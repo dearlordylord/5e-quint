@@ -101,6 +101,12 @@ describe("AdminMirrorPage mirror boundary", () => {
     expect(selectMirrorSession([newest], null)).toBe(newest)
   })
 
+  test("treats an empty retained collection entry as no selected session", () => {
+    const sparseSessions = new Array<AdminMirrorSessionState>(1)
+
+    expect(selectMirrorSession(sparseSessions, null)).toBeNull()
+  })
+
   test("formats battle event titles without technical battle ids", () => {
     expect(
       presentationTimelineTitle({

@@ -16,10 +16,21 @@ import {
   WIZARD_BATTLE_DEMO_META,
   WIZARD_BATTLE_DEMO_OBJECT_IGNITIONS,
   WIZARD_BATTLE_DEMO_STATE,
-  WIZARD_BATTLE_DEMO_STEPS
+  WIZARD_BATTLE_DEMO_STEPS,
+  wizardBattleCombatantDisplayName,
+  wizardBattleDamageSummary
 } from "./wizard-battle-demo.ts"
 
 describe("wizard battle demo", () => {
+  test("formats all-success damage summaries and unknown combatant labels", () => {
+    const unknownCombatantId = combatantId("synthetic:unknown-combatant")
+
+    expect(wizardBattleCombatantDisplayName(unknownCombatantId)).toBe("synthetic:unknown-combatant")
+    expect(wizardBattleDamageSummary([{ targetId: unknownCombatantId, succeeded: true }])).toBe(
+      "synthetic:unknown-combatant succeed and take half damage."
+    )
+  })
+
   test("resolves the full promoted Fireball, Shatter, Counterspell, and death-save demo", () => {
     const snapshot = snapshotBattle(WIZARD_BATTLE_DEMO_STATE)
     const laserWizard = snapshot.combatants.find(

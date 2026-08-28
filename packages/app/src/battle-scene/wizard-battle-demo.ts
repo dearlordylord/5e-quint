@@ -20,7 +20,7 @@ import {
   snapshotBattle,
   startBattle
 } from "@dnd/battle-runtime"
-import { attackBonus, Hp, movementFeet, proficiencyBonus } from "@dnd/shared/types"
+import { attackBonus, Hp, movementFeet, PositiveInteger, proficiencyBonus } from "@dnd/shared/types"
 import { abilityModifier, defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra"
 import type { SpellRecord } from "@dnd/surface/surface/types"
 import { buildUnitCatalog, srdUnitCollection } from "@dnd/surface/surface/unit-catalog"
@@ -61,6 +61,10 @@ const wizardProficiencyBonus = 3
 const fireballAreaRadiusFeet = 20
 const shatterAreaRadiusFeet = 10
 const deathSaveSuccessThreshold = 10
+const wizardLevelThreeSlotCount = 2
+const bufoLevelThreeSlotCount = 3
+const wizardLevelThreeSlots = PositiveInteger(wizardLevelThreeSlotCount)
+const bufoLevelThreeSlots = PositiveInteger(bufoLevelThreeSlotCount)
 const scriptedDamageDie = {
   fireballHigh: 4,
   fireballLow: 3,
@@ -155,12 +159,14 @@ type WizardBattleCombatantSpec = {
   readonly name: string
   readonly team: "blue" | "red"
   readonly initiative: number
-  readonly preparedSpellIds: ReadonlyArray<string>
+  readonly preparedSpellIds: ReadonlyArray<WizardBattleSpellId>
   readonly levelTwoSlots: number
-  readonly levelThreeSlots: number
+  readonly levelThreeSlots: PositiveInteger
   readonly gridPosition: BattleGridPosition
   readonly spriteFile: number
 }
+
+type WizardBattleSpellId = typeof fireballUnitId | typeof counterspellUnitId | typeof shatterUnitId
 
 type CounterspellChainLink = {
   readonly reactorId: CombatantId
@@ -171,9 +177,12 @@ type CounterspellChainLink = {
 
 type ReadonlyNonEmptyArray<T> = readonly [T, ...ReadonlyArray<T>]
 
-type SpellSaveOutcome = {
+export type WizardBattleDamageSummaryOutcome = {
   readonly targetId: CombatantId
   readonly succeeded: boolean
+}
+
+type SpellSaveOutcome = WizardBattleDamageSummaryOutcome & {
   readonly label: string
   readonly detail: string
 }
@@ -242,7 +251,7 @@ const WIZARD_BATTLE_DEMO_COMBATANTS = [
     initiative: 20,
     preparedSpellIds: [fireballUnitId],
     levelTwoSlots: 0,
-    levelThreeSlots: 2,
+    levelThreeSlots: wizardLevelThreeSlots,
     gridPosition: { row: 3, col: 2 },
     spriteFile: 5
   },
@@ -253,7 +262,7 @@ const WIZARD_BATTLE_DEMO_COMBATANTS = [
     initiative: 18,
     preparedSpellIds: [fireballUnitId],
     levelTwoSlots: 0,
-    levelThreeSlots: 2,
+    levelThreeSlots: wizardLevelThreeSlots,
     gridPosition: { row: 3, col: 8 },
     spriteFile: 4
   },
@@ -264,7 +273,7 @@ const WIZARD_BATTLE_DEMO_COMBATANTS = [
     initiative: 16,
     preparedSpellIds: [fireballUnitId, counterspellUnitId],
     levelTwoSlots: 0,
-    levelThreeSlots: 2,
+    levelThreeSlots: wizardLevelThreeSlots,
     gridPosition: { row: 5, col: 2 },
     spriteFile: 1
   },
@@ -275,7 +284,7 @@ const WIZARD_BATTLE_DEMO_COMBATANTS = [
     initiative: 14,
     preparedSpellIds: [shatterUnitId, counterspellUnitId],
     levelTwoSlots: 2,
-    levelThreeSlots: 2,
+    levelThreeSlots: wizardLevelThreeSlots,
     gridPosition: { row: 5, col: 8 },
     spriteFile: 2
   },
@@ -286,7 +295,7 @@ const WIZARD_BATTLE_DEMO_COMBATANTS = [
     initiative: 12,
     preparedSpellIds: [fireballUnitId, counterspellUnitId],
     levelTwoSlots: 0,
-    levelThreeSlots: 3,
+    levelThreeSlots: bufoLevelThreeSlots,
     gridPosition: { row: 7, col: 2 },
     spriteFile: 3
   },
@@ -297,7 +306,7 @@ const WIZARD_BATTLE_DEMO_COMBATANTS = [
     initiative: 10,
     preparedSpellIds: [fireballUnitId, counterspellUnitId],
     levelTwoSlots: 0,
-    levelThreeSlots: 2,
+    levelThreeSlots: wizardLevelThreeSlots,
     gridPosition: { row: 7, col: 8 },
     spriteFile: 6
   }
@@ -392,7 +401,7 @@ function lastStep(steps: readonly [WizardBattleDemoStep, ...Array<WizardBattleDe
   return steps[steps.length - 1]
 }
 
-function nameOf(combatantId: CombatantId): string {
+export function wizardBattleCombatantDisplayName(combatantId: CombatantId): string {
   const combatant = WIZARD_BATTLE_DEMO_COMBATANTS.find((candidate) => candidate.combatantId === combatantId)
   return combatant?.name ?? String(combatantId)
 }
@@ -680,7 +689,7 @@ function castAreaSpell(builder: WizardBattleDemoBuilder, plan: AreaSpellPlan): W
 
   nextBuilder = pushStep(nextBuilder, {
     title: "Area selected",
-    detail: `${plan.spell.name} catches ${plan.outcomes.map((outcome) => nameOf(outcome.targetId)).join(", ")}.`,
+    detail: `${plan.spell.name} catches ${plan.outcomes.map((outcome) => wizardBattleCombatantDisplayName(outcome.targetId)).join(", ")}.`,
     session: spellReady.session,
     cue: { spell: spellCue(plan) }
   })
@@ -829,7 +838,10 @@ function resolveCounterspellChain(
       nextBuilder = pushCounterspellCastStep(nextBuilder, link, reactionResult)
       return { builder: nextBuilder, value: reactionResult }
     }
-    requireNeedsReaction(reactionResult, `Expected ${nameOf(nextLink.reactorId)} Counterspell window.`)
+    requireNeedsReaction(
+      reactionResult,
+      `Expected ${wizardBattleCombatantDisplayName(nextLink.reactorId)} Counterspell window.`
+    )
     nextBuilder = pushCounterspellCastStep(nextBuilder, link, reactionResult)
     pendingInterrupt = reactionResult
   }
@@ -860,7 +872,7 @@ function resolveDeclinedCounterspell(
   result: BattleRuntimeResolutionResult,
   decline: Extract<SpellCastReactionPlan, { readonly kind: "declinedCounterspell" }>
 ): WizardBattleDemoTransition<Extract<BattleRuntimeResolutionResult, { readonly tag: "needsHoles" }>> {
-  requireNeedsReaction(result, `Expected ${nameOf(decline.reactorId)} Counterspell window.`)
+  requireNeedsReaction(result, `Expected ${wizardBattleCombatantDisplayName(decline.reactorId)} Counterspell window.`)
   requireCounterspellChoice(result, {
     reactorId: decline.reactorId,
     slotLevel: counterspellSlotLevel,
@@ -890,7 +902,7 @@ function resolveDeclinedCounterspell(
   requireNeedsHoles(declined, `Expected ${plan.spell.name} to continue after declined Counterspell.`)
   const declinedBuilder = pushStep(waitingBuilder, {
     title: "Counterspell declined",
-    detail: `${nameOf(decline.reactorId)} declines the reaction.`,
+    detail: `${wizardBattleCombatantDisplayName(decline.reactorId)} declines the reaction.`,
     session: declined.session,
     cue: {
       reactingId: decline.reactorId,
@@ -917,7 +929,9 @@ function passCurrentTurn(
   if (result.tag === "resolved") {
     /* v8 ignore next -- @preserve -- a scripted death save is supplied only for turns that expose its hole */
     if (deathSave !== undefined) {
-      throw new Error(`Did not receive expected Death Saving Throw for ${nameOf(deathSave.targetId)}.`)
+      throw new Error(
+        `Did not receive expected Death Saving Throw for ${wizardBattleCombatantDisplayName(deathSave.targetId)}.`
+      )
     }
     return {
       ...nextBuilder,
@@ -954,7 +968,7 @@ function passCurrentTurn(
   )
   return pushStep(nextBuilder, {
     title: "Death save",
-    detail: `${nameOf(deathSave.targetId)} rolls ${deathSave.roll}: ${deathSaveText(deathSave.roll)}.`,
+    detail: `${wizardBattleCombatantDisplayName(deathSave.targetId)} rolls ${deathSave.roll}: ${deathSaveText(deathSave.roll)}.`,
     cue: {
       labels: [
         {
@@ -972,7 +986,7 @@ function ensureTurnStarted(builder: WizardBattleDemoBuilder, actorId: CombatantI
   requireCurrentActor(builder.session.state, actorId)
   const started = pushStep(builder, {
     title: "Turn starts",
-    detail: `${nameOf(actorId)} takes the turn.`,
+    detail: `${wizardBattleCombatantDisplayName(actorId)} takes the turn.`,
     cue: {}
   })
   return { ...started, startedTurnActorId: actorId }
@@ -992,7 +1006,9 @@ function requireCurrentActor(state: BattleState, actorId: CombatantId): void {
   const currentActorId = snapshotBattle(state).currentActorId
   /* v8 ignore next -- @preserve -- callers advance the fixture in the battle state's turn order */
   if (currentActorId !== actorId) {
-    throw new Error(`Expected current actor ${nameOf(actorId)}, got ${nameOf(currentActorId)}.`)
+    throw new Error(
+      `Expected current actor ${wizardBattleCombatantDisplayName(actorId)}, got ${wizardBattleCombatantDisplayName(currentActorId)}.`
+    )
   }
 }
 
@@ -1023,10 +1039,10 @@ function counterspellFactsForPlan(context: BattleRuntimeContext, plan: AreaSpell
 function counterspellFactsDetail(plan: AreaSpellPlan): string {
   if (plan.reaction.kind === "counterspellChain") {
     const firstCounterspell = plan.reaction.chain[0]
-    return `${nameOf(firstCounterspell.reactorId)} is visible within Counterspell range.`
+    return `${wizardBattleCombatantDisplayName(firstCounterspell.reactorId)} is visible within Counterspell range.`
   }
   if (plan.reaction.kind === "declinedCounterspell") {
-    return `${nameOf(plan.reaction.reactorId)} is visible within Counterspell range.`
+    return `${wizardBattleCombatantDisplayName(plan.reaction.reactorId)} is visible within Counterspell range.`
   }
   const noReaction: Extract<SpellCastReactionPlan, { readonly kind: "none" }> = plan.reaction
   void noReaction
@@ -1090,15 +1106,23 @@ function counterspellCue(link: CounterspellChainLink): NonNullable<WizardBattleD
   }
 }
 
-function damageSummary(plan: AreaSpellPlan): string {
-  const failed = plan.outcomes.filter((outcome) => !outcome.succeeded).map((outcome) => nameOf(outcome.targetId))
-  const succeeded = plan.outcomes.filter((outcome) => outcome.succeeded).map((outcome) => nameOf(outcome.targetId))
+export function wizardBattleDamageSummary(outcomes: ReadonlyArray<WizardBattleDamageSummaryOutcome>): string {
+  const failed = outcomes
+    .filter((outcome) => !outcome.succeeded)
+    .map((outcome) => wizardBattleCombatantDisplayName(outcome.targetId))
+  const succeeded = outcomes
+    .filter((outcome) => outcome.succeeded)
+    .map((outcome) => wizardBattleCombatantDisplayName(outcome.targetId))
   return [
     failed.length === 0 ? "" : `${failed.join(", ")} fail.`,
     succeeded.length === 0 ? "" : `${succeeded.join(", ")} succeed and take half damage.`
   ]
     .filter(Boolean)
     .join(" ")
+}
+
+function damageSummary(plan: AreaSpellPlan): string {
+  return wizardBattleDamageSummary(plan.outcomes)
 }
 
 function deathSaveText(roll: number): string {
@@ -1118,7 +1142,7 @@ function requireNonEmptySteps(
   return [first, ...steps.slice(1)]
 }
 
-function requireInitialSession(spellsById: Readonly<Record<string, SpellRecord>>): BattleRuntimeSession {
+function requireInitialSession(spellsById: Readonly<Record<WizardBattleSpellId, SpellRecord>>): BattleRuntimeSession {
   const session = startBattle({
     battleId: battleId("battle:wizard-fireball-counterspell-demo"),
     combatants: WIZARD_BATTLE_DEMO_COMBATANTS.map((combatant) =>
@@ -1128,7 +1152,7 @@ function requireInitialSession(spellsById: Readonly<Record<string, SpellRecord>>
         initiative: combatant.initiative,
         levelThreeSlots: combatant.levelThreeSlots,
         levelTwoSlots: combatant.levelTwoSlots,
-        preparedSpells: combatant.preparedSpellIds.map((spellId) => spellsById[spellId] ?? requireSpellRecord(spellId))
+        preparedSpells: combatant.preparedSpellIds.map((spellId) => spellsById[spellId])
       })
     )
   })
@@ -1207,7 +1231,7 @@ function wizardCreature(input: {
         invocationSpellAccesses: [],
         spellSlots: [
           ...(input.levelTwoSlots === 0 ? [] : [{ spellLevel: shatterSlotLevel, count: input.levelTwoSlots }]),
-          ...(input.levelThreeSlots === 0 ? [] : [{ spellLevel: fireballSlotLevel, count: input.levelThreeSlots }])
+          { spellLevel: fireballSlotLevel, count: input.levelThreeSlots }
         ]
       }
     }

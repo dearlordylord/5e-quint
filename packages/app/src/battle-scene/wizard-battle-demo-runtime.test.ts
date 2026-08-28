@@ -1,4 +1,4 @@
-import { combatantId } from "@dnd/battle-runtime"
+import { combatantId, snapshotBattle } from "@dnd/battle-runtime"
 import { describe, expect, test } from "vitest"
 
 import { WIZARD_BATTLE_DEMO_STEPS } from "./wizard-battle-demo.ts"
@@ -120,5 +120,41 @@ describe("wizard battle demo runtime guards", () => {
         "rolledDice"
       )
     ).toThrow("Expected rolledDice hole.")
+  })
+
+  test("rejects a reaction choice whose procedure has no presentation", () => {
+    const session = WIZARD_BATTLE_DEMO_STEPS[0].session
+    const reactorId = combatantId("E")
+
+    expect(() =>
+      requireCounterspellChoice(
+        {
+          tag: "needsHoles",
+          session,
+          envelope: {
+            checkpoint: session.state,
+            frontier: {
+              kind: "interruptDecision",
+              trigger: "spellCast",
+              decisionHole: {},
+              choices: [
+                {
+                  kind: "nestedProcedure",
+                  initialHoles: [],
+                  subject: {
+                    tag: "runtimeCommand",
+                    actorId: snapshotBattle(session.state).currentActorId,
+                    command: "castTriggeredReactionSpell",
+                    reactorId,
+                    procedureRef: "synthetic:unbound-procedure" as never
+                  }
+                }
+              ]
+            }
+          }
+        } as never,
+        { reactorId, slotLevel: 3, spellId: "counterspell" }
+      )
+    ).toThrow("Expected Counterspell Reaction choice.")
   })
 })
