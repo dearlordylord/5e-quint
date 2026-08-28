@@ -917,7 +917,11 @@ function applyHideousLaughterDamageRepeatSaves(
     });
   return succeededEffects.reduce(
     (nextState, effect) =>
-      removeHideousLaughterEffectFromTarget(nextState, targetId, effect),
+      removeHideousLaughterEffectFromTarget(
+        nextState,
+        targetId,
+        effect.effectRef,
+      ),
     state,
   );
 }

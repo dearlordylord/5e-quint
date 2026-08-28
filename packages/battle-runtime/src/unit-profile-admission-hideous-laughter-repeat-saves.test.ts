@@ -1,13 +1,12 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-hideous-laughter-repeat-save-lifecycle
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime.test-support.ts";
 import { allocateBattleEffectOccurrenceForCreature } from "./effect-execution-ref.ts";
 import { describe, expect, test } from "vitest";
 import { Result } from "effect";
 import {
   colorSprayUnitId,
   eldritchBlastUnitId,
-  ensnaringStrikeUnitId,
   faerieFireUnitId,
   hellishRebukeUnitId,
   hideousLaughterDurationTicks,
@@ -52,6 +51,7 @@ import {
   resolveBattleSubject,
   resourceCount,
   spellSlotLevel,
+  spellSlotInvocationRef,
   startBattle,
   supportedPreparedHellishRebukeReactionSpellProfile,
   supportedPreparedHideousLaughterProfile,
@@ -66,12 +66,14 @@ import type {
   EffectAtom,
 } from "./unit-profile-admission.test-support.ts";
 
-function hideousLaughterEffectTemplate() {
+function hideousLaughterEffectTemplate(
+  sourceProcedureRef: ReturnType<
+    typeof requireCharacterSpellProcedureRefForTest
+  >,
+) {
   return {
     kind: "hideousLaughter",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(hideousLaughterUnitId),
-    ),
+    sourceProcedureRef,
     sourceCombatantId: spellCasterId,
     conditionHadNonSpellProneSource: false,
     conditionHadNonSpellIncapacitatedSource: false,
@@ -93,6 +95,10 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       targetHp: 20,
       targetMaxHp: 20,
     });
+    const laughterProcedureRef = spellAct({
+      session: baseState,
+      spellId: hideousLaughterUnitId,
+    }).subject.procedureRef;
     const target = requireCombatant(baseState.state, spellTargetId);
     const targetWithConditions =
       battleCreatureStateWithKnockOutPreservedConditions(
@@ -109,9 +115,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       owner: targetWithConditions,
       effect: {
         kind: "spellCondition",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(ensnaringStrikeUnitId),
-        ),
+        sourceProcedureRef: laughterProcedureRef,
         sourceCombatantId: spellCasterId,
         condition: "restrained",
         conditionHadNonSpellSource: false,
@@ -135,7 +139,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
     };
     const laughterAllocation = allocateBattleEffectOccurrenceForCreature({
       owner: targetWithConditionOccurrence,
-      effect: hideousLaughterEffectTemplate(),
+      effect: hideousLaughterEffectTemplate(laughterProcedureRef),
     });
     const state: BattleState = {
       ...baseState.state,
@@ -206,7 +210,13 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
   test("Hideous Laughter asks for an Advantage repeat save after end-turn spell damage", () => {
     const baseState = spellBattle({
       preparedSpells: [spellRecord(hideousLaughterUnitId)],
+      targetPreparedSpells: [spellRecord(hideousLaughterUnitId)],
     });
+    const targetLaughterProcedureRef = requireCharacterSpellProcedureRefForTest(
+      baseState,
+      spellTargetId,
+      spellSlotInvocationRef(hideousLaughterUnitId, 1, "hideousLaughter"),
+    );
     const caster = requireCombatant(baseState.state, spellCasterId);
     const casterWithConditions =
       battleCreatureStateWithKnockOutPreservedConditions(
@@ -220,9 +230,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       owner: casterWithConditions,
       effect: {
         kind: "spellTurnEndDamage",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          "synthetic-end-turn-damage",
-        ),
+        sourceProcedureRef: targetLaughterProcedureRef,
         sourceCombatantId: spellTargetId,
         damage: {
           expr: { dice: 1, dieSize: 6 },
@@ -244,7 +252,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
         ],
       },
       effect: {
-        ...hideousLaughterEffectTemplate(),
+        ...hideousLaughterEffectTemplate(targetLaughterProcedureRef),
         sourceCombatantId: spellTargetId,
         expiresAt: {
           kind: "concentration",
@@ -331,10 +339,15 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
     const spell = spellRecord(eldritchBlastUnitId);
     const baseState = spellBattle({
       cantrips: [spell],
+      preparedSpells: [spellRecord(hideousLaughterUnitId)],
       casterClassLevels: [{ className: "warlock", level: classLevel(5) }],
       targetHp: 20,
       targetMaxHp: 20,
     });
+    const laughterProcedureRef = spellAct({
+      session: baseState,
+      spellId: hideousLaughterUnitId,
+    }).subject.procedureRef;
     const target = requireCombatant(baseState.state, spellTargetId);
     const affectedTarget = battleCreatureStateWithKnockOutPreservedConditions(
       target,
@@ -345,7 +358,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
     );
     const allocation = allocateBattleEffectOccurrenceForCreature({
       owner: affectedTarget,
-      effect: hideousLaughterEffectTemplate(),
+      effect: hideousLaughterEffectTemplate(laughterProcedureRef),
     });
     const state: BattleState = {
       ...baseState.state,
@@ -353,9 +366,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
         .set(spellCasterId, {
           ...requireCombatant(baseState.state, spellCasterId),
           concentration: {
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(hideousLaughterUnitId),
-            ),
+            sourceProcedureRef: laughterProcedureRef,
             effectKind: "spellEffect",
           },
         })
@@ -471,7 +482,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
     const removedState = removeHideousLaughterEffectFromTarget(
       state,
       spellTargetId,
-      allocation.effect,
+      allocation.effect.effectRef,
     );
     const removedTarget = requireCombatant(removedState, spellTargetId);
     const replacementTarget =
@@ -484,7 +495,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       );
     const replacementAllocation = allocateBattleEffectOccurrenceForCreature({
       owner: replacementTarget,
-      effect: hideousLaughterEffectTemplate(),
+      effect: hideousLaughterEffectTemplate(laughterProcedureRef),
     });
     const replacementState: BattleState = {
       ...removedState,
@@ -523,6 +534,23 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
     expect(replacementAllocation.effect.effectRef).not.toBe(
       allocation.effect.effectRef,
     );
+    const staleResultTarget = requireCombatant(
+      staleFillResult.state,
+      spellTargetId,
+    );
+    expect(staleResultTarget.activeEffects).toContainEqual(
+      replacementAllocation.effect,
+    );
+    expect(hasCondition(staleResultTarget.conditions, "prone")).toBe(true);
+    expect(hasCondition(staleResultTarget.conditions, "incapacitated")).toBe(
+      true,
+    );
+    expect(
+      requireCombatant(staleFillResult.state, spellCasterId).concentration,
+    ).toEqual({
+      sourceProcedureRef: replacementAllocation.effect.sourceProcedureRef,
+      effectKind: "spellEffect",
+    });
 
     const resolved = resolveBattleSubject({
       state,
@@ -555,11 +583,15 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
   test("Hideous Laughter asks for fresh damage repeat saves for Ice Knife attack and burst damage", () => {
     const spell = spellRecord(iceKnifeUnitId);
     const baseState = spellBattle({
-      preparedSpells: [spell],
-      spellSlots: [{ spellLevel: 1, count: 1 }],
+      preparedSpells: [spell, spellRecord(hideousLaughterUnitId)],
+      spellSlots: [{ spellLevel: 1, count: 2 }],
       targetHp: 20,
       targetMaxHp: 20,
     });
+    const laughterProcedureRef = spellAct({
+      session: baseState,
+      spellId: hideousLaughterUnitId,
+    }).subject.procedureRef;
     const target = requireCombatant(baseState.state, spellTargetId);
     const affectedTarget = battleCreatureStateWithKnockOutPreservedConditions(
       target,
@@ -570,7 +602,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
     );
     const allocation = allocateBattleEffectOccurrenceForCreature({
       owner: affectedTarget,
-      effect: hideousLaughterEffectTemplate(),
+      effect: hideousLaughterEffectTemplate(laughterProcedureRef),
     });
     const state: BattleState = {
       ...baseState.state,
@@ -733,6 +765,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       throw new Error(battleStateInitIssueMessage(baseStateResult.failure));
     }
     const baseState = baseStateResult.success;
+    const subject = weaponAttackSubject(baseState, "Longsword");
     const target = requireCombatant(baseState.state, spellTargetId);
     const affectedTarget = battleCreatureStateWithKnockOutPreservedConditions(
       target,
@@ -743,7 +776,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
     );
     const allocation = allocateBattleEffectOccurrenceForCreature({
       owner: affectedTarget,
-      effect: hideousLaughterEffectTemplate(),
+      effect: hideousLaughterEffectTemplate(subject.procedureRef),
     });
     const state: BattleState = {
       ...baseState.state,
@@ -752,10 +785,6 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
         activeEffects: [...allocation.owner.activeEffects, allocation.effect],
       }),
     };
-    const subject = weaponAttackSubject(
-      battleRuntimeSessionForTest({ ...baseState, state }),
-      "Longsword",
-    );
     const targetHole = requireResultHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",

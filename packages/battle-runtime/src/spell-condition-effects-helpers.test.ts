@@ -499,7 +499,7 @@ describe("spell condition effect source ownership", () => {
       removeHideousLaughterEffectFromTarget(
         laughingState,
         goblinId,
-        laughterAllocation.effect,
+        laughterAllocation.effect.effectRef,
       ).combatants.get(goblinId)?.activeEffects,
     ).toEqual([]);
     const knockedOutLaughing = {
@@ -518,8 +518,88 @@ describe("spell condition effect source ownership", () => {
           ),
         },
         goblinId,
-        laughterAllocation.effect,
+        laughterAllocation.effect.effectRef,
       ).combatants.get(goblinId)?.activeEffects,
     ).toEqual([]);
+  });
+
+  test("Hideous Laughter cleanup reads the exact current occurrence instead of a stale same-ref clone", () => {
+    const state = fighterVsGoblinBattle();
+    const target = state.combatants.get(goblinId);
+    const source = state.combatants.get(fighterId);
+    if (
+      target === undefined ||
+      target.positiveHpUnconscious !== null ||
+      source === undefined
+    ) {
+      throw new Error("Expected the synthetic cleanup combatants.");
+    }
+    const allocation = allocateActiveEffectForTest(
+      {
+        ...target,
+        conditions: applyCondition(
+          applyCondition(target.conditions, "prone"),
+          "incapacitated",
+        ),
+      },
+      {
+        kind: "hideousLaughter",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          "synthetic-stale-laughter-source",
+        ),
+        sourceCombatantId: fighterId,
+        conditionHadNonSpellProneSource: false,
+        conditionHadNonSpellIncapacitatedSource: false,
+        repeatSaveRollMode: null,
+        save: {
+          ability: "wis",
+          dc: { kind: "fixed", dc: difficultyClass(13) },
+        },
+        expiresAt: { kind: "concentration", combatantId: fighterId },
+      },
+    );
+    const staleClone = allocation.effect;
+    const currentProcedureRef = battleProcedureExecutionRefForTest(
+      "synthetic-current-laughter-source",
+    );
+    const currentEffect = {
+      ...staleClone,
+      sourceProcedureRef: currentProcedureRef,
+      conditionHadNonSpellProneSource: true,
+      conditionHadNonSpellIncapacitatedSource: true,
+    };
+    const currentState: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants)
+        .set(fighterId, {
+          ...source,
+          concentration: {
+            sourceProcedureRef: currentProcedureRef,
+            effectKind: "spellEffect",
+          },
+        })
+        .set(goblinId, {
+          ...allocation.owner,
+          activeEffects: [currentEffect],
+        }),
+    };
+
+    const cleaned = removeHideousLaughterEffectFromTarget(
+      currentState,
+      goblinId,
+      staleClone.effectRef,
+    );
+    const cleanedTarget = cleaned.combatants.get(goblinId);
+    expect(cleanedTarget?.activeEffects).toEqual([]);
+    expect(
+      hasCondition(cleanedTarget?.conditions ?? target.conditions, "prone"),
+    ).toBe(true);
+    expect(
+      hasCondition(
+        cleanedTarget?.conditions ?? target.conditions,
+        "incapacitated",
+      ),
+    ).toBe(true);
+    expect(cleaned.combatants.get(fighterId)?.concentration).toBeNull();
   });
 });

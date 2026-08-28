@@ -81,6 +81,10 @@ export function spellBattle(input: {
     readonly count: number;
   }[];
   readonly extraTargetIds?: readonly CombatantId[];
+  readonly extraTargetSpellcasting?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["spellcasting"];
   readonly extraTargetHp?: number;
   readonly extraTargetMaxHp?: number;
   readonly targetHp?: number;
@@ -241,6 +245,7 @@ export function spellBattle(input: {
           initiative: 9 - index,
           ...optionalProperty("currentHp", input.extraTargetHp),
           ...optionalProperty("maxHp", input.extraTargetMaxHp),
+          ...optionalProperty("spellcasting", input.extraTargetSpellcasting),
         }),
       ),
       ...(input.statBlockTargets ?? []).map((target) =>

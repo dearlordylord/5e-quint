@@ -711,19 +711,18 @@ export function removeHypnoticPatternControlEffectsFromTarget(
 export function removeHideousLaughterEffectFromTarget(
   state: BattleState,
   targetId: CombatantId,
-  expiringEffect: HideousLaughterEffect,
+  effectRef: BattleEffectExecutionRef,
 ): BattleState {
   const target = state.combatants.get(targetId);
-  if (
-    target === undefined ||
-    !target.activeEffects.some(
-      (effect) => effect.effectRef === expiringEffect.effectRef,
-    )
-  ) {
+  const expiringEffect = target?.activeEffects.find(
+    (effect): effect is HideousLaughterEffect =>
+      effect.kind === "hideousLaughter" && effect.effectRef === effectRef,
+  );
+  if (target === undefined || expiringEffect === undefined) {
     return state;
   }
   const activeEffects = target.activeEffects.filter(
-    (effect) => effect.effectRef !== expiringEffect.effectRef,
+    (effect) => effect.effectRef !== effectRef,
   );
   const conditions = conditionsAfterExpiringHideousLaughterEffect(
     target.conditions,

@@ -4,6 +4,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
+import { resourceCount } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import hypnoticPatternInput from "../../surface/content/hypnotic_pattern.json";
 import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
@@ -38,6 +39,7 @@ import type {
   BattleFill,
   BattleHole,
   BattleRuntimeSession,
+  BattleState,
   BattleSpellSavingThrowOutcomeHole,
   CombatantId,
 } from "./unit-profile-admission.test-support.ts";
@@ -45,7 +47,6 @@ import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-red
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
-  battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectForTest,
   battleStateWithAllocatedEffectOccurrencesForTest,
   requireCharacterSpellProcedureRefForTest,
@@ -187,10 +188,27 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       ),
     );
     const protectionSource = requireCombatant(baseState.state, spellTargetId);
+    if (
+      protectionSource.origin.kind !== "character" ||
+      protectionSource.origin.spellcasting == null
+    ) {
+      throw new Error("Expected an admitted Protection spell source.");
+    }
+    const protectionSpellcasting = protectionSource.origin.spellcasting;
     const concentratingState = {
       ...baseState.state,
       combatants: new Map(baseState.state.combatants).set(spellTargetId, {
         ...protectionSource,
+        origin: {
+          ...protectionSource.origin,
+          spellcasting: {
+            ...protectionSpellcasting,
+            spellSlots: protectionSpellcasting.spellSlots.map((slot) => ({
+              ...slot,
+              expended: resourceCount(1),
+            })),
+          },
+        },
         concentration: {
           sourceProcedureRef: protectionProcedureRef,
           effectKind: "spellEffect" as const,
@@ -270,10 +288,27 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       ),
     );
     const immunitySource = requireCombatant(baseState.state, spellTargetId);
+    if (
+      immunitySource.origin.kind !== "character" ||
+      immunitySource.origin.spellcasting == null
+    ) {
+      throw new Error("Expected an admitted immunity spell source.");
+    }
+    const immunitySpellcasting = immunitySource.origin.spellcasting;
     const concentratingState = {
       ...baseState.state,
       combatants: new Map(baseState.state.combatants).set(spellTargetId, {
         ...immunitySource,
+        origin: {
+          ...immunitySource.origin,
+          spellcasting: {
+            ...immunitySpellcasting,
+            spellSlots: immunitySpellcasting.spellSlots.map((slot) => ({
+              ...slot,
+              expended: resourceCount(1),
+            })),
+          },
+        },
         concentration: {
           sourceProcedureRef: immunityProcedureRef,
           effectKind: "spellEffect" as const,
@@ -677,15 +712,53 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
   });
 
   test("Hypnotic Pattern cast preserves an unrelated control occurrence by exact ref", () => {
+    const unrelatedCasterId = combatantId(
+      "synthetic-unrelated-hypnotic-caster",
+    );
     const base = spellBattle({
       preparedSpells: [hypnoticPatternSpellRecord()],
       spellSlots: [{ spellLevel: 3, count: 1 }],
+      extraTargetIds: [unrelatedCasterId],
+      extraTargetSpellcasting: wizardSpellcasting({
+        preparedSpells: [hypnoticPatternSpellRecord()],
+        spellSlots: [{ spellLevel: 3, count: 1 }],
+      }),
     });
-    const unrelatedSource = battleProcedureExecutionRefForTest(
-      "synthetic-hypnotic-unrelated",
+    const unrelatedSource = requireCharacterSpellProcedureRefForTest(
+      base,
+      unrelatedCasterId,
+      spellSlotInvocationRef(hypnoticPatternUnitId, 3, "hypnoticPattern"),
     );
+    const unrelatedCaster = requireCombatant(base.state, unrelatedCasterId);
+    if (
+      unrelatedCaster.origin.kind !== "character" ||
+      unrelatedCaster.origin.spellcasting == null
+    ) {
+      throw new Error("Expected the unrelated Hypnotic Pattern caster.");
+    }
+    const unrelatedSpellcasting = unrelatedCaster.origin.spellcasting;
+    const mechanicallyPossibleState: BattleState = {
+      ...base.state,
+      combatants: new Map(base.state.combatants).set(unrelatedCasterId, {
+        ...unrelatedCaster,
+        origin: {
+          ...unrelatedCaster.origin,
+          spellcasting: {
+            ...unrelatedSpellcasting,
+            spellSlots: unrelatedSpellcasting.spellSlots.map((slot) => ({
+              ...slot,
+              expended: resourceCount(1),
+            })),
+          },
+        },
+        concentration: {
+          sourceProcedureRef: unrelatedSource,
+          effectKind: "spellEffect",
+        },
+      }),
+    };
     const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
-      state: base.state,
+      state: mechanicallyPossibleState,
       occurrences: [
         {
           kind: "activeEffect",
@@ -693,11 +766,12 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
           effect: {
             kind: "hypnoticPatternControl" as const,
             sourceProcedureRef: unrelatedSource,
-            sourceCombatantId: spellCasterId,
+            sourceCombatantId: unrelatedCasterId,
             conditionHadNonSpellCharmedSource: false,
             conditionHadNonSpellIncapacitatedSource: false,
             expiresAt: {
-              kind: "duration" as const,
+              kind: "concentration" as const,
+              combatantId: unrelatedCasterId,
               durationTicks: elapsedTimeTicks(10),
             },
           },
