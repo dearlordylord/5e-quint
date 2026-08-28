@@ -41,6 +41,11 @@ const evidenceCoverageMetrics = new Set([
   "runtime-parity",
   "runtime-test",
 ]);
+const evidenceMetricVerificationOwnerKinds = new Map([
+  ["qnt-proof", "qnt-proof"],
+  ["runtime-parity", "focused-mbt"],
+  ["runtime-test", "runtime-test"],
+]);
 const trackerCoverageMetrics = new Set([
   "missing-qnt-owner",
   "missing-runtime-owner",
@@ -341,12 +346,14 @@ function validateCoverageClaimRows({
   allowedMetrics,
   requirementsById,
   claimKind,
+  metricVerificationOwnerKinds,
 }) {
   const allowedFields = new Set([
     identityField,
     "coverageMetric",
     "requirementIds",
   ]);
+  if (claimKind === "evidence") allowedFields.add("ownerPath");
   const identities = new Set();
   for (const [index, row] of rows.entries()) {
     const context = `${claimKind} claim row ${index + 1}`;
@@ -375,6 +382,12 @@ function validateCoverageClaimRows({
         `${context}.coverageMetric has unknown value ${row.coverageMetric}.`,
       );
     }
+    if (
+      claimKind === "evidence" &&
+      (typeof row.ownerPath !== "string" || row.ownerPath.trim().length === 0)
+    ) {
+      fail(`${context}.ownerPath must be a non-empty string.`);
+    }
     if (!Array.isArray(row.requirementIds) || row.requirementIds.length === 0) {
       fail(`${context}.requirementIds must be a non-empty array.`);
     }
@@ -396,6 +409,22 @@ function validateCoverageClaimRows({
       referencedIds.add(requirementId);
       if (!requirementsById.has(requirementId)) {
         fail(`${context} references unknown requirement ${requirementId}.`);
+      }
+      const requiredOwnerKind = metricVerificationOwnerKinds?.get(
+        row.coverageMetric,
+      );
+      const requirement = requirementsById.get(requirementId);
+      if (
+        requiredOwnerKind !== undefined &&
+        !(requirement.verificationOwners ?? []).some(
+          (owner) =>
+            owner.kind === requiredOwnerKind &&
+            owner.ownerPath === row.ownerPath,
+        )
+      ) {
+        fail(
+          `${context} metric ${row.coverageMetric} requires ${requirementId} to have exact verification owner ${requiredOwnerKind}:${row.ownerPath}.`,
+        );
       }
     }
   }
@@ -667,6 +696,7 @@ function buildMatrix() {
     allowedMetrics: evidenceCoverageMetrics,
     requirementsById,
     claimKind: "evidence",
+    metricVerificationOwnerKinds: evidenceMetricVerificationOwnerKinds,
   });
   validateCoverageClaimRows({
     rows: trackerClaims,
@@ -753,6 +783,7 @@ function buildMatrix() {
     evidenceClaims: evidenceClaims.map((claim) => ({
       evidenceId: claim.evidenceId,
       coverageMetric: claim.coverageMetric,
+      ownerPath: claim.ownerPath,
       requirementIds: claim.requirementIds,
     })),
     trackerClaims: trackerClaims.map((claim) => ({
@@ -852,11 +883,11 @@ function renderReport(matrix) {
     "",
     "## Historical Evidence Claims",
     "",
-    "| Evidence | Coverage metric | Requirements |",
-    "| --- | --- | --- |",
+    "| Evidence | Coverage metric | Exact owner | Requirements |",
+    "| --- | --- | --- | --- |",
     ...matrix.evidenceClaims.map(
       (claim) =>
-        `| ${claim.evidenceId} | ${claim.coverageMetric} | ${claim.requirementIds.join(", ")} |`,
+        `| ${claim.evidenceId} | ${claim.coverageMetric} | ${claim.ownerPath} | ${claim.requirementIds.join(", ")} |`,
     ),
     "",
     "## Tracker Follow-up Claims",
@@ -939,6 +970,21 @@ function withFixtureRoot(fn) {
   }
 }
 
+function writeFixtureVerificationClaims(fixtureRoot) {
+  fs.writeFileSync(
+    path.join(fixtureRoot, "packages/proofs/owner-proof.qnt"),
+    "// RAW-COVERAGE: verification-owner:qnt-proof RAW-FIXTURE-001\n",
+  );
+  fs.writeFileSync(
+    path.join(fixtureRoot, "packages/runtime/src/owner.mbt.test.ts"),
+    "// RAW-COVERAGE: verification-owner:focused-mbt RAW-FIXTURE-001\n",
+  );
+  fs.writeFileSync(
+    path.join(fixtureRoot, "packages/runtime/src/owner.test.ts"),
+    "// RAW-COVERAGE: verification-owner:runtime-test RAW-FIXTURE-001\n",
+  );
+}
+
 function runSelfTests() {
   const baseRequirement = {
     id: "RAW-FIXTURE-001",
@@ -946,8 +992,16 @@ function runSelfTests() {
     runtimeOwners: ["packages/runtime/src/owner.ts"],
     verificationOwners: [
       {
+        kind: "qnt-proof",
+        ownerPath: "packages/proofs/owner-proof.qnt",
+      },
+      {
         kind: "focused-mbt",
         ownerPath: "packages/runtime/src/owner.mbt.test.ts",
+      },
+      {
+        kind: "runtime-test",
+        ownerPath: "packages/runtime/src/owner.test.ts",
       },
     ],
   };
@@ -961,10 +1015,7 @@ function runSelfTests() {
       path.join(fixtureRoot, "packages/runtime/src/owner.ts"),
       "// RAW-COVERAGE: runtime-owner RAW-FIXTURE-001\n",
     );
-    fs.writeFileSync(
-      path.join(fixtureRoot, "packages/runtime/src/owner.mbt.test.ts"),
-      "// RAW-COVERAGE: verification-owner:focused-mbt RAW-FIXTURE-001\n",
-    );
+    writeFixtureVerificationClaims(fixtureRoot);
     validateRawCoverageOwnerClaims([baseRequirement], fixtureRoot);
   });
 
@@ -977,10 +1028,7 @@ function runSelfTests() {
       path.join(fixtureRoot, "packages/runtime/src/owner.ts"),
       "// RAW-COVERAGE: runtime-owner RAW-FIXTURE-001\n",
     );
-    fs.writeFileSync(
-      path.join(fixtureRoot, "packages/runtime/src/owner.mbt.test.ts"),
-      "// RAW-COVERAGE: verification-owner:focused-mbt RAW-FIXTURE-001\n",
-    );
+    writeFixtureVerificationClaims(fixtureRoot);
     assertThrowsWith(
       "unknown requirement claim",
       () => {
@@ -996,10 +1044,7 @@ function runSelfTests() {
       path.join(fixtureRoot, "packages/runtime/src/owner.ts"),
       "// RAW-COVERAGE: runtime-owner RAW-FIXTURE-001\n",
     );
-    fs.writeFileSync(
-      path.join(fixtureRoot, "packages/runtime/src/owner.mbt.test.ts"),
-      "// RAW-COVERAGE: verification-owner:focused-mbt RAW-FIXTURE-001\n",
-    );
+    writeFixtureVerificationClaims(fixtureRoot);
     assertThrowsWith(
       "missing reverse qnt claim",
       () => {
@@ -1013,6 +1058,7 @@ function runSelfTests() {
   const validEvidenceClaim = {
     evidenceId: "FIXTURE-PROOF",
     coverageMetric: "qnt-proof",
+    ownerPath: "packages/proofs/owner-proof.qnt",
     requirementIds: [baseRequirement.id],
   };
   const validateEvidenceClaims = (rows) =>
@@ -1022,6 +1068,7 @@ function runSelfTests() {
       allowedMetrics: evidenceCoverageMetrics,
       requirementsById,
       claimKind: "evidence",
+      metricVerificationOwnerKinds: evidenceMetricVerificationOwnerKinds,
     });
   validateEvidenceClaims([validEvidenceClaim]);
   validateCoverageClaimRows({
@@ -1053,6 +1100,11 @@ function runSelfTests() {
       label: "unknown evidence metric",
       rows: [{ ...validEvidenceClaim, coverageMetric: "done" }],
       message: "coverageMetric has unknown value done",
+    },
+    {
+      label: "missing evidence owner path",
+      rows: [{ ...validEvidenceClaim, ownerPath: "" }],
+      message: "ownerPath must be a non-empty string",
     },
     {
       label: "empty requirement ids",
@@ -1090,6 +1142,34 @@ function runSelfTests() {
       fixture.label,
       () => validateEvidenceClaims(fixture.rows),
       fixture.message,
+    );
+  }
+
+  for (const [coverageMetric, requiredOwnerKind] of [
+    ["qnt-proof", "qnt-proof"],
+    ["runtime-parity", "focused-mbt"],
+    ["runtime-test", "runtime-test"],
+  ]) {
+    const requirementWithoutMetricOwner = {
+      ...baseRequirement,
+      verificationOwners: baseRequirement.verificationOwners.filter(
+        (owner) => owner.kind !== requiredOwnerKind,
+      ),
+    };
+    assertThrowsWith(
+      `${coverageMetric} evidence owner mismatch`,
+      () =>
+        validateCoverageClaimRows({
+          rows: [{ ...validEvidenceClaim, coverageMetric }],
+          identityField: "evidenceId",
+          allowedMetrics: evidenceCoverageMetrics,
+          requirementsById: new Map([
+            [requirementWithoutMetricOwner.id, requirementWithoutMetricOwner],
+          ]),
+          claimKind: "evidence",
+          metricVerificationOwnerKinds: evidenceMetricVerificationOwnerKinds,
+        }),
+      `metric ${coverageMetric} requires ${baseRequirement.id} to have exact verification owner ${requiredOwnerKind}:${validEvidenceClaim.ownerPath}`,
     );
   }
 }

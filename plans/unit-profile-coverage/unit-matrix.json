@@ -3279,21 +3279,21 @@
       "id": "stat-block.action-lifecycle",
       "profileKind": "stat-block-control",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+        "packages/shared-algebras/proofs/rule-core/stat-block-action-lifecycle.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts"
       ],
       "sourceBoundary": "StatBlockRecord",
       "taskRefs": [
-        "SB-CONTROLS-INDUCTIVE",
+        "SB-ACTION-LIFECYCLE-INDUCTIVE",
         "SB-ACTIONS-RUNTIME-TEST"
       ],
       "title": "Stat Block Action lifecycle",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt"
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-action-lifecycle-inductive.qnt"
         },
         {
           "kind": "runtime-test",
@@ -3305,21 +3305,21 @@
       "id": "stat-block.bonus-action-lifecycle",
       "profileKind": "stat-block-control",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+        "packages/shared-algebras/proofs/rule-core/stat-block-bonus-action-lifecycle.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts"
       ],
       "sourceBoundary": "StatBlockRecord",
       "taskRefs": [
-        "SB-CONTROLS-INDUCTIVE",
+        "SB-BONUS-ACTION-LIFECYCLE-INDUCTIVE",
         "SB-ACTIONS-RUNTIME-TEST"
       ],
       "title": "Stat Block Bonus Action lifecycle",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt"
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-bonus-action-lifecycle-inductive.qnt"
         },
         {
           "kind": "runtime-test",
@@ -3331,22 +3331,21 @@
       "id": "stat-block.legendary-action-lifecycle",
       "profileKind": "stat-block-control",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt",
-        "packages/battle-runtime/battle-runtime-legendary-actions.qnt"
+        "packages/shared-algebras/proofs/rule-core/stat-block-legendary-action-lifecycle.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts"
       ],
       "sourceBoundary": "StatBlockRecord",
       "taskRefs": [
-        "SB-CONTROLS-INDUCTIVE",
+        "SB-LEGENDARY-ACTION-LIFECYCLE-INDUCTIVE",
         "SB-ACTIONS-RUNTIME-TEST"
       ],
       "title": "Stat Block Legendary Action lifecycle",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt"
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-legendary-action-lifecycle-inductive.qnt"
         },
         {
           "kind": "runtime-test",
@@ -3379,14 +3378,14 @@
       "id": "stat-block.multiattack",
       "profileKind": "stat-block-control",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+        "packages/shared-algebras/proofs/rule-core/stat-block-multiattack.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts"
       ],
       "sourceBoundary": "StatBlockRecord",
       "taskRefs": [
-        "SB-CONTROLS-INDUCTIVE",
+        "SB-MULTIATTACK-INDUCTIVE",
         "SB-MULTIATTACK-MBT",
         "SB-ACTIONS-RUNTIME-TEST"
       ],
@@ -3394,11 +3393,11 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt"
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-multiattack-inductive.qnt"
         },
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/rule-core-stat-block-controls.mbt.test.ts"
+          "ownerPath": "packages/battle-runtime/src/rule-core-stat-block-multiattack.mbt.test.ts"
         },
         {
           "kind": "runtime-test",
@@ -3410,22 +3409,21 @@
       "id": "stat-block.resource-lifecycle",
       "profileKind": "stat-block-control",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt",
-        "packages/battle-runtime/battle-runtime-turn-advancement-recharge.qnt"
+        "packages/shared-algebras/proofs/rule-core/stat-block-resource-lifecycle.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts"
       ],
       "sourceBoundary": "StatBlockRecord",
       "taskRefs": [
-        "SB-CONTROLS-INDUCTIVE",
+        "SB-RESOURCE-LIFECYCLE-INDUCTIVE",
         "SB-ACTIONS-RUNTIME-TEST"
       ],
       "title": "Stat Block limited-use and recharge resource lifecycle",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt"
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-resource-lifecycle-inductive.qnt"
         },
         {
           "kind": "runtime-test",
@@ -9286,7 +9284,7 @@
         "profileId": "stat-block.action-lifecycle",
         "profileKind": "stat-block-control",
         "qntOwners": [
-          "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+          "packages/shared-algebras/proofs/rule-core/stat-block-action-lifecycle.qnt"
         ]
       },
       {
@@ -9302,7 +9300,7 @@
         "profileId": "stat-block.bonus-action-lifecycle",
         "profileKind": "stat-block-control",
         "qntOwners": [
-          "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+          "packages/shared-algebras/proofs/rule-core/stat-block-bonus-action-lifecycle.qnt"
         ]
       },
       {
@@ -9318,8 +9316,7 @@
         "profileId": "stat-block.legendary-action-lifecycle",
         "profileKind": "stat-block-control",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-legendary-actions.qnt",
-          "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+          "packages/shared-algebras/proofs/rule-core/stat-block-legendary-action-lifecycle.qnt"
         ]
       },
       {
@@ -9352,7 +9349,7 @@
         "profileId": "stat-block.multiattack",
         "profileKind": "stat-block-control",
         "qntOwners": [
-          "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+          "packages/shared-algebras/proofs/rule-core/stat-block-multiattack.qnt"
         ]
       },
       {
@@ -9368,8 +9365,7 @@
         "profileId": "stat-block.resource-lifecycle",
         "profileKind": "stat-block-control",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-turn-advancement-recharge.qnt",
-          "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+          "packages/shared-algebras/proofs/rule-core/stat-block-resource-lifecycle.qnt"
         ]
       },
       {
@@ -21305,15 +21301,43 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Exact historical proof evidence from stat-block-controls-inductive.qnt; not tracker status.",
+      "note": "Exact historical Action lifecycle proof evidence; not tracker status.",
       "profileIds": [
-        "stat-block.action-lifecycle",
-        "stat-block.bonus-action-lifecycle",
-        "stat-block.legendary-action-lifecycle",
-        "stat-block.multiattack",
+        "stat-block.action-lifecycle"
+      ],
+      "taskId": "SB-ACTION-LIFECYCLE-INDUCTIVE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Exact historical Bonus Action lifecycle proof evidence; not tracker status.",
+      "profileIds": [
+        "stat-block.bonus-action-lifecycle"
+      ],
+      "taskId": "SB-BONUS-ACTION-LIFECYCLE-INDUCTIVE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Exact historical Legendary Action lifecycle proof evidence; not tracker status.",
+      "profileIds": [
+        "stat-block.legendary-action-lifecycle"
+      ],
+      "taskId": "SB-LEGENDARY-ACTION-LIFECYCLE-INDUCTIVE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Exact historical Multiattack proof evidence; not tracker status.",
+      "profileIds": [
+        "stat-block.multiattack"
+      ],
+      "taskId": "SB-MULTIATTACK-INDUCTIVE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Exact historical limited-usage resource proof evidence; not tracker status.",
+      "profileIds": [
         "stat-block.resource-lifecycle"
       ],
-      "taskId": "SB-CONTROLS-INDUCTIVE"
+      "taskId": "SB-RESOURCE-LIFECYCLE-INDUCTIVE"
     },
     {
       "claimKind": "runtime-evidence",

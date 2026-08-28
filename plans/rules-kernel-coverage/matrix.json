@@ -2782,17 +2782,12 @@
       ],
       "profiles": ["stat-block.action-lifecycle"],
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+        "packages/shared-algebras/proofs/rule-core/stat-block-action-lifecycle.qnt"
       ],
       "reason": "Typed Stat Block Action sections spend the ordinary Action resource without authored-identity dispatch.",
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/stat-block-authored-projection.ts",
-        "packages/battle-runtime/src/stat-block-combatant-admission.ts",
-        "packages/battle-runtime/src/stat-block-execution.ts",
-        "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/statblock-action-support.ts",
-        "packages/battle-runtime/src/battle-reducer/statblock.ts"
+        "packages/battle-runtime/src/battle-state-execution.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -2812,17 +2807,12 @@
       ],
       "profiles": ["stat-block.bonus-action-lifecycle"],
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+        "packages/shared-algebras/proofs/rule-core/stat-block-bonus-action-lifecycle.qnt"
       ],
       "reason": "Typed Bonus Action procedures use the shared turn resource and retain their procedure shape.",
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/stat-block-authored-projection.ts",
-        "packages/battle-runtime/src/stat-block-combatant-admission.ts",
-        "packages/battle-runtime/src/stat-block-execution.ts",
-        "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/statblock-action-support.ts",
-        "packages/battle-runtime/src/battle-reducer/statblock.ts"
+        "packages/battle-runtime/src/battle-state-execution.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -2832,6 +2822,10 @@
       "title": "Battle Stat Block Bonus Action lifecycle"
     },
     {
+      "bridgeOwners": [
+        "packages/battle-runtime/battle-runtime-stat-block-legendary-action-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-legendary-actions.qnt"
+      ],
       "id": "BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE",
       "kind": "profile-procedure",
       "parityWitnesses": [
@@ -2842,19 +2836,12 @@
       ],
       "profiles": ["stat-block.legendary-action-lifecycle"],
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt",
-        "packages/battle-runtime/battle-runtime-stat-block-bridge.qnt",
-        "packages/battle-runtime/battle-runtime-legendary-actions.qnt"
+        "packages/shared-algebras/proofs/rule-core/stat-block-legendary-action-lifecycle.qnt"
       ],
       "reason": "Legendary Action windows and refreshing uses are modeled independently from ordinary Actions.",
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/stat-block-authored-projection.ts",
-        "packages/battle-runtime/src/stat-block-combatant-admission.ts",
-        "packages/battle-runtime/src/stat-block-execution.ts",
-        "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/statblock-action-support.ts",
-        "packages/battle-runtime/src/battle-reducer/statblock.ts"
+        "packages/battle-runtime/src/battle-state-execution.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -2878,18 +2865,7 @@
       "reason": "Production runtime executes the 252 checked Attack Procedure rows, but #427 owns the missing identity-independent QNT semantics and parity for attack rolls, multiple damage components, and admitted typed hit riders.",
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/stat-block-authored-projection.ts",
-        "packages/battle-runtime/src/stat-block-combatant-admission.ts",
-        "packages/battle-runtime/src/stat-block-execution.ts",
-        "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/statblock-action-support.ts",
-        "packages/battle-runtime/src/statblock-attack-damage-support.ts",
-        "packages/battle-runtime/src/battle-reducer/statblock.ts",
-        "packages/battle-runtime/src/battle-reducer/statblock-attacks.ts",
-        "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
-        "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
-        "packages/battle-runtime/src/statblock-attack-hit-condition-support.ts",
-        "packages/battle-runtime/src/battle-reducer/statblock-attack-hit-condition-riders.ts"
+        "packages/battle-runtime/src/battle-state-execution.ts"
       ],
       "status": "needs-qnt-owner",
       "surfaceEvidence": [
@@ -2899,13 +2875,16 @@
       "title": "Battle Stat Block attack, damage, and typed hit-rider procedure"
     },
     {
+      "bridgeOwners": [
+        "packages/battle-runtime/battle-runtime-stat-block-multiattack-bridge.qnt"
+      ],
       "id": "BATTLE.STAT_BLOCK.MULTIATTACK",
       "kind": "profile-procedure",
       "parityWitnesses": [
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/rule-core-stat-block-controls.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-stat-block-multiattack.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-stat-block-multiattack.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -2915,19 +2894,12 @@
       ],
       "profiles": ["stat-block.multiattack"],
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+        "packages/shared-algebras/proofs/rule-core/stat-block-multiattack.qnt"
       ],
       "reason": "Multiattack dispatch follows typed procedure references and continuation state rather than names.",
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/stat-block-authored-projection.ts",
-        "packages/battle-runtime/src/stat-block-combatant-admission.ts",
-        "packages/battle-runtime/src/stat-block-execution.ts",
-        "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/statblock-action-support.ts",
-        "packages/battle-runtime/src/battle-reducer/statblock.ts",
-        "packages/battle-runtime/src/battle-reducer/statblock-attacks.ts",
-        "packages/battle-runtime/src/battle-reducer/hole-helpers.ts"
+        "packages/battle-runtime/src/battle-state-execution.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -2937,6 +2909,10 @@
       "title": "Battle Stat Block Multiattack control and dispatch"
     },
     {
+      "bridgeOwners": [
+        "packages/battle-runtime/battle-runtime-stat-block-recharge-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-turn-advancement-recharge.qnt"
+      ],
       "id": "BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE",
       "kind": "profile-procedure",
       "parityWitnesses": [
@@ -2947,19 +2923,12 @@
       ],
       "profiles": ["stat-block.resource-lifecycle"],
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt",
-        "packages/battle-runtime/battle-runtime-stat-block-bridge.qnt",
-        "packages/battle-runtime/battle-runtime-turn-advancement-recharge.qnt"
+        "packages/shared-algebras/proofs/rule-core/stat-block-resource-lifecycle.qnt"
       ],
-      "reason": "Daily, recharge, rest, and shared-resource availability is derived from typed resource declarations and references.",
+      "reason": "Daily, recharge, and rest usage are discriminated resource variants; the runtime owner projects the matching typed declaration.",
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/stat-block-authored-projection.ts",
-        "packages/battle-runtime/src/stat-block-combatant-admission.ts",
-        "packages/battle-runtime/src/stat-block-execution.ts",
-        "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/statblock-action-support.ts",
-        "packages/battle-runtime/src/battle-reducer/statblock.ts"
+        "packages/battle-runtime/src/battle-state-execution.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -9604,15 +9573,33 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
-      "obligationIds": [
-        "BATTLE.STAT_BLOCK.ACTION_LIFECYCLE",
-        "BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE",
-        "BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE",
-        "BATTLE.STAT_BLOCK.MULTIATTACK",
-        "BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE"
-      ],
-      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt",
+      "evidence": "Focused Stat Block ordinary Action resource semantics.",
+      "obligationIds": ["BATTLE.STAT_BLOCK.ACTION_LIFECYCLE"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-action-lifecycle.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused Stat Block Bonus Action resource semantics.",
+      "obligationIds": ["BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-bonus-action-lifecycle.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused Legendary Action post-turn window and use-refresh semantics.",
+      "obligationIds": ["BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-legendary-action-lifecycle.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused Multiattack Attack-action spend and pending-dispatch semantics.",
+      "obligationIds": ["BATTLE.STAT_BLOCK.MULTIATTACK"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-multiattack.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused daily, Recharge, and rest-recharge resource semantics.",
+      "obligationIds": ["BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-resource-lifecycle.qnt",
       "role": "semantic-core"
     },
     {
@@ -9945,15 +9932,63 @@
       "role": "proof-only"
     },
     {
-      "evidence": "packages/shared-algebras/proofs/rule-core/stat-block-controls-examples.qnt is assessed generator-readiness proofOnly example evidence for Stat Block attack controls.",
+      "evidence": "Focused Action lifecycle run-block evidence.",
       "obligationIds": [],
-      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-controls-examples.qnt",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-action-lifecycle-examples.qnt",
       "role": "proof-only"
     },
     {
-      "evidence": "packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt is assessed generator-readiness proofOnly inductive evidence for Stat Block attack controls.",
+      "evidence": "Focused Action lifecycle inductive evidence.",
       "obligationIds": [],
-      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-action-lifecycle-inductive.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Focused Bonus Action lifecycle run-block evidence.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-bonus-action-lifecycle-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Focused Bonus Action lifecycle inductive evidence.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-bonus-action-lifecycle-inductive.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Focused Legendary Action lifecycle run-block evidence.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-legendary-action-lifecycle-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Focused Legendary Action lifecycle inductive evidence.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-legendary-action-lifecycle-inductive.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Focused Multiattack run-block evidence.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-multiattack-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Focused Multiattack inductive evidence.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-multiattack-inductive.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Focused limited-usage resource run-block evidence.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-resource-lifecycle-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Focused limited-usage resource inductive evidence.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-resource-lifecycle-inductive.qnt",
       "role": "proof-only"
     },
     {
@@ -10199,10 +10234,10 @@
       "role": "bridge"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-legendary-actions.qnt carries executable legendary-action support used by the registered Stat Block action-control obligation.",
-      "obligationIds": ["BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE"],
+      "evidence": "Applies the focused Legendary Action lifecycle through the bounded BattleState projection.",
+      "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-legendary-actions.qnt",
-      "role": "proof-only"
+      "role": "bridge"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-movement-bridge.qnt projects rule-core movement facts into the battle runtime shape for registered movement obligations.",
@@ -10217,13 +10252,40 @@
       "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-stat-block-bridge.qnt projects rule-core Stat Block controls into the battle runtime shape for registered Stat Block obligations.",
-      "obligationIds": [
-        "BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE",
-        "BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE"
-      ],
-      "ownerPath": "packages/battle-runtime/battle-runtime-stat-block-bridge.qnt",
+      "evidence": "Projects focused Legendary Action lifecycle facts into battle-runtime state.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-stat-block-legendary-action-bridge.qnt",
       "role": "bridge"
+    },
+    {
+      "evidence": "Focused Legendary Action bridge run-block evidence.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-stat-block-legendary-action-bridge-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Projects focused Multiattack dispatch facts into battle-runtime state.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-stat-block-multiattack-bridge.qnt",
+      "role": "bridge"
+    },
+    {
+      "evidence": "Focused Multiattack bridge run-block evidence.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-stat-block-multiattack-bridge-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Projects focused Recharge resource facts into battle-runtime state.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-stat-block-recharge-bridge.qnt",
+      "role": "bridge"
+    },
+    {
+      "evidence": "Focused Recharge bridge run-block evidence.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-stat-block-recharge-bridge-examples.qnt",
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-warding-bond.qnt is Warding Bond proof support registered under the linked-effect damage-sharing obligation.",
@@ -10232,10 +10294,10 @@
       "role": "proof-only"
     },
     {
-      "evidence": "packages/shared-algebras/proofs/rule-core/action-turn-procedures.qnt carries executable action-turn procedure core support used by registered feature procedure obligations.",
+      "evidence": "Shared lower-level Action and Bonus Action spend semantics used by precise procedure-family semantic cores.",
       "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/action-turn-procedures.qnt",
-      "role": "proof-only"
+      "role": "semantic-core"
     },
     {
       "evidence": "packages/shared-algebras/proofs/rule-core/attack-action-additional-attacks.qnt carries executable Attack action additional-attack support used by registered feature procedure obligations.",
@@ -11339,10 +11401,10 @@
       "role": "proof-only"
     },
     {
-      "evidence": "Focused canonical End Turn plus Stat Block recharge-roll composition owner.",
-      "obligationIds": ["BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE"],
+      "evidence": "Projects the focused Recharge resource transition into canonical End Turn advancement.",
+      "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-turn-advancement-recharge.qnt",
-      "role": "semantic-core"
+      "role": "bridge"
     },
     {
       "evidence": "Focused proof owner for start-turn Stat Block recharge resolution.",
@@ -11838,7 +11900,7 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-legendary-actions.qnt",
-      "role": "proof-only"
+      "role": "bridge"
     },
     {
       "classification": "qnt-owner-role",
@@ -12517,14 +12579,33 @@
       "role": "semantic-core"
     },
     {
-      "category": "proof-only-example",
-      "classification": "exempt",
-      "evidence": "Run-block examples for the stat-block bridge; registered stat-block owners carry active coverage.",
-      "ownerPath": "packages/battle-runtime/battle-runtime-stat-block-bridge-examples.qnt"
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-stat-block-legendary-action-bridge-examples.qnt",
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-stat-block-bridge.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-stat-block-legendary-action-bridge.qnt",
+      "role": "bridge"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-stat-block-multiattack-bridge-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-stat-block-multiattack-bridge.qnt",
+      "role": "bridge"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-stat-block-recharge-bridge-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-stat-block-recharge-bridge.qnt",
       "role": "bridge"
     },
     {
@@ -12560,7 +12641,7 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-turn-advancement-recharge.qnt",
-      "role": "semantic-core"
+      "role": "bridge"
     },
     {
       "classification": "qnt-owner-role",
@@ -12711,7 +12792,7 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/action-turn-procedures.qnt",
-      "role": "proof-only"
+      "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
@@ -13057,22 +13138,82 @@
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-controls-examples.qnt",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-action-lifecycle-examples.qnt",
       "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-action-lifecycle-inductive.qnt",
       "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-action-lifecycle.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-bonus-action-lifecycle-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-bonus-action-lifecycle-inductive.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-bonus-action-lifecycle.qnt",
       "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-initial-condition-immunity.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-legendary-action-lifecycle-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-legendary-action-lifecycle-inductive.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-legendary-action-lifecycle.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-multiattack-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-multiattack-inductive.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-multiattack.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-resource-lifecycle-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-resource-lifecycle-inductive.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-resource-lifecycle.qnt",
       "role": "semantic-core"
     },
     {
@@ -14018,13 +14159,14 @@
         "all-block"
       ],
       "obligationId": "BATTLE.ATTACK.ORDINARY_OBJECT_PROCEDURE",
-      "proofOnly": [
-        "packages/battle-runtime/battle-runtime-ordinary-object-attack.mbt.qnt"
-      ],
+      "proofOnly": [],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-ordinary-object-attack.qnt"
       ],
-      "status": "generation-subset-clean"
+      "status": "generation-subset-clean",
+      "supportingOwners": [
+        "packages/battle-runtime/battle-runtime-ordinary-object-attack.mbt.qnt"
+      ]
     },
     {
       "blockedBy": [],
@@ -14454,9 +14596,7 @@
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
-      "proofOnly": [
-        "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
-      ],
+      "proofOnly": [],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-save-gated-facts.qnt",
         "packages/battle-runtime/battle-runtime-save-condition-target-list.qnt",
@@ -14472,7 +14612,10 @@
         "packages/battle-runtime/battle-runtime-save-gated-damage-target.qnt",
         "packages/battle-runtime/battle-runtime-save-gated-object-facts.qnt"
       ],
-      "status": "generation-subset-clean"
+      "status": "generation-subset-clean",
+      "supportingOwners": [
+        "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+      ]
     },
     {
       "blockedBy": [],
@@ -14743,13 +14886,14 @@
         "pattern-match"
       ],
       "obligationId": "BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE",
-      "proofOnly": [
-        "packages/battle-runtime/battle-runtime-gust-of-wind-tests.qnt"
-      ],
+      "proofOnly": [],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-gust-of-wind.qnt"
       ],
-      "status": "generation-subset-clean"
+      "status": "generation-subset-clean",
+      "supportingOwners": [
+        "packages/battle-runtime/battle-runtime-gust-of-wind-tests.qnt"
+      ]
     },
     {
       "blockedBy": [],
@@ -14809,14 +14953,15 @@
         "set-operators"
       ],
       "obligationId": "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE",
-      "proofOnly": [
-        "packages/battle-runtime/battle-runtime-levitate-creature-tests.qnt"
-      ],
+      "proofOnly": [],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-levitate-creature.qnt",
         "packages/battle-runtime/battle-runtime-timed-effects.qnt"
       ],
-      "status": "generation-subset-clean"
+      "status": "generation-subset-clean",
+      "supportingOwners": [
+        "packages/battle-runtime/battle-runtime-levitate-creature-tests.qnt"
+      ]
     },
     {
       "blockedBy": [],
@@ -16210,7 +16355,6 @@
       "blockedBy": [],
       "generatorSubset": [
         "import",
-        "variant",
         "record",
         "record-update",
         "pure-def",
@@ -16219,22 +16363,16 @@
         "bool",
         "if-expression",
         "let-binding",
-        "arithmetic",
         "comparison",
-        "boolean-connective",
-        "all-block",
-        "pattern-match",
-        "set",
-        "membership"
+        "boolean-connective"
       ],
       "obligationId": "BATTLE.STAT_BLOCK.ACTION_LIFECYCLE",
       "proofOnly": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt",
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls-examples.qnt",
-        "packages/battle-runtime/battle-runtime-turn-advancement-recharge-tests.qnt"
+        "packages/shared-algebras/proofs/rule-core/stat-block-action-lifecycle-inductive.qnt",
+        "packages/shared-algebras/proofs/rule-core/stat-block-action-lifecycle-examples.qnt"
       ],
       "semanticCore": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+        "packages/shared-algebras/proofs/rule-core/stat-block-action-lifecycle.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -16242,7 +16380,6 @@
       "blockedBy": [],
       "generatorSubset": [
         "import",
-        "variant",
         "record",
         "record-update",
         "pure-def",
@@ -16251,30 +16388,27 @@
         "bool",
         "if-expression",
         "let-binding",
-        "arithmetic",
         "comparison",
-        "boolean-connective",
-        "all-block",
-        "pattern-match",
-        "set",
-        "membership"
+        "boolean-connective"
       ],
       "obligationId": "BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE",
       "proofOnly": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt",
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls-examples.qnt",
-        "packages/battle-runtime/battle-runtime-turn-advancement-recharge-tests.qnt"
+        "packages/shared-algebras/proofs/rule-core/stat-block-bonus-action-lifecycle-inductive.qnt",
+        "packages/shared-algebras/proofs/rule-core/stat-block-bonus-action-lifecycle-examples.qnt"
       ],
       "semanticCore": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+        "packages/shared-algebras/proofs/rule-core/stat-block-bonus-action-lifecycle.qnt"
       ],
       "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
+      "bridgeOwners": [
+        "packages/battle-runtime/battle-runtime-stat-block-legendary-action-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-legendary-actions.qnt"
+      ],
       "generatorSubset": [
         "import",
-        "variant",
         "record",
         "record-update",
         "pure-def",
@@ -16282,28 +16416,29 @@
         "int",
         "bool",
         "if-expression",
-        "let-binding",
         "arithmetic",
         "comparison",
         "boolean-connective",
         "all-block",
-        "pattern-match",
         "set",
         "membership"
       ],
       "obligationId": "BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE",
       "proofOnly": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt",
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls-examples.qnt",
-        "packages/battle-runtime/battle-runtime-turn-advancement-recharge-tests.qnt"
+        "packages/shared-algebras/proofs/rule-core/stat-block-legendary-action-lifecycle-inductive.qnt",
+        "packages/shared-algebras/proofs/rule-core/stat-block-legendary-action-lifecycle-examples.qnt",
+        "packages/battle-runtime/battle-runtime-stat-block-legendary-action-bridge-examples.qnt"
       ],
       "semanticCore": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+        "packages/shared-algebras/proofs/rule-core/stat-block-legendary-action-lifecycle.qnt"
       ],
       "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
+      "bridgeOwners": [
+        "packages/battle-runtime/battle-runtime-stat-block-multiattack-bridge.qnt"
+      ],
       "generatorSubset": [
         "import",
         "variant",
@@ -16325,17 +16460,21 @@
       ],
       "obligationId": "BATTLE.STAT_BLOCK.MULTIATTACK",
       "proofOnly": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt",
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls-examples.qnt",
-        "packages/battle-runtime/battle-runtime-turn-advancement-recharge-tests.qnt"
+        "packages/shared-algebras/proofs/rule-core/stat-block-multiattack-inductive.qnt",
+        "packages/shared-algebras/proofs/rule-core/stat-block-multiattack-examples.qnt",
+        "packages/battle-runtime/battle-runtime-stat-block-multiattack-bridge-examples.qnt"
       ],
       "semanticCore": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+        "packages/shared-algebras/proofs/rule-core/stat-block-multiattack.qnt"
       ],
       "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
+      "bridgeOwners": [
+        "packages/battle-runtime/battle-runtime-stat-block-recharge-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-turn-advancement-recharge.qnt"
+      ],
       "generatorSubset": [
         "import",
         "variant",
@@ -16357,13 +16496,13 @@
       ],
       "obligationId": "BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE",
       "proofOnly": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt",
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/stat-block-resource-lifecycle-inductive.qnt",
+        "packages/shared-algebras/proofs/rule-core/stat-block-resource-lifecycle-examples.qnt",
+        "packages/battle-runtime/battle-runtime-stat-block-recharge-bridge-examples.qnt",
         "packages/battle-runtime/battle-runtime-turn-advancement-recharge-tests.qnt"
       ],
       "semanticCore": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt",
-        "packages/battle-runtime/battle-runtime-turn-advancement-recharge.qnt"
+        "packages/shared-algebras/proofs/rule-core/stat-block-resource-lifecycle.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -16710,13 +16849,14 @@
         "membership"
       ],
       "obligationId": "CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY",
-      "proofOnly": [
-        "packages/character-creation-runtime/character-creation-runtime.mbt.qnt"
-      ],
+      "proofOnly": [],
       "semanticCore": [
         "packages/character-creation-runtime/character-creation-runtime-slice.qnt"
       ],
-      "status": "generation-subset-clean"
+      "status": "generation-subset-clean",
+      "supportingOwners": [
+        "packages/character-creation-runtime/character-creation-runtime.mbt.qnt"
+      ]
     },
     {
       "blockedBy": [],
@@ -16741,14 +16881,15 @@
         "membership"
       ],
       "obligationId": "CREATION.CHOICE_DISCOVERY_CARDINALITY",
-      "proofOnly": [
-        "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
-        "packages/character-creation-runtime/character-creation-runtime-slice-tests.qnt"
-      ],
+      "proofOnly": [],
       "semanticCore": [
         "packages/character-creation-runtime/character-creation-runtime-slice.qnt"
       ],
-      "status": "generation-subset-clean"
+      "status": "generation-subset-clean",
+      "supportingOwners": [
+        "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+        "packages/character-creation-runtime/character-creation-runtime-slice-tests.qnt"
+      ]
     },
     {
       "blockedBy": [],
@@ -16796,13 +16937,14 @@
         "all-block"
       ],
       "obligationId": "SHEET.HIT_POINTS.MAXIMUM_DERIVATION",
-      "proofOnly": [
-        "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt"
-      ],
+      "proofOnly": [],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/hit-point-maximum.qnt"
       ],
-      "status": "generation-subset-clean"
+      "status": "generation-subset-clean",
+      "supportingOwners": [
+        "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt"
+      ]
     },
     {
       "blockedBy": [],
@@ -16824,13 +16966,14 @@
         "pattern-match"
       ],
       "obligationId": "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
-      "proofOnly": [
-        "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt"
-      ],
+      "proofOnly": [],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/armor-class-base.qnt"
       ],
-      "status": "generation-subset-clean"
+      "status": "generation-subset-clean",
+      "supportingOwners": [
+        "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt"
+      ]
     },
     {
       "blockedBy": [],
@@ -16844,13 +16987,14 @@
         "pattern-match"
       ],
       "obligationId": "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
-      "proofOnly": [
-        "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt"
-      ],
+      "proofOnly": [],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/ability-check-proficiency-bonus.qnt"
       ],
-      "status": "generation-subset-clean"
+      "status": "generation-subset-clean",
+      "supportingOwners": [
+        "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt"
+      ]
     },
     {
       "blockedBy": [],
@@ -16872,13 +17016,15 @@
       ],
       "obligationId": "SHEET.SPELL_REST_BENEFIT.APPLICATION",
       "proofOnly": [
-        "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application-examples.qnt"
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application.qnt"
       ],
-      "status": "generation-subset-clean"
+      "status": "generation-subset-clean",
+      "supportingOwners": [
+        "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt"
+      ]
     },
     {
       "blockedBy": [],
@@ -16897,9 +17043,7 @@
         "all-block"
       ],
       "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
-      "proofOnly": [
-        "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt"
-      ],
+      "proofOnly": [],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/feature-resource-pool.qnt",
         "packages/shared-algebras/proofs/rule-core/feature-resource-hit-point-healing.qnt",
@@ -16907,7 +17051,10 @@
         "packages/shared-algebras/proofs/rule-core/font-of-magic-resource.qnt",
         "packages/shared-algebras/proofs/rule-core/uncanny-metabolism-resource.qnt"
       ],
-      "status": "generation-subset-clean"
+      "status": "generation-subset-clean",
+      "supportingOwners": [
+        "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt"
+      ]
     },
     {
       "blockedBy": [],
@@ -16933,13 +17080,14 @@
         "size"
       ],
       "obligationId": "SHEET.WEAPON_MASTERY.RESELECTION",
-      "proofOnly": [
-        "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt"
-      ],
+      "proofOnly": [],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
       ],
-      "status": "generation-subset-clean"
+      "status": "generation-subset-clean",
+      "supportingOwners": [
+        "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt"
+      ]
     },
     {
       "blockedBy": [],
@@ -17018,13 +17166,14 @@
         "pattern-match"
       ],
       "obligationId": "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
-      "proofOnly": [
-        "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt"
-      ],
+      "proofOnly": [],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/spellbook-ritual-access.qnt"
       ],
-      "status": "generation-subset-clean"
+      "status": "generation-subset-clean",
+      "supportingOwners": [
+        "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt"
+      ]
     },
     {
       "blockedBy": [],
@@ -17043,13 +17192,14 @@
         "all-block"
       ],
       "obligationId": "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
-      "proofOnly": [
-        "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt"
-      ],
+      "proofOnly": [],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/spell-slot-transitions.qnt"
       ],
-      "status": "generation-subset-clean"
+      "status": "generation-subset-clean",
+      "supportingOwners": [
+        "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt"
+      ]
     },
     {
       "blockedBy": [],
@@ -17066,13 +17216,14 @@
         "pattern-match"
       ],
       "obligationId": "SHEET.SPELL_SLOTS.TABLE_DERIVATION",
-      "proofOnly": [
-        "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt"
-      ],
+      "proofOnly": [],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/spell-slot-table.qnt"
       ],
-      "status": "generation-subset-clean"
+      "status": "generation-subset-clean",
+      "supportingOwners": [
+        "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt"
+      ]
     },
     {
       "blockedBy": [],
@@ -17312,13 +17463,14 @@
         "membership"
       ],
       "obligationId": "BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN",
-      "proofOnly": [
-        "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt"
-      ],
+      "proofOnly": [],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-concentration.qnt"
       ],
-      "status": "generation-subset-clean"
+      "status": "generation-subset-clean",
+      "supportingOwners": [
+        "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt"
+      ]
     },
     {
       "blockedBy": [],
@@ -17344,15 +17496,16 @@
         "membership"
       ],
       "obligationId": "BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING",
-      "proofOnly": [
-        "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt"
-      ],
+      "proofOnly": [],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-turn-advancement.qnt",
         "packages/battle-runtime/battle-runtime-weapon-hit-turn-effects.qnt",
         "packages/battle-runtime/battle-runtime-fighter-ongoing-feature-lifecycle.qnt"
       ],
-      "status": "generation-subset-clean"
+      "status": "generation-subset-clean",
+      "supportingOwners": [
+        "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt"
+      ]
     },
     {
       "blockedBy": [],
@@ -17373,15 +17526,16 @@
         "all-block"
       ],
       "obligationId": "BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION",
-      "proofOnly": [
-        "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt"
-      ],
+      "proofOnly": [],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-hit-points.qnt",
         "packages/battle-runtime/battle-runtime-concentration.qnt",
         "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt"
       ],
-      "status": "generation-subset-clean"
+      "status": "generation-subset-clean",
+      "supportingOwners": [
+        "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt"
+      ]
     },
     {
       "blockedBy": [],

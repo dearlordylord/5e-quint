@@ -6,7 +6,7 @@
 module battleRuntimeWeaponAttacks {
   import attackActionAdditionalAttacks.* from "../shared-algebras/proofs/rule-core/attack-action-additional-attacks"
   import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
-  import battleRuntimeStatBlockBridge.* from "./battle-runtime-stat-block-bridge"
+  import battleRuntimeStatBlockMultiattackBridge.* from "./battle-runtime-stat-block-multiattack-bridge"
   import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeSpellcastingFacts.* from "./battle-runtime-spellcasting-facts"

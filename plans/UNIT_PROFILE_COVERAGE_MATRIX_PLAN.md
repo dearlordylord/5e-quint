@@ -40,7 +40,7 @@ Durable decisions that apply across all phases:
 - **Profile model**: QNT proves structural mechanics profiles, not individual
   authored Units. Unit coverage proves that every authored Unit maps to one or
   more supported profiles or to an explicit unsupported disposition.
-- **Procedure parity vs Unit identity**: QMBT2-QMBT6 are Procedure Parity MBT:
+- **Procedure parity vs Unit identity**: focused QMBT lanes are Procedure Parity MBT:
   focused behavior-shape parity against production reducers. Selected identity
   replay is a later, selective identity-aware lane driven by this matrix.
 - **Selective identity coverage**: deterministic projection/admission coverage
@@ -311,7 +311,7 @@ artifacts; generated inventory comes from the authored collections.
 
 ### What To Build
 
-Backfill profile claims for existing QCORE7-QCORE11 proof families. Map current
+Backfill profile claims for existing reusable proof families. Map current
 SRD Units that instantiate those profiles. Keep the matrix honest: if a Unit
 contains mechanics beyond a proved profile, split its claim or mark the
 remainder as unsupported/widening.
@@ -342,12 +342,12 @@ remainder as unsupported/widening.
 
 ### What To Build
 
-Backfill QMBT1-QMBT6 profile parity claims. Add planned parity rows for ready
+Backfill focused QMBT profile parity claims. Add planned parity rows for ready
 tasks and completed parity rows for done tasks. Keep MBT scarce: profile MBT is
 representative semantics coverage, while catalog tests cover per-Unit
 classification.
 
-After QMBT2-QMBT6, use the matrix as the input to a separate Specific Unit
+After the focused QMBT lanes, use the matrix as the input to a separate Specific Unit
 Parity MBT lane only where identity matters. That lane should bind selected
 Unit ids into production runtime fixtures, not enumerate all Units in QNT.
 

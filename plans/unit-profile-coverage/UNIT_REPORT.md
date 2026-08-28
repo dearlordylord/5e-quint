@@ -2290,7 +2290,11 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | GH-424 | missing-runtime-owner | `stat-block.spell-invocation.restricted` |
 | GH-425 | missing-runtime-owner | `stat-block.attack-additional-effect` |
 | GH-426 | missing-runtime-owner | `stat-block.standard-action-option` |
-| SB-CONTROLS-INDUCTIVE | qnt-proof | `stat-block.action-lifecycle`, `stat-block.bonus-action-lifecycle`, `stat-block.legendary-action-lifecycle`, `stat-block.multiattack`, `stat-block.resource-lifecycle` |
+| SB-ACTION-LIFECYCLE-INDUCTIVE | qnt-proof | `stat-block.action-lifecycle` |
+| SB-BONUS-ACTION-LIFECYCLE-INDUCTIVE | qnt-proof | `stat-block.bonus-action-lifecycle` |
+| SB-LEGENDARY-ACTION-LIFECYCLE-INDUCTIVE | qnt-proof | `stat-block.legendary-action-lifecycle` |
+| SB-MULTIATTACK-INDUCTIVE | qnt-proof | `stat-block.multiattack` |
+| SB-RESOURCE-LIFECYCLE-INDUCTIVE | qnt-proof | `stat-block.resource-lifecycle` |
 | SB-ACTIONS-RUNTIME-TEST | runtime-evidence | `stat-block.action-lifecycle`, `stat-block.bonus-action-lifecycle`, `stat-block.legendary-action-lifecycle`, `stat-block.attack-procedure`, `stat-block.multiattack`, `stat-block.resource-lifecycle` |
 | SB-MULTIATTACK-MBT | runtime-parity | `stat-block.multiattack` |
 | GH-427 | missing-qnt-owner | `stat-block.attack-procedure` |

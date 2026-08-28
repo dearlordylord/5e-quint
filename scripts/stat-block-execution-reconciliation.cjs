@@ -35,6 +35,18 @@ const profileTaskClaimsPath = path.join(
   root,
   "plans/unit-profile-coverage/task-claims.jsonl",
 );
+const evidenceClaimsPath = path.join(
+  root,
+  "plans/raw-coverage/evidence-claims.jsonl",
+);
+const qntOwnerRolesPath = path.join(
+  root,
+  "plans/rules-kernel-coverage/qnt-owner-roles.jsonl",
+);
+const generatorReadinessPath = path.join(
+  root,
+  "plans/rules-kernel-coverage/generator-readiness.jsonl",
+);
 
 const write = process.argv.includes("--write");
 const selfTest = process.argv.includes("--self-test");
@@ -140,6 +152,14 @@ const semanticFamilyDefinitions = [
     obligationId: "BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE",
   },
 ];
+
+const formallyCoveredFamilyIds = new Set([
+  "stat-block.action-lifecycle",
+  "stat-block.bonus-action-lifecycle",
+  "stat-block.legendary-action-lifecycle",
+  "stat-block.multiattack",
+  "stat-block.resource-lifecycle",
+]);
 
 const missingOwnerDefinitions = [
   {
@@ -447,6 +467,9 @@ function readCoverageJoinInputs() {
     obligations: readJsonl(obligationsPath),
     rawTrackerClaims: readJsonl(rawTrackerClaimsPath),
     profileTaskClaims: readJsonl(profileTaskClaimsPath),
+    evidenceClaims: readJsonl(evidenceClaimsPath),
+    qntOwnerRoles: readJsonl(qntOwnerRolesPath),
+    generatorReadiness: readJsonl(generatorReadinessPath),
   };
 }
 
@@ -455,6 +478,85 @@ function sameMembers(actual, expected) {
     actual.length === expected.length &&
     expected.every((member) => actual.includes(member))
   );
+}
+
+function verificationOwnerKey(owner) {
+  return `${owner.kind}:${owner.ownerPath}`;
+}
+
+function sameVerificationOwners(actual, expected) {
+  return sameMembers(
+    actual.map(verificationOwnerKey),
+    expected.map(verificationOwnerKey),
+  );
+}
+
+function evidenceMetricForVerificationKind(kind) {
+  if (kind === "qnt-proof") return "qnt-proof";
+  if (kind === "focused-mbt") return "runtime-parity";
+  if (kind === "runtime-test") return "runtime-test";
+  fail(`Unknown verification owner kind ${kind}.`);
+}
+
+function validateRetiredExecutionIdentities(texts) {
+  for (const [ownerPath, text] of Object.entries(texts)) {
+    if (/\bQMBT6\b/.test(text)) {
+      fail(`Retired omnibus identity QMBT6 survives in ${ownerPath}.`);
+    }
+  }
+}
+
+function currentExecutionIdentityTexts() {
+  const ownerPaths = [
+    "packages/battle-runtime/rule-core-stat-block-multiattack.mbt.qnt",
+    "packages/battle-runtime/src/rule-core-stat-block-multiattack.mbt.test.ts",
+  ];
+  return Object.fromEntries(
+    ownerPaths.map((ownerPath) => [
+      ownerPath,
+      fs.readFileSync(path.join(root, ownerPath), "utf8"),
+    ]),
+  );
+}
+
+function assertFamilyOwnerSeparation(reconciliation, profiles) {
+  const coveredFamilies = reconciliation.families
+    .filter((family) => formallyCoveredFamilyIds.has(family.id))
+    .map((family) => ({
+      family,
+      profile: profiles.get(family.profileId),
+    }));
+  for (const { family, profile } of coveredFamilies) {
+    if (profile === undefined) {
+      fail(`${family.id} references missing profile ${family.profileId}.`);
+    }
+  }
+  for (const [index, left] of coveredFamilies.entries()) {
+    for (const right of coveredFamilies.slice(index + 1)) {
+      const sharedQntOwners = left.profile.qntOwners.filter((ownerPath) =>
+        right.profile.qntOwners.includes(ownerPath),
+      );
+      if (sharedQntOwners.length > 0) {
+        fail(
+          `${left.family.id} and ${right.family.id} share forbidden semantic owner ${sharedQntOwners[0]}.`,
+        );
+      }
+      const leftProofOwners = left.profile.verificationOwners
+        .filter((owner) => owner.kind === "qnt-proof")
+        .map((owner) => owner.ownerPath);
+      const rightProofOwners = right.profile.verificationOwners
+        .filter((owner) => owner.kind === "qnt-proof")
+        .map((owner) => owner.ownerPath);
+      const sharedProofOwners = leftProofOwners.filter((ownerPath) =>
+        rightProofOwners.includes(ownerPath),
+      );
+      if (sharedProofOwners.length > 0) {
+        fail(
+          `${left.family.id} and ${right.family.id} share forbidden qnt-proof owner ${sharedProofOwners[0]}.`,
+        );
+      }
+    }
+  }
 }
 
 function validateCoverageJoin(
@@ -476,6 +578,18 @@ function validateCoverageJoin(
   const profileTaskClaims = new Map(
     inputs.profileTaskClaims.map((claim) => [claim.taskId, claim]),
   );
+  const evidenceClaims = new Map(
+    inputs.evidenceClaims.map((claim) => [claim.evidenceId, claim]),
+  );
+  const qntOwnerRoles = new Map(
+    inputs.qntOwnerRoles.map((owner) => [owner.ownerPath, owner.role]),
+  );
+  const generatorReadiness = new Map(
+    inputs.generatorReadiness.map((readiness) => [
+      readiness.obligationId,
+      readiness,
+    ]),
+  );
   if (requirements.has("RAW-QCORE11-STAT-BLOCK-CONTROLS-001")) {
     fail("Retired catch-all RAW-QCORE11-STAT-BLOCK-CONTROLS-001 still exists.");
   }
@@ -487,6 +601,7 @@ function validateCoverageJoin(
       "Retired catch-all obligation BATTLE.STAT_BLOCK.ATTACK_CONTROL still exists.",
     );
   }
+  assertFamilyOwnerSeparation(reconciliation, profiles);
   for (const family of reconciliation.families) {
     for (const requirementId of family.rawRequirementIds ?? []) {
       if (!requirements.has(requirementId)) {
@@ -509,6 +624,46 @@ function validateCoverageJoin(
     const familyRequirements = (family.rawRequirementIds ?? []).map((id) =>
       requirements.get(id),
     );
+    const canonicalRequirement = familyRequirements[0];
+    if (canonicalRequirement !== undefined) {
+      const ownerMismatch = familyRequirements.some(
+        (requirement) =>
+          !sameMembers(requirement.qntOwners, canonicalRequirement.qntOwners) ||
+          !sameMembers(
+            requirement.runtimeOwners,
+            canonicalRequirement.runtimeOwners,
+          ) ||
+          !sameVerificationOwners(
+            requirement.verificationOwners,
+            canonicalRequirement.verificationOwners,
+          ),
+      );
+      if (
+        ownerMismatch ||
+        !sameMembers(profile.qntOwners, canonicalRequirement.qntOwners) ||
+        !sameMembers(obligation.qntOwners, canonicalRequirement.qntOwners) ||
+        !sameMembers(
+          profile.runtimeOwners,
+          canonicalRequirement.runtimeOwners,
+        ) ||
+        !sameMembers(
+          obligation.runtimeOwners,
+          canonicalRequirement.runtimeOwners,
+        ) ||
+        !sameVerificationOwners(
+          profile.verificationOwners,
+          canonicalRequirement.verificationOwners,
+        ) ||
+        !sameVerificationOwners(
+          obligation.parityWitnesses,
+          canonicalRequirement.verificationOwners.filter(
+            (owner) => owner.kind !== "qnt-proof",
+          ),
+        )
+      ) {
+        fail(`${family.id} cross-layer owner join is not exact.`);
+      }
+    }
     if (family.state === "executable") {
       if (
         profile.runtimeOwners.length === 0 ||
@@ -564,6 +719,56 @@ function validateCoverageJoin(
         )
       ) {
         fail(`${family.id} covered formal ownership is incomplete.`);
+      }
+      if (family.formalEvidenceState !== "needs-qnt-owner") {
+        const readiness = generatorReadiness.get(family.obligationId);
+        if (
+          readiness === undefined ||
+          !sameMembers(readiness.semanticCore, obligation.qntOwners) ||
+          !sameMembers(
+            readiness.bridgeOwners ?? [],
+            obligation.bridgeOwners ?? [],
+          ) ||
+          obligation.qntOwners.some(
+            (ownerPath) => qntOwnerRoles.get(ownerPath) !== "semantic-core",
+          ) ||
+          (obligation.bridgeOwners ?? []).some(
+            (ownerPath) => qntOwnerRoles.get(ownerPath) !== "bridge",
+          )
+        ) {
+          fail(`${family.id} semantic/bridge owner partition is not exact.`);
+        }
+        const proofOwners = profile.verificationOwners.filter(
+          (owner) => owner.kind === "qnt-proof",
+        );
+        if (
+          proofOwners.some(
+            (owner) =>
+              qntOwnerRoles.get(owner.ownerPath) !== "proof-only" ||
+              !readiness.proofOnly.includes(owner.ownerPath),
+          )
+        ) {
+          fail(`${family.id} qnt-proof owner partition is not exact.`);
+        }
+      }
+      const evidenceForFamily = profile.verificationOwners.map((owner) => {
+        const metric = evidenceMetricForVerificationKind(owner.kind);
+        return [...evidenceClaims.values()].find(
+          (claim) =>
+            claim.coverageMetric === metric &&
+            claim.ownerPath === owner.ownerPath &&
+            family.rawRequirementIds.every((requirementId) =>
+              claim.requirementIds.includes(requirementId),
+            ),
+        );
+      });
+      if (
+        evidenceForFamily.some((claim) => claim === undefined) ||
+        evidenceForFamily.some(
+          (claim) => !profile.taskRefs.includes(claim.evidenceId),
+        )
+      ) {
+        fail(`${family.id} verification evidence identity join is not exact.`);
       }
     }
     if (
@@ -721,7 +926,17 @@ async function runSelfTest() {
   const realPressure = readJson(pressurePath);
   const realReconciliation = buildReconciliation(realPressure);
   const realCoverage = readCoverageJoinInputs();
+  validateRetiredExecutionIdentities(currentExecutionIdentityTexts());
   validateCoverageJoin(realReconciliation, realCoverage);
+
+  assertThrowsWith(
+    "retired execution identity",
+    () =>
+      validateRetiredExecutionIdentities({
+        "synthetic.qnt": "// retired QMBT6 catch-all",
+      }),
+    "Retired omnibus identity QMBT6 survives",
+  );
 
   const catchallCoverage = structuredClone(realCoverage);
   catchallCoverage.requirements.push({
@@ -741,6 +956,112 @@ async function runSelfTest() {
     "contradictory covered profile",
     () => validateCoverageJoin(realReconciliation, contradictoryCoverage),
     "stat-block.action-lifecycle covered formal ownership is incomplete",
+  );
+
+  const missingCoveredProfileCoverage = structuredClone(realCoverage);
+  missingCoveredProfileCoverage.profiles =
+    missingCoveredProfileCoverage.profiles.filter(
+      ({ id }) => id !== "stat-block.action-lifecycle",
+    );
+  assertThrowsWith(
+    "missing covered family profile",
+    () =>
+      validateCoverageJoin(realReconciliation, missingCoveredProfileCoverage),
+    "stat-block.action-lifecycle references missing profile stat-block.action-lifecycle",
+  );
+
+  const sharedSemanticOwnerCoverage = structuredClone(realCoverage);
+  sharedSemanticOwnerCoverage.profiles.find(
+    ({ id }) => id === "stat-block.bonus-action-lifecycle",
+  ).qntOwners = structuredClone(
+    sharedSemanticOwnerCoverage.profiles.find(
+      ({ id }) => id === "stat-block.action-lifecycle",
+    ).qntOwners,
+  );
+  assertThrowsWith(
+    "shared family semantic owner",
+    () => validateCoverageJoin(realReconciliation, sharedSemanticOwnerCoverage),
+    "share forbidden semantic owner",
+  );
+
+  const sharedProofOwnerCoverage = structuredClone(realCoverage);
+  const actionProofOwner = sharedProofOwnerCoverage.profiles
+    .find(({ id }) => id === "stat-block.action-lifecycle")
+    .verificationOwners.find(({ kind }) => kind === "qnt-proof");
+  const bonusProfile = sharedProofOwnerCoverage.profiles.find(
+    ({ id }) => id === "stat-block.bonus-action-lifecycle",
+  );
+  bonusProfile.verificationOwners = bonusProfile.verificationOwners.map(
+    (owner) => (owner.kind === "qnt-proof" ? actionProofOwner : owner),
+  );
+  assertThrowsWith(
+    "shared family qnt-proof owner",
+    () => validateCoverageJoin(realReconciliation, sharedProofOwnerCoverage),
+    "share forbidden qnt-proof owner",
+  );
+
+  const mismatchedSemanticOwnerCoverage = structuredClone(realCoverage);
+  mismatchedSemanticOwnerCoverage.profiles.find(
+    ({ id }) => id === "stat-block.action-lifecycle",
+  ).qntOwners = [
+    "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt",
+  ];
+  assertThrowsWith(
+    "wrong but nonempty semantic owner",
+    () =>
+      validateCoverageJoin(realReconciliation, mismatchedSemanticOwnerCoverage),
+    "stat-block.action-lifecycle cross-layer owner join is not exact",
+  );
+
+  const mismatchedRuntimeOwnerCoverage = structuredClone(realCoverage);
+  mismatchedRuntimeOwnerCoverage.profiles.find(
+    ({ id }) => id === "stat-block.action-lifecycle",
+  ).runtimeOwners = ["packages/battle-runtime/src/stat-block-execution.ts"];
+  assertThrowsWith(
+    "wrong but nonempty runtime owner",
+    () =>
+      validateCoverageJoin(realReconciliation, mismatchedRuntimeOwnerCoverage),
+    "stat-block.action-lifecycle cross-layer owner join is not exact",
+  );
+
+  const mismatchedVerificationOwnerCoverage = structuredClone(realCoverage);
+  mismatchedVerificationOwnerCoverage.profiles.find(
+    ({ id }) => id === "stat-block.action-lifecycle",
+  ).verificationOwners[0].ownerPath =
+    "packages/shared-algebras/proofs/rule-core/attack-damage-composition-inductive.qnt";
+  assertThrowsWith(
+    "wrong but nonempty verification owner",
+    () =>
+      validateCoverageJoin(
+        realReconciliation,
+        mismatchedVerificationOwnerCoverage,
+      ),
+    "stat-block.action-lifecycle cross-layer owner join is not exact",
+  );
+
+  const mismatchedEvidenceOwnerCoverage = structuredClone(realCoverage);
+  mismatchedEvidenceOwnerCoverage.evidenceClaims.find(
+    ({ evidenceId }) => evidenceId === "SB-ACTION-LIFECYCLE-INDUCTIVE",
+  ).ownerPath =
+    "packages/shared-algebras/proofs/rule-core/attack-damage-composition-inductive.qnt";
+  assertThrowsWith(
+    "wrong but nonempty evidence owner",
+    () =>
+      validateCoverageJoin(realReconciliation, mismatchedEvidenceOwnerCoverage),
+    "stat-block.action-lifecycle verification evidence identity join is not exact",
+  );
+
+  const mismatchedBridgeOwnerCoverage = structuredClone(realCoverage);
+  mismatchedBridgeOwnerCoverage.obligations.find(
+    ({ id }) => id === "BATTLE.STAT_BLOCK.MULTIATTACK",
+  ).bridgeOwners = [
+    "packages/battle-runtime/battle-runtime-stat-block-recharge-bridge.qnt",
+  ];
+  assertThrowsWith(
+    "wrong but nonempty bridge owner",
+    () =>
+      validateCoverageJoin(realReconciliation, mismatchedBridgeOwnerCoverage),
+    "stat-block.multiattack semantic/bridge owner partition is not exact",
   );
 
   const brokenRuntimeTrackerCoverage = structuredClone(realCoverage);
@@ -817,6 +1138,7 @@ async function main() {
     return;
   }
   const reconciliation = buildReconciliation(readJson(pressurePath));
+  validateRetiredExecutionIdentities(currentExecutionIdentityTexts());
   validateCoverageJoin(reconciliation);
   const inventory = await formatArtifact(
     `${JSON.stringify(reconciliation, null, 2)}\n`,

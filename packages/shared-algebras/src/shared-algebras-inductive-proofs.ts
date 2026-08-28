@@ -26,7 +26,11 @@ const ruleCoreInductiveProofModules = [
   "proofs/rule-core/movement-spatial-grapple-inductive.qnt",
   "proofs/rule-core/reactions-continuations-concentration-inductive.qnt",
   "proofs/rule-core/spell-procedure-profiles-inductive.qnt",
-  "proofs/rule-core/stat-block-controls-inductive.qnt",
+  "proofs/rule-core/stat-block-action-lifecycle-inductive.qnt",
+  "proofs/rule-core/stat-block-bonus-action-lifecycle-inductive.qnt",
+  "proofs/rule-core/stat-block-legendary-action-lifecycle-inductive.qnt",
+  "proofs/rule-core/stat-block-multiattack-inductive.qnt",
+  "proofs/rule-core/stat-block-resource-lifecycle-inductive.qnt",
   "proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt",
   "proofs/rule-core/zero-hit-point-lifecycle-inductive.qnt",
 ] as const;

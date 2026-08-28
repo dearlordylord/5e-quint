@@ -15,7 +15,7 @@ module ruleCoreComponentRoute {
     | RuleCoreReactionContinuationConcentrationOwner
     | RuleCoreShoveOutcomeOwner
     | RuleCoreSpellProcedureProfileOwner
-    | RuleCoreStatBlockControlOwner
+    | RuleCoreStatBlockMultiattackOwner
 
   type RuleCoreComponentRouteEvent =
     | RuleCoreComponentParseInput({ owner: RuleCoreComponentOwner })

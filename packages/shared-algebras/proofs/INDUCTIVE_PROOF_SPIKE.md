@@ -34,7 +34,11 @@ The active inductive modules are classified as:
   - `rule-core/movement-spatial-grapple-inductive.qnt`;
   - `rule-core/reactions-continuations-concentration-inductive.qnt`;
   - `rule-core/spell-procedure-profiles-inductive.qnt`;
-  - `rule-core/stat-block-controls-inductive.qnt`;
+  - `rule-core/stat-block-action-lifecycle-inductive.qnt`;
+  - `rule-core/stat-block-bonus-action-lifecycle-inductive.qnt`;
+  - `rule-core/stat-block-legendary-action-lifecycle-inductive.qnt`;
+  - `rule-core/stat-block-multiattack-inductive.qnt`;
+  - `rule-core/stat-block-resource-lifecycle-inductive.qnt`;
   - `rule-core/unit-feature-procedure-profiles-inductive.qnt`;
   - `rule-core/zero-hit-point-lifecycle-inductive.qnt`.
 

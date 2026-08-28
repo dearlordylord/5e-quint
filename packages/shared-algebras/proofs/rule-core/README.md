@@ -215,7 +215,7 @@ Out of scope for QCORE6:
 - Stand from Prone and Movement cost accounting, deferred to QCORE7;
 - reaction windows, continuations, and Concentration, deferred to QCORE8;
 - spell action profiles, deferred to QCORE10;
-- stat-block Multiattack dispatches, deferred to QCORE11.
+- Stat Block Multiattack dispatches, owned by `stat-block-multiattack.qnt`.
 
 `action-turn-procedures-inductive.qnt` is the owned proof machine. Its invariant
 links Dash bonus bounds to remaining action/bonus-action resources, keeping the
@@ -287,8 +287,8 @@ Out of scope for QCORE8:
 
 - Readied Spell Response effect release, owned by QCORE10's spell profile
   module;
-- all possible reaction features, deferred to QCORE9/QCORE11 procedure
-  profiles;
+- all possible reaction features, deferred to QCORE9 profiles and the separate
+  Stat Block Reaction capability gap;
 - battle-wide queue/stack policy beyond the QCORE8 reaction-window protocol;
 - pathfinding, line of sight, reach derivation, or authored catalog
   enumeration.
@@ -369,7 +369,7 @@ Out of scope for QCORE9:
 
 - Unit id or authored Surface feature admission breadth;
 - spell procedure profiles and Readied Spell Response, deferred to QCORE10;
-- stat-block controls, deferred to QCORE11;
+- Stat Block family procedures, owned by their focused family modules;
 - full ability-check procedure modeling beyond the Cutting Words roll-reduction
   fact;
 - catalog-level class/subclass progression parsers.
@@ -537,42 +537,30 @@ and Readied Spell Response hold/release while tracking only scalar outputs plus
 ordinary and Mage Armor Spell Effect fixtures and one readied spell held-effect
 fixture.
 
-## QCORE11: Stat-Block Controls
+## Stat Block procedure families
 
-`stat-block-controls.qnt` models projection-shaped Stat Block control facts
-after authored `StatBlockRecord` projection. The module uses fixture attack
-names and bounded resources rather than importing Surface records, monster ids,
-or catalog entries.
+Stat Block execution is modeled by five independent, projection-shaped rule
+cores after authored `StatBlockRecord` admission:
 
-Scope:
+- `stat-block-action-lifecycle.qnt` spends the ordinary Action resource;
+- `stat-block-bonus-action-lifecycle.qnt` spends the Bonus Action resource;
+- `stat-block-multiattack.qnt` spends one Attack action, retains only the listed
+  pending dispatches, permits Movement and End Turn interleaving, and closes
+  pending dispatches at End Turn;
+- `stat-block-legendary-action-lifecycle.qnt` owns the post-turn window,
+  limited-use spend, and start-turn refresh;
+- `stat-block-resource-lifecycle.qnt` owns X/Day, Recharge, and rest-recharge
+  resources, including keyed d6 Recharge rolls.
 
-- Stat Block Actions-section attack options spend the Attack action;
-- Multiattack is a named dispatch procedure inside the Attack action: the first
-  listed attack spends the Attack action, remaining named dispatch attacks stay
-  pending, Movement and End Turn may interleave, and End Turn closes unspent
-  dispatches;
-- admitted Stat Block Bonus Action options spend the shared Bonus Action
-  resource;
-- Stat Block Reaction options use QCORE8's shared offered trigger window and
-  spend Reaction quota only when taken;
-- Legendary Action windows open after another creature's turn, spend one
-  Legendary Action use, close after one action, refresh at the monster's start
-  turn, and leave per-action-name cooldowns to the caller;
-- X/Day, Recharge, Recharge after Short or Long Rest, and start-turn keyed d6
-  Recharge rolls mutate only executable resource state.
+Each rule core has its own `-inductive.qnt` proof machine and `-examples.qnt`
+run-block evidence. Shared action-turn helpers remain lower-level rule facts;
+there is no aggregate Stat Block procedure state or proof owner. Stat Block
+Reaction execution is not modeled by these covered families and remains the
+separate missing-owner capability tracked by GitHub #423. Attack-roll, damage,
+and hit-rider semantics remain the separate formal gap tracked by GitHub #427.
 
-Out of scope for QCORE11:
-
-- authored Stat Block catalog breadth or parser admission;
-- monster-specific tactics or action priority guidance;
-- per-Legendary-Action identity cooldown tracking, left to the caller;
-- broad battle reducer replay beyond the reusable control procedure facts.
-
-`stat-block-controls-inductive.qnt` is the owned proof machine. It samples
-bounded action/Bonus Action/Reaction resources, two fixture named attacks,
-daily use, Recharge, rest recharge, start-turn recharge rolls, Legendary Action
-windows, and Multiattack dispatch closure while keeping projection state
-Surface-free.
+Authored catalog breadth, monster tactics, per-Legendary-Action identity
+cooldowns, and broad reducer replay remain outside these focused rule cores.
 
 ## Focused Runtime MBT Contract
 

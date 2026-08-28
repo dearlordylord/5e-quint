@@ -71,7 +71,7 @@
     "test:mbt:rule-core-features": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/rule-core-features.mbt.test.ts",
     "test:mbt:rule-core-movement": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/rule-core-movement.mbt.test.ts",
     "test:mbt:rule-core-reactions": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/rule-core-reactions.mbt.test.ts",
-    "test:mbt:rule-core-stat-block-controls": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/rule-core-stat-block-controls.mbt.test.ts",
+    "test:mbt:rule-core-stat-block-multiattack": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/rule-core-stat-block-multiattack.mbt.test.ts",
     "test:mbt:rule-core-spell-damage": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/rule-core-spells.mbt.test.ts -t \"damage spell procedure family\"",
     "test:mbt:rule-core-spell-defensive-effect": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/rule-core-spells.mbt.test.ts -t \"defensive effect spell procedure family\"",
     "test:mbt:rule-core-spell-readied-response": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/rule-core-spells.mbt.test.ts -t \"readied response spell procedure family\"",
