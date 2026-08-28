@@ -677,7 +677,8 @@ describe("Chromatic Orb chained spell attack", () => {
   });
 
   test("Warding Bond shared damage from chained spells uses the caster damage lifecycle", () => {
-    const state = withWardingBondSharedCasterLifecycle();
+    const fixture = withWardingBondSharedCasterLifecycle();
+    const state = fixture.state;
     const damage = chromaticOrbDamageFills(state, {
       damageType: "acid",
       targetId: firstTargetId,
@@ -727,7 +728,7 @@ describe("Chromatic Orb chained spell attack", () => {
     expect(resolved.state.combatants.get(firstTargetId)?.hp).toBe(9);
     expect(caster?.hp).toBe(9);
     expect(caster?.concentration).toEqual({
-      sourceProcedureRef: expect.any(String),
+      sourceProcedureRef: fixture.rayProcedureRef,
       effectKind: "spellEffect",
     });
     expect(
@@ -738,6 +739,28 @@ describe("Chromatic Orb chained spell attack", () => {
     expect(
       resolved.state.combatants.get(secondTargetId)?.concentration,
     ).toBeNull();
+    const rayTarget = resolved.state.combatants.get(thirdTargetId);
+    expect(rayTarget?.nextEffectOrdinal).toBe(
+      fixture.rayTargetNextEffectOrdinal,
+    );
+    expect(
+      rayTarget?.activeEffects.filter(
+        (effect) =>
+          effect.effectRef === fixture.rayEffectRefs[0] ||
+          effect.effectRef === fixture.rayEffectRefs[1],
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        kind: "abilityD20TestRollModeEndTurnSave",
+        effectRef: fixture.rayEffectRefs[0],
+        sourceProcedureRef: fixture.rayProcedureRef,
+      }),
+      expect.objectContaining({
+        kind: "sourceDamageRollPenalty",
+        effectRef: fixture.rayEffectRefs[1],
+        sourceProcedureRef: fixture.rayProcedureRef,
+      }),
+    ]);
   });
 
   test("damage that drops a character to 0 HP uses the zero-HP disposition", () => {
@@ -1069,6 +1092,7 @@ function chromaticOrbSession(input: {
               combatantId: wardingBondCasterId,
               displayName: "Warding Bond caster",
               initiative: 15,
+              classLevels: [{ className: "wizard", level: 3 }],
               resources: [
                 {
                   unit: syntheticWardingBondPreparedFeature,
@@ -1392,12 +1416,7 @@ function stateWithRayOfEnfeeblementEffects(input: {
   readonly sourceId: CombatantId;
   readonly targetId: CombatantId;
   readonly remainingDurationTicks: ElapsedTimeTicks;
-}): {
-  readonly state: BattleState;
-  readonly sourceProcedureRef: ReturnType<
-    typeof requireCharacterSpellProcedureRefForTest
-  >;
-} {
+}) {
   const sourceProcedureRef = requireCharacterSpellProcedureRefForTest(
     input.session,
     input.sourceId,
@@ -1442,7 +1461,12 @@ function stateWithRayOfEnfeeblementEffects(input: {
     },
   });
   return {
+    effectRefs: [
+      rollMode.effect.effectRef,
+      damagePenalty.effect.effectRef,
+    ] as const,
     sourceProcedureRef,
+    targetNextEffectOrdinal: damagePenalty.owner.nextEffectOrdinal,
     state: {
       ...input.state,
       combatants: new Map(input.state.combatants).set(input.targetId, {
@@ -1493,7 +1517,7 @@ function withSourceDamageRollPenalty(): BattleState {
   };
 }
 
-function withWardingBondSharedCasterLifecycle(): BattleState {
+function withWardingBondSharedCasterLifecycle() {
   const session = chromaticOrbSession({
     spellLevel: 1,
     priorCastHistory: "wardingBondLifecycle",
@@ -1559,38 +1583,43 @@ function withWardingBondSharedCasterLifecycle(): BattleState {
       expiresAt: {
         kind: "concentration",
         combatantId: secondTargetId,
-        durationTicks: elapsedTimeTicks(8),
+        durationTicks: elapsedTimeTicks(9),
       },
     },
   });
   return {
-    ...ray.state,
-    combatants: new Map(ray.state.combatants)
-      .set(wardingBondCasterId, {
-        ...battleCreatureStateWithKnockOutPreservedConditions(
-          hideousLaughter.owner,
-          applyCondition(
-            applyCondition(caster.conditions, "prone"),
-            "incapacitated",
+    rayEffectRefs: ray.effectRefs,
+    rayProcedureRef: ray.sourceProcedureRef,
+    rayTargetNextEffectOrdinal: ray.targetNextEffectOrdinal,
+    state: {
+      ...ray.state,
+      combatants: new Map(ray.state.combatants)
+        .set(wardingBondCasterId, {
+          ...battleCreatureStateWithKnockOutPreservedConditions(
+            hideousLaughter.owner,
+            applyCondition(
+              applyCondition(caster.conditions, "prone"),
+              "incapacitated",
+            ),
           ),
-        ),
-        activeEffects: [...caster.activeEffects, hideousLaughter.effect],
-        concentration: {
-          sourceProcedureRef: ray.sourceProcedureRef,
-          effectKind: "spellEffect",
-        },
-      })
-      .set(firstTargetId, {
-        ...wardingBondEffect.owner,
-        activeEffects: [...target.activeEffects, wardingBondEffect.effect],
-      })
-      .set(secondTargetId, {
-        ...laughterCaster,
-        concentration: {
-          sourceProcedureRef: hideousLaughterProcedureRef,
-          effectKind: "spellEffect",
-        },
-      }),
+          activeEffects: [...caster.activeEffects, hideousLaughter.effect],
+          concentration: {
+            sourceProcedureRef: ray.sourceProcedureRef,
+            effectKind: "spellEffect",
+          },
+        })
+        .set(firstTargetId, {
+          ...wardingBondEffect.owner,
+          activeEffects: [...target.activeEffects, wardingBondEffect.effect],
+        })
+        .set(secondTargetId, {
+          ...laughterCaster,
+          concentration: {
+            sourceProcedureRef: hideousLaughterProcedureRef,
+            effectKind: "spellEffect",
+          },
+        }),
+    },
   };
 }
 
@@ -1753,6 +1782,10 @@ function characterCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
+  readonly classLevels?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["classLevels"];
   readonly spellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -1794,7 +1827,7 @@ function characterCreature(input: {
               },
             ]),
       ],
-      classLevels: [{ className: "wizard", level: 1 }],
+      classLevels: input.classLevels ?? [{ className: "wizard", level: 1 }],
       knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
       weaponMasteries: [],
