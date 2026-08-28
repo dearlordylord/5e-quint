@@ -27,10 +27,11 @@ import {
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
-  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
 } from "./battle-runtime.test-support.ts";
 import {
+  assertBattleSnapshotCodecRoundTripForTest,
   breakBattleConcentration,
   discoverBattleActCandidates,
   elapsedTimeTicks,
@@ -475,25 +476,53 @@ describe("L12G deterministic Levitate creature admission", () => {
     const cast = castWillingLevitate();
     const casterTurn = advanceToNextCasterTurn(cast.state);
     const original = requireLevitatedEffect(casterTurn);
-    const selectedEffectRef = battleEffectExecutionRefForTest(
-      "second-levitate-occurrence",
+    const targetBeforeAllocation = requireCombatant(casterTurn, spellTargetId);
+    const casterBeforeAllocation = requireCombatant(casterTurn, spellCasterId);
+    const twoOccurrences = battleStateWithAllocatedEffectForTest({
+      state: casterTurn,
+      ownerId: spellTargetId,
+      effect: {
+        kind: "spellLevitatedCreature",
+        sourceProcedureRef: original.sourceProcedureRef,
+        sourceCombatantId: original.sourceCombatantId,
+        altitudeFeet: original.altitudeFeet,
+        maxAltitudeChangeFeet: original.maxAltitudeChangeFeet,
+        rangeFeet: original.rangeFeet,
+        expiresAt: original.expiresAt,
+      },
+    });
+    const targetAfterAllocation = requireCombatant(
+      twoOccurrences,
+      spellTargetId,
     );
-    const target = requireCombatant(casterTurn, spellTargetId);
-    const twoOccurrences: BattleState = {
-      ...casterTurn,
-      combatants: new Map(casterTurn.combatants).set(spellTargetId, {
-        ...target,
-        activeEffects: [
-          ...target.activeEffects,
-          { ...original, effectRef: selectedEffectRef },
-        ],
-      }),
-    };
+    const casterAfterAllocation = requireCombatant(
+      twoOccurrences,
+      spellCasterId,
+    );
+    const selected = targetAfterAllocation.activeEffects.find(
+      (effect) =>
+        effect.kind === "spellLevitatedCreature" &&
+        effect.effectRef !== original.effectRef,
+    );
+    if (selected?.kind !== "spellLevitatedCreature") {
+      throw new Error("Expected a second allocated Levitate occurrence.");
+    }
+    expect(Number(targetAfterAllocation.nextEffectOrdinal)).toBe(
+      Number(targetBeforeAllocation.nextEffectOrdinal) + 1,
+    );
+    expect(casterAfterAllocation.nextEffectOrdinal).toBe(
+      casterBeforeAllocation.nextEffectOrdinal,
+    );
+    expect(
+      casterAfterAllocation.activeEffects.some(
+        (effect) => effect.effectRef === selected.effectRef,
+      ),
+    ).toBe(false);
     const altitudeAct = discoverBattleActCandidates(twoOccurrences).find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
         candidate.subject.command === "levitateAltitudeControl" &&
-        candidate.subject.effectRef === selectedEffectRef,
+        candidate.subject.effectRef === selected.effectRef,
     );
     if (altitudeAct === undefined) {
       throw new Error("Expected the selected Levitate occurrence control act.");
@@ -502,7 +531,31 @@ describe("L12G deterministic Levitate creature admission", () => {
       altitudeAct.initialHoles,
       "levitateAltitudeChange",
     );
-    expect(hole.effectRef).toBe(selectedEffectRef);
+    expect(hole.effectRef).toBe(selected.effectRef);
+    const awaitingAltitudeChange = resolveBattleSubject({
+      state: twoOccurrences,
+      subject: altitudeAct.subject,
+      fills: [],
+    });
+    if (awaitingAltitudeChange.tag !== "needsHoles") {
+      throw new Error("Expected Levitate altitude-change hole.");
+    }
+    assertBattleSnapshotCodecRoundTripForTest(awaitingAltitudeChange.snapshot);
+    const staleRangeFact = {
+      kind: "levitatedTargetWithinSpellRange" as const,
+      effectRef: original.effectRef,
+      sourceCombatantId: spellCasterId,
+      sourceProcedureRef: original.sourceProcedureRef,
+      targetId: spellTargetId,
+      rangeFeet: movementFeet(60),
+    };
+    expect(
+      resolveBattleSubject({
+        state: twoOccurrences,
+        subject: altitudeAct.subject,
+        fills: [levitateAltitudeChangeFill(hole, "up", 10, [staleRangeFact])],
+      }),
+    ).toMatchObject({ tag: "invalid" });
     const raised = resolveBattleSubject({
       state: twoOccurrences,
       subject: altitudeAct.subject,
@@ -510,9 +563,9 @@ describe("L12G deterministic Levitate creature admission", () => {
         levitateAltitudeChangeFill(hole, "up", 10, [
           {
             kind: "levitatedTargetWithinSpellRange",
-            effectRef: selectedEffectRef,
+            effectRef: selected.effectRef,
             sourceCombatantId: spellCasterId,
-            sourceProcedureRef: original.sourceProcedureRef,
+            sourceProcedureRef: selected.sourceProcedureRef,
             targetId: spellTargetId,
             rangeFeet: movementFeet(60),
           },
@@ -523,6 +576,7 @@ describe("L12G deterministic Levitate creature admission", () => {
     if (raised.tag !== "resolved") {
       throw new Error("Expected exact-occurrence altitude control to resolve.");
     }
+    assertBattleSnapshotCodecRoundTripForTest(raised.snapshot);
     const levitateEffects = requireCombatant(
       raised.state,
       spellTargetId,
@@ -536,7 +590,7 @@ describe("L12G deterministic Levitate creature admission", () => {
           altitudeFeet: movementFeet(20),
         }),
         expect.objectContaining({
-          effectRef: selectedEffectRef,
+          effectRef: selected.effectRef,
           altitudeFeet: movementFeet(30),
         }),
       ]),
@@ -645,32 +699,23 @@ describe("L12G deterministic Levitate creature admission", () => {
 
   test("Levitate concentration cleanup preserves an unrelated target resistance", () => {
     const cast = castWillingLevitate();
-    const target = requireCombatant(cast.state, spellTargetId);
     const unrelatedSource = battleProcedureExecutionRefForTest(
       "synthetic-levitate-unrelated-resistance",
     );
-    const state: BattleState = {
-      ...cast.state,
-      combatants: new Map(cast.state.combatants).set(spellTargetId, {
-        ...target,
-        activeEffects: [
-          ...target.activeEffects,
-          {
-            kind: "damageResistance" as const,
-            effectRef: battleEffectExecutionRefForTest(
-              "synthetic-levitate-unrelated-resistance-effect",
-            ),
-            sourceProcedureRef: unrelatedSource,
-            sourceCombatantId: spellTargetId,
-            damageType: "cold" as const,
-            expiresAt: {
-              kind: "duration" as const,
-              durationTicks: elapsedTimeTicks(10),
-            },
-          },
-        ],
-      }),
-    };
+    const state = battleStateWithAllocatedEffectForTest({
+      state: cast.state,
+      ownerId: spellTargetId,
+      effect: {
+        kind: "damageResistance" as const,
+        sourceProcedureRef: unrelatedSource,
+        sourceCombatantId: spellTargetId,
+        damageType: "cold" as const,
+        expiresAt: {
+          kind: "duration" as const,
+          durationTicks: elapsedTimeTicks(10),
+        },
+      },
+    });
 
     const broken = breakBattleConcentration(state, spellCasterId);
     const brokenTarget = requireCombatant(broken, spellTargetId);

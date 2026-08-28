@@ -1,6 +1,5 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import {
-  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectForTest,
 } from "./battle-runtime.test-support.ts";
@@ -398,29 +397,41 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
   });
 
   test("movement through a recast Line requires the current occurrence reference", () => {
-    const cast = castGustOfWind([]);
+    const session = gustOfWindBattle(2);
+    const firstCast = resolveGustOfWindCast({ session, outcomes: [] });
+    const staleEffect = gustOfWindLineEffect(firstCast.state);
+    const casterTurn = advanceToCasterLaterTurn(firstCast.state);
+    const casterBeforeRecast = requireCombatant(casterTurn, spellCasterId);
+    const recast = resolveGustOfWindCast({
+      session: battleRuntimeSessionForTest({
+        state: casterTurn,
+        context: session.context,
+      }),
+      outcomes: [],
+    });
+    const freshEffect = gustOfWindLineEffect(recast.state);
+    const casterAfterRecast = requireCombatant(recast.state, spellCasterId);
+
+    expect(freshEffect.effectRef).not.toBe(staleEffect.effectRef);
+    expect(Number(casterAfterRecast.nextEffectOrdinal)).toBe(
+      Number(casterBeforeRecast.nextEffectOrdinal) + 1,
+    );
+    expect(casterAfterRecast.activeEffects).toContainEqual(freshEffect);
+    expect(
+      requireCombatant(recast.state, spellTargetId).activeEffects.some(
+        (effect) => effect.effectRef === freshEffect.effectRef,
+      ),
+    ).toBe(false);
+    assertBattleSnapshotCodecRoundTripForTest(recast.snapshot);
+
     const targetTurn = endTurn({
-      state: cast.state,
+      state: recast.state,
       actorId: spellCasterId,
     });
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const staleEffect = gustOfWindLineEffect(targetTurn.state);
-    const freshEffectRef = battleEffectExecutionRefForTest("fresh-gust-line");
-    const caster = requireCombatant(targetTurn.state, spellCasterId);
-    const recastState: BattleState = {
-      ...targetTurn.state,
-      combatants: new Map(targetTurn.state.combatants).set(spellCasterId, {
-        ...caster,
-        activeEffects: caster.activeEffects.map((effect) =>
-          effect.effectRef === staleEffect.effectRef
-            ? { ...effect, effectRef: freshEffectRef }
-            : effect,
-        ),
-      }),
-    };
-    const act = moveAct(recastState);
+    const act = moveAct(targetTurn.state);
     const movement = requireHole(act.initialHoles, "movement");
     const lineMovement = (effectRef: typeof staleEffect.effectRef) =>
       movementFill(movement, {
@@ -430,7 +441,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
           kind: "gustOfWindLineMovement",
           effectRef,
           sourceCombatantId: spellCasterId,
-          sourceProcedureRef: staleEffect.sourceProcedureRef,
+          sourceProcedureRef: freshEffect.sourceProcedureRef,
           areaId: gustOfWindAreaId,
           directionId: gustOfWindNorthDirectionId,
           totalDistanceFeet: movementFeet(5),
@@ -440,7 +451,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
 
     expect(
       resolveBattleSubject({
-        state: recastState,
+        state: targetTurn.state,
         subject: act.subject,
         fills: [lineMovement(staleEffect.effectRef)],
       }),
@@ -451,9 +462,9 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     });
     expect(
       resolveBattleSubject({
-        state: recastState,
+        state: targetTurn.state,
         subject: act.subject,
-        fills: [lineMovement(freshEffectRef)],
+        fills: [lineMovement(freshEffect.effectRef)],
       }),
     ).toMatchObject({ tag: "resolved" });
   });
@@ -500,8 +511,11 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
   });
 
   test("movement cost composes Grease and Gust of Wind Line facts", () => {
-    const cast = castGustOfWind([]);
-    const greased = withGreaseGroundHazard(cast.state);
+    const session = gustOfWindBattle(1);
+    const cast = resolveGustOfWindCast({ session, outcomes: [] });
+    const greased = withGreaseGroundHazard(
+      battleRuntimeSessionForTest({ ...session, state: cast.state }),
+    );
     const targetTurn = endTurn({
       state: greased,
       actorId: spellCasterId,
@@ -510,6 +524,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       throw new Error("Expected caster End Turn to resolve.");
     }
     const lineEffect = gustOfWindLineEffect(targetTurn.state);
+    const greaseEffect = greaseGroundHazardEffect(targetTurn.state);
     const act = moveAct(targetTurn.state);
     const movement = requireHole(act.initialHoles, "movement");
     const resolved = resolveBattleSubject({
@@ -524,13 +539,9 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
             sources: [
               {
                 kind: "greaseGroundHazard",
-                effectRef: battleEffectExecutionRefForTest(
-                  "grease-ground-hazard",
-                ),
+                effectRef: greaseEffect.effectRef,
                 sourceCombatantId: spellCasterId,
-                sourceProcedureRef: battleProcedureExecutionRefForTest(
-                  String(greaseUnitId),
-                ),
+                sourceProcedureRef: greaseEffect.sourceProcedureRef,
                 areaId: greaseAreaId,
               },
             ],
@@ -565,36 +576,49 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
   });
 
   test("area movement rejects a stale mechanically identical hazard occurrence", () => {
-    const cast = castGustOfWind([]);
-    const greased = withGreaseGroundHazard(cast.state);
+    const session = gustOfWindBattle(1);
+    const cast = resolveGustOfWindCast({ session, outcomes: [] });
+    const greased = withGreaseGroundHazard(
+      battleRuntimeSessionForTest({ ...session, state: cast.state }),
+    );
+    const staleEffect = greaseGroundHazardEffect(greased);
+    const casterBeforeReplacement = requireCombatant(greased, spellCasterId);
+    const withReplacement = withGreaseGroundHazard(
+      battleRuntimeSessionForTest({ ...session, state: greased }),
+    );
+    const replacementCaster = requireCombatant(withReplacement, spellCasterId);
+    const freshEffect = replacementCaster.activeEffects.find(
+      (effect) =>
+        effect.kind === "greaseGroundHazard" &&
+        effect.effectRef !== staleEffect.effectRef,
+    );
+    if (freshEffect?.kind !== "greaseGroundHazard") {
+      throw new Error("Expected a fresh allocated Grease occurrence.");
+    }
+    expect(Number(replacementCaster.nextEffectOrdinal)).toBe(
+      Number(casterBeforeReplacement.nextEffectOrdinal) + 1,
+    );
+    const replacedState: BattleState = {
+      ...withReplacement,
+      combatants: new Map(withReplacement.combatants).set(spellCasterId, {
+        ...replacementCaster,
+        activeEffects: replacementCaster.activeEffects.filter(
+          (effect) => effect.effectRef !== staleEffect.effectRef,
+        ),
+      }),
+    };
     const targetTurn = endTurn({
-      state: greased,
+      state: replacedState,
       actorId: spellCasterId,
     });
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const staleEffectRef = battleEffectExecutionRefForTest(
-      "grease-ground-hazard",
-    );
-    const freshEffectRef = battleEffectExecutionRefForTest(
-      "fresh-grease-ground-hazard",
-    );
-    const caster = requireCombatant(targetTurn.state, spellCasterId);
-    const replacedState: BattleState = {
-      ...targetTurn.state,
-      combatants: new Map(targetTurn.state.combatants).set(spellCasterId, {
-        ...caster,
-        activeEffects: caster.activeEffects.map((effect) =>
-          effect.effectRef === staleEffectRef
-            ? { ...effect, effectRef: freshEffectRef }
-            : effect,
-        ),
-      }),
-    };
-    const act = moveAct(replacedState);
+    const act = moveAct(targetTurn.state);
     const movement = requireHole(act.initialHoles, "movement");
-    const difficultTerrainMovement = (effectRef: typeof staleEffectRef) =>
+    const difficultTerrainMovement = (
+      effectRef: typeof staleEffect.effectRef,
+    ) =>
       movementFill(movement, {
         movementCostFeet: 10,
         provokedOpportunityAttacks: [],
@@ -605,9 +629,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
               kind: "greaseGroundHazard",
               effectRef,
               sourceCombatantId: spellCasterId,
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String(greaseUnitId),
-              ),
+              sourceProcedureRef: freshEffect.sourceProcedureRef,
               areaId: greaseAreaId,
             },
           ],
@@ -618,22 +640,25 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
 
     expect(
       resolveBattleSubject({
-        state: replacedState,
+        state: targetTurn.state,
         subject: act.subject,
-        fills: [difficultTerrainMovement(staleEffectRef)],
+        fills: [difficultTerrainMovement(staleEffect.effectRef)],
       }),
     ).toMatchObject({
       tag: "invalid",
       message:
         "Area Difficult Terrain movement fact does not match an active Difficult Terrain area.",
     });
-    expect(
-      resolveBattleSubject({
-        state: replacedState,
-        subject: act.subject,
-        fills: [difficultTerrainMovement(freshEffectRef)],
-      }),
-    ).toMatchObject({ tag: "resolved" });
+    const resolved = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: act.subject,
+      fills: [difficultTerrainMovement(freshEffect.effectRef)],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected current Grease occurrence to resolve.");
+    }
+    assertBattleSnapshotCodecRoundTripForTest(resolved.snapshot);
   });
 
   test("caster can spend a Bonus Action to replace the active Line direction", () => {
@@ -862,22 +887,41 @@ function castGustOfWind(
     readonly succeeded: boolean;
   }[],
 ) {
+  return resolveGustOfWindCast({
+    session: gustOfWindBattle(1),
+    outcomes,
+  });
+}
+
+function gustOfWindBattle(spellSlotCount: number) {
   const spell = spellRecord(gustOfWindUnitId);
-  const state = spellBattle({
-    preparedSpells: [spell],
-    spellSlots: [{ spellLevel: 2, count: 1 }],
+  return spellBattle({
+    preparedSpells: [spell, spellRecord(greaseUnitId)],
+    spellSlots: [
+      { spellLevel: 1, count: 2 },
+      { spellLevel: 2, count: spellSlotCount },
+    ],
     casterClassLevels: [{ className: "wizard", level: 3 }],
   });
+}
+
+function resolveGustOfWindCast(input: {
+  readonly session: BattleRuntimeSession;
+  readonly outcomes: readonly {
+    readonly targetId: typeof spellTargetId;
+    readonly succeeded: boolean;
+  }[];
+}) {
   const act = spellAct({
-    session: state,
+    session: input.session,
     spellId: gustOfWindUnitId,
     slotLevel: 2,
   });
   const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
   const resolved = resolveBattleSubject({
-    state: state.state,
+    state: input.session.state,
     subject: act.subject,
-    fills: [gustOfWindLineSavingThrowOutcomeFill(savingThrow, outcomes)],
+    fills: [gustOfWindLineSavingThrowOutcomeFill(savingThrow, input.outcomes)],
   });
   if (resolved.tag !== "resolved") {
     throw new Error("Expected Gust of Wind cast to resolve.");
@@ -1040,35 +1084,41 @@ function gustOfWindWithLineHoleId(
   });
 }
 
-function withGreaseGroundHazard(state: BattleState): BattleState {
-  const caster = requireCombatant(state, spellCasterId);
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(spellCasterId, {
-      ...caster,
-      activeEffects: [
-        ...caster.activeEffects,
-        {
-          kind: "greaseGroundHazard" as const,
-          effectRef: battleEffectExecutionRefForTest("grease-ground-hazard"),
-          sourceCombatantId: spellCasterId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(greaseUnitId),
-          ),
-          areaId: greaseAreaId,
-          heightenedSpellTargetDisadvantage: null,
-          save: {
-            ability: "dex" as const,
-            dc: { kind: "caster_spell_save_dc" as const },
-          },
-          expiresAt: {
-            kind: "duration" as const,
-            durationTicks: elapsedTimeTicks(10),
-          },
-        },
-      ],
-    }),
-  };
+function withGreaseGroundHazard(session: BattleRuntimeSession): BattleState {
+  const sourceProcedureRef = requireCharacterSpellProcedureRefForTest(
+    session,
+    spellCasterId,
+    spellSlotInvocationRef(greaseUnitId, 1, "greaseGroundHazard"),
+  );
+  return battleStateWithAllocatedEffectForTest({
+    state: session.state,
+    ownerId: spellCasterId,
+    effect: {
+      kind: "greaseGroundHazard" as const,
+      sourceCombatantId: spellCasterId,
+      sourceProcedureRef,
+      areaId: greaseAreaId,
+      heightenedSpellTargetDisadvantage: null,
+      save: {
+        ability: "dex" as const,
+        dc: { kind: "caster_spell_save_dc" as const },
+      },
+      expiresAt: {
+        kind: "duration" as const,
+        durationTicks: elapsedTimeTicks(10),
+      },
+    },
+  });
+}
+
+function greaseGroundHazardEffect(state: BattleState) {
+  const effect = requireCombatant(state, spellCasterId).activeEffects.find(
+    (candidate) => candidate.kind === "greaseGroundHazard",
+  );
+  if (effect?.kind !== "greaseGroundHazard") {
+    throw new Error("Expected a Grease ground-hazard occurrence.");
+  }
+  return effect;
 }
 
 function moveAct(state: BattleState) {

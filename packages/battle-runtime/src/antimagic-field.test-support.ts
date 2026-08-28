@@ -11,6 +11,7 @@ import type {
   BattleAreaId,
   CombatantId,
 } from "./index.ts";
+import type { BattleActiveEffectOccurrenceTemplate } from "./effect-execution-ref.ts";
 import { antimagicFieldUnitId } from "./unit-profile-admission-catalog.test-support.ts";
 
 export type TestAntimagicFieldAuraMembership = {
@@ -33,18 +34,15 @@ export function antimagicFieldAuraMembershipForTest(input: {
   };
 }
 
-export function antimagicFieldAuraEffectForTest(input: {
+export function antimagicFieldAuraEffectTemplateForTest(input: {
   readonly areaId: BattleAreaId;
   readonly aura: TestAntimagicFieldAuraMembership;
 }): Extract<
-  BattleActiveEffect,
+  BattleActiveEffectOccurrenceTemplate,
   { readonly kind: "antimagicFieldOngoingSpellSuppression" }
 > {
   return {
     kind: "antimagicFieldOngoingSpellSuppression",
-    effectRef: battleEffectExecutionRefForTest(
-      `antimagic-field-aura:${input.aura.sourceCombatantId}:${input.areaId}`,
-    ),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(antimagicFieldUnitId),
     ),
@@ -58,5 +56,20 @@ export function antimagicFieldAuraEffectForTest(input: {
       combatantId: input.aura.sourceCombatantId,
       durationTicks: elapsedTimeTicks(600),
     },
+  };
+}
+
+export function antimagicFieldAuraEffectForTest(input: {
+  readonly areaId: BattleAreaId;
+  readonly aura: TestAntimagicFieldAuraMembership;
+}): Extract<
+  BattleActiveEffect,
+  { readonly kind: "antimagicFieldOngoingSpellSuppression" }
+> {
+  return {
+    ...antimagicFieldAuraEffectTemplateForTest(input),
+    effectRef: battleEffectExecutionRefForTest(
+      `antimagic-field-aura:${input.aura.sourceCombatantId}:${input.areaId}`,
+    ),
   };
 }
