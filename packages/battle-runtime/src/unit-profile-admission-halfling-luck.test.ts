@@ -841,13 +841,13 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     });
   });
 
-  test("Spellcasting Ability Checks expose the post-roll natural-1 reroll choice", () => {
+  test("a low-level ongoing-spell emitter exposes the Dispel check natural-1 reroll choice", () => {
     const { unit, unitRef } = halflingLuckSelection();
     const objectId = battleObjectId("halfling-luck-dispel-object");
-    const emitterTemplate = spellLightEmitter({
+    const emitterTemplate = lowLevelOngoingSpellEmitter({
       objectId,
       sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String("synthetic_blue_flame"),
+        "synthetic-low-level-dispel-emitter",
       ),
       sourceSpellLevel: 4,
     });
@@ -1784,7 +1784,7 @@ function ongoingSpellTargetWithinRangeFact(
   };
 }
 
-function spellLightEmitter(input: {
+function lowLevelOngoingSpellEmitter(input: {
   readonly objectId: ReturnType<typeof battleObjectId>;
   readonly sourceProcedureRef: ReturnType<
     typeof battleProcedureExecutionRefForTest

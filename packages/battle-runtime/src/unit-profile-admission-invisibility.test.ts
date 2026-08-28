@@ -629,7 +629,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
     ).toBeNull();
   });
 
-  test("invisibility preserves an unrelated target effect", () => {
+  test("invisibility preserves a low-level unrelated target effect", () => {
     const session = spellBattle({
       preparedSpells: [spellRecord(invisibilityUnitId)],
       spellSlots: [{ spellLevel: 2, count: 1 }],

@@ -831,7 +831,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
     expect(snapshotBattle(expired).lightEmitters).toEqual([]);
   });
 
-  test("flame_blade concentration cleanup preserves an unrelated caster effect", () => {
+  test("flame_blade concentration cleanup preserves a low-level unrelated caster effect", () => {
     const cast = castFlameBlade(flameBladeBattle());
     const unrelatedSource = battleProcedureExecutionRefForTest(
       "synthetic-flame-blade-unrelated-resistance",

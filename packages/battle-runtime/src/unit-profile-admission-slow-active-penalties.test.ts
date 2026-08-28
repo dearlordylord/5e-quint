@@ -496,17 +496,39 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     ).toBe(false);
   });
 
-  test("slowed target Flaming Sphere Bonus Action prevents a later Action", () => {
-    const targetTurn = withCombatantActiveEffect(
-      targetTurnAfterFailedSlow(
-        spellBattle({
-          preparedSpells: [spellRecord(slowUnitId)],
-          spellSlots: [{ spellLevel: 3, count: 1 }],
-        }),
-      ),
-      spellTargetId,
-      targetOwnedFlamingSphereEffect(),
+  test("a slowed target's low-level Flaming Sphere interaction prevents a later Action", () => {
+    const slowedTargetTurn = targetTurnAfterFailedSlow(
+      spellBattle({
+        preparedSpells: [spellRecord(slowUnitId)],
+        spellSlots: [{ spellLevel: 3, count: 1 }],
+      }),
     );
+    const flamingSphere = syntheticTargetOwnedFlamingSphereInteraction();
+    const slowedTarget = requireCombatant(
+      slowedTargetTurn.state,
+      spellTargetId,
+    );
+    const stateWithConcentration = {
+      ...slowedTargetTurn.state,
+      combatants: new Map(slowedTargetTurn.state.combatants).set(
+        spellTargetId,
+        {
+          ...slowedTarget,
+          concentration: {
+            sourceProcedureRef: flamingSphere.sourceProcedureRef,
+            effectKind: "spellEffect" as const,
+          },
+        },
+      ),
+    };
+    const targetTurn = battleRuntimeSessionForTest({
+      ...slowedTargetTurn,
+      state: battleStateWithAllocatedEffectForTest({
+        state: stateWithConcentration,
+        ownerId: spellTargetId,
+        effect: flamingSphere,
+      }),
+    });
 
     const reposition = flamingSphereRepositionAct(targetTurn, spellTargetId);
     const movement = requireHole(
@@ -832,7 +854,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     ).toBe(false);
   });
 
-  test("Slow recast replaces only its own active penalties", () => {
+  test("Slow recast replaces its admitted occurrence and preserves a low-level unrelated occurrence", () => {
     const base = spellBattle({
       preparedSpells: [spellRecord(slowUnitId)],
       spellSlots: [{ spellLevel: 3, count: 2 }],
@@ -1043,33 +1065,7 @@ function targetTurnAfterFailedSlow(
   return battleRuntimeSessionForTest({ ...session, state: targetTurn.state });
 }
 
-function withCombatantActiveEffect(
-  session: BattleRuntimeSession,
-  combatantId: CombatantId,
-  effect: BattleSourcedEffectOccurrenceTemplate,
-): BattleRuntimeSession {
-  const combatant = requireCombatant(session.state, combatantId);
-  const stateWithConcentration = {
-    ...session.state,
-    combatants: new Map(session.state.combatants).set(combatantId, {
-      ...combatant,
-      concentration: {
-        sourceProcedureRef: effect.sourceProcedureRef,
-        effectKind: "spellEffect" as const,
-      },
-    }),
-  };
-  return battleRuntimeSessionForTest({
-    ...session,
-    state: battleStateWithAllocatedEffectForTest({
-      state: stateWithConcentration,
-      ownerId: combatantId,
-      effect,
-    }),
-  });
-}
-
-function targetOwnedFlamingSphereEffect(): Extract<
+function syntheticTargetOwnedFlamingSphereInteraction(): Extract<
   BattleSourcedEffectOccurrenceTemplate,
   { readonly kind: "flamingSphere" }
 > {

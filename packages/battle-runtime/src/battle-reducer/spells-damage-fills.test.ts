@@ -190,7 +190,7 @@ describe("spell damage fill projections", () => {
     expect(Number(requireCombatant(state, spellTargetId).hp)).toBe(4);
   });
 
-  test("leaves damage unapplied while a source-side damage penalty still needs its roll", () => {
+  test("leaves damage unapplied while a low-level source-side penalty still needs its roll", () => {
     const spell = slotAttackDamageSpell();
     const session = spellBattle({
       preparedSpells: [spell],
@@ -202,7 +202,7 @@ describe("spell damage fill projections", () => {
     }
     const caster = requireCombatant(session.state, spellCasterId);
     const sourceProcedureRef = battleProcedureExecutionRefForTest(
-      "spells-damage-fills:source-penalty",
+      "synthetic-low-level-spells-damage-fills-source-penalty",
     );
     const concentratingState = {
       ...session.state,

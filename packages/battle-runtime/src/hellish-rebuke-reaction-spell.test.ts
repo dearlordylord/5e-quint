@@ -232,7 +232,7 @@ describe("Hellish Rebuke Reaction spell", () => {
     );
   });
 
-  test("applies a source damage penalty before the damaged creature's Concentration save", () => {
+  test("applies a low-level source damage penalty before the damaged creature's Concentration save", () => {
     const base = battleWithHellishRebuke(srdSpellRecord(hellishRebukeUnitId));
     const concentrationProcedureRef = battleProcedureExecutionRefForTest(
       "synthetic-hellish-rebuke-damager-concentration",

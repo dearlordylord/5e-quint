@@ -1,9 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import {
-  battleStateWithAllocatedEffectForTest,
-  characterSpellInvocationForProcedureRefForTest,
-  requireCharacterSpellProcedureRefForTest,
-} from "./battle-runtime.test-support.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV88A dancing_lights
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-dancing-lights-movable-dim-light
@@ -23,6 +19,7 @@ import {
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   bonusSpellAct,
+  knownWillingSpellTargetFill,
   spellAct,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
@@ -43,7 +40,6 @@ import {
   resolveBattleInterrupt,
   resolveBattleSubject,
   snapshotBattle,
-  spellSlotInvocationRef,
 } from "./unit-profile-admission.test-support.ts";
 import type { ActionSpellAct } from "./unit-profile-admission-catalog.test-support.ts";
 import type {
@@ -315,10 +311,52 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
   });
   test("dancing_lights supports combined Medium-form choice, Bonus Action movement, Concentration cleanup, and duration cleanup", () => {
     const spell = spellRecord(dancingLightsUnitId);
-    const session = spellBattle({
+    const baseSession = spellBattle({
       cantrips: [spell],
       preparedSpells: [spellRecord(longstriderUnitId)],
       spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const longstriderAct = spellAct({
+      session: baseSession,
+      spellId: longstriderUnitId,
+      slotLevel: 1,
+    });
+    const longstriderTarget = requireHole(
+      longstriderAct.initialHoles,
+      "targetChoice",
+    );
+    const longstriderCast = resolveBattleSubject({
+      state: baseSession.state,
+      subject: longstriderAct.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          longstriderTarget,
+          longstriderUnitId,
+          spellCasterId,
+          spellCasterId,
+        ),
+      ],
+    });
+    if (longstriderCast.tag !== "resolved") {
+      throw new Error("Expected admitted Longstrider cast to resolve.");
+    }
+    const targetTurnAfterLongstrider = endTurn({
+      state: longstriderCast.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurnAfterLongstrider.tag !== "resolved") {
+      throw new Error("Expected Longstrider caster turn to end.");
+    }
+    const casterTurnAfterLongstrider = endTurn({
+      state: targetTurnAfterLongstrider.state,
+      actorId: spellTargetId,
+    });
+    if (casterTurnAfterLongstrider.tag !== "resolved") {
+      throw new Error("Expected Longstrider target turn to end.");
+    }
+    const session = battleRuntimeSessionForTest({
+      ...baseSession,
+      state: casterTurnAfterLongstrider.state,
     });
     const combinedAct = discoverBattleActs(session).find(
       (candidate): candidate is ActionSpellAct =>
@@ -407,20 +445,43 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       resolved.snapshot.lightEmitters[0].attachment.kind === "dancingLight"
         ? resolved.snapshot.lightEmitters[0].attachment.positionId
         : null;
-    const recastReadyState: BattleState = {
-      ...resolved.state,
-      currentTurnResources: session.state.currentTurnResources,
-    };
+    const targetTurnBeforeRecast = endTurn({
+      state: resolved.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurnBeforeRecast.tag !== "resolved") {
+      throw new Error("Expected Dancing Lights caster turn to end.");
+    }
+    const casterTurnBeforeRecast = endTurn({
+      state: targetTurnBeforeRecast.state,
+      actorId: spellTargetId,
+    });
+    if (casterTurnBeforeRecast.tag !== "resolved") {
+      throw new Error("Expected Dancing Lights target turn to end.");
+    }
+    const recastSession = battleRuntimeSessionForTest({
+      ...session,
+      state: casterTurnBeforeRecast.state,
+    });
+    const recastAct = discoverBattleActs(recastSession).find(
+      (candidate): candidate is ActionSpellAct =>
+        candidate.subject.tag === "actionSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          dancingLightsUnitId &&
+        battleActSpellPresentation(candidate)?.invocation.procedure ===
+          "dancingLightsCombinedCast",
+    );
+    if (recastAct === undefined) {
+      throw new Error("Expected a fresh Dancing Lights combined-form act.");
+    }
     const recast = resolveBattleSubject({
-      state: recastReadyState,
-      subject: combinedAct.subject,
+      state: recastSession.state,
+      subject: recastAct.subject,
       fills: [
         {
           kind: "dancingLightsPlacement",
-          holeId: requireHole(
-            combinedAct.initialHoles,
-            "dancingLightsPlacement",
-          ).holeId,
+          holeId: requireHole(recastAct.initialHoles, "dancingLightsPlacement")
+            .holeId,
           value: {
             mode: "cast",
             form: "combinedMediumForm",
@@ -485,49 +546,19 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
         }),
       ],
     });
-    const resolvedCaster = resolved.state.combatants.get(spellCasterId);
-    if (resolvedCaster === undefined) {
-      throw new Error("Expected Dancing Lights caster before repositioning.");
-    }
-    const longstriderProcedureRef = requireCharacterSpellProcedureRefForTest(
-      session,
-      spellCasterId,
-      spellSlotInvocationRef(longstriderUnitId, 1, "scalarBuff"),
-    );
-    const longstriderInvocation =
-      characterSpellInvocationForProcedureRefForTest(
-        session,
-        spellCasterId,
-        longstriderProcedureRef,
-      );
-    if (
-      longstriderInvocation.procedure !== "scalarBuff" ||
-      longstriderInvocation.effect.kind !== "activeEffect" ||
-      longstriderInvocation.effect.activeEffect.kind !== "speedDelta"
-    ) {
-      throw new Error("Expected the admitted Longstrider speed effect.");
-    }
-    const repositionState = battleStateWithAllocatedEffectForTest({
-      state: resolved.state,
-      ownerId: spellCasterId,
-      effect: {
-        ...longstriderInvocation.effect.activeEffect,
-        sourceProcedureRef: longstriderProcedureRef,
-      },
-    });
     const unrelatedEffect = requireCombatant(
-      repositionState,
+      resolved.state,
       spellCasterId,
     ).activeEffects.find(
       (effect) =>
         "sourceProcedureRef" in effect &&
-        effect.sourceProcedureRef === longstriderProcedureRef,
+        effect.sourceProcedureRef === longstriderAct.subject.procedureRef,
     );
     if (unrelatedEffect === undefined) {
       throw new Error("Expected allocated Longstrider occurrence.");
     }
     const moved = resolveBattleSubject({
-      state: repositionState,
+      state: resolved.state,
       subject: moveAct.subject,
       fills: [
         {

@@ -1,8 +1,8 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
-  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   battleStateWithAllocatedEffectOccurrencesForTest,
   characterSpellInvocationRefForProcedureRefForTest,
   requireCharacterSpellProcedureRefForTest,
@@ -82,11 +82,9 @@ import {
   elapsedTimeTicks,
   resolveBattleInterrupt,
   resolveBattleSubject,
-  spellId,
   spellSlotInvocationRef,
   type BattleRuntimeSession,
   type BattleState,
-  type SpellMarkedDamageRider,
 } from "./unit-profile-admission.test-support.ts";
 
 function creatureSizeAct(
@@ -1290,7 +1288,7 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     ).toBe(11);
   });
 
-  test("Reduce subtracts from total attack-hit damage including marked riders", () => {
+  test("Reduce subtracts from total attack-hit damage in a low-level marked-rider interaction", () => {
     const spell = spellRecord(enlargeReduceUnitId);
     const session = spellBattle({
       preparedSpells: [spell],
@@ -1655,33 +1653,28 @@ function withSyntheticHitRider(
 }
 
 function withSyntheticMarkedDamageRider(state: BattleState): BattleState {
-  const caster = requireCombatant(state, spellCasterId);
-  const markedRider = {
-    kind: "spellMarkedDamageRider",
-    effectRef: battleEffectExecutionRefForTest("reduce-floor-mark"),
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(spellId("synthetic_reduce_floor_mark")),
-    ),
-    sourceCombatantId: spellCasterId,
-    targetCombatantId: spellTargetId,
-    transfer: {
-      kind: "awaitingTargetDrop",
-      retargetTiming: "sameTurn",
+  return battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: spellCasterId,
+    effect: {
+      kind: "spellMarkedDamageRider",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "synthetic-reduce-damage-aggregation-mark",
+      ),
+      sourceCombatantId: spellCasterId,
+      targetCombatantId: spellTargetId,
+      transfer: {
+        kind: "awaitingTargetDrop",
+        retargetTiming: "sameTurn",
+      },
+      abilityCheckBehavior: { kind: "none" },
+      damage: { expr: { dice: 1, dieSize: 6 }, damageType: "force" },
+      expiresAt: {
+        kind: "duration",
+        durationTicks: elapsedTimeTicks(600),
+      },
     },
-    abilityCheckBehavior: { kind: "none" },
-    damage: { expr: { dice: 1, dieSize: 6 }, damageType: "force" },
-    expiresAt: {
-      kind: "concentration",
-      combatantId: spellCasterId,
-    },
-  } satisfies SpellMarkedDamageRider;
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(spellCasterId, {
-      ...caster,
-      activeEffects: [...caster.activeEffects, markedRider],
-    }),
-  };
+  });
 }
 
 function sizeChangeEffects(

@@ -586,7 +586,7 @@ describe("effect lifecycle route boundary", () => {
     ).toBe(true);
   });
 
-  test("routes turn-end damage and base armor expiration from resolved boundaries", () => {
+  test("routes low-level turn-end damage and admitted base armor expiration from resolved boundaries", () => {
     const base = goblinTurnBattle();
     const goblin = base.combatants.get(goblinId);
     if (goblin === undefined) throw new Error("Expected Goblin combatant.");
@@ -596,7 +596,7 @@ describe("effect lifecycle route boundary", () => {
       effect: {
         kind: "spellTurnEndDamage",
         sourceProcedureRef: battleProcedureExecutionRefForTest(
-          "effect-route-turn-end-damage",
+          "synthetic-low-level-effect-route-turn-end-damage",
         ),
         sourceCombatantId: fighterId,
         damage: { expr: { dice: 1, dieSize: 6 }, damageType: "fire" },
@@ -731,7 +731,7 @@ describe("effect lifecycle route boundary", () => {
     );
   });
 
-  test("routes a next-round start-turn save by its advanced turn anchor", () => {
+  test("routes a low-level next-round start-turn save by its advanced turn anchor", () => {
     const base = goblinTurnBattle();
     const fighter = base.combatants.get(fighterId);
     if (fighter === undefined) throw new Error("Expected Fighter combatant.");
@@ -742,7 +742,7 @@ describe("effect lifecycle route boundary", () => {
         kind: "spellTurnStartDamageAndSave",
         source: "turnBoundaryEffectLifecycle",
         sourceProcedureRef: battleProcedureExecutionRefForTest(
-          "effect-route-round-wrap-start-damage",
+          "synthetic-low-level-effect-route-round-wrap-start-damage",
         ),
         sourceCombatantId: goblinId,
         damage: { expr: { dice: 1, dieSize: 4 }, damageType: "fire" },

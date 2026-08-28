@@ -49,7 +49,6 @@ import {
   resolveBattleSubject,
   spellSaveDcForCaster,
   spellSlotInvocationRef,
-  type BattleActiveEffect,
   type BattleFill,
   type BattleHole,
   type BattleRuntimeSession,
@@ -60,7 +59,7 @@ import {
 } from "./unit-profile-admission.test-support.ts";
 import {
   assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
-  battleEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectForTest,
   requireCharacterUnitProcedureRefForTest,
   requireCharacterSpellProcedureRefForTest,
@@ -212,7 +211,7 @@ describe("Dragon's Breath initial cast admission", () => {
     ).toBe(false);
   });
 
-  test("grants the target a Magic action that exhales the retained damage type and slot-scaled damage", () => {
+  test("grants the target an exhale and applies a low-level action-ended invisibility interaction", () => {
     const session = spellBattle({
       casterClassLevels: [{ className: "wizard", level: classLevel(3) }],
       casterD20Statistics: testCharacterD20Statistics({ int: 16 }),
@@ -227,7 +226,7 @@ describe("Dragon's Breath initial cast admission", () => {
     if (endedCasterTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const targetTurn = stateWithExhalingTargetActionEarlyEndCondition(
+    const targetTurn = stateWithSyntheticExhaleEndedInvisibilityInteraction(
       endedCasterTurn.state,
     );
     const exhaleAct = discoverBattleActs(
@@ -369,33 +368,20 @@ describe("Dragon's Breath initial cast admission", () => {
     if (endedCasterTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const caster = requireCombatant(endedCasterTurn.state, spellCasterId);
-    const stateWithSaveModifiers = {
-      ...endedCasterTurn.state,
-      combatants: new Map(endedCasterTurn.state.combatants).set(spellCasterId, {
-        ...caster,
-        dodging: true,
-        activeEffects: [
-          ...caster.activeEffects,
-          {
-            kind: "wardingBond",
-            effectRef: battleEffectExecutionRefForTest("dragon-ward-one"),
-            sourceProcedureRef: dragonsBreathSourceProcedureRef(
-              endedCasterTurn.state,
-            ),
-            sourceCombatantId: spellTargetId,
-            expiresAt: {
-              kind: "duration",
-              durationTicks: elapsedTimeTicks(3_600),
-            },
-          } satisfies Extract<
-            BattleActiveEffect,
-            { readonly kind: "wardingBond" }
-          >,
-        ],
-      }),
+    const stateWithSaveModifiers = stateWithSyntheticWardingBondInteraction(
+      endedCasterTurn.state,
+      spellCasterId,
+      spellTargetId,
+    );
+    const caster = requireCombatant(stateWithSaveModifiers, spellCasterId);
+    const stateWithSaveModifiersAndDodge = {
+      ...stateWithSaveModifiers,
+      combatants: new Map(stateWithSaveModifiers.combatants).set(
+        spellCasterId,
+        { ...caster, dodging: true },
+      ),
     };
-    const exhaleAct = dragonsBreathExhaleAct(stateWithSaveModifiers);
+    const exhaleAct = dragonsBreathExhaleAct(stateWithSaveModifiersAndDodge);
     const saveHole = requireHole(exhaleAct.initialHoles, "savingThrowOutcome");
 
     expect(saveHole.targetRollModes).toContainEqual({
@@ -410,7 +396,7 @@ describe("Dragon's Breath initial cast admission", () => {
     });
   });
 
-  test("applies Warding Bond shared-damage concentration fills from the exhale lifecycle", () => {
+  test("applies a low-level Warding Bond interaction before exhale concentration fills", () => {
     const session = spellBattle({
       preparedSpells: [dragonsBreathSpell()],
       spellSlots: [{ spellLevel: 2, count: 1 }],
@@ -507,7 +493,7 @@ describe("Dragon's Breath initial cast admission", () => {
     ).toBeNull();
   });
 
-  test("preserves Warding Bond shared damage before later same-Cone direct damage", () => {
+  test("preserves low-level Warding Bond shared damage before later same-Cone direct damage", () => {
     const laterTargetId = combatantId(
       "unit-profile-dragons-breath-warding-bond-later-target",
     );
@@ -521,7 +507,7 @@ describe("Dragon's Breath initial cast admission", () => {
     if (endedCasterTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const targetTurn = stateWithWardingBondTarget(
+    const targetTurn = stateWithSyntheticWardingBondInteraction(
       endedCasterTurn.state,
       spellCasterId,
       laterTargetId,
@@ -1109,16 +1095,19 @@ function dragonsBreathExhaleAct(state: BattleState) {
   return exhaleAct;
 }
 
-function stateWithExhalingTargetActionEarlyEndCondition(
+function stateWithSyntheticExhaleEndedInvisibilityInteraction(
   state: BattleState,
 ): BattleState {
   const target = requireCombatant(state, spellTargetId);
   if (target.positiveHpUnconscious !== null) {
     throw new Error("Expected Dragon's Breath fixture target to be conscious.");
   }
+  const invisibilityProcedureRef = battleProcedureExecutionRefForTest(
+    "synthetic-dragons-breath-interaction-invisibility",
+  );
   const effect = {
     kind: "targetActionEndedSpellCondition",
-    sourceProcedureRef: dragonsBreathSourceProcedureRef(state),
+    sourceProcedureRef: invisibilityProcedureRef,
     sourceCombatantId: spellTargetId,
     condition: "invisible",
     conditionHadNonSpellSource: false,
@@ -1132,6 +1121,10 @@ function stateWithExhalingTargetActionEarlyEndCondition(
     ...state,
     combatants: new Map(state.combatants).set(spellTargetId, {
       ...target,
+      concentration: {
+        sourceProcedureRef: invisibilityProcedureRef,
+        effectKind: "spellEffect",
+      },
       conditions: { ...target.conditions, invisible: true },
     }),
   };
@@ -1145,57 +1138,47 @@ function stateWithExhalingTargetActionEarlyEndCondition(
 function stateWithWardingBondSharedCasterConcentration(
   state: BattleState,
 ): BattleState {
-  const stateWithBond = stateWithWardingBondTarget(
+  const stateWithBond = stateWithSyntheticWardingBondInteraction(
     state,
     spellCasterId,
     spellTargetId,
   );
-  const sharedDamageCaster = requireCombatant(state, spellTargetId);
+  const sharedDamageCaster = requireCombatant(stateWithBond, spellTargetId);
+  const concentrationProcedureRef = battleProcedureExecutionRefForTest(
+    "synthetic-dragons-breath-interaction-target-concentration",
+  );
   return {
     ...stateWithBond,
     combatants: new Map(stateWithBond.combatants).set(spellTargetId, {
       ...sharedDamageCaster,
       concentration: {
-        sourceProcedureRef: dragonsBreathSourceProcedureRef(state),
+        sourceProcedureRef: concentrationProcedureRef,
         effectKind: "spellEffect",
       },
     }),
   };
 }
 
-function stateWithWardingBondTarget(
+function stateWithSyntheticWardingBondInteraction(
   state: BattleState,
   targetId: CombatantId,
   sourceId: CombatantId,
 ): BattleState {
-  const target = requireCombatant(state, targetId);
-  const wardingBondEffect = {
-    kind: "wardingBond",
-    effectRef: battleEffectExecutionRefForTest("dragon-ward-two"),
-    sourceProcedureRef: dragonsBreathSourceProcedureRef(state),
-    sourceCombatantId: sourceId,
-    expiresAt: {
-      kind: "duration",
-      durationTicks: elapsedTimeTicks(3_600),
+  return battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: targetId,
+    effect: {
+      kind: "wardingBond",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "synthetic-dragons-breath-interaction-warding-bond",
+      ),
+      sourceCombatantId: sourceId,
+      expiresAt: {
+        kind: "duration",
+        durationTicks: elapsedTimeTicks(3_600),
+      },
     },
-  } satisfies Extract<BattleActiveEffect, { readonly kind: "wardingBond" }>;
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(targetId, {
-      ...target,
-      activeEffects: [...target.activeEffects, wardingBondEffect],
-    }),
-  };
-}
-
-function dragonsBreathSourceProcedureRef(state: BattleState) {
-  const effect = requireCombatant(state, spellTargetId).activeEffects.find(
-    (candidate) => candidate.kind === "dragonsBreath",
-  );
-  if (effect === undefined) {
-    throw new Error("Expected Dragon's Breath active effect.");
-  }
-  return effect.sourceProcedureRef;
+  });
 }
 
 function requireConcentrationHole(

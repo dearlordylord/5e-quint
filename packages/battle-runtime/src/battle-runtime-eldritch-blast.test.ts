@@ -299,7 +299,7 @@ describe("battle runtime: Eldritch Blast", () => {
     expect("objectDamages" in requireResolved(result)).toBe(false);
   });
 
-  test("Eldritch Blast same-target hits use independent damage lifecycle holes", () => {
+  test("Eldritch Blast low-level reduction fixture keeps same-target damage lifecycle holes independent", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-eldritch-blast-same-target-lifecycle"),
       combatants: [
@@ -326,7 +326,7 @@ describe("battle runtime: Eldritch Blast", () => {
     const target = baseState.combatants.get(skeletonId)!;
     const source = baseState.combatants.get(wizardId)!;
     const reductionProcedureRef = battleProcedureExecutionRefForTest(
-      "synthetic-eldritch-blast-reduction",
+      "synthetic-low-level-eldritch-blast-reduction",
     );
     const concentratingState = {
       ...baseState,
@@ -342,7 +342,7 @@ describe("battle runtime: Eldritch Blast", () => {
           ...target,
           concentration: {
             sourceProcedureRef: battleProcedureExecutionRefForTest(
-              "synthetic-target-concentration",
+              "synthetic-low-level-target-concentration",
             ),
             effectKind: "readiedSpell",
           },
@@ -708,7 +708,7 @@ describe("battle runtime: Eldritch Blast", () => {
     }
   });
 
-  test("Eldritch Blast creature beams use Concentration, spell reduction, and zero-HP damage lifecycle holes", () => {
+  test("Eldritch Blast low-level fixtures expose Concentration, reduction, and zero-HP lifecycle holes", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-eldritch-blast-concentration"),
       combatants: [
@@ -802,7 +802,7 @@ describe("battle runtime: Eldritch Blast", () => {
     const reductionTarget = state.combatants.get(skeletonId)!;
     const reductionSource = state.combatants.get(wizardId)!;
     const reductionProcedureRef = battleProcedureExecutionRefForTest(
-      "synthetic-eldritch-blast-reduction",
+      "synthetic-low-level-eldritch-blast-reduction",
     );
     const concentratingReductionState = {
       ...state,
