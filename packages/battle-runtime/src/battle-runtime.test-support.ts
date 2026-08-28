@@ -17,8 +17,9 @@ import {
   resolveFindFamiliarForm,
   resolvePactOfTheChainFindFamiliarForm,
 } from "@dnd/surface/surface/find-familiar-forms";
-import { Match, Schema } from "effect";
+import { Match, ParseResult, Schema } from "effect";
 import * as Either from "effect/Either";
+import { expect } from "vitest";
 import {
   battleStatBlockCombatantSource,
   type BattleStatBlockCombatantSource,
@@ -80,8 +81,9 @@ import {
   type UnitId,
   unitId as parseUnitId,
 } from "@dnd/shared/game-facts";
-import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import {
+  decodeStatBlockRecordEither,
+  decodeUnitRecordSync,
   StatBlockProcedureOrdinalSchema,
   StatBlockProcedureResourceOrdinalSchema,
 } from "@dnd/surface/surface/schema";
@@ -4111,6 +4113,34 @@ export function statBlockRecord(): NonSwarmStatBlockRecord {
       statBlockCatalog,
       statBlockId("stat_block_goblin_warrior"),
     ),
+  );
+}
+
+export function expectCasterDerivedArmorClassSourceRejectedAtStatBlockDecodeBoundary(
+  record: StatBlockRecord,
+): void {
+  const malformedArmorClass = decodeStatBlockRecordEither({
+    ...record,
+    statBlock: {
+      ...record.statBlock,
+      ac: { value: { kind: "caster_derived", source: "spell_save_dc" } },
+    },
+  });
+  expect(Either.isLeft(malformedArmorClass)).toBe(true);
+  if (Either.isRight(malformedArmorClass)) {
+    throw new Error("Expected malformed Armor Class source to be rejected.");
+  }
+  expect(malformedArmorClass.left._tag).toBe("ParseError");
+  const armorClassParseIssues = ParseResult.ArrayFormatter.formatErrorSync(
+    malformedArmorClass.left,
+  );
+  expect(armorClassParseIssues).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        _tag: "Unexpected",
+        path: ["statBlock", "ac", "value", "source"],
+      }),
+    ]),
   );
 }
 

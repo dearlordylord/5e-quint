@@ -4,10 +4,7 @@ import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
-import {
-  decodeStatBlockRecordEither,
-  StatBlockProcedureResourceOrdinalSchema,
-} from "@dnd/surface/surface/schema";
+import { StatBlockProcedureResourceOrdinalSchema } from "@dnd/surface/surface/schema";
 
 import { addBattleStatBlockCombatant } from "./battle-reducer/stat-block-combatant-execution.ts";
 import {
@@ -35,6 +32,7 @@ import {
   monsterResourceStatBlock,
   statBlockCreatureInit,
   statBlockRecord,
+  expectCasterDerivedArmorClassSourceRejectedAtStatBlockDecodeBoundary,
   projectedStatBlockRuntimeSource,
 } from "./battle-runtime.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY
@@ -240,54 +238,9 @@ describe("Stat Block combatant admission capability", () => {
 
   test("rejects nonliteral authored Stat Block initialization facts at the schema boundary", () => {
     const source = statBlockRecord();
-    const malformedArmorClass = decodeStatBlockRecordEither({
-      ...source,
-      statBlock: {
-        ...source.statBlock,
-        ac: { value: { kind: "caster_derived", source: "spell_save_dc" } },
-      },
-    });
-    expect(malformedArmorClass).toMatchObject({
-      _tag: "Left",
-      left: {
-        _tag: "ParseError",
-        issue: {
-          _tag: "Composite",
-          issues: {
-            _tag: "Pointer",
-            path: "statBlock",
-            issue: {
-              _tag: "Refinement",
-              issue: {
-                _tag: "Composite",
-                issues: {
-                  _tag: "Pointer",
-                  path: "ac",
-                  issue: {
-                    _tag: "Composite",
-                    issues: {
-                      _tag: "Pointer",
-                      path: "value",
-                      issue: {
-                        _tag: "Refinement",
-                        issue: {
-                          _tag: "Composite",
-                          issues: {
-                            _tag: "Pointer",
-                            path: "source",
-                            issue: { _tag: "Unexpected" },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
+    expectCasterDerivedArmorClassSourceRejectedAtStatBlockDecodeBoundary(
+      source,
+    );
   });
 
   test("retains caller-supplied initial conditions for Stat Block creatures", () => {
