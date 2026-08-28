@@ -1,9 +1,15 @@
+// RAW-COVERAGE: verification-owner:runtime-test RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.spellcasting.procedure
+// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.SPELLCASTING_PROCEDURE
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import * as Either from "effect/Either";
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import { statBlockId } from "@dnd/shared/game-facts";
-import { StatBlockProcedureOrdinalSchema } from "@dnd/surface/surface/schema";
+import {
+  StatBlockProcedureOrdinalSchema,
+  StatBlockProcedureResourceOrdinalSchema,
+} from "@dnd/surface/surface/schema";
 import type {
   StatBlockProcedureEntry,
   StandaloneStatBlock,
@@ -29,6 +35,7 @@ import {
   monsterMultiattackStatBlock,
   statBlockRecord,
 } from "./battle-runtime.test-support.ts";
+import { syntheticSpellcastingProcedureEntry } from "./stat-block-spellcasting-procedure.test-support.ts";
 import { statBlockExecutionAdmissionCohort } from "./stat-block-execution.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution-state.ts";
 import {
@@ -38,6 +45,8 @@ import {
 
 const authoredOrdinal = (value: number) =>
   Schema.decodeUnknownSync(StatBlockProcedureOrdinalSchema)(value);
+const authoredResourceOrdinal = (value: number) =>
+  Schema.decodeUnknownSync(StatBlockProcedureResourceOrdinalSchema)(value);
 
 function initializedStatBlock(source: StatBlockRecord) {
   const initialized = battleCreatureInitFromStatBlock({
@@ -504,5 +513,129 @@ describe("generic Stat Block projection", () => {
         }),
       ]),
     );
+  });
+
+  test("projects generic spellcasting without selecting child invocations", () => {
+    const source = statBlockRecord();
+    const spellcasting = syntheticSpellcastingProcedureEntry();
+    const projected = projectAuthoredStatBlock({
+      ...source,
+      statBlock: {
+        ...source.statBlock,
+        actions: [...(source.statBlock.actions ?? []), spellcasting],
+        resources: [
+          ...(source.statBlock.resources ?? []),
+          {
+            ordinal: authoredResourceOrdinal(1),
+            ownership: "each",
+            limit: { kind: "daily", uses: 2 },
+          },
+        ],
+      },
+    });
+
+    expect(Either.isRight(projected)).toBe(true);
+    if (Either.isLeft(projected)) return;
+    const runtimeProcedure = projected.right.runtime.procedures.find(
+      (procedure) => procedure.kind === "spellcasting",
+    );
+    expect(runtimeProcedure).toEqual({
+      kind: "spellcasting",
+      section: "actions",
+      procedureOrdinal: spellcasting.procedureOrdinal,
+      ability: "int",
+      spellSaveDc: 13,
+      spellAttackBonus: 5,
+      components: { v: true, s: true, m: "notRequired" },
+      resourceRefs: [],
+      groups: [
+        {
+          kind: "at_will",
+          resourceRefs: [],
+          invocations: [{ kind: "unrestricted" }, { kind: "restricted" }],
+        },
+        {
+          kind: "limited",
+          resourceRefs: [1],
+          invocations: [{ kind: "unrestricted" }],
+        },
+      ],
+    });
+    expect(JSON.stringify(runtimeProcedure)).not.toContain("synthetic_spell");
+    expect(JSON.stringify(runtimeProcedure)).not.toContain(
+      "synthetic restriction",
+    );
+  });
+
+  test("takes renamed spellcasting shapes through the same runtime route", () => {
+    const source = statBlockRecord();
+    const originalEntry = syntheticSpellcastingProcedureEntry();
+    const renamedEntry = syntheticSpellcastingProcedureEntry({
+      name: "Different Procedure Label",
+      unrestrictedSpellId: "another_synthetic_spell",
+      restrictedSpellId: "yet_another_synthetic_spell",
+      restrictionExpression: "A different protected expression.",
+    });
+    const project = (entry: StatBlockProcedureEntry) =>
+      projectAuthoredStatBlock({
+        ...source,
+        statBlock: {
+          ...source.statBlock,
+          actions: [...(source.statBlock.actions ?? []), entry],
+          resources: [
+            ...(source.statBlock.resources ?? []),
+            {
+              ordinal: authoredResourceOrdinal(1),
+              ownership: "each",
+              limit: { kind: "daily", uses: 2 },
+            },
+          ],
+        },
+      });
+    const original = project(originalEntry);
+    const renamed = project(renamedEntry);
+
+    expect(Either.isRight(original)).toBe(true);
+    expect(Either.isRight(renamed)).toBe(true);
+    if (Either.isLeft(original) || Either.isLeft(renamed)) return;
+    const originalRuntime = original.right.runtime.procedures.find(
+      (procedure) => procedure.kind === "spellcasting",
+    );
+    const renamedRuntime = renamed.right.runtime.procedures.find(
+      (procedure) => procedure.kind === "spellcasting",
+    );
+    expect(originalRuntime).toEqual(renamedRuntime);
+  });
+
+  test("retains an explicit unsupported state for spellcasting outside action sections", () => {
+    const source = statBlockRecord();
+    const spellcasting = syntheticSpellcastingProcedureEntry();
+    const reactionSpellcasting = {
+      ...spellcasting,
+      trigger: {
+        kind: "creature_casts_spell" as const,
+        components: ["V"] as const,
+      },
+    };
+    const projected = projectAuthoredStatBlock({
+      ...source,
+      statBlock: {
+        ...source.statBlock,
+        reactions: [reactionSpellcasting],
+      },
+    });
+
+    expect(Either.isLeft(projected)).toBe(true);
+    if (Either.isRight(projected)) return;
+    expect(projected.left).toEqual({
+      tag: "battleStatBlockProjectionFailure",
+      reason: "unsupportedProcedureBinding",
+      issues: [
+        {
+          section: "reactions",
+          procedureOrdinal: spellcasting.procedureOrdinal,
+        },
+      ],
+    });
   });
 });

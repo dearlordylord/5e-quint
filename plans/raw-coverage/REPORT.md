@@ -209,11 +209,11 @@
 - SRD span classification: 23966 / 23966 = 100.00%
 - Non-fluff span closure: 22730 / 22730 = 100.00%
 - Executable requirements: 24
-- QNT modeled: 13 / 24 = 54.17%
-- QNT proved: 13 / 24 = 54.17%
-- Runtime mapped: 15 / 24 = 62.50%
-- Runtime tested: 7 / 24 = 29.17%
-- Runtime parity covered: 9 / 24 = 37.50%
+- QNT modeled: 14 / 24 = 58.33%
+- QNT proved: 14 / 24 = 58.33%
+- Runtime mapped: 16 / 24 = 66.67%
+- Runtime tested: 8 / 24 = 33.33%
+- Runtime parity covered: 10 / 24 = 41.67%
 - Out of promoted scope spans: 1731
 - Ambiguous spans: 0
 - RAW-reviewed sections: 2920 / 2920 = 100.00%
@@ -3162,6 +3162,9 @@
 | SB-RESOURCE-LIFECYCLE-INDUCTIVE | qnt-proof | packages/shared-algebras/proofs/rule-core/stat-block-resource-lifecycle-inductive.qnt | RAW-STAT-BLOCK-LIMITED-USAGE-001 |
 | SB-ACTIONS-RUNTIME-TEST | runtime-test | packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts | RAW-STAT-BLOCK-ACTION-LIFECYCLE-001, RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001, RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001, RAW-STAT-BLOCK-ATTACK-PROCEDURE-001, RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001, RAW-STAT-BLOCK-MULTIATTACK-001, RAW-STAT-BLOCK-LIMITED-USAGE-001 |
 | SB-MULTIATTACK-MBT | runtime-parity | packages/battle-runtime/src/rule-core-stat-block-multiattack.mbt.test.ts | RAW-STAT-BLOCK-MULTIATTACK-001 |
+| SB-SPELLCASTING-PROCEDURE-QNT | qnt-proof | packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-procedure-examples.qnt | RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001 |
+| SB-SPELLCASTING-PROCEDURE-MBT | runtime-parity | packages/battle-runtime/src/rule-core-stat-block-spellcasting-procedure.mbt.test.ts | RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001 |
+| SB-SPELLCASTING-PROCEDURE-RUNTIME-TEST | runtime-test | packages/battle-runtime/src/stat-block-projection.test.ts | RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001 |
 
 ## Tracker Follow-up Claims
 
@@ -3170,7 +3173,6 @@ GitHub owns tracker status. These rows only join checked coverage gaps to stable
 | Tracker | Gap metric | Requirements |
 | --- | --- | --- |
 | GH-418 | missing-runtime-owner | RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001 |
-| GH-419 | missing-runtime-owner | RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001 |
 | GH-420 | missing-runtime-owner | RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001 |
 | GH-421 | missing-runtime-owner | RAW-STAT-BLOCK-SAVE-PROCEDURE-001 |
 | GH-422 | missing-runtime-owner | RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001 |
@@ -3250,7 +3252,7 @@ GitHub owns tracker status. These rows only join checked coverage gaps to stable
 | RAW-STAT-BLOCK-MULTIATTACK-001 | executable | yes | yes | yes | yes | yes | SB-MULTIATTACK-INDUCTIVE, SB-ACTIONS-RUNTIME-TEST, SB-MULTIATTACK-MBT |  |
 | RAW-STAT-BLOCK-LIMITED-USAGE-001 | executable | yes | yes | yes | yes | no | SB-RESOURCE-LIFECYCLE-INDUCTIVE, SB-ACTIONS-RUNTIME-TEST |  |
 | RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001 | executable | no | no | no | no | no |  | GH-418 |
-| RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001 | executable | no | no | no | no | no |  | GH-419 |
+| RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001 | executable | yes | yes | yes | yes | yes | SB-SPELLCASTING-PROCEDURE-QNT, SB-SPELLCASTING-PROCEDURE-MBT, SB-SPELLCASTING-PROCEDURE-RUNTIME-TEST |  |
 | RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001 | executable | no | no | no | no | no |  | GH-420 |
 | RAW-STAT-BLOCK-SAVE-PROCEDURE-001 | executable | no | no | no | no | no |  | GH-421 |
 | RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001 | executable | no | no | no | no | no |  | GH-422 |

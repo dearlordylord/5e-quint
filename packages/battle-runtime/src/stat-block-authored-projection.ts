@@ -1,3 +1,6 @@
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001
+// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.spellcasting.procedure
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.SPELLCASTING_PROCEDURE
 import * as Either from "effect/Either";
 import { Match } from "effect";
 import {
@@ -12,6 +15,7 @@ import type {
   StatBlockProcedureOrdinal,
   StatBlockProcedureResourceOrdinal,
   StatBlockRecord,
+  StatBlockSpellReference,
   StandaloneCreatureSpeed,
   StandaloneStatBlock,
   StandaloneStatBlockSpeedEntry,
@@ -45,6 +49,7 @@ import type {
   StatBlockTraitAttackRollMode,
   SupportedCreatureAttackRollMechanics,
 } from "./battle-action-options.ts";
+import { optionalProperty } from "./optional-property.ts";
 
 type BattleStatBlockProjectionScalarFailureReason =
   | "nonLiteralSize"
@@ -378,6 +383,15 @@ export type AuthoredStatBlockProcedureExecutionDecision =
         BattleStatBlockRuntimeProcedure,
         { readonly kind: "bonusActionOption" }
       >;
+    }
+  | {
+      readonly kind: "executable";
+      readonly procedureKind: "spellcasting";
+      readonly entry: AuthoredExecutableProcedureEntryByKind<"spellcasting">;
+      readonly runtime: Extract<
+        BattleStatBlockRuntimeProcedure,
+        { readonly kind: "spellcasting" }
+      >;
     };
 
 type AdmittedExecutableStatBlockProcedureProjection =
@@ -412,6 +426,17 @@ type AdmittedExecutableStatBlockProcedureProjection =
       readonly presentation: Extract<
         BattleStatBlockAuthoredProcedurePresentation,
         { readonly kind: "bonusActionOption" }
+      >;
+    }
+  | {
+      readonly kind: "executable";
+      readonly runtime: Extract<
+        BattleStatBlockRuntimeProcedure,
+        { readonly kind: "spellcasting" }
+      >;
+      readonly presentation: Extract<
+        BattleStatBlockAuthoredProcedurePresentation,
+        { readonly kind: "spellcasting" }
       >;
     };
 
@@ -555,6 +580,19 @@ function admittedProcedureProjection(
           ),
         }),
     ),
+    Match.when(
+      { kind: "executable", procedureKind: "spellcasting" },
+      ({ entry: executableEntry, runtime }) =>
+        Either.right({
+          kind: "executable" as const,
+          runtime,
+          presentation: spellcastingProcedurePresentation(
+            section,
+            executableEntry,
+            executableEntry.procedure,
+          ),
+        }),
+    ),
     Match.exhaustive,
   );
 }
@@ -656,11 +694,42 @@ export function authoredStatBlockProcedureExecutionDecision(
       entry,
       failedFacts: ["missingSupportProcedureOwner"] as const,
     })),
-    Match.when({ kind: "spellcasting" }, () => ({
-      kind: "missingOwner" as const,
-      entry,
-      failedFacts: ["missingSpellcastingProcedureOwner"] as const,
-    })),
+    Match.when({ kind: "spellcasting" }, (procedure) => {
+      // The Surface schema correlates this procedure with a `none` resource
+      // reference branch. Keep the guard at this typed boundary because the
+      // generated TypeScript union does not retain that nested correlation.
+      if (entry.resourceRefs.kind !== "none") {
+        return {
+          kind: "missingOwner" as const,
+          entry,
+          failedFacts: ["runtimeProcedureBindingRejected"] as const,
+        };
+      }
+      const narrowedEntry: AuthoredExecutableProcedureEntryByKind<"spellcasting"> =
+        {
+          kind: "executable",
+          procedureOrdinal: entry.procedureOrdinal,
+          procedure,
+          resourceRefs: { kind: "none" },
+        };
+      const runtime = runtimeSpellcastingBinding(
+        section,
+        narrowedEntry,
+        procedure,
+      );
+      return Either.isRight(runtime)
+        ? {
+            kind: "executable" as const,
+            procedureKind: "spellcasting" as const,
+            entry: narrowedEntry,
+            runtime: runtime.right,
+          }
+        : {
+            kind: "missingOwner" as const,
+            entry: narrowedEntry,
+            failedFacts: spellcastingExecutionFailedFacts(section),
+          };
+    }),
     Match.exhaustive,
   );
 }
@@ -822,6 +891,91 @@ function runtimeBonusActionBinding(
       );
 }
 
+function runtimeSpellcastingBinding(
+  section: StatBlockActionProjectionSection,
+  entry: AuthoredExecutableProcedureEntryByKind<"spellcasting">,
+  procedure: AuthoredExecutableProcedureEntryByKind<"spellcasting">["procedure"],
+): Either.Either<
+  Extract<BattleStatBlockRuntimeProcedure, { readonly kind: "spellcasting" }>,
+  BattleStatBlockUnsupportedProcedureBinding
+> {
+  if (section !== "actions" && section !== "bonusActions") {
+    return Either.left(procedureBindingIssue(section, entry.procedureOrdinal));
+  }
+  const groups = procedure.groups.map((group) =>
+    Match.value(group).pipe(
+      Match.when({ kind: "at_will" }, ({ spells }) => ({
+        kind: "at_will" as const,
+        resourceRefs: [] as const,
+        invocations: runtimeSpellcastingInvocations(spells),
+      })),
+      Match.when({ kind: "limited" }, ({ resourceRefs, spells }) => ({
+        kind: "limited" as const,
+        resourceRefs: resourceRefs.ordinals,
+        invocations: runtimeSpellcastingInvocations(spells),
+      })),
+      Match.exhaustive,
+    ),
+  );
+  return Either.right({
+    kind: "spellcasting",
+    section,
+    procedureOrdinal: entry.procedureOrdinal,
+    ability: procedure.ability,
+    ...optionalProperty(
+      "spellSaveDc",
+      procedure.spellSaveDc === undefined
+        ? undefined
+        : PositiveInteger(procedure.spellSaveDc.dc),
+    ),
+    ...optionalProperty(
+      "spellAttackBonus",
+      procedure.spellAttackBonus === undefined
+        ? undefined
+        : Integer(procedure.spellAttackBonus.value),
+    ),
+    ...(procedure.components === undefined
+      ? {}
+      : {
+          components: {
+            v: procedure.components.v,
+            s: procedure.components.s,
+            m:
+              procedure.components.m === false
+                ? ("notRequired" as const)
+                : ("required" as const),
+          },
+        }),
+    groups: nonEmptyRuntimeValues(groups),
+    resourceRefs: [],
+  });
+}
+
+function runtimeSpellcastingInvocations(
+  spells: ReadonlyNonEmptyArray<StatBlockSpellReference>,
+): ReadonlyNonEmptyArray<
+  Extract<
+    BattleStatBlockRuntimeProcedure,
+    { readonly kind: "spellcasting" }
+  >["groups"][number]["invocations"][number]
+> {
+  return nonEmptyRuntimeValues(
+    spells.map((spell) =>
+      spell.restriction === undefined
+        ? { kind: "unrestricted" as const }
+        : { kind: "restricted" as const },
+    ),
+  );
+}
+
+function spellcastingExecutionFailedFacts(
+  section: StatBlockActionProjectionSection,
+): ReadonlyNonEmptyArray<StatBlockProcedureExecutionFailedFact> {
+  return section === "actions" || section === "bonusActions"
+    ? ["runtimeProcedureBindingRejected"]
+    : ["unsupportedSection"];
+}
+
 function presentationProjection(
   record: StatBlockRecord,
   admitted: readonly AdmittedStatBlockProcedureProjection[],
@@ -901,6 +1055,20 @@ function bonusActionProcedurePresentation(
   return {
     ...procedurePresentationBase(section, entry, procedure.name),
     kind: "bonusActionOption",
+  };
+}
+
+function spellcastingProcedurePresentation(
+  section: StatBlockActionProjectionSection,
+  entry: AuthoredExecutableProcedureEntry,
+  procedure: Extract<typeof entry.procedure, { readonly kind: "spellcasting" }>,
+): Extract<
+  BattleStatBlockAuthoredProcedurePresentation,
+  { readonly kind: "spellcasting" }
+> {
+  return {
+    ...procedurePresentationBase(section, entry, procedure.name),
+    kind: "spellcasting",
   };
 }
 

@@ -25517,11 +25517,11 @@
     "closedNonFluffSpans": 22730,
     "requirements": 74,
     "executableRequirements": 24,
-    "qntModeled": 13,
-    "qntProved": 13,
-    "runtimeMapped": 15,
-    "runtimeTested": 7,
-    "runtimeParityCovered": 9,
+    "qntModeled": 14,
+    "qntProved": 14,
+    "runtimeMapped": 16,
+    "runtimeTested": 8,
+    "runtimeParityCovered": 10,
     "outOfScopeSpans": 1731,
     "ambiguousSpans": 0,
     "rawReviewedSections": 2920
@@ -51942,6 +51942,30 @@
       "requirementIds": [
         "RAW-STAT-BLOCK-MULTIATTACK-001"
       ]
+    },
+    {
+      "evidenceId": "SB-SPELLCASTING-PROCEDURE-QNT",
+      "coverageMetric": "qnt-proof",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-procedure-examples.qnt",
+      "requirementIds": [
+        "RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001"
+      ]
+    },
+    {
+      "evidenceId": "SB-SPELLCASTING-PROCEDURE-MBT",
+      "coverageMetric": "runtime-parity",
+      "ownerPath": "packages/battle-runtime/src/rule-core-stat-block-spellcasting-procedure.mbt.test.ts",
+      "requirementIds": [
+        "RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001"
+      ]
+    },
+    {
+      "evidenceId": "SB-SPELLCASTING-PROCEDURE-RUNTIME-TEST",
+      "coverageMetric": "runtime-test",
+      "ownerPath": "packages/battle-runtime/src/stat-block-projection.test.ts",
+      "requirementIds": [
+        "RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001"
+      ]
     }
   ],
   "trackerClaims": [
@@ -51950,13 +51974,6 @@
       "coverageMetric": "missing-runtime-owner",
       "requirementIds": [
         "RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001"
-      ]
-    },
-    {
-      "trackerId": "GH-419",
-      "coverageMetric": "missing-runtime-owner",
-      "requirementIds": [
-        "RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001"
       ]
     },
     {
@@ -81221,15 +81238,17 @@
         "SRD521-MONSTERS-OVERVIEW-0233-008",
         "SRD521-MONSTERS-OVERVIEW-0233-009"
       ],
-      "qntModeled": false,
-      "qntProved": false,
-      "runtimeMapped": false,
-      "runtimeTested": false,
-      "runtimeParityCovered": false,
-      "evidenceClaims": [],
-      "trackerClaims": [
-        "GH-419"
-      ]
+      "qntModeled": true,
+      "qntProved": true,
+      "runtimeMapped": true,
+      "runtimeTested": true,
+      "runtimeParityCovered": true,
+      "evidenceClaims": [
+        "SB-SPELLCASTING-PROCEDURE-QNT",
+        "SB-SPELLCASTING-PROCEDURE-MBT",
+        "SB-SPELLCASTING-PROCEDURE-RUNTIME-TEST"
+      ],
+      "trackerClaims": []
     },
     {
       "id": "RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001",

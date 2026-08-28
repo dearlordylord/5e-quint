@@ -73,18 +73,18 @@
     },
     "qntProfileModelingCoverage": {
       "denominator": 164,
-      "numerator": 151,
-      "percent": "92.1%"
+      "numerator": 152,
+      "percent": "92.7%"
     },
     "qntProofCoverage": {
       "denominator": 164,
-      "numerator": 146,
-      "percent": "89%"
+      "numerator": 147,
+      "percent": "89.6%"
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 203,
-      "numerator": 167,
-      "percent": "82.3%"
+      "numerator": 168,
+      "percent": "82.8%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 203,
@@ -98,13 +98,13 @@
     },
     "runtimeMappingCoverage": {
       "denominator": 164,
-      "numerator": 155,
-      "percent": "94.5%"
+      "numerator": 156,
+      "percent": "95.1%"
     },
     "runtimeParityCoverage": {
       "denominator": 164,
-      "numerator": 155,
-      "percent": "94.5%"
+      "numerator": 156,
+      "percent": "95.1%"
     },
     "selectedIdentityReplayCoverage": {
       "denominator": 199,
@@ -3477,15 +3477,36 @@
     {
       "id": "stat-block.spellcasting.procedure",
       "profileKind": "stat-block-control",
-      "qntOwners": [],
-      "qntOwnershipStatus": "needs-qnt-owner",
-      "runtimeOwners": [],
-      "sourceBoundary": "StatBlockRecord",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-procedure.qnt"
+      ],
+      "qntOwnershipStatus": "covered",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/stat-block-authored-projection.ts",
+        "packages/battle-runtime/src/stat-block-execution-state.ts",
+        "packages/battle-runtime/src/stat-block-execution.ts"
+      ],
+      "sourceBoundary": "StatBlockRecord; generic admission preserves typed procedure facts and child outcome kinds without selecting a group or invocation",
       "taskRefs": [
-        "GH-419"
+        "SB-SPELLCASTING-PROCEDURE-QNT",
+        "SB-SPELLCASTING-PROCEDURE-MBT",
+        "SB-SPELLCASTING-PROCEDURE-RUNTIME-TEST"
       ],
       "title": "Stat Block spellcasting procedure",
-      "verificationOwners": []
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-procedure-examples.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-stat-block-spellcasting-procedure.mbt.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/stat-block-projection.test.ts"
+        }
+      ]
     },
     {
       "id": "stat-block.spellcasting.limited-group",
@@ -7647,8 +7668,8 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 203,
-        "numerator": 167,
-        "percent": "82.3%"
+        "numerator": 168,
+        "percent": "82.8%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 203,
@@ -9426,21 +9447,20 @@
         "qntOwners": []
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
-            "followUpTaskIds": [
-              "GH-419"
-            ],
             "obligationId": "BATTLE.STAT_BLOCK.SPELLCASTING_PROCEDURE",
             "runtime": "battle",
-            "status": "needs-qnt-owner",
+            "status": "covered",
             "title": "Stat Block spellcasting procedure"
           }
         ],
         "profileId": "stat-block.spellcasting.procedure",
         "profileKind": "stat-block-control",
-        "qntOwners": []
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-procedure.qnt"
+        ]
       },
       {
         "joinStatus": "mapped-open",
@@ -21289,14 +21309,6 @@
       "claimKind": "missing-runtime-owner",
       "note": "Bounded #114 Rule Capability Increment from checked #350 pressure.",
       "profileIds": [
-        "stat-block.spellcasting.procedure"
-      ],
-      "taskId": "GH-419"
-    },
-    {
-      "claimKind": "missing-runtime-owner",
-      "note": "Bounded #114 Rule Capability Increment from checked #350 pressure.",
-      "profileIds": [
         "stat-block.spellcasting.limited-group"
       ],
       "taskId": "GH-420"
@@ -21409,6 +21421,30 @@
         "stat-block.multiattack"
       ],
       "taskId": "SB-MULTIATTACK-MBT"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Exact generic Stat Block spellcasting procedure admission and typed child-outcome proof evidence; not child lifecycle or invocation execution.",
+      "profileIds": [
+        "stat-block.spellcasting.procedure"
+      ],
+      "taskId": "SB-SPELLCASTING-PROCEDURE-QNT"
+    },
+    {
+      "claimKind": "runtime-parity",
+      "note": "Focused production parity for generic Stat Block spellcasting procedure projection; no group or invocation selection.",
+      "profileIds": [
+        "stat-block.spellcasting.procedure"
+      ],
+      "taskId": "SB-SPELLCASTING-PROCEDURE-MBT"
+    },
+    {
+      "claimKind": "runtime-evidence",
+      "note": "Exact source-free runtime projection and identity-independence evidence; restricted deltas remain non-executable.",
+      "profileIds": [
+        "stat-block.spellcasting.procedure"
+      ],
+      "taskId": "SB-SPELLCASTING-PROCEDURE-RUNTIME-TEST"
     },
     {
       "claimKind": "missing-qnt-owner",

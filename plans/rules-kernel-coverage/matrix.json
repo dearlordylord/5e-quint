@@ -1,8 +1,8 @@
 {
   "summary": {
     "total": 162,
-    "covered": 142,
-    "open": 14,
+    "covered": 143,
+    "open": 13,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
@@ -12,8 +12,8 @@
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 142,
-      "needs-qnt-owner": 14,
+      "covered": 143,
+      "needs-qnt-owner": 13,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
       "boundary-only": 5,
@@ -3030,16 +3030,32 @@
       "title": "Unrestricted Stat Block spell invocation"
     },
     {
-      "followUpTaskIds": ["GH-419"],
       "id": "BATTLE.STAT_BLOCK.SPELLCASTING_PROCEDURE",
       "kind": "profile-procedure",
-      "parityWitnesses": [],
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-stat-block-spellcasting-procedure.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-stat-block-spellcasting-procedure.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/stat-block-projection.test.ts"
+        }
+      ],
       "profiles": ["stat-block.spellcasting.procedure"],
-      "qntOwners": [],
-      "reason": "GitHub #419 owns the bounded generic missing-owner family from #350.",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-procedure.qnt"
+      ],
+      "reason": "GitHub #419 admits the complete generic Stat Block spellcasting procedure projection for Action and Bonus Action sections. It preserves typed at-will, limited-use, unrestricted, and restricted child outcome kinds and group resource ordinals without selecting a group or invocation. Child lifecycle and invocation execution remain with #420, #422, and the #428 descendant owners.",
       "runtime": "battle",
-      "runtimeOwners": [],
-      "status": "needs-qnt-owner",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/stat-block-authored-projection.ts",
+        "packages/battle-runtime/src/stat-block-execution-state.ts",
+        "packages/battle-runtime/src/stat-block-execution.ts"
+      ],
+      "status": "covered",
       "surfaceEvidence": [
         "plans/stat-block-procedure-pressure/inventory.json",
         ".references/srd-5.2.1/Monsters/Overview.md#Parts-of-a-Stat-Block"
@@ -9669,6 +9685,12 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "Focused generic Stat Block spellcasting procedure admission, Action or Bonus Action cost projection, and identity-free preservation of typed group and invocation outcome facts. It does not select a spellcasting group or invocation and does not execute restricted deltas.",
+      "obligationIds": ["BATTLE.STAT_BLOCK.SPELLCASTING_PROCEDURE"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-procedure.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "Focused daily, Recharge, and rest-recharge resource semantics.",
       "obligationIds": ["BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE"],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-resource-lifecycle.qnt",
@@ -10049,6 +10071,12 @@
       "evidence": "Focused Multiattack inductive evidence.",
       "obligationIds": [],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-multiattack-inductive.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Focused Stat Block spellcasting procedure admission and child-outcome example evidence.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-procedure-examples.qnt",
       "role": "proof-only"
     },
     {
@@ -13290,6 +13318,16 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-procedure-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-procedure.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/uncanny-metabolism-resource.qnt",
       "role": "semantic-core"
     },
@@ -16508,6 +16546,33 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/stat-block-multiattack.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "fold",
+        "list",
+        "map"
+      ],
+      "obligationId": "BATTLE.STAT_BLOCK.SPELLCASTING_PROCEDURE",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-procedure-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-procedure.qnt"
       ],
       "status": "generation-subset-clean"
     },

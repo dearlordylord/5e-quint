@@ -1,5 +1,4 @@
 {"trackerId":"GH-418","coverageMetric":"missing-runtime-owner","requirementIds":["RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001"]}
-{"trackerId":"GH-419","coverageMetric":"missing-runtime-owner","requirementIds":["RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001"]}
 {"trackerId":"GH-420","coverageMetric":"missing-runtime-owner","requirementIds":["RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001"]}
 {"trackerId":"GH-421","coverageMetric":"missing-runtime-owner","requirementIds":["RAW-STAT-BLOCK-SAVE-PROCEDURE-001"]}
 {"trackerId":"GH-422","coverageMetric":"missing-runtime-owner","requirementIds":["RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001"]}

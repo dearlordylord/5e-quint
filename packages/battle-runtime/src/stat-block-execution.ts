@@ -1,6 +1,6 @@
-// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-MULTIATTACK-001
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties stat-block.multiattack
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP BATTLE.STAT_BLOCK.MULTIATTACK
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-MULTIATTACK-001 RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties stat-block.multiattack stat-block.spellcasting.procedure
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP BATTLE.STAT_BLOCK.MULTIATTACK BATTLE.STAT_BLOCK.SPELLCASTING_PROCEDURE
 import { optionalProperty } from "./optional-property.ts";
 import {
   NonNegativeInteger,
@@ -37,6 +37,8 @@ import {
   type BattleStatBlockExecutionSource,
   type BattleStatBlockRuntimeProcedure,
   type BattleStatBlockRuntimeResource,
+  type BattleStatBlockRuntimeSpellcastingGroup,
+  type StatBlockSpellcastingGroup,
   type StatBlockExecutionState,
   type StatBlockExecutionAdmission,
   type StatBlockExecutionSnapshot,
@@ -99,7 +101,8 @@ type AllocatedStatBlockExecution = {
     | AdmittedAttackOccurrence
     | AdmittedUnarmedStrikeOccurrence
     | AdmittedMultiattackOccurrence
-    | AdmittedBonusActionOccurrence,
+    | AdmittedBonusActionOccurrence
+    | AdmittedSpellcastingOccurrence,
     BattleStatBlockProcedureExecutionRef
   >;
 };
@@ -163,12 +166,45 @@ export type AdmittedBonusActionOccurrence = {
   readonly resourceRefs: readonly StatBlockProcedureResourceOrdinal[];
 };
 
+export type AdmittedSpellcastingOccurrence = {
+  readonly kind: "spellcasting";
+  readonly procedureOrdinal: Extract<
+    BattleStatBlockRuntimeProcedure,
+    { readonly kind: "spellcasting" }
+  >["procedureOrdinal"];
+  readonly section: Extract<
+    BattleStatBlockRuntimeProcedure,
+    { readonly kind: "spellcasting" }
+  >["section"];
+  readonly ability: Extract<
+    BattleStatBlockRuntimeProcedure,
+    { readonly kind: "spellcasting" }
+  >["ability"];
+  readonly spellSaveDc?: Extract<
+    BattleStatBlockRuntimeProcedure,
+    { readonly kind: "spellcasting" }
+  >["spellSaveDc"];
+  readonly spellAttackBonus?: Extract<
+    BattleStatBlockRuntimeProcedure,
+    { readonly kind: "spellcasting" }
+  >["spellAttackBonus"];
+  readonly components?: Extract<
+    BattleStatBlockRuntimeProcedure,
+    { readonly kind: "spellcasting" }
+  >["components"];
+  readonly groups: Extract<
+    BattleStatBlockRuntimeProcedure,
+    { readonly kind: "spellcasting" }
+  >["groups"];
+};
+
 export type AdmittedStatBlockOccurrences = {
   readonly legendaryActionUses?: PositiveInteger;
   readonly attacks: readonly AdmittedAttackOccurrence[];
   readonly unarmedStrike: AdmittedUnarmedStrikeOccurrence;
   readonly multiattacks: readonly AdmittedMultiattackOccurrence[];
   readonly bonusActions: readonly AdmittedBonusActionOccurrence[];
+  readonly spellcastings: readonly AdmittedSpellcastingOccurrence[];
   readonly resources: readonly BattleStatBlockRuntimeResource[];
 };
 
@@ -295,6 +331,27 @@ function admitStatBlock(
     bonusActions.push(occurrence);
   }
 
+  const spellcastings: AdmittedSpellcastingOccurrence[] = [];
+  for (const procedure of statBlock.procedures) {
+    if (procedure.kind !== "spellcasting") continue;
+    spellcastings.push({
+      kind: "spellcasting",
+      procedureOrdinal: procedure.procedureOrdinal,
+      section: procedure.section,
+      ability: procedure.ability,
+      ...(procedure.spellSaveDc === undefined
+        ? {}
+        : { spellSaveDc: procedure.spellSaveDc }),
+      ...(procedure.spellAttackBonus === undefined
+        ? {}
+        : { spellAttackBonus: procedure.spellAttackBonus }),
+      ...(procedure.components === undefined
+        ? {}
+        : { components: procedure.components }),
+      groups: procedure.groups,
+    });
+  }
+
   return {
     occurrences: {
       ...(statBlock.legendaryActionUses === undefined ||
@@ -307,6 +364,7 @@ function admitStatBlock(
       unarmedStrike: admittedUnarmedStrike(statBlock),
       multiattacks,
       bonusActions,
+      spellcastings,
       resources: statBlock.resources,
     },
   };
@@ -418,7 +476,8 @@ function allocateStatBlockExecution(
     | AdmittedAttackOccurrence
     | AdmittedUnarmedStrikeOccurrence
     | AdmittedMultiattackOccurrence
-    | AdmittedBonusActionOccurrence,
+    | AdmittedBonusActionOccurrence
+    | AdmittedSpellcastingOccurrence,
     BattleStatBlockProcedureExecutionRef
   >();
   const legendaryUses = admitted.legendaryActionUses;
@@ -541,6 +600,42 @@ function allocateStatBlockExecution(
     });
   }
 
+  for (const spellcasting of admitted.spellcastings) {
+    const groups = spellcasting.groups.map((group) =>
+      runtimeSpellcastingGroupBinding(
+        allocator,
+        admitted.resources,
+        group,
+        sharedResourcePools,
+        resourcePools,
+      ),
+    );
+    const procedureRef = allocateProcedureRef(allocator);
+    procedureRefs.set(spellcasting, procedureRef);
+    procedureBindings.push({
+      procedureRef,
+      procedure: {
+        kind: "spellcasting",
+        section: spellcasting.section,
+        procedureOrdinal: spellcasting.procedureOrdinal,
+        ability: spellcasting.ability,
+        ...(spellcasting.spellSaveDc === undefined
+          ? {}
+          : { spellSaveDc: spellcasting.spellSaveDc }),
+        ...(spellcasting.spellAttackBonus === undefined
+          ? {}
+          : { spellAttackBonus: spellcasting.spellAttackBonus }),
+        ...(spellcasting.components === undefined
+          ? {}
+          : { components: spellcasting.components }),
+        groups: nonEmptyRuntimeValues(groups),
+      },
+      // Group resource pools are selected by a child spell invocation. They
+      // must not all be spent merely by admitting the generic procedure.
+      resourcePoolRefs: [],
+    });
+  }
+
   return {
     execution: admittedStatBlockExecutionState({
       scopeRef: allocator.scopeRef,
@@ -549,6 +644,38 @@ function allocateStatBlockExecution(
     }),
     procedureRefs,
   };
+}
+
+function runtimeSpellcastingGroupBinding(
+  allocator: ExecutionReferenceAllocator,
+  resources: readonly BattleStatBlockRuntimeResource[],
+  group: BattleStatBlockRuntimeSpellcastingGroup,
+  sharedResourcePools: Map<
+    StatBlockProcedureResourceOrdinal,
+    StatBlockResourcePoolState
+  >,
+  resourcePools: StatBlockResourcePoolState[],
+): StatBlockSpellcastingGroup {
+  const resourcePoolRefs = allocateProcedureResourcePools(
+    allocator,
+    resources,
+    group.resourceRefs,
+    sharedResourcePools,
+    resourcePools,
+  );
+  return Match.value(group).pipe(
+    Match.when({ kind: "at_will" }, ({ invocations }) => ({
+      kind: "at_will" as const,
+      resourcePoolRefs: [] as const,
+      invocations,
+    })),
+    Match.when({ kind: "limited" }, ({ invocations }) => ({
+      kind: "limited" as const,
+      resourcePoolRefs: nonEmptyRuntimeValues(resourcePoolRefs),
+      invocations,
+    })),
+    Match.exhaustive,
+  );
 }
 
 export type StatBlockPresentationAllocation = {
@@ -1083,6 +1210,18 @@ function allocateProcedureRef(
   const ordinal = allocator.procedureOrdinal;
   allocator.procedureOrdinal = NonNegativeInteger(ordinal + 1);
   return battleStatBlockProcedureExecutionRef(allocator.scopeRef, ordinal);
+}
+
+function nonEmptyRuntimeValues<T>(
+  values: readonly T[],
+): ReadonlyNonEmptyArray<T> {
+  const [first, ...rest] = values;
+  if (first === undefined) {
+    throw new Error(
+      "Stat Block spellcasting admission invariant violated: expected a non-empty value collection.",
+    );
+  }
+  return [first, ...rest];
 }
 
 function allocateResourcePoolRef(

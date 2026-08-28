@@ -13,6 +13,7 @@ export const STAT_BLOCK_PROCEDURE_PRESENTATION_KINDS = [
   "attack",
   "multiattack",
   "bonusActionOption",
+  "spellcasting",
   "textOnly",
 ] as const;
 export type StatBlockProcedurePresentationKind =
@@ -26,6 +27,7 @@ export const STAT_BLOCK_EXECUTABLE_PROCEDURE_KINDS = [
   "attack",
   "multiattack",
   "bonusActionOption",
+  "spellcasting",
 ] as const;
 export type StatBlockExecutableProcedureKind =
   (typeof STAT_BLOCK_EXECUTABLE_PROCEDURE_KINDS)[number];

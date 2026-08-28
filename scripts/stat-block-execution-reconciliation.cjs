@@ -75,6 +75,10 @@ const semanticFamiliesByPressureOwner = new Map([
     "stat-block.attack-procedure",
   ],
   [
+    "battle-runtime generic Stat Block spellcasting procedure",
+    "stat-block.spellcasting.procedure",
+  ],
+  [
     "battle-runtime generic Stat Block Multiattack control",
     "stat-block.multiattack",
   ],
@@ -145,6 +149,14 @@ const semanticFamilyDefinitions = [
     obligationId: "BATTLE.STAT_BLOCK.MULTIATTACK",
   },
   {
+    id: "stat-block.spellcasting.procedure",
+    title: "Stat Block spellcasting procedure",
+    state: "executable",
+    rawRequirementIds: ["RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001"],
+    profileId: "stat-block.spellcasting.procedure",
+    obligationId: "BATTLE.STAT_BLOCK.SPELLCASTING_PROCEDURE",
+  },
+  {
     id: "stat-block.resource-lifecycle",
     title: "Stat Block limited-use and recharge resource lifecycle",
     state: "executable",
@@ -159,6 +171,7 @@ const formallyCoveredFamilyIds = new Set([
   "stat-block.bonus-action-lifecycle",
   "stat-block.legendary-action-lifecycle",
   "stat-block.multiattack",
+  "stat-block.spellcasting.procedure",
   "stat-block.resource-lifecycle",
 ]);
 
@@ -174,15 +187,6 @@ const missingOwnerDefinitions = [
   },
   {
     rank: 2,
-    id: "stat-block.spellcasting.procedure",
-    title: "Stat Block spellcasting procedure",
-    issueNumber: 419,
-    rawRequirementIds: ["RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001"],
-    profileId: "stat-block.spellcasting.procedure",
-    obligationId: "BATTLE.STAT_BLOCK.SPELLCASTING_PROCEDURE",
-  },
-  {
-    rank: 3,
     id: "stat-block.spellcasting.limited-group",
     title: "Limited-use Stat Block spellcasting group",
     issueNumber: 420,
@@ -191,7 +195,7 @@ const missingOwnerDefinitions = [
     obligationId: "BATTLE.STAT_BLOCK.SPELLCASTING_LIMITED_GROUP",
   },
   {
-    rank: 4,
+    rank: 3,
     id: "stat-block.save-procedure",
     title: "Stat Block save-gated procedure",
     issueNumber: 421,
@@ -200,7 +204,7 @@ const missingOwnerDefinitions = [
     obligationId: "BATTLE.STAT_BLOCK.SAVE_PROCEDURE",
   },
   {
-    rank: 5,
+    rank: 4,
     id: "stat-block.spellcasting.at-will-group",
     title: "At-will Stat Block spellcasting group",
     issueNumber: 422,
@@ -209,7 +213,7 @@ const missingOwnerDefinitions = [
     obligationId: "BATTLE.STAT_BLOCK.SPELLCASTING_AT_WILL_GROUP",
   },
   {
-    rank: 6,
+    rank: 5,
     id: "stat-block.reaction-lifecycle",
     title: "Stat Block reaction trigger and resource lifecycle",
     issueNumber: 423,
@@ -218,7 +222,7 @@ const missingOwnerDefinitions = [
     obligationId: "BATTLE.STAT_BLOCK.REACTION_LIFECYCLE",
   },
   {
-    rank: 7,
+    rank: 6,
     id: "stat-block.spell-invocation.restricted",
     title: "Restricted Stat Block spell invocation",
     issueNumber: 424,
@@ -227,7 +231,7 @@ const missingOwnerDefinitions = [
     obligationId: "BATTLE.STAT_BLOCK.SPELL_INVOCATION_RESTRICTED",
   },
   {
-    rank: 8,
+    rank: 7,
     id: "stat-block.attack-additional-effect",
     title: "Typed Stat Block attack additional-effect continuation",
     issueNumber: 425,
@@ -236,7 +240,7 @@ const missingOwnerDefinitions = [
     obligationId: "BATTLE.STAT_BLOCK.ATTACK_ADDITIONAL_EFFECT",
   },
   {
-    rank: 9,
+    rank: 8,
     id: "stat-block.standard-action-option",
     title: "Stat Block standard action-option delegation",
     issueNumber: 426,
