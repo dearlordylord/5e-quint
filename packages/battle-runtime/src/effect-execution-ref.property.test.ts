@@ -30,6 +30,7 @@ import {
   battleEffectExecutionRef,
   battleEffectExecutionRefBelongsToScope,
   battleObjectId,
+  battleSpellEffectOccurrenceId,
   type BattleEffectExecutionRef,
   type BattleProcedureExecutionRef,
   type CombatantId,
@@ -47,6 +48,7 @@ import {
   spellTargetId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { spellAct } from "./unit-profile-admission-spell-fill.test-support.ts";
+import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 
 const PROPERTY_OPTIONS = { numRuns: 64, seed: 0x3810cc } as const;
 
@@ -171,6 +173,10 @@ function occurrenceTemplate(input: {
     battleProcedureExecutionRefForTest(
       `occurrence-source:${sourceCombatantId}:${descriptor.marker}`,
     );
+  const objectLightSpellLevel = parseBattleSpellEffectLevel(0);
+  if (objectLightSpellLevel === null) {
+    throw new Error("Expected the admitted Light cantrip effect level.");
+  }
   return Match.value(descriptor).pipe(
     Match.discriminatorsExhaustive("kind")({
       heldLight: () =>
@@ -209,6 +215,10 @@ function occurrenceTemplate(input: {
             kind: "spellLightEmitter",
             sourceCombatantId,
             sourceProcedureRef,
+            sourceEffectId: battleSpellEffectOccurrenceId(
+              `effect-occurrence-property-light-source-${descriptor.marker}`,
+            ),
+            sourceSpellLevel: objectLightSpellLevel,
             attachment: {
               kind: "object",
               objectId: battleObjectId(
@@ -289,8 +299,18 @@ function occurrenceTemplateHasProductionOwnerSourceFacts(input: {
             storedLightEmitter: ({ emitter }) =>
               Match.value(emitter).pipe(
                 Match.discriminatorsExhaustive("kind")({
-                  spellLightEmitter: ({ sourceCombatantId, attachment }) =>
+                  spellLightEmitter: ({
+                    sourceCombatantId,
+                    sourceEffectId,
+                    sourceSpellLevel,
+                    attachment,
+                  }) =>
                     sourceCombatantId === input.ownerId &&
+                    sourceEffectId ===
+                      battleSpellEffectOccurrenceId(
+                        `effect-occurrence-property-light-source-${input.descriptor.marker}`,
+                      ) &&
+                    Number(sourceSpellLevel) === 0 &&
                     Match.value(attachment).pipe(
                       Match.discriminatorsExhaustive("kind")({
                         combatant: () => false,
@@ -822,8 +842,12 @@ describe("durable effect occurrence allocation properties", () => {
   test("snapshot codecs reject bounded occurrence-census mutations", () => {
     fc.assert(
       fc.property(
-        fc.array(occurrenceDescriptorArbitrary, { maxLength: 6 }),
-        (generatedDescriptors) => {
+        fc.record({
+          heldLightMarker: fc.integer({ min: 0, max: 4 }),
+          spellLightMarker: fc.integer({ min: 0, max: 4 }),
+          targetSpeedMarker: fc.integer({ min: 0, max: 4 }),
+        }),
+        ({ heldLightMarker, spellLightMarker, targetSpeedMarker }) => {
           const session = spellBattle({
             cantrips: [spellRecord("light"), spellRecord("produce_flame")],
             preparedSpells: [
@@ -875,10 +899,9 @@ describe("durable effect occurrence allocation properties", () => {
             throw new Error("Expected light and Dispel source bindings.");
           }
           const descriptors: readonly OccurrenceDescriptor[] = [
-            { kind: "heldLight", marker: 0 },
-            { kind: "spellLightEmitter", marker: 0 },
-            { kind: "targetSpeedDelta", marker: 0 },
-            ...generatedDescriptors,
+            { kind: "heldLight", marker: heldLightMarker },
+            { kind: "spellLightEmitter", marker: spellLightMarker },
+            { kind: "targetSpeedDelta", marker: targetSpeedMarker },
           ];
           const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
             state,
