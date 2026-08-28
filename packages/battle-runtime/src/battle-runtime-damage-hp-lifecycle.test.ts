@@ -1,9 +1,7 @@
 import { damageAmount, DieRollResult, Hp } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 
-import type { BattleActiveEffect } from "./battle-state-execution.ts";
 import {
-  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   combatantId,
   concentrationSavingThrowFill,
@@ -36,17 +34,7 @@ import {
   battleCreatureStateWithDamageProjection,
   battleCreatureStateWithKnockOutPreservedConditions,
 } from "./battle-reducer/creature-hit-point-state.ts";
-
-const hpMaximumEffect = {
-  kind: "hitPointMaximumIncrease",
-  sourceProcedureRef: battleProcedureExecutionRefForTest("synthetic-aid"),
-  sourceCombatantId: fighterId,
-  amount: 5,
-  expiresAt: {
-    kind: "duration" as const,
-    durationTicks: elapsedTimeTicks(1),
-  },
-} as const satisfies BattleActiveEffect;
+import { allocateBattleEffectOccurrenceForCreature } from "./effect-execution-ref.ts";
 
 describe("damage and hit point lifecycle helpers", () => {
   test("projects temporary hit points, maximum increases, and expiration edges", () => {
@@ -55,6 +43,19 @@ describe("damage and hit point lifecycle helpers", () => {
     if (target === undefined || target.positiveHpUnconscious !== null) {
       throw new Error("Expected the synthetic target.");
     }
+    const hpMaximumEffect = allocateBattleEffectOccurrenceForCreature({
+      owner: target,
+      effect: {
+        kind: "hitPointMaximumIncrease",
+        sourceProcedureRef: battleProcedureExecutionRefForTest("synthetic-aid"),
+        sourceCombatantId: fighterId,
+        amount: 5,
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(1),
+        },
+      },
+    }).effect;
 
     expect(Number(applyTemporaryHitPoints(target, 0).tempHp)).toBe(0);
     expect(Number(applyTemporaryHitPoints(target, 4).tempHp)).toBe(4);
@@ -117,17 +118,20 @@ describe("damage and hit point lifecycle helpers", () => {
     expect(applyHpHealing(goblin, 0)).toBe(goblin);
     expect(applyHpHealing(goblin, 100)).toBe(goblin);
 
-    const regainPreventedEffect = {
-      kind: "hitPointRegainPrevented",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "synthetic-chill-touch",
-      ),
-      sourceCombatantId: fighterId,
-      expiresAt: {
-        kind: "duration" as const,
-        durationTicks: elapsedTimeTicks(1),
+    const regainPreventedEffect = allocateBattleEffectOccurrenceForCreature({
+      owner: goblin,
+      effect: {
+        kind: "hitPointRegainPrevented",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          "synthetic-chill-touch",
+        ),
+        sourceCombatantId: fighterId,
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(1),
+        },
       },
-    } as const satisfies BattleActiveEffect;
+    }).effect;
     const regainPrevented = {
       ...goblin,
       hp: Hp(1),
@@ -481,22 +485,24 @@ describe("damage and hit point lifecycle helpers", () => {
       massiveDamageKills: false,
     });
     expect(releasedKnockout.positiveHpUnconscious).toBeNull();
-    const escapeEffect = {
-      kind: "spellCondition",
-      effectRef: battleEffectExecutionRefForTest("synthetic-charm-effect"),
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "synthetic-charm-source",
-      ),
-      sourceCombatantId: fighterId,
-      condition: "charmed",
-      conditionHadNonSpellSource: false,
-      escape: { kind: "targetDamagedByCasterOrAlly" as const },
-      turnStartDamage: null,
-      expiresAt: {
-        kind: "duration" as const,
-        durationTicks: elapsedTimeTicks(1),
+    const escapeEffect = allocateBattleEffectOccurrenceForCreature({
+      owner: knockout,
+      effect: {
+        kind: "spellCondition",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          "synthetic-charm-source",
+        ),
+        sourceCombatantId: fighterId,
+        condition: "charmed",
+        conditionHadNonSpellSource: false,
+        escape: { kind: "targetDamagedByCasterOrAlly" },
+        turnStartDamage: null,
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(1),
+        },
       },
-    } as const satisfies BattleActiveEffect;
+    }).effect;
     const knockedOutWithEscape = {
       ...knockout,
       activeEffects: [escapeEffect],

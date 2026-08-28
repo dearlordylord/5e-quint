@@ -3,10 +3,10 @@ import type {
   BattleState,
   BattleSubject,
 } from "./battle-runtime.test-support.ts";
-import type { BattleActiveEffect } from "./index.ts";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { describe, expect, test } from "vitest";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-hit-point-state.ts";
+import { allocateBattleEffectOccurrenceForCreature } from "./effect-execution-ref.ts";
 import {
   attackDamageDispositionFill,
   armorClass,
@@ -206,37 +206,38 @@ describe("battle runtime: Concentration and readied spells", () => {
     const state = wizardVsSkeletonBattle().state;
     const wizard = state.combatants.get(wizardId)!;
     const skeleton = state.combatants.get(skeletonId)!;
+    const sourceProcedureRef = battleProcedureExecutionRefForTest(
+      String("hold_person"),
+    );
+    const allocatedEffect = allocateBattleEffectOccurrenceForCreature({
+      owner: skeleton,
+      effect: {
+        kind: "spellBaseArmorClass",
+        sourceProcedureRef,
+        sourceCombatantId: wizardId,
+        base: armorClass(13),
+        ability: "dex",
+        expiresAt: {
+          kind: "concentration",
+          combatantId: wizardId,
+          durationTicks: requireElapsedHours(1),
+        },
+        earlyEnds: [{ kind: "concentrationBroken" }],
+      },
+    });
     const concentrating = {
       ...state,
       combatants: new Map(state.combatants)
         .set(wizardId, {
           ...wizard,
           concentration: {
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String("hold_person"),
-            ),
+            sourceProcedureRef,
             effectKind: "spellEffect",
           },
         })
         .set(skeletonId, {
-          ...skeleton,
-          activeEffects: [
-            {
-              kind: "spellBaseArmorClass",
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String("hold_person"),
-              ),
-              sourceCombatantId: wizardId,
-              base: armorClass(13),
-              ability: "dex",
-              expiresAt: {
-                kind: "concentration",
-                combatantId: wizardId,
-                durationTicks: requireElapsedHours(1),
-              },
-              earlyEnds: [{ kind: "concentrationBroken" }],
-            },
-          ],
+          ...allocatedEffect.owner,
+          activeEffects: [allocatedEffect.effect],
         }),
     } satisfies BattleState;
 
@@ -822,63 +823,67 @@ describe("battle runtime: Concentration and readied spells", () => {
     ) {
       throw new Error("Expected readied spell caster and target.");
     }
-    const hideousLaughter = {
-      kind: "hideousLaughter",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "synthetic_readied_release_hideous_laughter",
-      ),
-      sourceCombatantId: secondWizardId,
-      conditionHadNonSpellProneSource: false,
-      conditionHadNonSpellIncapacitatedSource: false,
-      repeatSaveRollMode: null,
-      save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
-      expiresAt: { kind: "concentration", combatantId: secondWizardId },
-    } satisfies Extract<
-      BattleActiveEffect,
-      { readonly kind: "hideousLaughter" }
-    >;
-    const sourceDamageRollPenalty = {
-      kind: "sourceDamageRollPenalty" as const,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "synthetic_readied_release_source_penalty",
-      ),
-      sourceCombatantId: fighterId,
-      amount: { dice: 1, dieSize: 8 },
-      expiresAt: { kind: "concentration" as const, combatantId: fighterId },
-    } satisfies Extract<
-      BattleActiveEffect,
-      { readonly kind: "sourceDamageRollPenalty" }
-    >;
+    const hideousLaughter = allocateBattleEffectOccurrenceForCreature({
+      owner: target,
+      effect: {
+        kind: "hideousLaughter",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          "synthetic_readied_release_hideous_laughter",
+        ),
+        sourceCombatantId: secondWizardId,
+        conditionHadNonSpellProneSource: false,
+        conditionHadNonSpellIncapacitatedSource: false,
+        repeatSaveRollMode: null,
+        save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+        expiresAt: { kind: "concentration", combatantId: secondWizardId },
+      },
+    });
+    const sourceDamageRollPenalty = allocateBattleEffectOccurrenceForCreature({
+      owner: caster,
+      effect: {
+        kind: "sourceDamageRollPenalty",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          "synthetic_readied_release_source_penalty",
+        ),
+        sourceCombatantId: fighterId,
+        amount: { dice: 1, dieSize: 8 },
+        expiresAt: { kind: "concentration", combatantId: fighterId },
+      },
+    });
     const enrichedState: BattleState = {
       ...session.state,
       combatants: new Map(session.state.combatants)
         .set(wizardId, {
-          ...caster,
-          activeEffects: [...caster.activeEffects, sourceDamageRollPenalty],
+          ...sourceDamageRollPenalty.owner,
+          activeEffects: [
+            ...caster.activeEffects,
+            sourceDamageRollPenalty.effect,
+          ],
         })
         .set(secondWizardId, {
           ...laughterCaster,
           concentration: {
-            sourceProcedureRef: hideousLaughter.sourceProcedureRef,
+            sourceProcedureRef: hideousLaughter.effect.sourceProcedureRef,
             effectKind: "spellEffect",
           },
         })
         .set(fighterId, {
           ...penaltyCaster,
           concentration: {
-            sourceProcedureRef: sourceDamageRollPenalty.sourceProcedureRef,
+            sourceProcedureRef:
+              sourceDamageRollPenalty.effect.sourceProcedureRef,
             effectKind: "spellEffect",
           },
         })
         .set(goblinId, {
           ...battleCreatureStateWithKnockOutPreservedConditions(
-            target,
+            hideousLaughter.owner,
             applyCondition(
               applyCondition(target.conditions, "prone"),
               "incapacitated",
             ),
           ),
-          activeEffects: [...target.activeEffects, hideousLaughter],
+          activeEffects: [...target.activeEffects, hideousLaughter.effect],
         }),
     };
     const enrichedSession = battleRuntimeSessionForTest({
