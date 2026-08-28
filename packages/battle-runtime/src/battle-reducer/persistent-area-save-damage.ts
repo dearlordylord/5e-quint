@@ -32,7 +32,7 @@ import type {
   BattleState,
 } from "../battle-state-execution.ts";
 import { validateRolledDiceFillForDiceExpr } from "../battle-state-execution.ts";
-import type { CombatantId } from "../identity.ts";
+import type { BattleEffectExecutionRef, CombatantId } from "../identity.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import { concentrationSavingThrowHole } from "./damage-apply.ts";
 import {
@@ -198,16 +198,24 @@ type PersistentAreaSaveDamageProcedureCandidate =
       readonly kind: "insectPlague";
       readonly resolution: InsectPlagueResolutionInput;
       readonly target: BattleCreatureState | undefined;
-      readonly effectOwnerId: CombatantId | undefined;
-      readonly effect: InsectPlagueAreaHazardEffect | undefined;
+      readonly locatedEffect:
+        | {
+            readonly effectOwnerId: CombatantId;
+            readonly effect: InsectPlagueAreaHazardEffect;
+          }
+        | undefined;
       readonly trigger: BattleInsectPlagueAreaHazardTrigger;
     }
   | {
       readonly kind: "cloudkill";
       readonly resolution: CloudkillResolutionInput;
       readonly target: BattleCreatureState | undefined;
-      readonly effectOwnerId: CombatantId | undefined;
-      readonly effect: CloudkillAreaHazardEffect | undefined;
+      readonly locatedEffect:
+        | {
+            readonly effectOwnerId: CombatantId;
+            readonly effect: CloudkillAreaHazardEffect;
+          }
+        | undefined;
       readonly trigger: BattleCloudkillAreaHazardTrigger;
     };
 
@@ -254,8 +262,7 @@ export function resolveInsectPlagueAreaSaveDamage(
     kind: "insectPlague",
     resolution,
     target: resolution.state.combatants.get(resolution.subject.actorId),
-    effectOwnerId: locatedEffect?.effectOwnerId,
-    effect: locatedEffect?.effect,
+    locatedEffect,
     trigger: persistentAreaTriggerFromMembershipFact(
       resolution.subject.areaMembershipTrigger,
     ),
@@ -285,8 +292,7 @@ export function resolveCloudkillAreaSaveDamage(
     kind: "cloudkill",
     resolution,
     target: resolution.state.combatants.get(resolution.subject.actorId),
-    effectOwnerId: locatedEffect?.effectOwnerId,
-    effect: locatedEffect?.effect,
+    locatedEffect,
     trigger: persistentAreaTriggerFromMembershipFact(
       resolution.subject.areaMembershipTrigger,
     ),
@@ -354,8 +360,7 @@ export function resolveCloudkillMovementSaveDamageSequence(input: {
         fills: input.parent.fills,
       },
       target: state.combatants.get(request.subject.actorId),
-      effectOwnerId: locatedActiveEffect?.effectOwnerId,
-      effect: locatedActiveEffect?.effect,
+      locatedEffect: locatedActiveEffect,
       trigger: persistentAreaTriggerFromMembershipFact(
         request.subject.areaMembershipTrigger,
       ),
@@ -498,9 +503,8 @@ function parsePersistentAreaSaveDamageProcedure(
 ): PersistentAreaProcedureParseResult {
   const membershipTrigger = candidate.resolution.subject.areaMembershipTrigger;
   if (
-    candidate.effect === undefined ||
-    candidate.effectOwnerId === undefined ||
-    candidate.effect.areaId !== membershipTrigger.areaId
+    candidate.locatedEffect === undefined ||
+    candidate.locatedEffect.effect.areaId !== membershipTrigger.areaId
   ) {
     return {
       tag: "invalid",
@@ -516,7 +520,7 @@ function parsePersistentAreaSaveDamageProcedure(
     !persistentAreaAppearanceTriggerMatchesCastOccurrence(
       candidate.resolution.state,
       membershipTrigger,
-      candidate.effect,
+      candidate.locatedEffect.effect,
     )
   ) {
     return {
@@ -539,7 +543,7 @@ function parsePersistentAreaSaveDamageProcedure(
     };
   }
   if (
-    candidate.effect.savedThisTurn.includes(
+    candidate.locatedEffect.effect.savedThisTurn.includes(
       candidate.resolution.subject.actorId,
     )
   ) {
@@ -560,16 +564,16 @@ function parsePersistentAreaSaveDamageProcedure(
             kind: candidate.kind,
             resolution: candidate.resolution,
             target: candidate.target,
-            effectOwnerId: candidate.effectOwnerId,
-            effect: candidate.effect,
+            effectOwnerId: candidate.locatedEffect.effectOwnerId,
+            effect: candidate.locatedEffect.effect,
             trigger: candidate.trigger,
           }
         : {
             kind: candidate.kind,
             resolution: candidate.resolution,
             target: candidate.target,
-            effectOwnerId: candidate.effectOwnerId,
-            effect: candidate.effect,
+            effectOwnerId: candidate.locatedEffect.effectOwnerId,
+            effect: candidate.locatedEffect.effect,
             trigger: candidate.trigger,
           },
   };
@@ -1076,7 +1080,9 @@ function persistentAreaAdjustedDamage(input: {
 }
 
 function activeEffectForRef<
-  TEffect extends BattleActiveEffect & { readonly effectRef: string },
+  TEffect extends BattleActiveEffect & {
+    readonly effectRef: BattleEffectExecutionRef;
+  },
 >(
   state: BattleState,
   effectRef: TEffect["effectRef"],
@@ -1088,13 +1094,13 @@ function activeEffectForRef<
     | { readonly effectOwnerId: CombatantId; readonly effect: TEffect }
     | undefined;
   for (const [effectOwnerId, combatant] of state.combatants) {
-    const effect = combatant.activeEffects.find(
-      (candidate): candidate is TEffect =>
-        isExpectedEffect(candidate) && candidate.effectRef === effectRef,
-    );
-    if (effect === undefined) continue;
-    if (located !== undefined) return undefined;
-    located = { effectOwnerId, effect };
+    for (const candidate of combatant.activeEffects) {
+      if (!isExpectedEffect(candidate) || candidate.effectRef !== effectRef) {
+        continue;
+      }
+      if (located !== undefined) return undefined;
+      located = { effectOwnerId, effect: candidate };
+    }
   }
   return located;
 }

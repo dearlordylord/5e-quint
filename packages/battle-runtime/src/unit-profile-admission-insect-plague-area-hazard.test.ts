@@ -590,4 +590,35 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
       }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
+
+  test("rejects a save when one owner contains duplicate effect occurrence references", () => {
+    const { session, cast } = castInsectPlague();
+    const saveAct = insectPlagueAreaHazardSaveAct(
+      battleRuntimeSessionForTest({ state: cast, context: session.context }),
+      spellTargetId,
+      "appearsInArea",
+    );
+    const caster = requireCombatant(cast, spellCasterId);
+    const effect = caster.activeEffects.find(
+      (candidate) => candidate.kind === "insectPlagueAreaHazard",
+    );
+    if (effect?.kind !== "insectPlagueAreaHazard") {
+      throw new Error("Expected active Insect Plague.");
+    }
+    const stateWithDuplicateRef = {
+      ...cast,
+      combatants: new Map(cast.combatants).set(spellCasterId, {
+        ...caster,
+        activeEffects: [...caster.activeEffects, { ...effect }],
+      }),
+    };
+
+    expect(
+      resolveBattleSubject({
+        state: stateWithDuplicateRef,
+        subject: saveAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+  });
 });

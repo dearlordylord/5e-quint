@@ -1903,22 +1903,22 @@ export function applyGreaseGroundHazardCastEffects(input: {
   };
 }
 
-function updateCasterActiveEffects(input: {
+function updateEffectOwnerActiveEffects(input: {
   readonly state: BattleState;
-  readonly sourceCombatantId: CombatantId;
+  readonly effectOwnerId: CombatantId;
   readonly update: (
     activeEffects: readonly BattleActiveEffect[],
   ) => readonly BattleActiveEffect[];
 }): BattleState {
-  const caster = input.state.combatants.get(input.sourceCombatantId);
-  if (caster === undefined) {
+  const effectOwner = input.state.combatants.get(input.effectOwnerId);
+  if (effectOwner === undefined) {
     return input.state;
   }
   const combatants = new Map(input.state.combatants).set(
-    input.sourceCombatantId,
+    input.effectOwnerId,
     {
-      ...caster,
-      activeEffects: input.update(caster.activeEffects),
+      ...effectOwner,
+      activeEffects: input.update(effectOwner.activeEffects),
     },
   );
   return { ...input.state, combatants };
@@ -1936,9 +1936,9 @@ function battleStateAfterReplacingCasterActiveEffect(input: {
   readonly actorId: CombatantId;
   readonly activeEffect: CasterAreaSpellActiveEffect;
 }): BattleState {
-  return updateCasterActiveEffects({
+  return updateEffectOwnerActiveEffects({
     state: input.state,
-    sourceCombatantId: input.actorId,
+    effectOwnerId: input.actorId,
     update: (activeEffects) => [
       ...activeEffects.filter(
         (activeEffect) =>
@@ -2564,9 +2564,9 @@ export function markMoonbeamSavedThisTurn(
   targetId: CombatantId,
   effect: Extract<BattleActiveEffect, { readonly kind: "moonbeam" }>,
 ): BattleState {
-  return updateCasterActiveEffects({
+  return updateEffectOwnerActiveEffects({
     state,
-    sourceCombatantId: effect.sourceCombatantId,
+    effectOwnerId: effect.sourceCombatantId,
     update: (activeEffects) =>
       activeEffects.map((current) =>
         moonbeamEffectMatches(current, effect)
@@ -2598,9 +2598,9 @@ export function addMoonbeamShapeShiftSuppression(
   targetId: CombatantId,
   effect: Extract<BattleActiveEffect, { readonly kind: "moonbeam" }>,
 ): BattleState {
-  return updateCasterActiveEffects({
+  return updateEffectOwnerActiveEffects({
     state,
-    sourceCombatantId: effect.sourceCombatantId,
+    effectOwnerId: effect.sourceCombatantId,
     update: (activeEffects) =>
       activeEffects.map((current) =>
         moonbeamEffectMatches(current, effect)
@@ -2621,9 +2621,9 @@ export function removeMoonbeamShapeShiftSuppression(
   targetId: CombatantId,
   effect: Extract<BattleActiveEffect, { readonly kind: "moonbeam" }>,
 ): BattleState {
-  return updateCasterActiveEffects({
+  return updateEffectOwnerActiveEffects({
     state,
-    sourceCombatantId: effect.sourceCombatantId,
+    effectOwnerId: effect.sourceCombatantId,
     update: (activeEffects) =>
       activeEffects.map((current) =>
         moonbeamEffectMatches(current, effect)
@@ -2644,9 +2644,9 @@ export function markWebSavedThisTurn(
   effect: Extract<BattleActiveEffect, { readonly kind: "webRestraintHazard" }>,
   trigger: BattleWebRestraintTrigger,
 ): BattleState {
-  return updateCasterActiveEffects({
+  return updateEffectOwnerActiveEffects({
     state,
-    sourceCombatantId: effect.sourceCombatantId,
+    effectOwnerId: effect.sourceCombatantId,
     update: (activeEffects) =>
       activeEffects.map((current) =>
         current === effect && trigger === "entersArea"
@@ -2676,25 +2676,27 @@ function markSingleSaveAreaHazardSavedThisTurn(
   effect: SingleSaveAreaHazardActiveEffect,
   effectOwnerId: CombatantId = effect.sourceCombatantId,
 ): BattleState {
-  return updateCasterActiveEffects({
+  return updateEffectOwnerActiveEffects({
     state,
-    sourceCombatantId: effectOwnerId,
-    update: (activeEffects) =>
-      activeEffects.map((current) =>
-        (
-          "effectRef" in effect
-            ? "effectRef" in current && current.effectRef === effect.effectRef
-            : current === effect
-        )
-          ? {
-              ...effect,
-              savedThisTurn: appendCombatantIdOnce(
-                effect.savedThisTurn,
-                targetId,
-              ),
-            }
-          : current,
-      ),
+    effectOwnerId,
+    update: (activeEffects) => {
+      let updated = false;
+      return activeEffects.map((current) => {
+        const matches =
+          !updated &&
+          ("effectRef" in effect
+            ? current.kind === effect.kind &&
+              "effectRef" in current &&
+              current.effectRef === effect.effectRef
+            : current === effect);
+        if (!matches) return current;
+        updated = true;
+        return {
+          ...effect,
+          savedThisTurn: appendCombatantIdOnce(effect.savedThisTurn, targetId),
+        };
+      });
+    },
   });
 }
 
