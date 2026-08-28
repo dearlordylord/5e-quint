@@ -35,7 +35,7 @@ import {
   type OraclePublicationMember,
 } from "./oracle-publication.ts";
 import type { OracleEvaluationServices } from "./oracle-evaluation.ts";
-import { encodeOracleStartupSurface } from "./oracle-startup-surface.ts";
+import { encodeOracleStartupSurface } from "./oracle-startup-catalog.ts";
 
 /** The only files in a source-free Oracle distribution root. */
 export const ORACLE_DISTRIBUTION_FILE_NAMES = {
@@ -56,7 +56,6 @@ export type OracleApplication = {
   readonly distributionId: DistributionId;
   readonly identity: OracleIdentityResponse;
   readonly projection: SrdSurface;
-  readonly projectionBytes: Readonly<Uint8Array>;
   readonly services: OracleEvaluationServices;
   readonly evaluateJson: (rawJson: string) => ReturnType<OracleBatchOperation>;
 };
@@ -170,7 +169,7 @@ export function serializeOracleDistributionIdentity(
  * Catalog services are built from the decoded value, so evaluation cannot use
  * a catalog assembled from a different source or projection.
  */
-export function buildOracleApplicationFromProjection(input: {
+function buildOracleApplicationFromProjection(input: {
   readonly distributionId: DistributionId;
   readonly projectionBytes: Uint8Array;
 }): Either.Either<OracleApplication, OracleApplicationBuildIssue> {
@@ -201,8 +200,7 @@ export function buildOracleApplicationFromProjection(input: {
   const identity = Object.freeze({
     distributionId: input.distributionId,
   });
-  const projectionBytes = new Uint8Array(input.projectionBytes);
-  const servicesValue = Object.freeze(services.right);
+  const servicesValue = deepFreeze(services.right);
   const distribution = Object.freeze({
     distributionId: input.distributionId,
     services: servicesValue,
@@ -215,7 +213,6 @@ export function buildOracleApplicationFromProjection(input: {
       distributionId: input.distributionId,
       identity,
       projection,
-      projectionBytes,
       services: servicesValue,
       evaluateJson,
     }),

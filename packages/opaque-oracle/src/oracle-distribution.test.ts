@@ -13,6 +13,9 @@ import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { buildOracleDistribution } from "../scripts/build-distribution.ts";
+import { checkOracleDistribution } from "../scripts/check-distribution.ts";
+import { decodeOracleEvaluationBatchJson } from "./oracle-case-trace.ts";
+import { evaluateOracleBatch } from "./oracle-evaluation.ts";
 import {
   computeOracleDistributionId,
   loadOracleApplicationFromDirectory,
@@ -180,6 +183,9 @@ describe("Opaque Oracle source-free distribution", () => {
         recursive: true,
         dereference: true,
       });
+      expect(Either.isRight(checkOracleDistribution(stagedDirectory))).toBe(
+        true,
+      );
       const cleanWorkingDirectory = mkdtempSync(
         join(temporaryRoot, "clean-cwd-"),
       );
@@ -231,6 +237,21 @@ describe("Opaque Oracle source-free distribution", () => {
       const decompositionResponses = parseResponseLines(decomposition);
       expect(decompositionResponses).toHaveLength(4);
       const batchTraces = assertEvaluated(decompositionResponses[0]!);
+      const stagedApplication = loadOracleApplicationFromDirectory({
+        directory: stagedDirectory,
+      });
+      expect(Either.isRight(stagedApplication)).toBe(true);
+      if (Either.isLeft(stagedApplication)) return;
+      const decodedSelectedBatch =
+        decodeOracleEvaluationBatchJson(selectedBatch);
+      expect(Either.isRight(decodedSelectedBatch)).toBe(true);
+      if (Either.isLeft(decodedSelectedBatch)) return;
+      expect(batchTraces).toEqual(
+        evaluateOracleBatch({
+          batch: decodedSelectedBatch.right,
+          services: stagedApplication.right.services,
+        }),
+      );
       const singletonTraces = decompositionResponses
         .slice(1)
         .flatMap((response) => assertEvaluated(response));
@@ -333,6 +354,9 @@ describe("Opaque Oracle source-free distribution", () => {
       writeFileSync(
         join(tamperedDirectory, ORACLE_DISTRIBUTION_FILE_NAMES.projection),
         tamperedProjection,
+      );
+      expect(Either.isLeft(checkOracleDistribution(tamperedDirectory))).toBe(
+        true,
       );
       const tamperedIdentity = runExecutable(
         join(tamperedDirectory, ORACLE_DISTRIBUTION_FILE_NAMES.executable),

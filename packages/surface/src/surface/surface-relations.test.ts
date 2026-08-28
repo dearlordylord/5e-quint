@@ -2,6 +2,7 @@ import { createRequire } from "node:module";
 
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
+import { StatBlockId, UnitId } from "@dnd/shared/game-facts";
 
 import { decodeSrdSurfaceEither } from "./schema.ts";
 import {
@@ -119,8 +120,8 @@ describe("canonical Surface authored relations", () => {
   it("closes complete dependency graphs while admitting selected references", () => {
     const result = closeSrdSurface({
       surface: srdSurface,
-      rootUnitIds: ["class_fighter"],
-      rootStatBlockIds: ["stat_block_skeleton"],
+      rootUnitIds: [UnitId.make("class_fighter")],
+      rootStatBlockIds: [StatBlockId.make("stat_block_skeleton")],
     });
 
     expect(Either.isLeft(result)).toBe(false);
@@ -139,8 +140,8 @@ describe("canonical Surface authored relations", () => {
   it("retains a referenced record when the workflow lookup policy requires it", () => {
     const result = closeSrdSurface({
       surface: srdSurface,
-      rootUnitIds: ["class_fighter"],
-      rootStatBlockIds: ["stat_block_skeleton"],
+      rootUnitIds: [UnitId.make("class_fighter")],
+      rootStatBlockIds: [StatBlockId.make("stat_block_skeleton")],
       relationSelection: {
         includeReference: (relation) => relation.relation === "subclass-choice",
       },
@@ -156,8 +157,8 @@ describe("canonical Surface authored relations", () => {
   it("reports an absent root as a typed closure issue", () => {
     const result = closeSrdSurface({
       surface: srdSurface,
-      rootUnitIds: ["synthetic_missing_unit"],
-      rootStatBlockIds: ["stat_block_skeleton"],
+      rootUnitIds: [UnitId.make("synthetic_missing_unit")],
+      rootStatBlockIds: [StatBlockId.make("stat_block_skeleton")],
     });
 
     expect(Either.isLeft(result)).toBe(true);

@@ -22,10 +22,7 @@ import {
 } from "@dnd/surface/surface/surface-catalog";
 import { decodeSrdSurfaceEither } from "@dnd/surface/surface/schema";
 import type { SrdSurface } from "@dnd/surface/surface/types";
-import {
-  deriveCharacterCreationWorkflowRoots,
-  type CharacterCreationWorkflowRoots,
-} from "@dnd/character-creation-runtime";
+import { deriveCharacterCreationWorkflowRoots } from "@dnd/character-creation-runtime";
 import type { OracleEvaluationServices } from "./oracle-evaluation.ts";
 
 export type OracleStartupCatalogIssue =
@@ -69,10 +66,7 @@ export type OracleStartupCatalogIssues = readonly [
 export type OracleStartupCatalog = {
   readonly projection: SrdSurface;
   readonly projectionBytes: Uint8Array;
-  readonly roots: CharacterCreationWorkflowRoots;
   readonly services: OracleEvaluationServices;
-  readonly unitCollection: SrdUnitCollection;
-  readonly statBlockCollection: SrdStatBlockCollection;
 };
 
 /**
@@ -192,9 +186,9 @@ export function buildOracleStartupCatalog(
   const roots = deriveCharacterCreationWorkflowRoots({
     unitLibrary: fullCatalogs.right.unitCatalog,
   });
-  const rootUnitIds = roots.unitIds.map(String);
-  const rootStatBlockIds = canonicalSurface.statBlocks.map((record) =>
-    String(record.id),
+  const rootUnitIds = roots.unitIds;
+  const rootStatBlockIds = canonicalSurface.statBlocks.map(
+    (record) => record.id,
   );
   const relations = collectSurfaceAuthoredRelations(canonicalSurface);
   if (Either.isLeft(relations)) {
@@ -213,7 +207,7 @@ export function buildOracleStartupCatalog(
       includeReference: (relation) =>
         relation.relation === "subclass-choice" ||
         (relation.targetKind === "unit" &&
-          rootUnitIds.includes(relation.targetRecordId)),
+          rootUnitIds.some((rootId) => rootId === relation.targetRecordId)),
     },
   });
   if (Either.isLeft(projection)) {
@@ -260,12 +254,9 @@ export function buildOracleStartupCatalog(
   return Either.right({
     projection: decodedProjection.right,
     projectionBytes,
-    roots,
     services: {
       unitLibrary: unitResult.catalog,
       statBlockCatalog: statBlockResult.catalog,
     },
-    unitCollection,
-    statBlockCollection,
   });
 }

@@ -8,11 +8,20 @@ import {
 } from "./schema-base.ts";
 import { StatBlockRecordSchema, UnitRecordSchema } from "./schema.ts";
 import type { SrdSurface, StatBlockRecord, UnitRecord } from "./types.ts";
+import { StatBlockId, UnitId } from "@dnd/shared/game-facts";
 
-/** One role-owned authored edge in a decoded Surface record. */
-export type SurfaceAuthoredRelation = {
-  readonly sourceKind: "unit" | "statBlock";
-  readonly sourceRecordId: string;
+/** Family-specific ids prevent a Unit id from being supplied as a Stat Block root. */
+export type SurfaceUnitId = UnitRecord["id"];
+export type SurfaceStatBlockId = StatBlockRecord["id"];
+
+type SurfaceAuthoredRelationBase<
+  SourceKind extends "unit" | "statBlock",
+  SourceId extends SurfaceUnitId | SurfaceStatBlockId,
+  TargetKind extends "unit" | "statBlock",
+  TargetId extends SurfaceUnitId | SurfaceStatBlockId,
+> = {
+  readonly sourceKind: SourceKind;
+  readonly sourceRecordId: SourceId;
   readonly sourceRecordName: string;
   readonly fieldPath: string;
   readonly relationKind: "reference" | "dependency";
@@ -20,9 +29,31 @@ export type SurfaceAuthoredRelation = {
     SurfaceSchemaFieldRole,
     { readonly category: "reference" | "dependency" }
   >["relation"];
-  readonly targetKind: "unit" | "statBlock";
-  readonly targetRecordId: string;
+  readonly targetKind: TargetKind;
+  readonly targetRecordId: TargetId;
 };
+
+/** One role-owned authored edge with source/target record families coupled to their ids. */
+export type SurfaceAuthoredRelation =
+  | SurfaceAuthoredRelationBase<"unit", SurfaceUnitId, "unit", SurfaceUnitId>
+  | SurfaceAuthoredRelationBase<
+      "unit",
+      SurfaceUnitId,
+      "statBlock",
+      SurfaceStatBlockId
+    >
+  | SurfaceAuthoredRelationBase<
+      "statBlock",
+      SurfaceStatBlockId,
+      "unit",
+      SurfaceUnitId
+    >
+  | SurfaceAuthoredRelationBase<
+      "statBlock",
+      SurfaceStatBlockId,
+      "statBlock",
+      SurfaceStatBlockId
+    >;
 
 export type SurfaceRelationTraversalIssue = {
   readonly tag: "surfaceRelationTraversalIssue";
@@ -314,20 +345,48 @@ export function collectSurfaceAuthoredRelations(
       const role = ownRole ?? task.inheritedRole;
       if (typeof task.current === "string") {
         if (role?.category === "reference" || role?.category === "dependency") {
-          const sourceName =
-            record.sourceKind === "unit"
-              ? record.value.name
-              : record.value.name;
-          relations.push({
-            sourceKind: record.sourceKind,
-            sourceRecordId: record.value.id,
+          const sourceName = record.value.name;
+          const relation = {
             sourceRecordName: sourceName,
             fieldPath: task.path.replace(/^value\.?/, ""),
             relationKind: role.category,
             relation: role.relation,
-            targetKind: role.targetKind,
-            targetRecordId: task.current,
-          });
+          } as const;
+          if (record.sourceKind === "unit") {
+            if (role.targetKind === "unit") {
+              relations.push({
+                ...relation,
+                sourceKind: "unit",
+                sourceRecordId: record.value.id,
+                targetKind: "unit",
+                targetRecordId: UnitId.make(task.current),
+              });
+            } else {
+              relations.push({
+                ...relation,
+                sourceKind: "unit",
+                sourceRecordId: record.value.id,
+                targetKind: "statBlock",
+                targetRecordId: StatBlockId.make(task.current),
+              });
+            }
+          } else if (role.targetKind === "unit") {
+            relations.push({
+              ...relation,
+              sourceKind: "statBlock",
+              sourceRecordId: record.value.id,
+              targetKind: "unit",
+              targetRecordId: UnitId.make(task.current),
+            });
+          } else {
+            relations.push({
+              ...relation,
+              sourceKind: "statBlock",
+              sourceRecordId: record.value.id,
+              targetKind: "statBlock",
+              targetRecordId: StatBlockId.make(task.current),
+            });
+          }
         } else if (
           role === undefined &&
           structuralAst(task.ast)._tag === "StringKeyword"
@@ -413,8 +472,8 @@ const relationSelected = (
  */
 export function closeSrdSurface(input: {
   readonly surface: SrdSurface;
-  readonly rootUnitIds: readonly string[];
-  readonly rootStatBlockIds: readonly string[];
+  readonly rootUnitIds: readonly SurfaceUnitId[];
+  readonly rootStatBlockIds: readonly SurfaceStatBlockId[];
   readonly relationSelection?: SurfaceRelationSelection;
 }): Either.Either<SrdSurface, SurfaceRelationClosureIssues> {
   const relationsResult = collectSurfaceAuthoredRelations(input.surface);
