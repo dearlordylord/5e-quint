@@ -3,9 +3,9 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   assertBattleSnapshotCodecRoundTripForTest,
   battleProcedureExecutionRefForSpellHoleForTest,
-  battleStateWithAllocatedEffectOccurrencesForTest,
 } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { advanceToActorNextTurnForTest } from "./spell-effect-fixture.test-support.ts";
 import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedure-profiles/execution-composition.ts";
 import { admitBattleResolutionInput } from "./battle-reducer/resolution-admission.ts";
 import { resolveBonusActionSpellAct } from "./battle-reducer/spells-resolve.ts";
@@ -19,7 +19,6 @@ import {
   spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
-import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   abilityModifier,
   DieRollResult,
@@ -33,7 +32,6 @@ import type {
   BattleActiveEffect,
   BattleSpellTargetListHole,
 } from "./battle-state-execution.ts";
-import type { BattleActiveEffectOccurrenceTemplate } from "./effect-execution-ref.ts";
 import {
   EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE,
   SEEKING_SPELL_REROLL_UNSUPPORTED_ATTACK_ROLL_OWNER_MESSAGE,
@@ -1089,17 +1087,13 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
   test("preserves Quickened spell attack resources when Mirror Image duplicate is hit", () => {
     const baseSession = saveMetamagicBattle({
       knownOptions: [quickenedMetamagicOption()],
-      preparedSpells: ["burning_hands", "mirror_image"],
-      spellSlots: [
-        { spellLevel: 1, count: 1 },
-        { spellLevel: 2, count: 1 },
-      ],
+      mirrorImageAllyCaster: true,
     });
-    const state = withMirrorImageDuplicates(baseSession, skeletonId);
+    const state = withMirrorImageDuplicates(baseSession, fighterId);
     const session = battleSessionAtState(baseSession, state);
     const act = quickenedRayOfFrostAct(session);
     const targetHole = findHole(act.initialHoles, "targetChoice");
-    const target = targetFill(targetHole, skeletonId);
+    const target = targetFill(targetHole, fighterId);
     const awaitingAttackRoll = resolveBattleSubject({
       state,
       subject: act.subject,
@@ -1144,8 +1138,8 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       true,
     );
     expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(2));
-    expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(10);
-    expect(mirrorImageDuplicatesRemaining(resolved.state, skeletonId)).toBe(2);
+    expect(resolved.state.combatants.get(fighterId)?.hp).toBe(12);
+    expect(mirrorImageDuplicatesRemaining(resolved.state, fighterId)).toBe(2);
   });
 
   test("discovers and resolves Quickened action spells after the Magic action is already spent", () => {
@@ -2318,26 +2312,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       knownOptions: [empoweredMetamagicOption()],
       preparedSpells: ["burning_hands", "hunters_mark"],
     });
-    const state = withActiveEffect(baseSession.state, wizardId, {
-      kind: "spellMarkedDamageRider",
-      sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
-        baseSession,
-        wizardId,
-        spellSlotInvocationRef("hunters_mark", 1, "markedDamageRider"),
-      ),
-      sourceCombatantId: wizardId,
-      targetCombatantId: skeletonId,
-      transfer: {
-        kind: "awaitingTargetDrop",
-        retargetTiming: "sameTurn",
-      },
-      abilityCheckBehavior: { kind: "none" },
-      damage: { expr: { dice: 1, dieSize: 6 }, damageType: "force" },
-      expiresAt: {
-        kind: "concentration",
-        combatantId: wizardId,
-      },
-    });
+    const state = withHuntersMark(baseSession, skeletonId);
     const session = battleSessionAtState(baseSession, state);
     const act = actionRayOfFrostAct(session);
     const target = targetFill(
@@ -4776,63 +4751,89 @@ function withSanctuaryWard(
   session: BattleRuntimeSession,
   wardedId: ReturnType<typeof combatantId>,
 ): BattleState {
-  return withActiveEffect(session.state, wardedId, {
-    kind: "sanctuaryWard",
-    sourceProcedureRef: requireAdmittedSpellProcedureRef(
-      session,
-      "sanctuary",
-      "sanctuaryTargetingInterdiction",
-    ),
-    sourceCombatantId: wizardId,
-    save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
-    expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
-  });
+  const procedureRef = requireCharacterSpellProcedureRefForTest(
+    session,
+    wizardId,
+    spellSlotInvocationRef("sanctuary", 1, "sanctuaryTargetingInterdiction"),
+  );
+  const act = discoverBattleActs(session).find(
+    (candidate) =>
+      candidate.subject.actorId === wizardId &&
+      "procedureRef" in candidate.subject &&
+      candidate.subject.procedureRef === procedureRef,
+  );
+  if (act === undefined) {
+    throw new Error("Expected the admitted Sanctuary invocation act.");
+  }
+  const target = findHole(act.initialHoles, "spellTargetList");
+  const cast = requireResolved(
+    resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [spellTargetListFill(target, "sanctuary", [wardedId])],
+    }),
+  );
+  return advanceToActorNextTurnForTest(cast.state, wizardId);
 }
 
 function withMirrorImageDuplicates(
   session: BattleRuntimeSession,
   targetId: ReturnType<typeof combatantId>,
 ): BattleState {
-  return withActiveEffect(session.state, targetId, {
-    kind: "mirrorImageDuplicates",
-    sourceProcedureRef: requireAdmittedSpellProcedureRef(
-      session,
-      "mirror_image",
-      "mirrorImageHitInterception",
-    ),
-    sourceCombatantId: targetId,
-    remainingDuplicates: 3,
-    expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
-  });
-}
-
-function requireAdmittedSpellProcedureRef(
-  session: BattleRuntimeSession,
-  spellId: string,
-  procedure: string,
-) {
-  const subject = discoverBattleActs(session).find((act) => {
-    const presentation = battleActSpellPresentation(act);
-    return (
-      act.subject.actorId === wizardId &&
-      presentation?.invocation.procedure === procedure
-    );
-  })?.subject;
-  if (subject === undefined || !("procedureRef" in subject)) {
-    throw new Error(`Expected admitted ${spellId} ${procedure} procedure.`);
+  const procedureRef = requireCharacterSpellProcedureRefForTest(
+    session,
+    targetId,
+    spellSlotInvocationRef("mirror_image", 2, "mirrorImageHitInterception"),
+  );
+  const act = discoverBattleActs(session).find(
+    (candidate) =>
+      candidate.subject.actorId === targetId &&
+      "procedureRef" in candidate.subject &&
+      candidate.subject.procedureRef === procedureRef,
+  );
+  if (act === undefined) {
+    throw new Error("Expected the target's admitted Mirror Image invocation.");
   }
-  return subject.procedureRef;
+  if (act.initialHoles.length !== 0) {
+    throw new Error("Expected Mirror Image to retain its self-only frontier.");
+  }
+  const cast = requireResolved(
+    resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [],
+    }),
+  );
+  return advanceToActorNextTurnForTest(cast.state, wizardId);
 }
 
-function withActiveEffect(
-  state: BattleState,
+function withHuntersMark(
+  session: BattleRuntimeSession,
   targetId: ReturnType<typeof combatantId>,
-  effect: BattleActiveEffectOccurrenceTemplate,
 ): BattleState {
-  return battleStateWithAllocatedEffectOccurrencesForTest({
-    state,
-    occurrences: [{ kind: "activeEffect", ownerId: targetId, effect }],
-  }).state;
+  const procedureRef = requireCharacterSpellProcedureRefForTest(
+    session,
+    wizardId,
+    spellSlotInvocationRef("hunters_mark", 1, "markedDamageRider"),
+  );
+  const act = discoverBattleActs(session).find(
+    (candidate) =>
+      candidate.subject.actorId === wizardId &&
+      "procedureRef" in candidate.subject &&
+      candidate.subject.procedureRef === procedureRef,
+  );
+  if (act === undefined) {
+    throw new Error("Expected the admitted Hunter's Mark invocation act.");
+  }
+  const target = findHole(act.initialHoles, "targetChoice");
+  const cast = requireResolved(
+    resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [targetFill(target, targetId)],
+    }),
+  );
+  return advanceToActorNextTurnForTest(cast.state, wizardId);
 }
 
 function sanctuaryRetargetFill(
@@ -5102,6 +5103,7 @@ function saveMetamagicBattle(input: {
   }[];
   readonly d20Statistics?: ReturnType<typeof testCharacterD20Statistics>;
   readonly spellcastingAbilityModifier?: number;
+  readonly mirrorImageAllyCaster?: boolean;
 }): BattleRuntimeSession {
   return startBattleSessionRight({
     battleId: battleId("battle:sorcerer-metamagic-save"),
@@ -5156,9 +5158,19 @@ function saveMetamagicBattle(input: {
       characterSeed({
         combatantId: fighterId,
         displayName: "Nearby Ally",
-        initiative: 12,
+        initiative: input.mirrorImageAllyCaster === true ? 25 : 12,
         currentHp: 12,
         maxHp: 20,
+        ...(input.mirrorImageAllyCaster === true
+          ? {
+              classLevels: [{ className: "wizard" as const, level: 3 }],
+              spellcasting: wizardSpellcasting({
+                cantrips: [],
+                preparedSpells: [spellRecord("mirror_image")],
+                spellSlots: [{ spellLevel: 2, count: 1 }],
+              }),
+            }
+          : {}),
       }),
       statBlockCreatureInit({
         combatantId: skeletonId,
@@ -6210,7 +6222,12 @@ function findSpellTargetListHole(
 
 function spellTargetListFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
-  _spellId: "bless" | "burning_hands" | "command" | "invisibility",
+  _spellId:
+    | "bless"
+    | "burning_hands"
+    | "command"
+    | "invisibility"
+    | "sanctuary",
   targetIds: readonly ReturnType<typeof combatantId>[],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
   const relationshipFactRequest = hole.relationshipFactRequest;

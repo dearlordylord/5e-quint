@@ -1,4 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import { castFlyAndAdvanceToCasterTurnForTest } from "./spell-effect-fixture.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L13UG-A18 fighter_remarkable_athlete monk_open_hand_technique paladin_sacred_weapon ranger_hunters_prey rogue_steady_aim wizard_potent_cantrip
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.remarkable-athlete unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.hunters-prey unit-feature.rogue-steady-aim unit-feature.potent-cantrip
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
@@ -54,7 +55,6 @@ import {
   requireResultHole,
   resolveBattleSubject,
   startBattle,
-  spellSlotInvocationRef,
 } from "./unit-profile-admission.test-support.ts";
 import { battleUnitSupportProfilesForUnit } from "./unit-feature-support.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
@@ -75,11 +75,8 @@ import { characterUnitProcedureBindings } from "./character-execution-queries.ts
 import {
   attackExecutionSelectionForSubjectForTest,
   characterBattleFeatureInitForTest,
-  battleStateWithAllocatedEffectOccurrencesForTest,
   characterAttackSubjectForTest,
   endTurn,
-  elapsedTimeTicks,
-  requireCharacterSpellProcedureRefForTest,
   requireResolved,
   SURFACE_UNIT_RECORD_SCHEMA_NEGATIVE_TEST_TIMEOUT_MILLISECONDS,
   wizardSpellcasting,
@@ -158,46 +155,10 @@ function remarkableAthleteRuntimeBattleWithFlySpeed() {
     selected: true,
     withFlySpell: true,
   });
-  const state = session.state;
-  const actor = state.combatants.get(remarkableAthleteActorId);
-  if (actor === undefined) {
-    throw new Error("Expected Remarkable Athlete actor in fixture.");
-  }
-  const flyProcedureRef = requireCharacterSpellProcedureRefForTest(
+  return castFlyAndAdvanceToCasterTurnForTest({
     session,
-    remarkableAthleteActorId,
-    spellSlotInvocationRef("fly", 3, "scalarBuff"),
-  );
-  return battleStateWithAllocatedEffectOccurrencesForTest({
-    state: {
-      ...state,
-      combatants: new Map(state.combatants).set(remarkableAthleteActorId, {
-        ...actor,
-        concentration: {
-          sourceProcedureRef: flyProcedureRef,
-          effectKind: "spellEffect",
-        },
-      }),
-    },
-    occurrences: [
-      {
-        kind: "activeEffect",
-        ownerId: remarkableAthleteActorId,
-        effect: {
-          kind: "specialSpeedGrant",
-          sourceProcedureRef: flyProcedureRef,
-          sourceCombatantId: remarkableAthleteActorId,
-          speedKind: "fly",
-          speed: { kind: "fixed", speedFeet: movementFeet(60) },
-          hover: true,
-          expiresAt: {
-            kind: "concentration",
-            combatantId: remarkableAthleteActorId,
-            durationTicks: elapsedTimeTicks(100),
-          },
-        },
-      },
-    ],
+    casterId: remarkableAthleteActorId,
+    targetId: remarkableAthleteActorId,
   }).state;
 }
 
@@ -860,20 +821,33 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
       ],
     });
 
-    const actorWithoutFly = state.combatants.get(remarkableAthleteActorId);
-    if (actorWithoutFly === undefined) {
+    const actorWithFly = state.combatants.get(remarkableAthleteActorId);
+    if (actorWithFly === undefined) {
       throw new Error("Expected Remarkable Athlete actor.");
     }
+    const flyEffect = actorWithFly.activeEffects.find(
+      (effect) =>
+        effect.kind === "specialSpeedGrant" &&
+        effect.speedKind === "fly" &&
+        effect.sourceCombatantId === remarkableAthleteActorId,
+    );
+    if (flyEffect === undefined) {
+      throw new Error("Expected the resolved Remarkable Athlete Fly effect.");
+    }
+    const retainedEffects = actorWithFly.activeEffects.filter(
+      (effect) => effect.effectRef !== flyEffect.effectRef,
+    );
     const stateWithoutFly = {
       ...state,
       combatants: new Map(state.combatants).set(remarkableAthleteActorId, {
-        ...actorWithoutFly,
-        activeEffects: actorWithoutFly.activeEffects.filter(
-          (effect) =>
-            effect.kind !== "specialSpeedGrant" || effect.speedKind !== "fly",
-        ),
+        ...actorWithFly,
+        concentration: null,
+        activeEffects: retainedEffects,
       }),
     };
+    expect(
+      stateWithoutFly.combatants.get(remarkableAthleteActorId)?.activeEffects,
+    ).toEqual(retainedEffects);
     expect(
       resolveBattleSubject({
         state: stateWithoutFly,

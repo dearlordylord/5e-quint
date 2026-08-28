@@ -5,6 +5,7 @@ import {
 } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import { castFlyAndAdvanceToCasterTurnForTest } from "./spell-effect-fixture.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.rogue-steady-aim
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.brutal-strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-01-BRUTAL-STRIKE-RECKLESS-DAMAGE barbarian_brutal_strike
@@ -70,7 +71,6 @@ import {
   discoverBattleActCandidates,
   discoverBattleActs,
   endTurn,
-  elapsedTimeTicks,
   movementFill,
   movementFeet,
   movementDeltaFeet,
@@ -104,7 +104,7 @@ import type {
   BattleState,
   BattleSubject,
 } from "./battle-runtime.test-support.ts";
-import { spellSlotInvocationRef, type BattleRuntimeSession } from "./index.ts";
+import type { BattleRuntimeSession } from "./index.ts";
 import { describe, expect, test } from "vitest";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
@@ -3686,46 +3686,10 @@ describe("battle runtime: class action features", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const baseState = forcefulSession.state;
-    const actor = baseState.combatants.get(fighterId);
-    if (actor === undefined) {
-      throw new Error("Expected the Forceful Blow actor.");
-    }
-    const flyProcedureRef = requireCharacterSpellProcedureRefForTest(
-      forcefulSession,
-      fighterId,
-      spellSlotInvocationRef("fly", 3, "scalarBuff"),
-    );
-    const state = battleStateWithAllocatedEffectOccurrencesForTest({
-      state: {
-        ...baseState,
-        combatants: new Map(baseState.combatants).set(fighterId, {
-          ...actor,
-          concentration: {
-            sourceProcedureRef: flyProcedureRef,
-            effectKind: "spellEffect",
-          },
-        }),
-      },
-      occurrences: [
-        {
-          kind: "activeEffect",
-          ownerId: fighterId,
-          effect: {
-            kind: "specialSpeedGrant",
-            sourceProcedureRef: flyProcedureRef,
-            sourceCombatantId: fighterId,
-            speedKind: "fly",
-            speed: { kind: "fixed", speedFeet: movementFeet(60) },
-            hover: true,
-            expiresAt: {
-              kind: "concentration",
-              combatantId: fighterId,
-              durationTicks: elapsedTimeTicks(100),
-            },
-          },
-        },
-      ],
+    const state = castFlyAndAdvanceToCasterTurnForTest({
+      session: forcefulSession,
+      casterId: fighterId,
+      targetId: fighterId,
     }).state;
     const attackSubject = fighterAttackSubject(state, "Unarmed Strike");
     const target = attackInitialTargetHole(state, attackSubject);
