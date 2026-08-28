@@ -1,4 +1,4 @@
-import { Either, JSONSchema, Option, Schema } from "effect";
+import { Either, JSONSchema, Match, Option, Schema } from "effect";
 import * as AST from "effect/SchemaAST";
 import { stripNestedJsonSchemaIds } from "@dnd/shared/json-schema";
 import {
@@ -46,25 +46,6 @@ export function documentJsonSchema<A, I, R>(
   );
 }
 
-type UnsupportedDocumentAst = Extract<
-  AST.AST,
-  { readonly _tag: "AnyKeyword" | "UnknownKeyword" | "Declaration" }
->;
-
-type CompositeDocumentAst = Extract<
-  AST.AST,
-  {
-    readonly _tag:
-      | "Refinement"
-      | "TupleType"
-      | "TypeLiteral"
-      | "Union"
-      | "Suspend"
-      | "Transformation"
-      | "TemplateLiteral";
-  }
->;
-
 type DocumentAstProjectionOperations = {
   readonly project: (ast: AST.AST, path?: string) => AST.AST;
   readonly projectType: (value: AST.Type, path: string) => AST.Type;
@@ -85,28 +66,16 @@ type DocumentAstProjectionOperations = {
   readonly projectedSuspendBodies: WeakMap<() => AST.AST, AST.AST>;
 };
 
-const DOCUMENT_UNSUPPORTED_AST_TAGS: readonly AST.AST["_tag"][] = [
-  "AnyKeyword",
-  "UnknownKeyword",
-  "Declaration",
-];
-
-const DOCUMENT_COMPOSITE_AST_TAGS: readonly AST.AST["_tag"][] = [
-  "Refinement",
-  "TupleType",
-  "TypeLiteral",
-  "Union",
-  "Suspend",
-  "Transformation",
-  "TemplateLiteral",
-];
-
-function isUnsupportedDocumentAst(ast: AST.AST): ast is UnsupportedDocumentAst {
-  return DOCUMENT_UNSUPPORTED_AST_TAGS.includes(ast._tag);
-}
-
-function isCompositeDocumentAst(ast: AST.AST): ast is CompositeDocumentAst {
-  return DOCUMENT_COMPOSITE_AST_TAGS.includes(ast._tag);
+function rejectUnsupportedDocumentAst(
+  ast: Extract<
+    AST.AST,
+    { readonly _tag: "AnyKeyword" | "UnknownKeyword" | "Declaration" }
+  >,
+  path: string,
+): never {
+  throw new Error(
+    `Document schemas cannot contain ${ast._tag} AST nodes at ${path}.`,
+  );
 }
 
 function projectDocumentAstNode(
@@ -114,79 +83,83 @@ function projectDocumentAstNode(
   path: string,
   operations: DocumentAstProjectionOperations,
 ): AST.AST {
-  if (isUnsupportedDocumentAst(ast)) {
-    throw new Error(
-      `Document schemas cannot contain ${ast._tag} AST nodes at ${path}.`,
-    );
-  }
-  if (!isCompositeDocumentAst(ast)) return ast;
-  return projectCompositeDocumentAst(ast, path, operations);
-}
-
-function projectCompositeDocumentAst(
-  ast: CompositeDocumentAst,
-  path: string,
-  operations: DocumentAstProjectionOperations,
-): AST.AST {
-  switch (ast._tag) {
-    case "Refinement":
-      return projectDocumentRefinement(ast, path, operations);
-    case "TupleType":
-      return new AST.TupleType(
-        ast.elements.map((element, index) =>
-          operations.projectOptionalType(element, `${path}[${index}]`),
-        ),
-        ast.rest.map((element) => operations.projectType(element, `${path}[]`)),
-        ast.isReadonly,
-        ast.annotations,
-      );
-    case "TypeLiteral":
-      return new AST.TypeLiteral(
-        ast.propertySignatures.map((property) =>
-          operations.projectPropertySignature(
-            property,
-            `${path}.${String(property.name)}`,
+  return Match.value(ast).pipe(
+    Match.discriminatorsExhaustive("_tag")({
+      Declaration: (matched) => rejectUnsupportedDocumentAst(matched, path),
+      Literal: (matched) => matched,
+      UniqueSymbol: (matched) => matched,
+      UndefinedKeyword: (matched) => matched,
+      VoidKeyword: (matched) => matched,
+      NeverKeyword: (matched) => matched,
+      UnknownKeyword: (matched) => rejectUnsupportedDocumentAst(matched, path),
+      AnyKeyword: (matched) => rejectUnsupportedDocumentAst(matched, path),
+      StringKeyword: (matched) => matched,
+      NumberKeyword: (matched) => matched,
+      BooleanKeyword: (matched) => matched,
+      BigIntKeyword: (matched) => matched,
+      SymbolKeyword: (matched) => matched,
+      ObjectKeyword: (matched) => matched,
+      Enums: (matched) => matched,
+      TemplateLiteral: (matched) =>
+        new AST.TemplateLiteral(
+          matched.head,
+          mapNonEmpty(
+            matched.spans,
+            (span) =>
+              new AST.TemplateLiteralSpan(
+                operations.project(span.type, `${path}<span>`),
+                span.literal,
+              ),
           ),
+          matched.annotations,
         ),
-        ast.indexSignatures.map((indexSignature) =>
-          operations.projectIndexSignature(indexSignature, `${path}[*]`),
+      Refinement: (matched) =>
+        projectDocumentRefinement(matched, path, operations),
+      TupleType: (matched) =>
+        new AST.TupleType(
+          matched.elements.map((element, index) =>
+            operations.projectOptionalType(element, `${path}[${index}]`),
+          ),
+          matched.rest.map((element) =>
+            operations.projectType(element, `${path}[]`),
+          ),
+          matched.isReadonly,
+          matched.annotations,
         ),
-        ast.annotations,
-      );
-    case "Union":
-      return AST.Union.make(
-        ast.types.map((member, index) =>
-          operations.project(member, `${path}|${index}`),
-        ),
-        ast.annotations,
-      );
-    case "Suspend":
-      return projectDocumentSuspend(ast, path, operations);
-    case "Transformation":
-      return new AST.Transformation(
-        operations.project(ast.from, `${path}<from>`),
-        operations.project(ast.to, `${path}<to>`),
-        ast.transformation,
-        ast.annotations,
-      );
-    case "TemplateLiteral":
-      return new AST.TemplateLiteral(
-        ast.head,
-        mapNonEmpty(
-          ast.spans,
-          (span) =>
-            new AST.TemplateLiteralSpan(
-              operations.project(span.type, `${path}<span>`),
-              span.literal,
+      TypeLiteral: (matched) =>
+        new AST.TypeLiteral(
+          matched.propertySignatures.map((property) =>
+            operations.projectPropertySignature(
+              property,
+              `${path}.${String(property.name)}`,
             ),
+          ),
+          matched.indexSignatures.map((indexSignature) =>
+            operations.projectIndexSignature(indexSignature, `${path}[*]`),
+          ),
+          matched.annotations,
         ),
-        ast.annotations,
-      );
-  }
+      Union: (matched) =>
+        AST.Union.make(
+          matched.types.map((member, index) =>
+            operations.project(member, `${path}|${index}`),
+          ),
+          matched.annotations,
+        ),
+      Suspend: (matched) => projectDocumentSuspend(matched, path, operations),
+      Transformation: (matched) =>
+        new AST.Transformation(
+          operations.project(matched.from, `${path}<from>`),
+          operations.project(matched.to, `${path}<to>`),
+          matched.transformation,
+          matched.annotations,
+        ),
+    }),
+  );
 }
 
 function projectDocumentRefinement(
-  ast: Extract<CompositeDocumentAst, { readonly _tag: "Refinement" }>,
+  ast: AST.Refinement,
   path: string,
   operations: DocumentAstProjectionOperations,
 ): AST.AST {
@@ -209,7 +182,7 @@ function projectDocumentRefinement(
 }
 
 function projectDocumentSuspend(
-  ast: Extract<CompositeDocumentAst, { readonly _tag: "Suspend" }>,
+  ast: AST.Suspend,
   path: string,
   operations: DocumentAstProjectionOperations,
 ): AST.Suspend {

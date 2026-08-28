@@ -1,4 +1,4 @@
-import { Either, Option, ParseResult, Schema } from "effect";
+import { Either, Match, Option, ParseResult, Schema } from "effect";
 import * as AST from "effect/SchemaAST";
 
 import { compareCodePoints } from "./oracle-canonical.ts";
@@ -97,90 +97,49 @@ function collectParseIssues(
   }
 }
 
-type SimpleParseIssue = PendingParseIssue & {
-  readonly issue: Extract<
-    ParseResult.ParseIssue,
-    { readonly _tag: "Unexpected" | "Missing" }
-  >;
-};
-
 function collectParseIssue(
   current: PendingParseIssue,
   pending: PendingParseIssue[],
   output: OracleDecodeIssue[],
   options: DecodeOptions,
 ): void {
-  if (isSimpleParseIssue(current)) {
-    output.push({
-      path: current.path,
-      code:
-        current.issue._tag === "Unexpected" ? "unknownMember" : "missingMember",
-    });
-    return;
-  }
-  collectNonSimpleParseIssue(current, pending, output, options);
-}
-
-function isSimpleParseIssue(
-  current: PendingParseIssue,
-): current is SimpleParseIssue {
-  return (
-    current.issue._tag === "Unexpected" || current.issue._tag === "Missing"
+  return Match.value(current.issue).pipe(
+    Match.discriminatorsExhaustive("_tag")({
+      Pointer: (issue) =>
+        collectPointerParseIssue({ ...current, issue }, pending),
+      Composite: (issue) =>
+        collectCompositeParseIssue({ ...current, issue }, pending),
+      Unexpected: () => {
+        output.push({ path: current.path, code: "unknownMember" });
+      },
+      Missing: () => {
+        output.push({ path: current.path, code: "missingMember" });
+      },
+      Refinement: (issue) =>
+        collectRefinementParseIssue(
+          { ...current, issue },
+          pending,
+          output,
+          options,
+        ),
+      Transformation: (issue) => {
+        pending.push({
+          issue: issue.issue,
+          path: current.path,
+          depth: current.depth + 1,
+        });
+      },
+      Type: (issue) => {
+        output.push({
+          path: current.path,
+          code: isUnknownVariant(issue) ? "unknownVariant" : "wrongType",
+        });
+      },
+      Forbidden: () => {
+        output.push({ path: "", code: "wrongType" });
+      },
+    }),
   );
-}
-
-function collectNonSimpleParseIssue(
-  current: PendingParseIssue,
-  pending: PendingParseIssue[],
-  output: OracleDecodeIssue[],
-  options: DecodeOptions,
-): void {
-  if (isPointerParseIssue(current)) {
-    collectPointerParseIssue(current, pending);
-    return;
-  }
-  if (isCompositeParseIssue(current)) {
-    collectCompositeParseIssue(current, pending);
-    return;
-  }
-  if (isRefinementParseIssue(current)) {
-    collectRefinementParseIssue(current, pending, output, options);
-    return;
-  }
-  if (current.issue._tag === "Transformation") {
-    pending.push({
-      issue: current.issue.issue,
-      path: current.path,
-      depth: current.depth + 1,
-    });
-    return;
-  }
-  if (current.issue._tag === "Type") {
-    output.push({
-      path: current.path,
-      code: isUnknownVariant(current.issue) ? "unknownVariant" : "wrongType",
-    });
-    return;
-  }
-  output.push({ path: current.path, code: "wrongType" });
-}
-
-function isPointerParseIssue(
-  current: PendingParseIssue,
-): current is PendingParseIssue & { readonly issue: ParseResult.Pointer } {
-  return current.issue._tag === "Pointer";
-}
-
-function isCompositeParseIssue(
-  current: PendingParseIssue,
-): current is PendingParseIssue & { readonly issue: ParseResult.Composite } {
-  return current.issue._tag === "Composite";
-}
-
-function isRefinementParseIssue(
-  current: PendingParseIssue,
-): current is PendingParseIssue & { readonly issue: ParseResult.Refinement } {
-  return current.issue._tag === "Refinement";
 }
 
 function collectPointerParseIssue(
