@@ -1,8 +1,13 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { describe, expect, test } from "vitest";
 
 import { statBlockId } from "@dnd/shared/game-facts";
 
 import { srdStatBlockCollection } from "./stat-block-catalog.ts";
+import { projectAuthoredStatBlocks } from "./stat-block-raw-projection.test-support.ts";
 
 const animalRecords = srdStatBlockCollection.statBlocks.filter((record) =>
   record.provenance.section.startsWith("Animals.md:"),
@@ -50,6 +55,30 @@ const expectLimitedUse = (
 };
 
 describe("Animals Stat Block procedure fidelity", () => {
+  test("preserves the Swarm of Insects GM-selected Speed alternative", () => {
+    const raw = readFileSync(
+      join(
+        dirname(fileURLToPath(import.meta.url)),
+        "../../../../.references/srd-5.2.1/Animals.md",
+      ),
+      "utf8",
+    );
+    expect(raw).toContain(
+      "**Speed** 20 ft., Climb or Fly 20 ft. (GM's choice)",
+    );
+    const swarm = requireAnimal("stat_block_swarm_of_insects");
+    expect(projectAuthoredStatBlocks([swarm])[0]?.generalFacts.speeds).toEqual([
+      { kind: "walk", feet: 20, hover: false },
+      {
+        kind: "gm_choice",
+        alternatives: [
+          { kind: "climb", feet: 20, hover: false },
+          { kind: "fly", feet: 20, hover: false },
+        ],
+      },
+    ]);
+  });
+
   test("admits only fully typed attacks and executable Multiattack children", () => {
     const sections = ["actions", "bonusActions", "reactions"] as const;
 

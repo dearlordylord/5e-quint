@@ -57,7 +57,7 @@ describe("MCP Stat Block battle combatant projection", () => {
       },
       resourceRefs: { kind: "none" },
     };
-    const invalid = {
+    const invalid = Schema.decodeUnknownSync(SrdStatBlockRecordSchema)({
       ...base,
       id: statBlockId("stat_block_synthetic_mcp_projection_failure"),
       name: "Synthetic MCP Projection Failure",
@@ -65,7 +65,7 @@ describe("MCP Stat Block battle combatant projection", () => {
         ...base.statBlock,
         actions: [unsupportedAttack, multiattack],
       },
-    } satisfies StatBlockRecord;
+    });
     const root = {
       ...baseRoot,
       statBlockCatalog: {
@@ -188,6 +188,30 @@ describe("MCP Stat Block battle combatant projection", () => {
         code: "STAT_BLOCK_BATTLE_INIT_INVALID",
         statBlockId: invalid.id,
         reason: "unsupportedFormRestrictedSpeed",
+      },
+    });
+  });
+
+  test("reports the unresolved GM Speed Table Decision without selecting an alternative", () => {
+    const root = createMcpPlaySessionRoot();
+    const swarm = assertStatBlockForTest(
+      root.statBlockCatalog,
+      statBlockId("stat_block_swarm_of_insects"),
+    );
+
+    const projected = projectStatBlockBattleCombatant({
+      root,
+      combatant: statBlockCombatant(swarm),
+    });
+
+    expect(Either.isLeft(projected)).toBe(true);
+    if (Either.isRight(projected)) return;
+    expect(jsonContentPayload(projected.left)).toEqual({
+      error: "Stat Block projection failed.",
+      details: {
+        code: "STAT_BLOCK_BATTLE_INIT_INVALID",
+        statBlockId: swarm.id,
+        reason: "unresolvedGmSpeedChoice",
       },
     });
   });

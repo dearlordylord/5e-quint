@@ -157,6 +157,7 @@ export type BattleDruidWildShapeKnownFormIssue =
       readonly statBlockId: StatBlockId;
       readonly reason:
         | "nonLiteralSize"
+        | "unresolvedGmSpeedChoice"
         | "unsupportedFormRestrictedSpeed"
         | "unsupportedQualifiedConditionImmunity"
         | "unsupportedLairConditionalLegendaryActionUses"
@@ -200,6 +201,8 @@ const WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES = {
     "Druid Wild Shape battle forms cannot select lair-conditional Legendary Action uses without lair context.",
   unsupportedFormRestrictedSpeed:
     "Druid Wild Shape battle forms require an active form before selecting form-restricted Speeds.",
+  unresolvedGmSpeedChoice:
+    "Druid Wild Shape battle forms require the GM's Table Decision selecting one authored Speed alternative.",
   unsupportedQualifiedConditionImmunity:
     "Druid Wild Shape battle forms cannot apply a qualified condition Immunity without its qualifying state.",
   invalidResourceLimit:
@@ -354,6 +357,14 @@ function wildShapeProjectionDisposition(
         reason,
       },
     })),
+    Match.when({ reason: "unresolvedGmSpeedChoice" }, ({ reason }) => ({
+      kind: "issue" as const,
+      issue: {
+        tag: "battleDruidWildShapeKnownFormIssue" as const,
+        statBlockId,
+        reason,
+      },
+    })),
     Match.when(
       { reason: "unsupportedQualifiedConditionImmunity" },
       ({ reason }) => ({
@@ -420,6 +431,11 @@ export function wildShapeKnownFormsIssueMessage(
           { reason: "unsupportedFormRestrictedSpeed" },
           () =>
             WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES.unsupportedFormRestrictedSpeed,
+        ),
+        Match.when(
+          { reason: "unresolvedGmSpeedChoice" },
+          () =>
+            WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES.unresolvedGmSpeedChoice,
         ),
         Match.when(
           { reason: "unsupportedQualifiedConditionImmunity" },

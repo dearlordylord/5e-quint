@@ -59,10 +59,107 @@ let defaultEffect : Effect =
 
 let NonEmpty = λ(element : Type) -> { first : element, rest : List element }
 
+let AtLeastTwo =
+      λ(element : Type) ->
+        { first : element, second : element, rest : List element }
+
 let nonEmptyToList =
       λ(element : Type) ->
       λ(input : NonEmpty element) ->
         [ input.first ] # input.rest
+
+let SpeedDistance : Type = { feet : Natural }
+
+let FlySpeed : Type =
+      < hovering : SpeedDistance | ordinary : SpeedDistance >
+
+let SpeedAlternative : Type =
+      < burrow : SpeedDistance
+      | climb : SpeedDistance
+      | fly : FlySpeed
+      | swim : SpeedDistance
+      | walk : SpeedDistance
+      >
+
+let SpeedAlternativeRecord : Type =
+      { feet : { kind : Text, value : Natural }
+      , hover : Optional Bool
+      , kind : Text
+      }
+
+let ordinarySpeedAlternative =
+      λ(kind : Text) ->
+      λ(input : SpeedDistance) ->
+        { feet = { kind = "literal", value = input.feet }
+        , hover = None Bool
+        , kind
+        }
+
+let speedAlternative : SpeedAlternative -> SpeedAlternativeRecord =
+      λ(input : SpeedAlternative) ->
+        merge
+          { burrow = ordinarySpeedAlternative "burrow"
+          , climb = ordinarySpeedAlternative "climb"
+          , fly =
+              λ(fly : FlySpeed) ->
+                merge
+                  { hovering =
+                      λ(input : SpeedDistance) ->
+                        { feet = { kind = "literal", value = input.feet }
+                        , hover = Some True
+                        , kind = "fly"
+                        }
+                  , ordinary =
+                      λ(input : SpeedDistance) ->
+                        { feet = { kind = "literal", value = input.feet }
+                        , hover = None Bool
+                        , kind = "fly"
+                        }
+                  }
+                  fly
+          , swim = ordinarySpeedAlternative "swim"
+          , walk = ordinarySpeedAlternative "walk"
+          }
+          input
+
+let speedAlternativesToRecords :
+      AtLeastTwo SpeedAlternative -> List SpeedAlternativeRecord =
+      λ(input : AtLeastTwo SpeedAlternative) ->
+        [ speedAlternative input.first, speedAlternative input.second ]
+        # List/fold
+            SpeedAlternative
+            input.rest
+            (List SpeedAlternativeRecord)
+            ( λ(alternative : SpeedAlternative) ->
+              λ(alternatives : List SpeedAlternativeRecord) ->
+                [ speedAlternative alternative ] # alternatives
+            )
+            ([] : List SpeedAlternativeRecord)
+
+let SpeedEntry : Type =
+      { alternatives : Optional (List SpeedAlternativeRecord)
+      , feet : Optional { kind : Text, value : Natural }
+      , hover : Optional Bool
+      , kind : Text
+      }
+
+let speed : SpeedAlternative -> SpeedEntry =
+      λ(input : SpeedAlternative) ->
+        let alternative = speedAlternative input
+
+        in  { alternatives = None (List SpeedAlternativeRecord)
+            , feet = Some alternative.feet
+            , hover = alternative.hover
+            , kind = alternative.kind
+            }
+
+let gmSpeedChoice : AtLeastTwo SpeedAlternative -> SpeedEntry =
+      λ(input : AtLeastTwo SpeedAlternative) ->
+        { alternatives = Some (speedAlternativesToRecords input)
+        , feet = None { kind : Text, value : Natural }
+        , hover = None Bool
+        , kind = "gm_choice"
+        }
 
 let Vulnerabilities : Type =
       < fixed : NonEmpty Text
@@ -541,6 +638,8 @@ let trait : TraitInput -> Trait =
 
 in  { Effect
     , Dispatch
+    , FlySpeed
+    , SpeedAlternative
     , SpellRef
     , Group
     , Vulnerabilities
@@ -568,7 +667,9 @@ in  { Effect
     , saveArea
     , spellRef
     , spellDefinitionComponents
-    , spellcasting
+     , spellcasting
+     , speed
+     , gmSpeedChoice
     , staticDamage
     , sourceNextTurnEnd
     , targetNextTurnEnd

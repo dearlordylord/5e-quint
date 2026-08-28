@@ -615,6 +615,12 @@ export type CreatureSense = Schema.Schema.Type<
 export type StandaloneCreatureSense = Schema.Schema.Type<
   typeof SurfaceSchema.StandaloneCreatureSenseSchema
 >;
+export type StandaloneCreatureSpeed = Schema.Schema.Type<
+  typeof SurfaceSchema.StandaloneCreatureSpeedSchema
+>;
+export type StandaloneStatBlockSpeedEntry = Schema.Schema.Type<
+  typeof SurfaceSchema.StandaloneStatBlockSpeedEntrySchema
+>;
 export type StandaloneStatBlockAbilityScores = Schema.Schema.Type<
   typeof SurfaceSchema.StandaloneStatBlockAbilityScoresSchema
 >;

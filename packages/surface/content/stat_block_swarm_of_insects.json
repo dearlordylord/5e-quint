@@ -110,18 +110,23 @@
         "kind": "walk"
       },
       {
-        "feet": {
-          "kind": "literal",
-          "value": 20
-        },
-        "kind": "climb"
-      },
-      {
-        "feet": {
-          "kind": "literal",
-          "value": 20
-        },
-        "kind": "fly"
+        "alternatives": [
+          {
+            "feet": {
+              "kind": "literal",
+              "value": 20
+            },
+            "kind": "climb"
+          },
+          {
+            "feet": {
+              "kind": "literal",
+              "value": 20
+            },
+            "kind": "fly"
+          }
+        ],
+        "kind": "gm_choice"
       }
     ],
     "swarm": {

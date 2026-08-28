@@ -135,7 +135,13 @@ describe("T–Z form-restricted Speed fidelity", () => {
       lycanthropes.equipmentSource,
     );
     const werebear = requireNamed(projectionByName(projected), "Werebear");
-    expect(werebear.generalFacts.speeds[1]?.availability).toEqual({
+    const werebearRestrictedSpeed = werebear.generalFacts.speeds[1];
+    expect(
+      werebearRestrictedSpeed !== undefined &&
+        "availability" in werebearRestrictedSpeed
+        ? werebearRestrictedSpeed.availability
+        : undefined,
+    ).toEqual({
       kind: "forms_only",
       forms: ["bear", "hybrid"],
     });
