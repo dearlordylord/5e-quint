@@ -25,6 +25,7 @@ import { decodeOracleEvaluationBatchJson } from "./oracle-case-trace.ts";
 import { decodeOracleCorpusJson } from "./oracle-corpus.ts";
 import type { OracleTrace } from "./oracle-case-trace-schema.ts";
 import { evaluateOracleBatch } from "./oracle-evaluation.ts";
+import { ORACLE_HTTP_MAX_REQUEST_BYTES } from "./oracle-http.ts";
 import {
   computeOracleDistributionId,
   loadOracleApplicationFromDirectory,
@@ -296,11 +297,12 @@ function requestOracle(
     readonly path: string;
     readonly body?: Uint8Array;
     readonly contentType?: string;
+    readonly declaredContentLength?: number;
   },
 ): Promise<OracleHttpResponse> {
   const body = input.body ?? new Uint8Array();
   const headers: Record<string, string | number> = {
-    "content-length": body.byteLength,
+    "content-length": input.declaredContentLength ?? body.byteLength,
   };
   if (input.contentType !== undefined) {
     headers["content-type"] = input.contentType;
@@ -887,7 +889,13 @@ describe("Opaque Oracle source-free distribution", () => {
         "text/plain; charset=utf-8",
       );
       expect(unsupportedMedia.status).toBe(415);
-      const oversized = await post(Buffer.alloc(2_000_000, 0x20));
+      const oversized = await requestOracle(runningProcess.readiness.port, {
+        method: "POST",
+        path: "/oracle/evaluations",
+        body: Buffer.alloc(0),
+        contentType: jsonContentType,
+        declaredContentLength: ORACLE_HTTP_MAX_REQUEST_BYTES + 1,
+      });
       expect(oversized.status).toBe(413);
 
       await waitForOracleExit(runningProcess, "SIGINT");
