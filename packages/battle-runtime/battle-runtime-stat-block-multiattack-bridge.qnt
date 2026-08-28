@@ -4,11 +4,14 @@
 module battleRuntimeStatBlockMultiattackBridge {
   import statBlockMultiattack.* from "../shared-algebras/proofs/rule-core/stat-block-multiattack"
 
-  pure def battleRuntimeSyntheticMultiattackDispatchCountAfterActivation: int =
+  pure def battleRuntimeStatBlockMultiattackDispatchCountAfterActivation(
+    dispatchProcedureRefs: List[StatBlockProcedureRef]
+  ): int =
     statBlockMultiattackPendingProcedureRefs(
       activateStatBlockMultiattack(
         initialStatBlockMultiattackState,
-        { dispatchProcedureRefs: List(0, 0, 0) }
+        { dispatchProcedureRefs: dispatchProcedureRefs },
+        AllListedDispatches,
       )
     ).length()
 

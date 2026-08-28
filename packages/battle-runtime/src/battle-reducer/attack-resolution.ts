@@ -163,7 +163,8 @@ import {
 import {
   spendStatBlockAttackResources,
   statBlockAttackProcedureSection,
-  statBlockMultiattackEffectiveDispatchProcedureRefsForActor,
+  statBlockMultiattackDispatchResourceDemandForActor,
+  statBlockMultiattackTurnResourcesAfterResolvedDispatch,
   updateStatBlockActorResources,
 } from "./statblock.ts";
 import {
@@ -236,11 +237,13 @@ import {
 } from "./battle-runtime-protocol.ts";
 import {
   actorHasClassFeatureExtraAttackActionResource,
+  isStatBlockBattleCreatureState,
   spendTurnAction,
 } from "./battle-discovery.ts";
 import {
   isStatBlockMultiattackActionResource,
   spendEscapeGrappleActionResource,
+  statBlockMultiattackActionResourceMatchesProcedure,
 } from "./action-resource-kinds.ts";
 import { spellDamageRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
 import { SHOVE_PUSH_DISTANCE_FEET } from "./domain-constants.ts";
@@ -997,8 +1000,8 @@ export function resolveMultiattack(
   const actor = input.actor;
   const origin = actor.origin;
   const multiattackBinding = input.multiattackBinding;
-  const pendingProcedureRefs =
-    statBlockMultiattackEffectiveDispatchProcedureRefsForActor(
+  const dispatchResourceDemand =
+    statBlockMultiattackDispatchResourceDemandForActor(
       actor,
       multiattackBinding,
     );
@@ -1006,7 +1009,7 @@ export function resolveMultiattack(
     !statBlockMultiattackResourcesAvailable(
       origin.execution,
       multiattackBinding,
-      pendingProcedureRefs,
+      dispatchResourceDemand,
     )
   ) {
     return invalidResult(
@@ -1029,7 +1032,7 @@ export function resolveMultiattack(
       ...spent.right,
       actionResources: [
         ...spent.right.actionResources,
-        ...pendingProcedureRefs.map((dispatch) => ({
+        ...dispatchResourceDemand.procedureRefs.map((dispatch) => ({
           kind: "action" as const,
           source: "statBlockMultiattack" as const,
           sourceOwnerId: input.subject.actorId,
@@ -2534,14 +2537,23 @@ function spendAttackTurnResources(
       state.currentTurnResources,
       "attack",
       (resource) =>
-        isStatBlockMultiattackActionResource(resource, actorId) &&
         attack.procedureRef !== undefined &&
-        resource.attackProcedureRef === attack.procedureRef,
+        statBlockMultiattackActionResourceMatchesProcedure(
+          resource,
+          actorId,
+          attack.procedureRef,
+        ),
     );
+    const actor = state.combatants.get(actorId);
     return Either.isLeft(spent)
       ? Either.left("Attack is no longer available for the current actor.")
       : Either.right({
-          spentTurnResources: spent.right,
+          spentTurnResources: isStatBlockBattleCreatureState(actor)
+            ? statBlockMultiattackTurnResourcesAfterResolvedDispatch(
+                actor,
+                spent.right,
+              )
+            : spent.right,
           spentResource: null,
         });
   }

@@ -100,7 +100,7 @@ import {
   type StatBlockMultiattackProcedure,
   type StatBlockProcedureBindingFor,
 } from "./stat-block-execution-state.ts";
-import { statBlockMultiattackEffectiveDispatchProcedureRefsForActor } from "./battle-reducer/statblock.ts";
+import { statBlockMultiattackDispatchResourceDemandForActor } from "./battle-reducer/statblock.ts";
 import {
   creatureActionSectionIsSupported,
   creatureNamedAttackRollIsSupported,
@@ -1968,7 +1968,7 @@ describe("battle runtime: Stat Block actions", () => {
     });
   });
 
-  test("Stat Block Multiattack spends overlapping binding and dispatch resources atomically", () => {
+  test("Stat Block Multiattack spends its binding at activation and its overlapping dispatch resource at resolution", () => {
     const base = monsterResourceStatBlock();
     const actions = base.statBlock.actions;
     const resources = base.statBlock.resources;
@@ -2111,7 +2111,7 @@ describe("battle runtime: Stat Block actions", () => {
     });
   });
 
-  test("slowed Stat Block Multiattack grants one dispatch and defers its resource spend", () => {
+  test("slowed Stat Block Multiattack offers every listed dispatch and resolves one", () => {
     const base = monsterResourceStatBlock();
     const actions = base.statBlock.actions;
     const resources = base.statBlock.resources;
@@ -2212,19 +2212,20 @@ describe("battle runtime: Stat Block actions", () => {
       afterMultiattack.currentTurnResources.actionResources.filter(
         (resource) => resource.source === "statBlockMultiattack",
       ),
-    ).toHaveLength(1);
+    ).toHaveLength(2);
     expect(afterGoblin.origin.execution.resourcePools).toContainEqual(
       expect.objectContaining({ kind: "daily", usesRemaining: 1 }),
     );
-    const [effectiveDispatch] =
+    const effectiveDispatches =
       afterMultiattack.currentTurnResources.actionResources.flatMap(
         (resource) =>
           resource.source === "statBlockMultiattack"
             ? [resource.attackProcedureRef]
             : [],
       );
+    const effectiveDispatch = effectiveDispatches[1];
     if (effectiveDispatch === undefined) {
-      throw new Error("Expected the slowed Multiattack dispatch.");
+      throw new Error("Expected a non-first slowed Multiattack dispatch.");
     }
     const afterDispatch = resolveMultiattackDispatchMiss(
       afterMultiattack,
@@ -2237,6 +2238,11 @@ describe("battle runtime: Stat Block actions", () => {
     expect(afterDispatchGoblin.origin.execution.resourcePools).toContainEqual(
       expect.objectContaining({ kind: "daily", usesRemaining: 0 }),
     );
+    expect(
+      afterDispatch.currentTurnResources.actionResources.filter(
+        (resource) => resource.source === "statBlockMultiattack",
+      ),
+    ).toHaveLength(0);
   });
 
   test("Stat Block Multiattack resource demand matches the independent capacity oracle", () => {
@@ -2309,8 +2315,8 @@ describe("battle runtime: Stat Block actions", () => {
                 ],
               }
             : actor;
-          const effectiveDispatchProcedureRefs =
-            statBlockMultiattackEffectiveDispatchProcedureRefsForActor(
+          const dispatchResourceDemand =
+            statBlockMultiattackDispatchResourceDemandForActor(
               actorForPlan,
               binding,
             );
@@ -2340,14 +2346,17 @@ describe("battle runtime: Stat Block actions", () => {
             ? availableUses >= 1 + effectiveDispatchCount
             : availableUses >= 1 && availableUses >= effectiveDispatchCount;
 
-          expect(effectiveDispatchProcedureRefs).toHaveLength(
-            effectiveDispatchCount,
+          expect(dispatchResourceDemand).toMatchObject({
+            kind: slowed ? "oneListedDispatch" : "allListedDispatches",
+          });
+          expect(dispatchResourceDemand.procedureRefs).toEqual(
+            repeatedProcedureRefs(secondAttackRef, dispatchCount),
           );
           expect(
             statBlockMultiattackResourcesAvailable(
               execution,
               binding,
-              effectiveDispatchProcedureRefs,
+              dispatchResourceDemand,
             ),
           ).toBe(expectedAvailable);
 

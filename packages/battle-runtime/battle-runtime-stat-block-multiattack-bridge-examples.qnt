@@ -4,7 +4,7 @@ module battleRuntimeStatBlockMultiattackBridgeExamples {
   import battleRuntimeStatBlockMultiattackBridge.* from "./battle-runtime-stat-block-multiattack-bridge"
 
   run test_synthetic_multiattack_dispatch_count_uses_stat_block_profile = {
-    val afterActivation = battleRuntimeSyntheticMultiattackDispatchCountAfterActivation
+    val afterActivation = battleRuntimeStatBlockMultiattackDispatchCountAfterActivation(List(0, 0, 0))
     val afterFirstDispatch = battleRuntimeStatBlockMultiattackDispatchCountAfterDispatch(afterActivation)
     val afterSecondDispatch = battleRuntimeStatBlockMultiattackDispatchCountAfterDispatch(afterFirstDispatch)
     val afterThirdDispatch = battleRuntimeStatBlockMultiattackDispatchCountAfterDispatch(afterSecondDispatch)

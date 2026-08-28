@@ -15,6 +15,7 @@ import {
 import type { Ability, CreatureType } from "@dnd/shared/game-facts";
 import { Brand } from "effect";
 import * as Either from "effect/Either";
+import * as Match from "effect/Match";
 import type {
   ChallengeRating,
   CreatureLimitedUse,
@@ -623,28 +624,67 @@ export function statBlockProcedureResourcesAvailable(
     : false;
 }
 
+export type StatBlockMultiattackDispatchResourceDemand =
+  | {
+      readonly kind: "allListedDispatches";
+      readonly procedureRefs: ReadonlyNonEmptyArray<BattleStatBlockProcedureExecutionRef>;
+    }
+  | {
+      readonly kind: "oneListedDispatch";
+      readonly procedureRefs: ReadonlyNonEmptyArray<BattleStatBlockProcedureExecutionRef>;
+    };
+
 /**
- * A Multiattack consumes every effective dispatch occurrence exactly once. A
- * shared or binary limited-use pool therefore has to cover every occurrence,
- * rather than merely being available for each distinct procedure reference.
+ * An unrestricted Multiattack must be able to pay every listed dispatch
+ * occurrence. A one-dispatch cap instead requires the activation resources and
+ * at least one individually payable listed dispatch, leaving the choice to the
+ * resolving actor.
  */
 export function statBlockMultiattackResourcesAvailable(
   execution: StatBlockExecutionState,
   binding: StatBlockProcedureBindingFor<StatBlockMultiattackProcedure>,
-  effectiveDispatchProcedureRefs: readonly BattleStatBlockProcedureExecutionRef[],
+  demand: StatBlockMultiattackDispatchResourceDemand,
 ): boolean {
   const requiredUsesByPool = resourcePoolUsesForRefs(binding.resourcePoolRefs);
-  for (const procedureRef of effectiveDispatchProcedureRefs) {
-    const dispatchBinding = statBlockProcedureBinding(execution, procedureRef);
-    if (dispatchBinding === undefined) return false;
-    for (const resourcePoolRef of dispatchBinding.resourcePoolRefs) {
-      requiredUsesByPool.set(
-        resourcePoolRef,
-        (requiredUsesByPool.get(resourcePoolRef) ?? 0) + 1,
-      );
-    }
-  }
-  return statBlockResourcePoolUsesAvailable(execution, requiredUsesByPool);
+  return Match.value(demand).pipe(
+    Match.when({ kind: "oneListedDispatch" }, ({ procedureRefs }) =>
+      procedureRefs.some((procedureRef) => {
+        const dispatchBinding = statBlockProcedureBinding(
+          execution,
+          procedureRef,
+        );
+        if (dispatchBinding === undefined) return false;
+        const selectedUsesByPool = new Map(requiredUsesByPool);
+        for (const resourcePoolRef of dispatchBinding.resourcePoolRefs) {
+          selectedUsesByPool.set(
+            resourcePoolRef,
+            (selectedUsesByPool.get(resourcePoolRef) ?? 0) + 1,
+          );
+        }
+        return statBlockResourcePoolUsesAvailable(
+          execution,
+          selectedUsesByPool,
+        );
+      }),
+    ),
+    Match.when({ kind: "allListedDispatches" }, ({ procedureRefs }) => {
+      for (const procedureRef of procedureRefs) {
+        const dispatchBinding = statBlockProcedureBinding(
+          execution,
+          procedureRef,
+        );
+        if (dispatchBinding === undefined) return false;
+        for (const resourcePoolRef of dispatchBinding.resourcePoolRefs) {
+          requiredUsesByPool.set(
+            resourcePoolRef,
+            (requiredUsesByPool.get(resourcePoolRef) ?? 0) + 1,
+          );
+        }
+      }
+      return statBlockResourcePoolUsesAvailable(execution, requiredUsesByPool);
+    }),
+    Match.exhaustive,
+  );
 }
 
 /**

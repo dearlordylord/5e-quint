@@ -45,6 +45,7 @@ module ruleCoreStatBlockMultiattackMbt {
     else if (qPhase == MbtTurnEnded) StatBlockMultiattackTurnEnded
     else StatBlockMultiattackDispatching({
       pendingProcedureRefs: qPendingProcedureRefs,
+      allowance: AllListedDispatches,
     })
 
   action recordProjection(
@@ -74,7 +75,11 @@ module ruleCoreStatBlockMultiattackMbt {
     val profile = {
       dispatchProcedureRefs: List(0, 0, 1),
     }
-    val activated = activateStatBlockMultiattack(initialStatBlockMultiattackState, profile)
+    val activated = activateStatBlockMultiattack(
+      initialStatBlockMultiattackState,
+      profile,
+      AllListedDispatches,
+    )
     all {
       openHoles == Set(),
       qPhase == MbtReadyToAct,

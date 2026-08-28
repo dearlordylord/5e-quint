@@ -142,6 +142,7 @@ import {
   canSpendEscapeGrappleActionResource,
   isClassFeatureExtraAttackActionResource,
   isStatBlockMultiattackActionResource,
+  statBlockMultiattackActionResourceMatchesProcedure,
 } from "./action-resource-kinds.ts";
 import { supportedUnitFeatureActs } from "./unit-feature-discovery.ts";
 import { monkFocusActs } from "./monk-focus-discovery.ts";
@@ -158,7 +159,7 @@ import {
 import {
   attackActionOptionIsOrdinaryAttackAction,
   attackSubjectPart,
-  statBlockMultiattackEffectiveDispatchProcedureRefsForActor,
+  statBlockMultiattackDispatchResourceDemandForActor,
   statBlockAttackProcedureSection,
 } from "./statblock.ts";
 import type {
@@ -339,6 +340,8 @@ function appendOrdinaryAttackActs(
   actorId: CombatantId,
   acts: BattleActDiscoveryCandidate[],
 ): void {
+  const hasOpenStatBlockMultiattackDispatch =
+    actorHasStatBlockMultiattackActionResource(state, actorId);
   const attackActionOptions = attackActionOptionsForActor(
     state,
     actorId,
@@ -347,7 +350,8 @@ function appendOrdinaryAttackActs(
   );
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
-    canSpendAction(state.currentTurnResources, "attack") &&
+    (hasOpenStatBlockMultiattackDispatch ||
+      canSpendAction(state.currentTurnResources, "attack")) &&
     attackActionOptions.some(
       (attack) =>
         attackTargetChoices(state, actorId, attack).length > 0 ||
@@ -1737,16 +1741,13 @@ export function statBlockMultiattackActs(
   }
   const origin = actor.origin;
   return statBlockMultiattackBindings(origin.execution).flatMap((binding) => {
-    const effectiveDispatchProcedureRefs =
-      statBlockMultiattackEffectiveDispatchProcedureRefsForActor(
-        actor,
-        binding,
-      );
+    const dispatchResourceDemand =
+      statBlockMultiattackDispatchResourceDemandForActor(actor, binding);
     if (
       !statBlockMultiattackResourcesAvailable(
         origin.execution,
         binding,
-        effectiveDispatchProcedureRefs,
+        dispatchResourceDemand,
       )
     ) {
       return [];
@@ -1862,9 +1863,12 @@ export function subjectAllowedDuringStatBlockMultiattackDispatch(
   }
   return state.currentTurnResources.actionResources.some(
     (resource): boolean =>
-      isStatBlockMultiattackActionResource(resource, actorId) &&
       subject.procedureRef !== undefined &&
-      resource.attackProcedureRef === subject.procedureRef,
+      statBlockMultiattackActionResourceMatchesProcedure(
+        resource,
+        actorId,
+        subject.procedureRef,
+      ),
   );
 }
 

@@ -366,10 +366,11 @@ module battleRuntimeWeaponAttacks {
 
   pure def resolveGoblinMultiattack(state: BattleState): BattleState = {
     val attacker = combatantForActor(state, Goblin)
+    val syntheticThreeAttackMultiattackDispatchProcedureRefs = List(0, 0, 0)
     if (not(state.actionAvailable) or currentActor(state) != Goblin or attacker.hp == 0)
       state
     else
-      { ...stateWithActorCombatant(state, Goblin, { ...attacker, multiattackDispatchesRemaining: battleRuntimeSyntheticMultiattackDispatchCountAfterActivation }), actionAvailable: false }
+      { ...stateWithActorCombatant(state, Goblin, { ...attacker, multiattackDispatchesRemaining: battleRuntimeStatBlockMultiattackDispatchCountAfterActivation(syntheticThreeAttackMultiattackDispatchProcedureRefs) }), actionAvailable: false }
   }
 
   pure def goblinMultiattackDispatchContinuationOpen(state: BattleState): bool =

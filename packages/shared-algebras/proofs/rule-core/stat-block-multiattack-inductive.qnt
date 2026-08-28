@@ -13,6 +13,7 @@ module statBlockMultiattackInductive {
 
   var qPhase: MultiattackProofPhase
   var qPendingProcedureRefs: List[StatBlockProcedureRef]
+  var qDispatchAllowance: StatBlockMultiattackDispatchAllowance
 
   pure def qState: StatBlockMultiattackState =
     if (qPhase == ProofReadyToAct) StatBlockMultiattackReadyToAct
@@ -20,24 +21,29 @@ module statBlockMultiattackInductive {
     else if (qPhase == ProofTurnEnded) StatBlockMultiattackTurnEnded
     else StatBlockMultiattackDispatching({
       pendingProcedureRefs: qPendingProcedureRefs,
+      allowance: qDispatchAllowance,
     })
 
   action recordState(state: StatBlockMultiattackState): bool = match state {
     | StatBlockMultiattackReadyToAct => all {
         qPhase' = ProofReadyToAct,
         qPendingProcedureRefs' = List(),
+        qDispatchAllowance' = AllListedDispatches,
       }
     | StatBlockMultiattackActionSpent => all {
         qPhase' = ProofActionSpent,
         qPendingProcedureRefs' = List(),
+        qDispatchAllowance' = AllListedDispatches,
       }
     | StatBlockMultiattackTurnEnded => all {
         qPhase' = ProofTurnEnded,
         qPendingProcedureRefs' = List(),
+        qDispatchAllowance' = AllListedDispatches,
       }
     | StatBlockMultiattackDispatching(active) => all {
         qPhase' = ProofDispatching,
         qPendingProcedureRefs' = active.pendingProcedureRefs,
+        qDispatchAllowance' = active.allowance,
       }
   }
 
@@ -45,7 +51,8 @@ module statBlockMultiattackInductive {
 
   action doActivate = {
     val profile = { dispatchProcedureRefs: List(0, 0, 1) }
-    all { recordState(activateStatBlockMultiattack(qState, profile)) }
+    nondet allowance = Set(AllListedDispatches, OneListedDispatch).oneOf()
+    all { recordState(activateStatBlockMultiattack(qState, profile, allowance)) }
   }
 
   action doDispatch = {

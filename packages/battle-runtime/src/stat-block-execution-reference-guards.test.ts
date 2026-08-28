@@ -82,9 +82,10 @@ describe("Stat Block execution stale references", () => {
       statBlockProcedureBinding(currentExecution, staleDispatchProcedureRef),
     ).toBeUndefined();
     expect(
-      statBlockMultiattackResourcesAvailable(currentExecution, binding, [
-        staleDispatchProcedureRef,
-      ]),
+      statBlockMultiattackResourcesAvailable(currentExecution, binding, {
+        kind: "allListedDispatches",
+        procedureRefs: [staleDispatchProcedureRef],
+      }),
     ).toBe(false);
     expect(
       spendStatBlockMultiattackActivationResources(currentExecution, binding),

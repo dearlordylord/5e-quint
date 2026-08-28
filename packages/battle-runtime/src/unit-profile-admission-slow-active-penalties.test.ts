@@ -459,7 +459,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     );
   });
 
-  test("slowed Stat Block Multiattack does not open follow-up dispatch attacks", () => {
+  test("slowed Stat Block Multiattack allows one chosen listed dispatch", () => {
     const targetTurn = statBlockTargetTurnAfterFailedSlow();
 
     const multiattack = actionAct(
@@ -482,12 +482,69 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       resolved.state.currentTurnResources.actionResources.filter(
         (resource) => resource.source === "statBlockMultiattack",
       ),
-    ).toEqual([]);
+    ).toHaveLength(3);
     expect(canSpendAction(resolved.state.currentTurnResources, "attack")).toBe(
       false,
     );
+    const activated = battleRuntimeSessionForTest({
+      ...targetTurn,
+      state: resolved.state,
+    });
     expect(
-      discoverBattleActCandidates(resolved.state).some(
+      discoverBattleActs(activated).some(
+        (candidate) =>
+          candidate.subject.tag === "action" &&
+          candidate.subject.actorId === slowMultiattackTargetId &&
+          candidate.subject.action === "attack",
+      ),
+    ).toBe(true);
+    const selectedDispatch = actionAct(
+      activated,
+      slowMultiattackTargetId,
+      "attack",
+      "Shortbow",
+    );
+    const targetHole = requireResultHole(
+      resolveBattleSubject({
+        state: activated.state,
+        subject: selectedDispatch.subject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const targetFill = attackTargetFill(
+      targetHole,
+      slowMultiattackTargetId,
+      spellCasterId,
+    );
+    const attackRoll = requireResultHole(
+      resolveBattleSubject({
+        state: activated.state,
+        subject: selectedDispatch.subject,
+        fills: [targetFill],
+      }),
+      "attackRoll",
+    );
+    const dispatched = resolveBattleSubject({
+      state: activated.state,
+      subject: selectedDispatch.subject,
+      fills: [
+        targetFill,
+        attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
+      ],
+    });
+    if (dispatched.tag !== "resolved") {
+      throw new Error(
+        `Expected one chosen slowed Multiattack dispatch to resolve: ${JSON.stringify(dispatched)}`,
+      );
+    }
+    expect(
+      dispatched.state.currentTurnResources.actionResources.filter(
+        (resource) => resource.source === "statBlockMultiattack",
+      ),
+    ).toEqual([]);
+    expect(
+      discoverBattleActCandidates(dispatched.state).some(
         (candidate) =>
           candidate.subject.tag === "action" &&
           candidate.subject.actorId === slowMultiattackTargetId &&

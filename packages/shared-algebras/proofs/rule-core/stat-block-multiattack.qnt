@@ -17,6 +17,10 @@ module statBlockMultiattack {
     dispatchProcedureRefs: List[StatBlockProcedureRef],
   }
 
+  type StatBlockMultiattackDispatchAllowance =
+    | AllListedDispatches
+    | OneListedDispatch
+
   type StatBlockProcedureRefRemoval = {
     removed: bool,
     remaining: List[StatBlockProcedureRef],
@@ -26,7 +30,10 @@ module statBlockMultiattack {
     | StatBlockMultiattackReadyToAct
     | StatBlockMultiattackActionSpent
     | StatBlockMultiattackTurnEnded
-    | StatBlockMultiattackDispatching({ pendingProcedureRefs: List[StatBlockProcedureRef] })
+    | StatBlockMultiattackDispatching({
+        pendingProcedureRefs: List[StatBlockProcedureRef],
+        allowance: StatBlockMultiattackDispatchAllowance,
+      })
 
   pure def initialStatBlockMultiattackState: StatBlockMultiattackState =
     StatBlockMultiattackReadyToAct
@@ -109,13 +116,15 @@ module statBlockMultiattack {
 
   pure def activateStatBlockMultiattack(
     state: StatBlockMultiattackState,
-    profile: StatBlockMultiattackProfile
+    profile: StatBlockMultiattackProfile,
+    allowance: StatBlockMultiattackDispatchAllowance,
   ): StatBlockMultiattackState =
     match state {
       | StatBlockMultiattackReadyToAct => {
           if (not(legalStatBlockMultiattackProfile(profile))) state
           else StatBlockMultiattackDispatching({
             pendingProcedureRefs: profile.dispatchProcedureRefs,
+            allowance: allowance,
           })
         }
       | StatBlockMultiattackActionSpent => state
@@ -132,6 +141,8 @@ module statBlockMultiattack {
     | StatBlockMultiattackTurnEnded => state
     | StatBlockMultiattackDispatching(active) => {
         if (not(statBlockProcedureRefsContain(active.pendingProcedureRefs, procedureRef))) state
+        else if (active.allowance == OneListedDispatch)
+          StatBlockMultiattackActionSpent
         else {
           val remaining = removeFirstStatBlockProcedureRef(
             active.pendingProcedureRefs,
@@ -141,6 +152,7 @@ module statBlockMultiattack {
             StatBlockMultiattackActionSpent
           else StatBlockMultiattackDispatching({
             pendingProcedureRefs: remaining,
+            allowance: active.allowance,
           })
         }
       }

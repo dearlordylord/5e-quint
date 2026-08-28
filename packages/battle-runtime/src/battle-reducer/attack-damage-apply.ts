@@ -67,7 +67,10 @@ import {
   ATTACK_DAMAGE_DISPOSITION_HOLE_INSTANCE,
   type StatBlockMultiattackActionResource,
 } from "./battle-runtime-protocol.ts";
-import { isStatBlockMultiattackActionResource } from "./action-resource-kinds.ts";
+import {
+  isStatBlockMultiattackActionResource,
+  statBlockMultiattackActionResourceMatchesProcedure,
+} from "./action-resource-kinds.ts";
 import { attackDamageDieFloorChoiceProcedureRefs } from "./attack-damage-die-floor-choice.ts";
 import {
   damageAllowsKnockOut,
@@ -462,9 +465,6 @@ export function attackActionOptionsForActor(
         (resource): resource is StatBlockMultiattackActionResource =>
           isStatBlockMultiattackActionResource(resource, actorId),
       );
-    const multiattackAttackProcedureRefs = multiattackResources.map(
-      (resource) => resource.attackProcedureRef,
-    );
     return statBlockAttackActionOptions(origin.execution).filter(
       (option) =>
         option.procedureRef !== undefined &&
@@ -472,9 +472,15 @@ export function attackActionOptionsForActor(
           origin.execution,
           option.procedureRef,
         ) &&
-        (multiattackAttackProcedureRefs.length === 0 ||
+        (multiattackResources.length === 0 ||
           (option.procedureRef !== undefined &&
-            multiattackAttackProcedureRefs.includes(option.procedureRef))) &&
+            multiattackResources.some((resource) =>
+              statBlockMultiattackActionResourceMatchesProcedure(
+                resource,
+                actorId,
+                option.procedureRef,
+              ),
+            ))) &&
         ammunitionForAttackIsAvailable(actor, option),
     );
   }

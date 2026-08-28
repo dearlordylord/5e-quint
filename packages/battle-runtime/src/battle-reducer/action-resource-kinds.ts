@@ -5,7 +5,7 @@ import {
   type RuntimeActionResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import * as Either from "effect/Either";
-import type { CombatantId } from "../identity.ts";
+import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import type {
   ClassFeatureExtraAttackActionResource,
   StatBlockMultiattackActionResource,
@@ -18,6 +18,17 @@ export function isStatBlockMultiattackActionResource(
   return (
     resource.source === "statBlockMultiattack" &&
     resource.sourceOwnerId === actorId
+  );
+}
+
+export function statBlockMultiattackActionResourceMatchesProcedure(
+  resource: RuntimeActionResource,
+  actorId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+): resource is StatBlockMultiattackActionResource {
+  return (
+    isStatBlockMultiattackActionResource(resource, actorId) &&
+    resource.attackProcedureRef === procedureRef
   );
 }
 

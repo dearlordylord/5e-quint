@@ -13,7 +13,10 @@ import type {
   BattleTurnResources,
 } from "../battle-state-execution.ts";
 import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
-import { canSpendEscapeGrappleActionResource } from "./action-resource-kinds.ts";
+import {
+  canSpendEscapeGrappleActionResource,
+  statBlockMultiattackActionResourceMatchesProcedure,
+} from "./action-resource-kinds.ts";
 import {
   combatantCanTakeActions,
   isLegendaryAttackSubject,
@@ -287,6 +290,19 @@ function actionSubjectEligibilityFacts(
   state: BattleState,
   subject: Extract<BattleSubject, { readonly tag: "action" }>,
 ): Exclude<ActionEligibilityFacts, { readonly tag: "notApplicable" }> {
+  if (
+    subject.action === "attack" &&
+    subject.procedureRef !== undefined &&
+    state.currentTurnResources.actionResources.some((resource) =>
+      statBlockMultiattackActionResourceMatchesProcedure(
+        resource,
+        subject.actorId,
+        subject.procedureRef,
+      ),
+    )
+  ) {
+    return { tag: "familiarForbiddenActorEligibilityOnly" };
+  }
   const standard = (action: StandardActionKind) =>
     ({ tag: "standardAction", action }) as const;
   const facts = Match.value(subject.action).pipe(
