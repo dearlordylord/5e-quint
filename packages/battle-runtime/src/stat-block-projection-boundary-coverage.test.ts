@@ -26,6 +26,7 @@ import {
 import {
   monsterMultiattackStatBlock,
   monsterResourceStatBlock,
+  isNonSpellExecutableProcedureEntryOfKind,
   statBlockCatalog,
   statBlockRecord,
   unitLibrary,
@@ -750,7 +751,11 @@ describe("Stat Block projection boundary coverage", () => {
     const source = monsterResourceStatBlock();
     const resources = source.statBlock.resources;
     const firstAction = source.statBlock.actions?.[0];
-    if (resources === undefined || firstAction === undefined) {
+    if (
+      resources === undefined ||
+      firstAction === undefined ||
+      !isNonSpellExecutableProcedureEntryOfKind(firstAction, "attack_roll")
+    ) {
       throw new Error("Expected synthetic resource-backed form fixture.");
     }
     const daily = resources.find((resource) => resource.limit.kind === "daily");

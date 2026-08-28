@@ -25,6 +25,8 @@ import {
 } from "./index.ts";
 import {
   admittedStatBlockSource,
+  nonSpellExecutableProcedureEntry,
+  isNonSpellExecutableProcedureEntryOfKind,
   statBlockCatalog,
   monsterMultiattackStatBlock,
   statBlockRecord,
@@ -236,7 +238,10 @@ describe("generic Stat Block projection", () => {
   test("rejects an authored Multiattack targeting a text-only action", () => {
     const source = statBlockRecord();
     const attack = source.statBlock.actions?.[0];
-    if (attack === undefined || attack.kind !== "executable") {
+    if (
+      attack === undefined ||
+      !isNonSpellExecutableProcedureEntryOfKind(attack, "attack_roll")
+    ) {
       throw new Error("Expected an authored action attack.");
     }
     const withUnsupportedDispatch: StatBlockRecord = {
@@ -287,7 +292,10 @@ describe("generic Stat Block projection", () => {
   test("rejects an authored Multiattack targeting an unsupported executable attack", () => {
     const source = statBlockRecord();
     const attack = source.statBlock.actions?.[0];
-    if (attack === undefined || attack.kind !== "executable") {
+    if (
+      attack === undefined ||
+      !isNonSpellExecutableProcedureEntryOfKind(attack, "attack_roll")
+    ) {
       throw new Error("Expected an authored action attack.");
     }
     const unsupportedAttack = {
@@ -297,24 +305,16 @@ describe("generic Stat Block projection", () => {
         multiattackCount: { kind: "literal" as const, value: 2 },
       },
     };
-    const multiattack: Extract<
-      StatBlockProcedureEntry,
-      { readonly kind: "executable" }
-    > = {
-      kind: "executable",
-      procedureOrdinal: authoredOrdinal(3),
-      procedure: {
-        kind: "multiattack",
-        name: "Synthetic Routine",
-        dispatches: [
-          {
-            procedureOrdinal: attack.procedureOrdinal,
-            count: { kind: "literal", value: 1 },
-          },
-        ],
-      },
-      resourceRefs: { kind: "none" },
-    };
+    const multiattack = nonSpellExecutableProcedureEntry(3, {
+      kind: "multiattack",
+      name: "Synthetic Routine",
+      dispatches: [
+        {
+          procedureOrdinal: attack.procedureOrdinal,
+          count: { kind: "literal", value: 1 },
+        },
+      ],
+    });
     const projected = projectAuthoredStatBlock({
       ...source,
       id: statBlockId("synthetic-multiattack-unsupported-attack"),

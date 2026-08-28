@@ -4124,12 +4124,33 @@ type AuthoredExecutableProcedureEntry = Extract<
   StatBlockProcedureEntry,
   { readonly kind: "executable" }
 >;
-type AttackProcedureEntry = AuthoredExecutableProcedureEntry & {
+type AuthoredNonSpellExecutableProcedure = Exclude<
+  AuthoredExecutableProcedure,
+  { readonly kind: "spellcasting" }
+>;
+export type NonSpellExecutableProcedureEntry = Extract<
+  AuthoredExecutableProcedureEntry,
+  { readonly procedure: AuthoredNonSpellExecutableProcedure }
+>;
+export type NonSpellExecutableProcedureEntryOfKind<
+  Kind extends AuthoredNonSpellExecutableProcedure["kind"],
+> = Omit<NonSpellExecutableProcedureEntry, "procedure"> & {
   readonly procedure: Extract<
-    AuthoredExecutableProcedureEntry["procedure"],
-    { readonly kind: "attack_roll" }
+    AuthoredNonSpellExecutableProcedure,
+    { readonly kind: Kind }
   >;
 };
+type AttackProcedureEntry =
+  NonSpellExecutableProcedureEntryOfKind<"attack_roll">;
+
+export function isNonSpellExecutableProcedureEntryOfKind<
+  Kind extends AuthoredNonSpellExecutableProcedure["kind"],
+>(
+  entry: StatBlockProcedureEntry,
+  kind: Kind,
+): entry is NonSpellExecutableProcedureEntryOfKind<Kind> {
+  return entry.kind === "executable" && entry.procedure.kind === kind;
+}
 
 export function authoredProcedureOrdinal(value: number) {
   return Schema.decodeSync(StatBlockProcedureOrdinalSchema)(value);
@@ -4145,16 +4166,15 @@ function attackProcedureEntry(
 ): AttackProcedureEntry | undefined {
   return entries?.find(
     (entry): entry is AttackProcedureEntry =>
-      entry.kind === "executable" &&
-      entry.procedure.kind === "attack_roll" &&
+      isNonSpellExecutableProcedureEntryOfKind(entry, "attack_roll") &&
       entry.procedure.name === name,
   );
 }
 
-export function executableProcedureEntry(
+export function nonSpellExecutableProcedureEntry(
   procedureOrdinal: number,
-  procedure: AuthoredExecutableProcedure,
-): AuthoredExecutableProcedureEntry {
+  procedure: AuthoredNonSpellExecutableProcedure,
+): NonSpellExecutableProcedureEntry {
   return {
     kind: "executable",
     procedureOrdinal: authoredProcedureOrdinal(procedureOrdinal),
