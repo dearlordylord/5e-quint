@@ -177,12 +177,9 @@ type CounterspellChainLink = {
 
 type ReadonlyNonEmptyArray<T> = readonly [T, ...ReadonlyArray<T>]
 
-export type WizardBattleDamageSummaryOutcome = {
+type SpellSaveOutcome = {
   readonly targetId: CombatantId
   readonly succeeded: boolean
-}
-
-type SpellSaveOutcome = WizardBattleDamageSummaryOutcome & {
   readonly label: string
   readonly detail: string
 }
@@ -228,6 +225,10 @@ type AreaSpellPlan = {
   readonly outcomes: ReadonlyNonEmptyArray<SpellSaveOutcome>
   readonly reaction: SpellCastReactionPlan
 }
+
+type WizardBattleDamageSummaryOutcomes = ReadonlyNonEmptyArray<
+  Pick<AreaSpellPlan["outcomes"][number], "targetId" | "succeeded">
+>
 
 type WizardBattleDemoBuilder = {
   readonly session: BattleRuntimeSession
@@ -1106,7 +1107,7 @@ function counterspellCue(link: CounterspellChainLink): NonNullable<WizardBattleD
   }
 }
 
-export function wizardBattleDamageSummary(outcomes: ReadonlyArray<WizardBattleDamageSummaryOutcome>): string {
+export function wizardBattleDamageSummary(outcomes: WizardBattleDamageSummaryOutcomes): string {
   const failed = outcomes
     .filter((outcome) => !outcome.succeeded)
     .map((outcome) => wizardBattleCombatantDisplayName(outcome.targetId))
@@ -1167,7 +1168,7 @@ function wizardCreature(input: {
   readonly combatantId: CombatantId
   readonly displayName: string
   readonly initiative: number
-  readonly levelThreeSlots: number
+  readonly levelThreeSlots: PositiveInteger
   readonly levelTwoSlots: number
   readonly preparedSpells: ReadonlyArray<SpellRecord>
 }): BattleCreatureInit {

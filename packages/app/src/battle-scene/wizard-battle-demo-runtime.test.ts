@@ -1,4 +1,13 @@
-import { combatantId, snapshotBattle } from "@dnd/battle-runtime"
+import {
+  battleCharacterExecutionScopeRef,
+  battleCheckpointFrontierEnvelope,
+  battleExecutionScopeOrdinal,
+  battleId,
+  battleProcedureExecutionRef,
+  type BattleRuntimeResolutionResult,
+  combatantId
+} from "@dnd/battle-runtime"
+import { NonNegativeInteger } from "@dnd/shared/types"
 import { describe, expect, test } from "vitest"
 
 import { WIZARD_BATTLE_DEMO_STEPS } from "./wizard-battle-demo.ts"
@@ -11,6 +20,16 @@ import {
   requireNeedsReaction,
   requireResultHole
 } from "./wizard-battle-demo-runtime.ts"
+
+function replaceNonEmptyAt<T>(
+  values: readonly [T, ...ReadonlyArray<T>],
+  index: number,
+  replacement: T
+): readonly [T, ...ReadonlyArray<T>] {
+  const [first, ...rest] = values
+  if (index === 0) return [replacement, ...rest]
+  return [first, ...rest.map((value, restIndex) => (restIndex === index - 1 ? replacement : value))]
+}
 
 describe("wizard battle demo runtime guards", () => {
   test("reports stale authored fixture selections at their boundary", () => {
@@ -123,38 +142,69 @@ describe("wizard battle demo runtime guards", () => {
   })
 
   test("rejects a reaction choice whose procedure has no presentation", () => {
-    const session = WIZARD_BATTLE_DEMO_STEPS[0].session
     const reactorId = combatantId("E")
-
-    expect(() =>
-      requireCounterspellChoice(
-        {
-          tag: "needsHoles",
-          session,
-          envelope: {
-            checkpoint: session.state,
-            frontier: {
-              kind: "interruptDecision",
-              trigger: "spellCast",
-              decisionHole: {},
-              choices: [
-                {
-                  kind: "nestedProcedure",
-                  initialHoles: [],
-                  subject: {
-                    tag: "runtimeCommand",
-                    actorId: snapshotBattle(session.state).currentActorId,
-                    command: "castTriggeredReactionSpell",
-                    reactorId,
-                    procedureRef: "synthetic:unbound-procedure" as never
-                  }
-                }
-              ]
-            }
-          }
-        } as never,
-        { reactorId, slotLevel: 3, spellId: "counterspell" }
+    const step = WIZARD_BATTLE_DEMO_STEPS.find((candidate) => {
+      const frontier = battleCheckpointFrontierEnvelope(candidate.session.state).frontier
+      return (
+        frontier.kind === "interruptDecision" &&
+        frontier.choices.some(
+          (choice) =>
+            choice.kind === "nestedProcedure" &&
+            choice.subject.command === "castTriggeredReactionSpell" &&
+            choice.subject.reactorId === reactorId
+        )
       )
-    ).toThrow("Expected Counterspell Reaction choice.")
+    })
+    if (step === undefined) {
+      throw new Error("Expected a Counterspell interrupt demo step.")
+    }
+    const envelope = battleCheckpointFrontierEnvelope(step.session.state)
+    if (envelope.frontier.kind !== "interruptDecision") {
+      throw new Error("Expected a Counterspell interrupt frontier.")
+    }
+    const choiceIndex = envelope.frontier.choices.findIndex(
+      (choice) =>
+        choice.kind === "nestedProcedure" &&
+        choice.subject.command === "castTriggeredReactionSpell" &&
+        choice.subject.reactorId === reactorId
+    )
+    if (choiceIndex < 0) {
+      throw new Error("Expected a Counterspell interrupt choice.")
+    }
+    const selectedChoice = envelope.frontier.choices[choiceIndex]
+    if (selectedChoice.kind !== "nestedProcedure" || selectedChoice.subject.command !== "castTriggeredReactionSpell") {
+      throw new Error("Expected a Counterspell reaction spell choice.")
+    }
+    const unboundProcedureRef = battleProcedureExecutionRef(
+      battleCharacterExecutionScopeRef(
+        battleId("battle:synthetic-unbound-procedure"),
+        selectedChoice.subject.actorId,
+        battleExecutionScopeOrdinal(0)
+      ),
+      NonNegativeInteger(0)
+    )
+    const unboundChoice = {
+      ...selectedChoice,
+      subject: {
+        ...selectedChoice.subject,
+        procedureRef: unboundProcedureRef
+      }
+    }
+    const choices = replaceNonEmptyAt(envelope.frontier.choices, choiceIndex, unboundChoice)
+    const result: Extract<BattleRuntimeResolutionResult, { readonly tag: "needsHoles" }> = {
+      tag: "needsHoles",
+      session: step.session,
+      envelope: {
+        ...envelope,
+        frontier: {
+          ...envelope.frontier,
+          choices
+        }
+      }
+    }
+
+    expect(() => requireCounterspellChoice(result, { reactorId, slotLevel: 3, spellId: "counterspell" })).toThrow(
+      "Expected Counterspell Reaction choice."
+    )
   })
 })
