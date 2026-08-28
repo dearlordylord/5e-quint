@@ -17,6 +17,7 @@ import {
 const ABILITY_NAMES = ["str", "dex", "con", "int", "wis", "cha"] as const;
 type AbilityName = (typeof ABILITY_NAMES)[number];
 const ATTACK_ABILITY_NAMES = ["str", "dex", "int", "wis", "cha"] as const;
+type AttackAbilityName = (typeof ATTACK_ABILITY_NAMES)[number];
 type NonEmptyStrings = readonly [string, ...string[]];
 
 type AbilityMatrixFact = {
@@ -97,10 +98,14 @@ type NamedModifier = {
 };
 
 type AttackAbilityEvidence =
-  | { readonly kind: "resolved"; readonly ability: AbilityName }
+  | { readonly kind: "resolved"; readonly ability: AttackAbilityName }
   | {
       readonly kind: "unresolved";
-      readonly candidates: readonly [AbilityName, ...AbilityName[]];
+      readonly candidates: readonly [
+        AttackAbilityName,
+        AttackAbilityName,
+        ...AttackAbilityName[],
+      ];
     };
 
 type ResourceLimitProjection =
@@ -239,6 +244,11 @@ type ProcedureProjection =
       }[];
       readonly resourceLimits: readonly ResourceLimitProjection[];
     };
+
+type StructuralProcedure = Exclude<
+  ProcedureProjection,
+  { readonly kind: "textOnly" }
+>;
 
 type ScopedGeneralFacts = {
   readonly challengeRating: number;
@@ -381,6 +391,11 @@ const statBlockIdFromRawName = (name: string): string =>
 const isRawSection = (value: string): value is RawSection =>
   RAW_SECTIONS.some((section) => section === value);
 
+const isAttackAbilityName = (
+  ability: AbilityName,
+): ability is AttackAbilityName =>
+  ATTACK_ABILITY_NAMES.some((attackAbility) => attackAbility === ability);
+
 const proficiencyBonus = (challengeRating: number): number =>
   2 + Math.floor(Math.max(0, challengeRating - 1) / 4);
 
@@ -388,7 +403,7 @@ const rawAttackAbilityCandidates = (
   abilityScores: Readonly<Record<AbilityName, number>>,
   challengeRating: number,
   attackBonus: number,
-): readonly AbilityName[] =>
+): readonly AttackAbilityName[] =>
   ATTACK_ABILITY_NAMES.filter(
     (ability) =>
       Math.floor((abilityScores[ability] - 10) / 2) +
@@ -397,13 +412,13 @@ const rawAttackAbilityCandidates = (
   );
 
 const attackAbilityEvidence = (
-  candidates: readonly AbilityName[],
+  candidates: readonly AttackAbilityName[],
 ): AttackAbilityEvidence | undefined => {
-  const [first, ...rest] = candidates;
+  const [first, second, ...rest] = candidates;
   if (first === undefined) return undefined;
-  return rest.length === 0
+  return second === undefined
     ? { kind: "resolved", ability: first }
-    : { kind: "unresolved", candidates: [first, ...rest] };
+    : { kind: "unresolved", candidates: [first, second, ...rest] };
 };
 
 const requireMatch = (
@@ -1424,23 +1439,22 @@ const parseSimpleAttack = (
           when: "attack_roll_had_advantage" as const,
         }
       : undefined;
-  let onHit: AttackEffectProjection[];
-  if (totalDamageAlternative) {
-    if (baseDamage === undefined || alternativeBonus === undefined) {
-      return undefined;
-    }
-    onHit = [baseDamage, alternativeBonus];
-  } else {
-    onHit = parsedDamages.map((damage, index) =>
-      advantageConditional && index === parsedDamages.length - 1
-        ? {
-            ...damage,
-            kind: "conditional_bonus_damage",
-            when: "attack_roll_had_advantage",
-          }
-        : damage,
-    );
-  }
+  const projectedOnHit: readonly AttackEffectProjection[] | undefined =
+    totalDamageAlternative
+      ? baseDamage === undefined || alternativeBonus === undefined
+        ? undefined
+        : [baseDamage, alternativeBonus]
+      : parsedDamages.map((damage, index) =>
+          advantageConditional && index === parsedDamages.length - 1
+            ? {
+                ...damage,
+                kind: "conditional_bonus_damage",
+                when: "attack_roll_had_advantage",
+              }
+            : damage,
+        );
+  if (projectedOnHit === undefined) return undefined;
+  const onHit: AttackEffectProjection[] = [...projectedOnHit];
   const sizeCondition = hit.match(
     /If the target is a (Tiny|Small|Medium|Large|Huge|Gargantuan) or smaller creature, it has the ([A-Za-z]+) condition/,
   );
@@ -2340,7 +2354,10 @@ const projectExecutableProcedure = (
             `${record.name}/${attack.name} has no RAW-derived attack ability candidate`,
           );
         }
-        if (!candidates.includes(attack.attackAbility)) {
+        if (
+          !isAttackAbilityName(attack.attackAbility) ||
+          !candidates.includes(attack.attackAbility)
+        ) {
           throw new Error(
             `${record.name}/${attack.name} uses ${attack.attackAbility} outside RAW-derived attack ability candidates ${candidates.join(", ")}`,
           );
@@ -2466,6 +2483,39 @@ const projectExecutableProcedure = (
   );
 };
 
+const bindAuthoredResourceLimits = (
+  structuralProcedure: StructuralProcedure,
+  authoredResourceLimits: readonly ResourceLimitProjection[],
+): StructuralProcedure | undefined => {
+  if (authoredResourceLimits.length === 0) return structuralProcedure;
+  if (structuralProcedure.kind !== "spellcasting") {
+    return {
+      ...structuralProcedure,
+      resourceLimits: authoredResourceLimits,
+    };
+  }
+  const limitedGroups = structuralProcedure.groups.filter(
+    (group) => group.resourceLimits.length > 0,
+  );
+  const targetGroup =
+    limitedGroups.length === 1
+      ? limitedGroups[0]
+      : limitedGroups.length === 0 && structuralProcedure.groups.length === 1
+        ? structuralProcedure.groups[0]
+        : undefined;
+  if (authoredResourceLimits.length !== 1 || targetGroup === undefined) {
+    return undefined;
+  }
+  return {
+    ...structuralProcedure,
+    groups: structuralProcedure.groups.map((group) =>
+      group === targetGroup
+        ? { ...group, kind: "limited", resourceLimits: authoredResourceLimits }
+        : group,
+    ),
+  };
+};
+
 const projectAuthoredProcedures = (
   record: SrdStatBlockRecord,
   ammunitionByWeapon: ReadonlyMap<string, string>,
@@ -2545,24 +2595,11 @@ const projectAuthoredProcedures = (
         structuralProcedure !== undefined &&
         structuralProcedure.kind !== "textOnly"
       ) {
-        if (
-          structuralProcedure.kind === "spellcasting" &&
-          structuralProcedure.groups.length === 1 &&
-          structuralProcedure.groups[0]?.resourceLimits.length === 0 &&
-          resourceLimits.length > 0
-        ) {
-          return {
-            ...structuralProcedure,
-            groups: [
-              {
-                ...structuralProcedure.groups[0],
-                kind: "limited",
-                resourceLimits,
-              },
-            ],
-          };
-        }
-        return structuralProcedure;
+        const resourceBoundProcedure = bindAuthoredResourceLimits(
+          structuralProcedure,
+          resourceLimits,
+        );
+        if (resourceBoundProcedure !== undefined) return resourceBoundProcedure;
       }
       return {
         section,
