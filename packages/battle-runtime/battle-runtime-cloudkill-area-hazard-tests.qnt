@@ -16,6 +16,11 @@ module battleRuntimeCloudkillAreaHazardTests {
   pure val cloudkillFiveDiceTotalingEight: List[CloudkillD8Pip] =
     List(CloudkillD8Four, CloudkillD8One, CloudkillD8One, CloudkillD8One, CloudkillD8One)
 
+  pure def cloudkillPendingRemainingTargets(
+    transaction: CloudkillResolutionTransaction,
+  ): List[CloudkillTarget] =
+    cloudkillTransactionResolution(transaction).remainingTargets
+
   run test_cloudkill_cast_owns_raw_area_damage_duration_and_slot_scaling = {
     val fifthLevel = castCloudkillAt(5)
     val sixthLevel = castCloudkillAt(6)
@@ -162,17 +167,29 @@ module battleRuntimeCloudkillAreaHazardTests {
       assert(match firstSave.pending {
         | CloudkillSavingThrowPending(data) =>
             data.target == SecondaryCloudkillTarget and
-            data.remainingTargets == List(PrimaryCloudkillTarget)
+            cloudkillPendingRemainingTargets(data.transaction) == List(PrimaryCloudkillTarget)
         | _ => false
       }),
       assert(match secondSave.pending {
         | CloudkillSavingThrowPending(data) =>
             data.target == PrimaryCloudkillTarget and
-            data.remainingTargets == List()
+            cloudkillPendingRemainingTargets(data.transaction) == List()
+        | _ => false
+      }),
+      assert(secondSave.secondaryTargetHitPoints == 40),
+      assert(not(cloudkillTargetSavedThisTurn(secondSave, SecondaryCloudkillTarget))),
+      assert(match secondSave.lifecycle {
+        | CloudkillActive(cloud) => cloud.durationTicks == 100
         | _ => false
       }),
       assert(resolved.secondaryTargetHitPoints == 32),
       assert(resolved.primaryTargetHitPoints == 36),
+      assert(cloudkillTargetSavedThisTurn(resolved, SecondaryCloudkillTarget)),
+      assert(cloudkillTargetSavedThisTurn(resolved, PrimaryCloudkillTarget)),
+      assert(match resolved.lifecycle {
+        | CloudkillActive(cloud) => cloud.durationTicks == 99
+        | _ => false
+      }),
       assert(resolved.pending == NoCloudkillPendingResolution),
     }
   }
@@ -226,7 +243,13 @@ module battleRuntimeCloudkillAreaHazardTests {
     all {
       assert(match concentrationSave.pending {
         | CloudkillConcentrationSavingThrowPending(data) =>
-            data.remainingTargets == List(SecondaryCloudkillTarget)
+            cloudkillPendingRemainingTargets(data.transaction) == List(SecondaryCloudkillTarget)
+        | _ => false
+      }),
+      assert(concentrationSave.casterHitPoints == 40),
+      assert(not(cloudkillTargetSavedThisTurn(concentrationSave, CloudkillCaster))),
+      assert(match concentrationSave.lifecycle {
+        | CloudkillActive(cloud) => cloud.durationTicks == 100
         | _ => false
       }),
       assert(not(canceled.casterConcentrating)),
@@ -254,7 +277,12 @@ module battleRuntimeCloudkillAreaHazardTests {
         }
       | _ => cast
     }
-    val expired = tickCloudkillDuration(expiring)
+    val expiringTargetTurn = endCloudkillCasterTurn(expiring)
+    val expired = beginCloudkillSourceTurn(
+      expiringTargetTurn,
+      CloudkillMovementBeforeOtherOccurrence,
+      List(),
+    )
     all {
       assert(not(cloudkillIsActive(concentrationEnded))),
       assert(notStrong == cast),

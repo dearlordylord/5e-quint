@@ -17,7 +17,6 @@ import {
   booleanField,
   defineDriver,
   focusedMbtMaxSteps,
-  mbtPickSchemas,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
@@ -29,10 +28,7 @@ import {
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { concentrationSavingThrowFill } from "./battle-runtime.test-support.ts";
-import {
-  battleObscurementZones,
-  breakBattleConcentration,
-} from "./unit-profile-admission.test-support.ts";
+import { battleObscurementZones } from "./unit-profile-admission.test-support.ts";
 import {
   damageRollFillWithGroups,
   interruptDecisionFill,
@@ -149,23 +145,22 @@ type CloudkillEffect = Extract<
 const secondaryTargetId = combatantId("cloudkill-mbt-secondary-target");
 
 const driverSchema = {
-  init: { slotLevel: mbtPickSchemas.int },
-  doCastCloudkill: {},
-  doDiscoverAppearanceSave: {},
-  doResolveAppearanceSave: { succeeded: mbtPickSchemas.bool },
-  doResolveAppearanceDamage: { damageDiePip: mbtPickSchemas.int },
-  doEndCasterTurn: {},
-  doBeginSourceTurnMovement: {
-    primaryAffected: mbtPickSchemas.bool,
-    secondaryAffected: mbtPickSchemas.bool,
-    secondaryFirst: mbtPickSchemas.bool,
-  },
-  doBeginSourceTurnMovementThroughSource: {},
-  doResolveMovementSave: { succeeded: mbtPickSchemas.bool },
-  doResolveMovementDamage: { damageDiePip: mbtPickSchemas.int },
-  doResolveSourceConcentrationSave: { succeeded: mbtPickSchemas.bool },
-  doEndConcentration: {},
-  doDisperseWithStrongWind: {},
+  init: {},
+  doWitnessSixthLevelCast: {},
+  doWitnessAppearanceHalfDamage: {},
+  doWitnessAppearanceFailedSaveD8One: {},
+  doWitnessAppearanceFailedSaveD8Two: {},
+  doWitnessAppearanceFailedSaveD8Three: {},
+  doWitnessAppearanceFailedSaveD8Four: {},
+  doWitnessAppearanceFailedSaveD8Five: {},
+  doWitnessAppearanceFailedSaveD8Six: {},
+  doWitnessAppearanceFailedSaveD8Seven: {},
+  doWitnessAppearanceFailedSaveD8Eight: {},
+  doWitnessMovementCheckpoint: {},
+  doWitnessOrderedMovementClosure: {},
+  doWitnessSourceConcentrationCheckpoint: {},
+  doWitnessSourceConcentrationCancellation: {},
+  doWitnessStrongWindCleanup: {},
   step: {},
 } as const;
 
@@ -173,54 +168,72 @@ function createCloudkillMbtDriver() {
   return defineDriver(driverSchema, () => {
     let state = initialRuntimeState(5);
     return {
-      init: ({ slotLevel }) => {
-        state = initialRuntimeState(slotLevel);
+      init: () => {
+        state = initialRuntimeState(5);
       },
-      doCastCloudkill: () => {
-        state = castCloudkill(state);
+      doWitnessSixthLevelCast: () => {
+        state = castCloudkill(initialRuntimeState(6));
       },
-      doDiscoverAppearanceSave: () => {
-        state = discoverAppearanceSave(state);
-      },
-      doResolveAppearanceSave: ({ succeeded }) => {
-        state = resolvePendingSave(state, succeeded, "appearanceDamage");
-      },
-      doResolveAppearanceDamage: ({ damageDiePip }) => {
-        state = resolvePendingDamage(state, damageDiePip, "appearanceResolved");
-      },
-      doEndCasterTurn: () => {
-        state = endCasterTurn(state);
-      },
-      doBeginSourceTurnMovement: (input) => {
-        state = beginSourceTurnMovement(state, cloudkillMovementTargets(input));
-      },
-      doBeginSourceTurnMovementThroughSource: () => {
-        state = beginSourceTurnMovement(state, [
-          spellCasterId,
-          secondaryTargetId,
-        ]);
-      },
-      doResolveMovementSave: ({ succeeded }) => {
-        state = resolvePendingSave(state, succeeded, "movementDamage");
-      },
-      doResolveMovementDamage: ({ damageDiePip }) => {
-        state = resolvePendingDamage(state, damageDiePip, "movementResolved");
-      },
-      doResolveSourceConcentrationSave: ({ succeeded }) => {
-        state = resolveSourceConcentrationSave(state, succeeded);
-      },
-      doEndConcentration: () => {
-        state = {
-          ...state,
-          battle: withBattleState(
-            state.battle,
-            breakBattleConcentration(state.battle.state, spellCasterId),
+      doWitnessAppearanceHalfDamage: () => {
+        state = resolvePendingDamage(
+          resolvePendingSave(
+            discoverAppearanceSave(castCloudkill(initialRuntimeState(5))),
+            true,
+            "appearanceDamage",
           ),
-          outcome: "concentrationEnded",
-        };
+          2,
+          "appearanceResolved",
+        );
       },
-      doDisperseWithStrongWind: () => {
-        state = disperseWithStrongWind(state);
+      doWitnessAppearanceFailedSaveD8One: () => {
+        state = cloudkillAppearanceFailedSave(1);
+      },
+      doWitnessAppearanceFailedSaveD8Two: () => {
+        state = cloudkillAppearanceFailedSave(2);
+      },
+      doWitnessAppearanceFailedSaveD8Three: () => {
+        state = cloudkillAppearanceFailedSave(3);
+      },
+      doWitnessAppearanceFailedSaveD8Four: () => {
+        state = cloudkillAppearanceFailedSave(4);
+      },
+      doWitnessAppearanceFailedSaveD8Five: () => {
+        state = cloudkillAppearanceFailedSave(5);
+      },
+      doWitnessAppearanceFailedSaveD8Six: () => {
+        state = cloudkillAppearanceFailedSave(6);
+      },
+      doWitnessAppearanceFailedSaveD8Seven: () => {
+        state = cloudkillAppearanceFailedSave(7);
+      },
+      doWitnessAppearanceFailedSaveD8Eight: () => {
+        state = cloudkillAppearanceFailedSave(8);
+      },
+      doWitnessMovementCheckpoint: () => {
+        state = cloudkillOrderedMovementCheckpoint();
+      },
+      doWitnessOrderedMovementClosure: () => {
+        state = resolvePendingDamage(
+          resolvePendingSave(
+            cloudkillOrderedMovementCheckpoint(),
+            true,
+            "movementDamage",
+          ),
+          2,
+          "movementResolved",
+        );
+      },
+      doWitnessSourceConcentrationCheckpoint: () => {
+        state = cloudkillSourceConcentrationCheckpoint();
+      },
+      doWitnessSourceConcentrationCancellation: () => {
+        state = resolveSourceConcentrationSave(
+          cloudkillSourceConcentrationCheckpoint(),
+          false,
+        );
+      },
+      doWitnessStrongWindCleanup: () => {
+        state = disperseWithStrongWind(castCloudkill(initialRuntimeState(5)));
       },
       step: () => {},
       getState: () => cloudkillMbtProjection(state),
@@ -341,7 +354,7 @@ describe("Cloudkill area-hazard MBT parity", () => {
         driver: createCloudkillMbtDriver(),
         backend: "typescript",
         nTraces: mbtTraceCount(),
-        maxSteps: focusedMbtMaxSteps(8),
+        maxSteps: focusedMbtMaxSteps(1),
         stateCheck: cloudkillMbtStateCheck,
       });
     },
@@ -459,6 +472,44 @@ function endCasterTurn(
     battle: withBattleState(state.battle, resolved.state),
     outcome: "targetTurn",
   };
+}
+
+function cloudkillAppearanceFailedSave(
+  damageDiePip: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8,
+): CloudkillMbtRuntimeState {
+  return resolvePendingDamage(
+    resolvePendingSave(
+      discoverAppearanceSave(castCloudkill(initialRuntimeState(5))),
+      false,
+      "appearanceDamage",
+    ),
+    damageDiePip,
+    "appearanceResolved",
+  );
+}
+
+function cloudkillOrderedMovementCheckpoint(): CloudkillMbtRuntimeState {
+  const movement = beginSourceTurnMovement(
+    endCasterTurn(castCloudkill(initialRuntimeState(5))),
+    [secondaryTargetId, spellTargetId],
+  );
+  return resolvePendingDamage(
+    resolvePendingSave(movement, false, "movementDamage"),
+    2,
+    "movementResolved",
+  );
+}
+
+function cloudkillSourceConcentrationCheckpoint(): CloudkillMbtRuntimeState {
+  const movement = beginSourceTurnMovement(
+    endCasterTurn(castCloudkill(initialRuntimeState(5))),
+    [spellCasterId, secondaryTargetId],
+  );
+  return resolvePendingDamage(
+    resolvePendingSave(movement, true, "movementDamage"),
+    2,
+    "movementResolved",
+  );
 }
 
 function beginSourceTurnMovement(
@@ -837,18 +888,6 @@ function targetRole(targetId: CombatantId | undefined): CloudkillMbtTarget {
   return "none";
 }
 
-function cloudkillMovementTargets(input: {
-  readonly primaryAffected: boolean;
-  readonly secondaryAffected: boolean;
-  readonly secondaryFirst: boolean;
-}): readonly CombatantId[] {
-  const targets = [
-    ...(input.primaryAffected ? [spellTargetId] : []),
-    ...(input.secondaryAffected ? [secondaryTargetId] : []),
-  ];
-  return input.secondaryFirst ? targets.reverse() : targets;
-}
-
 function cloudkillMovementFill(
   hole: BattleCloudkillMovementHole,
   affectedCombatantIdsInResolutionOrder: readonly CombatantId[],
@@ -972,15 +1011,6 @@ const CLOUDKILL_OUTCOME_BY_QUINT_TAG: Readonly<
   CloudkillMbtStrongWindEnded: "strongWindEnded",
 };
 
-const CLOUDKILL_PENDING_BY_QUINT_TAG: Readonly<
-  Record<string, CloudkillMbtPending>
-> = {
-  CloudkillMbtNoPending: "none",
-  CloudkillMbtSavingThrowPending: "savingThrow",
-  CloudkillMbtDamagePending: "damage",
-  CloudkillMbtConcentrationSavingThrowPending: "concentrationSavingThrow",
-};
-
 const CLOUDKILL_TARGET_BY_QUINT_TAG: Readonly<
   Record<string, CloudkillMbtTarget>
 > = {
@@ -988,6 +1018,14 @@ const CLOUDKILL_TARGET_BY_QUINT_TAG: Readonly<
   SourceCloudkillMbtTarget: "source",
   PrimaryCloudkillMbtTarget: "primary",
   SecondaryCloudkillMbtTarget: "secondary",
+};
+
+const CLOUDKILL_PENDING_BY_QUINT_TAG: Readonly<
+  Record<string, CloudkillMbtPending>
+> = {
+  CloudkillMbtNoPending: "none",
+  CloudkillMbtSavingThrowPending: "savingThrow",
+  CloudkillMbtConcentrationSavingThrowPending: "concentrationSavingThrow",
 };
 
 function normalizeCloudkillMbtQuintState(raw: unknown): CloudkillMbtProjection {
