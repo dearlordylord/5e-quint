@@ -49,7 +49,7 @@ flowchart TB
     subgraph Bridges["battle-runtime QNT bridge modules"]
       MoveBridge["battle-runtime-movement-bridge.qnt"]
       IntBridge["battle-runtime-interrupt-bridge.qnt"]
-      StatBridge["battle-runtime-stat-block-bridge.qnt"]
+      StatBridge["focused Stat Block bridges<br/>Legendary Action, Multiattack, Recharge"]
       FeatureBridge["battle-runtime-feature-bridge.qnt"]
       SpellBridge["focused spell procedure bridges<br/>restoration, saves, attacks, scalar buffs,<br/>riders, sequences, and lifecycle"]
     end
@@ -61,7 +61,7 @@ flowchart TB
       DamageAdj["damage-component-adjustments.qnt"]
       AttackComp["attack-damage-composition.qnt"]
       Reactions["reactions-continuations-concentration.qnt"]
-      StatControls["stat-block-controls.qnt"]
+      StatFamilies["stat-block-{action,bonus-action,legendary-action,<br/>multiattack,resource}-lifecycle/core slices"]
       Features["unit-feature-*-core.qnt families<br/>pool-cost, action-count, rage-reckless, attack-rider, ..."]
       Spells["spell-definition-profiles, spell-invocation-*-core,<br/>spell-*-projection-core, spell-procedure-profiles.qnt"]
     end
@@ -71,7 +71,7 @@ flowchart TB
     subgraph QntMbt["208 *.mbt.qnt MBT witnesses"]
       WitnessQ["literal projection witnesses - most<br/>self-contained SRD outcomes as literals,<br/>e.g. battle-runtime-weapon-attack-skeleton.mbt.qnt"]
       OracleQ["computed-oracle drivers - few, allowlisted<br/>import the rule slice as SRD oracle,<br/>e.g. battle-runtime-direct-condition-lifecycle.mbt.qnt"]
-      RuleCoreMbtQ["9 rule-core-*.mbt.qnt lanes<br/>movement, reactions, features, spells,<br/>stat-block-controls, hit-point-damage, ..."]
+      RuleCoreMbtQ["9 rule-core-*.mbt.qnt lanes<br/>movement, reactions, features, spells,<br/>stat-block-multiattack, hit-point-damage, ..."]
     end
   end
 
@@ -110,7 +110,7 @@ flowchart TB
   IntBridge --> Reactions
   IntBridge --> ActionTurn
   IntBridge --> ReactKinds
-  StatBridge --> StatControls
+  StatBridge --> StatFamilies
   FeatureBridge --> Features
   FeatureBridge --> DamageAdj
   FeatureBridge --> Reactions
@@ -148,7 +148,7 @@ flowchart TB
   classDef ts fill:#effaf1,stroke:#2f7d3d,color:#112;
   classDef verify fill:#fff6df,stroke:#a87020,color:#112;
 
-  class TraceQ,Conc,ReactWin,HPSlice,MoreSlices,Model,ReactKinds,OtherLeaves,MoveBridge,IntBridge,StatBridge,FeatureBridge,SpellBridge,ActionTurn,Movement,HP,DamageAdj,AttackComp,Reactions,StatControls,Features,Spells,ProofMods,WitnessQ,OracleQ,RuleCoreMbtQ qnt;
+  class TraceQ,Conc,ReactWin,HPSlice,MoreSlices,Model,ReactKinds,OtherLeaves,MoveBridge,IntBridge,StatBridge,FeatureBridge,SpellBridge,ActionTurn,Movement,HP,DamageAdj,AttackComp,Reactions,StatFamilies,Features,Spells,ProofMods,WitnessQ,OracleQ,RuleCoreMbtQ qnt;
   class PublicIndex,BattleReducer,ReducerImpl,Subjects,TraceTS ts;
   class MbtDrivers,ProofLane,TraceTest,ReducerTests,ClosureGate verify;
 ```
@@ -210,7 +210,7 @@ flowchart LR
 ```mermaid
 flowchart TB
   subgraph Connected["Connected and active"]
-    C1["Generic SRD semantics<br/>HP, damage, action economy, movement,<br/>features, spells, reactions, stat-block controls"]
+    C1["Generic SRD semantics<br/>HP, damage, action economy, movement,<br/>features, spells, reactions, focused Stat Block families"]
     C2["Rule-core QNT slices"]
     C3["Battle-runtime QNT bridges and leaves"]
     C4["Focused battle-runtime behavioural slices"]

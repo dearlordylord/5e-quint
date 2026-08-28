@@ -229,11 +229,6 @@ const ALLOWLIST = {
     rationale:
       "shared damage and cleanup outcomes depend on mutable source/ward hit points and bond presence",
   },
-  "rule-core-stat-block-controls.mbt.qnt": {
-    classification: "computed oracle",
-    rationale:
-      "dispatch resolution depends on mutable remaining-dispatch counts",
-  },
 };
 
 function listDrivers(dir) {

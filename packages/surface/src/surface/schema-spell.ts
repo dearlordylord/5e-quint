@@ -5129,9 +5129,9 @@ export const CreatureActionsSchema = Schema.Struct({
   specials: optionalExact(nonEmpty(CreatureNamedSpecialActionSchema)),
 });
 
-export const CreatureRechargeMinimumRollSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.between(2, 6),
+export const CREATURE_RECHARGE_MINIMUM_ROLLS = [2, 3, 4, 5, 6] as const;
+export const CreatureRechargeMinimumRollSchema = Schema.Literal(
+  ...CREATURE_RECHARGE_MINIMUM_ROLLS,
 );
 
 export const CreatureLimitedUseSchema = Schema.Union(

@@ -1,4 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import { D6RollResult } from "@dnd/shared/types";
 // KERNEL-COVERAGE: parity-witness BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 
 import { isDeepStrictEqual } from "node:util";
@@ -649,7 +650,7 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
                 value: [
                   {
                     target: rechargeTarget,
-                    roll: DieRollResult(5),
+                    roll: D6RollResult(5),
                   },
                 ],
               },

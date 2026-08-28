@@ -1,11 +1,14 @@
 // Owns attack pipelines, standard action resolvers, off-hand/statblock/grapple
 // commands, attack fill validation, and attack action-resource spending.
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-ATTACK-PROCEDURE-001 RAW-STAT-BLOCK-MULTIATTACK-001
+// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.action-lifecycle stat-block.bonus-action-lifecycle stat-block.attack-procedure stat-block.multiattack
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP BATTLE.STAT_BLOCK.ACTION_LIFECYCLE BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE BATTLE.STAT_BLOCK.ATTACK_PROCEDURE BATTLE.STAT_BLOCK.MULTIATTACK
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // KERNEL-COVERAGE: runtime-owner BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 // KERNEL-COVERAGE: runtime-owner BATTLE.RELATIONSHIP_DISCOVERY
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.light-extra-attack-damage-ability-modifier
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
@@ -161,7 +164,7 @@ import {
 import {
   spendStatBlockAttackResources,
   statBlockAttackProcedureSection,
-  statBlockMultiattackEffectiveDispatchProcedureRefsForActor,
+  statBlockMultiattackDispatchResourceDemandForActor,
   updateStatBlockActorResources,
 } from "./statblock.ts";
 import {
@@ -237,8 +240,9 @@ import {
   spendTurnAction,
 } from "./battle-discovery.ts";
 import {
-  isStatBlockMultiattackActionResource,
+  hasStatBlockMultiattackContinuationResource,
   spendEscapeGrappleActionResource,
+  statBlockMultiattackActionResourceMatchesProcedure,
 } from "./action-resource-kinds.ts";
 import { spellDamageRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
 import { SHOVE_PUSH_DISTANCE_FEET } from "./domain-constants.ts";
@@ -998,8 +1002,8 @@ export function resolveMultiattack(
   const actor = input.actor;
   const origin = actor.origin;
   const multiattackBinding = input.multiattackBinding;
-  const [consumedProcedureRef, ...pendingProcedureRefs] =
-    statBlockMultiattackEffectiveDispatchProcedureRefsForActor(
+  const dispatchResourceDemand =
+    statBlockMultiattackDispatchResourceDemandForActor(
       actor,
       multiattackBinding,
     );
@@ -1007,7 +1011,7 @@ export function resolveMultiattack(
     !statBlockMultiattackResourcesAvailable(
       origin.execution,
       multiattackBinding,
-      [consumedProcedureRef, ...pendingProcedureRefs],
+      dispatchResourceDemand,
     )
   ) {
     return invalidResult(
@@ -1024,29 +1028,48 @@ export function resolveMultiattack(
       "Attack is no longer available for the current actor.",
     );
   }
+  const multiattackDispatchResources = Match.value(dispatchResourceDemand).pipe(
+    Match.when({ kind: "allListedDispatches" }, ({ procedureRefs }) =>
+      procedureRefs.map(
+        (attackProcedureRef): StatBlockMultiattackActionResource => ({
+          kind: "action",
+          source: "statBlockMultiattack",
+          sourceOwnerId: input.subject.actorId,
+          sourceProcedureRef: multiattackBinding.procedureRef,
+          dispatch: { kind: "listedOccurrence", attackProcedureRef },
+        }),
+      ),
+    ),
+    Match.when(
+      { kind: "oneListedDispatch" },
+      ({ procedureRefs }): readonly StatBlockMultiattackActionResource[] => [
+        {
+          kind: "action",
+          source: "statBlockMultiattack",
+          sourceOwnerId: input.subject.actorId,
+          sourceProcedureRef: multiattackBinding.procedureRef,
+          dispatch: {
+            kind: "oneListedChoice",
+            attackProcedureRefs: procedureRefs,
+          },
+        },
+      ],
+    ),
+    Match.exhaustive,
+  );
   const nextStateWithPendingDispatches = {
     ...input.state,
     currentTurnResources: {
       ...spent.right,
       actionResources: [
         ...spent.right.actionResources,
-        ...pendingProcedureRefs.map((dispatch) => ({
-          kind: "action" as const,
-          source: "statBlockMultiattack" as const,
-          sourceOwnerId: input.subject.actorId,
-          attackProcedureRef: dispatch,
-          restriction: {
-            kind: "exclude" as const,
-            actions: ATTACK_ONLY_ACTION_RESOURCE_EXCLUDED_ACTIONS,
-          },
-        })),
+        ...multiattackDispatchResources,
       ],
     },
   };
   const nextExecution = spendStatBlockMultiattackActivationResources(
     origin.execution,
     multiattackBinding,
-    consumedProcedureRef,
   );
   const nextState = {
     ...nextStateWithPendingDispatches,
@@ -2520,15 +2543,19 @@ function spendAttackTurnResources(
   },
   string
 > {
-  const multiattackResources =
-    attack.kind === "statBlockAttack" && statBlockAttackSection === "actions"
-      ? state.currentTurnResources.actionResources.filter(
-          (resource): resource is StatBlockMultiattackActionResource =>
-            isStatBlockMultiattackActionResource(resource, actorId),
-        )
-      : [];
+  const actor = state.combatants.get(actorId);
+  const statBlockExecution =
+    actor?.origin.kind === "statBlock" ? actor.origin.execution : null;
+  const hasMultiattackContinuation =
+    statBlockExecution !== null &&
+    hasStatBlockMultiattackContinuationResource(
+      state.currentTurnResources.actionResources,
+      actorId,
+      statBlockExecution,
+    );
   if (
-    multiattackResources.length > 0 &&
+    hasMultiattackContinuation &&
+    statBlockExecution !== null &&
     attack.kind === "statBlockAttack" &&
     statBlockAttackSection === "actions"
   ) {
@@ -2536,9 +2563,13 @@ function spendAttackTurnResources(
       state.currentTurnResources,
       "attack",
       (resource) =>
-        isStatBlockMultiattackActionResource(resource, actorId) &&
         attack.procedureRef !== undefined &&
-        resource.attackProcedureRef === attack.procedureRef,
+        statBlockMultiattackActionResourceMatchesProcedure(
+          resource,
+          actorId,
+          statBlockExecution,
+          attack.procedureRef,
+        ),
     );
     return Either.isLeft(spent)
       ? Either.left("Attack is no longer available for the current actor.")

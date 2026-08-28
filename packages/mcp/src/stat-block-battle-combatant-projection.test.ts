@@ -279,20 +279,13 @@ describe("MCP Stat Block battle combatant projection", () => {
       ownership: "each" as const,
       limit: { kind: "daily" as const, uses: 0 },
     };
-    const invalidRechargeResource = {
-      ordinal: Schema.decodeUnknownSync(
-        StatBlockProcedureResourceOrdinalSchema,
-      )(2),
-      ownership: "shared" as const,
-      limit: { kind: "recharge" as const, minimumRoll: 7 },
-    };
     const invalid = {
       ...base,
       id: statBlockId("stat_block_synthetic_mcp_invalid_resource_limit"),
       name: "Synthetic MCP Invalid Resource Limit",
       statBlock: {
         ...base.statBlock,
-        resources: [invalidResource, invalidRechargeResource],
+        resources: [invalidResource],
       },
     } satisfies StatBlockRecord;
     const root = {
@@ -320,10 +313,6 @@ describe("MCP Stat Block battle combatant projection", () => {
           {
             ordinal: invalidResource.ordinal,
             reason: "invalidDailyUses",
-          },
-          {
-            ordinal: invalidRechargeResource.ordinal,
-            reason: "invalidRechargeMinimumRoll",
           },
         ],
       },

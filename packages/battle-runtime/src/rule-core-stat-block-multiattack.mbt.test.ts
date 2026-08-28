@@ -1,3 +1,4 @@
+// RAW-COVERAGE: verification-owner:focused-mbt RAW-STAT-BLOCK-MULTIATTACK-001
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import {
   resolveBattleSubject,
@@ -6,9 +7,10 @@ import {
   authoredProcedureOrdinal,
   nonSpellExecutableProcedureEntry,
 } from "./battle-runtime.test-support.ts";
-// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.attack-control
-// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.multiattack
+// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.MULTIATTACK
 import { isDeepStrictEqual } from "node:util";
+import * as Match from "effect/Match";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -19,7 +21,9 @@ import {
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintList,
   quintStateRecord,
+  quintVariantMappedValue,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
@@ -54,40 +58,46 @@ import {
   type StatBlockBattleCombatantInit,
 } from "./index.ts";
 
-const ruleCoreStatBlockControlMbtHoles = [
+const ruleCoreStatBlockMultiattackMbtHoles = [
   "Movement",
   "TargetChoice",
   "AttackRoll",
 ] as const;
-type RuleCoreStatBlockControlMbtHole =
-  (typeof ruleCoreStatBlockControlMbtHoles)[number];
-const ruleCoreStatBlockControlResults = [
+type RuleCoreStatBlockMultiattackMbtHole =
+  (typeof ruleCoreStatBlockMultiattackMbtHoles)[number];
+const ruleCoreStatBlockMultiattackResults = [
   "init",
   "needsHoles",
   "resolved",
   "invalid",
 ] as const;
-type RuleCoreStatBlockControlResult =
-  (typeof ruleCoreStatBlockControlResults)[number];
-const ruleCoreStatBlockControlInvalidReasons = [
+type RuleCoreStatBlockMultiattackResult =
+  (typeof ruleCoreStatBlockMultiattackResults)[number];
+const ruleCoreStatBlockMultiattackInvalidReasons = [
   "none",
   "staleSubject",
 ] as const;
-type RuleCoreStatBlockControlInvalidReason =
-  (typeof ruleCoreStatBlockControlInvalidReasons)[number];
+const statBlockMultiattackMbtPhaseByTag = {
+  MbtReadyToAct: "MbtReadyToAct",
+  MbtActionSpent: "MbtActionSpent",
+  MbtTurnEnded: "MbtTurnEnded",
+  MbtDispatching: "MbtDispatching",
+} as const;
+type RuleCoreStatBlockMultiattackInvalidReason =
+  (typeof ruleCoreStatBlockMultiattackInvalidReasons)[number];
 
-type RuleCoreStatBlockControlProjection = RuleCoreComponentRoutedProjection & {
-  readonly attackActionAvailable: boolean;
-  readonly bonusActionAvailable: boolean;
-  readonly pendingPrimaryDispatches: number;
-  readonly pendingSecondaryDispatches: number;
-  readonly movementSpentFeet: number;
-  readonly movementRemainingFeet: number;
-  readonly multiattackContinuationOpen: boolean;
-  readonly holes: readonly RuleCoreStatBlockControlMbtHole[];
-  readonly lastResult: RuleCoreStatBlockControlResult;
-  readonly lastInvalidReason: RuleCoreStatBlockControlInvalidReason;
-};
+type RuleCoreStatBlockMultiattackProjection =
+  RuleCoreComponentRoutedProjection & {
+    readonly attackActionAvailable: boolean;
+    readonly bonusActionAvailable: boolean;
+    readonly pendingDispatchProcedureRefs: readonly number[];
+    readonly movementSpentFeet: number;
+    readonly movementRemainingFeet: number;
+    readonly multiattackContinuationOpen: boolean;
+    readonly holes: readonly RuleCoreStatBlockMultiattackMbtHole[];
+    readonly lastResult: RuleCoreStatBlockMultiattackResult;
+    readonly lastInvalidReason: RuleCoreStatBlockMultiattackInvalidReason;
+  };
 type StatBlockMultiattackResourceSnapshot = Extract<
   ReturnType<typeof snapshotBattle>["turn"]["actionResources"][number],
   { readonly source: "statBlockMultiattack" }
@@ -103,30 +113,31 @@ const targetId = combatantId("rule-core-stat-block-target");
 const primaryAttackName = "Claw";
 const secondaryAttackName = "Spine";
 const multiattackName = "Multiattack";
-const componentOwner = "RuleCoreStatBlockControlOwner";
+const componentOwner = "RuleCoreStatBlockMultiattackOwner";
 const driverSchema = {
   init: {},
   doStartMultiattack: {},
   doMoveDuringDispatch: {},
   doRejectBonusActionDuringDispatch: {},
   doRejectOrdinaryActionDuringDispatch: {},
-  doResolvePrimaryDispatch: {},
-  doResolveSecondaryDispatch: {},
+  doResolveProcedureZeroDispatch: {},
+  doResolveProcedureOneDispatch: {},
   doEndTurnClosesDispatches: {},
   step: {},
 } as const;
 
-function createRuleCoreStatBlockControlDriver() {
+function createRuleCoreStatBlockMultiattackDriver() {
   return defineDriver(driverSchema, () => {
-    let state = statBlockControlBattle();
+    let state = statBlockMultiattackBattle();
     let holes: readonly BattleHole[] = [];
-    let lastResult: RuleCoreStatBlockControlProjection["lastResult"] = "init";
-    let lastInvalidReason: RuleCoreStatBlockControlProjection["lastInvalidReason"] =
+    let lastResult: RuleCoreStatBlockMultiattackProjection["lastResult"] =
+      "init";
+    let lastInvalidReason: RuleCoreStatBlockMultiattackProjection["lastInvalidReason"] =
       "none";
     let bonusActionSubject = statBlockBonusActionSubject(state);
 
     function reset(): void {
-      state = statBlockControlBattle();
+      state = statBlockMultiattackBattle();
       holes = [];
       lastResult = "init";
       lastInvalidReason = "none";
@@ -148,9 +159,9 @@ function createRuleCoreStatBlockControlDriver() {
         lastInvalidReason = "none";
         return;
       }
-      if (!isRuleCoreStatBlockControlInvalidReason(result.reason)) {
+      if (!isRuleCoreStatBlockMultiattackInvalidReason(result.reason)) {
         throw new Error(
-          `Unexpected rule-core Stat Block control MBT invalid reason: ${result.reason}`,
+          `Unexpected rule-core Stat Block Multiattack MBT invalid reason: ${result.reason}`,
         );
       }
       lastResult = "invalid";
@@ -228,8 +239,8 @@ function createRuleCoreStatBlockControlDriver() {
           speedKind: "walk",
         });
       },
-      doResolvePrimaryDispatch: () => resolveDispatch(primaryAttackName),
-      doResolveSecondaryDispatch: () => resolveDispatch(secondaryAttackName),
+      doResolveProcedureZeroDispatch: () => resolveDispatch(primaryAttackName),
+      doResolveProcedureOneDispatch: () => resolveDispatch(secondaryAttackName),
       doEndTurnClosesDispatches: () => {
         const result = resolveBattleSubject({
           state,
@@ -239,12 +250,11 @@ function createRuleCoreStatBlockControlDriver() {
         recordResult(result);
         if (result.tag === "resolved") {
           assertNoPendingDispatchesAfterEndTurn(result.state);
-          state = statBlockControlBattle();
         }
       },
       step: () => {},
       getState: () =>
-        projectRuleCoreStatBlockControlState({
+        projectRuleCoreStatBlockMultiattackState({
           state,
           holes,
           lastResult,
@@ -262,39 +272,41 @@ function assertNoPendingDispatchesAfterEndTurn(state: BattleState): void {
   }
 }
 
-const statBlockControlStateCheck = stateCheck(
-  normalizeRuleCoreStatBlockControlQuintState,
-  compareRuleCoreStatBlockControlState,
+const statBlockMultiattackStateCheck = stateCheck(
+  normalizeRuleCoreStatBlockMultiattackQuintState,
+  compareRuleCoreStatBlockMultiattackState,
 );
 
-const ruleCoreStatBlockControlDefaultMbtSteps = 6;
+const ruleCoreStatBlockMultiattackDefaultMbtSteps = 6;
 
-describe("rule-core Stat Block control focused MBT", () => {
+describe("rule-core Stat Block Multiattack focused MBT", () => {
   it(
-    "replays QCORE11 Multiattack dispatch parity through battle-runtime reducers",
+    "replays Stat Block Multiattack dispatch parity through battle-runtime reducers",
     async () => {
       await run({
         spec: mbtSpecPath(
           import.meta.dirname,
-          "rule-core-stat-block-controls.mbt.qnt",
+          "rule-core-stat-block-multiattack.mbt.qnt",
         ),
         init: "init",
         step: "step",
-        driver: createRuleCoreStatBlockControlDriver(),
+        driver: createRuleCoreStatBlockMultiattackDriver(),
         backend: "typescript",
         seed: process.env["QUINT_SEED"],
         nTraces: mbtTraceCount(),
-        maxSteps: focusedMbtMaxSteps(ruleCoreStatBlockControlDefaultMbtSteps),
-        stateCheck: statBlockControlStateCheck,
+        maxSteps: focusedMbtMaxSteps(
+          ruleCoreStatBlockMultiattackDefaultMbtSteps,
+        ),
+        stateCheck: statBlockMultiattackStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,
   );
 });
 
-function statBlockControlBattle(): BattleState {
+function statBlockMultiattackBattle(): BattleState {
   return startBattleRight({
-    battleId: battleId("rule-core-stat-block-controls"),
+    battleId: battleId("rule-core-stat-block-multiattack"),
     combatants: [
       statBlockCreature({
         combatantId: actorId,
@@ -410,12 +422,12 @@ function moveSubject(): Extract<
   return { tag: "runtimeCommand", actorId, command: "move" };
 }
 
-function projectRuleCoreStatBlockControlState(input: {
+function projectRuleCoreStatBlockMultiattackState(input: {
   readonly state: BattleState;
   readonly holes: readonly BattleHole[];
-  readonly lastResult: RuleCoreStatBlockControlProjection["lastResult"];
-  readonly lastInvalidReason: RuleCoreStatBlockControlProjection["lastInvalidReason"];
-}): RuleCoreStatBlockControlProjection {
+  readonly lastResult: RuleCoreStatBlockMultiattackProjection["lastResult"];
+  readonly lastInvalidReason: RuleCoreStatBlockMultiattackProjection["lastInvalidReason"];
+}): RuleCoreStatBlockMultiattackProjection {
   const snapshot = snapshotBattle(input.state);
   const actor = snapshot.combatants.find(
     (combatant) => combatant.combatantId === actorId,
@@ -453,16 +465,31 @@ function projectRuleCoreStatBlockControlState(input: {
     ),
     bonusActionAvailable:
       input.state.currentTurnResources.currentHasBonusAction,
-    pendingPrimaryDispatches: dispatches.filter(
-      (resource) => resource.attackProcedureRef === primaryAttackRef,
-    ).length,
-    pendingSecondaryDispatches: dispatches.filter(
-      (resource) => resource.attackProcedureRef === secondaryAttackRef,
-    ).length,
+    pendingDispatchProcedureRefs: dispatches.flatMap((resource) =>
+      Match.value(resource.dispatch).pipe(
+        Match.when({ kind: "listedOccurrence" }, ({ attackProcedureRef }) => [
+          attackProcedureRef === primaryAttackRef
+            ? 0
+            : attackProcedureRef === secondaryAttackRef
+              ? 1
+              : unknownSyntheticProcedureRef(attackProcedureRef),
+        ]),
+        Match.when({ kind: "oneListedChoice" }, ({ attackProcedureRefs }) =>
+          attackProcedureRefs.map((attackProcedureRef) =>
+            attackProcedureRef === primaryAttackRef
+              ? 0
+              : attackProcedureRef === secondaryAttackRef
+                ? 1
+                : unknownSyntheticProcedureRef(attackProcedureRef),
+          ),
+        ),
+        Match.exhaustive,
+      ),
+    ),
     movementSpentFeet: Number(actor.movement.spentFeet),
     movementRemainingFeet: Number(actor.movement.remainingFeet),
     multiattackContinuationOpen: dispatches.length > 0,
-    holes: input.holes.map(projectStatBlockControlHole).sort(),
+    holes: input.holes.map(projectStatBlockMultiattackHole).sort(),
     lastResult: input.lastResult,
     lastInvalidReason: input.lastInvalidReason,
   });
@@ -475,6 +502,12 @@ function pendingStatBlockMultiattackDispatches(
     (resource): resource is StatBlockMultiattackResourceSnapshot =>
       resource.source === "statBlockMultiattack" &&
       resource.sourceOwnerId === actorId,
+  );
+}
+
+function unknownSyntheticProcedureRef(procedureRef: unknown): never {
+  throw new Error(
+    `Unexpected synthetic Stat Block Multiattack procedure ref: ${String(procedureRef)}`,
   );
 }
 
@@ -564,39 +597,38 @@ function requireHole<K extends BattleHole["kind"]>(
   return hole;
 }
 
-function projectStatBlockControlHole(
+function projectStatBlockMultiattackHole(
   hole: BattleHole,
-): RuleCoreStatBlockControlMbtHole {
+): RuleCoreStatBlockMultiattackMbtHole {
   if (hole.kind === "movement") return "Movement";
   if (hole.kind === "targetChoice") return "TargetChoice";
   if (hole.kind === "attackRoll") return "AttackRoll";
   throw new Error(
-    `Unexpected rule-core Stat Block control MBT hole: ${hole.kind}`,
+    `Unexpected rule-core Stat Block Multiattack MBT hole: ${hole.kind}`,
   );
 }
 
-function normalizeRuleCoreStatBlockControlQuintState(
+function normalizeRuleCoreStatBlockMultiattackQuintState(
   raw: unknown,
-): RuleCoreStatBlockControlProjection {
+): RuleCoreStatBlockMultiattackProjection {
   const state = quintStateRecord(raw);
+  const phase = statBlockMultiattackMbtPhase(state["qPhase"]);
   const protocol = decodeWitnessProtocolState({
     state,
     protocolField: "qProtocol",
     noInvalidReason: "none",
-    decodeHole: statBlockControlHoleName,
+    decodeHole: statBlockMultiattackHoleName,
     compareHoles: (left, right) => left.localeCompare(right),
   });
   return {
     componentRoute: decodeRuleCoreComponentRoute(state["qComponentRoute"]),
-    attackActionAvailable: booleanField(state, "qAttackActionAvailable"),
+    attackActionAvailable: phase === "MbtReadyToAct",
     bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
-    pendingPrimaryDispatches: numberFromQuintInt(
-      state["qPendingPrimaryDispatches"],
-      "qPendingPrimaryDispatches",
-    ),
-    pendingSecondaryDispatches: numberFromQuintInt(
-      state["qPendingSecondaryDispatches"],
-      "qPendingSecondaryDispatches",
+    pendingDispatchProcedureRefs: quintList(
+      state["qPendingProcedureRefs"],
+      "qPendingProcedureRefs",
+    ).map((raw, index) =>
+      numberFromQuintInt(raw, `qPendingProcedureRefs[${index}]`),
     ),
     movementSpentFeet: numberFromQuintInt(
       state["qMovementSpentFeet"],
@@ -606,67 +638,79 @@ function normalizeRuleCoreStatBlockControlQuintState(
       state["qMovementRemainingFeet"],
       "qMovementRemainingFeet",
     ),
-    multiattackContinuationOpen: booleanField(
-      state,
-      "qMultiattackContinuationOpen",
-    ),
+    multiattackContinuationOpen: phase === "MbtDispatching",
     holes: protocol.holes,
-    lastResult: statBlockControlResult(protocol.lastResult),
-    lastInvalidReason: statBlockControlInvalidReason(
+    lastResult: statBlockMultiattackResult(protocol.lastResult),
+    lastInvalidReason: statBlockMultiattackInvalidReason(
       protocol.lastInvalidReason,
     ),
   };
 }
 
-function compareRuleCoreStatBlockControlState(
-  quint: RuleCoreStatBlockControlProjection,
-  runtime: RuleCoreStatBlockControlProjection,
+function statBlockMultiattackMbtPhase(
+  raw: unknown,
+): "MbtReadyToAct" | "MbtActionSpent" | "MbtTurnEnded" | "MbtDispatching" {
+  return quintVariantMappedValue(
+    raw,
+    "qPhase",
+    statBlockMultiattackMbtPhaseByTag,
+    "Stat Block Multiattack MBT phase",
+  );
+}
+
+function compareRuleCoreStatBlockMultiattackState(
+  quint: RuleCoreStatBlockMultiattackProjection,
+  runtime: RuleCoreStatBlockMultiattackProjection,
 ): boolean {
   return isDeepStrictEqual(runtime, quint);
 }
 
-function statBlockControlHoleName(
+function statBlockMultiattackHoleName(
   raw: unknown,
-): RuleCoreStatBlockControlMbtHole {
+): RuleCoreStatBlockMultiattackMbtHole {
   const name = stringFieldValue(raw, "protocol.holes entry");
-  if (isRuleCoreStatBlockControlMbtHole(name)) return name;
-  throw new Error(`Unexpected rule-core Stat Block control MBT hole: ${name}`);
-}
-
-function statBlockControlResult(raw: unknown): RuleCoreStatBlockControlResult {
-  const value = stringFieldValue(raw, "protocol.result");
-  if (isRuleCoreStatBlockControlResult(value)) return value;
+  if (isRuleCoreStatBlockMultiattackMbtHole(name)) return name;
   throw new Error(
-    `Unexpected rule-core Stat Block control MBT result: ${value}`,
+    `Unexpected rule-core Stat Block Multiattack MBT hole: ${name}`,
   );
 }
 
-function statBlockControlInvalidReason(
+function statBlockMultiattackResult(
   raw: unknown,
-): RuleCoreStatBlockControlInvalidReason {
-  const value = stringFieldValue(raw, "protocol.invalidReason");
-  if (isRuleCoreStatBlockControlInvalidReason(value)) return value;
+): RuleCoreStatBlockMultiattackResult {
+  const value = stringFieldValue(raw, "protocol.result");
+  if (isRuleCoreStatBlockMultiattackResult(value)) return value;
   throw new Error(
-    `Unexpected rule-core Stat Block control MBT invalid reason: ${value}`,
+    `Unexpected rule-core Stat Block Multiattack MBT result: ${value}`,
   );
 }
 
-function isRuleCoreStatBlockControlMbtHole(
-  value: string,
-): value is RuleCoreStatBlockControlMbtHole {
-  return ruleCoreStatBlockControlMbtHoles.some((hole) => hole === value);
+function statBlockMultiattackInvalidReason(
+  raw: unknown,
+): RuleCoreStatBlockMultiattackInvalidReason {
+  const value = stringFieldValue(raw, "protocol.invalidReason");
+  if (isRuleCoreStatBlockMultiattackInvalidReason(value)) return value;
+  throw new Error(
+    `Unexpected rule-core Stat Block Multiattack MBT invalid reason: ${value}`,
+  );
 }
 
-function isRuleCoreStatBlockControlResult(
+function isRuleCoreStatBlockMultiattackMbtHole(
   value: string,
-): value is RuleCoreStatBlockControlResult {
-  return ruleCoreStatBlockControlResults.some((result) => result === value);
+): value is RuleCoreStatBlockMultiattackMbtHole {
+  return ruleCoreStatBlockMultiattackMbtHoles.some((hole) => hole === value);
 }
 
-function isRuleCoreStatBlockControlInvalidReason(
+function isRuleCoreStatBlockMultiattackResult(
   value: string,
-): value is RuleCoreStatBlockControlInvalidReason {
-  return ruleCoreStatBlockControlInvalidReasons.some(
+): value is RuleCoreStatBlockMultiattackResult {
+  return ruleCoreStatBlockMultiattackResults.some((result) => result === value);
+}
+
+function isRuleCoreStatBlockMultiattackInvalidReason(
+  value: string,
+): value is RuleCoreStatBlockMultiattackInvalidReason {
+  return ruleCoreStatBlockMultiattackInvalidReasons.some(
     (reason) => reason === value,
   );
 }
@@ -734,7 +778,7 @@ function baseStatBlockRecord(id: string): StatBlockRecord {
     challengeRating: 0.25,
     provenance: {
       kind: "synthetic-test",
-      section: "QMBT6 typed fixture",
+      section: "focused Multiattack typed fixture",
     },
     statBlock: {
       size: "medium",

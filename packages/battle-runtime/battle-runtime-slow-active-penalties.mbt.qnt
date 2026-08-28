@@ -1,9 +1,8 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-slow-active-penalties
 
 module battleRuntimeSlowActivePenaltiesMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+  import statBlockMultiattack.* from "../shared-algebras/proofs/rule-core/stat-block-multiattack"
 
   // RAW trace:
   // - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Slow:
@@ -19,7 +18,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
     | EndTurnSave
     | SomaticFailure
 
-  type SlowActivePenaltiesScenarioOutcome = | Init | FailedSave | TargetTurn | NeedsSave | Saved | FailedAgain | SpentAction | AttackedOnce | NeedsSomaticFailure | SomaticSpellFailed | SelfFailedSave | MultiattackFailedSave | MultiattackTargetTurn | MultiattackedOnce
+  type SlowActivePenaltiesScenarioOutcome = | Init | FailedSave | TargetTurn | NeedsSave | Saved | FailedAgain | SpentAction | AttackedOnce | NeedsSomaticFailure | SomaticSpellFailed | SelfFailedSave | MultiattackFailedSave | MultiattackTargetTurn | MultiattackActivated | MultiattackDispatched
 
   type SlowActivePenaltiesWitnessState = {
     currentTurnRole: str,
@@ -337,7 +336,18 @@ module battleRuntimeSlowActivePenaltiesMbt {
       witnessResolved(NoHole)),
   }
 
-  action doMakeSlowedStatBlockMultiattack = all {
+  pure def slowedStatBlockMultiattackProfile: StatBlockMultiattackProfile = {
+    dispatchProcedureRefs: List(0, 0, 1),
+  }
+
+  pure def slowedStatBlockMultiattackActivatedState: StatBlockMultiattackState =
+    activateStatBlockMultiattack(
+      initialStatBlockMultiattackState,
+      slowedStatBlockMultiattackProfile,
+      OneListedDispatch,
+    )
+
+  action doActivateSlowedStatBlockMultiattack = all {
     qState.scenarioOutcome == MultiattackTargetTurn,
     recordSlowState(
       "multiattackTarget",
@@ -346,14 +356,39 @@ module battleRuntimeSlowActivePenaltiesMbt {
       false,
       0,
       false,
-      0,
+      statBlockMultiattackDispatchResourceCount(slowedStatBlockMultiattackActivatedState),
       false,
       30,
       10,
       0,
       true,
       true,
-      MultiattackedOnce,
+      MultiattackActivated,
+      witnessResolved(NoHole)),
+  }
+
+  action doResolveChosenSlowedStatBlockMultiattackDispatch = all {
+    qState.scenarioOutcome == MultiattackActivated,
+    recordSlowState(
+      "multiattackTarget",
+      "action",
+      false,
+      false,
+      0,
+      false,
+      statBlockMultiattackPendingProcedureRefs(
+        resolveStatBlockMultiattackDispatch(
+          slowedStatBlockMultiattackActivatedState,
+          1,
+        )
+      ).length(),
+      false,
+      30,
+      10,
+      0,
+      true,
+      true,
+      MultiattackDispatched,
       witnessResolved(NoHole)),
   }
 
@@ -365,7 +400,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
       AttackedOnce,
       SomaticSpellFailed,
       SelfFailedSave,
-      MultiattackedOnce,
+      MultiattackDispatched,
     )),
     recordSlowState(
       qState.currentTurnRole,
@@ -399,7 +434,8 @@ module battleRuntimeSlowActivePenaltiesMbt {
     doCastSlowSelfFailedSave,
     doCastSlowMultiattackFailedSave,
     doEndCasterTurnForMultiattackTarget,
-    doMakeSlowedStatBlockMultiattack,
+    doActivateSlowedStatBlockMultiattack,
+    doResolveChosenSlowedStatBlockMultiattackDispatch,
     doStutter,
   }
 }

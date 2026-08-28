@@ -5,10 +5,13 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-granted-action
 // Owns top-level act discovery and subject/action-resource discovery helpers.
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-MULTIATTACK-001
+// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.bonus-action-lifecycle stat-block.multiattack
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE BATTLE.STAT_BLOCK.MULTIATTACK
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-flaming-sphere-hazard-ram spell.invocation-fog-cloud-obscurement spell.invocation-grease-ground-hazard spell.invocation-gust-of-wind-line spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-flaming-sphere-hazard-ram spell.invocation-fog-cloud-obscurement spell.invocation-grease-ground-hazard spell.invocation-gust-of-wind-line spell.invocation-jump-movement-replacement spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
@@ -137,8 +140,9 @@ import { readiedSpellInitialHoles } from "./readied-initial-holes.ts";
 import { characterSpellProcedure } from "../character-execution-queries.ts";
 import {
   canSpendEscapeGrappleActionResource,
+  hasStatBlockMultiattackContinuationResource,
   isClassFeatureExtraAttackActionResource,
-  isStatBlockMultiattackActionResource,
+  statBlockMultiattackActionResourceMatchesProcedure,
 } from "./action-resource-kinds.ts";
 import { supportedUnitFeatureActs } from "./unit-feature-discovery.ts";
 import { monkFocusActs } from "./monk-focus-discovery.ts";
@@ -155,7 +159,7 @@ import {
 import {
   attackActionOptionIsOrdinaryAttackAction,
   attackSubjectPart,
-  statBlockMultiattackEffectiveDispatchProcedureRefsForActor,
+  statBlockMultiattackDispatchResourceDemandForActor,
   statBlockAttackProcedureSection,
 } from "./statblock.ts";
 import type {
@@ -336,6 +340,8 @@ function appendOrdinaryAttackActs(
   actorId: CombatantId,
   acts: BattleActDiscoveryCandidate[],
 ): void {
+  const hasOpenStatBlockMultiattackDispatch =
+    actorHasStatBlockMultiattackActionResource(state, actorId);
   const attackActionOptions = attackActionOptionsForActor(
     state,
     actorId,
@@ -344,7 +350,8 @@ function appendOrdinaryAttackActs(
   );
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
-    canSpendAction(state.currentTurnResources, "attack") &&
+    (hasOpenStatBlockMultiattackDispatch ||
+      canSpendAction(state.currentTurnResources, "attack")) &&
     attackActionOptions.some(
       (attack) =>
         attackTargetChoices(state, actorId, attack).length > 0 ||
@@ -1734,16 +1741,13 @@ export function statBlockMultiattackActs(
   }
   const origin = actor.origin;
   return statBlockMultiattackBindings(origin.execution).flatMap((binding) => {
-    const effectiveDispatchProcedureRefs =
-      statBlockMultiattackEffectiveDispatchProcedureRefsForActor(
-        actor,
-        binding,
-      );
+    const dispatchResourceDemand =
+      statBlockMultiattackDispatchResourceDemandForActor(actor, binding);
     if (
       !statBlockMultiattackResourcesAvailable(
         origin.execution,
         binding,
-        effectiveDispatchProcedureRefs,
+        dispatchResourceDemand,
       )
     ) {
       return [];
@@ -1815,8 +1819,14 @@ export function actorHasStatBlockMultiattackActionResource(
   state: BattleState,
   actorId: CombatantId,
 ): boolean {
-  return state.currentTurnResources.actionResources.some((resource) =>
-    isStatBlockMultiattackActionResource(resource, actorId),
+  const actor = state.combatants.get(actorId);
+  const statBlockExecution =
+    actor?.origin.kind === "statBlock" ? actor.origin.execution : null;
+  if (statBlockExecution === null) return false;
+  return hasStatBlockMultiattackContinuationResource(
+    state.currentTurnResources.actionResources,
+    actorId,
+    statBlockExecution,
   );
 }
 
@@ -1857,11 +1867,19 @@ export function subjectAllowedDuringStatBlockMultiattackDispatch(
   ) {
     return false;
   }
+  const actor = state.combatants.get(actorId);
+  const statBlockExecution =
+    actor?.origin.kind === "statBlock" ? actor.origin.execution : null;
+  if (statBlockExecution === null) return false;
   return state.currentTurnResources.actionResources.some(
     (resource): boolean =>
-      isStatBlockMultiattackActionResource(resource, actorId) &&
       subject.procedureRef !== undefined &&
-      resource.attackProcedureRef === subject.procedureRef,
+      statBlockMultiattackActionResourceMatchesProcedure(
+        resource,
+        actorId,
+        statBlockExecution,
+        subject.procedureRef,
+      ),
   );
 }
 

@@ -1,7 +1,7 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-slow-active-penalties
-// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP
 // RAW trace:
 // - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Slow:
 //   failed Wisdom Saving Throws halve Speed, apply -2 AC and -2 Dexterity
@@ -92,7 +92,8 @@ type LastResult =
   | "selfFailedSave"
   | "multiattackFailedSave"
   | "multiattackTargetTurn"
-  | "multiattackedOnce";
+  | "multiattackActivated"
+  | "multiattackDispatched";
 const SCENARIO_OUTCOME_BY_TAG = {
   Init: "init",
   FailedSave: "failedSave",
@@ -107,7 +108,8 @@ const SCENARIO_OUTCOME_BY_TAG = {
   SelfFailedSave: "selfFailedSave",
   MultiattackFailedSave: "multiattackFailedSave",
   MultiattackTargetTurn: "multiattackTargetTurn",
-  MultiattackedOnce: "multiattackedOnce",
+  MultiattackActivated: "multiattackActivated",
+  MultiattackDispatched: "multiattackDispatched",
 } as const satisfies Readonly<Record<string, LastResult>>;
 const slowMultiattackTargetId = combatantId(
   "slow-active-penalties-mbt-multiattack-target",
@@ -158,7 +160,8 @@ const driverSchema = {
   doCastSlowSelfFailedSave: {},
   doCastSlowMultiattackFailedSave: {},
   doEndCasterTurnForMultiattackTarget: {},
-  doMakeSlowedStatBlockMultiattack: {},
+  doActivateSlowedStatBlockMultiattack: {},
+  doResolveChosenSlowedStatBlockMultiattackDispatch: {},
   doStutter: {},
   step: {},
 } as const;
@@ -206,8 +209,11 @@ function createSlowActivePenaltiesDriver() {
       doEndCasterTurnForMultiattackTarget: () => {
         state = endCasterTurnForMultiattackTarget(state);
       },
-      doMakeSlowedStatBlockMultiattack: () => {
-        state = makeSlowedStatBlockMultiattack(state);
+      doActivateSlowedStatBlockMultiattack: () => {
+        state = activateSlowedStatBlockMultiattack(state);
+      },
+      doResolveChosenSlowedStatBlockMultiattackDispatch: () => {
+        state = resolveChosenSlowedStatBlockMultiattackDispatch(state);
       },
       doStutter: () => {},
       step: () => {},
@@ -265,7 +271,10 @@ describe("Slow active-penalties MBT parity", () => {
       initialRuntimeState(),
     );
     const multiattackTurn = endCasterTurnForMultiattackTarget(multiattackCast);
-    const multiattacked = makeSlowedStatBlockMultiattack(multiattackTurn);
+    const multiattackActivated =
+      activateSlowedStatBlockMultiattack(multiattackTurn);
+    const multiattackDispatched =
+      resolveChosenSlowedStatBlockMultiattackDispatch(multiattackActivated);
     expect(slowActivePenaltiesProjection(multiattackTurn)).toMatchObject({
       currentTurnRole: "multiattackTarget",
       turnActionOrBonusChoice: "notChosen",
@@ -274,13 +283,21 @@ describe("Slow active-penalties MBT parity", () => {
       statBlockMultiattackResourceCount: 0,
       lastResult: "multiattackTargetTurn",
     });
-    expect(slowActivePenaltiesProjection(multiattacked)).toMatchObject({
+    expect(slowActivePenaltiesProjection(multiattackActivated)).toMatchObject({
+      currentTurnRole: "multiattackTarget",
+      turnActionOrBonusChoice: "action",
+      targetTurnCanSpendAction: false,
+      targetTurnCanSpendBonusAction: false,
+      statBlockMultiattackResourceCount: 1,
+      lastResult: "multiattackActivated",
+    });
+    expect(slowActivePenaltiesProjection(multiattackDispatched)).toMatchObject({
       currentTurnRole: "multiattackTarget",
       turnActionOrBonusChoice: "action",
       targetTurnCanSpendAction: false,
       targetTurnCanSpendBonusAction: false,
       statBlockMultiattackResourceCount: 0,
-      lastResult: "multiattackedOnce",
+      lastResult: "multiattackDispatched",
     });
   });
 
@@ -626,7 +643,7 @@ function makeTargetAttack(
   };
 }
 
-function makeSlowedStatBlockMultiattack(
+function activateSlowedStatBlockMultiattack(
   state: SlowActivePenaltiesRuntimeState,
 ): SlowActivePenaltiesRuntimeState {
   if (state.lastResult !== "multiattackTargetTurn") {
@@ -649,7 +666,63 @@ function makeSlowedStatBlockMultiattack(
     }),
     currentTurnRole: "multiattackTarget",
     holes: [],
-    lastResult: "multiattackedOnce",
+    lastResult: "multiattackActivated",
+  };
+}
+
+function resolveChosenSlowedStatBlockMultiattackDispatch(
+  state: SlowActivePenaltiesRuntimeState,
+): SlowActivePenaltiesRuntimeState {
+  if (state.lastResult !== "multiattackActivated") {
+    return state;
+  }
+  const act = actionAct(
+    state.battle,
+    slowMultiattackTargetId,
+    "attack",
+    "Shortbow",
+  );
+  const targetHole = requireResultHole(
+    resolveBattleSubject({
+      state: state.battle.state,
+      subject: act.subject,
+      fills: [],
+    }),
+    "targetChoice",
+  );
+  const targetFill = attackTargetFill(
+    targetHole,
+    slowMultiattackTargetId,
+    spellCasterId,
+  );
+  const attackRoll = requireResultHole(
+    resolveBattleSubject({
+      state: state.battle.state,
+      subject: act.subject,
+      fills: [targetFill],
+    }),
+    "attackRoll",
+  );
+  const resolved = resolveBattleSubject({
+    state: state.battle.state,
+    subject: act.subject,
+    fills: [
+      targetFill,
+      attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
+    ],
+  });
+  expect(resolved).toMatchObject({ tag: "resolved" });
+  if (resolved.tag !== "resolved") {
+    throw new Error("Expected chosen slowed Multiattack dispatch to resolve.");
+  }
+  return {
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
+    currentTurnRole: "multiattackTarget",
+    holes: [],
+    lastResult: "multiattackDispatched",
   };
 }
 

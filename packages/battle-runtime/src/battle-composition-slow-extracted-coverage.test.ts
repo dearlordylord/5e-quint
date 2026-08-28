@@ -39,7 +39,7 @@ import {
   spendStatBlockAttackResources,
   statBlockAttackActionOptions,
   statBlockAttackProcedureSection,
-  statBlockMultiattackEffectiveDispatchProcedureRefsForActor,
+  statBlockMultiattackDispatchResourceDemandForActor,
   updateStatBlockActorResources,
 } from "./battle-reducer/statblock.ts";
 import type { SpellMetamagicApplicationFact } from "./battle-reducer/metamagic-support.ts";
@@ -204,7 +204,7 @@ describe("extracted battle composition and Slow coverage", () => {
 });
 
 describe("Stat Block extracted composition coverage", () => {
-  test("limits a slowed Multiattack to its first dispatch", () => {
+  test("limits a slowed Multiattack to one chosen listed dispatch", () => {
     const state = statBlockMultiattackBattle();
     const actor = requireStatBlockActor(state);
     const binding = statBlockMultiattackBindings(actor.origin.execution)[0];
@@ -213,21 +213,21 @@ describe("Stat Block extracted composition coverage", () => {
     }
 
     expect(
-      statBlockMultiattackEffectiveDispatchProcedureRefsForActor(
-        actor,
-        binding,
-      ),
-    ).toEqual(binding.procedure.dispatchProcedureRefs);
+      statBlockMultiattackDispatchResourceDemandForActor(actor, binding),
+    ).toEqual({
+      kind: "allListedDispatches",
+      procedureRefs: binding.procedure.dispatchProcedureRefs,
+    });
     const slowedActor = {
       ...actor,
       activeEffects: [...actor.activeEffects, slowEffectForTest()],
     } satisfies StatBlockBattleCreatureState;
     expect(
-      statBlockMultiattackEffectiveDispatchProcedureRefsForActor(
-        slowedActor,
-        binding,
-      ),
-    ).toEqual([binding.procedure.dispatchProcedureRefs[0]]);
+      statBlockMultiattackDispatchResourceDemandForActor(slowedActor, binding),
+    ).toEqual({
+      kind: "oneListedDispatch",
+      procedureRefs: binding.procedure.dispatchProcedureRefs,
+    });
   });
 
   test("distinguishes ordinary attacks, absent actors, and non-attack bindings", () => {

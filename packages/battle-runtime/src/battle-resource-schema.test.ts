@@ -39,7 +39,6 @@ describe("Battle action resource schema", () => {
       decode({
         kind: "action",
         source: "spellEffect",
-        sourceOwnerId: ownerId,
         sourceProcedureRef: procedureRef,
         restriction,
       }),

@@ -14,7 +14,7 @@ const RULE_CORE_COMPONENT_OWNERS = [
   "RuleCoreReactionContinuationConcentrationOwner",
   "RuleCoreShoveOutcomeOwner",
   "RuleCoreSpellProcedureProfileOwner",
-  "RuleCoreStatBlockControlOwner",
+  "RuleCoreStatBlockMultiattackOwner",
 ] as const;
 
 export type RuleCoreComponentOwner =

@@ -305,18 +305,15 @@ describe("Stat Block projection boundary coverage", () => {
     }
   });
 
-  test("rejects invalid authored resource limits before runtime allocation", () => {
+  test("rejects invalid authored daily limits before runtime allocation", () => {
     const source = monsterResourceStatBlock();
     const resources = source.statBlock.resources;
     if (resources === undefined) {
       throw new Error("Expected the resource-backed Stat Block fixture.");
     }
     const daily = resources.find((resource) => resource.limit.kind === "daily");
-    const recharge = resources.find(
-      (resource) => resource.limit.kind === "recharge",
-    );
-    if (daily === undefined || recharge === undefined) {
-      throw new Error("Expected daily and recharge resource fixtures.");
+    if (daily === undefined) {
+      throw new Error("Expected a daily resource fixture.");
     }
     const [firstResource, secondResource, ...remainingResources] = resources;
     if (firstResource === undefined || secondResource === undefined) {
@@ -338,88 +335,17 @@ describe("Stat Block projection boundary coverage", () => {
         ],
       },
     };
-    const malformedRecharge: StatBlockRecord = {
-      ...source,
-      statBlock: {
-        ...source.statBlock,
-        resources: [
-          firstResource.ordinal === recharge.ordinal
-            ? {
-                ...firstResource,
-                limit: { kind: "recharge", minimumRoll: 7 },
-              }
-            : firstResource,
-          secondResource.ordinal === recharge.ordinal
-            ? {
-                ...secondResource,
-                limit: { kind: "recharge", minimumRoll: 7 },
-              }
-            : secondResource,
-          ...remainingResources,
-        ],
-      },
-    };
-
-    const invalidResourceCases = [
-      {
-        record: malformedDaily,
-        issues: [{ ordinal: daily.ordinal, reason: "invalidDailyUses" }],
-      },
-      {
-        record: malformedRecharge,
-        issues: [
-          {
-            ordinal: recharge.ordinal,
-            reason: "invalidRechargeMinimumRoll",
-          },
-        ],
-      },
-    ] as const;
-
-    for (const { record, issues } of invalidResourceCases) {
-      const projection = projectAuthoredStatBlock(record);
-      expect(projection).toEqual(
-        Either.left({
-          tag: "battleStatBlockProjectionFailure",
-          reason: "invalidResourceLimit",
-          issues,
-        }),
-      );
-      if (Either.isRight(projection)) continue;
-      expect(battleStatBlockProjectionFailureMessage(projection.left)).toBe(
-        "Stat Block authored projection failed: battle initialization requires valid Stat Block resource limits.",
-      );
-    }
-
-    const malformedBoth: StatBlockRecord = {
-      ...source,
-      statBlock: {
-        ...source.statBlock,
-        resources: [
-          {
-            ...firstResource,
-            limit: { kind: "daily", uses: 0 },
-          },
-          {
-            ...secondResource,
-            limit: { kind: "recharge", minimumRoll: 7 },
-          },
-          ...remainingResources,
-        ],
-      },
-    };
-    expect(projectAuthoredStatBlock(malformedBoth)).toEqual(
+    const projection = projectAuthoredStatBlock(malformedDaily);
+    expect(projection).toEqual(
       Either.left({
         tag: "battleStatBlockProjectionFailure",
         reason: "invalidResourceLimit",
-        issues: [
-          { ordinal: firstResource.ordinal, reason: "invalidDailyUses" },
-          {
-            ordinal: secondResource.ordinal,
-            reason: "invalidRechargeMinimumRoll",
-          },
-        ],
+        issues: [{ ordinal: daily.ordinal, reason: "invalidDailyUses" }],
       }),
+    );
+    if (Either.isRight(projection)) return;
+    expect(battleStatBlockProjectionFailureMessage(projection.left)).toBe(
+      "Stat Block authored projection failed: battle initialization requires valid Stat Block resource limits.",
     );
   });
 

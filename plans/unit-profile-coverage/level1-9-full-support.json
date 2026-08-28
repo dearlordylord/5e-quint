@@ -22988,17 +22988,27 @@
             "joinStatus": "mapped-open",
             "obligations": [
               {
+                "followUpTaskIds": [
+                  "GH-441"
+                ],
                 "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
                 "runtime": "battle",
-                "status": "covered",
+                "status": "needs-qnt-owner",
                 "title": "Battle Slow applies active penalties, target-turn Action or Bonus Action restriction, Attack cap, Somatic failure, and repeat-save cleanup"
+              },
+              {
+                "followUpTaskIds": [
+                  "GH-441"
+                ],
+                "obligationId": "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
+                "runtime": "battle",
+                "status": "needs-qnt-owner",
+                "title": "Battle Slow caps an activated Stat Block Multiattack to one listed attack"
               }
             ],
             "profileId": "spell.invocation-slow-active-penalties",
             "profileKind": "spell-invocation",
-            "qntOwners": [
-              "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt"
-            ]
+            "qntOwners": []
           }
         ],
         "unitId": "slow"
