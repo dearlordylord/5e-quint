@@ -21,6 +21,7 @@ import type {
   BattleHole,
   BattleState,
   BattleSubject,
+  NonSpellExecutableProcedureKind,
 } from "./battle-runtime.test-support.ts";
 import type { BattleActiveEffect } from "./battle-state-execution.ts";
 import {
@@ -43,7 +44,7 @@ import {
   discoverBattleActs,
   distantFighterId,
   endTurn,
-  executableProcedureEntry,
+  nonSpellExecutableProcedureEntry,
   fighterAttackSubject,
   fighterGrapplesGoblin,
   fighterId,
@@ -55,6 +56,7 @@ import {
   goblinTurnBattle,
   grappleOutcomeFill,
   hidePrerequisites,
+  isNonSpellExecutableProcedureEntryOfKind,
   longRangeFighterId,
   monsterAttackSubject,
   monsterMultiattackStatBlock,
@@ -308,18 +310,18 @@ function authoredAttackProcedure(
   return entry.procedure;
 }
 
-function authoredProcedure(
-  record: StatBlockRecord,
-  ordinal: number,
-): Extract<
-  NonNullable<StatBlockRecord["statBlock"]["actions"]>[number],
-  { readonly kind: "executable" }
-> {
+function requireNonSpellExecutableProcedureEntryOfKind<
+  Kind extends NonSpellExecutableProcedureKind,
+>(record: StatBlockRecord, ordinal: number, kind: Kind) {
   const entry = record.statBlock.actions?.find(
     (candidate) =>
-      candidate.procedureOrdinal === authoredProcedureOrdinal(ordinal),
+      candidate.procedureOrdinal === authoredProcedureOrdinal(ordinal) &&
+      isNonSpellExecutableProcedureEntryOfKind(candidate, kind),
   );
-  if (entry?.kind !== "executable") {
+  if (
+    entry === undefined ||
+    !isNonSpellExecutableProcedureEntryOfKind(entry, kind)
+  ) {
     throw new Error(`Expected authored action ordinal ${ordinal}.`);
   }
   return entry;
@@ -335,7 +337,7 @@ function sizeGatedConditionRiderStatBlock(): StatBlockRecord {
     statBlock: {
       ...base.statBlock,
       actions: [
-        executableProcedureEntry(1, {
+        nonSpellExecutableProcedureEntry(1, {
           ...template,
           attackAbility: "str",
           attackType: "melee",
@@ -379,7 +381,7 @@ function unsupportedConditionRiderStatBlock(): StatBlockRecord {
     statBlock: {
       ...base.statBlock,
       actions: [
-        executableProcedureEntry(1, {
+        nonSpellExecutableProcedureEntry(1, {
           ...bite,
           onHit: [
             damage,
@@ -405,7 +407,7 @@ function conditionOnlyRiderStatBlock(): StatBlockRecord {
     statBlock: {
       ...base.statBlock,
       actions: [
-        executableProcedureEntry(1, {
+        nonSpellExecutableProcedureEntry(1, {
           ...bite,
           onHit: [
             {
@@ -436,7 +438,7 @@ function nonProneSizeGatedConditionRiderStatBlock(): StatBlockRecord {
     statBlock: {
       ...base.statBlock,
       actions: [
-        executableProcedureEntry(1, {
+        nonSpellExecutableProcedureEntry(1, {
           ...bite,
           onHit: [
             damage,
@@ -552,7 +554,7 @@ function monsterMultiDamageStatBlock(): StatBlockRecord {
     statBlock: {
       ...base.statBlock,
       actions: [
-        executableProcedureEntry(1, {
+        nonSpellExecutableProcedureEntry(1, {
           ...shortbow,
           name: "Venom Dart",
           onHit: [
@@ -1361,7 +1363,13 @@ describe("battle runtime: Stat Block actions", () => {
       throw new Error("Expected a Stat Block Bonus Action option.");
     }
     const [firstBonusAction] = bonusActions;
-    if (firstBonusAction === undefined) {
+    if (
+      firstBonusAction === undefined ||
+      !isNonSpellExecutableProcedureEntryOfKind(
+        firstBonusAction,
+        "action_option",
+      )
+    ) {
       throw new Error("Expected a first Stat Block Bonus Action option.");
     }
     const statBlock: StatBlockRecord = {
@@ -1668,9 +1676,17 @@ describe("battle runtime: Stat Block actions", () => {
   test("limited-use Stat Block Multiattack rejects a replay after its dispatch is spent", () => {
     const base = monsterMultiattackStatBlock({ scimitarCount: 1 });
     const actions = base.statBlock.actions;
-    const scimitar = authoredProcedure(base, 1);
-    const multiattack = authoredProcedure(base, 3);
-    if (actions === undefined || multiattack.procedure.kind !== "multiattack") {
+    const scimitar = requireNonSpellExecutableProcedureEntryOfKind(
+      base,
+      1,
+      "attack_roll",
+    );
+    const multiattack = requireNonSpellExecutableProcedureEntryOfKind(
+      base,
+      3,
+      "multiattack",
+    );
+    if (actions === undefined) {
       throw new Error("Expected the synthetic Multiattack fixtures.");
     }
     const [firstDispatch] = multiattack.procedure.dispatches;
@@ -1705,7 +1721,7 @@ describe("battle runtime: Stat Block actions", () => {
               entry.procedureOrdinal !== scimitar.procedureOrdinal &&
               entry.procedureOrdinal !== multiattack.procedureOrdinal,
           ),
-          executableProcedureEntry(3, {
+          nonSpellExecutableProcedureEntry(3, {
             ...multiattack.procedure,
             dispatches: [firstDispatch],
           }),
@@ -1754,8 +1770,12 @@ describe("battle runtime: Stat Block actions", () => {
   test("Stat Block Multiattack spends its own limited-use resource and rejects replay", () => {
     const base = monsterMultiattackStatBlock();
     const actions = base.statBlock.actions;
-    const multiattack = authoredProcedure(base, 3);
-    if (actions === undefined || multiattack.procedure.kind !== "multiattack") {
+    const multiattack = requireNonSpellExecutableProcedureEntryOfKind(
+      base,
+      3,
+      "multiattack",
+    );
+    if (actions === undefined) {
       throw new Error("Expected the synthetic Multiattack fixtures.");
     }
     const retainedActions = actions.filter(
@@ -1781,7 +1801,7 @@ describe("battle runtime: Stat Block actions", () => {
           firstRetainedAction,
           ...remainingRetainedActions,
           {
-            ...executableProcedureEntry(3, multiattack.procedure),
+            ...nonSpellExecutableProcedureEntry(3, multiattack.procedure),
             resourceRefs: {
               kind: "some",
               ordinals: [resourceOrdinal(1)],
@@ -1867,7 +1887,7 @@ describe("battle runtime: Stat Block actions", () => {
         actions: [
           ...actions,
           {
-            ...executableProcedureEntry(3, {
+            ...nonSpellExecutableProcedureEntry(3, {
               kind: "multiattack",
               name: "Synthetic Binding Dispatch Overlap",
               dispatches: [
@@ -1995,7 +2015,7 @@ describe("battle runtime: Stat Block actions", () => {
         actions: [
           ...actions,
           {
-            ...executableProcedureEntry(3, {
+            ...nonSpellExecutableProcedureEntry(3, {
               kind: "multiattack",
               name: "Synthetic Slow Multiattack",
               dispatches: [
@@ -2310,7 +2330,7 @@ describe("battle runtime: Stat Block actions", () => {
         actions: [
           ...actions,
           {
-            ...executableProcedureEntry(3, {
+            ...nonSpellExecutableProcedureEntry(3, {
               kind: "multiattack",
               name: "Synthetic Repeated Limited Attack",
               dispatches: [
@@ -2384,7 +2404,7 @@ describe("battle runtime: Stat Block actions", () => {
         ...base.statBlock,
         actions: [
           ...actions,
-          executableProcedureEntry(3, {
+          nonSpellExecutableProcedureEntry(3, {
             kind: "multiattack",
             name: "Synthetic Count Two Limited Attack",
             dispatches: [

@@ -41,7 +41,7 @@ import {
   damageRollFill,
   DieRollResult,
   discoverBattleActCandidates,
-  executableProcedureEntry,
+  nonSpellExecutableProcedureEntry,
   hasCondition,
   resolveBattleSubject,
   startBattleRight,
@@ -527,7 +527,7 @@ function sizeGatedConditionRiderAttackerStatBlock(): StatBlockRecord {
         kind: "spoken_and_understood",
         languages: { kind: "named", languages: ["Common", "Goblin"] },
       },
-      actions: [executableProcedureEntry(1, biteAttack())],
+      actions: [nonSpellExecutableProcedureEntry(1, biteAttack())],
     },
   };
 }

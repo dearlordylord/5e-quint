@@ -4,7 +4,7 @@ import {
   startBattleRight,
   statBlockProcedurePresentationsForStateForTest,
   authoredProcedureOrdinal,
-  executableProcedureEntry,
+  nonSpellExecutableProcedureEntry,
 } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.attack-control
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
@@ -686,9 +686,9 @@ function multiattackStatBlock(): StatBlockRecord {
     statBlock: {
       ...base.statBlock,
       actions: [
-        executableProcedureEntry(1, primaryAttack()),
-        executableProcedureEntry(2, secondaryAttack()),
-        executableProcedureEntry(3, {
+        nonSpellExecutableProcedureEntry(1, primaryAttack()),
+        nonSpellExecutableProcedureEntry(2, secondaryAttack()),
+        nonSpellExecutableProcedureEntry(3, {
           kind: "multiattack",
           name: multiattackName,
           dispatches: [
@@ -704,7 +704,7 @@ function multiattackStatBlock(): StatBlockRecord {
         }),
       ],
       bonusActions: [
-        executableProcedureEntry(1, {
+        nonSpellExecutableProcedureEntry(1, {
           kind: "action_option",
           name: "Nimble Escape",
           options: ["disengage"],
@@ -721,7 +721,7 @@ function targetStatBlock(): StatBlockRecord {
     name: "Rule Core Target",
     statBlock: {
       ...base.statBlock,
-      actions: [executableProcedureEntry(1, primaryAttack())],
+      actions: [nonSpellExecutableProcedureEntry(1, primaryAttack())],
     },
   };
 }

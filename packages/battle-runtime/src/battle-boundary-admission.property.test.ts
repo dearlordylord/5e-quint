@@ -182,6 +182,7 @@ import {
   discoverBattleActCandidates,
   discoverBattleActs,
   initiativeScore,
+  isNonSpellExecutableProcedureEntryOfKind,
   acidSplashWithRadius,
   testCharacterWeaponAttackForUnit,
   reactionModifierChoice,
@@ -2991,10 +2992,8 @@ describe("battle boundary admission owners", () => {
 
     const limitedBonusAction = monsterResourceStatBlock();
     const bonusOption =
-      monsterMultiattackStatBlock().statBlock.bonusActions?.find(
-        (entry) =>
-          entry.kind === "executable" &&
-          entry.procedure.kind === "action_option",
+      monsterMultiattackStatBlock().statBlock.bonusActions?.find((entry) =>
+        isNonSpellExecutableProcedureEntryOfKind(entry, "action_option"),
       );
     const dailyResource = limitedBonusAction.statBlock.resources?.find(
       (resource) => resource.limit.kind === "daily",

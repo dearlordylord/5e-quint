@@ -1,10 +1,7 @@
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 import { statBlockId } from "@dnd/shared/game-facts";
-import type {
-  StatBlockProcedureEntry,
-  StatBlockRecord,
-} from "@dnd/surface/surface/types";
+import type { StatBlockRecord } from "@dnd/surface/surface/types";
 
 import {
   battleId,
@@ -13,7 +10,8 @@ import {
   startBattle,
 } from "./index.ts";
 import {
-  authoredProcedureOrdinal,
+  nonSpellExecutableProcedureEntry,
+  isNonSpellExecutableProcedureEntryOfKind,
   statBlockCreatureInit,
   statBlockRecord,
 } from "./battle-runtime.test-support.ts";
@@ -75,7 +73,10 @@ function castInvalidFamiliar(statBlock: StatBlockRecord) {
 function unsupportedFamiliarStatBlock(): StatBlockRecord {
   const source = statBlockRecord();
   const attack = source.statBlock.actions?.[0];
-  if (attack === undefined || attack.kind !== "executable") {
+  if (
+    attack === undefined ||
+    !isNonSpellExecutableProcedureEntryOfKind(attack, "attack_roll")
+  ) {
     throw new Error("Expected a Goblin Warrior executable attack.");
   }
   const unsupportedAttack = {
@@ -85,24 +86,16 @@ function unsupportedFamiliarStatBlock(): StatBlockRecord {
       multiattackCount: { kind: "literal" as const, value: 2 },
     },
   };
-  const multiattack: Extract<
-    StatBlockProcedureEntry,
-    { readonly kind: "executable" }
-  > = {
-    kind: "executable",
-    procedureOrdinal: authoredProcedureOrdinal(3),
-    procedure: {
-      kind: "multiattack",
-      name: "Synthetic Familiar Routine",
-      dispatches: [
-        {
-          procedureOrdinal: attack.procedureOrdinal,
-          count: { kind: "literal", value: 1 },
-        },
-      ],
-    },
-    resourceRefs: { kind: "none" },
-  };
+  const multiattack = nonSpellExecutableProcedureEntry(3, {
+    kind: "multiattack",
+    name: "Synthetic Familiar Routine",
+    dispatches: [
+      {
+        procedureOrdinal: attack.procedureOrdinal,
+        count: { kind: "literal", value: 1 },
+      },
+    ],
+  });
   return {
     ...source,
     id: statBlockId("stat_block_synthetic_familiar_projection_failure"),
