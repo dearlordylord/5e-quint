@@ -560,16 +560,15 @@ function withFirstSpellRestriction(record: StatBlockRecord): StatBlockRecord {
 }
 
 function addFirstSpellRestriction(value: unknown): boolean {
-  if (typeof value !== "object" || value === null) return false;
   if (Array.isArray(value)) {
     return value.some((child) => addFirstSpellRestriction(child));
   }
-  const record = value as Record<string, unknown>;
-  if (typeof record.spellId === "string" && record.restriction === undefined) {
-    record.restriction = "Synthetic table restriction.";
+  if (!isUnknownRecord(value)) return false;
+  if (typeof value.spellId === "string" && value.restriction === undefined) {
+    value.restriction = "Synthetic table restriction.";
     return true;
   }
-  return Object.values(record).some((child) => addFirstSpellRestriction(child));
+  return Object.values(value).some((child) => addFirstSpellRestriction(child));
 }
 
 function withFirstSpellcastingMaterial(
@@ -587,26 +586,28 @@ function replaceFirstSpellcastingMaterial(
   value: unknown,
   material: string,
 ): boolean {
-  if (typeof value !== "object" || value === null) return false;
   if (Array.isArray(value)) {
     return value.some((child) =>
       replaceFirstSpellcastingMaterial(child, material),
     );
   }
-  const record = value as Record<string, unknown>;
-  const components = record.components;
+  if (!isUnknownRecord(value)) return false;
+  const components = value.components;
   if (
-    record.kind === "spellcasting" &&
-    typeof components === "object" &&
-    components !== null &&
+    value.kind === "spellcasting" &&
+    isUnknownRecord(components) &&
     "m" in components
   ) {
-    (components as Record<string, unknown>).m = material;
+    components.m = material;
     return true;
   }
-  return Object.values(record).some((child) =>
+  return Object.values(value).some((child) =>
     replaceFirstSpellcastingMaterial(child, material),
   );
+}
+
+function isUnknownRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function groupsWithoutWitnesses(
