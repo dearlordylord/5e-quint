@@ -7293,6 +7293,7 @@ export type BattleSnapshot = {
   readonly turnOrder: readonly CombatantId[];
   readonly combatants: readonly BattleCreatureSnapshot[];
   readonly companions: readonly BattleCompanionSnapshot[];
+  readonly storedLightEmitters: readonly BattleStoredLightEmitter[];
   readonly lightEmitters: readonly BattleLightEmitter[];
   readonly obscurementZones: readonly BattleObscurementZone[];
   readonly acts: readonly BattleSnapshotAct[];
@@ -7317,20 +7318,12 @@ type BattleCreatureSnapshotCommon = {
   readonly maxHp: Hp;
   readonly tempHp: Hp;
   readonly nextEffectOrdinal: BattleEffectExecutionOrdinal;
-  readonly effectOccurrences: readonly (
-    | {
-        readonly kind: "activeEffect";
-        readonly effectRef: BattleEffectExecutionRef;
-        readonly activeEffectKind: BattleActiveEffect["kind"];
-        readonly ongoingSpellObjectId: BattleObjectId | null;
-      }
-    | {
-        readonly kind: "storedLightEmitter";
-        readonly effectRef: BattleEffectExecutionRef;
-        readonly storedLightEmitterKind: BattleStoredLightEmitter["kind"];
-        readonly attachment: BattleLightEmitterAttachment;
-      }
-  )[];
+  readonly activeEffectOccurrences: readonly {
+    readonly kind: "activeEffect";
+    readonly effectRef: BattleEffectExecutionRef;
+    readonly activeEffectKind: BattleActiveEffect["kind"];
+    readonly ongoingSpellObjectId: BattleObjectId | null;
+  }[];
   readonly armorClass: ArmorClass;
   readonly size: Size;
   readonly zeroHpLifecycle: BattleCreatureZeroHpLifecycleSnapshot;

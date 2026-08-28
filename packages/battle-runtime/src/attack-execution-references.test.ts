@@ -166,10 +166,10 @@ describe("character attack execution references", () => {
     if (ownerSnapshot === undefined) {
       throw new Error("Expected allocated occurrence owner snapshot.");
     }
-    expect(ownerSnapshot.effectOccurrences.map(({ kind }) => kind)).toEqual([
-      "activeEffect",
-      "storedLightEmitter",
-    ]);
+    expect(
+      ownerSnapshot.activeEffectOccurrences.map(({ kind }) => kind),
+    ).toEqual(["activeEffect"]);
+    expect(encoded.storedLightEmitters).toHaveLength(1);
     expect(
       encoded.lightEmitters.every((emitter) => !("effectRef" in emitter)),
     ).toBe(true);
@@ -183,32 +183,19 @@ describe("character attack execution references", () => {
       ...encoded,
       combatants: encoded.combatants.map((combatant) =>
         combatant.combatantId === goblinId
-          ? (({ effectOccurrences: _effectOccurrences, ...rest }) => rest)(
-              combatant,
-            )
+          ? (({ activeEffectOccurrences: _activeEffectOccurrences, ...rest }) =>
+              rest)(combatant)
           : combatant,
       ),
     };
     const duplicateAcrossKinds = {
       ...encoded,
-      combatants: encoded.combatants.map((combatant) =>
-        combatant.combatantId !== goblinId
-          ? combatant
-          : {
-              ...combatant,
-              effectOccurrences: combatant.effectOccurrences.map(
-                (occurrence, index) =>
-                  index === 0
-                    ? occurrence
-                    : {
-                        ...occurrence,
-                        effectRef: combatant.effectOccurrences[0]?.effectRef,
-                      },
-              ),
-            },
-      ),
+      storedLightEmitters: encoded.storedLightEmitters.map((emitter) => ({
+        ...emitter,
+        effectRef: ownerSnapshot.activeEffectOccurrences[0]!.effectRef,
+      })),
     };
-    const goblinOccurrence = ownerSnapshot.effectOccurrences[0];
+    const goblinOccurrence = ownerSnapshot.activeEffectOccurrences[0];
     if (goblinOccurrence === undefined) {
       throw new Error("Expected allocated occurrence metadata.");
     }
@@ -216,12 +203,12 @@ describe("character attack execution references", () => {
       ...encoded,
       combatants: encoded.combatants.map((combatant) =>
         combatant.combatantId === goblinId
-          ? { ...combatant, effectOccurrences: [] }
+          ? { ...combatant, activeEffectOccurrences: [] }
           : combatant.combatantId === fighterId
             ? {
                 ...combatant,
-                effectOccurrences: [
-                  ...combatant.effectOccurrences,
+                activeEffectOccurrences: [
+                  ...combatant.activeEffectOccurrences,
                   goblinOccurrence,
                 ],
               }
@@ -241,9 +228,9 @@ describe("character attack execution references", () => {
         combatant.combatantId === goblinId
           ? {
               ...combatant,
-              effectOccurrences: [
-                ...combatant.effectOccurrences,
-                { kind: "activeEffect" as const, effectRef: futureRef },
+              activeEffectOccurrences: [
+                ...combatant.activeEffectOccurrences,
+                { ...goblinOccurrence, effectRef: futureRef },
               ],
             }
           : combatant,
@@ -264,7 +251,7 @@ describe("character attack execution references", () => {
           ? combatant
           : {
               ...combatant,
-              effectOccurrences: combatant.effectOccurrences.map(
+              activeEffectOccurrences: combatant.activeEffectOccurrences.map(
                 (occurrence) =>
                   occurrence.kind === "activeEffect"
                     ? { ...occurrence, activeEffectKind: "notAnActiveEffect" }
@@ -280,7 +267,7 @@ describe("character attack execution references", () => {
           ? combatant
           : {
               ...combatant,
-              effectOccurrences: combatant.effectOccurrences.map(
+              activeEffectOccurrences: combatant.activeEffectOccurrences.map(
                 (occurrence) =>
                   occurrence.kind === "activeEffect"
                     ? {
@@ -294,29 +281,12 @@ describe("character attack execution references", () => {
             },
       ),
     };
-    const contradictoryStoredEmitterMetadata = {
+    const duplicateStoredEmitter = {
       ...encoded,
-      combatants: encoded.combatants.map((combatant) =>
-        combatant.combatantId !== goblinId
-          ? combatant
-          : {
-              ...combatant,
-              effectOccurrences: combatant.effectOccurrences.map(
-                (occurrence) =>
-                  occurrence.kind === "storedLightEmitter"
-                    ? {
-                        ...occurrence,
-                        attachment: {
-                          kind: "object" as const,
-                          objectId: battleObjectId(
-                            "contradictory-emitter-object",
-                          ),
-                        },
-                      }
-                    : occurrence,
-              ),
-            },
-      ),
+      storedLightEmitters: [
+        ...encoded.storedLightEmitters,
+        ...encoded.storedLightEmitters,
+      ],
     };
     for (const invalid of [
       withoutCensus,
@@ -325,7 +295,7 @@ describe("character attack execution references", () => {
       future,
       unknownActiveEffectKind,
       contradictoryActiveEffectMetadata,
-      contradictoryStoredEmitterMetadata,
+      duplicateStoredEmitter,
       injectedProjectionRef,
     ]) {
       expect(

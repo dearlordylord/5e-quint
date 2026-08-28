@@ -494,12 +494,32 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       Result.isFailure(
         Schema.decodeUnknownResult(BattleSnapshotSchema)({
           ...deferredCheckSnapshot,
+          storedLightEmitters: deferredCheckSnapshot.storedLightEmitters.filter(
+            (emitter) => emitter.effectRef !== allocatedEmitter.effectRef,
+          ),
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)({
+          ...deferredCheckSnapshot,
+          storedLightEmitters: deferredCheckSnapshot.storedLightEmitters.filter(
+            (emitter) => emitter.effectRef !== allocatedEmitter.effectRef,
+          ),
           combatants: deferredCheckSnapshot.combatants.map((combatant) => ({
             ...combatant,
-            effectOccurrences: combatant.effectOccurrences.filter(
-              (occurrence) =>
-                occurrence.effectRef !== allocatedEmitter.effectRef,
-            ),
+            activeEffectOccurrences: [
+              ...combatant.activeEffectOccurrences,
+              ...(combatant.combatantId === spellTargetId
+                ? [
+                    {
+                      ...combatant.activeEffectOccurrences[0]!,
+                      effectRef: allocatedEmitter.effectRef,
+                    },
+                  ]
+                : []),
+            ],
           })),
         }),
       ),
@@ -508,28 +528,12 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       Result.isFailure(
         Schema.decodeUnknownResult(BattleSnapshotSchema)({
           ...deferredCheckSnapshot,
-          combatants: deferredCheckSnapshot.combatants.map((combatant) => ({
-            ...combatant,
-            effectOccurrences: combatant.effectOccurrences.map((occurrence) =>
-              occurrence.effectRef === allocatedEmitter.effectRef
-                ? { ...occurrence, kind: "activeEffect" as const }
-                : occurrence,
-            ),
-          })),
-        }),
-      ),
-    ).toBe(true);
-    expect(
-      Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)({
-          ...deferredCheckSnapshot,
-          combatants: deferredCheckSnapshot.combatants.map((combatant) => ({
-            ...combatant,
-            effectOccurrences: combatant.effectOccurrences.map((occurrence) =>
-              occurrence.effectRef === allocatedEmitter.effectRef &&
-              occurrence.kind === "storedLightEmitter"
+          storedLightEmitters: deferredCheckSnapshot.storedLightEmitters.map(
+            (emitter) =>
+              emitter.effectRef === allocatedEmitter.effectRef &&
+              emitter.kind === "spellLightEmitter"
                 ? {
-                    ...occurrence,
+                    ...emitter,
                     attachment: {
                       kind: "object" as const,
                       objectId: battleObjectId(
@@ -537,9 +541,8 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
                       ),
                     },
                   }
-                : occurrence,
-            ),
-          })),
+                : emitter,
+          ),
         }),
       ),
     ).toBe(true);
@@ -1076,7 +1079,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
         combatant.combatantId === spellCasterId
           ? {
               ...combatant,
-              effectOccurrences: combatant.effectOccurrences.map(
+              activeEffectOccurrences: combatant.activeEffectOccurrences.map(
                 (occurrence) =>
                   occurrence.effectRef === effect.effectRef
                     ? {
@@ -1100,10 +1103,11 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       ...focusedSnapshot,
       combatants: focusedSnapshot.combatants.map((combatant) => ({
         ...combatant,
-        effectOccurrences: combatant.effectOccurrences.map((occurrence) =>
-          occurrence.effectRef === effect.effectRef
-            ? { ...occurrence, kind: "storedLightEmitter" as const }
-            : occurrence,
+        activeEffectOccurrences: combatant.activeEffectOccurrences.map(
+          (occurrence) =>
+            occurrence.effectRef === effect.effectRef
+              ? { ...occurrence, kind: "storedLightEmitter" as const }
+              : occurrence,
         ),
       })),
     };
@@ -1290,9 +1294,10 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
             combatant.combatantId === spellCasterId
               ? {
                   ...combatant,
-                  effectOccurrences: combatant.effectOccurrences.filter(
-                    (occurrence) => occurrence.effectRef !== effect.effectRef,
-                  ),
+                  activeEffectOccurrences:
+                    combatant.activeEffectOccurrences.filter(
+                      (occurrence) => occurrence.effectRef !== effect.effectRef,
+                    ),
                 }
               : combatant,
           ),

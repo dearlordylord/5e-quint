@@ -104,6 +104,7 @@ import {
   BattleExecutionScopeCursor,
   battleProcedureExecutionRefBelongsToScope,
   battleProcedureExecutionRefOrdinalIsBefore,
+  battleEffectExecutionRefBelongsToScope,
   battleEffectExecutionRefOrdinalIsBefore,
   battleCharacterExecutionScopeRefBelongsToBattle,
   battleCharacterExecutionScopeRefBelongsToCombatant,
@@ -5862,24 +5863,13 @@ const BattleCreatureSnapshotCommonFields = {
   maxHp: Schema.Number,
   tempHp: Schema.Number,
   nextEffectOrdinal: BattleEffectExecutionOrdinal,
-  effectOccurrences: Schema.Array(
-    Schema.Union([
-      Schema.Struct({
-        kind: Schema.Literal("activeEffect"),
-        effectRef: BattleEffectExecutionRef,
-        activeEffectKind: Schema.Literals(BATTLE_ACTIVE_EFFECT_KINDS),
-        ongoingSpellObjectId: Schema.Union([BattleObjectId, Schema.Null]),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("storedLightEmitter"),
-        effectRef: BattleEffectExecutionRef,
-        storedLightEmitterKind: Schema.Literals([
-          "spellLightEmitter",
-          "objectInvisibleRevealLightEmitter",
-        ]),
-        attachment: BattleLightEmitterAttachmentSchema,
-      }),
-    ]),
+  activeEffectOccurrences: Schema.Array(
+    Schema.Struct({
+      kind: Schema.Literal("activeEffect"),
+      effectRef: BattleEffectExecutionRef,
+      activeEffectKind: Schema.Literals(BATTLE_ACTIVE_EFFECT_KINDS),
+      ongoingSpellObjectId: Schema.Union([BattleObjectId, Schema.Null]),
+    }),
   ),
   armorClass: Schema.Number,
   size: Schema.String,
@@ -6002,8 +5992,8 @@ function battleCreatureSnapshotCommonInvariantsHold(
   snapshot: BattleCreatureSnapshotInvariantInput,
 ): boolean {
   if (
-    new Set(snapshot.effectOccurrences.map(({ effectRef }) => effectRef))
-      .size !== snapshot.effectOccurrences.length
+    new Set(snapshot.activeEffectOccurrences.map(({ effectRef }) => effectRef))
+      .size !== snapshot.activeEffectOccurrences.length
   ) {
     return false;
   }
@@ -6013,7 +6003,7 @@ function battleCreatureSnapshotCommonInvariantsHold(
   ) {
     return false;
   }
-  return snapshot.effectOccurrences.every((occurrence) => {
+  return snapshot.activeEffectOccurrences.every((occurrence) => {
     if (
       occurrence.kind === "activeEffect" &&
       (occurrence.activeEffectKind === "spellObjectContactDamage") !==
@@ -6362,8 +6352,7 @@ const BattleLightEmitterEndOfTurnExpirationSchema = Schema.Struct({
   round: Schema.Number,
 });
 
-const BattleSpellLightEmitterFields = {
-  effectRef: Schema.optionalKey(Schema.Never),
+const BattleSpellLightEmitterMechanicalFields = {
   kind: Schema.Literal("spellLightEmitter"),
   sourceProcedureRef: BattleProcedureExecutionRef,
   sourceCombatantId: CombatantId,
@@ -6383,17 +6372,69 @@ const BattleSpellLightEmitterFields = {
   expiresAt: BattleActiveEffectExpirationSchema,
 };
 
-const BattleLightEmitterSchema = Schema.Union([
+const BattleProjectedSpellLightEmitterFields = {
+  ...BattleSpellLightEmitterMechanicalFields,
+  effectRef: Schema.optionalKey(Schema.Never),
+};
+
+const BattleStoredSpellLightEmitterFields = {
+  ...BattleSpellLightEmitterMechanicalFields,
+  effectRef: BattleEffectExecutionRef,
+};
+
+const BattleProjectedSpellLightEmitterSchema = Schema.Union([
   Schema.Struct({
-    ...BattleSpellLightEmitterFields,
+    ...BattleProjectedSpellLightEmitterFields,
     sourceEffectId: BattleSpellEffectOccurrenceId,
     sourceSpellLevel: BattleSpellEffectLevel,
   }),
   Schema.Struct({
-    ...BattleSpellLightEmitterFields,
+    ...BattleProjectedSpellLightEmitterFields,
     sourceEffectId: Schema.optionalKey(Schema.Never),
     sourceSpellLevel: Schema.optionalKey(Schema.Never),
   }),
+]);
+
+const BattleStoredSpellLightEmitterSchema = Schema.Union([
+  Schema.Struct({
+    ...BattleStoredSpellLightEmitterFields,
+    sourceEffectId: BattleSpellEffectOccurrenceId,
+    sourceSpellLevel: BattleSpellEffectLevel,
+  }),
+  Schema.Struct({
+    ...BattleStoredSpellLightEmitterFields,
+    sourceEffectId: Schema.optionalKey(Schema.Never),
+    sourceSpellLevel: Schema.optionalKey(Schema.Never),
+  }),
+]);
+
+const BattleProjectedObjectInvisibleRevealLightEmitterSchema = Schema.Struct({
+  effectRef: Schema.optionalKey(Schema.Never),
+  kind: Schema.Literal("objectInvisibleRevealLightEmitter"),
+  sourceProcedureRef: BattleProcedureExecutionRef,
+  sourceCombatantId: CombatantId,
+  objectId: BattleObjectId,
+  emission: BattleDimLightEmissionSchema,
+  expiresAt: BattleLightEmitterEndOfTurnExpirationSchema,
+});
+
+const BattleStoredObjectInvisibleRevealLightEmitterSchema = Schema.Struct({
+  effectRef: BattleEffectExecutionRef,
+  kind: Schema.Literal("objectInvisibleRevealLightEmitter"),
+  sourceProcedureRef: BattleProcedureExecutionRef,
+  sourceCombatantId: CombatantId,
+  objectId: BattleObjectId,
+  emission: BattleDimLightEmissionSchema,
+  expiresAt: BattleLightEmitterEndOfTurnExpirationSchema,
+});
+
+const BattleStoredLightEmitterSchema = Schema.Union([
+  BattleStoredSpellLightEmitterSchema,
+  BattleStoredObjectInvisibleRevealLightEmitterSchema,
+]);
+
+const BattleLightEmitterSchema = Schema.Union([
+  BattleProjectedSpellLightEmitterSchema,
   Schema.Struct({
     effectRef: Schema.optionalKey(Schema.Never),
     kind: Schema.Literal("unitFeatureLightEmitter"),
@@ -6414,15 +6455,7 @@ const BattleLightEmitterSchema = Schema.Union([
     ]),
     expiresAt: BattleActiveEffectExpirationSchema,
   }),
-  Schema.Struct({
-    effectRef: Schema.optionalKey(Schema.Never),
-    kind: Schema.Literal("objectInvisibleRevealLightEmitter"),
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    sourceCombatantId: CombatantId,
-    objectId: BattleObjectId,
-    emission: BattleDimLightEmissionSchema,
-    expiresAt: BattleLightEmitterEndOfTurnExpirationSchema,
-  }),
+  BattleProjectedObjectInvisibleRevealLightEmitterSchema,
 ]);
 
 const BattlePointOriginSphereAreaSchema = Schema.Struct({
@@ -6562,8 +6595,11 @@ type EncodedBattleActExecutionCandidate =
   typeof BattleActExecutionCandidateSchema.Type;
 type EncodedBattleSubject = typeof BattleSubjectSchema.Type;
 type EncodedBattleHole = typeof BattleHolePayloadUnionSchema.Type;
+type EncodedBattleStoredLightEmitter =
+  typeof BattleStoredLightEmitterSchema.Type;
 type SerializedEffectOccurrenceKind =
-  EncodedBattleCreatureSnapshot["effectOccurrences"][number]["kind"];
+  | EncodedBattleCreatureSnapshot["activeEffectOccurrences"][number]["kind"]
+  | "storedLightEmitter";
 
 type SerializedExecutionReferenceOwnership =
   | {
@@ -7242,7 +7278,7 @@ function serializedStatBlockAuthoritativeExecutionReferences(
 function serializedCombatantAuthoritativeExecutionReferences(
   combatant: EncodedBattleCreatureSnapshot,
 ): readonly string[] {
-  const effectOccurrenceRefs = combatant.effectOccurrences.map(
+  const effectOccurrenceRefs = combatant.activeEffectOccurrences.map(
     ({ effectRef }) => effectRef,
   );
   if (combatant.origin.kind === "statBlock") {
@@ -7460,7 +7496,7 @@ type SerializedLightEmitterSource =
     };
 
 function serializedLightEmitterSource(
-  emitter: Schema.Schema.Type<typeof BattleLightEmitterSchema>,
+  emitter: SerializedLightEmitterSource,
 ): SerializedLightEmitterSource {
   return {
     kind: emitter.kind,
@@ -7470,7 +7506,7 @@ function serializedLightEmitterSource(
 }
 
 function serializedLightEmitterOwnsSource(
-  emitter: Schema.Schema.Type<typeof BattleLightEmitterSchema>,
+  emitter: SerializedLightEmitterSource,
   combatants: readonly EncodedBattleCreatureSnapshot[],
 ): boolean {
   return Match.value(serializedLightEmitterSource(emitter)).pipe(
@@ -7494,59 +7530,6 @@ function serializedLightEmitterOwnsSource(
           source.sourceProcedureRef,
         ) === "spellInvocation",
     }),
-  );
-}
-
-function serializedLightEmitterAttachmentKey(
-  attachment: Schema.Schema.Type<typeof BattleLightEmitterAttachmentSchema>,
-): string {
-  return Match.value(attachment).pipe(
-    Match.discriminatorsExhaustive("kind")({
-      combatant: ({ combatantId }) => `combatant:${combatantId}`,
-      object: ({ objectId }) => `object:${objectId}`,
-      dancingLight: ({ lightId, positionId, form }) =>
-        `dancingLight:${lightId}:${positionId}:${form}`,
-    }),
-  );
-}
-
-function incrementCount(counts: Map<string, number>, key: string): void {
-  counts.set(key, (counts.get(key) ?? 0) + 1);
-}
-
-function serializedStoredLightEmitterCensusMatchesProjection(snapshot: {
-  readonly combatants: readonly EncodedBattleCreatureSnapshot[];
-  readonly lightEmitters: readonly Schema.Schema.Type<
-    typeof BattleLightEmitterSchema
-  >[];
-}): boolean {
-  const censusCounts = new Map<string, number>();
-  for (const occurrence of snapshot.combatants.flatMap(
-    ({ effectOccurrences }) => effectOccurrences,
-  )) {
-    if (occurrence.kind !== "storedLightEmitter") continue;
-    incrementCount(
-      censusCounts,
-      `${occurrence.storedLightEmitterKind}:${serializedLightEmitterAttachmentKey(occurrence.attachment)}`,
-    );
-  }
-
-  const projectionCounts = new Map<string, number>();
-  for (const emitter of snapshot.lightEmitters) {
-    const key = Match.value(emitter).pipe(
-      Match.discriminatorsExhaustive("kind")({
-        spellLightEmitter: ({ attachment }) =>
-          `spellLightEmitter:${serializedLightEmitterAttachmentKey(attachment)}`,
-        objectInvisibleRevealLightEmitter: ({ objectId }) =>
-          `objectInvisibleRevealLightEmitter:object:${objectId}`,
-        unitFeatureLightEmitter: () => null,
-      }),
-    );
-    if (key !== null) incrementCount(projectionCounts, key);
-  }
-
-  return [...censusCounts].every(
-    ([key, count]) => (projectionCounts.get(key) ?? 0) >= count,
   );
 }
 
@@ -7575,6 +7558,7 @@ function serializedObscurementZoneOwnsSource(
 function serializedSpellcastingAbilityCheckTargetMatchesOccurrence(
   hole: EncodedBattleHole,
   combatants: readonly EncodedBattleCreatureSnapshot[],
+  storedLightEmitters: readonly EncodedBattleStoredLightEmitter[],
 ): boolean {
   if (
     hole.kind !== "spellcastingAbilityCheck" ||
@@ -7591,26 +7575,29 @@ function serializedSpellcastingAbilityCheckTargetMatchesOccurrence(
   return Match.value(checkedOccurrence.effect).pipe(
     Match.discriminatorsExhaustive("kind")({
       spellLightEmitter: ({ effectRef }) =>
-        owner.effectOccurrences.some(
-          (occurrence) =>
-            occurrence.kind === "storedLightEmitter" &&
-            occurrence.effectRef === effectRef &&
-            occurrence.storedLightEmitterKind === "spellLightEmitter" &&
+        storedLightEmitters.some(
+          (emitter) =>
+            emitter.kind === "spellLightEmitter" &&
+            emitter.effectRef === effectRef &&
+            battleEffectExecutionRefBelongsToScope(
+              emitter.effectRef,
+              owner.origin.execution.scopeRef,
+            ) &&
             Match.value(target).pipe(
               Match.discriminatorsExhaustive("kind")({
                 combatant: ({ combatantId }) =>
-                  occurrence.attachment.kind === "combatant" &&
-                  occurrence.attachment.combatantId === combatantId,
+                  emitter.attachment.kind === "combatant" &&
+                  emitter.attachment.combatantId === combatantId,
                 object: ({ objectId }) =>
-                  occurrence.attachment.kind === "object" &&
-                  occurrence.attachment.objectId === objectId,
+                  emitter.attachment.kind === "object" &&
+                  emitter.attachment.objectId === objectId,
               }),
             ),
         ),
       spellActiveEffect: ({ effectRef, activeEffectKind }) =>
         target.kind === "object" &&
         activeEffectKind === "spellObjectContactDamage" &&
-        owner.effectOccurrences.some(
+        owner.activeEffectOccurrences.some(
           (occurrence) =>
             occurrence.kind === "activeEffect" &&
             occurrence.effectRef === effectRef &&
@@ -7624,14 +7611,25 @@ function serializedSpellcastingAbilityCheckTargetMatchesOccurrence(
 function serializedBattleHoleOwnsBoundExecutionReferences(input: {
   readonly hole: EncodedBattleHole;
   readonly combatants: readonly EncodedBattleCreatureSnapshot[];
+  readonly storedLightEmitters: readonly EncodedBattleStoredLightEmitter[];
   readonly boundExecutionRefs: ReadonlySet<string>;
   readonly expectedProcedureRefs:
     | ReadonlySet<BattleProcedureExecutionRef>
     | undefined;
 }): boolean {
-  const { hole, combatants, boundExecutionRefs, expectedProcedureRefs } = input;
+  const {
+    hole,
+    combatants,
+    storedLightEmitters,
+    boundExecutionRefs,
+    expectedProcedureRefs,
+  } = input;
   if (
-    !serializedSpellcastingAbilityCheckTargetMatchesOccurrence(hole, combatants)
+    !serializedSpellcastingAbilityCheckTargetMatchesOccurrence(
+      hole,
+      combatants,
+      storedLightEmitters,
+    )
   ) {
     return false;
   }
@@ -7644,17 +7642,20 @@ function serializedBattleHoleOwnsBoundExecutionReferences(input: {
           : combatants.filter(
               (combatant) => combatant.combatantId === reference.ownerId,
             );
-      if (
-        !eligibleOwners.some((combatant) =>
-          combatant.effectOccurrences.some(
-            (occurrence) =>
-              occurrence.kind === reference.effectOccurrenceKind &&
-              occurrence.effectRef === reference.ref,
-          ),
-        )
-      ) {
-        return false;
-      }
+      return eligibleOwners.some((combatant) =>
+        reference.effectOccurrenceKind === "activeEffect"
+          ? combatant.activeEffectOccurrences.some(
+              (occurrence) => occurrence.effectRef === reference.ref,
+            )
+          : storedLightEmitters.some(
+              (emitter) =>
+                emitter.effectRef === reference.ref &&
+                battleEffectExecutionRefBelongsToScope(
+                  emitter.effectRef,
+                  combatant.origin.execution.scopeRef,
+                ),
+            ),
+      );
     }
     if (
       reference.kind === "subjectProcedure" &&
@@ -7764,6 +7765,7 @@ function serializedBattleSubjectProcedureRefs(
 function serializedBattleHolesOwnBoundExecutionReferences(input: {
   readonly holes: readonly EncodedBattleHole[];
   readonly combatants: readonly EncodedBattleCreatureSnapshot[];
+  readonly storedLightEmitters: readonly EncodedBattleStoredLightEmitter[];
   readonly boundExecutionRefs: ReadonlySet<string>;
   readonly expectedProcedureRefs:
     | ReadonlySet<BattleProcedureExecutionRef>
@@ -7773,6 +7775,7 @@ function serializedBattleHolesOwnBoundExecutionReferences(input: {
     serializedBattleHoleOwnsBoundExecutionReferences({
       hole,
       combatants: input.combatants,
+      storedLightEmitters: input.storedLightEmitters,
       boundExecutionRefs: input.boundExecutionRefs,
       expectedProcedureRefs: input.expectedProcedureRefs,
     }),
@@ -8024,14 +8027,14 @@ function serializedBattleSubjectOwnsBoundExecutionReferences(
         activeEffect: ({ ownerId, effectRef }) =>
           combatants
             .find((combatant) => combatant.combatantId === ownerId)
-            ?.effectOccurrences.some(
+            ?.activeEffectOccurrences.some(
               (occurrence) =>
                 occurrence.kind === "activeEffect" &&
                 occurrence.effectRef === effectRef,
             ) === true,
         activeEffectOccurrence: ({ effectRef }) =>
           combatants.some((combatant) =>
-            combatant.effectOccurrences.some(
+            combatant.activeEffectOccurrences.some(
               (occurrence) =>
                 occurrence.kind === "activeEffect" &&
                 occurrence.effectRef === effectRef,
@@ -8360,6 +8363,7 @@ const BattleSnapshotCommonFields = {
   currentActorId: CombatantId,
   turnOrder: Schema.Array(CombatantId),
   companions: Schema.Array(BattleCompanionSnapshotSchema),
+  storedLightEmitters: Schema.Array(BattleStoredLightEmitterSchema),
   lightEmitters: Schema.Array(BattleLightEmitterSchema),
   obscurementZones: Schema.Array(BattleObscurementZoneSchema),
   acts: Schema.Array(BattleActExecutionCandidateSchema),
@@ -8424,14 +8428,18 @@ function battleSnapshotInvariantsHold(
   const liveCombatantIds = new Set(
     snapshot.combatants.map((combatant) => combatant.combatantId),
   );
-  const boundExecutionRefs = new Set(
-    snapshot.combatants.flatMap(
+  const boundExecutionRefs = new Set([
+    ...snapshot.combatants.flatMap(
       serializedCombatantAuthoritativeExecutionReferences,
     ),
-  );
-  const effectOccurrenceRefs = snapshot.combatants.flatMap((combatant) =>
-    combatant.effectOccurrences.map(({ effectRef }) => effectRef),
-  );
+    ...snapshot.storedLightEmitters.map(({ effectRef }) => effectRef),
+  ]);
+  const effectOccurrenceRefs = [
+    ...snapshot.combatants.flatMap((combatant) =>
+      combatant.activeEffectOccurrences.map(({ effectRef }) => effectRef),
+    ),
+    ...snapshot.storedLightEmitters.map(({ effectRef }) => effectRef),
+  ];
   return (
     battleSnapshotLiveCombatantIdsAreUnique(snapshot, liveCombatantIds) &&
     new Set(effectOccurrenceRefs).size === effectOccurrenceRefs.length &&
@@ -8466,6 +8474,7 @@ function battleSnapshotInvariantsHold(
         serializedBattleHolesOwnBoundExecutionReferences({
           holes: act.initialHoles,
           combatants: snapshot.combatants,
+          storedLightEmitters: snapshot.storedLightEmitters,
           boundExecutionRefs,
           expectedProcedureRefs: serializedBattleSubjectProcedureRefs(
             act.subject,
@@ -8479,7 +8488,23 @@ function battleSnapshotInvariantsHold(
       serializedReadiedResponseIsBound(snapshot.combatants, readied),
     ) &&
     battleSnapshotPendingInterruptIsValid(snapshot, boundExecutionRefs) &&
-    serializedStoredLightEmitterCensusMatchesProjection(snapshot) &&
+    snapshot.storedLightEmitters.every((emitter) => {
+      const owners = snapshot.combatants.filter((combatant) =>
+        battleEffectExecutionRefBelongsToScope(
+          emitter.effectRef,
+          combatant.origin.execution.scopeRef,
+        ),
+      );
+      return (
+        owners.length === 1 &&
+        battleEffectExecutionRefOrdinalIsBefore(
+          emitter.effectRef,
+          owners[0]!.origin.execution.scopeRef,
+          owners[0]!.nextEffectOrdinal,
+        ) &&
+        serializedLightEmitterOwnsSource(emitter, snapshot.combatants)
+      );
+    }) &&
     snapshot.lightEmitters.every((emitter) =>
       serializedLightEmitterOwnsSource(emitter, snapshot.combatants),
     ) &&
@@ -8541,6 +8566,7 @@ function battleSnapshotPendingInterruptIsValid(
     serializedBattleHoleOwnsBoundExecutionReferences({
       hole: pendingInterrupt.decisionHole,
       combatants: snapshot.combatants,
+      storedLightEmitters: snapshot.storedLightEmitters,
       boundExecutionRefs,
       expectedProcedureRefs: undefined,
     }) &&
@@ -8555,6 +8581,7 @@ function battleSnapshotPendingInterruptIsValid(
         serializedBattleHolesOwnBoundExecutionReferences({
           holes: choice.initialHoles,
           combatants: snapshot.combatants,
+          storedLightEmitters: snapshot.storedLightEmitters,
           boundExecutionRefs,
           expectedProcedureRefs: serializedInterruptChoiceProcedureRefs(choice),
         }),

@@ -287,7 +287,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     expect(
       approached.snapshot.combatants
         .find(({ combatantId }) => combatantId === spellTargetId)
-        ?.effectOccurrences.some(
+        ?.activeEffectOccurrences.some(
           ({ effectRef }) => effectRef === approachEffectRef,
         ),
     ).toBe(false);

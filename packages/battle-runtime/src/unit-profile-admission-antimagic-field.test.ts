@@ -25,9 +25,11 @@ import {
   type BattleHole,
   type BattleRuntimeSession,
   type BattleState,
-  type BattleStoredLightEmitter,
-  type BattleTrackedOngoingSpellLightEmitter,
 } from "./index.ts";
+import type {
+  BattleStoredLightEmitterTemplate,
+  BattleTrackedOngoingSpellLightEmitterMechanicalFacts,
+} from "./battle-state-execution.ts";
 import {
   antimagicFieldUnitId,
   continualFlameUnitId,
@@ -50,6 +52,7 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   assertBattleSnapshotCodecRoundTripForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   resolveBattleSubject,
@@ -113,7 +116,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
     const artifactEffectId = battleSpellEffectOccurrenceId(
       "unit-profile-antimagic-artifact-light-effect",
     );
-    const ordinaryLight = trackedObjectSpellLightEmitter({
+    const ordinaryLightTemplate = trackedObjectSpellLightEmitter({
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String(continualFlameUnitId),
       ),
@@ -121,7 +124,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       sourceSpellLevel: 2,
       objectId: "unit-profile-antimagic-continual-flame-object",
     });
-    const artifactLight = trackedObjectSpellLightEmitter({
+    const artifactLightTemplate = trackedObjectSpellLightEmitter({
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String("synthetic_artifact_light"),
       ),
@@ -130,12 +133,16 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       objectId: "unit-profile-antimagic-artifact-light-object",
     });
     const session = antimagicFieldBattle({
-      lightEmitters: [ordinaryLight, artifactLight],
+      lightEmitters: [ordinaryLightTemplate, artifactLightTemplate],
     });
+    const [ordinaryLight, artifactLight] = session.state.lightEmitters;
+    if (ordinaryLight === undefined || artifactLight === undefined) {
+      throw new Error("Expected both allocated tracked light occurrences.");
+    }
 
     const resolved = castAntimagicField(session, [
-      antimagicAffectedLight(continualFlameEffectId, "ordinarySpell"),
-      antimagicAffectedLight(artifactEffectId, "artifact"),
+      antimagicAffectedLight(ordinaryLight.effectRef, "ordinarySpell"),
+      antimagicAffectedLight(artifactLight.effectRef, "artifact"),
     ]);
 
     expect(resolved.state.lightEmitters).toEqual([
@@ -147,6 +154,11 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
     const { effectRef: _ordinaryEffectRef, ...ordinaryProjection } =
       ordinaryLight;
     expect(resolved.snapshot.lightEmitters).toEqual([artifactProjection]);
+    expect(resolved.snapshot.storedLightEmitters).toEqual([
+      ordinaryLight,
+      artifactLight,
+    ]);
+    assertBattleSnapshotCodecRoundTripForTest(resolved.snapshot);
     expect(
       resolved.state.combatants.get(spellCasterId)?.activeEffects,
     ).toContainEqual(
@@ -164,7 +176,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
         suppressedOngoingSpellEffects: [
           {
             kind: "spellLightEmitter",
-            effectRef: effectRefForTest(continualFlameEffectId),
+            effectRef: ordinaryLight.effectRef,
           },
         ],
         expiresAt: {
@@ -226,7 +238,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
     const sourceEffectId = battleSpellEffectOccurrenceId(
       "unit-profile-antimagic-duration-light-effect",
     );
-    const durationLight = trackedObjectSpellLightEmitter({
+    const durationLightTemplate = trackedObjectSpellLightEmitter({
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String("synthetic_duration_light"),
       ),
@@ -235,13 +247,21 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       objectId: "unit-profile-antimagic-duration-light-object",
       expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(1) },
     });
-    const session = antimagicFieldBattle({ lightEmitters: [durationLight] });
+    const session = antimagicFieldBattle({
+      lightEmitters: [durationLightTemplate],
+    });
+    const durationLight = session.state.lightEmitters[0];
+    if (durationLight === undefined) {
+      throw new Error("Expected allocated duration light occurrence.");
+    }
     const suppressed = castAntimagicField(session, [
-      antimagicAffectedLight(sourceEffectId, "ordinarySpell"),
+      antimagicAffectedLight(durationLight.effectRef, "ordinarySpell"),
     ]);
 
     expect(suppressed.state.lightEmitters).toEqual([durationLight]);
     expect(suppressed.snapshot.lightEmitters).toEqual([]);
+    expect(suppressed.snapshot.storedLightEmitters).toEqual([durationLight]);
+    assertBattleSnapshotCodecRoundTripForTest(suppressed.snapshot);
 
     const targetTurn = endTurn({
       state: suppressed.state,
@@ -505,7 +525,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
     const sourceEffectId = battleSpellEffectOccurrenceId(
       "unit-profile-antimagic-empty-suppression-effect",
     );
-    const emitter = trackedObjectSpellLightEmitter({
+    const emitterTemplate = trackedObjectSpellLightEmitter({
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         "synthetic_empty_suppression_light",
       ),
@@ -513,7 +533,11 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       sourceSpellLevel: 2,
       objectId: "unit-profile-antimagic-empty-suppression-object",
     });
-    const session = antimagicFieldBattle({ lightEmitters: [emitter] });
+    const session = antimagicFieldBattle({ lightEmitters: [emitterTemplate] });
+    const emitter = session.state.lightEmitters[0];
+    if (emitter === undefined) {
+      throw new Error("Expected allocated tracked light occurrence.");
+    }
     const resolved = castAntimagicField(session, []);
 
     expect(resolved.state.lightEmitters).toEqual([emitter]);
@@ -542,7 +566,7 @@ function maybeSpiritualWeaponRepeatAct(session: BattleRuntimeSession) {
 }
 
 function antimagicFieldBattle(input?: {
-  readonly lightEmitters?: readonly BattleStoredLightEmitter[];
+  readonly lightEmitters?: readonly BattleStoredLightEmitterTemplate[];
   readonly activeEffects?: readonly BattleActiveEffect[];
   readonly preparedSpells?: readonly ReturnType<typeof spellRecord>[];
   readonly spellSlots?: SpellBattleSlots;
@@ -553,13 +577,35 @@ function antimagicFieldBattle(input?: {
     ],
     spellSlots: input?.spellSlots ?? [{ spellLevel: 8, count: 1 }],
   });
+  const baseCaster = requireCombatant(base.state, spellCasterId);
+  if (baseCaster.origin.kind !== "character") {
+    throw new Error("Expected Antimagic Field caster to be a character.");
+  }
+  const storedLightSourceProcedureRef =
+    baseCaster.origin.execution.procedureBindings.find(
+      (binding) => binding.procedure.kind === "spellInvocation",
+    )?.procedureRef;
+  if (
+    (input?.lightEmitters?.length ?? 0) > 0 &&
+    storedLightSourceProcedureRef === undefined
+  ) {
+    throw new Error("Expected a spell invocation light source.");
+  }
+  const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+    state: base.state,
+    occurrences: (input?.lightEmitters ?? []).map((emitter) => ({
+      kind: "storedLightEmitter" as const,
+      ownerId: spellCasterId,
+      emitter: {
+        ...emitter,
+        sourceProcedureRef: storedLightSourceProcedureRef!,
+      },
+    })),
+  });
   if (input?.activeEffects === undefined) {
     return battleRuntimeSessionForTest({
       ...base,
-      state: {
-        ...base.state,
-        lightEmitters: input?.lightEmitters ?? [],
-      },
+      state: allocated.state,
     });
   }
   const caster = requireCombatant(base.state, spellCasterId);
@@ -605,9 +651,8 @@ function antimagicFieldBattle(input?: {
   return battleRuntimeSessionForTest({
     ...base,
     state: {
-      ...base.state,
-      lightEmitters: input?.lightEmitters ?? [],
-      combatants: new Map(base.state.combatants).set(spellCasterId, {
+      ...allocated.state,
+      combatants: new Map(allocated.state.combatants).set(spellCasterId, {
         ...casterWithEffects,
         origin: { ...caster.origin, execution },
         concentration: {
@@ -673,14 +718,14 @@ function antimagicFieldAreaFill(input: {
 }
 
 function antimagicAffectedLight(
-  sourceEffectId: ReturnType<typeof battleSpellEffectOccurrenceId>,
+  effectRef: ReturnType<typeof battleEffectExecutionRefForTest>,
   sourceKind: BattleAntimagicFieldAffectedOngoingSpellEffect["sourceKind"],
 ): BattleAntimagicFieldAffectedOngoingSpellEffect {
   return {
     kind: "antimagicFieldAffectedOngoingSpellEffect",
     effect: {
       kind: "spellLightEmitter",
-      effectRef: effectRefForTest(sourceEffectId),
+      effectRef,
     },
     sourceKind,
   };
@@ -721,7 +766,7 @@ function antimagicFieldSuppressing(
   affectedOngoingSpellEffects: readonly BattleAntimagicFieldAffectedOngoingSpellEffect[],
 ): BattleState {
   const antimagicCaster = requireCombatant(state, spellTargetId);
-  return {
+  const stateWithConcentration = {
     ...state,
     combatants: new Map(state.combatants).set(spellTargetId, {
       ...antimagicCaster,
@@ -731,9 +776,15 @@ function antimagicFieldSuppressing(
         ),
         effectKind: "spellEffect",
       },
-      activeEffects: [
-        ...antimagicCaster.activeEffects,
-        {
+    }),
+  };
+  return battleStateWithAllocatedEffectOccurrencesForTest({
+    state: stateWithConcentration,
+    occurrences: [
+      {
+        kind: "activeEffect",
+        ownerId: spellTargetId,
+        effect: {
           kind: "antimagicFieldOngoingSpellSuppression",
           sourceProcedureRef: battleProcedureExecutionRefForTest(
             String(antimagicFieldUnitId),
@@ -755,9 +806,9 @@ function antimagicFieldSuppressing(
             durationTicks: elapsedTimeTicks(600),
           },
         },
-      ],
-    }),
-  };
+      },
+    ],
+  }).state;
 }
 
 function trackedObjectSpellLightEmitter(input: {
@@ -767,15 +818,14 @@ function trackedObjectSpellLightEmitter(input: {
   readonly sourceEffectId: ReturnType<typeof battleSpellEffectOccurrenceId>;
   readonly sourceSpellLevel: number;
   readonly objectId: string;
-  readonly expiresAt?: BattleTrackedOngoingSpellLightEmitter["expiresAt"];
-}): BattleTrackedOngoingSpellLightEmitter {
+  readonly expiresAt?: BattleTrackedOngoingSpellLightEmitterMechanicalFacts["expiresAt"];
+}): BattleStoredLightEmitterTemplate {
   const sourceSpellLevel = parseBattleSpellEffectLevel(input.sourceSpellLevel);
   if (sourceSpellLevel === null) {
     throw new Error(`Invalid spell effect level ${input.sourceSpellLevel}.`);
   }
   return {
     kind: "spellLightEmitter",
-    effectRef: effectRefForTest(input.sourceEffectId),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(input.sourceProcedureRef),
     ),

@@ -809,10 +809,14 @@ describe("durable effect occurrence allocation properties", () => {
           if (goblin === undefined || fighterSnapshot === undefined) {
             throw new Error("Expected both encoded occurrence owners.");
           }
-          const goblinOccurrence = goblin.effectOccurrences[0];
-          const fighterOccurrence = fighterSnapshot.effectOccurrences[0];
-          const goblinStoredOccurrence = goblin.effectOccurrences.find(
-            (occurrence) => occurrence.kind === "storedLightEmitter",
+          const goblinOccurrence = goblin.activeEffectOccurrences[0];
+          const fighterOccurrence = fighterSnapshot.activeEffectOccurrences[0];
+          const goblinStoredOccurrence = encoded.storedLightEmitters.find(
+            (emitter) =>
+              emitter.effectRef ===
+              allocated.occurrences.find(
+                (occurrence) => occurrence.kind === "storedLightEmitter",
+              )?.emitter.effectRef,
           );
           if (
             goblinOccurrence === undefined ||
@@ -826,8 +830,10 @@ describe("durable effect occurrence allocation properties", () => {
             ...encoded,
             combatants: encoded.combatants.map((combatant) =>
               combatant.combatantId === spellTargetId
-                ? (({ effectOccurrences: _effectOccurrences, ...rest }) =>
-                    rest)(combatant)
+                ? (({
+                    activeEffectOccurrences: _activeEffectOccurrences,
+                    ...rest
+                  }) => rest)(combatant)
                 : combatant,
             ),
           };
@@ -837,36 +843,25 @@ describe("durable effect occurrence allocation properties", () => {
               combatant.combatantId === spellTargetId
                 ? {
                     ...combatant,
-                    effectOccurrences: combatant.effectOccurrences.map(
-                      (occurrence, index) =>
-                        index === 0
-                          ? (({ effectRef: _effectRef, ...rest }) => rest)(
-                              occurrence,
-                            )
-                          : occurrence,
-                    ),
+                    activeEffectOccurrences:
+                      combatant.activeEffectOccurrences.map(
+                        (occurrence, index) =>
+                          index === 0
+                            ? (({ effectRef: _effectRef, ...rest }) => rest)(
+                                occurrence,
+                              )
+                            : occurrence,
+                      ),
                   }
                 : combatant,
             ),
           };
           const duplicateAcrossKinds = {
             ...encoded,
-            combatants: encoded.combatants.map((combatant) =>
-              combatant.combatantId === spellTargetId
-                ? {
-                    ...combatant,
-                    effectOccurrences: combatant.effectOccurrences.map(
-                      (occurrence) =>
-                        occurrence.effectRef ===
-                        goblinStoredOccurrence.effectRef
-                          ? {
-                              ...occurrence,
-                              effectRef: goblinOccurrence.effectRef,
-                            }
-                          : occurrence,
-                    ),
-                  }
-                : combatant,
+            storedLightEmitters: encoded.storedLightEmitters.map((emitter) =>
+              emitter.effectRef === goblinStoredOccurrence.effectRef
+                ? { ...emitter, effectRef: goblinOccurrence.effectRef }
+                : emitter,
             ),
           };
           const wrongOwner = {
@@ -875,13 +870,14 @@ describe("durable effect occurrence allocation properties", () => {
               combatant.combatantId === spellTargetId
                 ? {
                     ...combatant,
-                    effectOccurrences: combatant.effectOccurrences.slice(1),
+                    activeEffectOccurrences:
+                      combatant.activeEffectOccurrences.slice(1),
                   }
                 : combatant.combatantId === spellCasterId
                   ? {
                       ...combatant,
-                      effectOccurrences: [
-                        ...combatant.effectOccurrences,
+                      activeEffectOccurrences: [
+                        ...combatant.activeEffectOccurrences,
                         goblinOccurrence,
                       ],
                     }
@@ -901,8 +897,8 @@ describe("durable effect occurrence allocation properties", () => {
               combatant.combatantId === spellCasterId
                 ? {
                     ...combatant,
-                    effectOccurrences: [
-                      ...combatant.effectOccurrences,
+                    activeEffectOccurrences: [
+                      ...combatant.activeEffectOccurrences,
                       {
                         ...fighterOccurrence,
                         effectRef: futureRef,
