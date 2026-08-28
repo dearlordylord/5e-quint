@@ -41,9 +41,11 @@ module battleRuntimeHoleKinds {
     | SpellTargetAllocationHoleKind
     | SpellTargetListHoleKind
     | SpellcastingAbilityCheckHoleKind
+    | StartTurnOccurrenceOrderHoleKind
     | StatBlockRechargeRollHoleKind
     | TargetAbilityChoicesHoleKind
     | TargetChoiceHoleKind
+    | TemporaryHitPointChoiceHoleKind
     | UnitFeatureDecisionHoleKind
     | WildShapeEquipmentDispositionHoleKind
 }

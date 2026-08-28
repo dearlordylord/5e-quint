@@ -213,7 +213,7 @@ const ALLOWLIST = {
   "battle-runtime-insect-plague-area-hazard.mbt.qnt": {
     classification: "computed oracle",
     rationale:
-      "active area, per-turn trigger ledger, slot scaling, saving throw, target vitals, duration, and concentration cleanup all mutate through the reducer",
+      "multi-step traces compute active-area lifecycle, the shared per-turn trigger ledger, target vitals, duration, and concentration cleanup from mutable reducer state",
   },
   "battle-runtime-blur-attack-roll-defense-lifecycle.mbt.qnt": {
     classification: "computed oracle",

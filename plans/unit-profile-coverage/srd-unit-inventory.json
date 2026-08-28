@@ -226,9 +226,9 @@
       ],
       "issues": [
         "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/armor-class.test.ts:armorClassBuild",
-        "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/rests.test.ts:expectRight",
+        "srd521:classes/barbarian:level-1:class-feature-grant:barbarian_unarmored_defense tests evidence reference points to missing symbol expectRight: packages/character-sheet-runtime/src/rests.test.ts:expectRight",
         "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/armor-class.test.ts:armorClassBuild",
-        "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/armor-class.test.ts:expectRight",
+        "srd521:classes/monk:level-1:class-feature-grant:monk_unarmored_defense tests evidence reference points to missing symbol expectRight: packages/character-sheet-runtime/src/armor-class.test.ts:expectRight",
         "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/rests.test.ts:weaponMasteryBuild",
         "srd521:classes/fighter:level-1:mastery-pressure:fighter_weapon_mastery tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/rests.test.ts:selectedClassChoiceUnitIds",
         "srd521:classes/barbarian:level-1:mastery-pressure:barbarian_weapon_mastery tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/rests.test.ts:weaponMasteryBuild",
@@ -243,7 +243,7 @@
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept runtimeProjection evidence reference points to missing symbol spellHasRitualTag: packages/character-sheet-runtime/src/spell-invocation.ts:spellHasRitualTag",
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/rests.test.ts:wizardBuild",
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/rests.test.ts:wizardWarlockBuild",
-        "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/armor-class.test.ts:expectRight",
+        "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery tests evidence reference points to missing symbol expectRight: packages/character-sheet-runtime/src/armor-class.test.ts:expectRight",
         "srd521:classes/cleric:spell-level-5:spell-unit-pressure:cleric_spell_list_hallow tests evidence reference has invalid symbol path: packages/character-sheet-runtime/src/hallow.test.ts:Character Sheet runtime / Hallow",
         "srd521:classes/sorcerer:spell-level-5:spell-unit-pressure:sorcerer_spell_list_arcane_hand tests evidence reference has invalid symbol path: packages/character-sheet-runtime/src/arcane-hand.test.ts:Character Sheet runtime / Arcane Hand",
         "srd521:classes/wizard:spell-level-5:spell-unit-pressure:wizard_spell_list_arcane_hand tests evidence reference has invalid symbol path: packages/character-sheet-runtime/src/arcane-hand.test.ts:Character Sheet runtime / Arcane Hand",
@@ -42433,7 +42433,7 @@
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
         "owner": "shared table/spatial area geometry, pathfinding, and environment owner",
-        "reason": "The promoted owner consumes explicit area identity, area-membership trigger facts, and strong-wind cleanup commands. It does not infer position, path crossing, Sphere membership, cloud destination, descent through terrain, or wind dispersal from map geometry."
+        "reason": "The promoted owner consumes explicit area identity, ordered affected-creature facts for its fixed 10-foot movement frontier, area-membership trigger facts, and strong-wind cleanup commands. It does not infer position, path crossing, Sphere membership, cloud destination or direction, descent through terrain, or wind dispersal from map geometry."
       },
       "ownerEvidence": [
         {
@@ -54728,7 +54728,7 @@
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
         "owner": "shared table/spatial area geometry, pathfinding, and environment owner",
-        "reason": "The promoted owner consumes explicit area identity, area-membership trigger facts, and strong-wind cleanup commands. It does not infer position, path crossing, Sphere membership, cloud destination, descent through terrain, or wind dispersal from map geometry."
+        "reason": "The promoted owner consumes explicit area identity, ordered affected-creature facts for its fixed 10-foot movement frontier, area-membership trigger facts, and strong-wind cleanup commands. It does not infer position, path crossing, Sphere membership, cloud destination or direction, descent through terrain, or wind dispersal from map geometry."
       },
       "ownerEvidence": [
         {

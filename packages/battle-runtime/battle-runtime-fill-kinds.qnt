@@ -40,9 +40,11 @@ module battleRuntimeFillKinds {
     | SlowSomaticSpellFailureOutcomeFillKind
     | SpellTargetAllocationFillKind
     | SpellTargetListFillKind
+    | StartTurnOccurrenceOrderFillKind
     | StatBlockRechargeRollFillKind
     | TargetAbilityChoicesFillKind
     | TargetChoiceFillKind
+    | TemporaryHitPointChoiceFillKind
     | UnitFeatureDecisionFillKind
     | WildShapeEquipmentDispositionFillKind
 }
