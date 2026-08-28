@@ -9,6 +9,7 @@ import type {
   McpBattleState,
   McpBattleStateTransitionIssue,
 } from "./session-store-types.ts";
+import { invalidBattleStateTransition } from "./session-store-state-transition.ts";
 
 type CharacterId = AvailableCharacterSession["characterId"];
 
@@ -140,13 +141,6 @@ export function commitBattleEndTransition(input: {
     });
   }
   return Either.right({ tag: "none" });
-}
-
-function invalidBattleStateTransition(
-  from: McpBattleState["tag"],
-  to: McpBattleState["tag"],
-): Either.Either<never, McpBattleStateTransitionIssue> {
-  return Either.left({ tag: "invalidBattleStateTransition", from, to });
 }
 
 function battleCharacterIdsFromState(

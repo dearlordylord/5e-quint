@@ -40,10 +40,7 @@ import type {
   McpBattleRosterTransitionIssue,
 } from "./battle-roster-session-types.ts";
 import { createCharacterSessionRegistry } from "./character-session-registry.ts";
-import {
-  invalidBattleRosterStateTransition,
-  invalidBattleStateTransition,
-} from "./session-store-state-transition.ts";
+import { invalidBattleStateTransition } from "./session-store-state-transition.ts";
 import {
   commitBattleEndTransition,
   commitBattleStartTransition,
@@ -207,10 +204,7 @@ export function createMcpSessionStore(input: {
     McpBattleRosterTransitionIssue
   > {
     if (battleState.tag !== "activeBattle") {
-      return invalidBattleRosterStateTransition(
-        battleState.tag,
-        "activeBattle",
-      );
+      return invalidBattleStateTransition(battleState.tag, "activeBattle");
     }
     return battleRosterPlanner.plan(
       operation,
@@ -344,10 +338,7 @@ export function createMcpSessionStore(input: {
     planActiveBattleRosterTransition,
     commitActiveBattleRosterTransition(plan) {
       if (battleState.tag !== "activeBattle") {
-        return invalidBattleRosterStateTransition(
-          battleState.tag,
-          "activeBattle",
-        );
+        return invalidBattleStateTransition(battleState.tag, "activeBattle");
       }
       const committed = battleRosterPlanner.commit(
         plan,
