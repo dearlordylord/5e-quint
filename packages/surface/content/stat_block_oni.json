@@ -1,0 +1,293 @@
+{
+  "challengeRating": 7,
+  "id": "stat_block_oni",
+  "kind": "statBlock",
+  "name": "Oni",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-M-O.md:817-858"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 15,
+      "con": 16,
+      "dex": 11,
+      "int": 14,
+      "str": 19,
+      "wis": 12
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 17
+      }
+    },
+    "actions": [
+      {
+        "description": "The oni makes two Claw or Nightmare Ray attacks. It can replace one attack with a use of Spellcasting.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 7
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Claw",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 12,
+                  "flat": 4
+                },
+                "kind": "fixed",
+                "static": 10
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 8
+                },
+                "kind": "fixed",
+                "static": 9
+              },
+              "damageType": "necrotic",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 10
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Ranged Attack Roll: +5, range 60 ft. Hit: 9 (2d6 + 2) Psychic damage, and the target has the Frightened condition until the start of the oni's next turn.",
+        "kind": "textOnly",
+        "name": "Nightmare Ray",
+        "procedureOrdinal": 3,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "The oni shape-shifts into a Small or Medium Humanoid or a Large Giant, or it returns to its true form. Other than its size, its game statistics are the same in each form. Any equipment it is wearing or carrying isn't transformed.",
+        "kind": "textOnly",
+        "name": "Shape-Shift",
+        "procedureOrdinal": 4,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "cha",
+          "components": {
+            "m": false,
+            "s": true,
+            "v": true
+          },
+          "groups": [
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  1
+                ]
+              },
+              "spells": [
+                {
+                  "castAtLevel": 2,
+                  "spellId": "charm_person"
+                },
+                {
+                  "spellId": "darkness"
+                },
+                {
+                  "spellId": "gaseous_form"
+                },
+                {
+                  "spellId": "sleep"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Spellcasting",
+          "spellSaveDc": {
+            "dc": 13,
+            "kind": "fixed"
+          }
+        },
+        "procedureOrdinal": 5,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "lawful"
+    },
+    "bonusActions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "cha",
+          "components": {
+            "m": false,
+            "s": false,
+            "v": false
+          },
+          "groups": [
+            {
+              "kind": "at_will",
+              "resourceRefs": {
+                "kind": "none"
+              },
+              "spells": [
+                {
+                  "restriction": "self only",
+                  "spellId": "invisibility"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Invisibility"
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Common",
+          "Giant"
+        ]
+      }
+    },
+    "creatureType": "fiend",
+    "hp": {
+      "kind": "literal",
+      "value": 119
+    },
+    "initiative": {
+      "modifier": 0,
+      "score": 10
+    },
+    "passivePerception": 14,
+    "resistances": {
+      "damageTypes": [
+        "cold"
+      ],
+      "kind": "fixed"
+    },
+    "resources": [
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 1
+        },
+        "ordinal": 1,
+        "ownership": "each"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "cha",
+        "modifier": 5
+      },
+      {
+        "ability": "con",
+        "modifier": 6
+      },
+      {
+        "ability": "dex",
+        "modifier": 0
+      },
+      {
+        "ability": "int",
+        "modifier": 2
+      },
+      {
+        "ability": "str",
+        "modifier": 4
+      },
+      {
+        "ability": "wis",
+        "modifier": 4
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "large",
+    "skillModifiers": [
+      {
+        "modifier": 5,
+        "skill": "arcana"
+      },
+      {
+        "modifier": 8,
+        "skill": "deception"
+      },
+      {
+        "modifier": 4,
+        "skill": "perception"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "hover": true,
+        "kind": "fly"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The oni regains 10 Hit Points at the start of each of its turns if it has at least 1 Hit Point.",
+        "name": "Regeneration"
+      }
+    ]
+  }
+}
