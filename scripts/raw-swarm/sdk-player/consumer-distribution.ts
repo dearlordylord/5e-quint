@@ -83,14 +83,53 @@ function contextText(delivery: ContextDelivery): string {
     : benchmarkContextForRole(delivery.profile, delivery.role);
 }
 
-const declarationDiagnosticCodes = new Set(["TS4023", "TS4058", "TS7056"]);
-/** The emitted declaration graph is compilation support, not an unbounded SDK. */
-export const PUBLIC_DECLARATION_BUNDLE_MAX_FILES = 512;
-export const PUBLIC_DECLARATION_BUNDLE_MAX_BYTES = 5 * 1024 * 1024;
+const PRE_EXISTING_DECLARATION_SERIALIZATION_DIAGNOSTIC_CODES = new Set([
+  "TS4023",
+  "TS4058",
+  "TS7056",
+]);
+const PRE_EXISTING_DECLARATION_SERIALIZATION_DIAGNOSTIC_OWNERS = [
+  "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+  "packages/battle-runtime/src/battle-reducer/ongoing-concentration-area-spell.ts",
+  "packages/surface/src/surface/schema-nonspell.ts",
+  "packages/surface/src/surface/schema-spell.ts",
+  "packages/surface/src/surface/schema.ts",
+] as const;
+
+/**
+ * The pinned integration revision emitted 512 files and 6,302,380 bytes while
+ * an allowed TS7056 prevented codec-building-blocks.d.ts from being emitted.
+ * The #427 graph emits that owner successfully and measures 514 files and
+ * about 6.38 MB. These named limits leave six files and less than 0.5 MiB of
+ * headroom without treating the older partial-emission counts as a target.
+ */
+const PUBLIC_DECLARATION_BUNDLE_OBSERVED_FILES = 514;
+const PUBLIC_DECLARATION_BUNDLE_FILE_HEADROOM = 6;
+export const PUBLIC_DECLARATION_BUNDLE_MAX_FILES =
+  PUBLIC_DECLARATION_BUNDLE_OBSERVED_FILES +
+  PUBLIC_DECLARATION_BUNDLE_FILE_HEADROOM;
+export const PUBLIC_DECLARATION_BUNDLE_MAX_BYTES = 13 * 512 * 1024;
 export type PublicDeclarationBundleMeasure = {
   readonly files: number;
   readonly bytes: number;
 };
+
+export function unexpectedPublicDeclarationDiagnostics(
+  diagnostics: readonly string[],
+): readonly string[] {
+  return diagnostics.filter((line) => {
+    const code = line.match(/error (TS\d+):/)?.[1];
+    const hasPreExistingOwner =
+      PRE_EXISTING_DECLARATION_SERIALIZATION_DIAGNOSTIC_OWNERS.some((owner) =>
+        line.includes(owner),
+      );
+    return (
+      code === undefined ||
+      !PRE_EXISTING_DECLARATION_SERIALIZATION_DIAGNOSTIC_CODES.has(code) ||
+      !hasPreExistingOwner
+    );
+  });
+}
 const PLAYER_RUN_START_OBSERVATION = {
   kind: "awaitingFirstContinuation",
   tacticalNote: "",
@@ -182,19 +221,17 @@ export function emitPublicDeclarations(
     const diagnostics = `${result.stdout}${result.stderr}`
       .split("\n")
       .filter((line) => line.includes("error TS"));
-    const unexpected = diagnostics.filter((line) => {
-      const code = line.match(/error (TS\d+):/)?.[1];
-      return code === undefined || !declarationDiagnosticCodes.has(code);
-    });
+    const unexpected = unexpectedPublicDeclarationDiagnostics(diagnostics);
     if (diagnostics.length === 0 || unexpected.length > 0) {
       throw new Error(
         `Public declaration emission failed:\n${unexpected.join("\n") || result.stderr}`,
       );
     }
-    // TypeScript 5.9 reports these only while serializing large inferred
-    // schemas, after it emits the reachable declarations. Required-file checks
-    // below and the isolated consumer typecheck are the executable completeness
-    // boundary for this narrow SDK; any other diagnostic fails the build.
+    // TypeScript 5.9 reports the explicitly partitioned pre-existing
+    // diagnostics only while serializing the listed giant inferred schemas.
+    // Required-file checks below and the isolated consumer typecheck are the
+    // executable completeness boundary for this narrow SDK. New owners,
+    // including #427 attack-selection schemas, must emit without diagnostics.
   }
 
   const requiredDeclarations = [

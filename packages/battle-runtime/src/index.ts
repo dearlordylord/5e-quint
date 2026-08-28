@@ -362,11 +362,16 @@ export type {
   CharacterWeaponAttackActionOption,
   CharacterWeaponAttackDamageTypeChoices,
   StatBlockAttackActionOption,
-  StatBlockDamageNotation,
   SupportedAttackActionOption,
   UnarmedStrikeDamageEffect,
   UnarmedStrikeDamageProfile,
 } from "./battle-action-options.ts";
+
+export type {
+  StatBlockAttackDamageComponentRef,
+  StatBlockAttackDamageSelection,
+  StatBlockDamageComponentNotation,
+} from "./stat-block-attack-damage-selection.ts";
 
 export type {
   AuthoredStatBlockBattleInitInput,

@@ -111,7 +111,6 @@ import {
 } from "./statblock-attacks.ts";
 import { activeSpellWeaponDamageRiders } from "./damage-helpers.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
-import { supportedStatBlockAttackHitConditionRiders } from "../statblock-attack-hit-condition-support.ts";
 import {
   THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID,
   THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE,
@@ -768,7 +767,7 @@ function statBlockAttackSupportsOrdinaryObjectTarget(
 ): boolean {
   return (
     attack.traitAttackRollModes === undefined &&
-    supportedStatBlockAttackHitConditionRiders(attack.attack).length === 0
+    attack.attack.onHit.conditionRider === undefined
   );
 }
 

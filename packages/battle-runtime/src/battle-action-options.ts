@@ -9,12 +9,25 @@ import type {
   CreatureAttackRollMechanics,
   DamageType,
   DiceExpr,
+  Size,
   StatBlockValue,
   WeaponDamage,
 } from "@dnd/surface/surface/types";
 import { Match } from "effect";
 import type { CharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-schema.ts";
 import type { AttackDamageAbilityModifierChoice } from "./battle-reducer/attack-damage-ability-modifier-choice.ts";
+import {
+  statBlockAttackDamageSelection,
+  statBlockAttackDamageSelectionsEqual,
+  statBlockAttackDamageSelectionKey,
+  type StatBlockAttackDamageComponentRef,
+  type StatBlockAttackDamageSelection,
+} from "./stat-block-attack-damage-selection.ts";
+export type {
+  StatBlockAttackDamageComponentRef,
+  StatBlockAttackDamageSelection,
+  StatBlockDamageComponentNotation,
+} from "./stat-block-attack-damage-selection.ts";
 export type { AttackDamageAbilityModifierChoice };
 
 export const UNARMED_STRIKE_NAME = "Unarmed Strike";
@@ -182,41 +195,6 @@ type SupportedStatBlockAttackEffectList =
       SupportedStatBlockAttackHitTargetSizeConditionEffect,
     ];
 
-type SupportedStaticStatBlockBaseDamageEffect =
-  SupportedStatBlockBaseDamageEffect & {
-    readonly amount: SupportedStatBlockBaseDamageEffect["amount"] & {
-      readonly static: number;
-    };
-  };
-
-type SupportedStaticStatBlockAdvantageBonusDamageEffect =
-  SupportedStatBlockAdvantageBonusDamageEffect & {
-    readonly amount: SupportedStatBlockAdvantageBonusDamageEffect["amount"] & {
-      readonly static: number;
-    };
-  };
-
-type SupportedStaticStatBlockBaseDamageEffectList =
-  ReadonlyNonEmptyArray<SupportedStaticStatBlockBaseDamageEffect>;
-
-type SupportedStaticStatBlockAttackDamageEffectList =
-  | SupportedStaticStatBlockBaseDamageEffectList
-  | readonly [
-      SupportedStaticStatBlockAdvantageBonusDamageEffect,
-      ...SupportedStaticStatBlockBaseDamageEffectList,
-    ]
-  | readonly [
-      ...SupportedStaticStatBlockBaseDamageEffectList,
-      SupportedStaticStatBlockAdvantageBonusDamageEffect,
-    ];
-
-type SupportedStaticStatBlockAttackEffectList =
-  | SupportedStaticStatBlockAttackDamageEffectList
-  | readonly [
-      ...SupportedStaticStatBlockAttackDamageEffectList,
-      SupportedStatBlockAttackHitTargetSizeConditionEffect,
-    ];
-
 export type SupportedCreatureAttackRollMechanics = Omit<
   CreatureAttackRollMechanics,
   | "attackBonus"
@@ -245,10 +223,24 @@ export type SupportedCreatureAttackRollMechanics = Omit<
       }
   );
 
-export type SupportedStaticDamageCreatureAttackRollMechanics =
-  SupportedCreatureAttackRollMechanics & {
-    readonly onHit: SupportedStaticStatBlockAttackEffectList;
-  };
+type OmitEach<T, K extends PropertyKey> = T extends unknown
+  ? Omit<T, K>
+  : never;
+
+export type SupportedStatBlockAttackRollMechanics = OmitEach<
+  SupportedCreatureAttackRollMechanics,
+  "onHit"
+>;
+
+export type StatBlockAttackHitTargetSizePredicate = {
+  readonly kind: "targetCreatureSizeAtMost";
+  readonly maxCreatureSize: Size;
+};
+
+export type StatBlockAttackHitTargetSizeConditionRider = {
+  readonly condition: "prone";
+  readonly targetSizePredicate: StatBlockAttackHitTargetSizePredicate;
+};
 
 export const STAT_BLOCK_ATTACK_ROLL_ADVANTAGE_PREDICATES = [
   "nonIncapacitatedAllyWithin5FeetOfTarget",
@@ -269,29 +261,12 @@ export const STAT_BLOCK_ATTACK_SECTIONS = [
 export type StatBlockAttackSection =
   (typeof STAT_BLOCK_ATTACK_SECTIONS)[number];
 
-export const STAT_BLOCK_DAMAGE_NOTATIONS = ["rolled", "static"] as const;
-export type StatBlockDamageNotation =
-  (typeof STAT_BLOCK_DAMAGE_NOTATIONS)[number];
-
-export type RolledStatBlockAttackActionOption = {
+export type StatBlockAttackActionOption = {
   readonly kind: "statBlockAttack";
   readonly procedureRef: BattleStatBlockProcedureExecutionRef;
-  readonly attack: SupportedCreatureAttackRollMechanics;
-  readonly damageNotation: "rolled";
+  readonly attack: SelectedStatBlockAttackRollMechanics;
   readonly traitAttackRollModes?: ReadonlyNonEmptyArray<StatBlockTraitAttackRollMode>;
 };
-
-export type StaticStatBlockAttackActionOption = {
-  readonly kind: "statBlockAttack";
-  readonly procedureRef: BattleStatBlockProcedureExecutionRef;
-  readonly attack: SupportedStaticDamageCreatureAttackRollMechanics;
-  readonly damageNotation: "static";
-  readonly traitAttackRollModes?: ReadonlyNonEmptyArray<StatBlockTraitAttackRollMode>;
-};
-
-export type StatBlockAttackActionOption =
-  | RolledStatBlockAttackActionOption
-  | StaticStatBlockAttackActionOption;
 
 export type SupportedAttackActionOption =
   | CharacterAttackActionOption
@@ -333,11 +308,9 @@ type StatBlockAttackExecutionSelectionBase = {
   readonly attackDamageType?: never;
 };
 export type StatBlockAttackExecutionSelection =
-  StatBlockAttackExecutionSelectionBase &
-    (
-      | { readonly statBlockDamageNotation?: never }
-      | { readonly statBlockDamageNotation: "static" }
-    );
+  StatBlockAttackExecutionSelectionBase & {
+    readonly statBlockDamageSelection: StatBlockAttackDamageSelection;
+  };
 export type BoundAttackExecutionSelection =
   | CharacterAttackExecutionSelection
   | StatBlockAttackExecutionSelection;
@@ -373,12 +346,12 @@ export function attackExecutionSelectionForOption(
   attack: BoundSupportedAttackActionOption,
 ): BoundAttackExecutionSelection {
   if (attack.kind === "statBlockAttack") {
-    return attack.damageNotation === "static"
-      ? {
-          procedureRef: attack.procedureRef,
-          statBlockDamageNotation: "static",
-        }
-      : { procedureRef: attack.procedureRef };
+    return {
+      procedureRef: attack.procedureRef,
+      statBlockDamageSelection: statBlockAttackDamageSelectionForDamage(
+        attack.attack.onHit.damage,
+      ),
+    };
   }
   return {
     procedureRef: attack.procedureRef,
@@ -399,10 +372,11 @@ export function boundAttackExecutionSelectionMatchesOption(
   return attack.kind === "statBlockAttack"
     ? selection.attackAbility === undefined &&
         selection.attackDamageType === undefined &&
-        ("statBlockDamageNotation" in selection
-          ? selection.statBlockDamageNotation
-          : undefined) ===
-          (attack.damageNotation === "static" ? "static" : undefined)
+        "statBlockDamageSelection" in selection &&
+        statBlockAttackDamageSelectionsEqual(
+          selection.statBlockDamageSelection,
+          statBlockAttackDamageSelectionForDamage(attack.attack.onHit.damage),
+        )
     : selection.attackAbility === attackExecutionAbility(attack) &&
         selection.attackDamageType === attackExecutionDamageType(attack);
 }
@@ -423,8 +397,11 @@ export function attackExecutionSelectionKey(
     selection.attackDamageType ?? null,
   ];
   return JSON.stringify(
-    "statBlockDamageNotation" in selection
-      ? [...identity, selection.statBlockDamageNotation ?? ("rolled" as const)]
+    "statBlockDamageSelection" in selection
+      ? [
+          ...identity,
+          statBlockAttackDamageSelectionKey(selection.statBlockDamageSelection),
+        ]
       : identity,
   );
 }
@@ -440,11 +417,13 @@ export function attackExecutionSelectionIdentitiesEqual(
 
 export type StatBlockAttackDamageComponent =
   | {
+      readonly componentRef: StatBlockAttackDamageComponentRef;
       readonly expr: DiceExpr;
       readonly static?: number;
       readonly damageType: DamageType;
     }
   | {
+      readonly componentRef: StatBlockAttackDamageComponentRef;
       /** A printed fixed amount with no authored dice expression. */
       readonly static: number;
       readonly damageType: DamageType;
@@ -455,12 +434,62 @@ export type StatBlockAttackDamage = {
   readonly advantageBonus?: StatBlockAttackDamageComponent;
 };
 
-export type StaticStatBlockAttackDamageComponent =
-  StatBlockAttackDamageComponent & {
-    readonly static: number;
+export type SelectedStatBlockAttackDamageComponent =
+  | {
+      readonly kind: "fixed";
+      readonly componentRef: StatBlockAttackDamageComponentRef;
+      readonly amount: number;
+      readonly damageType: DamageType;
+    }
+  | {
+      readonly kind: "rolled";
+      readonly componentRef: StatBlockAttackDamageComponentRef;
+      readonly expr: DiceExpr;
+      readonly damageType: DamageType;
+    };
+
+export type SelectedStatBlockAttackDamage = {
+  readonly baseComponents: ReadonlyNonEmptyArray<SelectedStatBlockAttackDamageComponent>;
+  readonly advantageBonus?: SelectedStatBlockAttackDamageComponent;
+};
+
+export type SelectedStatBlockAttackHitEffects = {
+  readonly damage: SelectedStatBlockAttackDamage;
+  readonly conditionRider?: StatBlockAttackHitTargetSizeConditionRider;
+};
+
+export type SelectedStatBlockAttackRollMechanics =
+  SupportedStatBlockAttackRollMechanics & {
+    readonly onHit: SelectedStatBlockAttackHitEffects;
   };
 
-export type StaticStatBlockAttackDamage = {
-  readonly baseComponents: ReadonlyNonEmptyArray<StaticStatBlockAttackDamageComponent>;
-  readonly advantageBonus?: StaticStatBlockAttackDamageComponent;
-};
+export function statBlockAttackDamageSelectionForDamage(
+  damage: SelectedStatBlockAttackDamage,
+): StatBlockAttackDamageSelection {
+  const [firstBaseComponent, ...remainingBaseComponents] =
+    damage.baseComponents;
+  return statBlockAttackDamageSelection([
+    statBlockAttackDamageComponentSelection(firstBaseComponent),
+    ...remainingBaseComponents.map(statBlockAttackDamageComponentSelection),
+    ...(damage.advantageBonus === undefined
+      ? []
+      : [statBlockAttackDamageComponentSelection(damage.advantageBonus)]),
+  ]);
+}
+
+function statBlockAttackDamageComponentSelection(
+  component: SelectedStatBlockAttackDamageComponent,
+): {
+  readonly componentRef: StatBlockAttackDamageComponentRef;
+  readonly notation: "rolled" | "static";
+} {
+  return {
+    componentRef: component.componentRef,
+    notation: Match.value(component).pipe(
+      Match.discriminatorsExhaustive("kind")({
+        fixed: () => "static" as const,
+        rolled: () => "rolled" as const,
+      }),
+    ),
+  };
+}

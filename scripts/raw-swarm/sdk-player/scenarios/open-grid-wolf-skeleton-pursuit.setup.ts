@@ -85,7 +85,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: {
       overhead: { kind: "open" },
       barrierHeights: [],
@@ -112,7 +112,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
     observation: {
       scenarioId: "open-grid-wolf-skeleton-pursuit",
       combatants: ["wolf", "skeleton"],
-      statBlockDamageNotation: "rolled",
+      statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     },
   };
 };

@@ -26,12 +26,11 @@ import {
   type BattleWeaponDamage,
   type CharacterUnarmedStrikeActionOption,
   type CharacterWeaponAttackActionOption,
+  type SelectedStatBlockAttackDamage,
+  type SelectedStatBlockAttackDamageComponent,
   type StatBlockAttackActionOption,
-  type StatBlockAttackDamage,
-  type StatBlockAttackDamageComponent,
-  type StaticStatBlockAttackDamage,
   type SupportedAttackActionOption,
-  type SupportedCreatureAttackRollMechanics,
+  type SupportedStatBlockAttackRollMechanics,
 } from "../battle-action-options.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
@@ -62,7 +61,6 @@ import {
   activeRageDamageBonusForFrenzy,
   ongoingFeatureProfileIsRecklessAttackForFrenzy,
 } from "./barbarian-frenzy.ts";
-import { supportedStatBlockAttackDamage } from "../statblock-attack-damage-support.ts";
 import { STANDARD_CREATURE_MELEE_REACH_FEET } from "./domain-constants.ts";
 import {
   FRENZY_DAMAGE_TYPE_HOLE_ID,
@@ -72,7 +70,7 @@ import {
 const byTag = Match.discriminator("tag");
 
 export function supportedStatBlockAttackTargetConstraint(
-  attack: SupportedCreatureAttackRollMechanics,
+  attack: SupportedStatBlockAttackRollMechanics,
 ): AttackTargetConstraint {
   return Match.value(attack).pipe(
     Match.when({ attackType: "melee" }, (meleeAttack) => ({
@@ -89,18 +87,9 @@ export function supportedStatBlockAttackTargetConstraint(
 }
 
 export function statBlockAttackDamage(
-  attack: Extract<
-    StatBlockAttackActionOption,
-    { readonly damageNotation: "static" }
-  >,
-): StaticStatBlockAttackDamage;
-export function statBlockAttackDamage(
   attack: StatBlockAttackActionOption,
-): StatBlockAttackDamage;
-export function statBlockAttackDamage(
-  attack: StatBlockAttackActionOption,
-): StatBlockAttackDamage {
-  return supportedStatBlockAttackDamage(attack.attack);
+): SelectedStatBlockAttackDamage {
+  return attack.attack.onHit.damage;
 }
 
 export function statBlockAttackTargetConstraint(
@@ -278,18 +267,20 @@ export function attackDamage(attack: SupportedAttackActionOption):
     ),
     Match.when({ kind: "statBlockAttack" }, (statBlockAttack) => {
       const [damage] = statBlockAttackDamage(statBlockAttack).baseComponents;
-      if (!("expr" in damage)) {
-        return {
-          static: damage.static,
-          damageType: damage.damageType,
-        };
-      }
-      return {
-        dice: damage.expr.dice,
-        dieSize: damage.expr.dieSize,
-        ...optionalProperty("flat", damage.expr.flat),
-        damageType: damage.damageType,
-      };
+      return Match.value(damage).pipe(
+        Match.discriminatorsExhaustive("kind")({
+          fixed: (fixedDamage) => ({
+            static: fixedDamage.amount,
+            damageType: fixedDamage.damageType,
+          }),
+          rolled: (rolledDamage) => ({
+            dice: rolledDamage.expr.dice,
+            dieSize: rolledDamage.expr.dieSize,
+            ...optionalProperty("flat", rolledDamage.expr.flat),
+            damageType: rolledDamage.damageType,
+          }),
+        }),
+      );
     }),
     Match.exhaustive,
   );
@@ -586,9 +577,7 @@ function attackBaseDamageTypes(
   if (attack.kind === "unarmedStrike") {
     return [attack.effect.damage.damageType];
   }
-  const [first, ...rest] = supportedStatBlockAttackDamage(
-    attack.attack,
-  ).baseComponents;
+  const [first, ...rest] = attack.attack.onHit.damage.baseComponents;
   return [first.damageType, ...rest.map((component) => component.damageType)];
 }
 
@@ -937,10 +926,7 @@ export function attackDamageComponents(
     Match.when({ kind: "statBlockAttack" }, (statBlockAttack) => {
       const damage = statBlockAttackDamage(statBlockAttack);
       const baseComponents = damage.baseComponents.flatMap((component) =>
-        statBlockAttack.damageNotation === "static" &&
-        component.static !== undefined
-          ? []
-          : rolledStatBlockDamageComponent(component, critical),
+        rolledStatBlockDamageComponent(component, critical),
       );
       const advantageBonus = damage.advantageBonus;
       if (
@@ -950,13 +936,10 @@ export function attackDamageComponents(
         return baseComponents;
       }
 
-      return statBlockAttack.damageNotation === "static" &&
-        advantageBonus.static !== undefined
-        ? baseComponents
-        : [
-            ...baseComponents,
-            ...rolledStatBlockDamageComponent(advantageBonus, critical),
-          ];
+      return [
+        ...baseComponents,
+        ...rolledStatBlockDamageComponent(advantageBonus, critical),
+      ];
     }),
     Match.exhaustive,
   );
@@ -969,21 +952,25 @@ export function attackDamageComponents(
 }
 
 function rolledStatBlockDamageComponent(
-  damage: StatBlockAttackDamageComponent,
+  damage: SelectedStatBlockAttackDamageComponent,
   critical: boolean,
 ): readonly AttackDamageComponent[] {
-  if (!("expr" in damage)) {
-    return [];
-  }
-  return [
-    {
-      expr: {
-        ...damage.expr,
-        dice: critical ? damage.expr.dice * 2 : damage.expr.dice,
-      },
-      damageType: damage.damageType,
-    },
-  ];
+  return Match.value(damage).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      fixed: () => [],
+      rolled: (rolledDamage) => [
+        {
+          expr: {
+            ...rolledDamage.expr,
+            dice: critical
+              ? rolledDamage.expr.dice * 2
+              : rolledDamage.expr.dice,
+          },
+          damageType: rolledDamage.damageType,
+        },
+      ],
+    }),
+  );
 }
 
 export function weaponDamageComponent(

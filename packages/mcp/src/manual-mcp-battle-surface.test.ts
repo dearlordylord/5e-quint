@@ -1581,7 +1581,11 @@ function requireAct(
     (candidate) =>
       candidate.label === label &&
       (attackName === undefined ||
-        (!("statBlockDamageNotation" in candidate.subject) &&
+        ("statBlockDamageSelection" in candidate.subject &&
+          candidate.subject.statBlockDamageSelection !== undefined &&
+          candidate.subject.statBlockDamageSelection.every(
+            ({ notation }) => notation === "rolled",
+          ) &&
           candidate.summary === `Take the Attack action with ${attackName}.`)),
   );
   const [act] = matchingActs;

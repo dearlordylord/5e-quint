@@ -28,6 +28,7 @@ import {
   buildConsumerDistribution,
   PUBLIC_DECLARATION_BUNDLE_MAX_BYTES,
   PUBLIC_DECLARATION_BUNDLE_MAX_FILES,
+  unexpectedPublicDeclarationDiagnostics,
 } from "./consumer-distribution.ts";
 import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
 import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
@@ -66,8 +67,20 @@ function copyDistribution(source: string, destination: string): void {
 
 describe("SDK player consumer distribution", () => {
   test("bounds the declaration bundle to accessible declaration files", () => {
-    expect(PUBLIC_DECLARATION_BUNDLE_MAX_FILES).toBe(512);
-    expect(PUBLIC_DECLARATION_BUNDLE_MAX_BYTES).toBe(5 * 1024 * 1024);
+    expect(PUBLIC_DECLARATION_BUNDLE_MAX_FILES).toBe(520);
+    expect(PUBLIC_DECLARATION_BUNDLE_MAX_BYTES).toBe(13 * 512 * 1024);
+    expect(
+      unexpectedPublicDeclarationDiagnostics([
+        "packages/surface/src/surface/schema-spell.ts(1,1): error TS7056: existing giant schema",
+      ]),
+    ).toEqual([]);
+    expect(
+      unexpectedPublicDeclarationDiagnostics([
+        "packages/battle-runtime/src/battle-reducer/codec-building-blocks.ts(1,1): error TS7056: attack owner",
+      ]),
+    ).toEqual([
+      "packages/battle-runtime/src/battle-reducer/codec-building-blocks.ts(1,1): error TS7056: attack owner",
+    ]);
     const directory = mkdtempSync(join(tmpdir(), "dnd-declaration-gate-"));
     writeFileSync(join(directory, "allowed.d.ts"), "export {};\n");
     expect(assertPublicDeclarationBundle(directory)).toEqual({
@@ -1363,8 +1376,8 @@ export const continueBattle: PlayerContinuation = (context) => {
           "utf8",
         )
           .replace(
-            'statBlockDamageNotation: "rolled"',
-            'statBlockDamageNotation: "static"',
+            'preferredComponentNotation: "rolled"',
+            'preferredComponentNotation: "static"',
           )
           .replace(
             "initiative: sdk.initiativeScore(10)",
@@ -1376,14 +1389,27 @@ export const continueBattle: PlayerContinuation = (context) => {
         );
         writeFileSync(
           join(destination, "attempt.ts"),
-          attemptSource(`  const attack = context.sdk
+          attemptSource(`  const usesOnlyStaticDamageComponents = (
+    selection: unknown,
+  ): boolean =>
+    Array.isArray(selection) &&
+    selection.length > 0 &&
+    selection.every(
+      (component: unknown) =>
+        typeof component === "object" &&
+        component !== null &&
+        "notation" in component &&
+        component.notation === "static",
+    );
+  const attack = context.sdk
     .discoverBattleActs(context.session)
     .find(
       ({ subject, initialHoles }) =>
         subject.tag === "action" &&
         subject.action === "attack" &&
         subject.actorId === "external-skeleton" &&
-        subject.statBlockDamageNotation === "static" &&
+        subject.attackAbility === undefined &&
+        usesOnlyStaticDamageComponents(subject.statBlockDamageSelection) &&
         initialHoles.some(
           (hole: (typeof initialHoles)[number]) =>
             hole.kind === "targetChoice" &&
@@ -1394,7 +1420,10 @@ export const continueBattle: PlayerContinuation = (context) => {
     attack === undefined ||
     attack.subject.tag !== "action" ||
     attack.subject.action !== "attack" ||
-    attack.subject.statBlockDamageNotation !== "static"
+    attack.subject.attackAbility !== undefined ||
+    !usesOnlyStaticDamageComponents(
+      attack.subject.statBlockDamageSelection,
+    )
   ) {
     throw new Error("Expected the static External Skeleton attack");
   }
@@ -1508,7 +1537,9 @@ export const continueBattle: PlayerContinuation = (context) => {
                 spatialFacts: [
                   {
                     kind: "attackTargetDistance",
-                    statBlockDamageNotation: "static",
+                    statBlockDamageSelection: [
+                      expect.objectContaining({ notation: "static" }),
+                    ],
                   },
                 ],
               },

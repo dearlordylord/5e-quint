@@ -1,6 +1,7 @@
 import { movementFeet } from "@dnd/shared/types";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import {
+  battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest,
   nonSpellExecutableProcedureEntry,
   projectedStatBlockRuntimeSource,
   resolveBattleSubject,
@@ -387,7 +388,10 @@ function requireDiscoveredStatBlockAttackSubject(
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
       candidate.subject.actorId === actorId &&
-      (candidate.subject.statBlockDamageNotation ?? "rolled") === damageMode,
+      battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+        candidate.subject,
+        damageMode,
+      ),
   );
   if (
     act === undefined ||

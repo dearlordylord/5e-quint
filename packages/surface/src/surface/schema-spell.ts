@@ -4968,7 +4968,7 @@ export const CreatureSenseSchema = Schema.Struct({
 });
 
 /** Runtime projections may preserve a static-only printed damage amount. */
-const StatBlockDamageNotationAmountSchema = Schema.Union(
+const StatBlockPrintedOrRolledDamageAmountSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("fixed"),
     expr: DiceExprSchema,
@@ -4984,7 +4984,7 @@ const CreatureAttackEffectAtomSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("damage"),
     damageType: DamageTypeRefSchema,
-    amount: StatBlockDamageNotationAmountSchema,
+    amount: StatBlockPrintedOrRolledDamageAmountSchema,
     timing: optionalExact(Schema.Literal("end_of_next_turn")),
   }),
   Schema.Struct({
@@ -4999,7 +4999,7 @@ const CreatureAttackEffectAtomSchema = Schema.Union(
       }),
     ),
     damageType: DamageTypeRefSchema,
-    amount: StatBlockDamageNotationAmountSchema,
+    amount: StatBlockPrintedOrRolledDamageAmountSchema,
   }),
   Schema.Struct({
     kind: Schema.Literal("apply_condition_if_target_size_at_most"),

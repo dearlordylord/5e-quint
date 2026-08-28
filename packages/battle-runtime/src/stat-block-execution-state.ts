@@ -40,14 +40,9 @@ import type {
   StatBlockAttackSection,
   StatBlockTraitAttackRollMode,
   SupportedCreatureAttackRollMechanics,
-  SupportedStaticDamageCreatureAttackRollMechanics,
 } from "./battle-action-options.ts";
 import type { SupportedStatBlockBonusActionStandardAction } from "./battle-reducer/battle-runtime-protocol.ts";
-import {
-  statBlockAttackDamageRequiresRoll,
-  statBlockAttackDamageSupportsStaticNotation,
-  supportedStatBlockAttackDamage,
-} from "./statblock-attack-damage-support.ts";
+import { selectedStatBlockAttackRollOptions } from "./statblock-attack-damage-support.ts";
 import type {
   BattleResourcePoolExecutionRef,
   BattleStatBlockExecutionScopeRef,
@@ -538,34 +533,19 @@ export function statBlockAttackActionOptions(
       return [];
     }
     const attack = binding.procedure.attack;
-    const damage = supportedStatBlockAttackDamage(attack);
     const traitAttackRollModes =
       binding.procedure.kind === "attack"
         ? binding.procedure.traitAttackRollModes
         : undefined;
-    const base = {
-      kind: "statBlockAttack" as const,
-      procedureRef: binding.procedureRef,
-      attack,
-      ...optionalProperty("traitAttackRollModes", traitAttackRollModes),
-    };
-    return [
-      ...(statBlockAttackDamageRequiresRoll(damage)
-        ? [{ ...base, damageNotation: "rolled" as const }]
-        : []),
-      ...(statBlockAttackSupportsStaticDamageNotation(attack)
-        ? [{ ...base, attack, damageNotation: "static" as const }]
-        : []),
-    ];
+    return selectedStatBlockAttackRollOptions(attack).map(
+      (selectedAttack): StatBlockAttackActionOption => ({
+        kind: "statBlockAttack",
+        procedureRef: binding.procedureRef,
+        attack: selectedAttack,
+        ...optionalProperty("traitAttackRollModes", traitAttackRollModes),
+      }),
+    );
   });
-}
-
-function statBlockAttackSupportsStaticDamageNotation(
-  attack: SupportedCreatureAttackRollMechanics,
-): attack is SupportedStaticDamageCreatureAttackRollMechanics {
-  return statBlockAttackDamageSupportsStaticNotation(
-    supportedStatBlockAttackDamage(attack),
-  );
 }
 
 export function statBlockProcedureBinding(

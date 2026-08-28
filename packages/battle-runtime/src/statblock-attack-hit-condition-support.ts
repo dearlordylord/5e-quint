@@ -7,7 +7,14 @@ import type {
   CreatureAttackRollMechanics,
   Size,
 } from "@dnd/surface/surface/types";
-import type { SupportedCreatureAttackRollMechanics } from "./battle-action-options.ts";
+import type {
+  StatBlockAttackHitTargetSizeConditionRider,
+  SupportedCreatureAttackRollMechanics,
+} from "./battle-action-options.ts";
+export type {
+  StatBlockAttackHitTargetSizeConditionRider,
+  StatBlockAttackHitTargetSizePredicate,
+} from "./battle-action-options.ts";
 
 type CreatureAttackHitEffects = Pick<CreatureAttackRollMechanics, "onHit">;
 
@@ -16,16 +23,6 @@ export type StatBlockAttackHitTargetSizeConditionRiderEffect = Extract<
   { readonly kind: "apply_condition_if_target_size_at_most" }
 > & {
   readonly condition: "prone";
-};
-
-export type StatBlockAttackHitTargetSizePredicate = {
-  readonly kind: "targetCreatureSizeAtMost";
-  readonly maxCreatureSize: Size;
-};
-
-export type StatBlockAttackHitTargetSizeConditionRider = {
-  readonly condition: "prone";
-  readonly targetSizePredicate: StatBlockAttackHitTargetSizePredicate;
 };
 
 export function supportedStatBlockAttackHitConditionRiderEffect(

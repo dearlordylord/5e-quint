@@ -81,6 +81,7 @@ import type { ReplayAddressableSpellActiveEffect } from "./active-effect/executi
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   battleActiveEffectExecutionRefForTest,
+  battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest,
   battleProcedureExecutionRefForTest,
   resolveBattleSubject,
   statBlockProcedurePresentationsForStateForTest,
@@ -1512,7 +1513,10 @@ function statBlockAttackAct(
       candidate.subject.actorId === actorId &&
       candidate.subject.action === "attack" &&
       candidate.subject.procedureRef === procedureRef &&
-      candidate.subject.statBlockDamageNotation === undefined &&
+      battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+        candidate.subject,
+        "rolled",
+      ) &&
       candidate.subject.procedureRef !== undefined,
   );
   if (matchingActs.length !== 1) {

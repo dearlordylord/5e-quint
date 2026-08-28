@@ -13,6 +13,8 @@ import {
   spendAmmunitionForAcceptedAttackPendingContinuation,
 } from "./battle-ammunition.ts";
 import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-apply.ts";
+import { attackExecutionSelectionForOption } from "./battle-action-options.ts";
+import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
 import { BattleSnapshotSchema } from "./battle-reducer/battle-codecs.ts";
 import { snapshotBattle } from "./battle-execution-composition.ts";
 import {
@@ -171,18 +173,23 @@ describe("ammunition lifecycle", () => {
         attack.attack.ammunition === "arrow",
     );
     expect(shortbow).toBeDefined();
-    if (
-      shortbow?.kind !== "statBlockAttack" ||
-      shortbow.damageNotation !== "rolled"
-    ) {
+    if (shortbow?.kind !== "statBlockAttack") {
       return;
     }
+    const attackSelection = attackExecutionSelectionForOption(shortbow);
+    if (
+      !statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+        attackSelection.statBlockDamageSelection,
+        "rolled",
+      )
+    )
+      return;
 
     const subject = {
       tag: "action" as const,
       actorId: skeletonId,
       action: "attack" as const,
-      procedureRef: shortbow.procedureRef,
+      ...attackSelection,
     };
     const pending = spendAmmunitionForAcceptedAttackPendingContinuation({
       state: initial,
@@ -366,11 +373,14 @@ describe("ammunition lifecycle", () => {
       (attack) =>
         attack.kind === "statBlockAttack" &&
         attack.attack.ammunition === "arrow" &&
-        attack.damageNotation === "rolled",
+        statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+          attackExecutionSelectionForOption(attack).statBlockDamageSelection,
+          "rolled",
+        ),
     );
     expect(shortbow).toBeDefined();
     if (shortbow?.kind !== "statBlockAttack") return;
-    const attackSelection = { procedureRef: shortbow.procedureRef };
+    const attackSelection = attackExecutionSelectionForOption(shortbow);
     const targetSpatialFacts = {
       kind: "targetSpatialFacts" as const,
       holeId: ATTACK_TARGET_HOLE_ID,
@@ -391,7 +401,7 @@ describe("ammunition lifecycle", () => {
           trigger: readyTriggerDescriptionForTest("the synthetic target moves"),
           response: {
             kind: "attack" as const,
-            selection: { procedureRef: shortbow.procedureRef },
+            selection: attackSelection,
           },
           expiresAt: { kind: "startOfTurn" as const, combatantId: skeletonId },
         },

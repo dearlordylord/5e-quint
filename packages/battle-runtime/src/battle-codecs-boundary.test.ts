@@ -46,6 +46,7 @@ import {
 } from "./battle-runtime.test-support.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
+import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import {
   battleAreaId,
@@ -382,7 +383,7 @@ function staticDartSubject(
   {
     readonly tag: "action";
     readonly action: "attack";
-    readonly statBlockDamageNotation: "static";
+    readonly statBlockDamageSelection: unknown;
   }
 > {
   const subject = discoverBattleActs(session).find(
@@ -390,12 +391,20 @@ function staticDartSubject(
       candidate.tag === "action" &&
       candidate.action === "attack" &&
       candidate.actorId === goblinId &&
-      candidate.statBlockDamageNotation === "static",
+      candidate.statBlockDamageSelection !== undefined &&
+      statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+        candidate.statBlockDamageSelection,
+        "static",
+      ),
   )?.subject;
   if (
     subject?.tag !== "action" ||
     subject.action !== "attack" ||
-    subject.statBlockDamageNotation !== "static"
+    subject.statBlockDamageSelection === undefined ||
+    !statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+      subject.statBlockDamageSelection,
+      "static",
+    )
   ) {
     throw new Error("Expected a discovered static Stat Block attack.");
   }
@@ -790,7 +799,7 @@ describe("battle codec act ownership boundaries", () => {
         fighterId,
         {
           procedureRef: subject.procedureRef,
-          statBlockDamageNotation: "static",
+          statBlockDamageSelection: subject.statBlockDamageSelection,
         },
         movementFeet(5),
       ),
@@ -804,7 +813,7 @@ describe("battle codec act ownership boundaries", () => {
         {
           kind: "attackTargetDistance",
           procedureRef: subject.procedureRef,
-          statBlockDamageNotation: "static",
+          statBlockDamageSelection: subject.statBlockDamageSelection,
         },
       ],
     });
@@ -840,8 +849,12 @@ describe("battle codec act ownership boundaries", () => {
     const attackResponse = declarationHole.responseChoices.find(
       (response) =>
         response.kind === "attack" &&
-        "statBlockDamageNotation" in response.selection &&
-        response.selection.statBlockDamageNotation === "static",
+        "statBlockDamageSelection" in response.selection &&
+        response.selection.statBlockDamageSelection !== undefined &&
+        statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+          response.selection.statBlockDamageSelection,
+          "static",
+        ),
     );
     if (attackResponse?.kind !== "attack") {
       throw new Error("Expected the static Stat Block Ready response.");
@@ -903,7 +916,8 @@ describe("battle codec act ownership boundaries", () => {
       spatialFacts: [
         {
           kind: "attackTargetDistance",
-          statBlockDamageNotation: "static",
+          statBlockDamageSelection:
+            attackResponse.selection.statBlockDamageSelection,
         },
       ],
     });

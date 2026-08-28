@@ -1,6 +1,7 @@
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
+  singleBaseStatBlockAttackDamageSelectionForTest,
 } from "./battle-runtime.test-support.ts";
 import { Schema } from "effect";
 import fc from "fast-check";
@@ -295,13 +296,16 @@ describe("BattleSubject identity", () => {
         actorId,
         familiarId: companionId,
         procedureRef: statBlockProcedureRef,
+        statBlockDamageSelection:
+          singleBaseStatBlockAttackDamageSelectionForTest("rolled"),
       },
       {
         tag: "pactOfTheChainFamiliarAttack",
         actorId,
         familiarId: companionId,
         procedureRef: statBlockProcedureRef,
-        statBlockDamageNotation: "static",
+        statBlockDamageSelection:
+          singleBaseStatBlockAttackDamageSelectionForTest("static"),
       },
       {
         tag: "bonusAction",

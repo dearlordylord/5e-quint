@@ -23,6 +23,9 @@ import { Schema } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { describe, expect, test } from "vitest";
+import { attackExecutionSelectionForOption } from "./battle-action-options.ts";
+import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
+import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   applyCondition,
@@ -1178,12 +1181,17 @@ function pactScratchSubject(
   if (procedureRef === undefined) {
     throw new Error("Expected admitted Scratch procedure.");
   }
+  const attack = statBlockAttackActionOptions(familiar.origin.execution).find(
+    (candidate) => candidate.procedureRef === procedureRef,
+  );
+  if (attack === undefined) {
+    throw new Error("Expected executable Scratch damage selection.");
+  }
   return {
     tag: "pactOfTheChainFamiliarAttack",
     actorId,
     familiarId: subjectFamiliarId,
-    procedureRef,
-    statBlockDamageNotation: "static",
+    ...attackExecutionSelectionForOption(attack),
   };
 }
 
@@ -4577,13 +4585,19 @@ describe("Find Familiar lifecycle", () => {
       (act) =>
         act.subject.tag === "pactOfTheChainFamiliarAttack" &&
         act.subject.procedureRef === scratchProcedureRef &&
-        act.subject.statBlockDamageNotation === undefined,
+        statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+          act.subject.statBlockDamageSelection,
+          "rolled",
+        ),
     )?.subject;
     const staticSubject = attackActs.find(
       (act) =>
         act.subject.tag === "pactOfTheChainFamiliarAttack" &&
         act.subject.procedureRef === scratchProcedureRef &&
-        act.subject.statBlockDamageNotation === "static",
+        statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+          act.subject.statBlockDamageSelection,
+          "static",
+        ),
     )?.subject;
     expect(rolledScratchSubject).toBeUndefined();
     if (staticSubject?.tag !== "pactOfTheChainFamiliarAttack") {
@@ -5168,7 +5182,10 @@ describe("Find Familiar lifecycle", () => {
     ).find(
       (act) =>
         act.subject.tag === "pactOfTheChainFamiliarAttack" &&
-        act.subject.statBlockDamageNotation === undefined,
+        statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+          act.subject.statBlockDamageSelection,
+          "rolled",
+        ),
     );
     expect(discoveredPactAttack?.subject.tag).toBe(
       "pactOfTheChainFamiliarAttack",

@@ -4,7 +4,11 @@ import { describe, expect, test } from "vitest";
 import { createMcpPlaySessionRoot, handleToolCall } from "./server.ts";
 import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
 import { characterDraftId } from "@dnd/character-creation-runtime";
-import { combatantId, type BattleActPresentation } from "@dnd/battle-runtime";
+import {
+  combatantId,
+  type BattleActPresentation,
+  type StatBlockAttackDamageSelection,
+} from "@dnd/battle-runtime";
 import { characterIdFromDraftId } from "./session-store.ts";
 import {
   GENERIC_COMBAT_ACTION_LABELS,
@@ -1896,9 +1900,18 @@ type BoundAttackSubjectView = {
   readonly actorId: string;
   readonly action: "attack";
   readonly procedureRef: string;
-  readonly attackAbility?: string;
-  readonly attackDamageType?: string;
-};
+} & (
+  | {
+      readonly attackAbility: string;
+      readonly attackDamageType: string;
+      readonly statBlockDamageSelection?: never;
+    }
+  | {
+      readonly attackAbility?: never;
+      readonly attackDamageType?: never;
+      readonly statBlockDamageSelection: StatBlockAttackDamageSelection;
+    }
+);
 
 type BattleHoleView = {
   readonly kind: string;
@@ -1933,8 +1946,10 @@ function requireAttackAct(
       act.subject.actorId === actorId &&
       "action" in act.subject &&
       act.subject.action === "attack" &&
-      (!("statBlockDamageNotation" in act.subject) ||
-        act.subject.statBlockDamageNotation === undefined) &&
+      act.subject.attackAbility === undefined &&
+      act.subject.statBlockDamageSelection.every(
+        ({ notation }) => notation === "rolled",
+      ) &&
       act.summary === `Take the Attack action with ${attackName}.`,
   );
   const [act] = matchingActs;

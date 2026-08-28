@@ -52,6 +52,10 @@ import {
   TRANSMUTED_SPELL_DAMAGE_TYPES,
 } from "./battle-reducer/metamagic-transmuted-facts.ts";
 import { attackExecutionSelectionKey } from "./battle-action-options.ts";
+import {
+  StatBlockAttackDamageSelection,
+  statBlockAttackDamageSelectionKey,
+} from "./stat-block-attack-damage-selection.ts";
 
 export const BATTLE_SUBJECT_ACTIONS = [
   "attack",
@@ -528,28 +532,18 @@ const CharacterAttackExecutionSelectionSchema = Schema.Struct({
   attackAbility: BattleAttackExecutionAbilitySchema,
   attackDamageType: DamageTypeSchema,
   attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+  statBlockDamageSelection: Schema.optionalWith(Schema.Never, {
+    exact: true,
+  }),
 });
 
-const RolledStatBlockAttackExecutionSelectionSchema = Schema.Struct({
+const StatBlockAttackExecutionSelectionSchema = Schema.Struct({
   procedureRef: BattleStatBlockProcedureExecutionRef,
   attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
   attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
   attackName: Schema.optionalWith(Schema.Never, { exact: true }),
-  statBlockDamageNotation: Schema.optionalWith(Schema.Never, { exact: true }),
+  statBlockDamageSelection: StatBlockAttackDamageSelection,
 });
-
-const StaticStatBlockAttackExecutionSelectionSchema = Schema.Struct({
-  procedureRef: BattleStatBlockProcedureExecutionRef,
-  attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
-  attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
-  attackName: Schema.optionalWith(Schema.Never, { exact: true }),
-  statBlockDamageNotation: Schema.Literal("static"),
-});
-
-const StatBlockAttackExecutionSelectionSchema = Schema.Union(
-  RolledStatBlockAttackExecutionSelectionSchema,
-  StaticStatBlockAttackExecutionSelectionSchema,
-);
 
 export const BattleAttackExecutionSelectionSchema = Schema.Union(
   CharacterAttackExecutionSelectionSchema,
@@ -586,7 +580,9 @@ export const BattleSubjectSchema = Schema.Union(
     attackDamageType: DamageTypeSchema,
     attackName: Schema.optionalWith(Schema.Never, { exact: true }),
     statBlockSection: Schema.optionalWith(Schema.Never, { exact: true }),
-    statBlockDamageNotation: Schema.optionalWith(Schema.Never, { exact: true }),
+    statBlockDamageSelection: Schema.optionalWith(Schema.Never, {
+      exact: true,
+    }),
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
@@ -597,27 +593,14 @@ export const BattleSubjectSchema = Schema.Union(
     attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
     attackName: Schema.optionalWith(Schema.Never, { exact: true }),
     statBlockSection: Schema.optionalWith(Schema.Never, { exact: true }),
-    statBlockDamageNotation: Schema.optionalWith(Schema.Never, { exact: true }),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
-    action: Schema.Literal("attack"),
-    procedureRef: BattleStatBlockProcedureExecutionRef,
-    attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
-    attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
-    attackName: Schema.optionalWith(Schema.Never, { exact: true }),
-    statBlockSection: Schema.optionalWith(Schema.Never, { exact: true }),
-    statBlockDamageNotation: Schema.Literal("static"),
+    statBlockDamageSelection: StatBlockAttackDamageSelection,
   }),
   Schema.Struct({
     tag: Schema.Literal("pactOfTheChainFamiliarAttack"),
     actorId: CombatantId,
     familiarId: CombatantId,
     procedureRef: BattleStatBlockProcedureExecutionRef,
-    statBlockDamageNotation: Schema.optionalWith(Schema.Literal("static"), {
-      exact: true,
-    }),
+    statBlockDamageSelection: StatBlockAttackDamageSelection,
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
@@ -1737,7 +1720,7 @@ function battleSubjectKey(subject: BattleSubject): string {
         attack.actorId,
         attack.familiarId,
         attack.procedureRef,
-        attack.statBlockDamageNotation ?? "rolled",
+        statBlockAttackDamageSelectionKey(attack.statBlockDamageSelection),
       ]),
     ),
     Match.orElse((remainingSubject) =>
@@ -1748,9 +1731,6 @@ function battleSubjectKey(subject: BattleSubject): string {
             attack.actorId,
             attack.action,
             attackExecutionSelectionKey(attack),
-            "statBlockDamageNotation" in attack
-              ? (attack.statBlockDamageNotation ?? "rolled")
-              : null,
           ]),
         ),
         Match.when({ tag: "action", action: "dash" }, (action) =>
