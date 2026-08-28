@@ -71,6 +71,7 @@ import {
   type CompletedGlyphInscriptionWitness,
   type GlyphDurableOccurrenceEndWitness,
   type GlyphDurableOccurrenceProfile,
+  type GlyphDurableOccurrenceTemplate,
   type GlyphExplosiveRuneReleaseProfile,
   type GlyphStoredSpellReleaseProfile,
 } from "./battle-reducer/glyph-durable-occurrence.ts";
@@ -191,6 +192,7 @@ import {
 import {
   battleProcedureExecutionRefForSpellHoleForTest,
   battleEffectExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   combatantId,
   battleProcedureExecutionRefForTest,
   characterBattleFeatureInitForTest,
@@ -199,10 +201,13 @@ import {
 
 const executionRegistry = spellProcedureExecutionRegistry();
 
-type GlyphDurableOccurrenceEffect = Extract<
+type StoredGlyphDurableOccurrenceEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "glyphDurableOccurrence" }
 >;
+type GlyphDurableOccurrenceFacts =
+  | GlyphDurableOccurrenceTemplate
+  | StoredGlyphDurableOccurrenceEffect;
 type TestSpellSlotLevel = NonNullable<
   Parameters<typeof spellBattle>[0]["spellSlots"]
 >[number]["spellLevel"];
@@ -4808,19 +4813,21 @@ function stateWithOrdinaryMindSpikeConcentration(
       combatantId: spellCasterId,
       durationTicks: elapsedTimeTicks(600),
     },
-  } as const satisfies Extract<
-    BattleActiveEffect,
-    { readonly kind: "spellConcentrationDuration" }
-  >;
+  } as const;
+  const allocatedState = battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: spellCasterId,
+    effect: durationEffect,
+  });
+  const allocatedCaster = requireCombatant(allocatedState, spellCasterId);
   return {
-    ...state,
-    combatants: new Map(state.combatants).set(spellCasterId, {
-      ...caster,
+    ...allocatedState,
+    combatants: new Map(allocatedState.combatants).set(spellCasterId, {
+      ...allocatedCaster,
       concentration: {
         sourceProcedureRef: durationEffect.sourceProcedureRef,
         effectKind: "spellEffect",
       },
-      activeEffects: [...caster.activeEffects, durationEffect],
     }),
   };
 }
@@ -5059,7 +5066,7 @@ function requireCompletedGlyphEffect(input: {
   readonly anchor: CompletedGlyphInscriptionWitness["anchor"];
   readonly sourceSpellLevel?: BattleSpellEffectLevel;
   readonly release?: CompletedGlyphInscriptionWitness["release"];
-}): GlyphDurableOccurrenceEffect {
+}): GlyphDurableOccurrenceTemplate {
   const result = glyphDurableOccurrenceEffectFromCompletedInscription({
     profile: requireGlyphProfile(),
     witness: completedGlyphInscriptionWitness({
@@ -5110,7 +5117,7 @@ function glyphBattleSession(
 }
 
 function stateWithGlyphEffect(
-  effect: GlyphDurableOccurrenceEffect,
+  effect: GlyphDurableOccurrenceTemplate,
   state: BattleState = glyphBattle(),
 ): BattleState {
   const added = addGlyphDurableOccurrence({ state, effect });
@@ -5121,7 +5128,7 @@ function stateWithGlyphEffect(
 }
 
 function sessionWithGlyphEffect(
-  effect: GlyphDurableOccurrenceEffect,
+  effect: GlyphDurableOccurrenceTemplate,
   input: Parameters<typeof spellBattle>[0] = {},
 ): BattleRuntimeSession {
   const session = glyphBattleSession(input);
@@ -5194,12 +5201,12 @@ function casterSpellSlotExpended(
 
 function glyphEffects(
   state: BattleState,
-): readonly GlyphDurableOccurrenceEffect[] {
+): readonly StoredGlyphDurableOccurrenceEffect[] {
   return (
     state.combatants
       .get(spellCasterId)
       ?.activeEffects.filter(
-        (effect): effect is GlyphDurableOccurrenceEffect =>
+        (effect): effect is StoredGlyphDurableOccurrenceEffect =>
           effect.kind === "glyphDurableOccurrence",
       ) ?? []
   );
@@ -5232,7 +5239,6 @@ function stateWithTargetHideousLaughter(
   state: BattleState,
   combatantId: typeof spellTargetId,
 ): BattleState {
-  const target = requireCombatant(state, combatantId);
   const hideousLaughterEffect = {
     kind: "hideousLaughter",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -5248,14 +5254,12 @@ function stateWithTargetHideousLaughter(
       combatantId: spellCasterId,
       durationTicks: elapsedTimeTicks(60),
     },
-  } satisfies Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>;
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(combatantId, {
-      ...target,
-      activeEffects: [...target.activeEffects, hideousLaughterEffect],
-    }),
-  };
+  } as const;
+  return battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: combatantId,
+    effect: hideousLaughterEffect,
+  });
 }
 
 function stateWithSpellDamageReduction(
@@ -5263,7 +5267,6 @@ function stateWithSpellDamageReduction(
   targetId: CombatantId,
   damageType: DamageType,
 ): BattleState {
-  const target = requireCombatant(state, targetId);
   const spellDamageReductionEffect = {
     kind: "spellDamageReduction",
     sourceProcedureRef: glyphProcedureRef,
@@ -5275,17 +5278,12 @@ function stateWithSpellDamageReduction(
       kind: "duration",
       durationTicks: elapsedTimeTicks(60),
     },
-  } satisfies Extract<
-    BattleActiveEffect,
-    { readonly kind: "spellDamageReduction" }
-  >;
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(targetId, {
-      ...target,
-      activeEffects: [...target.activeEffects, spellDamageReductionEffect],
-    }),
-  };
+  } as const;
+  return battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: targetId,
+    effect: spellDamageReductionEffect,
+  });
 }
 
 function damageImmuneHumanoidStatBlock(damageType: "force" | "thunder") {
@@ -5482,7 +5480,7 @@ function attackDamageDispositionFill(
 
 function glyphSavingThrowOutcomeFillForTargets(input: {
   readonly state: BattleState;
-  readonly effect: GlyphDurableOccurrenceEffect;
+  readonly effect: GlyphDurableOccurrenceFacts;
   readonly targetIds: readonly [CombatantId, ...CombatantId[]];
   readonly outcomes: Extract<
     BattleFill,
@@ -5501,7 +5499,7 @@ function glyphSavingThrowOutcomeFillForTargets(input: {
 
 function glyphExplosiveRuneReleaseWitness(input: {
   readonly state: BattleState;
-  readonly effect: GlyphDurableOccurrenceEffect;
+  readonly effect: GlyphDurableOccurrenceFacts;
   readonly profile: GlyphExplosiveRuneReleaseProfile;
   readonly outcomes: Extract<
     BattleFill,
@@ -5541,7 +5539,7 @@ function glyphExplosiveRuneReleaseWitness(input: {
 
 function requireGlyphSavingThrowOutcomeHole(input: {
   readonly state: BattleState;
-  readonly effect: GlyphDurableOccurrenceEffect;
+  readonly effect: GlyphDurableOccurrenceFacts;
   readonly targetIds: readonly [CombatantId, ...CombatantId[]];
 }): NonNullable<ReturnType<typeof glyphExplosiveRuneSavingThrowOutcomeHole>> {
   const hole = glyphExplosiveRuneSavingThrowOutcomeHole(input);
