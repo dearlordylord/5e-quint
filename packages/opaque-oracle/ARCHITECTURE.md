@@ -52,13 +52,15 @@ rejects source files, maps, symlinks, workspace links, repository paths, and
 unresolved non-builtin imports.
 
 `oracle-main.ts` is the one executable root and delegates process edges to
-`oracle-bootstrap.ts`. Its exhaustive modes are `identity` and persistent
-UTF-8/LF-framed `stream`; the latter delegates every raw frame to the shared
-batch operation and writes one buffered response plus LF. Decode/domain
-rejection is response data, while an evaluator or process defect aborts
-without writing a partial response. Future HTTP support extends this same
-mode root and distribution rather than introducing another composition or
-evaluator.
+`oracle-bootstrap.ts`. Its exhaustive commands are `identity`, persistent
+UTF-8/LF-framed `stream`, and loopback-only `serve`. Both evaluation adapters
+delegate raw input to the shared batch operation and buffer one response before
+writing it. Decode/domain rejection is response data; a stream evaluator defect
+aborts without a partial response, while an HTTP evaluator defect produces one
+atomic transport 500 and leaves the listener available for later requests.
+The HTTP adapter owns only request framing, route/status mapping, and listener
+lifecycle. Startup loads one immutable `OracleApplication`; it does not create
+a second composition, evaluator, catalog, asset, or distribution manifest.
 
 ## Corpus publication
 

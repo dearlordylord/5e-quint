@@ -15,9 +15,13 @@ import {
   type OracleEvaluationServicesBuildIssues,
 } from "./oracle-catalog-services.ts";
 import {
-  makeOracleBatchOperation,
+  evaluateOracleBatchJson,
   type OracleBatchOperation,
 } from "./oracle-batch-operation.ts";
+import {
+  makeOracleBatchOperationInternal,
+  type OracleBatchEvaluator,
+} from "./oracle-batch-operation-internal.ts";
 import {
   parseJsonWithDuplicateDetection,
   type OracleDecodeIssues,
@@ -62,6 +66,30 @@ export type OracleApplication = {
   readonly services: OracleEvaluationServices;
   readonly evaluateJson: (rawJson: string) => ReturnType<OracleBatchOperation>;
 };
+
+/**
+ * Compose a test-only application at the same boundary as distribution
+ * loading. The replacement operation receives the original identity,
+ * projection, and services through one newly branded application value.
+ *
+ * This leaf export is intentionally omitted from the package barrel; it is
+ * only for package-owned defect and adapter tests.
+ */
+export function withOracleBatchEvaluatorForTest(
+  application: OracleApplication,
+  evaluator: OracleBatchEvaluator,
+): OracleApplication {
+  const operation = makeOracleBatchOperationInternal(evaluator);
+  const composed: OracleApplication = Object.freeze({
+    [oracleApplicationBrand]: true,
+    identity: application.identity,
+    projection: application.projection,
+    services: application.services,
+    evaluateJson: (rawJson: string) =>
+      operation({ application: composed, rawJson }),
+  });
+  return composed;
+}
 
 export type OracleApplicationBuildIssue =
   | {
@@ -204,13 +232,13 @@ function buildOracleApplicationFromProjection(input: {
     distributionId: input.distributionId,
   });
   const servicesValue = deepFreeze(services.right);
-  const operation = makeOracleBatchOperation();
   const application: OracleApplication = Object.freeze({
     [oracleApplicationBrand]: true,
     identity,
     projection,
     services: servicesValue,
-    evaluateJson: (rawJson: string) => operation({ application, rawJson }),
+    evaluateJson: (rawJson: string) =>
+      evaluateOracleBatchJson({ application, rawJson }),
   });
   return Either.right(application);
 }
