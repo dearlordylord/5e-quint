@@ -1,6 +1,6 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 import fc from "fast-check";
-import { Schema } from "effect";
+import { ParseResult, Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 import { decodeStatBlockRecordEither } from "@dnd/surface/surface/schema";
@@ -1652,47 +1652,22 @@ describe("battle boundary admission owners", () => {
         ac: { value: { kind: "caster_derived", source: "spell_save_dc" } },
       },
     });
-    expect(malformedArmorClass).toMatchObject({
-      _tag: "Left",
-      left: {
-        _tag: "ParseError",
-        issue: {
-          _tag: "Composite",
-          issues: {
-            _tag: "Pointer",
-            path: "statBlock",
-            issue: {
-              _tag: "Refinement",
-              issue: {
-                _tag: "Composite",
-                issues: {
-                  _tag: "Pointer",
-                  path: "ac",
-                  issue: {
-                    _tag: "Composite",
-                    issues: {
-                      _tag: "Pointer",
-                      path: "value",
-                      issue: {
-                        _tag: "Refinement",
-                        issue: {
-                          _tag: "Composite",
-                          issues: {
-                            _tag: "Pointer",
-                            path: "source",
-                            issue: { _tag: "Unexpected" },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
+    expect(Either.isLeft(malformedArmorClass)).toBe(true);
+    if (Either.isRight(malformedArmorClass)) {
+      throw new Error("Expected malformed Armor Class source to be rejected.");
+    }
+    expect(malformedArmorClass.left._tag).toBe("ParseError");
+    const armorClassParseIssues = ParseResult.ArrayFormatter.formatErrorSync(
+      malformedArmorClass.left,
+    );
+    expect(armorClassParseIssues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          _tag: "Unexpected",
+          path: ["statBlock", "ac", "value", "source"],
+        }),
+      ]),
+    );
     const malformedCreatureType = decodeStatBlockRecordEither({
       ...authoredSource,
       statBlock: { ...authoredSource.statBlock, creatureType: 42 },
