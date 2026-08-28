@@ -118,6 +118,34 @@ function replaceActSubject(
   };
 }
 
+function replaceCastActWithLevitateAltitudeControl(
+  snapshot: EncodedSnapshot,
+  input: {
+    readonly sourceProcedureRef: string;
+    readonly subjectEffectRef: string;
+    readonly altitudeHole: EncodedHole;
+  },
+): EncodedSnapshot {
+  return replaceActSubject(
+    snapshot,
+    (act) =>
+      act.subject.tag === "actionSpell" &&
+      act.subject.mode.tag === "cast" &&
+      act.subject.procedureRef === input.sourceProcedureRef,
+    (act) => ({
+      ...act,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: wizardId,
+        command: "levitateAltitudeControl",
+        effectRef: input.subjectEffectRef,
+        targetId: skeletonId,
+      },
+      initialHoles: [input.altitudeHole],
+    }),
+  );
+}
+
 function replaceActOwner(
   snapshot: EncodedSnapshot,
   predicate: (act: EncodedAct) => boolean,
@@ -334,6 +362,23 @@ function codecFixture() {
       },
       {
         kind: "activeEffect",
+        ownerId: skeletonId,
+        effect: {
+          kind: "spellLevitatedCreature",
+          sourceProcedureRef: sourceBinding.procedureRef,
+          sourceCombatantId: wizardId,
+          altitudeFeet: movementFeet(10),
+          maxAltitudeChangeFeet: movementFeet(20),
+          rangeFeet: movementFeet(60),
+          expiresAt: {
+            kind: "concentration",
+            combatantId: wizardId,
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
+        kind: "activeEffect",
         ownerId: wizardId,
         effect: {
           kind: "antimagicFieldOngoingSpellSuppression",
@@ -417,6 +462,15 @@ function codecFixture() {
   if (skeletonStoredLightEmitter?.kind !== "storedLightEmitter") {
     throw new Error("Expected a codec stored light emitter occurrence.");
   }
+  const levitateEffectRefs = allocated.occurrences.flatMap((occurrence) =>
+    occurrence.kind === "activeEffect" &&
+    occurrence.effect.kind === "spellLevitatedCreature"
+      ? [occurrence.effect.effectRef]
+      : [],
+  );
+  if (levitateEffectRefs.length !== 2) {
+    throw new Error("Expected two codec Levitate effect occurrences.");
+  }
   return {
     snapshot: Schema.encodeSync(BattleSnapshotSchema)(
       snapshotBattle(allocated.state),
@@ -432,6 +486,7 @@ function codecFixture() {
     spikeGrowthEffectRef: activeEffectRef("spikeGrowthHazard"),
     gustOfWindEffectRef: activeEffectRef("gustOfWindLine"),
     levitateEffectRef: activeEffectRef("spellLevitatedCreature"),
+    secondLevitateEffectRef: levitateEffectRefs[1]!,
     antimagicFieldEffectRef: activeEffectRef(
       "antimagicFieldOngoingSpellSuppression",
     ),
@@ -1154,7 +1209,7 @@ describe("battle codec execution-reference boundaries", () => {
     },
   );
 
-  test("binds a Levitate altitude hole to the target-owned active effect", () => {
+  test("binds a Levitate altitude act and hole to the same target-owned active effect", () => {
     const altitudeHole = hole("levitateAltitudeChange", {
       kind: "levitateAltitudeChange",
       effectRef: fixture.levitateEffectRef,
@@ -1167,11 +1222,11 @@ describe("battle codec execution-reference boundaries", () => {
     expect(
       Result.isSuccess(
         Schema.decodeUnknownResult(BattleSnapshotSchema)(
-          replaceActHole(
-            fixture.snapshot,
-            fixture.sourceProcedureRef,
+          replaceCastActWithLevitateAltitudeControl(fixture.snapshot, {
+            sourceProcedureRef: fixture.sourceProcedureRef,
+            subjectEffectRef: fixture.levitateEffectRef,
             altitudeHole,
-          ),
+          }),
         ),
       ),
     ).toBe(true);
@@ -1180,13 +1235,23 @@ describe("battle codec execution-reference boundaries", () => {
       fixture.storedLightEmitterRef,
     ]) {
       expectSnapshotDecodeLeft(
-        replaceActHole(
-          fixture.snapshot,
-          fixture.sourceProcedureRef,
-          encodeHole({ ...altitudeHole, effectRef }),
-        ),
+        replaceCastActWithLevitateAltitudeControl(fixture.snapshot, {
+          sourceProcedureRef: fixture.sourceProcedureRef,
+          subjectEffectRef: fixture.levitateEffectRef,
+          altitudeHole: encodeHole({ ...altitudeHole, effectRef }),
+        }),
       );
     }
+    expectSnapshotDecodeLeft(
+      replaceCastActWithLevitateAltitudeControl(fixture.snapshot, {
+        sourceProcedureRef: fixture.sourceProcedureRef,
+        subjectEffectRef: fixture.levitateEffectRef,
+        altitudeHole: encodeHole({
+          ...altitudeHole,
+          effectRef: fixture.secondLevitateEffectRef,
+        }),
+      }),
+    );
   });
 
   test("binds an Antimagic Field target choice to the source-owned aura occurrence", () => {

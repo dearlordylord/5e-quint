@@ -6094,7 +6094,33 @@ export const BattleActPresentationSchema = Schema.Union([
 const BattleActExecutionCandidateSchema = Schema.Struct({
   subject: BattleSubjectSchema,
   initialHoles: Schema.Array(BattleHoleSchema),
-});
+}).pipe(
+  Schema.check(
+    Schema.makeFilter(
+      (act) => {
+        const subject = act.subject;
+        if (
+          subject.tag !== "runtimeCommand" ||
+          subject.command !== "levitateAltitudeControl"
+        ) {
+          return true;
+        }
+        const altitudeHole = act.initialHoles[0];
+        return (
+          act.initialHoles.length === 1 &&
+          altitudeHole?.kind === "levitateAltitudeChange" &&
+          altitudeHole.effectRef === subject.effectRef &&
+          altitudeHole.actorId === subject.actorId &&
+          altitudeHole.targetId === subject.targetId
+        );
+      },
+      {
+        message:
+          "Levitate altitude control subjects and initial holes must identify the same effect occurrence, actor, and target.",
+      },
+    ),
+  ),
+);
 
 const BattleReadiedSpellSnapshotSchema = Schema.Struct({
   casterId: CombatantId,
