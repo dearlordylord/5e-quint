@@ -1,0 +1,340 @@
+{
+  "challengeRating": 21,
+  "id": "stat_block_lich",
+  "kind": "statBlock",
+  "name": "Lich",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-H-L.md:705-757"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 16,
+      "con": 16,
+      "dex": 16,
+      "int": 21,
+      "str": 11,
+      "wis": 14
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 20
+      }
+    },
+    "actions": [
+      {
+        "description": "The lich makes three attacks, using Eldritch Burst or Paralyzing Touch in any combination.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Melee or Ranged Attack Roll: +12, reach 5 ft. or range 120 ft. Hit: 31 (4d12 + 5) Force damage.",
+        "kind": "textOnly",
+        "name": "Eldritch Burst",
+        "procedureOrdinal": 2,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Melee Attack Roll: +12, reach 5 ft. Hit: 15 (3d6 + 5) Cold damage, and the target has the Paralyzed condition until the start of the lich's next turn.",
+        "kind": "textOnly",
+        "name": "Paralyzing Touch",
+        "procedureOrdinal": 3,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "int",
+          "groups": [
+            {
+              "kind": "at_will",
+              "resourceRefs": {
+                "kind": "none"
+              },
+              "spells": [
+                {
+                  "spellId": "detect_magic"
+                },
+                {
+                  "spellId": "detect_thoughts"
+                },
+                {
+                  "spellId": "dispel_magic"
+                },
+                {
+                  "castAtLevel": 5,
+                  "spellId": "fireball"
+                },
+                {
+                  "spellId": "invisibility"
+                },
+                {
+                  "castAtLevel": 5,
+                  "spellId": "lightning_bolt"
+                },
+                {
+                  "spellId": "mage_hand"
+                },
+                {
+                  "spellId": "prestidigitation"
+                }
+              ]
+            },
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  1
+                ]
+              },
+              "spells": [
+                {
+                  "spellId": "animate_dead"
+                },
+                {
+                  "spellId": "dimension_door"
+                },
+                {
+                  "spellId": "plane_shift"
+                }
+              ]
+            },
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  2
+                ]
+              },
+              "spells": [
+                {
+                  "spellId": "chain_lightning"
+                },
+                {
+                  "spellId": "finger_of_death"
+                },
+                {
+                  "spellId": "power_word_kill"
+                },
+                {
+                  "spellId": "scrying"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Spellcasting",
+          "spellSaveDc": {
+            "dc": 20,
+            "kind": "fixed"
+          }
+        },
+        "procedureOrdinal": 4,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "neutral"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "all"
+      }
+    },
+    "creatureType": "undead",
+    "creatureTypeTags": [
+      "wizard"
+    ],
+    "gear": [
+      {
+        "item": "Component Pouch"
+      }
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 315
+    },
+    "immunities": {
+      "conditions": [
+        "charmed",
+        "exhaustion",
+        "frightened",
+        "paralyzed",
+        "poisoned"
+      ],
+      "damageTypes": [
+        "necrotic",
+        "poison"
+      ]
+    },
+    "initiative": {
+      "modifier": 17,
+      "score": 27
+    },
+    "legendaryActions": {
+      "entries": [
+        {
+          "description": "The lich teleports up to 60 feet to an unoccupied space it can see, and each creature within 10 feet of the space it left takes 11 (2d10) Necrotic damage.",
+          "kind": "textOnly",
+          "name": "Deathly Teleport",
+          "procedureOrdinal": 1,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        },
+        {
+          "description": "Constitution Saving Throw: DC 20, each creature that isn't an Undead in a 20-foot Emanation originating from the lich. Failure: 31 (9d6) Necrotic damage. Success: Half damage. Failure or Success: The lich can't take this action again until the start of its next turn.",
+          "kind": "textOnly",
+          "name": "Disrupt Life",
+          "procedureOrdinal": 2,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        },
+        {
+          "description": "The lich casts Fear, using the same spellcasting ability as Spellcasting. The lich can't take this action again until the start of its next turn.",
+          "kind": "textOnly",
+          "name": "Frightening Gaze",
+          "procedureOrdinal": 3,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        }
+      ],
+      "uses": {
+        "additionalUsesInLair": 1,
+        "kind": "lair_bonus",
+        "usesOutsideLair": 3
+      }
+    },
+    "passivePerception": 19,
+    "reactions": [
+      {
+        "description": "The lich casts Counterspell or Shield in response to the spell's trigger, using the same spellcasting ability as Spellcasting.",
+        "kind": "textOnly",
+        "name": "Protective Magic",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "resistances": {
+      "damageTypes": [
+        "cold",
+        "lightning"
+      ],
+      "kind": "fixed"
+    },
+    "resources": [
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 2
+        },
+        "ordinal": 1,
+        "ownership": "each"
+      },
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 1
+        },
+        "ordinal": 2,
+        "ownership": "each"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 0
+      },
+      {
+        "ability": "dex",
+        "modifier": 10
+      },
+      {
+        "ability": "con",
+        "modifier": 10
+      },
+      {
+        "ability": "int",
+        "modifier": 12
+      },
+      {
+        "ability": "wis",
+        "modifier": 9
+      },
+      {
+        "ability": "cha",
+        "modifier": 3
+      }
+    ],
+    "senses": [
+      {
+        "kind": "truesight",
+        "rangeFeet": 120
+      }
+    ],
+    "size": "medium",
+    "skillModifiers": [
+      {
+        "modifier": 19,
+        "skill": "arcana"
+      },
+      {
+        "modifier": 12,
+        "skill": "history"
+      },
+      {
+        "modifier": 9,
+        "skill": "insight"
+      },
+      {
+        "modifier": 9,
+        "skill": "perception"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      }
+    ],
+    "traits": [
+      {
+        "description": "If the lich fails a saving throw, it can choose to succeed instead.",
+        "name": "Legendary Resistance (4/Day, or 5/Day in Lair)"
+      },
+      {
+        "description": "If destroyed, the lich reforms in 1d10 days if it has a spirit jar, reviving with all its Hit Points. The new body appears in an unoccupied space within the lich's lair.",
+        "name": "Spirit Jar"
+      }
+    ]
+  }
+}
