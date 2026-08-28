@@ -26,7 +26,10 @@ import {
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime.test-support.ts";
 import {
   breakBattleConcentration,
   discoverBattleActCandidates,
@@ -331,6 +334,7 @@ describe("L12G deterministic Levitate creature admission", () => {
           provokedOpportunityAttacks: [],
           levitatedMovement: {
             kind: "levitatedMovement",
+            effectRef: requireLevitatedEffect(targetTurn.state).effectRef,
             sourceCombatantId: spellCasterId,
             sourceProcedureRef: requireLevitatedEffect(targetTurn.state)
               .sourceProcedureRef,
@@ -358,6 +362,7 @@ describe("L12G deterministic Levitate creature admission", () => {
           provokedOpportunityAttacks: [],
           levitatedMovement: {
             kind: "levitatedMovement",
+            effectRef: requireLevitatedEffect(targetTurn.state).effectRef,
             sourceCombatantId: spellCasterId,
             sourceProcedureRef: requireLevitatedEffect(targetTurn.state)
               .sourceProcedureRef,
@@ -412,6 +417,7 @@ describe("L12G deterministic Levitate creature admission", () => {
     const witnessedAltitudeChange = levitateAltitudeChangeFill(hole, "up", 10, [
       {
         kind: "levitatedTargetWithinSpellRange",
+        effectRef: levitated.effectRef,
         sourceCombatantId: spellCasterId,
         sourceProcedureRef: levitated.sourceProcedureRef,
         targetId: spellTargetId,
@@ -465,6 +471,78 @@ describe("L12G deterministic Levitate creature admission", () => {
     });
   });
 
+  test("altitude control mutates only the selected Levitate occurrence", () => {
+    const cast = castWillingLevitate();
+    const casterTurn = advanceToNextCasterTurn(cast.state);
+    const original = requireLevitatedEffect(casterTurn);
+    const selectedEffectRef = battleEffectExecutionRefForTest(
+      "second-levitate-occurrence",
+    );
+    const target = requireCombatant(casterTurn, spellTargetId);
+    const twoOccurrences: BattleState = {
+      ...casterTurn,
+      combatants: new Map(casterTurn.combatants).set(spellTargetId, {
+        ...target,
+        activeEffects: [
+          ...target.activeEffects,
+          { ...original, effectRef: selectedEffectRef },
+        ],
+      }),
+    };
+    const altitudeAct = discoverBattleActCandidates(twoOccurrences).find(
+      (candidate) =>
+        candidate.subject.tag === "runtimeCommand" &&
+        candidate.subject.command === "levitateAltitudeControl" &&
+        candidate.subject.effectRef === selectedEffectRef,
+    );
+    if (altitudeAct === undefined) {
+      throw new Error("Expected the selected Levitate occurrence control act.");
+    }
+    const hole = requireHole(
+      altitudeAct.initialHoles,
+      "levitateAltitudeChange",
+    );
+    expect(hole.effectRef).toBe(selectedEffectRef);
+    const raised = resolveBattleSubject({
+      state: twoOccurrences,
+      subject: altitudeAct.subject,
+      fills: [
+        levitateAltitudeChangeFill(hole, "up", 10, [
+          {
+            kind: "levitatedTargetWithinSpellRange",
+            effectRef: selectedEffectRef,
+            sourceCombatantId: spellCasterId,
+            sourceProcedureRef: original.sourceProcedureRef,
+            targetId: spellTargetId,
+            rangeFeet: movementFeet(60),
+          },
+        ]),
+      ],
+    });
+    expect(raised).toMatchObject({ tag: "resolved" });
+    if (raised.tag !== "resolved") {
+      throw new Error("Expected exact-occurrence altitude control to resolve.");
+    }
+    const levitateEffects = requireCombatant(
+      raised.state,
+      spellTargetId,
+    ).activeEffects.filter(
+      (effect) => effect.kind === "spellLevitatedCreature",
+    );
+    expect(levitateEffects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          effectRef: original.effectRef,
+          altitudeFeet: movementFeet(20),
+        }),
+        expect.objectContaining({
+          effectRef: selectedEffectRef,
+          altitudeFeet: movementFeet(30),
+        }),
+      ]),
+    );
+  });
+
   test("self-target Levitate uses movement, not a caster Magic Action, to change altitude", () => {
     const cast = castWillingLevitate({
       targetId: spellCasterId,
@@ -497,6 +575,8 @@ describe("L12G deterministic Levitate creature admission", () => {
           provokedOpportunityAttacks: [],
           levitatedMovement: {
             kind: "levitatedMovement",
+            effectRef: requireLevitatedEffect(casterTurn, spellCasterId)
+              .effectRef,
             sourceCombatantId: spellCasterId,
             sourceProcedureRef: requireLevitatedEffect(
               casterTurn,
@@ -577,6 +657,9 @@ describe("L12G deterministic Levitate creature admission", () => {
           ...target.activeEffects,
           {
             kind: "damageResistance" as const,
+            effectRef: battleEffectExecutionRefForTest(
+              "synthetic-levitate-unrelated-resistance-effect",
+            ),
             sourceProcedureRef: unrelatedSource,
             sourceCombatantId: spellTargetId,
             damageType: "cold" as const,

@@ -3,7 +3,11 @@
 // Levitate creature-branch state and caller-witnessed altitude controls.
 
 import { movementFeet, type MovementFeet } from "@dnd/shared/types";
-import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
+import type {
+  BattleEffectExecutionRef,
+  BattleProcedureExecutionRef,
+  CombatantId,
+} from "../identity.ts";
 import type {
   BattleCreatureState,
   BattleLevitateAltitudeChangeHole,
@@ -27,15 +31,14 @@ export const LEVITATE_ALTITUDE_CONTROL_FEET = movementFeet(20);
 
 export function activeLevitatedCreatureEffect(
   combatant: BattleCreatureState | undefined,
-  source?: {
-    readonly sourceCombatantId: CombatantId;
+  occurrence?: {
+    readonly effectRef: BattleEffectExecutionRef;
   },
 ): SpellLevitatedCreatureActiveEffect | undefined {
   return combatant?.activeEffects.find(
     (effect): effect is SpellLevitatedCreatureActiveEffect =>
       effect.kind === "spellLevitatedCreature" &&
-      (source === undefined ||
-        effect.sourceCombatantId === source.sourceCombatantId),
+      (occurrence === undefined || effect.effectRef === occurrence.effectRef),
   );
 }
 
@@ -60,10 +63,12 @@ export function activeLevitatedCreatureTargetsControlledBy(
 export function levitateAltitudeChangeHole(input: {
   readonly actorId: CombatantId;
   readonly targetId: CombatantId;
+  readonly effectRef: BattleEffectExecutionRef;
   readonly maxDistanceFeet: MovementFeet;
 }): BattleLevitateAltitudeChangeHole {
   return {
     kind: "levitateAltitudeChange",
+    effectRef: input.effectRef,
     holeInstanceKey: LEVITATE_ALTITUDE_CHANGE_HOLE_INSTANCE,
     holeId: LEVITATE_ALTITUDE_CHANGE_HOLE_ID,
     label: "Levitate altitude change",
@@ -108,6 +113,7 @@ export function altitudeAfterChange(
 export function updateLevitatedCreatureAltitude(input: {
   readonly state: BattleState;
   readonly targetId: CombatantId;
+  readonly effectRef: BattleEffectExecutionRef;
   readonly sourceCombatantId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly change: {
@@ -117,7 +123,12 @@ export function updateLevitatedCreatureAltitude(input: {
 }): BattleState {
   const target = input.state.combatants.get(input.targetId);
   const effect = activeLevitatedCreatureEffect(target, input);
-  if (target === undefined || effect === undefined) {
+  if (
+    target === undefined ||
+    effect === undefined ||
+    effect.sourceCombatantId !== input.sourceCombatantId ||
+    effect.sourceProcedureRef !== input.sourceProcedureRef
+  ) {
     return input.state;
   }
   const nextEffect = {
@@ -137,6 +148,7 @@ export function updateLevitatedCreatureAltitude(input: {
 
 export function levitatedTargetWithinSpellRangeFactPresent(input: {
   readonly facts: readonly BattleTargetSpatialFact[];
+  readonly effectRef: BattleEffectExecutionRef;
   readonly sourceCombatantId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly targetId: CombatantId;
@@ -145,6 +157,7 @@ export function levitatedTargetWithinSpellRangeFactPresent(input: {
   return input.facts.some(
     (fact) =>
       fact.kind === "levitatedTargetWithinSpellRange" &&
+      fact.effectRef === input.effectRef &&
       fact.sourceCombatantId === input.sourceCombatantId &&
       fact.sourceProcedureRef === input.sourceProcedureRef &&
       fact.targetId === input.targetId &&
@@ -159,17 +172,18 @@ export function validateLevitatedMovementFact(input: {
   readonly movementCostFeet: BattleMovementFillValue["movementCostFeet"];
   readonly areaExtraCostFeet: MovementFeet;
 }): string | null {
-  const effect = activeLevitatedCreatureEffect(input.combatant);
-  if (effect === undefined) {
-    return input.fact === undefined
-      ? null
-      : "Levitated movement witness was supplied for a target that is not levitated.";
-  }
-  /* v8 ignore start -- @preserve -- Malformed Levitate witness: an active effect requires the discovered fixed-object-or-surface reach fact. */
+  const activeEffect = activeLevitatedCreatureEffect(input.combatant);
   if (input.fact === undefined) {
-    return "Levitated targets require a fixed-object or surface-within-reach movement witness.";
+    return activeEffect === undefined
+      ? null
+      : "Levitated targets require a fixed-object or surface-within-reach movement witness.";
   }
-  /* v8 ignore stop -- @preserve */
+  const effect = activeLevitatedCreatureEffect(input.combatant, input.fact);
+  if (effect === undefined) {
+    return activeEffect === undefined
+      ? "Levitated movement witness was supplied for a target that is not levitated."
+      : "Levitated movement witness does not match the active Levitate effect.";
+  }
   /* v8 ignore start -- @preserve -- Stale Levitate witness: discovery copies the active effect's source combatant and procedure identity into the movement fact. */
   if (
     input.fact.sourceCombatantId !== effect.sourceCombatantId ||

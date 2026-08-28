@@ -1018,6 +1018,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
   }),
   Schema.Struct({
     kind: Schema.Literal("levitatedTargetWithinSpellRange"),
+    effectRef: BattleEffectExecutionRef,
     sourceCombatantId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
     targetId: CombatantId,
@@ -1940,6 +1941,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     kind: Schema.Literal("rolledDice"),
     spikeGrowthMovement: Schema.Struct({
       targetId: CombatantId,
+      effectRef: BattleEffectExecutionRef,
       sourceProcedureRef: BattleProcedureExecutionRef,
       sourceCombatantId: CombatantId,
       areaId: BattleAreaId,
@@ -2656,6 +2658,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("levitateAltitudeChange"),
+    effectRef: BattleEffectExecutionRef,
     label: Schema.String,
     actorId: CombatantId,
     targetId: CombatantId,
@@ -4264,30 +4267,35 @@ const BattleMovementFillValueCommonSchemaFields = {
         Schema.Union([
           Schema.Struct({
             kind: Schema.Literal("greaseGroundHazard"),
+            effectRef: BattleEffectExecutionRef,
             sourceCombatantId: CombatantId,
             sourceProcedureRef: BattleProcedureExecutionRef,
             areaId: BattleAreaId,
           }),
           Schema.Struct({
             kind: Schema.Literal("webAreaHazard"),
+            effectRef: BattleEffectExecutionRef,
             sourceCombatantId: CombatantId,
             sourceProcedureRef: BattleProcedureExecutionRef,
             areaId: BattleAreaId,
           }),
           Schema.Struct({
             kind: Schema.Literal("sleetStormHazard"),
+            effectRef: BattleEffectExecutionRef,
             sourceCombatantId: CombatantId,
             sourceProcedureRef: BattleProcedureExecutionRef,
             areaId: BattleAreaId,
           }),
           Schema.Struct({
             kind: Schema.Literal("insectPlagueHazard"),
+            effectRef: BattleEffectExecutionRef,
             sourceCombatantId: CombatantId,
             sourceProcedureRef: BattleProcedureExecutionRef,
             areaId: BattleAreaId,
           }),
           Schema.Struct({
             kind: Schema.Literal("spikeGrowthHazard"),
+            effectRef: BattleEffectExecutionRef,
             sourceCombatantId: CombatantId,
             sourceProcedureRef: BattleProcedureExecutionRef,
             areaId: BattleAreaId,
@@ -4302,6 +4310,7 @@ const BattleMovementFillValueCommonSchemaFields = {
   gustOfWindLineMovement: Schema.optionalKey(
     Schema.Struct({
       kind: Schema.Literal("gustOfWindLineMovement"),
+      effectRef: BattleEffectExecutionRef,
       sourceCombatantId: CombatantId,
       sourceProcedureRef: BattleProcedureExecutionRef,
       areaId: BattleAreaId,
@@ -5176,6 +5185,7 @@ export const BattleFillSchema: Schema.Codec<
         levitatedMovement: Schema.optionalKey(
           Schema.Struct({
             kind: Schema.Literal("levitatedMovement"),
+            effectRef: BattleEffectExecutionRef,
             sourceCombatantId: CombatantId,
             sourceProcedureRef: BattleProcedureExecutionRef,
             fixedObjectOrSurfaceWithinReach: Schema.Literal(true),
@@ -6759,9 +6769,14 @@ function serializedBattleHoleExecutionReferences(
       Match.when({ movableZone: Match.any }, (hole) =>
         procedureSource(hole.movableZone),
       ),
-      Match.when({ spikeGrowthMovement: Match.any }, (hole) =>
-        procedureSource(hole.spikeGrowthMovement),
-      ),
+      Match.when({ spikeGrowthMovement: Match.any }, (hole) => [
+        ...procedureSource(hole.spikeGrowthMovement),
+        serializedExecutionReference(
+          hole.spikeGrowthMovement.effectRef,
+          hole.spikeGrowthMovement.sourceCombatantId,
+          "activeEffect",
+        ),
+      ]),
       Match.when({ insectPlagueAreaHazard: Match.any }, (hole) => [
         ...procedureSource(hole.insectPlagueAreaHazard),
         bound(hole.insectPlagueAreaHazard.effectRef),
@@ -6997,7 +7012,13 @@ function serializedBattleHoleExecutionReferences(
       findFamiliarConnection: noSerializedExecutionReferences,
       grappleOutcome: noSerializedExecutionReferences,
       interruptDecision: noSerializedExecutionReferences,
-      levitateAltitudeChange: noSerializedExecutionReferences,
+      levitateAltitudeChange: (value) => [
+        serializedExecutionReference(
+          value.effectRef,
+          value.targetId,
+          "activeEffect",
+        ),
+      ],
       levitateInitialRise: noSerializedExecutionReferences,
       movement: noSerializedExecutionReferences,
       movableZoneRamMovement: (value) => [

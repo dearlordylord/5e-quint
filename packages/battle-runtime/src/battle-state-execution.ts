@@ -1508,30 +1508,35 @@ export type BattleAcrobaticMovementFact = {
 export type BattleAreaDifficultTerrainSource =
   | {
       readonly kind: "greaseGroundHazard";
+      readonly effectRef: BattleEffectExecutionRef;
       readonly sourceCombatantId: CombatantId;
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly areaId: BattleAreaId;
     }
   | {
       readonly kind: "webAreaHazard";
+      readonly effectRef: BattleEffectExecutionRef;
       readonly sourceCombatantId: CombatantId;
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly areaId: BattleAreaId;
     }
   | {
       readonly kind: "sleetStormHazard";
+      readonly effectRef: BattleEffectExecutionRef;
       readonly sourceCombatantId: CombatantId;
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly areaId: BattleAreaId;
     }
   | {
       readonly kind: "insectPlagueHazard";
+      readonly effectRef: BattleEffectExecutionRef;
       readonly sourceCombatantId: CombatantId;
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly areaId: BattleAreaId;
     }
   | {
       readonly kind: "spikeGrowthHazard";
+      readonly effectRef: BattleEffectExecutionRef;
       readonly sourceCombatantId: CombatantId;
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly areaId: BattleAreaId;
@@ -1545,6 +1550,7 @@ export type BattleAreaDifficultTerrainMovementFact = {
 };
 export type BattleGustOfWindLineMovementFact = {
   readonly kind: "gustOfWindLineMovement";
+  readonly effectRef: BattleEffectExecutionRef;
   readonly sourceCombatantId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly areaId: BattleAreaId;
@@ -1596,6 +1602,7 @@ export type BattleJumpMovementReplacementFact = {
 export type BattleLevitateAltitudeDirection = "up" | "down";
 export type BattleLevitatedMovementFact = {
   readonly kind: "levitatedMovement";
+  readonly effectRef: BattleEffectExecutionRef;
   readonly sourceCombatantId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly fixedObjectOrSurfaceWithinReach: true;
@@ -1951,6 +1958,7 @@ export type BattleTargetSpatialFact =
     }
   | {
       readonly kind: "levitatedTargetWithinSpellRange";
+      readonly effectRef: BattleEffectExecutionRef;
       readonly sourceCombatantId: CombatantId;
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly targetId: CombatantId;
@@ -5560,6 +5568,7 @@ export type BattleSpikeGrowthMovementDamageRollHole = Extract<
 > & {
   readonly spikeGrowthMovement: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -6047,6 +6056,7 @@ export type BattleLevitateAltitudeChangeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "levitateAltitudeChange";
+  readonly effectRef: BattleEffectExecutionRef;
   readonly label: string;
   readonly actorId: CombatantId;
   readonly targetId: CombatantId;
