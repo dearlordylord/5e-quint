@@ -24,6 +24,7 @@ import {
 } from "./statblock-attack-hit-condition-support.ts";
 import {
   statBlockAdvantageBonusDamageComponentRef,
+  statBlockAttackDamageComponentRefsMatchSelectionRoles,
   statBlockBaseDamageComponentOrdinal,
   statBlockBaseDamageComponentRef,
   statBlockAttackDamageSelectionKey,
@@ -248,21 +249,22 @@ export function selectedStatBlockAttackDamageOptions(
     damage.baseComponents;
   const firstComponentOptions =
     selectedStatBlockDamageComponentOptions(firstBaseComponent);
-  let baseOptions: readonly ReadonlyNonEmptyArray<SelectedStatBlockAttackDamageComponent>[] =
-    firstComponentOptions.map((component) => [component]);
-  for (const component of remainingBaseComponents) {
-    const componentOptions = selectedStatBlockDamageComponentOptions(component);
-    baseOptions = baseOptions.flatMap((baseOption) =>
-      componentOptions.map(
-        (
-          selectedComponent,
-        ): ReadonlyNonEmptyArray<SelectedStatBlockAttackDamageComponent> => [
-          ...baseOption,
-          selectedComponent,
-        ],
+  const baseOptions = remainingBaseComponents.reduce<
+    readonly ReadonlyNonEmptyArray<SelectedStatBlockAttackDamageComponent>[]
+  >(
+    (options, component) =>
+      options.flatMap((baseOption) =>
+        selectedStatBlockDamageComponentOptions(component).map(
+          (
+            selectedComponent,
+          ): ReadonlyNonEmptyArray<SelectedStatBlockAttackDamageComponent> => [
+            ...baseOption,
+            selectedComponent,
+          ],
+        ),
       ),
-    );
-  }
+    firstComponentOptions.map((component) => [component]),
+  );
   const advantageBonus = damage.advantageBonus;
   const options: readonly SelectedStatBlockAttackDamage[] =
     advantageBonus === undefined
@@ -344,17 +346,15 @@ function selectedStatBlockDamageComponent(
 export function selectedStatBlockAttackDamageHasCanonicalComponentRefs(
   damage: SelectedStatBlockAttackDamage,
 ): boolean {
-  const baseRefsAreCanonical = damage.baseComponents.every(
-    (component, index) =>
-      component.componentRef.kind === "baseDamageComponent" &&
-      component.componentRef.ordinal === index + 1,
-  );
-  return (
-    baseRefsAreCanonical &&
-    (damage.advantageBonus === undefined ||
-      damage.advantageBonus.componentRef.kind ===
-        "advantageBonusDamageComponent")
-  );
+  const [firstBaseComponent, ...remainingBaseComponents] =
+    damage.baseComponents;
+  return statBlockAttackDamageComponentRefsMatchSelectionRoles([
+    firstBaseComponent.componentRef,
+    ...remainingBaseComponents.map(({ componentRef }) => componentRef),
+    ...(damage.advantageBonus === undefined
+      ? []
+      : [damage.advantageBonus.componentRef]),
+  ]);
 }
 
 function withStatBlockDamageComponentRef(

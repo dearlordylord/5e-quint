@@ -530,7 +530,7 @@ export const BattleAttackExecutionAbilitySchema = Schema.Union(
   Schema.Literal("spellcasting"),
 );
 
-const CharacterAttackExecutionSelectionSchema = Schema.Struct({
+export const CharacterAttackExecutionSelectionSchema = Schema.Struct({
   procedureRef: BattleAttackProcedureExecutionRef,
   attackAbility: BattleAttackExecutionAbilitySchema,
   attackDamageType: DamageTypeSchema,

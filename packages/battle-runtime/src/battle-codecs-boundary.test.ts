@@ -45,7 +45,7 @@ import {
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
-import type { BattleSubject } from "./battle-subjects.ts";
+import { BattleSubjectSchema, type BattleSubject } from "./battle-subjects.ts";
 import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import {
@@ -768,6 +768,80 @@ describe("battle codec Stat Block Recharge d6 boundaries", () => {
           kind: "statBlockRechargeRoll",
           holeId: holeId(`recharge-not-d6-${roll}`),
           value: [{ target, roll }],
+        }),
+      ),
+    ).toBe(true);
+  });
+});
+
+describe("battle codec attack-selection boundaries", () => {
+  test("rejects a Stat Block selection on a character-only Weapon Mastery Push fact", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("codec-weapon-mastery-push-selection"),
+      combatants: [
+        statBlockCreatureInit({
+          combatantId: goblinId,
+          statBlock: codecStaticDartStatBlock(),
+          initiative: 20,
+        }),
+        characterSeed({ combatantId: fighterId, initiative: 10 }),
+      ],
+    });
+    const subject = staticDartSubject(session);
+
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleFillSchema)({
+          kind: "targetSpatialFacts",
+          holeId: holeId("weapon-mastery-push-stat-block-selection"),
+          spatialFacts: [
+            {
+              kind: "weaponMasteryPushDisposition",
+              attackerId: subject.actorId,
+              targetId: fighterId,
+              procedureRef: subject.procedureRef,
+              statBlockDamageSelection: subject.statBlockDamageSelection,
+              disposition: {
+                kind: "blocked",
+                distanceFeet: movementFeet(0),
+                reason: "noLegalDestination",
+                provokesOpportunityAttacks: false,
+              },
+            },
+          ],
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("rejects noncanonical component roles through the Stat Block subject codec", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("codec-stat-block-damage-component-roles"),
+      combatants: [
+        statBlockCreatureInit({
+          combatantId: goblinId,
+          statBlock: codecStaticDartStatBlock(),
+          initiative: 20,
+        }),
+        characterSeed({ combatantId: fighterId, initiative: 10 }),
+      ],
+    });
+    const subject = staticDartSubject(session);
+
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSubjectSchema)({
+          ...subject,
+          statBlockDamageSelection: [
+            {
+              componentRef: { kind: "baseDamageComponent", ordinal: 2 },
+              notation: "rolled",
+            },
+            {
+              componentRef: { kind: "baseDamageComponent", ordinal: 1 },
+              notation: "static",
+            },
+          ],
         }),
       ),
     ).toBe(true);

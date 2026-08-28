@@ -89,6 +89,7 @@ import {
   battleSubjectBoundExecutionReferences,
   battleSubjectProcedureRefs,
   BattleAttackExecutionSelectionSchema,
+  CharacterAttackExecutionSelectionSchema,
   BattleReadyResponseSnapshotSchema,
   BattleReadyResponseSchema,
   BattleInterruptAttackExecutionSelectionSchema,
@@ -676,7 +677,7 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     secondTargetId: CombatantId,
   }),
   Schema.extend(
-    BattleAttackExecutionSelectionSchema,
+    CharacterAttackExecutionSelectionSchema,
     Schema.Struct({
       kind: Schema.Literal("weaponMasteryPushDisposition"),
       attackerId: CombatantId,

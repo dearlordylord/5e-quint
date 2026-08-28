@@ -200,6 +200,7 @@ import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-ex
 import { characterBattleCreatureInitWeaponAttack } from "./battle-init.ts";
 import {
   attackExecutionSelectionForOption,
+  type CharacterAttackExecutionSelection,
   type CharacterWeaponAttackActionOption,
 } from "./battle-action-options.ts";
 import {
@@ -1580,10 +1581,7 @@ export function goblinTurnBattle(
 export function fighterAttackSubject(
   state: BattleState,
   attackName: string = "Longsword",
-): Extract<
-  BattleSubject,
-  { readonly tag: "action"; readonly action: "attack" }
-> {
+): ReturnType<typeof characterAttackSubjectForTest> {
   return characterAttackSubjectForTest(state, fighterId, attackName);
 }
 
@@ -1636,6 +1634,15 @@ export function characterAttackSubjectForTest(
   };
 }
 
+export function attackExecutionSelectionForSubjectForTest(
+  subject: ReturnType<typeof characterAttackSubjectForTest>,
+): CharacterAttackExecutionSelection;
+export function attackExecutionSelectionForSubjectForTest(
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >,
+): BattleInterruptAttackExecutionSelection;
 export function attackExecutionSelectionForSubjectForTest(
   subject: Extract<
     BattleSubject,
@@ -2952,7 +2959,7 @@ export function attackRollFill(
       { readonly kind: "attackRoll" }
     >["value"]["d20TestNaturalOneReroll"];
   },
-): BattleFill {
+): Extract<BattleFill, { readonly kind: "attackRoll" }> {
   if (hole.kind !== "attackRoll") {
     throw new Error("Expected attackRoll hole.");
   }

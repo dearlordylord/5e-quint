@@ -55,9 +55,9 @@ export type StatBlockAttackDamageComponentSelection =
 export const StatBlockAttackDamageSelection = Schema.NonEmptyArray(
   StatBlockAttackDamageComponentSelection,
 ).pipe(
-  Schema.filter(statBlockAttackDamageSelectionHasUniqueComponentRefs, {
+  Schema.filter(statBlockAttackDamageSelectionHasCanonicalComponentRoles, {
     message: () =>
-      "Stat Block Attack damage selection must name each component at most once.",
+      "Stat Block Attack damage selection must list base component refs 1 through N in order, followed only by the optional Advantage bonus component ref.",
   }),
   Schema.brand("StatBlockAttackDamageSelection"),
 );
@@ -112,11 +112,30 @@ export function statBlockAttackDamageSelectionUsesOnlyComponentNotation(
   return selection.every((component) => component.notation === notation);
 }
 
-function statBlockAttackDamageSelectionHasUniqueComponentRefs(
+function statBlockAttackDamageSelectionHasCanonicalComponentRoles(
   selection: ReadonlyNonEmptyArray<StatBlockAttackDamageComponentSelection>,
 ): boolean {
-  const componentRefs = selection.map(({ componentRef }) =>
-    statBlockAttackDamageComponentRefKey(componentRef),
+  const [firstSelection, ...remainingSelections] = selection;
+  return statBlockAttackDamageComponentRefsMatchSelectionRoles([
+    firstSelection.componentRef,
+    ...remainingSelections.map(({ componentRef }) => componentRef),
+  ]);
+}
+
+export function statBlockAttackDamageComponentRefsMatchSelectionRoles(
+  componentRefs: ReadonlyNonEmptyArray<StatBlockAttackDamageComponentRef>,
+): boolean {
+  const [firstComponentRef] = componentRefs;
+  return (
+    firstComponentRef.kind === "baseDamageComponent" &&
+    componentRefs.every((componentRef, index) =>
+      Match.value(componentRef).pipe(
+        Match.discriminatorsExhaustive("kind")({
+          baseDamageComponent: ({ ordinal }) => ordinal === index + 1,
+          advantageBonusDamageComponent: () =>
+            index === componentRefs.length - 1,
+        }),
+      ),
+    )
   );
-  return new Set(componentRefs).size === componentRefs.length;
 }

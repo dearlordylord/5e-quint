@@ -39,8 +39,85 @@ const advantageBonusShapeArbitrary = fc.constantFrom(
   "rollable" as const,
 );
 
+const INVALID_COMPONENT_ROLE_SELECTIONS = [
+  {
+    name: "rejects a bonus-only selection",
+    selection: [
+      {
+        componentRef: { kind: "advantageBonusDamageComponent" },
+        notation: "static",
+      },
+    ],
+  },
+  {
+    name: "rejects a gapped base ordinal",
+    selection: [
+      {
+        componentRef: { kind: "baseDamageComponent", ordinal: 1 },
+        notation: "static",
+      },
+      {
+        componentRef: { kind: "baseDamageComponent", ordinal: 3 },
+        notation: "rolled",
+      },
+    ],
+  },
+  {
+    name: "rejects out-of-order base ordinals",
+    selection: [
+      {
+        componentRef: { kind: "baseDamageComponent", ordinal: 2 },
+        notation: "rolled",
+      },
+      {
+        componentRef: { kind: "baseDamageComponent", ordinal: 1 },
+        notation: "static",
+      },
+    ],
+  },
+  {
+    name: "rejects an Advantage bonus before the base components",
+    selection: [
+      {
+        componentRef: { kind: "advantageBonusDamageComponent" },
+        notation: "rolled",
+      },
+      {
+        componentRef: { kind: "baseDamageComponent", ordinal: 1 },
+        notation: "static",
+      },
+    ],
+  },
+  {
+    name: "rejects a duplicate Advantage bonus role",
+    selection: [
+      {
+        componentRef: { kind: "baseDamageComponent", ordinal: 1 },
+        notation: "static",
+      },
+      {
+        componentRef: { kind: "advantageBonusDamageComponent" },
+        notation: "rolled",
+      },
+      {
+        componentRef: { kind: "advantageBonusDamageComponent" },
+        notation: "static",
+      },
+    ],
+  },
+  {
+    name: "rejects a malformed zero base ordinal",
+    selection: [
+      {
+        componentRef: { kind: "baseDamageComponent", ordinal: 0 },
+        notation: "static",
+      },
+    ],
+  },
+] as const;
+
 describe("Stat Block per-component damage selection properties", () => {
-  it("has permutation-independent equality and canonical keys", () => {
+  it("round-trips every canonical component-role selection", () => {
     fc.assert(
       fc.property(
         fc.array(notationArbitrary, { minLength: 1, maxLength: 6 }),
@@ -50,30 +127,34 @@ describe("Stat Block per-component damage selection properties", () => {
             baseNotations,
             advantageBonusNotation,
           );
-          const forward = statBlockAttackDamageSelection(selections);
-          const [firstReversedSelection, ...remainingReversedSelections] = [
-            ...selections,
-          ].reverse();
-          if (firstReversedSelection === undefined) {
-            throw new Error(
-              "A reversed non-empty selection must remain non-empty.",
-            );
-          }
-          const reverse = statBlockAttackDamageSelection([
-            firstReversedSelection,
-            ...remainingReversedSelections,
-          ]);
-
-          expect(statBlockAttackDamageSelectionsEqual(forward, reverse)).toBe(
-            true,
+          const selection = statBlockAttackDamageSelection(selections);
+          const encoded = Schema.encodeSync(StatBlockAttackDamageSelection)(
+            selection,
           );
-          expect(statBlockAttackDamageSelectionKey(forward)).toBe(
-            statBlockAttackDamageSelectionKey(reverse),
+          const decoded = Schema.decodeUnknownEither(
+            StatBlockAttackDamageSelection,
+          )(encoded);
+
+          expect(Either.isRight(decoded)).toBe(true);
+          if (Either.isLeft(decoded)) return;
+          expect(
+            statBlockAttackDamageSelectionsEqual(selection, decoded.right),
+          ).toBe(true);
+          expect(statBlockAttackDamageSelectionKey(decoded.right)).toBe(
+            statBlockAttackDamageSelectionKey(selection),
           );
         },
       ),
       { numRuns: 100 },
     );
+  });
+
+  it.each(INVALID_COMPONENT_ROLE_SELECTIONS)("$name", ({ selection }) => {
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(StatBlockAttackDamageSelection)(selection),
+      ),
+    ).toBe(true);
   });
 
   it("rejects every duplicate component role regardless of notation", () => {

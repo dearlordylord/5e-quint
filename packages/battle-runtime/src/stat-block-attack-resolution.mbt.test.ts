@@ -458,7 +458,7 @@ function createStatBlockAttackParityDriver(
             ...(configuration.attackRoll.mode === "advantage"
               ? { rollMode: "advantage" as const }
               : {}),
-          }) as Extract<BattleFill, { readonly kind: "attackRoll" }>;
+          });
           resolveCurrentSubject([selectedTargetChoice, attackRoll]);
         },
         doFillDamageRoll: () => {
