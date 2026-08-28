@@ -47,6 +47,7 @@ import {
   zeroAbilityWeaponAttack,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import { allocateBattleActiveEffectRefForCreature } from "./active-effect/execution-ref.ts";
 import {
   attackRollFill,
   battleActiveEffectExecutionRefForTest,
@@ -79,14 +80,18 @@ function withSecondCloudkillMovement(state: BattleState): BattleState {
       > => candidate.kind === "cloudkillAreaHazard",
     );
     if (effect === undefined) continue;
+    const allocation = allocateBattleActiveEffectRefForCreature({
+      owner: combatant,
+    });
     return {
       ...state,
       combatants: new Map(state.combatants).set(combatantId, {
-        ...combatant,
+        ...allocation.owner,
         activeEffects: [
-          ...combatant.activeEffects,
+          ...allocation.owner.activeEffects,
           {
             ...effect,
+            effectRef: allocation.effectRef,
             sourceProcedureRef: battleProcedureExecutionRefForTest(
               "second-cloudkill-movement-occurrence",
             ),
@@ -3638,6 +3643,10 @@ describe("Cloudkill source-turn movement", () => {
 
   test("rejects the former anytime movement-save command", () => {
     const { state } = castCloudkill();
+    const cloudkill = [...state.combatants.values()]
+      .flatMap(({ activeEffects }) => activeEffects)
+      .find((effect) => effect.kind === "cloudkillAreaHazard");
+    if (cloudkill === undefined) throw new Error("Expected Cloudkill.");
 
     expect(
       resolveBattleSubject({
@@ -3649,6 +3658,7 @@ describe("Cloudkill source-turn movement", () => {
           areaMembershipTrigger: {
             kind: "areaMovesIntoSpace",
             areaId: cloudkillAreaId,
+            effectRef: cloudkill.effectRef,
           },
         },
         fills: [],

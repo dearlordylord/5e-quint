@@ -111,10 +111,14 @@ describe("BattleSubject identity", () => {
         areaMembershipTrigger: { kind: "turnStartInArea", areaId },
       },
       insectPlagueAreaHazardSave: {
-        areaMembershipTrigger: { kind: "turnEndInArea", areaId },
+        areaMembershipTrigger: { kind: "turnEndInArea", areaId, effectRef },
       },
       cloudkillAreaHazardSave: {
-        areaMembershipTrigger: { kind: "areaMovesIntoSpace", areaId },
+        areaMembershipTrigger: {
+          kind: "areaMovesIntoSpace",
+          areaId,
+          effectRef,
+        },
       },
       disperseCloudkill: { areaId },
       webRestrainedNoLongerInArea: { areaId },

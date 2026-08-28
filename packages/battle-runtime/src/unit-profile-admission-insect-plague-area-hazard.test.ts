@@ -20,6 +20,7 @@ import {
   requireResultHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { requireResolved } from "./battle-runtime.test-support.ts";
+import { allocateBattleActiveEffectRefForCreature } from "./active-effect/execution-ref.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   insectPlagueAreaFill,
@@ -547,5 +548,46 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
       reason: "staleSubject",
       message: "Insect Plague save is no longer available.",
     });
+  });
+
+  test("binds a discovered save to the exact Insect Plague occurrence across same-area replacement", () => {
+    const { session, cast } = castInsectPlague();
+    const saveAct = insectPlagueAreaHazardSaveAct(
+      battleRuntimeSessionForTest({ state: cast, context: session.context }),
+      spellTargetId,
+      "appearsInArea",
+    );
+    const caster = requireCombatant(cast, spellCasterId);
+    const effect = caster.activeEffects.find(
+      (candidate) => candidate.kind === "insectPlagueAreaHazard",
+    );
+    if (effect?.kind !== "insectPlagueAreaHazard") {
+      throw new Error("Expected active Insect Plague.");
+    }
+    const allocation = allocateBattleActiveEffectRefForCreature({
+      owner: caster,
+    });
+    const replacement = {
+      ...effect,
+      effectRef: allocation.effectRef,
+      savedThisTurn: [],
+    };
+    const replacedState = {
+      ...cast,
+      combatants: new Map(cast.combatants).set(spellCasterId, {
+        ...allocation.owner,
+        activeEffects: allocation.owner.activeEffects.map((candidate) =>
+          candidate === effect ? replacement : candidate,
+        ),
+      }),
+    };
+
+    expect(
+      resolveBattleSubject({
+        state: replacedState,
+        subject: saveAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 });

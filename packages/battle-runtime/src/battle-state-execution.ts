@@ -763,8 +763,7 @@ export type BattleStartTurnOccurrenceSequenceCheckpoint = {
   };
   readonly child: {
     readonly kind: "cloudkillMovementSaveDamageSequence";
-    readonly areaId: BattleAreaId;
-    readonly sourceProcedureRef: BattleProcedureExecutionRef;
+    readonly effectRef: BattleActiveEffectExecutionRef;
     readonly targetId: CombatantId;
   };
 };
@@ -5232,6 +5231,7 @@ export type BattleInsectPlagueAreaHazardSavingThrowOutcomeHole = {
   readonly label: string;
   readonly insectPlagueAreaHazard: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleActiveEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5254,6 +5254,7 @@ export type BattleCloudkillAreaHazardSavingThrowOutcomeHole = {
   readonly label: string;
   readonly cloudkillAreaHazard: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleActiveEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5275,6 +5276,7 @@ export type BattleInsectPlagueAreaHazardDamageRollHole = Extract<
 > & {
   readonly insectPlagueAreaHazard: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleActiveEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5292,6 +5294,7 @@ export type BattleCloudkillAreaHazardDamageRollHole = Extract<
 > & {
   readonly cloudkillAreaHazard: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleActiveEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5936,6 +5939,7 @@ export type BattleCloudkillMovementHole = {
   readonly label: string;
   readonly sourceCombatantId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  readonly effectRef: BattleActiveEffectExecutionRef;
   readonly areaId: BattleAreaId;
   readonly distanceFeet: MovementFeet;
   readonly directionRequirement: "awayFromSource";

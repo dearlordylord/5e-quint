@@ -50,7 +50,10 @@ import type {
   BattleTablePositionId,
   CombatantId,
 } from "../identity.ts";
-import { allocateBattleActiveEffectRefForCreature } from "../active-effect/execution-ref.ts";
+import {
+  allocateBattleActiveEffectRef,
+  allocateBattleActiveEffectRefForCreature,
+} from "../active-effect/execution-ref.ts";
 import {
   activeEffectProcedureMatches,
   activeEffectHasSourceCombatant,
@@ -2310,11 +2313,17 @@ export function applyInsectPlagueAreaHazardCastEffect(input: {
     { readonly procedure: "insectPlagueAreaHazard" }
   >;
 }): BattleState {
-  return battleStateAfterReplacingCasterActiveEffect({
+  const allocation = allocateBattleActiveEffectRef({
     state: input.state,
+    ownerId: input.actorId,
+  });
+  if (allocation.tag === "ownerNotFound") return input.state;
+  return battleStateAfterReplacingCasterActiveEffect({
+    state: allocation.state,
     actorId: input.actorId,
     activeEffect: {
       kind: "insectPlagueAreaHazard" as const,
+      effectRef: allocation.effectRef,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       appearanceOccurrence: {
@@ -2347,11 +2356,17 @@ export function applyCloudkillAreaHazardCastEffect(input: {
     { readonly procedure: "cloudkillAreaHazard" }
   >;
 }): BattleState {
-  return battleStateAfterReplacingCasterActiveEffect({
+  const allocation = allocateBattleActiveEffectRef({
     state: input.state,
+    ownerId: input.actorId,
+  });
+  if (allocation.tag === "ownerNotFound") return input.state;
+  return battleStateAfterReplacingCasterActiveEffect({
+    state: allocation.state,
     actorId: input.actorId,
     activeEffect: {
       kind: "cloudkillAreaHazard" as const,
+      effectRef: allocation.effectRef,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       appearanceOccurrence: {
@@ -2659,13 +2674,18 @@ function markSingleSaveAreaHazardSavedThisTurn(
   state: BattleState,
   targetId: CombatantId,
   effect: SingleSaveAreaHazardActiveEffect,
+  effectOwnerId: CombatantId = effect.sourceCombatantId,
 ): BattleState {
   return updateCasterActiveEffects({
     state,
-    sourceCombatantId: effect.sourceCombatantId,
+    sourceCombatantId: effectOwnerId,
     update: (activeEffects) =>
       activeEffects.map((current) =>
-        current === effect
+        (
+          "effectRef" in effect
+            ? "effectRef" in current && current.effectRef === effect.effectRef
+            : current === effect
+        )
           ? {
               ...effect,
               savedThisTurn: appendCombatantIdOnce(
@@ -2692,20 +2712,32 @@ export function markSleetStormAreaHazardSavedThisTurn(
 export function markInsectPlagueAreaHazardSavedThisTurn(
   state: BattleState,
   targetId: CombatantId,
+  effectOwnerId: CombatantId,
   effect: Extract<
     BattleActiveEffect,
     { readonly kind: "insectPlagueAreaHazard" }
   >,
 ): BattleState {
-  return markSingleSaveAreaHazardSavedThisTurn(state, targetId, effect);
+  return markSingleSaveAreaHazardSavedThisTurn(
+    state,
+    targetId,
+    effect,
+    effectOwnerId,
+  );
 }
 
 export function markCloudkillAreaHazardSavedThisTurn(
   state: BattleState,
   targetId: CombatantId,
+  effectOwnerId: CombatantId,
   effect: Extract<BattleActiveEffect, { readonly kind: "cloudkillAreaHazard" }>,
 ): BattleState {
-  return markSingleSaveAreaHazardSavedThisTurn(state, targetId, effect);
+  return markSingleSaveAreaHazardSavedThisTurn(
+    state,
+    targetId,
+    effect,
+    effectOwnerId,
+  );
 }
 
 export function applyWebRestrainedCondition(

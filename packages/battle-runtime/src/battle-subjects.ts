@@ -182,16 +182,19 @@ export const BattleInsectPlagueAreaMembershipTriggerSchema = Schema.Union([
     ...RejectRedundantSpellSourceFields,
     kind: Schema.Literal("appearsInArea"),
     areaId: BattleAreaId,
+    effectRef: BattleActiveEffectExecutionRef,
   }),
   Schema.Struct({
     ...RejectRedundantSpellSourceFields,
     kind: Schema.Literal("firstEntryOnTurn"),
     areaId: BattleAreaId,
+    effectRef: BattleActiveEffectExecutionRef,
   }),
   Schema.Struct({
     ...RejectRedundantSpellSourceFields,
     kind: Schema.Literal("turnEndInArea"),
     areaId: BattleAreaId,
+    effectRef: BattleActiveEffectExecutionRef,
   }),
 ]);
 export type BattleInsectPlagueAreaMembershipTrigger =
@@ -202,21 +205,25 @@ export const BattleCloudkillAreaMembershipTriggerSchema = Schema.Union([
     ...RejectRedundantSpellSourceFields,
     kind: Schema.Literal("appearsInArea"),
     areaId: BattleAreaId,
+    effectRef: BattleActiveEffectExecutionRef,
   }),
   Schema.Struct({
     ...RejectRedundantSpellSourceFields,
     kind: Schema.Literal("areaMovesIntoSpace"),
     areaId: BattleAreaId,
+    effectRef: BattleActiveEffectExecutionRef,
   }),
   Schema.Struct({
     ...RejectRedundantSpellSourceFields,
     kind: Schema.Literal("firstEntryOnTurn"),
     areaId: BattleAreaId,
+    effectRef: BattleActiveEffectExecutionRef,
   }),
   Schema.Struct({
     ...RejectRedundantSpellSourceFields,
     kind: Schema.Literal("turnEndInArea"),
     areaId: BattleAreaId,
+    effectRef: BattleActiveEffectExecutionRef,
   }),
 ]);
 export type BattleCloudkillAreaMembershipTrigger =

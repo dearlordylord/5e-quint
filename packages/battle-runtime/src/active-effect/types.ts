@@ -692,44 +692,46 @@ export type BattleActiveEffect =
         { readonly kind: "concentration" }
       > & { readonly durationTicks: ElapsedTimeTicks };
     })
-  | (BattleSpellEffectBase & {
-      readonly kind: "insectPlagueAreaHazard";
-      readonly appearanceOccurrence: BattleTurnAnchor;
-      readonly areaId: BattleAreaId;
-      readonly radiusFeet: MovementFeet;
-      readonly save: {
-        readonly ability: Extract<Ability, "con">;
-        readonly dc: DcSource;
-      };
-      readonly damage: {
-        readonly expr: DiceExpr;
-        readonly damageType: Extract<DamageType, "piercing">;
-      };
-      readonly savedThisTurn: readonly CombatantId[];
-      readonly expiresAt: Extract<
-        BattleActiveEffectExpiration,
-        { readonly kind: "concentration" }
-      > & { readonly durationTicks: ElapsedTimeTicks };
-    })
-  | (BattleSpellEffectBase & {
-      readonly kind: "cloudkillAreaHazard";
-      readonly appearanceOccurrence: BattleTurnAnchor;
-      readonly areaId: BattleAreaId;
-      readonly radiusFeet: MovementFeet;
-      readonly save: {
-        readonly ability: Extract<Ability, "con">;
-        readonly dc: DcSource;
-      };
-      readonly damage: {
-        readonly expr: DiceExpr;
-        readonly damageType: Extract<DamageType, "poison">;
-      };
-      readonly savedThisTurn: readonly CombatantId[];
-      readonly expiresAt: Extract<
-        BattleActiveEffectExpiration,
-        { readonly kind: "concentration" }
-      > & { readonly durationTicks: ElapsedTimeTicks };
-    })
+  | (BattleSpellEffectBase &
+      BattleReplayAddressableEffect & {
+        readonly kind: "insectPlagueAreaHazard";
+        readonly appearanceOccurrence: BattleTurnAnchor;
+        readonly areaId: BattleAreaId;
+        readonly radiusFeet: MovementFeet;
+        readonly save: {
+          readonly ability: Extract<Ability, "con">;
+          readonly dc: DcSource;
+        };
+        readonly damage: {
+          readonly expr: DiceExpr;
+          readonly damageType: Extract<DamageType, "piercing">;
+        };
+        readonly savedThisTurn: readonly CombatantId[];
+        readonly expiresAt: Extract<
+          BattleActiveEffectExpiration,
+          { readonly kind: "concentration" }
+        > & { readonly durationTicks: ElapsedTimeTicks };
+      })
+  | (BattleSpellEffectBase &
+      BattleReplayAddressableEffect & {
+        readonly kind: "cloudkillAreaHazard";
+        readonly appearanceOccurrence: BattleTurnAnchor;
+        readonly areaId: BattleAreaId;
+        readonly radiusFeet: MovementFeet;
+        readonly save: {
+          readonly ability: Extract<Ability, "con">;
+          readonly dc: DcSource;
+        };
+        readonly damage: {
+          readonly expr: DiceExpr;
+          readonly damageType: Extract<DamageType, "poison">;
+        };
+        readonly savedThisTurn: readonly CombatantId[];
+        readonly expiresAt: Extract<
+          BattleActiveEffectExpiration,
+          { readonly kind: "concentration" }
+        > & { readonly durationTicks: ElapsedTimeTicks };
+      })
   | (BattleSpellEffectBase & {
       readonly kind: "flamingSphere";
       readonly areaId: BattleAreaId;

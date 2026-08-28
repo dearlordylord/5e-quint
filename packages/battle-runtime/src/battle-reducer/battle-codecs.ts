@@ -1954,6 +1954,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     kind: Schema.Literal("rolledDice"),
     insectPlagueAreaHazard: Schema.Struct({
       ...BattleProcedureSourceSchema,
+      effectRef: BattleActiveEffectExecutionRef,
       areaId: BattleAreaId,
       trigger: Schema.Literals([
         "appearsInArea",
@@ -1972,6 +1973,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     kind: Schema.Literal("rolledDice"),
     cloudkillAreaHazard: Schema.Struct({
       ...BattleProcedureSourceSchema,
+      effectRef: BattleActiveEffectExecutionRef,
       areaId: BattleAreaId,
       trigger: Schema.Literals([
         "appearsInArea",
@@ -2227,6 +2229,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     insectPlagueAreaHazard: Schema.Struct({
       ...BattleProcedureSourceSchema,
+      effectRef: BattleActiveEffectExecutionRef,
       areaId: BattleAreaId,
       trigger: Schema.Literals([
         "appearsInArea",
@@ -2250,6 +2253,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     cloudkillAreaHazard: Schema.Struct({
       ...BattleProcedureSourceSchema,
+      effectRef: BattleActiveEffectExecutionRef,
       areaId: BattleAreaId,
       trigger: Schema.Literals([
         "appearsInArea",
@@ -2476,7 +2480,10 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     kind: Schema.Literal("temporaryHitPointChoice"),
     sourceCombatantId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
-    sourceTurn: Schema.Struct({ actorId: CombatantId, round: BattleRoundSchema }),
+    sourceTurn: Schema.Struct({
+      actorId: CombatantId,
+      round: BattleRoundSchema,
+    }),
     occurrenceId: BattleStartTurnOccurrenceId,
     existingTemporaryHitPoints: HpSchema,
     grantedTemporaryHitPoints: HpSchema,
@@ -2486,6 +2493,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     kind: Schema.Literal("cloudkillMovement"),
     sourceCombatantId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
+    effectRef: BattleActiveEffectExecutionRef,
     areaId: BattleAreaId,
     distanceFeet: MovementFeet,
     directionRequirement: Schema.Literal("awayFromSource"),

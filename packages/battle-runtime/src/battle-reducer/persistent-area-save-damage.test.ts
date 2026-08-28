@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   battleId,
+  battleActiveEffectExecutionRefForTest,
   characterSeed,
   fighterId,
   startBattleRight,
@@ -32,10 +33,15 @@ const unrelatedFill = {
   value: "fire",
 } satisfies BattleFill;
 
+const persistentAreaEffectRef = battleActiveEffectExecutionRefForTest(
+  "persistent-area-save-damage-effect",
+);
+
 function appearanceTrigger(areaId: BattleAreaId) {
   return {
     kind: "appearsInArea" as const,
     areaId,
+    effectRef: persistentAreaEffectRef,
   };
 }
 
@@ -61,6 +67,7 @@ describe("persistent-area save/damage protocol", () => {
         areaMembershipTrigger: {
           kind: "turnEndInArea",
           areaId: areaMembershipTrigger.areaId,
+          effectRef: persistentAreaEffectRef,
         },
       }),
     ).toBe(false);

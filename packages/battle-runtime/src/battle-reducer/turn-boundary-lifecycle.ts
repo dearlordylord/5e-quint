@@ -278,10 +278,10 @@ function cloudkillStartTurnMovementHole(
   sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"],
   effect: Pick<
     CloudkillAreaHazardEffect,
-    "sourceCombatantId" | "sourceProcedureRef" | "areaId"
+    "effectRef" | "sourceCombatantId" | "sourceProcedureRef" | "areaId"
   >,
 ): BattleCloudkillMovementHole {
-  const key = `battle:cloudkill-start-turn-movement:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${Number(sourceTurn.round)}`;
+  const key = cloudkillStartTurnMovementHoleKey(sourceTurn, effect.effectRef);
   return {
     kind: "cloudkillMovement",
     holeId: holeId(key),
@@ -289,11 +289,19 @@ function cloudkillStartTurnMovementHole(
     label: "Cloudkill start-turn movement",
     sourceCombatantId: effect.sourceCombatantId,
     sourceProcedureRef: effect.sourceProcedureRef,
+    effectRef: effect.effectRef,
     areaId: effect.areaId,
     distanceFeet: CLOUDKILL_START_TURN_MOVE_FEET,
     directionRequirement: "awayFromSource",
     requiresTableSpatialFact: true,
   };
+}
+
+function cloudkillStartTurnMovementHoleKey(
+  sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"],
+  effectRef: CloudkillAreaHazardEffect["effectRef"],
+): string {
+  return `battle:cloudkill-start-turn-movement:${effectRef}:${Number(sourceTurn.round)}`;
 }
 
 type StartTurnOccurrenceOption =
@@ -384,13 +392,12 @@ function startTurnOccurrenceOption(
 }
 
 function cloudkillMovementOccurrenceOption(
-  effect: Pick<CloudkillAreaHazardEffect, "sourceProcedureRef" | "areaId">,
+  effect: Pick<CloudkillAreaHazardEffect, "effectRef">,
 ): StartTurnOccurrenceOption {
   return startTurnOccurrenceOption(
     "cloudkillMovement",
     {
-      sourceProcedureRef: effect.sourceProcedureRef,
-      areaId: effect.areaId,
+      effectRef: effect.effectRef,
     },
     "Move Cloudkill",
   );
@@ -542,6 +549,7 @@ function cloudkillMovementSaveSubject(
     areaMembershipTrigger: {
       kind: "areaMovesIntoSpace",
       areaId: effect.areaId,
+      effectRef: effect.effectRef,
     },
   };
 }
@@ -562,8 +570,7 @@ function cloudkillMovementCheckpointMatchesRequest(
   request: CloudkillMovementSaveDamageRequest,
 ): boolean {
   return (
-    request.effect.areaId === checkpoint.child.areaId &&
-    request.effect.sourceProcedureRef === checkpoint.child.sourceProcedureRef &&
+    request.effect.effectRef === checkpoint.child.effectRef &&
     request.subject.actorId === checkpoint.child.targetId
   );
 }
@@ -698,11 +705,12 @@ function resolveStartTurnOccurrenceSuffixAfterMovement(input: {
     context: {
       kind: "replay",
       previouslyAcceptedMovementFillHoleIds: [
-        cloudkillStartTurnMovementHole(checkpoint.sourceTurn, {
-          sourceCombatantId: checkpoint.sourceTurn.actorId,
-          sourceProcedureRef: checkpoint.child.sourceProcedureRef,
-          areaId: checkpoint.child.areaId,
-        }).holeId,
+        holeId(
+          cloudkillStartTurnMovementHoleKey(
+            checkpoint.sourceTurn,
+            checkpoint.child.effectRef,
+          ),
+        ),
       ],
     },
     fills: input.fills,
@@ -762,9 +770,7 @@ function resolveCloudkillMovementSequenceResume(input: {
     (fill): fill is CloudkillMovementFill => fill.kind === "cloudkillMovement",
   );
   const checkpointBoundary = boundaries.find(
-    ({ effect }) =>
-      effect.areaId === checkpoint.child.areaId &&
-      effect.sourceProcedureRef === checkpoint.child.sourceProcedureRef,
+    ({ effect }) => effect.effectRef === checkpoint.child.effectRef,
   );
   if (checkpointBoundary === undefined) {
     return completeCloudkillMovementSequenceResume(
@@ -3525,11 +3531,7 @@ function resolveOrderedStartTurnOccurrences(input: {
     const effect = cloudkillStartTurnMovementEffects(
       prefixState,
       input.sourceTurn.actorId,
-    ).find(
-      (candidate) =>
-        candidate.sourceProcedureRef === handle.effect.sourceProcedureRef &&
-        candidate.areaId === handle.effect.areaId,
-    );
+    ).find((candidate) => candidate.effectRef === handle.effect.effectRef);
     if (effect === undefined) continue;
     const hole = cloudkillStartTurnMovementHole(input.sourceTurn, effect);
     const matchingFills = movementFills.filter(

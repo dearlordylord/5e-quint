@@ -1545,14 +1545,17 @@ export function insectPlagueAreaHazardSaveAct(
       Match.when("appearsInArea", () => ({
         kind: "appearsInArea" as const,
         areaId: effect.areaId,
+        effectRef: effect.effectRef,
       })),
       Match.when("entersArea", () => ({
         kind: "firstEntryOnTurn" as const,
         areaId: effect.areaId,
+        effectRef: effect.effectRef,
       })),
       Match.when("endsTurnInArea", () => ({
         kind: "turnEndInArea" as const,
         areaId: effect.areaId,
+        effectRef: effect.effectRef,
       })),
       Match.exhaustive,
     ),
@@ -1610,18 +1613,22 @@ export function cloudkillAreaHazardSaveAct(
       Match.when("appearsInArea", () => ({
         kind: "appearsInArea" as const,
         areaId: effect.areaId,
+        effectRef: effect.effectRef,
       })),
       Match.when("movesIntoSpace", () => ({
         kind: "areaMovesIntoSpace" as const,
         areaId: effect.areaId,
+        effectRef: effect.effectRef,
       })),
       Match.when("entersArea", () => ({
         kind: "firstEntryOnTurn" as const,
         areaId: effect.areaId,
+        effectRef: effect.effectRef,
       })),
       Match.when("endsTurnInArea", () => ({
         kind: "turnEndInArea" as const,
         areaId: effect.areaId,
+        effectRef: effect.effectRef,
       })),
       Match.exhaustive,
     ),
