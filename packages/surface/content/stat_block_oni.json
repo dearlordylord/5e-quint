@@ -168,7 +168,7 @@
               },
               "spells": [
                 {
-                  "restriction": "self only",
+                  "restriction": "on itself",
                   "spellId": "invisibility"
                 }
               ]

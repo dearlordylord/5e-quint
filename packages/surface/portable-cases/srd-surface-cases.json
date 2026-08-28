@@ -70447,7 +70447,7 @@
                         "spells": [
                           {
                             "spellId": "invisibility",
-                            "restriction": "self only"
+                            "restriction": "on itself"
                           }
                         ]
                       }
@@ -127404,7 +127404,7 @@
                         "spells": [
                           {
                             "spellId": "invisibility",
-                            "restriction": "self only"
+                            "restriction": "on itself"
                           }
                         ]
                       }

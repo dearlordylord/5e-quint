@@ -131,7 +131,7 @@ in  { challengeRating = 7
                                   { spellId = "invisibility"
                                   , count = None Natural
                                   , castAtLevel = None Natural
-                                  , restriction = Some "self only"
+                                  , restriction = Some "on itself"
                                   }
                             , rest = [] : List T.SpellRef
                             }

@@ -1201,7 +1201,7 @@ const parseDirectSpellcasting = (
   }
   const spell = parseSpell(match[1] ?? "");
   const selfOnly =
-    match[2] === undefined ? spell : { ...spell, restriction: "self only" };
+    match[2] === undefined ? spell : { ...spell, restriction: "on itself" };
   const explicit = explicitAbility !== null;
   const ability = explicit
     ? parsedAbility(match[3] ?? "", entry.name)
