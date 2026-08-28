@@ -53,6 +53,7 @@ import {
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { allocateBattleEffectExecutionRefForCreature } from "./effect-execution-ref.ts";
+import { updateCombatantWithActiveEffectOccurrence } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import {
   attackRollFill,
   battleEffectExecutionRefForTest,
@@ -111,26 +112,43 @@ function withSecondCloudkillMovement(state: BattleState): BattleState {
   throw new Error("Expected an active Cloudkill effect.");
 }
 
-function withGreaseGroundHazard(state: BattleState): BattleState {
+function withGreaseGroundHazard(state: BattleState): {
+  readonly state: BattleState;
+  readonly effectRef: BattleEffectExecutionRef;
+} {
   const source = state.combatants.get(spellCasterId);
   if (source === undefined) {
     throw new Error("Expected the persistent-spell source.");
   }
-  return battleStateWithAllocatedEffectForTest({
+  const cloudkill = source.activeEffects.find(
+    (effect) => effect.kind === "cloudkillAreaHazard",
+  );
+  if (cloudkill?.kind !== "cloudkillAreaHazard") {
+    throw new Error("Expected the bound persistent-spell source procedure.");
+  }
+  const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
     state,
-    ownerId: source.combatantId,
-    effect: {
-      kind: "greaseGroundHazard",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "cloudkill-composition-grease",
-      ),
-      sourceCombatantId: spellCasterId,
-      areaId: greaseAreaId,
-      heightenedSpellTargetDisadvantage: null,
-      save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
-      expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
-    },
+    occurrences: [
+      {
+        kind: "activeEffect",
+        ownerId: source.combatantId,
+        effect: {
+          kind: "greaseGroundHazard",
+          sourceProcedureRef: cloudkill.sourceProcedureRef,
+          sourceCombatantId: spellCasterId,
+          areaId: greaseAreaId,
+          heightenedSpellTargetDisadvantage: null,
+          save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
+          expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
+        },
+      },
+    ],
   });
+  const occurrence = allocated.occurrences[0];
+  if (occurrence?.kind !== "activeEffect") {
+    throw new Error("Expected the allocated Grease occurrence.");
+  }
+  return { state: allocated.state, effectRef: occurrence.effect.effectRef };
 }
 
 function withSourceStartTurnDamage(
@@ -3460,10 +3478,12 @@ describe("Cloudkill source-turn movement", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected the target turn to start.");
     }
+    const grease = withGreaseGroundHazard(targetTurn.state);
+    const overlappingGrease = withGreaseGroundHazard(grease.state);
     const readied = readyTargetRayOfFrost(
       battleRuntimeSessionForTest({
         ...cast.session,
-        state: withGreaseGroundHazard(targetTurn.state),
+        state: overlappingGrease.state,
       }),
     );
     const subject = {
@@ -3471,8 +3491,38 @@ describe("Cloudkill source-turn movement", () => {
       actorId: spellTargetId,
       command: "greaseGroundHazardSave" as const,
       areaId: greaseAreaId,
+      effectRef: grease.effectRef,
       trigger: "endsTurnInArea" as const,
     };
+    const greaseOwner = overlappingGrease.state.combatants.get(spellCasterId);
+    const selectedGrease = greaseOwner?.activeEffects.find(
+      (effect) => effect.effectRef === grease.effectRef,
+    );
+    if (greaseOwner === undefined || selectedGrease === undefined) {
+      throw new Error("Expected the selected overlapping Grease occurrence.");
+    }
+    const removedSelected = updateCombatantWithActiveEffectOccurrence(
+      overlappingGrease.state.combatants,
+      spellCasterId,
+      selectedGrease,
+      (owner) => ({
+        ...owner,
+        activeEffects: owner.activeEffects.filter(
+          (effect) => effect.effectRef !== grease.effectRef,
+        ),
+      }),
+    );
+    expect(removedSelected.tag).toBe("updated");
+    expect(
+      resolveBattleSubject({
+        state: {
+          ...overlappingGrease.state,
+          combatants: removedSelected.combatants,
+        },
+        subject,
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
     const combinedFrontier = resolveBattleSubject({
       state: readied.state,
       subject,
@@ -3488,6 +3538,7 @@ describe("Cloudkill source-turn movement", () => {
     if (greaseSaveHole?.kind !== "savingThrowOutcome") {
       throw new Error("Expected the Grease end-turn save frontier.");
     }
+    expect(greaseSaveHole.greaseGroundHazard?.effectRef).toBe(grease.effectRef);
     expect(combinedFrontier.holes).toEqual([greaseSaveHole]);
     const greaseSaveFill = singleTargetSavingThrowOutcomeFill(
       greaseSaveHole,

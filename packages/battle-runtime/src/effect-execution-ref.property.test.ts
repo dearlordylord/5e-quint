@@ -241,16 +241,13 @@ function occurrenceWithoutRef(occurrence: BattleAllocatedEffectOccurrence) {
   );
 }
 
-function isStoredLightEmitterOccurrence(
+function storedLightEmitterOccurrenceRefs(
   occurrence: BattleAllocatedEffectOccurrence,
-): occurrence is Extract<
-  BattleAllocatedEffectOccurrence,
-  { readonly kind: "storedLightEmitter" }
-> {
+): readonly BattleEffectExecutionRef[] {
   return Match.value(occurrence).pipe(
     Match.discriminatorsExhaustive("kind")({
-      activeEffect: () => false,
-      storedLightEmitter: () => true,
+      activeEffect: () => [],
+      storedLightEmitter: ({ emitter }) => [emitter.effectRef],
     }),
   );
 }
@@ -936,8 +933,9 @@ describe("durable effect occurrence allocation properties", () => {
           const goblinStoredOccurrence = encoded.storedLightEmitters.find(
             (emitter) =>
               emitter.effectRef ===
-              allocated.occurrences.find(isStoredLightEmitterOccurrence)
-                ?.emitter.effectRef,
+              allocated.occurrences.flatMap(
+                storedLightEmitterOccurrenceRefs,
+              )[0],
           );
           if (
             goblinOccurrence === undefined ||
