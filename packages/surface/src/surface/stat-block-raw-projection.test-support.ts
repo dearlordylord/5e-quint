@@ -96,6 +96,13 @@ type NamedModifier = {
   readonly modifier: number;
 };
 
+type AttackAbilityEvidence =
+  | { readonly kind: "resolved"; readonly ability: AbilityName }
+  | {
+      readonly kind: "unresolved";
+      readonly candidates: readonly [AbilityName, ...AbilityName[]];
+    };
+
 type ResourceLimitProjection =
   | {
       readonly kind: "daily";
@@ -105,6 +112,11 @@ type ResourceLimitProjection =
   | {
       readonly kind: "recharge";
       readonly minimumRoll: number;
+      readonly ownership: "shared" | "each";
+    }
+  | {
+      readonly kind: "recharge_after_rest";
+      readonly rest: "short_or_long";
       readonly ownership: "shared" | "each";
     };
 
@@ -137,7 +149,7 @@ type AttackEffectProjection =
   | {
       readonly kind: "apply_condition";
       readonly condition: string;
-      readonly expiresAt: "target_next_turn_end";
+      readonly expiresAt: "source_next_turn_end" | "target_next_turn_end";
     };
 
 type SpellProjection = {
@@ -162,7 +174,7 @@ type ProcedureProjection =
       readonly kind: "attack_roll";
       readonly attackType: "melee" | "ranged";
       readonly attackBonus: number;
-      readonly attackAbilityCandidates: readonly AbilityName[];
+      readonly attackAbilityEvidence: AttackAbilityEvidence;
       readonly reachFeet?: number;
       readonly rangeFeet?: { readonly normal: number; readonly long: number };
       readonly ammunition?: string;
@@ -332,6 +344,16 @@ type RawStatBlockProjection = {
   readonly procedures: readonly ProcedureProjection[];
 };
 
+const procedureResourceLimits = (
+  procedures: readonly ProcedureProjection[],
+): readonly ResourceLimitProjection[] =>
+  procedures.flatMap((procedure) => [
+    ...procedure.resourceLimits,
+    ...(procedure.kind === "spellcasting"
+      ? procedure.groups.flatMap((group) => group.resourceLimits)
+      : []),
+  ]);
+
 const signedNumber = (value: string): number =>
   Number(value.replace("−", "-").replace("+", ""));
 
@@ -343,7 +365,7 @@ const normalizedIdentifier = (value: string): string =>
 
 const normalizedProcedureName = (value: string): string =>
   value.replace(
-    / \((?:Recharge \d(?:–\d)?|\d+\/Day)(?:; (.+))?\)$/,
+    / \((?:Recharge \d(?:–\d)?|Recharge after a Short or Long Rest|\d+\/Day)(?:; (.+))?\)$/,
     (_, qualifier: string | undefined) =>
       qualifier === undefined ? "" : ` (${qualifier})`,
   );
@@ -373,6 +395,16 @@ const rawAttackAbilityCandidates = (
         proficiencyBonus(challengeRating) ===
       attackBonus,
   );
+
+const attackAbilityEvidence = (
+  candidates: readonly AbilityName[],
+): AttackAbilityEvidence | undefined => {
+  const [first, ...rest] = candidates;
+  if (first === undefined) return undefined;
+  return rest.length === 0
+    ? { kind: "resolved", ability: first }
+    : { kind: "unresolved", candidates: [first, ...rest] };
+};
 
 const requireMatch = (
   value: string,
@@ -428,7 +460,7 @@ const parseMetadata = (
   context: string,
 ): Pick<
   ScopedGeneralFacts,
-  "size" | "creatureType" | "creatureTypeTags" | "alignment"
+  "size" | "creatureType" | "creatureTypeTags" | "alignment" | "swarm"
 > => {
   const metadataLine = lines.find(
     (line) => line.startsWith("*") && !line.startsWith("**"),
@@ -443,12 +475,16 @@ const parseMetadata = (
   );
   const sizeText = metadata[1] ?? "";
   const alignmentText = metadata[4] ?? "";
-  const size = sizeText.includes(" or ")
+  const swarmMetadata = sizeText.match(/^([A-Za-z]+) Swarm of ([A-Za-z]+)$/);
+  const creatureSizeText = swarmMetadata?.[1] ?? sizeText;
+  const size = creatureSizeText.includes(" or ")
     ? {
         kind: "alternatives" as const,
-        options: sizeText.split(" or ").map((option) => option.toLowerCase()),
+        options: creatureSizeText
+          .split(" or ")
+          .map((option) => option.toLowerCase()),
       }
-    : sizeText.toLowerCase();
+    : creatureSizeText.toLowerCase();
   const alignment =
     alignmentText === "Unaligned"
       ? ("unaligned" as const)
@@ -470,6 +506,10 @@ const parseMetadata = (
     creatureTypeTags:
       metadata[3] === undefined ? [] : [metadata[3].toLowerCase()],
     alignment,
+    swarm:
+      swarmMetadata?.[2] === undefined
+        ? null
+        : { constituentSize: swarmMetadata[2].toLowerCase() },
   };
 };
 
@@ -616,7 +656,18 @@ const parseAbilityMatrix = (
   }
 
   const facts = rows.flatMap((cells, rowIndex) => {
-    if (cells.length !== 12 || cells.some((cell) => cell.length === 0)) {
+    const expandedCells = cells.flatMap((cell) => {
+      const combinedAbilityScore = cell.match(
+        /^(STR|DEX|CON|INT|WIS|CHA) (\d+)$/,
+      );
+      return combinedAbilityScore === null
+        ? [cell]
+        : [combinedAbilityScore[1] ?? "", combinedAbilityScore[2] ?? ""];
+    });
+    if (
+      expandedCells.length !== 12 ||
+      expandedCells.some((cell) => cell.length === 0)
+    ) {
       throw new Error(
         `Expected ${context} ability matrix row ${rowIndex + 1} to contain exactly twelve nonempty cells`,
       );
@@ -634,7 +685,7 @@ const parseAbilityMatrix = (
       score3,
       modifier3,
       saveModifier3,
-    ] = cells;
+    ] = expandedCells;
     if (
       ability1 === undefined ||
       score1 === undefined ||
@@ -1082,7 +1133,7 @@ const parseCommunication = (
   if (qualifier?.startsWith("telepathy ") === true) {
     const telepathy = requireMatch(
       qualifier,
-      /^telepathy (\d+) ft\.(?: \(doesn't allow the receiving creature to respond telepathically\))?$/,
+      /^telepathy (\d+) ft\.(?: \((doesn't allow the receiving creature to respond telepathically|works only with creatures that understand (.+))\))?$/,
       `${context} telepathy`,
     );
     return {
@@ -1090,7 +1141,12 @@ const parseCommunication = (
       languages: parseLanguageSet(spoken),
       telepathy: {
         rangeFeet: Number(telepathy[1]),
-        ...(qualifier.includes("doesn't allow")
+        ...(telepathy[3] === undefined
+          ? {}
+          : {
+              requiresLanguageUnderstanding: parseLanguageSet(telepathy[3]),
+            }),
+        ...(telepathy[2]?.startsWith("doesn't allow") === true
           ? { response: "receiving_creature_cannot_respond" as const }
           : {}),
       },
@@ -1171,7 +1227,6 @@ const parseRawGeneralFacts = (
     ...parseSenses(lines, name),
     gear: parseGear(lines),
     communication: parseCommunication(lines, name),
-    swarm: null,
   };
 };
 
@@ -1266,6 +1321,15 @@ const parseDamage = (
 const parseRawResourceLimits = (
   name: string,
 ): readonly ResourceLimitProjection[] => {
+  if (/\(Recharge after a Short or Long Rest\)$/.test(name)) {
+    return [
+      {
+        kind: "recharge_after_rest",
+        rest: "short_or_long",
+        ownership: "shared",
+      },
+    ];
+  }
   const recharge = name.match(/\(Recharge (\d)(?:–\d)?\)$/);
   if (recharge !== null) {
     return [
@@ -1304,12 +1368,15 @@ const parseAmmunitionByWeapon = (
 
 const parseSimpleAttack = (
   entry: RawEntry,
-  generalFacts: ScopedGeneralFacts,
+  generalFacts: Pick<
+    ScopedGeneralFacts,
+    "abilityScores" | "challengeRating" | "gear"
+  >,
   ammunitionByWeapon: ReadonlyMap<string, string>,
 ): ProcedureProjection | undefined => {
   if (entry.section === "Traits") return undefined;
   const match = entry.description.match(
-    /^(Melee|Ranged) Attack Roll: ([+−-]\d+)(?: to hit)?, (?:(?:reach (\d+) ft\.)|(?:range (\d+)(?:\/(\d+))? ft\.)) Hit: (.+)\.$/,
+    /^(Melee|Ranged) Attack Roll: ([+−-]\d+)(?: to hit)?, (?:(?:reach (\d+) (?:ft|feet)\.)|(?:range (\d+)(?:\/(\d+))? (?:ft|feet)\.)) Hit: (.+)\.$/,
   );
   if (match === null) return undefined;
   const hit = match[6] ?? "";
@@ -1327,16 +1394,53 @@ const parseSimpleAttack = (
     (damage): damage is DamageProjection => damage !== undefined,
   );
   if (parsedDamages.length === 0) return undefined;
-  const advantageConditional = /if the attack roll had Advantage$/i.test(hit);
-  const onHit: AttackEffectProjection[] = parsedDamages.map((damage, index) =>
-    advantageConditional && index === parsedDamages.length - 1
+  const advantageConditional =
+    /if (?:the attack roll|the [A-Za-z ]+) had Advantage(?: on the attack roll)?$/i.test(
+      hit,
+    );
+  const totalDamageAlternative = advantageConditional && hit.includes(", or ");
+  const [baseDamage, totalDamage] = parsedDamages;
+  const alternativeBonus =
+    totalDamageAlternative &&
+    parsedDamages.length === 2 &&
+    baseDamage !== undefined &&
+    totalDamage !== undefined &&
+    baseDamage.damageType === totalDamage.damageType &&
+    baseDamage.dieSize !== undefined &&
+    baseDamage.dieSize === totalDamage.dieSize &&
+    baseDamage.dice !== undefined &&
+    totalDamage.dice !== undefined &&
+    totalDamage.dice > baseDamage.dice &&
+    totalDamage.static > baseDamage.static
       ? {
-          ...damage,
-          kind: "conditional_bonus_damage",
-          when: "attack_roll_had_advantage",
+          kind: "conditional_bonus_damage" as const,
+          damageType: totalDamage.damageType,
+          static: totalDamage.static - baseDamage.static,
+          dice: totalDamage.dice - baseDamage.dice,
+          dieSize: totalDamage.dieSize,
+          ...((totalDamage.flat ?? 0) - (baseDamage.flat ?? 0) === 0
+            ? {}
+            : { flat: (totalDamage.flat ?? 0) - (baseDamage.flat ?? 0) }),
+          when: "attack_roll_had_advantage" as const,
         }
-      : damage,
-  );
+      : undefined;
+  let onHit: AttackEffectProjection[];
+  if (totalDamageAlternative) {
+    if (baseDamage === undefined || alternativeBonus === undefined) {
+      return undefined;
+    }
+    onHit = [baseDamage, alternativeBonus];
+  } else {
+    onHit = parsedDamages.map((damage, index) =>
+      advantageConditional && index === parsedDamages.length - 1
+        ? {
+            ...damage,
+            kind: "conditional_bonus_damage",
+            when: "attack_roll_had_advantage",
+          }
+        : damage,
+    );
+  }
   const sizeCondition = hit.match(
     /If the target is a (Tiny|Small|Medium|Large|Huge|Gargantuan) or smaller creature, it has the ([A-Za-z]+) condition/,
   );
@@ -1357,6 +1461,16 @@ const parseSimpleAttack = (
       expiresAt: "target_next_turn_end",
     });
   }
+  const sourceTurnCondition = hit.match(
+    /, and the target has the ([A-Za-z]+) condition until the end of the [A-Za-z]+(?: [A-Za-z]+)*'s next turn$/,
+  );
+  if (sourceTurnCondition?.[1] !== undefined) {
+    onHit.push({
+      kind: "apply_condition",
+      condition: sourceTurnCondition[1].toLowerCase(),
+      expiresAt: "source_next_turn_end",
+    });
+  }
   const residual = hit
     .replace(
       /(\d+)(?: \((\d+)d(\d+)(?: ([+−-]) (\d+))?\))? ([A-Z][a-z]+) damage/g,
@@ -1370,7 +1484,15 @@ const parseSimpleAttack = (
       /(?:and )?the target has the [A-Za-z]+ condition until the end of its next turn/,
       "",
     )
-    .replace(/if the attack roll had Advantage/i, "")
+    .replace(
+      /, and the target has the [A-Za-z]+ condition until the end of the [A-Za-z]+(?: [A-Za-z]+)*'s next turn/,
+      "",
+    )
+    .replace(
+      /if (?:the attack roll|the [A-Za-z ]+) had Advantage(?: on the attack roll)?/i,
+      "",
+    )
+    .replace(/\bor\b/gi, "")
     .replace(/\bplus\b/gi, "")
     .replace(/[\s,.]/g, "");
   if (residual !== "") return undefined;
@@ -1378,12 +1500,14 @@ const parseSimpleAttack = (
   if (attackType !== "melee" && attackType !== "ranged") {
     throw new Error(`Unsupported ${entry.name} attack type ${match[1] ?? ""}`);
   }
-  const attackAbilityCandidates = rawAttackAbilityCandidates(
-    generalFacts.abilityScores,
-    generalFacts.challengeRating,
-    signedNumber(match[2] ?? ""),
+  const attackAbility = attackAbilityEvidence(
+    rawAttackAbilityCandidates(
+      generalFacts.abilityScores,
+      generalFacts.challengeRating,
+      signedNumber(match[2] ?? ""),
+    ),
   );
-  if (attackAbilityCandidates.length !== 1) return undefined;
+  if (attackAbility === undefined) return undefined;
   const procedureName = normalizedProcedureName(entry.name);
   const ammunition = generalFacts.gear.some(
     ({ item }) => item === procedureName,
@@ -1396,7 +1520,7 @@ const parseSimpleAttack = (
     kind: "attack_roll",
     attackType,
     attackBonus: signedNumber(match[2] ?? ""),
-    attackAbilityCandidates,
+    attackAbilityEvidence: attackAbility,
     ...(match[3] === undefined
       ? {
           rangeFeet: {
@@ -1414,7 +1538,7 @@ const parseSimpleAttack = (
 const parseSimpleSave = (entry: RawEntry): ProcedureProjection | undefined => {
   if (entry.section === "Traits") return undefined;
   const line = entry.description.match(
-    /^(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) Saving Throw: DC (\d+), each creature in a (\d+)-foot-long, (\d+)-foot-wide Line\. Failure: (.+)\. Success: Half damage\.$/,
+    /^(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) Saving Throw: DC (\d+), each creature in an? (\d+)-foot-long, (\d+)-foot-wide Line\. Failure: (.+)\. Success: Half damage\.$/,
   );
   const cone = entry.description.match(
     /^(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) Saving Throw: DC (\d+), each creature in a (\d+)-foot Cone\. Failure: (.+)\. Success: Half damage\.$/,
@@ -1451,6 +1575,31 @@ const parseSimpleMultiattack = (
 ): ProcedureProjection | undefined => {
   if (entry.section === "Traits") return undefined;
   if (entry.description.includes(",")) return undefined;
+  const pair = entry.description.match(
+    /^The .+ makes (one|two|three) (.+?) attacks? and (one|two|three) (.+?) attacks\.$/,
+  );
+  if (pair !== null) {
+    const firstCount = NUMBER_WORDS.find(([word]) => word === pair[1])?.[1];
+    const secondCount = NUMBER_WORDS.find(([word]) => word === pair[3])?.[1];
+    if (
+      firstCount === undefined ||
+      secondCount === undefined ||
+      pair[2] === undefined ||
+      pair[4] === undefined
+    ) {
+      throw new Error(`Unable to parse ${entry.name} dispatches`);
+    }
+    return {
+      section: entry.section,
+      name: normalizedProcedureName(entry.name),
+      kind: "multiattack",
+      dispatches: [
+        { procedureName: pair[2], count: firstCount },
+        { procedureName: pair[4], count: secondCount },
+      ],
+      resourceLimits: parseRawResourceLimits(entry.name),
+    };
+  }
   const match = entry.description.match(
     /^The .+ makes (one|two|three) (.+) attacks\.$/,
   );
@@ -1476,13 +1625,15 @@ const splitOutsideParentheses = (value: string): readonly string[] => {
     const character = value[index];
     if (character === "(") depth += 1;
     if (character === ")") depth -= 1;
-    if (character === "," && depth === 0) {
+    const isAlternative = value.slice(index, index + 4) === " or ";
+    if ((character === "," || isAlternative) && depth === 0) {
       parts.push(value.slice(start, index).trim());
-      start = index + 1;
+      start = index + (isAlternative ? 4 : 1);
+      if (isAlternative) index += 3;
     }
   }
   parts.push(value.slice(start).trim());
-  return parts;
+  return parts.filter((part) => part.length > 0);
 };
 
 const parseSpell = (value: string): SpellProjection => {
@@ -1510,7 +1661,7 @@ const parseSpellcasting = (
     return undefined;
   }
   const header = entry.description.match(
-    /^The .+ casts one of the following spells, (?:(requiring no (Somatic or )?Material components) and )?using (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) as (?:the )?spellcasting ability(?: \(spell save DC (\d+)(?:, ([+−-]\d+) to hit with spell attacks)?\))?: /,
+    /^The .+ casts one of the following spells, (?:(requiring no (?:(Somatic or )?Material|spell) components) and )?using (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) as (?:the )?spellcasting ability(?: \(spell save DC (\d+)(?:, ([+−-]\d+) to hit with spell attacks)?\))?: /,
   );
   if (header === null) return undefined;
   const groups = Array.from(
@@ -1555,12 +1706,14 @@ const parseSpellcasting = (
     components:
       header[1] === undefined
         ? { kind: "spell_definition" }
-        : {
-            kind: "fixed",
-            v: true,
-            s: header[2] === undefined,
-            m: false,
-          },
+        : header[1].includes("spell components")
+          ? { kind: "fixed", v: false, s: false, m: false }
+          : {
+              kind: "fixed",
+              v: true,
+              s: header[2] === undefined,
+              m: false,
+            },
     groups,
     resourceLimits: parseRawResourceLimits(entry.name),
   };
@@ -1569,13 +1722,14 @@ const parseSpellcasting = (
 const parseDirectSpellcasting = (
   entry: RawEntry,
   inheritedAbility: AbilityName | undefined,
+  inheritedSpellAttackBonus: number | undefined,
 ): ProcedureProjection | undefined => {
   if (entry.section === "Traits") return undefined;
   const explicitAbility = entry.description.match(
-    /^The .+ casts (?:the )?(.+?)(?: spell)?( on itself)?, requiring no spell components and using (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) as the spellcasting ability(?: \(spell save DC (\d+)\))?\.$/,
+    /^The .+ casts (?:the )?(.+?)(?: spell)?( on itself| on that creature)?, requiring no (spell|Material|Somatic or Material) components and using (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) as the spellcasting ability(?: \(spell save DC (\d+)\))?\.(?: (The spell .+)\.)?$/,
   );
   const sameAbility = entry.description.match(
-    /^The .+ casts (?:the )?(.+?)(?: spell)?( on itself)?,( requiring no spell components and)? using the same spellcasting ability as Spellcasting\.$/,
+    /^The .+ casts (?:the )?(.+?)(?: spell)?( on itself| on that creature)?,( requiring no spell components and)? using the same spellcasting ability as Spellcasting\.(?: (The spell .+)\.)?$/,
   );
   if (explicitAbility === null && sameAbility === null) return undefined;
   const inherited = sameAbility === null ? undefined : inheritedAbility;
@@ -1583,29 +1737,43 @@ const parseDirectSpellcasting = (
   const match = explicitAbility ?? sameAbility;
   if (match === null) return undefined;
   if (explicitAbility !== null && match[2] !== undefined) return undefined;
+  if ((match[1] ?? "").includes(" in response")) {
+    return undefined;
+  }
+  const explicit = explicitAbility !== null;
+  const sourceRestriction = explicit ? match[6] : match[4];
+  if (match[2] !== undefined && sourceRestriction !== undefined) {
+    return undefined;
+  }
+  const spells = splitOutsideParentheses(match[1] ?? "").map((value) =>
+    parseSpell(value.replace(/^or /, "")),
+  );
   if (
-    (match[1] ?? "").includes(" or ") ||
-    (match[1] ?? "").includes(" in response")
+    spells.length === 0 ||
+    spells.some((spell) => spell.castAtLevel !== undefined) ||
+    (spells.length > 1 &&
+      (match[2] !== undefined || sourceRestriction !== undefined))
   ) {
     return undefined;
   }
-  const spell = parseSpell(match[1] ?? "");
-  if (spell.castAtLevel !== undefined) return undefined;
-  const selfOnly =
-    match[2] === undefined ? spell : { ...spell, restriction: "on itself" };
-  const explicit = explicitAbility !== null;
+  const projectedSpells = spells.map((spell) =>
+    sourceRestriction !== undefined
+      ? { ...spell, restriction: sourceRestriction }
+      : match[2] === undefined
+        ? spell
+        : { ...spell, restriction: match[2].trim() },
+  );
   const ability = explicit
-    ? parsedAbility(match[3] ?? "", entry.name)
+    ? parsedAbility(match[4] ?? "", entry.name)
     : inherited;
   if (ability === undefined) return undefined;
   const limits = parseRawResourceLimits(entry.name);
-  if (limits.some((limit) => limit.kind === "recharge")) return undefined;
   const group: Extract<
     ProcedureProjection,
     { readonly kind: "spellcasting" }
   >["groups"][number] = {
     kind: limits.length === 0 ? "at_will" : "limited",
-    spells: [selfOnly],
+    spells: projectedSpells,
     resourceLimits: limits,
   };
   return {
@@ -1613,13 +1781,25 @@ const parseDirectSpellcasting = (
     name: normalizedProcedureName(entry.name),
     kind: "spellcasting",
     ability,
-    ...(explicit && match[4] !== undefined
-      ? { spellSaveDc: Number(match[4]) }
+    ...(sameAbility === null || inheritedSpellAttackBonus === undefined
+      ? {}
+      : { spellAttackBonus: inheritedSpellAttackBonus }),
+    ...(explicit && match[5] !== undefined
+      ? { spellSaveDc: Number(match[5]) }
       : {}),
     components:
-      explicit || sameAbility?.[3] !== undefined
-        ? { kind: "fixed", v: false, s: false, m: false }
-        : { kind: "spell_definition" },
+      explicitAbility !== null
+        ? match[3] === "spell"
+          ? { kind: "fixed", v: false, s: false, m: false }
+          : {
+              kind: "fixed",
+              v: true,
+              s: match[3] !== "Somatic or Material",
+              m: false,
+            }
+        : sameAbility?.[3] !== undefined
+          ? { kind: "fixed", v: false, s: false, m: false }
+          : { kind: "spell_definition" },
     groups: [group],
     resourceLimits: [],
   };
@@ -1688,14 +1868,18 @@ const rawTextOnlyReason = (
 
 const parseRawProcedure = (
   entry: RawEntry,
-  generalFacts: ScopedGeneralFacts,
+  generalFacts: Pick<
+    ScopedGeneralFacts,
+    "abilityScores" | "challengeRating" | "gear"
+  >,
   ammunitionByWeapon: ReadonlyMap<string, string>,
   spellcastingAbility: AbilityName | undefined,
+  spellAttackBonus: number | undefined,
 ): ProcedureProjection | undefined => {
   if (entry.section === "Traits") return undefined;
   return (
     parseSpellcasting(entry) ??
-    parseDirectSpellcasting(entry, spellcastingAbility) ??
+    parseDirectSpellcasting(entry, spellcastingAbility, spellAttackBonus) ??
     parseSimpleAttack(entry, generalFacts, ammunitionByWeapon) ??
     parseSimpleSave(entry) ??
     parseSimpleMultiattack(entry) ??
@@ -1771,17 +1955,28 @@ const rawRecordLines = (
 ): readonly string[] =>
   sourceLines.slice(occurrence.anchor.lineStart - 1, occurrence.anchor.lineEnd);
 
-const uniqueSpellcastingAbility = (
+const uniqueSpellcastingFacts = (
   entries: readonly RawEntry[],
-): AbilityName | undefined => {
-  const abilities = entries.flatMap((entry) => {
+):
+  | {
+      readonly ability: AbilityName;
+      readonly spellAttackBonus: number | undefined;
+    }
+  | undefined => {
+  const spellcasting = entries.flatMap((entry) => {
     const procedure = parseSpellcasting(entry);
-    return procedure?.kind === "spellcasting" ? [procedure.ability] : [];
+    return procedure?.kind === "spellcasting" ? [procedure] : [];
   });
-  if (abilities.length > 1) {
+  if (spellcasting.length > 1) {
     throw new Error("A RAW Stat Block has multiple Spellcasting abilities");
   }
-  return abilities[0];
+  const [procedure] = spellcasting;
+  return procedure === undefined
+    ? undefined
+    : {
+        ability: procedure.ability,
+        spellAttackBonus: procedure.spellAttackBonus,
+      };
 };
 
 export const projectRawStatBlocks = (
@@ -1803,27 +1998,28 @@ export const projectRawStatBlocks = (
       const lines = rawRecordLines(sourceLines, occurrence);
       const entries = parseRawEntries(lines);
       const generalFacts = parseRawGeneralFacts(occurrence.name, lines);
-      const spellcastingAbility = uniqueSpellcastingAbility(entries);
+      const spellcasting = uniqueSpellcastingFacts(entries);
       const parsedProcedures = entries.flatMap((entry) => {
         const procedure = parseRawProcedure(
           entry,
           generalFacts,
           ammunitionByWeapon,
-          spellcastingAbility,
+          spellcasting?.ability,
+          spellcasting?.spellAttackBonus,
         );
         return procedure === undefined ? [] : [procedure];
       });
-      const executableNames = new Set(
-        parsedProcedures.flatMap((procedure) =>
-          procedure.kind === "textOnly" ? [] : [procedure.name],
-        ),
+      const structurallyPresentNames = new Set(
+        entries
+          .filter((entry) => entry.section !== "Traits")
+          .map((entry) => normalizedProcedureName(entry.name)),
       );
       const procedures = parsedProcedures.map(
         (procedure): ProcedureProjection => {
           if (
             procedure.kind !== "multiattack" ||
             procedure.dispatches.every((dispatch) =>
-              executableNames.has(dispatch.procedureName),
+              structurallyPresentNames.has(dispatch.procedureName),
             )
           ) {
             return procedure;
@@ -1848,25 +2044,21 @@ export const projectRawStatBlocks = (
           };
         },
       );
-      const rawTextOnly = procedures.flatMap((procedure) =>
-        procedure.kind === "textOnly"
-          ? [
-              {
-                section: procedure.section,
-                name: procedure.name,
-                description: procedure.description,
-                reason: procedure.reason,
-              },
-            ]
-          : [],
+      const admissionDisposition = authoredProcedures(record).flatMap(
+        ({ section, entry }) =>
+          entry.kind === "textOnly"
+            ? [
+                {
+                  section,
+                  name: normalizedProcedureName(entry.name),
+                  description: normalizedProse(entry.description),
+                  reason: entry.reason,
+                },
+              ]
+            : [],
       );
       const legendaryActionUses = parseLegendaryActionUses(lines);
-      const resources = procedures.flatMap((procedure) => [
-        ...procedure.resourceLimits,
-        ...(procedure.kind === "spellcasting"
-          ? procedure.groups.flatMap((group) => group.resourceLimits)
-          : []),
-      ]);
+      const resources = procedureResourceLimits(procedures);
 
       return {
         id: statBlockIdFromRawName(occurrence.name),
@@ -1892,7 +2084,7 @@ export const projectRawStatBlocks = (
             description,
             effect: null,
           })),
-        textOnlyProcedures: rawTextOnly,
+        textOnlyProcedures: admissionDisposition,
         procedures,
       };
     })
@@ -2056,13 +2248,20 @@ const projectAttackEffect = (effect: AttackEffect): AttackEffectProjection => {
     };
   }
   if (effect.kind === "apply_condition" && "expiresAt" in effect) {
-    if (effect.expiresAt.kind !== "target_next_turn_end") {
-      throw new Error("Unsupported authored attack condition expiration");
-    }
     return {
       kind: "apply_condition",
       condition: effect.condition,
-      expiresAt: "target_next_turn_end",
+      expiresAt: Match.value(effect.expiresAt).pipe(
+        Match.when(
+          { kind: "source_next_turn_end" },
+          () => "source_next_turn_end" as const,
+        ),
+        Match.when(
+          { kind: "target_next_turn_end" },
+          () => "target_next_turn_end" as const,
+        ),
+        Match.exhaustive,
+      ),
     };
   }
   throw new Error("Unsupported authored attack effect");
@@ -2084,12 +2283,11 @@ const projectResourceLimits = (
     if (resource === undefined) {
       throw new Error(`Missing ${record.name} resource ordinal ${ordinal}`);
     }
-    return projectResource(record, resource);
+    return projectResource(resource);
   });
 };
 
 const projectResource = (
-  record: SrdStatBlockRecord,
   resource: NonNullable<SrdStatBlockRecord["statBlock"]["resources"]>[number],
 ): ResourceLimitProjection =>
   Match.value(resource.limit).pipe(
@@ -2103,17 +2301,12 @@ const projectResource = (
       minimumRoll: recharge.minimumRoll,
       ownership: resource.ownership,
     })),
-    Match.when({ kind: "recharge_after_rest" }, () => {
-      throw new Error(`${record.name} has an unsupported rest resource`);
-    }),
+    Match.when({ kind: "recharge_after_rest" }, (afterRest) => ({
+      kind: "recharge_after_rest" as const,
+      rest: afterRest.rest,
+      ownership: resource.ownership,
+    })),
     Match.exhaustive,
-  );
-
-const projectDeclaredResources = (
-  record: SrdStatBlockRecord,
-): readonly ResourceLimitProjection[] =>
-  (record.statBlock.resources ?? []).map((resource) =>
-    projectResource(record, resource),
   );
 
 const literalValue = (value: {
@@ -2135,23 +2328,24 @@ const projectExecutableProcedure = (
       kind: "attack_roll" as const,
       attackType: attack.attackType,
       attackBonus: literalValue(attack.attackBonus),
-      attackAbilityCandidates: (() => {
+      attackAbilityEvidence: (() => {
         const candidates = rawAttackAbilityCandidates(
           record.statBlock.abilityScores,
           record.challengeRating,
           literalValue(attack.attackBonus),
         );
-        if (candidates.length !== 1) {
+        const evidence = attackAbilityEvidence(candidates);
+        if (evidence === undefined) {
           throw new Error(
-            `${record.name}/${attack.name} has ambiguous RAW-derived attack abilities ${candidates.join(", ")}`,
+            `${record.name}/${attack.name} has no RAW-derived attack ability candidate`,
           );
         }
-        if (candidates[0] !== attack.attackAbility) {
+        if (!candidates.includes(attack.attackAbility)) {
           throw new Error(
-            `${record.name}/${attack.name} uses ${attack.attackAbility}; RAW derives ${candidates[0]}`,
+            `${record.name}/${attack.name} uses ${attack.attackAbility} outside RAW-derived attack ability candidates ${candidates.join(", ")}`,
           );
         }
-        return candidates;
+        return evidence;
       })(),
       ...(attack.attackType === "melee"
         ? { reachFeet: attack.reachFeet }
@@ -2274,8 +2468,49 @@ const projectExecutableProcedure = (
 
 const projectAuthoredProcedures = (
   record: SrdStatBlockRecord,
+  ammunitionByWeapon: ReadonlyMap<string, string>,
 ): readonly ProcedureProjection[] => {
   const entries = authoredProcedures(record);
+  const inheritedSpellcastingFacts = entries.flatMap(({ section, entry }) => {
+    if (
+      entry.kind === "executable" &&
+      entry.procedure.kind === "spellcasting" &&
+      normalizedProcedureName(entry.procedure.name) === "Spellcasting"
+    ) {
+      return [
+        {
+          ability: entry.procedure.ability,
+          spellAttackBonus:
+            entry.procedure.spellAttackBonus?.kind === "literal"
+              ? entry.procedure.spellAttackBonus.value
+              : undefined,
+        },
+      ];
+    }
+    if (
+      entry.kind === "textOnly" &&
+      normalizedProcedureName(entry.name) === "Spellcasting"
+    ) {
+      const parsed = parseSpellcasting({
+        section,
+        name: entry.name,
+        description: normalizedProse(entry.description),
+      });
+      return parsed?.kind === "spellcasting"
+        ? [
+            {
+              ability: parsed.ability,
+              spellAttackBonus: parsed.spellAttackBonus,
+            },
+          ]
+        : [];
+    }
+    return [];
+  });
+  if (inheritedSpellcastingFacts.length > 1) {
+    throw new Error(`${record.name} has multiple Spellcasting abilities`);
+  }
+  const inheritedSpellcasting = inheritedSpellcastingFacts[0];
   const namesBySectionAndOrdinal = new Map<
     ProcedureSection,
     Map<number, string>
@@ -2288,6 +2523,47 @@ const projectAuthoredProcedures = (
   return entries.map(({ section, entry }): ProcedureProjection => {
     const resourceLimits = projectResourceLimits(record, entry.resourceRefs);
     if (entry.kind === "textOnly") {
+      const structuralProcedure = parseRawProcedure(
+        {
+          section,
+          name: entry.name,
+          description: normalizedProse(entry.description),
+        },
+        {
+          abilityScores: record.statBlock.abilityScores,
+          challengeRating: record.challengeRating,
+          gear: (record.statBlock.gear ?? []).map((gear) => ({
+            item: gear.item,
+            quantity: gear.quantity ?? 1,
+          })),
+        },
+        ammunitionByWeapon,
+        inheritedSpellcasting?.ability,
+        inheritedSpellcasting?.spellAttackBonus,
+      );
+      if (
+        structuralProcedure !== undefined &&
+        structuralProcedure.kind !== "textOnly"
+      ) {
+        if (
+          structuralProcedure.kind === "spellcasting" &&
+          structuralProcedure.groups.length === 1 &&
+          structuralProcedure.groups[0]?.resourceLimits.length === 0 &&
+          resourceLimits.length > 0
+        ) {
+          return {
+            ...structuralProcedure,
+            groups: [
+              {
+                ...structuralProcedure.groups[0],
+                kind: "limited",
+                resourceLimits,
+              },
+            ],
+          };
+        }
+        return structuralProcedure;
+      }
       return {
         section,
         name: normalizedProcedureName(entry.name),
@@ -2356,11 +2632,31 @@ const projectAuthoredSpeed = (speed: AuthoredSpeedEntry): ScopedSpeedEntry =>
 
 export const projectAuthoredStatBlocks = (
   records: readonly SrdStatBlockRecord[],
-): readonly RawStatBlockProjection[] =>
-  records
+  equipmentSource: string,
+): readonly RawStatBlockProjection[] => {
+  const ammunitionByWeapon = parseAmmunitionByWeapon(equipmentSource);
+  return records
     .map((record) => {
       const procedures = authoredProcedures(record);
-      const projectedProcedures = projectAuthoredProcedures(record);
+      const projectedProcedures = projectAuthoredProcedures(
+        record,
+        ammunitionByWeapon,
+      );
+      const referencedResourceOrdinals = new Set(
+        procedures.flatMap(({ entry }) => [
+          ...(entry.resourceRefs.kind === "some"
+            ? entry.resourceRefs.ordinals
+            : []),
+          ...(entry.kind === "executable" &&
+          entry.procedure.kind === "spellcasting"
+            ? entry.procedure.groups.flatMap((group) =>
+                group.resourceRefs.kind === "some"
+                  ? group.resourceRefs.ordinals
+                  : [],
+              )
+            : []),
+        ]),
+      );
       const legendaryActionUses = projectLegendaryActionUses(record);
       const resistances = record.statBlock.resistances;
       return {
@@ -2472,7 +2768,14 @@ export const projectAuthoredStatBlocks = (
           swarm: record.statBlock.swarm ?? null,
           ...(legendaryActionUses === undefined ? {} : { legendaryActionUses }),
         },
-        resources: projectDeclaredResources(record),
+        resources: [
+          ...procedureResourceLimits(projectedProcedures),
+          ...(record.statBlock.resources ?? [])
+            .filter(
+              (resource) => !referencedResourceOrdinals.has(resource.ordinal),
+            )
+            .map((resource) => projectResource(resource)),
+        ],
         entryNames: [
           ...(record.statBlock.traits ?? []).map(
             (trait) => `Traits/${trait.name}`,
@@ -2503,3 +2806,4 @@ export const projectAuthoredStatBlocks = (
       };
     })
     .sort((left, right) => left.name.localeCompare(right.name));
+};

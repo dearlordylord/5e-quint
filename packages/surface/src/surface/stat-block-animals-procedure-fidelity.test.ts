@@ -67,7 +67,9 @@ describe("Animals Stat Block procedure fidelity", () => {
       "**Speed** 20 ft., Climb or Fly 20 ft. (GM's choice)",
     );
     const swarm = requireAnimal("stat_block_swarm_of_insects");
-    expect(projectAuthoredStatBlocks([swarm])[0]?.generalFacts.speeds).toEqual([
+    expect(
+      projectAuthoredStatBlocks([swarm], "")[0]?.generalFacts.speeds,
+    ).toEqual([
       { kind: "walk", feet: 20, hover: false },
       {
         kind: "gm_choice",
