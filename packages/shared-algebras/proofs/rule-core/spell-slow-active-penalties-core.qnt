@@ -71,6 +71,7 @@ module spellSlowActivePenaltiesCore {
     | SlowTurnRestrictedBonusActionUsed
 
   type SlowSomaticResolutionState =
+    | SlowSomaticResolutionNotRequested
     | SlowSomaticCheckBypassed
     | SlowSomaticFailureOutcomeRequired
     | SlowSomaticSpellContinues
@@ -105,6 +106,9 @@ module spellSlowActivePenaltiesCore {
     occurrence: initialSlowOccurrenceState,
     concentrationCommand: SlowSourceConcentrationUnchanged,
   }
+
+  pure def initialSlowSomaticResolutionState:
+    SlowSomaticResolutionState = SlowSomaticResolutionNotRequested
 
   pure def legalSlowEffectSource(source: SlowEffectSource): bool = all {
     source.casterRef >= 0,
@@ -305,20 +309,34 @@ module spellSlowActivePenaltiesCore {
   ): bool =
     not(slowTargetAffected(state, targetRef))
 
+  pure def canBeginSlowTargetTurn(turn: SlowTargetTurnState): bool =
+    match turn {
+      | SlowTurnUnrestricted => true
+      | SlowTurnRestrictedUnused => false
+      | SlowTurnRestrictedAttackActionOneAttackAvailable => false
+      | SlowTurnRestrictedAttackActionNoAttackAvailable => false
+      | SlowTurnRestrictedOtherActionUsed => false
+      | SlowTurnRestrictedBonusActionUsed => false
+    }
+
   pure def beginSlowTargetTurn(
     state: SlowOccurrenceState,
-    targetRef: SlowEntityRef
+    targetRef: SlowEntityRef,
+    turn: SlowTargetTurnState
   ): SlowTargetTurnState =
-    if (slowTargetAffected(state, targetRef))
+    if (not(canBeginSlowTargetTurn(turn))) turn
+    else if (slowTargetAffected(state, targetRef))
       SlowTurnRestrictedUnused
     else SlowTurnUnrestricted
 
   pure def beginSlowTargetTurnAfterPriorAction(
     state: SlowOccurrenceState,
     targetRef: SlowEntityRef,
+    turn: SlowTargetTurnState,
     priorActionKind: SlowTurnActionKind
   ): SlowTargetTurnState =
-    if (not(slowTargetAffected(state, targetRef)))
+    if (not(canBeginSlowTargetTurn(turn))) turn
+    else if (not(slowTargetAffected(state, targetRef)))
       SlowTurnUnrestricted
     else if (priorActionKind == SlowAttackAction)
       SlowTurnRestrictedAttackActionOneAttackAvailable
@@ -326,9 +344,11 @@ module spellSlowActivePenaltiesCore {
 
   pure def beginSlowTargetTurnAfterPriorBonusAction(
     state: SlowOccurrenceState,
-    targetRef: SlowEntityRef
+    targetRef: SlowEntityRef,
+    turn: SlowTargetTurnState
   ): SlowTargetTurnState =
-    if (not(slowTargetAffected(state, targetRef)))
+    if (not(canBeginSlowTargetTurn(turn))) turn
+    else if (not(slowTargetAffected(state, targetRef)))
       SlowTurnUnrestricted
     else SlowTurnRestrictedBonusActionUsed
 
@@ -422,21 +442,39 @@ module spellSlowActivePenaltiesCore {
       | _ => 0
     }
 
+  pure def canRequestSlowSomaticResolution(
+    resolution: SlowSomaticResolutionState
+  ): bool =
+    match resolution {
+      | SlowSomaticResolutionNotRequested => true
+      | SlowSomaticCheckBypassed => false
+      | SlowSomaticFailureOutcomeRequired => false
+      | SlowSomaticSpellContinues => false
+      | SlowSomaticSpellFailedAfterResourceSpend => false
+    }
+
   pure def requestSlowSomaticResolution(
+    resolution: SlowSomaticResolutionState,
     state: SlowOccurrenceState,
     casterRef: SlowEntityRef,
     hasEffectiveSomaticComponent: bool
   ): SlowSomaticResolutionState =
-    if (slowTargetAffected(state, casterRef) and hasEffectiveSomaticComponent)
+    if (not(canRequestSlowSomaticResolution(resolution))) resolution
+    else if (
+      slowTargetAffected(state, casterRef) and hasEffectiveSomaticComponent
+    )
       SlowSomaticFailureOutcomeRequired
-    else SlowSomaticSpellContinues
+    else SlowSomaticCheckBypassed
 
   pure def slowSomaticOutcomeRequired(
     state: SlowSomaticResolutionState
   ): bool =
     match state {
+      | SlowSomaticResolutionNotRequested => false
+      | SlowSomaticCheckBypassed => false
       | SlowSomaticFailureOutcomeRequired => true
-      | _ => false
+      | SlowSomaticSpellContinues => false
+      | SlowSomaticSpellFailedAfterResourceSpend => false
     }
 
   pure def canResolveSlowSomaticFailureOutcome(
@@ -458,7 +496,32 @@ module spellSlowActivePenaltiesCore {
 
   pure def slowSomaticSpellEffectMayApply(
     state: SlowSomaticResolutionState
-  ): bool = state == SlowSomaticSpellContinues
+  ): bool =
+    match state {
+      | SlowSomaticResolutionNotRequested => false
+      | SlowSomaticCheckBypassed => true
+      | SlowSomaticFailureOutcomeRequired => false
+      | SlowSomaticSpellContinues => true
+      | SlowSomaticSpellFailedAfterResourceSpend => false
+    }
+
+  pure def canBeginNextSlowSomaticInvocation(
+    state: SlowSomaticResolutionState
+  ): bool =
+    match state {
+      | SlowSomaticResolutionNotRequested => false
+      | SlowSomaticCheckBypassed => true
+      | SlowSomaticFailureOutcomeRequired => false
+      | SlowSomaticSpellContinues => true
+      | SlowSomaticSpellFailedAfterResourceSpend => true
+    }
+
+  pure def beginNextSlowSomaticInvocation(
+    state: SlowSomaticResolutionState
+  ): SlowSomaticResolutionState =
+    if (canBeginNextSlowSomaticInvocation(state))
+      initialSlowSomaticResolutionState
+    else state
 
   pure def slowSomaticFailureStartsNewConcentration(
     state: SlowSomaticResolutionState

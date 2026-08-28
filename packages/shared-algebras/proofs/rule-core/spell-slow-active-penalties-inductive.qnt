@@ -17,8 +17,10 @@ module spellSlowActivePenaltiesInductive {
     | SlowProofSpentBonusAction
     | SlowProofMadeAttack
     | SlowProofRequestedSomaticOutcome
+    | SlowProofBypassedSomaticCheck
     | SlowProofFailedSomaticCast
     | SlowProofContinuedSomaticCast
+    | SlowProofBeganNextSomaticInvocation
     | SlowProofRepeatSaveFailed
     | SlowProofRepeatSaveRemovedOneTarget
     | SlowProofRepeatSaveRemovedLastTarget
@@ -75,6 +77,7 @@ module spellSlowActivePenaltiesInductive {
   )
 
   pure def qSomaticDomain: Set[SlowSomaticResolutionState] = Set(
+    SlowSomaticResolutionNotRequested,
     SlowSomaticCheckBypassed,
     SlowSomaticFailureOutcomeRequired,
     SlowSomaticSpellContinues,
@@ -128,8 +131,10 @@ module spellSlowActivePenaltiesInductive {
     SlowProofSpentBonusAction,
     SlowProofMadeAttack,
     SlowProofRequestedSomaticOutcome,
+    SlowProofBypassedSomaticCheck,
     SlowProofFailedSomaticCast,
     SlowProofContinuedSomaticCast,
+    SlowProofBeganNextSomaticInvocation,
     SlowProofRepeatSaveFailed,
     SlowProofRepeatSaveRemovedOneTarget,
     SlowProofRepeatSaveRemovedLastTarget,
@@ -230,7 +235,7 @@ module spellSlowActivePenaltiesInductive {
   action init = all {
     qOccurrence' = initialSlowOccurrenceState,
     qTurn' = SlowTurnUnrestricted,
-    qSomatic' = SlowSomaticCheckBypassed,
+    qSomatic' = initialSlowSomaticResolutionState,
     qMultiattack' = initialSlowStatBlockMultiattackState,
     qConcentrationCommand' = SlowSourceConcentrationUnchanged,
     qActorWasSlowedAtMultiattackActivation' = false,
@@ -255,24 +260,32 @@ module spellSlowActivePenaltiesInductive {
 
   action doBeginRestrictedTurn = all {
     slowTargetAffected(qOccurrence, 1),
+    canBeginSlowTargetTurn(qTurn),
     recordTurn(
-      beginSlowTargetTurn(qOccurrence, 1),
+      beginSlowTargetTurn(qOccurrence, 1, qTurn),
       SlowProofBeganRestrictedTurn
     ),
   }
 
   action doReconcilePriorAction = all {
     slowTargetAffected(qOccurrence, 1),
+    canBeginSlowTargetTurn(qTurn),
     recordTurn(
-      beginSlowTargetTurnAfterPriorAction(qOccurrence, 1, SlowOtherAction),
+      beginSlowTargetTurnAfterPriorAction(
+        qOccurrence,
+        1,
+        qTurn,
+        SlowOtherAction
+      ),
       SlowProofReconciledPriorAction
     ),
   }
 
   action doReconcilePriorBonusAction = all {
     slowTargetAffected(qOccurrence, 1),
+    canBeginSlowTargetTurn(qTurn),
     recordTurn(
-      beginSlowTargetTurnAfterPriorBonusAction(qOccurrence, 1),
+      beginSlowTargetTurnAfterPriorBonusAction(qOccurrence, 1, qTurn),
       SlowProofReconciledPriorBonusAction
     ),
   }
@@ -306,10 +319,19 @@ module spellSlowActivePenaltiesInductive {
 
   action doRequestSomaticOutcome = all {
     slowTargetAffected(qOccurrence, 1),
-    not(slowSomaticOutcomeRequired(qSomatic)),
+    canRequestSlowSomaticResolution(qSomatic),
     recordSomatic(
-      requestSlowSomaticResolution(qOccurrence, 1, true),
+      requestSlowSomaticResolution(qSomatic, qOccurrence, 1, true),
       SlowProofRequestedSomaticOutcome
+    ),
+  }
+
+  action doBypassSomaticCheck = all {
+    slowTargetAffected(qOccurrence, 1),
+    canRequestSlowSomaticResolution(qSomatic),
+    recordSomatic(
+      requestSlowSomaticResolution(qSomatic, qOccurrence, 1, false),
+      SlowProofBypassedSomaticCheck
     ),
   }
 
@@ -326,6 +348,16 @@ module spellSlowActivePenaltiesInductive {
     recordSomatic(
       applySlowSomaticFailureOutcome(qSomatic, SlowSomaticSpellSucceeded),
       SlowProofContinuedSomaticCast
+    ),
+  }
+
+  // This abstract action marks a distinct later spell invocation. It does not
+  // grant a runtime action or resource; those remain runtime-owned.
+  action doBeginNextSomaticInvocation = all {
+    canBeginNextSlowSomaticInvocation(qSomatic),
+    recordSomatic(
+      beginNextSlowSomaticInvocation(qSomatic),
+      SlowProofBeganNextSomaticInvocation
     ),
   }
 
@@ -452,8 +484,10 @@ module spellSlowActivePenaltiesInductive {
     doSpendBonusAction,
     doMakeAttack,
     doRequestSomaticOutcome,
+    doBypassSomaticCheck,
     doFailSomaticCast,
     doContinueSomaticCast,
+    doBeginNextSomaticInvocation,
     doResolveRepeatSaveFailure,
     doResolveRepeatSaveSuccess,
     doConsumeConcentrationEndedSignal,
@@ -463,6 +497,74 @@ module spellSlowActivePenaltiesInductive {
     doDispatchMultiattack,
     doEndMultiattackTurn,
   }
+
+  val restrictedTurnCannotBeReinitialized =
+    if (canBeginSlowTargetTurn(qTurn)) qTurn == SlowTurnUnrestricted
+    else all {
+      beginSlowTargetTurn(qOccurrence, 1, qTurn) == qTurn,
+      beginSlowTargetTurnAfterPriorAction(
+        qOccurrence,
+        1,
+        qTurn,
+        SlowAttackAction
+      ) == qTurn,
+      beginSlowTargetTurnAfterPriorAction(
+        qOccurrence,
+        1,
+        qTurn,
+        SlowOtherAction
+      ) == qTurn,
+      beginSlowTargetTurnAfterPriorBonusAction(
+        qOccurrence,
+        1,
+        qTurn
+      ) == qTurn,
+    }
+
+  val somaticRequestPhaseInvariant =
+    if (canRequestSlowSomaticResolution(qSomatic))
+      qSomatic == SlowSomaticResolutionNotRequested
+    else all {
+      requestSlowSomaticResolution(
+        qSomatic,
+        qOccurrence,
+        1,
+        true
+      ) == qSomatic,
+      requestSlowSomaticResolution(
+        qSomatic,
+        qOccurrence,
+        1,
+        false
+      ) == qSomatic,
+    }
+
+  val somaticNextInvocationPhaseInvariant =
+    match qSomatic {
+      | SlowSomaticResolutionNotRequested => all {
+          not(canBeginNextSlowSomaticInvocation(qSomatic)),
+          beginNextSlowSomaticInvocation(qSomatic) == qSomatic,
+        }
+      | SlowSomaticFailureOutcomeRequired => all {
+          not(canBeginNextSlowSomaticInvocation(qSomatic)),
+          beginNextSlowSomaticInvocation(qSomatic) == qSomatic,
+        }
+      | SlowSomaticCheckBypassed => all {
+          canBeginNextSlowSomaticInvocation(qSomatic),
+          beginNextSlowSomaticInvocation(qSomatic) ==
+            initialSlowSomaticResolutionState,
+        }
+      | SlowSomaticSpellContinues => all {
+          canBeginNextSlowSomaticInvocation(qSomatic),
+          beginNextSlowSomaticInvocation(qSomatic) ==
+            initialSlowSomaticResolutionState,
+        }
+      | SlowSomaticSpellFailedAfterResourceSpend => all {
+          canBeginNextSlowSomaticInvocation(qSomatic),
+          beginNextSlowSomaticInvocation(qSomatic) ==
+            initialSlowSomaticResolutionState,
+        }
+    }
 
   val invariant = all {
     qOccurrence.in(qOccurrenceDomain),
@@ -474,6 +576,9 @@ module spellSlowActivePenaltiesInductive {
     qEvent.in(qEventDomain),
     legalSlowOccurrenceState(qOccurrence),
     legalSlowStatBlockMultiattackState(qMultiattack),
+    restrictedTurnCannotBeReinitialized,
+    somaticRequestPhaseInvariant,
+    somaticNextInvocationPhaseInvariant,
     slowTurnDoesNotSpendBothActionAndBonusAction(qTurn),
     not(slowTargetAffected(qOccurrence, 1)) implies
       qTurn == SlowTurnUnrestricted,
@@ -495,14 +600,35 @@ module spellSlowActivePenaltiesInductive {
         }
     },
     match qSomatic {
-      | SlowSomaticFailureOutcomeRequired => slowSomaticFailurePercent == 25
+      | SlowSomaticResolutionNotRequested =>
+          not(slowSomaticSpellEffectMayApply(qSomatic))
+      | SlowSomaticCheckBypassed =>
+          slowSomaticSpellEffectMayApply(qSomatic)
+      | SlowSomaticFailureOutcomeRequired => all {
+          slowSomaticFailurePercent == 25,
+          slowSomaticOutcomeRequired(qSomatic),
+          not(slowSomaticSpellEffectMayApply(qSomatic)),
+        }
+      | SlowSomaticSpellContinues =>
+          slowSomaticSpellEffectMayApply(qSomatic)
       | SlowSomaticSpellFailedAfterResourceSpend => all {
           slowSomaticFailureSpentCastResources(qSomatic),
           not(slowSomaticSpellEffectMayApply(qSomatic)),
           not(slowSomaticFailureStartsNewConcentration(qSomatic)),
         }
-      | _ => true
     },
+    (qEvent == SlowProofRequestedSomaticOutcome) implies
+      qSomatic == SlowSomaticFailureOutcomeRequired,
+    (qEvent == SlowProofBypassedSomaticCheck) implies all {
+      qSomatic == SlowSomaticCheckBypassed,
+      slowSomaticSpellEffectMayApply(qSomatic),
+    },
+    (qEvent == SlowProofFailedSomaticCast) implies
+      qSomatic == SlowSomaticSpellFailedAfterResourceSpend,
+    (qEvent == SlowProofContinuedSomaticCast) implies
+      qSomatic == SlowSomaticSpellContinues,
+    (qEvent == SlowProofBeganNextSomaticInvocation) implies
+      qSomatic == SlowSomaticResolutionNotRequested,
     (qEvent == SlowProofRepeatSaveFailed) implies all {
       qOccurrence != SlowOccurrenceAbsent,
       qConcentrationCommand == SlowSourceConcentrationUnchanged,
@@ -598,8 +724,11 @@ module spellSlowActivePenaltiesInductive {
   val witnessBonusActionSpent = qEvent == SlowProofSpentBonusAction
   val witnessOneAttackMade = qEvent == SlowProofMadeAttack
   val witnessSomaticOutcomeRequired = qEvent == SlowProofRequestedSomaticOutcome
+  val witnessSomaticCheckBypassed = qEvent == SlowProofBypassedSomaticCheck
   val witnessSomaticFailure = qEvent == SlowProofFailedSomaticCast
   val witnessSomaticSuccess = qEvent == SlowProofContinuedSomaticCast
+  val witnessNextSomaticInvocation =
+    qEvent == SlowProofBeganNextSomaticInvocation
   val witnessRepeatSaveFailure = qEvent == SlowProofRepeatSaveFailed
   val witnessPerTargetCleanup = qEvent == SlowProofRepeatSaveRemovedOneTarget
   val witnessLastTargetCleanup = qEvent == SlowProofRepeatSaveRemovedLastTarget

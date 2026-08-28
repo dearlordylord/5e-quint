@@ -32,7 +32,11 @@ module spellSlowActivePenaltiesExamples {
   }
 
   run test_restricted_turn_spends_at_most_one_action_kind_and_caps_attacks = {
-    val unused = beginSlowTargetTurn(exampleActiveSlow, 1)
+    val unused = beginSlowTargetTurn(
+      exampleActiveSlow,
+      1,
+      SlowTurnUnrestricted
+    )
     val attackAction = applySlowTurnAction(unused, SlowAttackAction)
     val firstAttack = applySlowAttackActionAttack(attackAction)
     val rejectedSecondAttack = applySlowAttackActionAttack(firstAttack)
@@ -42,8 +46,27 @@ module spellSlowActivePenaltiesExamples {
       bonusAction,
       SlowOtherAction
     )
+    val rejectedRepeatBegin = beginSlowTargetTurn(
+      exampleActiveSlow,
+      1,
+      firstAttack
+    )
+    val rejectedPriorBonusAfterAction =
+      beginSlowTargetTurnAfterPriorBonusAction(
+        exampleActiveSlow,
+        1,
+        firstAttack
+      )
+    val rejectedPriorActionAfterBonus = beginSlowTargetTurnAfterPriorAction(
+      exampleActiveSlow,
+      1,
+      bonusAction,
+      SlowOtherAction
+    )
     all {
       assert(unused == SlowTurnRestrictedUnused),
+      assert(canBeginSlowTargetTurn(SlowTurnUnrestricted)),
+      assert(not(canBeginSlowTargetTurn(unused))),
       assert(slowTurnCanSpendAction(unused)),
       assert(slowTurnCanSpendBonusAction(unused)),
       assert(slowTurnDoesNotSpendBothActionAndBonusAction(unused)),
@@ -52,6 +75,9 @@ module spellSlowActivePenaltiesExamples {
       assert(rejectedSecondAttack == firstAttack),
       assert(rejectedBonusAfterAction == firstAttack),
       assert(rejectedActionAfterBonus == bonusAction),
+      assert(rejectedRepeatBegin == firstAttack),
+      assert(rejectedPriorBonusAfterAction == firstAttack),
+      assert(rejectedPriorActionAfterBonus == bonusAction),
       assert(slowTurnDoesNotSpendBothActionAndBonusAction(firstAttack)),
       assert(slowTurnDoesNotSpendBothActionAndBonusAction(bonusAction)),
     }
@@ -61,6 +87,7 @@ module spellSlowActivePenaltiesExamples {
     val reconciled = beginSlowTargetTurnAfterPriorAction(
       exampleActiveSlow,
       1,
+      SlowTurnUnrestricted,
       SlowOtherAction
     )
     all {
@@ -74,7 +101,8 @@ module spellSlowActivePenaltiesExamples {
   run test_current_turn_prior_bonus_action_is_reconciled_without_action = {
     val reconciled = beginSlowTargetTurnAfterPriorBonusAction(
       exampleActiveSlow,
-      1
+      1,
+      SlowTurnUnrestricted
     )
     all {
       assert(not(slowTurnActionSpent(reconciled))),
@@ -85,7 +113,12 @@ module spellSlowActivePenaltiesExamples {
   }
 
   run test_effective_somatic_component_requires_25_percent_outcome = {
-    val required = requestSlowSomaticResolution(exampleActiveSlow, 1, true)
+    val required = requestSlowSomaticResolution(
+      initialSlowSomaticResolutionState,
+      exampleActiveSlow,
+      1,
+      true
+    )
     val failed = applySlowSomaticFailureOutcome(
       required,
       SlowSomaticSpellFailed
@@ -95,11 +128,13 @@ module spellSlowActivePenaltiesExamples {
       SlowSomaticSpellSucceeded
     )
     val noEffectiveSomatic = requestSlowSomaticResolution(
+      initialSlowSomaticResolutionState,
       exampleActiveSlow,
       1,
       false
     )
     val unaffectedCaster = requestSlowSomaticResolution(
+      initialSlowSomaticResolutionState,
       exampleActiveSlow,
       3,
       true
@@ -113,8 +148,80 @@ module spellSlowActivePenaltiesExamples {
       assert(not(slowSomaticSpellEffectMayApply(failed))),
       assert(not(slowSomaticFailureStartsNewConcentration(failed))),
       assert(slowSomaticSpellEffectMayApply(succeeded)),
-      assert(noEffectiveSomatic == SlowSomaticSpellContinues),
-      assert(unaffectedCaster == SlowSomaticSpellContinues),
+      assert(noEffectiveSomatic == SlowSomaticCheckBypassed),
+      assert(unaffectedCaster == SlowSomaticCheckBypassed),
+      assert(slowSomaticSpellEffectMayApply(noEffectiveSomatic)),
+      assert(slowSomaticSpellEffectMayApply(unaffectedCaster)),
+    }
+  }
+
+  run test_somatic_resolution_requires_explicit_next_invocation_boundary = {
+    val start = initialSlowSomaticResolutionState
+    val required = requestSlowSomaticResolution(
+      start,
+      exampleActiveSlow,
+      1,
+      true
+    )
+    val failed = applySlowSomaticFailureOutcome(
+      required,
+      SlowSomaticSpellFailed
+    )
+    val continued = applySlowSomaticFailureOutcome(
+      required,
+      SlowSomaticSpellSucceeded
+    )
+    val bypassed = requestSlowSomaticResolution(
+      start,
+      exampleActiveSlow,
+      1,
+      false
+    )
+    val nextAfterFailure = beginNextSlowSomaticInvocation(failed)
+    val nextRequest = requestSlowSomaticResolution(
+      nextAfterFailure,
+      exampleActiveSlow,
+      1,
+      true
+    )
+    all {
+      assert(canRequestSlowSomaticResolution(start)),
+      assert(not(canRequestSlowSomaticResolution(required))),
+      assert(not(canRequestSlowSomaticResolution(bypassed))),
+      assert(not(canRequestSlowSomaticResolution(continued))),
+      assert(not(canRequestSlowSomaticResolution(failed))),
+      assert(requestSlowSomaticResolution(
+        required,
+        exampleActiveSlow,
+        1,
+        true
+      ) == required),
+      assert(requestSlowSomaticResolution(
+        bypassed,
+        exampleActiveSlow,
+        1,
+        true
+      ) == bypassed),
+      assert(requestSlowSomaticResolution(
+        continued,
+        exampleActiveSlow,
+        1,
+        true
+      ) == continued),
+      assert(requestSlowSomaticResolution(
+        failed,
+        exampleActiveSlow,
+        1,
+        true
+      ) == failed),
+      assert(not(canBeginNextSlowSomaticInvocation(start))),
+      assert(not(canBeginNextSlowSomaticInvocation(required))),
+      assert(canBeginNextSlowSomaticInvocation(bypassed)),
+      assert(canBeginNextSlowSomaticInvocation(continued)),
+      assert(canBeginNextSlowSomaticInvocation(failed)),
+      assert(beginNextSlowSomaticInvocation(required) == required),
+      assert(nextAfterFailure == start),
+      assert(nextRequest == SlowSomaticFailureOutcomeRequired),
     }
   }
 
@@ -172,11 +279,19 @@ module spellSlowActivePenaltiesExamples {
 
   run test_cleanup_releases_only_the_slow_turn_restriction = {
     val actionSpent = applySlowTurnAction(
-      beginSlowTargetTurn(exampleActiveSlow, 1),
+      beginSlowTargetTurn(
+        exampleActiveSlow,
+        1,
+        SlowTurnUnrestricted
+      ),
       SlowOtherAction
     )
     val bonusActionSpent = applySlowTurnBonusAction(
-      beginSlowTargetTurn(exampleActiveSlow, 1)
+      beginSlowTargetTurn(
+        exampleActiveSlow,
+        1,
+        SlowTurnUnrestricted
+      )
     )
     val concentrationEnded = applySlowOccurrenceCleanupSignal(
       exampleActiveSlow,
@@ -232,7 +347,11 @@ module spellSlowActivePenaltiesExamples {
       Set(1)
     ).occurrence
     val actionSpent = applySlowTurnAction(
-      beginSlowTargetTurn(oneTargetSlow, 1),
+      beginSlowTargetTurn(
+        oneTargetSlow,
+        1,
+        SlowTurnUnrestricted
+      ),
       SlowOtherAction
     )
     val request = requestSlowRepeatSave(oneTargetSlow, 1)

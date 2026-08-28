@@ -295,7 +295,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
     "caster",
     initialSlowOccurrenceState,
     SlowTurnUnrestricted,
-    SlowSomaticCheckBypassed,
+    initialSlowSomaticResolutionState,
     initialSlowStatBlockMultiattackState,
     Init,
     witnessInit(NoHole)
@@ -307,7 +307,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
       "caster",
       qSingleTargetSlow,
       SlowTurnUnrestricted,
-      SlowSomaticCheckBypassed,
+      initialSlowSomaticResolutionState,
       initialSlowStatBlockMultiattackState,
       FailedSave,
       witnessResolved(NoHole)
@@ -319,8 +319,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
     recordSlowState(
       "target",
       qSingleTargetSlow,
-      beginSlowTargetTurn(qSingleTargetSlow, 1),
-      SlowSomaticCheckBypassed,
+      beginSlowTargetTurn(
+        qSingleTargetSlow,
+        1,
+        SlowTurnUnrestricted
+      ),
+      initialSlowSomaticResolutionState,
       initialSlowStatBlockMultiattackState,
       TargetTurn,
       witnessResolved(NoHole)
@@ -333,8 +337,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
     recordSlowState(
       "target",
       qSingleTargetSlow,
-      beginSlowTargetTurn(qSingleTargetSlow, 1),
-      SlowSomaticCheckBypassed,
+      beginSlowTargetTurn(
+        qSingleTargetSlow,
+        1,
+        SlowTurnUnrestricted
+      ),
+      initialSlowSomaticResolutionState,
       initialSlowStatBlockMultiattackState,
       NeedsSave,
       witnessNeedsHoles(Set(EndTurnSave))
@@ -356,7 +364,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
         "caster",
         saved.occurrence,
         SlowTurnUnrestricted,
-        SlowSomaticCheckBypassed,
+        initialSlowSomaticResolutionState,
         initialSlowStatBlockMultiattackState,
         Saved,
         witnessResolved(NoHole)
@@ -378,7 +386,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
         "caster",
         failed.occurrence,
         SlowTurnUnrestricted,
-        SlowSomaticCheckBypassed,
+        initialSlowSomaticResolutionState,
         initialSlowStatBlockMultiattackState,
         FailedAgain,
         witnessResolved(NoHole)
@@ -388,7 +396,11 @@ module battleRuntimeSlowActivePenaltiesMbt {
 
   action doSpendTargetAction = {
     val spent = applySlowTurnAction(
-      beginSlowTargetTurn(qSingleTargetSlow, 1),
+      beginSlowTargetTurn(
+        qSingleTargetSlow,
+        1,
+        SlowTurnUnrestricted
+      ),
       SlowOtherAction
     )
     all {
@@ -397,7 +409,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
         "target",
         qSingleTargetSlow,
         spent,
-        SlowSomaticCheckBypassed,
+        initialSlowSomaticResolutionState,
         initialSlowStatBlockMultiattackState,
         SpentAction,
         witnessResolved(NoHole)
@@ -407,7 +419,11 @@ module battleRuntimeSlowActivePenaltiesMbt {
 
   action doSpendTargetBonusAction = {
     val spent = applySlowTurnBonusAction(
-      beginSlowTargetTurn(qSingleTargetSlow, 1)
+      beginSlowTargetTurn(
+        qSingleTargetSlow,
+        1,
+        SlowTurnUnrestricted
+      )
     )
     all {
       qState.scenarioOutcome == TargetTurn,
@@ -416,7 +432,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
         qSingleTargetSlow,
         spent,
         { actionAvailable: true, bonusActionAvailable: false },
-        SlowSomaticCheckBypassed,
+        initialSlowSomaticResolutionState,
         initialSlowStatBlockMultiattackState,
         SpentBonusAction,
         witnessResolved(NoHole)
@@ -426,7 +442,11 @@ module battleRuntimeSlowActivePenaltiesMbt {
 
   action doEndSlowConcentrationAfterAction = {
     val spent = applySlowTurnAction(
-      beginSlowTargetTurn(qSingleTargetSlow, 1),
+      beginSlowTargetTurn(
+        qSingleTargetSlow,
+        1,
+        SlowTurnUnrestricted
+      ),
       SlowOtherAction
     )
     val cleaned = applySlowOccurrenceCleanupSignal(
@@ -445,7 +465,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
         cleaned.occurrence,
         reconciled,
         { actionAvailable: false, bonusActionAvailable: true },
-        SlowSomaticCheckBypassed,
+        initialSlowSomaticResolutionState,
         initialSlowStatBlockMultiattackState,
         ConcentrationEndedAfterAction,
         witnessResolved(NoHole)
@@ -455,7 +475,11 @@ module battleRuntimeSlowActivePenaltiesMbt {
 
   action doExpireSlowDurationAfterBonusAction = {
     val spent = applySlowTurnBonusAction(
-      beginSlowTargetTurn(qSingleTargetSlow, 1)
+      beginSlowTargetTurn(
+        qSingleTargetSlow,
+        1,
+        SlowTurnUnrestricted
+      )
     )
     val cleaned = applySlowOccurrenceCleanupSignal(
       qSingleTargetSlow,
@@ -473,7 +497,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
         cleaned.occurrence,
         reconciled,
         { actionAvailable: true, bonusActionAvailable: false },
-        SlowSomaticCheckBypassed,
+        initialSlowSomaticResolutionState,
         initialSlowStatBlockMultiattackState,
         DurationExpiredAfterBonusAction,
         witnessResolved(NoHole)
@@ -483,7 +507,11 @@ module battleRuntimeSlowActivePenaltiesMbt {
 
   action doMakeTargetAttack = {
     val attackAction = applySlowTurnAction(
-      beginSlowTargetTurn(qSingleTargetSlow, 1),
+      beginSlowTargetTurn(
+        qSingleTargetSlow,
+        1,
+        SlowTurnUnrestricted
+      ),
       SlowAttackAction
     )
     val attacked = applySlowAttackActionAttack(attackAction)
@@ -493,7 +521,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
         "target",
         qSingleTargetSlow,
         attacked,
-        SlowSomaticCheckBypassed,
+        initialSlowSomaticResolutionState,
         initialSlowStatBlockMultiattackState,
         AttackedOnce,
         witnessResolved(NoHole)
@@ -503,6 +531,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
 
   action doRequestSomaticFailure = {
     val requested = requestSlowSomaticResolution(
+      initialSlowSomaticResolutionState,
       qSingleTargetSlow,
       1,
       true
@@ -513,7 +542,11 @@ module battleRuntimeSlowActivePenaltiesMbt {
       recordSlowState(
         "target",
         qSingleTargetSlow,
-        beginSlowTargetTurn(qSingleTargetSlow, 1),
+        beginSlowTargetTurn(
+          qSingleTargetSlow,
+          1,
+          SlowTurnUnrestricted
+        ),
         requested,
         initialSlowStatBlockMultiattackState,
         NeedsSomaticFailure,
@@ -524,6 +557,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
 
   action doFillSomaticSpellFailure = {
     val requested = requestSlowSomaticResolution(
+      initialSlowSomaticResolutionState,
       qSingleTargetSlow,
       1,
       true
@@ -533,7 +567,11 @@ module battleRuntimeSlowActivePenaltiesMbt {
       SlowSomaticSpellFailed
     )
     val spentBonus = applySlowTurnBonusAction(
-      beginSlowTargetTurn(qSingleTargetSlow, 1)
+      beginSlowTargetTurn(
+        qSingleTargetSlow,
+        1,
+        SlowTurnUnrestricted
+      )
     )
     all {
       qState.scenarioOutcome == NeedsSomaticFailure,
@@ -555,8 +593,13 @@ module battleRuntimeSlowActivePenaltiesMbt {
     recordSlowState(
       "caster",
       qSelfSlow,
-      beginSlowTargetTurnAfterPriorAction(qSelfSlow, 0, SlowOtherAction),
-      SlowSomaticCheckBypassed,
+      beginSlowTargetTurnAfterPriorAction(
+        qSelfSlow,
+        0,
+        SlowTurnUnrestricted,
+        SlowOtherAction
+      ),
+      initialSlowSomaticResolutionState,
       initialSlowStatBlockMultiattackState,
       SelfFailedSave,
       witnessResolved(NoHole)
@@ -568,8 +611,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
     recordSlowState(
       "caster",
       qSelfSlow,
-      beginSlowTargetTurnAfterPriorBonusAction(qSelfSlow, 0),
-      SlowSomaticCheckBypassed,
+      beginSlowTargetTurnAfterPriorBonusAction(
+        qSelfSlow,
+        0,
+        SlowTurnUnrestricted
+      ),
+      initialSlowSomaticResolutionState,
       initialSlowStatBlockMultiattackState,
       PriorBonusActionReconciled,
       witnessResolved(NoHole)
@@ -582,7 +629,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
       "caster",
       qMultiattackTargetSlow,
       SlowTurnUnrestricted,
-      SlowSomaticCheckBypassed,
+      initialSlowSomaticResolutionState,
       initialSlowStatBlockMultiattackState,
       MultiattackFailedSave,
       witnessResolved(NoHole)
@@ -594,8 +641,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
     recordSlowState(
       "multiattackTarget",
       qMultiattackTargetSlow,
-      beginSlowTargetTurn(qMultiattackTargetSlow, 3),
-      SlowSomaticCheckBypassed,
+      beginSlowTargetTurn(
+        qMultiattackTargetSlow,
+        3,
+        SlowTurnUnrestricted
+      ),
+      initialSlowSomaticResolutionState,
       initialSlowStatBlockMultiattackState,
       MultiattackTargetTurn,
       witnessResolved(NoHole)
@@ -611,10 +662,14 @@ module battleRuntimeSlowActivePenaltiesMbt {
       "multiattackTarget",
       qMultiattackTargetSlow,
       applySlowTurnAction(
-        beginSlowTargetTurn(qMultiattackTargetSlow, 3),
+        beginSlowTargetTurn(
+          qMultiattackTargetSlow,
+          3,
+          SlowTurnUnrestricted
+        ),
         SlowAttackAction
       ),
-      SlowSomaticCheckBypassed,
+      initialSlowSomaticResolutionState,
       qSlowedMultiattackActivated,
       MultiattackActivated,
       witnessResolved(NoHole)
@@ -628,11 +683,15 @@ module battleRuntimeSlowActivePenaltiesMbt {
       qMultiattackTargetSlow,
       applySlowAttackActionAttack(
         applySlowTurnAction(
-          beginSlowTargetTurn(qMultiattackTargetSlow, 3),
+          beginSlowTargetTurn(
+            qMultiattackTargetSlow,
+            3,
+            SlowTurnUnrestricted
+          ),
           SlowAttackAction
         )
       ),
-      SlowSomaticCheckBypassed,
+      initialSlowSomaticResolutionState,
       qSlowedMultiattackDispatched,
       MultiattackDispatched,
       witnessResolved(NoHole)
@@ -645,7 +704,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
       "caster",
       qTwoTargetSlow,
       SlowTurnUnrestricted,
-      SlowSomaticCheckBypassed,
+      initialSlowSomaticResolutionState,
       initialSlowStatBlockMultiattackState,
       TwoTargetsFailedSave,
       witnessResolved(NoHole)
@@ -657,8 +716,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
     recordSlowState(
       "target",
       qTwoTargetSlow,
-      beginSlowTargetTurn(qTwoTargetSlow, 1),
-      SlowSomaticCheckBypassed,
+      beginSlowTargetTurn(
+        qTwoTargetSlow,
+        1,
+        SlowTurnUnrestricted
+      ),
+      initialSlowSomaticResolutionState,
       initialSlowStatBlockMultiattackState,
       TwoTargetsTargetTurn,
       witnessResolved(NoHole)
@@ -671,8 +734,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
     recordSlowState(
       "target",
       qTwoTargetSlow,
-      beginSlowTargetTurn(qTwoTargetSlow, 1),
-      SlowSomaticCheckBypassed,
+      beginSlowTargetTurn(
+        qTwoTargetSlow,
+        1,
+        SlowTurnUnrestricted
+      ),
+      initialSlowSomaticResolutionState,
       initialSlowStatBlockMultiattackState,
       TwoTargetsNeedSave,
       witnessNeedsHoles(Set(EndTurnSave))
@@ -693,8 +760,12 @@ module battleRuntimeSlowActivePenaltiesMbt {
       recordSlowState(
         "secondTarget",
         saved.occurrence,
-        beginSlowTargetTurn(saved.occurrence, 2),
-        SlowSomaticCheckBypassed,
+        beginSlowTargetTurn(
+          saved.occurrence,
+          2,
+          SlowTurnUnrestricted
+        ),
+        initialSlowSomaticResolutionState,
         initialSlowStatBlockMultiattackState,
         OneTargetSaved,
         witnessResolved(NoHole)
@@ -713,7 +784,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
         "caster",
         cleaned.occurrence,
         SlowTurnUnrestricted,
-        SlowSomaticCheckBypassed,
+        initialSlowSomaticResolutionState,
         initialSlowStatBlockMultiattackState,
         ConcentrationEnded,
         witnessResolved(NoHole)
@@ -733,7 +804,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
         "caster",
         cleaned.occurrence,
         SlowTurnUnrestricted,
-        SlowSomaticCheckBypassed,
+        initialSlowSomaticResolutionState,
         initialSlowStatBlockMultiattackState,
         DurationExpired,
         witnessResolved(NoHole)
