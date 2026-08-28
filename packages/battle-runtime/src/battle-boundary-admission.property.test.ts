@@ -169,6 +169,7 @@ import {
   wizardSpellcasting,
   spellRecord,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   unitLibrary,
   KNOCKED_OUT_UNCONSCIOUS,
   discoverBattleActCandidates,
@@ -182,6 +183,7 @@ import {
   endTurn,
   testBattleCreatureStateWithConditions,
 } from "./battle-runtime.test-support.ts";
+import { parseBattleSpellEffectLevel } from "./procedure-execution/spell-effect-level.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { castResolvedFindFamiliar } from "./find-familiar-lifecycle.ts";
@@ -448,14 +450,234 @@ describe("battle boundary admission owners", () => {
           attack: null,
           spellcasting: wizardSpellcasting(),
         }),
+        statBlockCreatureInit({ initiative: 10 }),
       ],
     });
     const codecAct = findAct(codecSession, magicSubject("acid_splash"));
     if (codecAct.subject.tag !== "actionSpell") {
       throw new Error("Expected action-spell codec act.");
     }
+    const codecProcedureRef = codecAct.subject.procedureRef;
+    const glyphSpellLevel = parseBattleSpellEffectLevel(3);
+    if (glyphSpellLevel === null) {
+      throw new Error("Expected the boundary Glyph spell level to be valid.");
+    }
+    const allocatedCodecState =
+      battleStateWithAllocatedEffectOccurrencesForTest({
+        state: codecSession.state,
+        occurrences: [
+          {
+            kind: "activeEffect",
+            ownerId: goblinId,
+            effect: {
+              kind: "spellTurnStartDamageAndSave",
+              source: "turnBoundaryEffectLifecycle",
+              sourceProcedureRef: codecAct.subject.procedureRef,
+              sourceCombatantId: wizardId,
+              damage: { expr: { dice: 1, dieSize: 6 }, damageType: "cold" },
+              save: {
+                ability: "dex",
+                dc: { kind: "fixed", dc: 12 },
+                successEnds: "spell",
+              },
+              expiresAt: {
+                kind: "duration",
+                durationTicks: elapsedTimeTicks(10),
+              },
+            },
+          },
+          {
+            kind: "activeEffect",
+            ownerId: goblinId,
+            effect: {
+              kind: "hideousLaughter",
+              sourceProcedureRef: codecAct.subject.procedureRef,
+              sourceCombatantId: wizardId,
+              conditionHadNonSpellProneSource: false,
+              conditionHadNonSpellIncapacitatedSource: false,
+              repeatSaveRollMode: null,
+              save: { ability: "wis", dc: { kind: "fixed", dc: 12 } },
+              expiresAt: {
+                kind: "concentration",
+                combatantId: wizardId,
+                durationTicks: elapsedTimeTicks(10),
+              },
+            },
+          },
+          {
+            kind: "activeEffect",
+            ownerId: wizardId,
+            effect: {
+              kind: "glyphDurableOccurrence",
+              sourceProcedureRef: codecAct.subject.procedureRef,
+              sourceCombatantId: wizardId,
+              sourceEffectId: battleSpellEffectOccurrenceId("boundary-glyph"),
+              sourceSpellLevel: glyphSpellLevel,
+              release: { kind: "explosiveRune", damageType: "fire" },
+              anchor: {
+                kind: "surface",
+                areaId: battleAreaId("boundary-glyph-anchor"),
+              },
+              coveredAreaId: battleAreaId("boundary-glyph-covered"),
+              castLocationId: battleTablePositionId("boundary-glyph-position"),
+              maxCoveredDiameterFeet: movementFeet(10),
+              notice: {
+                ability: "wis",
+                skill: "perception",
+                dc: { kind: "caster_spell_save_dc" },
+                owner: "table_witnessed_glyph_notice",
+              },
+              trigger: {
+                occurrence: "table_witnessed_trigger_occurrence",
+                activationFilter: "creature_type",
+                nonTriggerExclusion: "password_or_other_condition",
+                onTriggered: "spell_ends",
+              },
+              movementInvalidation: {
+                movedSubject: "inscribed_surface_or_object",
+                distanceFrom: "cast_location",
+                moreThanFeet: movementFeet(10),
+                outcome: "glyph_breaks_spell_ends_without_triggering",
+              },
+              expiresAt: { kind: "untilDispelled" },
+            },
+          },
+          {
+            kind: "activeEffect",
+            ownerId: goblinId,
+            effect: {
+              kind: "spellDamageReduction",
+              sourceProcedureRef: codecAct.subject.procedureRef,
+              sourceCombatantId: wizardId,
+              damageType: "cold",
+              amount: { dice: 1, dieSize: 4 },
+              usedThisTurn: false,
+              expiresAt: { kind: "untilDispelled" },
+            },
+          },
+          {
+            kind: "activeEffect",
+            ownerId: goblinId,
+            effect: {
+              kind: "sourceDamageRollPenalty",
+              sourceProcedureRef: codecAct.subject.procedureRef,
+              sourceCombatantId: wizardId,
+              amount: { dice: 1, dieSize: 8 },
+              expiresAt: { kind: "untilDispelled" },
+            },
+          },
+          {
+            kind: "activeEffect",
+            ownerId: goblinId,
+            effect: {
+              kind: "spellTurnEndDamage",
+              sourceProcedureRef: codecAct.subject.procedureRef,
+              sourceCombatantId: wizardId,
+              damage: { expr: { dice: 1, dieSize: 6 }, damageType: "cold" },
+              expiresAt: {
+                kind: "endOfTurn",
+                combatantId: goblinId,
+                round: codecSession.state.initiative.round,
+              },
+            },
+          },
+          {
+            kind: "activeEffect",
+            ownerId: wizardId,
+            effect: {
+              kind: "flamingSphere",
+              sourceProcedureRef: codecAct.subject.procedureRef,
+              sourceCombatantId: wizardId,
+              areaId: battleAreaId("boundary-movable"),
+              save: { ability: "dex", dc: { kind: "fixed", dc: 12 } },
+              damage: { expr: { dice: 1, dieSize: 6 }, damageType: "fire" },
+              ramMaxMoveFeet: movementFeet(30),
+              expiresAt: {
+                kind: "duration",
+                durationTicks: elapsedTimeTicks(10),
+              },
+            },
+          },
+          {
+            kind: "activeEffect",
+            ownerId: wizardId,
+            effect: {
+              kind: "spikeGrowthHazard",
+              sourceProcedureRef: codecAct.subject.procedureRef,
+              sourceCombatantId: wizardId,
+              areaId: battleAreaId("boundary-spike"),
+              damage: { expr: { dice: 2, dieSize: 4 }, damageType: "piercing" },
+              damagePerFeet: movementFeet(5),
+              expiresAt: {
+                kind: "duration",
+                durationTicks: elapsedTimeTicks(10),
+              },
+            },
+          },
+          {
+            kind: "activeEffect",
+            ownerId: wizardId,
+            effect: {
+              kind: "insectPlagueAreaHazard",
+              sourceProcedureRef: codecProcedureRef,
+              sourceCombatantId: wizardId,
+              appearanceOccurrence: {
+                actorId: wizardId,
+                round: codecSession.state.initiative.round,
+              },
+              areaId: battleAreaId("boundary-insect"),
+              radiusFeet: movementFeet(20),
+              save: { ability: "con", dc: { kind: "fixed", dc: 12 } },
+              damage: {
+                expr: { dice: 4, dieSize: 10 },
+                damageType: "piercing",
+              },
+              savedThisTurn: [],
+              expiresAt: {
+                kind: "concentration",
+                combatantId: wizardId,
+                durationTicks: elapsedTimeTicks(10),
+              },
+            },
+          },
+          {
+            kind: "activeEffect",
+            ownerId: wizardId,
+            effect: {
+              kind: "cloudkillAreaHazard",
+              sourceProcedureRef: codecProcedureRef,
+              sourceCombatantId: wizardId,
+              appearanceOccurrence: {
+                actorId: wizardId,
+                round: codecSession.state.initiative.round,
+              },
+              areaId: battleAreaId("boundary-cloudkill"),
+              radiusFeet: movementFeet(20),
+              save: { ability: "con", dc: { kind: "fixed", dc: 12 } },
+              damage: { expr: { dice: 5, dieSize: 8 }, damageType: "poison" },
+              savedThisTurn: [],
+              expiresAt: {
+                kind: "concentration",
+                combatantId: wizardId,
+                durationTicks: elapsedTimeTicks(10),
+              },
+            },
+          },
+        ],
+      });
+    const occurrenceRef = (activeEffectKind: string) => {
+      const occurrence = allocatedCodecState.occurrences.find(
+        (candidate) =>
+          candidate.kind === "activeEffect" &&
+          candidate.effect.kind === activeEffectKind,
+      );
+      if (occurrence?.kind !== "activeEffect") {
+        throw new Error(`Expected boundary ${activeEffectKind} occurrence.`);
+      }
+      return occurrence.effect.effectRef;
+    };
     const codecSnapshot = Schema.encodeSync(BattleSnapshotSchema)({
-      ...snapshotBattle(codecSession.state),
+      ...snapshotBattle(allocatedCodecState.state),
       acts: [codecAct],
     });
     type EncodedCodecHole = Schema.Codec.Encoded<typeof BattleHoleSchema>;
@@ -494,6 +716,7 @@ describe("battle boundary admission owners", () => {
     const codecHoles = [
       codecSaving("turnStart", "spellTurnStartSave", {
         ...codecSource,
+        effectRef: occurrenceRef("spellTurnStartDamageAndSave"),
         save: {
           ability: "dex",
           dc: { kind: "fixed", dc: 12 },
@@ -505,9 +728,11 @@ describe("battle boundary admission owners", () => {
         kind: "savingThrowOutcome",
         hideousLaughterRepeatSave: {
           ...codecSource,
+          effectRef: occurrenceRef("hideousLaughter"),
           trigger: "endTurn",
           save: { ability: "wis", dc: { kind: "fixed", dc: 12 } },
         },
+        damageOccurrence: { kind: "untrackedDamage" },
         ability: "wis",
         dc: { kind: "fixed", dc: 12 },
         areaChoices: [],
@@ -525,7 +750,7 @@ describe("battle boundary admission owners", () => {
         glyphExplosiveRune: {
           sourceCombatantId: wizardId,
           sourceProcedureRef: codecAct.subject.procedureRef,
-          sourceEffectId: battleSpellEffectOccurrenceId("boundary-glyph"),
+          effectRef: occurrenceRef("glyphDurableOccurrence"),
           radiusFeet: 20,
         },
         ability: "dex",
@@ -542,14 +767,13 @@ describe("battle boundary admission owners", () => {
         glyphExplosiveRune: {
           sourceCombatantId: wizardId,
           sourceProcedureRef: codecAct.subject.procedureRef,
-          sourceEffectId: battleSpellEffectOccurrenceId(
-            "boundary-glyph-damage",
-          ),
+          effectRef: occurrenceRef("glyphDurableOccurrence"),
           damage: { expr: { dice: 1, dieSize: 6 }, damageType: "fire" },
         },
       }),
       codecRolled("spellReduction", {
         spellDamageReduction: {
+          effectRef: occurrenceRef("spellDamageReduction"),
           sourceProcedureRef: codecAct.subject.procedureRef,
           sourceCombatantId: wizardId,
           targetId: goblinId,
@@ -559,6 +783,7 @@ describe("battle boundary admission owners", () => {
       }),
       codecRolled("damagePenalty", {
         sourceDamageRollPenalty: {
+          effectRef: occurrenceRef("sourceDamageRollPenalty"),
           sourceProcedureRef: codecAct.subject.procedureRef,
           sourceCombatantId: wizardId,
           affectedCombatantId: goblinId,
@@ -579,6 +804,7 @@ describe("battle boundary admission owners", () => {
       codecRolled("turnStartDamage", {
         spellTurnStartDamage: {
           ...codecSource,
+          effectRef: occurrenceRef("spellTurnStartDamageAndSave"),
           trigger: { kind: "condition", condition: "poisoned" },
           damage: { expr: { dice: 1, dieSize: 6 }, damageType: "cold" },
         },
@@ -586,12 +812,14 @@ describe("battle boundary admission owners", () => {
       codecRolled("turnEndDamage", {
         spellTurnEndDamage: {
           ...codecSource,
+          effectRef: occurrenceRef("spellTurnEndDamage"),
           damage: { expr: { dice: 1, dieSize: 6 }, damageType: "cold" },
         },
       }),
       codecRolled("movableZone", {
         movableZone: {
           ...codecSource,
+          effectRef: occurrenceRef("flamingSphere"),
           areaId: battleAreaId("boundary-movable"),
           trigger: "endsTurnWithinFiveFeetOfSphere",
           save: { ability: "dex", dc: { kind: "fixed", dc: 12 } },
@@ -600,6 +828,7 @@ describe("battle boundary admission owners", () => {
       codecRolled("spikeGrowth", {
         spikeGrowthMovement: {
           ...codecSource,
+          effectRef: occurrenceRef("spikeGrowthHazard"),
           areaId: battleAreaId("boundary-spike"),
           distanceFeet: 10,
           damage: { expr: { dice: 1, dieSize: 4 }, damageType: "piercing" },
@@ -608,6 +837,7 @@ describe("battle boundary admission owners", () => {
       codecRolled("insectPlague", {
         insectPlagueAreaHazard: {
           ...codecSource,
+          effectRef: occurrenceRef("insectPlagueAreaHazard"),
           areaId: battleAreaId("boundary-insect"),
           trigger: "entersArea",
           damage: { expr: { dice: 1, dieSize: 6 }, damageType: "piercing" },
@@ -616,6 +846,7 @@ describe("battle boundary admission owners", () => {
       codecRolled("cloudkill", {
         cloudkillAreaHazard: {
           ...codecSource,
+          effectRef: occurrenceRef("cloudkillAreaHazard"),
           areaId: battleAreaId("boundary-cloudkill"),
           trigger: "entersArea",
           damage: { expr: { dice: 1, dieSize: 6 }, damageType: "poison" },
