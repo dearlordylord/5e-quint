@@ -903,7 +903,9 @@ describe("Counterspell Reaction spell", () => {
     if (resumed.tag !== "needsHoles") {
       throw new Error("Expected Magic Missile to resume after Counterspell.");
     }
-    expect(resumed.frontier.kind).toBe("ordinaryHoles");
+    if (resumed.frontier.kind !== "ordinaryHoles") {
+      throw new Error("Expected Magic Missile's ordinary damage frontier.");
+    }
     const transactionView = battlePendingTransactionView(resumed.transaction);
     expect(transactionView).toMatchObject({
       _tag: "Some",

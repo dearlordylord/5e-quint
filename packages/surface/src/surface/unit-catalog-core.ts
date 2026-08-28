@@ -1,4 +1,3 @@
-// KERNEL-COVERAGE: runtime-owner SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE
 import { Option } from "effect";
 import { UnitId as UnitIdSchema } from "@dnd/shared/game-facts";
 import type {

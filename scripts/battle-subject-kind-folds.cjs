@@ -262,6 +262,19 @@ function extractBattleSubjectKindCases(rootPath) {
     true,
   );
   const cases = [];
+  const schemaBindings = new Map();
+  function collectSchemaBindings(node) {
+    if (
+      ts.isVariableDeclaration(node) &&
+      ts.isIdentifier(node.name) &&
+      node.initializer !== undefined
+    ) {
+      schemaBindings.set(node.name.text, node.initializer);
+    }
+    ts.forEachChild(node, collectSchemaBindings);
+  }
+  collectSchemaBindings(sourceFile);
+
   function collectStruct(callExpression) {
     if (!isSchemaCall(callExpression, "Struct")) return;
     const [shape] = callExpression.arguments;
@@ -294,16 +307,39 @@ function extractBattleSubjectKindCases(rootPath) {
       });
     }
   }
+  function visitSchema(node, resolvingBindings) {
+    if (ts.isIdentifier(node)) {
+      const binding = schemaBindings.get(node.text);
+      if (binding === undefined || resolvingBindings.has(node.text)) return;
+      resolvingBindings.add(node.text);
+      visitSchema(binding, resolvingBindings);
+      resolvingBindings.delete(node.text);
+      return;
+    }
+    if (!ts.isCallExpression(node)) return;
+    if (isSchemaCall(node, "Struct")) {
+      collectStruct(node);
+      return;
+    }
+    if (isSchemaCall(node, "Union")) {
+      for (const argument of node.arguments) {
+        visitSchema(argument, resolvingBindings);
+      }
+      return;
+    }
+    if (isSchemaCall(node, "extend")) {
+      const [base] = node.arguments;
+      if (base !== undefined) visitSchema(base, resolvingBindings);
+    }
+  }
   function visit(node) {
     if (
       ts.isVariableDeclaration(node) &&
       node.name.getText(sourceFile) === "BattleSubjectSchema"
     ) {
-      function visitSchema(schemaNode) {
-        if (ts.isCallExpression(schemaNode)) collectStruct(schemaNode);
-        ts.forEachChild(schemaNode, visitSchema);
+      if (node.initializer !== undefined) {
+        visitSchema(node.initializer, new Set());
       }
-      if (node.initializer !== undefined) visitSchema(node.initializer);
       return;
     }
     ts.forEachChild(node, visit);

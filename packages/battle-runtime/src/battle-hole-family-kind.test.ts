@@ -3,14 +3,12 @@
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
-import * as AST from "effect/SchemaAST";
 import { describe, expect, test } from "vitest";
 import {
   battleFillKind,
   battleHoleAcceptsFill,
   battleHoleFamilyKind,
   battleSubjectKind,
-  BattleInterruptSubjectSchema,
   type BattleFill,
   type BattleHole,
   type BattleSubject,
@@ -77,59 +75,7 @@ function battleFrontierRows(): readonly BattleHoleFrontierRow[] {
 }
 
 function battleSubjectKindCases(): readonly BattleSubjectKindCase[] {
-  return [
-    ...extractBattleSubjectKindCases(repoRootPath),
-    ...battleInterruptSubjectKindCases(),
-  ];
-}
-
-const interruptSubjectKindByCommand: Readonly<Record<string, string>> = {
-  releaseReadiedSpell: "runtimeReadiedResponse",
-  releaseReadiedMovement: "runtimeReadiedResponse",
-  releaseReadiedAction: "runtimeReaction",
-  releaseReadiedAttack: "runtimeReaction",
-  castTriggeredReactionSpell: "runtimeReaction",
-  castAttackHitBonusActionSpell: "runtimeReaction",
-  opportunityAttack: "runtimeReaction",
-  retaliationAttack: "runtimeCommandRetaliationAttack",
-};
-
-function battleInterruptSubjectKindCases(): readonly BattleSubjectKindCase[] {
-  return interruptSubjectCommandValues(BattleInterruptSubjectSchema.ast).map(
-    (command) => {
-      const subjectKind = interruptSubjectKindByCommand[command];
-      if (subjectKind === undefined) {
-        throw new Error(`Missing subject-kind mapping for ${command}.`);
-      }
-      return {
-        tag: "runtimeCommand",
-        discriminator: "command",
-        discriminatorValue: command,
-        subjectKind,
-      };
-    },
-  );
-}
-
-function interruptSubjectCommandValues(ast: AST.AST): readonly string[] {
-  const members = AST.isUnion(ast) ? ast.types : [ast];
-  const commandValues = members.flatMap((member) => {
-    if (AST.isUnion(member)) {
-      return interruptSubjectCommandValues(member);
-    }
-    const command = AST.getPropertySignatures(member).find(
-      (property) => property.name === "command",
-    );
-    if (command === undefined) return [];
-    if (
-      command.type._tag !== "Literal" ||
-      typeof command.type.literal !== "string"
-    ) {
-      throw new Error("Expected interrupt subject command literals.");
-    }
-    return [command.type.literal];
-  });
-  return [...new Set(commandValues)];
+  return extractBattleSubjectKindCases(repoRootPath);
 }
 
 function subjectForKindCase(subjectKindCase: BattleSubjectKindCase) {

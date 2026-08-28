@@ -336,6 +336,14 @@
       "kind": "reaction-continuation",
       "parityWitnesses": [
         {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+        },
+        {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -371,7 +379,10 @@
         "packages/battle-runtime/src/battle-reducer/ready.ts",
         "packages/battle-runtime/src/battle-reducer/ready-trigger.ts",
         "packages/battle-runtime/src/battle-reducer/readied-release.ts",
-        "packages/battle-runtime/src/battle-reducer/interrupt-execution.ts"
+        "packages/battle-runtime/src/battle-reducer/interrupt-execution.ts",
+        "packages/battle-runtime/src/battle-reducer/interrupt-checkpoint-identity.ts",
+        "packages/battle-runtime/src/battle-reducer/interrupt-lifecycle.ts",
+        "packages/battle-runtime/src/battle-runtime-transaction.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -4587,6 +4598,14 @@
       "kind": "reaction-continuation",
       "parityWitnesses": [
         {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+        },
+        {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/interrupt-stack-resume.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt",
@@ -4614,7 +4633,10 @@
         "packages/battle-runtime/src/battle-reducer/interrupt-continuation.ts",
         "packages/battle-runtime/src/battle-reducer/attack-damage-events.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-cast-interrupt-frame.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-cast-interrupt-frame.ts",
+        "packages/battle-runtime/src/battle-reducer/interrupt-checkpoint-identity.ts",
+        "packages/battle-runtime/src/battle-reducer/interrupt-lifecycle.ts",
+        "packages/battle-runtime/src/battle-runtime-transaction.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
