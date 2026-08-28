@@ -941,7 +941,13 @@ function isTurnBoundaryEffectLifecycleSavingThrowFill(
       (effect) =>
         effect.kind === "spellTurnStartDamageAndSave" &&
         fill.holeId ===
-          spellTurnStartSavingThrowOutcomeHoleId(combatant.combatantId, effect),
+          spellTurnStartSavingThrowOutcomeHoleId(
+            {
+              actorId: combatant.combatantId,
+              round: state.initiative.round,
+            },
+            effect,
+          ),
     ),
   );
 }

@@ -158,6 +158,7 @@ function withSourceTurnStartTemporaryHitPoints(
   input: {
     readonly sourceKey?: string;
     readonly amount?: number;
+    readonly persistWithoutConcentration?: boolean;
   } = {},
 ): BattleState {
   const source = state.combatants.get(spellCasterId);
@@ -172,7 +173,9 @@ function withSourceTurnStartTemporaryHitPoints(
     ),
     sourceCombatantId: spellTargetId,
     amount: input.amount ?? 3,
-    expiresAt: { kind: "concentration", combatantId: spellTargetId },
+    expiresAt: input.persistWithoutConcentration
+      ? { kind: "duration", durationTicks: elapsedTimeTicks(10) }
+      : { kind: "concentration", combatantId: spellTargetId },
   } as const satisfies BattleActiveEffect;
   return {
     ...state,
@@ -1763,6 +1766,147 @@ describe("Cloudkill source-turn movement", () => {
         pendingInterrupt: null,
       },
     });
+  });
+
+  test("resumes movement one through Temporary Hit Points to movement two in the retained order", () => {
+    const cast = castCloudkill({ targetCanReadyRayOfFrost: true });
+    const targetTurn = endTurn({
+      state: cast.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected the target turn to start.");
+    }
+    const readied = readyTargetRayOfFrost(
+      battleRuntimeSessionForTest({ ...cast.session, state: targetTurn.state }),
+    );
+    const boundaryState = withSecondCloudkillMovement(
+      withSourceTurnStartTemporaryHitPoints(readied.state, {
+        sourceKey: "cloudkill-interrupted-between-movements-thp",
+        amount: 4,
+        persistWithoutConcentration: true,
+      }),
+    );
+    const orderFrontier = endTurn({
+      state: boundaryState,
+      actorId: spellTargetId,
+    });
+    const orderHole = requireResultHole(
+      orderFrontier,
+      "startTurnOccurrenceOrder",
+    );
+    const movements = orderHole.occurrences.filter(
+      (occurrence) => occurrence.kind === "cloudkillMovement",
+    );
+    const temporaryHitPoints = orderHole.occurrences.find(
+      (occurrence) => occurrence.kind === "turnStartTemporaryHitPoints",
+    );
+    const firstMovement = movements[0];
+    const secondMovement = movements[1];
+    if (
+      firstMovement === undefined ||
+      temporaryHitPoints === undefined ||
+      secondMovement === undefined
+    ) {
+      throw new Error("Expected movement, Temporary Hit Points, movement.");
+    }
+    const orderFill = {
+      kind: "startTurnOccurrenceOrder" as const,
+      holeId: orderHole.holeId,
+      value: {
+        occurrenceIds: [
+          firstMovement.occurrenceId,
+          temporaryHitPoints.occurrenceId,
+          secondMovement.occurrenceId,
+        ] as const,
+      },
+    };
+    const firstMovementFrontier = endTurn({
+      state: boundaryState,
+      actorId: spellTargetId,
+      fills: [orderFill],
+    });
+    const firstMovementFill = cloudkillMovementFill(
+      requireResultHole(firstMovementFrontier, "cloudkillMovement"),
+      [spellTargetId],
+    );
+    const saveFrontier = endTurn({
+      state: boundaryState,
+      actorId: spellTargetId,
+      fills: [orderFill, firstMovementFill],
+    });
+    const saveFill = singleTargetSavingThrowOutcomeFill(
+      requireResultHole(saveFrontier, "savingThrowOutcome"),
+      spellTargetId,
+      false,
+    );
+    const interrupted = endTurn({
+      state: boundaryState,
+      actorId: spellTargetId,
+      fills: [orderFill, firstMovementFill, saveFill],
+    });
+    if (interrupted.tag !== "needsHoles") {
+      throw new Error("Expected the first movement failed-save interrupt.");
+    }
+    const pending = interrupted.snapshot.pendingInterrupt;
+    if (pending === null) {
+      throw new Error("Expected a pending failed-save interrupt.");
+    }
+    const declined = resolveBattleInterrupt({
+      state: interrupted.state,
+      fill: interruptDecisionFill(pending.decisionHole, {
+        kind: "decline",
+        responderId: spellTargetId,
+      }),
+    });
+    const damageFill = damageRollFillWithGroups(
+      requireResultHole(declined, "rolledDice"),
+      [[1, 1, 1, 1, 1]],
+    );
+    if (declined.tag !== "needsHoles") {
+      throw new Error("Expected movement damage after declining.");
+    }
+    const concentrationFrontier = resolveBattleSubject({
+      state: declined.state,
+      subject: declined.subject,
+      fills: [firstMovementFill, saveFill, damageFill],
+    });
+    const concentrationFill = concentrationSavingThrowFill(
+      requireResultHole(concentrationFrontier, "concentrationSavingThrow"),
+      true,
+    );
+    if (concentrationFrontier.tag !== "needsHoles") {
+      throw new Error("Expected movement Concentration frontier.");
+    }
+    const secondMovementFrontier = resolveBattleSubject({
+      state: concentrationFrontier.state,
+      subject: concentrationFrontier.subject,
+      fills: [
+        orderFill,
+        firstMovementFill,
+        saveFill,
+        damageFill,
+        concentrationFill,
+      ],
+    });
+
+    expect(secondMovementFrontier).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "cloudkillMovement" }],
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            tempHp: 4,
+          }),
+        ]),
+      },
+    });
+    const secondMovementHole = requireResultHole(
+      secondMovementFrontier,
+      "cloudkillMovement",
+    );
+    expect(secondMovementHole.holeId).not.toBe(firstMovementFill.holeId);
   });
 
   test("offers the chosen movement occurrence before stat-block recharge", () => {

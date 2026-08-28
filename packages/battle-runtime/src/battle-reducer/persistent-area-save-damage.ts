@@ -89,8 +89,6 @@ type PersistentAreaResolutionContext =
       readonly kind: "replayParent";
       readonly parent: ReplayParentContinuation;
       readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
-      readonly orderHoleId: BattleStartTurnOccurrenceSequenceCheckpoint["orderHoleId"];
-      readonly currentOccurrenceId: BattleStartTurnOccurrenceSequenceCheckpoint["currentOccurrenceId"];
       readonly occurrence: BattleStartTurnOccurrenceSequenceCheckpoint["child"];
       readonly handledPosition:
         | BattleStartTurnOccurrenceSequenceCheckpoint
@@ -290,8 +288,6 @@ export function resolveCloudkillMovementSaveDamageSequence(input: {
   readonly parent: ReplayParentContinuation;
   readonly requests: readonly CloudkillMovementSaveDamageRequest[];
   readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
-  readonly orderHoleId: BattleStartTurnOccurrenceSequenceCheckpoint["orderHoleId"];
-  readonly currentOccurrenceId: BattleStartTurnOccurrenceSequenceCheckpoint["currentOccurrenceId"];
   readonly continuation: CloudkillMovementSequenceContinuation;
 }): CloudkillMovementSaveDamageSequenceResult {
   const saveHoleIds = new Set<BattleHoleId>();
@@ -348,8 +344,6 @@ export function resolveCloudkillMovementSaveDamageSequence(input: {
         kind: "replayParent",
         parent: requestParent,
         sourceTurn: input.sourceTurn,
-        orderHoleId: input.orderHoleId,
-        currentOccurrenceId: input.currentOccurrenceId,
         occurrence: {
           kind: "cloudkillMovementSaveDamageSequence",
           areaId: request.effect.areaId,
@@ -391,8 +385,6 @@ function sameCloudkillMovementSaveDamagePosition(
     left.kind === right.kind &&
     left.sourceTurn.actorId === right.sourceTurn.actorId &&
     left.sourceTurn.round === right.sourceTurn.round &&
-    left.orderHoleId === right.orderHoleId &&
-    left.currentOccurrenceId === right.currentOccurrenceId &&
     left.child.areaId === right.child.areaId &&
     left.child.sourceProcedureRef === right.child.sourceProcedureRef &&
     left.child.targetId === right.child.targetId
@@ -749,11 +741,9 @@ function persistentAreaReplayPosition(
     byPersistentAreaResolutionContextKind("standalone", () => undefined),
     byPersistentAreaResolutionContextKind(
       "replayParent",
-      ({ occurrence, sourceTurn, orderHoleId, currentOccurrenceId }) => ({
+      ({ occurrence, sourceTurn }) => ({
         kind: "startTurnOccurrenceSequence" as const,
         sourceTurn,
-        orderHoleId,
-        currentOccurrenceId,
         child: occurrence,
       }),
     ),

@@ -742,8 +742,6 @@ export type BattleStartTurnOccurrenceSequenceCheckpoint = {
     readonly actorId: CombatantId;
     readonly round: RoundType;
   };
-  readonly orderHoleId: BattleHoleId;
-  readonly currentOccurrenceId: import("./identity.ts").BattleStartTurnOccurrenceId;
   readonly child: {
     readonly kind: "cloudkillMovementSaveDamageSequence";
     readonly areaId: BattleAreaId;
