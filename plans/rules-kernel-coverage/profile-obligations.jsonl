@@ -2,7 +2,7 @@
 {"profileId":"spell.invocation-sleet-storm-area-hazard","obligationIds":["BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE"]}
 {"profileId":"spell.invocation-insect-plague-area-hazard","obligationIds":["BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE"]}
 {"profileId":"spell.invocation-cloudkill-area-hazard","obligationIds":["BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE"]}
-{"profileId":"spell.invocation-slow-active-penalties","obligationIds":["BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE"]}
+{"profileId":"spell.invocation-slow-active-penalties","obligationIds":["BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE","BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP"]}
 {"profileId":"unit-feature.action-surge-resource","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.attack-action-attack-count-scaling","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.attack-damage-reduction-zero-damage-redirect","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS","BATTLE.REACTION.OFFER_DECLINE_RESUME"]}

@@ -11,11 +11,12 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties stat-block.multiattack
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.brutal-strike
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP BATTLE.STAT_BLOCK.MULTIATTACK
 // This module owns Effect Schema values for battle state execution.
 
 import { ATTACK_ROLL_MODES } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -29,6 +30,7 @@ import {
 import {
   CONDITIONS as ALL_CONDITIONS,
   COVER_TYPES,
+  CreatureId,
   ResourceCount,
 } from "@dnd/shared/types";
 import { BattleCreatureDisplayNameSchema } from "../battle-creature-display-name.ts";
@@ -55,6 +57,7 @@ import {
 } from "../unit-feature-support.ts";
 import { Match, Schema } from "effect";
 import { SpellExecutionFactsSchema } from "./spell-execution-facts.ts";
+import { statBlockMultiattackContinuationResourcesAreValid } from "./action-resource-kinds.ts";
 import {
   UnitFeatureProcedureExecutionSchema,
   UnitSupportProcedureExecutionSchema,
@@ -5400,7 +5403,8 @@ export const RuntimeActionResourceSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("action"),
     source: Schema.Literal("statBlockMultiattack"),
-    sourceOwnerId: Schema.String,
+    sourceOwnerId: CreatureId,
+    sourceProcedureRef: BattleStatBlockProcedureExecutionRef,
     dispatch: Schema.Union(
       Schema.Struct({
         kind: Schema.Literal("listedOccurrence"),
@@ -8314,6 +8318,7 @@ function battleSnapshotInvariantsHold(
       cursorByCombatant,
       retiredAllocationByCombatant,
     }) &&
+    battleSnapshotActionResourceContinuationsAreValid(snapshot) &&
     battleSnapshotActsOwnReferences(snapshot, boundExecutionRefs) &&
     snapshot.readiedResponses.spells.every((readied) =>
       serializedReadiedSpellOwnsInvocation(snapshot.combatants, readied),
@@ -8329,6 +8334,26 @@ function battleSnapshotInvariantsHold(
         cursor: cursorByCombatant.get(executionScope.combatantId),
         battleId: snapshot.battleId,
       }),
+    )
+  );
+}
+
+function battleSnapshotActionResourceContinuationsAreValid(
+  snapshot: BattleSnapshotInvariantInput,
+): boolean {
+  const continuationResources = snapshot.turn.actionResources.filter(
+    (resource) => resource.source === "statBlockMultiattack",
+  );
+  if (continuationResources.length === 0) return true;
+  const actor = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === snapshot.currentActorId,
+  );
+  return (
+    actor?.origin.kind === "statBlock" &&
+    statBlockMultiattackContinuationResourcesAreValid(
+      continuationResources,
+      snapshot.currentActorId,
+      actor.origin.execution,
     )
   );
 }

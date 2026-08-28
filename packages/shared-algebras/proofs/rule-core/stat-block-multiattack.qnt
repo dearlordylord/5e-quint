@@ -1,9 +1,7 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-STAT-BLOCK-MULTIATTACK-001
 // UNIT-PROFILE-COVERAGE: qnt-owner stat-block.multiattack
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: qnt-owner BATTLE.STAT_BLOCK.MULTIATTACK
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 
 module statBlockMultiattack {
   type StatBlockProcedureRef = int

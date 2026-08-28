@@ -6881,8 +6881,8 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 117,
-      "numerator": 104,
-      "percent": "88.9%"
+      "numerator": 103,
+      "percent": "88%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 117,
@@ -6891,8 +6891,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 163,
-      "numerator": 137,
-      "percent": "84%"
+      "numerator": 136,
+      "percent": "83.4%"
     },
     "strictFinalSupport": {
       "denominator": 283,
@@ -11572,8 +11572,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 163,
-        "numerator": 137,
-        "percent": "84%"
+        "numerator": 136,
+        "percent": "83.4%"
       }
     },
     "units": [
@@ -15737,23 +15737,33 @@
         "unitId": "sleep"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
+                "followUpTaskIds": [
+                  "GH-351"
+                ],
                 "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
                 "runtime": "battle",
-                "status": "covered",
+                "status": "needs-qnt-owner",
                 "title": "Battle Slow applies active penalties, target-turn Action or Bonus Action restriction, Attack cap, Somatic failure, and repeat-save cleanup"
+              },
+              {
+                "followUpTaskIds": [
+                  "GH-351"
+                ],
+                "obligationId": "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
+                "runtime": "battle",
+                "status": "needs-qnt-owner",
+                "title": "Battle Slow caps an activated Stat Block Multiattack to one listed attack"
               }
             ],
             "profileId": "spell.invocation-slow-active-penalties",
             "profileKind": "spell-invocation",
-            "qntOwners": [
-              "packages/shared-algebras/proofs/rule-core/stat-block-multiattack.qnt"
-            ]
+            "qntOwners": []
           }
         ],
         "unitId": "slow"

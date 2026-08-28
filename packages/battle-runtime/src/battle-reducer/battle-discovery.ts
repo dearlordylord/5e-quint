@@ -7,7 +7,7 @@
 // Owns top-level act discovery and subject/action-resource discovery helpers.
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-MULTIATTACK-001
 // UNIT-PROFILE-COVERAGE: runtime-owner stat-block.bonus-action-lifecycle stat-block.multiattack
-// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE BATTLE.STAT_BLOCK.MULTIATTACK
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE BATTLE.STAT_BLOCK.MULTIATTACK
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
@@ -140,8 +140,8 @@ import { readiedSpellInitialHoles } from "./readied-initial-holes.ts";
 import { characterSpellProcedure } from "../character-execution-queries.ts";
 import {
   canSpendEscapeGrappleActionResource,
+  hasStatBlockMultiattackContinuationResource,
   isClassFeatureExtraAttackActionResource,
-  isStatBlockMultiattackActionResource,
   statBlockMultiattackActionResourceMatchesProcedure,
 } from "./action-resource-kinds.ts";
 import { supportedUnitFeatureActs } from "./unit-feature-discovery.ts";
@@ -1819,8 +1819,14 @@ export function actorHasStatBlockMultiattackActionResource(
   state: BattleState,
   actorId: CombatantId,
 ): boolean {
-  return state.currentTurnResources.actionResources.some((resource) =>
-    isStatBlockMultiattackActionResource(resource, actorId),
+  const actor = state.combatants.get(actorId);
+  const statBlockExecution =
+    actor?.origin.kind === "statBlock" ? actor.origin.execution : null;
+  if (statBlockExecution === null) return false;
+  return hasStatBlockMultiattackContinuationResource(
+    state.currentTurnResources.actionResources,
+    actorId,
+    statBlockExecution,
   );
 }
 
@@ -1861,12 +1867,17 @@ export function subjectAllowedDuringStatBlockMultiattackDispatch(
   ) {
     return false;
   }
+  const actor = state.combatants.get(actorId);
+  const statBlockExecution =
+    actor?.origin.kind === "statBlock" ? actor.origin.execution : null;
+  if (statBlockExecution === null) return false;
   return state.currentTurnResources.actionResources.some(
     (resource): boolean =>
       subject.procedureRef !== undefined &&
       statBlockMultiattackActionResourceMatchesProcedure(
         resource,
         actorId,
+        statBlockExecution,
         subject.procedureRef,
       ),
   );

@@ -1,6 +1,6 @@
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-MULTIATTACK-001 RAW-STAT-BLOCK-LIMITED-USAGE-001
-// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.multiattack stat-block.resource-lifecycle
-// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.MULTIATTACK BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties stat-block.multiattack stat-block.resource-lifecycle
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP BATTLE.STAT_BLOCK.MULTIATTACK BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE
 import { optionalProperty } from "./optional-property.ts";
 import {
   PositiveInteger,
@@ -593,7 +593,7 @@ function statBlockAttackSupportsStaticDamageNotation(
 }
 
 export function statBlockProcedureBinding(
-  execution: StatBlockExecutionState,
+  execution: Pick<StatBlockExecutionSnapshot, "procedureBindings">,
   procedureRef: BattleStatBlockProcedureExecutionRef,
 ): StatBlockProcedureBinding | undefined {
   return execution.procedureBindings.find(

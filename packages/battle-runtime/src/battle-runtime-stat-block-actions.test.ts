@@ -1546,12 +1546,14 @@ describe("battle runtime: Stat Block actions", () => {
     const multiattackState = requireResolved(
       resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
     ).state;
+    assertBattleSnapshotCodecRoundTripForTest(snapshotBattle(multiattackState));
 
     expect(multiattackState.currentTurnResources.actionResources).toEqual([
       {
         kind: "action",
         source: "statBlockMultiattack",
         sourceOwnerId: goblinId,
+        sourceProcedureRef: procedureRefForOrdinal(goblinTurn, 3),
         dispatch: {
           kind: "listedOccurrence",
           attackProcedureRef: procedureRefForAttack(goblinTurn, 1),
@@ -1565,6 +1567,7 @@ describe("battle runtime: Stat Block actions", () => {
         kind: "action",
         source: "statBlockMultiattack",
         sourceOwnerId: goblinId,
+        sourceProcedureRef: procedureRefForOrdinal(goblinTurn, 3),
         dispatch: {
           kind: "listedOccurrence",
           attackProcedureRef: procedureRefForAttack(goblinTurn, 1),
@@ -1578,6 +1581,7 @@ describe("battle runtime: Stat Block actions", () => {
         kind: "action",
         source: "statBlockMultiattack",
         sourceOwnerId: goblinId,
+        sourceProcedureRef: procedureRefForOrdinal(goblinTurn, 3),
         dispatch: {
           kind: "listedOccurrence",
           attackProcedureRef: procedureRefForAttack(goblinTurn, 2),
@@ -1722,6 +1726,7 @@ describe("battle runtime: Stat Block actions", () => {
         ],
       }),
     ).state;
+    assertBattleSnapshotCodecRoundTripForTest(snapshotBattle(afterDispatch));
 
     expect(afterDispatch.currentTurnResources.actionResources).toEqual([
       expect.objectContaining({
@@ -2245,6 +2250,7 @@ describe("battle runtime: Stat Block actions", () => {
       ),
     ).toEqual([
       expect.objectContaining({
+        sourceProcedureRef: procedureRefForOrdinal(afterMultiattack, 3),
         dispatch: {
           kind: "oneListedChoice",
           attackProcedureRefs: [

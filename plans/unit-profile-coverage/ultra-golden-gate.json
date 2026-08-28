@@ -1,5 +1,12 @@
 {
-  "blockedScopeIds": [],
+  "blockedScopeIds": [
+    "level-1-5",
+    "level-1-6",
+    "level-1-7",
+    "level-1-8",
+    "level-1-9",
+    "level-1-10"
+  ],
   "definition": {
     "aggregateRule": "Ultra-golden passes only when every required layer passes for every scoped level report. The checker deliberately does not publish a blended ultra-golden percentage.",
     "layers": [
@@ -1287,7 +1294,7 @@
     },
     {
       "layerResult": {
-        "completeLayers": 4,
+        "completeLayers": 3,
         "totalLayers": 4
       },
       "layers": [
@@ -1327,33 +1334,42 @@
           "status": "pass"
         },
         {
-          "blockingCount": 0,
+          "blockingCount": 2,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 65,
-              "numerator": 65
+              "denominator": 64,
+              "numerator": 64
             },
             "qntCoveredObligations": {
-              "denominator": 77,
-              "numerator": 77
+              "denominator": 78,
+              "numerator": 76
             }
           },
           "generatorBlockingRows": [],
           "id": "qnt-generator-readiness",
-          "missingOrOpenObligations": [],
-          "status": "pass"
+          "missingOrOpenObligations": [
+            {
+              "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+              "status": "needs-qnt-owner"
+            },
+            {
+              "obligationId": "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
+              "status": "needs-qnt-owner"
+            }
+          ],
+          "status": "blocked"
         },
         {
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 77,
-              "numerator": 77
+              "denominator": 78,
+              "numerator": 78
             },
             "witnessKinds": {
               "contract-test": 3,
               "deterministic-qnt-replay": 12,
-              "focused-mbt": 80,
+              "focused-mbt": 81,
               "runtime-test": 26
             }
           },
@@ -1503,6 +1519,7 @@
         "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
         "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
         "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+        "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
         "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
         "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY",
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
@@ -1529,12 +1546,12 @@
         "SHEET.WEAPON_MASTERY.RESELECTION"
       ],
       "scopeId": "level-1-5",
-      "status": "pass",
+      "status": "blocked",
       "title": "Character Levels 1-5"
     },
     {
       "layerResult": {
-        "completeLayers": 4,
+        "completeLayers": 3,
         "totalLayers": 4
       },
       "layers": [
@@ -1574,33 +1591,42 @@
           "status": "pass"
         },
         {
-          "blockingCount": 0,
+          "blockingCount": 2,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 65,
-              "numerator": 65
+              "denominator": 64,
+              "numerator": 64
             },
             "qntCoveredObligations": {
-              "denominator": 77,
-              "numerator": 77
+              "denominator": 78,
+              "numerator": 76
             }
           },
           "generatorBlockingRows": [],
           "id": "qnt-generator-readiness",
-          "missingOrOpenObligations": [],
-          "status": "pass"
+          "missingOrOpenObligations": [
+            {
+              "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+              "status": "needs-qnt-owner"
+            },
+            {
+              "obligationId": "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
+              "status": "needs-qnt-owner"
+            }
+          ],
+          "status": "blocked"
         },
         {
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 77,
-              "numerator": 77
+              "denominator": 78,
+              "numerator": 78
             },
             "witnessKinds": {
               "contract-test": 3,
               "deterministic-qnt-replay": 12,
-              "focused-mbt": 80,
+              "focused-mbt": 81,
               "runtime-test": 26
             }
           },
@@ -1750,6 +1776,7 @@
         "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
         "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
         "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+        "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
         "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
         "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY",
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
@@ -1776,12 +1803,12 @@
         "SHEET.WEAPON_MASTERY.RESELECTION"
       ],
       "scopeId": "level-1-6",
-      "status": "pass",
+      "status": "blocked",
       "title": "Character Levels 1-6"
     },
     {
       "layerResult": {
-        "completeLayers": 4,
+        "completeLayers": 3,
         "totalLayers": 4
       },
       "layers": [
@@ -1821,33 +1848,42 @@
           "status": "pass"
         },
         {
-          "blockingCount": 0,
+          "blockingCount": 2,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 65,
-              "numerator": 65
+              "denominator": 64,
+              "numerator": 64
             },
             "qntCoveredObligations": {
-              "denominator": 77,
-              "numerator": 77
+              "denominator": 78,
+              "numerator": 76
             }
           },
           "generatorBlockingRows": [],
           "id": "qnt-generator-readiness",
-          "missingOrOpenObligations": [],
-          "status": "pass"
+          "missingOrOpenObligations": [
+            {
+              "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+              "status": "needs-qnt-owner"
+            },
+            {
+              "obligationId": "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
+              "status": "needs-qnt-owner"
+            }
+          ],
+          "status": "blocked"
         },
         {
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 77,
-              "numerator": 77
+              "denominator": 78,
+              "numerator": 78
             },
             "witnessKinds": {
               "contract-test": 3,
               "deterministic-qnt-replay": 12,
-              "focused-mbt": 80,
+              "focused-mbt": 81,
               "runtime-test": 26
             }
           },
@@ -1997,6 +2033,7 @@
         "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
         "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
         "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+        "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
         "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
         "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY",
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
@@ -2023,12 +2060,12 @@
         "SHEET.WEAPON_MASTERY.RESELECTION"
       ],
       "scopeId": "level-1-7",
-      "status": "pass",
+      "status": "blocked",
       "title": "Character Levels 1-7"
     },
     {
       "layerResult": {
-        "completeLayers": 4,
+        "completeLayers": 3,
         "totalLayers": 4
       },
       "layers": [
@@ -2068,33 +2105,42 @@
           "status": "pass"
         },
         {
-          "blockingCount": 0,
+          "blockingCount": 2,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 65,
-              "numerator": 65
+              "denominator": 64,
+              "numerator": 64
             },
             "qntCoveredObligations": {
-              "denominator": 77,
-              "numerator": 77
+              "denominator": 78,
+              "numerator": 76
             }
           },
           "generatorBlockingRows": [],
           "id": "qnt-generator-readiness",
-          "missingOrOpenObligations": [],
-          "status": "pass"
+          "missingOrOpenObligations": [
+            {
+              "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+              "status": "needs-qnt-owner"
+            },
+            {
+              "obligationId": "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
+              "status": "needs-qnt-owner"
+            }
+          ],
+          "status": "blocked"
         },
         {
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 77,
-              "numerator": 77
+              "denominator": 78,
+              "numerator": 78
             },
             "witnessKinds": {
               "contract-test": 3,
               "deterministic-qnt-replay": 12,
-              "focused-mbt": 80,
+              "focused-mbt": 81,
               "runtime-test": 26
             }
           },
@@ -2244,6 +2290,7 @@
         "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
         "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
         "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+        "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
         "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
         "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY",
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
@@ -2270,12 +2317,12 @@
         "SHEET.WEAPON_MASTERY.RESELECTION"
       ],
       "scopeId": "level-1-8",
-      "status": "pass",
+      "status": "blocked",
       "title": "Character Levels 1-8"
     },
     {
       "layerResult": {
-        "completeLayers": 4,
+        "completeLayers": 3,
         "totalLayers": 4
       },
       "layers": [
@@ -2315,33 +2362,42 @@
           "status": "pass"
         },
         {
-          "blockingCount": 0,
+          "blockingCount": 2,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 65,
-              "numerator": 65
+              "denominator": 64,
+              "numerator": 64
             },
             "qntCoveredObligations": {
-              "denominator": 77,
-              "numerator": 77
+              "denominator": 78,
+              "numerator": 76
             }
           },
           "generatorBlockingRows": [],
           "id": "qnt-generator-readiness",
-          "missingOrOpenObligations": [],
-          "status": "pass"
+          "missingOrOpenObligations": [
+            {
+              "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+              "status": "needs-qnt-owner"
+            },
+            {
+              "obligationId": "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
+              "status": "needs-qnt-owner"
+            }
+          ],
+          "status": "blocked"
         },
         {
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 77,
-              "numerator": 77
+              "denominator": 78,
+              "numerator": 78
             },
             "witnessKinds": {
               "contract-test": 3,
               "deterministic-qnt-replay": 12,
-              "focused-mbt": 80,
+              "focused-mbt": 81,
               "runtime-test": 26
             }
           },
@@ -2479,6 +2535,7 @@
         "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
         "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
         "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+        "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
         "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
         "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY",
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
@@ -2505,12 +2562,12 @@
         "SHEET.WEAPON_MASTERY.RESELECTION"
       ],
       "scopeId": "level-1-9",
-      "status": "pass",
+      "status": "blocked",
       "title": "Character Levels 1-9"
     },
     {
       "layerResult": {
-        "completeLayers": 4,
+        "completeLayers": 3,
         "totalLayers": 4
       },
       "layers": [
@@ -2550,33 +2607,42 @@
           "status": "pass"
         },
         {
-          "blockingCount": 0,
+          "blockingCount": 2,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 65,
-              "numerator": 65
+              "denominator": 64,
+              "numerator": 64
             },
             "qntCoveredObligations": {
-              "denominator": 77,
-              "numerator": 77
+              "denominator": 78,
+              "numerator": 76
             }
           },
           "generatorBlockingRows": [],
           "id": "qnt-generator-readiness",
-          "missingOrOpenObligations": [],
-          "status": "pass"
+          "missingOrOpenObligations": [
+            {
+              "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+              "status": "needs-qnt-owner"
+            },
+            {
+              "obligationId": "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
+              "status": "needs-qnt-owner"
+            }
+          ],
+          "status": "blocked"
         },
         {
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 77,
-              "numerator": 77
+              "denominator": 78,
+              "numerator": 78
             },
             "witnessKinds": {
               "contract-test": 3,
               "deterministic-qnt-replay": 12,
-              "focused-mbt": 80,
+              "focused-mbt": 81,
               "runtime-test": 26
             }
           },
@@ -2714,6 +2780,7 @@
         "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
         "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
         "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+        "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
         "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
         "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY",
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
@@ -2740,7 +2807,7 @@
         "SHEET.WEAPON_MASTERY.RESELECTION"
       ],
       "scopeId": "level-1-10",
-      "status": "pass",
+      "status": "blocked",
       "title": "Character Levels 1-10"
     }
   ],
@@ -2959,5 +3026,5 @@
     "rulesKernelMatrix": "plans/rules-kernel-coverage/matrix.json",
     "unitMatrix": "plans/unit-profile-coverage/unit-matrix.json"
   },
-  "status": "pass"
+  "status": "blocked"
 }

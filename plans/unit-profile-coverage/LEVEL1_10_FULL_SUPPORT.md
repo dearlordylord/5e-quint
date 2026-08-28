@@ -22,8 +22,8 @@ Strict level-9/10 final support blockers: 0.
 | Strict level-9/10 final support | 411/411 (100%) |
 | SRD authored product readiness | 135/135 (100%) |
 | Rules-kernel profile join | 125/125 (100%) |
-| Rules-kernel covered profile join | 112/125 (89.6%) |
-| Supported Unit rules-kernel chain | 150/180 (83.3%) |
+| Rules-kernel covered profile join | 111/125 (88.8%) |
+| Supported Unit rules-kernel chain | 149/180 (82.8%) |
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
@@ -160,6 +160,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `rogue_ability_score_improvement_l10` | mapped-open | `character-creation.class-feature-feat-choice` (mapped-open: `CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
 | `rogue_expertise` | mapped-open | `character-creation.skill-expertise-choice` (mapped-open: `CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
 | `rogue_weapon_mastery` | mapped-open | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
+| `slow` | mapped-open | `spell.invocation-slow-active-penalties` (mapped-open: `BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE` (needs-qnt-owner), `BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP` (needs-qnt-owner)) | `GH-351` |
 | `sorcerer_draconic_spells` | mapped-open | `character-sheet.class-feature-prepared-spell-access` (mapped-open: `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` (covered)) | _plan-update-required_ |
 | `warlock_contact_patron` | mapped-open | `character-sheet.class-feature-prepared-spell-access` (mapped-open: `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` (covered)) | _plan-update-required_ |
 | `warlock_eldritch_invocations` | mapped-open | `character-creation.eldritch-invocation-choice` (mapped-open: `CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE` (covered)); `character-creation.warlock-pact-magic-advancement` (mapped-open: `CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION` (covered)) | _plan-update-required_ |

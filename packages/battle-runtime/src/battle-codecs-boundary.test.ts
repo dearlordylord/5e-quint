@@ -55,6 +55,18 @@ import {
 type EncodedHole = Schema.Schema.Encoded<typeof BattleHoleSchema>;
 type EncodedSnapshot = Schema.Schema.Encoded<typeof BattleSnapshotSchema>;
 type EncodedAct = EncodedSnapshot["acts"][number];
+type EncodedActionResource = EncodedSnapshot["turn"]["actionResources"][number];
+type EncodedStatBlockMultiattackActionResource = Extract<
+  EncodedActionResource,
+  { readonly source: "statBlockMultiattack" }
+>;
+type EncodedListedMultiattackActionResource =
+  EncodedStatBlockMultiattackActionResource & {
+    readonly dispatch: Extract<
+      EncodedStatBlockMultiattackActionResource["dispatch"],
+      { readonly kind: "listedOccurrence" }
+    >;
+  };
 type CodecCase = {
   readonly name: string;
   readonly expected: "Right" | "Left";
@@ -139,6 +151,56 @@ const encodedSnapshotFromState = (
 function expectSnapshotDecodeLeft(snapshot: unknown): void {
   const decoded = Schema.decodeUnknownEither(BattleSnapshotSchema)(snapshot);
   expect(Either.isLeft(decoded)).toBe(true);
+}
+
+function isEncodedStatBlockMultiattackActionResource(
+  resource: EncodedActionResource,
+): resource is EncodedStatBlockMultiattackActionResource {
+  return resource.source === "statBlockMultiattack";
+}
+
+function isEncodedListedMultiattackActionResource(
+  resource: EncodedActionResource,
+): resource is EncodedListedMultiattackActionResource {
+  return (
+    isEncodedStatBlockMultiattackActionResource(resource) &&
+    resource.dispatch.kind === "listedOccurrence"
+  );
+}
+
+function encodedActivatedMultiattackSnapshot(): EncodedSnapshot {
+  const session = startBattleSessionRight({
+    battleId: battleId("codec-multiattack-continuation"),
+    combatants: [
+      characterSeed({ combatantId: wizardId, initiative: 20 }),
+      statBlockCreatureInit({
+        combatantId: skeletonId,
+        statBlock: monsterMultiattackStatBlock(),
+        initiative: 10,
+      }),
+    ],
+  });
+  const turn = requireResolved(
+    endTurn({ state: session.state, actorId: wizardId }),
+  ).state;
+  const multiattack = snapshotBattle(turn).acts.find(
+    (act) =>
+      act.subject.tag === "action" &&
+      act.subject.action === "multiattack" &&
+      act.subject.actorId === skeletonId,
+  );
+  if (multiattack === undefined) {
+    throw new Error("Expected a Stat Block Multiattack act.");
+  }
+  return encodedSnapshotFromState(
+    requireResolved(
+      resolveBattleSubject({
+        state: turn,
+        subject: multiattack.subject,
+        fills: [],
+      }),
+    ).state,
+  );
 }
 
 function codecFixture() {
@@ -935,37 +997,7 @@ describe("battle codec act ownership boundaries", () => {
     expectSnapshotDecodeLeft(malformed);
   });
   test("rejects an empty Stat Block Multiattack one-listed choice", () => {
-    const session = startBattleSessionRight({
-      battleId: battleId("codec-multiattack-empty-choice"),
-      combatants: [
-        characterSeed({ combatantId: wizardId, initiative: 20 }),
-        statBlockCreatureInit({
-          combatantId: skeletonId,
-          statBlock: monsterMultiattackStatBlock(),
-          initiative: 10,
-        }),
-      ],
-    });
-    const turn = requireResolved(
-      endTurn({ state: session.state, actorId: wizardId }),
-    ).state;
-    const multiattack = snapshotBattle(turn).acts.find(
-      (act) =>
-        act.subject.tag === "action" &&
-        act.subject.action === "multiattack" &&
-        act.subject.actorId === skeletonId,
-    );
-    if (multiattack === undefined) {
-      throw new Error("Expected a Stat Block Multiattack act.");
-    }
-    const activated = requireResolved(
-      resolveBattleSubject({
-        state: turn,
-        subject: multiattack.subject,
-        fills: [],
-      }),
-    ).state;
-    const encoded = encodedSnapshotFromState(activated);
+    const encoded = encodedActivatedMultiattackSnapshot();
     expectSnapshotDecodeLeft({
       ...encoded,
       turn: {
@@ -981,6 +1013,130 @@ describe("battle codec act ownership boundaries", () => {
               }
             : resource,
         ),
+      },
+    });
+  });
+  test("rejects a Stat Block Multiattack continuation owned by another combatant", () => {
+    const encoded = encodedActivatedMultiattackSnapshot();
+    expectSnapshotDecodeLeft({
+      ...encoded,
+      turn: {
+        ...encoded.turn,
+        actionResources: encoded.turn.actionResources.map((resource) =>
+          resource.source === "statBlockMultiattack"
+            ? { ...resource, sourceOwnerId: wizardId }
+            : resource,
+        ),
+      },
+    });
+  });
+  test("rejects a Stat Block Multiattack continuation bound to a non-Multiattack procedure", () => {
+    const encoded = encodedActivatedMultiattackSnapshot();
+    const attackResource = encoded.turn.actionResources.find(
+      isEncodedListedMultiattackActionResource,
+    );
+    if (attackResource === undefined) {
+      throw new Error("Expected a listed Multiattack continuation resource.");
+    }
+    expectSnapshotDecodeLeft({
+      ...encoded,
+      turn: {
+        ...encoded.turn,
+        actionResources: encoded.turn.actionResources.map((resource) =>
+          resource.source === "statBlockMultiattack"
+            ? {
+                ...resource,
+                sourceProcedureRef: attackResource.dispatch.attackProcedureRef,
+              }
+            : resource,
+        ),
+      },
+    });
+  });
+  test("rejects an unlisted Stat Block Multiattack dispatch procedure", () => {
+    const encoded = encodedActivatedMultiattackSnapshot();
+    const statBlockCombatant = encoded.combatants.find(
+      (combatant) => combatant.combatantId === skeletonId,
+    );
+    if (statBlockCombatant?.origin.kind !== "statBlock") {
+      throw new Error("Expected a Stat Block continuation owner.");
+    }
+    const unarmedStrikeRef =
+      statBlockCombatant.origin.execution.procedureBindings.find(
+        (binding) => binding.procedure.kind === "unarmedStrike",
+      )?.procedureRef;
+    if (unarmedStrikeRef === undefined) {
+      throw new Error("Expected the runtime-injected Unarmed Strike binding.");
+    }
+    const firstContinuationIndex = encoded.turn.actionResources.findIndex(
+      (resource) => resource.source === "statBlockMultiattack",
+    );
+    expect(firstContinuationIndex).toBeGreaterThanOrEqual(0);
+    expectSnapshotDecodeLeft({
+      ...encoded,
+      turn: {
+        ...encoded.turn,
+        actionResources: encoded.turn.actionResources.map((resource, index) =>
+          index === firstContinuationIndex &&
+          resource.source === "statBlockMultiattack"
+            ? {
+                ...resource,
+                dispatch: {
+                  kind: "listedOccurrence",
+                  attackProcedureRef: unarmedStrikeRef,
+                },
+              }
+            : resource,
+        ),
+      },
+    });
+  });
+  test("rejects Stat Block Multiattack continuation multiplicity beyond the source binding", () => {
+    const encoded = encodedActivatedMultiattackSnapshot();
+    const continuationResources = encoded.turn.actionResources.filter(
+      isEncodedStatBlockMultiattackActionResource,
+    );
+    const lastContinuation = continuationResources.at(-1);
+    if (lastContinuation === undefined) {
+      throw new Error("Expected a Multiattack continuation resource.");
+    }
+    expectSnapshotDecodeLeft({
+      ...encoded,
+      turn: {
+        ...encoded.turn,
+        actionResources: [...encoded.turn.actionResources, lastContinuation],
+      },
+    });
+  });
+  test("rejects a one-listed Multiattack choice that drops source multiplicity", () => {
+    const encoded = encodedActivatedMultiattackSnapshot();
+    const continuationResources = encoded.turn.actionResources.filter(
+      isEncodedListedMultiattackActionResource,
+    );
+    const firstContinuation = continuationResources[0];
+    if (firstContinuation === undefined) {
+      throw new Error("Expected a listed Multiattack continuation resource.");
+    }
+    const distinctProcedureRefs = Array.from(
+      new Set(
+        continuationResources.map(
+          (resource) => resource.dispatch.attackProcedureRef,
+        ),
+      ),
+    );
+    expectSnapshotDecodeLeft({
+      ...encoded,
+      turn: {
+        ...encoded.turn,
+        actionResources: [
+          {
+            ...firstContinuation,
+            dispatch: {
+              kind: "oneListedChoice",
+              attackProcedureRefs: distinctProcedureRefs,
+            },
+          },
+        ],
       },
     });
   });

@@ -1,5 +1,5 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties stat-block.multiattack
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP BATTLE.STAT_BLOCK.MULTIATTACK
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 import { Either, Match } from "effect";
@@ -42,6 +42,7 @@ export type RuntimeActionResource =
       readonly kind: "action";
       readonly source: "statBlockMultiattack";
       readonly sourceOwnerId: CreatureId;
+      readonly sourceProcedureRef: BattleStatBlockProcedureExecutionRef;
       readonly dispatch:
         | {
             readonly kind: "listedOccurrence";

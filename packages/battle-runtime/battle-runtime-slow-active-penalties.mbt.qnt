@@ -1,6 +1,4 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-slow-active-penalties
 
 module battleRuntimeSlowActivePenaltiesMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"

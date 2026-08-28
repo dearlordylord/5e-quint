@@ -2632,6 +2632,7 @@ describe("MCP server route", () => {
         expect.objectContaining({
           source: "statBlockMultiattack",
           sourceOwnerId: "goblin",
+          sourceProcedureRef: expect.any(String),
         }),
       ]),
     );
@@ -2643,6 +2644,7 @@ describe("MCP server route", () => {
         expect.objectContaining({
           source: "statBlockMultiattack",
           sourceOwnerId: "goblin",
+          sourceProcedureRef: expect.any(String),
         }),
       ]),
     );
@@ -2652,12 +2654,25 @@ describe("MCP server route", () => {
     );
     expect(
       continuation.availableActs.map((act: { label: string }) => act.label),
-    ).toEqual(["Attack", "Attack", "Move", "End Turn"]);
+    ).toEqual(["Attack", "Attack", "Attack", "Attack", "Move", "End Turn"]);
     expect(
       continuation.availableActs.map(
         (act: { subject: unknown }) => act.subject,
       ),
     ).toEqual([
+      expect.objectContaining({
+        tag: "action",
+        actorId: "goblin",
+        action: "attack",
+        procedureRef: expect.any(String),
+      }),
+      expect.objectContaining({
+        tag: "action",
+        actorId: "goblin",
+        action: "attack",
+        procedureRef: expect.any(String),
+        statBlockDamageNotation: "static",
+      }),
       expect.objectContaining({
         tag: "action",
         actorId: "goblin",

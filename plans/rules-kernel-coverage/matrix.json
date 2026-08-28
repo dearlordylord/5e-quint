@@ -1,19 +1,19 @@
 {
   "summary": {
-    "total": 161,
-    "covered": 143,
-    "open": 12,
+    "total": 162,
+    "covered": 142,
+    "open": 14,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 127,
+      "battle": 128,
       "character-creation": 16,
       "character-sheet": 13,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 143,
-      "needs-qnt-owner": 12,
+      "covered": 142,
+      "needs-qnt-owner": 14,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
       "boundary-only": 5,
@@ -261,6 +261,7 @@
       "title": "Battle Cloudkill active Sphere hazard projects Heavily Obscured area facts, resolves table-triggered Constitution saves and Poison damage, and cleans up on Concentration, duration, or strong wind"
     },
     {
+      "followUpTaskIds": ["GH-351"],
       "id": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [
@@ -276,29 +277,39 @@
         }
       ],
       "profiles": ["spell.invocation-slow-active-penalties"],
-      "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-multiattack.qnt"
-      ],
-      "reason": "The promoted Slow runtime consumes caller-supplied affected-creature area witnesses, save outcomes, retained active Slow effects, shared action-economy state, Attack action resource state, and canonical spell component facts. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller/table facts.",
+      "qntOwners": [],
+      "reason": "Production runtime and focused tests cover the complete Slow lifecycle, but no reusable semantic QNT owner currently models Speed, Armor Class, Dexterity Saving Throw, Reaction, Action-or-Bonus-Action, Somatic failure, repeat-save, and Concentration semantics together. The Slow MBT module remains a bounded fixture, and the separately tracked Slow Multiattack attack-cap obligation must not be read as ownership of these unmodeled clauses.",
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/slow-active-penalties.ts",
+        "packages/battle-runtime/src/battle-state-execution.ts",
+        "packages/battle-runtime/src/active-effect/types.ts",
+        "packages/battle-runtime/src/stat-block-execution.ts",
+        "packages/battle-runtime/src/stat-block-execution-state.ts",
+        "packages/battle-runtime/src/battle-reducer/action-eligibility.ts",
+        "packages/battle-runtime/src/battle-reducer/action-resource-kinds.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/creature-state.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
+        "packages/battle-runtime/src/battle-reducer/slow-active-penalties-effects.ts",
         "packages/battle-runtime/src/battle-reducer/slow-active-penalties-runtime.ts",
-        "packages/battle-runtime/src/battle-reducer/statblock.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/slow-active-penalties.ts",
         "packages/battle-runtime/src/battle-reducer/spell-turn-resources.ts",
-        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock.ts",
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
+        "packages/battle-runtime/src/battle-subjects.ts",
         "packages/shared-algebras/src/action-economy-algebra.ts"
       ],
-      "status": "covered",
+      "status": "needs-qnt-owner",
       "surfaceEvidence": [
         ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Slow",
         "UBIQUITOUS_LANGUAGE.md#Spellcasting",
@@ -307,6 +318,45 @@
         "UBIQUITOUS_LANGUAGE.md#Movement"
       ],
       "title": "Battle Slow applies active penalties, target-turn Action or Bonus Action restriction, Attack cap, Somatic failure, and repeat-save cleanup"
+    },
+    {
+      "followUpTaskIds": ["GH-351"],
+      "id": "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
+      "kind": "resource-sequencing",
+      "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/slow-active-penalties.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": ["spell.invocation-slow-active-penalties"],
+      "qntOwners": [],
+      "reason": "Production runtime caps an admitted Stat Block Multiattack to one activation-owned listed-attack choice when the actor is affected by Slow, and the codec plus canonical continuation matcher enforce source owner, listed references, choice shape, multiplicity, and active continuation. The reusable Multiattack QNT core models OneListedDispatch as an input allowance but does not derive that allowance from Slow; the Slow MBT module remains a bounded fixture. Therefore the Slow-triggered cap still needs a semantic QNT owner. This obligation excludes every other Slow penalty and lifecycle clause and the ordinary Attack action outside the admitted Multiattack projection.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/shared-algebras/src/action-economy-algebra.ts",
+        "packages/battle-runtime/src/stat-block-execution.ts",
+        "packages/battle-runtime/src/stat-block-execution-state.ts",
+        "packages/battle-runtime/src/battle-reducer/action-eligibility.ts",
+        "packages/battle-runtime/src/battle-reducer/action-resource-kinds.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/slow-active-penalties-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock.ts"
+      ],
+      "status": "needs-qnt-owner",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Slow",
+        ".references/srd-5.2.1/Monsters/Overview.md#Parts-of-a-Stat-Block",
+        "UBIQUITOUS_LANGUAGE.md#Action Lifecycle",
+        "UBIQUITOUS_LANGUAGE.md#Creatures-and-Stat-Blocks"
+      ],
+      "title": "Battle Slow caps an activated Stat Block Multiattack to one listed attack"
     },
     {
       "id": "BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY",
@@ -2908,14 +2958,20 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/stat-block-multiattack.qnt"
       ],
-      "reason": "The current executable projection admits Multiattack dispatch only to typed Action-section attack procedure references, preserving multiplicity and permitting any pending attack order without name dispatch; ability and replacement dispatch remains an explicit bounded gap.",
+      "reason": "The executable projection admits Multiattack dispatch only to typed Action-section attack procedure references, preserves multiplicity, and permits any pending attack order without name dispatch. Its continuation resource carries the exact source Multiattack procedure; the canonical matcher, eligibility, discovery, dispatch, and snapshot codec boundaries reject foreign, unlisted, and multiplicity-invalid continuation states. Ability and replacement dispatch remains an explicit bounded gap.",
       "runtime": "battle",
       "runtimeOwners": [
+        "packages/shared-algebras/src/action-economy-algebra.ts",
         "packages/battle-runtime/src/stat-block-execution.ts",
         "packages/battle-runtime/src/stat-block-execution-state.ts",
-        "packages/battle-runtime/src/battle-reducer/statblock.ts",
+        "packages/battle-runtime/src/battle-reducer/action-eligibility.ts",
+        "packages/battle-runtime/src/battle-reducer/action-resource-kinds.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
-        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts"
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -5635,24 +5691,20 @@
     },
     {
       "classification": "semantic-frontier",
-      "coveredByObligationIds": [
-        "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE"
-      ],
-      "followUpTaskIds": [],
+      "coveredByObligationIds": [],
+      "followUpTaskIds": ["GH-351"],
       "holeKind": "savingThrowOutcome",
       "id": "BattleSlowActivePenaltiesEndTurnSavingThrowOutcomeHole",
-      "reason": "Slow end-of-target-turn Saving Throw outcomes drive reducer-owned per-target active penalty cleanup and caster Concentration cleanup when no affected targets remain.",
+      "reason": "Slow end-of-target-turn Saving Throw outcomes drive reducer-owned per-target active penalty cleanup and caster Concentration cleanup when no affected targets remain; the complete lifecycle still needs a reusable semantic QNT owner.",
       "subject": "battle-hole-family"
     },
     {
       "classification": "semantic-frontier",
-      "coveredByObligationIds": [
-        "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE"
-      ],
-      "followUpTaskIds": [],
+      "coveredByObligationIds": [],
+      "followUpTaskIds": ["GH-351"],
       "holeKind": "slowSomaticSpellFailureOutcome",
       "id": "BattleSlowSomaticSpellFailureOutcomeHole",
-      "reason": "Slow Somatic spell-failure outcome holes carry the RAW 25 percent chance for an affected target casting a spell with an effective Somatic component. The fill determines whether casting resources are spent without applying the spell or resolution continues.",
+      "reason": "Slow Somatic spell-failure outcome holes carry the RAW 25 percent chance for an affected target casting a spell with an effective Somatic component. The fill determines whether casting resources are spent without applying the spell or resolution continues; the complete lifecycle still needs a reusable semantic QNT owner.",
       "subject": "battle-hole-family"
     },
     {
@@ -6393,13 +6445,11 @@
     },
     {
       "classification": "semantic-frontier",
-      "coveredByObligationIds": [
-        "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE"
-      ],
+      "coveredByObligationIds": [],
       "fillKind": "slowSomaticSpellFailureOutcome",
-      "followUpTaskIds": [],
+      "followUpTaskIds": ["GH-351"],
       "id": "slowSomaticSpellFailureOutcome",
-      "reason": "Slow Somatic spell-failure fills decide the RAW 25 percent failure branch for affected targets: failed outcomes spend casting resources without applying the spell or starting Concentration, while nonfailed outcomes allow ordinary spell resolution to continue.",
+      "reason": "Slow Somatic spell-failure fills decide the RAW 25 percent failure branch for affected targets: failed outcomes spend casting resources without applying the spell or starting Concentration, while nonfailed outcomes allow ordinary spell resolution to continue. The complete lifecycle still needs a reusable semantic QNT owner.",
       "subject": "battle-fill-kind"
     },
     {
@@ -7528,7 +7578,10 @@
       "profileId": "spell.invocation-cloudkill-area-hazard"
     },
     {
-      "obligationIds": ["BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE"],
+      "obligationIds": [
+        "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+        "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP"
+      ],
       "profileId": "spell.invocation-slow-active-penalties"
     },
     {
@@ -9610,11 +9663,8 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "Focused Multiattack Attack-action spend, activation-owned dispatch allowance, pending-dispatch, and Slow one-listed-choice semantics.",
-      "obligationIds": [
-        "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
-        "BATTLE.STAT_BLOCK.MULTIATTACK"
-      ],
+      "evidence": "Focused Multiattack Attack-action spend, activation-owned dispatch allowance, and pending dispatch, including one-listed-choice behavior when that allowance is supplied. It does not derive the allowance from Slow or model any Slow active-penalty or lifecycle clause.",
+      "obligationIds": ["BATTLE.STAT_BLOCK.MULTIATTACK"],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-multiattack.qnt",
       "role": "semantic-core"
     },
@@ -16462,31 +16512,15 @@
       "status": "generation-subset-clean"
     },
     {
-      "blockedBy": [],
-      "generatorSubset": [
-        "variant",
-        "record",
-        "pure-def",
-        "constant-def",
-        "int",
-        "bool",
-        "if-expression",
-        "let-binding",
-        "comparison",
-        "boolean-connective",
-        "all-block",
-        "pattern-match",
-        "fold",
-        "list"
-      ],
-      "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+      "blockedBy": ["fixture-world-coupled", "mbt-harness-coupled"],
+      "followUpTaskIds": ["GH-351"],
+      "generatorSubset": [],
+      "obligationId": "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
       "proofOnly": [
         "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt"
       ],
-      "semanticCore": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-multiattack.qnt"
-      ],
-      "status": "generation-subset-clean"
+      "semanticCore": [],
+      "status": "blocked"
     },
     {
       "blockedBy": [],

@@ -2,7 +2,7 @@
 // commands, attack fill validation, and attack action-resource spending.
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-ATTACK-PROCEDURE-001 RAW-STAT-BLOCK-MULTIATTACK-001
 // UNIT-PROFILE-COVERAGE: runtime-owner stat-block.action-lifecycle stat-block.bonus-action-lifecycle stat-block.attack-procedure stat-block.multiattack
-// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ACTION_LIFECYCLE BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE BATTLE.STAT_BLOCK.ATTACK_PROCEDURE BATTLE.STAT_BLOCK.MULTIATTACK
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP BATTLE.STAT_BLOCK.ACTION_LIFECYCLE BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE BATTLE.STAT_BLOCK.ATTACK_PROCEDURE BATTLE.STAT_BLOCK.MULTIATTACK
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // KERNEL-COVERAGE: runtime-owner BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES
@@ -239,7 +239,7 @@ import {
   spendTurnAction,
 } from "./battle-discovery.ts";
 import {
-  isStatBlockMultiattackActionResource,
+  hasStatBlockMultiattackContinuationResource,
   spendEscapeGrappleActionResource,
   statBlockMultiattackActionResourceMatchesProcedure,
 } from "./action-resource-kinds.ts";
@@ -1031,6 +1031,7 @@ export function resolveMultiattack(
           kind: "action",
           source: "statBlockMultiattack",
           sourceOwnerId: input.subject.actorId,
+          sourceProcedureRef: multiattackBinding.procedureRef,
           dispatch: { kind: "listedOccurrence", attackProcedureRef },
           restriction: {
             kind: "exclude",
@@ -1046,6 +1047,7 @@ export function resolveMultiattack(
           kind: "action",
           source: "statBlockMultiattack",
           sourceOwnerId: input.subject.actorId,
+          sourceProcedureRef: multiattackBinding.procedureRef,
           dispatch: {
             kind: "oneListedChoice",
             attackProcedureRefs: procedureRefs,
@@ -2545,15 +2547,19 @@ function spendAttackTurnResources(
   },
   string
 > {
-  const multiattackResources =
-    attack.kind === "statBlockAttack" && statBlockAttackSection === "actions"
-      ? state.currentTurnResources.actionResources.filter(
-          (resource): resource is StatBlockMultiattackActionResource =>
-            isStatBlockMultiattackActionResource(resource, actorId),
-        )
-      : [];
+  const actor = state.combatants.get(actorId);
+  const statBlockExecution =
+    actor?.origin.kind === "statBlock" ? actor.origin.execution : null;
+  const hasMultiattackContinuation =
+    statBlockExecution !== null &&
+    hasStatBlockMultiattackContinuationResource(
+      state.currentTurnResources.actionResources,
+      actorId,
+      statBlockExecution,
+    );
   if (
-    multiattackResources.length > 0 &&
+    hasMultiattackContinuation &&
+    statBlockExecution !== null &&
     attack.kind === "statBlockAttack" &&
     statBlockAttackSection === "actions"
   ) {
@@ -2565,6 +2571,7 @@ function spendAttackTurnResources(
         statBlockMultiattackActionResourceMatchesProcedure(
           resource,
           actorId,
+          statBlockExecution,
           attack.procedureRef,
         ),
     );
