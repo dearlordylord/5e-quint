@@ -27,6 +27,7 @@ import {
   ClassLevel,
   DieRollResult,
   Hp,
+  movementFeet,
 } from "@dnd/shared/types";
 import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
@@ -53,10 +54,12 @@ import { sacredWeaponHeldMeleeWeapons } from "./battle-reducer/unit-feature-disc
 import { combatantHandUses } from "./battle-reducer/creature-state-leaves.ts";
 import {
   attackInitialTargetHole,
+  attackExecutionSelectionForSubjectForTest,
   attackDamageDispositionFill,
   attackRollFill,
   attackTargetFill,
   battleId,
+  battleFrontierInterruptDecisionForState,
   battleObjectId,
   battleTablePositionId,
   characterSeed,
@@ -68,6 +71,7 @@ import {
   findHole,
   goblinAttackSubject,
   goblinId,
+  movementFill,
   requireHole,
   requireResolved,
   resolveBattleSubject,
@@ -90,7 +94,9 @@ import {
   battleDruidWildShapeKnownFormSupportForUnit,
   battleStateWithGroundObjects,
   battleAvailableDruidWildShapeKnownForms,
+  battleCheckpointFrontierEnvelope,
   BattleFillSchema,
+  BattleCheckpointFrontierEnvelopeSchema,
   battleShapeShiftedRuntimeState,
   combatantAbilityCheckModifier,
   combatantD20AbilityScore,
@@ -299,6 +305,99 @@ test("assumes, reuses, and dismisses a known Beast Wild Shape form", () => {
   const dismissedSnapshot = snapshotCreature(dismissed.snapshot, druidId);
   expect(dismissedSnapshot.size).toBe("medium");
   expect(Number(dismissedSnapshot.movement.speedFeet)).toBe(30);
+});
+
+test("roundtrips a runtime-produced Wild Shape Opportunity Attack frontier", () => {
+  const initial = druidWildShapeBattle();
+  const assumed = requireResolved(
+    resolveDruidWildShapeWithoutLoadoutEquipment(
+      initial,
+      wildShapeSubject(initial, {
+        action: "assumeForm",
+        formStatBlockId: ridingHorseId,
+      }),
+    ),
+  );
+  const wildShapeAttack = discoverBattleActCandidates(assumed.state).find(
+    (act) =>
+      isAttackActForProcedure(
+        act,
+        wildShapeStatBlockAttackProcedureRef(assumed.state, "Hooves"),
+      ),
+  );
+  if (
+    wildShapeAttack?.subject.tag !== "action" ||
+    wildShapeAttack.subject.action !== "attack"
+  ) {
+    throw new Error("Expected the active Wild Shape form attack.");
+  }
+  const goblinTurn = requireResolved(
+    endTurn({ state: assumed.state, actorId: druidId }),
+  ).state;
+  const moveSubject: BattleSubject = {
+    tag: "runtimeCommand",
+    actorId: goblinId,
+    command: "move",
+  };
+  const movement = requireHole(
+    resolveBattleSubject({
+      state: goblinTurn,
+      subject: moveSubject,
+      fills: [],
+    }),
+    "movement",
+  );
+  const awaitingOpportunity = resolveBattleSubject({
+    state: goblinTurn,
+    subject: moveSubject,
+    fills: [
+      movementFill(movement, {
+        movementCostFeet: 5,
+        provokedOpportunityAttacks: [
+          {
+            reactorId: druidId,
+            distanceFeet: movementFeet(5),
+            ...attackExecutionSelectionForSubjectForTest(
+              wildShapeAttack.subject,
+            ),
+          },
+        ],
+      }),
+    ],
+  });
+  if (awaitingOpportunity.tag !== "needsHoles") {
+    throw new Error("Expected a Wild Shape Opportunity Attack interrupt.");
+  }
+  const frontier = battleFrontierInterruptDecisionForState(
+    awaitingOpportunity.state,
+  );
+  const choice = frontier?.choices.find(
+    (candidate) =>
+      candidate.kind === "nestedProcedure" &&
+      candidate.subject.command === "opportunityAttack" &&
+      candidate.subject.reactorId === druidId,
+  );
+  if (
+    choice === undefined ||
+    choice.kind !== "nestedProcedure" ||
+    choice.subject.command !== "opportunityAttack"
+  ) {
+    throw new Error("Expected the Wild Shape Opportunity Attack choice.");
+  }
+  expect(choice.subject.procedureRef).toBe(
+    wildShapeAttack.subject.procedureRef,
+  );
+
+  const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+    battleCheckpointFrontierEnvelope(awaitingOpportunity.state),
+  );
+  expect(
+    Either.isRight(
+      Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+        encoded,
+      ),
+    ),
+  ).toBe(true);
 });
 
 test("projects active Wild Shape lifecycle ownership when turn control returns to the druid", () => {

@@ -7,6 +7,7 @@
 // RAW: .references/srd-5.2.1/Rules-Glossary.md#Concentration
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
+  battleFrontierInterruptDecisionForState,
   cantripSpellInvocationRef,
   concentrationSavingThrowFill,
   damageRollFill,
@@ -125,13 +126,15 @@ describe("GH-227 active spell lifecycle coverage", () => {
         singleTargetSavingThrowOutcomeFill(entrySave, spellTargetId, false),
       ],
     });
-    if (
-      awaitingReaction.tag !== "needsHoles" ||
-      awaitingReaction.snapshot.pendingInterrupt === null
-    ) {
+    if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected the failed Web save Reaction window.");
     }
-    const pending = awaitingReaction.snapshot.pendingInterrupt;
+    const pending = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    );
+    if (pending === null) {
+      throw new Error("Expected the failed Web save Reaction window.");
+    }
     const releaseChoice = pending.choices.find(
       (choice) =>
         choice.kind === "nestedProcedure" &&
@@ -212,13 +215,11 @@ describe("GH-227 active spell lifecycle coverage", () => {
         concentrationSavingThrowFill(concentrationSave, true),
       ],
     });
-    expect(completed).toMatchObject({
-      tag: "resolved",
-      snapshot: { pendingInterrupt: null },
-    });
+    expect(completed.tag).toBe("resolved");
     if (completed.tag !== "resolved") {
       throw new Error("Expected the resumed Web spell to resolve.");
     }
+    expect(battleFrontierInterruptDecisionForState(completed.state)).toBeNull();
 
     const caster = requireCombatant(completed.state, spellCasterId);
     expect(caster.hp).toBeLessThan(caster.maxHp);

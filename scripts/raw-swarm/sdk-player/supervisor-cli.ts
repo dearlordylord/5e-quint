@@ -19,14 +19,15 @@ import {
 import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
-  BattleSnapshotSchema,
+  BattleCheckpointFrontierEnvelopeSchema,
+  currentBattleCheckpointFrontierEnvelope,
   endBattleRuntimeTurnWithTableD20TestCircumstances,
   resolveBattleRuntimeInterrupt,
   resolveBattleRuntimeSubject,
   resolveBattleRuntimeSubjectWithTableD20TestCircumstances,
-  snapshotBattle,
   type BattleRuntimeResolutionResult,
   type BattleRuntimeTableD20TestResolutionResult,
+  type BattleHole,
 } from "../../../packages/battle-runtime/src/index.ts";
 import { Either, Match, Schema } from "effect";
 
@@ -61,6 +62,7 @@ import {
   scenarioTokenId,
   type ScenarioSession,
 } from "./scenario-session.ts";
+import type { ReadonlyNonEmptyArray } from "../../../packages/shared/src/types.ts";
 import {
   canonicalSdkCallInput,
   decodeSdkCallInput,
@@ -386,10 +388,12 @@ function resolutionProjection(
     result.tag === "scenarioMovementRejected"
   )
     return jsonValue(result);
-  const { snapshot, ...outcome } = result;
+  const { envelope, ...outcome } = result;
   return jsonValue({
     ...outcome,
-    snapshot: Schema.encodeSync(BattleSnapshotSchema)(snapshot),
+    envelope: Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+      envelope,
+    ),
   });
 }
 
@@ -450,15 +454,41 @@ function retainScenarioBattlefield(
             session,
             issue: updated.left,
           }
-        : {
-            ...needsHoles,
-            holes: projectGeometryTargetHoles({
+        : (() => {
+            if (needsHoles.envelope.frontier.kind !== "holes") {
+              return {
+                ...needsHoles,
+                session: updated.right,
+              };
+            }
+            const projectedHoles = projectGeometryTargetHoles({
               session,
-              subject: needsHoles.subject,
-              holes: needsHoles.holes,
-            }),
-            session: updated.right,
-          };
+              subject: needsHoles.envelope.frontier.subject,
+              holes: needsHoles.envelope.frontier.holes,
+            });
+            const firstHole = projectedHoles[0];
+            if (firstHole === undefined) {
+              return {
+                ...needsHoles,
+                session: updated.right,
+              };
+            }
+            const holes: ReadonlyNonEmptyArray<BattleHole> = [
+              firstHole,
+              ...projectedHoles.slice(1),
+            ];
+            return {
+              ...needsHoles,
+              envelope: {
+                ...needsHoles.envelope,
+                frontier: {
+                  ...needsHoles.envelope.frontier,
+                  holes,
+                },
+              },
+              session: updated.right,
+            };
+          })();
     }),
     byResolutionTag("invalid", (invalid) => {
       const updated =
@@ -522,7 +552,7 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
           session,
           reason: "invalidFill",
           message: tableSpatialProjectedFills.left.message,
-          snapshot: snapshotBattle(session.battle.state),
+          envelope: currentBattleCheckpointFrontierEnvelope(session.battle),
         };
         return {
           operation: "resolveBattleRuntimeSubject" as const,
@@ -542,7 +572,7 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
           session,
           reason: "invalidFill",
           message: projectedFills.left.message,
-          snapshot: snapshotBattle(session.battle.state),
+          envelope: currentBattleCheckpointFrontierEnvelope(session.battle),
         };
         return {
           operation: "resolveBattleRuntimeSubject" as const,
@@ -562,7 +592,7 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
           session,
           reason: "invalidFill",
           message: attackProjectedFills.left.message,
-          snapshot: snapshotBattle(session.battle.state),
+          envelope: currentBattleCheckpointFrontierEnvelope(session.battle),
         };
         return {
           operation: "resolveBattleRuntimeSubject" as const,
@@ -582,7 +612,7 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
           session,
           reason: "invalidFill",
           message: creatureSpellProjectedFills.left.message,
-          snapshot: snapshotBattle(session.battle.state),
+          envelope: currentBattleCheckpointFrontierEnvelope(session.battle),
         };
         return {
           operation: "resolveBattleRuntimeSubject" as const,

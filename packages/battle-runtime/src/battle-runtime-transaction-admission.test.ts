@@ -48,7 +48,12 @@ function requireHole<Kind extends BattleHole["kind"]>(
   result: NeedsHolesTransactionResult,
   kind: Kind,
 ): Extract<BattleHole, { readonly kind: Kind }> {
-  const hole = result.resolution.holes.find(
+  const frontier = result.resolution.envelope.frontier;
+  const holes: readonly BattleHole[] =
+    frontier.kind === "interruptDecision"
+      ? [frontier.decisionHole]
+      : frontier.holes;
+  const hole = holes.find(
     (candidate): candidate is Extract<BattleHole, { readonly kind: Kind }> =>
       candidate.kind === kind,
   );

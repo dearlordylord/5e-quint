@@ -32,6 +32,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import { describe, expect, it } from "vitest";
 import {
   battleProcedureExecutionRefForSpellHoleForTest,
+  battleFrontierInterruptDecisionForState,
   requireCharacterSpellProcedureRefForTest,
   resolveBattleSubject,
   spellSlotInvocationRef,
@@ -639,16 +640,6 @@ type NeedsHolesResult = Extract<
   { readonly tag: "needsHoles" }
 >;
 
-type TriggeredReactionSpellChoice = Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "nestedProcedure" }
-> & {
-  readonly subject: Extract<
-    BattleInterruptSubject,
-    { readonly command: "castTriggeredReactionSpell" }
-  >;
-};
-
 type StartedMagicMissile = NeedsHolesResult & {
   readonly targetAllocationFill: Extract<
     BattleFill,
@@ -870,6 +861,16 @@ function counterspellTriggerFact(
   };
 }
 
+type TriggeredReactionSpellChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "nestedProcedure" }
+> & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    { readonly command: "castTriggeredReactionSpell" }
+  >;
+};
+
 function requireCounterspellChoice(
   result: NeedsHolesResult,
 ): TriggeredReactionSpellChoice {
@@ -898,33 +899,33 @@ function requireTriggeredReactionSpellChoice(input: {
   readonly procedure: string;
   readonly slotLevel: number;
 }): TriggeredReactionSpellChoice {
-  const choice = input.result.snapshot.pendingInterrupt?.choices.find(
-    (candidate): candidate is TriggeredReactionSpellChoice => {
-      if (
-        candidate.kind !== "nestedProcedure" ||
-        candidate.subject.command !== "castTriggeredReactionSpell" ||
-        candidate.subject.reactorId !== reactorId
-      ) {
-        return false;
-      }
-      const reactor = input.result.state.combatants.get(
-        candidate.subject.reactorId,
-      );
-      if (reactor?.origin.kind !== "character") return false;
-      const binding = characterProcedureBinding(
-        reactor.origin.execution,
-        candidate.subject.procedureRef,
-      );
-      if (binding?.procedure.kind !== "spellInvocation") return false;
-      const execution = binding.procedure.execution;
-      return (
-        execution.procedure === input.procedure &&
-        "resource" in execution &&
-        execution.resource.tag === "spellSlot" &&
-        Number(execution.resource.slotLevel) === input.slotLevel
-      );
-    },
-  );
+  const choice = battleFrontierInterruptDecisionForState(
+    input.result.state,
+  )?.choices.find((candidate): candidate is TriggeredReactionSpellChoice => {
+    if (
+      candidate.kind !== "nestedProcedure" ||
+      candidate.subject.command !== "castTriggeredReactionSpell" ||
+      candidate.subject.reactorId !== reactorId
+    ) {
+      return false;
+    }
+    const reactor = input.result.state.combatants.get(
+      candidate.subject.reactorId,
+    );
+    if (reactor?.origin.kind !== "character") return false;
+    const binding = characterProcedureBinding(
+      reactor.origin.execution,
+      candidate.subject.procedureRef,
+    );
+    if (binding?.procedure.kind !== "spellInvocation") return false;
+    const execution = binding.procedure.execution;
+    return (
+      execution.procedure === input.procedure &&
+      "resource" in execution &&
+      execution.resource.tag === "spellSlot" &&
+      Number(execution.resource.slotLevel) === input.slotLevel
+    );
+  });
   if (choice === undefined) {
     throw new Error(`Expected ${input.spellId} Reaction choice.`);
   }
@@ -935,7 +936,9 @@ function requirePendingReactionTrigger(
   result: NeedsHolesResult,
   trigger: "spellCast" | "afterDamage",
 ): void {
-  if (result.snapshot.pendingInterrupt?.trigger !== trigger) {
+  if (
+    battleFrontierInterruptDecisionForState(result.state)?.trigger !== trigger
+  ) {
     throw new Error(`Expected ${trigger} Reaction window.`);
   }
 }
@@ -1088,7 +1091,8 @@ function reactionCastingTimeProjection(
       3,
     ),
     reactionWindowCleared:
-      state.lastResult !== "init" && snapshot.pendingInterrupt === null,
+      state.lastResult !== "init" &&
+      battleFrontierInterruptDecisionForState(state.battle) === null,
     lastResult: state.lastResult,
   };
 }

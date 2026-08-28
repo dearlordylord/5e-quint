@@ -53,6 +53,7 @@ import {
 } from "./unit-profile-admission-catalog.test-support.ts";
 import type { BattleFill } from "./index.ts";
 import {
+  battleFrontierInterruptDecisionForState,
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
@@ -427,7 +428,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       tag: "resolved",
       snapshot: {
         currentActorId: spellCasterId,
-        turn: { bonusActionAvailable: false },
+        turn: { bonusActionQuotaAvailable: false },
       },
     });
     if (resolved.tag !== "resolved") {
@@ -539,7 +540,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       tag: "resolved",
       snapshot: {
         currentActorId: spellCasterId,
-        turn: { bonusActionAvailable: false },
+        turn: { bonusActionQuotaAvailable: false },
       },
     });
     if (resolved.tag !== "resolved") {
@@ -691,32 +692,32 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
-      snapshot: {
-        pendingInterrupt: {
-          trigger: "saveFailed",
-          choices: [
-            expect.objectContaining({
-              kind: "nestedProcedure",
-              subject: expect.objectContaining({
-                command: "releaseReadiedSpell",
-                readiedSpellCasterId: spellTargetId,
-              }),
-            }),
-          ],
-        },
-      },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected failed ram save reaction.");
     }
-    const pendingInterrupt = awaitingReaction.snapshot.pendingInterrupt;
-    if (pendingInterrupt === null) {
+    const interruptFrontier = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    );
+    expect(interruptFrontier).toMatchObject({
+      trigger: "saveFailed",
+      choices: [
+        expect.objectContaining({
+          kind: "nestedProcedure",
+          subject: expect.objectContaining({
+            command: "releaseReadiedSpell",
+            readiedSpellCasterId: spellTargetId,
+          }),
+        }),
+      ],
+    });
+    if (interruptFrontier === null) {
       throw new Error("Expected a pending failed-save interrupt.");
     }
 
     const afterDecline = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: interruptDecisionFill(pendingInterrupt.decisionHole, {
+      fill: interruptDecisionFill(interruptFrontier.decisionHole, {
         kind: "decline",
         responderId: spellTargetId,
       }),
@@ -725,8 +726,13 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     expect(afterDecline).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "rolledDice" }],
-      snapshot: { pendingInterrupt: null },
     });
+    if (afterDecline.tag !== "needsHoles") {
+      throw new Error("Expected declined Flaming Sphere ram to need damage.");
+    }
+    expect(
+      battleFrontierInterruptDecisionForState(afterDecline.state),
+    ).toBeNull();
   });
   test("failed table-triggered Flaming Sphere save opens a readied-spell Reaction", () => {
     const spell = spellRecord(flamingSphereUnitId);
@@ -779,13 +785,15 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Flaming Sphere save Reaction.");
     }
-    const pendingInterrupt = awaitingReaction.snapshot.pendingInterrupt;
-    if (pendingInterrupt === null) {
+    const interruptFrontier = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    );
+    if (interruptFrontier === null) {
       throw new Error("Expected a pending failed-save interrupt.");
     }
     const declined = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: interruptDecisionFill(pendingInterrupt.decisionHole, {
+      fill: interruptDecisionFill(interruptFrontier.decisionHole, {
         kind: "decline",
         responderId: spellTargetId,
       }),
@@ -793,8 +801,11 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     expect(declined).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "rolledDice" }],
-      snapshot: { pendingInterrupt: null },
     });
+    if (declined.tag !== "needsHoles") {
+      throw new Error("Expected declined Flaming Sphere save to need damage.");
+    }
+    expect(battleFrontierInterruptDecisionForState(declined.state)).toBeNull();
   });
 
   test("ram discovery includes the caster as a creature-space target", () => {

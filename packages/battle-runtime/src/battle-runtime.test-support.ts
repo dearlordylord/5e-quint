@@ -200,7 +200,11 @@ import {
   battleObscurementZones,
   battleReactionRollOrDamageReductionSupportForUnit,
   BattleSnapshotSchema,
+  BattleCheckpointFrontierEnvelopeSchema,
   BattleSubjectSchema,
+  battleCheckpointFrontierEnvelope,
+  battleFrontierInterruptDecision,
+  battleFrontierInterruptDecisionForState,
   battleTablePositionId,
   battleUnitSupportProfilesForUnit,
   breakBattleConcentration,
@@ -2300,27 +2304,38 @@ export function assertBattleSnapshotCodecRoundTripForTest(
   );
 }
 
-export function assertBattleSnapshotCodecAcceptsHolesForSubjectForTest(input: {
+export function assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest(input: {
   readonly snapshot: Schema.Schema.Type<typeof BattleSnapshotSchema>;
   readonly subject: BattleSubject;
   readonly holes: readonly BattleHole[];
 }): void {
-  const actIndex = input.snapshot.acts.findIndex((act) =>
-    sameBattleSubject(act.subject, input.subject),
-  );
-  const acts =
-    actIndex < 0
-      ? [
-          ...input.snapshot.acts,
-          { subject: input.subject, initialHoles: input.holes },
-        ]
-      : input.snapshot.acts.map((act, index) =>
-          index === actIndex ? { ...act, initialHoles: input.holes } : act,
-        );
-  Schema.decodeUnknownSync(BattleSnapshotSchema)({
-    ...Schema.encodeSync(BattleSnapshotSchema)(input.snapshot),
-    acts,
+  const firstHole = input.holes[0];
+  const frontier =
+    firstHole === undefined
+      ? { kind: "acts" as const, acts: [] }
+      : {
+          kind: "holes" as const,
+          subject: input.subject,
+          holes: [firstHole, ...input.holes.slice(1)] as [
+            BattleHole,
+            ...BattleHole[],
+          ],
+          continuation: { kind: "ordinaryReplay" as const },
+        };
+  Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)({
+    checkpoint: Schema.encodeSync(BattleSnapshotSchema)(input.snapshot),
+    frontier,
   });
+}
+
+/** Read interrupt choices through the runtime-owned frontier for a mechanical result. */
+export function battleFrontierInterruptDecisionFromResolution(
+  result: ReturnType<typeof resolveBattleSubjectRuntime>,
+): ReturnType<typeof battleFrontierInterruptDecision> {
+  if (result.tag === "invalid") {
+    return null;
+  }
+  return battleFrontierInterruptDecisionForState(result.state);
 }
 
 function bindSelectedSpellSpatialFactsForTest(
@@ -4822,7 +4837,7 @@ export function resolveGoblinScimitarHitReduction(input: {
     throw new Error("Expected attack-hit Reaction window.");
   }
   const choice = reactionModifierChoice(
-    setup.result.snapshot.pendingInterrupt!.choices,
+    battleFrontierInterruptDecisionForState(setup.result.state)!.choices,
     input.unitId,
     "attackDamageReduction",
   );
@@ -4872,7 +4887,7 @@ export function resolveGoblinScimitarHitReduction(input: {
     return result;
   }
   if (
-    result.snapshot.pendingInterrupt === null &&
+    battleFrontierInterruptDecisionForState(result.state) === null &&
     !result.holes.some((hole) => hole.kind === "concentrationSavingThrow")
   ) {
     throw new Error("Expected attack-damage Reaction or Concentration window.");
@@ -4883,7 +4898,7 @@ export function resolveGoblinScimitarHitReduction(input: {
 export function reactionModifierChoice(
   choices: ReadonlyArray<
     NonNullable<
-      ReturnType<typeof snapshotBattle>["pendingInterrupt"]
+      ReturnType<typeof battleFrontierInterruptDecision>
     >["choices"][number]
   >,
   unitId: string,
@@ -4930,7 +4945,7 @@ export function reactionModifierReductionRollFill(
 export function reactionChoiceWithSubject(
   choices: ReadonlyArray<
     NonNullable<
-      ReturnType<typeof snapshotBattle>["pendingInterrupt"]
+      ReturnType<typeof battleFrontierInterruptDecision>
     >["choices"][number]
   >,
 ) {
@@ -5931,7 +5946,11 @@ export {
   battleObscurementZones,
   battleReactionRollOrDamageReductionSupportForUnit,
   BattleSnapshotSchema,
+  BattleCheckpointFrontierEnvelopeSchema,
   BattleSubjectSchema,
+  battleCheckpointFrontierEnvelope,
+  battleFrontierInterruptDecision,
+  battleFrontierInterruptDecisionForState,
   battleTablePositionId,
   battleUnitSupportProfilesForUnit,
   breakBattleConcentration,

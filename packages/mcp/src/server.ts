@@ -28,11 +28,6 @@ import { Either } from "effect";
 import type { ProtocolToolDefinition } from "./tool-definition-contract.ts";
 
 export {
-  battleCreatureInitFromCharacterBuild,
-  startBattleFromCharacterBuildAndStatBlock,
-  type CharacterBuildCreatureInput,
-} from "@dnd/character-battle-runtime";
-export {
   battleToolDefinitions,
   handleBattleToolCall,
   isBattleToolName,
@@ -67,7 +62,6 @@ export {
 export {
   createMcpSessionStore,
   type AvailableCharacterSession,
-  type BattleFillSession,
   type CharacterSession,
   type InBattleCharacterSession,
   type McpSessionSnapshot,

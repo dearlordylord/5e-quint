@@ -6,6 +6,7 @@ import {
   battleId,
   battleObjectId,
   battleProcedureExecutionRefForSpellHoleForTest,
+  battleFrontierInterruptDecisionForState,
   cantripSpellInvocationRef,
   characterSeed,
   damageRollFill,
@@ -135,7 +136,9 @@ export function resolveReadiedFireBoltObjectScenario(input: {
       ],
     }),
   );
-  const pendingInterrupt = awaitingRelease.snapshot.pendingInterrupt;
+  const pendingInterrupt = battleFrontierInterruptDecisionForState(
+    awaitingRelease.state,
+  );
   if (pendingInterrupt === null) {
     throw new Error("Expected an attack-hit interrupt checkpoint.");
   }

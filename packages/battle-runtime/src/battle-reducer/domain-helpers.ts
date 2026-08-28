@@ -2,8 +2,13 @@
 // RAW-COVERAGE: runtime-owner RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001
 
 import * as Either from "effect/Either";
+import { Match } from "effect";
 import type { CreatureType } from "@dnd/shared/game-facts";
-import { difficultyClass, type DifficultyClass } from "@dnd/shared/types";
+import {
+  difficultyClass,
+  type DifficultyClass,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import type {
   BattleCreatureState,
   BattleStateInitIssue,
@@ -42,6 +47,37 @@ export function battleStateInitIssueMessage(
     : issue.tag === "battleStateInitIssues"
       ? issue.issues.map(battleStateInitIssueMessage).join("; ")
       : issue.message;
+}
+
+export function battleStateInitIssueLeaves(
+  issue: BattleStateInitIssue,
+): ReadonlyNonEmptyArray<BattleStateInitLeafIssue> {
+  return Match.value(issue).pipe(
+    Match.when({ tag: "battleStateInitIssues" }, ({ issues }) => {
+      const [firstIssue, ...restIssues] = issues;
+      return prependBattleStateInitLeaves(
+        battleStateInitIssueLeaves(firstIssue),
+        restIssues.flatMap(battleStateInitIssueLeaves),
+      );
+    }),
+    Match.when({ tag: "battleStateInitIssue" }, battleStateInitLeafList),
+    Match.when({ tag: "weaponLoadoutMismatch" }, battleStateInitLeafList),
+    Match.exhaustive,
+  );
+}
+
+function battleStateInitLeafList(
+  leaf: BattleStateInitLeafIssue,
+): ReadonlyNonEmptyArray<BattleStateInitLeafIssue> {
+  return [leaf];
+}
+
+function prependBattleStateInitLeaves(
+  first: ReadonlyNonEmptyArray<BattleStateInitLeafIssue>,
+  rest: readonly BattleStateInitLeafIssue[],
+): ReadonlyNonEmptyArray<BattleStateInitLeafIssue> {
+  const [firstLeaf, ...restLeaves] = first;
+  return [firstLeaf, ...restLeaves, ...rest];
 }
 
 export function battleStateInitIssues(

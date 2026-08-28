@@ -12,6 +12,7 @@ import type {
   BattleState,
   GlyphStoredSpellReleaseReplayContext,
 } from "../battle-state-execution.ts";
+import { DURABLE_CONTINUATION_CHECKPOINT_BOUNDARY } from "../battle-state-execution.ts";
 import { battleContinuationFillEquals } from "./battle-fill-equality.ts";
 import {
   currentInterruptCheckpoint,
@@ -237,10 +238,7 @@ export function resolveReplayContinuationFromState(
       ),
     ),
   );
-  if (
-    result.tag !== "needsHoles" ||
-    replayChangedInterruptStackDepth(input.state, result.state)
-  ) {
+  if (result.tag !== "needsHoles" || result.checkpointBoundary !== undefined) {
     return result.tag === "resolved"
       ? mergeObjectOutcomeResult(result, input.continuation.objectOutcomes)
       : result;
@@ -262,6 +260,7 @@ export function resolveReplayContinuationFromState(
       ...result,
       state: pendingState,
       snapshot: snapshotBattle(pendingState),
+      checkpointBoundary: DURABLE_CONTINUATION_CHECKPOINT_BOUNDARY,
     };
   }
   const pendingState = {
@@ -293,16 +292,6 @@ function admitReplayContinuationSubject(
     interruptRouteOptions,
     [admittedReplayContinuationSubject]: true,
   };
-}
-
-function replayChangedInterruptStackDepth(
-  stateBeforeReplay: BattleState,
-  stateAfterReplay: BattleState,
-): boolean {
-  return (
-    stateAfterReplay.interruptStack.length !==
-    stateBeforeReplay.interruptStack.length
-  );
 }
 
 function replayInterruptRouteOptions(
@@ -353,11 +342,12 @@ function resolveGlyphStoredSpellReplayContinuationFromState(
     );
   }
   if (result.tag === "needsHoles") {
-    if (replayChangedInterruptStackDepth(input.state, result.state)) {
+    if (result.checkpointBoundary !== undefined) {
       return needsHolesResult(
         result.state,
         input.continuation.subject,
         result.holes,
+        result.checkpointBoundary,
       );
     }
     const pendingState = {
@@ -374,6 +364,7 @@ function resolveGlyphStoredSpellReplayContinuationFromState(
       pendingState,
       input.continuation.subject,
       result.holes,
+      DURABLE_CONTINUATION_CHECKPOINT_BOUNDARY,
     );
   }
   if (result.tag === "notFound") {

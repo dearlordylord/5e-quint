@@ -8,7 +8,8 @@ import {
   requireCounterspellProcedureRef,
   requireHole,
   requireNeedsHoles,
-  requireNeedsReaction
+  requireNeedsReaction,
+  requireResultHole
 } from "./wizard-battle-demo-runtime.ts"
 
 describe("wizard battle demo runtime guards", () => {
@@ -37,7 +38,7 @@ describe("wizard battle demo runtime guards", () => {
       requireNeedsReaction(
         {
           tag: "needsHoles",
-          snapshot: { pendingInterrupt: undefined }
+          envelope: { checkpoint: {}, frontier: { kind: "acts", acts: [] } }
         } as never,
         "Expected a spell-cast Reaction."
       )
@@ -46,8 +47,14 @@ describe("wizard battle demo runtime guards", () => {
       requireCounterspellChoice(
         {
           tag: "needsHoles",
-          snapshot: {
-            pendingInterrupt: { choices: [] }
+          envelope: {
+            checkpoint: {},
+            frontier: {
+              kind: "interruptDecision",
+              trigger: "spellCast",
+              decisionHole: {},
+              choices: []
+            }
           }
         } as never,
         {
@@ -57,12 +64,17 @@ describe("wizard battle demo runtime guards", () => {
         }
       )
     ).toThrow("Expected Counterspell Reaction choice.")
+    // These malformed envelopes inject protocol mismatches that the result union normally prevents.
     expect(() =>
       requireCounterspellChoice(
         {
           tag: "needsHoles",
-          snapshot: {
-            pendingInterrupt: {
+          envelope: {
+            checkpoint: {},
+            frontier: {
+              kind: "interruptDecision",
+              trigger: "spellCast",
+              decisionHole: {},
               choices: [{ kind: "synthetic:not-counterspell" }]
             }
           }
@@ -74,5 +86,39 @@ describe("wizard battle demo runtime guards", () => {
         }
       )
     ).toThrow("Expected Counterspell Reaction choice.")
+    expect(() =>
+      requireCounterspellChoice(
+        {
+          tag: "needsHoles",
+          envelope: { checkpoint: {}, frontier: { kind: "acts", acts: [] } }
+        } as never,
+        {
+          reactorId: combatantId("synthetic:reactor"),
+          slotLevel: 3,
+          spellId: "synthetic:counterspell"
+        }
+      )
+    ).toThrow("Expected Counterspell Reaction choice.")
+    expect(() =>
+      requireResultHole(
+        {
+          tag: "needsHoles",
+          envelope: { checkpoint: {}, frontier: { kind: "holes", holes: [] } }
+        } as never,
+        "interruptDecision"
+      )
+    ).toThrow("Expected interruptDecision hole.")
+    expect(() =>
+      requireResultHole(
+        {
+          tag: "needsHoles",
+          envelope: {
+            checkpoint: {},
+            frontier: { kind: "interruptDecision", decisionHole: {}, choices: [] }
+          }
+        } as never,
+        "rolledDice"
+      )
+    ).toThrow("Expected rolledDice hole.")
   })
 })

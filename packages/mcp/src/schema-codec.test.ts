@@ -2,6 +2,7 @@ import fc from "fast-check";
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
+import { MODEL_OUTPUT_SCHEMA_MAX_DEPTH } from "./model-output-json-schema.ts";
 import {
   mcpObjectJsonSchema,
   mcpObjectJsonSchemaWithCopiedObjects,
@@ -231,5 +232,71 @@ describe("MCP model output JSON Schema", () => {
         },
       ],
     });
+  });
+
+  test("keys bounded projections by their depth without widening the default", () => {
+    const codec = Schema.Struct({
+      envelope: Schema.Struct({
+        frontier: Schema.Struct({
+          acts: Schema.Array(
+            Schema.Struct({
+              subject: Schema.String,
+              initialHoles: Schema.Array(Schema.String),
+            }),
+          ),
+        }),
+      }),
+    });
+
+    const defaultProjection = mcpModelOutputJsonSchema(codec);
+    const battleProjection = mcpModelOutputJsonSchema(codec, {
+      maxDepth: MODEL_OUTPUT_SCHEMA_MAX_DEPTH,
+    });
+
+    expect(defaultProjection).toMatchObject({
+      properties: {
+        envelope: {
+          properties: {
+            frontier: {
+              properties: {
+                acts: { type: "array", items: { type: "object" } },
+              },
+            },
+          },
+        },
+      },
+    });
+    expect(battleProjection).toMatchObject({
+      properties: {
+        envelope: {
+          properties: {
+            frontier: {
+              properties: {
+                acts: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      subject: { type: "string" },
+                      initialHoles: { type: "array" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+    expect(defaultProjection).not.toHaveProperty(
+      "properties.envelope.properties.frontier.properties.acts.items.properties",
+    );
+    expect(battleProjection).not.toBe(defaultProjection);
+    expect(mcpModelOutputJsonSchema(codec)).toBe(defaultProjection);
+    expect(
+      mcpModelOutputJsonSchema(codec, {
+        maxDepth: MODEL_OUTPUT_SCHEMA_MAX_DEPTH,
+      }),
+    ).toBe(battleProjection);
   });
 });

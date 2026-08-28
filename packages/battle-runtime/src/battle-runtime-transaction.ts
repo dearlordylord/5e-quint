@@ -12,6 +12,8 @@ import {
   resolveBattleRuntimeInterrupt,
   openCreatureFallsRuntimeInterruptWindow,
   resolveBattleRuntimeSubject,
+  battleCheckpointFrontierEnvelope,
+  type BattleCheckpointFrontierEnvelope,
   type BattleRuntimeResolutionResult,
 } from "./battle-session-execution.ts";
 import {
@@ -28,7 +30,7 @@ import {
 import { optionalProperty } from "./optional-property.ts";
 import {
   currentInterruptCheckpoint,
-  interruptDecisionHole,
+  interruptDecisionFrontier,
   snapshotBattle,
 } from "./battle-reducer/battle-snapshot.ts";
 import { currentActorId } from "./battle-reducer/creature-state-leaves.ts";
@@ -81,6 +83,20 @@ export type BattlePendingTransactionSessionView =
   | {
       readonly tag: "valid";
       readonly view: BattlePendingTransactionView;
+    }
+  | { readonly tag: "foreignTransaction" }
+  | { readonly tag: "transactionSessionMismatch" };
+
+/**
+ * The runtime-owned envelope for a transaction's current layer.  The
+ * transaction remains opaque; callers receive only the envelope after the
+ * runtime checks that the token belongs to this runtime and this exact
+ * session.
+ */
+export type BattlePendingTransactionEnvelopeSessionView =
+  | {
+      readonly tag: "valid";
+      readonly envelope: BattleCheckpointFrontierEnvelope;
     }
   | { readonly tag: "foreignTransaction" }
   | { readonly tag: "transactionSessionMismatch" };
@@ -281,6 +297,9 @@ export type BattleRuntimeTransactionDefect =
       readonly tag: "emptyHoleFrontier";
     }
   | {
+      readonly tag: "interruptFrontierMissingCheckpoint";
+    }
+  | {
       readonly tag: "mechanicalFrontierProjection";
       readonly issue: BattleMechanicalFrontierIssue;
     }
@@ -396,6 +415,43 @@ export function battlePendingTransactionViewForSession(
         view: transactionView(transactionData),
       }
     : { tag: "transactionSessionMismatch" };
+}
+
+/**
+ * Project the current transaction layer through the runtime-owned checkpoint
+ * envelope.  Ordinary holes are retained by the opaque token rather than
+ * inferred from reducer state, which intentionally has no ordinary pending
+ * continuation field.  Interrupt decisions still come from the canonical
+ * reducer frontier because the token does not expose authored choices.
+ */
+export function battlePendingTransactionEnvelopeForSession(
+  transaction: BattlePendingTransaction,
+  session: BattleRuntimeSession,
+): BattlePendingTransactionEnvelopeSessionView {
+  const data = lookupBattleRuntimeTransaction(transaction);
+  if (Option.isNone(data)) return { tag: "foreignTransaction" };
+  const transactionData = data.value;
+  if (transactionData.currentSession !== session) {
+    return { tag: "transactionSessionMismatch" };
+  }
+  if (isInterruptFrontier(transactionData.holes)) {
+    return {
+      tag: "valid",
+      envelope: battleCheckpointFrontierEnvelope(session.state),
+    };
+  }
+  return {
+    tag: "valid",
+    envelope: {
+      checkpoint: snapshotBattle(session.state),
+      frontier: {
+        kind: "holes",
+        subject: transactionData.subject,
+        holes: transactionData.holes,
+        continuation: { kind: "ordinaryReplay" },
+      },
+    },
+  };
 }
 
 function lookupBattleRuntimeTransaction(
@@ -644,7 +700,7 @@ function resolveOperation(input: {
       const pending = pendingLookup.value;
       if (sameBattleSubject(pending.subject, subject)) {
         return resolveBattleRuntimeSubject({
-          session: pending.baseSession,
+          session: battleTransactionReplaySession(pending),
           subject: pending.subject,
           fills: appendFills(pending.fills, fills),
           ...optionalProperty("statBlockCatalog", input.statBlockCatalog),
@@ -665,6 +721,15 @@ function resolveOperation(input: {
     }),
     Match.exhaustive,
   );
+}
+
+function battleTransactionReplaySession(
+  transaction: BattlePendingTransactionData,
+): BattleRuntimeSession {
+  return transaction.currentSession.state.subjectResolutionPhase.kind ===
+    "subjectContinuation"
+    ? transaction.currentSession
+    : transaction.baseSession;
 }
 
 function validateTransaction(input: {
@@ -723,13 +788,31 @@ function transactionNeedsHolesResult(
   },
   resolution: NeedsHolesResolution,
 ): BattleRuntimeTransactionResult {
-  const holes = nonEmptyHoles(resolution.holes);
+  const frontier = resolution.envelope.frontier;
+  const holes =
+    frontier.kind === "interruptDecision"
+      ? ([frontier.decisionHole] as const)
+      : nonEmptyHoles(frontier.holes);
   if (holes === undefined) {
     return transactionDefectResult(resolution, {
       tag: "emptyHoleFrontier",
     });
   }
-  const transaction = transactionForNeedsHoles(input, resolution, holes);
+  const subject =
+    frontier.kind === "holes"
+      ? frontier.subject
+      : interruptedProcedureSubjectFromState(resolution.session.state);
+  if (subject === null) {
+    return transactionDefectResult(resolution, {
+      tag: "interruptFrontierMissingCheckpoint",
+    });
+  }
+  const transaction = transactionForNeedsHoles(
+    input,
+    resolution,
+    holes,
+    subject,
+  );
   return projectPendingTransactionFrontier(resolution, transaction);
 }
 
@@ -744,7 +827,7 @@ function projectPendingTransactionFrontier(
     });
   }
   const projected = battleMechanicalFrontier({
-    result: resolution,
+    result: resolution.envelope.frontier,
     acceptedFills: transactionLookup.value.fills,
   });
   if (Either.isLeft(projected)) {
@@ -761,6 +844,15 @@ function projectPendingTransactionFrontier(
   };
 }
 
+function interruptedProcedureSubjectFromState(
+  state: BattleRuntimeSession["state"],
+): BattleSubject | null {
+  const checkpoint = currentInterruptCheckpoint(state);
+  return checkpoint === null
+    ? null
+    : interruptedProcedureSubject(checkpoint.continuation);
+}
+
 function transactionForNeedsHoles(
   input: {
     readonly session: BattleRuntimeSession;
@@ -769,6 +861,7 @@ function transactionForNeedsHoles(
   },
   resolution: NeedsHolesResolution,
   holes: ReadonlyNonEmptyArray<BattleHole>,
+  subject: BattleSubject,
 ): BattlePendingTransaction {
   return Match.value(input.operation).pipe(
     Match.when({ kind: "ordinarySubject" }, ({ subject, fills }) => {
@@ -780,11 +873,11 @@ function transactionForNeedsHoles(
         return createBattlePendingTransaction({
           baseSession: input.session,
           currentSession: resolution.session,
-          subject: resolution.subject,
+          subject,
           fills,
           holes,
           parent: null,
-          completion: completionForSubject(resolution.subject),
+          completion: completionForSubject(subject),
         });
       }
       const pending = pendingLookup.value;
@@ -792,7 +885,7 @@ function transactionForNeedsHoles(
         return createBattlePendingTransaction({
           baseSession: pending.baseSession,
           currentSession: resolution.session,
-          subject: resolution.subject,
+          subject,
           fills: appendFills(pending.fills, fills),
           holes,
           parent: pending.parent,
@@ -802,11 +895,11 @@ function transactionForNeedsHoles(
       return createBattlePendingTransaction({
         baseSession: resolution.session,
         currentSession: resolution.session,
-        subject: resolution.subject,
+        subject,
         fills,
         holes,
         parent: input.transaction,
-        completion: completionForSubject(resolution.subject),
+        completion: completionForSubject(subject),
       });
     }),
     Match.when({ kind: "interruptDecision" }, ({ fill }) => {
@@ -815,11 +908,11 @@ function transactionForNeedsHoles(
         return createBattlePendingTransaction({
           baseSession: resolution.session,
           currentSession: resolution.session,
-          subject: resolution.subject,
+          subject,
           fills: acceptedFillsForInterrupt(fill),
           holes,
           parent: null,
-          completion: completionForSubject(resolution.subject),
+          completion: completionForSubject(subject),
         });
       }
       const pendingDataLookup = lookupBattleRuntimeTransaction(pending);
@@ -827,15 +920,35 @@ function transactionForNeedsHoles(
         return createBattlePendingTransaction({
           baseSession: resolution.session,
           currentSession: resolution.session,
-          subject: resolution.subject,
+          subject,
           fills: acceptedFillsForInterrupt(fill),
           holes,
           parent: null,
-          completion: completionForSubject(resolution.subject),
+          completion: completionForSubject(subject),
         });
       }
       const pendingData = pendingDataLookup.value;
-      return sameBattleSubject(pendingData.subject, resolution.subject)
+      const ancestor = ancestorTransactionForSubject(
+        pendingData.parent,
+        subject,
+      );
+      if (ancestor !== null) {
+        // Completing a nested interrupt can expose the ordinary frontier of
+        // an ancestor layer. Rehydrate that owner so its canonical replay
+        // fills (for example, an attack target and roll) remain attached to
+        // the continuation. Nested choice fills have already been consumed
+        // by the reducer and must not become a new ancestor replay prefix.
+        return createBattlePendingTransaction({
+          baseSession: ancestor.data.baseSession,
+          currentSession: resolution.session,
+          subject: ancestor.data.subject,
+          fills: ancestor.data.fills,
+          holes,
+          parent: ancestor.data.parent,
+          completion: ancestor.data.completion,
+        });
+      }
+      return sameBattleSubject(pendingData.subject, subject)
         ? createBattlePendingTransaction({
             baseSession: pendingData.baseSession,
             currentSession: resolution.session,
@@ -848,15 +961,31 @@ function transactionForNeedsHoles(
         : createBattlePendingTransaction({
             baseSession: resolution.session,
             currentSession: resolution.session,
-            subject: resolution.subject,
+            subject,
             fills: acceptedFillsForInterrupt(fill),
             holes,
             parent: pending,
-            completion: completionForSubject(resolution.subject),
+            completion: completionForSubject(subject),
           });
     }),
     Match.exhaustive,
   );
+}
+
+function ancestorTransactionForSubject(
+  transaction: BattlePendingTransaction | null,
+  subject: BattleSubject,
+): { readonly data: BattlePendingTransactionData } | null {
+  let cursor = transaction;
+  while (cursor !== null) {
+    const data = lookupBattleRuntimeTransaction(cursor);
+    if (Option.isNone(data)) return null;
+    if (sameBattleSubject(data.value.subject, subject)) {
+      return { data: data.value };
+    }
+    cursor = data.value.parent;
+  }
+  return null;
 }
 
 function settleResolvedTransaction(input: {
@@ -1015,16 +1144,28 @@ function refreshParentFrontier(input: {
     ownership.tag !== "interruptFrontier" ||
     currentIdentity !== ownership.checkpoint
   ) {
+    const currentFrontier = interruptDecisionFrontier(
+      input.resolution.session.state,
+    );
+    if (currentFrontier === null) {
+      return {
+        tag: "ownerRetained",
+        result: transactionDefectResult(input.resolution, {
+          tag: "interruptFrontierMissingCheckpoint",
+        }),
+      };
+    }
     const nestedSubject = interruptedProcedureSubject(
       currentFrame.continuation,
     );
-    const nestedHoles = [interruptDecisionHole(currentFrame)] as const;
+    const nestedHoles = [currentFrontier.decisionHole] as const;
     const nestedResolution: NeedsHolesResolution = {
       tag: "needsHoles",
       session: input.resolution.session,
-      subject: nestedSubject,
-      holes: nestedHoles,
-      snapshot: snapshotBattle(input.resolution.session.state),
+      envelope: {
+        checkpoint: snapshotBattle(input.resolution.session.state),
+        frontier: currentFrontier,
+      },
     };
     const nestedTransaction = createBattlePendingTransaction({
       baseSession: input.resolution.session,
@@ -1044,16 +1185,28 @@ function refreshParentFrontier(input: {
     };
   }
 
-  const refreshedHoles = [interruptDecisionHole(currentFrame)] as const;
+  const currentFrontier = interruptDecisionFrontier(
+    input.resolution.session.state,
+  );
+  if (currentFrontier === null) {
+    return {
+      tag: "ownerRetained",
+      result: transactionDefectResult(input.resolution, {
+        tag: "interruptFrontierMissingCheckpoint",
+      }),
+    };
+  }
+  const refreshedHoles = [currentFrontier.decisionHole] as const;
   // The parent subject was not consumed by the one-shot overlay. Its frontier
   // is the current, reconciled checkpoint in the post-overlay session; the
   // parent layer retains only its accepted subject fills and completion mode.
   const refreshedResolution: NeedsHolesResolution = {
     tag: "needsHoles",
     session: input.resolution.session,
-    subject: parentData.subject,
-    holes: refreshedHoles,
-    snapshot: snapshotBattle(input.resolution.session.state),
+    envelope: {
+      checkpoint: snapshotBattle(input.resolution.session.state),
+      frontier: currentFrontier,
+    },
   };
   const refreshedTransaction = createBattlePendingTransaction({
     baseSession: parentData.baseSession,
@@ -1110,7 +1263,11 @@ function resumePendingLayer(input: {
       result: transactionInvalidResult(invalid, input.transaction),
     })),
     Match.when({ tag: "needsHoles" }, (needsHoles) => {
-      const holes = nonEmptyHoles(needsHoles.holes);
+      const frontier = needsHoles.envelope.frontier;
+      const holes =
+        frontier.kind === "interruptDecision"
+          ? ([frontier.decisionHole] as const)
+          : nonEmptyHoles(frontier.holes);
       if (holes === undefined) {
         return {
           tag: "result" as const,
@@ -1119,14 +1276,23 @@ function resumePendingLayer(input: {
           }),
         };
       }
-      const nextTransaction = sameBattleSubject(
-        data.subject,
-        needsHoles.subject,
-      )
+      const subject =
+        frontier.kind === "holes"
+          ? frontier.subject
+          : interruptedProcedureSubjectFromState(needsHoles.session.state);
+      if (subject === null) {
+        return {
+          tag: "result" as const,
+          result: transactionDefectResult(input.resolution, {
+            tag: "interruptFrontierMissingCheckpoint",
+          }),
+        };
+      }
+      const nextTransaction = sameBattleSubject(data.subject, subject)
         ? createBattlePendingTransaction({
             baseSession: data.baseSession,
             currentSession: needsHoles.session,
-            subject: needsHoles.subject,
+            subject,
             fills: data.fills,
             holes,
             parent: data.parent,
@@ -1135,11 +1301,11 @@ function resumePendingLayer(input: {
         : createBattlePendingTransaction({
             baseSession: needsHoles.session,
             currentSession: needsHoles.session,
-            subject: needsHoles.subject,
+            subject,
             fills: [],
             holes,
             parent: input.transaction,
-            completion: completionForSubject(needsHoles.subject),
+            completion: completionForSubject(subject),
           });
       const nextDataLookup = lookupBattleRuntimeTransaction(nextTransaction);
       if (Option.isNone(nextDataLookup)) {
@@ -1152,7 +1318,7 @@ function resumePendingLayer(input: {
       }
       const nextData = nextDataLookup.value;
       const projected = battleMechanicalFrontier({
-        result: needsHoles,
+        result: needsHoles.envelope.frontier,
         acceptedFills: nextData.fills,
       });
       if (Either.isLeft(projected)) {
@@ -1247,7 +1413,7 @@ function invalidTransactionResolution(
     session,
     reason: "staleSubject",
     message,
-    snapshot: snapshotBattle(session.state),
+    envelope: battleCheckpointFrontierEnvelope(session.state),
   };
 }
 

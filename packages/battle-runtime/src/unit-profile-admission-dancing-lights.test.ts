@@ -1,5 +1,8 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleFrontierInterruptDecisionForState,
+  requireCharacterSpellProcedureRefForTest,
+} from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV88A dancing_lights
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-dancing-lights-movable-dim-light
@@ -278,35 +281,43 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       tag: "needsHoles",
       holes: [{ kind: "interruptDecision", trigger: "spellCast" }],
       snapshot: {
-        pendingInterrupt: {
-          trigger: "spellCast",
-          choices: [
-            expect.objectContaining({
-              kind: "nestedProcedure",
-              subject: expect.objectContaining({
-                command: "releaseReadiedSpell",
-                readiedSpellCasterId: spellTargetId,
-              }),
-            }),
-          ],
-        },
         lightEmitters: [],
       },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Dancing Lights spell-cast reaction window.");
     }
+    const reactionFrontier = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    );
+    expect(reactionFrontier).toMatchObject({
+      trigger: "spellCast",
+      choices: [
+        expect.objectContaining({
+          kind: "nestedProcedure",
+          subject: expect.objectContaining({
+            command: "releaseReadiedSpell",
+            readiedSpellCasterId: spellTargetId,
+          }),
+        }),
+      ],
+    });
+    if (reactionFrontier === null) {
+      throw new Error("Expected Dancing Lights reaction frontier.");
+    }
     const afterDecline = resolveBattleInterrupt({
       state: awaitingReaction.state,
-      fill: interruptDecisionFill(
-        awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
-        { kind: "decline", responderId: spellTargetId },
-      ),
+      fill: interruptDecisionFill(reactionFrontier.decisionHole, {
+        kind: "decline",
+        responderId: spellTargetId,
+      }),
     });
     if (afterDecline.tag !== "resolved") {
       throw new Error("Expected declined reaction to replay Dancing Lights.");
     }
-    expect(afterDecline.snapshot.pendingInterrupt).toBeNull();
+    expect(
+      battleFrontierInterruptDecisionForState(afterDecline.state),
+    ).toBeNull();
     expect(afterDecline.snapshot.lightEmitters).toHaveLength(2);
     expect(
       canSpendAction(afterDecline.state.currentTurnResources, "magic"),

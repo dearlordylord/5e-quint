@@ -38,13 +38,16 @@ not a voter or an admission subsystem.
    mise exec -- pnpm raw-swarm:catalogue -- --json
    ```
 
-   The admitted projection is derived from `.scenario.json` records and their
-   referenced authored source, final review, and stage-facts authorities.
+   The live admitted projection is derived from direct `.scenario.json` records
+   and their referenced authored source, final review, and stage-facts
+   authorities. Contained Scenario authorities remain available for historical
+   and frozen-admission validation but are excluded from this authoring
+   projection and live comparison; see the [package vocabulary](README.md#vocabulary).
    Current admission records also retain the exact predecessor Scenario ids
    observed at that admission boundary; catalogue rendering validates their
    retained comparison against that boundary rather than against the newly
-   admitted record itself. Historical records remain readable as historical
-   evidence and cannot authorize a current comparison.
+   admitted record itself. A contained authority cannot authorize a new current
+   comparison.
    Rejected Candidates are diagnostic evidence and are not comparison targets.
    If the command fails, stop and repair the authority read; do not proceed
    with a partial, sampled, cached, or hand-written catalogue.

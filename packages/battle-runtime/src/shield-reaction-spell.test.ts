@@ -48,6 +48,7 @@ import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts"
 import { completeReactionSpellSlotCast } from "./battle-reducer/reaction-spell-resolution.ts";
 import {
   resolveBattleSubject,
+  battleFrontierInterruptDecisionForState,
   characterSpellInvocationRefForProcedureRefForTest,
   opportunityAttackProcedureSelectionForTest,
 } from "./battle-runtime.test-support.ts";
@@ -103,17 +104,20 @@ describe("Shield Reaction spell", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Shield to open an attack-hit Reaction window.");
     }
-    const reactionChoice =
-      awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-        (choice) =>
-          choice.kind === "nestedProcedure" &&
-          choice.subject.command === "castTriggeredReactionSpell",
-      );
+    expect(
+      battleFrontierInterruptDecisionForState(awaitingReaction.state),
+    ).toMatchObject({ trigger: "attackHit" });
+    const reactionChoice = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    )?.choices.find(
+      (choice) =>
+        choice.kind === "nestedProcedure" &&
+        choice.subject.command === "castTriggeredReactionSpell",
+    );
     if (
       reactionChoice === undefined ||
       reactionChoice.kind !== "nestedProcedure" ||
@@ -157,11 +161,11 @@ describe("Shield Reaction spell", () => {
     });
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected source-scoped Shield free cast to resolve.");
     }
+    expect(battleFrontierInterruptDecisionForState(resolved.state)).toBeNull();
     const caster = resolved.state.combatants.get(spellCasterId);
     if (caster?.origin.kind !== "character") {
       throw new Error("Expected Shield caster character after cast.");
@@ -217,19 +221,21 @@ describe("Shield Reaction spell", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Shield to open an attack-hit Reaction window.");
     }
+    expect(
+      battleFrontierInterruptDecisionForState(awaitingReaction.state),
+    ).toMatchObject({ trigger: "attackHit" });
     const resolved = resolveShieldReactionChoice(awaitingReaction, session);
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Shield Reaction to resolve.");
     }
+    expect(battleFrontierInterruptDecisionForState(resolved.state)).toBeNull();
     const shieldCaster = resolved.snapshot.combatants.find(
       (combatant) => combatant.combatantId === spellCasterId,
     );
@@ -370,12 +376,13 @@ describe("Shield Reaction spell", () => {
     if (awaitingOpportunityAttack.tag !== "needsHoles") {
       throw new Error("Expected movement to provoke an Opportunity Attack.");
     }
-    const opportunityAttackChoice =
-      awaitingOpportunityAttack.snapshot.pendingInterrupt?.choices.find(
-        (choice) =>
-          choice.kind === "nestedProcedure" &&
-          choice.subject.command === "opportunityAttack",
-      );
+    const opportunityAttackChoice = battleFrontierInterruptDecisionForState(
+      awaitingOpportunityAttack.state,
+    )?.choices.find(
+      (choice) =>
+        choice.kind === "nestedProcedure" &&
+        choice.subject.command === "opportunityAttack",
+    );
     if (
       opportunityAttackChoice === undefined ||
       opportunityAttackChoice.kind !== "nestedProcedure" ||
@@ -466,20 +473,22 @@ describe("Shield Reaction spell", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected spell Attack Roll hit to open Shield window.");
     }
+    expect(
+      battleFrontierInterruptDecisionForState(awaitingReaction.state),
+    ).toMatchObject({ trigger: "attackHit" });
 
     const resolved = resolveShieldReactionChoice(awaitingReaction, session);
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Shielded spell attack to resolve as a miss.");
     }
+    expect(battleFrontierInterruptDecisionForState(resolved.state)).toBeNull();
     expect(resolved.snapshot.combatants).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -514,11 +523,13 @@ describe("Shield Reaction spell", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Magic Missile to open Shield window.");
     }
+    expect(
+      battleFrontierInterruptDecisionForState(awaitingReaction.state),
+    ).toMatchObject({ trigger: "spellCast" });
 
     const awaitingDamage = resolveShieldReactionChoice(
       awaitingReaction,
@@ -539,11 +550,11 @@ describe("Shield Reaction spell", () => {
     }
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Shielded Magic Missile to resolve.");
     }
+    expect(battleFrontierInterruptDecisionForState(resolved.state)).toBeNull();
     expect(resolved.snapshot.combatants).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -595,8 +606,13 @@ describe("Shield Reaction spell", () => {
 
     expect(awaitingDamage).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: null },
     });
+    if (awaitingDamage.tag !== "needsHoles") {
+      throw new Error("Expected Magic Missile damage hole without Shield.");
+    }
+    expect(
+      battleFrontierInterruptDecisionForState(awaitingDamage.state),
+    ).toBeNull();
   });
 
   test("does not offer or finalize a second Spell Slot during the current actor's Magic Missile", () => {
@@ -621,7 +637,6 @@ describe("Shield Reaction spell", () => {
     });
     expect(awaitingDamage).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: null },
     });
     if (awaitingDamage.tag !== "needsHoles") {
       throw new Error("Expected Magic Missile damage hole without Shield.");
@@ -639,7 +654,6 @@ describe("Shield Reaction spell", () => {
     expect(resolved).toMatchObject({
       tag: "resolved",
       snapshot: {
-        pendingInterrupt: null,
         turn: {
           spellSlotUsesThisTurn: [
             { kind: "committed", combatantId: spellCasterId },
@@ -650,6 +664,7 @@ describe("Shield Reaction spell", () => {
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Magic Missile to spend one Spell Slot.");
     }
+    expect(battleFrontierInterruptDecisionForState(resolved.state)).toBeNull();
     expect(resolved.snapshot.combatants).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -1321,12 +1336,13 @@ function resolveShieldReactionChoice(
   >,
   session: BattleRuntimeSession,
 ): ReturnType<typeof resolveBattleInterrupt> {
-  const reactionChoice =
-    awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-      (choice) =>
-        choice.kind === "nestedProcedure" &&
-        choice.subject.command === "castTriggeredReactionSpell",
-    );
+  const reactionChoice = battleFrontierInterruptDecisionForState(
+    awaitingReaction.state,
+  )?.choices.find(
+    (choice) =>
+      choice.kind === "nestedProcedure" &&
+      choice.subject.command === "castTriggeredReactionSpell",
+  );
   if (
     reactionChoice === undefined ||
     reactionChoice.kind !== "nestedProcedure" ||

@@ -79,7 +79,12 @@ function requireHole<Kind extends BattleHole["kind"]>(
   result: NeedsHolesTransactionResult,
   kind: Kind,
 ): Extract<BattleHole, { readonly kind: Kind }> {
-  const hole = result.resolution.holes.find(
+  const frontier = result.resolution.envelope.frontier;
+  const holes: readonly BattleHole[] =
+    frontier.kind === "interruptDecision"
+      ? [frontier.decisionHole]
+      : frontier.holes;
+  const hole = holes.find(
     (candidate): candidate is Extract<BattleHole, { readonly kind: Kind }> =>
       candidate.kind === kind,
   );
@@ -87,6 +92,16 @@ function requireHole<Kind extends BattleHole["kind"]>(
     throw new Error(`Expected ${kind} hole in transaction result.`);
   }
   return hole;
+}
+
+function transactionSubject(
+  result: NeedsHolesTransactionResult,
+): BattleSubject {
+  const view = battlePendingTransactionView(result.transaction);
+  if (Option.isNone(view)) {
+    throw new Error("Expected an owned pending transaction.");
+  }
+  return view.value.subject;
 }
 
 function moveSubjectFor(
@@ -233,7 +248,7 @@ describe("battle runtime transaction completion unwind", () => {
     expect(declined.tag).toBe("settled");
     if (declined.tag === "settled") {
       expect(declined.resolution.session.state.interruptStack).toEqual([]);
-      expect(declined.resolution.snapshot.pendingInterrupt).toBeNull();
+      expect(declined.resolution.envelope.frontier.kind).toBe("acts");
     }
   });
 
@@ -302,16 +317,20 @@ describe("battle runtime transaction completion unwind", () => {
       }),
       "Ready trigger report",
     );
-    expect(report.resolution.snapshot.pendingInterrupt?.trigger).toBe(
+    expect(report.frontier.kind).toBe("interruptDecision");
+    if (report.resolution.envelope.frontier.kind !== "interruptDecision") {
+      return;
+    }
+    expect(report.resolution.envelope.frontier.trigger).toBe(
       "reportedReadyTrigger",
     );
+    if (report.frontier.kind !== "interruptDecision") return;
     const readyDecisionHole = requireHole(report, "interruptDecision");
-    const releaseChoice =
-      report.resolution.snapshot.pendingInterrupt?.choices.find(
-        (choice) =>
-          choice.kind === "nestedProcedure" &&
-          choice.subject.command === "releaseReadiedMovement",
-      );
+    const releaseChoice = report.frontier.choices.find(
+      (choice) =>
+        choice.kind === "nestedProcedure" &&
+        choice.subject.command === "releaseReadiedMovement",
+    );
     if (
       releaseChoice?.kind !== "nestedProcedure" ||
       releaseChoice.subject.command !== "releaseReadiedMovement"
@@ -345,7 +364,7 @@ describe("battle runtime transaction completion unwind", () => {
         transaction: release.transaction,
         operation: {
           kind: "ordinarySubject",
-          subject: release.resolution.subject,
+          subject: transactionSubject(release),
           fills: [
             movementFill(readyMovementHole, {
               movementCostFeet: 5,
@@ -370,7 +389,10 @@ describe("battle runtime transaction completion unwind", () => {
       "Ready movement with nested Opportunity Attack",
     );
     expect(nested.frontier.kind).toBe("interruptDecision");
-    expect(nested.resolution.snapshot.pendingInterrupt?.trigger).toBe(
+    if (nested.resolution.envelope.frontier.kind !== "interruptDecision") {
+      return;
+    }
+    expect(nested.resolution.envelope.frontier.trigger).toBe(
       "opportunityAttack",
     );
 
@@ -378,7 +400,10 @@ describe("battle runtime transaction completion unwind", () => {
     expect(afterNested.tag).toBe("needsHoles");
     if (afterNested.tag !== "needsHoles") return;
     expect(afterNested.frontier.kind).toBe("interruptDecision");
-    expect(afterNested.resolution.snapshot.pendingInterrupt?.trigger).toBe(
+    if (afterNested.resolution.envelope.frontier.kind !== "interruptDecision") {
+      return;
+    }
+    expect(afterNested.resolution.envelope.frontier.trigger).toBe(
       "opportunityAttack",
     );
     const afterNestedFrontier = requireInterruptFrontier(
@@ -421,7 +446,7 @@ describe("battle runtime transaction completion unwind", () => {
     expect(settled.tag).toBe("settled");
     if (settled.tag === "settled") {
       expect(settled.resolution.session.state.interruptStack).toEqual([]);
-      expect(settled.resolution.snapshot.pendingInterrupt).toBeNull();
+      expect(settled.resolution.envelope.frontier.kind).toBe("acts");
     }
   });
 
@@ -498,12 +523,12 @@ describe("battle runtime transaction completion unwind", () => {
       }),
       "first Ready trigger report",
     );
-    const firstReportChoice =
-      firstReport.resolution.snapshot.pendingInterrupt?.choices.find(
-        (choice) =>
-          choice.kind === "nestedProcedure" &&
-          choice.subject.command === "releaseReadiedMovement",
-      );
+    if (firstReport.frontier.kind !== "interruptDecision") return;
+    const firstReportChoice = firstReport.frontier.choices.find(
+      (choice) =>
+        choice.kind === "nestedProcedure" &&
+        choice.subject.command === "releaseReadiedMovement",
+    );
     if (
       firstReportChoice?.kind !== "nestedProcedure" ||
       firstReportChoice.subject.command !== "releaseReadiedMovement"
@@ -554,7 +579,7 @@ describe("battle runtime transaction completion unwind", () => {
         transaction: released.transaction,
         operation: {
           kind: "ordinarySubject",
-          subject: released.resolution.subject,
+          subject: transactionSubject(released),
           fills: [nestedMovement],
         },
       }),
@@ -578,12 +603,12 @@ describe("battle runtime transaction completion unwind", () => {
       }),
       "second Ready trigger report",
     );
-    const secondReportChoice =
-      secondReport.resolution.snapshot.pendingInterrupt?.choices.find(
-        (choice) =>
-          choice.kind === "nestedProcedure" &&
-          choice.subject.command === "releaseReadiedMovement",
-      );
+    if (secondReport.frontier.kind !== "interruptDecision") return;
+    const secondReportChoice = secondReport.frontier.choices.find(
+      (choice) =>
+        choice.kind === "nestedProcedure" &&
+        choice.subject.command === "releaseReadiedMovement",
+    );
     if (
       secondReportChoice?.kind !== "nestedProcedure" ||
       secondReportChoice.subject.command !== "releaseReadiedMovement"
@@ -617,7 +642,7 @@ describe("battle runtime transaction completion unwind", () => {
         transaction: secondReleased.transaction,
         operation: {
           kind: "ordinarySubject",
-          subject: secondReleased.resolution.subject,
+          subject: transactionSubject(secondReleased),
           fills: [
             movementFill(requireHole(secondReleased, "movement"), {
               movementCostFeet: 5,
@@ -629,7 +654,7 @@ describe("battle runtime transaction completion unwind", () => {
       "second Ready movement completion",
     );
 
-    expect(exposed.resolution.subject).toEqual(outerSubject);
+    expect(transactionSubject(exposed)).toEqual(outerSubject);
     expect(exposed.frontier.kind).toBe("interruptDecision");
     expect(
       currentInterruptCheckpoint(exposed.resolution.session.state)?.trigger,
@@ -661,7 +686,7 @@ describe("battle runtime transaction completion unwind", () => {
     expect(settled.tag).toBe("settled");
     if (settled.tag === "settled") {
       expect(settled.resolution.session.state.interruptStack).toEqual([]);
-      expect(settled.resolution.snapshot.pendingInterrupt).toBeNull();
+      expect(settled.resolution.envelope.frontier.kind).toBe("acts");
     }
   });
 });

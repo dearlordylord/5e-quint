@@ -3,6 +3,7 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 import type { JsonSchemaType } from "@modelcontextprotocol/sdk/validation";
 import { describe, expect, test } from "vitest";
+import assert from "node:assert/strict";
 import { Either } from "effect";
 import { decodeDiceSeed, type DiceSeed } from "./dice-sampling-service.ts";
 import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
@@ -192,22 +193,24 @@ describe("MCP protocol server", () => {
       expect(validateStartOutput(started).valid).toBe(true);
       const startedResult = operationResult(started);
       expect(startedResult).toMatchObject({
-        snapshot: null,
-        battleState: {
-          tag: "initialInitiativeSetup",
-          battleId: "battle:initiative-modes",
-          combatants: [
-            {
-              combatantId: "initiative-advantage-source",
-              initiative: 10,
-              rollMode: "advantage",
-            },
-            {
-              combatantId: "initiative-normal-foe",
-              initiative: 8,
-              rollMode: "normal",
-            },
-          ],
+        envelope: null,
+        session: {
+          battleState: {
+            tag: "initialInitiativeSetup",
+            battleId: "battle:initiative-modes",
+            combatants: [
+              {
+                combatantId: "initiative-advantage-source",
+                initiative: 10,
+                rollMode: "advantage",
+              },
+              {
+                combatantId: "initiative-normal-foe",
+                initiative: 8,
+                rollMode: "normal",
+              },
+            ],
+          },
         },
       });
       expect(started.projection).toMatchObject({
@@ -233,12 +236,16 @@ describe("MCP protocol server", () => {
       });
       expect(validateLifecycleOutput(finalized).valid).toBe(true);
       expect(operationResult(finalized)).toMatchObject({
-        battleState: {
-          tag: "activeBattle",
-          battleId: "battle:initiative-modes",
+        envelope: {
+          checkpoint: {
+            battleId: "battle:initiative-modes",
+          },
         },
-        snapshot: {
-          battleId: "battle:initiative-modes",
+        session: {
+          battleState: {
+            tag: "activeBattle",
+            battleId: "battle:initiative-modes",
+          },
         },
       });
       expect(finalized.projection).toMatchObject({
@@ -311,7 +318,12 @@ describe("MCP protocol server", () => {
           ],
         },
       });
-      expect(operationResult(swapStart).battleState).toMatchObject({
+      expect(
+        objectField(
+          objectField(operationResult(swapStart), "session"),
+          "battleState",
+        ),
+      ).toMatchObject({
         tag: "initialInitiativeSetup",
         combatants: [
           { combatantId: "initiative-swap-source", initiative: 10 },
@@ -368,7 +380,12 @@ describe("MCP protocol server", () => {
         },
       });
       expect(validateLifecycleOutput(swapped).valid).toBe(true);
-      expect(operationResult(swapped).battleState).toMatchObject({
+      expect(
+        objectField(
+          objectField(operationResult(swapped), "session"),
+          "battleState",
+        ),
+      ).toMatchObject({
         tag: "initialInitiativeSetup",
         combatants: [
           { combatantId: "initiative-swap-ally", initiative: 10 },
@@ -416,7 +433,12 @@ describe("MCP protocol server", () => {
           operation: { kind: "finalizeInitialInitiativeSetup" },
         },
       });
-      expect(operationResult(swapFinalized).battleState).toMatchObject({
+      expect(
+        objectField(
+          objectField(operationResult(swapFinalized), "session"),
+          "battleState",
+        ),
+      ).toMatchObject({
         tag: "activeBattle",
         battleId: "battle:initiative-swap",
       });
@@ -448,11 +470,7 @@ describe("MCP protocol server", () => {
         operation: {
           name: "battle_lifecycle",
           result: {
-            battleState: { tag: "none" },
-            snapshot: null,
-            availableActs: [],
-            admittedSpellPresentations: [],
-            presentedInterruptChoices: [],
+            envelope: null,
             session: objectField(
               noBattleLifecycle.structuredContent,
               "projection",
@@ -1600,18 +1618,20 @@ describe("MCP protocol server", () => {
           },
         });
         expect(operationResult(mixedRoster)).toMatchObject({
-          snapshot: {
-            companions: [
-              expect.objectContaining({
-                companionId: "row-coverage-familiar",
-                ownerId: "row-companion-owner",
-              }),
-            ],
-            turnOrder: [
-              "row-coverage-familiar",
-              "row-companion-owner",
-              "row-companion-goblin",
-            ],
+          envelope: {
+            checkpoint: {
+              companions: [
+                expect.objectContaining({
+                  companionId: "row-coverage-familiar",
+                  ownerId: "row-companion-owner",
+                }),
+              ],
+              turnOrder: [
+                "row-coverage-familiar",
+                "row-companion-owner",
+                "row-companion-goblin",
+              ],
+            },
           },
         });
         const mixedRosterEnded = await callStructuredTool(client, {
@@ -1657,7 +1677,7 @@ describe("MCP protocol server", () => {
           },
         });
         expect(operationResult(shieldBattle)).toMatchObject({
-          snapshot: { currentActorId: "row-shield-goblin" },
+          envelope: { checkpoint: { currentActorId: "row-shield-goblin" } },
         });
         const discoveredShieldBattle = operationResult(
           await callStructuredTool(client, {
@@ -1667,7 +1687,7 @@ describe("MCP protocol server", () => {
         );
         const goblinAttack = jsonObjectArrayAt(
           discoveredShieldBattle,
-          "availableActs",
+          "envelope.frontier.acts",
         ).find((act) => {
           const subject = act.subject;
           return (
@@ -1739,7 +1759,7 @@ describe("MCP protocol server", () => {
           restoration: { tag: "retained" },
           unresolvedInputs: [
             {
-              sourcePath: "$.projection.pendingBattleHoles",
+              sourcePath: "$.details.battleEnvelope.frontier.holes",
               inputs: [expect.objectContaining({ kind: "attackRoll" })],
             },
           ],
@@ -1749,13 +1769,16 @@ describe("MCP protocol server", () => {
           name: "read_play_session",
           arguments: { playSessionId },
         });
-        expect(objectField(resumed, "projection")).toMatchObject({
-          pendingBattleHoles: [expect.objectContaining({ kind: "attackRoll" })],
-        });
+        expect(resumed.unresolvedInputs).toMatchObject([
+          {
+            sourcePath: "$.battleEnvelope.frontier.holes",
+            inputs: [expect.objectContaining({ kind: "attackRoll" })],
+          },
+        ]);
         expect(resumed).toMatchObject({
           unresolvedInputs: [
             {
-              sourcePath: "$.projection.pendingBattleHoles",
+              sourcePath: "$.battleEnvelope.frontier.holes",
               inputs: [expect.objectContaining({ kind: "attackRoll" })],
             },
           ],
@@ -1765,13 +1788,13 @@ describe("MCP protocol server", () => {
           name: "read_battle_state",
           arguments: { playSessionId },
         });
-        expect(
-          objectField(
-            objectField(operationResult(resumedBattleState), "session"),
-            "transientBattleFills",
-          ),
-        ).toMatchObject({
-          holes: [expect.objectContaining({ kind: "attackRoll" })],
+        expect(operationResult(resumedBattleState)).toMatchObject({
+          envelope: {
+            frontier: {
+              kind: "holes",
+              holes: [expect.objectContaining({ kind: "attackRoll" })],
+            },
+          },
         });
         const stillPending = operationResult(
           await callStructuredTool(client, {
@@ -1780,14 +1803,11 @@ describe("MCP protocol server", () => {
           }),
         );
         expect(stillPending).toMatchObject({
-          snapshot: { currentActorId: "row-shield-goblin" },
+          envelope: { checkpoint: { currentActorId: "row-shield-goblin" } },
         });
         const attackRollHole = jsonObjectArrayAt(
-          objectField(
-            objectField(stillPending, "session"),
-            "transientBattleFills",
-          ),
-          "holes",
+          stillPending,
+          "envelope.frontier.holes",
         ).find((hole) => hole.kind === "attackRoll");
         if (!attackRollHole || typeof attackRollHole.holeId !== "string") {
           throw new Error("Expected a returned Attack roll hole.");
@@ -1811,13 +1831,15 @@ describe("MCP protocol server", () => {
           },
         });
         const afterAttackRollResult = operationResult(afterAttackRoll);
-        const interruptHole = jsonObjectArrayAt(
-          objectField(afterAttackRollResult, "result"),
-          "holes",
-        ).find((hole) => hole.kind === "interruptDecision");
-        const interruptChoices = jsonObjectArrayAt(
+        const interruptFrontier = objectField(
           afterAttackRollResult,
-          "presentedInterruptChoices",
+          "envelope.frontier",
+        );
+        assert.equal(interruptFrontier.kind, "interruptDecision");
+        const interruptHole = objectField(interruptFrontier, "decisionHole");
+        const interruptChoices = jsonObjectArrayAt(
+          interruptFrontier,
+          "choices",
         );
         const shieldChoice = interruptChoices.find((presented) => {
           const choice = presented.choice;
@@ -1875,7 +1897,7 @@ describe("MCP protocol server", () => {
           },
         });
         expect(operationResult(endedTurn)).toMatchObject({
-          snapshot: { currentActorId: "row-shield-wizard" },
+          envelope: { checkpoint: { currentActorId: "row-shield-wizard" } },
         });
         expect(endedTurn).toMatchObject({
           restoration: { tag: "retained" },
@@ -2003,8 +2025,10 @@ describe("MCP protocol server", () => {
       });
       expect(validateStartOutput(started).valid).toBe(true);
       expect(operationResult(started)).toMatchObject({
-        snapshot: {
-          turnOrder: ["protocol-first", "protocol-second", "protocol-goblin"],
+        envelope: {
+          checkpoint: {
+            turnOrder: ["protocol-first", "protocol-second", "protocol-goblin"],
+          },
         },
       });
       expect(started.projection).toMatchObject({
@@ -2056,8 +2080,10 @@ describe("MCP protocol server", () => {
         arguments: { playSessionId },
       });
       expect(operationResult(read)).toMatchObject({
-        snapshot: {
-          turnOrder: ["protocol-first", "protocol-second", "protocol-goblin"],
+        envelope: {
+          checkpoint: {
+            turnOrder: ["protocol-first", "protocol-second", "protocol-goblin"],
+          },
         },
       });
       const inBattle = operationResult(
@@ -2239,10 +2265,12 @@ describe("MCP protocol server", () => {
         arguments: { playSessionId },
       });
       expect(operationResult(battleAfterStatBlockAdd)).toMatchObject({
-        snapshot: {
-          combatants: expect.arrayContaining([
-            expect.objectContaining({ combatantId: "lifecycle-skeleton" }),
-          ]),
+        envelope: {
+          checkpoint: {
+            combatants: expect.arrayContaining([
+              expect.objectContaining({ combatantId: "lifecycle-skeleton" }),
+            ]),
+          },
         },
       });
 
@@ -2269,10 +2297,12 @@ describe("MCP protocol server", () => {
         arguments: { playSessionId },
       });
       expect(operationResult(battleAfterStatBlockRemoval)).toMatchObject({
-        snapshot: {
-          combatants: expect.not.arrayContaining([
-            expect.objectContaining({ combatantId: "lifecycle-skeleton" }),
-          ]),
+        envelope: {
+          checkpoint: {
+            combatants: expect.not.arrayContaining([
+              expect.objectContaining({ combatantId: "lifecycle-skeleton" }),
+            ]),
+          },
         },
       });
 
@@ -2501,8 +2531,8 @@ describe("MCP protocol server", () => {
               ),
               battleState: root.sessionStore.battleState,
               battleSession: root.sessionStore.battleSession,
-              transientBattleFills:
-                root.sessionStore.snapshot().transientBattleFills,
+              pendingBattleFills:
+                root.sessionStore.getPendingBattleTransaction(),
             });
           },
         );
@@ -2557,8 +2587,16 @@ describe("MCP protocol server", () => {
         name: "read_battle_state",
         arguments: { playSessionId },
       });
-      expect(operationResult(battleAfterFailure).snapshot).toEqual(
-        operationResult(battleBeforeFailure).snapshot,
+      expect(
+        objectField(
+          objectField(operationResult(battleAfterFailure), "envelope"),
+          "checkpoint",
+        ),
+      ).toEqual(
+        objectField(
+          objectField(operationResult(battleBeforeFailure), "envelope"),
+          "checkpoint",
+        ),
       );
       const stillOccupied = await callStructuredTool(client, {
         name: "inspect_character_session",
@@ -3373,6 +3411,7 @@ async function installCharacterRowCoverageSessions(
             : {
                 druidWildShapeKnownFormStatBlockIds:
                   input.druidWildShapeKnownFormStatBlockIds,
+                statBlockCatalog: root.statBlockCatalog,
               }),
           ...(input.zeroHpLifecycle === undefined
             ? {}
@@ -3637,7 +3676,12 @@ function arrayField(
   value: Readonly<Record<string, unknown>>,
   field: string,
 ): readonly unknown[] {
-  const result = value[field];
+  const result = field
+    .split(".")
+    .reduce<unknown>(
+      (current, key) => (isJsonObject(current) ? current[key] : undefined),
+      value,
+    );
   if (!Array.isArray(result)) throw new Error(`Expected ${field} array.`);
   return result;
 }
@@ -3646,7 +3690,12 @@ function objectField(
   value: Readonly<Record<string, unknown>>,
   field: string,
 ): Readonly<Record<string, unknown>> {
-  const result = value[field];
+  const result = field
+    .split(".")
+    .reduce<unknown>(
+      (current, key) => (isJsonObject(current) ? current[key] : undefined),
+      value,
+    );
   if (!isJsonObject(result)) throw new Error(`Expected ${field} object.`);
   return result;
 }

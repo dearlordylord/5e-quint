@@ -14,7 +14,12 @@ import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Either, Match, Schema } from "effect";
 
-import { capabilityContextForRole } from "./capability-projection.ts";
+import {
+  capabilityContextForRole,
+  SCENARIO_AUTHORITY_RECONCILIATION_BOUNDARY,
+  STAT_BLOCK_INITIALIZATION_CAPABILITY_BOUNDARY,
+  SUPPORTED_ONLY_CAPABILITY_REVISION_POLICY,
+} from "./capability-projection.ts";
 import {
   codexOutputJsonSchema,
   finalScenarioDisposition,
@@ -25,15 +30,16 @@ import {
   ScenarioCandidateBatchSchema,
   ScenarioCampaignConfigSchema,
   RejectedScenarioCandidateReviewSchema,
-  CurrentScenarioCompositeReviewSchema,
-  HistoricalScenarioCompositeReviewSchema,
+  classifyScenarioReviewOutputSchema,
+  scenarioCompositeReviewSchemaForIntents,
   verifyFinalScenarioReview,
   type ContentAvailabilityIntent,
   type ScenarioCampaignCandidateRejection,
   type ScenarioCampaignAgents,
   type ScenarioCampaignResult,
   type ScenarioCatalogueAdmissionContext,
-  type ScenarioCompositeReview,
+  type ScenarioReviewInput,
+  type CurrentScenarioCompositeReview,
   type SdkCapabilityIntent,
 } from "./scenario-campaign.ts";
 import {
@@ -56,7 +62,6 @@ import {
 import { RAW_SWARM_STAGE_PLAN_REASONS } from "./scenario-stage-plan.ts";
 import { scenarioSetupStatBlocks } from "./sdk-player/scenario-setup-runtime.ts";
 import {
-  canonicalJson,
   currentGitRevision,
   GitShaSchema,
   repoRoot,
@@ -458,7 +463,7 @@ async function runCodexJson<A, I>(
   }
 }
 
-function generationPreamble(
+export function generationPreamble(
   statBlockNames: readonly string[],
   contentAvailabilityIntent: ContentAvailabilityIntent,
   sdkCapabilityIntent: SdkCapabilityIntent,
@@ -476,7 +481,7 @@ ${contentAvailabilityIntent === "availableOnly" ? "Use canonical stat blocks onl
 
 SDK-capability intent: ${sdkCapabilityIntent}
 
-${sdkCapabilityIntent === "supportedOnly" ? "Use only scenario facts and interactions representable through the current public SDK described below. Do not repeat known unsupported mechanics merely because a prior scenario used them." : "Deliberately exercise one capability absent from the current public SDK described below, and explicitly name that capability as the intended probe. Keep the remaining scenario representable."}
+${sdkCapabilityIntent === "supportedOnly" ? `Use only scenario facts and interactions representable through the current public SDK described below. Do not repeat known unsupported mechanics merely because a prior scenario used them. ${STAT_BLOCK_INITIALIZATION_CAPABILITY_BOUNDARY} ${SUPPORTED_ONLY_CAPABILITY_REVISION_POLICY}` : "Deliberately exercise one capability absent from the current public SDK described below, and explicitly name that capability as the intended probe. Keep the remaining scenario representable."}
 
 ${capabilityContext}`;
 }
@@ -524,6 +529,9 @@ export function scenarioCampaignAgents(input: {
           capabilityContextForRole("generation"),
         )}
 
+Configured exploratory purpose:
+${input.scenarioPurpose}
+
 Distribution preference:
 ${input.distributionPreference}
 
@@ -543,34 +551,48 @@ Produce exactly ${input.candidateCount} materially different candidate objects. 
           retention: { directory: eventDirectory },
         },
       ),
-    reviewScenario: async ({
+    reviewScenario: async <
+      ContentIntent extends ContentAvailabilityIntent,
+      SdkIntent extends SdkCapabilityIntent,
+    >({
       scenario,
       campaignId,
       candidateId,
       candidateScenarioSha256,
       plannedScenarioId,
       finalReview,
+      scenarioPurpose,
       distributionPreference,
+      stageFacts,
       contentAvailabilityIntent,
       sdkCapabilityIntent,
       catalogueComparison,
-    }) =>
-      runCodexJson(
+    }: ScenarioReviewInput<ContentIntent, SdkIntent>) => {
+      const reviewSchema = scenarioCompositeReviewSchemaForIntents({
+        contentAvailabilityIntent,
+        sdkCapabilityIntent,
+      });
+      return runCodexJson(
         `Perform one ${finalReview ? "final pre-play" : "milestone"} review invocation with five mandatory, independently scoped assessments. Do not produce an aggregate verdict and do not merge their evidence or responsibilities.
 
 RAW: use only .references/srd-5.2.1/ and ASSUMPTIONS.md. Check legality, coherence, executability, and missing Table Decisions. Do not choose tactics, predict an outcome, rewrite prose, or decide artifact policy.
 
 Content availability: compare selected canonical identities with the supplied availability list and the exact campaign intent. Do not infer a product obligation from an accidental unavailable selection.
 
-SDK capability: compare required setup/play facts with the current public SDK documentation below, not historical run verdicts. Do not inspect implementation files.
+SDK capability: compare required setup/play facts with the current public SDK documentation below, not historical Execution verdicts. Do not inspect implementation files. ${STAT_BLOCK_INITIALIZATION_CAPABILITY_BOUNDARY} Treat a Candidate's requirement for that choice or roll workflow as an absent operation. ${SUPPORTED_ONLY_CAPABILITY_REVISION_POLICY}
 
 Artifact policy: apply docs/mushroom-playbook/AUTHORING.md only to public identity/expression safety. Do not judge mechanics or tactics.
 
-Scenario quality: independently classify the setup and encounter as ready only when it is mechanically meaningful, every represented combatant or group seriously pursues an authored strategy-bearing objective, and fixed versus delegated choices fit the campaign distribution preference. Do not impose generic balance: a deliberately loose or highly prescribed scenario can be ready. Do not choose tactics, predict an outcome, or rewrite prose. Return one concise critique when this quality responsibility needs a material revision.
+Scenario quality: independently classify the setup and encounter as ready only when it is mechanically meaningful, every represented combatant or group seriously pursues an authored strategy-bearing objective, fixed versus delegated choices fit the campaign distribution preference, and the Candidate's prose and typed stage facts align with the configured exploratory purpose. Treat a contradiction between the configured purpose and either authority as a material needsRevision finding; for example, a purpose requiring delegated Character Sheet choices cannot be ready when the typed character requirement classifies the scenario as stat-block-only. Use the supplied typed stage facts as controller evidence rather than inferring them from prose, and do not repair a contradiction by silently changing the configured purpose. Do not impose generic balance: a deliberately loose or highly prescribed scenario can be ready. Do not choose tactics, predict an outcome, or rewrite prose. Return one concise critique when this quality responsibility needs a material revision.
+
+${SCENARIO_AUTHORITY_RECONCILIATION_BOUNDARY} Inspect stage-fact evidence text and every retained catalogue-comparison dimension as part of that reconciliation. Never mark a Candidate ready after silently removing a requirement.
 
 Content-availability intent: ${contentAvailabilityIntent}
 SDK-capability intent: ${sdkCapabilityIntent}
+Configured exploratory purpose: ${scenarioPurpose}
 Campaign distribution preference: ${distributionPreference}
+Typed Candidate stage facts:
+${JSON.stringify(stageFacts, null, 2)}
 
 Catalogue comparison evidence supplied by the authoring operator:
 ${JSON.stringify(catalogueComparison, null, 2)}
@@ -589,7 +611,7 @@ ${capabilityContextForRole("review")}
 
 Scenario:
 ${scenario}`,
-        CurrentScenarioCompositeReviewSchema,
+        reviewSchema,
         {
           ...reviewerExecution,
           subject: {
@@ -606,7 +628,8 @@ ${scenario}`,
             reviewStage: finalReview ? "final" : "milestone",
           },
         },
-      ),
+      );
+    },
     compareCandidate: async ({
       scenario,
       candidateIndex,
@@ -642,27 +665,25 @@ export async function replayRetainedScenarioReview(input: {
   readonly retainedInput: RetainedScenarioReviewInput;
   readonly ledgerPath: string;
   readonly gitSha: GitSha;
-}): Promise<ScenarioCompositeReview> {
+}): Promise<CurrentScenarioCompositeReview> {
   if (input.retainedInput.schemaVersion === 2) {
     fail(
       "Historical Scenario review input is readable evidence but is not a current executable review subject.",
     );
   }
-  const currentOutputSchema = codexOutputJsonSchema(
-    CurrentScenarioCompositeReviewSchema,
+  const compatibility = classifyScenarioReviewOutputSchema({
+    schemaVersion: input.retainedInput.schemaVersion,
+    outputJsonSchema: input.retainedInput.outputJsonSchema,
+  });
+  if (Either.isLeft(compatibility)) {
+    fail(compatibility.left);
+  }
+  const retainedResult = compatibility.right.decodeResult(
+    input.retainedInput.result,
   );
-  const historicalOutputSchema = codexOutputJsonSchema(
-    HistoricalScenarioCompositeReviewSchema,
-  );
-  const isCurrent =
-    canonicalJson(input.retainedInput.outputJsonSchema) ===
-    canonicalJson(currentOutputSchema);
-  const isHistorical =
-    canonicalJson(input.retainedInput.outputJsonSchema) ===
-    canonicalJson(historicalOutputSchema);
-  if (!isCurrent && !isHistorical) {
+  if (Either.isLeft(retainedResult)) {
     fail(
-      "Retained scenario review input does not use the production composite-review schema.",
+      "Retained scenario review result does not match its canonical output schema.",
     );
   }
   const execution = {
@@ -678,17 +699,17 @@ export async function replayRetainedScenarioReview(input: {
       reviewStage: input.retainedInput.reviewStage,
     },
   } as const;
-  return isCurrent
-    ? await runCodexJson(
-        input.retainedInput.prompt,
-        CurrentScenarioCompositeReviewSchema,
-        execution,
-      )
-    : await runCodexJson(
-        input.retainedInput.prompt,
-        HistoricalScenarioCompositeReviewSchema,
-        execution,
-      );
+  const schema = Match.value(compatibility.right).pipe(
+    Match.when({ tag: "intentSpecificCurrent" }, ({ schema }) => schema),
+    Match.when({ tag: "legacyCurrent" }, ({ schema }) => schema),
+    Match.when({ tag: "historical" }, () =>
+      fail(
+        "Historical Scenario review input is readable evidence but is not a current executable review subject.",
+      ),
+    ),
+    Match.exhaustive,
+  );
+  return await runCodexJson(input.retainedInput.prompt, schema, execution);
 }
 
 function verifyRetainedScenario(

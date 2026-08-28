@@ -5,8 +5,10 @@ import { describe, expect, test } from "vitest";
 import { Schema } from "effect";
 import { classLevel } from "@dnd/shared/types";
 import {
+  BattleCheckpointFrontierEnvelopeSchema,
   BattleInterruptProcedureChoiceSchema,
   BattleSnapshotSchema,
+  battleCheckpointFrontierEnvelope,
 } from "./index.ts";
 import {
   Either,
@@ -30,6 +32,7 @@ import {
   statBlockCreatureInit,
   targetFill,
   damageRollFill,
+  battleFrontierInterruptDecisionForState,
   unitLibrary,
 } from "./battle-runtime.test-support.ts";
 import type { BattleState } from "./battle-runtime.test-support.ts";
@@ -45,46 +48,34 @@ describe("battle runtime: Barbarian Retaliation", () => {
     expect(awaitingRetaliation).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
-      snapshot: {
-        pendingInterrupt: {
-          trigger: "afterDamage",
-          choices: expect.arrayContaining([
-            expect.objectContaining({
-              kind: "nestedProcedure",
-              subject: expect.objectContaining({
-                command: "retaliationAttack",
-                reactorId: fighterId,
-                targetId: goblinId,
-                procedureRef: expect.any(String),
-                attackDamageType: "slashing",
-              }),
-            }),
-            expect.objectContaining({
-              kind: "nestedProcedure",
-              subject: expect.objectContaining({
-                command: "retaliationAttack",
-                reactorId: fighterId,
-                targetId: goblinId,
-                procedureRef: expect.any(String),
-                attackDamageType: "bludgeoning",
-              }),
-            }),
-          ]),
-        },
-      },
     });
     if (awaitingRetaliation.tag !== "needsHoles") {
       throw new Error("Expected Retaliation interrupt decision.");
     }
-    const retaliationChoice =
-      awaitingRetaliation.snapshot.pendingInterrupt?.choices.find(
-        (choice) =>
-          choice.kind === "nestedProcedure" &&
-          choice.subject.command === "retaliationAttack",
-      );
-    if (retaliationChoice === undefined) {
+    const retaliationChoice = battleFrontierInterruptDecisionForState(
+      awaitingRetaliation.state,
+    )?.choices.find(
+      (choice) =>
+        choice.kind === "nestedProcedure" &&
+        choice.subject.command === "retaliationAttack",
+    );
+    if (
+      retaliationChoice === undefined ||
+      retaliationChoice.kind !== "nestedProcedure" ||
+      retaliationChoice.subject.command !== "retaliationAttack"
+    ) {
       throw new Error("Expected a Retaliation codec fixture.");
     }
+    const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+      battleCheckpointFrontierEnvelope(awaitingRetaliation.state),
+    );
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+          encoded,
+        ),
+      ),
+    ).toBe(true);
     expect(() =>
       Schema.decodeUnknownSync(BattleInterruptProcedureChoiceSchema)(
         retaliationChoice,
@@ -95,27 +86,17 @@ describe("battle runtime: Barbarian Retaliation", () => {
         Schema.encodeSync(BattleSnapshotSchema)(awaitingRetaliation.snapshot),
       ),
     ).not.toThrow();
-    const forgedRetaliationSnapshot = {
-      ...awaitingRetaliation.snapshot,
-      pendingInterrupt: {
-        ...awaitingRetaliation.snapshot.pendingInterrupt!,
-        choices: awaitingRetaliation.snapshot.pendingInterrupt!.choices.map(
-          (choice) =>
-            choice.kind === "nestedProcedure" &&
-            choice.subject.command === "retaliationAttack"
-              ? {
-                  ...choice,
-                  subject: { ...choice.subject, reactorId: goblinId },
-                }
-              : choice,
-        ),
-      },
-    };
     expect(() =>
-      Schema.decodeUnknownSync(BattleSnapshotSchema)(
-        Schema.encodeSync(BattleSnapshotSchema)(forgedRetaliationSnapshot),
-      ),
-    ).toThrow();
+      Schema.decodeUnknownSync(BattleInterruptProcedureChoiceSchema)({
+        ...retaliationChoice,
+        subject: {
+          ...retaliationChoice.subject,
+          reactorId: goblinId,
+        },
+      }),
+    ).toThrow(
+      "Interrupt choices must own the matching reference-bearing runtime subject.",
+    );
     const longswordSelection = attackExecutionSelectionForSubjectForTest(
       fighterAttackSubject(awaitingRetaliation.state, "Longsword"),
     );

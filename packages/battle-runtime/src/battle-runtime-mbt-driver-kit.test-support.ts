@@ -94,13 +94,17 @@ import {
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
-import type { CharacterProcedureBattleSubject } from "./battle-subjects.ts";
+import type {
+  BattleInterruptSubject,
+  CharacterProcedureBattleSubject,
+} from "./battle-subjects.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   BATTLE_INVALID_REASON_CODES,
   battleAmmunitionStock,
   battleId,
+  battleFrontierInterruptDecisionForState,
   battleObjectId,
   battleReducerStartRouteEvent,
   battleUnitRefWithSupportProfiles,
@@ -110,6 +114,7 @@ import {
   combatantId,
   discoverBattleActs,
   initiativeScore,
+  interruptChoiceResponderId,
   isCharacterProcedureBattleSubject,
   resolveBattleInterrupt,
   sameBattleSubject,
@@ -122,7 +127,6 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleInterruptProcedureChoice,
-  type BattleInterruptSubject,
   type BattleInvalidReasonCode,
   type BattleProcedureExecutionRef,
   type BattleResolutionResult,
@@ -131,7 +135,6 @@ import {
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
-import { interruptChoiceResponderId } from "./battle-state-execution.ts";
 
 function requireAdmittedCharacterProcedureSubject(
   session: BattleRuntimeSession,
@@ -9784,7 +9787,8 @@ export function createInterruptStackResumeRouteDriver() {
         }
         appendInterruptRouteEvents(awaitingAttackReaction);
         const releaseChoice = interruptReactionChoiceWithSubject(
-          awaitingAttackReaction.snapshot.pendingInterrupt!.choices,
+          battleFrontierInterruptDecisionForState(awaitingAttackReaction.state)!
+            .choices,
         );
         if (
           releaseChoice.subject.tag !== "runtimeCommand" ||
@@ -9795,7 +9799,9 @@ export function createInterruptStackResumeRouteDriver() {
         const released = resolveBattleInterrupt({
           state: awaitingAttackReaction.state,
           fill: interruptDecisionFillSupport(
-            awaitingAttackReaction.snapshot.pendingInterrupt!.decisionHole,
+            battleFrontierInterruptDecisionForState(
+              awaitingAttackReaction.state,
+            )!.decisionHole,
             {
               kind: "resolve",
               responderId: interruptWizardId,
@@ -9828,7 +9834,7 @@ export function createInterruptStackResumeRouteDriver() {
         const declinedNested = resolveBattleInterrupt({
           state: nested.state,
           fill: interruptDecisionFillSupport(
-            nested.snapshot.pendingInterrupt!.decisionHole,
+            battleFrontierInterruptDecisionForState(nested.state)!.decisionHole,
             {
               kind: "decline",
               responderId: interruptSecondWizardId,
@@ -9877,7 +9883,8 @@ export function createInterruptStackResumeRouteDriver() {
         const resolved = resolveBattleInterrupt({
           state: awaitingReaction.state,
           fill: interruptDecisionFillSupport(
-            awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
+            battleFrontierInterruptDecisionForState(awaitingReaction.state)!
+              .decisionHole,
             {
               kind: "resolve",
               responderId: interruptShieldCasterId,
@@ -9961,15 +9968,12 @@ function publicReplayContinuationAfterAttackDeclines(): {
     result.tag === "needsHoles" &&
     result.holes.some((hole) => hole.kind === "interruptDecision")
   ) {
-    const pending = result.snapshot.pendingInterrupt;
+    const pending = battleFrontierInterruptDecisionForState(result.state);
     const firstChoice = pending?.choices[0];
-    const responderId =
-      firstChoice === undefined
-        ? undefined
-        : interruptChoiceResponderId(firstChoice);
-    if (pending == null || responderId === undefined) {
+    if (pending == null || firstChoice === undefined) {
       throw new Error("Expected public interrupt decision responder.");
     }
+    const responderId = interruptChoiceResponderId(firstChoice);
     result = resolveBattleInterrupt({
       state: result.state,
       fill: interruptDecisionFillSupport(pending.decisionHole, {
@@ -15690,7 +15694,7 @@ function projectAdrenalineRushMbtState(input: {
   }
   return {
     actorTempHp: actor.tempHp,
-    bonusActionAvailable: snapshot.turn.bonusActionAvailable,
+    bonusActionAvailable: snapshot.turn.bonusActionQuotaAvailable,
     dashBonusFeet: Number(snapshot.turn.dashMovementBonusFeet),
     featureUsesRemaining: resourceUsesRemaining(
       battleRuntimeSessionForTest({
@@ -15732,7 +15736,7 @@ function projectRogueSteadyAimMbtState(input: {
         battleProcedureExecutionRefForTest("rogue_steady_aim"),
   );
   return {
-    bonusActionAvailable: snapshot.turn.bonusActionAvailable,
+    bonusActionAvailable: snapshot.turn.bonusActionQuotaAvailable,
     actorSpeedFeet: Number(actor.movement.speedFeet),
     nextAttackAdvantageActive,
     speedZeroActive,
@@ -16229,10 +16233,15 @@ function requireInterruptShieldReactionChoice(
 > & {
   readonly subject: Extract<
     BattleInterruptSubject,
-    { readonly command: "castTriggeredReactionSpell" }
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "castTriggeredReactionSpell";
+    }
   >;
 } {
-  const choice = result.snapshot.pendingInterrupt?.choices.find(
+  const choice = battleFrontierInterruptDecisionForState(
+    result.state,
+  )?.choices.find(
     (
       candidate,
     ): candidate is Extract<
@@ -16241,7 +16250,10 @@ function requireInterruptShieldReactionChoice(
     > & {
       readonly subject: Extract<
         BattleInterruptSubject,
-        { readonly command: "castTriggeredReactionSpell" }
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "castTriggeredReactionSpell";
+        }
       >;
     } => {
       if (

@@ -67,7 +67,8 @@ The evaluator instantiates a simulated spec's full transitive import closure for
 every trace. A simulated `*.mbt.qnt` driver may import only small, pure leaf
 modules containing types, tags, and pure facts. It must not import aggregation
 or behavioral modules. `scripts/check-mbt-driver-closure.cjs` enforces the
-closure budget in `pnpm quality`; shrink its allowlist rather than growing it.
+closure budget in `pnpm quality:milestone`; shrink its allowlist rather than
+growing it.
 
 Keep broadly imported type-vocabulary modules free of behavioral imports. Move
 a shared type into a leaf module that both sides can import.

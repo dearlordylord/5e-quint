@@ -9,6 +9,7 @@ import {
   BattleSnapshotSchema,
 } from "./index.ts";
 import {
+  battleFrontierInterruptDecisionForState,
   characterSpellInvocationRefForProcedureRefForTest,
   testCharacterD20Statistics,
 } from "./battle-runtime.test-support.ts";
@@ -111,29 +112,29 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Shining Smite attack-hit window.");
     }
-    const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-      (candidate) => {
-        if (
-          candidate.kind !== "nestedProcedure" ||
-          candidate.subject.command !== "castAttackHitBonusActionSpell"
-        ) {
-          return false;
-        }
-        const invocationRef = characterSpellInvocationRefForProcedureRefForTest(
-          battleRuntimeSessionForTest({
-            ...session,
-            state: awaitingReaction.state,
-          }),
-          candidate.subject.casterId,
-          candidate.subject.procedureRef,
-        );
-        return (
-          invocationRef.spellId === shiningSmiteUnitId &&
-          invocationRef.tag === "spellSlot" &&
-          Number(invocationRef.slotLevel) === shiningSmiteUpcastSlotLevel
-        );
-      },
-    );
+    const choice = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    )?.choices.find((candidate) => {
+      if (
+        candidate.kind !== "nestedProcedure" ||
+        candidate.subject.command !== "castAttackHitBonusActionSpell"
+      ) {
+        return false;
+      }
+      const invocationRef = characterSpellInvocationRefForProcedureRefForTest(
+        battleRuntimeSessionForTest({
+          ...session,
+          state: awaitingReaction.state,
+        }),
+        candidate.subject.casterId,
+        candidate.subject.procedureRef,
+      );
+      return (
+        invocationRef.spellId === shiningSmiteUnitId &&
+        invocationRef.tag === "spellSlot" &&
+        Number(invocationRef.slotLevel) === shiningSmiteUpcastSlotLevel
+      );
+    });
     if (
       choice === undefined ||
       choice.kind !== "nestedProcedure" ||
@@ -433,7 +434,9 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     if (unarmedHit.tag !== "needsHoles") {
       throw new Error("Expected Shining Smite Unarmed Strike window.");
     }
-    const unarmedChoice = unarmedHit.snapshot.pendingInterrupt?.choices.find(
+    const unarmedChoice = battleFrontierInterruptDecisionForState(
+      unarmedHit.state,
+    )?.choices.find(
       (candidate) =>
         candidate.kind === "nestedProcedure" &&
         candidate.subject.command === "castAttackHitBonusActionSpell",
@@ -506,9 +509,10 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
         attackRollFill(rangedRoll, { total: 15, naturalD20: 10 }),
       ],
     });
-    expect(rangedHit).toMatchObject({
-      tag: "needsHoles",
-      snapshot: { pendingInterrupt: null },
-    });
+    expect(rangedHit).toMatchObject({ tag: "needsHoles" });
+    if (rangedHit.tag !== "needsHoles") {
+      throw new Error("Expected Shining Smite ranged attack frontier.");
+    }
+    expect(battleFrontierInterruptDecisionForState(rangedHit.state)).toBeNull();
   });
 });

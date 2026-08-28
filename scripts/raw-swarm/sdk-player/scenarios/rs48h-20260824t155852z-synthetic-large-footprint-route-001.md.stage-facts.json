@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "rs48h-20260824t155852z-synthetic-large-footprint-route-001",
+  "scenarioSha256": "1a05e37b54115fa0bf05a7427627eed2523ba27b55ca27d212604ec8e36b2b29",
+  "source": "scenarioGenerationCandidate",
+  "facts": {
+    "schemaVersion": 1,
+    "characterRequirement": {
+      "tag": "statBlocksOnly",
+      "evidence": "All six participants use available canonical Stat Blocks, and every tactical choice belongs to their controllers rather than Character Sheets."
+    },
+    "spatialRequirement": {
+      "tag": "geometryAssisted",
+      "evidence": "Geometry witnesses opposite-edge adjacency, the delegated southern route choice, Large-footprint clearance, and subsequent Opportunity Attack reach exits."
+    }
+  }
+}

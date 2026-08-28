@@ -94,6 +94,7 @@ import { describe, expect, test } from "vitest";
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
+  battleFrontierInterruptDecisionForState,
 } from "./battle-runtime.test-support.ts";
 import {
   spellAct,
@@ -2138,9 +2139,6 @@ describe("battle runtime: Weapon Mastery", () => {
     expect(awaitingPrimaryAfterDamage).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
-      snapshot: {
-        pendingInterrupt: { trigger: "afterDamage" },
-      },
     });
     if (awaitingPrimaryAfterDamage.tag !== "needsHoles") {
       throw new Error(
@@ -2157,7 +2155,9 @@ describe("battle runtime: Weapon Mastery", () => {
     const afterDecline = resolveBattleInterrupt({
       state: awaitingPrimaryAfterDamage.state,
       fill: interruptDecisionFill(
-        awaitingPrimaryAfterDamage.snapshot.pendingInterrupt!.decisionHole,
+        battleFrontierInterruptDecisionForState(
+          awaitingPrimaryAfterDamage.state,
+        )!.decisionHole,
         { kind: "decline", responderId: wizardId },
       ),
     });
@@ -2276,7 +2276,6 @@ describe("battle runtime: Weapon Mastery", () => {
       tag: "needsHoles",
       holes: [{ kind: "interruptDecision", trigger: "attackHit" }],
       snapshot: {
-        pendingInterrupt: { trigger: "attackHit" },
         combatants: expect.arrayContaining([
           expect.objectContaining({ combatantId: skeletonId, hp: Hp(12) }),
         ]),
@@ -2291,7 +2290,8 @@ describe("battle runtime: Weapon Mastery", () => {
     const afterCleaveHitDecline = resolveBattleInterrupt({
       state: awaitingCleaveAttackHit.state,
       fill: interruptDecisionFill(
-        awaitingCleaveAttackHit.snapshot.pendingInterrupt!.decisionHole,
+        battleFrontierInterruptDecisionForState(awaitingCleaveAttackHit.state)!
+          .decisionHole,
         { kind: "decline", responderId: skeletonId },
       ),
     });

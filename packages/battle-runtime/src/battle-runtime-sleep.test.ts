@@ -7,7 +7,7 @@ import { describe, expect, test } from "vitest";
 import {
   applyBattleHitPointDamage,
   armorClass,
-  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
+  assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
   attackRollFill,
   attackTargetFill,
   battleAfterFailedSleepInitialSave,
@@ -434,7 +434,7 @@ describe("battle runtime: Sleep", () => {
     if (repeatSaveRequest.tag !== "needsHoles") {
       throw new Error("Expected Sleep repeat save.");
     }
-    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+    assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: repeatSaveRequest.snapshot,
       subject: repeatSaveRequest.subject,
       holes: repeatSaveRequest.holes,

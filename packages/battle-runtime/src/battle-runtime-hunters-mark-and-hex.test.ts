@@ -908,8 +908,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     expect(awaitingCounterspell).toMatchObject({
       tag: "needsHoles",
       snapshot: {
-        pendingInterrupt: { trigger: "spellCast" },
-        turn: { bonusActionAvailable: false },
+        turn: { bonusActionQuotaAvailable: true },
       },
     });
     if (awaitingCounterspell.tag !== "needsHoles") {

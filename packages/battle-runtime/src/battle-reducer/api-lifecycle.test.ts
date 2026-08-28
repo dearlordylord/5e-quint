@@ -1,8 +1,14 @@
 import * as Either from "effect/Either";
-import { unitId } from "@dnd/shared/game-facts";
+import { statBlockId, unitId } from "@dnd/shared/game-facts";
+import { Hp } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 
-import { battleId, battleObjectId, combatantId } from "../identity.ts";
+import {
+  battleCompanionFormId,
+  battleId,
+  battleObjectId,
+  combatantId,
+} from "../identity.ts";
 import {
   characterSeed,
   startBattleRight,
@@ -14,6 +20,8 @@ import {
   addBattleRuntimeCombatant,
   applyInitiativeSwap,
   battleStateInitIssueFromAdmissionIssues,
+  battleInitializationIssueFactFields,
+  battleInitializationIssueLeaves,
   createInitialInitiativeForCombatants,
   finishInitialInitiativeSetup as finishInitialInitiativeSetupFromApi,
   removeBattleRuntimeCombatants,
@@ -21,6 +29,11 @@ import {
   startBattle,
   startBattleWithInitialInitiativeSetup as startBattleWithInitialInitiativeSetupFromApi,
 } from "./api-lifecycle.ts";
+import type {
+  BattleInitializationIssue,
+  BattleInitializationIssueFacts,
+  BattleInitializationLeafIssue,
+} from "../battle-state-execution.ts";
 
 describe("battle lifecycle admission issue aggregation", () => {
   const baseCombatant = characterSeed({ initiative: 20 });
@@ -71,6 +84,7 @@ describe("battle lifecycle admission issue aggregation", () => {
       expect(result.left).toEqual({
         tag: "weaponLoadoutMismatch",
         slot: "main-hand",
+        ownerPath: ["initialCombatants", 0],
       });
     }
   });
@@ -85,6 +99,7 @@ describe("battle lifecycle admission issue aggregation", () => {
       expect(empty.left).toEqual({
         tag: "battleStateInitIssue",
         message: "startBattle requires at least one combatant.",
+        kind: "emptyRoster",
       });
     }
 
@@ -97,8 +112,245 @@ describe("battle lifecycle admission issue aggregation", () => {
       expect(duplicate.left).toEqual({
         tag: "battleStateInitIssue",
         message: `Duplicate combatant id: ${baseCombatant.combatantId}`,
+        kind: "duplicateCombatantId",
+        combatantId: baseCombatant.combatantId,
+        ownerPath: ["initialCombatants", 1],
       });
     }
+  });
+
+  test("projects every initialization fact without dropping its structured fields", () => {
+    const factCombatantId = combatantId("initialization-fact-combatant");
+    const otherFactCombatantId = combatantId(
+      "initialization-fact-other-combatant",
+    );
+    const factStatBlockId = statBlockId("initialization-fact-stat-block");
+    const otherFactStatBlockId = statBlockId(
+      "initialization-fact-other-stat-block",
+    );
+    const factWeaponUnitId = unitId("initialization-fact-weapon");
+    const facts = [
+      { kind: "emptyRoster" },
+      {
+        kind: "duplicateCombatantId",
+        combatantId: factCombatantId,
+      },
+      {
+        kind: "ammunitionStockInvalid",
+        combatantId: factCombatantId,
+        ammunition: "arrow",
+      },
+      {
+        kind: "currentHpExceedsMaximum",
+        combatantId: factCombatantId,
+        currentHp: Hp(3),
+        maximumHp: Hp(2),
+      },
+      {
+        kind: "positiveHpUnconsciousInvalid",
+        combatantId: factCombatantId,
+        requirement: "oneCurrentHp",
+      },
+      {
+        kind: "zeroHpLifecycleInvalid",
+        combatantId: factCombatantId,
+        requirement: "absentAtPositiveHp",
+      },
+      {
+        kind: "initialConditionImmune",
+        combatantId: factCombatantId,
+        condition: "blinded",
+      },
+      {
+        kind: "statBlockSourceInvalid",
+        statBlockId: factStatBlockId,
+        constraint: "literalArmorClassRequired",
+      },
+      {
+        kind: "statBlockCombatantInvalid",
+        combatantId: factCombatantId,
+        constraint: "concreteCreatureTypeRequired",
+      },
+      {
+        kind: "characterClassLevelsInvalid",
+        combatantId: factCombatantId,
+        issueIndex: 0,
+      },
+      {
+        kind: "characterSupportProjectionInvalid",
+        combatantId: factCombatantId,
+        issueIndex: 1,
+      },
+      {
+        kind: "characterResourceInvalid",
+        combatantId: factCombatantId,
+        issueIndex: 2,
+      },
+      {
+        kind: "characterFeatureInvalid",
+        combatantId: factCombatantId,
+        issueIndex: 3,
+      },
+      {
+        kind: "characterSpellcastingInvalid",
+        combatantId: factCombatantId,
+        issueIndex: 4,
+      },
+      {
+        kind: "characterAdmissionInvalid",
+        combatantId: factCombatantId,
+        phase: "weaponExecution",
+        issueIndex: 5,
+      },
+      {
+        kind: "executionScopeUnavailable",
+        combatantId: factCombatantId,
+      },
+      {
+        kind: "runtimeContextMissing",
+        combatantId: factCombatantId,
+      },
+      {
+        kind: "weaponPresentationUnavailable",
+        combatantId: factCombatantId,
+        weaponUnitId: factWeaponUnitId,
+        availability: "missing",
+      },
+      {
+        kind: "hidePrerequisiteReferencesUnknownCombatant",
+        combatantId: factCombatantId,
+        referencedCombatantId: otherFactCombatantId,
+      },
+      {
+        kind: "hidePrerequisiteSelfReference",
+        combatantId: factCombatantId,
+      },
+      {
+        kind: "initialCombatantOrderMissing",
+        combatantId: factCombatantId,
+      },
+      {
+        kind: "initialInitiativeInvalid",
+        initializationReason: "emptyRoster",
+      },
+      {
+        kind: "runtimeAdmissionInvalid",
+        combatantId: factCombatantId,
+        origin: "character",
+        issueIndex: 6,
+      },
+      {
+        kind: "companionOwnerMissing",
+        ownerId: factCombatantId,
+      },
+      {
+        kind: "companionDurableIdentityMissing",
+        ownerId: factCombatantId,
+      },
+      {
+        kind: "companionOwnerAlreadyHasCompanion",
+        ownerId: factCombatantId,
+      },
+      {
+        kind: "companionDurableIdentityInUse",
+        ownerId: factCombatantId,
+        durableCompanionId: "initialization-fact-companion",
+        existingOwnerId: otherFactCombatantId,
+      },
+      {
+        kind: "companionManifestationInvalid",
+        ownerId: factCombatantId,
+        requirement: "embodiedOutsideBattle",
+      },
+      {
+        kind: "companionFormStatBlockMissing",
+        formAccess: "findFamiliar",
+        resolvedStatBlockId: factStatBlockId,
+      },
+      {
+        kind: "companionFormAccessMismatch",
+        storedFormAccess: "findFamiliar",
+        eligibilityFormAccess: "pactOfTheChain",
+      },
+      {
+        kind: "companionFormResolvedStatBlockMismatch",
+        formAccess: "findFamiliar",
+        expectedStatBlockId: factStatBlockId,
+        resolvedStatBlockId: otherFactStatBlockId,
+      },
+      {
+        kind: "companionFormSelectionStatBlockMissing",
+        formAccess: "findFamiliar",
+        selectedStatBlockId: factStatBlockId,
+      },
+      {
+        kind: "companionFormSelectionStatBlockInvalid",
+        formAccess: "findFamiliar",
+        selectedStatBlockId: factStatBlockId,
+        expectedCreatureType: "beast",
+        expectedChallengeRating: 0,
+      },
+      {
+        kind: "companionFormSpecialFormUnknown",
+        formAccess: "pactOfTheChain",
+        formId: battleCompanionFormId("initialization-fact-special-form"),
+      },
+      {
+        kind: "companionFormNormalFormIneligible",
+        formAccess: "findFamiliar",
+        formId: battleCompanionFormId("initialization-fact-normal-form"),
+      },
+      {
+        kind: "companionCombatantAdmissionInvalid",
+        ownerId: factCombatantId,
+        companionCombatantId: otherFactCombatantId,
+      },
+      {
+        kind: "companionInitialInitiativeInvalid",
+        ownerId: factCombatantId,
+        companionCombatantId: otherFactCombatantId,
+        requirement: "stackConstruction",
+      },
+      {
+        kind: "companionOwnerRuntimeContextMissing",
+        ownerId: factCombatantId,
+      },
+      {
+        kind: "companionPresentationStatBlockMissing",
+        companionCombatantId: otherFactCombatantId,
+        statBlockId: factStatBlockId,
+      },
+      {
+        kind: "companionPresentationCombatantMissing",
+        companionCombatantId: otherFactCombatantId,
+        statBlockId: factStatBlockId,
+      },
+    ] satisfies ReadonlyArray<BattleInitializationIssueFacts>;
+
+    for (const fact of facts) {
+      const { kind, ...fields } = fact;
+      expect(battleInitializationIssueFactFields(fact)).toEqual({
+        reason: kind,
+        ...fields,
+      });
+    }
+
+    const first = {
+      tag: "battleStateInitIssue",
+      message: "fact leaf",
+      kind: "emptyRoster",
+    } as const satisfies BattleInitializationLeafIssue;
+    const second = {
+      tag: "weaponLoadoutMismatch",
+      slot: "off-hand",
+    } as const satisfies BattleInitializationLeafIssue;
+    const nested = {
+      tag: "battleStateInitIssues",
+      issues: [first, second],
+    } as const satisfies BattleInitializationIssue;
+    expect(battleInitializationIssueLeaves(nested)).toEqual([first, second]);
+    expect(battleInitializationIssueLeaves(first)).toEqual([first]);
+    expect(battleInitializationIssueLeaves(second)).toEqual([second]);
   });
 
   test("initial Initiative rejects incomplete caller ordering and empty rosters", () => {
@@ -147,8 +399,16 @@ describe("battle lifecycle admission issue aggregation", () => {
       expect(result.left).toEqual({
         tag: "battleStateInitIssues",
         issues: [
-          { tag: "weaponLoadoutMismatch", slot: "main-hand" },
-          { tag: "weaponLoadoutMismatch", slot: "off-hand" },
+          {
+            tag: "weaponLoadoutMismatch",
+            slot: "main-hand",
+            ownerPath: ["initialCombatants", 0],
+          },
+          {
+            tag: "weaponLoadoutMismatch",
+            slot: "off-hand",
+            ownerPath: ["initialCombatants", 0],
+          },
         ],
       });
     }

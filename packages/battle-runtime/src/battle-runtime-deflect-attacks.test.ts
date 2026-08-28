@@ -31,6 +31,7 @@ import {
   unitLibrary,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
   battleId,
+  battleFrontierInterruptDecisionForState,
   battleProcedureExecutionRefForTest,
   battleReactionRollOrDamageReductionSupportForUnit,
   battleUnitSupportProfilesForUnit,
@@ -136,7 +137,7 @@ describe("battle runtime: Deflect Attacks", () => {
       throw new Error("Expected Deflect Attacks Reaction window.");
     }
     const choice = reactionModifierChoice(
-      setup.result.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(setup.result.state)!.choices,
       unit.id,
       "attackDamageReduction",
     );
@@ -245,7 +246,7 @@ describe("battle runtime: Deflect Attacks", () => {
       throw new Error("Expected Deflect Attacks Reaction window.");
     }
     const choice = reactionModifierChoice(
-      setup.result.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(setup.result.state)!.choices,
       unit.id,
       "attackDamageReduction",
     );
@@ -324,7 +325,7 @@ describe("battle runtime: Deflect Attacks", () => {
       throw new Error("Expected Deflect Attacks Reaction window.");
     }
     const choice = reactionModifierChoice(
-      setup.result.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(setup.result.state)!.choices,
       unit.id,
       "attackDamageReduction",
     );
@@ -429,7 +430,7 @@ describe("battle runtime: Deflect Attacks", () => {
       throw new Error("Expected Deflect Attacks Reaction window.");
     }
     const choice = reactionModifierChoice(
-      setup.result.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(setup.result.state)!.choices,
       unit.id,
       "attackDamageReduction",
     );
@@ -530,7 +531,7 @@ describe("battle runtime: Deflect Attacks", () => {
       throw new Error("Expected Deflect Attacks Reaction window.");
     }
     const choice = reactionModifierChoice(
-      setup.result.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(setup.result.state)!.choices,
       unit.id,
       "attackDamageReduction",
     );
@@ -654,7 +655,7 @@ describe("battle runtime: Deflect Attacks", () => {
       throw new Error("Expected Deflect Attacks Reaction window.");
     }
     const choice = reactionModifierChoice(
-      awaitingReaction.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(awaitingReaction.state)!.choices,
       unit.id,
       "attackDamageReduction",
     );

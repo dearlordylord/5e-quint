@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001",
+  "scenarioSha256": "9c941aa981140bfb61f39116cc9f406ed66c2a9d61b836d8d3b9ac18fc42b0c7",
+  "source": "scenarioGenerationCandidate",
+  "facts": {
+    "schemaVersion": 1,
+    "characterRequirement": {
+      "tag": "statBlocksOnly",
+      "evidence": "Goblin Warrior, Skeleton, Wolf, and Riding Horse are selected directly from the available canonical stat-block catalog."
+    },
+    "spatialRequirement": {
+      "tag": "geometryAssisted",
+      "evidence": "Exact arena bounds, impenetrable pillar volumes, placements, and objective predicates allow the geometry adapter to answer every required spatial question."
+    }
+  }
+}

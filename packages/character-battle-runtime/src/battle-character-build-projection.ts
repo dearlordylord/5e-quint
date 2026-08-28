@@ -40,6 +40,9 @@ import {
   eldritchInvocationId,
   type CharacterBuild,
   type CharacterBuildMagicInitiateSpellAccessIssue,
+  type CharacterBuildProjectionCause,
+  type CharacterBuildProjectionIssue,
+  type CharacterBuildMagicInitiateSpellAccess,
   type CharacterEquipmentItemId,
   type CharacterBuildSpellcastingSource,
   type NonEmptyReadonlyArray,
@@ -67,6 +70,7 @@ import {
   proficiencyBonusForCharacterLevel,
   resourceCount,
   spellSlotLevel,
+  type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import type {
   Ability,
@@ -83,18 +87,171 @@ import {
   spellcastingClassRecordForClassName,
 } from "@dnd/surface/surface/unit-catalog-core";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import { Either, Option } from "effect";
+import { Either, Match, Option } from "effect";
+import { isNonEmptyReadonlyArray } from "effect/Array";
 import {
   classSpellChoiceIsRuntimeDetached,
   omitRuntimeDetachedClassSpellChoices,
   type ClassSpellChoiceKind,
 } from "./class-spell-choice-projection.ts";
 
-export type BattleCreatureInitIssue = {
+type CharacterBattleBuildProjectionPhase =
+  | "derivedState"
+  | "hitPoints"
+  | "proficiencies"
+  | "classLevels"
+  | "supportProfiles"
+  | "resources"
+  | "spellcasting"
+  | "species"
+  | "armorClass"
+  | "equipment"
+  | "druidWildShape"
+  | "metamagic";
+
+type CharacterBattleBuildProjectionReasonFor<
+  Cause extends CharacterBuildProjectionCause = CharacterBuildProjectionCause,
+> = Cause extends CharacterBuildProjectionCause
+  ? {
+      readonly kind: "characterBuildProjection";
+      readonly phase: CharacterBattleBuildProjectionPhase;
+      readonly cause: Cause["tag"];
+    } & Omit<Cause, "tag" | "reason"> &
+      (Cause extends { readonly reason: infer CauseReason }
+        ? { readonly causeReason: CauseReason }
+        : Record<never, never>)
+  : never;
+
+export type CharacterBattleInitIssueReason =
+  | {
+      readonly kind: "characterBuildProjection";
+      readonly phase: CharacterBattleBuildProjectionPhase;
+    }
+  | CharacterBattleBuildProjectionReasonFor
+  | {
+      readonly kind: "characterBattleInput";
+      readonly field: "initiative" | "hitPointMaximum" | "currentHp";
+      readonly constraint:
+        | "integer"
+        | "positive"
+        | "notAboveBuildMaximum"
+        | "notAboveMaximum";
+    }
+  | {
+      readonly kind: "characterBattleInvariant";
+      readonly invariant:
+        | "characterOriginRequired"
+        | "distinctResourceUnits"
+        | "distinctFeatureUnits"
+        | "distinctWeaponMasteries"
+        | "loadoutMatchesArmorClass";
+    }
+  | {
+      readonly kind: "characterBattleResourceProjection";
+      readonly issueIndex: number;
+    }
+  | {
+      readonly kind: "characterBattleSupportProjection";
+      readonly issueIndex: number;
+    }
+  | {
+      readonly kind: "characterBattleClassLevelsProjection";
+      readonly issueIndex: number;
+    }
+  | {
+      readonly kind: "characterBattleSpellProjection";
+      readonly issueIndex: number;
+    };
+
+type CharacterBattleInitIssueFactFor<
+  Reason extends CharacterBattleInitIssueReason =
+    CharacterBattleInitIssueReason,
+> = Reason extends CharacterBattleInitIssueReason
+  ? Omit<Reason, "kind"> & { readonly reason: Reason["kind"] }
+  : never;
+
+export type CharacterBattleInitIssueFact = CharacterBattleInitIssueFactFor;
+
+export function characterBattleInitIssueFactFields(
+  reason: CharacterBattleInitIssueReason,
+): CharacterBattleInitIssueFact {
+  return Match.value(reason).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      characterBuildProjection: (matched) => {
+        const { kind, ...fields } = matched;
+        return { ...fields, reason: kind };
+      },
+      characterBattleInput: ({ kind, field, constraint }) => ({
+        reason: kind,
+        field,
+        constraint,
+      }),
+      characterBattleInvariant: ({ kind, invariant }) => ({
+        reason: kind,
+        invariant,
+      }),
+      characterBattleResourceProjection: ({ kind, issueIndex }) => ({
+        reason: kind,
+        issueIndex,
+      }),
+      characterBattleSupportProjection: ({ kind, issueIndex }) => ({
+        reason: kind,
+        issueIndex,
+      }),
+      characterBattleClassLevelsProjection: ({ kind, issueIndex }) => ({
+        reason: kind,
+        issueIndex,
+      }),
+      characterBattleSpellProjection: ({ kind, issueIndex }) => ({
+        reason: kind,
+        issueIndex,
+      }),
+    }),
+  );
+}
+
+export function characterBattleInitIssueReasonFromFact(
+  fact: CharacterBattleInitIssueFact,
+): CharacterBattleInitIssueReason {
+  return Match.value(fact).pipe(
+    Match.discriminatorsExhaustive("reason")({
+      characterBuildProjection: (matched) => {
+        const { reason, ...fields } = matched;
+        return { kind: reason, ...fields };
+      },
+      characterBattleInput: ({ reason, field, constraint }) => ({
+        kind: reason,
+        field,
+        constraint,
+      }),
+      characterBattleInvariant: ({ reason, invariant }) => ({
+        kind: reason,
+        invariant,
+      }),
+      characterBattleResourceProjection: ({ reason, issueIndex }) => ({
+        kind: reason,
+        issueIndex,
+      }),
+      characterBattleSupportProjection: ({ reason, issueIndex }) => ({
+        kind: reason,
+        issueIndex,
+      }),
+      characterBattleClassLevelsProjection: ({ reason, issueIndex }) => ({
+        kind: reason,
+        issueIndex,
+      }),
+      characterBattleSpellProjection: ({ reason, issueIndex }) => ({
+        kind: reason,
+        issueIndex,
+      }),
+    }),
+  );
+}
+
+export type BattleCreatureInitLeafIssue = {
   readonly tag: "battleCreatureInitIssue";
   readonly message: string;
-  readonly spellAccessIssues?: readonly CharacterBattleSpellAccessProjectionIssue[];
-};
+} & CharacterBattleInitIssueFact;
 
 type CharacterBattleSpellAccessProjectionIssueBase = {
   readonly tag: "characterBattleSpellAccessProjectionIssue";
@@ -108,23 +265,149 @@ export type CharacterBattleSpellAccessProjectionIssue =
       readonly cause:
         | "missingSourceUnit"
         | "unsupportedSourceUnit"
-        | "missingSpellListSource"
-        | "invalidSpellSelection";
+        | "missingSpellListSource";
+    })
+  | (CharacterBattleSpellAccessProjectionIssueBase & {
+      readonly accessIndex: number;
+      readonly featUnitId: UnitRecord["id"];
+      readonly cause: "invalidSpellSelection";
+      readonly issueIndex: number;
     })
   | (CharacterBattleSpellAccessProjectionIssueBase & {
       readonly issueIndex: number;
       readonly cause: "invalidBuildSpellAccess";
     });
 
+export type BattleCreatureInitIssueLeaf =
+  | BattleCreatureInitLeafIssue
+  | CharacterBattleSpellAccessProjectionIssue;
+
+export type BattleCreatureInitIssue =
+  | BattleCreatureInitIssueLeaf
+  | {
+      readonly tag: "battleCreatureInitIssues";
+      /** Presentation-only summary; the independently checkable facts remain in `issues`. */
+      readonly message: string;
+      readonly issues: readonly [
+        BattleCreatureInitIssueLeaf,
+        BattleCreatureInitIssueLeaf,
+        ...BattleCreatureInitIssueLeaf[],
+      ];
+    };
+
 export function battleCreatureInitIssue(
   message: string,
-  spellAccessIssues: readonly CharacterBattleSpellAccessProjectionIssue[] = [],
-): Either.Either<never, BattleCreatureInitIssue> {
+  reason: CharacterBattleInitIssueReason = {
+    kind: "characterBuildProjection",
+    phase: "derivedState",
+  },
+): Either.Either<never, BattleCreatureInitLeafIssue> {
   return Either.left({
     tag: "battleCreatureInitIssue",
     message,
-    ...(spellAccessIssues.length === 0 ? {} : { spellAccessIssues }),
+    ...characterBattleInitIssueFactFields(reason),
   });
+}
+
+export function battleCreatureInitIssueFromCharacterBuildProjection(
+  issue: CharacterBuildProjectionIssue,
+  phase: CharacterBattleBuildProjectionPhase,
+): BattleCreatureInitLeafIssue {
+  const { tag: cause, ...causeFields } = issue.cause;
+  const reason =
+    issue.cause.tag === "invalidChoiceOption"
+      ? {
+          kind: "characterBuildProjection" as const,
+          phase,
+          cause,
+          causeReason: issue.cause.reason,
+          optionId: issue.cause.optionId,
+        }
+      : {
+          kind: "characterBuildProjection" as const,
+          phase,
+          cause,
+          ...causeFields,
+        };
+  return {
+    tag: "battleCreatureInitIssue",
+    message: characterCreationIssueMessage(issue),
+    ...characterBattleInitIssueFactFields(reason),
+  };
+}
+
+export function battleCreatureInitIssuesFromCharacterBuildProjection(
+  issues: ReadonlyNonEmptyArray<CharacterBuildProjectionIssue>,
+  phase: CharacterBattleBuildProjectionPhase,
+): Either.Either<never, BattleCreatureInitIssue> {
+  const [first, ...rest] = issues;
+  return battleCreatureInitIssueFromLeaves([
+    battleCreatureInitIssueFromCharacterBuildProjection(first, phase),
+    ...rest.map((issue) =>
+      battleCreatureInitIssueFromCharacterBuildProjection(issue, phase),
+    ),
+  ]);
+}
+
+export function battleCreatureInitIssues(
+  first: BattleCreatureInitIssueLeaf,
+  second: BattleCreatureInitIssueLeaf,
+  ...rest: ReadonlyArray<BattleCreatureInitIssueLeaf>
+): Either.Either<
+  never,
+  Extract<BattleCreatureInitIssue, { tag: "battleCreatureInitIssues" }>
+> {
+  return Either.left({
+    tag: "battleCreatureInitIssues",
+    message: [first, second, ...rest]
+      .map(battleCreatureInitIssueMessage)
+      .join("; "),
+    issues: [first, second, ...rest],
+  });
+}
+
+export function battleCreatureInitIssueFromLeaves(
+  issues: ReadonlyNonEmptyArray<BattleCreatureInitIssueLeaf>,
+): Either.Either<never, BattleCreatureInitIssue> {
+  const [first, second, ...rest] = issues;
+  return second === undefined
+    ? Either.left(first)
+    : battleCreatureInitIssues(first, second, ...rest);
+}
+
+export function battleCreatureInitIssuesFromMessages(
+  messages: readonly string[],
+  reasonForIndex: (index: number) => CharacterBattleInitIssueReason,
+): Either.Either<never, BattleCreatureInitIssue> {
+  const leaves = messages.map((message, index) => ({
+    tag: "battleCreatureInitIssue" as const,
+    message,
+    ...characterBattleInitIssueFactFields(reasonForIndex(index)),
+  }));
+  if (!isNonEmptyReadonlyArray(leaves)) {
+    return battleCreatureInitIssue(
+      "Character battle initialization produced no projection issue facts.",
+      reasonForIndex(0),
+    );
+  }
+  return battleCreatureInitIssueFromLeaves(leaves);
+}
+
+export function battleCreatureInitIssueLeaves(
+  issue: BattleCreatureInitIssue,
+): ReadonlyNonEmptyArray<BattleCreatureInitIssueLeaf> {
+  if (issue.tag !== "battleCreatureInitIssues") return [issue];
+  const [firstIssue, ...restIssues] = issue.issues;
+  const firstLeaves = battleCreatureInitIssueLeaves(firstIssue);
+  return [...firstLeaves, ...restIssues.flatMap(battleCreatureInitIssueLeaves)];
+}
+
+export function battleCreatureInitIssueMessage(
+  issue: BattleCreatureInitIssue,
+): string {
+  return issue.tag === "battleCreatureInitIssues"
+    ? issue.issues.map(battleCreatureInitIssueMessage).join("; ")
+    : issue.message;
 }
 
 export function characterArmorClassState(input: {
@@ -141,7 +424,7 @@ export function characterArmorClassState(input: {
   )) {
     const unit = getRequiredUnit(input.unitLibrary, featureUnitId);
     if (Either.isLeft(unit)) {
-      return battleCreatureInitIssue(unit.left.message);
+      return battleCreatureInitIssue(battleCreatureInitIssueMessage(unit.left));
     }
     bonuses.push(...armorDefenseBonus(unit.right));
   }
@@ -261,7 +544,7 @@ export function characterOffHandAttackActionOption(
     pactBladeBondedWeaponItemId,
   );
   if (Either.isLeft(option)) {
-    return battleCreatureInitIssue(option.left.message);
+    return battleCreatureInitIssue(battleCreatureInitIssueMessage(option.left));
   }
   return option.right === null
     ? battleCreatureInitIssue(
@@ -386,7 +669,7 @@ export function characterPactBladeBondedWeaponItemId(input: {
   const weaponUnitId = characterEquipmentItemSourceFromId(input.itemId).unitId;
   const unit = getRequiredUnit(input.unitLibrary, weaponUnitId);
   if (Either.isLeft(unit)) {
-    return battleCreatureInitIssue(unit.left.message);
+    return battleCreatureInitIssue(battleCreatureInitIssueMessage(unit.left));
   }
   if (
     unit.right.kind !== "weapon" ||
@@ -414,7 +697,7 @@ function characterWeaponAttackActionOption(
 > {
   const unit = getRequiredUnit(unitLibrary, unitId);
   if (Either.isLeft(unit)) {
-    return battleCreatureInitIssue(unit.left.message);
+    return battleCreatureInitIssue(battleCreatureInitIssueMessage(unit.left));
   }
   if (unit.right.kind !== "weapon" || unit.right.damage.kind !== "dice") {
     return Either.right(null);
@@ -437,7 +720,9 @@ function characterWeaponAttackActionOption(
     classLevels,
   });
   if (Either.isLeft(martialArts)) {
-    return battleCreatureInitIssue(martialArts.left.message);
+    return battleCreatureInitIssue(
+      battleCreatureInitIssueMessage(martialArts.left),
+    );
   }
   const projectedAttack =
     martialArts.right === null || !isMonkWeapon(unit.right)
@@ -484,7 +769,9 @@ export function characterBaseUnarmedStrikeActionOption(
     classLevels,
   });
   if (Either.isLeft(martialArts)) {
-    return battleCreatureInitIssue(martialArts.left.message);
+    return battleCreatureInitIssue(
+      battleCreatureInitIssueMessage(martialArts.left),
+    );
   }
   return Either.right(
     martialArts.right === null
@@ -651,7 +938,7 @@ function martialArtsAttackProjectionForBuild(input: {
   )) {
     const unit = getRequiredUnit(input.unitLibrary, featureUnitId);
     if (Either.isLeft(unit)) {
-      return battleCreatureInitIssue(unit.left.message);
+      return battleCreatureInitIssue(battleCreatureInitIssueMessage(unit.left));
     }
     const profile = martialArtsAttackProjectionProfileForUnit(
       unit.right,
@@ -791,18 +1078,65 @@ function spellcastingAllowedByArmorTraining(
             .unitId,
         );
   if (armor !== undefined && Either.isLeft(armor)) {
-    return battleCreatureInitIssue(armor.left.message);
+    return battleCreatureInitIssue(battleCreatureInitIssueMessage(armor.left));
   }
   const armorTraining = characterBuildArmorTraining(build, unitLibrary);
   if (Either.isLeft(armorTraining)) {
-    return battleCreatureInitIssue(
-      armorTraining.left.map(characterCreationIssueMessage).join("; "),
+    return battleCreatureInitIssuesFromMessages(
+      armorTraining.left.map(characterCreationIssueMessage),
+      () => ({
+        kind: "characterBuildProjection",
+        phase: "proficiencies",
+      }),
     );
   }
   return Either.right(
     armor?.right.kind !== "armor" ||
       armorTraining.right.includes(armor.right.category),
   );
+}
+
+function parseCharacterBattleMagicInitiateSpellAccesses(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+}): Either.Either<
+  readonly CharacterBuildMagicInitiateSpellAccess[],
+  BattleCreatureInitIssue
+> {
+  const parsed = parseCharacterBuildMagicInitiateSpellAccesses({
+    value: input.build.magicInitiateSpellAccesses,
+    build: input.build,
+    unitLibrary: input.unitLibrary,
+  });
+  if (Either.isRight(parsed)) return Either.right(parsed.right);
+  const spellAccessIssues = characterBattleSpellAccessProjectionIssues(
+    parsed.left,
+    input.build,
+  );
+  return isNonEmptyReadonlyArray(spellAccessIssues)
+    ? battleCreatureInitIssueFromLeaves(spellAccessIssues)
+    : battleCreatureInitIssue(
+        "Character Battle Spell Access projection contains invalid selections.",
+        { kind: "characterBuildProjection", phase: "spellcasting" },
+      );
+}
+
+function projectCharacterBattleMagicInitiateSpellAccessesForCasting(input: {
+  readonly build: CharacterBuild;
+  readonly accesses: readonly CharacterBuildMagicInitiateSpellAccess[];
+  readonly unitLibrary: UnitCatalog;
+}): Either.Either<
+  readonly CharacterBattleSpellAccessInit[],
+  BattleCreatureInitIssue
+> {
+  const projected = projectCharacterBattleMagicInitiateSpellAccesses(input);
+  if (Either.isRight(projected)) return Either.right(projected.right);
+  return isNonEmptyReadonlyArray(projected.left)
+    ? battleCreatureInitIssueFromLeaves(projected.left)
+    : battleCreatureInitIssue(
+        "Character Battle Spell Access projection contains invalid selections.",
+        { kind: "characterBuildProjection", phase: "spellcasting" },
+      );
 }
 
 export function characterSpellcasting(input: {
@@ -822,25 +1156,16 @@ export function characterSpellcasting(input: {
 > {
   const { build, unitLibrary } = input;
   const parsedMagicInitiateSpellAccesses =
-    parseCharacterBuildMagicInitiateSpellAccesses({
-      value: build.magicInitiateSpellAccesses,
-      build,
-      unitLibrary,
-    });
+    parseCharacterBattleMagicInitiateSpellAccesses({ build, unitLibrary });
   if (Either.isLeft(parsedMagicInitiateSpellAccesses)) {
-    const spellAccessIssues = characterBattleSpellAccessProjectionIssues(
-      parsedMagicInitiateSpellAccesses.left,
-      build,
-    );
-    return battleCreatureInitIssue(
-      spellAccessIssues.map((issue) => issue.message).join("; "),
-      spellAccessIssues,
-    );
+    return Either.left(parsedMagicInitiateSpellAccesses.left);
   }
   const spellcasting = build.spellcasting;
   const canCastSpells = characterBattleSpellcastingCanCast(input);
   if (Either.isLeft(canCastSpells)) {
-    return battleCreatureInitIssue(canCastSpells.left.message);
+    return battleCreatureInitIssue(
+      battleCreatureInitIssueMessage(canCastSpells.left),
+    );
   }
   const sources =
     spellcasting === undefined
@@ -850,7 +1175,9 @@ export function characterSpellcasting(input: {
           sources: spellcasting.sources,
         });
   if (Either.isLeft(sources)) {
-    return battleCreatureInitIssue(sources.left.message);
+    return battleCreatureInitIssue(
+      battleCreatureInitIssueMessage(sources.left),
+    );
   }
   const spellRecords = characterBattleSpellRecordsForSources({
     sources: sources.right,
@@ -860,17 +1187,13 @@ export function characterSpellcasting(input: {
     return Either.left(spellRecords.left);
   }
   const projectedMagicInitiateSpellAccesses =
-    projectCharacterBattleMagicInitiateSpellAccesses({
+    projectCharacterBattleMagicInitiateSpellAccessesForCasting({
       build,
       accesses: parsedMagicInitiateSpellAccesses.right,
       unitLibrary,
     });
   if (Either.isLeft(projectedMagicInitiateSpellAccesses)) {
-    const spellAccessIssues = projectedMagicInitiateSpellAccesses.left;
-    return battleCreatureInitIssue(
-      spellAccessIssues.map((issue) => issue.message).join("; "),
-      spellAccessIssues,
-    );
+    return Either.left(projectedMagicInitiateSpellAccesses.left);
   }
   const projectedSpellAccesses = projectedMagicInitiateSpellAccesses.right;
   const additionalSpellAccesses = characterBattleAdditionalSpellAccesses({
@@ -985,10 +1308,20 @@ function characterBattleSpellRecordsForSources(input: {
           selectionKind: "leveledSpell",
         });
   const issues = [cantrips, preparedSpells].flatMap((projection) =>
-    Either.isLeft(projection) ? [projection.left.message] : [],
+    Either.isLeft(projection)
+      ? [battleCreatureInitIssueMessage(projection.left)]
+      : [],
   );
   return Either.isLeft(cantrips) || Either.isLeft(preparedSpells)
-    ? battleCreatureInitIssue(issues.join("; "))
+    ? isNonEmptyReadonlyArray(issues)
+      ? battleCreatureInitIssuesFromMessages(issues, () => ({
+          kind: "characterBuildProjection",
+          phase: "spellcasting",
+        }))
+      : battleCreatureInitIssue(
+          "Character battle spell records projection failed.",
+          { kind: "characterBuildProjection", phase: "spellcasting" },
+        )
     : Either.right({
         cantrips: cantrips.right,
         preparedSpells: preparedSpells.right,
@@ -1076,6 +1409,7 @@ function characterBattleSpellAccessProjectionIssues(
           accessIndex,
           featUnitId: access.featUnitId,
           cause: "invalidSpellSelection",
+          issueIndex,
           message: issue.message,
         };
   });
@@ -1098,7 +1432,7 @@ function projectCharacterBattleMagicInitiateSpellAccesses(input: {
       accessIndex,
       unitLibrary: input.unitLibrary,
     });
-    if (Either.isLeft(projection)) issues.push(projection.left);
+    if (Either.isLeft(projection)) issues.push(...projection.left);
     else projected.push(projection.right);
   }
   return issues.length > 0 ? Either.left(issues) : Either.right(projected);
@@ -1111,42 +1445,48 @@ function projectCharacterBattleMagicInitiateSpellAccess(input: {
   readonly unitLibrary: UnitCatalog;
 }): Either.Either<
   CharacterBattleSpellAccessInit,
-  CharacterBattleSpellAccessProjectionIssue
+  readonly CharacterBattleSpellAccessProjectionIssue[]
 > {
   const sourceUnit = input.unitLibrary.getUnit(input.access.featUnitId);
   if (Option.isNone(sourceUnit)) {
-    return Either.left({
-      tag: "characterBattleSpellAccessProjectionIssue",
-      accessIndex: input.accessIndex,
-      featUnitId: input.access.featUnitId,
-      cause: "missingSourceUnit",
-      message: `Magic Initiate Spell Access source Unit is missing: ${input.access.featUnitId}.`,
-    });
+    return Either.left([
+      {
+        tag: "characterBattleSpellAccessProjectionIssue",
+        accessIndex: input.accessIndex,
+        featUnitId: input.access.featUnitId,
+        cause: "missingSourceUnit",
+        message: `Magic Initiate Spell Access source Unit is missing: ${input.access.featUnitId}.`,
+      },
+    ]);
   }
   if (
     sourceUnit.value.kind !== "feat" ||
     sourceUnit.value.mechanics.family !== "magic_initiate"
   ) {
-    return Either.left({
-      tag: "characterBattleSpellAccessProjectionIssue",
-      accessIndex: input.accessIndex,
-      featUnitId: input.access.featUnitId,
-      cause: "unsupportedSourceUnit",
-      message: `Magic Initiate Spell Access source Unit must be a magic_initiate feat: ${input.access.featUnitId}.`,
-    });
+    return Either.left([
+      {
+        tag: "characterBattleSpellAccessProjectionIssue",
+        accessIndex: input.accessIndex,
+        featUnitId: input.access.featUnitId,
+        cause: "unsupportedSourceUnit",
+        message: `Magic Initiate Spell Access source Unit must be a magic_initiate feat: ${input.access.featUnitId}.`,
+      },
+    ]);
   }
   const spellListClassRecord = spellcastingClassRecordForClassName({
     className: sourceUnit.value.mechanics.spellList,
     unitLibrary: input.unitLibrary,
   });
   if (spellListClassRecord === undefined) {
-    return Either.left({
-      tag: "characterBattleSpellAccessProjectionIssue",
-      accessIndex: input.accessIndex,
-      featUnitId: input.access.featUnitId,
-      cause: "missingSpellListSource",
-      message: `Magic Initiate Spell Access canonical spell list source is missing: ${sourceUnit.value.mechanics.spellList}.`,
-    });
+    return Either.left([
+      {
+        tag: "characterBattleSpellAccessProjectionIssue",
+        accessIndex: input.accessIndex,
+        featUnitId: input.access.featUnitId,
+        cause: "missingSpellListSource",
+        message: `Magic Initiate Spell Access canonical spell list source is missing: ${sourceUnit.value.mechanics.spellList}.`,
+      },
+    ]);
   }
   const spells = spellRecordsForIds(input.unitLibrary, [
     input.access.cantrips[0],
@@ -1154,13 +1494,30 @@ function projectCharacterBattleMagicInitiateSpellAccess(input: {
     input.access.levelOneSpell,
   ] as const);
   if (Either.isLeft(spells)) {
-    return Either.left({
-      tag: "characterBattleSpellAccessProjectionIssue",
-      accessIndex: input.accessIndex,
-      featUnitId: input.access.featUnitId,
-      cause: "invalidSpellSelection",
-      message: spells.left.message,
-    });
+    const issues = battleCreatureInitIssueLeaves(spells.left).map(
+      (issue, issueIndex) => ({
+        tag: "characterBattleSpellAccessProjectionIssue" as const,
+        accessIndex: input.accessIndex,
+        featUnitId: input.access.featUnitId,
+        cause: "invalidSpellSelection" as const,
+        issueIndex,
+        message: battleCreatureInitIssueMessage(issue),
+      }),
+    );
+    return Either.left(
+      isNonEmptyReadonlyArray(issues)
+        ? issues
+        : [
+            {
+              tag: "characterBattleSpellAccessProjectionIssue" as const,
+              accessIndex: input.accessIndex,
+              featUnitId: input.access.featUnitId,
+              cause: "invalidSpellSelection" as const,
+              issueIndex: 0,
+              message: "Character battle spell selection projection failed.",
+            },
+          ],
+    );
   }
   const spellList: CharacterBattleSpellListFact = {
     className: spellListClassRecord.className,
@@ -1526,15 +1883,24 @@ function spellRecordsForIds<const UnitIds extends readonly UnitRecord["id"][]>(
   BattleCreatureInitIssue
 > {
   const spells: SpellRecord[] = [];
+  const issues: string[] = [];
   for (const unitId of unitIds) {
     const unit = getRequiredUnit(unitLibrary, unitId);
     if (Either.isLeft(unit)) {
-      return battleCreatureInitIssue(unit.left.message);
+      issues.push(unit.left.message);
+      continue;
     }
     if (unit.right.kind !== "spell") {
-      return battleCreatureInitIssue(`Expected spell Unit: ${unitId}`);
+      issues.push(`Expected spell Unit: ${unitId}`);
+      continue;
     }
     spells.push(unit.right);
+  }
+  if (isNonEmptyReadonlyArray(issues)) {
+    return battleCreatureInitIssuesFromMessages(issues, () => ({
+      kind: "characterBuildProjection",
+      phase: "spellcasting",
+    }));
   }
   // Every input id contributes exactly one record unless the function returns
   // a typed lookup/kind issue, so this projection preserves tuple length.
@@ -1575,7 +1941,15 @@ function battleProjectedSpellRecordsForIds(input: {
   }
   return issues.length === 0
     ? Either.right(spells)
-    : battleCreatureInitIssue(issues.join("; "));
+    : isNonEmptyReadonlyArray(issues)
+      ? battleCreatureInitIssuesFromMessages(issues, () => ({
+          kind: "characterBuildProjection",
+          phase: "spellcasting",
+        }))
+      : battleCreatureInitIssue(
+          "Character battle spell selection projection failed.",
+          { kind: "characterBuildProjection", phase: "spellcasting" },
+        );
 }
 
 export function getRequiredUnit(

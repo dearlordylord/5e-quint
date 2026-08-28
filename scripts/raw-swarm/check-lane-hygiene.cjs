@@ -26,6 +26,7 @@ const {
   DETERMINISTIC_NETWORK_GLOBALS,
   DETERMINISTIC_NETWORK_MODULES,
   DETERMINISTIC_TRANSITIVE_SCAN_BOUNDARIES,
+  DETERMINISTIC_WORKFLOW_PATH_FILTERS,
   MODEL_BACKED_OPERATIONS,
   MODEL_BACKED_ENTRYPOINTS,
   MODEL_BACKED_PROFILE_BUDGET_SECONDS,
@@ -33,8 +34,8 @@ const {
   NETWORK_CLI_EXECUTABLES,
   DETERMINISTIC_TRUSTED_BOUNDARY_TESTS,
   GUARDED_DETERMINISTIC_RAW_SWARM_TESTS,
-  QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
-  RAW_SWARM_TESTS_OUTSIDE_QUALITY,
+  DETERMINISTIC_RAW_SWARM_TESTS,
+  RAW_SWARM_TESTS_OUTSIDE_DETERMINISTIC_LANE,
   SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS,
   isSupportedVitestTestFilename,
 } = require("./lane-classification.cjs");
@@ -86,6 +87,43 @@ function assertDeterministicGuardResolvable() {
     0,
     `The deterministic capability guard could not resolve or initialize:\n${result.stderr}`,
   );
+}
+
+function assertDeterministicWorkflow() {
+  const workflow = readFileSync(
+    join(root, ".github/workflows/raw-swarm-deterministic.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /^name: Raw Swarm deterministic$/m);
+  assert.match(
+    workflow,
+    /^ {2}push:\n {4}branches:\n {6}- master\n {4}paths: &raw-swarm-deterministic-paths$/m,
+  );
+  assert.match(
+    workflow,
+    /^ {2}pull_request:\n {4}paths: \*raw-swarm-deterministic-paths$/m,
+  );
+  assert.match(workflow, /^ {2}workflow_dispatch:$/m);
+  assert.match(workflow, /^ {2}cancel-in-progress: true$/m);
+  const pathFilterBlock = workflow.match(
+    /^ {4}paths: &raw-swarm-deterministic-paths\n((?: {6}- ".+"\n)+)/m,
+  );
+  assert.notEqual(pathFilterBlock, null);
+  const workflowPathFilters = pathFilterBlock[1]
+    .trimEnd()
+    .split("\n")
+    .map((line) => JSON.parse(line.slice("      - ".length)));
+  assert.deepEqual(
+    workflowPathFilters,
+    DETERMINISTIC_WORKFLOW_PATH_FILTERS,
+    "Raw Swarm deterministic workflow path filters must match their canonical inventory.",
+  );
+  assert.equal(
+    workflow.match(/run: pnpm check:raw-swarm-deterministic$/gm)?.length,
+    1,
+    "Raw Swarm deterministic workflow must invoke its public locked command exactly once.",
+  );
+  assert.doesNotMatch(workflow, /check:raw-swarm-deterministic:body/);
 }
 
 const codingAgentAlternation =
@@ -1062,7 +1100,7 @@ function sourceDependencyEdges(sourcePath) {
   return edges;
 }
 
-function sourcePathsForQualityTest(testPath) {
+function sourcePathsForDeterministicTest(testPath) {
   const pending = [resolve(root, testPath)];
   const visited = new Set();
   const paths = [];
@@ -1120,7 +1158,7 @@ function runSourceCheck(sourcePathArgument) {
 
 function runTestSourceCheck(testPathArgument) {
   const testPath = repositoryOwnedSourceFile(testPathArgument, "Test");
-  for (const sourcePath of sourcePathsForQualityTest(testPath)) {
+  for (const sourcePath of sourcePathsForDeterministicTest(testPath)) {
     const relativeSourcePath = relative(root, sourcePath);
     if (
       MODEL_BACKED_SOURCE_FILES.includes(relativeSourcePath) ||
@@ -1137,7 +1175,7 @@ function runTestSourceCheck(testPathArgument) {
 
 function runTestSourceListing(testPathArgument) {
   const testPath = repositoryOwnedSourceFile(testPathArgument, "Test");
-  for (const sourcePath of sourcePathsForQualityTest(testPath)) {
+  for (const sourcePath of sourcePathsForDeterministicTest(testPath)) {
     process.stdout.write(`${relative(root, sourcePath)}\n`);
   }
 }
@@ -1150,31 +1188,31 @@ function runLaneHygiene() {
 
   assert.deepEqual(
     [
-      ...QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
-      ...Object.keys(RAW_SWARM_TESTS_OUTSIDE_QUALITY),
+      ...DETERMINISTIC_RAW_SWARM_TESTS,
+      ...Object.keys(RAW_SWARM_TESTS_OUTSIDE_DETERMINISTIC_LANE),
     ].sort(),
     discoveredTests,
-    "Every Raw Swarm test must be classified as quality-owned or an explicitly retained prototype exclusion. Live model work belongs behind a public model command, not in a test file.",
+    "Every Raw Swarm test must be classified in the deterministic lane or as an explicitly retained prototype exclusion. Live model work belongs behind a public model command, not in a test file.",
   );
   assert.deepEqual(
-    Object.keys(RAW_SWARM_TESTS_OUTSIDE_QUALITY).sort(),
+    Object.keys(RAW_SWARM_TESTS_OUTSIDE_DETERMINISTIC_LANE).sort(),
     [
       "scripts/raw-swarm/battle-slice-tools.test.ts",
       "scripts/raw-swarm/transcript.property.test.ts",
     ],
-    "Only the two established Raw Swarm prototype tests may remain outside quality.",
+    "Only the two established Raw Swarm prototype tests may remain outside the deterministic lane.",
   );
   assert.equal(
-    QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS.some((testPath) =>
-      Object.hasOwn(RAW_SWARM_TESTS_OUTSIDE_QUALITY, testPath),
+    DETERMINISTIC_RAW_SWARM_TESTS.some((testPath) =>
+      Object.hasOwn(RAW_SWARM_TESTS_OUTSIDE_DETERMINISTIC_LANE, testPath),
     ),
     false,
-    "A Raw Swarm test cannot be both quality-owned and excluded from quality.",
+    "A Raw Swarm test cannot be both deterministic-lane-owned and excluded from that lane.",
   );
   assert.equal(
-    new Set(QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS).size,
-    QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS.length,
-    "The quality-owned deterministic test inventory must be duplicate-free.",
+    new Set(DETERMINISTIC_RAW_SWARM_TESTS).size,
+    DETERMINISTIC_RAW_SWARM_TESTS.length,
+    "The deterministic Raw Swarm test inventory must be duplicate-free.",
   );
   assert.equal(
     new Set(DETERMINISTIC_TRUSTED_BOUNDARY_TESTS).size,
@@ -1188,9 +1226,9 @@ function runLaneHygiene() {
   );
   for (const testPath of DETERMINISTIC_TRUSTED_BOUNDARY_TESTS) {
     assert.equal(
-      QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS.includes(testPath),
+      DETERMINISTIC_RAW_SWARM_TESTS.includes(testPath),
       true,
-      `Trusted deterministic boundary test ${testPath} must remain quality-owned.`,
+      `Trusted deterministic boundary test ${testPath} must remain in the deterministic lane.`,
     );
   }
   assert.deepEqual(
@@ -1198,15 +1236,15 @@ function runLaneHygiene() {
       ...DETERMINISTIC_TRUSTED_BOUNDARY_TESTS,
       ...GUARDED_DETERMINISTIC_RAW_SWARM_TESTS,
     ].sort(),
-    QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
-    "The trusted and guarded deterministic phases must partition every quality-owned test exactly once.",
+    DETERMINISTIC_RAW_SWARM_TESTS,
+    "The trusted and guarded deterministic phases must partition every deterministic-lane test exactly once.",
   );
   for (const testPath of discoveredTests) {
     const ownedTestPath = repositoryOwnedSourceFile(
       testPath,
       "Discovered test",
     );
-    for (const sourcePath of sourcePathsForQualityTest(ownedTestPath)) {
+    for (const sourcePath of sourcePathsForDeterministicTest(ownedTestPath)) {
       const relativeSourcePath = relative(root, sourcePath);
       if (
         MODEL_BACKED_SOURCE_FILES.includes(relativeSourcePath) ||
@@ -1249,6 +1287,7 @@ function runLaneHygiene() {
     scripts["check:raw-swarm-deterministic"],
     /with-broad-workspace-lock\.sh pnpm run check:raw-swarm-deterministic:body$/,
   );
+  assertDeterministicWorkflow();
   assert.equal(
     scripts["raw-swarm:model:trial"],
     ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/raw-swarm/with-model-lane-lock.sh trial node scripts/raw-swarm/run-model-backed.mjs trial",
@@ -1260,7 +1299,7 @@ function runLaneHygiene() {
 
   const qualityBody = scripts["quality:body"];
   assert.match(qualityBody, /pnpm check:raw-swarm-lane-hygiene/);
-  assert.match(qualityBody, /pnpm check:raw-swarm-deterministic:body/);
+  assert.doesNotMatch(qualityBody, /check:raw-swarm-deterministic/);
   assert.doesNotMatch(
     qualityBody,
     /raw-swarm:model|check:raw-swarm-sdk-player/,
@@ -1283,7 +1322,7 @@ function runLaneHygiene() {
   });
   for (const path of MODEL_BACKED_ENTRYPOINTS) {
     assert.equal(
-      QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS.includes(path),
+      DETERMINISTIC_RAW_SWARM_TESTS.includes(path),
       false,
       `Model entry point ${path} entered the deterministic inventory.`,
     );
@@ -1426,7 +1465,7 @@ function runLaneHygiene() {
   );
 
   process.stdout.write(
-    `Raw Swarm lane hygiene passed: ${QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS.length} quality-owned deterministic tests, ${Object.keys(RAW_SWARM_TESTS_OUTSIDE_QUALITY).length} closed prototype exclusions, and ${Object.keys(MODEL_BACKED_OPERATIONS).length} explicit model-backed operations.\n`,
+    `Raw Swarm lane hygiene passed: ${DETERMINISTIC_RAW_SWARM_TESTS.length} deterministic-lane tests, ${Object.keys(RAW_SWARM_TESTS_OUTSIDE_DETERMINISTIC_LANE).length} closed prototype exclusions, and ${Object.keys(MODEL_BACKED_OPERATIONS).length} explicit model-backed operations.\n`,
   );
 }
 

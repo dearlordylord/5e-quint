@@ -1,22 +1,7 @@
 import {
-  battleAttackExecutionScopeRef,
-  battleAttackProcedureExecutionRef,
-  battleCharacterExecutionScopeRef,
-  battleExecutionScopeOrdinal,
-  battleId,
-  battleProcedureExecutionRef,
-  combatantId,
-  type BattleHole,
-} from "@dnd/battle-runtime";
-import {
-  holeId,
-  holeInstanceKey,
-} from "@dnd/shared-algebras/runtime-hole-algebra";
-import {
   battleRuntimeContextForTest,
   battleRuntimeSessionForTest,
 } from "@dnd/battle-runtime/test-support";
-import { NonNegativeInteger } from "@dnd/shared/types";
 import { Effect, Either } from "effect";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
@@ -107,105 +92,57 @@ describe("Admin Mirror publisher", () => {
     expect(enabled.nextSequence()).toBe(1);
   });
 
-  test("keeps authored presentation out of pending and resolved timeline state", () => {
-    const actorId = combatantId("presentation-actor");
-    const procedureRef = battleProcedureExecutionRef(
-      battleCharacterExecutionScopeRef(
-        battleId("presentation-battle"),
-        actorId,
-        battleExecutionScopeOrdinal(0),
-      ),
-      NonNegativeInteger(0),
-    );
-    const pendingProjection = projectionWithTransientBattleFills({
-      fills: [],
-      holes: [pendingTargetHole(actorId, "bonus")],
-      subject: {
-        tag: "bonusActionSpell",
-        actorId,
-        procedureRef,
-        mode: { tag: "cast" },
-      },
-    });
+  test("keeps authored presentation out of timeline state", () => {
+    const pendingProjection = projectionWithoutBattle();
 
-    expect(pendingProjection.session.transientBattleFills).not.toHaveProperty(
-      "label",
-    );
-    expect(pendingProjection.session.transientBattleFills).not.toHaveProperty(
-      "summary",
-    );
-    expect(
-      JSON.stringify(pendingProjection.session.transientBattleFills),
-    ).not.toContain("Hunter's Mark");
+    expect(JSON.stringify(pendingProjection)).not.toContain("Hunter's Mark");
 
     const pendingEntry = createAdminMirrorPresentationTimelineEntry(
       envelope({ sequence: 3, projection: pendingProjection }),
       100,
       envelope({
         sequence: 2,
-        projection: projectionWithTransientBattleFills(null),
+        projection: projectionWithoutBattle(),
       }),
     );
     const resolvedEntry = createAdminMirrorPresentationTimelineEntry(
       envelope({
         sequence: 4,
-        projection: projectionWithTransientBattleFills(null),
+        projection: projectionWithoutBattle(),
       }),
       101,
       envelope({ sequence: 3, projection: pendingProjection }),
     );
 
-    expect(pendingEntry.actionSummary).toBe("Battle action pending");
-    expect(resolvedEntry.actionSummary).toBe("Battle action resolved");
+    expect(pendingEntry.actionSummary).toBeNull();
+    expect(resolvedEntry.actionSummary).toBeNull();
   });
 
   test("does not reconstruct authored attack names from mechanical execution selectors", () => {
-    const actorId = combatantId("presentation-attacker");
-    const procedureRef = battleAttackProcedureExecutionRef(
-      battleAttackExecutionScopeRef(
-        battleId("presentation-attack-battle"),
-        actorId,
-        battleExecutionScopeOrdinal(0),
-      ),
-      NonNegativeInteger(0),
-    );
-    const pendingProjection = projectionWithTransientBattleFills({
-      fills: [],
-      holes: [pendingTargetHole(actorId, "attack")],
-      subject: {
-        tag: "action",
-        action: "attack",
-        actorId,
-        procedureRef,
-        attackAbility: "dex",
-        attackDamageType: "force",
-      },
-    });
+    const pendingProjection = projectionWithoutBattle();
 
-    expect(
-      pendingProjection.session.transientBattleFills?.subject,
-    ).not.toHaveProperty("attackName");
+    expect(JSON.stringify(pendingProjection)).not.toContain("attackName");
     const pendingEntry = createAdminMirrorPresentationTimelineEntry(
       envelope({ sequence: 5, projection: pendingProjection }),
       102,
       envelope({
         sequence: 4,
-        projection: projectionWithTransientBattleFills(null),
+        projection: projectionWithoutBattle(),
       }),
     );
     const resolvedEntry = createAdminMirrorPresentationTimelineEntry(
       envelope({
         sequence: 6,
-        projection: projectionWithTransientBattleFills(null),
+        projection: projectionWithoutBattle(),
       }),
       103,
       envelope({ sequence: 5, projection: pendingProjection }),
     );
 
-    expect(pendingEntry.actionSummary).toBe("Battle action pending");
-    expect(resolvedEntry.actionSummary).toBe("Battle action resolved");
-    expect(pendingEntry.actionSummary).not.toContain("undefined");
-    expect(resolvedEntry.actionSummary).not.toContain("undefined");
+    expect(pendingEntry.actionSummary).toBeNull();
+    expect(resolvedEntry.actionSummary).toBeNull();
+    expect(String(pendingEntry.actionSummary)).not.toContain("undefined");
+    expect(String(resolvedEntry.actionSummary)).not.toContain("undefined");
   });
 
   test("skips projections when an active battle lacks presentation context", () => {
@@ -266,7 +203,6 @@ function envelope(input: {
         battleState: { tag: "none" },
         draftIds: [],
         selectedStatBlockId: null,
-        transientBattleFills: null,
       },
     },
     publisherInstanceId: adminMirrorPublisherInstanceId("publisher-a"),
@@ -275,9 +211,7 @@ function envelope(input: {
   };
 }
 
-function projectionWithTransientBattleFills(
-  transientBattleFills: AdminMirrorProjectionEnvelope["projection"]["session"]["transientBattleFills"],
-): AdminMirrorProjectionEnvelope["projection"] {
+function projectionWithoutBattle(): AdminMirrorProjectionEnvelope["projection"] {
   return {
     battle: null,
     characters: [],
@@ -285,20 +219,6 @@ function projectionWithTransientBattleFills(
       battleState: { tag: "none" },
       draftIds: [],
       selectedStatBlockId: null,
-      transientBattleFills,
     },
-  };
-}
-
-function pendingTargetHole(
-  actorId: ReturnType<typeof combatantId>,
-  suffix: string,
-): Extract<BattleHole, { readonly kind: "targetChoice" }> {
-  return {
-    holeInstanceKey: holeInstanceKey(`admin-pending:${suffix}:instance`),
-    holeId: holeId(`admin-pending:${suffix}`),
-    kind: "targetChoice",
-    label: "Pending target",
-    choices: [actorId],
   };
 }

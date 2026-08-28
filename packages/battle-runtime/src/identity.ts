@@ -31,6 +31,13 @@ export type BattleTablePositionId = typeof BattleTablePositionId.Type;
 export const battleTablePositionId: (value: string) => BattleTablePositionId =
   BattleTablePositionId.make;
 
+export const BattleCompanionFormId = Schema.NonEmptyTrimmedString.pipe(
+  Schema.brand("BattleCompanionFormId"),
+);
+export type BattleCompanionFormId = typeof BattleCompanionFormId.Type;
+export const battleCompanionFormId: (value: string) => BattleCompanionFormId =
+  BattleCompanionFormId.make;
+
 export const BattleLineDirectionId = Schema.NonEmptyTrimmedString.pipe(
   Schema.brand("BattleLineDirectionId"),
 );
@@ -565,6 +572,19 @@ export function battleActiveEffectExecutionRefOrdinalIsBefore(
     decoded.kind === "activeEffectOccurrence" &&
     nonNegativeIntegerProperty(decoded, "ordinal") &&
     Number(decoded.ordinal) < nextEffectOrdinal &&
+    battleActiveEffectExecutionReferenceIsCanonical(effectRef)
+  );
+}
+
+export function battleActiveEffectExecutionRefBelongsToScope(
+  effectRef: BattleActiveEffectExecutionRef,
+  scopeRef: BattleExecutionScopeRef,
+): boolean {
+  const decoded = parseExecutionReference(effectRef);
+  return (
+    decoded !== null &&
+    decoded.ownerScopeRef === scopeRef &&
+    decoded.kind === "activeEffectOccurrence" &&
     battleActiveEffectExecutionReferenceIsCanonical(effectRef)
   );
 }

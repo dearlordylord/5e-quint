@@ -8,18 +8,30 @@ import {
   jsonContent,
   jsonSerializablePayload,
 } from "./tool-content.ts";
-import { projectModelOutputJsonSchema } from "./model-output-json-schema.ts";
+import {
+  projectModelOutputJsonSchema,
+  type ModelOutputSchemaProjectionOptions,
+} from "./model-output-json-schema.ts";
 
 export type McpObjectInputSchema = Readonly<Record<string, unknown>> & {
   readonly type: "object";
 };
 export type McpOutputSchema = Readonly<Record<string, unknown>>;
 
+const MODEL_OUTPUT_SCHEMA = Symbol("McpModelOutputSchema");
+
+export type McpModelOutputSchema = McpOutputSchema & {
+  readonly [MODEL_OUTPUT_SCHEMA]: true;
+};
+
 export type ToolError = ReturnType<typeof errorContent>;
 export type ToolInputResult<A> = Either.Either<A, ToolError>;
 
 const outputSchemaByCodec = new WeakMap<object, McpOutputSchema>();
-const modelOutputSchemaByCodec = new WeakMap<object, McpOutputSchema>();
+const modelOutputSchemaByCodec = new WeakMap<
+  object,
+  Map<ModelOutputSchemaProjectionOptions["maxDepth"], McpModelOutputSchema>
+>();
 
 export function decodeToolArgs<A, I>(
   schema: Schema.Schema<A, I, never>,
@@ -156,20 +168,39 @@ export function mcpOutputJsonSchema<A, I>(
 
 export function mcpModelOutputJsonSchema<A, I>(
   schema: Schema.Schema<A, I, never>,
-): McpOutputSchema {
-  const cached = modelOutputSchemaByCodec.get(schema);
+  options: ModelOutputSchemaProjectionOptions = {},
+): McpModelOutputSchema {
+  const maxDepth = options.maxDepth;
+  const cached = modelOutputSchemaByCodec.get(schema)?.get(maxDepth);
   if (cached !== undefined) return cached;
 
   const generated = omitRedundantImpossibleProperties(
     jsonSchemaFromCodec(schema),
   );
-  const projected = projectModelOutputJsonSchema(generated);
+  const projected = projectModelOutputJsonSchema(generated, options);
   const identified = {
     $id: outputSchemaId(projected),
     ...projected,
-  } satisfies McpOutputSchema;
-  modelOutputSchemaByCodec.set(schema, identified);
+    [MODEL_OUTPUT_SCHEMA]: true as const,
+  } satisfies McpModelOutputSchema;
+  Object.defineProperty(identified, MODEL_OUTPUT_SCHEMA, {
+    enumerable: false,
+  });
+  const schemasByDepth =
+    modelOutputSchemaByCodec.get(schema) ??
+    new Map<
+      ModelOutputSchemaProjectionOptions["maxDepth"],
+      McpModelOutputSchema
+    >();
+  schemasByDepth.set(maxDepth, identified);
+  modelOutputSchemaByCodec.set(schema, schemasByDepth);
   return identified;
+}
+
+export function isMcpModelOutputSchema(
+  schema: McpOutputSchema,
+): schema is McpModelOutputSchema {
+  return Reflect.get(schema, MODEL_OUTPUT_SCHEMA) === true;
 }
 
 export function schemaJsonContent<A, I>(

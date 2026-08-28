@@ -1,4 +1,7 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleFrontierInterruptDecisionForState,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay reaction-interruption shield hellish_rebuke counterspell
 // UNIT-IDENTITY-REPLAY: reaction-interruption shield doResolveShieldReactionSpellHit
 // UNIT-IDENTITY-REPLAY: reaction-interruption hellish_rebuke doResolveHellishRebukeFailedSavingThrow
@@ -86,16 +89,6 @@ type StartedMagicMissile = NeedsHolesResult & {
 
 type ReactionSpellUnitId = "shield" | "hellish_rebuke" | "counterspell";
 type SrdSpellUnitId = ReactionSpellUnitId | "magic_missile";
-
-type TriggeredReactionSpellChoice = Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "nestedProcedure" }
-> & {
-  readonly subject: Extract<
-    BattleInterruptSubject,
-    { readonly command: "castTriggeredReactionSpell" }
-  >;
-};
 
 type AttackAct = AvailableBattleAct & {
   readonly subject: Extract<
@@ -970,24 +963,33 @@ function attackTargetFill(input: {
   };
 }
 
+type TriggeredReactionSpellChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "nestedProcedure" }
+> & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    { readonly command: "castTriggeredReactionSpell" }
+  >;
+};
+
 function resolveShieldReactionChoice(
   awaitingReaction: Extract<
     ReturnType<typeof resolveBattleSubject>,
     { readonly tag: "needsHoles" }
   >,
 ): ReturnType<typeof resolveBattleInterrupt> {
-  const reactionChoice =
-    awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-      (choice): choice is TriggeredReactionSpellChoice => {
-        if (
-          choice.kind !== "nestedProcedure" ||
-          choice.subject.command !== "castTriggeredReactionSpell" ||
-          choice.subject.reactorId !== reactorId
-        )
-          return false;
-        return true;
-      },
-    );
+  const reactionChoice = battleFrontierInterruptDecisionForState(
+    awaitingReaction.state,
+  )?.choices.find((choice): choice is TriggeredReactionSpellChoice => {
+    if (
+      choice.kind !== "nestedProcedure" ||
+      choice.subject.command !== "castTriggeredReactionSpell" ||
+      choice.subject.reactorId !== reactorId
+    )
+      return false;
+    return true;
+  });
   if (reactionChoice === undefined) {
     throw new Error("Expected Shield Reaction spell choice.");
   }
@@ -1014,17 +1016,17 @@ function requireCounterspellChoice(
     { readonly tag: "needsHoles" }
   >,
 ): TriggeredReactionSpellChoice {
-  const choice = result.snapshot.pendingInterrupt?.choices.find(
-    (candidate): candidate is TriggeredReactionSpellChoice => {
-      if (
-        candidate.kind !== "nestedProcedure" ||
-        candidate.subject.command !== "castTriggeredReactionSpell" ||
-        candidate.subject.reactorId !== reactorId
-      )
-        return false;
-      return true;
-    },
-  );
+  const choice = battleFrontierInterruptDecisionForState(
+    result.state,
+  )?.choices.find((candidate): candidate is TriggeredReactionSpellChoice => {
+    if (
+      candidate.kind !== "nestedProcedure" ||
+      candidate.subject.command !== "castTriggeredReactionSpell" ||
+      candidate.subject.reactorId !== reactorId
+    )
+      return false;
+    return true;
+  });
   if (choice === undefined) {
     throw new Error("Expected Counterspell level 3 Reaction choice.");
   }
@@ -1037,17 +1039,17 @@ function requireHellishRebukeChoice(
     { readonly tag: "needsHoles" }
   >,
 ): TriggeredReactionSpellChoice {
-  const choice = result.snapshot.pendingInterrupt?.choices.find(
-    (candidate): candidate is TriggeredReactionSpellChoice => {
-      if (
-        candidate.kind !== "nestedProcedure" ||
-        candidate.subject.command !== "castTriggeredReactionSpell" ||
-        candidate.subject.reactorId !== reactorId
-      )
-        return false;
-      return true;
-    },
-  );
+  const choice = battleFrontierInterruptDecisionForState(
+    result.state,
+  )?.choices.find((candidate): candidate is TriggeredReactionSpellChoice => {
+    if (
+      candidate.kind !== "nestedProcedure" ||
+      candidate.subject.command !== "castTriggeredReactionSpell" ||
+      candidate.subject.reactorId !== reactorId
+    )
+      return false;
+    return true;
+  });
   if (choice === undefined) {
     throw new Error("Expected Hellish Rebuke level 2 Reaction choice.");
   }

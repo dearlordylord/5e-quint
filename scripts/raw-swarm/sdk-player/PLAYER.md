@@ -212,18 +212,21 @@ decision to end combat remain table interpretations over those concrete facts,
 not Battle Runtime state.
 Both outcomes must return the latest session produced by the calls.
 
-A `needsHoles` result means the selected subject is still in progress. A fresh
-act discovery may then be empty by design; that is not an obstruction. Always
-carry `result.session` forward, but do not treat it as saved fill history: a
-`needsHoles` session does not persist the answer prefix for the next replay.
-When the current source already has the facts needed for a downstream answer,
-it may resolve that answer in the same authored continuation. Otherwise return
-`kind: "continue"` with the latest session. The supervisor then records the
-continuation and rewrites `OBSERVATION.json`; reread it before authoring the
-next continuation.
+A `needsHoles` result means the selected subject is still in progress. Its
+executable frontier is always at `result.envelope.frontier`: ordinary Holes use
+`frontier.subject` and `frontier.holes`, while an interrupt decision uses
+`frontier.decisionHole` and `frontier.choices`. The result has no top-level
+hole or subject fields. A fresh act discovery may then be empty by design; that is
+not an obstruction. Always carry `result.session` forward, but do not treat it
+as saved fill history: a `needsHoles` session does not persist the answer prefix
+for the next replay. When the current source already has the facts needed for a
+downstream answer, it may resolve that answer in the same authored continuation.
+Otherwise return `kind: "continue"` with the latest session. The supervisor then
+records the continuation and rewrites `OBSERVATION.json`; reread it before
+authoring the next continuation.
 Keep every accepted fill in canonical order. On the next resolution call, use
-the result's subject and submit the complete accumulated prefix plus the newly
-requested fill(s), not only the latest fill(s):
+`result.envelope.frontier.subject` for a Holes frontier and submit the complete
+accumulated prefix plus the newly requested fill(s), not only the latest fill(s):
 
 ```ts
 const acceptedFills = [targetFill];
@@ -233,10 +236,13 @@ const first = context.sdk.resolveBattleRuntimeSubject({
   fills: acceptedFills,
 });
 if (first.tag === "needsHoles") {
-  const nextFill = fillForHole(first.holes[0]);
+  if (first.envelope.frontier.kind !== "holes") {
+    throw new Error("Handle an interrupt frontier through its decision hole.");
+  }
+  const nextFill = fillForHole(first.envelope.frontier.holes[0]);
   const next = context.sdk.resolveBattleRuntimeSubject({
     session: first.session,
-    subject: first.subject,
+    subject: first.envelope.frontier.subject,
     fills: [...acceptedFills, nextFill],
   });
 }

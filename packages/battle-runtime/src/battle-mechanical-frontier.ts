@@ -7,14 +7,12 @@ import {
   BattleMechanicalInterruptProcedureChoiceSchema,
   BattleMechanicalOrdinaryHoleSchema as BattleMechanicalOrdinaryHoleCodecSchema,
 } from "./battle-reducer/battle-codecs.ts";
-import { battleHoleFamilyKind } from "./battle-reducer/hole-helpers.ts";
-import { sameDomainValue } from "./domain-value-equality.ts";
 import { projectMechanicalAttackActionOption } from "./battle-mechanical-attack-options.ts";
 import type {
   BattleHole,
   BattleInterruptProcedureChoice,
   BattleFill,
-  BattleResolutionResult,
+  BattleInterruptDecisionFrontier,
 } from "./battle-state-execution.ts";
 import { BattleSubjectSchema, type BattleSubject } from "./battle-subjects.ts";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
@@ -59,19 +57,20 @@ export type BattleMechanicalFrontier =
   | BattleMechanicalInterruptFrontier;
 
 /**
- * The continuation facts required for a mechanical frontier projection.
- * Runtime resolution wrappers may carry session and route metadata alongside
- * these facts, but the frontier owner only consumes this stable projection.
+ * The single frontier projection consumed by the mechanical boundary.
+ * Runtime resolution/session envelopes own this frontier; no committed
+ * snapshot fields are duplicated here.
  */
-export type BattleMechanicalFrontierResult = Pick<
-  Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
-  "subject" | "holes" | "snapshot"
->;
+export type BattleMechanicalFrontierResult =
+  | {
+      readonly kind: "holes";
+      readonly subject: BattleSubject;
+      readonly holes: readonly BattleHole[];
+    }
+  | BattleInterruptDecisionFrontier;
 
 export type BattleMechanicalFrontierIssue =
   | { readonly tag: "emptyHoleFrontier" }
-  | { readonly tag: "mixedInterruptAndOrdinaryHoles" }
-  | { readonly tag: "interruptFrontierMissingCheckpoint" }
   | { readonly tag: "interruptFrontierChoiceSetEmpty" }
   | { readonly tag: "interruptFrontierDecisionHoleMismatch" };
 
@@ -102,45 +101,24 @@ export function battleMechanicalFrontier(input: {
   readonly acceptedFills: readonly BattleFill[];
 }): Either.Either<BattleMechanicalFrontier, BattleMechanicalFrontierIssue> {
   const { result } = input;
-  if (result.holes.length === 0) {
-    return Either.left({ tag: "emptyHoleFrontier" });
-  }
-  const interruptHoles = result.holes.filter(
-    (hole) => battleHoleFamilyKind(hole) === "interruptDecision",
-  );
-  if (interruptHoles.length > 0) {
-    if (interruptHoles.length !== 1 || result.holes.length !== 1) {
-      return Either.left({ tag: "mixedInterruptAndOrdinaryHoles" });
-    }
-    const [interruptHole] = result.holes;
-    if (
-      interruptHole === undefined ||
-      interruptHole.kind !== "interruptDecision"
-    ) {
-      return Either.left({ tag: "mixedInterruptAndOrdinaryHoles" });
-    }
-    const pendingInterrupt = result.snapshot.pendingInterrupt;
-    if (pendingInterrupt === null) {
-      return Either.left({ tag: "interruptFrontierMissingCheckpoint" });
-    }
-    if (pendingInterrupt.choices.length === 0) {
-      return Either.left({ tag: "interruptFrontierChoiceSetEmpty" });
-    }
-    const mechanicalInterruptHole =
-      projectMechanicalInterruptHole(interruptHole);
-    const mechanicalPendingInterruptHole = projectMechanicalInterruptHole(
-      pendingInterrupt.decisionHole,
-    );
-    if (
-      !sameDomainValue(mechanicalInterruptHole, mechanicalPendingInterruptHole)
-    ) {
+  if (result.kind === "interruptDecision") {
+    if (result.trigger !== result.decisionHole.trigger) {
       return Either.left({ tag: "interruptFrontierDecisionHoleMismatch" });
     }
+    if (result.choices.length === 0) {
+      return Either.left({ tag: "interruptFrontierChoiceSetEmpty" });
+    }
+    const mechanicalInterruptHole = projectMechanicalInterruptHole(
+      result.decisionHole,
+    );
     return Either.right({
       kind: "interruptDecision",
       decisionHole: mechanicalInterruptHole,
-      choices: projectMechanicalChoices(pendingInterrupt.choices),
+      choices: projectMechanicalChoices(result.choices),
     });
+  }
+  if (result.holes.length === 0) {
+    return Either.left({ tag: "emptyHoleFrontier" });
   }
   return Either.right({
     kind: "ordinaryHoles",

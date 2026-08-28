@@ -181,13 +181,12 @@ export function combatantSnapshot(
   combatant: BattleCreatureState,
 ): BattleCreatureSnapshot {
   const sourceGrapple = grappledBy(state, combatant.combatantId) ?? null;
-  const common = {
+  const common: Omit<BattleCreatureSnapshot, "origin"> = {
     combatantId: combatant.combatantId,
     initiative: combatant.initiative,
     hp: combatant.hp,
     maxHp: effectiveHitPointMaximum(combatant),
     tempHp: combatant.tempHp,
-    nextActiveEffectOrdinal: combatant.nextActiveEffectOrdinal,
     activeEffectRefs: combatant.activeEffects.flatMap((effect) =>
       "effectRef" in effect ? [effect.effectRef] : [],
     ),
@@ -206,17 +205,21 @@ export function combatantSnapshot(
     ammunitionStocks: combatant.ammunitionStocks,
   };
   const origin = combatantOriginSnapshot(combatant);
-  if (origin.kind === "character") {
-    const { displayName, ...mechanicalOrigin } = origin;
-    return { ...common, displayName, origin: mechanicalOrigin };
-  }
-  return { ...common, origin };
+  return Match.value(origin).pipe(
+    Match.when({ kind: "character" }, (characterOrigin) => ({
+      ...common,
+      origin: characterOrigin,
+    })),
+    Match.when({ kind: "statBlock" }, (statBlockOrigin) => ({
+      ...common,
+      origin: statBlockOrigin,
+    })),
+    Match.exhaustive,
+  );
 }
 
 type BattleCreatureOriginProjection =
-  | (Extract<BattleCreatureOriginSnapshot, { readonly kind: "character" }> & {
-      readonly displayName: string;
-    })
+  | Extract<BattleCreatureOriginSnapshot, { readonly kind: "character" }>
   | Extract<BattleCreatureOriginSnapshot, { readonly kind: "statBlock" }>;
 
 export function combatantOriginSnapshot(
@@ -226,10 +229,8 @@ export function combatantOriginSnapshot(
     Match.when({ kind: "character" }, (origin) => ({
       kind: "character" as const,
       characterId: origin.characterId,
-      displayName: origin.displayName,
       execution: {
         scopeRef: origin.execution.scopeRef,
-        nextProcedureOrdinal: origin.execution.nextProcedureOrdinal,
         procedureBindings: characterProcedureBindingSnapshots(
           origin.execution,
           (invocation) => spellExecutionFacts(invocation),

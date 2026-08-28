@@ -10,6 +10,7 @@ import {
 } from "./play-session.ts";
 import { GuestAccessGrantSchema } from "./play-session-access.ts";
 import { playSessionCreationResultSchema } from "./play-session-creation-schema.ts";
+import { BattlePresentationEnvelopeSchema } from "./battle-tool-output.ts";
 import {
   modelFacingSessionProjectionSchema,
   modelFacingUnresolvedInputsSchema,
@@ -23,6 +24,7 @@ import {
 import { McpSessionSummarySchema } from "./session-snapshot-output.ts";
 import {
   PLAY_SESSION_NEXT_OPERATION_NAMES,
+  playSessionToolNames,
   type PlaySessionOperationName,
   type PlaySessionToolName,
 } from "./play-session-tool-names.ts";
@@ -65,6 +67,10 @@ const routedOutputSchemas = new Map<
   PlaySessionOperationName,
   WeakMap<object, McpOutputSchema>
 >();
+const embeddedBattleEnvelope = embeddedSchema(
+  mcpModelOutputJsonSchema(BattlePresentationEnvelopeSchema),
+  "BattleEnvelope",
+);
 
 export const deleteSavedPlaySessionOutputSchema: McpOutputSchema = {
   type: "object",
@@ -104,13 +110,25 @@ export function playSessionLifecycleOutputSchema(
   operationName: PlaySessionToolName,
   resultTag: "playSessionCreated" | "playSessionResumed",
 ): McpOutputSchema {
+  const resumedBattleEnvelope =
+    operationName === playSessionToolNames.read
+      ? { battleEnvelope: embeddedBattleEnvelope.schema }
+      : {};
   const lifecycleResult = {
     type: "object",
     properties: {
       tag: { const: resultTag },
       playSessionId: playSessionIdJsonSchema,
+      ...resumedBattleEnvelope,
     },
-    required: ["tag", "playSessionId"],
+    required: [
+      "tag",
+      "playSessionId",
+      ...(operationName === playSessionToolNames.read
+        ? ["battleEnvelope"]
+        : []),
+    ],
+    $defs: embeddedBattleEnvelope.definitions,
     additionalProperties: false,
   } satisfies McpOutputSchema;
   return playSessionOperationOutputSchema(
@@ -191,13 +209,22 @@ export function playSessionOperationOutputSchema(
       ...embeddedPlaySessionId.definitions,
       ...embeddedSessionProjection.definitions,
       ...embeddedOperationResult.definitions,
+      ...embeddedBattleEnvelope.definitions,
     },
     anyOf: [
       availableResultSchema({
         operationName,
         playSessionId: embeddedPlaySessionId.schema,
         operationResult: {
-          anyOf: [embeddedOperationResult.schema, operationErrorSchema],
+          anyOf: [
+            embeddedOperationResult.schema,
+            operationErrorSchema,
+            recoverableOperationResultSchema({
+              operationResult: embeddedOperationResult.schema,
+              battleEnvelope: embeddedBattleEnvelope.schema,
+              operationError: operationErrorSchema,
+            }),
+          ],
         },
         projection: embeddedSessionProjection.schema,
       }),
@@ -218,6 +245,22 @@ export function playSessionOperationOutputSchema(
   cache.set(operationResultSchema, identified);
   routedOutputSchemas.set(operationName, cache);
   return identified;
+}
+
+function recoverableOperationResultSchema(input: {
+  readonly operationResult: McpOutputSchema;
+  readonly operationError: McpOutputSchema;
+  readonly battleEnvelope: McpOutputSchema;
+}): McpOutputSchema {
+  return {
+    type: "object",
+    properties: {
+      result: { anyOf: [input.operationResult, input.operationError] },
+      battleEnvelope: input.battleEnvelope,
+    },
+    required: ["result", "battleEnvelope"],
+    additionalProperties: false,
+  };
 }
 
 function availableResultSchema(input: {

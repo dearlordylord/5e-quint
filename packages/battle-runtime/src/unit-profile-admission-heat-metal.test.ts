@@ -38,7 +38,7 @@ import {
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
-  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
+  assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
   battleObjectId,
   breakBattleConcentration,
   elapsedTimeTicks,
@@ -120,7 +120,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     if (needsContactTarget.tag !== "needsHoles") {
       throw new Error("Expected Heat Metal contact targets.");
     }
-    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+    assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: needsContactTarget.snapshot,
       subject: act.subject,
       holes: needsContactTarget.holes,
@@ -558,7 +558,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     if (needsDrop.tag !== "needsHoles") {
       throw new Error("Expected Heat Metal object-drop resolution.");
     }
-    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+    assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: needsDrop.snapshot,
       subject: act.subject,
       holes: needsDrop.holes,
@@ -792,7 +792,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
 
     expect(repeated).toMatchObject({
       tag: "resolved",
-      snapshot: { turn: { bonusActionAvailable: false } },
+      snapshot: { turn: { bonusActionQuotaAvailable: false } },
     });
     if (repeated.tag !== "resolved") {
       throw new Error("Expected Heat Metal repeat damage to resolve.");
@@ -876,7 +876,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     if (needsSave.tag !== "needsHoles") {
       throw new Error("Expected Heat Metal object-contact save.");
     }
-    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+    assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: needsSave.snapshot,
       subject: act.subject,
       holes: needsSave.holes,

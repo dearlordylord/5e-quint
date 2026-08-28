@@ -89,13 +89,10 @@ describe("Character Build battle spell projection boundaries", () => {
     expect(result).toMatchObject({
       _tag: "Left",
       left: {
-        spellAccessIssues: [
-          expect.objectContaining({
-            accessIndex: 0,
-            cause: "invalidSpellSelection",
-            message: expect.stringContaining(missingSpellId),
-          }),
-        ],
+        tag: "characterBattleSpellAccessProjectionIssue",
+        accessIndex: 0,
+        cause: "invalidSpellSelection",
+        message: expect.stringContaining(missingSpellId),
       },
     });
   });
@@ -119,13 +116,10 @@ describe("Character Build battle spell projection boundaries", () => {
     expect(result).toMatchObject({
       _tag: "Left",
       left: {
-        spellAccessIssues: [
-          expect.objectContaining({
-            accessIndex: 0,
-            cause: "invalidSpellSelection",
-            message: `Expected spell Unit: ${wrongKindSpellId}`,
-          }),
-        ],
+        tag: "characterBattleSpellAccessProjectionIssue",
+        accessIndex: 0,
+        cause: "invalidSpellSelection",
+        message: `Expected spell Unit: ${wrongKindSpellId}`,
       },
     });
   });

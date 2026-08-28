@@ -28,6 +28,7 @@ import {
   battleId,
   combatantId,
   initiativeScore,
+  startBattle,
 } from "@dnd/battle-runtime";
 import {
   characterSheetId,
@@ -50,7 +51,7 @@ import {
   characterBattleInitiativeScore,
   characterBattleRuntimeIssueMessage,
   characterSheetBattleInitWithRoute,
-  startBattleFromCharacterSheetAndStatBlock,
+  composeBattleRoster,
   type CharacterBattleRouteEvent,
 } from "./index.ts";
 
@@ -353,7 +354,7 @@ function alertInitiativeHandoffProjection(): OriginFeatSelectedIdentityProjectio
     proficiencyBonusChoice: "add",
   });
   if (Either.isLeft(score)) {
-    throw new Error(score.left.message);
+    throw new Error(characterBattleRuntimeIssueMessage(score.left));
   }
 
   return {
@@ -376,7 +377,7 @@ function publicCharacterSheetBattleInitSelectedReferenceRetentionRoute(
     ammunitionStocks: [],
   });
   if (Either.isLeft(projection)) {
-    throw new Error(projection.left.issue.message);
+    throw new Error(characterBattleRuntimeIssueMessage(projection.left));
   }
 
   return selectedReferenceRouteEvents(projection.right.routeEvents).filter(
@@ -387,30 +388,48 @@ function publicCharacterSheetBattleInitSelectedReferenceRetentionRoute(
 function publicStartBattleSelectedReferenceRuntimeRoute(
   build: CharacterBuild,
 ): readonly CharacterBattleRouteEvent[] {
-  const entry = startBattleFromCharacterSheetAndStatBlock({
+  const character = {
+    sheet: characterSheetForBuild(build),
+    unitLibrary,
+    statBlockCatalog,
+    combatantId: combatantId("combatant:origin-feat-runtime-entry"),
+    displayName: "Origin Feat Runtime Entry",
+    initiative: alertInitiativeScoreForBuild(build),
+    ammunitionStocks: [],
+  };
+  const statBlockEntryInput = {
+    combatantId: combatantId("combatant:origin-feat-skeleton"),
+    statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+    initiative: initiativeScore(10),
+    ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+    conditions: [],
+  };
+  const roster = composeBattleRoster([
+    {
+      kind: "characterSheet",
+      source: { kind: "available", input: character },
+    },
+    {
+      kind: "statBlock",
+      source: { kind: "available", input: statBlockEntryInput },
+    },
+  ]);
+  if (roster.tag === "rejected") {
+    throw new Error(`Roster admission failed: ${roster.issues[0].kind}`);
+  }
+  const session = startBattle({
     battleId: battleId("battle:origin-feat-runtime-entry"),
-    character: {
-      sheet: characterSheetForBuild(build),
-      unitLibrary,
-      statBlockCatalog,
-      combatantId: combatantId("combatant:origin-feat-runtime-entry"),
-      displayName: "Origin Feat Runtime Entry",
-      initiative: alertInitiativeScoreForBuild(build),
-      ammunitionStocks: [],
-    },
-    statBlockBattleInput: {
-      combatantId: combatantId("combatant:origin-feat-skeleton"),
-      statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
-      initiative: initiativeScore(10),
-      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-      conditions: [],
-    },
+    combatants: roster.admissions.map((admission) => admission.combatant),
   });
-  if (Either.isLeft(entry)) {
-    throw new Error(characterBattleRuntimeIssueMessage(entry.left.issue));
+  if (Either.isLeft(session)) {
+    throw new Error(characterBattleRuntimeIssueMessage(session.left));
   }
 
-  return selectedReferenceRouteEvents(entry.right.initProjectionRouteEvents);
+  return selectedReferenceRouteEvents(
+    roster.admissions.flatMap((admission) =>
+      admission.kind === "characterSheet" ? admission.routeEvents : [],
+    ),
+  );
 }
 
 function selectedReferenceRouteEvents(
@@ -445,7 +464,7 @@ function alertInitiativeScoreForBuild(build: CharacterBuild) {
     proficiencyBonusChoice: "add",
   });
   if (Either.isLeft(score)) {
-    throw new Error(score.left.message);
+    throw new Error(characterBattleRuntimeIssueMessage(score.left));
   }
   return score.right;
 }

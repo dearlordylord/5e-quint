@@ -6,6 +6,7 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY
 import { describe, expect, test } from "vitest";
 import {
+  battleFrontierInterruptDecisionForState,
   requireCharacterSpellProcedureRefForTest,
   characterSpellInvocationRefForProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
@@ -651,13 +652,13 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     expect(countered).toMatchObject({
       tag: "resolved",
       snapshot: {
-        pendingInterrupt: null,
-        turn: { bonusActionAvailable: false },
+        turn: { bonusActionQuotaAvailable: false },
       },
     });
     if (countered.tag !== "resolved") {
       throw new Error("Expected Counterspell to resolve Spiritual Weapon.");
     }
+    expect(battleFrontierInterruptDecisionForState(countered.state)).toBeNull();
     expect(
       requireCombatant(countered.state, spellCasterId).activeEffects,
     ).not.toContainEqual(expect.objectContaining({ kind: "spiritualWeapon" }));
@@ -841,7 +842,9 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         ],
       }),
     );
-    expect(awaitingShield.snapshot.pendingInterrupt).toMatchObject({
+    expect(
+      battleFrontierInterruptDecisionForState(awaitingShield.state),
+    ).toMatchObject({
       trigger: "attackHit",
     });
     expect(
@@ -872,13 +875,13 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     expect(resolved).toMatchObject({
       tag: "resolved",
       snapshot: {
-        pendingInterrupt: null,
-        turn: { bonusActionAvailable: false },
+        turn: { bonusActionQuotaAvailable: false },
       },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Shielded Spiritual Weapon cast to resolve.");
     }
+    expect(battleFrontierInterruptDecisionForState(resolved.state)).toBeNull();
     expect(requireCombatant(resolved.state, spellTargetId).hp).toStrictEqual(
       Hp(20),
     );
@@ -940,7 +943,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
 
     expect(lost).toMatchObject({
       tag: "resolved",
-      snapshot: { turn: { bonusActionAvailable: false } },
+      snapshot: { turn: { bonusActionQuotaAvailable: false } },
     });
     if (lost.tag !== "resolved") {
       throw new Error("Expected Sanctuary-lost Spiritual Weapon to resolve.");
@@ -1648,7 +1651,9 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         fills: repeatFills,
       }),
     );
-    expect(awaitingShield.snapshot.pendingInterrupt).toMatchObject({
+    expect(
+      battleFrontierInterruptDecisionForState(awaitingShield.state),
+    ).toMatchObject({
       trigger: "attackHit",
     });
 
@@ -1671,13 +1676,13 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     expect(resolved).toMatchObject({
       tag: "resolved",
       snapshot: {
-        pendingInterrupt: null,
-        turn: { bonusActionAvailable: false },
+        turn: { bonusActionQuotaAvailable: false },
       },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Shielded Spiritual Weapon repeat to resolve.");
     }
+    expect(battleFrontierInterruptDecisionForState(resolved.state)).toBeNull();
     expect(requireCombatant(resolved.state, spellTargetId).hp).toStrictEqual(
       Hp(30),
     );
@@ -1822,7 +1827,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
 
     expect(lost).toMatchObject({
       tag: "resolved",
-      snapshot: { turn: { bonusActionAvailable: false } },
+      snapshot: { turn: { bonusActionQuotaAvailable: false } },
     });
     if (lost.tag !== "resolved") {
       throw new Error("Expected Sanctuary-lost repeat attack to resolve.");
@@ -1903,30 +1908,30 @@ function requireTriggeredReactionSpellChoice(input: {
   readonly procedure: string;
   readonly slotLevel: number;
 }): TriggeredReactionSpellChoice {
-  const choice = input.result.snapshot.pendingInterrupt?.choices.find(
-    (candidate): candidate is TriggeredReactionSpellChoice => {
-      if (
-        candidate.kind !== "nestedProcedure" ||
-        candidate.subject.command !== "castTriggeredReactionSpell" ||
-        candidate.subject.reactorId !== input.reactorId
-      )
-        return false;
-      const invocation = characterSpellInvocationRefForProcedureRefForTest(
-        battleRuntimeSessionForTest({
-          ...input.session,
-          state: input.result.state,
-        }),
-        candidate.subject.reactorId,
-        candidate.subject.procedureRef,
-      );
-      return (
-        invocation.tag === "spellSlot" &&
-        invocation.spellId === input.spellId &&
-        invocation.procedure === input.procedure &&
-        Number(invocation.slotLevel) === input.slotLevel
-      );
-    },
-  );
+  const choice = battleFrontierInterruptDecisionForState(
+    input.result.state,
+  )?.choices.find((candidate): candidate is TriggeredReactionSpellChoice => {
+    if (
+      candidate.kind !== "nestedProcedure" ||
+      candidate.subject.command !== "castTriggeredReactionSpell" ||
+      candidate.subject.reactorId !== input.reactorId
+    )
+      return false;
+    const invocation = characterSpellInvocationRefForProcedureRefForTest(
+      battleRuntimeSessionForTest({
+        ...input.session,
+        state: input.result.state,
+      }),
+      candidate.subject.reactorId,
+      candidate.subject.procedureRef,
+    );
+    return (
+      invocation.tag === "spellSlot" &&
+      invocation.spellId === input.spellId &&
+      invocation.procedure === input.procedure &&
+      Number(invocation.slotLevel) === input.slotLevel
+    );
+  });
   if (choice === undefined) {
     throw new Error(`Expected ${input.spellId} Reaction spell choice.`);
   }

@@ -814,10 +814,13 @@ export const continueBattle: PlayerContinuation = (context) => {
     speedKind: "walk",
     fills: [],
   });
-  if (awaitingOpportunity.tag !== "needsHoles" || awaitingOpportunity.snapshot.pendingInterrupt === null) {
+  if (
+    awaitingOpportunity.tag !== "needsHoles" ||
+    awaitingOpportunity.envelope.frontier.kind !== "interruptDecision"
+  ) {
     throw new Error("Expected Opportunity Attack decision");
   }
-  const decisionHole = awaitingOpportunity.snapshot.pendingInterrupt.decisionHole;
+  const decisionHole = awaitingOpportunity.envelope.frontier.decisionHole;
   const prematureContinuation = context.sdk.resolveScenarioMovement({
     kind: "continue",
     session: awaitingOpportunity.session,
@@ -1267,8 +1270,12 @@ export const continueBattle: PlayerContinuation = (context) => {
   if (awaitingTarget.tag !== "needsHoles") {
     throw new Error("Expected an attack target frontier");
   }
-  const targetHole = awaitingTarget.holes.find(
-    (hole) => hole.kind === "targetChoice" && hole.attack !== undefined,
+  if (awaitingTarget.envelope.frontier.kind !== "holes") {
+    throw new Error("Expected an attack target Hole frontier");
+  }
+  const targetHole = awaitingTarget.envelope.frontier.holes.find(
+    (hole: { kind: string; attack?: unknown }) =>
+      hole.kind === "targetChoice" && hole.attack !== undefined,
   );
   if (targetHole?.kind !== "targetChoice") {
     throw new Error("Expected an attack target hole");
@@ -1342,7 +1349,13 @@ export const continueBattle: PlayerContinuation = (context) => {
         if (!isJsonRecord(result)) {
           throw new Error("Expected projected battle resolution result");
         }
-        const holes = result.holes;
+        const envelope = result.envelope;
+        const holes =
+          isJsonRecord(envelope) &&
+          isJsonRecord(envelope.frontier) &&
+          envelope.frontier.kind === "holes"
+            ? envelope.frontier.holes
+            : undefined;
         if (!Array.isArray(holes)) {
           throw new Error("Expected projected battle resolution holes");
         }

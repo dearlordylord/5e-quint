@@ -8,6 +8,7 @@ import {
   battleSpellEffectOccurrenceId,
   battleObscurementZones,
   breakBattleConcentration,
+  battleFrontierInterruptDecisionForState,
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
@@ -24,6 +25,7 @@ import {
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
+  type BattleInterruptSubject,
   type BattleInterruptProcedureChoice,
   type BattleObjectIgnitionDisposition,
   type BattleProcedureExecutionRef,
@@ -362,10 +364,29 @@ type OngoingSpellTargetChoiceFill = Extract<
 type OngoingSpellTarget = OngoingSpellTargetChoiceFill["value"];
 type OngoingSpellTargetWithinRangeFact =
   OngoingSpellTargetChoiceFill["spatialFacts"][number];
-type ReactionRollOrDamageReductionChoice = Extract<
+type NestedProcedureChoice = Extract<
   BattleInterruptProcedureChoice,
-  { readonly kind: "reactionRollOrDamageReduction" }
+  { readonly kind: "nestedProcedure" }
 >;
+type CounterspellReactionChoice = NestedProcedureChoice & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "castTriggeredReactionSpell";
+    }
+  >;
+};
+type ReactionModifierChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "reactionModifier" }
+>;
+type ReactionRollOrDamageReductionChoice = ReactionModifierChoice & {
+  readonly modifier: Extract<
+    ReactionModifierChoice["modifier"],
+    { readonly kind: "attackDamageReduction" }
+  >;
+};
 
 describe("level 5 SDK tracer bullets", () => {
   test("Barbarian Fast Movement projects through sheet handoff and increases Speed plus Dash without Heavy armor", () => {
@@ -851,7 +872,7 @@ describe("level 5 SDK tracer bullets", () => {
       rogueId,
     );
     expect(choice.initialHoles).toEqual([]);
-    expect(choice.choice.reduction).toEqual({ kind: "halfDamage" });
+    expect(choice.modifier.reduction).toEqual({ kind: "halfDamage" });
 
     const afterReaction = resolveBattleInterrupt({
       state: awaitingReaction.state,
@@ -862,7 +883,7 @@ describe("level 5 SDK tracer bullets", () => {
           responderId: rogueId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.choice.procedureRef,
+            procedureRef: choice.modifier.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [],
           },
@@ -890,7 +911,7 @@ describe("level 5 SDK tracer bullets", () => {
 
     expect(rogue.hp).toBe(Hp(Number(beforeHp) - expectedUncannyDodgeDamage));
     expect(rogue.reactionAvailable).toBe(false);
-    expect(resolved.snapshot.pendingInterrupt).toBeNull();
+    expect(battleFrontierInterruptDecisionForState(resolved.state)).toBeNull();
   });
 
   test("Haste casts from a level-5 spellcaster sheet and projects speed, AC, Dexterity save, action, slot, and lethargy behavior", () => {
@@ -1669,7 +1690,9 @@ describe("level 5 SDK tracer bullets", () => {
         counterspellTriggeringWizardId,
       );
 
-      expect(resolved.snapshot.pendingInterrupt).toBeNull();
+      expect(
+        battleFrontierInterruptDecisionForState(resolved.state),
+      ).toBeNull();
       expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
       expect(reactor.reactionAvailable).toBe(false);
       expect(reactor.origin.spellcasting?.spellSlots).toEqual(
@@ -2613,9 +2636,9 @@ describe("level 5 SDK tracer bullets", () => {
       ).toBe(
         Number(secondTargetBeforeHealing.hp) + massHealingWordHealingTotal,
       );
-      expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(
-        false,
-      );
+      expect(
+        snapshotBattle(resolved.state).turn.bonusActionQuotaAvailable,
+      ).toBe(false);
       expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual(
         [{ kind: "committed", combatantId: massHealingWordCase.casterId }],
       );
@@ -3444,13 +3467,12 @@ function startCounterspellableMagicMissile(input: {
       ]),
     ],
   });
-  expect(result).toMatchObject({
-    tag: "needsHoles",
-    snapshot: { pendingInterrupt: { trigger: "spellCast" } },
-  });
   if (result.tag !== "needsHoles") {
     throw new Error("Expected Counterspell Reaction window.");
   }
+  expect(battleFrontierInterruptDecisionForState(result.state)?.trigger).toBe(
+    "spellCast",
+  );
   return result;
 }
 
@@ -3512,38 +3534,35 @@ function spellCastReactionFactsFill(
   };
 }
 
-type CounterspellReactionChoice = Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
->;
-
 function requireCounterspellChoice(
   result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
   reactorId: CombatantId,
 ): CounterspellReactionChoice {
   const reactor = result.state.combatants.get(reactorId);
-  const choice = result.snapshot.pendingInterrupt?.choices.find(
-    (candidate): candidate is CounterspellReactionChoice => {
-      if (
-        candidate.kind !== "castTriggeredReactionSpell" ||
-        candidate.reactorId !== reactorId ||
-        reactor?.origin.kind !== "character"
-      ) {
-        return false;
-      }
-      const binding = characterProcedureBinding(
-        reactor.origin.execution,
-        candidate.subject.procedureRef,
-      );
-      return (
-        binding?.procedure.kind === "spellInvocation" &&
-        binding.procedure.execution.procedure === "counterspell" &&
-        binding.procedure.execution.resource.tag === "spellSlot" &&
-        Number(binding.procedure.execution.resource.slotLevel) ===
-          counterspellCastLevel
-      );
-    },
-  );
+  const choice = battleFrontierInterruptDecisionForState(
+    result.state,
+  )?.choices.find((candidate): candidate is CounterspellReactionChoice => {
+    if (
+      candidate.kind !== "nestedProcedure" ||
+      candidate.subject.tag !== "runtimeCommand" ||
+      candidate.subject.command !== "castTriggeredReactionSpell" ||
+      candidate.subject.reactorId !== reactorId ||
+      reactor?.origin.kind !== "character"
+    ) {
+      return false;
+    }
+    const binding = characterProcedureBinding(
+      reactor.origin.execution,
+      candidate.subject.procedureRef,
+    );
+    return (
+      binding?.procedure.kind === "spellInvocation" &&
+      binding.procedure.execution.procedure === "counterspell" &&
+      binding.procedure.execution.resource.tag === "spellSlot" &&
+      Number(binding.procedure.execution.resource.slotLevel) ===
+        counterspellCastLevel
+    );
+  });
   if (choice === undefined) {
     throw new Error("Expected Counterspell Reaction choice.");
   }
@@ -3555,19 +3574,21 @@ function requireUncannyDodgeAttackDamageChoice(
   reactorId: CombatantId,
 ): ReactionRollOrDamageReductionChoice {
   const reactor = result.state.combatants.get(reactorId);
-  const choice = result.snapshot.pendingInterrupt?.choices.find(
+  const choice = battleFrontierInterruptDecisionForState(
+    result.state,
+  )?.choices.find(
     (candidate): candidate is ReactionRollOrDamageReductionChoice => {
       if (
-        candidate.kind !== "reactionRollOrDamageReduction" ||
-        candidate.reactorId !== reactorId ||
-        candidate.choice.kind !== "attackDamageReduction" ||
+        candidate.kind !== "reactionModifier" ||
+        candidate.responderId !== reactorId ||
+        candidate.modifier.kind !== "attackDamageReduction" ||
         reactor?.origin.kind !== "character"
       ) {
         return false;
       }
       const binding = characterProcedureBinding(
         reactor.origin.execution,
-        candidate.choice.procedureRef,
+        candidate.modifier.procedureRef,
       );
       return (
         binding?.procedure.kind === "unitFeature" &&

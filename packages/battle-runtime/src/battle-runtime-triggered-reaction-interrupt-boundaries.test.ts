@@ -4,15 +4,16 @@ import type {
   AvailableBattleAct,
   BattleProcedureExecutionRef,
   BattleHole,
+  BattleInterruptSubject,
   BattleFill,
   BattleInterruptProcedureChoice,
-  BattleInterruptSubject,
   BattleSubject,
 } from "./index.ts";
 import { resolveBattleSubject as resolveBattleSubjectRuntime } from "./index.ts";
 import {
   attackRollFill,
   battleId,
+  battleFrontierInterruptDecisionForState,
   characterSeed,
   combatantId,
   damageRollFillWithGroups,
@@ -40,19 +41,22 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import { statBlockWithCreatureType } from "./unit-profile-admission-creature-fixture.test-support.ts";
 
-const spellCasterId = combatantId("triggered-reaction-spell-caster");
-const reactionCasterId = combatantId("triggered-reaction-reaction-caster");
-const attackerId = combatantId("triggered-reaction-attacker");
-
 type TriggeredReactionSpellChoice = Extract<
   BattleInterruptProcedureChoice,
   { readonly kind: "nestedProcedure" }
 > & {
   readonly subject: Extract<
     BattleInterruptSubject,
-    { readonly command: "castTriggeredReactionSpell" }
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "castTriggeredReactionSpell";
+    }
   >;
 };
+
+const spellCasterId = combatantId("triggered-reaction-spell-caster");
+const reactionCasterId = combatantId("triggered-reaction-reaction-caster");
+const attackerId = combatantId("triggered-reaction-attacker");
 
 type AttackAct = AvailableBattleAct & {
   readonly subject: Extract<
@@ -120,7 +124,7 @@ describe("triggered Reaction spell interrupt boundaries", () => {
 
     expect(result).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: null },
+
       holes: [{ kind: "rolledDice" }],
     });
   });
@@ -191,7 +195,6 @@ describe("triggered Reaction spell interrupt boundaries", () => {
 
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected immune Hellish Rebuke to resolve.");
@@ -335,7 +338,6 @@ describe("triggered Reaction spell interrupt boundaries", () => {
     });
     expect(completed).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null },
     });
   });
 });
@@ -480,7 +482,7 @@ function attackAgainstReactionCaster(input: {
   });
   const result =
     attackResult.tag === "needsHoles" &&
-    attackResult.snapshot.pendingInterrupt === null &&
+    battleFrontierInterruptDecisionForState(attackResult.state) === null &&
     attackResult.holes.some((hole) => hole.kind === "rolledDice")
       ? resolveBattleSubject({
           state: attackResult.state,
@@ -511,8 +513,10 @@ function requireReactionSpellChoice(
     { readonly tag: "needsHoles" }
   >,
   reactorId: ReturnType<typeof combatantId>,
-): TriggeredReactionSpellChoice {
-  const choice = result.snapshot.pendingInterrupt?.choices.find(
+): Extract<TriggeredReactionSpellChoice, { readonly kind: "nestedProcedure" }> {
+  const choice = battleFrontierInterruptDecisionForState(
+    result.state,
+  )?.choices.find(
     (candidate): candidate is TriggeredReactionSpellChoice =>
       candidate.kind === "nestedProcedure" &&
       candidate.subject.tag === "runtimeCommand" &&

@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import type * as BattleRuntime from "@dnd/battle-runtime"
-import { battlePresentedSnapshot, combatantId } from "@dnd/battle-runtime"
+import { battlePresentedCheckpointFrontierEnvelope, combatantId } from "@dnd/battle-runtime"
 import { render, screen } from "@testing-library/react"
+import { Either } from "effect"
 import { describe, expect, it, vi } from "vitest"
 
 import type * as BattleSceneLayout from "./battle-scene-layout.ts"
@@ -13,13 +14,13 @@ vi.mock("@dnd/battle-runtime", async (importOriginal) => {
   const { Either } = await import("effect")
   return {
     ...actual,
-    battlePresentedSnapshot: vi.fn(
+    battlePresentedCheckpointFrontierEnvelope: vi.fn(
       (
-        session: Parameters<typeof actual.battlePresentedSnapshot>[0]
-      ): ReturnType<typeof actual.battlePresentedSnapshot> => {
+        session: Parameters<typeof actual.battlePresentedCheckpointFrontierEnvelope>[0]
+      ): ReturnType<typeof actual.battlePresentedCheckpointFrontierEnvelope> => {
         const combatantId = session.state.combatants.keys().next().value
         return combatantId === undefined
-          ? actual.battlePresentedSnapshot(session)
+          ? actual.battlePresentedCheckpointFrontierEnvelope(session)
           : Either.left([
               {
                 tag: "battleSnapshotPresentationIssue",
@@ -57,12 +58,52 @@ describe("BattlePage presentation failure", () => {
 
   it("renders typed scene projection issues after snapshot projection succeeds", async () => {
     const actual = await vi.importActual<typeof BattleRuntime>("@dnd/battle-runtime")
-    const successfulSnapshot = actual.battlePresentedSnapshot(WIZARD_BATTLE_DEMO_STEPS[0].session)
-    expect(successfulSnapshot._tag).toBe("Right")
-    vi.mocked(battlePresentedSnapshot).mockReturnValueOnce(successfulSnapshot)
+    const successfulEnvelope = actual.battlePresentedCheckpointFrontierEnvelope(WIZARD_BATTLE_DEMO_STEPS[0].session)
+    expect(successfulEnvelope._tag).toBe("Right")
+    vi.mocked(battlePresentedCheckpointFrontierEnvelope).mockReturnValueOnce(successfulEnvelope)
 
     render(<BattlePage steps={WIZARD_BATTLE_DEMO_STEPS} meta={WIZARD_BATTLE_DEMO_META} />)
 
     expect(screen.getByRole("alert").textContent).toContain("missingCurrentActor")
+  })
+
+  it("renders interrupt choice projection issues with their reactor context", async () => {
+    const actual = await vi.importActual<typeof BattleRuntime>("@dnd/battle-runtime")
+    const checkpointFrontier = WIZARD_BATTLE_DEMO_STEPS.map((step) =>
+      actual.battlePresentedCheckpointFrontierEnvelope(step.session)
+    ).find(
+      (candidate) =>
+        Either.isRight(candidate) &&
+        candidate.right.frontier.kind === "interruptDecision" &&
+        candidate.right.frontier.choices.some(
+          (presentedChoice) => presentedChoice.choice.kind !== "reactionRollOrDamageReduction"
+        )
+    )
+    if (checkpointFrontier === undefined) {
+      throw new Error("Expected the battle demo to expose a subject-bearing interrupt decision.")
+    }
+    if (Either.isLeft(checkpointFrontier) || checkpointFrontier.right.frontier.kind !== "interruptDecision") {
+      throw new Error("Expected the counterspell demo step to expose an interrupt decision.")
+    }
+    const presentedChoice = checkpointFrontier.right.frontier.choices.find(
+      (candidate) => candidate.choice.kind !== "reactionRollOrDamageReduction"
+    )
+    if (presentedChoice === undefined || presentedChoice.choice.kind === "reactionRollOrDamageReduction") {
+      throw new Error("Expected the counterspell interrupt to carry a presented battle subject.")
+    }
+    const issue = {
+      tag: "battleInterruptChoicePresentationIssue",
+      reason: "missingSubjectPresentation",
+      reactorId: presentedChoice.choice.reactorId,
+      choiceKind: presentedChoice.choice.kind,
+      subject: presentedChoice.choice.subject
+    } as const
+    vi.mocked(battlePresentedCheckpointFrontierEnvelope).mockReturnValueOnce(Either.left([issue]))
+
+    render(<BattlePage steps={WIZARD_BATTLE_DEMO_STEPS} meta={WIZARD_BATTLE_DEMO_META} />)
+
+    expect(screen.getByRole("alert").textContent).toBe(
+      `Battle interrupt choice presentation is unavailable for reactor ${issue.reactorId}: missingSubjectPresentation.`
+    )
   })
 })

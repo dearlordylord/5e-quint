@@ -6,6 +6,8 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { Either, Match, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
+import { SHARED_HOST_TEST_TIMEOUT_MILLISECONDS as TEST_TIMEOUT } from "../../../scripts/shared-host-test-policy.mjs";
+
 import {
   decodeEvaluationInventory,
   type EvaluationInventory,
@@ -893,125 +895,131 @@ describe("5.5e SRD Oracle evaluation artifacts", () => {
     }
   });
 
-  test("cross-validates MCP refs, inventory cases, scenario ids, and projection contracts", async () => {
-    const matrix = decodeCapabilityMatrix(
-      resolve(evalRoot, "capability-matrix.json"),
-    );
-    const manifest = decodeFile(mcpManifestSchemaFor(matrix), manifestPath);
-    const inventory: EvaluationInventory = decodeEvaluationInventory(
-      resolve(evalRoot, "evaluation-inventory.json"),
-    );
-    const manifestByKey = new Map(
-      manifest.evidence.map((row) => [
-        `${row.scenarioId}\u0000${row.flowId}\u0000${row.taskId}`,
-        row,
-      ]),
-    );
-    expect(manifestByKey.size).toBe(manifest.evidence.length);
-    const skillCaseIds = new Set(inventory.skillActivation.map(({ id }) => id));
-    for (const row of matrix.rows) {
-      if (row.mcpEvidence.status === "observed") {
-        const rowRefKeys = new Set<string>();
-        for (const ref of row.mcpEvidence.refs) {
-          const refKey = `${ref.scenarioId}\u0000${ref.flowId}\u0000${ref.taskId}`;
-          expect(
-            rowRefKeys.has(refKey),
-            `${row.id}: duplicate MCP evidence reference ${refKey}`,
-          ).toBe(false);
-          rowRefKeys.add(refKey);
-          const manifestRow = manifestByKey.get(refKey);
-          expect(manifestRow, row.id).toBeDefined();
-          if ("requiredQueryKinds" in row) {
-            expect(
-              manifestRow !== undefined && "queryKinds" in manifestRow
-                ? manifestRow.queryKinds
-                : undefined,
-              row.id,
-            ).toEqual(row.requiredQueryKinds);
-          }
-          expect(
-            existsSync(resolve(repoRoot, manifestRow?.ownerPath ?? "")),
-          ).toBe(true);
-          expect(
-            existsSync(resolve(repoRoot, manifestRow?.testPath ?? "")),
-          ).toBe(true);
-          const testSource = readFileSync(
-            resolve(repoRoot, manifestRow?.testPath ?? ""),
-            "utf8",
-          );
-          expect(
-            sourceDefinesVitestScenario(testSource, ref.scenarioId),
-            `${row.id}: ${ref.scenarioId} must identify an executable scenario`,
-          ).toBe(true);
-        }
-      }
-      for (const caseId of row.installedChatGptEvidence.caseIds) {
-        expect(skillCaseIds.has(caseId), `${row.id}: ${caseId}`).toBe(true);
-      }
-    }
-
-    const [clientTransport, serverTransport] =
-      InMemoryTransport.createLinkedPair();
-    const { server } = createDndMcpProtocolServer();
-    const client = new Client({
-      name: "dnd-srd-oracle-capability-matrix-check",
-      version: "0.1.0",
-    });
-    try {
-      await server.connect(serverTransport);
-      await client.connect(clientTransport);
-      const tools = await client.listTools();
-      const toolByName = new Map(
-        tools.tools.map((tool) => [
-          tool.name,
-          { name: tool.name, outputSchema: tool.outputSchema },
+  test(
+    "cross-validates MCP refs, inventory cases, scenario ids, and projection contracts",
+    async () => {
+      const matrix = decodeCapabilityMatrix(
+        resolve(evalRoot, "capability-matrix.json"),
+      );
+      const manifest = decodeFile(mcpManifestSchemaFor(matrix), manifestPath);
+      const inventory: EvaluationInventory = decodeEvaluationInventory(
+        resolve(evalRoot, "evaluation-inventory.json"),
+      );
+      const manifestByKey = new Map(
+        manifest.evidence.map((row) => [
+          `${row.scenarioId}\u0000${row.flowId}\u0000${row.taskId}`,
+          row,
         ]),
       );
-      const missingProjections: string[] = [];
+      expect(manifestByKey.size).toBe(manifest.evidence.length);
+      const skillCaseIds = new Set(
+        inventory.skillActivation.map(({ id }) => id),
+      );
       for (const row of matrix.rows) {
-        for (const projection of row.modelVisibleProjection) {
-          if (
-            !validateModelVisibleProjection(
-              projection,
-              row.mcpSurface,
-              toolByName,
-            )
-          ) {
-            missingProjections.push(
-              `${row.id}: ${projection.toolName}.${projection.pathSegments.join(".")}`,
+        if (row.mcpEvidence.status === "observed") {
+          const rowRefKeys = new Set<string>();
+          for (const ref of row.mcpEvidence.refs) {
+            const refKey = `${ref.scenarioId}\u0000${ref.flowId}\u0000${ref.taskId}`;
+            expect(
+              rowRefKeys.has(refKey),
+              `${row.id}: duplicate MCP evidence reference ${refKey}`,
+            ).toBe(false);
+            rowRefKeys.add(refKey);
+            const manifestRow = manifestByKey.get(refKey);
+            expect(manifestRow, row.id).toBeDefined();
+            if ("requiredQueryKinds" in row) {
+              expect(
+                manifestRow !== undefined && "queryKinds" in manifestRow
+                  ? manifestRow.queryKinds
+                  : undefined,
+                row.id,
+              ).toEqual(row.requiredQueryKinds);
+            }
+            expect(
+              existsSync(resolve(repoRoot, manifestRow?.ownerPath ?? "")),
+            ).toBe(true);
+            expect(
+              existsSync(resolve(repoRoot, manifestRow?.testPath ?? "")),
+            ).toBe(true);
+            const testSource = readFileSync(
+              resolve(repoRoot, manifestRow?.testPath ?? ""),
+              "utf8",
             );
+            expect(
+              sourceDefinesVitestScenario(testSource, ref.scenarioId),
+              `${row.id}: ${ref.scenarioId} must identify an executable scenario`,
+            ).toBe(true);
           }
         }
+        for (const caseId of row.installedChatGptEvidence.caseIds) {
+          expect(skillCaseIds.has(caseId), `${row.id}: ${caseId}`).toBe(true);
+        }
       }
-      expect(missingProjections).toEqual([]);
-      expect(
-        validateModelVisibleProjection(
-          {
-            toolName: "read_battle_state",
-            pathSegments: ["snapshot", "notReal"],
-          },
-          ["read_battle_state"],
-          toolByName,
-        ),
-      ).toBe(false);
-      expect(
-        validateModelVisibleProjection(
-          { toolName: "read_battle_state", pathSegments: ["currentActorId"] },
-          ["read_battle_state"],
-          toolByName,
-        ),
-      ).toBe(false);
-      expect(
-        validateModelVisibleProjection(
-          { toolName: "start_battle", pathSegments: ["snapshot"] },
-          ["read_battle_state"],
-          toolByName,
-        ),
-      ).toBe(false);
-    } finally {
-      await Promise.allSettled([client.close(), server.close()]);
-    }
-  }, 30_000);
+
+      const [clientTransport, serverTransport] =
+        InMemoryTransport.createLinkedPair();
+      const { server } = createDndMcpProtocolServer();
+      const client = new Client({
+        name: "dnd-srd-oracle-capability-matrix-check",
+        version: "0.1.0",
+      });
+      try {
+        await server.connect(serverTransport);
+        await client.connect(clientTransport);
+        const tools = await client.listTools();
+        const toolByName = new Map(
+          tools.tools.map((tool) => [
+            tool.name,
+            { name: tool.name, outputSchema: tool.outputSchema },
+          ]),
+        );
+        const missingProjections: string[] = [];
+        for (const row of matrix.rows) {
+          for (const projection of row.modelVisibleProjection) {
+            if (
+              !validateModelVisibleProjection(
+                projection,
+                row.mcpSurface,
+                toolByName,
+              )
+            ) {
+              missingProjections.push(
+                `${row.id}: ${projection.toolName}.${projection.pathSegments.join(".")}`,
+              );
+            }
+          }
+        }
+        expect(missingProjections).toEqual([]);
+        expect(
+          validateModelVisibleProjection(
+            {
+              toolName: "read_battle_state",
+              pathSegments: ["snapshot", "notReal"],
+            },
+            ["read_battle_state"],
+            toolByName,
+          ),
+        ).toBe(false);
+        expect(
+          validateModelVisibleProjection(
+            { toolName: "read_battle_state", pathSegments: ["currentActorId"] },
+            ["read_battle_state"],
+            toolByName,
+          ),
+        ).toBe(false);
+        expect(
+          validateModelVisibleProjection(
+            { toolName: "start_battle", pathSegments: ["snapshot"] },
+            ["read_battle_state"],
+            toolByName,
+          ),
+        ).toBe(false);
+      } finally {
+        await Promise.allSettled([client.close(), server.close()]);
+      }
+    },
+    TEST_TIMEOUT,
+  );
 
   test("records partial installed ChatGPT evidence without promoting pending cases", () => {
     const evidence = decodeInstalledEvidence(

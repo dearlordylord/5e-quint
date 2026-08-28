@@ -110,6 +110,38 @@ describe("Raw Swarm capability projection", () => {
     }
   });
 
+  test("makes resolved monster HP distinct from the absent Table choice workflow", () => {
+    const mechanicalBoundary =
+      "battleCreatureInitFromStatBlock accepts a resolved currentHp and typed initial conditions, but the public SDK does not surface the Table's fixed-vs-rolled monster Hit Points selection or roll workflow";
+    const revisionPolicy =
+      "For supportedOnly generation and review, a Candidate requiring an absent public-SDK operation must be classified as unsupported and needsRevision, never marked ready";
+    for (const role of ["generation", "review"] as const) {
+      const context = capabilityContextForRole(role);
+      expect(context).toContain(mechanicalBoundary);
+      expect(context).toContain(revisionPolicy);
+    }
+    const setupContext = capabilityContextForRole("setupAuthoring");
+    expect(setupContext).toContain(mechanicalBoundary);
+    expect(setupContext).not.toContain(revisionPolicy);
+    expect(setupContext.split(mechanicalBoundary)).toHaveLength(2);
+  });
+
+  test("makes cross-authority numeric contradictions a review revision", () => {
+    for (const role of ["generation", "review"] as const) {
+      const context = capabilityContextForRole(role);
+      expect(context).toContain(
+        "reconcile every concrete quantity or count, coordinate or position, derived distance or range",
+      );
+      expect(context).toContain(
+        "across Candidate prose, typed stage facts, and catalogue-comparison evidence",
+      );
+      expect(context).toContain(
+        "Contradictions or unresolved mismatches are needsRevision findings",
+      );
+      expect(context).toContain("must never be silently repaired");
+    }
+  });
+
   test("rejects an unrecognized role instead of widening the projection", () => {
     expect(Either.isLeft(parseCapabilityRole("reviewer"))).toBe(true);
     expect(Either.isRight(parseCapabilityRole("review"))).toBe(true);

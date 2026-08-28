@@ -1,11 +1,14 @@
 import type {
-  BattleCreatureInit,
   BattleId,
   BattlePendingTransaction,
   BattleRuntimeSession,
   BattleSubject,
   CombatantId,
 } from "@dnd/battle-runtime";
+import type {
+  BattleRosterCharacterCombatant,
+  BattleRosterStatBlockCombatant,
+} from "@dnd/character-battle-runtime";
 import type { CharacterSheetId } from "@dnd/character-sheet-runtime";
 
 import type {
@@ -16,37 +19,14 @@ import type {
 
 type CharacterId = CharacterSheetId;
 
-type CharacterBattleCreatureInit = Extract<
-  BattleCreatureInit["creatureInit"],
-  { readonly kind: "character" }
->;
-type StatBlockBattleCreatureInit = Extract<
-  BattleCreatureInit["creatureInit"],
-  { readonly kind: "statBlock" }
->;
-
-export type CharacterBattleRosterCombatant = Omit<
-  BattleCreatureInit,
-  "creatureInit"
-> & {
-  readonly creatureInit: CharacterBattleCreatureInit;
-};
-
-export type StatBlockBattleRosterCombatant = Omit<
-  BattleCreatureInit,
-  "creatureInit"
-> & {
-  readonly creatureInit: StatBlockBattleCreatureInit;
-};
-
 export type McpBattleRosterOperation =
   | {
       readonly kind: "addCharacter";
-      readonly combatant: CharacterBattleRosterCombatant;
+      readonly combatant: BattleRosterCharacterCombatant;
     }
   | {
       readonly kind: "addStatBlock";
-      readonly combatant: StatBlockBattleRosterCombatant;
+      readonly combatant: BattleRosterStatBlockCombatant;
     }
   | {
       readonly kind: "remove";
@@ -95,7 +75,7 @@ export type ActiveBattleRosterTransitionPlanData = {
   readonly storeIdentity: object;
   readonly activeBattle: BattleRuntimeSession;
   readonly characterSessionTransitions: readonly CharacterSessionBattleTransition[];
-  readonly pendingBattleFills: BattlePendingTransaction | null;
+  readonly pendingBattleTransaction: BattlePendingTransaction | null;
   readonly result: ActiveBattleRosterTransitionPlanResult;
 };
 
@@ -130,6 +110,7 @@ export type McpBattleRosterTransitionIssue =
   | {
       readonly tag: "battleRosterCombatantAdmissionFailed";
       readonly combatantId: CombatantId;
+      readonly ownerPath: readonly ["operation", "combatant"];
       readonly message: string;
     }
   | {

@@ -12,7 +12,6 @@ import type {
 import {
   applyInitiativeSwap,
   battleStateInitIssueMessage,
-  battlePendingTransactionView,
   battlePendingTransactionViewForSession,
   battleRuntimeSessionDescendsFrom,
   finishInitialInitiativeSetup,
@@ -179,7 +178,7 @@ export function createMcpSessionStore(input: {
     storeIdentity,
   });
   let selectedStatBlockId: StatBlockId | null = null;
-  let pendingBattleFills: BattlePendingTransaction | null = null;
+  let pendingBattleTransaction: BattlePendingTransaction | null = null;
   let battleState: McpBattleState = { tag: "none" };
 
   function planActiveBattleRosterTransition(
@@ -212,7 +211,7 @@ export function createMcpSessionStore(input: {
     return battleRosterPlanner.plan(
       operation,
       battleState.session,
-      pendingBattleFills,
+      pendingBattleTransaction,
     );
   }
 
@@ -233,7 +232,7 @@ export function createMcpSessionStore(input: {
       });
     }
     battleState = { tag: "activeBattle", session };
-    pendingBattleFills = null;
+    pendingBattleTransaction = null;
     return Either.right(undefined);
   }
 
@@ -279,7 +278,7 @@ export function createMcpSessionStore(input: {
       });
       if (Either.isLeft(committed)) return committed;
       battleState = committed.right;
-      pendingBattleFills = null;
+      pendingBattleTransaction = null;
       return Either.right(undefined);
     },
     commitBattleEnd({ battleSession, characterSettlements }) {
@@ -291,7 +290,7 @@ export function createMcpSessionStore(input: {
       });
       if (Either.isLeft(committed)) return committed;
       battleState = committed.right;
-      pendingBattleFills = null;
+      pendingBattleTransaction = null;
       return Either.right(undefined);
     },
     storeActiveBattle(session) {
@@ -332,7 +331,7 @@ export function createMcpSessionStore(input: {
           }
           const stored = storeActiveBattleSession(resolution.session);
           if (Either.isLeft(stored)) return stored;
-          pendingBattleFills = transaction;
+          pendingBattleTransaction = transaction;
           return Either.right(undefined);
         }),
         Match.exhaustive,
@@ -349,11 +348,11 @@ export function createMcpSessionStore(input: {
       const committed = battleRosterPlanner.commit(
         plan,
         battleState.session,
-        pendingBattleFills,
+        pendingBattleTransaction,
       );
       if (Either.isLeft(committed)) return Either.left(committed.left);
       battleState = { tag: "activeBattle", session: committed.right };
-      pendingBattleFills = null;
+      pendingBattleTransaction = null;
       return committed;
     },
     storeInitialInitiativeSetup(setup) {
@@ -364,7 +363,7 @@ export function createMcpSessionStore(input: {
         );
       }
       battleState = { tag: "initialInitiativeSetup", setup };
-      pendingBattleFills = null;
+      pendingBattleTransaction = null;
       return Either.right(undefined);
     },
     applyInitialInitiativeSwap(input) {
@@ -392,11 +391,11 @@ export function createMcpSessionStore(input: {
       }
       const session = finishInitialInitiativeSetup(battleState.setup);
       battleState = { tag: "activeBattle", session };
-      pendingBattleFills = null;
+      pendingBattleTransaction = null;
       return Either.right(session);
     },
     getPendingBattleTransaction(): BattlePendingTransaction | null {
-      return pendingBattleFills;
+      return pendingBattleTransaction;
     },
     clearSelectedStatBlock(): void {
       selectedStatBlockId = null;
@@ -421,13 +420,6 @@ export function createMcpSessionStore(input: {
         characterIds,
         selectedStatBlockId,
         battleState: battleStateSnapshot(store.battleState),
-        transientBattleFills:
-          pendingBattleFills === null
-            ? null
-            : Option.match(battlePendingTransactionView(pendingBattleFills), {
-                onNone: invalidPendingBattleTransactionProjection,
-                onSome: (view) => view,
-              }),
       };
     },
   } satisfies McpSessionStore;
@@ -457,10 +449,4 @@ function invalidBattleRosterStateTransition(
   >
 > {
   return Either.left({ tag: "invalidBattleStateTransition", from, to });
-}
-
-function invalidPendingBattleTransactionProjection(): never {
-  // The setter accepts only tokens created by battle-runtime. Reaching this
-  // branch would mean that an internal opaque-token invariant was violated.
-  throw new Error("MCP session store received an unknown battle transaction.");
 }

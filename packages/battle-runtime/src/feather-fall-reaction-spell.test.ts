@@ -36,6 +36,7 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
+  type BattleInterruptProcedureChoice,
   type BattleResolutionResult,
   type BattleRuntimeSession,
   type BattleState,
@@ -46,10 +47,12 @@ import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics
 import {
   spellAccessFreeCastSpellInvocationRef,
   spellSlotInvocationRef,
+  type BattleInterruptSubject,
 } from "./battle-subjects.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   battleProcedureExecutionRefForSpellHoleForTest,
+  battleFrontierInterruptDecisionForState,
   characterSpellInvocationRefForProcedureRefForTest,
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
@@ -70,6 +73,30 @@ const fallingCId = combatantId("feather-fall-target-c");
 const fallingDId = combatantId("feather-fall-target-d");
 const fallingEId = combatantId("feather-fall-target-e");
 const fallingFId = combatantId("feather-fall-target-f");
+
+type NestedProcedureChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "nestedProcedure" }
+>;
+type TriggeredReactionSpellChoice = NestedProcedureChoice & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "castTriggeredReactionSpell";
+    }
+  >;
+};
+
+function isTriggeredReactionSpellChoice(
+  choice: BattleInterruptProcedureChoice,
+): choice is TriggeredReactionSpellChoice {
+  return (
+    choice.kind === "nestedProcedure" &&
+    choice.subject.tag === "runtimeCommand" &&
+    choice.subject.command === "castTriggeredReactionSpell"
+  );
+}
 
 describe("Feather Fall Reaction spell", () => {
   test("spends a source-scoped free cast when Feather Fall resolves for a falling creature", () => {
@@ -109,22 +136,14 @@ describe("Feather Fall Reaction spell", () => {
     );
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "creatureFalls" } },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Feather Fall falling-trigger Reaction window.");
     }
-    const reactionChoice =
-      awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-        (choice) =>
-          choice.kind === "nestedProcedure" &&
-          choice.subject.command === "castTriggeredReactionSpell",
-      );
-    if (
-      reactionChoice === undefined ||
-      reactionChoice.kind !== "nestedProcedure" ||
-      reactionChoice.subject.command !== "castTriggeredReactionSpell"
-    ) {
+    const reactionChoice = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    )?.choices.find(isTriggeredReactionSpellChoice);
+    if (reactionChoice === undefined) {
       throw new Error("Expected Feather Fall Reaction choice.");
     }
     expect(
@@ -164,7 +183,6 @@ describe("Feather Fall Reaction spell", () => {
     });
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null },
     });
     if (resolved.tag !== "resolved") {
       throw new Error(
@@ -209,7 +227,6 @@ describe("Feather Fall Reaction spell", () => {
 
     expect(result).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "creatureFalls" } },
     });
   });
 
@@ -242,19 +259,20 @@ describe("Feather Fall Reaction spell", () => {
 
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "creatureFalls" } },
+      envelope: {
+        frontier: { kind: "interruptDecision", trigger: "creatureFalls" },
+      },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Feather Fall falling-trigger Reaction window.");
     }
 
-    const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-      (candidate) => {
-        if (
-          candidate.kind !== "nestedProcedure" ||
-          candidate.subject.command !== "castTriggeredReactionSpell"
-        )
-          return false;
+    if (awaitingReaction.envelope.frontier.kind !== "interruptDecision") {
+      throw new Error("Expected Feather Fall interrupt decision frontier.");
+    }
+    const choice = awaitingReaction.envelope.frontier.choices.find(
+      (candidate): candidate is TriggeredReactionSpellChoice => {
+        if (!isTriggeredReactionSpellChoice(candidate)) return false;
         const invocation = characterSpellInvocationRefForProcedureRefForTest(
           awaitingReaction.session,
           candidate.subject.reactorId,
@@ -267,11 +285,7 @@ describe("Feather Fall Reaction spell", () => {
         );
       },
     );
-    if (
-      choice === undefined ||
-      choice.kind !== "nestedProcedure" ||
-      choice.subject.command !== "castTriggeredReactionSpell"
-    ) {
+    if (choice === undefined) {
       throw new Error("Expected Feather Fall Reaction choice.");
     }
     const targetList = requireHole(choice.initialHoles, "spellTargetList");
@@ -280,7 +294,7 @@ describe("Feather Fall Reaction spell", () => {
     const resolved = resolveBattleRuntimeInterrupt({
       session: awaitingReaction.session,
       fill: interruptDecisionFill(
-        requireHole(awaitingReaction.holes, "interruptDecision"),
+        awaitingReaction.envelope.frontier.decisionHole,
         {
           kind: "resolve",
           responderId: casterId,
@@ -300,7 +314,7 @@ describe("Feather Fall Reaction spell", () => {
 
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null },
+      envelope: { frontier: { kind: "acts" } },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Feather Fall Reaction to resolve.");
@@ -417,7 +431,6 @@ describe("Feather Fall Reaction spell", () => {
 
     expect(result).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null },
     });
   });
 
@@ -430,16 +443,10 @@ describe("Feather Fall Reaction spell", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Feather Fall falling-trigger Reaction window.");
     }
-    const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-      (candidate) =>
-        candidate.kind === "nestedProcedure" &&
-        candidate.subject.command === "castTriggeredReactionSpell",
-    );
-    if (
-      choice === undefined ||
-      choice.kind !== "nestedProcedure" ||
-      choice.subject.command !== "castTriggeredReactionSpell"
-    ) {
+    const choice = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    )?.choices.find(isTriggeredReactionSpellChoice);
+    if (choice === undefined) {
       throw new Error("Expected Feather Fall Reaction choice.");
     }
 
@@ -462,7 +469,6 @@ describe("Feather Fall Reaction spell", () => {
     expect(result).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "spellTargetList" }],
-      snapshot: { pendingInterrupt: { trigger: "creatureFalls" } },
     });
   });
 
@@ -475,16 +481,10 @@ describe("Feather Fall Reaction spell", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Feather Fall falling-trigger Reaction window.");
     }
-    const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-      (candidate) =>
-        candidate.kind === "nestedProcedure" &&
-        candidate.subject.command === "castTriggeredReactionSpell",
-    );
-    if (
-      choice === undefined ||
-      choice.kind !== "nestedProcedure" ||
-      choice.subject.command !== "castTriggeredReactionSpell"
-    ) {
+    const choice = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    )?.choices.find(isTriggeredReactionSpellChoice);
+    if (choice === undefined) {
       throw new Error("Expected Feather Fall Reaction choice.");
     }
     const targetList = requireHole(choice.initialHoles, "spellTargetList");
@@ -647,33 +647,25 @@ function castFeatherFallOn(
   if (awaitingReaction.tag !== "needsHoles") {
     throw new Error("Expected Feather Fall falling-trigger Reaction window.");
   }
-  const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-    (candidate) => {
-      if (
-        candidate.kind !== "nestedProcedure" ||
-        candidate.subject.command !== "castTriggeredReactionSpell"
-      )
-        return false;
-      const invocation = characterSpellInvocationRefForProcedureRefForTest(
-        battleRuntimeSessionForTest({
-          ...session,
-          state: awaitingReaction.state,
-        }),
-        candidate.subject.reactorId,
-        candidate.subject.procedureRef,
-      );
-      return (
-        invocation.tag === "spellSlot" &&
-        invocation.spellId === featherFallUnitId &&
-        invocation.procedure === "featherFallMitigation"
-      );
-    },
-  );
-  if (
-    choice === undefined ||
-    choice.kind !== "nestedProcedure" ||
-    choice.subject.command !== "castTriggeredReactionSpell"
-  ) {
+  const choice = battleFrontierInterruptDecisionForState(
+    awaitingReaction.state,
+  )?.choices.find((candidate): candidate is TriggeredReactionSpellChoice => {
+    if (!isTriggeredReactionSpellChoice(candidate)) return false;
+    const invocation = characterSpellInvocationRefForProcedureRefForTest(
+      battleRuntimeSessionForTest({
+        ...session,
+        state: awaitingReaction.state,
+      }),
+      candidate.subject.reactorId,
+      candidate.subject.procedureRef,
+    );
+    return (
+      invocation.tag === "spellSlot" &&
+      invocation.spellId === featherFallUnitId &&
+      invocation.procedure === "featherFallMitigation"
+    );
+  });
+  if (choice === undefined) {
     throw new Error("Expected Feather Fall Reaction choice.");
   }
   const resolved = resolveBattleInterrupt({

@@ -25,16 +25,17 @@ import {
   battleId,
   characterId,
   combatantId,
+  battlePendingTransactionView,
   discoverBattleActCandidates,
   initiativeScore,
   resolveBattleInterrupt,
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
   startBattle,
+  settleBattleRuntimeTransaction,
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleInterruptProcedureChoice,
-  type BattleInterruptSubject,
   type BattleProcedureExecutionRef,
   type BattleResolutionResult,
   type BattleRuntimeSession,
@@ -48,9 +49,11 @@ import {
   cantripSpellInvocationRef,
   spellSlotInvocationRef,
   spellAccessFreeCastSpellInvocationRef,
+  type BattleInterruptSubject,
 } from "./battle-subjects.ts";
 import {
   assertBattleSnapshotCodecRoundTripForTest,
+  battleFrontierInterruptDecisionForState,
   characterSpellInvocationRefForProcedureRefForTest,
   requireCharacterSpellProcedureRefForTest,
   resolveBattleSubject,
@@ -74,15 +77,29 @@ const casterId = combatantId("counterspell-triggering-caster");
 const counterspellerId = combatantId("counterspell-reactor");
 const secondCounterspellerId = combatantId("counterspell-second-reactor");
 
-type TriggeredReactionSpellChoice = Extract<
+type NestedProcedureChoice = Extract<
   BattleInterruptProcedureChoice,
   { readonly kind: "nestedProcedure" }
-> & {
+>;
+type TriggeredReactionSpellChoice = NestedProcedureChoice & {
   readonly subject: Extract<
     BattleInterruptSubject,
-    { readonly command: "castTriggeredReactionSpell" }
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "castTriggeredReactionSpell";
+    }
   >;
 };
+
+function isTriggeredReactionSpellChoice(
+  choice: BattleInterruptProcedureChoice,
+): choice is TriggeredReactionSpellChoice {
+  return (
+    choice.kind === "nestedProcedure" &&
+    choice.subject.tag === "runtimeCommand" &&
+    choice.subject.command === "castTriggeredReactionSpell"
+  );
+}
 
 describe("Counterspell Reaction spell", () => {
   test("does not admit a Counterspell reactor without an available spell slot", () => {
@@ -113,7 +130,6 @@ describe("Counterspell Reaction spell", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
   });
 
@@ -153,9 +169,6 @@ describe("Counterspell Reaction spell", () => {
 
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: {
-        pendingInterrupt: null,
-      },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Counterspell to resolve.");
@@ -298,7 +311,6 @@ describe("Counterspell Reaction spell", () => {
 
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected source-scoped Counterspell to resolve.");
@@ -354,7 +366,6 @@ describe("Counterspell Reaction spell", () => {
     expect(incomplete).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "savingThrowOutcome" }],
-      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
   });
 
@@ -402,7 +413,6 @@ describe("Counterspell Reaction spell", () => {
 
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Counterspell to close the spell-cast window.");
@@ -452,7 +462,6 @@ describe("Counterspell Reaction spell", () => {
     });
     expect(afterCounterspell).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: null },
     });
     if (afterCounterspell.tag !== "needsHoles") {
       throw new Error("Expected Magic Missile to continue to damage.");
@@ -616,9 +625,6 @@ describe("Counterspell Reaction spell", () => {
 
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: {
-        pendingInterrupt: null,
-      },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected failed save Counterspell to resolve.");
@@ -706,7 +712,6 @@ describe("Counterspell Reaction spell", () => {
     });
     expect(awaitingSecondCounterspell).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
     if (awaitingSecondCounterspell.tag !== "needsHoles") {
       throw new Error("Expected nested Counterspell Reaction window.");
@@ -731,7 +736,6 @@ describe("Counterspell Reaction spell", () => {
     });
     expect(afterSecondCounterspell).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: null },
     });
     if (afterSecondCounterspell.tag !== "needsHoles") {
       throw new Error("Expected original spell to resume after Counterspell.");
@@ -781,6 +785,141 @@ describe("Counterspell Reaction spell", () => {
     });
   });
 
+  test("retains the triggering spell fills when nested Counterspell responders unwind through a transaction", () => {
+    const session = battleWithCounterspell({
+      casterSlots: [{ spellLevel: 1, count: 1 }],
+      includeSecondCounterspeller: true,
+    });
+    const subject = magicMissileSubject(session, 1);
+    const targetAllocationResult = resolveBattleSubject({
+      state: session.state,
+      subject,
+      fills: [],
+    });
+    if (targetAllocationResult.tag !== "needsHoles") {
+      throw new Error("Expected Magic Missile target allocation hole.");
+    }
+    const targetAllocation = requireHole(
+      targetAllocationResult.holes,
+      "spellTargetAllocation",
+    );
+    const firstCounterspellFact = counterspellTriggerFact({
+      session,
+      reactorId: counterspellerId,
+      casterId,
+    });
+    const first = settleBattleRuntimeTransaction({
+      session,
+      transaction: null,
+      operation: {
+        kind: "ordinarySubject",
+        subject,
+        fills: [
+          magicMissileTargetAllocationFill({
+            hole: targetAllocation,
+            casterId,
+            targetId: counterspellerId,
+            dartCount: targetAllocation.allocationCount,
+          }),
+          spellCastReactionFactsFill([firstCounterspellFact]),
+        ],
+      },
+    });
+    if (first.tag !== "needsHoles") {
+      throw new Error("Expected the first Counterspell transaction window.");
+    }
+    const firstFrontier = battleFrontierInterruptDecisionForState(
+      first.resolution.session.state,
+    );
+    const firstChoice = firstFrontier?.choices.find(
+      (choice): choice is TriggeredReactionSpellChoice =>
+        isTriggeredReactionSpellChoice(choice) &&
+        choice.subject.reactorId === counterspellerId,
+    );
+    if (firstChoice === undefined) {
+      throw new Error("Expected the first Counterspell choice.");
+    }
+    const secondCounterspellFact = counterspellTriggerFact({
+      session,
+      reactorId: secondCounterspellerId,
+      casterId: counterspellerId,
+    });
+    const second = settleBattleRuntimeTransaction({
+      session: first.resolution.session,
+      transaction: first.transaction,
+      operation: {
+        kind: "interruptDecision",
+        fill: interruptDecisionFill(
+          requireHole(
+            first.resolution.envelope.frontier.kind === "interruptDecision"
+              ? [first.resolution.envelope.frontier.decisionHole]
+              : [],
+            "interruptDecision",
+          ),
+          counterspellDecision(
+            counterspellerId,
+            firstChoice,
+            counterspellSavingThrowFills(firstChoice, casterId, false, [
+              spellCastReactionFactsFill([secondCounterspellFact]),
+            ]),
+          ),
+        ),
+      },
+    });
+    if (second.tag !== "needsHoles") {
+      throw new Error("Expected the nested Counterspell transaction window.");
+    }
+    const secondFrontier = battleFrontierInterruptDecisionForState(
+      second.resolution.session.state,
+    );
+    const secondChoice = secondFrontier?.choices.find(
+      (choice): choice is TriggeredReactionSpellChoice =>
+        isTriggeredReactionSpellChoice(choice) &&
+        choice.subject.reactorId === secondCounterspellerId,
+    );
+    if (secondChoice === undefined) {
+      throw new Error("Expected the second Counterspell choice.");
+    }
+    const resumed = settleBattleRuntimeTransaction({
+      session: second.resolution.session,
+      transaction: second.transaction,
+      operation: {
+        kind: "interruptDecision",
+        fill: interruptDecisionFill(
+          requireHole(
+            second.resolution.envelope.frontier.kind === "interruptDecision"
+              ? [second.resolution.envelope.frontier.decisionHole]
+              : [],
+            "interruptDecision",
+          ),
+          counterspellDecision(
+            secondCounterspellerId,
+            secondChoice,
+            counterspellSavingThrowFills(secondChoice, counterspellerId, false),
+          ),
+        ),
+      },
+    });
+    if (resumed.tag !== "needsHoles") {
+      throw new Error("Expected Magic Missile to resume after Counterspell.");
+    }
+    expect(resumed.frontier.kind).toBe("ordinaryHoles");
+    const transactionView = battlePendingTransactionView(resumed.transaction);
+    expect(transactionView).toMatchObject({
+      _tag: "Some",
+      value: {
+        subject,
+        fills: [
+          expect.objectContaining({ kind: "spellTargetAllocation" }),
+          expect.objectContaining({ kind: "targetSpatialFacts" }),
+        ],
+      },
+    });
+    expect(resumed.frontier.holes).toEqual(
+      expect.arrayContaining([expect.objectContaining({ kind: "rolledDice" })]),
+    );
+  });
+
   test("allows Counterspell to end Shield before Shield affects the triggering spell", () => {
     const session = battleWithCounterspell({
       casterSlots: [{ spellLevel: 1, count: 1 }],
@@ -822,7 +961,6 @@ describe("Counterspell Reaction spell", () => {
     });
     expect(awaitingCounterspell).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
     if (awaitingCounterspell.tag !== "needsHoles") {
       throw new Error("Expected Counterspell to interrupt Shield casting.");
@@ -851,7 +989,6 @@ describe("Counterspell Reaction spell", () => {
     });
     expect(afterCounterspell).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: null },
     });
     if (afterCounterspell.tag !== "needsHoles") {
       throw new Error(
@@ -935,7 +1072,6 @@ describe("Counterspell Reaction spell", () => {
     });
     expect(awaitingCounterspell).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
     if (awaitingCounterspell.tag !== "needsHoles") {
       throw new Error("Expected Counterspell to interrupt Shield casting.");
@@ -956,7 +1092,6 @@ describe("Counterspell Reaction spell", () => {
     });
     expect(afterDecline).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: null },
     });
     if (afterDecline.tag !== "needsHoles") {
       throw new Error("Expected Shield to replay after Counterspell decline.");
@@ -1027,7 +1162,6 @@ describe("Counterspell Reaction spell", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error(
@@ -1055,7 +1189,6 @@ describe("Counterspell Reaction spell", () => {
 
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Counterspell to end Acid Splash.");
@@ -1107,7 +1240,6 @@ describe("Counterspell Reaction spell", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error(
@@ -1136,8 +1268,7 @@ describe("Counterspell Reaction spell", () => {
     expect(resolved).toMatchObject({
       tag: "resolved",
       snapshot: {
-        pendingInterrupt: null,
-        turn: { bonusActionAvailable: false, dashMovementBonusFeet: 0 },
+        turn: { bonusActionQuotaAvailable: false, dashMovementBonusFeet: 0 },
       },
     });
     if (resolved.tag !== "resolved") {
@@ -1184,7 +1315,6 @@ describe("Counterspell Reaction spell", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
   });
 
@@ -1213,7 +1343,6 @@ describe("Counterspell Reaction spell", () => {
     });
     expect(declined).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: null },
     });
     if (declined.tag !== "needsHoles") {
       throw new Error(
@@ -1232,7 +1361,6 @@ describe("Counterspell Reaction spell", () => {
 
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null },
     });
   });
 
@@ -1287,7 +1415,6 @@ describe("Counterspell Reaction spell", () => {
 
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null },
     });
     if (resolved.tag !== "resolved") {
       throw new Error(
@@ -1653,7 +1780,6 @@ function startMagicMissile(input: {
   });
   expect(result).toMatchObject({
     tag: "needsHoles",
-    snapshot: { pendingInterrupt: { trigger: "spellCast" } },
   });
   if (result.tag !== "needsHoles") {
     throw new Error("Expected Magic Missile spell-cast Reaction window.");
@@ -1822,36 +1948,34 @@ function requireTriggeredReactionSpellChoice(input: {
   readonly resource?: CounterspellFreeCastChoiceResource;
 }): TriggeredReactionSpellChoice {
   const expectedFreeCastResource = input.resource;
-  const choice = input.result.snapshot.pendingInterrupt?.choices.find(
-    (candidate): candidate is TriggeredReactionSpellChoice => {
-      if (
-        candidate.kind !== "nestedProcedure" ||
-        candidate.subject.tag !== "runtimeCommand" ||
-        candidate.subject.command !== "castTriggeredReactionSpell" ||
-        candidate.subject.reactorId !== input.reactorId
-      ) {
-        return false;
-      }
-      const invocation = characterSpellInvocationRefForProcedureRefForTest(
-        battleRuntimeSessionForTest({
-          state: input.result.state,
-          context: input.session.context,
-        }),
-        candidate.subject.reactorId,
-        candidate.subject.procedureRef,
-      );
-      return (
-        invocation.spellId === input.spellId &&
-        invocation.procedure === input.procedure &&
-        (expectedFreeCastResource === undefined
-          ? invocation.tag === "spellSlot" &&
-            Number(invocation.slotLevel) === input.slotLevel
-          : invocation.tag === "spellAccessFreeCast" &&
-            invocation.resourcePoolRef ===
-              expectedFreeCastResource.resourcePoolRef)
-      );
-    },
-  );
+  const choice = battleFrontierInterruptDecisionForState(
+    input.result.state,
+  )?.choices.find((candidate): candidate is TriggeredReactionSpellChoice => {
+    if (
+      !isTriggeredReactionSpellChoice(candidate) ||
+      candidate.subject.reactorId !== input.reactorId
+    ) {
+      return false;
+    }
+    const invocation = characterSpellInvocationRefForProcedureRefForTest(
+      battleRuntimeSessionForTest({
+        state: input.result.state,
+        context: input.session.context,
+      }),
+      candidate.subject.reactorId,
+      candidate.subject.procedureRef,
+    );
+    return (
+      invocation.spellId === input.spellId &&
+      invocation.procedure === input.procedure &&
+      (expectedFreeCastResource === undefined
+        ? invocation.tag === "spellSlot" &&
+          Number(invocation.slotLevel) === input.slotLevel
+        : invocation.tag === "spellAccessFreeCast" &&
+          invocation.resourcePoolRef ===
+            expectedFreeCastResource.resourcePoolRef)
+    );
+  });
   if (choice === undefined) {
     throw new Error(`Expected ${input.spellId} Reaction choice.`);
   }

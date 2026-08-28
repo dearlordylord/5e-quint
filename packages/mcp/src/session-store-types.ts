@@ -1,7 +1,6 @@
 import type { CharacterDraftId } from "@dnd/character-creation-runtime";
 import type {
   BattleId,
-  BattlePendingTransactionView,
   BattleRuntimeSession,
   InitialInitiativeSetup,
   snapshotBattle,
@@ -63,9 +62,6 @@ export type CharacterSessionRegistry = {
   entries(): IterableIterator<readonly [CharacterId, CharacterSession]>;
   keys(): IterableIterator<CharacterId>;
 };
-
-/** Wire/session projection of the shared transaction's current layer. */
-export type BattleFillSession = BattlePendingTransactionView;
 
 export type McpBattleTransactionStorageIssue = {
   readonly tag: "battleStatePendingTransactionInvalid";
@@ -139,7 +135,6 @@ export type McpSessionSnapshot = {
   readonly characterIds: readonly CharacterId[];
   readonly selectedStatBlockId: StatBlockId | null;
   readonly battleState: McpBattleStateSnapshot;
-  readonly transientBattleFills: BattleFillSession | null;
 };
 export type McpBattleSessionSnapshot = Extract<
   McpBattleStateSnapshot,

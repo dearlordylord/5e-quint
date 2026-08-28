@@ -48,7 +48,10 @@ import type {
   BattleRuntimeSession,
   BattleState,
 } from "./unit-profile-admission.test-support.ts";
-import { battleProcedureExecutionRefForSpellHoleForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleFrontierInterruptDecisionForState,
+  battleProcedureExecutionRefForSpellHoleForTest,
+} from "./battle-runtime.test-support.ts";
 import { characterSpellProcedureExecution } from "./character-execution-admission.ts";
 
 describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
@@ -630,7 +633,6 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
 
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Produce Flame hurl to open attack-hit window.");
@@ -645,7 +647,8 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
     const afterDecline = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
+        battleFrontierInterruptDecisionForState(awaitingReaction.state)!
+          .decisionHole,
         { kind: "decline", responderId: spellTargetId },
       ),
     });
@@ -656,7 +659,7 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
     expect(afterDecline).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "rolledDice" }],
-      snapshot: { pendingInterrupt: null, lightEmitters: [] },
+      snapshot: { lightEmitters: [] },
     });
   });
   test("produce_flame hurl object miss spends the Magic action without object damage", () => {

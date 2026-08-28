@@ -46,6 +46,7 @@ import {
   Hp,
   interruptDecisionFill,
   reactionModifierChoice,
+  battleFrontierInterruptDecisionForState,
   reactionModifierUnitRef,
   requireHole,
   resolveBattleInterrupt,
@@ -54,7 +55,6 @@ import {
   rolledDiceGroup,
   skeletonCreatureInit,
   skeletonId,
-  snapshotBattle,
   startBattleRight,
   statBlockCreatureInit,
   targetFill,
@@ -96,7 +96,7 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
       throw new Error("Expected attack-hit Reaction window.");
     }
     const choice = reactionModifierChoice(
-      setup.result.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(setup.result.state)!.choices,
       "rogue_uncanny_dodge",
       "attackDamageReduction",
     );
@@ -178,10 +178,13 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
       "attackDamageReduction",
     );
 
-    expect(awaitingReaction.snapshot.pendingInterrupt!.choices).toEqual(
+    expect(
+      battleFrontierInterruptDecisionForState(awaitingReaction.state)!.choices,
+    ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           kind: "reactionModifier",
+          responderId: fighterId,
           modifier: expect.objectContaining({
             kind: "attackDamageReduction",
             procedureRef,
@@ -212,7 +215,12 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
     const setup = goblinScimitarHitReactionSetup(state);
 
     expect(setup.result).toMatchObject({ tag: "needsHoles" });
-    expect(setup.result.snapshot.pendingInterrupt).toBeNull();
+    if (setup.result.tag !== "needsHoles") {
+      throw new Error("Expected an attack-hit Reaction window.");
+    }
+    expect(
+      battleFrontierInterruptDecisionForState(setup.result.state),
+    ).toBeNull();
   });
 
   test("hit and damage reduction reactions use their separate RAW windows", () => {
@@ -258,10 +266,9 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
       throw new Error("Expected attack-hit Reaction window.");
     }
 
-    const hitModifierChoices =
-      hitReaction.result.snapshot.pendingInterrupt!.choices.filter(
-        (choice) => choice.kind === "reactionModifier",
-      );
+    const hitModifierChoices = battleFrontierInterruptDecisionForState(
+      hitReaction.result.state,
+    )!.choices.filter((choice) => choice.kind === "reactionModifier");
     const firstHitModifierChoice = hitModifierChoices[0];
     if (firstHitModifierChoice === undefined) {
       throw new Error("Expected an attack-hit Reaction modifier choice.");
@@ -318,10 +325,9 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
     if (awaitingDamageReaction.tag !== "needsHoles") {
       throw new Error("Expected attack-damage Reaction window.");
     }
-    const damageModifierChoices =
-      awaitingDamageReaction.snapshot.pendingInterrupt!.choices.filter(
-        (choice) => choice.kind === "reactionModifier",
-      );
+    const damageModifierChoices = battleFrontierInterruptDecisionForState(
+      awaitingDamageReaction.state,
+    )!.choices.filter((choice) => choice.kind === "reactionModifier");
     expect(damageModifierChoices).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -389,7 +395,7 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
     if (resolved.tag !== "resolved") {
       throw new Error(`Expected resolved static attack, got ${resolved.tag}.`);
     }
-    expect(resolved.snapshot.pendingInterrupt).toBeNull();
+    expect(battleFrontierInterruptDecisionForState(resolved.state)).toBeNull();
     expect(resolved.state.combatants.get(fighterId)?.hp).toBe(Hp(7));
     expect(resolved.state.combatants.get(fighterId)?.reactionAvailable).toBe(
       true,
@@ -472,7 +478,7 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
       interruptStack: [{ kind: "interruptCheckpoint", frame }],
     } satisfies BattleState;
     const decision =
-      snapshotBattle(pendingState).pendingInterrupt?.decisionHole;
+      battleFrontierInterruptDecisionForState(pendingState)?.decisionHole;
     if (decision === undefined) {
       throw new Error("Expected pending interrupt decision.");
     }
@@ -585,7 +591,7 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
       interruptStack: [{ kind: "interruptCheckpoint", frame }],
     } satisfies BattleState;
     const decision =
-      snapshotBattle(pendingState).pendingInterrupt?.decisionHole;
+      battleFrontierInterruptDecisionForState(pendingState)?.decisionHole;
     if (decision === undefined) {
       throw new Error("Expected pending interrupt decision.");
     }
@@ -641,7 +647,9 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
       throw new Error("Expected post-reaction Concentration save.");
     }
     const subject = goblinAttackSubject(afterReaction.state, "Scimitar");
-    expect(afterReaction.snapshot.pendingInterrupt).toBeNull();
+    expect(
+      battleFrontierInterruptDecisionForState(afterReaction.state),
+    ).toBeNull();
     const concentration = findHole(
       afterReaction.holes,
       "concentrationSavingThrow",

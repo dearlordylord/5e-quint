@@ -23,7 +23,6 @@ import type {
   BattleHole,
   BattleInterruptDecisionHole,
   BattleInterruptProcedureChoice,
-  BattleSnapshot,
 } from "./battle-state-execution.ts";
 
 const mechanicalHole = {
@@ -85,13 +84,6 @@ const runtimeInterruptChoice = {
   BattleInterruptProcedureChoice,
   { readonly kind: "nestedProcedure" }
 >;
-
-const runtimePendingInterrupt = {
-  trigger: runtimeInterruptDecisionHole.trigger,
-  decisionHole: runtimeInterruptDecisionHole,
-  choices: [runtimeInterruptChoice],
-  stackDepth: battleReplayStackDepth(1),
-} satisfies NonNullable<BattleSnapshot["pendingInterrupt"]>;
 
 type NeedsHolesResult = Extract<
   ReturnType<typeof resolveBattleSubject>,
@@ -176,14 +168,13 @@ function ordinaryNeedsHolesResult(): NeedsHolesResult {
 
 function frontierInput(
   result: NeedsHolesResult,
-  holes: readonly BattleHole[],
-  pendingInterrupt: BattleSnapshot["pendingInterrupt"],
+  holes: readonly BattleHole[] = result.holes,
 ) {
   return {
     result: {
-      ...result,
+      kind: "holes" as const,
+      subject: result.subject,
       holes,
-      snapshot: { ...result.snapshot, pendingInterrupt },
     },
     acceptedFills: [],
   };
@@ -414,9 +405,7 @@ describe("battle mechanical frontier", () => {
   test("projects an ordinary frontier without a pending interrupt", () => {
     const result = ordinaryNeedsHolesResult();
 
-    const frontier = battleMechanicalFrontier(
-      frontierInput(result, result.holes, null),
-    );
+    const frontier = battleMechanicalFrontier(frontierInput(result));
 
     expect(Either.isRight(frontier)).toBe(true);
     if (Either.isLeft(frontier)) {
@@ -433,9 +422,9 @@ describe("battle mechanical frontier", () => {
     const result = ordinaryNeedsHolesResult();
     const frontier = battleMechanicalFrontier({
       result: {
+        kind: "holes",
         subject: result.subject,
         holes: result.holes,
-        snapshot: result.snapshot,
       },
       acceptedFills: [],
     });
@@ -472,7 +461,11 @@ describe("battle mechanical frontier", () => {
       throw new Error("Expected the fighter attack to request an attack roll.");
     }
     const frontier = battleMechanicalFrontier({
-      result: attackResult,
+      result: {
+        kind: "holes",
+        subject: attackResult.subject,
+        holes: attackResult.holes,
+      },
       acceptedFills: [],
     });
     if (Either.isLeft(frontier)) {
@@ -499,17 +492,16 @@ describe("battle mechanical frontier", () => {
   });
 
   test("projects an interrupt frontier when its decision hole matches the checkpoint", () => {
-    const result = ordinaryNeedsHolesResult();
-
-    const frontier = battleMechanicalFrontier(
-      frontierInput(result, [runtimeInterruptDecisionHole], {
-        ...runtimePendingInterrupt,
-        decisionHole: {
-          ...runtimePendingInterrupt.decisionHole,
-          label: "A different presentation label",
-        },
-      }),
-    );
+    const frontier = battleMechanicalFrontier({
+      result: {
+        kind: "interruptDecision",
+        trigger: runtimeInterruptDecisionHole.trigger,
+        decisionHole: runtimeInterruptDecisionHole,
+        choices: [runtimeInterruptChoice],
+        stackDepth: battleReplayStackDepth(1),
+      },
+      acceptedFills: [],
+    });
 
     expect(Either.isRight(frontier)).toBe(true);
     if (Either.isRight(frontier)) {
@@ -527,61 +519,29 @@ describe("battle mechanical frontier", () => {
     }
   });
 
-  test("reports every mechanical frontier admission issue", () => {
-    const result = ordinaryNeedsHolesResult();
-    const [ordinaryHole] = result.holes;
-    if (ordinaryHole === undefined) {
-      throw new Error("Expected the ordinary test frontier to contain a hole.");
-    }
-    const emptyChoicesPendingInterrupt = {
-      ...runtimePendingInterrupt,
-      choices: [],
-    } satisfies NonNullable<BattleSnapshot["pendingInterrupt"]>;
-    const mismatchedPendingInterrupt = {
-      ...runtimePendingInterrupt,
-      decisionHole: {
-        ...runtimePendingInterrupt.decisionHole,
-        eligibleResponders: [],
+  test("rejects an interrupt frontier whose decision hole has another trigger", () => {
+    const frontier = battleMechanicalFrontier({
+      result: {
+        kind: "interruptDecision",
+        trigger: "attackHit",
+        decisionHole: runtimeInterruptDecisionHole,
+        choices: [runtimeInterruptChoice],
+        stackDepth: battleReplayStackDepth(1),
       },
-    } satisfies NonNullable<BattleSnapshot["pendingInterrupt"]>;
-    const issueCases = [
-      {
-        name: "empty hole frontier",
-        holes: [],
-        pendingInterrupt: null,
-        issue: { tag: "emptyHoleFrontier" },
-      },
-      {
-        name: "mixed interrupt and ordinary holes",
-        holes: [ordinaryHole, runtimeInterruptDecisionHole],
-        pendingInterrupt: null,
-        issue: { tag: "mixedInterruptAndOrdinaryHoles" },
-      },
-      {
-        name: "interrupt frontier missing checkpoint",
-        holes: [runtimeInterruptDecisionHole],
-        pendingInterrupt: null,
-        issue: { tag: "interruptFrontierMissingCheckpoint" },
-      },
-      {
-        name: "interrupt frontier with empty choices",
-        holes: [runtimeInterruptDecisionHole],
-        pendingInterrupt: emptyChoicesPendingInterrupt,
-        issue: { tag: "interruptFrontierChoiceSetEmpty" },
-      },
-      {
-        name: "interrupt frontier decision-hole mismatch",
-        holes: [runtimeInterruptDecisionHole],
-        pendingInterrupt: mismatchedPendingInterrupt,
-        issue: { tag: "interruptFrontierDecisionHoleMismatch" },
-      },
-    ] as const;
+      acceptedFills: [],
+    });
 
-    for (const issueCase of issueCases) {
-      const frontier = battleMechanicalFrontier(
-        frontierInput(result, issueCase.holes, issueCase.pendingInterrupt),
-      );
-      expect(frontier, issueCase.name).toEqual(Either.left(issueCase.issue));
-    }
+    expect(frontier).toEqual(
+      Either.left({ tag: "interruptFrontierDecisionHoleMismatch" }),
+    );
+  });
+
+  test("reports an empty ordinary hole frontier", () => {
+    const result = ordinaryNeedsHolesResult();
+    const frontier = battleMechanicalFrontier({
+      result: { kind: "holes", subject: result.subject, holes: [] },
+      acceptedFills: [],
+    });
+    expect(frontier).toEqual(Either.left({ tag: "emptyHoleFrontier" }));
   });
 });

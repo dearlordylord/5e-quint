@@ -71,11 +71,13 @@ export {
   characterSheetCurrentHp,
   characterSheetHitPointMaximum,
   characterSheetHitPointMaximumProjection,
+  characterSheetHitPointMaximumProjectionWithIssues,
   characterSheetHitPoints,
   characterSheetHitPointsCurrentHp,
   characterSheetNormalHitPointMaximum,
   characterSheetTempHp,
 } from "./hit-points.ts";
+export type { CharacterSheetHitPointMaximumProjectionIssue } from "./hit-points.ts";
 export {
   characterSheetMonkUncannyMetabolismUseState,
   characterSheetMonksFocusSaveDc,

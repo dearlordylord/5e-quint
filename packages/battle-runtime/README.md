@@ -124,16 +124,35 @@ checks.
 ## Runtime protocol
 
 1. Call `startBattle(BattleCreatureInit[])` to create durable `BattleState`.
-2. Read `snapshotBattle(state)` and `discoverBattleActs(state)`.
-3. Choose a `BattleSubject` and call
-   `resolveBattleSubject({ state, subject, fills })`.
-4. On `needsHoles`, retain submitted fills outside Battle State and replay the
-   same subject against the returned durable state with all accumulated fills.
-5. On `resolved`, commit the returned state. On `invalid`, do not commit a new
-   state.
+2. Discover presentation-free `BattleActDiscoveryCandidate` values with
+   `discoverBattleActCandidates(state)`; presentation joins happen outside the
+   mechanical result.
+3. Choose a `BattleSubject` and call the session entrypoint
+   `resolveBattleRuntimeSubject({ session, subject, fills })`.
+4. Every session result carries exactly one
+   `BattleCheckpointFrontierEnvelope`: a purified `checkpoint` paired with one
+   `acts`, ordered non-empty `holes`, or `interruptDecision` frontier. A Hole
+   frontier carries its typed subject and either `ordinaryReplay` or
+   `runtimeOwnedInterrupt` continuation semantics.
+5. For ordinary open procedures, `needsHoles` retains the unchanged incoming
+   checkpoint and callers replay the same subject with accumulated fills. An
+   interrupt opening or nested interrupt continuation returns its durable
+   runtime-owned checkpoint. Rejected fills keep the unchanged session and the
+   preceding envelope for retry. A successful ordinary resolution, or an
+   interrupt resolution that closes its window, commits exactly once and
+   returns the next checkpoint with an Acts frontier. If an interrupt decision
+   leaves responders, the resolved result instead carries the current durable
+   checkpoint with an `interruptDecision` frontier.
 
 Subject resolution is replay-from-root. Battle State stores durable combat facts,
 not partially answered forms or derivable projections.
+
+The envelope has no terminal or victory variant. Under the ubiquitous language,
+battle end is a Table Decision, and the current runtime has no terminal state;
+an otherwise successful resolution therefore returns the Acts frontier (which
+may be empty) once any interrupt window is closed, rather than inventing a
+terminal product state. Snapshot and Act presentation, labels, and transport
+codecs remain external projections.
 
 Reaction windows carry an `interruptStack` in returned durable state. The caller
 must commit that state before resolving or declining the Reaction. The runtime
@@ -148,10 +167,12 @@ interrupted continuation; callers must not reproduce that sequencing.
 - `BattleSubject` — replay key for one discovered act; add one for a reusable
   procedure, not a named authored ability.
 - `BattleHole` / `BattleFill` — missing runtime input and its caller answer.
+- `BattleCheckpointFrontierEnvelope` — the exclusive mechanical pairing of one
+  durable checkpoint with exactly one continuation frontier.
 - `SupportProfile` — admitted structural proof for one procedure family.
 - `origin` — retained Character or Stat Block facts; origin is not provenance.
-- `BattleSnapshot` — JSON-friendly caller view that excludes internal maps and
-  implementation-only state.
+- `BattleSnapshot` — purified durable checkpoint view that excludes frontiers,
+  execution cursors, and presentation joins.
 - `interruptStack` — durable Reaction frame and continuation state.
 
 ## State ownership
@@ -200,9 +221,9 @@ reproduction, and Quint syntax guidance live in
 
 `pnpm check:qnt-inventory` rejects every package QNT file that is neither an
 executable root nor transitively imported by one. The guarded root `pnpm
-proof:qnt` and `pnpm quality` lanes run this gate; package-local proof work must
-run the listed inventory check separately. This README therefore does not
-maintain a parallel QNT file inventory.
+proof:qnt` and `pnpm quality:milestone` lanes run this gate; package-local proof
+work must run the listed inventory check separately. This README therefore does
+not maintain a parallel QNT file inventory.
 
 Runtime behavior and focused tests must cite the relevant local SRD 5.2.1
 passage. Modeling choices belong in `ASSUMPTIONS.md`; coverage accounting belongs

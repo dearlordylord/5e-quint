@@ -15,13 +15,20 @@ import {
   startBattle,
   startBattleWithInitialInitiativeSetup,
 } from "@dnd/battle-runtime";
-import { characterSheetBattleInit } from "@dnd/character-battle-runtime";
+import {
+  characterSheetBattleInit,
+  type BattleRosterStatBlockCombatant,
+} from "@dnd/character-battle-runtime";
 import {
   characterSheetDruidWildShapeKnownForms,
   characterSheetId,
 } from "@dnd/character-sheet-runtime";
 import { Hp } from "@dnd/shared/types";
 import { statBlockId, unitId } from "@dnd/shared/game-facts";
+import {
+  buildStatBlockCatalog,
+  srdStatBlockCollection,
+} from "@dnd/surface/surface/stat-block-catalog";
 import {
   buildUnitCatalog,
   srdUnitCollection,
@@ -33,17 +40,20 @@ import {
   availableCharacterSession,
   createMcpSessionStore,
 } from "./session-store.ts";
-import type { StatBlockBattleRosterCombatant } from "./battle-roster-session-types.ts";
 import { createMcpPlaySessionRoot } from "./composition-root.ts";
 
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
 });
-if (unitCatalogResult.tag !== "ok") {
-  throw new Error("MCP session store test Unit catalog must build.");
+const statBlockCatalogResult = buildStatBlockCatalog({
+  collections: [srdStatBlockCollection],
+});
+if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
+  throw new Error("MCP session store test catalogs must build.");
 }
 const unitLibrary = unitCatalogResult.catalog;
+const statBlockCatalog = statBlockCatalogResult.catalog;
 const DRUID_WILD_SHAPE_KNOWN_FORM_IDS = [
   statBlockId("stat_block_rat"),
   statBlockId("stat_block_riding_horse"),
@@ -100,6 +110,7 @@ describe("MCP character sessions", () => {
       conditions: [],
       companion: { tag: "none" },
       unitLibrary,
+      statBlockCatalog,
       druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
     });
 
@@ -127,6 +138,7 @@ describe("MCP character sessions", () => {
         conditions: [],
         companion: { tag: "none" },
         unitLibrary,
+        statBlockCatalog,
         druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
       }),
     );
@@ -140,6 +152,7 @@ describe("MCP character sessions", () => {
         conditions: [],
         companion: { tag: "none" },
         unitLibrary,
+        statBlockCatalog,
         druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
       }),
     );
@@ -165,6 +178,7 @@ describe("MCP character sessions", () => {
         conditions: [],
         companion: { tag: "none" },
         unitLibrary,
+        statBlockCatalog,
         druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
       }),
     );
@@ -194,6 +208,7 @@ describe("MCP character sessions", () => {
         conditions: [],
         companion: { tag: "none" },
         unitLibrary,
+        statBlockCatalog,
         druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
       }),
     );
@@ -301,6 +316,7 @@ describe("MCP character sessions", () => {
         conditions: [],
         companion: { tag: "none" },
         unitLibrary,
+        statBlockCatalog,
         druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
       }),
     );
@@ -613,6 +629,7 @@ describe("MCP character sessions", () => {
         conditions: [],
         companion: { tag: "none" },
         unitLibrary,
+        statBlockCatalog,
         druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
       }),
     );
@@ -669,6 +686,7 @@ describe("MCP character sessions", () => {
         conditions: [],
         companion: { tag: "none" },
         unitLibrary,
+        statBlockCatalog,
         druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
       }),
     );
@@ -756,8 +774,7 @@ describe("MCP character sessions", () => {
 
     expect(store.commitActiveBattleRosterTransition(planned.plan)).toEqual(
       Either.left({
-        tag: "battleRosterPlanBattleChanged",
-        battleId: active.state.battleId,
+        tag: "battleRosterPlanFillsChanged",
       }),
     );
     expect(deepStoreState(store)).toEqual(beforeCommit);
@@ -838,7 +855,7 @@ function expectRight<T, E>(value: Either.Either<T, E>): T {
 
 function expectStatBlockCombatant(
   combatant: import("@dnd/battle-runtime").BattleCreatureInit,
-): StatBlockBattleRosterCombatant {
+): BattleRosterStatBlockCombatant {
   if (combatant.creatureInit.kind !== "statBlock") {
     throw new Error("Expected a Stat Block combatant.");
   }

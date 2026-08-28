@@ -2,6 +2,7 @@ import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleActiveEffectExecutionRefForTest,
+  battleFrontierInterruptDecisionForState,
   battleProcedureExecutionRefForTest,
   characterSpellInvocationRefForProcedureRefForTest,
   requireCharacterSpellProcedureRefForTest,
@@ -1816,28 +1817,28 @@ function requireCounterspellChoice(
   >,
   session: BattleRuntimeSession,
 ): CounterspellChoice {
-  const choice = result.snapshot.pendingInterrupt?.choices.find(
-    (candidate): candidate is CounterspellChoice => {
-      if (
-        candidate.kind !== "nestedProcedure" ||
-        candidate.subject.command !== "castTriggeredReactionSpell" ||
-        candidate.subject.reactorId !== spellTargetId
-      ) {
-        return false;
-      }
-      const invocation = characterSpellInvocationRefForProcedureRefForTest(
-        session,
-        candidate.subject.reactorId,
-        candidate.subject.procedureRef,
-      );
-      return (
-        invocation.tag === "spellSlot" &&
-        invocation.spellId === "counterspell" &&
-        invocation.procedure === "counterspell" &&
-        Number(invocation.slotLevel) === 3
-      );
-    },
-  );
+  const choice = battleFrontierInterruptDecisionForState(
+    result.state,
+  )?.choices.find((candidate): candidate is CounterspellChoice => {
+    if (
+      candidate.kind !== "nestedProcedure" ||
+      candidate.subject.command !== "castTriggeredReactionSpell" ||
+      candidate.subject.reactorId !== spellTargetId
+    ) {
+      return false;
+    }
+    const invocation = characterSpellInvocationRefForProcedureRefForTest(
+      session,
+      candidate.subject.reactorId,
+      candidate.subject.procedureRef,
+    );
+    return (
+      invocation.tag === "spellSlot" &&
+      invocation.spellId === "counterspell" &&
+      invocation.procedure === "counterspell" &&
+      Number(invocation.slotLevel) === 3
+    );
+  });
   if (choice === undefined) {
     throw new Error("Expected Counterspell Reaction choice.");
   }

@@ -925,6 +925,7 @@ function sheetFixture(
       ...(input.druidWildShapeKnownFormStatBlockIds === undefined
         ? {}
         : {
+            statBlockCatalog,
             druidWildShapeKnownFormStatBlockIds:
               input.druidWildShapeKnownFormStatBlockIds,
           }),

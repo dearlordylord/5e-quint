@@ -256,7 +256,6 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
       }),
     ).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null },
     });
   });
 

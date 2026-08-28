@@ -7,6 +7,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 import type { BattleProcedureExecutionRef } from "./identity.ts";
 import {
+  battleFrontierInterruptDecisionForState,
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
   characterSpellInvocationRefForProcedureRefForTest,
@@ -832,30 +833,30 @@ function requireTriggeredReactionSpellChoice(input: {
   readonly procedure: string;
   readonly slotLevel: number;
 }): TriggeredReactionSpellChoice {
-  const choice = input.result.snapshot.pendingInterrupt?.choices.find(
-    (candidate): candidate is TriggeredReactionSpellChoice => {
-      if (
-        candidate.kind !== "nestedProcedure" ||
-        candidate.subject.command !== "castTriggeredReactionSpell" ||
-        candidate.subject.reactorId !== input.reactorId
-      )
-        return false;
-      const invocation = characterSpellInvocationRefForProcedureRefForTest(
-        battleRuntimeSessionForTest({
-          state: input.result.state,
-          context: input.session.context,
-        }),
-        candidate.subject.reactorId,
-        candidate.subject.procedureRef,
-      );
-      return (
-        invocation.tag === "spellSlot" &&
-        invocation.spellId === input.spellId &&
-        invocation.procedure === input.procedure &&
-        Number(invocation.slotLevel) === input.slotLevel
-      );
-    },
-  );
+  const choice = battleFrontierInterruptDecisionForState(
+    input.result.state,
+  )?.choices.find((candidate): candidate is TriggeredReactionSpellChoice => {
+    if (
+      candidate.kind !== "nestedProcedure" ||
+      candidate.subject.command !== "castTriggeredReactionSpell" ||
+      candidate.subject.reactorId !== input.reactorId
+    )
+      return false;
+    const invocation = characterSpellInvocationRefForProcedureRefForTest(
+      battleRuntimeSessionForTest({
+        state: input.result.state,
+        context: input.session.context,
+      }),
+      candidate.subject.reactorId,
+      candidate.subject.procedureRef,
+    );
+    return (
+      invocation.tag === "spellSlot" &&
+      invocation.spellId === input.spellId &&
+      invocation.procedure === input.procedure &&
+      Number(invocation.slotLevel) === input.slotLevel
+    );
+  });
   if (choice === undefined) {
     throw new Error(`Expected ${input.spellId} Reaction spell choice.`);
   }

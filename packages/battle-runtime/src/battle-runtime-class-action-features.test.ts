@@ -67,6 +67,7 @@ import {
   characterBattleResourceUsage,
   characterBattleFeatureInitForTest,
   difficultyClass,
+  battleCheckpointFrontierEnvelope,
   discoverBattleActCandidates,
   discoverBattleActs,
   endTurn,
@@ -262,6 +263,15 @@ describe("battle runtime: class action features", () => {
             },
           ],
         },
+      },
+    });
+
+    if (surged.tag !== "resolved") {
+      throw new Error(`Expected resolved Action Surge, got ${surged.tag}.`);
+    }
+    expect(battleCheckpointFrontierEnvelope(surged.state).frontier).toEqual(
+      expect.objectContaining({
+        kind: "acts",
         acts: expect.arrayContaining([
           expect.objectContaining({
             subject: expect.objectContaining({ action: "attack" }),
@@ -284,14 +294,12 @@ describe("battle runtime: class action features", () => {
             },
           }),
         ]),
-      },
-    });
-
-    if (surged.tag !== "resolved") {
-      throw new Error(`Expected resolved Action Surge, got ${surged.tag}.`);
-    }
+      }),
+    );
     expect(
-      surged.snapshot.acts.some((act) => act.subject.tag === "actionSpell"),
+      discoverBattleActCandidates(surged.state).some(
+        (act) => act.subject.tag === "actionSpell",
+      ),
     ).toBe(false);
     expect(
       resolveBattleSubject({
@@ -493,7 +501,7 @@ describe("battle runtime: class action features", () => {
       tag: "resolved",
       snapshot: {
         turn: {
-          bonusActionAvailable: false,
+          bonusActionQuotaAvailable: false,
         },
         combatants: [
           {
@@ -747,7 +755,7 @@ describe("battle runtime: class action features", () => {
     const aimed = requireResolved(
       resolveBattleSubject({ state, subject: act.subject, fills: [] }),
     );
-    expect(aimed.snapshot.turn.bonusActionAvailable).toBe(false);
+    expect(aimed.snapshot.turn.bonusActionQuotaAvailable).toBe(false);
     expect(
       aimed.snapshot.combatants.find(
         (combatant) => combatant.combatantId === fighterId,
@@ -945,7 +953,7 @@ describe("battle runtime: class action features", () => {
       tag: "resolved",
       snapshot: {
         turn: expect.objectContaining({
-          bonusActionAvailable: false,
+          bonusActionQuotaAvailable: false,
         }),
       },
     });
@@ -1417,7 +1425,7 @@ describe("battle runtime: class action features", () => {
       },
       snapshot: {
         turn: {
-          bonusActionAvailable: true,
+          bonusActionQuotaAvailable: true,
         },
       },
     });
@@ -1681,7 +1689,7 @@ describe("battle runtime: class action features", () => {
       throw new Error("Expected limited Rage resource.");
     }
     expect(Number(rageState.usesRemaining)).toBe(1);
-    expect(extended.snapshot.turn.bonusActionAvailable).toBe(false);
+    expect(extended.snapshot.turn.bonusActionQuotaAvailable).toBe(false);
   });
 
   test("Rage extends when Grapple forces an enemy saving throw", () => {

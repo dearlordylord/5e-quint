@@ -3,6 +3,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-roll-miss-to-hit-replacement
 import { describe, expect, test } from "vitest";
 import {
+  battleFrontierInterruptDecisionForState,
   characterAttackSubjectForTest,
   requireCharacterUnitProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
@@ -197,18 +198,21 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Peerless Aim hit to open Shield reaction.");
     }
-    const shieldChoice =
-      awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-        (choice) =>
-          choice.kind === "nestedProcedure" &&
-          choice.subject.command === "castTriggeredReactionSpell" &&
-          choice.subject.reactorId === spellTargetId,
-      );
+    expect(
+      battleFrontierInterruptDecisionForState(awaitingReaction.state),
+    ).toMatchObject({ trigger: "attackHit" });
+    const shieldChoice = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    )?.choices.find(
+      (choice) =>
+        choice.kind === "nestedProcedure" &&
+        choice.subject.command === "castTriggeredReactionSpell" &&
+        choice.subject.reactorId === spellTargetId,
+    );
     if (
       shieldChoice === undefined ||
       shieldChoice.kind !== "nestedProcedure" ||
@@ -234,11 +238,13 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     expect(afterShield).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "rolledDice" }],
-      snapshot: { pendingInterrupt: null },
     });
     if (afterShield.tag !== "needsHoles") {
       throw new Error("Expected replayed Peerless Aim attack to need damage.");
     }
+    expect(
+      battleFrontierInterruptDecisionForState(afterShield.state),
+    ).toBeNull();
     const damage = requireHole(afterShield.holes, "rolledDice");
     const resolved = resolveBattleSubject({
       state: afterShield.state,

@@ -60,7 +60,7 @@ Evidence: an _unused_ `import battle-runtime-model` took a 0.6s spec to 85s; a d
 
 This yields three enforceable rules, consistent with "state minimal, composition at the reducer" above:
 
-- **Simulated `*.mbt.qnt` drivers import leaves only** — small pure modules of types/tags and `pure def` facts, never a barrel or a behavioural rule module. Enforced by `scripts/check-mbt-driver-closure.cjs` (transitive import file-count ≤ 8), run in `pnpm quality`.
+- **Simulated `*.mbt.qnt` drivers import leaves only** — small pure modules of types/tags and `pure def` facts, never a barrel or a behavioural rule module. Enforced by `scripts/check-mbt-driver-closure.cjs` (transitive import file-count ≤ 8), run in `pnpm quality:milestone`.
 - **Type-vocabulary modules stay free of behavioural imports.** A widely-imported type module (e.g. `battle-runtime-model`) must source any type it needs from a leaf shared with the behaviour, never by importing the behaviour itself.
 - **Prefer literal projection witnesses over computed-oracle drivers.** A deterministic scenario should assert its SRD outcome as literal facts (self-contained, fast). Import the rule reducer to _derive_ the projection only when it genuinely depends on mutable state the reducer computes; never reimplement the rule inside the witness to avoid the import — that duplicates rule logic and weakens parity.
 
@@ -75,4 +75,4 @@ The decision rule for Quint picks is:
 
 Literal witnesses still state their expected outcomes in Quint. A conditional literal keyed by a picked value is acceptable because the value travels in the trace; importing a reducer or reimplementing one inside the witness is still reserved for genuine computed-oracle drivers.
 
-`scripts/check-mbt-driver-closure.cjs`, run by `pnpm quality`, enforces the import-closure budget and rejects untyped witness replay storage. Scenario branches should be typed local outcome variants or encoded directly in `WitnessProtocol`.
+`scripts/check-mbt-driver-closure.cjs`, run by `pnpm quality:milestone`, enforces the import-closure budget and rejects untyped witness replay storage. Scenario branches should be typed local outcome variants or encoded directly in `WitnessProtocol`.

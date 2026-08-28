@@ -28,6 +28,7 @@ export type PlayerBattleFill =
 export const PLAYER_CONTINUATION_PROTOCOL_REMINDER = [
   "discoverBattleActs(context.session) returns the readonly act array directly; do not read an .acts property from it.",
   "Resolve an ordinary surfaced subject with resolveBattleRuntimeSubject({ session, subject, fills }).",
+  "Resolution results expose executable inputs at result.envelope.frontier: ordinary Holes use frontier.subject and frontier.holes; interrupt decisions use frontier.decisionHole and frontier.choices. Results have no top-level hole or subject fields.",
   "A D20 Test is exactly an Ability Check, Saving Throw, or attack roll. For each rolled pending test, use the surfaced rollMode (normal, advantage, or disadvantage); d20TestCircumstanceRequests identify the exact occurrence and saving-throw target after mechanical and Table circumstances are combined.",
   'Start surfaced movement with resolveScenarioMovement({ kind: "route", session, subject, route, speedKind, fills }); there is no movement field.',
   'Continue surfaced movement holes with resolveScenarioMovement({ kind: "continue", session, fills }).',

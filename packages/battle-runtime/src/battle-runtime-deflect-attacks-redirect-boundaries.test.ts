@@ -1,4 +1,6 @@
 import { classLevel } from "@dnd/shared/types";
+import { Schema } from "effect";
+import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -22,6 +24,7 @@ import {
   interruptDecisionFill,
   monkDeflectAttacksFocusResource,
   reactionModifierChoice,
+  battleFrontierInterruptDecisionForState,
   reactionModifierReductionRollFill,
   reactionModifierUnitRefWithProfile,
   requireHole,
@@ -35,6 +38,10 @@ import {
   unitLibrary,
 } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import {
+  BattleCheckpointFrontierEnvelopeSchema,
+  battleCheckpointFrontierEnvelope,
+} from "./index.ts";
 
 describe("battle runtime: Deflect Attacks redirect boundaries", () => {
   test("static Stat Block damage reaches Deflect Attacks redirect without a damage-roll frontier", () => {
@@ -86,13 +93,43 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
       );
     }
     const choice = reactionModifierChoice(
-      awaitingReaction.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(awaitingReaction.state)!.choices,
       unit.id,
       "attackDamageReduction",
     );
     expect(choice.modifier).toMatchObject({
       zeroDamageRedirect: { originalDamageType: "slashing" },
     });
+    const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+      battleCheckpointFrontierEnvelope(awaitingReaction.state),
+    );
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+          encoded,
+        ),
+      ),
+    ).toBe(true);
+    if (encoded.frontier.kind !== "interruptDecision") {
+      throw new Error(
+        "Expected the encoded Deflect Attacks Reaction frontier.",
+      );
+    }
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)({
+          ...encoded,
+          frontier: {
+            ...encoded.frontier,
+            trigger: "attackDamage",
+            decisionHole: {
+              ...encoded.frontier.decisionHole,
+              trigger: "attackDamage",
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
     const awaitingRedirect = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
@@ -161,7 +198,7 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
       throw new Error("Expected Deflect Attacks Reaction window.");
     }
     const choice = reactionModifierChoice(
-      setup.result.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(setup.result.state)!.choices,
       unit.id,
       "attackDamageReduction",
     );
@@ -221,7 +258,7 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
       throw new Error("Expected Deflect Attacks Reaction window.");
     }
     const choice = reactionModifierChoice(
-      awaitingReaction.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(awaitingReaction.state)!.choices,
       unit.id,
       "attackDamageReduction",
     );
@@ -295,7 +332,7 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
     }
     const unit = unitLibrary.requireUnit("monk_deflect_attacks");
     const choice = reactionModifierChoice(
-      setup.result.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(setup.result.state)!.choices,
       unit.id,
       "attackDamageReduction",
     );

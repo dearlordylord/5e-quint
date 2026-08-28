@@ -50,7 +50,7 @@ import type { BattleFill, BattleHole, BattleSubject } from "./index.ts";
  * fields themselves.
  *
  * Renamed inert fields:
- *   - `BattleCreatureState.origin.kind === "character"`: `characterId`, `displayName`
+ *   - `BattleCreatureState.origin.kind === "character"`: `characterId`
  *   - `BattleCreatureOriginSnapshot.kind === "statBlock"`: `statBlockId`
  *   - Spell presentation source identity (`AuthoredSelectedSpellInvocation.spell.id`
  *     and `spell.name` derived from `BattleRuntimeContext` character spell
@@ -146,7 +146,6 @@ function combatantMechanicalProjection(combatant: BattleCreatureState) {
     hidden: combatant.hidden,
     dodging: combatant.dodging,
     zeroHpLifecycle: combatant.zeroHpLifecycle,
-    nextActiveEffectOrdinal: combatant.nextActiveEffectOrdinal,
   };
   if (combatant.origin.kind !== "character") {
     return {
@@ -221,7 +220,6 @@ function snapshotCombatantMechanicalProjection(
     hp: Number(combatant.hp),
     maxHp: Number(combatant.maxHp),
     tempHp: Number(combatant.tempHp),
-    nextActiveEffectOrdinal: combatant.nextActiveEffectOrdinal,
     activeEffectRefs: combatant.activeEffectRefs,
     armorClass: combatant.armorClass,
     size: combatant.size,
@@ -257,8 +255,6 @@ function snapshotOriginMechanicalProjection(
 function snapshotMechanicalProjection(snapshot: BattleSnapshot) {
   return {
     battleId: snapshot.battleId,
-    executionScopeCursors: snapshot.executionScopeCursors,
-    retiredExecutionScopeAllocations: snapshot.retiredExecutionScopeAllocations,
     round: snapshot.round,
     currentActorId: snapshot.currentActorId,
     turnOrder: snapshot.turnOrder,
@@ -268,9 +264,9 @@ function snapshotMechanicalProjection(snapshot: BattleSnapshot) {
     companions: snapshot.companions,
     lightEmitters: snapshot.lightEmitters,
     obscurementZones: snapshot.obscurementZones,
-    acts: snapshot.acts,
     turn: snapshot.turn,
     readiedResponses: snapshot.readiedResponses,
+    helpAttackMarkers: snapshot.helpAttackMarkers,
   };
 }
 
@@ -300,7 +296,6 @@ function actExecutionProjection(state: BattleState) {
 
 function renameInertIdentityFields(state: BattleState): BattleState {
   const syntheticCharacterId = characterId("synthetic-character-id-witness");
-  const syntheticDisplayName = "Synthetic Witness Name";
 
   const renamedCombatants = new Map(
     Array.from(state.combatants.entries()).map(([id, combatant]) => {
@@ -314,7 +309,6 @@ function renameInertIdentityFields(state: BattleState): BattleState {
           origin: {
             ...combatant.origin,
             characterId: syntheticCharacterId,
-            displayName: syntheticDisplayName,
           },
         },
       ];
@@ -520,7 +514,7 @@ describe("inert authored identity renaming witness (#224)", () => {
     );
   });
 
-  test("renaming characterId and displayName changes only those identity fields in the snapshot", () => {
+  test("renaming characterId changes only that identity field in the snapshot", () => {
     const state = fighterVsGoblinBattle();
     const originalSnapshot = snapshotBattle(state);
     const renamedSnapshot = snapshotBattle(renameInertIdentityFields(state));
@@ -543,7 +537,7 @@ describe("inert authored identity renaming witness (#224)", () => {
     expect(fighterRenamed.origin.characterId).toBe(
       characterId("synthetic-character-id-witness"),
     );
-    expect(fighterRenamed.displayName).toBe("Synthetic Witness Name");
+    expect(fighterRenamed).not.toHaveProperty("displayName");
   });
 
   test("renaming snapshot statBlockId does not change snapshot mechanics", () => {
@@ -590,7 +584,7 @@ describe("inert authored identity renaming witness (#224)", () => {
     );
   });
 
-  test("the state witness actually mutates the inert fields", () => {
+  test("the state witness actually mutates the inert identity field", () => {
     const state = fighterVsGoblinBattle();
     const fighter = state.combatants.get(combatantId("fighter"));
     expect(fighter?.origin.kind).toBe("character");
@@ -604,7 +598,6 @@ describe("inert authored identity renaming witness (#224)", () => {
     expect(renamedFighter.origin.characterId).toBe(
       characterId("synthetic-character-id-witness"),
     );
-    expect(renamedFighter.origin.displayName).toBe("Synthetic Witness Name");
   });
 
   test("renaming spell presentation source identity does not change spell act execution structure", () => {

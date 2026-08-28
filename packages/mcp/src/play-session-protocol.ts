@@ -1,9 +1,4 @@
 import { Either } from "effect";
-import {
-  characterDraftId,
-  type CharacterDraftId,
-} from "@dnd/character-creation-runtime";
-
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { BattleToolName } from "./battle-tool-input.ts";
 import {
@@ -40,8 +35,14 @@ import {
 } from "./play-session-request-identity.ts";
 import {
   availablePlaySessionEnvelope,
+  recoverableOperationResult,
   unavailablePlaySessionEnvelope,
 } from "./play-session-envelope.ts";
+import { createdCharacterDraftId } from "./play-session-command.ts";
+import {
+  battleSessionPayload,
+  battlePresentationIssueContent,
+} from "./battle-tool-payloads.ts";
 
 export {
   unresolvedInputsFrom,
@@ -120,12 +121,34 @@ export async function handleReadPlaySession(
   const result = await registry.run(
     routed.right.playSessionId,
     routed.right.caller,
-    (root) => ({
-      projection: root.sessionStore.snapshot(),
-      hasAvailableCharacterSession: Array.from(
-        root.sessionStore.characters.entries(),
-      ).some(([, session]) => session.tag !== "inBattle"),
-    }),
+    (root) => {
+      const battleEnvelope = readBattleEnvelopeForRoot(root);
+      if (Either.isLeft(battleEnvelope)) {
+        const operationContent = battlePresentationIssueContent(
+          battleEnvelope.left,
+        );
+        return {
+          operationResult: jsonContentPayload(operationContent),
+          isError: true as const,
+          projection: root.sessionStore.snapshot(),
+          hasAvailableCharacterSession: Array.from(
+            root.sessionStore.characters.entries(),
+          ).some(([, session]) => session.tag !== "inBattle"),
+        };
+      }
+      return {
+        operationResult: {
+          tag: "playSessionResumed" as const,
+          playSessionId: routed.right.playSessionId,
+          battleEnvelope: battleEnvelope.right,
+        },
+        isError: false as const,
+        projection: root.sessionStore.snapshot(),
+        hasAvailableCharacterSession: Array.from(
+          root.sessionStore.characters.entries(),
+        ).some(([, session]) => session.tag !== "inBattle"),
+      };
+    },
   );
   if (Either.isLeft(result)) {
     return result.left.tag === "playSessionUnavailable"
@@ -138,13 +161,11 @@ export async function handleReadPlaySession(
   return availablePlaySessionEnvelope({
     playSessionId: routed.right.playSessionId,
     operationName: playSessionToolNames.read,
-    operationResult: {
-      tag: "playSessionResumed",
-      playSessionId: routed.right.playSessionId,
-    },
+    operationResult: result.right.value.operationResult,
     projection: result.right.value.projection,
     hasAvailableCharacterSession:
       result.right.value.hasAvailableCharacterSession,
+    isError: result.right.value.isError,
     tenure: result.right.tenure,
     identity,
   });
@@ -171,13 +192,29 @@ export async function handlePlaySessionOperation(input: {
   const result = await input.registry.run(
     routed.right.playSessionId,
     routed.right.caller,
-    async (root) => ({
-      operationContent: await input.handle(root, routed.right.operationArgs),
-      projection: root.sessionStore.snapshot(),
-      hasAvailableCharacterSession: Array.from(
-        root.sessionStore.characters.entries(),
-      ).some(([, session]) => session.tag !== "inBattle"),
-    }),
+    async (root) => {
+      const operationContent = await input.handle(
+        root,
+        routed.right.operationArgs,
+      );
+      const operationResult = isToolContent(operationContent)
+        ? "structuredContent" in operationContent
+          ? operationContent.structuredContent
+          : jsonContentPayload(operationContent)
+        : undefined;
+      return {
+        operationContent,
+        operationResult: recoverableOperationResult(
+          root,
+          operationResult,
+          isToolContent(operationContent) && operationContent.isError === true,
+        ),
+        projection: root.sessionStore.snapshot(),
+        hasAvailableCharacterSession: Array.from(
+          root.sessionStore.characters.entries(),
+        ).some(([, session]) => session.tag !== "inBattle"),
+      };
+    },
     {
       commandFor: (operation) =>
         retainedPlaySessionCommand(
@@ -217,10 +254,7 @@ export async function handlePlaySessionOperation(input: {
   return availablePlaySessionEnvelope({
     playSessionId: routed.right.playSessionId,
     operationName: input.operationName,
-    operationResult:
-      "structuredContent" in operationContent
-        ? operationContent.structuredContent
-        : jsonContentPayload(operationContent),
+    operationResult: result.right.value.operationResult,
     projection: result.right.value.projection,
     hasAvailableCharacterSession:
       result.right.value.hasAvailableCharacterSession,
@@ -228,6 +262,15 @@ export async function handlePlaySessionOperation(input: {
     tenure: result.right.tenure,
     identity: input.identity ?? GUEST_ONLY_REQUEST_IDENTITY,
   });
+}
+
+function readBattleEnvelopeForRoot(root: McpPlaySessionRoot) {
+  const battleState = root.sessionStore.battleState;
+  if (battleState.tag !== "activeBattle") return Either.right(null);
+  return Either.map(
+    battleSessionPayload(root, battleState.session),
+    (payload) => payload.envelope,
+  );
 }
 
 function operationShouldBeRetained(
@@ -264,25 +307,6 @@ function retainedPlaySessionCommand(
     return { name: operationName, args: decoded.right.args };
   }
   return { name: operationName, args };
-}
-
-function createdCharacterDraftId(operationContent: unknown): CharacterDraftId {
-  if (!isToolContent(operationContent)) {
-    throw new Error(
-      "A successful Character Draft creation returned invalid tool content.",
-    );
-  }
-  const payload =
-    "structuredContent" in operationContent
-      ? operationContent.structuredContent
-      : jsonContentPayload(operationContent);
-  const draft = isJsonObject(payload) ? payload.draft : undefined;
-  if (!isJsonObject(draft) || typeof draft.draftId !== "string") {
-    throw new Error(
-      "A successful Character Draft creation omitted its retained draft identity.",
-    );
-  }
-  return characterDraftId(draft.draftId);
 }
 
 type RoutedArgs = {

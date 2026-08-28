@@ -51,6 +51,9 @@ import {
   fighterId,
   fighterVsGoblinBattle,
   fighterTurnWithReadiedAcidAndSecondReadiedRay,
+  battleCheckpointFrontierEnvelope,
+  battleFrontierInterruptDecision,
+  battleFrontierInterruptDecisionForState,
   findHole,
   goblinId,
   interruptDecisionFill,
@@ -61,6 +64,7 @@ import {
   wizardId,
 } from "./battle-runtime.test-support.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { currentInterruptCheckpoint } from "./battle-reducer/battle-snapshot.ts";
 import { replayContinuationFrame } from "./battle-reducer/replay-continuation.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
@@ -76,13 +80,13 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleInterruptProcedureChoice,
-  type BattleInterruptSubject,
   type BattleInterruptedProcedure,
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
+import type { BattleInterruptSubject } from "./battle-subjects.ts";
 
 const interruptStackResumeDriverSchema = {
   init: {},
@@ -91,16 +95,6 @@ const interruptStackResumeDriverSchema = {
   doReplayRecordedProcedureFromRoot: {},
   step: {},
 } as const;
-
-type ShieldReactionChoice = Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "nestedProcedure" }
-> & {
-  readonly subject: Extract<
-    BattleInterruptSubject,
-    { readonly command: "castTriggeredReactionSpell" }
-  >;
-};
 
 type InterruptStackResumeDriverAction = Exclude<
   keyof typeof interruptStackResumeDriverSchema,
@@ -132,6 +126,30 @@ type InterruptStackResumeProjection = {
   readonly targetHp: number;
   readonly lastResult: InterruptStackResumeLastResult;
 };
+
+type NestedProcedureChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "nestedProcedure" }
+>;
+type TriggeredReactionSpellChoice = NestedProcedureChoice & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "castTriggeredReactionSpell";
+    }
+  >;
+};
+
+function isTriggeredReactionSpellChoice(
+  choice: BattleInterruptProcedureChoice,
+): choice is TriggeredReactionSpellChoice {
+  return (
+    choice.kind === "nestedProcedure" &&
+    choice.subject.tag === "runtimeCommand" &&
+    choice.subject.command === "castTriggeredReactionSpell"
+  );
+}
 
 type InterruptStackResumeRuntimeState = {
   readonly battle: BattleState;
@@ -302,8 +320,14 @@ function nestedDeclineResumesOuterInterrupt(): InterruptStackResumeRuntimeState 
   if (awaitingAttackReaction.tag !== "needsHoles") {
     throw new Error("Expected outer attack-hit interrupt window.");
   }
+  const awaitingAttackDecision = battleFrontierInterruptDecisionForState(
+    awaitingAttackReaction.state,
+  );
+  if (awaitingAttackDecision === null) {
+    throw new Error("Expected outer attack-hit interrupt decision.");
+  }
   const releaseChoice = reactionChoiceWithSubject(
-    awaitingAttackReaction.snapshot.pendingInterrupt!.choices,
+    awaitingAttackDecision.choices,
   );
   if (
     releaseChoice.subject.tag !== "runtimeCommand" ||
@@ -313,18 +337,15 @@ function nestedDeclineResumesOuterInterrupt(): InterruptStackResumeRuntimeState 
   }
   const released = resolveBattleInterrupt({
     state: awaitingAttackReaction.state,
-    fill: interruptDecisionFill(
-      awaitingAttackReaction.snapshot.pendingInterrupt!.decisionHole,
-      {
-        kind: "resolve",
-        responderId: wizardId,
-        choice: {
-          kind: "releaseReadiedSpell",
-          procedureRef: releaseChoice.subject.procedureRef,
-          fills: [],
-        },
+    fill: interruptDecisionFill(awaitingAttackDecision.decisionHole, {
+      kind: "resolve",
+      responderId: wizardId,
+      choice: {
+        kind: "releaseReadiedSpell",
+        procedureRef: releaseChoice.subject.procedureRef,
+        fills: [],
       },
-    ),
+    }),
   });
   if (released.tag !== "needsHoles") {
     throw new Error("Expected released readied spell holes.");
@@ -345,17 +366,17 @@ function nestedDeclineResumesOuterInterrupt(): InterruptStackResumeRuntimeState 
   if (nested.tag !== "needsHoles") {
     throw new Error("Expected nested save-failed interrupt window.");
   }
-  const maxStackDepthObserved =
-    nested.snapshot.pendingInterrupt?.stackDepth ?? 0;
+  const nestedDecision = battleFrontierInterruptDecisionForState(nested.state);
+  if (nestedDecision === null) {
+    throw new Error("Expected nested save-failed interrupt decision.");
+  }
+  const maxStackDepthObserved = nestedDecision.stackDepth;
   const declinedNested = resolveBattleInterrupt({
     state: nested.state,
-    fill: interruptDecisionFill(
-      nested.snapshot.pendingInterrupt!.decisionHole,
-      {
-        kind: "decline",
-        responderId: secondWizardId,
-      },
-    ),
+    fill: interruptDecisionFill(nestedDecision.decisionHole, {
+      kind: "decline",
+      responderId: secondWizardId,
+    }),
   });
   if (declinedNested.tag !== "needsHoles") {
     throw new Error("Expected nested decline to resume released spell damage.");
@@ -405,23 +426,25 @@ function shieldMutationResumesInterruptedAttack(): InterruptStackResumeRuntimeSt
   if (awaitingReaction.tag !== "needsHoles") {
     throw new Error("Expected Shield to open an attack-hit interrupt window.");
   }
-  const maxStackDepthObserved =
-    awaitingReaction.snapshot.pendingInterrupt?.stackDepth ?? 0;
+  const awaitingDecision = battleFrontierInterruptDecisionForState(
+    awaitingReaction.state,
+  );
+  if (awaitingDecision === null) {
+    throw new Error("Expected Shield interrupt decision.");
+  }
+  const maxStackDepthObserved = awaitingDecision.stackDepth;
   const choice = requireShieldReactionChoice(awaitingReaction);
   const resolved = resolveBattleInterrupt({
     state: awaitingReaction.state,
-    fill: interruptDecisionFill(
-      awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
-      {
-        kind: "resolve",
-        responderId: shieldCasterId,
-        choice: {
-          kind: "castTriggeredReactionSpell",
-          procedureRef: choice.subject.procedureRef,
-          fills: [],
-        },
+    fill: interruptDecisionFill(awaitingDecision.decisionHole, {
+      kind: "resolve",
+      responderId: shieldCasterId,
+      choice: {
+        kind: "castTriggeredReactionSpell",
+        procedureRef: choice.subject.procedureRef,
+        fills: [],
       },
-    ),
+    }),
   });
   if (resolved.tag !== "resolved") {
     throw new Error("Expected Shield active effect to resume the attack.");
@@ -649,13 +672,17 @@ function requireHoleFromArray<K extends BattleHole["kind"]>(
 
 function requireShieldReactionChoice(
   result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
-): ShieldReactionChoice {
-  for (const candidate of result.snapshot.pendingInterrupt?.choices ?? []) {
-    if (!isShieldReactionChoice(candidate)) {
-      continue;
-    }
-    const reactor = result.state.combatants.get(candidate.subject.reactorId);
+): TriggeredReactionSpellChoice {
+  const choice = battleFrontierInterruptDecisionForState(
+    result.state,
+  )?.choices.find((candidate): candidate is TriggeredReactionSpellChoice => {
     if (
+      !isTriggeredReactionSpellChoice(candidate) ||
+      candidate.subject.reactorId !== shieldCasterId
+    )
+      return false;
+    const reactor = result.state.combatants.get(candidate.subject.reactorId);
+    return (
       reactor?.origin.kind === "character" &&
       reactor.origin.execution.procedureBindings.some(
         (binding) =>
@@ -663,22 +690,12 @@ function requireShieldReactionChoice(
           binding.procedure.kind === "spellInvocation" &&
           binding.procedure.execution.procedure === "shieldReaction",
       )
-    ) {
-      return candidate;
-    }
+    );
+  });
+  if (choice === undefined) {
+    throw new Error("Expected Shield Reaction choice.");
   }
-  throw new Error("Expected Shield Reaction choice.");
-}
-
-function isShieldReactionChoice(
-  candidate: BattleInterruptProcedureChoice,
-): candidate is ShieldReactionChoice {
-  return (
-    candidate.kind === "nestedProcedure" &&
-    candidate.subject.tag === "runtimeCommand" &&
-    candidate.subject.command === "castTriggeredReactionSpell" &&
-    candidate.subject.reactorId === shieldCasterId
-  );
+  return choice;
 }
 
 function shieldArmorClassBonusActive(
@@ -706,6 +723,14 @@ function interruptStackResumeProjection(
   state: InterruptStackResumeRuntimeState,
 ): InterruptStackResumeProjection {
   const snapshot = snapshotBattle(state.battle);
+  const envelope = battleCheckpointFrontierEnvelope(state.battle);
+  const pending = battleFrontierInterruptDecision(envelope);
+  const currentFrame = state.battle.interruptStack.at(-1);
+  const currentCheckpoint = currentInterruptCheckpoint(state.battle);
+  const handledInterruptTrigger =
+    currentFrame?.kind === "replayContinuation"
+      ? currentFrame.handledInterruptTrigger
+      : undefined;
   const responder = snapshot.combatants.find(
     (combatant) => combatant.combatantId === state.responderId,
   );
@@ -717,9 +742,16 @@ function interruptStackResumeProjection(
   }
   return {
     maxStackDepthObserved: state.maxStackDepthObserved,
-    finalStackDepth: snapshot.pendingInterrupt?.stackDepth ?? 0,
+    finalStackDepth:
+      pending?.stackDepth ??
+      (envelope.frontier.kind === "holes"
+        ? state.battle.interruptStack.length
+        : 0),
     pendingTrigger: interruptStackResumeTrigger(
-      snapshot.pendingInterrupt?.trigger ?? "none",
+      pending?.trigger ??
+        currentCheckpoint?.trigger ??
+        handledInterruptTrigger ??
+        "none",
     ),
     resumedHole: state.resumedHole,
     activeEffectMutationSeenOnResume: state.activeEffectMutationSeenOnResume,

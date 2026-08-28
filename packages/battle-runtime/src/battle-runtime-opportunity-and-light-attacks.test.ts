@@ -2,7 +2,10 @@ import { battleObjectId } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { Either, Schema } from "effect";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleFrontierInterruptDecisionForState,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime.test-support.ts";
 import {
   BattleInterruptProcedureChoiceSchema,
   BattleSnapshotSchema,
@@ -131,7 +134,9 @@ type NeedsHolesResult = Extract<
 >;
 
 function pendingInterruptForNeedsHoles(result: NeedsHolesResult) {
-  const pendingInterrupt = result.snapshot.pendingInterrupt;
+  const pendingInterrupt = battleFrontierInterruptDecisionForState(
+    result.state,
+  );
   if (pendingInterrupt === null) {
     throw new Error("Expected a pending interrupt for the needsHoles result.");
   }
@@ -241,12 +246,12 @@ function startFighterUnarmedOpportunityAttack(state: BattleState) {
     throw new Error("Expected unarmed Opportunity Attack Reaction window.");
   }
   const choice = reactionChoiceWithSubject(
-    awaitingReaction.snapshot.pendingInterrupt!.choices,
+    pendingInterruptForNeedsHoles(awaitingReaction).choices,
   );
   const startedReaction = resolveBattleInterrupt({
     state: awaitingReaction.state,
     fill: interruptDecisionFill(
-      awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
+      pendingInterruptForNeedsHoles(awaitingReaction).decisionHole,
       {
         kind: "resolve",
         responderId: fighterId,
@@ -416,7 +421,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       }),
     );
 
-    expect(resolved.snapshot.turn.bonusActionAvailable).toBe(false);
+    expect(resolved.snapshot.turn.bonusActionQuotaAvailable).toBe(false);
     expect(resolved.snapshot.combatants).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ combatantId: goblinId, hp: 10 }),
@@ -489,7 +494,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       }),
     );
 
-    expect(resolved.snapshot.turn.bonusActionAvailable).toBe(false);
+    expect(resolved.snapshot.turn.bonusActionQuotaAvailable).toBe(false);
     expect(resolved.state.combatants.get(wizardId)).toMatchObject({
       hp: 8,
       concentration: null,
@@ -631,7 +636,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     expect(completed).toMatchObject({
       tag: "resolved",
       snapshot: {
-        turn: { bonusActionAvailable: false },
+        turn: { bonusActionQuotaAvailable: false },
         combatants: expect.arrayContaining([
           expect.objectContaining({ combatantId: goblinId, hp: 6 }),
         ]),
@@ -733,7 +738,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     expect(completed).toMatchObject({
       tag: "resolved",
       snapshot: {
-        turn: { bonusActionAvailable: false },
+        turn: { bonusActionQuotaAvailable: false },
         combatants: expect.arrayContaining([
           expect.objectContaining({ combatantId: goblinId, hp: 10 }),
         ]),
@@ -1084,7 +1089,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       holes: [{ kind: "interruptDecision", trigger: "attackHit" }],
     });
     const damageReductionChoice = reactionModifierChoice(
-      awaitingReaction.snapshot.pendingInterrupt!.choices,
+      pendingInterruptForNeedsHoles(awaitingReaction).choices,
       "rogue_uncanny_dodge",
       "attackDamageReduction",
     );
@@ -1124,7 +1129,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     if (completed.tag !== "resolved") {
       throw new Error(`Expected resolved, got ${completed.tag}.`);
     }
-    expect(completed.snapshot.turn.bonusActionAvailable).toBe(false);
+    expect(completed.snapshot.turn.bonusActionQuotaAvailable).toBe(false);
     expect(completed.snapshot.combatants).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -1329,22 +1334,6 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "interruptDecision", trigger: "opportunityAttack" }],
-      snapshot: {
-        pendingInterrupt: {
-          choices: [
-            {
-              kind: "nestedProcedure",
-              subject: {
-                command: "opportunityAttack",
-                reactorId: goblinId,
-                targetId: fighterId,
-                distanceFeet: movementFeet(5),
-                procedureRef: goblinOpportunityAttackThreat(state).procedureRef,
-              },
-            },
-          ],
-        },
-      },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
@@ -1656,7 +1645,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     const declined = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
+        pendingInterruptForNeedsHoles(awaitingReaction).decisionHole,
         { kind: "decline", responderId: goblinId },
       ),
     });
@@ -1664,7 +1653,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     if (declined.tag !== "resolved") {
       throw new Error(`Expected resolved, got ${declined.tag}.`);
     }
-    expect(declined.snapshot.pendingInterrupt).toBeNull();
+    expect(battleFrontierInterruptDecisionForState(declined.state)).toBeNull();
     expect(declined.snapshot.combatants).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -1707,12 +1696,12 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
     }
     const choice = reactionChoiceWithSubject(
-      awaitingReaction.snapshot.pendingInterrupt!.choices,
+      pendingInterruptForNeedsHoles(awaitingReaction).choices,
     );
     const startedReaction = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
+        pendingInterruptForNeedsHoles(awaitingReaction).decisionHole,
         {
           kind: "resolve",
           responderId: goblinId,
@@ -1750,7 +1739,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     if (completed.tag !== "resolved") {
       throw new Error(`Expected resolved, got ${completed.tag}.`);
     }
-    expect(completed.snapshot.pendingInterrupt).toBeNull();
+    expect(battleFrontierInterruptDecisionForState(completed.state)).toBeNull();
     expect(completed.snapshot.combatants).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -1820,7 +1809,6 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     expect(completed).toMatchObject({
       tag: "resolved",
       snapshot: {
-        pendingInterrupt: null,
         combatants: expect.arrayContaining([
           expect.objectContaining({
             combatantId: movingBeastId,
@@ -1869,7 +1857,6 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     expect(completed).toMatchObject({
       tag: "resolved",
       snapshot: {
-        pendingInterrupt: null,
         combatants: expect.arrayContaining([
           expect.objectContaining({
             combatantId: fighterId,
@@ -1952,7 +1939,6 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     expect(completed).toMatchObject({
       tag: "resolved",
       snapshot: {
-        pendingInterrupt: null,
         combatants: expect.arrayContaining([
           expect.objectContaining({
             combatantId: goblinId,
@@ -2095,15 +2081,19 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected an Opportunity Attack interrupt window.");
     }
-    const choices = awaitingReaction.snapshot.pendingInterrupt?.choices.filter(
+    const choices = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    )?.choices.filter(
       (choice) =>
         choice.kind === "nestedProcedure" &&
+        choice.subject.tag === "runtimeCommand" &&
         choice.subject.command === "opportunityAttack",
     );
     expect(choices).toHaveLength(2);
     const secondChoice = choices?.find(
       (choice) =>
         choice.kind === "nestedProcedure" &&
+        choice.subject.tag === "runtimeCommand" &&
         choice.subject.command === "opportunityAttack" &&
         choice.subject.procedureRef === secondProcedureRef,
     );
@@ -2123,7 +2113,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     const startedReaction = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
+        pendingInterruptForNeedsHoles(awaitingReaction).decisionHole,
         {
           kind: "resolve",
           responderId: reactorId,
@@ -2171,12 +2161,12 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
     }
     const choice = reactionChoiceWithSubject(
-      awaitingReaction.snapshot.pendingInterrupt!.choices,
+      pendingInterruptForNeedsHoles(awaitingReaction).choices,
     );
     const startedReaction = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
+        pendingInterruptForNeedsHoles(awaitingReaction).decisionHole,
         {
           kind: "resolve",
           responderId: goblinId,
@@ -2296,12 +2286,12 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
     }
     const choice = reactionChoiceWithSubject(
-      awaitingReaction.snapshot.pendingInterrupt!.choices,
+      pendingInterruptForNeedsHoles(awaitingReaction).choices,
     );
     const startedReaction = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
+        pendingInterruptForNeedsHoles(awaitingReaction).decisionHole,
         {
           kind: "resolve",
           responderId: goblinId,
@@ -2357,7 +2347,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     });
 
     const damageChoice = reactionModifierChoice(
-      awaitingDamageReaction.snapshot.pendingInterrupt!.choices,
+      pendingInterruptForNeedsHoles(awaitingDamageReaction).choices,
       cuttingWordsDamageOnly.id,
       "damageRollReduction",
     );
@@ -2387,7 +2377,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     if (completed.tag !== "resolved") {
       throw new Error(`Expected resolved, got ${completed.tag}.`);
     }
-    expect(completed.snapshot.pendingInterrupt).toBeNull();
+    expect(battleFrontierInterruptDecisionForState(completed.state)).toBeNull();
     expect(completed.snapshot.combatants).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -2455,7 +2445,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       throw new Error("Expected Opportunity Attack Reaction window.");
     }
     const opportunityAttackChoice = reactionChoiceWithSubject(
-      awaitingOpportunityAttack.snapshot.pendingInterrupt!.choices,
+      pendingInterruptForNeedsHoles(awaitingOpportunityAttack).choices,
     );
     const startedOpportunityAttack = resolveBattleInterrupt({
       state: awaitingOpportunityAttack.state,
@@ -2483,7 +2473,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       throw new Error("Expected Opportunity Attack hit Reaction window.");
     }
     const damageReductionChoice = reactionModifierChoice(
-      awaitingHitReaction.snapshot.pendingInterrupt!.choices,
+      pendingInterruptForNeedsHoles(awaitingHitReaction).choices,
       "rogue_uncanny_dodge",
       "attackDamageReduction",
     );
@@ -2521,7 +2511,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     if (completed.tag !== "resolved") {
       throw new Error(`Expected resolved, got ${completed.tag}.`);
     }
-    expect(completed.snapshot.pendingInterrupt).toBeNull();
+    expect(battleFrontierInterruptDecisionForState(completed.state)).toBeNull();
     expect(completed.snapshot.combatants).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -2579,7 +2569,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       throw new Error("Expected Opportunity Attack Reaction window.");
     }
     const opportunityAttackChoice = reactionChoiceWithSubject(
-      awaitingOpportunityAttack.snapshot.pendingInterrupt!.choices,
+      pendingInterruptForNeedsHoles(awaitingOpportunityAttack).choices,
     );
     const startedOpportunityAttack = resolveBattleInterrupt({
       state: awaitingOpportunityAttack.state,
@@ -2607,7 +2597,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       throw new Error("Expected Opportunity Attack hit Reaction window.");
     }
     const damageReductionChoice = reactionModifierChoice(
-      awaitingHitReaction.snapshot.pendingInterrupt!.choices,
+      pendingInterruptForNeedsHoles(awaitingHitReaction).choices,
       "rogue_uncanny_dodge",
       "attackDamageReduction",
     );
@@ -2688,12 +2678,12 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
     }
     const choice = reactionChoiceWithSubject(
-      awaitingReaction.snapshot.pendingInterrupt!.choices,
+      pendingInterruptForNeedsHoles(awaitingReaction).choices,
     );
     const startedReaction = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
+        pendingInterruptForNeedsHoles(awaitingReaction).decisionHole,
         {
           kind: "resolve",
           responderId: goblinId,
@@ -2746,7 +2736,6 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     expect(completed).toMatchObject({
       tag: "resolved",
       snapshot: {
-        pendingInterrupt: null,
         combatants: expect.arrayContaining([
           expect.objectContaining({
             combatantId: fighterId,
@@ -2795,12 +2784,12 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
     }
     const choice = reactionChoiceWithSubject(
-      awaitingReaction.snapshot.pendingInterrupt!.choices,
+      pendingInterruptForNeedsHoles(awaitingReaction).choices,
     );
     const startedReaction = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
+        pendingInterruptForNeedsHoles(awaitingReaction).decisionHole,
         {
           kind: "resolve",
           responderId: goblinId,
