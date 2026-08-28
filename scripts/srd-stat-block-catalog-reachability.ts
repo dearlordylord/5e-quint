@@ -104,8 +104,8 @@ export type SrdStatBlockCatalogReachabilityInput = {
 
 function indexByStatBlockId<T extends { readonly id: StatBlockId }>(
   values: readonly T[],
-): ReadonlyMap<StatBlockId, readonly T[]> {
-  const index = new Map<StatBlockId, T[]>();
+): ReadonlyMap<StatBlockId, readonly [T, ...T[]]> {
+  const index = new Map<StatBlockId, [T, ...T[]]>();
   for (const value of values) {
     const occurrences = index.get(value.id);
     if (occurrences === undefined) {
@@ -179,7 +179,6 @@ export function evaluateSrdStatBlockCatalogReachability(
 
   for (const installedOccurrences of installedById.values()) {
     const installed = installedOccurrences[0];
-    if (installed === undefined) continue;
     const listedOccurrences = listedById.get(installed.id) ?? [];
     if (listedOccurrences.length === 0) {
       issues.push({ kind: "missing-list-entry", statBlockId: installed.id });
