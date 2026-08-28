@@ -107,23 +107,15 @@ module statBlockMultiattack {
       | _ => false
     }
 
-  pure def multiattackPendingProcedureRefsAfterFirstDispatch(
-    profile: StatBlockMultiattackProfile
-  ): List[StatBlockProcedureRef] =
-    profile.dispatchProcedureRefs.slice(1, profile.dispatchProcedureRefs.length())
-
-  pure def startStatBlockMultiattack(
+  pure def activateStatBlockMultiattack(
     state: StatBlockMultiattackState,
     profile: StatBlockMultiattackProfile
   ): StatBlockMultiattackState =
     match state {
       | StatBlockMultiattackReadyToAct => {
-          val pendingProcedureRefs = multiattackPendingProcedureRefsAfterFirstDispatch(profile)
           if (not(legalStatBlockMultiattackProfile(profile))) state
-          else if (pendingProcedureRefs.length() == 0)
-            StatBlockMultiattackActionSpent
           else StatBlockMultiattackDispatching({
-            pendingProcedureRefs: pendingProcedureRefs,
+            pendingProcedureRefs: profile.dispatchProcedureRefs,
           })
         }
       | StatBlockMultiattackActionSpent => state

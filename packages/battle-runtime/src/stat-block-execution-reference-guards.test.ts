@@ -72,7 +72,7 @@ describe("Stat Block execution stale references", () => {
     ).toBe(currentExecution);
   });
 
-  test("rejects a stale Multiattack dispatch reference and preserves activation state", () => {
+  test("rejects a stale dispatch while resource-free activation preserves value", () => {
     const currentExecution = admittedExecution("multiattack-reference-current");
     const staleExecution = admittedExecution("multiattack-reference-stale");
     const binding = multiattackBinding(currentExecution);
@@ -87,11 +87,7 @@ describe("Stat Block execution stale references", () => {
       ]),
     ).toBe(false);
     expect(
-      spendStatBlockMultiattackActivationResources(
-        currentExecution,
-        binding,
-        staleDispatchProcedureRef,
-      ),
-    ).toBe(currentExecution);
+      spendStatBlockMultiattackActivationResources(currentExecution, binding),
+    ).toStrictEqual(currentExecution);
   });
 });

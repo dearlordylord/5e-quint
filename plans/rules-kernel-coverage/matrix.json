@@ -16367,19 +16367,7 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [
-        "import",
-        "record",
-        "record-update",
-        "pure-def",
-        "constant-def",
-        "int",
-        "bool",
-        "if-expression",
-        "let-binding",
-        "comparison",
-        "boolean-connective"
-      ],
+      "generatorSubset": ["import", "pure-def", "if-expression", "let-binding"],
       "obligationId": "BATTLE.STAT_BLOCK.ACTION_LIFECYCLE",
       "proofOnly": [
         "packages/shared-algebras/proofs/rule-core/stat-block-action-lifecycle-inductive.qnt",
@@ -16392,19 +16380,7 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [
-        "import",
-        "record",
-        "record-update",
-        "pure-def",
-        "constant-def",
-        "int",
-        "bool",
-        "if-expression",
-        "let-binding",
-        "comparison",
-        "boolean-connective"
-      ],
+      "generatorSubset": ["import", "pure-def", "if-expression", "let-binding"],
       "obligationId": "BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE",
       "proofOnly": [
         "packages/shared-algebras/proofs/rule-core/stat-block-bonus-action-lifecycle-inductive.qnt",
@@ -16422,7 +16398,7 @@
         "packages/battle-runtime/battle-runtime-legendary-actions.qnt"
       ],
       "generatorSubset": [
-        "import",
+        "variant",
         "record",
         "record-update",
         "pure-def",
@@ -16435,7 +16411,8 @@
         "boolean-connective",
         "all-block",
         "set",
-        "membership"
+        "membership",
+        "implies"
       ],
       "obligationId": "BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE",
       "proofOnly": [
@@ -16454,23 +16431,20 @@
         "packages/battle-runtime/battle-runtime-stat-block-multiattack-bridge.qnt"
       ],
       "generatorSubset": [
-        "import",
         "variant",
         "record",
-        "record-update",
         "pure-def",
         "constant-def",
         "int",
         "bool",
         "if-expression",
         "let-binding",
-        "arithmetic",
         "comparison",
         "boolean-connective",
         "all-block",
         "pattern-match",
-        "set",
-        "membership"
+        "fold",
+        "list"
       ],
       "obligationId": "BATTLE.STAT_BLOCK.MULTIATTACK",
       "proofOnly": [
@@ -16490,7 +16464,6 @@
         "packages/battle-runtime/battle-runtime-turn-advancement-recharge.qnt"
       ],
       "generatorSubset": [
-        "import",
         "variant",
         "record",
         "record-update",
@@ -16499,7 +16472,6 @@
         "int",
         "bool",
         "if-expression",
-        "let-binding",
         "arithmetic",
         "comparison",
         "boolean-connective",

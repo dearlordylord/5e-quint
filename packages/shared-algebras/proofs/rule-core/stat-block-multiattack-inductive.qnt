@@ -43,9 +43,9 @@ module statBlockMultiattackInductive {
 
   action init = all { recordState(initialStatBlockMultiattackState) }
 
-  action doStart = {
+  action doActivate = {
     val profile = { dispatchProcedureRefs: List(0, 0, 1) }
-    all { recordState(startStatBlockMultiattack(qState, profile)) }
+    all { recordState(activateStatBlockMultiattack(qState, profile)) }
   }
 
   action doDispatch = {
@@ -54,7 +54,7 @@ module statBlockMultiattackInductive {
   }
 
   action doEndTurn = all { recordState(endStatBlockMultiattackTurn(qState)) }
-  action step = any { doStart, doDispatch, doEndTurn }
+  action step = any { doActivate, doDispatch, doEndTurn }
 
   val invariant = all {
     qPhase.in(Set(ProofReadyToAct, ProofActionSpent, ProofTurnEnded, ProofDispatching)),

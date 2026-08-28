@@ -997,7 +997,7 @@ export function resolveMultiattack(
   const actor = input.actor;
   const origin = actor.origin;
   const multiattackBinding = input.multiattackBinding;
-  const [consumedProcedureRef, ...pendingProcedureRefs] =
+  const pendingProcedureRefs =
     statBlockMultiattackEffectiveDispatchProcedureRefsForActor(
       actor,
       multiattackBinding,
@@ -1006,7 +1006,7 @@ export function resolveMultiattack(
     !statBlockMultiattackResourcesAvailable(
       origin.execution,
       multiattackBinding,
-      [consumedProcedureRef, ...pendingProcedureRefs],
+      pendingProcedureRefs,
     )
   ) {
     return invalidResult(
@@ -1045,7 +1045,6 @@ export function resolveMultiattack(
   const nextExecution = spendStatBlockMultiattackActivationResources(
     origin.execution,
     multiattackBinding,
-    consumedProcedureRef,
   );
   const nextState = {
     ...nextStateWithPendingDispatches,

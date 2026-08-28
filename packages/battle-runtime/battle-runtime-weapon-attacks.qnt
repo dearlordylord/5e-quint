@@ -369,7 +369,7 @@ module battleRuntimeWeaponAttacks {
     if (not(state.actionAvailable) or currentActor(state) != Goblin or attacker.hp == 0)
       state
     else
-      { ...stateWithActorCombatant(state, Goblin, { ...attacker, multiattackDispatchesRemaining: battleRuntimeGoblinMultiattackDispatchesAfterFirstAttack }), actionAvailable: false }
+      { ...stateWithActorCombatant(state, Goblin, { ...attacker, multiattackDispatchesRemaining: battleRuntimeSyntheticMultiattackDispatchCountAfterActivation }), actionAvailable: false }
   }
 
   pure def goblinMultiattackDispatchContinuationOpen(state: BattleState): bool =
@@ -403,7 +403,7 @@ module battleRuntimeWeaponAttacks {
   ): BattleState = {
     val attacker = combatantForActor(state, Goblin)
     val defender = combatantForActor(state, Fighter)
-    val attackerAfterDispatch = { ...attacker, multiattackDispatchesRemaining: battleRuntimeGoblinMultiattackDispatchesAfterDispatch(attacker.multiattackDispatchesRemaining) }
+    val attackerAfterDispatch = { ...attacker, multiattackDispatchesRemaining: battleRuntimeStatBlockMultiattackDispatchCountAfterDispatch(attacker.multiattackDispatchesRemaining) }
     if (attacker.multiattackDispatchesRemaining <= 0 or currentActor(state) != Goblin or attacker.hp == 0)
       state
     else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(defender), 20)))

@@ -133,6 +133,47 @@ function discoveredMultiattackSubject(state: BattleState): BattleSubject {
   return act.subject;
 }
 
+function resolveMultiattackDispatchMiss(
+  state: BattleState,
+  procedureRef: BattleStatBlockProcedureExecutionRef,
+): BattleState {
+  const act = discoverStatBlockActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "action" &&
+      candidate.subject.action === "attack" &&
+      candidate.subject.procedureRef === procedureRef &&
+      candidate.subject.statBlockDamageNotation === undefined,
+  );
+  if (act === undefined) {
+    throw new Error("Expected a pending Multiattack dispatch.");
+  }
+  const targetChoice = attackTargetFill(
+    findHole(act.initialHoles, "targetChoice"),
+    goblinId,
+    fighterId,
+  );
+  const targeted = requireNeedsHoles(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetChoice],
+    }),
+  );
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetChoice,
+        attackRollFill(findHole(targeted.holes, "attackRoll"), {
+          total: 1,
+          naturalD20: 1,
+        }),
+      ],
+    }),
+  ).state;
+}
+
 function discoveredStatBlockBonusActionSubject(
   state: BattleState,
   standardAction: "disengage" | "hide",
@@ -1521,6 +1562,16 @@ describe("battle runtime: Stat Block actions", () => {
         kind: "action",
         source: "statBlockMultiattack",
         sourceOwnerId: goblinId,
+        attackProcedureRef: procedureRefForAttack(goblinTurn, 1),
+        restriction: {
+          kind: "exclude",
+          actions: expect.arrayContaining(["dash", "magic", "utilize"]),
+        },
+      },
+      {
+        kind: "action",
+        source: "statBlockMultiattack",
+        sourceOwnerId: goblinId,
         attackProcedureRef: procedureRefForAttack(goblinTurn, 2),
         restriction: {
           kind: "exclude",
@@ -1652,6 +1703,10 @@ describe("battle runtime: Stat Block actions", () => {
         source: "statBlockMultiattack",
         attackProcedureRef: procedureRefForAttack(goblinTurn, 1),
       }),
+      expect.objectContaining({
+        source: "statBlockMultiattack",
+        attackProcedureRef: procedureRefForAttack(goblinTurn, 1),
+      }),
     ]);
     expect(
       discoverStatBlockActs(afterDispatch).map((act) => act.subject),
@@ -1675,6 +1730,50 @@ describe("battle runtime: Stat Block actions", () => {
         fills: [targetChoice],
       }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+  });
+
+  test("Stat Block Multiattack resolves every effective dispatch exactly once", () => {
+    const goblinTurn = requireResolved(
+      endTurn({
+        state: startBattleRight({
+          battleId: battleId("battle-monster-multiattack-multiplicity"),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            statBlockCreatureInit({
+              initiative: 10,
+              statBlock: monsterMultiattackStatBlock(),
+            }),
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    let state = requireResolved(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject: discoveredMultiattackSubject(goblinTurn),
+        fills: [],
+      }),
+    ).state;
+    const dispatchOrder = [
+      procedureRefForAttack(state, 2),
+      procedureRefForAttack(state, 1),
+      procedureRefForAttack(state, 1),
+    ];
+
+    expect(
+      state.currentTurnResources.actionResources.filter(
+        (resource) => resource.source === "statBlockMultiattack",
+      ),
+    ).toHaveLength(3);
+    for (const [index, procedureRef] of dispatchOrder.entries()) {
+      state = resolveMultiattackDispatchMiss(state, procedureRef);
+      expect(
+        state.currentTurnResources.actionResources.filter(
+          (resource) => resource.source === "statBlockMultiattack",
+        ),
+      ).toHaveLength(dispatchOrder.length - index - 1);
+    }
   });
 
   test("limited-use Stat Block Multiattack rejects a replay after its dispatch is spent", () => {
@@ -1755,8 +1854,12 @@ describe("battle runtime: Stat Block actions", () => {
     const afterMultiattack = requireResolved(
       resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
     ).state;
+    const afterDispatch = resolveMultiattackDispatchMiss(
+      afterMultiattack,
+      procedureRefForAttack(afterMultiattack, 1),
+    );
     const fighterTurn = requireResolved(
-      endTurn({ state: afterMultiattack, actorId: goblinId }),
+      endTurn({ state: afterDispatch, actorId: goblinId }),
     ).state;
     const nextGoblinTurn = requireResolved(
       endTurn({ state: fighterTurn, actorId: fighterId }),
@@ -1972,11 +2075,26 @@ describe("battle runtime: Stat Block actions", () => {
       expect.objectContaining({
         resourcePoolRef,
         kind: "daily",
+        usesRemaining: 1,
+      }),
+    );
+    const afterDispatch = resolveMultiattackDispatchMiss(
+      afterMultiattack,
+      firstDispatch,
+    );
+    const afterDispatchGoblin = afterDispatch.combatants.get(goblinId);
+    if (afterDispatchGoblin?.origin.kind !== "statBlock") {
+      throw new Error("Expected Stat Block goblin after dispatch.");
+    }
+    expect(afterDispatchGoblin.origin.execution.resourcePools).toContainEqual(
+      expect.objectContaining({
+        resourcePoolRef,
+        kind: "daily",
         usesRemaining: 0,
       }),
     );
     const fighterTurn = requireResolved(
-      endTurn({ state: afterMultiattack, actorId: goblinId }),
+      endTurn({ state: afterDispatch, actorId: goblinId }),
     ).state;
     const nextGoblinTurn = requireResolved(
       endTurn({ state: fighterTurn, actorId: fighterId }),
@@ -1993,7 +2111,7 @@ describe("battle runtime: Stat Block actions", () => {
     });
   });
 
-  test("slowed Stat Block Multiattack gates and spends only its effective first dispatch resources", () => {
+  test("slowed Stat Block Multiattack grants one dispatch and defers its resource spend", () => {
     const base = monsterResourceStatBlock();
     const actions = base.statBlock.actions;
     const resources = base.statBlock.resources;
@@ -2094,8 +2212,29 @@ describe("battle runtime: Stat Block actions", () => {
       afterMultiattack.currentTurnResources.actionResources.filter(
         (resource) => resource.source === "statBlockMultiattack",
       ),
-    ).toEqual([]);
+    ).toHaveLength(1);
     expect(afterGoblin.origin.execution.resourcePools).toContainEqual(
+      expect.objectContaining({ kind: "daily", usesRemaining: 1 }),
+    );
+    const [effectiveDispatch] =
+      afterMultiattack.currentTurnResources.actionResources.flatMap(
+        (resource) =>
+          resource.source === "statBlockMultiattack"
+            ? [resource.attackProcedureRef]
+            : [],
+      );
+    if (effectiveDispatch === undefined) {
+      throw new Error("Expected the slowed Multiattack dispatch.");
+    }
+    const afterDispatch = resolveMultiattackDispatchMiss(
+      afterMultiattack,
+      effectiveDispatch,
+    );
+    const afterDispatchGoblin = afterDispatch.combatants.get(goblinId);
+    if (afterDispatchGoblin?.origin.kind !== "statBlock") {
+      throw new Error("Expected slowed Stat Block goblin after dispatch.");
+    }
+    expect(afterDispatchGoblin.origin.execution.resourcePools).toContainEqual(
       expect.objectContaining({ kind: "daily", usesRemaining: 0 }),
     );
   });
@@ -2175,8 +2314,6 @@ describe("battle runtime: Stat Block actions", () => {
               actorForPlan,
               binding,
             );
-          const [consumedProcedureRef, ...pendingProcedureRefs] =
-            effectiveDispatchProcedureRefs;
           const relevantResourcePoolRefs = shared
             ? [dispatchPoolRef]
             : [ownPoolRef, dispatchPoolRef];
@@ -2206,9 +2343,6 @@ describe("battle runtime: Stat Block actions", () => {
           expect(effectiveDispatchProcedureRefs).toHaveLength(
             effectiveDispatchCount,
           );
-          expect(pendingProcedureRefs).toHaveLength(
-            slowed ? 0 : dispatchCount - 1,
-          );
           expect(
             statBlockMultiattackResourcesAvailable(
               execution,
@@ -2223,7 +2357,6 @@ describe("battle runtime: Stat Block actions", () => {
           const spent = spendStatBlockMultiattackActivationResources(
             execution,
             binding,
-            consumedProcedureRef,
           );
           const bindingPool = spent.resourcePools.find(
             (pool) =>
@@ -2237,7 +2370,7 @@ describe("battle runtime: Stat Block actions", () => {
             expect(dispatchPool).toEqual(
               expect.objectContaining({
                 kind: "daily",
-                usesRemaining: resourceCount(availableUses - 2),
+                usesRemaining: resourceCount(availableUses - 1),
               }),
             );
           } else {
@@ -2250,7 +2383,7 @@ describe("battle runtime: Stat Block actions", () => {
             expect(dispatchPool).toEqual(
               expect.objectContaining({
                 kind: "daily",
-                usesRemaining: resourceCount(availableUses - 1),
+                usesRemaining: resourceCount(availableUses),
               }),
             );
           }

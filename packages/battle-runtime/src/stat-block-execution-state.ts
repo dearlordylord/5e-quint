@@ -624,7 +624,7 @@ export function statBlockProcedureResourcesAvailable(
 }
 
 /**
- * A Multiattack consumes each effective dispatched procedure in order. A
+ * A Multiattack consumes every effective dispatch occurrence exactly once. A
  * shared or binary limited-use pool therefore has to cover every occurrence,
  * rather than merely being available for each distinct procedure reference.
  */
@@ -648,25 +648,15 @@ export function statBlockMultiattackResourcesAvailable(
 }
 
 /**
- * A Multiattack spends its own resource declaration together with the first
- * dispatched procedure when activation grants the remaining dispatches. The
- * complete demand is checked above, while this operation spends only the
- * activation portion and leaves pending dispatches to their own resolution.
+ * Multiattack activation spends only the Multiattack binding's resource
+ * declaration. Every granted dispatch remains pending and spends its own
+ * procedure resources when that attack is actually resolved.
  */
 export function spendStatBlockMultiattackActivationResources(
   execution: StatBlockExecutionState,
   binding: StatBlockProcedureBindingFor<StatBlockMultiattackProcedure>,
-  consumedProcedureRef: BattleStatBlockProcedureExecutionRef,
 ): StatBlockExecutionState {
-  const firstDispatchBinding = statBlockProcedureBinding(
-    execution,
-    consumedProcedureRef,
-  );
-  if (firstDispatchBinding === undefined) return execution;
-  return spendStatBlockResourcePoolUses(execution, [
-    ...binding.resourcePoolRefs,
-    ...firstDispatchBinding.resourcePoolRefs,
-  ]);
+  return spendStatBlockResourcePoolUses(execution, binding.resourcePoolRefs);
 }
 
 export function spendStatBlockProcedureResources(

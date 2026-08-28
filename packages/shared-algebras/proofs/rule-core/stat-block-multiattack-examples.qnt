@@ -7,15 +7,17 @@ module statBlockMultiattackExamples {
     val profile = {
       dispatchProcedureRefs: List(0, 0, 1),
     }
-    val started = startStatBlockMultiattack(initialStatBlockMultiattackState, profile)
-    val firstDispatch = resolveStatBlockMultiattackDispatch(started, 1)
+    val activated = activateStatBlockMultiattack(initialStatBlockMultiattackState, profile)
+    val firstDispatch = resolveStatBlockMultiattackDispatch(activated, 1)
     val secondDispatch = resolveStatBlockMultiattackDispatch(firstDispatch, 0)
+    val thirdDispatch = resolveStatBlockMultiattackDispatch(secondDispatch, 0)
     all {
-      assert(statBlockMultiattackPendingProcedureRefs(started) == List(0, 1)),
-      assert(statBlockMultiattackPendingProcedureRefs(firstDispatch) == List(0)),
-      assert(multiattackDispatchSubjectPermitted(started, StatBlockMovementSubject)),
-      assert(not(multiattackDispatchSubjectPermitted(started, StatBlockBonusActionSubject))),
-      assert(not(statBlockMultiattackContinuationOpen(secondDispatch))),
+      assert(statBlockMultiattackPendingProcedureRefs(activated) == List(0, 0, 1)),
+      assert(statBlockMultiattackPendingProcedureRefs(firstDispatch) == List(0, 0)),
+      assert(statBlockMultiattackPendingProcedureRefs(secondDispatch) == List(0)),
+      assert(multiattackDispatchSubjectPermitted(activated, StatBlockMovementSubject)),
+      assert(not(multiattackDispatchSubjectPermitted(activated, StatBlockBonusActionSubject))),
+      assert(not(statBlockMultiattackContinuationOpen(thirdDispatch))),
     }
   }
 
@@ -23,10 +25,10 @@ module statBlockMultiattackExamples {
     val profile = {
       dispatchProcedureRefs: List(0, 0),
     }
-    val started = startStatBlockMultiattack(initialStatBlockMultiattackState, profile)
-    val ended = endStatBlockMultiattackTurn(started)
+    val activated = activateStatBlockMultiattack(initialStatBlockMultiattackState, profile)
+    val ended = endStatBlockMultiattackTurn(activated)
     all {
-      assert(statBlockMultiattackContinuationOpen(started)),
+      assert(statBlockMultiattackContinuationOpen(activated)),
       assert(not(statBlockMultiattackContinuationOpen(ended))),
       assert(ended == StatBlockMultiattackTurnEnded),
     }

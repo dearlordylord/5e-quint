@@ -74,15 +74,15 @@ module ruleCoreStatBlockMultiattackMbt {
     val profile = {
       dispatchProcedureRefs: List(0, 0, 1),
     }
-    val started = startStatBlockMultiattack(initialStatBlockMultiattackState, profile)
+    val activated = activateStatBlockMultiattack(initialStatBlockMultiattackState, profile)
     all {
       openHoles == Set(),
       qPhase == MbtReadyToAct,
       recordProjection(
-        if (statBlockMultiattackContinuationOpen(started)) MbtDispatching
+        if (statBlockMultiattackContinuationOpen(activated)) MbtDispatching
         else MbtActionSpent,
         true,
-        statBlockMultiattackPendingProcedureRefs(started),
+        statBlockMultiattackPendingProcedureRefs(activated),
         qMovementSpentFeet,
         qMovementRemainingFeet,
         Set(),
