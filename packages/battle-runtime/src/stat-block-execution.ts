@@ -19,6 +19,7 @@ import {
   type SupportedStatBlockBonusActionStandardAction,
 } from "./battle-reducer/battle-runtime-protocol.ts";
 import {
+  type BattleEffectExecutionRef,
   type BattleStatBlockProcedureExecutionRef,
   type BattleId,
   BattleResourcePoolExecutionRef,
@@ -603,6 +604,20 @@ export function restoreStatBlockExecutionAdmissions<
   readonly StatBlockExecutionAdmission<TStatBlock>[],
   ReadonlyNonEmptyArray<StatBlockExecutionRestoreIssue>
 > {
+  const effectOccurrenceSourceRefCounts = new Map<
+    BattleEffectExecutionRef,
+    number
+  >();
+  for (const restoration of restorations) {
+    for (const binding of restoration.snapshot.procedureBindings) {
+      if (binding.procedure.kind !== "effectOccurrenceSource") continue;
+      effectOccurrenceSourceRefCounts.set(
+        binding.procedure.effectRef,
+        (effectOccurrenceSourceRefCounts.get(binding.procedure.effectRef) ??
+          0) + 1,
+      );
+    }
+  }
   const restored: StatBlockExecutionAdmission<TStatBlock>[] = [];
   const issues: StatBlockExecutionRestoreIssue[] = [];
   const restoredScopeRefs = new Set<BattleStatBlockExecutionScopeRef>();
@@ -663,6 +678,7 @@ export function restoreStatBlockExecutionAdmissions<
         snapshot.scopeRef,
         expected.execution.procedureBindings.length,
         effectOccurrenceSourceBindings,
+        effectOccurrenceSourceRefCounts,
       )
     ) {
       issues.push(
@@ -794,10 +810,15 @@ function effectOccurrenceSourceBindingsAreCanonical(
   scopeRef: BattleStatBlockExecutionScopeRef,
   firstOrdinal: number,
   bindings: readonly StatBlockProcedureBindingSnapshot[],
+  effectOccurrenceSourceRefCounts: ReadonlyMap<
+    BattleEffectExecutionRef,
+    number
+  >,
 ): boolean {
   return bindings.every(
     (binding, index) =>
       binding.procedure.kind === "effectOccurrenceSource" &&
+      effectOccurrenceSourceRefCounts.get(binding.procedure.effectRef) === 1 &&
       binding.resourcePoolRefs.length === 0 &&
       binding.procedureRef ===
         battleStatBlockProcedureExecutionRef(

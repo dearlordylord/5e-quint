@@ -33,7 +33,6 @@ import {
   testShortswordAttack,
   attackRollFill,
   battleStateWithAllocatedEffectOccurrencesForTest,
-  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   skeletonId,
   statBlockCreatureInit,
@@ -303,6 +302,20 @@ function codecFixture() {
           expiresAt: {
             kind: "concentration",
             combatantId: wizardId,
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: skeletonId,
+        effect: {
+          kind: "possession",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+          expiresAt: {
+            kind: "duration",
             durationTicks: elapsedTimeTicks(10),
           },
         },
@@ -686,6 +699,7 @@ function codecFixture() {
     markedDamageRiderEffectRef: activeEffectRef("spellMarkedDamageRider"),
     spellTurnStartEffectRef: activeEffectRef("spellTurnStartDamageAndSave"),
     hideousLaughterEffectRef: activeEffectRef("hideousLaughter"),
+    protectionRelevantEffectRef: activeEffectRef("possession"),
     greaseEffectRef: activeEffectRef("greaseGroundHazard"),
     sleetStormEffectRef: activeEffectRef("sleetStormAreaHazard"),
     glyphEffectRef: activeEffectRef("glyphDurableOccurrence"),
@@ -844,10 +858,8 @@ const savingThrowCases: readonly CodecCase[] = [
       "wis",
       {
         ...source,
-        effectRef: battleEffectExecutionRefForTest(
-          "codec-protection-relevant-effect-save",
-        ),
-        relevantEffect: "frightened",
+        effectRef: fixture.protectionRelevantEffectRef,
+        relevantEffect: "possession",
         save: save("wis"),
       },
     ),

@@ -47,6 +47,7 @@ import {
   battleEffectExecutionRef,
   battleProcedureExecutionRef,
   battleResourcePoolExecutionRef,
+  battleStatBlockProcedureExecutionRef,
   battleExecutionScopeOrdinal,
   battleStatBlockExecutionScopeRef,
   battleStatBlockExecutionScopeRefIsWellFormed,
@@ -2164,6 +2165,89 @@ describe("Stat Block execution references", () => {
         reason: "procedureBindingsMismatch",
       }),
     );
+  });
+
+  test("restores one expired source binding and rejects duplicate effect identity across a restoration cohort", () => {
+    const actorId = combatantId("execution-ref-source-binding-cohort");
+    const statBlocks = [
+      monsterResourceStatBlock(),
+      monsterResourceStatBlock(),
+    ] as const;
+    const admissions = isolatedStatBlockAdmissions(actorId, statBlocks);
+    const snapshots = admissions.map((admission) =>
+      statBlockExecutionSnapshot(admission.execution),
+    );
+    const firstSnapshot = snapshots[0];
+    const secondSnapshot = snapshots[1];
+    if (firstSnapshot === undefined || secondSnapshot === undefined) {
+      throw new Error("Expected two Stat Block execution snapshots.");
+    }
+    const sharedEffectRef = battleEffectExecutionRef(
+      JSON.stringify({
+        kind: "effectOccurrence",
+        ownerScopeRef: firstSnapshot.scopeRef,
+        ordinal: 0,
+      }),
+    );
+    const withHistoricalSourceBinding = (
+      snapshot: typeof firstSnapshot,
+    ): typeof firstSnapshot => ({
+      ...snapshot,
+      procedureBindings: [
+        ...snapshot.procedureBindings,
+        {
+          procedureRef: battleStatBlockProcedureExecutionRef(
+            snapshot.scopeRef,
+            NonNegativeInteger(snapshot.procedureBindings.length),
+          ),
+          procedure: {
+            kind: "effectOccurrenceSource",
+            effectRef: sharedEffectRef,
+            effectKind: "spellConditionRepeatSave",
+          },
+          resourcePoolRefs: [],
+        },
+      ],
+    });
+    const firstHistoricalSnapshot = withHistoricalSourceBinding(firstSnapshot);
+    const secondHistoricalSnapshot =
+      withHistoricalSourceBinding(secondSnapshot);
+
+    const restoredExpired = restoreStatBlockExecutionAdmission(
+      isolatedExecutionBattleId,
+      actorId,
+      statBlocks[0],
+      firstHistoricalSnapshot,
+    );
+    expect(Result.isSuccess(restoredExpired)).toBe(true);
+    if (Result.isFailure(restoredExpired)) {
+      throw new Error(
+        "Expected one expired historical source binding to restore.",
+      );
+    }
+    expect(
+      restoredExpired.success.execution.procedureBindings.at(-1)?.procedure,
+    ).toMatchObject({
+      kind: "effectOccurrenceSource",
+      effectRef: sharedEffectRef,
+    });
+
+    const duplicated = restoreStatBlockExecutionAdmissions(
+      isolatedExecutionBattleId,
+      actorId,
+      [
+        { statBlock: statBlocks[0], snapshot: firstHistoricalSnapshot },
+        { statBlock: statBlocks[1], snapshot: secondHistoricalSnapshot },
+      ],
+    );
+    expect(Result.isFailure(duplicated)).toBe(true);
+    if (Result.isSuccess(duplicated)) {
+      throw new Error("Expected duplicate restored effect identity to fail.");
+    }
+    expect(duplicated.failure).toMatchObject([
+      { restorationIndex: 0, reason: "procedureBindingsMismatch" },
+      { restorationIndex: 1, reason: "procedureBindingsMismatch" },
+    ]);
   });
 
   test("reports every structurally mismatched resource pool without partial restoration", () => {

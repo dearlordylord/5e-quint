@@ -6969,7 +6969,13 @@ function serializedBattleHoleExecutionReferences(
                 procedureSource(matched.abilityD20TestRollModeEndTurnSave),
             ),
             Match.when({ protectionRelevantEffectSave: Match.any }, (matched) =>
-              procedureSource(matched.protectionRelevantEffectSave),
+              occurrenceSource(
+                matched.protectionRelevantEffectSave,
+                matched.protectionRelevantEffectSave.targetId,
+                activeEffectKinds("spellConditionRepeatSave", "possession", {
+                  kind: "identityOnly",
+                }),
+              ),
             ),
             Match.exhaustive,
           ),
@@ -8122,7 +8128,12 @@ function serializedBattleActHolesMatchSelectedOccurrence(
   const selectedOccurrenceRefs = battleSubjectBoundExecutionReferences(
     act.subject,
   ).flatMap((reference) =>
-    reference.kind === "activeEffectOccurrence" ? [reference.effectRef] : [],
+    reference.kind === "activeEffectOccurrence" ||
+    (reference.kind === "activeEffect" &&
+      act.subject.tag === "runtimeCommand" &&
+      act.subject.command === "protectionRelevantEffectSave")
+      ? [reference.effectRef]
+      : [],
   );
   if (selectedOccurrenceRefs.length === 0 || act.initialHoles.length === 0) {
     return true;
@@ -9022,17 +9033,32 @@ function serializedEffectOccurrenceSourceBindingsMatch(
       ),
     ),
   );
-  return combatants.every((combatant) =>
-    combatant.origin.execution.procedureBindings.every((binding) => {
-      if (binding.procedure.kind !== "effectOccurrenceSource") return true;
-      const activeEffectKind = activeEffectKindByRef.get(
-        binding.procedure.effectRef,
-      );
+  const sourceBindings = combatants.flatMap((combatant) => {
+    const procedureBindings =
+      combatant.origin.kind === "statBlock"
+        ? combatant.origin.execution.procedureBindings
+        : [
+            ...combatant.origin.execution.procedureBindings,
+            ...combatant.origin.druidWildShapeAvailableForms.flatMap(
+              (form) => form.execution.procedureBindings,
+            ),
+          ];
+    return procedureBindings.flatMap((binding) =>
+      binding.procedure.kind === "effectOccurrenceSource"
+        ? [binding.procedure]
+        : [],
+    );
+  });
+  return (
+    new Set(sourceBindings.map((binding) => binding.effectRef)).size ===
+      sourceBindings.length &&
+    sourceBindings.every((binding) => {
+      const activeEffectKind = activeEffectKindByRef.get(binding.effectRef);
       return (
         activeEffectKind === undefined ||
-        activeEffectKind === binding.procedure.effectKind
+        activeEffectKind === binding.effectKind
       );
-    }),
+    })
   );
 }
 

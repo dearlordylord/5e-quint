@@ -501,7 +501,7 @@ describe("Protection relevant-effect selected occurrence identity", () => {
     });
   });
 
-  it("rejects a save fill discovered for a different same-shape occurrence", () => {
+  it("rejects duplicate selected and cross-wired save fills in either order", () => {
     const protectedState = resolveProtectionFromEvilAndGood();
     const fixture = stateWithProtectionRelevantCharmOccurrences(
       protectionFromEvilAndGoodProtectedTargetTurn(protectedState.state),
@@ -526,36 +526,119 @@ describe("Protection relevant-effect selected occurrence identity", () => {
     expect(selectedHole.protectionRelevantEffectSave.effectRef).toBe(
       selectedSubject.effectRef,
     );
+    const siblingHole = requireResultHole(
+      resolveBattleSubject({
+        state: fixture.state,
+        subject: siblingSubject,
+        fills: [],
+      }),
+      "savingThrowOutcome",
+    );
+    const selectedFill = savingThrowOutcomeFill(selectedHole, [
+      { targetId: protectedTargetId, succeeded: true },
+    ]);
+    const siblingFill = savingThrowOutcomeFill(siblingHole, [
+      { targetId: protectedTargetId, succeeded: true },
+    ]);
 
-    const crossWired = resolveBattleSubject({
-      state: fixture.state,
-      subject: siblingSubject,
-      fills: [
-        savingThrowOutcomeFill(selectedHole, [
-          { targetId: protectedTargetId, succeeded: true },
-        ]),
-      ],
-    });
+    for (const fills of [
+      [selectedFill, siblingFill],
+      [siblingFill, selectedFill],
+      [selectedFill, selectedFill],
+    ]) {
+      const rejected = resolveBattleSubject({
+        state: fixture.state,
+        subject: selectedSubject,
+        fills,
+      });
+      expect(rejected).toMatchObject({
+        tag: "invalid",
+        reason: "invalidFill",
+        message:
+          "Protection relevant-effect save fill does not match the selected effect occurrence.",
+      });
+      const snapshottedTarget = rejected.snapshot.combatants.find(
+        (combatant) => combatant.combatantId === protectedTargetId,
+      );
+      expect(
+        snapshottedTarget?.activeEffectOccurrences.some(
+          (effect) => effect.effectRef === fixture.selectedEffect.effectRef,
+        ),
+      ).toBe(true);
+      expect(
+        snapshottedTarget?.activeEffectOccurrences.some(
+          (effect) => effect.effectRef === fixture.siblingEffect.effectRef,
+        ),
+      ).toBe(true);
+    }
+  });
 
-    expect(crossWired).toMatchObject({
-      tag: "invalid",
-      reason: "invalidFill",
-      message:
-        "Protection relevant-effect save fill does not match the selected effect occurrence.",
+  it("rejects forged protection-save hole occurrence identity, kind, and ownership", () => {
+    const protectedState = resolveProtectionFromEvilAndGood();
+    const fixture = stateWithProtectionRelevantCharmOccurrences(
+      protectionFromEvilAndGoodProtectedTargetTurn(protectedState.state),
+    );
+    const selectedSubject = protectionRelevantCharmSaveSubject(
+      fixture.selectedEffect,
+    );
+    const selectedHole = requireResultHole(
+      resolveBattleSubject({
+        state: fixture.state,
+        subject: selectedSubject,
+        fills: [],
+      }),
+      "savingThrowOutcome",
+    );
+    if (!("protectionRelevantEffectSave" in selectedHole)) {
+      throw new Error("Expected Protection relevant-effect save hole.");
+    }
+    const encoded = Schema.encodeSync(BattleSnapshotSchema)({
+      ...snapshotBattle(fixture.state),
+      acts: [{ subject: selectedSubject, initialHoles: [selectedHole] }],
     });
-    const snapshottedTarget = crossWired.snapshot.combatants.find(
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(encoded),
+    ).not.toThrow();
+    const target = encoded.combatants.find(
       (combatant) => combatant.combatantId === protectedTargetId,
     );
-    expect(
-      snapshottedTarget?.activeEffectOccurrences.some(
-        (effect) => effect.effectRef === fixture.selectedEffect.effectRef,
-      ),
-    ).toBe(true);
-    expect(
-      snapshottedTarget?.activeEffectOccurrences.some(
-        (effect) => effect.effectRef === fixture.siblingEffect.effectRef,
-      ),
-    ).toBe(true);
+    const wrongKindEffect = target?.activeEffectOccurrences.find(
+      (effect) => effect.activeEffectKind === "creatureTypeProtection",
+    );
+    if (wrongKindEffect === undefined) {
+      throw new Error("Expected the target's protection occurrence.");
+    }
+    const forgedPayloads = [
+      {
+        effectRef: fixture.siblingEffect.effectRef,
+        targetId: protectedTargetId,
+      },
+      { effectRef: wrongKindEffect.effectRef, targetId: protectedTargetId },
+      { effectRef: fixture.selectedEffect.effectRef, targetId: feySourceId },
+    ] as const;
+    for (const forgedPayload of forgedPayloads) {
+      const forged = {
+        ...encoded,
+        acts: encoded.acts.map((act) => ({
+          ...act,
+          initialHoles: act.initialHoles.map((hole) =>
+            hole.kind === "savingThrowOutcome" &&
+            "protectionRelevantEffectSave" in hole
+              ? {
+                  ...hole,
+                  protectionRelevantEffectSave: {
+                    ...hole.protectionRelevantEffectSave,
+                    ...forgedPayload,
+                  },
+                }
+              : hole,
+          ),
+        })),
+      };
+      expect(() =>
+        Schema.decodeUnknownSync(BattleSnapshotSchema)(forged),
+      ).toThrow();
+    }
   });
 
   it("round-trips the stat-block-owned low-level source binding and rejects a contradictory effect kind", () => {
@@ -609,6 +692,76 @@ describe("Protection relevant-effect selected occurrence identity", () => {
     };
     expect(() =>
       Schema.decodeUnknownSync(BattleSnapshotSchema)(contradictory),
+    ).toThrow();
+  });
+
+  it("rejects cross-owner duplicate source bindings while preserving one expired historical binding", () => {
+    const protectedState = resolveProtectionFromEvilAndGood();
+    const fixture = stateWithProtectionRelevantCharmOccurrences(
+      protectionFromEvilAndGoodProtectedTargetTurn(protectedState.state),
+    );
+    const characterSource =
+      battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest({
+        state: fixture.state,
+        sourceCombatantId: casterId,
+        ownerId: protectedTargetId,
+        effect: protectionRelevantCharmEffect(),
+      });
+    const encoded = Schema.encodeSync(BattleSnapshotSchema)(
+      snapshotBattle(characterSource.state),
+    );
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(encoded),
+    ).not.toThrow();
+
+    const expiredHistorical = {
+      ...encoded,
+      acts: [],
+      combatants: encoded.combatants.map((combatant) => ({
+        ...combatant,
+        activeEffectOccurrences: combatant.activeEffectOccurrences.filter(
+          (effect) => effect.effectRef !== characterSource.effectRef,
+        ),
+      })),
+    };
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(expiredHistorical),
+    ).not.toThrow();
+
+    const crossOwnerDuplicate = {
+      ...encoded,
+      combatants: encoded.combatants.map((combatant) =>
+        combatant.combatantId !== casterId ||
+        combatant.origin.kind !== "character"
+          ? combatant
+          : {
+              ...combatant,
+              origin: {
+                ...combatant.origin,
+                execution: {
+                  ...combatant.origin.execution,
+                  procedureBindings:
+                    combatant.origin.execution.procedureBindings.map(
+                      (binding) =>
+                        binding.procedure.kind !== "effectOccurrenceSource" ||
+                        binding.procedure.effectRef !==
+                          characterSource.effectRef
+                          ? binding
+                          : {
+                              ...binding,
+                              procedure: {
+                                ...binding.procedure,
+                                effectRef: fixture.selectedEffect.effectRef,
+                              },
+                            },
+                    ),
+                },
+              },
+            },
+      ),
+    };
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(crossOwnerDuplicate),
     ).toThrow();
   });
 });
