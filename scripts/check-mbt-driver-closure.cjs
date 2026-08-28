@@ -210,6 +210,11 @@ const ALLOWLIST = {
     rationale:
       "active sphere, bonus action, slot, ram movement, saving throw, and target vitals all mutate through the reducer",
   },
+  "battle-runtime-insect-plague-area-hazard.mbt.qnt": {
+    classification: "computed oracle",
+    rationale:
+      "active area, per-turn trigger ledger, slot scaling, saving throw, target vitals, duration, and concentration cleanup all mutate through the reducer",
+  },
   "battle-runtime-blur-attack-roll-defense-lifecycle.mbt.qnt": {
     classification: "computed oracle",
     rationale: "attack-roll mode depends on mutable bypass/advantage state",
