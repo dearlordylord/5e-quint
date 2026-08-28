@@ -17,7 +17,7 @@ import { runOracleStream } from "./oracle-stream.ts";
 import { buildOracleDistribution } from "../scripts/build-distribution.ts";
 import {
   loadOracleApplicationFromDirectory,
-  withOracleBatchEvaluator,
+  withOracleBatchEvaluatorForTest,
   type OracleApplication,
 } from "./oracle-distribution.ts";
 
@@ -124,7 +124,7 @@ describe("Opaque Oracle persistent byte stream", () => {
       }
       return [firstTrace];
     };
-    const defectiveApplication = withOracleBatchEvaluator(
+    const defectiveApplication = withOracleBatchEvaluatorForTest(
       application,
       defectiveEvaluator,
     );

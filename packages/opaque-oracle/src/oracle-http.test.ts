@@ -18,7 +18,7 @@ import { evaluateOracleBatch } from "./oracle-evaluation.ts";
 import {
   loadOracleApplicationFromDirectory,
   type OracleApplication,
-  withOracleBatchEvaluator,
+  withOracleBatchEvaluatorForTest,
 } from "./oracle-distribution.ts";
 import {
   encodeOracleBatchResponseJson,
@@ -293,7 +293,7 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
 
   test("decodes invalid UTF-8 and bounds request bytes before evaluation", async () => {
     let evaluations = 0;
-    const evaluatedApplication = withOracleBatchEvaluator(
+    const evaluatedApplication = withOracleBatchEvaluatorForTest(
       application,
       ({ batch, services }) => {
         evaluations += 1;
@@ -325,7 +325,7 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
 
   test("returns one atomic defect response and keeps the listener usable", async () => {
     let calls = 0;
-    const defectiveApplication = withOracleBatchEvaluator(
+    const defectiveApplication = withOracleBatchEvaluatorForTest(
       application,
       ({ batch, services }) => {
         calls += 1;

@@ -22,6 +22,7 @@ import { describe, expect, test } from "vitest";
 import { buildOracleDistribution } from "../scripts/build-distribution.ts";
 import { checkOracleDistribution } from "../scripts/check-distribution.ts";
 import { decodeOracleEvaluationBatchJson } from "./oracle-case-trace.ts";
+import { decodeOracleCorpusJson } from "./oracle-corpus.ts";
 import type { OracleTrace } from "./oracle-case-trace-schema.ts";
 import { evaluateOracleBatch } from "./oracle-evaluation.ts";
 import {
@@ -43,11 +44,13 @@ import {
 
 const packageRoot = resolve(import.meta.dirname, "..");
 const corpusPath = resolve(packageRoot, "corpus/oracle-evaluation-corpus.json");
-const corpus = JSON.parse(readFileSync(corpusPath, "utf8")) as {
-  readonly batch: {
-    readonly cases: readonly Record<string, unknown>[];
-  };
-};
+const decodedCorpus = decodeOracleCorpusJson(readFileSync(corpusPath, "utf8"));
+if (Either.isLeft(decodedCorpus)) {
+  throw new Error(
+    `The committed Oracle corpus failed canonical decoding: ${JSON.stringify(decodedCorpus.left)}`,
+  );
+}
+const corpus = decodedCorpus.right;
 
 const distributionAssetNames = [
   ORACLE_DISTRIBUTION_FILE_NAMES.executable,

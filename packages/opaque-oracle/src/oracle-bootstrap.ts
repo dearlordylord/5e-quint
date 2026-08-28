@@ -2,10 +2,8 @@ import { fileURLToPath } from "node:url";
 
 import { Effect, Either, Exit, Match, Stream } from "effect";
 
-import type { OracleBatchEvaluator } from "./oracle-batch-operation.ts";
 import {
   loadOracleApplicationFromExecutable,
-  withOracleBatchEvaluator,
   type OracleApplication,
   type OracleDistributionLoadIssue,
 } from "./oracle-distribution.ts";
@@ -78,8 +76,6 @@ export type OracleProcessDependencies = {
   readonly loadApplication?: (
     executablePath: string,
   ) => ReturnType<typeof loadOracleApplicationFromExecutable>;
-  /** Test-build seam; production leaves this unset and uses the loaded application. */
-  readonly batchEvaluator?: OracleBatchEvaluator;
 };
 
 /** Parse the one root command and its serve-only options. */
@@ -105,9 +101,9 @@ export function parseOracleCliCommand(
 }
 
 /**
- * Run one root command with injectable process edges. The optional batch
- * evaluator is intentionally a test-build seam and is never selected by
- * production command-line input.
+ * Run one root command with injectable process edges. Production command-line
+ * input always uses the single application returned by the distribution
+ * loader.
  */
 export async function runOracleProcess(
   args: readonly string[],
@@ -137,10 +133,7 @@ export async function runOracleProcess(
     return 1;
   }
 
-  const application =
-    dependencies.batchEvaluator === undefined
-      ? loaded.right
-      : withOracleBatchEvaluator(loaded.right, dependencies.batchEvaluator);
+  const application = loaded.right;
   return Match.value(mode.right).pipe(
     Match.when({ tag: "identity" }, () =>
       runIdentityMode(application, writeStdout, writeStderr),

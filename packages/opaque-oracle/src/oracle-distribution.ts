@@ -65,11 +65,14 @@ export type OracleApplication = {
 };
 
 /**
- * Compose a test application at the same boundary as distribution loading.
- * The replacement operation receives the original identity, projection, and
- * services through one newly branded application value.
+ * Compose a test-only application at the same boundary as distribution
+ * loading. The replacement operation receives the original identity,
+ * projection, and services through one newly branded application value.
+ *
+ * This leaf export is intentionally omitted from the package barrel; it is
+ * only for package-owned defect and adapter tests.
  */
-export function withOracleBatchEvaluator(
+export function withOracleBatchEvaluatorForTest(
   application: OracleApplication,
   evaluator: OracleBatchEvaluator,
 ): OracleApplication {

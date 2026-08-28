@@ -6,7 +6,21 @@ export * from "./oracle-document.ts";
 export * from "./oracle-evaluation.ts";
 export * from "./oracle-batch-operation.ts";
 export * from "./oracle-catalog-services.ts";
-export * from "./oracle-distribution.ts";
+export {
+  ORACLE_DISTRIBUTION_FILE_NAMES,
+  ORACLE_DISTRIBUTION_FORMAT,
+  computeOracleDistributionId,
+  serializeOracleDistributionIdentity,
+  loadOracleApplicationFromDirectory,
+  loadOracleApplicationFromExecutable,
+} from "./oracle-distribution.ts";
+export type {
+  OracleDistributionPayload,
+  OracleApplication,
+  OracleApplicationBuildIssue,
+  OracleDistributionLoadIssue,
+  OracleDistributionLoadResult,
+} from "./oracle-distribution.ts";
 export * from "./oracle-publication.ts";
 export {
   ORACLE_LOOPBACK_HOST,

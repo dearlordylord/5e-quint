@@ -1,6 +1,13 @@
+import { Either } from "effect";
+
 import { evaluateOracleCase } from "../src/oracle-evaluation.ts";
 import type { OracleBatchEvaluator } from "../src/oracle-batch-operation.ts";
 import { runOracleProcess } from "../src/oracle-bootstrap.ts";
+import {
+  loadOracleApplicationFromExecutable,
+  withOracleBatchEvaluatorForTest,
+  type OracleDistributionLoadResult,
+} from "../src/oracle-distribution.ts";
 
 /**
  * Test-only build entry. The injected failure is a seam witness, not an
@@ -18,7 +25,17 @@ const batchEvaluator: OracleBatchEvaluator = ({ batch, services }) => {
   return [firstTrace];
 };
 
-void runOracleProcess(process.argv.slice(2), { batchEvaluator }).then(
+const loadApplication = (
+  executablePath: string,
+): OracleDistributionLoadResult => {
+  const loaded = loadOracleApplicationFromExecutable(executablePath);
+  if (Either.isLeft(loaded)) return loaded;
+  return Either.right(
+    withOracleBatchEvaluatorForTest(loaded.right, batchEvaluator),
+  );
+};
+
+void runOracleProcess(process.argv.slice(2), { loadApplication }).then(
   (exitCode) => {
     if (exitCode !== 0) process.exitCode = exitCode;
   },
