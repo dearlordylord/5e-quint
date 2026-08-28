@@ -17,8 +17,9 @@ import {
   resolveFindFamiliarForm,
   resolvePactOfTheChainFindFamiliarForm,
 } from "@dnd/surface/surface/find-familiar-forms";
-import { Match, Schema } from "effect";
+import { Match, ParseResult, Schema } from "effect";
 import * as Either from "effect/Either";
+import { expect } from "vitest";
 import {
   battleStatBlockCombatantSource,
   type BattleStatBlockCombatantSource,
@@ -80,8 +81,9 @@ import {
   type UnitId,
   unitId as parseUnitId,
 } from "@dnd/shared/game-facts";
-import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import {
+  decodeStatBlockRecordEither,
+  decodeUnitRecordSync,
   StatBlockProcedureOrdinalSchema,
   StatBlockProcedureResourceOrdinalSchema,
 } from "@dnd/surface/surface/schema";
@@ -4099,6 +4101,34 @@ export function statBlockRecord(): NonSwarmStatBlockRecord {
   );
 }
 
+export function expectCasterDerivedArmorClassSourceRejectedAtStatBlockDecodeBoundary(
+  record: StatBlockRecord,
+): void {
+  const malformedArmorClass = decodeStatBlockRecordEither({
+    ...record,
+    statBlock: {
+      ...record.statBlock,
+      ac: { value: { kind: "caster_derived", source: "spell_save_dc" } },
+    },
+  });
+  expect(Either.isLeft(malformedArmorClass)).toBe(true);
+  if (Either.isRight(malformedArmorClass)) {
+    throw new Error("Expected malformed Armor Class source to be rejected.");
+  }
+  expect(malformedArmorClass.left._tag).toBe("ParseError");
+  const armorClassParseIssues = ParseResult.ArrayFormatter.formatErrorSync(
+    malformedArmorClass.left,
+  );
+  expect(armorClassParseIssues).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        _tag: "Unexpected",
+        path: ["statBlock", "ac", "value", "source"],
+      }),
+    ]),
+  );
+}
+
 /** Test-only admission helper: execution tests consume the source-free runtime projection. */
 export function projectedStatBlockRuntimeSource(
   record: StatBlockRecord = statBlockRecord(),
@@ -4124,12 +4154,35 @@ type AuthoredExecutableProcedureEntry = Extract<
   StatBlockProcedureEntry,
   { readonly kind: "executable" }
 >;
-type AttackProcedureEntry = AuthoredExecutableProcedureEntry & {
+type AuthoredNonSpellExecutableProcedure = Exclude<
+  AuthoredExecutableProcedure,
+  { readonly kind: "spellcasting" }
+>;
+export type NonSpellExecutableProcedureKind =
+  AuthoredNonSpellExecutableProcedure["kind"];
+export type NonSpellExecutableProcedureEntry = Extract<
+  AuthoredExecutableProcedureEntry,
+  { readonly procedure: AuthoredNonSpellExecutableProcedure }
+>;
+export type NonSpellExecutableProcedureEntryOfKind<
+  Kind extends NonSpellExecutableProcedureKind,
+> = Omit<NonSpellExecutableProcedureEntry, "procedure"> & {
   readonly procedure: Extract<
-    AuthoredExecutableProcedureEntry["procedure"],
-    { readonly kind: "attack_roll" }
+    AuthoredNonSpellExecutableProcedure,
+    { readonly kind: Kind }
   >;
 };
+type AttackProcedureEntry =
+  NonSpellExecutableProcedureEntryOfKind<"attack_roll">;
+
+export function isNonSpellExecutableProcedureEntryOfKind<
+  Kind extends NonSpellExecutableProcedureKind,
+>(
+  entry: StatBlockProcedureEntry,
+  kind: Kind,
+): entry is NonSpellExecutableProcedureEntryOfKind<Kind> {
+  return entry.kind === "executable" && entry.procedure.kind === kind;
+}
 
 export function authoredProcedureOrdinal(value: number) {
   return Schema.decodeSync(StatBlockProcedureOrdinalSchema)(value);
@@ -4145,16 +4198,15 @@ function attackProcedureEntry(
 ): AttackProcedureEntry | undefined {
   return entries?.find(
     (entry): entry is AttackProcedureEntry =>
-      entry.kind === "executable" &&
-      entry.procedure.kind === "attack_roll" &&
+      isNonSpellExecutableProcedureEntryOfKind(entry, "attack_roll") &&
       entry.procedure.name === name,
   );
 }
 
-export function executableProcedureEntry(
+export function nonSpellExecutableProcedureEntry(
   procedureOrdinal: number,
-  procedure: AuthoredExecutableProcedure,
-): AuthoredExecutableProcedureEntry {
+  procedure: AuthoredNonSpellExecutableProcedure,
+): NonSpellExecutableProcedureEntry {
   return {
     kind: "executable",
     procedureOrdinal: authoredProcedureOrdinal(procedureOrdinal),

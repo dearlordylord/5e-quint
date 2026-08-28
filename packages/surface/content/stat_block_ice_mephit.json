@@ -1,0 +1,205 @@
+{
+  "challengeRating": 0.5,
+  "id": "stat_block_ice_mephit",
+  "kind": "statBlock",
+  "name": "Ice Mephit",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-M-O.md:275-305"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 12,
+      "con": 10,
+      "dex": 13,
+      "int": 9,
+      "str": 7,
+      "wis": 11
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 11
+      }
+    },
+    "actions": [
+      {
+        "description": "Melee Attack Roll: +3, reach 5 ft. Hit: 3 (1d4 + 1) Slashing damage plus 2 (1d4) Cold damage.",
+        "kind": "textOnly",
+        "name": "Claw",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "cha",
+          "components": {
+            "m": false,
+            "s": false,
+            "v": false
+          },
+          "groups": [
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  1
+                ]
+              },
+              "spells": [
+                {
+                  "spellId": "fog_cloud"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Fog Cloud (1/Day)"
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "con",
+          "area": {
+            "kind": "cone",
+            "lengthFeet": 15
+          },
+          "dc": {
+            "dc": 10,
+            "kind": "fixed"
+          },
+          "kind": "save",
+          "name": "Frost Breath (Recharge 6)",
+          "onFail": {
+            "amount": {
+              "expr": {
+                "dice": 3,
+                "dieSize": 4
+              },
+              "kind": "fixed",
+              "static": 7
+            },
+            "damageType": "cold",
+            "kind": "damage"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            2
+          ]
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "neutral"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Primordial (Aquan, Auran)"
+        ]
+      }
+    },
+    "creatureType": "elemental",
+    "hp": {
+      "kind": "literal",
+      "value": 21
+    },
+    "immunities": {
+      "conditions": [
+        "exhaustion",
+        "poisoned"
+      ],
+      "damageTypes": [
+        "cold",
+        "poison"
+      ]
+    },
+    "initiative": {
+      "modifier": 1,
+      "score": 11
+    },
+    "passivePerception": 12,
+    "resources": [
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 1
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      },
+      {
+        "limit": {
+          "kind": "recharge",
+          "minimumRoll": 6
+        },
+        "ordinal": 2,
+        "ownership": "shared"
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "small",
+    "skillModifiers": [
+      {
+        "modifier": 2,
+        "skill": "perception"
+      },
+      {
+        "modifier": 3,
+        "skill": "stealth"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "fly"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The mephit explodes when it dies. Constitution Saving Throw: DC 10, each creature in a 5-foot Emanation originating from the mephit. Failure: 5 (2d4) Cold damage. Success: Half damage.",
+        "name": "Death Burst"
+      }
+    ],
+    "vulnerabilities": {
+      "damageTypes": [
+        "fire"
+      ],
+      "kind": "fixed"
+    }
+  }
+}

@@ -119,6 +119,10 @@ type DamageProjection = {
   readonly abilityModifier?: AbilityName;
 };
 
+type ResistanceProjection =
+  | { readonly kind: "fixed"; readonly damageTypes: readonly string[] }
+  | { readonly kind: "choose_one_from"; readonly options: readonly string[] };
+
 type AttackEffectProjection =
   | DamageProjection
   | (Omit<DamageProjection, "kind"> & {
@@ -129,6 +133,11 @@ type AttackEffectProjection =
       readonly kind: "apply_condition_if_target_size_at_most";
       readonly condition: string;
       readonly maxCreatureSize: string;
+    }
+  | {
+      readonly kind: "apply_condition";
+      readonly condition: string;
+      readonly expiresAt: "target_next_turn_end";
     };
 
 type SpellProjection = {
@@ -203,11 +212,14 @@ type ProcedureProjection =
       readonly ability: AbilityName;
       readonly spellSaveDc?: number;
       readonly spellAttackBonus?: number;
-      readonly components?: {
-        readonly v: boolean;
-        readonly s: boolean;
-        readonly m: boolean | string;
-      };
+      readonly components:
+        | { readonly kind: "spell_definition" }
+        | {
+            readonly kind: "fixed";
+            readonly v: boolean;
+            readonly s: boolean;
+            readonly m: boolean | string;
+          };
       readonly groups: readonly {
         readonly kind: "at_will" | "limited";
         readonly spells: readonly SpellProjection[];
@@ -253,7 +265,7 @@ type ScopedGeneralFacts = {
         readonly damageTypes: NonEmptyStrings;
         readonly qualifier: string;
       };
-  readonly resistances: readonly string[];
+  readonly resistances: ResistanceProjection;
   readonly immunityDamageTypes: readonly string[];
   readonly immunityConditions: readonly string[];
   readonly senses: readonly {
@@ -313,7 +325,11 @@ const normalizedIdentifier = (value: string): string =>
   value.toLowerCase().replaceAll(" ", "_");
 
 const normalizedProcedureName = (value: string): string =>
-  value.replace(/ \((?:Recharge \d(?:–\d)?|\d+\/Day)\)$/, "");
+  value.replace(
+    / \((?:Recharge \d(?:–\d)?|\d+\/Day)(?:; (.+))?\)$/,
+    (_, qualifier: string | undefined) =>
+      qualifier === undefined ? "" : ` (${qualifier})`,
+  );
 
 const statBlockIdFromRawName = (name: string): string =>
   `stat_block_${name
@@ -649,7 +665,7 @@ const parseAbilityScores = (
       (cells) =>
         cells.length === ABILITY_NAMES.length &&
         cells.every((cell) =>
-          /^\d+ \([+−-]?\d+\)(?: Save [+−-]?\d+)?$/.test(cell),
+          /^\d+ \([+−-]?\d+\)(?: Save [ +−-]?\d+)?$/.test(cell),
         ),
     );
   if (scoreCells === undefined) {
@@ -692,7 +708,7 @@ const parseSavingThrowModifiers = (
     .find(
       (cells) =>
         cells.length === ABILITY_NAMES.length &&
-        cells.every((cell) => /^\d+ \([+−-]?\d+\) Save [+−-]?\d+$/.test(cell)),
+        cells.every((cell) => /^\d+ \([+−-]?\d+\) Save [ +−-]?\d+$/.test(cell)),
     );
   if (combinedCells !== undefined) {
     const saveValues = abilityRecord(
@@ -760,22 +776,6 @@ const parseNamedModifiers = (
   );
 };
 
-const parseDamageTypes = (
-  lines: readonly string[],
-  label: "Vulnerabilities" | "Resistances",
-): readonly string[] => {
-  const line = lines.find((candidate) => candidate.startsWith(`**${label}**`));
-  return line === undefined
-    ? []
-    : sortedStrings(
-        line
-          .replace(`**${label}**`, "")
-          .trim()
-          .split(", ")
-          .map((value) => value.toLowerCase()),
-      );
-};
-
 const parseVulnerabilities = (
   lines: readonly string[],
 ): ScopedGeneralFacts["vulnerabilities"] => {
@@ -803,6 +803,37 @@ const parseVulnerabilities = (
       };
 };
 
+const parseResistances = (lines: readonly string[]): ResistanceProjection => {
+  const line = lines.find((candidate) =>
+    candidate.startsWith("**Resistances**"),
+  );
+  if (line === undefined) return { kind: "fixed", damageTypes: [] };
+  const value = line.replace("**Resistances**", "").trim();
+  const chosen = value.match(/^Damage type chosen for .+$/);
+  const chosenOptions =
+    chosen === null
+      ? []
+      : (requireMatch(
+          normalizedProse(lines.join(" ")),
+          /one of the following damage types [^:]*: ([A-Za-z, ]+)\./,
+          "chosen resistance options",
+        )[1]
+          ?.split(", ")
+          .map((damageType) => damageType.replace(/^or /, "").toLowerCase()) ??
+        []);
+  return chosen === null
+    ? {
+        kind: "fixed",
+        damageTypes: sortedStrings(
+          value.split(", ").map((damageType) => damageType.toLowerCase()),
+        ),
+      }
+    : {
+        kind: "choose_one_from",
+        options: sortedStrings(chosenOptions),
+      };
+};
+
 const parseImmunities = (
   lines: readonly string[],
 ): Pick<ScopedGeneralFacts, "immunityDamageTypes" | "immunityConditions"> => {
@@ -819,7 +850,13 @@ const parseImmunities = (
   const parseList = (value: string): readonly string[] =>
     value === ""
       ? []
-      : sortedStrings(value.split(", ").map((item) => item.toLowerCase()));
+      : sortedStrings(
+          value
+            .split(", ")
+            .map((item) =>
+              item.replace(/ \(with \*[^*]+\*\)$/, "").toLowerCase(),
+            ),
+        );
   const conditionNames = new Set<string>(CONDITIONS);
   const firstValues = parseList(firstGroup);
   const firstGroupIsConditions =
@@ -899,19 +936,34 @@ const parseGear = (lines: readonly string[]): ScopedGeneralFacts["gear"] => {
     .sort((left, right) => left.item.localeCompare(right.item));
 };
 
+const NUMBER_WORDS = [
+  ["one", 1],
+  ["two", 2],
+  ["three", 3],
+  ["four", 4],
+  ["five", 5],
+] as const;
+
 const parseLanguageSet = (value: string): LanguageSetProjection => {
   if (value === "All") return { kind: "all" };
-  const additional = value.match(/^(.+) plus (one|two) other languages?$/);
-  return additional === null
-    ? {
-        kind: "named",
-        languages: value.replace(", and ", ", ").split(/, | and /),
-      }
-    : {
-        kind: "named_plus_other_languages",
-        languages: [additional[1] ?? ""],
-        additionalLanguages: additional[2] === "two" ? 2 : 1,
-      };
+  const additional = value.match(
+    /^(.+) plus (one|two|three|four|five) other languages?$/,
+  );
+  const languages = (additional?.[1] ?? value)
+    .split(/, (?![^()]*\))| and /)
+    .map((language) => language.replace(/^and /, ""));
+  if (additional === null) return { kind: "named", languages };
+  const additionalLanguageCount = NUMBER_WORDS.find(
+    ([word]) => word === additional[2],
+  )?.[1];
+  if (additionalLanguageCount === undefined) {
+    throw new Error(`Unsupported additional language count ${additional[2]}`);
+  }
+  return {
+    kind: "named_plus_other_languages",
+    languages,
+    additionalLanguages: additionalLanguageCount,
+  };
 };
 
 const parseCommunication = (
@@ -924,24 +976,45 @@ const parseCommunication = (
   if (text === "None") {
     return { kind: "none" };
   }
-  const understoodOnly = text.match(/^Understands (.+) but can't speak$/);
+  const telepathyText = text.match(/; telepathy (\d+) ft\.$/);
+  const withoutTelepathy = text.replace(/; telepathy \d+ ft\.$/, "");
+  const telepathy =
+    telepathyText?.[1] === undefined
+      ? {}
+      : { telepathy: { rangeFeet: Number(telepathyText[1]) } };
+  const understoodOnly = withoutTelepathy.match(
+    /^Understands (.+) but can't speak$/,
+  );
   if (understoodOnly !== null) {
     return {
       kind: "understood_but_cannot_speak",
       languages: parseLanguageSet(understoodOnly[1] ?? ""),
+      ...telepathy,
     };
   }
-  const [spoken = "", qualifier] = text.split("; ");
+  const [spoken = "", qualifier] = withoutTelepathy.split("; ");
+  if (telepathyText !== null && qualifier === undefined) {
+    return {
+      kind: "spoken_and_understood",
+      languages: parseLanguageSet(spoken),
+      ...telepathy,
+    };
+  }
   if (qualifier?.startsWith("telepathy ") === true) {
     const telepathy = requireMatch(
       qualifier,
-      /^telepathy (\d+) ft\.$/,
+      /^telepathy (\d+) ft\.(?: \(doesn't allow the receiving creature to respond telepathically\))?$/,
       `${context} telepathy`,
     );
     return {
       kind: "spoken_and_understood",
       languages: parseLanguageSet(spoken),
-      telepathy: { rangeFeet: Number(telepathy[1]) },
+      telepathy: {
+        rangeFeet: Number(telepathy[1]),
+        ...(qualifier.includes("doesn't allow")
+          ? { response: "receiving_creature_cannot_respond" as const }
+          : {}),
+      },
     };
   }
   if (qualifier?.startsWith("understands ") === true) {
@@ -1014,7 +1087,7 @@ const parseRawGeneralFacts = (
     saveProficiencies: [],
     skillModifiers: parseNamedModifiers(lines, "Skills"),
     vulnerabilities: parseVulnerabilities(lines),
-    resistances: parseDamageTypes(lines, "Resistances"),
+    resistances: parseResistances(lines),
     ...parseImmunities(lines),
     ...parseSenses(lines, name),
     gear: parseGear(lines),
@@ -1124,7 +1197,7 @@ const parseRawResourceLimits = (
       },
     ];
   }
-  const daily = name.match(/\((\d+)\/Day\)$/);
+  const daily = name.match(/\((\d+)\/Day(?:; .+)?\)$/);
   return daily === null
     ? []
     : [
@@ -1195,6 +1268,16 @@ const parseSimpleAttack = (
       condition: sizeCondition[2].toLowerCase(),
     });
   }
+  const targetTurnCondition = hit.match(
+    /(?:and )?the target has the ([A-Za-z]+) condition until the end of its next turn$/,
+  );
+  if (targetTurnCondition?.[1] !== undefined) {
+    onHit.push({
+      kind: "apply_condition",
+      condition: targetTurnCondition[1].toLowerCase(),
+      expiresAt: "target_next_turn_end",
+    });
+  }
   const residual = hit
     .replace(
       /(\d+)(?: \((\d+)d(\d+)(?: ([+−-]) (\d+))?\))? ([A-Z][a-z]+) damage/g,
@@ -1202,6 +1285,10 @@ const parseSimpleAttack = (
     )
     .replace(
       /If the target is a (?:Tiny|Small|Medium|Large|Huge|Gargantuan) or smaller creature, it has the [A-Za-z]+ condition/,
+      "",
+    )
+    .replace(
+      /(?:and )?the target has the [A-Za-z]+ condition until the end of its next turn/,
       "",
     )
     .replace(/if the attack roll had Advantage/i, "")
@@ -1280,12 +1367,6 @@ const parseSimpleSave = (entry: RawEntry): ProcedureProjection | undefined => {
   };
 };
 
-const NUMBER_WORDS = [
-  ["one", 1],
-  ["two", 2],
-  ["three", 3],
-] as const;
-
 const parseSimpleMultiattack = (
   entry: RawEntry,
 ): ProcedureProjection | undefined => {
@@ -1353,16 +1434,36 @@ const parseSpellcasting = (
     /^The .+ casts one of the following spells, (?:(requiring no (Somatic or )?Material components) and )?using (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) as (?:the )?spellcasting ability(?: \(spell save DC (\d+)(?:, ([+−-]\d+) to hit with spell attacks)?\))?: /,
   );
   if (header === null) return undefined;
-  const atWill = requireMatch(
-    entry.description,
-    /At Will: (.+?)(?= (?:- )?\d+\/Day(?: Each)?:|$)/,
-    `${entry.name} At Will`,
+  const groups = Array.from(
+    entry.description.matchAll(
+      /(?:- )?(?:At Will|(\d+)\/Day( Each)?): (.+?)(?= (?:- )?(?:At Will|\d+\/Day(?: Each)?):|$)/g,
+    ),
+    (
+      group,
+    ): Extract<
+      ProcedureProjection,
+      { readonly kind: "spellcasting" }
+    >["groups"][number] => {
+      const uses = group[1];
+      const spells = splitOutsideParentheses(group[3] ?? "").map(parseSpell);
+      return uses === undefined
+        ? { kind: "at_will", spells, resourceLimits: [] }
+        : {
+            kind: "limited",
+            spells,
+            resourceLimits: [
+              {
+                kind: "daily",
+                uses: Number(uses),
+                ownership: group[2] === undefined ? "shared" : "each",
+              },
+            ],
+          };
+    },
   );
-  const limited = entry.description.match(/(\d+)\/Day( Each)?: (.+)$/);
-  const limitedOwnership: Extract<
-    ResourceLimitProjection,
-    { readonly kind: "daily" }
-  >["ownership"] = limited?.[2] === undefined ? "shared" : "each";
+  if (groups.length === 0) {
+    throw new Error(`Missing ${entry.name} spell groups`);
+  }
   return {
     section: entry.section,
     name: normalizedProcedureName(entry.name),
@@ -1372,38 +1473,76 @@ const parseSpellcasting = (
     ...(header[5] === undefined
       ? {}
       : { spellAttackBonus: signedNumber(header[5]) }),
-    ...(header[1] === undefined
-      ? {}
-      : {
-          components: {
+    components:
+      header[1] === undefined
+        ? { kind: "spell_definition" }
+        : {
+            kind: "fixed",
             v: true,
             s: header[2] === undefined,
             m: false,
           },
-        }),
-    groups: [
-      {
-        kind: "at_will",
-        spells: splitOutsideParentheses(atWill[1] ?? "").map(parseSpell),
-        resourceLimits: [],
-      },
-      ...(limited === null
-        ? []
-        : [
-            {
-              kind: "limited" as const,
-              spells: splitOutsideParentheses(limited[3] ?? "").map(parseSpell),
-              resourceLimits: [
-                {
-                  kind: "daily" as const,
-                  uses: Number(limited[1]),
-                  ownership: limitedOwnership,
-                },
-              ],
-            },
-          ]),
-    ],
+    groups,
     resourceLimits: parseRawResourceLimits(entry.name),
+  };
+};
+
+const parseDirectSpellcasting = (
+  entry: RawEntry,
+  inheritedAbility: AbilityName | undefined,
+): ProcedureProjection | undefined => {
+  if (entry.section === "Traits") return undefined;
+  const explicitAbility = entry.description.match(
+    /^The .+ casts (?:the )?(.+?)(?: spell)?( on itself)?, requiring no spell components and using (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) as the spellcasting ability(?: \(spell save DC (\d+)\))?\.$/,
+  );
+  const sameAbility = entry.description.match(
+    /^The .+ casts (?:the )?(.+?)(?: spell)?( on itself)?,( requiring no spell components and)? using the same spellcasting ability as Spellcasting\.$/,
+  );
+  if (explicitAbility === null && sameAbility === null) return undefined;
+  const inherited = sameAbility === null ? undefined : inheritedAbility;
+  if (sameAbility !== null && inherited === undefined) return undefined;
+  const match = explicitAbility ?? sameAbility;
+  if (match === null) return undefined;
+  if (explicitAbility !== null && match[2] !== undefined) return undefined;
+  if (
+    (match[1] ?? "").includes(" or ") ||
+    (match[1] ?? "").includes(" in response")
+  ) {
+    return undefined;
+  }
+  const spell = parseSpell(match[1] ?? "");
+  if (spell.castAtLevel !== undefined) return undefined;
+  const selfOnly =
+    match[2] === undefined ? spell : { ...spell, restriction: "on itself" };
+  const explicit = explicitAbility !== null;
+  const ability = explicit
+    ? parsedAbility(match[3] ?? "", entry.name)
+    : inherited;
+  if (ability === undefined) return undefined;
+  const limits = parseRawResourceLimits(entry.name);
+  if (limits.some((limit) => limit.kind === "recharge")) return undefined;
+  const group: Extract<
+    ProcedureProjection,
+    { readonly kind: "spellcasting" }
+  >["groups"][number] = {
+    kind: limits.length === 0 ? "at_will" : "limited",
+    spells: [selfOnly],
+    resourceLimits: limits,
+  };
+  return {
+    section: entry.section,
+    name: normalizedProcedureName(entry.name),
+    kind: "spellcasting",
+    ability,
+    ...(explicit && match[4] !== undefined
+      ? { spellSaveDc: Number(match[4]) }
+      : {}),
+    components:
+      explicit || sameAbility?.[3] !== undefined
+        ? { kind: "fixed", v: false, s: false, m: false }
+        : { kind: "spell_definition" },
+    groups: [group],
+    resourceLimits: [],
   };
 };
 
@@ -1429,14 +1568,55 @@ const parseActionOption = (
       };
 };
 
+const rawTextOnlyReason = (
+  entry: RawEntry,
+): "unsupported_action_shape" | "unsupported_procedure_family" =>
+  /^The .+ casts .+ on itself, requiring no spell components and using (?:Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) as the spellcasting ability\.$/.test(
+    entry.description,
+  ) ||
+  (!entry.description.includes("in response") &&
+    /^The .+ casts .+(?: or .+)+, using the same spellcasting ability as Spellcasting\.$/.test(
+      entry.description,
+    )) ||
+  /^The .+ casts .+ twice, requiring no .+ components and using .+ as the spellcasting ability/.test(
+    entry.description,
+  ) ||
+  (parseRawResourceLimits(entry.name).length === 0 &&
+    /^The .+ casts .+ \(level \d+ version\), requiring no spell components and using .+ as the spellcasting ability/.test(
+      entry.description,
+    )) ||
+  /^The .+ casts .+ using .+ as the spellcasting ability .+ duration is/.test(
+    entry.description,
+  ) ||
+  (entry.section === "Bonus Actions" &&
+    /^The .+ casts .+, requiring no spell components and using .+ as the spellcasting ability/.test(
+      entry.description,
+    ) &&
+    !entry.description.includes("can't take this action again")) ||
+  /^The .+ shape-shifts .+ Its game statistics are the same in each form, except (?:for )?(?:its|its Fly) Speed/.test(
+    entry.description,
+  ) ||
+  (/^Trigger:/.test(entry.description) &&
+    (/\. On a miss, .+ makes one .+ attack/.test(entry.description) ||
+      /Response: The .+ uses [A-Za-z' -]+\.$/.test(entry.description) ||
+      /Response: The wearer gains a .+ bonus to AC/.test(entry.description) ||
+      /Response: The .+ adds \d+ to the roll\.$/.test(entry.description) ||
+      /Response: The .+ reduces the damage .+ Saving Throw:/.test(
+        entry.description,
+      )))
+    ? "unsupported_procedure_family"
+    : "unsupported_action_shape";
+
 const parseRawProcedure = (
   entry: RawEntry,
   generalFacts: ScopedGeneralFacts,
   ammunitionByWeapon: ReadonlyMap<string, string>,
+  spellcastingAbility: AbilityName | undefined,
 ): ProcedureProjection | undefined => {
   if (entry.section === "Traits") return undefined;
   return (
     parseSpellcasting(entry) ??
+    parseDirectSpellcasting(entry, spellcastingAbility) ??
     parseSimpleAttack(entry, generalFacts, ammunitionByWeapon) ??
     parseSimpleSave(entry) ??
     parseSimpleMultiattack(entry) ??
@@ -1445,11 +1625,7 @@ const parseRawProcedure = (
       name: normalizedProcedureName(entry.name),
       kind: "textOnly",
       description: entry.description,
-      reason:
-        entry.section === "Reactions" ||
-        /^The .+ (?:casts|shape-shifts)\b/.test(entry.description)
-          ? "unsupported_procedure_family"
-          : "unsupported_action_shape",
+      reason: rawTextOnlyReason(entry),
       resourceLimits: parseRawResourceLimits(entry.name),
     }
   );
@@ -1516,6 +1692,19 @@ const rawRecordLines = (
 ): readonly string[] =>
   sourceLines.slice(occurrence.anchor.lineStart - 1, occurrence.anchor.lineEnd);
 
+const uniqueSpellcastingAbility = (
+  entries: readonly RawEntry[],
+): AbilityName | undefined => {
+  const abilities = entries.flatMap((entry) => {
+    const procedure = parseSpellcasting(entry);
+    return procedure?.kind === "spellcasting" ? [procedure.ability] : [];
+  });
+  if (abilities.length > 1) {
+    throw new Error("A RAW Stat Block has multiple Spellcasting abilities");
+  }
+  return abilities[0];
+};
+
 export const projectRawStatBlocks = (
   source: string,
   occurrences: readonly SrdStatBlockSourceOccurrence[],
@@ -1535,11 +1724,13 @@ export const projectRawStatBlocks = (
       const lines = rawRecordLines(sourceLines, occurrence);
       const entries = parseRawEntries(lines);
       const generalFacts = parseRawGeneralFacts(occurrence.name, lines);
+      const spellcastingAbility = uniqueSpellcastingAbility(entries);
       const parsedProcedures = entries.flatMap((entry) => {
         const procedure = parseRawProcedure(
           entry,
           generalFacts,
           ammunitionByWeapon,
+          spellcastingAbility,
         );
         return procedure === undefined ? [] : [procedure];
       });
@@ -1785,7 +1976,17 @@ const projectAttackEffect = (effect: AttackEffect): AttackEffectProjection => {
       maxCreatureSize: effect.maxCreatureSize,
     };
   }
-  throw new Error(`Unsupported authored attack effect ${effect.kind}`);
+  if (effect.kind === "apply_condition" && "expiresAt" in effect) {
+    if (effect.expiresAt.kind !== "target_next_turn_end") {
+      throw new Error("Unsupported authored attack condition expiration");
+    }
+    return {
+      kind: "apply_condition",
+      condition: effect.condition,
+      expiresAt: "target_next_turn_end",
+    };
+  }
+  throw new Error("Unsupported authored attack effect");
 };
 
 const projectResourceLimits = (
@@ -1963,9 +2164,10 @@ const projectExecutableProcedure = (
       ...(spellcasting.spellAttackBonus === undefined
         ? {}
         : { spellAttackBonus: literalValue(spellcasting.spellAttackBonus) }),
-      ...(spellcasting.components === undefined
-        ? {}
-        : { components: { ...spellcasting.components } }),
+      components:
+        spellcasting.components === undefined
+          ? { kind: "spell_definition" as const }
+          : { kind: "fixed" as const, ...spellcasting.components },
       groups: spellcasting.groups.map((group) => ({
         kind: group.kind,
         spells: group.spells.map((spell) => ({
@@ -2053,9 +2255,6 @@ export const projectAuthoredStatBlocks = (
       const projectedProcedures = projectAuthoredProcedures(record);
       const legendaryActionUses = projectLegendaryActionUses(record);
       const resistances = record.statBlock.resistances;
-      if (resistances?.kind === "choose_one_from") {
-        throw new Error(`${record.name} has unsupported chosen resistances`);
-      }
       return {
         id: record.id,
         name: record.name,
@@ -2118,7 +2317,20 @@ export const projectAuthoredStatBlocks = (
                       `${record.name} vulnerability damage type`,
                     ),
                   },
-          resistances: sortedStrings(resistances?.damageTypes ?? []),
+          resistances:
+            resistances === undefined
+              ? { kind: "fixed" as const, damageTypes: [] }
+              : Match.value(resistances).pipe(
+                  Match.when({ kind: "fixed" }, (fixed) => ({
+                    kind: "fixed" as const,
+                    damageTypes: sortedStrings(fixed.damageTypes),
+                  })),
+                  Match.when({ kind: "choose_one_from" }, (chosen) => ({
+                    kind: "choose_one_from" as const,
+                    options: sortedStrings(chosen.options),
+                  })),
+                  Match.exhaustive,
+                ),
           immunityDamageTypes: sortedStrings(
             record.statBlock.immunities?.damageTypes ?? [],
           ),

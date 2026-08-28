@@ -38,6 +38,7 @@ import {
   characterSeed,
   fighterId,
   monsterResourceStatBlock,
+  isNonSpellExecutableProcedureEntryOfKind,
   projectedStatBlockRuntimeSource,
   statBlockCatalog,
   startBattleRight,
@@ -1356,8 +1357,8 @@ describe("Stat Block execution references", () => {
     const base = monsterResourceStatBlock();
     const legendaryAttack = base.statBlock.legendaryActions?.entries[0];
     if (
-      legendaryAttack?.kind !== "executable" ||
-      legendaryAttack.procedure.kind !== "attack_roll"
+      legendaryAttack === undefined ||
+      !isNonSpellExecutableProcedureEntryOfKind(legendaryAttack, "attack_roll")
     ) {
       throw new Error("Expected the synthetic Legendary Action fixture.");
     }
@@ -2574,8 +2575,8 @@ describe("Stat Block execution references", () => {
     );
     if (
       baseActions === undefined ||
-      baseAttack?.kind !== "executable" ||
-      baseAttack.procedure.kind !== "attack_roll"
+      baseAttack === undefined ||
+      !isNonSpellExecutableProcedureEntryOfKind(baseAttack, "attack_roll")
     ) {
       throw new Error(
         "Expected the SRD Riding Horse fixture to have an attack.",
@@ -2592,7 +2593,8 @@ describe("Stat Block execution references", () => {
       statBlock: {
         ...baseForm.statBlock,
         actions: mapNonEmpty(baseActions, (entry) =>
-          entry === baseAttack
+          isNonSpellExecutableProcedureEntryOfKind(entry, "attack_roll") &&
+          entry.procedureOrdinal === baseAttack.procedureOrdinal
             ? {
                 ...entry,
                 procedure: {

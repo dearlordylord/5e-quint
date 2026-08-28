@@ -80,7 +80,7 @@ import {
   secondWizardId as interruptSecondWizardId,
   wizardId as interruptWizardId,
   resolveBattleSubject,
-  executableProcedureEntry,
+  nonSpellExecutableProcedureEntry,
   type BattleActSelectorForTest,
 } from "./battle-runtime.test-support.ts";
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
@@ -18091,7 +18091,7 @@ function skeletonMultiattackStatBlock(): StatBlockRecord {
       ...base.statBlock,
       actions: [
         ...actions,
-        executableProcedureEntry(3, {
+        nonSpellExecutableProcedureEntry(3, {
           kind: "multiattack",
           name: "Multiattack",
           dispatches: [
