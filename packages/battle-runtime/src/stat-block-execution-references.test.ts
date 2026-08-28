@@ -1640,7 +1640,15 @@ describe("Stat Block execution references", () => {
           ? {
               ...combatant,
               nextEffectOrdinal: combatant.nextEffectOrdinal + 1,
-              activeEffectRefs: [...combatant.activeEffectRefs, effectRef],
+              activeEffectOccurrences: [
+                ...combatant.activeEffectOccurrences,
+                {
+                  kind: "activeEffect" as const,
+                  effectRef,
+                  activeEffectKind: "spellCondition" as const,
+                  location: { kind: "nonSpatial" as const },
+                },
+              ],
             }
           : combatant,
       ),
@@ -1665,9 +1673,14 @@ describe("Stat Block execution references", () => {
           combatant.combatantId === fighterId
             ? {
                 ...combatant,
-                activeEffectRefs: [
-                  ...combatant.activeEffectRefs,
-                  fighterEffectRef,
+                activeEffectOccurrences: [
+                  ...combatant.activeEffectOccurrences,
+                  {
+                    kind: "activeEffect" as const,
+                    effectRef: fighterEffectRef,
+                    activeEffectKind: "spellCondition" as const,
+                    location: { kind: "nonSpatial" as const },
+                  },
                 ],
               }
             : combatant,
