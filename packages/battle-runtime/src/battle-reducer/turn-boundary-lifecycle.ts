@@ -84,7 +84,6 @@ import type {
   BattleStatBlockRechargeRollHole,
   BattleStatBlockRechargeRollResult,
   BattleState,
-  BattleStoredLightEmitter,
   BattleTurnResources,
   BattleUnitFeatureConditionEndTurnSavingThrowOutcomeHole,
   SpellTurnStartDamage,
@@ -93,6 +92,7 @@ import { validateRolledDiceFillForDiceExpr } from "../battle-state-execution.ts"
 import { characterBattleResourceIsUseCount } from "../character-battle-resource-execution.ts";
 import {
   battleStartTurnOccurrenceId,
+  type BattleEffectExecutionRef,
   type BattleProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
@@ -1141,48 +1141,23 @@ function resolveEndTurn({
   };
 }
 
-function roundDurationActiveEffectKey(
-  combatantId: CombatantId,
-  effect: BattleActiveEffect,
-): string {
-  return JSON.stringify([
-    combatantId,
-    effect.kind,
-    "sourceCombatantId" in effect ? effect.sourceCombatantId : null,
-    "sourceProcedureRef" in effect ? effect.sourceProcedureRef : null,
-  ]);
-}
-
-function roundDurationLightEmitterKey(
-  emitter: BattleStoredLightEmitter,
-): string {
-  return JSON.stringify([
-    emitter.kind,
-    emitter.sourceCombatantId,
-    emitter.sourceProcedureRef,
-    "sourceEffectId" in emitter ? emitter.sourceEffectId : null,
-    "attachment" in emitter ? emitter.attachment : null,
-  ]);
-}
-
 function roundDurationCohort(
   state: BattleState,
 ): BattleStartTurnOccurrenceSequenceCheckpoint["roundDurationCohort"] {
   const wrapsRound =
     Number(nextInitiative(state.initiative).round) >
     Number(state.initiative.round);
-  if (!wrapsRound) return { activeEffectKeys: [], lightEmitterKeys: [] };
+  if (!wrapsRound) return { activeEffectRefs: [], lightEmitterRefs: [] };
   return {
-    activeEffectKeys: [...state.combatants].flatMap(
-      ([combatantId, combatant]) =>
-        combatant.activeEffects
-          .filter(isTickingDurationActiveEffect)
-          .map((effect) => roundDurationActiveEffectKey(combatantId, effect)),
+    activeEffectRefs: [...state.combatants].flatMap(([, combatant]) =>
+      combatant.activeEffects
+        .filter(isTickingDurationActiveEffect)
+        .map((effect) => effect.effectRef),
     ),
-    lightEmitterKeys: state.lightEmitters.flatMap((emitter) =>
+    lightEmitterRefs: state.lightEmitters.flatMap((emitter) =>
       emitter.kind !== "objectInvisibleRevealLightEmitter" &&
       emitter.expiresAt.kind === "duration"
-        ? [roundDurationLightEmitterKey(emitter)]
+        ? [emitter.effectRef]
         : [],
     ),
   };
@@ -1193,11 +1168,11 @@ function applyRoundDurationTickAfterStartTurnOccurrences(
   cohort: BattleStartTurnOccurrenceSequenceCheckpoint["roundDurationCohort"],
 ): BattleState {
   if (
-    cohort.activeEffectKeys.length === 0 &&
-    cohort.lightEmitterKeys.length === 0
+    cohort.activeEffectRefs.length === 0 &&
+    cohort.lightEmitterRefs.length === 0
   )
     return state;
-  const activeEffectKeys = new Set(cohort.activeEffectKeys);
+  const activeEffectRefs = new Set(cohort.activeEffectRefs);
   const durationTick = tickDurationEffects(
     state.combatants,
     {
@@ -1205,15 +1180,15 @@ function applyRoundDurationTickAfterStartTurnOccurrences(
       spellEndTargetStatePromotionTiming:
         END_OF_NEXT_TURN_NEW_ROUND_DURATION_TICK,
     },
-    activeEffectKeys,
+    activeEffectRefs,
   );
-  const lightEmitterKeys = new Set(cohort.lightEmitterKeys);
+  const lightEmitterRefs = new Set(cohort.lightEmitterRefs);
   const stateAfterTick = battleStateWithFlySpeedGrantEndFallCleanupFrames(
     {
       ...state,
       combatants: durationTick.value,
       lightEmitters: state.lightEmitters.flatMap((emitter) =>
-        lightEmitterKeys.has(roundDurationLightEmitterKey(emitter))
+        lightEmitterRefs.has(emitter.effectRef)
           ? tickDurationBattleLightEmitters([emitter])
           : [emitter],
       ),
@@ -3717,7 +3692,7 @@ type DurationTickContext = {
 export function tickDurationEffects(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   context?: DurationTickContext,
-  cohortKeys?: ReadonlySet<string>,
+  cohortEffectRefs?: ReadonlySet<BattleEffectExecutionRef>,
 ): {
   readonly value: ReadonlyMap<CombatantId, BattleCreatureState>;
   readonly flySpeedGrantEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
@@ -3734,8 +3709,8 @@ export function tickDurationEffects(
       for (const effect of combatant.activeEffects) {
         if (
           !isTickingDurationActiveEffect(effect) ||
-          (cohortKeys !== undefined &&
-            !cohortKeys.has(roundDurationActiveEffectKey(id, effect)))
+          (cohortEffectRefs !== undefined &&
+            !cohortEffectRefs.has(effect.effectRef))
         ) {
           activeEffects.push(effect);
           continue;

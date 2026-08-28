@@ -457,15 +457,17 @@ function sameCloudkillMovementSaveDamagePosition(
     left.completedPrefixHoleIds.every(
       (holeId, index) => holeId === right.completedPrefixHoleIds[index],
     ) &&
-    left.roundDurationCohort.activeEffectKeys.length ===
-      right.roundDurationCohort.activeEffectKeys.length &&
-    left.roundDurationCohort.activeEffectKeys.every(
-      (key, index) => key === right.roundDurationCohort.activeEffectKeys[index],
+    left.roundDurationCohort.activeEffectRefs.length ===
+      right.roundDurationCohort.activeEffectRefs.length &&
+    left.roundDurationCohort.activeEffectRefs.every(
+      (effectRef, index) =>
+        effectRef === right.roundDurationCohort.activeEffectRefs[index],
     ) &&
-    left.roundDurationCohort.lightEmitterKeys.length ===
-      right.roundDurationCohort.lightEmitterKeys.length &&
-    left.roundDurationCohort.lightEmitterKeys.every(
-      (key, index) => key === right.roundDurationCohort.lightEmitterKeys[index],
+    left.roundDurationCohort.lightEmitterRefs.length ===
+      right.roundDurationCohort.lightEmitterRefs.length &&
+    left.roundDurationCohort.lightEmitterRefs.every(
+      (effectRef, index) =>
+        effectRef === right.roundDurationCohort.lightEmitterRefs[index],
     )
   );
 }

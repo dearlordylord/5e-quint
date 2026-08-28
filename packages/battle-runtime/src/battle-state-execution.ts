@@ -789,8 +789,8 @@ export type BattleStartTurnOccurrenceSequenceCheckpoint = {
   /** Exact child holes completed before the current occurrence; fill values live only in the replay procedure. */
   readonly completedPrefixHoleIds: readonly BattleHoleId[];
   readonly roundDurationCohort: {
-    readonly activeEffectKeys: readonly string[];
-    readonly lightEmitterKeys: readonly string[];
+    readonly activeEffectRefs: readonly BattleEffectExecutionRef[];
+    readonly lightEmitterRefs: readonly BattleEffectExecutionRef[];
   };
   readonly child: {
     readonly kind: "cloudkillMovementSaveDamageSequence";

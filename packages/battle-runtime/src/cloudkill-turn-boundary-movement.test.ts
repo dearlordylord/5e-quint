@@ -7,7 +7,12 @@ import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
 import cloudkillInput from "../../surface/content/cloudkill.json";
-import { battleAreaId, battleId, type CombatantId } from "./identity.ts";
+import {
+  battleAreaId,
+  battleId,
+  type BattleEffectExecutionRef,
+  type CombatantId,
+} from "./identity.ts";
 import type {
   BattleActiveEffect,
   BattleCloudkillMovementHole,
@@ -520,6 +525,117 @@ function withOneTickDurationCohort(
   }).state;
 }
 
+function durationCohortEffectRefs(
+  state: BattleState,
+  sourceKey: string,
+): readonly BattleEffectExecutionRef[] {
+  const sourceProcedureRef = battleProcedureExecutionRefForTest(sourceKey);
+  return [
+    ...[...state.combatants.values()].flatMap((combatant) =>
+      combatant.activeEffects.flatMap((effect) =>
+        "sourceProcedureRef" in effect &&
+        effect.sourceProcedureRef === sourceProcedureRef
+          ? [effect.effectRef]
+          : [],
+      ),
+    ),
+    ...state.lightEmitters.flatMap((emitter) =>
+      emitter.sourceProcedureRef === sourceProcedureRef
+        ? [emitter.effectRef]
+        : [],
+    ),
+  ];
+}
+
+function resolveInterruptedRoundWrapAfterCohortMutation(input: {
+  readonly sourceKey: string;
+  readonly mutateCheckpointState: (state: BattleState) => BattleState;
+}): BattleState {
+  const cast = castCloudkill({ targetCanReadyRayOfFrost: true });
+  const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
+  if (targetTurn.tag !== "resolved") {
+    throw new Error("Expected the target turn to start.");
+  }
+  const readied = readyTargetRayOfFrost(
+    battleRuntimeSessionForTest({ ...cast.session, state: targetTurn.state }),
+  );
+  const boundaryState = withOneTickDurationCohort(
+    readied.state,
+    input.sourceKey,
+  );
+  const orderFrontier = endTurn({
+    state: boundaryState,
+    actorId: spellTargetId,
+  });
+  const orderFill = startTurnOccurrenceOrderFill(
+    requireResultHole(orderFrontier, "startTurnOccurrenceOrder"),
+    (occurrence) => (occurrence.kind === "cloudkillMovement" ? 0 : 1),
+  );
+  const movementFrontier = endTurn({
+    state: boundaryState,
+    actorId: spellTargetId,
+    fills: [orderFill],
+  });
+  const movementFill = cloudkillMovementFill(
+    requireResultHole(movementFrontier, "cloudkillMovement"),
+    [spellTargetId],
+  );
+  const saveFrontier = endTurn({
+    state: boundaryState,
+    actorId: spellTargetId,
+    fills: [orderFill, movementFill],
+  });
+  const saveFill = singleTargetSavingThrowOutcomeFill(
+    requireResultHole(saveFrontier, "savingThrowOutcome"),
+    spellTargetId,
+    false,
+  );
+  const interrupted = endTurn({
+    state: boundaryState,
+    actorId: spellTargetId,
+    fills: [orderFill, movementFill, saveFill],
+  });
+  const decisionHole = requireResultHole(interrupted, "interruptDecision");
+  if (interrupted.tag !== "needsHoles") {
+    throw new Error("Expected the movement save interrupt.");
+  }
+  const declined = resolveBattleInterrupt({
+    state: input.mutateCheckpointState(interrupted.state),
+    fill: interruptDecisionFill(decisionHole, {
+      kind: "decline",
+      responderId: spellTargetId,
+    }),
+  });
+  const damageFill = damageRollFillWithGroups(
+    requireResultHole(declined, "rolledDice"),
+    [[1, 1, 1, 1, 1]],
+  );
+  if (declined.tag !== "needsHoles") {
+    throw new Error("Expected movement damage.");
+  }
+  const concentrationFrontier = resolveBattleSubject({
+    state: declined.state,
+    subject: declined.subject,
+    fills: [orderFill, movementFill, saveFill, damageFill],
+  });
+  const concentrationFill = concentrationSavingThrowFill(
+    requireResultHole(concentrationFrontier, "concentrationSavingThrow"),
+    true,
+  );
+  if (concentrationFrontier.tag !== "needsHoles") {
+    throw new Error("Expected Concentration save after movement damage.");
+  }
+  const resolved = resolveBattleSubject({
+    state: concentrationFrontier.state,
+    subject: concentrationFrontier.subject,
+    fills: [orderFill, movementFill, saveFill, damageFill, concentrationFill],
+  });
+  if (resolved.tag !== "resolved") {
+    throw new Error("Expected interrupted round wrap to resolve.");
+  }
+  return resolved.state;
+}
+
 describe("Cloudkill source-turn movement", () => {
   test("ticks only the duration cohort present before a direct round-wrap boundary", () => {
     const cast = castCloudkill();
@@ -668,6 +784,117 @@ describe("Cloudkill source-turn movement", () => {
         },
       }),
     ]);
+  });
+
+  test("does not age fresh same-shape duration occurrences that replace the checkpoint cohort", () => {
+    const sourceKey = "replaced-round-wrap-duration-cohort";
+    let checkpointRefs: readonly BattleEffectExecutionRef[] = [];
+    let replacementRefs: readonly BattleEffectExecutionRef[] = [];
+    const resolved = resolveInterruptedRoundWrapAfterCohortMutation({
+      sourceKey,
+      mutateCheckpointState: (state) => {
+        checkpointRefs = durationCohortEffectRefs(state, sourceKey);
+        const sourceProcedureRef =
+          battleProcedureExecutionRefForTest(sourceKey);
+        const combatants = new Map(
+          [...state.combatants].map(([combatantId, combatant]) => [
+            combatantId,
+            {
+              ...combatant,
+              activeEffects: combatant.activeEffects.filter(
+                (effect) =>
+                  !("sourceProcedureRef" in effect) ||
+                  effect.sourceProcedureRef !== sourceProcedureRef,
+              ),
+            },
+          ]),
+        );
+        const replacement = withOneTickDurationCohort(
+          {
+            ...state,
+            combatants,
+            lightEmitters: state.lightEmitters.filter(
+              (emitter) => emitter.sourceProcedureRef !== sourceProcedureRef,
+            ),
+          },
+          sourceKey,
+        );
+        replacementRefs = durationCohortEffectRefs(replacement, sourceKey);
+        return replacement;
+      },
+    });
+
+    expect(checkpointRefs).toHaveLength(2);
+    expect(replacementRefs).toHaveLength(2);
+    expect(replacementRefs).not.toEqual(checkpointRefs);
+    expect(durationCohortEffectRefs(resolved, sourceKey)).toEqual(
+      replacementRefs,
+    );
+  });
+
+  test("ages duration occurrences whose checkpoint identity survives state mutation", () => {
+    const sourceKey = "mutated-round-wrap-duration-cohort";
+    let checkpointRefs: readonly BattleEffectExecutionRef[] = [];
+    const resolved = resolveInterruptedRoundWrapAfterCohortMutation({
+      sourceKey,
+      mutateCheckpointState: (state) => {
+        checkpointRefs = durationCohortEffectRefs(state, sourceKey);
+        const sourceProcedureRef =
+          battleProcedureExecutionRefForTest(sourceKey);
+        return {
+          ...state,
+          combatants: new Map(
+            [...state.combatants].map(([combatantId, combatant]) => [
+              combatantId,
+              {
+                ...combatant,
+                activeEffects: combatant.activeEffects.map((effect) =>
+                  effect.kind === "turnStartTemporaryHitPoints" &&
+                  effect.sourceProcedureRef === sourceProcedureRef &&
+                  effect.expiresAt.kind === "duration"
+                    ? {
+                        ...effect,
+                        expiresAt: {
+                          ...effect.expiresAt,
+                          durationTicks: elapsedTimeTicks(2),
+                        },
+                      }
+                    : effect,
+                ),
+              },
+            ]),
+          ),
+          lightEmitters: state.lightEmitters.map((emitter) =>
+            emitter.kind === "spellLightEmitter" &&
+            emitter.sourceProcedureRef === sourceProcedureRef &&
+            emitter.expiresAt.kind === "duration"
+              ? {
+                  ...emitter,
+                  expiresAt: {
+                    ...emitter.expiresAt,
+                    durationTicks: elapsedTimeTicks(2),
+                  },
+                }
+              : emitter,
+          ),
+        };
+      },
+    });
+
+    expect(checkpointRefs).toHaveLength(2);
+    expect(durationCohortEffectRefs(resolved, sourceKey)).toEqual(
+      checkpointRefs,
+    );
+    expect(
+      [...resolved.combatants.values()]
+        .flatMap((combatant) => combatant.activeEffects)
+        .find((effect) => effect.effectRef === checkpointRefs[0])?.expiresAt,
+    ).toEqual({ kind: "duration", durationTicks: elapsedTimeTicks(1) });
+    expect(
+      resolved.lightEmitters.find(
+        (emitter) => emitter.effectRef === checkpointRefs[1],
+      )?.expiresAt,
+    ).toEqual({ kind: "duration", durationTicks: elapsedTimeTicks(1) });
   });
 
   test("lets the turn owner order simultaneous source-start damage and Cloudkill movement", () => {
