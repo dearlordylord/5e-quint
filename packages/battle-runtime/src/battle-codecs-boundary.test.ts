@@ -308,6 +308,20 @@ function codecFixture() {
       },
       {
         kind: "activeEffect",
+        ownerId: skeletonId,
+        effect: {
+          kind: "possession",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+          expiresAt: {
+            kind: "duration",
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
+        kind: "activeEffect",
         ownerId: wizardId,
         effect: {
           kind: "greaseGroundHazard",
@@ -685,6 +699,7 @@ function codecFixture() {
     markedDamageRiderEffectRef: activeEffectRef("spellMarkedDamageRider"),
     spellTurnStartEffectRef: activeEffectRef("spellTurnStartDamageAndSave"),
     hideousLaughterEffectRef: activeEffectRef("hideousLaughter"),
+    protectionRelevantEffectRef: activeEffectRef("possession"),
     greaseEffectRef: activeEffectRef("greaseGroundHazard"),
     sleetStormEffectRef: activeEffectRef("sleetStormAreaHazard"),
     glyphEffectRef: activeEffectRef("glyphDurableOccurrence"),
@@ -841,7 +856,12 @@ const savingThrowCases: readonly CodecCase[] = [
       "protectionRelevantEffectSave",
       "protectionRelevantEffectSave",
       "wis",
-      { ...source, relevantEffect: "frightened", save: save("wis") },
+      {
+        ...source,
+        effectRef: fixture.protectionRelevantEffectRef,
+        relevantEffect: "possession",
+        save: save("wis"),
+      },
     ),
   ),
   ...(

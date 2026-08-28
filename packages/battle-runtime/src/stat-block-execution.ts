@@ -19,6 +19,7 @@ import {
   type SupportedStatBlockBonusActionStandardAction,
 } from "./battle-reducer/battle-runtime-protocol.ts";
 import {
+  type BattleEffectExecutionRef,
   type BattleStatBlockProcedureExecutionRef,
   type BattleId,
   BattleResourcePoolExecutionRef,
@@ -544,7 +545,7 @@ export function statBlockPresentationAllocation(
   if (
     !procedureBindingSnapshotsEqual(
       statBlockProcedureBindingSnapshots(allocated.execution),
-      statBlockProcedureBindingSnapshots(admission.execution),
+      authoredStatBlockProcedureBindingSnapshots(admission.execution),
     )
   ) {
     throw new Error(
@@ -603,6 +604,20 @@ export function restoreStatBlockExecutionAdmissions<
   readonly StatBlockExecutionAdmission<TStatBlock>[],
   ReadonlyNonEmptyArray<StatBlockExecutionRestoreIssue>
 > {
+  const effectOccurrenceSourceRefCounts = new Map<
+    BattleEffectExecutionRef,
+    number
+  >();
+  for (const restoration of restorations) {
+    for (const binding of restoration.snapshot.procedureBindings) {
+      if (binding.procedure.kind !== "effectOccurrenceSource") continue;
+      effectOccurrenceSourceRefCounts.set(
+        binding.procedure.effectRef,
+        (effectOccurrenceSourceRefCounts.get(binding.procedure.effectRef) ??
+          0) + 1,
+      );
+    }
+  }
   const restored: StatBlockExecutionAdmission<TStatBlock>[] = [];
   const issues: StatBlockExecutionRestoreIssue[] = [];
   const restoredScopeRefs = new Set<BattleStatBlockExecutionScopeRef>();
@@ -648,10 +663,22 @@ export function restoreStatBlockExecutionAdmissions<
       statBlock: restoration.statBlock,
       execution: allocated.execution,
     });
+    const authoredBindings = snapshot.procedureBindings.filter(
+      (binding) => binding.procedure.kind !== "effectOccurrenceSource",
+    );
+    const effectOccurrenceSourceBindings = snapshot.procedureBindings.filter(
+      (binding) => binding.procedure.kind === "effectOccurrenceSource",
+    );
     if (
       !procedureBindingSnapshotsEqual(
-        snapshot.procedureBindings,
+        authoredBindings,
         statBlockProcedureBindingSnapshots(expected.execution),
+      ) ||
+      !effectOccurrenceSourceBindingsAreCanonical(
+        snapshot.scopeRef,
+        expected.execution.procedureBindings.length,
+        effectOccurrenceSourceBindings,
+        effectOccurrenceSourceRefCounts,
       )
     ) {
       issues.push(
@@ -682,7 +709,10 @@ export function restoreStatBlockExecutionAdmissions<
         statBlock: restoration.statBlock,
         execution: admittedStatBlockExecutionState({
           scopeRef: snapshot.scopeRef,
-          procedureBindings: expected.execution.procedureBindings,
+          procedureBindings: [
+            ...expected.execution.procedureBindings,
+            ...effectOccurrenceSourceBindings,
+          ],
           resourcePools: restoredResourcePools,
         }),
       }),
@@ -765,6 +795,36 @@ function procedureBindingSnapshotsEqual(
       }
       return persistedValuesEqual(binding.procedure, expectedBinding.procedure);
     })
+  );
+}
+
+function authoredStatBlockProcedureBindingSnapshots(
+  execution: StatBlockExecutionState,
+): readonly StatBlockProcedureBindingSnapshot[] {
+  return execution.procedureBindings.filter(
+    (binding) => binding.procedure.kind !== "effectOccurrenceSource",
+  );
+}
+
+function effectOccurrenceSourceBindingsAreCanonical(
+  scopeRef: BattleStatBlockExecutionScopeRef,
+  firstOrdinal: number,
+  bindings: readonly StatBlockProcedureBindingSnapshot[],
+  effectOccurrenceSourceRefCounts: ReadonlyMap<
+    BattleEffectExecutionRef,
+    number
+  >,
+): boolean {
+  return bindings.every(
+    (binding, index) =>
+      binding.procedure.kind === "effectOccurrenceSource" &&
+      effectOccurrenceSourceRefCounts.get(binding.procedure.effectRef) === 1 &&
+      binding.resourcePoolRefs.length === 0 &&
+      binding.procedureRef ===
+        battleStatBlockProcedureExecutionRef(
+          scopeRef,
+          NonNegativeInteger(firstOrdinal + index),
+        ),
   );
 }
 

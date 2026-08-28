@@ -264,6 +264,7 @@ export function protectionRelevantEffectSavingThrowOutcomeHole(
   const key = [
     "battle:protection-relevant-effect-save:",
     targetId,
+    spellActiveEffectExecutionRef(effect),
     effect.sourceCombatantId,
     effect.sourceProcedureRef,
     relevantEffect,
@@ -277,6 +278,7 @@ export function protectionRelevantEffectSavingThrowOutcomeHole(
     label: `${relevantEffect} save`,
     protectionRelevantEffectSave: {
       targetId,
+      effectRef: spellActiveEffectExecutionRef(effect),
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       relevantEffect,

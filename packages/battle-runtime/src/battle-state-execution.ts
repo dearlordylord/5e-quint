@@ -5623,6 +5623,7 @@ export type BattleProtectionRelevantEffectSavingThrowOutcomeHole = {
   readonly label: string;
   readonly protectionRelevantEffectSave: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly relevantEffect: "charmed" | "frightened" | "possession";

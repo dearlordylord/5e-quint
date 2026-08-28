@@ -1,16 +1,19 @@
 import { NonNegativeInteger } from "@dnd/shared/types";
 
 import { battleStateWithAllocatedEffectOccurrencesForTest } from "./battle-runtime.test-support.ts";
-import { type EffectOccurrenceSourceKind } from "./character-execution-vocabulary.ts";
+import { type EffectOccurrenceSourceKind } from "./effect-occurrence-source-vocabulary.ts";
 import type { BattleSourcedEffectOccurrenceTemplate } from "./effect-execution-ref.ts";
 import {
   battleProcedureExecutionCursor,
   battleProcedureExecutionRef,
+  battleStatBlockProcedureExecutionRef,
   type BattleEffectExecutionRef,
   type BattleProcedureExecutionRef,
+  BattleStatBlockProcedureExecutionRef,
   type CombatantId,
 } from "./identity.ts";
 import type { BattleState } from "./index.ts";
+import { admittedStatBlockExecutionState } from "./stat-block-execution-state.ts";
 
 type SupportedLowLevelEffectOccurrenceTemplate = Extract<
   BattleSourcedEffectOccurrenceTemplate,
@@ -42,31 +45,46 @@ export function battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest(input:
   readonly effectRef: BattleEffectExecutionRef;
 } {
   const source = input.state.combatants.get(input.sourceCombatantId);
-  if (source === undefined || source.origin.kind !== "character") {
+  if (source === undefined) {
     throw new Error(
-      `Expected low-level effect source ${input.sourceCombatantId} to be a character.`,
+      `Expected low-level effect source ${input.sourceCombatantId}.`,
     );
   }
-  const procedureOrdinal = Number(source.origin.execution.nextProcedureOrdinal);
-  const sourceProcedureRef = battleProcedureExecutionRef(
-    source.origin.execution.scopeRef,
-    NonNegativeInteger(procedureOrdinal),
-  );
-  const stateWithAllocatedSourceProcedure = {
-    ...input.state,
-    combatants: new Map(input.state.combatants).set(input.sourceCombatantId, {
-      ...source,
-      origin: {
-        ...source.origin,
-        execution: {
-          ...source.origin.execution,
-          nextProcedureOrdinal: battleProcedureExecutionCursor(
-            procedureOrdinal + 1,
+  const procedureOrdinal =
+    source.origin.kind === "character"
+      ? Number(source.origin.execution.nextProcedureOrdinal)
+      : source.origin.execution.procedureBindings.length;
+  const sourceProcedureRef: BattleProcedureExecutionRef =
+    source.origin.kind === "character"
+      ? battleProcedureExecutionRef(
+          source.origin.execution.scopeRef,
+          NonNegativeInteger(procedureOrdinal),
+        )
+      : battleStatBlockProcedureExecutionRef(
+          source.origin.execution.scopeRef,
+          NonNegativeInteger(procedureOrdinal),
+        );
+  const stateWithAllocatedSourceProcedure: BattleState =
+    source.origin.kind === "character"
+      ? {
+          ...input.state,
+          combatants: new Map(input.state.combatants).set(
+            input.sourceCombatantId,
+            {
+              ...source,
+              origin: {
+                ...source.origin,
+                execution: {
+                  ...source.origin.execution,
+                  nextProcedureOrdinal: battleProcedureExecutionCursor(
+                    procedureOrdinal + 1,
+                  ),
+                },
+              },
+            },
           ),
-        },
-      },
-    }),
-  };
+        }
+      : input.state;
   const effect: SupportedLowLevelEffectOccurrenceTemplate = {
     ...input.effect,
     sourceProcedureRef,
@@ -91,9 +109,17 @@ export function battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest(input:
   const allocatedSource = allocation.state.combatants.get(
     input.sourceCombatantId,
   );
-  if (allocatedSource?.origin.kind !== "character") {
-    throw new Error("Expected allocated low-level effect character source.");
+  if (allocatedSource === undefined) {
+    throw new Error("Expected allocated low-level effect source.");
   }
+  const binding = {
+    procedureRef: sourceProcedureRef,
+    procedure: {
+      kind: "effectOccurrenceSource" as const,
+      effectRef: occurrence.effect.effectRef,
+      effectKind: effect.kind,
+    },
+  };
   return {
     state: {
       ...allocation.state,
@@ -101,23 +127,35 @@ export function battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest(input:
         input.sourceCombatantId,
         {
           ...allocatedSource,
-          origin: {
-            ...allocatedSource.origin,
-            execution: {
-              ...allocatedSource.origin.execution,
-              procedureBindings: [
-                ...allocatedSource.origin.execution.procedureBindings,
-                {
-                  procedureRef: sourceProcedureRef,
-                  procedure: {
-                    kind: "effectOccurrenceSource",
-                    effectRef: occurrence.effect.effectRef,
-                    effectKind: effect.kind,
+          origin:
+            allocatedSource.origin.kind === "character"
+              ? {
+                  ...allocatedSource.origin,
+                  execution: {
+                    ...allocatedSource.origin.execution,
+                    procedureBindings: [
+                      ...allocatedSource.origin.execution.procedureBindings,
+                      binding,
+                    ],
                   },
+                }
+              : {
+                  ...allocatedSource.origin,
+                  execution: admittedStatBlockExecutionState({
+                    ...allocatedSource.origin.execution,
+                    procedureBindings: [
+                      ...allocatedSource.origin.execution.procedureBindings,
+                      {
+                        ...binding,
+                        procedureRef:
+                          BattleStatBlockProcedureExecutionRef.make(
+                            sourceProcedureRef,
+                          ),
+                        resourcePoolRefs: [],
+                      },
+                    ],
+                  }),
                 },
-              ],
-            },
-          },
         },
       ),
     },
