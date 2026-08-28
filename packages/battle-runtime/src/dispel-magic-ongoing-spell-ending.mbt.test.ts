@@ -415,9 +415,13 @@ function requestHigherLevelCheck(
       casterId: spellCasterId,
       sourceProcedureRef: act.subject.procedureRef,
       target: { kind: "object", objectId: dispelledObjectId },
-      effect: {
-        kind: "spellActiveEffect",
-        activeEffectKind: "spellObjectContactDamage",
+      checkedOccurrence: {
+        ownerId: spellCasterId,
+        target: { kind: "object", objectId: dispelledObjectId },
+        effect: {
+          kind: "spellActiveEffect",
+          activeEffectKind: "spellObjectContactDamage",
+        },
       },
       contestedSpellLevel: HIGHER_LEVEL_SOURCE_SPELL_LEVEL,
     },
