@@ -402,7 +402,11 @@ function codecFixture() {
           sourceProcedureRef: source.procedureRef,
           sourceCombatantId: wizardId,
           damage: { expr: { dice: 1, dieSize: 6 }, damageType: "cold" },
-          expiresAt: { kind: "endOfTurn", combatantId: skeletonId },
+          expiresAt: {
+            kind: "endOfTurn",
+            combatantId: skeletonId,
+            round: session.state.initiative.round,
+          },
         },
       },
       {
