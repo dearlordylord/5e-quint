@@ -55,6 +55,8 @@
     "sdk-raw-integration-inventory:check": "node scripts/sdk-raw-integration-inventory.cjs",
     "unit-profile-coverage:check": "node scripts/unit-profile-coverage-check.cjs --self-test && node scripts/unit-profile-coverage-check.cjs",
     "unit-profile-coverage:check:self-test": "node scripts/unit-profile-coverage-check.cjs --self-test",
+    "gh381-registry-path-manifest:check": "node scripts/gh381-registry-path-manifest.cjs --self-test && node scripts/gh381-registry-path-manifest.cjs",
+    "gh381-registry-path-manifest:write": "node scripts/gh381-registry-path-manifest.cjs --write",
     "check:workspace-quality-inventory": "node scripts/workspace-quality-harness.mjs --self-test",
     "lint": "pnpm lint:eslint && prettier --check \"packages/**/*.{ts,tsx,mts,cts,js,mjs,cjs}\" \"scripts/**/*.{ts,tsx,mts,cts,js,mjs,cjs}\" eslint.config.mjs eslint.complexity.config.mjs vitest.config.ts && prettier --check --parser json .madgerc cyclomatic-complexity-baseline.json",
     "lint:eslint": "eslint . --max-warnings=0 --report-unused-disable-directives",

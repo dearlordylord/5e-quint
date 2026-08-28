@@ -3,7 +3,7 @@
     "plans/rules-kernel-coverage/obligations.jsonl",
     "plans/rules-kernel-coverage/qnt-owner-roles.jsonl"
   ],
-  "sourceHead": "4e48b4ca78188eea7ed82474d13ca1ad912711b5",
+  "sourceHead": "62961f94f8b8389534fd42eb6c7809a6a0161f02",
   "issue": 381,
   "selectionRule": "All BATTLE.SPELL active-effect-lifecycle and reaction-continuation obligations, plus the explicit granted-action, suppression, reaction/interruption, concentration-teardown, and turn-boundary cross-boundary rows listed in crossBoundaryIds.",
   "crossBoundaryIds": [
@@ -76,11 +76,11 @@
   ],
   "obligationGroups": {
     "directMigratedAdapters": [
-      "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
-      "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
+      "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT",
       "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
       "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY",
-      "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT"
+      "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
+      "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION"
     ],
     "concentrationAndContinuation": [
       "BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE",
@@ -297,6 +297,7 @@
       "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
       "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
       "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
+      "BATTLE.SPELL.REACTION_CASTING_TIME",
       "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
       "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
       "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
@@ -304,14 +305,13 @@
       "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
       "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE",
       "BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING",
-      "BATTLE.SPELL.HASTE_POSITIVE_EFFECTS",
-      "BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE",
-      "BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE",
-      "BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION",
-      "BATTLE.SPELL.REACTION_CASTING_TIME",
       "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
       "BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING",
-      "BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN"
+      "BATTLE.SPELL.HASTE_POSITIVE_EFFECTS",
+      "BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE",
+      "BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN",
+      "BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE",
+      "BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION"
     ]
   },
   "sourceOrPurePaths": [
@@ -320,6 +320,7 @@
     "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
     "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
     "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt",
+    "packages/battle-runtime/battle-runtime-cloudkill-area-hazard.qnt",
     "packages/battle-runtime/battle-runtime-concentration.qnt",
     "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
     "packages/battle-runtime/battle-runtime-creature-size-change.qnt",
@@ -345,6 +346,7 @@
     "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt",
     "packages/battle-runtime/battle-runtime-gust-of-wind.qnt",
     "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt",
+    "packages/battle-runtime/battle-runtime-insect-plague-area-hazard.qnt",
     "packages/battle-runtime/battle-runtime-invisibility.qnt",
     "packages/battle-runtime/battle-runtime-jump-movement.qnt",
     "packages/battle-runtime/battle-runtime-levitate-creature.qnt",
@@ -421,6 +423,7 @@
     "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt",
     "packages/battle-runtime/src/active-effect/types.ts",
     "packages/battle-runtime/src/battle-reducer/antimagic-field-action-interdiction.ts",
+    "packages/battle-runtime/src/battle-reducer/area-wind-strength.ts",
     "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
     "packages/battle-runtime/src/battle-reducer/attack-damage-events.ts",
     "packages/battle-runtime/src/battle-reducer/attack-main.ts",
@@ -428,6 +431,7 @@
     "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
     "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
     "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+    "packages/battle-runtime/src/battle-reducer/command-procedures.ts",
     "packages/battle-runtime/src/battle-reducer/companion-routes.ts",
     "packages/battle-runtime/src/battle-reducer/creature-size-change-effects.ts",
     "packages/battle-runtime/src/battle-reducer/creature-state-leaves.ts",
@@ -447,15 +451,18 @@
     "packages/battle-runtime/src/battle-reducer/mirror-image-hit-interception.ts",
     "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
     "packages/battle-runtime/src/battle-reducer/ongoing-feature-helpers.ts",
+    "packages/battle-runtime/src/battle-reducer/persistent-area-save-damage.ts",
     "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts",
     "packages/battle-runtime/src/battle-reducer/readied-release.ts",
     "packages/battle-runtime/src/battle-reducer/ready-trigger.ts",
     "packages/battle-runtime/src/battle-reducer/ready.ts",
+    "packages/battle-runtime/src/battle-reducer/replay-continuation.ts",
     "packages/battle-runtime/src/battle-reducer/sanctuary-targeting-interdiction.ts",
     "packages/battle-runtime/src/battle-reducer/slow-active-penalties-runtime.ts",
     "packages/battle-runtime/src/battle-reducer/spell-cast-interrupt-frame.ts",
     "packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts",
     "packages/battle-runtime/src/battle-reducer/spell-created-held-object.ts",
+    "packages/battle-runtime/src/battle-reducer/spell-effect-cleanup-procedures.ts",
     "packages/battle-runtime/src/battle-reducer/spell-end-target-state.ts",
     "packages/battle-runtime/src/battle-reducer/spell-granted-action-resource.ts",
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/_save-gate-helpers.ts",
@@ -539,6 +546,9 @@
     "packages/battle-runtime/src/antimagic-field-ongoing-suppression.mbt.test.ts",
     "packages/battle-runtime/src/battle-runtime-hunters-mark-and-hex.test.ts",
     "packages/battle-runtime/src/blur-attack-roll-defense-lifecycle.mbt.test.ts",
+    "packages/battle-runtime/src/cloudkill-area-hazard.mbt.test.ts",
+    "packages/battle-runtime/src/cloudkill-strong-wind-dispersal.test.ts",
+    "packages/battle-runtime/src/cloudkill-turn-boundary-movement.test.ts",
     "packages/battle-runtime/src/concentration-break-teardown.mbt.test.ts",
     "packages/battle-runtime/src/condition-removal-protection-selected-identity.mbt.test.ts",
     "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
@@ -556,6 +566,7 @@
     "packages/battle-runtime/src/haste-lethargy-lifecycle.mbt.test.ts",
     "packages/battle-runtime/src/heat-metal-object-contact.mbt.test.ts",
     "packages/battle-runtime/src/hellish-rebuke-reaction-spell.test.ts",
+    "packages/battle-runtime/src/insect-plague-area-hazard.mbt.test.ts",
     "packages/battle-runtime/src/interrupt-stack-resume.mbt.test.ts",
     "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
     "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
@@ -613,6 +624,7 @@
     "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt",
     "packages/battle-runtime/battle-runtime-antimagic-field-ongoing-suppression.mbt.qnt",
     "packages/battle-runtime/battle-runtime-blur-attack-roll-defense-lifecycle.mbt.qnt",
+    "packages/battle-runtime/battle-runtime-cloudkill-area-hazard.mbt.qnt",
     "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt",
     "packages/battle-runtime/battle-runtime-condition-removal-protection-selected-identity.mbt.qnt",
     "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
@@ -627,6 +639,7 @@
     "packages/battle-runtime/battle-runtime-gust-of-wind-line-lifecycle.mbt.qnt",
     "packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt",
     "packages/battle-runtime/battle-runtime-heat-metal-object-contact.mbt.qnt",
+    "packages/battle-runtime/battle-runtime-insect-plague-area-hazard.mbt.qnt",
     "packages/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt",
     "packages/battle-runtime/battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt",
     "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
@@ -656,12 +669,13 @@
   "qntOwnerAccounting": {
     "unit": "Unique qntOwners resolved through qnt-owner-roles.jsonl; semantic-core is the only QNT authority class.",
     "counts": {
-      "semanticCore": 111,
+      "semanticCore": 113,
       "bridge": 4,
       "mbtFixture": 3,
       "proofOnly": 7,
-      "unregistered": 2,
-      "totalResolvedOwnerPaths": 125
+      "selectedIdentityTrace": 0,
+      "unregistered": 0,
+      "totalResolvedOwnerPaths": 127
     },
     "semanticCorePaths": [
       "packages/battle-runtime/battle-runtime-acid-arrow.qnt",
@@ -669,6 +683,7 @@
       "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
       "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
       "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt",
+      "packages/battle-runtime/battle-runtime-cloudkill-area-hazard.qnt",
       "packages/battle-runtime/battle-runtime-concentration.qnt",
       "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
       "packages/battle-runtime/battle-runtime-creature-size-change.qnt",
@@ -694,6 +709,7 @@
       "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt",
       "packages/battle-runtime/battle-runtime-gust-of-wind.qnt",
       "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt",
+      "packages/battle-runtime/battle-runtime-insect-plague-area-hazard.qnt",
       "packages/battle-runtime/battle-runtime-invisibility.qnt",
       "packages/battle-runtime/battle-runtime-jump-movement.qnt",
       "packages/battle-runtime/battle-runtime-levitate-creature.qnt",
@@ -796,22 +812,10 @@
         "packages/battle-runtime/battle-runtime-prone-movement.qnt",
         "packages/battle-runtime/battle-runtime-warding-bond.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core-examples.qnt"
-      ]
+      ],
+      "selectedIdentityTrace": []
     },
-    "unregisteredObligations": [
-      {
-        "id": "BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE",
-        "status": "needs-qnt-owner",
-        "ownerRole": "unregistered",
-        "reason": "Registry row has no qntOwners; it is not treated as QNT authority until a role-backed owner is added."
-      },
-      {
-        "id": "BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE",
-        "status": "needs-qnt-owner",
-        "ownerRole": "unregistered",
-        "reason": "Registry row has no qntOwners; it is not treated as QNT authority until a role-backed owner is added."
-      }
-    ]
+    "unregisteredObligations": []
   },
   "deferredScriptPaths": [
     "scripts/raw-swarm/sdk-player/scenario-session.ts",
@@ -857,15 +861,15 @@
   ],
   "pathCounts": {
     "obligationCount": 58,
-    "sourceOrPure": 203,
-    "parityOrFixture": 86,
-    "qntFixtureSpec": 44,
+    "sourceOrPure": 210,
+    "parityOrFixture": 90,
+    "qntFixtureSpec": 46,
     "deferredLaterIssue": 2
   },
   "staticScopeNotes": {
-    "authority": "Tests, MBT fixtures, bridge QNT, and proof-only QNT are retained as parity/non-authority evidence; they are not semantic-core authority.",
-    "registryGaps": "Insect Plague and Cloudkill are selected for lifecycle coverage but currently have no qntOwners; their runtime and parity paths remain listed without inventing QNT authority.",
-    "authoredIdentity": "The #381 source delta is limited to four MBT adapter files; no production dispatch path is changed. Runtime audit must continue to require typed Surface/procedure facts and state rather than spell identity.",
-    "concurrency": "No Fiber, Scope, Layer, Stream, PubSub, Queue, Deferred, or Ref ownership change is authorized by these four adapter edits; runtime scope/fiber evidence remains pending the RC112 verification environment."
+    "authority": "Tests, MBT fixtures, bridge QNT, proof-only QNT, and selected-identity traces are retained as parity/non-authority evidence; they are not semantic-core authority.",
+    "registryGaps": "Every selected qntOwner has an authored role; no selected #381 obligation is unregistered.",
+    "authoredIdentity": "The #381 manifest accounts for registry-selected source and evidence paths only; it does not authorize production execution dispatch by authored spell identity.",
+    "concurrency": "No Fiber, Scope, Layer, Stream, PubSub, Queue, Deferred, or Ref ownership change is implied by registry path accounting."
   }
 }
