@@ -1,9 +1,13 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.reaction-roll-or-damage-reduction
 import { describe, expect, test } from "vitest";
 import { classLevel } from "@dnd/shared/types";
+import { Schema } from "effect";
+import * as Either from "effect/Either";
 
 import {
   battleFrontierInterruptDecisionForState,
+  BattleCheckpointFrontierEnvelopeSchema,
+  battleCheckpointFrontierEnvelope,
   type BattleState,
   type CombatantId,
   openCreatureFallsInterruptWindow,
@@ -71,6 +75,34 @@ describe("Slow Fall Reaction", () => {
       },
       initialHoles: [],
     });
+    const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+      battleCheckpointFrontierEnvelope(awaitingReaction.state),
+    );
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+          encoded,
+        ),
+      ),
+    ).toBe(true);
+    if (encoded.frontier.kind !== "interruptDecision") {
+      throw new Error("Expected the encoded Slow Fall Reaction frontier.");
+    }
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)({
+          ...encoded,
+          frontier: {
+            ...encoded.frontier,
+            trigger: "attackHit",
+            decisionHole: {
+              ...encoded.frontier.decisionHole,
+              trigger: "attackHit",
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
   });
 
   test("declining Slow Fall resumes the falling creature continuation", () => {

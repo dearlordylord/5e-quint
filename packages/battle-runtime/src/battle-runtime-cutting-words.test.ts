@@ -119,13 +119,55 @@ describe("battle runtime: Cutting Words", () => {
       cuttingWordsAttackOnly.id,
       "attackRollReduction",
     );
+    const encodedAttackRollFrontier = Schema.encodeSync(
+      BattleCheckpointFrontierEnvelopeSchema,
+    )(battleCheckpointFrontierEnvelope(awaitingReaction.state));
     expect(
       Either.isRight(
         Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
-          Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
-            battleCheckpointFrontierEnvelope(awaitingReaction.state),
-          ),
+          encodedAttackRollFrontier,
         ),
+      ),
+    ).toBe(true);
+    if (encodedAttackRollFrontier.frontier.kind !== "interruptDecision") {
+      throw new Error("Expected the encoded attack-roll Reaction frontier.");
+    }
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)({
+          ...encodedAttackRollFrontier,
+          frontier: {
+            ...encodedAttackRollFrontier.frontier,
+            trigger: "attackDamage",
+            decisionHole: {
+              ...encodedAttackRollFrontier.frontier.decisionHole,
+              trigger: "attackDamage",
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)({
+          ...encodedAttackRollFrontier,
+          frontier: {
+            ...encodedAttackRollFrontier.frontier,
+            choices: encodedAttackRollFrontier.frontier.choices.map(
+              (candidate) =>
+                candidate.kind === "reactionRollOrDamageReduction" &&
+                candidate.choice.kind === "attackRollReduction"
+                  ? {
+                      ...candidate,
+                      choice: {
+                        ...candidate.choice,
+                        kind: "abilityCheckReduction",
+                      },
+                    }
+                  : candidate,
+            ),
+          },
+        }),
       ),
     ).toBe(true);
     const resolved = resolveBattleInterrupt({
@@ -251,6 +293,34 @@ describe("battle runtime: Cutting Words", () => {
       cuttingWordsDamageOnly.id,
       "damageRollReduction",
     );
+    const encodedDamageRollFrontier = Schema.encodeSync(
+      BattleCheckpointFrontierEnvelopeSchema,
+    )(battleCheckpointFrontierEnvelope(awaitingReaction.state));
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+          encodedDamageRollFrontier,
+        ),
+      ),
+    ).toBe(true);
+    if (encodedDamageRollFrontier.frontier.kind !== "interruptDecision") {
+      throw new Error("Expected the encoded damage-roll Reaction frontier.");
+    }
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)({
+          ...encodedDamageRollFrontier,
+          frontier: {
+            ...encodedDamageRollFrontier.frontier,
+            trigger: "attackHit",
+            decisionHole: {
+              ...encodedDamageRollFrontier.frontier.decisionHole,
+              trigger: "attackHit",
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(

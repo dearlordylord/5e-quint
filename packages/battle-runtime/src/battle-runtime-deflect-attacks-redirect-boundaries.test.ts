@@ -1,4 +1,6 @@
 import { classLevel } from "@dnd/shared/types";
+import { Schema } from "effect";
+import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -36,6 +38,10 @@ import {
   unitLibrary,
 } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import {
+  BattleCheckpointFrontierEnvelopeSchema,
+  battleCheckpointFrontierEnvelope,
+} from "./index.ts";
 
 describe("battle runtime: Deflect Attacks redirect boundaries", () => {
   test("static Stat Block damage reaches Deflect Attacks redirect without a damage-roll frontier", () => {
@@ -94,6 +100,36 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
     expect(choice.choice).toMatchObject({
       zeroDamageRedirect: { originalDamageType: "slashing" },
     });
+    const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+      battleCheckpointFrontierEnvelope(awaitingReaction.state),
+    );
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+          encoded,
+        ),
+      ),
+    ).toBe(true);
+    if (encoded.frontier.kind !== "interruptDecision") {
+      throw new Error(
+        "Expected the encoded Deflect Attacks Reaction frontier.",
+      );
+    }
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)({
+          ...encoded,
+          frontier: {
+            ...encoded.frontier,
+            trigger: "attackDamage",
+            decisionHole: {
+              ...encoded.frontier.decisionHole,
+              trigger: "attackDamage",
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
     const awaitingRedirect = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(

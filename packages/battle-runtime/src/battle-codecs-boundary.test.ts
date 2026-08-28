@@ -809,6 +809,27 @@ describe("battle codec act ownership boundaries", () => {
     if (pendingEnvelope.frontier.kind !== "interruptDecision") {
       throw new Error("Expected a pending interrupt-decision frontier.");
     }
+    expectEnvelopeDecodeLeft({
+      ...pendingEnvelope,
+      frontier: {
+        ...pendingEnvelope.frontier,
+        decisionHole: {
+          ...pendingEnvelope.frontier.decisionHole,
+          trigger: "attackHit",
+        },
+      },
+    });
+    expectEnvelopeDecodeLeft({
+      ...pendingEnvelope,
+      frontier: {
+        ...pendingEnvelope.frontier,
+        trigger: "attackHit",
+        decisionHole: {
+          ...pendingEnvelope.frontier.decisionHole,
+          trigger: "attackHit",
+        },
+      },
+    });
     const readiedAttackSnapshot =
       pendingEnvelope.checkpoint.readiedResponses.actionsOrMovements.find(
         (readied) => readied.response.kind === "attack",
@@ -878,6 +899,15 @@ describe("battle codec act ownership boundaries", () => {
     ) {
       throw new Error("Expected the encoded readied-attack choice.");
     }
+    const statBlockRetaliationChoice: EncodedInterruptChoice = {
+      kind: "retaliationAttack",
+      reactorId: goblinId,
+      subject: {
+        ...encodedReadiedAttack.subject,
+        command: "retaliationAttack",
+      },
+      initialHoles: [],
+    };
     const malformedInterruptKindCases: readonly EncodedInterruptChoice[] = [
       {
         kind: "castAttackHitBonusActionSpell",
@@ -913,15 +943,7 @@ describe("battle codec act ownership boundaries", () => {
         },
         initialHoles: [],
       },
-      {
-        kind: "retaliationAttack",
-        reactorId: goblinId,
-        subject: {
-          ...encodedReadiedAttack.subject,
-          command: "retaliationAttack",
-        },
-        initialHoles: [],
-      },
+      statBlockRetaliationChoice,
       {
         kind: "releaseReadiedMovement",
         reactorId: goblinId,
@@ -980,6 +1002,18 @@ describe("battle codec act ownership boundaries", () => {
       });
       expect(Either.isLeft(decoded)).toBe(true);
     }
+    expectEnvelopeDecodeLeft({
+      ...pendingEnvelope,
+      frontier: {
+        ...pendingEnvelope.frontier,
+        trigger: "afterDamage",
+        decisionHole: {
+          ...pendingEnvelope.frontier.decisionHole,
+          trigger: "afterDamage",
+        },
+        choices: [statBlockRetaliationChoice],
+      },
+    });
     const replaceTarget = (
       candidate: EncodedInterruptChoice,
     ): EncodedInterruptChoice =>

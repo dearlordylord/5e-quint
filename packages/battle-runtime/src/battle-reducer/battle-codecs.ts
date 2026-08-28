@@ -6491,7 +6491,13 @@ type SerializedExecutionReferenceOwnership = {
 
 type SerializedRuntimeCommandReferencePolicy =
   | {
-      readonly kind: "attackProcedureOwned";
+      readonly kind: "opportunityAttackProcedureOwned";
+      readonly ownerId: CombatantId;
+      readonly targetId: CombatantId;
+      readonly procedureRef: BattleProcedureExecutionRef;
+    }
+  | {
+      readonly kind: "retaliationAttackProcedureOwned";
       readonly ownerId: CombatantId;
       readonly targetId: CombatantId;
       readonly procedureRef: BattleProcedureExecutionRef;
@@ -6577,7 +6583,7 @@ function serializedRuntimeCommandReferencePolicy(
       opportunityAttack: (
         command,
       ): SerializedRuntimeCommandReferencePolicy => ({
-        kind: "attackProcedureOwned",
+        kind: "opportunityAttackProcedureOwned",
         ownerId: command.reactorId,
         targetId: command.targetId,
         procedureRef: command.procedureRef,
@@ -6607,7 +6613,7 @@ function serializedRuntimeCommandReferencePolicy(
       retaliationAttack: (
         command,
       ): SerializedRuntimeCommandReferencePolicy => ({
-        kind: "attackProcedureOwned",
+        kind: "retaliationAttackProcedureOwned",
         ownerId: command.reactorId,
         targetId: command.targetId,
         procedureRef: command.procedureRef,
@@ -6719,18 +6725,51 @@ function serializedAttackProcedureRefIsBound(
   );
   if (combatant === undefined) return false;
   if (combatant.origin.kind === "character") {
-    return (
-      combatant.origin.attackExecution.attackProcedureRef === procedureRef ||
-      combatant.origin.attackExecution.unarmedStrikeProcedureRef ===
-        procedureRef ||
-      combatant.origin.attackExecution.offHandAttackProcedureRef ===
-        procedureRef
+    return serializedCharacterAttackProcedureRefIsBound(
+      combatant,
+      procedureRef,
     );
   }
   return combatant.origin.execution.procedureBindings.some(
     (binding) =>
       binding.procedureRef === procedureRef &&
       binding.procedure.kind === "attack",
+  );
+}
+
+function serializedCharacterAttackProcedureRefIsBound(
+  combatant: EncodedBattleCreatureSnapshot | undefined,
+  procedureRef: BattleProcedureExecutionRef,
+): boolean {
+  if (combatant?.origin.kind !== "character") return false;
+  const attackExecution = combatant.origin.attackExecution;
+  return (
+    attackExecution.attackProcedureRef === procedureRef ||
+    attackExecution.unarmedStrikeProcedureRef === procedureRef ||
+    attackExecution.offHandAttackProcedureRef === procedureRef
+  );
+}
+
+function serializedOpportunityAttackProcedureRefIsBound(
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+  combatantId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+): boolean {
+  if (
+    serializedAttackProcedureRefIsBound(combatants, combatantId, procedureRef)
+  ) {
+    return true;
+  }
+  const combatant = combatants.find(
+    (candidate) => candidate.combatantId === combatantId,
+  );
+  if (combatant?.origin.kind !== "character") return false;
+  return combatant.origin.druidWildShapeAvailableForms.some((form) =>
+    form.execution.procedureBindings.some(
+      (binding) =>
+        binding.procedureRef === procedureRef &&
+        binding.procedure.kind === "attack",
+    ),
   );
 }
 
@@ -6908,8 +6947,6 @@ function serializedRuntimeCommandOwnsBoundProcedure(input: {
   const policy = serializedRuntimeCommandReferencePolicy(command);
   return Match.value(policy).pipe(
     Match.discriminatorsExhaustive("kind")({
-      attackProcedureOwned: ({ ownerId, procedureRef }) =>
-        serializedAttackProcedureRefIsBound(combatants, ownerId, procedureRef),
       combatantOwned: ({ ownerId }) =>
         serializedProcedureRefsBelongToCombatant(
           ownerId,
@@ -6928,6 +6965,17 @@ function serializedRuntimeCommandOwnsBoundProcedure(input: {
           (readied) =>
             readied.casterId === ownerId &&
             readied.procedureRef === procedureRef,
+        ),
+      opportunityAttackProcedureOwned: ({ ownerId, procedureRef }) =>
+        serializedOpportunityAttackProcedureRefIsBound(
+          combatants,
+          ownerId,
+          procedureRef,
+        ),
+      retaliationAttackProcedureOwned: ({ ownerId, procedureRef }) =>
+        serializedCharacterAttackProcedureRefIsBound(
+          combatants.find((combatant) => combatant.combatantId === ownerId),
+          procedureRef,
         ),
       spellInvocationOwned: ({ ownerId, procedureRef, executionFactsKind }) => {
         const binding = characterProcedureBinding(
@@ -7492,10 +7540,11 @@ function serializedRuntimeCommandTargetIsLive(
     combatants.some((combatant) => combatant.combatantId === targetId);
   return Match.value(serializedRuntimeCommandReferencePolicy(command)).pipe(
     Match.discriminatorsExhaustive("kind")({
-      attackProcedureOwned: ({ targetId }) => targetIsLive(targetId),
       combatantOwned: () => true,
+      opportunityAttackProcedureOwned: ({ targetId }) => targetIsLive(targetId),
       readiedAttackOwned: ({ targetId }) => targetIsLive(targetId),
       readiedSpellOwned: () => true,
+      retaliationAttackProcedureOwned: ({ targetId }) => targetIsLive(targetId),
       spellInvocationOwned: () => true,
     }),
   );
@@ -7514,11 +7563,19 @@ function serializedInterruptChoiceMatchesTrigger(
         trigger === "afterDamage" ||
         trigger === "creatureFalls",
       opportunityAttack: () => trigger === "opportunityAttack",
-      reactionRollOrDamageReduction: () => true,
-      releaseReadiedAction: () => true,
-      releaseReadiedAttack: () => true,
-      releaseReadiedMovement: () => true,
-      releaseReadiedSpell: () => true,
+      reactionRollOrDamageReduction: ({ choice: modifier }) =>
+        Match.value(modifier.kind).pipe(
+          Match.when("abilityCheckReduction", () => false),
+          Match.when("attackDamageReduction", () => trigger === "attackHit"),
+          Match.when("attackRollReduction", () => trigger === "attackHit"),
+          Match.when("damageRollReduction", () => trigger === "attackDamage"),
+          Match.when("fallDamageReduction", () => trigger === "creatureFalls"),
+          Match.exhaustive,
+        ),
+      releaseReadiedAction: () => trigger === "reportedReadyTrigger",
+      releaseReadiedAttack: () => trigger === "reportedReadyTrigger",
+      releaseReadiedMovement: () => trigger === "reportedReadyTrigger",
+      releaseReadiedSpell: () => trigger === "reportedReadyTrigger",
       retaliationAttack: () => trigger === "afterDamage",
     }),
   );
@@ -7631,6 +7688,7 @@ function battleCheckpointFrontierInvariantsHold(
           new Set(battleSubjectProcedureRefs(value.subject)),
         ),
       interruptDecision: (value) =>
+        value.trigger === value.decisionHole.trigger &&
         value.choices.every((choice) =>
           serializedInterruptChoiceInvariantsHold({
             choice,
