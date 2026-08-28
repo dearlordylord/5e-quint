@@ -1,6 +1,6 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
-  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
+  assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
@@ -84,7 +84,7 @@ import {
   spiritualWeaponUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
-import { BattleSnapshotSchema } from "./index.ts";
+import { BattleCheckpointFrontierEnvelopeSchema } from "./index.ts";
 
 const slowExtraTargetId = combatantId("unit-profile-slow-extra-target");
 const slowMultiattackTargetId = combatantId(
@@ -242,7 +242,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     if (targetTurnNeedsSave.tag !== "needsHoles") {
       throw new Error("Expected Slow target End Turn to request a save.");
     }
-    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+    assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: targetTurnNeedsSave.snapshot,
       subject: targetTurnNeedsSave.subject,
       holes: targetTurnNeedsSave.holes,
@@ -579,16 +579,15 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       }),
     );
     const snapshot = snapshotBattle(targetTurn.state);
-    const focusedSnapshot = {
-      ...snapshot,
-      acts: snapshot.acts.filter(
-        (candidate) =>
-          "procedureRef" in candidate.subject &&
-          candidate.subject.procedureRef === act.subject.procedureRef,
-      ),
+    const focusedEnvelope = {
+      checkpoint: snapshot,
+      frontier: {
+        kind: "acts" as const,
+        acts: [{ subject: act.subject, initialHoles: act.initialHoles }],
+      },
     };
-    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
-      snapshot: focusedSnapshot,
+    assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
+      snapshot,
       subject: act.subject,
       holes: act.initialHoles,
     });
@@ -605,12 +604,17 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     );
     expect(
       Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)({
-          ...Schema.encodeSync(BattleSnapshotSchema)(focusedSnapshot),
-          acts: focusedSnapshot.acts.map((candidate) => ({
-            ...candidate,
-            initialHoles: wrongOwnerHoles,
-          })),
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)({
+          ...Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+            focusedEnvelope,
+          ),
+          frontier: {
+            ...focusedEnvelope.frontier,
+            acts: focusedEnvelope.frontier.acts.map((candidate) => ({
+              ...candidate,
+              initialHoles: wrongOwnerHoles,
+            })),
+          },
         }),
       ),
     ).toBe(true);

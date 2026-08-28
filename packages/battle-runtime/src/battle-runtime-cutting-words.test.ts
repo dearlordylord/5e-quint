@@ -1,6 +1,8 @@
 import { attackDamageInterruptionFrame } from "./battle-reducer/attack-damage-events.ts";
 import { classLevel } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
+import { Schema } from "effect";
+import * as Either from "effect/Either";
 import { combatantId } from "./identity.ts";
 import {
   attackDamageHoleAfterHit,
@@ -33,6 +35,7 @@ import {
   resolveBattleInterrupt,
   resolveBattleSubject,
   resolveSuccessfulAbilityCheckReactionReduction,
+  battleFrontierInterruptDecisionForState,
   rolledDiceGroup,
   skeletonId,
   startBattleRight,
@@ -41,6 +44,10 @@ import {
   targetFill,
   unitLibrary,
 } from "./battle-runtime.test-support.ts";
+import {
+  BattleCheckpointFrontierEnvelopeSchema,
+  battleCheckpointFrontierEnvelope,
+} from "./index.ts";
 
 describe("battle runtime: Cutting Words", () => {
   test("full SRD Cutting Words is admitted with ability-check reactions supported", () => {
@@ -108,10 +115,61 @@ describe("battle runtime: Cutting Words", () => {
       throw new Error("Expected Cutting Words attack-hit Reaction window.");
     }
     const choice = reactionModifierChoice(
-      awaitingReaction.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(awaitingReaction.state)!.choices,
       cuttingWordsAttackOnly.id,
       "attackRollReduction",
     );
+    const encodedAttackRollFrontier = Schema.encodeSync(
+      BattleCheckpointFrontierEnvelopeSchema,
+    )(battleCheckpointFrontierEnvelope(awaitingReaction.state));
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+          encodedAttackRollFrontier,
+        ),
+      ),
+    ).toBe(true);
+    if (encodedAttackRollFrontier.frontier.kind !== "interruptDecision") {
+      throw new Error("Expected the encoded attack-roll Reaction frontier.");
+    }
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)({
+          ...encodedAttackRollFrontier,
+          frontier: {
+            ...encodedAttackRollFrontier.frontier,
+            trigger: "attackDamage",
+            decisionHole: {
+              ...encodedAttackRollFrontier.frontier.decisionHole,
+              trigger: "attackDamage",
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)({
+          ...encodedAttackRollFrontier,
+          frontier: {
+            ...encodedAttackRollFrontier.frontier,
+            choices: encodedAttackRollFrontier.frontier.choices.map(
+              (candidate) =>
+                candidate.kind === "reactionRollOrDamageReduction" &&
+                candidate.choice.kind === "attackRollReduction"
+                  ? {
+                      ...candidate,
+                      choice: {
+                        ...candidate.choice,
+                        kind: "abilityCheckReduction",
+                      },
+                    }
+                  : candidate,
+            ),
+          },
+        }),
+      ),
+    ).toBe(true);
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
@@ -231,10 +289,38 @@ describe("battle runtime: Cutting Words", () => {
       }).criticalConsequence,
     ).toEqual({ kind: "criticalHit" });
     const choice = reactionModifierChoice(
-      awaitingReaction.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(awaitingReaction.state)!.choices,
       cuttingWordsDamageOnly.id,
       "damageRollReduction",
     );
+    const encodedDamageRollFrontier = Schema.encodeSync(
+      BattleCheckpointFrontierEnvelopeSchema,
+    )(battleCheckpointFrontierEnvelope(awaitingReaction.state));
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+          encodedDamageRollFrontier,
+        ),
+      ),
+    ).toBe(true);
+    if (encodedDamageRollFrontier.frontier.kind !== "interruptDecision") {
+      throw new Error("Expected the encoded damage-roll Reaction frontier.");
+    }
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)({
+          ...encodedDamageRollFrontier,
+          frontier: {
+            ...encodedDamageRollFrontier.frontier,
+            trigger: "attackHit",
+            decisionHole: {
+              ...encodedDamageRollFrontier.frontier.decisionHole,
+              trigger: "attackHit",
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(

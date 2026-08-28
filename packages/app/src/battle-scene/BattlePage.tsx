@@ -1,12 +1,12 @@
-import { battlePresentedSnapshot } from "@dnd/battle-runtime"
-import { Either } from "effect"
+import { type BattlePresentationIssue, battlePresentedCheckpointFrontierEnvelope } from "@dnd/battle-runtime"
+import { Either, Match } from "effect"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { EventLog, type EventLogEntry } from "#/components/EventLog.tsx"
 import { PageShell } from "#/components/PageShell.tsx"
 import { BTN_SM } from "#/components/styles.ts"
 
-import { computeWizardBattleScene } from "./battle-scene-layout.ts"
+import { type BattleScenePresentationIssue, computeWizardBattleScene } from "./battle-scene-layout.ts"
 import { BattleField } from "./BattleField.tsx"
 import { InitiativeTracker } from "./InitiativeTracker.tsx"
 import type { WizardBattleDemoMeta, WizardBattleDemoStep } from "./wizard-battle-demo.ts"
@@ -28,16 +28,16 @@ export function BattlePage({
   const headerRef = useRef<HTMLDivElement | null>(null)
   const step = steps[cursor]
   const lastStep = steps.length - 1
-  const presentedSnapshot = useMemo(() => battlePresentedSnapshot(step.session), [step.session])
+  const presentedEnvelope = useMemo(() => battlePresentedCheckpointFrontierEnvelope(step.session), [step.session])
   const projectionResult = useMemo(
     () =>
-      Either.flatMap(presentedSnapshot, (snapshot) =>
+      Either.flatMap(presentedEnvelope, (envelope) =>
         Either.mapLeft(
-          computeWizardBattleScene({ meta, snapshot, step, stepIndex: cursor }),
+          computeWizardBattleScene({ meta, snapshot: envelope.checkpoint, step, stepIndex: cursor }),
           (issue) => [issue] as const
         )
       ),
-    [cursor, meta, presentedSnapshot, step]
+    [cursor, meta, presentedEnvelope, step]
   )
   const logEntries: ReadonlyArray<EventLogEntry> = useMemo(
     () => steps.map((entry) => ({ detail: entry.detail, label: entry.title })),
@@ -117,9 +117,7 @@ export function BattlePage({
       <PageShell title="Battle Visualizer">
         <ul role="alert">
           {projectionResult.left.map((issue) => (
-            <li key={`${issue.combatantId}:${issue.reason}`}>
-              {`Battle presentation is unavailable for combatant ${issue.combatantId}: ${issue.reason}.`}
-            </li>
+            <li key={presentationIssueKey(issue)}>{presentationIssueMessage(issue)}</li>
           ))}
         </ul>
       </PageShell>
@@ -178,6 +176,37 @@ export function BattlePage({
         <EventLog entries={logEntries} cursor={cursor} onJumpTo={stepTo} />
       </div>
     </PageShell>
+  )
+}
+
+function presentationIssueKey(issue: BattlePresentationIssue | BattleScenePresentationIssue): string {
+  return Match.value(issue).pipe(
+    Match.when({ tag: "battleSnapshotPresentationIssue" }, (matched) => `${matched.combatantId}:${matched.reason}`),
+    Match.when({ tag: "battleScenePresentationIssue" }, (matched) => `${matched.combatantId}:${matched.reason}`),
+    Match.when(
+      { tag: "battleInterruptChoicePresentationIssue" },
+      (matched) => `${matched.reactorId}:${matched.choiceKind}:${matched.reason}`
+    ),
+    Match.exhaustive
+  )
+}
+
+function presentationIssueMessage(issue: BattlePresentationIssue | BattleScenePresentationIssue): string {
+  return Match.value(issue).pipe(
+    Match.when(
+      { tag: "battleSnapshotPresentationIssue" },
+      (matched) => `Battle presentation is unavailable for combatant ${matched.combatantId}: ${matched.reason}.`
+    ),
+    Match.when(
+      { tag: "battleScenePresentationIssue" },
+      (matched) => `Battle scene presentation is unavailable for combatant ${matched.combatantId}: ${matched.reason}.`
+    ),
+    Match.when(
+      { tag: "battleInterruptChoicePresentationIssue" },
+      (matched) =>
+        `Battle interrupt choice presentation is unavailable for reactor ${matched.reactorId}: ${matched.reason}.`
+    ),
+    Match.exhaustive
   )
 }
 

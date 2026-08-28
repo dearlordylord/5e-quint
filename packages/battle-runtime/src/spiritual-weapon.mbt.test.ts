@@ -301,7 +301,7 @@ function projectSpiritualWeaponMbtState(input: {
   }
   return {
     targetHp: target.hp,
-    bonusActionAvailable: snapshot.turn.bonusActionAvailable,
+    bonusActionAvailable: snapshot.turn.bonusActionQuotaAvailable,
     casterConcentrating: caster.concentrating,
     forcePositionId: spiritualWeaponForcePositionId(input.state),
     holes: projectSpiritualWeaponHoles(input.holes),

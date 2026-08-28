@@ -5,7 +5,10 @@ import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedur
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31F true_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31C divine_smite
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage spell.invocation-spell-hosted-weapon-attack
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleFrontierInterruptDecisionForState,
+  requireCharacterSpellProcedureRefForTest,
+} from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import { characterAttackSubjectForTest } from "./battle-runtime.test-support.ts";
@@ -313,14 +316,15 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
 
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error(
         "Expected Divine Smite Unarmed Strike hit to open an attack-hit window.",
       );
     }
-    expect(awaitingReaction.snapshot.pendingInterrupt?.choices).toEqual(
+    expect(
+      battleFrontierInterruptDecisionForState(awaitingReaction.state)?.choices,
+    ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           kind: "castAttackHitBonusActionSpell",
@@ -376,12 +380,13 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
         "Expected Divine Smite Unarmed Strike hit to open an attack-hit window.",
       );
     }
-    const smiteChoice =
-      awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-        (choice) =>
-          choice.kind === "castAttackHitBonusActionSpell" &&
-          choice.reactorId === spellCasterId,
-      );
+    const smiteChoice = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    )?.choices.find(
+      (choice) =>
+        choice.kind === "castAttackHitBonusActionSpell" &&
+        choice.reactorId === spellCasterId,
+    );
     if (
       smiteChoice === undefined ||
       smiteChoice.kind !== "castAttackHitBonusActionSpell"
@@ -466,7 +471,6 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
 
     expect(afterHit).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: null },
     });
   });
   test("divine_smite is admitted after a melee weapon hit and adds Radiant damage without replaying the base attack", () => {
@@ -498,19 +502,19 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
 
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error(
         "Expected Divine Smite hit to open an attack-hit window.",
       );
     }
-    const smiteChoice =
-      awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-        (choice) =>
-          choice.kind === "castAttackHitBonusActionSpell" &&
-          choice.reactorId === spellCasterId,
-      );
+    const smiteChoice = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    )?.choices.find(
+      (choice) =>
+        choice.kind === "castAttackHitBonusActionSpell" &&
+        choice.reactorId === spellCasterId,
+    );
     if (
       smiteChoice === undefined ||
       smiteChoice.kind !== "castAttackHitBonusActionSpell"
@@ -537,9 +541,8 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     expect(afterSmite).toMatchObject({
       tag: "needsHoles",
       snapshot: {
-        pendingInterrupt: null,
         turn: {
-          bonusActionAvailable: false,
+          bonusActionQuotaAvailable: false,
           spellSlotUsesThisTurn: [
             { kind: "committed", combatantId: spellCasterId },
           ],
@@ -671,12 +674,13 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     if (awaitingAttackHit.tag !== "needsHoles") {
       throw new Error("Expected Divine Smite attack-hit window.");
     }
-    const smiteChoice =
-      awaitingAttackHit.snapshot.pendingInterrupt?.choices.find(
-        (choice) =>
-          choice.kind === "castAttackHitBonusActionSpell" &&
-          choice.reactorId === spellCasterId,
-      );
+    const smiteChoice = battleFrontierInterruptDecisionForState(
+      awaitingAttackHit.state,
+    )?.choices.find(
+      (choice) =>
+        choice.kind === "castAttackHitBonusActionSpell" &&
+        choice.reactorId === spellCasterId,
+    );
     if (
       smiteChoice === undefined ||
       smiteChoice.kind !== "castAttackHitBonusActionSpell"
@@ -905,17 +909,8 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
       tag: "needsHoles",
       holes: [{ kind: "interruptDecision", trigger: "spellCast" }],
       snapshot: {
-        pendingInterrupt: {
-          trigger: "spellCast",
-          choices: [
-            expect.objectContaining({
-              kind: "releaseReadiedSpell",
-              readiedSpellCasterId: spellTargetId,
-            }),
-          ],
-        },
         turn: {
-          bonusActionAvailable: false,
+          bonusActionQuotaAvailable: false,
           spellSlotUsesThisTurn: [
             { kind: "committed", combatantId: spellCasterId },
           ],
@@ -928,14 +923,13 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     const afterReadyDecline = resolveBattleInterrupt({
       state: afterSmite.state,
       fill: interruptDecisionFill(
-        afterSmite.snapshot.pendingInterrupt!.decisionHole,
+        battleFrontierInterruptDecisionForState(afterSmite.state)!.decisionHole,
         { kind: "decline", responderId: spellTargetId },
       ),
     });
     expect(afterReadyDecline).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "rolledDice" }],
-      snapshot: { pendingInterrupt: null },
     });
     if (afterReadyDecline.tag !== "needsHoles") {
       throw new Error("Expected Divine Smite replay to need attack damage.");
@@ -987,12 +981,13 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
         "Expected Divine Smite critical hit to open an attack-hit window.",
       );
     }
-    const smiteChoice =
-      awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-        (choice) =>
-          choice.kind === "castAttackHitBonusActionSpell" &&
-          choice.reactorId === spellCasterId,
-      );
+    const smiteChoice = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    )?.choices.find(
+      (choice) =>
+        choice.kind === "castAttackHitBonusActionSpell" &&
+        choice.reactorId === spellCasterId,
+    );
     if (
       smiteChoice === undefined ||
       smiteChoice.kind !== "castAttackHitBonusActionSpell"
@@ -1074,12 +1069,13 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
         "Expected Divine Smite hit to open an attack-hit window.",
       );
     }
-    const smiteChoice =
-      awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-        (choice) =>
-          choice.kind === "castAttackHitBonusActionSpell" &&
-          choice.reactorId === spellCasterId,
-      );
+    const smiteChoice = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    )?.choices.find(
+      (choice) =>
+        choice.kind === "castAttackHitBonusActionSpell" &&
+        choice.reactorId === spellCasterId,
+    );
     if (
       smiteChoice === undefined ||
       smiteChoice.kind !== "castAttackHitBonusActionSpell"

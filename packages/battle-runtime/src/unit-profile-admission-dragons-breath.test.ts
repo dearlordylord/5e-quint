@@ -55,7 +55,7 @@ import {
   type SpellRecord,
 } from "./unit-profile-admission.test-support.ts";
 import {
-  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
+  assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
   battleActiveEffectExecutionRefForTest,
   requireCharacterUnitProcedureRefForTest,
   requireCharacterSpellProcedureRefForTest,
@@ -262,7 +262,7 @@ describe("Dragon's Breath initial cast admission", () => {
     if (needsDamage.tag !== "needsHoles") {
       throw new Error("Expected Dragon's Breath damage dice.");
     }
-    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+    assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: needsDamage.snapshot,
       subject: exhaleAct.subject,
       holes: needsDamage.holes,

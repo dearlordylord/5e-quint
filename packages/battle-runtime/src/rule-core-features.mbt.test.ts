@@ -108,6 +108,7 @@ import {
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
   battleUnitRefWithSupportProfiles,
   battleId,
+  battleFrontierInterruptDecisionForState,
   characterBattleResourceUsage,
   characterId,
   combatantId,
@@ -1627,7 +1628,7 @@ function createRuleCoreFeatureDriver(
         );
       }
       const choice = reactionModifierChoice(
-        awaited.snapshot.pendingInterrupt?.choices ?? [],
+        battleFrontierInterruptDecisionForState(awaited.state)?.choices ?? [],
         input.unitId,
         input.modifierKind,
       );
@@ -2831,7 +2832,7 @@ function rolledDiceGroup(group: readonly number[]): {
 function reactionModifierChoice(
   choices: ReadonlyArray<
     NonNullable<
-      ReturnType<typeof snapshotBattle>["pendingInterrupt"]
+      ReturnType<typeof battleFrontierInterruptDecisionForState>
     >["choices"][number]
   >,
   unitId: string,
@@ -2947,7 +2948,8 @@ function projectRuleCoreFeatureState(input: {
     critical: input.critical,
     actorArmorClass: input.actorArmorClass,
     holes: input.holes.map(projectFeatureHole),
-    pendingInterrupt: snapshot.pendingInterrupt !== null,
+    pendingInterrupt:
+      battleFrontierInterruptDecisionForState(input.state) !== null,
     lastResult: input.lastResult,
     lastInvalidReason: input.lastInvalidReason,
   });

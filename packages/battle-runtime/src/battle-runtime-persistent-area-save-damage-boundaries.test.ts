@@ -223,7 +223,6 @@ describe("persistent area save/damage public boundaries", () => {
     ).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
-      snapshot: { pendingInterrupt: { trigger: "saveFailed" } },
     });
   });
 

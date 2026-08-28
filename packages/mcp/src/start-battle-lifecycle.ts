@@ -1,16 +1,13 @@
-import {
-  battleAdmittedSpellPresentations,
-  battlePresentedSnapshot,
-  discoverBattleActs,
-  type BattleId,
-  type BattleRuntimeSession,
-} from "@dnd/battle-runtime";
+import { type BattleId, type BattleRuntimeSession } from "@dnd/battle-runtime";
 import { Match, Either } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import { battleStateSnapshot } from "./battle-state-snapshot.ts";
 import { StartBattleOutputSchema } from "./battle-tool-output.ts";
-import { battleSnapshotPresentationIssueContent } from "./battle-tool-payloads.ts";
+import {
+  battlePresentationEnvelopeForSession,
+  battlePresentationIssueContent,
+} from "./battle-tool-payloads.ts";
 import { completeBattleStateTransition } from "./battle-state-transition.ts";
 import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { schemaJsonContent } from "./schema-codec.ts";
@@ -46,10 +43,14 @@ export function commitActiveBattleStart(input: {
     readonly session: AvailableCharacterSession;
   }[];
 }) {
-  const snapshot = battlePresentedSnapshot(input.session);
-  if (Either.isLeft(snapshot)) {
-    return battleSnapshotPresentationIssueContent(snapshot.left);
+  const presentedEnvelope = battlePresentationEnvelopeForSession(
+    input.root,
+    input.session,
+  );
+  if (Either.isLeft(presentedEnvelope)) {
+    return battlePresentationIssueContent(presentedEnvelope.left);
   }
+  const envelope = presentedEnvelope.right;
   return completeBattleStateTransition({
     root: input.root,
     transition: input.root.sessionStore.commitBattleStart({
@@ -65,13 +66,7 @@ export function commitActiveBattleStart(input: {
         throw new Error("Battle start payload requires owned active state.");
       }
       return schemaJsonContent(StartBattleOutputSchema, {
-        battleState,
-        snapshot: snapshot.right,
-        availableActs: discoverBattleActs(input.session),
-        admittedSpellPresentations: battleAdmittedSpellPresentations(
-          input.session,
-        ),
-        presentedInterruptChoices: [],
+        envelope,
         session: { ...mcpSessionSummary(session), battleState },
       });
     },

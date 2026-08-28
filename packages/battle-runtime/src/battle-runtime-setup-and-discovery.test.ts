@@ -31,6 +31,7 @@ import {
   BattleHoleSchema,
   battleId,
   BattleSnapshotSchema,
+  discoverBattleActCandidates,
   discoverBattleActs,
   Either,
   initiativeScore,
@@ -148,19 +149,9 @@ describe("battle runtime: setup and discovery", () => {
           conditions: [],
         },
       ],
-      acts: [
-        {
-          subject: {
-            tag: "runtimeCommand",
-            actorId: goblinId,
-            command: "endTurn",
-          },
-          initialHoles: [],
-        },
-      ],
       turn: {
         actionResources: [{ kind: "action", source: "turn" }],
-        bonusActionAvailable: false,
+        bonusActionQuotaAvailable: true,
         spellSlotUsesThisTurn: [],
         levelOnePlusSpellCastsThisTurn: [],
         quickenedLevelOnePlusSpellCastsThisTurn: [],
@@ -262,42 +253,42 @@ describe("battle runtime: setup and discovery", () => {
       readiedResponses: { spells: [], actionsOrMovements: [] },
       obscurementZones: [],
       helpAttackMarkers: [],
-      pendingInterrupt: null,
     });
   });
 
-  // Rules-Glossary.md — Bonus Action: a creature can take a Bonus Action only
-  // when a rule explicitly grants one. Monsters/Overview.md says a monster's
-  // Bonus Actions section supplies those grants.
-  test("snapshot Bonus Action availability follows surfaced rule grants", () => {
-    const skeletonBattle = startBattleRight({
+  // Rules-Glossary.md — Bonus Action: the turn reset restores the per-turn
+  // Bonus Action quota for every creature. That quota is an economy resource,
+  // not evidence that Act discovery found a usable Bonus Action; a creature
+  // can have an unspent quota while its surfaced Bonus Action grants are empty.
+  test("snapshot Bonus Action quota is distinct from surfaced Bonus Action grants", () => {
+    const skeletonBattle = startBattleSessionRight({
       battleId: battleId("battle-skeleton-bonus-action-availability"),
       combatants: [
         skeletonCreatureInit({ initiative: 20 }),
         characterSeed({ initiative: 10 }),
       ],
     });
-    const skeletonSnapshot = snapshotBattle(skeletonBattle);
+    const skeletonSnapshot = snapshotBattle(skeletonBattle.state);
+    const skeletonActs = discoverBattleActs(skeletonBattle);
 
-    expect(skeletonSnapshot.turn.bonusActionAvailable).toBe(false);
+    expect(skeletonSnapshot.turn.bonusActionQuotaAvailable).toBe(true);
     expect(
-      skeletonSnapshot.acts.some(
-        ({ subject }) => subject.tag === "bonusAction",
-      ),
+      skeletonActs.some(({ subject }) => subject.tag === "bonusAction"),
     ).toBe(false);
 
-    const goblinBattle = startBattleRight({
+    const goblinBattle = startBattleSessionRight({
       battleId: battleId("battle-goblin-bonus-action-availability"),
       combatants: [
         statBlockCreatureInit({ initiative: 20 }),
         characterSeed({ initiative: 10 }),
       ],
     });
-    const goblinSnapshot = snapshotBattle(goblinBattle);
+    const goblinSnapshot = snapshotBattle(goblinBattle.state);
+    const goblinActs = discoverBattleActs(goblinBattle);
 
-    expect(goblinSnapshot.turn.bonusActionAvailable).toBe(true);
+    expect(goblinSnapshot.turn.bonusActionQuotaAvailable).toBe(true);
     expect(
-      goblinSnapshot.acts.some(({ subject }) => subject.tag === "bonusAction"),
+      goblinActs.some(({ subject }) => subject.tag === "bonusAction"),
     ).toBe(true);
   });
 
@@ -319,8 +310,7 @@ describe("battle runtime: setup and discovery", () => {
       throw new Error("Expected the Attack target frontier.");
     }
 
-    expect(attack.snapshot.acts).toEqual([]);
-    expect(snapshotBattle(attack.state).acts).toEqual([]);
+    expect(attack.holes[0]?.kind).toBe("targetChoice");
     expect(
       resolveBattleSubject({
         state: attack.state,
@@ -360,7 +350,7 @@ describe("battle runtime: setup and discovery", () => {
       );
 
     expect(unarmedStrike).toBeDefined();
-    const attackAct = snapshotBattle(session.state).acts.find(
+    const attackAct = discoverBattleActs(session).find(
       ({ subject }) =>
         subject.tag === "action" &&
         subject.action === "attack" &&
@@ -405,7 +395,7 @@ describe("battle runtime: setup and discovery", () => {
     expect(damaged.state.combatants.get(goblinId)?.hp).toBe(9);
 
     const grappleSession = makeSession("grapple");
-    const grappleAct = snapshotBattle(grappleSession.state).acts.find(
+    const grappleAct = discoverBattleActs(grappleSession).find(
       ({ subject }) => subject.tag === "action" && subject.action === "grapple",
     );
     if (
@@ -459,7 +449,7 @@ describe("battle runtime: setup and discovery", () => {
     ]);
 
     const shoveSession = makeSession("shove");
-    const shoveAct = snapshotBattle(shoveSession.state).acts.find(
+    const shoveAct = discoverBattleActs(shoveSession).find(
       ({ subject }) => subject.tag === "action" && subject.action === "shove",
     );
     if (
@@ -1016,6 +1006,6 @@ describe("battle runtime: setup and discovery", () => {
     expect(removed.subjectResolutionPhase).toEqual({
       kind: "subjectSelection",
     });
-    expect(snapshotBattle(removed).acts.length).toBeGreaterThan(0);
+    expect(discoverBattleActCandidates(removed).length).toBeGreaterThan(0);
   });
 });

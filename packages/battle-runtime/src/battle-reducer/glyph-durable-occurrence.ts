@@ -74,6 +74,7 @@ import type {
   BattleGlyphExplosiveRuneDamageRollHole,
   BattleGlyphExplosiveRuneSavingThrowOutcomeHole,
   BattleHole,
+  BattleResolutionCheckpointBoundary,
   BattleHideousLaughterRepeatSavingThrowOutcomeHole,
   BattleSpellDamageReductionRollHole,
   BattleSpellTargetListSpatialFact,
@@ -564,6 +565,7 @@ export type ReleaseGlyphStoredSpellResult =
       readonly state: BattleState;
       readonly sourceEffectId: BattleSpellEffectOccurrenceId;
       readonly holes: readonly BattleHole[];
+      readonly checkpointBoundary?: BattleResolutionCheckpointBoundary;
     };
 
 type GlyphStoredSpellReleaseWitnessValidationFailure =
@@ -1024,6 +1026,7 @@ export function releaseGlyphStoredSpell(input: {
       state: resolved.state,
       sourceEffectId,
       holes: resolved.holes,
+      ...optionalProperty("checkpointBoundary", resolved.checkpointBoundary),
     };
   }
   if (resolved.tag === "invalid") {

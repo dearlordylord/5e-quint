@@ -15,6 +15,7 @@ import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // UNIT-IDENTITY-REPLAY: L1H-MASS-HEALING-WORD mass_healing_word doMassHealingWordNeedsTargetList doMassHealingWordNeedsHealingRoll doMassHealingWordWounded
 import { isDeepStrictEqual } from "node:util";
 import {
+  battleFrontierInterruptDecisionForState,
   characterAttackSubjectForTest,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
@@ -1028,7 +1029,9 @@ function createRuleCoreSpellDriver() {
         }
         state = attackHit.state;
         holes = attackHit.holes;
-        const releaseChoice = attackHit.snapshot.pendingInterrupt?.choices.find(
+        const releaseChoice = battleFrontierInterruptDecisionForState(
+          attackHit.state,
+        )?.choices.find(
           (candidate) =>
             candidate.kind === "releaseReadiedSpell" &&
             candidate.readiedSpellCasterId === casterId,
@@ -2248,7 +2251,7 @@ function projectRuleCoreSpellState(input: {
   }
   return withRuleCoreComponentRoute(componentOwner, {
     actionAvailable: snapshot.turn.actionResources.length > 0,
-    bonusActionAvailable: snapshot.turn.bonusActionAvailable,
+    bonusActionAvailable: snapshot.turn.bonusActionQuotaAvailable,
     casterReactionAvailable: caster.reactionAvailable,
     casterHp: caster.hp,
     targetHp: target.hp,

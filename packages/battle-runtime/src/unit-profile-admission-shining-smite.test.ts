@@ -3,13 +3,17 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-SHINING-SMITE shining_smite
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage-illumination
 import { Schema } from "effect";
+import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 import {
+  BattleCheckpointFrontierEnvelopeSchema,
   BattleInterruptProcedureChoiceSchema,
   BattleSnapshotSchema,
+  battleCheckpointFrontierEnvelope,
 } from "./index.ts";
 import {
   characterSpellInvocationRefForProcedureRefForTest,
+  battleFrontierInterruptDecisionForState,
   testCharacterD20Statistics,
 } from "./battle-runtime.test-support.ts";
 import { characterAttackSubjectForTest } from "./battle-runtime.test-support.ts";
@@ -111,30 +115,40 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Shining Smite attack-hit window.");
     }
-    const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-      (candidate) => {
-        if (candidate.kind !== "castAttackHitBonusActionSpell") return false;
-        const invocationRef = characterSpellInvocationRefForProcedureRefForTest(
-          battleRuntimeSessionForTest({
-            ...session,
-            state: awaitingReaction.state,
-          }),
-          candidate.reactorId,
-          candidate.subject.procedureRef,
-        );
-        return (
-          invocationRef.spellId === shiningSmiteUnitId &&
-          invocationRef.tag === "spellSlot" &&
-          Number(invocationRef.slotLevel) === shiningSmiteUpcastSlotLevel
-        );
-      },
-    );
+    const choice = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    )?.choices.find((candidate) => {
+      if (candidate.kind !== "castAttackHitBonusActionSpell") return false;
+      const invocationRef = characterSpellInvocationRefForProcedureRefForTest(
+        battleRuntimeSessionForTest({
+          ...session,
+          state: awaitingReaction.state,
+        }),
+        candidate.reactorId,
+        candidate.subject.procedureRef,
+      );
+      return (
+        invocationRef.spellId === shiningSmiteUnitId &&
+        invocationRef.tag === "spellSlot" &&
+        Number(invocationRef.slotLevel) === shiningSmiteUpcastSlotLevel
+      );
+    });
     if (
       choice === undefined ||
       choice.kind !== "castAttackHitBonusActionSpell"
     ) {
       throw new Error("Expected Shining Smite after-hit choice.");
     }
+    const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+      battleCheckpointFrontierEnvelope(awaitingReaction.state),
+    );
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+          encoded,
+        ),
+      ),
+    ).toBe(true);
     expect(
       characterSpellInvocationRefForProcedureRefForTest(
         battleRuntimeSessionForTest({
@@ -427,7 +441,9 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     if (unarmedHit.tag !== "needsHoles") {
       throw new Error("Expected Shining Smite Unarmed Strike window.");
     }
-    const unarmedChoice = unarmedHit.snapshot.pendingInterrupt?.choices.find(
+    const unarmedChoice = battleFrontierInterruptDecisionForState(
+      unarmedHit.state,
+    )?.choices.find(
       (candidate) => candidate.kind === "castAttackHitBonusActionSpell",
     );
     if (unarmedChoice?.kind !== "castAttackHitBonusActionSpell") {
@@ -497,7 +513,6 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     });
     expect(rangedHit).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: null },
     });
   });
 });

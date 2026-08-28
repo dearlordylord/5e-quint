@@ -12,6 +12,7 @@ import {
   concentrationSavingThrowFill,
   interruptDecisionFill,
   requireCharacterSpellProcedureRefForTest,
+  battleFrontierInterruptDecisionForState,
 } from "./battle-runtime.test-support.ts";
 import {
   damageRollFillWithGroups,
@@ -181,7 +182,9 @@ describe("Heat Metal object-contact public entry boundaries", () => {
       holes: [{ kind: "interruptDecision", trigger: "spellCast" }],
     });
     if (result.tag !== "needsHoles") return;
-    const pendingInterrupt = result.snapshot.pendingInterrupt;
+    const pendingInterrupt = battleFrontierInterruptDecisionForState(
+      result.state,
+    );
     expect(pendingInterrupt?.trigger).toBe("spellCast");
     if (pendingInterrupt === null) return;
     const declined = resolveBattleInterrupt({
@@ -261,7 +264,7 @@ describe("Heat Metal object-contact public entry boundaries", () => {
     });
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { turn: { bonusActionAvailable: false } },
+      snapshot: { turn: { bonusActionQuotaAvailable: false } },
     });
     if (resolved.tag !== "resolved") return;
     expect(requireCombatant(resolved.state, spellTargetId).hp).toBe(Hp(20));

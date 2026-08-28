@@ -46,6 +46,7 @@ import type {
   BattleFill,
   BattleState,
 } from "./unit-profile-admission.test-support.ts";
+import { battleFrontierInterruptDecisionForState } from "./battle-runtime.test-support.ts";
 
 describe("SRDINV32A deterministic Dancing Lights admission", () => {
   test("dancing_lights is admitted as Magic Action source-owned movable Dim Light", () => {
@@ -278,15 +279,6 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       tag: "needsHoles",
       holes: [{ kind: "interruptDecision", trigger: "spellCast" }],
       snapshot: {
-        pendingInterrupt: {
-          trigger: "spellCast",
-          choices: [
-            expect.objectContaining({
-              kind: "releaseReadiedSpell",
-              readiedSpellCasterId: spellTargetId,
-            }),
-          ],
-        },
         lightEmitters: [],
       },
     });
@@ -296,14 +288,17 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     const afterDecline = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
+        battleFrontierInterruptDecisionForState(awaitingReaction.state)!
+          .decisionHole,
         { kind: "decline", responderId: spellTargetId },
       ),
     });
     if (afterDecline.tag !== "resolved") {
       throw new Error("Expected declined reaction to replay Dancing Lights.");
     }
-    expect(afterDecline.snapshot.pendingInterrupt).toBeNull();
+    expect(
+      battleFrontierInterruptDecisionForState(afterDecline.state),
+    ).toBeNull();
     expect(afterDecline.snapshot.lightEmitters).toHaveLength(2);
     expect(
       canSpendAction(afterDecline.state.currentTurnResources, "magic"),

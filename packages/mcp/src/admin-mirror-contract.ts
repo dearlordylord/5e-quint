@@ -1,6 +1,7 @@
-import { BattlePresentedSnapshotSchema } from "@dnd/battle-runtime";
+import { BattlePresentedCheckpointFrontierEnvelopeSchema } from "@dnd/battle-runtime";
 import { Schema } from "effect";
 
+import { battleEnvelopeMatchesActiveSession } from "./battle-envelope-correlation.ts";
 import { CharacterSessionRowSchema } from "./character-tool-output.ts";
 import {
   McpActiveBattleStateSnapshotSchema,
@@ -38,7 +39,6 @@ export const adminMirrorSequence: (value: number) => AdminMirrorSequence =
 const AdminMirrorSessionSummaryFields = {
   draftIds: McpSessionSnapshotSchema.fields.draftIds,
   selectedStatBlockId: McpSessionSnapshotSchema.fields.selectedStatBlockId,
-  transientBattleFills: McpSessionSnapshotSchema.fields.transientBattleFills,
 };
 export const AdminMirrorSessionSummarySchema = Schema.Struct({
   ...AdminMirrorSessionSummaryFields,
@@ -69,9 +69,21 @@ export const AdminSessionProjectionSchema = Schema.Union(
       ...AdminMirrorSessionSummaryFields,
       battleState: McpActiveBattleStateSnapshotSchema,
     }),
-    battle: BattlePresentedSnapshotSchema,
+    battle: BattlePresentedCheckpointFrontierEnvelopeSchema,
     characters: Schema.Array(CharacterSessionRowSchema),
-  }),
+  }).pipe(
+    Schema.filter(
+      ({ battle, session }) =>
+        battleEnvelopeMatchesActiveSession({
+          envelope: battle,
+          session,
+        }),
+      {
+        message: () =>
+          "An active Battle envelope must match its session Battle and actor.",
+      },
+    ),
+  ),
 );
 export type AdminSessionProjection = typeof AdminSessionProjectionSchema.Type;
 

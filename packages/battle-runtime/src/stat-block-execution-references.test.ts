@@ -10,6 +10,7 @@ import {
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 import {
+  BattleCheckpointFrontierEnvelopeSchema,
   BattleHoleSchema,
   BattleSnapshotSchema,
   BattleSubjectSchema,
@@ -21,6 +22,7 @@ import {
   removeBattleRuntimeCombatants,
   snapshotBattle,
   startBattle,
+  battleCheckpointFrontierEnvelope,
   type BattleState,
 } from "./index.ts";
 import {
@@ -44,12 +46,21 @@ import {
   BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
   BattleStatBlockExecutionScopeRef,
+  battleActiveEffectExecutionOrdinal,
   battleCharacterExecutionScopeRef,
+  battleCharacterExecutionScopeRefOrdinalIsBefore,
   battleActiveEffectExecutionRef,
+  battleActiveEffectExecutionRefOrdinalIsBefore,
+  battleAttackExecutionScopeRef,
+  battleAttackExecutionScopeRefOrdinalIsBefore,
+  battleExecutionScopeCursor,
   battleProcedureExecutionRef,
+  battleProcedureExecutionCursor,
+  battleProcedureExecutionRefOrdinalIsBefore,
   battleResourcePoolExecutionRef,
   battleExecutionScopeOrdinal,
   battleStatBlockExecutionScopeRef,
+  battleStatBlockExecutionScopeRefOrdinalIsBefore,
   battleStatBlockExecutionScopeRefIsWellFormed,
   combatantId,
   type BattleStatBlockExecutionScopeRef as BattleStatBlockExecutionScopeReference,
@@ -102,6 +113,99 @@ function executionReferenceView(
 }
 
 describe("Stat Block execution references", () => {
+  test("orders every execution-reference family against its allocation cursor", () => {
+    const ownerBattleId = battleId("battle-reference-ordinal-ordering");
+    const ownerId = combatantId("reference-ordinal-owner");
+    const ordinal = battleExecutionScopeOrdinal(0);
+    const nextScope = battleExecutionScopeCursor(
+      battleExecutionScopeOrdinal(1),
+    );
+    const characterScope = battleCharacterExecutionScopeRef(
+      ownerBattleId,
+      ownerId,
+      ordinal,
+    );
+    const statBlockScope = battleStatBlockExecutionScopeRef(
+      ownerBattleId,
+      ownerId,
+      ordinal,
+    );
+    const attackScope = battleAttackExecutionScopeRef(
+      ownerBattleId,
+      ownerId,
+      ordinal,
+    );
+    const procedureRef = battleProcedureExecutionRef(
+      characterScope,
+      NonNegativeInteger(0),
+    );
+    const activeEffectRef = battleActiveEffectExecutionRef(
+      JSON.stringify({
+        kind: "activeEffectOccurrence",
+        ownerScopeRef: characterScope,
+        ordinal: 0,
+      }),
+    );
+
+    expect(
+      battleCharacterExecutionScopeRefOrdinalIsBefore(
+        characterScope,
+        nextScope,
+      ),
+    ).toBe(true);
+    expect(
+      battleStatBlockExecutionScopeRefOrdinalIsBefore(
+        statBlockScope,
+        nextScope,
+      ),
+    ).toBe(true);
+    expect(
+      battleAttackExecutionScopeRefOrdinalIsBefore(attackScope, nextScope),
+    ).toBe(true);
+    expect(
+      battleProcedureExecutionRefOrdinalIsBefore(
+        procedureRef,
+        characterScope,
+        battleProcedureExecutionCursor(1),
+      ),
+    ).toBe(true);
+    expect(
+      battleActiveEffectExecutionRefOrdinalIsBefore(
+        activeEffectRef,
+        characterScope,
+        battleActiveEffectExecutionOrdinal(1),
+      ),
+    ).toBe(true);
+    expect(
+      battleCharacterExecutionScopeRefOrdinalIsBefore(
+        characterScope,
+        undefined,
+      ),
+    ).toBe(false);
+    expect(
+      battleStatBlockExecutionScopeRefOrdinalIsBefore(
+        statBlockScope,
+        undefined,
+      ),
+    ).toBe(false);
+    expect(
+      battleAttackExecutionScopeRefOrdinalIsBefore(attackScope, undefined),
+    ).toBe(false);
+    expect(
+      battleProcedureExecutionRefOrdinalIsBefore(
+        procedureRef,
+        statBlockScope,
+        battleProcedureExecutionCursor(1),
+      ),
+    ).toBe(false);
+    expect(
+      battleActiveEffectExecutionRefOrdinalIsBefore(
+        activeEffectRef,
+        statBlockScope,
+        battleActiveEffectExecutionOrdinal(1),
+      ),
+    ).toBe(false);
+  });
   test("offers only rolled damage when structured attack damage omits a static value", () => {
     const base = statBlockRecord();
     const attacks = base.statBlock.actions?.attacks;
@@ -593,54 +697,19 @@ describe("Stat Block execution references", () => {
     const serializedAfterRemoval = Schema.decodeUnknownSync(
       BattleSnapshotSchema,
     )(Schema.encodeSync(BattleSnapshotSchema)(snapshotBattle(removed.right)));
-    const restoredScopeCursors = new Map(removed.right.executionScopeCursors);
-    restoredScopeCursors.clear();
-    for (const cursor of serializedAfterRemoval.executionScopeCursors) {
-      restoredScopeCursors.set(cursor.combatantId, {
-        kind: "active",
-        nextScopeOrdinal: cursor.nextScopeOrdinal,
-      });
-    }
-    for (const allocation of serializedAfterRemoval.retiredExecutionScopeAllocations) {
-      restoredScopeCursors.set(allocation.combatantId, {
-        kind: "retired",
-        nextScopeOrdinal: allocation.nextScopeOrdinal,
-        ownership: allocation.ownership,
-      });
-    }
-    expect(() =>
-      Schema.decodeUnknownSync(BattleSnapshotSchema)({
-        ...serializedAfterRemoval,
-        executionScopeCursors: [
-          ...serializedAfterRemoval.executionScopeCursors,
-          ...serializedAfterRemoval.retiredExecutionScopeAllocations,
-        ],
-      }),
-    ).toThrow();
-    expect(restoredScopeCursors.get(actorId)).toEqual(
-      removed.right.executionScopeCursors.get(actorId),
+    expect(serializedAfterRemoval).not.toHaveProperty("executionScopeCursors");
+    expect(serializedAfterRemoval).not.toHaveProperty(
+      "retiredExecutionScopeAllocations",
     );
-    const retiredAllocation =
-      serializedAfterRemoval.retiredExecutionScopeAllocations[0];
-    if (retiredAllocation === undefined) {
-      throw new Error("Expected retired execution ownership evidence.");
-    }
     expect(() =>
       Schema.decodeUnknownSync(BattleSnapshotSchema)({
         ...serializedAfterRemoval,
-        retiredExecutionScopeAllocations: [
-          ...serializedAfterRemoval.retiredExecutionScopeAllocations,
-          {
-            combatantId: combatantId("never-admitted-combatant"),
-            nextScopeOrdinal: retiredAllocation.nextScopeOrdinal,
-            ownership: retiredAllocation.ownership,
-          },
-        ],
+        executionScopeCursors: [],
       }),
     ).toThrow();
     const restoredAfterRemoval: BattleState = {
       ...removed.right,
-      executionScopeCursors: restoredScopeCursors,
+      executionScopeCursors: new Map(removed.right.executionScopeCursors),
     };
     const characterWithoutFormsId = combatantId(
       "execution-ref-character-without-forms",
@@ -665,19 +734,10 @@ describe("Stat Block execution references", () => {
     if (Either.isLeft(removedCharacter)) {
       throw new Error("Expected the character to be removed.");
     }
-    const serializedAfterCharacterRemoval = Schema.decodeUnknownSync(
-      BattleSnapshotSchema,
-    )(
-      Schema.encodeSync(BattleSnapshotSchema)(
-        snapshotBattle(removedCharacter.right),
-      ),
-    );
     const retiredCharacterAllocation =
-      serializedAfterCharacterRemoval.retiredExecutionScopeAllocations.find(
-        (allocation) => allocation.combatantId === characterWithoutFormsId,
-      );
+      removedCharacter.right.executionScopeCursors.get(characterWithoutFormsId);
     if (
-      retiredCharacterAllocation === undefined ||
+      retiredCharacterAllocation?.kind !== "retired" ||
       retiredCharacterAllocation.ownership.kind !== "character"
     ) {
       throw new Error("Expected the retired character allocation.");
@@ -690,51 +750,6 @@ describe("Stat Block execution references", () => {
         formScopeRefs: [],
       },
     });
-    const allocatedFormScopeOrdinal = battleExecutionScopeOrdinal(
-      Number(retiredCharacterAllocation.nextScopeOrdinal) - 1,
-    );
-    const unallocatedFormScopeOrdinal = battleExecutionScopeOrdinal(
-      Number(retiredCharacterAllocation.nextScopeOrdinal),
-    );
-    const snapshotWithRetiredFormScopeRef = (
-      formScopeRef: BattleStatBlockExecutionScopeReference,
-    ) =>
-      Schema.decodeUnknownSync(BattleSnapshotSchema)({
-        ...serializedAfterCharacterRemoval,
-        retiredExecutionScopeAllocations:
-          serializedAfterCharacterRemoval.retiredExecutionScopeAllocations.map(
-            (allocation) =>
-              allocation.combatantId === characterWithoutFormsId
-                ? {
-                    ...allocation,
-                    ownership: {
-                      ...allocation.ownership,
-                      formScopeRefs: [formScopeRef],
-                    },
-                  }
-                : allocation,
-          ),
-      });
-    const invalidRetiredFormScopeRefs = [
-      battleStatBlockExecutionScopeRef(
-        removedCharacter.right.battleId,
-        combatantId("foreign-retired-form-owner"),
-        allocatedFormScopeOrdinal,
-      ),
-      battleStatBlockExecutionScopeRef(
-        battleId("foreign-retired-form-battle"),
-        characterWithoutFormsId,
-        allocatedFormScopeOrdinal,
-      ),
-      battleStatBlockExecutionScopeRef(
-        removedCharacter.right.battleId,
-        characterWithoutFormsId,
-        unallocatedFormScopeOrdinal,
-      ),
-    ] as const;
-    for (const formScopeRef of invalidRetiredFormScopeRefs) {
-      expect(() => snapshotWithRetiredFormScopeRef(formScopeRef)).toThrow();
-    }
     const readmitted = addBattleCombatant({
       state: restoredAfterRemoval,
       combatant: actorInit,
@@ -1474,6 +1489,13 @@ describe("Stat Block execution references", () => {
     const snapshot = snapshotBattle(spentBattle);
     const encoded = Schema.encodeSync(BattleSnapshotSchema)(snapshot);
     const decoded = Schema.decodeUnknownSync(BattleSnapshotSchema)(encoded);
+    const encodedEnvelope = Schema.encodeSync(
+      BattleCheckpointFrontierEnvelopeSchema,
+    )(battleCheckpointFrontierEnvelope(spentBattle));
+    if (encodedEnvelope.frontier.kind !== "acts") {
+      throw new Error("Expected an Acts frontier.");
+    }
+    const encodedActs = encodedEnvelope.frontier.acts;
     const duplicatedCombatant = encoded.combatants[0];
     if (duplicatedCombatant === undefined) {
       throw new Error("Expected a serialized combatant fixture.");
@@ -1594,7 +1616,7 @@ describe("Stat Block execution references", () => {
         ordinal: 999,
       }),
     );
-    const firstAct = encoded.acts[0];
+    const firstAct = encodedActs[0];
     if (firstAct === undefined) {
       throw new Error("Expected at least one serialized Stat Block act.");
     }
@@ -1614,14 +1636,14 @@ describe("Stat Block execution references", () => {
       JSON.stringify({
         kind: "activeEffectOccurrence",
         ownerScopeRef: encodedFighter.origin.execution.scopeRef,
-        ordinal: encodedFighter.nextActiveEffectOrdinal,
+        ordinal: spentBattle.combatants.get(fighterId)?.nextActiveEffectOrdinal,
       }),
     );
     const actorEffectRef = battleActiveEffectExecutionRef(
       JSON.stringify({
         kind: "activeEffectOccurrence",
         ownerScopeRef: decodedOrigin.execution.scopeRef,
-        ordinal: encodedActor.nextActiveEffectOrdinal,
+        ordinal: spentBattle.combatants.get(actorId)?.nextActiveEffectOrdinal,
       }),
     );
     const escapeSubject = {
@@ -1635,23 +1657,28 @@ describe("Stat Block execution references", () => {
       ownerId: CombatantId,
       effectRef: BattleActiveEffectExecutionRef,
     ) => ({
-      ...encoded,
-      combatants: encoded.combatants.map((combatant) =>
-        combatant.combatantId === ownerId
-          ? {
-              ...combatant,
-              nextActiveEffectOrdinal: combatant.nextActiveEffectOrdinal + 1,
-              activeEffectRefs: [...combatant.activeEffectRefs, effectRef],
-            }
-          : combatant,
-      ),
-      acts: [
-        { ...firstAct, subject: escapeSubject, initialHoles: [] },
-        ...encoded.acts.slice(1),
-      ],
+      ...encodedEnvelope,
+      checkpoint: {
+        ...encodedEnvelope.checkpoint,
+        combatants: encodedEnvelope.checkpoint.combatants.map((combatant) =>
+          combatant.combatantId === ownerId
+            ? {
+                ...combatant,
+                activeEffectRefs: [...combatant.activeEffectRefs, effectRef],
+              }
+            : combatant,
+        ),
+      },
+      frontier: {
+        ...encodedEnvelope.frontier,
+        acts: [
+          { ...firstAct, subject: escapeSubject, initialHoles: [] },
+          ...encodedActs.slice(1),
+        ],
+      },
     });
     expect(() =>
-      Schema.decodeUnknownSync(BattleSnapshotSchema)(
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
         snapshotWithEffectOwner(fighterId, fighterEffectRef),
       ),
     ).not.toThrow();
@@ -1660,63 +1687,77 @@ describe("Stat Block execution references", () => {
       fighterEffectRef,
     );
     expect(() =>
-      Schema.decodeUnknownSync(BattleSnapshotSchema)({
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)({
         ...duplicateActiveEffectSnapshot,
-        combatants: duplicateActiveEffectSnapshot.combatants.map((combatant) =>
-          combatant.combatantId === fighterId
-            ? {
-                ...combatant,
-                activeEffectRefs: [
-                  ...combatant.activeEffectRefs,
-                  fighterEffectRef,
-                ],
-              }
-            : combatant,
-        ),
+        checkpoint: {
+          ...duplicateActiveEffectSnapshot.checkpoint,
+          combatants: duplicateActiveEffectSnapshot.checkpoint.combatants.map(
+            (combatant) =>
+              combatant.combatantId === fighterId
+                ? {
+                    ...combatant,
+                    activeEffectRefs: [
+                      ...combatant.activeEffectRefs,
+                      fighterEffectRef,
+                    ],
+                  }
+                : combatant,
+          ),
+        },
       }),
     ).toThrow();
     expect(() =>
-      Schema.decodeUnknownSync(BattleSnapshotSchema)({
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)({
         ...snapshotWithEffectOwner(actorId, actorEffectRef),
-        acts: [
-          {
-            ...firstAct,
-            subject: { ...escapeSubject, effectRef: actorEffectRef },
-            initialHoles: [],
-          },
-          ...encoded.acts.slice(1),
-        ],
+        frontier: {
+          ...encodedEnvelope.frontier,
+          acts: [
+            {
+              ...firstAct,
+              subject: { ...escapeSubject, effectRef: actorEffectRef },
+              initialHoles: [],
+            },
+            ...encodedActs.slice(1),
+          ],
+        },
       }),
     ).toThrow();
-    const encodedAttackSnapshot = Schema.encodeSync(BattleSnapshotSchema)(
-      snapshotBattle(battle),
-    );
-    const encodedAttackActIndex = encodedAttackSnapshot.acts.findIndex(
+    const encodedAttackSnapshot = Schema.encodeSync(
+      BattleCheckpointFrontierEnvelopeSchema,
+    )(battleCheckpointFrontierEnvelope(battle));
+    if (encodedAttackSnapshot.frontier.kind !== "acts") {
+      throw new Error("Expected an Acts frontier.");
+    }
+    const encodedAttackActs = encodedAttackSnapshot.frontier.acts;
+    const encodedAttackActIndex = encodedAttackActs.findIndex(
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "attack" &&
         "procedureRef" in act.subject &&
         act.subject.procedureRef === decodedStatBlockAttack.procedureRef,
     );
-    const encodedAttackAct = encodedAttackSnapshot.acts[encodedAttackActIndex];
+    const encodedAttackAct = encodedAttackActs[encodedAttackActIndex];
     if (encodedAttackAct === undefined) {
       throw new Error("Expected the encoded Stat Block attack act.");
     }
     const snapshotWithAttackInitialHole = (hole: unknown) => ({
       ...encodedAttackSnapshot,
-      acts: encodedAttackSnapshot.acts.map((act, index) =>
-        index === encodedAttackActIndex
-          ? { ...encodedAttackAct, initialHoles: [hole] }
-          : act,
-      ),
+      frontier: {
+        ...encodedAttackSnapshot.frontier,
+        acts: encodedAttackActs.map((act, index) =>
+          index === encodedAttackActIndex
+            ? { ...encodedAttackAct, initialHoles: [hole] }
+            : act,
+        ),
+      },
     });
     expect(() =>
-      Schema.decodeUnknownSync(BattleSnapshotSchema)(
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
         snapshotWithAttackInitialHole(decodedAttackRollHole),
       ),
     ).not.toThrow();
     expect(() =>
-      Schema.decodeUnknownSync(BattleSnapshotSchema)(
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
         snapshotWithAttackInitialHole({
           ...decodedAttackRollHole,
           ongoingFeatureActivations: [
@@ -1726,7 +1767,7 @@ describe("Stat Block execution references", () => {
       ),
     ).toThrow();
     expect(() =>
-      Schema.decodeUnknownSync(BattleSnapshotSchema)(
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
         snapshotWithAttackInitialHole({
           kind: "rolledDice",
           holeId: "battle:test:unbound-damage-choice",
@@ -1739,7 +1780,7 @@ describe("Stat Block execution references", () => {
       ),
     ).toThrow();
     expect(() =>
-      Schema.decodeUnknownSync(BattleSnapshotSchema)(
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
         snapshotWithAttackInitialHole({
           kind: "hitPointHealingDistribution",
           holeId: "battle:test:unbound-healing-pool",
@@ -1758,7 +1799,7 @@ describe("Stat Block execution references", () => {
       ),
     ).toThrow();
     expect(() =>
-      Schema.decodeUnknownSync(BattleSnapshotSchema)(
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
         snapshotWithAttackInitialHole({
           kind: "savingThrowOutcome",
           holeId: "battle:test:externally-owned-save-bonus",
@@ -1782,7 +1823,7 @@ describe("Stat Block execution references", () => {
       ),
     ).not.toThrow();
     expect(() =>
-      Schema.decodeUnknownSync(BattleSnapshotSchema)(
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
         snapshotWithAttackInitialHole({
           kind: "concentrationSavingThrow",
           holeId: "battle:test:unbound-concentration-bonus",
@@ -1803,7 +1844,7 @@ describe("Stat Block execution references", () => {
       ),
     ).toThrow();
     expect(() =>
-      Schema.decodeUnknownSync(BattleSnapshotSchema)(
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
         snapshotWithAttackInitialHole({
           kind: "attackDamageDisposition",
           holeId: "battle:test:unbound-damage-disposition",
@@ -1821,7 +1862,7 @@ describe("Stat Block execution references", () => {
       ),
     ).toThrow();
     expect(() =>
-      Schema.decodeUnknownSync(BattleSnapshotSchema)(
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
         snapshotWithAttackInitialHole({
           kind: "movableZoneRamMovement",
           holeId: "battle:test:unbound-movable-zone",
@@ -1839,42 +1880,48 @@ describe("Stat Block execution references", () => {
       ),
     ).toThrow();
     expect(() =>
-      Schema.decodeUnknownSync(BattleSnapshotSchema)({
-        ...encoded,
-        acts: [
-          {
-            ...firstAct,
-            initialHoles: [
-              {
-                kind: "statBlockRechargeRoll",
-                holeId: "battle:test:unbound-recharge",
-                holeInstanceKey: "battle:test:unbound-recharge",
-                label: "Synthetic recharge",
-                combatantId: actorId,
-                rechargeTargets: [unboundResourceRef],
-              },
-            ],
-          },
-          ...encoded.acts.slice(1),
-        ],
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)({
+        ...encodedEnvelope,
+        frontier: {
+          ...encodedEnvelope.frontier,
+          acts: [
+            {
+              ...firstAct,
+              initialHoles: [
+                {
+                  kind: "statBlockRechargeRoll",
+                  holeId: "battle:test:unbound-recharge",
+                  holeInstanceKey: "battle:test:unbound-recharge",
+                  label: "Synthetic recharge",
+                  combatantId: actorId,
+                  rechargeTargets: [unboundResourceRef],
+                },
+              ],
+            },
+            ...encodedActs.slice(1),
+          ],
+        },
       }),
     ).toThrow();
     expect(() =>
-      Schema.decodeUnknownSync(BattleSnapshotSchema)({
-        ...encoded,
-        acts: [
-          {
-            ...firstAct,
-            subject: {
-              tag: "action",
-              actorId,
-              action: "escapeSpellRestraint",
-              targetId: actorId,
-              effectRef: unboundEffectRef,
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)({
+        ...encodedEnvelope,
+        frontier: {
+          ...encodedEnvelope.frontier,
+          acts: [
+            {
+              ...firstAct,
+              subject: {
+                tag: "action",
+                actorId,
+                action: "escapeSpellRestraint",
+                targetId: actorId,
+                effectRef: unboundEffectRef,
+              },
             },
-          },
-          ...encoded.acts.slice(1),
-        ],
+            ...encodedActs.slice(1),
+          ],
+        },
       }),
     ).toThrow();
     expect(() =>
@@ -2103,8 +2150,14 @@ describe("Stat Block execution references", () => {
       ),
     ).toBe(true);
     expect(decoded.combatants).toEqual(snapshot.combatants);
-    expect(decoded.acts.map((act) => act.subject)).toEqual(
-      snapshot.acts.map((act) => act.subject),
+    const decodedEnvelope = Schema.decodeUnknownSync(
+      BattleCheckpointFrontierEnvelopeSchema,
+    )(encodedEnvelope);
+    if (decodedEnvelope.frontier.kind !== "acts") {
+      throw new Error("Expected an Acts frontier after decoding.");
+    }
+    expect(decodedEnvelope.frontier.acts.map((act) => act.subject)).toEqual(
+      encodedActs.map((act) => act.subject),
     );
   });
 
@@ -2453,6 +2506,18 @@ describe("Stat Block execution references", () => {
     const encodedBattle = Schema.encodeSync(BattleSnapshotSchema)(
       snapshotBattle(spentBattle),
     );
+    expect(
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(encodedBattle),
+    ).toEqual(snapshotBattle(spentBattle));
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+          Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+            battleCheckpointFrontierEnvelope(spentBattle),
+          ),
+        ),
+      ),
+    ).toBe(true);
     expect(() =>
       Schema.decodeUnknownSync(BattleSnapshotSchema)({
         ...encodedBattle,

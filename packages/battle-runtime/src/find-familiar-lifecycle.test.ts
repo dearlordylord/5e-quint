@@ -49,9 +49,11 @@ import {
   battleCreaturePresentationDisplayName,
   battleDruidWildShapeKnownFormSupportForUnit,
   battleId,
+  battleCheckpointFrontierEnvelope,
   battleObjectId,
   battleUnitSupportProfilesForUnit,
   BattleSnapshotSchema,
+  BattleCheckpointFrontierEnvelopeSchema,
   castFindFamiliar,
   castRetainedFindFamiliarRuntime,
   castWildCompanion,
@@ -99,6 +101,7 @@ import {
   characterBattleFeatureInitForTest,
   readyDeclarationFillForTest,
   requireCharacterSpellProcedureRefForTest,
+  battleFrontierInterruptDecisionForState,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
 import { spellSlotInvocationRef } from "./battle-subjects.ts";
@@ -3365,7 +3368,6 @@ describe("Find Familiar lifecycle", () => {
       subject: {
         tag: "findFamiliarTouchSpell",
       },
-      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
     if (interrupted.tag !== "needsHoles") return;
     expect(
@@ -3385,7 +3387,6 @@ describe("Find Familiar lifecycle", () => {
       subject: {
         tag: "findFamiliarTouchSpell",
       },
-      snapshot: { pendingInterrupt: null },
     });
     if (resumed.tag !== "needsHoles") return;
     const completed = resolveBattleSubject({
@@ -3455,7 +3456,6 @@ describe("Find Familiar lifecycle", () => {
     expect(interrupted).toMatchObject({
       tag: "needsHoles",
       subject: { tag: "findFamiliarTouchSpell" },
-      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
     if (interrupted.tag !== "needsHoles") return;
     expect(
@@ -3472,7 +3472,6 @@ describe("Find Familiar lifecycle", () => {
     expect(resumed).toMatchObject({
       tag: "needsHoles",
       subject: { tag: "findFamiliarTouchSpell" },
-      snapshot: { pendingInterrupt: null },
     });
     if (resumed.tag !== "needsHoles") return;
     const completed = resolveBattleSubject({
@@ -3927,13 +3926,19 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(awaitingPlacement).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        expect.objectContaining({ kind: "companionReappearancePlacement" }),
-      ],
+      envelope: {
+        frontier: {
+          kind: "holes",
+          holes: [
+            expect.objectContaining({ kind: "companionReappearancePlacement" }),
+          ],
+        },
+      },
     });
     if (awaitingPlacement.tag !== "needsHoles") return;
+    if (awaitingPlacement.envelope.frontier.kind !== "holes") return;
     const placementHole = requireHole(
-      awaitingPlacement.holes,
+      awaitingPlacement.envelope.frontier.holes,
       "companionReappearancePlacement",
     );
     const placementFill = companionReappearancePlacementFill(placementHole);
@@ -3965,11 +3970,19 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(awaitingInitiative).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        expect.objectContaining({ kind: "companionReappearanceInitiative" }),
-      ],
+      envelope: {
+        frontier: {
+          kind: "holes",
+          holes: [
+            expect.objectContaining({
+              kind: "companionReappearanceInitiative",
+            }),
+          ],
+        },
+      },
     });
     if (awaitingInitiative.tag !== "needsHoles") return;
+    if (awaitingInitiative.envelope.frontier.kind !== "holes") return;
 
     const reappeared = resolveBattleRuntimeSubject({
       session: reappearanceSession,
@@ -3978,7 +3991,7 @@ describe("Find Familiar lifecycle", () => {
         placementFill,
         companionReappearanceInitiativeFill(
           requireHole(
-            awaitingInitiative.holes,
+            awaitingInitiative.envelope.frontier.holes,
             "companionReappearanceInitiative",
           ),
         ),
@@ -4000,7 +4013,7 @@ describe("Find Familiar lifecycle", () => {
       reappeared.session.state.combatants.get(familiarId),
     ).not.toHaveProperty("displayName");
     expect(
-      reappeared.snapshot.combatants.find(
+      reappeared.envelope.checkpoint.combatants.find(
         (combatant) => combatant.combatantId === familiarId,
       ),
     ).not.toHaveProperty("displayName");
@@ -4384,7 +4397,6 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
     });
     if (awaitingReaction.tag !== "needsHoles") return;
     expect(
@@ -4400,10 +4412,9 @@ describe("Find Familiar lifecycle", () => {
         owner: "battleAttackRoll",
       }),
     ]);
-    const shieldChoice =
-      awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-        (choice) => choice.kind === "castTriggeredReactionSpell",
-      );
+    const shieldChoice = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    )?.choices.find((choice) => choice.kind === "castTriggeredReactionSpell");
     expect(shieldChoice).toMatchObject({
       kind: "castTriggeredReactionSpell",
       reactorId: enemyId,
@@ -4432,7 +4443,6 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null },
     });
     if (resolved.tag !== "resolved") return;
     expect(resolved.state.currentTurnResources.actionResources).toEqual([]);
@@ -4538,7 +4548,6 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(pendingInterrupt).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
     });
     if (pendingInterrupt.tag !== "needsHoles") return;
     const blockedByInterrupt = resolveBattleSubject({
@@ -4605,6 +4614,30 @@ describe("Find Familiar lifecycle", () => {
     expect(cast.tag).toBe("resolved");
     if (cast.tag !== "resolved") return;
     assertBattleSnapshotCodecRoundTripForTest(snapshotBattle(cast.state));
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+          Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+            battleCheckpointFrontierEnvelope(cast.state),
+          ),
+        ),
+      ),
+    ).toBe(true);
+    const caster = cast.state.combatants.get(casterId);
+    if (caster?.origin.kind !== "character") {
+      throw new Error("Expected the Pact familiar owner character.");
+    }
+    expect(() =>
+      snapshotBattle({
+        ...cast.state,
+        combatants: new Map(cast.state.combatants).set(familiarId, {
+          ...caster,
+          combatantId: familiarId,
+        }),
+      }),
+    ).toThrow(
+      "Present Find Familiar snapshot requires a Stat Block combatant.",
+    );
     const attackActs = discoverBattleActs(
       battleRuntimeSessionForTest({
         state: cast.state,
@@ -4796,14 +4829,7 @@ describe("Find Familiar lifecycle", () => {
           : combatant,
       ),
     });
-    expect(Either.isRight(authoredNameInMechanicalSnapshot)).toBe(true);
-    if (Either.isRight(authoredNameInMechanicalSnapshot)) {
-      expect(
-        authoredNameInMechanicalSnapshot.right.combatants.find(
-          (combatant) => combatant.combatantId === familiarId,
-        ),
-      ).not.toHaveProperty("displayName");
-    }
+    expect(Either.isLeft(authoredNameInMechanicalSnapshot)).toBe(true);
     const invalid = Schema.decodeUnknownEither(BattleSnapshotSchema)({
       ...encoded,
       companions: [{ status: "present" }],

@@ -26,6 +26,7 @@ import {
 } from "./battle-session-execution.ts";
 import {
   attackRollFill,
+  attackExecutionSelectionForSubjectForTest,
   battleId,
   battleProcedureExecutionRefForTest,
   characterBattleFeatureInitForTest,
@@ -37,6 +38,7 @@ import {
   goblinId,
   discoverBattleActs,
   findHole,
+  movementFill,
   requireCharacterUnitProcedureRefForTest,
   savingThrowOutcomeFill,
   startBattleSessionRight,
@@ -624,7 +626,8 @@ describe("Table-authored per-test D20 circumstances", () => {
     });
     expect(initial.tag).toBe("needsHoles");
     if (initial.tag !== "needsHoles") return;
-    const targetHole = initial.holes.find(
+    if (initial.envelope.frontier.kind !== "holes") return;
+    const targetHole = initial.envelope.frontier.holes.find(
       (hole) => hole.kind === "targetChoice",
     );
     expect(targetHole).toBeDefined();
@@ -640,6 +643,7 @@ describe("Table-authored per-test D20 circumstances", () => {
       });
     expect(preliminary.tag).toBe("needsHoles");
     if (preliminary.tag !== "needsHoles") return;
+    if (preliminary.envelope.frontier.kind !== "holes") return;
     const request = preliminary.d20TestCircumstanceRequests[0];
     expect(request).toMatchObject({
       testKind: "attackRoll",
@@ -652,10 +656,13 @@ describe("Table-authored per-test D20 circumstances", () => {
         subject,
         fills: [
           selectedTarget,
-          attackRollFill(findHole(preliminary.holes, "attackRoll"), {
-            total: 30,
-            naturalD20: 18,
-          }),
+          attackRollFill(
+            findHole(preliminary.envelope.frontier.holes, "attackRoll"),
+            {
+              total: 30,
+              naturalD20: 18,
+            },
+          ),
         ],
         d20TestResolutionId: resolutionId,
         tableD20TestCircumstanceDecisions: [],
@@ -669,7 +676,7 @@ describe("Table-authored per-test D20 circumstances", () => {
     expect(Either.isRight(admitted)).toBe(true);
     if (Either.isLeft(admitted)) return;
     const projectedHoles = battleHolesWithTableD20TestCircumstances({
-      holes: preliminary.holes,
+      holes: preliminary.envelope.frontier.holes,
       requests: preliminary.d20TestCircumstanceRequests,
       admitted: admitted.right,
     });
@@ -733,6 +740,60 @@ describe("Table-authored per-test D20 circumstances", () => {
     }
   });
 
+  test("keeps an Opportunity Attack interrupt frontier free of Table D20 requests", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("synthetic-table-opportunity-frontier"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const fighterAttack = fighterAttackSubject(session.state);
+    const goblinTurn = endBattleRuntimeTurn({
+      session,
+      actorId: fighterId,
+    });
+    if (goblinTurn.tag !== "resolved") {
+      throw new Error("Expected the fighter's turn to end.");
+    }
+    const moveSubject = {
+      tag: "runtimeCommand" as const,
+      actorId: goblinId,
+      command: "move" as const,
+    };
+    const move = resolveBattleRuntimeSubject({
+      session: goblinTurn.session,
+      subject: moveSubject,
+      fills: [],
+    });
+    if (move.tag !== "needsHoles" || move.envelope.frontier.kind !== "holes") {
+      throw new Error("Expected the goblin's movement frontier.");
+    }
+    const result = resolveBattleRuntimeSubjectWithTableD20TestCircumstances({
+      session: goblinTurn.session,
+      subject: moveSubject,
+      fills: [
+        movementFill(findHole(move.envelope.frontier.holes, "movement"), {
+          movementCostFeet: 5,
+          provokedOpportunityAttacks: [
+            {
+              reactorId: fighterId,
+              distanceFeet: movementFeet(5),
+              ...attackExecutionSelectionForSubjectForTest(fighterAttack),
+            },
+          ],
+        }),
+      ],
+      d20TestResolutionId: d20TestResolutionId("opportunity-frontier"),
+      tableD20TestCircumstanceDecisions: [],
+    });
+
+    expect(result.tag).toBe("needsHoles");
+    if (result.tag !== "needsHoles") return;
+    expect(result.envelope.frontier.kind).toBe("interruptDecision");
+    expect(result.d20TestCircumstanceRequests).toEqual([]);
+  });
+
   test("keeps no-roll concentration saves out of Table circumstance requests", () => {
     const baseSession = startBattleSessionRight({
       battleId: battleId("synthetic-table-no-roll-concentration"),
@@ -767,7 +828,8 @@ describe("Table-authored per-test D20 circumstances", () => {
     });
     expect(initial.tag).toBe("needsHoles");
     if (initial.tag !== "needsHoles") return;
-    const targetHole = initial.holes.find(
+    if (initial.envelope.frontier.kind !== "holes") return;
+    const targetHole = initial.envelope.frontier.holes.find(
       (hole) => hole.kind === "targetChoice",
     );
     if (targetHole === undefined) throw new Error("Expected target choice.");
@@ -779,7 +841,8 @@ describe("Table-authored per-test D20 circumstances", () => {
     });
     expect(attackStage.tag).toBe("needsHoles");
     if (attackStage.tag !== "needsHoles") return;
-    const attackHole = attackStage.holes.find(
+    if (attackStage.envelope.frontier.kind !== "holes") return;
+    const attackHole = attackStage.envelope.frontier.holes.find(
       (hole) => hole.kind === "attackRoll",
     );
     if (attackHole === undefined) throw new Error("Expected attack roll.");
@@ -794,7 +857,8 @@ describe("Table-authored per-test D20 circumstances", () => {
     });
     expect(damageStage.tag).toBe("needsHoles");
     if (damageStage.tag !== "needsHoles") return;
-    const damageHole = damageStage.holes.find(
+    if (damageStage.envelope.frontier.kind !== "holes") return;
+    const damageHole = damageStage.envelope.frontier.holes.find(
       (hole) => hole.kind === "rolledDice",
     );
     if (damageHole === undefined) throw new Error("Expected damage roll.");
@@ -806,7 +870,14 @@ describe("Table-authored per-test D20 circumstances", () => {
     });
     expect(concentrationStage.tag).toBe("needsHoles");
     if (concentrationStage.tag !== "needsHoles") return;
-    const concentrationHole = concentrationStage.holes.find(
+    if (concentrationStage.envelope.frontier.kind !== "holes") return;
+    expect(concentrationStage.envelope.frontier.continuation).toEqual({
+      kind: "runtimeOwnedInterrupt",
+    });
+    expect(
+      concentrationStage.session.state.interruptStack.at(-1),
+    ).toMatchObject({ kind: "attackDamageContinuationConcentration" });
+    const concentrationHole = concentrationStage.envelope.frontier.holes.find(
       (hole) => hole.kind === "concentrationSavingThrow",
     );
     if (concentrationHole === undefined) {
@@ -854,7 +925,11 @@ describe("Table-authored per-test D20 circumstances", () => {
     });
     expect(initial.tag).toBe("needsHoles");
     if (initial.tag !== "needsHoles") return;
-    const saveHole = findHole(initial.holes, "savingThrowOutcome");
+    if (initial.envelope.frontier.kind !== "holes") return;
+    const saveHole = findHole(
+      initial.envelope.frontier.holes,
+      "savingThrowOutcome",
+    );
     expect(initial.d20TestCircumstanceRequests).toEqual([]);
     const mixedSave = savingThrowOutcomeFill(saveHole, [
       { targetId: skeletonId, succeeded: true, withoutRoll: true },
@@ -869,7 +944,8 @@ describe("Table-authored per-test D20 circumstances", () => {
     });
     expect(next.tag).toBe("needsHoles");
     if (next.tag !== "needsHoles") return;
-    expect(next.holes).toEqual(
+    if (next.envelope.frontier.kind !== "holes") return;
+    expect(next.envelope.frontier.holes).toEqual(
       expect.arrayContaining([expect.objectContaining({ kind: "rolledDice" })]),
     );
     expect(next.d20TestCircumstanceRequests).toEqual([]);
@@ -985,7 +1061,8 @@ describe("Table-authored per-test D20 circumstances", () => {
     });
     expect(initial.tag).toBe("needsHoles");
     if (initial.tag !== "needsHoles") return;
-    const targetHole = initial.holes.find(
+    if (initial.envelope.frontier.kind !== "holes") return;
+    const targetHole = initial.envelope.frontier.holes.find(
       (hole) => hole.kind === "targetChoice",
     );
     if (targetHole === undefined) throw new Error("Expected target choice.");

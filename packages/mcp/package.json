@@ -4,7 +4,8 @@
   "dndWorkspacePackageKind": "production",
   "type": "module",
   "exports": {
-    "./experimental-admin-mirror-contract": "./src/admin-mirror-contract.ts"
+    "./experimental-admin-mirror-contract": "./src/admin-mirror-contract.ts",
+    "./test-support/cross-boundary-battle": "./test-support/cross-boundary-battle.ts"
   },
   "scripts": {
     "dev": "tsx src/index.ts",

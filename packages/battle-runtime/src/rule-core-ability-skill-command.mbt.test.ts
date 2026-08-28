@@ -874,7 +874,7 @@ function projectState(input: {
     targetEffectCount: target.activeEffects.length,
     casterEffectCount: caster.activeEffects.length,
     actionAvailable: snapshot.turn.actionResources.length > 0,
-    bonusActionAvailable: snapshot.turn.bonusActionAvailable,
+    bonusActionAvailable: snapshot.turn.bonusActionQuotaAvailable,
     movementSpentFeet: Number(targetSnapshot.movement.spentFeet),
     currentActor: actorName(snapshot.currentActorId),
     pendingCommandOption: pendingCommandOption(target.activeEffects),

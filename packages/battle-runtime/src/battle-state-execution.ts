@@ -385,7 +385,6 @@ import type {
   BattleExecutionScopeCursor,
   BattleLineDirectionId,
   BattleObjectId,
-  BattleProcedureExecutionCursor,
   BattleResourcePoolExecutionRef,
   BattleSpellEffectOccurrenceId,
   BattleStatBlockExecutionScopeRef,
@@ -4573,11 +4572,6 @@ export type AvailableBattleAct = BattleActExecutionCandidate & {
   readonly presentation: BattleActPresentation;
 };
 
-export type BattleSnapshotAct = Pick<
-  BattleActExecutionCandidate,
-  "subject" | "initialHoles"
->;
-
 export type BattleHoleId = HoleId;
 export type BattleHoleInstanceKey = HoleInstanceKey;
 export type BattleTargetChoiceHole = Extract<
@@ -7197,6 +7191,14 @@ export const BATTLE_INVALID_REASON_CODES = [
 export type BattleInvalidReasonCode =
   (typeof BATTLE_INVALID_REASON_CODES)[number];
 
+export type BattleResolutionCheckpointBoundary =
+  | { readonly kind: "durableInterruptCheckpoint" }
+  | { readonly kind: "durableContinuationCheckpoint" };
+
+export const DURABLE_CONTINUATION_CHECKPOINT_BOUNDARY = {
+  kind: "durableContinuationCheckpoint",
+} as const satisfies BattleResolutionCheckpointBoundary;
+
 export type BattleResolutionResult =
   | {
       readonly tag: "resolved";
@@ -7216,6 +7218,8 @@ export type BattleResolutionResult =
       readonly subject: BattleSubject;
       readonly holes: readonly BattleHole[];
       readonly snapshot: BattleSnapshot;
+      /** Set when this result advances the runtime's durable checkpoint. */
+      readonly checkpointBoundary?: BattleResolutionCheckpointBoundary;
       readonly routeEvents?: BattleReducerRouteEvents;
     }
   | {
@@ -7277,17 +7281,13 @@ export type BattleFallDamageLandingResult =
       readonly message: string;
     };
 
+/**
+ * Durable committed mechanical checkpoint for a Battle Runtime state.
+ * Continuation frontiers, allocation/replay bookkeeping, and presentation
+ * joins are projected separately.
+ */
 export type BattleSnapshot = {
   readonly battleId: BattleId;
-  readonly executionScopeCursors: readonly {
-    readonly combatantId: CombatantId;
-    readonly nextScopeOrdinal: BattleExecutionScopeCursor;
-  }[];
-  readonly retiredExecutionScopeAllocations: readonly {
-    readonly combatantId: CombatantId;
-    readonly nextScopeOrdinal: BattleExecutionScopeCursor;
-    readonly ownership: BattleRetiredExecutionScopeOwnership;
-  }[];
   readonly round: RoundType;
   readonly currentActorId: CombatantId;
   readonly turnOrder: readonly CombatantId[];
@@ -7295,19 +7295,27 @@ export type BattleSnapshot = {
   readonly companions: readonly BattleCompanionSnapshot[];
   readonly lightEmitters: readonly BattleLightEmitter[];
   readonly obscurementZones: readonly BattleObscurementZone[];
-  readonly acts: readonly BattleSnapshotAct[];
   readonly turn: BattleTurnSnapshot;
   readonly readiedResponses: {
     readonly spells: readonly BattleReadiedSpellSnapshot[];
     readonly actionsOrMovements: readonly BattleReadiedResponseSnapshot[];
   };
   readonly helpAttackMarkers: readonly BattleHelpAttackSnapshot[];
-  readonly pendingInterrupt: {
-    readonly trigger: BattleInterruptTrigger;
-    readonly decisionHole: BattleInterruptDecisionHole;
-    readonly choices: readonly BattleInterruptProcedureChoice[];
-    readonly stackDepth: BattleReplayStackDepth;
-  } | null;
+};
+
+/**
+ * The mechanical frontier for choosing an interrupt procedure.
+ *
+ * This is intentionally not part of BattleSnapshot: a frontier describes an
+ * open decision in an in-flight execution, while BattleSnapshot is the
+ * durable committed mechanical checkpoint callers can persist.
+ */
+export type BattleInterruptDecisionFrontier = {
+  readonly kind: "interruptDecision";
+  readonly trigger: BattleInterruptTrigger;
+  readonly decisionHole: BattleInterruptDecisionHole;
+  readonly choices: ReadonlyNonEmptyArray<BattleInterruptProcedureChoice>;
+  readonly stackDepth: BattleReplayStackDepth;
 };
 
 type BattleCreatureSnapshotCommon = {
@@ -7316,7 +7324,6 @@ type BattleCreatureSnapshotCommon = {
   readonly hp: Hp;
   readonly maxHp: Hp;
   readonly tempHp: Hp;
-  readonly nextActiveEffectOrdinal: BattleActiveEffectExecutionOrdinal;
   readonly activeEffectRefs: readonly BattleActiveEffectExecutionRef[];
   readonly armorClass: ArmorClass;
   readonly size: Size;
@@ -7373,12 +7380,34 @@ export type BattleSnapshotPresentationIssue = {
   readonly combatantId: CombatantId;
 };
 
+export type BattleInterruptChoicePresentationIssue = {
+  readonly tag: "battleInterruptChoicePresentationIssue";
+  readonly reason: "missingSubjectPresentation";
+  readonly reactorId: CombatantId;
+  readonly choiceKind: Exclude<
+    BattleInterruptProcedureChoice,
+    { readonly kind: "reactionRollOrDamageReduction" }
+  >["kind"];
+  readonly subject: BattleSubject;
+};
+
+export type BattlePresentationIssue =
+  | BattleSnapshotPresentationIssue
+  | BattleInterruptChoicePresentationIssue;
+
 export type BattleSnapshotPresentationIssues =
   ReadonlyNonEmptyArray<BattleSnapshotPresentationIssue>;
 
+export type BattleInterruptChoicePresentationIssues =
+  ReadonlyNonEmptyArray<BattleInterruptChoicePresentationIssue>;
+
+export type BattlePresentationIssues =
+  ReadonlyNonEmptyArray<BattlePresentationIssue>;
+
 export type BattleTurnSnapshot = {
   readonly actionResources: readonly RuntimeActionResource[];
-  readonly bonusActionAvailable: boolean;
+  /** The current turn's unspent Bonus Action quota, not discovered action availability. */
+  readonly bonusActionQuotaAvailable: boolean;
   readonly jumpDistanceMultiplier: BattleJumpDistanceMultiplier | null;
   readonly heightenedStepOfTheWindCarriedCreatures: readonly HeightenedStepOfTheWindCarriedCreature[];
   readonly spellSlotUsesThisTurn: readonly BattleTurnSpellSlotUse[];
@@ -7422,7 +7451,6 @@ export type BattleCreatureOriginSnapshot =
       readonly characterId: CharacterId;
       readonly execution: {
         readonly scopeRef: BattleCharacterExecutionScopeRef;
-        readonly nextProcedureOrdinal: BattleProcedureExecutionCursor;
         readonly procedureBindings: readonly CharacterProcedureBindingSnapshot[];
       };
       readonly attackExecution: {

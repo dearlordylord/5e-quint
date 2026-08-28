@@ -100,7 +100,7 @@ describe("Admin Mirror MCP tool publishing", () => {
     await settleForkedEffects();
 
     expect(published).toHaveLength(1);
-    expect(published[0]?.projection.battle?.battleId).toBe(
+    expect(published[0]?.projection.battle?.checkpoint.battleId).toBe(
       "battle:mirror-publish",
     );
 
@@ -138,8 +138,8 @@ describe("Admin Mirror MCP tool publishing", () => {
       debug: { eventKind: "battleStarted", previousBattle: null },
     });
 
-    const nextActorId = battle.turnOrder[1];
-    const damagedCombatant = battle.combatants[0];
+    const nextActorId = battle.checkpoint.turnOrder[1];
+    const damagedCombatant = battle.checkpoint.combatants[0];
     if (nextActorId === undefined || damagedCombatant === undefined) {
       throw new Error("Expected the test battle to contain two combatants.");
     }
@@ -149,12 +149,15 @@ describe("Admin Mirror MCP tool publishing", () => {
         ...startedEnvelope.projection,
         battle: {
           ...battle,
-          combatants: battle.combatants.map((combatant) =>
-            combatant.combatantId === damagedCombatant.combatantId
-              ? { ...combatant, hp: 1 }
-              : combatant,
-          ),
-          currentActorId: nextActorId,
+          checkpoint: {
+            ...battle.checkpoint,
+            combatants: battle.checkpoint.combatants.map((combatant) =>
+              combatant.combatantId === damagedCombatant.combatantId
+                ? { ...combatant, hp: 1 }
+                : combatant,
+            ),
+            currentActorId: nextActorId,
+          },
         },
       },
       sequence: adminMirrorSequence(1),

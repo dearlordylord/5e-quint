@@ -59,6 +59,7 @@ import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.
 import { savingThrowOutcomeFill } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
+  battleFrontierInterruptDecisionForState,
   resolveBattleSubject,
   paladinsSmiteResource,
   characterSpellInvocationForProcedureRefForTest,
@@ -72,7 +73,6 @@ import {
   discoverBattleActs,
   endTurn,
   resolveBattleInterrupt,
-  snapshotBattle,
   type BattleFill,
   type BattleHole,
   type BattleReducerRouteEvent,
@@ -1966,21 +1966,21 @@ function requireAfterHitChoice(
   spellId: string,
   options: { readonly invocationTag?: string } = {},
 ): PendingAfterHitChoice {
-  const choice = snapshotBattle(session.state).pendingInterrupt?.choices.find(
-    (candidate) => {
-      if (candidate.kind !== "castAttackHitBonusActionSpell") return false;
-      const invocationRef = characterSpellInvocationRefForProcedureRefForTest(
-        session,
-        candidate.reactorId,
-        candidate.subject.procedureRef,
-      );
-      return (
-        invocationRef.spellId === spellId &&
-        (options.invocationTag === undefined ||
-          invocationRef.tag === options.invocationTag)
-      );
-    },
-  );
+  const choice = battleFrontierInterruptDecisionForState(
+    session.state,
+  )?.choices.find((candidate) => {
+    if (candidate.kind !== "castAttackHitBonusActionSpell") return false;
+    const invocationRef = characterSpellInvocationRefForProcedureRefForTest(
+      session,
+      candidate.reactorId,
+      candidate.subject.procedureRef,
+    );
+    return (
+      invocationRef.spellId === spellId &&
+      (options.invocationTag === undefined ||
+        invocationRef.tag === options.invocationTag)
+    );
+  });
   if (choice === undefined || choice.kind !== "castAttackHitBonusActionSpell") {
     throw new Error(`Expected ${spellId} after-hit spell choice.`);
   }

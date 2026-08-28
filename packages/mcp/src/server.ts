@@ -62,7 +62,7 @@ export {
 export {
   createMcpSessionStore,
   type AvailableCharacterSession,
-  type BattleFillSession,
+  type PendingBattleFillSession,
   type CharacterSession,
   type InBattleCharacterSession,
   type McpSessionSnapshot,

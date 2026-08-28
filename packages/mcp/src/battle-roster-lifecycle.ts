@@ -1,10 +1,11 @@
-import { Either, Match } from "effect";
-import type { BattleRuntimeSession, CombatantId } from "@dnd/battle-runtime";
-import type { BattleLifecycleToolInput } from "./battle-lifecycle-tool-input.ts";
 import {
-  battlePresentationProjection,
-  battleSnapshotPresentationIssueContent,
-} from "./battle-tool-payloads.ts";
+  battlePresentedCheckpointFrontierEnvelope,
+  type BattleRuntimeSession,
+  type CombatantId,
+} from "@dnd/battle-runtime";
+import { Either, Match } from "effect";
+import type { BattleLifecycleToolInput } from "./battle-lifecycle-tool-input.ts";
+import { battlePresentationIssueContent } from "./battle-tool-payloads.ts";
 import { BattleLifecycleOutputSchema } from "./battle-tool-output.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import {
@@ -144,20 +145,16 @@ function commitBattleLifecycleTransition(input: {
     session: committed.right,
   });
   return schemaJsonContent(BattleLifecycleOutputSchema, {
-    battleState,
     result: input.result,
-    snapshot: presentation.right.snapshot,
-    availableActs: presentation.right.availableActs,
-    admittedSpellPresentations: presentation.right.admittedSpellPresentations,
-    presentedInterruptChoices: presentation.right.presentedInterruptChoices,
+    envelope: presentation.right,
     session: { ...input.root.sessionStore.snapshot(), battleState },
   });
 }
 
 function battlePresentationForCommit(nextBattle: BattleRuntimeSession) {
   return Either.mapLeft(
-    battlePresentationProjection(nextBattle),
-    battleSnapshotPresentationIssueContent,
+    battlePresentedCheckpointFrontierEnvelope(nextBattle),
+    battlePresentationIssueContent,
   );
 }
 

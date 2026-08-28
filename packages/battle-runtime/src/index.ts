@@ -132,7 +132,9 @@ export { objectInvisibleBenefitDenied } from "./battle-reducer/attack-roll.ts";
 
 export {
   BattleActPresentationSchema,
+  BattleCheckpointFrontierEnvelopeSchema,
   BattleInterruptProcedureChoiceSchema,
+  BattleInterruptDecisionFrontierSchema,
   BattleSpellPresentationSchema,
   BattleUnitSupportSourceSchema,
 } from "./battle-reducer/battle-codecs.ts";
@@ -155,6 +157,17 @@ export {
 } from "./battle-act-composition.ts";
 
 export {
+  BattlePresentedCheckpointFrontierEnvelopeSchema,
+  battlePresentedCheckpointFrontierEnvelope,
+  presentBattleCheckpointFrontierEnvelope,
+  presentBattleInterruptChoices,
+} from "./battle-snapshot-presentation.ts";
+export type {
+  BattlePresentedCheckpointFrontierEnvelope,
+  BattlePresentedInterruptChoice,
+} from "./battle-snapshot-presentation.ts";
+
+export {
   combatantCanSee,
   combatantHasSeeInvisibleAndEtherealEffect,
   seeInvisibleRevealsEtherealWitness,
@@ -167,6 +180,7 @@ export {
 } from "./battle-reducer/attack-damage-apply.ts";
 
 export {
+  battleHoleAcceptsFill,
   battleHoleFamilyKind,
   thaumaturgyBoomingVoiceInfluenceAbilityCheckHole,
   type BattleHoleFamilyKind,
@@ -402,6 +416,7 @@ export {
   type AttackDamageRiderUsage,
   type AttackRollFeatureActivation,
   type AvailableBattleAct,
+  type BattleActDiscoveryCandidate,
   type BattleActPresentation,
   type BattleAbilityCheckHole,
   type BattleActiveEffect,
@@ -474,6 +489,7 @@ export {
   type BattleAntimagicFieldTransitWitness,
   type BattlePossessionAttemptDisposition,
   type BattleInterruptDecision,
+  type BattleInterruptDecisionFrontier,
   type BattleInterruptDecisionHole,
   type BattleInterruptCheckpoint,
   type BattleInterruptProcedureChoice,
@@ -492,6 +508,10 @@ export {
   type BattleSnapshot,
   type BattlePresentedCreatureSnapshot,
   type BattlePresentedSnapshot,
+  type BattleInterruptChoicePresentationIssue,
+  type BattleInterruptChoicePresentationIssues,
+  type BattlePresentationIssue,
+  type BattlePresentationIssues,
   type BattleSnapshotPresentationIssue,
   type BattleSnapshotPresentationIssues,
   type BattleStoredLightEmitter,
@@ -693,6 +713,13 @@ export {
   resolveBattleRuntimeInterrupt,
   resolveBattleRuntimeSubject,
   resolveBattleRuntimeSubjectWithTableD20TestCircumstances,
+  battleCheckpointFrontierEnvelope,
+  battleFrontierHoles,
+  battleFrontierInterruptDecision,
+  battleFrontierInterruptDecisionForState,
+  currentBattleCheckpointFrontierEnvelope,
+  type BattleCheckpointFrontierEnvelope,
+  type BattleResolvedCheckpointFrontierEnvelope,
   resolveBattleSubject,
   type BattleRuntimeResolutionInput,
   type BattleRuntimeResolutionResult,

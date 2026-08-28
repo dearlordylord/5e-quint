@@ -1,14 +1,14 @@
 import {
-  battleCharacterExecutionScopeRef,
+  battleStatBlockExecutionScopeRef,
   battleExecutionScopeOrdinal,
-  battleId,
-  battlePresentedSnapshot,
   battleProcedureExecutionRef,
+  battleReplayStackDepth,
+  battleId,
+  currentBattleCheckpointFrontierEnvelope,
   combatantId,
   discoverBattleActs,
   resolveBattleRuntimeSubject,
-  snapshotBattle,
-  type BattleInterruptProcedureChoice,
+  type BattleResolvedCheckpointFrontierEnvelope,
   type BattleRuntimeResolutionResult,
 } from "@dnd/battle-runtime";
 import { NonNegativeInteger } from "@dnd/shared/types";
@@ -22,13 +22,12 @@ import { describe, expect, test } from "vitest";
 import {
   battleResolutionResultPayload,
   battleSessionPayload,
-  battleSnapshotPresentationIssueContent,
+  battlePresentationIssueContent,
   noStoredBattleContent,
   pendingBattleFillsContent,
-  presentedInterruptChoices,
   unknownStatBlockContent,
 } from "./battle-tool-payloads.ts";
-import { storeBattleResolution } from "./battle-tools.ts";
+import { storeBattleResolution } from "./battle-resolution-storage.ts";
 import { createMcpPlaySessionRoot } from "./composition-root.ts";
 import { handleToolCall as handleWireToolCall } from "./server.ts";
 import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
@@ -47,10 +46,7 @@ describe("battle tool payload boundaries", () => {
     expect(battleSessionPayload(root, null)).toMatchObject({
       _tag: "Right",
       right: {
-        snapshot: null,
-        availableActs: [],
-        admittedSpellPresentations: [],
-        presentedInterruptChoices: [],
+        envelope: null,
       },
     });
     expect(noStoredBattleContent()).toMatchObject({
@@ -69,10 +65,19 @@ describe("battle tool payload boundaries", () => {
     expect(battleSessionPayload(root, session)).toMatchObject({
       _tag: "Right",
       right: {
-        snapshot: { pendingInterrupt: null },
-        presentedInterruptChoices: [],
+        envelope: {
+          checkpoint: { battleId: "battle:payload-boundaries" },
+        },
       },
     });
+    const payload = battleSessionPayload(root, session);
+    if (Either.isLeft(payload)) throw new Error("Expected an active payload.");
+    if (payload.right.envelope === null) {
+      throw new Error("Expected an active battle envelope.");
+    }
+    expect(payload.right.envelope.checkpoint).not.toHaveProperty(
+      "pendingInterrupt",
+    );
   });
 
   test("returns typed snapshot-presentation issues as tool errors", () => {
@@ -81,13 +86,13 @@ describe("battle tool payload boundaries", () => {
       reason: "missingStatBlockPresentation",
       combatantId: combatantId("synthetic-missing-presentation"),
     } as const;
-    const content = battleSnapshotPresentationIssueContent([issue]);
+    const content = battlePresentationIssueContent([issue]);
     expect(content).toMatchObject({
       isError: true,
       content: [
         {
           text: expect.stringContaining(
-            '"code": "BATTLE_SNAPSHOT_PRESENTATION_INCOMPLETE"',
+            '"code": "BATTLE_PRESENTATION_INCOMPLETE"',
           ),
         },
       ],
@@ -108,16 +113,6 @@ describe("battle tool payload boundaries", () => {
     expect(
       pendingBattleFillsContent(
         {
-          fills: [],
-          holes: [
-            {
-              holeInstanceKey: holeInstanceKey("payload-pending:instance"),
-              holeId: holeId("payload-pending"),
-              kind: "targetChoice",
-              label: "Pending target",
-              choices: [combatantId("pending-target")],
-            },
-          ],
           subject: {
             tag: "runtimeCommand",
             actorId: combatantId("pending-actor"),
@@ -133,61 +128,27 @@ describe("battle tool payload boundaries", () => {
     });
   });
 
-  test("omits mechanical and unpresentable interrupt choices", () => {
-    const { session } = startedStatBlockBattle();
-    const reactorId = combatantId("goblin");
-    const procedureRef = battleProcedureExecutionRef(
-      battleCharacterExecutionScopeRef(
-        battleId("battle:payload-boundaries"),
-        reactorId,
-        battleExecutionScopeOrdinal(0),
-      ),
-      NonNegativeInteger(0),
-    );
-    const choices = [
-      {
-        kind: "reactionRollOrDamageReduction",
-        reactorId,
-        choice: {
-          kind: "attackDamageReduction",
-          procedureRef,
-          reduction: { kind: "halfDamage" },
-        },
-        initialHoles: [],
-      },
-      {
-        kind: "castTriggeredReactionSpell",
-        reactorId,
-        initialHoles: [],
-        subject: {
-          tag: "runtimeCommand",
-          actorId: reactorId,
-          command: "castTriggeredReactionSpell",
-          reactorId,
-          procedureRef,
-        },
-      },
-    ] as const satisfies readonly BattleInterruptProcedureChoice[];
-
-    expect(presentedInterruptChoices(session, choices)).toEqual([]);
-  });
-
   test("retains reported dropped-object outcomes in resolved payloads", () => {
     const { session } = startedStatBlockBattle();
-    const presented = battlePresentedSnapshot(session);
-    if (Either.isLeft(presented)) {
-      throw new Error("Expected the test battle snapshot to be presentable.");
+    const envelope = currentBattleCheckpointFrontierEnvelope(session);
+    if (envelope.frontier.kind === "holes") {
+      throw new Error(
+        "Expected the test battle to expose a resolved frontier.",
+      );
     }
+    const resolvedEnvelope =
+      envelope as BattleResolvedCheckpointFrontierEnvelope;
     const result = {
       tag: "resolved",
       session,
-      snapshot: snapshotBattle(session.state),
+      envelope: resolvedEnvelope,
       droppedObjects: [],
     } satisfies BattleRuntimeResolutionResult;
 
-    expect(
-      battleResolutionResultPayload(result, presented.right),
-    ).toHaveProperty("droppedObjects", []);
+    expect(battleResolutionResultPayload(result)).toHaveProperty(
+      "droppedObjects",
+      [],
+    );
   });
 
   test("does not store needs-holes results without a pending transaction", () => {
@@ -211,6 +172,80 @@ describe("battle tool payload boundaries", () => {
       Either.left({ tag: "pendingBattleFillTransactionMissing" }),
     );
     expect(root.sessionStore.battleSession).toBe(session);
+  });
+
+  test("retains a pending transaction for a resolved interrupt frontier", () => {
+    const { root, session } = startedStatBlockBattle();
+    const act = discoverBattleActs(session)[0];
+    if (act === undefined) throw new Error("Expected a battle act.");
+    const envelope = currentBattleCheckpointFrontierEnvelope(session);
+    const resolvedInterrupt = {
+      tag: "resolved" as const,
+      session,
+      envelope: {
+        ...envelope,
+        frontier: {
+          kind: "interruptDecision" as const,
+          trigger: "attackHit" as const,
+          decisionHole: {
+            holeInstanceKey: holeInstanceKey(
+              "battle:payload-boundaries:interrupt",
+            ),
+            holeId: holeId("battle:payload-boundaries:interrupt"),
+            kind: "interruptDecision" as const,
+            label: "Respond",
+            trigger: "attackHit" as const,
+            eligibleResponders: [combatantId("goblin")],
+          },
+          choices: [
+            {
+              kind: "reactionRollOrDamageReduction",
+              reactorId: combatantId("goblin"),
+              choice: {
+                kind: "attackDamageReduction",
+                procedureRef: battleProcedureExecutionRef(
+                  battleStatBlockExecutionScopeRef(
+                    battleId("battle:payload-boundaries"),
+                    combatantId("goblin"),
+                    battleExecutionScopeOrdinal(0),
+                  ),
+                  NonNegativeInteger(0),
+                ),
+                reduction: { kind: "halfDamage" },
+              },
+              initialHoles: [],
+            },
+          ],
+          stackDepth: battleReplayStackDepth(0),
+        },
+      },
+    } satisfies BattleRuntimeResolutionResult;
+    const pending = {
+      baseSession: session,
+      subject: act.subject,
+      fills: [],
+    };
+
+    expect(storeBattleResolution(root, resolvedInterrupt, pending)).toEqual(
+      Either.right({ tag: "stored" }),
+    );
+    expect(root.sessionStore.battleSession).toBe(session);
+    expect(root.sessionStore.pendingBattleFills).toEqual(pending);
+
+    const actsFrontier =
+      envelope.frontier.kind === "acts" ? envelope.frontier : undefined;
+    if (actsFrontier === undefined) {
+      throw new Error("Expected a current Acts frontier.");
+    }
+    const resolvedActs = {
+      tag: "resolved" as const,
+      session,
+      envelope: { checkpoint: envelope.checkpoint, frontier: actsFrontier },
+    } satisfies BattleRuntimeResolutionResult;
+    expect(storeBattleResolution(root, resolvedActs, pending)).toEqual(
+      Either.right({ tag: "stored" }),
+    );
+    expect(root.sessionStore.pendingBattleFills).toBeNull();
   });
 });
 

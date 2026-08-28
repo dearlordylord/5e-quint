@@ -181,13 +181,12 @@ export function combatantSnapshot(
   combatant: BattleCreatureState,
 ): BattleCreatureSnapshot {
   const sourceGrapple = grappledBy(state, combatant.combatantId) ?? null;
-  const common = {
+  const common: Omit<BattleCreatureSnapshot, "origin"> = {
     combatantId: combatant.combatantId,
     initiative: combatant.initiative,
     hp: combatant.hp,
     maxHp: effectiveHitPointMaximum(combatant),
     tempHp: combatant.tempHp,
-    nextActiveEffectOrdinal: combatant.nextActiveEffectOrdinal,
     activeEffectRefs: combatant.activeEffects.flatMap((effect) =>
       "effectRef" in effect ? [effect.effectRef] : [],
     ),
@@ -205,9 +204,16 @@ export function combatantSnapshot(
     movement: battleMovementBudgetForActor(state, combatant.combatantId),
     ammunitionStocks: combatant.ammunitionStocks,
   };
-  return Match.value(combatantOriginSnapshot(combatant)).pipe(
-    Match.when({ kind: "character" }, (origin) => ({ ...common, origin })),
-    Match.when({ kind: "statBlock" }, (origin) => ({ ...common, origin })),
+  const origin = combatantOriginSnapshot(combatant);
+  return Match.value(origin).pipe(
+    Match.when({ kind: "character" }, (characterOrigin) => ({
+      ...common,
+      origin: characterOrigin,
+    })),
+    Match.when({ kind: "statBlock" }, (statBlockOrigin) => ({
+      ...common,
+      origin: statBlockOrigin,
+    })),
     Match.exhaustive,
   );
 }
@@ -225,7 +231,6 @@ export function combatantOriginSnapshot(
       characterId: origin.characterId,
       execution: {
         scopeRef: origin.execution.scopeRef,
-        nextProcedureOrdinal: origin.execution.nextProcedureOrdinal,
         procedureBindings: characterProcedureBindingSnapshots(
           origin.execution,
           (invocation) => spellExecutionFacts(invocation),

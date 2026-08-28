@@ -4,7 +4,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING
 // RAW: .references/srd-5.2.1/Spells/Descriptions-A-D.md#Dispel-Magic
 import {
-  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
+  assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
@@ -32,7 +32,11 @@ import type {
   BattleTrackedOngoingSpellLightEmitter,
 } from "./index.ts";
 import type { BattleObjectInvisibleRevealLightEmitter } from "./battle-state-execution.ts";
-import { BattleHoleSchema, BattleSnapshotSchema } from "./index.ts";
+import {
+  BattleCheckpointFrontierEnvelopeSchema,
+  BattleHoleSchema,
+  BattleSnapshotSchema,
+} from "./index.ts";
 import {
   antimagicFieldUnitId,
   continualFlameUnitId,
@@ -792,37 +796,43 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       requireHole(act.initialHoles, "ongoingSpellTargetChoice").choices,
     ).toContainEqual(target);
     const snapshot = snapshotBattle(state.state);
-    const focusedSnapshot = {
-      ...snapshot,
-      acts: snapshot.acts.filter(
-        (candidate) =>
-          "procedureRef" in candidate.subject &&
-          candidate.subject.procedureRef === act.subject.procedureRef,
-      ),
+    const focusedEnvelope = {
+      checkpoint: snapshot,
+      frontier: {
+        kind: "acts" as const,
+        acts: [{ subject: act.subject, initialHoles: act.initialHoles }],
+      },
     };
     expect(
       Either.isRight(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(focusedSnapshot),
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+          focusedEnvelope,
+        ),
       ),
     ).toBe(true);
-    const wrongOwnerSnapshot = {
-      ...focusedSnapshot,
-      combatants: focusedSnapshot.combatants.map((combatant) =>
-        combatant.combatantId === spellCasterId
-          ? {
-              ...combatant,
-              activeEffectRefs: [
-                battleActiveEffectExecutionRefForTest(
-                  "wrong-owner-spiritual-weapon",
-                ),
-              ],
-            }
-          : combatant,
-      ),
+    const wrongOwnerEnvelope = {
+      ...focusedEnvelope,
+      checkpoint: {
+        ...focusedEnvelope.checkpoint,
+        combatants: focusedEnvelope.checkpoint.combatants.map((combatant) =>
+          combatant.combatantId === spellCasterId
+            ? {
+                ...combatant,
+                activeEffectRefs: [
+                  battleActiveEffectExecutionRefForTest(
+                    "wrong-owner-spiritual-weapon",
+                  ),
+                ],
+              }
+            : combatant,
+        ),
+      },
     };
     expect(
       Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(wrongOwnerSnapshot),
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+          wrongOwnerEnvelope,
+        ),
       ),
     ).toBe(true);
 
@@ -982,28 +992,38 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       throw new Error("Expected a Dispel Magic spellcasting ability check.");
     }
     const focusedSnapshot = needsCheck.snapshot;
-    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+    assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: focusedSnapshot,
       subject: act.subject,
       holes: needsCheck.holes,
     });
-    const encodedSnapshot =
-      Schema.encodeSync(BattleSnapshotSchema)(focusedSnapshot);
+    const encodedEnvelope = Schema.encodeSync(
+      BattleCheckpointFrontierEnvelopeSchema,
+    )({
+      checkpoint: focusedSnapshot,
+      frontier: {
+        kind: "acts",
+        acts: [{ subject: act.subject, initialHoles: needsCheck.holes }],
+      },
+    });
     expect(
       Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)({
-          ...encodedSnapshot,
-          combatants: encodedSnapshot.combatants.map((combatant) =>
-            combatant.combatantId === spellCasterId
-              ? {
-                  ...combatant,
-                  activeEffectRefs: combatant.activeEffectRefs.filter(
-                    (effectRef) => effectRef !== effect.effectRef,
-                  ),
-                }
-              : combatant,
-          ),
-          acts: [{ subject: act.subject, initialHoles: needsCheck.holes }],
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)({
+          ...encodedEnvelope,
+          checkpoint: {
+            ...encodedEnvelope.checkpoint,
+            combatants: encodedEnvelope.checkpoint.combatants.map(
+              (combatant) =>
+                combatant.combatantId === spellCasterId
+                  ? {
+                      ...combatant,
+                      activeEffectRefs: combatant.activeEffectRefs.filter(
+                        (effectRef) => effectRef !== effect.effectRef,
+                      ),
+                    }
+                  : combatant,
+            ),
+          },
         }),
       ),
     ).toBe(true);

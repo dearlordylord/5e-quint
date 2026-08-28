@@ -56,6 +56,7 @@ import {
   damageRollFillWithGroups,
   difficultyClass,
   discoverBattleActCandidates,
+  battleFrontierInterruptDecisionForState,
   discoverBattleActs,
   Either,
   elapsedTimeTicks,
@@ -660,7 +661,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           }),
         ],
       }),
-    ).toMatchObject({ tag: "resolved", snapshot: { pendingInterrupt: null } });
+    ).toMatchObject({ tag: "resolved" });
   });
 
   test("BattleFillSchema decodes creature-space traversal Movement facts", () => {
@@ -1889,13 +1890,16 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
     }
-    const readiedChoice =
-      awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-        (choice) =>
-          choice.kind === "releaseReadiedMovement" &&
-          choice.readiedMovementActorId === fighterId,
-      );
-    expect(awaitingReaction.snapshot.pendingInterrupt?.choices).toEqual(
+    const readiedChoice = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    )?.choices.find(
+      (choice) =>
+        choice.kind === "releaseReadiedMovement" &&
+        choice.readiedMovementActorId === fighterId,
+    );
+    expect(
+      battleFrontierInterruptDecisionForState(awaitingReaction.state)?.choices,
+    ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           kind: "releaseReadiedMovement",
@@ -1974,11 +1978,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     });
     expect(opportunityWindow).toMatchObject({
       tag: "needsHoles",
-      snapshot: {
-        pendingInterrupt: {
-          trigger: "opportunityAttack",
-        },
-      },
     });
     if (opportunityWindow.tag !== "needsHoles") {
       throw new Error("Expected nested Opportunity Attack interrupt.");
@@ -2059,7 +2058,9 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     if (reported.tag !== "needsHoles") {
       throw new Error("Expected reported Ready trigger interrupt.");
     }
-    const choice = reported.snapshot.pendingInterrupt?.choices.find(
+    const choice = battleFrontierInterruptDecisionForState(
+      reported.state,
+    )?.choices.find(
       (candidate) =>
         candidate.kind === "releaseReadiedAttack" &&
         candidate.subject.targetId === goblinId,
@@ -2367,7 +2368,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       subject: goblinAttack,
     });
     expect(
-      completed.snapshot.acts.every(
+      discoverBattleActCandidates(completed.state).every(
         ({ subject }) =>
           subject.tag === "runtimeCommand" &&
           subject.command === "reportReadyTrigger",
@@ -4431,7 +4432,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       resolveBattleSubject({ state, subject: dashAct.subject, fills: [] }),
     );
     expect(dashed.snapshot.turn).toMatchObject({
-      bonusActionAvailable: false,
+      bonusActionQuotaAvailable: false,
       actionResources: [{ kind: "action", source: "turn" }],
       dashMovementBonusFeet: 30,
     });
@@ -4440,7 +4441,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       resolveBattleSubject({ state, subject: disengageAct.subject, fills: [] }),
     );
     expect(disengaged.snapshot.turn).toMatchObject({
-      bonusActionAvailable: false,
+      bonusActionQuotaAvailable: false,
       actionResources: [{ kind: "action", source: "turn" }],
       disengaged: true,
     });
@@ -4504,7 +4505,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       }),
     );
     expect(hidden.snapshot).toMatchObject({
-      turn: { bonusActionAvailable: false },
+      turn: { bonusActionQuotaAvailable: false },
       combatants: expect.arrayContaining([
         expect.objectContaining({ combatantId: fighterId }),
       ]),

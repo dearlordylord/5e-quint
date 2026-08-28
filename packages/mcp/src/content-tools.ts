@@ -258,9 +258,9 @@ function workflowGuide() {
       "Call discover_battle_acts and copy a returned subject exactly.",
       "If an act has initialHoles, call fill_battle_hole with the typed subject and one typed fill at a time, reusing the same subject until result.tag is resolved.",
       "If an act has no holes, call resolve_battle_act with the typed subject.",
-      "Call end_turn only when no transientBattleFills are pending.",
+      "Call end_turn only when no Battle continuation inputs are pending.",
       "If end_turn asks for a Death Saving Throw hole, fill that pending subject before taking other battle actions.",
-      "Call end_battle only when no transientBattleFills are pending, then list_characters for durable HP, zero-HP lifecycle, and Spell Slot handoff.",
+      "Call end_battle only when no Battle continuation inputs are pending, then list_characters for durable HP, zero-HP lifecycle, and Spell Slot handoff.",
       "Call query_character_session with one returned characterId and a discriminated query variant to inspect existing Character Sheet projections; it returns typed rejection while that character is in Battle and admits only ritual Spell Invocation inspection outside Battle.",
     ],
     resultPaths: {
@@ -268,10 +268,10 @@ function workflowGuide() {
       draftRevision: "draft.revision or storedDraft.revision",
       finalization: "finalization",
       characters: "characters",
-      battleActs: "availableActs",
-      followUpBattleHoles: "result.holes",
-      pendingBattleFills: "session.transientBattleFills",
-      battleCombatants: "snapshot.combatants",
+      battleActs: "envelope.frontier.acts",
+      followUpBattleHoles: "envelope.frontier.holes",
+      pendingBattleFills: "envelope.frontier",
+      battleCombatants: "envelope.checkpoint.combatants",
       characterSessionOperation: "result",
       calendarTimeResult: "result",
       calendarTimeRecoveryHoles: "result.holes",
@@ -284,13 +284,13 @@ function workflowGuide() {
       abilityScoresFill:
         '{"kind":"abilityScores","holeId":"copy from holes[].holeId","method":"standardArray","value":{"str":15,"dex":14,"con":13,"int":8,"wis":10,"cha":12}}',
       targetChoiceFill:
-        '{"kind":"targetChoice","holeId":"copy from result.holes[] or initialHoles[]","value":"target combatantId","spatialFacts":[{"kind":"attackTargetDistance | spellTarget | grappleTargetWithinReach | attackerAllyWithin5FeetOfTarget","actorId":"table/caller combatantId when required","targetId":"table/caller combatantId when required","procedureRef":"copy from the target hole sourceProcedureRef or attack.selection procedureRef when required","attackAbility":"copy from attack.selection when present","attackDamageType":"copy from attack.selection when present","distanceFeet":"nonnegative feet when kind is attackTargetDistance"}]}',
+        '{"kind":"targetChoice","holeId":"copy from envelope.frontier.holes[] or envelope.frontier.acts[].initialHoles[]","value":"target combatantId","spatialFacts":[{"kind":"attackTargetDistance | spellTarget | grappleTargetWithinReach | attackerAllyWithin5FeetOfTarget","actorId":"table/caller combatantId when required","targetId":"table/caller combatantId when required","procedureRef":"copy from the target hole sourceProcedureRef or attack.selection procedureRef when required","attackAbility":"copy from attack.selection when present","attackDamageType":"copy from attack.selection when present","distanceFeet":"nonnegative feet when kind is attackTargetDistance"}]}',
       spellTargetAllocationFill:
-        '{"kind":"spellTargetAllocation","holeId":"copy from result.holes[] or initialHoles[]","value":{"allocations":[{"targetId":"target combatantId","count":3}]},"spatialFacts":[{"kind":"spellTarget","casterId":"caster combatantId","targetId":"same target combatantId","sourceProcedureRef":"copy from the target hole sourceProcedureRef"}]}',
+        '{"kind":"spellTargetAllocation","holeId":"copy from envelope.frontier.holes[] or envelope.frontier.acts[].initialHoles[]","value":{"allocations":[{"targetId":"target combatantId","count":3}]},"spatialFacts":[{"kind":"spellTarget","casterId":"caster combatantId","targetId":"same target combatantId","sourceProcedureRef":"copy from the target hole sourceProcedureRef"}]}',
       attackRollFill:
-        '{"kind":"attackRoll","holeId":"copy from result.holes[] or initialHoles[]","value":{"total":16,"naturalD20":14,"rollMode":"normal | advantage | disadvantage optional"}}',
+        '{"kind":"attackRoll","holeId":"copy from envelope.frontier.holes[] or envelope.frontier.acts[].initialHoles[]","value":{"total":16,"naturalD20":14,"rollMode":"normal | advantage | disadvantage optional"}}',
       savingThrowOutcomeFill:
-        '{"kind":"savingThrowOutcome","holeId":"copy from result.holes[] or initialHoles[]","value":{"area":{"originAnchorId":"table-supplied origin combatantId","affectedTargetIds":["table-supplied affected combatantId"]},"outcomes":[{"targetId":"same affected combatantId","succeeded":false}]}}',
+        '{"kind":"savingThrowOutcome","holeId":"copy from envelope.frontier.holes[] or envelope.frontier.acts[].initialHoles[]","value":{"area":{"originAnchorId":"table-supplied origin combatantId","affectedTargetIds":["table-supplied affected combatantId"]},"outcomes":[{"targetId":"same affected combatantId","succeeded":false}]}}',
       rolledDiceFill:
         '{"kind":"rolledDice","holeId":"copy exact damage-result hole id","value":[{"results":[5]}]}',
       characterSessionOperations:
@@ -303,7 +303,7 @@ function workflowGuide() {
       "On revision errors, read storedDraft.revision and retry against the current draft.",
       "On BATTLE_ACT_NOT_AVAILABLE, call discover_battle_acts and use a current subject.",
       "On BATTLE_ACT_REQUIRES_HOLES, use fill_battle_hole instead of resolve_battle_act.",
-      "On pending-fill errors, continue filling session.transientBattleFills.subject until the result resolves.",
+      "On pending-fill errors, continue filling the subject in envelope.frontier until the result resolves.",
       "Short Rest, composed Long Rest interruption/resumption, and calendar-time Stable recovery are supported through apply_character_session_operation; unresolved calendar recovery returns result.holes for a subsequent call, while a resumed Long Rest must supply strictly increasing cumulativeRestedTicks segments and its final cumulative segment in the same call.",
     ],
     limits: [

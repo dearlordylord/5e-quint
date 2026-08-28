@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { battlePresentedSnapshot } from "@dnd/battle-runtime"
+import { battlePresentedCheckpointFrontierEnvelope } from "@dnd/battle-runtime"
 import {
   type AdminMirrorPresentationTimelineEntry,
   AdminMirrorPresentationTimelineEntrySchema,
@@ -307,8 +307,7 @@ function rawSessionState(input: { readonly mirrorSessionId?: string; readonly se
         session: {
           battleState: { tag: "none" },
           draftIds: [],
-          selectedStatBlockId: null,
-          transientBattleFills: null
+          selectedStatBlockId: null
         }
       },
       publisherInstanceId: "publisher-a",
@@ -330,8 +329,8 @@ function rawSessionState(input: { readonly mirrorSessionId?: string; readonly se
 
 function rawDetailedSessionState() {
   const base = rawSessionState({ sequence: 1 })
-  const battle = Either.getOrThrow(battlePresentedSnapshot(WIZARD_BATTLE_DEMO_STEPS[0].session))
-  return {
+  const battle = Either.getOrThrow(battlePresentedCheckpointFrontierEnvelope(WIZARD_BATTLE_DEMO_STEPS[0].session))
+  const result = {
     ...base,
     envelope: {
       ...base.envelope,
@@ -350,7 +349,7 @@ function rawDetailedSessionState() {
             status: "available"
           },
           {
-            battleId: battle.battleId,
+            battleId: battle.checkpoint.battleId,
             build: {},
             characterId: "character:in-battle",
             companion: {},
@@ -362,8 +361,8 @@ function rawDetailedSessionState() {
           ...base.envelope.projection.session,
           battleState: {
             tag: "activeBattle",
-            battleId: battle.battleId,
-            currentActorId: battle.currentActorId
+            battleId: battle.checkpoint.battleId,
+            currentActorId: battle.checkpoint.currentActorId
           }
         }
       }
@@ -415,6 +414,7 @@ function rawDetailedSessionState() {
       }
     ]
   }
+  return result
 }
 
 function rawPresentationTimelineEntry(input: {

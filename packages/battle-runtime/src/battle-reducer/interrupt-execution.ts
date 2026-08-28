@@ -50,7 +50,7 @@ export {
   currentInterruptFrame,
   interruptDecisionHole,
   interruptTriggerLabel,
-  pendingInterruptSnapshot,
+  interruptDecisionFrontier,
   snapshotBattle,
   unofferedEligibleResponders,
 } from "./battle-snapshot.ts";
@@ -597,6 +597,7 @@ function openPreparedInterruptWindowWithChoices(
     subject: interruptedProcedureSubject(frame.continuation),
     holes: [decisionHole],
     snapshot: snapshotBattle(nextState),
+    checkpointBoundary: { kind: "durableInterruptCheckpoint" },
   };
 }
 

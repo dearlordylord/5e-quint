@@ -641,24 +641,18 @@ export function directFrontierUseChecks(input: {
         );
     }
     if (nextSubjects.length === 0) continue;
-    const availableActs =
+    const frontierActsForSubjects =
       projection.frontier.kind === "acts"
         ? projection.frontier.acts
-        : projection.frontier.kind === "none"
-          ? nextActs
-          : undefined;
-    if (projection.frontier.kind === "none" && availableActs === undefined)
-      fail(
-        `Continuation ${projection.continuation} cannot prove a subject used before a retained act discovery.`,
-      );
+        : undefined;
     for (const next of nextSubjects)
       validateSubjectCall(
         projection,
         next,
-        availableActs,
+        frontierActsForSubjects,
         input.holeEvidenceSource,
       );
-    if (projection.frontier.kind !== "none") checked += 1;
+    checked += 1;
   }
   if (checked === 0)
     fail("Fixed baseline projection did not prove any direct frontier reuse.");

@@ -1,6 +1,14 @@
-import { battlePresentedSnapshot, combatantId, snapshotBattle } from "@dnd/battle-runtime"
+import {
+  battlePresentedCheckpointFrontierEnvelope,
+  BattlePresentedCheckpointFrontierEnvelopeSchema,
+  battlePresentedSnapshot,
+  combatantId,
+  snapshotBattle
+} from "@dnd/battle-runtime"
+import { AdminSessionProjectionSchema } from "@dnd/mcp/experimental-admin-mirror-contract"
+import { productionBattleConsumerSeam } from "@dnd/mcp/test-support/cross-boundary-battle"
 import { Hp } from "@dnd/shared/types"
-import { Either } from "effect"
+import { Either, Schema } from "effect"
 import { describe, expect, test } from "vitest"
 
 import { computeWizardBattleScene } from "./battle-scene-layout.ts"
@@ -157,4 +165,104 @@ describe("wizard battle demo", () => {
       ).toBe(true)
     }
   })
+
+  test("carries each canonical MCP envelope frontier into the React scene model", () => {
+    const frontierKinds = ["acts", "holes", "interruptDecision"] as const
+
+    for (const frontierKind of frontierKinds) {
+      const candidate = WIZARD_BATTLE_DEMO_STEPS.map((step, stepIndex) => ({
+        envelope: battlePresentedCheckpointFrontierEnvelope(step.session),
+        step,
+        stepIndex
+      })).find((entry) => Either.isRight(entry.envelope) && entry.envelope.right.frontier.kind === frontierKind)
+      if (candidate === undefined || Either.isLeft(candidate.envelope)) {
+        throw new Error(`Expected a ${frontierKind} demo frontier.`)
+      }
+
+      const mcpProjection = Schema.decodeUnknownEither(AdminSessionProjectionSchema)({
+        session: {
+          draftIds: [],
+          selectedStatBlockId: null,
+          battleState: {
+            tag: "activeBattle",
+            battleId: candidate.envelope.right.checkpoint.battleId,
+            currentActorId: candidate.envelope.right.checkpoint.currentActorId
+          }
+        },
+        battle: candidate.envelope.right,
+        characters: []
+      })
+      expect(Either.isRight(mcpProjection)).toBe(true)
+      if (Either.isLeft(mcpProjection)) continue
+      const battle = mcpProjection.right.battle
+      expect(battle).not.toBeNull()
+      if (battle === null) continue
+      const canonicalEnvelope = Schema.decodeUnknownSync(BattlePresentedCheckpointFrontierEnvelopeSchema)(battle)
+      expect(canonicalEnvelope).toEqual(
+        Schema.decodeUnknownSync(BattlePresentedCheckpointFrontierEnvelopeSchema)(candidate.envelope.right)
+      )
+
+      const scene = computeWizardBattleScene({
+        meta: WIZARD_BATTLE_DEMO_META,
+        snapshot: candidate.envelope.right.checkpoint,
+        step: candidate.step,
+        stepIndex: candidate.stepIndex
+      })
+      expect(Either.isRight(scene)).toBe(true)
+    }
+  })
+
+  test("executes one Battle through runtime, MCP, and the React-facing model", async () => {
+    const cases = await productionBattleConsumerSeam()
+    expect(cases.map((candidate) => candidate.kind)).toEqual([
+      "acts",
+      "holes",
+      "rejected",
+      "interruptDecision",
+      "resolution"
+    ])
+
+    for (const [stepIndex, candidate] of cases.entries()) {
+      const runtimeEnvelope = candidate.runtimeEnvelope
+      const runtimeWireEnvelope = Schema.decodeUnknownSync(BattlePresentedCheckpointFrontierEnvelopeSchema)(
+        Schema.encodeSync(BattlePresentedCheckpointFrontierEnvelopeSchema)(runtimeEnvelope)
+      )
+      expect(runtimeWireEnvelope, candidate.kind).toEqual(candidate.envelope)
+
+      const canonicalEnvelope = Schema.decodeUnknownSync(BattlePresentedCheckpointFrontierEnvelopeSchema)(
+        candidate.envelope
+      )
+      const operation = jsonRecord(candidate.operationResult)
+      const publishedEnvelope =
+        candidate.kind === "rejected"
+          ? jsonRecord(jsonRecord(operation.details).battleEnvelope)
+          : jsonRecord(operation.envelope)
+      expect(Schema.decodeUnknownSync(BattlePresentedCheckpointFrontierEnvelopeSchema)(publishedEnvelope)).toEqual(
+        canonicalEnvelope
+      )
+      // The wire decoder intentionally erases nominal brands; this equality is the
+      // boundary proof before the already-typed runtime checkpoint reaches React.
+      expect(canonicalEnvelope.checkpoint).toEqual(candidate.runtimeEnvelope.checkpoint)
+
+      const scene = computeWizardBattleScene({
+        meta: { combatants: {}, objectNames: {} },
+        snapshot: candidate.runtimeEnvelope.checkpoint,
+        step: {
+          cue: {},
+          detail: candidate.kind,
+          session: candidate.runtimeSession,
+          title: candidate.kind
+        },
+        stepIndex
+      })
+      expect(Either.isRight(scene)).toBe(true)
+    }
+  }, 30_000)
 })
+
+function jsonRecord(value: unknown): Readonly<Record<string, unknown>> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new Error("Expected a record at the MCP seam.")
+  }
+  return value as Readonly<Record<string, unknown>>
+}

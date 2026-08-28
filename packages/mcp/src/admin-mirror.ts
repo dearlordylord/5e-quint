@@ -1,8 +1,8 @@
-import { battlePresentedSnapshot } from "@dnd/battle-runtime";
 import { Effect, Either, Schema } from "effect";
 
 import { characterListRows } from "./character-session-rows.ts";
 import { battleStateSnapshot } from "./battle-state-snapshot.ts";
+import { battlePresentationEnvelopeForSession } from "./battle-tool-payloads.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import {
   AdminMirrorProjectionEnvelopeSchema,
@@ -120,7 +120,7 @@ export function adminProjection(
   root: McpPlaySessionRoot,
 ): Either.Either<
   AdminSessionProjection,
-  string | import("@dnd/battle-runtime").BattleSnapshotPresentationIssues
+  string | import("@dnd/battle-runtime").BattlePresentationIssues
 > {
   const characters = characterListRows(root);
   if (Either.isLeft(characters)) return Either.left(characters.left);
@@ -129,12 +129,11 @@ export function adminProjection(
   const sessionSummary = {
     draftIds: snapshot.draftIds,
     selectedStatBlockId: snapshot.selectedStatBlockId,
-    transientBattleFills: snapshot.transientBattleFills,
   };
   const presentedBattle =
     battleState.tag !== "activeBattle"
       ? Either.right(null)
-      : battlePresentedSnapshot(battleState.session);
+      : battlePresentationEnvelopeForSession(root, battleState.session);
   if (Either.isLeft(presentedBattle)) {
     return Either.left(presentedBattle.left);
   }
@@ -143,7 +142,7 @@ export function adminProjection(
   );
   if (projectedBattleState.tag === "activeBattle") {
     if (presentedBattle.right === null) {
-      return Either.left("Active Battle projection is missing its snapshot.");
+      return Either.left("Active Battle projection is missing its envelope.");
     }
     return Either.right({
       battle: presentedBattle.right,

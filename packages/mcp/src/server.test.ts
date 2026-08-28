@@ -9,6 +9,7 @@ import {
   battleActSpellPresentation,
   battleAmmunitionStock,
   battleCreatureInitFromStatBlock,
+  BattleFillSchema,
   battleId,
   characterId,
   combatantId,
@@ -18,8 +19,11 @@ import {
   KNOCKED_OUT_UNCONSCIOUS,
   snapshotBattle,
   startBattle,
+  type BattleCheckpointFrontierEnvelope,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   type BattleCreatureState,
+  type BattleFill,
+  type BattleHole,
   type BattleCreatureInit,
   type BattleSubject,
   type BattleRuntimeSession,
@@ -74,7 +78,11 @@ import {
 } from "./server.ts";
 import { buildAdvertisedToolDefinitions } from "./protocol-server.ts";
 import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
-import type { BattleToolResult } from "./battle-tools.ts";
+import {
+  pendingFillFrontierIssue,
+  type BattleToolResult,
+} from "./battle-tools.ts";
+import { battleMechanicsEnvelopeForSession } from "./battle-tool-payloads.ts";
 import type { CharacterToolResult } from "./character-tools.ts";
 import {
   CharacterSessionDetailOutputSchema,
@@ -348,6 +356,47 @@ const fighterId = combatantId("fighter");
 const goblinId = combatantId("goblin");
 
 describe("MCP server route", () => {
+  test("accepts the runtime-mapped Spellcasting Ability Check fill and rejects an unrelated kind", () => {
+    // The MCP frontier guard reads only protocol kinds and Hole identity;
+    // payload details belong to the runtime procedure boundary.
+    const spellcastingAbilityCheckHole = {
+      holeId: "mcp:test:spellcasting-ability-check",
+      kind: "spellcastingAbilityCheck",
+    } as BattleHole;
+    const pending = {
+      kind: "holes",
+      subject: {
+        tag: "runtimeCommand",
+        actorId: fighterId,
+        command: "endTurn",
+      },
+      holes: [spellcastingAbilityCheckHole],
+      continuation: { kind: "ordinaryReplay" },
+    } satisfies Extract<
+      BattleCheckpointFrontierEnvelope["frontier"],
+      { readonly kind: "holes" }
+    >;
+    const abilityCheckFill = {
+      holeId: spellcastingAbilityCheckHole.holeId,
+      kind: "abilityCheck",
+      value: { total: 14 },
+    } as BattleFill;
+
+    expect(pendingFillFrontierIssue(pending, abilityCheckFill)).toBeNull();
+    expect(
+      pendingFillFrontierIssue(
+        pending,
+        Schema.decodeUnknownSync(BattleFillSchema)({
+          holeId: spellcastingAbilityCheckHole.holeId,
+          kind: "rolledDice",
+          value: [{ results: [14] }],
+        }),
+      ),
+    ).toMatchObject({
+      details: { code: "BATTLE_FILL_KIND_MISMATCH" },
+    });
+  });
+
   test("falls back to canonical ids when optional authored display records are absent", () => {
     const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
@@ -1150,7 +1199,6 @@ describe("MCP server route", () => {
       draftIds: [],
       selectedStatBlockId: "stat_block_goblin_warrior",
       battleState: { tag: "none" },
-      transientBattleFills: null,
     });
     expect(root.sessionStore.getSelectedStatBlock()?.id).toBe(
       "stat_block_goblin_warrior",
@@ -1231,7 +1279,9 @@ describe("MCP server route", () => {
       battleId: "battle-root",
       currentActorId: fighterId,
     });
-    expect(root.sessionStore.snapshot().transientBattleFills).toBeNull();
+    expect(root.sessionStore.snapshot()).not.toHaveProperty(
+      "transientBattleFills",
+    );
     expect(
       discoverBattleActs(battleRuntimeSessionForTest({ state, context })).map(
         (act) => act.summary,
@@ -2216,7 +2266,7 @@ describe("MCP server route", () => {
       (tool) => tool.name === "read_play_session",
     );
     const readPlaySessionSchema = JSON.stringify(readPlaySession?.outputSchema);
-    expect(readPlaySessionSchema).toContain('"pendingBattleHoles"');
+    expect(readPlaySessionSchema).not.toContain('"pendingBattleHoles"');
     expect(readPlaySessionSchema).toContain('"holeId"');
     expect(readPlaySessionSchema).toContain('"holeInstanceKey"');
   });
@@ -2229,8 +2279,8 @@ describe("MCP server route", () => {
     expect(workflow).toMatchObject({
       resultPaths: {
         creationHoles: "holes",
-        battleActs: "availableActs",
-        followUpBattleHoles: "result.holes",
+        battleActs: "envelope.frontier.acts",
+        followUpBattleHoles: "envelope.frontier.holes",
         characterSessionOperation: "result",
         calendarTimeResult: "result",
         calendarTimeRecoveryHoles: "result.holes",
@@ -2318,7 +2368,7 @@ describe("MCP server route", () => {
     expect(
       readPayload(handleToolCall(root, "describe_mcp_workflow", undefined)),
     ).toMatchObject({
-      resultPaths: { battleActs: "availableActs" },
+      resultPaths: { battleActs: "envelope.frontier.acts" },
     });
 
     expect(
@@ -2393,8 +2443,8 @@ describe("MCP server route", () => {
 
     for (const name of ["read_battle_state", "discover_battle_acts"] as const) {
       expect(readPayload(handleToolCall(root, name, {}))).toMatchObject({
-        snapshot: null,
-        availableActs: [],
+        envelope: null,
+        session: { battleState: { tag: "none" } },
       });
     }
 
@@ -2449,12 +2499,12 @@ describe("MCP server route", () => {
     expect(
       readPayload(handleToolCall(root, "read_battle_state", {})),
     ).toMatchObject({
-      details: { code: "BATTLE_SNAPSHOT_PRESENTATION_INCOMPLETE" },
+      details: { code: "BATTLE_PRESENTATION_INCOMPLETE" },
     });
     expect(
       readPayload(handleToolCall(root, "end_turn", { actorId: "goblin" })),
     ).toMatchObject({
-      details: { code: "BATTLE_SNAPSHOT_PRESENTATION_INCOMPLETE" },
+      details: { code: "BATTLE_PRESENTATION_INCOMPLETE" },
     });
   });
 
@@ -2527,25 +2577,27 @@ describe("MCP server route", () => {
       root.sessionStore.battleSession?.state.combatants.get(goblinId),
     ).not.toHaveProperty("displayName");
     expect(started).toMatchObject({
-      snapshot: {
-        battleId: "battle:mcp-shell",
-        currentActorId: "fighter",
-        turnOrder: ["fighter", "goblin"],
-        combatants: [
-          {
-            combatantId: "fighter",
-            origin: { kind: "character" },
-            initiative: 18,
-          },
-          {
-            combatantId: "goblin",
-            origin: { kind: "statBlock" },
-            initiative: 7,
-          },
-        ],
-        readiedResponses: { spells: [], actionsOrMovements: [] },
-        helpAttackMarkers: [],
-        pendingInterrupt: null,
+      envelope: {
+        frontier: { kind: "acts" },
+        checkpoint: {
+          battleId: "battle:mcp-shell",
+          currentActorId: "fighter",
+          turnOrder: ["fighter", "goblin"],
+          combatants: [
+            {
+              combatantId: "fighter",
+              origin: { kind: "character" },
+              initiative: 18,
+            },
+            {
+              combatantId: "goblin",
+              origin: { kind: "statBlock" },
+              initiative: 7,
+            },
+          ],
+          readiedResponses: { spells: [], actionsOrMovements: [] },
+          helpAttackMarkers: [],
+        },
       },
       session: {
         selectedStatBlockId: "stat_block_goblin_warrior",
@@ -2556,29 +2608,33 @@ describe("MCP server route", () => {
         },
       },
     });
-    expect(started.snapshot.combatants[0]).toMatchObject({
+    expect(started.envelope.checkpoint.combatants[0]).toMatchObject({
       combatantId: "fighter",
       movement: { speedFeet: 30, spentFeet: 0, remainingFeet: 30 },
     });
-    expect(started.snapshot.combatants[0]).not.toHaveProperty("defeated");
+    expect(started.envelope.checkpoint.combatants[0]).not.toHaveProperty(
+      "defeated",
+    );
     if ("isError" in startResponse) {
       throw new Error("Expected start_battle to return structured content.");
     }
     expect(startResponse.structuredContent).toMatchObject({
-      snapshot: {
-        combatants: [
-          {
-            combatantId: "fighter",
-          },
-          {
-            combatantId: "goblin",
-          },
-        ],
+      envelope: {
+        checkpoint: {
+          combatants: [
+            {
+              combatantId: "fighter",
+            },
+            {
+              combatantId: "goblin",
+            },
+          ],
+        },
       },
     });
 
     const read = readPayload(handleToolCall(root, "read_battle_state", {}));
-    expect(read.snapshot).toMatchObject({
+    expect(read.envelope.checkpoint).toMatchObject({
       battleId: "battle:mcp-shell",
       currentActorId: "fighter",
       combatants: [
@@ -2593,7 +2649,7 @@ describe("MCP server route", () => {
       ],
     });
     expect(
-      read.availableActs.map((act: { label: string }) => act.label),
+      read.envelope.frontier.acts.map((act: { label: string }) => act.label),
     ).toEqual([
       "Attack",
       "Attack",
@@ -2605,13 +2661,13 @@ describe("MCP server route", () => {
       "End Turn",
     ]);
     expect(
-      read.availableActs
+      read.envelope.frontier.acts
         .filter((act: { label: string }) => act.label === "Ready")
         .map((act: { initialHoles: readonly { kind: string }[] }) =>
           act.initialHoles.map((hole) => hole.kind),
         ),
     ).toEqual([["readyDeclaration"]]);
-    expect(read.snapshot.combatants).toHaveLength(2);
+    expect(read.envelope.checkpoint.combatants).toHaveLength(2);
   });
 
   test("discovers Stat Block Multiattack dispatch and Movement continuations through MCP tools", () => {
@@ -2674,8 +2730,8 @@ describe("MCP server route", () => {
       }),
     );
     expect(opened.result.tag).toBe("resolved");
-    expect(opened.snapshot.currentActorId).toBe("goblin");
-    expect(opened.snapshot.turn.actionResources).toEqual(
+    expect(opened.envelope.checkpoint.currentActorId).toBe("goblin");
+    expect(opened.envelope.checkpoint.turn.actionResources).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           source: "statBlockMultiattack",
@@ -2699,10 +2755,12 @@ describe("MCP server route", () => {
       handleToolCall(root, "discover_battle_acts", {}),
     );
     expect(
-      continuation.availableActs.map((act: { label: string }) => act.label),
+      continuation.envelope.frontier.acts.map(
+        (act: { label: string }) => act.label,
+      ),
     ).toEqual(["Attack", "Attack", "Move", "End Turn"]);
     expect(
-      continuation.availableActs.map(
+      continuation.envelope.frontier.acts.map(
         (act: { subject: unknown }) => act.subject,
       ),
     ).toEqual([
@@ -2781,7 +2839,7 @@ describe("MCP server route", () => {
       }),
     );
     expect(moved.result.tag).toBe("resolved");
-    expect(moved.snapshot.combatants).toContainEqual(
+    expect(moved.envelope.checkpoint.combatants).toContainEqual(
       expect.objectContaining({
         combatantId: "fighter",
         movement: expect.objectContaining({ spentFeet: 10 }),
@@ -2820,7 +2878,7 @@ describe("MCP server route", () => {
       }),
     );
 
-    expect(started.snapshot).toMatchObject({
+    expect(started.envelope.checkpoint).toMatchObject({
       currentActorId: "second-fighter",
       turnOrder: ["second-fighter", "first-fighter"],
     });
@@ -3119,8 +3177,10 @@ describe("MCP server route", () => {
     const discovered = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
-    expect(discovered.snapshot).toMatchObject({ currentActorId: "fighter" });
-    expect(discovered.availableActs).toEqual(
+    expect(discovered.envelope.checkpoint).toMatchObject({
+      currentActorId: "fighter",
+    });
+    expect(discovered.envelope.frontier.acts).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           label: "Attack",
@@ -3198,13 +3258,16 @@ describe("MCP server route", () => {
         },
       }),
     );
-    expect(afterTarget.result).toMatchObject({
-      tag: "needsHoles",
-      holes: [{ kind: "attackRoll", holeId: "battle:attack:roll" }],
+    expect(afterTarget).toMatchObject({
+      result: { tag: "needsHoles" },
+      envelope: {
+        frontier: {
+          kind: "holes",
+          holes: [{ kind: "attackRoll", holeId: "battle:attack:roll" }],
+        },
+      },
     });
-    expect(afterTarget.availableActs).toEqual([]);
-    expect(afterTarget.snapshot.acts).toEqual([]);
-    expect(afterTarget.session.transientBattleFills).toMatchObject({
+    expect(root.sessionStore.pendingBattleFills).toMatchObject({
       subject: expect.objectContaining({
         procedureRef: fighterAttackSubject.procedureRef,
       }),
@@ -3229,19 +3292,22 @@ describe("MCP server route", () => {
         },
       }),
     );
-    expect(afterAttackRoll.result).toMatchObject({
-      tag: "needsHoles",
-      holes: [
-        {
-          kind: "rolledDice",
-          holeId: "battle:attack:damage-result:1d8+3-slashing",
-          critical: false,
+    expect(afterAttackRoll).toMatchObject({
+      result: { tag: "needsHoles" },
+      envelope: {
+        frontier: {
+          kind: "holes",
+          holes: [
+            {
+              kind: "rolledDice",
+              holeId: "battle:attack:damage-result:1d8+3-slashing",
+              critical: false,
+            },
+          ],
         },
-      ],
+      },
     });
-    expect(afterAttackRoll.availableActs).toEqual([]);
-    expect(afterAttackRoll.snapshot.acts).toEqual([]);
-    expect(afterAttackRoll.session.transientBattleFills.fills).toHaveLength(2);
+    expect(root.sessionStore.pendingBattleFills?.fills).toHaveLength(2);
 
     const afterDamage = readPayload(
       handleToolCall(root, "fill_battle_hole", {
@@ -3254,20 +3320,40 @@ describe("MCP server route", () => {
       }),
     );
     expect(afterDamage.result.tag).toBe("resolved");
-    expect(afterDamage.snapshot.combatants).toEqual([
+    expect(afterDamage.envelope.checkpoint.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 12 }),
       expect.objectContaining({ combatantId: "goblin", hp: 2 }),
     ]);
     expect(
-      afterDamage.availableActs.map((act: { label: string }) => act.label),
+      afterDamage.envelope.frontier.acts.map(
+        (act: { label: string }) => act.label,
+      ),
     ).toEqual(["Adrenaline Rush: Dash", "Second Wind", "Move", "End Turn"]);
     expect(root.sessionStore.pendingBattleFills).toBeNull();
+
+    const battleBeforeWrongActorEnd = root.sessionStore.battleSession;
+    const wrongActorEnd = handleToolCall(root, "end_turn", {
+      actorId: "goblin",
+    });
+    const wrongActorPayload = readPayload(wrongActorEnd);
+    expect(wrongActorPayload).toMatchObject({
+      result: {
+        tag: "invalid",
+        reason: "wrongActor",
+      },
+      envelope: {
+        frontier: { kind: "acts" },
+      },
+    });
+    expect("isError" in wrongActorEnd).toBe(false);
+    expect(root.sessionStore.battleSession).toBe(battleBeforeWrongActorEnd);
+    expect(wrongActorPayload.envelope).toEqual(afterDamage.envelope);
 
     const afterEndTurn = readPayload(
       handleToolCall(root, "end_turn", { actorId: "fighter" }),
     );
     expect(afterEndTurn.result.tag).toBe("resolved");
-    expect(afterEndTurn.snapshot).toMatchObject({
+    expect(afterEndTurn.envelope.checkpoint).toMatchObject({
       currentActorId: "goblin",
       combatants: [
         { combatantId: "fighter", hp: 12 },
@@ -3281,7 +3367,7 @@ describe("MCP server route", () => {
     const goblinActs = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
-    expect(goblinActs.availableActs).toEqual(
+    expect(goblinActs.envelope.frontier.acts).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           label: "Attack",
@@ -3306,7 +3392,9 @@ describe("MCP server route", () => {
       ]),
     );
     expect(
-      goblinActs.availableActs.map((act: { label: string }) => act.label),
+      goblinActs.envelope.frontier.acts.map(
+        (act: { label: string }) => act.label,
+      ),
     ).toEqual([
       "Attack",
       "Attack",
@@ -3338,7 +3426,7 @@ describe("MCP server route", () => {
       },
       goblinScimitar,
     );
-    const goblinAttackRoll = afterGoblinTarget.result.holes.find(
+    const goblinAttackRoll = afterGoblinTarget.envelope.frontier.holes.find(
       (hole: { readonly kind?: string }) => hole.kind === "attackRoll",
     );
     if (goblinAttackRoll === undefined) {
@@ -3363,6 +3451,9 @@ describe("MCP server route", () => {
     );
     expect(afterGoblinAttackRoll.result).toMatchObject({
       tag: "needsHoles",
+    });
+    expect(afterGoblinAttackRoll.envelope.frontier).toMatchObject({
+      kind: "holes",
       holes: [
         {
           kind: "rolledDice",
@@ -3386,7 +3477,7 @@ describe("MCP server route", () => {
       goblinScimitar,
     );
     expect(afterGoblinDamage.result.tag).toBe("resolved");
-    expect(afterGoblinDamage.snapshot.combatants).toEqual([
+    expect(afterGoblinDamage.envelope.checkpoint.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 5 }),
       expect.objectContaining({ combatantId: "goblin", hp: 2 }),
     ]);
@@ -3456,11 +3547,16 @@ describe("MCP server route", () => {
       shortbowSubject,
     );
 
-    expect(afterTarget.result).toMatchObject({
-      tag: "needsHoles",
-      holes: [{ kind: "attackRoll", rollMode: "disadvantage" }],
+    expect(afterTarget).toMatchObject({
+      result: { tag: "needsHoles" },
+      envelope: {
+        frontier: {
+          kind: "holes",
+          holes: [{ kind: "attackRoll", rollMode: "disadvantage" }],
+        },
+      },
     });
-    expect(afterTarget.session.transientBattleFills).toMatchObject({
+    expect(root.sessionStore.pendingBattleFills).toMatchObject({
       fills: [
         {
           kind: "targetChoice",
@@ -3622,31 +3718,37 @@ describe("MCP server route", () => {
         holeId: "battle:attack:roll",
         value: { total: 16, naturalD20: 14 },
       },
-      afterTarget.result.subject,
+      afterTarget.envelope.frontier.subject,
     );
 
-    expect(afterAttackRoll.result).toMatchObject({
-      tag: "needsHoles",
-      holes: [
-        {
-          kind: "rolledDice",
-          holeId: "battle:attack:damage-result:1d4+3-piercing",
-          attackDamageRiders: [
+    expect(afterAttackRoll).toMatchObject({
+      result: { tag: "needsHoles" },
+      envelope: {
+        frontier: {
+          kind: "holes",
+          holes: [
             {
-              procedureRef: expect.any(String),
-              damage: { dice: 1, dieSize: 6, damageType: "piercing" },
+              kind: "rolledDice",
+              holeId: "battle:attack:damage-result:1d4+3-piercing",
+              attackDamageRiders: [
+                {
+                  procedureRef: expect.any(String),
+                  damage: { dice: 1, dieSize: 6, damageType: "piercing" },
+                },
+              ],
             },
           ],
         },
-      ],
+      },
     });
-    const sneakAttackProcedureRef = afterAttackRoll.result.holes.flatMap(
-      (hole: {
-        readonly attackDamageRiders?: readonly {
-          readonly procedureRef: string;
-        }[];
-      }) => hole.attackDamageRiders ?? [],
-    )[0]?.procedureRef;
+    const sneakAttackProcedureRef =
+      afterAttackRoll.envelope.frontier.holes.flatMap(
+        (hole: {
+          readonly attackDamageRiders?: readonly {
+            readonly procedureRef: string;
+          }[];
+        }) => hole.attackDamageRiders ?? [],
+      )[0]?.procedureRef;
     if (sneakAttackProcedureRef === undefined) {
       throw new Error("Expected the mechanical Sneak Attack procedure ref.");
     }
@@ -3661,20 +3763,22 @@ describe("MCP server route", () => {
         selectedAttackDamageRiderProcedureRefs: [sneakAttackProcedureRef],
         value: [{ results: [2] }, { results: [3] }],
       },
-      afterAttackRoll.result.subject,
+      afterAttackRoll.envelope.frontier.subject,
     );
 
     expect(afterDamage.result).toMatchObject({ tag: "resolved" });
-    expect(afterDamage.snapshot.combatants).toEqual(
+    expect(afterDamage.envelope.checkpoint.combatants).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ combatantId: "fighter", hp: 10 }),
         expect.objectContaining({ combatantId: "goblin", hp: 2 }),
       ]),
     );
-    expect(afterDamage.snapshot.turn.attackDamageRidersUsedThisTurn).toEqual([
+    expect(
+      afterDamage.envelope.checkpoint.turn.attackDamageRidersUsedThisTurn,
+    ).toEqual([
       { attackerId: "fighter", procedureRef: sneakAttackProcedureRef },
     ]);
-    expect(afterDamage.session).toMatchObject({ transientBattleFills: null });
+    expect(root.sessionStore.pendingBattleFills).toBeNull();
   });
 
   test("start_battle rejects missing caller-supplied Initiative scores", () => {
@@ -3886,7 +3990,7 @@ describe("MCP server route", () => {
       }),
     );
 
-    expect(started.snapshot).toMatchObject({
+    expect(started.envelope.checkpoint).toMatchObject({
       currentActorId: "first-goblin",
       turnOrder: ["first-goblin", "second-goblin"],
       combatants: [
@@ -3944,7 +4048,7 @@ describe("MCP server route", () => {
       }),
     );
 
-    expect(started.snapshot).toMatchObject({
+    expect(started.envelope.checkpoint).toMatchObject({
       currentActorId: "wizard-familiar",
       turnOrder: ["wizard-familiar", "wizard"],
       combatants: [
@@ -4040,7 +4144,7 @@ describe("MCP server route", () => {
 
     const dismissalAct = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
-    ).availableActs.find(
+    ).envelope.frontier.acts.find(
       (act: {
         readonly subject: { readonly tag: string; readonly action?: string };
       }) =>
@@ -4066,7 +4170,7 @@ describe("MCP server route", () => {
       }),
     );
     expect(dismissed.result.tag).toBe("resolved");
-    expect(dismissed.snapshot.companions).toMatchObject([
+    expect(dismissed.envelope.checkpoint.companions).toMatchObject([
       {
         ownerId: "wizard",
         identity: {
@@ -4080,7 +4184,7 @@ describe("MCP server route", () => {
     readPayload(handleToolCall(root, "end_turn", { actorId: "wizard" }));
     const reappearanceAct = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
-    ).availableActs.find(
+    ).envelope.frontier.acts.find(
       (act: {
         readonly subject: { readonly tag: string; readonly action?: string };
       }) =>
@@ -4107,13 +4211,13 @@ describe("MCP server route", () => {
       }),
     );
     expect(afterPlacement.result.tag).toBe("needsHoles");
-    expect(afterPlacement.session.transientBattleFills).toMatchObject({
+    expect(root.sessionStore.pendingBattleFills).toMatchObject({
       subject: reappearanceAct.subject,
       fills: [
         expect.objectContaining({ kind: "companionReappearancePlacement" }),
       ],
     });
-    const initiativeHole = afterPlacement.result.holes.find(
+    const initiativeHole = afterPlacement.envelope.frontier.holes.find(
       (hole: { readonly kind: string }) =>
         hole.kind === "companionReappearanceInitiative",
     );
@@ -4131,8 +4235,8 @@ describe("MCP server route", () => {
       }),
     );
     expect(afterInitiative.result.tag).toBe("resolved");
-    expect(afterInitiative.session.transientBattleFills).toBeNull();
-    expect(afterInitiative.snapshot.companions).toMatchObject([
+    expect(root.sessionStore.pendingBattleFills).toBeNull();
+    expect(afterInitiative.envelope.checkpoint.companions).toMatchObject([
       {
         companionId: "wizard-familiar",
         status: "present",
@@ -4289,7 +4393,7 @@ describe("MCP server route", () => {
         ],
       }),
     );
-    expect(started.snapshot).toMatchObject({
+    expect(started.envelope.checkpoint).toMatchObject({
       battleId: "battle:gh324-round-trip",
       turnOrder: [
         "gh324-wizard",
@@ -4323,9 +4427,11 @@ describe("MCP server route", () => {
     expect(
       readPayload(handleToolCall(root, "read_battle_state", {})),
     ).toMatchObject({
-      snapshot: {
-        battleId: "battle:gh324-round-trip",
-        currentActorId: "gh324-wizard",
+      envelope: {
+        checkpoint: {
+          battleId: "battle:gh324-round-trip",
+          currentActorId: "gh324-wizard",
+        },
       },
       session: {
         battleState: {
@@ -4573,7 +4679,7 @@ describe("MCP server route", () => {
         ],
       }),
     );
-    expect(repaired.snapshot.combatants).toEqual(
+    expect(repaired.envelope.checkpoint.combatants).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           combatantId: "mixed-fighter-repaired",
@@ -5011,7 +5117,7 @@ describe("MCP server route", () => {
         ],
       }),
     );
-    expect(started.snapshot.combatants).toEqual([
+    expect(started.envelope.checkpoint.combatants).toEqual([
       expect.objectContaining({ combatantId: "goblin", hp: 3, tempHp: 4 }),
     ]);
 
@@ -5129,7 +5235,7 @@ describe("MCP server route", () => {
         }),
       ),
     ).toMatchObject({
-      details: { code: "BATTLE_SNAPSHOT_PRESENTATION_INCOMPLETE" },
+      details: { code: "BATTLE_PRESENTATION_INCOMPLETE" },
     });
   });
 
@@ -5177,7 +5283,7 @@ describe("MCP server route", () => {
 
     const deliveryAct = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
-    ).availableActs.find(
+    ).envelope.frontier.acts.find(
       (act: {
         readonly subject: {
           readonly tag: string;
@@ -5214,7 +5320,7 @@ describe("MCP server route", () => {
       }),
     );
     expect(afterConnection.result.tag).toBe("needsHoles");
-    expect(afterConnection.session.transientBattleFills).toMatchObject({
+    expect(root.sessionStore.pendingBattleFills).toMatchObject({
       subject: deliveryAct.subject,
       fills: [expect.objectContaining({ kind: "findFamiliarConnection" })],
     });
@@ -5223,7 +5329,7 @@ describe("MCP server route", () => {
         combatantId("wizard-familiar"),
       )?.reactionAvailable,
     ).toBe(true);
-    const targetHole = afterConnection.result.holes.find(
+    const targetHole = afterConnection.envelope.frontier.holes.find(
       (hole: { readonly kind: string }) => hole.kind === "targetChoice",
     );
     expect(targetHole).toMatchObject({
@@ -5256,8 +5362,8 @@ describe("MCP server route", () => {
       root.sessionStore.battleSession?.state.combatants.get(
         combatantId("wizard-familiar"),
       )?.reactionAvailable,
-    ).toBe(false);
-    const healingRollHole = afterTarget.result.holes.find(
+    ).toBe(true);
+    const healingRollHole = afterTarget.envelope.frontier.holes.find(
       (hole: { readonly kind: string }) => hole.kind === "rolledDice",
     );
     expect(healingRollHole).toBeDefined();
@@ -5274,14 +5380,14 @@ describe("MCP server route", () => {
       }),
     );
     expect(afterHealingRoll.result.tag).toBe("resolved");
-    expect(afterHealingRoll.session.transientBattleFills).toBeNull();
+    expect(root.sessionStore.pendingBattleFills).toBeNull();
     expect(
       root.sessionStore.battleSession?.state.combatants.get(
         combatantId("wizard-familiar"),
       )?.reactionAvailable,
     ).toBe(false);
     expect(
-      afterHealingRoll.snapshot.combatants.find(
+      afterHealingRoll.envelope.checkpoint.combatants.find(
         (combatant: { readonly combatantId: string }) =>
           combatant.combatantId === "goblin",
       ),
@@ -5322,7 +5428,7 @@ describe("MCP server route", () => {
       }),
     );
 
-    expect(started.snapshot).toMatchObject({
+    expect(started.envelope.checkpoint).toMatchObject({
       currentActorId: "wizard-familiar",
       turnOrder: ["wizard-familiar", "wizard"],
       companions: [
@@ -6459,7 +6565,7 @@ describe("MCP server route", () => {
       }),
     );
 
-    expect(started.snapshot).toMatchObject({
+    expect(started.envelope.checkpoint).toMatchObject({
       currentActorId: "wizard",
       turnOrder: ["wizard", "wizard-familiar"],
     });
@@ -6499,7 +6605,7 @@ describe("MCP server route", () => {
 
     const permanentDismissAct = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
-    ).availableActs.find(
+    ).envelope.frontier.acts.find(
       (act: {
         readonly subject: { readonly tag: string; readonly action?: string };
       }) =>
@@ -6515,9 +6621,9 @@ describe("MCP server route", () => {
       }),
     );
     expect(dismissed.result.tag).toBe("resolved");
-    expect(dismissed.snapshot.companions).toEqual([]);
+    expect(dismissed.envelope.checkpoint.companions).toEqual([]);
     expect(
-      dismissed.snapshot.combatants.some(
+      dismissed.envelope.checkpoint.combatants.some(
         (combatant: { readonly combatantId: string }) =>
           combatant.combatantId === "wizard-familiar",
       ),
@@ -6780,7 +6886,7 @@ describe("MCP server route", () => {
           },
         }),
       ),
-    ).toMatchObject({ details: { code: "BATTLE_ACT_NOT_AVAILABLE" } });
+    ).toMatchObject({ details: { code: "BATTLE_FILL_HOLE_MISMATCH" } });
 
     const pending = fillBattleHoleThroughTool(
       root,
@@ -6794,6 +6900,55 @@ describe("MCP server route", () => {
       validAttackSubject,
     );
     expect(pending.result.tag).toBe("needsHoles");
+    const ordinaryCheckpoint = root.sessionStore.battleSession;
+    expect(ordinaryCheckpoint).not.toBeNull();
+    if (ordinaryCheckpoint === null) {
+      throw new Error("Expected the ordinary attack checkpoint.");
+    }
+    expect(root.sessionStore.pendingBattleFills?.baseSession).toBe(
+      ordinaryCheckpoint,
+    );
+    expect(root.sessionStore.pendingBattleFills?.fills).toHaveLength(1);
+
+    expect(
+      readPayload(
+        handleToolCall(root, "fill_battle_hole", {
+          subject: validAttackSubject,
+          fill: {
+            kind: "targetChoice",
+            holeId: "battle:synthetic-stale-hole",
+            value: "goblin",
+          },
+        }),
+      ),
+    ).toMatchObject({
+      details: { code: "BATTLE_FILL_HOLE_MISMATCH" },
+    });
+    const ordinaryFrontier = battleMechanicsEnvelopeForSession(
+      root,
+      ordinaryCheckpoint,
+    ).frontier;
+    const currentHole =
+      ordinaryFrontier.kind === "holes" ? ordinaryFrontier.holes[0] : undefined;
+    if (currentHole === undefined) {
+      throw new Error("Expected the pending ordinary attack roll hole.");
+    }
+    expect(
+      readPayload(
+        handleToolCall(root, "fill_battle_hole", {
+          subject: validAttackSubject,
+          fill: {
+            kind: "rolledDice",
+            holeId: currentHole.holeId,
+            value: [{ results: [1] }],
+          },
+        }),
+      ),
+    ).toMatchObject({
+      details: { code: "BATTLE_FILL_KIND_MISMATCH" },
+    });
+    expect(root.sessionStore.battleSession).toBe(ordinaryCheckpoint);
+    expect(root.sessionStore.pendingBattleFills?.fills).toHaveLength(1);
     expect(readPayload(handleToolCall(root, "end_battle", {}))).toMatchObject({
       details: { code: "BATTLE_FILLS_PENDING" },
     });
@@ -6809,6 +6964,56 @@ describe("MCP server route", () => {
         }),
       ),
     ).toMatchObject({ details: { code: "BATTLE_FILL_SUBJECT_MISMATCH" } });
+
+    const afterAttackRoll = fillBattleHoleThroughTool(
+      root,
+      "fighter",
+      "Longsword",
+      {
+        kind: "attackRoll",
+        holeId: currentHole.holeId,
+        value: { total: 18, naturalD20: 12 },
+      },
+      validAttackSubject,
+    );
+    expect(afterAttackRoll.result.tag).toBe("needsHoles");
+    const damageFrontier = battleMechanicsEnvelopeForSession(
+      root,
+      ordinaryCheckpoint,
+    ).frontier;
+    const damageHole =
+      damageFrontier.kind === "holes" ? damageFrontier.holes[0] : undefined;
+    if (damageHole === undefined) {
+      throw new Error("Expected the pending ordinary damage hole.");
+    }
+    const afterDamage = fillBattleHoleThroughTool(
+      root,
+      "fighter",
+      "Longsword",
+      {
+        kind: "rolledDice",
+        holeId: damageHole.holeId,
+        value: [{ results: [5] }],
+      },
+      validAttackSubject,
+    );
+    expect(afterDamage.result.tag).toBe("resolved");
+    expect(root.sessionStore.pendingBattleFills).toBeNull();
+    const committedBattle = root.sessionStore.battleSession;
+    const repeated = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: validAttackSubject,
+        fill: {
+          kind: "rolledDice",
+          holeId: damageHole.holeId,
+          value: [{ results: [5] }],
+        },
+      }),
+    );
+    expect(repeated).toMatchObject({
+      details: { code: "BATTLE_FILL_HOLE_MISMATCH" },
+    });
+    expect(root.sessionStore.battleSession).toBe(committedBattle);
   });
 
   test("start_battle rejects duplicate character and combatant ids", () => {
@@ -7026,7 +7231,6 @@ describe("MCP server route", () => {
       draftIds: [],
       characterIds: [testCharacterId(draftId)],
       battleState: { tag: "none" },
-      transientBattleFills: null,
     });
 
     const selected = readPayload(
@@ -7067,7 +7271,7 @@ describe("MCP server route", () => {
       }),
     );
 
-    expect(started.snapshot).toMatchObject({
+    expect(started.envelope.checkpoint).toMatchObject({
       currentActorId: "fighter",
       turnOrder: ["fighter", "goblin"],
       combatants: [
@@ -7078,7 +7282,7 @@ describe("MCP server route", () => {
     const fighterActs = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
-    expect(fighterActs.availableActs).toEqual(
+    expect(fighterActs.envelope.frontier.acts).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           label: "Attack",
@@ -7121,7 +7325,9 @@ describe("MCP server route", () => {
       ]),
     );
     expect(
-      fighterActs.availableActs.map((act: { label: string }) => act.label),
+      fighterActs.envelope.frontier.acts.map(
+        (act: { label: string }) => act.label,
+      ),
     ).toEqual([
       "Attack",
       "Attack",
@@ -7163,7 +7369,7 @@ describe("MCP server route", () => {
         holeId: "battle:attack:roll",
         value: { total: 16, naturalD20: 14 },
       },
-      afterFighterTarget.result.subject,
+      afterFighterTarget.envelope.frontier.subject,
     );
     const afterFighterDamage = fillBattleHoleThroughTool(
       root,
@@ -7174,26 +7380,26 @@ describe("MCP server route", () => {
         holeId: "battle:attack:damage-result:1d8+3-slashing",
         value: [{ results: [5] }],
       },
-      afterFighterAttackRoll.result.subject,
+      afterFighterAttackRoll.envelope.frontier.subject,
     );
 
     expect(afterFighterDamage.result.tag).toBe("resolved");
-    expect(afterFighterDamage.snapshot.combatants).toEqual([
+    expect(afterFighterDamage.envelope.checkpoint.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 12 }),
       expect.objectContaining({ combatantId: "goblin", hp: 2 }),
     ]);
-    expect(afterFighterDamage.session.transientBattleFills).toBeNull();
+    expect(root.sessionStore.pendingBattleFills).toBeNull();
 
     const afterEndTurn = readPayload(
       handleToolCall(root, "end_turn", { actorId: "fighter" }),
     );
     expect(afterEndTurn.result.tag).toBe("resolved");
-    expect(afterEndTurn.snapshot.currentActorId).toBe("goblin");
+    expect(afterEndTurn.envelope.checkpoint.currentActorId).toBe("goblin");
 
     const goblinActs = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
-    expect(goblinActs.availableActs).toEqual(
+    expect(goblinActs.envelope.frontier.acts).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           label: "Attack",
@@ -7218,7 +7424,9 @@ describe("MCP server route", () => {
       ]),
     );
     expect(
-      goblinActs.availableActs.map((act: { label: string }) => act.label),
+      goblinActs.envelope.frontier.acts.map(
+        (act: { label: string }) => act.label,
+      ),
     ).toEqual([
       "Attack",
       "Attack",
@@ -7244,7 +7452,7 @@ describe("MCP server route", () => {
         value: "fighter",
       },
     );
-    const goblinAttackRoll = afterGoblinTarget.result.holes.find(
+    const goblinAttackRoll = afterGoblinTarget.envelope.frontier.holes.find(
       (hole: { kind: string }) => hole.kind === "attackRoll",
     );
     const afterGoblinAttackRoll = fillBattleHoleThroughTool(
@@ -7262,7 +7470,7 @@ describe("MCP server route", () => {
             : { rollMode: goblinAttackRoll.rollMode }),
         },
       },
-      afterGoblinTarget.result.subject,
+      afterGoblinTarget.envelope.frontier.subject,
     );
     const afterGoblinDamage = fillBattleHoleThroughTool(
       root,
@@ -7273,17 +7481,16 @@ describe("MCP server route", () => {
         holeId: "battle:attack:damage-result:1d6+2-slashing",
         value: [{ results: [5] }],
       },
-      afterGoblinAttackRoll.result.subject,
+      afterGoblinAttackRoll.envelope.frontier.subject,
     );
 
     expect(afterGoblinDamage.result.tag).toBe("resolved");
-    expect(afterGoblinDamage.snapshot.combatants).toEqual([
+    expect(afterGoblinDamage.envelope.checkpoint.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 5 }),
       expect.objectContaining({ combatantId: "goblin", hp: 2 }),
     ]);
     expect(root.sessionStore.snapshot()).toMatchObject({
       selectedStatBlockId: "stat_block_goblin_warrior",
-      transientBattleFills: null,
     });
     expect(
       root.sessionStore.battleSession?.state.combatants.get(fighterId)?.hp,
@@ -7395,7 +7602,7 @@ describe("MCP server route", () => {
     );
 
     const acts = readPayload(handleToolCall(root, "discover_battle_acts", {}));
-    const shove = acts.availableActs.find(
+    const shove = acts.envelope.frontier.acts.find(
       (act: { label: string }) => act.label === "Unarmed Strike (Shove)",
     );
     expect(shove).toBeDefined();
@@ -7417,13 +7624,13 @@ describe("MCP server route", () => {
         },
       }),
     );
-    const shoveOutcome = afterTarget.result.holes.find(
+    const shoveOutcome = afterTarget.envelope.frontier.holes.find(
       (hole: { kind: string }) => hole.kind === "shoveOutcome",
     );
 
     const afterShove = readPayload(
       handleToolCall(root, "fill_battle_hole", {
-        subject: afterTarget.result.subject,
+        subject: afterTarget.envelope.frontier.subject,
         fill: {
           kind: "shoveOutcome",
           holeId: shoveOutcome.holeId,
@@ -7664,9 +7871,14 @@ describe("MCP server route", () => {
     expect(damagePendingDisposition).toMatchObject({
       result: {
         tag: "needsHoles",
-        holes: [{ kind: "attackDamageDisposition" }],
       },
-      snapshot: { turn: { attackRollMadeThisTurn: true } },
+      envelope: {
+        checkpoint: { turn: { attackRollMadeThisTurn: false } },
+        frontier: {
+          kind: "holes",
+          holes: [{ kind: "attackDamageDisposition" }],
+        },
+      },
     });
 
     const duplicateDamage = readPayload(
@@ -7680,20 +7892,20 @@ describe("MCP server route", () => {
       }),
     );
     expect(duplicateDamage).toMatchObject({
-      result: {
-        tag: "invalid",
-        reason: "invalidFill",
-        message: "Attack damage was filled twice.",
-      },
-      snapshot: { turn: { attackRollMadeThisTurn: false } },
-      session: {
-        transientBattleFills: {
-          fills: expect.arrayContaining([
-            expect.objectContaining({ kind: "attackRoll" }),
-            expect.objectContaining({ kind: "rolledDice" }),
-          ]),
+      details: {
+        code: "BATTLE_FILL_HOLE_MISMATCH",
+        currentFrontier: {
+          kind: "holes",
+          holes: [{ kind: "attackDamageDisposition" }],
         },
+        requestedFill: { kind: "rolledDice" },
       },
+    });
+    expect(root.sessionStore.pendingBattleFills).toMatchObject({
+      fills: expect.arrayContaining([
+        expect.objectContaining({ kind: "attackRoll" }),
+        expect.objectContaining({ kind: "rolledDice" }),
+      ]),
     });
     readPayload(
       handleToolCall(root, "fill_battle_hole", {
@@ -7836,7 +8048,7 @@ describe("MCP server route", () => {
       }),
     );
 
-    expect(started.snapshot.combatants).toEqual([
+    expect(started.envelope.checkpoint.combatants).toEqual([
       expect.objectContaining({
         combatantId: "fighter",
         hp: 1,
@@ -7845,7 +8057,7 @@ describe("MCP server route", () => {
       }),
       expect.objectContaining({ combatantId: "goblin" }),
     ]);
-    expect(started.snapshot.combatants).toEqual([
+    expect(started.envelope.checkpoint.combatants).toEqual([
       expect.objectContaining({
         combatantId: "fighter",
       }),
@@ -7926,7 +8138,7 @@ describe("MCP server route", () => {
       }),
     );
 
-    expect(started.snapshot.combatants).toEqual([
+    expect(started.envelope.checkpoint.combatants).toEqual([
       expect.objectContaining({ combatantId: "goblin" }),
       expect.objectContaining({
         combatantId: "fighter",
@@ -7945,7 +8157,7 @@ describe("MCP server route", () => {
       handleToolCall(root, "end_turn", { actorId: "goblin" }),
     );
     expect(afterGoblinTurn.result.tag).toBe("resolved");
-    expect(afterGoblinTurn.snapshot.currentActorId).toBe("fighter");
+    expect(afterGoblinTurn.envelope.checkpoint.currentActorId).toBe("fighter");
   });
 
   test("starts battle from a dead zero-HP character session without reviving it", () => {
@@ -7992,7 +8204,7 @@ describe("MCP server route", () => {
       }),
     );
 
-    expect(started.snapshot.combatants).toEqual([
+    expect(started.envelope.checkpoint.combatants).toEqual([
       expect.objectContaining({ combatantId: "goblin" }),
       expect.objectContaining({
         combatantId: "fighter",
@@ -8011,8 +8223,8 @@ describe("MCP server route", () => {
       handleToolCall(root, "end_turn", { actorId: "goblin" }),
     );
     expect(afterGoblinTurn.result.tag).toBe("resolved");
-    expect(afterGoblinTurn.snapshot.currentActorId).toBe("fighter");
-    expect(afterGoblinTurn.snapshot.combatants).toEqual([
+    expect(afterGoblinTurn.envelope.checkpoint.currentActorId).toBe("fighter");
+    expect(afterGoblinTurn.envelope.checkpoint.combatants).toEqual([
       expect.objectContaining({ combatantId: "goblin" }),
       expect.objectContaining({
         combatantId: "fighter",
@@ -8633,7 +8845,7 @@ describe("MCP server route", () => {
     const discovered = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
-    const act = discovered.availableActs.find(
+    const act = discovered.envelope.frontier.acts.find(
       (candidate: {
         readonly presentation?: {
           readonly kind?: string;
@@ -8678,16 +8890,21 @@ describe("MCP server route", () => {
         },
       }),
     );
-    expect(afterSavingThrow.result).toMatchObject({
-      tag: "needsHoles",
-      holes: [
-        {
-          kind: "rolledDice",
-          holeId: expect.any(String),
+    expect(afterSavingThrow).toMatchObject({
+      result: { tag: "needsHoles" },
+      envelope: {
+        frontier: {
+          kind: "holes",
+          holes: [
+            {
+              kind: "rolledDice",
+              holeId: expect.any(String),
+            },
+          ],
         },
-      ],
+      },
     });
-    const acidDamageHole = afterSavingThrow.result.holes.find(
+    const acidDamageHole = afterSavingThrow.envelope.frontier.holes.find(
       (hole: { readonly kind?: string }) => hole.kind === "rolledDice",
     );
     if (acidDamageHole === undefined) {
@@ -8704,14 +8921,16 @@ describe("MCP server route", () => {
         },
       }),
     );
-    expect(afterDamage.result).toMatchObject({
-      tag: "resolved",
-      snapshot: {
-        combatants: [
-          { combatantId: "fighter", hp: 8 },
-          { combatantId: "goblin", hp: 6 },
-        ],
-        turn: { actionResources: [] },
+    expect(afterDamage).toMatchObject({
+      result: { tag: "resolved" },
+      envelope: {
+        checkpoint: {
+          combatants: [
+            { combatantId: "fighter", hp: 8 },
+            { combatantId: "goblin", hp: 6 },
+          ],
+          turn: { actionResources: [] },
+        },
       },
     });
     expect(root.sessionStore.pendingBattleFills).toBeNull();
@@ -8776,7 +8995,7 @@ describe("MCP server route", () => {
     const discovered = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
-    const act = discovered.availableActs.find(
+    const act = discovered.envelope.frontier.acts.find(
       (candidate: {
         readonly presentation?: {
           readonly kind?: string;
@@ -8824,7 +9043,7 @@ describe("MCP server route", () => {
         },
       }),
     );
-    const attackRoll = afterObjectTarget.result.holes.find(
+    const attackRoll = afterObjectTarget.envelope.frontier.holes.find(
       (hole: { readonly kind?: string }) => hole.kind === "attackRoll",
     );
     if (attackRoll === undefined) {
@@ -8841,7 +9060,7 @@ describe("MCP server route", () => {
         },
       }),
     );
-    const damage = afterAttackRoll.result.holes.find(
+    const damage = afterAttackRoll.envelope.frontier.holes.find(
       (hole: { readonly kind?: string }) => hole.kind === "rolledDice",
     );
     if (damage === undefined) {
@@ -8975,7 +9194,7 @@ describe("MCP server route", () => {
     const discovered = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
-    const act = discovered.availableActs.find(
+    const act = discovered.envelope.frontier.acts.find(
       (candidate: {
         readonly presentation?: {
           readonly kind?: string;
@@ -9047,7 +9266,7 @@ describe("MCP server route", () => {
         },
       }),
     );
-    const attackRoll = afterTarget.result.holes.find(
+    const attackRoll = afterTarget.envelope.frontier.holes.find(
       (hole: { readonly kind?: string }) => hole.kind === "attackRoll",
     );
     if (attackRoll === undefined) {
@@ -9064,7 +9283,7 @@ describe("MCP server route", () => {
         },
       }),
     );
-    const damage = afterAttackRoll.result.holes.find(
+    const damage = afterAttackRoll.envelope.frontier.holes.find(
       (hole: { readonly kind?: string }) => hole.kind === "rolledDice",
     );
     if (damage === undefined) {
@@ -9085,14 +9304,16 @@ describe("MCP server route", () => {
       }),
     );
 
-    expect(afterDamage.result).toMatchObject({
-      tag: "resolved",
-      snapshot: {
-        combatants: [
-          { combatantId: "fighter" },
-          { combatantId: "goblin", hp: 0 },
-        ],
-        turn: { actionResources: [] },
+    expect(afterDamage).toMatchObject({
+      result: { tag: "resolved" },
+      envelope: {
+        checkpoint: {
+          combatants: [
+            { combatantId: "fighter" },
+            { combatantId: "goblin", hp: 0 },
+          ],
+          turn: { actionResources: [] },
+        },
       },
     });
     expect(root.sessionStore.pendingBattleFills).toBeNull();
@@ -9200,7 +9421,7 @@ describe("MCP server route", () => {
     const discovered = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
-    const act = discovered.availableActs.find(
+    const act = discovered.envelope.frontier.acts.find(
       (candidate: {
         readonly presentation?: {
           readonly kind?: string;
@@ -9240,23 +9461,25 @@ describe("MCP server route", () => {
       }),
     );
 
-    expect(afterTarget.result).toMatchObject({
-      tag: "resolved",
-      snapshot: {
-        combatants: [
-          { combatantId: "fighter" },
-          {
-            combatantId: "dying-ally",
-            hp: 0,
-            zeroHpLifecycle: {
-              policy: "usesDeathSavingThrows",
-              deathSaves: { successes: 0, failures: 0 },
-              stable: true,
-              dead: false,
+    expect(afterTarget).toMatchObject({
+      result: { tag: "resolved" },
+      envelope: {
+        checkpoint: {
+          combatants: [
+            { combatantId: "fighter" },
+            {
+              combatantId: "dying-ally",
+              hp: 0,
+              zeroHpLifecycle: {
+                policy: "usesDeathSavingThrows",
+                deathSaves: { successes: 0, failures: 0 },
+                stable: true,
+                dead: false,
+              },
             },
-          },
-        ],
-        turn: { actionResources: [] },
+          ],
+          turn: { actionResources: [] },
+        },
       },
     });
     expect(root.sessionStore.pendingBattleFills).toBeNull();
@@ -9321,7 +9544,7 @@ describe("MCP server route", () => {
     const discovered = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
-    const act = discovered.availableActs.find(
+    const act = discovered.envelope.frontier.acts.find(
       (candidate: {
         readonly presentation?: {
           readonly kind?: string;
@@ -9362,7 +9585,7 @@ describe("MCP server route", () => {
         },
       }),
     );
-    const attackRoll = afterObjectTarget.result.holes.find(
+    const attackRoll = afterObjectTarget.envelope.frontier.holes.find(
       (hole: { readonly kind?: string }) => hole.kind === "attackRoll",
     );
     if (attackRoll === undefined) {
@@ -9379,7 +9602,7 @@ describe("MCP server route", () => {
         },
       }),
     );
-    const damage = afterAttackRoll.result.holes.find(
+    const damage = afterAttackRoll.envelope.frontier.holes.find(
       (hole: { readonly kind?: string }) => hole.kind === "rolledDice",
     );
     if (damage === undefined) {
@@ -9496,6 +9719,8 @@ describe("MCP server route", () => {
       throw new Error("Expected Fighter to hold a readied spell.");
     }
     readPayload(handleToolCall(root, "end_turn", { actorId: "fighter" }));
+    const ordinaryCheckpoint = root.sessionStore.battleSession;
+    expect(ordinaryCheckpoint?.state.interruptStack).toHaveLength(0);
 
     const goblinAttack = battleAttackSubjectForName(root, "goblin", "Shortbow");
     readPayload(
@@ -9530,31 +9755,39 @@ describe("MCP server route", () => {
     expect(afterAttackRoll).toMatchObject({
       result: {
         tag: "needsHoles",
-        holes: [{ kind: "interruptDecision", trigger: "attackHit" }],
       },
-      snapshot: {
-        pendingInterrupt: { trigger: "attackHit" },
+      envelope: {
+        frontier: {
+          kind: "interruptDecision",
+          trigger: "attackHit",
+        },
       },
     });
     expect(
       readPayload(handleToolCall(root, "read_battle_state", {})),
     ).toMatchObject({
-      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
-      presentedInterruptChoices: [
-        expect.objectContaining({
-          choice: expect.objectContaining({ kind: "releaseReadiedSpell" }),
-        }),
-      ],
+      envelope: {
+        frontier: {
+          kind: "interruptDecision",
+          trigger: "attackHit",
+          choices: [
+            expect.objectContaining({
+              choice: expect.objectContaining({ kind: "releaseReadiedSpell" }),
+            }),
+          ],
+        },
+      },
     });
-    const releaseChoices =
-      afterAttackRoll.snapshot.pendingInterrupt.choices.filter(
-        (choice: {
+    const releaseChoices = afterAttackRoll.envelope.frontier.choices.filter(
+      (choice: {
+        readonly choice?: {
           readonly kind?: string;
           readonly readiedSpellCasterId?: string;
-        }) =>
-          choice.kind === "releaseReadiedSpell" &&
-          choice.readiedSpellCasterId === "fighter",
-      );
+        };
+      }) =>
+        choice.choice?.kind === "releaseReadiedSpell" &&
+        choice.choice.readiedSpellCasterId === "fighter",
+    );
     const [releaseChoice] = releaseChoices;
     if (releaseChoices.length !== 1 || releaseChoice === undefined) {
       throw new Error("Expected one Fighter readied-spell release choice.");
@@ -9572,7 +9805,7 @@ describe("MCP server route", () => {
             choice: {
               kind: "releaseReadiedSpell",
               readiedSpellCasterId: "fighter",
-              procedureRef: releaseChoice.subject.procedureRef,
+              procedureRef: releaseChoice.choice.subject.procedureRef,
               fills: [],
             },
           },
@@ -9582,28 +9815,37 @@ describe("MCP server route", () => {
     expect(afterReactionDecision).toMatchObject({
       result: {
         tag: "needsHoles",
-        subject: {
-          tag: "runtimeCommand",
-          command: "releaseReadiedSpell",
-          readiedSpellCasterId: "fighter",
-        },
-        holes: [{ kind: "targetChoice" }],
       },
-      snapshot: {
-        pendingInterrupt: { trigger: "attackHit" },
+      envelope: {
+        frontier: {
+          kind: "holes",
+          subject: {
+            tag: "runtimeCommand",
+            command: "releaseReadiedSpell",
+            readiedSpellCasterId: "fighter",
+          },
+          holes: [{ kind: "targetChoice" }],
+        },
       },
     });
     expect(root.sessionStore.battleSession?.state.interruptStack).toHaveLength(
       1,
     );
-    expect(afterReactionDecision.session.transientBattleFills).toMatchObject({
+    expect(currentPendingBattleFills(root)?.baseSession).toBe(
+      root.sessionStore.battleSession,
+    );
+    expect(currentPendingBattleFills(root)?.baseSession).not.toBe(
+      ordinaryCheckpoint,
+    );
+    expect(currentPendingBattleFills(root)?.fills).toEqual([]);
+    expect(root.sessionStore.pendingBattleFills).toMatchObject({
       subject: {
         command: "releaseReadiedSpell",
       },
     });
 
-    const releaseSubject = afterReactionDecision.result.subject;
-    const spellTarget = afterReactionDecision.result.holes.find(
+    const releaseSubject = afterReactionDecision.envelope.frontier.subject;
+    const spellTarget = afterReactionDecision.envelope.frontier.holes.find(
       (hole: { readonly kind?: string }) => hole.kind === "targetChoice",
     );
     const afterReadiedTarget = readPayload(
@@ -9618,16 +9860,25 @@ describe("MCP server route", () => {
               kind: "spellTarget",
               casterId: "fighter",
               targetId: "goblin",
-              sourceProcedureRef: releaseChoice.subject.procedureRef,
+              sourceProcedureRef: releaseChoice.choice.subject.procedureRef,
             },
           ],
         },
       }),
     );
-    expect(afterReadiedTarget.result).toMatchObject({
-      tag: "needsHoles",
-      holes: [{ kind: "attackRoll" }],
+    expect(afterReadiedTarget).toMatchObject({
+      result: { tag: "needsHoles" },
+      envelope: {
+        frontier: {
+          kind: "holes",
+          holes: [{ kind: "attackRoll" }],
+        },
+      },
     });
+    expect(currentPendingBattleFills(root)?.baseSession).toEqual(
+      root.sessionStore.battleSession,
+    );
+    expect(currentPendingBattleFills(root)?.fills).toHaveLength(1);
   });
 
   test("rejects available character sessions with non-canonical Spell Slot state", () => {
@@ -10335,7 +10586,7 @@ function battleAttackSubjectForName(
 > {
   const matchingActs = readPayload(
     handleToolCall(root, "discover_battle_acts", {}),
-  ).availableActs.filter(
+  ).envelope.frontier.acts.filter(
     (candidate: {
       readonly presentation: {
         readonly kind: string;
@@ -10386,7 +10637,7 @@ function battleActionSubject(
 ): BattleSubject {
   const act = readPayload(
     handleToolCall(root, "discover_battle_acts", {}),
-  ).availableActs.find(
+  ).envelope.frontier.acts.find(
     (candidate: { readonly subject: BattleSubject }) =>
       candidate.subject.tag === "action" &&
       candidate.subject.actorId === actorId &&
@@ -10400,6 +10651,12 @@ function battleActionSubject(
 
 function readPayload(response: CharacterToolResult | BattleToolResult) {
   return JSON.parse(response.content[0]?.text ?? "null");
+}
+
+function currentPendingBattleFills(
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
+) {
+  return root.sessionStore.pendingBattleFills;
 }
 
 function initialClassHoleIds(): readonly CreationHoleIdText[] {

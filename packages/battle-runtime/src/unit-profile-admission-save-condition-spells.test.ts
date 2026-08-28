@@ -84,7 +84,7 @@ import {
   supportedPreparedSleepTargetAdmissionProfile,
 } from "./unit-profile-admission.test-support.ts";
 import {
-  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
+  assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
   battleStateWithAllSpellSlotsExpended,
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
@@ -1139,7 +1139,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     if (initialResolution.tag !== "needsHoles") {
       throw new Error("Expected Blindness/Deafness casting holes.");
     }
-    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+    assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: initialResolution.snapshot,
       subject: act.subject,
       holes: initialResolution.holes,
@@ -1722,7 +1722,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
       false,
     );
-    expect(resolved.snapshot.turn.bonusActionAvailable).toBe(false);
+    expect(resolved.snapshot.turn.bonusActionQuotaAvailable).toBe(false);
   });
 
   test("lesser_restoration clears source Concentration when removing the last concentration condition effect", () => {
@@ -1937,7 +1937,7 @@ function resolveContagionTargetEndTurnSave(
   if (needsSave.tag !== "needsHoles") {
     throw new Error("Expected Contagion counted repeat save.");
   }
-  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+  assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
     snapshot: needsSave.snapshot,
     subject: needsSave.subject,
     holes: needsSave.holes,

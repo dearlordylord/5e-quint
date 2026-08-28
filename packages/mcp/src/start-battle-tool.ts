@@ -18,7 +18,7 @@ import {
   type CharacterSessionCombatantToolInput,
   type StartBattleToolInput,
 } from "./start-battle-tool-input.ts";
-import { type ToolError } from "./schema-codec.ts";
+import type { ToolError } from "./schema-codec.ts";
 import { startInitialInitiativeSetup } from "./initial-initiative-setup-start.ts";
 import {
   battleRuntimeIssuePayload,

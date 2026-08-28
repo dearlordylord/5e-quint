@@ -24,7 +24,7 @@ build:
 
 Each registry-owned Play Session root then creates one in-memory store for
 character drafts, finalized Character Builds, durable post-battle character
-state, selected Stat Block identity, durable battle state, and transient battle
+state, selected Stat Block identity, durable battle state, and accepted battle
 fills, plus its own Admin Mirror publication.
 
 The protocol host keeps those mutable facts in isolated **Play Sessions**.
@@ -291,8 +291,9 @@ The battle-session tool boundary exposes these user-facing tools:
   Initiative facts through existing SDK contracts; it performs no Initiative
   arithmetic or roll-mode interpretation.
 - `read_battle_state` returns the canonical stored `BattleState` projection and
-  current battle snapshot. The Play Session projection has exactly one Battle
-  workflow state: `none`, `initialInitiativeSetup`, or `activeBattle`.
+  one presented checkpoint/frontier envelope for an active battle. The Play
+  Session projection has exactly one Battle workflow state: `none`,
+  `initialInitiativeSetup`, or `activeBattle`.
   Character occupancy remains visible through the Character Session read models
   while the SDK setup object or active Battle owns the combat facts.
 - `roll_dice` is an optional independent bounded raw-face sampler backed by
@@ -305,13 +306,14 @@ The battle-session tool boundary exposes these user-facing tools:
 - `discover_battle_acts` returns the current actor's battle acts. The battle
   runtime is the source of truth for which acts are currently available.
 - `fill_battle_hole` submits one fill at a time for a selected battle act
-  subject. MCP stores transient target, spell target allocation, attack-roll,
-  damage-result, and feature-roll fills until `@dnd/battle-runtime` resolves the
-  act, then stores the returned `BattleState` and clears the transient fills.
+  subject. MCP retains only the base session, selected subject, and accepted
+  fills until `@dnd/battle-runtime` resolves the act; each read or retry
+  reprojects the single runtime-owned envelope, then clears accepted fills on
+  commit.
 - `resolve_battle_act` resolves selected battle act subjects that need no
   holes, such as Fighter 2 Action Surge.
-- `end_turn` resolves the End Turn runtime command for the current actor, stores
-  the returned `BattleState`, and clears transient battle fills.
+- `end_turn` resolves the End Turn runtime command for the current actor,
+  stores the returned `BattleState`, and clears accepted battle fills.
 - `end_battle` computes every character-origin settlement first, then commits
   the whole Character Session roster in one atomic registry operation. On
   success it returns the complete Character Session list, the SDK-derived
@@ -399,11 +401,13 @@ Selected Stat Block state stores only the catalog Stat Block id. The full Stat
 Block record is resolved through the MCP root's installed `statBlockCatalog`,
 so MCP session state cannot drift from the SRD stat-block catalog.
 
-Transient battle fills are MCP session state. They are kept separate from
-`BattleState` so battle replay remains owned by `@dnd/battle-runtime`.
+Accepted battle fills are MCP workflow state. The base session, selected
+subject, and ordered fills are kept separate from `BattleState`; the current
+checkpoint/frontier envelope remains owned by `@dnd/battle-runtime`.
 
 MCP session state belongs here when it is tool workflow state:
-draft handles, selected content ids, durable battle ids, and transient fills.
+draft handles, selected content ids, durable battle ids, and accepted battle
+fills.
 Reducer state and rules behavior remain owned by the runtime packages.
 
 MCP tools should use their final user-facing tool names. The implementation
@@ -420,7 +424,7 @@ output codecs therefore share one generated schema in the server and one AJV
 validator in clients that honor JSON Schema `$id`; changing a schema shape
 changes its identity automatically.
 
-Character-tool session outputs omit transient battle subjects and fills. That
+Character-tool session outputs omit accepted battle subjects and fills. That
 wire projection is derived from the canonical session snapshot; it does not add
 separate session state. The model-facing schemas for capacity-rich battle
 results retain each canonical result's root branches, fields, requiredness, and
