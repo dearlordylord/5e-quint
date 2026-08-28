@@ -4,6 +4,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
 } from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
@@ -996,52 +997,58 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
       spellId: protectionFromEvilAndGoodUnitId,
     });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
-    const target = requireCombatant(base.state, spellTargetId);
     const unrelatedSource = battleProcedureExecutionRefForTest(
       "synthetic-creature-protection-unrelated",
     );
-    const state: BattleState = {
+    const concentratingState: BattleState = {
       ...base.state,
-      combatants: new Map(base.state.combatants)
-        .set(spellCasterId, {
-          ...requireCombatant(base.state, spellCasterId),
-          concentration: {
-            sourceProcedureRef: act.subject.procedureRef,
-            effectKind: "spellEffect",
-          },
-        })
-        .set(spellTargetId, {
-          ...target,
-          activeEffects: [
-            {
-              kind: "creatureTypeProtection" as const,
-              sourceProcedureRef: act.subject.procedureRef,
-              sourceCombatantId: spellCasterId,
-              attackRollMode: "disadvantage" as const,
-              protectedAgainstCreatureTypes: ["undead"] as const,
-              preventedConditions: ["charmed", "frightened"] as const,
-              preventsPossession: true,
-              expiresAt: {
-                kind: "concentration" as const,
-                combatantId: spellCasterId,
-              },
-            },
-            {
-              kind: "creatureTypeProtection" as const,
-              sourceProcedureRef: unrelatedSource,
-              sourceCombatantId: spellCasterId,
-              attackRollMode: "disadvantage" as const,
-              protectedAgainstCreatureTypes: ["fey"] as const,
-              preventedConditions: [],
-              preventsPossession: false,
-              expiresAt: {
-                kind: "duration" as const,
-                durationTicks: elapsedTimeTicks(10),
-              },
-            },
-          ],
-        }),
+      combatants: new Map(base.state.combatants).set(spellCasterId, {
+        ...requireCombatant(base.state, spellCasterId),
+        concentration: {
+          sourceProcedureRef: act.subject.procedureRef,
+          effectKind: "spellEffect",
+        },
+      }),
     };
+    const state = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: concentratingState,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: spellTargetId,
+          effect: {
+            kind: "creatureTypeProtection" as const,
+            sourceProcedureRef: act.subject.procedureRef,
+            sourceCombatantId: spellCasterId,
+            attackRollMode: "disadvantage" as const,
+            protectedAgainstCreatureTypes: ["undead"] as const,
+            preventedConditions: ["charmed", "frightened"] as const,
+            preventsPossession: true,
+            expiresAt: {
+              kind: "concentration" as const,
+              combatantId: spellCasterId,
+            },
+          },
+        },
+        {
+          kind: "activeEffect",
+          ownerId: spellTargetId,
+          effect: {
+            kind: "creatureTypeProtection" as const,
+            sourceProcedureRef: unrelatedSource,
+            sourceCombatantId: spellCasterId,
+            attackRollMode: "disadvantage" as const,
+            protectedAgainstCreatureTypes: ["fey"] as const,
+            preventedConditions: [],
+            preventsPossession: false,
+            expiresAt: {
+              kind: "duration" as const,
+              durationTicks: elapsedTimeTicks(10),
+            },
+          },
+        },
+      ],
+    }).state;
     const resolved = resolveBattleSubject({
       state,
       subject: act.subject,
