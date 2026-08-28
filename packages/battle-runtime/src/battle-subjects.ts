@@ -167,11 +167,13 @@ export const BattleSleetStormAreaMembershipTriggerSchema = Schema.Union([
     ...RejectRedundantSpellSourceFields,
     kind: Schema.Literal("firstEntryOnTurn"),
     areaId: BattleAreaId,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     ...RejectRedundantSpellSourceFields,
     kind: Schema.Literal("turnStartInArea"),
     areaId: BattleAreaId,
+    effectRef: BattleEffectExecutionRef,
   }),
 ]);
 export type BattleSleetStormAreaMembershipTrigger =
@@ -980,6 +982,7 @@ export const BattleSubjectSchema = Schema.Union([
     command: Schema.Literal("greaseGroundHazardSave"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
+    effectRef: BattleEffectExecutionRef,
     trigger: Schema.Literals(["entersArea", "endsTurnInArea"]),
   }),
   Schema.Struct({
@@ -988,6 +991,7 @@ export const BattleSubjectSchema = Schema.Union([
     command: Schema.Literal("webRestraintSave"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
+    effectRef: BattleEffectExecutionRef,
     trigger: Schema.Literals(["entersArea", "startsTurnInArea"]),
   }),
   Schema.Struct({
@@ -1021,6 +1025,7 @@ export const BattleSubjectSchema = Schema.Union([
     command: Schema.Literal("webRestrainedNoLongerInArea"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
@@ -1028,6 +1033,7 @@ export const BattleSubjectSchema = Schema.Union([
     command: Schema.Literal("webAreaRemoved"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
@@ -1035,6 +1041,7 @@ export const BattleSubjectSchema = Schema.Union([
     command: Schema.Literal("gustOfWindLineSave"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
+    effectRef: BattleEffectExecutionRef,
     directionId: BattleLineDirectionId,
     trigger: Schema.Literal("endsTurnInLine"),
   }),
@@ -1044,6 +1051,7 @@ export const BattleSubjectSchema = Schema.Union([
     command: Schema.Literal("gustOfWindLineDirectionChange"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
+    effectRef: BattleEffectExecutionRef,
     directionId: BattleLineDirectionId,
   }),
   Schema.Struct({
@@ -1052,6 +1060,7 @@ export const BattleSubjectSchema = Schema.Union([
     command: Schema.Literal("movableZoneSave"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
+    effectRef: BattleEffectExecutionRef,
     trigger: Schema.Literal("endsTurnWithinFiveFeetOfSphere"),
   }),
   Schema.Struct({
@@ -1060,6 +1069,7 @@ export const BattleSubjectSchema = Schema.Union([
     command: Schema.Literal("movableZoneSave"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
+    effectRef: BattleEffectExecutionRef,
     trigger: Schema.Literals([
       "appearsInArea",
       "areaMovesIntoSpace",
@@ -1073,6 +1083,7 @@ export const BattleSubjectSchema = Schema.Union([
     command: Schema.Literal("moonbeamCylinderExit"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
@@ -1080,6 +1091,7 @@ export const BattleSubjectSchema = Schema.Union([
     command: Schema.Literal("movableZoneReposition"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
@@ -1088,6 +1100,7 @@ export const BattleSubjectSchema = Schema.Union([
     ...RejectRedundantSpellSourceFields,
     targetId: CombatantId,
     areaId: BattleAreaId,
+    effectRef: BattleEffectExecutionRef,
     trigger: Schema.Literal("rammedBySphere"),
   }),
   Schema.Struct({
@@ -1375,6 +1388,10 @@ export type BattleSubjectBoundExecutionReference =
       readonly effectRef: BattleEffectExecutionRef;
     }
   | {
+      readonly kind: "activeEffectOccurrence";
+      readonly effectRef: BattleEffectExecutionRef;
+    }
+  | {
       readonly kind: "statBlockScope";
       readonly ownerId: CombatantId;
       readonly scopeRef: BattleStatBlockExecutionScopeRef;
@@ -1470,6 +1487,11 @@ function battleRuntimeCommandBoundExecutionReferences(
       effectRef: value.effectRef,
     },
   ];
+  const activeEffectOccurrence = (value: {
+    readonly effectRef: BattleEffectExecutionRef;
+  }): readonly BattleSubjectBoundExecutionReference[] => [
+    { kind: "activeEffectOccurrence", effectRef: value.effectRef },
+  ];
   return Match.value(subject).pipe(
     Match.discriminatorsExhaustive("command")({
       endTurn: noBoundExecutionReferences,
@@ -1486,20 +1508,21 @@ function battleRuntimeCommandBoundExecutionReferences(
       releaseGrapple: noBoundExecutionReferences,
       opportunityAttack: noBoundExecutionReferences,
       retaliationAttack: noBoundExecutionReferences,
-      greaseGroundHazardSave: noBoundExecutionReferences,
-      webRestraintSave: noBoundExecutionReferences,
-      sleetStormAreaHazardSave: noBoundExecutionReferences,
+      greaseGroundHazardSave: activeEffectOccurrence,
+      webRestraintSave: activeEffectOccurrence,
+      sleetStormAreaHazardSave: (value) =>
+        activeEffectOccurrence(value.areaMembershipTrigger),
       insectPlagueAreaHazardSave: noBoundExecutionReferences,
       cloudkillAreaHazardSave: noBoundExecutionReferences,
       disperseCloudkill: noBoundExecutionReferences,
-      webRestrainedNoLongerInArea: noBoundExecutionReferences,
-      webAreaRemoved: noBoundExecutionReferences,
-      gustOfWindLineSave: noBoundExecutionReferences,
-      gustOfWindLineDirectionChange: noBoundExecutionReferences,
-      movableZoneSave: noBoundExecutionReferences,
-      moonbeamCylinderExit: noBoundExecutionReferences,
-      movableZoneReposition: noBoundExecutionReferences,
-      movableZoneRam: noBoundExecutionReferences,
+      webRestrainedNoLongerInArea: activeEffectOccurrence,
+      webAreaRemoved: activeEffectOccurrence,
+      gustOfWindLineSave: activeEffectOccurrence,
+      gustOfWindLineDirectionChange: activeEffectOccurrence,
+      movableZoneSave: activeEffectOccurrence,
+      moonbeamCylinderExit: activeEffectOccurrence,
+      movableZoneReposition: activeEffectOccurrence,
+      movableZoneRam: activeEffectOccurrence,
       releaseSpellCreatedHeldObject: actorEffect,
       protectionRelevantEffectSave: actorEffect,
       creatureTypeProtectionConditionAttempt: noBoundExecutionReferences,
@@ -1880,6 +1903,7 @@ function battleSubjectKey(subject: BattleSubject): string {
               ? command.naturalWeaponDamageType
               : null,
             "areaId" in command ? command.areaId : null,
+            "effectRef" in command ? command.effectRef : null,
             "trigger" in command ? command.trigger : null,
             runtimeCommandAreaMembershipTrigger(command),
             "relevantEffect" in command ? command.relevantEffect : null,

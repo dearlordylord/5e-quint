@@ -9,7 +9,9 @@ import { describe, expect, test } from "vitest";
 import { HEIGHTENED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
 import {
   assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
+  battleEffectExecutionRefForTest,
   battleId,
+  battleStateWithAllocatedEffectForTest,
   battleStateWithAllSpellSlotsExpended,
   characterSeed,
   startBattleSessionRight,
@@ -744,6 +746,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       actorId: spellTargetId,
       command: "greaseGroundHazardSave" as const,
       areaId: greaseAreaId,
+      effectRef: battleEffectExecutionRefForTest("grease-subject-a"),
     };
 
     expect(
@@ -762,6 +765,94 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
         },
       ),
     ).toBe(false);
+    expect(
+      sameBattleSubject(
+        { ...base, trigger: "entersArea" },
+        {
+          ...base,
+          effectRef: battleEffectExecutionRefForTest("grease-subject-b"),
+          trigger: "entersArea",
+        },
+      ),
+    ).toBe(false);
+  });
+  test("a Grease subject rejects a fresh same-shape replacement but accepts a same-ref clone", () => {
+    const spell = spellRecord(greaseUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const act = spellAct({ session, spellId: greaseUnitId, slotLevel: 1 });
+    const cast = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        greaseSavingThrowOutcomeFill(
+          requireHole(act.initialHoles, "savingThrowOutcome"),
+          [],
+        ),
+      ],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Grease cast to resolve.");
+    }
+    const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected target turn.");
+    }
+    const selected = greaseGroundHazardEndTurnAct(
+      battleRuntimeSessionForTest({
+        state: targetTurn.state,
+        context: session.context,
+      }),
+      spellTargetId,
+    );
+    const owner = requireCombatant(targetTurn.state, spellCasterId);
+    const effect = owner.activeEffects.find(
+      (candidate) => candidate.kind === "greaseGroundHazard",
+    );
+    if (effect?.kind !== "greaseGroundHazard") {
+      throw new Error("Expected Grease occurrence.");
+    }
+    const { effectRef: selectedRef, ...template } = effect;
+    const withoutSelected: BattleState = {
+      ...targetTurn.state,
+      combatants: new Map(targetTurn.state.combatants).set(spellCasterId, {
+        ...owner,
+        activeEffects: owner.activeEffects.filter(
+          (candidate) => candidate.effectRef !== selectedRef,
+        ),
+      }),
+    };
+    const replacement = battleStateWithAllocatedEffectForTest({
+      state: withoutSelected,
+      ownerId: spellCasterId,
+      effect: template,
+    });
+    expect(
+      resolveBattleSubject({
+        state: replacement,
+        subject: selected.subject,
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+
+    const sameRefClone: BattleState = {
+      ...targetTurn.state,
+      combatants: new Map(targetTurn.state.combatants).set(spellCasterId, {
+        ...owner,
+        activeEffects: owner.activeEffects.map((candidate) =>
+          candidate.effectRef === selectedRef ? { ...candidate } : candidate,
+        ),
+      }),
+    };
+    expect(
+      resolveBattleSubject({
+        state: sameRefClone,
+        subject: selected.subject,
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "needsHoles" });
   });
   test("grease end-turn save asks for End Turn holes before advancing", () => {
     const spell = spellRecord(greaseUnitId);

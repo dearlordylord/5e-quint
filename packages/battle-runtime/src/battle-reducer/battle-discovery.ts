@@ -1142,6 +1142,7 @@ function greaseGroundHazardSaveAct(
       actorId,
       command: "greaseGroundHazardSave",
       areaId: effect.areaId,
+      effectRef: effect.effectRef,
       trigger,
     },
     initialHoles: [
@@ -1195,6 +1196,7 @@ function webRestraintSaveAct(
       actorId,
       command: "webRestraintSave",
       areaId: effect.areaId,
+      effectRef: effect.effectRef,
       trigger,
     },
     initialHoles: [
@@ -1232,6 +1234,7 @@ function webRestrainedNoLongerInAreaActs(
             actorId,
             command: "webRestrainedNoLongerInArea" as const,
             areaId: web.areaId,
+            effectRef: web.effectRef,
           },
           initialHoles: [],
         }));
@@ -1249,6 +1252,7 @@ function webAreaRemovalActs(
       actorId,
       command: "webAreaRemoved" as const,
       areaId: effect.areaId,
+      effectRef: effect.effectRef,
     },
     initialHoles: [],
   }));
@@ -1275,6 +1279,7 @@ function gustOfWindLineEndTurnSaveActs(
       actorId,
       command: "gustOfWindLineSave" as const,
       areaId: effect.areaId,
+      effectRef: effect.effectRef,
       directionId: effect.directionId,
       trigger: "endsTurnInLine" as const,
     },
@@ -1309,6 +1314,7 @@ function gustOfWindLineDirectionChangeActs(
               actorId,
               command: "gustOfWindLineDirectionChange" as const,
               areaId: effect.areaId,
+              effectRef: effect.effectRef,
               directionId: effect.directionId,
             },
             initialHoles: [gustOfWindLineDirectionChoiceHole(effect)],
@@ -1395,6 +1401,7 @@ function flamingSphereSaveAct(
       actorId,
       command: "movableZoneSave",
       areaId: effect.areaId,
+      effectRef: effect.effectRef,
       trigger: "endsTurnWithinFiveFeetOfSphere",
     },
     initialHoles: [
@@ -1418,6 +1425,7 @@ function flamingSphereRepositionAct(
       actorId,
       command: "movableZoneReposition",
       areaId: effect.areaId,
+      effectRef: effect.effectRef,
     },
     initialHoles: [flamingSphereRepositionMovementHole(effect)],
   };
@@ -1436,6 +1444,7 @@ function flamingSphereRamAct(
       command: "movableZoneRam",
       targetId,
       areaId: effect.areaId,
+      effectRef: effect.effectRef,
       trigger: "rammedBySphere",
     },
     initialHoles: [
@@ -1468,6 +1477,7 @@ function moonbeamEndTurnSaveActs(
       actorId,
       command: "movableZoneSave" as const,
       areaId: effect.areaId,
+      effectRef: effect.effectRef,
       trigger: "endsTurnInArea" as const,
     },
     initialHoles: [
@@ -1488,6 +1498,7 @@ function moonbeamCylinderExitActs(
         actorId,
         command: "moonbeamCylinderExit" as const,
         areaId: effect.areaId,
+        effectRef: effect.effectRef,
       },
       initialHoles: [],
     }));
@@ -1513,6 +1524,7 @@ function moonbeamRepositionActs(
               actorId,
               command: "movableZoneReposition" as const,
               areaId: effect.areaId,
+              effectRef: effect.effectRef,
             },
             initialHoles: [moonbeamRepositionMovementHole(effect)],
           },

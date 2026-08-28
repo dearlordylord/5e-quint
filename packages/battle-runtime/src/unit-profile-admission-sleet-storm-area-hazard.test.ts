@@ -436,6 +436,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
     expect(entryAct.subject.areaMembershipTrigger).toEqual({
       kind: "firstEntryOnTurn",
       areaId: sleetStormAreaId,
+      effectRef: expect.any(String),
     });
     expect(
       resolveBattleSubject({

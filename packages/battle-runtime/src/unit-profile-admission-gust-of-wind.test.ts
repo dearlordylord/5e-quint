@@ -1,5 +1,8 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
+} from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-GUST-OF-WIND-LINE-RUNTIME gust_of_wind
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-gust-of-wind-line
@@ -503,7 +506,6 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       ),
     ).toBe(false);
     const laterTurnBase = advanceToCasterLaterTurn(cast.state);
-    const caster = requireCombatant(laterTurnBase, spellCasterId);
     const unrelatedEffect = {
       kind: "speedDelta",
       sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -513,13 +515,11 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       deltaFeet: movementDeltaFeet(10),
       expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
     } as const;
-    const laterTurn: BattleState = {
-      ...laterTurnBase,
-      combatants: new Map(laterTurnBase.combatants).set(spellCasterId, {
-        ...caster,
-        activeEffects: [...caster.activeEffects, unrelatedEffect],
-      }),
-    };
+    const laterTurn = battleStateWithAllocatedEffectForTest({
+      state: laterTurnBase,
+      ownerId: spellCasterId,
+      effect: unrelatedEffect,
+    });
     const directionAct = gustOfWindLineDirectionChangeAct(laterTurn);
     const directionHole = requireHole(
       directionAct.initialHoles,
@@ -562,7 +562,9 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     );
     expect(
       requireCombatant(resolved.state, spellCasterId).activeEffects,
-    ).toEqual(expect.arrayContaining([unrelatedEffect]));
+    ).toEqual(
+      expect.arrayContaining([expect.objectContaining(unrelatedEffect)]),
+    );
   });
 
   test("Heightened Gust of Wind stores the selected target on the Line occurrence", () => {

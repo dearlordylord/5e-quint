@@ -912,6 +912,7 @@ function handledInterruptOccurrenceFor(
       trigger: "saveFailed" as const,
       targetId: saveFailed.targetId,
       ...optionalProperty("sourceProcedureRef", saveFailed.sourceProcedureRef),
+      ...optionalProperty("effectRef", saveFailed.effectRef),
     })),
     Match.when({ trigger: "attackHit" }, () => ({
       trigger: "attackHit" as const,

@@ -1923,6 +1923,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     kind: Schema.Literal("rolledDice"),
     movableZone: Schema.Struct({
       ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
       trigger: Schema.Literals([
         "endsTurnWithinFiveFeetOfSphere",
@@ -2175,6 +2176,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     greaseGroundHazard: Schema.Struct({
       ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
       trigger: Schema.Literals(["entersArea", "endsTurnInArea"]),
       save: Schema.Struct({
@@ -2194,6 +2196,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     webRestraint: Schema.Struct({
       ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
       trigger: Schema.Literals(["entersArea", "startsTurnInArea"]),
       save: Schema.Struct({
@@ -2213,6 +2216,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     sleetStormAreaHazard: Schema.Struct({
       ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
       trigger: Schema.Literals(["entersArea", "startsTurnInArea"]),
       save: Schema.Struct({
@@ -2281,6 +2285,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     gustOfWindLine: Schema.Struct({
       ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
       directionId: BattleLineDirectionId,
       trigger: Schema.Literal("endsTurnInLine"),
@@ -2302,6 +2307,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     sourceCombatantId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
+    effectRef: BattleEffectExecutionRef,
     areaId: BattleAreaId,
     directionId: BattleLineDirectionId,
     requiresTableSpatialFact: Schema.Literal(true),
@@ -2393,6 +2399,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     movableZone: Schema.Struct({
       ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
       trigger: Schema.Literals([
         "endsTurnWithinFiveFeetOfSphere",
@@ -2420,6 +2427,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     movableZone: Schema.Struct({
       ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
       trigger: Schema.Literals([
         "appearsInArea",
@@ -2449,6 +2457,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     movableZone: Schema.Struct({
       ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
       maxMoveFeet: MovementFeet,
     }),
@@ -2461,6 +2470,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     movableZone: Schema.Struct({
       sourceProcedureRef: BattleProcedureExecutionRef,
       sourceCombatantId: CombatantId,
+      effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
       maxMoveFeet: MovementFeet,
     }),
@@ -6694,13 +6704,13 @@ function serializedBattleHoleExecutionReferences(
         (hole) =>
           Match.value(hole).pipe(
             Match.when({ greaseGroundHazard: Match.any }, (matched) =>
-              procedureSource(matched.greaseGroundHazard),
+              occurrenceSource(matched.greaseGroundHazard),
             ),
             Match.when({ webRestraint: Match.any }, (matched) =>
-              procedureSource(matched.webRestraint),
+              occurrenceSource(matched.webRestraint),
             ),
             Match.when({ sleetStormAreaHazard: Match.any }, (matched) =>
-              procedureSource(matched.sleetStormAreaHazard),
+              occurrenceSource(matched.sleetStormAreaHazard),
             ),
             Match.when({ insectPlagueAreaHazard: Match.any }, (matched) =>
               occurrenceSource(matched.insectPlagueAreaHazard),
@@ -6709,10 +6719,10 @@ function serializedBattleHoleExecutionReferences(
               occurrenceSource(matched.cloudkillAreaHazard),
             ),
             Match.when({ gustOfWindLine: Match.any }, (matched) =>
-              procedureSource(matched.gustOfWindLine),
+              occurrenceSource(matched.gustOfWindLine),
             ),
             Match.when({ movableZone: Match.any }, (matched) =>
-              procedureSource(matched.movableZone),
+              occurrenceSource(matched.movableZone),
             ),
             Match.when({ dragonsBreath: Match.any }, (matched) =>
               procedureSource(matched.dragonsBreath),
@@ -6779,7 +6789,7 @@ function serializedBattleHoleExecutionReferences(
         activeOccurrenceSource(hole.spellTurnEndDamage),
       ),
       Match.when({ movableZone: Match.any }, (hole) =>
-        procedureSource(hole.movableZone),
+        activeOccurrenceSource(hole.movableZone),
       ),
       Match.when({ spikeGrowthMovement: Match.any }, (hole) =>
         procedureSource(hole.spikeGrowthMovement),
@@ -6963,12 +6973,14 @@ function serializedBattleHoleExecutionReferences(
       savingThrowOutcome: savingThrowReferences,
       gustOfWindLineDirectionChoice: (value) => [
         source(value.sourceProcedureRef, value.sourceCombatantId),
+        boundOccurrence(value.effectRef, "activeEffect"),
       ],
       movableZoneRepositionMovement: (value) => [
         source(
           value.movableZone.sourceProcedureRef,
           value.movableZone.sourceCombatantId,
         ),
+        boundOccurrence(value.movableZone.effectRef, "activeEffect"),
       ],
       cloudkillMovement: (value) => [
         source(value.sourceProcedureRef, value.sourceCombatantId),
@@ -7023,6 +7035,7 @@ function serializedBattleHoleExecutionReferences(
           value.movableZone.sourceProcedureRef,
           value.movableZone.sourceCombatantId,
         ),
+        boundOccurrence(value.movableZone.effectRef, "activeEffect"),
       ],
       shoveOutcome: noSerializedExecutionReferences,
       toolPossessionFacts: noSerializedExecutionReferences,
@@ -7719,6 +7732,14 @@ function serializedBattleSubjectOwnsBoundExecutionReferences(
                 occurrence.kind === "activeEffect" &&
                 occurrence.effectRef === effectRef,
             ) === true,
+        activeEffectOccurrence: ({ effectRef }) =>
+          combatants.some((combatant) =>
+            combatant.effectOccurrences.some(
+              (occurrence) =>
+                occurrence.kind === "activeEffect" &&
+                occurrence.effectRef === effectRef,
+            ),
+          ),
         statBlockScope: ({ ownerId, scopeRef }) => {
           const combatant = combatants.find(
             (candidate) => candidate.combatantId === ownerId,

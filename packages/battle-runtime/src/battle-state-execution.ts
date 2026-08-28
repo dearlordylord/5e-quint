@@ -1276,6 +1276,7 @@ export type BattleInterruptCheckpoint =
       readonly trigger: "saveFailed";
       readonly targetId: CombatantId;
       readonly sourceProcedureRef?: BattleProcedureExecutionRef;
+      readonly effectRef?: BattleEffectExecutionRef;
     })
   | (BattleInterruptCheckpointWithContinuationBase & {
       readonly trigger: "afterDamage";
@@ -1374,6 +1375,7 @@ export type BattleHandledInterruptOccurrence =
       readonly trigger: "saveFailed";
       readonly targetId: CombatantId;
       readonly sourceProcedureRef?: BattleProcedureExecutionRef;
+      readonly effectRef?: BattleEffectExecutionRef;
     }
   | {
       [T in Exclude<BattleInterruptTrigger, "saveFailed">]: {
@@ -5186,6 +5188,7 @@ export type BattleGreaseGroundHazardSavingThrowOutcomeHole = {
   readonly label: string;
   readonly greaseGroundHazard: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5209,6 +5212,7 @@ export type BattleWebRestraintSavingThrowOutcomeHole = {
   readonly label: string;
   readonly webRestraint: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5243,6 +5247,7 @@ export type BattleSleetStormAreaHazardSavingThrowOutcomeHole = {
   readonly label: string;
   readonly sleetStormAreaHazard: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5348,6 +5353,7 @@ export type BattleGustOfWindLineSavingThrowOutcomeHole = {
   readonly label: string;
   readonly gustOfWindLine: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5372,6 +5378,7 @@ export type BattleGustOfWindLineDirectionChoiceHole = {
   readonly label: string;
   readonly sourceCombatantId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  readonly effectRef: BattleEffectExecutionRef;
   readonly areaId: BattleAreaId;
   readonly directionId: BattleLineDirectionId;
   readonly requiresTableSpatialFact: true;
@@ -5460,6 +5467,7 @@ export type BattleFlamingSphereRamMovementHole = {
   readonly label: string;
   readonly movableZone: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5473,6 +5481,7 @@ export type BattleMovableZoneRepositionMovementHole = {
   readonly kind: "movableZoneRepositionMovement";
   readonly label: string;
   readonly movableZone: {
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5487,6 +5496,7 @@ export type BattleFlamingSphereSavingThrowOutcomeHole = {
   readonly label: string;
   readonly movableZone: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5508,6 +5518,7 @@ export type BattleFlamingSphereDamageRollHole = Extract<
 > & {
   readonly movableZone: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5528,6 +5539,7 @@ export type BattleMoonbeamSavingThrowOutcomeHole = {
   readonly label: string;
   readonly movableZone: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5549,6 +5561,7 @@ export type BattleMoonbeamDamageRollHole = Extract<
 > & {
   readonly movableZone: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;

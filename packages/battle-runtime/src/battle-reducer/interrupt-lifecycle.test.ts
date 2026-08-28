@@ -115,7 +115,9 @@ describe("interrupt lifecycle", () => {
     expect(continuationResumer).toHaveBeenCalledWith(
       expect.objectContaining({
         continuation: expect.objectContaining({ kind: "resolved" }),
-        handledInterruptTrigger: "saveFailed",
+        handledInterruptOccurrence: expect.objectContaining({
+          trigger: "saveFailed",
+        }),
       }),
     );
   });

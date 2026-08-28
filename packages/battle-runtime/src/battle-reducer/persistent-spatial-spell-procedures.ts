@@ -19,6 +19,7 @@ import type {
 } from "../battle-subjects.ts";
 import {
   type BattleAreaId,
+  type BattleEffectExecutionRef,
   type BattleProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
@@ -187,6 +188,22 @@ type PersistentSpatialSaveFailedReplaySubject = Extract<
   }
 >;
 
+function persistentSpatialReplayEffectRef(
+  subject: PersistentSpatialSaveFailedReplaySubject,
+): BattleEffectExecutionRef {
+  return Match.value(subject).pipe(
+    Match.discriminatorsExhaustive("command")({
+      greaseGroundHazardSave: ({ effectRef }) => effectRef,
+      webRestraintSave: ({ effectRef }) => effectRef,
+      sleetStormAreaHazardSave: ({ areaMembershipTrigger }) =>
+        areaMembershipTrigger.effectRef,
+      gustOfWindLineSave: ({ effectRef }) => effectRef,
+      movableZoneSave: ({ effectRef }) => effectRef,
+      movableZoneRam: ({ effectRef }) => effectRef,
+    }),
+  );
+}
+
 function maybeOpenPersistentSpatialSaveFailedReplayInterrupt(input: {
   readonly state: BattleState;
   readonly outcome: BattleSavingThrowOutcome;
@@ -206,16 +223,19 @@ function maybeOpenPersistentSpatialSaveFailedReplayInterrupt(input: {
   if (input.outcome.succeeded) {
     return null;
   }
+  const effectRef = persistentSpatialReplayEffectRef(input.replaySubject);
   const handledThisOccurrence =
     input.handledSaveFailedOccurrence?.targetId === input.outcome.targetId &&
     input.handledSaveFailedOccurrence.sourceProcedureRef ===
-      input.sourceProcedureRef;
+      input.sourceProcedureRef &&
+    input.handledSaveFailedOccurrence.effectRef === effectRef;
   return maybeOpenInterruptWindow(
     input.state,
     {
       trigger: "saveFailed",
       targetId: input.outcome.targetId,
       sourceProcedureRef: input.sourceProcedureRef,
+      effectRef,
       continuation: {
         kind: "replay",
         subject: input.replaySubject,
@@ -327,6 +347,7 @@ function greaseGroundHazardEffectFor(
 ): GreaseGroundHazardEffect | undefined {
   return activeEffectForArea(
     state,
+    subject.effectRef,
     subject.areaId,
     (effect): effect is GreaseGroundHazardEffect =>
       effect.kind === "greaseGroundHazard",
@@ -337,13 +358,16 @@ function activeEffectForArea<
   TEffect extends BattleActiveEffect & { readonly areaId: BattleAreaId },
 >(
   state: BattleState,
+  effectRef: BattleEffectExecutionRef,
   areaId: BattleAreaId,
   isExpectedEffect: (effect: BattleActiveEffect) => effect is TEffect,
 ): TEffect | undefined {
   for (const combatant of state.combatants.values()) {
     const effect = combatant.activeEffects.find(
       (candidate): candidate is TEffect =>
-        isExpectedEffect(candidate) && candidate.areaId === areaId,
+        candidate.effectRef === effectRef &&
+        isExpectedEffect(candidate) &&
+        candidate.areaId === areaId,
     );
     if (effect !== undefined) return effect;
   }
@@ -488,6 +512,7 @@ function webRestraintHazardEffectFor(
 ): WebRestraintHazardEffect | undefined {
   return activeEffectForArea(
     state,
+    subject.effectRef,
     subject.areaId,
     (effect): effect is WebRestraintHazardEffect =>
       effect.kind === "webRestraintHazard",
@@ -641,6 +666,7 @@ function sleetStormAreaHazardEffectFor(
 ): SleetStormAreaHazardEffect | undefined {
   return activeEffectForArea(
     state,
+    subject.areaMembershipTrigger.effectRef,
     subject.areaMembershipTrigger.areaId,
     (effect): effect is SleetStormAreaHazardEffect =>
       effect.kind === "sleetStormAreaHazard",
@@ -671,7 +697,7 @@ export function sleetStormAreaHazardSavingThrowOutcomeHole(
   effect: SleetStormAreaHazardEffect,
   trigger: BattleSleetStormAreaHazardTrigger,
 ): BattleSleetStormAreaHazardSavingThrowOutcomeHole {
-  const key = `battle:sleet-storm-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
+  const key = `battle:sleet-storm-area-hazard-save:${targetId}:${effect.effectRef}:${trigger}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
@@ -679,6 +705,7 @@ export function sleetStormAreaHazardSavingThrowOutcomeHole(
     label: `${trigger === "entersArea" ? "Entry" : "Start-turn"} DEX save`,
     sleetStormAreaHazard: {
       targetId,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
@@ -960,6 +987,7 @@ function gustOfWindLineEffectFor(
 ): GustOfWindLineEffect | undefined {
   return activeEffectForArea(
     state,
+    subject.effectRef,
     subject.areaId,
     (effect): effect is GustOfWindLineEffect =>
       effect.kind === "gustOfWindLine" &&
@@ -1210,6 +1238,7 @@ function flamingSphereEffectFor(
 ): FlamingSphereEffect | undefined {
   return activeEffectForArea(
     state,
+    subject.effectRef,
     subject.areaId,
     (effect): effect is FlamingSphereEffect => effect.kind === "flamingSphere",
   );
@@ -1220,7 +1249,7 @@ function flamingSphereDamageRollHole(
   effect: FlamingSphereEffect,
   trigger: BattleFlamingSphereTrigger,
 ): BattleFlamingSphereDamageRollHole {
-  const key = `battle:flaming-sphere-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
+  const key = `battle:flaming-sphere-damage:${targetId}:${effect.effectRef}:${trigger}`;
   return {
     kind: "rolledDice",
     holeId: holeId(key),
@@ -1228,6 +1257,7 @@ function flamingSphereDamageRollHole(
     label: `${flamingSphereTriggerLabel(trigger)} damage`,
     movableZone: {
       targetId,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
@@ -1905,6 +1935,7 @@ function moonbeamEffectFor(
 ): MoonbeamEffect | undefined {
   return activeEffectForArea(
     state,
+    subject.effectRef,
     subject.areaId,
     (effect): effect is MoonbeamEffect => effect.kind === "moonbeam",
   );
@@ -1915,7 +1946,7 @@ function moonbeamDamageRollHole(
   effect: MoonbeamEffect,
   trigger: BattleMoonbeamSaveTrigger,
 ): BattleMoonbeamDamageRollHole {
-  const key = `battle:moonbeam-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
+  const key = `battle:moonbeam-damage:${targetId}:${effect.effectRef}:${trigger}`;
   return {
     kind: "rolledDice",
     holeId: holeId(key),
@@ -1923,6 +1954,7 @@ function moonbeamDamageRollHole(
     label: `${moonbeamTriggerLabel(trigger)} damage`,
     movableZone: {
       targetId,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,

@@ -1486,6 +1486,7 @@ export function sleetStormAreaHazardSaveAct(
     areaMembershipTrigger: {
       kind: trigger === "entersArea" ? "firstEntryOnTurn" : "turnStartInArea",
       areaId: effect.areaId,
+      effectRef: effect.effectRef,
     },
   };
   return {

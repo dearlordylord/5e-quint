@@ -796,13 +796,7 @@ describe("L12G deterministic Moonbeam admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const saveSubject = {
-      tag: "runtimeCommand" as const,
-      actorId: spellTargetId,
-      command: "movableZoneSave" as const,
-      areaId: moonbeamAreaId,
-      trigger: "entersArea" as const,
-    };
+    const saveSubject = moonbeamSaveSubject(targetTurn.state, "entersArea");
 
     const needsSave = resolveBattleSubject({
       state: targetTurn.state,
@@ -1018,7 +1012,7 @@ describe("L12G deterministic Moonbeam admission", () => {
 
   test("duplicate same-turn save does not repeat shape-shift rider effects", () => {
     const cast = moonbeamCastOverWildShapedTarget();
-    const saveSubject = moonbeamSaveSubject("entersArea");
+    const saveSubject = moonbeamSaveSubject(cast, "entersArea");
     const firstSave = resolveMoonbeamSaveForShapeShiftedTarget({
       state: cast,
       trigger: "entersArea",
@@ -1089,7 +1083,7 @@ describe("L12G deterministic Moonbeam admission", () => {
 
     const exited = resolveBattleSubject({
       state: suppressed,
-      subject: moonbeamCylinderExitSubject(),
+      subject: moonbeamCylinderExitSubject(suppressed),
       fills: [],
     });
 
@@ -1592,7 +1586,7 @@ function resolveMoonbeamSaveForShapeShiftedTarget(input: {
   >["trigger"];
   readonly succeeded: boolean;
 }): BattleState {
-  const subject = moonbeamSaveSubject(input.trigger);
+  const subject = moonbeamSaveSubject(input.state, input.trigger);
   const needsSave = resolveBattleSubject({
     state: input.state,
     subject,
@@ -1632,6 +1626,7 @@ function battleSessionWithState(
 }
 
 function moonbeamSaveSubject(
+  state: BattleState,
   trigger: Extract<
     BattleSubject,
     {
@@ -1648,11 +1643,14 @@ function moonbeamSaveSubject(
     actorId: spellTargetId,
     command: "movableZoneSave",
     areaId: moonbeamAreaId,
+    effectRef: activeMoonbeamEffectRef(state),
     trigger,
   };
 }
 
-function moonbeamCylinderExitSubject(): Extract<
+function moonbeamCylinderExitSubject(
+  state: BattleState,
+): Extract<
   BattleSubject,
   { readonly tag: "runtimeCommand"; readonly command: "moonbeamCylinderExit" }
 > {
@@ -1661,5 +1659,19 @@ function moonbeamCylinderExitSubject(): Extract<
     actorId: spellTargetId,
     command: "moonbeamCylinderExit",
     areaId: moonbeamAreaId,
+    effectRef: activeMoonbeamEffectRef(state),
   };
+}
+
+function activeMoonbeamEffectRef(state: BattleState) {
+  const effect = [...state.combatants.values()]
+    .flatMap((combatant) => combatant.activeEffects)
+    .find(
+      (candidate) =>
+        candidate.kind === "moonbeam" && candidate.areaId === moonbeamAreaId,
+    );
+  if (effect?.kind !== "moonbeam") {
+    throw new Error("Expected active Moonbeam occurrence.");
+  }
+  return effect.effectRef;
 }

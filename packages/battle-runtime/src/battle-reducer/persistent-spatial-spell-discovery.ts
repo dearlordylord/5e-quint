@@ -89,7 +89,7 @@ export function greaseGroundHazardSavingThrowOutcomeHole(
   effect: GreaseGroundHazardEffect,
   trigger: "entersArea" | "endsTurnInArea",
 ): BattleGreaseGroundHazardSavingThrowOutcomeHole {
-  const key = `battle:grease-ground-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
+  const key = `battle:grease-ground-hazard-save:${targetId}:${effect.effectRef}:${trigger}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
@@ -97,6 +97,7 @@ export function greaseGroundHazardSavingThrowOutcomeHole(
     label: `${trigger === "entersArea" ? "Entry" : "End-turn"} DEX save`,
     greaseGroundHazard: {
       targetId,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
@@ -127,7 +128,7 @@ export function webRestraintSavingThrowOutcomeHole(
   effect: WebRestraintHazardEffect,
   trigger: BattleWebRestraintTrigger,
 ): BattleWebRestraintSavingThrowOutcomeHole {
-  const key = `battle:web-restraint-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
+  const key = `battle:web-restraint-save:${targetId}:${effect.effectRef}:${trigger}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
@@ -135,6 +136,7 @@ export function webRestraintSavingThrowOutcomeHole(
     label: `${trigger === "entersArea" ? "Entry" : "Start-turn"} DEX save`,
     webRestraint: {
       targetId,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
@@ -151,7 +153,7 @@ export function gustOfWindLineSavingThrowOutcomeHole(
   effect: GustOfWindLineEffect,
   trigger: "endsTurnInLine",
 ): BattleGustOfWindLineSavingThrowOutcomeHole {
-  const key = `battle:gust-of-wind-line-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${effect.directionId}:${trigger}`;
+  const key = `battle:gust-of-wind-line-save:${targetId}:${effect.effectRef}:${effect.directionId}:${trigger}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
@@ -159,6 +161,7 @@ export function gustOfWindLineSavingThrowOutcomeHole(
     label: "End-turn STR save",
     gustOfWindLine: {
       targetId,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
@@ -188,7 +191,7 @@ function gustOfWindLineHeightenedRollModeProjection(
 export function gustOfWindLineDirectionChoiceHole(
   effect: GustOfWindLineEffect,
 ): BattleGustOfWindLineDirectionChoiceHole {
-  const key = `battle:gust-of-wind-line-direction:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${effect.directionId}`;
+  const key = `battle:gust-of-wind-line-direction:${effect.effectRef}:${effect.directionId}`;
   return {
     kind: "gustOfWindLineDirectionChoice",
     holeId: holeId(key),
@@ -196,6 +199,7 @@ export function gustOfWindLineDirectionChoiceHole(
     label: "Line direction",
     sourceCombatantId: effect.sourceCombatantId,
     sourceProcedureRef: effect.sourceProcedureRef,
+    effectRef: effect.effectRef,
     areaId: effect.areaId,
     directionId: effect.directionId,
     requiresTableSpatialFact: true,
@@ -219,7 +223,7 @@ export function flamingSphereRamMovementHole(
   targetId: CombatantId,
   effect: FlamingSphereEffect,
 ): BattleFlamingSphereRamMovementHole {
-  const key = `battle:flaming-sphere-ram-movement:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}`;
+  const key = `battle:flaming-sphere-ram-movement:${targetId}:${effect.effectRef}`;
   return {
     kind: "movableZoneRamMovement",
     holeId: holeId(key),
@@ -227,6 +231,7 @@ export function flamingSphereRamMovementHole(
     label: "Ram movement",
     movableZone: {
       targetId,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
@@ -239,13 +244,14 @@ export function flamingSphereRamMovementHole(
 export function flamingSphereRepositionMovementHole(
   effect: FlamingSphereEffect,
 ): BattleMovableZoneRepositionMovementHole {
-  const key = `battle:flaming-sphere-reposition-movement:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}`;
+  const key = `battle:flaming-sphere-reposition-movement:${effect.effectRef}`;
   return {
     kind: "movableZoneRepositionMovement",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: "Reposition movement",
     movableZone: {
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
@@ -261,7 +267,7 @@ export function flamingSphereSavingThrowOutcomeHole(
   effect: FlamingSphereEffect,
   trigger: BattleFlamingSphereTrigger,
 ): BattleFlamingSphereSavingThrowOutcomeHole {
-  const key = `battle:flaming-sphere-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
+  const key = `battle:flaming-sphere-save:${targetId}:${effect.effectRef}:${trigger}`;
   return {
     ...movableZoneSavingThrowOutcomeHoleBase(
       state,
@@ -272,6 +278,7 @@ export function flamingSphereSavingThrowOutcomeHole(
     ),
     movableZone: {
       targetId,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
@@ -310,7 +317,7 @@ export function moonbeamSavingThrowOutcomeHole(
   effect: MoonbeamEffect,
   trigger: BattleMoonbeamSaveTrigger,
 ): BattleMoonbeamSavingThrowOutcomeHole {
-  const key = `battle:moonbeam-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
+  const key = `battle:moonbeam-save:${targetId}:${effect.effectRef}:${trigger}`;
   return {
     ...movableZoneSavingThrowOutcomeHoleBase(
       state,
@@ -321,6 +328,7 @@ export function moonbeamSavingThrowOutcomeHole(
     ),
     movableZone: {
       targetId,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
@@ -351,13 +359,14 @@ function movableZoneSavingThrowOutcomeHoleBase<
 export function moonbeamRepositionMovementHole(
   effect: MoonbeamEffect,
 ): BattleMovableZoneRepositionMovementHole {
-  const key = `battle:moonbeam-reposition-movement:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}`;
+  const key = `battle:moonbeam-reposition-movement:${effect.effectRef}`;
   return {
     kind: "movableZoneRepositionMovement",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: "Reposition movement",
     movableZone: {
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
