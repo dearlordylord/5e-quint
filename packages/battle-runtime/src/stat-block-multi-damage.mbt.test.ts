@@ -1,7 +1,7 @@
 import { movementFeet } from "@dnd/shared/types";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import {
-  executableProcedureEntry,
+  nonSpellExecutableProcedureEntry,
   projectedStatBlockRuntimeSource,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
@@ -469,7 +469,7 @@ function multiDamageAttackerStatBlock(): StatBlockRecord {
     name: "Stat Block Multi-Damage Attacker",
     statBlock: {
       ...base.statBlock,
-      actions: [executableProcedureEntry(1, venomDartAttack())],
+      actions: [nonSpellExecutableProcedureEntry(1, venomDartAttack())],
     },
   };
 }
