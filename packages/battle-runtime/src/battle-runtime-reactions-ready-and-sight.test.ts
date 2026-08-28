@@ -803,6 +803,43 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     );
   });
 
+  test("checkpoint codec roundtrips a runtime-produced attack-hit Readied Spell frontier", () => {
+    const awaiting = readiedSpellAttackHitPending();
+    const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+      battleCheckpointFrontierEnvelope(awaiting.state),
+    );
+    if (encoded.frontier.kind !== "interruptDecision") {
+      throw new Error("Expected an encoded Readied Spell interrupt frontier.");
+    }
+    expect(encoded.frontier).toMatchObject({
+      trigger: "attackHit",
+      decisionHole: { trigger: "attackHit" },
+      choices: [expect.objectContaining({ kind: "releaseReadiedSpell" })],
+    });
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+          encoded,
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)({
+          ...encoded,
+          frontier: {
+            ...encoded.frontier,
+            trigger: "spellCast",
+            decisionHole: {
+              ...encoded.frontier.decisionHole,
+              trigger: "spellCast",
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+  });
+
   test("snapshot decoding rejects unbound, wrong-kind, and mismatched Readied Spell owners", () => {
     const awaiting = readiedSpellAttackHitPending();
     const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(

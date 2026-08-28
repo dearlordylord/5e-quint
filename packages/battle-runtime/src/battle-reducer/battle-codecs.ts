@@ -7553,6 +7553,7 @@ function serializedRuntimeCommandTargetIsLive(
 function serializedInterruptChoiceMatchesTrigger(
   choice: EncodedBattleInterruptProcedureChoice,
   trigger: (typeof BATTLE_INTERRUPT_TRIGGERS)[number],
+  readiedSpells: readonly EncodedBattleReadiedSpellSnapshot[],
 ): boolean {
   return Match.value(choice).pipe(
     Match.discriminatorsExhaustive("kind")({
@@ -7575,9 +7576,37 @@ function serializedInterruptChoiceMatchesTrigger(
       releaseReadiedAction: () => trigger === "reportedReadyTrigger",
       releaseReadiedAttack: () => trigger === "reportedReadyTrigger",
       releaseReadiedMovement: () => trigger === "reportedReadyTrigger",
-      releaseReadiedSpell: () => trigger === "reportedReadyTrigger",
+      releaseReadiedSpell: (release) =>
+        serializedReadiedSpellChoiceMatchesTrigger(
+          release,
+          trigger,
+          readiedSpells,
+        ),
       retaliationAttack: () => trigger === "afterDamage",
     }),
+  );
+}
+
+function serializedReadiedSpellChoiceMatchesTrigger(
+  choice: Extract<
+    EncodedBattleInterruptProcedureChoice,
+    { readonly kind: "releaseReadiedSpell" }
+  >,
+  trigger: (typeof BATTLE_INTERRUPT_TRIGGERS)[number],
+  readiedSpells: readonly EncodedBattleReadiedSpellSnapshot[],
+): boolean {
+  const subject = choice.subject;
+  if (
+    subject.tag !== "runtimeCommand" ||
+    subject.command !== "releaseReadiedSpell"
+  ) {
+    return false;
+  }
+  return readiedSpells.some(
+    (readied) =>
+      readied.casterId === choice.readiedSpellCasterId &&
+      readied.procedureRef === subject.procedureRef &&
+      readied.trigger === trigger,
   );
 }
 
@@ -7621,7 +7650,7 @@ function serializedInterruptChoiceInvariantsHold(input: {
   const subject = serializedInterruptChoiceSubject(choice);
   const subjectIsBound = subject === undefined || input.subjectIsBound(subject);
   return (
-    serializedInterruptChoiceMatchesTrigger(choice, trigger) &&
+    serializedInterruptChoiceMatchesTrigger(choice, trigger, readiedSpells) &&
     serializedInterruptChoiceTargetIsLive(subject, combatants) &&
     subjectIsBound &&
     serializedInterruptChoiceOwnsBoundProcedure({
