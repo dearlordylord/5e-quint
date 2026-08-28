@@ -2397,23 +2397,31 @@ describe("SRDINV30D deterministic Heroism Spell Unit admission", () => {
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Heroism to resolve.");
     }
-    expect(resolved.state.combatants.get(spellCasterId)?.activeEffects).toEqual(
-      [
-        expect.objectContaining({
-          kind: "conditionImmunity",
-          sourceProcedureRef: act.subject.procedureRef,
-          sourceCombatantId: spellCasterId,
-          condition: "frightened",
-          expiresAt: { kind: "concentration", combatantId: spellCasterId },
-        }),
-        expect.objectContaining({
-          kind: "turnStartTemporaryHitPoints",
-          sourceProcedureRef: act.subject.procedureRef,
-          sourceCombatantId: spellCasterId,
-          amount: 3,
-          expiresAt: { kind: "concentration", combatantId: spellCasterId },
-        }),
-      ],
+    const casterBefore = state.combatants.get(spellCasterId);
+    const casterAfter = resolved.state.combatants.get(spellCasterId);
+    expect(casterAfter?.activeEffects).toEqual([
+      expect.objectContaining({
+        kind: "conditionImmunity",
+        sourceProcedureRef: act.subject.procedureRef,
+        sourceCombatantId: spellCasterId,
+        condition: "frightened",
+        expiresAt: { kind: "concentration", combatantId: spellCasterId },
+      }),
+      expect.objectContaining({
+        kind: "turnStartTemporaryHitPoints",
+        sourceProcedureRef: act.subject.procedureRef,
+        sourceCombatantId: spellCasterId,
+        amount: 3,
+        expiresAt: { kind: "concentration", combatantId: spellCasterId },
+      }),
+    ]);
+    const heroismEffectRefs =
+      casterAfter?.activeEffects.flatMap((effect) =>
+        "effectRef" in effect ? [effect.effectRef] : [],
+      ) ?? [];
+    expect(new Set(heroismEffectRefs).size).toBe(2);
+    expect(Number(casterAfter?.nextEffectOrdinal)).toBe(
+      Number(casterBefore?.nextEffectOrdinal) + 2,
     );
     const ended = resolveBattleSubject({
       state: resolved.state,

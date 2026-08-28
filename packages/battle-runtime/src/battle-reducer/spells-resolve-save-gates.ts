@@ -22,6 +22,10 @@ import { Result } from "effect";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
+import {
+  allocateBattleEffectOccurrenceForCreature,
+  allocateBattleEffectOccurrencesForCreature,
+} from "../effect-execution-ref.ts";
 import { characterUnitProcedureBindings } from "../character-execution-queries.ts";
 import { isCantripSpellAccess } from "../procedure-execution/spell-invocation-vocabulary.ts";
 import {
@@ -1116,15 +1120,16 @@ function applyAbilityD20TestRollModeSaveGateEffects(
       continue;
     }
     /* v8 ignore stop -- @preserve */
+    const allocation = allocateBattleEffectOccurrenceForCreature({
+      owner: target,
+      effect: {
+        ...invocation.successEffect,
+        sourceProcedureRef: invocation.sourceProcedureRef,
+      },
+    });
     combatants.set(targetId, {
-      ...target,
-      activeEffects: [
-        ...target.activeEffects,
-        {
-          ...invocation.successEffect,
-          sourceProcedureRef: invocation.sourceProcedureRef,
-        },
-      ],
+      ...allocation.owner,
+      activeEffects: [...allocation.owner.activeEffects, allocation.effect],
     });
   }
   for (const targetId of failedTargetIds) {
@@ -1134,10 +1139,9 @@ function applyAbilityD20TestRollModeSaveGateEffects(
       continue;
     }
     /* v8 ignore stop -- @preserve */
-    combatants.set(targetId, {
-      ...target,
-      activeEffects: [
-        ...target.activeEffects,
+    const allocation = allocateBattleEffectOccurrencesForCreature({
+      owner: target,
+      effects: [
         {
           ...invocation.failedSaveEffect,
           sourceProcedureRef: invocation.sourceProcedureRef,
@@ -1147,6 +1151,10 @@ function applyAbilityD20TestRollModeSaveGateEffects(
           sourceProcedureRef: invocation.sourceProcedureRef,
         },
       ],
+    });
+    combatants.set(targetId, {
+      ...allocation.owner,
+      activeEffects: [...allocation.owner.activeEffects, ...allocation.effects],
     });
   }
   return { ...state, combatants };
@@ -2306,20 +2314,24 @@ function withFailedSaveConcentrationDuration(
     return result;
   }
   /* v8 ignore stop -- @preserve */
+  const allocation = allocateBattleEffectOccurrenceForCreature({
+    owner: actor,
+    effect,
+  });
   const state = {
     ...result.state,
     combatants: new Map(result.state.combatants).set(actorId, {
-      ...actor,
+      ...allocation.owner,
       activeEffects: [
         ...(options.replaceExistingSameSpellDuration
-          ? actor.activeEffects.filter(
+          ? allocation.owner.activeEffects.filter(
               (candidate) =>
                 candidate.kind !== "spellConcentrationDuration" ||
                 candidate.sourceProcedureRef !== effect.sourceProcedureRef ||
                 candidate.sourceCombatantId !== effect.sourceCombatantId,
             )
-          : actor.activeEffects),
-        effect,
+          : allocation.owner.activeEffects),
+        allocation.effect,
       ],
     }),
   };

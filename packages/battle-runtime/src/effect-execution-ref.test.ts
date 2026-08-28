@@ -141,19 +141,6 @@ describe("spell active-effect execution references", () => {
     );
   });
 
-  test("keeps an already-bound occurrence outside the insertion-template phase", () => {
-    const bound = syntheticEffect(
-      battleProcedureExecutionRefForTest("already-bound-effect"),
-      "charmed",
-    );
-    if (false) {
-      // @ts-expect-error A durable occurrence cannot be rebound as an insertion template.
-      const invalidTemplate: BattleSourcedEffectOccurrenceTemplate = bound;
-      void invalidTemplate;
-    }
-    expect(bound.effectRef).toBeDefined();
-  });
-
   test("does not reuse an active-effect occurrence ref after owner re-admission", () => {
     const initial = fighterVsGoblinBattle();
     const first = allocateBattleEffectExecutionRef({

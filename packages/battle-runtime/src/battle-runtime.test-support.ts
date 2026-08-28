@@ -579,7 +579,9 @@ export function battleStateWithAllocatedEffectForTest(input: {
   readonly effect: BattleSourcedEffectOccurrenceTemplate;
 }): BattleState {
   const owner = input.state.combatants.get(input.ownerId);
-  if (owner === undefined) return input.state;
+  if (owner === undefined) {
+    throw new Error(`Expected active-effect owner ${input.ownerId}.`);
+  }
   const allocation = allocateBattleEffectOccurrenceForCreature({
     owner,
     effect: input.effect,

@@ -52,8 +52,7 @@ import type {
 } from "../identity.ts";
 import {
   allocateBattleEffectOccurrenceForCreature,
-  allocateBattleEffectExecutionRef,
-  allocateBattleEffectExecutionRefForCreature,
+  type BattleSourcedEffectOccurrenceTemplate,
 } from "../effect-execution-ref.ts";
 import {
   activeEffectProcedureMatches,
@@ -226,6 +225,10 @@ type CasterAreaSpellActiveEffect = Extract<
   BattleActiveEffect,
   { readonly kind: CasterAreaSpellActiveEffectKind }
 >;
+type CasterAreaSpellActiveEffectTemplate = Extract<
+  BattleSourcedEffectOccurrenceTemplate,
+  { readonly kind: CasterAreaSpellActiveEffectKind }
+>;
 const SINGLE_SAVE_AREA_ACTIVE_EFFECT_KINDS = [
   "moonbeam",
   "sleetStormAreaHazard",
@@ -321,22 +324,37 @@ export function applySpellActiveEffects(
     return state;
   }
   /* v8 ignore stop -- @preserve */
-  const laterDamageEffect =
-    invocation.laterDamage === null
-      ? []
-      : [
-          {
-            kind: "spellTurnEndDamage" as const,
-            sourceProcedureRef: invocation.sourceProcedureRef,
-            sourceCombatantId: actorId,
-            damage: invocation.laterDamage,
-            expiresAt: endOfNextTurnExpiration(
-              state,
-              targetId,
-              END_OF_NEXT_TURN_DURING_TURN,
-            ),
-          },
-        ];
+  const laterDamageApplication = (() => {
+    if (invocation.laterDamage === null) {
+      return {
+        state,
+        target,
+        effects: target.activeEffects,
+      };
+    }
+    const allocation = allocateBattleEffectOccurrenceForCreature({
+      owner: target,
+      effect: {
+        kind: "spellTurnEndDamage",
+        sourceProcedureRef: invocation.sourceProcedureRef,
+        sourceCombatantId: actorId,
+        damage: invocation.laterDamage,
+        expiresAt: endOfNextTurnExpiration(
+          state,
+          targetId,
+          END_OF_NEXT_TURN_DURING_TURN,
+        ),
+      },
+    });
+    return {
+      state: {
+        ...state,
+        combatants: new Map(state.combatants).set(targetId, allocation.owner),
+      },
+      target: allocation.owner,
+      effects: [...allocation.owner.activeEffects, allocation.effect],
+    };
+  })();
   const riderApplication = invocation.postDamageRiders
     .filter(isSpellActiveEffectPostDamageRider)
     .reduce(
@@ -367,12 +385,8 @@ export function applySpellActiveEffects(
         };
       },
       {
-        state,
-        target,
-        effects: [
-          ...target.activeEffects,
-          ...laterDamageEffect,
-        ] as readonly BattleActiveEffect[],
+        ...laterDamageApplication,
+        effects: laterDamageApplication.effects,
       },
     );
 
@@ -1236,24 +1250,21 @@ export function applyDancingLightsSpellEffect(
     return state;
   }
   /* v8 ignore stop -- @preserve */
-  const allocation = allocateBattleEffectExecutionRefForCreature({
+  const allocation = allocateBattleEffectOccurrenceForCreature({
     owner: caster,
+    effect: {
+      kind: "dancingLights",
+      sourceProcedureRef: invocation.sourceProcedureRef,
+      sourceCombatantId: actorId,
+      expiresAt: invocation.expiresAt,
+      ...plan,
+    },
   });
   const owner = allocation.owner;
   /* v8 ignore start -- @preserve -- Defensive internal guard: the Dancing Lights invocation is admitted only for a character spellcaster, and active-effect allocation preserves origin kind. */
   if (owner.origin.kind !== "character") return state;
   /* v8 ignore stop -- @preserve */
-  const activeEffect: Extract<
-    BattleActiveEffect,
-    { readonly kind: "dancingLights" }
-  > = {
-    kind: "dancingLights",
-    effectRef: allocation.effectRef,
-    sourceProcedureRef: invocation.sourceProcedureRef,
-    sourceCombatantId: actorId,
-    expiresAt: invocation.expiresAt,
-    ...plan,
-  };
+  const activeEffect = allocation.effect;
   const repositionExecution: DancingLightsRepositionSpellProcedureExecution = {
     spellRuleFacts: invocation.spellRuleFacts,
     access: invocation.access,
@@ -1495,16 +1506,12 @@ export function applyFailedSaveSpellActiveEffects(
       continue;
     }
     /* v8 ignore stop -- @preserve */
-    const activeEffects = activeEffectRiders.reduce(
-      (effects, rider): readonly BattleActiveEffect[] => [
-        ...effects.filter(
-          (effect) =>
-            !(
-              effect.kind === "nextAttackRollBySelf" &&
-              sourceRefsMatch(effect, sourceProcedureRef, sourceCombatantId)
-            ),
-        ),
-        {
+    let allocatedTarget = target;
+    let activeEffects = target.activeEffects;
+    for (const rider of activeEffectRiders) {
+      const allocation = allocateBattleEffectOccurrenceForCreature({
+        owner: allocatedTarget,
+        effect: {
           kind: "nextAttackRollBySelf",
           sourceProcedureRef: invocation.sourceProcedureRef,
           sourceCombatantId: actorId,
@@ -1516,10 +1523,20 @@ export function applyFailedSaveSpellActiveEffects(
             rider.expiresAt,
           ),
         },
-      ],
-      target.activeEffects,
-    );
-    combatants.set(targetId, { ...target, activeEffects });
+      });
+      allocatedTarget = allocation.owner;
+      activeEffects = [
+        ...activeEffects.filter(
+          (effect) =>
+            !(
+              effect.kind === "nextAttackRollBySelf" &&
+              sourceRefsMatch(effect, sourceProcedureRef, sourceCombatantId)
+            ),
+        ),
+        allocation.effect,
+      ];
+    }
+    combatants.set(targetId, { ...allocatedTarget, activeEffects });
   }
   return { ...state, combatants };
 }
@@ -1575,16 +1592,26 @@ export function applyFailedSaveSpellConditionEffects(
       target.combatantId,
       appliedEffect.expiresAt,
     );
-    const selectedEffect = (() => {
+    const selectedEffectTemplate = (() => {
       if (appliedEffect.repeatSave === null) {
-        const allocation = allocateBattleEffectExecutionRefForCreature({
-          owner: target,
-        });
         return {
-          owner: allocation.owner,
-          effect: {
-            kind: "spellCondition" as const,
-            effectRef: allocation.effectRef,
+          kind: "spellCondition" as const,
+          sourceProcedureRef: invocation.sourceProcedureRef,
+          sourceCombatantId: actorId,
+          condition: appliedEffect.condition,
+          conditionHadNonSpellSource:
+            conditionHadNonSpellSourceBeforeSpellEffect(
+              target,
+              appliedEffect.condition,
+            ),
+          escape: appliedEffect.escape,
+          turnStartDamage: appliedEffect.turnStartDamage,
+          expiresAt,
+        };
+      }
+      return isCountedSpellConditionRepeatSave(appliedEffect.repeatSave)
+        ? {
+            kind: "spellConditionCountedEndTurnSave" as const,
             sourceProcedureRef: invocation.sourceProcedureRef,
             sourceCombatantId: actorId,
             condition: appliedEffect.condition,
@@ -1593,59 +1620,40 @@ export function applyFailedSaveSpellConditionEffects(
                 target,
                 appliedEffect.condition,
               ),
-            escape: appliedEffect.escape,
-            turnStartDamage: appliedEffect.turnStartDamage,
+            save: appliedEffect.repeatSave.save,
+            successes: 0,
+            failures: 0,
+            successThreshold: appliedEffect.repeatSave.successThreshold,
+            failureThreshold: appliedEffect.repeatSave.failureThreshold,
+            savingThrowDisadvantageAbility:
+              savingThrowDisadvantageAbilityChoice ??
+              appliedEffect.repeatSave.savingThrowDisadvantageAbilities[0],
+            lockedIn: false,
             expiresAt,
-          } satisfies BattleActiveEffect,
-        };
-      }
-      return isCountedSpellConditionRepeatSave(appliedEffect.repeatSave)
-        ? {
-            owner: target,
-            effect: {
-              kind: "spellConditionCountedEndTurnSave" as const,
-              sourceProcedureRef: invocation.sourceProcedureRef,
-              sourceCombatantId: actorId,
-              condition: appliedEffect.condition,
-              conditionHadNonSpellSource:
-                conditionHadNonSpellSourceBeforeSpellEffect(
-                  target,
-                  appliedEffect.condition,
-                ),
-              save: appliedEffect.repeatSave.save,
-              successes: 0,
-              failures: 0,
-              successThreshold: appliedEffect.repeatSave.successThreshold,
-              failureThreshold: appliedEffect.repeatSave.failureThreshold,
-              savingThrowDisadvantageAbility:
-                savingThrowDisadvantageAbilityChoice ??
-                appliedEffect.repeatSave.savingThrowDisadvantageAbilities[0],
-              lockedIn: false,
-              expiresAt,
-            } satisfies BattleActiveEffect,
           }
         : {
-            owner: target,
-            effect: {
-              kind: "spellConditionEndTurnSave" as const,
-              sourceProcedureRef: invocation.sourceProcedureRef,
-              sourceCombatantId: actorId,
-              condition: appliedEffect.condition,
-              conditionHadNonSpellSource:
-                conditionHadNonSpellSourceBeforeSpellEffect(
-                  target,
-                  appliedEffect.condition,
-                ),
-              heightenedSpellTargetDisadvantage:
-                spellConditionEndTurnSaveHeightenedRollMode(
-                  targetId,
-                  heightenedSpellTargetId,
-                ),
-              save: appliedEffect.repeatSave,
-              expiresAt,
-            } satisfies BattleActiveEffect,
+            kind: "spellConditionEndTurnSave" as const,
+            sourceProcedureRef: invocation.sourceProcedureRef,
+            sourceCombatantId: actorId,
+            condition: appliedEffect.condition,
+            conditionHadNonSpellSource:
+              conditionHadNonSpellSourceBeforeSpellEffect(
+                target,
+                appliedEffect.condition,
+              ),
+            heightenedSpellTargetDisadvantage:
+              spellConditionEndTurnSaveHeightenedRollMode(
+                targetId,
+                heightenedSpellTargetId,
+              ),
+            save: appliedEffect.repeatSave,
+            expiresAt,
           };
     })();
+    const selectedEffect = allocateBattleEffectOccurrenceForCreature({
+      owner: target,
+      effect: selectedEffectTemplate,
+    });
     const activeEffects = [
       ...selectedEffect.owner.activeEffects.filter(
         (effect) => !replacing.includes(effect),
@@ -1749,9 +1757,9 @@ export function applySleepPendingRepeatSaveEffects(
     if (target === undefined) {
       continue;
     }
-    const activeEffects = [
-      ...target.activeEffects,
-      {
+    const allocation = allocateBattleEffectOccurrenceForCreature({
+      owner: target,
+      effect: {
         kind: "sleepPendingRepeatSave" as const,
         sourceProcedureRef: invocation.sourceProcedureRef,
         sourceCombatantId: actorId,
@@ -1773,10 +1781,14 @@ export function applySleepPendingRepeatSaveEffects(
           combatantId: actorId,
         },
       },
+    });
+    const activeEffects = [
+      ...allocation.owner.activeEffects,
+      allocation.effect,
     ];
     combatants.set(
       targetId,
-      battleCreatureWithSpellActiveEffects(target, activeEffects),
+      battleCreatureWithSpellActiveEffects(allocation.owner, activeEffects),
     );
   }
   const effected: BattleState = { ...state, combatants };
@@ -1802,9 +1814,9 @@ export function applyHideousLaughterEffects(
     if (target === undefined) {
       continue;
     }
-    const activeEffects = [
-      ...target.activeEffects,
-      {
+    const allocation = allocateBattleEffectOccurrenceForCreature({
+      owner: target,
+      effect: {
         kind: "hideousLaughter" as const,
         sourceProcedureRef: invocation.sourceProcedureRef,
         sourceCombatantId: actorId,
@@ -1826,9 +1838,13 @@ export function applyHideousLaughterEffects(
           durationTicks: HIDEOUS_LAUGHTER_DURATION_TICKS,
         },
       },
+    });
+    const activeEffects = [
+      ...allocation.owner.activeEffects,
+      allocation.effect,
     ];
     const affectedTarget = battleCreatureWithSpellActiveEffects(
-      target,
+      allocation.owner,
       activeEffects,
     );
     combatants.set(targetId, affectedTarget);
@@ -1932,19 +1948,27 @@ function appendCombatantIdOnce(
 function battleStateAfterReplacingCasterActiveEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly activeEffect: CasterAreaSpellActiveEffect;
+  readonly activeEffect: CasterAreaSpellActiveEffectTemplate;
 }): BattleState {
-  return updateEffectOwnerActiveEffects({
-    state: input.state,
-    effectOwnerId: input.actorId,
-    update: (activeEffects) => [
-      ...activeEffects.filter(
-        (activeEffect) =>
-          !sameCasterAreaSpellOccurrence(activeEffect, input.activeEffect),
-      ),
-      input.activeEffect,
-    ],
+  const owner = input.state.combatants.get(input.actorId);
+  if (owner === undefined) return input.state;
+  const allocation = allocateBattleEffectOccurrenceForCreature({
+    owner,
+    effect: input.activeEffect,
   });
+  return {
+    ...input.state,
+    combatants: new Map(input.state.combatants).set(input.actorId, {
+      ...allocation.owner,
+      activeEffects: [
+        ...allocation.owner.activeEffects.filter(
+          (activeEffect) =>
+            !sameCasterAreaSpellOccurrence(activeEffect, input.activeEffect),
+        ),
+        allocation.effect,
+      ],
+    }),
+  };
 }
 
 const CASTER_AREA_SPELL_ACTIVE_EFFECT_KIND_SET: ReadonlySet<
@@ -1959,7 +1983,7 @@ function isCasterAreaSpellActiveEffect(
 
 function sameCasterAreaSpellOccurrence(
   candidate: BattleActiveEffect,
-  activeEffect: CasterAreaSpellActiveEffect,
+  activeEffect: CasterAreaSpellActiveEffectTemplate,
 ): boolean {
   return (
     isCasterAreaSpellActiveEffect(candidate) &&
@@ -2090,32 +2114,32 @@ export function applySpiritualWeaponAttackProxyEffect(input: {
   if (caster === undefined) {
     return input.state;
   }
-  const allocation = allocateBattleEffectExecutionRefForCreature({
+  const allocation = allocateBattleEffectOccurrenceForCreature({
     owner: caster,
+    effect: {
+      kind: "spiritualWeapon",
+      sourceProcedureRef: input.invocation.sourceProcedureRef,
+      sourceCombatantId: input.actorId,
+      sourceSpellLevel: spellInvocationEffectiveSpellLevel(input.invocation),
+      forcePositionId: input.forcePositionId,
+      forceReachFeet: input.invocation.forceReachFeet,
+      repeatMoveMaxFeet: input.invocation.repeatMoveMaxFeet,
+      repeatTargeting: input.repeatTargeting,
+      startedOn: {
+        actorId: input.actorId,
+        round: input.state.initiative.round,
+      },
+      damage: input.invocation.damage,
+      attackKind: input.invocation.attackKind,
+      attackBonus: input.invocation.attackBonus,
+      expiresAt: {
+        kind: "concentration",
+        combatantId: input.actorId,
+        durationTicks: input.invocation.durationTicks,
+      },
+    },
   });
-  const activeEffect = {
-    kind: "spiritualWeapon" as const,
-    effectRef: allocation.effectRef,
-    sourceProcedureRef: input.invocation.sourceProcedureRef,
-    sourceCombatantId: input.actorId,
-    sourceSpellLevel: spellInvocationEffectiveSpellLevel(input.invocation),
-    forcePositionId: input.forcePositionId,
-    forceReachFeet: input.invocation.forceReachFeet,
-    repeatMoveMaxFeet: input.invocation.repeatMoveMaxFeet,
-    repeatTargeting: input.repeatTargeting,
-    startedOn: {
-      actorId: input.actorId,
-      round: input.state.initiative.round,
-    },
-    damage: input.invocation.damage,
-    attackKind: input.invocation.attackKind,
-    attackBonus: input.invocation.attackBonus,
-    expiresAt: {
-      kind: "concentration" as const,
-      combatantId: input.actorId,
-      durationTicks: input.invocation.durationTicks,
-    },
-  } satisfies Extract<BattleActiveEffect, { readonly kind: "spiritualWeapon" }>;
+  const activeEffect = allocation.effect;
   const activeEffects = [
     ...caster.activeEffects.filter(
       (effect) =>
@@ -2311,17 +2335,11 @@ export function applyInsectPlagueAreaHazardCastEffect(input: {
     { readonly procedure: "insectPlagueAreaHazard" }
   >;
 }): BattleState {
-  const allocation = allocateBattleEffectExecutionRef({
-    state: input.state,
-    ownerId: input.actorId,
-  });
-  if (allocation.tag === "ownerNotFound") return input.state;
   return battleStateAfterReplacingCasterActiveEffect({
-    state: allocation.state,
+    state: input.state,
     actorId: input.actorId,
     activeEffect: {
       kind: "insectPlagueAreaHazard" as const,
-      effectRef: allocation.effectRef,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       appearanceOccurrence: {
@@ -2354,17 +2372,11 @@ export function applyCloudkillAreaHazardCastEffect(input: {
     { readonly procedure: "cloudkillAreaHazard" }
   >;
 }): BattleState {
-  const allocation = allocateBattleEffectExecutionRef({
-    state: input.state,
-    ownerId: input.actorId,
-  });
-  if (allocation.tag === "ownerNotFound") return input.state;
   return battleStateAfterReplacingCasterActiveEffect({
-    state: allocation.state,
+    state: input.state,
     actorId: input.actorId,
     activeEffect: {
       kind: "cloudkillAreaHazard" as const,
-      effectRef: allocation.effectRef,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       appearanceOccurrence: {
@@ -2764,33 +2776,33 @@ export function applyWebRestrainedCondition(
       activeEffectSourceMatches(candidate, effect) &&
       candidate.condition === "restrained",
   );
-  const allocation = allocateBattleEffectExecutionRefForCreature({
+  const allocation = allocateBattleEffectOccurrenceForCreature({
     owner: target,
-  });
-  const activeEffects = [
-    ...allocation.owner.activeEffects.filter(
-      (candidate) => !replacing.includes(candidate),
-    ),
-    {
-      kind: "spellCondition" as const,
-      effectRef: allocation.effectRef,
+    effect: {
+      kind: "spellCondition",
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
-      condition: "restrained" as const,
+      condition: "restrained",
       conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(
         target,
         "restrained",
       ),
       escape: {
-        kind: "abilityCheck" as const,
-        ability: "str" as const,
-        skill: "athletics" as const,
-        allowedActor: "target" as const,
-        successEnds: "condition" as const,
+        kind: "abilityCheck",
+        ability: "str",
+        skill: "athletics",
+        allowedActor: "target",
+        successEnds: "condition",
       },
       turnStartDamage: null,
       expiresAt: effect.expiresAt,
     },
+  });
+  const activeEffects = [
+    ...allocation.owner.activeEffects.filter(
+      (candidate) => !replacing.includes(candidate),
+    ),
+    allocation.effect,
   ];
   return {
     ...state,
@@ -2871,8 +2883,19 @@ export function applyCommandPendingEffects(
       continue;
     }
     /* v8 ignore stop -- @preserve */
-    const allocation = allocateBattleEffectExecutionRefForCreature({
+    const allocation = allocateBattleEffectOccurrenceForCreature({
       owner: target,
+      effect: {
+        kind: "commandPending",
+        option,
+        sourceProcedureRef: invocation.sourceProcedureRef,
+        sourceCombatantId: actorId,
+        expiresAt: endOfNextTurnExpiration(
+          state,
+          targetId,
+          END_OF_NEXT_TURN_DURING_TURN,
+        ),
+      },
     });
     nextState = {
       ...nextState,
@@ -2886,18 +2909,7 @@ export function applyCommandPendingEffects(
                 sourceRefsMatch(effect, sourceProcedureRef, sourceCombatantId)
               ),
           ),
-          {
-            kind: "commandPending",
-            effectRef: allocation.effectRef,
-            option,
-            sourceProcedureRef: invocation.sourceProcedureRef,
-            sourceCombatantId: actorId,
-            expiresAt: endOfNextTurnExpiration(
-              state,
-              targetId,
-              END_OF_NEXT_TURN_DURING_TURN,
-            ),
-          },
+          allocation.effect,
         ],
       }),
     };
@@ -2970,16 +2982,17 @@ export function applyFailedSaveAttackRollAdvantageEffects(
       continue;
     }
     /* v8 ignore stop -- @preserve */
+    const allocation = allocateBattleEffectOccurrenceForCreature({
+      owner: target,
+      effect: {
+        ...invocation.effect,
+        sourceProcedureRef: invocation.sourceProcedureRef,
+        sourceCombatantId: actorId,
+      },
+    });
     combatants.set(targetId, {
-      ...target,
-      activeEffects: [
-        ...target.activeEffects,
-        {
-          ...invocation.effect,
-          sourceProcedureRef: invocation.sourceProcedureRef,
-          sourceCombatantId: actorId,
-        },
-      ],
+      ...allocation.owner,
+      activeEffects: [...allocation.owner.activeEffects, allocation.effect],
     });
   }
   return {
@@ -3008,21 +3021,31 @@ export function applySaveGatedConditionImmunityEffects(
       return nextState;
     }
     /* v8 ignore stop -- @preserve */
-    const nextEffects = invocation.activeEffects.map((effect) => ({
-      ...effect,
-      sourceProcedureRef: invocation.sourceProcedureRef,
-      sourceCombatantId: actorId,
-      conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(
-        target,
-        effect.condition,
-      ),
-    }));
-    const activeEffects = [...target.activeEffects, ...nextEffects];
+    let allocatedTarget = target;
+    const nextEffects: BattleActiveEffect[] = [];
+    for (const effect of invocation.activeEffects) {
+      const allocation = allocateBattleEffectOccurrenceForCreature({
+        owner: allocatedTarget,
+        effect: {
+          ...effect,
+          sourceProcedureRef: invocation.sourceProcedureRef,
+          sourceCombatantId: actorId,
+          conditionHadNonSpellSource:
+            conditionHadNonSpellSourceBeforeSpellEffect(
+              target,
+              effect.condition,
+            ),
+        },
+      });
+      allocatedTarget = allocation.owner;
+      nextEffects.push(allocation.effect);
+    }
+    const activeEffects = [...allocatedTarget.activeEffects, ...nextEffects];
     return {
       ...nextState,
       combatants: new Map(nextState.combatants).set(
         targetId,
-        battleCreatureWithSpellActiveEffects(target, activeEffects),
+        battleCreatureWithSpellActiveEffects(allocatedTarget, activeEffects),
       ),
     };
   }, state);
@@ -3132,91 +3155,69 @@ function spellPostDamageRiderActiveEffect(input: {
     input.target.combatantId,
     spellPostDamageRiderExpiration(input.rider),
   );
-  return Match.value(input.rider).pipe(
+  const effect = Match.value(input.rider).pipe(
     Match.when({ kind: "speedDelta" }, (rider) => ({
-      state: input.state,
-      target: input.target,
-      effect: {
-        kind: "speedDelta" as const,
-        sourceProcedureRef: input.sourceProcedureRef,
-        sourceCombatantId: input.actorId,
-        deltaFeet: rider.deltaFeet,
-        expiresAt,
-      },
+      kind: "speedDelta" as const,
+      sourceProcedureRef: input.sourceProcedureRef,
+      sourceCombatantId: input.actorId,
+      deltaFeet: rider.deltaFeet,
+      expiresAt,
     })),
-    Match.when({ kind: "condition" }, (rider) => {
-      const allocation = allocateBattleEffectExecutionRefForCreature({
-        owner: input.target,
-      });
-      return {
-        state: {
-          ...input.state,
-          combatants: new Map(input.state.combatants).set(
-            input.target.combatantId,
-            allocation.owner,
-          ),
-        },
-        target: allocation.owner,
-        effect: {
-          kind: "spellCondition" as const,
-          effectRef: allocation.effectRef,
-          sourceProcedureRef: input.sourceProcedureRef,
-          sourceCombatantId: input.actorId,
-          condition: rider.condition,
-          conditionHadNonSpellSource:
-            conditionHadNonSpellSourceBeforeSpellEffect(
-              input.target,
-              rider.condition,
-            ),
-          escape: null,
-          turnStartDamage: null,
-          expiresAt,
-        },
-      };
-    }),
+    Match.when({ kind: "condition" }, (rider) => ({
+      kind: "spellCondition" as const,
+      sourceProcedureRef: input.sourceProcedureRef,
+      sourceCombatantId: input.actorId,
+      condition: rider.condition,
+      conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(
+        input.target,
+        rider.condition,
+      ),
+      escape: null,
+      turnStartDamage: null,
+      expiresAt,
+    })),
     Match.when({ kind: "opportunityAttackDenied" }, () => ({
-      state: input.state,
-      target: input.target,
-      effect: {
-        kind: "opportunityAttackDenied" as const,
-        sourceProcedureRef: input.sourceProcedureRef,
-        sourceCombatantId: input.actorId,
-        expiresAt,
-      },
+      kind: "opportunityAttackDenied" as const,
+      sourceProcedureRef: input.sourceProcedureRef,
+      sourceCombatantId: input.actorId,
+      expiresAt,
     })),
     Match.when({ kind: "nextAttackRollAgainstTarget" }, (rider) => ({
-      state: input.state,
-      target: input.target,
-      effect: {
-        kind: "nextAttackRollAgainstSelf" as const,
-        sourceProcedureRef: input.sourceProcedureRef,
-        sourceCombatantId: input.actorId,
-        mode: rider.mode,
-        expiresAt,
-      },
+      kind: "nextAttackRollAgainstSelf" as const,
+      sourceProcedureRef: input.sourceProcedureRef,
+      sourceCombatantId: input.actorId,
+      mode: rider.mode,
+      expiresAt,
     })),
     Match.when({ kind: "hitPointRegainPrevented" }, () => ({
-      state: input.state,
-      target: input.target,
-      effect: {
-        kind: "hitPointRegainPrevented" as const,
-        sourceProcedureRef: input.sourceProcedureRef,
-        sourceCombatantId: input.actorId,
-        expiresAt,
-      },
+      kind: "hitPointRegainPrevented" as const,
+      sourceProcedureRef: input.sourceProcedureRef,
+      sourceCombatantId: input.actorId,
+      expiresAt,
     })),
     Match.when({ kind: "invisibleBenefitDenied" }, () => ({
-      state: input.state,
-      target: input.target,
-      effect: {
-        kind: "invisibleBenefitDenied" as const,
-        sourceProcedureRef: input.sourceProcedureRef,
-        sourceCombatantId: input.actorId,
-        expiresAt,
-      },
+      kind: "invisibleBenefitDenied" as const,
+      sourceProcedureRef: input.sourceProcedureRef,
+      sourceCombatantId: input.actorId,
+      expiresAt,
     })),
     Match.exhaustive,
   );
+  const allocation = allocateBattleEffectOccurrenceForCreature({
+    owner: input.target,
+    effect,
+  });
+  return {
+    state: {
+      ...input.state,
+      combatants: new Map(input.state.combatants).set(
+        input.target.combatantId,
+        allocation.owner,
+      ),
+    },
+    target: allocation.owner,
+    effect: allocation.effect,
+  };
 }
 
 type PostDamageRiderExpirationInput =
@@ -3346,23 +3347,21 @@ export function applyDragonsBreathInitialSpellEffect(
     return state;
   }
   /* v8 ignore stop -- @preserve */
-  const allocation = allocateBattleEffectExecutionRefForCreature({
+  const allocation = allocateBattleEffectOccurrenceForCreature({
     owner: target,
+    effect: {
+      ...invocation.activeEffect,
+      sourceProcedureRef: procedureRef,
+      sourceCombatantId: actorId,
+      damageType,
+      spellSaveDc,
+    },
   });
-  const allocatedTarget = allocation.owner;
-  const nextEffect: BattleActiveEffect = {
-    ...invocation.activeEffect,
-    sourceProcedureRef: procedureRef,
-    sourceCombatantId: actorId,
-    damageType,
-    spellSaveDc,
-    effectRef: allocation.effectRef,
-  };
-  const activeEffects = [...allocatedTarget.activeEffects, nextEffect];
+  const activeEffects = [...allocation.owner.activeEffects, allocation.effect];
   return {
     ...state,
     combatants: new Map(state.combatants).set(targetId, {
-      ...allocatedTarget,
+      ...allocation.owner,
       activeEffects,
     }),
   };
