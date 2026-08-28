@@ -15,7 +15,7 @@ import {
   type BattleRuntimeTransactionResult,
   type BattleSubject,
 } from "@dnd/battle-runtime";
-import { Either, Match } from "effect";
+import { Either, Match, Option } from "effect";
 
 import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
@@ -468,14 +468,16 @@ function activeBattleWithoutPendingFills(
   const pendingTransaction = root.sessionStore.getPendingBattleTransaction();
   if (pendingTransaction === null) return Either.right(session.right);
   const pendingFills = battlePendingTransactionView(pendingTransaction);
-  return pendingFills === undefined
+  return Option.isNone(pendingFills)
     ? Either.left(
         errorContent("The stored battle transaction is invalid.", {
           code: "BATTLE_TRANSACTION_DEFECT",
           issue: { tag: "foreignTransaction" },
         }),
       )
-    : Either.left(pendingBattleFillsContent(pendingFills, pendingMessage));
+    : Either.left(
+        pendingBattleFillsContent(pendingFills.value, pendingMessage),
+      );
 }
 
 function activeBattleForTool(

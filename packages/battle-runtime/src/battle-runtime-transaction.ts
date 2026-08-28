@@ -1,6 +1,6 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
 
-import { Either, Match } from "effect";
+import { Either, Match, Option } from "effect";
 
 import {
   battleMechanicalFrontier,
@@ -19,6 +19,10 @@ import {
   battleRuntimeSessionWithState,
   type BattleRuntimeSession,
 } from "./battle-runtime-context.ts";
+import {
+  battleReplayStackDepth,
+  type BattleReplayStackDepth,
+} from "./identity.ts";
 import { optionalProperty } from "./optional-property.ts";
 import {
   currentInterruptCheckpoint,
@@ -183,13 +187,14 @@ export function admitBattleRuntimeTransactionOperation(input: {
         }
       : { tag: "admitted", operation: input.operation };
   }
-  const pending = battlePendingTransactionData.get(input.transaction);
-  if (pending === undefined) {
+  const pendingLookup = lookupBattleRuntimeTransaction(input.transaction);
+  if (Option.isNone(pendingLookup)) {
     return {
       tag: "rejected",
       issue: { tag: "foreignTransaction" },
     };
   }
+  const pending = pendingLookup.value;
   const interruptFrontier = isInterruptFrontier(pending.holes);
   return Match.value(input.operation).pipe(
     Match.when(
@@ -277,7 +282,7 @@ export type BattleRuntimeTransactionDefect =
     }
   | {
       readonly tag: "unsettledInterruptStack";
-      readonly depth: number;
+      readonly depth: BattleReplayStackDepth;
     }
   | {
       readonly tag: "unsettledSubjectContinuation";
@@ -362,9 +367,11 @@ type ResolvedResolution = Extract<
  */
 export function battlePendingTransactionView(
   transaction: BattlePendingTransaction,
-): BattlePendingTransactionView | undefined {
-  const data = battlePendingTransactionData.get(transaction);
-  return data === undefined ? undefined : transactionView(data);
+): Option.Option<BattlePendingTransactionView> {
+  return Option.map(
+    lookupBattleRuntimeTransaction(transaction),
+    transactionView,
+  );
 }
 
 /**
@@ -376,22 +383,21 @@ export function battlePendingTransactionViewForSession(
   transaction: BattlePendingTransaction,
   session: BattleRuntimeSession,
 ): BattlePendingTransactionSessionView {
-  const data = battlePendingTransactionData.get(transaction);
-  if (data === undefined) return { tag: "foreignTransaction" };
-  return data.currentSession === session
+  const data = lookupBattleRuntimeTransaction(transaction);
+  if (Option.isNone(data)) return { tag: "foreignTransaction" };
+  const transactionData = data.value;
+  return transactionData.currentSession === session
     ? {
         tag: "valid",
-        view: transactionView(data),
+        view: transactionView(transactionData),
       }
     : { tag: "transactionSessionMismatch" };
 }
 
-function battlePendingTransactionMatchesSession(
+function lookupBattleRuntimeTransaction(
   transaction: BattlePendingTransaction,
-  session: BattleRuntimeSession,
-): boolean {
-  const data = battlePendingTransactionData.get(transaction);
-  return data !== undefined && data.currentSession === session;
+): Option.Option<BattlePendingTransactionData> {
+  return Option.fromNullable(battlePendingTransactionData.get(transaction));
 }
 
 function createBattlePendingTransaction(input: {
@@ -593,11 +599,11 @@ function resolveOperation(input: {
         : resolveBattleRuntimeInterrupt({ session: input.session, fill }),
     ),
     Match.when({ kind: "ordinarySubject" }, ({ subject, fills }) => {
-      const pending =
+      const pendingLookup =
         input.transaction === null
-          ? null
-          : battlePendingTransactionData.get(input.transaction);
-      if (pending === null || pending === undefined) {
+          ? Option.none<BattlePendingTransactionData>()
+          : lookupBattleRuntimeTransaction(input.transaction);
+      if (Option.isNone(pendingLookup)) {
         return resolveBattleRuntimeSubject({
           session: input.session,
           subject,
@@ -605,6 +611,7 @@ function resolveOperation(input: {
           ...optionalProperty("statBlockCatalog", input.statBlockCatalog),
         });
       }
+      const pending = pendingLookup.value;
       if (sameBattleSubject(pending.subject, subject)) {
         return resolveBattleRuntimeSubject({
           session: pending.baseSession,
@@ -635,12 +642,9 @@ function validateTransaction(input: {
   readonly transaction: BattlePendingTransaction | null;
 }): BattleRuntimeTransactionDefect | undefined {
   if (input.transaction === null) return undefined;
-  const data = battlePendingTransactionData.get(input.transaction);
-  if (data === undefined) return { tag: "foreignTransaction" };
-  return battlePendingTransactionMatchesSession(
-    input.transaction,
-    input.session,
-  )
+  const data = lookupBattleRuntimeTransaction(input.transaction);
+  if (Option.isNone(data)) return { tag: "foreignTransaction" };
+  return data.value.currentSession === input.session
     ? undefined
     : { tag: "transactionSessionMismatch" };
 }
@@ -703,15 +707,15 @@ function projectPendingTransactionFrontier(
   resolution: NeedsHolesResolution,
   transaction: BattlePendingTransaction,
 ): BattleRuntimeTransactionResult {
-  const transactionView = battlePendingTransactionData.get(transaction);
-  if (transactionView === undefined) {
+  const transactionLookup = lookupBattleRuntimeTransaction(transaction);
+  if (Option.isNone(transactionLookup)) {
     return transactionDefectResult(resolution, {
       tag: "foreignTransaction",
     });
   }
   const projected = battleMechanicalFrontier({
     result: resolution,
-    acceptedFills: transactionView.fills,
+    acceptedFills: transactionLookup.value.fills,
   });
   if (Either.isLeft(projected)) {
     return transactionDefectResult(resolution, {
@@ -738,11 +742,11 @@ function transactionForNeedsHoles(
 ): BattlePendingTransaction {
   return Match.value(input.operation).pipe(
     Match.when({ kind: "ordinarySubject" }, ({ subject, fills }) => {
-      const pending =
+      const pendingLookup =
         input.transaction === null
-          ? null
-          : battlePendingTransactionData.get(input.transaction);
-      if (pending === null || pending === undefined) {
+          ? Option.none<BattlePendingTransactionData>()
+          : lookupBattleRuntimeTransaction(input.transaction);
+      if (Option.isNone(pendingLookup)) {
         return createBattlePendingTransaction({
           baseSession: input.session,
           currentSession: resolution.session,
@@ -753,6 +757,7 @@ function transactionForNeedsHoles(
           completion: completionForSubject(resolution.subject),
         });
       }
+      const pending = pendingLookup.value;
       if (sameBattleSubject(pending.subject, subject)) {
         return createBattlePendingTransaction({
           baseSession: pending.baseSession,
@@ -787,8 +792,8 @@ function transactionForNeedsHoles(
           completion: completionForSubject(resolution.subject),
         });
       }
-      const pendingData = battlePendingTransactionData.get(pending);
-      if (pendingData === undefined) {
+      const pendingDataLookup = lookupBattleRuntimeTransaction(pending);
+      if (Option.isNone(pendingDataLookup)) {
         return createBattlePendingTransaction({
           baseSession: resolution.session,
           currentSession: resolution.session,
@@ -799,6 +804,7 @@ function transactionForNeedsHoles(
           completion: completionForSubject(resolution.subject),
         });
       }
+      const pendingData = pendingDataLookup.value;
       return sameBattleSubject(pendingData.subject, resolution.subject)
         ? createBattlePendingTransaction({
             baseSession: pendingData.baseSession,
@@ -833,12 +839,15 @@ function settleResolvedTransaction(input: {
   let completionCursor: BattlePendingTransaction | null = null;
 
   if (input.transaction !== null) {
-    const transactionData = battlePendingTransactionData.get(input.transaction);
-    if (transactionData === undefined) {
+    const transactionDataLookup = lookupBattleRuntimeTransaction(
+      input.transaction,
+    );
+    if (Option.isNone(transactionDataLookup)) {
       return transactionDefectResult(resolution, {
         tag: "foreignTransaction",
       });
     }
+    const transactionData = transactionDataLookup.value;
     if (input.operation.kind === "interruptDecision") {
       completionCursor = input.transaction;
     } else {
@@ -853,12 +862,14 @@ function settleResolvedTransaction(input: {
   }
 
   while (completionCursor !== null) {
-    const transactionData = battlePendingTransactionData.get(completionCursor);
-    if (transactionData === undefined) {
+    const transactionDataLookup =
+      lookupBattleRuntimeTransaction(completionCursor);
+    if (Option.isNone(transactionDataLookup)) {
       return transactionDefectResult(resolution, {
         tag: "foreignTransaction",
       });
     }
+    const transactionData = transactionDataLookup.value;
     if (
       transactionData.completion.kind === "replaySubject" &&
       transactionOwnerClosedWithAncestor(transactionData, resolution.session)
@@ -937,8 +948,8 @@ function refreshParentFrontier(input: {
   readonly parent: BattlePendingTransaction | null;
 }): RefreshParentFrontierOutcome {
   if (input.parent === null) return { tag: "closed" };
-  const parentData = battlePendingTransactionData.get(input.parent);
-  if (parentData === undefined) {
+  const parentDataLookup = lookupBattleRuntimeTransaction(input.parent);
+  if (Option.isNone(parentDataLookup)) {
     return {
       tag: "ownerRetained",
       result: transactionDefectResult(input.resolution, {
@@ -946,6 +957,7 @@ function refreshParentFrontier(input: {
       }),
     };
   }
+  const parentData = parentDataLookup.value;
 
   const currentFrame = currentInterruptCheckpoint(
     input.resolution.session.state,
@@ -1046,8 +1058,8 @@ function resumePendingLayer(input: {
   readonly transaction: BattlePendingTransaction;
   readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
 }): ResumePendingLayerResult {
-  const data = battlePendingTransactionData.get(input.transaction);
-  if (data === undefined) {
+  const dataLookup = lookupBattleRuntimeTransaction(input.transaction);
+  if (Option.isNone(dataLookup)) {
     return {
       tag: "result",
       result: transactionDefectResult(input.resolution, {
@@ -1055,6 +1067,7 @@ function resumePendingLayer(input: {
       }),
     };
   }
+  const data = dataLookup.value;
   const resumed = resolveBattleRuntimeSubject({
     session: input.resolution.session,
     subject: data.subject,
@@ -1098,8 +1111,8 @@ function resumePendingLayer(input: {
             parent: input.transaction,
             completion: completionForSubject(needsHoles.subject),
           });
-      const nextData = battlePendingTransactionData.get(nextTransaction);
-      if (nextData === undefined) {
+      const nextDataLookup = lookupBattleRuntimeTransaction(nextTransaction);
+      if (Option.isNone(nextDataLookup)) {
         return {
           tag: "result" as const,
           result: transactionDefectResult(input.resolution, {
@@ -1107,6 +1120,7 @@ function resumePendingLayer(input: {
           }),
         };
       }
+      const nextData = nextDataLookup.value;
       const projected = battleMechanicalFrontier({
         result: needsHoles,
         acceptedFills: nextData.fills,
@@ -1163,7 +1177,7 @@ function settledStateIssue(
     ? undefined
     : {
         tag: "unsettledInterruptStack",
-        depth: session.state.interruptStack.length,
+        depth: battleReplayStackDepth(session.state.interruptStack.length),
       };
 }
 

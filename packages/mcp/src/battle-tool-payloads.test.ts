@@ -18,7 +18,7 @@ import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { Either } from "effect";
+import { Either, Option } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -216,15 +216,15 @@ describe("battle tool payload boundaries", () => {
       throw new Error("Expected the test battle act to need hole fills.");
     }
     const transactionView = battlePendingTransactionView(result.transaction);
-    expect(transactionView).toBeDefined();
-    if (transactionView !== undefined) {
-      expect(Object.isFrozen(transactionView)).toBe(true);
-      expect(Object.isFrozen(transactionView.subject)).toBe(true);
-      expect(Object.isFrozen(transactionView.fills)).toBe(true);
-      expect(Object.isFrozen(transactionView.holes)).toBe(true);
-      expect(Object.isFrozen(transactionView.holes[0])).toBe(true);
-      expect(transactionView.subject).not.toBe(result.resolution.subject);
-      expect(transactionView.holes).not.toBe(result.resolution.holes);
+    expect(Option.isSome(transactionView)).toBe(true);
+    if (Option.isSome(transactionView)) {
+      expect(Object.isFrozen(transactionView.value)).toBe(true);
+      expect(Object.isFrozen(transactionView.value.subject)).toBe(true);
+      expect(Object.isFrozen(transactionView.value.fills)).toBe(true);
+      expect(Object.isFrozen(transactionView.value.holes)).toBe(true);
+      expect(Object.isFrozen(transactionView.value.holes[0])).toBe(true);
+      expect(transactionView.value.subject).not.toBe(result.resolution.subject);
+      expect(transactionView.value.holes).not.toBe(result.resolution.holes);
     }
     expect(
       root.sessionStore.storeActiveBattle(result.resolution.session),

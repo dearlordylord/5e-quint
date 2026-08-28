@@ -13,7 +13,7 @@ import {
 import { settleCharacterSheetFromBattle } from "@dnd/character-battle-runtime";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import { Either, Match } from "effect";
+import { Either, Match, Option } from "effect";
 
 import type { CharacterSessionRegistry } from "./session-store.ts";
 import {
@@ -58,12 +58,12 @@ export function createBattleRosterTransitionPlanner(input: {
     plan(operation, activeBattle, pendingBattleFills) {
       if (pendingBattleFills !== null) {
         const pendingView = battlePendingTransactionView(pendingBattleFills);
-        if (pendingView === undefined) {
+        if (Option.isNone(pendingView)) {
           return Either.left({ tag: "battleRosterUnknownPendingTransaction" });
         }
         return Either.left({
           tag: "battleRosterPendingBattleFills",
-          pendingSubject: pendingView.subject,
+          pendingSubject: pendingView.value.subject,
         });
       }
       return planActiveBattleRosterTransition({

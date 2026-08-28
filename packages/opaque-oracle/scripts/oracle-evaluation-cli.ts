@@ -27,6 +27,7 @@ import {
 import {
   ORACLE_PUBLICATION_ARTIFACTS,
   ORACLE_PUBLICATION_MEMBERS,
+  isOraclePublicationArtifactFileName,
   type OraclePublicationMember,
 } from "../src/oracle-publication.ts";
 import {
@@ -92,6 +93,15 @@ export type OracleCorpusValidationIssue =
       readonly member: OraclePublicationMember;
       readonly path: string;
       readonly error: PlatformError;
+    }
+  | {
+      readonly tag: "publicationDirectoryRead";
+      readonly path: string;
+      readonly error: PlatformError;
+    }
+  | {
+      readonly tag: "publicationSchemaOrphan";
+      readonly path: string;
     }
   | {
       readonly tag: "publicationSchema";
@@ -583,6 +593,18 @@ type PublicationSchemaCollection = {
   readonly issues: readonly OracleCorpusValidationIssue[];
 };
 
+type PublicationDirectoryRead =
+  | {
+      readonly tag: "readFailed";
+      readonly path: string;
+      readonly error: PlatformError;
+    }
+  | {
+      readonly tag: "read";
+      readonly path: string;
+      readonly entries: readonly string[];
+    };
+
 function validateCorpusText(
   text: string,
   services: OracleEvaluationServices,
@@ -665,6 +687,11 @@ function readPublicationSchemas(
   publicationDirectory: string,
 ): Effect.Effect<PublicationSchemaCollection, never, Path.Path> {
   return Effect.gen(function* () {
+    const directory = yield* readPublicationDirectory(
+      fileSystem,
+      publicationDirectory,
+    );
+    const path = yield* Path.Path;
     const reads = yield* Effect.forEach(
       ORACLE_PUBLICATION_MEMBERS,
       (member) =>
@@ -676,9 +703,58 @@ function readPublicationSchemas(
       validators: new Map<OraclePublicationMember, ValidateFunction<unknown>>(
         validatorEntries,
       ),
-      issues: reads.flatMap(publicationSchemaIssues),
+      issues: [
+        ...publicationDirectoryIssues(directory, path),
+        ...reads.flatMap(publicationSchemaIssues),
+      ],
     };
   });
+}
+
+function readPublicationDirectory(
+  fileSystem: FileSystem.FileSystem,
+  publicationDirectory: string,
+): Effect.Effect<PublicationDirectoryRead, never> {
+  return fileSystem.readDirectory(publicationDirectory).pipe(
+    Effect.either,
+    Effect.map((entries) =>
+      Either.isLeft(entries)
+        ? {
+            tag: "readFailed" as const,
+            path: publicationDirectory,
+            error: entries.left,
+          }
+        : {
+            tag: "read" as const,
+            path: publicationDirectory,
+            entries: entries.right,
+          },
+    ),
+  );
+}
+
+function publicationDirectoryIssues(
+  directory: PublicationDirectoryRead,
+  path: Path.Path,
+): readonly OracleCorpusValidationIssue[] {
+  return Match.value(directory).pipe(
+    Match.when({ tag: "readFailed" }, ({ path: directoryPath, error }) => [
+      {
+        tag: "publicationDirectoryRead" as const,
+        path: directoryPath,
+        error,
+      },
+    ]),
+    Match.when({ tag: "read" }, ({ path: directoryPath, entries }) =>
+      entries
+        .filter((entry) => !isOraclePublicationArtifactFileName(entry))
+        .map((entry) => ({
+          tag: "publicationSchemaOrphan" as const,
+          path: path.join(directoryPath, entry),
+        })),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function readPublicationSchema(

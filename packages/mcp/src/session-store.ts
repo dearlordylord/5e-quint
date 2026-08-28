@@ -424,8 +424,10 @@ export function createMcpSessionStore(input: {
         transientBattleFills:
           pendingBattleFills === null
             ? null
-            : (battlePendingTransactionView(pendingBattleFills) ??
-              invalidPendingBattleTransactionProjection()),
+            : Option.match(battlePendingTransactionView(pendingBattleFills), {
+                onNone: invalidPendingBattleTransactionProjection,
+                onSome: (view) => view,
+              }),
       };
     },
   } satisfies McpSessionStore;

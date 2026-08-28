@@ -5,6 +5,7 @@ import { pathToFileURL } from "node:url";
 import {
   ORACLE_PUBLICATION_ARTIFACTS,
   ORACLE_PUBLICATION_MEMBERS,
+  isOraclePublicationArtifactFileName,
 } from "../src/oracle-publication.ts";
 import {
   formatOraclePublicationValidation,
@@ -29,13 +30,8 @@ export function checkOraclePublicationSync(
     return issues;
   }
 
-  const expectedNames = new Set<string>(
-    ORACLE_PUBLICATION_MEMBERS.map(
-      (member) => ORACLE_PUBLICATION_ARTIFACTS[member].fileName,
-    ),
-  );
   for (const entry of entries.right) {
-    if (!expectedNames.has(entry.name)) {
+    if (!isOraclePublicationArtifactFileName(entry.name)) {
       issues.push(`orphan publication entry: ${entry.name}`);
     }
   }

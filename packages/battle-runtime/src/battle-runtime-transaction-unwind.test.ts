@@ -1,10 +1,12 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
 
+import { Option } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
   battlePendingTransactionView,
   settleBattleRuntimeTransaction,
+  type BattlePendingTransaction,
   type BattleRuntimeTransactionResult,
 } from "./battle-runtime-transaction.ts";
 import {
@@ -177,6 +179,16 @@ function readyMovementSession(): BattleRuntimeSession {
 }
 
 describe("battle runtime transaction completion unwind", () => {
+  test("represents an opaque token from another owner as an empty lookup", () => {
+    // The token constructor is private; this boundary test models a token
+    // supplied by a different runtime owner.
+    const foreignToken = Object.freeze({}) as BattlePendingTransaction;
+
+    expect(Option.isNone(battlePendingTransactionView(foreignToken))).toBe(
+      true,
+    );
+  });
+
   test("replays an ordinary subject once after its nested interrupt declines", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-transaction-ordinary-replay"),
@@ -399,8 +411,11 @@ describe("battle runtime transaction completion unwind", () => {
     const refreshedParent = battlePendingTransactionView(
       afterNested.transaction,
     );
-    expect(refreshedParent?.subject).toEqual(outerSubject);
-    expect(refreshedParent?.fills).toHaveLength(1);
+    expect(Option.isSome(refreshedParent)).toBe(true);
+    if (Option.isSome(refreshedParent)) {
+      expect(refreshedParent.value.subject).toEqual(outerSubject);
+      expect(refreshedParent.value.fills).toHaveLength(1);
+    }
 
     const settled = settledByDeclining(afterNested, skeletonId);
     expect(settled.tag).toBe("settled");
@@ -619,11 +634,17 @@ describe("battle runtime transaction completion unwind", () => {
     expect(
       currentInterruptCheckpoint(exposed.resolution.session.state)?.trigger,
     ).toBe("opportunityAttack");
-    expect(battlePendingTransactionView(exposed.transaction)).toMatchObject({
-      subject: outerSubject,
-      fills: [outerMovement],
-      holes: [{ kind: "interruptDecision", trigger: "opportunityAttack" }],
-    });
+    const exposedTransactionView = battlePendingTransactionView(
+      exposed.transaction,
+    );
+    expect(Option.isSome(exposedTransactionView)).toBe(true);
+    if (Option.isSome(exposedTransactionView)) {
+      expect(exposedTransactionView.value).toMatchObject({
+        subject: outerSubject,
+        fills: [outerMovement],
+        holes: [{ kind: "interruptDecision", trigger: "opportunityAttack" }],
+      });
+    }
     const exposedFrontier = requireInterruptFrontier(
       exposed.frontier,
       "grandparent checkpoint",

@@ -226,6 +226,48 @@ describe("Opaque Oracle evaluation CLI", () => {
     });
   });
 
+  test("check fails closed for an orphan publication schema without writes", async () => {
+    const mutationEvents: string[] = [];
+    const result = await runWithPlatform(
+      runOracleEvaluationCli(
+        [
+          "check",
+          "--corpus",
+          "corpus/oracle-evaluation-corpus.json",
+          "--publication-directory",
+          "publication",
+        ],
+        services,
+        { buildCorpus: buildFixtureCorpus },
+      ),
+      validationFileSystem(
+        fixtureCorpusBytes(),
+        {},
+        {
+          publicationEntries: [
+            ...publicationArtifactFileNames(),
+            "orphan.schema.json",
+          ],
+          mutationEvents,
+        },
+      ),
+      recordingTerminal([]),
+    );
+
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isRight(result)) return;
+    expect(result.left).toMatchObject({ tag: "corpusValidationFailed" });
+    expect(result.left).toMatchObject({
+      issues: expect.arrayContaining([
+        expect.objectContaining({
+          tag: "publicationSchemaOrphan",
+          path: "publication/orphan.schema.json",
+        }),
+      ]),
+    });
+    expect(mutationEvents).toEqual([]);
+  });
+
   test.each([
     ["malformed JSON", "{\n"],
     ["duplicate raw members", '{"batch":{},"batch":{},"traces":[]}\n'],
@@ -254,18 +296,28 @@ describe("Opaque Oracle evaluation CLI", () => {
   });
 
   test("check fails closed when a live trace differs at the same position", async () => {
-    const corpus = JSON.parse(fixtureCorpusBytes().toString("utf8")) as {
-      readonly traces: Array<{
-        readonly creation: {
-          readonly started: unknown;
-          progression: unknown[];
-        };
-      }>;
-    };
+    const parsed: unknown = JSON.parse(fixtureCorpusBytes().toString("utf8"));
+    if (!isTraceMutationCorpus(parsed)) {
+      throw new Error("Fixture corpus JSON has no mutable trace progression.");
+    }
+    const corpus = parsed;
     const firstTrace = corpus.traces[0];
-    if (firstTrace === undefined) throw new Error("Fixture has no trace.");
-    firstTrace.creation.progression = [firstTrace.creation.started];
-    const changedCorpus = Buffer.from(`${JSON.stringify(corpus)}\n`, "utf8");
+    const changedCorpus = Buffer.from(
+      `${JSON.stringify({
+        ...corpus,
+        traces: [
+          {
+            ...firstTrace,
+            creation: {
+              ...firstTrace.creation,
+              progression: [firstTrace.creation.started],
+            },
+          },
+          ...corpus.traces.slice(1),
+        ],
+      })}\n`,
+      "utf8",
+    );
 
     const result = await runWithPlatform(
       runOracleEvaluationCli(
@@ -338,6 +390,45 @@ function fixtureCorpusBytes(): Buffer {
   return serializeOracleCorpus(fixtureCorpus);
 }
 
+function publicationArtifactFileNames(): readonly string[] {
+  return ORACLE_PUBLICATION_MEMBERS.map(
+    (member) => ORACLE_PUBLICATION_ARTIFACTS[member].fileName,
+  );
+}
+
+type TraceMutationCorpus = Readonly<Record<string, unknown>> & {
+  readonly traces: readonly [TraceMutation, ...TraceMutation[]];
+};
+
+type TraceMutation = Readonly<Record<string, unknown>> & {
+  readonly creation: Readonly<Record<string, unknown>> & {
+    readonly started: unknown;
+    readonly progression: readonly unknown[];
+  };
+};
+
+function isTraceMutationCorpus(value: unknown): value is TraceMutationCorpus {
+  if (
+    !isRecord(value) ||
+    !Array.isArray(value.traces) ||
+    value.traces.length === 0
+  ) {
+    return false;
+  }
+  return value.traces.every(isTraceMutation);
+}
+
+function isTraceMutation(value: unknown): value is TraceMutation {
+  if (!isRecord(value) || !isRecord(value.creation)) return false;
+  return (
+    "started" in value.creation && Array.isArray(value.creation.progression)
+  );
+}
+
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 function createFixtureCorpus(): OracleCorpus {
   const result = buildOracleCorpus({
     cases: [fixtureCase()],
@@ -391,6 +482,7 @@ function readOnlyFileSystem(
 ): FileSystem.FileSystem {
   return FileSystem.makeNoop({
     readFileString: () => Effect.succeed(Buffer.from(corpus).toString("utf8")),
+    readDirectory: () => Effect.succeed([...publicationArtifactFileNames()]),
     readFile: (path) => {
       const member = ORACLE_PUBLICATION_MEMBERS.find((candidate) =>
         path.endsWith(ORACLE_PUBLICATION_ARTIFACTS[candidate].fileName),
@@ -429,9 +521,17 @@ function validationFileSystem(
   schemaOverrides: Partial<
     Record<OraclePublicationMember, Uint8Array | "missing">
   > = {},
+  options: {
+    readonly publicationEntries?: readonly string[];
+    readonly mutationEvents?: string[];
+  } = {},
 ): FileSystem.FileSystem {
   return FileSystem.makeNoop({
     readFileString: () => Effect.succeed(Buffer.from(corpus).toString("utf8")),
+    readDirectory: () =>
+      Effect.succeed([
+        ...(options.publicationEntries ?? publicationArtifactFileNames()),
+      ]),
     readFile: (path) => {
       const member = ORACLE_PUBLICATION_MEMBERS.find((candidate) =>
         path.endsWith(ORACLE_PUBLICATION_ARTIFACTS[candidate].fileName),
@@ -463,6 +563,28 @@ function validationFileSystem(
         override ?? ORACLE_PUBLICATION_ARTIFACTS[member].bytes,
       );
     },
+    makeDirectory: (path) => {
+      options.mutationEvents?.push(`directory:${path}`);
+      return Effect.succeed(undefined);
+    },
+    makeTempFile: (tempFileOptions) => {
+      options.mutationEvents?.push(
+        `temporary:${tempFileOptions?.directory ?? ""}`,
+      );
+      return Effect.succeed("unexpected.tmp");
+    },
+    writeFile: (path) => {
+      options.mutationEvents?.push(`write:${path}`);
+      return Effect.succeed(undefined);
+    },
+    rename: (oldPath, newPath) => {
+      options.mutationEvents?.push(`rename:${oldPath}->${newPath}`);
+      return Effect.succeed(undefined);
+    },
+    remove: (path) => {
+      options.mutationEvents?.push(`remove:${path}`);
+      return Effect.succeed(undefined);
+    },
   });
 }
 
@@ -488,6 +610,7 @@ function recordingFileSystem(
   failWrite: boolean,
 ): FileSystem.FileSystem {
   return FileSystem.makeNoop({
+    readDirectory: () => Effect.succeed([...publicationArtifactFileNames()]),
     readFile: (path) => {
       const member = ORACLE_PUBLICATION_MEMBERS.find((candidate) =>
         path.endsWith(ORACLE_PUBLICATION_ARTIFACTS[candidate].fileName),

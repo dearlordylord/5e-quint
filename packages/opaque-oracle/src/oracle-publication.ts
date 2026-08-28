@@ -26,6 +26,12 @@ export const ORACLE_PUBLICATION_ROOT_IDS = {
   evaluationBatch: "urn:dnd:opaque-oracle:oracle-evaluation-batch.schema.json",
 } as const satisfies Readonly<Record<OraclePublicationMember, string>>;
 
+export function isOraclePublicationArtifactFileName(fileName: string): boolean {
+  return ORACLE_PUBLICATION_MEMBERS.some(
+    (member) => ORACLE_PUBLICATION_FILE_NAMES[member] === fileName,
+  );
+}
+
 type DocumentJsonSchema = ReturnType<typeof documentJsonSchema>;
 
 function withPublicationRootId<T extends DocumentJsonSchema>(
