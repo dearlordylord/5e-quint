@@ -43,6 +43,10 @@ module battleRuntimeCloudkillAreaHazardMbt {
     qSecondarySavedThisTurn: bool,
     qPrimaryHitPoints: int,
     qSecondaryHitPoints: int,
+    qPrimaryStagedDamage: int,
+    qSecondaryStagedDamage: int,
+    qPrimaryStagedSaved: bool,
+    qSecondaryStagedSaved: bool,
     qLastMovementDistanceFeet: int,
     qPending: CloudkillMbtPending,
     qPendingTarget: CloudkillMbtTarget,
@@ -79,6 +83,10 @@ module battleRuntimeCloudkillAreaHazardMbt {
         qSecondarySavedThisTurn: false,
         qPrimaryHitPoints: 40,
         qSecondaryHitPoints: 40,
+        qPrimaryStagedDamage: 0,
+        qSecondaryStagedDamage: 0,
+        qPrimaryStagedSaved: false,
+        qSecondaryStagedSaved: false,
         qLastMovementDistanceFeet: 0,
         qPending: CloudkillMbtNoPending,
         qPendingTarget: NoCloudkillMbtTarget,
@@ -200,6 +208,15 @@ module battleRuntimeCloudkillAreaHazardMbt {
         qActionAvailable: true,
         qPrimarySavedThisTurn: false,
         qSecondarySavedThisTurn: false,
+        qPrimaryStagedDamage: 0,
+        qSecondaryStagedDamage: 0,
+        qPrimaryStagedSaved: false,
+        qSecondaryStagedSaved: false,
+        qDurationTicks:
+          if (firstTarget == NoCloudkillMbtTarget)
+            qState.qDurationTicks - 1
+          else
+            qState.qDurationTicks,
         qLastMovementDistanceFeet: 10,
         qPending:
           if (firstTarget == NoCloudkillMbtTarget)
@@ -235,16 +252,22 @@ module battleRuntimeCloudkillAreaHazardMbt {
     nondet damageDiePip = 1.to(4).oneOf()
     val rolledDamage = qState.qDamageDice * damageDiePip
     val damage = cloudkillMbtDamage(rolledDamage, qState.qSavingThrowSucceeded)
-    val nextPrimaryHitPoints =
+    val nextPrimaryStagedDamage =
       if (qState.qPendingTarget == PrimaryCloudkillMbtTarget)
-        cloudkillMbtHitPointsAfterDamage(qState.qPrimaryHitPoints, damage)
+        qState.qPrimaryStagedDamage + damage
       else
-        qState.qPrimaryHitPoints
-    val nextSecondaryHitPoints =
+        qState.qPrimaryStagedDamage
+    val nextSecondaryStagedDamage =
       if (qState.qPendingTarget == SecondaryCloudkillMbtTarget)
-        cloudkillMbtHitPointsAfterDamage(qState.qSecondaryHitPoints, damage)
+        qState.qSecondaryStagedDamage + damage
       else
-        qState.qSecondaryHitPoints
+        qState.qSecondaryStagedDamage
+    val nextPrimaryStagedSaved =
+      qState.qPrimaryStagedSaved or
+      qState.qPendingTarget == PrimaryCloudkillMbtTarget
+    val nextSecondaryStagedSaved =
+      qState.qSecondaryStagedSaved or
+      qState.qPendingTarget == SecondaryCloudkillMbtTarget
     val hasRemainingTarget = qState.qRemainingTarget != NoCloudkillMbtTarget
     all {
       qState.qOutcome == CloudkillMbtMovementDamage,
@@ -252,13 +275,44 @@ module battleRuntimeCloudkillAreaHazardMbt {
       qState' = {
         ...qState,
         qPrimarySavedThisTurn:
-          qState.qPrimarySavedThisTurn or
-          qState.qPendingTarget == PrimaryCloudkillMbtTarget,
+          if (hasRemainingTarget)
+            qState.qPrimarySavedThisTurn
+          else
+            qState.qPrimarySavedThisTurn or nextPrimaryStagedSaved,
         qSecondarySavedThisTurn:
-          qState.qSecondarySavedThisTurn or
-          qState.qPendingTarget == SecondaryCloudkillMbtTarget,
-        qPrimaryHitPoints: nextPrimaryHitPoints,
-        qSecondaryHitPoints: nextSecondaryHitPoints,
+          if (hasRemainingTarget)
+            qState.qSecondarySavedThisTurn
+          else
+            qState.qSecondarySavedThisTurn or nextSecondaryStagedSaved,
+        qPrimaryHitPoints:
+          if (hasRemainingTarget)
+            qState.qPrimaryHitPoints
+          else
+            cloudkillMbtHitPointsAfterDamage(
+              qState.qPrimaryHitPoints,
+              nextPrimaryStagedDamage,
+            ),
+        qSecondaryHitPoints:
+          if (hasRemainingTarget)
+            qState.qSecondaryHitPoints
+          else
+            cloudkillMbtHitPointsAfterDamage(
+              qState.qSecondaryHitPoints,
+              nextSecondaryStagedDamage,
+            ),
+        qPrimaryStagedDamage:
+          if (hasRemainingTarget) nextPrimaryStagedDamage else 0,
+        qSecondaryStagedDamage:
+          if (hasRemainingTarget) nextSecondaryStagedDamage else 0,
+        qPrimaryStagedSaved:
+          if (hasRemainingTarget) nextPrimaryStagedSaved else false,
+        qSecondaryStagedSaved:
+          if (hasRemainingTarget) nextSecondaryStagedSaved else false,
+        qDurationTicks:
+          if (hasRemainingTarget)
+            qState.qDurationTicks
+          else
+            qState.qDurationTicks - 1,
         qPending:
           if (hasRemainingTarget)
             CloudkillMbtSavingThrowPending
@@ -287,6 +341,8 @@ module battleRuntimeCloudkillAreaHazardMbt {
       qDurationTicks: 0,
       qRadiusFeet: 0,
       qHeavilyObscured: false,
+      qPrimarySavedThisTurn: false,
+      qSecondarySavedThisTurn: false,
       qOutcome: CloudkillMbtConcentrationEnded,
     },
   }
@@ -302,6 +358,8 @@ module battleRuntimeCloudkillAreaHazardMbt {
       qDurationTicks: 0,
       qRadiusFeet: 0,
       qHeavilyObscured: false,
+      qPrimarySavedThisTurn: false,
+      qSecondarySavedThisTurn: false,
       qOutcome: CloudkillMbtStrongWindEnded,
     },
   }

@@ -34,7 +34,7 @@ import {
 } from "./unit-profile-admission.test-support.ts";
 import {
   damageRollFillWithGroups,
-  requireCombatant,
+  interruptDecisionFill,
   requireHole,
   requireResultHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
@@ -56,6 +56,7 @@ import {
   combatantId,
   discoverBattleActs,
   endTurn,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   snapshotBattle,
   type BattleActiveEffect,
@@ -115,6 +116,7 @@ type CloudkillPendingProcedure = {
   readonly kind: "appearance" | "movement";
   readonly state: BattleState;
   readonly subject: BattleSubject;
+  readonly fills: readonly BattleFill[];
   readonly result: Extract<
     BattleResolutionResult,
     { readonly tag: "needsHoles" }
@@ -253,8 +255,8 @@ describe("Cloudkill area-hazard MBT parity", () => {
       pending: "savingThrow",
       pendingTarget: "primary",
       remainingTarget: "none",
-      secondarySavedThisTurn: true,
-      secondaryHitPoints: 30,
+      secondarySavedThisTurn: false,
+      secondaryHitPoints: 40,
     });
 
     state = resolvePendingSave(state, true, "movementDamage");
@@ -366,8 +368,9 @@ function discoverAppearanceSave(
     ...state,
     pendingProcedure: {
       kind: "appearance",
-      state: result.state,
-      subject: result.subject,
+      state: state.battle.state,
+      subject: act.subject,
+      fills: [],
       result,
     },
     outcome: "appearanceSave",
@@ -441,8 +444,9 @@ function beginSourceTurnMovement(
     ...state,
     pendingProcedure: {
       kind: "movement",
-      state: result.state,
+      state: boundaryState,
       subject: result.subject,
+      fills: [movementFill],
       result,
     },
     lastMovementDistanceFeet: Number(movementHole.distanceFeet),
@@ -465,15 +469,30 @@ function resolvePendingSave(
     saveHole.cloudkillAreaHazard.targetId,
     succeeded,
   );
-  const result = submitPendingProcedure(pending, [fill]);
-  requireNeedsHoles(result, "Expected Cloudkill damage frontier.");
+  const fills = [...pending.fills, fill];
+  const result = submitPendingProcedure(pending, fills);
+  requireNeedsHoles(result, "Expected Cloudkill damage or reaction frontier.");
+  const hasFailedSaveInterrupt = result.holes.some(
+    (hole) => hole.kind === "interruptDecision",
+  );
+  const damageFrontier = hasFailedSaveInterrupt
+    ? declineCloudkillFailedSaveInterrupt(result)
+    : result;
+  if (!damageFrontier.holes.some((hole) => hole.kind === "rolledDice")) {
+    throw new Error(
+      `Expected Cloudkill damage frontier, got ${damageFrontier.holes.map((hole) => hole.kind).join(", ")}.`,
+    );
+  }
   return {
     ...state,
     pendingProcedure: {
       ...pending,
-      state: result.state,
-      subject: result.subject,
-      result,
+      state: hasFailedSaveInterrupt ? damageFrontier.state : pending.state,
+      subject: hasFailedSaveInterrupt
+        ? damageFrontier.subject
+        : pending.subject,
+      fills,
+      result: damageFrontier,
     },
     savingThrowSucceeded: succeeded,
     outcome,
@@ -496,7 +515,8 @@ function resolvePendingDamage(
   const fill = damageRollFillWithGroups(damageHole, [
     Array.from({ length: dice }, () => damageDiePip),
   ]);
-  const result = submitPendingProcedure(pending, [fill]);
+  const fills = [...pending.fills, fill];
+  const result = submitPendingProcedure(pending, fills);
   if (result.tag === "invalid") {
     throw new Error(`Cloudkill damage was invalid: ${result.message}`);
   }
@@ -515,8 +535,7 @@ function resolvePendingDamage(
     ...state,
     pendingProcedure: {
       ...pending,
-      state: result.state,
-      subject: result.subject,
+      fills,
       result,
     },
     remainingTarget: "none",
@@ -569,15 +588,24 @@ function cloudkillMbtProjection(
   const battleState =
     state.pendingProcedure?.result.state ?? state.battle.state;
   const battle = withBattleState(state.battle, battleState);
+  const snapshot =
+    state.pendingProcedure?.result.snapshot ?? snapshotBattle(battleState);
   const effect = activeCloudkill(battleState);
-  const caster = requireCombatant(battleState, spellCasterId);
+  const casterSnapshot = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === spellCasterId,
+  );
+  if (casterSnapshot === undefined) {
+    throw new Error("Expected the Cloudkill caster snapshot.");
+  }
   const savedThisTurn = effect?.savedThisTurn ?? [];
   const pendingTarget =
     state.pendingProcedure === null
       ? "none"
       : pendingTargetFromResult(state.pendingProcedure.result);
   return {
-    casterTurn: snapshotBattle(battleState).currentActorId === spellCasterId,
+    casterTurn:
+      state.pendingProcedure?.kind === "movement" ||
+      snapshot.currentActorId === spellCasterId,
     actionAvailable: canSpendAction(battleState.currentTurnResources, "magic"),
     spellAvailable:
       maybeSpellAct({
@@ -586,9 +614,7 @@ function cloudkillMbtProjection(
         slotLevel: state.configuredSlotLevel,
       }) !== undefined,
     hazardActive: effect !== undefined,
-    casterConcentrating:
-      effect !== undefined &&
-      caster.concentration?.sourceProcedureRef === effect.sourceProcedureRef,
+    casterConcentrating: effect !== undefined && casterSnapshot.concentrating,
     slotLevel: state.configuredSlotLevel,
     damageDice: effect?.damage.expr.dice ?? 0,
     durationTicks:
@@ -604,10 +630,8 @@ function cloudkillMbtProjection(
     ),
     primarySavedThisTurn: savedThisTurn.includes(spellTargetId),
     secondarySavedThisTurn: savedThisTurn.includes(secondaryTargetId),
-    primaryHitPoints: Number(requireCombatant(battleState, spellTargetId).hp),
-    secondaryHitPoints: Number(
-      requireCombatant(battleState, secondaryTargetId).hp,
-    ),
+    primaryHitPoints: snapshotHitPoints(snapshot, spellTargetId),
+    secondaryHitPoints: snapshotHitPoints(snapshot, secondaryTargetId),
     lastMovementDistanceFeet: state.lastMovementDistanceFeet,
     pending: pendingPhase(state.pendingProcedure?.result),
     pendingTarget,
@@ -615,6 +639,18 @@ function cloudkillMbtProjection(
     savingThrowSucceeded: state.savingThrowSucceeded,
     outcome: state.outcome,
   };
+}
+
+function snapshotHitPoints(
+  snapshot: ReturnType<typeof snapshotBattle>,
+  targetId: CombatantId,
+): number {
+  const target = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === targetId,
+  );
+  if (target === undefined)
+    throw new Error("Expected Cloudkill target snapshot.");
+  return Number(target.hp);
 }
 
 function activeCloudkill(state: BattleState): CloudkillEffect | undefined {
@@ -725,6 +761,25 @@ function submitPendingProcedure(
     subject: pending.subject,
     fills,
   });
+}
+
+function declineCloudkillFailedSaveInterrupt(
+  result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
+): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
+  const decisionHole = requireResultHole(result, "interruptDecision");
+  const responder = result.snapshot.pendingInterrupt?.choices[0];
+  if (responder === undefined) {
+    throw new Error("Expected a Cloudkill failed-save reaction responder.");
+  }
+  const declined = resolveBattleInterrupt({
+    state: result.state,
+    fill: interruptDecisionFill(decisionHole, {
+      kind: "decline",
+      responderId: responder.reactorId,
+    }),
+  });
+  requireNeedsHoles(declined, "Expected damage after declining the reaction.");
+  return declined;
 }
 
 function requirePendingProcedure(
@@ -869,7 +924,11 @@ function compareCloudkillMbtStates(
   try {
     expect(runtime).toEqual(quint);
   } catch (error) {
-    if (error instanceof Error) throw new Error(error.message);
+    if (error instanceof Error) {
+      throw new Error(
+        `${error.message}\nruntime=${JSON.stringify(runtime)}\nquint=${JSON.stringify(quint)}`,
+      );
+    }
     throw error;
   }
   return true;
