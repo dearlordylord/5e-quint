@@ -145,7 +145,7 @@
           "minimumRoll": 4
         },
         "ordinal": 1,
-        "ownership": "each"
+        "ownership": "shared"
       }
     ],
     "savingThrowModifiers": [

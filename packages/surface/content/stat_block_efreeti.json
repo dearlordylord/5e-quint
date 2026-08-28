@@ -177,10 +177,7 @@
         },
         "procedureOrdinal": 4,
         "resourceRefs": {
-          "kind": "some",
-          "ordinals": [
-            1
-          ]
+          "kind": "none"
         }
       }
     ],

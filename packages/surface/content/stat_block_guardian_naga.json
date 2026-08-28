@@ -34,46 +34,11 @@
         }
       },
       {
-        "kind": "executable",
-        "procedure": {
-          "attackAbility": "str",
-          "attackBonus": {
-            "kind": "literal",
-            "value": 8
-          },
-          "attackType": "melee",
-          "kind": "attack_roll",
-          "name": "Bite",
-          "onHit": [
-            {
-              "amount": {
-                "expr": {
-                  "dice": 2,
-                  "dieSize": 12,
-                  "flat": 4
-                },
-                "kind": "fixed",
-                "static": 17
-              },
-              "damageType": "piercing",
-              "kind": "damage"
-            },
-            {
-              "amount": {
-                "expr": {
-                  "dice": 4,
-                  "dieSize": 10
-                },
-                "kind": "fixed",
-                "static": 22
-              },
-              "damageType": "poison",
-              "kind": "damage"
-            }
-          ],
-          "reachFeet": 10
-        },
+        "description": "Melee Attack Roll: +8, reach 10 ft. Hit: 17 (2d12 + 4) Piercing damage plus 22 (4d10) Poison damage.",
+        "kind": "textOnly",
+        "name": "Bite",
         "procedureOrdinal": 2,
+        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }
@@ -147,10 +112,7 @@
         },
         "procedureOrdinal": 4,
         "resourceRefs": {
-          "kind": "some",
-          "ordinals": [
-            1
-          ]
+          "kind": "none"
         }
       }
     ],

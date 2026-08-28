@@ -34,46 +34,11 @@
         }
       },
       {
-        "kind": "executable",
-        "procedure": {
-          "attackAbility": "str",
-          "attackBonus": {
-            "kind": "literal",
-            "value": 8
-          },
-          "attackType": "melee",
-          "kind": "attack_roll",
-          "name": "Withering Sword",
-          "onHit": [
-            {
-              "amount": {
-                "expr": {
-                  "dice": 2,
-                  "dieSize": 8,
-                  "flat": 4
-                },
-                "kind": "fixed",
-                "static": 13
-              },
-              "damageType": "slashing",
-              "kind": "damage"
-            },
-            {
-              "amount": {
-                "expr": {
-                  "dice": 2,
-                  "dieSize": 10
-                },
-                "kind": "fixed",
-                "static": 11
-              },
-              "damageType": "necrotic",
-              "kind": "damage"
-            }
-          ],
-          "reachFeet": 5
-        },
+        "description": "Melee Attack Roll: +8, reach 5 ft. Hit: 13 (2d8 + 4) Slashing damage plus 11 (2d10) Necrotic damage.",
+        "kind": "textOnly",
+        "name": "Withering Sword",
         "procedureOrdinal": 2,
+        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }

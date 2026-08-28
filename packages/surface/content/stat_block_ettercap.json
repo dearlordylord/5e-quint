@@ -44,34 +44,11 @@
         }
       },
       {
-        "kind": "executable",
-        "procedure": {
-          "attackAbility": "str",
-          "attackBonus": {
-            "kind": "literal",
-            "value": 4
-          },
-          "attackType": "melee",
-          "kind": "attack_roll",
-          "name": "Claw",
-          "onHit": [
-            {
-              "amount": {
-                "expr": {
-                  "dice": 2,
-                  "dieSize": 4,
-                  "flat": 2
-                },
-                "kind": "fixed",
-                "static": 7
-              },
-              "damageType": "slashing",
-              "kind": "damage"
-            }
-          ],
-          "reachFeet": 5
-        },
+        "description": "Melee Attack Roll: +4, reach 5 ft. Hit: 7 (2d4 + 2) Slashing damage.",
+        "kind": "textOnly",
+        "name": "Claw",
         "procedureOrdinal": 3,
+        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }

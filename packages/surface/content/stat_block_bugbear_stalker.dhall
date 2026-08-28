@@ -19,7 +19,7 @@ in  { challengeRating = 3
         , communication = { kind = "spoken_and_understood", languages = { kind = "named", languages = [ "Common", "Goblin" ] } }
         , creatureType = "fey"
         , creatureTypeTags = [ "goblinoid" ]
-        , gear = [ { item = "Chain Shirt", quantity = None Natural }, { item = "Javelins", quantity = Some 6 }, { item = "Morningstar", quantity = None Natural } ]
+        , gear = [ { item = "Chain Shirt", quantity = None Natural }, { item = "Javelin", quantity = Some 6 }, { item = "Morningstar", quantity = None Natural } ]
         , hp = { kind = "literal", value = 65 }
         , initiative = { modifier = +2, score = 12 }
         , passivePerception = 11

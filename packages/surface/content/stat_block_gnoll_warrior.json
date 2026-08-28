@@ -59,7 +59,6 @@
       {
         "kind": "executable",
         "procedure": {
-          "ammunition": "arrow",
           "attackAbility": "dex",
           "attackBonus": {
             "kind": "literal",

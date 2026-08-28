@@ -24,66 +24,21 @@
     },
     "actions": [
       {
-        "kind": "executable",
-        "procedure": {
-          "dispatches": [
-            {
-              "count": {
-                "kind": "literal",
-                "value": 2
-              },
-              "procedureOrdinal": 2
-            }
-          ],
-          "kind": "multiattack",
-          "name": "Multiattack"
-        },
+        "description": "The dragon makes two Rend attacks.",
+        "kind": "textOnly",
+        "name": "Multiattack",
         "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }
       },
       {
-        "kind": "executable",
-        "procedure": {
-          "attackAbility": "str",
-          "attackBonus": {
-            "kind": "literal",
-            "value": 4
-          },
-          "attackType": "melee",
-          "kind": "attack_roll",
-          "name": "Rend",
-          "onHit": [
-            {
-              "amount": {
-                "expr": {
-                  "dice": 1,
-                  "dieSize": 10,
-                  "flat": 2
-                },
-                "kind": "fixed",
-                "static": 7
-              },
-              "damageType": "slashing",
-              "kind": "damage"
-            },
-            {
-              "amount": {
-                "expr": {
-                  "dice": 1,
-                  "dieSize": 6
-                },
-                "kind": "fixed",
-                "static": 3
-              },
-              "damageType": "poison",
-              "kind": "damage"
-            }
-          ],
-          "reachFeet": 5
-        },
+        "description": "Melee Attack Roll: +4, reach 5 ft. Hit: 7 (1d10 + 2) Slashing damage plus 3 (1d6) Poison damage.",
+        "kind": "textOnly",
+        "name": "Rend",
         "procedureOrdinal": 2,
+        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }

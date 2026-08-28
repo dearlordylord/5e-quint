@@ -9,17 +9,7 @@ in  { challengeRating = 12
         , ac = { value = { kind = "literal", value = 18 } }
         , actions =
             [ T.textOnly { procedureOrdinal = 1, name = "Multiattack", description = "The erinyes makes three Withering Sword attacks and can use Entangling Rope.", reason = "unsupported_action_shape" }
-            , T.executable
-                { procedureOrdinal = 2
-                , procedure = T.meleeAttack
-                    { name = "Withering Sword"
-                    , attackAbility = "str"
-                    , attackBonus = +8
-                    , reachFeet = 5
-                    , onHit =
-                        { first = T.damage { damageType = "slashing", dice = 2, dieSize = 8, flat = Some +4, static = 13 }, rest = [ T.damage { damageType = "necrotic", dice = 2, dieSize = 10, flat = None Integer, static = 11 } ] }
-                    }
-                }
+            , T.textOnly { procedureOrdinal = 2, name = "Withering Sword", description = "Melee Attack Roll: +8, reach 5 ft. Hit: 13 (2d8 + 4) Slashing damage plus 11 (2d10) Necrotic damage.", reason = "unsupported_action_shape" }
             , T.textOnly { procedureOrdinal = 3, name = "Entangling Rope (Requires Magic Rope)", description = "Strength Saving Throw: DC 16, one creature the erinyes can see within 120 feet. Failure: 14 (4d6) Force damage, and the target has the Restrained condition until the rope is destroyed, the erinyes uses a Bonus Action to release the target, or the erinyes uses Entangling Rope again.", reason = "unsupported_action_shape" }
             ]
         , reactions =

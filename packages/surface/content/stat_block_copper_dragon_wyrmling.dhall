@@ -9,7 +9,7 @@ in  { challengeRating = 1
         , ac = { value = { kind = "literal", value = 16 } }
         , actions =
             [ T.executable { procedureOrdinal = 1, procedure = T.meleeAttack { name = "Rend", attackAbility = "str", attackBonus = +4, reachFeet = 5, onHit = { first = T.damage { damageType = "slashing", dice = 1, dieSize = 10, flat = (Some +2), static = 7 }, rest = [] : List T.Effect } } }
-            , T.resourceExecutable { procedureOrdinal = 2, procedure = T.saveArea { name = "Acid Breath", ability = "dex", dc = 11, area = (T.line { lengthFeet = 20, widthFeet = 5 }), onFail = (T.damage { damageType = "acid", dice = 4, dieSize = 8, flat = (None Integer), static = 18 }), onSuccess = { kind = "half_damage" } }, resourceOrdinals = { first = 1, rest = [] : List Natural } }
+            , T.resourceExecutable { procedureOrdinal = 2, procedure = T.NonSpellProcedure.saveArea { name = "Acid Breath", ability = "dex", dc = 11, area = (T.line { lengthFeet = 20, widthFeet = 5 }), onFail = (T.damage { damageType = "acid", dice = 4, dieSize = 8, flat = (None Integer), static = 18 }), onSuccess = { kind = "half_damage" } }, resourceOrdinals = { first = 1, rest = [] : List Natural } }
             , T.textOnly { procedureOrdinal = 3, name = "Slowing Breath", description = "Constitution Saving Throw: DC 11, each creature in a 15-foot Cone. Failure: The target can't take Reactions; its Speed is halved; and it can take either an action or a Bonus Action on its turn, not both. This effect lasts until the end of its next turn.", reason = "unsupported_action_shape" }
             ]
         , alignment = { order = "chaotic", morality = "good" }

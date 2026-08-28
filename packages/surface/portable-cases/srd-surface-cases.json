@@ -43380,7 +43380,7 @@
               "resources": [
                 {
                   "ordinal": 1,
-                  "ownership": "each",
+                  "ownership": "shared",
                   "limit": {
                     "kind": "recharge",
                     "minimumRoll": 4
@@ -43962,7 +43962,7 @@
               "resources": [
                 {
                   "ordinal": 1,
-                  "ownership": "each",
+                  "ownership": "shared",
                   "limit": {
                     "kind": "recharge",
                     "minimumRoll": 6
@@ -45505,34 +45505,11 @@
                   }
                 },
                 {
-                  "kind": "executable",
+                  "kind": "textOnly",
                   "procedureOrdinal": 3,
-                  "procedure": {
-                    "kind": "attack_roll",
-                    "attackAbility": "str",
-                    "attackBonus": {
-                      "kind": "literal",
-                      "value": 6
-                    },
-                    "reachFeet": 10,
-                    "onHit": [
-                      {
-                        "kind": "damage",
-                        "damageType": "slashing",
-                        "amount": {
-                          "kind": "fixed",
-                          "expr": {
-                            "dice": 2,
-                            "dieSize": 10,
-                            "flat": 3
-                          },
-                          "static": 14
-                        }
-                      }
-                    ],
-                    "attackType": "melee",
-                    "name": "Tail"
-                  },
+                  "name": "Tail",
+                  "description": "Melee Attack Roll: +6, reach 10 ft. Hit: 14 (2d10 + 3) Slashing damage.",
+                  "reason": "unsupported_action_shape",
                   "resourceRefs": {
                     "kind": "none"
                   }
@@ -46393,66 +46370,21 @@
               ],
               "actions": [
                 {
-                  "kind": "executable",
+                  "kind": "textOnly",
                   "procedureOrdinal": 1,
-                  "procedure": {
-                    "kind": "multiattack",
-                    "name": "Multiattack",
-                    "dispatches": [
-                      {
-                        "procedureOrdinal": 2,
-                        "count": {
-                          "kind": "literal",
-                          "value": 2
-                        }
-                      }
-                    ]
-                  },
+                  "name": "Multiattack",
+                  "description": "The dragon makes two Rend attacks.",
+                  "reason": "unsupported_action_shape",
                   "resourceRefs": {
                     "kind": "none"
                   }
                 },
                 {
-                  "kind": "executable",
+                  "kind": "textOnly",
                   "procedureOrdinal": 2,
-                  "procedure": {
-                    "kind": "attack_roll",
-                    "attackAbility": "str",
-                    "attackBonus": {
-                      "kind": "literal",
-                      "value": 4
-                    },
-                    "reachFeet": 5,
-                    "onHit": [
-                      {
-                        "kind": "damage",
-                        "damageType": "slashing",
-                        "amount": {
-                          "kind": "fixed",
-                          "expr": {
-                            "dice": 1,
-                            "dieSize": 6,
-                            "flat": 2
-                          },
-                          "static": 5
-                        }
-                      },
-                      {
-                        "kind": "damage",
-                        "damageType": "acid",
-                        "amount": {
-                          "kind": "fixed",
-                          "expr": {
-                            "dice": 1,
-                            "dieSize": 4
-                          },
-                          "static": 2
-                        }
-                      }
-                    ],
-                    "attackType": "melee",
-                    "name": "Rend"
-                  },
+                  "name": "Rend",
+                  "description": "Melee Attack Roll: +4, reach 5 ft. Hit: 5 (1d6 + 2) Slashing damage plus 2 (1d4) Acid damage.",
+                  "reason": "unsupported_action_shape",
                   "resourceRefs": {
                     "kind": "none"
                   }
@@ -47055,10 +46987,7 @@
                     ]
                   },
                   "resourceRefs": {
-                    "kind": "some",
-                    "ordinals": [
-                      2
-                    ]
+                    "kind": "none"
                   }
                 }
               ],
@@ -47416,10 +47345,7 @@
                     ]
                   },
                   "resourceRefs": {
-                    "kind": "some",
-                    "ordinals": [
-                      2
-                    ]
+                    "kind": "none"
                   }
                 }
               ],
@@ -48574,10 +48500,7 @@
                     ]
                   },
                   "resourceRefs": {
-                    "kind": "some",
-                    "ordinals": [
-                      2
-                    ]
+                    "kind": "none"
                   }
                 }
               ],
@@ -48926,10 +48849,7 @@
                     ]
                   },
                   "resourceRefs": {
-                    "kind": "some",
-                    "ordinals": [
-                      2
-                    ]
+                    "kind": "none"
                   }
                 }
               ],
@@ -49954,10 +49874,7 @@
                     ]
                   },
                   "resourceRefs": {
-                    "kind": "some",
-                    "ordinals": [
-                      2
-                    ]
+                    "kind": "none"
                   }
                 }
               ],
@@ -50328,10 +50245,7 @@
                     ]
                   },
                   "resourceRefs": {
-                    "kind": "some",
-                    "ordinals": [
-                      2
-                    ]
+                    "kind": "none"
                   }
                 }
               ],
@@ -51728,7 +51642,7 @@
                   "item": "Chain Shirt"
                 },
                 {
-                  "item": "Javelins",
+                  "item": "Javelin",
                   "quantity": 6
                 },
                 {
@@ -51896,7 +51810,7 @@
                   "item": "Hide Armor"
                 },
                 {
-                  "item": "Light Hammers",
+                  "item": "Light Hammer",
                   "quantity": 3
                 }
               ],
@@ -58741,10 +58655,7 @@
                     ]
                   },
                   "resourceRefs": {
-                    "kind": "some",
-                    "ordinals": [
-                      1
-                    ]
+                    "kind": "none"
                   }
                 }
               ],
@@ -58896,46 +58807,11 @@
                   }
                 },
                 {
-                  "kind": "executable",
+                  "kind": "textOnly",
                   "procedureOrdinal": 2,
-                  "procedure": {
-                    "kind": "attack_roll",
-                    "attackAbility": "str",
-                    "attackBonus": {
-                      "kind": "literal",
-                      "value": 8
-                    },
-                    "reachFeet": 5,
-                    "onHit": [
-                      {
-                        "kind": "damage",
-                        "damageType": "slashing",
-                        "amount": {
-                          "kind": "fixed",
-                          "expr": {
-                            "dice": 2,
-                            "dieSize": 8,
-                            "flat": 4
-                          },
-                          "static": 13
-                        }
-                      },
-                      {
-                        "kind": "damage",
-                        "damageType": "necrotic",
-                        "amount": {
-                          "kind": "fixed",
-                          "expr": {
-                            "dice": 2,
-                            "dieSize": 10
-                          },
-                          "static": 11
-                        }
-                      }
-                    ],
-                    "attackType": "melee",
-                    "name": "Withering Sword"
-                  },
+                  "name": "Withering Sword",
+                  "description": "Melee Attack Roll: +8, reach 5 ft. Hit: 13 (2d8 + 4) Slashing damage plus 11 (2d10) Necrotic damage.",
+                  "reason": "unsupported_action_shape",
                   "resourceRefs": {
                     "kind": "none"
                   }
@@ -59100,34 +58976,11 @@
                   }
                 },
                 {
-                  "kind": "executable",
+                  "kind": "textOnly",
                   "procedureOrdinal": 3,
-                  "procedure": {
-                    "kind": "attack_roll",
-                    "attackAbility": "str",
-                    "attackBonus": {
-                      "kind": "literal",
-                      "value": 4
-                    },
-                    "reachFeet": 5,
-                    "onHit": [
-                      {
-                        "kind": "damage",
-                        "damageType": "slashing",
-                        "amount": {
-                          "kind": "fixed",
-                          "expr": {
-                            "dice": 2,
-                            "dieSize": 4,
-                            "flat": 2
-                          },
-                          "static": 7
-                        }
-                      }
-                    ],
-                    "attackType": "melee",
-                    "name": "Claw"
-                  },
+                  "name": "Claw",
+                  "description": "Melee Attack Roll: +4, reach 5 ft. Hit: 7 (2d4 + 2) Slashing damage.",
+                  "reason": "unsupported_action_shape",
                   "resourceRefs": {
                     "kind": "none"
                   }
@@ -61285,10 +61138,7 @@
                     ]
                   },
                   "resourceRefs": {
-                    "kind": "some",
-                    "ordinals": [
-                      1
-                    ]
+                    "kind": "none"
                   }
                 }
               ],
@@ -61588,7 +61438,6 @@
                       }
                     ],
                     "attackType": "ranged",
-                    "ammunition": "arrow",
                     "name": "Bone Bow"
                   },
                   "resourceRefs": {
@@ -63784,66 +63633,21 @@
               ],
               "actions": [
                 {
-                  "kind": "executable",
+                  "kind": "textOnly",
                   "procedureOrdinal": 1,
-                  "procedure": {
-                    "kind": "multiattack",
-                    "name": "Multiattack",
-                    "dispatches": [
-                      {
-                        "procedureOrdinal": 2,
-                        "count": {
-                          "kind": "literal",
-                          "value": 2
-                        }
-                      }
-                    ]
-                  },
+                  "name": "Multiattack",
+                  "description": "The dragon makes two Rend attacks.",
+                  "reason": "unsupported_action_shape",
                   "resourceRefs": {
                     "kind": "none"
                   }
                 },
                 {
-                  "kind": "executable",
+                  "kind": "textOnly",
                   "procedureOrdinal": 2,
-                  "procedure": {
-                    "kind": "attack_roll",
-                    "attackAbility": "str",
-                    "attackBonus": {
-                      "kind": "literal",
-                      "value": 4
-                    },
-                    "reachFeet": 5,
-                    "onHit": [
-                      {
-                        "kind": "damage",
-                        "damageType": "slashing",
-                        "amount": {
-                          "kind": "fixed",
-                          "expr": {
-                            "dice": 1,
-                            "dieSize": 10,
-                            "flat": 2
-                          },
-                          "static": 7
-                        }
-                      },
-                      {
-                        "kind": "damage",
-                        "damageType": "poison",
-                        "amount": {
-                          "kind": "fixed",
-                          "expr": {
-                            "dice": 1,
-                            "dieSize": 6
-                          },
-                          "static": 3
-                        }
-                      }
-                    ],
-                    "attackType": "melee",
-                    "name": "Rend"
-                  },
+                  "name": "Rend",
+                  "description": "Melee Attack Roll: +4, reach 5 ft. Hit: 7 (1d10 + 2) Slashing damage plus 3 (1d6) Poison damage.",
+                  "reason": "unsupported_action_shape",
                   "resourceRefs": {
                     "kind": "none"
                   }
@@ -65174,34 +64978,11 @@
                   }
                 },
                 {
-                  "kind": "executable",
+                  "kind": "textOnly",
                   "procedureOrdinal": 2,
-                  "procedure": {
-                    "kind": "attack_roll",
-                    "attackAbility": "str",
-                    "attackBonus": {
-                      "kind": "literal",
-                      "value": 4
-                    },
-                    "reachFeet": 5,
-                    "onHit": [
-                      {
-                        "kind": "damage",
-                        "damageType": "piercing",
-                        "amount": {
-                          "kind": "fixed",
-                          "expr": {
-                            "dice": 2,
-                            "dieSize": 6,
-                            "flat": 2
-                          },
-                          "static": 9
-                        }
-                      }
-                    ],
-                    "attackType": "melee",
-                    "name": "Beak"
-                  },
+                  "name": "Beak",
+                  "description": "Melee Attack Roll: +4, reach 5 ft. Hit: 9 (2d6 + 2) Piercing damage.",
+                  "reason": "unsupported_action_shape",
                   "resourceRefs": {
                     "kind": "none"
                   }
@@ -65607,46 +65388,11 @@
                   }
                 },
                 {
-                  "kind": "executable",
+                  "kind": "textOnly",
                   "procedureOrdinal": 2,
-                  "procedure": {
-                    "kind": "attack_roll",
-                    "attackAbility": "str",
-                    "attackBonus": {
-                      "kind": "literal",
-                      "value": 8
-                    },
-                    "reachFeet": 10,
-                    "onHit": [
-                      {
-                        "kind": "damage",
-                        "damageType": "piercing",
-                        "amount": {
-                          "kind": "fixed",
-                          "expr": {
-                            "dice": 2,
-                            "dieSize": 12,
-                            "flat": 4
-                          },
-                          "static": 17
-                        }
-                      },
-                      {
-                        "kind": "damage",
-                        "damageType": "poison",
-                        "amount": {
-                          "kind": "fixed",
-                          "expr": {
-                            "dice": 4,
-                            "dieSize": 10
-                          },
-                          "static": 22
-                        }
-                      }
-                    ],
-                    "attackType": "melee",
-                    "name": "Bite"
-                  },
+                  "name": "Bite",
+                  "description": "Melee Attack Roll: +8, reach 10 ft. Hit: 17 (2d12 + 4) Piercing damage plus 22 (4d10) Poison damage.",
+                  "reason": "unsupported_action_shape",
                   "resourceRefs": {
                     "kind": "none"
                   }
@@ -65720,10 +65466,7 @@
                     ]
                   },
                   "resourceRefs": {
-                    "kind": "some",
-                    "ordinals": [
-                      1
-                    ]
+                    "kind": "none"
                   }
                 }
               ],
@@ -95788,7 +95531,7 @@
               "resources": [
                 {
                   "ordinal": 1,
-                  "ownership": "each",
+                  "ownership": "shared",
                   "limit": {
                     "kind": "recharge",
                     "minimumRoll": 4
@@ -96370,7 +96113,7 @@
               "resources": [
                 {
                   "ordinal": 1,
-                  "ownership": "each",
+                  "ownership": "shared",
                   "limit": {
                     "kind": "recharge",
                     "minimumRoll": 6
@@ -97913,34 +97656,11 @@
                   }
                 },
                 {
-                  "kind": "executable",
+                  "kind": "textOnly",
                   "procedureOrdinal": 3,
-                  "procedure": {
-                    "kind": "attack_roll",
-                    "attackAbility": "str",
-                    "attackBonus": {
-                      "kind": "literal",
-                      "value": 6
-                    },
-                    "reachFeet": 10,
-                    "onHit": [
-                      {
-                        "kind": "damage",
-                        "damageType": "slashing",
-                        "amount": {
-                          "kind": "fixed",
-                          "expr": {
-                            "dice": 2,
-                            "dieSize": 10,
-                            "flat": 3
-                          },
-                          "static": 14
-                        }
-                      }
-                    ],
-                    "attackType": "melee",
-                    "name": "Tail"
-                  },
+                  "name": "Tail",
+                  "description": "Melee Attack Roll: +6, reach 10 ft. Hit: 14 (2d10 + 3) Slashing damage.",
+                  "reason": "unsupported_action_shape",
                   "resourceRefs": {
                     "kind": "none"
                   }
@@ -98801,66 +98521,21 @@
               ],
               "actions": [
                 {
-                  "kind": "executable",
+                  "kind": "textOnly",
                   "procedureOrdinal": 1,
-                  "procedure": {
-                    "kind": "multiattack",
-                    "name": "Multiattack",
-                    "dispatches": [
-                      {
-                        "procedureOrdinal": 2,
-                        "count": {
-                          "kind": "literal",
-                          "value": 2
-                        }
-                      }
-                    ]
-                  },
+                  "name": "Multiattack",
+                  "description": "The dragon makes two Rend attacks.",
+                  "reason": "unsupported_action_shape",
                   "resourceRefs": {
                     "kind": "none"
                   }
                 },
                 {
-                  "kind": "executable",
+                  "kind": "textOnly",
                   "procedureOrdinal": 2,
-                  "procedure": {
-                    "kind": "attack_roll",
-                    "attackAbility": "str",
-                    "attackBonus": {
-                      "kind": "literal",
-                      "value": 4
-                    },
-                    "reachFeet": 5,
-                    "onHit": [
-                      {
-                        "kind": "damage",
-                        "damageType": "slashing",
-                        "amount": {
-                          "kind": "fixed",
-                          "expr": {
-                            "dice": 1,
-                            "dieSize": 6,
-                            "flat": 2
-                          },
-                          "static": 5
-                        }
-                      },
-                      {
-                        "kind": "damage",
-                        "damageType": "acid",
-                        "amount": {
-                          "kind": "fixed",
-                          "expr": {
-                            "dice": 1,
-                            "dieSize": 4
-                          },
-                          "static": 2
-                        }
-                      }
-                    ],
-                    "attackType": "melee",
-                    "name": "Rend"
-                  },
+                  "name": "Rend",
+                  "description": "Melee Attack Roll: +4, reach 5 ft. Hit: 5 (1d6 + 2) Slashing damage plus 2 (1d4) Acid damage.",
+                  "reason": "unsupported_action_shape",
                   "resourceRefs": {
                     "kind": "none"
                   }
@@ -99463,10 +99138,7 @@
                     ]
                   },
                   "resourceRefs": {
-                    "kind": "some",
-                    "ordinals": [
-                      2
-                    ]
+                    "kind": "none"
                   }
                 }
               ],
@@ -99824,10 +99496,7 @@
                     ]
                   },
                   "resourceRefs": {
-                    "kind": "some",
-                    "ordinals": [
-                      2
-                    ]
+                    "kind": "none"
                   }
                 }
               ],
@@ -100982,10 +100651,7 @@
                     ]
                   },
                   "resourceRefs": {
-                    "kind": "some",
-                    "ordinals": [
-                      2
-                    ]
+                    "kind": "none"
                   }
                 }
               ],
@@ -101334,10 +101000,7 @@
                     ]
                   },
                   "resourceRefs": {
-                    "kind": "some",
-                    "ordinals": [
-                      2
-                    ]
+                    "kind": "none"
                   }
                 }
               ],
@@ -102362,10 +102025,7 @@
                     ]
                   },
                   "resourceRefs": {
-                    "kind": "some",
-                    "ordinals": [
-                      2
-                    ]
+                    "kind": "none"
                   }
                 }
               ],
@@ -102736,10 +102396,7 @@
                     ]
                   },
                   "resourceRefs": {
-                    "kind": "some",
-                    "ordinals": [
-                      2
-                    ]
+                    "kind": "none"
                   }
                 }
               ],
@@ -104136,7 +103793,7 @@
                   "item": "Chain Shirt"
                 },
                 {
-                  "item": "Javelins",
+                  "item": "Javelin",
                   "quantity": 6
                 },
                 {
@@ -104304,7 +103961,7 @@
                   "item": "Hide Armor"
                 },
                 {
-                  "item": "Light Hammers",
+                  "item": "Light Hammer",
                   "quantity": 3
                 }
               ],
@@ -111149,10 +110806,7 @@
                     ]
                   },
                   "resourceRefs": {
-                    "kind": "some",
-                    "ordinals": [
-                      1
-                    ]
+                    "kind": "none"
                   }
                 }
               ],
@@ -111304,46 +110958,11 @@
                   }
                 },
                 {
-                  "kind": "executable",
+                  "kind": "textOnly",
                   "procedureOrdinal": 2,
-                  "procedure": {
-                    "kind": "attack_roll",
-                    "attackAbility": "str",
-                    "attackBonus": {
-                      "kind": "literal",
-                      "value": 8
-                    },
-                    "reachFeet": 5,
-                    "onHit": [
-                      {
-                        "kind": "damage",
-                        "damageType": "slashing",
-                        "amount": {
-                          "kind": "fixed",
-                          "expr": {
-                            "dice": 2,
-                            "dieSize": 8,
-                            "flat": 4
-                          },
-                          "static": 13
-                        }
-                      },
-                      {
-                        "kind": "damage",
-                        "damageType": "necrotic",
-                        "amount": {
-                          "kind": "fixed",
-                          "expr": {
-                            "dice": 2,
-                            "dieSize": 10
-                          },
-                          "static": 11
-                        }
-                      }
-                    ],
-                    "attackType": "melee",
-                    "name": "Withering Sword"
-                  },
+                  "name": "Withering Sword",
+                  "description": "Melee Attack Roll: +8, reach 5 ft. Hit: 13 (2d8 + 4) Slashing damage plus 11 (2d10) Necrotic damage.",
+                  "reason": "unsupported_action_shape",
                   "resourceRefs": {
                     "kind": "none"
                   }
@@ -111508,34 +111127,11 @@
                   }
                 },
                 {
-                  "kind": "executable",
+                  "kind": "textOnly",
                   "procedureOrdinal": 3,
-                  "procedure": {
-                    "kind": "attack_roll",
-                    "attackAbility": "str",
-                    "attackBonus": {
-                      "kind": "literal",
-                      "value": 4
-                    },
-                    "reachFeet": 5,
-                    "onHit": [
-                      {
-                        "kind": "damage",
-                        "damageType": "slashing",
-                        "amount": {
-                          "kind": "fixed",
-                          "expr": {
-                            "dice": 2,
-                            "dieSize": 4,
-                            "flat": 2
-                          },
-                          "static": 7
-                        }
-                      }
-                    ],
-                    "attackType": "melee",
-                    "name": "Claw"
-                  },
+                  "name": "Claw",
+                  "description": "Melee Attack Roll: +4, reach 5 ft. Hit: 7 (2d4 + 2) Slashing damage.",
+                  "reason": "unsupported_action_shape",
                   "resourceRefs": {
                     "kind": "none"
                   }
@@ -113693,10 +113289,7 @@
                     ]
                   },
                   "resourceRefs": {
-                    "kind": "some",
-                    "ordinals": [
-                      1
-                    ]
+                    "kind": "none"
                   }
                 }
               ],
@@ -113996,7 +113589,6 @@
                       }
                     ],
                     "attackType": "ranged",
-                    "ammunition": "arrow",
                     "name": "Bone Bow"
                   },
                   "resourceRefs": {
@@ -116192,66 +115784,21 @@
               ],
               "actions": [
                 {
-                  "kind": "executable",
+                  "kind": "textOnly",
                   "procedureOrdinal": 1,
-                  "procedure": {
-                    "kind": "multiattack",
-                    "name": "Multiattack",
-                    "dispatches": [
-                      {
-                        "procedureOrdinal": 2,
-                        "count": {
-                          "kind": "literal",
-                          "value": 2
-                        }
-                      }
-                    ]
-                  },
+                  "name": "Multiattack",
+                  "description": "The dragon makes two Rend attacks.",
+                  "reason": "unsupported_action_shape",
                   "resourceRefs": {
                     "kind": "none"
                   }
                 },
                 {
-                  "kind": "executable",
+                  "kind": "textOnly",
                   "procedureOrdinal": 2,
-                  "procedure": {
-                    "kind": "attack_roll",
-                    "attackAbility": "str",
-                    "attackBonus": {
-                      "kind": "literal",
-                      "value": 4
-                    },
-                    "reachFeet": 5,
-                    "onHit": [
-                      {
-                        "kind": "damage",
-                        "damageType": "slashing",
-                        "amount": {
-                          "kind": "fixed",
-                          "expr": {
-                            "dice": 1,
-                            "dieSize": 10,
-                            "flat": 2
-                          },
-                          "static": 7
-                        }
-                      },
-                      {
-                        "kind": "damage",
-                        "damageType": "poison",
-                        "amount": {
-                          "kind": "fixed",
-                          "expr": {
-                            "dice": 1,
-                            "dieSize": 6
-                          },
-                          "static": 3
-                        }
-                      }
-                    ],
-                    "attackType": "melee",
-                    "name": "Rend"
-                  },
+                  "name": "Rend",
+                  "description": "Melee Attack Roll: +4, reach 5 ft. Hit: 7 (1d10 + 2) Slashing damage plus 3 (1d6) Poison damage.",
+                  "reason": "unsupported_action_shape",
                   "resourceRefs": {
                     "kind": "none"
                   }
@@ -117582,34 +117129,11 @@
                   }
                 },
                 {
-                  "kind": "executable",
+                  "kind": "textOnly",
                   "procedureOrdinal": 2,
-                  "procedure": {
-                    "kind": "attack_roll",
-                    "attackAbility": "str",
-                    "attackBonus": {
-                      "kind": "literal",
-                      "value": 4
-                    },
-                    "reachFeet": 5,
-                    "onHit": [
-                      {
-                        "kind": "damage",
-                        "damageType": "piercing",
-                        "amount": {
-                          "kind": "fixed",
-                          "expr": {
-                            "dice": 2,
-                            "dieSize": 6,
-                            "flat": 2
-                          },
-                          "static": 9
-                        }
-                      }
-                    ],
-                    "attackType": "melee",
-                    "name": "Beak"
-                  },
+                  "name": "Beak",
+                  "description": "Melee Attack Roll: +4, reach 5 ft. Hit: 9 (2d6 + 2) Piercing damage.",
+                  "reason": "unsupported_action_shape",
                   "resourceRefs": {
                     "kind": "none"
                   }
@@ -118015,46 +117539,11 @@
                   }
                 },
                 {
-                  "kind": "executable",
+                  "kind": "textOnly",
                   "procedureOrdinal": 2,
-                  "procedure": {
-                    "kind": "attack_roll",
-                    "attackAbility": "str",
-                    "attackBonus": {
-                      "kind": "literal",
-                      "value": 8
-                    },
-                    "reachFeet": 10,
-                    "onHit": [
-                      {
-                        "kind": "damage",
-                        "damageType": "piercing",
-                        "amount": {
-                          "kind": "fixed",
-                          "expr": {
-                            "dice": 2,
-                            "dieSize": 12,
-                            "flat": 4
-                          },
-                          "static": 17
-                        }
-                      },
-                      {
-                        "kind": "damage",
-                        "damageType": "poison",
-                        "amount": {
-                          "kind": "fixed",
-                          "expr": {
-                            "dice": 4,
-                            "dieSize": 10
-                          },
-                          "static": 22
-                        }
-                      }
-                    ],
-                    "attackType": "melee",
-                    "name": "Bite"
-                  },
+                  "name": "Bite",
+                  "description": "Melee Attack Roll: +8, reach 10 ft. Hit: 17 (2d12 + 4) Piercing damage plus 22 (4d10) Poison damage.",
+                  "reason": "unsupported_action_shape",
                   "resourceRefs": {
                     "kind": "none"
                   }
@@ -118128,10 +117617,7 @@
                     ]
                   },
                   "resourceRefs": {
-                    "kind": "some",
-                    "ordinals": [
-                      1
-                    ]
+                    "kind": "none"
                   }
                 }
               ],

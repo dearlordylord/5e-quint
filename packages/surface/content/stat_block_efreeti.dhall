@@ -31,7 +31,7 @@ in  { challengeRating = 11
                     , onHit = { first = T.damage { damageType = "fire", dice = 7, dieSize = 6, flat = None Integer, static = 24 }, rest = [] : List T.Effect }
                     }
                 }
-            , T.resourceExecutable
+            , T.executable
                 { procedureOrdinal = 4
                 , procedure = T.spellcasting
                     { name = "Spellcasting"
@@ -61,7 +61,6 @@ in  { challengeRating = 11
                         T.spellRef { spellId = "wall_of_fire", count = None Natural, castAtLevel = Some 7, restriction = None Text } ] }
                           } ] }
                     }
-                , resourceOrdinals = { first = 1, rest = [] : List Natural }
                 }
             ]
         , traits =

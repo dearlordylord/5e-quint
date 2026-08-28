@@ -10,16 +10,7 @@ in  { challengeRating = 2
         , actions =
             [ T.textOnly { procedureOrdinal = 1, name = "Multiattack", description = "The ettercap makes one Bite attack and one Claw attack.", reason = "unsupported_action_shape" }
             , T.textOnly { procedureOrdinal = 2, name = "Bite", description = "Melee Attack Roll: +4, reach 5 ft. Hit: 5 (1d6 + 2) Piercing damage plus 2 (1d4) Poison damage, and the target has the Poisoned condition until the start of the ettercap's next turn.", reason = "unsupported_action_shape" }
-            , T.executable
-                { procedureOrdinal = 3
-                , procedure = T.meleeAttack
-                    { name = "Claw"
-                    , attackAbility = "str"
-                    , attackBonus = +4
-                    , reachFeet = 5
-                    , onHit = { first = T.damage { damageType = "slashing", dice = 2, dieSize = 4, flat = Some +2, static = 7 }, rest = [] : List T.Effect }
-                    }
-                }
+            , T.textOnly { procedureOrdinal = 3, name = "Claw", description = "Melee Attack Roll: +4, reach 5 ft. Hit: 7 (2d4 + 2) Slashing damage.", reason = "unsupported_action_shape" }
             , T.resourceTextOnly
                 { procedureOrdinal = 4
                 , name = "Web Strand (Recharge 5–6)"
