@@ -42,8 +42,10 @@ import {
   type BattleProcedureExecutionRef,
 } from "./identity.ts";
 import {
-  spellCasterId,
+  continualFlameUnitId,
   darknessUnitId,
+  lightUnitId,
+  spellCasterId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
@@ -239,30 +241,41 @@ describe("Magical Darkness point-origin lifecycle MBT parity", () => {
 
 function initialRuntimeState(): DarknessRuntimeState {
   const session = spellBattle({
-    preparedSpells: [spellRecord(darknessUnitId)],
-    spellSlots: [{ spellLevel: 2, count: 1 }],
+    cantrips: [spellRecord(lightUnitId)],
+    preparedSpells: [
+      spellRecord(darknessUnitId),
+      spellRecord(continualFlameUnitId),
+    ],
+    spellSlots: [
+      { spellLevel: 2, count: 1 },
+      { spellLevel: 3, count: 1 },
+    ],
   });
-  const darknessAct = spellAct({
+  const lightAct = spellAct({ session, spellId: lightUnitId });
+  const heightenedContinualFlameAct = spellAct({
     session,
-    spellId: darknessUnitId,
-    slotLevel: 2,
+    spellId: continualFlameUnitId,
+    slotLevel: 3,
   });
   const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
     state: session.state,
     occurrences: [
       {
         sourceEffectId: OVERLAPPING_LOW_LEVEL_LIGHT_ID,
-        sourceSpellLevel: 2,
+        sourceSpellLevel: 0,
+        sourceProcedureRef: lightAct.subject.procedureRef,
         objectId: "focused-darkness-overlapping-level-two-object",
       },
       {
         sourceEffectId: OVERLAPPING_HIGH_LEVEL_LIGHT_ID,
         sourceSpellLevel: 3,
+        sourceProcedureRef: heightenedContinualFlameAct.subject.procedureRef,
         objectId: "focused-darkness-overlapping-level-three-object",
       },
       {
         sourceEffectId: NON_OVERLAPPING_LOW_LEVEL_LIGHT_ID,
-        sourceSpellLevel: 2,
+        sourceSpellLevel: 0,
+        sourceProcedureRef: lightAct.subject.procedureRef,
         objectId: "focused-darkness-non-overlapping-level-two-object",
       },
     ].map((emitter) => ({
@@ -270,7 +283,6 @@ function initialRuntimeState(): DarknessRuntimeState {
       ownerId: spellCasterId,
       emitter: trackedObjectSpellLightEmitter({
         ...emitter,
-        sourceProcedureRef: darknessAct.subject.procedureRef,
       }),
     })),
   });
