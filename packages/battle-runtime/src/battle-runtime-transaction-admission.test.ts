@@ -2,14 +2,11 @@ import { describe, expect, test } from "vitest";
 
 import {
   admitBattleRuntimeTransactionOperation,
-  settleBattleRuntimeResolution,
+  settleCreatureFallsRuntimeTransaction,
   settleBattleRuntimeTransaction,
   type BattleRuntimeTransactionOperation,
   type BattleRuntimeTransactionResult,
 } from "./battle-runtime-transaction.ts";
-import { battleRuntimeSessionWithState } from "./battle-runtime-context.ts";
-import { resolveBattleRuntimeSubject } from "./battle-session-execution.ts";
-import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   attackExecutionSelectionForSubjectForTest,
   battleId,
@@ -258,121 +255,22 @@ describe("battle runtime transaction operation admission", () => {
     ).toEqual({ tag: "admitted", operation });
   });
 
-  test("rejects a resolution from an unrelated battle", () => {
+  test("rejects Creature Falls against a different pending subject", () => {
     const ordinary = pendingOrdinaryMove();
-    const foreign = startBattleSessionRight({
-      battleId: battleId("battle-transaction-admission-foreign"),
-      combatants: [
-        characterSeed({ initiative: 20 }),
-        statBlockCreatureInit({ initiative: 10 }),
-      ],
-    });
-    const foreignResolution = resolveBattleRuntimeSubject({
-      session: foreign,
-      subject: ordinary.subject,
-      fills: [],
-    });
 
-    const result = settleBattleRuntimeResolution({
+    const result = settleCreatureFallsRuntimeTransaction({
       session: ordinary.result.resolution.session,
       transaction: ordinary.result.transaction,
-      operation: {
-        kind: "ordinarySubject",
-        subject: ordinary.subject,
-        fills: [],
-      },
-      resolution: foreignResolution,
+      fallingCreatureId: fighterId,
+      reactionSpellTargetFacts: [],
     });
 
     expect(result).toMatchObject({
-      tag: "defect",
-      issue: {
-        tag: "foreignResolutionSession",
-        reason: "battleIdentityMismatch",
-      },
-    });
-  });
-
-  test("rejects a same-shape resolution session without runtime lineage", () => {
-    const ordinary = pendingOrdinaryMove();
-    const expectedSession = ordinary.result.resolution.session;
-    const unrelated = battleRuntimeSessionForTest({
-      state: expectedSession.state,
-      context: expectedSession.context,
-    });
-    const unrelatedResolution = resolveBattleRuntimeSubject({
-      session: unrelated,
-      subject: ordinary.subject,
-      fills: [],
-    });
-
-    const result = settleBattleRuntimeResolution({
-      session: expectedSession,
+      tag: "invalid",
       transaction: ordinary.result.transaction,
-      operation: {
-        kind: "ordinarySubject",
-        subject: ordinary.subject,
-        fills: [],
-      },
-      resolution: unrelatedResolution,
-    });
-
-    expect(result).toMatchObject({
-      tag: "defect",
-      issue: {
-        tag: "foreignResolutionSession",
-        reason: "sessionLineageMismatch",
+      resolution: {
+        reason: "staleSubject",
       },
     });
-  });
-
-  test("accepts a resolution produced from the exact input session", () => {
-    const ordinary = pendingOrdinaryMove();
-    const expectedSession = ordinary.result.resolution.session;
-    const directResolution = resolveBattleRuntimeSubject({
-      session: expectedSession,
-      subject: ordinary.subject,
-      fills: [],
-    });
-
-    const result = settleBattleRuntimeResolution({
-      session: expectedSession,
-      transaction: ordinary.result.transaction,
-      operation: {
-        kind: "ordinarySubject",
-        subject: ordinary.subject,
-        fills: [],
-      },
-      resolution: directResolution,
-    });
-
-    expect(result.tag).not.toBe("defect");
-  });
-
-  test("accepts a resolution from a valid descendant overlay session", () => {
-    const ordinary = pendingOrdinaryMove();
-    const expectedSession = ordinary.result.resolution.session;
-    const overlaySession = battleRuntimeSessionWithState(
-      expectedSession,
-      expectedSession.state,
-    );
-    const descendantResolution = resolveBattleRuntimeSubject({
-      session: overlaySession,
-      subject: ordinary.subject,
-      fills: [],
-    });
-
-    const result = settleBattleRuntimeResolution({
-      session: expectedSession,
-      transaction: ordinary.result.transaction,
-      operation: {
-        kind: "ordinarySubject",
-        subject: ordinary.subject,
-        fills: [],
-      },
-      resolution: descendantResolution,
-    });
-
-    expect(result.tag).not.toBe("defect");
   });
 });

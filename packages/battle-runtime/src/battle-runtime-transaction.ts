@@ -10,6 +10,7 @@ import {
 import { discoverBattleActs } from "./battle-act-composition.ts";
 import {
   resolveBattleRuntimeInterrupt,
+  openCreatureFallsRuntimeInterruptWindow,
   resolveBattleRuntimeSubject,
   type BattleRuntimeResolutionResult,
 } from "./battle-session-execution.ts";
@@ -21,6 +22,7 @@ import {
 } from "./battle-runtime-context.ts";
 import {
   battleReplayStackDepth,
+  type CombatantId,
   type BattleReplayStackDepth,
 } from "./identity.ts";
 import { optionalProperty } from "./optional-property.ts";
@@ -29,6 +31,7 @@ import {
   interruptDecisionHole,
   snapshotBattle,
 } from "./battle-reducer/battle-snapshot.ts";
+import { currentActorId } from "./battle-reducer/creature-state-leaves.ts";
 import {
   interruptCheckpointIdentity,
   type InterruptCheckpointIdentity,
@@ -42,6 +45,7 @@ import type {
   BattleFill,
   BattleHole,
   BattleStatBlockExecutionCatalog,
+  BattleTargetSpatialFact,
 } from "./battle-state-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
@@ -531,14 +535,40 @@ export function settleBattleRuntimeTransaction(input: {
     resolveOperation({ ...input, operation: operationAdmission.operation }),
     input.session,
   );
-  return settleBattleRuntimeResolution({ ...input, resolution });
+  return settleBoundBattleRuntimeResolution({ ...input, resolution });
 }
 
-/**
- * Settle a result produced by a battle-runtime entry point that has extra
- * caller-owned witnesses, such as the creature-falls interrupt opener.
- */
-export function settleBattleRuntimeResolution(input: {
+/** Settle the production Creature Falls resolution bound to its witnesses. */
+export function settleCreatureFallsRuntimeTransaction(input: {
+  readonly session: BattleRuntimeSession;
+  readonly transaction: BattlePendingTransaction | null;
+  readonly fallingCreatureId: CombatantId;
+  readonly reactionSpellTargetFacts: readonly BattleTargetSpatialFact[];
+  readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
+}): BattleRuntimeTransactionResult {
+  const subject: Extract<
+    BattleSubject,
+    { readonly tag: "runtimeCommand"; readonly command: "creatureFalls" }
+  > = {
+    tag: "runtimeCommand",
+    actorId: currentActorId(input.session.state),
+    command: "creatureFalls",
+    fallingCreatureId: input.fallingCreatureId,
+  };
+  return settleBoundBattleRuntimeResolution({
+    session: input.session,
+    transaction: input.transaction,
+    operation: { kind: "ordinarySubject", subject, fills: [] },
+    resolution: openCreatureFallsRuntimeInterruptWindow({
+      session: input.session,
+      fallingCreatureId: input.fallingCreatureId,
+      reactionSpellTargetFacts: input.reactionSpellTargetFacts,
+    }),
+    ...optionalProperty("statBlockCatalog", input.statBlockCatalog),
+  });
+}
+
+function settleBoundBattleRuntimeResolution(input: {
   readonly session: BattleRuntimeSession;
   readonly transaction: BattlePendingTransaction | null;
   readonly operation: BattleRuntimeTransactionOperation;

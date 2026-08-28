@@ -715,7 +715,7 @@ export {
 
 export {
   settleBattleRuntimeTransaction,
-  settleBattleRuntimeResolution,
+  settleCreatureFallsRuntimeTransaction,
   admitBattleRuntimeTransactionOperation,
   battlePendingTransactionView,
   battlePendingTransactionViewForSession,

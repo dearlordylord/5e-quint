@@ -3,8 +3,7 @@ import {
   battleInitiativePosition,
   battlePendingTransactionView,
   discoverBattleActs,
-  openCreatureFallsRuntimeInterruptWindow,
-  settleBattleRuntimeResolution,
+  settleCreatureFallsRuntimeTransaction,
   settleBattleRuntimeTransaction,
   sameBattleSubject,
   type BattleFill,
@@ -140,6 +139,19 @@ export function handleBattleToolCall(
       const state = activeBattleForTool(root);
       if (Either.isLeft(state)) return state.left;
       const pending = root.sessionStore.getPendingBattleTransaction();
+      if (
+        matched.args.subject.tag === "runtimeCommand" &&
+        matched.args.subject.command === "creatureFalls"
+      ) {
+        const result = settleCreatureFallsRuntimeTransaction({
+          session: state.right,
+          transaction: pending,
+          fallingCreatureId: matched.args.subject.fallingCreatureId,
+          reactionSpellTargetFacts: matched.args.reactionSpellTargetFacts,
+          statBlockCatalog: root.statBlockCatalog,
+        });
+        return storedBattleTransactionContent(root, state.right, result);
+      }
       const operation = battleRuntimeTransactionOperationForSubject(
         matched.args.subject,
       );
@@ -153,27 +165,6 @@ export function handleBattleToolCall(
           issue: admission.issue,
           requestedSubject: matched.args.subject,
         });
-      }
-      if (
-        matched.args.subject.tag === "runtimeCommand" &&
-        matched.args.subject.command === "creatureFalls"
-      ) {
-        const result = openCreatureFallsRuntimeInterruptWindow({
-          session: state.right,
-          fallingCreatureId: matched.args.subject.fallingCreatureId,
-          reactionSpellTargetFacts: matched.args.reactionSpellTargetFacts,
-        });
-        return storedBattleTransactionContent(
-          root,
-          state.right,
-          settleBattleRuntimeResolution({
-            session: state.right,
-            transaction: pending,
-            operation: admission.operation,
-            resolution: result,
-            statBlockCatalog: root.statBlockCatalog,
-          }),
-        );
       }
       const availableAct = discoverBattleActs(state.right).find((act) =>
         sameBattleSubject(act.subject, matched.args.subject),
