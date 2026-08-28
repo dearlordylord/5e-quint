@@ -82,10 +82,28 @@ type OracleServeProcess = {
 
 type OracleStreamProcess = {
   readonly child: ChildProcessByStdio<Writable, Readable, Readable>;
-  readonly lines: ReadlineInterface;
-  readonly stdout: () => string;
   readonly stderr: () => string;
+  readonly rawLines: string[];
+  readonly pendingWaiters: OracleStreamFrameWaiter[];
+  readonly activeWaiters: Set<OracleStreamFrameWaiter>;
+  readonly queuedLines: string[];
+  readonly frameBytes: number[];
+  protocolFailure: Error | undefined;
+  fail: (cause: unknown) => void;
+  dispose: () => void;
 };
+
+type OracleStreamFrameObservation = {
+  readonly response: OracleBatchResponse;
+  readonly rawLine: string;
+};
+
+type OracleStreamFrameWaiter = {
+  readonly accept: (rawLine: string) => void;
+  readonly fail: (cause: Error) => void;
+};
+
+const ORACLE_STREAM_FRAME_TIMEOUT_MS = 10_000;
 
 function writeNetworkDenialPreload(directory: string): string {
   const path = join(directory, "deny-network.cjs");
@@ -188,44 +206,137 @@ function launchOracleStream(
   executable: string,
   cwd: string,
   preload: string,
+  args: readonly string[] = ["stream"],
 ): OracleStreamProcess {
   const child: ChildProcessByStdio<Writable, Readable, Readable> = spawn(
     executable,
-    ["stream"],
+    [...args],
     {
       cwd,
       env: processEnvironment(preload),
       stdio: ["pipe", "pipe", "pipe"],
     },
   );
-  child.stdout.setEncoding("utf8");
   child.stderr.setEncoding("utf8");
-  const stdoutChunks: string[] = [];
   const stderrChunks: string[] = [];
-  child.stdout.on("data", (chunk: string | Buffer) => {
-    stdoutChunks.push(typeof chunk === "string" ? chunk : chunk.toString());
-  });
-  child.stderr.on("data", (chunk: string | Buffer) => {
+  const onStderrData = (chunk: string | Buffer): void => {
     stderrChunks.push(typeof chunk === "string" ? chunk : chunk.toString());
-  });
-  return {
-    child,
-    lines: createInterface({ input: child.stdout }),
-    stdout: () => stdoutChunks.join(""),
-    stderr: () => stderrChunks.join(""),
   };
+  child.stderr.on("data", onStderrData);
+  const streamProcess: OracleStreamProcess = {
+    child,
+    stderr: () => stderrChunks.join(""),
+    rawLines: [],
+    pendingWaiters: [],
+    activeWaiters: new Set(),
+    queuedLines: [],
+    frameBytes: [],
+    protocolFailure: undefined,
+    fail: () => undefined,
+    dispose: () => undefined,
+  };
+
+  const failProcess = (cause: unknown): void => {
+    const error = cause instanceof Error ? cause : new Error(String(cause));
+    streamProcess.protocolFailure ??= error;
+    const waiters = new Set([
+      ...streamProcess.pendingWaiters,
+      ...streamProcess.activeWaiters,
+    ]);
+    streamProcess.pendingWaiters.length = 0;
+    streamProcess.activeWaiters.clear();
+    for (const waiter of waiters) waiter.fail(streamProcess.protocolFailure);
+  };
+  streamProcess.fail = failProcess;
+
+  const onStdoutData = (chunk: Buffer | string): void => {
+    const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    const combined = Buffer.concat([
+      Buffer.from(streamProcess.frameBytes),
+      bytes,
+    ]);
+    let lineStart = 0;
+    for (let index = 0; index < combined.length; index += 1) {
+      if (combined[index] !== 0x0a) continue;
+      const rawLine = combined.subarray(lineStart, index).toString("utf8");
+      streamProcess.rawLines.push(rawLine);
+      streamProcess.queuedLines.push(rawLine);
+      lineStart = index + 1;
+    }
+    streamProcess.frameBytes.length = 0;
+    for (const byte of combined.subarray(lineStart)) {
+      streamProcess.frameBytes.push(byte);
+    }
+    drainOracleStreamLines(streamProcess);
+  };
+  const onChildError = (cause: Error): void => failProcess(cause);
+  const onChildExit = (
+    code: number | null,
+    signal: NodeJS.Signals | null,
+  ): void => {
+    if (
+      streamProcess.pendingWaiters.length > 0 ||
+      streamProcess.activeWaiters.size > 0
+    ) {
+      failProcess(
+        new Error(
+          `Oracle stream exited before all responses (${String(code)}, ${String(signal)}).`,
+        ),
+      );
+    }
+  };
+  const onStdinError = (cause: Error): void => failProcess(cause);
+  child.stdout.on("data", onStdoutData);
+  child.once("error", onChildError);
+  child.once("exit", onChildExit);
+  child.stdin.once("error", onStdinError);
+  streamProcess.dispose = (): void => {
+    child.stdout.removeListener("data", onStdoutData);
+    child.stderr.removeListener("data", onStderrData);
+    child.removeListener("error", onChildError);
+    child.removeListener("exit", onChildExit);
+    child.stdin.removeListener("error", onStdinError);
+  };
+  return streamProcess;
 }
 
 function evaluateOracleStreamFrame(
   process: OracleStreamProcess,
   body: Uint8Array,
-): Promise<OracleBatchResponse> {
-  return new Promise<OracleBatchResponse>((resolve, reject) => {
+  options: { readonly timeoutMs?: number } = {},
+): Promise<OracleStreamFrameObservation> {
+  return new Promise<OracleStreamFrameObservation>((resolve, reject) => {
+    if (process.protocolFailure !== undefined) {
+      reject(process.protocolFailure);
+      return;
+    }
     let settled = false;
+    let response: OracleBatchResponse | undefined;
+    let rawLine: string | undefined;
+    let writesRemaining = 2;
+    const timeoutMs = options.timeoutMs ?? ORACLE_STREAM_FRAME_TIMEOUT_MS;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const waiter: OracleStreamFrameWaiter = {
+      accept: (line) => {
+        try {
+          response = decodeJson(OracleBatchResponseSchema, line);
+          rawLine = line;
+          settleIfReady();
+        } catch (cause) {
+          fail(
+            cause instanceof Error
+              ? cause
+              : new Error(`Invalid Oracle stream response: ${String(cause)}`),
+          );
+        }
+      },
+      fail: (cause) => fail(cause),
+    };
     const cleanup = (): void => {
-      process.lines.removeListener("line", onLine);
-      process.child.removeListener("error", onError);
-      process.child.removeListener("exit", onExit);
+      if (timer !== undefined) clearTimeout(timer);
+      process.activeWaiters.delete(waiter);
+      const index = process.pendingWaiters.indexOf(waiter);
+      if (index >= 0) process.pendingWaiters.splice(index, 1);
     };
     const finish = (operation: () => void): void => {
       if (settled) return;
@@ -233,68 +344,92 @@ function evaluateOracleStreamFrame(
       cleanup();
       operation();
     };
-    const onLine = (line: string): void => {
-      try {
-        const response = decodeJson(OracleBatchResponseSchema, line);
-        finish(() => resolve(response));
-      } catch (cause) {
-        finish(() =>
-          reject(
-            cause instanceof Error
-              ? cause
-              : new Error(`Invalid Oracle stream response: ${String(cause)}`),
-          ),
-        );
-      }
+    const fail = (cause: Error): void => {
+      finish(() => {
+        process.protocolFailure ??= cause;
+        reject(cause);
+      });
     };
-    const onError = (cause: Error): void => {
-      finish(() => reject(cause));
-    };
-    const onExit = (
-      code: number | null,
-      signal: NodeJS.Signals | null,
-    ): void => {
+    const settleIfReady = (): void => {
+      if (response === undefined || rawLine === undefined) return;
+      if (writesRemaining !== 0) return;
+      const decodedResponse = response;
+      const decodedRawLine = rawLine;
       finish(() =>
-        reject(
-          new Error(
-            `Oracle stream exited before its response (${String(code)}, ${String(signal)}).`,
-          ),
-        ),
+        resolve({ response: decodedResponse, rawLine: decodedRawLine }),
       );
     };
-    process.lines.once("line", onLine);
-    process.child.once("error", onError);
-    process.child.once("exit", onExit);
-    try {
-      process.child.stdin.write(Buffer.from(body));
-      process.child.stdin.write("\n");
-    } catch (cause) {
-      finish(() =>
-        reject(
-          cause instanceof Error
-            ? cause
-            : new Error(`Oracle stream write failed: ${String(cause)}`),
+    const writeFinished = (cause?: Error | null): void => {
+      if (cause !== undefined && cause !== null) {
+        fail(cause);
+        return;
+      }
+      writesRemaining -= 1;
+      settleIfReady();
+    };
+    timer = setTimeout(() => {
+      fail(
+        new Error(
+          `Oracle stream frame timed out after ${timeoutMs}ms without one response.`,
         ),
+      );
+    }, timeoutMs);
+    process.activeWaiters.add(waiter);
+    process.pendingWaiters.push(waiter);
+    try {
+      process.child.stdin.write(Buffer.from(body), writeFinished);
+      process.child.stdin.write("\n", writeFinished);
+    } catch (cause) {
+      fail(
+        cause instanceof Error
+          ? cause
+          : new Error(`Oracle stream write failed: ${String(cause)}`),
       );
     }
+    drainOracleStreamLines(process);
   });
+}
+
+function drainOracleStreamLines(process: OracleStreamProcess): void {
+  if (process.protocolFailure !== undefined) return;
+  if (process.queuedLines.length > process.pendingWaiters.length) {
+    process.fail(
+      new Error(
+        `Oracle stream emitted ${process.queuedLines.length} response lines for ${process.pendingWaiters.length} pending frame(s).`,
+      ),
+    );
+    return;
+  }
+  while (process.queuedLines.length > 0 && process.pendingWaiters.length > 0) {
+    const rawLine = process.queuedLines.shift();
+    const waiter = process.pendingWaiters.shift();
+    if (rawLine === undefined || waiter === undefined) {
+      process.fail(new Error("Oracle stream response queue lost a line."));
+      return;
+    }
+    waiter.accept(rawLine);
+  }
 }
 
 async function waitForOracleStreamExit(
   process: OracleStreamProcess,
 ): Promise<void> {
   const { child } = process;
+  let onExit:
+    | ((code: number | null, signal: NodeJS.Signals | null) => void)
+    | undefined;
   const exit =
     child.exitCode !== null || child.signalCode !== null
       ? Promise.resolve({ code: child.exitCode, signal: child.signalCode })
       : new Promise<{ code: number | null; signal: NodeJS.Signals | null }>(
           (resolve) => {
-            child.once("exit", (code, signal) => resolve({ code, signal }));
+            onExit = (code, signal) => resolve({ code, signal });
+            child.once("exit", onExit);
           },
         );
-  child.stdin.end();
   let timeout: ReturnType<typeof setTimeout> | undefined;
   try {
+    child.stdin.end();
     const timeoutPromise = new Promise<never>((_, reject) => {
       timeout = setTimeout(
         () => reject(new Error("Oracle stream did not close.")),
@@ -306,8 +441,39 @@ async function waitForOracleStreamExit(
     expect(result.signal).toBeNull();
   } finally {
     if (timeout !== undefined) clearTimeout(timeout);
+    if (onExit !== undefined) child.removeListener("exit", onExit);
   }
-  process.lines.close();
+  if (process.protocolFailure !== undefined) {
+    throw process.protocolFailure;
+  }
+  if (process.frameBytes.length > 0) {
+    throw new Error("Oracle stream ended with an incomplete response line.");
+  }
+  expect(process.pendingWaiters).toHaveLength(0);
+  expect(process.activeWaiters.size).toBe(0);
+  expect(process.queuedLines).toHaveLength(0);
+}
+
+async function terminateOracleStream(
+  process: OracleStreamProcess,
+): Promise<void> {
+  let onExit: (() => void) | undefined;
+  const exit =
+    process.child.exitCode !== null || process.child.signalCode !== null
+      ? Promise.resolve()
+      : new Promise<void>((resolve) => {
+          onExit = () => resolve();
+          process.child.once("exit", onExit);
+        });
+  try {
+    if (process.child.exitCode === null && process.child.signalCode === null) {
+      process.child.kill("SIGKILL");
+    }
+    await exit;
+  } finally {
+    if (onExit !== undefined) process.child.removeListener("exit", onExit);
+    process.dispose();
+  }
 }
 
 function onlyOracleResponse(
@@ -541,7 +707,7 @@ function assertEvaluated(
 }
 
 describe("Opaque Oracle source-free distribution", () => {
-  test("is deterministic, verifies identity, runs offline from another directory, and preserves stream laws", () => {
+  test("is deterministic, verifies identity, runs offline from another directory, and preserves stream laws", async () => {
     const temporaryRoot = mkdtempSync(
       join(tmpdir(), "opaque-oracle-distribution-"),
     );
@@ -711,8 +877,6 @@ describe("Opaque Oracle source-free distribution", () => {
         ),
         invalidUtf8: Buffer.from([0xc3, 0x28]),
       } as const;
-      const lineFeed = Buffer.from("\n");
-
       const decomposition = runExecutable(
         executable,
         ["stream"],
@@ -767,77 +931,75 @@ describe("Opaque Oracle source-free distribution", () => {
         identity.distributionId,
       );
 
-      const malformed = runExecutable(
+      const namedMalformedFrames = {
+        ...malformedFrames,
+        finalValidCase: Buffer.from(firstSingleton),
+      } as const;
+      type NamedMalformedFrame = keyof typeof namedMalformedFrames;
+      const malformedFrameNames = Object.keys(
+        namedMalformedFrames,
+      ) as NamedMalformedFrame[];
+      const malformedProcess = launchOracleStream(
         executable,
-        ["stream"],
         cleanWorkingDirectory,
         preload,
-        Buffer.concat([
-          malformedFrames.invalidJson,
-          lineFeed,
-          malformedFrames.blank,
-          lineFeed,
-          malformedFrames.duplicateMember,
-          lineFeed,
-          malformedFrames.emptyBatch,
-          lineFeed,
-          malformedFrames.structurallyInvalidCase,
-          lineFeed,
-          malformedFrames.invalidUtf8,
-          lineFeed,
-          Buffer.from(firstSingleton),
-          lineFeed,
-        ]),
       );
-      assertSuccessfulProcess(malformed);
-      const malformedResponses = parseResponseLines(malformed);
-      expect(malformedResponses).toHaveLength(7);
-      const decodeRejectedResponses = malformedResponses.filter(
-        (response) => response.tag === "decodeRejected",
-      );
-      expect(decodeRejectedResponses).toHaveLength(6);
-      for (const response of decodeRejectedResponses) {
-        expect(response.tag).toBe("decodeRejected");
-        expect(response.distributionId).toBe(identity.distributionId);
+      const malformedObservations = new Map<
+        NamedMalformedFrame,
+        OracleStreamFrameObservation
+      >();
+      const observationForMalformedFrame = (
+        name: NamedMalformedFrame,
+      ): OracleStreamFrameObservation => {
+        const observation = malformedObservations.get(name);
+        if (observation === undefined) {
+          throw new Error(`Response missing for ${name}.`);
+        }
+        return observation;
+      };
+      try {
+        for (const name of malformedFrameNames) {
+          const observation = await evaluateOracleStreamFrame(
+            malformedProcess,
+            namedMalformedFrames[name],
+          );
+          malformedObservations.set(name, observation);
+        }
+        await waitForOracleStreamExit(malformedProcess);
+        expect(malformedProcess.stderr()).toBe("");
+        expect(malformedProcess.rawLines).toHaveLength(
+          malformedFrameNames.length,
+        );
+        expect(malformedProcess.rawLines).toEqual(
+          malformedFrameNames.map(
+            (name) => observationForMalformedFrame(name).rawLine,
+          ),
+        );
+      } finally {
+        await terminateOracleStream(malformedProcess);
       }
-      const evaluatedResponses = malformedResponses.filter(
-        (response) => response.tag === "evaluated",
-      );
-      expect(evaluatedResponses).toHaveLength(1);
-      for (const response of evaluatedResponses) {
-        expect(assertEvaluated(response)).toHaveLength(1);
+      const responseForMalformedFrame = (
+        name: NamedMalformedFrame,
+      ): OracleBatchResponse => observationForMalformedFrame(name).response;
+      for (const name of malformedFrameNames) {
+        const response = responseForMalformedFrame(name);
+        expect(response.distributionId).toBe(identity.distributionId);
+        if (name === "finalValidCase") {
+          expect(assertEvaluated(response)).toHaveLength(1);
+        } else if (response.tag !== "decodeRejected") {
+          throw new Error(`Malformed frame ${name} was not rejected.`);
+        }
       }
 
-      const duplicateResult = runExecutable(
-        executable,
-        ["stream"],
-        cleanWorkingDirectory,
-        preload,
-        Buffer.concat([malformedFrames.duplicateMember, lineFeed]),
-      );
-      assertSuccessfulProcess(duplicateResult);
-      const duplicateResponse = onlyOracleResponse(
-        parseResponseLines(duplicateResult),
-        "duplicate-key",
-      );
-      if (duplicateResponse.tag !== "decodeRejected") {
-        throw new Error("The duplicate-key frame was not rejected.");
+      const duplicateMemberResponse =
+        responseForMalformedFrame("duplicateMember");
+      if (duplicateMemberResponse.tag !== "decodeRejected") {
+        throw new Error("The named duplicate-key frame was not rejected.");
       }
-      expect(duplicateResponse.issues.length).toBeGreaterThan(0);
-      const invalidUtf8Result = runExecutable(
-        executable,
-        ["stream"],
-        cleanWorkingDirectory,
-        preload,
-        Buffer.concat([malformedFrames.invalidUtf8, lineFeed]),
-      );
-      assertSuccessfulProcess(invalidUtf8Result);
-      const invalidUtf8Response = onlyOracleResponse(
-        parseResponseLines(invalidUtf8Result),
-        "invalid UTF-8",
-      );
+      expect(duplicateMemberResponse.issues.length).toBeGreaterThan(0);
+      const invalidUtf8Response = responseForMalformedFrame("invalidUtf8");
       if (invalidUtf8Response.tag !== "decodeRejected") {
-        throw new Error("The invalid UTF-8 frame was not rejected.");
+        throw new Error("The named invalid UTF-8 frame was not rejected.");
       }
       expect(invalidUtf8Response.issues).toEqual([
         { path: "", code: "invalidJson" },
@@ -872,17 +1034,6 @@ describe("Opaque Oracle source-free distribution", () => {
       expect(invalidMode.stderr.toString("utf8")).toContain(
         "Usage: oracle identity | oracle stream",
       );
-
-      const finalFrame = runExecutable(
-        executable,
-        ["stream"],
-        cleanWorkingDirectory,
-        preload,
-        Buffer.from(firstSingleton),
-      );
-      assertSuccessfulProcess(finalFrame);
-      expect(finalFrame.stdout.toString("utf8").endsWith("\n")).toBe(true);
-      expect(parseResponseLines(finalFrame)).toHaveLength(1);
 
       const tamperedDirectory = join(temporaryRoot, "tampered");
       cpSync(stagedDirectory, tamperedDirectory, {
@@ -1050,14 +1201,14 @@ describe("Opaque Oracle source-free distribution", () => {
       }
       expect(workflowTrace.creation.outcome.tag).toBe("fillRejected");
 
-      const malformedResponses = await Promise.all([
-        post(Buffer.alloc(0)),
-        post(Buffer.from("not-json")),
-        post(Buffer.from('{"cases":[],"cases":[]}')),
-        post(Buffer.from('{"cases":[{}]}')),
-        post(Buffer.from([0xc3, 0x28])),
-      ]);
-      for (const response of malformedResponses) {
+      const malformedResponses = {
+        emptyInput: await post(Buffer.alloc(0)),
+        invalidJson: await post(Buffer.from("not-json")),
+        duplicateMember: await post(Buffer.from('{"cases":[],"cases":[]}')),
+        structurallyInvalidCase: await post(Buffer.from('{"cases":[{}]}')),
+        invalidUtf8: await post(Buffer.from([0xc3, 0x28])),
+      } as const;
+      for (const response of Object.values(malformedResponses)) {
         expect(response.status).toBe(400);
         assertJsonContract(response);
         const value = decodeJson(
@@ -1070,10 +1221,7 @@ describe("Opaque Oracle source-free distribution", () => {
         }
         expect(value.distributionId).toBe(identity.distributionId);
       }
-      const invalidUtf8Response = malformedResponses[4];
-      if (invalidUtf8Response === undefined) {
-        throw new Error("The invalid UTF-8 response was missing.");
-      }
+      const invalidUtf8Response = malformedResponses.invalidUtf8;
       expect(invalidUtf8Response.body.toString("utf8")).toBe(
         `{"tag":"decodeRejected","distributionId":"${identity.distributionId}","issues":[{"path":"","code":"invalidJson"}]}`,
       );
@@ -1319,6 +1467,7 @@ describe("Opaque Oracle source-free distribution", () => {
       ];
 
       const cliByScenario = new Map<ParityScenario, OracleBatchResponse>();
+      const cliObservations: OracleStreamFrameObservation[] = [];
       const streamProcess = launchOracleStream(
         ordinaryBuild.executablePath,
         cleanWorkingDirectory,
@@ -1326,22 +1475,26 @@ describe("Opaque Oracle source-free distribution", () => {
       );
       try {
         for (const scenario of scenarios) {
-          const response = await evaluateOracleStreamFrame(
+          const observation = await evaluateOracleStreamFrame(
             streamProcess,
             scenario.body,
           );
-          cliByScenario.set(scenario, response);
+          cliByScenario.set(scenario, observation.response);
+          cliObservations.push(observation);
         }
         await waitForOracleStreamExit(streamProcess);
         expect(streamProcess.stderr()).toBe("");
+        expect(streamProcess.rawLines).toHaveLength(cliObservations.length);
+        expect(streamProcess.rawLines).toEqual(
+          cliObservations.map(({ rawLine }) => rawLine),
+        );
+        expect(
+          streamProcess.rawLines.map((rawLine) =>
+            decodeJson(OracleBatchResponseSchema, rawLine),
+          ),
+        ).toEqual(cliObservations.map(({ response }) => response));
       } finally {
-        if (
-          streamProcess.child.exitCode === null &&
-          streamProcess.child.signalCode === null
-        ) {
-          streamProcess.child.kill("SIGKILL");
-        }
-        streamProcess.lines.close();
+        await terminateOracleStream(streamProcess);
       }
 
       const ordinaryIdentityProcess = runExecutable(
@@ -1616,6 +1769,67 @@ describe("Opaque Oracle source-free distribution", () => {
       rmSync(temporaryRoot, { recursive: true, force: true });
     }
   }, 300_000);
+
+  test("does not drop extra stream lines and bounds silent frames", async () => {
+    const temporaryRoot = mkdtempSync(
+      join(tmpdir(), "opaque-oracle-stream-observer-"),
+    );
+    try {
+      const cleanWorkingDirectory = mkdtempSync(
+        join(temporaryRoot, "clean-cwd-"),
+      );
+      const preload = writeNetworkDenialPreload(temporaryRoot);
+      const response = JSON.stringify({
+        tag: "decodeRejected",
+        distributionId: `sha256:${"0".repeat(64)}`,
+        issues: [{ path: "", code: "invalidJson" }],
+      });
+      const extraLinesScript = [
+        `const response = ${JSON.stringify(`${response}\n${response}\n`)};`,
+        'process.stdin.once("data", () => process.stdout.write(response));',
+      ].join("\n");
+      const extraLinesProcess = launchOracleStream(
+        process.execPath,
+        cleanWorkingDirectory,
+        preload,
+        ["-e", extraLinesScript],
+      );
+      try {
+        await expect(
+          evaluateOracleStreamFrame(extraLinesProcess, Buffer.from("{}"), {
+            timeoutMs: 1_000,
+          }),
+        ).rejects.toThrow(
+          "Oracle stream emitted 2 response lines for 1 pending frame(s).",
+        );
+        expect(extraLinesProcess.rawLines).toEqual([response, response]);
+      } finally {
+        await terminateOracleStream(extraLinesProcess);
+      }
+
+      const silentProcess = launchOracleStream(
+        process.execPath,
+        cleanWorkingDirectory,
+        preload,
+        ["-e", 'process.stdin.on("data", () => undefined);'],
+      );
+      try {
+        await expect(
+          evaluateOracleStreamFrame(silentProcess, Buffer.from("{}"), {
+            timeoutMs: 25,
+          }),
+        ).rejects.toThrow(
+          "Oracle stream frame timed out after 25ms without one response.",
+        );
+        expect(silentProcess.pendingWaiters).toHaveLength(0);
+        expect(silentProcess.activeWaiters.size).toBe(0);
+      } finally {
+        await terminateOracleStream(silentProcess);
+      }
+    } finally {
+      rmSync(temporaryRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
 
   test("rejects a test entrypoint that imports eager catalog data", () => {
     const temporaryRoot = mkdtempSync(
