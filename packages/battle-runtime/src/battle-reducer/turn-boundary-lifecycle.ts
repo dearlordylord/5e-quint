@@ -329,6 +329,7 @@ function temporaryHitPointChoiceHole(input: {
   readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
   readonly occurrenceId: StartTurnOccurrenceOption["occurrenceId"];
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  readonly effectRef: BattleEffectExecutionRef;
   readonly sourceCombatantId: CombatantId;
   readonly existingTemporaryHitPoints: number;
   readonly grantedTemporaryHitPoints: number;
@@ -341,6 +342,7 @@ function temporaryHitPointChoiceHole(input: {
     label: "Choose which Temporary Hit Points to keep",
     sourceCombatantId: input.sourceCombatantId,
     sourceProcedureRef: input.sourceProcedureRef,
+    effectRef: input.effectRef,
     sourceTurn: input.sourceTurn,
     occurrenceId: input.occurrenceId,
     existingTemporaryHitPoints: Hp(input.existingTemporaryHitPoints),
@@ -424,7 +426,7 @@ function startTurnOccurrenceOptionForHandle(
     Match.when({ kind: "turnStartTemporaryHitPoints" }, ({ effect }) =>
       startTurnOccurrenceOption(
         "turnStartTemporaryHitPoints",
-        { sourceProcedureRef: effect.sourceProcedureRef },
+        { effectRef: effect.effectRef },
         "Grant start-turn Temporary Hit Points",
       ),
     ),
@@ -1339,9 +1341,7 @@ function spellTurnStartDamageOccurrenceOption(
     effect.kind === "spellCondition"
       ? "spellConditionTurnStartDamage"
       : "spellTurnStartDamageAndSave",
-    effect.kind === "spellCondition"
-      ? { effectRef: effect.effectRef }
-      : { sourceProcedureRef: effect.sourceProcedureRef },
+    { effectRef: effect.effectRef },
     "Resolve start-turn spell damage",
   );
 }
@@ -1401,7 +1401,7 @@ function spellTurnEndDamageRollHole(
   effect: SpellTurnEndDamageEffect,
 ): BattleSpellTurnEndDamageRollHole {
   const expr = `${effect.damage.expr.dice}d${effect.damage.expr.dieSize}`;
-  const key = `battle:spell-turn-end-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${expr}`;
+  const key = `battle:spell-turn-end-damage:${targetId}:${effect.effectRef}:${expr}`;
   return {
     kind: "rolledDice",
     holeId: holeId(key),
@@ -1409,6 +1409,7 @@ function spellTurnEndDamageRollHole(
     label: `Spell turn-end damage (${expr})`,
     spellTurnEndDamage: {
       targetId,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       damage: effect.damage,
@@ -1477,6 +1478,7 @@ function spellTurnStartDamageRollHole(
     label: `Spell turn-start damage (${expr})`,
     spellTurnStartDamage: {
       targetId: sourceTurn.actorId,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       trigger: spellTurnStartDamageTrigger(effect),
@@ -1561,6 +1563,7 @@ function spellTurnStartSavingThrowOutcomeHole(
     label: `Turn-start ${effect.save.ability.toUpperCase()} save`,
     spellTurnStartSave: {
       targetId: sourceTurn.actorId,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       save: effect.save,
@@ -2192,7 +2195,7 @@ function applySleepRepeatSaveFills(
       return nextState;
     }
     const activeEffectsWithoutPending = target.activeEffects.filter(
-      (candidate) => candidate !== effect,
+      (candidate) => candidate.effectRef !== effect.effectRef,
     );
     const conditionsWithoutPending =
       conditionsAfterExpiringSpellConditionEffects(
@@ -2493,7 +2496,7 @@ function removeAbilityD20TestRollModeEffectFromCombatants(
         ...target,
         activeEffects: target.activeEffects.filter(
           (effect) =>
-            effect !== expiringEffect &&
+            effect.effectRef !== expiringEffect.effectRef &&
             !(
               effect.kind === "sourceDamageRollPenalty" &&
               effect.sourceProcedureRef === expiringEffect.sourceProcedureRef &&
@@ -2524,7 +2527,7 @@ function removeSpellConditionEffectFromCombatants(
       expiringEffect,
       (target) => {
         const activeEffects = target.activeEffects.filter(
-          (effect) => effect !== expiringEffect,
+          (effect) => effect.effectRef !== expiringEffect.effectRef,
         );
         return battleCreatureWithActiveEffectsAndConditions(
           target,
@@ -2563,7 +2566,9 @@ function updateSpellConditionCountedEndTurnSaveEffect(
     (target) => ({
       ...target,
       activeEffects: target.activeEffects.map((candidate) =>
-        candidate === effect ? { ...effect, ...patch } : candidate,
+        candidate.effectRef === effect.effectRef
+          ? { ...effect, ...patch }
+          : candidate,
       ),
     }),
   ).combatants;
@@ -2580,7 +2585,7 @@ function removeUnitFeatureConditionEndTurnSaveEffectFromCombatants(
     expiringEffect,
     (target) => {
       const activeEffects = target.activeEffects.filter(
-        (effect) => effect !== expiringEffect,
+        (effect) => effect.effectRef !== expiringEffect.effectRef,
       );
       return battleCreatureWithActiveEffectsAndConditions(
         target,
@@ -2608,7 +2613,7 @@ function removeSlowActivePenaltiesEffectFromCombatants(
       (target) => ({
         ...target,
         activeEffects: target.activeEffects.filter(
-          (effect) => effect !== expiringEffect,
+          (effect) => effect.effectRef !== expiringEffect.effectRef,
         ),
       }),
     ),
@@ -2632,7 +2637,7 @@ function removeHideousLaughterEffectFromCombatants(
       expiringEffect,
       (target) => {
         const activeEffects = target.activeEffects.filter(
-          (effect) => effect !== expiringEffect,
+          (effect) => effect.effectRef !== expiringEffect.effectRef,
         );
         return battleCreatureWithActiveEffectsAndConditions(
           target,
@@ -2686,7 +2691,9 @@ export function updateCombatantWithActiveEffectOccurrence<
   const target = combatants.get(targetId);
   if (
     target === undefined ||
-    !target.activeEffects.some((effect) => effect === effectOccurrence)
+    !target.activeEffects.some(
+      (effect) => effect.effectRef === effectOccurrence.effectRef,
+    )
   ) {
     return { tag: "unchanged", combatants };
   }
@@ -2723,7 +2730,7 @@ function removeSpellTurnStartDamageAndSaveEffect(
     combatants: new Map(state.combatants).set(targetId, {
       ...target,
       activeEffects: target.activeEffects.filter(
-        (candidate) => candidate !== effect,
+        (candidate) => candidate.effectRef !== effect.effectRef,
       ),
     }),
   };
@@ -2849,13 +2856,8 @@ function activeSpellTurnStartDamageEffect(
   offered: SpellTurnStartDamageEffect,
 ): SpellTurnStartDamageEffect | undefined {
   const actor = state.combatants.get(actorId);
-  return spellTurnStartDamageEffects(actor).find((candidate) =>
-    offered.kind === "spellCondition"
-      ? candidate.kind === "spellCondition" &&
-        candidate.effectRef === offered.effectRef
-      : candidate.kind === "spellTurnStartDamageAndSave" &&
-        candidate.sourceProcedureRef === offered.sourceProcedureRef &&
-        candidate.sourceCombatantId === offered.sourceCombatantId,
+  return spellTurnStartDamageEffects(actor).find(
+    (candidate) => candidate.effectRef === offered.effectRef,
   );
 }
 
@@ -3421,8 +3423,7 @@ function resolveOrderedStartTurnOccurrences(input: {
             { readonly kind: "turnStartTemporaryHitPoints" }
           > =>
             effect.kind === "turnStartTemporaryHitPoints" &&
-            effect.sourceProcedureRef === handle.effect.sourceProcedureRef &&
-            effect.sourceCombatantId === handle.effect.sourceCombatantId,
+            effect.effectRef === handle.effect.effectRef,
         );
       if (exactEffect === undefined) continue;
       const actor = prefixState.combatants.get(input.sourceTurn.actorId);
@@ -3445,6 +3446,7 @@ function resolveOrderedStartTurnOccurrences(input: {
         sourceTurn: input.sourceTurn,
         occurrenceId,
         sourceProcedureRef: exactEffect.sourceProcedureRef,
+        effectRef: exactEffect.effectRef,
         sourceCombatantId: exactEffect.sourceCombatantId,
         existingTemporaryHitPoints: Number(actor.tempHp),
         grantedTemporaryHitPoints,

@@ -549,6 +549,7 @@ function durationCohortEffectRefs(
 
 function resolveInterruptedRoundWrapAfterCohortMutation(input: {
   readonly sourceKey: string;
+  readonly checkpointState?: (state: BattleState) => BattleState;
   readonly mutateCheckpointState: (state: BattleState) => BattleState;
 }): BattleState {
   const cast = castCloudkill({ targetCanReadyRayOfFrost: true });
@@ -559,10 +560,9 @@ function resolveInterruptedRoundWrapAfterCohortMutation(input: {
   const readied = readyTargetRayOfFrost(
     battleRuntimeSessionForTest({ ...cast.session, state: targetTurn.state }),
   );
-  const boundaryState = withOneTickDurationCohort(
-    readied.state,
-    input.sourceKey,
-  );
+  const boundaryState =
+    input.checkpointState?.(readied.state) ??
+    withOneTickDurationCohort(readied.state, input.sourceKey);
   const orderFrontier = endTurn({
     state: boundaryState,
     actorId: spellTargetId,
@@ -830,6 +830,68 @@ describe("Cloudkill source-turn movement", () => {
     expect(durationCohortEffectRefs(resolved, sourceKey)).toEqual(
       replacementRefs,
     );
+    expect(resolved.combatants.get(spellCasterId)?.tempHp).toBe(Hp(0));
+  });
+
+  test("does not execute a fresh same-shape damage-and-save occurrence in a removed checkpoint slot", () => {
+    const sourceKey = "replaced-round-wrap-damage-save-occurrence";
+    let checkpointRef: BattleEffectExecutionRef | undefined;
+    let replacementRef: BattleEffectExecutionRef | undefined;
+    let checkpointHp: Hp | undefined;
+    const resolved = resolveInterruptedRoundWrapAfterCohortMutation({
+      sourceKey,
+      checkpointState: (state) => {
+        checkpointHp = state.combatants.get(spellCasterId)?.hp;
+        return withSourceStartTurnDamage(state, sourceKey);
+      },
+      mutateCheckpointState: (state) => {
+        const sourceProcedureRef =
+          battleProcedureExecutionRefForTest(sourceKey);
+        const source = state.combatants.get(spellCasterId);
+        if (source === undefined) {
+          throw new Error("Expected the damage-and-save occurrence owner.");
+        }
+        const checkpointEffect = source.activeEffects.find(
+          (effect) =>
+            effect.kind === "spellTurnStartDamageAndSave" &&
+            effect.sourceProcedureRef === sourceProcedureRef,
+        );
+        if (checkpointEffect?.kind !== "spellTurnStartDamageAndSave") {
+          throw new Error("Expected checkpoint damage-and-save occurrence.");
+        }
+        checkpointRef = checkpointEffect.effectRef;
+        const replacement = withSourceStartTurnDamage(
+          {
+            ...state,
+            combatants: new Map(state.combatants).set(spellCasterId, {
+              ...source,
+              activeEffects: source.activeEffects.filter(
+                (effect) => effect.effectRef !== checkpointEffect.effectRef,
+              ),
+            }),
+          },
+          sourceKey,
+        );
+        replacementRef = replacement.combatants
+          .get(spellCasterId)
+          ?.activeEffects.find(
+            (effect) =>
+              effect.kind === "spellTurnStartDamageAndSave" &&
+              effect.sourceProcedureRef === sourceProcedureRef,
+          )?.effectRef;
+        return replacement;
+      },
+    });
+
+    expect(checkpointRef).toBeDefined();
+    expect(replacementRef).toBeDefined();
+    expect(replacementRef).not.toBe(checkpointRef);
+    expect(resolved.combatants.get(spellCasterId)?.hp).toBe(checkpointHp);
+    expect(
+      resolved.combatants
+        .get(spellCasterId)
+        ?.activeEffects.some((effect) => effect.effectRef === replacementRef),
+    ).toBe(true);
   });
 
   test("ages duration occurrences whose checkpoint identity survives state mutation", () => {
@@ -895,6 +957,7 @@ describe("Cloudkill source-turn movement", () => {
         (emitter) => emitter.effectRef === checkpointRefs[1],
       )?.expiresAt,
     ).toEqual({ kind: "duration", durationTicks: elapsedTimeTicks(1) });
+    expect(resolved.combatants.get(spellCasterId)?.tempHp).toBe(Hp(1));
   });
 
   test("lets the turn owner order simultaneous source-start damage and Cloudkill movement", () => {

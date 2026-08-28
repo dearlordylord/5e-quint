@@ -5071,6 +5071,7 @@ export type BattleSpellTurnStartDamageRollHole = Extract<
 > & {
   readonly spellTurnStartDamage: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly trigger:
@@ -5089,6 +5090,7 @@ export type BattleSpellTurnEndDamageRollHole = Extract<
 > & {
   readonly spellTurnEndDamage: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly damage: SpellTurnEndDamage;
@@ -5101,6 +5103,7 @@ export type BattleSpellTurnStartSavingThrowOutcomeHole = {
   readonly label: string;
   readonly spellTurnStartSave: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly save: SpellTurnStartDamageSave;
@@ -6001,6 +6004,7 @@ export type BattleTemporaryHitPointChoiceHole = {
   readonly label: string;
   readonly sourceCombatantId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  readonly effectRef: BattleEffectExecutionRef;
   readonly sourceTurn: {
     readonly actorId: CombatantId;
     readonly round: RoundType;

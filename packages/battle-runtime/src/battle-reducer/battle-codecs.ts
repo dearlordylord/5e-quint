@@ -1383,6 +1383,7 @@ const SpellTurnDamageSchema = Schema.Struct({
 
 const BattleSpellTurnStartDamageSourceSchema = Schema.Struct({
   ...BattleProcedureSourceSchema,
+  effectRef: BattleEffectExecutionRef,
   trigger: Schema.Union([
     Schema.Struct({
       kind: Schema.Literal("condition"),
@@ -1399,6 +1400,7 @@ const BattleSpellTurnStartDamageSourceSchema = Schema.Struct({
 
 const BattleSpellTurnEndDamageSourceSchema = Schema.Struct({
   ...BattleProcedureSourceSchema,
+  effectRef: BattleEffectExecutionRef,
   damage: SpellTurnDamageSchema,
 });
 
@@ -2113,6 +2115,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     spellTurnStartSave: Schema.Struct({
       targetId: CombatantId,
+      effectRef: BattleEffectExecutionRef,
       sourceProcedureRef: BattleProcedureExecutionRef,
       sourceCombatantId: CombatantId,
       save: Schema.Struct({
@@ -2480,6 +2483,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     kind: Schema.Literal("temporaryHitPointChoice"),
     sourceCombatantId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
+    effectRef: BattleEffectExecutionRef,
     sourceTurn: Schema.Struct({
       actorId: CombatantId,
       round: BattleRoundSchema,
@@ -6601,7 +6605,7 @@ function serializedBattleHoleExecutionReferences(
       readonly effectRef: BattleEffectExecutionRef;
     }): readonly SerializedExecutionReferenceOwnership[] => [
       source(owner.sourceProcedureRef, owner.sourceCombatantId),
-      bound(owner.effectRef),
+      bound(owner.effectRef, "activeEffect"),
       ...bonuses,
     ];
     return Match.value(value).pipe(
@@ -6626,7 +6630,7 @@ function serializedBattleHoleExecutionReferences(
               procedureSource(matched.objectContactSave),
             ),
             Match.when({ spellTurnStartSave: Match.any }, (matched) =>
-              procedureSource(matched.spellTurnStartSave),
+              occurrenceSource(matched.spellTurnStartSave),
             ),
             Match.when({ hideousLaughterRepeatSave: Match.any }, (matched) =>
               procedureSource(matched.hideousLaughterRepeatSave),
@@ -6718,6 +6722,14 @@ function serializedBattleHoleExecutionReferences(
     }): readonly SerializedExecutionReferenceOwnership[] => [
       source(owner.sourceProcedureRef, owner.sourceCombatantId),
     ];
+    const activeOccurrenceSource = (owner: {
+      readonly sourceProcedureRef: BattleProcedureExecutionRef;
+      readonly sourceCombatantId: CombatantId;
+      readonly effectRef: BattleEffectExecutionRef;
+    }): readonly SerializedExecutionReferenceOwnership[] => [
+      source(owner.sourceProcedureRef, owner.sourceCombatantId),
+      bound(owner.effectRef, "activeEffect"),
+    ];
     return Match.value(value).pipe(
       Match.when({ sourceProcedureRef: Match.any }, (hole) => [
         source(hole.sourceProcedureRef),
@@ -6747,10 +6759,10 @@ function serializedBattleHoleExecutionReferences(
         procedureSource(hole.mirrorImageDuplicateRoll),
       ),
       Match.when({ spellTurnStartDamage: Match.any }, (hole) =>
-        procedureSource(hole.spellTurnStartDamage),
+        activeOccurrenceSource(hole.spellTurnStartDamage),
       ),
       Match.when({ spellTurnEndDamage: Match.any }, (hole) =>
-        procedureSource(hole.spellTurnEndDamage),
+        activeOccurrenceSource(hole.spellTurnEndDamage),
       ),
       Match.when({ movableZone: Match.any }, (hole) =>
         procedureSource(hole.movableZone),
@@ -6951,6 +6963,7 @@ function serializedBattleHoleExecutionReferences(
       startTurnOccurrenceOrder: () => [],
       temporaryHitPointChoice: (value) => [
         source(value.sourceProcedureRef, value.sourceCombatantId),
+        bound(value.effectRef, "activeEffect"),
       ],
       statBlockRechargeRoll: (value) =>
         value.rechargeTargets.map((ref) => owned(ref, value.combatantId)),
