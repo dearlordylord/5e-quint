@@ -1,5 +1,7 @@
-import { damageAmount, DieRollResult, Hp } from "@dnd/shared/types";
+import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
+import { damageAmount, DieRollResult, Hp, Round } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 
 import {
   battleId,
@@ -47,7 +49,7 @@ import {
 } from "./battle-reducer/creature-hit-point-state.ts";
 import { allocateBattleEffectOccurrenceForCreature } from "./effect-execution-ref.ts";
 
-function admittedDamageEffectSession() {
+function admittedPriorCastDamageEffectSession() {
   const session = startBattleSessionRight({
     battleId: battleId("battle-damage-hp-admitted-effects"),
     combatants: [
@@ -65,22 +67,32 @@ function admittedDamageEffectSession() {
           ],
           spellSlots: [
             { spellLevel: 1, count: 2 },
-            { spellLevel: 2, count: 1 },
+            { spellLevel: 2, count: 2 },
           ],
         }),
       }),
       statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
     ],
   });
-  return {
-    ...session,
-    state: battleStateWithAllSpellSlotsExpended(session.state, fighterId),
-  };
+  const expendedState = battleStateWithAllSpellSlotsExpended(
+    session.state,
+    fighterId,
+  );
+  return battleRuntimeSessionForTest({
+    state: {
+      ...expendedState,
+      initiative: {
+        ...expendedState.initiative,
+        round: Round(4),
+      },
+    },
+    context: session.context,
+  });
 }
 
 describe("damage and hit point lifecycle helpers", () => {
   test("projects temporary hit points, maximum increases, and expiration edges", () => {
-    const session = admittedDamageEffectSession();
+    const session = admittedPriorCastDamageEffectSession();
     const state = session.state;
     const target = state.combatants.get(goblinId);
     if (target === undefined || target.positiveHpUnconscious !== null) {
@@ -118,7 +130,7 @@ describe("damage and hit point lifecycle helpers", () => {
     expect(Number(increased.maxHp)).toBe(Number(target.maxHp));
     expect(Number(increased.hp)).toBe(Number(target.hp) + 5);
 
-    const lowerSameSourceAllocation =
+    const repeatedSameStrengthAllocation =
       allocateBattleEffectOccurrenceForCreature({
         owner: increased,
         effect: {
@@ -129,12 +141,12 @@ describe("damage and hit point lifecycle helpers", () => {
           expiresAt: hpMaximumEffect.expiresAt,
         },
       });
-    expect(lowerSameSourceAllocation.effect.effectRef).not.toBe(
+    expect(repeatedSameStrengthAllocation.effect.effectRef).not.toBe(
       hpMaximumEffect.effectRef,
     );
     const retainedMaximum = applyHitPointMaximumIncrease(
-      lowerSameSourceAllocation.owner,
-      lowerSameSourceAllocation.effect,
+      repeatedSameStrengthAllocation.owner,
+      repeatedSameStrengthAllocation.effect,
     );
     expect(retainedMaximum.activeEffects).toHaveLength(2);
     expect(Number(retainedMaximum.maxHp)).toBe(Number(increased.maxHp));
@@ -157,7 +169,7 @@ describe("damage and hit point lifecycle helpers", () => {
   });
 
   test("covers damage projection, healing gates, and death-save transitions", () => {
-    const session = admittedDamageEffectSession();
+    const session = admittedPriorCastDamageEffectSession();
     const state = session.state;
     const fighter = state.combatants.get(fighterId);
     const goblin = state.combatants.get(goblinId);
@@ -196,7 +208,7 @@ describe("damage and hit point lifecycle helpers", () => {
         expiresAt: {
           kind: "endOfTurn",
           combatantId: fighterId,
-          round: 2,
+          round: Round(5),
         },
       },
     });
@@ -473,7 +485,7 @@ describe("damage and hit point lifecycle helpers", () => {
   });
 
   test("damage application returns the original state for zero-damage and unknown targets", () => {
-    const session = admittedDamageEffectSession();
+    const session = admittedPriorCastDamageEffectSession();
     const state = session.state;
     const target = state.combatants.get(goblinId);
     const fighter = state.combatants.get(fighterId);
@@ -561,7 +573,11 @@ describe("damage and hit point lifecycle helpers", () => {
         sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
           session,
           fighterId,
-          spellSlotInvocationRef("charm_person", 1, "conditionSave"),
+          spellSlotInvocationRef(
+            "charm_person",
+            1,
+            "saveGatedCondition",
+          ),
         ),
         sourceCombatantId: fighterId,
         condition: "charmed",
@@ -575,7 +591,10 @@ describe("damage and hit point lifecycle helpers", () => {
       },
     });
     const knockedOutWithEscape = {
-      ...escapeEffect.owner,
+      ...battleCreatureStateWithKnockOutPreservedConditions(
+        escapeEffect.owner,
+        applyCondition(knockout.conditions, "charmed"),
+      ),
       activeEffects: [escapeEffect.effect],
     };
     const escaped = removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly(

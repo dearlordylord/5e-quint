@@ -4,6 +4,8 @@ import type {
   BattleSubject,
 } from "./battle-runtime.test-support.ts";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
+import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
+import { Round } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-hit-point-state.ts";
 import { allocateBattleEffectOccurrenceForCreature } from "./effect-execution-ref.ts";
@@ -221,10 +223,17 @@ describe("battle runtime: Concentration and readied spells", () => {
         }),
       ],
     });
-    const state = battleStateWithAllSpellSlotsExpended(
+    const expendedState = battleStateWithAllSpellSlotsExpended(
       session.state,
       wizardId,
     );
+    const state: BattleState = {
+      ...expendedState,
+      initiative: {
+        ...expendedState.initiative,
+        round: Round(2),
+      },
+    };
     const wizard = state.combatants.get(wizardId)!;
     const skeleton = state.combatants.get(skeletonId)!;
     const sourceProcedureRef = requireCharacterSpellProcedureRefForTest(
@@ -245,6 +254,7 @@ describe("battle runtime: Concentration and readied spells", () => {
         expiresAt: {
           kind: "concentration",
           combatantId: wizardId,
+          durationTicks: elapsedTimeTicks(10),
         },
       },
     });
@@ -259,7 +269,13 @@ describe("battle runtime: Concentration and readied spells", () => {
           },
         })
         .set(skeletonId, {
-          ...allocatedEffect.owner,
+          ...battleCreatureStateWithKnockOutPreservedConditions(
+            allocatedEffect.owner,
+            applyCondition(
+              applyCondition(skeleton.conditions, "prone"),
+              "incapacitated",
+            ),
+          ),
           activeEffects: [allocatedEffect.effect],
         }),
     } satisfies BattleState;
@@ -840,13 +856,20 @@ describe("battle runtime: Concentration and readied spells", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const mechanicallyPossibleState = battleStateWithAllSpellSlotsExpended(
+    const expendedState = battleStateWithAllSpellSlotsExpended(
       battleStateWithAllSpellSlotsExpended(
         session.state,
         secondWizardId,
       ),
       fighterId,
     );
+    const mechanicallyPossibleState: BattleState = {
+      ...expendedState,
+      initiative: {
+        ...expendedState.initiative,
+        round: Round(2),
+      },
+    };
     const caster = mechanicallyPossibleState.combatants.get(wizardId);
     const laughterCaster =
       mechanicallyPossibleState.combatants.get(secondWizardId);
@@ -874,13 +897,17 @@ describe("battle runtime: Concentration and readied spells", () => {
         conditionHadNonSpellIncapacitatedSource: false,
         repeatSaveRollMode: null,
         save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
-        expiresAt: { kind: "concentration", combatantId: secondWizardId },
+        expiresAt: {
+          kind: "concentration",
+          combatantId: secondWizardId,
+          durationTicks: elapsedTimeTicks(10),
+        },
       },
     });
-    const sourceDamageRollPenalty = allocateBattleEffectOccurrenceForCreature({
+    const sourceD20TestRollMode = allocateBattleEffectOccurrenceForCreature({
       owner: caster,
       effect: {
-        kind: "sourceDamageRollPenalty",
+        kind: "abilityD20TestRollModeEndTurnSave",
         sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
           session,
           fighterId,
@@ -891,8 +918,28 @@ describe("battle runtime: Concentration and readied spells", () => {
           ),
         ),
         sourceCombatantId: fighterId,
+        ability: "str",
+        mode: "disadvantage",
+        save: { ability: "con", dc: { kind: "caster_spell_save_dc" } },
+        expiresAt: {
+          kind: "concentration",
+          combatantId: fighterId,
+          durationTicks: elapsedTimeTicks(10),
+        },
+      },
+    });
+    const sourceDamageRollPenalty = allocateBattleEffectOccurrenceForCreature({
+      owner: sourceD20TestRollMode.owner,
+      effect: {
+        kind: "sourceDamageRollPenalty",
+        sourceProcedureRef: sourceD20TestRollMode.effect.sourceProcedureRef,
+        sourceCombatantId: fighterId,
         amount: { dice: 1, dieSize: 8 },
-        expiresAt: { kind: "concentration", combatantId: fighterId },
+        expiresAt: {
+          kind: "concentration",
+          combatantId: fighterId,
+          durationTicks: elapsedTimeTicks(10),
+        },
       },
     });
     const enrichedState: BattleState = {
@@ -902,6 +949,7 @@ describe("battle runtime: Concentration and readied spells", () => {
           ...sourceDamageRollPenalty.owner,
           activeEffects: [
             ...caster.activeEffects,
+            sourceD20TestRollMode.effect,
             sourceDamageRollPenalty.effect,
           ],
         })
@@ -951,8 +999,24 @@ describe("battle runtime: Concentration and readied spells", () => {
         fills: [],
       }),
     );
+    const awaitingRayRepeatSave = endTurn({
+      state: readied.state,
+      actorId: wizardId,
+    });
+    const rayRepeatSave = requireHole(
+      awaitingRayRepeatSave,
+      "savingThrowOutcome",
+    );
     const goblinTurn = requireResolved(
-      endTurn({ state: readied.state, actorId: wizardId }),
+      endTurn({
+        state: readied.state,
+        actorId: wizardId,
+        fills: [
+          savingThrowOutcomeFill(rayRepeatSave, [
+            { targetId: wizardId, succeeded: false },
+          ]),
+        ],
+      }),
     );
     const releaseSubject = {
       tag: "runtimeCommand" as const,
