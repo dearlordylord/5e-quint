@@ -1312,7 +1312,7 @@ const BattleLightEmitterAttachmentSchema = Schema.Union([
 const BattleOngoingSpellEffectRefSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("spellLightEmitter"),
-    sourceEffectId: BattleSpellEffectOccurrenceId,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     kind: Schema.Literal("spellActiveEffect"),
@@ -1331,7 +1331,7 @@ const BattleOngoingSpellEffectRefSchema = Schema.Union([
 const BattleAntimagicFieldOngoingSpellEffectRefSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("spellLightEmitter"),
-    sourceEffectId: BattleSpellEffectOccurrenceId,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     kind: Schema.Literal("spellActiveEffect"),
@@ -3407,7 +3407,7 @@ type BattleFillEncoded =
             readonly effect:
               | {
                   readonly kind: "spellLightEmitter";
-                  readonly sourceEffectId: string;
+                  readonly effectRef: string;
                 }
               | {
                   readonly kind: "spellActiveEffect";
@@ -3440,7 +3440,7 @@ type BattleFillEncoded =
               readonly effect:
                 | {
                     readonly kind: "spellLightEmitter";
-                    readonly sourceEffectId: string;
+                    readonly effectRef: string;
                   }
                 | {
                     readonly kind: "spellActiveEffect";
@@ -3545,7 +3545,7 @@ type BattleFillEncoded =
               | { readonly kind: "combatant"; readonly combatantId: string };
             readonly spellCreatedLightOverlaps: readonly {
               readonly kind: "spellCreatedLightOverlapsArea";
-              readonly sourceEffectId: string;
+              readonly effectRef: string;
             }[];
           }
         | {
@@ -3561,7 +3561,7 @@ type BattleFillEncoded =
               readonly effect:
                 | {
                     readonly kind: "spellLightEmitter";
-                    readonly sourceEffectId: string;
+                    readonly effectRef: string;
                   }
                 | {
                     readonly kind: "spellActiveEffect";
@@ -4701,7 +4701,7 @@ export const BattleFillSchema: Schema.Codec<
           spellCreatedLightOverlaps: Schema.Array(
             Schema.Struct({
               kind: Schema.Literal("spellCreatedLightOverlapsArea"),
-              sourceEffectId: BattleSpellEffectOccurrenceId,
+              effectRef: BattleEffectExecutionRef,
             }),
           ),
         }),
@@ -6849,7 +6849,7 @@ function serializedBattleHoleExecutionReferences(
         owned(value.procedureRef, value.casterId),
         ...value.choices.flatMap((choice) =>
           choice.kind === "magicalEffect" &&
-          choice.effect.kind === "spellActiveEffect"
+          choice.effect.kind !== "antimagicFieldAura"
             ? [bound(choice.effect.effectRef)]
             : [],
         ),

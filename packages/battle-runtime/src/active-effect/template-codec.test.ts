@@ -9,6 +9,10 @@ import {
   WardingBondActiveEffectTemplateSchema,
 } from "./codecs.ts";
 import { SpellWeaponAttackOverrideTemplateSchema } from "../procedure-execution/weapon-attack-override.ts";
+import {
+  ConditionImmunityTemplateSchema,
+  TurnStartTemporaryHitPointsTemplateSchema,
+} from "../battle-reducer/spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts";
 
 const duration = { kind: "duration", durationTicks: 10 } as const;
 const concentration = {
@@ -67,6 +71,26 @@ const templateSchemas = [
     encoded: {
       kind: "wardingBond",
       sourceCombatantId: "template-source",
+      expiresAt: duration,
+    },
+  },
+  {
+    name: "condition immunity",
+    schema: ConditionImmunityTemplateSchema,
+    encoded: {
+      kind: "conditionImmunity",
+      sourceCombatantId: "template-source",
+      condition: "frightened",
+      expiresAt: duration,
+    },
+  },
+  {
+    name: "turn-start temporary hit points",
+    schema: TurnStartTemporaryHitPointsTemplateSchema,
+    encoded: {
+      kind: "turnStartTemporaryHitPoints",
+      sourceCombatantId: "template-source",
+      amount: 3,
       expiresAt: duration,
     },
   },

@@ -1,6 +1,7 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   assertBattleSnapshotCodecRoundTripForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
 import {
@@ -287,7 +288,9 @@ describe("battle runtime: Darkness", () => {
           magicalDarknessAreaFill(area, battleAreaId("darkness-overlap-area"), [
             {
               kind: "spellCreatedLightOverlapsArea",
-              sourceEffectId: overlappingLevelTwoEffectId,
+              effectRef: battleEffectExecutionRefForTest(
+                String(overlappingLevelTwoEffectId),
+              ),
             },
           ]),
         ],
@@ -329,7 +332,7 @@ describe("battle runtime: Darkness", () => {
             [
               {
                 kind: "spellCreatedLightOverlapsArea",
-                sourceEffectId: battleSpellEffectOccurrenceId(
+                effectRef: battleEffectExecutionRefForTest(
                   "darkness-missing-light",
                 ),
               },
@@ -384,7 +387,9 @@ describe("battle runtime: Darkness", () => {
             [
               {
                 kind: "spellCreatedLightOverlapsArea",
-                sourceEffectId: overLevelEffectId,
+                effectRef: battleEffectExecutionRefForTest(
+                  String(overLevelEffectId),
+                ),
               },
             ],
           ),
@@ -535,6 +540,7 @@ function trackedObjectSpellLightEmitter(input: {
   }
   return {
     kind: "spellLightEmitter",
+    effectRef: battleEffectExecutionRefForTest(String(input.sourceEffectId)),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String("synthetic_spell_light"),
     ),

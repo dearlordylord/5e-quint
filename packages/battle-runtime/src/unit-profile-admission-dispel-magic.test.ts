@@ -664,7 +664,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
             kind: "magicalEffect",
             effect: {
               kind: "spellLightEmitter",
-              sourceEffectId: selectedEmitter.sourceEffectId,
+              effectRef: selectedEmitter.effectRef,
             },
           },
         }),
@@ -811,9 +811,17 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
         combatant.combatantId === spellCasterId
           ? {
               ...combatant,
-              activeEffectRefs: [
-                battleEffectExecutionRefForTest("wrong-owner-spiritual-weapon"),
-              ],
+              effectOccurrences: combatant.effectOccurrences.map(
+                (occurrence) =>
+                  occurrence.effectRef === effect.effectRef
+                    ? {
+                        ...occurrence,
+                        effectRef: battleEffectExecutionRefForTest(
+                          "wrong-owner-spiritual-weapon",
+                        ),
+                      }
+                    : occurrence,
+              ),
             }
           : combatant,
       ),
@@ -995,8 +1003,8 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
             combatant.combatantId === spellCasterId
               ? {
                   ...combatant,
-                  activeEffectRefs: combatant.activeEffectRefs.filter(
-                    (effectRef) => effectRef !== effect.effectRef,
+                  effectOccurrences: combatant.effectOccurrences.filter(
+                    (occurrence) => occurrence.effectRef !== effect.effectRef,
                   ),
                 }
               : combatant,
@@ -1353,6 +1361,10 @@ function objectSpellEmitter(input: {
 }): BattleTrackedOngoingSpellLightEmitter {
   return {
     kind: "spellLightEmitter",
+    effectRef: battleEffectExecutionRefForTest(
+      input.sourceEffectId ??
+        `${spellTargetId}:${input.sourceProcedureRef}:${input.objectId}:test-effect`,
+    ),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(input.sourceProcedureRef),
     ),

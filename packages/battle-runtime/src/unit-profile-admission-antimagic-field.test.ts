@@ -142,7 +142,11 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       ordinaryLight,
       artifactLight,
     ]);
-    expect(resolved.snapshot.lightEmitters).toEqual([artifactLight]);
+    const { effectRef: _artifactEffectRef, ...artifactProjection } =
+      artifactLight;
+    const { effectRef: _ordinaryEffectRef, ...ordinaryProjection } =
+      ordinaryLight;
+    expect(resolved.snapshot.lightEmitters).toEqual([artifactProjection]);
     expect(
       resolved.state.combatants.get(spellCasterId)?.activeEffects,
     ).toContainEqual(
@@ -160,7 +164,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
         suppressedOngoingSpellEffects: [
           {
             kind: "spellLightEmitter",
-            sourceEffectId: continualFlameEffectId,
+            effectRef: effectRefForTest(continualFlameEffectId),
           },
         ],
         expiresAt: {
@@ -180,8 +184,8 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
         ),
     ).toBe(false);
     expect(snapshotBattle(restored).lightEmitters).toEqual([
-      ordinaryLight,
-      artifactLight,
+      ordinaryProjection,
+      artifactProjection,
     ]);
   });
 
@@ -513,7 +517,8 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
     const resolved = castAntimagicField(session, []);
 
     expect(resolved.state.lightEmitters).toEqual([emitter]);
-    expect(resolved.snapshot.lightEmitters).toEqual([emitter]);
+    const { effectRef: _emitterEffectRef, ...emitterProjection } = emitter;
+    expect(resolved.snapshot.lightEmitters).toEqual([emitterProjection]);
     expect(
       requireCombatant(resolved.state, spellCasterId).activeEffects,
     ).toContainEqual(
@@ -673,7 +678,10 @@ function antimagicAffectedLight(
 ): BattleAntimagicFieldAffectedOngoingSpellEffect {
   return {
     kind: "antimagicFieldAffectedOngoingSpellEffect",
-    effect: { kind: "spellLightEmitter", sourceEffectId },
+    effect: {
+      kind: "spellLightEmitter",
+      effectRef: effectRefForTest(sourceEffectId),
+    },
     sourceKind,
   };
 }
@@ -767,6 +775,7 @@ function trackedObjectSpellLightEmitter(input: {
   }
   return {
     kind: "spellLightEmitter",
+    effectRef: effectRefForTest(input.sourceEffectId),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(input.sourceProcedureRef),
     ),

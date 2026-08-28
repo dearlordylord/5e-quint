@@ -27,6 +27,7 @@ import {
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import { targetListSpellUsesTargetListHole } from "../spells-discovery.ts";
 import { allocateBattleEffectOccurrencesForCreature } from "../../effect-execution-ref.ts";
 
@@ -323,6 +324,22 @@ function applyConditionImmunityAndTurnStartTemporaryHitPointsEffects(
   }, state);
 }
 
+export const ConditionImmunityTemplateSchema = Schema.Struct({
+  ...BattleEffectOccurrenceTemplateSchemaFields,
+  kind: Schema.Literal("conditionImmunity"),
+  sourceCombatantId: CombatantId,
+  condition: Schema.Literal("frightened"),
+  expiresAt: BattleActiveEffectExpirationSchema,
+});
+
+export const TurnStartTemporaryHitPointsTemplateSchema = Schema.Struct({
+  ...BattleEffectOccurrenceTemplateSchemaFields,
+  kind: Schema.Literal("turnStartTemporaryHitPoints"),
+  sourceCombatantId: CombatantId,
+  amount: Schema.Number,
+  expiresAt: BattleActiveEffectExpirationSchema,
+});
+
 const ConditionImmunityAndTurnStartTemporaryHitPointsInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
@@ -339,18 +356,8 @@ const ConditionImmunityAndTurnStartTemporaryHitPointsInvocationSchema =
         maxTargets: Schema.Number,
       }),
       activeEffects: Schema.Tuple([
-        Schema.Struct({
-          kind: Schema.Literal("conditionImmunity"),
-          sourceCombatantId: CombatantId,
-          condition: Schema.Literal("frightened"),
-          expiresAt: BattleActiveEffectExpirationSchema,
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("turnStartTemporaryHitPoints"),
-          sourceCombatantId: CombatantId,
-          amount: Schema.Number,
-          expiresAt: BattleActiveEffectExpirationSchema,
-        }),
+        ConditionImmunityTemplateSchema,
+        TurnStartTemporaryHitPointsTemplateSchema,
       ]),
       rangeFeet: MovementFeet,
     }),

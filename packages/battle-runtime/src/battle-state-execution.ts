@@ -2241,7 +2241,7 @@ export type BattleMagicalDarknessAreaChoice = Extract<
 >;
 export type BattleSpellCreatedLightAreaOverlap = {
   readonly kind: "spellCreatedLightOverlapsArea";
-  readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+  readonly effectRef: BattleEffectExecutionRef;
 };
 export type BattleSpellAreaOriginAnchor =
   | {

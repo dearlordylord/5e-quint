@@ -7,7 +7,6 @@ import type {
   BattleEffectExecutionRef,
   BattleAreaId,
   BattleDancingLightId,
-  BattleSpellEffectOccurrenceId,
   BattleTablePositionId,
   CombatantId,
 } from "../identity.ts";
@@ -78,7 +77,7 @@ export type SpellConditionRepeatSave = {
 export type BattleOngoingSpellEffectRef =
   | {
       readonly kind: "spellLightEmitter";
-      readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+      readonly effectRef: BattleEffectExecutionRef;
     }
   | {
       readonly kind: "spellActiveEffect";

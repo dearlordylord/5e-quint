@@ -494,24 +494,25 @@ export function battleLightEmitters(
                       : [],
       ),
   );
-  const emitters = [
-    ...state.lightEmitters.map(projectStoredLightEmitter),
+  const storedEmitters =
+    suppressedEffectKeys.size === 0
+      ? state.lightEmitters
+      : state.lightEmitters.filter(
+          (emitter) =>
+            !(
+              isTrackedOngoingSpellLightEmitter(emitter) &&
+              suppressedEffectKeys.has(
+                ongoingSpellEffectRefKey(
+                  ongoingSpellEffectRefForEmitter(emitter),
+                ),
+              )
+            ),
+        );
+  return [
+    ...storedEmitters.map(projectStoredLightEmitter),
     ...outlineLightEmitters,
     ...state.objectOutlines.map(faerieFireObjectDimLightEmitter),
   ];
-  return suppressedEffectKeys.size === 0
-    ? emitters
-    : emitters.filter(
-        (emitter) =>
-          !(
-            isTrackedOngoingSpellLightEmitter(emitter) &&
-            suppressedEffectKeys.has(
-              ongoingSpellEffectRefKey(
-                ongoingSpellEffectRefForEmitter(emitter),
-              ),
-            )
-          ),
-      );
 }
 
 function projectStoredLightEmitter(
@@ -2072,9 +2073,9 @@ export function applyMagicalDarknessPointOriginCastEffect(input: {
       },
     },
   });
-  const dispelledLightEffectIds = new Set(
+  const dispelledLightEffectRefs = new Set(
     input.areaChoice.spellCreatedLightOverlaps.map(
-      (overlap) => overlap.sourceEffectId,
+      (overlap) => overlap.effectRef,
     ),
   );
   return {
@@ -2085,7 +2086,7 @@ export function applyMagicalDarknessPointOriginCastEffect(input: {
           isTrackedOngoingSpellLightEmitter(emitter) &&
           emitter.sourceSpellLevel <=
             input.invocation.dispelledSpellCreatedLightMaxSpellLevel &&
-          dispelledLightEffectIds.has(emitter.sourceEffectId)
+          dispelledLightEffectRefs.has(emitter.effectRef)
         ),
     ),
   };
