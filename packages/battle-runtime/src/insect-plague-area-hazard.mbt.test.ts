@@ -31,9 +31,8 @@ import type {
   BattleActiveEffect,
   BattleRuntimeSession,
   BattleState,
-  CombatantId,
 } from "./index.ts";
-import { endTurn } from "./index.ts";
+import { endTurn, snapshotBattle } from "./index.ts";
 import type { BattleInsectPlagueAreaHazardTrigger } from "./battle-state-execution.ts";
 import type { BattleEffectExecutionRef } from "./identity.ts";
 import {
@@ -88,7 +87,6 @@ type InsectPlagueMbtProjection = {
 type InsectPlagueRuntimeState = {
   readonly session: BattleRuntimeSession;
   readonly slotLevel: 5 | 6 | 7;
-  readonly turnActorId: CombatantId;
   readonly occurrenceOrdinal: number;
   readonly exactEffectRef: BattleEffectExecutionRef | null;
 };
@@ -302,7 +300,6 @@ function initialRuntimeState(
   return {
     session,
     slotLevel,
-    turnActorId: spellCasterId,
     occurrenceOrdinal: Number(caster.nextEffectOrdinal),
     exactEffectRef: null,
   };
@@ -414,9 +411,10 @@ function resolveInsectPlagueSave(
 function beginLaterTurn(
   state: InsectPlagueRuntimeState,
 ): InsectPlagueRuntimeState {
+  const currentActorId = snapshotBattle(state.session.state).currentActorId;
   const advanced = endTurn({
     state: state.session.state,
-    actorId: state.turnActorId,
+    actorId: currentActorId,
   });
   if (advanced.tag !== "resolved") {
     throw new Error("Expected the production battle turn to advance.");
@@ -427,8 +425,6 @@ function beginLaterTurn(
       ...state.session,
       state: advanced.state,
     }),
-    turnActorId:
-      state.turnActorId === spellCasterId ? spellTargetId : spellCasterId,
   };
 }
 
@@ -460,6 +456,7 @@ function insectPlagueRuntimeProjection(
   state: InsectPlagueRuntimeState,
 ): InsectPlagueMbtProjection {
   const battle = state.session.state;
+  const currentActorId = snapshotBattle(battle).currentActorId;
   const caster = requireCombatant(battle, spellCasterId);
   const target = requireCombatant(battle, spellTargetId);
   const effect = insectPlagueEffects(battle)[0];
@@ -489,7 +486,7 @@ function insectPlagueRuntimeProjection(
     caster.concentration?.sourceProcedureRef === effect.sourceProcedureRef;
   return {
     actionAvailable: canSpendAction(battle.currentTurnResources, "magic"),
-    targetTurn: state.turnActorId === spellTargetId,
+    targetTurn: currentActorId === spellTargetId,
     areaActive,
     areaOccurrenceOrdinal: effect === undefined ? 0 : state.occurrenceOrdinal,
     areaDamageDice: effect === undefined ? 0 : effect.damage.expr.dice,
@@ -500,7 +497,7 @@ function insectPlagueRuntimeProjection(
     areaRadiusFeet: effect === undefined ? 0 : Number(effect.radiusFeet),
     appearanceOccurrenceOpen:
       effect !== undefined &&
-      effect.appearanceOccurrence.actorId === state.turnActorId &&
+      effect.appearanceOccurrence.actorId === currentActorId &&
       effect.appearanceOccurrence.round === battle.initiative.round,
     savedThisTurn: effect?.savedThisTurn.includes(spellTargetId) === true,
     nextOccurrenceOrdinal: Number(caster.nextEffectOrdinal),

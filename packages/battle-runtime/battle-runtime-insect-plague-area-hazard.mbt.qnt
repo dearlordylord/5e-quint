@@ -3,6 +3,7 @@
 module battleRuntimeInsectPlagueAreaHazardMbt {
   import battleRuntimeInsectPlagueAreaHazard.* from "./battle-runtime-insect-plague-area-hazard"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
+  import spellSlotExpenditure.* from "../shared-algebras/proofs/rule-core/spell-slot-expenditure"
 
   var qActionAvailable: bool
   var qTargetTurn: bool
@@ -24,70 +25,60 @@ module battleRuntimeInsectPlagueAreaHazardMbt {
   var qLightlyObscured: bool
   var qDifficultTerrain: bool
 
-  pure def insectPlagueMbtState(
-    actionAvailable: bool,
-    targetTurn: bool,
-    areaActive: bool,
-    areaOccurrenceOrdinal: int,
-    areaDamageDice: int,
-    areaDurationTicks: int,
-    areaRadiusFeet: int,
-    appearanceOccurrenceOpen: bool,
-    savedThisTurn: bool,
-    nextOccurrenceOrdinal: int,
-    slotLevel: int,
-    slotsRemaining: int,
-    slotSpellCastThisTurn: bool,
-    targetHitPoints: int,
-    targetDead: bool,
-    targetUnconscious: bool,
-  ): InsectPlagueAreaHazardState = {
-    actionAvailable: actionAvailable,
-    targetTurn: targetTurn,
-    area:
-      if (areaActive)
-        InsectPlagueAreaActive({
-          occurrenceOrdinal: areaOccurrenceOrdinal,
-          damageDice: areaDamageDice,
-          durationTicks: areaDurationTicks,
-          radiusFeet: areaRadiusFeet,
-          appearanceOccurrenceOpen: appearanceOccurrenceOpen,
-          savedThisTurn: savedThisTurn,
-        })
-      else
-        InsectPlagueAreaAbsent,
-    nextOccurrenceOrdinal: nextOccurrenceOrdinal,
-    slotLedger: { slotLevel: slotLevel, slotsRemaining: slotsRemaining },
-    slotSpellCastThisTurn: slotSpellCastThisTurn,
-    targetVitals: {
-      kind: PlayerCharacter,
-      hitPoints: targetHitPoints,
-      hitPointMaximum: 500,
-      temporaryHitPoints: 0,
-      dead: targetDead,
-      unconscious: targetUnconscious,
+  type InsectPlagueMbtProjection = {
+    turn: {
+      actionAvailable: bool,
+      targetTurn: bool,
+      slotSpellCastThisTurn: bool,
     },
+    area: InsectPlagueArea,
+    nextOccurrenceOrdinal: int,
+    slotLedger: SpellSlotLedger,
+    targetVitals: CreatureVitals,
+  }
+
+  pure def insectPlagueMbtState(
+    projection: InsectPlagueMbtProjection,
+  ): InsectPlagueAreaHazardState = {
+    actionAvailable: projection.turn.actionAvailable,
+    targetTurn: projection.turn.targetTurn,
+    area: projection.area,
+    nextOccurrenceOrdinal: projection.nextOccurrenceOrdinal,
+    slotLedger: projection.slotLedger,
+    slotSpellCastThisTurn: projection.turn.slotSpellCastThisTurn,
+    targetVitals: projection.targetVitals,
   }
 
   pure def currentInsectPlagueMbtState: InsectPlagueAreaHazardState =
-    insectPlagueMbtState(
-      qActionAvailable,
-      qTargetTurn,
-      qAreaActive,
-      qAreaOccurrenceOrdinal,
-      qAreaDamageDice,
-      qAreaDurationTicks,
-      qAreaRadiusFeet,
-      qAppearanceOccurrenceOpen,
-      qSavedThisTurn,
-      qNextOccurrenceOrdinal,
-      qSlotLevel,
-      qSlotsRemaining,
-      qSlotSpellCastThisTurn,
-      qTargetHitPoints,
-      qTargetDead,
-      qTargetUnconscious,
-    )
+    insectPlagueMbtState({
+      turn: {
+        actionAvailable: qActionAvailable,
+        targetTurn: qTargetTurn,
+        slotSpellCastThisTurn: qSlotSpellCastThisTurn,
+      },
+      area:
+        if (qAreaActive)
+          InsectPlagueAreaActive({
+            occurrenceOrdinal: qAreaOccurrenceOrdinal,
+            damageDice: qAreaDamageDice,
+            durationTicks: qAreaDurationTicks,
+            radiusFeet: qAreaRadiusFeet,
+            appearanceOccurrenceOpen: qAppearanceOccurrenceOpen,
+            savedThisTurn: qSavedThisTurn,
+          })
+        else
+          InsectPlagueAreaAbsent,
+      nextOccurrenceOrdinal: qNextOccurrenceOrdinal,
+      slotLedger: { slotLevel: qSlotLevel, slotsRemaining: qSlotsRemaining },
+      targetVitals: {
+        kind: PlayerCharacter,
+        hitPoints: qTargetHitPoints,
+        hitPointMaximum: 500,
+        temporaryHitPoints: 0,
+        dead: qTargetDead,
+        unconscious: qTargetUnconscious,
+      },
+    })
 
   action recordNextState(nextState: InsectPlagueAreaHazardState): bool = all {
     qActionAvailable' = nextState.actionAvailable,

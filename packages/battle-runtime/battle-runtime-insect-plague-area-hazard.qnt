@@ -79,12 +79,13 @@ module battleRuntimeInsectPlagueAreaHazard {
       appearanceOccurrenceOpen: bool,
       savedThisTurn: bool,
     },
+    targetTurn: bool,
     trigger: InsectPlagueSaveTrigger,
   ): bool =
     match trigger {
       | InsectPlagueAppearanceOccurrence => area.appearanceOccurrenceOpen
       | InsectPlagueFirstEntryOccurrence => true
-      | InsectPlagueTargetTurnEndOccurrence => true
+      | InsectPlagueTargetTurnEndOccurrence => targetTurn
     }
 
   pure def resolveInsectPlagueCast(
@@ -138,7 +139,7 @@ module battleRuntimeInsectPlagueAreaHazard {
       | InsectPlagueAreaAbsent => state
       | InsectPlagueAreaActive(area) =>
           if (
-            not(insectPlagueTriggerIsAvailable(area, trigger)) or
+            not(insectPlagueTriggerIsAvailable(area, state.targetTurn, trigger)) or
             not(areaEffectTriggerCanResolve(
               true,
               true,

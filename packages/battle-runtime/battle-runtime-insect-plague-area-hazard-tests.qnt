@@ -65,6 +65,17 @@ module battleRuntimeInsectPlagueAreaHazardTests {
     }
   }
 
+  run test_insect_plague_turn_end_requires_the_targets_turn = {
+    val cast = resolveInsectPlagueCast(initialInsectPlagueState(5), 5)
+    val invalidTurnEnd = resolveInsectPlagueSave(
+      cast,
+      InsectPlagueTargetTurnEndOccurrence,
+      false,
+      20,
+    )
+    assert(invalidTurnEnd == cast)
+  }
+
   run test_insect_plague_upcast_failed_save_applies_the_selected_roll = {
     val cast = resolveInsectPlagueCast(initialInsectPlagueState(7), 7)
     val resolved = resolveInsectPlagueSave(cast, InsectPlagueAppearanceOccurrence, false, 49)
