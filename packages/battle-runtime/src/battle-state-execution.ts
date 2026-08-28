@@ -755,6 +755,7 @@ export type BattleStartTurnOccurrenceSequenceCheckpoint = {
     readonly actorId: CombatantId;
     readonly round: RoundType;
   };
+  readonly completedPrefixFills: readonly BattleStartTurnCompletedPrefixFill[];
   readonly child: {
     readonly kind: "cloudkillMovementSaveDamageSequence";
     readonly areaId: BattleAreaId;
@@ -762,6 +763,20 @@ export type BattleStartTurnOccurrenceSequenceCheckpoint = {
     readonly targetId: CombatantId;
   };
 };
+export type BattleStartTurnCompletedPrefixFill = Extract<
+  BattleFill,
+  {
+    readonly kind:
+      | "attackDamageDisposition"
+      | "cloudkillMovement"
+      | "concentrationSavingThrow"
+      | "deathSavingThrow"
+      | "rolledDice"
+      | "savingThrowOutcome"
+      | "statBlockRechargeRoll"
+      | "temporaryHitPointChoice";
+  }
+>;
 export type BattleInterruptedProcedure =
   | {
       readonly kind: "replay";
@@ -5958,7 +5973,7 @@ export type BattleTemporaryHitPointChoiceHole = {
   readonly holeId: BattleHoleId;
   readonly kind: "temporaryHitPointChoice";
   readonly label: string;
-  readonly actorId: CombatantId;
+  readonly sourceCombatantId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly sourceTurn: { readonly actorId: CombatantId; readonly round: RoundType };
   readonly occurrenceId: BattleStartTurnOccurrenceOption["occurrenceId"];

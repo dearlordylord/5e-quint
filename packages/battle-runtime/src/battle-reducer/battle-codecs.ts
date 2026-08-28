@@ -2474,7 +2474,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("temporaryHitPointChoice"),
-    actorId: CombatantId,
+    sourceCombatantId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
     sourceTurn: Schema.Struct({ actorId: CombatantId, round: BattleRoundSchema }),
     occurrenceId: BattleStartTurnOccurrenceId,
@@ -6888,7 +6888,7 @@ function serializedBattleHoleExecutionReferences(
       ],
       startTurnOccurrenceOrder: () => [],
       temporaryHitPointChoice: (value) => [
-        source(value.sourceProcedureRef, value.actorId),
+        source(value.sourceProcedureRef, value.sourceCombatantId),
       ],
       statBlockRechargeRoll: (value) =>
         value.rechargeTargets.map((ref) => owned(ref, value.combatantId)),

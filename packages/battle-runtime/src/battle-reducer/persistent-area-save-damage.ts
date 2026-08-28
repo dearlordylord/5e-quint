@@ -1,4 +1,5 @@
 import { optionalProperty } from "../optional-property.ts";
+import { sameMultisetBy } from "../mechanical-equality.ts";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import {
   holeId,
@@ -35,6 +36,12 @@ import { validateRolledDiceFillForDiceExpr } from "../battle-state-execution.ts"
 import type { BattleAreaId, CombatantId } from "../identity.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import { concentrationSavingThrowHole } from "./damage-apply.ts";
+import {
+  damageDispositionFillFor,
+  damageDispositionFillsValidation,
+  damageDispositionForTarget,
+  zeroHitPointReplacementDispositionHole,
+} from "./attack-damage-apply.ts";
 import { damageAmountAfterTargetAdjustments } from "./damage-helpers.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import {
@@ -43,6 +50,7 @@ import {
 } from "./fill-hole-protocol.ts";
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
+import { battleContinuationFillEquals } from "./battle-fill-equality.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
   projectReplayChildResult,
@@ -81,6 +89,7 @@ type PersistentAreaResolvedHoleIds = {
   readonly save: BattleHoleId;
   readonly damage: BattleHoleId;
   readonly concentration: BattleHoleId | null;
+  readonly disposition: BattleHoleId | null;
 };
 
 type PersistentAreaResolutionContext =
@@ -90,6 +99,7 @@ type PersistentAreaResolutionContext =
       readonly parent: ReplayParentContinuation;
       readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
       readonly sequence: BattleStartTurnOccurrenceSequenceCheckpoint["sequence"];
+      readonly completedPrefixFills: BattleStartTurnOccurrenceSequenceCheckpoint["completedPrefixFills"];
       readonly occurrence: BattleStartTurnOccurrenceSequenceCheckpoint["child"];
       readonly handledPosition:
         | BattleStartTurnOccurrenceSequenceCheckpoint
@@ -115,6 +125,7 @@ export type CloudkillMovementSaveDamageSequenceResult =
       readonly saveHoleIds: ReadonlySet<BattleHoleId>;
       readonly damageHoleIds: ReadonlySet<BattleHoleId>;
       readonly concentrationHoleIds: ReadonlySet<BattleHoleId>;
+      readonly dispositionHoleIds: ReadonlySet<BattleHoleId>;
     }
   | {
       readonly tag: "result";
@@ -125,6 +136,7 @@ type CloudkillMovementSequenceContinuation =
   | {
       readonly kind: "turnBoundaryReplay";
       readonly sequence: BattleStartTurnOccurrenceSequenceCheckpoint["sequence"];
+      readonly completedPrefixFills: BattleStartTurnOccurrenceSequenceCheckpoint["completedPrefixFills"];
     }
   | {
       readonly kind: "advancedPrefixAtCheckpoint";
@@ -300,6 +312,7 @@ export function resolveCloudkillMovementSaveDamageSequence(input: {
   const saveHoleIds = new Set<BattleHoleId>();
   const damageHoleIds = new Set<BattleHoleId>();
   const concentrationHoleIds = new Set<BattleHoleId>();
+  const dispositionHoleIds = new Set<BattleHoleId>();
   const handledCheckpoint =
     input.continuation.kind === "advancedPrefixAtCheckpoint"
       ? input.continuation.checkpoint
@@ -355,6 +368,10 @@ export function resolveCloudkillMovementSaveDamageSequence(input: {
           input.continuation.kind === "turnBoundaryReplay"
             ? input.continuation.sequence
             : input.continuation.checkpoint.sequence,
+        completedPrefixFills:
+          input.continuation.kind === "turnBoundaryReplay"
+            ? input.continuation.completedPrefixFills
+            : input.continuation.checkpoint.completedPrefixFills,
         occurrence: {
           kind: "cloudkillMovementSaveDamageSequence",
           areaId: request.effect.areaId,
@@ -373,6 +390,9 @@ export function resolveCloudkillMovementSaveDamageSequence(input: {
     if (step.holeIds.concentration !== null) {
       concentrationHoleIds.add(step.holeIds.concentration);
     }
+    if (step.holeIds.disposition !== null) {
+      dispositionHoleIds.add(step.holeIds.disposition);
+    }
     parentPositionMatched ||= step.matchedHandledPosition;
   }
 
@@ -385,6 +405,7 @@ export function resolveCloudkillMovementSaveDamageSequence(input: {
     saveHoleIds,
     damageHoleIds,
     concentrationHoleIds,
+    dispositionHoleIds,
   };
 }
 
@@ -411,7 +432,12 @@ function sameCloudkillMovementSaveDamagePosition(
     left.sourceTurn.round === right.sourceTurn.round &&
     left.child.areaId === right.child.areaId &&
     left.child.sourceProcedureRef === right.child.sourceProcedureRef &&
-    left.child.targetId === right.child.targetId
+    left.child.targetId === right.child.targetId &&
+    sameMultisetBy(
+      left.completedPrefixFills,
+      right.completedPrefixFills,
+      battleContinuationFillEquals,
+    )
   );
 }
 
@@ -694,17 +720,56 @@ function resolvePersistentAreaSaveDamageStep(input: {
       ]),
     );
   }
+  const dispositionHole = zeroHitPointReplacementDispositionHole({
+    damageSourceId: effect.sourceCombatantId,
+    target,
+    damageAmount: adjustedDamage,
+  });
+  const dispositionFills =
+    dispositionHole === null
+      ? []
+      : resolution.fills.filter(
+          (
+            fill,
+          ): fill is Extract<
+            BattleFill,
+            { readonly kind: "attackDamageDisposition" }
+          > =>
+            fill.kind === "attackDamageDisposition" &&
+            fill.holeId === dispositionHole.holeId,
+        );
+  const dispositionIssue = damageDispositionFillsValidation({
+    holes: dispositionHole === null ? [] : [dispositionHole],
+    fills: dispositionFills,
+  });
+  if (dispositionIssue !== null) {
+    return persistentAreaStepResult(
+      context,
+      invalidResult(resolution.state, "invalidFill", dispositionIssue),
+    );
+  }
+  if (
+    dispositionHole !== null &&
+    damageDispositionFillFor(dispositionFills, dispositionHole) === undefined
+  ) {
+    return persistentAreaStepResult(
+      context,
+      needsHolesResult(resolution.state, resolution.subject, [dispositionHole]),
+    );
+  }
 
   const holeIds = {
     save: saveHole.holeId,
     damage: damageHole.holeId,
     concentration: concentrationHole === null ? null : concentrationHole.holeId,
+    disposition: dispositionHole === null ? null : dispositionHole.holeId,
   } satisfies PersistentAreaResolvedHoleIds;
-  const consumedHoleIds = new Set(
-    holeIds.concentration === null
-      ? [holeIds.save, holeIds.damage]
-      : [holeIds.save, holeIds.damage, holeIds.concentration],
-  );
+  const consumedHoleIds = new Set([
+    holeIds.save,
+    holeIds.damage,
+    ...(holeIds.concentration === null ? [] : [holeIds.concentration]),
+    ...(holeIds.disposition === null ? [] : [holeIds.disposition]),
+  ]);
   /* v8 ignore start -- @preserve -- Malformed fill set: every supplied fill must answer a hole derived for this exact replay subject. */
   if (
     persistentAreaContextOwnsAllFills(context) &&
@@ -727,6 +792,11 @@ function resolvePersistentAreaSaveDamageStep(input: {
     adjustedDamage,
     {
       damageSourceId: effect.sourceCombatantId,
+      damageDisposition: damageDispositionForTarget(
+        dispositionHole === null ? [] : [dispositionHole],
+        dispositionFills,
+        resolution.subject.actorId,
+      ),
       ...optionalProperty("concentrationSavingThrow", concentrationFill),
       spatialFacts: [],
     },
@@ -765,9 +835,10 @@ function persistentAreaReplayPosition(
     byPersistentAreaResolutionContextKind("standalone", () => undefined),
     byPersistentAreaResolutionContextKind(
       "replayParent",
-      ({ occurrence, sequence, sourceTurn }) => ({
+      ({ completedPrefixFills, occurrence, sequence, sourceTurn }) => ({
         kind: "startTurnOccurrenceSequence" as const,
         sequence,
+        completedPrefixFills,
         sourceTurn,
         child: occurrence,
       }),

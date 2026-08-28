@@ -846,7 +846,7 @@ describe("Cloudkill source-turn movement", () => {
         "temporaryHitPointChoice",
       );
       expect(choiceHole).toMatchObject({
-        actorId: spellCasterId,
+        sourceTurn: { actorId: spellCasterId },
         existingTemporaryHitPoints: 10,
         grantedTemporaryHitPoints: 5,
       });

@@ -174,7 +174,7 @@ function conditionImmunityAndTurnStartTemporaryHitPointsSpellProjection(
       {
         kind: "turnStartTemporaryHitPoints",
         sourceCombatantId: actorId,
-        amount: Number(spellcastingAbilityModifier),
+        amount: Math.max(0, Number(spellcastingAbilityModifier)),
         expiresAt,
       },
     ],
