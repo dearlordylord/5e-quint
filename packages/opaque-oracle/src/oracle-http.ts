@@ -31,11 +31,25 @@ export type OracleHttpServiceOptions = OracleHttpServerOptions & {
 };
 
 /** Bind one production Oracle HTTP server and return its assigned endpoint. */
-export function listenOracleHttpServer(input: OracleHttpServerOptions) {
-  return listenOracleHttpServerInternal(input);
+export function listenOracleHttpServer({
+  application,
+  host,
+  port,
+}: OracleHttpServerOptions) {
+  return listenOracleHttpServerInternal({ application, host, port });
 }
 
 /** Run the production loopback HTTP lifecycle until termination. */
-export function runOracleHttpService(input: OracleHttpServiceOptions) {
-  return runOracleHttpServiceInternal(input);
+export function runOracleHttpService({
+  application,
+  host,
+  port,
+  writeReady,
+}: OracleHttpServiceOptions) {
+  return runOracleHttpServiceInternal({
+    application,
+    host,
+    port,
+    writeReady,
+  });
 }

@@ -35,6 +35,7 @@ import {
   ORACLE_HTTP_IDENTITY_PATH,
   ORACLE_HTTP_JSON_CONTENT_TYPE,
   ORACLE_HTTP_MAX_REQUEST_BYTES,
+  runOracleHttpService,
 } from "./oracle-http.ts";
 import {
   listenOracleHttpServerInternal,
@@ -153,6 +154,68 @@ async function request(
 }
 
 describe("Opaque Oracle loopback HTTP adapter", () => {
+  test("public listen ignores runtime-only test seams", async () => {
+    let serverFactoryCalls = 0;
+    const serverFactory: HttpServerFactory = () => {
+      serverFactoryCalls += 1;
+      throw new Error("public listen accepted a server factory");
+    };
+    const encodeBatchResponse = (_response: OracleBatchResponse): string => {
+      throw new Error("public listen accepted a response encoder");
+    };
+    const result = await listenOracleHttpServer(
+      Object.assign(
+        {
+          application,
+          host: ORACLE_LOOPBACK_HOST,
+          port: portZeroValue,
+        },
+        { encodeBatchResponse, serverFactory },
+      ),
+    );
+    if (Either.isLeft(result)) {
+      throw new Error(`Oracle HTTP public listen failed: ${result.left.tag}`);
+    }
+    try {
+      const response = await request(result.right, {
+        method: "POST",
+        path: ORACLE_HTTP_EVALUATIONS_PATH,
+        body: "not-json",
+        contentType: ORACLE_HTTP_JSON_CONTENT_TYPE,
+      });
+      expect(response.statusCode).toBe(400);
+    } finally {
+      await closeServer(result.right);
+    }
+    expect(serverFactoryCalls).toBe(0);
+  });
+
+  test("public service ignores runtime-only test seams", async () => {
+    let serverFactoryCalls = 0;
+    const serverFactory: HttpServerFactory = () => {
+      serverFactoryCalls += 1;
+      throw new Error("public service accepted a server factory");
+    };
+    const result = await runOracleHttpService(
+      Object.assign(
+        {
+          application,
+          host: ORACLE_LOOPBACK_HOST,
+          port: portZeroValue,
+          writeReady: async () => {
+            process.emit("SIGINT");
+          },
+        },
+        {
+          encodeBatchResponse: (_response: OracleBatchResponse): string => "",
+          serverFactory,
+        },
+      ),
+    );
+    expect(Either.isRight(result)).toBe(true);
+    expect(serverFactoryCalls).toBe(0);
+  });
+
   test("discovers port zero only after listen and closes idempotently", async () => {
     const server = await openServer();
     expect(server.readiness.host).toBe(ORACLE_LOOPBACK_HOST);
