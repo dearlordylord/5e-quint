@@ -424,8 +424,8 @@ function markJumpMovementReplacementUsed(
   /* v8 ignore stop -- @preserve */
   const activeEffects = actor.activeEffects.map((effect) =>
     effect.kind === "jumpMovementReplacement" &&
-    effect.sourceCombatantId === consumedEffect.sourceCombatantId &&
-    effect.sourceProcedureRef === consumedEffect.sourceProcedureRef
+    spellActiveEffectExecutionRef(effect) ===
+      spellActiveEffectExecutionRef(consumedEffect)
       ? { ...effect, usedThisTurn: true }
       : effect,
   );

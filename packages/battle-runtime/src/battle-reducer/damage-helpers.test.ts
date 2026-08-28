@@ -8,6 +8,7 @@ import {
   spellTargetId,
 } from "../unit-profile-admission-catalog.test-support.ts";
 import {
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   testLongswordAttack,
 } from "../battle-runtime.test-support.ts";
@@ -54,6 +55,7 @@ function availableSlashingReduction() {
     const sourceCombatantId = combatantId(source);
     return {
       ...eligibleEffect,
+      effectRef: battleEffectExecutionRefForTest(`${source}:reduction`),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         `${source}:resistance`,
       ),
@@ -99,6 +101,9 @@ function availableSourceDamageRollPenalty() {
       ...sourceWithoutPenalty.activeEffects,
       {
         kind: "sourceDamageRollPenalty",
+        effectRef: battleEffectExecutionRefForTest(
+          "source-damage-roll-penalty",
+        ),
         sourceProcedureRef: battleProcedureExecutionRefForTest(
           "source-damage-roll-penalty",
         ),
@@ -133,6 +138,63 @@ function availableSourceDamageRollPenalty() {
 }
 
 describe("damage reduction helper boundaries", () => {
+  test("a stale reduction roll cannot bind a mechanically identical replacement occurrence", () => {
+    const first = availableSlashingReduction();
+    const staleRoll = damageRollFillWithGroups(first.hole, [[3]]);
+    const selected = first.target.activeEffects.find(
+      (effect) =>
+        effect.kind === "spellDamageReduction" &&
+        effect.damageType === "slashing" &&
+        !effect.usedThisTurn,
+    );
+    if (selected?.kind !== "spellDamageReduction") {
+      throw new Error("Expected an available spell damage reduction.");
+    }
+    const replacementRef = battleEffectExecutionRefForTest(
+      "replacement-damage-reduction",
+    );
+    const replacementTarget = {
+      ...first.target,
+      activeEffects: first.target.activeEffects.map((effect) =>
+        effect.effectRef === selected.effectRef
+          ? { ...selected, effectRef: replacementRef }
+          : effect,
+      ),
+    };
+    const replacementRequest = applyAvailableSpellDamageReduction(
+      replacementTarget,
+      first.damageByType,
+      undefined,
+    );
+    if (replacementRequest.tag !== "needsHoles") {
+      throw new Error("Expected the replacement reduction roll hole.");
+    }
+
+    expect(replacementRequest.holes[0]?.holeId).not.toBe(first.hole.holeId);
+    expect(
+      applyAvailableSpellDamageReduction(
+        replacementTarget,
+        first.damageByType,
+        staleRoll,
+      ),
+    ).toEqual({ tag: "invalid" });
+
+    const firstApplied = applyAvailableSpellDamageReduction(
+      first.target,
+      first.damageByType,
+      staleRoll,
+    );
+    if (firstApplied.tag !== "ok") {
+      throw new Error("Expected the selected reduction roll to apply.");
+    }
+    expect(
+      applySpellDamageReductionConsumption(
+        replacementTarget,
+        firstApplied.consumption,
+      ),
+    ).toEqual(replacementTarget);
+  });
+
   test("selects a target reduction roll by exact protocol identity", () => {
     const first = availableSlashingReduction();
     const eligibleEffect = first.target.activeEffects.find(
@@ -268,6 +330,57 @@ describe("damage reduction helper boundaries", () => {
 });
 
 describe("source damage roll penalty helper boundaries", () => {
+  test("a stale penalty roll cannot bind a mechanically identical replacement occurrence", () => {
+    const first = availableSourceDamageRollPenalty();
+    const staleRoll = damageRollFillWithGroups(first.hole, [[4]]);
+    const selected = first.source.activeEffects.find(
+      (effect) => effect.kind === "sourceDamageRollPenalty",
+    );
+    if (selected?.kind !== "sourceDamageRollPenalty") {
+      throw new Error("Expected an available source damage roll penalty.");
+    }
+    const replacementSource = {
+      ...first.source,
+      activeEffects: first.source.activeEffects.map((effect) =>
+        effect.effectRef === selected.effectRef
+          ? {
+              ...selected,
+              effectRef: battleEffectExecutionRefForTest(
+                "replacement-source-damage-roll-penalty",
+              ),
+            }
+          : effect,
+      ),
+    };
+    const replacementRequest = applyAvailableSourceDamageRollPenalty(
+      replacementSource,
+      first.damageByType,
+      first.damageRollHoleId,
+      undefined,
+    );
+    if (replacementRequest.tag !== "needsHoles") {
+      throw new Error("Expected the replacement penalty roll hole.");
+    }
+
+    expect(replacementRequest.holes[0]?.holeId).not.toBe(first.hole.holeId);
+    expect(
+      applyAvailableSourceDamageRollPenalty(
+        replacementSource,
+        first.damageByType,
+        first.damageRollHoleId,
+        staleRoll,
+      ),
+    ).toEqual({ tag: "invalid" });
+    expect(
+      applyAvailableSourceDamageRollPenalty(
+        first.source,
+        first.damageByType,
+        first.damageRollHoleId,
+        staleRoll,
+      ),
+    ).toMatchObject({ tag: "ok" });
+  });
+
   test("applies the requested roll and rejects stale, mismatched, or invalid fills", () => {
     const { source, damageByType, damageRollHoleId, hole } =
       availableSourceDamageRollPenalty();

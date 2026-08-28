@@ -6379,6 +6379,7 @@ export function cunningStrikeOptionUnsupportedIssue(
     : CUNNING_STRIKE_OPTION_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE;
 }
 export type SpellDamageReductionRoll = {
+  readonly effectRef: BattleEffectExecutionRef;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly sourceCombatantId: CombatantId;
   readonly targetId: CombatantId;
@@ -6389,6 +6390,7 @@ export type SpellDamageReductionRoll = {
   };
 };
 export type SourceDamageRollPenaltyFill = {
+  readonly effectRef: BattleEffectExecutionRef;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly sourceCombatantId: CombatantId;
   readonly affectedCombatantId: CombatantId;
