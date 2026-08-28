@@ -2,6 +2,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
 } from "./battle-runtime.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
@@ -36,9 +37,8 @@ import {
   type BattleResolutionResult,
   type BattleRuntimeSession,
   type BattleState,
-  type BattleStoredLightEmitter,
-  type BattleTrackedOngoingSpellLightEmitter,
 } from "./index.ts";
+import type { BattleStoredLightEmitterTemplate } from "./battle-state-execution.ts";
 
 type OngoingSpellTargetChoiceFill = Extract<
   BattleFill,
@@ -142,13 +142,10 @@ function initialRuntimeState(): DispelMagicRuntimeState {
 
 function endObjectAttachedSpellLight(): DispelMagicRuntimeState {
   const battle = battleWithLightEmitters([
-    objectSpellEmitter({
+    {
       objectId: selectedObjectId,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(continualFlameUnitId),
-      ),
       sourceSpellLevel: 2,
-    }),
+    },
   ]);
   const act = spellAct({
     session: battle,
@@ -230,13 +227,10 @@ function endSelectedMagicalEffectActiveEffect(): DispelMagicRuntimeState {
 
 function rejectOutOfRangeObjectTarget(): DispelMagicRuntimeState {
   const battle = battleWithLightEmitters([
-    objectSpellEmitter({
+    {
       objectId: selectedObjectId,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(continualFlameUnitId),
-      ),
       sourceSpellLevel: 2,
-    }),
+    },
   ]);
   const act = spellAct({
     session: battle,
@@ -257,6 +251,7 @@ function rejectOutOfRangeObjectTarget(): DispelMagicRuntimeState {
         target,
         facts: [
           ongoingSpellTargetWithinRangeFact({
+            hole: requireHole(act.initialHoles, "ongoingSpellTargetChoice"),
             target,
             rangeFeet: movementFeet(121),
           }),
@@ -274,15 +269,40 @@ function rejectOutOfRangeObjectTarget(): DispelMagicRuntimeState {
 }
 
 function battleWithLightEmitters(
-  lightEmitters: readonly BattleStoredLightEmitter[],
+  lightEmitters: readonly {
+    readonly objectId: ReturnType<typeof battleObjectId>;
+    readonly sourceSpellLevel: number;
+  }[],
 ): BattleRuntimeSession {
   const session = spellBattle({
-    preparedSpells: [spellRecord(dispelMagicUnitId)],
-    spellSlots: [{ spellLevel: 3, count: 1 }],
+    preparedSpells: [
+      spellRecord(dispelMagicUnitId),
+      spellRecord(continualFlameUnitId),
+    ],
+    spellSlots: [
+      { spellLevel: 2, count: 1 },
+      { spellLevel: 3, count: 1 },
+    ],
+  });
+  const continualFlameProcedureRef = spellAct({
+    session,
+    spellId: continualFlameUnitId,
+    slotLevel: 2,
+  }).subject.procedureRef;
+  const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+    state: session.state,
+    occurrences: lightEmitters.map((emitter) => ({
+      kind: "storedLightEmitter" as const,
+      ownerId: spellCasterId,
+      emitter: objectSpellEmitter({
+        ...emitter,
+        sourceProcedureRef: continualFlameProcedureRef,
+      }),
+    })),
   });
   return battleRuntimeSessionForTest({
     ...session,
-    state: { ...session.state, lightEmitters },
+    state: allocated.state,
   });
 }
 
@@ -345,20 +365,28 @@ function battleWithSpellLightAndActiveEffects(): BattleRuntimeSession {
       effectId: retainedActiveEffectId,
     }),
   ]);
-  return battleRuntimeSessionForTest({
-    ...battle,
-    state: {
-      ...battle.state,
-      lightEmitters: [
-        objectSpellEmitter({
+  const continualFlameProcedureRef = spellAct({
+    session: battle,
+    spellId: continualFlameUnitId,
+    slotLevel: 2,
+  }).subject.procedureRef;
+  const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+    state: battle.state,
+    occurrences: [
+      {
+        kind: "storedLightEmitter",
+        ownerId: spellCasterId,
+        emitter: objectSpellEmitter({
           objectId: selectedObjectId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(continualFlameUnitId),
-          ),
+          sourceProcedureRef: continualFlameProcedureRef,
           sourceSpellLevel: 2,
         }),
-      ],
-    },
+      },
+    ],
+  });
+  return battleRuntimeSessionForTest({
+    ...battle,
+    state: allocated.state,
   });
 }
 
@@ -368,13 +396,11 @@ function objectSpellEmitter(input: {
     typeof battleProcedureExecutionRefForTest
   >;
   readonly sourceSpellLevel: number;
-}): BattleTrackedOngoingSpellLightEmitter {
+}): BattleStoredLightEmitterTemplate {
   return {
     kind: "spellLightEmitter",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(input.sourceProcedureRef),
-    ),
-    sourceCombatantId: spellTargetId,
+    sourceProcedureRef: input.sourceProcedureRef,
+    sourceCombatantId: spellCasterId,
     sourceEffectId: battleSpellEffectOccurrenceId(
       `${spellTargetId}:${input.sourceProcedureRef}:${input.objectId}:selected`,
     ),
@@ -471,21 +497,26 @@ function ongoingSpellTargetFill(input: {
     holeId: input.hole.holeId,
     value: input.target,
     spatialFacts: input.facts ?? [
-      ongoingSpellTargetWithinRangeFact({ target: input.target }),
+      ongoingSpellTargetWithinRangeFact({
+        hole: input.hole,
+        target: input.target,
+      }),
     ],
   };
 }
 
 function ongoingSpellTargetWithinRangeFact(input: {
+  readonly hole: Extract<
+    BattleHole,
+    { readonly kind: "ongoingSpellTargetChoice" }
+  >;
   readonly target: OngoingSpellTarget;
   readonly rangeFeet?: ReturnType<typeof movementFeet>;
 }): OngoingSpellTargetWithinRangeFact {
   return {
     kind: "ongoingSpellTargetWithinRange",
     casterId: spellCasterId,
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(dispelMagicUnitId),
-    ),
+    sourceProcedureRef: input.hole.procedureRef,
     target: input.target,
     rangeFeet: input.rangeFeet ?? movementFeet(120),
   };
