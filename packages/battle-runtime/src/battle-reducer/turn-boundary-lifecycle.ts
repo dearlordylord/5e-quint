@@ -45,6 +45,7 @@ import {
 import {
   type Ability,
   DieRollResult,
+  Hp,
   movementFeet,
   type Round as RoundType,
 } from "@dnd/shared/types";
@@ -64,6 +65,7 @@ import type {
   BattleFill,
   BattleFlySpeedGrantEndFallCleanupFrame,
   BattleHideousLaughterRepeatSavingThrowOutcomeHole,
+  BattleHole,
   BattleHoleId,
   BattleObjectOutcomeAccumulation,
   BattleResolutionInput,
@@ -304,6 +306,28 @@ function startTurnOccurrenceSequence(
   return second === undefined
     ? { kind: "single", occurrenceId: first }
     : { kind: "ordered", occurrenceIds: [first, second, ...occurrenceIds.slice(2)] };
+}
+
+function temporaryHitPointChoiceHole(input: {
+  readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
+  readonly occurrenceId: StartTurnOccurrenceOption["occurrenceId"];
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  readonly existingTemporaryHitPoints: number;
+  readonly grantedTemporaryHitPoints: number;
+}): Extract<BattleHole, { readonly kind: "temporaryHitPointChoice" }> {
+  const key = `battle:temporary-hit-point-choice:${input.sourceTurn.actorId}:${Number(input.sourceTurn.round)}:${input.occurrenceId}`;
+  return {
+    kind: "temporaryHitPointChoice",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: "Choose which Temporary Hit Points to keep",
+    actorId: input.sourceTurn.actorId,
+    sourceProcedureRef: input.sourceProcedureRef,
+    sourceTurn: input.sourceTurn,
+    occurrenceId: input.occurrenceId,
+    existingTemporaryHitPoints: Hp(input.existingTemporaryHitPoints),
+    grantedTemporaryHitPoints: Hp(input.grantedTemporaryHitPoints),
+  };
 }
 
 type StartTurnOccurrenceHandle =
@@ -3318,20 +3342,71 @@ function resolveOrderedStartTurnOccurrences(input: {
       const exactEffect = prefixState.combatants
         .get(input.sourceTurn.actorId)
         ?.activeEffects.find(
-          (effect) =>
+          (
+            effect,
+          ): effect is Extract<
+            BattleActiveEffect,
+            { readonly kind: "turnStartTemporaryHitPoints" }
+          > =>
             effect.kind === "turnStartTemporaryHitPoints" &&
             effect.sourceProcedureRef === handle.effect.sourceProcedureRef &&
             effect.sourceCombatantId === handle.effect.sourceCombatantId,
         );
       if (exactEffect === undefined) continue;
-      prefixState = {
-        ...prefixState,
-        combatants: applyStartOfTurnTemporaryHitPointEffects(
-          prefixState.combatants,
-          input.sourceTurn.actorId,
-          [handle.effect.sourceProcedureRef],
-        ),
-      };
+      const actor = prefixState.combatants.get(input.sourceTurn.actorId);
+      if (actor === undefined) continue;
+      if (Number(actor.tempHp) === 0) {
+        prefixState = {
+          ...prefixState,
+          combatants: new Map(prefixState.combatants).set(
+            input.sourceTurn.actorId,
+            applyTemporaryHitPoints(actor, exactEffect.amount),
+          ),
+        };
+        continue;
+      }
+      const occurrenceId = startTurnOccurrenceOptionForHandle(handle).occurrenceId;
+      const hole = temporaryHitPointChoiceHole({
+        sourceTurn: input.sourceTurn,
+        occurrenceId,
+        sourceProcedureRef: exactEffect.sourceProcedureRef,
+        existingTemporaryHitPoints: Number(actor.tempHp),
+        grantedTemporaryHitPoints: exactEffect.amount,
+      });
+      const fills = input.fills.filter(
+        (
+          fill,
+        ): fill is Extract<
+          BattleFill,
+          { readonly kind: "temporaryHitPointChoice" }
+        > => fill.kind === "temporaryHitPointChoice" && fill.holeId === hole.holeId,
+      );
+      if (fills.length === 0) {
+        return {
+          tag: "result",
+          result: needsHolesResult(resultState(), input.subject, [hole]),
+        };
+      }
+      if (fills.length !== 1) {
+        return {
+          tag: "result",
+          result: invalidResult(
+            resultState(),
+            "invalidFill",
+            "Temporary Hit Point choice must answer its exact occurrence once.",
+          ),
+        };
+      }
+      acceptedHoleIds.add(hole.holeId);
+      if (fills[0]!.value === "replaceWithGranted") {
+        prefixState = {
+          ...prefixState,
+          combatants: new Map(prefixState.combatants).set(
+            input.sourceTurn.actorId,
+            { ...actor, tempHp: Hp(exactEffect.amount) },
+          ),
+        };
+      }
       continue;
     }
     if (
@@ -4976,6 +5051,7 @@ const END_TURN_FILL_KINDS = [
   "attackDamageDisposition",
   "cloudkillMovement",
   "startTurnOccurrenceOrder",
+  "temporaryHitPointChoice",
   "concentrationSavingThrow",
   "deathSavingThrow",
   "rolledDice",

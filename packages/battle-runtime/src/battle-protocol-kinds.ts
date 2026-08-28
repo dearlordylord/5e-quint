@@ -178,6 +178,10 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
         () => "toolPossessionFacts" as const,
       ),
       byBattleFillKind(
+        "temporaryHitPointChoice",
+        () => "temporaryHitPointChoice" as const,
+      ),
+      byBattleFillKind(
         "unitFeatureDecision",
         () => "unitFeatureDecision" as const,
       ),

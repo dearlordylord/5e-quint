@@ -299,6 +299,10 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
         () => "toolPossessionFacts" as const,
       ),
       byBattleHoleKind(
+        "temporaryHitPointChoice",
+        () => "temporaryHitPointChoice" as const,
+      ),
+      byBattleHoleKind(
         "unitFeatureDecision",
         () => "unitFeatureDecision" as const,
       ),

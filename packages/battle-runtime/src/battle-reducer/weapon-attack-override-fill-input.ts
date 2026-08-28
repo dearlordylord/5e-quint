@@ -87,6 +87,7 @@ function classifyWeaponAttackOverrideFill(
       movableZoneRepositionMovement: ordinaryFillIsInvalid,
       cloudkillMovement: ordinaryFillIsInvalid,
       startTurnOccurrenceOrder: ordinaryFillIsInvalid,
+      temporaryHitPointChoice: ordinaryFillIsInvalid,
       teleportDestination: ordinaryFillIsInvalid,
       spiritualWeaponForcePosition: ordinaryFillIsInvalid,
       spellTargetAllocation: ordinaryFillIsInvalid,

@@ -46,6 +46,7 @@ export const BATTLE_TRACE_HOLE_KINDS = [
   "movableZoneRamMovement",
   "movableZoneRepositionMovement",
   "startTurnOccurrenceOrder",
+  "temporaryHitPointChoice",
   "cloudkillMovement",
   "savingThrowOutcome",
   "slowSomaticSpellFailureOutcome",

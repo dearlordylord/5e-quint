@@ -5947,6 +5947,24 @@ export type BattleStartTurnOccurrenceOrderHole = {
     ...BattleStartTurnOccurrenceOption[],
   ];
 };
+export const BATTLE_TEMPORARY_HIT_POINT_CHOICES = [
+  "keepExisting",
+  "replaceWithGranted",
+] as const;
+export type BattleTemporaryHitPointChoice =
+  (typeof BATTLE_TEMPORARY_HIT_POINT_CHOICES)[number];
+export type BattleTemporaryHitPointChoiceHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "temporaryHitPointChoice";
+  readonly label: string;
+  readonly actorId: CombatantId;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  readonly sourceTurn: { readonly actorId: CombatantId; readonly round: RoundType };
+  readonly occurrenceId: BattleStartTurnOccurrenceOption["occurrenceId"];
+  readonly existingTemporaryHitPoints: Hp;
+  readonly grantedTemporaryHitPoints: Hp;
+};
 export const BATTLE_START_TURN_OCCURRENCE_KINDS = [
   "deathSavingThrow",
   "statBlockRecharge",
@@ -6230,6 +6248,7 @@ export type BattleHole =
   | BattleConcentrationSavingThrowHole
   | BattleInterruptDecisionHole
   | BattleStartTurnOccurrenceOrderHole
+  | BattleTemporaryHitPointChoiceHole
   | BattleCloudkillMovementHole
   | BattleMovementHole
   | BattleLevitateAltitudeChangeHole
@@ -6364,12 +6383,18 @@ export type BattleStartTurnOccurrenceOrderFill = {
     ];
   };
 };
+export type BattleTemporaryHitPointChoiceFill = {
+  readonly kind: "temporaryHitPointChoice";
+  readonly holeId: BattleHoleId;
+  readonly value: BattleTemporaryHitPointChoice;
+};
 export type BattleBrutalStrikeForcefulBlowMovementFill = {
   readonly kind: "movement";
   readonly holeId: BattleHoleId;
   readonly value: BattleBrutalStrikeForcefulBlowMovementFillValue;
 };
 export type BattleFill =
+  | BattleTemporaryHitPointChoiceFill
   | {
       readonly kind: "readyDeclaration";
       readonly holeId: BattleHoleId;

@@ -2,6 +2,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import { Schema } from "effect";
+import { Hp } from "@dnd/shared/types";
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
@@ -806,6 +807,91 @@ describe("Cloudkill source-turn movement", () => {
     });
   });
 
+  test("lets the recipient keep or replace an existing Temporary Hit Point pool", () => {
+    function choose(value: "keepExisting" | "replaceWithGranted") {
+      const cast = castCloudkill();
+      const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
+      if (targetTurn.tag !== "resolved") {
+        throw new Error("Expected the target turn to start.");
+      }
+      const source = targetTurn.state.combatants.get(spellCasterId);
+      if (source === undefined) throw new Error("Expected the Cloudkill source.");
+      const withExistingPool = {
+        ...targetTurn.state,
+        combatants: new Map(targetTurn.state.combatants).set(spellCasterId, {
+          ...source,
+          tempHp: Hp(10),
+        }),
+      };
+      const boundaryState = withSourceTurnStartTemporaryHitPoints(
+        withExistingPool,
+        { sourceKey: "cloudkill-lower-thp-choice", amount: 5 },
+      );
+      const orderFrontier = endTurn({
+        state: boundaryState,
+        actorId: spellTargetId,
+      });
+      const orderFill = startTurnOccurrenceOrderFill(
+        requireResultHole(orderFrontier, "startTurnOccurrenceOrder"),
+        (occurrence) =>
+          occurrence.kind === "turnStartTemporaryHitPoints" ? 0 : 1,
+      );
+      const choiceFrontier = endTurn({
+        state: boundaryState,
+        actorId: spellTargetId,
+        fills: [orderFill],
+      });
+      const choiceHole = requireResultHole(
+        choiceFrontier,
+        "temporaryHitPointChoice",
+      );
+      expect(choiceHole).toMatchObject({
+        actorId: spellCasterId,
+        existingTemporaryHitPoints: 10,
+        grantedTemporaryHitPoints: 5,
+      });
+      expect(
+        Schema.decodeUnknownSync(BattleHoleSchema)(
+          Schema.encodeSync(BattleHoleSchema)(choiceHole),
+        ),
+      ).toEqual(choiceHole);
+      const movementFrontier = endTurn({
+        state: boundaryState,
+        actorId: spellTargetId,
+        fills: [
+          orderFill,
+          { kind: "temporaryHitPointChoice", holeId: choiceHole.holeId, value },
+        ],
+      });
+      expect(movementFrontier).toMatchObject({
+        tag: "needsHoles",
+        holes: [{ kind: "cloudkillMovement" }],
+      });
+      if (movementFrontier.tag !== "needsHoles") {
+        throw new Error("Expected Cloudkill movement after the Temporary Hit Point choice.");
+      }
+      const completed = endTurn({
+        state: boundaryState,
+        actorId: spellTargetId,
+        fills: [
+          orderFill,
+          { kind: "temporaryHitPointChoice", holeId: choiceHole.holeId, value },
+          cloudkillMovementFill(
+            requireResultHole(movementFrontier, "cloudkillMovement"),
+            [],
+          ),
+        ],
+      });
+      if (completed.tag !== "resolved") {
+        throw new Error("Expected the empty Cloudkill movement to finish.");
+      }
+      return completed.state.combatants.get(spellCasterId)?.tempHp;
+    }
+
+    expect(choose("keepExisting")).toBe(10);
+    expect(choose("replaceWithGranted")).toBe(5);
+  });
+
   test("executes reverse-storage Temporary Hit Point grants around movement", () => {
     const cast = castCloudkill();
     const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
@@ -891,10 +977,30 @@ describe("Cloudkill source-turn movement", () => {
       requireResultHole(concentrationFrontier, "concentrationSavingThrow"),
       true,
     );
-    const result = endTurn({
+    const choiceFrontier = endTurn({
       state: boundaryState,
       actorId: spellTargetId,
       fills: [orderFill, movementFill, saveFill, damageFill, concentrationFill],
+    });
+    const choiceHole = requireResultHole(
+      choiceFrontier,
+      "temporaryHitPointChoice",
+    );
+    const result = endTurn({
+      state: boundaryState,
+      actorId: spellTargetId,
+      fills: [
+        orderFill,
+        movementFill,
+        saveFill,
+        damageFill,
+        concentrationFill,
+        {
+          kind: "temporaryHitPointChoice",
+          holeId: choiceHole.holeId,
+          value: "keepExisting",
+        },
+      ],
     });
 
     expect(result).toMatchObject({ tag: "resolved" });

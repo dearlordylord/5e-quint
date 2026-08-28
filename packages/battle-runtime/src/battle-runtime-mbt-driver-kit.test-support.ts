@@ -18912,6 +18912,11 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
             "Generic battle runtime MBT leaves simultaneous Cloudkill start-turn ordering to its focused witness.",
           );
         }),
+        Match.when({ kind: "temporaryHitPointChoice" }, () => {
+          throw new Error(
+            "Generic battle runtime MBT leaves Temporary Hit Point choices to focused turn-boundary witnesses.",
+          );
+        }),
       )
       .pipe(
         Match.when({ kind: "toolPossessionFacts" }, () => {

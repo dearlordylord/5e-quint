@@ -32,6 +32,7 @@ import {
   ResourceCount,
 } from "@dnd/shared/types";
 import { BattleCreatureDisplayNameSchema } from "../battle-creature-display-name.ts";
+import { BattleRoundSchema } from "../active-effect/round-codec.ts";
 import type { Ability, DamageType, Skill } from "@dnd/surface/surface/types";
 import {
   CreatureAttackRollMechanicsSchema,
@@ -162,7 +163,10 @@ import type {
   BattleHole,
   BattleMovementFillValue,
 } from "../battle-state-execution.ts";
-import { BATTLE_START_TURN_OCCURRENCE_KINDS } from "../battle-state-execution.ts";
+import {
+  BATTLE_START_TURN_OCCURRENCE_KINDS,
+  BATTLE_TEMPORARY_HIT_POINT_CHOICES,
+} from "../battle-state-execution.ts";
 import { ATTACK_PRESENTATION_JOIN_ISSUE_REASONS } from "../attack-presentation-contract.ts";
 const NonEmptyTrimmedStringSchema = Schema.Trimmed.pipe(
   Schema.check(Schema.isNonEmpty()),
@@ -2469,6 +2473,16 @@ const BattleHolePayloadUnionSchema = Schema.Union([
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
+    kind: Schema.Literal("temporaryHitPointChoice"),
+    actorId: CombatantId,
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    sourceTurn: Schema.Struct({ actorId: CombatantId, round: BattleRoundSchema }),
+    occurrenceId: BattleStartTurnOccurrenceId,
+    existingTemporaryHitPoints: HpSchema,
+    grantedTemporaryHitPoints: HpSchema,
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
     kind: Schema.Literal("cloudkillMovement"),
     sourceCombatantId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
@@ -3626,6 +3640,11 @@ type BattleFillEncoded =
       };
     }
   | {
+      readonly kind: "temporaryHitPointChoice";
+      readonly holeId: string;
+      readonly value: (typeof BATTLE_TEMPORARY_HIT_POINT_CHOICES)[number];
+    }
+  | {
       readonly kind: "cloudkillMovement";
       readonly holeId: string;
       readonly value: {
@@ -4768,6 +4787,11 @@ export const BattleFillSchema: Schema.Codec<
           [BattleStartTurnOccurrenceId],
         ),
       }),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("temporaryHitPointChoice"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Literals(BATTLE_TEMPORARY_HIT_POINT_CHOICES),
     }),
     Schema.Struct({
       kind: Schema.Literal("cloudkillMovement"),
@@ -6863,6 +6887,9 @@ function serializedBattleHoleExecutionReferences(
         source(value.sourceProcedureRef, value.sourceCombatantId),
       ],
       startTurnOccurrenceOrder: () => [],
+      temporaryHitPointChoice: (value) => [
+        source(value.sourceProcedureRef, value.actorId),
+      ],
       statBlockRechargeRoll: (value) =>
         value.rechargeTargets.map((ref) => owned(ref, value.combatantId)),
       spellcastingAbilityCheck: (value) => [
