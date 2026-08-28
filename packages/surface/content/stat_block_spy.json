@@ -1,0 +1,179 @@
+{
+  "challengeRating": 1,
+  "id": "stat_block_spy",
+  "kind": "statBlock",
+  "name": "Spy",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-P-S.md:1513-1539"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 16,
+      "con": 10,
+      "dex": 15,
+      "int": 12,
+      "str": 10,
+      "wis": 14
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 12
+      }
+    },
+    "actions": [
+      {
+        "description": "Melee Attack Roll: +4, reach 5 ft. Hit: 5 (1d6 + 2) Piercing damage plus 7 (2d6) Poison damage.",
+        "kind": "textOnly",
+        "name": "Shortsword",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Ranged Attack Roll: +4, range 30/120 ft. Hit: 5 (1d6 + 2) Piercing damage plus 7 (2d6) Poison damage.",
+        "kind": "textOnly",
+        "name": "Hand Crossbow",
+        "procedureOrdinal": 2,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "neutral",
+      "order": "neutral"
+    },
+    "bonusActions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "kind": "action_option",
+          "name": "Cunning Action",
+          "options": [
+            "dash",
+            "disengage",
+            "hide"
+          ]
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "additionalLanguages": 1,
+        "kind": "named_plus_other_languages",
+        "languages": [
+          "Common"
+        ]
+      }
+    },
+    "creatureType": "humanoid",
+    "gear": [
+      {
+        "item": "Hand Crossbow",
+        "quantity": 1
+      },
+      {
+        "item": "Shortsword",
+        "quantity": 1
+      },
+      {
+        "item": "Thieves' Tools",
+        "quantity": 1
+      }
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 27
+    },
+    "initiative": {
+      "modifier": 4,
+      "score": 14
+    },
+    "passivePerception": 16,
+    "savingThrowModifiers": [
+      {
+        "ability": "cha",
+        "modifier": 3
+      },
+      {
+        "ability": "con",
+        "modifier": 0
+      },
+      {
+        "ability": "dex",
+        "modifier": 2
+      },
+      {
+        "ability": "int",
+        "modifier": 1
+      },
+      {
+        "ability": "str",
+        "modifier": 0
+      },
+      {
+        "ability": "wis",
+        "modifier": 2
+      }
+    ],
+    "size": {
+      "kind": "alternatives",
+      "options": [
+        "medium",
+        "small"
+      ]
+    },
+    "skillModifiers": [
+      {
+        "modifier": 5,
+        "skill": "deception"
+      },
+      {
+        "modifier": 4,
+        "skill": "insight"
+      },
+      {
+        "modifier": 5,
+        "skill": "investigation"
+      },
+      {
+        "modifier": 6,
+        "skill": "perception"
+      },
+      {
+        "modifier": 4,
+        "skill": "sleight_of_hand"
+      },
+      {
+        "modifier": 6,
+        "skill": "stealth"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "climb"
+      }
+    ]
+  }
+}

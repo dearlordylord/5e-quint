@@ -25,6 +25,50 @@ type RawFidelityLane = {
   readonly records: readonly SrdStatBlockRecord[];
 };
 
+export const projectRawStatBlockSourceOccurrences = (config: {
+  readonly sourcePath: `.references/srd-5.2.1/${string}`;
+  readonly names: readonly string[];
+}): {
+  readonly occurrences: readonly SrdStatBlockSourceOccurrence[];
+  readonly records: readonly SrdStatBlockRecord[];
+  readonly projection: ReturnType<typeof projectRawStatBlocks>;
+} => {
+  const repositoryRoot = join(
+    dirname(fileURLToPath(import.meta.url)),
+    "../../../../",
+  );
+  const source = readFileSync(join(repositoryRoot, config.sourcePath), "utf8");
+  const equipmentSource = readFileSync(
+    join(repositoryRoot, ".references/srd-5.2.1/Equipment.md"),
+    "utf8",
+  );
+  const discovery = discoverSrdStatBlocks([
+    { sourcePath: config.sourcePath, contents: source },
+  ]);
+  if (discovery.issues.length > 0) {
+    throw new Error(
+      `Unable to reconcile ${config.sourcePath}: ${JSON.stringify(discovery.issues)}`,
+    );
+  }
+  const names = new Set(config.names.map(normalizeStatBlockIdentity));
+  const occurrences = discovery.occurrences.filter((occurrence) =>
+    names.has(normalizeStatBlockIdentity(occurrence.name)),
+  );
+  const records = srdStatBlockCollection.statBlocks.filter((record) =>
+    names.has(normalizeStatBlockIdentity(record.name)),
+  );
+  return {
+    occurrences,
+    records,
+    projection: projectRawStatBlocks(
+      source,
+      occurrences,
+      records,
+      equipmentSource,
+    ),
+  };
+};
+
 export const defineRawStatBlockFidelityLane = (config: {
   readonly label: string;
   readonly sourcePath: `.references/srd-5.2.1/${string}`;

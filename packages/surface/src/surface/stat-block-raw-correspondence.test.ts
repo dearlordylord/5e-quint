@@ -1211,9 +1211,9 @@ const sourceCorrespondence: readonly SourceCorrespondenceExpectation[] = [
   sourceRecord({
     id: "stat_block_sprite",
     name: "Sprite",
-    source: "Monsters/Monsters-P-S.md:1484-1512",
+    source: "Monsters/Monsters-P-S.md:1484-1509",
     rawSpanSha256:
-      "dcc42b743c451462b50214f6e2168a58f19390191eecd3056cd62d60493d00d6",
+      "43bfe0b8516d7279096f43cf507ffd1916ac0d69ba5229541e1d6e8befc68ae9",
     challengeRating: 0.25,
     statBlock: standaloneStatBlock({
       size: "tiny",

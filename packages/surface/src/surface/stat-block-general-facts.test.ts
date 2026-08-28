@@ -47,6 +47,39 @@ const syntheticStandaloneStatBlock = {
 } as const;
 
 describe("standalone Stat Block general facts", () => {
+  test("distinguishes fixed from exactly qualified vulnerabilities", () => {
+    const qualified = {
+      kind: "qualified",
+      damageTypes: ["cold"],
+      qualifier: "from attacks made with a synthetic moon-forged weapon",
+    } as const;
+    expect(
+      decode(StandaloneStatBlockSchema, {
+        ...syntheticStandaloneStatBlock,
+        vulnerabilities: qualified,
+      }).vulnerabilities,
+    ).toEqual(qualified);
+    expect(() =>
+      decode(StandaloneStatBlockSchema, {
+        ...syntheticStandaloneStatBlock,
+        vulnerabilities: {
+          kind: "fixed",
+          damageTypes: ["cold"],
+          qualifier: qualified.qualifier,
+        },
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(StandaloneStatBlockSchema, {
+        ...syntheticStandaloneStatBlock,
+        vulnerabilities: {
+          kind: "qualified",
+          damageTypes: ["cold"],
+        },
+      }),
+    ).toThrow();
+  });
+
   test("decodes descriptive and communication facts without Hit Dice", () => {
     expect(
       decode(StandaloneStatBlockSchema, syntheticStandaloneStatBlock),

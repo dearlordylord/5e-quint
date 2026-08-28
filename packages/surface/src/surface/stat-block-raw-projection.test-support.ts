@@ -186,7 +186,7 @@ type ProcedureProjection =
       readonly ability: AbilityName;
       readonly spellSaveDc?: number;
       readonly spellAttackBonus?: number;
-      readonly components: {
+      readonly components?: {
         readonly v: boolean;
         readonly s: boolean;
         readonly m: boolean | string;
@@ -228,7 +228,13 @@ type ScopedGeneralFacts = {
   readonly savingThrowModifiers: readonly NamedModifier[];
   readonly saveProficiencies: readonly AbilityName[];
   readonly skillModifiers: readonly NamedModifier[];
-  readonly vulnerabilities: readonly string[];
+  readonly vulnerabilities:
+    | { readonly kind: "fixed"; readonly damageTypes: readonly string[] }
+    | {
+        readonly kind: "qualified";
+        readonly damageTypes: readonly string[];
+        readonly qualifier: string;
+      };
   readonly resistances: readonly string[];
   readonly immunityDamageTypes: readonly string[];
   readonly immunityConditions: readonly string[];
@@ -455,6 +461,20 @@ const parseAbilityScores = (
   if (lines.some((line) => line.startsWith("| **Score**"))) {
     return abilityRecord(parseAbilityRow(lines, "Score", context));
   }
+  const compactRows = lines.filter((line) =>
+    /^\| (?:STR|INT) \| \d+ \|/.test(line),
+  );
+  if (compactRows.length === 2) {
+    return abilityRecord(
+      compactRows.flatMap((line) => {
+        const cells = line
+          .split("|")
+          .slice(1, -1)
+          .map((cell) => cell.trim());
+        return [1, 5, 9].map((index) => Number(cells[index]));
+      }),
+    );
+  }
   const scoreCells = lines
     .map((line) =>
       line
@@ -465,7 +485,9 @@ const parseAbilityScores = (
     .find(
       (cells) =>
         cells.length === ABILITY_NAMES.length &&
-        cells.every((cell) => /^\d+ \([+−-]?\d+\)$/.test(cell)),
+        cells.every((cell) =>
+          /^\d+ \([+−-]?\d+\)(?: Save [+−-]?\d+)?$/.test(cell),
+        ),
     );
   if (scoreCells === undefined) {
     throw new Error(`Expected six ${context} ability scores`);
@@ -485,6 +507,51 @@ const parseSavingThrowModifiers = (
       ABILITY_NAMES.map((ability, index) => ({
         name: ability,
         modifier: saveValues[index] ?? 0,
+      })),
+    );
+  }
+  const compactRows = lines.filter((line) =>
+    /^\| (?:STR|INT) \| \d+ \|/.test(line),
+  );
+  if (compactRows.length === 2) {
+    return sortedModifiers(
+      compactRows
+        .flatMap((line) => {
+          const cells = line
+            .split("|")
+            .slice(1, -1)
+            .map((cell) => cell.trim());
+          return [
+            { name: cells[0] ?? "", modifier: cells[3] ?? "" },
+            { name: cells[4] ?? "", modifier: cells[7] ?? "" },
+            { name: cells[8] ?? "", modifier: cells[11] ?? "" },
+          ];
+        })
+        .map(({ name, modifier }) => ({
+          name: name.toLowerCase(),
+          modifier: signedNumber(modifier),
+        })),
+    );
+  }
+  const combinedCells = lines
+    .map((line) =>
+      line
+        .split("|")
+        .slice(1, -1)
+        .map((cell) => cell.trim()),
+    )
+    .find(
+      (cells) =>
+        cells.length === ABILITY_NAMES.length &&
+        cells.every((cell) => /^\d+ \([+−-]?\d+\) Save [+−-]?\d+$/.test(cell)),
+    );
+  if (combinedCells !== undefined) {
+    return sortedModifiers(
+      combinedCells.map((cell, index) => ({
+        name: ABILITY_NAMES[index] ?? "str",
+        modifier: signedNumber(
+          requireMatch(cell, / Save ([+−-]?\d+)$/, `${context} Save`)[1] ?? "",
+        ),
       })),
     );
   }
@@ -546,6 +613,29 @@ const parseDamageTypes = (
           .split(", ")
           .map((value) => value.toLowerCase()),
       );
+};
+
+const parseVulnerabilities = (
+  lines: readonly string[],
+): ScopedGeneralFacts["vulnerabilities"] => {
+  const line = lines.find((candidate) =>
+    candidate.startsWith("**Vulnerabilities**"),
+  );
+  if (line === undefined) return { kind: "fixed", damageTypes: [] };
+  const value = line.replace("**Vulnerabilities**", "").trim();
+  const qualified = value.match(/^([A-Z][a-z]+) damage (from .+)$/);
+  return qualified === null
+    ? {
+        kind: "fixed",
+        damageTypes: sortedStrings(
+          value.split(", ").map((item) => item.toLowerCase()),
+        ),
+      }
+    : {
+        kind: "qualified",
+        damageTypes: [(qualified[1] ?? "").toLowerCase()],
+        qualifier: qualified[2] ?? "",
+      };
 };
 
 const parseImmunities = (
@@ -645,9 +735,13 @@ const parseGear = (lines: readonly string[]): ScopedGeneralFacts["gear"] => {
 };
 
 const parseLanguageSet = (value: string): LanguageSetProjection => {
+  if (value === "All") return { kind: "all" };
   const additional = value.match(/^(.+) plus (one|two) other languages?$/);
   return additional === null
-    ? { kind: "named", languages: value.split(", ") }
+    ? {
+        kind: "named",
+        languages: value.replace(", and ", ", ").split(/, | and /),
+      }
     : {
         kind: "named_plus_other_languages",
         languages: [additional[1] ?? ""],
@@ -754,7 +848,7 @@ const parseRawGeneralFacts = (
     savingThrowModifiers: parseSavingThrowModifiers(lines, name),
     saveProficiencies: [],
     skillModifiers: parseNamedModifiers(lines, "Skills"),
-    vulnerabilities: parseDamageTypes(lines, "Vulnerabilities"),
+    vulnerabilities: parseVulnerabilities(lines),
     resistances: parseDamageTypes(lines, "Resistances"),
     ...parseImmunities(lines),
     ...parseSenses(lines, name),
@@ -1090,14 +1184,13 @@ const parseSpellcasting = (
   ) {
     return undefined;
   }
-  const header = requireMatch(
-    entry.description,
-    /^The .+ casts one of the following spells, requiring no (Somatic or )?Material components and using (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) as the spellcasting ability \(spell save DC (\d+)(?:, ([+−-]\d+) to hit with spell attacks)?\): /,
-    `${entry.name} header`,
+  const header = entry.description.match(
+    /^The .+ casts one of the following spells, (?:(requiring no (Somatic or )?Material components) and )?using (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) as (?:the )?spellcasting ability(?: \(spell save DC (\d+)(?:, ([+−-]\d+) to hit with spell attacks)?\))?: /,
   );
+  if (header === null) return undefined;
   const atWill = requireMatch(
     entry.description,
-    /At Will: (.+?)(?= \d+\/Day(?: Each)?:|$)/,
+    /At Will: (.+?)(?= (?:- )?\d+\/Day(?: Each)?:|$)/,
     `${entry.name} At Will`,
   );
   const limited = entry.description.match(/(\d+)\/Day( Each)?: (.+)$/);
@@ -1109,16 +1202,20 @@ const parseSpellcasting = (
     section: entry.section,
     name: normalizedProcedureName(entry.name),
     kind: "spellcasting",
-    ability: parsedAbility(header[2] ?? "", entry.name),
-    spellSaveDc: Number(header[3]),
-    ...(header[4] === undefined
+    ability: parsedAbility(header[3] ?? "", entry.name),
+    ...(header[4] === undefined ? {} : { spellSaveDc: Number(header[4]) }),
+    ...(header[5] === undefined
       ? {}
-      : { spellAttackBonus: signedNumber(header[4]) }),
-    components: {
-      v: true,
-      s: header[1] === undefined,
-      m: false,
-    },
+      : { spellAttackBonus: signedNumber(header[5]) }),
+    ...(header[1] === undefined
+      ? {}
+      : {
+          components: {
+            v: true,
+            s: header[2] === undefined,
+            m: false,
+          },
+        }),
     groups: [
       {
         kind: "at_will",
@@ -1183,7 +1280,11 @@ const parseRawProcedure = (
       name: normalizedProcedureName(entry.name),
       kind: "textOnly",
       description: entry.description,
-      reason: "unsupported_action_shape",
+      reason:
+        entry.section === "Reactions" ||
+        /^The .+ (?:casts|shape-shifts)\b/.test(entry.description)
+          ? "unsupported_procedure_family"
+          : "unsupported_action_shape",
       resourceLimits: parseRawResourceLimits(entry.name),
     }
   );
@@ -1697,14 +1798,9 @@ const projectExecutableProcedure = (
       ...(spellcasting.spellAttackBonus === undefined
         ? {}
         : { spellAttackBonus: literalValue(spellcasting.spellAttackBonus) }),
-      components:
-        spellcasting.components === undefined
-          ? (() => {
-              throw new Error(
-                `${record.name}/${spellcasting.name} has no component facts`,
-              );
-            })()
-          : { ...spellcasting.components },
+      ...(spellcasting.components === undefined
+        ? {}
+        : { components: { ...spellcasting.components } }),
       groups: spellcasting.groups.map((group) => ({
         kind: group.kind,
         spells: group.spells.map((spell) => ({
@@ -1838,9 +1934,21 @@ export const projectAuthoredStatBlocks = (
               }),
             ),
           ),
-          vulnerabilities: sortedStrings(
-            record.statBlock.vulnerabilities?.damageTypes ?? [],
-          ),
+          vulnerabilities:
+            record.statBlock.vulnerabilities?.kind === "qualified"
+              ? {
+                  kind: "qualified" as const,
+                  damageTypes: sortedStrings(
+                    record.statBlock.vulnerabilities.damageTypes,
+                  ),
+                  qualifier: record.statBlock.vulnerabilities.qualifier,
+                }
+              : {
+                  kind: "fixed" as const,
+                  damageTypes: sortedStrings(
+                    record.statBlock.vulnerabilities?.damageTypes ?? [],
+                  ),
+                },
           resistances: sortedStrings(resistances?.damageTypes ?? []),
           immunityDamageTypes: sortedStrings(
             record.statBlock.immunities?.damageTypes ?? [],

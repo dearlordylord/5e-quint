@@ -1,0 +1,166 @@
+{ challengeRating = 10
+, id = "stat_block_stone_golem"
+, kind = "statBlock"
+, name = "Stone Golem"
+, provenance =
+  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:1598-1631" }
+, statBlock =
+  { abilityScores = { cha = 1, con = 20, dex = 9, int = 3, str = 22, wis = 11 }
+  , ac.value = { kind = "literal", value = 18 }
+  , actions =
+    [ { description = Some
+          "The golem makes two attacks, using Slam or Force Bolt in any combination."
+      , kind = "textOnly"
+      , name = Some "Multiattack"
+      , procedure =
+          None
+            { attackAbility : Text
+            , attackBonus : { kind : Text, value : Natural }
+            , attackType : Text
+            , kind : Text
+            , name : Text
+            , onHit :
+                List
+                  { amount :
+                      { expr :
+                          { dice : Natural
+                          , dieSize : Natural
+                          , flat : Optional Natural
+                          }
+                      , kind : Text
+                      , static : Natural
+                      }
+                  , damageType : Text
+                  , kind : Text
+                  }
+            , reachFeet : Natural
+            }
+      , procedureOrdinal = 1
+      , reason = Some "unsupported_action_shape"
+      , resourceRefs.kind = "none"
+      }
+    , { description = None Text
+      , kind = "executable"
+      , name = None Text
+      , procedure = Some
+        { attackAbility = "str"
+        , attackBonus = { kind = "literal", value = 10 }
+        , attackType = "melee"
+        , kind = "attack_roll"
+        , name = "Slam"
+        , onHit =
+          [ { amount =
+              { expr = { dice = 2, dieSize = 8, flat = Some 6 }
+              , kind = "fixed"
+              , static = 15
+              }
+            , damageType = "bludgeoning"
+            , kind = "damage"
+            }
+          , { amount =
+              { expr = { dice = 2, dieSize = 8, flat = None Natural }
+              , kind = "fixed"
+              , static = 9
+              }
+            , damageType = "force"
+            , kind = "damage"
+            }
+          ]
+        , reachFeet = 5
+        }
+      , procedureOrdinal = 2
+      , reason = None Text
+      , resourceRefs.kind = "none"
+      }
+    , { description = Some
+          "Ranged Attack Roll: +9, range 120 ft. Hit: 22 (4d10) Force damage."
+      , kind = "textOnly"
+      , name = Some "Force Bolt"
+      , procedure =
+          None
+            { attackAbility : Text
+            , attackBonus : { kind : Text, value : Natural }
+            , attackType : Text
+            , kind : Text
+            , name : Text
+            , onHit :
+                List
+                  { amount :
+                      { expr :
+                          { dice : Natural
+                          , dieSize : Natural
+                          , flat : Optional Natural
+                          }
+                      , kind : Text
+                      , static : Natural
+                      }
+                  , damageType : Text
+                  , kind : Text
+                  }
+            , reachFeet : Natural
+            }
+      , procedureOrdinal = 3
+      , reason = Some "unsupported_action_shape"
+      , resourceRefs.kind = "none"
+      }
+    ]
+  , alignment = "unaligned"
+  , bonusActions =
+    [ { description =
+          "The golem casts the Slow spell, requiring no spell components and using Constitution as the spellcasting ability (spell save DC 17)."
+      , kind = "textOnly"
+      , name = "Slow"
+      , procedureOrdinal = 1
+      , reason = "unsupported_procedure_family"
+      , resourceRefs = { kind = "some", ordinals = [ 1 ] }
+      }
+    ]
+  , communication =
+    { kind = "understood_but_cannot_speak"
+    , languages =
+      { additionalLanguages = 2
+      , kind = "named_plus_other_languages"
+      , languages = [ "Common" ]
+      }
+    }
+  , creatureType = "construct"
+  , hp = { kind = "literal", value = 220 }
+  , immunities =
+    { conditions =
+      [ "charmed"
+      , "exhaustion"
+      , "frightened"
+      , "paralyzed"
+      , "petrified"
+      , "poisoned"
+      ]
+    , damageTypes = [ "poison", "psychic" ]
+    }
+  , initiative = { modifier = 3, score = 13 }
+  , passivePerception = 10
+  , resources =
+    [ { limit = { kind = "recharge", minimumRoll = 5 }
+      , ordinal = 1
+      , ownership = "shared"
+      }
+    ]
+  , savingThrowModifiers =
+    [ { ability = "cha", modifier = -5 }
+    , { ability = "con", modifier = +5 }
+    , { ability = "dex", modifier = -1 }
+    , { ability = "int", modifier = -4 }
+    , { ability = "str", modifier = +6 }
+    , { ability = "wis", modifier = +0 }
+    ]
+  , senses = [ { kind = "darkvision", rangeFeet = 120 } ]
+  , size = "large"
+  , speeds = [ { feet = { kind = "literal", value = 30 }, kind = "walk" } ]
+  , traits =
+    [ { description = "The golem can't shape-shift.", name = "Immutable Form" }
+    , { description =
+          "The golem has Advantage on saving throws against spells and other magical effects."
+      , name = "Magic Resistance"
+      }
+    ]
+  }
+}
