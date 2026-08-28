@@ -105,15 +105,40 @@ module spellSlowStatBlockMultiattackCore {
       ),
     })
 
-  pure def slowStatBlockMultiattackHasBinding(
+  pure def slowStatBlockMultiattackSourceOwnerMatches(
     state: SlowStatBlockMultiattackState,
-    binding: SlowStatBlockMultiattackBinding
+    sourceOwnerRef: SlowEntityRef
   ): bool =
     match state {
       | SlowStatBlockMultiattackReady => false
       | SlowStatBlockMultiattackActivated(active) =>
-          active.binding == binding
+          active.binding.sourceOwnerRef == sourceOwnerRef
     }
+
+  pure def slowStatBlockMultiattackProcedureExecutionMatches(
+    state: SlowStatBlockMultiattackState,
+    procedureExecutionRef: StatBlockProcedureRef
+  ): bool =
+    match state {
+      | SlowStatBlockMultiattackReady => false
+      | SlowStatBlockMultiattackActivated(active) =>
+          active.binding.multiattackProcedureExecutionRef ==
+            procedureExecutionRef
+    }
+
+  pure def slowStatBlockMultiattackHasBinding(
+    state: SlowStatBlockMultiattackState,
+    binding: SlowStatBlockMultiattackBinding
+  ): bool = all {
+    slowStatBlockMultiattackSourceOwnerMatches(
+      state,
+      binding.sourceOwnerRef
+    ),
+    slowStatBlockMultiattackProcedureExecutionMatches(
+      state,
+      binding.multiattackProcedureExecutionRef
+    ),
+  }
 
   pure def slowStatBlockMultiattackDispatchState(
     state: SlowStatBlockMultiattackState

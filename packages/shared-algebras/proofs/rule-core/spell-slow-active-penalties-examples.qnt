@@ -105,9 +105,8 @@ module spellSlowActivePenaltiesExamples {
       true
     )
     all {
-      assert(required == SlowSomaticFailureOutcomeRequired({
-        failurePercent: 25,
-      })),
+      assert(required == SlowSomaticFailureOutcomeRequired),
+      assert(slowSomaticFailurePercent == 25),
       assert(slowSomaticOutcomeRequired(required)),
       assert(failed == SlowSomaticSpellFailedAfterResourceSpend),
       assert(slowSomaticFailureSpentCastResources(failed)),
@@ -282,6 +281,13 @@ module spellSlowActivePenaltiesExamples {
     all {
       assert(legalSlowStatBlockMultiattackState(activated)),
       assert(slowStatBlockMultiattackHasBinding(activated, binding)),
+      assert(slowStatBlockMultiattackSourceOwnerMatches(activated, 1)),
+      assert(not(slowStatBlockMultiattackSourceOwnerMatches(activated, 2))),
+      assert(slowStatBlockMultiattackProcedureExecutionMatches(activated, 4)),
+      assert(not(slowStatBlockMultiattackProcedureExecutionMatches(
+        activated,
+        5
+      ))),
       assert(slowStatBlockMultiattackPendingProcedureRefs(activated) == List(0, 0, 1)),
       assert(slowStatBlockMultiattackDispatchResourceCount(activated) == 1),
       assert(slowStatBlockMultiattackOneListedAllowanceActive(activated)),

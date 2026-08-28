@@ -144,7 +144,9 @@ module battleRuntimeSlowActivePenaltiesMbt {
     match turn {
       | SlowTurnUnrestricted => "notRestricted"
       | SlowTurnRestrictedUnused => "notChosen"
-      | SlowTurnRestrictedActionUsed(_) => "action"
+      | SlowTurnRestrictedAttackActionOneAttackAvailable => "action"
+      | SlowTurnRestrictedAttackActionNoAttackAvailable => "action"
+      | SlowTurnRestrictedOtherActionUsed => "action"
       | SlowTurnRestrictedBonusActionUsed => "bonusAction"
     }
 
@@ -152,10 +154,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
     match turn {
       | SlowTurnUnrestricted => true
       | SlowTurnRestrictedUnused => true
-      | SlowTurnRestrictedActionUsed(data) => all {
-          data.actionKind == SlowAttackAction,
-          data.attackCount == 0,
-        }
+      | SlowTurnRestrictedAttackActionOneAttackAvailable => true
       | _ => false
     }
 
@@ -163,7 +162,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
     somatic: SlowSomaticResolutionState
   ): int =
     match somatic {
-      | SlowSomaticFailureOutcomeRequired(data) => data.failurePercent
+      | SlowSomaticFailureOutcomeRequired => slowSomaticFailurePercent
       | _ => 0
     }
 
@@ -176,11 +175,24 @@ module battleRuntimeSlowActivePenaltiesMbt {
       "oneListedChoice"
     else "listedOccurrences"
 
-  pure def qMultiattackBindingObserved(
+  pure def qMultiattackSourceOwnerObserved(
     multiattack: SlowStatBlockMultiattackState
   ): bool = all {
     slowStatBlockMultiattackContinuationOpen(multiattack),
-    slowStatBlockMultiattackHasBinding(multiattack, qMultiattackBinding),
+    slowStatBlockMultiattackSourceOwnerMatches(
+      multiattack,
+      qMultiattackBinding.sourceOwnerRef
+    ),
+  }
+
+  pure def qMultiattackSourceProcedureObserved(
+    multiattack: SlowStatBlockMultiattackState
+  ): bool = all {
+    slowStatBlockMultiattackContinuationOpen(multiattack),
+    slowStatBlockMultiattackProcedureExecutionMatches(
+      multiattack,
+      qMultiattackBinding.multiattackProcedureExecutionRef
+    ),
   }
 
   pure def qMultiattackChosenProcedurePermitted(
@@ -247,9 +259,9 @@ module battleRuntimeSlowActivePenaltiesMbt {
       statBlockMultiattackPendingProcedureRefs:
         slowStatBlockMultiattackPendingProcedureRefs(multiattack),
       statBlockMultiattackSourceOwnerMatches:
-        qMultiattackBindingObserved(multiattack),
+        qMultiattackSourceOwnerObserved(multiattack),
       statBlockMultiattackSourceProcedureMatches:
-        qMultiattackBindingObserved(multiattack),
+        qMultiattackSourceProcedureObserved(multiattack),
       statBlockMultiattackContinuationOpen:
         slowStatBlockMultiattackContinuationOpen(multiattack),
       statBlockMultiattackChosenProcedurePermitted:

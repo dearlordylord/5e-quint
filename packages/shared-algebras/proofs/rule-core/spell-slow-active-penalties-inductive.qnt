@@ -68,24 +68,15 @@ module spellSlowActivePenaltiesInductive {
   pure def qTurnDomain: Set[SlowTargetTurnState] = Set(
     SlowTurnUnrestricted,
     SlowTurnRestrictedUnused,
-    SlowTurnRestrictedActionUsed({
-      actionKind: SlowAttackAction,
-      attackCount: 0,
-    }),
-    SlowTurnRestrictedActionUsed({
-      actionKind: SlowAttackAction,
-      attackCount: 1,
-    }),
-    SlowTurnRestrictedActionUsed({
-      actionKind: SlowOtherAction,
-      attackCount: 0,
-    }),
+    SlowTurnRestrictedAttackActionOneAttackAvailable,
+    SlowTurnRestrictedAttackActionNoAttackAvailable,
+    SlowTurnRestrictedOtherActionUsed,
     SlowTurnRestrictedBonusActionUsed
   )
 
   pure def qSomaticDomain: Set[SlowSomaticResolutionState] = Set(
     SlowSomaticCheckBypassed,
-    SlowSomaticFailureOutcomeRequired({ failurePercent: 25 }),
+    SlowSomaticFailureOutcomeRequired,
     SlowSomaticSpellContinues,
     SlowSomaticSpellFailedAfterResourceSpend
   )
@@ -166,23 +157,18 @@ module spellSlowActivePenaltiesInductive {
   pure def qConcentrationCleanupEvent(
     turn: SlowTargetTurnState
   ): SlowProofEvent =
-    match turn {
-      | SlowTurnRestrictedActionUsed(_) =>
-          SlowProofConcentrationEndedAfterAction
-      | SlowTurnRestrictedBonusActionUsed =>
-          SlowProofConcentrationEndedAfterBonusAction
-      | _ => SlowProofConcentrationEnded
-    }
+    if (slowTurnActionSpent(turn)) SlowProofConcentrationEndedAfterAction
+    else if (slowTurnBonusActionSpent(turn))
+      SlowProofConcentrationEndedAfterBonusAction
+    else SlowProofConcentrationEnded
 
   pure def qDurationCleanupEvent(
     turn: SlowTargetTurnState
   ): SlowProofEvent =
-    match turn {
-      | SlowTurnRestrictedActionUsed(_) => SlowProofDurationExpiredAfterAction
-      | SlowTurnRestrictedBonusActionUsed =>
-          SlowProofDurationExpiredAfterBonusAction
-      | _ => SlowProofDurationExpired
-    }
+    if (slowTurnActionSpent(turn)) SlowProofDurationExpiredAfterAction
+    else if (slowTurnBonusActionSpent(turn))
+      SlowProofDurationExpiredAfterBonusAction
+    else SlowProofDurationExpired
 
   action recordOccurrenceTransition(
     result: SlowOccurrenceTransition,
@@ -487,7 +473,6 @@ module spellSlowActivePenaltiesInductive {
     qActorWasSlowedAtMultiattackActivation.in(Set(true, false)),
     qEvent.in(qEventDomain),
     legalSlowOccurrenceState(qOccurrence),
-    legalSlowTargetTurnState(qTurn),
     legalSlowStatBlockMultiattackState(qMultiattack),
     slowTurnDoesNotSpendBothActionAndBonusAction(qTurn),
     not(slowTargetAffected(qOccurrence, 1)) implies
@@ -510,7 +495,7 @@ module spellSlowActivePenaltiesInductive {
         }
     },
     match qSomatic {
-      | SlowSomaticFailureOutcomeRequired(data) => data.failurePercent == 25
+      | SlowSomaticFailureOutcomeRequired => slowSomaticFailurePercent == 25
       | SlowSomaticSpellFailedAfterResourceSpend => all {
           slowSomaticFailureSpentCastResources(qSomatic),
           not(slowSomaticSpellEffectMayApply(qSomatic)),

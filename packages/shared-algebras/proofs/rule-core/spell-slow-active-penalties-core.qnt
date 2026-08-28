@@ -65,15 +65,14 @@ module spellSlowActivePenaltiesCore {
   type SlowTargetTurnState =
     | SlowTurnUnrestricted
     | SlowTurnRestrictedUnused
-    | SlowTurnRestrictedActionUsed({
-        actionKind: SlowTurnActionKind,
-        attackCount: int,
-      })
+    | SlowTurnRestrictedAttackActionOneAttackAvailable
+    | SlowTurnRestrictedAttackActionNoAttackAvailable
+    | SlowTurnRestrictedOtherActionUsed
     | SlowTurnRestrictedBonusActionUsed
 
   type SlowSomaticResolutionState =
     | SlowSomaticCheckBypassed
-    | SlowSomaticFailureOutcomeRequired({ failurePercent: int })
+    | SlowSomaticFailureOutcomeRequired
     | SlowSomaticSpellContinues
     | SlowSomaticSpellFailedAfterResourceSpend
 
@@ -321,10 +320,9 @@ module spellSlowActivePenaltiesCore {
   ): SlowTargetTurnState =
     if (not(slowTargetAffected(state, targetRef)))
       SlowTurnUnrestricted
-    else SlowTurnRestrictedActionUsed({
-      actionKind: priorActionKind,
-      attackCount: 0,
-    })
+    else if (priorActionKind == SlowAttackAction)
+      SlowTurnRestrictedAttackActionOneAttackAvailable
+    else SlowTurnRestrictedOtherActionUsed
 
   pure def beginSlowTargetTurnAfterPriorBonusAction(
     state: SlowOccurrenceState,
@@ -347,22 +345,13 @@ module spellSlowActivePenaltiesCore {
       turn
     else SlowTurnUnrestricted
 
-  pure def legalSlowTargetTurnState(state: SlowTargetTurnState): bool =
-    match state {
-      | SlowTurnUnrestricted => true
-      | SlowTurnRestrictedUnused => true
-      | SlowTurnRestrictedBonusActionUsed => true
-      | SlowTurnRestrictedActionUsed(data) =>
-          if (data.actionKind == SlowAttackAction)
-            data.attackCount >= 0 and data.attackCount <= 1
-          else data.attackCount == 0
-    }
-
   pure def slowTurnCanSpendAction(state: SlowTargetTurnState): bool =
     match state {
       | SlowTurnUnrestricted => true
       | SlowTurnRestrictedUnused => true
-      | SlowTurnRestrictedActionUsed(_) => false
+      | SlowTurnRestrictedAttackActionOneAttackAvailable => false
+      | SlowTurnRestrictedAttackActionNoAttackAvailable => false
+      | SlowTurnRestrictedOtherActionUsed => false
       | SlowTurnRestrictedBonusActionUsed => false
     }
 
@@ -370,13 +359,17 @@ module spellSlowActivePenaltiesCore {
     match state {
       | SlowTurnUnrestricted => true
       | SlowTurnRestrictedUnused => true
-      | SlowTurnRestrictedActionUsed(_) => false
+      | SlowTurnRestrictedAttackActionOneAttackAvailable => false
+      | SlowTurnRestrictedAttackActionNoAttackAvailable => false
+      | SlowTurnRestrictedOtherActionUsed => false
       | SlowTurnRestrictedBonusActionUsed => false
     }
 
   pure def slowTurnActionSpent(state: SlowTargetTurnState): bool =
     match state {
-      | SlowTurnRestrictedActionUsed(_) => true
+      | SlowTurnRestrictedAttackActionOneAttackAvailable => true
+      | SlowTurnRestrictedAttackActionNoAttackAvailable => true
+      | SlowTurnRestrictedOtherActionUsed => true
       | _ => false
     }
 
@@ -401,10 +394,9 @@ module spellSlowActivePenaltiesCore {
     actionKind: SlowTurnActionKind
   ): SlowTargetTurnState =
     if (not(canSpendSlowTurnAction(state, actionKind))) state
-    else SlowTurnRestrictedActionUsed({
-      actionKind: actionKind,
-      attackCount: 0,
-    })
+    else if (actionKind == SlowAttackAction)
+      SlowTurnRestrictedAttackActionOneAttackAvailable
+    else SlowTurnRestrictedOtherActionUsed
 
   pure def canSpendSlowTurnBonusAction(state: SlowTargetTurnState): bool =
     state == SlowTurnRestrictedUnused
@@ -416,26 +408,17 @@ module spellSlowActivePenaltiesCore {
     else SlowTurnRestrictedBonusActionUsed
 
   pure def canMakeSlowAttackActionAttack(state: SlowTargetTurnState): bool =
-    match state {
-      | SlowTurnRestrictedActionUsed(data) => all {
-          data.actionKind == SlowAttackAction,
-          data.attackCount == 0,
-        }
-      | _ => false
-    }
+    state == SlowTurnRestrictedAttackActionOneAttackAvailable
 
   pure def applySlowAttackActionAttack(
     state: SlowTargetTurnState
   ): SlowTargetTurnState =
     if (not(canMakeSlowAttackActionAttack(state))) state
-    else SlowTurnRestrictedActionUsed({
-      actionKind: SlowAttackAction,
-      attackCount: 1,
-    })
+    else SlowTurnRestrictedAttackActionNoAttackAvailable
 
   pure def slowTurnAttackCount(state: SlowTargetTurnState): int =
     match state {
-      | SlowTurnRestrictedActionUsed(data) => data.attackCount
+      | SlowTurnRestrictedAttackActionNoAttackAvailable => 1
       | _ => 0
     }
 
@@ -445,16 +428,14 @@ module spellSlowActivePenaltiesCore {
     hasEffectiveSomaticComponent: bool
   ): SlowSomaticResolutionState =
     if (slowTargetAffected(state, casterRef) and hasEffectiveSomaticComponent)
-      SlowSomaticFailureOutcomeRequired({
-        failurePercent: slowSomaticFailurePercent,
-      })
+      SlowSomaticFailureOutcomeRequired
     else SlowSomaticSpellContinues
 
   pure def slowSomaticOutcomeRequired(
     state: SlowSomaticResolutionState
   ): bool =
     match state {
-      | SlowSomaticFailureOutcomeRequired(_) => true
+      | SlowSomaticFailureOutcomeRequired => true
       | _ => false
     }
 

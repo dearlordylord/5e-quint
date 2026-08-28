@@ -47,6 +47,7 @@ import {
 import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
 import { savingThrowFlatBonusProjections } from "./battle-reducer/spells-damage-fills.ts";
 import { SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT } from "./battle-reducer/domain-constants.ts";
+import type { SlowActivePenaltiesEffect } from "./battle-reducer/slow-active-penalties-effects.ts";
 import { slowActionOrBonusActionTurnResources } from "./battle-reducer/slow-active-penalties-turn-restriction.ts";
 import { tickBattleStateDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import { statBlockMultiattackBindings } from "./stat-block-execution-state.ts";
@@ -55,7 +56,6 @@ import {
   endTurn,
   snapshotBattle,
   type AvailableBattleAct,
-  type BattleActiveEffect,
   type BattleFill,
   type BattleHole,
   type BattleRuntimeSession,
@@ -636,10 +636,7 @@ function reconcileSlowAfterPriorBonusAction(
     slotLevel: 3,
   });
   const caster = requireCombatant(afterBonusAction.state, spellCasterId);
-  const activeEffect: Extract<
-    BattleActiveEffect,
-    { readonly kind: "slowActivePenalties" }
-  > = {
+  const activeEffect: SlowActivePenaltiesEffect = {
     kind: "slowActivePenalties",
     sourceProcedureRef: slowAct.subject.procedureRef,
     sourceCombatantId: spellCasterId,
@@ -999,18 +996,32 @@ function stateWithSlowDurationTicks(
         {
           ...combatant,
           activeEffects: combatant.activeEffects.map((effect) =>
-            effect.kind === "slowActivePenalties" &&
-            effect.sourceCombatantId === spellCasterId &&
-            effect.expiresAt.kind === "concentration"
-              ? ({
-                  ...effect,
-                  expiresAt: { ...effect.expiresAt, durationTicks },
-                } as BattleActiveEffect)
+            effect.kind === "slowActivePenalties"
+              ? slowActivePenaltiesEffectWithDurationTicks(
+                  effect,
+                  durationTicks,
+                )
               : effect,
           ),
         },
       ]),
     ),
+  };
+}
+
+function slowActivePenaltiesEffectWithDurationTicks(
+  effect: SlowActivePenaltiesEffect,
+  durationTicks: ReturnType<typeof elapsedTimeTicks>,
+): SlowActivePenaltiesEffect {
+  if (
+    effect.sourceCombatantId !== spellCasterId ||
+    effect.expiresAt.kind !== "concentration"
+  ) {
+    return effect;
+  }
+  return {
+    ...effect,
+    expiresAt: { ...effect.expiresAt, durationTicks },
   };
 }
 
