@@ -2787,7 +2787,7 @@
       "reason": "Typed Stat Block Action sections spend the ordinary Action resource without authored-identity dispatch.",
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-state-execution.ts"
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -2812,7 +2812,9 @@
       "reason": "Typed Bonus Action procedures use the shared turn resource and retain their procedure shape.",
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-state-execution.ts"
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -2841,7 +2843,11 @@
       "reason": "Legendary Action windows and refreshing uses are modeled independently from ordinary Actions.",
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-state-execution.ts"
+        "packages/battle-runtime/src/battle-reducer/unit-feature-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-state-execution.ts",
+        "packages/battle-runtime/src/battle-reducer/legendary-action-window.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -2865,7 +2871,12 @@
       "reason": "Production runtime executes the 252 checked Attack Procedure rows, but #427 owns the missing identity-independent QNT semantics and parity for attack rolls, multiple damage components, and admitted typed hit riders.",
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-state-execution.ts"
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock-attacks.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock-attack-hit-condition-riders.ts",
+        "packages/battle-runtime/src/statblock-attack-hit-condition-support.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
+        "packages/battle-runtime/src/statblock-attack-damage-support.ts"
       ],
       "status": "needs-qnt-owner",
       "surfaceEvidence": [
@@ -2896,17 +2907,21 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/stat-block-multiattack.qnt"
       ],
-      "reason": "Multiattack dispatch follows typed procedure references and continuation state rather than names.",
+      "reason": "The current executable projection admits Multiattack dispatch only to typed Action-section attack procedure references, preserving multiplicity and permitting any pending attack order without name dispatch; ability and replacement dispatch remains an explicit bounded gap.",
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-state-execution.ts"
+        "packages/battle-runtime/src/stat-block-execution.ts",
+        "packages/battle-runtime/src/stat-block-execution-state.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
         ".references/srd-5.2.1/Monsters/Overview.md#Parts-of-a-Stat-Block",
         "UBIQUITOUS_LANGUAGE.md#Creatures-and-Stat-Blocks"
       ],
-      "title": "Battle Stat Block Multiattack control and dispatch"
+      "title": "Battle admitted attack-procedure Multiattack control and dispatch"
     },
     {
       "bridgeOwners": [
@@ -2928,7 +2943,10 @@
       "reason": "Daily, recharge, and rest usage are discriminated resource variants; the runtime owner projects the matching typed declaration.",
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-state-execution.ts"
+        "packages/battle-runtime/src/stat-block-execution-state.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -14159,14 +14177,13 @@
         "all-block"
       ],
       "obligationId": "BATTLE.ATTACK.ORDINARY_OBJECT_PROCEDURE",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-ordinary-object-attack.mbt.qnt"
+      ],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-ordinary-object-attack.qnt"
       ],
-      "status": "generation-subset-clean",
-      "supportingOwners": [
-        "packages/battle-runtime/battle-runtime-ordinary-object-attack.mbt.qnt"
-      ]
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -14596,7 +14613,9 @@
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+      ],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-save-gated-facts.qnt",
         "packages/battle-runtime/battle-runtime-save-condition-target-list.qnt",
@@ -14612,10 +14631,7 @@
         "packages/battle-runtime/battle-runtime-save-gated-damage-target.qnt",
         "packages/battle-runtime/battle-runtime-save-gated-object-facts.qnt"
       ],
-      "status": "generation-subset-clean",
-      "supportingOwners": [
-        "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
-      ]
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -14886,14 +14902,13 @@
         "pattern-match"
       ],
       "obligationId": "BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-gust-of-wind-tests.qnt"
+      ],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-gust-of-wind.qnt"
       ],
-      "status": "generation-subset-clean",
-      "supportingOwners": [
-        "packages/battle-runtime/battle-runtime-gust-of-wind-tests.qnt"
-      ]
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -14953,15 +14968,14 @@
         "set-operators"
       ],
       "obligationId": "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-levitate-creature-tests.qnt"
+      ],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-levitate-creature.qnt",
         "packages/battle-runtime/battle-runtime-timed-effects.qnt"
       ],
-      "status": "generation-subset-clean",
-      "supportingOwners": [
-        "packages/battle-runtime/battle-runtime-levitate-creature-tests.qnt"
-      ]
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -16849,14 +16863,13 @@
         "membership"
       ],
       "obligationId": "CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/character-creation-runtime/character-creation-runtime.mbt.qnt"
+      ],
       "semanticCore": [
         "packages/character-creation-runtime/character-creation-runtime-slice.qnt"
       ],
-      "status": "generation-subset-clean",
-      "supportingOwners": [
-        "packages/character-creation-runtime/character-creation-runtime.mbt.qnt"
-      ]
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -16881,15 +16894,14 @@
         "membership"
       ],
       "obligationId": "CREATION.CHOICE_DISCOVERY_CARDINALITY",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+        "packages/character-creation-runtime/character-creation-runtime-slice-tests.qnt"
+      ],
       "semanticCore": [
         "packages/character-creation-runtime/character-creation-runtime-slice.qnt"
       ],
-      "status": "generation-subset-clean",
-      "supportingOwners": [
-        "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
-        "packages/character-creation-runtime/character-creation-runtime-slice-tests.qnt"
-      ]
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -16937,14 +16949,13 @@
         "all-block"
       ],
       "obligationId": "SHEET.HIT_POINTS.MAXIMUM_DERIVATION",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt"
+      ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/hit-point-maximum.qnt"
       ],
-      "status": "generation-subset-clean",
-      "supportingOwners": [
-        "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt"
-      ]
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -16966,14 +16977,13 @@
         "pattern-match"
       ],
       "obligationId": "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt"
+      ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/armor-class-base.qnt"
       ],
-      "status": "generation-subset-clean",
-      "supportingOwners": [
-        "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt"
-      ]
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -16987,14 +16997,13 @@
         "pattern-match"
       ],
       "obligationId": "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt"
+      ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/ability-check-proficiency-bonus.qnt"
       ],
-      "status": "generation-subset-clean",
-      "supportingOwners": [
-        "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt"
-      ]
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -17016,15 +17025,13 @@
       ],
       "obligationId": "SHEET.SPELL_REST_BENEFIT.APPLICATION",
       "proofOnly": [
-        "packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application-examples.qnt"
+        "packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application-examples.qnt",
+        "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt"
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application.qnt"
       ],
-      "status": "generation-subset-clean",
-      "supportingOwners": [
-        "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt"
-      ]
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -17043,7 +17050,9 @@
         "all-block"
       ],
       "obligationId": "SHEET.FEATURE_RESOURCES.TRANSITIONS",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt"
+      ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/feature-resource-pool.qnt",
         "packages/shared-algebras/proofs/rule-core/feature-resource-hit-point-healing.qnt",
@@ -17051,10 +17060,7 @@
         "packages/shared-algebras/proofs/rule-core/font-of-magic-resource.qnt",
         "packages/shared-algebras/proofs/rule-core/uncanny-metabolism-resource.qnt"
       ],
-      "status": "generation-subset-clean",
-      "supportingOwners": [
-        "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt"
-      ]
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -17080,14 +17086,13 @@
         "size"
       ],
       "obligationId": "SHEET.WEAPON_MASTERY.RESELECTION",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt"
+      ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/weapon-mastery-reselection.qnt"
       ],
-      "status": "generation-subset-clean",
-      "supportingOwners": [
-        "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt"
-      ]
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -17166,14 +17171,13 @@
         "pattern-match"
       ],
       "obligationId": "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt"
+      ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/spellbook-ritual-access.qnt"
       ],
-      "status": "generation-subset-clean",
-      "supportingOwners": [
-        "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt"
-      ]
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -17192,14 +17196,13 @@
         "all-block"
       ],
       "obligationId": "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt"
+      ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/spell-slot-transitions.qnt"
       ],
-      "status": "generation-subset-clean",
-      "supportingOwners": [
-        "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt"
-      ]
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -17216,14 +17219,13 @@
         "pattern-match"
       ],
       "obligationId": "SHEET.SPELL_SLOTS.TABLE_DERIVATION",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt"
+      ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/spell-slot-table.qnt"
       ],
-      "status": "generation-subset-clean",
-      "supportingOwners": [
-        "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt"
-      ]
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -17463,14 +17465,13 @@
         "membership"
       ],
       "obligationId": "BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt"
+      ],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-concentration.qnt"
       ],
-      "status": "generation-subset-clean",
-      "supportingOwners": [
-        "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt"
-      ]
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -17496,16 +17497,15 @@
         "membership"
       ],
       "obligationId": "BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt"
+      ],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-turn-advancement.qnt",
         "packages/battle-runtime/battle-runtime-weapon-hit-turn-effects.qnt",
         "packages/battle-runtime/battle-runtime-fighter-ongoing-feature-lifecycle.qnt"
       ],
-      "status": "generation-subset-clean",
-      "supportingOwners": [
-        "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt"
-      ]
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -17526,16 +17526,15 @@
         "all-block"
       ],
       "obligationId": "BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt"
+      ],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-hit-points.qnt",
         "packages/battle-runtime/battle-runtime-concentration.qnt",
         "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt"
       ],
-      "status": "generation-subset-clean",
-      "supportingOwners": [
-        "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt"
-      ]
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],

@@ -6,7 +6,7 @@ module ruleCoreStatBlockMultiattackMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
   // Fixture bounds:
-  // - one Stat Block actor with a two-dispatch Multiattack and one target;
+  // - one Stat Block actor with a three-dispatch Multiattack and one target;
   // - dispatch attacks are resolved as misses so attack damage, reactions, and
   //   limited-use resource branches stay outside this focused tracer;
   // - Legendary Actions are intentionally excluded for a later tracer.
@@ -19,8 +19,7 @@ module ruleCoreStatBlockMultiattackMbt {
 
   var qPhase: StatBlockMultiattackMbtPhase
   var qBonusActionAvailable: bool
-  var qPendingPrimaryDispatches: int
-  var qPendingSecondaryDispatches: int
+  var qPendingProcedureRefs: List[StatBlockProcedureRef]
   var qMovementSpentFeet: int
   var qMovementRemainingFeet: int
   var qProtocol: WitnessProtocol[str]
@@ -40,22 +39,18 @@ module ruleCoreStatBlockMultiattackMbt {
   pure def initialMovementRemainingFeet: int = 30
   pure def interleavedMovementFeet: int = 5
 
-  pure def qDispatches: StatBlockMultiattackDispatches = {
-    primaryRemaining: qPendingPrimaryDispatches,
-    secondaryRemaining: qPendingSecondaryDispatches,
-  }
-
   pure def qState: StatBlockMultiattackState =
     if (qPhase == MbtReadyToAct) StatBlockMultiattackReadyToAct
     else if (qPhase == MbtActionSpent) StatBlockMultiattackActionSpent
     else if (qPhase == MbtTurnEnded) StatBlockMultiattackTurnEnded
-    else StatBlockMultiattackDispatching({ dispatches: qDispatches })
+    else StatBlockMultiattackDispatching({
+      pendingProcedureRefs: qPendingProcedureRefs,
+    })
 
   action recordProjection(
     phase: StatBlockMultiattackMbtPhase,
     bonusActionAvailable: bool,
-    pendingPrimaryDispatches: int,
-    pendingSecondaryDispatches: int,
+    pendingProcedureRefs: List[StatBlockProcedureRef],
     movementSpentFeet: int,
     movementRemainingFeet: int,
     holes: Set[str],
@@ -63,8 +58,7 @@ module ruleCoreStatBlockMultiattackMbt {
   ): bool = all {
     qPhase' = phase,
     qBonusActionAvailable' = bonusActionAvailable,
-    qPendingPrimaryDispatches' = pendingPrimaryDispatches,
-    qPendingSecondaryDispatches' = pendingSecondaryDispatches,
+    qPendingProcedureRefs' = pendingProcedureRefs,
     qMovementSpentFeet' = movementSpentFeet,
     qMovementRemainingFeet' = movementRemainingFeet,
     qProtocol' = witnessProtocolForProjection(holes, result),
@@ -72,15 +66,13 @@ module ruleCoreStatBlockMultiattackMbt {
   }
 
   action init = recordProjection(
-    MbtReadyToAct, true, 0, 0, 0, initialMovementRemainingFeet,
+    MbtReadyToAct, true, List(), 0, initialMovementRemainingFeet,
     Set(), WInit
   )
 
   action doStartMultiattack = {
     val profile = {
-      firstAttackName: PrimaryStatBlockAttack,
-      primaryAttackCount: 2,
-      secondaryAttackCount: 1,
+      dispatchProcedureRefs: List(0, 0, 1),
     }
     val started = startStatBlockMultiattack(initialStatBlockMultiattackState, profile)
     all {
@@ -90,8 +82,7 @@ module ruleCoreStatBlockMultiattackMbt {
         if (statBlockMultiattackContinuationOpen(started)) MbtDispatching
         else MbtActionSpent,
         true,
-        statBlockMultiattackDispatches(started).primaryRemaining,
-        statBlockMultiattackDispatches(started).secondaryRemaining,
+        statBlockMultiattackPendingProcedureRefs(started),
         qMovementSpentFeet,
         qMovementRemainingFeet,
         Set(),
@@ -111,8 +102,7 @@ module ruleCoreStatBlockMultiattackMbt {
     recordProjection(
       qPhase,
       qBonusActionAvailable,
-      qPendingPrimaryDispatches,
-      qPendingSecondaryDispatches,
+      qPendingProcedureRefs,
       qMovementSpentFeet + interleavedMovementFeet,
       qMovementRemainingFeet - interleavedMovementFeet,
       Set(),
@@ -130,8 +120,7 @@ module ruleCoreStatBlockMultiattackMbt {
     recordProjection(
       qPhase,
       qBonusActionAvailable,
-      qPendingPrimaryDispatches,
-      qPendingSecondaryDispatches,
+      qPendingProcedureRefs,
       qMovementSpentFeet,
       qMovementRemainingFeet,
       Set(),
@@ -149,8 +138,7 @@ module ruleCoreStatBlockMultiattackMbt {
     recordProjection(
       qPhase,
       qBonusActionAvailable,
-      qPendingPrimaryDispatches,
-      qPendingSecondaryDispatches,
+      qPendingProcedureRefs,
       qMovementSpentFeet,
       qMovementRemainingFeet,
       Set(),
@@ -158,21 +146,20 @@ module ruleCoreStatBlockMultiattackMbt {
     ),
   }
 
-  action doResolvePrimaryDispatch = {
+  action doResolveProcedureZeroDispatch = {
     val dispatched = resolveStatBlockMultiattackDispatch(
       qState,
-      PrimaryStatBlockAttack
+      0
     )
     all {
       openHoles == Set(),
       qPhase == MbtDispatching,
-      qPendingPrimaryDispatches > 0,
+      statBlockProcedureRefsContain(qPendingProcedureRefs, 0),
       recordProjection(
         if (statBlockMultiattackContinuationOpen(dispatched)) MbtDispatching
         else MbtActionSpent,
         qBonusActionAvailable,
-        statBlockMultiattackDispatches(dispatched).primaryRemaining,
-        statBlockMultiattackDispatches(dispatched).secondaryRemaining,
+        statBlockMultiattackPendingProcedureRefs(dispatched),
         qMovementSpentFeet,
         qMovementRemainingFeet,
         Set(),
@@ -181,21 +168,20 @@ module ruleCoreStatBlockMultiattackMbt {
     }
   }
 
-  action doResolveSecondaryDispatch = {
+  action doResolveProcedureOneDispatch = {
     val dispatched = resolveStatBlockMultiattackDispatch(
       qState,
-      SecondaryStatBlockAttack
+      1
     )
     all {
       openHoles == Set(),
       qPhase == MbtDispatching,
-      qPendingSecondaryDispatches > 0,
+      statBlockProcedureRefsContain(qPendingProcedureRefs, 1),
       recordProjection(
         if (statBlockMultiattackContinuationOpen(dispatched)) MbtDispatching
         else MbtActionSpent,
         qBonusActionAvailable,
-        statBlockMultiattackDispatches(dispatched).primaryRemaining,
-        statBlockMultiattackDispatches(dispatched).secondaryRemaining,
+        statBlockMultiattackPendingProcedureRefs(dispatched),
         qMovementSpentFeet,
         qMovementRemainingFeet,
         Set(),
@@ -214,8 +200,7 @@ module ruleCoreStatBlockMultiattackMbt {
       recordProjection(
         MbtTurnEnded,
         true,
-        statBlockMultiattackDispatches(ended).primaryRemaining,
-        statBlockMultiattackDispatches(ended).secondaryRemaining,
+        statBlockMultiattackPendingProcedureRefs(ended),
         0,
         initialMovementRemainingFeet,
         Set(),
@@ -229,8 +214,8 @@ module ruleCoreStatBlockMultiattackMbt {
     doMoveDuringDispatch,
     doRejectBonusActionDuringDispatch,
     doRejectOrdinaryActionDuringDispatch,
-    doResolvePrimaryDispatch,
-    doResolveSecondaryDispatch,
+    doResolveProcedureZeroDispatch,
+    doResolveProcedureOneDispatch,
     doEndTurnClosesDispatches,
   }
 }

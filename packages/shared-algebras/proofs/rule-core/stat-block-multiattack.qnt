@@ -4,59 +4,45 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.STAT_BLOCK.MULTIATTACK
 
 module statBlockMultiattack {
-  type StatBlockAttackName =
-    | PrimaryStatBlockAttack
-    | SecondaryStatBlockAttack
+  type StatBlockProcedureRef = int
 
   type StatBlockDispatchSubject =
-    | StatBlockDispatchAttack({ attackName: StatBlockAttackName })
+    | StatBlockDispatchProcedure({ procedureRef: StatBlockProcedureRef })
     | StatBlockMovementSubject
     | StatBlockEndTurnSubject
     | StatBlockBonusActionSubject
     | StatBlockOrdinaryActionSubject
 
   type StatBlockMultiattackProfile = {
-    firstAttackName: StatBlockAttackName,
-    primaryAttackCount: int,
-    secondaryAttackCount: int,
+    dispatchProcedureRefs: List[StatBlockProcedureRef],
   }
 
-  type StatBlockMultiattackDispatches = {
-    primaryRemaining: int,
-    secondaryRemaining: int,
+  type StatBlockProcedureRefRemoval = {
+    removed: bool,
+    remaining: List[StatBlockProcedureRef],
   }
 
   type StatBlockMultiattackState =
     | StatBlockMultiattackReadyToAct
     | StatBlockMultiattackActionSpent
     | StatBlockMultiattackTurnEnded
-    | StatBlockMultiattackDispatching({ dispatches: StatBlockMultiattackDispatches })
-
-  pure def initialStatBlockMultiattackDispatches: StatBlockMultiattackDispatches = {
-    primaryRemaining: 0,
-    secondaryRemaining: 0,
-  }
+    | StatBlockMultiattackDispatching({ pendingProcedureRefs: List[StatBlockProcedureRef] })
 
   pure def initialStatBlockMultiattackState: StatBlockMultiattackState =
     StatBlockMultiattackReadyToAct
 
-  pure def legalStatBlockMultiattackProfile(profile: StatBlockMultiattackProfile): bool = {
-    val totalAttacks = profile.primaryAttackCount + profile.secondaryAttackCount
-    val firstAttackCount =
-      if (profile.firstAttackName == PrimaryStatBlockAttack) profile.primaryAttackCount
-      else profile.secondaryAttackCount
-    all {
-      profile.firstAttackName.in(Set(PrimaryStatBlockAttack, SecondaryStatBlockAttack)),
-      profile.primaryAttackCount >= 0,
-      profile.secondaryAttackCount >= 0,
-      totalAttacks >= 1,
-      firstAttackCount >= 1,
-    }
-  }
+  pure def legalStatBlockProcedureRefs(procedureRefs: List[StatBlockProcedureRef]): bool =
+    procedureRefs.foldl(true, (legal, procedureRef) => legal and procedureRef >= 0)
 
-  pure def legalStatBlockMultiattackDispatches(dispatches: StatBlockMultiattackDispatches): bool = all {
-    dispatches.primaryRemaining >= 0,
-    dispatches.secondaryRemaining >= 0,
+  pure def statBlockProcedureRefsContain(
+    procedureRefs: List[StatBlockProcedureRef],
+    procedureRef: StatBlockProcedureRef
+  ): bool =
+    procedureRefs.foldl(false, (found, candidate) => found or candidate == procedureRef)
+
+  pure def legalStatBlockMultiattackProfile(profile: StatBlockMultiattackProfile): bool = all {
+    profile.dispatchProcedureRefs.length() >= 1,
+    legalStatBlockProcedureRefs(profile.dispatchProcedureRefs),
   }
 
   pure def legalStatBlockMultiattackState(state: StatBlockMultiattackState): bool = all {
@@ -65,14 +51,11 @@ module statBlockMultiattack {
       | StatBlockMultiattackActionSpent => true
       | StatBlockMultiattackTurnEnded => true
       | StatBlockMultiattackDispatching(active) => all {
-          legalStatBlockMultiattackDispatches(active.dispatches),
-          multiattackDispatchesRemaining(active.dispatches) > 0,
+          active.pendingProcedureRefs.length() > 0,
+          legalStatBlockProcedureRefs(active.pendingProcedureRefs),
         }
     },
   }
-
-  pure def multiattackDispatchesRemaining(dispatches: StatBlockMultiattackDispatches): int =
-    dispatches.primaryRemaining + dispatches.secondaryRemaining
 
   pure def statBlockMultiattackContinuationOpen(state: StatBlockMultiattackState): bool =
     match state {
@@ -82,32 +65,31 @@ module statBlockMultiattack {
       | StatBlockMultiattackDispatching(_) => true
     }
 
-  pure def statBlockMultiattackDispatches(
+  pure def statBlockMultiattackPendingProcedureRefs(
     state: StatBlockMultiattackState
-  ): StatBlockMultiattackDispatches =
+  ): List[StatBlockProcedureRef] =
     match state {
-      | StatBlockMultiattackReadyToAct => initialStatBlockMultiattackDispatches
-      | StatBlockMultiattackActionSpent => initialStatBlockMultiattackDispatches
-      | StatBlockMultiattackTurnEnded => initialStatBlockMultiattackDispatches
-      | StatBlockMultiattackDispatching(active) => active.dispatches
+      | StatBlockMultiattackReadyToAct => List()
+      | StatBlockMultiattackActionSpent => List()
+      | StatBlockMultiattackTurnEnded => List()
+      | StatBlockMultiattackDispatching(active) => active.pendingProcedureRefs
     }
 
-  pure def dispatchCountForAttackName(
-    dispatches: StatBlockMultiattackDispatches,
-    attackName: StatBlockAttackName
-  ): int =
-    if (attackName == PrimaryStatBlockAttack) dispatches.primaryRemaining
-    else dispatches.secondaryRemaining
-
-  pure def decrementDispatch(
-    dispatches: StatBlockMultiattackDispatches,
-    attackName: StatBlockAttackName
-  ): StatBlockMultiattackDispatches =
-    if (attackName == PrimaryStatBlockAttack and dispatches.primaryRemaining > 0) {
-      dispatches.with("primaryRemaining", dispatches.primaryRemaining - 1)
-    } else if (attackName == SecondaryStatBlockAttack and dispatches.secondaryRemaining > 0) {
-      dispatches.with("secondaryRemaining", dispatches.secondaryRemaining - 1)
-    } else dispatches
+  pure def removeFirstStatBlockProcedureRef(
+    procedureRefs: List[StatBlockProcedureRef],
+    procedureRef: StatBlockProcedureRef
+  ): List[StatBlockProcedureRef] =
+    procedureRefs.foldl(
+      { removed: false, remaining: List() },
+      (acc, candidate) =>
+        if (not(acc.removed) and candidate == procedureRef) {
+          removed: true,
+          remaining: acc.remaining,
+        } else {
+          removed: acc.removed,
+          remaining: acc.remaining.append(candidate),
+        }
+    ).remaining
 
   pure def multiattackDispatchSubjectPermitted(
     state: StatBlockMultiattackState,
@@ -117,21 +99,18 @@ module statBlockMultiattack {
     else match subject {
       | StatBlockMovementSubject => true
       | StatBlockEndTurnSubject => true
-      | StatBlockDispatchAttack(v) =>
-        dispatchCountForAttackName(statBlockMultiattackDispatches(state), v.attackName) > 0
+      | StatBlockDispatchProcedure(v) =>
+        statBlockProcedureRefsContain(
+          statBlockMultiattackPendingProcedureRefs(state),
+          v.procedureRef
+        )
       | _ => false
     }
 
-  pure def multiattackDispatchesAfterFirstAttack(
+  pure def multiattackPendingProcedureRefsAfterFirstDispatch(
     profile: StatBlockMultiattackProfile
-  ): StatBlockMultiattackDispatches =
-    decrementDispatch(
-      {
-        primaryRemaining: profile.primaryAttackCount,
-        secondaryRemaining: profile.secondaryAttackCount,
-      },
-      profile.firstAttackName
-    )
+  ): List[StatBlockProcedureRef] =
+    profile.dispatchProcedureRefs.slice(1, profile.dispatchProcedureRefs.length())
 
   pure def startStatBlockMultiattack(
     state: StatBlockMultiattackState,
@@ -139,12 +118,12 @@ module statBlockMultiattack {
   ): StatBlockMultiattackState =
     match state {
       | StatBlockMultiattackReadyToAct => {
-          val dispatches = multiattackDispatchesAfterFirstAttack(profile)
+          val pendingProcedureRefs = multiattackPendingProcedureRefsAfterFirstDispatch(profile)
           if (not(legalStatBlockMultiattackProfile(profile))) state
-          else if (multiattackDispatchesRemaining(dispatches) == 0)
+          else if (pendingProcedureRefs.length() == 0)
             StatBlockMultiattackActionSpent
           else StatBlockMultiattackDispatching({
-            dispatches: dispatches,
+            pendingProcedureRefs: pendingProcedureRefs,
           })
         }
       | StatBlockMultiattackActionSpent => state
@@ -154,19 +133,22 @@ module statBlockMultiattack {
 
   pure def resolveStatBlockMultiattackDispatch(
     state: StatBlockMultiattackState,
-    attackName: StatBlockAttackName
+    procedureRef: StatBlockProcedureRef
   ): StatBlockMultiattackState = match state {
     | StatBlockMultiattackReadyToAct => state
     | StatBlockMultiattackActionSpent => state
     | StatBlockMultiattackTurnEnded => state
     | StatBlockMultiattackDispatching(active) => {
-        if (dispatchCountForAttackName(active.dispatches, attackName) <= 0) state
+        if (not(statBlockProcedureRefsContain(active.pendingProcedureRefs, procedureRef))) state
         else {
-          val remaining = decrementDispatch(active.dispatches, attackName)
-          if (multiattackDispatchesRemaining(remaining) == 0)
+          val remaining = removeFirstStatBlockProcedureRef(
+            active.pendingProcedureRefs,
+            procedureRef
+          )
+          if (remaining.length() == 0)
             StatBlockMultiattackActionSpent
           else StatBlockMultiattackDispatching({
-            dispatches: remaining,
+            pendingProcedureRefs: remaining,
           })
         }
       }

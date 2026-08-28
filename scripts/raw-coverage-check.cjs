@@ -1174,38 +1174,44 @@ function runSelfTests() {
   }
 }
 
-try {
-  if (selfTest) {
-    runSelfTests();
-    console.log("RAW coverage checker self-test OK.");
-    return;
-  }
-
-  const matrix = buildMatrix();
-  const report = renderReport(matrix);
-
-  if (write) {
-    fs.writeFileSync(paths.matrix, `${JSON.stringify(matrix, null, 2)}\n`);
-    fs.writeFileSync(paths.report, report);
-  } else {
-    assertDeepEqual(
-      readJson(paths.matrix),
-      matrix,
-      "plans/raw-coverage/matrix.json",
-    );
-    const existingReport = fs.readFileSync(paths.report, "utf8");
-    if (existingReport !== report) {
-      fail(
-        "plans/raw-coverage/REPORT.md is stale. Run node scripts/raw-coverage-check.cjs --write to refresh it.",
-      );
+function main() {
+  try {
+    if (selfTest) {
+      runSelfTests();
+      console.log("RAW coverage checker self-test OK.");
+      return;
     }
-  }
 
-  console.log(
-    `RAW coverage tracer OK: ${matrix.summary.classifiedSpans}/${matrix.summary.generatedSpans} spans classified, ` +
-      `${matrix.summary.closedNonFluffSpans}/${matrix.summary.nonFluffSpans} non-fluff spans closed.`,
-  );
-} catch (error) {
-  console.error(error.message);
-  process.exitCode = 1;
+    const matrix = buildMatrix();
+    const report = renderReport(matrix);
+
+    if (write) {
+      fs.writeFileSync(paths.matrix, `${JSON.stringify(matrix, null, 2)}\n`);
+      fs.writeFileSync(paths.report, report);
+    } else {
+      assertDeepEqual(
+        readJson(paths.matrix),
+        matrix,
+        "plans/raw-coverage/matrix.json",
+      );
+      const existingReport = fs.readFileSync(paths.report, "utf8");
+      if (existingReport !== report) {
+        fail(
+          "plans/raw-coverage/REPORT.md is stale. Run node scripts/raw-coverage-check.cjs --write to refresh it.",
+        );
+      }
+    }
+
+    console.log(
+      `RAW coverage tracer OK: ${matrix.summary.classifiedSpans}/${matrix.summary.generatedSpans} spans classified, ` +
+        `${matrix.summary.closedNonFluffSpans}/${matrix.summary.nonFluffSpans} non-fluff spans closed.`,
+    );
+  } catch (error) {
+    console.error(error.message);
+    process.exitCode = 1;
+  }
 }
+
+module.exports = { scanRawCoverageClaims, validateRawCoverageOwnerClaims };
+
+if (require.main === module) main();

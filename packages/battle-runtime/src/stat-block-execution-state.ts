@@ -1,3 +1,6 @@
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-MULTIATTACK-001 RAW-STAT-BLOCK-LIMITED-USAGE-001
+// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.multiattack stat-block.resource-lifecycle
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.MULTIATTACK BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE
 import { optionalProperty } from "./optional-property.ts";
 import {
   PositiveInteger,

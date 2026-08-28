@@ -6,8 +6,8 @@ module battleRuntimeStatBlockMultiattackBridgeExamples {
   run test_synthetic_multiattack_dispatch_count_uses_stat_block_profile = {
     all {
       assert(battleRuntimeSyntheticMultiattackDispatchesAfterFirstAttack == 2),
-      assert(battleRuntimeSyntheticMultiattackDispatchesAfterDispatch(2) == 1),
-      assert(battleRuntimeSyntheticMultiattackDispatchesAfterDispatch(1) == 0),
+      assert(battleRuntimeSyntheticMultiattackDispatchesAfterDispatch(List(0, 1), 1) == 1),
+      assert(battleRuntimeSyntheticMultiattackDispatchesAfterDispatch(List(0), 0) == 0),
     }
   }
 }

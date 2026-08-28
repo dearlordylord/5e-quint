@@ -3282,7 +3282,7 @@
         "packages/shared-algebras/proofs/rule-core/stat-block-action-lifecycle.qnt"
       ],
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-state-execution.ts"
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts"
       ],
       "sourceBoundary": "StatBlockRecord",
       "taskRefs": [
@@ -3308,7 +3308,9 @@
         "packages/shared-algebras/proofs/rule-core/stat-block-bonus-action-lifecycle.qnt"
       ],
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-state-execution.ts"
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock.ts"
       ],
       "sourceBoundary": "StatBlockRecord",
       "taskRefs": [
@@ -3334,7 +3336,11 @@
         "packages/shared-algebras/proofs/rule-core/stat-block-legendary-action-lifecycle.qnt"
       ],
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-state-execution.ts"
+        "packages/battle-runtime/src/battle-reducer/unit-feature-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-state-execution.ts",
+        "packages/battle-runtime/src/battle-reducer/legendary-action-window.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
       ],
       "sourceBoundary": "StatBlockRecord",
       "taskRefs": [
@@ -3359,7 +3365,12 @@
       "qntOwners": [],
       "qntOwnershipStatus": "needs-qnt-owner",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-state-execution.ts"
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock-attacks.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock-attack-hit-condition-riders.ts",
+        "packages/battle-runtime/src/statblock-attack-hit-condition-support.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
+        "packages/battle-runtime/src/statblock-attack-damage-support.ts"
       ],
       "sourceBoundary": "StatBlockRecord",
       "taskRefs": [
@@ -3381,7 +3392,11 @@
         "packages/shared-algebras/proofs/rule-core/stat-block-multiattack.qnt"
       ],
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-state-execution.ts"
+        "packages/battle-runtime/src/stat-block-execution.ts",
+        "packages/battle-runtime/src/stat-block-execution-state.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts"
       ],
       "sourceBoundary": "StatBlockRecord",
       "taskRefs": [
@@ -3389,7 +3404,7 @@
         "SB-MULTIATTACK-MBT",
         "SB-ACTIONS-RUNTIME-TEST"
       ],
-      "title": "Stat Block Multiattack control and dispatch",
+      "title": "Admitted attack-procedure Multiattack control and dispatch",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -3412,7 +3427,10 @@
         "packages/shared-algebras/proofs/rule-core/stat-block-resource-lifecycle.qnt"
       ],
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-state-execution.ts"
+        "packages/battle-runtime/src/stat-block-execution-state.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock.ts"
       ],
       "sourceBoundary": "StatBlockRecord",
       "taskRefs": [
@@ -9343,7 +9361,7 @@
             "obligationId": "BATTLE.STAT_BLOCK.MULTIATTACK",
             "runtime": "battle",
             "status": "covered",
-            "title": "Battle Stat Block Multiattack control and dispatch"
+            "title": "Battle admitted attack-procedure Multiattack control and dispatch"
           }
         ],
         "profileId": "stat-block.multiattack",

@@ -1649,7 +1649,6 @@ function validateGeneratorReadiness(
   const semanticCore = stringArrayOrEmpty(readiness.semanticCore);
   const proofOnly = stringArrayOrEmpty(readiness.proofOnly);
   const bridgeOwners = stringArrayOrEmpty(readiness.bridgeOwners);
-  const supportingOwners = stringArrayOrEmpty(readiness.supportingOwners);
   const generatorSubset = stringArrayOrEmpty(readiness.generatorSubset);
   const blockedBy = stringArrayOrEmpty(readiness.blockedBy);
   const followUpTaskIds = stringArrayOrEmpty(readiness.followUpTaskIds);
@@ -1683,7 +1682,6 @@ function validateGeneratorReadiness(
   }
   const semanticCoreSet = new Set(semanticCore);
   const bridgeOwnerSet = new Set(bridgeOwners);
-  const proofOnlySet = new Set(proofOnly);
   for (const ownerPath of proofOnly) {
     if (semanticCoreSet.has(ownerPath)) {
       issues.push(
@@ -1694,10 +1692,6 @@ function validateGeneratorReadiness(
     if (ownerRole === undefined) {
       issues.push(
         `${context}.proofOnly path ${ownerPath} is missing a QNT owner role.`,
-      );
-    } else if (ownerRole !== "proof-only") {
-      issues.push(
-        `${context}.proofOnly path ${ownerPath} has QNT owner role ${ownerRole}; expected proof-only.`,
       );
     }
     if (bridgeOwnerSet.has(ownerPath)) {
@@ -1723,39 +1717,12 @@ function validateGeneratorReadiness(
       );
     }
   }
-  if (Object.prototype.hasOwnProperty.call(readiness, "supportingOwners")) {
-    issues.push(
-      ...validateStringArray(
-        readiness.supportingOwners,
-        `${context}.supportingOwners`,
-      ),
-    );
-  }
-  for (const ownerPath of supportingOwners) {
-    if (
-      semanticCoreSet.has(ownerPath) ||
-      bridgeOwnerSet.has(ownerPath) ||
-      proofOnlySet.has(ownerPath)
-    ) {
-      issues.push(
-        `${context}.${ownerPath} cannot be both supportingOwners and an owned semantic/bridge/proof path.`,
-      );
-    }
-    if (!qntOwnerRolesByPath.has(ownerPath)) {
-      issues.push(
-        `${context}.supportingOwners path ${ownerPath} is missing a QNT owner role.`,
-      );
-    }
-  }
   if (readiness.status === "not-assessed") {
     for (const field of generatorReadinessArrayFields) {
       const entries = stringArrayOrEmpty(readiness[field]);
       if (entries.length > 0) {
         issues.push(`${context}.not-assessed must have empty ${field}.`);
       }
-    }
-    if (supportingOwners.length > 0) {
-      issues.push(`${context}.not-assessed must have empty supportingOwners.`);
     }
   }
   if (
@@ -1823,12 +1790,7 @@ function validateGeneratorReadiness(
       `${context}.${readiness.status} has semanticCore run block(s) at ${runBlockLocations} and must include blockedBy ${semanticCoreRunBlockBlocker}.`,
     );
   }
-  for (const field of [
-    "semanticCore",
-    "bridgeOwners",
-    "proofOnly",
-    "supportingOwners",
-  ]) {
+  for (const field of ["semanticCore", "bridgeOwners", "proofOnly"]) {
     for (const ownerPath of stringArrayOrEmpty(readiness[field])) {
       if (!fs.existsSync(path.join(rootPath, ownerPath))) {
         issues.push(`${context}.${field} path ${ownerPath} does not exist.`);
@@ -2038,12 +2000,7 @@ function generatorReadinessOwnerPaths(generatorReadiness) {
   const ownerPaths = new Set();
   for (const readiness of generatorReadiness) {
     if (!isRecord(readiness) || readiness.status === "not-assessed") continue;
-    for (const field of [
-      "semanticCore",
-      "bridgeOwners",
-      "proofOnly",
-      "supportingOwners",
-    ]) {
+    for (const field of ["semanticCore", "bridgeOwners", "proofOnly"]) {
       for (const ownerPath of stringArrayOrEmpty(readiness[field])) {
         ownerPaths.add(ownerPath);
       }

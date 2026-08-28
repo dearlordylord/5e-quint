@@ -5,15 +5,16 @@ module battleRuntimeStatBlockMultiattackBridge {
   import statBlockMultiattack.* from "../shared-algebras/proofs/rule-core/stat-block-multiattack"
 
   pure def battleRuntimeSyntheticMultiattackDispatchesAfterFirstAttack: int =
-    multiattackDispatchesRemaining(multiattackDispatchesAfterFirstAttack({
-      firstAttackName: PrimaryStatBlockAttack,
-      primaryAttackCount: 3,
-      secondaryAttackCount: 0,
-    }))
+    multiattackPendingProcedureRefsAfterFirstDispatch({
+      dispatchProcedureRefs: List(0, 0, 0),
+    }).length()
 
-  pure def battleRuntimeSyntheticMultiattackDispatchesAfterDispatch(remaining: int): int =
-    multiattackDispatchesRemaining(decrementDispatch({
-      primaryRemaining: remaining,
-      secondaryRemaining: 0,
-    }, PrimaryStatBlockAttack))
+  pure def battleRuntimeSyntheticMultiattackDispatchesAfterDispatch(
+    pendingProcedureRefs: List[StatBlockProcedureRef],
+    procedureRef: StatBlockProcedureRef
+  ): int =
+    removeFirstStatBlockProcedureRef(
+      pendingProcedureRefs,
+      procedureRef
+    ).length()
 }

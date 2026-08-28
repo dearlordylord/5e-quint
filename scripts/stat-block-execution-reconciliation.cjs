@@ -3,6 +3,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const prettier = require("prettier");
+const { validateRawCoverageOwnerClaims } = require("./raw-coverage-check.cjs");
 
 const root = process.cwd();
 const pressurePath = path.join(
@@ -491,6 +492,18 @@ function sameVerificationOwners(actual, expected) {
   );
 }
 
+function memberUnion(collections) {
+  return [...new Set(collections.flat())];
+}
+
+function verificationOwnerUnion(collections) {
+  return [
+    ...new Map(
+      collections.flat().map((owner) => [verificationOwnerKey(owner), owner]),
+    ).values(),
+  ];
+}
+
 function evidenceMetricForVerificationKind(kind) {
   if (kind === "qnt-proof") return "qnt-proof";
   if (kind === "focused-mbt") return "runtime-parity";
@@ -563,6 +576,7 @@ function validateCoverageJoin(
   reconciliation,
   inputs = readCoverageJoinInputs(),
 ) {
+  validateRawCoverageOwnerClaims(inputs.requirements, root);
   const requirements = new Map(
     inputs.requirements.map((requirement) => [requirement.id, requirement]),
   );
@@ -624,39 +638,28 @@ function validateCoverageJoin(
     const familyRequirements = (family.rawRequirementIds ?? []).map((id) =>
       requirements.get(id),
     );
-    const canonicalRequirement = familyRequirements[0];
-    if (canonicalRequirement !== undefined) {
-      const ownerMismatch = familyRequirements.some(
-        (requirement) =>
-          !sameMembers(requirement.qntOwners, canonicalRequirement.qntOwners) ||
-          !sameMembers(
-            requirement.runtimeOwners,
-            canonicalRequirement.runtimeOwners,
-          ) ||
-          !sameVerificationOwners(
-            requirement.verificationOwners,
-            canonicalRequirement.verificationOwners,
-          ),
+    if (familyRequirements.length > 0) {
+      const familyQntOwners = memberUnion(
+        familyRequirements.map((requirement) => requirement.qntOwners),
+      );
+      const familyRuntimeOwners = memberUnion(
+        familyRequirements.map((requirement) => requirement.runtimeOwners),
+      );
+      const familyVerificationOwners = verificationOwnerUnion(
+        familyRequirements.map((requirement) => requirement.verificationOwners),
       );
       if (
-        ownerMismatch ||
-        !sameMembers(profile.qntOwners, canonicalRequirement.qntOwners) ||
-        !sameMembers(obligation.qntOwners, canonicalRequirement.qntOwners) ||
-        !sameMembers(
-          profile.runtimeOwners,
-          canonicalRequirement.runtimeOwners,
-        ) ||
-        !sameMembers(
-          obligation.runtimeOwners,
-          canonicalRequirement.runtimeOwners,
-        ) ||
+        !sameMembers(profile.qntOwners, familyQntOwners) ||
+        !sameMembers(obligation.qntOwners, familyQntOwners) ||
+        !sameMembers(profile.runtimeOwners, familyRuntimeOwners) ||
+        !sameMembers(obligation.runtimeOwners, familyRuntimeOwners) ||
         !sameVerificationOwners(
           profile.verificationOwners,
-          canonicalRequirement.verificationOwners,
+          familyVerificationOwners,
         ) ||
         !sameVerificationOwners(
           obligation.parityWitnesses,
-          canonicalRequirement.verificationOwners.filter(
+          familyVerificationOwners.filter(
             (owner) => owner.kind !== "qnt-proof",
           ),
         )
@@ -741,11 +744,20 @@ function validateCoverageJoin(
         const proofOwners = profile.verificationOwners.filter(
           (owner) => owner.kind === "qnt-proof",
         );
+        const readinessSemanticAndBridgeOwners = new Set([
+          ...readiness.semanticCore,
+          ...(readiness.bridgeOwners ?? []),
+        ]);
         if (
           proofOwners.some(
             (owner) =>
               qntOwnerRoles.get(owner.ownerPath) !== "proof-only" ||
               !readiness.proofOnly.includes(owner.ownerPath),
+          ) ||
+          readiness.proofOnly.some(
+            (ownerPath) =>
+              qntOwnerRoles.get(ownerPath) !== "proof-only" ||
+              readinessSemanticAndBridgeOwners.has(ownerPath),
           )
         ) {
           fail(`${family.id} qnt-proof owner partition is not exact.`);
@@ -1022,6 +1034,74 @@ async function runSelfTest() {
     () =>
       validateCoverageJoin(realReconciliation, mismatchedRuntimeOwnerCoverage),
     "stat-block.action-lifecycle cross-layer owner join is not exact",
+  );
+
+  const swappedAttackDamageOwnersCoverage = structuredClone(realCoverage);
+  const swappedAttackRequirement =
+    swappedAttackDamageOwnersCoverage.requirements.find(
+      ({ id }) => id === "RAW-STAT-BLOCK-ATTACK-PROCEDURE-001",
+    );
+  const swappedDamageRequirement =
+    swappedAttackDamageOwnersCoverage.requirements.find(
+      ({ id }) => id === "RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001",
+    );
+  [
+    swappedAttackRequirement.runtimeOwners,
+    swappedDamageRequirement.runtimeOwners,
+  ] = [
+    swappedDamageRequirement.runtimeOwners,
+    swappedAttackRequirement.runtimeOwners,
+  ];
+  assertThrowsWith(
+    "swapped attack and damage runtime owners",
+    () =>
+      validateCoverageJoin(
+        realReconciliation,
+        swappedAttackDamageOwnersCoverage,
+      ),
+    "cites RAW-STAT-BLOCK-ATTACK-PROCEDURE-001 as runtime-owner, but requirements.jsonl does not list that owner",
+  );
+
+  const wrongRequirementRuntimeOwnerCoverage = structuredClone(realCoverage);
+  wrongRequirementRuntimeOwnerCoverage.requirements.find(
+    ({ id }) => id === "RAW-STAT-BLOCK-ATTACK-PROCEDURE-001",
+  ).runtimeOwners[0] = "packages/battle-runtime/src/stat-block-execution.ts";
+  assertThrowsWith(
+    "wrong but nonempty requirement runtime owner",
+    () =>
+      validateCoverageJoin(
+        realReconciliation,
+        wrongRequirementRuntimeOwnerCoverage,
+      ),
+    "cites RAW-STAT-BLOCK-ATTACK-PROCEDURE-001 as runtime-owner, but requirements.jsonl does not list that owner",
+  );
+
+  const missingRequirementRuntimeOwnerCoverage = structuredClone(realCoverage);
+  missingRequirementRuntimeOwnerCoverage.requirements
+    .find(({ id }) => id === "RAW-STAT-BLOCK-ATTACK-PROCEDURE-001")
+    .runtimeOwners.pop();
+  assertThrowsWith(
+    "missing requirement runtime owner",
+    () =>
+      validateCoverageJoin(
+        realReconciliation,
+        missingRequirementRuntimeOwnerCoverage,
+      ),
+    "cites RAW-STAT-BLOCK-ATTACK-PROCEDURE-001 as runtime-owner, but requirements.jsonl does not list that owner",
+  );
+
+  const extraRequirementRuntimeOwnerCoverage = structuredClone(realCoverage);
+  extraRequirementRuntimeOwnerCoverage.requirements
+    .find(({ id }) => id === "RAW-STAT-BLOCK-ATTACK-PROCEDURE-001")
+    .runtimeOwners.push("packages/battle-runtime/src/stat-block-execution.ts");
+  assertThrowsWith(
+    "extra requirement runtime owner",
+    () =>
+      validateCoverageJoin(
+        realReconciliation,
+        extraRequirementRuntimeOwnerCoverage,
+      ),
+    "lists runtime owner packages/battle-runtime/src/stat-block-execution.ts, but that artifact does not cite it with RAW-COVERAGE: runtime-owner",
   );
 
   const mismatchedVerificationOwnerCoverage = structuredClone(realCoverage);

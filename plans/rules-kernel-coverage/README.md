@@ -183,6 +183,10 @@ scope.
   owner list.
 - `proofOnly`: QNT files that support proof, induction, fixtures, or tests but
   are not intended as generator input for implementation semantics.
+- `bridgeOwners`: optional QNT runtime-application or projection bridges for the
+  obligation. Every listed path must be declared in the obligation's
+  `bridgeOwners`, classified as `bridge`, and is included in the checked QNT
+  registry denominator without becoming generator input.
 - `generatorSubset`: the observed QNT language constructs a future generator
   would need for the row. The subset vocabulary is checked as row data today and
   is intentionally refined by the C-lane generation-subset tasks.

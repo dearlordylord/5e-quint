@@ -20,6 +20,7 @@ import {
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintList,
   quintStateRecord,
   quintVariantMappedValue,
   run,
@@ -88,8 +89,7 @@ type RuleCoreStatBlockMultiattackProjection =
   RuleCoreComponentRoutedProjection & {
     readonly attackActionAvailable: boolean;
     readonly bonusActionAvailable: boolean;
-    readonly pendingPrimaryDispatches: number;
-    readonly pendingSecondaryDispatches: number;
+    readonly pendingDispatchProcedureRefs: readonly number[];
     readonly movementSpentFeet: number;
     readonly movementRemainingFeet: number;
     readonly multiattackContinuationOpen: boolean;
@@ -119,8 +119,8 @@ const driverSchema = {
   doMoveDuringDispatch: {},
   doRejectBonusActionDuringDispatch: {},
   doRejectOrdinaryActionDuringDispatch: {},
-  doResolvePrimaryDispatch: {},
-  doResolveSecondaryDispatch: {},
+  doResolveProcedureZeroDispatch: {},
+  doResolveProcedureOneDispatch: {},
   doEndTurnClosesDispatches: {},
   step: {},
 } as const;
@@ -238,8 +238,8 @@ function createRuleCoreStatBlockMultiattackDriver() {
           speedKind: "walk",
         });
       },
-      doResolvePrimaryDispatch: () => resolveDispatch(primaryAttackName),
-      doResolveSecondaryDispatch: () => resolveDispatch(secondaryAttackName),
+      doResolveProcedureZeroDispatch: () => resolveDispatch(primaryAttackName),
+      doResolveProcedureOneDispatch: () => resolveDispatch(secondaryAttackName),
       doEndTurnClosesDispatches: () => {
         const result = resolveBattleSubject({
           state,
@@ -465,12 +465,13 @@ function projectRuleCoreStatBlockMultiattackState(input: {
     ),
     bonusActionAvailable:
       input.state.currentTurnResources.currentHasBonusAction,
-    pendingPrimaryDispatches: dispatches.filter(
-      (resource) => resource.attackProcedureRef === primaryAttackRef,
-    ).length,
-    pendingSecondaryDispatches: dispatches.filter(
-      (resource) => resource.attackProcedureRef === secondaryAttackRef,
-    ).length,
+    pendingDispatchProcedureRefs: dispatches.map((resource) =>
+      resource.attackProcedureRef === primaryAttackRef
+        ? 0
+        : resource.attackProcedureRef === secondaryAttackRef
+          ? 1
+          : unknownSyntheticProcedureRef(resource.attackProcedureRef),
+    ),
     movementSpentFeet: Number(actor.movement.spentFeet),
     movementRemainingFeet: Number(actor.movement.remainingFeet),
     multiattackContinuationOpen: dispatches.length > 0,
@@ -487,6 +488,12 @@ function pendingStatBlockMultiattackDispatches(
     (resource): resource is StatBlockMultiattackResourceSnapshot =>
       resource.source === "statBlockMultiattack" &&
       resource.sourceOwnerId === actorId,
+  );
+}
+
+function unknownSyntheticProcedureRef(procedureRef: unknown): never {
+  throw new Error(
+    `Unexpected synthetic Stat Block Multiattack procedure ref: ${String(procedureRef)}`,
   );
 }
 
@@ -603,13 +610,11 @@ function normalizeRuleCoreStatBlockMultiattackQuintState(
     componentRoute: decodeRuleCoreComponentRoute(state["qComponentRoute"]),
     attackActionAvailable: phase === "MbtReadyToAct",
     bonusActionAvailable: booleanField(state, "qBonusActionAvailable"),
-    pendingPrimaryDispatches: numberFromQuintInt(
-      state["qPendingPrimaryDispatches"],
-      "qPendingPrimaryDispatches",
-    ),
-    pendingSecondaryDispatches: numberFromQuintInt(
-      state["qPendingSecondaryDispatches"],
-      "qPendingSecondaryDispatches",
+    pendingDispatchProcedureRefs: quintList(
+      state["qPendingProcedureRefs"],
+      "qPendingProcedureRefs",
+    ).map((raw, index) =>
+      numberFromQuintInt(raw, `qPendingProcedureRefs[${index}]`),
     ),
     movementSpentFeet: numberFromQuintInt(
       state["qMovementSpentFeet"],
