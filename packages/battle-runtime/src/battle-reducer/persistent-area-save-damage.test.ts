@@ -15,7 +15,7 @@ import {
   resolveCloudkillAreaSaveDamage,
   resolveInsectPlagueAreaSaveDamage,
 } from "./persistent-area-save-damage.ts";
-import { isPersistentAreaAppearanceSubject } from "./persistent-spatial-spell-procedures.ts";
+import { isPersistentAreaSubjectAllowedOutsideCurrentActorTurn } from "./persistent-spatial-spell-procedures.ts";
 
 function persistentAreaBattle() {
   return startBattleRight({
@@ -46,13 +46,13 @@ function appearanceTrigger(areaId: BattleAreaId) {
 }
 
 describe("persistent-area save/damage protocol", () => {
-  test("identifies appearance subjects admitted to occurrence validation", () => {
+  test("identifies persistent-area subjects allowed outside the current actor turn", () => {
     const areaMembershipTrigger = appearanceTrigger(
       battleAreaId("test-persistent-area-appearance"),
     );
 
     expect(
-      isPersistentAreaAppearanceSubject({
+      isPersistentAreaSubjectAllowedOutsideCurrentActorTurn({
         tag: "runtimeCommand",
         actorId: fighterId,
         command: "insectPlagueAreaHazardSave",
@@ -60,7 +60,31 @@ describe("persistent-area save/damage protocol", () => {
       }),
     ).toBe(true);
     expect(
-      isPersistentAreaAppearanceSubject({
+      isPersistentAreaSubjectAllowedOutsideCurrentActorTurn({
+        tag: "runtimeCommand",
+        actorId: fighterId,
+        command: "insectPlagueAreaHazardSave",
+        areaMembershipTrigger: {
+          kind: "firstEntryOnTurn",
+          areaId: areaMembershipTrigger.areaId,
+          effectRef: persistentAreaEffectRef,
+        },
+      }),
+    ).toBe(true);
+    expect(
+      isPersistentAreaSubjectAllowedOutsideCurrentActorTurn({
+        tag: "runtimeCommand",
+        actorId: fighterId,
+        command: "insectPlagueAreaHazardSave",
+        areaMembershipTrigger: {
+          kind: "turnEndInArea",
+          areaId: areaMembershipTrigger.areaId,
+          effectRef: persistentAreaEffectRef,
+        },
+      }),
+    ).toBe(false);
+    expect(
+      isPersistentAreaSubjectAllowedOutsideCurrentActorTurn({
         tag: "runtimeCommand",
         actorId: fighterId,
         command: "cloudkillAreaHazardSave",

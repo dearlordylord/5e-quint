@@ -30,9 +30,9 @@ module battleRuntimeInsectPlagueAreaHazard {
   pure val insectPlagueDurationTicks: int = 100
 
   type InsectPlagueSaveTrigger =
-    | InsectPlagueAppearsInArea
-    | InsectPlagueEntersArea
-    | InsectPlagueEndsTurnInArea
+    | InsectPlagueAppearanceOccurrence
+    | InsectPlagueFirstEntryOccurrence
+    | InsectPlagueTargetTurnEndOccurrence
 
   type InsectPlagueArea =
     | InsectPlagueAreaAbsent
@@ -65,9 +65,9 @@ module battleRuntimeInsectPlagueAreaHazard {
     trigger: InsectPlagueSaveTrigger,
   ): AreaEffectTriggerTiming =
     match trigger {
-      | InsectPlagueAppearsInArea => AreaAppearsInSpace
-      | InsectPlagueEntersArea => CreatureEntersArea
-      | InsectPlagueEndsTurnInArea => CreatureEndsTurnInArea
+      | InsectPlagueAppearanceOccurrence => AreaAppearsInSpace
+      | InsectPlagueFirstEntryOccurrence => CreatureEntersArea
+      | InsectPlagueTargetTurnEndOccurrence => CreatureEndsTurnInArea
     }
 
   pure def insectPlagueTriggerIsAvailable(
@@ -79,13 +79,13 @@ module battleRuntimeInsectPlagueAreaHazard {
       appearanceOccurrenceOpen: bool,
       savedThisTurn: bool,
     },
-    targetTurn: bool,
     trigger: InsectPlagueSaveTrigger,
   ): bool =
-    if (trigger == InsectPlagueAppearsInArea)
-      area.appearanceOccurrenceOpen
-    else
-      targetTurn
+    match trigger {
+      | InsectPlagueAppearanceOccurrence => area.appearanceOccurrenceOpen
+      | InsectPlagueFirstEntryOccurrence => true
+      | InsectPlagueTargetTurnEndOccurrence => true
+    }
 
   pure def resolveInsectPlagueCast(
     state: InsectPlagueAreaHazardState,
@@ -138,7 +138,7 @@ module battleRuntimeInsectPlagueAreaHazard {
       | InsectPlagueAreaAbsent => state
       | InsectPlagueAreaActive(area) =>
           if (
-            not(insectPlagueTriggerIsAvailable(area, state.targetTurn, trigger)) or
+            not(insectPlagueTriggerIsAvailable(area, trigger)) or
             not(areaEffectTriggerCanResolve(
               true,
               true,

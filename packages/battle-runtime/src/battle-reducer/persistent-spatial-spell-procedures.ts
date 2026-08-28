@@ -260,15 +260,28 @@ export function isPersistentSpatialSpellProcedureSubject(
   );
 }
 
-export function isPersistentAreaAppearanceSubject(
+export function isPersistentAreaSubjectAllowedOutsideCurrentActorTurn(
   subject: BattleSubject,
 ): boolean {
-  return (
-    subject.tag === "runtimeCommand" &&
-    (subject.command === "insectPlagueAreaHazardSave" ||
-      subject.command === "cloudkillAreaHazardSave") &&
-    subject.areaMembershipTrigger.kind === "appearsInArea"
-  );
+  if (subject.tag !== "runtimeCommand") return false;
+  if (subject.command === "insectPlagueAreaHazardSave") {
+    return Match.value(subject.areaMembershipTrigger.kind).pipe(
+      Match.when("appearsInArea", () => true),
+      Match.when("firstEntryOnTurn", () => true),
+      Match.when("turnEndInArea", () => false),
+      Match.exhaustive,
+    );
+  }
+  if (subject.command === "cloudkillAreaHazardSave") {
+    return Match.value(subject.areaMembershipTrigger.kind).pipe(
+      Match.when("appearsInArea", () => true),
+      Match.when("areaMovesIntoSpace", () => false),
+      Match.when("firstEntryOnTurn", () => false),
+      Match.when("turnEndInArea", () => false),
+      Match.exhaustive,
+    );
+  }
+  return false;
 }
 
 export function resolvePersistentSpatialSpellProcedureCommand(

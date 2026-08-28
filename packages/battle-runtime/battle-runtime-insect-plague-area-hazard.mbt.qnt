@@ -167,13 +167,13 @@ module battleRuntimeInsectPlagueAreaHazardMbt {
     nondet savingThrowSucceeded = Set(true, false).oneOf()
     nondet rolledDamage = qAreaDamageDice.to(qAreaDamageDice * insectPlagueDamageDieSize).oneOf()
     nondet trigger = Set(
-      InsectPlagueAppearsInArea,
-      InsectPlagueEntersArea,
-      InsectPlagueEndsTurnInArea,
+      InsectPlagueAppearanceOccurrence,
+      InsectPlagueFirstEntryOccurrence,
+      InsectPlagueTargetTurnEndOccurrence,
     ).oneOf()
     all {
       qAreaActive,
-      trigger == InsectPlagueAppearsInArea or qTargetTurn,
+      trigger != InsectPlagueTargetTurnEndOccurrence or qTargetTurn,
       recordNextState(resolveInsectPlagueSave(
         currentInsectPlagueMbtState,
         trigger,

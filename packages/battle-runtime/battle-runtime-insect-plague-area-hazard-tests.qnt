@@ -43,11 +43,11 @@ module battleRuntimeInsectPlagueAreaHazardTests {
 
   run test_insect_plague_qualified_triggers_share_one_turn_ledger = {
     val cast = resolveInsectPlagueCast(initialInsectPlagueState(5), 5)
-    val appeared = resolveInsectPlagueSave(cast, InsectPlagueAppearsInArea, false, 20)
-    val duplicateEntry = resolveInsectPlagueSave(appeared, InsectPlagueEntersArea, false, 20)
+    val appeared = resolveInsectPlagueSave(cast, InsectPlagueAppearanceOccurrence, false, 20)
+    val duplicateEntry = resolveInsectPlagueSave(appeared, InsectPlagueFirstEntryOccurrence, false, 20)
     val laterTurn = beginInsectPlagueLaterTurn(duplicateEntry)
-    val entered = resolveInsectPlagueSave(laterTurn, InsectPlagueEntersArea, true, 20)
-    val duplicateEnd = resolveInsectPlagueSave(entered, InsectPlagueEndsTurnInArea, false, 20)
+    val entered = resolveInsectPlagueSave(laterTurn, InsectPlagueFirstEntryOccurrence, true, 20)
+    val duplicateEnd = resolveInsectPlagueSave(entered, InsectPlagueTargetTurnEndOccurrence, false, 20)
     all {
       assert(appeared.targetVitals.hitPoints == 80),
       assert(duplicateEntry == appeared),
@@ -56,9 +56,18 @@ module battleRuntimeInsectPlagueAreaHazardTests {
     }
   }
 
+  run test_insect_plague_first_entry_can_resolve_on_another_creatures_turn = {
+    val cast = resolveInsectPlagueCast(initialInsectPlagueState(5), 5)
+    val entered = resolveInsectPlagueSave(cast, InsectPlagueFirstEntryOccurrence, false, 20)
+    all {
+      assert(not(cast.targetTurn)),
+      assert(entered.targetVitals.hitPoints == 80),
+    }
+  }
+
   run test_insect_plague_upcast_failed_save_applies_the_selected_roll = {
     val cast = resolveInsectPlagueCast(initialInsectPlagueState(7), 7)
-    val resolved = resolveInsectPlagueSave(cast, InsectPlagueAppearsInArea, false, 49)
+    val resolved = resolveInsectPlagueSave(cast, InsectPlagueAppearanceOccurrence, false, 49)
     all {
       assert(resolved.targetVitals.hitPoints == 51),
       assert(match resolved.area {
@@ -71,7 +80,7 @@ module battleRuntimeInsectPlagueAreaHazardTests {
   run test_insect_plague_appearance_is_bound_to_cast_occurrence_and_cleanup = {
     val cast = resolveInsectPlagueCast(initialInsectPlagueState(5), 5)
     val laterTurn = beginInsectPlagueLaterTurn(cast)
-    val staleAppearance = resolveInsectPlagueSave(laterTurn, InsectPlagueAppearsInArea, false, 20)
+    val staleAppearance = resolveInsectPlagueSave(laterTurn, InsectPlagueAppearanceOccurrence, false, 20)
     val cleaned = resolveInsectPlagueConcentrationCleanup(laterTurn)
     all {
       assert(staleAppearance == laterTurn),

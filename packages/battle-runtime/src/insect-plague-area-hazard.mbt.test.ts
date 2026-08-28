@@ -174,28 +174,39 @@ describe("Insect Plague area-hazard MBT parity", () => {
     });
   });
 
-  it("shares one production trigger ledger across entry and end of turn", () => {
+  it("resolves off-turn entry and shares the production trigger ledger", () => {
     const cast = castInsectPlague(initialRuntimeState(5));
-    const targetTurn = beginLaterTurn(cast);
-    const entered = resolveInsectPlagueSave(targetTurn, {
+    const enteredOffTurn = resolveInsectPlagueSave(cast, {
       savingThrowSucceeded: false,
       rolledDamage: 20,
       trigger: "entersArea",
     });
-    const duplicateEnd = resolveInsectPlagueSave(entered, {
+    const duplicateAppearance = resolveInsectPlagueSave(enteredOffTurn, {
       savingThrowSucceeded: false,
+      rolledDamage: 20,
+      trigger: "appearsInArea",
+    });
+    const targetTurn = beginLaterTurn(enteredOffTurn);
+    const endedTargetTurn = resolveInsectPlagueSave(targetTurn, {
+      savingThrowSucceeded: true,
       rolledDamage: 20,
       trigger: "endsTurnInArea",
     });
 
-    expect(insectPlagueRuntimeProjection(entered)).toMatchObject({
+    expect(insectPlagueRuntimeProjection(enteredOffTurn)).toMatchObject({
       areaActive: true,
+      targetTurn: false,
       savedThisTurn: true,
       targetHitPoints: 480,
     });
-    expect(insectPlagueRuntimeProjection(duplicateEnd)).toEqual(
-      insectPlagueRuntimeProjection(entered),
+    expect(insectPlagueRuntimeProjection(duplicateAppearance)).toEqual(
+      insectPlagueRuntimeProjection(enteredOffTurn),
     );
+    expect(insectPlagueRuntimeProjection(endedTargetTurn)).toMatchObject({
+      targetTurn: true,
+      savedThisTurn: true,
+      targetHitPoints: 470,
+    });
   });
 
   it("projects Lightly Obscured and Difficult Terrain from the active Sphere", () => {
@@ -563,9 +574,9 @@ function insectPlagueTriggerFromQuint(
   raw: unknown,
 ): BattleInsectPlagueAreaHazardTrigger {
   const tag = quintVariantTag(raw);
-  if (tag === "InsectPlagueAppearsInArea") return "appearsInArea";
-  if (tag === "InsectPlagueEntersArea") return "entersArea";
-  if (tag === "InsectPlagueEndsTurnInArea") return "endsTurnInArea";
+  if (tag === "InsectPlagueAppearanceOccurrence") return "appearsInArea";
+  if (tag === "InsectPlagueFirstEntryOccurrence") return "entersArea";
+  if (tag === "InsectPlagueTargetTurnEndOccurrence") return "endsTurnInArea";
   throw new Error(`Unknown Quint Insect Plague trigger: ${tag}`);
 }
 
