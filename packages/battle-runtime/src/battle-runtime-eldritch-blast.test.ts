@@ -14,6 +14,7 @@ import {
   battleId,
   battleObjectId,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   cantripSpellInvocationRef,
   characterSeed,
   concentrationSavingThrowFill,
@@ -544,34 +545,31 @@ describe("battle runtime: Eldritch Blast", () => {
     if (concentratingTarget === undefined || protectedTarget === undefined) {
       throw new Error("Expected both teardown-route targets.");
     }
-    const state = {
+    const concentratingState = {
       ...session.state,
-      combatants: new Map(session.state.combatants)
-        .set(skeletonId, {
-          ...concentratingTarget,
-          concentration: {
-            sourceProcedureRef: concentratingProcedureRef,
-            effectKind: "spellEffect" as const,
-          },
-        })
-        .set(secondWizardId, {
-          ...protectedTarget,
-          activeEffects: [
-            ...protectedTarget.activeEffects,
-            {
-              kind: "spellArmorClassBonus" as const,
-              sourceProcedureRef: concentratingProcedureRef,
-              sourceCombatantId: skeletonId,
-              bonus: 2,
-              negatesRepeatedDamageAllocation: false,
-              expiresAt: {
-                kind: "concentration" as const,
-                combatantId: skeletonId,
-              },
-            },
-          ],
-        }),
+      combatants: new Map(session.state.combatants).set(skeletonId, {
+        ...concentratingTarget,
+        concentration: {
+          sourceProcedureRef: concentratingProcedureRef,
+          effectKind: "spellEffect" as const,
+        },
+      }),
     } satisfies BattleState;
+    const state = battleStateWithAllocatedEffectForTest({
+      state: concentratingState,
+      ownerId: secondWizardId,
+      effect: {
+        kind: "spellArmorClassBonus",
+        sourceProcedureRef: concentratingProcedureRef,
+        sourceCombatantId: skeletonId,
+        bonus: 2,
+        negatesRepeatedDamageAllocation: false,
+        expiresAt: {
+          kind: "concentration",
+          combatantId: skeletonId,
+        },
+      },
+    });
     const act = findAct(
       battleRuntimeSessionForTest({ ...session, state }),
       magicSubject("eldritch_blast"),

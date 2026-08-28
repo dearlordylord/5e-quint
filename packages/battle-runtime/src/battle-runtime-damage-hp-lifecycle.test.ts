@@ -483,9 +483,7 @@ describe("damage and hit point lifecycle helpers", () => {
     expect(releasedKnockout.positiveHpUnconscious).toBeNull();
     const escapeEffect = {
       kind: "spellCondition",
-      effectRef: battleEffectExecutionRefForTest(
-        "synthetic-charm-effect",
-      ),
+      effectRef: battleEffectExecutionRefForTest("synthetic-charm-effect"),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         "synthetic-charm-source",
       ),

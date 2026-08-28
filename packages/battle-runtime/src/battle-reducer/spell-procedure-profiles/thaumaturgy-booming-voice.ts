@@ -42,6 +42,7 @@ import { invalidResult } from "../result-helpers.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { thaumaturgyActiveOneMinuteEffectCountHole } from "../spells-damage-fills.ts";
 import { thaumaturgyBoomingVoiceProjection } from "../spells-profiles-support.ts";
+import { replaceTargetSpellActiveEffect } from "../active-effect-replacement.ts";
 import {
   THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
@@ -132,27 +133,17 @@ function applyThaumaturgyBoomingVoiceEffect(
   if (actor === undefined) {
     return state;
   }
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(actorId, {
-      ...actor,
-      activeEffects: [
-        ...actor.activeEffects.filter(
-          (effect) =>
-            !isThaumaturgyBoomingVoiceEffectForInvocation(
-              effect,
-              actorId,
-              invocation,
-            ),
-        ),
-        {
-          ...invocation.activeEffect,
-          sourceProcedureRef: invocation.sourceProcedureRef,
-          sourceCombatantId: actorId,
-        },
-      ],
-    }),
-  };
+  return replaceTargetSpellActiveEffect(
+    state,
+    actorId,
+    (effect) =>
+      isThaumaturgyBoomingVoiceEffectForInvocation(effect, actorId, invocation),
+    {
+      ...invocation.activeEffect,
+      sourceProcedureRef: invocation.sourceProcedureRef,
+      sourceCombatantId: actorId,
+    },
+  );
 }
 
 function resolveThaumaturgyBoomingVoice(

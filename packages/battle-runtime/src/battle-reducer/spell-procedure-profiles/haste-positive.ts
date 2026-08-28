@@ -34,6 +34,7 @@ import {
   type HastePositiveSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
+import type { BattleSourcedEffectOccurrenceTemplateList } from "../../effect-execution-ref.ts";
 
 import { replaceAllocatedTargetSpellActiveEffects } from "../active-effect-replacement.ts";
 import { spellSelectionResolution } from "../needs-holes-result.ts";
@@ -428,11 +429,7 @@ function applyHastePositiveEffects(
           isHastePositiveActiveEffect(effect) &&
           effect.sourceProcedureRef === invocation.sourceProcedureRef &&
           effect.sourceCombatantId === actorId,
-        hastePositiveEffects(invocation).map((effect) => ({
-          ...effect,
-          sourceProcedureRef: invocation.sourceProcedureRef,
-          sourceCombatantId: actorId,
-        })),
+        hastePositiveEffectTemplates(invocation, actorId),
       ),
     state,
   );
@@ -450,18 +447,36 @@ type HastePositiveActiveEffect = Extract<
   }
 >;
 
-type HastePositiveEffectTemplate =
-  HastePositiveSpellInvocation["activeEffects"][keyof HastePositiveSpellInvocation["activeEffects"]];
-
-function hastePositiveEffects(
+function hastePositiveEffectTemplates(
   invocation: BattleExecutableSpellInvocation<HastePositiveSpellInvocation>,
-): readonly HastePositiveEffectTemplate[] {
+  actorId: CombatantId,
+): BattleSourcedEffectOccurrenceTemplateList {
   return [
-    invocation.activeEffects.speedRatio,
-    invocation.activeEffects.armorClassBonus,
-    invocation.activeEffects.dexteritySavingThrowAdvantage,
-    invocation.activeEffects.grantedActionResource,
-    invocation.activeEffects.spellEndTargetState,
+    {
+      ...invocation.activeEffects.speedRatio,
+      sourceProcedureRef: invocation.sourceProcedureRef,
+      sourceCombatantId: actorId,
+    },
+    {
+      ...invocation.activeEffects.armorClassBonus,
+      sourceProcedureRef: invocation.sourceProcedureRef,
+      sourceCombatantId: actorId,
+    },
+    {
+      ...invocation.activeEffects.dexteritySavingThrowAdvantage,
+      sourceProcedureRef: invocation.sourceProcedureRef,
+      sourceCombatantId: actorId,
+    },
+    {
+      ...invocation.activeEffects.grantedActionResource,
+      sourceProcedureRef: invocation.sourceProcedureRef,
+      sourceCombatantId: actorId,
+    },
+    {
+      ...invocation.activeEffects.spellEndTargetState,
+      sourceProcedureRef: invocation.sourceProcedureRef,
+      sourceCombatantId: actorId,
+    },
   ];
 }
 

@@ -276,9 +276,7 @@ describe("turn-boundary active-effect occurrence updates", () => {
       },
       {
         kind: "jumpMovementReplacement" as const,
-        effectRef: battleEffectExecutionRefForTest(
-          "turn-start-jump-refresh",
-        ),
+        effectRef: battleEffectExecutionRefForTest("turn-start-jump-refresh"),
         sourceProcedureRef: jumpProcedureRef,
         sourceCombatantId: wizardId,
         movementCostFeet: movementFeet(10),

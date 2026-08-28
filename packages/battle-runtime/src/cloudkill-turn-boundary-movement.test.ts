@@ -284,9 +284,7 @@ function withCommandGrovel(
   if (target === undefined) {
     throw new Error("Expected the Command Grovel target.");
   }
-  const effectRef = battleEffectExecutionRefForTest(
-    "cloudkill-command-grovel",
-  );
+  const effectRef = battleEffectExecutionRefForTest("cloudkill-command-grovel");
   const effect = {
     kind: "commandPending",
     effectRef,
@@ -327,9 +325,7 @@ function withCommandDrop(
   if (target === undefined) {
     throw new Error("Expected the Command Drop target.");
   }
-  const effectRef = battleEffectExecutionRefForTest(
-    "cloudkill-command-drop",
-  );
+  const effectRef = battleEffectExecutionRefForTest("cloudkill-command-drop");
   const effect = {
     kind: "commandPending",
     effectRef,

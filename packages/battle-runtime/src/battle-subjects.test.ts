@@ -69,9 +69,7 @@ describe("BattleSubject identity", () => {
       ),
       NonNegativeInteger(0),
     );
-    const effectRef = battleEffectExecutionRefForTest(
-      "runtime-command-effect",
-    );
+    const effectRef = battleEffectExecutionRefForTest("runtime-command-effect");
     const areaId = "runtime-command-area";
     const runtimeCommandExtras = {
       endTurn: {},
@@ -207,9 +205,7 @@ describe("BattleSubject identity", () => {
       ),
       NonNegativeInteger(0),
     );
-    const effectRef = battleEffectExecutionRefForTest(
-      "action-subject-effect",
-    );
+    const effectRef = battleEffectExecutionRefForTest("action-subject-effect");
     const actionExtras = {
       attack: {
         procedureRef: attackProcedureRef,

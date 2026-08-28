@@ -51,6 +51,7 @@ import type {
   CombatantId,
 } from "../identity.ts";
 import {
+  allocateBattleEffectOccurrenceForCreature,
   allocateBattleEffectExecutionRef,
   allocateBattleEffectExecutionRefForCreature,
 } from "../effect-execution-ref.ts";
@@ -1914,13 +1915,10 @@ function updateEffectOwnerActiveEffects(input: {
   if (effectOwner === undefined) {
     return input.state;
   }
-  const combatants = new Map(input.state.combatants).set(
-    input.effectOwnerId,
-    {
-      ...effectOwner,
-      activeEffects: input.update(effectOwner.activeEffects),
-    },
-  );
+  const combatants = new Map(input.state.combatants).set(input.effectOwnerId, {
+    ...effectOwner,
+    activeEffects: input.update(effectOwner.activeEffects),
+  });
   return { ...input.state, combatants };
 }
 
@@ -3385,25 +3383,26 @@ export function applyShieldReactionSpellActiveEffect(
   }
   /* v8 ignore stop -- @preserve */
 
+  const allocation = allocateBattleEffectOccurrenceForCreature({
+    owner: reactor,
+    effect: {
+      kind: "spellArmorClassBonus",
+      sourceProcedureRef: invocation.sourceProcedureRef,
+      sourceCombatantId: reactorId,
+      bonus: invocation.armorClassBonus,
+      negatesRepeatedDamageAllocation:
+        invocation.negatesRepeatedDamageAllocation,
+      expiresAt: {
+        kind: "startOfTurn",
+        combatantId: reactorId,
+      },
+    },
+  });
   return {
     ...state,
     combatants: new Map(state.combatants).set(reactorId, {
-      ...reactor,
-      activeEffects: [
-        ...reactor.activeEffects,
-        {
-          kind: "spellArmorClassBonus",
-          sourceProcedureRef: invocation.sourceProcedureRef,
-          sourceCombatantId: reactorId,
-          bonus: invocation.armorClassBonus,
-          negatesRepeatedDamageAllocation:
-            invocation.negatesRepeatedDamageAllocation,
-          expiresAt: {
-            kind: "startOfTurn",
-            combatantId: reactorId,
-          },
-        },
-      ],
+      ...allocation.owner,
+      activeEffects: [...allocation.owner.activeEffects, allocation.effect],
     }),
   };
 }

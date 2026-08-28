@@ -1,4 +1,8 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import {
+  allocateBattleEffectOccurrenceForCreature,
+  type BattleSourcedEffectOccurrenceTemplate,
+} from "./effect-execution-ref.ts";
 
 export const SURFACE_UNIT_RECORD_SCHEMA_NEGATIVE_TEST_TIMEOUT_MILLISECONDS = 10_000;
 
@@ -567,6 +571,26 @@ export function battleEffectExecutionRefForTest(
       ordinal,
     }),
   );
+}
+
+export function battleStateWithAllocatedEffectForTest(input: {
+  readonly state: BattleState;
+  readonly ownerId: CombatantId;
+  readonly effect: BattleSourcedEffectOccurrenceTemplate;
+}): BattleState {
+  const owner = input.state.combatants.get(input.ownerId);
+  if (owner === undefined) return input.state;
+  const allocation = allocateBattleEffectOccurrenceForCreature({
+    owner,
+    effect: input.effect,
+  });
+  return {
+    ...input.state,
+    combatants: new Map(input.state.combatants).set(input.ownerId, {
+      ...allocation.owner,
+      activeEffects: [...allocation.owner.activeEffects, allocation.effect],
+    }),
+  };
 }
 
 export function characterSpellInvocationForProcedureRefForTest(

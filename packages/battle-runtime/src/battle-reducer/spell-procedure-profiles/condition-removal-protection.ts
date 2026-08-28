@@ -20,6 +20,7 @@ import {
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
+import { allocateBattleEffectOccurrencesForCreature } from "../../effect-execution-ref.ts";
 
 import { spellSelectionResolution } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
@@ -249,20 +250,23 @@ function applyConditionRemovalProtectionEffect(
       target,
       condition,
     );
-    const nextEffects = [
-      {
-        ...invocation.protection.conditionSaveRollMode,
-        sourceProcedureRef: invocation.sourceProcedureRef,
-        sourceCombatantId: actorId,
-      },
-      {
-        ...invocation.protection.damageResistance,
-        sourceProcedureRef: invocation.sourceProcedureRef,
-        sourceCombatantId: actorId,
-      },
-    ];
+    const allocation = allocateBattleEffectOccurrencesForCreature({
+      owner: cleansedTarget,
+      effects: [
+        {
+          ...invocation.protection.conditionSaveRollMode,
+          sourceProcedureRef: invocation.sourceProcedureRef,
+          sourceCombatantId: actorId,
+        },
+        {
+          ...invocation.protection.damageResistance,
+          sourceProcedureRef: invocation.sourceProcedureRef,
+          sourceCombatantId: actorId,
+        },
+      ],
+    });
     const activeEffects = [
-      ...cleansedTarget.activeEffects.filter(
+      ...allocation.owner.activeEffects.filter(
         (effect) =>
           !(
             (effect.kind === "conditionSavingThrowRollMode" ||
@@ -271,12 +275,12 @@ function applyConditionRemovalProtectionEffect(
             effect.sourceCombatantId === actorId
           ),
       ),
-      ...nextEffects,
+      ...allocation.effects,
     ];
     return {
       ...nextState,
       combatants: new Map(nextState.combatants).set(targetId, {
-        ...cleansedTarget,
+        ...allocation.owner,
         activeEffects,
       }),
     };

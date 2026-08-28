@@ -204,9 +204,7 @@ describe("battle runtime: attack rolls and damage", () => {
 
     const markedRider = {
       kind: "spellMarkedDamageRider",
-      effectRef: battleEffectExecutionRefForTest(
-        "synthetic-statblock-mark",
-      ),
+      effectRef: battleEffectExecutionRefForTest("synthetic-statblock-mark"),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         "synthetic-statblock-mark-source",
       ),

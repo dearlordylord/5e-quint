@@ -133,11 +133,9 @@ export type BattleSpellActiveEffectTemplate<E extends BattleSpellEffectBase> =
     : never;
 /** Source-bound effect facts before Battle admission binds occurrence identity. */
 export type BattleSourcedActiveEffectTemplate<
-  E extends BattleActiveEffect &
-    BattleActiveEffectSource &
-    BattleEffectOccurrenceIdentity,
+  E extends BattleActiveEffect & BattleActiveEffectSource,
 > = E extends BattleActiveEffect
-  ? Omit<E, "effectRef">
+  ? Omit<E, "effectRef"> & { readonly effectRef?: never }
   : never;
 export type BattleShapeShiftReplacementFormFacts = {
   readonly kind: "runtimeCreatureForm";
@@ -447,12 +445,13 @@ export type BattleActiveEffect =
         { readonly kind: "startOfTurn" }
       >;
     })
-  | (BattleSpellEffectBase & {
-      readonly kind: "speedRatio";
-      readonly numerator: number;
-      readonly denominator: number;
-      readonly expiresAt: BattleActiveEffectExpiration;
-    })
+  | (BattleSpellEffectBase &
+      BattleReplayAddressableEffect & {
+        readonly kind: "speedRatio";
+        readonly numerator: number;
+        readonly denominator: number;
+        readonly expiresAt: BattleActiveEffectExpiration;
+      })
   | (BattleSpellEffectBase & {
       readonly kind: "spellSpeedZero";
       readonly expiresAt: Extract<
@@ -485,12 +484,13 @@ export type BattleActiveEffect =
       } & SelfTransformationModeEffectPayload)
   | SpellShapeShiftedFormActiveEffect
   | SpellLevitatedCreatureActiveEffect
-  | (BattleSpellEffectBase & {
-      readonly kind: "spellArmorClassBonus";
-      readonly bonus: number;
-      readonly negatesRepeatedDamageAllocation: boolean;
-      readonly expiresAt: BattleActiveEffectExpiration;
-    })
+  | (BattleSpellEffectBase &
+      BattleReplayAddressableEffect & {
+        readonly kind: "spellArmorClassBonus";
+        readonly bonus: number;
+        readonly negatesRepeatedDamageAllocation: boolean;
+        readonly expiresAt: BattleActiveEffectExpiration;
+      })
   | (BattleSpellEffectBase & {
       readonly kind: "spellArmorClassFloor";
       readonly floor: ArmorClass;
@@ -937,23 +937,25 @@ export type BattleActiveEffect =
       readonly mode: "advantage";
       readonly expiresAt: BattleActiveEffectExpiration;
     })
-  | (BattleSpellEffectBase & {
-      readonly kind: "savingThrowRollMode";
-      readonly ability: Ability;
-      readonly mode: "advantage";
-      readonly expiresAt: BattleActiveEffectExpiration;
-    })
+  | (BattleSpellEffectBase &
+      BattleReplayAddressableEffect & {
+        readonly kind: "savingThrowRollMode";
+        readonly ability: Ability;
+        readonly mode: "advantage";
+        readonly expiresAt: BattleActiveEffectExpiration;
+      })
   | (BattleSpellEffectBase &
       BattleReplayAddressableEffect & {
         readonly kind: "spellGrantedActionResource";
         readonly restriction: ActionRestriction;
         readonly expiresAt: BattleActiveEffectExpiration;
       })
-  | (BattleSpellEffectBase & {
-      readonly kind: "spellEndTargetState";
-      readonly condition: "incapacitated";
-      readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
-    })
+  | (BattleSpellEffectBase &
+      BattleReplayAddressableEffect & {
+        readonly kind: "spellEndTargetState";
+        readonly condition: "incapacitated";
+        readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
+      })
   | (BattleSpellEffectBase & {
       readonly kind: "damageResistance";
       readonly damageType: DamageType;

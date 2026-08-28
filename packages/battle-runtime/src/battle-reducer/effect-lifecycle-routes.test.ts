@@ -770,7 +770,10 @@ describe("effect lifecycle route boundary", () => {
       actorId: goblinId,
       command: "endTurn" as const,
     };
-    const damageFrontier = endTurn({ state: withStartDamage, actorId: goblinId });
+    const damageFrontier = endTurn({
+      state: withStartDamage,
+      actorId: goblinId,
+    });
     const damageFill = damageRollFill(
       requireBattleHole(damageFrontier, "rolledDice"),
       1,

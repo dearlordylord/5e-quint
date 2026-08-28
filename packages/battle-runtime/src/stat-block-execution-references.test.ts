@@ -172,9 +172,7 @@ describe("Stat Block execution references", () => {
     expect(BattleEffectExecutionRef.make(activeEffectRef)).toBe(
       activeEffectRef,
     );
-    expect(() =>
-      BattleEffectExecutionRef.make("active-effect-0"),
-    ).toThrow();
+    expect(() => BattleEffectExecutionRef.make("active-effect-0")).toThrow();
     expect(() =>
       BattleEffectExecutionRef.make(
         JSON.stringify({

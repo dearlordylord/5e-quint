@@ -71,8 +71,7 @@ export const BattleEffectExecutionRef = NonEmptyTrimmedStringSchema.pipe(
   ),
   Schema.brand("BattleEffectExecutionRef"),
 );
-export type BattleEffectExecutionRef =
-  typeof BattleEffectExecutionRef.Type;
+export type BattleEffectExecutionRef = typeof BattleEffectExecutionRef.Type;
 export const battleEffectExecutionRef: (
   value: string,
 ) => BattleEffectExecutionRef = BattleEffectExecutionRef.make;
@@ -85,8 +84,7 @@ export type BattleEffectExecutionOrdinal =
   typeof BattleEffectExecutionOrdinal.Type;
 export const battleEffectExecutionOrdinal: (
   value: number,
-) => BattleEffectExecutionOrdinal =
-  BattleEffectExecutionOrdinal.make;
+) => BattleEffectExecutionOrdinal = BattleEffectExecutionOrdinal.make;
 
 export const battleSpellEffectOccurrenceId: (
   value: string,
@@ -651,9 +649,7 @@ function battleOwnedExecutionScopeReferenceIsCanonical(
   );
 }
 
-function battleEffectExecutionReferenceIsCanonical(
-  reference: string,
-): boolean {
+function battleEffectExecutionReferenceIsCanonical(reference: string): boolean {
   const decoded = parseExecutionReference(reference);
   return (
     decoded !== null &&

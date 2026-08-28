@@ -997,10 +997,10 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     };
     expect(
       resolved.state.combatants.get(spellTargetId)?.activeEffects,
-    ).toContainEqual(failedTargetEffect);
+    ).toContainEqual(expect.objectContaining(failedTargetEffect));
     expect(
       resolved.state.combatants.get(thirdTargetId)?.activeEffects,
-    ).toContainEqual(failedTargetEffect);
+    ).toContainEqual(expect.objectContaining(failedTargetEffect));
     expect(
       resolved.state.combatants
         .get(secondTargetId)

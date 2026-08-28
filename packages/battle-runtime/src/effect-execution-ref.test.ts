@@ -116,12 +116,13 @@ describe("spell active-effect execution references", () => {
       "effect-occurrence-batch",
     );
 
+    const templates = [
+      syntheticEffectTemplate(sourceProcedureRef, "charmed"),
+      syntheticEffectTemplate(sourceProcedureRef, "frightened"),
+    ] as const;
     const allocation = allocateBattleEffectOccurrencesForCreature({
       owner,
-      effects: [
-        syntheticEffectTemplate(sourceProcedureRef, "charmed"),
-        syntheticEffectTemplate(sourceProcedureRef, "frightened"),
-      ],
+      effects: templates,
     });
 
     expect(allocation.effects).toHaveLength(2);
@@ -135,6 +136,22 @@ describe("spell active-effect execution references", () => {
     expect(Number(allocation.owner.nextEffectOrdinal)).toBe(
       Number(owner.nextEffectOrdinal) + 2,
     );
+    expect(templates.every((template) => !("effectRef" in template))).toBe(
+      true,
+    );
+  });
+
+  test("keeps an already-bound occurrence outside the insertion-template phase", () => {
+    const bound = syntheticEffect(
+      battleProcedureExecutionRefForTest("already-bound-effect"),
+      "charmed",
+    );
+    if (false) {
+      // @ts-expect-error A durable occurrence cannot be rebound as an insertion template.
+      const invalidTemplate: BattleSourcedEffectOccurrenceTemplate = bound;
+      void invalidTemplate;
+    }
+    expect(bound.effectRef).toBeDefined();
   });
 
   test("does not reuse an active-effect occurrence ref after owner re-admission", () => {

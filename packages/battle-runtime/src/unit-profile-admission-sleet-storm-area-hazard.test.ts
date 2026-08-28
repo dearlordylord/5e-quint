@@ -35,7 +35,6 @@ import {
   spellRecord,
 } from "./unit-profile-admission-spell-record.test-support.ts";
 import type {
-  BattleActiveEffect,
   BattleState,
   BattleSubject,
 } from "./unit-profile-admission.test-support.ts";
@@ -55,6 +54,7 @@ import { discoverBattleActCandidates, discoverBattleActs } from "./index.ts";
 import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
 import {
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
 
@@ -123,7 +123,7 @@ function castSleetStormForTargetTurn(
 
 function stateWithTargetConcentration(state: BattleState): BattleState {
   const target = requireCombatant(state, spellTargetId);
-  const concentrationEffect: BattleActiveEffect = {
+  const concentrationEffect = {
     kind: "spellArmorClassBonus",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(syntheticTargetConcentrationSpellId),
@@ -135,8 +135,8 @@ function stateWithTargetConcentration(state: BattleState): BattleState {
       kind: "concentration",
       combatantId: spellTargetId,
     },
-  };
-  return {
+  } as const;
+  const concentratingState = {
     ...state,
     combatants: new Map(state.combatants).set(spellTargetId, {
       ...target,
@@ -146,9 +146,13 @@ function stateWithTargetConcentration(state: BattleState): BattleState {
         ),
         effectKind: "spellEffect",
       },
-      activeEffects: [...target.activeEffects, concentrationEffect],
     }),
   };
+  return battleStateWithAllocatedEffectForTest({
+    state: concentratingState,
+    ownerId: spellTargetId,
+    effect: concentrationEffect,
+  });
 }
 
 function sleetStormWithAreaMembershipSaveLimits(

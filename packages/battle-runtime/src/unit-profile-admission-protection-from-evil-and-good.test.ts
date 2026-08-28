@@ -756,9 +756,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
     } as const satisfies BattleActiveEffect;
     const repeatCharmedEffect = {
       kind: "spellConditionRepeatSave",
-      effectRef: battleEffectExecutionRefForTest(
-        "protected-repeat-charm",
-      ),
+      effectRef: battleEffectExecutionRefForTest("protected-repeat-charm"),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String("unit-profile-repeat-charm-effect"),
       ),

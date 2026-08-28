@@ -17,6 +17,7 @@ import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra
 import { describe, expect, test } from "vitest";
 import {
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   requireCharacterSpellProcedureRefForTest,
   characterSpellInvocationRefForProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
@@ -1987,45 +1988,46 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     const unrelatedSource = battleProcedureExecutionRefForTest(
       "synthetic-other-ac-bonus",
     );
-    const stateWithPriorEffects: BattleState = {
+    const concentratingState: BattleState = {
       ...session.state,
-      combatants: new Map(session.state.combatants)
-        .set(spellCasterId, {
-          ...requireCombatant(session.state, spellCasterId),
-          concentration: {
-            sourceProcedureRef: act.subject.procedureRef,
-            effectKind: "spellEffect",
-          },
-        })
-        .set(spellTargetId, {
-          ...target,
-          activeEffects: [
-            ...target.activeEffects,
-            {
-              kind: "spellArmorClassBonus" as const,
-              sourceProcedureRef: act.subject.procedureRef,
-              sourceCombatantId: spellCasterId,
-              bonus: 2,
-              negatesRepeatedDamageAllocation: false,
-              expiresAt: {
-                kind: "concentration" as const,
-                combatantId: spellCasterId,
-              },
-            },
-            {
-              kind: "spellArmorClassBonus" as const,
-              sourceProcedureRef: unrelatedSource,
-              sourceCombatantId: spellCasterId,
-              bonus: 1,
-              negatesRepeatedDamageAllocation: false,
-              expiresAt: {
-                kind: "duration" as const,
-                durationTicks: elapsedTimeTicks(10),
-              },
-            },
-          ],
-        }),
+      combatants: new Map(session.state.combatants).set(spellCasterId, {
+        ...requireCombatant(session.state, spellCasterId),
+        concentration: {
+          sourceProcedureRef: act.subject.procedureRef,
+          effectKind: "spellEffect",
+        },
+      }),
     };
+    const withReplacedEffect = battleStateWithAllocatedEffectForTest({
+      state: concentratingState,
+      ownerId: spellTargetId,
+      effect: {
+        kind: "spellArmorClassBonus",
+        sourceProcedureRef: act.subject.procedureRef,
+        sourceCombatantId: spellCasterId,
+        bonus: 2,
+        negatesRepeatedDamageAllocation: false,
+        expiresAt: {
+          kind: "concentration",
+          combatantId: spellCasterId,
+        },
+      },
+    });
+    const stateWithPriorEffects = battleStateWithAllocatedEffectForTest({
+      state: withReplacedEffect,
+      ownerId: spellTargetId,
+      effect: {
+        kind: "spellArmorClassBonus",
+        sourceProcedureRef: unrelatedSource,
+        sourceCombatantId: spellCasterId,
+        bonus: 1,
+        negatesRepeatedDamageAllocation: false,
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(10),
+        },
+      },
+    });
     const resolved = resolveBattleSubject({
       state: stateWithPriorEffects,
       subject: act.subject,

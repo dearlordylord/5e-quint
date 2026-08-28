@@ -96,9 +96,7 @@ describe("spell condition effect source ownership", () => {
     );
     const spellConditionEffect = {
       kind: "spellCondition",
-      effectRef: battleEffectExecutionRefForTest(
-        "synthetic-condition-effect",
-      ),
+      effectRef: battleEffectExecutionRefForTest("synthetic-condition-effect"),
       sourceProcedureRef,
       sourceCombatantId: fighterId,
       condition: "unconscious",
@@ -228,9 +226,7 @@ describe("spell condition effect source ownership", () => {
     }
     const charmedSourceEffect = {
       kind: "spellCondition",
-      effectRef: battleEffectExecutionRefForTest(
-        "synthetic-charmed-source",
-      ),
+      effectRef: battleEffectExecutionRefForTest("synthetic-charmed-source"),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         "synthetic-charmed-procedure",
       ),

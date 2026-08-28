@@ -349,8 +349,7 @@ function resolveProtectionFromPoisonBattle(): BattleState {
             ...target.activeEffects,
             {
               kind: "spellCondition" as const,
-              effectRef:
-                battleEffectExecutionRefForTest("poison-condition"),
+              effectRef: battleEffectExecutionRefForTest("poison-condition"),
               sourceProcedureRef: battleProcedureExecutionRefForTest(
                 String(poisonSprayUnitId),
               ),

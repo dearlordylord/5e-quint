@@ -59,6 +59,7 @@ import {
 import { CombatantId } from "../../identity.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
+import { allocateBattleEffectOccurrenceForCreature } from "../../effect-execution-ref.ts";
 import {
   applyHitPointMaximumIncrease,
   applyTemporaryHitPoints,
@@ -381,12 +382,19 @@ function applyScalarBuffEffect(
         combatants: new Map(nextState.combatants).set(targetId, nextTarget),
       };
     }
-    if (scalarEffect.kind === "hitPointMaximumIncrease") {
-      const nextTarget = applyHitPointMaximumIncrease(target, {
+    const allocation = allocateBattleEffectOccurrenceForCreature({
+      owner: target,
+      effect: {
         ...scalarEffect.activeEffect,
         sourceProcedureRef: invocation.sourceProcedureRef,
         sourceCombatantId: actorId,
-      });
+      },
+    });
+    if (allocation.effect.kind === "hitPointMaximumIncrease") {
+      const nextTarget = applyHitPointMaximumIncrease(
+        allocation.owner,
+        allocation.effect,
+      );
       return {
         ...nextState,
         combatants: new Map(nextState.combatants).set(targetId, nextTarget),
@@ -397,13 +405,11 @@ function applyScalarBuffEffect(
         effect.kind === scalarEffect.activeEffect.kind &&
         effect.sourceProcedureRef === invocation.sourceProcedureRef,
     );
-    const nextTarget = battleCreatureWithSpellActiveEffects(target, [
-      ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
-      {
-        ...scalarEffect.activeEffect,
-        sourceProcedureRef: invocation.sourceProcedureRef,
-        sourceCombatantId: actorId,
-      },
+    const nextTarget = battleCreatureWithSpellActiveEffects(allocation.owner, [
+      ...allocation.owner.activeEffects.filter(
+        (effect) => !replacing.includes(effect),
+      ),
+      allocation.effect,
     ]);
     const applied = {
       ...nextState,

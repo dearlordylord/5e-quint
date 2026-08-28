@@ -2,7 +2,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   assertBattleSnapshotCodecRoundTripForTest,
   attackExecutionSelectionForSubjectForTest,
-  battleEffectExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   battleProcedureExecutionRefForTest,
   characterAttackSubjectForTest,
   testShortswordAttack,
@@ -781,27 +781,12 @@ describe("SRDINV53 deterministic Jump movement replacement admission", () => {
     const unrelatedSource = battleProcedureExecutionRefForTest(
       "synthetic-jump-unrelated-resistance",
     );
-    const state = {
+    const stateWithUnrelatedEffect = {
       ...session.state,
       combatants: new Map(session.state.combatants).set(spellCasterId, {
         ...caster,
         activeEffects: [
           ...caster.activeEffects,
-          {
-            kind: "jumpMovementReplacement" as const,
-            effectRef: battleEffectExecutionRefForTest(
-              "synthetic-jump-prior",
-            ),
-            sourceProcedureRef: act.subject.procedureRef,
-            sourceCombatantId: spellCasterId,
-            movementCostFeet: movementFeet(10),
-            maxJumpDistanceFeet: movementFeet(30),
-            usedThisTurn: true,
-            expiresAt: {
-              kind: "duration" as const,
-              durationTicks: elapsedTimeTicks(1),
-            },
-          },
           {
             kind: "damageResistance" as const,
             sourceProcedureRef: unrelatedSource,
@@ -815,6 +800,29 @@ describe("SRDINV53 deterministic Jump movement replacement admission", () => {
         ],
       }),
     };
+    const state = battleStateWithAllocatedEffectForTest({
+      state: stateWithUnrelatedEffect,
+      ownerId: spellCasterId,
+      effect: {
+        kind: "jumpMovementReplacement",
+        sourceProcedureRef: act.subject.procedureRef,
+        sourceCombatantId: spellCasterId,
+        movementCostFeet: movementFeet(10),
+        maxJumpDistanceFeet: movementFeet(30),
+        usedThisTurn: true,
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(1),
+        },
+      },
+    });
+    const beforeRecast = requireCombatant(state, spellCasterId);
+    const priorJump = beforeRecast.activeEffects.find(
+      (effect) => effect.kind === "jumpMovementReplacement",
+    );
+    if (priorJump?.kind !== "jumpMovementReplacement") {
+      throw new Error("Expected prior Jump occurrence.");
+    }
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
     const recast = resolveBattleSubject({
       state,
@@ -830,6 +838,7 @@ describe("SRDINV53 deterministic Jump movement replacement admission", () => {
       throw new Error("Expected Jump recast to resolve.");
     }
     const effects = requireCombatant(recast.state, spellCasterId).activeEffects;
+    const recastCaster = requireCombatant(recast.state, spellCasterId);
     expect(effects).toContainEqual(
       expect.objectContaining({
         kind: "damageResistance",
@@ -846,5 +855,12 @@ describe("SRDINV53 deterministic Jump movement replacement admission", () => {
     expect(
       effects.filter((effect) => effect.kind === "jumpMovementReplacement"),
     ).toHaveLength(1);
+    const replacementJump = effects.find(
+      (effect) => effect.kind === "jumpMovementReplacement",
+    );
+    expect(replacementJump?.effectRef).not.toBe(priorJump.effectRef);
+    expect(Number(recastCaster.nextEffectOrdinal)).toBe(
+      Number(beforeRecast.nextEffectOrdinal) + 1,
+    );
   });
 });

@@ -722,9 +722,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
           actorId: ensnaringStrikeHelperId,
           action: "escapeSpellRestraint",
           targetId: spellTargetId,
-          effectRef: battleEffectExecutionRefForTest(
-            "stale-web-restraint",
-          ),
+          effectRef: battleEffectExecutionRefForTest("stale-web-restraint"),
         },
         fills: [],
       }),

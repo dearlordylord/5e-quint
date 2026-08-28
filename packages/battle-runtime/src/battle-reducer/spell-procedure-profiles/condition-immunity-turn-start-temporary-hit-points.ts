@@ -28,6 +28,7 @@ import {
 import { CombatantId } from "../../identity.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { targetListSpellUsesTargetListHole } from "../spells-discovery.ts";
+import { allocateBattleEffectOccurrencesForCreature } from "../../effect-execution-ref.ts";
 
 import { spellSelectionResolution } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
@@ -279,26 +280,30 @@ function applyConditionImmunityAndTurnStartTemporaryHitPointsEffects(
     if (target === undefined) {
       return nextState;
     }
-    const nextEffects = invocation.activeEffects.map((effect) =>
-      effect.kind === "conditionImmunity"
-        ? {
-            ...effect,
-            sourceProcedureRef: invocation.sourceProcedureRef,
-            sourceCombatantId: actorId,
-            conditionHadNonSpellSource:
-              conditionHadNonSpellSourceBeforeSpellEffect(
-                target,
-                effect.condition,
-              ),
-          }
-        : {
-            ...effect,
-            sourceProcedureRef: invocation.sourceProcedureRef,
-            sourceCombatantId: actorId,
-          },
-    );
+    const [conditionImmunity, turnStartTemporaryHitPoints] =
+      invocation.activeEffects;
+    const allocation = allocateBattleEffectOccurrencesForCreature({
+      owner: target,
+      effects: [
+        {
+          ...conditionImmunity,
+          sourceProcedureRef: invocation.sourceProcedureRef,
+          sourceCombatantId: actorId,
+          conditionHadNonSpellSource:
+            conditionHadNonSpellSourceBeforeSpellEffect(
+              target,
+              conditionImmunity.condition,
+            ),
+        },
+        {
+          ...turnStartTemporaryHitPoints,
+          sourceProcedureRef: invocation.sourceProcedureRef,
+          sourceCombatantId: actorId,
+        },
+      ],
+    });
     const activeEffects = [
-      ...target.activeEffects.filter(
+      ...allocation.owner.activeEffects.filter(
         (effect) =>
           !(
             (effect.kind === "conditionImmunity" ||
@@ -306,13 +311,13 @@ function applyConditionImmunityAndTurnStartTemporaryHitPointsEffects(
             effect.sourceProcedureRef === invocation.sourceProcedureRef
           ),
       ),
-      ...nextEffects,
+      ...allocation.effects,
     ];
     return {
       ...nextState,
       combatants: new Map(nextState.combatants).set(
         targetId,
-        battleCreatureWithSpellActiveEffects(target, activeEffects),
+        battleCreatureWithSpellActiveEffects(allocation.owner, activeEffects),
       ),
     };
   }, state);

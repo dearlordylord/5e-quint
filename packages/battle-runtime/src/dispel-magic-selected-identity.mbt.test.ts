@@ -453,8 +453,7 @@ function hasActiveEffect(
     combatant.activeEffects.some(
       (effect) =>
         effect.kind === "spellObjectContactDamage" &&
-        effect.effectRef ===
-          battleEffectExecutionRefForTest(String(effectId)),
+        effect.effectRef === battleEffectExecutionRefForTest(String(effectId)),
     ),
   );
 }

@@ -812,9 +812,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
           ? {
               ...combatant,
               activeEffectRefs: [
-                battleEffectExecutionRefForTest(
-                  "wrong-owner-spiritual-weapon",
-                ),
+                battleEffectExecutionRefForTest("wrong-owner-spiritual-weapon"),
               ],
             }
           : combatant,

@@ -1,4 +1,7 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
+} from "./battle-runtime.test-support.ts";
 import type { BattleActDiscoveryCandidate } from "./battle-state-execution.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION
 // RAW trace:
@@ -60,7 +63,6 @@ import {
   battleReducerStartRouteEvent,
   discoverBattleActCandidates,
   spellId,
-  type BattleActiveEffect,
   type BattleHole,
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
@@ -584,7 +586,6 @@ function battleWithConcentratingShieldOfFaithSource(): BattleState {
     ],
   });
   const source = requireCombatant(base, skeletonId);
-  const protectedTarget = requireCombatant(base, secondSkeletonId);
   const shieldOfFaithEffect = {
     kind: "spellArmorClassBonus",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -597,27 +598,24 @@ function battleWithConcentratingShieldOfFaithSource(): BattleState {
       kind: "concentration",
       combatantId: skeletonId,
     },
-  } satisfies Extract<
-    BattleActiveEffect,
-    { readonly kind: "spellArmorClassBonus" }
-  >;
-  return {
+  } as const;
+  const concentratingState = {
     ...base,
-    combatants: new Map(base.combatants)
-      .set(skeletonId, {
-        ...source,
-        concentration: {
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(spellId(shieldOfFaithUnitId)),
-          ),
-          effectKind: "spellEffect",
-        },
-      })
-      .set(secondSkeletonId, {
-        ...protectedTarget,
-        activeEffects: [...protectedTarget.activeEffects, shieldOfFaithEffect],
-      }),
+    combatants: new Map(base.combatants).set(skeletonId, {
+      ...source,
+      concentration: {
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String(spellId(shieldOfFaithUnitId)),
+        ),
+        effectKind: "spellEffect",
+      },
+    }),
   };
+  return battleStateWithAllocatedEffectForTest({
+    state: concentratingState,
+    ownerId: secondSkeletonId,
+    effect: shieldOfFaithEffect,
+  });
 }
 
 function battleWithReadiedSpellConcentrationSource(): BattleState {

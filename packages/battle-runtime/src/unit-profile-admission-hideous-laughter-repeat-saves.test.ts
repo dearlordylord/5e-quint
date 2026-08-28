@@ -96,8 +96,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
           ...target.activeEffects,
           {
             kind: "spellCondition",
-            effectRef:
-              battleEffectExecutionRefForTest("laughter-condition"),
+            effectRef: battleEffectExecutionRefForTest("laughter-condition"),
             sourceProcedureRef: battleProcedureExecutionRefForTest(
               String(ensnaringStrikeUnitId),
             ),

@@ -145,29 +145,31 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
     expect(resolved.snapshot.lightEmitters).toEqual([artifactLight]);
     expect(
       resolved.state.combatants.get(spellCasterId)?.activeEffects,
-    ).toContainEqual({
-      kind: "antimagicFieldOngoingSpellSuppression",
-      sourceProcedureRef: expect.any(String),
-      sourceCombatantId: spellCasterId,
-      areaId: antimagicFieldAreaId,
-      auraMembership: {
-        kind: "antimagicFieldAuraMembership",
-        originIncluded: true,
-        nonOriginCombatantIds: [],
-      },
-      radiusFeet: movementFeet(10),
-      suppressedOngoingSpellEffects: [
-        {
-          kind: "spellLightEmitter",
-          sourceEffectId: continualFlameEffectId,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "antimagicFieldOngoingSpellSuppression",
+        sourceProcedureRef: expect.any(String),
+        sourceCombatantId: spellCasterId,
+        areaId: antimagicFieldAreaId,
+        auraMembership: {
+          kind: "antimagicFieldAuraMembership",
+          originIncluded: true,
+          nonOriginCombatantIds: [],
         },
-      ],
-      expiresAt: {
-        kind: "concentration",
-        combatantId: spellCasterId,
-        durationTicks: elapsedTimeTicks(600),
-      },
-    });
+        radiusFeet: movementFeet(10),
+        suppressedOngoingSpellEffects: [
+          {
+            kind: "spellLightEmitter",
+            sourceEffectId: continualFlameEffectId,
+          },
+        ],
+        expiresAt: {
+          kind: "concentration",
+          combatantId: spellCasterId,
+          durationTicks: elapsedTimeTicks(600),
+        },
+      }),
+    );
 
     const restored = breakBattleConcentration(resolved.state, spellCasterId);
     expect(

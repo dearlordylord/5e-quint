@@ -623,9 +623,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
         tag: "runtimeCommand",
         actorId: spellTargetId,
         command: "commandGrovel",
-        effectRef: battleEffectExecutionRefForTest(
-          "stale-command-grovel",
-        ),
+        effectRef: battleEffectExecutionRefForTest("stale-command-grovel"),
       },
       fills: [],
     });
@@ -1139,9 +1137,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
         tag: "runtimeCommand",
         actorId: spellCasterId,
         command: "commandGrovel",
-        effectRef: battleEffectExecutionRefForTest(
-          "premature-command-grovel",
-        ),
+        effectRef: battleEffectExecutionRefForTest("premature-command-grovel"),
       },
       fills: [],
     });
