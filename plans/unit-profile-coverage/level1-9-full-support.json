@@ -22989,7 +22989,7 @@
             "obligations": [
               {
                 "followUpTaskIds": [
-                  "GH-351"
+                  "GH-441"
                 ],
                 "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
                 "runtime": "battle",
@@ -22998,7 +22998,7 @@
               },
               {
                 "followUpTaskIds": [
-                  "GH-351"
+                  "GH-441"
                 ],
                 "obligationId": "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
                 "runtime": "battle",

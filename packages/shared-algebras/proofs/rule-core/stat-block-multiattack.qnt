@@ -21,11 +21,6 @@ module statBlockMultiattack {
     | AllListedDispatches
     | OneListedDispatch
 
-  type StatBlockProcedureRefRemoval = {
-    removed: bool,
-    remaining: List[StatBlockProcedureRef],
-  }
-
   type StatBlockMultiattackState =
     | StatBlockMultiattackReadyToAct
     | StatBlockMultiattackActionSpent

@@ -185,7 +185,6 @@ export const DieRollResult = Brand.all(
 );
 
 export const D6_ROLL_RESULTS = [1, 2, 3, 4, 5, 6] as const;
-export type D6RollResultValue = (typeof D6_ROLL_RESULTS)[number];
 export type D6RollResult = DieRollResult & Brand.Brand<"D6RollResult">;
 export const D6RollResult = Brand.all(
   DieRollResult,

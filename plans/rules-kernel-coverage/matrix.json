@@ -261,7 +261,7 @@
       "title": "Battle Cloudkill active Sphere hazard projects Heavily Obscured area facts, resolves table-triggered Constitution saves and Poison damage, and cleans up on Concentration, duration, or strong wind"
     },
     {
-      "followUpTaskIds": ["GH-351"],
+      "followUpTaskIds": ["GH-441"],
       "id": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
       "kind": "active-effect-lifecycle",
       "parityWitnesses": [
@@ -320,7 +320,7 @@
       "title": "Battle Slow applies active penalties, target-turn Action or Bonus Action restriction, Attack cap, Somatic failure, and repeat-save cleanup"
     },
     {
-      "followUpTaskIds": ["GH-351"],
+      "followUpTaskIds": ["GH-441"],
       "id": "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
       "kind": "resource-sequencing",
       "parityWitnesses": [
@@ -5692,7 +5692,7 @@
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [],
-      "followUpTaskIds": ["GH-351"],
+      "followUpTaskIds": ["GH-441"],
       "holeKind": "savingThrowOutcome",
       "id": "BattleSlowActivePenaltiesEndTurnSavingThrowOutcomeHole",
       "reason": "Slow end-of-target-turn Saving Throw outcomes drive reducer-owned per-target active penalty cleanup and caster Concentration cleanup when no affected targets remain; the complete lifecycle still needs a reusable semantic QNT owner.",
@@ -5701,7 +5701,7 @@
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [],
-      "followUpTaskIds": ["GH-351"],
+      "followUpTaskIds": ["GH-441"],
       "holeKind": "slowSomaticSpellFailureOutcome",
       "id": "BattleSlowSomaticSpellFailureOutcomeHole",
       "reason": "Slow Somatic spell-failure outcome holes carry the RAW 25 percent chance for an affected target casting a spell with an effective Somatic component. The fill determines whether casting resources are spent without applying the spell or resolution continues; the complete lifecycle still needs a reusable semantic QNT owner.",
@@ -6447,7 +6447,7 @@
       "classification": "semantic-frontier",
       "coveredByObligationIds": [],
       "fillKind": "slowSomaticSpellFailureOutcome",
-      "followUpTaskIds": ["GH-351"],
+      "followUpTaskIds": ["GH-441"],
       "id": "slowSomaticSpellFailureOutcome",
       "reason": "Slow Somatic spell-failure fills decide the RAW 25 percent failure branch for affected targets: failed outcomes spend casting resources without applying the spell or starting Concentration, while nonfailed outcomes allow ordinary spell resolution to continue. The complete lifecycle still needs a reusable semantic QNT owner.",
       "subject": "battle-fill-kind"
@@ -16513,7 +16513,7 @@
     },
     {
       "blockedBy": ["fixture-world-coupled", "mbt-harness-coupled"],
-      "followUpTaskIds": ["GH-351"],
+      "followUpTaskIds": ["GH-441"],
       "generatorSubset": [],
       "obligationId": "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
       "proofOnly": [

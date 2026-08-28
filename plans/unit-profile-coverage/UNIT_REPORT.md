@@ -92,7 +92,7 @@ The Unit matrix owns authored-content breadth. `plans/rules-kernel-coverage/prof
 
 | Profile | Kind | Status | Follow-up tasks | Reason | Obligations |
 | --- | --- | --- | --- | --- | --- |
-| `spell.invocation-slow-active-penalties` | spell-invocation | mapped-open | `GH-351` | _none_ | `BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE` (needs-qnt-owner), `BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP` (needs-qnt-owner) |
+| `spell.invocation-slow-active-penalties` | spell-invocation | mapped-open | `GH-441` | _none_ | `BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE` (needs-qnt-owner), `BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP` (needs-qnt-owner) |
 | `stat-block.attack-procedure` | stat-block-control | mapped-open | `GH-427` | _none_ | `BATTLE.STAT_BLOCK.ATTACK_PROCEDURE` (needs-qnt-owner) |
 | `stat-block.spell-invocation.unrestricted` | stat-block-control | mapped-open | `GH-418` | _none_ | `BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED` (needs-qnt-owner) |
 | `stat-block.spellcasting.procedure` | stat-block-control | mapped-open | `GH-419` | _none_ | `BATTLE.STAT_BLOCK.SPELLCASTING_PROCEDURE` (needs-qnt-owner) |
@@ -158,7 +158,7 @@ The Unit matrix owns authored-content breadth. `plans/rules-kernel-coverage/prof
 | `rogue_ability_score_improvement_l10` | mapped-open | `character-creation.class-feature-feat-choice` (mapped-open) | _plan-update-required_ |
 | `rogue_expertise` | mapped-open | `character-creation.skill-expertise-choice` (mapped-open) | _plan-update-required_ |
 | `rogue_weapon_mastery` | mapped-open | `character-creation.weapon-mastery-choice` (mapped-open) | _plan-update-required_ |
-| `slow` | mapped-open | `spell.invocation-slow-active-penalties` (mapped-open) | `GH-351` |
+| `slow` | mapped-open | `spell.invocation-slow-active-penalties` (mapped-open) | `GH-441` |
 | `sorcerer_draconic_spells` | mapped-open | `character-sheet.class-feature-prepared-spell-access` (mapped-open) | _plan-update-required_ |
 | `warlock_contact_patron` | mapped-open | `character-sheet.class-feature-prepared-spell-access` (mapped-open) | _plan-update-required_ |
 | `warlock_eldritch_invocations` | mapped-open | `character-creation.eldritch-invocation-choice` (mapped-open), `character-creation.warlock-pact-magic-advancement` (mapped-open) | _plan-update-required_ |

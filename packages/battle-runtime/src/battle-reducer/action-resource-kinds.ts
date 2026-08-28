@@ -26,7 +26,7 @@ import type {
   StatBlockMultiattackActionResource,
 } from "./battle-runtime-protocol.ts";
 
-export type BoundStatBlockMultiattackActionResource = {
+type BoundStatBlockMultiattackActionResource = {
   readonly resource: StatBlockMultiattackActionResource;
   readonly sourceBinding: StatBlockProcedureBindingFor<StatBlockMultiattackProcedure>;
 };
@@ -65,7 +65,7 @@ export function statBlockMultiattackActionResourceMatchesProcedure(
   );
 }
 
-export function bindStatBlockMultiattackActionResource(
+function bindStatBlockMultiattackActionResource(
   resource: RuntimeActionResource,
   actorId: CombatantId,
   execution: StatBlockExecutionSnapshot,
