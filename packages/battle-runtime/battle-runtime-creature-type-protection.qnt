@@ -42,14 +42,17 @@ module battleRuntimeCreatureTypeProtection {
     else
       PossessionUnprevented
 
-  pure def protectionRelevantEffectSourceIsScoped(
+  pure def protectionRelevantEffectSaveRollModeForSource(
     creatureTypesByActor: Actor -> RuntimeCreatureType,
     source: Actor,
-  ): bool =
-    if (creatureTypesByActor.keys().contains(source))
-      protectionFromEvilAndGoodCreatureTypeIsScoped(creatureTypesByActor.get(source))
+  ): SavingThrowRollMode =
+    if (
+      creatureTypesByActor.keys().contains(source)
+      and protectionFromEvilAndGoodCreatureTypeIsScoped(creatureTypesByActor.get(source))
+    )
+      AdvantageSavingThrow
     else
-      false
+      NormalSavingThrow
 
   pure def protectionFromEvilAndGoodRelevantEffectSaveRollMode(
     creatureTypesByActor: Actor -> RuntimeCreatureType,
@@ -62,20 +65,11 @@ module battleRuntimeCreatureTypeProtection {
     ) {
       match relevantEffect {
         | ProtectionRelevantCharmed(effect) =>
-            if (protectionRelevantEffectSourceIsScoped(creatureTypesByActor, effect.source))
-              AdvantageSavingThrow
-            else
-              NormalSavingThrow
+            protectionRelevantEffectSaveRollModeForSource(creatureTypesByActor, effect.source)
         | ProtectionRelevantFrightened(effect) =>
-            if (protectionRelevantEffectSourceIsScoped(creatureTypesByActor, effect.source))
-              AdvantageSavingThrow
-            else
-              NormalSavingThrow
+            protectionRelevantEffectSaveRollModeForSource(creatureTypesByActor, effect.source)
         | ProtectionRelevantPossession(effect) =>
-            if (protectionRelevantEffectSourceIsScoped(creatureTypesByActor, effect.source))
-              AdvantageSavingThrow
-            else
-              NormalSavingThrow
+            protectionRelevantEffectSaveRollModeForSource(creatureTypesByActor, effect.source)
         | _ => NormalSavingThrow
       }
     } else NormalSavingThrow
