@@ -157,6 +157,10 @@ export function characterProcedureBindingSnapshots(
         procedureRef: binding.procedureRef,
         procedure: { kind: procedure.kind },
       })),
+      Match.when({ kind: "effectOccurrenceSource" }, (procedure) => ({
+        procedureRef: binding.procedureRef,
+        procedure,
+      })),
       Match.exhaustive,
     ),
   );
