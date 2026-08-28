@@ -588,6 +588,17 @@ const parseResistances = (lines: readonly string[]): ResistanceProjection => {
   if (line === undefined) return { kind: "fixed", damageTypes: [] };
   const value = line.replace("**Resistances**", "").trim();
   const chosen = value.match(/^Damage type chosen for .+$/);
+  const chosenOptions =
+    chosen === null
+      ? []
+      : (requireMatch(
+          normalizedProse(lines.join(" ")),
+          /one of the following damage types [^:]*: ([A-Za-z, ]+)\./,
+          "chosen resistance options",
+        )[1]
+          ?.split(", ")
+          .map((damageType) => damageType.replace(/^or /, "").toLowerCase()) ??
+        []);
   return chosen === null
     ? {
         kind: "fixed",
@@ -597,7 +608,7 @@ const parseResistances = (lines: readonly string[]): ResistanceProjection => {
       }
     : {
         kind: "choose_one_from",
-        options: ["acid", "cold", "fire", "lightning", "poison"],
+        options: sortedStrings(chosenOptions),
       };
 };
 
