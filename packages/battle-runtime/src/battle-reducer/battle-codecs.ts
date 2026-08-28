@@ -6972,9 +6972,10 @@ function serializedBattleHoleExecutionReferences(
               occurrenceSource(
                 matched.protectionRelevantEffectSave,
                 matched.protectionRelevantEffectSave.targetId,
-                activeEffectKinds("spellConditionRepeatSave", "possession", {
-                  kind: "identityOnly",
-                }),
+                matched.protectionRelevantEffectSave.relevantEffect ===
+                  "possession"
+                  ? activeEffect("possession")
+                  : activeEffect("spellConditionRepeatSave"),
               ),
             ),
             Match.exhaustive,
@@ -8125,6 +8126,23 @@ function serializedBattleHolesOwnBoundExecutionReferences(input: {
 function serializedBattleActHolesMatchSelectedOccurrence(
   act: EncodedBattleActExecutionCandidate,
 ): boolean {
+  const protectionRelevantEffect =
+    act.subject.tag === "runtimeCommand" &&
+    act.subject.command === "protectionRelevantEffectSave"
+      ? act.subject.relevantEffect
+      : undefined;
+  if (
+    protectionRelevantEffect !== undefined &&
+    act.initialHoles.some(
+      (hole) =>
+        hole.kind === "savingThrowOutcome" &&
+        "protectionRelevantEffectSave" in hole &&
+        hole.protectionRelevantEffectSave.relevantEffect !==
+          protectionRelevantEffect,
+    )
+  ) {
+    return false;
+  }
   const selectedOccurrenceRefs = battleSubjectBoundExecutionReferences(
     act.subject,
   ).flatMap((reference) =>

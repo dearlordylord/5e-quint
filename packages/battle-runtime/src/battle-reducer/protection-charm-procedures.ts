@@ -63,11 +63,12 @@ export function resolveProtectionRelevantEffectSaveCommand(
     ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
       fill.kind === "savingThrowOutcome",
   );
-  if (attemptedSaveFills.length === 0) {
+  if (input.fills.length === 0) {
     return needsHolesResult(input.state, input.subject, [hole]);
   }
   const saveFill = attemptedSaveFills[0];
   if (
+    input.fills.length !== 1 ||
     attemptedSaveFills.length !== 1 ||
     saveFill === undefined ||
     saveFill.holeId !== hole.holeId

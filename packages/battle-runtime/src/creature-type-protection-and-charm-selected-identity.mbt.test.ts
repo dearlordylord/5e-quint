@@ -540,11 +540,18 @@ describe("Protection relevant-effect selected occurrence identity", () => {
     const siblingFill = savingThrowOutcomeFill(siblingHole, [
       { targetId: protectedTargetId, succeeded: true },
     ]);
+    const unsupportedFill = {
+      kind: "targetChoice",
+      holeId: selectedHole.holeId,
+      value: protectedTargetId,
+    } as const satisfies BattleFill;
 
     for (const fills of [
       [selectedFill, siblingFill],
       [siblingFill, selectedFill],
       [selectedFill, selectedFill],
+      [selectedFill, unsupportedFill],
+      [unsupportedFill, selectedFill],
     ]) {
       const rejected = resolveBattleSubject({
         state: fixture.state,
@@ -615,6 +622,11 @@ describe("Protection relevant-effect selected occurrence identity", () => {
       },
       { effectRef: wrongKindEffect.effectRef, targetId: protectedTargetId },
       { effectRef: fixture.selectedEffect.effectRef, targetId: feySourceId },
+      {
+        effectRef: fixture.selectedEffect.effectRef,
+        targetId: protectedTargetId,
+        relevantEffect: "possession",
+      },
     ] as const;
     for (const forgedPayload of forgedPayloads) {
       const forged = {
@@ -639,6 +651,24 @@ describe("Protection relevant-effect selected occurrence identity", () => {
         Schema.decodeUnknownSync(BattleSnapshotSchema)(forged),
       ).toThrow();
     }
+    const forgedSubject = {
+      ...encoded,
+      acts: encoded.acts.map((act) =>
+        act.subject.tag === "runtimeCommand" &&
+        act.subject.command === "protectionRelevantEffectSave"
+          ? {
+              ...act,
+              subject: {
+                ...act.subject,
+                relevantEffect: "possession" as const,
+              },
+            }
+          : act,
+      ),
+    };
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(forgedSubject),
+    ).toThrow();
   });
 
   it("round-trips the stat-block-owned low-level source binding and rejects a contradictory effect kind", () => {
