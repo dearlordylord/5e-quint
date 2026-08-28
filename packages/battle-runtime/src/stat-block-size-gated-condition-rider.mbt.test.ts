@@ -5,6 +5,7 @@ import { movementFeet } from "@dnd/shared/types";
 import { isDeepStrictEqual } from "node:util";
 
 import { describe, expect, it } from "vitest";
+import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 
 import type {
   AuthoredExecutableProcedure,
@@ -566,7 +567,11 @@ function sizeGatedConditionRiderTargetStatBlock(
         languages: { kind: "named", languages: ["Common", "Goblin"] },
       },
       ...(targetSizeGate === "mediumOrSmallerProneImmune"
-        ? { immunities: { conditions: ["prone"] } }
+        ? {
+            immunities: decodeCreatureImmunityDeclarationSync({
+              conditions: ["prone"],
+            }),
+          }
         : {}),
     },
   };

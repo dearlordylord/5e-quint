@@ -14,7 +14,10 @@ import * as Either from "effect/Either";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS druid_wild_shape
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
-import { StatBlockProcedureResourceOrdinalSchema } from "@dnd/surface/surface/schema";
+import {
+  decodeCreatureImmunityDeclarationSync,
+  StatBlockProcedureResourceOrdinalSchema,
+} from "@dnd/surface/surface/schema";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 import type {
@@ -479,10 +482,10 @@ function proneImmuneTargetStatBlock(): StatBlockRecord {
     statBlock: {
       ...base.statBlock,
       hp: { kind: "literal", value: 20 },
-      immunities: {
+      immunities: decodeCreatureImmunityDeclarationSync({
         ...(base.statBlock.immunities ?? {}),
         conditions: ["prone"],
-      },
+      }),
       size: "medium",
     },
   };

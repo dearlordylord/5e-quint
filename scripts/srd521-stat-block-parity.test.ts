@@ -175,7 +175,13 @@ describe("SRD Stat Block source parity operation", () => {
     );
     expect(
       report.issues.filter((issue) => issue.kind === "cardinality"),
-    ).toEqual([]);
+    ).toEqual([
+      {
+        kind: "cardinality",
+        expectedIdentityCount: report.discovery.identities.length,
+        actualInstalledCount: srdStatBlockCollection.statBlocks.length + 1,
+      },
+    ]);
   });
 
   test("enforces discovered cardinality once every source identity is installed", () => {

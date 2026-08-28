@@ -1,0 +1,146 @@
+{ challengeRating = 5
+, id = "stat_block_xorn"
+, kind = "statBlock"
+, name = "Xorn"
+, provenance =
+  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:1274-1310" }
+, statBlock =
+  { abilityScores =
+    { cha = 11, con = 22, dex = 10, int = 11, str = 17, wis = 10 }
+  , ac.value = { kind = "literal", value = 19 }
+  , actions =
+    [ { description = Some
+          "The xorn makes one Bite attack and three Claw attacks."
+      , kind = "textOnly"
+      , name = Some "Multiattack"
+      , procedure =
+          None
+            { attackAbility : Text
+            , attackBonus : { kind : Text, value : Natural }
+            , attackType : Text
+            , kind : Text
+            , name : Text
+            , onHit :
+                List
+                  { amount :
+                      { expr :
+                          { dice : Natural, dieSize : Natural, flat : Natural }
+                      , kind : Text
+                      , static : Natural
+                      }
+                  , damageType : Text
+                  , kind : Text
+                  }
+            , reachFeet : Natural
+            }
+      , procedureOrdinal = 1
+      , reason = Some "unsupported_action_shape"
+      , resourceRefs.kind = "none"
+      }
+    , { description = None Text
+      , kind = "executable"
+      , name = None Text
+      , procedure = Some
+        { attackAbility = "str"
+        , attackBonus = { kind = "literal", value = 6 }
+        , attackType = "melee"
+        , kind = "attack_roll"
+        , name = "Bite"
+        , onHit =
+          [ { amount =
+              { expr = { dice = 4, dieSize = 6, flat = 3 }
+              , kind = "fixed"
+              , static = 17
+              }
+            , damageType = "piercing"
+            , kind = "damage"
+            }
+          ]
+        , reachFeet = 5
+        }
+      , procedureOrdinal = 2
+      , reason = None Text
+      , resourceRefs.kind = "none"
+      }
+    , { description = None Text
+      , kind = "executable"
+      , name = None Text
+      , procedure = Some
+        { attackAbility = "str"
+        , attackBonus = { kind = "literal", value = 6 }
+        , attackType = "melee"
+        , kind = "attack_roll"
+        , name = "Claw"
+        , onHit =
+          [ { amount =
+              { expr = { dice = 1, dieSize = 10, flat = 3 }
+              , kind = "fixed"
+              , static = 8
+              }
+            , damageType = "slashing"
+            , kind = "damage"
+            }
+          ]
+        , reachFeet = 5
+        }
+      , procedureOrdinal = 3
+      , reason = None Text
+      , resourceRefs.kind = "none"
+      }
+    ]
+  , alignment = { morality = "neutral", order = "neutral" }
+  , bonusActions =
+    [ { description =
+          "The xorn moves up to its Speed or Burrow Speed straight toward an enemy it can sense."
+      , kind = "textOnly"
+      , name = "Charge"
+      , procedureOrdinal = 1
+      , reason = "unsupported_action_shape"
+      , resourceRefs.kind = "none"
+      }
+    ]
+  , communication =
+    { kind = "spoken_and_understood"
+    , languages = { kind = "named", languages = [ "Primordial (Terran)" ] }
+    }
+  , creatureType = "elemental"
+  , hp = { kind = "literal", value = 84 }
+  , immunities =
+    { conditions = [ "paralyzed", "petrified", "poisoned" ]
+    , damageTypes = [ "poison" ]
+    }
+  , initiative = { modifier = 0, score = 10 }
+  , passivePerception = 16
+  , savingThrowModifiers =
+    [ { ability = "cha", modifier = 0 }
+    , { ability = "con", modifier = 6 }
+    , { ability = "dex", modifier = 0 }
+    , { ability = "int", modifier = 0 }
+    , { ability = "str", modifier = 3 }
+    , { ability = "wis", modifier = 0 }
+    ]
+  , senses =
+    [ { kind = "darkvision", rangeFeet = 60 }
+    , { kind = "tremorsense", rangeFeet = 60 }
+    ]
+  , size = "medium"
+  , skillModifiers =
+    [ { modifier = 6, skill = "perception" }
+    , { modifier = 6, skill = "stealth" }
+    ]
+  , speeds =
+    [ { feet = { kind = "literal", value = 20 }, kind = "walk" }
+    , { feet = { kind = "literal", value = 20 }, kind = "burrow" }
+    ]
+  , traits =
+    [ { description =
+          "The xorn can burrow through nonmagical, unworked earth and stone. While doing so, the xorn doesn't disturb the material it moves through."
+      , name = "Earth Glide"
+      }
+    , { description =
+          "The xorn can pinpoint the location of precious metals and stones within 60 feet of itself."
+      , name = "Treasure Sense"
+      }
+    ]
+  }
+}

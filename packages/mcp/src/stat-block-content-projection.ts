@@ -147,10 +147,7 @@ function damageModifierTypes(
   value:
     | StatBlockRecord["statBlock"]["vulnerabilities"]
     | StatBlockRecord["statBlock"]["resistances"]
-    | Pick<
-        NonNullable<StatBlockRecord["statBlock"]["immunities"]>,
-        "damageTypes"
-      >
+    | StatBlockRecord["statBlock"]["immunities"]
     | undefined,
 ): string[] {
   if (value === undefined) {
@@ -159,7 +156,7 @@ function damageModifierTypes(
   if ("kind" in value && value.kind === "choose_one_from") {
     return [];
   }
-  return value.damageTypes === undefined ? [] : [...value.damageTypes];
+  return "damageTypes" in value ? [...value.damageTypes] : [];
 }
 
 function damageResistanceChoices(
@@ -171,5 +168,7 @@ function damageResistanceChoices(
 function conditionModifierTypes(
   value: StatBlockRecord["statBlock"]["immunities"],
 ): string[] {
-  return value?.conditions === undefined ? [] : [...value.conditions];
+  return value !== undefined && "conditions" in value
+    ? [...value.conditions]
+    : [];
 }

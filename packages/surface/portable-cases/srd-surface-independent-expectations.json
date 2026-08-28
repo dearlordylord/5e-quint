@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "schemaSha256": "51cd9350fa19de31820a4b9f0288c8dd6a86e3d901e8d170b8f5d87c8102550d",
+  "schemaSha256": "c3ea126c2edfc89c7d599b727fc98ada17e828d6e8d2f3d0081594ad96f272c4",
   "dependencyContractSha256": "b51a948f39405d371e528850fab0ba81f800add9af4bea84440ddba616cc50ef",
   "cases": [
     {
       "name": "valid published aggregate",
-      "inputSha256": "79a288c843745c1cc1b6d470ceb2d30a19975a66736fed4ce42a604348fa095a",
+      "inputSha256": "aeaabb0084d9df12e6046b82c06581fb6cfbfa4da2abf03fa2c9b8365e1dd872",
       "expected": {
         "tag": "accepted"
       }
@@ -39,6 +39,19 @@
     {
       "name": "refinement violation",
       "inputSha256": "a51464c23c540dbd7ae27ad202cd8c59d822517d2f935d317b85d6972e6fc16f",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "schema",
+            "path": "$.statBlocks[0]"
+          }
+        ]
+      }
+    },
+    {
+      "name": "condition immunity overlap",
+      "inputSha256": "ca64593fa9ecdc6445027b8c3d4cac14671b66e54629a132dca06d49e39582ea",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -1380,7 +1393,7 @@
     },
     {
       "name": "canonical dependency role: unit.mechanics.creature.normalForms[].statBlockId",
-      "inputSha256": "b3e99811f1fdd9c6c6dbc1f8115bb9e734b7d8af1a301c6e6406d947a0ca4541",
+      "inputSha256": "e346d3f258031c89bfe32aa4ab79eea038b11e46654a2ab9c6b94368ba857653",
       "expected": {
         "tag": "rejected",
         "issues": [

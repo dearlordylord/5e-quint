@@ -38,11 +38,14 @@ describe("H–L scoped RAW fidelity", () => {
   test("rejects chosen-resistance, immunity, gear, and size mutations", () => {
     const halfDragon = installedByName.get("Half-Dragon");
     const hydra = installedByName.get("Hydra");
+    const hydraImmunities = hydra?.statBlock.immunities;
     const kobold = installedByName.get("Kobold Warrior");
     const knight = installedByName.get("Knight");
     if (
       halfDragon?.statBlock.resistances?.kind !== "choose_one_from" ||
-      hydra?.statBlock.immunities?.conditions === undefined ||
+      hydra === undefined ||
+      hydraImmunities === undefined ||
+      !("conditions" in hydraImmunities) ||
       kobold?.statBlock.gear === undefined ||
       knight === undefined
     ) {
@@ -66,8 +69,8 @@ describe("H–L scoped RAW fidelity", () => {
         statBlock: {
           ...hydra.statBlock,
           immunities: {
-            ...hydra.statBlock.immunities,
-            conditions: hydra.statBlock.immunities.conditions.filter(
+            ...hydraImmunities,
+            conditions: hydraImmunities.conditions.filter(
               (condition) => condition !== "stunned",
             ),
           },
