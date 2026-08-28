@@ -2714,31 +2714,38 @@ export function markSleetStormAreaHazardSavedThisTurn(
 export function markInsectPlagueAreaHazardSavedThisTurn(
   state: BattleState,
   targetId: CombatantId,
-  effectOwnerId: CombatantId,
-  effect: Extract<
-    BattleActiveEffect,
-    { readonly kind: "insectPlagueAreaHazard" }
-  >,
+  locatedEffect: {
+    readonly effectOwnerId: CombatantId;
+    readonly effect: Extract<
+      BattleActiveEffect,
+      { readonly kind: "insectPlagueAreaHazard" }
+    >;
+  },
 ): BattleState {
   return markSingleSaveAreaHazardSavedThisTurn(
     state,
     targetId,
-    effect,
-    effectOwnerId,
+    locatedEffect.effect,
+    locatedEffect.effectOwnerId,
   );
 }
 
 export function markCloudkillAreaHazardSavedThisTurn(
   state: BattleState,
   targetId: CombatantId,
-  effectOwnerId: CombatantId,
-  effect: Extract<BattleActiveEffect, { readonly kind: "cloudkillAreaHazard" }>,
+  locatedEffect: {
+    readonly effectOwnerId: CombatantId;
+    readonly effect: Extract<
+      BattleActiveEffect,
+      { readonly kind: "cloudkillAreaHazard" }
+    >;
+  },
 ): BattleState {
   return markSingleSaveAreaHazardSavedThisTurn(
     state,
     targetId,
-    effect,
-    effectOwnerId,
+    locatedEffect.effect,
+    locatedEffect.effectOwnerId,
   );
 }
 

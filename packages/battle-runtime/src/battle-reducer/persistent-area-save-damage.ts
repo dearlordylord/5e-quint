@@ -180,16 +180,20 @@ type ParsedPersistentAreaSaveDamageProcedure =
       readonly kind: "insectPlague";
       readonly resolution: InsectPlagueResolutionInput;
       readonly target: BattleCreatureState;
-      readonly effectOwnerId: CombatantId;
-      readonly effect: InsectPlagueAreaHazardEffect;
+      readonly locatedEffect: {
+        readonly effectOwnerId: CombatantId;
+        readonly effect: InsectPlagueAreaHazardEffect;
+      };
       readonly trigger: BattleInsectPlagueAreaHazardTrigger;
     }
   | {
       readonly kind: "cloudkill";
       readonly resolution: CloudkillResolutionInput;
       readonly target: BattleCreatureState;
-      readonly effectOwnerId: CombatantId;
-      readonly effect: CloudkillAreaHazardEffect;
+      readonly locatedEffect: {
+        readonly effectOwnerId: CombatantId;
+        readonly effect: CloudkillAreaHazardEffect;
+      };
       readonly trigger: BattleCloudkillAreaHazardTrigger;
     };
 
@@ -564,16 +568,14 @@ function parsePersistentAreaSaveDamageProcedure(
             kind: candidate.kind,
             resolution: candidate.resolution,
             target: candidate.target,
-            effectOwnerId: candidate.locatedEffect.effectOwnerId,
-            effect: candidate.locatedEffect.effect,
+            locatedEffect: candidate.locatedEffect,
             trigger: candidate.trigger,
           }
         : {
             kind: candidate.kind,
             resolution: candidate.resolution,
             target: candidate.target,
-            effectOwnerId: candidate.locatedEffect.effectOwnerId,
-            effect: candidate.locatedEffect.effect,
+            locatedEffect: candidate.locatedEffect,
             trigger: candidate.trigger,
           },
   };
@@ -602,7 +604,8 @@ function resolvePersistentAreaSaveDamageStep(input: {
   readonly context: PersistentAreaResolutionContext;
 }): PersistentAreaSaveDamageStep {
   const { procedure, context } = input;
-  const { resolution, target, effect } = procedure;
+  const { resolution, target } = procedure;
+  const { effect } = procedure.locatedEffect;
   const { saveHole, damageHole } = persistentAreaProcedureHoles(
     procedure,
     context,
@@ -973,12 +976,12 @@ function persistentAreaProcedureHoles(
       saveHole: insectPlagueAreaHazardSavingThrowOutcomeHole(
         insectPlague.resolution.state,
         insectPlague.resolution.subject.actorId,
-        insectPlague.effect,
+        insectPlague.locatedEffect.effect,
         insectPlague.trigger,
       ),
       damageHole: insectPlagueAreaHazardDamageRollHole(
         insectPlague.resolution.subject.actorId,
-        insectPlague.effect,
+        insectPlague.locatedEffect.effect,
         insectPlague.trigger,
       ),
     })),
@@ -986,13 +989,13 @@ function persistentAreaProcedureHoles(
       saveHole: cloudkillAreaHazardSavingThrowOutcomeHole(
         cloudkill.resolution.state,
         cloudkill.resolution.subject.actorId,
-        cloudkill.effect,
+        cloudkill.locatedEffect.effect,
         cloudkill.trigger,
         context.kind === "replayParent" ? context.sourceTurn : undefined,
       ),
       damageHole: cloudkillAreaHazardDamageRollHole(
         cloudkill.resolution.subject.actorId,
-        cloudkill.effect,
+        cloudkill.locatedEffect.effect,
         cloudkill.trigger,
         context.kind === "replayParent" ? context.sourceTurn : undefined,
       ),
@@ -1010,16 +1013,14 @@ function stateAfterPersistentAreaSaveDamage(
       markInsectPlagueAreaHazardSavedThisTurn(
         state,
         insectPlague.resolution.subject.actorId,
-        insectPlague.effectOwnerId,
-        insectPlague.effect,
+        insectPlague.locatedEffect,
       ),
     ),
     byPersistentAreaProcedureKind("cloudkill", (cloudkill) =>
       markCloudkillAreaHazardSavedThisTurn(
         state,
         cloudkill.resolution.subject.actorId,
-        cloudkill.effectOwnerId,
-        cloudkill.effect,
+        cloudkill.locatedEffect,
       ),
     ),
     Match.exhaustive,
@@ -1095,10 +1096,11 @@ function activeEffectForRef<
     | undefined;
   for (const [effectOwnerId, combatant] of state.combatants) {
     for (const candidate of combatant.activeEffects) {
-      if (!isExpectedEffect(candidate) || candidate.effectRef !== effectRef) {
+      if (!("effectRef" in candidate) || candidate.effectRef !== effectRef) {
         continue;
       }
       if (located !== undefined) return undefined;
+      if (!isExpectedEffect(candidate)) return undefined;
       located = { effectOwnerId, effect: candidate };
     }
   }

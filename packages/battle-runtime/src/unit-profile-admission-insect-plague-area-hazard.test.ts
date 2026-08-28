@@ -621,4 +621,46 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
       }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
+
+  test("rejects a save when a different effect kind collides with its occurrence reference", () => {
+    const { session, cast } = castInsectPlague();
+    const saveAct = insectPlagueAreaHazardSaveAct(
+      battleRuntimeSessionForTest({ state: cast, context: session.context }),
+      spellTargetId,
+      "appearsInArea",
+    );
+    const caster = requireCombatant(cast, spellCasterId);
+    const effect = caster.activeEffects.find(
+      (candidate) => candidate.kind === "insectPlagueAreaHazard",
+    );
+    if (effect?.kind !== "insectPlagueAreaHazard") {
+      throw new Error("Expected active Insect Plague.");
+    }
+    const collidingUnrelatedEffect = {
+      kind: "spellDashBonusAction" as const,
+      effectRef: effect.effectRef,
+      sourceProcedureRef: effect.sourceProcedureRef,
+      sourceCombatantId: effect.sourceCombatantId,
+      expiresAt: effect.expiresAt,
+    };
+    const stateWithCrossKindCollision = {
+      ...cast,
+      combatants: new Map(cast.combatants).set(spellCasterId, {
+        ...caster,
+        activeEffects: [...caster.activeEffects, collidingUnrelatedEffect],
+      }),
+    };
+
+    const result = resolveBattleSubject({
+      state: stateWithCrossKindCollision,
+      subject: saveAct.subject,
+      fills: [],
+    });
+    expect(result).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    expect(
+      stateWithCrossKindCollision.combatants
+        .get(spellCasterId)
+        ?.activeEffects.includes(collidingUnrelatedEffect),
+    ).toBe(true);
+  });
 });
