@@ -3719,11 +3719,9 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     const sizeChangeAct = requireActorAdmittedSpellActForTest({
       session: wizardSession,
       actorId: wizardId,
+      subjectTag: "actionSpell",
       invocationRef: expectedSizeChange,
     });
-    if (sizeChangeAct?.subject.tag !== "actionSpell") {
-      throw new Error("Expected the admitted Enlarge invocation.");
-    }
     const sizeTarget = requireHole(
       resolveBattleSubject({
         state: wizardTurn,

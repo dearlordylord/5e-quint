@@ -1419,11 +1419,9 @@ function castCunningStrikeSizeChange(
   const act = requireActorAdmittedSpellActForTest({
     session,
     actorId: fighterId,
+    subjectTag: "actionSpell",
     invocationRef: expected,
   });
-  if (act?.subject.tag !== "actionSpell") {
-    throw new Error("Expected the admitted Enlarge/Reduce size-change act.");
-  }
   const target = requireHole(
     resolveBattleSubject({
       state: session.state,

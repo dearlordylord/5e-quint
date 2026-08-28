@@ -1229,14 +1229,12 @@ describe("battle boundary admission owners", () => {
     const shockingGraspAct = requireActorAdmittedSpellActForTest({
       session: shockingGraspSession,
       actorId: fighterId,
+      subjectTag: "actionSpell",
       invocationRef: cantripSpellInvocationRef(
         "shocking_grasp",
         "spellAttackDamage",
       ),
     });
-    if (shockingGraspAct.subject.tag !== "actionSpell") {
-      throw new Error("Expected admitted Shocking Grasp action spell.");
-    }
     const shockingTarget = findHole(
       shockingGraspAct.initialHoles,
       "targetChoice",

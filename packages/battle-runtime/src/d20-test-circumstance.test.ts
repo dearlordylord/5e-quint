@@ -95,11 +95,9 @@ function requireSaveConditionSpellAct(
   const act = requireActorAdmittedSpellActForTest({
     session,
     actorId: fighterId,
+    subjectTag: "actionSpell",
     invocationRef: expected,
   });
-  if (act?.subject.tag !== "actionSpell") {
-    throw new Error(`Expected the admitted ${selectedSpellId} invocation.`);
-  }
   return act;
 }
 

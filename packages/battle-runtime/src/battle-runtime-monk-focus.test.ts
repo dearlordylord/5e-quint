@@ -1317,11 +1317,9 @@ function withJumpMovementReplacementEffect(
   const act = requireActorAdmittedSpellActForTest({
     session,
     actorId: fighterId,
+    subjectTag: "bonusActionSpell",
     invocationRef: expected,
   });
-  if (act?.subject.tag !== "bonusActionSpell") {
-    throw new Error("Expected the Monk's admitted Jump invocation.");
-  }
   const target = requireHole(
     resolveBattleSubject({
       state: session.state,

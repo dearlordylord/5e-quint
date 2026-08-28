@@ -337,11 +337,9 @@ function dangerSenseGreaseGroundHazardBattle(input?: {
   const act = requireActorAdmittedSpellActForTest({
     session,
     actorId: spellCasterId,
+    subjectTag: "actionSpell",
     invocationRef: expected,
   });
-  if (act?.subject.tag !== "actionSpell") {
-    throw new Error("Expected the admitted Grease invocation.");
-  }
   const save = requireHole(act.initialHoles, "savingThrowOutcome");
   const castState = requireResolved(
     resolveBattleSubject({
