@@ -27,7 +27,7 @@ module statBlockResourceLifecycleExamples {
         spent: true,
       }),
       assert(recharge == {
-        resource: StatBlockRechargeUse({ minimumRoll: 5, available: false }),
+        resource: StatBlockRechargeUse({ minimumRoll: RechargeMinimumFive, available: false }),
         spent: true,
       }),
       assert(not(failedRoll.available)),

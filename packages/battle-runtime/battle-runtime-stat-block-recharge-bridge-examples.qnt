@@ -6,13 +6,13 @@ module battleRuntimeStatBlockRechargeBridgeExamples {
 
   run test_recharge_roll_uses_stat_block_resource_contract = {
     all {
-      assert(not(battleRuntimeRechargeAvailableAfterRoll(false, 5, RechargeD6One))),
-      assert(not(battleRuntimeRechargeAvailableAfterRoll(false, 5, RechargeD6Two))),
-      assert(not(battleRuntimeRechargeAvailableAfterRoll(false, 5, RechargeD6Three))),
-      assert(not(battleRuntimeRechargeAvailableAfterRoll(false, 5, RechargeD6Four))),
-      assert(battleRuntimeRechargeAvailableAfterRoll(false, 5, RechargeD6Five)),
-      assert(battleRuntimeRechargeAvailableAfterRoll(false, 5, RechargeD6Six)),
-      assert(battleRuntimeRechargeAvailableAfterRoll(true, 5, RechargeD6One)),
+      assert(not(battleRuntimeRechargeAvailableAfterRoll(false, RechargeMinimumFive, RechargeD6One))),
+      assert(not(battleRuntimeRechargeAvailableAfterRoll(false, RechargeMinimumFive, RechargeD6Two))),
+      assert(not(battleRuntimeRechargeAvailableAfterRoll(false, RechargeMinimumFive, RechargeD6Three))),
+      assert(not(battleRuntimeRechargeAvailableAfterRoll(false, RechargeMinimumFive, RechargeD6Four))),
+      assert(battleRuntimeRechargeAvailableAfterRoll(false, RechargeMinimumFive, RechargeD6Five)),
+      assert(battleRuntimeRechargeAvailableAfterRoll(false, RechargeMinimumFive, RechargeD6Six)),
+      assert(battleRuntimeRechargeAvailableAfterRoll(true, RechargeMinimumFive, RechargeD6One)),
     }
   }
 }

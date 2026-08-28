@@ -10,7 +10,7 @@ module statBlockResourceLifecycleInductive {
   var qKind: ResourceProofKind
   var qDailyUsesRemaining: int
   var qDailyUsesMaximum: int
-  var qRechargeMinimumRoll: int
+  var qRechargeMinimumRoll: StatBlockRechargeMinimumRoll
   var qRechargeAvailable: bool
   var qRechargeAfterRestAvailable: bool
 
@@ -32,7 +32,7 @@ module statBlockResourceLifecycleInductive {
         qKind' = ProofDaily,
         qDailyUsesRemaining' = daily.usesRemaining,
         qDailyUsesMaximum' = daily.maximumUses,
-        qRechargeMinimumRoll' = 5,
+        qRechargeMinimumRoll' = RechargeMinimumFive,
         qRechargeAvailable' = true,
         qRechargeAfterRestAvailable' = true,
       }
@@ -48,7 +48,7 @@ module statBlockResourceLifecycleInductive {
         qKind' = ProofRechargeAfterRest,
         qDailyUsesRemaining' = 1,
         qDailyUsesMaximum' = 1,
-        qRechargeMinimumRoll' = 5,
+        qRechargeMinimumRoll' = RechargeMinimumFive,
         qRechargeAvailable' = true,
         qRechargeAfterRestAvailable' = rest.available,
       }
@@ -90,7 +90,13 @@ module statBlockResourceLifecycleInductive {
     qKind.in(Set(ProofDaily, ProofRecharge, ProofRechargeAfterRest)),
     qDailyUsesMaximum.in(1.to(6)),
     qDailyUsesRemaining.in(0.to(qDailyUsesMaximum)),
-    qRechargeMinimumRoll.in(2.to(6)),
+    qRechargeMinimumRoll.in(Set(
+      RechargeMinimumTwo,
+      RechargeMinimumThree,
+      RechargeMinimumFour,
+      RechargeMinimumFive,
+      RechargeMinimumSix
+    )),
     qRechargeAvailable.in(Set(true, false)),
     qRechargeAfterRestAvailable.in(Set(true, false)),
     legalStatBlockLimitedUseResource(qState),

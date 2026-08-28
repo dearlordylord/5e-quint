@@ -4,7 +4,12 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE
 
 module statBlockResourceLifecycle {
-  type StatBlockRechargeMinimumRoll = int
+  type StatBlockRechargeMinimumRoll =
+    | RechargeMinimumTwo
+    | RechargeMinimumThree
+    | RechargeMinimumFour
+    | RechargeMinimumFive
+    | RechargeMinimumSix
 
   type StatBlockRechargeD6Result =
     | RechargeD6One
@@ -42,7 +47,7 @@ module statBlockResourceLifecycle {
   }
 
   pure def initialStatBlockRechargeResource: StatBlockRechargeResource = {
-    minimumRoll: 5,
+    minimumRoll: RechargeMinimumFive,
     available: true,
   }
 
@@ -57,7 +62,13 @@ module statBlockResourceLifecycle {
   }
 
   pure def legalStatBlockRechargeResource(resource: StatBlockRechargeResource): bool = all {
-    resource.minimumRoll.in(2.to(6)),
+    resource.minimumRoll.in(Set(
+      RechargeMinimumTwo,
+      RechargeMinimumThree,
+      RechargeMinimumFour,
+      RechargeMinimumFive,
+      RechargeMinimumSix
+    )),
     resource.available.in(Set(true, false)),
   }
 
@@ -102,7 +113,7 @@ module statBlockResourceLifecycle {
   ): StatBlockRechargeResource = {
     val roll = statBlockRechargeD6ResultValue(result)
     if (recharge.available) recharge
-    else if (roll >= recharge.minimumRoll)
+    else if (roll >= statBlockRechargeMinimumRollValue(recharge.minimumRoll))
       recharge.with("available", true)
     else recharge
   }
@@ -116,6 +127,16 @@ module statBlockResourceLifecycle {
     | RechargeD6Four => 4
     | RechargeD6Five => 5
     | RechargeD6Six => 6
+  }
+
+  pure def statBlockRechargeMinimumRollValue(
+    minimumRoll: StatBlockRechargeMinimumRoll
+  ): int = match minimumRoll {
+    | RechargeMinimumTwo => 2
+    | RechargeMinimumThree => 3
+    | RechargeMinimumFour => 4
+    | RechargeMinimumFive => 5
+    | RechargeMinimumSix => 6
   }
 
   pure def refreshStatBlockResourceAfterShortRest(

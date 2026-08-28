@@ -14,7 +14,7 @@ module battleRuntimeTurnAdvancementRecharge {
   ): BattleState = {
     val advanced = endTurn(state)
     if (currentActor(advanced) == Goblin and not(advanced.goblin.rechargeAvailable))
-      { ...advanced, goblin: { ...advanced.goblin, rechargeAvailable: battleRuntimeRechargeAvailableAfterRoll(advanced.goblin.rechargeAvailable, 5, roll) } }
+      { ...advanced, goblin: { ...advanced.goblin, rechargeAvailable: battleRuntimeRechargeAvailableAfterRoll(advanced.goblin.rechargeAvailable, RechargeMinimumFive, roll) } }
     else
       advanced
   }

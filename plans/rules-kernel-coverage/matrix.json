@@ -16544,7 +16544,6 @@
         "all-block",
         "pattern-match",
         "set",
-        "range",
         "membership"
       ],
       "obligationId": "BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE",
