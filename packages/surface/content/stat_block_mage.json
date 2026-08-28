@@ -61,7 +61,15 @@
                   "spellId": "light"
                 },
                 {
-                  "restriction": "included in AC",
+                  "restriction": {
+                    "authoredExpression": "included in AC",
+                    "deltas": [
+                      {
+                        "kind": "armor_class_already_includes_effect",
+                        "projection": "already_included"
+                      }
+                    ]
+                  },
                   "spellId": "mage_armor"
                 },
                 {

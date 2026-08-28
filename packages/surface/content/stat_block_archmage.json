@@ -70,7 +70,15 @@
                   "spellId": "light"
                 },
                 {
-                  "restriction": "included in AC",
+                  "restriction": {
+                    "authoredExpression": "included in AC",
+                    "deltas": [
+                      {
+                        "kind": "armor_class_already_includes_effect",
+                        "projection": "already_included"
+                      }
+                    ]
+                  },
                   "spellId": "mage_armor"
                 },
                 {
@@ -113,7 +121,15 @@
                   "spellId": "cone_of_cold"
                 },
                 {
-                  "restriction": "cast before combat",
+                  "restriction": {
+                    "authoredExpression": "cast before combat",
+                    "deltas": [
+                      {
+                        "kind": "application_timing",
+                        "timing": "before_combat"
+                      }
+                    ]
+                  },
                   "spellId": "mind_blank"
                 },
                 {

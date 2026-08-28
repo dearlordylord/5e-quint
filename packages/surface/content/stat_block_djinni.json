@@ -162,7 +162,16 @@
               },
               "spells": [
                 {
-                  "restriction": "can create wine instead of water",
+                  "restriction": {
+                    "authoredExpression": "can create wine instead of water",
+                    "deltas": [
+                      {
+                        "kind": "created_substance_substitution",
+                        "replaces": "water",
+                        "substitute": "wine"
+                      }
+                    ]
+                  },
                   "spellId": "create_food_and_water"
                 },
                 {

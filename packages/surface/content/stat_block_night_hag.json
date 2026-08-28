@@ -130,7 +130,15 @@
                   "spellId": "phantasmal_killer"
                 },
                 {
-                  "restriction": "self only",
+                  "restriction": {
+                    "authoredExpression": "self only",
+                    "deltas": [
+                      {
+                        "kind": "target_limit",
+                        "target": "self"
+                      }
+                    ]
+                  },
                   "spellId": "plane_shift"
                 }
               ]

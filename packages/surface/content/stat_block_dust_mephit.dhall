@@ -60,7 +60,7 @@ in  { challengeRating = 0.5
                                   { spellId = "sleep"
                                   , count = None Natural
                                   , castAtLevel = None Natural
-                                  , restriction = None Text
+
                                   }
                             , rest = [] : List T.SpellRef
                             }

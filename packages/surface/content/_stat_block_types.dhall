@@ -326,14 +326,368 @@ let Resource : Type =
 
 let resource : Resource -> Resource = λ(input : Resource) -> input
 
+let nonEmptyMap =
+      λ(source : Type) ->
+      λ(target : Type) ->
+      λ(project : source -> target) ->
+      λ(input : NonEmpty source) ->
+        [ project input.first ]
+        # List/fold
+            source
+            input.rest
+            (List target)
+            ( λ(item : source) ->
+              λ(items : List target) -> [ project item ] # items
+            )
+            ([] : List target)
+
+let CreatureType : Type =
+      < aberration
+      | beast
+      | celestial
+      | construct
+      | dragon
+      | elemental
+      | fey
+      | fiend
+      | giant
+      | humanoid
+      | monstrosity
+      | ooze
+      | plant
+      | undead
+      >
+
+let creatureTypeText : CreatureType -> Text =
+      λ(input : CreatureType) ->
+        merge
+          { aberration = "aberration"
+          , beast = "beast"
+          , celestial = "celestial"
+          , construct = "construct"
+          , dragon = "dragon"
+          , elemental = "elemental"
+          , fey = "fey"
+          , fiend = "fiend"
+          , giant = "giant"
+          , humanoid = "humanoid"
+          , monstrosity = "monstrosity"
+          , ooze = "ooze"
+          , plant = "plant"
+          , undead = "undead"
+          }
+          input
+
+let Size : Type = < tiny | small | medium | large | huge | gargantuan >
+
+let sizeText : Size -> Text =
+      λ(input : Size) ->
+        merge
+          { tiny = "tiny"
+          , small = "small"
+          , medium = "medium"
+          , large = "large"
+          , huge = "huge"
+          , gargantuan = "gargantuan"
+          }
+          input
+
+let DurationUnit : Type = < round | minute | hour | day >
+
+let durationUnitText : DurationUnit -> Text =
+      λ(input : DurationUnit) ->
+        merge
+          { round = "round", minute = "minute", hour = "hour", day = "day" }
+          input
+
+let PositiveNatural : Type = { predecessor : Natural }
+
+let positiveNatural : PositiveNatural -> Natural =
+      λ(input : PositiveNatural) -> input.predecessor + 1
+
+let EffectTerminationTrigger : Type =
+      < invoker_turn_boundary_in_illumination :
+          { turnBoundary : < start_or_end >
+          , illumination : < bright_light >
+          }
+      | same_invoker_recasts_spell
+      >
+
+let InvocationDelta : Type =
+      < transformation_form_creature_type_limit :
+          { creatureTypes : NonEmpty CreatureType }
+      | temporary_hit_points
+      | concentration_requirement
+      | effect_termination :
+          { triggers : NonEmpty EffectTerminationTrigger }
+      | created_substance_substitution
+      | duration_override :
+          { duration : { unit : DurationUnit, amount : PositiveNatural } }
+      | target_limit
+      | movement_trace_suppression
+      | appearance_options : { sizes : NonEmpty Size }
+      | armor_class_already_includes_effect
+      | application_timing
+      >
+
+let EffectTerminationTriggerRecord : Type =
+      { kind : Text
+      , turnBoundary : Optional Text
+      , illumination : Optional Text
+      }
+
+let effectTerminationTriggerRecord :
+      EffectTerminationTrigger -> EffectTerminationTriggerRecord =
+      λ(input : EffectTerminationTrigger) ->
+        merge
+          { invoker_turn_boundary_in_illumination =
+              λ(payload :
+                { turnBoundary : < start_or_end >
+                , illumination : < bright_light >
+                }
+              ) ->
+                { kind = "invoker_turn_boundary_in_illumination"
+                , turnBoundary = Some
+                    (merge { start_or_end = "start_or_end" } payload.turnBoundary)
+                , illumination = Some
+                    (merge { bright_light = "bright_light" } payload.illumination)
+                }
+          , same_invoker_recasts_spell =
+              { kind = "same_invoker_recasts_spell"
+              , turnBoundary = None Text
+              , illumination = None Text
+              }
+          }
+          input
+
+let InvocationDeltaRecord : Type =
+      { kind : Text
+      , creatureTypes : Optional (List Text)
+      , spellGrant : Optional Text
+      , maintenanceRequirement : Optional Text
+      , requirement : Optional Text
+      , triggers : Optional (List EffectTerminationTriggerRecord)
+      , replaces : Optional Text
+      , substitute : Optional Text
+      , duration : Optional { unit : Text, amount : Natural }
+      , target : Optional Text
+      , subject : Optional Text
+      , whileCondition : Optional Text
+      , trace : Optional Text
+      , sizes : Optional (List Text)
+      , bodyPlan : Optional Text
+      , projection : Optional Text
+      , timing : Optional Text
+      }
+
+let defaultInvocationDeltaRecord : InvocationDeltaRecord =
+      { kind = ""
+      , creatureTypes = None (List Text)
+      , spellGrant = None Text
+      , maintenanceRequirement = None Text
+      , requirement = None Text
+      , triggers = None (List EffectTerminationTriggerRecord)
+      , replaces = None Text
+      , substitute = None Text
+      , duration = None { unit : Text, amount : Natural }
+      , target = None Text
+      , subject = None Text
+      , whileCondition = None Text
+      , trace = None Text
+      , sizes = None (List Text)
+      , bodyPlan = None Text
+      , projection = None Text
+      , timing = None Text
+      }
+
+let invocationDeltaRecord : InvocationDelta -> InvocationDeltaRecord =
+      λ(input : InvocationDelta) ->
+        merge
+          { transformation_form_creature_type_limit =
+              λ(payload : { creatureTypes : NonEmpty CreatureType }) ->
+                defaultInvocationDeltaRecord
+                //  { kind = "transformation_form_creature_type_limit"
+                    , creatureTypes = Some
+                        ( nonEmptyMap
+                            CreatureType
+                            Text
+                            creatureTypeText
+                            payload.creatureTypes
+                        )
+                    }
+          , temporary_hit_points =
+              defaultInvocationDeltaRecord
+              //  { kind = "temporary_hit_points"
+                  , spellGrant = Some "none"
+                  , maintenanceRequirement = Some "not_required"
+                  }
+          , concentration_requirement =
+              defaultInvocationDeltaRecord
+              //  { kind = "concentration_requirement"
+                  , requirement = Some "not_required"
+                  }
+          , effect_termination =
+              λ(payload : { triggers : NonEmpty EffectTerminationTrigger }) ->
+                defaultInvocationDeltaRecord
+                //  { kind = "effect_termination"
+                    , triggers = Some
+                        ( nonEmptyMap
+                            EffectTerminationTrigger
+                            EffectTerminationTriggerRecord
+                            effectTerminationTriggerRecord
+                            payload.triggers
+                        )
+                    }
+          , created_substance_substitution =
+              defaultInvocationDeltaRecord
+              //  { kind = "created_substance_substitution"
+                  , replaces = Some "water"
+                  , substitute = Some "wine"
+                  }
+          , duration_override =
+              λ(payload :
+                { duration : { unit : DurationUnit, amount : PositiveNatural } }
+              ) ->
+                defaultInvocationDeltaRecord
+                //  { kind = "duration_override"
+                    , duration = Some
+                        { unit = durationUnitText payload.duration.unit
+                        , amount = positiveNatural payload.duration.amount
+                        }
+                    }
+          , target_limit =
+              defaultInvocationDeltaRecord
+              // { kind = "target_limit", target = Some "self" }
+          , movement_trace_suppression =
+              defaultInvocationDeltaRecord
+              //  { kind = "movement_trace_suppression"
+                  , subject = Some "invoker"
+                  , whileCondition = Some "invisible"
+                  , trace = Some "none"
+                  }
+          , appearance_options =
+              λ(payload : { sizes : NonEmpty Size }) ->
+                defaultInvocationDeltaRecord
+                //  { kind = "appearance_options"
+                    , sizes = Some
+                        (nonEmptyMap Size Text sizeText payload.sizes)
+                    , bodyPlan = Some "biped"
+                    }
+          , armor_class_already_includes_effect =
+              defaultInvocationDeltaRecord
+              //  { kind = "armor_class_already_includes_effect"
+                  , projection = Some "already_included"
+                  }
+          , application_timing =
+              defaultInvocationDeltaRecord
+              //  { kind = "application_timing"
+                  , timing = Some "before_combat"
+                  }
+          }
+          input
+
+let beastOrHumanoidTransformationForms : InvocationDelta =
+      InvocationDelta.transformation_form_creature_type_limit
+        { creatureTypes =
+            { first = CreatureType.beast
+            , rest = [ CreatureType.humanoid ]
+            }
+        }
+
+let noTransformationTemporaryHitPoints : InvocationDelta =
+      InvocationDelta.temporary_hit_points
+
+let noConcentrationRequirement : InvocationDelta =
+      InvocationDelta.concentration_requirement
+
+let endsAtTurnBoundaryInBrightLight : InvocationDelta =
+      InvocationDelta.effect_termination
+        { triggers =
+            { first = EffectTerminationTrigger.invoker_turn_boundary_in_illumination
+                { turnBoundary = < start_or_end >.start_or_end
+                , illumination = < bright_light >.bright_light
+                }
+            , rest = [] : List EffectTerminationTrigger
+            }
+        }
+
+let endsWhenSameInvokerRecastsSpell : InvocationDelta =
+      InvocationDelta.effect_termination
+        { triggers =
+            { first = EffectTerminationTrigger.same_invoker_recasts_spell
+            , rest = [] : List EffectTerminationTrigger
+            }
+        }
+
+let wineInsteadOfWater : InvocationDelta =
+      InvocationDelta.created_substance_substitution
+
+let twentyFourHourDuration : InvocationDelta =
+      InvocationDelta.duration_override
+        { duration =
+            { unit = DurationUnit.hour, amount = { predecessor = 23 } }
+        }
+
+let selfTargetLimit : InvocationDelta = InvocationDelta.target_limit
+
+let invisibleInvokerLeavesNoTracks : InvocationDelta =
+      InvocationDelta.movement_trace_suppression
+
+let largeOrMediumBipedAppearance : InvocationDelta =
+      InvocationDelta.appearance_options
+        { sizes = { first = Size.large, rest = [ Size.medium ] } }
+
+let spellEffectAlreadyIncludedInArmorClass : InvocationDelta =
+      InvocationDelta.armor_class_already_includes_effect
+
+let appliedBeforeCombat : InvocationDelta = InvocationDelta.application_timing
+
+let SpellInvocationRestriction : Type =
+      { authoredExpression : Text, deltas : NonEmpty InvocationDelta }
+
+let SpellInvocationRestrictionRecord : Type =
+      { authoredExpression : Text, deltas : List InvocationDeltaRecord }
+
 let SpellRef : Type =
       { spellId : Text
       , count : Optional Natural
       , castAtLevel : Optional Natural
-      , restriction : Optional Text
+      , restriction : Optional SpellInvocationRestrictionRecord
       }
 
-let spellRef : SpellRef -> SpellRef = λ(reference : SpellRef) -> reference
+let SpellRefInput : Type =
+      { spellId : Text
+      , count : Optional Natural
+      , castAtLevel : Optional Natural
+      }
+
+let spellRef : SpellRefInput -> SpellRef =
+      λ(reference : SpellRefInput) ->
+        reference
+        // { restriction = None SpellInvocationRestrictionRecord }
+
+let RestrictedSpellRefInput : Type =
+      { spellId : Text
+      , count : Optional Natural
+      , castAtLevel : Optional Natural
+      , restriction : SpellInvocationRestriction
+      }
+
+let restrictedSpellRef : RestrictedSpellRefInput -> SpellRef =
+      λ(reference : RestrictedSpellRefInput) ->
+        { spellId = reference.spellId
+        , count = reference.count
+        , castAtLevel = reference.castAtLevel
+        , restriction = Some
+            { authoredExpression = reference.restriction.authoredExpression
+            , deltas =
+                nonEmptyMap
+                  InvocationDelta
+                  InvocationDeltaRecord
+                  invocationDeltaRecord
+                  reference.restriction.deltas
+            }
+        }
 
 let Group : Type =
       { kind : Text
@@ -638,43 +992,57 @@ let trait : TraitInput -> Trait =
 
 in  { Effect
     , Dispatch
+    , InvocationDelta
     , FlySpeed
     , SpeedAlternative
     , SpellRef
     , Group
     , Vulnerabilities
+    , appliedBeforeCombat
     , advantageDamage
     , actionOption
     , meleeAttack
     , rangedAttack
     , atWill
+    , beastOrHumanoidTransformationForms
     , applyCondition
     , conditionIfSize
     , cone
     , daily
     , damage
+    , endsAtTurnBoundaryInBrightLight
+    , endsWhenSameInvokerRecastsSpell
     , executable
     , NonSpellProcedure
     , resourceExecutable
     , limited
+    , largeOrMediumBipedAppearance
     , line
     , multiattack
     , noComponents
     , noMaterialComponents
+    , noConcentrationRequirement
+    , noTransformationTemporaryHitPoints
     , recharge
     , resource
+    , restrictedSpellRef
     , rest
     , saveArea
+    , selfTargetLimit
     , spellRef
+    , spellEffectAlreadyIncludedInArmorClass
     , spellDefinitionComponents
      , spellcasting
      , speed
      , gmSpeedChoice
     , staticDamage
+    , twentyFourHourDuration
     , sourceNextTurnEnd
     , targetNextTurnEnd
     , textOnly
     , resourceTextOnly
     , trait
+    , invisibleInvokerLeavesNoTracks
     , vulnerabilityList
+    , wineInsteadOfWater
     }

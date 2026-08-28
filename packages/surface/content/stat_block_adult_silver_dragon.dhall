@@ -1,4 +1,6 @@
-{ challengeRating = 16
+let T = ./_stat_block_types.dhall
+
+in  { challengeRating = 16
 , id = "stat_block_adult_silver_dragon"
 , kind = "statBlock"
 , name = "Adult Silver Dragon"
@@ -24,18 +26,7 @@
             , dc : Optional { dc : Natural, kind : Text }
             , groups :
                 Optional
-                  ( List
-                      { kind : Text
-                      , resourceRefs :
-                          { kind : Text, ordinals : Optional (List Natural) }
-                      , spells :
-                          List
-                            { castAtLevel : Optional Natural
-                            , restriction : Optional Text
-                            , spellId : Text
-                            }
-                      }
-                  )
+                  (List T.Group)
             , kind : Text
             , name : Text
             , onFail :
@@ -86,18 +77,7 @@
         , dc = None { dc : Natural, kind : Text }
         , groups =
             None
-              ( List
-                  { kind : Text
-                  , resourceRefs :
-                      { kind : Text, ordinals : Optional (List Natural) }
-                  , spells :
-                      List
-                        { castAtLevel : Optional Natural
-                        , restriction : Optional Text
-                        , spellId : Text
-                        }
-                  }
-              )
+              (List T.Group)
         , kind = "attack_roll"
         , name = "Rend"
         , onFail =
@@ -150,18 +130,7 @@
         , dc = Some { dc = 20, kind = "fixed" }
         , groups =
             None
-              ( List
-                  { kind : Text
-                  , resourceRefs :
-                      { kind : Text, ordinals : Optional (List Natural) }
-                  , spells :
-                      List
-                        { castAtLevel : Optional Natural
-                        , restriction : Optional Text
-                        , spellId : Text
-                        }
-                  }
-              )
+              (List T.Group)
         , kind = "save"
         , name = "Cold Breath"
         , onFail = Some
@@ -210,18 +179,7 @@
             , dc : Optional { dc : Natural, kind : Text }
             , groups :
                 Optional
-                  ( List
-                      { kind : Text
-                      , resourceRefs :
-                          { kind : Text, ordinals : Optional (List Natural) }
-                      , spells :
-                          List
-                            { castAtLevel : Optional Natural
-                            , restriction : Optional Text
-                            , spellId : Text
-                            }
-                      }
-                  )
+                  (List T.Group)
             , kind : Text
             , name : Text
             , onFail :
@@ -274,36 +232,17 @@
           [ { kind = "at_will"
             , resourceRefs = { kind = "none", ordinals = None (List Natural) }
             , spells =
-              [ { castAtLevel = None Natural
-                , restriction = None Text
-                , spellId = "detect_magic"
-                }
-              , { castAtLevel = None Natural
-                , restriction = None Text
-                , spellId = "hold_monster"
-                }
-              , { castAtLevel = None Natural
-                , restriction = None Text
-                , spellId = "ice_knife"
-                }
-              , { castAtLevel = None Natural
-                , restriction = Some
-                    "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell"
-                , spellId = "shapechange"
-                }
+              [ T.spellRef { spellId = "detect_magic", count = None Natural, castAtLevel = None Natural }
+              , T.spellRef { spellId = "hold_monster", count = None Natural, castAtLevel = None Natural }
+              , T.spellRef { spellId = "ice_knife", count = None Natural, castAtLevel = None Natural }
+              , T.restrictedSpellRef { spellId = "shapechange", count = None Natural, castAtLevel = None Natural, restriction = { authoredExpression = "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell", deltas = { first = T.beastOrHumanoidTransformationForms, rest = [ T.noTransformationTemporaryHitPoints, T.noConcentrationRequirement ] : List T.InvocationDelta } } }
               ]
             }
           , { kind = "limited"
             , resourceRefs = { kind = "some", ordinals = Some [ 2 ] }
             , spells =
-              [ { castAtLevel = Some 5
-                , restriction = None Text
-                , spellId = "ice_storm"
-                }
-              , { castAtLevel = None Natural
-                , restriction = None Text
-                , spellId = "zone_of_truth"
-                }
+              [ T.spellRef { spellId = "ice_storm", count = None Natural, castAtLevel = Some 5 }
+              , T.spellRef { spellId = "zone_of_truth", count = None Natural, castAtLevel = None Natural }
               ]
             }
           ]

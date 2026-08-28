@@ -48,6 +48,14 @@ New procedure owners live under `src/procedure-admission/`,
 `battle-state-execution.ts` owns state-only dispatch;
 `battle-execution-composition.ts` supplies the authored-free procedure registry.
 The registry is an operation dependency, never Battle State or session state.
+
+Restricted Stat Block spell invocation currently has an admission foundation,
+not an execution owner. `admitStatBlockSpellInvocationDeltas` accepts only the
+non-empty typed Surface deltas and returns one precise missing-owner result per
+delta. It cannot receive spell or Stat Block identity, provenance, or authored
+expression. Adding this classification does not admit an invocation, change its
+procedure-pressure disposition, or claim Battle or Quint parity.
+
 Find Familiar's authored Stat Block lookup is owned by
 `find-familiar-stat-block-catalog.ts` and is threaded only through admission
 and presentation; runtime state retains projected source-free execution facts

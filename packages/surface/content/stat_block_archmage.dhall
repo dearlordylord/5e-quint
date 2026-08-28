@@ -42,50 +42,49 @@ in  { challengeRating = 12
                                   { spellId = "detect_magic"
                                   , count = None Natural
                                   , castAtLevel = None Natural
-                                  , restriction = None Text
+
                                   }
                             , rest =
                                   [ T.spellRef
                                       { spellId = "detect_thoughts"
                                       , count = None Natural
                                       , castAtLevel = None Natural
-                                      , restriction = None Text
+
                                       }
                                   , T.spellRef
                                       { spellId = "disguise_self"
                                       , count = None Natural
                                       , castAtLevel = None Natural
-                                      , restriction = None Text
+
                                       }
                                   , T.spellRef
                                       { spellId = "invisibility"
                                       , count = None Natural
                                       , castAtLevel = None Natural
-                                      , restriction = None Text
+
                                       }
                                   , T.spellRef
                                       { spellId = "light"
                                       , count = None Natural
                                       , castAtLevel = None Natural
-                                      , restriction = None Text
+
                                       }
-                                  , T.spellRef
-                                      { spellId = "mage_armor"
+                                  , T.restrictedSpellRef { spellId = "mage_armor"
                                       , count = None Natural
                                       , castAtLevel = None Natural
-                                      , restriction = Some "included in AC"
+                                      , restriction = { authoredExpression = "included in AC", deltas = { first = T.spellEffectAlreadyIncludedInArmorClass, rest = [] : List T.InvocationDelta } }
                                       }
                                   , T.spellRef
                                       { spellId = "mage_hand"
                                       , count = None Natural
                                       , castAtLevel = None Natural
-                                      , restriction = None Text
+
                                       }
                                   , T.spellRef
                                       { spellId = "prestidigitation"
                                       , count = None Natural
                                       , castAtLevel = None Natural
-                                      , restriction = None Text
+
                                       }
                                   ]
                                 : List T.SpellRef
@@ -101,14 +100,14 @@ in  { challengeRating = 12
                                       { spellId = "fly"
                                       , count = None Natural
                                       , castAtLevel = None Natural
-                                      , restriction = None Text
+
                                       }
                                 , rest =
                                       [ T.spellRef
                                           { spellId = "lightning_bolt"
                                           , count = None Natural
                                           , castAtLevel = Some 7
-                                          , restriction = None Text
+
                                           }
                                       ]
                                     : List T.SpellRef
@@ -123,27 +122,25 @@ in  { challengeRating = 12
                                       { spellId = "cone_of_cold"
                                       , count = None Natural
                                       , castAtLevel = Some 9
-                                      , restriction = None Text
+
                                       }
                                 , rest =
-                                      [ T.spellRef
-                                          { spellId = "mind_blank"
+                                      [ T.restrictedSpellRef { spellId = "mind_blank"
                                           , count = None Natural
                                           , castAtLevel = None Natural
-                                          , restriction = Some
-                                              "cast before combat"
+                                          , restriction = { authoredExpression = "cast before combat", deltas = { first = T.appliedBeforeCombat, rest = [] : List T.InvocationDelta } }
                                           }
                                       , T.spellRef
                                           { spellId = "scrying"
                                           , count = None Natural
                                           , castAtLevel = None Natural
-                                          , restriction = None Text
+
                                           }
                                       , T.spellRef
                                           { spellId = "teleport"
                                           , count = None Natural
                                           , castAtLevel = None Natural
-                                          , restriction = None Text
+
                                           }
                                       ]
                                     : List T.SpellRef
@@ -176,7 +173,7 @@ in  { challengeRating = 12
                                   { spellId = "misty_step"
                                   , count = None Natural
                                   , castAtLevel = None Natural
-                                  , restriction = None Text
+
                                   }
                             , rest = [] : List T.SpellRef
                             }

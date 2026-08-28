@@ -13,17 +13,17 @@ in  { challengeRating = 1
             , T.executable { procedureOrdinal = 3, procedure = T.rangedAttack { name = "Thorn Burst", attackAbility = "cha", attackBonus = +6, rangeFeet = { normal = 60, long = 60 }, ammunition = (None Text), onHit = { first = T.damage { damageType = "piercing", dice = 1, dieSize = 6, flat = (Some +4), static = 7 }, rest = [] : List T.Effect } } }
             , T.executable { procedureOrdinal = 4, procedure = T.spellcasting { name = "Spellcasting", ability = "cha", spellSaveDc = (Some { kind = "fixed", dc = 14 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noMaterialComponents, groups = { first = T.atWill { spells =
                       { first = -- RAW: Monsters/Monsters-C-D.md:929-968 — At Will: Animal Friendship.
-                        T.spellRef { spellId = "animal_friendship", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "animal_friendship", count = (None Natural), castAtLevel = (None Natural) }
                       , rest = [ -- RAW: Monsters/Monsters-C-D.md:929-968 — At Will: Charm Monster, lasts 24 hours; ends early if the dryad casts it again.
-                        T.spellRef { spellId = "charm_monster", count = (None Natural), castAtLevel = (None Natural), restriction = (Some "lasts 24 hours; ends early if the dryad casts the spell again") }
+                        T.restrictedSpellRef { spellId = "charm_monster", count = (None Natural), castAtLevel = (None Natural), restriction = { authoredExpression = "lasts 24 hours; ends early if the dryad casts the spell again", deltas = { first = T.twentyFourHourDuration, rest = [ T.endsWhenSameInvokerRecastsSpell ] : List T.InvocationDelta } } }
                       , -- RAW: Monsters/Monsters-C-D.md:929-968 — At Will: Druidcraft.
-                        T.spellRef { spellId = "druidcraft", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "druidcraft", count = (None Natural), castAtLevel = (None Natural) }
                       ] } }
                   , rest = [ T.limited { resourceOrdinals = { first = 1 , rest = [] : List Natural }, spells =
                       { first = -- RAW: Monsters/Monsters-C-D.md:929-968 — 1/Day Each: Entangle.
-                        T.spellRef { spellId = "entangle", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "entangle", count = (None Natural), castAtLevel = (None Natural) }
                       , rest = [ -- RAW: Monsters/Monsters-C-D.md:929-968 — 1/Day Each: Pass without Trace.
-                        T.spellRef { spellId = "pass_without_trace", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "pass_without_trace", count = (None Natural), castAtLevel = (None Natural) }
                       ] } }
                   ] } } }
             ]

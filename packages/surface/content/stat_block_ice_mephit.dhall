@@ -38,7 +38,7 @@ in  { challengeRating = 0.5
                                   { spellId = "fog_cloud"
                                   , count = None Natural
                                   , castAtLevel = None Natural
-                                  , restriction = None Text
+
                                   }
                             , rest = [] : List T.SpellRef
                             }

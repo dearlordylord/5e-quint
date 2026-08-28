@@ -510,7 +510,9 @@ function syntheticIdentityRecord(
       if (key === "spellId") {
         return `synthetic_spell_reference_${String(recordOrdinal)}`;
       }
-      if (key === "restriction") return "Synthetic restriction.";
+      if (key === "authoredExpression") {
+        return "Synthetic renamed restriction expression.";
+      }
       if (key === "label") return "Synthetic label";
       return value;
     }),
@@ -565,7 +567,10 @@ function addFirstSpellRestriction(value: unknown): boolean {
   }
   if (!isUnknownRecord(value)) return false;
   if (typeof value.spellId === "string" && value.restriction === undefined) {
-    value.restriction = "Synthetic table restriction.";
+    value.restriction = {
+      authoredExpression: "Synthetic table restriction.",
+      deltas: [{ kind: "target_limit", target: "self" }],
+    };
     return true;
   }
   return Object.values(value).some((child) => addFirstSpellRestriction(child));

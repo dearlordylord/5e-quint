@@ -108,7 +108,27 @@
                   "spellId": "detect_evil_and_good"
                 },
                 {
-                  "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                  "restriction": {
+                    "authoredExpression": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                    "deltas": [
+                      {
+                        "creatureTypes": [
+                          "beast",
+                          "humanoid"
+                        ],
+                        "kind": "transformation_form_creature_type_limit"
+                      },
+                      {
+                        "kind": "temporary_hit_points",
+                        "maintenanceRequirement": "not_required",
+                        "spellGrant": "none"
+                      },
+                      {
+                        "kind": "concentration_requirement",
+                        "requirement": "not_required"
+                      }
+                    ]
+                  },
                   "spellId": "shapechange"
                 }
               ]
