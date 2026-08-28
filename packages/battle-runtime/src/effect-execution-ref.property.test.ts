@@ -1,7 +1,7 @@
 import fc from "fast-check";
-import { Result, Schema } from "effect";
+import { Match, Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
-import { movementFeet } from "@dnd/shared/types";
+import { movementDeltaFeet, movementFeet } from "@dnd/shared/types";
 
 import type {
   BattleActiveEffectOccurrenceTemplate,
@@ -22,7 +22,6 @@ import {
   spellRecord,
   startBattleRight,
   startBattleSessionRight,
-  statBlockCreatureInit,
   wizardSpellcasting,
   wizardId,
 } from "./battle-runtime.test-support.ts";
@@ -51,47 +50,25 @@ const PROPERTY_OPTIONS = { numRuns: 64, seed: 0x3810cc } as const;
 
 const OCCURRENCE_KINDS = [
   "heldLight",
-  "findFamiliarSharedSenses",
   "spellLightEmitter",
+  "targetSpeedDelta",
 ] as const;
 type OccurrenceKind = (typeof OCCURRENCE_KINDS)[number];
-type OccurrenceDescriptor =
-  | {
-      readonly kind: Exclude<OccurrenceKind, "findFamiliarSharedSenses">;
-      readonly marker: number;
-      readonly sourceIsOwner: boolean;
-    }
-  | {
-      readonly kind: "findFamiliarSharedSenses";
-      readonly marker: number;
-    };
+type OccurrenceDescriptor = {
+  readonly kind: OccurrenceKind;
+  readonly marker: number;
+};
 
 const occurrenceDescriptorArbitrary: fc.Arbitrary<OccurrenceDescriptor> =
-  fc.oneof(
-    fc.record({
-      kind: fc.constantFrom("heldLight" as const, "spellLightEmitter" as const),
-      marker: fc.integer({ min: 0, max: 4 }),
-      sourceIsOwner: fc.boolean(),
-    }),
-    fc.record({
-      kind: fc.constant("findFamiliarSharedSenses" as const),
-      marker: fc.integer({ min: 0, max: 4 }),
-    }),
-  );
+  fc.record({
+    kind: fc.constantFrom(...OCCURRENCE_KINDS),
+    marker: fc.integer({ min: 0, max: 4 }),
+  });
 
 const sourcedOccurrenceDescriptorArbitrary = fc.record({
-  kind: fc.constantFrom("heldLight" as const, "spellLightEmitter" as const),
+  kind: fc.constantFrom(...OCCURRENCE_KINDS),
   marker: fc.integer({ min: 0, max: 4 }),
-  sourceIsOwner: fc.boolean(),
 });
-
-function descriptorWithAlternateSource(
-  descriptor: OccurrenceDescriptor,
-): OccurrenceDescriptor {
-  return descriptor.kind === "findFamiliarSharedSenses"
-    ? descriptor
-    : { ...descriptor, sourceIsOwner: false };
-}
 
 function occurrenceFixture(): {
   readonly state: ReturnType<typeof startBattleRight>;
@@ -106,9 +83,17 @@ function occurrenceFixture(): {
         initiative: 20,
         spellcasting: wizardSpellcasting({
           cantrips: [spellRecord("light"), spellRecord("produce_flame")],
+          preparedSpells: [spellRecord("longstrider")],
         }),
       }),
-      statBlockCreatureInit({ initiative: 10 }),
+      characterSeed({
+        combatantId: goblinId,
+        initiative: 10,
+        spellcasting: wizardSpellcasting({
+          cantrips: [spellRecord("light"), spellRecord("produce_flame")],
+          preparedSpells: [spellRecord("longstrider")],
+        }),
+      }),
     ],
   }).state;
   const fighter = state.combatants.get(wizardId);
@@ -123,14 +108,15 @@ function lightProcedureRefForDescriptor(
   source: BattleCreatureState,
   descriptor: OccurrenceDescriptor,
 ): BattleProcedureExecutionRef | undefined {
-  if (
-    descriptor.kind === "findFamiliarSharedSenses" ||
-    source.origin.kind !== "character"
-  ) {
+  if (source.origin.kind !== "character") {
     return undefined;
   }
-  const expectedProcedure =
-    descriptor.kind === "heldLight" ? "heldLight" : "objectLight";
+  const expectedProcedure = Match.value(descriptor.kind).pipe(
+    Match.when("heldLight", () => "heldLight" as const),
+    Match.when("spellLightEmitter", () => "objectLight" as const),
+    Match.when("targetSpeedDelta", () => "scalarBuff" as const),
+    Match.exhaustive,
+  );
   const sourceProcedureRef = source.origin.execution.procedureBindings.find(
     (binding) =>
       binding.procedure.kind === "spellInvocation" &&
@@ -144,18 +130,23 @@ function lightProcedureRefForDescriptor(
 
 function occurrenceTemplateWithBoundSource(input: {
   readonly descriptor: OccurrenceDescriptor;
-  readonly source: BattleCreatureState;
-  readonly ownerId: CombatantId;
-  readonly alternateSourceId: CombatantId;
+  readonly owner: BattleCreatureState;
+  readonly alternateSource: BattleCreatureState;
 }): BattleEffectOccurrenceAllocationTemplate {
+  const source = Match.value(input.descriptor.kind).pipe(
+    Match.when("heldLight", () => input.owner),
+    Match.when("spellLightEmitter", () => input.owner),
+    Match.when("targetSpeedDelta", () => input.alternateSource),
+    Match.exhaustive,
+  );
   const sourceProcedureRef = lightProcedureRefForDescriptor(
-    input.source,
+    source,
     input.descriptor,
   );
   return occurrenceTemplate({
     descriptor: input.descriptor,
-    ownerId: input.ownerId,
-    alternateSourceId: input.alternateSourceId,
+    ownerId: input.owner.combatantId,
+    alternateSourceId: input.alternateSource.combatantId,
     ...(sourceProcedureRef === undefined ? {} : { sourceProcedureRef }),
   });
 }
@@ -167,83 +158,151 @@ function occurrenceTemplate(input: {
   readonly sourceProcedureRef?: BattleProcedureExecutionRef;
 }): BattleEffectOccurrenceAllocationTemplate {
   const { descriptor } = input;
-  const sourceCombatantId =
-    descriptor.kind === "findFamiliarSharedSenses" || descriptor.sourceIsOwner
-      ? input.ownerId
-      : input.alternateSourceId;
+  const sourceCombatantId = Match.value(descriptor.kind).pipe(
+    Match.when("heldLight", () => input.ownerId),
+    Match.when("spellLightEmitter", () => input.ownerId),
+    Match.when("targetSpeedDelta", () => input.alternateSourceId),
+    Match.exhaustive,
+  );
   const sourceProcedureRef =
     input.sourceProcedureRef ??
     battleProcedureExecutionRefForTest(
       `occurrence-source:${sourceCombatantId}:${descriptor.marker}`,
     );
-  switch (descriptor.kind) {
-    case "heldLight":
-      return {
-        kind: "activeEffect",
-        effect: {
-          kind: "heldLight",
-          sourceCombatantId,
-          sourceProcedureRef,
-          brightRadiusFeet: movementFeet(descriptor.marker + 1),
-          dimAdditionalFeet: movementFeet(descriptor.marker + 2),
-          expiresAt: { kind: "untilDispelled" },
-        },
-      };
-    case "findFamiliarSharedSenses":
-      return {
-        kind: "activeEffect",
-        effect: {
-          kind: "findFamiliarSharedSenses",
-          source: {
-            kind: "companionSharedSenses",
-            ownerId: input.ownerId,
-            companionId: input.alternateSourceId,
+  return Match.value(descriptor).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      heldLight: () =>
+        ({
+          kind: "activeEffect",
+          effect: {
+            kind: "heldLight",
+            sourceCombatantId,
+            sourceProcedureRef,
+            brightRadiusFeet: movementFeet(descriptor.marker + 1),
+            dimAdditionalFeet: movementFeet(descriptor.marker + 2),
+            expiresAt: { kind: "untilDispelled" },
           },
-          sourceCombatantId,
-          familiarId: input.alternateSourceId,
-          canSeeThroughFamiliar: true,
-          canHearThroughFamiliar: true,
-          familiarSenses: [],
-          expiresAt: { kind: "startOfTurn", combatantId: input.ownerId },
-        },
-      };
-    case "spellLightEmitter":
-      return {
-        kind: "storedLightEmitter",
-        emitter: {
-          kind: "spellLightEmitter",
-          sourceCombatantId,
-          sourceProcedureRef,
-          attachment: {
-            kind: "combatant",
-            combatantId: input.ownerId,
+        }) as const,
+      targetSpeedDelta: () =>
+        ({
+          kind: "activeEffect",
+          effect: {
+            kind: "speedDelta",
+            sourceCombatantId,
+            sourceProcedureRef,
+            deltaFeet: movementDeltaFeet(descriptor.marker + 1),
+            expiresAt: { kind: "untilDispelled" },
           },
-          emission: {
-            kind: "dim",
-            radiusFeet: movementFeet(descriptor.marker + 1),
+        }) as const,
+      spellLightEmitter: () =>
+        ({
+          kind: "storedLightEmitter",
+          emitter: {
+            kind: "spellLightEmitter",
+            sourceCombatantId,
+            sourceProcedureRef,
+            attachment: {
+              kind: "combatant",
+              combatantId: input.alternateSourceId,
+            },
+            emission: {
+              kind: "dim",
+              radiusFeet: movementFeet(descriptor.marker + 1),
+            },
+            opaqueCoverInteraction: { kind: "blocksEmission" },
+            expiresAt: { kind: "untilDispelled" },
           },
-          opaqueCoverInteraction: { kind: "blocksEmission" },
-          expiresAt: { kind: "untilDispelled" },
-        },
-      };
-  }
+        }) as const,
+    }),
+  );
 }
 
 function occurrenceRef(
   occurrence: BattleAllocatedEffectOccurrence,
 ): BattleEffectExecutionRef {
-  return occurrence.kind === "activeEffect"
-    ? occurrence.effect.effectRef
-    : occurrence.emitter.effectRef;
+  return Match.value(occurrence).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      activeEffect: ({ effect }) => effect.effectRef,
+      storedLightEmitter: ({ emitter }) => emitter.effectRef,
+    }),
+  );
 }
 
 function occurrenceWithoutRef(occurrence: BattleAllocatedEffectOccurrence) {
-  if (occurrence.kind === "activeEffect") {
-    const { effectRef: _effectRef, ...effect } = occurrence.effect;
-    return { kind: occurrence.kind, effect };
-  }
-  const { effectRef: _effectRef, ...emitter } = occurrence.emitter;
-  return { kind: occurrence.kind, emitter };
+  return Match.value(occurrence).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      activeEffect: ({ kind, effect: { effectRef: _effectRef, ...effect } }) =>
+        ({ kind, effect }) as const,
+      storedLightEmitter: ({
+        kind,
+        emitter: { effectRef: _effectRef, ...emitter },
+      }) => ({ kind, emitter }) as const,
+    }),
+  );
+}
+
+function isStoredLightEmitterOccurrence(
+  occurrence: BattleAllocatedEffectOccurrence,
+): occurrence is Extract<
+  BattleAllocatedEffectOccurrence,
+  { readonly kind: "storedLightEmitter" }
+> {
+  return Match.value(occurrence).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      activeEffect: () => false,
+      storedLightEmitter: () => true,
+    }),
+  );
+}
+
+function occurrenceTemplateHasProductionOwnerSourceFacts(input: {
+  readonly descriptor: OccurrenceDescriptor;
+  readonly template: BattleEffectOccurrenceAllocationTemplate;
+  readonly ownerId: CombatantId;
+  readonly alternateId: CombatantId;
+}): boolean {
+  return Match.value(input.descriptor).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      heldLight: () =>
+        Match.value(input.template).pipe(
+          Match.discriminatorsExhaustive("kind")({
+            activeEffect: ({ effect }) =>
+              effect.sourceCombatantId === input.ownerId,
+            storedLightEmitter: () => false,
+          }),
+        ),
+      spellLightEmitter: () =>
+        Match.value(input.template).pipe(
+          Match.discriminatorsExhaustive("kind")({
+            activeEffect: () => false,
+            storedLightEmitter: ({ emitter }) =>
+              Match.value(emitter).pipe(
+                Match.discriminatorsExhaustive("kind")({
+                  spellLightEmitter: ({ sourceCombatantId, attachment }) =>
+                    sourceCombatantId === input.ownerId &&
+                    Match.value(attachment).pipe(
+                      Match.discriminatorsExhaustive("kind")({
+                        combatant: ({ combatantId }) =>
+                          combatantId === input.alternateId,
+                        object: () => false,
+                        dancingLight: () => false,
+                      }),
+                    ),
+                  objectInvisibleRevealLightEmitter: () => false,
+                }),
+              ),
+          }),
+        ),
+      targetSpeedDelta: () =>
+        Match.value(input.template).pipe(
+          Match.discriminatorsExhaustive("kind")({
+            activeEffect: ({ effect }) =>
+              effect.sourceCombatantId === input.alternateId,
+            storedLightEmitter: () => false,
+          }),
+        ),
+    }),
+  );
 }
 
 function allocateSequentially(input: {
@@ -276,7 +335,6 @@ describe("durable effect occurrence allocation properties", () => {
         {
           kind: "heldLight",
           marker: 0,
-          sourceIsOwner: true,
         } satisfies OccurrenceDescriptor,
       ],
     },
@@ -285,17 +343,14 @@ describe("durable effect occurrence allocation properties", () => {
         {
           kind: "heldLight",
           marker: 1,
-          sourceIsOwner: false,
         } satisfies OccurrenceDescriptor,
         {
           kind: "spellLightEmitter",
           marker: 1,
-          sourceIsOwner: false,
         } satisfies OccurrenceDescriptor,
         {
-          kind: "heldLight",
+          kind: "targetSpeedDelta",
           marker: 1,
-          sourceIsOwner: false,
         } satisfies OccurrenceDescriptor,
       ],
     },
@@ -306,15 +361,32 @@ describe("durable effect occurrence allocation properties", () => {
       const occurrences = descriptors.map((descriptor) =>
         occurrenceTemplateWithBoundSource({
           descriptor,
-          source: fighter,
-          ownerId: goblinId,
-          alternateSourceId: wizardId,
+          owner: goblin,
+          alternateSource: fighter,
         }),
       );
       const allocated = allocateBattleEffectOccurrenceTemplatesForCreature({
         owner: goblin,
         occurrences,
       });
+      expect(
+        descriptors.every((descriptor, index) =>
+          occurrenceTemplateHasProductionOwnerSourceFacts({
+            descriptor,
+            template: occurrences[index]!,
+            ownerId: goblinId,
+            alternateId: wizardId,
+          }),
+        ),
+      ).toBe(true);
+      expect(
+        allocated.occurrences.every((occurrence) =>
+          battleEffectExecutionRefBelongsToScope(
+            occurrenceRef(occurrence),
+            goblin.origin.execution.scopeRef,
+          ),
+        ),
+      ).toBe(true);
       expect(allocated.occurrences).toHaveLength(occurrences.length);
       expect(Number(allocated.owner.nextEffectOrdinal)).toBe(
         Number(goblin.nextEffectOrdinal) + occurrences.length,
@@ -331,9 +403,8 @@ describe("durable effect occurrence allocation properties", () => {
           const occurrences = descriptors.map((descriptor) =>
             occurrenceTemplateWithBoundSource({
               descriptor,
-              source: fighter,
-              ownerId: goblinId,
-              alternateSourceId: wizardId,
+              owner: goblin,
+              alternateSource: fighter,
             }),
           );
           const templatesBefore = structuredClone(occurrences);
@@ -375,17 +446,17 @@ describe("durable effect occurrence allocation properties", () => {
         (descriptors) => {
           const { fighter, goblin } = occurrenceFixture();
           const forGoblin = descriptors.map((descriptor) =>
-            occurrenceTemplate({
-              descriptor: descriptorWithAlternateSource(descriptor),
-              ownerId: goblinId,
-              alternateSourceId: wizardId,
+            occurrenceTemplateWithBoundSource({
+              descriptor,
+              owner: goblin,
+              alternateSource: fighter,
             }),
           );
           const forFighter = descriptors.map((descriptor) =>
-            occurrenceTemplate({
-              descriptor: descriptorWithAlternateSource(descriptor),
-              ownerId: wizardId,
-              alternateSourceId: goblinId,
+            occurrenceTemplateWithBoundSource({
+              descriptor,
+              owner: fighter,
+              alternateSource: goblin,
             }),
           );
           const goblinAllocation =
@@ -400,6 +471,27 @@ describe("durable effect occurrence allocation properties", () => {
             });
           const goblinRefs = goblinAllocation.occurrences.map(occurrenceRef);
           const fighterRefs = fighterAllocation.occurrences.map(occurrenceRef);
+
+          expect(
+            descriptors.every((descriptor, index) =>
+              occurrenceTemplateHasProductionOwnerSourceFacts({
+                descriptor,
+                template: forGoblin[index]!,
+                ownerId: goblinId,
+                alternateId: wizardId,
+              }),
+            ),
+          ).toBe(true);
+          expect(
+            descriptors.every((descriptor, index) =>
+              occurrenceTemplateHasProductionOwnerSourceFacts({
+                descriptor,
+                template: forFighter[index]!,
+                ownerId: wizardId,
+                alternateId: goblinId,
+              }),
+            ),
+          ).toBe(true);
 
           expect(
             goblinRefs.every((ref) =>
@@ -458,11 +550,10 @@ describe("durable effect occurrence allocation properties", () => {
           maxLength: 16,
         }),
         (operations) => {
-          const { state: baseState, fighter, goblin } = occurrenceFixture();
+          const { state: baseState, fighter } = occurrenceFixture();
           const heldLightSource = {
             kind: "heldLight",
             marker: 0,
-            sourceIsOwner: false,
           } as const satisfies OccurrenceDescriptor;
           const heldLightProcedureRef = lightProcedureRefForDescriptor(
             fighter,
@@ -482,7 +573,7 @@ describe("durable effect occurrence allocation properties", () => {
           const initial = battleStateWithAllocatedEffectOccurrencesForTest({
             state: baseState,
             occurrences: [
-              { kind: "activeEffect", ownerId: goblinId, effect: template },
+              { kind: "activeEffect", ownerId: wizardId, effect: template },
             ],
           });
           const initialOccurrence = initial.occurrences[0];
@@ -500,39 +591,43 @@ describe("durable effect occurrence allocation properties", () => {
 
           for (const operation of operations) {
             const previousRef = currentEffect.effectRef;
-            if (operation === "mutate") {
-              mutationCount += 1;
-              const updated = updateCombatantWithActiveEffectOccurrence(
-                state.combatants,
-                goblinId,
-                currentEffect,
-                (target) => ({
-                  ...target,
-                  activeEffects: target.activeEffects.map((effect) =>
-                    effect.effectRef === previousRef &&
-                    effect.kind === "heldLight"
-                      ? {
-                          ...effect,
-                          brightRadiusFeet: movementFeet(5 + mutationCount),
-                        }
-                      : effect,
-                  ),
-                }),
-              );
-              expect(updated.tag).toBe("updated");
-              state = { ...state, combatants: updated.combatants };
-            } else {
-              replacementCount += 1;
-              state = replaceTargetActiveEffect(
-                state,
-                goblinId,
-                (effect) => effect.effectRef === previousRef,
-                template,
-              );
-            }
+            Match.value(operation).pipe(
+              Match.when("mutate", () => {
+                mutationCount += 1;
+                const updated = updateCombatantWithActiveEffectOccurrence(
+                  state.combatants,
+                  wizardId,
+                  currentEffect,
+                  (target) => ({
+                    ...target,
+                    activeEffects: target.activeEffects.map((effect) =>
+                      effect.effectRef === previousRef &&
+                      effect.kind === "heldLight"
+                        ? {
+                            ...effect,
+                            brightRadiusFeet: movementFeet(5 + mutationCount),
+                          }
+                        : effect,
+                    ),
+                  }),
+                );
+                expect(updated.tag).toBe("updated");
+                state = { ...state, combatants: updated.combatants };
+              }),
+              Match.when("replace", () => {
+                replacementCount += 1;
+                state = replaceTargetActiveEffect(
+                  state,
+                  wizardId,
+                  (effect) => effect.effectRef === previousRef,
+                  template,
+                );
+              }),
+              Match.exhaustive,
+            );
             const activeMatches =
               state.combatants
-                .get(goblinId)
+                .get(wizardId)
                 ?.activeEffects.filter(
                   (effect) =>
                     effect.kind === "heldLight" &&
@@ -544,29 +639,33 @@ describe("durable effect occurrence allocation properties", () => {
               throw new Error("Expected the current held-light occurrence.");
             }
             currentEffect = nextEffect;
-            if (operation === "mutate") {
-              expect(currentEffect.effectRef).toBe(previousRef);
-              expect(Number(currentEffect.brightRadiusFeet)).toBe(
-                5 + mutationCount,
-              );
-            } else {
-              expect(currentEffect.effectRef).not.toBe(previousRef);
-              expect(
-                state.combatants
-                  .get(goblinId)
-                  ?.activeEffects.some(
-                    (effect) => effect.effectRef === previousRef,
-                  ),
-              ).toBe(false);
-              seenRefs.add(currentEffect.effectRef);
-            }
+            Match.value(operation).pipe(
+              Match.when("mutate", () => {
+                expect(currentEffect.effectRef).toBe(previousRef);
+                expect(Number(currentEffect.brightRadiusFeet)).toBe(
+                  5 + mutationCount,
+                );
+              }),
+              Match.when("replace", () => {
+                expect(currentEffect.effectRef).not.toBe(previousRef);
+                expect(
+                  state.combatants
+                    .get(wizardId)
+                    ?.activeEffects.some(
+                      (effect) => effect.effectRef === previousRef,
+                    ),
+                ).toBe(false);
+                seenRefs.add(currentEffect.effectRef);
+              }),
+              Match.exhaustive,
+            );
           }
 
           expect(seenRefs.size).toBe(replacementCount + 1);
           expect(mutationCount + replacementCount).toBe(operations.length);
           expect(
-            Number(state.combatants.get(goblinId)?.nextEffectOrdinal),
-          ).toBe(Number(goblin.nextEffectOrdinal) + replacementCount + 1);
+            Number(state.combatants.get(wizardId)?.nextEffectOrdinal),
+          ).toBe(Number(fighter.nextEffectOrdinal) + replacementCount + 1);
         },
       ),
       PROPERTY_OPTIONS,
@@ -583,7 +682,6 @@ describe("durable effect occurrence allocation properties", () => {
           const heldLightSource = {
             kind: "heldLight",
             marker: 0,
-            sourceIsOwner: false,
           } as const satisfies OccurrenceDescriptor;
           const heldLightProcedureRef = lightProcedureRefForDescriptor(
             fighter,
@@ -603,7 +701,7 @@ describe("durable effect occurrence allocation properties", () => {
           const initial = battleStateWithAllocatedEffectOccurrencesForTest({
             state: baseState,
             occurrences: [
-              { kind: "activeEffect", ownerId: goblinId, effect: template },
+              { kind: "activeEffect", ownerId: wizardId, effect: template },
             ],
           });
           const initialOccurrence = initial.occurrences[0];
@@ -616,7 +714,7 @@ describe("durable effect occurrence allocation properties", () => {
           const initialEffect = initialOccurrence.effect;
           const mutated = updateCombatantWithActiveEffectOccurrence(
             initial.state.combatants,
-            goblinId,
+            wizardId,
             initialEffect,
             (target) => ({
               ...target,
@@ -637,7 +735,7 @@ describe("durable effect occurrence allocation properties", () => {
             combatants: mutated.combatants,
           };
           const mutatedEffects =
-            mutatedState.combatants.get(goblinId)?.activeEffects ?? [];
+            mutatedState.combatants.get(wizardId)?.activeEffects ?? [];
           expect(
             spellActiveEffectForExecutionRef(
               mutatedEffects,
@@ -650,12 +748,12 @@ describe("durable effect occurrence allocation properties", () => {
 
           const replacedState = replaceTargetActiveEffect(
             mutatedState,
-            goblinId,
+            wizardId,
             (effect) => effect.effectRef === initialEffect.effectRef,
             template,
           );
           const replacedEffects =
-            replacedState.combatants.get(goblinId)?.activeEffects ?? [];
+            replacedState.combatants.get(wizardId)?.activeEffects ?? [];
           const replacement = replacedEffects.find(
             (effect) =>
               effect.kind === "heldLight" &&
@@ -680,7 +778,7 @@ describe("durable effect occurrence allocation properties", () => {
 
           const removed = updateCombatantWithActiveEffectOccurrence(
             replacedState.combatants,
-            goblinId,
+            wizardId,
             replacement,
             (target) => ({
               ...target,
@@ -691,7 +789,7 @@ describe("durable effect occurrence allocation properties", () => {
           );
           expect(removed.tag).toBe("updated");
           const removedEffects =
-            removed.combatants.get(goblinId)?.activeEffects ?? [];
+            removed.combatants.get(wizardId)?.activeEffects ?? [];
           expect(removedEffects).toEqual([]);
           expect(
             spellActiveEffectForExecutionRef(
@@ -702,7 +800,7 @@ describe("durable effect occurrence allocation properties", () => {
           expect(
             updateCombatantWithActiveEffectOccurrence(
               removed.combatants,
-              goblinId,
+              wizardId,
               replacement,
               (target) => target,
             ).tag,
@@ -720,7 +818,10 @@ describe("durable effect occurrence allocation properties", () => {
         (generatedDescriptors) => {
           const session = spellBattle({
             cantrips: [spellRecord("light"), spellRecord("produce_flame")],
-            preparedSpells: [spellRecord("dispel_magic")],
+            preparedSpells: [
+              spellRecord("dispel_magic"),
+              spellRecord("longstrider"),
+            ],
             spellSlots: [{ spellLevel: 3, count: 1 }],
           });
           const state = session.state;
@@ -751,40 +852,61 @@ describe("durable effect occurrence allocation properties", () => {
                 binding.procedure.kind === "spellInvocation" &&
                 binding.procedure.execution.procedure === "ongoingSpellEnd",
             )?.procedureRef;
+          const scalarBuffProcedureRef =
+            caster.origin.execution.procedureBindings.find(
+              (binding) =>
+                binding.procedure.kind === "spellInvocation" &&
+                binding.procedure.execution.procedure === "scalarBuff",
+            )?.procedureRef;
           if (
             heldLightProcedureRef === undefined ||
             objectLightProcedureRef === undefined ||
-            dispelProcedureRef === undefined
+            dispelProcedureRef === undefined ||
+            scalarBuffProcedureRef === undefined
           ) {
             throw new Error("Expected light and Dispel source bindings.");
           }
           const descriptors: readonly OccurrenceDescriptor[] = [
-            { kind: "heldLight", marker: 0, sourceIsOwner: false },
-            { kind: "spellLightEmitter", marker: 0, sourceIsOwner: false },
-            { kind: "findFamiliarSharedSenses", marker: 0 },
+            { kind: "heldLight", marker: 0 },
+            { kind: "spellLightEmitter", marker: 0 },
+            { kind: "targetSpeedDelta", marker: 0 },
             ...generatedDescriptors,
           ];
           const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
             state,
-            occurrences: descriptors.map((descriptor) => {
-              const ownerId =
-                descriptor.kind === "findFamiliarSharedSenses"
-                  ? spellCasterId
-                  : spellTargetId;
-              return {
-                ...occurrenceTemplate({
-                  descriptor: descriptorWithAlternateSource(descriptor),
-                  ownerId,
-                  alternateSourceId:
-                    ownerId === spellCasterId ? spellTargetId : spellCasterId,
-                  sourceProcedureRef:
-                    descriptor.kind === "spellLightEmitter"
-                      ? objectLightProcedureRef
-                      : heldLightProcedureRef,
+            occurrences: descriptors.map((descriptor) =>
+              Match.value(descriptor).pipe(
+                Match.discriminatorsExhaustive("kind")({
+                  heldLight: () => ({
+                    ...occurrenceTemplate({
+                      descriptor,
+                      ownerId: spellCasterId,
+                      alternateSourceId: spellTargetId,
+                      sourceProcedureRef: heldLightProcedureRef,
+                    }),
+                    ownerId: spellCasterId,
+                  }),
+                  spellLightEmitter: () => ({
+                    ...occurrenceTemplate({
+                      descriptor,
+                      ownerId: spellCasterId,
+                      alternateSourceId: spellTargetId,
+                      sourceProcedureRef: objectLightProcedureRef,
+                    }),
+                    ownerId: spellCasterId,
+                  }),
+                  targetSpeedDelta: () => ({
+                    ...occurrenceTemplate({
+                      descriptor,
+                      ownerId: spellTargetId,
+                      alternateSourceId: spellCasterId,
+                      sourceProcedureRef: scalarBuffProcedureRef,
+                    }),
+                    ownerId: spellTargetId,
+                  }),
                 }),
-                ownerId,
-              };
-            }),
+              ),
+            ),
           });
           const encoded = Schema.encodeSync(BattleSnapshotSchema)(
             snapshotBattle(allocated.state),
@@ -814,9 +936,8 @@ describe("durable effect occurrence allocation properties", () => {
           const goblinStoredOccurrence = encoded.storedLightEmitters.find(
             (emitter) =>
               emitter.effectRef ===
-              allocated.occurrences.find(
-                (occurrence) => occurrence.kind === "storedLightEmitter",
-              )?.emitter.effectRef,
+              allocated.occurrences.find(isStoredLightEmitterOccurrence)
+                ?.emitter.effectRef,
           );
           if (
             goblinOccurrence === undefined ||
