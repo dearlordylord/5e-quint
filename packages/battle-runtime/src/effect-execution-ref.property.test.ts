@@ -2,6 +2,7 @@ import fc from "fast-check";
 import { Match, Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import { movementDeltaFeet, movementFeet } from "@dnd/shared/types";
+import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 
 import type {
   BattleActiveEffectOccurrenceTemplate,
@@ -28,6 +29,7 @@ import {
 import {
   battleEffectExecutionRef,
   battleEffectExecutionRefBelongsToScope,
+  battleObjectId,
   type BattleEffectExecutionRef,
   type BattleProcedureExecutionRef,
   type CombatantId,
@@ -178,9 +180,12 @@ function occurrenceTemplate(input: {
             kind: "heldLight",
             sourceCombatantId,
             sourceProcedureRef,
-            brightRadiusFeet: movementFeet(descriptor.marker + 1),
-            dimAdditionalFeet: movementFeet(descriptor.marker + 2),
-            expiresAt: { kind: "untilDispelled" },
+            brightRadiusFeet: movementFeet(20),
+            dimAdditionalFeet: movementFeet(20),
+            expiresAt: {
+              kind: "duration",
+              durationTicks: elapsedTimeTicks(100),
+            },
           },
         }) as const,
       targetSpeedDelta: () =>
@@ -190,8 +195,11 @@ function occurrenceTemplate(input: {
             kind: "speedDelta",
             sourceCombatantId,
             sourceProcedureRef,
-            deltaFeet: movementDeltaFeet(descriptor.marker + 1),
-            expiresAt: { kind: "untilDispelled" },
+            deltaFeet: movementDeltaFeet(10),
+            expiresAt: {
+              kind: "duration",
+              durationTicks: elapsedTimeTicks(600),
+            },
           },
         }) as const,
       spellLightEmitter: () =>
@@ -202,15 +210,21 @@ function occurrenceTemplate(input: {
             sourceCombatantId,
             sourceProcedureRef,
             attachment: {
-              kind: "combatant",
-              combatantId: input.alternateSourceId,
+              kind: "object",
+              objectId: battleObjectId(
+                `effect-occurrence-property-light-object-${descriptor.marker}`,
+              ),
             },
             emission: {
-              kind: "dim",
-              radiusFeet: movementFeet(descriptor.marker + 1),
+              kind: "brightAndDim",
+              brightRadiusFeet: movementFeet(20),
+              dimAdditionalFeet: movementFeet(20),
             },
             opaqueCoverInteraction: { kind: "blocksEmission" },
-            expiresAt: { kind: "untilDispelled" },
+            expiresAt: {
+              kind: "duration",
+              durationTicks: elapsedTimeTicks(600),
+            },
           },
         }) as const,
     }),
@@ -279,9 +293,12 @@ function occurrenceTemplateHasProductionOwnerSourceFacts(input: {
                     sourceCombatantId === input.ownerId &&
                     Match.value(attachment).pipe(
                       Match.discriminatorsExhaustive("kind")({
-                        combatant: ({ combatantId }) =>
-                          combatantId === input.alternateId,
-                        object: () => false,
+                        combatant: () => false,
+                        object: ({ objectId }) =>
+                          objectId ===
+                          battleObjectId(
+                            `effect-occurrence-property-light-object-${input.descriptor.marker}`,
+                          ),
                         dancingLight: () => false,
                       }),
                     ),
@@ -563,9 +580,12 @@ describe("durable effect occurrence allocation properties", () => {
             kind: "heldLight",
             sourceCombatantId: wizardId,
             sourceProcedureRef: heldLightProcedureRef,
-            brightRadiusFeet: movementFeet(5),
-            dimAdditionalFeet: movementFeet(5),
-            expiresAt: { kind: "untilDispelled" },
+            brightRadiusFeet: movementFeet(20),
+            dimAdditionalFeet: movementFeet(20),
+            expiresAt: {
+              kind: "duration",
+              durationTicks: elapsedTimeTicks(100),
+            },
           } as const satisfies BattleActiveEffectOccurrenceTemplate;
           const initial = battleStateWithAllocatedEffectOccurrencesForTest({
             state: baseState,
@@ -600,10 +620,7 @@ describe("durable effect occurrence allocation properties", () => {
                     activeEffects: target.activeEffects.map((effect) =>
                       effect.effectRef === previousRef &&
                       effect.kind === "heldLight"
-                        ? {
-                            ...effect,
-                            brightRadiusFeet: movementFeet(5 + mutationCount),
-                          }
+                        ? { ...effect }
                         : effect,
                     ),
                   }),
@@ -639,9 +656,7 @@ describe("durable effect occurrence allocation properties", () => {
             Match.value(operation).pipe(
               Match.when("mutate", () => {
                 expect(currentEffect.effectRef).toBe(previousRef);
-                expect(Number(currentEffect.brightRadiusFeet)).toBe(
-                  5 + mutationCount,
-                );
+                expect(currentEffect).toMatchObject(template);
               }),
               Match.when("replace", () => {
                 expect(currentEffect.effectRef).not.toBe(previousRef);
@@ -671,46 +686,48 @@ describe("durable effect occurrence allocation properties", () => {
 
   test("exact selection rejects stale refs after replacement and removal", () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 1, max: 120 }),
-        fc.integer({ min: 1, max: 120 }),
-        (initialRadius, mutatedRadius) => {
-          const { state: baseState, fighter } = occurrenceFixture();
-          const heldLightSource = {
-            kind: "heldLight",
-            marker: 0,
-          } as const satisfies OccurrenceDescriptor;
-          const heldLightProcedureRef = lightProcedureRefForDescriptor(
-            fighter,
-            heldLightSource,
-          );
-          if (heldLightProcedureRef === undefined) {
-            throw new Error("Expected held-light exact-selection source.");
-          }
-          const template = {
-            kind: "heldLight",
-            sourceCombatantId: wizardId,
-            sourceProcedureRef: heldLightProcedureRef,
-            brightRadiusFeet: movementFeet(initialRadius),
-            dimAdditionalFeet: movementFeet(5),
-            expiresAt: { kind: "untilDispelled" },
-          } as const satisfies BattleActiveEffectOccurrenceTemplate;
-          const initial = battleStateWithAllocatedEffectOccurrencesForTest({
-            state: baseState,
-            occurrences: [
-              { kind: "activeEffect", ownerId: wizardId, effect: template },
-            ],
-          });
-          const initialOccurrence = initial.occurrences[0];
-          if (
-            initialOccurrence?.kind !== "activeEffect" ||
-            initialOccurrence.effect.kind !== "heldLight"
-          ) {
-            throw new Error("Expected the allocated held-light occurrence.");
-          }
-          const initialEffect = initialOccurrence.effect;
-          const mutated = updateCombatantWithActiveEffectOccurrence(
-            initial.state.combatants,
+      fc.property(fc.integer({ min: 0, max: 8 }), (cloneCount) => {
+        const { state: baseState, fighter } = occurrenceFixture();
+        const heldLightSource = {
+          kind: "heldLight",
+          marker: 0,
+        } as const satisfies OccurrenceDescriptor;
+        const heldLightProcedureRef = lightProcedureRefForDescriptor(
+          fighter,
+          heldLightSource,
+        );
+        if (heldLightProcedureRef === undefined) {
+          throw new Error("Expected held-light exact-selection source.");
+        }
+        const template = {
+          kind: "heldLight",
+          sourceCombatantId: wizardId,
+          sourceProcedureRef: heldLightProcedureRef,
+          brightRadiusFeet: movementFeet(20),
+          dimAdditionalFeet: movementFeet(20),
+          expiresAt: {
+            kind: "duration",
+            durationTicks: elapsedTimeTicks(100),
+          },
+        } as const satisfies BattleActiveEffectOccurrenceTemplate;
+        const initial = battleStateWithAllocatedEffectOccurrencesForTest({
+          state: baseState,
+          occurrences: [
+            { kind: "activeEffect", ownerId: wizardId, effect: template },
+          ],
+        });
+        const initialOccurrence = initial.occurrences[0];
+        if (
+          initialOccurrence?.kind !== "activeEffect" ||
+          initialOccurrence.effect.kind !== "heldLight"
+        ) {
+          throw new Error("Expected the allocated held-light occurrence.");
+        }
+        const initialEffect = initialOccurrence.effect;
+        let mutatedState = initial.state;
+        for (let index = 0; index < cloneCount; index += 1) {
+          const cloned = updateCombatantWithActiveEffectOccurrence(
+            mutatedState.combatants,
             wizardId,
             initialEffect,
             (target) => ({
@@ -718,92 +735,86 @@ describe("durable effect occurrence allocation properties", () => {
               activeEffects: target.activeEffects.map((effect) =>
                 effect.effectRef === initialEffect.effectRef &&
                 effect.kind === "heldLight"
-                  ? {
-                      ...effect,
-                      brightRadiusFeet: movementFeet(mutatedRadius),
-                    }
+                  ? { ...effect }
                   : effect,
               ),
             }),
           );
-          expect(mutated.tag).toBe("updated");
-          const mutatedState = {
-            ...initial.state,
-            combatants: mutated.combatants,
-          };
-          const mutatedEffects =
-            mutatedState.combatants.get(wizardId)?.activeEffects ?? [];
-          expect(
-            spellActiveEffectForExecutionRef(
-              mutatedEffects,
-              initialEffect.effectRef,
-            ),
-          ).toMatchObject({
-            effectRef: initialEffect.effectRef,
-            brightRadiusFeet: movementFeet(mutatedRadius),
-          });
+          expect(cloned.tag).toBe("updated");
+          mutatedState = { ...mutatedState, combatants: cloned.combatants };
+        }
+        const mutatedEffects =
+          mutatedState.combatants.get(wizardId)?.activeEffects ?? [];
+        expect(
+          spellActiveEffectForExecutionRef(
+            mutatedEffects,
+            initialEffect.effectRef,
+          ),
+        ).toMatchObject({
+          effectRef: initialEffect.effectRef,
+          brightRadiusFeet: movementFeet(20),
+        });
 
-          const replacedState = replaceTargetActiveEffect(
-            mutatedState,
-            wizardId,
-            (effect) => effect.effectRef === initialEffect.effectRef,
-            template,
-          );
-          const replacedEffects =
-            replacedState.combatants.get(wizardId)?.activeEffects ?? [];
-          const replacement = replacedEffects.find(
-            (effect) =>
-              effect.kind === "heldLight" &&
-              effect.sourceProcedureRef === template.sourceProcedureRef,
-          );
-          if (replacement?.kind !== "heldLight") {
-            throw new Error("Expected the replacement held-light occurrence.");
-          }
-          expect(replacement.effectRef).not.toBe(initialEffect.effectRef);
-          expect(
-            spellActiveEffectForExecutionRef(
-              replacedEffects,
-              initialEffect.effectRef,
-            ),
-          ).toBeUndefined();
-          expect(
-            spellActiveEffectForExecutionRef(
-              replacedEffects,
-              replacement.effectRef,
-            ),
-          ).toBe(replacement);
+        const replacedState = replaceTargetActiveEffect(
+          mutatedState,
+          wizardId,
+          (effect) => effect.effectRef === initialEffect.effectRef,
+          template,
+        );
+        const replacedEffects =
+          replacedState.combatants.get(wizardId)?.activeEffects ?? [];
+        const replacement = replacedEffects.find(
+          (effect) =>
+            effect.kind === "heldLight" &&
+            effect.sourceProcedureRef === template.sourceProcedureRef,
+        );
+        if (replacement?.kind !== "heldLight") {
+          throw new Error("Expected the replacement held-light occurrence.");
+        }
+        expect(replacement.effectRef).not.toBe(initialEffect.effectRef);
+        expect(
+          spellActiveEffectForExecutionRef(
+            replacedEffects,
+            initialEffect.effectRef,
+          ),
+        ).toBeUndefined();
+        expect(
+          spellActiveEffectForExecutionRef(
+            replacedEffects,
+            replacement.effectRef,
+          ),
+        ).toBe(replacement);
 
-          const removed = updateCombatantWithActiveEffectOccurrence(
-            replacedState.combatants,
+        const removed = updateCombatantWithActiveEffectOccurrence(
+          replacedState.combatants,
+          wizardId,
+          replacement,
+          (target) => ({
+            ...target,
+            activeEffects: target.activeEffects.filter(
+              (effect) => effect.effectRef !== replacement.effectRef,
+            ),
+          }),
+        );
+        expect(removed.tag).toBe("updated");
+        const removedEffects =
+          removed.combatants.get(wizardId)?.activeEffects ?? [];
+        expect(removedEffects).toEqual([]);
+        expect(
+          spellActiveEffectForExecutionRef(
+            removedEffects,
+            replacement.effectRef,
+          ),
+        ).toBeUndefined();
+        expect(
+          updateCombatantWithActiveEffectOccurrence(
+            removed.combatants,
             wizardId,
             replacement,
-            (target) => ({
-              ...target,
-              activeEffects: target.activeEffects.filter(
-                (effect) => effect.effectRef !== replacement.effectRef,
-              ),
-            }),
-          );
-          expect(removed.tag).toBe("updated");
-          const removedEffects =
-            removed.combatants.get(wizardId)?.activeEffects ?? [];
-          expect(removedEffects).toEqual([]);
-          expect(
-            spellActiveEffectForExecutionRef(
-              removedEffects,
-              replacement.effectRef,
-            ),
-          ).toBeUndefined();
-          expect(
-            updateCombatantWithActiveEffectOccurrence(
-              removed.combatants,
-              wizardId,
-              replacement,
-              (target) => target,
-            ).tag,
-          ).toBe("unchanged");
-        },
-      ),
+            (target) => target,
+          ).tag,
+        ).toBe("unchanged");
+      }),
       PROPERTY_OPTIONS,
     );
   });
