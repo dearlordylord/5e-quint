@@ -35,7 +35,7 @@ module battleRuntimeAreaTriggerTiming {
         entryResolvedThisTurn: bool,
         startTurnResolvedThisTurn: bool,
       })
-    | MoonbeamOnceAcrossQualifiedTriggersProfile({ anyResolvedThisTurn: bool })
+    | OnceAcrossQualifiedAreaTriggersProfile({ anyResolvedThisTurn: bool })
 
   pure def webRestraintFirstEntryAndStartTurnProfile(
     entryResolvedThisTurn: bool,
@@ -55,10 +55,10 @@ module battleRuntimeAreaTriggerTiming {
       startTurnResolvedThisTurn: startTurnResolvedThisTurn,
     })
 
-  pure def moonbeamOnceAcrossQualifiedTriggersProfile(
+  pure def onceAcrossQualifiedAreaTriggersProfile(
     anyResolvedThisTurn: bool,
   ): AreaEffectTriggerProfile =
-    MoonbeamOnceAcrossQualifiedTriggersProfile({ anyResolvedThisTurn: anyResolvedThisTurn })
+    OnceAcrossQualifiedAreaTriggersProfile({ anyResolvedThisTurn: anyResolvedThisTurn })
 
   pure def areaEffectTriggerProfileIncludesTiming(
     profile: AreaEffectTriggerProfile,
@@ -73,7 +73,7 @@ module battleRuntimeAreaTriggerTiming {
           timing == AreaMovesIntoSpace or timing == CreatureEndsTurnNearArea
       | FirstEntryAndStartTurnProfile(_) =>
           timing == CreatureEntersArea or timing == CreatureStartsTurnInArea
-      | MoonbeamOnceAcrossQualifiedTriggersProfile(_) =>
+      | OnceAcrossQualifiedAreaTriggersProfile(_) =>
           timing == AreaAppearsInSpace or
           timing == AreaMovesIntoSpace or
           timing == CreatureEntersArea or
@@ -94,7 +94,7 @@ module battleRuntimeAreaTriggerTiming {
             data.startTurnResolvedThisTurn
           else
             false
-      | MoonbeamOnceAcrossQualifiedTriggersProfile(data) => data.anyResolvedThisTurn
+      | OnceAcrossQualifiedAreaTriggersProfile(data) => data.anyResolvedThisTurn
     }
 
   pure def areaEffectTriggerCanResolve(
