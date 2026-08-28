@@ -25517,11 +25517,11 @@
     "closedNonFluffSpans": 22730,
     "requirements": 74,
     "executableRequirements": 24,
-    "qntModeled": 13,
-    "qntProved": 13,
+    "qntModeled": 15,
+    "qntProved": 15,
     "runtimeMapped": 15,
     "runtimeTested": 7,
-    "runtimeParityCovered": 9,
+    "runtimeParityCovered": 11,
     "outOfScopeSpans": 1731,
     "ambiguousSpans": 0,
     "rawReviewedSections": 2920
@@ -51942,6 +51942,24 @@
       "requirementIds": [
         "RAW-STAT-BLOCK-MULTIATTACK-001"
       ]
+    },
+    {
+      "evidenceId": "SB-ATTACK-RESOLUTION-INDUCTIVE",
+      "coverageMetric": "qnt-proof",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-attack-resolution-inductive.qnt",
+      "requirementIds": [
+        "RAW-STAT-BLOCK-ATTACK-PROCEDURE-001",
+        "RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001"
+      ]
+    },
+    {
+      "evidenceId": "SB-ATTACK-RESOLUTION-MBT",
+      "coverageMetric": "runtime-parity",
+      "ownerPath": "packages/battle-runtime/src/stat-block-attack-resolution.mbt.test.ts",
+      "requirementIds": [
+        "RAW-STAT-BLOCK-ATTACK-PROCEDURE-001",
+        "RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001"
+      ]
     }
   ],
   "trackerClaims": [
@@ -52006,14 +52024,6 @@
       "coverageMetric": "missing-runtime-owner",
       "requirementIds": [
         "RAW-STAT-BLOCK-STANDARD-ACTION-OPTION-001"
-      ]
-    },
-    {
-      "trackerId": "GH-427",
-      "coverageMetric": "missing-qnt-owner",
-      "requirementIds": [
-        "RAW-STAT-BLOCK-ATTACK-PROCEDURE-001",
-        "RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001"
       ]
     }
   ],
@@ -81097,17 +81107,17 @@
         "SRD521-MONSTERS-OVERVIEW-0209-005",
         "SRD521-MONSTERS-OVERVIEW-0209-006"
       ],
-      "qntModeled": false,
-      "qntProved": false,
+      "qntModeled": true,
+      "qntProved": true,
       "runtimeMapped": true,
       "runtimeTested": true,
-      "runtimeParityCovered": false,
+      "runtimeParityCovered": true,
       "evidenceClaims": [
-        "SB-ACTIONS-RUNTIME-TEST"
+        "SB-ACTIONS-RUNTIME-TEST",
+        "SB-ATTACK-RESOLUTION-INDUCTIVE",
+        "SB-ATTACK-RESOLUTION-MBT"
       ],
-      "trackerClaims": [
-        "GH-427"
-      ]
+      "trackerClaims": []
     },
     {
       "id": "RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001",
@@ -81119,17 +81129,17 @@
         "SRD521-MONSTERS-OVERVIEW-0225-003",
         "SRD521-MONSTERS-OVERVIEW-0225-004"
       ],
-      "qntModeled": false,
-      "qntProved": false,
+      "qntModeled": true,
+      "qntProved": true,
       "runtimeMapped": true,
       "runtimeTested": true,
-      "runtimeParityCovered": false,
+      "runtimeParityCovered": true,
       "evidenceClaims": [
-        "SB-ACTIONS-RUNTIME-TEST"
+        "SB-ACTIONS-RUNTIME-TEST",
+        "SB-ATTACK-RESOLUTION-INDUCTIVE",
+        "SB-ATTACK-RESOLUTION-MBT"
       ],
-      "trackerClaims": [
-        "GH-427"
-      ]
+      "trackerClaims": []
     },
     {
       "id": "RAW-STAT-BLOCK-MULTIATTACK-001",

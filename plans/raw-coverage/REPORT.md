@@ -209,11 +209,11 @@
 - SRD span classification: 23966 / 23966 = 100.00%
 - Non-fluff span closure: 22730 / 22730 = 100.00%
 - Executable requirements: 24
-- QNT modeled: 13 / 24 = 54.17%
-- QNT proved: 13 / 24 = 54.17%
+- QNT modeled: 15 / 24 = 62.50%
+- QNT proved: 15 / 24 = 62.50%
 - Runtime mapped: 15 / 24 = 62.50%
 - Runtime tested: 7 / 24 = 29.17%
-- Runtime parity covered: 9 / 24 = 37.50%
+- Runtime parity covered: 11 / 24 = 45.83%
 - Out of promoted scope spans: 1731
 - Ambiguous spans: 0
 - RAW-reviewed sections: 2920 / 2920 = 100.00%
@@ -3162,6 +3162,8 @@
 | SB-RESOURCE-LIFECYCLE-INDUCTIVE | qnt-proof | packages/shared-algebras/proofs/rule-core/stat-block-resource-lifecycle-inductive.qnt | RAW-STAT-BLOCK-LIMITED-USAGE-001 |
 | SB-ACTIONS-RUNTIME-TEST | runtime-test | packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts | RAW-STAT-BLOCK-ACTION-LIFECYCLE-001, RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001, RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001, RAW-STAT-BLOCK-ATTACK-PROCEDURE-001, RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001, RAW-STAT-BLOCK-MULTIATTACK-001, RAW-STAT-BLOCK-LIMITED-USAGE-001 |
 | SB-MULTIATTACK-MBT | runtime-parity | packages/battle-runtime/src/rule-core-stat-block-multiattack.mbt.test.ts | RAW-STAT-BLOCK-MULTIATTACK-001 |
+| SB-ATTACK-RESOLUTION-INDUCTIVE | qnt-proof | packages/shared-algebras/proofs/rule-core/stat-block-attack-resolution-inductive.qnt | RAW-STAT-BLOCK-ATTACK-PROCEDURE-001, RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001 |
+| SB-ATTACK-RESOLUTION-MBT | runtime-parity | packages/battle-runtime/src/stat-block-attack-resolution.mbt.test.ts | RAW-STAT-BLOCK-ATTACK-PROCEDURE-001, RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001 |
 
 ## Tracker Follow-up Claims
 
@@ -3178,7 +3180,6 @@ GitHub owns tracker status. These rows only join checked coverage gaps to stable
 | GH-424 | missing-runtime-owner | RAW-STAT-BLOCK-SPELL-INVOCATION-RESTRICTED-001 |
 | GH-425 | missing-runtime-owner | RAW-STAT-BLOCK-ATTACK-ADDITIONAL-EFFECT-001 |
 | GH-426 | missing-runtime-owner | RAW-STAT-BLOCK-STANDARD-ACTION-OPTION-001 |
-| GH-427 | missing-qnt-owner | RAW-STAT-BLOCK-ATTACK-PROCEDURE-001, RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001 |
 
 ## Requirement Rows
 
@@ -3245,8 +3246,8 @@ GitHub owns tracker status. These rows only join checked coverage gaps to stable
 | RAW-STAT-BLOCK-ACTION-LIFECYCLE-001 | executable | yes | yes | yes | yes | no | SB-ACTION-LIFECYCLE-INDUCTIVE, SB-ACTIONS-RUNTIME-TEST |  |
 | RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001 | executable | yes | yes | yes | yes | no | SB-BONUS-ACTION-LIFECYCLE-INDUCTIVE, SB-ACTIONS-RUNTIME-TEST |  |
 | RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001 | executable | yes | yes | yes | yes | no | SB-LEGENDARY-ACTION-LIFECYCLE-INDUCTIVE, SB-ACTIONS-RUNTIME-TEST |  |
-| RAW-STAT-BLOCK-ATTACK-PROCEDURE-001 | executable | no | no | yes | yes | no | SB-ACTIONS-RUNTIME-TEST | GH-427 |
-| RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001 | executable | no | no | yes | yes | no | SB-ACTIONS-RUNTIME-TEST | GH-427 |
+| RAW-STAT-BLOCK-ATTACK-PROCEDURE-001 | executable | yes | yes | yes | yes | yes | SB-ACTIONS-RUNTIME-TEST, SB-ATTACK-RESOLUTION-INDUCTIVE, SB-ATTACK-RESOLUTION-MBT |  |
+| RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001 | executable | yes | yes | yes | yes | yes | SB-ACTIONS-RUNTIME-TEST, SB-ATTACK-RESOLUTION-INDUCTIVE, SB-ATTACK-RESOLUTION-MBT |  |
 | RAW-STAT-BLOCK-MULTIATTACK-001 | executable | yes | yes | yes | yes | yes | SB-MULTIATTACK-INDUCTIVE, SB-ACTIONS-RUNTIME-TEST, SB-MULTIATTACK-MBT |  |
 | RAW-STAT-BLOCK-LIMITED-USAGE-001 | executable | yes | yes | yes | yes | no | SB-RESOURCE-LIFECYCLE-INDUCTIVE, SB-ACTIONS-RUNTIME-TEST |  |
 | RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001 | executable | no | no | no | no | no |  | GH-418 |
