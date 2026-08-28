@@ -26,6 +26,27 @@ module battleRuntimeCloudkillAreaHazardMbt {
     | CloudkillMbtConcentrationEnded
     | CloudkillMbtStrongWindEnded
 
+  // This state-carried selector is the MBT replay protocol. Quint records the
+  // outer `step` action in ITF metadata, so the selected literal action must be
+  // carried explicitly for the TypeScript driver to replay the same witness.
+  type CloudkillMbtReplayAction =
+    | CloudkillMbtInitAction
+    | CloudkillMbtSixthLevelCastAction
+    | CloudkillMbtAppearanceHalfDamageAction
+    | CloudkillMbtAppearanceFailedSaveD8OneAction
+    | CloudkillMbtAppearanceFailedSaveD8TwoAction
+    | CloudkillMbtAppearanceFailedSaveD8ThreeAction
+    | CloudkillMbtAppearanceFailedSaveD8FourAction
+    | CloudkillMbtAppearanceFailedSaveD8FiveAction
+    | CloudkillMbtAppearanceFailedSaveD8SixAction
+    | CloudkillMbtAppearanceFailedSaveD8SevenAction
+    | CloudkillMbtAppearanceFailedSaveD8EightAction
+    | CloudkillMbtMovementNextTargetSaveCheckpointAction
+    | CloudkillMbtOrderedMovementClosureAction
+    | CloudkillMbtSourceConcentrationCheckpointAction
+    | CloudkillMbtSourceConcentrationCancellationAction
+    | CloudkillMbtStrongWindCleanupAction
+
   type CloudkillMbtState = {
     qCasterTurn: bool,
     qActionAvailable: bool,
@@ -52,6 +73,7 @@ module battleRuntimeCloudkillAreaHazardMbt {
   }
 
   var qState: CloudkillMbtState
+  var qReplayAction: CloudkillMbtReplayAction
 
   pure val initialProjection: CloudkillMbtState = {
     qCasterTurn: true,
@@ -78,10 +100,14 @@ module battleRuntimeCloudkillAreaHazardMbt {
     qOutcome: CloudkillMbtInit,
   }
 
-  action init = all { qState' = initialProjection }
+  action init = all {
+    qState' = initialProjection,
+    qReplayAction' = CloudkillMbtInitAction,
+  }
 
   action doWitnessSixthLevelCast = all {
     qState.qOutcome == CloudkillMbtInit,
+    qReplayAction' = CloudkillMbtSixthLevelCastAction,
     qState' = {
       ...initialProjection,
       qActionAvailable: false,
@@ -99,6 +125,7 @@ module battleRuntimeCloudkillAreaHazardMbt {
 
   action doWitnessAppearanceHalfDamage = all {
     qState.qOutcome == CloudkillMbtInit,
+    qReplayAction' = CloudkillMbtAppearanceHalfDamageAction,
     qState' = {
       ...initialProjection,
       qActionAvailable: false,
@@ -134,46 +161,58 @@ module battleRuntimeCloudkillAreaHazardMbt {
 
   action doWitnessAppearanceFailedSaveD8One = all {
     qState.qOutcome == CloudkillMbtInit,
+    qReplayAction' = CloudkillMbtAppearanceFailedSaveD8OneAction,
     qState' = appearanceFailedSaveProjection(35),
   }
 
   action doWitnessAppearanceFailedSaveD8Two = all {
     qState.qOutcome == CloudkillMbtInit,
+    qReplayAction' = CloudkillMbtAppearanceFailedSaveD8TwoAction,
     qState' = appearanceFailedSaveProjection(30),
   }
 
   action doWitnessAppearanceFailedSaveD8Three = all {
     qState.qOutcome == CloudkillMbtInit,
+    qReplayAction' = CloudkillMbtAppearanceFailedSaveD8ThreeAction,
     qState' = appearanceFailedSaveProjection(25),
   }
 
   action doWitnessAppearanceFailedSaveD8Four = all {
     qState.qOutcome == CloudkillMbtInit,
+    qReplayAction' = CloudkillMbtAppearanceFailedSaveD8FourAction,
     qState' = appearanceFailedSaveProjection(20),
   }
 
   action doWitnessAppearanceFailedSaveD8Five = all {
     qState.qOutcome == CloudkillMbtInit,
+    qReplayAction' = CloudkillMbtAppearanceFailedSaveD8FiveAction,
     qState' = appearanceFailedSaveProjection(15),
   }
 
   action doWitnessAppearanceFailedSaveD8Six = all {
     qState.qOutcome == CloudkillMbtInit,
+    qReplayAction' = CloudkillMbtAppearanceFailedSaveD8SixAction,
     qState' = appearanceFailedSaveProjection(10),
   }
 
   action doWitnessAppearanceFailedSaveD8Seven = all {
     qState.qOutcome == CloudkillMbtInit,
+    qReplayAction' = CloudkillMbtAppearanceFailedSaveD8SevenAction,
     qState' = appearanceFailedSaveProjection(5),
   }
 
   action doWitnessAppearanceFailedSaveD8Eight = all {
     qState.qOutcome == CloudkillMbtInit,
+    qReplayAction' = CloudkillMbtAppearanceFailedSaveD8EightAction,
     qState' = appearanceFailedSaveProjection(0),
   }
 
-  action doWitnessMovementCheckpoint = all {
+  // Secondary has resolved inside the still-open movement transaction. Primary
+  // is the next save frontier, while Secondary's damage and ledger entry remain
+  // staged and therefore absent from the public projection until closure.
+  action doWitnessMovementNextTargetSaveCheckpoint = all {
     qState.qOutcome == CloudkillMbtInit,
+    qReplayAction' = CloudkillMbtMovementNextTargetSaveCheckpointAction,
     qState' = {
       ...initialProjection,
       qActionAvailable: true,
@@ -194,6 +233,7 @@ module battleRuntimeCloudkillAreaHazardMbt {
 
   action doWitnessOrderedMovementClosure = all {
     qState.qOutcome == CloudkillMbtInit,
+    qReplayAction' = CloudkillMbtOrderedMovementClosureAction,
     qState' = {
       ...initialProjection,
       qActionAvailable: true,
@@ -215,6 +255,7 @@ module battleRuntimeCloudkillAreaHazardMbt {
 
   action doWitnessSourceConcentrationCheckpoint = all {
     qState.qOutcome == CloudkillMbtInit,
+    qReplayAction' = CloudkillMbtSourceConcentrationCheckpointAction,
     qState' = {
       ...initialProjection,
       qActionAvailable: true,
@@ -235,6 +276,7 @@ module battleRuntimeCloudkillAreaHazardMbt {
 
   action doWitnessSourceConcentrationCancellation = all {
     qState.qOutcome == CloudkillMbtInit,
+    qReplayAction' = CloudkillMbtSourceConcentrationCancellationAction,
     qState' = {
       ...initialProjection,
       qActionAvailable: true,
@@ -247,6 +289,7 @@ module battleRuntimeCloudkillAreaHazardMbt {
 
   action doWitnessStrongWindCleanup = all {
     qState.qOutcome == CloudkillMbtInit,
+    qReplayAction' = CloudkillMbtStrongWindCleanupAction,
     qState' = {
       ...initialProjection,
       qActionAvailable: false,
@@ -266,7 +309,7 @@ module battleRuntimeCloudkillAreaHazardMbt {
     doWitnessAppearanceFailedSaveD8Six,
     doWitnessAppearanceFailedSaveD8Seven,
     doWitnessAppearanceFailedSaveD8Eight,
-    doWitnessMovementCheckpoint,
+    doWitnessMovementNextTargetSaveCheckpoint,
     doWitnessOrderedMovementClosure,
     doWitnessSourceConcentrationCheckpoint,
     doWitnessSourceConcentrationCancellation,

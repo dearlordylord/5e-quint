@@ -145,36 +145,35 @@ type CloudkillEffect = Extract<
 const secondaryTargetId = combatantId("cloudkill-mbt-secondary-target");
 
 const driverSchema = {
-  init: {},
-  doWitnessSixthLevelCast: {},
-  doWitnessAppearanceHalfDamage: {},
-  doWitnessAppearanceFailedSaveD8One: {},
-  doWitnessAppearanceFailedSaveD8Two: {},
-  doWitnessAppearanceFailedSaveD8Three: {},
-  doWitnessAppearanceFailedSaveD8Four: {},
-  doWitnessAppearanceFailedSaveD8Five: {},
-  doWitnessAppearanceFailedSaveD8Six: {},
-  doWitnessAppearanceFailedSaveD8Seven: {},
-  doWitnessAppearanceFailedSaveD8Eight: {},
-  doWitnessMovementCheckpoint: {},
-  doWitnessOrderedMovementClosure: {},
-  doWitnessSourceConcentrationCheckpoint: {},
-  doWitnessSourceConcentrationCancellation: {},
-  doWitnessStrongWindCleanup: {},
-  step: {},
+  CloudkillMbtInitAction: {},
+  CloudkillMbtSixthLevelCastAction: {},
+  CloudkillMbtAppearanceHalfDamageAction: {},
+  CloudkillMbtAppearanceFailedSaveD8OneAction: {},
+  CloudkillMbtAppearanceFailedSaveD8TwoAction: {},
+  CloudkillMbtAppearanceFailedSaveD8ThreeAction: {},
+  CloudkillMbtAppearanceFailedSaveD8FourAction: {},
+  CloudkillMbtAppearanceFailedSaveD8FiveAction: {},
+  CloudkillMbtAppearanceFailedSaveD8SixAction: {},
+  CloudkillMbtAppearanceFailedSaveD8SevenAction: {},
+  CloudkillMbtAppearanceFailedSaveD8EightAction: {},
+  CloudkillMbtMovementNextTargetSaveCheckpointAction: {},
+  CloudkillMbtOrderedMovementClosureAction: {},
+  CloudkillMbtSourceConcentrationCheckpointAction: {},
+  CloudkillMbtSourceConcentrationCancellationAction: {},
+  CloudkillMbtStrongWindCleanupAction: {},
 } as const;
 
 function createCloudkillMbtDriver() {
   return defineDriver(driverSchema, () => {
     let state = initialRuntimeState(5);
     return {
-      init: () => {
+      CloudkillMbtInitAction: () => {
         state = initialRuntimeState(5);
       },
-      doWitnessSixthLevelCast: () => {
+      CloudkillMbtSixthLevelCastAction: () => {
         state = castCloudkill(initialRuntimeState(6));
       },
-      doWitnessAppearanceHalfDamage: () => {
+      CloudkillMbtAppearanceHalfDamageAction: () => {
         state = resolvePendingDamage(
           resolvePendingSave(
             discoverAppearanceSave(castCloudkill(initialRuntimeState(5))),
@@ -185,37 +184,37 @@ function createCloudkillMbtDriver() {
           "appearanceResolved",
         );
       },
-      doWitnessAppearanceFailedSaveD8One: () => {
+      CloudkillMbtAppearanceFailedSaveD8OneAction: () => {
         state = cloudkillAppearanceFailedSave(1);
       },
-      doWitnessAppearanceFailedSaveD8Two: () => {
+      CloudkillMbtAppearanceFailedSaveD8TwoAction: () => {
         state = cloudkillAppearanceFailedSave(2);
       },
-      doWitnessAppearanceFailedSaveD8Three: () => {
+      CloudkillMbtAppearanceFailedSaveD8ThreeAction: () => {
         state = cloudkillAppearanceFailedSave(3);
       },
-      doWitnessAppearanceFailedSaveD8Four: () => {
+      CloudkillMbtAppearanceFailedSaveD8FourAction: () => {
         state = cloudkillAppearanceFailedSave(4);
       },
-      doWitnessAppearanceFailedSaveD8Five: () => {
+      CloudkillMbtAppearanceFailedSaveD8FiveAction: () => {
         state = cloudkillAppearanceFailedSave(5);
       },
-      doWitnessAppearanceFailedSaveD8Six: () => {
+      CloudkillMbtAppearanceFailedSaveD8SixAction: () => {
         state = cloudkillAppearanceFailedSave(6);
       },
-      doWitnessAppearanceFailedSaveD8Seven: () => {
+      CloudkillMbtAppearanceFailedSaveD8SevenAction: () => {
         state = cloudkillAppearanceFailedSave(7);
       },
-      doWitnessAppearanceFailedSaveD8Eight: () => {
+      CloudkillMbtAppearanceFailedSaveD8EightAction: () => {
         state = cloudkillAppearanceFailedSave(8);
       },
-      doWitnessMovementCheckpoint: () => {
-        state = cloudkillOrderedMovementCheckpoint();
+      CloudkillMbtMovementNextTargetSaveCheckpointAction: () => {
+        state = cloudkillOrderedMovementNextTargetSaveCheckpoint();
       },
-      doWitnessOrderedMovementClosure: () => {
+      CloudkillMbtOrderedMovementClosureAction: () => {
         state = resolvePendingDamage(
           resolvePendingSave(
-            cloudkillOrderedMovementCheckpoint(),
+            cloudkillOrderedMovementNextTargetSaveCheckpoint(),
             true,
             "movementDamage",
           ),
@@ -223,20 +222,20 @@ function createCloudkillMbtDriver() {
           "movementResolved",
         );
       },
-      doWitnessSourceConcentrationCheckpoint: () => {
+      CloudkillMbtSourceConcentrationCheckpointAction: () => {
         state = cloudkillSourceConcentrationCheckpoint();
       },
-      doWitnessSourceConcentrationCancellation: () => {
+      CloudkillMbtSourceConcentrationCancellationAction: () => {
         state = resolveSourceConcentrationSave(
           cloudkillSourceConcentrationCheckpoint(),
           false,
         );
       },
-      doWitnessStrongWindCleanup: () => {
+      CloudkillMbtStrongWindCleanupAction: () => {
         state = disperseWithStrongWind(castCloudkill(initialRuntimeState(5)));
       },
-      step: () => {},
       getState: () => cloudkillMbtProjection(state),
+      config: () => ({ nondetPath: ["qReplayAction"] }),
     };
   });
 }
@@ -298,6 +297,44 @@ describe("Cloudkill area-hazard MBT parity", () => {
     });
   });
 
+  it(
+    "connects the staged next-target save checkpoint to its literal witness",
+    async () => {
+      expect(
+        cloudkillMbtProjection(
+          cloudkillOrderedMovementNextTargetSaveCheckpoint(),
+        ),
+      ).toMatchObject({
+        casterTurn: true,
+        durationTicks: 100,
+        lastMovementDistanceFeet: 10,
+        pending: "savingThrow",
+        pendingTarget: "primary",
+        remainingTarget: "none",
+        primarySavedThisTurn: false,
+        secondarySavedThisTurn: false,
+        primaryHitPoints: 40,
+        secondaryHitPoints: 40,
+        outcome: "movementSave",
+      });
+
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-cloudkill-area-hazard.mbt.qnt",
+        ),
+        init: "init",
+        step: "doWitnessMovementNextTargetSaveCheckpoint",
+        driver: createCloudkillMbtDriver(),
+        backend: "typescript",
+        nTraces: 1,
+        maxSteps: focusedMbtMaxSteps(2),
+        stateCheck: cloudkillMbtStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
   it("cancels remaining movement targets when source damage breaks Concentration", () => {
     let state = castCloudkill(initialRuntimeState(5));
     state = endCasterTurn(state);
@@ -354,7 +391,7 @@ describe("Cloudkill area-hazard MBT parity", () => {
         driver: createCloudkillMbtDriver(),
         backend: "typescript",
         nTraces: mbtTraceCount(),
-        maxSteps: focusedMbtMaxSteps(1),
+        maxSteps: focusedMbtMaxSteps(2),
         stateCheck: cloudkillMbtStateCheck,
       });
     },
@@ -488,7 +525,7 @@ function cloudkillAppearanceFailedSave(
   );
 }
 
-function cloudkillOrderedMovementCheckpoint(): CloudkillMbtRuntimeState {
+function cloudkillOrderedMovementNextTargetSaveCheckpoint(): CloudkillMbtRuntimeState {
   const movement = beginSourceTurnMovement(
     endCasterTurn(castCloudkill(initialRuntimeState(5))),
     [secondaryTargetId, spellTargetId],
@@ -1093,8 +1130,8 @@ function quintVariantValue<Value extends string>(
 }
 
 function compareCloudkillMbtStates(
-  runtime: CloudkillMbtProjection,
   quint: CloudkillMbtProjection,
+  runtime: CloudkillMbtProjection,
 ): boolean {
   try {
     expect(runtime).toEqual(quint);
