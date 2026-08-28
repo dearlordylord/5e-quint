@@ -37,6 +37,7 @@ import {
 } from "./oracle-publication.ts";
 import {
   OracleBatchResponseSchema,
+  OracleDefectResponseSchema,
   OracleHttpReadinessSchema,
   OracleIdentityResponseSchema,
   type OracleBatchResponse,
@@ -628,11 +629,13 @@ describe("Opaque Oracle source-free distribution", () => {
         throw new Error("The duplicate-key frame was not rejected.");
       }
       expect(duplicateResponse.issues.length).toBeGreaterThan(0);
-      const invalidUtf8Response = malformedResponses[4];
+      const invalidUtf8Response = malformedResponses[5];
       if (invalidUtf8Response?.tag !== "decodeRejected") {
         throw new Error("The invalid UTF-8 frame was not rejected.");
       }
-      expect(invalidUtf8Response.issues.length).toBeGreaterThan(1);
+      expect(invalidUtf8Response.issues).toEqual([
+        { path: "", code: "invalidJson" },
+      ]);
       const finalResponse = malformedResponses[6];
       if (finalResponse === undefined) {
         throw new Error("The final Oracle stream response was missing.");
@@ -946,6 +949,414 @@ describe("Opaque Oracle source-free distribution", () => {
       expect(afterDefect.body.toString("utf8")).toContain(
         `"distributionId":"${defectBuild.distributionId}"`,
       );
+      await waitForOracleExit(defectProcess, "SIGTERM");
+      running = undefined;
+    } finally {
+      if (running !== undefined) {
+        if (
+          running.child.exitCode === null &&
+          running.child.signalCode === null
+        ) {
+          running.child.kill("SIGKILL");
+        }
+        running.lines.close();
+      }
+      rmSync(temporaryRoot, { recursive: true, force: true });
+    }
+  }, 300_000);
+
+  test("proves packaged stream and HTTP parity for one persistent scenario table", async () => {
+    const temporaryRoot = mkdtempSync(
+      join(tmpdir(), "opaque-oracle-parity-distribution-"),
+    );
+    let running: OracleServeProcess | undefined;
+    try {
+      const ordinaryBuild = buildOracleDistribution({
+        destination: join(temporaryRoot, "ordinary-distribution"),
+      });
+      const cleanWorkingDirectory = mkdtempSync(
+        join(temporaryRoot, "clean-cwd-"),
+      );
+      const preload = writeNetworkDenialPreload(temporaryRoot);
+      const ordinaryIdentity = decodeJson(
+        OracleIdentityResponseSchema,
+        readFileSync(
+          join(
+            ordinaryBuild.destination,
+            ORACLE_DISTRIBUTION_FILE_NAMES.identity,
+          ),
+          "utf8",
+        ),
+      );
+      expect(ordinaryIdentity.distributionId).toBe(
+        ordinaryBuild.distributionId,
+      );
+
+      const firstCase = corpus.batch.cases[0];
+      const secondCase = corpus.batch.cases[1];
+      const priorCase = corpus.batch.cases[10];
+      if (
+        firstCase === undefined ||
+        secondCase === undefined ||
+        priorCase === undefined
+      ) {
+        throw new Error("The Oracle corpus is missing parity Cases.");
+      }
+
+      const jsonBody = (input: object): Buffer =>
+        Buffer.from(JSON.stringify(input), "utf8");
+      const wholeBatchBody = jsonBody({ cases: corpus.batch.cases });
+      const firstSingletonBody = jsonBody({ cases: [firstCase] });
+      const defectBatchBody = jsonBody({
+        cases: [firstCase, secondCase],
+      });
+      const lineFeed = Buffer.from("\n");
+
+      type ParityScenario = {
+        readonly name: string;
+        readonly body: Buffer;
+        readonly expectedTag: "evaluated" | "decodeRejected";
+      };
+      const evaluatedScenario = (
+        name: string,
+        body: Buffer,
+      ): ParityScenario => ({
+        name,
+        body,
+        expectedTag: "evaluated",
+      });
+      const rejectedScenario = (
+        name: string,
+        body: Buffer,
+      ): ParityScenario => ({
+        name,
+        body,
+        expectedTag: "decodeRejected",
+      });
+
+      const wholeBatchBeforePrior = evaluatedScenario(
+        "whole corpus before prior message",
+        wholeBatchBody,
+      );
+      const priorMessage = evaluatedScenario(
+        "prior message",
+        jsonBody({ cases: [priorCase] }),
+      );
+      const wholeBatchAfterPrior = evaluatedScenario(
+        "whole corpus after prior message",
+        wholeBatchBody,
+      );
+      const singletonScenarios = corpus.batch.cases.map((caseValue, index) =>
+        evaluatedScenario(
+          `singleton Case ${index}`,
+          jsonBody({ cases: [caseValue] }),
+        ),
+      );
+      const malformedScenarios: readonly ParityScenario[] = [
+        rejectedScenario("empty input", Buffer.alloc(0)),
+        rejectedScenario("blank input", Buffer.from("   ", "utf8")),
+        rejectedScenario("invalid JSON", Buffer.from("not-json", "utf8")),
+        rejectedScenario(
+          "duplicate object member",
+          Buffer.from('{"cases":[],"cases":[]}', "utf8"),
+        ),
+        rejectedScenario("empty batch", Buffer.from('{"cases":[]}', "utf8")),
+        rejectedScenario(
+          "structurally invalid Case",
+          Buffer.from('{"cases":[{}]}', "utf8"),
+        ),
+        rejectedScenario(
+          "valid and multiple structurally invalid Cases",
+          jsonBody({ cases: [firstCase, {}, { creation: {} }] }),
+        ),
+        rejectedScenario("fatal invalid UTF-8", Buffer.from([0xc3, 0x28])),
+      ];
+      const scenarios: readonly ParityScenario[] = [
+        wholeBatchBeforePrior,
+        priorMessage,
+        wholeBatchAfterPrior,
+        ...singletonScenarios,
+        ...malformedScenarios,
+      ];
+
+      const cliResult = runExecutable(
+        ordinaryBuild.executablePath,
+        ["stream"],
+        cleanWorkingDirectory,
+        preload,
+        Buffer.concat(scenarios.flatMap(({ body }) => [body, lineFeed])),
+      );
+      assertSuccessfulProcess(cliResult);
+      expect(cliResult.stderr.toString("utf8")).toBe("");
+      const cliResponses = parseResponseLines(cliResult);
+      expect(cliResponses).toHaveLength(scenarios.length);
+
+      const cliByScenario = new Map<ParityScenario, OracleBatchResponse>();
+      for (const [index, scenario] of scenarios.entries()) {
+        const response = cliResponses[index];
+        if (response === undefined) {
+          throw new Error(`CLI response missing for ${scenario.name}.`);
+        }
+        cliByScenario.set(scenario, response);
+      }
+
+      const ordinaryIdentityProcess = runExecutable(
+        ordinaryBuild.executablePath,
+        ["identity"],
+        cleanWorkingDirectory,
+        preload,
+      );
+      assertSuccessfulProcess(ordinaryIdentityProcess);
+      expect(
+        decodeJson(
+          OracleIdentityResponseSchema,
+          ordinaryIdentityProcess.stdout.toString("utf8"),
+        ),
+      ).toEqual(ordinaryIdentity);
+
+      const runningProcess = await launchOracleServe(
+        ordinaryBuild.executablePath,
+        cleanWorkingDirectory,
+        preload,
+      );
+      running = runningProcess;
+      expect(runningProcess.readiness.host).toBe("127.0.0.1");
+      expect(runningProcess.readiness.port).toBeGreaterThan(0);
+      expect(runningProcess.stderr()).toBe("");
+
+      const identityResponse = await requestOracle(
+        runningProcess.readiness.port,
+        { method: "GET", path: "/oracle/identity" },
+      );
+      expect(identityResponse.status).toBe(200);
+      expect(identityResponse.headers["content-type"]).toBe(
+        "application/json; charset=utf-8",
+      );
+      expect(
+        decodeJson(
+          OracleIdentityResponseSchema,
+          identityResponse.body.toString("utf8"),
+        ),
+      ).toEqual(ordinaryIdentity);
+
+      const httpByScenario = new Map<
+        ParityScenario,
+        { readonly response: OracleBatchResponse; readonly status: number }
+      >();
+      for (const scenario of scenarios) {
+        const httpResponse = await requestOracle(
+          runningProcess.readiness.port,
+          {
+            method: "POST",
+            path: "/oracle/evaluations",
+            body: scenario.body,
+            contentType: "application/json; charset=utf-8",
+          },
+        );
+        expect(httpResponse.headers["content-type"]).toBe(
+          "application/json; charset=utf-8",
+        );
+        const decodedResponse = decodeJson(
+          OracleBatchResponseSchema,
+          httpResponse.body.toString("utf8"),
+        );
+        expect(httpResponse.body.toString("utf8")).toBe(
+          JSON.stringify(decodedResponse),
+        );
+        httpByScenario.set(scenario, {
+          response: decodedResponse,
+          status: httpResponse.status,
+        });
+      }
+
+      const responseFor = (scenario: ParityScenario): OracleBatchResponse => {
+        const response = cliByScenario.get(scenario);
+        if (response === undefined) {
+          throw new Error(`CLI response missing for ${scenario.name}.`);
+        }
+        return response;
+      };
+      const httpResponseFor = (
+        scenario: ParityScenario,
+      ): {
+        readonly response: OracleBatchResponse;
+        readonly status: number;
+      } => {
+        const observation = httpByScenario.get(scenario);
+        if (observation === undefined) {
+          throw new Error(`HTTP response missing for ${scenario.name}.`);
+        }
+        return observation;
+      };
+
+      for (const scenario of scenarios) {
+        const cliResponse = responseFor(scenario);
+        const httpObservation = httpResponseFor(scenario);
+        expect(httpObservation.response).toEqual(cliResponse);
+        expect(cliResponse.tag).toBe(scenario.expectedTag);
+        expect(cliResponse.distributionId).toBe(
+          ordinaryIdentity.distributionId,
+        );
+        expect(httpObservation.status).toBe(
+          scenario.expectedTag === "evaluated" ? 200 : 400,
+        );
+      }
+
+      const wholeBeforeResponse = responseFor(wholeBatchBeforePrior);
+      const wholeAfterResponse = responseFor(wholeBatchAfterPrior);
+      expect(wholeAfterResponse).toEqual(wholeBeforeResponse);
+      const singletonTraces = singletonScenarios.flatMap((scenario) => {
+        const response = responseFor(scenario);
+        return assertEvaluated(response);
+      });
+      expect(assertEvaluated(wholeAfterResponse)).toEqual(singletonTraces);
+      const firstSingleton = singletonScenarios[0];
+      const secondSingleton = singletonScenarios[1];
+      const thirdSingleton = singletonScenarios[2];
+      if (
+        firstSingleton === undefined ||
+        secondSingleton === undefined ||
+        thirdSingleton === undefined
+      ) {
+        throw new Error("The Oracle corpus must contain A/B/A Cases.");
+      }
+      expect(responseFor(firstSingleton)).toEqual(responseFor(thirdSingleton));
+      expect(responseFor(firstSingleton)).not.toEqual(
+        responseFor(secondSingleton),
+      );
+
+      const mixedMalformed = malformedScenarios[6];
+      const invalidUtf8 = malformedScenarios[7];
+      if (mixedMalformed === undefined || invalidUtf8 === undefined) {
+        throw new Error("The parity malformed scenario table is incomplete.");
+      }
+      const mixedResponse = responseFor(mixedMalformed);
+      if (mixedResponse.tag !== "decodeRejected") {
+        throw new Error("The mixed malformed batch was evaluated.");
+      }
+      expect(mixedResponse.issues.length).toBeGreaterThan(1);
+      const invalidUtf8Response = responseFor(invalidUtf8);
+      if (invalidUtf8Response.tag !== "decodeRejected") {
+        throw new Error("The invalid UTF-8 batch was evaluated.");
+      }
+      expect(invalidUtf8Response.issues).toEqual([
+        { path: "", code: "invalidJson" },
+      ]);
+
+      await waitForOracleExit(runningProcess, "SIGTERM");
+      running = undefined;
+
+      const defectBuild = buildOracleDistribution({
+        destination: join(temporaryRoot, "defect-distribution"),
+        entryPoint: resolve(packageRoot, "scripts/oracle-defect-test-entry.ts"),
+      });
+      expect(defectBuild.distributionId).not.toBe(
+        ordinaryIdentity.distributionId,
+      );
+      const defectIdentity = decodeJson(
+        OracleIdentityResponseSchema,
+        readFileSync(
+          join(
+            defectBuild.destination,
+            ORACLE_DISTRIBUTION_FILE_NAMES.identity,
+          ),
+          "utf8",
+        ),
+      );
+      expect(defectIdentity.distributionId).toBe(defectBuild.distributionId);
+
+      const defectIdentityProcess = runExecutable(
+        defectBuild.executablePath,
+        ["identity"],
+        cleanWorkingDirectory,
+        preload,
+      );
+      assertSuccessfulProcess(defectIdentityProcess);
+      expect(
+        decodeJson(
+          OracleIdentityResponseSchema,
+          defectIdentityProcess.stdout.toString("utf8"),
+        ),
+      ).toEqual(defectIdentity);
+
+      const defectCliResult = runExecutable(
+        defectBuild.executablePath,
+        ["stream"],
+        cleanWorkingDirectory,
+        preload,
+        Buffer.concat([
+          defectBatchBody,
+          lineFeed,
+          firstSingletonBody,
+          lineFeed,
+        ]),
+      );
+      expect(defectCliResult.status).not.toBe(0);
+      expect(defectCliResult.stdout.toString("utf8")).toBe("");
+      expect(defectCliResult.stderr.toString("utf8")).toContain(
+        "injected later-Case evaluator defect",
+      );
+
+      const defectProcess = await launchOracleServe(
+        defectBuild.executablePath,
+        cleanWorkingDirectory,
+        preload,
+      );
+      running = defectProcess;
+      expect(defectProcess.readiness.host).toBe("127.0.0.1");
+      const defectIdentityResponse = await requestOracle(
+        defectProcess.readiness.port,
+        { method: "GET", path: "/oracle/identity" },
+      );
+      expect(defectIdentityResponse.status).toBe(200);
+      expect(
+        decodeJson(
+          OracleIdentityResponseSchema,
+          defectIdentityResponse.body.toString("utf8"),
+        ),
+      ).toEqual(defectIdentity);
+
+      const defectHttpResponse = await requestOracle(
+        defectProcess.readiness.port,
+        {
+          method: "POST",
+          path: "/oracle/evaluations",
+          body: defectBatchBody,
+          contentType: "application/json; charset=utf-8",
+        },
+      );
+      expect(defectHttpResponse.status).toBe(500);
+      expect(defectHttpResponse.headers["content-type"]).toBe(
+        "application/json; charset=utf-8",
+      );
+      const decodedDefect = decodeJson(
+        OracleDefectResponseSchema,
+        defectHttpResponse.body.toString("utf8"),
+      );
+      expect(decodedDefect).toEqual({
+        tag: "defect",
+        distributionId: defectIdentity.distributionId,
+      });
+      expect(defectHttpResponse.body.toString("utf8")).toBe(
+        JSON.stringify(decodedDefect),
+      );
+
+      const afterDefect = await requestOracle(defectProcess.readiness.port, {
+        method: "POST",
+        path: "/oracle/evaluations",
+        body: firstSingletonBody,
+        contentType: "application/json; charset=utf-8",
+      });
+      expect(afterDefect.status).toBe(200);
+      const afterDefectResponse = decodeJson(
+        OracleBatchResponseSchema,
+        afterDefect.body.toString("utf8"),
+      );
+      expect(afterDefectResponse.tag).toBe("evaluated");
+      expect(afterDefectResponse.distributionId).toBe(
+        defectIdentity.distributionId,
+      );
+
       await waitForOracleExit(defectProcess, "SIGTERM");
       running = undefined;
     } finally {
