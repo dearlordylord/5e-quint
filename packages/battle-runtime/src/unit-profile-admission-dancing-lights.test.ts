@@ -1,5 +1,9 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleStateWithAllocatedEffectForTest,
+  characterSpellInvocationForProcedureRefForTest,
+  requireCharacterSpellProcedureRefForTest,
+} from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV88A dancing_lights
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-dancing-lights-movable-dim-light
@@ -13,6 +17,7 @@ import {
 } from "./unit-profile-admission-catalog.test-support.ts";
 import {
   interruptDecisionFill,
+  requireCombatant,
   requireHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
@@ -33,7 +38,6 @@ import {
   elapsedTimeTicks,
   endTurn,
   holeId,
-  movementDeltaFeet,
   movementFeet,
   proficiencyBonus,
   resolveBattleInterrupt,
@@ -485,27 +489,43 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     if (resolvedCaster === undefined) {
       throw new Error("Expected Dancing Lights caster before repositioning.");
     }
-    const unrelatedEffect = {
-      kind: "speedDelta",
-      sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+    const longstriderProcedureRef = requireCharacterSpellProcedureRefForTest(
+      session,
+      spellCasterId,
+      spellSlotInvocationRef(longstriderUnitId, 1, "scalarBuff"),
+    );
+    const longstriderInvocation =
+      characterSpellInvocationForProcedureRefForTest(
         session,
         spellCasterId,
-        spellSlotInvocationRef(longstriderUnitId, 1, "scalarBuff"),
-      ),
-      sourceCombatantId: spellCasterId,
-      deltaFeet: movementDeltaFeet(10),
-      expiresAt: {
-        kind: "duration",
-        durationTicks: elapsedTimeTicks(600),
+        longstriderProcedureRef,
+      );
+    if (
+      longstriderInvocation.procedure !== "scalarBuff" ||
+      longstriderInvocation.effect.kind !== "activeEffect" ||
+      longstriderInvocation.effect.activeEffect.kind !== "speedDelta"
+    ) {
+      throw new Error("Expected the admitted Longstrider speed effect.");
+    }
+    const repositionState = battleStateWithAllocatedEffectForTest({
+      state: resolved.state,
+      ownerId: spellCasterId,
+      effect: {
+        ...longstriderInvocation.effect.activeEffect,
+        sourceProcedureRef: longstriderProcedureRef,
       },
-    } as const;
-    const repositionState: BattleState = {
-      ...resolved.state,
-      combatants: new Map(resolved.state.combatants).set(spellCasterId, {
-        ...resolvedCaster,
-        activeEffects: [...resolvedCaster.activeEffects, unrelatedEffect],
-      }),
-    };
+    });
+    const unrelatedEffect = requireCombatant(
+      repositionState,
+      spellCasterId,
+    ).activeEffects.find(
+      (effect) =>
+        "sourceProcedureRef" in effect &&
+        effect.sourceProcedureRef === longstriderProcedureRef,
+    );
+    if (unrelatedEffect === undefined) {
+      throw new Error("Expected allocated Longstrider occurrence.");
+    }
     const moved = resolveBattleSubject({
       state: repositionState,
       subject: moveAct.subject,

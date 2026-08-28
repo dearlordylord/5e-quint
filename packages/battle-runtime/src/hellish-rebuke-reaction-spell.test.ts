@@ -36,6 +36,7 @@ import { openAfterDamageSequenceInterruptWindow } from "./battle-reducer/interru
 import {
   battleProcedureExecutionRefForTest,
   battleProcedureExecutionRefForSpellHoleForTest,
+  battleStateWithAllocatedEffectForTest,
   characterSpellInvocationRefForProcedureRefForTest,
   concentrationSavingThrowFill,
   requireCharacterSpellProcedureRefForTest,
@@ -60,7 +61,6 @@ import {
   type AvailableBattleAct,
   type BattleCreatureInit,
   type BattleCreatureState,
-  type BattleActiveEffect,
   type BattleFill,
   type BattleHole,
   type BattleInterruptCheckpoint,
@@ -237,19 +237,6 @@ describe("Hellish Rebuke Reaction spell", () => {
     const concentrationProcedureRef = battleProcedureExecutionRefForTest(
       "synthetic-hellish-rebuke-damager-concentration",
     );
-    const sourceDamageRollPenalty = {
-      kind: "sourceDamageRollPenalty",
-      sourceProcedureRef: concentrationProcedureRef,
-      sourceCombatantId: damagerId,
-      amount: { dice: 1, dieSize: 8 },
-      expiresAt: {
-        kind: "concentration",
-        combatantId: damagerId,
-      },
-    } satisfies Extract<
-      BattleActiveEffect,
-      { readonly kind: "sourceDamageRollPenalty" }
-    >;
     const concentratingState = withCombatant(
       base.state,
       damagerId,
@@ -261,14 +248,20 @@ describe("Hellish Rebuke Reaction spell", () => {
         },
       }),
     );
-    const enrichedState = withCombatant(
-      concentratingState,
-      spellCasterId,
-      (caster) => ({
-        ...caster,
-        activeEffects: [...caster.activeEffects, sourceDamageRollPenalty],
-      }),
-    );
+    const enrichedState = battleStateWithAllocatedEffectForTest({
+      state: concentratingState,
+      ownerId: spellCasterId,
+      effect: {
+        kind: "sourceDamageRollPenalty",
+        sourceProcedureRef: concentrationProcedureRef,
+        sourceCombatantId: damagerId,
+        amount: { dice: 1, dieSize: 8 },
+        expiresAt: {
+          kind: "concentration",
+          combatantId: damagerId,
+        },
+      },
+    });
     const session = battleRuntimeSessionForTest({
       ...base,
       state: enrichedState,

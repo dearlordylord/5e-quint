@@ -59,7 +59,6 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
       session,
       spellId: expeditiousRetreatUnitId,
     });
-
     expect(act).toEqual(
       expect.objectContaining({
         subject: {
@@ -854,29 +853,23 @@ describe("SRDINV53 deterministic Jump movement replacement admission", () => {
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
     const act = bonusSpellAct({ session, spellId: jumpUnitId });
-    const caster = requireCombatant(session.state, spellCasterId);
     const unrelatedSource = battleProcedureExecutionRefForTest(
       "synthetic-jump-unrelated-resistance",
     );
-    const stateWithUnrelatedEffect = {
-      ...session.state,
-      combatants: new Map(session.state.combatants).set(spellCasterId, {
-        ...caster,
-        activeEffects: [
-          ...caster.activeEffects,
-          {
-            kind: "damageResistance" as const,
-            sourceProcedureRef: unrelatedSource,
-            sourceCombatantId: spellCasterId,
-            damageType: "cold" as const,
-            expiresAt: {
-              kind: "duration" as const,
-              durationTicks: elapsedTimeTicks(10),
-            },
-          },
-        ],
-      }),
-    };
+    const stateWithUnrelatedEffect = battleStateWithAllocatedEffectForTest({
+      state: session.state,
+      ownerId: spellCasterId,
+      effect: {
+        kind: "damageResistance",
+        sourceProcedureRef: unrelatedSource,
+        sourceCombatantId: spellCasterId,
+        damageType: "cold",
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(10),
+        },
+      },
+    });
     const state = battleStateWithAllocatedEffectForTest({
       state: stateWithUnrelatedEffect,
       ownerId: spellCasterId,

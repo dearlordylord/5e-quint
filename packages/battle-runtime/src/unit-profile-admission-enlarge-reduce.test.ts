@@ -3,6 +3,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   characterSpellInvocationRefForProcedureRefForTest,
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
@@ -1596,60 +1597,61 @@ function withSyntheticHitRider(
   state: BattleState,
   targetResistsDamage: boolean,
 ): BattleState {
-  const caster = requireCombatant(state, spellCasterId);
-  const target = requireCombatant(state, spellTargetId);
   const duration = {
     kind: "duration" as const,
     durationTicks: elapsedTimeTicks(600),
   };
-  return {
-    ...state,
-    combatants: new Map(state.combatants)
-      .set(spellCasterId, {
-        ...caster,
-        activeEffects: [
-          ...caster.activeEffects,
-          {
-            kind: "spellWeaponDamageRider" as const,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String("synthetic_reduce_floor_rider"),
-            ),
-            sourceCombatantId: spellCasterId,
-            damage: {
-              expr: { dice: 1, dieSize: 4 },
-              damageType: "radiant" as const,
-            },
-            expiresAt: duration,
+  const riderProcedureRef = battleProcedureExecutionRefForTest(
+    "synthetic-reduce-floor-rider",
+  );
+  const resistanceProcedureRef = battleProcedureExecutionRefForTest(
+    "synthetic-reduce-floor-resistance",
+  );
+  return battleStateWithAllocatedEffectOccurrencesForTest({
+    state,
+    occurrences: [
+      {
+        kind: "activeEffect",
+        ownerId: spellCasterId,
+        effect: {
+          kind: "spellWeaponDamageRider" as const,
+          sourceProcedureRef: riderProcedureRef,
+          sourceCombatantId: spellCasterId,
+          damage: {
+            expr: { dice: 1, dieSize: 4 },
+            damageType: "radiant" as const,
           },
-        ],
-      })
-      .set(spellTargetId, {
-        ...target,
-        activeEffects: targetResistsDamage
-          ? [
-              ...target.activeEffects,
-              {
+          expiresAt: duration,
+        },
+      },
+      ...(targetResistsDamage
+        ? ([
+            {
+              kind: "activeEffect" as const,
+              ownerId: spellTargetId,
+              effect: {
                 kind: "damageResistance" as const,
-                sourceProcedureRef: battleProcedureExecutionRefForTest(
-                  String("synthetic_reduce_floor_resistance"),
-                ),
+                sourceProcedureRef: resistanceProcedureRef,
                 sourceCombatantId: spellTargetId,
                 damageType: "slashing" as const,
                 expiresAt: duration,
               },
-              {
+            },
+            {
+              kind: "activeEffect" as const,
+              ownerId: spellTargetId,
+              effect: {
                 kind: "damageResistance" as const,
-                sourceProcedureRef: battleProcedureExecutionRefForTest(
-                  String("synthetic_reduce_floor_resistance"),
-                ),
+                sourceProcedureRef: resistanceProcedureRef,
                 sourceCombatantId: spellTargetId,
                 damageType: "radiant" as const,
                 expiresAt: duration,
               },
-            ]
-          : target.activeEffects,
-      }),
-  };
+            },
+          ] as const)
+        : []),
+    ],
+  }).state;
 }
 
 function withSyntheticMarkedDamageRider(state: BattleState): BattleState {

@@ -14,6 +14,7 @@ import { Hp } from "@dnd/shared/types";
 import dragonsBreathInput from "../../surface/content/dragons_breath.json";
 import {
   dragonsBreathUnitId,
+  resistanceUnitId,
   spellCasterId,
   spellTargetId,
 } from "./unit-profile-admission-catalog.test-support.ts";
@@ -27,10 +28,13 @@ import {
   statBlockWithCreatureType,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   bonusSpellAct,
   damageTypeChoiceFill,
+  knownWillingSpellTargetFill,
   knownWillingSpellTargetListFill,
+  spellAct,
   spellTargetListFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
@@ -62,6 +66,7 @@ import {
   requireCharacterSpellProcedureRefForTest,
   testCharacterD20Statistics,
   unitLibrary,
+  wizardSpellcasting,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
 } from "./battle-runtime.test-support.ts";
 import { BattleSnapshotSchema } from "./index.ts";
@@ -584,17 +589,65 @@ describe("Dragon's Breath initial cast admission", () => {
     const session = spellBattle({
       preparedSpells: [dragonsBreathSpell()],
       spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetSpellcasting: wizardSpellcasting({
+        cantrips: [spellRecord(resistanceUnitId)],
+        preparedSpells: [],
+      }),
     });
     const cast = castDragonsBreath(session, "fire");
     const endedCasterTurn = endTurn({ state: cast, actorId: spellCasterId });
     if (endedCasterTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const targetTurn = stateWithSpellDamageReduction(
-      endedCasterTurn.state,
-      spellCasterId,
-      "fire",
+    const resistanceSession = battleRuntimeSessionForTest({
+      ...session,
+      state: endedCasterTurn.state,
+    });
+    const resistanceAct = spellAct({
+      session: resistanceSession,
+      spellId: resistanceUnitId,
+    });
+    const resistanceTarget = requireHole(
+      resistanceAct.initialHoles,
+      "targetChoice",
     );
+    const resistanceDamageType = requireHole(
+      resistanceAct.initialHoles,
+      "damageTypeChoice",
+    );
+    const resistanceCast = resolveBattleSubject({
+      state: resistanceSession.state,
+      subject: resistanceAct.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          resistanceTarget,
+          resistanceUnitId,
+          spellTargetId,
+          spellCasterId,
+        ),
+        damageTypeChoiceFill(resistanceDamageType, "fire"),
+      ],
+    });
+    if (resistanceCast.tag !== "resolved") {
+      throw new Error(
+        `Expected admitted Resistance cast to resolve: ${JSON.stringify(resistanceCast)}`,
+      );
+    }
+    const nextCasterTurn = endTurn({
+      state: resistanceCast.state,
+      actorId: spellTargetId,
+    });
+    if (nextCasterTurn.tag !== "resolved") {
+      throw new Error("Expected Resistance caster turn to end.");
+    }
+    const nextTargetTurn = endTurn({
+      state: nextCasterTurn.state,
+      actorId: spellCasterId,
+    });
+    if (nextTargetTurn.tag !== "resolved") {
+      throw new Error("Expected Dragon's Breath source turn to end.");
+    }
+    const targetTurn = nextTargetTurn.state;
     const exhaleAct = dragonsBreathExhaleAct(targetTurn);
     const saveHole = requireHole(exhaleAct.initialHoles, "savingThrowOutcome");
     const needsDamage = resolveBattleSubject({
@@ -1131,36 +1184,6 @@ function stateWithWardingBondTarget(
     combatants: new Map(state.combatants).set(targetId, {
       ...target,
       activeEffects: [...target.activeEffects, wardingBondEffect],
-    }),
-  };
-}
-
-function stateWithSpellDamageReduction(
-  state: BattleState,
-  targetId: CombatantId,
-  damageType: DamageType,
-): BattleState {
-  const target = requireCombatant(state, targetId);
-  const spellDamageReductionEffect = {
-    kind: "spellDamageReduction",
-    sourceProcedureRef: dragonsBreathSourceProcedureRef(state),
-    sourceCombatantId: spellTargetId,
-    damageType,
-    amount: { dice: 1, dieSize: 4 },
-    usedThisTurn: false,
-    expiresAt: {
-      kind: "duration",
-      durationTicks: elapsedTimeTicks(60),
-    },
-  } satisfies Extract<
-    BattleActiveEffect,
-    { readonly kind: "spellDamageReduction" }
-  >;
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(targetId, {
-      ...target,
-      activeEffects: [...target.activeEffects, spellDamageReductionEffect],
     }),
   };
 }

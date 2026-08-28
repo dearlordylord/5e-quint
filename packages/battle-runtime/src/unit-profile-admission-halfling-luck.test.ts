@@ -23,7 +23,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
-  type BattleTrackedOngoingSpellLightEmitter,
+  type BattleStoredLightEmitterTemplate,
 } from "./battle-state-execution.ts";
 import { BattleFillSchema } from "./battle-reducer/battle-codecs.ts";
 import { battleContinuationFillEquals } from "./battle-reducer/battle-fill-equality.ts";
@@ -73,6 +73,7 @@ import {
   attackExecutionSelectionForSubjectForTest,
   attackRollFill,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   characterBattleFeatureInitForTest,
   characterAttackSubjectForTest,
   characterBonusAttackSubjectForTest,
@@ -843,7 +844,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
   test("Spellcasting Ability Checks expose the post-roll natural-1 reroll choice", () => {
     const { unit, unitRef } = halflingLuckSelection();
     const objectId = battleObjectId("halfling-luck-dispel-object");
-    const emitter = spellLightEmitter({
+    const emitterTemplate = spellLightEmitter({
       objectId,
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String("synthetic_blue_flame"),
@@ -856,8 +857,18 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       casterUnitRefs: [unitRef],
       casterUnitFeatures: [characterBattleFeatureInitForTest(unit)],
     });
+    const withEmitter = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: baseState.state,
+      occurrences: [
+        {
+          kind: "storedLightEmitter",
+          ownerId: spellTargetId,
+          emitter: emitterTemplate,
+        },
+      ],
+    });
     const state = battleRuntimeSessionForTest({
-      state: { ...baseState.state, lightEmitters: [emitter] },
+      state: withEmitter.state,
       context: baseState.context,
     });
     const act = spellAct({
@@ -1779,7 +1790,7 @@ function spellLightEmitter(input: {
     typeof battleProcedureExecutionRefForTest
   >;
   readonly sourceSpellLevel: number;
-}): BattleTrackedOngoingSpellLightEmitter {
+}): BattleStoredLightEmitterTemplate {
   return {
     kind: "spellLightEmitter",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
