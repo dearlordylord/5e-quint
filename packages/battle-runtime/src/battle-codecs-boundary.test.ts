@@ -31,7 +31,7 @@ import {
   testDaggerAttack,
   testShortswordAttack,
   attackRollFill,
-  battleEffectExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   battleProcedureExecutionRefForTest,
   skeletonId,
   statBlockCreatureInit,
@@ -150,10 +150,12 @@ function codecFixture() {
       skeletonCreatureInit({ initiative: 10 }),
     ],
   });
-  const snapshot = Schema.encodeSync(BattleSnapshotSchema)(
+  const initialSnapshot = Schema.encodeSync(BattleSnapshotSchema)(
     snapshotBattle(session.state),
   );
-  const wizard = snapshot.combatants.find((c) => c.combatantId === wizardId);
+  const wizard = initialSnapshot.combatants.find(
+    (c) => c.combatantId === wizardId,
+  );
   if (wizard?.origin.kind !== "character")
     throw new Error("Expected character spell fixture.");
   const characterContext = session.context.characters.get(wizardId);
@@ -176,10 +178,32 @@ function codecFixture() {
   );
   if (sourceBinding === undefined)
     throw new Error("Expected the save-gated source to be bound.");
+  const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+    state: session.state,
+    occurrences: [
+      {
+        kind: "activeEffect",
+        ownerId: wizardId,
+        effect: {
+          kind: "sourceDamageRollPenalty",
+          sourceProcedureRef: sourceBinding.procedureRef,
+          sourceCombatantId: wizardId,
+          amount: { dice: 1, dieSize: 8 },
+          expiresAt: { kind: "untilDispelled" },
+        },
+      },
+    ],
+  });
+  const effectOccurrence = allocated.occurrences[0];
+  if (effectOccurrence?.kind !== "activeEffect") {
+    throw new Error("Expected a codec active-effect occurrence.");
+  }
   return {
-    snapshot,
+    snapshot: Schema.encodeSync(BattleSnapshotSchema)(
+      snapshotBattle(allocated.state),
+    ),
     sourceProcedureRef: sourceBinding.procedureRef,
-    effectRef: battleEffectExecutionRefForTest("codec-marked-rider"),
+    effectRef: effectOccurrence.effect.effectRef,
   };
 }
 
@@ -335,6 +359,7 @@ const savingThrowCases: readonly CodecCase[] = [
         variant,
         saving(variant, variant, "con", {
           ...source,
+          effectRef: fixture.effectRef,
           areaId: battleAreaId(`area:${variant}`),
           trigger: "entersArea",
           save: save("con"),
@@ -432,6 +457,7 @@ const rolledDiceCases: readonly CodecCase[] = [
     "spellDamageReduction",
     rolled("spellDamageReduction", {
       spellDamageReduction: {
+        effectRef: fixture.effectRef,
         sourceProcedureRef: fixture.sourceProcedureRef,
         sourceCombatantId: wizardId,
         targetId: skeletonId,
@@ -444,6 +470,7 @@ const rolledDiceCases: readonly CodecCase[] = [
     "sourceDamageRollPenalty",
     rolled("sourceDamageRollPenalty", {
       sourceDamageRollPenalty: {
+        effectRef: fixture.effectRef,
         sourceProcedureRef: fixture.sourceProcedureRef,
         sourceCombatantId: wizardId,
         affectedCombatantId: skeletonId,
@@ -509,6 +536,7 @@ const rolledDiceCases: readonly CodecCase[] = [
       critical: false,
       insectPlagueAreaHazard: {
         ...source,
+        effectRef: fixture.effectRef,
         areaId: battleAreaId("area:insectPlagueAreaHazard"),
         trigger: "entersArea",
         damage: { expr: { dice: 1, dieSize: 6 }, damageType: "piercing" },
@@ -521,6 +549,7 @@ const rolledDiceCases: readonly CodecCase[] = [
       critical: false,
       cloudkillAreaHazard: {
         ...source,
+        effectRef: fixture.effectRef,
         areaId: battleAreaId("area:cloudkillAreaHazard"),
         trigger: "entersArea",
         damage: { expr: { dice: 1, dieSize: 6 }, damageType: "poison" },
@@ -617,6 +646,31 @@ describe("battle codec execution-reference boundaries", () => {
       replaceActHole(fixture.snapshot, fixture.sourceProcedureRef, replacement),
     );
     expect(Result.isSuccess(decoded)).toBe(expected === "Right");
+  });
+
+  test.each([
+    ["spellDamageReduction", rolledDiceCases[2]],
+    ["sourceDamageRollPenalty", rolledDiceCases[3]],
+  ] as const)("rejects %s when its effect occurrence is absent", (_, entry) => {
+    if (entry === undefined) {
+      throw new Error("Expected the damage protocol codec case.");
+    }
+    const snapshot = replaceActHole(
+      fixture.snapshot,
+      fixture.sourceProcedureRef,
+      entry.hole,
+    );
+    const withoutOccurrence = {
+      ...snapshot,
+      combatants: snapshot.combatants.map((combatant) => ({
+        ...combatant,
+        effectOccurrences: combatant.effectOccurrences.filter(
+          (occurrence) => occurrence.effectRef !== fixture.effectRef,
+        ),
+      })),
+    };
+
+    expectSnapshotDecodeLeft(withoutOccurrence);
   });
 });
 

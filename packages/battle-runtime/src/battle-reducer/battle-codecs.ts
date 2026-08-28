@@ -1870,6 +1870,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
     spellDamageReduction: Schema.Struct({
+      effectRef: BattleEffectExecutionRef,
       sourceProcedureRef: BattleProcedureExecutionRef,
       sourceCombatantId: CombatantId,
       targetId: CombatantId,
@@ -1884,6 +1885,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
     sourceDamageRollPenalty: Schema.Struct({
+      effectRef: BattleEffectExecutionRef,
       sourceProcedureRef: BattleProcedureExecutionRef,
       sourceCombatantId: CombatantId,
       affectedCombatantId: CombatantId,
@@ -6737,12 +6739,14 @@ function serializedBattleHoleExecutionReferences(
       Match.when({ glyphExplosiveRune: Match.any }, (hole) =>
         procedureSource(hole.glyphExplosiveRune),
       ),
-      Match.when({ spellDamageReduction: Match.any }, (hole) =>
-        procedureSource(hole.spellDamageReduction),
-      ),
-      Match.when({ sourceDamageRollPenalty: Match.any }, (hole) =>
-        procedureSource(hole.sourceDamageRollPenalty),
-      ),
+      Match.when({ spellDamageReduction: Match.any }, (hole) => [
+        ...procedureSource(hole.spellDamageReduction),
+        bound(hole.spellDamageReduction.effectRef, "activeEffect"),
+      ]),
+      Match.when({ sourceDamageRollPenalty: Match.any }, (hole) => [
+        ...procedureSource(hole.sourceDamageRollPenalty),
+        bound(hole.sourceDamageRollPenalty.effectRef, "activeEffect"),
+      ]),
       Match.when({ mirrorImageDuplicateRoll: Match.any }, (hole) =>
         procedureSource(hole.mirrorImageDuplicateRoll),
       ),
