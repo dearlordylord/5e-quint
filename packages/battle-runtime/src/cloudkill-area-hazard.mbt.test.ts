@@ -1,0 +1,876 @@
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-cloudkill-area-hazard
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
+//
+// RAW trace:
+// - .references/srd-5.2.1/Spells/Descriptions-A-D.md#Cloudkill
+// - .references/srd-5.2.1/Rules-Glossary.md#Concentration,
+//   #Area-of-Effect, #Sphere-Area-of-Effect, #Heavily-Obscured, and
+//   #Simultaneous-Effects
+// - .references/srd-5.2.1/Playing-the-Game.md#Saving-Throws-and-Damage
+// - .references/srd-5.2.1/Gameplay-Toolbox.md#Strong-Wind
+import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
+import { movementFeet } from "@dnd/shared/types";
+import { describe, expect, it } from "vitest";
+
+import {
+  MBT_TEST_TIMEOUT_MS,
+  booleanField,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtPickSchemas,
+  mbtSpecPath,
+  mbtTraceCount,
+  numberFromQuintInt,
+  quintRecordField,
+  quintStateRecord,
+  quintVariantTag,
+  run,
+  stateCheck,
+} from "./battle-runtime-mbt-driver-kit.test-support.ts";
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import {
+  battleObscurementZones,
+  breakBattleConcentration,
+} from "./unit-profile-admission.test-support.ts";
+import {
+  damageRollFillWithGroups,
+  requireCombatant,
+  requireHole,
+  requireResultHole,
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
+import {
+  cloudkillAreaFill,
+  cloudkillAreaHazardSaveAct,
+  maybeSpellAct,
+  singleTargetSavingThrowOutcomeFill,
+  spellAct,
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
+import {
+  cloudkillUnitId,
+  spellCasterId,
+  spellTargetId,
+} from "./unit-profile-admission-catalog.test-support.ts";
+import {
+  combatantId,
+  discoverBattleActs,
+  endTurn,
+  resolveBattleSubject,
+  snapshotBattle,
+  type BattleActiveEffect,
+  type BattleFill,
+  type BattleResolutionResult,
+  type BattleRuntimeSession,
+  type BattleState,
+  type BattleSubject,
+  type CombatantId,
+} from "./index.ts";
+import type {
+  BattleCloudkillAreaHazardDamageRollHole,
+  BattleCloudkillAreaHazardSavingThrowOutcomeHole,
+  BattleCloudkillMovementFill,
+  BattleCloudkillMovementHole,
+} from "./battle-state-execution.ts";
+
+type CloudkillMbtTarget = "none" | "primary" | "secondary";
+type CloudkillMbtPending = "none" | "savingThrow" | "damage";
+type CloudkillMbtOutcome =
+  | "init"
+  | "cast"
+  | "appearanceSave"
+  | "appearanceDamage"
+  | "appearanceResolved"
+  | "targetTurn"
+  | "movementSave"
+  | "movementDamage"
+  | "movementResolved"
+  | "concentrationEnded"
+  | "strongWindEnded";
+
+type CloudkillMbtProjection = {
+  readonly casterTurn: boolean;
+  readonly actionAvailable: boolean;
+  readonly spellAvailable: boolean;
+  readonly hazardActive: boolean;
+  readonly casterConcentrating: boolean;
+  readonly slotLevel: number;
+  readonly damageDice: number;
+  readonly durationTicks: number;
+  readonly radiusFeet: number;
+  readonly heavilyObscured: boolean;
+  readonly primarySavedThisTurn: boolean;
+  readonly secondarySavedThisTurn: boolean;
+  readonly primaryHitPoints: number;
+  readonly secondaryHitPoints: number;
+  readonly lastMovementDistanceFeet: number;
+  readonly pending: CloudkillMbtPending;
+  readonly pendingTarget: CloudkillMbtTarget;
+  readonly remainingTarget: CloudkillMbtTarget;
+  readonly savingThrowSucceeded: boolean;
+  readonly outcome: CloudkillMbtOutcome;
+};
+
+type CloudkillPendingProcedure = {
+  readonly kind: "appearance" | "movement";
+  readonly state: BattleState;
+  readonly subject: BattleSubject;
+  readonly result: Extract<
+    BattleResolutionResult,
+    { readonly tag: "needsHoles" }
+  >;
+};
+
+type CloudkillMbtRuntimeState = {
+  readonly battle: BattleRuntimeSession;
+  readonly configuredSlotLevel: number;
+  readonly pendingProcedure: CloudkillPendingProcedure | null;
+  readonly lastMovementDistanceFeet: number;
+  readonly remainingTarget: CloudkillMbtTarget;
+  readonly savingThrowSucceeded: boolean;
+  readonly outcome: CloudkillMbtOutcome;
+};
+
+type CloudkillEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "cloudkillAreaHazard" }
+>;
+
+const secondaryTargetId = combatantId("cloudkill-mbt-secondary-target");
+
+const driverSchema = {
+  init: { slotLevel: mbtPickSchemas.int },
+  doCastCloudkill: {},
+  doDiscoverAppearanceSave: {},
+  doResolveAppearanceSave: { succeeded: mbtPickSchemas.bool },
+  doResolveAppearanceDamage: { damageDiePip: mbtPickSchemas.int },
+  doEndCasterTurn: {},
+  doBeginSourceTurnMovement: {
+    primaryAffected: mbtPickSchemas.bool,
+    secondaryAffected: mbtPickSchemas.bool,
+    secondaryFirst: mbtPickSchemas.bool,
+  },
+  doResolveMovementSave: { succeeded: mbtPickSchemas.bool },
+  doResolveMovementDamage: { damageDiePip: mbtPickSchemas.int },
+  doEndConcentration: {},
+  doDisperseWithStrongWind: {},
+  step: {},
+} as const;
+
+function createCloudkillMbtDriver() {
+  return defineDriver(driverSchema, () => {
+    let state = initialRuntimeState(5);
+    return {
+      init: ({ slotLevel }) => {
+        state = initialRuntimeState(slotLevel);
+      },
+      doCastCloudkill: () => {
+        state = castCloudkill(state);
+      },
+      doDiscoverAppearanceSave: () => {
+        state = discoverAppearanceSave(state);
+      },
+      doResolveAppearanceSave: ({ succeeded }) => {
+        state = resolvePendingSave(state, succeeded, "appearanceDamage");
+      },
+      doResolveAppearanceDamage: ({ damageDiePip }) => {
+        state = resolvePendingDamage(state, damageDiePip, "appearanceResolved");
+      },
+      doEndCasterTurn: () => {
+        state = endCasterTurn(state);
+      },
+      doBeginSourceTurnMovement: (input) => {
+        state = beginSourceTurnMovement(state, input);
+      },
+      doResolveMovementSave: ({ succeeded }) => {
+        state = resolvePendingSave(state, succeeded, "movementDamage");
+      },
+      doResolveMovementDamage: ({ damageDiePip }) => {
+        state = resolvePendingDamage(state, damageDiePip, "movementResolved");
+      },
+      doEndConcentration: () => {
+        state = {
+          ...state,
+          battle: withBattleState(
+            state.battle,
+            breakBattleConcentration(state.battle.state, spellCasterId),
+          ),
+          outcome: "concentrationEnded",
+        };
+      },
+      doDisperseWithStrongWind: () => {
+        state = disperseWithStrongWind(state);
+      },
+      step: () => {},
+      getState: () => cloudkillMbtProjection(state),
+    };
+  });
+}
+
+const cloudkillMbtStateCheck = stateCheck(
+  normalizeCloudkillMbtQuintState,
+  compareCloudkillMbtStates,
+);
+
+describe("Cloudkill area-hazard MBT parity", () => {
+  it("projects the admitted RAW spell shape from the production reducer", () => {
+    const projection = cloudkillMbtProjection(
+      castCloudkill(initialRuntimeState(6)),
+    );
+
+    expect(projection).toMatchObject({
+      actionAvailable: false,
+      spellAvailable: false,
+      hazardActive: true,
+      casterConcentrating: true,
+      slotLevel: 6,
+      damageDice: 6,
+      durationTicks: 100,
+      radiusFeet: 20,
+      heavilyObscured: true,
+    });
+  });
+
+  it("retains table-supplied movement target order through both continuations", () => {
+    let state = castCloudkill(initialRuntimeState(5));
+    state = endCasterTurn(state);
+    state = beginSourceTurnMovement(state, {
+      primaryAffected: true,
+      secondaryAffected: true,
+      secondaryFirst: true,
+    });
+
+    expect(cloudkillMbtProjection(state)).toMatchObject({
+      lastMovementDistanceFeet: 10,
+      pending: "savingThrow",
+      pendingTarget: "secondary",
+      remainingTarget: "primary",
+    });
+
+    state = resolvePendingSave(state, false, "movementDamage");
+    state = resolvePendingDamage(state, 2, "movementResolved");
+    expect(cloudkillMbtProjection(state)).toMatchObject({
+      pending: "savingThrow",
+      pendingTarget: "primary",
+      remainingTarget: "none",
+      secondarySavedThisTurn: true,
+      secondaryHitPoints: 30,
+    });
+
+    state = resolvePendingSave(state, true, "movementDamage");
+    state = resolvePendingDamage(state, 2, "movementResolved");
+    expect(cloudkillMbtProjection(state)).toMatchObject({
+      pending: "none",
+      primarySavedThisTurn: true,
+      secondarySavedThisTurn: true,
+      primaryHitPoints: 35,
+      secondaryHitPoints: 30,
+    });
+  });
+
+  it("removes the hazard and obscurement when strong wind is supplied", () => {
+    const dispersed = disperseWithStrongWind(
+      castCloudkill(initialRuntimeState(5)),
+    );
+
+    expect(cloudkillMbtProjection(dispersed)).toMatchObject({
+      hazardActive: false,
+      casterConcentrating: false,
+      durationTicks: 0,
+      radiusFeet: 0,
+      heavilyObscured: false,
+      outcome: "strongWindEnded",
+    });
+  });
+
+  it(
+    "matches focused production Cloudkill traces against Quint",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-cloudkill-area-hazard.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createCloudkillMbtDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(8),
+        stateCheck: cloudkillMbtStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+});
+
+function initialRuntimeState(slotLevel: number): CloudkillMbtRuntimeState {
+  return {
+    battle: spellBattle({
+      preparedSpells: [spellRecord(cloudkillUnitId)],
+      spellSlots: [{ spellLevel: cloudkillSlotLevel(slotLevel), count: 1 }],
+      targetHp: 40,
+      targetMaxHp: 40,
+      extraTargetIds: [secondaryTargetId],
+      extraTargetHp: 40,
+      extraTargetMaxHp: 40,
+    }),
+    configuredSlotLevel: slotLevel,
+    pendingProcedure: null,
+    lastMovementDistanceFeet: 0,
+    remainingTarget: "none",
+    savingThrowSucceeded: false,
+    outcome: "init",
+  };
+}
+
+function castCloudkill(
+  state: CloudkillMbtRuntimeState,
+): CloudkillMbtRuntimeState {
+  const act = spellAct({
+    session: state.battle,
+    spellId: cloudkillUnitId,
+    slotLevel: state.configuredSlotLevel,
+  });
+  const areaHole = requireHole(act.initialHoles, "spellAreaChoice");
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: state.battle.state,
+      subject: act.subject,
+      fills: [cloudkillAreaFill(areaHole)],
+    }),
+    "Expected Cloudkill cast to resolve.",
+  );
+  return {
+    ...state,
+    battle: withBattleState(state.battle, resolved.state),
+    outcome: "cast",
+  };
+}
+
+function discoverAppearanceSave(
+  state: CloudkillMbtRuntimeState,
+): CloudkillMbtRuntimeState {
+  const act = cloudkillAreaHazardSaveAct(
+    state.battle,
+    spellTargetId,
+    "appearsInArea",
+  );
+  const result = resolveBattleSubject({
+    state: state.battle.state,
+    subject: act.subject,
+    fills: [],
+  });
+  requireNeedsHoles(result, "Expected Cloudkill appearance save frontier.");
+  return {
+    ...state,
+    pendingProcedure: {
+      kind: "appearance",
+      state: result.state,
+      subject: result.subject,
+      result,
+    },
+    outcome: "appearanceSave",
+  };
+}
+
+function endCasterTurn(
+  state: CloudkillMbtRuntimeState,
+): CloudkillMbtRuntimeState {
+  const resolved = requireResolved(
+    endTurn({ state: state.battle.state, actorId: spellCasterId }),
+    "Expected Cloudkill target turn to begin.",
+  );
+  return {
+    ...state,
+    battle: withBattleState(state.battle, resolved.state),
+    outcome: "targetTurn",
+  };
+}
+
+function beginSourceTurnMovement(
+  state: CloudkillMbtRuntimeState,
+  input: {
+    readonly primaryAffected: boolean;
+    readonly secondaryAffected: boolean;
+    readonly secondaryFirst: boolean;
+  },
+): CloudkillMbtRuntimeState {
+  let boundaryState = state.battle.state;
+  let boundaryActorId = snapshotBattle(boundaryState).currentActorId;
+  let frontier = endTurn({ state: boundaryState, actorId: boundaryActorId });
+  while (frontier.tag === "resolved") {
+    boundaryState = frontier.state;
+    boundaryActorId = snapshotBattle(boundaryState).currentActorId;
+    if (boundaryActorId === spellCasterId) {
+      throw new Error(
+        "Expected Cloudkill movement before the caster turn began.",
+      );
+    }
+    frontier = endTurn({ state: boundaryState, actorId: boundaryActorId });
+  }
+  requireNeedsHoles(frontier, "Expected Cloudkill movement frontier.");
+  const movementHole = requireResultHole(frontier, "cloudkillMovement");
+  expect(movementHole).toMatchObject({
+    distanceFeet: movementFeet(10),
+    directionRequirement: "awayFromSource",
+    requiresTableSpatialFact: true,
+  });
+  const orderedTargets = cloudkillMovementTargets(input);
+  const movementFill = cloudkillMovementFill(movementHole, orderedTargets);
+  const result = endTurn({
+    state: boundaryState,
+    actorId: boundaryActorId,
+    fills: [movementFill],
+  });
+  const remainingTarget =
+    orderedTargets.length === 2 ? targetRole(orderedTargets[1]) : "none";
+  if (result.tag === "invalid") {
+    throw new Error(`Cloudkill movement was invalid: ${result.message}`);
+  }
+  if (result.tag === "resolved") {
+    return {
+      ...state,
+      battle: withBattleState(state.battle, result.state),
+      lastMovementDistanceFeet: Number(movementHole.distanceFeet),
+      remainingTarget: "none",
+      outcome: "movementResolved",
+    };
+  }
+  return {
+    ...state,
+    pendingProcedure: {
+      kind: "movement",
+      state: result.state,
+      subject: result.subject,
+      result,
+    },
+    lastMovementDistanceFeet: Number(movementHole.distanceFeet),
+    remainingTarget,
+    outcome: "movementSave",
+  };
+}
+
+function resolvePendingSave(
+  state: CloudkillMbtRuntimeState,
+  succeeded: boolean,
+  outcome: Extract<CloudkillMbtOutcome, "appearanceDamage" | "movementDamage">,
+): CloudkillMbtRuntimeState {
+  const pending = requirePendingProcedure(state);
+  const saveHole = cloudkillSaveHole(
+    requireResultHole(pending.result, "savingThrowOutcome"),
+  );
+  const fill = singleTargetSavingThrowOutcomeFill(
+    saveHole,
+    saveHole.cloudkillAreaHazard.targetId,
+    succeeded,
+  );
+  const result = submitPendingProcedure(pending, [fill]);
+  requireNeedsHoles(result, "Expected Cloudkill damage frontier.");
+  return {
+    ...state,
+    pendingProcedure: {
+      ...pending,
+      state: result.state,
+      subject: result.subject,
+      result,
+    },
+    savingThrowSucceeded: succeeded,
+    outcome,
+  };
+}
+
+function resolvePendingDamage(
+  state: CloudkillMbtRuntimeState,
+  damageDiePip: number,
+  resolvedOutcome: Extract<
+    CloudkillMbtOutcome,
+    "appearanceResolved" | "movementResolved"
+  >,
+): CloudkillMbtRuntimeState {
+  const pending = requirePendingProcedure(state);
+  const damageHole = cloudkillDamageHole(
+    requireResultHole(pending.result, "rolledDice"),
+  );
+  const dice = damageHole.cloudkillAreaHazard.damage.expr.dice;
+  const fill = damageRollFillWithGroups(damageHole, [
+    Array.from({ length: dice }, () => damageDiePip),
+  ]);
+  const result = submitPendingProcedure(pending, [fill]);
+  if (result.tag === "invalid") {
+    throw new Error(`Cloudkill damage was invalid: ${result.message}`);
+  }
+  if (result.tag === "resolved") {
+    return {
+      ...state,
+      battle: withBattleState(state.battle, result.state),
+      pendingProcedure: null,
+      remainingTarget: "none",
+      savingThrowSucceeded: false,
+      outcome: resolvedOutcome,
+    };
+  }
+  const nextTarget = pendingTargetFromResult(result);
+  return {
+    ...state,
+    pendingProcedure: {
+      ...pending,
+      state: result.state,
+      subject: result.subject,
+      result,
+    },
+    remainingTarget: "none",
+    savingThrowSucceeded: false,
+    outcome:
+      nextTarget === "none"
+        ? resolvedOutcome
+        : pending.kind === "appearance"
+          ? "appearanceSave"
+          : "movementSave",
+  };
+}
+
+function disperseWithStrongWind(
+  state: CloudkillMbtRuntimeState,
+): CloudkillMbtRuntimeState {
+  const act = discoverBattleActs(state.battle).find(
+    (candidate) =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "disperseCloudkill",
+  );
+  if (act === undefined) {
+    throw new Error("Expected active Cloudkill strong-wind dispersal act.");
+  }
+  const windHole = requireHole(act.initialHoles, "areaWindStrength");
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: state.battle.state,
+      subject: act.subject,
+      fills: [
+        {
+          kind: "areaWindStrength",
+          holeId: windHole.holeId,
+          value: { kind: "strong" },
+        },
+      ],
+    }),
+    "Expected strong wind to disperse Cloudkill.",
+  );
+  return {
+    ...state,
+    battle: withBattleState(state.battle, resolved.state),
+    outcome: "strongWindEnded",
+  };
+}
+
+function cloudkillMbtProjection(
+  state: CloudkillMbtRuntimeState,
+): CloudkillMbtProjection {
+  const battleState =
+    state.pendingProcedure?.result.state ?? state.battle.state;
+  const battle = withBattleState(state.battle, battleState);
+  const effect = activeCloudkill(battleState);
+  const caster = requireCombatant(battleState, spellCasterId);
+  const savedThisTurn = effect?.savedThisTurn ?? [];
+  const pendingTarget =
+    state.pendingProcedure === null
+      ? "none"
+      : pendingTargetFromResult(state.pendingProcedure.result);
+  return {
+    casterTurn: snapshotBattle(battleState).currentActorId === spellCasterId,
+    actionAvailable: canSpendAction(battleState.currentTurnResources, "magic"),
+    spellAvailable:
+      maybeSpellAct({
+        session: battle,
+        spellId: cloudkillUnitId,
+        slotLevel: state.configuredSlotLevel,
+      }) !== undefined,
+    hazardActive: effect !== undefined,
+    casterConcentrating:
+      effect !== undefined &&
+      caster.concentration?.sourceProcedureRef === effect.sourceProcedureRef,
+    slotLevel: state.configuredSlotLevel,
+    damageDice: effect?.damage.expr.dice ?? 0,
+    durationTicks:
+      effect?.expiresAt.kind === "concentration"
+        ? Number(effect.expiresAt.durationTicks)
+        : 0,
+    radiusFeet: effect === undefined ? 0 : Number(effect.radiusFeet),
+    heavilyObscured: battleObscurementZones(battleState).some(
+      (zone) =>
+        zone.kind === "spellObscurementZone" &&
+        zone.obscurement === "heavilyObscured" &&
+        zone.area.areaId === effect?.areaId,
+    ),
+    primarySavedThisTurn: savedThisTurn.includes(spellTargetId),
+    secondarySavedThisTurn: savedThisTurn.includes(secondaryTargetId),
+    primaryHitPoints: Number(requireCombatant(battleState, spellTargetId).hp),
+    secondaryHitPoints: Number(
+      requireCombatant(battleState, secondaryTargetId).hp,
+    ),
+    lastMovementDistanceFeet: state.lastMovementDistanceFeet,
+    pending: pendingPhase(state.pendingProcedure?.result),
+    pendingTarget,
+    remainingTarget: state.remainingTarget,
+    savingThrowSucceeded: state.savingThrowSucceeded,
+    outcome: state.outcome,
+  };
+}
+
+function activeCloudkill(state: BattleState): CloudkillEffect | undefined {
+  return [...state.combatants.values()]
+    .flatMap((combatant) => combatant.activeEffects)
+    .find(
+      (effect): effect is CloudkillEffect =>
+        effect.kind === "cloudkillAreaHazard" &&
+        effect.sourceCombatantId === spellCasterId,
+    );
+}
+
+function pendingPhase(
+  result: BattleResolutionResult | undefined,
+): CloudkillMbtPending {
+  if (result === undefined || result.tag === "resolved") return "none";
+  if (result.tag === "invalid") {
+    throw new Error(`Unexpected invalid Cloudkill frontier: ${result.message}`);
+  }
+  if (result.holes.some((hole) => hole.kind === "savingThrowOutcome")) {
+    return "savingThrow";
+  }
+  if (result.holes.some((hole) => hole.kind === "rolledDice")) {
+    return "damage";
+  }
+  throw new Error("Expected a Cloudkill save or damage frontier.");
+}
+
+function pendingTargetFromResult(
+  result: BattleResolutionResult,
+): CloudkillMbtTarget {
+  if (result.tag !== "needsHoles") return "none";
+  const save = result.holes.find(
+    (hole): hole is BattleCloudkillAreaHazardSavingThrowOutcomeHole =>
+      hole.kind === "savingThrowOutcome" && "cloudkillAreaHazard" in hole,
+  );
+  if (save !== undefined) {
+    return targetRole(save.cloudkillAreaHazard.targetId);
+  }
+  const damage = result.holes.find(
+    (hole): hole is BattleCloudkillAreaHazardDamageRollHole =>
+      hole.kind === "rolledDice" && "cloudkillAreaHazard" in hole,
+  );
+  return damage === undefined
+    ? "none"
+    : targetRole(damage.cloudkillAreaHazard.targetId);
+}
+
+function targetRole(targetId: CombatantId | undefined): CloudkillMbtTarget {
+  if (targetId === spellTargetId) return "primary";
+  if (targetId === secondaryTargetId) return "secondary";
+  return "none";
+}
+
+function cloudkillMovementTargets(input: {
+  readonly primaryAffected: boolean;
+  readonly secondaryAffected: boolean;
+  readonly secondaryFirst: boolean;
+}): readonly CombatantId[] {
+  const targets = [
+    ...(input.primaryAffected ? [spellTargetId] : []),
+    ...(input.secondaryAffected ? [secondaryTargetId] : []),
+  ];
+  return input.secondaryFirst ? targets.reverse() : targets;
+}
+
+function cloudkillMovementFill(
+  hole: BattleCloudkillMovementHole,
+  affectedCombatantIdsInResolutionOrder: readonly CombatantId[],
+): BattleCloudkillMovementFill {
+  return {
+    kind: "cloudkillMovement",
+    holeId: hole.holeId,
+    value: { affectedCombatantIdsInResolutionOrder },
+  };
+}
+
+function cloudkillSaveHole(
+  hole: Extract<
+    import("./index.ts").BattleHole,
+    { readonly kind: "savingThrowOutcome" }
+  >,
+): BattleCloudkillAreaHazardSavingThrowOutcomeHole {
+  if (!("cloudkillAreaHazard" in hole)) {
+    throw new Error("Expected Cloudkill saving throw hole.");
+  }
+  return hole;
+}
+
+function cloudkillDamageHole(
+  hole: Extract<
+    import("./index.ts").BattleHole,
+    { readonly kind: "rolledDice" }
+  >,
+): BattleCloudkillAreaHazardDamageRollHole {
+  if (!("cloudkillAreaHazard" in hole)) {
+    throw new Error("Expected Cloudkill damage roll hole.");
+  }
+  return hole;
+}
+
+function submitPendingProcedure(
+  pending: CloudkillPendingProcedure,
+  fills: readonly BattleFill[],
+): BattleResolutionResult {
+  return resolveBattleSubject({
+    state: pending.state,
+    subject: pending.subject,
+    fills,
+  });
+}
+
+function requirePendingProcedure(
+  state: CloudkillMbtRuntimeState,
+): CloudkillPendingProcedure {
+  if (state.pendingProcedure === null) {
+    throw new Error("Expected pending Cloudkill procedure.");
+  }
+  return state.pendingProcedure;
+}
+
+function requireNeedsHoles(
+  result: BattleResolutionResult,
+  message: string,
+): asserts result is Extract<
+  BattleResolutionResult,
+  { readonly tag: "needsHoles" }
+> {
+  if (result.tag !== "needsHoles") throw new Error(message);
+}
+
+function requireResolved(
+  result: BattleResolutionResult,
+  message: string,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+  if (result.tag !== "resolved") throw new Error(message);
+  return result;
+}
+
+function withBattleState(
+  session: BattleRuntimeSession,
+  state: BattleState,
+): BattleRuntimeSession {
+  return battleRuntimeSessionForTest({ ...session, state });
+}
+
+function cloudkillSlotLevel(slotLevel: number): 5 | 6 {
+  if (slotLevel === 5 || slotLevel === 6) return slotLevel;
+  throw new Error(
+    `Expected Cloudkill MBT slot level 5 or 6, got ${slotLevel}.`,
+  );
+}
+
+const CLOUDKILL_OUTCOME_BY_QUINT_TAG: Readonly<
+  Record<string, CloudkillMbtOutcome>
+> = {
+  CloudkillMbtInit: "init",
+  CloudkillMbtCast: "cast",
+  CloudkillMbtAppearanceSave: "appearanceSave",
+  CloudkillMbtAppearanceDamage: "appearanceDamage",
+  CloudkillMbtAppearanceResolved: "appearanceResolved",
+  CloudkillMbtTargetTurn: "targetTurn",
+  CloudkillMbtMovementSave: "movementSave",
+  CloudkillMbtMovementDamage: "movementDamage",
+  CloudkillMbtMovementResolved: "movementResolved",
+  CloudkillMbtConcentrationEnded: "concentrationEnded",
+  CloudkillMbtStrongWindEnded: "strongWindEnded",
+};
+
+const CLOUDKILL_PENDING_BY_QUINT_TAG: Readonly<
+  Record<string, CloudkillMbtPending>
+> = {
+  CloudkillMbtNoPending: "none",
+  CloudkillMbtSavingThrowPending: "savingThrow",
+  CloudkillMbtDamagePending: "damage",
+};
+
+const CLOUDKILL_TARGET_BY_QUINT_TAG: Readonly<
+  Record<string, CloudkillMbtTarget>
+> = {
+  NoCloudkillMbtTarget: "none",
+  PrimaryCloudkillMbtTarget: "primary",
+  SecondaryCloudkillMbtTarget: "secondary",
+};
+
+function normalizeCloudkillMbtQuintState(raw: unknown): CloudkillMbtProjection {
+  const state = quintRecordField(quintStateRecord(raw), "qState");
+  return {
+    casterTurn: booleanField(state, "qCasterTurn"),
+    actionAvailable: booleanField(state, "qActionAvailable"),
+    spellAvailable: booleanField(state, "qSpellAvailable"),
+    hazardActive: booleanField(state, "qHazardActive"),
+    casterConcentrating: booleanField(state, "qCasterConcentrating"),
+    slotLevel: quintIntField(state, "qSlotLevel"),
+    damageDice: quintIntField(state, "qDamageDice"),
+    durationTicks: quintIntField(state, "qDurationTicks"),
+    radiusFeet: quintIntField(state, "qRadiusFeet"),
+    heavilyObscured: booleanField(state, "qHeavilyObscured"),
+    primarySavedThisTurn: booleanField(state, "qPrimarySavedThisTurn"),
+    secondarySavedThisTurn: booleanField(state, "qSecondarySavedThisTurn"),
+    primaryHitPoints: quintIntField(state, "qPrimaryHitPoints"),
+    secondaryHitPoints: quintIntField(state, "qSecondaryHitPoints"),
+    lastMovementDistanceFeet: quintIntField(state, "qLastMovementDistanceFeet"),
+    pending: quintVariantValue(
+      state["qPending"],
+      "qPending",
+      CLOUDKILL_PENDING_BY_QUINT_TAG,
+    ),
+    pendingTarget: quintVariantValue(
+      state["qPendingTarget"],
+      "qPendingTarget",
+      CLOUDKILL_TARGET_BY_QUINT_TAG,
+    ),
+    remainingTarget: quintVariantValue(
+      state["qRemainingTarget"],
+      "qRemainingTarget",
+      CLOUDKILL_TARGET_BY_QUINT_TAG,
+    ),
+    savingThrowSucceeded: booleanField(state, "qSavingThrowSucceeded"),
+    outcome: quintVariantValue(
+      state["qOutcome"],
+      "qOutcome",
+      CLOUDKILL_OUTCOME_BY_QUINT_TAG,
+    ),
+  };
+}
+
+function quintIntField(
+  state: Readonly<Record<string, unknown>>,
+  field: string,
+): number {
+  return numberFromQuintInt(state[field], field);
+}
+
+function quintVariantValue<Value extends string>(
+  raw: unknown,
+  field: string,
+  values: Readonly<Record<string, Value>>,
+): Value {
+  const tag = quintVariantTag(raw, field);
+  const value = values[tag];
+  if (value === undefined) {
+    throw new Error(`Unexpected Quint ${field} variant ${tag}.`);
+  }
+  return value;
+}
+
+function compareCloudkillMbtStates(
+  runtime: CloudkillMbtProjection,
+  quint: CloudkillMbtProjection,
+): boolean {
+  try {
+    expect(runtime).toEqual(quint);
+  } catch (error) {
+    if (error instanceof Error) throw new Error(error.message);
+    throw error;
+  }
+  return true;
+}
