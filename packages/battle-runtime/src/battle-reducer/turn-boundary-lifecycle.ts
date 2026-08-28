@@ -62,7 +62,6 @@ import type {
   BattleConcentrationSavingThrowHole,
   BattleCloudkillMovementHole,
   BattleStartTurnOccurrenceOrderHole,
-  BattleStartTurnCompletedPrefixFill,
   BattleFill,
   BattleFlySpeedGrantEndFallCleanupFrame,
   BattleHideousLaughterRepeatSavingThrowOutcomeHole,
@@ -85,6 +84,7 @@ import type {
   BattleStatBlockRechargeRollHole,
   BattleStatBlockRechargeRollResult,
   BattleState,
+  BattleStoredLightEmitter,
   BattleTurnResources,
   BattleUnitFeatureConditionEndTurnSavingThrowOutcomeHole,
   SpellTurnStartDamage,
@@ -150,10 +150,7 @@ import {
   type CloudkillAreaHazardEffect,
   type CloudkillMovementSaveDamageRequest,
 } from "./persistent-area-save-damage.ts";
-import {
-  battleContinuationFillEquals,
-  isBattleContinuationComparableFill,
-} from "./battle-fill-equality.ts";
+import { isBattleContinuationComparableFill } from "./battle-fill-equality.ts";
 import {
   projectReplayChildResult,
   replayParentContinuationFor,
@@ -314,7 +311,10 @@ function startTurnOccurrenceTraversal(
   const second = occurrenceIds[1];
   return second === undefined
     ? { kind: "single", occurrenceId: first }
-    : { kind: "ordered", occurrenceIds: [first, second, ...occurrenceIds.slice(2)] };
+    : {
+        kind: "ordered",
+        occurrenceIds: [first, second, ...occurrenceIds.slice(2)],
+      };
 }
 
 function temporaryHitPointChoiceHole(input: {
@@ -497,25 +497,6 @@ type CloudkillMovementBoundary = {
   readonly hole: BattleCloudkillMovementHole;
 };
 
-const START_TURN_COMPLETED_PREFIX_FILL_KINDS = [
-  "attackDamageDisposition",
-  "cloudkillMovement",
-  "concentrationSavingThrow",
-  "deathSavingThrow",
-  "rolledDice",
-  "savingThrowOutcome",
-  "statBlockRechargeRoll",
-  "temporaryHitPointChoice",
-] as const satisfies ReadonlyArray<BattleStartTurnCompletedPrefixFill["kind"]>;
-
-function isStartTurnCompletedPrefixFill(
-  fill: BattleFill,
-): fill is BattleStartTurnCompletedPrefixFill {
-  return START_TURN_COMPLETED_PREFIX_FILL_KINDS.some(
-    (kind) => kind === fill.kind,
-  );
-}
-
 type CloudkillMovementBoundaryRequest = CloudkillMovementBoundary & {
   readonly fill: CloudkillMovementFill;
 };
@@ -569,12 +550,10 @@ function cloudkillMovementSaveDamageRequests(
   requests: readonly CloudkillMovementBoundaryRequest[],
 ): readonly CloudkillMovementSaveDamageRequest[] {
   return requests.flatMap(({ effect, fill }) => {
-    return fill.value.affectedCombatantIdsInResolutionOrder.map(
-      (targetId) => ({
-        effect,
-        subject: cloudkillMovementSaveSubject(targetId, effect),
-      }),
-    );
+    return fill.value.affectedCombatantIdsInResolutionOrder.map((targetId) => ({
+      effect,
+      subject: cloudkillMovementSaveSubject(targetId, effect),
+    }));
   });
 }
 
@@ -613,7 +592,9 @@ function resolveStartTurnOccurrenceSuffixAfterMovement(input: {
   readonly previouslyAcceptedHoleIds: readonly BattleHoleId[];
 }): BattleResolutionResult {
   const { checkpoint } = input;
-  const orderHoleId = holeId(startTurnOccurrenceOrderHoleKey(checkpoint.sourceTurn));
+  const orderHoleId = holeId(
+    startTurnOccurrenceOrderHoleKey(checkpoint.sourceTurn),
+  );
   const orderFills = input.fills.filter(
     (
       fill,
@@ -621,8 +602,7 @@ function resolveStartTurnOccurrenceSuffixAfterMovement(input: {
       BattleFill,
       { readonly kind: "startTurnOccurrenceOrder" }
     > =>
-      fill.kind === "startTurnOccurrenceOrder" &&
-      fill.holeId === orderHoleId,
+      fill.kind === "startTurnOccurrenceOrder" && fill.holeId === orderHoleId,
   );
   if (checkpoint.sequence.kind === "single") {
     if (
@@ -682,10 +662,36 @@ function resolveStartTurnOccurrenceSuffixAfterMovement(input: {
       "Start-turn occurrence continuation is not a member of its retained order.",
     );
   }
+  const completedPrefixHoleIds = new Set(checkpoint.completedPrefixHoleIds);
+  if (
+    completedPrefixHoleIds.size !== checkpoint.completedPrefixHoleIds.length
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Start-turn occurrence continuation records each completed prefix hole once.",
+    );
+  }
+  for (const completedHoleId of completedPrefixHoleIds) {
+    const submittedFills = input.fills.filter(
+      (fill) => fill.holeId === completedHoleId,
+    );
+    if (
+      submittedFills.length !== 1 ||
+      !isBattleContinuationComparableFill(submittedFills[0]!)
+    ) {
+      return invalidResult(
+        input.state,
+        "staleSubject",
+        "Start-turn occurrence continuation prefix must preserve each recorded fill exactly once.",
+      );
+    }
+  }
   const suffix = resolveOrderedStartTurnOccurrences({
     state: input.state,
     subject: input.parent.subject,
     sourceTurn: checkpoint.sourceTurn,
+    roundDurationCohort: checkpoint.roundDurationCohort,
     traversal: startTurnOccurrenceTraversal(
       retainedOccurrenceIds.slice(currentIndex + 1),
     ),
@@ -706,25 +712,9 @@ function resolveStartTurnOccurrenceSuffixAfterMovement(input: {
   const acceptedHoleIds = new Set<BattleHoleId>([
     ...input.previouslyAcceptedHoleIds,
     ...suffix.acceptedHoleIds,
+    ...completedPrefixHoleIds,
     ...(checkpoint.sequence.kind === "ordered" ? [orderHoleId] : []),
   ]);
-  for (const recordedFill of checkpoint.completedPrefixFills) {
-    const submittedFills = input.fills.filter(
-      (fill) => fill.holeId === recordedFill.holeId,
-    );
-    if (
-      submittedFills.length !== 1 ||
-      !isBattleContinuationComparableFill(submittedFills[0]!) ||
-      !battleContinuationFillEquals(recordedFill, submittedFills[0]!)
-    ) {
-      return invalidResult(
-        input.state,
-        "staleSubject",
-        "Start-turn occurrence continuation prefix differs from its recorded fills.",
-      );
-    }
-    acceptedHoleIds.add(recordedFill.holeId);
-  }
   if (hasUnacceptedEndTurnFill(input.fills, acceptedHoleIds)) {
     return invalidResult(
       input.state,
@@ -734,6 +724,7 @@ function resolveStartTurnOccurrenceSuffixAfterMovement(input: {
   }
   const completedState = applyRoundDurationTickAfterStartTurnOccurrences(
     suffix.state,
+    checkpoint.roundDurationCohort,
   );
   return {
     tag: "resolved",
@@ -1144,20 +1135,82 @@ function resolveEndTurn({
   };
 }
 
+function roundDurationActiveEffectKey(
+  combatantId: CombatantId,
+  effect: BattleActiveEffect,
+): string {
+  return JSON.stringify([
+    combatantId,
+    effect.kind,
+    "sourceCombatantId" in effect ? effect.sourceCombatantId : null,
+    "sourceProcedureRef" in effect ? effect.sourceProcedureRef : null,
+  ]);
+}
+
+function roundDurationLightEmitterKey(
+  emitter: BattleStoredLightEmitter,
+): string {
+  return JSON.stringify([
+    emitter.kind,
+    emitter.sourceCombatantId,
+    emitter.sourceProcedureRef,
+    "sourceEffectId" in emitter ? emitter.sourceEffectId : null,
+    "attachment" in emitter ? emitter.attachment : null,
+  ]);
+}
+
+function roundDurationCohort(
+  state: BattleState,
+): BattleStartTurnOccurrenceSequenceCheckpoint["roundDurationCohort"] {
+  const wrapsRound =
+    Number(nextInitiative(state.initiative).round) >
+    Number(state.initiative.round);
+  if (!wrapsRound) return { activeEffectKeys: [], lightEmitterKeys: [] };
+  return {
+    activeEffectKeys: [...state.combatants].flatMap(
+      ([combatantId, combatant]) =>
+        combatant.activeEffects
+          .filter(isTickingDurationActiveEffect)
+          .map((effect) => roundDurationActiveEffectKey(combatantId, effect)),
+    ),
+    lightEmitterKeys: state.lightEmitters.flatMap((emitter) =>
+      emitter.kind !== "objectInvisibleRevealLightEmitter" &&
+      emitter.expiresAt.kind === "duration"
+        ? [roundDurationLightEmitterKey(emitter)]
+        : [],
+    ),
+  };
+}
+
 function applyRoundDurationTickAfterStartTurnOccurrences(
   state: BattleState,
+  cohort: BattleStartTurnOccurrenceSequenceCheckpoint["roundDurationCohort"],
 ): BattleState {
-  if (state.initiative.alreadyActed.length > 0) return state;
-  const durationTick = tickDurationEffects(state.combatants, {
-    state,
-    spellEndTargetStatePromotionTiming:
-      END_OF_NEXT_TURN_NEW_ROUND_DURATION_TICK,
-  });
+  if (
+    cohort.activeEffectKeys.length === 0 &&
+    cohort.lightEmitterKeys.length === 0
+  )
+    return state;
+  const activeEffectKeys = new Set(cohort.activeEffectKeys);
+  const durationTick = tickDurationEffects(
+    state.combatants,
+    {
+      state,
+      spellEndTargetStatePromotionTiming:
+        END_OF_NEXT_TURN_NEW_ROUND_DURATION_TICK,
+    },
+    activeEffectKeys,
+  );
+  const lightEmitterKeys = new Set(cohort.lightEmitterKeys);
   const stateAfterTick = battleStateWithFlySpeedGrantEndFallCleanupFrames(
     {
       ...state,
       combatants: durationTick.value,
-      lightEmitters: tickDurationBattleLightEmitters(state.lightEmitters),
+      lightEmitters: state.lightEmitters.flatMap((emitter) =>
+        lightEmitterKeys.has(roundDurationLightEmitterKey(emitter))
+          ? tickDurationBattleLightEmitters([emitter])
+          : [emitter],
+      ),
     },
     durationTick.flySpeedGrantEndFallCleanupFrames,
   );
@@ -3208,6 +3261,7 @@ function resolveOrderedStartTurnOccurrences(input: {
   readonly state: BattleState;
   readonly subject: BattleSubject;
   readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
+  readonly roundDurationCohort: BattleStartTurnOccurrenceSequenceCheckpoint["roundDurationCohort"];
   readonly traversal: StartTurnOccurrenceTraversal;
   readonly fills: readonly BattleFill[];
   readonly parent: ReplayParentContinuation;
@@ -3253,9 +3307,9 @@ function resolveOrderedStartTurnOccurrences(input: {
     const handle =
       (input.context.kind === "root"
         ? input.context.offeredHandles.find(
-        (candidate) =>
-          startTurnOccurrenceOptionForHandle(candidate).occurrenceId ===
-          occurrenceId,
+            (candidate) =>
+              startTurnOccurrenceOptionForHandle(candidate).occurrenceId ===
+              occurrenceId,
           )
         : undefined) ??
       startTurnOccurrenceHandlesForState(
@@ -3403,7 +3457,8 @@ function resolveOrderedStartTurnOccurrences(input: {
         };
         continue;
       }
-      const occurrenceId = startTurnOccurrenceOptionForHandle(handle).occurrenceId;
+      const occurrenceId =
+        startTurnOccurrenceOptionForHandle(handle).occurrenceId;
       const hole = temporaryHitPointChoiceHole({
         sourceTurn: input.sourceTurn,
         occurrenceId,
@@ -3418,7 +3473,9 @@ function resolveOrderedStartTurnOccurrences(input: {
         ): fill is Extract<
           BattleFill,
           { readonly kind: "temporaryHitPointChoice" }
-        > => fill.kind === "temporaryHitPointChoice" && fill.holeId === hole.holeId,
+        > =>
+          fill.kind === "temporaryHitPointChoice" &&
+          fill.holeId === hole.holeId,
       );
       if (fills.length === 0) {
         return {
@@ -3509,11 +3566,7 @@ function resolveOrderedStartTurnOccurrences(input: {
       };
     }
     const fill = matchingFills[0]!;
-    const completedPrefixFills = input.fills.filter(
-      (candidate): candidate is BattleStartTurnCompletedPrefixFill =>
-        isStartTurnCompletedPrefixFill(candidate) &&
-        acceptedHoleIds.has(candidate.holeId),
-    );
+    const completedPrefixHoleIds = [...acceptedHoleIds].sort();
     matchedMovementFillHoleIds.add(fill.holeId);
     acceptedHoleIds.add(fill.holeId);
     const affectedIssue = cloudkillMovementAffectedCombatantIssue(prefixState, [
@@ -3544,14 +3597,13 @@ function resolveOrderedStartTurnOccurrences(input: {
     const resolution = resolveCloudkillMovementSaveDamageSequence({
       advancedState: prefixState,
       parent: input.parent,
-      requests: cloudkillMovementSaveDamageRequests([
-        { effect, hole, fill },
-      ]),
+      requests: cloudkillMovementSaveDamageRequests([{ effect, hole, fill }]),
       sourceTurn: input.sourceTurn,
       continuation: {
         kind: "turnBoundaryReplay",
         sequence: input.traversal,
-        completedPrefixFills,
+        completedPrefixHoleIds,
+        roundDurationCohort: input.roundDurationCohort,
       },
     });
     if (resolution.tag === "result") return resolution;
@@ -3662,6 +3714,7 @@ type DurationTickContext = {
 export function tickDurationEffects(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   context?: DurationTickContext,
+  cohortKeys?: ReadonlySet<string>,
 ): {
   readonly value: ReadonlyMap<CombatantId, BattleCreatureState>;
   readonly flySpeedGrantEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
@@ -3676,7 +3729,11 @@ export function tickDurationEffects(
       const expiring: BattleActiveEffect[] = [];
       const activeEffects: BattleActiveEffect[] = [];
       for (const effect of combatant.activeEffects) {
-        if (!isTickingDurationActiveEffect(effect)) {
+        if (
+          !isTickingDurationActiveEffect(effect) ||
+          (cohortKeys !== undefined &&
+            !cohortKeys.has(roundDurationActiveEffectKey(id, effect)))
+        ) {
           activeEffects.push(effect);
           continue;
         }
@@ -4233,6 +4290,7 @@ function resolveEndTurnCommandForParent(
     actorId: nextActorId,
     round: initiative.round,
   };
+  const boundaryRoundDurationCohort = roundDurationCohort(input.state);
   const startTurnOccurrenceHandles = startTurnOccurrenceHandlesForState(
     input.state,
     nextActorId,
@@ -5022,10 +5080,11 @@ function resolveEndTurnCommandForParent(
     turnStartTemporaryHitPointProcedureRefsBeforeCloudkillMovement: [],
     deferStatBlockRecharge: true,
   });
-const orderedOccurrenceResolution = resolveOrderedStartTurnOccurrences({
+  const orderedOccurrenceResolution = resolveOrderedStartTurnOccurrences({
     state: advancedTurn.state,
     subject: input.subject,
     sourceTurn: nextSourceTurn,
+    roundDurationCohort: boundaryRoundDurationCohort,
     traversal: startTurnOccurrenceTraversal(
       orderedStartTurnOccurrenceHandles.map(
         (handle) => startTurnOccurrenceOptionForHandle(handle).occurrenceId,
@@ -5059,8 +5118,7 @@ const orderedOccurrenceResolution = resolveOrderedStartTurnOccurrences({
       "Cloudkill movement fill does not belong to an applicable ordered occurrence.",
     );
   }
-  const orderedOccurrenceHoleIds =
-    orderedOccurrenceResolution.acceptedHoleIds;
+  const orderedOccurrenceHoleIds = orderedOccurrenceResolution.acceptedHoleIds;
   const movementAffectedResolution = {
     tag: "resolved" as const,
     state: orderedOccurrenceResolution.state,
@@ -5068,8 +5126,7 @@ const orderedOccurrenceResolution = resolveOrderedStartTurnOccurrences({
     damageHoleIds: orderedOccurrenceResolution.movementDamageHoleIds,
     concentrationHoleIds:
       orderedOccurrenceResolution.movementConcentrationHoleIds,
-    dispositionHoleIds:
-      orderedOccurrenceResolution.movementDispositionHoleIds,
+    dispositionHoleIds: orderedOccurrenceResolution.movementDispositionHoleIds,
   };
   const acceptedEndTurnHoleIds = new Set<BattleHoleId>([
     ...savingThrowOutcomeHoleIds,
@@ -5091,6 +5148,7 @@ const orderedOccurrenceResolution = resolveOrderedStartTurnOccurrences({
   /* v8 ignore stop -- @preserve */
   const finalState = applyRoundDurationTickAfterStartTurnOccurrences(
     movementAffectedResolution.state,
+    boundaryRoundDurationCohort,
   );
   return {
     tag: "resolved",

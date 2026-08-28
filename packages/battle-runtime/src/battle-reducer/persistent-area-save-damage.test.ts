@@ -85,7 +85,7 @@ describe("persistent-area save/damage protocol", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Insect Plague save accepts only save, damage, and Concentration fills.",
+        "Insect Plague save accepts only save, damage, damage disposition, and Concentration fills.",
     });
   });
 
@@ -108,7 +108,7 @@ describe("persistent-area save/damage protocol", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Cloudkill save accepts only save, damage, and Concentration fills.",
+        "Cloudkill save accepts only save, damage, damage disposition, and Concentration fills.",
     });
   });
 });

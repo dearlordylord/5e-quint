@@ -1,5 +1,4 @@
 import { optionalProperty } from "../optional-property.ts";
-import { sameMultisetBy } from "../mechanical-equality.ts";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import {
   holeId,
@@ -50,7 +49,6 @@ import {
 } from "./fill-hole-protocol.ts";
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
-import { battleContinuationFillEquals } from "./battle-fill-equality.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
   projectReplayChildResult,
@@ -99,7 +97,8 @@ type PersistentAreaResolutionContext =
       readonly parent: ReplayParentContinuation;
       readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
       readonly sequence: BattleStartTurnOccurrenceSequenceCheckpoint["sequence"];
-      readonly completedPrefixFills: BattleStartTurnOccurrenceSequenceCheckpoint["completedPrefixFills"];
+      readonly completedPrefixHoleIds: BattleStartTurnOccurrenceSequenceCheckpoint["completedPrefixHoleIds"];
+      readonly roundDurationCohort: BattleStartTurnOccurrenceSequenceCheckpoint["roundDurationCohort"];
       readonly occurrence: BattleStartTurnOccurrenceSequenceCheckpoint["child"];
       readonly handledPosition:
         | BattleStartTurnOccurrenceSequenceCheckpoint
@@ -136,7 +135,8 @@ type CloudkillMovementSequenceContinuation =
   | {
       readonly kind: "turnBoundaryReplay";
       readonly sequence: BattleStartTurnOccurrenceSequenceCheckpoint["sequence"];
-      readonly completedPrefixFills: BattleStartTurnOccurrenceSequenceCheckpoint["completedPrefixFills"];
+      readonly completedPrefixHoleIds: BattleStartTurnOccurrenceSequenceCheckpoint["completedPrefixHoleIds"];
+      readonly roundDurationCohort: BattleStartTurnOccurrenceSequenceCheckpoint["roundDurationCohort"];
     }
   | {
       readonly kind: "advancedPrefixAtCheckpoint";
@@ -368,10 +368,14 @@ export function resolveCloudkillMovementSaveDamageSequence(input: {
           input.continuation.kind === "turnBoundaryReplay"
             ? input.continuation.sequence
             : input.continuation.checkpoint.sequence,
-        completedPrefixFills:
+        completedPrefixHoleIds:
           input.continuation.kind === "turnBoundaryReplay"
-            ? input.continuation.completedPrefixFills
-            : input.continuation.checkpoint.completedPrefixFills,
+            ? input.continuation.completedPrefixHoleIds
+            : input.continuation.checkpoint.completedPrefixHoleIds,
+        roundDurationCohort:
+          input.continuation.kind === "turnBoundaryReplay"
+            ? input.continuation.roundDurationCohort
+            : input.continuation.checkpoint.roundDurationCohort,
         occurrence: {
           kind: "cloudkillMovementSaveDamageSequence",
           areaId: request.effect.areaId,
@@ -433,10 +437,20 @@ function sameCloudkillMovementSaveDamagePosition(
     left.child.areaId === right.child.areaId &&
     left.child.sourceProcedureRef === right.child.sourceProcedureRef &&
     left.child.targetId === right.child.targetId &&
-    sameMultisetBy(
-      left.completedPrefixFills,
-      right.completedPrefixFills,
-      battleContinuationFillEquals,
+    left.completedPrefixHoleIds.length ===
+      right.completedPrefixHoleIds.length &&
+    left.completedPrefixHoleIds.every(
+      (holeId, index) => holeId === right.completedPrefixHoleIds[index],
+    ) &&
+    left.roundDurationCohort.activeEffectKeys.length ===
+      right.roundDurationCohort.activeEffectKeys.length &&
+    left.roundDurationCohort.activeEffectKeys.every(
+      (key, index) => key === right.roundDurationCohort.activeEffectKeys[index],
+    ) &&
+    left.roundDurationCohort.lightEmitterKeys.length ===
+      right.roundDurationCohort.lightEmitterKeys.length &&
+    left.roundDurationCohort.lightEmitterKeys.every(
+      (key, index) => key === right.roundDurationCohort.lightEmitterKeys[index],
     )
   );
 }
@@ -462,12 +476,13 @@ function persistentAreaAllowedFillIssue(
     (fill) =>
       fill.kind !== "savingThrowOutcome" &&
       fill.kind !== "rolledDice" &&
-      fill.kind !== "concentrationSavingThrow",
+      fill.kind !== "concentrationSavingThrow" &&
+      fill.kind !== "attackDamageDisposition",
   )
     ? invalidResult(
         resolution.state,
         "invalidFill",
-        `${procedureName} save accepts only save, damage, and Concentration fills.`,
+        `${procedureName} save accepts only save, damage, damage disposition, and Concentration fills.`,
       )
     : null;
 }
@@ -835,10 +850,17 @@ function persistentAreaReplayPosition(
     byPersistentAreaResolutionContextKind("standalone", () => undefined),
     byPersistentAreaResolutionContextKind(
       "replayParent",
-      ({ completedPrefixFills, occurrence, sequence, sourceTurn }) => ({
+      ({
+        completedPrefixHoleIds,
+        occurrence,
+        roundDurationCohort,
+        sequence,
+        sourceTurn,
+      }) => ({
         kind: "startTurnOccurrenceSequence" as const,
         sequence,
-        completedPrefixFills,
+        completedPrefixHoleIds,
+        roundDurationCohort,
         sourceTurn,
         child: occurrence,
       }),

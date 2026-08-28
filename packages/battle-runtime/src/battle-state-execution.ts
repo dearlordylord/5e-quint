@@ -755,7 +755,12 @@ export type BattleStartTurnOccurrenceSequenceCheckpoint = {
     readonly actorId: CombatantId;
     readonly round: RoundType;
   };
-  readonly completedPrefixFills: readonly BattleStartTurnCompletedPrefixFill[];
+  /** Exact child holes completed before the current occurrence; fill values live only in the replay procedure. */
+  readonly completedPrefixHoleIds: readonly BattleHoleId[];
+  readonly roundDurationCohort: {
+    readonly activeEffectKeys: readonly string[];
+    readonly lightEmitterKeys: readonly string[];
+  };
   readonly child: {
     readonly kind: "cloudkillMovementSaveDamageSequence";
     readonly areaId: BattleAreaId;
@@ -763,20 +768,6 @@ export type BattleStartTurnOccurrenceSequenceCheckpoint = {
     readonly targetId: CombatantId;
   };
 };
-export type BattleStartTurnCompletedPrefixFill = Extract<
-  BattleFill,
-  {
-    readonly kind:
-      | "attackDamageDisposition"
-      | "cloudkillMovement"
-      | "concentrationSavingThrow"
-      | "deathSavingThrow"
-      | "rolledDice"
-      | "savingThrowOutcome"
-      | "statBlockRechargeRoll"
-      | "temporaryHitPointChoice";
-  }
->;
 export type BattleInterruptedProcedure =
   | {
       readonly kind: "replay";
@@ -5975,7 +5966,10 @@ export type BattleTemporaryHitPointChoiceHole = {
   readonly label: string;
   readonly sourceCombatantId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
-  readonly sourceTurn: { readonly actorId: CombatantId; readonly round: RoundType };
+  readonly sourceTurn: {
+    readonly actorId: CombatantId;
+    readonly round: RoundType;
+  };
   readonly occurrenceId: BattleStartTurnOccurrenceOption["occurrenceId"];
   readonly existingTemporaryHitPoints: Hp;
   readonly grantedTemporaryHitPoints: Hp;

@@ -485,7 +485,199 @@ function activeCloudkill(state: BattleState) {
   return effect;
 }
 
+function withOneTickDurationCohort(
+  state: BattleState,
+  sourceKey: string,
+): BattleState {
+  const source = state.combatants.get(spellCasterId);
+  if (source === undefined) throw new Error("Expected the Cloudkill source.");
+  const sourceProcedureRef = battleProcedureExecutionRefForTest(sourceKey);
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(spellCasterId, {
+      ...source,
+      activeEffects: [
+        ...source.activeEffects,
+        {
+          kind: "turnStartTemporaryHitPoints",
+          sourceProcedureRef,
+          sourceCombatantId: spellCasterId,
+          amount: 1,
+          expiresAt: {
+            kind: "duration",
+            durationTicks: elapsedTimeTicks(1),
+          },
+        },
+      ],
+    }),
+    lightEmitters: [
+      ...state.lightEmitters,
+      {
+        kind: "spellLightEmitter",
+        sourceProcedureRef,
+        sourceCombatantId: spellCasterId,
+        attachment: { kind: "combatant", combatantId: spellCasterId },
+        emission: { kind: "dim", radiusFeet: movementFeet(10) },
+        opaqueCoverInteraction: { kind: "blocksEmission" },
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(1),
+        },
+      },
+    ],
+  };
+}
+
 describe("Cloudkill source-turn movement", () => {
+  test("ticks only the duration cohort present before a direct round-wrap boundary", () => {
+    const cast = castCloudkill();
+    const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected the target turn to start.");
+    }
+    const boundaryState = withOneTickDurationCohort(
+      targetTurn.state,
+      "direct-round-wrap-duration-cohort",
+    );
+    const orderFrontier = endTurn({
+      state: boundaryState,
+      actorId: spellTargetId,
+    });
+    const orderFill = startTurnOccurrenceOrderFill(
+      requireResultHole(orderFrontier, "startTurnOccurrenceOrder"),
+      (occurrence) => (occurrence.kind === "cloudkillMovement" ? 0 : 1),
+    );
+    const movementFrontier = endTurn({
+      state: boundaryState,
+      actorId: spellTargetId,
+      fills: [orderFill],
+    });
+    const movementFill = cloudkillMovementFill(
+      requireResultHole(movementFrontier, "cloudkillMovement"),
+      [],
+    );
+    const resolved = endTurn({
+      state: boundaryState,
+      actorId: spellTargetId,
+      fills: [orderFill, movementFill],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") return;
+    expect(
+      resolved.state.combatants
+        .get(spellCasterId)
+        ?.activeEffects.some(
+          (effect) =>
+            "sourceProcedureRef" in effect &&
+            effect.sourceProcedureRef ===
+              battleProcedureExecutionRefForTest(
+                "direct-round-wrap-duration-cohort",
+              ),
+        ),
+    ).toBe(false);
+    expect(resolved.state.lightEmitters).toEqual([]);
+  });
+
+  test("does not age duration state first observed after an interrupted round-wrap occurrence", () => {
+    const cast = castCloudkill({ targetCanReadyRayOfFrost: true });
+    const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected the target turn to start.");
+    }
+    const readied = readyTargetRayOfFrost(
+      battleRuntimeSessionForTest({ ...cast.session, state: targetTurn.state }),
+    );
+    const movementFrontier = endTurn({
+      state: readied.state,
+      actorId: spellTargetId,
+    });
+    const movementFill = cloudkillMovementFill(
+      requireResultHole(movementFrontier, "cloudkillMovement"),
+      [spellTargetId],
+    );
+    const saveFrontier = endTurn({
+      state: readied.state,
+      actorId: spellTargetId,
+      fills: [movementFill],
+    });
+    const saveFill = singleTargetSavingThrowOutcomeFill(
+      requireResultHole(saveFrontier, "savingThrowOutcome"),
+      spellTargetId,
+      false,
+    );
+    const interrupted = endTurn({
+      state: readied.state,
+      actorId: spellTargetId,
+      fills: [movementFill, saveFill],
+    });
+    const decisionHole = requireResultHole(interrupted, "interruptDecision");
+    if (interrupted.tag !== "needsHoles") {
+      throw new Error("Expected the movement save interrupt.");
+    }
+    const postInterruptState = withOneTickDurationCohort(
+      interrupted.state,
+      "post-interrupt-round-wrap-duration-state",
+    );
+    const declined = resolveBattleInterrupt({
+      state: postInterruptState,
+      fill: interruptDecisionFill(decisionHole, {
+        kind: "decline",
+        responderId: spellTargetId,
+      }),
+    });
+    const damageFill = damageRollFillWithGroups(
+      requireResultHole(declined, "rolledDice"),
+      [[1, 1, 1, 1, 1]],
+    );
+    if (declined.tag !== "needsHoles") {
+      throw new Error("Expected movement damage.");
+    }
+    const concentrationFrontier = resolveBattleSubject({
+      state: declined.state,
+      subject: declined.subject,
+      fills: [movementFill, saveFill, damageFill],
+    });
+    const concentrationFill = concentrationSavingThrowFill(
+      requireResultHole(concentrationFrontier, "concentrationSavingThrow"),
+      true,
+    );
+    if (concentrationFrontier.tag !== "needsHoles") {
+      throw new Error("Expected Concentration save after movement damage.");
+    }
+    const resolved = resolveBattleSubject({
+      state: concentrationFrontier.state,
+      subject: concentrationFrontier.subject,
+      fills: [movementFill, saveFill, damageFill, concentrationFill],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") return;
+    expect(
+      resolved.state.combatants
+        .get(spellCasterId)
+        ?.activeEffects.find(
+          (effect) =>
+            "sourceProcedureRef" in effect &&
+            effect.sourceProcedureRef ===
+              battleProcedureExecutionRefForTest(
+                "post-interrupt-round-wrap-duration-state",
+              ),
+        )?.expiresAt,
+    ).toEqual({ kind: "duration", durationTicks: elapsedTimeTicks(1) });
+    expect(resolved.state.lightEmitters).toEqual([
+      expect.objectContaining({
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          "post-interrupt-round-wrap-duration-state",
+        ),
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(1),
+        },
+      }),
+    ]);
+  });
+
   test("lets the turn owner order simultaneous source-start damage and Cloudkill movement", () => {
     function resolveOrdering(choice: "cloudkillMovement" | "startTurnEffects") {
       const cast = castCloudkill();
@@ -815,7 +1007,8 @@ describe("Cloudkill source-turn movement", () => {
         throw new Error("Expected the target turn to start.");
       }
       const source = targetTurn.state.combatants.get(spellCasterId);
-      if (source === undefined) throw new Error("Expected the Cloudkill source.");
+      if (source === undefined)
+        throw new Error("Expected the Cloudkill source.");
       const withExistingPool = {
         ...targetTurn.state,
         combatants: new Map(targetTurn.state.combatants).set(spellCasterId, {
@@ -868,7 +1061,9 @@ describe("Cloudkill source-turn movement", () => {
         holes: [{ kind: "cloudkillMovement" }],
       });
       if (movementFrontier.tag !== "needsHoles") {
-        throw new Error("Expected Cloudkill movement after the Temporary Hit Point choice.");
+        throw new Error(
+          "Expected Cloudkill movement after the Temporary Hit Point choice.",
+        );
       }
       const completed = endTurn({
         state: boundaryState,
@@ -2100,12 +2295,7 @@ describe("Cloudkill source-turn movement", () => {
     const missingRetainedOrder = resolveBattleSubject({
       state: stateWithoutRetainedOrder,
       subject: declined.subject,
-      fills: [
-        firstMovementFill,
-        saveFill,
-        damageFill,
-        concentrationFill,
-      ],
+      fills: [firstMovementFill, saveFill, damageFill, concentrationFill],
     });
     expect(missingRetainedOrder).toMatchObject({
       tag: "invalid",
@@ -2142,12 +2332,7 @@ describe("Cloudkill source-turn movement", () => {
     const alteredRetainedOrder = endTurn({
       state: stateWithAlteredOrder,
       actorId: spellTargetId,
-      fills: [
-        firstMovementFill,
-        saveFill,
-        damageFill,
-        concentrationFill,
-      ],
+      fills: [firstMovementFill, saveFill, damageFill, concentrationFill],
     });
     expect(alteredRetainedOrder).toMatchObject({
       tag: "invalid",
@@ -2365,12 +2550,7 @@ describe("Cloudkill source-turn movement", () => {
     const secondInterrupted = resolveBattleSubject({
       state: secondSaveFrontier.state,
       subject: secondSaveFrontier.subject,
-      fills: [
-        movementFill,
-        firstSaveFill,
-        firstDamageFill,
-        secondSaveFill,
-      ],
+      fills: [movementFill, firstSaveFill, firstDamageFill, secondSaveFill],
     });
 
     expect(secondInterrupted).toMatchObject({

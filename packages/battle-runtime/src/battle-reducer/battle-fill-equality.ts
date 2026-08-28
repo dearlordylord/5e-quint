@@ -76,7 +76,10 @@ export function battleContinuationFillEquals(
       attackDamageDisposition: (left) =>
         b.kind === "attackDamageDisposition" &&
         left.holeId === b.holeId &&
-        left.value.kind === b.value.kind,
+        left.value.kind === b.value.kind &&
+        (left.value.kind !== "zeroHitPointReplacement" ||
+          (b.value.kind === "zeroHitPointReplacement" &&
+            left.value.procedureRef === b.value.procedureRef)),
       concentrationSavingThrow: (left) =>
         b.kind === "concentrationSavingThrow" &&
         left.holeId === b.holeId &&
@@ -106,10 +109,7 @@ export function battleContinuationFillEquals(
       startTurnOccurrenceOrder: (left) =>
         b.kind === "startTurnOccurrenceOrder" &&
         left.holeId === b.holeId &&
-        arrayValuesEqual(
-          left.value.occurrenceIds,
-          b.value.occurrenceIds,
-        ),
+        arrayValuesEqual(left.value.occurrenceIds, b.value.occurrenceIds),
       temporaryHitPointChoice: (left) =>
         b.kind === "temporaryHitPointChoice" &&
         left.holeId === b.holeId &&
