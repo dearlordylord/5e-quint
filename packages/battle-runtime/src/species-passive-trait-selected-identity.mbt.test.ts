@@ -1,7 +1,4 @@
-import {
-  battleStateWithAllocatedEffectOccurrencesForTest,
-  characterBattleFeatureInitForTest,
-} from "./battle-runtime.test-support.ts";
+import { characterBattleFeatureInitForTest } from "./battle-runtime.test-support.ts";
 import { battleReducerRouteEventsForDiscoveredAct } from "./battle-reducer/reducer-route.ts";
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
@@ -71,12 +68,8 @@ import {
   wizardId,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
-import {
-  battleProcedureExecutionCursor,
-  battleProcedureExecutionRef,
-} from "./identity.ts";
-import type { UnitFeatureProcedureExecution } from "./character-execution-admission.ts";
-import { difficultyClass, NonNegativeInteger } from "@dnd/shared/types";
+import { difficultyClass } from "@dnd/shared/types";
+import { battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest } from "./low-level-effect-occurrence.test-support.ts";
 
 const speciesGoliathPowerfulBuildUnitId = "species_goliath_powerful_build";
 const speciesHalflingNimblenessUnitId = "species_halfling_nimbleness";
@@ -364,34 +357,26 @@ function poisonedDwarvenResilienceEndTurnBattle(): BattleState {
   // This fixture exercises the lower-level repeat-save interaction, not spell
   // admission. Give that synthetic boundary its own source-owned procedure and
   // fixed DC so it cannot be mistaken for an admitted spell lifecycle.
-  const syntheticPoison = stateWithLowLevelSyntheticProcedureForTest(
-    result.success.state,
-    wizardId,
-  );
-  const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
-    state: syntheticPoison.state,
-    occurrences: [
-      {
-        kind: "activeEffect",
-        ownerId: poisonedDwarvenResilienceTargetId,
-        effect: {
-          kind: "spellConditionEndTurnSave",
-          sourceProcedureRef: syntheticPoison.procedureRef,
-          sourceCombatantId: wizardId,
-          condition: "poisoned",
-          conditionHadNonSpellSource: false,
-          heightenedSpellTargetDisadvantage: null,
-          save: {
-            ability: "con",
-            dc: { kind: "fixed", dc: difficultyClass(10) },
-          },
-          expiresAt: {
-            kind: "duration",
-            durationTicks: elapsedTimeTicks(10),
-          },
-        },
+  const allocated = battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest({
+    state: result.success.state,
+    sourceCombatantId: wizardId,
+    ownerId: poisonedDwarvenResilienceTargetId,
+    effect: (sourceProcedureRef) => ({
+      kind: "spellConditionEndTurnSave",
+      sourceProcedureRef,
+      sourceCombatantId: wizardId,
+      condition: "poisoned",
+      conditionHadNonSpellSource: false,
+      heightenedSpellTargetDisadvantage: null,
+      save: {
+        ability: "con",
+        dc: { kind: "fixed", dc: difficultyClass(10) },
       },
-    ],
+      expiresAt: {
+        kind: "duration",
+        durationTicks: elapsedTimeTicks(10),
+      },
+    }),
   });
   const target = allocated.state.combatants.get(
     poisonedDwarvenResilienceTargetId,
@@ -411,64 +396,6 @@ function poisonedDwarvenResilienceEndTurnBattle(): BattleState {
       poisonedDwarvenResilienceTargetId,
       poisonedTarget,
     ),
-  };
-}
-
-function stateWithLowLevelSyntheticProcedureForTest(
-  state: BattleState,
-  sourceCombatantId: ReturnType<typeof combatantId>,
-): {
-  readonly state: BattleState;
-  readonly procedureRef: ReturnType<typeof battleProcedureExecutionRef>;
-} {
-  const source = state.combatants.get(sourceCombatantId);
-  if (source === undefined || source.origin.kind !== "character") {
-    throw new Error("Expected a character source for the synthetic boundary.");
-  }
-  const ordinal = Number(source.origin.execution.nextProcedureOrdinal);
-  const procedureRef = battleProcedureExecutionRef(
-    source.origin.execution.scopeRef,
-    NonNegativeInteger(ordinal),
-  );
-  return {
-    procedureRef,
-    state: {
-      ...state,
-      combatants: new Map(state.combatants).set(sourceCombatantId, {
-        ...source,
-        origin: {
-          ...source.origin,
-          execution: {
-            ...source.origin.execution,
-            nextProcedureOrdinal: battleProcedureExecutionCursor(ordinal + 1),
-            procedureBindings: [
-              ...source.origin.execution.procedureBindings,
-              {
-                procedureRef,
-                procedure: {
-                  kind: "unitFeature",
-                  source: { kind: "intrinsic" },
-                  execution: lowLevelSyntheticProcedureExecution(),
-                },
-              },
-            ],
-          },
-        },
-      }),
-    },
-  };
-}
-
-function lowLevelSyntheticProcedureExecution(): UnitFeatureProcedureExecution {
-  return {
-    kind: "passiveArmorClassBonus",
-    armorClass: {
-      bonus: 1,
-      condition: {
-        kind: "wearingArmor",
-        categories: ["light", "medium", "heavy"],
-      },
-    },
   };
 }
 

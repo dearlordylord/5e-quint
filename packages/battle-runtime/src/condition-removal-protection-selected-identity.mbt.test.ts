@@ -39,12 +39,8 @@ import {
   hasCondition,
   type BattleState,
 } from "./unit-profile-admission.test-support.ts";
-import {
-  battleProcedureExecutionCursor,
-  battleProcedureExecutionRef,
-} from "./identity.ts";
-import type { UnitFeatureProcedureExecution } from "./character-execution-admission.ts";
-import { NonNegativeInteger, difficultyClass } from "@dnd/shared/types";
+import { difficultyClass } from "@dnd/shared/types";
+import { battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest } from "./low-level-effect-occurrence.test-support.ts";
 
 type ConditionRemovalProtectionSelectedIdentityProjection = {
   readonly targetParalyzed: boolean;
@@ -175,57 +171,45 @@ function resolveLesserRestorationChoiceBattle(): BattleState {
   // This choice-removal scenario starts at an explicitly low-level active
   // condition boundary. It does not claim admitted spell-cast history for the
   // conditions that Lesser Restoration is asked to distinguish.
-  const syntheticParalysis = stateWithLowLevelSyntheticProcedureForTest(
-    session.state,
-    spellCasterId,
-  );
-  const syntheticPoison = stateWithLowLevelSyntheticProcedureForTest(
-    syntheticParalysis.state,
-    spellCasterId,
-  );
-  const paralyzedEffect = {
-    kind: "spellConditionEndTurnSave" as const,
-    sourceProcedureRef: syntheticParalysis.procedureRef,
+  const syntheticParalysis =
+    battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest({
+      state: session.state,
+      sourceCombatantId: spellCasterId,
+      ownerId: spellTargetId,
+      effect: (sourceProcedureRef) => ({
+        kind: "spellConditionEndTurnSave",
+        sourceProcedureRef,
+        sourceCombatantId: spellCasterId,
+        condition: "paralyzed",
+        conditionHadNonSpellSource: false,
+        heightenedSpellTargetDisadvantage: null,
+        save: {
+          ability: "wis",
+          dc: { kind: "fixed", dc: difficultyClass(11) },
+        },
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(10),
+        },
+      }),
+    });
+  const allocated = battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest({
+    state: syntheticParalysis.state,
     sourceCombatantId: spellCasterId,
-    condition: "paralyzed" as const,
-    conditionHadNonSpellSource: false,
-    heightenedSpellTargetDisadvantage: null,
-    save: {
-      ability: "wis" as const,
-      dc: { kind: "fixed" as const, dc: difficultyClass(11) },
-    },
-    expiresAt: {
-      kind: "duration" as const,
-      durationTicks: elapsedTimeTicks(10),
-    },
-  };
-  const poisonedEffect = {
-    kind: "spellCondition" as const,
-    sourceProcedureRef: syntheticPoison.procedureRef,
-    sourceCombatantId: spellCasterId,
-    condition: "poisoned" as const,
-    conditionHadNonSpellSource: false,
-    escape: null,
-    turnStartDamage: null,
-    expiresAt: {
-      kind: "duration" as const,
-      durationTicks: elapsedTimeTicks(10),
-    },
-  };
-  const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
-    state: syntheticPoison.state,
-    occurrences: [
-      {
-        kind: "activeEffect",
-        ownerId: spellTargetId,
-        effect: paralyzedEffect,
+    ownerId: spellTargetId,
+    effect: (sourceProcedureRef) => ({
+      kind: "spellCondition",
+      sourceProcedureRef,
+      sourceCombatantId: spellCasterId,
+      condition: "poisoned",
+      conditionHadNonSpellSource: false,
+      escape: null,
+      turnStartDamage: null,
+      expiresAt: {
+        kind: "duration",
+        durationTicks: elapsedTimeTicks(10),
       },
-      {
-        kind: "activeEffect",
-        ownerId: spellTargetId,
-        effect: poisonedEffect,
-      },
-    ],
+    }),
   });
   const target = requireCombatant(allocated.state, spellTargetId);
   const state: BattleState = {
@@ -369,31 +353,23 @@ function resolveProtectionFromPoisonBattle(): {
   });
   // The existing poison is a deliberately low-level condition-removal input;
   // Protection from Poison itself is still admitted and resolved below.
-  const syntheticPoison = stateWithLowLevelSyntheticProcedureForTest(
-    session.state,
-    spellCasterId,
-  );
-  const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
-    state: syntheticPoison.state,
-    occurrences: [
-      {
-        kind: "activeEffect",
-        ownerId: spellTargetId,
-        effect: {
-          kind: "spellCondition" as const,
-          sourceProcedureRef: syntheticPoison.procedureRef,
-          sourceCombatantId: spellCasterId,
-          condition: "poisoned" as const,
-          conditionHadNonSpellSource: true,
-          escape: null,
-          turnStartDamage: null,
-          expiresAt: {
-            kind: "duration" as const,
-            durationTicks: elapsedTimeTicks(10),
-          },
-        },
+  const allocated = battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest({
+    state: session.state,
+    sourceCombatantId: spellCasterId,
+    ownerId: spellTargetId,
+    effect: (sourceProcedureRef) => ({
+      kind: "spellCondition" as const,
+      sourceProcedureRef,
+      sourceCombatantId: spellCasterId,
+      condition: "poisoned" as const,
+      conditionHadNonSpellSource: true,
+      escape: null,
+      turnStartDamage: null,
+      expiresAt: {
+        kind: "duration" as const,
+        durationTicks: elapsedTimeTicks(10),
       },
-    ],
+    }),
   });
   const target = requireCombatant(allocated.state, spellTargetId);
   const state: BattleState = {
@@ -468,64 +444,6 @@ function projectConditionRemovalProtectionSelectedIdentityState(
     ),
     bonusActionAvailable: snapshot.turn.bonusActionAvailable,
     lastResult,
-  };
-}
-
-function stateWithLowLevelSyntheticProcedureForTest(
-  state: BattleState,
-  sourceCombatantId: typeof spellCasterId,
-): {
-  readonly state: BattleState;
-  readonly procedureRef: BattleProcedureExecutionRef;
-} {
-  const source = requireCombatant(state, sourceCombatantId);
-  if (source.origin.kind !== "character") {
-    throw new Error("Expected a character source for the synthetic boundary.");
-  }
-  const ordinal = Number(source.origin.execution.nextProcedureOrdinal);
-  const procedureRef = battleProcedureExecutionRef(
-    source.origin.execution.scopeRef,
-    NonNegativeInteger(ordinal),
-  );
-  return {
-    procedureRef,
-    state: {
-      ...state,
-      combatants: new Map(state.combatants).set(sourceCombatantId, {
-        ...source,
-        origin: {
-          ...source.origin,
-          execution: {
-            ...source.origin.execution,
-            nextProcedureOrdinal: battleProcedureExecutionCursor(ordinal + 1),
-            procedureBindings: [
-              ...source.origin.execution.procedureBindings,
-              {
-                procedureRef,
-                procedure: {
-                  kind: "unitFeature",
-                  source: { kind: "intrinsic" },
-                  execution: lowLevelSyntheticProcedureExecution(),
-                },
-              },
-            ],
-          },
-        },
-      }),
-    },
-  };
-}
-
-function lowLevelSyntheticProcedureExecution(): UnitFeatureProcedureExecution {
-  return {
-    kind: "passiveArmorClassBonus",
-    armorClass: {
-      bonus: 1,
-      condition: {
-        kind: "wearingArmor",
-        categories: ["light", "medium", "heavy"],
-      },
-    },
   };
 }
 
