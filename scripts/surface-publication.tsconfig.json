@@ -11,6 +11,7 @@
     "surface-portable-case-oracle.ts",
     "srd-surface-publication-artifacts.ts",
     "srd-stat-block-aggregate.ts",
+    "stat-block-procedure-pressure.ts",
     "srd521-stat-block-parity.ts",
     "srd521-stat-block-parity.test.ts"
   ],
