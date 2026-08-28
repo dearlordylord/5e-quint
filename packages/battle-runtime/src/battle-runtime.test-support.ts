@@ -4128,12 +4128,14 @@ type AuthoredNonSpellExecutableProcedure = Exclude<
   AuthoredExecutableProcedure,
   { readonly kind: "spellcasting" }
 >;
+export type NonSpellExecutableProcedureKind =
+  AuthoredNonSpellExecutableProcedure["kind"];
 export type NonSpellExecutableProcedureEntry = Extract<
   AuthoredExecutableProcedureEntry,
   { readonly procedure: AuthoredNonSpellExecutableProcedure }
 >;
 export type NonSpellExecutableProcedureEntryOfKind<
-  Kind extends AuthoredNonSpellExecutableProcedure["kind"],
+  Kind extends NonSpellExecutableProcedureKind,
 > = Omit<NonSpellExecutableProcedureEntry, "procedure"> & {
   readonly procedure: Extract<
     AuthoredNonSpellExecutableProcedure,
@@ -4144,7 +4146,7 @@ type AttackProcedureEntry =
   NonSpellExecutableProcedureEntryOfKind<"attack_roll">;
 
 export function isNonSpellExecutableProcedureEntryOfKind<
-  Kind extends AuthoredNonSpellExecutableProcedure["kind"],
+  Kind extends NonSpellExecutableProcedureKind,
 >(
   entry: StatBlockProcedureEntry,
   kind: Kind,

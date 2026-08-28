@@ -21,6 +21,7 @@ import type {
   BattleHole,
   BattleState,
   BattleSubject,
+  NonSpellExecutableProcedureKind,
 } from "./battle-runtime.test-support.ts";
 import type { BattleActiveEffect } from "./battle-state-execution.ts";
 import {
@@ -309,8 +310,8 @@ function authoredAttackProcedure(
   return entry.procedure;
 }
 
-function authoredProcedure<
-  Kind extends Parameters<typeof isNonSpellExecutableProcedureEntryOfKind>[1],
+function requireNonSpellExecutableProcedureEntryOfKind<
+  Kind extends NonSpellExecutableProcedureKind,
 >(record: StatBlockRecord, ordinal: number, kind: Kind) {
   const entry = record.statBlock.actions?.find(
     (candidate) =>
@@ -1675,8 +1676,16 @@ describe("battle runtime: Stat Block actions", () => {
   test("limited-use Stat Block Multiattack rejects a replay after its dispatch is spent", () => {
     const base = monsterMultiattackStatBlock({ scimitarCount: 1 });
     const actions = base.statBlock.actions;
-    const scimitar = authoredProcedure(base, 1, "attack_roll");
-    const multiattack = authoredProcedure(base, 3, "multiattack");
+    const scimitar = requireNonSpellExecutableProcedureEntryOfKind(
+      base,
+      1,
+      "attack_roll",
+    );
+    const multiattack = requireNonSpellExecutableProcedureEntryOfKind(
+      base,
+      3,
+      "multiattack",
+    );
     if (actions === undefined) {
       throw new Error("Expected the synthetic Multiattack fixtures.");
     }
@@ -1761,7 +1770,11 @@ describe("battle runtime: Stat Block actions", () => {
   test("Stat Block Multiattack spends its own limited-use resource and rejects replay", () => {
     const base = monsterMultiattackStatBlock();
     const actions = base.statBlock.actions;
-    const multiattack = authoredProcedure(base, 3, "multiattack");
+    const multiattack = requireNonSpellExecutableProcedureEntryOfKind(
+      base,
+      3,
+      "multiattack",
+    );
     if (actions === undefined) {
       throw new Error("Expected the synthetic Multiattack fixtures.");
     }
