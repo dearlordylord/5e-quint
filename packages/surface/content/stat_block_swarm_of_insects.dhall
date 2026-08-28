@@ -58,7 +58,7 @@ in  { challengeRating = 0.5
             , rest =
               [ S.speedAlternative
                   ( S.SpeedAlternative.fly
-                      { feet = 20, hover = None Bool }
+                      (S.FlySpeed.ordinary { feet = 20 })
                   )
               ]
             }

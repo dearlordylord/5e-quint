@@ -66,7 +66,8 @@ let nonEmptyToList =
 
 let SpeedDistance : Type = { feet : Natural }
 
-let FlySpeed : Type = { feet : Natural, hover : Optional Bool }
+let FlySpeed : Type =
+      < hovering : SpeedDistance | ordinary : SpeedDistance >
 
 let SpeedAlternative : Type =
       < burrow : SpeedDistance
@@ -97,10 +98,21 @@ let speedAlternative : SpeedAlternative -> SpeedAlternativeRecord =
           , climb = ordinarySpeedAlternative "climb"
           , fly =
               λ(fly : FlySpeed) ->
-                { feet = { kind = "literal", value = fly.feet }
-                , hover = fly.hover
-                , kind = "fly"
-                }
+                merge
+                  { hovering =
+                      λ(input : SpeedDistance) ->
+                        { feet = { kind = "literal", value = input.feet }
+                        , hover = Some True
+                        , kind = "fly"
+                        }
+                  , ordinary =
+                      λ(input : SpeedDistance) ->
+                        { feet = { kind = "literal", value = input.feet }
+                        , hover = None Bool
+                        , kind = "fly"
+                        }
+                  }
+                  fly
           , swim = ordinarySpeedAlternative "swim"
           , walk = ordinarySpeedAlternative "walk"
           }
@@ -609,6 +621,7 @@ let trait : TraitInput -> Trait =
 
 in  { Effect
     , Dispatch
+    , FlySpeed
     , SpeedAlternative
     , SpellRef
     , Group
