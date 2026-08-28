@@ -1328,7 +1328,7 @@ const BattleOngoingSpellEffectRefSchema = Schema.Union([
     sourceCombatantId: CombatantId,
   }),
 ]);
-const BattleAntimagicFieldOngoingSpellEffectRefSchema = Schema.Union([
+const BattleOngoingSpellOccurrenceRefSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("spellLightEmitter"),
     effectRef: BattleEffectExecutionRef,
@@ -1342,20 +1342,29 @@ const BattleAntimagicFieldOngoingSpellEffectRefSchema = Schema.Union([
     effectRef: BattleEffectExecutionRef,
   }),
 ]);
+const BattleAntimagicFieldOngoingSpellEffectRefSchema =
+  BattleOngoingSpellOccurrenceRefSchema;
 
+const BattleOngoingSpellCombatantTargetSchema = Schema.Struct({
+  kind: Schema.Literal("combatant"),
+  combatantId: CombatantId,
+});
+const BattleOngoingSpellObjectTargetSchema = Schema.Struct({
+  kind: Schema.Literal("object"),
+  objectId: BattleObjectId,
+});
+const BattleOngoingSpellMagicalEffectTargetSchema = Schema.Struct({
+  kind: Schema.Literal("magicalEffect"),
+  effect: BattleOngoingSpellEffectRefSchema,
+});
+const BattleOngoingSpellOccurrenceTargetSchema = Schema.Struct({
+  kind: Schema.Literal("magicalEffect"),
+  effect: BattleOngoingSpellOccurrenceRefSchema,
+});
 const BattleOngoingSpellTargetSchema = Schema.Union([
-  Schema.Struct({
-    kind: Schema.Literal("combatant"),
-    combatantId: CombatantId,
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("object"),
-    objectId: BattleObjectId,
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("magicalEffect"),
-    effect: BattleOngoingSpellEffectRefSchema,
-  }),
+  BattleOngoingSpellCombatantTargetSchema,
+  BattleOngoingSpellObjectTargetSchema,
+  BattleOngoingSpellMagicalEffectTargetSchema,
 ]);
 
 const BattleOngoingSpellTargetWithinRangeFactSchema = Schema.Struct({
@@ -2699,13 +2708,28 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     dc: DifficultyClass,
     rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
-    spellcastingAbilityCheck: Schema.Struct({
-      casterId: CombatantId,
-      sourceProcedureRef: BattleProcedureExecutionRef,
-      target: BattleOngoingSpellTargetSchema,
-      effect: BattleAntimagicFieldOngoingSpellEffectRefSchema,
-      contestedSpellLevel: BattleSpellEffectLevel,
-    }),
+    spellcastingAbilityCheck: Schema.Union([
+      Schema.Struct({
+        casterId: CombatantId,
+        sourceProcedureRef: BattleProcedureExecutionRef,
+        target: BattleOngoingSpellOccurrenceTargetSchema,
+        checkedOccurrence: Schema.optionalKey(Schema.Never),
+        contestedSpellLevel: BattleSpellEffectLevel,
+      }),
+      Schema.Struct({
+        casterId: CombatantId,
+        sourceProcedureRef: BattleProcedureExecutionRef,
+        target: Schema.Union([
+          BattleOngoingSpellCombatantTargetSchema,
+          BattleOngoingSpellObjectTargetSchema,
+        ]),
+        checkedOccurrence: Schema.Struct({
+          ownerId: CombatantId,
+          effect: BattleOngoingSpellOccurrenceRefSchema,
+        }),
+        contestedSpellLevel: BattleSpellEffectLevel,
+      }),
+    ]),
     ...D20TestNaturalOneRerollHoleOptionsSchema,
   }),
   Schema.Struct({
@@ -6528,7 +6552,7 @@ type SerializedExecutionReferenceOwnership =
   | {
       readonly kind: "effectOccurrence";
       readonly ref: BattleEffectExecutionRef;
-      readonly ownerId: undefined;
+      readonly ownerId: CombatantId | undefined;
       readonly effectOccurrenceKind: SerializedEffectOccurrenceKind;
     };
 
@@ -6542,13 +6566,25 @@ function serializedExecutionReference(
 function serializedEffectOccurrenceReference(
   ref: BattleEffectExecutionRef,
   effectOccurrenceKind: SerializedEffectOccurrenceKind,
+  ownerId: CombatantId | undefined,
 ): SerializedExecutionReferenceOwnership {
   return {
     kind: "effectOccurrence",
     ref,
-    ownerId: undefined,
+    ownerId,
     effectOccurrenceKind,
   };
+}
+
+function serializedOngoingSpellOccurrenceKind(
+  effect: Schema.Schema.Type<typeof BattleOngoingSpellOccurrenceRefSchema>,
+): SerializedEffectOccurrenceKind {
+  return Match.value(effect).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      spellActiveEffect: () => "activeEffect" as const,
+      spellLightEmitter: () => "storedLightEmitter" as const,
+    }),
+  );
 }
 
 function serializedSubjectProcedureReference(
@@ -6582,8 +6618,9 @@ function serializedBattleHoleExecutionReferences(
   const boundOccurrence = (
     ref: BattleEffectExecutionRef,
     effectOccurrenceKind: SerializedEffectOccurrenceKind,
+    ownerId?: CombatantId,
   ): SerializedExecutionReferenceOwnership =>
-    serializedEffectOccurrenceReference(ref, effectOccurrenceKind);
+    serializedEffectOccurrenceReference(ref, effectOccurrenceKind, ownerId);
   const attackOptionReferences = (
     attack: Extract<
       EncodedBattleHole,
@@ -6624,12 +6661,13 @@ function serializedBattleHoleExecutionReferences(
       ...bonuses,
     ];
     const occurrenceSource = (owner: {
+      readonly targetId: CombatantId;
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly sourceCombatantId: CombatantId;
       readonly effectRef: BattleEffectExecutionRef;
     }): readonly SerializedExecutionReferenceOwnership[] => [
       source(owner.sourceProcedureRef, owner.sourceCombatantId),
-      boundOccurrence(owner.effectRef, "activeEffect"),
+      boundOccurrence(owner.effectRef, "activeEffect", owner.targetId),
       ...bonuses,
     ];
     return Match.value(value).pipe(
@@ -6747,12 +6785,13 @@ function serializedBattleHoleExecutionReferences(
       source(owner.sourceProcedureRef, owner.sourceCombatantId),
     ];
     const activeOccurrenceSource = (owner: {
+      readonly targetId: CombatantId;
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly sourceCombatantId: CombatantId;
       readonly effectRef: BattleEffectExecutionRef;
     }): readonly SerializedExecutionReferenceOwnership[] => [
       source(owner.sourceProcedureRef, owner.sourceCombatantId),
-      boundOccurrence(owner.effectRef, "activeEffect"),
+      boundOccurrence(owner.effectRef, "activeEffect", owner.targetId),
     ];
     return Match.value(value).pipe(
       Match.when({ sourceProcedureRef: Match.any }, (hole) => [
@@ -6761,7 +6800,11 @@ function serializedBattleHoleExecutionReferences(
           Match.when({ spellMarkedDamageRiders: Match.any }, (spellDamage) =>
             (spellDamage.spellMarkedDamageRiders ?? []).flatMap((rider) => [
               owned(rider.sourceProcedureRef, rider.sourceCombatantId),
-              boundOccurrence(rider.effectRef, "activeEffect"),
+              boundOccurrence(
+                rider.effectRef,
+                "activeEffect",
+                rider.sourceCombatantId,
+              ),
             ]),
           ),
           Match.orElse(() => []),
@@ -6796,11 +6839,19 @@ function serializedBattleHoleExecutionReferences(
       ),
       Match.when({ insectPlagueAreaHazard: Match.any }, (hole) => [
         ...procedureSource(hole.insectPlagueAreaHazard),
-        boundOccurrence(hole.insectPlagueAreaHazard.effectRef, "activeEffect"),
+        boundOccurrence(
+          hole.insectPlagueAreaHazard.effectRef,
+          "activeEffect",
+          hole.insectPlagueAreaHazard.sourceCombatantId,
+        ),
       ]),
       Match.when({ cloudkillAreaHazard: Match.any }, (hole) => [
         ...procedureSource(hole.cloudkillAreaHazard),
-        boundOccurrence(hole.cloudkillAreaHazard.effectRef, "activeEffect"),
+        boundOccurrence(
+          hole.cloudkillAreaHazard.effectRef,
+          "activeEffect",
+          hole.cloudkillAreaHazard.sourceCombatantId,
+        ),
       ]),
       Match.when({ attack: Match.any }, (hole) => [
         ...attackOptionReferences(hole.attack),
@@ -6809,11 +6860,19 @@ function serializedBattleHoleExecutionReferences(
         ),
         ...(hole.spellWeaponDamageRiders ?? []).flatMap((rider) => [
           owned(rider.sourceProcedureRef, rider.sourceCombatantId),
-          boundOccurrence(rider.effectRef, "activeEffect"),
+          boundOccurrence(
+            rider.effectRef,
+            "activeEffect",
+            rider.sourceCombatantId,
+          ),
         ]),
         ...(hole.spellMarkedDamageRiders ?? []).flatMap((rider) => [
           owned(rider.sourceProcedureRef, rider.sourceCombatantId),
-          boundOccurrence(rider.effectRef, "activeEffect"),
+          boundOccurrence(
+            rider.effectRef,
+            "activeEffect",
+            rider.sourceCombatantId,
+          ),
         ]),
         ...(hole.cunningStrikeOptions ?? []).flatMap((option) => [
           bound(option.procedureRef),
@@ -6901,17 +6960,30 @@ function serializedBattleHoleExecutionReferences(
       ongoingSpellTargetChoice: (value) => [
         owned(value.procedureRef, value.casterId),
         ...value.choices.flatMap((choice) =>
-          choice.kind === "magicalEffect" &&
-          choice.effect.kind !== "antimagicFieldAura"
-            ? [
-                boundOccurrence(
-                  choice.effect.effectRef,
-                  choice.effect.kind === "spellActiveEffect"
-                    ? "activeEffect"
-                    : "storedLightEmitter",
+          Match.value(choice).pipe(
+            Match.discriminatorsExhaustive("kind")({
+              combatant: () => [],
+              object: () => [],
+              magicalEffect: ({ effect }) =>
+                Match.value(effect).pipe(
+                  Match.discriminatorsExhaustive("kind")({
+                    antimagicFieldAura: () => [],
+                    spellActiveEffect: (occurrence) => [
+                      boundOccurrence(
+                        occurrence.effectRef,
+                        serializedOngoingSpellOccurrenceKind(occurrence),
+                      ),
+                    ],
+                    spellLightEmitter: (occurrence) => [
+                      boundOccurrence(
+                        occurrence.effectRef,
+                        serializedOngoingSpellOccurrenceKind(occurrence),
+                      ),
+                    ],
+                  }),
                 ),
-              ]
-            : [],
+            }),
+          ),
         ),
       ],
       objectContactTargets: (value) => [
@@ -6973,38 +7045,65 @@ function serializedBattleHoleExecutionReferences(
       savingThrowOutcome: savingThrowReferences,
       gustOfWindLineDirectionChoice: (value) => [
         source(value.sourceProcedureRef, value.sourceCombatantId),
-        boundOccurrence(value.effectRef, "activeEffect"),
+        boundOccurrence(
+          value.effectRef,
+          "activeEffect",
+          value.sourceCombatantId,
+        ),
       ],
       movableZoneRepositionMovement: (value) => [
         source(
           value.movableZone.sourceProcedureRef,
           value.movableZone.sourceCombatantId,
         ),
-        boundOccurrence(value.movableZone.effectRef, "activeEffect"),
+        boundOccurrence(
+          value.movableZone.effectRef,
+          "activeEffect",
+          value.movableZone.sourceCombatantId,
+        ),
       ],
       cloudkillMovement: (value) => [
         source(value.sourceProcedureRef, value.sourceCombatantId),
-        boundOccurrence(value.effectRef, "activeEffect"),
+        boundOccurrence(
+          value.effectRef,
+          "activeEffect",
+          value.sourceCombatantId,
+        ),
       ],
       startTurnOccurrenceOrder: () => [],
       temporaryHitPointChoice: (value) => [
         source(value.sourceProcedureRef, value.sourceCombatantId),
-        boundOccurrence(value.effectRef, "activeEffect"),
+        boundOccurrence(
+          value.effectRef,
+          "activeEffect",
+          value.sourceTurn.actorId,
+        ),
       ],
       statBlockRechargeRoll: (value) =>
         value.rechargeTargets.map((ref) => owned(ref, value.combatantId)),
-      spellcastingAbilityCheck: (value) => [
-        source(
-          value.spellcastingAbilityCheck.sourceProcedureRef,
-          value.spellcastingAbilityCheck.casterId,
-        ),
-        boundOccurrence(
-          value.spellcastingAbilityCheck.effect.effectRef,
-          value.spellcastingAbilityCheck.effect.kind === "spellActiveEffect"
-            ? "activeEffect"
-            : "storedLightEmitter",
-        ),
-      ],
+      spellcastingAbilityCheck: (value) => {
+        const check = value.spellcastingAbilityCheck;
+        return [
+          source(check.sourceProcedureRef, check.casterId),
+          ...Match.value(check).pipe(
+            Match.when({ target: { kind: "magicalEffect" } }, (magical) => [
+              boundOccurrence(
+                magical.target.effect.effectRef,
+                serializedOngoingSpellOccurrenceKind(magical.target.effect),
+              ),
+            ]),
+            Match.orElse((aggregate) => [
+              boundOccurrence(
+                aggregate.checkedOccurrence.effect.effectRef,
+                serializedOngoingSpellOccurrenceKind(
+                  aggregate.checkedOccurrence.effect,
+                ),
+                aggregate.checkedOccurrence.ownerId,
+              ),
+            ]),
+          ),
+        ];
+      },
       sanctuaryInterdictionOutcome: (value) => [
         owned(value.sourceProcedureRef, value.sourceCombatantId),
         source(value.triggeringProcedureRef, value.triggeringCombatantId),
@@ -7035,7 +7134,11 @@ function serializedBattleHoleExecutionReferences(
           value.movableZone.sourceProcedureRef,
           value.movableZone.sourceCombatantId,
         ),
-        boundOccurrence(value.movableZone.effectRef, "activeEffect"),
+        boundOccurrence(
+          value.movableZone.effectRef,
+          "activeEffect",
+          value.movableZone.sourceCombatantId,
+        ),
       ],
       shoveOutcome: noSerializedExecutionReferences,
       toolPossessionFacts: noSerializedExecutionReferences,
@@ -7334,30 +7437,6 @@ function serializedObscurementZoneOwnsSource(
   );
 }
 
-function serializedSpellcastingAbilityCheckTargetMatchesEffect(
-  hole: EncodedBattleHole,
-): boolean {
-  if (
-    hole.kind !== "spellcastingAbilityCheck" ||
-    hole.spellcastingAbilityCheck.target.kind !== "magicalEffect"
-  ) {
-    return true;
-  }
-  const expected = hole.spellcastingAbilityCheck.effect;
-  return Match.value(hole.spellcastingAbilityCheck.target.effect).pipe(
-    Match.discriminatorsExhaustive("kind")({
-      spellLightEmitter: (target) =>
-        expected.kind === "spellLightEmitter" &&
-        target.effectRef === expected.effectRef,
-      spellActiveEffect: (target) =>
-        expected.kind === "spellActiveEffect" &&
-        target.activeEffectKind === expected.activeEffectKind &&
-        target.effectRef === expected.effectRef,
-      antimagicFieldAura: () => false,
-    }),
-  );
-}
-
 function serializedBattleHoleOwnsBoundExecutionReferences(input: {
   readonly hole: EncodedBattleHole;
   readonly combatants: readonly EncodedBattleCreatureSnapshot[];
@@ -7367,22 +7446,26 @@ function serializedBattleHoleOwnsBoundExecutionReferences(input: {
     | undefined;
 }): boolean {
   const { hole, combatants, boundExecutionRefs, expectedProcedureRefs } = input;
-  if (!serializedSpellcastingAbilityCheckTargetMatchesEffect(hole)) {
-    return false;
-  }
   return serializedBattleHoleExecutionReferences(hole).every((reference) => {
     if (!boundExecutionRefs.has(reference.ref)) return false;
-    if (
-      reference.kind === "effectOccurrence" &&
-      !combatants.some((combatant) =>
-        combatant.effectOccurrences.some(
-          (occurrence) =>
-            occurrence.kind === reference.effectOccurrenceKind &&
-            occurrence.effectRef === reference.ref,
-        ),
-      )
-    ) {
-      return false;
+    if (reference.kind === "effectOccurrence") {
+      const eligibleOwners =
+        reference.ownerId === undefined
+          ? combatants
+          : combatants.filter(
+              (combatant) => combatant.combatantId === reference.ownerId,
+            );
+      if (
+        !eligibleOwners.some((combatant) =>
+          combatant.effectOccurrences.some(
+            (occurrence) =>
+              occurrence.kind === reference.effectOccurrenceKind &&
+              occurrence.effectRef === reference.ref,
+          ),
+        )
+      ) {
+        return false;
+      }
     }
     if (
       reference.kind === "subjectProcedure" &&

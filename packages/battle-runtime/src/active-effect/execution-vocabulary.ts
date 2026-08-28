@@ -89,10 +89,12 @@ export type BattleOngoingSpellEffectRef =
       readonly areaId: BattleAreaId;
       readonly sourceCombatantId: CombatantId;
     };
-export type BattleAntimagicFieldOngoingSpellEffectRef = Exclude<
+export type BattleOngoingSpellOccurrenceRef = Exclude<
   BattleOngoingSpellEffectRef,
   { readonly kind: "antimagicFieldAura" }
 >;
+export type BattleAntimagicFieldOngoingSpellEffectRef =
+  BattleOngoingSpellOccurrenceRef;
 
 export type BattleAntimagicFieldAuraMembership = {
   readonly kind: "antimagicFieldAuraMembership";

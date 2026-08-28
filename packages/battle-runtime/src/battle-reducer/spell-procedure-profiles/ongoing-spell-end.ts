@@ -248,10 +248,12 @@ type TrackedDispellableOngoingSpellActiveEffect = Extract<
 type BattleTrackedOngoingSpellOccurrence =
   | {
       readonly kind: "lightEmitter";
+      readonly ownerId: CombatantId;
       readonly emitter: BattleTrackedOngoingSpellLightEmitter;
     }
   | {
       readonly kind: "activeEffect";
+      readonly ownerId: CombatantId;
       readonly effect: TrackedDispellableOngoingSpellActiveEffect;
     };
 type AntimagicFieldAuraOngoingSpellEffectRef = Extract<
@@ -615,6 +617,21 @@ function ongoingSpellEndAbilityCheckHole(
   const contestedSpellLevel =
     ongoingSpellOccurrenceSourceSpellLevel(occurrence);
   const dc = difficultyClass(10 + contestedSpellLevel);
+  const checkedTarget = Match.value(target).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      magicalEffect: () => ({
+        target: { kind: "magicalEffect" as const, effect },
+      }),
+      combatant: (combatantTarget) => ({
+        target: combatantTarget,
+        checkedOccurrence: { ownerId: occurrence.ownerId, effect },
+      }),
+      object: (objectTarget) => ({
+        target: objectTarget,
+        checkedOccurrence: { ownerId: occurrence.ownerId, effect },
+      }),
+    }),
+  );
   return {
     holeInstanceKey: holeInstanceKey(
       `battle:spell:ongoing-end:check:${ongoingSpellEffectRefKey(effect)}`,
@@ -628,9 +645,8 @@ function ongoingSpellEndAbilityCheckHole(
     spellcastingAbilityCheck: {
       casterId,
       sourceProcedureRef: invocation.sourceProcedureRef,
-      target,
-      effect,
       contestedSpellLevel,
+      ...checkedTarget,
     },
   };
 }
@@ -696,14 +712,26 @@ function matchingTrackedOngoingSpellOccurrences(
   const lightEmitters = state.lightEmitters.flatMap((emitter) =>
     isTrackedOngoingSpellLightEmitter(emitter) &&
     spellLightEmitterMatchesOngoingTarget(emitter, target)
-      ? [{ kind: "lightEmitter" as const, emitter }]
+      ? [
+          {
+            kind: "lightEmitter" as const,
+            ownerId: emitter.sourceCombatantId,
+            emitter,
+          },
+        ]
       : [],
   );
   const activeEffects = [...state.combatants.values()].flatMap((combatant) =>
     combatant.activeEffects.flatMap((effect) =>
       isTrackedDispellableOngoingSpellActiveEffect(effect) &&
       dispellableActiveEffectMatchesOngoingTarget(effect, target)
-        ? [{ kind: "activeEffect" as const, effect }]
+        ? [
+            {
+              kind: "activeEffect" as const,
+              ownerId: combatant.combatantId,
+              effect,
+            },
+          ]
         : [],
     ),
   );

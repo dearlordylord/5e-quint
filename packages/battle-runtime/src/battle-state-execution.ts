@@ -288,6 +288,7 @@ import type {
   BattleAntimagicFieldOngoingSpellEffectRef,
   BattleCommandOption,
   BattleOngoingSpellEffectRef,
+  BattleOngoingSpellOccurrenceRef,
   MagicWeaponEnhancementBonus,
   SpellAttackKind,
   SpellConditionRepeatSave,
@@ -301,6 +302,7 @@ export {
   type BattleDancingLight,
   type BattleDancingLightList,
   type BattleOngoingSpellEffectRef,
+  type BattleOngoingSpellOccurrenceRef,
   type MagicWeaponEnhancementBonus,
   type SpellAttackKind,
   type SpellConditionRepeatSave,
@@ -6102,10 +6104,26 @@ export type BattleSpellcastingAbilityCheckHole = {
   readonly spellcastingAbilityCheck: {
     readonly casterId: CombatantId;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
-    readonly target: BattleOngoingSpellTarget;
-    readonly effect: BattleAntimagicFieldOngoingSpellEffectRef;
     readonly contestedSpellLevel: BattleSpellEffectLevel;
-  };
+  } & (
+    | {
+        readonly target: Extract<
+          BattleOngoingSpellTarget,
+          { readonly kind: "magicalEffect" }
+        > & { readonly effect: BattleOngoingSpellOccurrenceRef };
+        readonly checkedOccurrence?: never;
+      }
+    | {
+        readonly target: Exclude<
+          BattleOngoingSpellTarget,
+          { readonly kind: "magicalEffect" }
+        >;
+        readonly checkedOccurrence: {
+          readonly ownerId: CombatantId;
+          readonly effect: BattleOngoingSpellOccurrenceRef;
+        };
+      }
+  );
   readonly requiresTableSpatialFact?: boolean;
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
 };

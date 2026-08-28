@@ -41,6 +41,7 @@ import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import {
   holeId,
   holeInstanceKey,
+  type HoleInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   type Ability,
@@ -1439,6 +1440,43 @@ function spellTurnEndDamageAmount(
     rolledDiceTotal(roll.value) + (effect.damage.expr.flat ?? 0),
     effect.damage.damageType,
   );
+}
+
+function spellTurnEndDamageDownstreamHoles<
+  Hole extends {
+    readonly holeId: BattleHoleId;
+    readonly holeInstanceKey: HoleInstanceKey;
+  },
+>(effect: SpellTurnEndDamageEffect, holes: readonly Hole[]): readonly Hole[] {
+  return holes.map((hole) => {
+    const key = `battle:spell-turn-end-damage-downstream:${effect.effectRef}:${hole.holeId}`;
+    return {
+      ...hole,
+      holeId: holeId(key),
+      holeInstanceKey: holeInstanceKey(key),
+    };
+  });
+}
+
+function spellTurnEndDamageDownstreamFillsForRawHoles<
+  Hole extends {
+    readonly holeId: BattleHoleId;
+    readonly holeInstanceKey: HoleInstanceKey;
+  },
+  Fill extends { readonly holeId: BattleHoleId },
+>(
+  effect: SpellTurnEndDamageEffect,
+  rawHoles: readonly Hole[],
+  fills: readonly Fill[],
+): readonly Fill[] {
+  const exactHoles = spellTurnEndDamageDownstreamHoles(effect, rawHoles);
+  return rawHoles.flatMap((rawHole, index) => {
+    const exactHole = exactHoles[index];
+    const fill = fills.find(
+      (candidate) => candidate.holeId === exactHole?.holeId,
+    );
+    return fill === undefined ? [] : [{ ...fill, holeId: rawHole.holeId }];
+  });
 }
 
 function spellTurnStartDamageForEffect(
@@ -3186,39 +3224,62 @@ function applyEndTurnSpellDamageFills(
       target,
       damageAmount,
     );
-    const concentrationLifecycleHoles =
+    const rawConcentrationLifecycleHoles =
       damageLifecycleConcentrationSavingThrowHoles({
         state: nextState,
         target,
         damageAmount,
       });
-    const concentrationLifecycleFills = fillsMatchingHoleIds(
-      concentrationSavingThrows,
-      concentrationLifecycleHoles,
-    );
-    const hideousLaughterLifecycleHoles =
+    const exactConcentrationHole =
+      concentrationHole === null
+        ? null
+        : spellTurnEndDamageDownstreamHoles(effect, [concentrationHole])[0]!;
+    const concentrationLifecycleFills =
+      spellTurnEndDamageDownstreamFillsForRawHoles(
+        effect,
+        rawConcentrationLifecycleHoles,
+        concentrationSavingThrows,
+      );
+    const rawHideousLaughterLifecycleHoles =
       damageLifecycleHideousLaughterDamageRepeatSaveHoles({
         state: nextState,
         target,
         damageAmount,
       });
-    const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
-      hideousLaughterDamageRepeatSaves,
-      hideousLaughterLifecycleHoles,
+    const hideousLaughterLifecycleFills =
+      spellTurnEndDamageDownstreamFillsForRawHoles(
+        effect,
+        rawHideousLaughterLifecycleHoles,
+        hideousLaughterDamageRepeatSaves,
+      );
+    const exactConcentrationFill =
+      exactConcentrationHole === null
+        ? undefined
+        : concentrationSavingThrowFillFor(
+            concentrationSavingThrows,
+            exactConcentrationHole,
+          );
+    const concentrationFill =
+      exactConcentrationFill === undefined || concentrationHole === null
+        ? undefined
+        : { ...exactConcentrationFill, holeId: concentrationHole.holeId };
+    const rawDispositionHoles = endTurnDamageDispositionRawHoles(
+      nextState,
+      actorId,
+      [{ effect, roll }],
+    );
+    const rawDispositionFills = spellTurnEndDamageDownstreamFillsForRawHoles(
+      effect,
+      rawDispositionHoles,
+      damageDispositions,
     );
     return applyPreparedSlotSpellDamage(nextState, actorId, damageAmount, {
-      concentrationSavingThrow:
-        concentrationHole === null
-          ? undefined
-          : concentrationSavingThrowFillFor(
-              concentrationLifecycleFills,
-              concentrationHole,
-            ),
+      concentrationSavingThrow: concentrationFill,
       wardingBondDamageShareConcentrationSavingThrows:
         concentrationLifecycleFills,
       damageDisposition: damageDispositionForTarget(
-        endTurnDamageDispositionHoles(nextState, actorId, [{ effect, roll }]),
-        damageDispositions,
+        rawDispositionHoles,
+        rawDispositionFills,
         actorId,
       ),
       hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
@@ -3625,18 +3686,33 @@ function endTurnDamageDispositionHoles(
     readonly roll: Extract<BattleFill, { readonly kind: "rolledDice" }>;
   }[],
 ): readonly BattleAttackDamageDispositionHole[] {
+  return damageRolls.flatMap(({ effect, roll }) =>
+    spellTurnEndDamageDownstreamHoles(
+      effect,
+      endTurnDamageDispositionRawHoles(state, actorId, [{ effect, roll }]),
+    ),
+  );
+}
+
+function endTurnDamageDispositionRawHoles(
+  state: BattleState,
+  actorId: CombatantId,
+  damageRolls: readonly {
+    readonly effect: SpellTurnEndDamageEffect;
+    readonly roll: Extract<BattleFill, { readonly kind: "rolledDice" }>;
+  }[],
+): readonly BattleAttackDamageDispositionHole[] {
   return damageRolls.flatMap(({ effect, roll }) => {
     const target = state.combatants.get(actorId);
     if (target === undefined) {
       return [];
     }
-    return (
-      zeroHitPointReplacementDispositionHole({
-        damageSourceId: effect.sourceCombatantId,
-        target,
-        damageAmount: spellTurnEndDamageAmount(state, target, effect, roll),
-      }) ?? []
-    );
+    const dispositionHole = zeroHitPointReplacementDispositionHole({
+      damageSourceId: effect.sourceCombatantId,
+      target,
+      damageAmount: spellTurnEndDamageAmount(state, target, effect, roll),
+    });
+    return dispositionHole === null ? [] : [dispositionHole];
   });
 }
 
@@ -4603,17 +4679,30 @@ function resolveEndTurnCommandForParent(
         request.effect,
         request.roll,
       );
-      const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+      const rawHoles = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
         state: input.state,
         target: actor,
         damageAmount,
       });
-      return damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+      const check = damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
         state: input.state,
         target: actor,
         damageAmount,
-        fills: fillsMatchingHoleIds(savingThrowOutcomeFills, holes),
+        fills: spellTurnEndDamageDownstreamFillsForRawHoles(
+          request.effect,
+          rawHoles,
+          savingThrowOutcomeFills,
+        ),
       });
+      return check.tag === "invalid"
+        ? check
+        : {
+            ...check,
+            holes: spellTurnEndDamageDownstreamHoles(
+              request.effect,
+              check.holes,
+            ),
+          };
     });
   const invalidEndTurnHideousLaughterDamageRepeatSaveCheck =
     endTurnHideousLaughterDamageRepeatSaveChecks.find(
@@ -4875,16 +4964,19 @@ function resolveEndTurnCommandForParent(
         return [];
       }
       /* v8 ignore stop -- @preserve */
-      return damageLifecycleConcentrationSavingThrowHoles({
-        state: input.state,
-        target,
-        damageAmount: spellTurnEndDamageAmount(
-          input.state,
+      return spellTurnEndDamageDownstreamHoles(
+        request.effect,
+        damageLifecycleConcentrationSavingThrowHoles({
+          state: input.state,
           target,
-          request.effect,
-          request.roll,
-        ),
-      });
+          damageAmount: spellTurnEndDamageAmount(
+            input.state,
+            target,
+            request.effect,
+            request.roll,
+          ),
+        }),
+      );
     },
   );
   const startTurnConcentrationHoles =

@@ -305,18 +305,30 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       sourceCombatantId: spellCasterId,
       sourceSpellLevel: 4,
     });
+    const otherEmitter = objectSpellEmitter({
+      objectId: battleObjectId("dispel-other-owner-object"),
+      sourceProcedureRef: emitter.sourceProcedureRef,
+      sourceCombatantId: spellCasterId,
+      sourceSpellLevel: 4,
+    });
+    const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: base.state,
+      occurrences: [
+        {
+          kind: "storedLightEmitter",
+          ownerId: spellCasterId,
+          emitter,
+        },
+        {
+          kind: "storedLightEmitter",
+          ownerId: spellTargetId,
+          emitter: otherEmitter,
+        },
+      ],
+    });
     const state = battleRuntimeSessionForTest({
       ...base,
-      state: battleStateWithAllocatedEffectOccurrencesForTest({
-        state: base.state,
-        occurrences: [
-          {
-            kind: "storedLightEmitter",
-            ownerId: spellCasterId,
-            emitter,
-          },
-        ],
-      }).state,
+      state: allocated.state,
     });
     const act = spellAct({
       session: state,
@@ -380,6 +392,60 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
         Schema.decodeUnknownResult(BattleSnapshotSchema)(deferredCheckSnapshot),
       ),
     ).toBe(true);
+    const mutateAggregateCheck = (
+      mutate: (
+        check: Exclude<
+          Extract<
+            BattleHole,
+            { readonly kind: "spellcastingAbilityCheck" }
+          >["spellcastingAbilityCheck"],
+          undefined
+        >,
+      ) => unknown,
+    ) => ({
+      ...deferredCheckSnapshot,
+      acts: deferredCheckSnapshot.acts.map((candidate) => ({
+        ...candidate,
+        initialHoles: candidate.initialHoles.map((hole) =>
+          hole.kind === "spellcastingAbilityCheck"
+            ? {
+                ...hole,
+                spellcastingAbilityCheck: mutate(hole.spellcastingAbilityCheck),
+              }
+            : hole,
+        ),
+      })),
+    });
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+          mutateAggregateCheck((check) => {
+            if (check.target.kind === "magicalEffect") return check;
+            return {
+              ...check,
+              checkedOccurrence: {
+                ...check.checkedOccurrence,
+                ownerId: spellTargetId,
+              },
+            };
+          }),
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+          mutateAggregateCheck((check) => {
+            if (check.target.kind === "magicalEffect") return check;
+            const {
+              checkedOccurrence: _checkedOccurrence,
+              ...checkWithoutOccurrence
+            } = check;
+            return checkWithoutOccurrence;
+          }),
+        ),
+      ),
+    ).toBe(true);
     expect(
       Result.isFailure(
         Schema.decodeUnknownResult(BattleSnapshotSchema)({
@@ -420,14 +486,20 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
             ...candidate,
             initialHoles: candidate.initialHoles.map((hole) =>
               hole.kind === "spellcastingAbilityCheck" &&
-              hole.spellcastingAbilityCheck.effect.kind === "spellLightEmitter"
+              hole.spellcastingAbilityCheck.target.kind !== "magicalEffect" &&
+              hole.spellcastingAbilityCheck.checkedOccurrence!.effect.kind ===
+                "spellLightEmitter"
                 ? {
                     ...hole,
                     spellcastingAbilityCheck: {
                       ...hole.spellcastingAbilityCheck,
-                      effect: {
-                        ...hole.spellcastingAbilityCheck.effect,
-                        effectRef: forgedEmitterRef,
+                      checkedOccurrence: {
+                        ...hole.spellcastingAbilityCheck.checkedOccurrence!,
+                        effect: {
+                          ...hole.spellcastingAbilityCheck.checkedOccurrence!
+                            .effect,
+                          effectRef: forgedEmitterRef,
+                        },
                       },
                     },
                   }
@@ -443,12 +515,13 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       subject: act.subject,
       fills: [targetFill, abilityCheckFill(checkHole, 13)],
     });
-    expect(failed).toMatchObject({
-      tag: "resolved",
-      state: {
-        lightEmitters: [expect.objectContaining({ sourceSpellLevel: 4 })],
-      },
-    });
+    expect(failed).toMatchObject({ tag: "resolved" });
+    if (failed.tag !== "resolved") {
+      throw new Error("Expected failed higher-level Dispel check to resolve.");
+    }
+    expect(failed.state.lightEmitters).toContainEqual(
+      expect.objectContaining({ effectRef: allocatedEmitter.effectRef }),
+    );
 
     const succeeded = resolveBattleSubject({
       state: state.state,
@@ -457,8 +530,16 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     });
     expect(succeeded).toMatchObject({
       tag: "resolved",
-      state: { lightEmitters: [] },
     });
+    if (succeeded.tag !== "resolved") {
+      throw new Error("Expected successful higher-level Dispel to resolve.");
+    }
+    expect(succeeded.state.lightEmitters).not.toContainEqual(
+      expect.objectContaining({ effectRef: allocatedEmitter.effectRef }),
+    );
+    expect(succeeded.state.lightEmitters).toContainEqual(
+      expect.objectContaining({ attachment: otherEmitter.attachment }),
+    );
   });
 
   test("duplicate higher-level ability check fills are invalid", () => {
@@ -682,9 +763,11 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
         dc: 14,
         spellcastingAbilityCheck: expect.objectContaining({
           target: { kind: "object", objectId },
-          effect: expect.objectContaining({
-            kind: "spellActiveEffect",
-            activeEffectKind: "spellObjectContactDamage",
+          checkedOccurrence: expect.objectContaining({
+            effect: expect.objectContaining({
+              kind: "spellActiveEffect",
+              activeEffectKind: "spellObjectContactDamage",
+            }),
           }),
           contestedSpellLevel: 4,
         }),
@@ -1154,7 +1237,6 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
         dc: 14,
         spellcastingAbilityCheck: expect.objectContaining({
           target,
-          effect: target.effect,
           contestedSpellLevel: 4,
         }),
       }),
@@ -1220,10 +1302,13 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
             ...hole,
             spellcastingAbilityCheck: {
               ...hole.spellcastingAbilityCheck,
-              effect: {
-                kind: "antimagicFieldAura",
-                areaId: battleAreaId("forged-ability-check-aura"),
-                sourceCombatantId: spellCasterId,
+              checkedOccurrence: {
+                ownerId: spellCasterId,
+                effect: {
+                  kind: "antimagicFieldAura",
+                  areaId: battleAreaId("forged-ability-check-aura"),
+                  sourceCombatantId: spellCasterId,
+                },
               },
             },
           })),
@@ -1234,9 +1319,18 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       Result.isFailure(
         Schema.decodeUnknownResult(BattleSnapshotSchema)(
           mutateDeferredCheck((hole) => {
-            const { effect: _effect, ...spellcastingAbilityCheck } =
-              hole.spellcastingAbilityCheck;
-            return { ...hole, spellcastingAbilityCheck };
+            if (hole.spellcastingAbilityCheck.target.kind !== "magicalEffect") {
+              throw new Error("Expected a magical-effect Dispel check.");
+            }
+            const { effect: _effect, ...targetWithoutEffect } =
+              hole.spellcastingAbilityCheck.target;
+            return {
+              ...hole,
+              spellcastingAbilityCheck: {
+                ...hole.spellcastingAbilityCheck,
+                target: targetWithoutEffect,
+              },
+            };
           }),
         ),
       ),

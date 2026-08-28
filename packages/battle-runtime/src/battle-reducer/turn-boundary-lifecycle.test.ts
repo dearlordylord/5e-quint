@@ -31,6 +31,7 @@ import {
   unitLibrary,
 } from "../unit-profile-admission-catalog.test-support.ts";
 import {
+  attackDamageDispositionFill,
   attackRollFill,
   requireHole,
   requireResultHole,
@@ -634,6 +635,44 @@ describe("turn-boundary active-effect occurrence updates", () => {
         ]),
       }),
     ]);
+    const checkpointDispositionHole = requireResultHole(
+      awaitingDisposition,
+      "attackDamageDisposition",
+    );
+    const replacementDamageHole = requireResultHole(
+      staleFillResult,
+      "rolledDice",
+    );
+    const replacementDamageFill = damageRollFillWithGroups(
+      replacementDamageHole,
+      [[1, 1]],
+    );
+    const replacementAwaitingDisposition = endTurn({
+      state: replacement.state,
+      actorId: spellTargetId,
+      fills: [replacementDamageFill],
+    });
+    const replacementDispositionHole = requireResultHole(
+      replacementAwaitingDisposition,
+      "attackDamageDisposition",
+    );
+    expect(replacementDispositionHole.holeId).not.toBe(
+      checkpointDispositionHole.holeId,
+    );
+    const staleDownstreamFillResult = endTurn({
+      state: replacement.state,
+      actorId: spellTargetId,
+      fills: [
+        replacementDamageFill,
+        attackDamageDispositionFill(checkpointDispositionHole, {
+          kind: "ordinaryDamage",
+        }),
+      ],
+    });
+    expect(staleDownstreamFillResult).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ holeId: replacementDispositionHole.holeId }],
+    });
   });
 
   test("recognizes the turn-boundary fill vocabulary", () => {

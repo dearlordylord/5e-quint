@@ -184,6 +184,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
         ]),
       ],
     });
+    expect(resolved).toMatchObject({ tag: "resolved" });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected start-turn damage repeat save to resolve.");
     }
@@ -312,6 +313,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
         ]),
       ],
     });
+    expect(resolved).toMatchObject({ tag: "resolved" });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected end-turn damage repeat save to resolve.");
     }
