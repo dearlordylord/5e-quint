@@ -2240,7 +2240,7 @@
   , kind = "statBlock"
   , name = "Sprite"
   , provenance =
-    { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:1484-1512" }
+    { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:1484-1509" }
   , statBlock =
     { abilityScores =
       { cha = 11, con = 10, dex = 18, int = 14, str = 3, wis = 13 }
