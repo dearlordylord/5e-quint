@@ -4,6 +4,9 @@
   "dndWorkspacePackageKind": "production",
   "version": "0.0.0",
   "type": "module",
+  "bin": {
+    "opaque-oracle": "./dist/oracle.mjs"
+  },
   "exports": {
     ".": "./src/index.ts"
   },
@@ -16,6 +19,9 @@
     "generate:corpus": "tsx scripts/oracle-evaluation-cli.ts generate",
     "check:corpus": "tsx scripts/oracle-evaluation-cli.ts check",
     "write:corpus": "tsx scripts/oracle-evaluation-cli.ts write",
+    "build": "tsx scripts/build-distribution.ts",
+    "check-distribution": "tsx scripts/check-distribution.ts",
+    "check:distribution": "pnpm run check-distribution",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
@@ -35,6 +41,7 @@
   "devDependencies": {
     "@types/node": "^22.10.0",
     "@typescript/native": "npm:typescript@^7.0.2",
+    "esbuild": "0.27.4",
     "fast-check": "3.23.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",

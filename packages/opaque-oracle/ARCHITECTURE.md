@@ -1,9 +1,9 @@
 # Opaque Oracle architecture
 
 `@dnd/opaque-oracle` owns the language-neutral Case, Trace, and Evaluation
-Batch boundary over one call-local production evaluation. It does not own a
-second rules engine, a durable session, a transport envelope, or presentation
-state.
+Batch boundary over one call-local production evaluation. It also owns one
+source-free application distribution and its thin executable adapters. It does
+not own a second rules engine, a durable session, or presentation state.
 
 ## Boundary pipeline
 
@@ -28,6 +28,37 @@ Standard Draft 2020-12 cannot observe duplicate raw JSON member names and does
 not encode arbitrary cross-record correlations. Those are deliberately
 preparse and semantic-admission responsibilities rather than claims made by
 the published schemas.
+
+## Application composition and distribution
+
+`oracle-startup-catalog.ts` derives the level-one/two workflow projection from
+the canonical SRD Surface aggregate. `oracle-catalog-services.ts` builds the
+Unit and Stat Block lookup services from one decoded projection. The
+`OracleApplication` in `oracle-distribution.ts` is the single immutable
+composition value: its identity, parsed projection, and evaluator services are
+created together, and its operation creates all mutable evaluation state inside
+each Case call. The builder is the only source-side staging step: it writes the
+exact projection bytes, while the executable reads only its beside-executable
+assets and rebuilds services from those bytes.
+
+`scripts/build-distribution.ts` emits one flat, deterministic distribution
+root containing the bundled `oracle.mjs`, the three canonical publication
+schemas, `oracle-startup-surface.json`, and narrow `oracle-identity.json`
+metadata. `computeOracleDistributionId` hashes named, length-framed executable,
+schema, and projection bytes; identity metadata is excluded from that preimage.
+Loading recomputes the digest, requires the canonical schema bytes and strict
+projection bytes, and rejects tampering before evaluation. The checker also
+rejects source files, maps, symlinks, workspace links, repository paths, and
+unresolved non-builtin imports.
+
+`oracle-main.ts` is the one executable root and delegates process edges to
+`oracle-bootstrap.ts`. Its exhaustive modes are `identity` and persistent
+UTF-8/LF-framed `stream`; the latter delegates every raw frame to the shared
+batch operation and writes one buffered response plus LF. Decode/domain
+rejection is response data, while an evaluator or process defect aborts
+without writing a partial response. Future HTTP support extends this same
+mode root and distribution rather than introducing another composition or
+evaluator.
 
 ## Corpus publication
 

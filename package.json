@@ -18,6 +18,8 @@
     "check:character-sheet-runtime-split": "node scripts/audit-character-sheet-runtime-split.mjs",
     "check:opaque-oracle-schema-sync": "pnpm --filter @dnd/opaque-oracle check:schema-sync",
     "check:opaque-oracle-corpus": "pnpm --filter @dnd/opaque-oracle check:corpus",
+    "build:opaque-oracle": "pnpm --filter @dnd/opaque-oracle build",
+    "check:opaque-oracle-distribution": "pnpm --filter @dnd/opaque-oracle check-distribution",
     "check:surface-content-publication": "node scripts/check-surface-content-json-sync.cjs",
     "check:cleanroom-provenance": "node scripts/check-cleanroom-provenance.cjs",
     "check:markdown-links": "node scripts/check-markdown-links.cjs --self-test && node scripts/check-markdown-links.cjs",

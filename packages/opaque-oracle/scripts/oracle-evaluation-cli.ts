@@ -35,20 +35,13 @@ import {
   type OraclePublicationSchemaValidation,
   validateOraclePublicationSchemaBytes,
 } from "./oracle-publication-validation.ts";
-import {
-  buildStatBlockCatalog,
-  srdStatBlockCollection,
-  type StatBlockCatalog,
-  type StatBlockCatalogBuildIssue,
-} from "@dnd/surface/surface/stat-block-catalog";
-import {
-  buildUnitCatalog,
-  srdUnitCollection,
-  type UnitCatalog,
-  type UnitCatalogBuildIssue,
-} from "@dnd/surface/surface/unit-catalog";
+import { type StatBlockCatalogBuildIssue } from "@dnd/surface/surface/stat-block-catalog";
+import { type UnitCatalogBuildIssue } from "@dnd/surface/surface/unit-catalog";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import { toReadonlyNonEmpty } from "./oracle-evaluation-cli-support.ts";
+import { buildOracleEvaluationServices } from "../src/oracle-catalog-services.ts";
+import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
+import { srdUnitCollection } from "@dnd/surface/surface/unit-catalog";
 
 /** Paths are relative to the package directory used by pnpm scripts. */
 export const DEFAULT_CORPUS_PATH = "corpus/oracle-evaluation-corpus.json";
@@ -202,66 +195,26 @@ export function buildProductionOracleEvaluationServices(): Either.Either<
   OracleEvaluationServices,
   OracleEvaluationCliError
 > {
-  const units = buildUnitCatalogSafely();
-  if (Either.isLeft(units)) {
-    return Either.left(catalogBuildFailed(units.left));
-  }
-  const statBlocks = buildStatBlockCatalogSafely();
-  if (Either.isLeft(statBlocks)) {
-    return Either.left(catalogBuildFailed(statBlocks.left));
-  }
-  return Either.right({
-    unitLibrary: units.right,
-    statBlockCatalog: statBlocks.right,
-  });
-}
-
-function buildUnitCatalogSafely(): Either.Either<
-  UnitCatalog,
-  ReadonlyNonEmptyArray<OracleCatalogIssue>
-> {
   try {
-    const units = buildUnitCatalog({ collections: [srdUnitCollection] });
-    return Match.value(units).pipe(
-      Match.when({ tag: "invalid" }, ({ issues }) =>
-        Either.left(
-          toReadonlyNonEmpty(issues.map(unitCatalogIssue), () =>
-            catalogBuildDefect("unit", new Error("Missing catalog issues.")),
-          ),
-        ),
-      ),
-      Match.when({ tag: "ok" }, ({ catalog }) => Either.right(catalog)),
-      Match.exhaustive,
-    );
-  } catch (cause) {
-    return Either.left([catalogBuildDefect("unit", cause)]);
-  }
-}
-
-function buildStatBlockCatalogSafely(): Either.Either<
-  StatBlockCatalog,
-  ReadonlyNonEmptyArray<OracleCatalogIssue>
-> {
-  try {
-    const statBlocks = buildStatBlockCatalog({
-      collections: [srdStatBlockCollection],
+    const services = buildOracleEvaluationServices({
+      unitCollection: srdUnitCollection,
+      statBlockCollection: srdStatBlockCollection,
     });
-    return Match.value(statBlocks).pipe(
-      Match.when({ tag: "invalid" }, ({ issues }) =>
-        Either.left(
-          toReadonlyNonEmpty(issues.map(statBlockCatalogIssue), () =>
-            catalogBuildDefect(
-              "statBlock",
-              new Error("Missing catalog issues."),
-            ),
-          ),
+    if (Either.isRight(services)) return Either.right(services.right);
+    const issues = services.left.flatMap((issue) =>
+      issue.tag === "unitCatalog"
+        ? issue.issues.map(unitCatalogIssue)
+        : issue.issues.map(statBlockCatalogIssue),
+    );
+    return Either.left(
+      catalogBuildFailed(
+        toReadonlyNonEmpty(issues, () =>
+          catalogBuildDefect("unit", new Error("Missing catalog issues.")),
         ),
       ),
-      Match.when({ tag: "ok" }, ({ catalog }) => Either.right(catalog)),
-      Match.exhaustive,
     );
   } catch (cause) {
-    return Either.left([catalogBuildDefect("statBlock", cause)]);
+    return Either.left(catalogBuildFailed([catalogBuildDefect("unit", cause)]));
   }
 }
 
