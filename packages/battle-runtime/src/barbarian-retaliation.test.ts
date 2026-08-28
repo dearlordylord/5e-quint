@@ -86,16 +86,42 @@ describe("battle runtime: Barbarian Retaliation", () => {
         Schema.encodeSync(BattleSnapshotSchema)(awaitingRetaliation.snapshot),
       ),
     ).not.toThrow();
+    const malformedRetaliationChoice = {
+      ...retaliationChoice,
+      subject: {
+        ...retaliationChoice.subject,
+        reactorId: goblinId,
+      },
+    };
     expect(() =>
       Schema.decodeUnknownSync(BattleInterruptProcedureChoiceSchema)({
-        ...retaliationChoice,
-        subject: {
-          ...retaliationChoice.subject,
-          reactorId: goblinId,
-        },
+        ...malformedRetaliationChoice,
+      }),
+    ).not.toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)({
+        ...encoded,
+        frontier:
+          encoded.frontier.kind === "interruptDecision"
+            ? {
+                ...encoded.frontier,
+                choices: encoded.frontier.choices.map((choice) =>
+                  choice.kind === "nestedProcedure" &&
+                  choice.subject.command === "retaliationAttack"
+                    ? {
+                        ...choice,
+                        subject: {
+                          ...choice.subject,
+                          reactorId: goblinId,
+                        },
+                      }
+                    : choice,
+                ),
+              }
+            : encoded.frontier,
       }),
     ).toThrow(
-      "Interrupt choices must own the matching reference-bearing runtime subject.",
+      "Battle checkpoint frontier references must be bound to the checkpoint and its subjects.",
     );
     const longswordSelection = attackExecutionSelectionForSubjectForTest(
       fighterAttackSubject(awaitingRetaliation.state, "Longsword"),
