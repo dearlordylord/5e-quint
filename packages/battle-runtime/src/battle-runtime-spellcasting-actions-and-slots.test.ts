@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test battle.spell-access-magic-initiate-casting
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
+import { resourceCount } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import { Result } from "effect";
 import {
@@ -23,7 +24,6 @@ import { spellActTurnResourceAvailable } from "./battle-reducer/spell-turn-resou
 import { characterExecutionWithSpellInvocations } from "./character-execution-admission.ts";
 import { characterSpellProcedure } from "./character-execution-queries.ts";
 import type {
-  BattleActiveEffect,
   BattleCreatureState,
   CharacterBattleSpellListFact,
 } from "./index.ts";
@@ -51,14 +51,14 @@ import {
   attackRollFill,
   battleId,
   battleProcedureExecutionRefForSpellHoleForTest,
-  battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   battleStateWithAllSpellSlotsExpended,
   cantripSpellInvocationRef,
   characterSeed,
-  combatantId,
   damageRollFill,
   damageRollFillWithGroups,
   discoverBattleActs,
+  elapsedTimeTicks,
   endTurn,
   expendedLevelOneSlots,
   fighterId,
@@ -616,31 +616,83 @@ describe("battle runtime: spellcasting actions and slots", () => {
   });
 
   test("prepared Magic Missile asks for an active source damage penalty roll", () => {
-    const baseSession = wizardVsSkeletonBattle();
+    const penaltySourceSpell = spellRecord("ray_of_enfeeblement");
+    const baseSession = wizardVsSkeletonBattle({
+      extraCombatants: [
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Penalty source",
+          initiative: 5,
+          attack: null,
+          classLevels: [{ className: "wizard", level: 3 }],
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [penaltySourceSpell],
+            spellSlots: [{ spellLevel: 2, count: 1 }],
+          }),
+        }),
+      ],
+    });
     const caster = baseSession.state.combatants.get(wizardId);
-    if (caster === undefined) {
-      throw new Error("Expected Wizard caster.");
+    const penaltySource = baseSession.state.combatants.get(fighterId);
+    if (
+      caster === undefined ||
+      penaltySource?.origin.kind !== "character" ||
+      penaltySource.origin.spellcasting === undefined
+    ) {
+      throw new Error("Expected Wizard caster and penalty source.");
     }
-    const sourceDamageRollPenalty = {
-      kind: "sourceDamageRollPenalty" as const,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "synthetic_source_damage_penalty",
+    const penaltyProcedureRef = requireCharacterSpellProcedureRefForTest(
+      baseSession,
+      fighterId,
+      spellSlotInvocationRef(
+        "ray_of_enfeeblement",
+        2,
+        "abilityD20TestRollModeSaveGate",
       ),
-      sourceCombatantId: skeletonId,
-      amount: { dice: 1, dieSize: 8 },
-      expiresAt: {
-        kind: "concentration" as const,
-        combatantId: skeletonId,
+    );
+    const allocatedPenaltyState = battleStateWithAllocatedEffectForTest({
+      state: baseSession.state,
+      ownerId: wizardId,
+      effect: {
+        kind: "sourceDamageRollPenalty",
+        sourceProcedureRef: penaltyProcedureRef,
+        sourceCombatantId: fighterId,
+        amount: { dice: 1, dieSize: 8 },
+        expiresAt: {
+          kind: "concentration",
+          combatantId: fighterId,
+          durationTicks: elapsedTimeTicks(10),
+        },
       },
-    } satisfies Extract<
-      BattleActiveEffect,
-      { readonly kind: "sourceDamageRollPenalty" }
-    >;
+    });
+    const allocatedPenalty = allocatedPenaltyState.combatants
+      .get(wizardId)
+      ?.activeEffects.find(
+        (effect) => effect.kind === "sourceDamageRollPenalty",
+      );
+    if (allocatedPenalty === undefined) {
+      throw new Error("Expected allocated source damage penalty.");
+    }
     const state: BattleState = {
-      ...baseSession.state,
-      combatants: new Map(baseSession.state.combatants).set(wizardId, {
-        ...caster,
-        activeEffects: [...caster.activeEffects, sourceDamageRollPenalty],
+      ...allocatedPenaltyState,
+      combatants: new Map(allocatedPenaltyState.combatants).set(fighterId, {
+        ...penaltySource,
+        origin: {
+          ...penaltySource.origin,
+          spellcasting: {
+            ...penaltySource.origin.spellcasting,
+            spellSlots: penaltySource.origin.spellcasting.spellSlots.map(
+              (slot) =>
+                slot.spellLevel === 2
+                  ? { ...slot, expended: resourceCount(1) }
+                  : slot,
+            ),
+          },
+        },
+        concentration: {
+          sourceProcedureRef: penaltyProcedureRef,
+          effectKind: "spellEffect",
+        },
       }),
     };
     const session = battleRuntimeSessionForTest({
@@ -674,6 +726,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
       label: "Source damage roll penalty (1d8)",
       sourceDamageRollPenalty: {
         damageRollHoleId: `${damage.holeId}:allocation:0`,
+        effectRef: allocatedPenalty.effectRef,
       },
     });
     const resolved = requireResolved(
@@ -1682,7 +1735,60 @@ describe("battle runtime: spellcasting actions and slots", () => {
       },
     });
 
-    const rayState = wizardVsSkeletonBattle();
+    const rayOfFrost = spellRecord("ray_of_frost");
+    const alternateAcidSplash = spellRecord("acid_splash");
+    const alternateMagicMissile = spellRecord("magic_missile");
+    const alternateRaySource = {
+      id: authoredUnitId("feat_synthetic_frost_dabbler"),
+      kind: "feat",
+      category: "origin",
+      name: "Synthetic Frost Dabbler",
+      provenance: { kind: "synthetic-test", section: "ray stacking" },
+      mechanics: { family: "magic_initiate", spellList: "wizard" },
+    } as const;
+    const rayState = startBattleSessionRight({
+      battleId: battleId("battle-wizard-skeleton"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          classLevels: [{ className: "wizard", level: 1 }],
+          resources: [
+            {
+              unit: alternateRaySource,
+              spellAccessFreeCast: {
+                spellId: alternateMagicMissile.id,
+                count: 1,
+              },
+              usesRemaining: 1,
+            },
+          ],
+          characterUnitRefs: [
+            { unit: rayOfFrost, supportProfiles: [] },
+            { unit: alternateAcidSplash, supportProfiles: [] },
+            { unit: alternateMagicMissile, supportProfiles: [] },
+          ],
+          spellcasting: {
+            ...wizardSpellcasting(),
+            spellAccesses: [
+              {
+                source: {
+                  tag: "feat",
+                  sourceUnit: alternateRaySource,
+                  spellList: wizardSpellListSource(),
+                },
+                spellcastingAbilityModifier: 3,
+                cantrips: [rayOfFrost, alternateAcidSplash],
+                levelOneSpell: alternateMagicMissile,
+              },
+            ],
+          },
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
     const rayTarget = requireHole(
       resolveBattleSubject({
         session: rayState,
@@ -1755,27 +1861,43 @@ describe("battle runtime: spellcasting actions and slots", () => {
     );
     expect(expendedLevelOneSlots(requireResolved(ray), wizardId)).toBe(0);
 
-    const existingSpeedDeltaProcedureRef = battleProcedureExecutionRefForTest(
-      "existing-speed-delta-procedure",
-    );
-    const stackedRayState = {
-      ...rayState.state,
-      combatants: new Map(rayState.state.combatants).set(skeletonId, {
-        ...rayState.state.combatants.get(skeletonId)!,
-        activeEffects: [
-          {
-            kind: "speedDelta",
-            sourceProcedureRef: existingSpeedDeltaProcedureRef,
-            sourceCombatantId: combatantId("other-wizard"),
-            deltaFeet: movementDeltaFeet(-10),
-            expiresAt: {
-              kind: "startOfTurn",
-              combatantId: combatantId("other-wizard"),
-            },
-          },
-        ],
-      }),
-    } satisfies BattleState;
+    const existingSpeedDeltaProcedureRef = discoverBattleActs(rayState)
+      .flatMap((act) => {
+        const presentation = battleActSpellPresentation(act);
+        return act.subject.tag === "actionSpell" &&
+          presentation?.invocation.spellId === String(rayOfFrost.id) &&
+          act.subject.procedureRef !== rayProcedureRef
+          ? [act.subject.procedureRef]
+          : [];
+      })
+      .at(0);
+    if (existingSpeedDeltaProcedureRef === undefined) {
+      throw new Error("Expected a distinct admitted Ray of Frost procedure.");
+    }
+    const stackedRayState = battleStateWithAllocatedEffectForTest({
+      state: rayState.state,
+      ownerId: skeletonId,
+      effect: {
+        kind: "speedDelta",
+        sourceProcedureRef: existingSpeedDeltaProcedureRef,
+        sourceCombatantId: wizardId,
+        deltaFeet: movementDeltaFeet(-10),
+        expiresAt: {
+          kind: "startOfTurn",
+          combatantId: wizardId,
+        },
+      },
+    });
+    const existingSpeedDelta = stackedRayState.combatants
+      .get(skeletonId)
+      ?.activeEffects.find(
+        (effect) =>
+          effect.kind === "speedDelta" &&
+          effect.sourceProcedureRef === existingSpeedDeltaProcedureRef,
+      );
+    if (existingSpeedDelta === undefined) {
+      throw new Error("Expected the allocated existing speed reduction.");
+    }
     const refreshedRay = resolveBattleSubject({
       session: battleRuntimeSessionForTest({
         ...rayState,
@@ -1800,12 +1922,13 @@ describe("battle runtime: spellcasting actions and slots", () => {
       activeEffects: [
         {
           kind: "speedDelta",
+          effectRef: existingSpeedDelta.effectRef,
           sourceProcedureRef: existingSpeedDeltaProcedureRef,
-          sourceCombatantId: combatantId("other-wizard"),
+          sourceCombatantId: wizardId,
           deltaFeet: movementDeltaFeet(-10),
           expiresAt: {
             kind: "startOfTurn",
-            combatantId: combatantId("other-wizard"),
+            combatantId: wizardId,
           },
         },
         {

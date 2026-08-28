@@ -5,6 +5,7 @@ import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   attackRollFill,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   damageRollFill,
   discoverBattleActCandidates,
   fighterAttackSubject,
@@ -284,28 +285,23 @@ describe("battle runtime: ordinary object attacks", () => {
     if (fighter === undefined) {
       throw new Error("Expected the fighter object-attack fixture.");
     }
-    const disadvantagedState = {
-      ...state,
-      combatants: new Map(state.combatants).set(fighterId, {
-        ...fighter,
-        activeEffects: [
-          ...fighter.activeEffects,
-          {
-            kind: "nextAttackRollBySelf" as const,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              "object-roll-mode-validation",
-            ),
-            sourceCombatantId: goblinId,
-            mode: "disadvantage" as const,
-            expiresAt: {
-              kind: "endOfTurn" as const,
-              combatantId: fighterId,
-              round: Round(1),
-            },
-          },
-        ],
-      }),
-    };
+    const disadvantagedState = battleStateWithAllocatedEffectForTest({
+      state,
+      ownerId: fighterId,
+      effect: {
+        kind: "nextAttackRollBySelf",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          "object-roll-mode-validation",
+        ),
+        sourceCombatantId: goblinId,
+        mode: "disadvantage",
+        expiresAt: {
+          kind: "endOfTurn",
+          combatantId: fighterId,
+          round: Round(1),
+        },
+      },
+    });
     const disadvantagedTargetHole = requireHole(
       resolveBattleSubject({ state: disadvantagedState, subject, fills: [] }),
       "targetChoice",
@@ -358,29 +354,29 @@ describe("battle runtime: ordinary object attacks", () => {
 
   test("a staged object attack preserves its admitted one-shot roll mode until damage is supplied", () => {
     const base = fighterVsGoblinBattle();
-    const fighter = base.combatants.get(fighterId)!;
-    const state = {
-      ...base,
-      combatants: new Map(base.combatants).set(fighterId, {
-        ...fighter,
-        activeEffects: [
-          ...fighter.activeEffects,
-          {
-            kind: "nextAttackRollBySelf" as const,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              "staged-object-attack",
-            ),
-            sourceCombatantId: goblinId,
-            mode: "disadvantage" as const,
-            expiresAt: {
-              kind: "endOfTurn" as const,
-              combatantId: fighterId,
-              round: Round(1),
-            },
-          },
-        ],
-      }),
-    };
+    const state = battleStateWithAllocatedEffectForTest({
+      state: base,
+      ownerId: fighterId,
+      effect: {
+        kind: "nextAttackRollBySelf",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          "staged-object-attack",
+        ),
+        sourceCombatantId: goblinId,
+        mode: "disadvantage",
+        expiresAt: {
+          kind: "endOfTurn",
+          combatantId: fighterId,
+          round: Round(1),
+        },
+      },
+    });
+    const stagedEffect = state.combatants
+      .get(fighterId)
+      ?.activeEffects.find((effect) => effect.kind === "nextAttackRollBySelf");
+    if (stagedEffect === undefined) {
+      throw new Error("Expected the allocated staged attack-roll effect.");
+    }
     const subject = fighterAttackSubject(state, "Longsword");
     const targetHole = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
@@ -421,7 +417,7 @@ describe("battle runtime: ordinary object attacks", () => {
       damageStage.state.combatants
         .get(fighterId)
         ?.activeEffects.some(
-          (effect) => effect.kind === "nextAttackRollBySelf",
+          (effect) => effect.effectRef === stagedEffect.effectRef,
         ),
     ).toBe(false);
     const damageHole = requireHole(damageStage, "rolledDice");
@@ -437,7 +433,7 @@ describe("battle runtime: ordinary object attacks", () => {
       completed.state.combatants
         .get(fighterId)
         ?.activeEffects.some(
-          (effect) => effect.kind === "nextAttackRollBySelf",
+          (effect) => effect.effectRef === stagedEffect.effectRef,
         ),
     ).toBe(false);
   });

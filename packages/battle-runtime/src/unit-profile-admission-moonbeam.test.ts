@@ -2,7 +2,9 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
 } from "./battle-runtime.test-support.ts";
+import type { BattleActiveEffectOccurrenceTemplate } from "./effect-execution-ref.ts";
 import {
   battleActDruidWildShapePresentation,
   battleActSpellPresentation,
@@ -20,8 +22,6 @@ import {
   type BattleRuntimeSession,
   type BattleState,
   type BattleSubject,
-  type BattleActiveEffect,
-  type SpellShapeShiftedFormActiveEffect,
 } from "./index.ts";
 import {
   requireCharacterSpellProcedureRefForTest,
@@ -952,6 +952,17 @@ describe("L12G deterministic Moonbeam admission", () => {
 
   test("failed save reverts a spell-effect shape-shift through the shared owner", () => {
     const cast = moonbeamCastOverSpellShapeShiftedTarget();
+    const selectedShapeShift = requireCombatant(
+      cast,
+      spellTargetId,
+    ).activeEffects.find(
+      (effect) =>
+        effect.kind === "spellShapeShiftedForm" &&
+        effect.sourceEffectId === syntheticSpellShapeShiftEffect.sourceEffectId,
+    );
+    if (selectedShapeShift === undefined) {
+      throw new Error("Expected the allocated spell shape-shift occurrence.");
+    }
     const failed = resolveMoonbeamSaveForShapeShiftedTarget({
       state: cast,
       trigger: "appearsInArea",
@@ -962,10 +973,7 @@ describe("L12G deterministic Moonbeam admission", () => {
     expect(battleShapeShiftedRuntimeState(target).kind).toBe("trueForm");
     expect(
       target.activeEffects.some(
-        (effect) =>
-          effect.kind === "spellShapeShiftedForm" &&
-          effect.sourceEffectId ===
-            syntheticSpellShapeShiftEffect.sourceEffectId,
+        (effect) => effect.effectRef === selectedShapeShift.effectRef,
       ),
     ).toBe(false);
     expect(combatantShapeShiftingSuppressed(failed, spellTargetId)).toBe(true);
@@ -973,6 +981,17 @@ describe("L12G deterministic Moonbeam admission", () => {
 
   test("successful save preserves a spell-effect shape-shift through the shared owner", () => {
     const cast = moonbeamCastOverSpellShapeShiftedTarget();
+    const selectedShapeShift = requireCombatant(
+      cast,
+      spellTargetId,
+    ).activeEffects.find(
+      (effect) =>
+        effect.kind === "spellShapeShiftedForm" &&
+        effect.sourceEffectId === syntheticSpellShapeShiftEffect.sourceEffectId,
+    );
+    if (selectedShapeShift === undefined) {
+      throw new Error("Expected the allocated spell shape-shift occurrence.");
+    }
     const resolved = resolveMoonbeamSaveForShapeShiftedTarget({
       state: cast,
       trigger: "appearsInArea",
@@ -983,10 +1002,7 @@ describe("L12G deterministic Moonbeam admission", () => {
     expect(battleShapeShiftedRuntimeState(target).kind).toBe("shapeShifted");
     expect(
       target.activeEffects.some(
-        (effect) =>
-          effect.kind === "spellShapeShiftedForm" &&
-          effect.sourceEffectId ===
-            syntheticSpellShapeShiftEffect.sourceEffectId,
+        (effect) => effect.effectRef === selectedShapeShift.effectRef,
       ),
     ).toBe(true);
     expect(combatantShapeShiftingSuppressed(resolved, spellTargetId)).toBe(
@@ -1379,7 +1395,7 @@ function battleWithTargetWebConcentration(): BattleRuntimeSession {
   return battleSessionWithState(initial, targetTurn.state);
 }
 
-const syntheticSpellShapeShiftEffect: SpellShapeShiftedFormActiveEffect = {
+const syntheticSpellShapeShiftEffect = {
   kind: "spellShapeShiftedForm",
   sourceCombatantId: spellCasterId,
   sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -1391,9 +1407,9 @@ const syntheticSpellShapeShiftEffect: SpellShapeShiftedFormActiveEffect = {
     creatureSize: "large",
   },
   expiresAt: { kind: "concentration", combatantId: spellCasterId },
-};
+} satisfies BattleActiveEffectOccurrenceTemplate;
 const syntheticDruidWildShapeEffect: Extract<
-  BattleActiveEffect,
+  BattleActiveEffectOccurrenceTemplate,
   { readonly kind: "druidWildShapeForm" }
 > = {
   kind: "druidWildShapeForm",
@@ -1534,7 +1550,7 @@ function moonbeamCastOverWildShapedTargetScenario(): {
 
 function moonbeamCastOverSpellShapeShiftedTarget(
   input: {
-    readonly activeShapeShiftOwners?: readonly BattleActiveEffect[];
+    readonly activeShapeShiftOwners?: readonly BattleActiveEffectOccurrenceTemplate[];
     readonly useActiveEffectBoundary?: boolean;
   } = {},
 ): BattleState {
@@ -1568,19 +1584,25 @@ function moonbeamCastOverSpellShapeShiftedTarget(
       }),
     ],
   });
-  const target = requireCombatant(initial.state, spellTargetId);
-  const combatants = new Map(initial.state.combatants);
-  const activeEffects = [
-    ...target.activeEffects,
-    ...(input.activeShapeShiftOwners ?? [syntheticSpellShapeShiftEffect]),
-  ];
+  const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+    state: initial.state,
+    occurrences: (
+      input.activeShapeShiftOwners ?? [syntheticSpellShapeShiftEffect]
+    ).map((effect) => ({
+      kind: "activeEffect" as const,
+      ownerId: spellTargetId,
+      effect,
+    })),
+  });
+  const target = requireCombatant(allocated.state, spellTargetId);
+  const combatants = new Map(allocated.state.combatants);
   combatants.set(
     spellTargetId,
     input.useActiveEffectBoundary === false
-      ? { ...target, activeEffects }
-      : battleCreatureWithSpellActiveEffects(target, activeEffects),
+      ? target
+      : battleCreatureWithSpellActiveEffects(target, target.activeEffects),
   );
-  const shaped: BattleState = { ...initial.state, combatants };
+  const shaped: BattleState = { ...allocated.state, combatants };
   const casterTurn = endTurn({ state: shaped, actorId: spellTargetId });
   if (casterTurn.tag !== "resolved") {
     throw new Error("Expected shape-shifted target End Turn to resolve.");

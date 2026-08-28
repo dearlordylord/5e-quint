@@ -72,6 +72,7 @@ import type {
   BattleInterruptedProcedure,
 } from "./battle-state-execution.ts";
 import { REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE } from "./unit-feature-support.ts";
+import { allocateBattleEffectOccurrenceForCreature } from "./effect-execution-ref.ts";
 
 describe("battle runtime: interrupt lifecycle and continuation boundaries", () => {
   test("opens a primary-attack follow-up continuation through an after-damage Reaction", () => {
@@ -326,21 +327,33 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
   test("reports stale subjects for pending Fly cleanup and landing mitigation continuations", () => {
     const state = fighterTurnWithReadiedRay("afterDamage");
     const subject = fighterAttackSubject(state);
-    const endedEffect = {
-      kind: "specialSpeedGrant",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "synthetic-fly-cleanup",
-      ),
-      sourceCombatantId: fighterId,
-      speedKind: "fly",
-      speed: { kind: "fixed", speedFeet: movementFeet(60) },
-      hover: true,
-      expiresAt: {
-        kind: "concentration",
-        combatantId: fighterId,
-        durationTicks: elapsedTimeTicks(1),
+    const fighter = state.combatants.get(fighterId);
+    if (fighter === undefined) {
+      throw new Error("Expected the Fly cleanup effect owner.");
+    }
+    const allocatedFly = allocateBattleEffectOccurrenceForCreature({
+      owner: fighter,
+      effect: {
+        kind: "specialSpeedGrant",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          "synthetic-fly-cleanup",
+        ),
+        sourceCombatantId: fighterId,
+        speedKind: "fly",
+        speed: { kind: "fixed", speedFeet: movementFeet(60) },
+        hover: true,
+        expiresAt: {
+          kind: "concentration",
+          combatantId: fighterId,
+          durationTicks: elapsedTimeTicks(1),
+        },
       },
-    } satisfies EndedFlySpeedGrant;
+    });
+    const endedEffect = allocatedFly.effect satisfies EndedFlySpeedGrant;
+    const afterEndedEffect = {
+      ...state,
+      combatants: new Map(state.combatants).set(fighterId, allocatedFly.owner),
+    };
     const flyFrame = {
       kind: "flySpeedGrantEndFallCleanup",
       targetId: fighterId,
@@ -375,7 +388,7 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
     for (const frame of [flyFrame, fallFrame]) {
       expect(
         resolveActiveInterruptContinuation({
-          state: { ...state, interruptStack: [frame] },
+          state: { ...afterEndedEffect, interruptStack: [frame] },
           frame,
           subject,
           fills: [],
