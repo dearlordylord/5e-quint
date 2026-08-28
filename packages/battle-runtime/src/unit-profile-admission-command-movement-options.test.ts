@@ -120,6 +120,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     ) {
       throw new Error("Expected Command Approach act.");
     }
+    const approachEffectRef = approachAct.subject.effectRef;
     const movement = requireHole(approachAct.initialHoles, "movement");
     const opportunityAttack = resolveBattleSubject({
       state: targetTurn.state,
@@ -176,7 +177,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       requireCombatant(approached.state, spellTargetId),
     ).not.toHaveProperty("commandApproach");
   });
-  test("command Approach ends the target turn when supplied proximity reaches the caster", () => {
+  test("command Approach rejects a delegated End Turn save after its exact occurrence ends", () => {
     const spell = spellRecord(commandUnitId);
     const session = spellBattle({
       preparedSpells: [spell],
@@ -279,16 +280,17 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       ],
     });
     expect(approached).toMatchObject({
-      tag: "resolved",
-      snapshot: { currentActorId: spellCasterId },
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Command Approach is no longer pending for this actor.",
     });
-    if (approached.tag !== "resolved") {
-      throw new Error("Expected Command Approach to resolve.");
-    }
-    expect(requireCombatant(approached.state, spellTargetId)).toMatchObject({
-      movementSpentFeet: movementFeet(10),
-      activeEffects: [],
-    });
+    expect(
+      approached.snapshot.combatants
+        .find(({ combatantId }) => combatantId === spellTargetId)
+        ?.effectOccurrences.some(
+          ({ effectRef }) => effectRef === approachEffectRef,
+        ),
+    ).toBe(false);
   });
   test("command Approach clears the pending effect without a Movement fill when no movement is available", () => {
     const spell = spellRecord(commandUnitId);
@@ -788,15 +790,19 @@ describe("QMBT14 deterministic Command movement option admission", () => {
           subject: fleeAct.subject,
           fills: [movementFill],
         },
-        handledInterruptTrigger: "opportunityAttack",
+        handledInterruptOccurrence: { trigger: "opportunityAttack" },
       },
     ]);
-    expect(requireCombatant(afterDecline.state, spellTargetId)).toMatchObject({
-      movementSpentFeet: movementFeet(0),
-      activeEffects: expect.arrayContaining([
-        expect.objectContaining({ kind: "commandPending", option: "flee" }),
-      ]),
-    });
+    const targetAfterDecline = requireCombatant(
+      afterDecline.state,
+      spellTargetId,
+    );
+    expect(targetAfterDecline.movementSpentFeet).toBe(movementFeet(30));
+    expect(
+      targetAfterDecline.activeEffects.some(
+        (effect) => effect.kind === "commandPending",
+      ),
+    ).toBe(false);
     const endTurnSave = requireResultHole(afterDecline, "savingThrowOutcome");
     const rejectedReplay = resolveBattleSubject({
       state: afterDecline.state,
@@ -812,18 +818,9 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     });
     expect(rejectedReplay).toMatchObject({
       tag: "invalid",
-      reason: "invalidFill",
-      message: "End Turn received duplicate Saving Throw outcome fills.",
+      reason: "staleSubject",
+      message: "Command Flee is no longer pending for this actor.",
       snapshot: snapshotBattle(afterDecline.state),
-      routeEvents: [
-        {
-          kind: "resolveBattleSubject",
-          subject: "commandEffect",
-          fill: "savingThrowOutcome",
-          holes: [],
-          owner: "battleHoleFrontier",
-        },
-      ],
     });
     const replayed = resolveBattleSubject({
       state: afterDecline.state,
@@ -835,15 +832,9 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       ],
     });
     expect(replayed).toMatchObject({
-      tag: "resolved",
-      snapshot: { currentActorId: spellCasterId },
-    });
-    if (replayed.tag !== "resolved") {
-      throw new Error("Expected Command Flee replay to resolve.");
-    }
-    expect(requireCombatant(replayed.state, spellTargetId)).toMatchObject({
-      movementSpentFeet: movementFeet(30),
-      activeEffects: [],
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Command Flee is no longer pending for this actor.",
     });
 
     const choice = reactionChoiceWithSubject(
@@ -880,14 +871,16 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       requireCombatant(afterAcceptedMiss.state, spellCasterId)
         .reactionAvailable,
     ).toBe(false);
+    const targetAfterAcceptedMiss = requireCombatant(
+      afterAcceptedMiss.state,
+      spellTargetId,
+    );
+    expect(targetAfterAcceptedMiss.movementSpentFeet).toBe(movementFeet(30));
     expect(
-      requireCombatant(afterAcceptedMiss.state, spellTargetId),
-    ).toMatchObject({
-      movementSpentFeet: movementFeet(0),
-      activeEffects: expect.arrayContaining([
-        expect.objectContaining({ kind: "commandPending", option: "flee" }),
-      ]),
-    });
+      targetAfterAcceptedMiss.activeEffects.some(
+        (effect) => effect.kind === "commandPending",
+      ),
+    ).toBe(false);
     const acceptedEndTurnSave = requireResultHole(
       afterAcceptedMiss,
       "savingThrowOutcome",
@@ -902,18 +895,9 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       ],
     });
     expect(replayedAfterAcceptedMiss).toMatchObject({
-      tag: "resolved",
-      snapshot: { currentActorId: spellCasterId },
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Command Flee is no longer pending for this actor.",
     });
-    if (replayedAfterAcceptedMiss.tag !== "resolved") {
-      throw new Error("Expected accepted Command Flee replay to resolve.");
-    }
-    expect(
-      requireCombatant(replayedAfterAcceptedMiss.state, spellCasterId)
-        .reactionAvailable,
-    ).toBe(true);
-    expect(
-      requireCombatant(replayedAfterAcceptedMiss.state, spellTargetId),
-    ).toMatchObject({ movementSpentFeet: movementFeet(30), activeEffects: [] });
   });
 });

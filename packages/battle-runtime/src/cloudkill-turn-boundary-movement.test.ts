@@ -52,6 +52,8 @@ import {
   attackRollFill,
   battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   concentrationSavingThrowFill,
   characterSeed,
   damageRollFill,
@@ -109,24 +111,21 @@ function withGreaseGroundHazard(state: BattleState): BattleState {
   if (source === undefined) {
     throw new Error("Expected the persistent-spell source.");
   }
-  const effect = {
-    kind: "greaseGroundHazard",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      "cloudkill-composition-grease",
-    ),
-    sourceCombatantId: spellCasterId,
-    areaId: greaseAreaId,
-    heightenedSpellTargetDisadvantage: null,
-    save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
-    expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
-  } as const satisfies BattleActiveEffect;
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(spellCasterId, {
-      ...source,
-      activeEffects: [...source.activeEffects, effect],
-    }),
-  };
+  return battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: source.combatantId,
+    effect: {
+      kind: "greaseGroundHazard",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "cloudkill-composition-grease",
+      ),
+      sourceCombatantId: spellCasterId,
+      areaId: greaseAreaId,
+      heightenedSpellTargetDisadvantage: null,
+      save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
+      expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
+    },
+  });
 }
 
 function withSourceStartTurnDamage(
@@ -137,26 +136,23 @@ function withSourceStartTurnDamage(
   if (source === undefined) {
     throw new Error("Expected the Cloudkill source.");
   }
-  const effect = {
-    kind: "spellTurnStartDamageAndSave",
-    source: "turnBoundaryEffectLifecycle",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(sourceKey),
-    sourceCombatantId: spellTargetId,
-    damage: { expr: { dice: 1, dieSize: 4 }, damageType: "fire" },
-    save: {
-      ability: "con",
-      dc: { kind: "caster_spell_save_dc" },
-      successEnds: "spell",
+  return battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: source.combatantId,
+    effect: {
+      kind: "spellTurnStartDamageAndSave",
+      source: "turnBoundaryEffectLifecycle",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(sourceKey),
+      sourceCombatantId: spellTargetId,
+      damage: { expr: { dice: 1, dieSize: 4 }, damageType: "fire" },
+      save: {
+        ability: "con",
+        dc: { kind: "caster_spell_save_dc" },
+        successEnds: "spell",
+      },
+      expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
     },
-    expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
-  } as const satisfies BattleActiveEffect;
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(spellCasterId, {
-      ...source,
-      activeEffects: [...source.activeEffects, effect],
-    }),
-  };
+  });
 }
 
 function withSourceTurnStartTemporaryHitPoints(
@@ -172,28 +168,25 @@ function withSourceTurnStartTemporaryHitPoints(
   if (source === undefined) {
     throw new Error("Expected the Cloudkill source.");
   }
-  const effect = {
-    kind: "turnStartTemporaryHitPoints",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      input.sourceKey ??
-        "cloudkill-simultaneous-turn-start-temporary-hit-points",
-    ),
-    sourceCombatantId: spellTargetId,
-    amount: input.amount ?? 3,
-    expiresAt: input.persistWithoutConcentration
-      ? { kind: "duration", durationTicks: elapsedTimeTicks(10) }
-      : {
-          kind: "concentration",
-          combatantId: input.concentrationCombatantId ?? spellTargetId,
-        },
-  } as const satisfies BattleActiveEffect;
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(spellCasterId, {
-      ...source,
-      activeEffects: [...source.activeEffects, effect],
-    }),
-  };
+  return battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: source.combatantId,
+    effect: {
+      kind: "turnStartTemporaryHitPoints",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        input.sourceKey ??
+          "cloudkill-simultaneous-turn-start-temporary-hit-points",
+      ),
+      sourceCombatantId: spellTargetId,
+      amount: input.amount ?? 3,
+      expiresAt: input.persistWithoutConcentration
+        ? { kind: "duration", durationTicks: elapsedTimeTicks(10) }
+        : {
+            kind: "concentration",
+            combatantId: input.concentrationCombatantId ?? spellTargetId,
+          },
+    },
+  });
 }
 
 function withCloudkillOwnedTurnStartTemporaryHitPoints(
@@ -207,20 +200,17 @@ function withCloudkillOwnedTurnStartTemporaryHitPoints(
   if (source === undefined || cloudkill === undefined) {
     throw new Error("Expected the Cloudkill source effect.");
   }
-  const effect = {
-    kind: "turnStartTemporaryHitPoints",
-    sourceProcedureRef: cloudkill.sourceProcedureRef,
-    sourceCombatantId: spellCasterId,
-    amount,
-    expiresAt: { kind: "concentration", combatantId: spellCasterId },
-  } as const satisfies BattleActiveEffect;
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(spellCasterId, {
-      ...source,
-      activeEffects: [...source.activeEffects, effect],
-    }),
-  };
+  return battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: source.combatantId,
+    effect: {
+      kind: "turnStartTemporaryHitPoints",
+      sourceProcedureRef: cloudkill.sourceProcedureRef,
+      sourceCombatantId: spellCasterId,
+      amount,
+      expiresAt: { kind: "concentration", combatantId: spellCasterId },
+    },
+  });
 }
 
 function withUnavailableSourceRecharge(state: BattleState): {
@@ -493,13 +483,13 @@ function withOneTickDurationCohort(
   const source = state.combatants.get(spellCasterId);
   if (source === undefined) throw new Error("Expected the Cloudkill source.");
   const sourceProcedureRef = battleProcedureExecutionRefForTest(sourceKey);
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(spellCasterId, {
-      ...source,
-      activeEffects: [
-        ...source.activeEffects,
-        {
+  return battleStateWithAllocatedEffectOccurrencesForTest({
+    state,
+    occurrences: [
+      {
+        kind: "activeEffect",
+        ownerId: source.combatantId,
+        effect: {
           kind: "turnStartTemporaryHitPoints",
           sourceProcedureRef,
           sourceCombatantId: spellCasterId,
@@ -509,24 +499,25 @@ function withOneTickDurationCohort(
             durationTicks: elapsedTimeTicks(1),
           },
         },
-      ],
-    }),
-    lightEmitters: [
-      ...state.lightEmitters,
+      },
       {
-        kind: "spellLightEmitter",
-        sourceProcedureRef,
-        sourceCombatantId: spellCasterId,
-        attachment: { kind: "combatant", combatantId: spellCasterId },
-        emission: { kind: "dim", radiusFeet: movementFeet(10) },
-        opaqueCoverInteraction: { kind: "blocksEmission" },
-        expiresAt: {
-          kind: "duration",
-          durationTicks: elapsedTimeTicks(1),
+        kind: "storedLightEmitter",
+        ownerId: source.combatantId,
+        emitter: {
+          kind: "spellLightEmitter",
+          sourceProcedureRef,
+          sourceCombatantId: spellCasterId,
+          attachment: { kind: "combatant", combatantId: spellCasterId },
+          emission: { kind: "dim", radiusFeet: movementFeet(10) },
+          opaqueCoverInteraction: { kind: "blocksEmission" },
+          expiresAt: {
+            kind: "duration",
+            durationTicks: elapsedTimeTicks(1),
+          },
         },
       },
     ],
-  };
+  }).state;
 }
 
 describe("Cloudkill source-turn movement", () => {

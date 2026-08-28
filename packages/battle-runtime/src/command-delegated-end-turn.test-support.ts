@@ -1,11 +1,11 @@
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { difficultyClass } from "@dnd/shared/types";
 
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
-import type {
-  BattleActiveEffect,
-  BattleState,
-} from "./battle-state-execution.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
+} from "./battle-runtime.test-support.ts";
+import type { BattleState } from "./battle-state-execution.ts";
 import type { CombatantId } from "./identity.ts";
 
 export function battleStateWithSyntheticWeakeningEndTurnSave(
@@ -36,17 +36,17 @@ export function battleStateWithSyntheticWeakeningEndTurnSave(
       combatantId: sourceId,
       durationTicks: elapsedTimeTicks(10),
     },
-  } as const satisfies BattleActiveEffect;
-  return {
+  } as const;
+  const concentratingState = {
     ...state,
-    combatants: new Map(state.combatants)
-      .set(sourceId, {
-        ...source,
-        concentration: { sourceProcedureRef, effectKind: "spellEffect" },
-      })
-      .set(targetId, {
-        ...target,
-        activeEffects: [...target.activeEffects, weakeningEffect],
-      }),
+    combatants: new Map(state.combatants).set(sourceId, {
+      ...source,
+      concentration: { sourceProcedureRef, effectKind: "spellEffect" },
+    }),
   };
+  return battleStateWithAllocatedEffectForTest({
+    state: concentratingState,
+    ownerId: targetId,
+    effect: weakeningEffect,
+  });
 }

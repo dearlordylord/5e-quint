@@ -58,6 +58,7 @@ import {
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   characterBattleFeatureInitForTest,
   characterSpellInvocationRefForProcedureRefForTest,
   fighterTurnWithReadiedAcidAndSecondReadiedRay,
@@ -15571,28 +15572,30 @@ function stateWithPreexistingBlurConcentration(
   state: BattleState,
 ): BattleState {
   const caster = requireBattleCombatant(state, fighterId);
-  return {
+  const sourceProcedureRef = battleProcedureExecutionRefForTest("blur");
+  const concentratingState = {
     ...state,
     combatants: new Map(state.combatants).set(fighterId, {
       ...caster,
       concentration: {
-        sourceProcedureRef: battleProcedureExecutionRefForTest("blur"),
+        sourceProcedureRef,
         effectKind: "spellEffect",
       },
-      activeEffects: [
-        ...caster.activeEffects,
-        {
-          kind: "blurred",
-          sourceProcedureRef: battleProcedureExecutionRefForTest("blur"),
-          sourceCombatantId: fighterId,
-          expiresAt: {
-            kind: "concentration",
-            combatantId: fighterId,
-          },
-        },
-      ],
     }),
   };
+  return battleStateWithAllocatedEffectForTest({
+    state: concentratingState,
+    ownerId: fighterId,
+    effect: {
+      kind: "blurred",
+      sourceProcedureRef,
+      sourceCombatantId: fighterId,
+      expiresAt: {
+        kind: "concentration",
+        combatantId: fighterId,
+      },
+    },
+  });
 }
 
 function advanceToConcentrationAttackerTurn(state: BattleState): BattleState {

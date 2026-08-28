@@ -123,6 +123,7 @@ import { requireCombatant } from "./unit-profile-admission-creature-fixture.test
 import {
   battleProcedureExecutionRefForSpellHoleForTest,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
 } from "./battle-runtime.test-support.ts";
 import {
   bindSelectedSpellInvocation,
@@ -389,30 +390,25 @@ export function withResistanceEffect(
   damageType: DamageType,
   usedThisTurn: boolean,
 ): BattleState {
-  const target = requireCombatant(state, targetId);
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(targetId, {
-      ...target,
-      activeEffects: [
-        ...target.activeEffects,
-        {
-          kind: "spellDamageReduction" as const,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(resistanceUnitId),
-          ),
-          sourceCombatantId: spellCasterId,
-          damageType,
-          amount: { dice: 1 as const, dieSize: 4 as const },
-          usedThisTurn,
-          expiresAt: {
-            kind: "concentration" as const,
-            combatantId: spellCasterId,
-          },
-        },
-      ],
-    }),
-  };
+  requireCombatant(state, targetId);
+  return battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: targetId,
+    effect: {
+      kind: "spellDamageReduction",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(resistanceUnitId),
+      ),
+      sourceCombatantId: spellCasterId,
+      damageType,
+      amount: { dice: 1, dieSize: 4 },
+      usedThisTurn,
+      expiresAt: {
+        kind: "concentration",
+        combatantId: spellCasterId,
+      },
+    },
+  });
 }
 
 export function spellTargetFill(
