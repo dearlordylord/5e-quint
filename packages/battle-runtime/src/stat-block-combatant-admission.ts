@@ -1,5 +1,5 @@
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
-import type { Condition } from "@dnd/shared/game-facts";
+import type { Condition, SurfaceCondition } from "@dnd/shared/game-facts";
 import { Hp, PositiveInteger } from "@dnd/shared/types";
 import { Brand } from "effect";
 import * as Either from "effect/Either";
@@ -62,7 +62,7 @@ export function statBlockInitialConditionImmunityIssue(
   conditions: readonly Condition[],
 ): StatBlockInitialConditionAdmissionIssue | null {
   const authoredImmunities = source.statBlock.immunities;
-  const fixedConditionImmunities: readonly string[] =
+  const fixedConditionImmunities: readonly SurfaceCondition[] =
     authoredImmunities !== undefined && "conditions" in authoredImmunities
       ? authoredImmunities.conditions
       : [];
