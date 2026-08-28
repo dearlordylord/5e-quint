@@ -14,6 +14,7 @@ import {
   battleAfterGoblinFailedSleepRepeatSave,
   battleId,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   breakBattleConcentration,
   characterSeed,
   damageRollFill,
@@ -151,7 +152,7 @@ describe("battle runtime: Sleep", () => {
     });
     const base = session.state;
     const goblin = base.combatants.get(goblinId)!;
-    const state = {
+    const concentratingState = {
       ...base,
       combatants: new Map(base.combatants).set(goblinId, {
         ...goblin,
@@ -161,25 +162,27 @@ describe("battle runtime: Sleep", () => {
           ),
           effectKind: "spellEffect",
         },
-        activeEffects: [
-          {
-            kind: "spellBaseArmorClass",
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String("mage_armor"),
-            ),
-            sourceCombatantId: goblinId,
-            base: armorClass(13),
-            ability: "dex",
-            expiresAt: {
-              kind: "concentration",
-              combatantId: goblinId,
-              durationTicks: requireElapsedHours(8),
-            },
-            earlyEnds: [{ kind: "concentrationBroken" }],
-          },
-        ],
       }),
     } satisfies BattleState;
+    const state = battleStateWithAllocatedEffectForTest({
+      state: concentratingState,
+      ownerId: goblinId,
+      effect: {
+        kind: "spellBaseArmorClass",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("mage_armor"),
+        ),
+        sourceCombatantId: goblinId,
+        base: armorClass(13),
+        ability: "dex",
+        expiresAt: {
+          kind: "concentration",
+          combatantId: goblinId,
+          durationTicks: requireElapsedHours(8),
+        },
+        earlyEnds: [{ kind: "concentrationBroken" }],
+      },
+    });
     const subject = findAct(session, magicSubject("sleep")).subject;
     const savingThrows = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
@@ -669,7 +672,7 @@ describe("battle runtime: Sleep", () => {
       endTurn({ state: slept, actorId: wizardId }),
     ).state;
     const goblin = goblinTurnBase.combatants.get(goblinId)!;
-    const goblinTurn = {
+    const concentratingGoblinTurn = {
       ...goblinTurnBase,
       combatants: new Map(goblinTurnBase.combatants).set(goblinId, {
         ...goblin,
@@ -679,26 +682,27 @@ describe("battle runtime: Sleep", () => {
           ),
           effectKind: "spellEffect",
         },
-        activeEffects: [
-          ...goblin.activeEffects,
-          {
-            kind: "spellBaseArmorClass",
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String("mage_armor"),
-            ),
-            sourceCombatantId: goblinId,
-            base: armorClass(13),
-            ability: "dex",
-            expiresAt: {
-              kind: "concentration",
-              combatantId: goblinId,
-              durationTicks: requireElapsedHours(8),
-            },
-            earlyEnds: [{ kind: "concentrationBroken" }],
-          },
-        ],
       }),
     } satisfies BattleState;
+    const goblinTurn = battleStateWithAllocatedEffectForTest({
+      state: concentratingGoblinTurn,
+      ownerId: goblinId,
+      effect: {
+        kind: "spellBaseArmorClass",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("mage_armor"),
+        ),
+        sourceCombatantId: goblinId,
+        base: armorClass(13),
+        ability: "dex",
+        expiresAt: {
+          kind: "concentration",
+          combatantId: goblinId,
+          durationTicks: requireElapsedHours(8),
+        },
+        earlyEnds: [{ kind: "concentrationBroken" }],
+      },
+    });
     const repeatSave = requireHole(
       endTurn({ state: goblinTurn, actorId: goblinId }),
       "savingThrowOutcome",
