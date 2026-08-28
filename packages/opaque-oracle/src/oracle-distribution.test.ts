@@ -5,9 +5,19 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
+import {
+  spawn,
+  spawnSync,
+  type ChildProcessWithoutNullStreams,
+} from "node:child_process";
+import type { IncomingHttpHeaders } from "node:http";
+import { request as requestHttp } from "node:http";
+import {
+  createInterface,
+  type Interface as ReadlineInterface,
+} from "node:readline";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { spawnSync } from "node:child_process";
 
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
@@ -44,6 +54,25 @@ const distributionAssetNames = [
 ];
 
 type ProcessResult = ReturnType<typeof spawnSync>;
+
+type OracleReadiness = {
+  readonly host: string;
+  readonly port: number;
+};
+
+type OracleHttpResponse = {
+  readonly status: number;
+  readonly headers: IncomingHttpHeaders;
+  readonly body: Buffer;
+};
+
+type OracleServeProcess = {
+  readonly child: ChildProcessWithoutNullStreams;
+  readonly readiness: OracleReadiness;
+  readonly lines: ReadlineInterface;
+  readonly stdout: () => string;
+  readonly stderr: () => string;
+};
 
 function writeNetworkDenialPreload(directory: string): string {
   const path = join(directory, "deny-network.cjs");
@@ -102,6 +131,195 @@ function assertSuccessfulProcess(result: ProcessResult): void {
   expect(result.error).toBeUndefined();
   expect(result.signal).toBeNull();
   expect(result.status).toBe(0);
+}
+
+async function launchOracleServe(
+  executable: string,
+  cwd: string,
+  preload: string,
+  port = "0",
+): Promise<OracleServeProcess> {
+  const child = spawn(
+    executable,
+    ["serve", "--host", "127.0.0.1", "--port", port],
+    {
+      cwd,
+      env: processEnvironment(preload),
+      stdio: ["ignore", "pipe", "pipe"],
+    },
+  ) as unknown as ChildProcessWithoutNullStreams;
+  child.stdout.setEncoding("utf8");
+  child.stderr.setEncoding("utf8");
+  const stdoutChunks: string[] = [];
+  const stderrChunks: string[] = [];
+  child.stdout.on("data", (chunk: string | Buffer) => {
+    stdoutChunks.push(typeof chunk === "string" ? chunk : chunk.toString());
+  });
+  child.stderr.on("data", (chunk: string | Buffer) => {
+    stderrChunks.push(typeof chunk === "string" ? chunk : chunk.toString());
+  });
+  const lines = createInterface({ input: child.stdout });
+  let readiness: OracleReadiness;
+  try {
+    readiness = await new Promise<OracleReadiness>((resolve, reject) => {
+      let settled = false;
+      let timeout: ReturnType<typeof setTimeout>;
+      const finish = (operation: () => void): void => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        operation();
+      };
+      function fail(cause: Error): void {
+        finish(() => {
+          lines.close();
+          if (child.exitCode === null && child.signalCode === null) {
+            child.kill("SIGTERM");
+          }
+          reject(cause);
+        });
+      }
+      timeout = setTimeout(() => {
+        fail(new Error("Oracle serve readiness timed out."));
+      }, 10_000);
+      lines.once("line", (line) => {
+        try {
+          const value: unknown = JSON.parse(line);
+          const record =
+            typeof value === "object" && value !== null
+              ? (value as { readonly host?: unknown; readonly port?: unknown })
+              : undefined;
+          const host = record?.host;
+          const port = record?.port;
+          if (
+            record === undefined ||
+            typeof host !== "string" ||
+            typeof port !== "number"
+          ) {
+            throw new Error("Oracle readiness has the wrong shape.");
+          }
+          finish(() => resolve({ host, port }));
+        } catch (cause) {
+          fail(
+            cause instanceof Error
+              ? cause
+              : new Error(`Invalid Oracle readiness: ${String(cause)}`),
+          );
+        }
+      });
+      child.once("error", (cause) => {
+        fail(cause instanceof Error ? cause : new Error(String(cause)));
+      });
+      child.once("exit", (code, signal) => {
+        fail(
+          new Error(
+            `Oracle serve exited before readiness (${String(code)}, ${String(signal)}).`,
+          ),
+        );
+      });
+    });
+  } catch (cause) {
+    lines.close();
+    if (child.exitCode === null && child.signalCode === null) {
+      child.kill("SIGKILL");
+    }
+    throw cause;
+  }
+  return {
+    child,
+    readiness,
+    lines,
+    stdout: () => stdoutChunks.join(""),
+    stderr: () => stderrChunks.join(""),
+  };
+}
+
+function requestOracle(
+  port: number,
+  input: {
+    readonly method: string;
+    readonly path: string;
+    readonly body?: Uint8Array;
+    readonly contentType?: string;
+  },
+): Promise<OracleHttpResponse> {
+  const body = input.body ?? new Uint8Array();
+  const headers: Record<string, string | number> = {
+    "content-length": body.byteLength,
+  };
+  if (input.contentType !== undefined) {
+    headers["content-type"] = input.contentType;
+  }
+  return new Promise((resolve, reject) => {
+    const request = requestHttp(
+      {
+        host: "127.0.0.1",
+        port,
+        path: input.path,
+        method: input.method,
+        headers,
+        agent: false,
+      },
+      (response) => {
+        const chunks: Buffer[] = [];
+        response.on("data", (chunk: Buffer | string) => {
+          chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+        });
+        response.once("aborted", () => {
+          reject(new Error("Oracle HTTP response was aborted."));
+        });
+        response.once("error", reject);
+        response.once("end", () => {
+          resolve({
+            status: response.statusCode ?? 0,
+            headers: response.headers,
+            body: Buffer.concat(chunks),
+          });
+        });
+      },
+    );
+    request.once("error", reject);
+    request.setTimeout(10_000, () => {
+      request.destroy(new Error("Oracle HTTP request timed out."));
+    });
+    request.end(Buffer.from(body));
+  });
+}
+
+async function waitForOracleExit(
+  process: OracleServeProcess,
+  signal: NodeJS.Signals,
+): Promise<void> {
+  const { child } = process;
+  const exit =
+    child.exitCode !== null || child.signalCode !== null
+      ? Promise.resolve({ code: child.exitCode, signal: child.signalCode })
+      : new Promise<{ code: number | null; signal: NodeJS.Signals | null }>(
+          (resolve) => {
+            child.once("exit", (code, childSignal) =>
+              resolve({ code, signal: childSignal }),
+            );
+          },
+        );
+  if (child.exitCode === null && child.signalCode === null) {
+    expect(child.kill(signal)).toBe(true);
+  }
+  let timeout: ReturnType<typeof setTimeout>;
+  try {
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeout = setTimeout(
+        () => reject(new Error("Oracle serve did not close.")),
+        10_000,
+      );
+    });
+    const result = await Promise.race([exit, timeoutPromise]);
+    expect(result.code).toBe(0);
+    expect(result.signal).toBeNull();
+  } finally {
+    clearTimeout(timeout!);
+  }
+  process.lines.close();
+  expect(process.stdout()).toBe(`${JSON.stringify(process.readiness)}\n`);
 }
 
 function assertEvaluated(
@@ -393,6 +611,234 @@ describe("Opaque Oracle source-free distribution", () => {
         "distribution rejected",
       );
     } finally {
+      rmSync(temporaryRoot, { recursive: true, force: true });
+    }
+  }, 300_000);
+
+  test("serves the packaged application over loopback with atomic request defects", async () => {
+    const temporaryRoot = mkdtempSync(
+      join(tmpdir(), "opaque-oracle-http-distribution-"),
+    );
+    let running: OracleServeProcess | undefined;
+    try {
+      const build = buildOracleDistribution({
+        destination: join(temporaryRoot, "distribution"),
+      });
+      const cleanWorkingDirectory = mkdtempSync(
+        join(temporaryRoot, "clean-cwd-"),
+      );
+      const preload = writeNetworkDenialPreload(temporaryRoot);
+      const executable = build.executablePath;
+      const identity = JSON.parse(
+        readFileSync(
+          join(build.destination, ORACLE_DISTRIBUTION_FILE_NAMES.identity),
+          "utf8",
+        ),
+      ) as { readonly distributionId: string };
+      const loaded = loadOracleApplicationFromDirectory({
+        directory: build.destination,
+      });
+      expect(Either.isRight(loaded)).toBe(true);
+      if (Either.isLeft(loaded)) return;
+
+      const firstCase = corpus.batch.cases[0];
+      const secondCase = corpus.batch.cases[1];
+      const thirdCase = corpus.batch.cases[2];
+      const workflowCase = corpus.batch.cases[10];
+      if (
+        firstCase === undefined ||
+        secondCase === undefined ||
+        thirdCase === undefined ||
+        workflowCase === undefined
+      ) {
+        throw new Error("The Oracle corpus is missing HTTP contract cases.");
+      }
+      const firstSingleton = JSON.stringify({ cases: [firstCase] });
+      const secondSingleton = JSON.stringify({ cases: [secondCase] });
+      const selectedBatch = JSON.stringify({
+        cases: [firstCase, secondCase, thirdCase],
+      });
+      const jsonContentType = "application/json; charset=utf-8";
+      const post = (
+        body: Uint8Array,
+        contentType = jsonContentType,
+      ): Promise<OracleHttpResponse> =>
+        requestOracle(running!.readiness.port, {
+          method: "POST",
+          path: "/oracle/evaluations",
+          body,
+          contentType,
+        });
+      const assertJsonContract = (response: OracleHttpResponse): void => {
+        expect(response.headers["content-type"]).toBe(jsonContentType);
+      };
+
+      running = await launchOracleServe(
+        executable,
+        cleanWorkingDirectory,
+        preload,
+      );
+      expect(running.readiness.host).toBe("127.0.0.1");
+      expect(Number.isInteger(running.readiness.port)).toBe(true);
+      expect(running.readiness.port).toBeGreaterThan(0);
+      expect(running.stderr()).toBe("");
+
+      const identityResponse = await requestOracle(running.readiness.port, {
+        method: "GET",
+        path: "/oracle/identity",
+      });
+      expect(identityResponse.status).toBe(200);
+      assertJsonContract(identityResponse);
+      expect(identityResponse.body.toString("utf8")).toBe(
+        JSON.stringify(identity),
+      );
+
+      const decodedBatch = decodeOracleEvaluationBatchJson(selectedBatch);
+      expect(Either.isRight(decodedBatch)).toBe(true);
+      if (Either.isLeft(decodedBatch)) return;
+      const expectedBatchResponse = {
+        tag: "evaluated",
+        distributionId: identity.distributionId,
+        traces: evaluateOracleBatch({
+          batch: decodedBatch.right,
+          services: loaded.right.services,
+        }),
+      };
+      const batchResponse = await post(Buffer.from(selectedBatch));
+      expect(batchResponse.status).toBe(200);
+      assertJsonContract(batchResponse);
+      expect(batchResponse.body.toString("utf8")).toBe(
+        JSON.stringify(expectedBatchResponse),
+      );
+
+      const firstResponse = await post(Buffer.from(firstSingleton));
+      const secondResponse = await post(Buffer.from(secondSingleton));
+      const firstAgainResponse = await post(Buffer.from(firstSingleton));
+      for (const response of [
+        firstResponse,
+        secondResponse,
+        firstAgainResponse,
+      ]) {
+        expect(response.status).toBe(200);
+        assertJsonContract(response);
+      }
+      expect(firstResponse.body).toEqual(firstAgainResponse.body);
+      expect(firstResponse.body).not.toEqual(secondResponse.body);
+
+      const workflowResponse = await post(
+        Buffer.from(JSON.stringify({ cases: [workflowCase] })),
+      );
+      expect(workflowResponse.status).toBe(200);
+      assertJsonContract(workflowResponse);
+      const workflowJson = JSON.parse(
+        workflowResponse.body.toString("utf8"),
+      ) as {
+        readonly tag: string;
+        readonly traces: readonly {
+          readonly creation: { readonly outcome: { readonly tag: string } };
+        }[];
+      };
+      expect(workflowJson.tag).toBe("evaluated");
+      expect(workflowJson.traces[0]?.creation.outcome.tag).toBe("fillRejected");
+
+      const malformedResponses = await Promise.all([
+        post(Buffer.alloc(0)),
+        post(Buffer.from("not-json")),
+        post(Buffer.from('{"cases":[],"cases":[]}')),
+        post(Buffer.from('{"cases":[{}]}')),
+        post(Buffer.from([0xc3, 0x28])),
+      ]);
+      for (const response of malformedResponses) {
+        expect(response.status).toBe(400);
+        assertJsonContract(response);
+        const value = JSON.parse(response.body.toString("utf8")) as {
+          readonly tag: string;
+          readonly distributionId: string;
+        };
+        expect(value.tag).toBe("decodeRejected");
+        expect(value.distributionId).toBe(identity.distributionId);
+      }
+      expect(malformedResponses[4]!.body.toString("utf8")).toBe(
+        `{"tag":"decodeRejected","distributionId":"${identity.distributionId}","issues":[{"path":"","code":"invalidJson"}]}`,
+      );
+
+      const unknownRoute = await requestOracle(running.readiness.port, {
+        method: "GET",
+        path: "/oracle/unknown",
+      });
+      expect(unknownRoute.status).toBe(404);
+      const wrongMethod = await requestOracle(running.readiness.port, {
+        method: "POST",
+        path: "/oracle/identity",
+      });
+      expect(wrongMethod.status).toBe(405);
+      const unsupportedMedia = await post(
+        Buffer.from(firstSingleton),
+        "text/plain; charset=utf-8",
+      );
+      expect(unsupportedMedia.status).toBe(415);
+      const oversized = await post(Buffer.alloc(2_000_000, 0x20));
+      expect(oversized.status).toBe(413);
+
+      await waitForOracleExit(running, "SIGINT");
+      running = undefined;
+
+      running = await launchOracleServe(
+        executable,
+        cleanWorkingDirectory,
+        preload,
+      );
+      expect(running.readiness.port).toBeGreaterThan(0);
+      await waitForOracleExit(running, "SIGTERM");
+      running = undefined;
+
+      const defectBuild = buildOracleDistribution({
+        destination: join(temporaryRoot, "defect-distribution"),
+        entryPoint: resolve(packageRoot, "scripts/oracle-defect-test-entry.ts"),
+      });
+      const defectProcess = await launchOracleServe(
+        defectBuild.executablePath,
+        cleanWorkingDirectory,
+        preload,
+      );
+      running = defectProcess;
+      const defectResponse = await requestOracle(defectProcess.readiness.port, {
+        method: "POST",
+        path: "/oracle/evaluations",
+        body: Buffer.from(JSON.stringify({ cases: [firstCase, secondCase] })),
+        contentType: jsonContentType,
+      });
+      expect(defectResponse.status).toBe(500);
+      assertJsonContract(defectResponse);
+      expect(defectResponse.body.toString("utf8")).toBe(
+        JSON.stringify({
+          tag: "defect",
+          distributionId: defectBuild.distributionId,
+        }),
+      );
+      const afterDefect = await requestOracle(defectProcess.readiness.port, {
+        method: "POST",
+        path: "/oracle/evaluations",
+        body: Buffer.from(firstSingleton),
+        contentType: jsonContentType,
+      });
+      expect(afterDefect.status).toBe(200);
+      assertJsonContract(afterDefect);
+      expect(afterDefect.body.toString("utf8")).toContain(
+        `"distributionId":"${defectBuild.distributionId}"`,
+      );
+      await waitForOracleExit(defectProcess, "SIGTERM");
+      running = undefined;
+    } finally {
+      if (running !== undefined) {
+        if (
+          running.child.exitCode === null &&
+          running.child.signalCode === null
+        ) {
+          running.child.kill("SIGKILL");
+        }
+        running.lines.close();
+      }
       rmSync(temporaryRoot, { recursive: true, force: true });
     }
   }, 300_000);

@@ -9,20 +9,31 @@ export * from "./oracle-catalog-services.ts";
 export * from "./oracle-distribution.ts";
 export * from "./oracle-publication.ts";
 export {
+  ORACLE_LOOPBACK_HOST,
+  OracleLoopbackHostSchema,
+  OraclePortSchema,
+  decodeOraclePort,
   DistributionIdSchema,
   decodeDistributionId,
   OracleBatchResponseSchema,
   OracleDecodeIssueSchema,
   OracleDecodeIssuesSchema,
   OracleIdentityResponseSchema,
+  OracleHttpReadinessSchema,
+  OracleDefectResponseSchema,
   encodeOracleBatchResponseJson,
   encodeOracleIdentityResponseJson,
+  encodeOracleHttpReadinessJson,
+  encodeOracleDefectResponseJson,
   oracleDecodeRejectedResponse,
+  oracleDefectResponse,
   oracleEvaluatedResponse,
   isOracleBatchResponse,
   ORACLE_INVALID_JSON_ISSUES,
 } from "./oracle-process-contract.ts";
 export type {
+  OracleLoopbackHost,
+  OraclePort,
   DistributionId,
   OracleBatchResponse,
   OracleDecodeIssue as OracleProcessDecodeIssue,
@@ -30,8 +41,11 @@ export type {
   OracleEvaluatedResponse,
   OracleDecodeRejectedResponse,
   OracleIdentityResponse,
+  OracleHttpReadiness,
+  OracleDefectResponse,
 } from "./oracle-process-contract.ts";
 export * from "./oracle-stream.ts";
+export * from "./oracle-http.ts";
 export * from "./oracle-bootstrap.ts";
 export * from "./oracle-startup-catalog.ts";
 export {

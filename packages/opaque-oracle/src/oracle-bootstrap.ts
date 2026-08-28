@@ -2,23 +2,59 @@ import { fileURLToPath } from "node:url";
 
 import { Effect, Either, Exit, Match, Stream } from "effect";
 
+import type { OracleBatchRequestEvaluator } from "./oracle-batch-operation.ts";
 import {
   loadOracleApplicationFromExecutable,
   type OracleApplication,
   type OracleDistributionLoadIssue,
 } from "./oracle-distribution.ts";
-import { encodeOracleIdentityResponseJson } from "./oracle-process-contract.ts";
 import {
-  runOracleStream,
-  type OracleStreamEvaluator,
-} from "./oracle-stream.ts";
+  decodeOraclePort,
+  encodeOracleIdentityResponseJson,
+  ORACLE_LOOPBACK_HOST,
+  type OracleLoopbackHost,
+  type OraclePort,
+} from "./oracle-process-contract.ts";
+import { runOracleStream } from "./oracle-stream.ts";
+import { runOracleHttpService } from "./oracle-http.ts";
 
-export const ORACLE_CLI_MODES = ["identity", "stream"] as const;
-export type OracleCliMode = (typeof ORACLE_CLI_MODES)[number];
-export const ORACLE_CLI_USAGE = `Usage: ${ORACLE_CLI_MODES.map((mode) => `oracle ${mode}`).join(" | ")} (the stream mode reads UTF-8 LF-framed batches from stdin)`;
+const ORACLE_CLI_COMMAND_DEFINITIONS = [
+  { tag: "identity", arguments: "none" },
+  { tag: "stream", arguments: "none" },
+  {
+    tag: "serve",
+    arguments: "serve",
+    hostFlag: "--host",
+    portFlag: "--port",
+  },
+] as const;
 
-const isOracleCliMode = (value: string | undefined): value is OracleCliMode =>
-  value !== undefined && ORACLE_CLI_MODES.some((mode) => mode === value);
+type OracleCliCommandDefinition =
+  (typeof ORACLE_CLI_COMMAND_DEFINITIONS)[number];
+export type OracleCliCommand = {
+  [Definition in OracleCliCommandDefinition as Definition["tag"]]: Definition extends {
+    readonly arguments: "serve";
+  }
+    ? {
+        readonly tag: Definition["tag"];
+        readonly host: OracleLoopbackHost;
+        readonly port: OraclePort;
+      }
+    : { readonly tag: Definition["tag"] };
+}[OracleCliCommandDefinition["tag"]];
+
+const oracleCliCommandUsage = (
+  definition: OracleCliCommandDefinition,
+): string =>
+  definition.arguments === "serve"
+    ? `oracle ${definition.tag} ${definition.hostFlag} ${ORACLE_LOOPBACK_HOST} ${definition.portFlag} <0..65535>`
+    : `oracle ${definition.tag}`;
+
+export const ORACLE_CLI_USAGE = `Usage: ${ORACLE_CLI_COMMAND_DEFINITIONS.map(
+  oracleCliCommandUsage,
+).join(
+  " | ",
+)} (the stream mode reads UTF-8 LF-framed batches from stdin; serve writes one readiness value before accepting requests)`;
 
 export type OracleCliArgumentIssue = {
   readonly tag: "invalidArguments";
@@ -36,21 +72,24 @@ export type OracleProcessDependencies = {
     executablePath: string,
   ) => ReturnType<typeof loadOracleApplicationFromExecutable>;
   /** Test-build seam; production leaves this unset and uses the application operation. */
-  readonly evaluate?: OracleStreamEvaluator<never, never>;
+  readonly evaluate?: OracleBatchRequestEvaluator<never, never>;
 };
 
-/** Parse the deliberately small root command mode exhaustively. */
-export function parseOracleCliMode(
+/** Parse the one root command and its serve-only options. */
+export function parseOracleCliCommand(
   args: readonly string[],
-): Either.Either<OracleCliMode, OracleCliArgumentIssue> {
+): Either.Either<OracleCliCommand, OracleCliArgumentIssue> {
   const [mode, ...remaining] = args;
-  if (isOracleCliMode(mode) && remaining.length === 0) {
-    return Either.right(mode);
+  const definition = ORACLE_CLI_COMMAND_DEFINITIONS.find(
+    (candidate) => candidate.tag === mode,
+  );
+  if (definition === undefined) return Either.left(invalidArguments());
+  if (definition.arguments === "serve") {
+    return parseOracleServeCommand(definition, remaining);
   }
-  return Either.left({
-    tag: "invalidArguments",
-    message: ORACLE_CLI_USAGE,
-  });
+  return remaining.length === 0
+    ? Either.right({ tag: definition.tag })
+    : Either.left(invalidArguments());
 }
 
 /**
@@ -64,7 +103,7 @@ export async function runOracleProcess(
 ): Promise<number> {
   const writeStdout = dependencies.writeStdout ?? defaultWriteStdout;
   const writeStderr = dependencies.writeStderr ?? defaultWriteStderr;
-  const mode = parseOracleCliMode(args);
+  const mode = parseOracleCliCommand(args);
   if (Either.isLeft(mode)) {
     await report(writeStderr, mode.left.message);
     return 2;
@@ -88,11 +127,21 @@ export async function runOracleProcess(
 
   const application = loaded.right;
   return Match.value(mode.right).pipe(
-    Match.when("identity", () =>
+    Match.when({ tag: "identity" }, () =>
       runIdentityMode(application, writeStdout, writeStderr),
     ),
-    Match.when("stream", () =>
+    Match.when({ tag: "stream" }, () =>
       runStreamMode(application, dependencies, writeStdout, writeStderr),
+    ),
+    Match.when({ tag: "serve" }, ({ host, port }) =>
+      runServeMode(
+        application,
+        dependencies,
+        host,
+        port,
+        writeStdout,
+        writeStderr,
+      ),
     ),
     Match.exhaustive,
   );
@@ -124,7 +173,7 @@ async function runStreamMode(
     dependencies.stdin ?? process.stdin,
     toProcessError,
   );
-  const evaluate: OracleStreamEvaluator<never, never> =
+  const evaluate: OracleBatchRequestEvaluator<never, never> =
     dependencies.evaluate ??
     ((request) => application.evaluateJson(request.rawJson));
   const result = await Effect.runPromiseExit(
@@ -141,6 +190,73 @@ async function runStreamMode(
   );
   if (Exit.isSuccess(result)) return 0;
   await report(writeStderr, `stream failed: ${String(result.cause)}`);
+  return 1;
+}
+
+function parseOracleServeCommand(
+  definition: Extract<OracleCliCommandDefinition, { arguments: "serve" }>,
+  args: readonly string[],
+): Either.Either<OracleCliCommand, OracleCliArgumentIssue> {
+  if (args.length === 0 || args.length % 2 !== 0) {
+    return Either.left(invalidArguments());
+  }
+  const values = new Map<string, string>();
+  for (let index = 0; index < args.length; index += 2) {
+    const flag = args[index];
+    const value = args[index + 1];
+    if (
+      (flag !== definition.hostFlag && flag !== definition.portFlag) ||
+      value === undefined ||
+      value.startsWith("--") ||
+      values.has(flag)
+    ) {
+      return Either.left(invalidArguments());
+    }
+    values.set(flag, value);
+  }
+
+  const host = values.get(definition.hostFlag);
+  const portToken = values.get(definition.portFlag);
+  if (
+    host !== ORACLE_LOOPBACK_HOST ||
+    portToken === undefined ||
+    !/^(?:0|[1-9][0-9]{0,4})$/u.test(portToken)
+  ) {
+    return Either.left(invalidArguments());
+  }
+  const decodedPort = decodeOraclePort(Number(portToken));
+  if (Either.isLeft(decodedPort)) return Either.left(invalidArguments());
+  return Either.right({
+    tag: "serve",
+    host: ORACLE_LOOPBACK_HOST,
+    port: decodedPort.right,
+  });
+}
+
+function invalidArguments(): OracleCliArgumentIssue {
+  return { tag: "invalidArguments", message: ORACLE_CLI_USAGE };
+}
+
+async function runServeMode(
+  application: OracleApplication,
+  dependencies: OracleProcessDependencies,
+  host: OracleLoopbackHost,
+  port: OraclePort,
+  writeStdout: OracleProcessWriter,
+  writeStderr: OracleProcessWriter,
+): Promise<number> {
+  const evaluate: OracleBatchRequestEvaluator<never, never> =
+    dependencies.evaluate ??
+    ((request) => application.evaluateJson(request.rawJson));
+  const result = await runOracleHttpService({
+    application,
+    evaluate,
+    host,
+    port,
+    writeReady: writeStdout,
+  });
+  if (Either.isRight(result)) return 0;
+  await report(writeStderr, `serve failed: ${result.left.tag}`);
   return 1;
 }
 

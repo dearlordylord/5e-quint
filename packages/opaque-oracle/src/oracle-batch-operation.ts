@@ -26,9 +26,12 @@ export type OracleBatchEvaluator = (input: {
   readonly services: OracleEvaluationServices;
 }) => readonly [OracleTrace, ...OracleTrace[]];
 
-export type OracleBatchOperation = (
+/** Transport-neutral raw-batch operation seam shared by every process adapter. */
+export type OracleBatchRequestEvaluator<Error = never, Requirements = never> = (
   input: OracleBatchOperationInput,
-) => Effect.Effect<OracleBatchResponse>;
+) => Effect.Effect<OracleBatchResponse, Error, Requirements>;
+
+export type OracleBatchOperation = OracleBatchRequestEvaluator;
 
 /**
  * Build one raw-frame operation around an evaluator boundary.

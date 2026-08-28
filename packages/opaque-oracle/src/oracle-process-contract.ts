@@ -7,6 +7,37 @@ import {
   type OracleTrace,
 } from "./oracle-case-trace-schema.ts";
 
+/** The only address an Oracle HTTP service may bind. */
+export const ORACLE_LOOPBACK_HOST = "127.0.0.1" as const;
+
+export const OracleLoopbackHostSchema = Schema.Literal(
+  ORACLE_LOOPBACK_HOST,
+).annotations({ identifier: "OracleLoopbackHost" });
+
+export type OracleLoopbackHost = typeof OracleLoopbackHostSchema.Type;
+
+/** A TCP port, including zero for operating-system assignment. */
+export const OraclePortSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.between(0, 65_535),
+  Schema.brand("OraclePort"),
+).annotations({ identifier: "OraclePort" });
+
+export type OraclePort = typeof OraclePortSchema.Type;
+
+export const decodeOraclePort = Schema.decodeUnknownEither(OraclePortSchema);
+
+/** The one compact value written after a serve command starts listening. */
+export const OracleHttpReadinessSchema = Schema.Struct({
+  host: OracleLoopbackHostSchema,
+  port: OraclePortSchema,
+}).annotations({
+  identifier: "OracleHttpReadiness",
+  parseOptions: { onExcessProperty: "error" },
+});
+
+export type OracleHttpReadiness = typeof OracleHttpReadinessSchema.Type;
+
 /** The identity of the executable and immutable services used for evaluation. */
 export const DistributionIdSchema = Schema.String.pipe(
   Schema.pattern(/^sha256:[0-9a-f]{64}$/u),
@@ -95,11 +126,28 @@ export type OracleIdentityResponse = Schema.Schema.Type<
   typeof OracleIdentityResponseSchema
 >;
 
+/** A transport-level defect is not part of the Oracle batch response algebra. */
+export const OracleDefectResponseSchema = Schema.Struct({
+  tag: Schema.Literal("defect"),
+  distributionId: DistributionIdSchema,
+}).annotations({
+  identifier: "OracleDefectResponse",
+  parseOptions: { onExcessProperty: "error" },
+});
+
+export type OracleDefectResponse = typeof OracleDefectResponseSchema.Type;
+
 const OracleBatchResponseJsonSchema = Schema.parseJson(
   OracleBatchResponseSchema,
 );
 const OracleIdentityResponseJsonSchema = Schema.parseJson(
   OracleIdentityResponseSchema,
+);
+const OracleHttpReadinessJsonSchema = Schema.parseJson(
+  OracleHttpReadinessSchema,
+);
+const OracleDefectResponseJsonSchema = Schema.parseJson(
+  OracleDefectResponseSchema,
 );
 
 /** Encode only after schema validation; JSON object member order is schema order. */
@@ -110,6 +158,23 @@ export const encodeOracleBatchResponseJson = Schema.encodeSync(
 export const encodeOracleIdentityResponseJson = Schema.encodeSync(
   OracleIdentityResponseJsonSchema,
 );
+
+export const encodeOracleHttpReadinessJson = Schema.encodeSync(
+  OracleHttpReadinessJsonSchema,
+);
+
+export const encodeOracleDefectResponseJson = Schema.encodeSync(
+  OracleDefectResponseJsonSchema,
+);
+
+export function oracleDefectResponse(input: {
+  readonly distributionId: DistributionId;
+}): OracleDefectResponse {
+  return OracleDefectResponseSchema.make({
+    tag: "defect",
+    distributionId: input.distributionId,
+  });
+}
 
 export function oracleDecodeRejectedResponse(input: {
   readonly distributionId: DistributionId;

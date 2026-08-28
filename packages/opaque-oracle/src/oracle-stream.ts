@@ -1,17 +1,13 @@
 import { Effect, Either, Stream } from "effect";
 
-import type { OracleBatchOperationInput } from "./oracle-batch-operation.ts";
+import type { OracleBatchRequestEvaluator } from "./oracle-batch-operation.ts";
 import type { OracleApplication } from "./oracle-distribution.ts";
+import { decodeOracleUtf8 } from "./oracle-utf8.ts";
 import {
   encodeOracleBatchResponseJson,
   ORACLE_INVALID_JSON_ISSUES,
   oracleDecodeRejectedResponse,
-  type OracleBatchResponse,
 } from "./oracle-process-contract.ts";
-
-export type OracleStreamEvaluator<Error, Requirements> = (
-  input: OracleBatchOperationInput,
-) => Effect.Effect<OracleBatchResponse, Error, Requirements>;
 
 export type OracleStreamResponseWriter<Error, Requirements> = (
   encodedResponse: string,
@@ -27,7 +23,7 @@ export interface OracleStreamOptions<
 > {
   readonly input: Stream.Stream<Uint8Array, InputError, InputRequirements>;
   readonly application: OracleApplication;
-  readonly evaluate: OracleStreamEvaluator<
+  readonly evaluate: OracleBatchRequestEvaluator<
     EvaluationError,
     EvaluationRequirements
   >;
@@ -63,7 +59,6 @@ export function runOracleStream<
   InputRequirements | EvaluationRequirements | WriteRequirements
 > {
   return Effect.fn("OracleStream.run")(function* () {
-    const decoder = new TextDecoder("utf-8", { fatal: true });
     let frameBytes: number[] = [];
 
     const processFrame = (
@@ -73,7 +68,7 @@ export function runOracleStream<
       EvaluationError | WriteError,
       EvaluationRequirements | WriteRequirements
     > => {
-      const decoded = decodeUtf8Frame(decoder, bytes);
+      const decoded = decodeOracleUtf8(Uint8Array.from(bytes));
       const responseEffect = Either.isLeft(decoded)
         ? Effect.succeed(
             oracleDecodeRejectedResponse({
@@ -114,15 +109,4 @@ export function runOracleStream<
       yield* processFrame(frameBytes);
     }
   })();
-}
-
-function decodeUtf8Frame(
-  decoder: InstanceType<typeof TextDecoder>,
-  bytes: readonly number[],
-): Either.Either<string, void> {
-  try {
-    return Either.right(decoder.decode(Uint8Array.from(bytes)));
-  } catch {
-    return Either.left(undefined);
-  }
 }

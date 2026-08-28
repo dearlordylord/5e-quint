@@ -15,11 +15,9 @@ import {
 import {
   makeOracleBatchOperation,
   type OracleBatchEvaluator,
+  type OracleBatchRequestEvaluator,
 } from "./oracle-batch-operation.ts";
-import {
-  runOracleStream,
-  type OracleStreamEvaluator,
-} from "./oracle-stream.ts";
+import { runOracleStream } from "./oracle-stream.ts";
 import { buildOracleDistribution } from "../scripts/build-distribution.ts";
 import { loadOracleApplicationFromDirectory } from "./oracle-distribution.ts";
 
@@ -53,7 +51,7 @@ afterAll(() => {
 
 function runStream(
   chunks: readonly Uint8Array[],
-  evaluate: OracleStreamEvaluator<never, never>,
+  evaluate: OracleBatchRequestEvaluator<never, never>,
 ): readonly string[] {
   const responses: string[] = [];
   const result = Effect.runSyncExit(
@@ -89,7 +87,7 @@ describe("Opaque Oracle persistent byte stream", () => {
 
     const chunks = Array.from(bytes, (byte) => new Uint8Array([byte]));
     const evaluatedFrames: string[] = [];
-    const evaluate: OracleStreamEvaluator<never, never> = (input) => {
+    const evaluate: OracleBatchRequestEvaluator<never, never> = (input) => {
       evaluatedFrames.push(input.rawJson);
       return application.evaluateJson(input.rawJson);
     };
