@@ -57,6 +57,8 @@
     "test:mbt:see-invisibility-observer-sight": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/see-invisibility-observer-sight.mbt.test.ts",
     "test:mbt:self-teleport-lifecycle": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/self-teleport-lifecycle.mbt.test.ts",
     "test:mbt:self-transformation-mode-lifecycle": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/self-transformation-mode-lifecycle.mbt.test.ts",
+    "test:mbt:insect-plague-area-hazard": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/insect-plague-area-hazard.mbt.test.ts",
+    "test:mbt:cloudkill-area-hazard": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/cloudkill-area-hazard.mbt.test.ts",
     "test:mbt:sleet-storm-area-hazard": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/sleet-storm-area-hazard.mbt.test.ts",
     "test:mbt:slow-active-penalties": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/slow-active-penalties.mbt.test.ts",
     "test:mbt:spell-created-held-object-lifecycle": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/spell-created-held-object-lifecycle.mbt.test.ts",

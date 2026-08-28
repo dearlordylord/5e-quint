@@ -502,3 +502,4 @@ function activeInterruptWithReplayContinuationAttackDamageChanges(
     ],
   };
 }
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE

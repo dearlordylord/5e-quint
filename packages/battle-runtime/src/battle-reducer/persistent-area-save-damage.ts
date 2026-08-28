@@ -1339,3 +1339,4 @@ function persistentAreaConcentrationSavingThrowHole(
     holeInstanceKey: holeInstanceKey(key),
   };
 }
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
