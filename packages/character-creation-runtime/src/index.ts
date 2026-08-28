@@ -479,3 +479,10 @@ export {
   supportedHoleOptionIds,
   type CharacterCreationSupportProfile,
 } from "./support-gates.ts";
+export {
+  CHARACTER_CREATION_WORKFLOW_HORIZON,
+  characterCreationWorkflowProgressions,
+  deriveCharacterCreationWorkflowRoots,
+  type CharacterCreationWorkflowHorizon,
+  type CharacterCreationWorkflowRoots,
+} from "./workflow-horizon.ts";
