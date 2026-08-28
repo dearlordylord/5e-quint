@@ -272,7 +272,10 @@ function cloudkillStartTurnMovementEffects(
 
 function cloudkillStartTurnMovementHole(
   sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"],
-  effect: CloudkillAreaHazardEffect,
+  effect: Pick<
+    CloudkillAreaHazardEffect,
+    "sourceCombatantId" | "sourceProcedureRef" | "areaId"
+  >,
 ): BattleCloudkillMovementHole {
   const key = `battle:cloudkill-start-turn-movement:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${Number(sourceTurn.round)}`;
   return {
@@ -580,166 +583,31 @@ function resolveStartTurnOccurrenceSuffixAfterMovement(input: {
       "Start-turn occurrence continuation is not a member of its retained order.",
     );
   }
-  const suffixIds = orderFills[0]!.value.occurrenceIds.slice(currentIndex + 1);
-  let prefixState = input.state;
-  for (const occurrenceId of suffixIds) {
-    const handle = startTurnOccurrenceHandlesForState(
-      prefixState,
-      checkpoint.sourceTurn.actorId,
-    ).find(
-      (candidate) =>
-        startTurnOccurrenceOptionForHandle(candidate).occurrenceId ===
-        occurrenceId,
-    );
-    if (handle === undefined) continue;
-    if (handle.kind === "deathSavingThrow") {
-      const actor = prefixState.combatants.get(checkpoint.sourceTurn.actorId);
-      if (!startTurnDeathSavingThrowRequired(actor)) continue;
-      const hole = deathSavingThrowHole(checkpoint.sourceTurn.actorId);
-      const fills = input.fills.filter(
-        (
-          fill,
-        ): fill is Extract<BattleFill, { readonly kind: "deathSavingThrow" }> =>
-          fill.kind === "deathSavingThrow" && fill.holeId === hole.holeId,
-      );
-      if (fills.length === 0) {
-        return needsHolesResult(prefixState, input.parent.subject, [hole]);
-      }
-      if (fills.length !== 1) {
-        return invalidResult(
-          prefixState,
-          "invalidFill",
-          "Death Saving Throw must answer its exact ordered occurrence once.",
-        );
-      }
-      const effective = effectiveD20TestNaturalOneRerollDeathSavingThrow(
-        fills[0]!,
-      );
-      prefixState = {
-        ...prefixState,
-        combatants: applyStartTurnDeathSavingThrow(
-          prefixState.combatants,
-          checkpoint.sourceTurn.actorId,
-          effective.value,
-        ),
-      };
-      continue;
-    }
-    if (handle.kind === "statBlockRecharge") {
-      const hole = statBlockRechargeRollHole(
-        prefixState.combatants.get(checkpoint.sourceTurn.actorId),
-      );
-      if (hole === null) continue;
-      const fills = input.fills.filter(
-        (
-          fill,
-        ): fill is Extract<
-          BattleFill,
-          { readonly kind: "statBlockRechargeRoll" }
-        > =>
-          fill.kind === "statBlockRechargeRoll" && fill.holeId === hole.holeId,
-      );
-      if (fills.length === 0) {
-        return needsHolesResult(prefixState, input.parent.subject, [hole]);
-      }
-      if (
-        fills.length !== 1 ||
-        !statBlockRechargeRollFillMatchesHole(fills[0]!.value, hole)
-      ) {
-        return invalidResult(
-          prefixState,
-          "invalidFill",
-          "Stat Block Recharge roll must match its exact ordered occurrence once.",
-        );
-      }
-      prefixState = {
-        ...prefixState,
-        combatants: processStatBlockRechargeRolls(
-          prefixState.combatants,
-          checkpoint.sourceTurn.actorId,
-          fills[0]!.value,
-        ),
-      };
-      continue;
-    }
-    if (handle.kind === "turnStartTemporaryHitPoints") {
-      prefixState = {
-        ...prefixState,
-        combatants: applyStartOfTurnTemporaryHitPointEffects(
-          prefixState.combatants,
-          checkpoint.sourceTurn.actorId,
-          [handle.effect.sourceProcedureRef],
-        ),
-      };
-      continue;
-    }
-    if (
-      handle.kind === "spellConditionTurnStartDamage" ||
-      handle.kind === "spellTurnStartDamageAndSave"
-    ) {
-      const step = resolveSpellTurnStartDamageOccurrence({
-        state: prefixState,
-        resultState: prefixState,
-        subject: input.parent.subject,
-        sourceTurn: checkpoint.sourceTurn,
-        offeredEffect: handle.effect,
-        fills: input.fills,
-      });
-      if (step.tag === "result") return step.result;
-      prefixState = step.state;
-      continue;
-    }
-    if (handle.kind !== "cloudkillMovement") continue;
-    const hole = cloudkillStartTurnMovementHole(
-      checkpoint.sourceTurn,
-      handle.effect,
-    );
-    const movementFills = input.fills.filter(
-      (fill): fill is CloudkillMovementFill =>
-        fill.kind === "cloudkillMovement" && fill.holeId === hole.holeId,
-    );
-    if (movementFills.length === 0) {
-      return needsHolesResult(prefixState, input.parent.subject, [hole]);
-    }
-    if (movementFills.length !== 1) {
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Cloudkill movement fills must match each ordered occurrence exactly once.",
-      );
-    }
-    const affectedIssue = cloudkillMovementAffectedCombatantIssue(
-      prefixState,
-      movementFills,
-    );
-    if (affectedIssue !== null) {
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        affectedIssue === "duplicate"
-          ? "Cloudkill movement affected combatants must be unique."
-          : "Cloudkill movement affected combatants must exist in the battle.",
-      );
-    }
-    const resolution = resolveCloudkillMovementSaveDamageSequence({
-      advancedState: prefixState,
-      parent: input.parent,
-      requests: cloudkillMovementSaveDamageRequests(prefixState, [
-        { effect: handle.effect, hole, fill: movementFills[0]! },
-      ]),
-      sourceTurn: checkpoint.sourceTurn,
-      continuation: { kind: "turnBoundaryReplay" },
-    });
-    if (resolution.tag === "result") return resolution.result;
-    prefixState = resolution.state;
-  }
+  const suffix = resolveOrderedStartTurnOccurrences({
+    state: input.state,
+    rootResultState: input.state,
+    preservePrefixInResults: true,
+    subject: input.parent.subject,
+    sourceTurn: checkpoint.sourceTurn,
+    occurrenceIds: orderFills[0]!.value.occurrenceIds.slice(currentIndex + 1),
+    offeredHandles: [],
+    previouslyAcceptedMovementFillHoleIds: [
+      cloudkillStartTurnMovementHole(checkpoint.sourceTurn, {
+        sourceCombatantId: checkpoint.sourceTurn.actorId,
+        sourceProcedureRef: checkpoint.child.sourceProcedureRef,
+        areaId: checkpoint.child.areaId,
+      }).holeId,
+    ],
+    fills: input.fills,
+    parent: input.parent,
+  });
+  if (suffix.tag === "result") return suffix.result;
   return {
     tag: "resolved",
-    state: prefixState,
-    snapshot: snapshotBattle(prefixState),
+    state: suffix.state,
+    snapshot: snapshotBattle(suffix.state),
   };
 }
-
 function resolveCloudkillMovementSequenceResume(input: {
   readonly resolution: EndTurnResolutionInput;
   readonly parent: ReplayParentContinuation;
@@ -3149,6 +3017,302 @@ function applyEndTurnSpellDamageFills(
   }, state);
 }
 
+type OrderedStartTurnOccurrenceSequenceResult =
+  | {
+      readonly tag: "advanced";
+      readonly state: BattleState;
+      readonly acceptedHoleIds: ReadonlySet<BattleHoleId>;
+      readonly matchedMovementFillHoleIds: ReadonlySet<BattleHoleId>;
+      readonly movementSaveHoleIds: ReadonlySet<BattleHoleId>;
+      readonly movementDamageHoleIds: ReadonlySet<BattleHoleId>;
+      readonly movementConcentrationHoleIds: ReadonlySet<BattleHoleId>;
+    }
+  | { readonly tag: "result"; readonly result: BattleResolutionResult };
+
+function resolveOrderedStartTurnOccurrences(input: {
+  readonly state: BattleState;
+  readonly rootResultState: BattleState;
+  readonly preservePrefixInResults: boolean;
+  readonly subject: BattleSubject;
+  readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
+  readonly occurrenceIds: readonly StartTurnOccurrenceOption["occurrenceId"][];
+  readonly offeredHandles: readonly StartTurnOccurrenceHandle[];
+  readonly previouslyAcceptedMovementFillHoleIds: readonly BattleHoleId[];
+  readonly fills: readonly BattleFill[];
+  readonly parent: ReplayParentContinuation;
+}): OrderedStartTurnOccurrenceSequenceResult {
+  const acceptedHoleIds = new Set<BattleHoleId>();
+  const matchedMovementFillHoleIds = new Set<BattleHoleId>();
+  for (const id of input.previouslyAcceptedMovementFillHoleIds) {
+    matchedMovementFillHoleIds.add(id);
+    acceptedHoleIds.add(id);
+  }
+  const movementSaveHoleIds = new Set<BattleHoleId>();
+  const movementDamageHoleIds = new Set<BattleHoleId>();
+  const movementConcentrationHoleIds = new Set<BattleHoleId>();
+  const movementFills = input.fills.filter(
+    (fill): fill is CloudkillMovementFill => fill.kind === "cloudkillMovement",
+  );
+  let prefixState = input.state;
+  const resultState = (): BattleState =>
+    input.preservePrefixInResults ? prefixState : input.rootResultState;
+
+  for (const occurrenceId of input.occurrenceIds) {
+    const handle =
+      input.offeredHandles.find(
+        (candidate) =>
+          startTurnOccurrenceOptionForHandle(candidate).occurrenceId ===
+          occurrenceId,
+      ) ??
+      startTurnOccurrenceHandlesForState(
+        prefixState,
+        input.sourceTurn.actorId,
+      ).find(
+        (candidate) =>
+          startTurnOccurrenceOptionForHandle(candidate).occurrenceId ===
+          occurrenceId,
+      );
+    if (handle === undefined) continue;
+    if (handle.kind === "deathSavingThrow") {
+      const actor = prefixState.combatants.get(input.sourceTurn.actorId);
+      if (!startTurnDeathSavingThrowRequired(actor)) continue;
+      const hole = deathSavingThrowHole(input.sourceTurn.actorId);
+      const fills = input.fills.filter(
+        (
+          fill,
+        ): fill is Extract<BattleFill, { readonly kind: "deathSavingThrow" }> =>
+          fill.kind === "deathSavingThrow" && fill.holeId === hole.holeId,
+      );
+      if (fills.length === 0) {
+        return {
+          tag: "result",
+          result: needsHolesResult(resultState(), input.subject, [hole]),
+        };
+      }
+      if (fills.length !== 1) {
+        return {
+          tag: "result",
+          result: invalidResult(
+            resultState(),
+            "invalidFill",
+            "Death Saving Throw must answer its exact ordered occurrence once.",
+          ),
+        };
+      }
+      const fill = fills[0]!;
+      if (
+        d20TestNaturalOneRerollDieDecisionRequired({
+          actor,
+          originalNaturalD20: Number(fill.value),
+          decision: fill.d20TestNaturalOneReroll,
+        })
+      ) {
+        return {
+          tag: "result",
+          result: needsHolesResult(resultState(), input.subject, [
+            d20TestNaturalOneRerollHoleWithOption(hole),
+          ]),
+        };
+      }
+      const rerollIssue = d20TestNaturalOneRerollDieIssue({
+        actor,
+        originalNaturalD20: Number(fill.value),
+        decision: fill.d20TestNaturalOneReroll,
+      });
+      if (rerollIssue !== null) {
+        return {
+          tag: "result",
+          result: invalidResult(resultState(), "invalidFill", rerollIssue),
+        };
+      }
+      prefixState = {
+        ...prefixState,
+        combatants: applyStartTurnDeathSavingThrow(
+          prefixState.combatants,
+          input.sourceTurn.actorId,
+          effectiveD20TestNaturalOneRerollDeathSavingThrow(fill).value,
+        ),
+      };
+      acceptedHoleIds.add(hole.holeId);
+      continue;
+    }
+    if (handle.kind === "statBlockRecharge") {
+      const hole = statBlockRechargeRollHole(
+        prefixState.combatants.get(input.sourceTurn.actorId),
+      );
+      if (hole === null) continue;
+      const fills = input.fills.filter(
+        (
+          fill,
+        ): fill is Extract<
+          BattleFill,
+          { readonly kind: "statBlockRechargeRoll" }
+        > =>
+          fill.kind === "statBlockRechargeRoll" && fill.holeId === hole.holeId,
+      );
+      if (fills.length === 0) {
+        return {
+          tag: "result",
+          result: needsHolesResult(resultState(), input.subject, [hole]),
+        };
+      }
+      if (
+        fills.length !== 1 ||
+        !statBlockRechargeRollFillMatchesHole(fills[0]!.value, hole)
+      ) {
+        return {
+          tag: "result",
+          result: invalidResult(
+            resultState(),
+            "invalidFill",
+            "Stat Block Recharge roll must match its exact ordered occurrence once.",
+          ),
+        };
+      }
+      prefixState = {
+        ...prefixState,
+        combatants: processStatBlockRechargeRolls(
+          prefixState.combatants,
+          input.sourceTurn.actorId,
+          fills[0]!.value,
+        ),
+      };
+      acceptedHoleIds.add(hole.holeId);
+      continue;
+    }
+    if (handle.kind === "turnStartTemporaryHitPoints") {
+      const exactEffect = prefixState.combatants
+        .get(input.sourceTurn.actorId)
+        ?.activeEffects.find(
+          (effect) =>
+            effect.kind === "turnStartTemporaryHitPoints" &&
+            effect.sourceProcedureRef === handle.effect.sourceProcedureRef &&
+            effect.sourceCombatantId === handle.effect.sourceCombatantId,
+        );
+      if (exactEffect === undefined) continue;
+      prefixState = {
+        ...prefixState,
+        combatants: applyStartOfTurnTemporaryHitPointEffects(
+          prefixState.combatants,
+          input.sourceTurn.actorId,
+          [handle.effect.sourceProcedureRef],
+        ),
+      };
+      continue;
+    }
+    if (
+      handle.kind === "spellConditionTurnStartDamage" ||
+      handle.kind === "spellTurnStartDamageAndSave"
+    ) {
+      const step = resolveSpellTurnStartDamageOccurrence({
+        state: prefixState,
+        resultState: resultState(),
+        subject: input.subject,
+        sourceTurn: input.sourceTurn,
+        offeredEffect: handle.effect,
+        fills: input.fills,
+      });
+      if (step.tag === "result") return step;
+      prefixState = step.state;
+      for (const id of step.acceptedHoleIds) acceptedHoleIds.add(id);
+      continue;
+    }
+    const effect = cloudkillStartTurnMovementEffects(
+      prefixState,
+      input.sourceTurn.actorId,
+    ).find(
+      (candidate) =>
+        candidate.sourceProcedureRef === handle.effect.sourceProcedureRef &&
+        candidate.areaId === handle.effect.areaId,
+    );
+    if (effect === undefined) continue;
+    const hole = cloudkillStartTurnMovementHole(input.sourceTurn, effect);
+    const matchingFills = movementFills.filter(
+      (fill) => fill.holeId === hole.holeId,
+    );
+    if (matchingFills.length === 0) {
+      if (
+        movementFills.some(
+          (fill) => !matchedMovementFillHoleIds.has(fill.holeId),
+        )
+      ) {
+        return {
+          tag: "result",
+          result: invalidResult(
+            resultState(),
+            "invalidFill",
+            "Cloudkill movement fill does not match the next ordered occurrence.",
+          ),
+        };
+      }
+      return {
+        tag: "result",
+        result: needsHolesResult(resultState(), input.subject, [hole]),
+      };
+    }
+    if (matchingFills.length !== 1) {
+      return {
+        tag: "result",
+        result: invalidResult(
+          resultState(),
+          "invalidFill",
+          "Cloudkill movement fills must match each ordered occurrence exactly once.",
+        ),
+      };
+    }
+    const fill = matchingFills[0]!;
+    matchedMovementFillHoleIds.add(fill.holeId);
+    acceptedHoleIds.add(fill.holeId);
+    const affectedIssue = cloudkillMovementAffectedCombatantIssue(prefixState, [
+      fill,
+    ]);
+    if (affectedIssue !== null) {
+      return {
+        tag: "result",
+        result: invalidResult(
+          resultState(),
+          "invalidFill",
+          affectedIssue === "duplicate"
+            ? "Cloudkill movement affected combatants must be unique."
+            : "Cloudkill movement affected combatants must exist in the battle.",
+        ),
+      };
+    }
+    const resolution = resolveCloudkillMovementSaveDamageSequence({
+      advancedState: prefixState,
+      parent: input.parent,
+      requests: cloudkillMovementSaveDamageRequests(prefixState, [
+        { effect, hole, fill },
+      ]),
+      sourceTurn: input.sourceTurn,
+      continuation: { kind: "turnBoundaryReplay" },
+    });
+    if (resolution.tag === "result") return resolution;
+    prefixState = resolution.state;
+    for (const id of resolution.saveHoleIds) {
+      acceptedHoleIds.add(id);
+      movementSaveHoleIds.add(id);
+    }
+    for (const id of resolution.damageHoleIds) {
+      acceptedHoleIds.add(id);
+      movementDamageHoleIds.add(id);
+    }
+    for (const id of resolution.concentrationHoleIds) {
+      acceptedHoleIds.add(id);
+      movementConcentrationHoleIds.add(id);
+    }
+  }
+  return {
+    tag: "advanced",
+    state: prefixState,
+    acceptedHoleIds,
+    matchedMovementFillHoleIds,
+    movementSaveHoleIds,
+    movementDamageHoleIds,
+    movementConcentrationHoleIds,
+  };
+}
+
 function endTurnDamageDispositionHoles(
   state: BattleState,
   actorId: CombatantId,
@@ -3793,40 +3957,6 @@ function resolveEndTurnCommandForParent(
     (request) => request.hole,
   );
   const rechargeHole = statBlockRechargeRollHole(nextActor);
-  const startTurnDamageEffects = spellTurnStartDamageEffects(nextActor);
-  const startTurnDamageRequests = startTurnDamageEffects.map((effect) => ({
-    effect,
-    hole: spellTurnStartDamageRollHole(
-      { actorId: nextActorId, round: initiative.round },
-      effect,
-    ),
-  }));
-  const startTurnDamageHoles = startTurnDamageRequests.map(
-    (request) => request.hole,
-  );
-  const startTurnSaveRequests = startTurnDamageEffects.flatMap((effect) =>
-    effect.kind === "spellTurnStartDamageAndSave"
-      ? [
-          {
-            effect,
-            hole: spellTurnStartSavingThrowOutcomeHole(
-              { actorId: nextActorId, round: initiative.round },
-              effect,
-              /* v8 ignore next -- @preserve -- Internal turn-boundary invariant: this callback only runs for a start-turn effect read from nextActor, so nextActor cannot be absent here. */
-              nextActor === undefined
-                ? []
-                : savingThrowFlatBonusProjections(
-                    input.state,
-                    effect.save.ability,
-                  ).filter((projection) => projection.targetId === nextActorId),
-            ),
-          },
-        ]
-      : [],
-  );
-  const startTurnSaveHoles = startTurnSaveRequests.map(
-    (request) => request.hole,
-  );
   const nextSourceTurn = {
     actorId: nextActorId,
     round: initiative.round,
@@ -4116,13 +4246,6 @@ function resolveEndTurnCommandForParent(
   const endTurnDamageRollRequests = endTurnDamageRollCollection.resolved.map(
     ({ request, fill: roll }) => ({ ...request, roll }),
   );
-  const startTurnDamageRollCollection = collectTurnBoundaryHoleFills(
-    startTurnDamageRequests,
-    (hole) => spellTurnStartDamageRollFor(input.fills, hole),
-  );
-  const startTurnDamageRolls = startTurnDamageRollCollection.resolved.map(
-    ({ fill }) => fill,
-  );
   const startTurnDamageRollRequestsBeforeCloudkillMovement: readonly {
     readonly effect: SpellTurnStartDamageEffect;
     readonly roll: Extract<BattleFill, { readonly kind: "rolledDice" }>;
@@ -4140,7 +4263,7 @@ function resolveEndTurnCommandForParent(
     );
   }
   const turnBoundaryDamageHoleIds = new Set<BattleHoleId>(
-    [...endTurnDamageHoles, ...startTurnDamageHoles].map((hole) => hole.holeId),
+    endTurnDamageHoles.map((hole) => hole.holeId),
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
@@ -4148,8 +4271,7 @@ function resolveEndTurnCommandForParent(
       (fill) =>
         fill.kind === "rolledDice" &&
         turnBoundaryDamageHoleIds.has(fill.holeId),
-    ).length !==
-    endTurnDamageRolls.length + startTurnDamageRolls.length
+    ).length !== endTurnDamageRolls.length
   ) {
     return invalidResult(
       input.state,
@@ -4158,15 +4280,6 @@ function resolveEndTurnCommandForParent(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const startTurnSaveCollection = collectTurnBoundaryHoleFills(
-    startTurnSaveRequests,
-    (hole) =>
-      spellTurnStartSavingThrowOutcomeFor(savingThrowOutcomeFills, hole),
-  );
-  const startTurnSaves = startTurnSaveCollection.resolved.map(
-    ({ fill }) => fill,
-  );
-  const missingStartTurnSaveHolesBeforeCloudkillMovement = [] as const;
   const endTurnHideousLaughterDamageRepeatSaveChecks =
     endTurnDamageRollRequests.map((request) => {
       /* v8 ignore start -- @preserve -- Internal turn-boundary invariant: endTurnDamageRollRequests can contain an entry only when that effect was read from actor. */
@@ -4292,9 +4405,7 @@ function resolveEndTurnCommandForParent(
       ...unitFeatureConditionEndTurnSaveHoles,
       ...slowActivePenaltiesEndTurnSaveHoles,
       ...abilityD20TestEndTurnSaveHoles,
-      ...startTurnSaveHoles,
       ...endTurnHideousLaughterDamageRepeatSaveHoles,
-      ...startTurnHideousLaughterDamageRepeatSaveHoles,
     ].map((hole) => hole.holeId),
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -4309,9 +4420,7 @@ function resolveEndTurnCommandForParent(
       unitFeatureConditionEndTurnSaves.length +
       slowActivePenaltiesEndTurnSaves.length +
       abilityD20TestEndTurnSaves.length +
-      startTurnSaves.length +
-      endTurnHideousLaughterDamageRepeatSaves.length +
-      startTurnHideousLaughterDamageRepeatSaves.length
+      endTurnHideousLaughterDamageRepeatSaves.length
   ) {
     return invalidResult(
       input.state,
@@ -4418,17 +4527,6 @@ function resolveEndTurnCommandForParent(
     const validation = validateSleepRepeatSavingThrowOutcome(
       fill.value,
       hole?.hideousLaughterRepeatSave.targetId ?? actorId,
-    );
-    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (validation !== null) {
-      return invalidResult(input.state, "invalidFill", validation);
-    }
-    /* v8 ignore stop -- @preserve */
-  }
-  for (const { fill } of startTurnSaveCollection.resolved) {
-    const validation = validateSpellTurnStartSavingThrowOutcome(
-      fill.value,
-      nextActorId,
     );
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (validation !== null) {
@@ -4564,13 +4662,6 @@ function resolveEndTurnCommandForParent(
       missingDamageDispositionHoles,
     );
   }
-  if (missingStartTurnSaveHolesBeforeCloudkillMovement.length > 0) {
-    return needsHolesResult(
-      input.state,
-      input.subject,
-      missingStartTurnSaveHolesBeforeCloudkillMovement,
-    );
-  }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     deathSavingThrowFill?.kind === "deathSavingThrow" &&
@@ -4659,188 +4750,32 @@ function resolveEndTurnCommandForParent(
     turnStartTemporaryHitPointProcedureRefsBeforeCloudkillMovement: [],
     deferStatBlockRecharge: true,
   });
+const orderedOccurrenceResolution = resolveOrderedStartTurnOccurrences({
+    state: advancedTurn.state,
+    rootResultState: input.state,
+    preservePrefixInResults: false,
+    subject: input.subject,
+    sourceTurn: nextSourceTurn,
+    occurrenceIds: orderedStartTurnOccurrenceHandles.map(
+      (handle) => startTurnOccurrenceOptionForHandle(handle).occurrenceId,
+    ),
+    offeredHandles: orderedStartTurnOccurrenceHandles,
+    previouslyAcceptedMovementFillHoleIds: [],
+    fills: input.fills,
+    parent,
+  });
+  if (orderedOccurrenceResolution.tag === "result") {
+    return orderedOccurrenceResolution.result;
+  }
   const cloudkillMovementFills = input.fills.filter(
     (fill): fill is CloudkillMovementFill => fill.kind === "cloudkillMovement",
   );
-  const orderedOccurrenceHandlesFromFirstCloudkillMovement =
-    orderedStartTurnOccurrenceHandles;
-  const matchedMovementFillHoleIds = new Set<BattleHoleId>();
-  const movementSaveHoleIds = new Set<BattleHoleId>();
-  const movementDamageHoleIds = new Set<BattleHoleId>();
-  const movementConcentrationHoleIds = new Set<BattleHoleId>();
-  const orderedOccurrenceHoleIds = new Set<BattleHoleId>();
-  let stateAfterOrderedOccurrences = advancedTurn.state;
-  for (const handle of orderedOccurrenceHandlesFromFirstCloudkillMovement) {
-    if (handle.kind === "deathSavingThrow") {
-      const currentActor =
-        stateAfterOrderedOccurrences.combatants.get(nextActorId);
-      if (!startTurnDeathSavingThrowRequired(currentActor)) continue;
-      const hole = deathSavingThrowHole(nextActorId);
-      if (deathSavingThrowFill?.kind !== "deathSavingThrow") {
-        return needsHolesResult(input.state, input.subject, [hole]);
-      }
-      stateAfterOrderedOccurrences = {
-        ...stateAfterOrderedOccurrences,
-        combatants: applyStartTurnDeathSavingThrow(
-          stateAfterOrderedOccurrences.combatants,
-          nextActorId,
-          effectiveD20TestNaturalOneRerollDeathSavingThrow(deathSavingThrowFill)
-            .value,
-        ),
-      };
-      orderedOccurrenceHoleIds.add(hole.holeId);
-      continue;
-    }
-    if (handle.kind === "statBlockRecharge") {
-      const hole = statBlockRechargeRollHole(
-        stateAfterOrderedOccurrences.combatants.get(nextActorId),
-      );
-      if (hole === null) continue;
-      if (rechargeRollFill?.kind !== "statBlockRechargeRoll") {
-        return needsHolesResult(input.state, input.subject, [hole]);
-      }
-      if (!statBlockRechargeRollFillMatchesHole(rechargeRollFill.value, hole)) {
-        return invalidResult(
-          input.state,
-          "invalidFill",
-          "Stat Block Recharge roll must match the exact ordered occurrence.",
-        );
-      }
-      stateAfterOrderedOccurrences = {
-        ...stateAfterOrderedOccurrences,
-        combatants: processStatBlockRechargeRolls(
-          stateAfterOrderedOccurrences.combatants,
-          nextActorId,
-          rechargeRollFill.value,
-        ),
-      };
-      orderedOccurrenceHoleIds.add(hole.holeId);
-      continue;
-    }
-    if (handle.kind === "turnStartTemporaryHitPoints") {
-      const exactEffect = stateAfterOrderedOccurrences.combatants
-        .get(nextActorId)
-        ?.activeEffects.find(
-          (effect) =>
-            effect.kind === "turnStartTemporaryHitPoints" &&
-            effect.sourceProcedureRef === handle.effect.sourceProcedureRef &&
-            effect.sourceCombatantId === handle.effect.sourceCombatantId,
-        );
-      if (exactEffect === undefined) continue;
-      stateAfterOrderedOccurrences = {
-        ...stateAfterOrderedOccurrences,
-        combatants: applyStartOfTurnTemporaryHitPointEffects(
-          stateAfterOrderedOccurrences.combatants,
-          nextActorId,
-          [handle.effect.sourceProcedureRef],
-        ),
-      };
-      continue;
-    }
-    if (
-      handle.kind === "spellConditionTurnStartDamage" ||
-      handle.kind === "spellTurnStartDamageAndSave"
-    ) {
-      const step = resolveSpellTurnStartDamageOccurrence({
-        state: stateAfterOrderedOccurrences,
-        resultState: input.state,
-        subject: input.subject,
-        sourceTurn: nextSourceTurn,
-        offeredEffect: handle.effect,
-        fills: input.fills,
-      });
-      if (step.tag === "result") return step.result;
-      stateAfterOrderedOccurrences = step.state;
-      for (const id of step.acceptedHoleIds) orderedOccurrenceHoleIds.add(id);
-      continue;
-    }
-    if (handle.kind !== "cloudkillMovement") continue;
-    const effect = cloudkillStartTurnMovementEffects(
-      stateAfterOrderedOccurrences,
-      nextActorId,
-    ).find(
-      (candidate) =>
-        candidate.sourceProcedureRef === handle.effect.sourceProcedureRef &&
-        candidate.areaId === handle.effect.areaId,
-    );
-    if (effect === undefined) continue;
-    const hole = cloudkillStartTurnMovementHole(
-      {
-        actorId: nextActorId,
-        round: advancedTurn.state.initiative.round,
-      },
-      effect,
-    );
-    const matchingFills = cloudkillMovementFills.filter(
-      (fill) => fill.holeId === hole.holeId,
-    );
-    if (matchingFills.length === 0) {
-      if (
-        cloudkillMovementFills.some(
-          (fill) => !matchedMovementFillHoleIds.has(fill.holeId),
-        )
-      ) {
-        return invalidResult(
-          input.state,
-          "invalidFill",
-          "Cloudkill movement fill does not match the next ordered occurrence.",
-        );
-      }
-      return needsHolesResult(input.state, input.subject, [hole]);
-    }
-    if (matchingFills.length !== 1) {
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Cloudkill movement fills must match each ordered occurrence exactly once.",
-      );
-    }
-    const fill = matchingFills[0];
-    if (fill === undefined) {
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Cloudkill movement occurrence lost its exact fill.",
-      );
-    }
-    matchedMovementFillHoleIds.add(fill.holeId);
-    const affectedCombatantIssue = cloudkillMovementAffectedCombatantIssue(
-      stateAfterOrderedOccurrences,
-      [fill],
-    );
-    if (affectedCombatantIssue !== null) {
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        affectedCombatantIssue === "duplicate"
-          ? "Cloudkill movement affected combatants must be unique."
-          : "Cloudkill movement affected combatants must exist in the battle.",
-      );
-    }
-    const resolution = resolveCloudkillMovementSaveDamageSequence({
-      advancedState: stateAfterOrderedOccurrences,
-      parent,
-      requests: cloudkillMovementSaveDamageRequests(
-        stateAfterOrderedOccurrences,
-        [{ effect, hole, fill }],
-      ),
-      sourceTurn: {
-        actorId: nextActorId,
-        round: advancedTurn.state.initiative.round,
-      },
-      continuation: { kind: "turnBoundaryReplay" },
-    });
-    if (resolution.tag === "result") return resolution.result;
-    stateAfterOrderedOccurrences = resolution.state;
-    for (const id of resolution.saveHoleIds) movementSaveHoleIds.add(id);
-    for (const id of resolution.damageHoleIds) movementDamageHoleIds.add(id);
-    for (const id of resolution.concentrationHoleIds) {
-      movementConcentrationHoleIds.add(id);
-    }
-  }
   if (
     cloudkillMovementFills.some(
-      (fill) => !matchedMovementFillHoleIds.has(fill.holeId),
+      (fill) =>
+        !orderedOccurrenceResolution.matchedMovementFillHoleIds.has(
+          fill.holeId,
+        ),
     )
   ) {
     return invalidResult(
@@ -4849,15 +4784,16 @@ function resolveEndTurnCommandForParent(
       "Cloudkill movement fill does not belong to an applicable ordered occurrence.",
     );
   }
+  const orderedOccurrenceHoleIds =
+    orderedOccurrenceResolution.acceptedHoleIds;
   const movementAffectedResolution = {
     tag: "resolved" as const,
-    state: stateAfterOrderedOccurrences,
-    saveHoleIds: movementSaveHoleIds,
-    damageHoleIds: movementDamageHoleIds,
-    concentrationHoleIds: movementConcentrationHoleIds,
+    state: orderedOccurrenceResolution.state,
+    saveHoleIds: orderedOccurrenceResolution.movementSaveHoleIds,
+    damageHoleIds: orderedOccurrenceResolution.movementDamageHoleIds,
+    concentrationHoleIds:
+      orderedOccurrenceResolution.movementConcentrationHoleIds,
   };
-
-  /* v8 ignore start -- @preserve -- Malformed resolution input: each save, damage, and Concentration fill must answer either a normal turn-boundary hole or a movement-triggered Cloudkill hole. */
   if (
     savingThrowOutcomeFills.some(
       (fill) =>
@@ -4882,7 +4818,11 @@ function resolveEndTurnCommandForParent(
       (fill) =>
         !damageDispositionHoles.some((hole) => hole.holeId === fill.holeId) &&
         !orderedOccurrenceHoleIds.has(fill.holeId),
-    )
+    ) ||
+    (deathSavingThrowFill !== undefined &&
+      !orderedOccurrenceHoleIds.has(deathSavingThrowFill.holeId)) ||
+    (rechargeRollFill !== undefined &&
+      !orderedOccurrenceHoleIds.has(rechargeRollFill.holeId))
   ) {
     return invalidResult(
       input.state,

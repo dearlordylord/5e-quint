@@ -738,4 +738,73 @@ describe("effect lifecycle route boundary", () => {
       ]),
     );
   });
+
+  test("routes a next-round start-turn save by its advanced turn anchor", () => {
+    const base = goblinTurnBattle();
+    const fighter = base.combatants.get(fighterId);
+    if (fighter === undefined) throw new Error("Expected Fighter combatant.");
+    const effect = {
+      kind: "spellTurnStartDamageAndSave",
+      source: "turnBoundaryEffectLifecycle",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "effect-route-round-wrap-start-damage",
+      ),
+      sourceCombatantId: goblinId,
+      damage: { expr: { dice: 1, dieSize: 4 }, damageType: "fire" },
+      save: {
+        ability: "con",
+        dc: { kind: "caster_spell_save_dc" },
+        successEnds: "spell",
+      },
+      expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
+    } as const satisfies BattleActiveEffect;
+    const withStartDamage = {
+      ...base,
+      combatants: new Map(base.combatants).set(fighterId, {
+        ...fighter,
+        activeEffects: [...fighter.activeEffects, effect],
+      }),
+    } satisfies BattleState;
+    const subject = {
+      tag: "runtimeCommand" as const,
+      actorId: goblinId,
+      command: "endTurn" as const,
+    };
+    const damageFrontier = endTurn({ state: withStartDamage, actorId: goblinId });
+    const damageFill = damageRollFill(
+      requireBattleHole(damageFrontier, "rolledDice"),
+      1,
+    );
+    const saveFrontier = endTurn({
+      state: withStartDamage,
+      actorId: goblinId,
+      fills: [damageFill],
+    });
+    const saveFill = savingThrowOutcomeFill(
+      requireBattleHole(saveFrontier, "savingThrowOutcome"),
+      [{ targetId: fighterId, succeeded: true }],
+    );
+    const resolved = endTurn({
+      state: withStartDamage,
+      actorId: goblinId,
+      fills: [damageFill, saveFill],
+    });
+
+    expect(
+      turnBoundaryEffectLifecycleRouteForResolution(
+        {
+          state: withStartDamage,
+          subject,
+          fills: [damageFill, saveFill],
+        },
+        resolved,
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        kind: "resolveBattleSubject",
+        fill: "savingThrowOutcome",
+        owner: "battleActiveEffect",
+      }),
+    ]);
+  });
 });
