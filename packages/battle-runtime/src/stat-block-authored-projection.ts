@@ -151,23 +151,9 @@ export function projectAuthoredStatBlock(
   BattleStatBlockProjectionFailure
 > {
   const source = record.statBlock;
-  const size = literalSize(source.size);
-  if (size === null) return Either.left(failure("nonLiteralSize"));
-  if (source.speeds.some((speed) => "availability" in speed)) {
-    return Either.left(failure("unsupportedFormRestrictedSpeed"));
-  }
-  if (
-    source.immunities !== undefined &&
-    "qualifiedConditions" in source.immunities
-  ) {
-    return Either.left(failure("unsupportedQualifiedConditionImmunity"));
-  }
-  const speeds = source.speeds.map(runtimeSpeed);
-  const legendaryActionUses = authoredLegendaryActionUses(
-    source.legendaryActions?.uses,
-  );
-  if (Either.isLeft(legendaryActionUses)) {
-    return Either.left(legendaryActionUses.left);
+  const scalarProjection = authoredStatBlockScalarProjection(source);
+  if (Either.isLeft(scalarProjection)) {
+    return Either.left(scalarProjection.left);
   }
   const resources = runtimeResources(source.resources);
   if (Either.isLeft(resources)) {
@@ -183,17 +169,53 @@ export function projectAuthoredStatBlock(
   const runtime = runtimeProjection(
     record,
     source,
-    size,
-    nonEmptyRuntimeValues(speeds),
+    scalarProjection.right.size,
+    scalarProjection.right.speeds,
     resources.right,
     admitted.flatMap((projection) =>
       projection.kind === "executable" ? [projection.runtime] : [],
     ),
-    legendaryActionUses.right,
+    scalarProjection.right.legendaryActionUses,
   );
   return Either.right({
     runtime,
     presentation: presentationProjection(record, admitted),
+  });
+}
+
+type AuthoredStatBlockScalarProjection = {
+  readonly size: Size;
+  readonly speeds: ReadonlyNonEmptyArray<BattleStatBlockRuntimeSpeed>;
+  readonly legendaryActionUses: BattleStatBlockExecutionSource["legendaryActionUses"];
+};
+
+function authoredStatBlockScalarProjection(
+  source: StandaloneStatBlock,
+): Either.Either<
+  AuthoredStatBlockScalarProjection,
+  BattleStatBlockProjectionFailure
+> {
+  const size = literalSize(source.size);
+  if (size === null) return Either.left(failure("nonLiteralSize"));
+  if (source.speeds.some((speed) => "availability" in speed)) {
+    return Either.left(failure("unsupportedFormRestrictedSpeed"));
+  }
+  if (
+    source.immunities !== undefined &&
+    "qualifiedConditions" in source.immunities
+  ) {
+    return Either.left(failure("unsupportedQualifiedConditionImmunity"));
+  }
+  const legendaryActionUses = authoredLegendaryActionUses(
+    source.legendaryActions?.uses,
+  );
+  if (Either.isLeft(legendaryActionUses)) {
+    return Either.left(legendaryActionUses.left);
+  }
+  return Either.right({
+    size,
+    speeds: nonEmptyRuntimeValues(source.speeds.map(runtimeSpeed)),
+    legendaryActionUses: legendaryActionUses.right,
   });
 }
 

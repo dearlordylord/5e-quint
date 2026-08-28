@@ -248,34 +248,72 @@ export function analyzeStatBlockProcedurePressure(
 export function statBlockProcedurePressureOccurrences(
   record: StatBlockRecord,
 ): readonly StatBlockProcedurePressureOccurrence[] {
-  const source = statBlockProcedurePressureSource(record.provenance.section);
   const occurrences: StatBlockProcedurePressureOccurrence[] = [];
-  const add = (
-    kind: StatBlockProcedurePressureOccurrenceKind,
-    location: StatBlockProcedurePressureLocation,
-    structuralSubject: unknown,
-    disposition: StatBlockProcedurePressureDisposition,
-  ): void => {
-    occurrences.push({
-      kind,
-      structuralShape: structuralShape(structuralSubject),
-      disposition:
-        source.kind === "linked"
-          ? disposition
-          : {
-              kind: "malformed",
-              stage: "sourceLink",
-              issues: [source.section],
-            },
-      witness: {
-        statBlockId: record.id,
-        statBlockName: record.name,
-        source,
-        location,
-      },
-    });
-  };
+  const add = occurrenceAppender(
+    occurrences,
+    procedurePressureOccurrenceBuilder(record),
+  );
+  const resourceContext = addResourceDeclarationOccurrences(record, add);
+  addTraitOccurrences(record, add);
+  addAuthoredSectionOccurrences(record, add, resourceContext);
+  return occurrences;
+}
 
+type ProcedurePressureOccurrenceBuilder = (
+  kind: StatBlockProcedurePressureOccurrenceKind,
+  location: StatBlockProcedurePressureLocation,
+  structuralSubject: unknown,
+  disposition: StatBlockProcedurePressureDisposition,
+) => StatBlockProcedurePressureOccurrence;
+
+function procedurePressureOccurrenceBuilder(
+  record: StatBlockRecord,
+): ProcedurePressureOccurrenceBuilder {
+  const source = statBlockProcedurePressureSource(record.provenance.section);
+  return (kind, location, structuralSubject, disposition) => ({
+    kind,
+    structuralShape: structuralShape(structuralSubject),
+    disposition:
+      source.kind === "linked"
+        ? disposition
+        : {
+            kind: "malformed",
+            stage: "sourceLink",
+            issues: [source.section],
+          },
+    witness: {
+      statBlockId: record.id,
+      statBlockName: record.name,
+      source,
+      location,
+    },
+  });
+}
+
+function occurrenceAppender(
+  occurrences: StatBlockProcedurePressureOccurrence[],
+  build: ProcedurePressureOccurrenceBuilder,
+): AddOccurrence {
+  return (kind, location, structuralSubject, disposition) => {
+    occurrences.push(build(kind, location, structuralSubject, disposition));
+  };
+}
+
+type StatBlockProcedurePressureResourceContext = {
+  readonly resources: ReadonlyMap<
+    StatBlockProcedureResourceOrdinal,
+    StatBlockProcedureResource
+  >;
+  readonly dispositions: ReadonlyMap<
+    StatBlockProcedureResourceOrdinal,
+    StatBlockProcedurePressureDisposition
+  >;
+};
+
+function addResourceDeclarationOccurrences(
+  record: StatBlockRecord,
+  add: AddOccurrence,
+): StatBlockProcedurePressureResourceContext {
   const resources = new Map(
     (record.statBlock.resources ?? []).map((resource) => [
       resource.ordinal,
@@ -308,6 +346,13 @@ export function statBlockProcedurePressureOccurrences(
     );
   }
 
+  return { resources, dispositions: resourceDispositions };
+}
+
+function addTraitOccurrences(
+  record: StatBlockRecord,
+  add: AddOccurrence,
+): void {
   for (const [traitIndex, trait] of (record.statBlock.traits ?? []).entries()) {
     add(
       "trait",
@@ -316,7 +361,13 @@ export function statBlockProcedurePressureOccurrences(
       traitDisposition(trait),
     );
   }
+}
 
+function addAuthoredSectionOccurrences(
+  record: StatBlockRecord,
+  add: AddOccurrence,
+  resourceContext: StatBlockProcedurePressureResourceContext,
+): void {
   for (const { section, entries } of authoredProcedureSections(record)) {
     add(
       "section",
@@ -354,62 +405,109 @@ export function statBlockProcedurePressureOccurrences(
         add,
         section,
         entry,
-        resources,
-        resourceDispositions,
+        resourceContext.resources,
+        resourceContext.dispositions,
       );
-      if (
-        section === "reactions" &&
-        entry.kind === "executable" &&
-        "trigger" in entry
-      ) {
-        add(
-          "reactionTrigger",
-          {
-            kind: "reactionTrigger",
-            procedureOrdinal: entry.procedureOrdinal,
-          },
-          entry.trigger,
-          reactionTriggerDisposition(entry.trigger),
-        );
-      }
-      if (entry.kind !== "executable") continue;
-      Match.value(entry.procedure).pipe(
-        Match.when({ kind: "multiattack" }, (procedure) => {
-          for (const dispatch of procedure.dispatches) {
-            const targetDecision = decisions.get(dispatch.procedureOrdinal);
-            add(
-              "procedureReference",
-              {
-                kind: "procedureReference",
-                section,
-                procedureOrdinal: entry.procedureOrdinal,
-                referencedProcedureOrdinal: dispatch.procedureOrdinal,
-              },
-              dispatch,
-              procedureReferenceDisposition(targetDecision),
-            );
-          }
-        }),
-        Match.when({ kind: "spellcasting" }, (procedure) =>
-          addSpellcastingOccurrences(
-            add,
-            section,
-            entry.procedureOrdinal,
-            procedure.groups,
-            resources,
-            resourceDispositions,
-          ),
-        ),
-        Match.when({ kind: "attack_roll" }, () => undefined),
-        Match.when({ kind: "save" }, () => undefined),
-        Match.when({ kind: "support" }, () => undefined),
-        Match.when({ kind: "action_option" }, () => undefined),
-        Match.exhaustive,
+      addReactionTriggerOccurrence(add, section, entry);
+      addNestedProcedureOccurrences(
+        add,
+        section,
+        entry,
+        decisions,
+        resourceContext,
       );
     }
   }
+}
 
-  return occurrences;
+function addReactionTriggerOccurrence(
+  add: AddOccurrence,
+  section: StatBlockActionProjectionSection,
+  entry: StatBlockProcedurePressureEntry,
+): void {
+  if (
+    section !== "reactions" ||
+    entry.kind !== "executable" ||
+    !("trigger" in entry)
+  ) {
+    return;
+  }
+  add(
+    "reactionTrigger",
+    {
+      kind: "reactionTrigger",
+      procedureOrdinal: entry.procedureOrdinal,
+    },
+    entry.trigger,
+    reactionTriggerDisposition(entry.trigger),
+  );
+}
+
+function addNestedProcedureOccurrences(
+  add: AddOccurrence,
+  section: StatBlockActionProjectionSection,
+  entry: StatBlockProcedurePressureEntry,
+  decisions: ReadonlyMap<
+    StatBlockProcedureOrdinal,
+    AuthoredStatBlockProcedureExecutionDecision
+  >,
+  resourceContext: StatBlockProcedurePressureResourceContext,
+): void {
+  if (entry.kind !== "executable") return;
+  Match.value(entry.procedure).pipe(
+    Match.when({ kind: "multiattack" }, (procedure) =>
+      addMultiattackProcedureReferences(
+        add,
+        section,
+        entry.procedureOrdinal,
+        procedure.dispatches,
+        decisions,
+      ),
+    ),
+    Match.when({ kind: "spellcasting" }, (procedure) =>
+      addSpellcastingOccurrences(
+        add,
+        section,
+        entry.procedureOrdinal,
+        procedure.groups,
+        resourceContext.resources,
+        resourceContext.dispositions,
+      ),
+    ),
+    Match.when({ kind: "attack_roll" }, () => undefined),
+    Match.when({ kind: "save" }, () => undefined),
+    Match.when({ kind: "support" }, () => undefined),
+    Match.when({ kind: "action_option" }, () => undefined),
+    Match.exhaustive,
+  );
+}
+
+function addMultiattackProcedureReferences(
+  add: AddOccurrence,
+  section: StatBlockActionProjectionSection,
+  procedureOrdinal: StatBlockProcedureOrdinal,
+  dispatches: ReadonlyNonEmptyArray<{
+    readonly procedureOrdinal: StatBlockProcedureOrdinal;
+    readonly count: unknown;
+  }>,
+  decisions: ReadonlyMap<
+    StatBlockProcedureOrdinal,
+    AuthoredStatBlockProcedureExecutionDecision
+  >,
+): void {
+  for (const dispatch of dispatches) {
+    add(
+      "procedureReference",
+      {
+        kind: "procedureReference",
+        section,
+        procedureOrdinal,
+        referencedProcedureOrdinal: dispatch.procedureOrdinal,
+      },
+      dispatch,
+      procedureReferenceDisposition(decisions.get(dispatch.procedureOrdinal)),
+    );
+  }
 }
 
 function authoredProcedureSections(
