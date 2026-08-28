@@ -299,7 +299,7 @@ describe("battle runtime: Eldritch Blast", () => {
     expect("objectDamages" in requireResolved(result)).toBe(false);
   });
 
-  test("Eldritch Blast same-target hits use independent damage lifecycle holes", () => {
+  test("Eldritch Blast low-level reduction fixture keeps same-target damage lifecycle holes independent", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-eldritch-blast-same-target-lifecycle"),
       combatants: [
@@ -324,35 +324,46 @@ describe("battle runtime: Eldritch Blast", () => {
     });
     const baseState = session.state;
     const target = baseState.combatants.get(skeletonId)!;
-    const state = {
+    const source = baseState.combatants.get(wizardId)!;
+    const reductionProcedureRef = battleProcedureExecutionRefForTest(
+      "synthetic-low-level-eldritch-blast-reduction",
+    );
+    const concentratingState = {
       ...baseState,
-      combatants: new Map(baseState.combatants).set(skeletonId, {
-        ...target,
-        concentration: {
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("test_concentration"),
-          ),
-          effectKind: "readiedSpell",
-        },
-        activeEffects: [
-          ...target.activeEffects,
-          {
-            kind: "spellDamageReduction" as const,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String("resistance"),
-            ),
-            sourceCombatantId: wizardId,
-            damageType: "force" as const,
-            amount: { dice: 1 as const, dieSize: 4 as const },
-            usedThisTurn: false,
-            expiresAt: {
-              kind: "concentration" as const,
-              combatantId: wizardId,
-            },
+      combatants: new Map(baseState.combatants)
+        .set(wizardId, {
+          ...source,
+          concentration: {
+            sourceProcedureRef: reductionProcedureRef,
+            effectKind: "spellEffect",
           },
-        ],
-      }),
+        })
+        .set(skeletonId, {
+          ...target,
+          concentration: {
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              "synthetic-low-level-target-concentration",
+            ),
+            effectKind: "readiedSpell",
+          },
+        }),
     } satisfies BattleState;
+    const state = battleStateWithAllocatedEffectForTest({
+      state: concentratingState,
+      ownerId: skeletonId,
+      effect: {
+        kind: "spellDamageReduction",
+        sourceProcedureRef: reductionProcedureRef,
+        sourceCombatantId: wizardId,
+        damageType: "force",
+        amount: { dice: 1, dieSize: 4 },
+        usedThisTurn: false,
+        expiresAt: {
+          kind: "concentration",
+          combatantId: wizardId,
+        },
+      },
+    });
     const act = findAct(
       battleRuntimeSessionForTest({ ...session, state }),
       magicSubject("eldritch_blast"),
@@ -496,7 +507,9 @@ describe("battle runtime: Eldritch Blast", () => {
     ).toMatchObject({ usedThisTurn: true });
   });
 
-  test("Eldritch Blast zero-HP damage routes spell-effect concentration teardown before the next beam", () => {
+  test("low-level injected spell-effect identity: Eldritch Blast zero-HP damage tears down concentration before the next beam", () => {
+    // This reducer interaction fixture injects a coherent concentrating effect;
+    // it does not represent that effect as having been admitted by a spell cast.
     const concentratingProcedureRef = battleProcedureExecutionRefForTest(
       "synthetic_concentrating_armor",
     );
@@ -697,7 +710,7 @@ describe("battle runtime: Eldritch Blast", () => {
     }
   });
 
-  test("Eldritch Blast creature beams use Concentration, spell reduction, and zero-HP damage lifecycle holes", () => {
+  test("Eldritch Blast low-level fixtures expose Concentration, reduction, and zero-HP lifecycle holes", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-eldritch-blast-concentration"),
       combatants: [
@@ -789,30 +802,38 @@ describe("battle runtime: Eldritch Blast", () => {
     });
 
     const reductionTarget = state.combatants.get(skeletonId)!;
-    const reductionState = {
+    const reductionSource = state.combatants.get(wizardId)!;
+    const reductionProcedureRef = battleProcedureExecutionRefForTest(
+      "synthetic-low-level-eldritch-blast-reduction",
+    );
+    const concentratingReductionState = {
       ...state,
-      combatants: new Map(state.combatants).set(skeletonId, {
-        ...reductionTarget,
-        concentration: null,
-        activeEffects: [
-          ...reductionTarget.activeEffects,
-          {
-            kind: "spellDamageReduction" as const,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String("resistance"),
-            ),
-            sourceCombatantId: wizardId,
-            damageType: "force" as const,
-            amount: { dice: 1 as const, dieSize: 4 as const },
-            usedThisTurn: false,
-            expiresAt: {
-              kind: "concentration" as const,
-              combatantId: wizardId,
-            },
+      combatants: new Map(state.combatants)
+        .set(wizardId, {
+          ...reductionSource,
+          concentration: {
+            sourceProcedureRef: reductionProcedureRef,
+            effectKind: "spellEffect",
           },
-        ],
-      }),
+        })
+        .set(skeletonId, { ...reductionTarget, concentration: null }),
     } satisfies BattleState;
+    const reductionState = battleStateWithAllocatedEffectForTest({
+      state: concentratingReductionState,
+      ownerId: skeletonId,
+      effect: {
+        kind: "spellDamageReduction",
+        sourceProcedureRef: reductionProcedureRef,
+        sourceCombatantId: wizardId,
+        damageType: "force",
+        amount: { dice: 1, dieSize: 4 },
+        usedThisTurn: false,
+        expiresAt: {
+          kind: "concentration",
+          combatantId: wizardId,
+        },
+      },
+    });
     const reduction = requireHole(
       resolveBattleSubject({
         state: reductionState,

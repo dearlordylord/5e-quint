@@ -59,7 +59,6 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
       session,
       spellId: expeditiousRetreatUnitId,
     });
-
     expect(act).toEqual(
       expect.objectContaining({
         subject: {
@@ -411,9 +410,11 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
   });
 });
 
-describe("SRDINV53 deterministic Jump movement replacement admission", () => {
-  test("using one of two mechanically identical Jump occurrences consumes only its exact occurrence", () => {
+describe("SRDINV53 Jump movement replacement interactions", () => {
+  test("low-level injected occurrence identity: using one of two mechanically identical Jump effects consumes only its exact occurrence", () => {
     const session = spellBattle({ preparedSpells: [] });
+    // Two coherent occurrences are injected to isolate exact-ref selection;
+    // this identity test does not claim either effect was admitted by casting.
     const sourceProcedureRef = battleProcedureExecutionRefForTest(
       "two-jump-occurrences",
     );
@@ -847,62 +848,78 @@ describe("SRDINV53 deterministic Jump movement replacement admission", () => {
     });
   });
 
-  test("Jump recast replaces only its own movement replacement", () => {
+  test("Jump recast replaces its admitted occurrence and preserves a low-level unrelated effect", () => {
     const spell = spellRecord(jumpUnitId);
     const session = spellBattle({
       preparedSpells: [spell],
-      spellSlots: [{ spellLevel: 1, count: 1 }],
+      spellSlots: [{ spellLevel: 1, count: 2 }],
     });
-    const act = bonusSpellAct({ session, spellId: jumpUnitId });
-    const caster = requireCombatant(session.state, spellCasterId);
+    const firstAct = bonusSpellAct({ session, spellId: jumpUnitId });
+    const firstTargetHole = requireHole(
+      firstAct.initialHoles,
+      "spellTargetList",
+    );
+    const firstCast = resolveBattleSubject({
+      state: session.state,
+      subject: firstAct.subject,
+      fills: [
+        jumpSpellTargetListFill(firstTargetHole, spellCasterId, jumpUnitId, [
+          spellCasterId,
+        ]),
+      ],
+    });
+    if (firstCast.tag !== "resolved") {
+      throw new Error("Expected first admitted Jump cast to resolve.");
+    }
     const unrelatedSource = battleProcedureExecutionRefForTest(
       "synthetic-jump-unrelated-resistance",
     );
-    const stateWithUnrelatedEffect = {
-      ...session.state,
-      combatants: new Map(session.state.combatants).set(spellCasterId, {
-        ...caster,
-        activeEffects: [
-          ...caster.activeEffects,
-          {
-            kind: "damageResistance" as const,
-            sourceProcedureRef: unrelatedSource,
-            sourceCombatantId: spellCasterId,
-            damageType: "cold" as const,
-            expiresAt: {
-              kind: "duration" as const,
-              durationTicks: elapsedTimeTicks(10),
-            },
-          },
-        ],
-      }),
-    };
-    const state = battleStateWithAllocatedEffectForTest({
-      state: stateWithUnrelatedEffect,
+    const stateWithUnrelatedEffect = battleStateWithAllocatedEffectForTest({
+      state: firstCast.state,
       ownerId: spellCasterId,
       effect: {
-        kind: "jumpMovementReplacement",
-        sourceProcedureRef: act.subject.procedureRef,
+        kind: "damageResistance",
+        sourceProcedureRef: unrelatedSource,
         sourceCombatantId: spellCasterId,
-        movementCostFeet: movementFeet(10),
-        maxJumpDistanceFeet: movementFeet(30),
-        usedThisTurn: true,
+        damageType: "cold",
         expiresAt: {
           kind: "duration",
-          durationTicks: elapsedTimeTicks(1),
+          durationTicks: elapsedTimeTicks(10),
         },
       },
     });
-    const beforeRecast = requireCombatant(state, spellCasterId);
+    const beforeRecast = requireCombatant(
+      stateWithUnrelatedEffect,
+      spellCasterId,
+    );
     const priorJump = beforeRecast.activeEffects.find(
       (effect) => effect.kind === "jumpMovementReplacement",
     );
     if (priorJump?.kind !== "jumpMovementReplacement") {
       throw new Error("Expected prior Jump occurrence.");
     }
+    const targetTurn = endTurn({
+      state: stateWithUnrelatedEffect,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected first Jump caster turn to end.");
+    }
+    const casterTurn = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+    });
+    if (casterTurn.tag !== "resolved") {
+      throw new Error("Expected first Jump target turn to end.");
+    }
+    const recastSession = battleRuntimeSessionForTest({
+      ...session,
+      state: casterTurn.state,
+    });
+    const act = bonusSpellAct({ session: recastSession, spellId: jumpUnitId });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
     const recast = resolveBattleSubject({
-      state,
+      state: recastSession.state,
       subject: act.subject,
       fills: [
         jumpSpellTargetListFill(targetHole, spellCasterId, jumpUnitId, [
