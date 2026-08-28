@@ -129,12 +129,14 @@ function requireKnownIds(obligations, ids, label) {
 
 function registryHead() {
   const registryPaths = [obligationsPath, rolesPath];
-  const dirty = childProcess.spawnSync(
-    "git",
-    ["diff", "--quiet", "--", ...registryPaths],
-    { cwd: root },
-  );
-  if (dirty.status !== 0) {
+  const hasRegistryDiff = (args) =>
+    childProcess.spawnSync("git", [...args, "--", ...registryPaths], {
+      cwd: root,
+    }).status !== 0;
+  if (
+    hasRegistryDiff(["diff", "--quiet"]) ||
+    hasRegistryDiff(["diff", "--cached", "--quiet"])
+  ) {
     throw new Error(
       "Commit authored rules-kernel registry changes before generating the #381 manifest sourceHead.",
     );
