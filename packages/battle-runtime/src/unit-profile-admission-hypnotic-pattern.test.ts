@@ -16,6 +16,7 @@ import {
   applyBattleHitPointDamage,
   applyCondition,
   breakBattleConcentration,
+  combatantId,
   damageAmount,
   discoverBattleActs,
   elapsedTimeTicks,
@@ -44,6 +45,7 @@ import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.
 import {
   battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
 
@@ -161,30 +163,49 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     });
   });
 
-  test("failed saves blocked by Charmed prevention spend the slot without control or concentration", () => {
+  test("RAW-valid creature-type protection does not cover a Humanoid Hypnotic Pattern caster", () => {
     const spell = hypnoticPatternSpellRecord();
+    const protectionSourceId = combatantId(
+      "synthetic-hypnotic-protection-source",
+    );
+    const protectionProcedureRef = battleProcedureExecutionRefForTest(
+      String(protectionFromEvilAndGoodUnitId),
+    );
     const baseState = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 3, count: 1 }],
+      extraTargetIds: [protectionSourceId],
     });
+    const protectionSource = requireCombatant(
+      baseState.state,
+      protectionSourceId,
+    );
+    const concentratingState = {
+      ...baseState.state,
+      combatants: new Map(baseState.state.combatants).set(protectionSourceId, {
+        ...protectionSource,
+        concentration: {
+          sourceProcedureRef: protectionProcedureRef,
+          effectKind: "spellEffect" as const,
+        },
+      }),
+    };
     const state: BattleRuntimeSession = battleRuntimeSessionForTest({
       ...baseState,
       state: battleStateWithAllocatedEffectForTest({
-        state: baseState.state,
+        state: concentratingState,
         ownerId: spellTargetId,
         effect: {
           kind: "creatureTypeProtection",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(protectionFromEvilAndGoodUnitId),
-          ),
-          sourceCombatantId: spellCasterId,
+          sourceProcedureRef: protectionProcedureRef,
+          sourceCombatantId: protectionSourceId,
           attackRollMode: "disadvantage",
-          protectedAgainstCreatureTypes: ["humanoid"],
+          protectedAgainstCreatureTypes: ["undead"],
           preventedConditions: ["charmed"],
           preventsPossession: true,
           expiresAt: {
             kind: "concentration",
-            combatantId: spellCasterId,
+            combatantId: protectionSourceId,
           },
         },
       }),
@@ -201,15 +222,18 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     expect(caster.origin.spellcasting?.spellSlots).toEqual([
       { spellLevel: 3, count: 1, expended: 1 },
     ]);
-    expect(caster.concentration).toBeNull();
-    expect(hasCondition(target.conditions, "charmed")).toBe(false);
-    expect(hasCondition(target.conditions, "incapacitated")).toBe(false);
-    expect(Number(effectiveWalkSpeed(cast.state, target))).toBeGreaterThan(0);
+    expect(caster.concentration).toEqual({
+      sourceProcedureRef: expect.any(String),
+      effectKind: "spellEffect",
+    });
+    expect(hasCondition(target.conditions, "charmed")).toBe(true);
+    expect(hasCondition(target.conditions, "incapacitated")).toBe(true);
+    expect(Number(effectiveWalkSpeed(cast.state, target))).toBe(0);
     expect(
       target.activeEffects.some(
         (effect) => effect.kind === "hypnoticPatternControl",
       ),
-    ).toBe(false);
+    ).toBe(true);
     expect(
       target.activeEffects.some(
         (effect) => effect.kind === "creatureTypeProtection",
@@ -219,26 +243,40 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
 
   test("failed saves blocked by Charmed condition immunity spend the slot without control or concentration", () => {
     const spell = hypnoticPatternSpellRecord();
+    const immunitySourceId = combatantId("synthetic-hypnotic-immunity-source");
+    const immunityProcedureRef = battleProcedureExecutionRefForTest(
+      String(calmEmotionsUnitId),
+    );
     const baseState = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 3, count: 1 }],
+      extraTargetIds: [immunitySourceId],
     });
+    const immunitySource = requireCombatant(baseState.state, immunitySourceId);
+    const concentratingState = {
+      ...baseState.state,
+      combatants: new Map(baseState.state.combatants).set(immunitySourceId, {
+        ...immunitySource,
+        concentration: {
+          sourceProcedureRef: immunityProcedureRef,
+          effectKind: "spellEffect" as const,
+        },
+      }),
+    };
     const state: BattleRuntimeSession = battleRuntimeSessionForTest({
       ...baseState,
       state: battleStateWithAllocatedEffectForTest({
-        state: baseState.state,
+        state: concentratingState,
         ownerId: spellTargetId,
         effect: {
           kind: "conditionImmunity",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(calmEmotionsUnitId),
-          ),
-          sourceCombatantId: spellCasterId,
+          sourceProcedureRef: immunityProcedureRef,
+          sourceCombatantId: immunitySourceId,
           condition: "charmed",
           conditionHadNonSpellSource: false,
           expiresAt: {
             kind: "concentration",
-            combatantId: spellCasterId,
+            combatantId: immunitySourceId,
           },
         },
       }),
@@ -607,39 +645,60 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     const unrelatedSource = battleProcedureExecutionRefForTest(
       "synthetic-hypnotic-unrelated",
     );
-    const state: BattleRuntimeSession = battleRuntimeSessionForTest({
-      ...base,
-      state: battleStateWithAllocatedEffectForTest({
-        state: base.state,
-        ownerId: spellTargetId,
-        effect: {
-          kind: "hypnoticPatternControl" as const,
-          sourceProcedureRef: unrelatedSource,
-          sourceCombatantId: spellCasterId,
-          conditionHadNonSpellCharmedSource: false,
-          conditionHadNonSpellIncapacitatedSource: false,
-          expiresAt: {
-            kind: "duration" as const,
-            durationTicks: elapsedTimeTicks(10),
+    const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: base.state,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: spellTargetId,
+          effect: {
+            kind: "hypnoticPatternControl" as const,
+            sourceProcedureRef: unrelatedSource,
+            sourceCombatantId: spellCasterId,
+            conditionHadNonSpellCharmedSource: false,
+            conditionHadNonSpellIncapacitatedSource: false,
+            expiresAt: {
+              kind: "duration" as const,
+              durationTicks: elapsedTimeTicks(10),
+            },
           },
         },
-      }),
+      ],
+    });
+    const unrelatedOccurrence = allocated.occurrences[0];
+    if (
+      unrelatedOccurrence?.kind !== "activeEffect" ||
+      unrelatedOccurrence.effect.kind !== "hypnoticPatternControl"
+    ) {
+      throw new Error("Expected allocated unrelated Hypnotic Pattern control.");
+    }
+    const allocatedTarget = requireCombatant(allocated.state, spellTargetId);
+    const state: BattleRuntimeSession = battleRuntimeSessionForTest({
+      ...base,
+      state: allocated.state,
     });
     const cast = castFailedHypnoticPattern(state);
-    const effects = requireCombatant(cast.state, spellTargetId).activeEffects;
+    const castTarget = requireCombatant(cast.state, spellTargetId);
+    const effects = castTarget.activeEffects;
     expect(effects).toHaveLength(2);
-    expect(effects).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          kind: "hypnoticPatternControl",
-          sourceProcedureRef: unrelatedSource,
-        }),
-        expect.objectContaining({
-          kind: "hypnoticPatternControl",
-          sourceCombatantId: spellCasterId,
-          expiresAt: expect.objectContaining({ kind: "concentration" }),
-        }),
-      ]),
+    expect(effects).toContainEqual(unrelatedOccurrence.effect);
+    const freshControl = effects.find(
+      (effect) =>
+        effect.kind === "hypnoticPatternControl" &&
+        effect.effectRef !== unrelatedOccurrence.effect.effectRef,
+    );
+    expect(freshControl).toEqual(
+      expect.objectContaining({
+        kind: "hypnoticPatternControl",
+        sourceCombatantId: spellCasterId,
+        expiresAt: expect.objectContaining({ kind: "concentration" }),
+      }),
+    );
+    expect(freshControl?.effectRef).not.toBe(
+      unrelatedOccurrence.effect.effectRef,
+    );
+    expect(Number(castTarget.nextEffectOrdinal)).toBe(
+      Number(allocatedTarget.nextEffectOrdinal) + 1,
     );
   });
 });
