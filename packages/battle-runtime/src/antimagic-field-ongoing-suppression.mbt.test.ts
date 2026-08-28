@@ -1,8 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import {
-  battleEffectExecutionRefForTest,
-  battleProcedureExecutionRefForTest,
-} from "./battle-runtime.test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-antimagic-field-ongoing-spell-suppression
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS antimagic_field
@@ -21,7 +18,10 @@ import { describe, expect, it } from "vitest";
 
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import { ongoingSpellEffectSuppressedByAntimagicField } from "./battle-reducer/antimagic-field-suppression.ts";
-import { battleSpellEffectOccurrenceId } from "./identity.ts";
+import {
+  allocateBattleEffectExecutionRefForCreature,
+  type BattleActiveEffectOccurrenceTemplate,
+} from "./effect-execution-ref.ts";
 import {
   requireCombatant,
   requireHole,
@@ -69,12 +69,11 @@ import {
 } from "./index.ts";
 
 const antimagicFieldAreaId = battleAreaId("focused-antimagic-field-area");
-const spiritualWeaponEffectId = battleSpellEffectOccurrenceId(
-  "focused-antimagic-spiritual-weapon",
-);
-const spiritualWeaponEffectRef = battleEffectExecutionRefForTest(
-  String(spiritualWeaponEffectId),
-);
+
+type SpiritualWeaponEffectRef = Extract<
+  BattleActiveEffect,
+  { readonly kind: "spiritualWeapon" }
+>["effectRef"];
 
 type AntimagicLastResult =
   | "init"
@@ -342,13 +341,20 @@ function initialRuntimeState(): AntimagicRuntimeState {
     },
   });
   const caster = requireCombatant(base.state, spellCasterId);
+  const effectAllocation = allocateBattleEffectExecutionRefForCreature({
+    owner: caster,
+  });
+  const ongoingSpell = {
+    ...spiritualWeaponActiveEffectTemplate(),
+    effectRef: effectAllocation.effectRef,
+  };
   const withOngoingSpell = battleRuntimeSessionForTest({
     ...base,
     state: {
       ...base.state,
       combatants: new Map(base.state.combatants).set(spellCasterId, {
-        ...caster,
-        activeEffects: [spiritualWeaponActiveEffect()],
+        ...effectAllocation.owner,
+        activeEffects: [ongoingSpell],
         concentration: {
           sourceProcedureRef: battleProcedureExecutionRefForTest(
             "spiritual-weapon-effect-fixture",
@@ -358,6 +364,14 @@ function initialRuntimeState(): AntimagicRuntimeState {
       }),
     },
   });
+  expect(
+    Number(
+      requireCombatant(withOngoingSpell.state, spellCasterId).nextEffectOrdinal,
+    ),
+  ).toBe(Number(caster.nextEffectOrdinal) + 1);
+  expect(
+    requireSpiritualWeaponActiveEffect(withOngoingSpell.state).effectRef,
+  ).toBe(effectAllocation.effectRef);
   const targetTurn = requireResolved(
     endTurn({ state: withOngoingSpell.state, actorId: spellCasterId }),
     "Expected target turn setup to resolve.",
@@ -375,6 +389,9 @@ function suppressOngoingSpell(
   state: AntimagicRuntimeState,
   sourceKind: AntimagicSuppressionSourceKind,
 ): AntimagicRuntimeState {
+  const ongoingSpellEffectRef = requireSpiritualWeaponActiveEffect(
+    state.battle.state,
+  ).effectRef;
   const act = spellAct({
     session: state.battle,
     spellId: antimagicFieldUnitId,
@@ -389,14 +406,18 @@ function suppressOngoingSpell(
         antimagicFieldAreaFill({
           hole: areaHole,
           affectedOngoingSpellEffects: [
-            antimagicAffectedSpiritualWeapon(sourceKind),
+            antimagicAffectedSpiritualWeapon(sourceKind, ongoingSpellEffectRef),
           ],
         }),
       ],
     }),
     "Expected Antimagic Field suppression to resolve.",
   );
-  assertSuppressionActiveEffectShape(resolved.state, sourceKind);
+  assertSuppressionActiveEffectShape(
+    resolved.state,
+    sourceKind,
+    ongoingSpellEffectRef,
+  );
   return {
     battle: battleRuntimeSessionForTest({
       ...state.battle,
@@ -425,17 +446,12 @@ function antimagicProjection(
   state: AntimagicRuntimeState,
 ): AntimagicFieldOngoingSuppressionState {
   const antimagicCaster = requireCombatant(state.battle.state, spellTargetId);
-  const ongoingCaster = requireCombatant(state.battle.state, spellCasterId);
   const suppression = antimagicSuppressionEffect(state.battle.state);
-  const ongoingSpell = ongoingCaster.activeEffects.find(
-    (effect) =>
-      effect.kind === "spiritualWeapon" &&
-      effect.effectRef === spiritualWeaponEffectRef,
-  );
+  const ongoingSpell = requireSpiritualWeaponActiveEffect(state.battle.state);
   const ongoingSpellRef = {
     kind: "spellActiveEffect" as const,
     activeEffectKind: "spiritualWeapon" as const,
-    effectRef: spiritualWeaponEffectRef,
+    effectRef: ongoingSpell.effectRef,
   };
   const projection = {
     actionAvailable: canSpendAction(
@@ -492,13 +508,14 @@ function antimagicFieldAreaFill(input: {
 
 function antimagicAffectedSpiritualWeapon(
   sourceKind: AntimagicSuppressionSourceKind,
+  effectRef: SpiritualWeaponEffectRef,
 ): BattleAntimagicFieldAffectedOngoingSpellEffect {
   return {
     kind: "antimagicFieldAffectedOngoingSpellEffect",
     effect: {
       kind: "spellActiveEffect",
       activeEffectKind: "spiritualWeapon",
-      effectRef: spiritualWeaponEffectRef,
+      effectRef,
     },
     sourceKind,
   };
@@ -507,6 +524,7 @@ function antimagicAffectedSpiritualWeapon(
 function assertSuppressionActiveEffectShape(
   state: BattleState,
   sourceKind: AntimagicSuppressionSourceKind,
+  effectRef: SpiritualWeaponEffectRef,
 ): void {
   const expectedSuppressedEffects =
     sourceKind === "ordinarySpell"
@@ -514,7 +532,7 @@ function assertSuppressionActiveEffectShape(
           {
             kind: "spellActiveEffect",
             activeEffectKind: "spiritualWeapon",
-            effectRef: spiritualWeaponEffectRef,
+            effectRef,
           },
         ]
       : [];
@@ -553,8 +571,8 @@ function antimagicSuppressionEffect(
   );
 }
 
-function spiritualWeaponActiveEffect(): Extract<
-  BattleActiveEffect,
+function spiritualWeaponActiveEffectTemplate(): Extract<
+  BattleActiveEffectOccurrenceTemplate,
   { readonly kind: "spiritualWeapon" }
 > {
   const sourceSpellLevel = parseBattleSpellEffectLevel(2);
@@ -563,7 +581,6 @@ function spiritualWeaponActiveEffect(): Extract<
   }
   return {
     kind: "spiritualWeapon",
-    effectRef: spiritualWeaponEffectRef,
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       "spiritual-weapon-effect-fixture",
     ),
@@ -592,6 +609,16 @@ function spiritualWeaponActiveEffect(): Extract<
       durationTicks: elapsedTimeTicks(3),
     },
   };
+}
+
+function requireSpiritualWeaponActiveEffect(state: BattleState) {
+  const effect = requireCombatant(state, spellCasterId).activeEffects.find(
+    (candidate) => candidate.kind === "spiritualWeapon",
+  );
+  if (effect?.kind !== "spiritualWeapon") {
+    throw new Error("Expected allocated Spiritual Weapon active effect.");
+  }
+  return effect;
 }
 
 function normalizeAntimagicQuintState(
