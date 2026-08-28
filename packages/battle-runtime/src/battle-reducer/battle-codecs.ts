@@ -6613,7 +6613,11 @@ function serializedBattleHoleExecutionReferences(
       readonly effectRef: BattleEffectExecutionRef;
     }): readonly SerializedExecutionReferenceOwnership[] => [
       source(owner.sourceProcedureRef, owner.sourceCombatantId),
-      bound(owner.effectRef),
+      serializedExecutionReference(
+        owner.effectRef,
+        owner.sourceCombatantId,
+        "activeEffect",
+      ),
       ...bonuses,
     ];
     return Match.value(value).pipe(
@@ -6751,11 +6755,19 @@ function serializedBattleHoleExecutionReferences(
       ),
       Match.when({ spellDamageReduction: Match.any }, (hole) => [
         ...procedureSource(hole.spellDamageReduction),
-        bound(hole.spellDamageReduction.effectRef, "activeEffect"),
+        serializedExecutionReference(
+          hole.spellDamageReduction.effectRef,
+          hole.spellDamageReduction.targetId,
+          "activeEffect",
+        ),
       ]),
       Match.when({ sourceDamageRollPenalty: Match.any }, (hole) => [
         ...procedureSource(hole.sourceDamageRollPenalty),
-        bound(hole.sourceDamageRollPenalty.effectRef, "activeEffect"),
+        serializedExecutionReference(
+          hole.sourceDamageRollPenalty.effectRef,
+          hole.sourceDamageRollPenalty.affectedCombatantId,
+          "activeEffect",
+        ),
       ]),
       Match.when({ mirrorImageDuplicateRoll: Match.any }, (hole) =>
         procedureSource(hole.mirrorImageDuplicateRoll),
@@ -6779,11 +6791,19 @@ function serializedBattleHoleExecutionReferences(
       ]),
       Match.when({ insectPlagueAreaHazard: Match.any }, (hole) => [
         ...procedureSource(hole.insectPlagueAreaHazard),
-        bound(hole.insectPlagueAreaHazard.effectRef),
+        serializedExecutionReference(
+          hole.insectPlagueAreaHazard.effectRef,
+          hole.insectPlagueAreaHazard.sourceCombatantId,
+          "activeEffect",
+        ),
       ]),
       Match.when({ cloudkillAreaHazard: Match.any }, (hole) => [
         ...procedureSource(hole.cloudkillAreaHazard),
-        bound(hole.cloudkillAreaHazard.effectRef),
+        serializedExecutionReference(
+          hole.cloudkillAreaHazard.effectRef,
+          hole.cloudkillAreaHazard.sourceCombatantId,
+          "activeEffect",
+        ),
       ]),
       Match.when({ attack: Match.any }, (hole) => [
         ...attackOptionReferences(hole.attack),
