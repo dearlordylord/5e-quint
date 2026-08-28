@@ -1,4 +1,5 @@
 import { Either } from "effect";
+import * as fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
 import { ORACLE_CLI_USAGE, parseOracleCliCommand } from "./oracle-bootstrap.ts";
@@ -60,6 +61,32 @@ describe("Opaque Oracle command parser", () => {
     );
     expect(ORACLE_CLI_USAGE).toContain(
       "the stream mode reads UTF-8 LF-framed batches",
+    );
+  });
+
+  test("accepts either serve-flag order for every valid bind port", () => {
+    fc.assert(
+      fc.property(fc.integer({ min: 0, max: 65_535 }), (port) => {
+        const hostFirst = parseOracleCliCommand([
+          "serve",
+          "--host",
+          "127.0.0.1",
+          "--port",
+          String(port),
+        ]);
+        const portFirst = parseOracleCliCommand([
+          "serve",
+          "--port",
+          String(port),
+          "--host",
+          "127.0.0.1",
+        ]);
+        expect(Either.isRight(hostFirst)).toBe(true);
+        if (Either.isLeft(hostFirst)) return;
+        expect(hostFirst.right).toMatchObject({ tag: "serve", port });
+        expect(portFirst).toEqual(hostFirst);
+      }),
+      { numRuns: 200 },
     );
   });
 });

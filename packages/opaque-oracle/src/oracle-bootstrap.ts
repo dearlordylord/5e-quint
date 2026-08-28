@@ -9,11 +9,11 @@ import {
   type OracleDistributionLoadIssue,
 } from "./oracle-distribution.ts";
 import {
-  decodeOraclePort,
+  decodeOracleBindPort,
   encodeOracleIdentityResponseJson,
   ORACLE_LOOPBACK_HOST,
   type OracleLoopbackHost,
-  type OraclePort,
+  type OracleBindPort,
 } from "./oracle-process-contract.ts";
 import { runOracleStream } from "./oracle-stream.ts";
 import { runOracleHttpService } from "./oracle-http.ts";
@@ -38,7 +38,7 @@ export type OracleCliCommand = {
     ? {
         readonly tag: Definition["tag"];
         readonly host: OracleLoopbackHost;
-        readonly port: OraclePort;
+        readonly port: OracleBindPort;
       }
     : { readonly tag: Definition["tag"] };
 }[OracleCliCommandDefinition["tag"]];
@@ -224,7 +224,7 @@ function parseOracleServeCommand(
   ) {
     return Either.left(invalidArguments());
   }
-  const decodedPort = decodeOraclePort(Number(portToken));
+  const decodedPort = decodeOracleBindPort(Number(portToken));
   if (Either.isLeft(decodedPort)) return Either.left(invalidArguments());
   return Either.right({
     tag: "serve",
@@ -241,7 +241,7 @@ async function runServeMode(
   application: OracleApplication,
   dependencies: OracleProcessDependencies,
   host: OracleLoopbackHost,
-  port: OraclePort,
+  port: OracleBindPort,
   writeStdout: OracleProcessWriter,
   writeStderr: OracleProcessWriter,
 ): Promise<number> {

@@ -16,21 +16,35 @@ export const OracleLoopbackHostSchema = Schema.Literal(
 
 export type OracleLoopbackHost = typeof OracleLoopbackHostSchema.Type;
 
-/** A TCP port, including zero for operating-system assignment. */
-export const OraclePortSchema = Schema.Number.pipe(
+/** A requested TCP bind port, including zero for operating-system assignment. */
+export const OracleBindPortSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.between(0, 65_535),
-  Schema.brand("OraclePort"),
-).annotations({ identifier: "OraclePort" });
+  Schema.brand("OracleBindPort"),
+).annotations({ identifier: "OracleBindPort" });
 
-export type OraclePort = typeof OraclePortSchema.Type;
+export type OracleBindPort = typeof OracleBindPortSchema.Type;
 
-export const decodeOraclePort = Schema.decodeUnknownEither(OraclePortSchema);
+export const decodeOracleBindPort =
+  Schema.decodeUnknownEither(OracleBindPortSchema);
+
+/** A TCP port returned after the operating system has completed a bind. */
+export const OracleListeningPortSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.between(1, 65_535),
+  Schema.brand("OracleListeningPort"),
+).annotations({ identifier: "OracleListeningPort" });
+
+export type OracleListeningPort = typeof OracleListeningPortSchema.Type;
+
+export const decodeOracleListeningPort = Schema.decodeUnknownEither(
+  OracleListeningPortSchema,
+);
 
 /** The one compact value written after a serve command starts listening. */
 export const OracleHttpReadinessSchema = Schema.Struct({
   host: OracleLoopbackHostSchema,
-  port: OraclePortSchema,
+  port: OracleListeningPortSchema,
 }).annotations({
   identifier: "OracleHttpReadiness",
   parseOptions: { onExcessProperty: "error" },

@@ -1,4 +1,10 @@
-import { createServer, request as requestHttp } from "node:http";
+import {
+  createServer,
+  request as requestHttp,
+  type IncomingMessage,
+  type Server,
+  type ServerResponse,
+} from "node:http";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -14,11 +20,13 @@ import {
 } from "./oracle-distribution.ts";
 import type { OracleBatchRequestEvaluator } from "./oracle-batch-operation.ts";
 import {
-  decodeOraclePort,
+  encodeOracleBatchResponseJson,
+  decodeOracleBindPort,
   encodeOracleDefectResponseJson,
   encodeOracleIdentityResponseJson,
   ORACLE_LOOPBACK_HOST,
   oracleDefectResponse,
+  type OracleBatchResponse,
 } from "./oracle-process-contract.ts";
 import {
   listenOracleHttpServer,
@@ -26,6 +34,7 @@ import {
   ORACLE_HTTP_IDENTITY_PATH,
   ORACLE_HTTP_JSON_CONTENT_TYPE,
   ORACLE_HTTP_MAX_REQUEST_BYTES,
+  runOracleHttpService,
 } from "./oracle-http.ts";
 
 const temporaryRoot = mkdtempSync(join(tmpdir(), "opaque-oracle-http-"));
@@ -39,7 +48,7 @@ if (Either.isLeft(loaded)) {
   throw new Error(`Oracle HTTP test application failed: ${loaded.left.tag}`);
 }
 const application = loaded.right;
-const portZero = decodeOraclePort(0);
+const portZero = decodeOracleBindPort(0);
 const portZeroValue = Either.isLeft(portZero)
   ? (() => {
       throw new Error("Oracle port zero must decode.");
@@ -68,14 +77,23 @@ function productionEvaluator(
   return (input) => value.evaluateJson(input.rawJson);
 }
 
+type HttpServerFactory = (
+  handler: (incoming: IncomingMessage, outgoing: ServerResponse) => void,
+) => Server;
+
 async function openServer(
   evaluate: OracleBatchRequestEvaluator<never, never> = productionEvaluator(),
+  options: {
+    readonly encodeBatchResponse?: (response: OracleBatchResponse) => string;
+    readonly serverFactory?: HttpServerFactory;
+  } = {},
 ) {
   const result = await listenOracleHttpServer({
     application,
     evaluate,
     host: ORACLE_LOOPBACK_HOST,
     port: portZeroValue,
+    ...options,
   });
   if (Either.isLeft(result)) {
     throw new Error(`Oracle HTTP test server failed: ${result.left.tag}`);
@@ -269,6 +287,75 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
     }
   });
 
+  test("maps a pre-write batch encoder defect to one atomic response", async () => {
+    let encoderCalls = 0;
+    const server = await openServer(productionEvaluator(), {
+      encodeBatchResponse: (response) => {
+        encoderCalls += 1;
+        if (encoderCalls === 1) throw new Error("injected encoder defect");
+        return encodeOracleBatchResponseJson(response);
+      },
+    });
+    try {
+      const defective = await request(server, {
+        method: "POST",
+        path: ORACLE_HTTP_EVALUATIONS_PATH,
+        body: "not-json",
+        contentType: ORACLE_HTTP_JSON_CONTENT_TYPE,
+      });
+      expect(defective.statusCode).toBe(500);
+      expect(defective.body.toString("utf8")).toBe(
+        encodeOracleDefectResponseJson(
+          oracleDefectResponse({
+            distributionId: application.identity.distributionId,
+          }),
+        ),
+      );
+
+      const healthy = await request(server, {
+        method: "POST",
+        path: ORACLE_HTTP_EVALUATIONS_PATH,
+        body: "not-json",
+        contentType: ORACLE_HTTP_JSON_CONTENT_TYPE,
+      });
+      expect(healthy.statusCode).toBe(400);
+      expect(encoderCalls).toBe(2);
+    } finally {
+      await closeServer(server);
+    }
+  });
+
+  test("returns a post-readiness listener failure and removes signal listeners", async () => {
+    let nodeServer: Server | undefined;
+    let signalReady: (() => void) | undefined;
+    const ready = new Promise<void>((resolve) => {
+      signalReady = resolve;
+    });
+    const signalListenerCount = process.listenerCount("SIGTERM");
+    const service = runOracleHttpService({
+      application,
+      evaluate: productionEvaluator(),
+      host: ORACLE_LOOPBACK_HOST,
+      port: portZeroValue,
+      serverFactory: (handler) => {
+        nodeServer = createServer(handler);
+        return nodeServer;
+      },
+      writeReady: async () => {
+        signalReady?.();
+      },
+    });
+
+    await ready;
+    if (nodeServer === undefined)
+      throw new Error("HTTP server was not created");
+    nodeServer.emit("error", new Error("injected listener failure"));
+    const result = await service;
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isLeft(result)) expect(result.left.tag).toBe("listenerFailed");
+    expect(process.listenerCount("SIGTERM")).toBe(signalListenerCount);
+  });
+
   test("reports a typed bind failure when the requested port is occupied", async () => {
     const occupied = createServer();
     const occupiedPort = await new Promise<number>((resolve, reject) => {
@@ -282,7 +369,7 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
         resolve(address.port);
       });
     });
-    const decodedPort = decodeOraclePort(occupiedPort);
+    const decodedPort = decodeOracleBindPort(occupiedPort);
     if (Either.isLeft(decodedPort))
       throw new Error("occupied port did not decode");
 

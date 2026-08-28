@@ -15,7 +15,7 @@ import {
   encodeOracleDefectResponseJson,
   encodeOracleHttpReadinessJson,
   encodeOracleIdentityResponseJson,
-  decodeOraclePort,
+  decodeOracleListeningPort,
   ORACLE_INVALID_JSON_ISSUES,
   ORACLE_LOOPBACK_HOST,
   oracleDefectResponse,
@@ -23,7 +23,7 @@ import {
   type OracleBatchResponse,
   type OracleHttpReadiness,
   type OracleLoopbackHost,
-  type OraclePort,
+  type OracleBindPort,
 } from "./oracle-process-contract.ts";
 
 export const ORACLE_HTTP_IDENTITY_PATH = "/oracle/identity" as const;
@@ -58,13 +58,33 @@ export type OracleHttpLifecycleIssue =
   | {
       readonly tag: "closeFailed";
       readonly message: string;
+    }
+  | {
+      readonly tag: "listenerFailed";
+      readonly message: string;
     };
 
-export type OracleHttpServiceOptions = {
+type OracleHttpBatchResponseEncoder = (response: OracleBatchResponse) => string;
+
+type OracleHttpRequestHandler = (
+  incoming: IncomingMessage,
+  outgoing: ServerResponse,
+) => void;
+
+type OracleHttpServerFactory = (handler: OracleHttpRequestHandler) => Server;
+
+type OracleHttpServerOptions = {
   readonly application: OracleApplication;
   readonly evaluate: OracleBatchRequestEvaluator<never, never>;
   readonly host: OracleLoopbackHost;
-  readonly port: OraclePort;
+  readonly port: OracleBindPort;
+  /** Package-local test seam for pre-write encoder failures. */
+  readonly encodeBatchResponse?: OracleHttpBatchResponseEncoder;
+  /** Package-local Node seam for deterministic listener-error tests. */
+  readonly serverFactory?: OracleHttpServerFactory;
+};
+
+export type OracleHttpServiceOptions = OracleHttpServerOptions & {
   readonly writeReady: (text: string) => Promise<void>;
 };
 
@@ -74,6 +94,9 @@ export type OracleHttpServiceOptions = {
  */
 export type OracleListeningHttpServer = {
   readonly readiness: OracleHttpReadiness;
+  readonly listenerFailure: Promise<
+    Either.Either<void, OracleHttpLifecycleIssue>
+  >;
   readonly close: () => Promise<Either.Either<void, OracleHttpLifecycleIssue>>;
 };
 
@@ -88,7 +111,9 @@ export function listenOracleHttpServer(input: {
   readonly application: OracleApplication;
   readonly evaluate: OracleBatchRequestEvaluator<never, never>;
   readonly host: OracleLoopbackHost;
-  readonly port: OraclePort;
+  readonly port: OracleBindPort;
+  readonly encodeBatchResponse?: OracleHttpBatchResponseEncoder;
+  readonly serverFactory?: OracleHttpServerFactory;
 }): Promise<
   Either.Either<OracleListeningHttpServer, OracleHttpLifecycleIssue>
 > {
@@ -100,7 +125,34 @@ export function listenOracleHttpServer(input: {
 
   return new Promise((resolve) => {
     let settled = false;
-    const server = createOracleHttpNodeServer(input);
+    let server: Server;
+    try {
+      server = createOracleHttpNodeServer(input);
+    } catch (cause) {
+      resolve(
+        Either.left({
+          tag: "listenFailed",
+          message: String(cause),
+        }),
+      );
+      return;
+    }
+    let listenerFailure: (
+      result: Either.Either<void, OracleHttpLifecycleIssue>,
+    ) => void = () => undefined;
+    const listenerFailurePromise = new Promise<
+      Either.Either<void, OracleHttpLifecycleIssue>
+    >((resolveFailure) => {
+      listenerFailure = resolveFailure;
+    });
+    let listenerFailureSettled = false;
+    const settleListenerFailure = (
+      result: Either.Either<void, OracleHttpLifecycleIssue>,
+    ): void => {
+      if (listenerFailureSettled) return;
+      listenerFailureSettled = true;
+      listenerFailure(result);
+    };
     const onListenError = (cause: Error): void => {
       if (settled) return;
       settled = true;
@@ -132,10 +184,15 @@ export function listenOracleHttpServer(input: {
 
         settled = true;
         server.off("error", onListenError);
-        // Keep post-listen infrastructure errors from becoming unhandled
-        // process defects. Request-local failures close their own response.
-        server.on("error", ignorePostListenError);
-        const decodedPort = decodeOraclePort(address.port);
+        server.on("error", (cause: Error) => {
+          settleListenerFailure(
+            Either.left({
+              tag: "listenerFailed",
+              message: String(cause),
+            }),
+          );
+        });
+        const decodedPort = decodeOracleListeningPort(address.port);
         if (Either.isLeft(decodedPort)) {
           void closeOracleHttpNodeServer(server);
           resolve(
@@ -154,6 +211,8 @@ export function listenOracleHttpServer(input: {
                 host: ORACLE_LOOPBACK_HOST,
                 port: decodedPort.right,
               },
+              listenerFailure: listenerFailurePromise,
+              settleListenerFailure,
             }),
           ),
         );
@@ -189,18 +248,49 @@ export async function runOracleHttpService(
     });
   }
 
-  await waitForTerminationSignal();
-  return server.close();
+  const termination = waitForTerminationSignal();
+  const lifecycle = await Promise.race([
+    server.listenerFailure.then((result) => ({
+      tag: "listenerFailure" as const,
+      result,
+    })),
+    termination.promise.then((signal) => ({
+      tag: "termination" as const,
+      signal,
+    })),
+  ]);
+  termination.cancel();
+  return Match.value(lifecycle).pipe(
+    Match.when({ tag: "listenerFailure" }, ({ result }) =>
+      handleListenerFailure(server, result),
+    ),
+    Match.when({ tag: "termination" }, () => server.close()),
+    Match.exhaustive,
+  );
+}
+
+async function handleListenerFailure(
+  server: OracleListeningHttpServer,
+  result: Either.Either<void, OracleHttpLifecycleIssue>,
+): Promise<Either.Either<void, OracleHttpLifecycleIssue>> {
+  if (Either.isRight(result)) return result;
+  const closed = await server.close();
+  return Either.isLeft(closed) ? closed : result;
 }
 
 function createOracleHttpNodeServer(input: {
   readonly application: OracleApplication;
   readonly evaluate: OracleBatchRequestEvaluator<never, never>;
+  readonly encodeBatchResponse?: OracleHttpBatchResponseEncoder;
+  readonly serverFactory?: OracleHttpServerFactory;
 }): Server {
-  return createServer((incoming, outgoing) => {
+  const requestHandler: OracleHttpRequestHandler = (incoming, outgoing) => {
     void handleOracleHttpRequest({
       application: input.application,
       evaluate: input.evaluate,
+      ...(input.encodeBatchResponse === undefined
+        ? {}
+        : { encodeBatchResponse: input.encodeBatchResponse }),
       incoming,
       outgoing,
     }).catch(() => {
@@ -208,12 +298,19 @@ function createOracleHttpNodeServer(input: {
       // response is the only truthful outcome once no contract value remains.
       if (!outgoing.destroyed) outgoing.destroy();
     });
-  });
+  };
+  return (input.serverFactory ?? defaultOracleHttpServerFactory)(
+    requestHandler,
+  );
 }
+
+const defaultOracleHttpServerFactory: OracleHttpServerFactory = (handler) =>
+  createServer(handler);
 
 async function handleOracleHttpRequest(input: {
   readonly application: OracleApplication;
   readonly evaluate: OracleBatchRequestEvaluator<never, never>;
+  readonly encodeBatchResponse?: OracleHttpBatchResponseEncoder;
   readonly incoming: IncomingMessage;
   readonly outgoing: ServerResponse;
 }): Promise<void> {
@@ -225,11 +322,8 @@ async function handleOracleHttpRequest(input: {
       return;
     }
     input.incoming.resume();
-    await writeJsonResponse(
-      input.outgoing,
-      200,
-      encodeOracleIdentityResponseJson(input.application.identity),
-    );
+    const response = encodeOracleIdentityHttpResponse(input.application);
+    await writeJsonResponse(input.outgoing, response.status, response.body);
     return;
   }
 
@@ -263,22 +357,26 @@ async function handleOracleHttpRequest(input: {
 
   const decoded = decodeOracleUtf8(body.right);
   if (Either.isLeft(decoded)) {
-    await writeJsonResponse(
-      input.outgoing,
-      400,
-      encodeOracleBatchResponseJson(
-        oracleDecodeRejectedResponse({
-          distributionId: input.application.identity.distributionId,
-          issues: ORACLE_INVALID_JSON_ISSUES,
-        }),
-      ),
-    );
+    const response = encodeOracleBatchHttpResponse({
+      application: input.application,
+      ...(input.encodeBatchResponse === undefined
+        ? {}
+        : { encodeBatchResponse: input.encodeBatchResponse }),
+      response: oracleDecodeRejectedResponse({
+        distributionId: input.application.identity.distributionId,
+        issues: ORACLE_INVALID_JSON_ISSUES,
+      }),
+    });
+    await writeJsonResponse(input.outgoing, response.status, response.body);
     return;
   }
 
   const response = await evaluateOracleRequest({
     application: input.application,
     evaluate: input.evaluate,
+    ...(input.encodeBatchResponse === undefined
+      ? {}
+      : { encodeBatchResponse: input.encodeBatchResponse }),
     rawJson: decoded.right,
   });
   await writeJsonResponse(input.outgoing, response.status, response.body);
@@ -287,6 +385,7 @@ async function handleOracleHttpRequest(input: {
 async function evaluateOracleRequest(input: {
   readonly application: OracleApplication;
   readonly evaluate: OracleBatchRequestEvaluator<never, never>;
+  readonly encodeBatchResponse?: OracleHttpBatchResponseEncoder;
   readonly rawJson: string;
 }): Promise<{
   readonly status: 200 | 400 | 500;
@@ -305,18 +404,55 @@ async function evaluateOracleRequest(input: {
   }
 
   if (Exit.isFailure(result)) return defectResponse(input.application);
-  const response = result.value;
-  return Match.value(response.tag).pipe(
-    Match.when("evaluated", () => ({
-      status: 200 as const,
-      body: encodeOracleBatchResponseJson(response),
-    })),
-    Match.when("decodeRejected", () => ({
-      status: 400 as const,
-      body: encodeOracleBatchResponseJson(response),
-    })),
-    Match.exhaustive,
-  );
+  return encodeOracleBatchHttpResponse({
+    application: input.application,
+    ...(input.encodeBatchResponse === undefined
+      ? {}
+      : { encodeBatchResponse: input.encodeBatchResponse }),
+    response: result.value,
+  });
+}
+
+function encodeOracleIdentityHttpResponse(application: OracleApplication): {
+  readonly status: 200 | 500;
+  readonly body: string;
+} {
+  try {
+    return {
+      status: 200,
+      body: encodeOracleIdentityResponseJson(application.identity),
+    };
+  } catch {
+    return defectResponse(application);
+  }
+}
+
+function encodeOracleBatchHttpResponse(input: {
+  readonly application: OracleApplication;
+  readonly encodeBatchResponse?: OracleHttpBatchResponseEncoder;
+  readonly response: OracleBatchResponse;
+}): {
+  readonly status: 200 | 400 | 500;
+  readonly body: string;
+} {
+  try {
+    const encodeBatchResponse =
+      input.encodeBatchResponse ?? encodeOracleBatchResponseJson;
+    const body = encodeBatchResponse(input.response);
+    return Match.value(input.response.tag).pipe(
+      Match.when("evaluated", () => ({
+        status: 200 as const,
+        body,
+      })),
+      Match.when("decodeRejected", () => ({
+        status: 400 as const,
+        body,
+      })),
+      Match.exhaustive,
+    );
+  } catch {
+    return defectResponse(input.application);
+  }
 }
 
 function defectResponse(application: OracleApplication): {
@@ -336,14 +472,26 @@ function defectResponse(application: OracleApplication): {
 function makeListeningHttpServer(input: {
   readonly server: Server;
   readonly readiness: OracleHttpReadiness;
+  readonly listenerFailure: Promise<
+    Either.Either<void, OracleHttpLifecycleIssue>
+  >;
+  readonly settleListenerFailure: (
+    result: Either.Either<void, OracleHttpLifecycleIssue>,
+  ) => void;
 }): OracleListeningHttpServer {
   let closeResult:
     | Promise<Either.Either<void, OracleHttpLifecycleIssue>>
     | undefined;
   return {
     readiness: input.readiness,
+    listenerFailure: input.listenerFailure,
     close: () => {
-      closeResult ??= closeOracleHttpNodeServer(input.server);
+      closeResult ??= closeOracleHttpNodeServer(input.server).then((result) => {
+        input.settleListenerFailure(
+          Either.isLeft(result) ? result : Either.right(undefined),
+        );
+        return result;
+      });
       return closeResult;
     },
   };
@@ -520,23 +668,37 @@ function writeResponse(
   });
 }
 
-function waitForTerminationSignal(): Promise<"SIGINT" | "SIGTERM"> {
-  return new Promise((resolve) => {
-    const onSignal = (signal: "SIGINT" | "SIGTERM"): void => {
+type OracleTerminationSignalWait = {
+  readonly promise: Promise<"SIGINT" | "SIGTERM">;
+  readonly cancel: () => void;
+};
+
+function waitForTerminationSignal(): OracleTerminationSignalWait {
+  let settled = false;
+  let resolveSignal: ((signal: "SIGINT" | "SIGTERM") => void) | undefined;
+  const onSignal = (signal: "SIGINT" | "SIGTERM"): void => {
+    if (settled) return;
+    settled = true;
+    process.off("SIGINT", onSigint);
+    process.off("SIGTERM", onSigterm);
+    resolveSignal?.(signal);
+  };
+  const onSigint = (): void => onSignal("SIGINT");
+  const onSigterm = (): void => onSignal("SIGTERM");
+  const promise = new Promise<"SIGINT" | "SIGTERM">((resolve) => {
+    resolveSignal = resolve;
+    process.on("SIGINT", onSigint);
+    process.on("SIGTERM", onSigterm);
+  });
+  return {
+    promise,
+    cancel: () => {
+      if (settled) return;
+      settled = true;
       process.off("SIGINT", onSigint);
       process.off("SIGTERM", onSigterm);
-      resolve(signal);
-    };
-    const onSigint = (): void => onSignal("SIGINT");
-    const onSigterm = (): void => onSignal("SIGTERM");
-    process.once("SIGINT", onSigint);
-    process.once("SIGTERM", onSigterm);
-  });
-}
-
-function ignorePostListenError(): void {
-  // Node infrastructure errors after a successful bind do not identify a
-  // request-domain result. The process lifecycle remains signal-controlled.
+    },
+  };
 }
 
 function toError(cause: unknown): Error {

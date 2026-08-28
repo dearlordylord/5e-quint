@@ -11,8 +11,10 @@ export * from "./oracle-publication.ts";
 export {
   ORACLE_LOOPBACK_HOST,
   OracleLoopbackHostSchema,
-  OraclePortSchema,
-  decodeOraclePort,
+  OracleBindPortSchema,
+  decodeOracleBindPort,
+  OracleListeningPortSchema,
+  decodeOracleListeningPort,
   DistributionIdSchema,
   decodeDistributionId,
   OracleBatchResponseSchema,
@@ -33,7 +35,8 @@ export {
 } from "./oracle-process-contract.ts";
 export type {
   OracleLoopbackHost,
-  OraclePort,
+  OracleBindPort,
+  OracleListeningPort,
   DistributionId,
   OracleBatchResponse,
   OracleDecodeIssue as OracleProcessDecodeIssue,
