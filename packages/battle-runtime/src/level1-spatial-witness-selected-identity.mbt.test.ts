@@ -1,4 +1,7 @@
-import { battleEffectExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleEffectExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
+} from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay level1-spatial-witness dancing_lights faerie_fire feather_fall fog_cloud grease jump light produce_flame thunderwave
 // UNIT-IDENTITY-REPLAY: level1-spatial-witness dancing_lights doDancingLightsMovableDimLight
 // UNIT-IDENTITY-REPLAY: level1-spatial-witness faerie_fire doFaerieFireOutlineAdvantageInvisibleDimLight
@@ -3333,16 +3336,20 @@ function lightBattle(): BattleState {
 
 function lightOneRoundRemainingBattle(): BattleState {
   const battle = lightBattle();
-  return {
-    ...battle,
-    lightEmitters: [
-      lightObjectSpellEmitter({
-        objectId: lightExpiringObjectId,
-        durationTicks: lightExpiringDurationTicks,
-        sourceProcedureRef: lightAct(battle).subject.procedureRef,
-      }),
+  return battleStateWithAllocatedEffectOccurrencesForTest({
+    state: battle,
+    occurrences: [
+      {
+        kind: "storedLightEmitter",
+        ownerId: casterId,
+        emitter: lightObjectSpellEmitter({
+          objectId: lightExpiringObjectId,
+          durationTicks: lightExpiringDurationTicks,
+          sourceProcedureRef: lightAct(battle).subject.procedureRef,
+        }),
+      },
     ],
-  };
+  }).state;
 }
 
 function produceFlameBattle(): BattleState {
@@ -5313,7 +5320,7 @@ function lightObjectSpellEmitter(input: {
   readonly objectId: BattleObjectId;
   readonly durationTicks: ElapsedTimeTicks;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
-}): ObjectLightEmitter {
+}) {
   return {
     kind: "spellLightEmitter",
     sourceProcedureRef: input.sourceProcedureRef,
@@ -5332,7 +5339,7 @@ function lightObjectSpellEmitter(input: {
       kind: "duration",
       durationTicks: input.durationTicks,
     },
-  };
+  } as const;
 }
 
 function produceFlameHeldLightEffect(

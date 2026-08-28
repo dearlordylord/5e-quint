@@ -2,6 +2,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
 } from "./battle-runtime.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
@@ -36,9 +37,8 @@ import {
   type BattleResolutionResult,
   type BattleRuntimeSession,
   type BattleState,
-  type BattleStoredLightEmitter,
-  type BattleTrackedOngoingSpellLightEmitter,
 } from "./index.ts";
+import type { BattleStoredLightEmitterTemplate } from "./battle-state-execution.ts";
 
 type OngoingSpellTargetChoiceFill = Extract<
   BattleFill,
@@ -274,15 +274,23 @@ function rejectOutOfRangeObjectTarget(): DispelMagicRuntimeState {
 }
 
 function battleWithLightEmitters(
-  lightEmitters: readonly BattleStoredLightEmitter[],
+  lightEmitters: readonly BattleStoredLightEmitterTemplate[],
 ): BattleRuntimeSession {
   const session = spellBattle({
     preparedSpells: [spellRecord(dispelMagicUnitId)],
     spellSlots: [{ spellLevel: 3, count: 1 }],
   });
+  const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+    state: session.state,
+    occurrences: lightEmitters.map((emitter) => ({
+      kind: "storedLightEmitter" as const,
+      ownerId: emitter.sourceCombatantId,
+      emitter,
+    })),
+  });
   return battleRuntimeSessionForTest({
     ...session,
-    state: { ...session.state, lightEmitters },
+    state: allocated.state,
   });
 }
 
@@ -345,20 +353,25 @@ function battleWithSpellLightAndActiveEffects(): BattleRuntimeSession {
       effectId: retainedActiveEffectId,
     }),
   ]);
-  return battleRuntimeSessionForTest({
-    ...battle,
-    state: {
-      ...battle.state,
-      lightEmitters: [
-        objectSpellEmitter({
+  const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+    state: battle.state,
+    occurrences: [
+      {
+        kind: "storedLightEmitter",
+        ownerId: spellTargetId,
+        emitter: objectSpellEmitter({
           objectId: selectedObjectId,
           sourceProcedureRef: battleProcedureExecutionRefForTest(
             String(continualFlameUnitId),
           ),
           sourceSpellLevel: 2,
         }),
-      ],
-    },
+      },
+    ],
+  });
+  return battleRuntimeSessionForTest({
+    ...battle,
+    state: allocated.state,
   });
 }
 
@@ -368,7 +381,7 @@ function objectSpellEmitter(input: {
     typeof battleProcedureExecutionRefForTest
   >;
   readonly sourceSpellLevel: number;
-}): BattleTrackedOngoingSpellLightEmitter {
+}): BattleStoredLightEmitterTemplate {
   return {
     kind: "spellLightEmitter",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
