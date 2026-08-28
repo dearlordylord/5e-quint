@@ -7,7 +7,6 @@ import {
 
 import { Either, Effect, Exit, Match } from "effect";
 
-import type { OracleBatchRequestEvaluator } from "./oracle-batch-operation.ts";
 import type { OracleApplication } from "./oracle-distribution.ts";
 import { decodeOracleUtf8 } from "./oracle-utf8.ts";
 import {
@@ -75,7 +74,6 @@ type OracleHttpServerFactory = (handler: OracleHttpRequestHandler) => Server;
 
 type OracleHttpServerOptions = {
   readonly application: OracleApplication;
-  readonly evaluate: OracleBatchRequestEvaluator<never, never>;
   readonly host: OracleLoopbackHost;
   readonly port: OracleBindPort;
   /** Package-local test seam for pre-write encoder failures. */
@@ -109,7 +107,6 @@ export type OracleListeningHttpServer = {
  */
 export function listenOracleHttpServer(input: {
   readonly application: OracleApplication;
-  readonly evaluate: OracleBatchRequestEvaluator<never, never>;
   readonly host: OracleLoopbackHost;
   readonly port: OracleBindPort;
   readonly encodeBatchResponse?: OracleHttpBatchResponseEncoder;
@@ -239,20 +236,46 @@ export async function runOracleHttpService(
 
   const server = listened.right;
   const termination = waitForTerminationSignal();
-  try {
-    await input.writeReady(
-      `${encodeOracleHttpReadinessJson(server.readiness)}\n`,
-    );
-  } catch (cause) {
-    termination.cancel();
-    const closed = await server.close();
-    if (Either.isLeft(closed)) return closed;
-    return Either.left({
-      tag: "readinessWriteFailed",
-      message: String(cause),
-    });
-  }
+  const readiness = Promise.resolve().then(() =>
+    input.writeReady(`${encodeOracleHttpReadinessJson(server.readiness)}\n`),
+  );
+  const startup = await Promise.race([
+    readiness.then(
+      () => ({ tag: "readinessSucceeded" as const }),
+      (cause: unknown) => ({ tag: "readinessFailed" as const, cause }),
+    ),
+    server.listenerFailure.then((result) => ({
+      tag: "listenerFailure" as const,
+      result,
+    })),
+    termination.promise.then((signal) => ({
+      tag: "termination" as const,
+      signal,
+    })),
+  ]);
+  return Match.value(startup).pipe(
+    Match.when({ tag: "readinessSucceeded" }, () =>
+      awaitOracleHttpLifecycle(server, termination),
+    ),
+    Match.when({ tag: "readinessFailed" }, ({ cause }) =>
+      closeAfterReadinessFailure(server, termination, cause),
+    ),
+    Match.when({ tag: "listenerFailure" }, ({ result }) => {
+      termination.cancel();
+      return handleListenerFailure(server, result);
+    }),
+    Match.when({ tag: "termination" }, () => {
+      termination.cancel();
+      return server.close();
+    }),
+    Match.exhaustive,
+  );
+}
 
+async function awaitOracleHttpLifecycle(
+  server: OracleListeningHttpServer,
+  termination: OracleTerminationSignalWait,
+): Promise<Either.Either<void, OracleHttpLifecycleIssue>> {
   const lifecycle = await Promise.race([
     server.listenerFailure.then((result) => ({
       tag: "listenerFailure" as const,
@@ -273,6 +296,20 @@ export async function runOracleHttpService(
   );
 }
 
+async function closeAfterReadinessFailure(
+  server: OracleListeningHttpServer,
+  termination: OracleTerminationSignalWait,
+  cause: unknown,
+): Promise<Either.Either<void, OracleHttpLifecycleIssue>> {
+  termination.cancel();
+  const closed = await server.close();
+  if (Either.isLeft(closed)) return closed;
+  return Either.left({
+    tag: "readinessWriteFailed",
+    message: String(cause),
+  });
+}
+
 async function handleListenerFailure(
   server: OracleListeningHttpServer,
   result: Either.Either<void, OracleHttpLifecycleIssue>,
@@ -284,14 +321,12 @@ async function handleListenerFailure(
 
 function createOracleHttpNodeServer(input: {
   readonly application: OracleApplication;
-  readonly evaluate: OracleBatchRequestEvaluator<never, never>;
   readonly encodeBatchResponse?: OracleHttpBatchResponseEncoder;
   readonly serverFactory?: OracleHttpServerFactory;
 }): Server {
   const requestHandler: OracleHttpRequestHandler = (incoming, outgoing) => {
     void handleOracleHttpRequest({
       application: input.application,
-      evaluate: input.evaluate,
       ...(input.encodeBatchResponse === undefined
         ? {}
         : { encodeBatchResponse: input.encodeBatchResponse }),
@@ -313,7 +348,6 @@ const defaultOracleHttpServerFactory: OracleHttpServerFactory = (handler) =>
 
 async function handleOracleHttpRequest(input: {
   readonly application: OracleApplication;
-  readonly evaluate: OracleBatchRequestEvaluator<never, never>;
   readonly encodeBatchResponse?: OracleHttpBatchResponseEncoder;
   readonly incoming: IncomingMessage;
   readonly outgoing: ServerResponse;
@@ -351,11 +385,16 @@ async function handleOracleHttpRequest(input: {
 
   const body = await readBoundedRequestBody(input.incoming);
   if (Either.isLeft(body)) {
-    if (body.left.tag === "requestTooLarge") {
-      await writeTransportResponse(input.outgoing, 413);
-      return;
-    }
-    if (!input.outgoing.destroyed) input.outgoing.destroy();
+    await Match.value(body.left).pipe(
+      Match.when({ tag: "requestTooLarge" }, () =>
+        writeTransportResponse(input.outgoing, 413),
+      ),
+      Match.when({ tag: "requestStreamFailed" }, () => {
+        if (!input.outgoing.destroyed) input.outgoing.destroy();
+        return Promise.resolve();
+      }),
+      Match.exhaustive,
+    );
     return;
   }
 
@@ -377,7 +416,6 @@ async function handleOracleHttpRequest(input: {
 
   const response = await evaluateOracleRequest({
     application: input.application,
-    evaluate: input.evaluate,
     ...(input.encodeBatchResponse === undefined
       ? {}
       : { encodeBatchResponse: input.encodeBatchResponse }),
@@ -388,7 +426,6 @@ async function handleOracleHttpRequest(input: {
 
 async function evaluateOracleRequest(input: {
   readonly application: OracleApplication;
-  readonly evaluate: OracleBatchRequestEvaluator<never, never>;
   readonly encodeBatchResponse?: OracleHttpBatchResponseEncoder;
   readonly rawJson: string;
 }): Promise<{
@@ -398,10 +435,7 @@ async function evaluateOracleRequest(input: {
   let result: Exit.Exit<OracleBatchResponse, never>;
   try {
     result = await Effect.runPromiseExit(
-      input.evaluate({
-        application: input.application,
-        rawJson: input.rawJson,
-      }),
+      input.application.evaluateJson(input.rawJson),
     );
   } catch {
     return defectResponse(input.application);

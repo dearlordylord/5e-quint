@@ -1,6 +1,5 @@
 import { Effect, Either, Stream } from "effect";
 
-import type { OracleBatchRequestEvaluator } from "./oracle-batch-operation.ts";
 import type { OracleApplication } from "./oracle-distribution.ts";
 import { decodeOracleUtf8 } from "./oracle-utf8.ts";
 import {
@@ -15,18 +14,12 @@ export type OracleStreamResponseWriter<Error, Requirements> = (
 
 export interface OracleStreamOptions<
   InputError,
-  EvaluationError,
   WriteError,
   InputRequirements,
-  EvaluationRequirements,
   WriteRequirements,
 > {
   readonly input: Stream.Stream<Uint8Array, InputError, InputRequirements>;
   readonly application: OracleApplication;
-  readonly evaluate: OracleBatchRequestEvaluator<
-    EvaluationError,
-    EvaluationRequirements
-  >;
   readonly write: OracleStreamResponseWriter<WriteError, WriteRequirements>;
 }
 
@@ -39,35 +32,27 @@ export interface OracleStreamOptions<
  */
 export function runOracleStream<
   InputError,
-  EvaluationError,
   WriteError,
   InputRequirements,
-  EvaluationRequirements,
   WriteRequirements,
 >(
   options: OracleStreamOptions<
     InputError,
-    EvaluationError,
     WriteError,
     InputRequirements,
-    EvaluationRequirements,
     WriteRequirements
   >,
 ): Effect.Effect<
   void,
-  InputError | EvaluationError | WriteError,
-  InputRequirements | EvaluationRequirements | WriteRequirements
+  InputError | WriteError,
+  InputRequirements | WriteRequirements
 > {
   return Effect.fn("OracleStream.run")(function* () {
     let frameBytes: number[] = [];
 
     const processFrame = (
       bytes: readonly number[],
-    ): Effect.Effect<
-      void,
-      EvaluationError | WriteError,
-      EvaluationRequirements | WriteRequirements
-    > => {
+    ): Effect.Effect<void, WriteError, WriteRequirements> => {
       const decoded = decodeOracleUtf8(Uint8Array.from(bytes));
       const responseEffect = Either.isLeft(decoded)
         ? Effect.succeed(
@@ -76,10 +61,7 @@ export function runOracleStream<
               issues: ORACLE_INVALID_JSON_ISSUES,
             }),
           )
-        : options.evaluate({
-            application: options.application,
-            rawJson: decoded.right,
-          });
+        : options.application.evaluateJson(decoded.right);
 
       return responseEffect.pipe(
         Effect.map(

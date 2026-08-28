@@ -9,16 +9,17 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { mkdtempSync, rmSync } from "node:fs";
 
-import { Either, Effect } from "effect";
+import { Either } from "effect";
 import { afterAll, describe, expect, test } from "vitest";
 
 import { buildOracleEvaluationCorpus } from "./oracle-corpus.ts";
 import { buildOracleDistribution } from "../scripts/build-distribution.ts";
+import { evaluateOracleBatch } from "./oracle-evaluation.ts";
 import {
   loadOracleApplicationFromDirectory,
   type OracleApplication,
+  withOracleBatchEvaluator,
 } from "./oracle-distribution.ts";
-import type { OracleBatchRequestEvaluator } from "./oracle-batch-operation.ts";
 import {
   encodeOracleBatchResponseJson,
   decodeOracleBindPort,
@@ -71,26 +72,19 @@ type HttpResult = {
   readonly body: Buffer;
 };
 
-function productionEvaluator(
-  value: OracleApplication = application,
-): OracleBatchRequestEvaluator<never, never> {
-  return (input) => value.evaluateJson(input.rawJson);
-}
-
 type HttpServerFactory = (
   handler: (incoming: IncomingMessage, outgoing: ServerResponse) => void,
 ) => Server;
 
 async function openServer(
-  evaluate: OracleBatchRequestEvaluator<never, never> = productionEvaluator(),
+  applicationToServe: OracleApplication = application,
   options: {
     readonly encodeBatchResponse?: (response: OracleBatchResponse) => string;
     readonly serverFactory?: HttpServerFactory;
   } = {},
 ) {
   const result = await listenOracleHttpServer({
-    application,
-    evaluate,
+    application: applicationToServe,
     host: ORACLE_LOOPBACK_HOST,
     port: portZeroValue,
     ...options,
@@ -185,7 +179,6 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
     const sigtermListeners = process.listenerCount("SIGTERM");
     const service = runOracleHttpService({
       application,
-      evaluate: productionEvaluator(),
       host: ORACLE_LOOPBACK_HOST,
       port: portZeroValue,
       serverFactory: (handler) => {
@@ -210,6 +203,48 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
     expect(nodeServer?.listening).toBe(false);
     expect(process.listenerCount("SIGINT")).toBe(sigintListeners);
     expect(process.listenerCount("SIGTERM")).toBe(sigtermListeners);
+  });
+
+  test("closes promptly when readiness never settles after termination", async () => {
+    let nodeServer: Server | undefined;
+    let readinessStarted!: () => void;
+    const readinessStartedPromise = new Promise<void>((resolve) => {
+      readinessStarted = resolve;
+    });
+    let rejectReadiness!: (cause: Error) => void;
+    const readinessPromise = new Promise<void>((_, reject) => {
+      rejectReadiness = reject;
+    });
+    const sigintListeners = process.listenerCount("SIGINT");
+    const sigtermListeners = process.listenerCount("SIGTERM");
+    const service = runOracleHttpService({
+      application,
+      host: ORACLE_LOOPBACK_HOST,
+      port: portZeroValue,
+      serverFactory: (handler) => {
+        const server = createServer(handler);
+        nodeServer = server;
+        return server;
+      },
+      writeReady: async () => {
+        readinessStarted();
+        await readinessPromise;
+      },
+    });
+
+    await readinessStartedPromise;
+    expect(process.listenerCount("SIGINT")).toBe(sigintListeners + 1);
+    expect(process.listenerCount("SIGTERM")).toBe(sigtermListeners + 1);
+    process.emit("SIGINT");
+
+    const result = await service;
+    expect(Either.isRight(result)).toBe(true);
+    expect(nodeServer?.listening).toBe(false);
+    expect(process.listenerCount("SIGINT")).toBe(sigintListeners);
+    expect(process.listenerCount("SIGTERM")).toBe(sigtermListeners);
+
+    rejectReadiness(new Error("abandoned readiness rejection"));
+    await Promise.resolve();
   });
 
   test("keeps transport failures outside the Oracle response algebra", async () => {
@@ -257,12 +292,15 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
   });
 
   test("decodes invalid UTF-8 and bounds request bytes before evaluation", async () => {
-    const evaluations: string[] = [];
-    const evaluate: OracleBatchRequestEvaluator<never, never> = (input) => {
-      evaluations.push(input.rawJson);
-      return productionEvaluator()(input);
-    };
-    const server = await openServer(evaluate);
+    let evaluations = 0;
+    const evaluatedApplication = withOracleBatchEvaluator(
+      application,
+      ({ batch, services }) => {
+        evaluations += 1;
+        return evaluateOracleBatch({ batch, services });
+      },
+    );
+    const server = await openServer(evaluatedApplication);
     try {
       const invalidUtf8 = await request(server, {
         method: "POST",
@@ -279,7 +317,7 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
         contentType: ORACLE_HTTP_JSON_CONTENT_TYPE,
       });
       expect(oversized.statusCode).toBe(413);
-      expect(evaluations).toEqual([]);
+      expect(evaluations).toBe(0);
     } finally {
       await closeServer(server);
     }
@@ -287,13 +325,15 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
 
   test("returns one atomic defect response and keeps the listener usable", async () => {
     let calls = 0;
-    const healthy = productionEvaluator();
-    const evaluate: OracleBatchRequestEvaluator<never, never> = (input) => {
-      calls += 1;
-      if (calls === 1) return Effect.die("injected HTTP evaluator defect");
-      return healthy(input);
-    };
-    const server = await openServer(evaluate);
+    const defectiveApplication = withOracleBatchEvaluator(
+      application,
+      ({ batch, services }) => {
+        calls += 1;
+        if (calls === 1) throw new Error("injected HTTP evaluator defect");
+        return evaluateOracleBatch({ batch, services });
+      },
+    );
+    const server = await openServer(defectiveApplication);
     try {
       const body = JSON.stringify(corpus.batch);
       const defective = await request(server, {
@@ -330,7 +370,7 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
 
   test("maps a pre-write batch encoder defect to one atomic response", async () => {
     let encoderCalls = 0;
-    const server = await openServer(productionEvaluator(), {
+    const server = await openServer(application, {
       encodeBatchResponse: (response) => {
         encoderCalls += 1;
         if (encoderCalls === 1) throw new Error("injected encoder defect");
@@ -375,7 +415,6 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
     const signalListenerCount = process.listenerCount("SIGTERM");
     const service = runOracleHttpService({
       application,
-      evaluate: productionEvaluator(),
       host: ORACLE_LOOPBACK_HOST,
       port: portZeroValue,
       serverFactory: (handler) => {
@@ -402,7 +441,6 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
     let closeObserved = false;
     const result = await listenOracleHttpServer({
       application,
-      evaluate: productionEvaluator(),
       host: ORACLE_LOOPBACK_HOST,
       port: portZeroValue,
       serverFactory: (handler) => {
@@ -442,7 +480,6 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
     try {
       const result = await listenOracleHttpServer({
         application,
-        evaluate: productionEvaluator(),
         host: ORACLE_LOOPBACK_HOST,
         port: decodedPort.right,
       });

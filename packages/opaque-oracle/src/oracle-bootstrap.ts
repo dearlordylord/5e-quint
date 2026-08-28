@@ -2,9 +2,10 @@ import { fileURLToPath } from "node:url";
 
 import { Effect, Either, Exit, Match, Stream } from "effect";
 
-import type { OracleBatchRequestEvaluator } from "./oracle-batch-operation.ts";
+import type { OracleBatchEvaluator } from "./oracle-batch-operation.ts";
 import {
   loadOracleApplicationFromExecutable,
+  withOracleBatchEvaluator,
   type OracleApplication,
   type OracleDistributionLoadIssue,
 } from "./oracle-distribution.ts";
@@ -77,8 +78,8 @@ export type OracleProcessDependencies = {
   readonly loadApplication?: (
     executablePath: string,
   ) => ReturnType<typeof loadOracleApplicationFromExecutable>;
-  /** Test-build seam; production leaves this unset and uses the application operation. */
-  readonly evaluate?: OracleBatchRequestEvaluator<never, never>;
+  /** Test-build seam; production leaves this unset and uses the loaded application. */
+  readonly batchEvaluator?: OracleBatchEvaluator;
 };
 
 /** Parse the one root command and its serve-only options. */
@@ -104,9 +105,9 @@ export function parseOracleCliCommand(
 }
 
 /**
- * Run one root command with injectable process edges. The optional evaluator
- * is intentionally a test-build seam and is never selected by production
- * command-line input.
+ * Run one root command with injectable process edges. The optional batch
+ * evaluator is intentionally a test-build seam and is never selected by
+ * production command-line input.
  */
 export async function runOracleProcess(
   args: readonly string[],
@@ -136,7 +137,10 @@ export async function runOracleProcess(
     return 1;
   }
 
-  const application = loaded.right;
+  const application =
+    dependencies.batchEvaluator === undefined
+      ? loaded.right
+      : withOracleBatchEvaluator(loaded.right, dependencies.batchEvaluator);
   return Match.value(mode.right).pipe(
     Match.when({ tag: "identity" }, () =>
       runIdentityMode(application, writeStdout, writeStderr),
@@ -145,14 +149,7 @@ export async function runOracleProcess(
       runStreamMode(application, dependencies, writeStdout, writeStderr),
     ),
     Match.when({ tag: "serve" }, ({ host, port }) =>
-      runServeMode(
-        application,
-        dependencies,
-        host,
-        port,
-        writeStdout,
-        writeStderr,
-      ),
+      runServeMode(application, host, port, writeStdout, writeStderr),
     ),
     Match.exhaustive,
   );
@@ -184,14 +181,10 @@ async function runStreamMode(
     dependencies.stdin ?? process.stdin,
     toProcessError,
   );
-  const evaluate: OracleBatchRequestEvaluator<never, never> =
-    dependencies.evaluate ??
-    ((request) => application.evaluateJson(request.rawJson));
   const result = await Effect.runPromiseExit(
     runOracleStream({
       input,
       application,
-      evaluate,
       write: (encodedResponse) =>
         Effect.tryPromise({
           try: () => writeStdout(encodedResponse),
@@ -250,18 +243,13 @@ function invalidArguments(): OracleCliArgumentIssue {
 
 async function runServeMode(
   application: OracleApplication,
-  dependencies: OracleProcessDependencies,
   host: OracleLoopbackHost,
   port: OracleBindPort,
   writeStdout: OracleProcessWriter,
   writeStderr: OracleProcessWriter,
 ): Promise<number> {
-  const evaluate: OracleBatchRequestEvaluator<never, never> =
-    dependencies.evaluate ??
-    ((request) => application.evaluateJson(request.rawJson));
   const result = await runOracleHttpService({
     application,
-    evaluate,
     host,
     port,
     writeReady: writeStdout,

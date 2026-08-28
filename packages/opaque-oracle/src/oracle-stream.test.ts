@@ -12,14 +12,14 @@ import {
   evaluateOracleCase,
   type OracleEvaluationServices,
 } from "./oracle-evaluation.ts";
-import {
-  makeOracleBatchOperation,
-  type OracleBatchEvaluator,
-  type OracleBatchRequestEvaluator,
-} from "./oracle-batch-operation.ts";
+import { type OracleBatchEvaluator } from "./oracle-batch-operation.ts";
 import { runOracleStream } from "./oracle-stream.ts";
 import { buildOracleDistribution } from "../scripts/build-distribution.ts";
-import { loadOracleApplicationFromDirectory } from "./oracle-distribution.ts";
+import {
+  loadOracleApplicationFromDirectory,
+  withOracleBatchEvaluator,
+  type OracleApplication,
+} from "./oracle-distribution.ts";
 
 function testCorpus(services: OracleEvaluationServices): OracleCorpus {
   const result = buildOracleEvaluationCorpus(services);
@@ -51,14 +51,13 @@ afterAll(() => {
 
 function runStream(
   chunks: readonly Uint8Array[],
-  evaluate: OracleBatchRequestEvaluator<never, never>,
+  applicationToRun: OracleApplication = application,
 ): readonly string[] {
   const responses: string[] = [];
   const result = Effect.runSyncExit(
     runOracleStream({
       input: Stream.fromIterable(chunks),
-      application,
-      evaluate,
+      application: applicationToRun,
       write: (encodedResponse) =>
         Effect.sync(() => {
           responses.push(encodedResponse);
@@ -86,15 +85,8 @@ describe("Opaque Oracle persistent byte stream", () => {
     bytes.set(finalFrame, prefix.length + invalidUtf8.length);
 
     const chunks = Array.from(bytes, (byte) => new Uint8Array([byte]));
-    const evaluatedFrames: string[] = [];
-    const evaluate: OracleBatchRequestEvaluator<never, never> = (input) => {
-      evaluatedFrames.push(input.rawJson);
-      return application.evaluateJson(input.rawJson);
-    };
+    const responses = runStream(chunks);
 
-    const responses = runStream(chunks, evaluate);
-
-    expect(evaluatedFrames).toEqual(["not-json", "", "still-not-json"]);
     expect(responses).toHaveLength(4);
     for (const encoded of responses) {
       expect(encoded.endsWith("\n")).toBe(true);
@@ -132,7 +124,10 @@ describe("Opaque Oracle persistent byte stream", () => {
       }
       return [firstTrace];
     };
-    const operation = makeOracleBatchOperation(defectiveEvaluator);
+    const defectiveApplication = withOracleBatchEvaluator(
+      application,
+      defectiveEvaluator,
+    );
     const responses: string[] = [];
     const batchText = JSON.stringify({ cases: [firstCase, secondCase] });
     const laterText = JSON.stringify({ cases: [firstCase] });
@@ -142,8 +137,7 @@ describe("Opaque Oracle persistent byte stream", () => {
         input: Stream.fromIterable([
           new TextEncoder().encode(`${batchText}\n${laterText}\n`),
         ]),
-        application,
-        evaluate: operation,
+        application: defectiveApplication,
         write: (encodedResponse) =>
           Effect.sync(() => {
             responses.push(encodedResponse);

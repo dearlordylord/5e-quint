@@ -16,6 +16,7 @@ import {
 } from "./oracle-catalog-services.ts";
 import {
   makeOracleBatchOperation,
+  type OracleBatchEvaluator,
   type OracleBatchOperation,
 } from "./oracle-batch-operation.ts";
 import {
@@ -62,6 +63,27 @@ export type OracleApplication = {
   readonly services: OracleEvaluationServices;
   readonly evaluateJson: (rawJson: string) => ReturnType<OracleBatchOperation>;
 };
+
+/**
+ * Compose a test application at the same boundary as distribution loading.
+ * The replacement operation receives the original identity, projection, and
+ * services through one newly branded application value.
+ */
+export function withOracleBatchEvaluator(
+  application: OracleApplication,
+  evaluator: OracleBatchEvaluator,
+): OracleApplication {
+  const operation = makeOracleBatchOperation(evaluator);
+  const composed: OracleApplication = Object.freeze({
+    [oracleApplicationBrand]: true,
+    identity: application.identity,
+    projection: application.projection,
+    services: application.services,
+    evaluateJson: (rawJson: string) =>
+      operation({ application: composed, rawJson }),
+  });
+  return composed;
+}
 
 export type OracleApplicationBuildIssue =
   | {

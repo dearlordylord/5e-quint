@@ -5,26 +5,24 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import {
-  spawn,
-  spawnSync,
-  type ChildProcessWithoutNullStreams,
-} from "node:child_process";
+import { spawn, spawnSync, type ChildProcessByStdio } from "node:child_process";
 import type { IncomingHttpHeaders } from "node:http";
 import { request as requestHttp } from "node:http";
 import {
   createInterface,
   type Interface as ReadlineInterface,
 } from "node:readline";
+import type { Readable } from "node:stream";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
-import { Either } from "effect";
+import { Either, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { buildOracleDistribution } from "../scripts/build-distribution.ts";
 import { checkOracleDistribution } from "../scripts/check-distribution.ts";
 import { decodeOracleEvaluationBatchJson } from "./oracle-case-trace.ts";
+import type { OracleTrace } from "./oracle-case-trace-schema.ts";
 import { evaluateOracleBatch } from "./oracle-evaluation.ts";
 import {
   computeOracleDistributionId,
@@ -35,6 +33,13 @@ import {
   ORACLE_PUBLICATION_FILE_NAMES,
   ORACLE_PUBLICATION_MEMBERS,
 } from "./oracle-publication.ts";
+import {
+  OracleBatchResponseSchema,
+  OracleHttpReadinessSchema,
+  OracleIdentityResponseSchema,
+  type OracleBatchResponse,
+  type OracleHttpReadiness,
+} from "./oracle-process-contract.ts";
 
 const packageRoot = resolve(import.meta.dirname, "..");
 const corpusPath = resolve(packageRoot, "corpus/oracle-evaluation-corpus.json");
@@ -55,11 +60,6 @@ const distributionAssetNames = [
 
 type ProcessResult = ReturnType<typeof spawnSync>;
 
-type OracleReadiness = {
-  readonly host: string;
-  readonly port: number;
-};
-
 type OracleHttpResponse = {
   readonly status: number;
   readonly headers: IncomingHttpHeaders;
@@ -67,8 +67,8 @@ type OracleHttpResponse = {
 };
 
 type OracleServeProcess = {
-  readonly child: ChildProcessWithoutNullStreams;
-  readonly readiness: OracleReadiness;
+  readonly child: ChildProcessByStdio<null, Readable, Readable>;
+  readonly readiness: OracleHttpReadiness;
   readonly lines: ReadlineInterface;
   readonly stdout: () => string;
   readonly stderr: () => string;
@@ -173,11 +173,23 @@ function runExecutable(
 
 function parseResponseLines(
   result: ProcessResult,
-): readonly Record<string, unknown>[] {
+): readonly OracleBatchResponse[] {
   const output = result.stdout.toString("utf8");
   expect(output.endsWith("\n")).toBe(true);
   const frames = output.slice(0, -1).split("\n");
-  return frames.map((frame) => JSON.parse(frame) as Record<string, unknown>);
+  return frames.map((frame) => decodeJson(OracleBatchResponseSchema, frame));
+}
+
+function decodeJson<T extends Schema.Schema.AnyNoContext>(
+  schema: T,
+  text: string,
+): Schema.Schema.Type<T> {
+  const value: unknown = JSON.parse(text);
+  const decoded = Schema.decodeUnknownEither(schema)(value);
+  if (Either.isLeft(decoded)) {
+    throw new Error(`Unexpected JSON contract value: ${String(decoded.left)}`);
+  }
+  return decoded.right;
 }
 
 function assertSuccessfulProcess(result: ProcessResult): void {
@@ -192,7 +204,7 @@ async function launchOracleServe(
   preload: string,
   port = "0",
 ): Promise<OracleServeProcess> {
-  const child = spawn(
+  const child: ChildProcessByStdio<null, Readable, Readable> = spawn(
     executable,
     ["serve", "--host", "127.0.0.1", "--port", port],
     {
@@ -200,7 +212,7 @@ async function launchOracleServe(
       env: processEnvironment(preload),
       stdio: ["ignore", "pipe", "pipe"],
     },
-  ) as unknown as ChildProcessWithoutNullStreams;
+  );
   child.stdout.setEncoding("utf8");
   child.stderr.setEncoding("utf8");
   const stdoutChunks: string[] = [];
@@ -212,9 +224,9 @@ async function launchOracleServe(
     stderrChunks.push(typeof chunk === "string" ? chunk : chunk.toString());
   });
   const lines = createInterface({ input: child.stdout });
-  let readiness: OracleReadiness;
+  let readiness: OracleHttpReadiness;
   try {
-    readiness = await new Promise<OracleReadiness>((resolve, reject) => {
+    readiness = await new Promise<OracleHttpReadiness>((resolve, reject) => {
       let settled = false;
       let timeout: ReturnType<typeof setTimeout>;
       const finish = (operation: () => void): void => {
@@ -237,21 +249,8 @@ async function launchOracleServe(
       }, 10_000);
       lines.once("line", (line) => {
         try {
-          const value: unknown = JSON.parse(line);
-          const record =
-            typeof value === "object" && value !== null
-              ? (value as { readonly host?: unknown; readonly port?: unknown })
-              : undefined;
-          const host = record?.host;
-          const port = record?.port;
-          if (
-            record === undefined ||
-            typeof host !== "string" ||
-            typeof port !== "number"
-          ) {
-            throw new Error("Oracle readiness has the wrong shape.");
-          }
-          finish(() => resolve({ host, port }));
+          const decoded = decodeJson(OracleHttpReadinessSchema, line);
+          finish(() => resolve(decoded));
         } catch (cause) {
           fail(
             cause instanceof Error
@@ -357,7 +356,7 @@ async function waitForOracleExit(
   if (child.exitCode === null && child.signalCode === null) {
     expect(child.kill(signal)).toBe(true);
   }
-  let timeout: ReturnType<typeof setTimeout>;
+  let timeout: ReturnType<typeof setTimeout> | undefined;
   try {
     const timeoutPromise = new Promise<never>((_, reject) => {
       timeout = setTimeout(
@@ -369,18 +368,19 @@ async function waitForOracleExit(
     expect(result.code).toBe(0);
     expect(result.signal).toBeNull();
   } finally {
-    clearTimeout(timeout!);
+    if (timeout !== undefined) clearTimeout(timeout);
   }
   process.lines.close();
   expect(process.stdout()).toBe(`${JSON.stringify(process.readiness)}\n`);
 }
 
 function assertEvaluated(
-  response: Record<string, unknown>,
-): readonly Record<string, unknown>[] {
-  expect(response.tag).toBe("evaluated");
-  expect(Array.isArray(response.traces)).toBe(true);
-  return response.traces as readonly Record<string, unknown>[];
+  response: OracleBatchResponse,
+): readonly OracleTrace[] {
+  if (response.tag !== "evaluated") {
+    throw new Error(`Expected evaluated response, got ${response.tag}.`);
+  }
+  return response.traces;
 }
 
 describe("Opaque Oracle source-free distribution", () => {
@@ -425,12 +425,13 @@ describe("Opaque Oracle source-free distribution", () => {
         );
       }
 
-      const identity = JSON.parse(
+      const identity = decodeJson(
+        OracleIdentityResponseSchema,
         readFileSync(
           join(firstDirectory, ORACLE_DISTRIBUTION_FILE_NAMES.identity),
           "utf8",
         ),
-      ) as { readonly distributionId: string };
+      );
       expect(Object.keys(identity)).toEqual(["distributionId"]);
       expect(identity.distributionId).toBe(firstBuild.distributionId);
       expect(
@@ -555,7 +556,11 @@ describe("Opaque Oracle source-free distribution", () => {
       assertSuccessfulProcess(decomposition);
       const decompositionResponses = parseResponseLines(decomposition);
       expect(decompositionResponses).toHaveLength(4);
-      const batchTraces = assertEvaluated(decompositionResponses[0]!);
+      const firstDecompositionResponse = decompositionResponses[0];
+      if (firstDecompositionResponse === undefined) {
+        throw new Error("The Oracle stream returned no batch response.");
+      }
+      const batchTraces = assertEvaluated(firstDecompositionResponse);
       const stagedApplication = loadOracleApplicationFromDirectory({
         directory: stagedDirectory,
       });
@@ -613,13 +618,21 @@ describe("Opaque Oracle source-free distribution", () => {
         expect(response.tag).toBe("decodeRejected");
         expect(response.distributionId).toBe(identity.distributionId);
       }
-      expect(
-        (malformedResponses[2]?.issues as readonly unknown[]).length,
-      ).toBeGreaterThan(0);
-      expect(
-        (malformedResponses[4]?.issues as readonly unknown[]).length,
-      ).toBeGreaterThan(1);
-      expect(assertEvaluated(malformedResponses[6]!)).toHaveLength(1);
+      const duplicateResponse = malformedResponses[2];
+      if (duplicateResponse?.tag !== "decodeRejected") {
+        throw new Error("The duplicate-key frame was not rejected.");
+      }
+      expect(duplicateResponse.issues.length).toBeGreaterThan(0);
+      const invalidUtf8Response = malformedResponses[4];
+      if (invalidUtf8Response?.tag !== "decodeRejected") {
+        throw new Error("The invalid UTF-8 frame was not rejected.");
+      }
+      expect(invalidUtf8Response.issues.length).toBeGreaterThan(1);
+      const finalResponse = malformedResponses[6];
+      if (finalResponse === undefined) {
+        throw new Error("The final Oracle stream response was missing.");
+      }
+      expect(assertEvaluated(finalResponse)).toHaveLength(1);
 
       const workflowRejection = runExecutable(
         executable,
@@ -629,16 +642,15 @@ describe("Opaque Oracle source-free distribution", () => {
         Buffer.from(`${JSON.stringify({ cases: [corpus.batch.cases[10]] })}\n`),
       );
       assertSuccessfulProcess(workflowRejection);
-      const rejectedTrace = assertEvaluated(
-        parseResponseLines(workflowRejection)[0]!,
-      )[0];
-      expect(
-        (
-          rejectedTrace?.creation as {
-            readonly outcome: { readonly tag: string };
-          }
-        ).outcome.tag,
-      ).toBe("fillRejected");
+      const workflowResponse = parseResponseLines(workflowRejection)[0];
+      if (workflowResponse === undefined) {
+        throw new Error("The workflow response was missing.");
+      }
+      const rejectedTrace = assertEvaluated(workflowResponse)[0];
+      if (rejectedTrace === undefined) {
+        throw new Error("The workflow response contained no trace.");
+      }
+      expect(rejectedTrace.creation.outcome.tag).toBe("fillRejected");
 
       const invalidMode = runExecutable(
         executable,
@@ -709,12 +721,13 @@ describe("Opaque Oracle source-free distribution", () => {
       );
       const preload = writeNetworkDenialPreload(temporaryRoot);
       const executable = build.executablePath;
-      const identity = JSON.parse(
+      const identity = decodeJson(
+        OracleIdentityResponseSchema,
         readFileSync(
           join(build.destination, ORACLE_DISTRIBUTION_FILE_NAMES.identity),
           "utf8",
         ),
-      ) as { readonly distributionId: string };
+      );
       const loaded = loadOracleApplicationFromDirectory({
         directory: build.destination,
       });
@@ -739,34 +752,38 @@ describe("Opaque Oracle source-free distribution", () => {
         cases: [firstCase, secondCase, thirdCase],
       });
       const jsonContentType = "application/json; charset=utf-8";
+      const assertJsonContract = (response: OracleHttpResponse): void => {
+        expect(response.headers["content-type"]).toBe(jsonContentType);
+      };
+
+      const runningProcess = await launchOracleServe(
+        executable,
+        cleanWorkingDirectory,
+        preload,
+      );
+      running = runningProcess;
       const post = (
         body: Uint8Array,
         contentType = jsonContentType,
       ): Promise<OracleHttpResponse> =>
-        requestOracle(running!.readiness.port, {
+        requestOracle(runningProcess.readiness.port, {
           method: "POST",
           path: "/oracle/evaluations",
           body,
           contentType,
         });
-      const assertJsonContract = (response: OracleHttpResponse): void => {
-        expect(response.headers["content-type"]).toBe(jsonContentType);
-      };
+      expect(runningProcess.readiness.host).toBe("127.0.0.1");
+      expect(Number.isInteger(runningProcess.readiness.port)).toBe(true);
+      expect(runningProcess.readiness.port).toBeGreaterThan(0);
+      expect(runningProcess.stderr()).toBe("");
 
-      running = await launchOracleServe(
-        executable,
-        cleanWorkingDirectory,
-        preload,
+      const identityResponse = await requestOracle(
+        runningProcess.readiness.port,
+        {
+          method: "GET",
+          path: "/oracle/identity",
+        },
       );
-      expect(running.readiness.host).toBe("127.0.0.1");
-      expect(Number.isInteger(running.readiness.port)).toBe(true);
-      expect(running.readiness.port).toBeGreaterThan(0);
-      expect(running.stderr()).toBe("");
-
-      const identityResponse = await requestOracle(running.readiness.port, {
-        method: "GET",
-        path: "/oracle/identity",
-      });
       expect(identityResponse.status).toBe(200);
       assertJsonContract(identityResponse);
       expect(identityResponse.body.toString("utf8")).toBe(
@@ -810,16 +827,19 @@ describe("Opaque Oracle source-free distribution", () => {
       );
       expect(workflowResponse.status).toBe(200);
       assertJsonContract(workflowResponse);
-      const workflowJson = JSON.parse(
+      const workflowJson = decodeJson(
+        OracleBatchResponseSchema,
         workflowResponse.body.toString("utf8"),
-      ) as {
-        readonly tag: string;
-        readonly traces: readonly {
-          readonly creation: { readonly outcome: { readonly tag: string } };
-        }[];
-      };
+      );
       expect(workflowJson.tag).toBe("evaluated");
-      expect(workflowJson.traces[0]?.creation.outcome.tag).toBe("fillRejected");
+      if (workflowJson.tag !== "evaluated") {
+        throw new Error("The workflow batch response was not evaluated.");
+      }
+      const workflowTrace = workflowJson.traces[0];
+      if (workflowTrace === undefined) {
+        throw new Error("The workflow response contained no trace.");
+      }
+      expect(workflowTrace.creation.outcome.tag).toBe("fillRejected");
 
       const malformedResponses = await Promise.all([
         post(Buffer.alloc(0)),
@@ -831,23 +851,30 @@ describe("Opaque Oracle source-free distribution", () => {
       for (const response of malformedResponses) {
         expect(response.status).toBe(400);
         assertJsonContract(response);
-        const value = JSON.parse(response.body.toString("utf8")) as {
-          readonly tag: string;
-          readonly distributionId: string;
-        };
+        const value = decodeJson(
+          OracleBatchResponseSchema,
+          response.body.toString("utf8"),
+        );
         expect(value.tag).toBe("decodeRejected");
+        if (value.tag !== "decodeRejected") {
+          throw new Error("The malformed batch response was evaluated.");
+        }
         expect(value.distributionId).toBe(identity.distributionId);
       }
-      expect(malformedResponses[4]!.body.toString("utf8")).toBe(
+      const invalidUtf8Response = malformedResponses[4];
+      if (invalidUtf8Response === undefined) {
+        throw new Error("The invalid UTF-8 response was missing.");
+      }
+      expect(invalidUtf8Response.body.toString("utf8")).toBe(
         `{"tag":"decodeRejected","distributionId":"${identity.distributionId}","issues":[{"path":"","code":"invalidJson"}]}`,
       );
 
-      const unknownRoute = await requestOracle(running.readiness.port, {
+      const unknownRoute = await requestOracle(runningProcess.readiness.port, {
         method: "GET",
         path: "/oracle/unknown",
       });
       expect(unknownRoute.status).toBe(404);
-      const wrongMethod = await requestOracle(running.readiness.port, {
+      const wrongMethod = await requestOracle(runningProcess.readiness.port, {
         method: "POST",
         path: "/oracle/identity",
       });
@@ -860,16 +887,17 @@ describe("Opaque Oracle source-free distribution", () => {
       const oversized = await post(Buffer.alloc(2_000_000, 0x20));
       expect(oversized.status).toBe(413);
 
-      await waitForOracleExit(running, "SIGINT");
+      await waitForOracleExit(runningProcess, "SIGINT");
       running = undefined;
 
-      running = await launchOracleServe(
+      const secondRunningProcess = await launchOracleServe(
         executable,
         cleanWorkingDirectory,
         preload,
       );
-      expect(running.readiness.port).toBeGreaterThan(0);
-      await waitForOracleExit(running, "SIGTERM");
+      running = secondRunningProcess;
+      expect(secondRunningProcess.readiness.port).toBeGreaterThan(0);
+      await waitForOracleExit(secondRunningProcess, "SIGTERM");
       running = undefined;
 
       const defectBuild = buildOracleDistribution({
