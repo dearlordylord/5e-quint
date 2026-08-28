@@ -2157,6 +2157,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     damageOccurrence: BattleDamageOccurrenceSourceSchema,
     hideousLaughterRepeatSave: Schema.Struct({
       targetId: CombatantId,
+      effectRef: BattleEffectExecutionRef,
       sourceProcedureRef: BattleProcedureExecutionRef,
       sourceCombatantId: CombatantId,
       trigger: Schema.Literals(["endTurn", "damage"]),
@@ -6775,7 +6776,10 @@ function serializedBattleHoleExecutionReferences(
               ),
             ),
             Match.when({ hideousLaughterRepeatSave: Match.any }, (matched) => [
-              ...procedureSource(matched.hideousLaughterRepeatSave),
+              ...occurrenceSource(
+                matched.hideousLaughterRepeatSave,
+                matched.hideousLaughterRepeatSave.targetId,
+              ),
               ...damageOccurrenceReferences(
                 matched.damageOccurrence,
                 matched.hideousLaughterRepeatSave.targetId,

@@ -716,12 +716,14 @@ export function removeHideousLaughterEffectFromTarget(
   const target = state.combatants.get(targetId);
   if (
     target === undefined ||
-    !target.activeEffects.some((effect) => effect === expiringEffect)
+    !target.activeEffects.some(
+      (effect) => effect.effectRef === expiringEffect.effectRef,
+    )
   ) {
     return state;
   }
   const activeEffects = target.activeEffects.filter(
-    (effect) => effect !== expiringEffect,
+    (effect) => effect.effectRef !== expiringEffect.effectRef,
   );
   const conditions = conditionsAfterExpiringHideousLaughterEffect(
     target.conditions,

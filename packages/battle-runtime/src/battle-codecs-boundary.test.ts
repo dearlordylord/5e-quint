@@ -347,6 +347,7 @@ const savingThrowCases: readonly CodecCase[] = [
     "hideousLaughterRepeatSave",
     saving("hideousLaughterRepeatSave", "hideousLaughterRepeatSave", "wis", {
       ...source,
+      effectRef: fixture.targetEffectRef,
       trigger: "endTurn",
       save: save("wis"),
     }),
@@ -672,6 +673,20 @@ const cases: readonly CodecCase[] = [
       targetFlatBonuses: [],
     }),
   ),
+  left(
+    "hideousLaughterRepeatSaveWrongOwner",
+    saving(
+      "hideousLaughterRepeatSaveWrongOwner",
+      "hideousLaughterRepeatSave",
+      "wis",
+      {
+        ...source,
+        effectRef: fixture.effectRef,
+        trigger: "damage",
+        save: save("wis"),
+      },
+    ),
+  ),
   ...sourceOwningHoleCases.map((replacement) =>
     left(`${replacement.kind}UnboundSource`, replacement),
   ),
@@ -683,6 +698,25 @@ describe("battle codec execution-reference boundaries", () => {
       replaceActHole(fixture.snapshot, fixture.sourceProcedureRef, replacement),
     );
     expect(Result.isSuccess(decoded)).toBe(expected === "Right");
+  });
+
+  test("rejects a Hideous Laughter repeat-save hole without its occurrence ref", () => {
+    const decoded = Schema.decodeUnknownResult(BattleHoleSchema)({
+      ...baseHole("hideousLaughterRepeatSaveMissingEffectRef"),
+      kind: "savingThrowOutcome",
+      damageOccurrence: { kind: "untrackedDamage" },
+      hideousLaughterRepeatSave: {
+        ...source,
+        trigger: "damage",
+        save: save("wis"),
+      },
+      ability: "wis",
+      dc: { kind: "caster_spell_save_dc" },
+      areaChoices: [],
+      targetRollModes: [],
+      targetFlatBonuses: [],
+    });
+    expect(Result.isFailure(decoded)).toBe(true);
   });
 });
 
