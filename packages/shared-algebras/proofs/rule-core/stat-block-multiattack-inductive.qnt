@@ -15,6 +15,28 @@ module statBlockMultiattackInductive {
   var qPendingProcedureRefs: List[StatBlockProcedureRef]
   var qDispatchAllowance: StatBlockMultiattackDispatchAllowance
 
+  pure def qProcedureRefDomain: Set[StatBlockProcedureRef] = 0.to(2)
+
+  pure def qPendingProcedureRefsDomain: Set[List[StatBlockProcedureRef]] =
+    Set(List())
+      .union(qProcedureRefDomain.map(first => List(first)))
+      .union(
+        qProcedureRefDomain
+          .map(first => qProcedureRefDomain.map(second => List(first, second)))
+          .flatten()
+      )
+      .union(
+        qProcedureRefDomain
+          .map(first =>
+            qProcedureRefDomain
+              .map(second =>
+                qProcedureRefDomain.map(third => List(first, second, third))
+              )
+              .flatten()
+          )
+          .flatten()
+      )
+
   pure def qState: StatBlockMultiattackState =
     if (qPhase == ProofReadyToAct) StatBlockMultiattackReadyToAct
     else if (qPhase == ProofActionSpent) StatBlockMultiattackActionSpent
@@ -56,7 +78,7 @@ module statBlockMultiattackInductive {
   }
 
   action doDispatch = {
-    nondet procedureRef = Set(0, 1, 2).oneOf()
+    nondet procedureRef = qProcedureRefDomain.oneOf()
     all { recordState(resolveStatBlockMultiattackDispatch(qState, procedureRef)) }
   }
 
@@ -65,10 +87,12 @@ module statBlockMultiattackInductive {
 
   val invariant = all {
     qPhase.in(Set(ProofReadyToAct, ProofActionSpent, ProofTurnEnded, ProofDispatching)),
+    qPendingProcedureRefs.in(qPendingProcedureRefsDomain),
+    qDispatchAllowance.in(Set(AllListedDispatches, OneListedDispatch)),
     qPendingProcedureRefs.length() <= 3,
     qPendingProcedureRefs.foldl(
       true,
-      (legal, procedureRef) => legal and procedureRef.in(0.to(2))
+      (legal, procedureRef) => legal and procedureRef.in(qProcedureRefDomain)
     ),
     (qPhase == ProofDispatching) implies qPendingProcedureRefs.length() > 0,
     legalStatBlockMultiattackState(qState),
