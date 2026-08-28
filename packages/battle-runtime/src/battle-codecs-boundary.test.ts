@@ -878,134 +878,107 @@ describe("battle codec act ownership boundaries", () => {
     ) {
       throw new Error("Expected the encoded readied-attack choice.");
     }
-    const interruptKindCases: readonly {
-      readonly expected: "Right" | "Left";
-      readonly choice: EncodedInterruptChoice;
-    }[] = [
+    const malformedInterruptKindCases: readonly EncodedInterruptChoice[] = [
       {
-        expected: "Right",
-        choice: {
-          kind: "castAttackHitBonusActionSpell",
-          reactorId: goblinId,
-          subject: {
-            tag: "runtimeCommand",
-            actorId: fighterId,
-            command: "castAttackHitBonusActionSpell",
-            casterId: goblinId,
-            procedureRef: encodedReadiedAttack.subject.procedureRef,
-          },
-          initialHoles: [],
+        kind: "castAttackHitBonusActionSpell",
+        reactorId: goblinId,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: fighterId,
+          command: "castAttackHitBonusActionSpell",
+          casterId: goblinId,
+          procedureRef: encodedReadiedAttack.subject.procedureRef,
         },
+        initialHoles: [],
       },
       {
-        expected: "Right",
-        choice: {
-          kind: "castTriggeredReactionSpell",
+        kind: "castTriggeredReactionSpell",
+        reactorId: goblinId,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: fighterId,
+          command: "castTriggeredReactionSpell",
           reactorId: goblinId,
-          subject: {
-            tag: "runtimeCommand",
-            actorId: fighterId,
-            command: "castTriggeredReactionSpell",
-            reactorId: goblinId,
-            procedureRef: encodedReadiedAttack.subject.procedureRef,
-          },
-          initialHoles: [],
+          procedureRef: encodedReadiedAttack.subject.procedureRef,
         },
+        initialHoles: [],
       },
       {
-        expected: "Right",
-        choice: {
-          kind: "opportunityAttack",
-          reactorId: goblinId,
-          subject: {
-            ...encodedReadiedAttack.subject,
-            command: "opportunityAttack",
-            distanceFeet: 5,
-          },
-          initialHoles: [],
+        kind: "opportunityAttack",
+        reactorId: goblinId,
+        subject: {
+          ...encodedReadiedAttack.subject,
+          command: "opportunityAttack",
+          distanceFeet: 5,
         },
+        initialHoles: [],
       },
       {
-        expected: "Right",
-        choice: {
-          kind: "retaliationAttack",
-          reactorId: goblinId,
-          subject: {
-            ...encodedReadiedAttack.subject,
-            command: "retaliationAttack",
-          },
-          initialHoles: [],
+        kind: "retaliationAttack",
+        reactorId: goblinId,
+        subject: {
+          ...encodedReadiedAttack.subject,
+          command: "retaliationAttack",
         },
+        initialHoles: [],
       },
       {
-        expected: "Left",
-        choice: {
-          kind: "releaseReadiedMovement",
-          reactorId: goblinId,
+        kind: "releaseReadiedMovement",
+        reactorId: goblinId,
+        readiedMovementActorId: goblinId,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: fighterId,
+          command: "releaseReadiedMovement",
           readiedMovementActorId: goblinId,
-          subject: {
-            tag: "runtimeCommand",
-            actorId: fighterId,
-            command: "releaseReadiedMovement",
-            readiedMovementActorId: goblinId,
-          },
-          initialHoles: [],
         },
+        initialHoles: [],
       },
       {
-        expected: "Left",
-        choice: {
-          kind: "releaseReadiedSpell",
-          reactorId: goblinId,
+        kind: "releaseReadiedSpell",
+        reactorId: goblinId,
+        readiedSpellCasterId: goblinId,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: fighterId,
+          command: "releaseReadiedSpell",
           readiedSpellCasterId: goblinId,
-          subject: {
-            tag: "runtimeCommand",
-            actorId: fighterId,
-            command: "releaseReadiedSpell",
-            readiedSpellCasterId: goblinId,
-            procedureRef: encodedReadiedAttack.subject.procedureRef,
-          },
-          initialHoles: [],
+          procedureRef: encodedReadiedAttack.subject.procedureRef,
         },
+        initialHoles: [],
       },
       {
-        expected: "Left",
+        kind: "reactionRollOrDamageReduction",
+        reactorId: fighterId,
         choice: {
-          kind: "reactionRollOrDamageReduction",
-          reactorId: fighterId,
-          choice: {
-            kind: "attackDamageReduction",
-            procedureRef: encodedReadiedAttack.subject.procedureRef,
-            reduction: { kind: "halfDamage" },
-          },
-          initialHoles: [],
+          kind: "attackDamageReduction",
+          procedureRef: encodedReadiedAttack.subject.procedureRef,
+          reduction: { kind: "halfDamage" },
         },
+        initialHoles: [],
       },
       {
-        expected: "Left",
+        kind: "reactionRollOrDamageReduction",
+        reactorId: goblinId,
         choice: {
-          kind: "reactionRollOrDamageReduction",
-          reactorId: goblinId,
-          choice: {
-            kind: "attackDamageReduction",
-            procedureRef: encodedReadiedAttack.subject.procedureRef,
-            reduction: { kind: "halfDamage" },
-          },
-          initialHoles: [],
+          kind: "attackDamageReduction",
+          procedureRef: encodedReadiedAttack.subject.procedureRef,
+          reduction: { kind: "halfDamage" },
         },
+        initialHoles: [],
       },
     ];
-    for (const interruptCase of interruptKindCases) {
+    for (const malformedChoice of malformedInterruptKindCases) {
       const decoded = Schema.decodeUnknownEither(
         BattleCheckpointFrontierEnvelopeSchema,
       )({
         ...pendingEnvelope,
         frontier: {
           ...pendingEnvelope.frontier,
-          choices: [interruptCase.choice],
+          choices: [malformedChoice],
         },
       });
-      expect(Either.isRight(decoded)).toBe(interruptCase.expected === "Right");
+      expect(Either.isLeft(decoded)).toBe(true);
     }
     const replaceTarget = (
       candidate: EncodedInterruptChoice,
