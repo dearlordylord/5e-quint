@@ -11,12 +11,13 @@ import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 //   rules-defined turn-boundary trigger shape.
 // - UBIQUITOUS_LANGUAGE.md: Boundary Crossing, Spell Effect, Reaction, Timer.
 // Boundary: bounded source/target fixture; not exhaustive same-timing ordering.
-// Death Saving Throw ordering is intentionally outside this witness; this
-// fixture does not assert a same-timing ordering for that lifecycle.
+// Death Saving Throw resolution ordering is outside this witness; the mixed
+// boundary case asserts only that the table receives the required order choice.
 import {
-  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
 } from "./battle-runtime.test-support.ts";
+import type { BattleActiveEffectOccurrenceTemplate } from "./effect-execution-ref.ts";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   difficultyClass,
@@ -65,7 +66,6 @@ import {
   battleId,
   endTurn,
   type ActiveOngoingFeatureOccurrence,
-  type BattleActiveEffect,
   type BattleCreatureState,
   type BattleResolutionResult,
   type BattleProcedureExecutionRef,
@@ -286,31 +286,29 @@ describe("turn-boundary effect lifecycle MBT", () => {
     MBT_TEST_TIMEOUT_MS,
   );
 
-  it("splits mixed death-save and turn-boundary discovery route ownership", () => {
+  it("requests occurrence ordering before mixed death-save and turn-boundary ownership", () => {
     const awaitingBoundary = endTurn({
       state: battleWithTurnBoundaryEffectsAndDeathSave(),
       actorId: fighterId,
     });
     assertNeedsHoles(awaitingBoundary, "mixed death-save route discovery");
-    expect(awaitingBoundary.holes.map((hole) => hole.kind)).toEqual([
-      "deathSavingThrow",
-      "rolledDice",
-      "savingThrowOutcome",
+    expect(awaitingBoundary.holes).toEqual([
+      expect.objectContaining({
+        kind: "startTurnOccurrenceOrder",
+        occurrences: expect.arrayContaining([
+          expect.objectContaining({ kind: "deathSavingThrow" }),
+          expect.objectContaining({ kind: "spellTurnStartDamageAndSave" }),
+        ]),
+      }),
     ]);
     expect(
       routeEventsOf(awaitingBoundary, "mixed death-save route discovery"),
     ).toEqual([
       {
-        kind: "discoverBattleActs",
-        subject: "deathSavingThrow",
-        holes: ["deathSavingThrow"],
-        owner: "battleHitPointAndZeroHpLifecycle",
-      },
-      {
-        kind: "discoverBattleActs",
-        subject: "turnBoundaryEffectLifecycle",
-        holes: ["rolledDice", "savingThrowOutcome"],
-        owner: "battleTurnBoundary",
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "battleAction",
+        holes: [],
+        owner: "battleActionEconomy",
       },
     ]);
     expect(
@@ -330,19 +328,11 @@ describe("turn-boundary effect lifecycle MBT", () => {
     assertNeedsHoles(awaitingBoundary, "mixed repeat-save route discovery");
     expect(awaitingBoundary.holes.map((hole) => hole.kind)).toEqual([
       "savingThrowOutcome",
-      "rolledDice",
-      "savingThrowOutcome",
     ]);
     expect(
       awaitingBoundary.holes.some(
         (hole) =>
           hole.kind === "savingThrowOutcome" && "sleepRepeatSave" in hole,
-      ),
-    ).toBe(true);
-    expect(
-      awaitingBoundary.holes.some(
-        (hole) =>
-          hole.kind === "savingThrowOutcome" && "spellTurnStartSave" in hole,
       ),
     ).toBe(true);
     expect(
@@ -352,12 +342,6 @@ describe("turn-boundary effect lifecycle MBT", () => {
         kind: "discoverBattleActs",
         subject: "repeatSaveConditionEffect",
         holes: ["savingThrowOutcome"],
-        owner: "battleTurnBoundary",
-      },
-      {
-        kind: "discoverBattleActs",
-        subject: "turnBoundaryEffectLifecycle",
-        holes: ["rolledDice", "savingThrowOutcome"],
         owner: "battleTurnBoundary",
       },
     ]);
@@ -414,15 +398,7 @@ describe("turn-boundary effect lifecycle MBT", () => {
     assertNeedsHoles(awaitingBoundary, "mixed saving throw route discovery");
     expect(awaitingBoundary.holes.map((hole) => hole.kind)).toEqual([
       "savingThrowOutcome",
-      "rolledDice",
-      "savingThrowOutcome",
     ]);
-    expect(
-      awaitingBoundary.holes.some(
-        (hole) =>
-          hole.kind === "savingThrowOutcome" && "spellTurnStartSave" in hole,
-      ),
-    ).toBe(true);
 
     const conditionSaveHole = findSpellConditionEndTurnSaveHole(
       awaitingBoundary.holes,
@@ -655,19 +631,30 @@ function resolveTargetStartTurn(
   if (awaitingBoundary.tag !== "needsHoles") {
     throw new Error("Expected target start-turn damage and save holes.");
   }
-  expect(holeOrder(awaitingBoundary.holes)).toBe("turnStartDamageThenSave");
-  const resolved = endTurn({
-    state: state.battle,
+  expect(awaitingBoundary.holes.map((hole) => hole.kind)).toEqual([
+    "rolledDice",
+  ]);
+  const damageFill = damageRollFillWithGroups(
+    findHole(awaitingBoundary.holes, "rolledDice"),
+    [[turnStartDamageRoll]],
+  );
+  const awaitingSave = endTurn({
+    state: awaitingBoundary.state,
     actorId: fighterId,
-    fills: [
-      damageRollFillWithGroups(findHole(awaitingBoundary.holes, "rolledDice"), [
-        [turnStartDamageRoll],
-      ]),
-      savingThrowOutcomeFill(
-        findHole(awaitingBoundary.holes, "savingThrowOutcome"),
-        [{ targetId: goblinId, succeeded: false }],
-      ),
-    ],
+    fills: [damageFill],
+  });
+  assertNeedsHoles(awaitingSave, "target start-turn save");
+  expect(awaitingSave.holes.map((hole) => hole.kind)).toEqual([
+    "savingThrowOutcome",
+  ]);
+  const saveFill = savingThrowOutcomeFill(
+    findHole(awaitingSave.holes, "savingThrowOutcome"),
+    [{ targetId: goblinId, succeeded: false }],
+  );
+  const resolved = endTurn({
+    state: awaitingBoundary.state,
+    actorId: fighterId,
+    fills: [damageFill, saveFill],
   });
   if (resolved.tag !== "resolved") {
     throw new Error("Expected target start-turn boundary to resolve.");
@@ -768,7 +755,7 @@ function battleWithTurnBoundaryEffects(input?: {
     fighter.origin.execution.scopeRef,
     NonNegativeInteger(firstProcedureOrdinal + 1),
   );
-  return {
+  const stateWithOngoingFeatures = {
     ...battle,
     combatants: new Map(battle.combatants)
       .set(fighterId, {
@@ -801,7 +788,6 @@ function battleWithTurnBoundaryEffects(input?: {
             ],
           },
         },
-        activeEffects: [...fighter.activeEffects, untilNextTurnEffect()],
         activeOngoingFeatureOccurrences: new Map([
           ...fighter.activeOngoingFeatureOccurrences,
           [startTurnOngoingFeatureKey, startTurnOngoingFeature()],
@@ -813,13 +799,28 @@ function battleWithTurnBoundaryEffects(input?: {
         hp: Hp(input?.targetHp ?? initialTargetHp),
         maxHp: Hp(initialTargetHp),
         positiveHpUnconscious: null,
-        activeEffects: [
-          ...goblin.activeEffects,
-          turnStartDamageEffect(),
-          turnEndDamageEffect(),
-        ],
       }),
   };
+  return battleStateWithAllocatedEffectOccurrencesForTest({
+    state: stateWithOngoingFeatures,
+    occurrences: [
+      {
+        kind: "activeEffect",
+        ownerId: fighterId,
+        effect: untilNextTurnEffect(),
+      },
+      {
+        kind: "activeEffect",
+        ownerId: goblinId,
+        effect: turnStartDamageEffect(),
+      },
+      {
+        kind: "activeEffect",
+        ownerId: goblinId,
+        effect: turnEndDamageEffect(),
+      },
+    ],
+  }).state;
 }
 
 function battleWithTurnBoundaryEffectsAndDeathSave(): BattleState {
@@ -853,53 +854,58 @@ function battleWithTurnBoundaryEffectsAndDeathSave(): BattleState {
 
 function battleWithTurnBoundaryEffectsAndConditionSave(): BattleState {
   const battle = battleWithTurnBoundaryEffects();
-  const fighter = requireCombatant(battle, fighterId);
-  return {
-    ...battle,
-    combatants: new Map(battle.combatants).set(fighterId, {
-      ...fighter,
-      activeEffects: [
-        ...fighter.activeEffects,
-        fighterSpellConditionEndTurnSaveEffect(),
-      ],
-    }),
-  };
+  return battleStateWithAllocatedEffectOccurrencesForTest({
+    state: battle,
+    occurrences: [
+      {
+        kind: "activeEffect",
+        ownerId: fighterId,
+        effect: fighterSpellConditionEndTurnSaveEffect(),
+      },
+    ],
+  }).state;
 }
 
 function battleWithTurnBoundaryEffectsAndSleepRepeatSave(): BattleState {
   const battle = battleWithTurnBoundaryEffects();
-  const fighter = requireCombatant(battle, fighterId);
-  return {
-    ...battle,
-    combatants: new Map(battle.combatants).set(fighterId, {
-      ...fighter,
-      activeEffects: [...fighter.activeEffects, sleepPendingRepeatSaveEffect()],
-    }),
-  };
+  return battleStateWithAllocatedEffectOccurrencesForTest({
+    state: battle,
+    occurrences: [
+      {
+        kind: "activeEffect",
+        ownerId: fighterId,
+        effect: sleepPendingRepeatSaveEffect(),
+      },
+    ],
+  }).state;
 }
 
 function battleWithCurrentActorEndTurnDamageAndConcentration(): BattleState {
   const battle = fighterVsGoblinBattle();
-  const fighter = requireCombatant(battle, fighterId);
+  const effect = fighterTurnEndDamageEffect();
+  const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+    state: battle,
+    occurrences: [{ kind: "activeEffect", ownerId: fighterId, effect }],
+  });
+  const fighter = requireCombatant(allocated.state, fighterId);
   return {
-    ...battle,
-    combatants: new Map(battle.combatants).set(fighterId, {
+    ...allocated.state,
+    combatants: new Map(allocated.state.combatants).set(fighterId, {
       ...fighter,
       concentration: {
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          "synthetic_turn_boundary_target_concentration",
-        ),
+        sourceProcedureRef: effect.sourceProcedureRef,
         effectKind: "spellEffect",
       },
-      activeEffects: [...fighter.activeEffects, fighterTurnEndDamageEffect()],
     }),
   };
 }
 
-function sleepPendingRepeatSaveEffect(): BattleActiveEffect {
+function sleepPendingRepeatSaveEffect(): Extract<
+  BattleActiveEffectOccurrenceTemplate,
+  { readonly kind: "sleepPendingRepeatSave" }
+> {
   return {
     kind: "sleepPendingRepeatSave",
-    effectRef: battleEffectExecutionRefForTest("mbt-sleep-pending-effect"),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(syntheticSpellId("synthetic_turn_boundary_sleep_repeat")),
     ),
@@ -914,7 +920,10 @@ function sleepPendingRepeatSaveEffect(): BattleActiveEffect {
   };
 }
 
-function fighterSpellConditionEndTurnSaveEffect(): BattleActiveEffect {
+function fighterSpellConditionEndTurnSaveEffect(): Extract<
+  BattleActiveEffectOccurrenceTemplate,
+  { readonly kind: "spellConditionEndTurnSave" }
+> {
   return {
     kind: "spellConditionEndTurnSave",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -932,7 +941,10 @@ function fighterSpellConditionEndTurnSaveEffect(): BattleActiveEffect {
   };
 }
 
-function fighterTurnEndDamageEffect(): BattleActiveEffect {
+function fighterTurnEndDamageEffect(): Extract<
+  BattleActiveEffectOccurrenceTemplate,
+  { readonly kind: "spellTurnEndDamage" }
+> {
   return {
     kind: "spellTurnEndDamage",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -1012,7 +1024,10 @@ function endTurnOngoingFeature(): ActiveOngoingFeatureOccurrence {
   };
 }
 
-function turnStartDamageEffect(): BattleActiveEffect {
+function turnStartDamageEffect(): Extract<
+  BattleActiveEffectOccurrenceTemplate,
+  { readonly kind: "spellTurnStartDamageAndSave" }
+> {
   return {
     kind: "spellTurnStartDamageAndSave",
     source: "turnBoundaryEffectLifecycle",
@@ -1033,7 +1048,10 @@ function turnStartDamageEffect(): BattleActiveEffect {
   };
 }
 
-function turnEndDamageEffect(): BattleActiveEffect {
+function turnEndDamageEffect(): Extract<
+  BattleActiveEffectOccurrenceTemplate,
+  { readonly kind: "spellTurnEndDamage" }
+> {
   return {
     kind: "spellTurnEndDamage",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -1048,7 +1066,10 @@ function turnEndDamageEffect(): BattleActiveEffect {
   };
 }
 
-function untilNextTurnEffect(): BattleActiveEffect {
+function untilNextTurnEffect(): Extract<
+  BattleActiveEffectOccurrenceTemplate,
+  { readonly kind: "nextAttackRollBySelf" }
+> {
   return {
     kind: "nextAttackRollBySelf",
     sourceProcedureRef: battleProcedureExecutionRefForTest(

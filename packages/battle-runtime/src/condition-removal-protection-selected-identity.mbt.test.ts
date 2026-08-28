@@ -1,8 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import {
-  battleEffectExecutionRefForTest,
-  battleProcedureExecutionRefForTest,
-} from "./battle-runtime.test-support.ts";
+import { battleStateWithAllocatedEffectOccurrencesForTest } from "./battle-runtime.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY lesser_restoration protection_from_poison
@@ -10,17 +7,14 @@ import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-REPLAY: RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY protection_from_poison doResolveProtectionFromPoison
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
-import type {
-  BattleActiveEffect,
-  BattleProcedureExecutionRef,
-} from "./index.ts";
+import type { BattleActiveEffect } from "./index.ts";
 import { snapshotBattle } from "./index.ts";
 import {
   holdPersonDurationTicks,
   holdPersonUnitId,
   lesserRestorationUnitId,
-  poisonSprayUnitId,
   protectionFromPoisonUnitId,
+  rayOfSicknessUnitId,
   spellCasterId,
   spellTargetId,
 } from "./unit-profile-admission-catalog.test-support.ts";
@@ -164,16 +158,30 @@ function expectedProjection(
 function resolveLesserRestorationChoiceBattle(): BattleState {
   const spell = spellRecord(lesserRestorationUnitId);
   const session = spellBattle({
-    preparedSpells: [spell],
-    spellSlots: [{ spellLevel: 2, count: 1 }],
+    preparedSpells: [
+      spell,
+      spellRecord(holdPersonUnitId),
+      spellRecord(rayOfSicknessUnitId),
+    ],
+    spellSlots: [
+      { spellLevel: 1, count: 1 },
+      { spellLevel: 2, count: 2 },
+    ],
   });
   const baseState = session.state;
-  const target = requireCombatant(baseState, spellTargetId);
+  const holdPersonProcedureRef = spellAct({
+    session,
+    spellId: holdPersonUnitId,
+    slotLevel: 2,
+  }).subject.procedureRef;
+  const rayOfSicknessProcedureRef = spellAct({
+    session,
+    spellId: rayOfSicknessUnitId,
+    slotLevel: 1,
+  }).subject.procedureRef;
   const paralyzedEffect = {
     kind: "spellConditionEndTurnSave" as const,
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(holdPersonUnitId),
-    ),
+    sourceProcedureRef: holdPersonProcedureRef,
     sourceCombatantId: spellCasterId,
     condition: "paralyzed" as const,
     conditionHadNonSpellSource: false,
@@ -188,35 +196,41 @@ function resolveLesserRestorationChoiceBattle(): BattleState {
     },
   };
   const poisonedEffect = {
-    kind: "spellConditionEndTurnSave" as const,
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String("synthetic_poison_spell"),
-    ),
+    kind: "spellCondition" as const,
+    sourceProcedureRef: rayOfSicknessProcedureRef,
     sourceCombatantId: spellCasterId,
     condition: "poisoned" as const,
     conditionHadNonSpellSource: false,
-    heightenedSpellTargetDisadvantage: null,
-    save: {
-      ability: "con" as const,
-      dc: { kind: "caster_spell_save_dc" as const },
-    },
+    escape: null,
+    turnStartDamage: null,
     expiresAt: {
       kind: "duration" as const,
       durationTicks: elapsedTimeTicks(10),
     },
   };
+  const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+    state: baseState,
+    occurrences: [
+      {
+        kind: "activeEffect",
+        ownerId: spellTargetId,
+        effect: paralyzedEffect,
+      },
+      {
+        kind: "activeEffect",
+        ownerId: spellTargetId,
+        effect: poisonedEffect,
+      },
+    ],
+  });
+  const target = requireCombatant(allocated.state, spellTargetId);
   const state: BattleState = {
-    ...baseState,
-    combatants: new Map(baseState.combatants).set(
+    ...allocated.state,
+    combatants: new Map(allocated.state.combatants).set(
       spellTargetId,
       battleCreatureStateWithKnockOutPreservedConditions(
         {
           ...target,
-          activeEffects: [
-            ...target.activeEffects,
-            paralyzedEffect,
-            poisonedEffect,
-          ],
         },
         applyCondition(
           applyCondition(target.conditions, "paralyzed"),
@@ -255,17 +269,18 @@ function resolveLesserRestorationChoiceBattle(): BattleState {
 function resolveLesserRestorationConcentrationCleanupBattle(): BattleState {
   const spell = spellRecord(lesserRestorationUnitId);
   const session = spellBattle({
-    preparedSpells: [spell],
-    spellSlots: [{ spellLevel: 2, count: 1 }],
+    preparedSpells: [spell, spellRecord(holdPersonUnitId)],
+    spellSlots: [{ spellLevel: 2, count: 2 }],
   });
   const baseState = session.state;
-  const caster = requireCombatant(baseState, spellCasterId);
-  const target = requireCombatant(baseState, spellTargetId);
+  const holdPersonProcedureRef = spellAct({
+    session,
+    spellId: holdPersonUnitId,
+    slotLevel: 2,
+  }).subject.procedureRef;
   const paralyzedEffect = {
     kind: "spellConditionEndTurnSave" as const,
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(holdPersonUnitId),
-    ),
+    sourceProcedureRef: holdPersonProcedureRef,
     sourceCombatantId: spellCasterId,
     condition: "paralyzed" as const,
     conditionHadNonSpellSource: false,
@@ -280,15 +295,25 @@ function resolveLesserRestorationConcentrationCleanupBattle(): BattleState {
       durationTicks: holdPersonDurationTicks,
     },
   };
+  const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+    state: baseState,
+    occurrences: [
+      {
+        kind: "activeEffect",
+        ownerId: spellTargetId,
+        effect: paralyzedEffect,
+      },
+    ],
+  });
+  const caster = requireCombatant(allocated.state, spellCasterId);
+  const target = requireCombatant(allocated.state, spellTargetId);
   const state: BattleState = {
-    ...baseState,
-    combatants: new Map(baseState.combatants)
+    ...allocated.state,
+    combatants: new Map(allocated.state.combatants)
       .set(spellCasterId, {
         ...caster,
         concentration: {
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(holdPersonUnitId),
-          ),
+          sourceProcedureRef: holdPersonProcedureRef,
           effectKind: "spellEffect" as const,
         },
       })
@@ -297,7 +322,6 @@ function resolveLesserRestorationConcentrationCleanupBattle(): BattleState {
         battleCreatureStateWithKnockOutPreservedConditions(
           {
             ...target,
-            activeEffects: [...target.activeEffects, paralyzedEffect],
           },
           applyCondition(target.conditions, "paralyzed"),
         ),
@@ -333,37 +357,48 @@ function resolveLesserRestorationConcentrationCleanupBattle(): BattleState {
 function resolveProtectionFromPoisonBattle(): BattleState {
   const spell = spellRecord(protectionFromPoisonUnitId);
   const session = spellBattle({
-    preparedSpells: [spell],
-    spellSlots: [{ spellLevel: 2, count: 1 }],
+    preparedSpells: [spell, spellRecord(rayOfSicknessUnitId)],
+    spellSlots: [
+      { spellLevel: 1, count: 1 },
+      { spellLevel: 2, count: 1 },
+    ],
   });
   const baseState = session.state;
-  const target = requireCombatant(baseState, spellTargetId);
+  const rayOfSicknessProcedureRef = spellAct({
+    session,
+    spellId: rayOfSicknessUnitId,
+    slotLevel: 1,
+  }).subject.procedureRef;
+  const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+    state: baseState,
+    occurrences: [
+      {
+        kind: "activeEffect",
+        ownerId: spellTargetId,
+        effect: {
+          kind: "spellCondition" as const,
+          sourceProcedureRef: rayOfSicknessProcedureRef,
+          sourceCombatantId: spellCasterId,
+          condition: "poisoned" as const,
+          conditionHadNonSpellSource: true,
+          escape: null,
+          turnStartDamage: null,
+          expiresAt: {
+            kind: "duration" as const,
+            durationTicks: elapsedTimeTicks(600),
+          },
+        },
+      },
+    ],
+  });
+  const target = requireCombatant(allocated.state, spellTargetId);
   const state: BattleState = {
-    ...baseState,
-    combatants: new Map(baseState.combatants).set(
+    ...allocated.state,
+    combatants: new Map(allocated.state.combatants).set(
       spellTargetId,
       battleCreatureStateWithKnockOutPreservedConditions(
         {
           ...target,
-          activeEffects: [
-            ...target.activeEffects,
-            {
-              kind: "spellCondition" as const,
-              effectRef: battleEffectExecutionRefForTest("poison-condition"),
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String(poisonSprayUnitId),
-              ),
-              sourceCombatantId: spellCasterId,
-              condition: "poisoned" as const,
-              conditionHadNonSpellSource: true,
-              escape: null,
-              turnStartDamage: null,
-              expiresAt: {
-                kind: "duration" as const,
-                durationTicks: elapsedTimeTicks(600),
-              },
-            },
-          ],
         },
         applyCondition(target.conditions, "poisoned"),
       ),
@@ -401,19 +436,26 @@ function projectConditionRemovalProtectionSelectedIdentityState(
 ): ConditionRemovalProtectionSelectedIdentityProjection {
   const target = requireCombatant(state, spellTargetId);
   const caster = requireCombatant(state, spellCasterId);
-  const protectionProcedureRef = protectionFromPoisonProcedureRef(state);
   const snapshot = snapshotBattle(state);
+  const poisonResistance = target.activeEffects.find(
+    isProtectionFromPoisonResistance,
+  );
+  const poisonSaveAdvantage = target.activeEffects.find(
+    isProtectionFromPoisonSaveAdvantage,
+  );
   return {
     targetParalyzed: hasCondition(target.conditions, "paralyzed"),
     targetPoisoned: hasCondition(target.conditions, "poisoned"),
     targetEffectCount: target.activeEffects.length,
     casterConcentrating: caster.concentration !== null,
-    targetHasPoisonResistance: target.activeEffects.some((effect) =>
-      isProtectionFromPoisonResistance(protectionProcedureRef, effect),
-    ),
-    targetHasPoisonSaveAdvantage: target.activeEffects.some((effect) =>
-      isProtectionFromPoisonSaveAdvantage(protectionProcedureRef, effect),
-    ),
+    targetHasPoisonResistance:
+      poisonResistance !== undefined &&
+      poisonSaveAdvantage?.sourceProcedureRef ===
+        poisonResistance.sourceProcedureRef,
+    targetHasPoisonSaveAdvantage:
+      poisonSaveAdvantage !== undefined &&
+      poisonResistance?.sourceProcedureRef ===
+        poisonSaveAdvantage.sourceProcedureRef,
     secondLevelSlotsExpended: secondLevelSlotsExpended(caster),
     actionAvailable: snapshot.turn.actionResources.some(
       (resource) => resource.source === "turn",
@@ -439,42 +481,17 @@ function secondLevelSlotsExpended(
 }
 
 function isProtectionFromPoisonResistance(
-  procedureRef: BattleProcedureExecutionRef,
   effect: BattleActiveEffect,
 ): effect is DamageResistanceEffect {
-  return (
-    effect.kind === "damageResistance" &&
-    effect.sourceProcedureRef === procedureRef &&
-    effect.damageType === "poison"
-  );
+  return effect.kind === "damageResistance" && effect.damageType === "poison";
 }
 
 function isProtectionFromPoisonSaveAdvantage(
-  procedureRef: BattleProcedureExecutionRef,
   effect: BattleActiveEffect,
 ): effect is ConditionSavingThrowRollModeEffect {
   return (
     effect.kind === "conditionSavingThrowRollMode" &&
-    effect.sourceProcedureRef === procedureRef &&
     effect.condition === "poisoned" &&
     effect.mode === "advantage"
   );
-}
-
-function protectionFromPoisonProcedureRef(
-  state: BattleState,
-): BattleProcedureExecutionRef {
-  const caster = state.combatants.get(spellCasterId);
-  if (caster?.origin.kind !== "character") {
-    throw new Error("Expected Protection from Poison caster.");
-  }
-  const binding = caster.origin.execution.procedureBindings.find(
-    (candidate) =>
-      candidate.procedure.kind === "spellInvocation" &&
-      candidate.procedure.execution.procedure === "conditionRemovalProtection",
-  );
-  if (binding === undefined) {
-    throw new Error("Expected Protection from Poison mechanical procedure.");
-  }
-  return binding.procedureRef;
 }

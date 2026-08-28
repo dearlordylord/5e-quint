@@ -1,5 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import { battleStateWithAllocatedEffectOccurrencesForTest } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN
 // RAW trace:
@@ -547,9 +547,7 @@ function voluntarilyEndConcentration(
 function castReplacementConcentrationSpell(
   state: ConcentrationBreakTeardownRuntimeState,
 ): ConcentrationBreakTeardownRuntimeState {
-  const beforeReplacement = stateWithPreexistingBlurConcentration(
-    state.battle.state,
-  );
+  const beforeReplacement = stateWithPreexistingBlurConcentration(state.battle);
   const replaced = stateAfterBlurCast({
     ...state,
     battle: battleRuntimeSessionForTest({
@@ -566,33 +564,36 @@ function castReplacementConcentrationSpell(
 }
 
 function stateWithPreexistingBlurConcentration(
-  state: BattleState,
+  battle: BattleRuntimeSession,
 ): BattleState {
-  const caster = requireCombatant(state, spellCasterId);
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(spellCasterId, {
-      ...caster,
-      concentration: {
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(blurUnitId),
-        ),
-        effectKind: "spellEffect",
-      },
-      activeEffects: [
-        ...caster.activeEffects,
-        {
+  const procedureRef = concentrationSpellCastAct(battle).subject.procedureRef;
+  const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+    state: battle.state,
+    occurrences: [
+      {
+        kind: "activeEffect",
+        ownerId: spellCasterId,
+        effect: {
           kind: "blurred",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(blurUnitId),
-          ),
+          sourceProcedureRef: procedureRef,
           sourceCombatantId: spellCasterId,
           expiresAt: {
             kind: "concentration",
             combatantId: spellCasterId,
           },
         },
-      ],
+      },
+    ],
+  });
+  const caster = requireCombatant(allocated.state, spellCasterId);
+  return {
+    ...allocated.state,
+    combatants: new Map(allocated.state.combatants).set(spellCasterId, {
+      ...caster,
+      concentration: {
+        sourceProcedureRef: procedureRef,
+        effectKind: "spellEffect",
+      },
     }),
   };
 }

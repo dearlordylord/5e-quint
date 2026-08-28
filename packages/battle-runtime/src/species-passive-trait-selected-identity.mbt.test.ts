@@ -1,6 +1,7 @@
 import {
-  battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   characterBattleFeatureInitForTest,
+  requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { battleReducerRouteEventsForDiscoveredAct } from "./battle-reducer/reducer-route.ts";
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
@@ -41,8 +42,8 @@ import {
   combatantId,
   discoverBattleActCandidates,
   endTurn,
+  spellSlotInvocationRef,
   startBattle,
-  type BattleActiveEffect,
   type BattleState,
   type BattleSubject,
 } from "./index.ts";
@@ -51,6 +52,7 @@ import {
   dwarfDwarvenResilienceUnitId,
   speciesHalflingBraveUnitId,
   speciesDragonbornDamageResistanceUnitId,
+  rayOfSicknessUnitId,
   unitLibrary,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { characterCreature } from "./unit-profile-admission-creature-fixture.test-support.ts";
@@ -348,46 +350,62 @@ function poisonedDwarvenResilienceEndTurnBattle(): BattleState {
         combatantId: wizardId,
         displayName: "Poison Source",
         initiative: 10,
+        attack: null,
+        spellcasting: wizardSpellcasting({
+          preparedSpells: [spellRecord(rayOfSicknessUnitId)],
+          spellSlots: [{ spellLevel: 1, count: 1 }],
+        }),
       }),
     ],
   });
   if (Result.isFailure(result)) {
     throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  const target = result.success.state.combatants.get(
+  const procedureRef = requireCharacterSpellProcedureRefForTest(
+    result.success,
+    wizardId,
+    spellSlotInvocationRef(rayOfSicknessUnitId, 1, "spellAttackDamage"),
+  );
+  const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+    state: result.success.state,
+    occurrences: [
+      {
+        kind: "activeEffect",
+        ownerId: poisonedDwarvenResilienceTargetId,
+        effect: {
+          kind: "spellConditionEndTurnSave",
+          sourceProcedureRef: procedureRef,
+          sourceCombatantId: wizardId,
+          condition: "poisoned",
+          conditionHadNonSpellSource: false,
+          heightenedSpellTargetDisadvantage: null,
+          save: {
+            ability: "con",
+            dc: { kind: "caster_spell_save_dc" },
+          },
+          expiresAt: {
+            kind: "duration",
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+    ],
+  });
+  const target = allocated.state.combatants.get(
     poisonedDwarvenResilienceTargetId,
   );
   if (target === undefined) {
     throw new Error("Expected poisoned Dwarven Resilience target.");
   }
-  const poisonedEffect = {
-    kind: "spellConditionEndTurnSave",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String("synthetic_poison_condition_save"),
-    ),
-    sourceCombatantId: wizardId,
-    condition: "poisoned",
-    conditionHadNonSpellSource: false,
-    heightenedSpellTargetDisadvantage: null,
-    save: {
-      ability: "con",
-      dc: { kind: "caster_spell_save_dc" },
-    },
-    expiresAt: {
-      kind: "duration",
-      durationTicks: elapsedTimeTicks(10),
-    },
-  } satisfies BattleActiveEffect;
   const poisonedTarget = {
     ...testBattleCreatureStateWithConditions(
       target,
       applyCondition(target.conditions, "poisoned"),
     ),
-    activeEffects: [...target.activeEffects, poisonedEffect],
   };
   return {
-    ...result.success.state,
-    combatants: new Map(result.success.state.combatants).set(
+    ...allocated.state,
+    combatants: new Map(allocated.state.combatants).set(
       poisonedDwarvenResilienceTargetId,
       poisonedTarget,
     ),
