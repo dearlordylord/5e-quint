@@ -12,7 +12,12 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION species_halfling_nimbleness
 import { abilityModifier, Hp } from "@dnd/shared/types";
 import { Result } from "effect";
-import { battleActUnitPresentation } from "./battle-act-composition.ts";
+import {
+  battleActSpellPresentation,
+  battleActUnitPresentation,
+} from "./battle-act-composition.ts";
+import { advanceToActorNextTurnForTest } from "./spell-effect-fixture.test-support.ts";
+import { knownWillingSpellTargetFill } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
   BattleInterruptProcedureChoiceSchema,
@@ -59,7 +64,6 @@ import {
   difficultyClass,
   discoverBattleActCandidates,
   discoverBattleActs,
-  elapsedTimeTicks,
   endTurn,
   fighterAttackSubject,
   fighterGrapplesGoblin,
@@ -108,7 +112,6 @@ import {
 } from "./battle-runtime.test-support.ts";
 import {
   assertBattleSnapshotCodecRoundTripForTest,
-  battleStateWithAllocatedEffectOccurrencesForTest,
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
   requireCharacterUnitProcedureRefForTest,
@@ -3651,8 +3654,13 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       combatants: [
         characterSeed({
           initiative: 20,
-          classLevels: [{ className: "wizard", level: 3 }],
+          classLevels: [{ className: "fighter", level: 1 }],
           characterUnitRefs: grapplerUnitRefs(),
+        }),
+        characterSeed({
+          combatantId: wizardId,
+          initiative: 15,
+          classLevels: [{ className: "wizard", level: 3 }],
           spellcasting: wizardSpellcasting({
             preparedSpells: [spellRecord("enlarge_reduce")],
             spellSlots: [{ spellLevel: 2, count: 1 }],
@@ -3661,19 +3669,22 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const state = sizeChangeSession.state;
     const grappleSubject: BattleSubject = {
       tag: "action",
       actorId: fighterId,
       action: "grapple",
     };
     const target = requireHole(
-      resolveBattleSubject({ state, subject: grappleSubject, fills: [] }),
+      resolveBattleSubject({
+        state: sizeChangeSession.state,
+        subject: grappleSubject,
+        fills: [],
+      }),
       "targetChoice",
     );
     const outcome = requireHole(
       resolveBattleSubject({
-        state,
+        state: sizeChangeSession.state,
         subject: grappleSubject,
         fills: [targetFill(target, skeletonId)],
       }),
@@ -3681,7 +3692,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     );
     const grappled = requireResolved(
       resolveBattleSubject({
-        state,
+        state: sizeChangeSession.state,
         subject: grappleSubject,
         fills: [
           targetFill(target, skeletonId),
@@ -3689,34 +3700,65 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         ],
       }),
     ).state;
-    const enlarged = battleStateWithAllocatedEffectOccurrencesForTest({
-      state: grappled,
-      occurrences: [
-        {
-          kind: "activeEffect",
-          ownerId: skeletonId,
-          effect: {
-            kind: "spellCreatureSizeChange",
-            sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
-              sizeChangeSession,
-              fighterId,
-              spellSlotInvocationRef(
-                "enlarge_reduce",
-                2,
-                "creatureSizeIncrease",
-              ),
+    expect(grappled.grapples).toContainEqual(
+      expect.objectContaining({ grapplerId: fighterId, targetId: skeletonId }),
+    );
+    const wizardTurn = requireResolved(
+      endTurn({ state: grappled, actorId: fighterId }),
+    ).state;
+    const wizardSession = battleRuntimeSessionForTest({
+      ...sizeChangeSession,
+      state: wizardTurn,
+    });
+    const expectedSizeChange = spellSlotInvocationRef(
+      "enlarge_reduce",
+      2,
+      "creatureSizeIncrease",
+    );
+    const sizeChangeAct = discoverBattleActs(wizardSession).find(
+      (candidate) => {
+        const invocation = battleActSpellPresentation(candidate)?.invocation;
+        return (
+          candidate.subject.actorId === wizardId &&
+          candidate.subject.tag === "actionSpell" &&
+          invocation?.tag === "spellSlot" &&
+          invocation.spellId === expectedSizeChange.spellId &&
+          invocation.procedure === expectedSizeChange.procedure &&
+          invocation.slotLevel === 2
+        );
+      },
+    );
+    if (sizeChangeAct?.subject.tag !== "actionSpell") {
+      throw new Error("Expected the admitted Enlarge invocation.");
+    }
+    const sizeTarget = requireHole(
+      resolveBattleSubject({
+        state: wizardTurn,
+        subject: sizeChangeAct.subject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const enlarged = advanceToActorNextTurnForTest(
+      requireResolved(
+        resolveBattleSubject({
+          state: wizardTurn,
+          subject: sizeChangeAct.subject,
+          fills: [
+            knownWillingSpellTargetFill(
+              sizeTarget,
+              "enlarge_reduce",
+              wizardId,
+              skeletonId,
             ),
-            sourceCombatantId: fighterId,
-            direction: "increase",
-            expiresAt: {
-              kind: "concentration",
-              combatantId: fighterId,
-              durationTicks: elapsedTimeTicks(60),
-            },
-          },
-        },
-      ],
-    }).state;
+          ],
+        }),
+      ).state,
+      fighterId,
+    );
+    expect(enlarged.grapples).toContainEqual(
+      expect.objectContaining({ grapplerId: fighterId, targetId: skeletonId }),
+    );
     const moveSubject: BattleSubject = {
       tag: "runtimeCommand",
       actorId: fighterId,

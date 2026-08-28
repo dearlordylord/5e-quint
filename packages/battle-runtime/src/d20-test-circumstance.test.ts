@@ -14,7 +14,6 @@ import {
   movementFeet,
 } from "@dnd/shared/types";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
-import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { combatantId } from "./identity.ts";
 import type { BattleFill, BattleHole } from "./battle-state-execution.ts";
 import type { CharacterBattleClassLevelInits } from "./character-class-level.ts";
@@ -28,23 +27,19 @@ import {
   attackRollFill,
   battleId,
   battleProcedureExecutionRefForTest,
-  battleStateWithAllocatedEffectOccurrencesForTest,
   characterBattleFeatureInitForTest,
   characterSeed,
   damageRollFillWithGroups,
-  elapsedTimeTicks,
   fighterAttackSubject,
   fighterId,
   goblinId,
   discoverBattleActs,
   findHole,
-  requireCharacterSpellProcedureRefForTest,
   requireCharacterUnitProcedureRefForTest,
   savingThrowOutcomeFill,
   startBattleSessionRight,
   statBlockCreatureInit,
   spellRecord,
-  testBattleCreatureStateWithConditions,
   targetFill,
   secondSkeletonId,
   skeletonId,
@@ -61,6 +56,10 @@ import {
   battleRuntimeSessionWithState,
 } from "./battle-runtime-context.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import {
+  spellConditionChoiceFill,
+  spellTargetListFill,
+} from "./unit-profile-admission-spell-fill.test-support.ts";
 import { attackRollHasAdvantageSource } from "./battle-reducer/attack-roll.ts";
 import { uniqueSavingThrowRollModeProjections } from "./battle-reducer/saving-throw-roll-mode-projections.ts";
 import {
@@ -82,6 +81,32 @@ const PROPERTY_OPTIONS = { numRuns: 64, seed: 0x279 } as const;
 const resolutionId = d20TestResolutionId("synthetic-resolution");
 const firstTargetId = combatantId("synthetic-first-target");
 const secondTargetId = combatantId("synthetic-second-target");
+
+function requireSaveConditionSpellAct(
+  session: Parameters<typeof discoverBattleActs>[0],
+  selectedSpellId: "hold_person" | "blindness_deafness",
+) {
+  const expected = spellSlotInvocationRef(
+    selectedSpellId,
+    2,
+    "saveGatedCondition",
+  );
+  const act = discoverBattleActs(session).find((candidate) => {
+    const invocation = battleActSpellPresentation(candidate)?.invocation;
+    return (
+      candidate.subject.actorId === fighterId &&
+      candidate.subject.tag === "actionSpell" &&
+      invocation?.tag === "spellSlot" &&
+      invocation.spellId === expected.spellId &&
+      invocation.procedure === expected.procedure &&
+      invocation.slotLevel === 2
+    );
+  });
+  if (act?.subject.tag !== "actionSpell") {
+    throw new Error(`Expected the admitted ${selectedSpellId} invocation.`);
+  }
+  return act;
+}
 
 // These focused fixtures contain only the fields read by the circumstance
 // projector; complete procedure payloads are covered by their owning tests.
@@ -1071,116 +1096,124 @@ describe("Table-authored per-test D20 circumstances", () => {
             spellSlots: [{ spellLevel: 2, count: 2 }],
           }),
         }),
-        statBlockCreatureInit({ initiative: 10 }),
+        characterSeed({
+          combatantId: goblinId,
+          displayName: "Synthetic Humanoid Save Target",
+          initiative: 10,
+          attack: null,
+        }),
       ],
     });
-    const holdPersonProcedureRef = requireCharacterSpellProcedureRefForTest(
-      baseSession,
+    const holdAct = requireSaveConditionSpellAct(baseSession, "hold_person");
+    const holdTarget = findHole(holdAct.initialHoles, "spellTargetList");
+    const holdTargetFill = spellTargetListFill(
+      holdTarget,
       fighterId,
-      spellSlotInvocationRef("hold_person", 2, "saveGatedCondition"),
+      "hold_person",
+      [goblinId],
     );
-    const blindnessProcedureRef = requireCharacterSpellProcedureRefForTest(
-      baseSession,
-      fighterId,
-      spellSlotInvocationRef("blindness_deafness", 2, "saveGatedCondition"),
-    );
-    const firstTurn = endBattleRuntimeTurn({
+    const awaitingHoldSave = resolveBattleRuntimeSubject({
       session: baseSession,
+      subject: holdAct.subject,
+      fills: [holdTargetFill],
+    });
+    if (awaitingHoldSave.tag !== "needsHoles") {
+      throw new Error(
+        `Expected Hold Person's initial save, got ${awaitingHoldSave.tag}${"message" in awaitingHoldSave ? `: ${awaitingHoldSave.message}` : ""}.`,
+      );
+    }
+    const holdSave = findHole(awaitingHoldSave.holes, "savingThrowOutcome");
+    const held = resolveBattleRuntimeSubject({
+      session: baseSession,
+      subject: holdAct.subject,
+      fills: [
+        holdTargetFill,
+        savingThrowOutcomeFill(holdSave, [
+          { targetId: goblinId, succeeded: false },
+        ]),
+      ],
+    });
+    expect(held.tag).toBe("resolved");
+    if (held.tag !== "resolved") return;
+    const targetTurn = endBattleRuntimeTurn({
+      session: held.session,
       actorId: fighterId,
     });
-    expect(firstTurn.tag).toBe("resolved");
-    if (firstTurn.tag !== "resolved") return;
-    const goblin = firstTurn.session.state.combatants.get(goblinId);
-    if (goblin === undefined) throw new Error("Expected Goblin.");
-    const caster = firstTurn.session.state.combatants.get(fighterId);
-    if (caster === undefined) throw new Error("Expected spell caster.");
-    const effect = (input: {
-      readonly sourceProcedureRef: typeof holdPersonProcedureRef;
-      readonly condition: "paralyzed" | "blinded";
-      readonly ability: "wis" | "con";
-      readonly expiresAt:
-        | {
-            readonly kind: "concentration";
-            readonly combatantId: typeof fighterId;
-            readonly durationTicks: ReturnType<typeof elapsedTimeTicks>;
-          }
-        | {
-            readonly kind: "duration";
-            readonly durationTicks: ReturnType<typeof elapsedTimeTicks>;
-          };
-    }) =>
-      ({
-        kind: "spellConditionEndTurnSave",
-        sourceProcedureRef: input.sourceProcedureRef,
-        sourceCombatantId: fighterId,
-        condition: input.condition,
-        conditionHadNonSpellSource: false,
-        heightenedSpellTargetDisadvantage: null,
-        save: {
-          ability: input.ability,
-          dc: { kind: "fixed", dc: difficultyClass(12) },
-        },
-        expiresAt: input.expiresAt,
-      }) as const;
-    const conditionedState = {
-      ...firstTurn.session.state,
-      combatants: new Map(firstTurn.session.state.combatants)
-        .set(fighterId, {
-          ...caster,
-          concentration: {
-            sourceProcedureRef: holdPersonProcedureRef,
-            effectKind: "spellEffect" as const,
-          },
-        })
-        .set(
-          goblinId,
-          testBattleCreatureStateWithConditions(
-            goblin,
-            applyCondition(
-              applyCondition(goblin.conditions, "paralyzed"),
-              "blinded",
-            ),
-          ),
-        ),
-    };
-    const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
-      state: conditionedState,
-      occurrences: [
-        {
-          kind: "activeEffect",
-          ownerId: goblinId,
-          effect: effect({
-            sourceProcedureRef: holdPersonProcedureRef,
-            condition: "paralyzed",
-            ability: "wis",
-            expiresAt: {
-              kind: "concentration",
-              combatantId: fighterId,
-              durationTicks: elapsedTimeTicks(10),
-            },
-          }),
-        },
-        {
-          kind: "activeEffect",
-          ownerId: goblinId,
-          effect: effect({
-            sourceProcedureRef: blindnessProcedureRef,
-            condition: "blinded",
-            ability: "con",
-            expiresAt: {
-              kind: "duration",
-              durationTicks: elapsedTimeTicks(10),
-            },
-          }),
-        },
+    expect(targetTurn.tag).toBe("resolved");
+    if (targetTurn.tag !== "resolved") return;
+    const firstRepeat = endBattleRuntimeTurn({
+      session: targetTurn.session,
+      actorId: goblinId,
+    });
+    expect(firstRepeat.tag).toBe("needsHoles");
+    if (firstRepeat.tag !== "needsHoles") return;
+    const holdRepeatSave = findHole(firstRepeat.holes, "savingThrowOutcome");
+    const casterTurn = endBattleRuntimeTurn({
+      session: targetTurn.session,
+      actorId: goblinId,
+      fills: [
+        savingThrowOutcomeFill(holdRepeatSave, [
+          { targetId: goblinId, succeeded: false },
+        ]),
       ],
     });
-    const session = battleRuntimeSessionWithState(
-      firstTurn.session,
-      allocated.state,
+    expect(casterTurn.tag).toBe("resolved");
+    if (casterTurn.tag !== "resolved") return;
+    const blindnessAct = requireSaveConditionSpellAct(
+      casterTurn.session,
+      "blindness_deafness",
     );
+    const blindnessTarget = findHole(
+      blindnessAct.initialHoles,
+      "spellTargetList",
+    );
+    const blindnessCondition = findHole(
+      blindnessAct.initialHoles,
+      "conditionChoice",
+    );
+    const blindnessTargetFill = spellTargetListFill(
+      blindnessTarget,
+      fighterId,
+      "blindness_deafness",
+      [goblinId],
+    );
+    const blindnessConditionFill = spellConditionChoiceFill(
+      blindnessCondition,
+      "blinded",
+    );
+    const awaitingBlindnessSave = resolveBattleRuntimeSubject({
+      session: casterTurn.session,
+      subject: blindnessAct.subject,
+      fills: [blindnessTargetFill, blindnessConditionFill],
+    });
+    if (awaitingBlindnessSave.tag !== "needsHoles") {
+      throw new Error("Expected Blindness/Deafness's initial save.");
+    }
+    const blindnessSave = findHole(
+      awaitingBlindnessSave.holes,
+      "savingThrowOutcome",
+    );
+    const blinded = resolveBattleRuntimeSubject({
+      session: casterTurn.session,
+      subject: blindnessAct.subject,
+      fills: [
+        blindnessTargetFill,
+        blindnessConditionFill,
+        savingThrowOutcomeFill(blindnessSave, [
+          { targetId: goblinId, succeeded: false },
+        ]),
+      ],
+    });
+    expect(blinded.tag).toBe("resolved");
+    if (blinded.tag !== "resolved") return;
+    const session = endBattleRuntimeTurn({
+      session: blinded.session,
+      actorId: fighterId,
+    });
+    expect(session.tag).toBe("resolved");
+    if (session.tag !== "resolved") return;
     const result = endBattleRuntimeTurnWithTableD20TestCircumstances({
-      session,
+      session: session.session,
       actorId: goblinId,
       fills: [],
       d20TestResolutionId: d20TestResolutionId("end-turn-save-requests"),

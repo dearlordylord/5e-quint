@@ -4,13 +4,15 @@ import { passiveSavingThrowRollModeRouteEvents } from "./index.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-BARBARIAN-DANGER-SENSE barbarian_danger_sense
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.passive-saving-throw-roll-mode
 import {
-  battleStateWithAllocatedEffectOccurrencesForTest,
   characterBattleFeatureInitForTest,
-  requireCharacterSpellProcedureRefForTest,
+  discoverBattleActs,
+  requireResolved,
+  resolveBattleSubject,
   spellRecord,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import { spellSlotInvocationRef } from "./index.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import { Result } from "effect";
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
@@ -22,7 +24,6 @@ import {
   battlePassiveSavingThrowRollModeSupportForUnit,
   battleUnitRefWithSupportProfiles,
   classLevel,
-  elapsedTimeTicks,
   endTurn,
   greaseAreaId,
   greaseGroundHazardEndTurnAct,
@@ -325,37 +326,52 @@ function dangerSenseGreaseGroundHazardBattle(input?: {
 }): BattleRuntimeSession {
   const session = dangerSenseBattle();
   const state = session.state;
-  const caster = state.combatants.get(spellCasterId);
   const target = state.combatants.get(spellTargetId);
-  if (caster === undefined || target === undefined) {
+  if (target === undefined) {
     throw new Error("Expected Danger Sense Grease combatants.");
   }
-  const allocatedState = battleStateWithAllocatedEffectOccurrencesForTest({
-    state,
-    occurrences: [
-      {
-        kind: "activeEffect",
-        ownerId: spellCasterId,
-        effect: {
-          kind: "greaseGroundHazard",
-          sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
-            session,
-            spellCasterId,
-            spellSlotInvocationRef(greaseUnitId, 1, "greaseGroundHazard"),
-          ),
-          sourceCombatantId: spellCasterId,
-          areaId: greaseAreaId,
-          heightenedSpellTargetDisadvantage: null,
-          save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
-          expiresAt: {
-            kind: "duration",
-            durationTicks: elapsedTimeTicks(10),
+  const expected = spellSlotInvocationRef(
+    greaseUnitId,
+    1,
+    "greaseGroundHazard",
+  );
+  const act = discoverBattleActs(session).find((candidate) => {
+    const invocation = battleActSpellPresentation(candidate)?.invocation;
+    return (
+      candidate.subject.actorId === spellCasterId &&
+      candidate.subject.tag === "actionSpell" &&
+      invocation?.tag === "spellSlot" &&
+      invocation.spellId === expected.spellId &&
+      invocation.procedure === expected.procedure &&
+      invocation.slotLevel === 1
+    );
+  });
+  if (act?.subject.tag !== "actionSpell") {
+    throw new Error("Expected the admitted Grease invocation.");
+  }
+  const save = requireHole(act.initialHoles, "savingThrowOutcome");
+  const castState = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        {
+          kind: "savingThrowOutcome",
+          holeId: save.holeId,
+          value: {
+            area: {
+              kind: "greaseGroundArea",
+              originAnchorId: spellCasterId,
+              affectedTargetIds: [],
+              areaId: greaseAreaId,
+            },
+            outcomes: [],
           },
         },
-      },
-    ],
-  }).state;
-  const nextCombatants = new Map(allocatedState.combatants);
+      ],
+    }),
+  ).state;
+  const nextCombatants = new Map(castState.combatants);
   if (input?.incapacitated === true) {
     nextCombatants.set(spellTargetId, {
       ...battleCreatureStateWithKnockOutPreservedConditions(
@@ -365,7 +381,7 @@ function dangerSenseGreaseGroundHazardBattle(input?: {
     });
   }
   const targetTurn = endTurn({
-    state: { ...allocatedState, combatants: nextCombatants },
+    state: { ...castState, combatants: nextCombatants },
     actorId: spellCasterId,
   });
   expect(targetTurn.tag).toBe("resolved");
