@@ -23,7 +23,6 @@ describe("restricted Stat Block invocation delta evidence", () => {
       classification: {
         rowCount: 23,
         recordCount: 21,
-        researchedFamilyCount: 11,
         deltaVocabularyCount: 11,
         deltaOccurrenceCount: 49,
       },

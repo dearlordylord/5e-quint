@@ -20,7 +20,6 @@ const EXPECTED_RECONCILIATION_OCCURRENCE_COUNT = 2602;
 const EXPECTED_RECONCILIATION_FAMILY_COUNT = 20;
 const EXPECTED_RESTRICTED_INVOCATION_ROW_COUNT = 23;
 const EXPECTED_RESTRICTED_INVOCATION_RECORD_COUNT = 21;
-const EXPECTED_RESEARCHED_FAMILY_COUNT = 11;
 const EXPECTED_DELTA_OCCURRENCE_COUNT = 49;
 
 const EXPECTED_DELTA_OCCURRENCES_BY_KIND = {
@@ -64,7 +63,6 @@ export type RestrictedInvocationDeltaEvidence = {
   readonly classification: {
     readonly rowCount: 23;
     readonly recordCount: 21;
-    readonly researchedFamilyCount: 11;
     readonly deltaVocabularyCount: 11;
     readonly deltaOccurrenceCount: 49;
     readonly deltaKindCounts: readonly {
@@ -323,7 +321,6 @@ export function validateRestrictedInvocationDeltaEvidence(input: {
       classification: {
         rowCount: EXPECTED_RESTRICTED_INVOCATION_ROW_COUNT,
         recordCount: EXPECTED_RESTRICTED_INVOCATION_RECORD_COUNT,
-        researchedFamilyCount: EXPECTED_RESEARCHED_FAMILY_COUNT,
         deltaVocabularyCount: STAT_BLOCK_SPELL_INVOCATION_DELTA_KINDS.length,
         deltaOccurrenceCount: EXPECTED_DELTA_OCCURRENCE_COUNT,
         deltaKindCounts: STAT_BLOCK_SPELL_INVOCATION_DELTA_KINDS.map(
