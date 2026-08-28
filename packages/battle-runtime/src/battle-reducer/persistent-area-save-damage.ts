@@ -392,9 +392,21 @@ function sameCloudkillMovementSaveDamagePosition(
   left: BattleStartTurnOccurrenceSequenceCheckpoint,
   right: BattleStartTurnOccurrenceSequenceCheckpoint,
 ): boolean {
+  const leftSequence = left.sequence;
+  const rightSequence = right.sequence;
   return (
     left.kind === right.kind &&
-    left.sequence.kind === right.sequence.kind &&
+    leftSequence.kind === rightSequence.kind &&
+    (leftSequence.kind === "single"
+      ? rightSequence.kind === "single" &&
+        leftSequence.occurrenceId === rightSequence.occurrenceId
+      : rightSequence.kind === "ordered" &&
+        leftSequence.occurrenceIds.length ===
+          rightSequence.occurrenceIds.length &&
+        leftSequence.occurrenceIds.every(
+          (occurrenceId, index) =>
+            occurrenceId === rightSequence.occurrenceIds[index],
+        )) &&
     left.sourceTurn.actorId === right.sourceTurn.actorId &&
     left.sourceTurn.round === right.sourceTurn.round &&
     left.child.areaId === right.child.areaId &&
@@ -1138,6 +1150,15 @@ export function cloudkillAreaHazardSavingThrowOutcomeHole(
     },
     ...persistentAreaSavingThrowHoleFacts(state, targetId, effect),
   };
+}
+
+export function cloudkillMovementSavingThrowHoleId(
+  checkpoint: BattleStartTurnOccurrenceSequenceCheckpoint,
+): BattleHoleId {
+  const { child, sourceTurn } = checkpoint;
+  return holeId(
+    `battle:cloudkill-area-hazard-save:${child.targetId}:${sourceTurn.actorId}:${child.sourceProcedureRef}:${child.areaId}:movesIntoSpace:${sourceTurn.actorId}:${Number(sourceTurn.round)}`,
+  );
 }
 
 function cloudkillAreaHazardDamageRollHole(

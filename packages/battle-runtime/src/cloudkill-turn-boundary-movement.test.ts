@@ -1945,13 +1945,35 @@ describe("Cloudkill source-turn movement", () => {
       subject: declined.subject,
       fills: [firstMovementFill, saveFill, damageFill],
     });
+    if (concentrationFrontier.tag !== "needsHoles") {
+      throw new Error("Expected movement Concentration frontier.");
+    }
     const concentrationFill = concentrationSavingThrowFill(
       requireResultHole(concentrationFrontier, "concentrationSavingThrow"),
       true,
     );
-    if (concentrationFrontier.tag !== "needsHoles") {
-      throw new Error("Expected movement Concentration frontier.");
+    if (concentrationFill.kind !== "concentrationSavingThrow") {
+      throw new Error("Expected a Concentration Saving Throw fill.");
     }
+    const duplicateConcentration = resolveBattleSubject({
+      state: concentrationFrontier.state,
+      subject: declined.subject,
+      fills: [
+        orderFill,
+        firstMovementFill,
+        saveFill,
+        damageFill,
+        concentrationFill,
+        {
+          ...concentrationFill,
+          value: { ...concentrationFill.value, succeeded: false },
+        },
+      ],
+    });
+    expect(duplicateConcentration).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
     const stateWithoutRetainedOrder = {
       ...concentrationFrontier.state,
       interruptStack: concentrationFrontier.state.interruptStack.map((entry) =>
@@ -1971,7 +1993,7 @@ describe("Cloudkill source-turn movement", () => {
     };
     const missingRetainedOrder = resolveBattleSubject({
       state: stateWithoutRetainedOrder,
-      subject: concentrationFrontier.subject,
+      subject: declined.subject,
       fills: [
         firstMovementFill,
         saveFill,
@@ -1980,6 +2002,48 @@ describe("Cloudkill source-turn movement", () => {
       ],
     });
     expect(missingRetainedOrder).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+    });
+    const stateWithAlteredOrder = {
+      ...concentrationFrontier.state,
+      interruptStack: concentrationFrontier.state.interruptStack.map((entry) =>
+        entry.kind === "replayContinuation" &&
+        entry.continuation.kind === "replay"
+          ? {
+              ...entry,
+              continuation: {
+                ...entry.continuation,
+                fills: entry.continuation.fills.map((fill) =>
+                  fill.kind === "startTurnOccurrenceOrder"
+                    ? {
+                        ...fill,
+                        value: {
+                          occurrenceIds: [
+                            fill.value.occurrenceIds[1],
+                            fill.value.occurrenceIds[0],
+                            ...fill.value.occurrenceIds.slice(2),
+                          ] as const,
+                        },
+                      }
+                    : fill,
+                ),
+              },
+            }
+          : entry,
+      ),
+    };
+    const alteredRetainedOrder = endTurn({
+      state: stateWithAlteredOrder,
+      actorId: spellTargetId,
+      fills: [
+        firstMovementFill,
+        saveFill,
+        damageFill,
+        concentrationFill,
+      ],
+    });
+    expect(alteredRetainedOrder).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
     });

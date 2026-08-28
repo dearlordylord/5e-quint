@@ -738,7 +738,19 @@ export type BattleAttackDamageInterruptionFrame = {
 };
 export type BattleStartTurnOccurrenceSequenceCheckpoint = {
   readonly kind: "startTurnOccurrenceSequence";
-  readonly sequence: { readonly kind: "single" } | { readonly kind: "ordered" };
+  readonly sequence:
+    | {
+        readonly kind: "single";
+        readonly occurrenceId: BattleStartTurnOccurrenceOption["occurrenceId"];
+      }
+    | {
+        readonly kind: "ordered";
+        readonly occurrenceIds: readonly [
+          BattleStartTurnOccurrenceOption["occurrenceId"],
+          BattleStartTurnOccurrenceOption["occurrenceId"],
+          ...BattleStartTurnOccurrenceOption["occurrenceId"][],
+        ];
+      };
   readonly sourceTurn: {
     readonly actorId: CombatantId;
     readonly round: RoundType;

@@ -142,6 +142,7 @@ import {
 import { hideousLaughterRepeatSavingThrowOutcomeHole } from "./hideous-laughter-repeat-save.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import {
+  cloudkillMovementSavingThrowHoleId,
   resolveCloudkillMovementSaveDamageSequence,
   type CloudkillAreaHazardEffect,
   type CloudkillMovementSaveDamageRequest,
@@ -293,6 +294,17 @@ function cloudkillStartTurnMovementHole(
 
 type StartTurnOccurrenceOption =
   BattleStartTurnOccurrenceOrderHole["occurrences"][number];
+
+function startTurnOccurrenceSequence(
+  occurrenceIds: readonly StartTurnOccurrenceOption["occurrenceId"][],
+): BattleStartTurnOccurrenceSequenceCheckpoint["sequence"] | undefined {
+  const first = occurrenceIds[0];
+  if (first === undefined) return undefined;
+  const second = occurrenceIds[1];
+  return second === undefined
+    ? { kind: "single", occurrenceId: first }
+    : { kind: "ordered", occurrenceIds: [first, second, ...occurrenceIds.slice(2)] };
+}
 
 type StartTurnOccurrenceHandle =
   | { readonly kind: "deathSavingThrow" }
@@ -529,12 +541,14 @@ function completeCloudkillMovementSequenceResume(
   fills: readonly BattleFill[],
   checkpoint: BattleStartTurnOccurrenceSequenceCheckpoint,
   parent: ReplayParentContinuation,
+  previouslyAcceptedHoleIds: readonly BattleHoleId[],
 ): BattleResolutionResult {
   return resolveStartTurnOccurrenceSuffixAfterMovement({
     state,
     fills,
     checkpoint,
     parent,
+    previouslyAcceptedHoleIds,
   });
 }
 
@@ -543,6 +557,7 @@ function resolveStartTurnOccurrenceSuffixAfterMovement(input: {
   readonly fills: readonly BattleFill[];
   readonly checkpoint: BattleStartTurnOccurrenceSequenceCheckpoint;
   readonly parent: ReplayParentContinuation;
+  readonly previouslyAcceptedHoleIds: readonly BattleHoleId[];
 }): BattleResolutionResult {
   const { checkpoint } = input;
   const orderHoleId = holeId(startTurnOccurrenceOrderHoleKey(checkpoint.sourceTurn));
@@ -556,21 +571,26 @@ function resolveStartTurnOccurrenceSuffixAfterMovement(input: {
       fill.kind === "startTurnOccurrenceOrder" &&
       fill.holeId === orderHoleId,
   );
-  if (orderFills.length === 0) {
-    if (checkpoint.sequence.kind === "ordered") {
+  if (checkpoint.sequence.kind === "single") {
+    if (
+      checkpoint.sequence.occurrenceId !==
+        cloudkillMovementOccurrenceOption(checkpoint.child).occurrenceId ||
+      orderFills.length > 0
+    ) {
       return invalidResult(
         input.state,
         "staleSubject",
-        "Ordered start-turn occurrence continuation lost its retained order.",
+        "Single start-turn occurrence continuation does not match its retained occurrence.",
       );
     }
-    return {
-      tag: "resolved",
-      state: input.state,
-      snapshot: snapshotBattle(input.state),
-    };
+  } else if (orderFills.length === 0) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Ordered start-turn occurrence continuation lost its retained order.",
+    );
   }
-  if (orderFills.length !== 1) {
+  if (checkpoint.sequence.kind === "ordered" && orderFills.length !== 1) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -580,8 +600,28 @@ function resolveStartTurnOccurrenceSuffixAfterMovement(input: {
   const currentOccurrenceId = cloudkillMovementOccurrenceOption(
     checkpoint.child,
   ).occurrenceId;
-  const currentIndex =
-    orderFills[0]!.value.occurrenceIds.indexOf(currentOccurrenceId);
+  const orderedCheckpoint =
+    checkpoint.sequence.kind === "ordered" ? checkpoint.sequence : undefined;
+  if (
+    orderedCheckpoint !== undefined &&
+    (orderFills[0]!.value.occurrenceIds.length !==
+      orderedCheckpoint.occurrenceIds.length ||
+      orderFills[0]!.value.occurrenceIds.some(
+        (occurrenceId, index) =>
+          occurrenceId !== orderedCheckpoint.occurrenceIds[index],
+      ))
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Start-turn occurrence continuation order differs from its canonical checkpoint.",
+    );
+  }
+  const retainedOccurrenceIds =
+    checkpoint.sequence.kind === "ordered"
+      ? checkpoint.sequence.occurrenceIds
+      : [checkpoint.sequence.occurrenceId];
+  const currentIndex = retainedOccurrenceIds.indexOf(currentOccurrenceId);
   if (currentIndex === -1) {
     return invalidResult(
       input.state,
@@ -593,7 +633,7 @@ function resolveStartTurnOccurrenceSuffixAfterMovement(input: {
     state: input.state,
     subject: input.parent.subject,
     sourceTurn: checkpoint.sourceTurn,
-    occurrenceIds: orderFills[0]!.value.occurrenceIds.slice(currentIndex + 1),
+    occurrenceIds: retainedOccurrenceIds.slice(currentIndex + 1),
     context: {
       kind: "replay",
       previouslyAcceptedMovementFillHoleIds: [
@@ -609,10 +649,42 @@ function resolveStartTurnOccurrenceSuffixAfterMovement(input: {
     sequence: checkpoint.sequence,
   });
   if (suffix.tag === "result") return suffix.result;
+  const acceptedHoleIds = new Set<BattleHoleId>([
+    ...input.previouslyAcceptedHoleIds,
+    ...suffix.acceptedHoleIds,
+    ...(checkpoint.sequence.kind === "ordered" ? [orderHoleId] : []),
+  ]);
+  const completedOccurrenceIds = retainedOccurrenceIds.slice(0, currentIndex);
+  if (
+    completedOccurrenceIds.includes(
+      startTurnOccurrenceOptionForHandle({ kind: "deathSavingThrow" })
+        .occurrenceId,
+    )
+  ) {
+    acceptedHoleIds.add(DEATH_SAVING_THROW_HOLE_ID);
+  }
+  if (
+    completedOccurrenceIds.includes(
+      startTurnOccurrenceOptionForHandle({ kind: "statBlockRecharge" })
+        .occurrenceId,
+    )
+  ) {
+    acceptedHoleIds.add(STAT_BLOCK_RECHARGE_ROLL_HOLE_ID);
+  }
+  if (hasUnacceptedEndTurnFill(input.fills, acceptedHoleIds)) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "End Turn replay received a fill unrelated to its retained start-turn occurrences.",
+    );
+  }
+  const completedState = applyRoundDurationTickAfterStartTurnOccurrences(
+    suffix.state,
+  );
   return {
     tag: "resolved",
-    state: suffix.state,
-    snapshot: snapshotBattle(suffix.state),
+    state: completedState,
+    snapshot: snapshotBattle(completedState),
   };
 }
 function resolveCloudkillMovementSequenceResume(input: {
@@ -655,6 +727,7 @@ function resolveCloudkillMovementSequenceResume(input: {
       resolution.fills,
       checkpoint,
       input.parent,
+      [cloudkillMovementSavingThrowHoleId(checkpoint)],
     );
   }
   const checkpointMovementFills = movementFills.filter(
@@ -708,6 +781,7 @@ function resolveCloudkillMovementSequenceResume(input: {
       resolution.fills,
       checkpoint,
       input.parent,
+      [cloudkillMovementSavingThrowHoleId(checkpoint)],
     );
   }
   const firstPendingRequest = pendingRequests[0];
@@ -739,6 +813,11 @@ function resolveCloudkillMovementSequenceResume(input: {
     resolution.fills,
     checkpoint,
     input.parent,
+    [
+      ...resumed.saveHoleIds,
+      ...resumed.damageHoleIds,
+      ...resumed.concentrationHoleIds,
+    ],
   );
 }
 
@@ -898,10 +977,7 @@ function resolveEndTurn({
       emitter.expiresAt.combatantId === currentActorId(state) &&
       emitter.expiresAt.round === state.initiative.round,
   );
-  const lightEmittersAfterDurationTick =
-    Number(initiative.round) > Number(state.initiative.round)
-      ? tickDurationBattleLightEmitters(lightEmittersAfterEndEffects)
-      : lightEmittersAfterEndEffects;
+  const lightEmittersAfterDurationTick = lightEmittersAfterEndEffects;
   const combatantsAfterStartOngoingFeatures = expireStartOfTurnOngoingFeatures(
     combatantsAfterEndEffects,
     nextActorId,
@@ -944,22 +1020,11 @@ function resolveEndTurn({
     turnBoundaryHideousLaughterDamageRepeatSaves,
     spellTurnStartDamageEffectsBeforeCloudkillMovement,
   ).combatants;
-  const durationTick =
-    Number(initiative.round) > Number(state.initiative.round)
-      ? tickDurationEffects(combatantsAfterSpellTurnStartDamage, {
-          state: {
-            ...state,
-            initiative,
-            combatants: combatantsAfterSpellTurnStartDamage,
-          },
-          spellEndTargetStatePromotionTiming:
-            END_OF_NEXT_TURN_NEW_ROUND_DURATION_TICK,
-        })
-      : {
-          value: combatantsAfterSpellTurnStartDamage,
-          flySpeedGrantEndFallCleanupFrames: [],
-          spellEndTargetStatePromotionIds: [],
-        };
+  const durationTick = {
+    value: combatantsAfterSpellTurnStartDamage,
+    flySpeedGrantEndFallCleanupFrames: [],
+    spellEndTargetStatePromotionIds: [],
+  };
   const combatantsAfterDurationTick = durationTick.value;
   flySpeedGrantEndFallCleanupFrames.push(
     ...durationTick.flySpeedGrantEndFallCleanupFrames,
@@ -1022,6 +1087,29 @@ function resolveEndTurn({
       nextStateWithSpellEndTargetStateConcentrationBreaks,
     ),
   };
+}
+
+function applyRoundDurationTickAfterStartTurnOccurrences(
+  state: BattleState,
+): BattleState {
+  if (state.initiative.alreadyActed.length > 0) return state;
+  const durationTick = tickDurationEffects(state.combatants, {
+    state,
+    spellEndTargetStatePromotionTiming:
+      END_OF_NEXT_TURN_NEW_ROUND_DURATION_TICK,
+  });
+  const stateAfterTick = battleStateWithFlySpeedGrantEndFallCleanupFrames(
+    {
+      ...state,
+      combatants: durationTick.value,
+      lightEmitters: tickDurationBattleLightEmitters(state.lightEmitters),
+    },
+    durationTick.flySpeedGrantEndFallCleanupFrames,
+  );
+  return battleStateAfterSpellEndTargetStatePromotionConcentrationBreaks(
+    stateAfterTick,
+    durationTick.spellEndTargetStatePromotionIds,
+  );
 }
 
 function moveActionBonusActionTurnResources(
@@ -2780,6 +2868,16 @@ function resolveSpellTurnStartDamageOccurrence(input: {
       ),
     };
   }
+  if (exactConcentrationFills.length !== concentrationHoles.length) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.resultState,
+        "invalidFill",
+        "Start-turn damage Concentration fills must answer each exact occurrence once.",
+      ),
+    };
+  }
   const dispositionHoles = startTurnDamageDispositionHoles(
     input.state,
     input.sourceTurn,
@@ -2882,6 +2980,20 @@ function resolveSpellTurnStartDamageOccurrence(input: {
     saveHole === undefined
       ? undefined
       : spellTurnStartSavingThrowOutcomeFor(savingThrowFills, saveHole);
+  const exactSaveFills =
+    saveHole === undefined
+      ? []
+      : savingThrowFills.filter((fill) => fill.holeId === saveHole.holeId);
+  if (exactSaveFills.length > 1) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.resultState,
+        "invalidFill",
+        "Start-turn ending save must answer its exact occurrence once.",
+      ),
+    };
+  }
   if (saveHole !== undefined && save === undefined) {
     return {
       tag: "result",
@@ -3043,7 +3155,9 @@ function resolveOrderedStartTurnOccurrences(input: {
   readonly occurrenceIds: readonly StartTurnOccurrenceOption["occurrenceId"][];
   readonly fills: readonly BattleFill[];
   readonly parent: ReplayParentContinuation;
-  readonly sequence: BattleStartTurnOccurrenceSequenceCheckpoint["sequence"];
+  readonly sequence:
+    | BattleStartTurnOccurrenceSequenceCheckpoint["sequence"]
+    | undefined;
   readonly context:
     | {
         readonly kind: "root";
@@ -3295,6 +3409,16 @@ function resolveOrderedStartTurnOccurrences(input: {
           affectedIssue === "duplicate"
             ? "Cloudkill movement affected combatants must be unique."
             : "Cloudkill movement affected combatants must exist in the battle.",
+        ),
+      };
+    }
+    if (input.sequence === undefined) {
+      return {
+        tag: "result",
+        result: invalidResult(
+          resultState(),
+          "staleSubject",
+          "Cloudkill movement lost its owning start-turn occurrence sequence.",
         ),
       };
     }
@@ -4784,10 +4908,11 @@ const orderedOccurrenceResolution = resolveOrderedStartTurnOccurrences({
     },
     fills: input.fills,
     parent,
-    sequence:
-      orderedStartTurnOccurrenceHandles.length >= 2
-        ? { kind: "ordered" }
-        : { kind: "single" },
+    sequence: startTurnOccurrenceSequence(
+      orderedStartTurnOccurrenceHandles.map(
+        (handle) => startTurnOccurrenceOptionForHandle(handle).occurrenceId,
+      ),
+    ),
   });
   if (orderedOccurrenceResolution.tag === "result") {
     return orderedOccurrenceResolution.result;
@@ -4819,36 +4944,17 @@ const orderedOccurrenceResolution = resolveOrderedStartTurnOccurrences({
     concentrationHoleIds:
       orderedOccurrenceResolution.movementConcentrationHoleIds,
   };
-  if (
-    savingThrowOutcomeFills.some(
-      (fill) =>
-        !savingThrowOutcomeHoleIds.has(fill.holeId) &&
-        !movementAffectedResolution.saveHoleIds.has(fill.holeId) &&
-        !orderedOccurrenceHoleIds.has(fill.holeId),
-    ) ||
-    input.fills.some(
-      (fill) =>
-        fill.kind === "rolledDice" &&
-        !turnBoundaryDamageHoleIds.has(fill.holeId) &&
-        !movementAffectedResolution.damageHoleIds.has(fill.holeId) &&
-        !orderedOccurrenceHoleIds.has(fill.holeId),
-    ) ||
-    concentrationSavingThrowFills.some(
-      (fill) =>
-        !concentrationHoleIds.has(fill.holeId) &&
-        !movementAffectedResolution.concentrationHoleIds.has(fill.holeId) &&
-        !orderedOccurrenceHoleIds.has(fill.holeId),
-    ) ||
-    damageDispositionFills.some(
-      (fill) =>
-        !damageDispositionHoles.some((hole) => hole.holeId === fill.holeId) &&
-        !orderedOccurrenceHoleIds.has(fill.holeId),
-    ) ||
-    (deathSavingThrowFill !== undefined &&
-      !orderedOccurrenceHoleIds.has(deathSavingThrowFill.holeId)) ||
-    (rechargeRollFill !== undefined &&
-      !orderedOccurrenceHoleIds.has(rechargeRollFill.holeId))
-  ) {
+  const acceptedEndTurnHoleIds = new Set<BattleHoleId>([
+    ...savingThrowOutcomeHoleIds,
+    ...turnBoundaryDamageHoleIds,
+    ...concentrationHoleIds,
+    ...damageDispositionHoles.map((hole) => hole.holeId),
+    ...orderedOccurrenceHoleIds,
+    ...(startTurnOccurrenceOrderFill === undefined
+      ? []
+      : [startTurnOccurrenceOrderFill.holeId]),
+  ]);
+  if (hasUnacceptedEndTurnFill(input.fills, acceptedEndTurnHoleIds)) {
     return invalidResult(
       input.state,
       "invalidFill",
@@ -4856,7 +4962,9 @@ const orderedOccurrenceResolution = resolveOrderedStartTurnOccurrences({
     );
   }
   /* v8 ignore stop -- @preserve */
-  const finalState = movementAffectedResolution.state;
+  const finalState = applyRoundDurationTickAfterStartTurnOccurrences(
+    movementAffectedResolution.state,
+  );
   return {
     tag: "resolved",
     state: finalState,
@@ -4878,6 +4986,17 @@ const END_TURN_FILL_KINDS = [
 const END_TURN_FILL_KIND_SET: ReadonlySet<BattleFill["kind"]> = new Set(
   END_TURN_FILL_KINDS,
 );
+
+function hasUnacceptedEndTurnFill(
+  fills: readonly BattleFill[],
+  acceptedHoleIds: ReadonlySet<BattleHoleId>,
+): boolean {
+  return fills.some(
+    (fill) =>
+      END_TURN_FILL_KIND_SET.has(fill.kind) &&
+      !acceptedHoleIds.has(fill.holeId),
+  );
+}
 
 export function isEndTurnFillKind(kind: BattleFill["kind"]): boolean {
   return END_TURN_FILL_KIND_SET.has(kind);
