@@ -169,6 +169,7 @@ import {
   savingThrowOutcomeFill,
   statBlockCreatureInit,
   statBlockRecord,
+  expectCasterDerivedArmorClassSourceRejectedAtStatBlockDecodeBoundary,
   projectedStatBlockRuntimeSource,
   wizardId,
   wizardSpellcasting,
@@ -1646,54 +1647,9 @@ describe("battle boundary admission owners", () => {
         statBlock: { ...source.statBlock, hp: { kind: "literal", value: 0 } },
       }),
     ).toMatchObject({ _tag: "Left" });
-    const malformedArmorClass = decodeStatBlockRecordEither({
-      ...authoredSource,
-      statBlock: {
-        ...authoredSource.statBlock,
-        ac: { value: { kind: "caster_derived", source: "spell_save_dc" } },
-      },
-    });
-    expect(malformedArmorClass).toMatchObject({
-      _tag: "Left",
-      left: {
-        _tag: "ParseError",
-        issue: {
-          _tag: "Composite",
-          issues: {
-            _tag: "Pointer",
-            path: "statBlock",
-            issue: {
-              _tag: "Refinement",
-              issue: {
-                _tag: "Composite",
-                issues: {
-                  _tag: "Pointer",
-                  path: "ac",
-                  issue: {
-                    _tag: "Composite",
-                    issues: {
-                      _tag: "Pointer",
-                      path: "value",
-                      issue: {
-                        _tag: "Refinement",
-                        issue: {
-                          _tag: "Composite",
-                          issues: {
-                            _tag: "Pointer",
-                            path: "source",
-                            issue: { _tag: "Unexpected" },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
+    expectCasterDerivedArmorClassSourceRejectedAtStatBlockDecodeBoundary(
+      authoredSource,
+    );
     const malformedCreatureType = decodeStatBlockRecordEither({
       ...authoredSource,
       statBlock: { ...authoredSource.statBlock, creatureType: 42 },
