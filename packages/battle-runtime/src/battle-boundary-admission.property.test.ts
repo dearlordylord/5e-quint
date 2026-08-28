@@ -7,6 +7,7 @@ import { unitId } from "@dnd/shared/game-facts";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { castFlyAndAdvanceToCasterTurnForTest } from "./spell-effect-fixture.test-support.ts";
+import { spellTargetListFill } from "./unit-profile-admission-spell-fill.test-support.ts";
 
 import {
   BattleHoleSchema,
@@ -146,11 +147,13 @@ import {
   attackInitialTargetHole,
   fighterVsGoblinBattle,
   findAct,
+  findHole,
   goblinId,
   magicSubject,
   movementFill,
   movementFeet,
   requireHole,
+  requireResolved,
   resolveBattleSubject,
   snapshotBattle,
   startBattleSessionRight,
@@ -2753,6 +2756,7 @@ describe("battle boundary admission owners", () => {
           combatantId: wizardId,
           initiative: 20,
           attack: null,
+          classLevels: [{ className: "cleric", level: 3 }],
           spellcasting: {
             ...wizardSpellcasting({
               cantrips: [acidSplashWithRadius(5)],
@@ -2774,25 +2778,21 @@ describe("battle boundary admission owners", () => {
     if (areaSanctuaryAct?.subject.tag !== "bonusActionSpell") {
       throw new Error("Expected admitted area-route Sanctuary procedure.");
     }
-    const areaState = battleStateWithAllocatedEffectOccurrencesForTest({
-      state: areaBaseSession.state,
-      occurrences: [
-        {
-          kind: "activeEffect",
-          ownerId: goblinId,
-          effect: {
-            kind: "sanctuaryWard",
-            sourceProcedureRef: areaSanctuaryAct.subject.procedureRef,
-            sourceCombatantId: wizardId,
-            save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
-            expiresAt: {
-              kind: "duration",
-              durationTicks: elapsedTimeTicks(10),
-            },
-          },
-        },
-      ],
-    }).state;
+    const sanctuaryTarget = findHole(
+      areaSanctuaryAct.initialHoles,
+      "spellTargetList",
+    );
+    const areaState = requireResolved(
+      resolveBattleSubject({
+        state: areaBaseSession.state,
+        subject: areaSanctuaryAct.subject,
+        fills: [
+          spellTargetListFill(sanctuaryTarget, wizardId, "sanctuary", [
+            goblinId,
+          ]),
+        ],
+      }),
+    ).state;
     const areaSession = battleRuntimeSessionForTest({
       state: areaState,
       context: areaBaseSession.context,
