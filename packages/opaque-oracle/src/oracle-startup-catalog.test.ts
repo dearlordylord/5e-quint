@@ -10,7 +10,7 @@ import {
 
 describe("Oracle startup catalog", () => {
   it("builds one parsed projection and services from the same bytes", () => {
-    const result = buildOracleStartupCatalog();
+    const result = buildOracleStartupCatalog(srdSurface);
 
     expect(Either.isLeft(result)).toBe(false);
     if (Either.isLeft(result)) return;
@@ -33,7 +33,7 @@ describe("Oracle startup catalog", () => {
   });
 
   it("keeps every canonical stat block because the Case contract selects any of them", () => {
-    const result = buildOracleStartupCatalog();
+    const result = buildOracleStartupCatalog(srdSurface);
 
     expect(Either.isLeft(result)).toBe(false);
     if (Either.isLeft(result)) return;
@@ -41,7 +41,7 @@ describe("Oracle startup catalog", () => {
   });
 
   it("filters the unit aggregate while preserving canonical order", () => {
-    const result = buildOracleStartupCatalog();
+    const result = buildOracleStartupCatalog(srdSurface);
 
     expect(Either.isLeft(result)).toBe(false);
     if (Either.isLeft(result)) return;

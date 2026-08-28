@@ -2,7 +2,7 @@ import type { ClassName, UnitRecord } from "@dnd/surface/surface/types";
 import {
   classSpellListForClassName,
   type UnitCatalog,
-} from "@dnd/surface/surface/unit-catalog";
+} from "@dnd/surface/surface/unit-catalog-core";
 import { Match, Option } from "effect";
 
 export const CLASS_SPELL_CHOICE_KINDS = ["cantrip", "leveledSpell"] as const;

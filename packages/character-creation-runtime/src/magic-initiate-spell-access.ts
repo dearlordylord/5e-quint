@@ -10,7 +10,7 @@ import {
 import {
   classSpellListForClassName,
   type UnitCatalog,
-} from "@dnd/surface/surface/unit-catalog";
+} from "@dnd/surface/surface/unit-catalog-core";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import { Either, Option } from "effect";
 

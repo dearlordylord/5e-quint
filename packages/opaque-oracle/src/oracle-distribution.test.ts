@@ -128,6 +128,26 @@ describe("Opaque Oracle source-free distribution", () => {
       });
 
       expect(firstBuild.distributionId).toBe(secondBuild.distributionId);
+      expect(
+        firstBuild.bundledInputs.some((input) =>
+          input.includes("packages/surface/content/"),
+        ),
+      ).toBe(false);
+      expect(
+        firstBuild.bundledInputs.some((input) =>
+          input.endsWith("/unit-catalog-data.ts"),
+        ),
+      ).toBe(false);
+      expect(
+        firstBuild.bundledInputs.some((input) =>
+          input.endsWith("/stat-block-catalog-data.ts"),
+        ),
+      ).toBe(false);
+      const executableText = readFileSync(
+        join(firstDirectory, ORACLE_DISTRIBUTION_FILE_NAMES.executable),
+        "utf8",
+      );
+      expect(executableText).not.toContain("packages/surface/content/");
       for (const assetName of distributionAssetNames) {
         expect(readFileSync(join(firstDirectory, assetName))).toEqual(
           readFileSync(join(secondDirectory, assetName)),
@@ -369,6 +389,39 @@ describe("Opaque Oracle source-free distribution", () => {
       expect(tamperedIdentity.stderr.toString("utf8")).toContain(
         "distribution rejected",
       );
+    } finally {
+      rmSync(temporaryRoot, { recursive: true, force: true });
+    }
+  }, 300_000);
+
+  test("rejects a test entrypoint that imports eager catalog data", () => {
+    const temporaryRoot = mkdtempSync(
+      join(tmpdir(), "opaque-oracle-eager-catalog-entrypoint-"),
+    );
+    try {
+      const entryPoint = join(temporaryRoot, "eager-catalog-entrypoint.ts");
+      writeFileSync(
+        entryPoint,
+        [
+          `import ${JSON.stringify(
+            resolve(packageRoot, "../surface/src/surface/unit-catalog-data.ts"),
+          )};`,
+          `import ${JSON.stringify(
+            resolve(
+              packageRoot,
+              "../surface/src/surface/stat-block-catalog-data.ts",
+            ),
+          )};`,
+          "",
+        ].join("\n"),
+      );
+
+      expect(() =>
+        buildOracleDistribution({
+          destination: join(temporaryRoot, "distribution"),
+          entryPoint,
+        }),
+      ).toThrow(/Oracle executable bundled canonical catalog inputs/);
     } finally {
       rmSync(temporaryRoot, { recursive: true, force: true });
     }

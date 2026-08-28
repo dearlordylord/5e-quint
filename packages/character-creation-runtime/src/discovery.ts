@@ -21,7 +21,7 @@ import {
   allCantripsFromClassSpellList,
   classSpellListForClassName,
   type ClassSpellListName,
-} from "@dnd/surface/surface/unit-catalog";
+} from "@dnd/surface/surface/unit-catalog-core";
 import { SKILLS } from "@dnd/surface/surface/types";
 import type {
   BackgroundToolProficiency,

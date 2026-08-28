@@ -165,7 +165,7 @@ describe("canonical Surface authored relations", () => {
     if (Either.isRight(result)) return;
     expect(result.left[0]).toMatchObject({
       tag: "surfaceRelationClosureIssue",
-      code: "missingTarget",
+      code: "missingRoot",
       fieldPath: "<root>",
     });
   });

@@ -71,18 +71,40 @@ export type SurfaceRelationTraversalIssues = readonly [
   ...SurfaceRelationTraversalIssue[],
 ];
 
-export type SurfaceRelationClosureIssue =
-  | SurfaceRelationTraversalIssue
+type SurfaceRelationMissingRootIssue =
   | {
       readonly tag: "surfaceRelationClosureIssue";
-      readonly code: "missingTarget" | "emptyProjection";
-      readonly sourceKind: "unit" | "statBlock";
-      readonly sourceRecordId: string;
-      readonly fieldPath: string;
-      readonly targetKind: "unit" | "statBlock";
-      readonly targetRecordId: string;
+      readonly code: "missingRoot";
+      readonly rootKind: "unit";
+      readonly rootId: SurfaceUnitId;
+      readonly fieldPath: "<root>";
+      readonly message: string;
+    }
+  | {
+      readonly tag: "surfaceRelationClosureIssue";
+      readonly code: "missingRoot";
+      readonly rootKind: "statBlock";
+      readonly rootId: SurfaceStatBlockId;
+      readonly fieldPath: "<root>";
       readonly message: string;
     };
+
+type SurfaceRelationEmptyProjectionIssue = {
+  readonly tag: "surfaceRelationClosureIssue";
+  readonly code: "emptyProjection";
+  readonly missingFamily: "unit" | "statBlock";
+  readonly message: string;
+};
+
+export type SurfaceRelationClosureIssue =
+  | SurfaceRelationTraversalIssue
+  | SurfaceRelationMissingRootIssue
+  | SurfaceRelationEmptyProjectionIssue
+  | (SurfaceAuthoredRelation & {
+      readonly tag: "surfaceRelationClosureIssue";
+      readonly code: "missingTarget";
+      readonly message: string;
+    });
 
 export type SurfaceRelationClosureIssues = readonly [
   SurfaceRelationClosureIssue,
@@ -97,6 +119,70 @@ export type SurfaceRelationSelection = {
 type SurfaceRecord =
   | { readonly sourceKind: "unit"; readonly value: UnitRecord }
   | { readonly sourceKind: "statBlock"; readonly value: StatBlockRecord };
+
+type SurfaceRecordRef =
+  | { readonly kind: "unit"; readonly id: SurfaceUnitId }
+  | { readonly kind: "statBlock"; readonly id: SurfaceStatBlockId };
+
+const relationTargetRef = (
+  relation: SurfaceAuthoredRelation,
+): SurfaceRecordRef => {
+  if (relation.targetKind === "unit") {
+    return { kind: "unit", id: relation.targetRecordId };
+  }
+  return { kind: "statBlock", id: relation.targetRecordId };
+};
+
+const makeSurfaceAuthoredRelation = (input: {
+  readonly record: SurfaceRecord;
+  readonly role: Extract<
+    SurfaceSchemaFieldRole,
+    { readonly category: "reference" | "dependency" }
+  >;
+  readonly fieldPath: string;
+  readonly targetRecordId: string;
+}): SurfaceAuthoredRelation => {
+  const shared = {
+    sourceRecordName: input.record.value.name,
+    fieldPath: input.fieldPath,
+    relationKind: input.role.category,
+    relation: input.role.relation,
+  } as const;
+  if (input.record.sourceKind === "unit") {
+    if (input.role.targetKind === "unit") {
+      return {
+        ...shared,
+        sourceKind: "unit",
+        sourceRecordId: input.record.value.id,
+        targetKind: "unit",
+        targetRecordId: UnitId.make(input.targetRecordId),
+      };
+    }
+    return {
+      ...shared,
+      sourceKind: "unit",
+      sourceRecordId: input.record.value.id,
+      targetKind: "statBlock",
+      targetRecordId: StatBlockId.make(input.targetRecordId),
+    };
+  }
+  if (input.role.targetKind === "unit") {
+    return {
+      ...shared,
+      sourceKind: "statBlock",
+      sourceRecordId: input.record.value.id,
+      targetKind: "unit",
+      targetRecordId: UnitId.make(input.targetRecordId),
+    };
+  }
+  return {
+    ...shared,
+    sourceKind: "statBlock",
+    sourceRecordId: input.record.value.id,
+    targetKind: "statBlock",
+    targetRecordId: StatBlockId.make(input.targetRecordId),
+  };
+};
 
 type WalkTask = {
   readonly ast: AST.AST;
@@ -345,48 +431,14 @@ export function collectSurfaceAuthoredRelations(
       const role = ownRole ?? task.inheritedRole;
       if (typeof task.current === "string") {
         if (role?.category === "reference" || role?.category === "dependency") {
-          const sourceName = record.value.name;
-          const relation = {
-            sourceRecordName: sourceName,
-            fieldPath: task.path.replace(/^value\.?/, ""),
-            relationKind: role.category,
-            relation: role.relation,
-          } as const;
-          if (record.sourceKind === "unit") {
-            if (role.targetKind === "unit") {
-              relations.push({
-                ...relation,
-                sourceKind: "unit",
-                sourceRecordId: record.value.id,
-                targetKind: "unit",
-                targetRecordId: UnitId.make(task.current),
-              });
-            } else {
-              relations.push({
-                ...relation,
-                sourceKind: "unit",
-                sourceRecordId: record.value.id,
-                targetKind: "statBlock",
-                targetRecordId: StatBlockId.make(task.current),
-              });
-            }
-          } else if (role.targetKind === "unit") {
-            relations.push({
-              ...relation,
-              sourceKind: "statBlock",
-              sourceRecordId: record.value.id,
-              targetKind: "unit",
-              targetRecordId: UnitId.make(task.current),
-            });
-          } else {
-            relations.push({
-              ...relation,
-              sourceKind: "statBlock",
-              sourceRecordId: record.value.id,
-              targetKind: "statBlock",
-              targetRecordId: StatBlockId.make(task.current),
-            });
-          }
+          relations.push(
+            makeSurfaceAuthoredRelation({
+              record,
+              role,
+              fieldPath: task.path.replace(/^value\.?/, ""),
+              targetRecordId: task.current,
+            }),
+          );
         } else if (
           role === undefined &&
           structuralAst(task.ast)._tag === "StringKeyword"
@@ -481,79 +533,102 @@ export function closeSrdSurface(input: {
     return Either.left([...relationsResult.left]);
   }
 
-  const unitsById = new Map<string, UnitRecord>(
-    input.surface.units.map((record) => [String(record.id), record]),
+  const unitsById = new Map<SurfaceUnitId, UnitRecord>(
+    input.surface.units.map((record) => [record.id, record]),
   );
-  const statBlocksById = new Map<string, StatBlockRecord>(
-    input.surface.statBlocks.map((record) => [String(record.id), record]),
+  const statBlocksById = new Map<SurfaceStatBlockId, StatBlockRecord>(
+    input.surface.statBlocks.map((record) => [record.id, record]),
   );
-  const selectedUnits = new Set<string>();
-  const selectedStatBlocks = new Set<string>();
-  const pending: {
-    readonly kind: "unit" | "statBlock";
-    readonly id: string;
-  }[] = [];
+  const selectedUnits = new Set<SurfaceUnitId>();
+  const selectedStatBlocks = new Set<SurfaceStatBlockId>();
+  const pending: SurfaceRecordRef[] = [];
   const issues: SurfaceRelationClosureIssue[] = [];
 
-  const addRoot = (kind: "unit" | "statBlock", id: string): void => {
-    const records = kind === "unit" ? unitsById : statBlocksById;
-    if (!records.has(id)) {
+  const addRoot = (root: SurfaceRecordRef): void => {
+    if (root.kind === "unit") {
+      if (!unitsById.has(root.id)) {
+        issues.push({
+          tag: "surfaceRelationClosureIssue",
+          code: "missingRoot",
+          rootKind: "unit",
+          rootId: root.id,
+          fieldPath: "<root>",
+          message: `Surface root unit ${String(root.id)} is absent from the canonical aggregate`,
+        });
+        return;
+      }
+    } else if (!statBlocksById.has(root.id)) {
       issues.push({
         tag: "surfaceRelationClosureIssue",
-        code: "missingTarget",
-        sourceKind: kind,
-        sourceRecordId: id,
+        code: "missingRoot",
+        rootKind: "statBlock",
+        rootId: root.id,
         fieldPath: "<root>",
-        targetKind: kind,
-        targetRecordId: id,
-        message: `Surface root ${kind} ${id} is absent from the canonical aggregate`,
+        message: `Surface root statBlock ${String(root.id)} is absent from the canonical aggregate`,
       });
       return;
     }
-    pending.push({ kind, id });
+    pending.push(root);
   };
-  input.rootUnitIds.forEach((id) => addRoot("unit", id));
-  input.rootStatBlockIds.forEach((id) => addRoot("statBlock", id));
+  input.rootUnitIds.forEach((id) => addRoot({ kind: "unit", id }));
+  input.rootStatBlockIds.forEach((id) => addRoot({ kind: "statBlock", id }));
 
-  const relationsBySource = new Map<
-    string,
-    readonly SurfaceAuthoredRelation[]
-  >();
+  const relationsBySource = {
+    unit: new Map<SurfaceUnitId, readonly SurfaceAuthoredRelation[]>(),
+    statBlock: new Map<
+      SurfaceStatBlockId,
+      readonly SurfaceAuthoredRelation[]
+    >(),
+  };
   for (const relation of relationsResult.right) {
-    const key = `${relation.sourceKind}:${relation.sourceRecordId}`;
-    relationsBySource.set(key, [
-      ...(relationsBySource.get(key) ?? []),
-      relation,
-    ]);
+    if (relation.sourceKind === "unit") {
+      const relations = relationsBySource.unit.get(relation.sourceRecordId);
+      relationsBySource.unit.set(relation.sourceRecordId, [
+        ...(relations ?? []),
+        relation,
+      ]);
+    } else {
+      const relations = relationsBySource.statBlock.get(
+        relation.sourceRecordId,
+      );
+      relationsBySource.statBlock.set(relation.sourceRecordId, [
+        ...(relations ?? []),
+        relation,
+      ]);
+    }
   }
 
   while (pending.length > 0) {
     const current = pending.pop();
     if (current === undefined) continue;
-    const selected =
-      current.kind === "unit" ? selectedUnits : selectedStatBlocks;
-    if (selected.has(current.id)) continue;
-    selected.add(current.id);
-    for (const relation of relationsBySource.get(
-      `${current.kind}:${current.id}`,
-    ) ?? []) {
+    if (current.kind === "unit") {
+      if (selectedUnits.has(current.id)) continue;
+      selectedUnits.add(current.id);
+    } else {
+      if (selectedStatBlocks.has(current.id)) continue;
+      selectedStatBlocks.add(current.id);
+    }
+    const sourceRelations =
+      current.kind === "unit"
+        ? relationsBySource.unit.get(current.id)
+        : relationsBySource.statBlock.get(current.id);
+    for (const relation of sourceRelations ?? []) {
       if (!relationSelected(relation, input.relationSelection ?? {})) continue;
-      const targets =
-        relation.targetKind === "unit" ? unitsById : statBlocksById;
-      if (!targets.has(relation.targetRecordId)) {
+      const target = relationTargetRef(relation);
+      const targetExists =
+        target.kind === "unit"
+          ? unitsById.has(target.id)
+          : statBlocksById.has(target.id);
+      if (!targetExists) {
         issues.push({
+          ...relation,
           tag: "surfaceRelationClosureIssue",
           code: "missingTarget",
-          sourceKind: relation.sourceKind,
-          sourceRecordId: relation.sourceRecordId,
-          fieldPath: relation.fieldPath,
-          targetKind: relation.targetKind,
-          targetRecordId: relation.targetRecordId,
           message: `Surface ${relation.relationKind} ${relation.targetKind} ${relation.targetRecordId} is absent from the canonical aggregate`,
         });
         continue;
       }
-      pending.push({ kind: relation.targetKind, id: relation.targetRecordId });
+      pending.push(target);
     }
   }
 
@@ -564,10 +639,10 @@ export function closeSrdSurface(input: {
     }
   }
   const units = input.surface.units.filter((record) =>
-    selectedUnits.has(String(record.id)),
+    selectedUnits.has(record.id),
   );
   const statBlocks = input.surface.statBlocks.filter((record) =>
-    selectedStatBlocks.has(String(record.id)),
+    selectedStatBlocks.has(record.id),
   );
   const firstUnit = units[0];
   const firstStatBlock = statBlocks[0];
@@ -576,11 +651,7 @@ export function closeSrdSurface(input: {
       {
         tag: "surfaceRelationClosureIssue",
         code: "emptyProjection",
-        sourceKind: firstUnit === undefined ? "unit" : "statBlock",
-        sourceRecordId: "<projection>",
-        fieldPath: "<projection>",
-        targetKind: firstUnit === undefined ? "unit" : "statBlock",
-        targetRecordId: "<projection>",
+        missingFamily: firstUnit === undefined ? "unit" : "statBlock",
         message:
           "A projected Surface must retain at least one record of each family",
       },

@@ -204,7 +204,9 @@ export function buildProductionOracleEvaluationServices(): Either.Either<
     const issues = services.left.flatMap((issue) =>
       issue.tag === "unitCatalog"
         ? issue.issues.map(unitCatalogIssue)
-        : issue.issues.map(statBlockCatalogIssue),
+        : issue.tag === "statBlockCatalog"
+          ? issue.issues.map(statBlockCatalogIssue)
+          : [catalogBuildDefect(issue.catalog, new Error(issue.message))],
     );
     return Either.left(
       catalogBuildFailed(

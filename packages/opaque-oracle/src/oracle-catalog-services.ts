@@ -5,13 +5,13 @@ import {
   defineSrdStatBlockCollection,
   type SrdStatBlockCollection,
   type StatBlockCatalogBuildIssue,
-} from "@dnd/surface/surface/stat-block-catalog";
+} from "@dnd/surface/surface/stat-block-catalog-core";
 import {
   buildUnitCatalog,
   defineSrdUnitCollection,
   type SrdUnitCollection,
   type UnitCatalogBuildIssue,
-} from "@dnd/surface/surface/unit-catalog";
+} from "@dnd/surface/surface/unit-catalog-core";
 import type { SrdSurface } from "@dnd/surface/surface/types";
 
 import type { OracleEvaluationServices } from "./oracle-evaluation.ts";
@@ -19,17 +19,37 @@ import type { OracleEvaluationServices } from "./oracle-evaluation.ts";
 export type OracleEvaluationServicesBuildIssue =
   | {
       readonly tag: "unitCatalog";
-      readonly issues: readonly UnitCatalogBuildIssue[];
+      readonly issues: readonly [
+        UnitCatalogBuildIssue,
+        ...UnitCatalogBuildIssue[],
+      ];
     }
   | {
       readonly tag: "statBlockCatalog";
-      readonly issues: readonly StatBlockCatalogBuildIssue[];
+      readonly issues: readonly [
+        StatBlockCatalogBuildIssue,
+        ...StatBlockCatalogBuildIssue[],
+      ];
+    }
+  | {
+      readonly tag: "catalogInvariant";
+      readonly catalog: "unit" | "statBlock";
+      readonly message: string;
     };
 
 export type OracleEvaluationServicesBuildIssues = readonly [
   OracleEvaluationServicesBuildIssue,
   ...OracleEvaluationServicesBuildIssue[],
 ];
+
+const nonEmptyIssues = <Issue>(
+  issues: readonly Issue[],
+): readonly [Issue, ...Issue[]] | undefined => {
+  const firstIssue = issues[0];
+  return firstIssue === undefined
+    ? undefined
+    : [firstIssue, ...issues.slice(1)];
+};
 
 /**
  * Build the two immutable lookup services from one already decoded Surface
@@ -49,15 +69,39 @@ export function buildOracleEvaluationServices(input: {
   });
   const issues: OracleEvaluationServicesBuildIssue[] = [];
   if (units.tag === "invalid") {
-    issues.push({ tag: "unitCatalog", issues: units.issues });
+    const unitIssues = nonEmptyIssues(units.issues);
+    issues.push(
+      unitIssues === undefined
+        ? {
+            tag: "catalogInvariant",
+            catalog: "unit",
+            message: "An invalid Unit catalog had no diagnostic issue",
+          }
+        : { tag: "unitCatalog", issues: unitIssues },
+    );
   }
   if (statBlocks.tag === "invalid") {
-    issues.push({ tag: "statBlockCatalog", issues: statBlocks.issues });
+    const statBlockIssues = nonEmptyIssues(statBlocks.issues);
+    issues.push(
+      statBlockIssues === undefined
+        ? {
+            tag: "catalogInvariant",
+            catalog: "statBlock",
+            message: "An invalid Stat Block catalog had no diagnostic issue",
+          }
+        : { tag: "statBlockCatalog", issues: statBlockIssues },
+    );
   }
   if (units.tag === "invalid" || statBlocks.tag === "invalid") {
     const [firstIssue, ...remainingIssues] = issues;
     if (firstIssue === undefined) {
-      throw new Error("Oracle catalog failure did not retain its issue.");
+      return Either.left([
+        {
+          tag: "catalogInvariant",
+          catalog: "unit",
+          message: "Catalog failure did not retain its issue",
+        },
+      ]);
     }
     return Either.left([firstIssue, ...remainingIssues]);
   }

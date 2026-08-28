@@ -81,7 +81,7 @@ import {
   allLeveledSpellsFromAnyClassSpellList,
   classSpellListForSpellcastingClassRecord,
   spellcastingClassRecordForClassName,
-} from "@dnd/surface/surface/unit-catalog";
+} from "@dnd/surface/surface/unit-catalog-core";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Option } from "effect";
 import {

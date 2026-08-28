@@ -15,6 +15,7 @@ import {
   type ResourceCount,
 } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
+import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-core";
 import { Either } from "effect";
 
 import {
@@ -564,6 +565,7 @@ function bookOfShadowsPresenceFromInput(
 export function parseCharacterSheet(
   value: unknown,
   unitLibrary: UnitCatalog,
+  statBlockCatalog?: StatBlockCatalog,
 ): Either.Either<CharacterSheet, CharacterSheetIssue> {
   /* v8 ignore next -- @preserve -- Malformed stored sheet: the raw persistence boundary requires a record before any field parsing. */
   if (!isRecord(value)) return characterSheetIssue("Expected Character Sheet.");
@@ -696,6 +698,7 @@ export function parseCharacterSheet(
       resourceExpenditures: resourceExpenditures.right,
       heroicInspiration: heroicInspiration.right,
       companion: companion.right,
+      ...(statBlockCatalog === undefined ? {} : { statBlockCatalog }),
       ...(druidWildShapeKnownForms.right === undefined
         ? {}
         : {
@@ -716,8 +719,9 @@ export function parseCharacterSheet(
 export function parseFreshCharacterSheet(
   value: unknown,
   unitLibrary: UnitCatalog,
+  statBlockCatalog?: StatBlockCatalog,
 ): Either.Either<FreshCharacterSheet, CharacterSheetIssue> {
-  const parsed = parseCharacterSheet(value, unitLibrary);
+  const parsed = parseCharacterSheet(value, unitLibrary, statBlockCatalog);
   if (Either.isLeft(parsed)) return Either.left(parsed.left);
   const sheet = parsed.right;
   const maximum = characterSheetHitPointCapacity({

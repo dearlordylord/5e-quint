@@ -22,6 +22,7 @@ import {
   type OraclePublicationMember,
 } from "../src/oracle-publication.ts";
 import { buildOracleStartupCatalog } from "../src/oracle-startup-catalog.ts";
+import { srdSurface } from "@dnd/surface/surface/surface-catalog";
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const repositoryRoot = resolve(packageRoot, "../..");
@@ -42,6 +43,7 @@ export type OracleDistributionBuildResult = {
   readonly destination: string;
   readonly executablePath: string;
   readonly distributionId: ReturnType<typeof computeOracleDistributionId>;
+  readonly bundledInputs: readonly string[];
 };
 
 /**
@@ -59,7 +61,7 @@ export function buildOracleDistribution(
   const entryPoint = resolve(
     options.entryPoint ?? DEFAULT_DISTRIBUTION_ENTRYPOINT,
   );
-  const startup = buildOracleStartupCatalog();
+  const startup = buildOracleStartupCatalog(srdSurface);
   if (Either.isLeft(startup)) {
     throw new Error(
       `Oracle startup catalog failed: ${JSON.stringify(startup.left)}`,
@@ -72,7 +74,7 @@ export function buildOracleDistribution(
     destination,
     ORACLE_DISTRIBUTION_FILE_NAMES.executable,
   );
-  buildSync({
+  const bundle = buildSync({
     entryPoints: [entryPoint],
     outfile: executablePath,
     bundle: true,
@@ -84,9 +86,23 @@ export function buildOracleDistribution(
     legalComments: "none",
     charset: "utf8",
     treeShaking: true,
+    metafile: true,
     absWorkingDir: repositoryRoot,
     logLevel: "silent",
   });
+  const bundledInputs = Object.keys(bundle.metafile?.inputs ?? {});
+  const forbiddenInputs = bundledInputs.filter(
+    (input) =>
+      input.includes("packages/surface/content/") ||
+      input.endsWith("/unit-catalog-data.ts") ||
+      input.endsWith("/stat-block-catalog-data.ts") ||
+      input.endsWith("/surface-catalog.ts"),
+  );
+  if (forbiddenInputs.length > 0) {
+    throw new Error(
+      `Oracle executable bundled canonical catalog inputs: ${forbiddenInputs.join(", ")}`,
+    );
+  }
   const executableBody = readFileSync(executablePath, "utf8").replace(
     /^\/\/[^\n]*\n/gm,
     "",
@@ -114,7 +130,7 @@ export function buildOracleDistribution(
     serializeOracleDistributionIdentity({ distributionId }),
     { mode: 0o644 },
   );
-  return { destination, executablePath, distributionId };
+  return { destination, executablePath, distributionId, bundledInputs };
 }
 
 function writePublicationArtifacts(

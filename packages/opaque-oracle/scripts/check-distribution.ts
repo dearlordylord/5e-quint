@@ -72,6 +72,19 @@ export function checkOracleDistribution(
     ORACLE_DISTRIBUTION_FILE_NAMES.executable,
   );
   const executable = readFileSync(executablePath, "utf8");
+  for (const marker of [
+    "packages/surface/content/",
+    "surface/content/",
+    "unit-catalog-data.ts",
+    "stat-block-catalog-data.ts",
+  ]) {
+    if (executable.includes(marker)) {
+      return Either.left({
+        tag: "sourceLeak",
+        path: `${executablePath} contains ${marker}`,
+      });
+    }
+  }
   const importIssue = inspectImports(executable);
   if (importIssue !== undefined) return Either.left(importIssue);
   const repositoryRoot = resolve(packageRoot, "../..");

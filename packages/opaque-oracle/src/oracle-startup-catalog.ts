@@ -5,44 +5,54 @@ import {
   type SrdStatBlockCollection,
   type StatBlockCatalog,
   type StatBlockCatalogBuildIssue,
-} from "@dnd/surface/surface/stat-block-catalog";
+} from "@dnd/surface/surface/stat-block-catalog-core";
 import {
   buildUnitCatalog,
   defineSrdUnitCollection,
   type SrdUnitCollection,
   type UnitCatalog,
   type UnitCatalogBuildIssue,
-} from "@dnd/surface/surface/unit-catalog";
+} from "@dnd/surface/surface/unit-catalog-core";
 import {
+  type SurfaceRelationClosureIssues,
+  type SurfaceRelationTraversalIssues,
   closeSrdSurface,
-  srdSurface,
   collectSurfaceAuthoredRelations,
-  type SurfaceRelationClosureIssue,
-  type SurfaceRelationTraversalIssue,
-} from "@dnd/surface/surface/surface-catalog";
+} from "@dnd/surface/surface/surface-relations";
 import { decodeSrdSurfaceEither } from "@dnd/surface/surface/schema";
 import type { SrdSurface } from "@dnd/surface/surface/types";
-import { deriveCharacterCreationWorkflowRoots } from "@dnd/character-creation-runtime";
+import { deriveCharacterCreationWorkflowRoots } from "@dnd/character-creation-runtime/workflow-horizon";
 import type { OracleEvaluationServices } from "./oracle-evaluation.ts";
+
+type OracleCatalogBuildIssue =
+  | UnitCatalogBuildIssue
+  | StatBlockCatalogBuildIssue;
+type OracleCatalogBuildIssues = readonly [
+  OracleCatalogBuildIssue,
+  ...OracleCatalogBuildIssue[],
+];
 
 export type OracleStartupCatalogIssue =
   | {
       readonly tag: "oracleStartupCatalogIssue";
       readonly stage: "canonicalCatalog";
-      readonly issues: readonly (
-        | UnitCatalogBuildIssue
-        | StatBlockCatalogBuildIssue
-      )[];
+      readonly issues: OracleCatalogBuildIssues;
+    }
+  | {
+      readonly tag: "oracleStartupCatalogIssue";
+      readonly stage: "catalogInvariant";
+      readonly catalogStage: "canonicalCatalog" | "projectedCatalog";
+      readonly message: string;
     }
   | {
       readonly tag: "oracleStartupCatalogIssue";
       readonly stage: "surfaceRelations";
-      readonly issues: readonly SurfaceRelationTraversalIssue[];
+      readonly issues: SurfaceRelationTraversalIssues;
     }
   | {
       readonly tag: "oracleStartupCatalogIssue";
       readonly stage: "surfaceClosure";
-      readonly issues: readonly SurfaceRelationClosureIssue[];
+      readonly issues: SurfaceRelationClosureIssues;
     }
   | {
       readonly tag: "oracleStartupCatalogIssue";
@@ -52,10 +62,7 @@ export type OracleStartupCatalogIssue =
   | {
       readonly tag: "oracleStartupCatalogIssue";
       readonly stage: "projectedCatalog";
-      readonly issues: readonly (
-        | UnitCatalogBuildIssue
-        | StatBlockCatalogBuildIssue
-      )[];
+      readonly issues: OracleCatalogBuildIssues;
     };
 
 export type OracleStartupCatalogIssues = readonly [
@@ -80,16 +87,50 @@ export function encodeOracleStartupSurface(surface: SrdSurface): Uint8Array {
 
 const catalogIssue = (
   stage: "canonicalCatalog" | "projectedCatalog",
-  issues: readonly (UnitCatalogBuildIssue | StatBlockCatalogBuildIssue)[],
+  issues: OracleCatalogBuildIssues,
 ): OracleStartupCatalogIssue => ({
   tag: "oracleStartupCatalogIssue",
   stage,
   issues,
 });
 
+const catalogInvariantIssue = (
+  catalogStage: "canonicalCatalog" | "projectedCatalog",
+): OracleStartupCatalogIssue => ({
+  tag: "oracleStartupCatalogIssue",
+  stage: "catalogInvariant",
+  catalogStage,
+  message: "An invalid catalog result did not contain a diagnostic issue",
+});
+
+const nonEmptyIssues = <Issue>(
+  issues: readonly Issue[],
+): readonly [Issue, ...Issue[]] | undefined => {
+  const firstIssue = issues[0];
+  return firstIssue === undefined
+    ? undefined
+    : [firstIssue, ...issues.slice(1)];
+};
+
+const catalogFailure = (
+  stage: "canonicalCatalog" | "projectedCatalog",
+  result:
+    | { readonly tag: "ok"; readonly catalog: unknown }
+    | {
+        readonly tag: "invalid";
+        readonly issues: readonly OracleCatalogBuildIssue[];
+      },
+): OracleStartupCatalogIssue | undefined => {
+  if (result.tag === "ok") return undefined;
+  const issues = nonEmptyIssues(result.issues);
+  return issues === undefined
+    ? catalogInvariantIssue(stage)
+    : catalogIssue(stage, issues);
+};
+
 const relationIssue = (
   stage: "surfaceRelations",
-  issues: readonly SurfaceRelationTraversalIssue[],
+  issues: SurfaceRelationTraversalIssues,
 ): Extract<
   OracleStartupCatalogIssue,
   { readonly stage: "surfaceRelations" }
@@ -100,7 +141,7 @@ const relationIssue = (
 });
 
 const closureIssue = (
-  issues: readonly SurfaceRelationClosureIssue[],
+  issues: SurfaceRelationClosureIssues,
 ): Extract<
   OracleStartupCatalogIssue,
   { readonly stage: "surfaceClosure" }
@@ -150,12 +191,10 @@ const buildFullCatalogs = (
     collections: [statBlockCollection],
   });
   const failures: OracleStartupCatalogIssue[] = [];
-  if (unitResult.tag === "invalid") {
-    failures.push(catalogIssue("canonicalCatalog", unitResult.issues));
-  }
-  if (statBlockResult.tag === "invalid") {
-    failures.push(catalogIssue("canonicalCatalog", statBlockResult.issues));
-  }
+  const unitFailure = catalogFailure("canonicalCatalog", unitResult);
+  if (unitFailure !== undefined) failures.push(unitFailure);
+  const statBlockFailure = catalogFailure("canonicalCatalog", statBlockResult);
+  if (statBlockFailure !== undefined) failures.push(statBlockFailure);
   if (failures.length > 0) {
     const firstFailure = failures[0];
     if (firstFailure !== undefined) {
@@ -163,7 +202,7 @@ const buildFullCatalogs = (
     }
   }
   if (unitResult.tag === "invalid" || statBlockResult.tag === "invalid") {
-    return Either.left([catalogIssue("canonicalCatalog", [])]);
+    return Either.left([catalogInvariantIssue("canonicalCatalog")]);
   }
   return Either.right({
     unitCatalog: unitResult.catalog,
@@ -178,7 +217,7 @@ const buildFullCatalogs = (
  * a contract boundary, not an invented level assignment.
  */
 export function buildOracleStartupCatalog(
-  canonicalSurface: SrdSurface = srdSurface,
+  canonicalSurface: SrdSurface,
 ): Either.Either<OracleStartupCatalog, OracleStartupCatalogIssues> {
   const fullCatalogs = buildFullCatalogs(canonicalSurface);
   if (Either.isLeft(fullCatalogs)) return Either.left(fullCatalogs.left);
@@ -235,12 +274,10 @@ export function buildOracleStartupCatalog(
     collections: [statBlockCollection],
   });
   const failures: OracleStartupCatalogIssue[] = [];
-  if (unitResult.tag === "invalid") {
-    failures.push(catalogIssue("projectedCatalog", unitResult.issues));
-  }
-  if (statBlockResult.tag === "invalid") {
-    failures.push(catalogIssue("projectedCatalog", statBlockResult.issues));
-  }
+  const unitFailure = catalogFailure("projectedCatalog", unitResult);
+  if (unitFailure !== undefined) failures.push(unitFailure);
+  const statBlockFailure = catalogFailure("projectedCatalog", statBlockResult);
+  if (statBlockFailure !== undefined) failures.push(statBlockFailure);
   if (failures.length > 0) {
     const firstFailure = failures[0];
     if (firstFailure !== undefined) {
@@ -248,7 +285,7 @@ export function buildOracleStartupCatalog(
     }
   }
   if (unitResult.tag === "invalid" || statBlockResult.tag === "invalid") {
-    return Either.left([catalogIssue("projectedCatalog", [])]);
+    return Either.left([catalogInvariantIssue("projectedCatalog")]);
   }
 
   return Either.right({
