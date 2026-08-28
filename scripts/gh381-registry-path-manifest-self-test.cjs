@@ -22,6 +22,8 @@ const {
 const obligationsPath = "plans/rules-kernel-coverage/obligations.jsonl";
 const rolesPath = "plans/rules-kernel-coverage/qnt-owner-roles.jsonl";
 const generatorPath = "scripts/gh381-registry-path-manifest.cjs";
+const fixturePrefix = "gh381-manifest-fixture-";
+const outsidePrefix = "gh381-manifest-outside-";
 
 function writeFile(root, repoPath, content = "fixture\n") {
   const absolute = path.join(root, repoPath);
@@ -83,8 +85,7 @@ function fixtureRows() {
   }));
 }
 
-function setupFixture() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "gh381-manifest-"));
+function setupFixture(root) {
   const obligations = fixtureRows();
   const roles = [
     { ownerPath: "fixtures/semantic.qnt", role: "semantic-core" },
@@ -115,8 +116,8 @@ function setupFixture() {
   return { obligations, obligationsText, roles, rolesText, root };
 }
 
-function runSelfTest() {
-  const fixture = setupFixture();
+function runFixtureAssertions(fixtureRoot, outsideRoot) {
+  const fixture = setupFixture(fixtureRoot);
   const expectedCommit = git(fixture.root, ["rev-parse", "HEAD"]).trim();
   const provenance = buildProvenance(fixture.root);
   assert.equal(provenance.registryCommit, expectedCommit);
@@ -190,7 +191,7 @@ function runSelfTest() {
       normalizeRepositoryPath(fixture.root, unsafePath, "unsafe fixture"),
     );
   }
-  const outside = path.join(path.dirname(fixture.root), "outside-file.ts");
+  const outside = path.join(outsideRoot, "outside-file.ts");
   fs.writeFileSync(outside, "outside\n");
   fs.symlinkSync(outside, path.join(fixture.root, "fixtures", "outside.ts"));
   assert.throws(() =>
@@ -251,6 +252,37 @@ function runSelfTest() {
     changedGenerator.generator.sha256,
     provenance.generator.sha256,
   );
+}
+
+function removeOwnedTemporaryRoot(temporaryParent, temporaryRoot, prefix) {
+  const canonicalRoot = fs.realpathSync(temporaryRoot);
+  if (
+    path.dirname(canonicalRoot) !== temporaryParent ||
+    !path.basename(canonicalRoot).startsWith(prefix)
+  ) {
+    throw new Error(
+      `Refusing to remove unowned temporary root: ${canonicalRoot}`,
+    );
+  }
+  fs.rmSync(canonicalRoot, { recursive: true });
+}
+
+function runSelfTest() {
+  const temporaryParent = fs.realpathSync(os.tmpdir());
+  let fixtureRoot;
+  let outsideRoot;
+  try {
+    fixtureRoot = fs.mkdtempSync(path.join(temporaryParent, fixturePrefix));
+    outsideRoot = fs.mkdtempSync(path.join(temporaryParent, outsidePrefix));
+    runFixtureAssertions(fixtureRoot, outsideRoot);
+  } finally {
+    if (outsideRoot !== undefined) {
+      removeOwnedTemporaryRoot(temporaryParent, outsideRoot, outsidePrefix);
+    }
+    if (fixtureRoot !== undefined) {
+      removeOwnedTemporaryRoot(temporaryParent, fixtureRoot, fixturePrefix);
+    }
+  }
   console.log("#381 registry path manifest self-test OK.");
 }
 
