@@ -2759,7 +2759,7 @@ function runSelfTest(root) {
     );
     for (const expectedIssue of [
       "fixture.profile has qnt-proof verification ownership but no qnt-proof task claim.",
-      "fixture.profile has runtime parity verification ownership but no completed runtime parity task claim.",
+      "fixture.profile has runtime verification ownership but no runtime evidence claim.",
       "fixture.profile taskRefs includes QCORE_FIXTURE but no matching task claim includes the profile.",
       "fixture.profile taskRefs includes QMBT_FIXTURE but no matching task claim includes the profile.",
     ]) {

@@ -1,7 +1,5 @@
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import { movementFeet } from "@dnd/shared/types";
-// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.attack-control
-// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
 import { isDeepStrictEqual } from "node:util";
 
 import { describe, expect, it } from "vitest";

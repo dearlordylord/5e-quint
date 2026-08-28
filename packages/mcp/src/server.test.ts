@@ -5,6 +5,8 @@ import { Either, Option, Schema } from "effect";
 
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+  BattlePresentedSnapshotSchema,
+  BattleSnapshotSchema,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   battleActSpellPresentation,
@@ -2627,11 +2629,24 @@ describe("MCP server route", () => {
     );
     expect(opened.result.tag).toBe("resolved");
     expect(opened.snapshot.currentActorId).toBe("goblin");
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattlePresentedSnapshotSchema)(
+          opened.snapshot,
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      opened.snapshot.turn.actionResources.some(
+        (resource: { readonly source: string }) => resource.source === "turn",
+      ),
+    ).toBe(false);
     expect(opened.snapshot.turn.actionResources).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           source: "statBlockMultiattack",
           sourceOwnerId: "goblin",
+          sourceProcedureRef: expect.any(String),
         }),
       ]),
     );
@@ -2643,21 +2658,51 @@ describe("MCP server route", () => {
         expect.objectContaining({
           source: "statBlockMultiattack",
           sourceOwnerId: "goblin",
+          sourceProcedureRef: expect.any(String),
         }),
       ]),
     );
+    expect(
+      root.sessionStore.battleSession?.state.currentTurnResources.actionResources.some(
+        (resource) => resource.source === "turn",
+      ),
+    ).toBe(false);
+    const persistedSession = root.sessionStore.battleSession;
+    expect(persistedSession).toBeDefined();
+    if (persistedSession == null) return;
+    const persistedSnapshot = Schema.encodeSync(BattleSnapshotSchema)(
+      snapshotBattle(persistedSession.state),
+    );
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)(persistedSnapshot),
+      ),
+    ).toBe(true);
 
     const continuation = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
     expect(
       continuation.availableActs.map((act: { label: string }) => act.label),
-    ).toEqual(["Attack", "Attack", "Move", "End Turn"]);
+    ).toEqual(["Attack", "Attack", "Attack", "Attack", "Move", "End Turn"]);
     expect(
       continuation.availableActs.map(
         (act: { subject: unknown }) => act.subject,
       ),
     ).toEqual([
+      expect.objectContaining({
+        tag: "action",
+        actorId: "goblin",
+        action: "attack",
+        procedureRef: expect.any(String),
+      }),
+      expect.objectContaining({
+        tag: "action",
+        actorId: "goblin",
+        action: "attack",
+        procedureRef: expect.any(String),
+        statBlockDamageNotation: "static",
+      }),
       expect.objectContaining({
         tag: "action",
         actorId: "goblin",

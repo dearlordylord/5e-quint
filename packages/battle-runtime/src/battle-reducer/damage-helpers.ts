@@ -1,3 +1,5 @@
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001
+// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.attack-procedure
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
@@ -11,7 +13,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
-// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
 import { DieRollResult, type DamageType } from "@dnd/shared/types";
 import {
   holeId,

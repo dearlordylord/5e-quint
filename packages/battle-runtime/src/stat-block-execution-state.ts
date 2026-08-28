@@ -1,8 +1,11 @@
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-MULTIATTACK-001 RAW-STAT-BLOCK-LIMITED-USAGE-001
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties stat-block.multiattack stat-block.resource-lifecycle
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP BATTLE.STAT_BLOCK.MULTIATTACK BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE
 import { optionalProperty } from "./optional-property.ts";
 import {
   PositiveInteger,
   resourceCount,
-  type DieRollResult,
+  type D6RollResult,
   type Integer as IntegerType,
   type NonNegativeInteger as NonNegativeIntegerType,
   type PositiveInteger as PositiveIntegerType,
@@ -12,9 +15,11 @@ import {
 import type { Ability, CreatureType } from "@dnd/shared/game-facts";
 import { Brand } from "effect";
 import * as Either from "effect/Either";
+import * as Match from "effect/Match";
 import type {
   ChallengeRating,
   CreatureLimitedUse,
+  CreatureRechargeMinimumRoll,
   CreatureSense,
   CreatureImmunityList,
   CreatureSavingThrowModifier,
@@ -257,20 +262,12 @@ export type BattleStatBlockRuntimeResource = {
     | { readonly kind: "daily"; readonly uses: PositiveIntegerType }
     | {
         readonly kind: "recharge";
-        readonly minimumRoll: StatBlockRechargeMinimumRoll;
+        readonly minimumRoll: CreatureRechargeMinimumRoll;
       }
     | { readonly kind: "recharge_after_rest" };
 };
 
-export const STAT_BLOCK_RECHARGE_MINIMUM_ROLLS = [
-  2, 3, 4, 5, 6,
-] as const satisfies ReadonlyArray<number>;
-export type StatBlockRechargeMinimumRoll =
-  (typeof STAT_BLOCK_RECHARGE_MINIMUM_ROLLS)[number];
-
-export type StatBlockRuntimeResourceParseFailure =
-  | "invalidDailyUses"
-  | "invalidRechargeMinimumRoll";
+export type StatBlockRuntimeResourceParseFailure = "invalidDailyUses";
 
 /**
  * Resolve one authored resource declaration into the source-free runtime
@@ -295,18 +292,12 @@ export function parseStatBlockRuntimeResource(
     });
   }
   if (resource.limit.kind === "recharge") {
-    const minimumRoll = statBlockRechargeMinimumRoll(
-      resource.limit.minimumRoll,
-    );
-    if (minimumRoll === null) {
-      return Either.left("invalidRechargeMinimumRoll");
-    }
     return Either.right({
       ordinal: resource.ordinal,
       ownership: resource.ownership,
       limit: {
         kind: "recharge",
-        minimumRoll,
+        minimumRoll: resource.limit.minimumRoll,
       },
     });
   }
@@ -315,17 +306,6 @@ export function parseStatBlockRuntimeResource(
     ownership: resource.ownership,
     limit: { kind: "recharge_after_rest" },
   });
-}
-
-function statBlockRechargeMinimumRoll(
-  value: number,
-): StatBlockRechargeMinimumRoll | null {
-  return (
-    STAT_BLOCK_RECHARGE_MINIMUM_ROLLS.find(
-      (minimumRoll): minimumRoll is StatBlockRechargeMinimumRoll =>
-        minimumRoll === value,
-    ) ?? null
-  );
 }
 
 export type BattleStatBlockRuntimeMultiattackDispatch = {
@@ -589,7 +569,7 @@ function statBlockAttackSupportsStaticDamageNotation(
 }
 
 export function statBlockProcedureBinding(
-  execution: StatBlockExecutionState,
+  execution: Pick<StatBlockExecutionSnapshot, "procedureBindings">,
   procedureRef: BattleStatBlockProcedureExecutionRef,
 ): StatBlockProcedureBinding | undefined {
   return execution.procedureBindings.find(
@@ -620,50 +600,79 @@ export function statBlockProcedureResourcesAvailable(
     : false;
 }
 
+export type StatBlockMultiattackDispatchResourceDemand =
+  | {
+      readonly kind: "allListedDispatches";
+      readonly procedureRefs: ReadonlyNonEmptyArray<BattleStatBlockProcedureExecutionRef>;
+    }
+  | {
+      readonly kind: "oneListedDispatch";
+      readonly procedureRefs: ReadonlyNonEmptyArray<BattleStatBlockProcedureExecutionRef>;
+    };
+
 /**
- * A Multiattack consumes each effective dispatched procedure in order. A
- * shared or binary limited-use pool therefore has to cover every occurrence,
- * rather than merely being available for each distinct procedure reference.
+ * An unrestricted Multiattack must be able to pay every listed dispatch
+ * occurrence. A one-dispatch cap instead requires the activation resources and
+ * at least one individually payable listed dispatch, leaving the choice to the
+ * resolving actor.
  */
 export function statBlockMultiattackResourcesAvailable(
   execution: StatBlockExecutionState,
   binding: StatBlockProcedureBindingFor<StatBlockMultiattackProcedure>,
-  effectiveDispatchProcedureRefs: readonly BattleStatBlockProcedureExecutionRef[],
+  demand: StatBlockMultiattackDispatchResourceDemand,
 ): boolean {
   const requiredUsesByPool = resourcePoolUsesForRefs(binding.resourcePoolRefs);
-  for (const procedureRef of effectiveDispatchProcedureRefs) {
-    const dispatchBinding = statBlockProcedureBinding(execution, procedureRef);
-    if (dispatchBinding === undefined) return false;
-    for (const resourcePoolRef of dispatchBinding.resourcePoolRefs) {
-      requiredUsesByPool.set(
-        resourcePoolRef,
-        (requiredUsesByPool.get(resourcePoolRef) ?? 0) + 1,
-      );
-    }
-  }
-  return statBlockResourcePoolUsesAvailable(execution, requiredUsesByPool);
+  return Match.value(demand).pipe(
+    Match.when({ kind: "oneListedDispatch" }, ({ procedureRefs }) =>
+      procedureRefs.some((procedureRef) => {
+        const dispatchBinding = statBlockProcedureBinding(
+          execution,
+          procedureRef,
+        );
+        if (dispatchBinding === undefined) return false;
+        const selectedUsesByPool = new Map(requiredUsesByPool);
+        for (const resourcePoolRef of dispatchBinding.resourcePoolRefs) {
+          selectedUsesByPool.set(
+            resourcePoolRef,
+            (selectedUsesByPool.get(resourcePoolRef) ?? 0) + 1,
+          );
+        }
+        return statBlockResourcePoolUsesAvailable(
+          execution,
+          selectedUsesByPool,
+        );
+      }),
+    ),
+    Match.when({ kind: "allListedDispatches" }, ({ procedureRefs }) => {
+      for (const procedureRef of procedureRefs) {
+        const dispatchBinding = statBlockProcedureBinding(
+          execution,
+          procedureRef,
+        );
+        if (dispatchBinding === undefined) return false;
+        for (const resourcePoolRef of dispatchBinding.resourcePoolRefs) {
+          requiredUsesByPool.set(
+            resourcePoolRef,
+            (requiredUsesByPool.get(resourcePoolRef) ?? 0) + 1,
+          );
+        }
+      }
+      return statBlockResourcePoolUsesAvailable(execution, requiredUsesByPool);
+    }),
+    Match.exhaustive,
+  );
 }
 
 /**
- * A Multiattack spends its own resource declaration together with the first
- * dispatched procedure when activation grants the remaining dispatches. The
- * complete demand is checked above, while this operation spends only the
- * activation portion and leaves pending dispatches to their own resolution.
+ * Multiattack activation spends only the Multiattack binding's resource
+ * declaration. Every granted dispatch remains pending and spends its own
+ * procedure resources when that attack is actually resolved.
  */
 export function spendStatBlockMultiattackActivationResources(
   execution: StatBlockExecutionState,
   binding: StatBlockProcedureBindingFor<StatBlockMultiattackProcedure>,
-  consumedProcedureRef: BattleStatBlockProcedureExecutionRef,
 ): StatBlockExecutionState {
-  const firstDispatchBinding = statBlockProcedureBinding(
-    execution,
-    consumedProcedureRef,
-  );
-  if (firstDispatchBinding === undefined) return execution;
-  return spendStatBlockResourcePoolUses(execution, [
-    ...binding.resourcePoolRefs,
-    ...firstDispatchBinding.resourcePoolRefs,
-  ]);
+  return spendStatBlockResourcePoolUses(execution, binding.resourcePoolRefs);
 }
 
 export function spendStatBlockProcedureResources(
@@ -701,7 +710,7 @@ export function applyStatBlockRechargeRolls(
   execution: StatBlockExecutionState,
   rolls: readonly {
     readonly target: BattleResourcePoolExecutionRef;
-    readonly roll: DieRollResult;
+    readonly roll: D6RollResult;
   }[],
 ): StatBlockExecutionState {
   const rollsByTarget = new Map(rolls.map((roll) => [roll.target, roll.roll]));

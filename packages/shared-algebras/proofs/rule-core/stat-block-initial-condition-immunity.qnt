@@ -1,5 +1,4 @@
 // -*- mode: Bluespec; -*-
-// RAW-COVERAGE: qnt-owner RAW-QCORE11-STAT-BLOCK-CONTROLS-001
 // KERNEL-COVERAGE: qnt-owner BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY
 
 module statBlockInitialConditionImmunity {

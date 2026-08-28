@@ -3,11 +3,13 @@ import { describe, expect, test } from "vitest";
 
 import {
   AuthoredStatBlockReactionTriggerSchema,
+  CREATURE_RECHARGE_MINIMUM_ROLLS,
   CreatureStatBlockProjectionSchema,
   EffectAtomSchema,
   StandaloneStatBlockSchema,
   StatBlockLegendaryActionSectionSchema,
   StatBlockProcedureEntrySchema,
+  StatBlockProcedureResourceSchema,
   StatBlockProcedureSectionSchema,
 } from "./schema.ts";
 
@@ -151,6 +153,32 @@ const syntheticStandaloneStatBlock = {
 } as const;
 
 describe("standalone Stat Block procedure sections", () => {
+  test.each(CREATURE_RECHARGE_MINIMUM_ROLLS)(
+    "accepts authored Recharge minimum roll %i",
+    (minimumRoll) => {
+      expect(
+        decode(StatBlockProcedureResourceSchema, {
+          ordinal: 1,
+          ownership: "shared",
+          limit: { kind: "recharge", minimumRoll },
+        }),
+      ).toMatchObject({ limit: { kind: "recharge", minimumRoll } });
+    },
+  );
+
+  test.each([0, 1, 7] as const)(
+    "rejects authored Recharge minimum roll %i",
+    (minimumRoll) => {
+      expect(() =>
+        decode(StatBlockProcedureResourceSchema, {
+          ordinal: 1,
+          ownership: "shared",
+          limit: { kind: "recharge", minimumRoll },
+        }),
+      ).toThrow();
+    },
+  );
+
   test("keeps spellcasting resources on groups while non-spell procedures may own refs", () => {
     const spellcastingEntry = syntheticStandaloneStatBlock.actions[3];
     expect(decode(StatBlockProcedureEntrySchema, spellcastingEntry)).toEqual(

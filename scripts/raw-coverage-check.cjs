@@ -14,10 +14,10 @@ const paths = {
   annotations: path.join(rawCoverageDir, "annotations.jsonl"),
   requirements: path.join(rawCoverageDir, "requirements.jsonl"),
   rawReviews: path.join(rawCoverageDir, "raw-reviews.jsonl"),
-  taskClaims: path.join(rawCoverageDir, "task-claims.jsonl"),
+  evidenceClaims: path.join(rawCoverageDir, "evidence-claims.jsonl"),
+  trackerClaims: path.join(rawCoverageDir, "tracker-claims.jsonl"),
   matrix: path.join(rawCoverageDir, "matrix.json"),
   report: path.join(rawCoverageDir, "REPORT.md"),
-  activePlan: path.join(root, "plans/ACTIVE_PLAN.md"),
 };
 
 const domainClassifications = new Set([
@@ -36,6 +36,20 @@ const rawCoverageClaimKinds = new Set([
   "verification-owner:runtime-test",
   "verification-owner:doc",
 ]);
+const evidenceCoverageMetrics = new Set([
+  "qnt-proof",
+  "runtime-parity",
+  "runtime-test",
+]);
+const evidenceMetricVerificationOwnerKinds = new Map([
+  ["qnt-proof", "qnt-proof"],
+  ["runtime-parity", "focused-mbt"],
+  ["runtime-test", "runtime-test"],
+]);
+const trackerCoverageMetrics = new Set([
+  "missing-qnt-owner",
+  "missing-runtime-owner",
+]);
 const skippedClaimScanDirs = new Set([
   ".git",
   ".turbo",
@@ -44,6 +58,7 @@ const skippedClaimScanDirs = new Set([
   "node_modules",
   "test-results",
 ]);
+const nonRulesCorpusFiles = new Set(["ATTRIBUTION.md"]);
 
 function fail(message) {
   throw new Error(message);
@@ -94,7 +109,13 @@ function markdownFiles(dirPath) {
     .flatMap((entry) => {
       const entryPath = path.join(dirPath, entry.name);
       if (entry.isDirectory()) return markdownFiles(entryPath);
-      if (entry.isFile() && entry.name.endsWith(".md")) return [entryPath];
+      if (
+        entry.isFile() &&
+        entry.name.endsWith(".md") &&
+        !nonRulesCorpusFiles.has(entry.name)
+      ) {
+        return [entryPath];
+      }
       return [];
     })
     .sort();
@@ -319,6 +340,96 @@ function requirementIdsForAnnotation(annotation) {
   return annotation.requirementIds ?? [];
 }
 
+function validateCoverageClaimRows({
+  rows,
+  identityField,
+  allowedMetrics,
+  requirementsById,
+  claimKind,
+  metricVerificationOwnerKinds,
+}) {
+  const allowedFields = new Set([
+    identityField,
+    "coverageMetric",
+    "requirementIds",
+  ]);
+  if (claimKind === "evidence") allowedFields.add("ownerPath");
+  const identities = new Set();
+  for (const [index, row] of rows.entries()) {
+    const context = `${claimKind} claim row ${index + 1}`;
+    if (row === null || typeof row !== "object" || Array.isArray(row)) {
+      fail(`${context} must be an object.`);
+    }
+    const unknownFields = Object.keys(row).filter(
+      (field) => !allowedFields.has(field),
+    );
+    if (unknownFields.length > 0) {
+      fail(`${context} has unknown fields: ${unknownFields.join(", ")}.`);
+    }
+    const identity = row[identityField];
+    if (typeof identity !== "string" || identity.trim().length === 0) {
+      fail(`${context}.${identityField} must be a non-empty string.`);
+    }
+    if (identities.has(identity)) {
+      fail(`${claimKind} claim identity ${identity} is duplicated.`);
+    }
+    identities.add(identity);
+    if (claimKind === "tracker" && !/^GH-[1-9][0-9]*$/.test(identity)) {
+      fail(`${context}.${identityField} must be a stable GH issue id.`);
+    }
+    if (!allowedMetrics.has(row.coverageMetric)) {
+      fail(
+        `${context}.coverageMetric has unknown value ${row.coverageMetric}.`,
+      );
+    }
+    if (
+      claimKind === "evidence" &&
+      (typeof row.ownerPath !== "string" || row.ownerPath.trim().length === 0)
+    ) {
+      fail(`${context}.ownerPath must be a non-empty string.`);
+    }
+    if (!Array.isArray(row.requirementIds) || row.requirementIds.length === 0) {
+      fail(`${context}.requirementIds must be a non-empty array.`);
+    }
+    const referencedIds = new Set();
+    for (const [requirementIndex, requirementId] of (
+      row.requirementIds ?? []
+    ).entries()) {
+      if (
+        typeof requirementId !== "string" ||
+        requirementId.trim().length === 0
+      ) {
+        fail(
+          `${context}.requirementIds[${requirementIndex}] must be a non-empty string.`,
+        );
+      }
+      if (referencedIds.has(requirementId)) {
+        fail(`${context}.requirementIds duplicates ${requirementId}.`);
+      }
+      referencedIds.add(requirementId);
+      if (!requirementsById.has(requirementId)) {
+        fail(`${context} references unknown requirement ${requirementId}.`);
+      }
+      const requiredOwnerKind = metricVerificationOwnerKinds?.get(
+        row.coverageMetric,
+      );
+      const requirement = requirementsById.get(requirementId);
+      if (
+        requiredOwnerKind !== undefined &&
+        !(requirement.verificationOwners ?? []).some(
+          (owner) =>
+            owner.kind === requiredOwnerKind &&
+            owner.ownerPath === row.ownerPath,
+        )
+      ) {
+        fail(
+          `${context} metric ${row.coverageMetric} requires ${requirementId} to have exact verification owner ${requiredOwnerKind}:${row.ownerPath}.`,
+        );
+      }
+    }
+  }
+}
+
 function annotationIsOutOfScope(annotation) {
   return (
     annotation.classification === "unsupported-out-of-promoted-scope" ||
@@ -421,23 +532,13 @@ function validateRawCoverageOwnerClaims(requirements, scanRoot = root) {
   }
 }
 
-function activePlanTaskStatuses() {
-  const raw = fs.readFileSync(paths.activePlan, "utf8");
-  const statuses = new Map();
-  const regex = /### Task \d+ - ([A-Z0-9]+) - [^\n]+\n\nStatus: `([^`]+)`/g;
-  let match;
-  while ((match = regex.exec(raw)) !== null) {
-    statuses.set(match[1], match[2]);
-  }
-  return statuses;
-}
-
 function buildMatrix() {
   const sections = readSections();
   const annotations = readJsonl(paths.annotations);
   const requirements = readJsonl(paths.requirements);
   const rawReviews = readJsonl(paths.rawReviews);
-  const taskClaims = readJsonl(paths.taskClaims);
+  const evidenceClaims = readJsonl(paths.evidenceClaims);
+  const trackerClaims = readJsonl(paths.trackerClaims);
   const generatedSpans = sections.flatMap(generateSectionSpans);
 
   const sectionsById = new Map(
@@ -455,7 +556,6 @@ function buildMatrix() {
   const rawReviewsBySectionId = new Map(
     rawReviews.map((review) => [review.sectionId, review]),
   );
-  const taskStatuses = activePlanTaskStatuses();
 
   for (const section of sections) {
     if (!section.spanIdPrefix)
@@ -590,22 +690,21 @@ function buildMatrix() {
   }
   validateRawCoverageOwnerClaims(requirements);
 
-  for (const taskClaim of taskClaims) {
-    if (!taskStatuses.has(taskClaim.taskId)) {
-      fail(
-        `Task claim references unknown ACTIVE_PLAN task ${taskClaim.taskId}.`,
-      );
-    }
-    for (const requirementId of taskClaim.requirementIds) {
-      if (!requirementsById.has(requirementId)) {
-        fail(
-          `Task claim ${taskClaim.taskId} references unknown requirement ${requirementId}.`,
-        );
-      }
-    }
-    for (const evidence of taskClaim.evidence ?? [])
-      validateOwnerPath(evidence.ownerPath, taskClaim.taskId);
-  }
+  validateCoverageClaimRows({
+    rows: evidenceClaims,
+    identityField: "evidenceId",
+    allowedMetrics: evidenceCoverageMetrics,
+    requirementsById,
+    claimKind: "evidence",
+    metricVerificationOwnerKinds: evidenceMetricVerificationOwnerKinds,
+  });
+  validateCoverageClaimRows({
+    rows: trackerClaims,
+    identityField: "trackerId",
+    allowedMetrics: trackerCoverageMetrics,
+    requirementsById,
+    claimKind: "tracker",
+  });
 
   const executableRequirements = requirements.filter(
     (requirement) => requirement.coverageKind === "executable",
@@ -619,9 +718,14 @@ function buildMatrix() {
   const runtimeMapped = executableRequirements.filter(
     (requirement) => requirement.runtimeOwners.length > 0,
   );
+  const runtimeTested = executableRequirements.filter((requirement) =>
+    requirement.verificationOwners.some(
+      (owner) => owner.kind === "runtime-test",
+    ),
+  );
   const runtimeParityCovered = executableRequirements.filter((requirement) =>
     requirement.verificationOwners.some(
-      (owner) => owner.kind === "focused-mbt" || owner.kind === "runtime-test",
+      (owner) => owner.kind === "focused-mbt",
     ),
   );
   const nonFluffAnnotations = annotations.filter(
@@ -662,6 +766,7 @@ function buildMatrix() {
       qntModeled: qntModeled.length,
       qntProved: qntProved.length,
       runtimeMapped: runtimeMapped.length,
+      runtimeTested: runtimeTested.length,
       runtimeParityCovered: runtimeParityCovered.length,
       outOfScopeSpans: outOfScopeAnnotations.length,
       ambiguousSpans: ambiguousAnnotations.length,
@@ -675,10 +780,16 @@ function buildMatrix() {
       verdict: review.verdict,
       sourcesChecked: review.sourcesChecked,
     })),
-    activePlanTasks: taskClaims.map((taskClaim) => ({
-      taskId: taskClaim.taskId,
-      status: taskStatuses.get(taskClaim.taskId),
-      requirementIds: taskClaim.requirementIds,
+    evidenceClaims: evidenceClaims.map((claim) => ({
+      evidenceId: claim.evidenceId,
+      coverageMetric: claim.coverageMetric,
+      ownerPath: claim.ownerPath,
+      requirementIds: claim.requirementIds,
+    })),
+    trackerClaims: trackerClaims.map((claim) => ({
+      trackerId: claim.trackerId,
+      coverageMetric: claim.coverageMetric,
+      requirementIds: claim.requirementIds,
     })),
     requirements: requirements.map((requirement) => ({
       id: requirement.id,
@@ -690,15 +801,18 @@ function buildMatrix() {
         (owner) => owner.kind === "qnt-proof",
       ),
       runtimeMapped: requirement.runtimeOwners.length > 0,
-      runtimeParityCovered: requirement.verificationOwners.some(
-        (owner) =>
-          owner.kind === "focused-mbt" || owner.kind === "runtime-test",
+      runtimeTested: requirement.verificationOwners.some(
+        (owner) => owner.kind === "runtime-test",
       ),
-      activePlanTasks: taskClaims
-        .filter((taskClaim) =>
-          taskClaim.requirementIds.includes(requirement.id),
-        )
-        .map((taskClaim) => taskClaim.taskId),
+      runtimeParityCovered: requirement.verificationOwners.some(
+        (owner) => owner.kind === "focused-mbt",
+      ),
+      evidenceClaims: evidenceClaims
+        .filter((claim) => claim.requirementIds.includes(requirement.id))
+        .map((claim) => claim.evidenceId),
+      trackerClaims: trackerClaims
+        .filter((claim) => claim.requirementIds.includes(requirement.id))
+        .map((claim) => claim.trackerId),
     })),
     outOfScope: outOfScopeAnnotations.map((annotation) => ({
       spanId: annotation.spanId,
@@ -749,6 +863,7 @@ function renderReport(matrix) {
     `- QNT modeled: ${s.qntModeled} / ${s.executableRequirements} = ${pct(s.qntModeled, s.executableRequirements)}`,
     `- QNT proved: ${s.qntProved} / ${s.executableRequirements} = ${pct(s.qntProved, s.executableRequirements)}`,
     `- Runtime mapped: ${s.runtimeMapped} / ${s.executableRequirements} = ${pct(s.runtimeMapped, s.executableRequirements)}`,
+    `- Runtime tested: ${s.runtimeTested} / ${s.executableRequirements} = ${pct(s.runtimeTested, s.executableRequirements)}`,
     `- Runtime parity covered: ${s.runtimeParityCovered} / ${s.executableRequirements} = ${pct(s.runtimeParityCovered, s.executableRequirements)}`,
     `- Out of promoted scope spans: ${s.outOfScopeSpans}`,
     `- Ambiguous spans: ${s.ambiguousSpans}`,
@@ -766,26 +881,39 @@ function renderReport(matrix) {
         `| ${review.sectionId} | ${review.reviewer} | ${review.verdict} | ${review.sourcesChecked.join(", ")} |`,
     ),
     "",
-    "## Active Plan Tasks",
+    "## Historical Evidence Claims",
     "",
-    "| Task | Status | Requirements |",
+    "| Evidence | Coverage metric | Exact owner | Requirements |",
+    "| --- | --- | --- | --- |",
+    ...matrix.evidenceClaims.map(
+      (claim) =>
+        `| ${claim.evidenceId} | ${claim.coverageMetric} | ${claim.ownerPath} | ${claim.requirementIds.join(", ")} |`,
+    ),
+    "",
+    "## Tracker Follow-up Claims",
+    "",
+    "GitHub owns tracker status. These rows only join checked coverage gaps to stable issue identities.",
+    "",
+    "| Tracker | Gap metric | Requirements |",
     "| --- | --- | --- |",
-    ...matrix.activePlanTasks.map(
-      (task) =>
-        `| ${task.taskId} | ${task.status} | ${task.requirementIds.join(", ")} |`,
+    ...matrix.trackerClaims.map(
+      (claim) =>
+        `| ${claim.trackerId} | ${claim.coverageMetric} | ${claim.requirementIds.join(", ")} |`,
     ),
     "",
     "## Requirement Rows",
     "",
-    "| Requirement | Kind | QNT modeled | QNT proved | Runtime mapped | Runtime parity | Active tasks |",
-    "| --- | --- | --- | --- | --- | --- | --- |",
+    "| Requirement | Kind | QNT modeled | QNT proved | Runtime mapped | Runtime tested | Runtime parity | Evidence | Follow-up |",
+    "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ...matrix.requirements.map(
       (requirement) =>
         `| ${requirement.id} | ${requirement.coverageKind} | ${requirement.qntModeled ? "yes" : "no"} | ${
           requirement.qntProved ? "yes" : "no"
         } | ${requirement.runtimeMapped ? "yes" : "no"} | ${
+          requirement.runtimeTested ? "yes" : "no"
+        } | ${
           requirement.runtimeParityCovered ? "yes" : "no"
-        } | ${requirement.activePlanTasks.join(", ")} |`,
+        } | ${requirement.evidenceClaims.join(", ")} | ${requirement.trackerClaims.join(", ")} |`,
     ),
     "",
     "## Out Of Promoted Scope",
@@ -842,6 +970,21 @@ function withFixtureRoot(fn) {
   }
 }
 
+function writeFixtureVerificationClaims(fixtureRoot) {
+  fs.writeFileSync(
+    path.join(fixtureRoot, "packages/proofs/owner-proof.qnt"),
+    "// RAW-COVERAGE: verification-owner:qnt-proof RAW-FIXTURE-001\n",
+  );
+  fs.writeFileSync(
+    path.join(fixtureRoot, "packages/runtime/src/owner.mbt.test.ts"),
+    "// RAW-COVERAGE: verification-owner:focused-mbt RAW-FIXTURE-001\n",
+  );
+  fs.writeFileSync(
+    path.join(fixtureRoot, "packages/runtime/src/owner.test.ts"),
+    "// RAW-COVERAGE: verification-owner:runtime-test RAW-FIXTURE-001\n",
+  );
+}
+
 function runSelfTests() {
   const baseRequirement = {
     id: "RAW-FIXTURE-001",
@@ -849,8 +992,16 @@ function runSelfTests() {
     runtimeOwners: ["packages/runtime/src/owner.ts"],
     verificationOwners: [
       {
+        kind: "qnt-proof",
+        ownerPath: "packages/proofs/owner-proof.qnt",
+      },
+      {
         kind: "focused-mbt",
         ownerPath: "packages/runtime/src/owner.mbt.test.ts",
+      },
+      {
+        kind: "runtime-test",
+        ownerPath: "packages/runtime/src/owner.test.ts",
       },
     ],
   };
@@ -864,10 +1015,7 @@ function runSelfTests() {
       path.join(fixtureRoot, "packages/runtime/src/owner.ts"),
       "// RAW-COVERAGE: runtime-owner RAW-FIXTURE-001\n",
     );
-    fs.writeFileSync(
-      path.join(fixtureRoot, "packages/runtime/src/owner.mbt.test.ts"),
-      "// RAW-COVERAGE: verification-owner:focused-mbt RAW-FIXTURE-001\n",
-    );
+    writeFixtureVerificationClaims(fixtureRoot);
     validateRawCoverageOwnerClaims([baseRequirement], fixtureRoot);
   });
 
@@ -880,10 +1028,7 @@ function runSelfTests() {
       path.join(fixtureRoot, "packages/runtime/src/owner.ts"),
       "// RAW-COVERAGE: runtime-owner RAW-FIXTURE-001\n",
     );
-    fs.writeFileSync(
-      path.join(fixtureRoot, "packages/runtime/src/owner.mbt.test.ts"),
-      "// RAW-COVERAGE: verification-owner:focused-mbt RAW-FIXTURE-001\n",
-    );
+    writeFixtureVerificationClaims(fixtureRoot);
     assertThrowsWith(
       "unknown requirement claim",
       () => {
@@ -899,10 +1044,7 @@ function runSelfTests() {
       path.join(fixtureRoot, "packages/runtime/src/owner.ts"),
       "// RAW-COVERAGE: runtime-owner RAW-FIXTURE-001\n",
     );
-    fs.writeFileSync(
-      path.join(fixtureRoot, "packages/runtime/src/owner.mbt.test.ts"),
-      "// RAW-COVERAGE: verification-owner:focused-mbt RAW-FIXTURE-001\n",
-    );
+    writeFixtureVerificationClaims(fixtureRoot);
     assertThrowsWith(
       "missing reverse qnt claim",
       () => {
@@ -911,40 +1053,165 @@ function runSelfTests() {
       "does not cite it with RAW-COVERAGE: qnt-owner",
     );
   });
-}
 
-try {
-  if (selfTest) {
-    runSelfTests();
-    console.log("RAW coverage checker self-test OK.");
-    return;
-  }
+  const requirementsById = new Map([[baseRequirement.id, baseRequirement]]);
+  const validEvidenceClaim = {
+    evidenceId: "FIXTURE-PROOF",
+    coverageMetric: "qnt-proof",
+    ownerPath: "packages/proofs/owner-proof.qnt",
+    requirementIds: [baseRequirement.id],
+  };
+  const validateEvidenceClaims = (rows) =>
+    validateCoverageClaimRows({
+      rows,
+      identityField: "evidenceId",
+      allowedMetrics: evidenceCoverageMetrics,
+      requirementsById,
+      claimKind: "evidence",
+      metricVerificationOwnerKinds: evidenceMetricVerificationOwnerKinds,
+    });
+  validateEvidenceClaims([validEvidenceClaim]);
+  validateCoverageClaimRows({
+    rows: [
+      {
+        trackerId: "GH-351",
+        coverageMetric: "missing-qnt-owner",
+        requirementIds: [baseRequirement.id],
+      },
+    ],
+    identityField: "trackerId",
+    allowedMetrics: trackerCoverageMetrics,
+    requirementsById,
+    claimKind: "tracker",
+  });
 
-  const matrix = buildMatrix();
-  const report = renderReport(matrix);
-
-  if (write) {
-    fs.writeFileSync(paths.matrix, `${JSON.stringify(matrix, null, 2)}\n`);
-    fs.writeFileSync(paths.report, report);
-  } else {
-    assertDeepEqual(
-      readJson(paths.matrix),
-      matrix,
-      "plans/raw-coverage/matrix.json",
+  const invalidEvidenceClaims = [
+    {
+      label: "empty evidence identity",
+      rows: [{ ...validEvidenceClaim, evidenceId: "" }],
+      message: "evidenceId must be a non-empty string",
+    },
+    {
+      label: "duplicate evidence identity",
+      rows: [validEvidenceClaim, validEvidenceClaim],
+      message: "evidence claim identity FIXTURE-PROOF is duplicated",
+    },
+    {
+      label: "unknown evidence metric",
+      rows: [{ ...validEvidenceClaim, coverageMetric: "done" }],
+      message: "coverageMetric has unknown value done",
+    },
+    {
+      label: "missing evidence owner path",
+      rows: [{ ...validEvidenceClaim, ownerPath: "" }],
+      message: "ownerPath must be a non-empty string",
+    },
+    {
+      label: "empty requirement ids",
+      rows: [{ ...validEvidenceClaim, requirementIds: [] }],
+      message: "requirementIds must be a non-empty array",
+    },
+    {
+      label: "duplicate requirement id",
+      rows: [
+        {
+          ...validEvidenceClaim,
+          requirementIds: [baseRequirement.id, baseRequirement.id],
+        },
+      ],
+      message: `requirementIds duplicates ${baseRequirement.id}`,
+    },
+    {
+      label: "unknown requirement id",
+      rows: [{ ...validEvidenceClaim, requirementIds: ["RAW-UNKNOWN-001"] }],
+      message: "references unknown requirement RAW-UNKNOWN-001",
+    },
+    {
+      label: "unknown claim field",
+      rows: [{ ...validEvidenceClaim, status: "done" }],
+      message: "has unknown fields: status",
+    },
+    {
+      label: "malformed claim row",
+      rows: [null],
+      message: "must be an object",
+    },
+  ];
+  for (const fixture of invalidEvidenceClaims) {
+    assertThrowsWith(
+      fixture.label,
+      () => validateEvidenceClaims(fixture.rows),
+      fixture.message,
     );
-    const existingReport = fs.readFileSync(paths.report, "utf8");
-    if (existingReport !== report) {
-      fail(
-        "plans/raw-coverage/REPORT.md is stale. Run node scripts/raw-coverage-check.cjs --write to refresh it.",
-      );
-    }
   }
 
-  console.log(
-    `RAW coverage tracer OK: ${matrix.summary.classifiedSpans}/${matrix.summary.generatedSpans} spans classified, ` +
-      `${matrix.summary.closedNonFluffSpans}/${matrix.summary.nonFluffSpans} non-fluff spans closed.`,
-  );
-} catch (error) {
-  console.error(error.message);
-  process.exitCode = 1;
+  for (const [coverageMetric, requiredOwnerKind] of [
+    ["qnt-proof", "qnt-proof"],
+    ["runtime-parity", "focused-mbt"],
+    ["runtime-test", "runtime-test"],
+  ]) {
+    const requirementWithoutMetricOwner = {
+      ...baseRequirement,
+      verificationOwners: baseRequirement.verificationOwners.filter(
+        (owner) => owner.kind !== requiredOwnerKind,
+      ),
+    };
+    assertThrowsWith(
+      `${coverageMetric} evidence owner mismatch`,
+      () =>
+        validateCoverageClaimRows({
+          rows: [{ ...validEvidenceClaim, coverageMetric }],
+          identityField: "evidenceId",
+          allowedMetrics: evidenceCoverageMetrics,
+          requirementsById: new Map([
+            [requirementWithoutMetricOwner.id, requirementWithoutMetricOwner],
+          ]),
+          claimKind: "evidence",
+          metricVerificationOwnerKinds: evidenceMetricVerificationOwnerKinds,
+        }),
+      `metric ${coverageMetric} requires ${baseRequirement.id} to have exact verification owner ${requiredOwnerKind}:${validEvidenceClaim.ownerPath}`,
+    );
+  }
 }
+
+function main() {
+  try {
+    if (selfTest) {
+      runSelfTests();
+      console.log("RAW coverage checker self-test OK.");
+      return;
+    }
+
+    const matrix = buildMatrix();
+    const report = renderReport(matrix);
+
+    if (write) {
+      fs.writeFileSync(paths.matrix, `${JSON.stringify(matrix, null, 2)}\n`);
+      fs.writeFileSync(paths.report, report);
+    } else {
+      assertDeepEqual(
+        readJson(paths.matrix),
+        matrix,
+        "plans/raw-coverage/matrix.json",
+      );
+      const existingReport = fs.readFileSync(paths.report, "utf8");
+      if (existingReport !== report) {
+        fail(
+          "plans/raw-coverage/REPORT.md is stale. Run node scripts/raw-coverage-check.cjs --write to refresh it.",
+        );
+      }
+    }
+
+    console.log(
+      `RAW coverage tracer OK: ${matrix.summary.classifiedSpans}/${matrix.summary.generatedSpans} spans classified, ` +
+        `${matrix.summary.closedNonFluffSpans}/${matrix.summary.nonFluffSpans} non-fluff spans closed.`,
+    );
+  } catch (error) {
+    console.error(error.message);
+    process.exitCode = 1;
+  }
+}
+
+module.exports = { scanRawCoverageClaims, validateRawCoverageOwnerClaims };
+
+if (require.main === module) main();

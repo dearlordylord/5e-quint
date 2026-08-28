@@ -1,8 +1,9 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-MULTIATTACK-001 RAW-STAT-BLOCK-LIMITED-USAGE-001
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties stat-block.bonus-action-lifecycle stat-block.legendary-action-lifecycle stat-block.multiattack stat-block.resource-lifecycle
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
-// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE BATTLE.STAT_BLOCK.MULTIATTACK BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE
 
-import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
   CharacterAttackExecutionSelection,
   StatBlockAttackExecutionSelection,
@@ -23,6 +24,7 @@ import {
 import {
   statBlockProcedureBinding,
   spendStatBlockProcedureResources,
+  type StatBlockMultiattackDispatchResourceDemand,
   type StatBlockMultiattackProcedure,
   type StatBlockProcedureBindingFor,
 } from "../stat-block-execution-state.ts";
@@ -33,15 +35,17 @@ import {
 } from "./druid-wild-shape.ts";
 import { slowActivePenaltiesEffects } from "./slow-active-penalties-effects.ts";
 
-export function statBlockMultiattackEffectiveDispatchProcedureRefsForActor(
+export function statBlockMultiattackDispatchResourceDemandForActor(
   actor: StatBlockBattleCreatureState,
   binding: StatBlockProcedureBindingFor<StatBlockMultiattackProcedure>,
-): ReadonlyNonEmptyArray<BattleStatBlockProcedureExecutionRef> {
-  const [consumedProcedureRef, ...pendingProcedureRefs] =
-    binding.procedure.dispatchProcedureRefs;
-  const effectivePendingProcedureRefs =
-    slowActivePenaltiesEffects(actor).length > 0 ? [] : pendingProcedureRefs;
-  return [consumedProcedureRef, ...effectivePendingProcedureRefs];
+): StatBlockMultiattackDispatchResourceDemand {
+  return {
+    kind:
+      slowActivePenaltiesEffects(actor).length > 0
+        ? "oneListedDispatch"
+        : "allListedDispatches",
+    procedureRefs: binding.procedure.dispatchProcedureRefs,
+  };
 }
 
 export function attackActionOptionIsOrdinaryAttackAction(

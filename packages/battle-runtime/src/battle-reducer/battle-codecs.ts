@@ -1,4 +1,5 @@
 // Runtime codecs for battle reducer public payloads.
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-MULTIATTACK-001
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
@@ -11,15 +12,17 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties stat-block.multiattack
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.brutal-strike
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP BATTLE.STAT_BLOCK.MULTIATTACK
 // This module owns Effect Schema values for battle state execution.
 
 import { ATTACK_ROLL_MODES } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { ArmorClassSchema as BattleArmorClassSchema } from "@dnd/shared-algebras/armor-class-algebra";
+import { HasteActionResourceRestrictionSchema } from "@dnd/shared-algebras/action-economy-algebra";
 import { RETAINED_COMPANION_PROTOCOL_TAGS } from "@dnd/shared-algebras/companion-protocol-algebra";
 import {
   AmmunitionKindSchema,
@@ -29,6 +32,7 @@ import {
 import {
   CONDITIONS as ALL_CONDITIONS,
   COVER_TYPES,
+  CreatureId,
   ResourceCount,
 } from "@dnd/shared/types";
 import { BattleCreatureDisplayNameSchema } from "../battle-creature-display-name.ts";
@@ -55,6 +59,10 @@ import {
 } from "../unit-feature-support.ts";
 import { Match, Schema } from "effect";
 import { SpellExecutionFactsSchema } from "./spell-execution-facts.ts";
+import {
+  actionResourceCollectionOwnershipActivityAndUniquenessAreValid,
+  statBlockMultiattackContinuationActionResourcesAreValid,
+} from "./action-resource-kinds.ts";
 import {
   UnitFeatureProcedureExecutionSchema,
   UnitSupportProcedureExecutionSchema,
@@ -2793,6 +2801,14 @@ const BattleDieRollResultSchema = Schema.Number.pipe(
   Schema.brand("DieRollResult"),
 );
 
+const BattleD6RollResultSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.between(1, 6),
+  Schema.brand("PositiveInteger"),
+  Schema.brand("DieRollResult"),
+  Schema.brand("D6RollResult"),
+);
+
 const BattleD20DieRollResultSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.between(1, 20),
@@ -5027,7 +5043,7 @@ export const BattleFillSchema: Schema.Schema<
       value: Schema.Array(
         Schema.Struct({
           target: BattleResourcePoolExecutionRef,
-          roll: BattleDieRollResultSchema,
+          roll: BattleD6RollResultSchema,
         }),
       ),
     }),
@@ -5384,7 +5400,7 @@ export const RuntimeActionResourceSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("action"),
     source: Schema.Literal("unit"),
-    sourceOwnerId: Schema.String,
+    sourceOwnerId: CreatureId,
     sourceProcedureRef: BattleProcedureExecutionRef,
     sourceUnitId: Schema.optionalWith(Schema.Never, { exact: true }),
     restriction: BattleActionRestrictionSchema,
@@ -5392,22 +5408,34 @@ export const RuntimeActionResourceSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("action"),
     source: Schema.Literal("spellEffect"),
-    sourceOwnerId: Schema.String,
+    sourceOwnerId: Schema.optionalWith(Schema.Never, { exact: true }),
     sourceEffectRef: BattleActiveEffectExecutionRef,
     sourceProcedureRef: Schema.optionalWith(Schema.Never, { exact: true }),
-    restriction: BattleActionRestrictionSchema,
+    restriction: HasteActionResourceRestrictionSchema,
   }),
   Schema.Struct({
     kind: Schema.Literal("action"),
     source: Schema.Literal("statBlockMultiattack"),
-    sourceOwnerId: Schema.String,
-    attackProcedureRef: BattleStatBlockProcedureExecutionRef,
-    restriction: BattleActionRestrictionSchema,
+    sourceOwnerId: CreatureId,
+    sourceProcedureRef: BattleStatBlockProcedureExecutionRef,
+    dispatch: Schema.Union(
+      Schema.Struct({
+        kind: Schema.Literal("listedOccurrence"),
+        attackProcedureRef: BattleStatBlockProcedureExecutionRef,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("oneListedChoice"),
+        attackProcedureRefs: Schema.NonEmptyArray(
+          BattleStatBlockProcedureExecutionRef,
+        ),
+      }),
+    ),
+    restriction: Schema.optionalWith(Schema.Never, { exact: true }),
   }),
   Schema.Struct({
     kind: Schema.Literal("action"),
     source: Schema.Literal("classFeatureExtraAttack"),
-    sourceOwnerId: Schema.String,
+    sourceOwnerId: CreatureId,
     sourceProcedureRef: BattleProcedureExecutionRef,
     sourceUnitId: Schema.optionalWith(Schema.Never, { exact: true }),
     restriction: BattleActionRestrictionSchema,
@@ -5415,7 +5443,7 @@ export const RuntimeActionResourceSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("action"),
     source: Schema.Literal("monkFocusFlurryOfBlows"),
-    sourceOwnerId: Schema.String,
+    sourceOwnerId: CreatureId,
     sourceProcedureRef: BattleProcedureExecutionRef,
   }),
 );
@@ -8303,6 +8331,7 @@ function battleSnapshotInvariantsHold(
       cursorByCombatant,
       retiredAllocationByCombatant,
     }) &&
+    battleSnapshotActionResourcesAreValid(snapshot) &&
     battleSnapshotActsOwnReferences(snapshot, boundExecutionRefs) &&
     snapshot.readiedResponses.spells.every((readied) =>
       serializedReadiedSpellOwnsInvocation(snapshot.combatants, readied),
@@ -8318,6 +8347,36 @@ function battleSnapshotInvariantsHold(
         cursor: cursorByCombatant.get(executionScope.combatantId),
         battleId: snapshot.battleId,
       }),
+    )
+  );
+}
+
+function battleSnapshotActionResourcesAreValid(
+  snapshot: BattleSnapshotInvariantInput,
+): boolean {
+  const actor = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === snapshot.currentActorId,
+  );
+  if (
+    actor === undefined ||
+    !actionResourceCollectionOwnershipActivityAndUniquenessAreValid(
+      snapshot.turn.actionResources,
+      snapshot.currentActorId,
+      actor.activeEffectRefs,
+    )
+  ) {
+    return false;
+  }
+  const hasMultiattackContinuation = snapshot.turn.actionResources.some(
+    (resource) => resource.source === "statBlockMultiattack",
+  );
+  if (!hasMultiattackContinuation) return true;
+  return (
+    actor?.origin.kind === "statBlock" &&
+    statBlockMultiattackContinuationActionResourcesAreValid(
+      snapshot.turn.actionResources,
+      snapshot.currentActorId,
+      actor.origin.execution,
     )
   );
 }

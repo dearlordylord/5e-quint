@@ -1,4 +1,3 @@
-// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
 import * as Either from "effect/Either";
 import { Match } from "effect";
 import {

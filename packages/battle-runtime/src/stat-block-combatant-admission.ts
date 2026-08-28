@@ -21,7 +21,6 @@ import {
   type BattleStatBlockRuntimeResource,
 } from "./stat-block-execution-state.ts";
 import { statBlockExecutionAdmissionCohort } from "./stat-block-execution.ts";
-// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY
 
 const AdmittedBattleStatBlockCombatant =

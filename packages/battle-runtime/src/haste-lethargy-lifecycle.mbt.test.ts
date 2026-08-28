@@ -470,9 +470,7 @@ function casterSpellSlotExpended(state: BattleState): number {
 
 function hasteCurrentSpellActionResourceCount(state: BattleState): number {
   return state.currentTurnResources.actionResources.filter(
-    (resource) =>
-      resource.source === "spellEffect" &&
-      resource.sourceOwnerId === spellCasterId,
+    (resource) => resource.source === "spellEffect",
   ).length;
 }
 

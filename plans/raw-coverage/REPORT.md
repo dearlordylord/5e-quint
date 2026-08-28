@@ -208,11 +208,12 @@
 
 - SRD span classification: 23966 / 23966 = 100.00%
 - Non-fluff span closure: 22730 / 22730 = 100.00%
-- Executable requirements: 9
-- QNT modeled: 9 / 9 = 100.00%
-- QNT proved: 9 / 9 = 100.00%
-- Runtime mapped: 8 / 9 = 88.89%
-- Runtime parity covered: 8 / 9 = 88.89%
+- Executable requirements: 24
+- QNT modeled: 13 / 24 = 54.17%
+- QNT proved: 13 / 24 = 54.17%
+- Runtime mapped: 15 / 24 = 62.50%
+- Runtime tested: 7 / 24 = 29.17%
+- Runtime parity covered: 9 / 24 = 37.50%
 - Out of promoted scope spans: 1731
 - Ambiguous spans: 0
 - RAW-reviewed sections: 2920 / 2920 = 100.00%
@@ -2771,59 +2772,59 @@
 | srd521-spells-descriptions-a-d-0297 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
 | srd521-spells-descriptions-a-d-0314 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
 | srd521-spells-descriptions-a-d-0331 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0350 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0361 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0376 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0389 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0404 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0419 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0436 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0449 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0462 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0479 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0499 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0516 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0531 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0546 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0563 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0578 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0593 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0606 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0623 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0644 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0660 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0677 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0692 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0707 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0722 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0739 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0754 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0771 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0352 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0363 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0378 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0391 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0406 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0421 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0438 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0451 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0464 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0481 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0501 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0518 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0533 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0548 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0565 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0580 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0595 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0608 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0625 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0646 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0662 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0679 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0694 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0709 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0724 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0741 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0756 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0773 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
 | srd521-spells-descriptions-a-d-0788 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
 | srd521-spells-descriptions-a-d-0807 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
 | srd521-spells-descriptions-a-d-0820 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
 | srd521-spells-descriptions-a-d-0841 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
 | srd521-spells-descriptions-a-d-0858 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0879 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0892 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0907 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0922 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0946 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0965 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-0987 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-1006 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-1023 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-1040 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-1057 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-1072 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-1089 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-1106 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-1119 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-1137 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-1152 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-1162 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-1173 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
-| srd521-spells-descriptions-a-d-1185 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0881 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0894 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0909 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0924 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0948 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0967 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-0989 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-1008 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-1025 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-1042 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-1059 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-1074 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-1091 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-1108 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-1121 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-1139 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-1154 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-1164 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-1175 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
+| srd521-spells-descriptions-a-d-1187 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
 | srd521-spells-descriptions-a-d-1200 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
 | srd521-spells-descriptions-a-d-1213 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
 | srd521-spells-descriptions-a-d-1231 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Descriptions-A-D.md, UBIQUITOUS_LANGUAGE.md |
@@ -3142,75 +3143,121 @@
 | srd521-spells-gaining-and-casting-0178 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Gaining-and-Casting.md, UBIQUITOUS_LANGUAGE.md |
 | srd521-spells-gaining-and-casting-0184 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Gaining-and-Casting.md, UBIQUITOUS_LANGUAGE.md |
 
-## Active Plan Tasks
+## Historical Evidence Claims
 
-| Task | Status | Requirements |
+| Evidence | Coverage metric | Exact owner | Requirements |
+| --- | --- | --- | --- |
+| QCORE7 | qnt-proof | packages/shared-algebras/proofs/rule-core/movement-spatial-grapple-inductive.qnt | RAW-QCORE7-MOVEMENT-GRAPPLE-001 |
+| QCORE8 | qnt-proof | packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration-inductive.qnt | RAW-PTG-REACTIONS-002, RAW-PTG-REACTIONS-004, RAW-PTG-REACTIONS-005, RAW-PTG-REACTIONS-006, RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001 |
+| QCORE9 | qnt-proof | packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt | RAW-QCORE9-UNIT-FEATURE-PROFILES-001 |
+| QCORE10 | qnt-proof | packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt | RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001 |
+| QMBT2 | runtime-parity | packages/battle-runtime/src/rule-core-movement.mbt.test.ts | RAW-QCORE7-MOVEMENT-GRAPPLE-001 |
+| QMBT3 | runtime-parity | packages/battle-runtime/src/rule-core-reactions.mbt.test.ts | RAW-PTG-REACTIONS-002, RAW-PTG-REACTIONS-004, RAW-PTG-REACTIONS-005, RAW-PTG-REACTIONS-006, RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001 |
+| QMBT4 | runtime-parity | packages/battle-runtime/src/rule-core-features.mbt.test.ts | RAW-QCORE9-UNIT-FEATURE-PROFILES-001 |
+| QMBT5 | runtime-parity | packages/battle-runtime/src/rule-core-spells.mbt.test.ts | RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001 |
+| SB-ACTION-LIFECYCLE-INDUCTIVE | qnt-proof | packages/shared-algebras/proofs/rule-core/stat-block-action-lifecycle-inductive.qnt | RAW-STAT-BLOCK-ACTION-LIFECYCLE-001 |
+| SB-BONUS-ACTION-LIFECYCLE-INDUCTIVE | qnt-proof | packages/shared-algebras/proofs/rule-core/stat-block-bonus-action-lifecycle-inductive.qnt | RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001 |
+| SB-LEGENDARY-ACTION-LIFECYCLE-INDUCTIVE | qnt-proof | packages/shared-algebras/proofs/rule-core/stat-block-legendary-action-lifecycle-inductive.qnt | RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001 |
+| SB-MULTIATTACK-INDUCTIVE | qnt-proof | packages/shared-algebras/proofs/rule-core/stat-block-multiattack-inductive.qnt | RAW-STAT-BLOCK-MULTIATTACK-001 |
+| SB-RESOURCE-LIFECYCLE-INDUCTIVE | qnt-proof | packages/shared-algebras/proofs/rule-core/stat-block-resource-lifecycle-inductive.qnt | RAW-STAT-BLOCK-LIMITED-USAGE-001 |
+| SB-ACTIONS-RUNTIME-TEST | runtime-test | packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts | RAW-STAT-BLOCK-ACTION-LIFECYCLE-001, RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001, RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001, RAW-STAT-BLOCK-ATTACK-PROCEDURE-001, RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001, RAW-STAT-BLOCK-MULTIATTACK-001, RAW-STAT-BLOCK-LIMITED-USAGE-001 |
+| SB-MULTIATTACK-MBT | runtime-parity | packages/battle-runtime/src/rule-core-stat-block-multiattack.mbt.test.ts | RAW-STAT-BLOCK-MULTIATTACK-001 |
+
+## Tracker Follow-up Claims
+
+GitHub owns tracker status. These rows only join checked coverage gaps to stable issue identities.
+
+| Tracker | Gap metric | Requirements |
 | --- | --- | --- |
-| QCORE7 | done | RAW-QCORE7-MOVEMENT-GRAPPLE-001 |
-| QCORE8 | done | RAW-PTG-REACTIONS-002, RAW-PTG-REACTIONS-004, RAW-PTG-REACTIONS-005, RAW-PTG-REACTIONS-006, RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001 |
-| QCORE9 | done | RAW-QCORE9-UNIT-FEATURE-PROFILES-001 |
-| QCORE10 | done | RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001 |
-| QCORE11 | done | RAW-QCORE11-STAT-BLOCK-CONTROLS-001 |
-| QMBT1 | done | RAW-QCORE7-MOVEMENT-GRAPPLE-001, RAW-PTG-REACTIONS-002, RAW-PTG-REACTIONS-004, RAW-PTG-REACTIONS-005, RAW-PTG-REACTIONS-006, RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001, RAW-QCORE9-UNIT-FEATURE-PROFILES-001 |
-| QMBT2 | done | RAW-QCORE7-MOVEMENT-GRAPPLE-001 |
-| QMBT3 | done | RAW-PTG-REACTIONS-002, RAW-PTG-REACTIONS-004, RAW-PTG-REACTIONS-005, RAW-PTG-REACTIONS-006, RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001 |
-| QMBT4 | done | RAW-QCORE9-UNIT-FEATURE-PROFILES-001 |
-| QMBT5 | done | RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001 |
-| QMBT6 | done | RAW-QCORE11-STAT-BLOCK-CONTROLS-001 |
+| GH-418 | missing-runtime-owner | RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001 |
+| GH-419 | missing-runtime-owner | RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001 |
+| GH-420 | missing-runtime-owner | RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001 |
+| GH-421 | missing-runtime-owner | RAW-STAT-BLOCK-SAVE-PROCEDURE-001 |
+| GH-422 | missing-runtime-owner | RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001 |
+| GH-423 | missing-runtime-owner | RAW-STAT-BLOCK-REACTION-LIFECYCLE-001 |
+| GH-424 | missing-runtime-owner | RAW-STAT-BLOCK-SPELL-INVOCATION-RESTRICTED-001 |
+| GH-425 | missing-runtime-owner | RAW-STAT-BLOCK-ATTACK-ADDITIONAL-EFFECT-001 |
+| GH-426 | missing-runtime-owner | RAW-STAT-BLOCK-STANDARD-ACTION-OPTION-001 |
+| GH-427 | missing-qnt-owner | RAW-STAT-BLOCK-ATTACK-PROCEDURE-001, RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001 |
 
 ## Requirement Rows
 
-| Requirement | Kind | QNT modeled | QNT proved | Runtime mapped | Runtime parity | Active tasks |
-| --- | --- | --- | --- | --- | --- | --- |
-| RAW-PTG-REACTIONS-001 | definition | no | no | no | no |  |
-| RAW-PTG-REACTIONS-002 | executable | yes | yes | yes | yes | QCORE8, QMBT1, QMBT3 |
-| RAW-PTG-REACTIONS-003 | definition | yes | no | yes | yes |  |
-| RAW-PTG-REACTIONS-004 | executable | yes | yes | yes | yes | QCORE8, QMBT1, QMBT3 |
-| RAW-PTG-REACTIONS-005 | executable | yes | yes | yes | yes | QCORE8, QMBT1, QMBT3 |
-| RAW-PTG-REACTIONS-006 | executable | yes | yes | yes | yes | QCORE8, QMBT1, QMBT3 |
-| RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001 | executable | yes | yes | yes | yes | QCORE8, QMBT1, QMBT3 |
-| RAW-DATA-ANIMALS | authored-data | no | no | no | no |  |
-| RAW-DATA-CHARACTER-CREATION | authored-data | no | no | no | no |  |
-| RAW-DATA-CHARACTER-ORIGINS | authored-data | no | no | no | no |  |
-| RAW-DATA-CLASSES-BARBARIAN | authored-data | no | no | no | no |  |
-| RAW-DATA-CLASSES-BARD | authored-data | no | no | no | no |  |
-| RAW-DATA-CLASSES-CLERIC | authored-data | no | no | no | no |  |
-| RAW-DATA-CLASSES-DRUID | authored-data | no | no | no | no |  |
-| RAW-DATA-CLASSES-FIGHTER | authored-data | no | no | no | no |  |
-| RAW-DATA-CLASSES-MONK | authored-data | no | no | no | no |  |
-| RAW-DATA-CLASSES-PALADIN | authored-data | no | no | no | no |  |
-| RAW-DATA-CLASSES-RANGER | authored-data | no | no | no | no |  |
-| RAW-DATA-CLASSES-ROGUE | authored-data | no | no | no | no |  |
-| RAW-DATA-CLASSES-SORCERER | authored-data | no | no | no | no |  |
-| RAW-DATA-CLASSES-WARLOCK | authored-data | no | no | no | no |  |
-| RAW-DATA-CLASSES-WIZARD | authored-data | no | no | no | no |  |
-| RAW-DATA-EQUIPMENT | authored-data | no | no | no | no |  |
-| RAW-DATA-FEATS | authored-data | no | no | no | no |  |
-| RAW-DATA-GAMEPLAY-TOOLBOX | authored-data | no | no | no | no |  |
-| RAW-DATA-MAGIC-ITEMS-ITEMS-A-H | authored-data | no | no | no | no |  |
-| RAW-DATA-MAGIC-ITEMS-ITEMS-I-P | authored-data | no | no | no | no |  |
-| RAW-DATA-MAGIC-ITEMS-ITEMS-Q-Z | authored-data | no | no | no | no |  |
-| RAW-DATA-MAGIC-ITEMS-OVERVIEW | authored-data | no | no | no | no |  |
-| RAW-DATA-MONSTERS-MONSTERS-A-B | authored-data | no | no | no | no |  |
-| RAW-DATA-MONSTERS-MONSTERS-C-D | authored-data | no | no | no | no |  |
-| RAW-DATA-MONSTERS-MONSTERS-E-G | authored-data | no | no | no | no |  |
-| RAW-DATA-MONSTERS-MONSTERS-H-L | authored-data | no | no | no | no |  |
-| RAW-DATA-MONSTERS-MONSTERS-M-O | authored-data | no | no | no | no |  |
-| RAW-DATA-MONSTERS-MONSTERS-P-S | authored-data | no | no | no | no |  |
-| RAW-DATA-MONSTERS-MONSTERS-T-Z | authored-data | no | no | no | no |  |
-| RAW-DATA-MONSTERS-OVERVIEW | authored-data | no | no | no | no |  |
-| RAW-DATA-PLAYING-THE-GAME | authored-data | no | no | no | no |  |
-| RAW-DATA-RULES-GLOSSARY | authored-data | no | no | no | no |  |
-| RAW-DATA-SPELLS-DESCRIPTIONS-A-D | authored-data | no | no | no | no |  |
-| RAW-DATA-SPELLS-DESCRIPTIONS-E-L | authored-data | no | no | no | no |  |
-| RAW-DATA-SPELLS-DESCRIPTIONS-M-P | authored-data | no | no | no | no |  |
-| RAW-DATA-SPELLS-DESCRIPTIONS-Q-R | authored-data | no | no | no | no |  |
-| RAW-DATA-SPELLS-DESCRIPTIONS-S-Z | authored-data | no | no | no | no |  |
-| RAW-DATA-SPELLS-GAINING-AND-CASTING | authored-data | no | no | no | no |  |
-| RAW-QCORE7-MOVEMENT-GRAPPLE-001 | executable | yes | yes | yes | yes | QCORE7, QMBT1, QMBT2 |
-| RAW-QCORE9-UNIT-FEATURE-PROFILES-001 | executable | yes | yes | yes | yes | QCORE9, QMBT1, QMBT4 |
-| RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001 | executable | yes | yes | yes | yes | QCORE10, QMBT5 |
-| RAW-QCORE11-STAT-BLOCK-CONTROLS-001 | executable | yes | yes | no | no | QCORE11, QMBT6 |
+| Requirement | Kind | QNT modeled | QNT proved | Runtime mapped | Runtime tested | Runtime parity | Evidence | Follow-up |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| RAW-PTG-REACTIONS-001 | definition | no | no | no | no | no |  |  |
+| RAW-PTG-REACTIONS-002 | executable | yes | yes | yes | no | yes | QCORE8, QMBT3 |  |
+| RAW-PTG-REACTIONS-003 | definition | yes | no | yes | no | yes |  |  |
+| RAW-PTG-REACTIONS-004 | executable | yes | yes | yes | no | yes | QCORE8, QMBT3 |  |
+| RAW-PTG-REACTIONS-005 | executable | yes | yes | yes | no | yes | QCORE8, QMBT3 |  |
+| RAW-PTG-REACTIONS-006 | executable | yes | yes | yes | no | yes | QCORE8, QMBT3 |  |
+| RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001 | executable | yes | yes | yes | no | yes | QCORE8, QMBT3 |  |
+| RAW-DATA-ANIMALS | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CHARACTER-CREATION | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CHARACTER-ORIGINS | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CLASSES-BARBARIAN | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CLASSES-BARD | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CLASSES-CLERIC | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CLASSES-DRUID | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CLASSES-FIGHTER | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CLASSES-MONK | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CLASSES-PALADIN | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CLASSES-RANGER | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CLASSES-ROGUE | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CLASSES-SORCERER | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CLASSES-WARLOCK | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CLASSES-WIZARD | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-EQUIPMENT | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-FEATS | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-GAMEPLAY-TOOLBOX | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-MAGIC-ITEMS-ITEMS-A-H | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-MAGIC-ITEMS-ITEMS-I-P | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-MAGIC-ITEMS-ITEMS-Q-Z | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-MAGIC-ITEMS-OVERVIEW | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-MONSTERS-MONSTERS-A-B | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-MONSTERS-MONSTERS-C-D | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-MONSTERS-MONSTERS-E-G | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-MONSTERS-MONSTERS-H-L | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-MONSTERS-MONSTERS-M-O | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-MONSTERS-MONSTERS-P-S | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-MONSTERS-MONSTERS-T-Z | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-MONSTERS-OVERVIEW | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-PLAYING-THE-GAME | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-RULES-GLOSSARY | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-SPELLS-DESCRIPTIONS-A-D | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-SPELLS-DESCRIPTIONS-E-L | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-SPELLS-DESCRIPTIONS-M-P | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-SPELLS-DESCRIPTIONS-Q-R | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-SPELLS-DESCRIPTIONS-S-Z | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-SPELLS-GAINING-AND-CASTING | authored-data | no | no | no | no | no |  |  |
+| RAW-QCORE7-MOVEMENT-GRAPPLE-001 | executable | yes | yes | yes | no | yes | QCORE7, QMBT2 |  |
+| RAW-QCORE9-UNIT-FEATURE-PROFILES-001 | executable | yes | yes | yes | no | yes | QCORE9, QMBT4 |  |
+| RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001 | executable | yes | yes | yes | no | yes | QCORE10, QMBT5 |  |
+| RAW-STAT-BLOCK-SCHEMA-DEFINITION-001 | definition | no | no | no | no | no |  |  |
+| RAW-STAT-BLOCK-TRAIT-PRESENTATION-001 | definition | no | no | no | no | no |  |  |
+| RAW-STAT-BLOCK-RUNNING-GUIDANCE-001 | table-caller-responsibility | no | no | no | no | no |  |  |
+| RAW-STAT-BLOCK-CATALOG-IDENTITY-A-B | authored-data | no | no | no | no | no |  |  |
+| RAW-STAT-BLOCK-CATALOG-IDENTITY-C-D | authored-data | no | no | no | no | no |  |  |
+| RAW-STAT-BLOCK-CATALOG-IDENTITY-E-G | authored-data | no | no | no | no | no |  |  |
+| RAW-STAT-BLOCK-CATALOG-IDENTITY-H-L | authored-data | no | no | no | no | no |  |  |
+| RAW-STAT-BLOCK-CATALOG-IDENTITY-M-O | authored-data | no | no | no | no | no |  |  |
+| RAW-STAT-BLOCK-CATALOG-IDENTITY-P-S | authored-data | no | no | no | no | no |  |  |
+| RAW-STAT-BLOCK-CATALOG-IDENTITY-T-Z | authored-data | no | no | no | no | no |  |  |
+| RAW-STAT-BLOCK-ACTION-LIFECYCLE-001 | executable | yes | yes | yes | yes | no | SB-ACTION-LIFECYCLE-INDUCTIVE, SB-ACTIONS-RUNTIME-TEST |  |
+| RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001 | executable | yes | yes | yes | yes | no | SB-BONUS-ACTION-LIFECYCLE-INDUCTIVE, SB-ACTIONS-RUNTIME-TEST |  |
+| RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001 | executable | yes | yes | yes | yes | no | SB-LEGENDARY-ACTION-LIFECYCLE-INDUCTIVE, SB-ACTIONS-RUNTIME-TEST |  |
+| RAW-STAT-BLOCK-ATTACK-PROCEDURE-001 | executable | no | no | yes | yes | no | SB-ACTIONS-RUNTIME-TEST | GH-427 |
+| RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001 | executable | no | no | yes | yes | no | SB-ACTIONS-RUNTIME-TEST | GH-427 |
+| RAW-STAT-BLOCK-MULTIATTACK-001 | executable | yes | yes | yes | yes | yes | SB-MULTIATTACK-INDUCTIVE, SB-ACTIONS-RUNTIME-TEST, SB-MULTIATTACK-MBT |  |
+| RAW-STAT-BLOCK-LIMITED-USAGE-001 | executable | yes | yes | yes | yes | no | SB-RESOURCE-LIFECYCLE-INDUCTIVE, SB-ACTIONS-RUNTIME-TEST |  |
+| RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001 | executable | no | no | no | no | no |  | GH-418 |
+| RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001 | executable | no | no | no | no | no |  | GH-419 |
+| RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001 | executable | no | no | no | no | no |  | GH-420 |
+| RAW-STAT-BLOCK-SAVE-PROCEDURE-001 | executable | no | no | no | no | no |  | GH-421 |
+| RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001 | executable | no | no | no | no | no |  | GH-422 |
+| RAW-STAT-BLOCK-REACTION-LIFECYCLE-001 | executable | no | no | no | no | no |  | GH-423 |
+| RAW-STAT-BLOCK-SPELL-INVOCATION-RESTRICTED-001 | executable | no | no | no | no | no |  | GH-424 |
+| RAW-STAT-BLOCK-ATTACK-ADDITIONAL-EFFECT-001 | executable | no | no | no | no | no |  | GH-425 |
+| RAW-STAT-BLOCK-STANDARD-ACTION-OPTION-001 | executable | no | no | no | no | no |  | GH-426 |
 
 ## Out Of Promoted Scope
 

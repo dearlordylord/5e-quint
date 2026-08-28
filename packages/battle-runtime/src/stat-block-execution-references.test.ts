@@ -9,6 +9,7 @@ import {
   resourceCount,
 } from "@dnd/shared/types";
 import {
+  CreatureRechargeMinimumRollSchema,
   StatBlockProcedureOrdinalSchema,
   StatBlockProcedureResourceOrdinalSchema,
 } from "@dnd/surface/surface/schema";
@@ -2432,7 +2433,12 @@ describe("Stat Block execution references", () => {
             ...rechargeSnapshot,
             resourcePools: rechargeSnapshot.resourcePools.map((pool) =>
               pool === thresholdRechargePool
-                ? { ...pool, minimumRoll: 6 }
+                ? {
+                    ...pool,
+                    minimumRoll: Schema.decodeUnknownSync(
+                      CreatureRechargeMinimumRollSchema,
+                    )(6),
+                  }
                 : pool,
             ),
           },

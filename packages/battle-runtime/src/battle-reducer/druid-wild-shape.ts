@@ -17,7 +17,7 @@ import {
   Hp,
   SIZES,
   proficiencyBonusForCharacterLevel,
-  type DieRollResult,
+  type D6RollResult,
 } from "@dnd/shared/types";
 import type { Ability, Size, Skill } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
@@ -383,7 +383,7 @@ export function applyActiveDruidWildShapeRechargeRolls(
   combatant: BattleCreatureState,
   rolls: readonly {
     readonly target: BattleResourcePoolExecutionRef;
-    readonly roll: DieRollResult;
+    readonly roll: D6RollResult;
   }[],
 ): BattleCreatureState {
   return mapActiveDruidWildShapeExecution(combatant, (execution) =>

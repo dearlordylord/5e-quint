@@ -34,7 +34,7 @@ import {
   abilityModifier,
   attackBonus,
   ClassLevel,
-  DieRollResult,
+  D6RollResult,
   Hp,
 } from "@dnd/shared/types";
 import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
@@ -700,7 +700,7 @@ test("an active Wild Shape form restores a spent recharge action from its start-
           value: [
             {
               target: rechargePool.resourcePoolRef,
-              roll: DieRollResult(rechargePool.minimumRoll),
+              roll: D6RollResult(rechargePool.minimumRoll),
             },
           ],
         },

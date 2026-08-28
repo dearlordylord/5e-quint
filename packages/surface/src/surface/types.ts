@@ -645,6 +645,9 @@ export type CreatureNamedActionOption = Schema.Schema.Type<
 export type CreatureActions = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureActionsSchema
 >;
+export type CreatureRechargeMinimumRoll = Schema.Schema.Type<
+  typeof SurfaceSchema.CreatureRechargeMinimumRollSchema
+>;
 export type CreatureLimitedUse = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureLimitedUseSchema
 >;
