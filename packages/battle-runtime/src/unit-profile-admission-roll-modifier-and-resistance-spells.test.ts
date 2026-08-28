@@ -13,6 +13,8 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   concentrationSavingThrowFill,
   testCharacterD20Statistics,
 } from "./battle-runtime.test-support.ts";
@@ -134,28 +136,22 @@ function withProtectionFromPoisonResistance(
   state: BattleState,
   targetId: typeof spellTargetId,
 ): BattleState {
-  const target = requireCombatant(state, targetId);
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(targetId, {
-      ...target,
-      activeEffects: [
-        ...target.activeEffects,
-        {
-          kind: "damageResistance" as const,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            "protection-from-poison-resistance-fixture",
-          ),
-          sourceCombatantId: spellCasterId,
-          damageType: "poison" as const,
-          expiresAt: {
-            kind: "duration" as const,
-            durationTicks: elapsedTimeTicks(600),
-          },
-        },
-      ],
-    }),
-  };
+  return battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: targetId,
+    effect: {
+      kind: "damageResistance",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "protection-from-poison-resistance-fixture",
+      ),
+      sourceCombatantId: spellCasterId,
+      damageType: "poison",
+      expiresAt: {
+        kind: "duration",
+        durationTicks: elapsedTimeTicks(600),
+      },
+    },
+  });
 }
 
 function withProtectionFromEnergyResistance(
@@ -163,29 +159,23 @@ function withProtectionFromEnergyResistance(
   targetId: typeof spellTargetId,
   damageType: DamageType,
 ): BattleState {
-  const target = requireCombatant(state, targetId);
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(targetId, {
-      ...target,
-      activeEffects: [
-        ...target.activeEffects,
-        {
-          kind: "damageResistance" as const,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            "protection-from-energy-resistance-fixture",
-          ),
-          sourceCombatantId: spellCasterId,
-          damageType,
-          expiresAt: {
-            kind: "concentration" as const,
-            combatantId: spellCasterId,
-            durationTicks: protectionFromEnergyDurationTicks,
-          },
-        },
-      ],
-    }),
-  };
+  return battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: targetId,
+    effect: {
+      kind: "damageResistance",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "protection-from-energy-resistance-fixture",
+      ),
+      sourceCombatantId: spellCasterId,
+      damageType,
+      expiresAt: {
+        kind: "concentration",
+        combatantId: spellCasterId,
+        durationTicks: protectionFromEnergyDurationTicks,
+      },
+    },
+  });
 }
 
 describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
@@ -276,16 +266,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       preparedSpells: [spell],
       extraTargetIds: [secondTargetId],
     });
-    const caster = state.state.combatants.get(spellCasterId);
-    const firstTarget = state.state.combatants.get(spellTargetId);
-    const secondTarget = state.state.combatants.get(secondTargetId);
-    if (
-      caster === undefined ||
-      firstTarget === undefined ||
-      secondTarget === undefined
-    ) {
-      throw new Error("Expected Bless recast combatants.");
-    }
+    const caster = requireCombatant(state.state, spellCasterId);
     const act = spellAct({ session: state, spellId: blessUnitId });
     const priorBlessEffect = {
       kind: "d20RollModifier" as const,
@@ -296,27 +277,33 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       skill: null,
       expiresAt: { kind: "concentration" as const, combatantId: spellCasterId },
     };
+    const allocatedState = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: state.state,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: spellTargetId,
+          effect: priorBlessEffect,
+        },
+        {
+          kind: "activeEffect",
+          ownerId: secondTargetId,
+          effect: priorBlessEffect,
+        },
+      ],
+    }).state;
     const stateWithPriorBless: BattleRuntimeSession =
       battleRuntimeSessionForTest({
         ...state,
         state: {
-          ...state.state,
-          combatants: new Map(state.state.combatants)
-            .set(spellCasterId, {
-              ...caster,
-              concentration: {
-                sourceProcedureRef: act.subject.procedureRef,
-                effectKind: "spellEffect",
-              },
-            })
-            .set(spellTargetId, {
-              ...firstTarget,
-              activeEffects: [...firstTarget.activeEffects, priorBlessEffect],
-            })
-            .set(secondTargetId, {
-              ...secondTarget,
-              activeEffects: [...secondTarget.activeEffects, priorBlessEffect],
-            }),
+          ...allocatedState,
+          combatants: new Map(allocatedState.combatants).set(spellCasterId, {
+            ...caster,
+            concentration: {
+              sourceProcedureRef: act.subject.procedureRef,
+              effectKind: "spellEffect",
+            },
+          }),
         },
       });
     const targetListHole = requireHole(act.initialHoles, "spellTargetList");
@@ -1539,33 +1526,25 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
       spellSlots: [],
     });
-    const targetCombatant = baseState.state.combatants.get(spellTargetId);
-    if (targetCombatant === undefined) {
-      throw new Error("Expected spell target.");
-    }
-    const state = {
-      ...baseState.state,
-      combatants: new Map(baseState.state.combatants).set(spellTargetId, {
-        ...targetCombatant,
-        activeEffects: [
-          ...targetCombatant.activeEffects,
-          {
-            kind: "spellDamageReduction" as const,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              "resistance-effect-fixture",
-            ),
-            sourceCombatantId: spellCasterId,
-            damageType: "slashing" as const,
-            amount: { dice: 1 as const, dieSize: 4 as const },
-            usedThisTurn: false,
-            expiresAt: {
-              kind: "concentration" as const,
-              combatantId: spellCasterId,
-            },
-          },
-        ],
-      }),
-    };
+    const targetCombatant = requireCombatant(baseState.state, spellTargetId);
+    const state = battleStateWithAllocatedEffectForTest({
+      state: baseState.state,
+      ownerId: spellTargetId,
+      effect: {
+        kind: "spellDamageReduction",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          "resistance-effect-fixture",
+        ),
+        sourceCombatantId: spellCasterId,
+        damageType: "slashing",
+        amount: { dice: 1, dieSize: 4 },
+        usedThisTurn: false,
+        expiresAt: {
+          kind: "concentration",
+          combatantId: spellCasterId,
+        },
+      },
+    });
     const subject = weaponAttackSubject(
       battleRuntimeSessionForTest({ ...baseState, state }),
       "Longsword",
@@ -1975,45 +1954,55 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     const act = spellAct({ session, spellId: guidanceUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const skillHole = requireHole(act.initialHoles, "skillChoice");
-    const target = requireCombatant(session.state, spellCasterId);
     const unrelatedSource = battleProcedureExecutionRefForTest(
       "synthetic-other-guidance-source",
     );
+    const allocatedState = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: session.state,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: spellCasterId,
+          effect: {
+            kind: "d20RollModifier",
+            sourceProcedureRef: act.subject.procedureRef,
+            sourceCombatantId: spellCasterId,
+            on: ["ability_check"],
+            delta: { dice: 1, dieSize: 4, sign: "+" },
+            skill: "stealth",
+            expiresAt: {
+              kind: "concentration",
+              combatantId: spellCasterId,
+            },
+          },
+        },
+        {
+          kind: "activeEffect",
+          ownerId: spellCasterId,
+          effect: {
+            kind: "d20RollModifier",
+            sourceProcedureRef: unrelatedSource,
+            sourceCombatantId: spellCasterId,
+            on: ["ability_check"],
+            delta: { dice: 1, dieSize: 4, sign: "+" },
+            skill: "perception",
+            expiresAt: {
+              kind: "duration",
+              durationTicks: elapsedTimeTicks(10),
+            },
+          },
+        },
+      ],
+    }).state;
+    const allocatedTarget = requireCombatant(allocatedState, spellCasterId);
     const stateWithPriorEffects: BattleState = {
-      ...session.state,
-      combatants: new Map(session.state.combatants).set(spellCasterId, {
-        ...target,
+      ...allocatedState,
+      combatants: new Map(allocatedState.combatants).set(spellCasterId, {
+        ...allocatedTarget,
         concentration: {
           sourceProcedureRef: act.subject.procedureRef,
           effectKind: "spellEffect",
         },
-        activeEffects: [
-          ...target.activeEffects,
-          {
-            kind: "d20RollModifier" as const,
-            sourceProcedureRef: act.subject.procedureRef,
-            sourceCombatantId: spellCasterId,
-            on: ["ability_check"] as const,
-            delta: { dice: 1, dieSize: 4, sign: "+" as const },
-            skill: "stealth" as const,
-            expiresAt: {
-              kind: "concentration" as const,
-              combatantId: spellCasterId,
-            },
-          },
-          {
-            kind: "d20RollModifier" as const,
-            sourceProcedureRef: unrelatedSource,
-            sourceCombatantId: spellCasterId,
-            on: ["ability_check"] as const,
-            delta: { dice: 1, dieSize: 4, sign: "+" as const },
-            skill: "perception" as const,
-            expiresAt: {
-              kind: "duration" as const,
-              durationTicks: elapsedTimeTicks(10),
-            },
-          },
-        ],
       }),
     };
 
@@ -2058,49 +2047,56 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     const act = spellAct({ session: base, spellId: resistanceUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const damageTypeHole = requireHole(act.initialHoles, "damageTypeChoice");
-    const target = requireCombatant(base.state, spellTargetId);
     const unrelatedSource = battleProcedureExecutionRefForTest(
       "synthetic-resistance-unrelated",
     );
-    const state: BattleState = {
-      ...base.state,
-      combatants: new Map(base.state.combatants)
-        .set(spellCasterId, {
-          ...requireCombatant(base.state, spellCasterId),
-          concentration: {
+    const allocatedState = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: base.state,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: spellTargetId,
+          effect: {
+            kind: "spellDamageReduction",
             sourceProcedureRef: act.subject.procedureRef,
-            effectKind: "spellEffect",
+            sourceCombatantId: spellCasterId,
+            damageType: "acid",
+            amount: { dice: 1, dieSize: 4 },
+            usedThisTurn: true,
+            expiresAt: {
+              kind: "concentration",
+              combatantId: spellCasterId,
+            },
           },
-        })
-        .set(spellTargetId, {
-          ...target,
-          activeEffects: [
-            {
-              kind: "spellDamageReduction" as const,
-              sourceProcedureRef: act.subject.procedureRef,
-              sourceCombatantId: spellCasterId,
-              damageType: "acid" as const,
-              amount: { dice: 1 as const, dieSize: 4 as const },
-              usedThisTurn: true,
-              expiresAt: {
-                kind: "concentration" as const,
-                combatantId: spellCasterId,
-              },
+        },
+        {
+          kind: "activeEffect",
+          ownerId: spellTargetId,
+          effect: {
+            kind: "spellDamageReduction",
+            sourceProcedureRef: unrelatedSource,
+            sourceCombatantId: spellCasterId,
+            damageType: "cold",
+            amount: { dice: 1, dieSize: 4 },
+            usedThisTurn: true,
+            expiresAt: {
+              kind: "duration",
+              durationTicks: elapsedTimeTicks(10),
             },
-            {
-              kind: "spellDamageReduction" as const,
-              sourceProcedureRef: unrelatedSource,
-              sourceCombatantId: spellCasterId,
-              damageType: "cold" as const,
-              amount: { dice: 1 as const, dieSize: 4 as const },
-              usedThisTurn: true,
-              expiresAt: {
-                kind: "duration" as const,
-                durationTicks: elapsedTimeTicks(10),
-              },
-            },
-          ],
-        }),
+          },
+        },
+      ],
+    }).state;
+    const allocatedCaster = requireCombatant(allocatedState, spellCasterId);
+    const state: BattleState = {
+      ...allocatedState,
+      combatants: new Map(allocatedState.combatants).set(spellCasterId, {
+        ...allocatedCaster,
+        concentration: {
+          sourceProcedureRef: act.subject.procedureRef,
+          effectKind: "spellEffect",
+        },
+      }),
     };
     const resolved = resolveBattleSubject({
       state,
@@ -2411,48 +2407,57 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
   test("protection_from_poison projects Advantage on Poisoned end-condition saves", () => {
     const baseSession = spellBattle({ spellSlots: [] });
     const target = requireCombatant(baseSession.state, spellTargetId);
+    const allocatedState = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: baseSession.state,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: spellTargetId,
+          effect: {
+            kind: "spellConditionEndTurnSave",
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              "poison-end-save-fixture",
+            ),
+            sourceCombatantId: spellCasterId,
+            condition: "poisoned",
+            conditionHadNonSpellSource: false,
+            heightenedSpellTargetDisadvantage: null,
+            save: {
+              ability: "con",
+              dc: { kind: "caster_spell_save_dc" },
+            },
+            expiresAt: {
+              kind: "duration",
+              durationTicks: elapsedTimeTicks(600),
+            },
+          },
+        },
+        {
+          kind: "activeEffect",
+          ownerId: spellTargetId,
+          effect: {
+            kind: "conditionSavingThrowRollMode",
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              "protection-from-poison-save-mode-fixture",
+            ),
+            sourceCombatantId: spellCasterId,
+            condition: "poisoned",
+            mode: "advantage",
+            expiresAt: {
+              kind: "duration",
+              durationTicks: elapsedTimeTicks(600),
+            },
+          },
+        },
+      ],
+    }).state;
+    const allocatedTarget = requireCombatant(allocatedState, spellTargetId);
     const state: BattleState = {
-      ...baseSession.state,
-      combatants: new Map(baseSession.state.combatants).set(
+      ...allocatedState,
+      combatants: new Map(allocatedState.combatants).set(
         spellTargetId,
         battleCreatureStateWithKnockOutPreservedConditions(
-          {
-            ...target,
-            activeEffects: [
-              ...target.activeEffects,
-              {
-                kind: "spellConditionEndTurnSave" as const,
-                sourceProcedureRef: battleProcedureExecutionRefForTest(
-                  "poison-end-save-fixture",
-                ),
-                sourceCombatantId: spellCasterId,
-                condition: "poisoned" as const,
-                conditionHadNonSpellSource: false,
-                heightenedSpellTargetDisadvantage: null,
-                save: {
-                  ability: "con" as const,
-                  dc: { kind: "caster_spell_save_dc" as const },
-                },
-                expiresAt: {
-                  kind: "duration" as const,
-                  durationTicks: elapsedTimeTicks(600),
-                },
-              },
-              {
-                kind: "conditionSavingThrowRollMode" as const,
-                sourceProcedureRef: battleProcedureExecutionRefForTest(
-                  "protection-from-poison-save-mode-fixture",
-                ),
-                sourceCombatantId: spellCasterId,
-                condition: "poisoned" as const,
-                mode: "advantage" as const,
-                expiresAt: {
-                  kind: "duration" as const,
-                  durationTicks: elapsedTimeTicks(600),
-                },
-              },
-            ],
-          },
+          allocatedTarget,
           applyCondition(target.conditions, "poisoned"),
         ),
       ),
@@ -2590,49 +2595,57 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
       slotLevel: 2,
     });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
-    const target = requireCombatant(base.state, spellTargetId);
     const unrelatedSource = battleProcedureExecutionRefForTest(
       "synthetic-poison-unrelated",
     );
-    const state: BattleState = {
-      ...base.state,
-      combatants: new Map(base.state.combatants).set(spellTargetId, {
-        ...target,
-        activeEffects: [
-          {
-            kind: "conditionSavingThrowRollMode" as const,
+    const state = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: base.state,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: spellTargetId,
+          effect: {
+            kind: "conditionSavingThrowRollMode",
             sourceProcedureRef: act.subject.procedureRef,
             sourceCombatantId: spellCasterId,
-            condition: "poisoned" as const,
-            mode: "advantage" as const,
+            condition: "poisoned",
+            mode: "advantage",
             expiresAt: {
-              kind: "duration" as const,
+              kind: "duration",
               durationTicks: elapsedTimeTicks(600),
             },
           },
-          {
-            kind: "damageResistance" as const,
+        },
+        {
+          kind: "activeEffect",
+          ownerId: spellTargetId,
+          effect: {
+            kind: "damageResistance",
             sourceProcedureRef: act.subject.procedureRef,
             sourceCombatantId: spellCasterId,
-            damageType: "poison" as const,
+            damageType: "poison",
             expiresAt: {
-              kind: "duration" as const,
+              kind: "duration",
               durationTicks: elapsedTimeTicks(600),
             },
           },
-          {
-            kind: "damageResistance" as const,
+        },
+        {
+          kind: "activeEffect",
+          ownerId: spellTargetId,
+          effect: {
+            kind: "damageResistance",
             sourceProcedureRef: unrelatedSource,
             sourceCombatantId: spellCasterId,
-            damageType: "acid" as const,
+            damageType: "acid",
             expiresAt: {
-              kind: "duration" as const,
+              kind: "duration",
               durationTicks: elapsedTimeTicks(10),
             },
           },
-        ],
-      }),
-    };
+        },
+      ],
+    }).state;
     const resolved = resolveBattleSubject({
       state,
       subject: act.subject,
@@ -2947,46 +2960,53 @@ describe("L5-B08 Protection from Energy deterministic Spell Unit admission", () 
     });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const damageTypeHole = requireHole(act.initialHoles, "damageTypeChoice");
-    const target = requireCombatant(base.state, spellTargetId);
     const unrelatedSource = battleProcedureExecutionRefForTest(
       "synthetic-energy-unrelated",
     );
-    const state: BattleState = {
-      ...base.state,
-      combatants: new Map(base.state.combatants)
-        .set(spellCasterId, {
-          ...requireCombatant(base.state, spellCasterId),
-          concentration: {
+    const allocatedState = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: base.state,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: spellTargetId,
+          effect: {
+            kind: "damageResistance",
             sourceProcedureRef: act.subject.procedureRef,
-            effectKind: "spellEffect",
+            sourceCombatantId: spellCasterId,
+            damageType: "acid",
+            expiresAt: {
+              kind: "concentration",
+              combatantId: spellCasterId,
+              durationTicks: protectionFromEnergyDurationTicks,
+            },
           },
-        })
-        .set(spellTargetId, {
-          ...target,
-          activeEffects: [
-            {
-              kind: "damageResistance" as const,
-              sourceProcedureRef: act.subject.procedureRef,
-              sourceCombatantId: spellCasterId,
-              damageType: "acid" as const,
-              expiresAt: {
-                kind: "concentration" as const,
-                combatantId: spellCasterId,
-                durationTicks: protectionFromEnergyDurationTicks,
-              },
+        },
+        {
+          kind: "activeEffect",
+          ownerId: spellTargetId,
+          effect: {
+            kind: "damageResistance",
+            sourceProcedureRef: unrelatedSource,
+            sourceCombatantId: spellCasterId,
+            damageType: "cold",
+            expiresAt: {
+              kind: "duration",
+              durationTicks: elapsedTimeTicks(10),
             },
-            {
-              kind: "damageResistance" as const,
-              sourceProcedureRef: unrelatedSource,
-              sourceCombatantId: spellCasterId,
-              damageType: "cold" as const,
-              expiresAt: {
-                kind: "duration" as const,
-                durationTicks: elapsedTimeTicks(10),
-              },
-            },
-          ],
-        }),
+          },
+        },
+      ],
+    }).state;
+    const allocatedCaster = requireCombatant(allocatedState, spellCasterId);
+    const state: BattleState = {
+      ...allocatedState,
+      combatants: new Map(allocatedState.combatants).set(spellCasterId, {
+        ...allocatedCaster,
+        concentration: {
+          sourceProcedureRef: act.subject.procedureRef,
+          effectKind: "spellEffect",
+        },
+      }),
     };
     const resolved = resolveBattleSubject({
       state,
