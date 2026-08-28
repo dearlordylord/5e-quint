@@ -33,14 +33,17 @@ describe("complete-catalog Stat Block procedure pressure", () => {
     );
 
     expect(report.recordCount).toBe(330);
+    expect(report.records.map(({ recordOrdinal }) => recordOrdinal)).toEqual(
+      srdStatBlockCollection.statBlocks.map((_, index) => index + 1),
+    );
     expect(report.records.map(({ statBlockId }) => statBlockId)).toEqual(
       srdStatBlockCollection.statBlocks.map(({ id }) => id),
     );
     expect(report.occurrenceCount).toBe(2602);
     expect(report.occurrenceCounts).toEqual(EXPECTED_OCCURRENCE_COUNTS);
     expect(report.occurrences).toEqual(
-      srdStatBlockCollection.statBlocks.flatMap(
-        statBlockProcedurePressureOccurrences,
+      srdStatBlockCollection.statBlocks.flatMap((record, index) =>
+        statBlockProcedurePressureOccurrences(record, index + 1),
       ),
     );
     expect(report.capabilityProposals.length).toBeLessThanOrEqual(24);
@@ -109,7 +112,8 @@ describe("complete-catalog Stat Block procedure pressure", () => {
       expect(
         declarations.some(
           (declaration) =>
-            declaration.witness.statBlockId === reference.witness.statBlockId &&
+            declaration.witness.recordOrdinal ===
+              reference.witness.recordOrdinal &&
             declaration.witness.location.kind === "resourceDeclaration" &&
             declaration.witness.location.resourceOrdinal ===
               referenceLocation.resourceOrdinal,
@@ -119,31 +123,19 @@ describe("complete-catalog Stat Block procedure pressure", () => {
   });
 
   it("keeps structural groups and capability pressure invariant under authored identity changes", () => {
-    const source = srdStatBlockCollection.statBlocks.find((record) =>
-      record.statBlock.actions?.some(
-        (entry) =>
-          entry.kind === "executable" &&
-          entry.procedure.kind === "spellcasting",
-      ),
+    const sourceRecords = srdStatBlockCollection.statBlocks;
+    const renamedRecords = sourceRecords.map((record, index) =>
+      syntheticIdentityRecord(record, index + 1),
     );
-    if (source === undefined) {
-      throw new Error("Expected one installed spellcasting Stat Block.");
-    }
-    const renamedUnknown: unknown = JSON.parse(
-      JSON.stringify(source, (key, value: unknown) => {
-        if (key === "id") return "stat_block_synthetic_pressure_identity";
-        if (key === "name") return "Synthetic Pressure Identity";
-        if (key === "description") return "Synthetic exact prose.";
-        if (key === "spellId") return "synthetic_spell_reference";
-        if (key === "restriction") return "Synthetic restriction.";
-        if (key === "label") return "Synthetic label";
-        return value;
-      }),
-    );
-    const renamed = decodeStatBlockRecordSync(renamedUnknown);
-    const sourceReport = analyzeStatBlockProcedurePressure([source]);
-    const renamedReport = analyzeStatBlockProcedurePressure([renamed]);
+    const sourceReport = analyzeStatBlockProcedurePressure(sourceRecords);
+    const renamedReport = analyzeStatBlockProcedurePressure(renamedRecords);
 
+    expect(renamedReport.occurrenceCounts).toEqual(
+      sourceReport.occurrenceCounts,
+    );
+    expect(renamedReport.dispositionCounts).toEqual(
+      sourceReport.dispositionCounts,
+    );
     expect(groupsWithoutWitnesses(renamedReport.groups)).toEqual(
       groupsWithoutWitnesses(sourceReport.groups),
     );
@@ -249,6 +241,30 @@ describe("complete-catalog Stat Block procedure pressure", () => {
     ).toEqual([]);
   });
 });
+
+function syntheticIdentityRecord(
+  record: StatBlockRecord,
+  recordOrdinal: number,
+): StatBlockRecord {
+  const renamedUnknown: unknown = JSON.parse(
+    JSON.stringify(record, (key, value: unknown) => {
+      if (key === "id") {
+        return `stat_block_synthetic_pressure_identity_${String(recordOrdinal)}`;
+      }
+      if (key === "name") {
+        return `Synthetic Pressure Identity ${String(recordOrdinal)}`;
+      }
+      if (key === "description") return "Synthetic exact prose.";
+      if (key === "spellId") {
+        return `synthetic_spell_reference_${String(recordOrdinal)}`;
+      }
+      if (key === "restriction") return "Synthetic restriction.";
+      if (key === "label") return "Synthetic label";
+      return value;
+    }),
+  );
+  return decodeStatBlockRecordSync(renamedUnknown);
+}
 
 function groupsWithoutWitnesses(
   groups: readonly StatBlockProcedurePressureGroup[],

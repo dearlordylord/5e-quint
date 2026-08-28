@@ -147,6 +147,7 @@ export type StatBlockProcedurePressureLocation =
     };
 
 export type StatBlockProcedurePressureWitness = {
+  readonly recordOrdinal: number;
   readonly statBlockId: StatBlockRecord["id"];
   readonly statBlockName: StatBlockRecord["name"];
   readonly source: StatBlockProcedurePressureSource;
@@ -161,6 +162,7 @@ export type StatBlockProcedurePressureOccurrence = {
 };
 
 export type StatBlockProcedurePressureRecordWitness = {
+  readonly recordOrdinal: number;
   readonly statBlockId: StatBlockRecord["id"];
   readonly statBlockName: StatBlockRecord["name"];
   readonly source: StatBlockProcedurePressureSource;
@@ -220,9 +222,10 @@ type StatBlockProcedurePressureEntry =
 export function analyzeStatBlockProcedurePressure(
   records: readonly StatBlockRecord[],
 ): StatBlockProcedurePressureReport {
-  const recordOccurrences = records.map((record) => ({
+  const recordOccurrences = records.map((record, index) => ({
     record,
-    occurrences: statBlockProcedurePressureOccurrences(record),
+    recordOrdinal: index + 1,
+    occurrences: statBlockProcedurePressureOccurrences(record, index + 1),
   }));
   const occurrences = recordOccurrences.flatMap(
     ({ occurrences: values }) => values,
@@ -230,12 +233,15 @@ export function analyzeStatBlockProcedurePressure(
   return {
     kind: "statBlockProcedurePressureReport",
     recordCount: records.length,
-    records: recordOccurrences.map(({ record, occurrences: values }) => ({
-      statBlockId: record.id,
-      statBlockName: record.name,
-      source: statBlockProcedurePressureSource(record.provenance.section),
-      occurrenceCount: values.length,
-    })),
+    records: recordOccurrences.map(
+      ({ record, recordOrdinal, occurrences: values }) => ({
+        recordOrdinal,
+        statBlockId: record.id,
+        statBlockName: record.name,
+        source: statBlockProcedurePressureSource(record.provenance.section),
+        occurrenceCount: values.length,
+      }),
+    ),
     occurrenceCount: occurrences.length,
     occurrenceCounts: occurrenceCounts(occurrences),
     dispositionCounts: dispositionCounts(occurrences),
@@ -247,11 +253,12 @@ export function analyzeStatBlockProcedurePressure(
 
 export function statBlockProcedurePressureOccurrences(
   record: StatBlockRecord,
+  recordOrdinal: number,
 ): readonly StatBlockProcedurePressureOccurrence[] {
   const occurrences: StatBlockProcedurePressureOccurrence[] = [];
   const add = occurrenceAppender(
     occurrences,
-    procedurePressureOccurrenceBuilder(record),
+    procedurePressureOccurrenceBuilder(record, recordOrdinal),
   );
   const resourceContext = addResourceDeclarationOccurrences(record, add);
   addTraitOccurrences(record, add);
@@ -268,6 +275,7 @@ type ProcedurePressureOccurrenceBuilder = (
 
 function procedurePressureOccurrenceBuilder(
   record: StatBlockRecord,
+  recordOrdinal: number,
 ): ProcedurePressureOccurrenceBuilder {
   const source = statBlockProcedurePressureSource(record.provenance.section);
   return (kind, location, structuralSubject, disposition) => ({
@@ -282,6 +290,7 @@ function procedurePressureOccurrenceBuilder(
             issues: [source.section],
           },
     witness: {
+      recordOrdinal,
       statBlockId: record.id,
       statBlockName: record.name,
       source,
@@ -1005,7 +1014,7 @@ function pressureGroups(
     structuralShape: occurrence.structuralShape,
     disposition: occurrence.disposition,
     occurrenceCount: witnesses.length,
-    statBlockCount: new Set(witnesses.map(({ statBlockId }) => statBlockId))
+    statBlockCount: new Set(witnesses.map(({ recordOrdinal }) => recordOrdinal))
       .size,
     exampleWitnesses: distinctExampleWitnesses(witnesses),
   })).sort((left, right) =>
@@ -1061,11 +1070,12 @@ function capabilityProposals(
     failedFacts: candidate.failedFacts,
     occurrenceCount: candidate.witnesses.length,
     statBlockCount: new Set(
-      candidate.witnesses.map(({ statBlockId }) => statBlockId),
+      candidate.witnesses.map(({ recordOrdinal }) => recordOrdinal),
     ).size,
     pressureScore:
       candidate.witnesses.length +
-      new Set(candidate.witnesses.map(({ statBlockId }) => statBlockId)).size,
+      new Set(candidate.witnesses.map(({ recordOrdinal }) => recordOrdinal))
+        .size,
     exampleWitnesses: distinctExampleWitnesses(candidate.witnesses),
   }))
     .sort(
@@ -1081,11 +1091,11 @@ function capabilityProposals(
 function distinctExampleWitnesses(
   witnesses: readonly StatBlockProcedurePressureWitness[],
 ): readonly StatBlockProcedurePressureWitness[] {
-  const statBlockIds = new Set<StatBlockRecord["id"]>();
+  const recordOrdinals = new Set<number>();
   const examples: StatBlockProcedurePressureWitness[] = [];
   for (const witness of witnesses) {
-    if (statBlockIds.has(witness.statBlockId)) continue;
-    statBlockIds.add(witness.statBlockId);
+    if (recordOrdinals.has(witness.recordOrdinal)) continue;
+    recordOrdinals.add(witness.recordOrdinal);
     examples.push(witness);
     if (examples.length === MAX_EXAMPLE_WITNESSES) break;
   }
