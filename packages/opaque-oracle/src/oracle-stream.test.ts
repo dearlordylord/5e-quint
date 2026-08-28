@@ -12,7 +12,7 @@ import {
   evaluateOracleCase,
   type OracleEvaluationServices,
 } from "./oracle-evaluation.ts";
-import { type OracleBatchEvaluator } from "./oracle-batch-operation.ts";
+import { type OracleBatchEvaluator } from "./oracle-batch-operation-internal.ts";
 import { runOracleStream } from "./oracle-stream.ts";
 import { buildOracleDistribution } from "../scripts/build-distribution.ts";
 import {

@@ -15,10 +15,13 @@ import {
   type OracleEvaluationServicesBuildIssues,
 } from "./oracle-catalog-services.ts";
 import {
-  makeOracleBatchOperation,
-  type OracleBatchEvaluator,
+  evaluateOracleBatchJson,
   type OracleBatchOperation,
 } from "./oracle-batch-operation.ts";
+import {
+  makeOracleBatchOperationInternal,
+  type OracleBatchEvaluator,
+} from "./oracle-batch-operation-internal.ts";
 import {
   parseJsonWithDuplicateDetection,
   type OracleDecodeIssues,
@@ -76,7 +79,7 @@ export function withOracleBatchEvaluatorForTest(
   application: OracleApplication,
   evaluator: OracleBatchEvaluator,
 ): OracleApplication {
-  const operation = makeOracleBatchOperation(evaluator);
+  const operation = makeOracleBatchOperationInternal(evaluator);
   const composed: OracleApplication = Object.freeze({
     [oracleApplicationBrand]: true,
     identity: application.identity,
@@ -229,13 +232,13 @@ function buildOracleApplicationFromProjection(input: {
     distributionId: input.distributionId,
   });
   const servicesValue = deepFreeze(services.right);
-  const operation = makeOracleBatchOperation();
   const application: OracleApplication = Object.freeze({
     [oracleApplicationBrand]: true,
     identity,
     projection,
     services: servicesValue,
-    evaluateJson: (rawJson: string) => operation({ application, rawJson }),
+    evaluateJson: (rawJson: string) =>
+      evaluateOracleBatchJson({ application, rawJson }),
   });
   return Either.right(application);
 }

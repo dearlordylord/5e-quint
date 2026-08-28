@@ -12,10 +12,8 @@ import {
   evaluateOracleBatch,
   type OracleEvaluationServices,
 } from "./oracle-evaluation.ts";
-import {
-  evaluateOracleBatchJson,
-  makeOracleBatchOperation,
-} from "./oracle-batch-operation.ts";
+import { evaluateOracleBatchJson } from "./oracle-batch-operation.ts";
+import { makeOracleBatchOperationInternal } from "./oracle-batch-operation-internal.ts";
 import { buildOracleDistribution } from "../scripts/build-distribution.ts";
 import { loadOracleApplicationFromDirectory } from "./oracle-distribution.ts";
 
@@ -65,10 +63,12 @@ describe("Opaque Oracle raw batch operation", () => {
 
   test("returns decoder issues as data without invoking the evaluator", () => {
     let evaluations = 0;
-    const operation = makeOracleBatchOperation(({ batch, services: input }) => {
-      evaluations += 1;
-      return evaluateOracleBatch({ batch, services: input });
-    });
+    const operation = makeOracleBatchOperationInternal(
+      ({ batch, services: input }) => {
+        evaluations += 1;
+        return evaluateOracleBatch({ batch, services: input });
+      },
+    );
 
     const response = Effect.runSync(
       operation({ application, rawJson: "not-json" }),

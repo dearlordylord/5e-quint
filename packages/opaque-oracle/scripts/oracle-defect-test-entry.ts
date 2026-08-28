@@ -1,8 +1,8 @@
 import { Either } from "effect";
 
 import { evaluateOracleCase } from "../src/oracle-evaluation.ts";
-import type { OracleBatchEvaluator } from "../src/oracle-batch-operation.ts";
 import { runOracleProcess } from "../src/oracle-bootstrap.ts";
+import type { OracleBatchEvaluator } from "../src/oracle-batch-operation-internal.ts";
 import {
   loadOracleApplicationFromExecutable,
   withOracleBatchEvaluatorForTest,

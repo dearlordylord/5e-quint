@@ -4,7 +4,11 @@ export * from "./oracle-corpus.ts";
 export * from "./oracle-decode.ts";
 export * from "./oracle-document.ts";
 export * from "./oracle-evaluation.ts";
-export * from "./oracle-batch-operation.ts";
+export { evaluateOracleBatchJson } from "./oracle-batch-operation.ts";
+export type {
+  OracleBatchOperationInput,
+  OracleBatchOperation,
+} from "./oracle-batch-operation.ts";
 export * from "./oracle-catalog-services.ts";
 export {
   ORACLE_DISTRIBUTION_FILE_NAMES,
