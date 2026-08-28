@@ -64,6 +64,74 @@ let nonEmptyToList =
       λ(input : NonEmpty element) ->
         [ input.first ] # input.rest
 
+let SpeedDistance : Type = { feet : Natural }
+
+let FlySpeed : Type = { feet : Natural, hover : Optional Bool }
+
+let SpeedAlternative : Type =
+      < burrow : SpeedDistance
+      | climb : SpeedDistance
+      | fly : FlySpeed
+      | swim : SpeedDistance
+      | walk : SpeedDistance
+      >
+
+let SpeedAlternativeRecord : Type =
+      { feet : { kind : Text, value : Natural }
+      , hover : Optional Bool
+      , kind : Text
+      }
+
+let ordinarySpeedAlternative =
+      λ(kind : Text) ->
+      λ(input : SpeedDistance) ->
+        { feet = { kind = "literal", value = input.feet }
+        , hover = None Bool
+        , kind
+        }
+
+let speedAlternative : SpeedAlternative -> SpeedAlternativeRecord =
+      λ(input : SpeedAlternative) ->
+        merge
+          { burrow = ordinarySpeedAlternative "burrow"
+          , climb = ordinarySpeedAlternative "climb"
+          , fly =
+              λ(fly : FlySpeed) ->
+                { feet = { kind = "literal", value = fly.feet }
+                , hover = fly.hover
+                , kind = "fly"
+                }
+          , swim = ordinarySpeedAlternative "swim"
+          , walk = ordinarySpeedAlternative "walk"
+          }
+          input
+
+let SpeedEntry : Type =
+      { alternatives : Optional (List SpeedAlternativeRecord)
+      , feet : Optional { kind : Text, value : Natural }
+      , hover : Optional Bool
+      , kind : Text
+      }
+
+let speed : SpeedAlternative -> SpeedEntry =
+      λ(input : SpeedAlternative) ->
+        let alternative = speedAlternative input
+
+        in  { alternatives = None (List SpeedAlternativeRecord)
+            , feet = Some alternative.feet
+            , hover = alternative.hover
+            , kind = alternative.kind
+            }
+
+let gmSpeedChoice : NonEmpty SpeedAlternativeRecord -> SpeedEntry =
+      λ(input : NonEmpty SpeedAlternativeRecord) ->
+        { alternatives = Some
+            (nonEmptyToList SpeedAlternativeRecord input)
+        , feet = None { kind : Text, value : Natural }
+        , hover = None Bool
+        , kind = "gm_choice"
+        }
+
 let Vulnerabilities : Type =
       < fixed : NonEmpty Text
       | qualified : { damageTypes : NonEmpty Text, qualifier : Text }
@@ -541,6 +609,7 @@ let trait : TraitInput -> Trait =
 
 in  { Effect
     , Dispatch
+    , SpeedAlternative
     , SpellRef
     , Group
     , Vulnerabilities
@@ -569,6 +638,9 @@ in  { Effect
     , spellRef
     , spellDefinitionComponents
     , spellcasting
+    , speed
+    , speedAlternative
+    , gmSpeedChoice
     , staticDamage
     , sourceNextTurnEnd
     , targetNextTurnEnd

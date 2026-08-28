@@ -247,15 +247,7 @@ type ScopedGeneralFacts = {
     readonly annotations: readonly string[];
   };
   readonly hp: { readonly kind: "literal"; readonly value: number };
-  readonly speeds: readonly {
-    readonly kind: string;
-    readonly feet: number;
-    readonly hover: boolean;
-    readonly availability?: {
-      readonly kind: "forms_only";
-      readonly forms: readonly string[];
-    };
-  }[];
+  readonly speeds: readonly ScopedSpeedEntry[];
   readonly abilityScores: Readonly<Record<AbilityName, number>>;
   readonly initiative: { readonly modifier: number; readonly score: number };
   readonly savingThrowModifiers: readonly NamedModifier[];
@@ -299,6 +291,23 @@ type ScopedGeneralFacts = {
         readonly additionalUsesInLair: number;
       };
 };
+
+type ScopedConcreteSpeed = {
+  readonly kind: string;
+  readonly feet: number;
+  readonly hover: boolean;
+  readonly availability?: {
+    readonly kind: "forms_only";
+    readonly forms: readonly string[];
+  };
+};
+
+type ScopedSpeedEntry =
+  | ScopedConcreteSpeed
+  | {
+      readonly kind: "gm_choice";
+      readonly alternatives: readonly ScopedConcreteSpeed[];
+    };
 
 type RawStatBlockProjection = {
   readonly id: string;
@@ -473,6 +482,18 @@ const parseSpeeds = (
     .trim()
     .split(", ")
     .map((part) => {
+      const gmChoice = part.match(
+        /^((?:Burrow|Climb|Fly|Swim|Walk)(?: or (?:Burrow|Climb|Fly|Swim|Walk))+)(?: )(\d+) ft\. \(GM's choice\)$/,
+      );
+      if (gmChoice !== null) {
+        const feet = Number(gmChoice[2]);
+        const alternatives = (gmChoice[1] ?? "").split(" or ").map((kind) => ({
+          kind: kind.toLowerCase(),
+          feet,
+          hover: false,
+        }));
+        return { kind: "gm_choice" as const, alternatives };
+      }
       const speed = requireMatch(
         part,
         /^(?:(Burrow|Climb|Fly|Swim) )?(\d+) ft\.(?: \((hover|[A-Za-z]+(?: or [A-Za-z]+)* form only)\))?$/,
@@ -2304,6 +2325,35 @@ const projectLegendaryActionUses = (
   );
 };
 
+type AuthoredSpeedEntry = SrdStatBlockRecord["statBlock"]["speeds"][number];
+type AuthoredConcreteSpeed = Exclude<
+  AuthoredSpeedEntry,
+  { readonly kind: "gm_choice" }
+>;
+
+const projectAuthoredConcreteSpeed = (
+  speed: AuthoredConcreteSpeed,
+): ScopedConcreteSpeed => ({
+  kind: speed.kind,
+  feet: speed.feet.value,
+  hover: speed.kind === "fly" && speed.hover === true,
+  ...(!("availability" in speed) ? {} : { availability: speed.availability }),
+});
+
+const projectAuthoredSpeed = (speed: AuthoredSpeedEntry): ScopedSpeedEntry =>
+  Match.value(speed).pipe(
+    Match.when({ kind: "gm_choice" }, ({ alternatives }) => ({
+      kind: "gm_choice" as const,
+      alternatives: alternatives.map(projectAuthoredConcreteSpeed),
+    })),
+    Match.when({ kind: "walk" }, projectAuthoredConcreteSpeed),
+    Match.when({ kind: "burrow" }, projectAuthoredConcreteSpeed),
+    Match.when({ kind: "climb" }, projectAuthoredConcreteSpeed),
+    Match.when({ kind: "fly" }, projectAuthoredConcreteSpeed),
+    Match.when({ kind: "swim" }, projectAuthoredConcreteSpeed),
+    Match.exhaustive,
+  );
+
 export const projectAuthoredStatBlocks = (
   records: readonly SrdStatBlockRecord[],
 ): readonly RawStatBlockProjection[] =>
@@ -2330,14 +2380,7 @@ export const projectAuthoredStatBlocks = (
             annotations: record.statBlock.ac.annotations ?? [],
           },
           hp: record.statBlock.hp,
-          speeds: record.statBlock.speeds.map((speed) => ({
-            kind: speed.kind,
-            feet: speed.feet.value,
-            hover: speed.kind === "fly" && speed.hover === true,
-            ...(!("availability" in speed)
-              ? {}
-              : { availability: speed.availability }),
-          })),
+          speeds: record.statBlock.speeds.map(projectAuthoredSpeed),
           abilityScores: record.statBlock.abilityScores,
           initiative: record.statBlock.initiative,
           savingThrowModifiers: sortedModifiers(

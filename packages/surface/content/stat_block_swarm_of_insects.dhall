@@ -51,9 +51,17 @@ in  { challengeRating = 0.5
       , senses = [ { kind = "blindsight", rangeFeet = 30 } ]
       , size = "medium"
       , speeds =
-        [ { feet = { kind = "literal", value = 20 }, kind = "walk" }
-        , { feet = { kind = "literal", value = 20 }, kind = "climb" }
-        , { feet = { kind = "literal", value = 20 }, kind = "fly" }
+        [ S.speed (S.SpeedAlternative.walk { feet = 20 })
+        , S.gmSpeedChoice
+            { first =
+                S.speedAlternative (S.SpeedAlternative.climb { feet = 20 })
+            , rest =
+              [ S.speedAlternative
+                  ( S.SpeedAlternative.fly
+                      { feet = 20, hover = None Bool }
+                  )
+              ]
+            }
         ]
       , traits =
         [ S.trait
