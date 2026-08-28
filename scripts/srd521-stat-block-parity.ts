@@ -3,6 +3,12 @@ import { join } from "node:path";
 
 import type { StatBlockRecord } from "../packages/surface/src/surface/types.ts";
 import { normalizeStatBlockIdentity } from "../packages/surface/src/surface/stat-block-identity.ts";
+import {
+  parseSourceSection,
+  sourcePathMatches,
+  sourceSectionMatchesAnchor,
+  type ParsedSourceSection,
+} from "../packages/surface/src/surface/source-section-anchor.ts";
 import type { SrdStatBlockPeerObservation } from "./surface-publication-peer-observations.ts";
 
 export const SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH =
@@ -497,12 +503,14 @@ function deriveProvenanceIssues(
   );
   if (sourceIdentity === undefined) return [];
   const provenanceSection = statBlock.provenance.section;
-  const claimedAnchor = parseSourceSection(provenanceSection);
+  const parsedSection = parseSourceSection(provenanceSection);
+  const claimedAnchor =
+    parsedSection.tag === "parsed" ? parsedSection.section : undefined;
   if (!canValidateProvenanceAnchor(claimedAnchor, sourceCoverage)) return [];
   const hasSourceAnchor =
     claimedAnchor !== undefined &&
     sourceIdentity.occurrences.some((occurrence) =>
-      sourceAnchorMatches(claimedAnchor, occurrence.anchor),
+      sourceSectionMatchesAnchor(claimedAnchor, occurrence.anchor),
     );
   return hasSourceAnchor
     ? []
@@ -531,34 +539,6 @@ function canValidateProvenanceAnchor(
         );
   return completePaths.some((sourcePath) =>
     sourcePathMatches(claimedAnchor.sourcePath, sourcePath),
-  );
-}
-
-type ParsedSourceSection = {
-  readonly sourcePath: string;
-  readonly lineStart: number;
-  readonly lineEnd: number;
-};
-
-function parseSourceSection(section: string): ParsedSourceSection | undefined {
-  const match = /^(.*):(\d+)-(\d+)$/.exec(section);
-  if (match === null) return undefined;
-  const lineStart = Number.parseInt(match[2] ?? "", 10);
-  const lineEnd = Number.parseInt(match[3] ?? "", 10);
-  return lineStart > 0 && lineEnd >= lineStart
-    ? { sourcePath: match[1] ?? "", lineStart, lineEnd }
-    : undefined;
-}
-
-function sourceAnchorMatches(
-  claimedAnchor: ParsedSourceSection,
-  sourceAnchor: SrdStatBlockSourceAnchor,
-): boolean {
-  return (
-    sourcePathMatches(claimedAnchor.sourcePath, sourceAnchor.sourcePath) &&
-    claimedAnchor.lineStart === sourceAnchor.lineStart &&
-    claimedAnchor.lineEnd >= sourceAnchor.lineEnd &&
-    claimedAnchor.lineEnd <= sourceAnchor.spanEnd
   );
 }
 
@@ -846,15 +826,6 @@ function statBlockAnchorRange(
     lineEnd: lineEndIndex,
     spanEnd: physicalEndIndex,
   };
-}
-
-function sourcePathMatches(
-  provenancePath: string,
-  sourcePath: string,
-): boolean {
-  return (
-    provenancePath === sourcePath || sourcePath.endsWith(`/${provenancePath}`)
-  );
 }
 
 function normalizeSourceBlock(
