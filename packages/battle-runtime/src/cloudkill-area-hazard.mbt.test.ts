@@ -9,7 +9,7 @@
 // - .references/srd-5.2.1/Playing-the-Game.md#Saving-Throws-and-Damage
 // - .references/srd-5.2.1/Gameplay-Toolbox.md#Strong-Wind
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
-import { movementFeet } from "@dnd/shared/types";
+import { Hp, movementFeet } from "@dnd/shared/types";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -28,6 +28,7 @@ import {
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import { concentrationSavingThrowFill } from "./battle-runtime.test-support.ts";
 import {
   battleObscurementZones,
   breakBattleConcentration,
@@ -74,8 +75,12 @@ import type {
   BattleCloudkillMovementHole,
 } from "./battle-state-execution.ts";
 
-type CloudkillMbtTarget = "none" | "primary" | "secondary";
-type CloudkillMbtPending = "none" | "savingThrow" | "damage";
+type CloudkillMbtTarget = "none" | "source" | "primary" | "secondary";
+type CloudkillMbtPending =
+  | "none"
+  | "savingThrow"
+  | "damage"
+  | "concentrationSavingThrow";
 type CloudkillMbtOutcome =
   | "init"
   | "cast"
@@ -85,6 +90,7 @@ type CloudkillMbtOutcome =
   | "targetTurn"
   | "movementSave"
   | "movementDamage"
+  | "sourceConcentrationSave"
   | "movementResolved"
   | "concentrationEnded"
   | "strongWindEnded";
@@ -100,8 +106,10 @@ type CloudkillMbtProjection = {
   readonly durationTicks: number;
   readonly radiusFeet: number;
   readonly heavilyObscured: boolean;
+  readonly sourceSavedThisTurn: boolean;
   readonly primarySavedThisTurn: boolean;
   readonly secondarySavedThisTurn: boolean;
+  readonly casterHitPoints: number;
   readonly primaryHitPoints: number;
   readonly secondaryHitPoints: number;
   readonly lastMovementDistanceFeet: number;
@@ -152,8 +160,10 @@ const driverSchema = {
     secondaryAffected: mbtPickSchemas.bool,
     secondaryFirst: mbtPickSchemas.bool,
   },
+  doBeginSourceTurnMovementThroughSource: {},
   doResolveMovementSave: { succeeded: mbtPickSchemas.bool },
   doResolveMovementDamage: { damageDiePip: mbtPickSchemas.int },
+  doResolveSourceConcentrationSave: { succeeded: mbtPickSchemas.bool },
   doEndConcentration: {},
   doDisperseWithStrongWind: {},
   step: {},
@@ -182,13 +192,22 @@ function createCloudkillMbtDriver() {
         state = endCasterTurn(state);
       },
       doBeginSourceTurnMovement: (input) => {
-        state = beginSourceTurnMovement(state, input);
+        state = beginSourceTurnMovement(state, cloudkillMovementTargets(input));
+      },
+      doBeginSourceTurnMovementThroughSource: () => {
+        state = beginSourceTurnMovement(state, [
+          spellCasterId,
+          secondaryTargetId,
+        ]);
       },
       doResolveMovementSave: ({ succeeded }) => {
         state = resolvePendingSave(state, succeeded, "movementDamage");
       },
       doResolveMovementDamage: ({ damageDiePip }) => {
         state = resolvePendingDamage(state, damageDiePip, "movementResolved");
+      },
+      doResolveSourceConcentrationSave: ({ succeeded }) => {
+        state = resolveSourceConcentrationSave(state, succeeded);
       },
       doEndConcentration: () => {
         state = {
@@ -236,11 +255,7 @@ describe("Cloudkill area-hazard MBT parity", () => {
   it("retains table-supplied movement target order through both continuations", () => {
     let state = castCloudkill(initialRuntimeState(5));
     state = endCasterTurn(state);
-    state = beginSourceTurnMovement(state, {
-      primaryAffected: true,
-      secondaryAffected: true,
-      secondaryFirst: true,
-    });
+    state = beginSourceTurnMovement(state, [secondaryTargetId, spellTargetId]);
 
     expect(cloudkillMbtProjection(state)).toMatchObject({
       lastMovementDistanceFeet: 10,
@@ -267,6 +282,34 @@ describe("Cloudkill area-hazard MBT parity", () => {
       secondarySavedThisTurn: true,
       primaryHitPoints: 35,
       secondaryHitPoints: 30,
+    });
+  });
+
+  it("cancels remaining movement targets when source damage breaks Concentration", () => {
+    let state = castCloudkill(initialRuntimeState(5));
+    state = endCasterTurn(state);
+    state = beginSourceTurnMovement(state, [spellCasterId, secondaryTargetId]);
+    state = resolvePendingSave(state, true, "movementDamage");
+    state = resolvePendingDamage(state, 2, "movementResolved");
+
+    expect(cloudkillMbtProjection(state)).toMatchObject({
+      pending: "concentrationSavingThrow",
+      pendingTarget: "source",
+      remainingTarget: "secondary",
+      casterHitPoints: 100,
+      secondaryHitPoints: 40,
+      outcome: "sourceConcentrationSave",
+    });
+
+    state = resolveSourceConcentrationSave(state, false);
+    expect(cloudkillMbtProjection(state)).toMatchObject({
+      hazardActive: false,
+      casterConcentrating: false,
+      pending: "none",
+      remainingTarget: "none",
+      casterHitPoints: 95,
+      secondaryHitPoints: 40,
+      outcome: "concentrationEnded",
     });
   });
 
@@ -307,22 +350,49 @@ describe("Cloudkill area-hazard MBT parity", () => {
 });
 
 function initialRuntimeState(slotLevel: number): CloudkillMbtRuntimeState {
+  const battle = cloudkillMbtBattle(slotLevel);
   return {
-    battle: spellBattle({
-      preparedSpells: [spellRecord(cloudkillUnitId)],
-      spellSlots: [{ spellLevel: cloudkillSlotLevel(slotLevel), count: 1 }],
-      targetHp: 40,
-      targetMaxHp: 40,
-      extraTargetIds: [secondaryTargetId],
-      extraTargetHp: 40,
-      extraTargetMaxHp: 40,
-    }),
+    battle: withBattleState(
+      battle,
+      battleStateWithCloudkillMbtCasterHitPoints(battle.state),
+    ),
     configuredSlotLevel: slotLevel,
     pendingProcedure: null,
     lastMovementDistanceFeet: 0,
     remainingTarget: "none",
     savingThrowSucceeded: false,
     outcome: "init",
+  };
+}
+
+function cloudkillMbtBattle(slotLevel: number): BattleRuntimeSession {
+  return spellBattle({
+    preparedSpells: [spellRecord(cloudkillUnitId)],
+    spellSlots: [{ spellLevel: cloudkillSlotLevel(slotLevel), count: 1 }],
+    targetHp: 40,
+    targetMaxHp: 40,
+    extraTargetIds: [secondaryTargetId],
+    extraTargetHp: 40,
+    extraTargetMaxHp: 40,
+  });
+}
+
+function battleStateWithCloudkillMbtCasterHitPoints(
+  state: BattleState,
+): BattleState {
+  const caster = state.combatants.get(spellCasterId);
+  if (caster === undefined)
+    throw new Error("Expected the Cloudkill MBT caster.");
+  if (caster.positiveHpUnconscious !== null) {
+    throw new Error("Expected a conscious positive-HP Cloudkill MBT caster.");
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(spellCasterId, {
+      ...caster,
+      hp: Hp(100),
+      maxHp: Hp(100),
+    }),
   };
 }
 
@@ -393,11 +463,7 @@ function endCasterTurn(
 
 function beginSourceTurnMovement(
   state: CloudkillMbtRuntimeState,
-  input: {
-    readonly primaryAffected: boolean;
-    readonly secondaryAffected: boolean;
-    readonly secondaryFirst: boolean;
-  },
+  orderedTargets: readonly CombatantId[],
 ): CloudkillMbtRuntimeState {
   let boundaryState = state.battle.state;
   let boundaryActorId = snapshotBattle(boundaryState).currentActorId;
@@ -419,7 +485,6 @@ function beginSourceTurnMovement(
     directionRequirement: "awayFromSource",
     requiresTableSpatialFact: true,
   });
-  const orderedTargets = cloudkillMovementTargets(input);
   const movementFill = cloudkillMovementFill(movementHole, orderedTargets);
   const result = endTurn({
     state: boundaryState,
@@ -530,6 +595,14 @@ function resolvePendingDamage(
       outcome: resolvedOutcome,
     };
   }
+  if (result.holes.some((hole) => hole.kind === "concentrationSavingThrow")) {
+    return {
+      ...state,
+      pendingProcedure: { ...pending, fills, result },
+      savingThrowSucceeded: false,
+      outcome: "sourceConcentrationSave",
+    };
+  }
   const nextTarget = pendingTargetFromResult(result);
   return {
     ...state,
@@ -546,6 +619,54 @@ function resolvePendingDamage(
         : pending.kind === "appearance"
           ? "appearanceSave"
           : "movementSave",
+  };
+}
+
+function resolveSourceConcentrationSave(
+  state: CloudkillMbtRuntimeState,
+  succeeded: boolean,
+): CloudkillMbtRuntimeState {
+  const pending = requirePendingProcedure(state);
+  const concentrationHole = requireResultHole(
+    pending.result,
+    "concentrationSavingThrow",
+  );
+  const fills = [
+    ...pending.fills,
+    concentrationSavingThrowFill(concentrationHole, succeeded),
+  ];
+  const result = submitPendingProcedure(pending, fills);
+  if (result.tag === "invalid") {
+    throw new Error(
+      `Cloudkill Concentration save was invalid: ${result.message}`,
+    );
+  }
+  if (!succeeded) {
+    if (result.tag !== "resolved") {
+      throw new Error("Expected failed source Concentration to end Cloudkill.");
+    }
+    return {
+      ...state,
+      battle: withBattleState(state.battle, result.state),
+      pendingProcedure: null,
+      remainingTarget: "none",
+      savingThrowSucceeded: false,
+      outcome: "concentrationEnded",
+    };
+  }
+  requireNeedsHoles(
+    result,
+    "Expected remaining Cloudkill movement target after maintained Concentration.",
+  );
+  if (!result.holes.some((hole) => hole.kind === "savingThrowOutcome")) {
+    throw new Error("Expected the remaining Cloudkill movement save frontier.");
+  }
+  return {
+    ...state,
+    pendingProcedure: { ...pending, fills, result },
+    remainingTarget: "none",
+    savingThrowSucceeded: false,
+    outcome: "movementSave",
   };
 }
 
@@ -628,8 +749,10 @@ function cloudkillMbtProjection(
         zone.obscurement === "heavilyObscured" &&
         zone.area.areaId === effect?.areaId,
     ),
+    sourceSavedThisTurn: savedThisTurn.includes(spellCasterId),
     primarySavedThisTurn: savedThisTurn.includes(spellTargetId),
     secondarySavedThisTurn: savedThisTurn.includes(secondaryTargetId),
+    casterHitPoints: snapshotHitPoints(snapshot, spellCasterId),
     primaryHitPoints: snapshotHitPoints(snapshot, spellTargetId),
     secondaryHitPoints: snapshotHitPoints(snapshot, secondaryTargetId),
     lastMovementDistanceFeet: state.lastMovementDistanceFeet,
@@ -676,13 +799,21 @@ function pendingPhase(
   if (result.holes.some((hole) => hole.kind === "rolledDice")) {
     return "damage";
   }
-  throw new Error("Expected a Cloudkill save or damage frontier.");
+  if (result.holes.some((hole) => hole.kind === "concentrationSavingThrow")) {
+    return "concentrationSavingThrow";
+  }
+  throw new Error(
+    "Expected a Cloudkill save, damage, or Concentration frontier.",
+  );
 }
 
 function pendingTargetFromResult(
   result: BattleResolutionResult,
 ): CloudkillMbtTarget {
   if (result.tag !== "needsHoles") return "none";
+  if (result.holes.some((hole) => hole.kind === "concentrationSavingThrow")) {
+    return "source";
+  }
   const save = result.holes.find(
     (hole): hole is BattleCloudkillAreaHazardSavingThrowOutcomeHole =>
       hole.kind === "savingThrowOutcome" && "cloudkillAreaHazard" in hole,
@@ -700,6 +831,7 @@ function pendingTargetFromResult(
 }
 
 function targetRole(targetId: CombatantId | undefined): CloudkillMbtTarget {
+  if (targetId === spellCasterId) return "source";
   if (targetId === spellTargetId) return "primary";
   if (targetId === secondaryTargetId) return "secondary";
   return "none";
@@ -834,6 +966,7 @@ const CLOUDKILL_OUTCOME_BY_QUINT_TAG: Readonly<
   CloudkillMbtTargetTurn: "targetTurn",
   CloudkillMbtMovementSave: "movementSave",
   CloudkillMbtMovementDamage: "movementDamage",
+  CloudkillMbtSourceConcentrationSave: "sourceConcentrationSave",
   CloudkillMbtMovementResolved: "movementResolved",
   CloudkillMbtConcentrationEnded: "concentrationEnded",
   CloudkillMbtStrongWindEnded: "strongWindEnded",
@@ -845,12 +978,14 @@ const CLOUDKILL_PENDING_BY_QUINT_TAG: Readonly<
   CloudkillMbtNoPending: "none",
   CloudkillMbtSavingThrowPending: "savingThrow",
   CloudkillMbtDamagePending: "damage",
+  CloudkillMbtConcentrationSavingThrowPending: "concentrationSavingThrow",
 };
 
 const CLOUDKILL_TARGET_BY_QUINT_TAG: Readonly<
   Record<string, CloudkillMbtTarget>
 > = {
   NoCloudkillMbtTarget: "none",
+  SourceCloudkillMbtTarget: "source",
   PrimaryCloudkillMbtTarget: "primary",
   SecondaryCloudkillMbtTarget: "secondary",
 };
@@ -868,8 +1003,10 @@ function normalizeCloudkillMbtQuintState(raw: unknown): CloudkillMbtProjection {
     durationTicks: quintIntField(state, "qDurationTicks"),
     radiusFeet: quintIntField(state, "qRadiusFeet"),
     heavilyObscured: booleanField(state, "qHeavilyObscured"),
+    sourceSavedThisTurn: booleanField(state, "qSourceSavedThisTurn"),
     primarySavedThisTurn: booleanField(state, "qPrimarySavedThisTurn"),
     secondarySavedThisTurn: booleanField(state, "qSecondarySavedThisTurn"),
+    casterHitPoints: quintIntField(state, "qCasterHitPoints"),
     primaryHitPoints: quintIntField(state, "qPrimaryHitPoints"),
     secondaryHitPoints: quintIntField(state, "qSecondaryHitPoints"),
     lastMovementDistanceFeet: quintIntField(state, "qLastMovementDistanceFeet"),

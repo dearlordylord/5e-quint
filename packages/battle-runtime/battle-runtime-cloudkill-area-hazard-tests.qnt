@@ -7,6 +7,15 @@ module battleRuntimeCloudkillAreaHazardTests {
   pure def castCloudkillAt(slotLevel: int): CloudkillSemanticState =
     resolveCloudkillCast(initialCloudkillSemanticState, slotLevel)
 
+  pure val cloudkillFiveFives: List[CloudkillD8Pip] =
+    List(CloudkillD8Five, CloudkillD8Five, CloudkillD8Five, CloudkillD8Five, CloudkillD8Five)
+
+  pure val cloudkillFiveTwos: List[CloudkillD8Pip] =
+    List(CloudkillD8Two, CloudkillD8Two, CloudkillD8Two, CloudkillD8Two, CloudkillD8Two)
+
+  pure val cloudkillFiveDiceTotalingEight: List[CloudkillD8Pip] =
+    List(CloudkillD8Four, CloudkillD8One, CloudkillD8One, CloudkillD8One, CloudkillD8One)
+
   run test_cloudkill_cast_owns_raw_area_damage_duration_and_slot_scaling = {
     val fifthLevel = castCloudkillAt(5)
     val sixthLevel = castCloudkillAt(6)
@@ -44,9 +53,12 @@ module battleRuntimeCloudkillAreaHazardTests {
         true,
       ),
       false,
-      false,
     )
-    val failedDamage = resolveCloudkillDamage(failedSave, 25)
+    val rejectedWrongDiceCount = resolveCloudkillDamage(
+      failedSave,
+      List(CloudkillD8Five, CloudkillD8Five, CloudkillD8Five, CloudkillD8Five),
+    )
+    val failedDamage = resolveCloudkillDamage(failedSave, cloudkillFiveFives)
     val fresh = resetCloudkillSavedThisTurn(failedDamage)
     val successfulSave = resolveCloudkillSavingThrow(
       discoverCloudkillAreaTrigger(
@@ -56,10 +68,10 @@ module battleRuntimeCloudkillAreaHazardTests {
         true,
       ),
       true,
-      false,
     )
-    val successfulDamage = resolveCloudkillDamage(successfulSave, 25)
+    val successfulDamage = resolveCloudkillDamage(successfulSave, cloudkillFiveFives)
     all {
+      assert(rejectedWrongDiceCount == failedSave),
       assert(not(cloudkillTargetSavedThisTurn(failedSave, PrimaryCloudkillTarget))),
       assert(failedDamage.primaryTargetHitPoints == 15),
       assert(cloudkillTargetSavedThisTurn(failedDamage, PrimaryCloudkillTarget)),
@@ -79,9 +91,8 @@ module battleRuntimeCloudkillAreaHazardTests {
           true,
         ),
         true,
-        false,
       ),
-      8,
+      cloudkillFiveDiceTotalingEight,
     )
     val duplicateEntry = discoverCloudkillAreaTrigger(
       appeared,
@@ -143,10 +154,10 @@ module battleRuntimeCloudkillAreaHazardTests {
       CloudkillMovementBeforeOtherOccurrence,
       List(SecondaryCloudkillTarget, PrimaryCloudkillTarget),
     )
-    val firstDamage = resolveCloudkillSavingThrow(firstSave, false, false)
-    val secondSave = resolveCloudkillDamage(firstDamage, 8)
-    val secondDamage = resolveCloudkillSavingThrow(secondSave, true, false)
-    val resolved = resolveCloudkillDamage(secondDamage, 8)
+    val firstDamage = resolveCloudkillSavingThrow(firstSave, false)
+    val secondSave = resolveCloudkillDamage(firstDamage, cloudkillFiveDiceTotalingEight)
+    val secondDamage = resolveCloudkillSavingThrow(secondSave, true)
+    val resolved = resolveCloudkillDamage(secondDamage, cloudkillFiveDiceTotalingEight)
     all {
       assert(match firstSave.pending {
         | CloudkillSavingThrowPending(data) =>
@@ -199,29 +210,33 @@ module battleRuntimeCloudkillAreaHazardTests {
     }
   }
 
-  run test_cloudkill_failed_save_reaction_can_cancel_current_damage_and_remaining_targets = {
+  run test_cloudkill_source_damage_concentration_failure_cancels_remaining_movement_targets = {
     val targetTurn = endCloudkillCasterTurn(castCloudkillAt(5))
-    val firstSave = beginCloudkillSourceTurn(
+    val sourceSave = beginCloudkillSourceTurn(
       targetTurn,
       CloudkillMovementBeforeOtherOccurrence,
-      List(PrimaryCloudkillTarget, SecondaryCloudkillTarget),
+      List(CloudkillCaster, SecondaryCloudkillTarget),
     )
-    val interrupted = resolveCloudkillSavingThrow(firstSave, false, true)
-    val canceled = acceptReactionEndingCloudkillConcentration(interrupted)
+    val sourceDamage = resolveCloudkillSavingThrow(sourceSave, true)
+    val concentrationSave = resolveCloudkillDamage(sourceDamage, cloudkillFiveTwos)
+    val canceled = resolveCloudkillSourceConcentrationSavingThrow(
+      concentrationSave,
+      false,
+    )
     all {
-      assert(match interrupted.pending {
-        | CloudkillFailedSaveReactionPending(data) =>
-            data.target == PrimaryCloudkillTarget and
+      assert(match concentrationSave.pending {
+        | CloudkillConcentrationSavingThrowPending(data) =>
             data.remainingTargets == List(SecondaryCloudkillTarget)
         | _ => false
       }),
       assert(not(canceled.casterConcentrating)),
       assert(not(cloudkillIsActive(canceled))),
       assert(canceled.pending == NoCloudkillPendingResolution),
-      assert(canceled.primaryTargetHitPoints == 40),
+      assert(canceled.casterHitPoints == 35),
       assert(canceled.secondaryTargetHitPoints == 40),
       assert(match canceled.lifecycle {
-        | CloudkillEnded(data) => data.reason == CloudkillReactionEndedConcentration
+        | CloudkillEnded(data) =>
+            data.reason == CloudkillSourceDamageEndedConcentration
         | _ => false
       }),
     }

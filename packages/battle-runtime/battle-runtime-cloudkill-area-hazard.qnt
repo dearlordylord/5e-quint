@@ -23,7 +23,20 @@
 module battleRuntimeCloudkillAreaHazard {
   import battleRuntimeAreaTriggerTiming.* from "./battle-runtime-area-trigger-timing"
 
-  type CloudkillTarget = PrimaryCloudkillTarget | SecondaryCloudkillTarget
+  type CloudkillTarget =
+    | CloudkillCaster
+    | PrimaryCloudkillTarget
+    | SecondaryCloudkillTarget
+
+  type CloudkillD8Pip =
+    | CloudkillD8One
+    | CloudkillD8Two
+    | CloudkillD8Three
+    | CloudkillD8Four
+    | CloudkillD8Five
+    | CloudkillD8Six
+    | CloudkillD8Seven
+    | CloudkillD8Eight
 
   type CloudkillTrigger =
     | CloudkillAppearsInArea
@@ -41,7 +54,7 @@ module battleRuntimeCloudkillAreaHazard {
 
   type CloudkillEndReason =
     | CloudkillConcentrationEnded
-    | CloudkillReactionEndedConcentration
+    | CloudkillSourceDamageEndedConcentration
     | CloudkillDispersedByStrongWind
     | CloudkillDurationExpired
 
@@ -69,16 +82,15 @@ module battleRuntimeCloudkillAreaHazard {
         target: CloudkillTarget,
         remainingTargets: List[CloudkillTarget],
       })
-    | CloudkillFailedSaveReactionPending({
-        trigger: CloudkillTrigger,
-        target: CloudkillTarget,
-        remainingTargets: List[CloudkillTarget],
-      })
     | CloudkillDamagePending({
         trigger: CloudkillTrigger,
         target: CloudkillTarget,
         remainingTargets: List[CloudkillTarget],
         savingThrowSucceeded: bool,
+      })
+    | CloudkillConcentrationSavingThrowPending({
+        trigger: CloudkillTrigger,
+        remainingTargets: List[CloudkillTarget],
       })
 
   type CloudkillSemanticState = {
@@ -88,6 +100,7 @@ module battleRuntimeCloudkillAreaHazard {
     turnRole: CloudkillTurnRole,
     lifecycle: CloudkillLifecycle,
     pending: CloudkillPendingResolution,
+    casterHitPoints: int,
     primaryTargetHitPoints: int,
     secondaryTargetHitPoints: int,
     lastStartTurnOrder: CloudkillStartTurnOrder,
@@ -107,6 +120,7 @@ module battleRuntimeCloudkillAreaHazard {
     turnRole: CloudkillCasterTurn,
     lifecycle: CloudkillAbsent,
     pending: NoCloudkillPendingResolution,
+    casterHitPoints: 40,
     primaryTargetHitPoints: 40,
     secondaryTargetHitPoints: 40,
     lastStartTurnOrder: CloudkillMovementBeforeOtherOccurrence,
@@ -115,6 +129,21 @@ module battleRuntimeCloudkillAreaHazard {
 
   pure def cloudkillDamageDice(slotLevel: int): int =
     cloudkillBaseDamageDice + (slotLevel - cloudkillMinimumSlotLevel)
+
+  pure def cloudkillD8PipValue(pip: CloudkillD8Pip): int =
+    match pip {
+      | CloudkillD8One => 1
+      | CloudkillD8Two => 2
+      | CloudkillD8Three => 3
+      | CloudkillD8Four => 4
+      | CloudkillD8Five => 5
+      | CloudkillD8Six => 6
+      | CloudkillD8Seven => 7
+      | CloudkillD8Eight => 8
+    }
+
+  pure def cloudkillRolledDamage(dice: List[CloudkillD8Pip]): int =
+    dice.foldl(0, (total, pip) => total + cloudkillD8PipValue(pip))
 
   pure def cloudkillTriggerTiming(trigger: CloudkillTrigger): AreaEffectTriggerTiming =
     match trigger {
@@ -313,41 +342,18 @@ module battleRuntimeCloudkillAreaHazard {
   pure def resolveCloudkillSavingThrow(
     state: CloudkillSemanticState,
     savingThrowSucceeded: bool,
-    failedSaveReactionAvailable: bool,
   ): CloudkillSemanticState =
     match state.pending {
       | CloudkillSavingThrowPending(data) =>
-          if (not(savingThrowSucceeded) and failedSaveReactionAvailable)
-            {
-              ...state,
-              pending: CloudkillFailedSaveReactionPending(data),
-            }
-          else
-            {
-              ...state,
-              pending: CloudkillDamagePending({
-                trigger: data.trigger,
-                target: data.target,
-                remainingTargets: data.remainingTargets,
-                savingThrowSucceeded: savingThrowSucceeded,
-              }),
-            }
-      | _ => state
-    }
-
-  pure def declineCloudkillFailedSaveReaction(
-    state: CloudkillSemanticState,
-  ): CloudkillSemanticState =
-    match state.pending {
-      | CloudkillFailedSaveReactionPending(data) => {
-          ...state,
-          pending: CloudkillDamagePending({
-            trigger: data.trigger,
-            target: data.target,
-            remainingTargets: data.remainingTargets,
-            savingThrowSucceeded: false,
-          }),
-        }
+          {
+            ...state,
+            pending: CloudkillDamagePending({
+              trigger: data.trigger,
+              target: data.target,
+              remainingTargets: data.remainingTargets,
+              savingThrowSucceeded: savingThrowSucceeded,
+            }),
+          }
       | _ => state
     }
 
@@ -360,6 +366,14 @@ module battleRuntimeCloudkillAreaHazard {
     damage: int,
   ): CloudkillSemanticState =
     match target {
+      | CloudkillCaster => {
+          ...state,
+          casterHitPoints:
+            if (state.casterHitPoints - damage > 0)
+              state.casterHitPoints - damage
+            else
+              0,
+        }
       | PrimaryCloudkillTarget => {
           ...state,
           primaryTargetHitPoints:
@@ -395,21 +409,61 @@ module battleRuntimeCloudkillAreaHazard {
 
   pure def resolveCloudkillDamage(
     state: CloudkillSemanticState,
-    rolledDamage: int,
+    rolledDice: List[CloudkillD8Pip],
   ): CloudkillSemanticState =
     match state.pending {
-      | CloudkillDamagePending(data) => {
-          val damaged = cloudkillTargetWithDamage(
-            state,
-            data.target,
-            cloudkillDamageAfterSave(rolledDamage, data.savingThrowSucceeded),
-          )
-          val marked = markCloudkillTargetSavedThisTurn(
-            { ...damaged, pending: NoCloudkillPendingResolution },
-            data.target,
-          )
-          cloudkillWithPendingTargets(marked, data.trigger, data.remainingTargets)
-        }
+      | CloudkillDamagePending(data) =>
+          match state.lifecycle {
+            | CloudkillActive(cloud) =>
+                if (rolledDice.length() != cloud.damageDice)
+                  state
+                else {
+                  val damaged = cloudkillTargetWithDamage(
+                    state,
+                    data.target,
+                    cloudkillDamageAfterSave(
+                      cloudkillRolledDamage(rolledDice),
+                      data.savingThrowSucceeded,
+                    ),
+                  )
+                  val marked = markCloudkillTargetSavedThisTurn(
+                    { ...damaged, pending: NoCloudkillPendingResolution },
+                    data.target,
+                  )
+                  if (data.target == CloudkillCaster and marked.casterConcentrating)
+                    {
+                      ...marked,
+                      pending: CloudkillConcentrationSavingThrowPending({
+                        trigger: data.trigger,
+                        remainingTargets: data.remainingTargets,
+                      }),
+                    }
+                  else
+                    cloudkillWithPendingTargets(
+                      marked,
+                      data.trigger,
+                      data.remainingTargets,
+                    )
+                }
+            | _ => state
+          }
+      | _ => state
+    }
+
+  pure def resolveCloudkillSourceConcentrationSavingThrow(
+    state: CloudkillSemanticState,
+    succeeded: bool,
+  ): CloudkillSemanticState =
+    match state.pending {
+      | CloudkillConcentrationSavingThrowPending(data) =>
+          if (succeeded)
+            cloudkillWithPendingTargets(
+              { ...state, pending: NoCloudkillPendingResolution },
+              data.trigger,
+              data.remainingTargets,
+            )
+          else
+            endCloudkill(state, CloudkillSourceDamageEndedConcentration)
       | _ => state
     }
 
@@ -426,15 +480,6 @@ module battleRuntimeCloudkillAreaHazard {
         lifecycle: CloudkillEnded({ reason: reason }),
         pending: NoCloudkillPendingResolution,
       }
-
-  pure def acceptReactionEndingCloudkillConcentration(
-    state: CloudkillSemanticState,
-  ): CloudkillSemanticState =
-    match state.pending {
-      | CloudkillFailedSaveReactionPending(_) =>
-          endCloudkill(state, CloudkillReactionEndedConcentration)
-      | _ => state
-    }
 
   pure def endCloudkillConcentration(state: CloudkillSemanticState): CloudkillSemanticState =
     endCloudkill(state, CloudkillConcentrationEnded)
