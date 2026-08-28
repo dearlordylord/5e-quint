@@ -1,12 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
-import {
-  classLevel,
-  damageAmount,
-  DieRollResult,
-  movementFeet,
-} from "@dnd/shared/types";
+import { classLevel, damageAmount, DieRollResult } from "@dnd/shared/types";
 import { ATTACK_RESOLVERS } from "./battle-reducer/attack-main.ts";
 import {
   maybeOpenInterruptWindow,
@@ -28,8 +22,8 @@ import type { BattleAttackRouteResolvers } from "./battle-reducer/attack-resolve
 import type {
   BattleFallDamageLandingMitigationFrame,
   BattleFlySpeedGrantEndFallCleanupFrame,
-  EndedFlySpeedGrant,
 } from "./battle-state-execution.ts";
+import type { BattleSubject } from "./battle-subjects.ts";
 import {
   InterruptLifecycleExecution,
   resolveActiveInterruptProcedure,
@@ -42,6 +36,7 @@ import {
   attackRollHoleAfterTarget,
   battleProcedureExecutionRefForTest,
   battleId,
+  breakBattleConcentration,
   characterBattleFeatureInitForTest,
   characterSeed,
   cuttingWordsAttackOnlyUnit,
@@ -72,6 +67,16 @@ import type {
   BattleInterruptedProcedure,
 } from "./battle-state-execution.ts";
 import { REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE } from "./unit-feature-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
+import {
+  knownWillingSpellTargetFill,
+  spellAct,
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  flyUnitId,
+  spellCasterId,
+} from "./unit-profile-admission-catalog.test-support.ts";
 
 describe("battle runtime: interrupt lifecycle and continuation boundaries", () => {
   test("opens a primary-attack follow-up continuation through an after-damage Reaction", () => {
@@ -326,26 +331,53 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
   test("reports stale subjects for pending Fly cleanup and landing mitigation continuations", () => {
     const state = fighterTurnWithReadiedRay("afterDamage");
     const subject = fighterAttackSubject(state);
-    const endedEffect = {
-      kind: "specialSpeedGrant",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "synthetic-fly-cleanup",
-      ),
-      sourceCombatantId: fighterId,
-      speedKind: "fly",
-      speed: { kind: "fixed", speedFeet: movementFeet(60) },
-      hover: true,
-      expiresAt: {
-        kind: "concentration",
-        combatantId: fighterId,
-        durationTicks: elapsedTimeTicks(1),
-      },
-    } satisfies EndedFlySpeedGrant;
-    const flyFrame = {
-      kind: "flySpeedGrantEndFallCleanup",
-      targetId: fighterId,
-      endedEffect,
-    } satisfies BattleFlySpeedGrantEndFallCleanupFrame;
+    const flySession = spellBattle({
+      preparedSpells: [spellRecord(flyUnitId)],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+    });
+    const flyAct = spellAct({
+      session: flySession,
+      spellId: flyUnitId,
+      slotLevel: 3,
+    });
+    const flyTarget = flyAct.initialHoles.find(
+      (hole) => hole.kind === "targetChoice",
+    );
+    if (flyTarget === undefined) {
+      throw new Error("Expected Fly target selection.");
+    }
+    const flyCast = resolveBattleSubject({
+      state: flySession.state,
+      subject: flyAct.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          flyTarget,
+          flyUnitId,
+          spellCasterId,
+          spellCasterId,
+        ),
+      ],
+    });
+    if (flyCast.tag !== "resolved") {
+      throw new Error("Expected admitted Fly cast to resolve.");
+    }
+    const afterFlyEnded = breakBattleConcentration(
+      flyCast.state,
+      spellCasterId,
+    );
+    const flyFrame = afterFlyEnded.interruptStack.find(
+      (frame): frame is BattleFlySpeedGrantEndFallCleanupFrame =>
+        frame.kind === "flySpeedGrantEndFallCleanup" &&
+        frame.targetId === spellCasterId,
+    );
+    if (flyFrame === undefined) {
+      throw new Error("Expected production Fly cleanup frame.");
+    }
+    const flySubject = {
+      tag: "runtimeCommand",
+      actorId: spellCasterId,
+      command: "endTurn",
+    } satisfies BattleSubject;
     const fallFrame = {
       kind: "fallDamageLandingMitigation",
       targetId: fighterId,
@@ -372,16 +404,23 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
       replayExecution,
       routeResolvers,
     );
-    for (const frame of [flyFrame, fallFrame]) {
+    for (const input of [
+      { state: afterFlyEnded, frame: flyFrame, subject: flySubject },
+      {
+        state: { ...state, interruptStack: [fallFrame] },
+        frame: fallFrame,
+        subject,
+      },
+    ]) {
       expect(
         resolveActiveInterruptContinuation({
-          state: { ...state, interruptStack: [frame] },
-          frame,
-          subject,
+          state: input.state,
+          frame: input.frame,
+          subject: input.subject,
           fills: [],
           execution,
         }),
-      ).toEqual({ tag: "notActiveContinuation", frame });
+      ).toEqual({ tag: "notActiveContinuation", frame: input.frame });
     }
   });
 
