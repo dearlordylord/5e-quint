@@ -15,6 +15,10 @@ import {
 
 export const ORACLE_CLI_MODES = ["identity", "stream"] as const;
 export type OracleCliMode = (typeof ORACLE_CLI_MODES)[number];
+export const ORACLE_CLI_USAGE = `Usage: ${ORACLE_CLI_MODES.map((mode) => `oracle ${mode}`).join(" | ")} (the stream mode reads UTF-8 LF-framed batches from stdin)`;
+
+const isOracleCliMode = (value: string | undefined): value is OracleCliMode =>
+  value !== undefined && ORACLE_CLI_MODES.some((mode) => mode === value);
 
 export type OracleCliArgumentIssue = {
   readonly tag: "invalidArguments";
@@ -40,13 +44,12 @@ export function parseOracleCliMode(
   args: readonly string[],
 ): Either.Either<OracleCliMode, OracleCliArgumentIssue> {
   const [mode, ...remaining] = args;
-  if ((mode === "identity" || mode === "stream") && remaining.length === 0) {
+  if (isOracleCliMode(mode) && remaining.length === 0) {
     return Either.right(mode);
   }
   return Either.left({
     tag: "invalidArguments",
-    message:
-      "Usage: oracle identity | oracle stream (the stream mode reads UTF-8 LF-framed batches from stdin)",
+    message: ORACLE_CLI_USAGE,
   });
 }
 

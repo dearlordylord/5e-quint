@@ -350,7 +350,9 @@ describe("Opaque Oracle source-free distribution", () => {
       );
       expect(invalidMode.status).toBe(2);
       expect(invalidMode.stdout.toString("utf8")).toBe("");
-      expect(invalidMode.stderr.toString("utf8")).toContain("Usage:");
+      expect(invalidMode.stderr.toString("utf8")).toContain(
+        "Usage: oracle identity | oracle stream",
+      );
 
       const finalFrame = runExecutable(
         executable,
