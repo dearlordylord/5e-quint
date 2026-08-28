@@ -9,7 +9,7 @@ import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-red
 import { allocateBattleEffectOccurrenceForCreature } from "./effect-execution-ref.ts";
 import {
   attackDamageDispositionFill,
-  armorClass,
+  battleStateWithAllSpellSlotsExpended,
   attackDamageHoleAfterHit,
   attackInitialTargetHole,
   attackRollFill,
@@ -32,7 +32,6 @@ import {
   goblinId,
   magicSubject,
   requireCharacterSpellProcedureRefForTest,
-  requireElapsedHours,
   requireHole,
   requireResolved,
   resolveBattleConcentrationDamage,
@@ -203,26 +202,50 @@ describe("battle runtime: Concentration and readied spells", () => {
   });
 
   test("breaking concentration clears concentration-owned spell effects", () => {
-    const state = wizardVsSkeletonBattle().state;
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-concentration-owned-hideous-laughter"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("hideous_laughter")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+        statBlockCreatureInit({
+          combatantId: skeletonId,
+          initiative: 10,
+        }),
+      ],
+    });
+    const state = battleStateWithAllSpellSlotsExpended(
+      session.state,
+      wizardId,
+    );
     const wizard = state.combatants.get(wizardId)!;
     const skeleton = state.combatants.get(skeletonId)!;
-    const sourceProcedureRef = battleProcedureExecutionRefForTest(
-      String("hold_person"),
+    const sourceProcedureRef = requireCharacterSpellProcedureRefForTest(
+      session,
+      wizardId,
+      spellSlotInvocationRef("hideous_laughter", 1, "hideousLaughter"),
     );
     const allocatedEffect = allocateBattleEffectOccurrenceForCreature({
       owner: skeleton,
       effect: {
-        kind: "spellBaseArmorClass",
+        kind: "hideousLaughter",
         sourceProcedureRef,
         sourceCombatantId: wizardId,
-        base: armorClass(13),
-        ability: "dex",
+        conditionHadNonSpellProneSource: false,
+        conditionHadNonSpellIncapacitatedSource: false,
+        repeatSaveRollMode: null,
+        save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
         expiresAt: {
           kind: "concentration",
           combatantId: wizardId,
-          durationTicks: requireElapsedHours(1),
         },
-        earlyEnds: [{ kind: "concentrationBroken" }],
       },
     });
     const concentrating = {
@@ -799,22 +822,36 @@ describe("battle runtime: Concentration and readied spells", () => {
           displayName: "Second Wizard",
           initiative: 5,
           attack: null,
-          spellcasting: wizardSpellcasting(),
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("hideous_laughter")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
         }),
         characterSeed({
           combatantId: fighterId,
           displayName: "Penalty Caster",
           initiative: 0,
           attack: null,
-          spellcasting: wizardSpellcasting(),
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("ray_of_enfeeblement")],
+            spellSlots: [{ spellLevel: 2, count: 1 }],
+          }),
         }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const caster = session.state.combatants.get(wizardId);
-    const laughterCaster = session.state.combatants.get(secondWizardId);
-    const penaltyCaster = session.state.combatants.get(fighterId);
-    const target = session.state.combatants.get(goblinId);
+    const mechanicallyPossibleState = battleStateWithAllSpellSlotsExpended(
+      battleStateWithAllSpellSlotsExpended(
+        session.state,
+        secondWizardId,
+      ),
+      fighterId,
+    );
+    const caster = mechanicallyPossibleState.combatants.get(wizardId);
+    const laughterCaster =
+      mechanicallyPossibleState.combatants.get(secondWizardId);
+    const penaltyCaster = mechanicallyPossibleState.combatants.get(fighterId);
+    const target = mechanicallyPossibleState.combatants.get(goblinId);
     if (
       caster === undefined ||
       laughterCaster === undefined ||
@@ -827,8 +864,10 @@ describe("battle runtime: Concentration and readied spells", () => {
       owner: target,
       effect: {
         kind: "hideousLaughter",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          "synthetic_readied_release_hideous_laughter",
+        sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+          session,
+          secondWizardId,
+          spellSlotInvocationRef("hideous_laughter", 1, "hideousLaughter"),
         ),
         sourceCombatantId: secondWizardId,
         conditionHadNonSpellProneSource: false,
@@ -842,8 +881,14 @@ describe("battle runtime: Concentration and readied spells", () => {
       owner: caster,
       effect: {
         kind: "sourceDamageRollPenalty",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          "synthetic_readied_release_source_penalty",
+        sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+          session,
+          fighterId,
+          spellSlotInvocationRef(
+            "ray_of_enfeeblement",
+            2,
+            "abilityD20TestRollModeSaveGate",
+          ),
         ),
         sourceCombatantId: fighterId,
         amount: { dice: 1, dieSize: 8 },
@@ -851,8 +896,8 @@ describe("battle runtime: Concentration and readied spells", () => {
       },
     });
     const enrichedState: BattleState = {
-      ...session.state,
-      combatants: new Map(session.state.combatants)
+      ...mechanicallyPossibleState,
+      combatants: new Map(mechanicallyPossibleState.combatants)
         .set(wizardId, {
           ...sourceDamageRollPenalty.owner,
           activeEffects: [

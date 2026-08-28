@@ -14,7 +14,6 @@ import {
   endTurn,
   initiativeScore,
   startBattle,
-  type BattleActiveEffect,
   type AvailableBattleAct,
   type BattleCreatureInit,
   type BattleFill,
@@ -46,7 +45,6 @@ import rayOfFrostInput from "../../surface/content/ray_of_frost.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 import {
-  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   battleProcedureExecutionRefForSpellHoleForTest,
   characterBattleFeatureInitForTest,
@@ -64,6 +62,7 @@ import { SPELL_CAST_REACTION_FACTS_HOLE_ID } from "./battle-reducer/battle-runti
 import { chainedSpellFillSet } from "./battle-reducer/spells-resolve-chained.ts";
 import { damageRelationshipQuestionId } from "./battle-reducer/damage-relationship-question-id.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import { allocateBattleEffectOccurrenceForCreature } from "./effect-execution-ref.ts";
 
 const spellCasterId = combatantId("chromatic-orb-caster");
 const firstTargetId = combatantId("chromatic-orb-first-target");
@@ -1170,26 +1169,29 @@ function withSourceDamageRollPenalty(state: BattleState): BattleState {
   if (caster === undefined) {
     throw new Error("Expected spell caster.");
   }
-  const sourceDamageRollPenalty = {
-    kind: "sourceDamageRollPenalty",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      "synthetic_source_damage_penalty",
-    ),
-    sourceCombatantId: firstTargetId,
-    amount: { dice: 1, dieSize: 8 },
-    expiresAt: {
-      kind: "concentration",
-      combatantId: firstTargetId,
+  const sourceDamageRollPenalty = allocateBattleEffectOccurrenceForCreature({
+    owner: caster,
+    effect: {
+      kind: "sourceDamageRollPenalty",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "synthetic_source_damage_penalty",
+      ),
+      sourceCombatantId: firstTargetId,
+      amount: { dice: 1, dieSize: 8 },
+      expiresAt: {
+        kind: "concentration",
+        combatantId: firstTargetId,
+      },
     },
-  } satisfies Extract<
-    BattleActiveEffect,
-    { readonly kind: "sourceDamageRollPenalty" }
-  >;
+  });
   return {
     ...state,
     combatants: new Map(state.combatants).set(spellCasterId, {
-      ...caster,
-      activeEffects: [...caster.activeEffects, sourceDamageRollPenalty],
+      ...sourceDamageRollPenalty.owner,
+      activeEffects: [
+        ...caster.activeEffects,
+        sourceDamageRollPenalty.effect,
+      ],
     }),
   };
 }
@@ -1205,57 +1207,61 @@ function withWardingBondSharedCasterLifecycle(state: BattleState): BattleState {
   ) {
     throw new Error("Expected Warding Bond caster, target, and effect source.");
   }
-  const wardingBondEffect = {
-    kind: "wardingBond",
-    effectRef: battleEffectExecutionRefForTest("chromatic-ward"),
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String("warding_bond"),
-    ),
-    sourceCombatantId: spellCasterId,
-    expiresAt: {
-      kind: "duration",
-      durationTicks: elapsedTimeTicks(3_600),
+  const wardingBondEffect = allocateBattleEffectOccurrenceForCreature({
+    owner: target,
+    effect: {
+      kind: "wardingBond",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("warding_bond"),
+      ),
+      sourceCombatantId: spellCasterId,
+      expiresAt: {
+        kind: "duration",
+        durationTicks: elapsedTimeTicks(3_600),
+      },
     },
-  } satisfies Extract<BattleActiveEffect, { readonly kind: "wardingBond" }>;
-  const hideousLaughterEffect = {
-    kind: "hideousLaughter",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String("test_hideous_laughter"),
-    ),
-    sourceCombatantId: secondTargetId,
-    conditionHadNonSpellProneSource: false,
-    conditionHadNonSpellIncapacitatedSource: false,
-    repeatSaveRollMode: null,
-    save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
-    expiresAt: {
-      kind: "concentration",
-      combatantId: secondTargetId,
-      durationTicks: elapsedTimeTicks(600),
+  });
+  const hideousLaughterProcedureRef = battleProcedureExecutionRefForTest(
+    String("test_hideous_laughter"),
+  );
+  const hideousLaughterEffect = allocateBattleEffectOccurrenceForCreature({
+    owner: caster,
+    effect: {
+      kind: "hideousLaughter",
+      sourceProcedureRef: hideousLaughterProcedureRef,
+      sourceCombatantId: secondTargetId,
+      conditionHadNonSpellProneSource: false,
+      conditionHadNonSpellIncapacitatedSource: false,
+      repeatSaveRollMode: null,
+      save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+      expiresAt: {
+        kind: "concentration",
+        combatantId: secondTargetId,
+        durationTicks: elapsedTimeTicks(600),
+      },
     },
-  } satisfies Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>;
+  });
   return {
     ...state,
     combatants: new Map(state.combatants)
       .set(spellCasterId, {
-        ...caster,
+        ...hideousLaughterEffect.owner,
         concentration: {
           sourceProcedureRef: battleProcedureExecutionRefForTest(
             String("test_concentration_spell"),
           ),
           effectKind: "spellEffect",
         },
-        activeEffects: [...caster.activeEffects, hideousLaughterEffect],
+        activeEffects: [...caster.activeEffects, hideousLaughterEffect.effect],
       })
       .set(firstTargetId, {
-        ...target,
-        activeEffects: [...target.activeEffects, wardingBondEffect],
+        ...wardingBondEffect.owner,
+        activeEffects: [...target.activeEffects, wardingBondEffect.effect],
       })
       .set(secondTargetId, {
         ...hideousLaughterSource,
         concentration: {
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("test_hideous_laughter"),
-          ),
+          sourceProcedureRef: hideousLaughterProcedureRef,
           effectKind: "spellEffect",
         },
       }),
