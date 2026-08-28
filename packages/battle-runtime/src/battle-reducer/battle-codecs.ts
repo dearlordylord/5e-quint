@@ -162,6 +162,7 @@ import type {
   BattleHole,
   BattleMovementFillValue,
 } from "../battle-state-execution.ts";
+import { BATTLE_START_TURN_OCCURRENCE_KINDS } from "../battle-state-execution.ts";
 import { ATTACK_PRESENTATION_JOIN_ISSUE_REASONS } from "../attack-presentation-contract.ts";
 const NonEmptyTrimmedStringSchema = Schema.Trimmed.pipe(
   Schema.check(Schema.isNonEmpty()),
@@ -298,6 +299,11 @@ const BattleHoleBaseSchema = {
   spell: Schema.optionalKey(Schema.Never),
   unit: Schema.optionalKey(Schema.Never),
 } as const;
+const BattleStartTurnOccurrenceOptionSchema = Schema.Struct({
+  occurrenceId: BattleStartTurnOccurrenceId,
+  kind: Schema.Literals(BATTLE_START_TURN_OCCURRENCE_KINDS),
+  label: Schema.String,
+});
 
 const BattleBrutalStrikeForcefulBlowMovementFactSchema = Schema.Struct({
   kind: Schema.Literal("brutalStrikeForcefulBlowStraightTowardTarget"),
@@ -2455,43 +2461,10 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     actorId: CombatantId,
     occurrences: Schema.TupleWithRest(
       Schema.Tuple([
-        Schema.Struct({
-          occurrenceId: BattleStartTurnOccurrenceId,
-          kind: Schema.Literals([
-            "deathSavingThrow",
-            "statBlockRecharge",
-            "turnStartTemporaryHitPoints",
-            "spellConditionTurnStartDamage",
-            "spellTurnStartDamageAndSave",
-            "cloudkillMovement",
-          ]),
-          label: Schema.String,
-        }),
-        Schema.Struct({
-          occurrenceId: BattleStartTurnOccurrenceId,
-          kind: Schema.Literals([
-            "deathSavingThrow",
-            "statBlockRecharge",
-            "turnStartTemporaryHitPoints",
-            "spellConditionTurnStartDamage",
-            "spellTurnStartDamageAndSave",
-            "cloudkillMovement",
-          ]),
-          label: Schema.String,
-        }),
+        BattleStartTurnOccurrenceOptionSchema,
+        BattleStartTurnOccurrenceOptionSchema,
       ]),
-      [Schema.Struct({
-        occurrenceId: BattleStartTurnOccurrenceId,
-        kind: Schema.Literals([
-          "deathSavingThrow",
-          "statBlockRecharge",
-          "turnStartTemporaryHitPoints",
-          "spellConditionTurnStartDamage",
-          "spellTurnStartDamageAndSave",
-          "cloudkillMovement",
-        ]),
-        label: Schema.String,
-      })],
+      [BattleStartTurnOccurrenceOptionSchema],
     ),
   }),
   Schema.Struct({
@@ -3102,7 +3075,6 @@ type BattleD20TestRolledD20sEncoded = {
   readonly second: number;
   readonly selected: "first" | "second";
 };
-
 type BattleD20TestNaturalOneRerollDecisionEncoded =
   | {
       readonly kind: "decline";

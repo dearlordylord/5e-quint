@@ -121,7 +121,9 @@ function withSourceStartTurnDamage(state: BattleState): BattleState {
   };
 }
 
-function withSourceTurnStartTemporaryHitPoints(state: BattleState): BattleState {
+function withSourceTurnStartTemporaryHitPoints(
+  state: BattleState,
+): BattleState {
   const source = state.combatants.get(spellCasterId);
   if (source === undefined) {
     throw new Error("Expected the Cloudkill source.");
@@ -641,10 +643,7 @@ describe("Cloudkill source-turn movement", () => {
         fills: [orderFill, movementFill, saveFill, damageFill],
       });
       const concentrationFill = concentrationSavingThrowFill(
-        requireResultHole(
-          concentrationFrontier,
-          "concentrationSavingThrow",
-        ),
+        requireResultHole(concentrationFrontier, "concentrationSavingThrow"),
         true,
       );
       const result = endTurn({
@@ -972,7 +971,10 @@ describe("Cloudkill source-turn movement", () => {
         actorId: spellTargetId,
         fills: [nextMovementFill, firstSaveFill],
       }),
-    ).toMatchObject({ tag: "needsHoles", holes: [{ kind: "savingThrowOutcome" }] });
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "savingThrowOutcome" }],
+    });
   });
 
   test("replays an interrupted movement save without advancing or reopening it", () => {
@@ -1120,6 +1122,88 @@ describe("Cloudkill source-turn movement", () => {
         pendingInterrupt: null,
       },
     });
+  });
+
+  test("offers the chosen movement occurrence before stat-block recharge", () => {
+    const cast = castCloudkill();
+    const targetTurn = endTurn({
+      state: cast.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected the target turn to start.");
+    }
+    const recharging = withUnavailableSourceRecharge(targetTurn.state);
+    const orderFrontier = endTurn({
+      state: recharging.state,
+      actorId: spellTargetId,
+    });
+    const orderFill = startTurnOccurrenceOrderFill(
+      requireResultHole(orderFrontier, "startTurnOccurrenceOrder"),
+      "cloudkillMovement",
+    );
+
+    const movementFrontier = endTurn({
+      state: recharging.state,
+      actorId: spellTargetId,
+      fills: [orderFill],
+    });
+
+    expect(movementFrontier).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "cloudkillMovement" }],
+    });
+    const rechargeFrontier = endTurn({
+      state: recharging.state,
+      actorId: spellTargetId,
+      fills: [
+        orderFill,
+        cloudkillMovementFill(
+          requireResultHole(movementFrontier, "cloudkillMovement"),
+          [],
+        ),
+      ],
+    });
+    expect(rechargeFrontier).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "statBlockRechargeRoll" }],
+    });
+    const rechargeFill = {
+      kind: "statBlockRechargeRoll" as const,
+      holeId: requireResultHole(rechargeFrontier, "statBlockRechargeRoll")
+        .holeId,
+      value: [
+        {
+          target: recharging.resourcePoolRef,
+          roll: DieRollResult(5),
+        },
+      ],
+    };
+    const completed = endTurn({
+      state: recharging.state,
+      actorId: spellTargetId,
+      fills: [
+        orderFill,
+        cloudkillMovementFill(
+          requireResultHole(movementFrontier, "cloudkillMovement"),
+          [],
+        ),
+        rechargeFill,
+      ],
+    });
+    if (completed.tag !== "resolved") {
+      throw new Error("Expected the ordered start-turn occurrences to finish.");
+    }
+    const source = completed.state.combatants.get(spellCasterId);
+    expect(source?.origin.kind).toBe("statBlock");
+    if (source?.origin.kind !== "statBlock") {
+      throw new Error("Expected the stat-block Cloudkill source.");
+    }
+    expect(
+      source.origin.execution.resourcePools.find(
+        (pool) => pool.resourcePoolRef === recharging.resourcePoolRef,
+      )?.available,
+    ).toBe(true);
   });
 
   test("opens independent failed-save windows for two movement-affected targets", () => {
@@ -2190,10 +2274,7 @@ describe("Cloudkill source-turn movement", () => {
       fills: [orderFill, startDamageFill, startSaveFill],
     });
     const startConcentrationFill = concentrationSavingThrowFill(
-      requireResultHole(
-        startConcentrationFrontier,
-        "concentrationSavingThrow",
-      ),
+      requireResultHole(startConcentrationFrontier, "concentrationSavingThrow"),
       true,
     );
     const startTurnFills = [

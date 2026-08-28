@@ -5933,13 +5933,16 @@ export type BattleStartTurnOccurrenceOrderHole = {
     ...BattleStartTurnOccurrenceOption[],
   ];
 };
+export const BATTLE_START_TURN_OCCURRENCE_KINDS = [
+  "deathSavingThrow",
+  "statBlockRecharge",
+  "turnStartTemporaryHitPoints",
+  "spellConditionTurnStartDamage",
+  "spellTurnStartDamageAndSave",
+  "cloudkillMovement",
+] as const;
 export type BattleStartTurnOccurrenceKind =
-  | "deathSavingThrow"
-  | "statBlockRecharge"
-  | "turnStartTemporaryHitPoints"
-  | "spellConditionTurnStartDamage"
-  | "spellTurnStartDamageAndSave"
-  | "cloudkillMovement";
+  (typeof BATTLE_START_TURN_OCCURRENCE_KINDS)[number];
 export type BattleStartTurnOccurrenceOption = {
   readonly occurrenceId: import("./identity.ts").BattleStartTurnOccurrenceId;
   readonly kind: BattleStartTurnOccurrenceKind;

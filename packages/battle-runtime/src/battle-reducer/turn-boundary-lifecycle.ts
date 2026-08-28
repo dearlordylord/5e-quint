@@ -250,6 +250,7 @@ type ResolvedTurnBoundaryFills = {
   >[];
   readonly deferSpellTurnStartDamage: boolean;
   readonly deferTurnStartTemporaryHitPoints: boolean;
+  readonly deferStatBlockRecharge: boolean;
 };
 
 const CLOUDKILL_START_TURN_MOVE_FEET = movementFeet(10);
@@ -346,17 +347,13 @@ function cloudkillMovementWasChosenBeforeStartTurnEffects(
       candidate.holeId === holeId(key),
   );
   if (fill?.kind !== "startTurnOccurrenceOrder") return false;
-  const movementId = cloudkillMovementOccurrenceOption(
-    occurrence,
-  ).occurrenceId;
+  const movementId = cloudkillMovementOccurrenceOption(occurrence).occurrenceId;
   const movementIndex = fill.value.occurrenceIds.indexOf(movementId);
   return fill.value.occurrenceIds
     .slice(movementIndex + 1)
     .some(
       (id) =>
-        String(id).startsWith(
-          '{"kind":"spellConditionTurnStartDamage"',
-        ) ||
+        String(id).startsWith('{"kind":"spellConditionTurnStartDamage"') ||
         String(id).startsWith('{"kind":"spellTurnStartDamageAndSave"'),
     );
 }
@@ -367,6 +364,20 @@ function cloudkillMovementWasChosenBeforeOccurrence(
   movement: Pick<CloudkillAreaHazardEffect, "sourceProcedureRef" | "areaId">,
   occurrenceId: StartTurnOccurrenceOption["occurrenceId"],
 ): boolean {
+  return occurrenceWasChosenBeforeOccurrence(
+    fills,
+    sourceTurn,
+    cloudkillMovementOccurrenceOption(movement).occurrenceId,
+    occurrenceId,
+  );
+}
+
+function occurrenceWasChosenBeforeOccurrence(
+  fills: readonly BattleFill[],
+  sourceTurn: BattleCloudkillMovementSequenceResumeCheckpoint["sourceTurn"],
+  firstOccurrenceId: StartTurnOccurrenceOption["occurrenceId"],
+  secondOccurrenceId: StartTurnOccurrenceOption["occurrenceId"],
+): boolean {
   const key = `battle:start-turn-occurrence-order:${sourceTurn.actorId}:${Number(sourceTurn.round)}`;
   const fill = fills.find(
     (candidate) =>
@@ -375,9 +386,8 @@ function cloudkillMovementWasChosenBeforeOccurrence(
   );
   if (fill?.kind !== "startTurnOccurrenceOrder") return false;
   return (
-    fill.value.occurrenceIds.indexOf(
-      cloudkillMovementOccurrenceOption(movement).occurrenceId,
-    ) < fill.value.occurrenceIds.indexOf(occurrenceId)
+    fill.value.occurrenceIds.indexOf(firstOccurrenceId) <
+    fill.value.occurrenceIds.indexOf(secondOccurrenceId)
   );
 }
 
@@ -718,6 +728,7 @@ function resolveEndTurn({
   damageDispositions,
   deferSpellTurnStartDamage,
   deferTurnStartTemporaryHitPoints,
+  deferStatBlockRecharge,
 }: ResolvedTurnBoundaryFills): Extract<
   BattleResolutionResult,
   { readonly tag: "resolved" }
@@ -921,11 +932,13 @@ function resolveEndTurn({
   flySpeedGrantEndFallCleanupFrames.push(
     ...durationTick.flySpeedGrantEndFallCleanupFrames,
   );
-  const combatantsAfterRecharge = processStatBlockRechargeRolls(
-    combatantsAfterDurationTick,
-    nextActorId,
-    statBlockRechargeRolls,
-  );
+  const combatantsAfterRecharge = deferStatBlockRecharge
+    ? combatantsAfterDurationTick
+    : processStatBlockRechargeRolls(
+        combatantsAfterDurationTick,
+        nextActorId,
+        statBlockRechargeRolls,
+      );
   const combatantsAfterDamageReductionReset =
     resetSpellDamageReductionsForNewTurn(combatantsAfterRecharge);
   const resetTurnResources = spellGrantedActionResourceTurnResources(
@@ -3450,8 +3463,7 @@ function resolveEndTurnCommandForParent(
     const expectedIds = new Set(
       startTurnOccurrences.map(({ occurrenceId }) => occurrenceId),
     );
-    const submittedIds =
-      startTurnOccurrenceOrderFill.value.occurrenceIds;
+    const submittedIds = startTurnOccurrenceOrderFill.value.occurrenceIds;
     if (
       submittedIds.length !== expectedIds.size ||
       new Set(submittedIds).size !== submittedIds.length ||
@@ -3503,6 +3515,20 @@ function resolveEndTurnCommandForParent(
           ),
       ),
     );
+  const cloudkillMovementBeforeStatBlockRecharge =
+    rechargeHole !== null &&
+    preBoundaryCloudkillEffects.some((movement) =>
+      occurrenceWasChosenBeforeOccurrence(
+        input.fills,
+        nextSourceTurn,
+        cloudkillMovementOccurrenceOption(movement).occurrenceId,
+        startTurnOccurrenceOption(
+          "statBlockRecharge",
+          {},
+          "Resolve stat-block recharge",
+        ).occurrenceId,
+      ),
+    );
   const initialHoles = [
     ...sleepRepeatSaveHoles,
     ...hideousLaughterRepeatSaveHoles,
@@ -3512,7 +3538,9 @@ function resolveEndTurnCommandForParent(
     ...abilityD20TestEndTurnSaveHoles,
     ...endTurnDamageHoles,
     ...(needsDeathSavingThrow ? [deathSavingThrowHole(nextActorId)] : []),
-    ...(rechargeHole === null ? [] : [rechargeHole]),
+    ...(rechargeHole === null || cloudkillMovementBeforeStatBlockRecharge
+      ? []
+      : [rechargeHole]),
     ...startTurnDamageHoles,
     ...startTurnSaveHoles,
   ];
@@ -4143,6 +4171,7 @@ function resolveEndTurnCommandForParent(
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     (rechargeHole !== null &&
+      !cloudkillMovementBeforeStatBlockRecharge &&
       rechargeRollFill?.kind !== "statBlockRechargeRoll") ||
     (rechargeHole === null && rechargeRollFill !== undefined)
   ) {
@@ -4250,6 +4279,7 @@ function resolveEndTurnCommandForParent(
     deferSpellTurnStartDamage: cloudkillMovementBeforeStartTurnEffects,
     deferTurnStartTemporaryHitPoints:
       cloudkillMovementBeforeTurnStartTemporaryHitPoints,
+    deferStatBlockRecharge: cloudkillMovementBeforeStatBlockRecharge,
   });
   const cloudkillMovementBoundaries = cloudkillStartTurnMovementEffects(
     advancedTurn.state,
@@ -4357,13 +4387,33 @@ function resolveEndTurnCommandForParent(
           ),
         }
       : movementAffectedResolution.state;
-  const finalState = cloudkillMovementBeforeStartTurnEffects
-    ? applyDeferredStartTurnSpellDamage(
-        stateAfterDeferredTemporaryHitPoints,
-        nextActorId,
-        input.fills,
-      )
-    : stateAfterDeferredTemporaryHitPoints;
+  const stateAfterDeferredStartTurnDamage =
+    cloudkillMovementBeforeStartTurnEffects
+      ? applyDeferredStartTurnSpellDamage(
+          stateAfterDeferredTemporaryHitPoints,
+          nextActorId,
+          input.fills,
+        )
+      : stateAfterDeferredTemporaryHitPoints;
+  if (
+    cloudkillMovementBeforeStatBlockRecharge &&
+    rechargeHole !== null &&
+    rechargeRollFill?.kind !== "statBlockRechargeRoll"
+  ) {
+    return needsHolesResult(input.state, input.subject, [rechargeHole]);
+  }
+  const finalState =
+    cloudkillMovementBeforeStatBlockRecharge &&
+    rechargeRollFill?.kind === "statBlockRechargeRoll"
+      ? {
+          ...stateAfterDeferredStartTurnDamage,
+          combatants: processStatBlockRechargeRolls(
+            stateAfterDeferredStartTurnDamage.combatants,
+            nextActorId,
+            rechargeRollFill.value,
+          ),
+        }
+      : stateAfterDeferredStartTurnDamage;
   return {
     tag: "resolved",
     state: finalState,
