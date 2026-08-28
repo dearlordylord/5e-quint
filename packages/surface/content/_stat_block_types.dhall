@@ -64,6 +64,29 @@ let nonEmptyToList =
       λ(input : NonEmpty element) ->
         [ input.first ] # input.rest
 
+let Vulnerabilities : Type =
+      < fixed : NonEmpty Text
+      | qualified : { damageTypes : NonEmpty Text, qualifier : Text }
+      >
+
+let vulnerabilityList =
+      λ(input : Vulnerabilities) ->
+        merge
+          { fixed =
+              λ(damageTypes : NonEmpty Text) ->
+                { kind = "fixed"
+                , damageTypes = nonEmptyToList Text damageTypes
+                , qualifier = None Text
+                }
+          , qualified =
+              λ(qualified : { damageTypes : NonEmpty Text, qualifier : Text }) ->
+                { kind = "qualified"
+                , damageTypes = nonEmptyToList Text qualified.damageTypes
+                , qualifier = Some qualified.qualifier
+                }
+          }
+          input
+
 let DamageInput : Type =
       { damageType : Text
       , dice : Natural
@@ -520,6 +543,7 @@ in  { Effect
     , Dispatch
     , SpellRef
     , Group
+    , Vulnerabilities
     , advantageDamage
     , actionOption
     , meleeAttack
@@ -551,4 +575,5 @@ in  { Effect
     , textOnly
     , resourceTextOnly
     , trait
+    , vulnerabilityList
     }

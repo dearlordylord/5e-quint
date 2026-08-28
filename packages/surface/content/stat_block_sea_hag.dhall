@@ -1,0 +1,140 @@
+{ challengeRating = 2
+, id = "stat_block_sea_hag"
+, kind = "statBlock"
+, name = "Sea Hag"
+, provenance =
+  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:850-880" }
+, statBlock =
+  { abilityScores =
+    { cha = 13, con = 16, dex = 13, int = 12, str = 16, wis = 12 }
+  , ac.value = { kind = "literal", value = 14 }
+  , actions =
+    [ { description = None Text
+      , kind = "executable"
+      , name = None Text
+      , procedure = Some
+        { attackAbility = "str"
+        , attackBonus = { kind = "literal", value = 5 }
+        , attackType = "melee"
+        , kind = "attack_roll"
+        , name = "Claw"
+        , onHit =
+          [ { amount =
+              { expr = { dice = 2, dieSize = 6, flat = 3 }
+              , kind = "fixed"
+              , static = 10
+              }
+            , damageType = "slashing"
+            , kind = "damage"
+            }
+          ]
+        , reachFeet = 5
+        }
+      , procedureOrdinal = 1
+      , reason = None Text
+      , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+      }
+    , { description = Some
+          "Wisdom Saving Throw: DC 11, one Frightened creature the hag can see within 30 feet. Failure: If the target has 20 Hit Points or fewer, it drops to 0 Hit Points. Otherwise, the target takes 13 (3d8) Psychic damage."
+      , kind = "textOnly"
+      , name = Some "Death Glare"
+      , procedure =
+          None
+            { attackAbility : Text
+            , attackBonus : { kind : Text, value : Natural }
+            , attackType : Text
+            , kind : Text
+            , name : Text
+            , onHit :
+                List
+                  { amount :
+                      { expr :
+                          { dice : Natural, dieSize : Natural, flat : Natural }
+                      , kind : Text
+                      , static : Natural
+                      }
+                  , damageType : Text
+                  , kind : Text
+                  }
+            , reachFeet : Natural
+            }
+      , procedureOrdinal = 2
+      , reason = Some "unsupported_action_shape"
+      , resourceRefs = { kind = "some", ordinals = Some [ 1 ] }
+      }
+    , { description = Some
+          "The hag casts Disguise Self, using Constitution as the spellcasting ability (spell save DC 13). The spell's duration is 24 hours."
+      , kind = "textOnly"
+      , name = Some "Illusory Appearance"
+      , procedure =
+          None
+            { attackAbility : Text
+            , attackBonus : { kind : Text, value : Natural }
+            , attackType : Text
+            , kind : Text
+            , name : Text
+            , onHit :
+                List
+                  { amount :
+                      { expr :
+                          { dice : Natural, dieSize : Natural, flat : Natural }
+                      , kind : Text
+                      , static : Natural
+                      }
+                  , damageType : Text
+                  , kind : Text
+                  }
+            , reachFeet : Natural
+            }
+      , procedureOrdinal = 3
+      , reason = Some "unsupported_procedure_family"
+      , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+      }
+    ]
+  , alignment = { morality = "evil", order = "chaotic" }
+  , communication =
+    { kind = "spoken_and_understood"
+    , languages =
+      { kind = "named"
+      , languages = [ "Common", "Giant", "Primordial (Aquan)" ]
+      }
+    }
+  , creatureType = "fey"
+  , hp = { kind = "literal", value = 52 }
+  , initiative = { modifier = 1, score = 11 }
+  , passivePerception = 11
+  , resources =
+    [ { limit = { kind = "recharge", minimumRoll = 5 }
+      , ordinal = 1
+      , ownership = "shared"
+      }
+    ]
+  , savingThrowModifiers =
+    [ { ability = "cha", modifier = 1 }
+    , { ability = "con", modifier = 3 }
+    , { ability = "dex", modifier = 1 }
+    , { ability = "int", modifier = 1 }
+    , { ability = "str", modifier = 3 }
+    , { ability = "wis", modifier = 1 }
+    ]
+  , senses = [ { kind = "darkvision", rangeFeet = 60 } ]
+  , size = "medium"
+  , speeds =
+    [ { feet = { kind = "literal", value = 30 }, kind = "walk" }
+    , { feet = { kind = "literal", value = 40 }, kind = "swim" }
+    ]
+  , traits =
+    [ { description = "The hag can breathe air and water."
+      , name = "Amphibious"
+      }
+    , { description =
+          "While within 30 feet of at least two hag allies, the hag can cast one of the following spells, requiring no Material components, using the spell's normal casting time, and using Intelligence as the spellcasting ability (spell save DC 11): Augury, Find Familiar, Identify, Locate Object, Scrying, or Unseen Servant. The hag must finish a Long Rest before using this trait to cast that spell again."
+      , name = "Coven Magic"
+      }
+    , { description =
+          "Wisdom Saving Throw: DC 11, any Beast or Humanoid that starts its turn within 30 feet of the hag and can see the hag's true form. Failure: The target has the Frightened condition until the start of its next turn. Success: The target is immune to this hag's Vile Appearance for 24 hours."
+      , name = "Vile Appearance"
+      }
+    ]
+  }
+}

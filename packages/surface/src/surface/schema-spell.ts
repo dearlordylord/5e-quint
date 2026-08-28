@@ -4862,10 +4862,17 @@ export const CreatureResistanceListSchema = Schema.Union(
   }),
 );
 
-export const CreatureVulnerabilityListSchema = Schema.Struct({
-  kind: Schema.Literal("fixed"),
-  damageTypes: nonEmpty(DamageTypeSchema),
-});
+export const CreatureVulnerabilityListSchema = Schema.Union(
+  strictStruct({
+    kind: Schema.Literal("fixed"),
+    damageTypes: nonEmpty(DamageTypeSchema),
+  }),
+  strictStruct({
+    kind: Schema.Literal("qualified"),
+    damageTypes: nonEmpty(DamageTypeSchema),
+    qualifier: surfaceExactProse(Schema.NonEmptyTrimmedString),
+  }),
+);
 
 export const CreatureImmunityListSchema = Schema.Union(
   Schema.Struct({

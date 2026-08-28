@@ -17,6 +17,23 @@ import {
 const ABILITY_NAMES = ["str", "dex", "con", "int", "wis", "cha"] as const;
 type AbilityName = (typeof ABILITY_NAMES)[number];
 const ATTACK_ABILITY_NAMES = ["str", "dex", "int", "wis", "cha"] as const;
+type NonEmptyStrings = readonly [string, ...string[]];
+
+type AbilityMatrixFact = {
+  readonly ability: AbilityName;
+  readonly score: number;
+  readonly modifier: number;
+  readonly saveModifier: number;
+};
+
+type AbilityMatrix = readonly [
+  AbilityMatrixFact,
+  AbilityMatrixFact,
+  AbilityMatrixFact,
+  AbilityMatrixFact,
+  AbilityMatrixFact,
+  AbilityMatrixFact,
+];
 
 const PROCEDURE_SECTIONS = [
   "Actions",
@@ -240,7 +257,14 @@ type ScopedGeneralFacts = {
   readonly savingThrowModifiers: readonly NamedModifier[];
   readonly saveProficiencies: readonly AbilityName[];
   readonly skillModifiers: readonly NamedModifier[];
-  readonly vulnerabilities: readonly string[];
+  readonly vulnerabilities:
+    | { readonly kind: "none" }
+    | { readonly kind: "fixed"; readonly damageTypes: NonEmptyStrings }
+    | {
+        readonly kind: "qualified";
+        readonly damageTypes: NonEmptyStrings;
+        readonly qualifier: string;
+      };
   readonly resistances: ResistanceProjection;
   readonly immunityDamageTypes: readonly string[];
   readonly immunityConditions: readonly string[];
@@ -362,6 +386,21 @@ const sortedStrings = <Value extends string>(
 ): readonly Value[] =>
   [...values].sort((left, right) => left.localeCompare(right));
 
+const sortedNonEmptyStrings = (
+  values: readonly string[],
+  context: string,
+): NonEmptyStrings => {
+  const sorted = sortedStrings(values);
+  const [first, ...rest] = sorted;
+  if (first === undefined || first.length === 0) {
+    throw new Error(`Expected at least one nonempty ${context}`);
+  }
+  if (rest.some((value) => value.length === 0)) {
+    throw new Error(`Expected nonempty ${context}`);
+  }
+  return [first, ...rest];
+};
+
 const sortedModifiers = (
   values: readonly NamedModifier[],
 ): readonly NamedModifier[] =>
@@ -455,14 +494,154 @@ const parseAbilityRow = (
 
 const abilityRecord = (
   values: readonly number[],
-): Readonly<Record<AbilityName, number>> => ({
-  str: values[0] ?? 0,
-  dex: values[1] ?? 0,
-  con: values[2] ?? 0,
-  int: values[3] ?? 0,
-  wis: values[4] ?? 0,
-  cha: values[5] ?? 0,
-});
+): Readonly<Record<AbilityName, number>> => {
+  const [str, dex, con, int, wis, cha, extra] = values;
+  if (
+    str === undefined ||
+    dex === undefined ||
+    con === undefined ||
+    int === undefined ||
+    wis === undefined ||
+    cha === undefined ||
+    extra !== undefined ||
+    values.some((value) => !Number.isFinite(value))
+  ) {
+    throw new Error("Expected exactly six finite ability values");
+  }
+  return { str, dex, con, int, wis, cha };
+};
+
+const isAbilityName = (value: string): value is AbilityName =>
+  ABILITY_NAMES.some((ability) => ability === value);
+
+const parseAbilityMatrixNumber = (
+  value: string,
+  pattern: RegExp,
+  context: string,
+): number => {
+  if (!pattern.test(value)) {
+    throw new Error(`Invalid ${context}: ${value}`);
+  }
+  return signedNumber(value);
+};
+
+const parseAbilityMatrixGroup = (
+  cells: readonly [string, string, string, string],
+  context: string,
+): AbilityMatrixFact => {
+  const [rawAbility, rawScore, rawModifier, rawSaveModifier] = cells;
+  const ability = rawAbility.toLowerCase();
+  if (!isAbilityName(ability)) {
+    throw new Error(`Unrecognized ${context} ability label: ${rawAbility}`);
+  }
+  return {
+    ability,
+    score: parseAbilityMatrixNumber(rawScore, /^\d+$/, `${context} score`),
+    modifier: parseAbilityMatrixNumber(
+      rawModifier,
+      /^[+−-]\d+$/,
+      `${context} modifier`,
+    ),
+    saveModifier: parseAbilityMatrixNumber(
+      rawSaveModifier,
+      /^[+−-]\d+$/,
+      `${context} save modifier`,
+    ),
+  };
+};
+
+const parseAbilityMatrix = (
+  lines: readonly string[],
+  context: string,
+): AbilityMatrix | undefined => {
+  const rows = lines
+    .map((line) =>
+      line
+        .split("|")
+        .slice(1, -1)
+        .map((cell) => cell.trim()),
+    )
+    .filter((cells) => {
+      const [firstCell, secondCell] = cells;
+      return (
+        (firstCell === "STR" || firstCell === "INT") &&
+        secondCell !== undefined &&
+        /^\d+$/.test(secondCell)
+      );
+    });
+  if (rows.length === 0) return undefined;
+  if (rows.length !== 2) {
+    throw new Error(`Expected exactly two ${context} ability matrix rows`);
+  }
+
+  const facts = rows.flatMap((cells, rowIndex) => {
+    if (cells.length !== 12 || cells.some((cell) => cell.length === 0)) {
+      throw new Error(
+        `Expected ${context} ability matrix row ${rowIndex + 1} to contain exactly twelve nonempty cells`,
+      );
+    }
+    const [
+      ability1,
+      score1,
+      modifier1,
+      saveModifier1,
+      ability2,
+      score2,
+      modifier2,
+      saveModifier2,
+      ability3,
+      score3,
+      modifier3,
+      saveModifier3,
+    ] = cells;
+    if (
+      ability1 === undefined ||
+      score1 === undefined ||
+      modifier1 === undefined ||
+      saveModifier1 === undefined ||
+      ability2 === undefined ||
+      score2 === undefined ||
+      modifier2 === undefined ||
+      saveModifier2 === undefined ||
+      ability3 === undefined ||
+      score3 === undefined ||
+      modifier3 === undefined ||
+      saveModifier3 === undefined
+    ) {
+      throw new Error(`Incomplete ${context} ability matrix row`);
+    }
+    return [
+      parseAbilityMatrixGroup(
+        [ability1, score1, modifier1, saveModifier1],
+        context,
+      ),
+      parseAbilityMatrixGroup(
+        [ability2, score2, modifier2, saveModifier2],
+        context,
+      ),
+      parseAbilityMatrixGroup(
+        [ability3, score3, modifier3, saveModifier3],
+        context,
+      ),
+    ];
+  });
+  const [str, dex, con, int, wis, cha, extra] = facts;
+  if (
+    str === undefined ||
+    dex === undefined ||
+    con === undefined ||
+    int === undefined ||
+    wis === undefined ||
+    cha === undefined ||
+    extra !== undefined ||
+    facts.some((fact, index) => fact.ability !== ABILITY_NAMES[index])
+  ) {
+    throw new Error(
+      `Expected ${context} ability matrix labels in STR, DEX, CON, INT, WIS, CHA order`,
+    );
+  }
+  return [str, dex, con, int, wis, cha];
+};
 
 const parseAbilityScores = (
   lines: readonly string[],
@@ -470,6 +649,10 @@ const parseAbilityScores = (
 ): Readonly<Record<AbilityName, number>> => {
   if (lines.some((line) => line.startsWith("| **Score**"))) {
     return abilityRecord(parseAbilityRow(lines, "Score", context));
+  }
+  const abilityMatrix = parseAbilityMatrix(lines, context);
+  if (abilityMatrix !== undefined) {
+    return abilityRecord(abilityMatrix.map(({ score }) => score));
   }
   const scoreCells = lines
     .map((line) =>
@@ -498,11 +681,20 @@ const parseSavingThrowModifiers = (
   context: string,
 ): readonly NamedModifier[] => {
   if (lines.some((line) => line.startsWith("| **Save**"))) {
-    const saveValues = parseAbilityRow(lines, "Save", context);
+    const saveValues = abilityRecord(parseAbilityRow(lines, "Save", context));
     return sortedModifiers(
-      ABILITY_NAMES.map((ability, index) => ({
+      ABILITY_NAMES.map((ability) => ({
         name: ability,
-        modifier: saveValues[index] ?? 0,
+        modifier: saveValues[ability],
+      })),
+    );
+  }
+  const abilityMatrix = parseAbilityMatrix(lines, context);
+  if (abilityMatrix !== undefined) {
+    return sortedModifiers(
+      abilityMatrix.map(({ ability, saveModifier }) => ({
+        name: ability,
+        modifier: saveModifier,
       })),
     );
   }
@@ -519,12 +711,24 @@ const parseSavingThrowModifiers = (
         cells.every((cell) => /^\d+ \([+−-]?\d+\) Save [ +−-]?\d+$/.test(cell)),
     );
   if (combinedCells !== undefined) {
+    const saveValues = abilityRecord(
+      combinedCells.map((cell) => {
+        const match = requireMatch(
+          cell,
+          / Save ([+−-]?\d+)$/,
+          `${context} Save`,
+        );
+        const value = match[1];
+        if (value === undefined) {
+          throw new Error(`Missing ${context} Save modifier`);
+        }
+        return signedNumber(value);
+      }),
+    );
     return sortedModifiers(
-      combinedCells.map((cell, index) => ({
-        name: ABILITY_NAMES[index] ?? "str",
-        modifier: signedNumber(
-          requireMatch(cell, / Save ([+−-]?\d+)$/, `${context} Save`)[1] ?? "",
-        ),
+      ABILITY_NAMES.map((ability) => ({
+        name: ability,
+        modifier: saveValues[ability],
       })),
     );
   }
@@ -572,20 +776,31 @@ const parseNamedModifiers = (
   );
 };
 
-const parseDamageTypes = (
+const parseVulnerabilities = (
   lines: readonly string[],
-  label: "Vulnerabilities" | "Resistances",
-): readonly string[] => {
-  const line = lines.find((candidate) => candidate.startsWith(`**${label}**`));
-  return line === undefined
-    ? []
-    : sortedStrings(
-        line
-          .replace(`**${label}**`, "")
-          .trim()
-          .split(", ")
-          .map((value) => value.toLowerCase()),
-      );
+): ScopedGeneralFacts["vulnerabilities"] => {
+  const line = lines.find((candidate) =>
+    candidate.startsWith("**Vulnerabilities**"),
+  );
+  if (line === undefined) return { kind: "none" };
+  const value = line.replace("**Vulnerabilities**", "").trim();
+  const qualified = value.match(/^([A-Z][a-z]+) damage (from .+)$/);
+  return qualified === null
+    ? {
+        kind: "fixed",
+        damageTypes: sortedNonEmptyStrings(
+          value.split(", ").map((item) => item.toLowerCase()),
+          "vulnerability damage type",
+        ),
+      }
+    : {
+        kind: "qualified",
+        damageTypes: sortedNonEmptyStrings(
+          [(qualified[1] ?? "").toLowerCase()],
+          "qualified vulnerability damage type",
+        ),
+        qualifier: qualified[2] ?? "",
+      };
 };
 
 const parseResistances = (lines: readonly string[]): ResistanceProjection => {
@@ -735,7 +950,7 @@ const parseLanguageSet = (value: string): LanguageSetProjection => {
     /^(.+) plus (one|two|three|four|five) other languages?$/,
   );
   const languages = (additional?.[1] ?? value)
-    .split(/, (?![^()]*\))/)
+    .split(/, (?![^()]*\))| and /)
     .map((language) => language.replace(/^and /, ""));
   if (additional === null) return { kind: "named", languages };
   const additionalLanguageCount = NUMBER_WORDS.find(
@@ -871,7 +1086,7 @@ const parseRawGeneralFacts = (
     savingThrowModifiers: parseSavingThrowModifiers(lines, name),
     saveProficiencies: [],
     skillModifiers: parseNamedModifiers(lines, "Skills"),
-    vulnerabilities: parseDamageTypes(lines, "Vulnerabilities"),
+    vulnerabilities: parseVulnerabilities(lines),
     resistances: parseResistances(lines),
     ...parseImmunities(lines),
     ...parseSenses(lines, name),
@@ -1215,11 +1430,10 @@ const parseSpellcasting = (
   ) {
     return undefined;
   }
-  const header = requireMatch(
-    entry.description,
-    /^The .+ casts one of the following spells,(?: (requiring no (Somatic or )?Material components) and)? using (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) as the spellcasting ability \(spell save DC (\d+)(?:, ([+−-]\d+) to hit with spell attacks)?\): /,
-    `${entry.name} header`,
+  const header = entry.description.match(
+    /^The .+ casts one of the following spells, (?:(requiring no (Somatic or )?Material components) and )?using (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) as (?:the )?spellcasting ability(?: \(spell save DC (\d+)(?:, ([+−-]\d+) to hit with spell attacks)?\))?: /,
   );
+  if (header === null) return undefined;
   const groups = Array.from(
     entry.description.matchAll(
       /(?:- )?(?:At Will|(\d+)\/Day( Each)?): (.+?)(?= (?:- )?(?:At Will|\d+\/Day(?: Each)?):|$)/g,
@@ -1255,7 +1469,7 @@ const parseSpellcasting = (
     name: normalizedProcedureName(entry.name),
     kind: "spellcasting",
     ability: parsedAbility(header[3] ?? "", entry.name),
-    spellSaveDc: Number(header[4]),
+    ...(header[4] === undefined ? {} : { spellSaveDc: Number(header[4]) }),
     ...(header[5] === undefined
       ? {}
       : { spellAttackBonus: signedNumber(header[5]) }),
@@ -1297,6 +1511,7 @@ const parseDirectSpellcasting = (
     return undefined;
   }
   const spell = parseSpell(match[1] ?? "");
+  if (spell.castAtLevel !== undefined) return undefined;
   const selfOnly =
     match[2] === undefined ? spell : { ...spell, restriction: "on itself" };
   const explicit = explicitAbility !== null;
@@ -1354,14 +1569,41 @@ const parseActionOption = (
 };
 
 const rawTextOnlyReason = (
-  description: string,
+  entry: RawEntry,
 ): "unsupported_action_shape" | "unsupported_procedure_family" =>
   /^The .+ casts .+ on itself, requiring no spell components and using (?:Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) as the spellcasting ability\.$/.test(
-    description,
+    entry.description,
   ) ||
-  /^The .+ shape-shifts to resemble .+ Its game statistics are the same in each form, except for its Speed\./.test(
-    description,
-  )
+  (!entry.description.includes("in response") &&
+    /^The .+ casts .+(?: or .+)+, using the same spellcasting ability as Spellcasting\.$/.test(
+      entry.description,
+    )) ||
+  /^The .+ casts .+ twice, requiring no .+ components and using .+ as the spellcasting ability/.test(
+    entry.description,
+  ) ||
+  (parseRawResourceLimits(entry.name).length === 0 &&
+    /^The .+ casts .+ \(level \d+ version\), requiring no spell components and using .+ as the spellcasting ability/.test(
+      entry.description,
+    )) ||
+  /^The .+ casts .+ using .+ as the spellcasting ability .+ duration is/.test(
+    entry.description,
+  ) ||
+  (entry.section === "Bonus Actions" &&
+    /^The .+ casts .+, requiring no spell components and using .+ as the spellcasting ability/.test(
+      entry.description,
+    ) &&
+    !entry.description.includes("can't take this action again")) ||
+  /^The .+ shape-shifts .+ Its game statistics are the same in each form, except (?:for )?(?:its|its Fly) Speed/.test(
+    entry.description,
+  ) ||
+  (/^Trigger:/.test(entry.description) &&
+    (/\. On a miss, .+ makes one .+ attack/.test(entry.description) ||
+      /Response: The .+ uses [A-Za-z' -]+\.$/.test(entry.description) ||
+      /Response: The wearer gains a .+ bonus to AC/.test(entry.description) ||
+      /Response: The .+ adds \d+ to the roll\.$/.test(entry.description) ||
+      /Response: The .+ reduces the damage .+ Saving Throw:/.test(
+        entry.description,
+      )))
     ? "unsupported_procedure_family"
     : "unsupported_action_shape";
 
@@ -1383,7 +1625,7 @@ const parseRawProcedure = (
       name: normalizedProcedureName(entry.name),
       kind: "textOnly",
       description: entry.description,
-      reason: rawTextOnlyReason(entry.description),
+      reason: rawTextOnlyReason(entry),
       resourceLimits: parseRawResourceLimits(entry.name),
     }
   );
@@ -2056,9 +2298,25 @@ export const projectAuthoredStatBlocks = (
               }),
             ),
           ),
-          vulnerabilities: sortedStrings(
-            record.statBlock.vulnerabilities?.damageTypes ?? [],
-          ),
+          vulnerabilities:
+            record.statBlock.vulnerabilities === undefined
+              ? { kind: "none" as const }
+              : record.statBlock.vulnerabilities.kind === "qualified"
+                ? {
+                    kind: "qualified" as const,
+                    damageTypes: sortedNonEmptyStrings(
+                      record.statBlock.vulnerabilities.damageTypes,
+                      `${record.name} qualified vulnerability damage type`,
+                    ),
+                    qualifier: record.statBlock.vulnerabilities.qualifier,
+                  }
+                : {
+                    kind: "fixed" as const,
+                    damageTypes: sortedNonEmptyStrings(
+                      record.statBlock.vulnerabilities.damageTypes,
+                      `${record.name} vulnerability damage type`,
+                    ),
+                  },
           resistances:
             resistances === undefined
               ? { kind: "fixed" as const, damageTypes: [] }
