@@ -12,11 +12,11 @@ import {
   createInterface,
   type Interface as ReadlineInterface,
 } from "node:readline";
-import type { Readable } from "node:stream";
+import type { Readable, Writable } from "node:stream";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
-import { Either, Schema } from "effect";
+import { Either, Match, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { buildOracleDistribution } from "../scripts/build-distribution.ts";
@@ -41,6 +41,7 @@ import {
   OracleHttpReadinessSchema,
   OracleIdentityResponseSchema,
   type OracleBatchResponse,
+  type OracleDecodeIssues,
   type OracleHttpReadiness,
 } from "./oracle-process-contract.ts";
 
@@ -74,6 +75,13 @@ type OracleHttpResponse = {
 type OracleServeProcess = {
   readonly child: ChildProcessByStdio<null, Readable, Readable>;
   readonly readiness: OracleHttpReadiness;
+  readonly lines: ReadlineInterface;
+  readonly stdout: () => string;
+  readonly stderr: () => string;
+};
+
+type OracleStreamProcess = {
+  readonly child: ChildProcessByStdio<Writable, Readable, Readable>;
   readonly lines: ReadlineInterface;
   readonly stdout: () => string;
   readonly stderr: () => string;
@@ -174,6 +182,149 @@ function runExecutable(
     input,
     maxBuffer: 32 * 1024 * 1024,
   });
+}
+
+function launchOracleStream(
+  executable: string,
+  cwd: string,
+  preload: string,
+): OracleStreamProcess {
+  const child: ChildProcessByStdio<Writable, Readable, Readable> = spawn(
+    executable,
+    ["stream"],
+    {
+      cwd,
+      env: processEnvironment(preload),
+      stdio: ["pipe", "pipe", "pipe"],
+    },
+  );
+  child.stdout.setEncoding("utf8");
+  child.stderr.setEncoding("utf8");
+  const stdoutChunks: string[] = [];
+  const stderrChunks: string[] = [];
+  child.stdout.on("data", (chunk: string | Buffer) => {
+    stdoutChunks.push(typeof chunk === "string" ? chunk : chunk.toString());
+  });
+  child.stderr.on("data", (chunk: string | Buffer) => {
+    stderrChunks.push(typeof chunk === "string" ? chunk : chunk.toString());
+  });
+  return {
+    child,
+    lines: createInterface({ input: child.stdout }),
+    stdout: () => stdoutChunks.join(""),
+    stderr: () => stderrChunks.join(""),
+  };
+}
+
+function evaluateOracleStreamFrame(
+  process: OracleStreamProcess,
+  body: Uint8Array,
+): Promise<OracleBatchResponse> {
+  return new Promise<OracleBatchResponse>((resolve, reject) => {
+    let settled = false;
+    const cleanup = (): void => {
+      process.lines.removeListener("line", onLine);
+      process.child.removeListener("error", onError);
+      process.child.removeListener("exit", onExit);
+    };
+    const finish = (operation: () => void): void => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      operation();
+    };
+    const onLine = (line: string): void => {
+      try {
+        const response = decodeJson(OracleBatchResponseSchema, line);
+        finish(() => resolve(response));
+      } catch (cause) {
+        finish(() =>
+          reject(
+            cause instanceof Error
+              ? cause
+              : new Error(`Invalid Oracle stream response: ${String(cause)}`),
+          ),
+        );
+      }
+    };
+    const onError = (cause: Error): void => {
+      finish(() => reject(cause));
+    };
+    const onExit = (
+      code: number | null,
+      signal: NodeJS.Signals | null,
+    ): void => {
+      finish(() =>
+        reject(
+          new Error(
+            `Oracle stream exited before its response (${String(code)}, ${String(signal)}).`,
+          ),
+        ),
+      );
+    };
+    process.lines.once("line", onLine);
+    process.child.once("error", onError);
+    process.child.once("exit", onExit);
+    try {
+      process.child.stdin.write(Buffer.from(body));
+      process.child.stdin.write("\n");
+    } catch (cause) {
+      finish(() =>
+        reject(
+          cause instanceof Error
+            ? cause
+            : new Error(`Oracle stream write failed: ${String(cause)}`),
+        ),
+      );
+    }
+  });
+}
+
+async function waitForOracleStreamExit(
+  process: OracleStreamProcess,
+): Promise<void> {
+  const { child } = process;
+  const exit =
+    child.exitCode !== null || child.signalCode !== null
+      ? Promise.resolve({ code: child.exitCode, signal: child.signalCode })
+      : new Promise<{ code: number | null; signal: NodeJS.Signals | null }>(
+          (resolve) => {
+            child.once("exit", (code, signal) => resolve({ code, signal }));
+          },
+        );
+  child.stdin.end();
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeout = setTimeout(
+        () => reject(new Error("Oracle stream did not close.")),
+        10_000,
+      );
+    });
+    const result = await Promise.race([exit, timeoutPromise]);
+    expect(result.code).toBe(0);
+    expect(result.signal).toBeNull();
+  } finally {
+    if (timeout !== undefined) clearTimeout(timeout);
+  }
+  process.lines.close();
+}
+
+function onlyOracleResponse(
+  responses: readonly OracleBatchResponse[],
+  description: string,
+): OracleBatchResponse {
+  let onlyResponse: OracleBatchResponse | undefined;
+  for (const response of responses) {
+    if (onlyResponse !== undefined) {
+      throw new Error(`Expected one ${description} response.`);
+    }
+    onlyResponse = response;
+  }
+  if (onlyResponse === undefined) {
+    throw new Error(`Expected one ${description} response.`);
+  }
+  return onlyResponse;
 }
 
 function parseResponseLines(
@@ -549,6 +700,18 @@ describe("Opaque Oracle source-free distribution", () => {
       const selectedBatch = JSON.stringify({
         cases: [firstCase, secondCase, thirdCase],
       });
+      const malformedFrames = {
+        invalidJson: Buffer.from("not-json", "utf8"),
+        blank: Buffer.alloc(0),
+        duplicateMember: Buffer.from('{"cases":[],"cases":[]}', "utf8"),
+        emptyBatch: Buffer.from('{"cases":[]}', "utf8"),
+        structurallyInvalidCase: Buffer.from(
+          '{"cases":[{}],"extra":true}',
+          "utf8",
+        ),
+        invalidUtf8: Buffer.from([0xc3, 0x28]),
+      } as const;
+      const lineFeed = Buffer.from("\n");
 
       const decomposition = runExecutable(
         executable,
@@ -610,37 +773,75 @@ describe("Opaque Oracle source-free distribution", () => {
         cleanWorkingDirectory,
         preload,
         Buffer.concat([
-          Buffer.from(
-            'not-json\n\n{"cases":[],"cases":[]}\n{"cases":[]}\n{"cases":[{}],"extra":true}\n',
-          ),
-          Buffer.from([0xc3, 0x28, 0x0a]),
+          malformedFrames.invalidJson,
+          lineFeed,
+          malformedFrames.blank,
+          lineFeed,
+          malformedFrames.duplicateMember,
+          lineFeed,
+          malformedFrames.emptyBatch,
+          lineFeed,
+          malformedFrames.structurallyInvalidCase,
+          lineFeed,
+          malformedFrames.invalidUtf8,
+          lineFeed,
           Buffer.from(firstSingleton),
+          lineFeed,
         ]),
       );
       assertSuccessfulProcess(malformed);
       const malformedResponses = parseResponseLines(malformed);
       expect(malformedResponses).toHaveLength(7);
-      for (const response of malformedResponses.slice(0, 6)) {
+      const decodeRejectedResponses = malformedResponses.filter(
+        (response) => response.tag === "decodeRejected",
+      );
+      expect(decodeRejectedResponses).toHaveLength(6);
+      for (const response of decodeRejectedResponses) {
         expect(response.tag).toBe("decodeRejected");
         expect(response.distributionId).toBe(identity.distributionId);
       }
-      const duplicateResponse = malformedResponses[2];
-      if (duplicateResponse?.tag !== "decodeRejected") {
+      const evaluatedResponses = malformedResponses.filter(
+        (response) => response.tag === "evaluated",
+      );
+      expect(evaluatedResponses).toHaveLength(1);
+      for (const response of evaluatedResponses) {
+        expect(assertEvaluated(response)).toHaveLength(1);
+      }
+
+      const duplicateResult = runExecutable(
+        executable,
+        ["stream"],
+        cleanWorkingDirectory,
+        preload,
+        Buffer.concat([malformedFrames.duplicateMember, lineFeed]),
+      );
+      assertSuccessfulProcess(duplicateResult);
+      const duplicateResponse = onlyOracleResponse(
+        parseResponseLines(duplicateResult),
+        "duplicate-key",
+      );
+      if (duplicateResponse.tag !== "decodeRejected") {
         throw new Error("The duplicate-key frame was not rejected.");
       }
       expect(duplicateResponse.issues.length).toBeGreaterThan(0);
-      const invalidUtf8Response = malformedResponses[5];
-      if (invalidUtf8Response?.tag !== "decodeRejected") {
+      const invalidUtf8Result = runExecutable(
+        executable,
+        ["stream"],
+        cleanWorkingDirectory,
+        preload,
+        Buffer.concat([malformedFrames.invalidUtf8, lineFeed]),
+      );
+      assertSuccessfulProcess(invalidUtf8Result);
+      const invalidUtf8Response = onlyOracleResponse(
+        parseResponseLines(invalidUtf8Result),
+        "invalid UTF-8",
+      );
+      if (invalidUtf8Response.tag !== "decodeRejected") {
         throw new Error("The invalid UTF-8 frame was not rejected.");
       }
       expect(invalidUtf8Response.issues).toEqual([
         { path: "", code: "invalidJson" },
       ]);
-      const finalResponse = malformedResponses[6];
-      if (finalResponse === undefined) {
-        throw new Error("The final Oracle stream response was missing.");
-      }
-      expect(assertEvaluated(finalResponse)).toHaveLength(1);
 
       const workflowRejection = runExecutable(
         executable,
@@ -992,12 +1193,12 @@ describe("Opaque Oracle source-free distribution", () => {
         ordinaryBuild.distributionId,
       );
 
-      const firstCase = corpus.batch.cases[0];
-      const secondCase = corpus.batch.cases[1];
+      const aCase = corpus.batch.cases[0];
+      const bCase = corpus.batch.cases[1];
       const priorCase = corpus.batch.cases[10];
       if (
-        firstCase === undefined ||
-        secondCase === undefined ||
+        aCase === undefined ||
+        bCase === undefined ||
         priorCase === undefined
       ) {
         throw new Error("The Oracle corpus is missing parity Cases.");
@@ -1006,9 +1207,10 @@ describe("Opaque Oracle source-free distribution", () => {
       const jsonBody = (input: object): Buffer =>
         Buffer.from(JSON.stringify(input), "utf8");
       const wholeBatchBody = jsonBody({ cases: corpus.batch.cases });
-      const firstSingletonBody = jsonBody({ cases: [firstCase] });
+      const aSingletonBody = jsonBody({ cases: [aCase] });
+      const bSingletonBody = jsonBody({ cases: [bCase] });
       const defectBatchBody = jsonBody({
-        cases: [firstCase, secondCase],
+        cases: [aCase, bCase],
       });
       const lineFeed = Buffer.from("\n");
 
@@ -1017,6 +1219,17 @@ describe("Opaque Oracle source-free distribution", () => {
         readonly body: Buffer;
         readonly expectedTag: "evaluated" | "decodeRejected";
       };
+      const expectedInvalidJsonIssues = [
+        { path: "", code: "invalidJson" },
+      ] as const satisfies OracleDecodeIssues;
+      const expectedMixedDecodeIssues = [
+        { path: "/cases/1/battle", code: "missingMember" },
+        { path: "/cases/1/creation", code: "missingMember" },
+        { path: "/cases/1/sheet", code: "missingMember" },
+        { path: "/cases/2/battle", code: "missingMember" },
+        { path: "/cases/2/creation/fillBatches", code: "missingMember" },
+        { path: "/cases/2/sheet", code: "missingMember" },
+      ] as const satisfies OracleDecodeIssues;
       const evaluatedScenario = (
         name: string,
         body: Buffer,
@@ -1046,58 +1259,89 @@ describe("Opaque Oracle source-free distribution", () => {
         "whole corpus after prior message",
         wholeBatchBody,
       );
-      const singletonScenarios = corpus.batch.cases.map((caseValue, index) =>
-        evaluatedScenario(
-          `singleton Case ${index}`,
-          jsonBody({ cases: [caseValue] }),
-        ),
+      const singletonScenarios = corpus.batch.cases.map((caseValue) =>
+        evaluatedScenario("corpus singleton", jsonBody({ cases: [caseValue] })),
+      );
+      const emptyInputScenario = rejectedScenario(
+        "empty input",
+        Buffer.alloc(0),
+      );
+      const blankInputScenario = rejectedScenario(
+        "blank input",
+        Buffer.from("   ", "utf8"),
+      );
+      const invalidJsonScenario = rejectedScenario(
+        "invalid JSON",
+        Buffer.from("not-json", "utf8"),
+      );
+      const duplicateMemberScenario = rejectedScenario(
+        "duplicate object member",
+        Buffer.from('{"cases":[],"cases":[]}', "utf8"),
+      );
+      const emptyBatchScenario = rejectedScenario(
+        "empty batch",
+        Buffer.from('{"cases":[]}', "utf8"),
+      );
+      const structurallyInvalidCaseScenario = rejectedScenario(
+        "structurally invalid Case",
+        Buffer.from('{"cases":[{}]}', "utf8"),
+      );
+      const mixedMalformedScenario = rejectedScenario(
+        "valid and multiple structurally invalid Cases",
+        jsonBody({ cases: [aCase, {}, { creation: {} }] }),
+      );
+      const invalidUtf8Scenario = rejectedScenario(
+        "fatal invalid UTF-8",
+        Buffer.from([0xc3, 0x28]),
       );
       const malformedScenarios: readonly ParityScenario[] = [
-        rejectedScenario("empty input", Buffer.alloc(0)),
-        rejectedScenario("blank input", Buffer.from("   ", "utf8")),
-        rejectedScenario("invalid JSON", Buffer.from("not-json", "utf8")),
-        rejectedScenario(
-          "duplicate object member",
-          Buffer.from('{"cases":[],"cases":[]}', "utf8"),
-        ),
-        rejectedScenario("empty batch", Buffer.from('{"cases":[]}', "utf8")),
-        rejectedScenario(
-          "structurally invalid Case",
-          Buffer.from('{"cases":[{}]}', "utf8"),
-        ),
-        rejectedScenario(
-          "valid and multiple structurally invalid Cases",
-          jsonBody({ cases: [firstCase, {}, { creation: {} }] }),
-        ),
-        rejectedScenario("fatal invalid UTF-8", Buffer.from([0xc3, 0x28])),
+        emptyInputScenario,
+        blankInputScenario,
+        invalidJsonScenario,
+        duplicateMemberScenario,
+        emptyBatchScenario,
+        structurallyInvalidCaseScenario,
+        mixedMalformedScenario,
+        invalidUtf8Scenario,
       ];
+      const aScenario = evaluatedScenario("A", aSingletonBody);
+      const bScenario = evaluatedScenario("B", bSingletonBody);
+      const repeatedAScenario = evaluatedScenario("A again", aSingletonBody);
       const scenarios: readonly ParityScenario[] = [
         wholeBatchBeforePrior,
         priorMessage,
         wholeBatchAfterPrior,
         ...singletonScenarios,
+        aScenario,
+        bScenario,
+        repeatedAScenario,
         ...malformedScenarios,
       ];
 
-      const cliResult = runExecutable(
+      const cliByScenario = new Map<ParityScenario, OracleBatchResponse>();
+      const streamProcess = launchOracleStream(
         ordinaryBuild.executablePath,
-        ["stream"],
         cleanWorkingDirectory,
         preload,
-        Buffer.concat(scenarios.flatMap(({ body }) => [body, lineFeed])),
       );
-      assertSuccessfulProcess(cliResult);
-      expect(cliResult.stderr.toString("utf8")).toBe("");
-      const cliResponses = parseResponseLines(cliResult);
-      expect(cliResponses).toHaveLength(scenarios.length);
-
-      const cliByScenario = new Map<ParityScenario, OracleBatchResponse>();
-      for (const [index, scenario] of scenarios.entries()) {
-        const response = cliResponses[index];
-        if (response === undefined) {
-          throw new Error(`CLI response missing for ${scenario.name}.`);
+      try {
+        for (const scenario of scenarios) {
+          const response = await evaluateOracleStreamFrame(
+            streamProcess,
+            scenario.body,
+          );
+          cliByScenario.set(scenario, response);
         }
-        cliByScenario.set(scenario, response);
+        await waitForOracleStreamExit(streamProcess);
+        expect(streamProcess.stderr()).toBe("");
+      } finally {
+        if (
+          streamProcess.child.exitCode === null &&
+          streamProcess.child.signalCode === null
+        ) {
+          streamProcess.child.kill("SIGKILL");
+        }
+        streamProcess.lines.close();
       }
 
       const ordinaryIdentityProcess = runExecutable(
@@ -1198,7 +1442,11 @@ describe("Opaque Oracle source-free distribution", () => {
           ordinaryIdentity.distributionId,
         );
         expect(httpObservation.status).toBe(
-          scenario.expectedTag === "evaluated" ? 200 : 400,
+          Match.value(scenario.expectedTag).pipe(
+            Match.when("evaluated", () => 200),
+            Match.when("decodeRejected", () => 400),
+            Match.exhaustive,
+          ),
         );
       }
 
@@ -1210,38 +1458,24 @@ describe("Opaque Oracle source-free distribution", () => {
         return assertEvaluated(response);
       });
       expect(assertEvaluated(wholeAfterResponse)).toEqual(singletonTraces);
-      const firstSingleton = singletonScenarios[0];
-      const secondSingleton = singletonScenarios[1];
-      const thirdSingleton = singletonScenarios[2];
-      if (
-        firstSingleton === undefined ||
-        secondSingleton === undefined ||
-        thirdSingleton === undefined
-      ) {
-        throw new Error("The Oracle corpus must contain A/B/A Cases.");
-      }
-      expect(responseFor(firstSingleton)).toEqual(responseFor(thirdSingleton));
-      expect(responseFor(firstSingleton)).not.toEqual(
-        responseFor(secondSingleton),
-      );
+      expect(responseFor(aScenario)).toEqual(responseFor(repeatedAScenario));
+      expect(responseFor(aScenario)).not.toEqual(responseFor(bScenario));
 
-      const mixedMalformed = malformedScenarios[6];
-      const invalidUtf8 = malformedScenarios[7];
-      if (mixedMalformed === undefined || invalidUtf8 === undefined) {
-        throw new Error("The parity malformed scenario table is incomplete.");
-      }
-      const mixedResponse = responseFor(mixedMalformed);
+      const mixedResponse = responseFor(mixedMalformedScenario);
       if (mixedResponse.tag !== "decodeRejected") {
         throw new Error("The mixed malformed batch was evaluated.");
       }
-      expect(mixedResponse.issues.length).toBeGreaterThan(1);
-      const invalidUtf8Response = responseFor(invalidUtf8);
+      expect(mixedResponse.issues).toEqual(expectedMixedDecodeIssues);
+      const invalidJsonResponse = responseFor(invalidJsonScenario);
+      if (invalidJsonResponse.tag !== "decodeRejected") {
+        throw new Error("The invalid JSON batch was evaluated.");
+      }
+      expect(invalidJsonResponse.issues).toEqual(expectedInvalidJsonIssues);
+      const invalidUtf8Response = responseFor(invalidUtf8Scenario);
       if (invalidUtf8Response.tag !== "decodeRejected") {
         throw new Error("The invalid UTF-8 batch was evaluated.");
       }
-      expect(invalidUtf8Response.issues).toEqual([
-        { path: "", code: "invalidJson" },
-      ]);
+      expect(invalidUtf8Response.issues).toEqual(expectedInvalidJsonIssues);
 
       await waitForOracleExit(runningProcess, "SIGTERM");
       running = undefined;
@@ -1284,13 +1518,13 @@ describe("Opaque Oracle source-free distribution", () => {
         ["stream"],
         cleanWorkingDirectory,
         preload,
-        Buffer.concat([
-          defectBatchBody,
-          lineFeed,
-          firstSingletonBody,
-          lineFeed,
-        ]),
+        Buffer.concat([defectBatchBody, lineFeed, bSingletonBody, lineFeed]),
       );
+      expect(defectCliResult.signal).toBeNull();
+      expect(defectCliResult.status).not.toBeNull();
+      if (defectCliResult.status === null) {
+        throw new Error("The defect CLI did not report an exit status.");
+      }
       expect(defectCliResult.status).not.toBe(0);
       expect(defectCliResult.stdout.toString("utf8")).toBe("");
       expect(defectCliResult.stderr.toString("utf8")).toContain(
@@ -1341,10 +1575,23 @@ describe("Opaque Oracle source-free distribution", () => {
         JSON.stringify(decodedDefect),
       );
 
+      const expectedRecoveryProcess = runExecutable(
+        defectBuild.executablePath,
+        ["stream"],
+        cleanWorkingDirectory,
+        preload,
+        Buffer.concat([bSingletonBody, lineFeed]),
+      );
+      assertSuccessfulProcess(expectedRecoveryProcess);
+      const expectedRecoveryResponse = onlyOracleResponse(
+        parseResponseLines(expectedRecoveryProcess),
+        "defect-build recovery",
+      );
+
       const afterDefect = await requestOracle(defectProcess.readiness.port, {
         method: "POST",
         path: "/oracle/evaluations",
-        body: firstSingletonBody,
+        body: bSingletonBody,
         contentType: "application/json; charset=utf-8",
       });
       expect(afterDefect.status).toBe(200);
@@ -1352,10 +1599,7 @@ describe("Opaque Oracle source-free distribution", () => {
         OracleBatchResponseSchema,
         afterDefect.body.toString("utf8"),
       );
-      expect(afterDefectResponse.tag).toBe("evaluated");
-      expect(afterDefectResponse.distributionId).toBe(
-        defectIdentity.distributionId,
-      );
+      expect(afterDefectResponse).toEqual(expectedRecoveryResponse);
 
       await waitForOracleExit(defectProcess, "SIGTERM");
       running = undefined;
