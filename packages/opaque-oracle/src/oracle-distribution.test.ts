@@ -12,11 +12,11 @@ import {
   createInterface,
   type Interface as ReadlineInterface,
 } from "node:readline";
-import type { Readable } from "node:stream";
+import type { Readable, Writable } from "node:stream";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
-import { Either, Schema } from "effect";
+import { Either, Match, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { buildOracleDistribution } from "../scripts/build-distribution.ts";
@@ -37,9 +37,11 @@ import {
 } from "./oracle-publication.ts";
 import {
   OracleBatchResponseSchema,
+  OracleDefectResponseSchema,
   OracleHttpReadinessSchema,
   OracleIdentityResponseSchema,
   type OracleBatchResponse,
+  type OracleDecodeIssues,
   type OracleHttpReadiness,
 } from "./oracle-process-contract.ts";
 
@@ -77,6 +79,41 @@ type OracleServeProcess = {
   readonly stdout: () => string;
   readonly stderr: () => string;
 };
+
+type OracleStreamProcess = {
+  readonly child: ChildProcessByStdio<Writable, Readable, Readable>;
+  readonly stderr: () => string;
+  readonly rawLines: string[];
+  readonly pendingWaiters: OracleStreamFrameWaiter[];
+  readonly activeWaiters: Set<OracleStreamFrameWaiter>;
+  readonly queuedLines: string[];
+  readonly frameBytes: number[];
+  exited: boolean;
+  closed: boolean;
+  closeResult: OracleStreamClose | undefined;
+  disposed: boolean;
+  protocolFailure: Error | undefined;
+  fail: (cause: unknown) => void;
+  dispose: () => void;
+};
+
+type OracleStreamClose = {
+  readonly code: number | null;
+  readonly signal: NodeJS.Signals | null;
+};
+
+type OracleStreamFrameObservation = {
+  readonly response: OracleBatchResponse;
+  readonly rawLine: string;
+};
+
+type OracleStreamFrameWaiter = {
+  readonly accept: (rawLine: string) => void;
+  readonly fail: (cause: Error) => void;
+};
+
+const ORACLE_STREAM_FRAME_TIMEOUT_MS = 10_000;
+const ORACLE_STREAM_CLOSE_TIMEOUT_MS = 10_000;
 
 function writeNetworkDenialPreload(directory: string): string {
   const path = join(directory, "deny-network.cjs");
@@ -173,6 +210,366 @@ function runExecutable(
     input,
     maxBuffer: 32 * 1024 * 1024,
   });
+}
+
+function launchOracleStream(
+  executable: string,
+  cwd: string,
+  preload: string,
+  args: readonly string[] = ["stream"],
+): OracleStreamProcess {
+  const child: ChildProcessByStdio<Writable, Readable, Readable> = spawn(
+    executable,
+    [...args],
+    {
+      cwd,
+      env: processEnvironment(preload),
+      stdio: ["pipe", "pipe", "pipe"],
+    },
+  );
+  child.stderr.setEncoding("utf8");
+  const stderrChunks: string[] = [];
+  const onStderrData = (chunk: string | Buffer): void => {
+    stderrChunks.push(typeof chunk === "string" ? chunk : chunk.toString());
+  };
+  child.stderr.on("data", onStderrData);
+  const streamProcess: OracleStreamProcess = {
+    child,
+    stderr: () => stderrChunks.join(""),
+    rawLines: [],
+    pendingWaiters: [],
+    activeWaiters: new Set(),
+    queuedLines: [],
+    frameBytes: [],
+    exited: false,
+    closed: false,
+    closeResult: undefined,
+    disposed: false,
+    protocolFailure: undefined,
+    fail: () => undefined,
+    dispose: () => undefined,
+  };
+
+  const failProcess = (cause: unknown): void => {
+    const error = cause instanceof Error ? cause : new Error(String(cause));
+    streamProcess.protocolFailure ??= error;
+    const waiters = new Set([
+      ...streamProcess.pendingWaiters,
+      ...streamProcess.activeWaiters,
+    ]);
+    streamProcess.pendingWaiters.length = 0;
+    streamProcess.activeWaiters.clear();
+    for (const waiter of waiters) waiter.fail(streamProcess.protocolFailure);
+  };
+  streamProcess.fail = failProcess;
+
+  const onStdoutData = (chunk: Buffer | string): void => {
+    const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    const combined = Buffer.concat([
+      Buffer.from(streamProcess.frameBytes),
+      bytes,
+    ]);
+    let lineStart = 0;
+    for (let index = 0; index < combined.length; index += 1) {
+      if (combined[index] !== 0x0a) continue;
+      const rawLine = combined.subarray(lineStart, index).toString("utf8");
+      streamProcess.rawLines.push(rawLine);
+      streamProcess.queuedLines.push(rawLine);
+      lineStart = index + 1;
+    }
+    streamProcess.frameBytes.length = 0;
+    for (const byte of combined.subarray(lineStart)) {
+      streamProcess.frameBytes.push(byte);
+    }
+    drainOracleStreamLines(streamProcess);
+  };
+  const onChildError = (cause: Error): void => failProcess(cause);
+  const onChildExit = (): void => {
+    streamProcess.exited = true;
+  };
+  const onChildClose = (
+    code: number | null,
+    signal: NodeJS.Signals | null,
+  ): void => {
+    streamProcess.closed = true;
+    streamProcess.closeResult = { code, signal };
+    drainOracleStreamLines(streamProcess);
+    if (streamProcess.pendingWaiters.length > 0) {
+      failProcess(
+        new Error(
+          `Oracle stream closed before all responses (${String(code)}, ${String(signal)}).`,
+        ),
+      );
+    }
+  };
+  const onStdinError = (cause: Error): void => failProcess(cause);
+  child.stdout.on("data", onStdoutData);
+  child.once("error", onChildError);
+  child.once("exit", onChildExit);
+  child.once("close", onChildClose);
+  child.stdin.once("error", onStdinError);
+  streamProcess.dispose = (): void => {
+    if (streamProcess.disposed) return;
+    streamProcess.disposed = true;
+    child.stdout.removeListener("data", onStdoutData);
+    child.stderr.removeListener("data", onStderrData);
+    child.removeListener("error", onChildError);
+    child.removeListener("exit", onChildExit);
+    child.removeListener("close", onChildClose);
+    child.stdin.removeListener("error", onStdinError);
+  };
+  return streamProcess;
+}
+
+function evaluateOracleStreamFrame(
+  process: OracleStreamProcess,
+  body: Uint8Array,
+  options: { readonly timeoutMs?: number } = {},
+): Promise<OracleStreamFrameObservation> {
+  return new Promise<OracleStreamFrameObservation>((resolve, reject) => {
+    if (process.protocolFailure !== undefined) {
+      reject(process.protocolFailure);
+      return;
+    }
+    let settled = false;
+    let response: OracleBatchResponse | undefined;
+    let rawLine: string | undefined;
+    let writesRemaining = 2;
+    const timeoutMs = options.timeoutMs ?? ORACLE_STREAM_FRAME_TIMEOUT_MS;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const waiter: OracleStreamFrameWaiter = {
+      accept: (line) => {
+        try {
+          response = decodeJson(OracleBatchResponseSchema, line);
+          rawLine = line;
+          settleIfReady();
+        } catch (cause) {
+          fail(
+            cause instanceof Error
+              ? cause
+              : new Error(`Invalid Oracle stream response: ${String(cause)}`),
+          );
+        }
+      },
+      fail: (cause) => fail(cause),
+    };
+    const cleanup = (): void => {
+      if (timer !== undefined) clearTimeout(timer);
+      process.activeWaiters.delete(waiter);
+      const index = process.pendingWaiters.indexOf(waiter);
+      if (index >= 0) process.pendingWaiters.splice(index, 1);
+    };
+    const finish = (operation: () => void): void => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      operation();
+    };
+    const fail = (cause: Error): void => {
+      finish(() => {
+        process.protocolFailure ??= cause;
+        reject(cause);
+      });
+    };
+    const settleIfReady = (): void => {
+      if (response === undefined || rawLine === undefined) return;
+      if (writesRemaining !== 0) return;
+      const decodedResponse = response;
+      const decodedRawLine = rawLine;
+      finish(() =>
+        resolve({ response: decodedResponse, rawLine: decodedRawLine }),
+      );
+    };
+    const writeFinished = (cause?: Error | null): void => {
+      if (cause !== undefined && cause !== null) {
+        fail(cause);
+        return;
+      }
+      writesRemaining -= 1;
+      settleIfReady();
+    };
+    timer = setTimeout(() => {
+      fail(
+        new Error(
+          `Oracle stream frame timed out after ${timeoutMs}ms without one response.`,
+        ),
+      );
+    }, timeoutMs);
+    process.activeWaiters.add(waiter);
+    process.pendingWaiters.push(waiter);
+    try {
+      process.child.stdin.write(Buffer.from(body), writeFinished);
+      process.child.stdin.write("\n", writeFinished);
+    } catch (cause) {
+      fail(
+        cause instanceof Error
+          ? cause
+          : new Error(`Oracle stream write failed: ${String(cause)}`),
+      );
+    }
+    drainOracleStreamLines(process);
+  });
+}
+
+function drainOracleStreamLines(process: OracleStreamProcess): void {
+  if (process.protocolFailure !== undefined) return;
+  if (process.queuedLines.length > process.pendingWaiters.length) {
+    process.fail(
+      new Error(
+        `Oracle stream emitted ${process.queuedLines.length} response lines for ${process.pendingWaiters.length} pending frame(s).`,
+      ),
+    );
+    return;
+  }
+  while (process.queuedLines.length > 0 && process.pendingWaiters.length > 0) {
+    const rawLine = process.queuedLines.shift();
+    const waiter = process.pendingWaiters.shift();
+    if (rawLine === undefined || waiter === undefined) {
+      process.fail(new Error("Oracle stream response queue lost a line."));
+      return;
+    }
+    waiter.accept(rawLine);
+  }
+}
+
+async function waitForOracleStreamClose(
+  process: OracleStreamProcess,
+): Promise<void> {
+  const { child } = process;
+  let onClose:
+    | ((code: number | null, signal: NodeJS.Signals | null) => void)
+    | undefined;
+  const close = process.closed
+    ? Promise.resolve(process.closeResult)
+    : new Promise<OracleStreamClose>((resolve) => {
+        onClose = (code, signal) => resolve({ code, signal });
+        child.once("close", onClose);
+      });
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    if (!process.closed && !child.stdin.writableEnded) child.stdin.end();
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeout = setTimeout(
+        () => reject(new Error("Oracle stream did not close.")),
+        ORACLE_STREAM_CLOSE_TIMEOUT_MS,
+      );
+    });
+    const result = await Promise.race([close, timeoutPromise]);
+    if (result === undefined) {
+      throw new Error("Oracle stream closed without a close result.");
+    }
+    expect(result.code).toBe(0);
+    expect(result.signal).toBeNull();
+  } finally {
+    if (timeout !== undefined) clearTimeout(timeout);
+    if (onClose !== undefined) child.removeListener("close", onClose);
+  }
+  if (process.protocolFailure !== undefined) {
+    throw process.protocolFailure;
+  }
+  if (process.frameBytes.length > 0) {
+    throw new Error("Oracle stream ended with an incomplete response line.");
+  }
+  expect(process.pendingWaiters).toHaveLength(0);
+  expect(process.activeWaiters.size).toBe(0);
+  expect(process.queuedLines).toHaveLength(0);
+}
+
+async function terminateOracleStream(
+  process: OracleStreamProcess,
+): Promise<void> {
+  let onClose: (() => void) | undefined;
+  const close = process.closed
+    ? Promise.resolve()
+    : new Promise<void>((resolve) => {
+        onClose = () => resolve();
+        process.child.once("close", onClose);
+      });
+  try {
+    if (!process.closed) {
+      process.child.kill("SIGKILL");
+    }
+    await close;
+  } finally {
+    if (onClose !== undefined) process.child.removeListener("close", onClose);
+    process.dispose();
+  }
+}
+
+async function evaluateOracleNamedStreamFrames<Name extends string>(
+  process: OracleStreamProcess,
+  names: readonly Name[],
+  bodies: { readonly [Key in Name]: Uint8Array },
+): Promise<Map<Name, OracleStreamFrameObservation>> {
+  const observations = new Map<Name, OracleStreamFrameObservation>();
+  for (const name of names) {
+    observations.set(
+      name,
+      await evaluateOracleStreamFrame(process, bodies[name]),
+    );
+  }
+  await waitForOracleStreamClose(process);
+  expect(process.stderr()).toBe("");
+  expect(process.rawLines).toHaveLength(names.length);
+  expect(process.rawLines).toEqual(
+    names.map((name) => {
+      const observation = observations.get(name);
+      if (observation === undefined) {
+        throw new Error(`Response missing for ${name}.`);
+      }
+      return observation.rawLine;
+    }),
+  );
+  return observations;
+}
+
+async function runOracleNamedStreamFrames<Name extends string>(
+  executable: string,
+  cwd: string,
+  preload: string,
+  names: readonly Name[],
+  bodies: { readonly [Key in Name]: Uint8Array },
+): Promise<Map<Name, OracleStreamFrameObservation>> {
+  const process = launchOracleStream(executable, cwd, preload);
+  try {
+    return await evaluateOracleNamedStreamFrames(process, names, bodies);
+  } finally {
+    await terminateOracleStream(process);
+  }
+}
+
+function onlyOracleResponse(
+  responses: readonly OracleBatchResponse[],
+  description: string,
+): OracleBatchResponse {
+  let onlyResponse: OracleBatchResponse | undefined;
+  for (const response of responses) {
+    if (onlyResponse !== undefined) {
+      throw new Error(`Expected one ${description} response.`);
+    }
+    onlyResponse = response;
+  }
+  if (onlyResponse === undefined) {
+    throw new Error(`Expected one ${description} response.`);
+  }
+  return onlyResponse;
+}
+
+function onlyOracleTrace(
+  traces: readonly OracleTrace[],
+  description: string,
+): OracleTrace {
+  let onlyTrace: OracleTrace | undefined;
+  for (const trace of traces) {
+    if (onlyTrace !== undefined) {
+      throw new Error(`Expected one ${description} trace.`);
+    }
+    onlyTrace = trace;
+  }
+  if (onlyTrace === undefined) {
+    throw new Error(`Expected one ${description} trace.`);
+  }
+  return onlyTrace;
 }
 
 function parseResponseLines(
@@ -389,7 +786,7 @@ function assertEvaluated(
 }
 
 describe("Opaque Oracle source-free distribution", () => {
-  test("is deterministic, verifies identity, runs offline from another directory, and preserves stream laws", () => {
+  test("is deterministic, verifies identity, runs offline from another directory, and preserves stream laws", async () => {
     const temporaryRoot = mkdtempSync(
       join(tmpdir(), "opaque-oracle-distribution-"),
     );
@@ -532,40 +929,67 @@ describe("Opaque Oracle source-free distribution", () => {
       );
       expect(identityProcess.stderr.toString("utf8")).toBe("");
 
-      const firstCase = corpus.batch.cases[0];
-      const secondCase = corpus.batch.cases[1];
-      const thirdCase = corpus.batch.cases[2];
+      const caseA = corpus.batch.cases[0];
+      const caseB = corpus.batch.cases[1];
+      const caseC = corpus.batch.cases[2];
+      const workflowCase = corpus.batch.cases[10];
       if (
-        firstCase === undefined ||
-        secondCase === undefined ||
-        thirdCase === undefined
+        caseA === undefined ||
+        caseB === undefined ||
+        caseC === undefined ||
+        workflowCase === undefined
       ) {
-        throw new Error("The Oracle corpus must contain three Cases.");
+        throw new Error("The Oracle corpus is missing legacy stream Cases.");
       }
-      const firstSingleton = JSON.stringify({ cases: [firstCase] });
-      const secondSingleton = JSON.stringify({ cases: [secondCase] });
-      const thirdSingleton = JSON.stringify({ cases: [thirdCase] });
+      const aSingleton = JSON.stringify({ cases: [caseA] });
+      const bSingleton = JSON.stringify({ cases: [caseB] });
+      const cSingleton = JSON.stringify({ cases: [caseC] });
       const selectedBatch = JSON.stringify({
-        cases: [firstCase, secondCase, thirdCase],
+        cases: [caseA, caseB, caseC],
       });
-
-      const decomposition = runExecutable(
+      const malformedFrames = {
+        invalidJson: Buffer.from("not-json", "utf8"),
+        blank: Buffer.alloc(0),
+        duplicateMember: Buffer.from('{"cases":[],"cases":[]}', "utf8"),
+        emptyBatch: Buffer.from('{"cases":[]}', "utf8"),
+        structurallyInvalidCase: Buffer.from(
+          '{"cases":[{}],"extra":true}',
+          "utf8",
+        ),
+        invalidUtf8: Buffer.from([0xc3, 0x28]),
+      } as const;
+      const decompositionScenarioNames = [
+        "batch",
+        "caseA",
+        "caseB",
+        "caseC",
+      ] as const;
+      const decompositionBodies = {
+        batch: Buffer.from(selectedBatch),
+        caseA: Buffer.from(aSingleton),
+        caseB: Buffer.from(bSingleton),
+        caseC: Buffer.from(cSingleton),
+      } satisfies Record<
+        (typeof decompositionScenarioNames)[number],
+        Uint8Array
+      >;
+      const decompositionObservations = await runOracleNamedStreamFrames(
         executable,
-        ["stream"],
         cleanWorkingDirectory,
         preload,
-        Buffer.from(
-          `${selectedBatch}\n${firstSingleton}\n${secondSingleton}\n${thirdSingleton}\n`,
-        ),
+        decompositionScenarioNames,
+        decompositionBodies,
       );
-      assertSuccessfulProcess(decomposition);
-      const decompositionResponses = parseResponseLines(decomposition);
-      expect(decompositionResponses).toHaveLength(4);
-      const firstDecompositionResponse = decompositionResponses[0];
-      if (firstDecompositionResponse === undefined) {
-        throw new Error("The Oracle stream returned no batch response.");
-      }
-      const batchTraces = assertEvaluated(firstDecompositionResponse);
+      const decompositionResponseFor = (
+        name: (typeof decompositionScenarioNames)[number],
+      ): OracleBatchResponse => {
+        const observation = decompositionObservations.get(name);
+        if (observation === undefined) {
+          throw new Error(`Decomposition response missing for ${name}.`);
+        }
+        return observation.response;
+      };
+      const batchTraces = assertEvaluated(decompositionResponseFor("batch"));
       const stagedApplication = loadOracleApplicationFromDirectory({
         directory: stagedDirectory,
       });
@@ -581,80 +1005,112 @@ describe("Opaque Oracle source-free distribution", () => {
           services: stagedApplication.right.services,
         }),
       );
-      const singletonTraces = decompositionResponses
-        .slice(1)
-        .flatMap((response) => assertEvaluated(response));
+      const singletonTraces = [
+        assertEvaluated(decompositionResponseFor("caseA")),
+        assertEvaluated(decompositionResponseFor("caseB")),
+        assertEvaluated(decompositionResponseFor("caseC")),
+      ].flatMap((traces) => traces);
       expect(batchTraces).toEqual(singletonTraces);
 
-      const isolation = runExecutable(
+      const isolationScenarioNames = ["A", "B", "A again"] as const;
+      const isolationBodies = {
+        A: Buffer.from(aSingleton),
+        B: Buffer.from(bSingleton),
+        "A again": Buffer.from(aSingleton),
+      } satisfies Record<(typeof isolationScenarioNames)[number], Uint8Array>;
+      const isolationObservations = await runOracleNamedStreamFrames(
         executable,
-        ["stream"],
         cleanWorkingDirectory,
         preload,
-        Buffer.from(
-          `${firstSingleton}\n${secondSingleton}\n${firstSingleton}\n`,
-        ),
+        isolationScenarioNames,
+        isolationBodies,
       );
-      assertSuccessfulProcess(isolation);
-      const isolationResponses = parseResponseLines(isolation);
-      expect(isolationResponses).toHaveLength(3);
-      expect(isolationResponses[0]).toEqual(isolationResponses[2]);
-      expect(isolationResponses[0]?.distributionId).toBe(
-        identity.distributionId,
-      );
+      const isolationResponseFor = (
+        name: (typeof isolationScenarioNames)[number],
+      ): OracleBatchResponse => {
+        const observation = isolationObservations.get(name);
+        if (observation === undefined) {
+          throw new Error(`Isolation response missing for ${name}.`);
+        }
+        return observation.response;
+      };
+      const responseA = isolationResponseFor("A");
+      expect(responseA).toEqual(isolationResponseFor("A again"));
+      expect(responseA.distributionId).toBe(identity.distributionId);
 
-      const malformed = runExecutable(
+      const streamFrameNames = [
+        "invalidJson",
+        "blank",
+        "duplicateMember",
+        "emptyBatch",
+        "structurallyInvalidCase",
+        "invalidUtf8",
+        "finalValidCase",
+      ] as const;
+      type StreamFrameName = (typeof streamFrameNames)[number];
+      const streamFrameBodies = {
+        ...malformedFrames,
+        finalValidCase: Buffer.from(aSingleton),
+      } satisfies Record<StreamFrameName, Uint8Array>;
+      const malformedObservations = await runOracleNamedStreamFrames(
         executable,
-        ["stream"],
         cleanWorkingDirectory,
         preload,
-        Buffer.concat([
-          Buffer.from(
-            'not-json\n\n{"cases":[],"cases":[]}\n{"cases":[]}\n{"cases":[{}],"extra":true}\n',
-          ),
-          Buffer.from([0xc3, 0x28, 0x0a]),
-          Buffer.from(firstSingleton),
-        ]),
+        streamFrameNames,
+        streamFrameBodies,
       );
-      assertSuccessfulProcess(malformed);
-      const malformedResponses = parseResponseLines(malformed);
-      expect(malformedResponses).toHaveLength(7);
-      for (const response of malformedResponses.slice(0, 6)) {
-        expect(response.tag).toBe("decodeRejected");
+      const responseForStreamFrame = (
+        name: StreamFrameName,
+      ): OracleStreamFrameObservation => {
+        const observation = malformedObservations.get(name);
+        if (observation === undefined) {
+          throw new Error(`Response missing for ${name}.`);
+        }
+        return observation;
+      };
+      const responseForMalformedFrame = (
+        name: StreamFrameName,
+      ): OracleBatchResponse => responseForStreamFrame(name).response;
+      for (const name of streamFrameNames) {
+        const response = responseForMalformedFrame(name);
         expect(response.distributionId).toBe(identity.distributionId);
+        if (name === "finalValidCase") {
+          expect(assertEvaluated(response)).toHaveLength(1);
+        } else if (response.tag !== "decodeRejected") {
+          throw new Error(`Malformed frame ${name} was not rejected.`);
+        }
       }
-      const duplicateResponse = malformedResponses[2];
-      if (duplicateResponse?.tag !== "decodeRejected") {
-        throw new Error("The duplicate-key frame was not rejected.");
+
+      const duplicateMemberResponse =
+        responseForMalformedFrame("duplicateMember");
+      if (duplicateMemberResponse.tag !== "decodeRejected") {
+        throw new Error("The named duplicate-key frame was not rejected.");
       }
-      expect(duplicateResponse.issues.length).toBeGreaterThan(0);
-      const invalidUtf8Response = malformedResponses[4];
-      if (invalidUtf8Response?.tag !== "decodeRejected") {
-        throw new Error("The invalid UTF-8 frame was not rejected.");
+      expect(duplicateMemberResponse.issues.length).toBeGreaterThan(0);
+      const invalidUtf8Response = responseForMalformedFrame("invalidUtf8");
+      if (invalidUtf8Response.tag !== "decodeRejected") {
+        throw new Error("The named invalid UTF-8 frame was not rejected.");
       }
-      expect(invalidUtf8Response.issues.length).toBeGreaterThan(1);
-      const finalResponse = malformedResponses[6];
-      if (finalResponse === undefined) {
-        throw new Error("The final Oracle stream response was missing.");
-      }
-      expect(assertEvaluated(finalResponse)).toHaveLength(1);
+      expect(invalidUtf8Response.issues).toEqual([
+        { path: "", code: "invalidJson" },
+      ]);
 
       const workflowRejection = runExecutable(
         executable,
         ["stream"],
         cleanWorkingDirectory,
         preload,
-        Buffer.from(`${JSON.stringify({ cases: [corpus.batch.cases[10]] })}\n`),
+        Buffer.from(`${JSON.stringify({ cases: [workflowCase] })}\n`),
       );
       assertSuccessfulProcess(workflowRejection);
-      const workflowResponse = parseResponseLines(workflowRejection)[0];
-      if (workflowResponse === undefined) {
-        throw new Error("The workflow response was missing.");
-      }
-      const rejectedTrace = assertEvaluated(workflowResponse)[0];
-      if (rejectedTrace === undefined) {
-        throw new Error("The workflow response contained no trace.");
-      }
+      const workflowResponse = onlyOracleResponse(
+        parseResponseLines(workflowRejection),
+        "workflow",
+      );
+      const rejectedTrace = onlyOracleTrace(
+        assertEvaluated(workflowResponse),
+        "workflow",
+      );
       expect(rejectedTrace.creation.outcome.tag).toBe("fillRejected");
 
       const invalidMode = runExecutable(
@@ -668,17 +1124,6 @@ describe("Opaque Oracle source-free distribution", () => {
       expect(invalidMode.stderr.toString("utf8")).toContain(
         "Usage: oracle identity | oracle stream",
       );
-
-      const finalFrame = runExecutable(
-        executable,
-        ["stream"],
-        cleanWorkingDirectory,
-        preload,
-        Buffer.from(firstSingleton),
-      );
-      assertSuccessfulProcess(finalFrame);
-      expect(finalFrame.stdout.toString("utf8").endsWith("\n")).toBe(true);
-      expect(parseResponseLines(finalFrame)).toHaveLength(1);
 
       const tamperedDirectory = join(temporaryRoot, "tampered");
       cpSync(stagedDirectory, tamperedDirectory, {
@@ -739,22 +1184,22 @@ describe("Opaque Oracle source-free distribution", () => {
       expect(Either.isRight(loaded)).toBe(true);
       if (Either.isLeft(loaded)) return;
 
-      const firstCase = corpus.batch.cases[0];
-      const secondCase = corpus.batch.cases[1];
-      const thirdCase = corpus.batch.cases[2];
+      const caseA = corpus.batch.cases[0];
+      const caseB = corpus.batch.cases[1];
+      const caseC = corpus.batch.cases[2];
       const workflowCase = corpus.batch.cases[10];
       if (
-        firstCase === undefined ||
-        secondCase === undefined ||
-        thirdCase === undefined ||
+        caseA === undefined ||
+        caseB === undefined ||
+        caseC === undefined ||
         workflowCase === undefined
       ) {
         throw new Error("The Oracle corpus is missing HTTP contract cases.");
       }
-      const firstSingleton = JSON.stringify({ cases: [firstCase] });
-      const secondSingleton = JSON.stringify({ cases: [secondCase] });
+      const aSingleton = JSON.stringify({ cases: [caseA] });
+      const bSingleton = JSON.stringify({ cases: [caseB] });
       const selectedBatch = JSON.stringify({
-        cases: [firstCase, secondCase, thirdCase],
+        cases: [caseA, caseB, caseC],
       });
       const jsonContentType = "application/json; charset=utf-8";
       const assertJsonContract = (response: OracleHttpResponse): void => {
@@ -813,19 +1258,15 @@ describe("Opaque Oracle source-free distribution", () => {
         JSON.stringify(expectedBatchResponse),
       );
 
-      const firstResponse = await post(Buffer.from(firstSingleton));
-      const secondResponse = await post(Buffer.from(secondSingleton));
-      const firstAgainResponse = await post(Buffer.from(firstSingleton));
-      for (const response of [
-        firstResponse,
-        secondResponse,
-        firstAgainResponse,
-      ]) {
+      const responseA = await post(Buffer.from(aSingleton));
+      const responseB = await post(Buffer.from(bSingleton));
+      const responseAAgain = await post(Buffer.from(aSingleton));
+      for (const response of [responseA, responseB, responseAAgain]) {
         expect(response.status).toBe(200);
         assertJsonContract(response);
       }
-      expect(firstResponse.body).toEqual(firstAgainResponse.body);
-      expect(firstResponse.body).not.toEqual(secondResponse.body);
+      expect(responseA.body).toEqual(responseAAgain.body);
+      expect(responseA.body).not.toEqual(responseB.body);
 
       const workflowResponse = await post(
         Buffer.from(JSON.stringify({ cases: [workflowCase] })),
@@ -840,20 +1281,17 @@ describe("Opaque Oracle source-free distribution", () => {
       if (workflowJson.tag !== "evaluated") {
         throw new Error("The workflow batch response was not evaluated.");
       }
-      const workflowTrace = workflowJson.traces[0];
-      if (workflowTrace === undefined) {
-        throw new Error("The workflow response contained no trace.");
-      }
+      const workflowTrace = onlyOracleTrace(workflowJson.traces, "workflow");
       expect(workflowTrace.creation.outcome.tag).toBe("fillRejected");
 
-      const malformedResponses = await Promise.all([
-        post(Buffer.alloc(0)),
-        post(Buffer.from("not-json")),
-        post(Buffer.from('{"cases":[],"cases":[]}')),
-        post(Buffer.from('{"cases":[{}]}')),
-        post(Buffer.from([0xc3, 0x28])),
-      ]);
-      for (const response of malformedResponses) {
+      const malformedResponses = {
+        emptyInput: await post(Buffer.alloc(0)),
+        invalidJson: await post(Buffer.from("not-json")),
+        duplicateMember: await post(Buffer.from('{"cases":[],"cases":[]}')),
+        structurallyInvalidCase: await post(Buffer.from('{"cases":[{}]}')),
+        invalidUtf8: await post(Buffer.from([0xc3, 0x28])),
+      } as const;
+      for (const response of Object.values(malformedResponses)) {
         expect(response.status).toBe(400);
         assertJsonContract(response);
         const value = decodeJson(
@@ -866,10 +1304,7 @@ describe("Opaque Oracle source-free distribution", () => {
         }
         expect(value.distributionId).toBe(identity.distributionId);
       }
-      const invalidUtf8Response = malformedResponses[4];
-      if (invalidUtf8Response === undefined) {
-        throw new Error("The invalid UTF-8 response was missing.");
-      }
+      const invalidUtf8Response = malformedResponses.invalidUtf8;
       expect(invalidUtf8Response.body.toString("utf8")).toBe(
         `{"tag":"decodeRejected","distributionId":"${identity.distributionId}","issues":[{"path":"","code":"invalidJson"}]}`,
       );
@@ -885,7 +1320,7 @@ describe("Opaque Oracle source-free distribution", () => {
       });
       expect(wrongMethod.status).toBe(405);
       const unsupportedMedia = await post(
-        Buffer.from(firstSingleton),
+        Buffer.from(aSingleton),
         "text/plain; charset=utf-8",
       );
       expect(unsupportedMedia.status).toBe(415);
@@ -924,7 +1359,7 @@ describe("Opaque Oracle source-free distribution", () => {
       const defectResponse = await requestOracle(defectProcess.readiness.port, {
         method: "POST",
         path: "/oracle/evaluations",
-        body: Buffer.from(JSON.stringify({ cases: [firstCase, secondCase] })),
+        body: Buffer.from(JSON.stringify({ cases: [caseA, caseB] })),
         contentType: jsonContentType,
       });
       expect(defectResponse.status).toBe(500);
@@ -938,7 +1373,7 @@ describe("Opaque Oracle source-free distribution", () => {
       const afterDefect = await requestOracle(defectProcess.readiness.port, {
         method: "POST",
         path: "/oracle/evaluations",
-        body: Buffer.from(firstSingleton),
+        body: Buffer.from(aSingleton),
         contentType: jsonContentType,
       });
       expect(afterDefect.status).toBe(200);
@@ -961,6 +1396,578 @@ describe("Opaque Oracle source-free distribution", () => {
       rmSync(temporaryRoot, { recursive: true, force: true });
     }
   }, 300_000);
+
+  test("proves packaged stream and HTTP parity for one persistent scenario table", async () => {
+    const temporaryRoot = mkdtempSync(
+      join(tmpdir(), "opaque-oracle-parity-distribution-"),
+    );
+    let running: OracleServeProcess | undefined;
+    try {
+      const ordinaryBuild = buildOracleDistribution({
+        destination: join(temporaryRoot, "ordinary-distribution"),
+      });
+      const cleanWorkingDirectory = mkdtempSync(
+        join(temporaryRoot, "clean-cwd-"),
+      );
+      const preload = writeNetworkDenialPreload(temporaryRoot);
+      const ordinaryIdentity = decodeJson(
+        OracleIdentityResponseSchema,
+        readFileSync(
+          join(
+            ordinaryBuild.destination,
+            ORACLE_DISTRIBUTION_FILE_NAMES.identity,
+          ),
+          "utf8",
+        ),
+      );
+      expect(ordinaryIdentity.distributionId).toBe(
+        ordinaryBuild.distributionId,
+      );
+
+      const aCase = corpus.batch.cases[0];
+      const bCase = corpus.batch.cases[1];
+      const priorCase = corpus.batch.cases[10];
+      if (
+        aCase === undefined ||
+        bCase === undefined ||
+        priorCase === undefined
+      ) {
+        throw new Error("The Oracle corpus is missing parity Cases.");
+      }
+
+      const jsonBody = (input: object): Buffer =>
+        Buffer.from(JSON.stringify(input), "utf8");
+      const wholeBatchBody = jsonBody({ cases: corpus.batch.cases });
+      const aSingletonBody = jsonBody({ cases: [aCase] });
+      const bSingletonBody = jsonBody({ cases: [bCase] });
+      const defectBatchBody = jsonBody({
+        cases: [aCase, bCase],
+      });
+      const lineFeed = Buffer.from("\n");
+
+      type ParityScenario = {
+        readonly name: string;
+        readonly body: Buffer;
+        readonly expectedTag: "evaluated" | "decodeRejected";
+      };
+      const expectedInvalidJsonIssues = [
+        { path: "", code: "invalidJson" },
+      ] as const satisfies OracleDecodeIssues;
+      const expectedMixedDecodeIssues = [
+        { path: "/cases/1/battle", code: "missingMember" },
+        { path: "/cases/1/creation", code: "missingMember" },
+        { path: "/cases/1/sheet", code: "missingMember" },
+        { path: "/cases/2/battle", code: "missingMember" },
+        { path: "/cases/2/creation/fillBatches", code: "missingMember" },
+        { path: "/cases/2/sheet", code: "missingMember" },
+      ] as const satisfies OracleDecodeIssues;
+      const evaluatedScenario = (
+        name: string,
+        body: Buffer,
+      ): ParityScenario => ({
+        name,
+        body,
+        expectedTag: "evaluated",
+      });
+      const rejectedScenario = (
+        name: string,
+        body: Buffer,
+      ): ParityScenario => ({
+        name,
+        body,
+        expectedTag: "decodeRejected",
+      });
+
+      const wholeBatchBeforePrior = evaluatedScenario(
+        "whole corpus before prior message",
+        wholeBatchBody,
+      );
+      const priorMessage = evaluatedScenario(
+        "prior message",
+        jsonBody({ cases: [priorCase] }),
+      );
+      const wholeBatchAfterPrior = evaluatedScenario(
+        "whole corpus after prior message",
+        wholeBatchBody,
+      );
+      const singletonScenarios = corpus.batch.cases.map((caseValue) =>
+        evaluatedScenario("corpus singleton", jsonBody({ cases: [caseValue] })),
+      );
+      const emptyInputScenario = rejectedScenario(
+        "empty input",
+        Buffer.alloc(0),
+      );
+      const blankInputScenario = rejectedScenario(
+        "blank input",
+        Buffer.from("   ", "utf8"),
+      );
+      const invalidJsonScenario = rejectedScenario(
+        "invalid JSON",
+        Buffer.from("not-json", "utf8"),
+      );
+      const duplicateMemberScenario = rejectedScenario(
+        "duplicate object member",
+        Buffer.from('{"cases":[],"cases":[]}', "utf8"),
+      );
+      const emptyBatchScenario = rejectedScenario(
+        "empty batch",
+        Buffer.from('{"cases":[]}', "utf8"),
+      );
+      const structurallyInvalidCaseScenario = rejectedScenario(
+        "structurally invalid Case",
+        Buffer.from('{"cases":[{}]}', "utf8"),
+      );
+      const mixedMalformedScenario = rejectedScenario(
+        "valid and multiple structurally invalid Cases",
+        jsonBody({ cases: [aCase, {}, { creation: {} }] }),
+      );
+      const invalidUtf8Scenario = rejectedScenario(
+        "fatal invalid UTF-8",
+        Buffer.from([0xc3, 0x28]),
+      );
+      const malformedScenarios: readonly ParityScenario[] = [
+        emptyInputScenario,
+        blankInputScenario,
+        invalidJsonScenario,
+        duplicateMemberScenario,
+        emptyBatchScenario,
+        structurallyInvalidCaseScenario,
+        mixedMalformedScenario,
+        invalidUtf8Scenario,
+      ];
+      const aScenario = evaluatedScenario("A", aSingletonBody);
+      const bScenario = evaluatedScenario("B", bSingletonBody);
+      const repeatedAScenario = evaluatedScenario("A again", aSingletonBody);
+      const scenarios: readonly ParityScenario[] = [
+        wholeBatchBeforePrior,
+        priorMessage,
+        wholeBatchAfterPrior,
+        ...singletonScenarios,
+        aScenario,
+        bScenario,
+        repeatedAScenario,
+        ...malformedScenarios,
+      ];
+
+      const cliByScenario = new Map<ParityScenario, OracleBatchResponse>();
+      const cliObservations: OracleStreamFrameObservation[] = [];
+      const streamProcess = launchOracleStream(
+        ordinaryBuild.executablePath,
+        cleanWorkingDirectory,
+        preload,
+      );
+      try {
+        for (const scenario of scenarios) {
+          const observation = await evaluateOracleStreamFrame(
+            streamProcess,
+            scenario.body,
+          );
+          cliByScenario.set(scenario, observation.response);
+          cliObservations.push(observation);
+        }
+        await waitForOracleStreamClose(streamProcess);
+        expect(streamProcess.stderr()).toBe("");
+        expect(streamProcess.rawLines).toHaveLength(cliObservations.length);
+        expect(streamProcess.rawLines).toEqual(
+          cliObservations.map(({ rawLine }) => rawLine),
+        );
+        expect(
+          streamProcess.rawLines.map((rawLine) =>
+            decodeJson(OracleBatchResponseSchema, rawLine),
+          ),
+        ).toEqual(cliObservations.map(({ response }) => response));
+      } finally {
+        await terminateOracleStream(streamProcess);
+      }
+
+      const ordinaryIdentityProcess = runExecutable(
+        ordinaryBuild.executablePath,
+        ["identity"],
+        cleanWorkingDirectory,
+        preload,
+      );
+      assertSuccessfulProcess(ordinaryIdentityProcess);
+      expect(
+        decodeJson(
+          OracleIdentityResponseSchema,
+          ordinaryIdentityProcess.stdout.toString("utf8"),
+        ),
+      ).toEqual(ordinaryIdentity);
+
+      const runningProcess = await launchOracleServe(
+        ordinaryBuild.executablePath,
+        cleanWorkingDirectory,
+        preload,
+      );
+      running = runningProcess;
+      expect(runningProcess.readiness.host).toBe("127.0.0.1");
+      expect(runningProcess.readiness.port).toBeGreaterThan(0);
+      expect(runningProcess.stderr()).toBe("");
+
+      const identityResponse = await requestOracle(
+        runningProcess.readiness.port,
+        { method: "GET", path: "/oracle/identity" },
+      );
+      expect(identityResponse.status).toBe(200);
+      expect(identityResponse.headers["content-type"]).toBe(
+        "application/json; charset=utf-8",
+      );
+      expect(
+        decodeJson(
+          OracleIdentityResponseSchema,
+          identityResponse.body.toString("utf8"),
+        ),
+      ).toEqual(ordinaryIdentity);
+
+      const httpByScenario = new Map<
+        ParityScenario,
+        { readonly response: OracleBatchResponse; readonly status: number }
+      >();
+      for (const scenario of scenarios) {
+        const httpResponse = await requestOracle(
+          runningProcess.readiness.port,
+          {
+            method: "POST",
+            path: "/oracle/evaluations",
+            body: scenario.body,
+            contentType: "application/json; charset=utf-8",
+          },
+        );
+        expect(httpResponse.headers["content-type"]).toBe(
+          "application/json; charset=utf-8",
+        );
+        const decodedResponse = decodeJson(
+          OracleBatchResponseSchema,
+          httpResponse.body.toString("utf8"),
+        );
+        expect(httpResponse.body.toString("utf8")).toBe(
+          JSON.stringify(decodedResponse),
+        );
+        httpByScenario.set(scenario, {
+          response: decodedResponse,
+          status: httpResponse.status,
+        });
+      }
+
+      const responseFor = (scenario: ParityScenario): OracleBatchResponse => {
+        const response = cliByScenario.get(scenario);
+        if (response === undefined) {
+          throw new Error(`CLI response missing for ${scenario.name}.`);
+        }
+        return response;
+      };
+      const httpResponseFor = (
+        scenario: ParityScenario,
+      ): {
+        readonly response: OracleBatchResponse;
+        readonly status: number;
+      } => {
+        const observation = httpByScenario.get(scenario);
+        if (observation === undefined) {
+          throw new Error(`HTTP response missing for ${scenario.name}.`);
+        }
+        return observation;
+      };
+
+      for (const scenario of scenarios) {
+        const cliResponse = responseFor(scenario);
+        const httpObservation = httpResponseFor(scenario);
+        expect(httpObservation.response).toEqual(cliResponse);
+        expect(cliResponse.tag).toBe(scenario.expectedTag);
+        expect(cliResponse.distributionId).toBe(
+          ordinaryIdentity.distributionId,
+        );
+        expect(httpObservation.status).toBe(
+          Match.value(scenario.expectedTag).pipe(
+            Match.when("evaluated", () => 200),
+            Match.when("decodeRejected", () => 400),
+            Match.exhaustive,
+          ),
+        );
+      }
+
+      const wholeBeforeResponse = responseFor(wholeBatchBeforePrior);
+      const wholeAfterResponse = responseFor(wholeBatchAfterPrior);
+      expect(wholeAfterResponse).toEqual(wholeBeforeResponse);
+      const singletonTraces = singletonScenarios.flatMap((scenario) => {
+        const response = responseFor(scenario);
+        return assertEvaluated(response);
+      });
+      expect(assertEvaluated(wholeAfterResponse)).toEqual(singletonTraces);
+      expect(responseFor(aScenario)).toEqual(responseFor(repeatedAScenario));
+      expect(responseFor(aScenario)).not.toEqual(responseFor(bScenario));
+
+      const mixedResponse = responseFor(mixedMalformedScenario);
+      if (mixedResponse.tag !== "decodeRejected") {
+        throw new Error("The mixed malformed batch was evaluated.");
+      }
+      expect(mixedResponse.issues).toEqual(expectedMixedDecodeIssues);
+      const invalidJsonResponse = responseFor(invalidJsonScenario);
+      if (invalidJsonResponse.tag !== "decodeRejected") {
+        throw new Error("The invalid JSON batch was evaluated.");
+      }
+      expect(invalidJsonResponse.issues).toEqual(expectedInvalidJsonIssues);
+      const invalidUtf8Response = responseFor(invalidUtf8Scenario);
+      if (invalidUtf8Response.tag !== "decodeRejected") {
+        throw new Error("The invalid UTF-8 batch was evaluated.");
+      }
+      expect(invalidUtf8Response.issues).toEqual(expectedInvalidJsonIssues);
+
+      await waitForOracleExit(runningProcess, "SIGTERM");
+      running = undefined;
+
+      const defectBuild = buildOracleDistribution({
+        destination: join(temporaryRoot, "defect-distribution"),
+        entryPoint: resolve(packageRoot, "scripts/oracle-defect-test-entry.ts"),
+      });
+      expect(defectBuild.distributionId).not.toBe(
+        ordinaryIdentity.distributionId,
+      );
+      const defectIdentity = decodeJson(
+        OracleIdentityResponseSchema,
+        readFileSync(
+          join(
+            defectBuild.destination,
+            ORACLE_DISTRIBUTION_FILE_NAMES.identity,
+          ),
+          "utf8",
+        ),
+      );
+      expect(defectIdentity.distributionId).toBe(defectBuild.distributionId);
+
+      const defectIdentityProcess = runExecutable(
+        defectBuild.executablePath,
+        ["identity"],
+        cleanWorkingDirectory,
+        preload,
+      );
+      assertSuccessfulProcess(defectIdentityProcess);
+      expect(
+        decodeJson(
+          OracleIdentityResponseSchema,
+          defectIdentityProcess.stdout.toString("utf8"),
+        ),
+      ).toEqual(defectIdentity);
+
+      const defectCliResult = runExecutable(
+        defectBuild.executablePath,
+        ["stream"],
+        cleanWorkingDirectory,
+        preload,
+        Buffer.concat([defectBatchBody, lineFeed, bSingletonBody, lineFeed]),
+      );
+      expect(defectCliResult.signal).toBeNull();
+      expect(defectCliResult.status).not.toBeNull();
+      if (defectCliResult.status === null) {
+        throw new Error("The defect CLI did not report an exit status.");
+      }
+      expect(defectCliResult.status).not.toBe(0);
+      expect(defectCliResult.stdout.toString("utf8")).toBe("");
+      expect(defectCliResult.stderr.toString("utf8")).toContain(
+        "injected later-Case evaluator defect",
+      );
+
+      const defectProcess = await launchOracleServe(
+        defectBuild.executablePath,
+        cleanWorkingDirectory,
+        preload,
+      );
+      running = defectProcess;
+      expect(defectProcess.readiness.host).toBe("127.0.0.1");
+      const defectIdentityResponse = await requestOracle(
+        defectProcess.readiness.port,
+        { method: "GET", path: "/oracle/identity" },
+      );
+      expect(defectIdentityResponse.status).toBe(200);
+      expect(
+        decodeJson(
+          OracleIdentityResponseSchema,
+          defectIdentityResponse.body.toString("utf8"),
+        ),
+      ).toEqual(defectIdentity);
+
+      const defectHttpResponse = await requestOracle(
+        defectProcess.readiness.port,
+        {
+          method: "POST",
+          path: "/oracle/evaluations",
+          body: defectBatchBody,
+          contentType: "application/json; charset=utf-8",
+        },
+      );
+      expect(defectHttpResponse.status).toBe(500);
+      expect(defectHttpResponse.headers["content-type"]).toBe(
+        "application/json; charset=utf-8",
+      );
+      const decodedDefect = decodeJson(
+        OracleDefectResponseSchema,
+        defectHttpResponse.body.toString("utf8"),
+      );
+      expect(decodedDefect).toEqual({
+        tag: "defect",
+        distributionId: defectIdentity.distributionId,
+      });
+      expect(defectHttpResponse.body.toString("utf8")).toBe(
+        JSON.stringify(decodedDefect),
+      );
+
+      const expectedRecoveryProcess = runExecutable(
+        defectBuild.executablePath,
+        ["stream"],
+        cleanWorkingDirectory,
+        preload,
+        Buffer.concat([bSingletonBody, lineFeed]),
+      );
+      assertSuccessfulProcess(expectedRecoveryProcess);
+      const expectedRecoveryResponse = onlyOracleResponse(
+        parseResponseLines(expectedRecoveryProcess),
+        "defect-build recovery",
+      );
+
+      const afterDefect = await requestOracle(defectProcess.readiness.port, {
+        method: "POST",
+        path: "/oracle/evaluations",
+        body: bSingletonBody,
+        contentType: "application/json; charset=utf-8",
+      });
+      expect(afterDefect.status).toBe(200);
+      const afterDefectResponse = decodeJson(
+        OracleBatchResponseSchema,
+        afterDefect.body.toString("utf8"),
+      );
+      expect(afterDefectResponse).toEqual(expectedRecoveryResponse);
+
+      await waitForOracleExit(defectProcess, "SIGTERM");
+      running = undefined;
+    } finally {
+      if (running !== undefined) {
+        if (
+          running.child.exitCode === null &&
+          running.child.signalCode === null
+        ) {
+          running.child.kill("SIGKILL");
+        }
+        running.lines.close();
+      }
+      rmSync(temporaryRoot, { recursive: true, force: true });
+    }
+  }, 300_000);
+
+  test("preserves close-boundary stream evidence and bounds silent frames", async () => {
+    const temporaryRoot = mkdtempSync(
+      join(tmpdir(), "opaque-oracle-stream-observer-"),
+    );
+    try {
+      const cleanWorkingDirectory = mkdtempSync(
+        join(temporaryRoot, "clean-cwd-"),
+      );
+      const preload = writeNetworkDenialPreload(temporaryRoot);
+      const response = JSON.stringify({
+        tag: "decodeRejected",
+        distributionId: `sha256:${"0".repeat(64)}`,
+        issues: [{ path: "", code: "invalidJson" }],
+      });
+      const extraLinesScript = [
+        `const response = ${JSON.stringify(`${response}\n${response}\n`)};`,
+        'process.stdin.once("data", () => process.stdout.write(response));',
+      ].join("\n");
+      const extraLinesProcess = launchOracleStream(
+        process.execPath,
+        cleanWorkingDirectory,
+        preload,
+        ["-e", extraLinesScript],
+      );
+      try {
+        await expect(
+          evaluateOracleStreamFrame(extraLinesProcess, Buffer.from("{}"), {
+            timeoutMs: 1_000,
+          }),
+        ).rejects.toThrow(
+          "Oracle stream emitted 2 response lines for 1 pending frame(s).",
+        );
+        expect(extraLinesProcess.rawLines).toEqual([response, response]);
+      } finally {
+        await terminateOracleStream(extraLinesProcess);
+      }
+
+      const trailingLine = `${response}\n`;
+      const trailingLineChildScript = [
+        'const { spawn } = require("node:child_process");',
+        'process.stdin.once("data", () => {',
+        `  const grandchildScript = ${JSON.stringify(
+          `setTimeout(() => process.stdout.write(${JSON.stringify(trailingLine)}), 50);`,
+        )};`,
+        '  spawn(process.execPath, ["-e", grandchildScript], { stdio: ["ignore", "inherit", "inherit"] });',
+        "  setTimeout(() => process.exit(0), 10);",
+        "});",
+      ].join("\n");
+      const trailingLineProcess = launchOracleStream(
+        process.execPath,
+        cleanWorkingDirectory,
+        preload,
+        ["-e", trailingLineChildScript],
+      );
+      try {
+        const observation = await evaluateOracleStreamFrame(
+          trailingLineProcess,
+          Buffer.from("{}"),
+          { timeoutMs: 1_000 },
+        );
+        expect(observation.rawLine).toBe(response);
+        expect(trailingLineProcess.exited).toBe(true);
+        await waitForOracleStreamClose(trailingLineProcess);
+        expect(trailingLineProcess.closed).toBe(true);
+        expect(trailingLineProcess.rawLines).toEqual([response]);
+      } finally {
+        await terminateOracleStream(trailingLineProcess);
+      }
+
+      const missingResponseProcess = launchOracleStream(
+        process.execPath,
+        cleanWorkingDirectory,
+        preload,
+        [
+          "-e",
+          'process.stdin.once("data", () => setTimeout(() => process.exit(0), 25));',
+        ],
+      );
+      try {
+        await expect(
+          evaluateOracleStreamFrame(missingResponseProcess, Buffer.from("{}"), {
+            timeoutMs: 1_000,
+          }),
+        ).rejects.toThrow(
+          "Oracle stream closed before all responses (0, null).",
+        );
+        expect(missingResponseProcess.closed).toBe(true);
+        expect(missingResponseProcess.pendingWaiters).toHaveLength(0);
+      } finally {
+        await terminateOracleStream(missingResponseProcess);
+      }
+
+      const silentProcess = launchOracleStream(
+        process.execPath,
+        cleanWorkingDirectory,
+        preload,
+        ["-e", 'process.stdin.on("data", () => undefined);'],
+      );
+      try {
+        await expect(
+          evaluateOracleStreamFrame(silentProcess, Buffer.from("{}"), {
+            timeoutMs: 25,
+          }),
+        ).rejects.toThrow(
+          "Oracle stream frame timed out after 25ms without one response.",
+        );
+        expect(silentProcess.pendingWaiters).toHaveLength(0);
+        expect(silentProcess.activeWaiters.size).toBe(0);
+      } finally {
+        await terminateOracleStream(silentProcess);
+      }
+    } finally {
+      rmSync(temporaryRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
 
   test("rejects a test entrypoint that imports eager catalog data", () => {
     const temporaryRoot = mkdtempSync(
@@ -1006,9 +2013,9 @@ describe("Opaque Oracle source-free distribution", () => {
         join(temporaryRoot, "clean-cwd-"),
       );
       const preload = writeNetworkDenialPreload(temporaryRoot);
-      const firstCase = corpus.batch.cases[0];
-      const secondCase = corpus.batch.cases[1];
-      if (firstCase === undefined || secondCase === undefined) {
+      const caseA = corpus.batch.cases[0];
+      const caseB = corpus.batch.cases[1];
+      if (caseA === undefined || caseB === undefined) {
         throw new Error("The Oracle corpus must contain two Cases.");
       }
       const result = runExecutable(
@@ -1017,7 +2024,7 @@ describe("Opaque Oracle source-free distribution", () => {
         cleanWorkingDirectory,
         preload,
         Buffer.from(
-          `${JSON.stringify({ cases: [firstCase, secondCase] })}\n${JSON.stringify({ cases: [firstCase] })}\n`,
+          `${JSON.stringify({ cases: [caseA, caseB] })}\n${JSON.stringify({ cases: [caseA] })}\n`,
         ),
       );
       expect(result.status).not.toBe(0);
