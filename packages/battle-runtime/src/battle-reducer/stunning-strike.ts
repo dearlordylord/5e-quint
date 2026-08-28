@@ -380,6 +380,7 @@ function stunningStrikeExecution(
           : undefined,
       spellInvocation: () => undefined,
       unavailableSpellInvocation: () => undefined,
+      effectOccurrenceSource: () => undefined,
     }),
   );
 }

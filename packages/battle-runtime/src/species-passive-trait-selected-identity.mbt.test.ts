@@ -361,10 +361,8 @@ function poisonedDwarvenResilienceEndTurnBattle(): BattleState {
     state: result.success.state,
     sourceCombatantId: wizardId,
     ownerId: poisonedDwarvenResilienceTargetId,
-    effect: (sourceProcedureRef) => ({
+    effect: {
       kind: "spellConditionEndTurnSave",
-      sourceProcedureRef,
-      sourceCombatantId: wizardId,
       condition: "poisoned",
       conditionHadNonSpellSource: false,
       heightenedSpellTargetDisadvantage: null,
@@ -376,7 +374,7 @@ function poisonedDwarvenResilienceEndTurnBattle(): BattleState {
         kind: "duration",
         durationTicks: elapsedTimeTicks(10),
       },
-    }),
+    },
   });
   const target = allocated.state.combatants.get(
     poisonedDwarvenResilienceTargetId,

@@ -32,6 +32,7 @@ import {
   ResourceCount,
 } from "@dnd/shared/types";
 import { BattleCreatureDisplayNameSchema } from "../battle-creature-display-name.ts";
+import { EFFECT_OCCURRENCE_SOURCE_KINDS } from "../character-execution-vocabulary.ts";
 import { BattleRoundSchema } from "../active-effect/round-codec.ts";
 import { BATTLE_ACTIVE_EFFECT_KINDS } from "../active-effect/types.ts";
 import type { Ability, DamageType, Skill } from "@dnd/surface/surface/types";
@@ -5846,6 +5847,11 @@ const CharacterBattleCreatureOriginSnapshotSchema = Schema.Struct({
           Schema.Struct({
             kind: Schema.Literal("unavailableSpellInvocation"),
           }),
+          Schema.Struct({
+            kind: Schema.Literal("effectOccurrenceSource"),
+            effectRef: BattleEffectExecutionRef,
+            effectKind: Schema.Literals(EFFECT_OCCURRENCE_SOURCE_KINDS),
+          }),
         ]),
       }),
     ),
@@ -7585,6 +7591,7 @@ function characterProcedureBindingKind(
   | "unitSupportProfile"
   | "spellInvocation"
   | "unavailableSpellInvocation"
+  | "effectOccurrenceSource"
   | undefined {
   return characterProcedureBinding(combatants, combatantId, procedureRef)
     ?.procedure.kind;
@@ -8305,6 +8312,7 @@ function serializedBattleActOwnsBoundProcedure(
           procedure.executionFacts.kind === "bonusActionDashSpell",
         /* v8 ignore next -- @preserve -- Malformed snapshot defense: an explicitly unavailable Spell Invocation can never own an executable Bonus Action standard-action subject. */
         unavailableSpellInvocation: () => false,
+        effectOccurrenceSource: () => false,
         unitFeature: (procedure) => {
           const executionKind = procedure.execution.kind;
           return (
@@ -8891,6 +8899,7 @@ function battleSnapshotInvariantsHold(
   return (
     battleSnapshotLiveCombatantIdsAreUnique(snapshot, liveCombatantIds) &&
     new Set(effectOccurrenceRefs).size === effectOccurrenceRefs.length &&
+    serializedEffectOccurrenceSourceBindingsMatch(snapshot.combatants) &&
     new Set([...executionScopeRefs, ...retiredExecutionScopeRefs]).size ===
       executionScopeRefs.length + retiredExecutionScopeRefs.length &&
     cursorByCombatant.size === snapshot.executionScopeCursors.length &&
@@ -8988,6 +8997,33 @@ function battleSnapshotInvariantsHold(
               snapshot.battleId,
             );
     })
+  );
+}
+
+function serializedEffectOccurrenceSourceBindingsMatch(
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+): boolean {
+  const activeEffectKindByRef = new Map(
+    combatants.flatMap((combatant) =>
+      combatant.activeEffectOccurrences.map(
+        (occurrence) =>
+          [occurrence.effectRef, occurrence.activeEffectKind] as const,
+      ),
+    ),
+  );
+  return combatants.every(
+    (combatant) =>
+      combatant.origin.kind !== "character" ||
+      combatant.origin.execution.procedureBindings.every((binding) => {
+        if (binding.procedure.kind !== "effectOccurrenceSource") return true;
+        const activeEffectKind = activeEffectKindByRef.get(
+          binding.procedure.effectRef,
+        );
+        return (
+          activeEffectKind === undefined ||
+          activeEffectKind === binding.procedure.effectKind
+        );
+      }),
   );
 }
 

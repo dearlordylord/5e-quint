@@ -5,6 +5,7 @@ import type {
 } from "./battle-reducer/procedure-execution-codecs.ts";
 import type {
   BattleCharacterExecutionScopeRef,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionCursor,
   BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
@@ -38,6 +39,24 @@ export type CharacterUnitProcedureExecution =
       readonly execution: UnitSupportProcedureExecution;
     };
 
+export const EFFECT_OCCURRENCE_SOURCE_KINDS = [
+  "nextAttackRollBySelf",
+  "sleepPendingRepeatSave",
+  "spellCondition",
+  "spellConditionEndTurnSave",
+  "spellTurnEndDamage",
+  "spellTurnStartDamageAndSave",
+] as const;
+
+export type EffectOccurrenceSourceKind =
+  (typeof EFFECT_OCCURRENCE_SOURCE_KINDS)[number];
+
+export type CharacterEffectOccurrenceSourceProcedure = {
+  readonly kind: "effectOccurrenceSource";
+  readonly effectRef: BattleEffectExecutionRef;
+  readonly effectKind: EffectOccurrenceSourceKind;
+};
+
 export type CharacterProcedureBinding =
   | {
       readonly procedureRef: BattleProcedureExecutionRef;
@@ -56,6 +75,10 @@ export type CharacterProcedureBinding =
         readonly kind: "unavailableSpellInvocation";
         readonly execution: SpellProcedureExecution;
       };
+    }
+  | {
+      readonly procedureRef: BattleProcedureExecutionRef;
+      readonly procedure: CharacterEffectOccurrenceSourceProcedure;
     };
 
 export type CharacterProcedureBindingSnapshot =
@@ -73,6 +96,10 @@ export type CharacterProcedureBindingSnapshot =
   | {
       readonly procedureRef: BattleProcedureExecutionRef;
       readonly procedure: { readonly kind: "unavailableSpellInvocation" };
+    }
+  | {
+      readonly procedureRef: BattleProcedureExecutionRef;
+      readonly procedure: CharacterEffectOccurrenceSourceProcedure;
     };
 
 type CharacterExecutionStateData = {

@@ -176,10 +176,8 @@ function resolveLesserRestorationChoiceBattle(): BattleState {
       state: session.state,
       sourceCombatantId: spellCasterId,
       ownerId: spellTargetId,
-      effect: (sourceProcedureRef) => ({
+      effect: {
         kind: "spellConditionEndTurnSave",
-        sourceProcedureRef,
-        sourceCombatantId: spellCasterId,
         condition: "paralyzed",
         conditionHadNonSpellSource: false,
         heightenedSpellTargetDisadvantage: null,
@@ -191,16 +189,14 @@ function resolveLesserRestorationChoiceBattle(): BattleState {
           kind: "duration",
           durationTicks: elapsedTimeTicks(10),
         },
-      }),
+      },
     });
   const allocated = battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest({
     state: syntheticParalysis.state,
     sourceCombatantId: spellCasterId,
     ownerId: spellTargetId,
-    effect: (sourceProcedureRef) => ({
+    effect: {
       kind: "spellCondition",
-      sourceProcedureRef,
-      sourceCombatantId: spellCasterId,
       condition: "poisoned",
       conditionHadNonSpellSource: false,
       escape: null,
@@ -209,7 +205,7 @@ function resolveLesserRestorationChoiceBattle(): BattleState {
         kind: "duration",
         durationTicks: elapsedTimeTicks(10),
       },
-    }),
+    },
   });
   const target = requireCombatant(allocated.state, spellTargetId);
   const state: BattleState = {
@@ -357,10 +353,8 @@ function resolveProtectionFromPoisonBattle(): {
     state: session.state,
     sourceCombatantId: spellCasterId,
     ownerId: spellTargetId,
-    effect: (sourceProcedureRef) => ({
+    effect: {
       kind: "spellCondition" as const,
-      sourceProcedureRef,
-      sourceCombatantId: spellCasterId,
       condition: "poisoned" as const,
       conditionHadNonSpellSource: true,
       escape: null,
@@ -369,7 +363,7 @@ function resolveProtectionFromPoisonBattle(): {
         kind: "duration" as const,
         durationTicks: elapsedTimeTicks(10),
       },
-    }),
+    },
   });
   const target = requireCombatant(allocated.state, spellTargetId);
   const state: BattleState = {

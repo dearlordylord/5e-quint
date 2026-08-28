@@ -12,7 +12,6 @@
 // Boundary: bounded source/target fixture; not exhaustive same-timing ordering.
 // Death Saving Throw resolution ordering is outside this witness; the mixed
 // boundary case asserts only that the table receives the required order choice.
-import type { BattleActiveEffectOccurrenceTemplate } from "./effect-execution-ref.ts";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   difficultyClass,
@@ -25,6 +24,7 @@ import {
   battleProcedureExecutionRef,
 } from "./identity.ts";
 import { describe, expect, it } from "vitest";
+import { Result, Schema } from "effect";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -57,7 +57,9 @@ import {
 import {
   battleReducerStartRouteEvent,
   battleId,
+  BattleSnapshotSchema,
   endTurn,
+  snapshotBattle,
   type ActiveOngoingFeatureOccurrence,
   type BattleCreatureState,
   type BattleResolutionResult,
@@ -67,7 +69,10 @@ import {
   type OngoingFeatureSourceKey,
 } from "./index.ts";
 import type { UnitFeatureProcedureExecution } from "./character-execution-admission.ts";
-import { battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest } from "./low-level-effect-occurrence.test-support.ts";
+import {
+  battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest,
+  type LowLevelEffectOccurrenceTemplate,
+} from "./low-level-effect-occurrence.test-support.ts";
 
 type TurnBoundaryLifecycleScenario =
   | "init"
@@ -227,7 +232,74 @@ const replaySequences = [
 ] as const satisfies ReadonlyArray<TurnBoundaryLifecycleReplaySequence>;
 
 describe("turn-boundary effect lifecycle MBT", () => {
+  function assertLowLevelEffectSourceSnapshotContract(): void {
+    const snapshot = snapshotBattle(battleWithTurnBoundaryEffects());
+    const encoded = Schema.encodeSync(BattleSnapshotSchema)(snapshot);
+    expect(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(encoded),
+      ),
+    ).toBe(true);
+    const fighter = encoded.combatants.find(
+      (combatant) => combatant.combatantId === fighterId,
+    );
+    if (fighter?.origin.kind !== "character") {
+      throw new Error("Expected encoded fighter character origin.");
+    }
+    const sourceBinding = fighter.origin.execution.procedureBindings.find(
+      (binding) => binding.procedure.kind === "effectOccurrenceSource",
+    );
+    if (sourceBinding?.procedure.kind !== "effectOccurrenceSource") {
+      throw new Error("Expected a low-level effect occurrence source binding.");
+    }
+    const encodedWithEffectKind = (effectKind: string): unknown => ({
+      ...encoded,
+      combatants: encoded.combatants.map((combatant) =>
+        combatant.combatantId !== fighterId ||
+        combatant.origin.kind !== "character"
+          ? combatant
+          : {
+              ...combatant,
+              origin: {
+                ...combatant.origin,
+                execution: {
+                  ...combatant.origin.execution,
+                  procedureBindings:
+                    combatant.origin.execution.procedureBindings.map(
+                      (binding) =>
+                        binding.procedureRef !== sourceBinding.procedureRef
+                          ? binding
+                          : {
+                              ...binding,
+                              procedure: {
+                                ...sourceBinding.procedure,
+                                effectKind,
+                              },
+                            },
+                    ),
+                },
+              },
+            },
+      ),
+    });
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+          encodedWithEffectKind("spellCondition"),
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+          encodedWithEffectKind("damageResistance"),
+        ),
+      ),
+    ).toBe(true);
+  }
+
   it("replays the bounded turn-boundary lifecycle sequence deterministically", async () => {
+    assertLowLevelEffectSourceSnapshotContract();
     const replayedActions = new Set<TurnBoundaryLifecycleDriverAction>();
 
     for (const sequence of replaySequences) {
@@ -769,21 +841,21 @@ function battleWithTurnBoundaryEffectsFixture(input?: {
       state: stateWithOngoingFeatures,
       sourceCombatantId: fighterId,
       ownerId: fighterId,
-      effect: untilNextTurnEffect,
+      effect: untilNextTurnEffect(),
     });
   const turnStartDamage =
     battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest({
       state: untilNextTurn.state,
       sourceCombatantId: fighterId,
       ownerId: goblinId,
-      effect: turnStartDamageEffect,
+      effect: turnStartDamageEffect(),
     });
   const turnEndDamage =
     battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest({
       state: turnStartDamage.state,
       sourceCombatantId: fighterId,
       ownerId: goblinId,
-      effect: turnEndDamageEffect,
+      effect: turnEndDamageEffect(),
     });
   return {
     state: turnEndDamage.state,
@@ -847,7 +919,7 @@ function battleWithTurnBoundaryEffectsAndConditionSave(): BattleState {
     state: battle,
     sourceCombatantId: goblinId,
     ownerId: fighterId,
-    effect: fighterSpellConditionEndTurnSaveEffect,
+    effect: fighterSpellConditionEndTurnSaveEffect(),
   }).state;
 }
 
@@ -857,7 +929,7 @@ function battleWithTurnBoundaryEffectsAndSleepRepeatSave(): BattleState {
     state: battle,
     sourceCombatantId: goblinId,
     ownerId: fighterId,
-    effect: sleepPendingRepeatSaveEffect,
+    effect: sleepPendingRepeatSaveEffect(),
   });
   const goblin = requireCombatant(allocated.state, goblinId);
   return {
@@ -879,14 +951,14 @@ function battleWithCurrentActorEndTurnDamageAndConcentration(): BattleState {
       state: battle,
       sourceCombatantId: goblinId,
       ownerId: fighterId,
-      effect: fighterTurnEndDamageEffect,
+      effect: fighterTurnEndDamageEffect(),
     });
   const concentration =
     battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest({
       state: incomingDamage.state,
       sourceCombatantId: fighterId,
       ownerId: fighterId,
-      effect: fighterConcentrationEffect,
+      effect: fighterConcentrationEffect(),
     });
   const fighter = requireCombatant(concentration.state, fighterId);
   return {
@@ -901,16 +973,12 @@ function battleWithCurrentActorEndTurnDamageAndConcentration(): BattleState {
   };
 }
 
-function sleepPendingRepeatSaveEffect(
-  sourceProcedureRef: BattleProcedureExecutionRef,
-): Extract<
-  BattleActiveEffectOccurrenceTemplate,
+function sleepPendingRepeatSaveEffect(): Extract<
+  LowLevelEffectOccurrenceTemplate,
   { readonly kind: "sleepPendingRepeatSave" }
 > {
   return {
     kind: "sleepPendingRepeatSave",
-    sourceProcedureRef,
-    sourceCombatantId: goblinId,
     conditionHadNonSpellSource: false,
     save: {
       ability: "wis",
@@ -921,16 +989,12 @@ function sleepPendingRepeatSaveEffect(
   };
 }
 
-function fighterSpellConditionEndTurnSaveEffect(
-  sourceProcedureRef: BattleProcedureExecutionRef,
-): Extract<
-  BattleActiveEffectOccurrenceTemplate,
+function fighterSpellConditionEndTurnSaveEffect(): Extract<
+  LowLevelEffectOccurrenceTemplate,
   { readonly kind: "spellConditionEndTurnSave" }
 > {
   return {
     kind: "spellConditionEndTurnSave",
-    sourceProcedureRef,
-    sourceCombatantId: goblinId,
     condition: "poisoned",
     conditionHadNonSpellSource: false,
     heightenedSpellTargetDisadvantage: null,
@@ -942,16 +1006,12 @@ function fighterSpellConditionEndTurnSaveEffect(
   };
 }
 
-function fighterTurnEndDamageEffect(
-  sourceProcedureRef: BattleProcedureExecutionRef,
-): Extract<
-  BattleActiveEffectOccurrenceTemplate,
+function fighterTurnEndDamageEffect(): Extract<
+  LowLevelEffectOccurrenceTemplate,
   { readonly kind: "spellTurnEndDamage" }
 > {
   return {
     kind: "spellTurnEndDamage",
-    sourceProcedureRef,
-    sourceCombatantId: goblinId,
     damage: {
       expr: { dice: 1, dieSize: 6 },
       damageType: "fire",
@@ -960,16 +1020,12 @@ function fighterTurnEndDamageEffect(
   };
 }
 
-function fighterConcentrationEffect(
-  sourceProcedureRef: BattleProcedureExecutionRef,
-): Extract<
-  BattleActiveEffectOccurrenceTemplate,
+function fighterConcentrationEffect(): Extract<
+  LowLevelEffectOccurrenceTemplate,
   { readonly kind: "nextAttackRollBySelf" }
 > {
   return {
     kind: "nextAttackRollBySelf",
-    sourceProcedureRef,
-    sourceCombatantId: fighterId,
     mode: "advantage",
     expiresAt: {
       kind: "concentration",
@@ -1095,17 +1151,13 @@ function endTurnOngoingFeature(): ActiveOngoingFeatureOccurrence {
   };
 }
 
-function turnStartDamageEffect(
-  sourceProcedureRef: BattleProcedureExecutionRef,
-): Extract<
-  BattleActiveEffectOccurrenceTemplate,
+function turnStartDamageEffect(): Extract<
+  LowLevelEffectOccurrenceTemplate,
   { readonly kind: "spellTurnStartDamageAndSave" }
 > {
   return {
     kind: "spellTurnStartDamageAndSave",
     source: "turnBoundaryEffectLifecycle",
-    sourceProcedureRef,
-    sourceCombatantId: fighterId,
     damage: {
       expr: { dice: 1, dieSize: 4 },
       damageType: "fire",
@@ -1119,16 +1171,12 @@ function turnStartDamageEffect(
   };
 }
 
-function turnEndDamageEffect(
-  sourceProcedureRef: BattleProcedureExecutionRef,
-): Extract<
-  BattleActiveEffectOccurrenceTemplate,
+function turnEndDamageEffect(): Extract<
+  LowLevelEffectOccurrenceTemplate,
   { readonly kind: "spellTurnEndDamage" }
 > {
   return {
     kind: "spellTurnEndDamage",
-    sourceProcedureRef,
-    sourceCombatantId: fighterId,
     damage: {
       expr: { dice: 1, dieSize: 6 },
       damageType: "fire",
@@ -1137,16 +1185,12 @@ function turnEndDamageEffect(
   };
 }
 
-function untilNextTurnEffect(
-  sourceProcedureRef: BattleProcedureExecutionRef,
-): Extract<
-  BattleActiveEffectOccurrenceTemplate,
+function untilNextTurnEffect(): Extract<
+  LowLevelEffectOccurrenceTemplate,
   { readonly kind: "nextAttackRollBySelf" }
 > {
   return {
     kind: "nextAttackRollBySelf",
-    sourceProcedureRef,
-    sourceCombatantId: fighterId,
     mode: "advantage",
     expiresAt: { kind: "startOfTurn", combatantId: fighterId },
   };
