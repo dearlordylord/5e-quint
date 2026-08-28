@@ -657,30 +657,33 @@ const parseGear = (lines: readonly string[]): ScopedGeneralFacts["gear"] => {
     .sort((left, right) => left.item.localeCompare(right.item));
 };
 
+const NUMBER_WORDS = [
+  ["one", 1],
+  ["two", 2],
+  ["three", 3],
+  ["four", 4],
+  ["five", 5],
+] as const;
+
 const parseLanguageSet = (value: string): LanguageSetProjection => {
   const additional = value.match(
     /^(.+) plus (one|two|three|four|five) other languages?$/,
   );
-  const additionalLanguageCounts = {
-    one: 1,
-    two: 2,
-    three: 3,
-    four: 4,
-    five: 5,
-  } as const;
   const languages = (additional?.[1] ?? value)
     .split(/, (?![^()]*\))/)
     .map((language) => language.replace(/^and /, ""));
-  const additionalLanguageCount = Object.entries(additionalLanguageCounts).find(
-    ([word]) => word === additional?.[2],
+  if (additional === null) return { kind: "named", languages };
+  const additionalLanguageCount = NUMBER_WORDS.find(
+    ([word]) => word === additional[2],
   )?.[1];
-  return additional === null
-    ? { kind: "named", languages }
-    : {
-        kind: "named_plus_other_languages",
-        languages,
-        additionalLanguages: additionalLanguageCount ?? 1,
-      };
+  if (additionalLanguageCount === undefined) {
+    throw new Error(`Unsupported additional language count ${additional[2]}`);
+  }
+  return {
+    kind: "named_plus_other_languages",
+    languages,
+    additionalLanguages: additionalLanguageCount,
+  };
 };
 
 const parseCommunication = (
@@ -1054,12 +1057,6 @@ const parseSimpleSave = (entry: RawEntry): ProcedureProjection | undefined => {
   };
 };
 
-const NUMBER_WORDS = [
-  ["one", 1],
-  ["two", 2],
-  ["three", 3],
-] as const;
-
 const parseSimpleMultiattack = (
   entry: RawEntry,
 ): ProcedureProjection | undefined => {
@@ -1211,8 +1208,11 @@ const parseDirectSpellcasting = (
     : inherited;
   if (ability === undefined) return undefined;
   const limits = parseRawResourceLimits(entry.name);
-  const group = {
-    kind: limits.length === 0 ? ("at_will" as const) : ("limited" as const),
+  const group: Extract<
+    ProcedureProjection,
+    { readonly kind: "spellcasting" }
+  >["groups"][number] = {
+    kind: limits.length === 0 ? "at_will" : "limited",
     spells: [selfOnly],
     resourceLimits: limits,
   };
@@ -1340,6 +1340,19 @@ const rawRecordLines = (
 ): readonly string[] =>
   sourceLines.slice(occurrence.anchor.lineStart - 1, occurrence.anchor.lineEnd);
 
+const uniqueSpellcastingAbility = (
+  entries: readonly RawEntry[],
+): AbilityName | undefined => {
+  const abilities = entries.flatMap((entry) => {
+    const procedure = parseSpellcasting(entry);
+    return procedure?.kind === "spellcasting" ? [procedure.ability] : [];
+  });
+  if (abilities.length > 1) {
+    throw new Error("A RAW Stat Block has multiple Spellcasting abilities");
+  }
+  return abilities[0];
+};
+
 export const projectRawStatBlocks = (
   source: string,
   occurrences: readonly SrdStatBlockSourceOccurrence[],
@@ -1359,16 +1372,7 @@ export const projectRawStatBlocks = (
       const lines = rawRecordLines(sourceLines, occurrence);
       const entries = parseRawEntries(lines);
       const generalFacts = parseRawGeneralFacts(occurrence.name, lines);
-      const spellcastingAbility = entries
-        .map(parseSpellcasting)
-        .find(
-          (
-            procedure,
-          ): procedure is Extract<
-            ProcedureProjection,
-            { readonly kind: "spellcasting" }
-          > => procedure?.kind === "spellcasting",
-        )?.ability;
+      const spellcastingAbility = uniqueSpellcastingAbility(entries);
       const parsedProcedures = entries.flatMap((entry) => {
         const procedure = parseRawProcedure(
           entry,
