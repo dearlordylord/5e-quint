@@ -1,0 +1,544 @@
+import {
+  createServer,
+  type IncomingMessage,
+  type Server,
+  type ServerResponse,
+} from "node:http";
+
+import { Either, Effect, Exit, Match } from "effect";
+
+import type { OracleBatchRequestEvaluator } from "./oracle-batch-operation.ts";
+import type { OracleApplication } from "./oracle-distribution.ts";
+import { decodeOracleUtf8 } from "./oracle-utf8.ts";
+import {
+  encodeOracleBatchResponseJson,
+  encodeOracleDefectResponseJson,
+  encodeOracleHttpReadinessJson,
+  encodeOracleIdentityResponseJson,
+  decodeOraclePort,
+  ORACLE_INVALID_JSON_ISSUES,
+  ORACLE_LOOPBACK_HOST,
+  oracleDefectResponse,
+  oracleDecodeRejectedResponse,
+  type OracleBatchResponse,
+  type OracleHttpReadiness,
+  type OracleLoopbackHost,
+  type OraclePort,
+} from "./oracle-process-contract.ts";
+
+export const ORACLE_HTTP_IDENTITY_PATH = "/oracle/identity" as const;
+export const ORACLE_HTTP_EVALUATIONS_PATH = "/oracle/evaluations" as const;
+export const ORACLE_HTTP_MAX_REQUEST_BYTES = 1_048_576 as const;
+export const ORACLE_HTTP_JSON_CONTENT_TYPE =
+  "application/json; charset=utf-8" as const;
+
+type OracleHttpTransportStatus = 404 | 405 | 413 | 415;
+
+type OracleHttpRequestFailure =
+  | { readonly tag: "requestTooLarge" }
+  | { readonly tag: "requestStreamFailed"; readonly message: string };
+
+export type OracleHttpLifecycleIssue =
+  | {
+      readonly tag: "invalidHost";
+      readonly host: string;
+    }
+  | {
+      readonly tag: "listenFailed";
+      readonly message: string;
+    }
+  | {
+      readonly tag: "invalidAddress";
+      readonly message: string;
+    }
+  | {
+      readonly tag: "readinessWriteFailed";
+      readonly message: string;
+    }
+  | {
+      readonly tag: "closeFailed";
+      readonly message: string;
+    };
+
+export type OracleHttpServiceOptions = {
+  readonly application: OracleApplication;
+  readonly evaluate: OracleBatchRequestEvaluator<never, never>;
+  readonly host: OracleLoopbackHost;
+  readonly port: OraclePort;
+  readonly writeReady: (text: string) => Promise<void>;
+};
+
+/**
+ * A server returned only after a successful bind. The underlying server and
+ * its pre-listen operations are intentionally not exposed to callers.
+ */
+export type OracleListeningHttpServer = {
+  readonly readiness: OracleHttpReadiness;
+  readonly close: () => Promise<Either.Either<void, OracleHttpLifecycleIssue>>;
+};
+
+/**
+ * Bind one loopback Oracle HTTP server and return its assigned endpoint.
+ *
+ * The result is the only public lifecycle value: there is no unbound server
+ * object on which a caller can invoke close before listen or invoke listen a
+ * second time.
+ */
+export function listenOracleHttpServer(input: {
+  readonly application: OracleApplication;
+  readonly evaluate: OracleBatchRequestEvaluator<never, never>;
+  readonly host: OracleLoopbackHost;
+  readonly port: OraclePort;
+}): Promise<
+  Either.Either<OracleListeningHttpServer, OracleHttpLifecycleIssue>
+> {
+  if (input.host !== ORACLE_LOOPBACK_HOST) {
+    return Promise.resolve(
+      Either.left({ tag: "invalidHost", host: input.host }),
+    );
+  }
+
+  return new Promise((resolve) => {
+    let settled = false;
+    const server = createOracleHttpNodeServer(input);
+    const onListenError = (cause: Error): void => {
+      if (settled) return;
+      settled = true;
+      server.off("error", onListenError);
+      resolve(
+        Either.left({
+          tag: "listenFailed",
+          message: String(cause),
+        }),
+      );
+    };
+
+    server.once("error", onListenError);
+    try {
+      server.listen(input.port, input.host, () => {
+        if (settled) return;
+        const address = server.address();
+        if (address === null || typeof address === "string") {
+          settled = true;
+          server.off("error", onListenError);
+          resolve(
+            Either.left({
+              tag: "invalidAddress",
+              message: "Oracle HTTP server did not bind a TCP address.",
+            }),
+          );
+          return;
+        }
+
+        settled = true;
+        server.off("error", onListenError);
+        // Keep post-listen infrastructure errors from becoming unhandled
+        // process defects. Request-local failures close their own response.
+        server.on("error", ignorePostListenError);
+        const decodedPort = decodeOraclePort(address.port);
+        if (Either.isLeft(decodedPort)) {
+          void closeOracleHttpNodeServer(server);
+          resolve(
+            Either.left({
+              tag: "invalidAddress",
+              message: "Oracle HTTP server returned an invalid TCP port.",
+            }),
+          );
+          return;
+        }
+        resolve(
+          Either.right(
+            makeListeningHttpServer({
+              server,
+              readiness: {
+                host: ORACLE_LOOPBACK_HOST,
+                port: decodedPort.right,
+              },
+            }),
+          ),
+        );
+      });
+    } catch (cause) {
+      onListenError(toError(cause));
+    }
+  });
+}
+
+/**
+ * Run the complete serve lifecycle used by the packaged executable: bind,
+ * publish one readiness line, await the first termination signal, and await
+ * server close completion.
+ */
+export async function runOracleHttpService(
+  input: OracleHttpServiceOptions,
+): Promise<Either.Either<void, OracleHttpLifecycleIssue>> {
+  const listened = await listenOracleHttpServer(input);
+  if (Either.isLeft(listened)) return listened;
+
+  const server = listened.right;
+  try {
+    await input.writeReady(
+      `${encodeOracleHttpReadinessJson(server.readiness)}\n`,
+    );
+  } catch (cause) {
+    const closed = await server.close();
+    if (Either.isLeft(closed)) return closed;
+    return Either.left({
+      tag: "readinessWriteFailed",
+      message: String(cause),
+    });
+  }
+
+  await waitForTerminationSignal();
+  return server.close();
+}
+
+function createOracleHttpNodeServer(input: {
+  readonly application: OracleApplication;
+  readonly evaluate: OracleBatchRequestEvaluator<never, never>;
+}): Server {
+  return createServer((incoming, outgoing) => {
+    void handleOracleHttpRequest({
+      application: input.application,
+      evaluate: input.evaluate,
+      incoming,
+      outgoing,
+    }).catch(() => {
+      // A socket or stream can fail after a response starts. Closing the
+      // response is the only truthful outcome once no contract value remains.
+      if (!outgoing.destroyed) outgoing.destroy();
+    });
+  });
+}
+
+async function handleOracleHttpRequest(input: {
+  readonly application: OracleApplication;
+  readonly evaluate: OracleBatchRequestEvaluator<never, never>;
+  readonly incoming: IncomingMessage;
+  readonly outgoing: ServerResponse;
+}): Promise<void> {
+  const pathname = oracleRequestPath(input.incoming.url);
+  if (pathname === ORACLE_HTTP_IDENTITY_PATH) {
+    if (input.incoming.method !== "GET") {
+      input.incoming.resume();
+      await writeTransportResponse(input.outgoing, 405);
+      return;
+    }
+    input.incoming.resume();
+    await writeJsonResponse(
+      input.outgoing,
+      200,
+      encodeOracleIdentityResponseJson(input.application.identity),
+    );
+    return;
+  }
+
+  if (pathname !== ORACLE_HTTP_EVALUATIONS_PATH) {
+    input.incoming.resume();
+    await writeTransportResponse(input.outgoing, 404);
+    return;
+  }
+
+  if (input.incoming.method !== "POST") {
+    input.incoming.resume();
+    await writeTransportResponse(input.outgoing, 405);
+    return;
+  }
+
+  if (!isSupportedJsonContentType(input.incoming.headers["content-type"])) {
+    input.incoming.resume();
+    await writeTransportResponse(input.outgoing, 415);
+    return;
+  }
+
+  const body = await readBoundedRequestBody(input.incoming);
+  if (Either.isLeft(body)) {
+    if (body.left.tag === "requestTooLarge") {
+      await writeTransportResponse(input.outgoing, 413);
+      return;
+    }
+    if (!input.outgoing.destroyed) input.outgoing.destroy();
+    return;
+  }
+
+  const decoded = decodeOracleUtf8(body.right);
+  if (Either.isLeft(decoded)) {
+    await writeJsonResponse(
+      input.outgoing,
+      400,
+      encodeOracleBatchResponseJson(
+        oracleDecodeRejectedResponse({
+          distributionId: input.application.identity.distributionId,
+          issues: ORACLE_INVALID_JSON_ISSUES,
+        }),
+      ),
+    );
+    return;
+  }
+
+  const response = await evaluateOracleRequest({
+    application: input.application,
+    evaluate: input.evaluate,
+    rawJson: decoded.right,
+  });
+  await writeJsonResponse(input.outgoing, response.status, response.body);
+}
+
+async function evaluateOracleRequest(input: {
+  readonly application: OracleApplication;
+  readonly evaluate: OracleBatchRequestEvaluator<never, never>;
+  readonly rawJson: string;
+}): Promise<{
+  readonly status: 200 | 400 | 500;
+  readonly body: string;
+}> {
+  let result: Exit.Exit<OracleBatchResponse, never>;
+  try {
+    result = await Effect.runPromiseExit(
+      input.evaluate({
+        application: input.application,
+        rawJson: input.rawJson,
+      }),
+    );
+  } catch {
+    return defectResponse(input.application);
+  }
+
+  if (Exit.isFailure(result)) return defectResponse(input.application);
+  const response = result.value;
+  return Match.value(response.tag).pipe(
+    Match.when("evaluated", () => ({
+      status: 200 as const,
+      body: encodeOracleBatchResponseJson(response),
+    })),
+    Match.when("decodeRejected", () => ({
+      status: 400 as const,
+      body: encodeOracleBatchResponseJson(response),
+    })),
+    Match.exhaustive,
+  );
+}
+
+function defectResponse(application: OracleApplication): {
+  readonly status: 500;
+  readonly body: string;
+} {
+  return {
+    status: 500,
+    body: encodeOracleDefectResponseJson(
+      oracleDefectResponse({
+        distributionId: application.identity.distributionId,
+      }),
+    ),
+  };
+}
+
+function makeListeningHttpServer(input: {
+  readonly server: Server;
+  readonly readiness: OracleHttpReadiness;
+}): OracleListeningHttpServer {
+  let closeResult:
+    | Promise<Either.Either<void, OracleHttpLifecycleIssue>>
+    | undefined;
+  return {
+    readiness: input.readiness,
+    close: () => {
+      closeResult ??= closeOracleHttpNodeServer(input.server);
+      return closeResult;
+    },
+  };
+}
+
+function closeOracleHttpNodeServer(
+  server: Server,
+): Promise<Either.Either<void, OracleHttpLifecycleIssue>> {
+  return new Promise((resolve) => {
+    try {
+      server.close((cause) => {
+        if (cause === undefined) {
+          resolve(Either.right(undefined));
+        } else {
+          resolve(
+            Either.left({
+              tag: "closeFailed",
+              message: String(cause),
+            }),
+          );
+        }
+      });
+    } catch (cause) {
+      resolve(
+        Either.left({
+          tag: "closeFailed",
+          message: String(cause),
+        }),
+      );
+    }
+  });
+}
+
+function oracleRequestPath(url: string | undefined): string {
+  try {
+    return new URL(url ?? "/", `http://${ORACLE_LOOPBACK_HOST}`).pathname;
+  } catch {
+    return "/";
+  }
+}
+
+function isSupportedJsonContentType(
+  contentType: string | string[] | undefined,
+): boolean {
+  if (contentType === undefined || Array.isArray(contentType)) return false;
+  const [mediaType, ...parameters] = contentType.split(";");
+  if (mediaType?.trim().toLowerCase() !== "application/json") return false;
+  for (const parameter of parameters) {
+    const separator = parameter.indexOf("=");
+    if (separator < 0) return false;
+    const name = parameter.slice(0, separator).trim().toLowerCase();
+    const value = parameter
+      .slice(separator + 1)
+      .trim()
+      .replace(/^"|"$/gu, "")
+      .toLowerCase();
+    if (name !== "charset" || value !== "utf-8") return false;
+  }
+  return true;
+}
+
+async function readBoundedRequestBody(
+  incoming: IncomingMessage,
+): Promise<Either.Either<Uint8Array, OracleHttpRequestFailure>> {
+  const declaredLength = parseContentLength(incoming.headers["content-length"]);
+  if (
+    declaredLength !== undefined &&
+    declaredLength > ORACLE_HTTP_MAX_REQUEST_BYTES
+  ) {
+    incoming.resume();
+    return Either.left({ tag: "requestTooLarge" });
+  }
+
+  const chunks: Buffer[] = [];
+  let byteLength = 0;
+  try {
+    for await (const chunk of incoming) {
+      const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+      byteLength += bytes.byteLength;
+      if (byteLength > ORACLE_HTTP_MAX_REQUEST_BYTES) {
+        incoming.resume();
+        return Either.left({ tag: "requestTooLarge" });
+      }
+      chunks.push(bytes);
+    }
+  } catch (cause) {
+    return Either.left({
+      tag: "requestStreamFailed",
+      message: String(cause),
+    });
+  }
+
+  if (incoming.aborted || !incoming.complete) {
+    return Either.left({
+      tag: "requestStreamFailed",
+      message: "Oracle HTTP request stream ended before completion.",
+    });
+  }
+
+  return Either.right(Buffer.concat(chunks, byteLength));
+}
+
+function parseContentLength(
+  value: string | string[] | undefined,
+): number | undefined {
+  if (value === undefined || Array.isArray(value)) return undefined;
+  const trimmed = value.trim();
+  if (!/^[0-9]+$/u.test(trimmed)) return undefined;
+  const parsed = Number(trimmed);
+  return Number.isFinite(parsed) ? parsed : Number.MAX_SAFE_INTEGER;
+}
+
+function writeJsonResponse(
+  outgoing: ServerResponse,
+  status: 200 | 400 | 500,
+  body: string,
+): Promise<void> {
+  return writeResponse(outgoing, status, body, ORACLE_HTTP_JSON_CONTENT_TYPE);
+}
+
+function writeTransportResponse(
+  outgoing: ServerResponse,
+  status: OracleHttpTransportStatus,
+): Promise<void> {
+  const body = `${status}\n`;
+  return writeResponse(outgoing, status, body, "text/plain; charset=utf-8");
+}
+
+function writeResponse(
+  outgoing: ServerResponse,
+  status: number,
+  body: string,
+  contentType: string,
+): Promise<void> {
+  if (outgoing.destroyed || outgoing.writableEnded) {
+    return Promise.reject(new Error("Oracle HTTP response socket is closed."));
+  }
+  const contentLength = Buffer.byteLength(body, "utf8");
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const cleanup = (): void => {
+      outgoing.off("error", onError);
+      outgoing.off("close", onClose);
+    };
+    const succeed = (): void => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve();
+    };
+    const fail = (cause: unknown): void => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(toError(cause));
+    };
+    const onError = (cause: Error): void => fail(cause);
+    const onClose = (): void => {
+      if (!outgoing.writableEnded)
+        fail(new Error("Oracle HTTP response closed."));
+    };
+
+    outgoing.once("error", onError);
+    outgoing.once("close", onClose);
+    try {
+      outgoing.writeHead(status, {
+        "Content-Type": contentType,
+        "Content-Length": contentLength,
+      });
+      outgoing.end(body, "utf8", succeed);
+    } catch (cause) {
+      fail(cause);
+    }
+  });
+}
+
+function waitForTerminationSignal(): Promise<"SIGINT" | "SIGTERM"> {
+  return new Promise((resolve) => {
+    const onSignal = (signal: "SIGINT" | "SIGTERM"): void => {
+      process.off("SIGINT", onSigint);
+      process.off("SIGTERM", onSigterm);
+      resolve(signal);
+    };
+    const onSigint = (): void => onSignal("SIGINT");
+    const onSigterm = (): void => onSignal("SIGTERM");
+    process.once("SIGINT", onSigint);
+    process.once("SIGTERM", onSigterm);
+  });
+}
+
+function ignorePostListenError(): void {
+  // Node infrastructure errors after a successful bind do not identify a
+  // request-domain result. The process lifecycle remains signal-controlled.
+}
+
+function toError(cause: unknown): Error {
+  return cause instanceof Error ? cause : new Error(String(cause));
+}
