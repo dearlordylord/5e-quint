@@ -25,7 +25,6 @@ export type SrdStatBlockAggregateSyncIssue =
 export type SrdStatBlockAggregateSyncResult =
   | {
       readonly tag: "synchronized";
-      readonly recordCount: number;
     }
   | {
       readonly tag: "unsynchronized";
@@ -101,15 +100,7 @@ export function evaluateSrdStatBlockAggregateSync(
     return { tag: "unsynchronized", issues: [firstIssue, ...remainingIssues] };
   }
 
-  if (installed.tag !== "available") {
-    throw new Error("Aggregate sync lost an unreadable artifact diagnostic");
-  }
-  return {
-    tag: "synchronized",
-    recordCount: (
-      installed.bytes.toString("utf8").match(/^  statBlockPeer/gm) ?? []
-    ).length,
-  };
+  return { tag: "synchronized" };
 }
 
 export function checkSrdStatBlockAggregateSync(
@@ -138,9 +129,7 @@ function main(): void {
     process.exitCode = 1;
     return;
   }
-  console.log(
-    `SRD Stat Block aggregate is synchronized: ${result.recordCount} records in RAW denominator order.`,
-  );
+  console.log("SRD Stat Block aggregate is synchronized.");
 }
 
 if (process.argv[1]?.endsWith("check-srd-stat-block-aggregate.ts") === true) {

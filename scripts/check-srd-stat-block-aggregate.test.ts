@@ -10,7 +10,6 @@ describe("SRD Stat Block aggregate synchronization", () => {
   it("accepts the canonical RAW-ordered aggregate", () => {
     expect(checkSrdStatBlockAggregateSync(process.cwd())).toEqual({
       tag: "synchronized",
-      recordCount: 330,
     });
   });
 

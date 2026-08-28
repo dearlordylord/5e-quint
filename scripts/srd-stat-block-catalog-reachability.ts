@@ -208,14 +208,28 @@ export function evaluateSrdStatBlockCatalogReachability(
 export function readSrdStatBlockPresentations(
   publicationFile: string,
 ): SrdStatBlockPresentationRows {
-  let document: unknown;
+  let bytes: string;
   try {
-    document = JSON.parse(readFileSync(publicationFile, "utf8"));
+    bytes = readFileSync(publicationFile, "utf8");
   } catch (error) {
     return {
       tag: "unavailable",
       issue: {
         kind: "presentation-artifact-unreadable",
+        file: publicationFile,
+        message: String(error),
+      },
+    };
+  }
+
+  let document: unknown;
+  try {
+    document = JSON.parse(bytes);
+  } catch (error) {
+    return {
+      tag: "unavailable",
+      issue: {
+        kind: "presentation-artifact-malformed",
         file: publicationFile,
         message: String(error),
       },

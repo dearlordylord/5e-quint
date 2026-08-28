@@ -115,7 +115,9 @@ describe("SRD Stat Block catalog reachability", () => {
       join(tmpdir(), "srd-stat-block-reachability-artifact-"),
     );
     const missingFile = join(directory, "missing.json");
+    const invalidJsonFile = join(directory, "invalid-json.json");
     const malformedFile = join(directory, "malformed.json");
+    writeFileSync(invalidJsonFile, "{");
     writeFileSync(malformedFile, "{}\n");
 
     try {
@@ -131,6 +133,13 @@ describe("SRD Stat Block catalog reachability", () => {
         issue: {
           kind: "presentation-artifact-malformed",
           file: malformedFile,
+        },
+      });
+      expect(readSrdStatBlockPresentations(invalidJsonFile)).toMatchObject({
+        tag: "unavailable",
+        issue: {
+          kind: "presentation-artifact-malformed",
+          file: invalidJsonFile,
         },
       });
     } finally {

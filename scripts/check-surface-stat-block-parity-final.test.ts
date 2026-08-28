@@ -48,7 +48,7 @@ function cleanPublicationCheck(
     peerCount: 0,
     peerObservations: [],
     statBlockParity: cleanParityReport(),
-    aggregateSync: { tag: "synchronized", recordCount: 0 },
+    aggregateSync: { tag: "synchronized" },
     catalogReachability: {
       installedCount: 0,
       listedCount: 0,
