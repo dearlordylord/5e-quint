@@ -1,4 +1,4 @@
-import { Match } from "effect";
+import { Brand, Match } from "effect";
 import * as Either from "effect/Either";
 
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
@@ -20,6 +20,7 @@ import {
   sourceSectionMatchesAnchor,
   type SourceSectionAnchorRange,
 } from "@dnd/surface/surface/source-section-anchor";
+import { normalizeStatBlockIdentity } from "@dnd/surface/surface/stat-block-identity";
 
 import {
   authoredStatBlockProcedureExecutionDecision,
@@ -264,11 +265,17 @@ export type StatBlockProcedurePressureWitness = {
 };
 
 export type StatBlockProcedurePressureOccurrence = {
+  readonly rowId: StatBlockProcedurePressureRowId;
   readonly kind: StatBlockProcedurePressureOccurrenceKind;
   readonly structuralShape: string;
   readonly disposition: StatBlockProcedurePressureDisposition;
   readonly witness: StatBlockProcedurePressureWitness;
 };
+
+export type StatBlockProcedurePressureRowId = string &
+  Brand.Brand<"StatBlockProcedurePressureRowId">;
+const StatBlockProcedurePressureRowId =
+  Brand.nominal<StatBlockProcedurePressureRowId>();
 
 export type StatBlockProcedurePressureRecordWitness = {
   readonly recordOrdinal: number;
@@ -285,6 +292,7 @@ export type StatBlockProcedurePressureGroup = {
   readonly disposition: StatBlockProcedurePressureDisposition;
   readonly occurrenceCount: number;
   readonly statBlockCount: number;
+  readonly memberRowIds: ReadonlyNonEmptyArray<StatBlockProcedurePressureRowId>;
   readonly exampleWitnesses: readonly StatBlockProcedurePressureWitness[];
 };
 
@@ -297,6 +305,7 @@ export type StatBlockProcedurePressureCapabilityProposal = {
   readonly occurrenceCount: number;
   readonly statBlockCount: number;
   readonly pressureScore: number;
+  readonly memberRowIds: ReadonlyNonEmptyArray<StatBlockProcedurePressureRowId>;
   readonly exampleWitnesses: readonly StatBlockProcedurePressureWitness[];
 };
 
@@ -314,6 +323,13 @@ export type StatBlockProcedurePressureReport = {
   readonly occurrences: readonly StatBlockProcedurePressureOccurrence[];
   readonly groups: readonly StatBlockProcedurePressureGroup[];
   readonly capabilityProposals: readonly StatBlockProcedurePressureCapabilityProposal[];
+};
+
+export type StatBlockProcedurePressureSourceAuthority = {
+  readonly identities: readonly {
+    readonly name: string;
+    readonly anchors: ReadonlyNonEmptyArray<SourceSectionAnchorRange>;
+  }[];
 };
 
 const MAX_EXAMPLE_WITNESSES = 3;
@@ -341,7 +357,7 @@ type StatBlockProcedurePressureEntry =
 
 export function analyzeStatBlockProcedurePressure(
   records: readonly StatBlockRecord[],
-  sourceAnchors: readonly SourceSectionAnchorRange[],
+  sourceAuthority: StatBlockProcedurePressureSourceAuthority,
 ): StatBlockProcedurePressureReport {
   const recordOccurrences = records.map((record, index) => ({
     record,
@@ -349,7 +365,7 @@ export function analyzeStatBlockProcedurePressure(
     occurrences: statBlockProcedurePressureOccurrences(
       record,
       index + 1,
-      sourceAnchors,
+      sourceAuthority,
     ),
   }));
   const occurrences = recordOccurrences.flatMap(
@@ -365,7 +381,7 @@ export function analyzeStatBlockProcedurePressure(
         statBlockName: record.name,
         source: statBlockProcedurePressureSource(
           record.provenance.section,
-          sourceAnchors,
+          sourceAnchorsForRecord(record, sourceAuthority),
         ),
         occurrenceCount: values.length,
       }),
@@ -382,12 +398,12 @@ export function analyzeStatBlockProcedurePressure(
 export function statBlockProcedurePressureOccurrences(
   record: StatBlockRecord,
   recordOrdinal: number,
-  sourceAnchors: readonly SourceSectionAnchorRange[],
+  sourceAuthority: StatBlockProcedurePressureSourceAuthority,
 ): readonly StatBlockProcedurePressureOccurrence[] {
   const occurrences: StatBlockProcedurePressureOccurrence[] = [];
   const add = occurrenceAppender(
     occurrences,
-    procedurePressureOccurrenceBuilder(record, recordOrdinal, sourceAnchors),
+    procedurePressureOccurrenceBuilder(record, recordOrdinal, sourceAuthority),
   );
   const resourceContext = addResourceDeclarationOccurrences(record, add);
   addTraitOccurrences(record, add);
@@ -405,13 +421,16 @@ type ProcedurePressureOccurrenceBuilder = (
 function procedurePressureOccurrenceBuilder(
   record: StatBlockRecord,
   recordOrdinal: number,
-  sourceAnchors: readonly SourceSectionAnchorRange[],
+  sourceAuthority: StatBlockProcedurePressureSourceAuthority,
 ): ProcedurePressureOccurrenceBuilder {
   const source = statBlockProcedurePressureSource(
     record.provenance.section,
-    sourceAnchors,
+    sourceAnchorsForRecord(record, sourceAuthority),
   );
   return (kind, location, structuralSubject, disposition) => ({
+    rowId: StatBlockProcedurePressureRowId(
+      `stat-block-${String(recordOrdinal)}:${JSON.stringify(location)}`,
+    ),
     kind,
     structuralShape: structuralShape(structuralSubject),
     disposition:
@@ -432,6 +451,23 @@ function procedurePressureOccurrenceBuilder(
       location,
     },
   });
+}
+
+/**
+ * Authored identity is consulted only at this provenance-admission boundary.
+ * Every disposition and structural pressure fact produced after admission is
+ * derived from typed Surface shape and remains independent of record identity.
+ */
+function sourceAnchorsForRecord(
+  record: StatBlockRecord,
+  sourceAuthority: StatBlockProcedurePressureSourceAuthority,
+): readonly SourceSectionAnchorRange[] {
+  const normalizedIdentity = normalizeStatBlockIdentity(record.name);
+  return (
+    sourceAuthority.identities.find(
+      ({ name }) => normalizeStatBlockIdentity(name) === normalizedIdentity,
+    )?.anchors ?? []
+  );
 }
 
 function occurrenceAppender(
@@ -543,7 +579,7 @@ function addAuthoredSectionOccurrences(
           section,
           procedureOrdinal: entry.procedureOrdinal,
         },
-        entry,
+        procedureStructuralSubject(entry),
         procedureDisposition(decision),
       );
       addEntryResourceReferences(
@@ -804,6 +840,37 @@ function procedureSurfaceShape(
   entry: Extract<StatBlockProcedureEntry, { readonly kind: "executable" }>,
 ): StatBlockProcedurePressureSurfaceShape {
   return { kind: "procedure", procedureKind: entry.procedure.kind };
+}
+
+function procedureStructuralSubject(
+  entry: StatBlockProcedurePressureEntry,
+): unknown {
+  if (entry.kind === "textOnly") return entry;
+  return Match.value(entry.procedure).pipe(
+    Match.when({ kind: "spellcasting" }, (procedure) => ({
+      ...entry,
+      procedure: {
+        ...procedure,
+        ...(procedure.components === undefined
+          ? {}
+          : {
+              components: {
+                ...procedure.components,
+                m:
+                  procedure.components.m === false
+                    ? false
+                    : { kind: "authoredExpressionPresent" as const },
+              },
+            }),
+      },
+    })),
+    Match.when({ kind: "attack_roll" }, () => entry),
+    Match.when({ kind: "multiattack" }, () => entry),
+    Match.when({ kind: "save" }, () => entry),
+    Match.when({ kind: "support" }, () => entry),
+    Match.when({ kind: "action_option" }, () => entry),
+    Match.exhaustive,
+  );
 }
 
 function traitDisposition(
@@ -1167,7 +1234,7 @@ function pressureGroups(
     string,
     {
       readonly occurrence: StatBlockProcedurePressureOccurrence;
-      readonly witnesses: StatBlockProcedurePressureWitness[];
+      readonly remainingOccurrences: StatBlockProcedurePressureOccurrence[];
     }
   >();
   for (const occurrence of occurrences) {
@@ -1176,22 +1243,35 @@ function pressureGroups(
     if (prior === undefined) {
       grouped.set(structuralKey, {
         occurrence,
-        witnesses: [occurrence.witness],
+        remainingOccurrences: [],
       });
     } else {
-      prior.witnesses.push(occurrence.witness);
+      prior.remainingOccurrences.push(occurrence);
     }
   }
-  return Array.from(grouped, ([structuralKey, { occurrence, witnesses }]) => ({
-    structuralKey,
-    kind: occurrence.kind,
-    structuralShape: occurrence.structuralShape,
-    disposition: occurrence.disposition,
-    occurrenceCount: witnesses.length,
-    statBlockCount: new Set(witnesses.map(({ recordOrdinal }) => recordOrdinal))
-      .size,
-    exampleWitnesses: distinctExampleWitnesses(witnesses),
-  })).sort((left, right) =>
+  return Array.from(
+    grouped,
+    ([structuralKey, { occurrence, remainingOccurrences }]) => {
+      const members = [occurrence, ...remainingOccurrences] as const;
+      return {
+        structuralKey,
+        kind: occurrence.kind,
+        structuralShape: occurrence.structuralShape,
+        disposition: occurrence.disposition,
+        occurrenceCount: members.length,
+        statBlockCount: new Set(
+          members.map(({ witness }) => witness.recordOrdinal),
+        ).size,
+        memberRowIds: [
+          occurrence.rowId,
+          ...remainingOccurrences.map(({ rowId }) => rowId),
+        ] as const,
+        exampleWitnesses: distinctExampleWitnesses(
+          members.map(({ witness }) => witness),
+        ),
+      };
+    },
+  ).sort((left, right) =>
     left.structuralKey.localeCompare(right.structuralKey),
   );
 }
@@ -1215,7 +1295,8 @@ function capabilityProposals(
       readonly occurrenceKind: StatBlockProcedurePressureOccurrenceKind;
       readonly surfaceShape: StatBlockProcedurePressureSurfaceShape;
       readonly failedFacts: ReadonlyNonEmptyArray<StatBlockProcedurePressureFailedFact>;
-      readonly witnesses: StatBlockProcedurePressureWitness[];
+      readonly occurrence: StatBlockProcedurePressureOccurrence;
+      readonly remainingOccurrences: StatBlockProcedurePressureOccurrence[];
     }
   >();
   for (const occurrence of occurrences) {
@@ -1231,27 +1312,38 @@ function capabilityProposals(
         occurrenceKind: occurrence.kind,
         surfaceShape: occurrence.disposition.surfaceShape,
         failedFacts: occurrence.disposition.failedFacts,
-        witnesses: [occurrence.witness],
+        occurrence,
+        remainingOccurrences: [],
       });
     } else {
-      candidate.witnesses.push(occurrence.witness);
+      candidate.remainingOccurrences.push(occurrence);
     }
   }
-  return Array.from(candidates, ([structuralKey, candidate]) => ({
-    structuralKey,
-    occurrenceKind: candidate.occurrenceKind,
-    surfaceShape: candidate.surfaceShape,
-    failedFacts: candidate.failedFacts,
-    occurrenceCount: candidate.witnesses.length,
-    statBlockCount: new Set(
-      candidate.witnesses.map(({ recordOrdinal }) => recordOrdinal),
-    ).size,
-    pressureScore:
-      candidate.witnesses.length +
-      new Set(candidate.witnesses.map(({ recordOrdinal }) => recordOrdinal))
-        .size,
-    exampleWitnesses: distinctExampleWitnesses(candidate.witnesses),
-  }))
+  return Array.from(candidates, ([structuralKey, candidate]) => {
+    const members = [
+      candidate.occurrence,
+      ...candidate.remainingOccurrences,
+    ] as const;
+    const statBlockCount = new Set(
+      members.map(({ witness }) => witness.recordOrdinal),
+    ).size;
+    return {
+      structuralKey,
+      occurrenceKind: candidate.occurrenceKind,
+      surfaceShape: candidate.surfaceShape,
+      failedFacts: candidate.failedFacts,
+      occurrenceCount: members.length,
+      statBlockCount,
+      pressureScore: members.length + statBlockCount,
+      memberRowIds: [
+        candidate.occurrence.rowId,
+        ...candidate.remainingOccurrences.map(({ rowId }) => rowId),
+      ] as const,
+      exampleWitnesses: distinctExampleWitnesses(
+        members.map(({ witness }) => witness),
+      ),
+    };
+  })
     .sort(
       (left, right) =>
         right.pressureScore - left.pressureScore ||

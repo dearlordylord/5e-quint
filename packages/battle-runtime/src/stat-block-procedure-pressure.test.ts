@@ -6,16 +6,22 @@ import { describe, expect, it } from "vitest";
 import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { decodeStatBlockRecordSync } from "@dnd/surface/surface/schema";
 import type {
+  AuthoredExecutableProcedure,
   StatBlockRecord,
   StatBlockSpellReference,
 } from "@dnd/surface/surface/types";
-import type { SourceSectionAnchorRange } from "@dnd/surface/surface/source-section-anchor";
+
+import {
+  discoverSrdStatBlocks,
+  SRD_STAT_BLOCK_SOURCE_PATHS,
+} from "../../../scripts/srd521-stat-block-parity.ts";
 
 import {
   analyzeStatBlockProcedurePressure,
   statBlockProcedurePressureOccurrences,
   type StatBlockProcedurePressureCapabilityProposal,
   type StatBlockProcedurePressureGroup,
+  type StatBlockProcedurePressureSourceAuthority,
 } from "./stat-block-procedure-pressure.ts";
 
 const EXPECTED_OCCURRENCE_COUNTS = {
@@ -30,13 +36,13 @@ const EXPECTED_OCCURRENCE_COUNTS = {
   procedureReference: 45,
 } as const;
 
-const SOURCE_ANCHORS = sourceAnchors(srdStatBlockCollection.statBlocks);
+const SOURCE_AUTHORITY = canonicalSourceAuthority();
 
 describe("complete-catalog Stat Block procedure pressure", () => {
   it("enumerates every authored procedure-bearing occurrence in RAW catalog order", () => {
     const report = analyzeStatBlockProcedurePressure(
       srdStatBlockCollection.statBlocks,
-      SOURCE_ANCHORS,
+      SOURCE_AUTHORITY,
     );
 
     expect(report.recordCount).toBe(330);
@@ -53,7 +59,7 @@ describe("complete-catalog Stat Block procedure pressure", () => {
         statBlockProcedurePressureOccurrences(
           record,
           index + 1,
-          SOURCE_ANCHORS,
+          SOURCE_AUTHORITY,
         ),
       ),
     );
@@ -88,7 +94,7 @@ describe("complete-catalog Stat Block procedure pressure", () => {
   it("keeps all five dispositions distinct and source-links every catalog occurrence", () => {
     const report = analyzeStatBlockProcedurePressure(
       srdStatBlockCollection.statBlocks,
-      SOURCE_ANCHORS,
+      SOURCE_AUTHORITY,
     );
 
     expect(report.dispositionCounts).toEqual({
@@ -119,7 +125,7 @@ describe("complete-catalog Stat Block procedure pressure", () => {
   it("accounts for every ordinary and Legendary Action resource declaration and reference", () => {
     const report = analyzeStatBlockProcedurePressure(
       srdStatBlockCollection.statBlocks,
-      SOURCE_ANCHORS,
+      SOURCE_AUTHORITY,
     );
     const declarations = report.occurrences.filter(
       (occurrence) => occurrence.kind === "resourceDeclaration",
@@ -153,18 +159,61 @@ describe("complete-catalog Stat Block procedure pressure", () => {
     }
   });
 
+  it("links every structural group and proposal to its complete stable row membership", () => {
+    const report = analyzeStatBlockProcedurePressure(
+      srdStatBlockCollection.statBlocks,
+      SOURCE_AUTHORITY,
+    );
+    const occurrencesByRowId = new Map(
+      report.occurrences.map((occurrence) => [occurrence.rowId, occurrence]),
+    );
+
+    expect(occurrencesByRowId.size).toBe(report.occurrenceCount);
+    for (const group of report.groups) {
+      expect(group.memberRowIds).toHaveLength(group.occurrenceCount);
+      expect(
+        group.memberRowIds.every((rowId) => occurrencesByRowId.has(rowId)),
+      ).toBe(true);
+    }
+    for (const proposal of report.capabilityProposals) {
+      expect(proposal.memberRowIds).toHaveLength(proposal.occurrenceCount);
+      expect(
+        proposal.memberRowIds.every((rowId) => occurrencesByRowId.has(rowId)),
+      ).toBe(true);
+    }
+    expect(
+      report.capabilityProposals.find(
+        ({ surfaceShape }) =>
+          surfaceShape.kind === "procedure" &&
+          surfaceShape.procedureKind === "save",
+      )?.memberRowIds,
+    ).toHaveLength(48);
+  });
+
   it("keeps structural groups and capability pressure invariant under authored identity changes", () => {
     const sourceRecords = srdStatBlockCollection.statBlocks;
     const renamedRecords = sourceRecords.map((record, index) =>
       syntheticIdentityRecord(record, index + 1),
     );
+    const renamedNames = new Map(
+      sourceRecords.map(({ name }, index) => [
+        name,
+        `Synthetic Pressure Identity ${String(index + 1)}`,
+      ]),
+    );
+    const renamedAuthority: StatBlockProcedurePressureSourceAuthority = {
+      identities: SOURCE_AUTHORITY.identities.map((identity) => ({
+        ...identity,
+        name: renamedNames.get(identity.name) ?? identity.name,
+      })),
+    };
     const sourceReport = analyzeStatBlockProcedurePressure(
       sourceRecords,
-      SOURCE_ANCHORS,
+      SOURCE_AUTHORITY,
     );
     const renamedReport = analyzeStatBlockProcedurePressure(
       renamedRecords,
-      SOURCE_ANCHORS,
+      renamedAuthority,
     );
 
     expect(renamedReport.occurrenceCounts).toEqual(
@@ -192,11 +241,11 @@ describe("complete-catalog Stat Block procedure pressure", () => {
     const restricted = withFirstSpellRestriction(source);
     const unrestrictedOccurrence = analyzeStatBlockProcedurePressure(
       [source],
-      SOURCE_ANCHORS,
+      SOURCE_AUTHORITY,
     ).occurrences.find(({ kind }) => kind === "spellReference");
     const restrictedOccurrence = analyzeStatBlockProcedurePressure(
       [restricted],
-      SOURCE_ANCHORS,
+      SOURCE_AUTHORITY,
     ).occurrences.find(({ kind }) => kind === "spellReference");
 
     expect(unrestrictedOccurrence?.disposition).toMatchObject({
@@ -224,10 +273,54 @@ describe("complete-catalog Stat Block procedure pressure", () => {
     );
   });
 
+  it("keeps spellcasting material prose out of structural rows and grouping", () => {
+    const source = srdStatBlockCollection.statBlocks.find((record) =>
+      statBlockSpellcastingProcedures(record).some(
+        ({ components }) => components !== undefined,
+      ),
+    );
+    if (source === undefined) {
+      throw new Error(
+        "Expected spellcasting with an authored material component.",
+      );
+    }
+    const firstMaterial = withFirstSpellcastingMaterial(
+      source,
+      "Synthetic first material.",
+    );
+    const secondMaterial = withFirstSpellcastingMaterial(
+      source,
+      "Synthetic second material.",
+    );
+    const firstReport = analyzeStatBlockProcedurePressure(
+      [firstMaterial],
+      SOURCE_AUTHORITY,
+    );
+    const secondReport = analyzeStatBlockProcedurePressure(
+      [secondMaterial],
+      SOURCE_AUTHORITY,
+    );
+
+    expect(groupsWithoutWitnesses(secondReport.groups)).toEqual(
+      groupsWithoutWitnesses(firstReport.groups),
+    );
+    expect(proposalsWithoutWitnesses(secondReport.capabilityProposals)).toEqual(
+      proposalsWithoutWitnesses(firstReport.capabilityProposals),
+    );
+    const serializedRows = JSON.stringify(secondReport.occurrences);
+    expect(serializedRows).not.toContain("Synthetic second material");
+    expect(JSON.stringify(firstReport)).not.toContain(
+      "Synthetic first material",
+    );
+    expect(serializedRows).toContain("authoredExpressionPresent");
+  });
+
   it("rejects plausible wrong-path and out-of-range source anchors", () => {
     const source = srdStatBlockCollection.statBlocks[0];
     if (source === undefined) throw new Error("Expected one SRD Stat Block.");
-    const anchor = SOURCE_ANCHORS[0];
+    const anchor = SOURCE_AUTHORITY.identities.find(
+      ({ name }) => name === source.name,
+    )?.anchors[0];
     if (anchor === undefined)
       throw new Error("Expected one SRD source anchor.");
     const mutations = [
@@ -241,7 +334,10 @@ describe("complete-catalog Stat Block procedure pressure", () => {
       }),
     );
 
-    const report = analyzeStatBlockProcedurePressure(mutations, SOURCE_ANCHORS);
+    const report = analyzeStatBlockProcedurePressure(
+      mutations,
+      SOURCE_AUTHORITY,
+    );
 
     expect(report.dispositionCounts.malformed).toBe(report.occurrenceCount);
     expect(
@@ -249,6 +345,34 @@ describe("complete-catalog Stat Block procedure pressure", () => {
         ({ source: recordSource }) => recordSource.kind === "unresolved",
       ),
     ).toBe(true);
+  });
+
+  it("rejects a canonical source anchor owned by another Stat Block identity", () => {
+    const borrower = srdStatBlockCollection.statBlocks.find(
+      ({ name }) => name === "Allosaurus",
+    );
+    const lenderAnchor = SOURCE_AUTHORITY.identities.find(
+      ({ name }) => name === "Ankylosaurus",
+    )?.anchors[0];
+    if (borrower === undefined || lenderAnchor === undefined) {
+      throw new Error("Expected the two canonical SRD source identities.");
+    }
+    const borrowedSection = `${lenderAnchor.sourcePath}:${String(lenderAnchor.lineStart)}-${String(lenderAnchor.lineEnd)}`;
+    const mutated: StatBlockRecord = {
+      ...borrower,
+      provenance: { ...borrower.provenance, section: borrowedSection },
+    };
+
+    const report = analyzeStatBlockProcedurePressure(
+      [mutated],
+      SOURCE_AUTHORITY,
+    );
+
+    expect(report.records[0]?.source).toEqual({
+      kind: "unresolved",
+      section: borrowedSection,
+    });
+    expect(report.dispositionCounts.malformed).toBe(report.occurrenceCount);
   });
 
   it("accumulates malformed source evidence across independent records", () => {
@@ -261,7 +385,7 @@ describe("complete-catalog Stat Block procedure pressure", () => {
         },
       }),
     );
-    const report = analyzeStatBlockProcedurePressure(mutated, SOURCE_ANCHORS);
+    const report = analyzeStatBlockProcedurePressure(mutated, SOURCE_AUTHORITY);
 
     expect(report.dispositionCounts.malformed).toBe(report.occurrenceCount);
     expect(
@@ -318,9 +442,18 @@ describe("complete-catalog Stat Block procedure pressure", () => {
         ],
       },
     });
+    const sourceIdentity = SOURCE_AUTHORITY.identities.find(
+      ({ name }) => name === source.name,
+    );
+    if (sourceIdentity === undefined) {
+      throw new Error("Expected the source record's canonical authority.");
+    }
+    const syntheticAuthority: StatBlockProcedurePressureSourceAuthority = {
+      identities: [{ ...sourceIdentity, name: synthetic.name }],
+    };
     const report = analyzeStatBlockProcedurePressure(
       [synthetic],
-      SOURCE_ANCHORS,
+      syntheticAuthority,
     );
     const trigger = report.occurrences.find(
       (occurrence) => occurrence.kind === "reactionTrigger",
@@ -400,6 +533,24 @@ function statBlockSpellReferences(
   );
 }
 
+function statBlockSpellcastingProcedures(
+  record: StatBlockRecord,
+): readonly Extract<
+  AuthoredExecutableProcedure,
+  { readonly kind: "spellcasting" }
+>[] {
+  return [
+    ...(record.statBlock.actions ?? []),
+    ...(record.statBlock.bonusActions ?? []),
+    ...(record.statBlock.reactions ?? []),
+    ...(record.statBlock.legendaryActions?.entries ?? []),
+  ].flatMap((entry) =>
+    entry.kind === "executable" && entry.procedure.kind === "spellcasting"
+      ? [entry.procedure]
+      : [],
+  );
+}
+
 function withFirstSpellRestriction(record: StatBlockRecord): StatBlockRecord {
   const encoded: unknown = JSON.parse(JSON.stringify(record));
   if (!addFirstSpellRestriction(encoded)) {
@@ -421,6 +572,43 @@ function addFirstSpellRestriction(value: unknown): boolean {
   return Object.values(record).some((child) => addFirstSpellRestriction(child));
 }
 
+function withFirstSpellcastingMaterial(
+  record: StatBlockRecord,
+  material: string,
+): StatBlockRecord {
+  const encoded: unknown = JSON.parse(JSON.stringify(record));
+  if (!replaceFirstSpellcastingMaterial(encoded, material)) {
+    throw new Error("Expected an authored spellcasting material component.");
+  }
+  return decodeStatBlockRecordSync(encoded);
+}
+
+function replaceFirstSpellcastingMaterial(
+  value: unknown,
+  material: string,
+): boolean {
+  if (typeof value !== "object" || value === null) return false;
+  if (Array.isArray(value)) {
+    return value.some((child) =>
+      replaceFirstSpellcastingMaterial(child, material),
+    );
+  }
+  const record = value as Record<string, unknown>;
+  const components = record.components;
+  if (
+    record.kind === "spellcasting" &&
+    typeof components === "object" &&
+    components !== null &&
+    "m" in components
+  ) {
+    (components as Record<string, unknown>).m = material;
+    return true;
+  }
+  return Object.values(record).some((child) =>
+    replaceFirstSpellcastingMaterial(child, material),
+  );
+}
+
 function groupsWithoutWitnesses(
   groups: readonly StatBlockProcedurePressureGroup[],
 ): readonly Omit<StatBlockProcedurePressureGroup, "exampleWitnesses">[] {
@@ -440,23 +628,29 @@ function proposalsWithoutWitnesses(
   );
 }
 
-function sourceAnchors(
-  records: readonly StatBlockRecord[],
-): readonly SourceSectionAnchorRange[] {
-  return records.map((record) => {
-    const match = /^(.*):(\d+)-(\d+)$/.exec(record.provenance.section);
-    if (match === null || match[1] === undefined) {
-      throw new Error("Expected canonical SRD source section.");
-    }
-    const lineStart = Number(match[2]);
-    const lineEnd = Number(match[3]);
-    return {
-      sourcePath: `.references/srd-5.2.1/${match[1]}`,
-      lineStart,
-      lineEnd,
-      spanEnd: lineEnd,
-    };
-  });
+function canonicalSourceAuthority(): StatBlockProcedurePressureSourceAuthority {
+  const repoRoot = resolve(process.cwd(), "../..");
+  const discovery = discoverSrdStatBlocks(
+    SRD_STAT_BLOCK_SOURCE_PATHS.map((sourcePath) => ({
+      sourcePath,
+      contents: readFileSync(resolve(repoRoot, sourcePath), "utf8"),
+    })),
+  );
+  if (discovery.issues.length > 0) {
+    throw new Error("Expected complete canonical SRD source discovery.");
+  }
+  return {
+    identities: discovery.identities.map(({ name, occurrences }) => {
+      const [first, ...remaining] = occurrences;
+      if (first === undefined) {
+        throw new Error("Expected every discovered identity to own an anchor.");
+      }
+      return {
+        name,
+        anchors: [first.anchor, ...remaining.map(({ anchor }) => anchor)],
+      };
+    }),
+  };
 }
 
 function typeScriptFiles(directory: string): readonly string[] {

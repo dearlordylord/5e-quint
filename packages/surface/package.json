@@ -11,6 +11,7 @@
     "./surface/portable-surface": "./src/surface/portable-surface.ts",
     "./surface/stat-block-catalog": "./src/surface/stat-block-catalog.ts",
     "./surface/stat-block-catalog.test-support": "./src/surface/stat-block-catalog.test-support.ts",
+    "./surface/stat-block-identity": "./src/surface/stat-block-identity.ts",
     "./surface/unit-catalog": "./src/surface/unit-catalog.ts",
     "./surface/types": "./src/surface/types.ts",
     "./surface/schema": "./src/surface/schema.ts",

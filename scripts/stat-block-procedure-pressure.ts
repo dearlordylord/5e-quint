@@ -16,6 +16,7 @@ import {
   STAT_BLOCK_PROCEDURE_PRESSURE_DISPOSITION_KINDS,
   STAT_BLOCK_PROCEDURE_PRESSURE_OCCURRENCE_KINDS,
   type StatBlockProcedurePressureReport,
+  type StatBlockProcedurePressureSourceAuthority,
   type StatBlockProcedurePressureWitness,
 } from "../packages/battle-runtime/src/stat-block-procedure-pressure.ts";
 import {
@@ -57,12 +58,31 @@ export async function buildStatBlockProcedurePressureArtifacts(): Promise<StatBl
   }
   const report = analyzeStatBlockProcedurePressure(
     srdStatBlockCollection.statBlocks,
-    sourceDiscovery.occurrences.map(({ anchor }) => anchor),
+    procedurePressureSourceAuthority(sourceDiscovery.identities),
   );
   return {
     json: await format(JSON.stringify(report), { parser: "json" }),
     markdown: await format(renderStatBlockProcedurePressureMarkdown(report), {
       parser: "markdown",
+    }),
+  };
+}
+
+function procedurePressureSourceAuthority(
+  identities: ReturnType<typeof discoverSrdStatBlocks>["identities"],
+): StatBlockProcedurePressureSourceAuthority {
+  return {
+    identities: identities.map(({ name, occurrences }) => {
+      const [first, ...remaining] = occurrences;
+      if (first === undefined) {
+        throw new Error(
+          "A discovered SRD identity must own a source occurrence.",
+        );
+      }
+      return {
+        name,
+        anchors: [first.anchor, ...remaining.map(({ anchor }) => anchor)],
+      };
     }),
   };
 }
@@ -148,7 +168,7 @@ function renderStatBlockProcedurePressureMarkdown(
         `| ${String(proposal.rank)} | ${proposal.occurrenceKind} | ${escapeTableCell(JSON.stringify(proposal.surfaceShape))} | ${escapeTableCell(proposal.failedFacts.join(", "))} | ${String(proposal.occurrenceCount)} | ${String(proposal.statBlockCount)} | ${String(proposal.pressureScore)} | ${proposal.exampleWitnesses.map(sourceWitnessMarkdown).join(", ")} |`,
     ),
     "",
-    "The JSON companion contains every occurrence, its identity-free structural shape, closed disposition, source witness, structural frequency group, and the same bounded proposal ranking.",
+    "The JSON companion contains every occurrence with a stable structural row ID, its identity-free structural shape, closed disposition, source witness, structural frequency group, and the same bounded proposal ranking. Every group and proposal carries the complete member-row relationship; example witnesses remain a short presentation aid rather than the membership authority.",
     "",
   ];
   return lines.join("\n");
