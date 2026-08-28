@@ -52,8 +52,11 @@ export type OracleDistributionPayload = {
   readonly projection: Uint8Array;
 };
 
+const oracleApplicationBrand: unique symbol = Symbol("OracleApplication");
+
+/** Loader-created application; the private brand prevents identity/service pairing by callers. */
 export type OracleApplication = {
-  readonly distributionId: DistributionId;
+  readonly [oracleApplicationBrand]: true;
   readonly identity: OracleIdentityResponse;
   readonly projection: SrdSurface;
   readonly services: OracleEvaluationServices;
@@ -201,22 +204,15 @@ function buildOracleApplicationFromProjection(input: {
     distributionId: input.distributionId,
   });
   const servicesValue = deepFreeze(services.right);
-  const distribution = Object.freeze({
-    distributionId: input.distributionId,
-    services: servicesValue,
-  });
   const operation = makeOracleBatchOperation();
-  const evaluateJson = (rawJson: string) =>
-    operation({ distribution, rawJson });
-  return Either.right(
-    Object.freeze({
-      distributionId: input.distributionId,
-      identity,
-      projection,
-      services: servicesValue,
-      evaluateJson,
-    }),
-  );
+  const application: OracleApplication = Object.freeze({
+    [oracleApplicationBrand]: true,
+    identity,
+    projection,
+    services: servicesValue,
+    evaluateJson: (rawJson: string) => operation({ application, rawJson }),
+  });
+  return Either.right(application);
 }
 
 function parseProjectionJson(

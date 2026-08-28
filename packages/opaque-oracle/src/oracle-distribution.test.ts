@@ -193,6 +193,7 @@ describe("Opaque Oracle source-free distribution", () => {
       expect(Either.isRight(loaded)).toBe(true);
       if (Either.isRight(loaded)) {
         expect(Object.isFrozen(loaded.right)).toBe(true);
+        expect(Object.hasOwn(loaded.right, "distributionId")).toBe(false);
         expect(Object.isFrozen(loaded.right.identity)).toBe(true);
         expect(Object.isFrozen(loaded.right.projection)).toBe(true);
         expect(Object.isFrozen(loaded.right.services)).toBe(true);

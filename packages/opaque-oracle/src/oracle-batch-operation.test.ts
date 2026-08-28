@@ -1,5 +1,8 @@
-import { Either, Effect, Schema } from "effect";
-import { describe, expect, test } from "vitest";
+import { Either, Effect } from "effect";
+import { afterAll, describe, expect, test } from "vitest";
+import { mkdtempSync, rmSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 
 import {
   buildOracleEvaluationCorpus,
@@ -12,38 +15,9 @@ import {
 import {
   evaluateOracleBatchJson,
   makeOracleBatchOperation,
-  type OracleEvaluationDistribution,
 } from "./oracle-batch-operation.ts";
-import { DistributionIdSchema } from "./oracle-process-contract.ts";
-import {
-  buildStatBlockCatalog,
-  srdStatBlockCollection,
-} from "@dnd/surface/surface/stat-block-catalog";
-import {
-  buildUnitCatalog,
-  srdUnitCollection,
-} from "@dnd/surface/surface/unit-catalog";
-
-function testServices(): OracleEvaluationServices {
-  const unitLibraryResult = buildUnitCatalog({
-    collections: [srdUnitCollection],
-  });
-  if (unitLibraryResult.tag !== "ok") {
-    throw new Error("SRD Unit catalog test fixture must build successfully.");
-  }
-  const statBlockCatalogResult = buildStatBlockCatalog({
-    collections: [srdStatBlockCollection],
-  });
-  if (statBlockCatalogResult.tag !== "ok") {
-    throw new Error(
-      "SRD Stat Block catalog test fixture must build successfully.",
-    );
-  }
-  return {
-    unitLibrary: unitLibraryResult.catalog,
-    statBlockCatalog: statBlockCatalogResult.catalog,
-  };
-}
+import { buildOracleDistribution } from "../scripts/build-distribution.ts";
+import { loadOracleApplicationFromDirectory } from "./oracle-distribution.ts";
 
 function testCorpus(services: OracleEvaluationServices): OracleCorpus {
   const result = buildOracleEvaluationCorpus(services);
@@ -55,21 +29,29 @@ function testCorpus(services: OracleEvaluationServices): OracleCorpus {
   return result.right;
 }
 
-const services = testServices();
-const corpus = testCorpus(services);
-const distributionId = Schema.decodeUnknownSync(DistributionIdSchema)(
-  `sha256:${"b".repeat(64)}`,
-);
-const distribution: OracleEvaluationDistribution = {
-  distributionId,
-  services,
-};
+const temporaryRoot = mkdtempSync(join(tmpdir(), "opaque-oracle-batch-"));
+const build = buildOracleDistribution({
+  destination: join(temporaryRoot, "distribution"),
+});
+const loaded = loadOracleApplicationFromDirectory({
+  directory: build.destination,
+});
+if (Either.isLeft(loaded)) {
+  throw new Error(`Oracle test application failed to load: ${loaded.left.tag}`);
+}
+const application = loaded.right;
+const corpus = testCorpus(application.services);
+const distributionId = application.identity.distributionId;
+
+afterAll(() => {
+  rmSync(temporaryRoot, { recursive: true, force: true });
+});
 
 describe("Opaque Oracle raw batch operation", () => {
   test("decodes one complete batch before evaluating and returns all traces", () => {
     const response = Effect.runSync(
       evaluateOracleBatchJson({
-        distribution,
+        application,
         rawJson: JSON.stringify(corpus.batch),
       }),
     );
@@ -89,7 +71,7 @@ describe("Opaque Oracle raw batch operation", () => {
     });
 
     const response = Effect.runSync(
-      operation({ distribution, rawJson: "not-json" }),
+      operation({ application, rawJson: "not-json" }),
     );
 
     expect(evaluations).toBe(0);

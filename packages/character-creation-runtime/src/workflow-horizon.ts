@@ -62,22 +62,24 @@ export function deriveCharacterCreationWorkflowRoots(input: {
   const supportProfile =
     input.supportProfile ?? CHARACTER_CREATION_SUPPORT_PROFILE;
   const progressions = characterCreationWorkflowProgressions(supportProfile);
-  const supportedClassIds = new Set<string>(
+  const supportedClassIds = new Set<UnitRecord["id"]>(
     progressions.flatMap((progression) => [
-      String(startingClassUnitId(progression)),
-      ...progression.advancements.map((entry) => String(entry.classUnitId)),
+      startingClassUnitId(progression),
+      ...progression.advancements.map((entry) => entry.classUnitId),
     ]),
   );
-  const supportedBackgroundIds = new Set(
-    supportedBackgroundUnitIds(supportProfile).map(String),
+  const supportedBackgroundIds = new Set<UnitRecord["id"]>(
+    supportedBackgroundUnitIds(supportProfile),
   );
-  const supportedSpeciesIds = new Set(supportedSpeciesUnitIds().map(String));
+  const supportedSpeciesIds = new Set<UnitRecord["id"]>(
+    supportedSpeciesUnitIds(),
+  );
   const supportedClassNames = new Set(
     input.unitLibrary
       .listUnits()
       .filter(
         (unit): unit is Extract<UnitRecord, { readonly kind: "class" }> =>
-          unit.kind === "class" && supportedClassIds.has(String(unit.id)),
+          unit.kind === "class" && supportedClassIds.has(unit.id),
       )
       .map((unit) => unit.className),
   );
@@ -85,10 +87,9 @@ export function deriveCharacterCreationWorkflowRoots(input: {
 
   for (const unit of input.unitLibrary.listUnits()) {
     if (
-      (unit.kind === "class" && supportedClassIds.has(String(unit.id))) ||
-      (unit.kind === "background" &&
-        supportedBackgroundIds.has(String(unit.id))) ||
-      (unit.kind === "species" && supportedSpeciesIds.has(String(unit.id))) ||
+      (unit.kind === "class" && supportedClassIds.has(unit.id)) ||
+      (unit.kind === "background" && supportedBackgroundIds.has(unit.id)) ||
+      (unit.kind === "species" && supportedSpeciesIds.has(unit.id)) ||
       (unit.kind === "class_feature" &&
         unit.acquiredAtLevel <=
           CHARACTER_CREATION_WORKFLOW_HORIZON.maxCharacterLevel &&

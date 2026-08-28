@@ -11,12 +11,6 @@ import {
   srdSurface,
 } from "./surface-catalog.ts";
 
-const canonicalRelations = collectSurfaceAuthoredRelations(srdSurface);
-if (Either.isLeft(canonicalRelations)) {
-  throw new Error("The canonical Surface relation graph must be valid.");
-}
-const canonicalRelationGraph = canonicalRelations.right;
-
 const require = createRequire(import.meta.url);
 const corpusAudit: {
   readonly readSurfaceRecords: () => readonly {
@@ -225,7 +219,6 @@ describe("canonical Surface authored relations", () => {
   it("closes complete dependency graphs while admitting selected references", () => {
     const result = closeSrdSurface({
       surface: srdSurface,
-      relationGraph: canonicalRelationGraph,
       rootUnitIds: [UnitId.make("class_fighter")],
       rootStatBlockIds: [StatBlockId.make("stat_block_skeleton")],
     });
@@ -246,7 +239,6 @@ describe("canonical Surface authored relations", () => {
   it("retains a referenced record when the workflow lookup policy requires it", () => {
     const result = closeSrdSurface({
       surface: srdSurface,
-      relationGraph: canonicalRelationGraph,
       rootUnitIds: [UnitId.make("class_fighter")],
       rootStatBlockIds: [StatBlockId.make("stat_block_skeleton")],
       relationSelection: {
@@ -264,7 +256,6 @@ describe("canonical Surface authored relations", () => {
   it("reports an absent root as a typed closure issue", () => {
     const result = closeSrdSurface({
       surface: srdSurface,
-      relationGraph: canonicalRelationGraph,
       rootUnitIds: [UnitId.make("synthetic_missing_unit")],
       rootStatBlockIds: [StatBlockId.make("stat_block_skeleton")],
     });

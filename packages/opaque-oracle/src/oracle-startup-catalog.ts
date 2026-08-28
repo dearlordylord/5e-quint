@@ -17,7 +17,6 @@ import {
   type SurfaceRelationClosureIssues,
   type SurfaceRelationTraversalIssues,
   closeSrdSurface,
-  collectSurfaceAuthoredRelations,
 } from "@dnd/surface/surface/surface-relations";
 import { decodeSrdSurfaceEither } from "@dnd/surface/surface/schema";
 import type { SrdSurface } from "@dnd/surface/surface/types";
@@ -229,17 +228,8 @@ export function buildOracleStartupCatalog(
   const rootStatBlockIds = canonicalSurface.statBlocks.map(
     (record) => record.id,
   );
-  const relationGraphResult = collectSurfaceAuthoredRelations(canonicalSurface);
-  if (Either.isLeft(relationGraphResult)) {
-    return Either.left([
-      relationIssue("surfaceRelations", relationGraphResult.left),
-    ]);
-  }
-  const relationGraph = relationGraphResult.right;
-
   const projection = closeSrdSurface({
     surface: canonicalSurface,
-    relationGraph,
     rootUnitIds,
     rootStatBlockIds,
     relationSelection: {
@@ -254,6 +244,20 @@ export function buildOracleStartupCatalog(
     },
   });
   if (Either.isLeft(projection)) {
+    const traversalIssues: SurfaceRelationTraversalIssues[number][] = [];
+    for (const issue of projection.left) {
+      if (issue.tag === "surfaceRelationTraversalIssue") {
+        traversalIssues.push(issue);
+      }
+    }
+    if (traversalIssues.length === projection.left.length) {
+      const nonEmptyTraversalIssues = nonEmptyIssues(traversalIssues);
+      if (nonEmptyTraversalIssues !== undefined) {
+        return Either.left([
+          relationIssue("surfaceRelations", nonEmptyTraversalIssues),
+        ]);
+      }
+    }
     return Either.left([closureIssue(projection.left)]);
   }
 

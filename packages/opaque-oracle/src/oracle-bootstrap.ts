@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 
-import { Effect, Either, Exit, Stream } from "effect";
+import { Effect, Either, Exit, Match, Stream } from "effect";
 
 import {
   loadOracleApplicationFromExecutable,
@@ -84,19 +84,31 @@ export async function runOracleProcess(
   }
 
   const application = loaded.right;
-  if (mode.right === "identity") {
-    try {
-      await writeStdout(
-        `${encodeOracleIdentityResponseJson(application.identity)}\n`,
-      );
-      return 0;
-    } catch (cause) {
-      await report(writeStderr, `stdout write failed: ${String(cause)}`);
-      return 1;
-    }
-  }
+  return Match.value(mode.right).pipe(
+    Match.when("identity", () =>
+      runIdentityMode(application, writeStdout, writeStderr),
+    ),
+    Match.when("stream", () =>
+      runStreamMode(application, dependencies, writeStdout, writeStderr),
+    ),
+    Match.exhaustive,
+  );
+}
 
-  return runStreamMode(application, dependencies, writeStdout, writeStderr);
+async function runIdentityMode(
+  application: OracleApplication,
+  writeStdout: OracleProcessWriter,
+  writeStderr: OracleProcessWriter,
+): Promise<number> {
+  try {
+    await writeStdout(
+      `${encodeOracleIdentityResponseJson(application.identity)}\n`,
+    );
+    return 0;
+  } catch (cause) {
+    await report(writeStderr, `stdout write failed: ${String(cause)}`);
+    return 1;
+  }
 }
 
 async function runStreamMode(
@@ -115,7 +127,7 @@ async function runStreamMode(
   const result = await Effect.runPromiseExit(
     runOracleStream({
       input,
-      distribution: application,
+      application,
       evaluate,
       write: (encodedResponse) =>
         Effect.tryPromise({

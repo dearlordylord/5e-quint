@@ -63,9 +63,6 @@ export type SurfaceRelationTraversalIssues = readonly [
   ...SurfaceRelationTraversalIssue[],
 ];
 
-/** The parsed relation edges reused by closure and startup composition. */
-export type SurfaceAuthoredRelationGraph = readonly SurfaceAuthoredRelation[];
-
 type SurfaceRelationMissingRootIssue =
   | {
       readonly tag: "surfaceRelationClosureIssue";
@@ -558,7 +555,10 @@ const astChildren = (
  */
 export function collectSurfaceAuthoredRelations(
   surface: Pick<SrdSurface, "units" | "statBlocks">,
-): Either.Either<SurfaceAuthoredRelationGraph, SurfaceRelationTraversalIssues> {
+): Either.Either<
+  readonly SurfaceAuthoredRelation[],
+  SurfaceRelationTraversalIssues
+> {
   const records: SurfaceRecord[] = [
     ...surface.units.map((value) => ({ sourceKind: "unit" as const, value })),
     ...surface.statBlocks.map((value) => ({
@@ -709,11 +709,15 @@ const relationSelected = (
  */
 export function closeSrdSurface(input: {
   readonly surface: SrdSurface;
-  readonly relationGraph: SurfaceAuthoredRelationGraph;
   readonly rootUnitIds: readonly SurfaceUnitId[];
   readonly rootStatBlockIds: readonly SurfaceStatBlockId[];
   readonly relationSelection?: SurfaceRelationSelection;
 }): Either.Either<SrdSurface, SurfaceRelationClosureIssues> {
+  const relationGraph = collectSurfaceAuthoredRelations(input.surface);
+  if (Either.isLeft(relationGraph)) {
+    return Either.left([...relationGraph.left]);
+  }
+
   const unitsById = new Map<SurfaceUnitId, UnitRecord>(
     input.surface.units.map((record) => [record.id, record]),
   );
@@ -761,7 +765,7 @@ export function closeSrdSurface(input: {
       readonly SurfaceAuthoredRelation[]
     >(),
   };
-  for (const relation of input.relationGraph) {
+  for (const relation of relationGraph.right) {
     if (relation.sourceKind === "unit") {
       const relations = relationsBySource.unit.get(relation.sourceRecordId);
       relationsBySource.unit.set(relation.sourceRecordId, [

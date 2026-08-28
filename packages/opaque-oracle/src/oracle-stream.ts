@@ -1,9 +1,7 @@
 import { Effect, Either, Stream } from "effect";
 
-import {
-  type OracleBatchOperationInput,
-  type OracleEvaluationDistribution,
-} from "./oracle-batch-operation.ts";
+import type { OracleBatchOperationInput } from "./oracle-batch-operation.ts";
+import type { OracleApplication } from "./oracle-distribution.ts";
 import {
   encodeOracleBatchResponseJson,
   ORACLE_INVALID_JSON_ISSUES,
@@ -28,7 +26,7 @@ export interface OracleStreamOptions<
   WriteRequirements,
 > {
   readonly input: Stream.Stream<Uint8Array, InputError, InputRequirements>;
-  readonly distribution: OracleEvaluationDistribution;
+  readonly application: OracleApplication;
   readonly evaluate: OracleStreamEvaluator<
     EvaluationError,
     EvaluationRequirements
@@ -79,12 +77,12 @@ export function runOracleStream<
       const responseEffect = Either.isLeft(decoded)
         ? Effect.succeed(
             oracleDecodeRejectedResponse({
-              distributionId: options.distribution.distributionId,
+              distributionId: options.application.identity.distributionId,
               issues: ORACLE_INVALID_JSON_ISSUES,
             }),
           )
         : options.evaluate({
-            distribution: options.distribution,
+            application: options.application,
             rawJson: decoded.right,
           });
 

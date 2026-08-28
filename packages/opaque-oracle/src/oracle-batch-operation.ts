@@ -4,6 +4,7 @@ import {
   decodeOracleEvaluationBatchJson,
   type OracleEvaluationBatch,
 } from "./oracle-case-trace.ts";
+import type { OracleApplication } from "./oracle-distribution.ts";
 import {
   evaluateOracleBatch,
   type OracleEvaluationServices,
@@ -11,19 +12,12 @@ import {
 import {
   oracleDecodeRejectedResponse,
   oracleEvaluatedResponse,
-  type DistributionId,
   type OracleBatchResponse,
 } from "./oracle-process-contract.ts";
 import type { OracleTrace } from "./oracle-case-trace-schema.ts";
 
-/** The immutable application facts shared by every batch in a process. */
-export interface OracleEvaluationDistribution {
-  readonly distributionId: DistributionId;
-  readonly services: OracleEvaluationServices;
-}
-
 export interface OracleBatchOperationInput {
-  readonly distribution: OracleEvaluationDistribution;
+  readonly application: OracleApplication;
   readonly rawJson: string;
 }
 
@@ -52,17 +46,17 @@ export function makeOracleBatchOperation(
         const decoded = decodeOracleEvaluationBatchJson(input.rawJson);
         if (Either.isLeft(decoded)) {
           return oracleDecodeRejectedResponse({
-            distributionId: input.distribution.distributionId,
+            distributionId: input.application.identity.distributionId,
             issues: decoded.left,
           });
         }
 
         const traces = evaluator({
           batch: decoded.right,
-          services: input.distribution.services,
+          services: input.application.services,
         });
         return oracleEvaluatedResponse({
-          distributionId: input.distribution.distributionId,
+          distributionId: input.application.identity.distributionId,
           traces,
         });
       }),

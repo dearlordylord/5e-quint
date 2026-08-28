@@ -1,5 +1,8 @@
-import { Either, Effect, Exit, Schema, Stream } from "effect";
-import { describe, expect, test } from "vitest";
+import { Either, Effect, Exit, Stream } from "effect";
+import { afterAll, describe, expect, test } from "vitest";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 import {
   buildOracleEvaluationCorpus,
@@ -10,45 +13,15 @@ import {
   type OracleEvaluationServices,
 } from "./oracle-evaluation.ts";
 import {
-  evaluateOracleBatchJson,
   makeOracleBatchOperation,
   type OracleBatchEvaluator,
-  type OracleEvaluationDistribution,
 } from "./oracle-batch-operation.ts";
-import { DistributionIdSchema } from "./oracle-process-contract.ts";
 import {
   runOracleStream,
   type OracleStreamEvaluator,
 } from "./oracle-stream.ts";
-import {
-  buildStatBlockCatalog,
-  srdStatBlockCollection,
-} from "@dnd/surface/surface/stat-block-catalog";
-import {
-  buildUnitCatalog,
-  srdUnitCollection,
-} from "@dnd/surface/surface/unit-catalog";
-
-function testServices(): OracleEvaluationServices {
-  const unitLibraryResult = buildUnitCatalog({
-    collections: [srdUnitCollection],
-  });
-  if (unitLibraryResult.tag !== "ok") {
-    throw new Error("SRD Unit catalog test fixture must build successfully.");
-  }
-  const statBlockCatalogResult = buildStatBlockCatalog({
-    collections: [srdStatBlockCollection],
-  });
-  if (statBlockCatalogResult.tag !== "ok") {
-    throw new Error(
-      "SRD Stat Block catalog test fixture must build successfully.",
-    );
-  }
-  return {
-    unitLibrary: unitLibraryResult.catalog,
-    statBlockCatalog: statBlockCatalogResult.catalog,
-  };
-}
+import { buildOracleDistribution } from "../scripts/build-distribution.ts";
+import { loadOracleApplicationFromDirectory } from "./oracle-distribution.ts";
 
 function testCorpus(services: OracleEvaluationServices): OracleCorpus {
   const result = buildOracleEvaluationCorpus(services);
@@ -60,15 +33,23 @@ function testCorpus(services: OracleEvaluationServices): OracleCorpus {
   return result.right;
 }
 
-const services = testServices();
-const corpus = testCorpus(services);
-const distributionId = Schema.decodeUnknownSync(DistributionIdSchema)(
-  `sha256:${"c".repeat(64)}`,
-);
-const distribution: OracleEvaluationDistribution = {
-  distributionId,
-  services,
-};
+const temporaryRoot = mkdtempSync(join(tmpdir(), "opaque-oracle-stream-"));
+const build = buildOracleDistribution({
+  destination: join(temporaryRoot, "distribution"),
+});
+const loaded = loadOracleApplicationFromDirectory({
+  directory: build.destination,
+});
+if (Either.isLeft(loaded)) {
+  throw new Error(`Oracle test application failed to load: ${loaded.left.tag}`);
+}
+const application = loaded.right;
+const corpus = testCorpus(application.services);
+const distributionId = application.identity.distributionId;
+
+afterAll(() => {
+  rmSync(temporaryRoot, { recursive: true, force: true });
+});
 
 function runStream(
   chunks: readonly Uint8Array[],
@@ -78,7 +59,7 @@ function runStream(
   const result = Effect.runSyncExit(
     runOracleStream({
       input: Stream.fromIterable(chunks),
-      distribution,
+      application,
       evaluate,
       write: (encodedResponse) =>
         Effect.sync(() => {
@@ -110,7 +91,7 @@ describe("Opaque Oracle persistent byte stream", () => {
     const evaluatedFrames: string[] = [];
     const evaluate: OracleStreamEvaluator<never, never> = (input) => {
       evaluatedFrames.push(input.rawJson);
-      return evaluateOracleBatchJson(input);
+      return application.evaluateJson(input.rawJson);
     };
 
     const responses = runStream(chunks, evaluate);
@@ -163,7 +144,7 @@ describe("Opaque Oracle persistent byte stream", () => {
         input: Stream.fromIterable([
           new TextEncoder().encode(`${batchText}\n${laterText}\n`),
         ]),
-        distribution,
+        application,
         evaluate: operation,
         write: (encodedResponse) =>
           Effect.sync(() => {
