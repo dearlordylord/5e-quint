@@ -1591,7 +1591,7 @@
               , reachFeet : Optional Natural
               }
         , procedureOrdinal = 2
-        , reason = Some "unsupported_action_shape"
+        , reason = Some "unsupported_procedure_family"
         , resourceRefs = { kind = "none", ordinals = None (List Natural) }
         }
       , { description = Some
@@ -1642,7 +1642,7 @@
               , reachFeet : Optional Natural
               }
         , procedureOrdinal = 3
-        , reason = Some "unsupported_action_shape"
+        , reason = Some "unsupported_procedure_family"
         , resourceRefs = { kind = "none", ordinals = None (List Natural) }
         }
       ]

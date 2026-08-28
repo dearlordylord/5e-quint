@@ -99,7 +99,7 @@ describe("H–L scoped RAW fidelity", () => {
     }
   });
 
-  test("rejects communication, lair-use, spell-tier, and recharge mutations", () => {
+  test("rejects communication, lair-use, spell-component, spell-tier, and recharge mutations", () => {
     const kraken = installedByName.get("Kraken");
     const lich = installedByName.get("Lich");
     const iceDevil = installedByName.get("Ice Devil");
@@ -170,6 +170,23 @@ describe("H–L scoped RAW fidelity", () => {
         ),
       },
     });
+    const lichWithFixedComponents = decodeSrdStatBlockRecord({
+      ...lich,
+      statBlock: {
+        ...lich.statBlock,
+        actions: lich.statBlock.actions?.map((entry) =>
+          entry === lichSpellcasting
+            ? {
+                ...entry,
+                procedure: {
+                  ...lichSpellcastingProcedure,
+                  components: { v: true, s: true, m: "a component pouch" },
+                },
+              }
+            : entry,
+        ),
+      },
+    });
     const iceDevilWithEachRecharge = decodeSrdStatBlockRecord({
       ...iceDevil,
       statBlock: {
@@ -186,6 +203,7 @@ describe("H–L scoped RAW fidelity", () => {
       krakenWithoutTelepathy,
       krakenWithoutLairBonus,
       lichWithoutTwoPerDayTier,
+      lichWithFixedComponents,
       iceDevilWithEachRecharge,
     ]) {
       expect(

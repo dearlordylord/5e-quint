@@ -1682,7 +1682,7 @@
           "kind": "textOnly",
           "name": "Invisibility",
           "procedureOrdinal": 2,
-          "reason": "unsupported_action_shape",
+          "reason": "unsupported_procedure_family",
           "resourceRefs": {
             "kind": "none"
           }
@@ -1692,7 +1692,7 @@
           "kind": "textOnly",
           "name": "Shape-Shift",
           "procedureOrdinal": 3,
-          "reason": "unsupported_action_shape",
+          "reason": "unsupported_procedure_family",
           "resourceRefs": {
             "kind": "none"
           }

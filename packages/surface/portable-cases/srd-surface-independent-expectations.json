@@ -5,7 +5,7 @@
   "cases": [
     {
       "name": "valid published aggregate",
-      "inputSha256": "319064efa3262e598d04a6ca68f7db6d9e5b0139b35237b39b8b4aa4c06fe597",
+      "inputSha256": "44f516988e441e50782a3e64ecf3c2b3338e9d182e12d0e935c3f3a231b9275b",
       "expected": {
         "tag": "accepted"
       }
@@ -1380,7 +1380,7 @@
     },
     {
       "name": "canonical dependency role: unit.mechanics.creature.normalForms[].statBlockId",
-      "inputSha256": "a5b2f634f3916fee25bdde2fde0fd186df33ffd58d5da818a1754142785b8212",
+      "inputSha256": "983082d09b8536d6d84e7ba1de60c93f10333642478a94724ae9cd62d89851d8",
       "expected": {
         "tag": "rejected",
         "issues": [

@@ -195,11 +195,14 @@ type ProcedureProjection =
       readonly ability: AbilityName;
       readonly spellSaveDc?: number;
       readonly spellAttackBonus?: number;
-      readonly components: {
-        readonly v: boolean;
-        readonly s: boolean;
-        readonly m: boolean | string;
-      };
+      readonly components:
+        | { readonly kind: "spell_definition" }
+        | {
+            readonly kind: "fixed";
+            readonly v: boolean;
+            readonly s: boolean;
+            readonly m: boolean | string;
+          };
       readonly groups: readonly {
         readonly kind: "at_will" | "limited";
         readonly spells: readonly SpellProjection[];
@@ -759,18 +762,6 @@ const parseCommunication = (
       ...telepathy,
     };
   }
-  if (qualifier?.startsWith("telepathy ") === true) {
-    const telepathy = requireMatch(
-      qualifier,
-      /^telepathy (\d+) ft\.$/,
-      `${context} telepathy`,
-    );
-    return {
-      kind: "spoken_and_understood",
-      languages: parseLanguageSet(spoken),
-      telepathy: { rangeFeet: Number(telepathy[1]) },
-    };
-  }
   if (qualifier?.startsWith("understands ") === true) {
     const understood = requireMatch(
       qualifier,
@@ -1216,8 +1207,13 @@ const parseSpellcasting = (
       : { spellAttackBonus: signedNumber(header[5]) }),
     components:
       header[1] === undefined
-        ? { v: true, s: true, m: true }
-        : { v: true, s: header[2] === undefined, m: false },
+        ? { kind: "spell_definition" }
+        : {
+            kind: "fixed",
+            v: true,
+            s: header[2] === undefined,
+            m: false,
+          },
     groups: [
       {
         kind: "at_will",
@@ -1263,6 +1259,15 @@ const parseActionOption = (
       };
 };
 
+const rawTextOnlyReason = (
+  description: string,
+): "unsupported_action_shape" | "unsupported_procedure_family" =>
+  /^The .+ casts .+ on itself, requiring no spell components and using (?:Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) as the spellcasting ability\.$/.test(
+    description,
+  ) || /^The .+ shape-shifts to resemble /.test(description)
+    ? "unsupported_procedure_family"
+    : "unsupported_action_shape";
+
 const parseRawProcedure = (
   entry: RawEntry,
   generalFacts: ScopedGeneralFacts,
@@ -1279,7 +1284,7 @@ const parseRawProcedure = (
       name: normalizedProcedureName(entry.name),
       kind: "textOnly",
       description: entry.description,
-      reason: "unsupported_action_shape",
+      reason: rawTextOnlyReason(entry.description),
       resourceLimits: parseRawResourceLimits(entry.name),
     }
   );
@@ -1805,8 +1810,8 @@ const projectExecutableProcedure = (
         : { spellAttackBonus: literalValue(spellcasting.spellAttackBonus) }),
       components:
         spellcasting.components === undefined
-          ? { v: true, s: true, m: true }
-          : { ...spellcasting.components },
+          ? { kind: "spell_definition" as const }
+          : { kind: "fixed" as const, ...spellcasting.components },
       groups: spellcasting.groups.map((group) => ({
         kind: group.kind,
         spells: group.spells.map((spell) => ({
