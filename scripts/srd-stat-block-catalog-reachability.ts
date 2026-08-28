@@ -34,6 +34,11 @@ export type SrdStatBlockCatalogReachabilityIssue =
       readonly occurrences: number;
     }
   | {
+      readonly kind: "list-entry-mismatch";
+      readonly statBlockId: StatBlockId;
+      readonly listEntryOrdinal: number;
+    }
+  | {
       readonly kind: "unselectable";
       readonly statBlockId: StatBlockId;
     }
@@ -182,6 +187,15 @@ export function evaluateSrdStatBlockCatalogReachability(
     const listedOccurrences = listedById.get(installed.id) ?? [];
     if (listedOccurrences.length === 0) {
       issues.push({ kind: "missing-list-entry", statBlockId: installed.id });
+    }
+    for (const [listEntryIndex, listedEntry] of listedOccurrences.entries()) {
+      if (!isDeepStrictEqual(listedEntry, installed)) {
+        issues.push({
+          kind: "list-entry-mismatch",
+          statBlockId: installed.id,
+          listEntryOrdinal: listEntryIndex + 1,
+        });
+      }
     }
 
     const selected = input.catalog.getStatBlock(installed.id);

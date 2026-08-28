@@ -19,6 +19,9 @@ export const SRD_STAT_BLOCK_SOURCE_PATHS = [
   ".references/srd-5.2.1/Monsters/Monsters-T-Z.md",
 ] as const;
 
+export const SRD_STAT_BLOCK_SOURCE_OCCURRENCE_CARDINALITY = 334 as const;
+export const SRD_STAT_BLOCK_SOURCE_IDENTITY_CARDINALITY = 330 as const;
+
 export const SRD_STAT_BLOCK_SCOPE = {
   kind: "standalone-srd-stat-blocks",
   includes: SRD_STAT_BLOCK_SOURCE_PATHS,

@@ -9,6 +9,8 @@ import {
   type SurfacePublicationCheckResult,
 } from "./check-surface-content-json-sync.ts";
 import {
+  SRD_STAT_BLOCK_SOURCE_IDENTITY_CARDINALITY,
+  SRD_STAT_BLOCK_SOURCE_OCCURRENCE_CARDINALITY,
   srdStatBlockSourceIdentityCount,
   srdStatBlockSourceOccurrenceCount,
   type SrdStatBlockParityIssue,
@@ -31,7 +33,12 @@ export const SURFACE_STAT_BLOCK_PARITY_FINAL_BLOCKERS = [
   "aggregate-sync-issues",
   "publication-issues",
   "incomplete-source-coverage",
+  "source-occurrence-cardinality",
+  "source-identity-cardinality",
   "parity-issues",
+  "installed-cardinality",
+  "listed-cardinality",
+  "presentation-cardinality",
   "reachability-issues",
 ] as const;
 
@@ -65,7 +72,37 @@ export function evaluateSurfaceStatBlockParityFinal(
   if (check.statBlockParity.sourceCoverage.tag !== "complete") {
     blockers.push("incomplete-source-coverage");
   }
+  if (
+    srdStatBlockSourceOccurrenceCount(check.statBlockParity.discovery) !==
+    SRD_STAT_BLOCK_SOURCE_OCCURRENCE_CARDINALITY
+  ) {
+    blockers.push("source-occurrence-cardinality");
+  }
+  if (
+    srdStatBlockSourceIdentityCount(check.statBlockParity.discovery) !==
+    SRD_STAT_BLOCK_SOURCE_IDENTITY_CARDINALITY
+  ) {
+    blockers.push("source-identity-cardinality");
+  }
   if (check.statBlockParity.issues.length > 0) blockers.push("parity-issues");
+  if (
+    check.catalogReachability.installedCount !==
+    SRD_STAT_BLOCK_SOURCE_IDENTITY_CARDINALITY
+  ) {
+    blockers.push("installed-cardinality");
+  }
+  if (
+    check.catalogReachability.listedCount !==
+    SRD_STAT_BLOCK_SOURCE_IDENTITY_CARDINALITY
+  ) {
+    blockers.push("listed-cardinality");
+  }
+  if (
+    check.catalogReachability.presentationCount !==
+    SRD_STAT_BLOCK_SOURCE_IDENTITY_CARDINALITY
+  ) {
+    blockers.push("presentation-cardinality");
+  }
   if (check.catalogReachability.issues.length > 0) {
     blockers.push("reachability-issues");
   }

@@ -15,6 +15,8 @@ import { type PublicationIssue } from "./check-surface-content-json-sync.ts";
 import { SRD_STAT_BLOCK_AGGREGATE_RELATIVE_PATH } from "./srd-stat-block-aggregate.ts";
 import { srdStatBlockCollection } from "../packages/surface/src/surface/stat-block-catalog.ts";
 import {
+  SRD_STAT_BLOCK_SOURCE_IDENTITY_CARDINALITY,
+  SRD_STAT_BLOCK_SOURCE_OCCURRENCE_CARDINALITY,
   SRD_STAT_BLOCK_SCOPE,
   SRD_STAT_BLOCK_SOURCE_PATHS,
   type SrdStatBlockParityReport,
@@ -30,8 +32,28 @@ function cleanParityReport(
       paths: SRD_STAT_BLOCK_SOURCE_PATHS,
     },
     discovery: {
-      occurrences: [],
-      identities: [],
+      occurrences: Array.from(
+        { length: SRD_STAT_BLOCK_SOURCE_OCCURRENCE_CARDINALITY },
+        (_, index) => ({
+          name: `Synthetic Stat Block ${index}`,
+          anchor: {
+            sourcePath: ".references/srd-5.2.1/synthetic.md",
+            heading: `Synthetic Stat Block ${index}`,
+            lineStart: index + 1,
+            lineEnd: index + 1,
+            spanEnd: index + 1,
+            section: `.references/srd-5.2.1/synthetic.md:${index + 1}`,
+          },
+          normalization: { tag: "ok" as const, value: `synthetic-${index}` },
+        }),
+      ),
+      identities: Array.from(
+        { length: SRD_STAT_BLOCK_SOURCE_IDENTITY_CARDINALITY },
+        (_, index) => ({
+          name: `Synthetic Stat Block ${index}`,
+          occurrences: [],
+        }),
+      ),
       issues: [],
     },
     issues: [],
@@ -50,9 +72,9 @@ function cleanPublicationCheck(
     statBlockParity: cleanParityReport(),
     aggregateSync: { tag: "synchronized" },
     catalogReachability: {
-      installedCount: 0,
-      listedCount: 0,
-      presentationCount: 0,
+      installedCount: SRD_STAT_BLOCK_SOURCE_IDENTITY_CARDINALITY,
+      listedCount: SRD_STAT_BLOCK_SOURCE_IDENTITY_CARDINALITY,
+      presentationCount: SRD_STAT_BLOCK_SOURCE_IDENTITY_CARDINALITY,
       issues: [],
     },
     ...overrides,
@@ -116,6 +138,32 @@ describe("Surface stat-block parity final gate", () => {
       tag: "accepted",
       check,
     });
+  });
+
+  it("rejects zero cardinalities even when every issue collection is empty", () => {
+    const result = rejectedResult(
+      evaluateSurfaceStatBlockParityFinal(
+        cleanPublicationCheck({
+          statBlockParity: cleanParityReport({
+            discovery: { occurrences: [], identities: [], issues: [] },
+          }),
+          catalogReachability: {
+            installedCount: 0,
+            listedCount: 0,
+            presentationCount: 0,
+            issues: [],
+          },
+        }),
+      ),
+    );
+
+    expect(result.blockers).toEqual([
+      "source-occurrence-cardinality",
+      "source-identity-cardinality",
+      "installed-cardinality",
+      "listed-cardinality",
+      "presentation-cardinality",
+    ]);
   });
 
   it("rejects the current report with source-derived counts and issue details", () => {
@@ -346,6 +394,9 @@ describe("Surface stat-block parity final gate", () => {
       "publication-issues",
       "incomplete-source-coverage",
       "parity-issues",
+      "installed-cardinality",
+      "listed-cardinality",
+      "presentation-cardinality",
       "reachability-issues",
     ]);
   });

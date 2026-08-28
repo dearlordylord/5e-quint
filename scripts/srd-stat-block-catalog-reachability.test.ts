@@ -148,6 +148,38 @@ describe("SRD Stat Block catalog reachability", () => {
     });
   });
 
+  it("rejects a listed row whose payload differs from its installed identity", () => {
+    const first = srdStatBlockCollection.statBlocks[0];
+    const presentations = readSrdStatBlockPresentations(publicationFile);
+    if (first === undefined || presentations.tag !== "available") {
+      throw new Error("List mismatch mutation requires a published record");
+    }
+    const presentation = presentations.statBlocks.find(
+      ({ id }) => id === first.id,
+    );
+    if (presentation === undefined) {
+      throw new Error("List mismatch mutation requires its presentation");
+    }
+    const mismatchedListEntry = { ...first, name: "Synthetic Listed Row" };
+
+    expect(
+      evaluateSrdStatBlockCatalogReachability({
+        installedStatBlocks: [first],
+        catalog: {
+          listStatBlocks: () => [mismatchedListEntry],
+          getStatBlock: () => Option.some(first),
+        },
+        presentations: { tag: "available", statBlocks: [presentation] },
+      }).issues,
+    ).toEqual([
+      {
+        kind: "list-entry-mismatch",
+        statBlockId: first.id,
+        listEntryOrdinal: 1,
+      },
+    ]);
+  });
+
   it("returns typed unreadable and malformed presentation artifact issues", () => {
     const directory = mkdtempSync(
       join(tmpdir(), "srd-stat-block-reachability-artifact-"),
