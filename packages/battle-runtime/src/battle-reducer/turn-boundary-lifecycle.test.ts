@@ -191,7 +191,7 @@ describe("turn-boundary active-effect occurrence updates", () => {
         kind: "duration" as const,
         durationTicks: elapsedTimeTicks(2),
       },
-    } as const satisfies BattleActiveEffect;
+    } as const;
     const expiringConcentrationEffect = {
       kind: "speedDelta" as const,
       sourceProcedureRef: concentrationSourceProcedureRef,
@@ -202,26 +202,35 @@ describe("turn-boundary active-effect occurrence updates", () => {
         combatantId: fighterId,
         durationTicks: elapsedTimeTicks(1),
       },
-    } as const satisfies BattleActiveEffect;
-    const stateWithEffects: BattleState = {
+    } as const;
+    const stateWithConcentration: BattleState = {
       ...state,
-      combatants: new Map(state.combatants)
-        .set(fighterId, {
-          ...fighter,
-          concentration: {
-            sourceProcedureRef: concentrationSourceProcedureRef,
-            effectKind: "spellEffect",
-          },
-        })
-        .set(goblinId, {
-          ...goblin,
-          activeEffects: [tickingEffect, expiringConcentrationEffect],
-        }),
+      combatants: new Map(state.combatants).set(fighterId, {
+        ...fighter,
+        concentration: {
+          sourceProcedureRef: concentrationSourceProcedureRef,
+          effectKind: "spellEffect",
+        },
+      }),
     };
-    const ticked = tickDurationEffects(stateWithEffects.combatants);
+    const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: stateWithConcentration,
+      occurrences: [tickingEffect, expiringConcentrationEffect].map(
+        (effect) => ({
+          kind: "activeEffect" as const,
+          ownerId: goblinId,
+          effect,
+        }),
+      ),
+    });
+    const [allocatedTicking] = allocated.occurrences;
+    if (allocatedTicking?.kind !== "activeEffect") {
+      throw new Error("Expected the allocated ticking occurrence.");
+    }
+    const ticked = tickDurationEffects(allocated.state.combatants);
     expect(ticked.value.get(goblinId)?.activeEffects).toEqual([
       {
-        ...tickingEffect,
+        ...allocatedTicking.effect,
         expiresAt: {
           kind: "duration",
           durationTicks: elapsedTimeTicks(1),
@@ -271,15 +280,20 @@ describe("turn-boundary active-effect occurrence updates", () => {
         combatantId: wizardId,
         durationTicks: elapsedTimeTicks(1),
       },
-    } as const satisfies BattleActiveEffect;
-    const combatants = new Map(state.combatants)
-      .set(wizardId, {
+    } as const;
+    const stateWithConcentration: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants).set(wizardId, {
         ...caster,
         concentration: { sourceProcedureRef, effectKind: "spellEffect" },
-      })
-      .set(fighterId, { ...target, activeEffects: [effect] });
+      }),
+    };
+    const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: stateWithConcentration,
+      occurrences: [{ kind: "activeEffect", ownerId: fighterId, effect }],
+    });
 
-    const expired = tickDurationEffects(combatants).value;
+    const expired = tickDurationEffects(allocated.state.combatants).value;
 
     expect(expired.get(wizardId)?.concentration).toBeNull();
     expect(expired.get(fighterId)).toMatchObject({
@@ -334,7 +348,6 @@ describe("turn-boundary active-effect occurrence updates", () => {
       },
       {
         kind: "jumpMovementReplacement" as const,
-        effectRef: battleEffectExecutionRefForTest("turn-start-jump-refresh"),
         sourceProcedureRef: jumpProcedureRef,
         sourceCombatantId: wizardId,
         movementCostFeet: movementFeet(10),
@@ -345,22 +358,31 @@ describe("turn-boundary active-effect occurrence updates", () => {
           durationTicks: elapsedTimeTicks(10),
         },
       },
-    ] as const satisfies readonly BattleActiveEffect[];
-    const stateWithUsedMarkers: BattleState = {
+    ] as const;
+    const stateWithConcentration: BattleState = {
       ...state,
-      combatants: new Map(state.combatants)
-        .set(wizardId, {
-          ...caster,
-          concentration: {
-            sourceProcedureRef: resistanceProcedureRef,
-            effectKind: "spellEffect",
-          },
-        })
-        .set(fighterId, { ...target, activeEffects }),
+      combatants: new Map(state.combatants).set(wizardId, {
+        ...caster,
+        concentration: {
+          sourceProcedureRef: resistanceProcedureRef,
+          effectKind: "spellEffect",
+        },
+      }),
     };
+    const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: stateWithConcentration,
+      occurrences: activeEffects.map((effect) => ({
+        kind: "activeEffect" as const,
+        ownerId: fighterId,
+        effect,
+      })),
+    });
+    const allocatedEffects = allocated.occurrences.flatMap((occurrence) =>
+      occurrence.kind === "activeEffect" ? [occurrence.effect] : [],
+    );
 
     const result = resolveEndTurnCommand({
-      state: stateWithUsedMarkers,
+      state: allocated.state,
       subject: {
         tag: "runtimeCommand",
         actorId: wizardId,
@@ -372,8 +394,8 @@ describe("turn-boundary active-effect occurrence updates", () => {
     expect(result.tag).toBe("resolved");
     if (result.tag !== "resolved") return;
     expect(result.state.combatants.get(fighterId)?.activeEffects).toEqual([
-      { ...activeEffects[0], usedThisTurn: false },
-      { ...activeEffects[1], usedThisTurn: false },
+      { ...allocatedEffects[0], usedThisTurn: false },
+      { ...allocatedEffects[1], usedThisTurn: false },
     ]);
   });
 

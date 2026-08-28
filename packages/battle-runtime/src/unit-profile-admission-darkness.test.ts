@@ -3,6 +3,7 @@ import {
   assertBattleSnapshotCodecRoundTripForTest,
   battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
 } from "./battle-runtime.test-support.ts";
 import {
   battleActSpellSlotPresentation,
@@ -26,7 +27,6 @@ import {
   type BattleSpellAreaOriginAnchor,
   type BattleTrackedOngoingSpellLightEmitter,
 } from "./index.ts";
-import type { BattleObjectInvisibleRevealLightEmitter } from "./battle-state-execution.ts";
 import {
   battleAreaId,
   battleId,
@@ -405,28 +405,36 @@ describe("battle runtime: Darkness", () => {
 
   test("Darkness ignores non-tracked light emitters and rejects stale slot resources", () => {
     const session = darknessBattle("battle-darkness-untracked-light");
-    const nonTrackedEmitter = {
-      kind: "objectInvisibleRevealLightEmitter",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "darkness-untracked-emitter",
-      ),
-      sourceCombatantId: wizardId,
-      objectId: battleObjectId("darkness-untracked-object"),
-      emission: { kind: "dim", radiusFeet: movementFeet(5) },
-      expiresAt: {
-        kind: "endOfTurn",
-        combatantId: wizardId,
-        round: Round(1),
-      },
-    } satisfies BattleObjectInvisibleRevealLightEmitter;
-    const state: BattleState = {
-      ...session.state,
-      lightEmitters: [nonTrackedEmitter],
-    };
-    const subject = findAct(
-      battleRuntimeSessionForTest({ ...session, state }),
-      magicSubject(darknessUnitId),
-    ).subject;
+    const subject = findAct(session, magicSubject(darknessUnitId)).subject;
+    if (subject.tag !== "actionSpell") {
+      throw new Error("Expected the Darkness action spell subject.");
+    }
+    const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: session.state,
+      occurrences: [
+        {
+          kind: "storedLightEmitter",
+          ownerId: wizardId,
+          emitter: {
+            kind: "objectInvisibleRevealLightEmitter",
+            sourceProcedureRef: subject.procedureRef,
+            sourceCombatantId: wizardId,
+            objectId: battleObjectId("darkness-untracked-object"),
+            emission: { kind: "dim", radiusFeet: movementFeet(5) },
+            expiresAt: {
+              kind: "endOfTurn",
+              combatantId: wizardId,
+              round: Round(1),
+            },
+          },
+        },
+      ],
+    });
+    const nonTrackedEmitter = allocated.state.lightEmitters[0];
+    if (nonTrackedEmitter === undefined) {
+      throw new Error("Expected the allocated untracked light emitter.");
+    }
+    const state = allocated.state;
     const area = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "spellAreaChoice",
