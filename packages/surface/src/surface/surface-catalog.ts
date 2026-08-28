@@ -9,3 +9,16 @@ export const srdSurface: SrdSurface = decodeSrdSurfaceSync({
   units: srdUnitCollection.units,
   statBlocks: srdStatBlockCollection.statBlocks,
 });
+
+export {
+  closeSrdSurface,
+  collectSurfaceAuthoredRelations,
+  type SurfaceAuthoredRelation,
+  type SurfaceRelationClosureIssue,
+  type SurfaceRelationClosureIssues,
+  type SurfaceRelationSelection,
+  type SurfaceRelationTraversalIssue,
+  type SurfaceRelationTraversalIssues,
+  type SurfaceStatBlockId,
+  type SurfaceUnitId,
+} from "./surface-relations.ts";

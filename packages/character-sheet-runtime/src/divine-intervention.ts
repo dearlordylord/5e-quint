@@ -7,7 +7,7 @@ import { resourceCount, type ResourceCount } from "@dnd/shared/types";
 import {
   allCantripsFromClassSpellList,
   classSpellListPreparedSpellLevel,
-} from "@dnd/surface/surface/unit-catalog";
+} from "@dnd/surface/surface/unit-catalog-core";
 import {
   topLevelSpellCastingTime,
   type SpellRecord,

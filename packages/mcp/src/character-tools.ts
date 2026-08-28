@@ -187,6 +187,7 @@ export function handleCharacterToolCall(
           hitPointMaximumReduction: Hp(0),
           conditions: [],
           unitLibrary: root.unitLibrary,
+          statBlockCatalog: root.statBlockCatalog,
           ...(matched.args.druidWildShapeKnownFormStatBlockIds === undefined
             ? {}
             : {

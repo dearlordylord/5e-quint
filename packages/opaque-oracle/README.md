@@ -78,6 +78,38 @@ neither concern is presented as schema parity.
 See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the package ownership boundary and
 the selected-build identity exception.
 
+## Packaged executable
+
+The package has one source-free executable root and one immutable application
+composition. Build and verify it with:
+
+```sh
+pnpm --filter @dnd/opaque-oracle build
+pnpm --filter @dnd/opaque-oracle check-distribution
+```
+
+The resulting `dist/` contains `oracle.mjs`, the three committed publication
+schemas, the strict startup projection, and `oracle-identity.json`. The
+identity is the SHA-256 value of named, length-framed executable/schema/
+projection bytes; metadata itself is not hashed. Runtime startup verifies all
+of those bytes and constructs Unit/Stat Block services from the parsed
+projection before exposing either mode:
+
+```sh
+dist/oracle.mjs identity
+dist/oracle.mjs stream < requests.ndjson
+```
+
+`identity` emits one compact identity response. `stream` is persistent and
+accepts arbitrary UTF-8 byte chunks separated by LF, including blank frames and
+an unterminated final frame. Each accepted or rejected batch produces one
+compact response and LF. A decode/domain rejection is normal response data;
+an unexpected defect writes no response for that frame and exits nonzero.
+The executable resolves assets beside itself, so it remains usable from an
+unrelated working directory without network access or workspace dependencies.
+The optional build entrypoint override is a test-only injection seam for
+atomic-defect tests; production command-line arguments cannot select it.
+
 ## Corpus CLI
 
 The package-local `oracle` CLI exposes three Effect commands:
