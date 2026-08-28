@@ -62,62 +62,32 @@ export function deriveCharacterCreationWorkflowRoots(input: {
   const supportProfile =
     input.supportProfile ?? CHARACTER_CREATION_SUPPORT_PROFILE;
   const progressions = characterCreationWorkflowProgressions(supportProfile);
-  const supportedClassIds = new Set<UnitRecord["id"]>(
-    progressions.flatMap((progression) => [
-      startingClassUnitId(progression),
-      ...progression.advancements.map((entry) => entry.classUnitId),
-    ]),
-  );
+  const supportedClassIds = supportedClassIdsFor(progressions);
   const supportedBackgroundIds = new Set<UnitRecord["id"]>(
     supportedBackgroundUnitIds(supportProfile),
   );
   const supportedSpeciesIds = new Set<UnitRecord["id"]>(
     supportedSpeciesUnitIds(),
   );
-  const supportedClassNames = new Set(
-    input.unitLibrary
-      .listUnits()
-      .filter(
-        (unit): unit is Extract<UnitRecord, { readonly kind: "class" }> =>
-          unit.kind === "class" && supportedClassIds.has(unit.id),
-      )
-      .map((unit) => unit.className),
+  const supportedClassNames = supportedClassNamesFor(
+    input.unitLibrary,
+    supportedClassIds,
   );
   const rootIds = new Set<UnitRecord["id"]>();
 
   for (const unit of input.unitLibrary.listUnits()) {
     if (
-      (unit.kind === "class" && supportedClassIds.has(unit.id)) ||
-      (unit.kind === "background" && supportedBackgroundIds.has(unit.id)) ||
-      (unit.kind === "species" && supportedSpeciesIds.has(unit.id)) ||
-      (unit.kind === "class_feature" &&
-        unit.acquiredAtLevel <=
-          CHARACTER_CREATION_WORKFLOW_HORIZON.maxCharacterLevel &&
-        supportedClassNames.has(unit.className)) ||
-      unit.kind === "species_trait" ||
-      unit.kind === "feat" ||
-      unit.kind === "mastery" ||
-      unit.kind === "armor" ||
-      unit.kind === "shield" ||
-      unit.kind === "weapon" ||
-      (unit.kind === "spell" && unit.mechanics.level <= 1)
-    ) {
+      isCharacterCreationWorkflowRootUnit(unit, {
+        supportedClassIds,
+        supportedBackgroundIds,
+        supportedSpeciesIds,
+        supportedClassNames,
+      })
+    )
       rootIds.add(unit.id);
-    }
   }
 
-  // Equipment slots are a discovery boundary in their own right. Keep the
-  // selected loadout records even if a future catalog changes their kind
-  // family, while retaining canonical catalog order below.
-  for (const choice of supportedLoadoutChoices(supportProfile)) {
-    rootIds.add(choice.unitId);
-  }
-  for (const unitId of supportProfile.purchasableEquipmentUnitIds) {
-    rootIds.add(unitId);
-  }
-  for (const unitId of supportProfile.characterBuildResourceUnitIds) {
-    rootIds.add(unitId);
-  }
+  addExplicitWorkflowRootIds(rootIds, supportProfile);
 
   return {
     horizon: CHARACTER_CREATION_WORKFLOW_HORIZON,
@@ -127,4 +97,110 @@ export function deriveCharacterCreationWorkflowRoots(input: {
       .filter((unit) => rootIds.has(unit.id))
       .map((unit) => unit.id),
   };
+}
+
+function supportedClassIdsFor(
+  progressions: readonly CharacterProgression[],
+): ReadonlySet<UnitRecord["id"]> {
+  return new Set<UnitRecord["id"]>(
+    progressions.flatMap((progression) => [
+      startingClassUnitId(progression),
+      ...progression.advancements.map((entry) => entry.classUnitId),
+    ]),
+  );
+}
+
+function supportedClassNamesFor(
+  unitLibrary: UnitCatalog,
+  supportedClassIds: ReadonlySet<UnitRecord["id"]>,
+): ReadonlySet<string> {
+  return new Set(
+    unitLibrary
+      .listUnits()
+      .filter(
+        (unit): unit is Extract<UnitRecord, { readonly kind: "class" }> =>
+          unit.kind === "class" && supportedClassIds.has(unit.id),
+      )
+      .map((unit) => unit.className),
+  );
+}
+
+type WorkflowRootUnitContext = {
+  readonly supportedClassIds: ReadonlySet<UnitRecord["id"]>;
+  readonly supportedBackgroundIds: ReadonlySet<UnitRecord["id"]>;
+  readonly supportedSpeciesIds: ReadonlySet<UnitRecord["id"]>;
+  readonly supportedClassNames: ReadonlySet<string>;
+};
+
+function isCharacterCreationWorkflowRootUnit(
+  unit: UnitRecord,
+  context: WorkflowRootUnitContext,
+): boolean {
+  return (
+    isSupportedClassRoot(unit, context.supportedClassIds) ||
+    isSupportedBackgroundRoot(unit, context.supportedBackgroundIds) ||
+    isSupportedSpeciesRoot(unit, context.supportedSpeciesIds) ||
+    isSupportedClassFeatureRoot(unit, context.supportedClassNames) ||
+    isUnconditionalWorkflowRootUnit(unit) ||
+    (unit.kind === "spell" && unit.mechanics.level <= 1)
+  );
+}
+
+function isSupportedClassRoot(
+  unit: UnitRecord,
+  supportedClassIds: ReadonlySet<UnitRecord["id"]>,
+): boolean {
+  return unit.kind === "class" && supportedClassIds.has(unit.id);
+}
+
+function isSupportedBackgroundRoot(
+  unit: UnitRecord,
+  supportedBackgroundIds: ReadonlySet<UnitRecord["id"]>,
+): boolean {
+  return unit.kind === "background" && supportedBackgroundIds.has(unit.id);
+}
+
+function isSupportedSpeciesRoot(
+  unit: UnitRecord,
+  supportedSpeciesIds: ReadonlySet<UnitRecord["id"]>,
+): boolean {
+  return unit.kind === "species" && supportedSpeciesIds.has(unit.id);
+}
+
+function isSupportedClassFeatureRoot(
+  unit: UnitRecord,
+  supportedClassNames: ReadonlySet<string>,
+): boolean {
+  return (
+    unit.kind === "class_feature" &&
+    unit.acquiredAtLevel <=
+      CHARACTER_CREATION_WORKFLOW_HORIZON.maxCharacterLevel &&
+    supportedClassNames.has(unit.className)
+  );
+}
+
+function isUnconditionalWorkflowRootUnit(unit: UnitRecord): boolean {
+  return (
+    unit.kind === "species_trait" ||
+    unit.kind === "feat" ||
+    unit.kind === "mastery" ||
+    unit.kind === "armor" ||
+    unit.kind === "shield" ||
+    unit.kind === "weapon"
+  );
+}
+
+function addExplicitWorkflowRootIds(
+  rootIds: Set<UnitRecord["id"]>,
+  supportProfile: CharacterCreationSupportProfile,
+): void {
+  for (const choice of supportedLoadoutChoices(supportProfile)) {
+    rootIds.add(choice.unitId);
+  }
+  for (const unitId of supportProfile.purchasableEquipmentUnitIds) {
+    rootIds.add(unitId);
+  }
+  for (const unitId of supportProfile.characterBuildResourceUnitIds) {
+    rootIds.add(unitId);
+  }
 }

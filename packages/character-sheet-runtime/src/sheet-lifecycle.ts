@@ -562,6 +562,10 @@ function bookOfShadowsPresenceFromInput(
   return Either.right(input.bookOfShadowsPresence ?? { tag: "onPerson" });
 }
 
+function statBlockCatalogState(statBlockCatalog: StatBlockCatalog | undefined) {
+  return statBlockCatalog === undefined ? {} : { statBlockCatalog };
+}
+
 export function parseCharacterSheet(
   value: unknown,
   unitLibrary: UnitCatalog,
@@ -698,7 +702,7 @@ export function parseCharacterSheet(
       resourceExpenditures: resourceExpenditures.right,
       heroicInspiration: heroicInspiration.right,
       companion: companion.right,
-      ...(statBlockCatalog === undefined ? {} : { statBlockCatalog }),
+      ...statBlockCatalogState(statBlockCatalog),
       ...(druidWildShapeKnownForms.right === undefined
         ? {}
         : {

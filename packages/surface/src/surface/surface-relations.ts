@@ -434,6 +434,17 @@ const isLiteralSchema = (ast: AST.AST): boolean => {
  * small compatibility check mirrors that choice for traversal, so an
  * unrelated union member cannot manufacture a second relation at one path.
  */
+const primitiveBranchMayContainValue = (
+  ast: AST.AST,
+  value: unknown,
+): boolean | undefined => {
+  if (ast._tag === "Literal") return value === ast.literal;
+  if (ast._tag === "StringKeyword") return typeof value === "string";
+  if (ast._tag === "NumberKeyword") return typeof value === "number";
+  if (ast._tag === "BooleanKeyword") return typeof value === "boolean";
+  return undefined;
+};
+
 const branchMayContainValue = (ast: AST.AST, value: unknown): boolean => {
   const current = structuralAst(ast);
   if (current._tag === "Suspend") {
@@ -443,38 +454,13 @@ const branchMayContainValue = (ast: AST.AST, value: unknown): boolean => {
   if (current._tag === "Union") {
     return current.types.some((member) => branchMayContainValue(member, value));
   }
-  if (current._tag === "Literal") return value === current.literal;
-  if (current._tag === "StringKeyword") return typeof value === "string";
-  if (current._tag === "NumberKeyword") return typeof value === "number";
-  if (current._tag === "BooleanKeyword") return typeof value === "boolean";
+  const primitiveResult = primitiveBranchMayContainValue(current, value);
+  if (primitiveResult !== undefined) return primitiveResult;
   if (current._tag === "TupleType") {
-    if (!Array.isArray(value)) return false;
-    const required = current.elements.filter(
-      (element) => !element.isOptional,
-    ).length;
-    return (
-      value.length >= required &&
-      (current.rest.length > 0 || value.length <= current.elements.length)
-    );
+    return tupleBranchMayContainValue(current, value);
   }
-  if (current._tag !== "TypeLiteral") return true;
-  if (!isObjectLike(value)) return false;
-  for (const property of current.propertySignatures) {
-    if (
-      !property.isOptional &&
-      !Object.prototype.hasOwnProperty.call(value, property.name)
-    ) {
-      return false;
-    }
-    if (Object.prototype.hasOwnProperty.call(value, property.name)) {
-      const propertyValue = value[String(property.name)];
-      if (isLiteralSchema(property.type)) {
-        const values = literalValues(property.type);
-        if (!values.some((candidate) => candidate === propertyValue)) {
-          return false;
-        }
-      }
-    }
+  if (current._tag === "TypeLiteral") {
+    return typeLiteralBranchMayContainValue(current, value);
   }
   return true;
 };
@@ -487,14 +473,104 @@ const unionBranchesForValue = (
   return matching.length > 0 ? matching : types;
 };
 
-const astChildren = (
-  ast: AST.AST,
+const tupleBranchMayContainValue = (
+  ast: AST.TupleType,
   value: unknown,
-): readonly {
+): boolean => {
+  if (!Array.isArray(value)) return false;
+  const required = ast.elements.filter((element) => !element.isOptional).length;
+  return (
+    value.length >= required &&
+    (ast.rest.length > 0 || value.length <= ast.elements.length)
+  );
+};
+
+const typeLiteralPropertyMayContainValue = (
+  property: AST.PropertySignature,
+  value: ObjectLike,
+): boolean => {
+  if (!Object.prototype.hasOwnProperty.call(value, property.name)) {
+    return property.isOptional;
+  }
+  const propertyValue = value[String(property.name)];
+  return (
+    !isLiteralSchema(property.type) ||
+    literalValues(property.type).some(
+      (candidate) => candidate === propertyValue,
+    )
+  );
+};
+
+const typeLiteralBranchMayContainValue = (
+  ast: AST.TypeLiteral,
+  value: unknown,
+): boolean =>
+  isObjectLike(value) &&
+  ast.propertySignatures.every((property) =>
+    typeLiteralPropertyMayContainValue(property, value),
+  );
+
+type AstChild = {
   readonly ast: AST.AST;
   readonly value: unknown;
   readonly path: string;
-}[] => {
+};
+
+const tupleElementForIndex = (
+  ast: AST.TupleType,
+  index: number,
+): AST.Type | undefined => {
+  if (index < ast.elements.length) return ast.elements[index];
+  if (ast.rest.length === 0) return undefined;
+  return ast.rest[Math.min(index - ast.elements.length, ast.rest.length - 1)];
+};
+
+const tupleAstChildren = (
+  ast: AST.TupleType,
+  value: unknown,
+): readonly AstChild[] => {
+  if (!Array.isArray(value)) return [];
+  const children: AstChild[] = [];
+  for (let index = 0; index < value.length; index += 1) {
+    const element = tupleElementForIndex(ast, index);
+    if (element !== undefined) {
+      children.push({
+        ast: element.type ?? element,
+        value: value[index],
+        path: `[${index}]`,
+      });
+    }
+  }
+  return children;
+};
+
+const typeLiteralAstChildren = (
+  ast: AST.TypeLiteral,
+  value: unknown,
+): readonly AstChild[] => {
+  if (!isObjectLike(value)) return [];
+  return ast.propertySignatures.flatMap((property) =>
+    Object.prototype.hasOwnProperty.call(value, property.name)
+      ? [
+          {
+            ast: property.type,
+            value: value[String(property.name)],
+            path: `.${String(property.name)}`,
+          },
+        ]
+      : [],
+  );
+};
+
+const wrappedAstChildren = (
+  ast: AST.AST,
+  value: unknown,
+): readonly AstChild[] => {
+  const child = schemaChild(ast);
+  return child === undefined ? [] : [{ ast: child, value, path: "" }];
+};
+
+const astChildren = (ast: AST.AST, value: unknown): readonly AstChild[] => {
   const current = structuralAst(ast);
   if (current._tag === "Suspend") {
     const child = suspendedAst(current);
@@ -507,45 +583,207 @@ const astChildren = (
       path: "",
     }));
   }
-  if (current._tag === "TupleType" && Array.isArray(value)) {
-    const children: { ast: AST.AST; value: unknown; path: string }[] = [];
-    for (let index = 0; index < value.length; index += 1) {
-      const element =
-        index < current.elements.length
-          ? current.elements[index]
-          : current.rest.length > 0
-            ? current.rest[
-                Math.min(
-                  index - current.elements.length,
-                  current.rest.length - 1,
-                )
-              ]
-            : undefined;
-      if (element !== undefined) {
-        children.push({
-          ast: element.type ?? element,
-          value: value[index],
-          path: `[${index}]`,
-        });
-      }
+  if (current._tag === "TupleType") {
+    return tupleAstChildren(current, value);
+  }
+  if (current._tag === "TypeLiteral") {
+    return typeLiteralAstChildren(current, value);
+  }
+  return wrappedAstChildren(current, value);
+};
+
+type SurfaceWalkCollections = {
+  readonly relations: SurfaceAuthoredRelation[];
+  readonly issues: SurfaceRelationTraversalIssue[];
+};
+
+type SurfaceWalkContext = SurfaceWalkCollections & {
+  readonly record: SurfaceRecord;
+  readonly pending: WalkTask[];
+  readonly seen: WeakMap<object, WeakMap<object, Set<string>>>;
+};
+
+const surfaceRecordAst = (record: SurfaceRecord): AST.AST =>
+  record.sourceKind === "unit"
+    ? UnitRecordSchema.ast
+    : StatBlockRecordSchema.ast;
+
+const walkTaskRole = (
+  task: WalkTask,
+): Either.Either<
+  SurfaceSchemaFieldRole | undefined,
+  SurfaceRelationTraversalIssue
+> => {
+  const ownRole = readSurfaceSchemaRole(task.ast);
+  if (
+    ownRole !== undefined &&
+    task.inheritedRole !== undefined &&
+    !roleEqual(ownRole, task.inheritedRole)
+  ) {
+    return Either.left({
+      tag: "surfaceRelationTraversalIssue",
+      code: "conflictingRole",
+      path: task.path,
+      message: `Surface schema roles conflict at ${task.path}`,
+    });
+  }
+  return Either.right(ownRole ?? task.inheritedRole);
+};
+
+const isSurfaceRelationRole = (
+  role: SurfaceSchemaFieldRole | undefined,
+): role is SurfaceRelationRole =>
+  role?.category === "reference" || role?.category === "dependency";
+
+const isUnownedStringTask = (
+  task: WalkTask,
+  role: SurfaceSchemaFieldRole | undefined,
+): boolean =>
+  typeof task.current === "string" &&
+  role === undefined &&
+  structuralAst(task.ast)._tag === "StringKeyword";
+
+const collectWalkTaskRelation = (
+  context: SurfaceWalkContext,
+  task: WalkTask,
+  role: SurfaceSchemaFieldRole | undefined,
+): void => {
+  if (isSurfaceRelationRole(role) && isStringLikeAst(task.ast)) {
+    const relationResult = makeSurfaceAuthoredRelation({
+      record: context.record,
+      role,
+      fieldPath: task.path.replace(/^value\.?/, ""),
+      issuePath: task.path,
+      targetRecordId: task.current,
+    });
+    if (Either.isLeft(relationResult)) {
+      context.issues.push(relationResult.left);
+    } else {
+      context.relations.push(relationResult.right);
     }
-    return children;
+  } else if (isUnownedStringTask(task, role)) {
+    context.issues.push({
+      tag: "surfaceRelationTraversalIssue",
+      code: "unownedString",
+      path: task.path,
+      message: `Surface value string has no schema role at ${task.path}`,
+    });
   }
-  if (current._tag === "TypeLiteral" && isObjectLike(value)) {
-    return current.propertySignatures.flatMap((property) =>
-      Object.prototype.hasOwnProperty.call(value, property.name)
-        ? [
-            {
-              ast: property.type,
-              value: value[String(property.name)],
-              path: `.${String(property.name)}`,
-            },
-          ]
-        : [],
-    );
+};
+
+const markWalkTaskSeen = (
+  context: SurfaceWalkContext,
+  task: WalkTask,
+  role: SurfaceSchemaFieldRole | undefined,
+): boolean => {
+  if (!isObjectValue(task.current)) return false;
+  const key = role === undefined ? "none" : JSON.stringify(role);
+  const seenForAst = context.seen.get(task.current) ?? new WeakMap();
+  const roleSet = seenForAst.get(task.ast) ?? new Set<string>();
+  if (roleSet.has(key)) return true;
+  roleSet.add(key);
+  seenForAst.set(task.ast, roleSet);
+  context.seen.set(task.current, seenForAst);
+  return false;
+};
+
+const surfaceRelationLeafAstTags = new Set<AST.AST["_tag"]>([
+  "StringKeyword",
+  "Literal",
+  "NumberKeyword",
+  "BooleanKeyword",
+  "UnknownKeyword",
+  "NeverKeyword",
+]);
+
+const unsupportedSurfaceWalkIssue = (
+  task: WalkTask,
+  children: readonly AstChild[],
+): SurfaceRelationTraversalIssue | undefined => {
+  if (children.length > 0 || !isObjectValue(task.current)) return undefined;
+  const current = structuralAst(task.ast);
+  if (
+    current._tag === "TypeLiteral" ||
+    current._tag === "TupleType" ||
+    surfaceRelationLeafAstTags.has(current._tag)
+  ) {
+    return undefined;
   }
-  const child = schemaChild(current);
-  return child === undefined ? [] : [{ ast: child, value, path: "" }];
+  return {
+    tag: "surfaceRelationTraversalIssue",
+    code: "unsupportedSchemaAst",
+    path: task.path,
+    message: `Surface relation traversal does not support ${current._tag} at ${task.path}`,
+  };
+};
+
+const appendWalkChildren = (
+  context: SurfaceWalkContext,
+  task: WalkTask,
+  role: SurfaceSchemaFieldRole | undefined,
+  children: readonly AstChild[],
+): void => {
+  for (let index = children.length - 1; index >= 0; index -= 1) {
+    const child = children[index];
+    if (child !== undefined) {
+      context.pending.push({
+        ast: child.ast,
+        current: child.value,
+        path: `${task.path}${child.path}`,
+        inheritedRole: role,
+      });
+    }
+  }
+};
+
+const walkSurfaceTask = (context: SurfaceWalkContext, task: WalkTask): void => {
+  const roleResult = walkTaskRole(task);
+  if (Either.isLeft(roleResult)) {
+    context.issues.push(roleResult.left);
+    return;
+  }
+  const role = roleResult.right;
+  collectWalkTaskRelation(context, task, role);
+  if (markWalkTaskSeen(context, task, role)) return;
+  const children = astChildren(task.ast, task.current);
+  const unsupportedIssue = unsupportedSurfaceWalkIssue(task, children);
+  if (unsupportedIssue !== undefined) context.issues.push(unsupportedIssue);
+  appendWalkChildren(context, task, role, children);
+};
+
+const walkSurfaceRecord = (
+  record: SurfaceRecord,
+  collections: SurfaceWalkCollections,
+): void => {
+  const context: SurfaceWalkContext = {
+    ...collections,
+    record,
+    pending: [
+      {
+        ast: surfaceRecordAst(record),
+        current: record.value,
+        path: "value",
+        inheritedRole: undefined,
+      },
+    ],
+    seen: new WeakMap(),
+  };
+  while (context.pending.length > 0) {
+    const task = context.pending.pop();
+    if (task !== undefined) walkSurfaceTask(context, task);
+  }
+};
+
+const surfaceWalkResult = (
+  collections: SurfaceWalkCollections,
+): Either.Either<
+  readonly SurfaceAuthoredRelation[],
+  SurfaceRelationTraversalIssues
+> => {
+  const firstIssue = collections.issues[0];
+  return firstIssue === undefined
+    ? Either.right(collections.relations)
+    : Either.left([firstIssue, ...collections.issues.slice(1)]);
 };
 
 /**
@@ -566,123 +804,12 @@ export function collectSurfaceAuthoredRelations(
       value,
     })),
   ];
-  const relations: SurfaceAuthoredRelation[] = [];
-  const issues: SurfaceRelationTraversalIssue[] = [];
-
-  for (const record of records) {
-    const schema =
-      record.sourceKind === "unit" ? UnitRecordSchema : StatBlockRecordSchema;
-    const pending: WalkTask[] = [
-      {
-        ast: schema.ast,
-        current: record.value,
-        path: "value",
-        inheritedRole: undefined,
-      },
-    ];
-    const seen = new WeakMap<object, WeakMap<object, Set<string>>>();
-
-    while (pending.length > 0) {
-      const task = pending.pop();
-      if (task === undefined) continue;
-      const ownRole = readSurfaceSchemaRole(task.ast);
-      if (
-        ownRole !== undefined &&
-        task.inheritedRole !== undefined &&
-        !roleEqual(ownRole, task.inheritedRole)
-      ) {
-        issues.push({
-          tag: "surfaceRelationTraversalIssue",
-          code: "conflictingRole",
-          path: task.path,
-          message: `Surface schema roles conflict at ${task.path}`,
-        });
-        continue;
-      }
-      const role = ownRole ?? task.inheritedRole;
-      if (
-        (role?.category === "reference" || role?.category === "dependency") &&
-        isStringLikeAst(task.ast)
-      ) {
-        const relationResult = makeSurfaceAuthoredRelation({
-          record,
-          role,
-          fieldPath: task.path.replace(/^value\.?/, ""),
-          issuePath: task.path,
-          targetRecordId: task.current,
-        });
-        if (Either.isLeft(relationResult)) {
-          issues.push(relationResult.left);
-        } else {
-          relations.push(relationResult.right);
-        }
-      } else if (
-        typeof task.current === "string" &&
-        role === undefined &&
-        structuralAst(task.ast)._tag === "StringKeyword"
-      ) {
-        issues.push({
-          tag: "surfaceRelationTraversalIssue",
-          code: "unownedString",
-          path: task.path,
-          message: `Surface value string has no schema role at ${task.path}`,
-        });
-      }
-
-      if (isObjectValue(task.current)) {
-        const objectValue = task.current;
-        const key = role === undefined ? "none" : JSON.stringify(role);
-        const seenForAst = seen.get(objectValue) ?? new WeakMap();
-        const roleSet = seenForAst.get(task.ast) ?? new Set<string>();
-        if (roleSet.has(key)) continue;
-        roleSet.add(key);
-        seenForAst.set(task.ast, roleSet);
-        seen.set(objectValue, seenForAst);
-      }
-
-      const children = astChildren(task.ast, task.current);
-      if (
-        children.length === 0 &&
-        typeof task.current === "object" &&
-        task.current !== null &&
-        structuralAst(task.ast)._tag !== "TypeLiteral" &&
-        structuralAst(task.ast)._tag !== "TupleType"
-      ) {
-        const current = structuralAst(task.ast);
-        if (
-          current._tag !== "StringKeyword" &&
-          current._tag !== "Literal" &&
-          current._tag !== "NumberKeyword" &&
-          current._tag !== "BooleanKeyword" &&
-          current._tag !== "UnknownKeyword" &&
-          current._tag !== "NeverKeyword"
-        ) {
-          issues.push({
-            tag: "surfaceRelationTraversalIssue",
-            code: "unsupportedSchemaAst",
-            path: task.path,
-            message: `Surface relation traversal does not support ${current._tag} at ${task.path}`,
-          });
-        }
-      }
-      for (let index = children.length - 1; index >= 0; index -= 1) {
-        const child = children[index];
-        if (child !== undefined) {
-          pending.push({
-            ast: child.ast,
-            current: child.value,
-            path: `${task.path}${child.path}`,
-            inheritedRole: role,
-          });
-        }
-      }
-    }
-  }
-
-  const firstIssue = issues[0];
-  return firstIssue === undefined
-    ? Either.right(relations)
-    : Either.left([firstIssue, ...issues.slice(1)]);
+  const collections: SurfaceWalkCollections = {
+    relations: [],
+    issues: [],
+  };
+  for (const record of records) walkSurfaceRecord(record, collections);
+  return surfaceWalkResult(collections);
 }
 
 const relationSelected = (
@@ -701,6 +828,231 @@ const relationSelected = (
     Match.exhaustive,
   );
 
+type SurfaceRecordMaps = {
+  readonly unitsById: Map<SurfaceUnitId, UnitRecord>;
+  readonly statBlocksById: Map<SurfaceStatBlockId, StatBlockRecord>;
+};
+
+type SurfaceRelationsBySource = {
+  readonly unit: Map<SurfaceUnitId, readonly SurfaceAuthoredRelation[]>;
+  readonly statBlock: Map<
+    SurfaceStatBlockId,
+    readonly SurfaceAuthoredRelation[]
+  >;
+};
+
+type SurfaceClosureContext = SurfaceRecordMaps & {
+  readonly relationsBySource: SurfaceRelationsBySource;
+  readonly relationSelection: SurfaceRelationSelection;
+  readonly selectedUnits: Set<SurfaceUnitId>;
+  readonly selectedStatBlocks: Set<SurfaceStatBlockId>;
+  readonly pending: SurfaceRecordRef[];
+  readonly issues: SurfaceRelationClosureIssue[];
+};
+
+const surfaceRecordMaps = (surface: SrdSurface): SurfaceRecordMaps => ({
+  unitsById: new Map(surface.units.map((record) => [record.id, record])),
+  statBlocksById: new Map(
+    surface.statBlocks.map((record) => [record.id, record]),
+  ),
+});
+
+const missingSurfaceRootIssue = (
+  root: SurfaceRecordRef,
+): SurfaceRelationClosureIssue =>
+  root.kind === "unit"
+    ? {
+        tag: "surfaceRelationClosureIssue",
+        code: "missingRoot",
+        rootKind: "unit",
+        rootId: root.id,
+        fieldPath: "<root>",
+        message: `Surface root unit ${String(root.id)} is absent from the canonical aggregate`,
+      }
+    : {
+        tag: "surfaceRelationClosureIssue",
+        code: "missingRoot",
+        rootKind: "statBlock",
+        rootId: root.id,
+        fieldPath: "<root>",
+        message: `Surface root statBlock ${String(root.id)} is absent from the canonical aggregate`,
+      };
+
+const addSurfaceRoot = (
+  context: SurfaceClosureContext,
+  root: SurfaceRecordRef,
+): void => {
+  const exists =
+    root.kind === "unit"
+      ? context.unitsById.has(root.id)
+      : context.statBlocksById.has(root.id);
+  if (exists) {
+    context.pending.push(root);
+  } else {
+    context.issues.push(missingSurfaceRootIssue(root));
+  }
+};
+
+const addSurfaceRoots = (
+  context: SurfaceClosureContext,
+  input: Pick<
+    Parameters<typeof closeSrdSurface>[0],
+    "rootUnitIds" | "rootStatBlockIds"
+  >,
+): void => {
+  input.rootUnitIds.forEach((id) =>
+    addSurfaceRoot(context, { kind: "unit", id }),
+  );
+  input.rootStatBlockIds.forEach((id) =>
+    addSurfaceRoot(context, { kind: "statBlock", id }),
+  );
+};
+
+const appendSurfaceRelation = <Kind extends SurfaceRecordKind>(
+  relationsBySource: Map<
+    SurfaceRecordId<Kind>,
+    readonly SurfaceAuthoredRelation[]
+  >,
+  sourceRecordId: SurfaceRecordId<Kind>,
+  relation: SurfaceAuthoredRelation,
+): void => {
+  const relations = relationsBySource.get(sourceRecordId);
+  relationsBySource.set(sourceRecordId, [...(relations ?? []), relation]);
+};
+
+const indexSurfaceRelations = (
+  relations: readonly SurfaceAuthoredRelation[],
+): SurfaceRelationsBySource => {
+  const relationsBySource: SurfaceRelationsBySource = {
+    unit: new Map(),
+    statBlock: new Map(),
+  };
+  for (const relation of relations) {
+    if (relation.sourceKind === "unit") {
+      appendSurfaceRelation(
+        relationsBySource.unit,
+        relation.sourceRecordId,
+        relation,
+      );
+    } else {
+      appendSurfaceRelation(
+        relationsBySource.statBlock,
+        relation.sourceRecordId,
+        relation,
+      );
+    }
+  }
+  return relationsBySource;
+};
+
+const markSurfaceRecordSelected = (
+  context: SurfaceClosureContext,
+  current: SurfaceRecordRef,
+): boolean => {
+  if (current.kind === "unit") {
+    if (context.selectedUnits.has(current.id)) return true;
+    context.selectedUnits.add(current.id);
+    return false;
+  }
+  if (context.selectedStatBlocks.has(current.id)) return true;
+  context.selectedStatBlocks.add(current.id);
+  return false;
+};
+
+const surfaceSourceRelations = (
+  context: SurfaceClosureContext,
+  current: SurfaceRecordRef,
+): readonly SurfaceAuthoredRelation[] =>
+  current.kind === "unit"
+    ? (context.relationsBySource.unit.get(current.id) ?? [])
+    : (context.relationsBySource.statBlock.get(current.id) ?? []);
+
+const surfaceRelationTargetExists = (
+  context: SurfaceClosureContext,
+  target: SurfaceRecordRef,
+): boolean =>
+  target.kind === "unit"
+    ? context.unitsById.has(target.id)
+    : context.statBlocksById.has(target.id);
+
+const enqueueSurfaceRelation = (
+  context: SurfaceClosureContext,
+  relation: SurfaceAuthoredRelation,
+): void => {
+  if (!relationSelected(relation, context.relationSelection)) return;
+  const target = relationTargetRef(relation);
+  if (!surfaceRelationTargetExists(context, target)) {
+    context.issues.push({
+      ...relation,
+      tag: "surfaceRelationClosureIssue",
+      code: "missingTarget",
+      message: `Surface ${relation.relationKind} ${relation.targetKind} ${relation.targetRecordId} is absent from the canonical aggregate`,
+    });
+    return;
+  }
+  context.pending.push(target);
+};
+
+const visitSurfaceRecord = (
+  context: SurfaceClosureContext,
+  current: SurfaceRecordRef,
+): void => {
+  if (markSurfaceRecordSelected(context, current)) return;
+  for (const relation of surfaceSourceRelations(context, current)) {
+    enqueueSurfaceRelation(context, relation);
+  }
+};
+
+const closeSurfaceReachability = (context: SurfaceClosureContext): void => {
+  while (context.pending.length > 0) {
+    const current = context.pending.pop();
+    if (current !== undefined) visitSurfaceRecord(context, current);
+  }
+};
+
+const closureIssuesResult = (
+  issues: readonly SurfaceRelationClosureIssue[],
+): Either.Either<void, SurfaceRelationClosureIssues> => {
+  const firstIssue = issues[0];
+  return firstIssue === undefined
+    ? Either.right(undefined)
+    : Either.left([firstIssue, ...issues.slice(1)]);
+};
+
+const emptySurfaceProjectionIssue = (
+  firstUnit: UnitRecord | undefined,
+  firstStatBlock: StatBlockRecord | undefined,
+): SurfaceRelationClosureIssue | undefined => {
+  if (firstUnit !== undefined && firstStatBlock !== undefined) return undefined;
+  return {
+    tag: "surfaceRelationClosureIssue",
+    code: "emptyProjection",
+    missingFamily: firstUnit === undefined ? "unit" : "statBlock",
+    message:
+      "A projected Surface must retain at least one record of each family",
+  };
+};
+
+const projectClosedSurface = (
+  surface: SrdSurface,
+  selectedUnits: ReadonlySet<SurfaceUnitId>,
+  selectedStatBlocks: ReadonlySet<SurfaceStatBlockId>,
+): Either.Either<SrdSurface, SurfaceRelationClosureIssues> => {
+  const units = surface.units.filter((record) => selectedUnits.has(record.id));
+  const statBlocks = surface.statBlocks.filter((record) =>
+    selectedStatBlocks.has(record.id),
+  );
+  const firstUnit = units[0];
+  const firstStatBlock = statBlocks[0];
+  const emptyIssue = emptySurfaceProjectionIssue(firstUnit, firstStatBlock);
+  if (emptyIssue !== undefined) return Either.left([emptyIssue]);
+  return Either.right({
+    kind: "srd-5.2.1-surface-catalog",
+    units: [firstUnit, ...units.slice(1)],
+    statBlocks: [firstStatBlock, ...statBlocks.slice(1)],
+  });
+};
+
 /**
  * Retain whole canonical records reachable from roots. The selection policy
  * distinguishes mechanics dependencies from identity/reference edges; callers
@@ -717,134 +1069,23 @@ export function closeSrdSurface(input: {
   if (Either.isLeft(relationGraph)) {
     return Either.left([...relationGraph.left]);
   }
-
-  const unitsById = new Map<SurfaceUnitId, UnitRecord>(
-    input.surface.units.map((record) => [record.id, record]),
-  );
-  const statBlocksById = new Map<SurfaceStatBlockId, StatBlockRecord>(
-    input.surface.statBlocks.map((record) => [record.id, record]),
-  );
-  const selectedUnits = new Set<SurfaceUnitId>();
-  const selectedStatBlocks = new Set<SurfaceStatBlockId>();
-  const pending: SurfaceRecordRef[] = [];
-  const issues: SurfaceRelationClosureIssue[] = [];
-
-  const addRoot = (root: SurfaceRecordRef): void => {
-    if (root.kind === "unit") {
-      if (!unitsById.has(root.id)) {
-        issues.push({
-          tag: "surfaceRelationClosureIssue",
-          code: "missingRoot",
-          rootKind: "unit",
-          rootId: root.id,
-          fieldPath: "<root>",
-          message: `Surface root unit ${String(root.id)} is absent from the canonical aggregate`,
-        });
-        return;
-      }
-    } else if (!statBlocksById.has(root.id)) {
-      issues.push({
-        tag: "surfaceRelationClosureIssue",
-        code: "missingRoot",
-        rootKind: "statBlock",
-        rootId: root.id,
-        fieldPath: "<root>",
-        message: `Surface root statBlock ${String(root.id)} is absent from the canonical aggregate`,
-      });
-      return;
-    }
-    pending.push(root);
+  const maps = surfaceRecordMaps(input.surface);
+  const context: SurfaceClosureContext = {
+    ...maps,
+    relationsBySource: indexSurfaceRelations(relationGraph.right),
+    relationSelection: input.relationSelection ?? {},
+    selectedUnits: new Set(),
+    selectedStatBlocks: new Set(),
+    pending: [],
+    issues: [],
   };
-  input.rootUnitIds.forEach((id) => addRoot({ kind: "unit", id }));
-  input.rootStatBlockIds.forEach((id) => addRoot({ kind: "statBlock", id }));
-
-  const relationsBySource = {
-    unit: new Map<SurfaceUnitId, readonly SurfaceAuthoredRelation[]>(),
-    statBlock: new Map<
-      SurfaceStatBlockId,
-      readonly SurfaceAuthoredRelation[]
-    >(),
-  };
-  for (const relation of relationGraph.right) {
-    if (relation.sourceKind === "unit") {
-      const relations = relationsBySource.unit.get(relation.sourceRecordId);
-      relationsBySource.unit.set(relation.sourceRecordId, [
-        ...(relations ?? []),
-        relation,
-      ]);
-    } else {
-      const relations = relationsBySource.statBlock.get(
-        relation.sourceRecordId,
-      );
-      relationsBySource.statBlock.set(relation.sourceRecordId, [
-        ...(relations ?? []),
-        relation,
-      ]);
-    }
-  }
-
-  while (pending.length > 0) {
-    const current = pending.pop();
-    if (current === undefined) continue;
-    if (current.kind === "unit") {
-      if (selectedUnits.has(current.id)) continue;
-      selectedUnits.add(current.id);
-    } else {
-      if (selectedStatBlocks.has(current.id)) continue;
-      selectedStatBlocks.add(current.id);
-    }
-    const sourceRelations =
-      current.kind === "unit"
-        ? relationsBySource.unit.get(current.id)
-        : relationsBySource.statBlock.get(current.id);
-    for (const relation of sourceRelations ?? []) {
-      if (!relationSelected(relation, input.relationSelection ?? {})) continue;
-      const target = relationTargetRef(relation);
-      const targetExists =
-        target.kind === "unit"
-          ? unitsById.has(target.id)
-          : statBlocksById.has(target.id);
-      if (!targetExists) {
-        issues.push({
-          ...relation,
-          tag: "surfaceRelationClosureIssue",
-          code: "missingTarget",
-          message: `Surface ${relation.relationKind} ${relation.targetKind} ${relation.targetRecordId} is absent from the canonical aggregate`,
-        });
-        continue;
-      }
-      pending.push(target);
-    }
-  }
-
-  if (issues.length > 0) {
-    const firstIssue = issues[0];
-    if (firstIssue !== undefined) {
-      return Either.left([firstIssue, ...issues.slice(1)]);
-    }
-  }
-  const units = input.surface.units.filter((record) =>
-    selectedUnits.has(record.id),
+  addSurfaceRoots(context, input);
+  closeSurfaceReachability(context);
+  const issueResult = closureIssuesResult(context.issues);
+  if (Either.isLeft(issueResult)) return Either.left(issueResult.left);
+  return projectClosedSurface(
+    input.surface,
+    context.selectedUnits,
+    context.selectedStatBlocks,
   );
-  const statBlocks = input.surface.statBlocks.filter((record) =>
-    selectedStatBlocks.has(record.id),
-  );
-  const firstUnit = units[0];
-  const firstStatBlock = statBlocks[0];
-  if (firstUnit === undefined || firstStatBlock === undefined) {
-    return Either.left([
-      {
-        tag: "surfaceRelationClosureIssue",
-        code: "emptyProjection",
-        missingFamily: firstUnit === undefined ? "unit" : "statBlock",
-        message:
-          "A projected Surface must retain at least one record of each family",
-      },
-    ]);
-  }
-  return Either.right({
-    kind: "srd-5.2.1-surface-catalog",
-    units: [firstUnit, ...units.slice(1)],
-    statBlocks: [firstStatBlock, ...statBlocks.slice(1)],
-  });
 }

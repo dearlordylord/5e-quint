@@ -121,15 +121,9 @@ export async function runOracleProcess(
     dependencies.executablePath ?? fileURLToPath(import.meta.url);
   const loadApplication =
     dependencies.loadApplication ?? loadOracleApplicationFromExecutable;
-  let loaded: ReturnType<typeof loadOracleApplicationFromExecutable>;
-  try {
-    loaded = loadApplication(executablePath);
-  } catch (cause) {
-    await report(writeStderr, `failed to load distribution: ${String(cause)}`);
-    return 1;
-  }
+  const loaded = loadOracleApplicationSafely(executablePath, loadApplication);
   if (Either.isLeft(loaded)) {
-    await report(writeStderr, formatDistributionIssue(loaded.left));
+    await report(writeStderr, loaded.left);
     return 1;
   }
 
@@ -194,31 +188,12 @@ function parseOracleServeCommand(
   definition: Extract<OracleCliCommandDefinition, { arguments: "serve" }>,
   args: readonly string[],
 ): Either.Either<OracleCliCommand, OracleCliArgumentIssue> {
-  if (args.length === 0 || args.length % 2 !== 0) {
-    return Either.left(invalidArguments());
-  }
-  const values = new Map<string, string>();
-  for (let index = 0; index < args.length; index += 2) {
-    const flag = args[index];
-    const value = args[index + 1];
-    if (
-      (flag !== definition.hostFlag && flag !== definition.portFlag) ||
-      value === undefined ||
-      value.startsWith("--") ||
-      values.has(flag)
-    ) {
-      return Either.left(invalidArguments());
-    }
-    values.set(flag, value);
-  }
+  const values = parseOracleServeFlags(definition, args);
+  if (values === undefined) return Either.left(invalidArguments());
 
   const host = values.get(definition.hostFlag);
   const portToken = values.get(definition.portFlag);
-  if (
-    host !== ORACLE_LOOPBACK_HOST ||
-    portToken === undefined ||
-    !/^(?:0|[1-9][0-9]{0,4})$/u.test(portToken)
-  ) {
+  if (!isValidOracleServeAddress(host, portToken)) {
     return Either.left(invalidArguments());
   }
   const decodedPort = decodeOracleBindPort(Number(portToken));
@@ -228,6 +203,62 @@ function parseOracleServeCommand(
     host: ORACLE_LOOPBACK_HOST,
     port: decodedPort.right,
   });
+}
+
+function loadOracleApplicationSafely(
+  executablePath: string,
+  loadApplication: NonNullable<OracleProcessDependencies["loadApplication"]>,
+): Either.Either<OracleApplication, string> {
+  try {
+    const loaded = loadApplication(executablePath);
+    return Either.isLeft(loaded)
+      ? Either.left(formatDistributionIssue(loaded.left))
+      : Either.right(loaded.right);
+  } catch (cause) {
+    return Either.left(`failed to load distribution: ${String(cause)}`);
+  }
+}
+
+function parseOracleServeFlags(
+  definition: Extract<OracleCliCommandDefinition, { arguments: "serve" }>,
+  args: readonly string[],
+): Map<string, string> | undefined {
+  if (args.length === 0 || args.length % 2 !== 0) return undefined;
+  const values = new Map<string, string>();
+  for (let index = 0; index < args.length; index += 2) {
+    const flag = args[index];
+    const value = args[index + 1];
+    if (!isValidOracleServeFlag(definition, flag, value, values)) {
+      return undefined;
+    }
+    values.set(flag, value);
+  }
+  return values;
+}
+
+function isValidOracleServeFlag(
+  definition: Extract<OracleCliCommandDefinition, { arguments: "serve" }>,
+  flag: string | undefined,
+  value: string | undefined,
+  values: ReadonlyMap<string, string>,
+): value is string {
+  return (
+    (flag === definition.hostFlag || flag === definition.portFlag) &&
+    value !== undefined &&
+    !value.startsWith("--") &&
+    !values.has(flag)
+  );
+}
+
+function isValidOracleServeAddress(
+  host: string | undefined,
+  portToken: string | undefined,
+): portToken is string {
+  return (
+    host === ORACLE_LOOPBACK_HOST &&
+    portToken !== undefined &&
+    /^(?:0|[1-9][0-9]{0,4})$/u.test(portToken)
+  );
 }
 
 function invalidArguments(): OracleCliArgumentIssue {

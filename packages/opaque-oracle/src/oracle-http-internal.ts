@@ -354,14 +354,7 @@ async function handleOracleHttpRequest(input: {
 }): Promise<void> {
   const pathname = oracleRequestPath(input.incoming.url);
   if (pathname === ORACLE_HTTP_IDENTITY_PATH) {
-    if (input.incoming.method !== "GET") {
-      input.incoming.resume();
-      await writeTransportResponse(input.outgoing, 405);
-      return;
-    }
-    input.incoming.resume();
-    const response = encodeOracleIdentityHttpResponse(input.application);
-    await writeJsonResponse(input.outgoing, response.status, response.body);
+    await handleOracleIdentityRequest(input);
     return;
   }
 
@@ -383,6 +376,30 @@ async function handleOracleHttpRequest(input: {
     return;
   }
 
+  await handleOracleEvaluationRequest(input);
+}
+
+async function handleOracleIdentityRequest(input: {
+  readonly application: OracleApplication;
+  readonly incoming: IncomingMessage;
+  readonly outgoing: ServerResponse;
+}): Promise<void> {
+  if (input.incoming.method !== "GET") {
+    input.incoming.resume();
+    await writeTransportResponse(input.outgoing, 405);
+    return;
+  }
+  input.incoming.resume();
+  const response = encodeOracleIdentityHttpResponse(input.application);
+  await writeJsonResponse(input.outgoing, response.status, response.body);
+}
+
+async function handleOracleEvaluationRequest(input: {
+  readonly application: OracleApplication;
+  readonly encodeBatchResponse?: OracleHttpBatchResponseEncoder;
+  readonly incoming: IncomingMessage;
+  readonly outgoing: ServerResponse;
+}): Promise<void> {
   const body = await readBoundedRequestBody(input.incoming);
   if (Either.isLeft(body)) {
     await Match.value(body.left).pipe(
@@ -577,18 +594,19 @@ function isSupportedJsonContentType(
   if (contentType === undefined || Array.isArray(contentType)) return false;
   const [mediaType, ...parameters] = contentType.split(";");
   if (mediaType?.trim().toLowerCase() !== "application/json") return false;
-  for (const parameter of parameters) {
-    const separator = parameter.indexOf("=");
-    if (separator < 0) return false;
-    const name = parameter.slice(0, separator).trim().toLowerCase();
-    const value = parameter
-      .slice(separator + 1)
-      .trim()
-      .replace(/^"|"$/gu, "")
-      .toLowerCase();
-    if (name !== "charset" || value !== "utf-8") return false;
-  }
-  return true;
+  return parameters.every(isSupportedJsonContentTypeParameter);
+}
+
+function isSupportedJsonContentTypeParameter(parameter: string): boolean {
+  const separator = parameter.indexOf("=");
+  if (separator < 0) return false;
+  const name = parameter.slice(0, separator).trim().toLowerCase();
+  const value = parameter
+    .slice(separator + 1)
+    .trim()
+    .replace(/^"|"$/gu, "")
+    .toLowerCase();
+  return name === "charset" && value === "utf-8";
 }
 
 async function readBoundedRequestBody(
@@ -603,6 +621,20 @@ async function readBoundedRequestBody(
     return Either.left({ tag: "requestTooLarge" });
   }
 
+  const collected = await collectBoundedRequestBodyChunks(incoming);
+  if (Either.isLeft(collected)) return Either.left(collected.left);
+  if (incoming.aborted || !incoming.complete) {
+    return Either.left({
+      tag: "requestStreamFailed",
+      message: "Oracle HTTP request stream ended before completion.",
+    });
+  }
+  return Either.right(collected.right);
+}
+
+async function collectBoundedRequestBodyChunks(
+  incoming: IncomingMessage,
+): Promise<Either.Either<Buffer, OracleHttpRequestFailure>> {
   const chunks: Buffer[] = [];
   let byteLength = 0;
   try {
@@ -621,14 +653,6 @@ async function readBoundedRequestBody(
       message: String(cause),
     });
   }
-
-  if (incoming.aborted || !incoming.complete) {
-    return Either.left({
-      tag: "requestStreamFailed",
-      message: "Oracle HTTP request stream ended before completion.",
-    });
-  }
-
   return Either.right(Buffer.concat(chunks, byteLength));
 }
 

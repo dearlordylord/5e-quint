@@ -23,35 +23,43 @@ export function canonicalizeCaseInput(input: unknown): unknown {
 
 function canonicalizeCaseInputUnsafe(input: unknown): unknown {
   if (!isRecord(input)) return input;
-  const creation = isRecord(input.creation) ? input.creation : undefined;
-  const sheet = isRecord(input.sheet) ? input.sheet : undefined;
-  const battle = isRecord(input.battle) ? input.battle : undefined;
-  const canonicalCreation =
-    creation === undefined || !Array.isArray(creation.fillBatches)
-      ? creation
-      : {
-          ...creation,
-          fillBatches: creation.fillBatches.map((batch) =>
-            Array.isArray(batch)
-              ? batch.map((fill) => canonicalizeFillInput(fill))
-              : batch,
-          ),
-        };
-  const canonicalSheet =
-    sheet?.tag === "wildShapeKnownForms" && isStringArray(sheet.statBlockIds)
-      ? {
-          ...sheet,
-          statBlockIds: canonicalizeStringSet(sheet.statBlockIds),
-        }
-      : sheet;
-  const canonicalBattle =
-    battle === undefined ? undefined : canonicalizeBattleInput(battle);
+  const canonicalCreation = canonicalizeCaseCreation(input.creation);
+  const canonicalSheet = canonicalizeCaseSheet(input.sheet);
+  const canonicalBattle = canonicalizeCaseBattle(input.battle);
   return {
     ...input,
     ...(canonicalCreation === undefined ? {} : { creation: canonicalCreation }),
     ...(canonicalSheet === undefined ? {} : { sheet: canonicalSheet }),
     ...(canonicalBattle === undefined ? {} : { battle: canonicalBattle }),
   };
+}
+
+function canonicalizeCaseCreation(input: unknown): unknown {
+  if (!isRecord(input)) return undefined;
+  if (!Array.isArray(input.fillBatches)) return input;
+  return {
+    ...input,
+    fillBatches: input.fillBatches.map((batch) =>
+      Array.isArray(batch)
+        ? batch.map((fill) => canonicalizeFillInput(fill))
+        : batch,
+    ),
+  };
+}
+
+function canonicalizeCaseSheet(input: unknown): unknown {
+  if (!isRecord(input)) return undefined;
+  return input.tag === "wildShapeKnownForms" &&
+    isStringArray(input.statBlockIds)
+    ? {
+        ...input,
+        statBlockIds: canonicalizeStringSet(input.statBlockIds),
+      }
+    : input;
+}
+
+function canonicalizeCaseBattle(input: unknown): unknown {
+  return isRecord(input) ? canonicalizeBattleInput(input) : undefined;
 }
 
 function canonicalizeFillInput(input: unknown): unknown {

@@ -46,6 +46,201 @@ export function documentJsonSchema<A, I, R>(
   );
 }
 
+type UnsupportedDocumentAst = Extract<
+  AST.AST,
+  { readonly _tag: "AnyKeyword" | "UnknownKeyword" | "Declaration" }
+>;
+
+type CompositeDocumentAst = Extract<
+  AST.AST,
+  {
+    readonly _tag:
+      | "Refinement"
+      | "TupleType"
+      | "TypeLiteral"
+      | "Union"
+      | "Suspend"
+      | "Transformation"
+      | "TemplateLiteral";
+  }
+>;
+
+type DocumentAstProjectionOperations = {
+  readonly project: (ast: AST.AST, path?: string) => AST.AST;
+  readonly projectType: (value: AST.Type, path: string) => AST.Type;
+  readonly projectOptionalType: (
+    value: AST.OptionalType,
+    path: string,
+  ) => AST.OptionalType;
+  readonly projectPropertySignature: (
+    value: AST.PropertySignature,
+    path: string,
+  ) => AST.PropertySignature;
+  readonly projectIndexSignature: (
+    value: AST.IndexSignature,
+    path: string,
+  ) => AST.IndexSignature;
+  readonly suspendIdentifier: (ast: AST.Suspend) => Option.Option<string>;
+  readonly projectedSuspendsByIdentifier: Map<string, AST.Suspend>;
+  readonly projectedSuspendBodies: WeakMap<() => AST.AST, AST.AST>;
+};
+
+const DOCUMENT_UNSUPPORTED_AST_TAGS: readonly AST.AST["_tag"][] = [
+  "AnyKeyword",
+  "UnknownKeyword",
+  "Declaration",
+];
+
+const DOCUMENT_COMPOSITE_AST_TAGS: readonly AST.AST["_tag"][] = [
+  "Refinement",
+  "TupleType",
+  "TypeLiteral",
+  "Union",
+  "Suspend",
+  "Transformation",
+  "TemplateLiteral",
+];
+
+function isUnsupportedDocumentAst(ast: AST.AST): ast is UnsupportedDocumentAst {
+  return DOCUMENT_UNSUPPORTED_AST_TAGS.includes(ast._tag);
+}
+
+function isCompositeDocumentAst(ast: AST.AST): ast is CompositeDocumentAst {
+  return DOCUMENT_COMPOSITE_AST_TAGS.includes(ast._tag);
+}
+
+function projectDocumentAstNode(
+  ast: AST.AST,
+  path: string,
+  operations: DocumentAstProjectionOperations,
+): AST.AST {
+  if (isUnsupportedDocumentAst(ast)) {
+    throw new Error(
+      `Document schemas cannot contain ${ast._tag} AST nodes at ${path}.`,
+    );
+  }
+  if (!isCompositeDocumentAst(ast)) return ast;
+  return projectCompositeDocumentAst(ast, path, operations);
+}
+
+function projectCompositeDocumentAst(
+  ast: CompositeDocumentAst,
+  path: string,
+  operations: DocumentAstProjectionOperations,
+): AST.AST {
+  switch (ast._tag) {
+    case "Refinement":
+      return projectDocumentRefinement(ast, path, operations);
+    case "TupleType":
+      return new AST.TupleType(
+        ast.elements.map((element, index) =>
+          operations.projectOptionalType(element, `${path}[${index}]`),
+        ),
+        ast.rest.map((element) => operations.projectType(element, `${path}[]`)),
+        ast.isReadonly,
+        ast.annotations,
+      );
+    case "TypeLiteral":
+      return new AST.TypeLiteral(
+        ast.propertySignatures.map((property) =>
+          operations.projectPropertySignature(
+            property,
+            `${path}.${String(property.name)}`,
+          ),
+        ),
+        ast.indexSignatures.map((indexSignature) =>
+          operations.projectIndexSignature(indexSignature, `${path}[*]`),
+        ),
+        ast.annotations,
+      );
+    case "Union":
+      return AST.Union.make(
+        ast.types.map((member, index) =>
+          operations.project(member, `${path}|${index}`),
+        ),
+        ast.annotations,
+      );
+    case "Suspend":
+      return projectDocumentSuspend(ast, path, operations);
+    case "Transformation":
+      return new AST.Transformation(
+        operations.project(ast.from, `${path}<from>`),
+        operations.project(ast.to, `${path}<to>`),
+        ast.transformation,
+        ast.annotations,
+      );
+    case "TemplateLiteral":
+      return new AST.TemplateLiteral(
+        ast.head,
+        mapNonEmpty(
+          ast.spans,
+          (span) =>
+            new AST.TemplateLiteralSpan(
+              operations.project(span.type, `${path}<span>`),
+              span.literal,
+            ),
+        ),
+        ast.annotations,
+      );
+  }
+}
+
+function projectDocumentRefinement(
+  ast: Extract<CompositeDocumentAst, { readonly _tag: "Refinement" }>,
+  path: string,
+  operations: DocumentAstProjectionOperations,
+): AST.AST {
+  const projectedFrom = operations.project(ast.from, path);
+  const jsonSchema = AST.getJSONSchemaAnnotation(ast);
+  if (Option.isSome(jsonSchema)) {
+    return new AST.Refinement(projectedFrom, ast.filter, ast.annotations);
+  }
+  const reason = ast.annotations[SemanticRefinementAnnotationId];
+  if (!isSemanticRefinementReason(reason)) {
+    throw new Error(
+      reason === undefined
+        ? `Document schema has an unannotated refinement at ${path}; mark its semantic admission reason or add a JSON Schema annotation.`
+        : `Document schema has an invalid semantic refinement reason at ${path}.`,
+    );
+  }
+  const annotations = { ...ast.annotations };
+  delete annotations[SemanticRefinementAnnotationId];
+  return AST.annotations(projectedFrom, annotations);
+}
+
+function projectDocumentSuspend(
+  ast: Extract<CompositeDocumentAst, { readonly _tag: "Suspend" }>,
+  path: string,
+  operations: DocumentAstProjectionOperations,
+): AST.Suspend {
+  const identifier = Option.getOrUndefined(operations.suspendIdentifier(ast));
+  if (identifier === undefined) {
+    throw new Error(
+      `Document schemas require an identifier on every Suspend at ${path}.`,
+    );
+  }
+  const existing = operations.projectedSuspendsByIdentifier.get(identifier);
+  if (existing !== undefined) return existing;
+  const projected = new AST.Suspend(
+    () => {
+      const cachedBody = operations.projectedSuspendBodies.get(ast.f);
+      if (cachedBody !== undefined) return cachedBody;
+      const projectedBody = operations.project(
+        ast.f(),
+        `${path}<${identifier}>`,
+      );
+      operations.projectedSuspendBodies.set(ast.f, projectedBody);
+      return projectedBody;
+    },
+    {
+      ...ast.annotations,
+      [AST.IdentifierAnnotationId]: identifier,
+    },
+  );
+  operations.projectedSuspendsByIdentifier.set(identifier, projected);
+  return projected;
+}
+
 function projectDocumentAst(root: AST.AST): AST.AST {
   const projectedByAst = new WeakMap<object, AST.AST>();
   const projectedSuspendsByIdentifier = new Map<string, AST.Suspend>();
@@ -54,150 +249,18 @@ function projectDocumentAst(root: AST.AST): AST.AST {
   const project = (ast: AST.AST, path = "$"): AST.AST => {
     const cached = projectedByAst.get(ast);
     if (cached !== undefined) return cached;
-
-    switch (ast._tag) {
-      case "AnyKeyword":
-      case "UnknownKeyword":
-        throw new Error(
-          `Document schemas cannot contain ${ast._tag} AST nodes at ${path}.`,
-        );
-      case "Declaration":
-        throw new Error(
-          `Document schemas cannot contain Declaration AST nodes at ${path}.`,
-        );
-      case "Refinement": {
-        const projectedFrom = project(ast.from, path);
-        const jsonSchema = AST.getJSONSchemaAnnotation(ast);
-        if (Option.isNone(jsonSchema)) {
-          const reason = ast.annotations[SemanticRefinementAnnotationId];
-          if (!isSemanticRefinementReason(reason)) {
-            throw new Error(
-              reason === undefined
-                ? `Document schema has an unannotated refinement at ${path}; mark its semantic admission reason or add a JSON Schema annotation.`
-                : `Document schema has an invalid semantic refinement reason at ${path}.`,
-            );
-          }
-          const annotations = { ...ast.annotations };
-          delete annotations[SemanticRefinementAnnotationId];
-          const projected = AST.annotations(projectedFrom, annotations);
-          projectedByAst.set(ast, projected);
-          return projected;
-        }
-        const projected = new AST.Refinement(
-          projectedFrom,
-          ast.filter,
-          ast.annotations,
-        );
-        projectedByAst.set(ast, projected);
-        return projected;
-      }
-      case "TupleType": {
-        const projected = new AST.TupleType(
-          ast.elements.map((element, index) =>
-            projectOptionalType(element, `${path}[${index}]`),
-          ),
-          ast.rest.map((element) => projectType(element, `${path}[]`)),
-          ast.isReadonly,
-          ast.annotations,
-        );
-        projectedByAst.set(ast, projected);
-        return projected;
-      }
-      case "TypeLiteral": {
-        const projected = new AST.TypeLiteral(
-          ast.propertySignatures.map((property) =>
-            projectPropertySignature(
-              property,
-              `${path}.${String(property.name)}`,
-            ),
-          ),
-          ast.indexSignatures.map((indexSignature) =>
-            projectIndexSignature(indexSignature, `${path}[*]`),
-          ),
-          ast.annotations,
-        );
-        projectedByAst.set(ast, projected);
-        return projected;
-      }
-      case "Union": {
-        const projected = AST.Union.make(
-          ast.types.map((member, index) => project(member, `${path}|${index}`)),
-          ast.annotations,
-        );
-        projectedByAst.set(ast, projected);
-        return projected;
-      }
-      case "Suspend": {
-        const identifier = Option.getOrUndefined(suspendIdentifier(ast));
-        if (identifier === undefined) {
-          throw new Error(
-            `Document schemas require an identifier on every Suspend at ${path}.`,
-          );
-        }
-        const existing = projectedSuspendsByIdentifier.get(identifier);
-        if (existing !== undefined) {
-          projectedByAst.set(ast, existing);
-          return existing;
-        }
-
-        const projected = new AST.Suspend(
-          () => {
-            const cachedBody = projectedSuspendBodies.get(ast.f);
-            if (cachedBody !== undefined) return cachedBody;
-            const projectedBody = project(ast.f(), `${path}<${identifier}>`);
-            projectedSuspendBodies.set(ast.f, projectedBody);
-            return projectedBody;
-          },
-          {
-            ...ast.annotations,
-            [AST.IdentifierAnnotationId]: identifier,
-          },
-        );
-        projectedByAst.set(ast, projected);
-        projectedSuspendsByIdentifier.set(identifier, projected);
-        return projected;
-      }
-      case "Transformation": {
-        const projected = new AST.Transformation(
-          project(ast.from, `${path}<from>`),
-          project(ast.to, `${path}<to>`),
-          ast.transformation,
-          ast.annotations,
-        );
-        projectedByAst.set(ast, projected);
-        return projected;
-      }
-      case "TemplateLiteral": {
-        const projected = new AST.TemplateLiteral(
-          ast.head,
-          mapNonEmpty(
-            ast.spans,
-            (span) =>
-              new AST.TemplateLiteralSpan(
-                project(span.type, `${path}<span>`),
-                span.literal,
-              ),
-          ),
-          ast.annotations,
-        );
-        projectedByAst.set(ast, projected);
-        return projected;
-      }
-      case "Enums":
-      case "Literal":
-      case "UniqueSymbol":
-      case "UndefinedKeyword":
-      case "VoidKeyword":
-      case "NeverKeyword":
-      case "StringKeyword":
-      case "NumberKeyword":
-      case "BooleanKeyword":
-      case "BigIntKeyword":
-      case "SymbolKeyword":
-      case "ObjectKeyword":
-        projectedByAst.set(ast, ast);
-        return ast;
-    }
+    const projected = projectDocumentAstNode(ast, path, {
+      project,
+      projectType,
+      projectOptionalType,
+      projectPropertySignature,
+      projectIndexSignature,
+      suspendIdentifier,
+      projectedSuspendsByIdentifier,
+      projectedSuspendBodies,
+    });
+    projectedByAst.set(ast, projected);
+    return projected;
   };
 
   const projectType = (value: AST.Type, path: string): AST.Type => {

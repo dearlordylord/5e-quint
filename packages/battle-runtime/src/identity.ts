@@ -500,19 +500,55 @@ export function battleProcedureExecutionRefBelongsToCombatant(
     return false;
   }
   const scopeRef = decoded.scopeRef;
-  return (
-    (Schema.is(BattleAttackExecutionScopeRef)(scopeRef) &&
-      battleProcedureExecutionRefBelongsToScope(procedureRef, scopeRef) &&
-      battleAttackExecutionScopeRefBelongsToCombatant(scopeRef, combatantId)) ||
-    (Schema.is(BattleStatBlockExecutionScopeRef)(scopeRef) &&
-      battleProcedureExecutionRefBelongsToScope(procedureRef, scopeRef) &&
-      battleStatBlockExecutionScopeRefBelongsToCombatant(
+  return battleProcedureScopeRefBelongsToCombatant(
+    procedureRef,
+    scopeRef,
+    combatantId,
+  );
+}
+
+function battleProcedureScopeRefBelongsToCombatant(
+  procedureRef: BattleProcedureExecutionRef,
+  scopeRef: unknown,
+  combatantId: CombatantId,
+): boolean {
+  if (Schema.is(BattleAttackExecutionScopeRef)(scopeRef)) {
+    return battleProcedureScopeAndCombatant(
+      procedureRef,
+      scopeRef,
+      combatantId,
+      battleAttackExecutionScopeRefBelongsToCombatant,
+    );
+  }
+  if (Schema.is(BattleStatBlockExecutionScopeRef)(scopeRef)) {
+    return battleProcedureScopeAndCombatant(
+      procedureRef,
+      scopeRef,
+      combatantId,
+      battleStatBlockExecutionScopeRefBelongsToCombatant,
+    );
+  }
+  return Schema.is(BattleCharacterExecutionScopeRef)(scopeRef)
+    ? battleProcedureScopeAndCombatant(
+        procedureRef,
         scopeRef,
         combatantId,
-      )) ||
-    (Schema.is(BattleCharacterExecutionScopeRef)(scopeRef) &&
-      battleProcedureExecutionRefBelongsToScope(procedureRef, scopeRef) &&
-      battleCharacterExecutionScopeRefBelongsToCombatant(scopeRef, combatantId))
+        battleCharacterExecutionScopeRefBelongsToCombatant,
+      )
+    : false;
+}
+
+function battleProcedureScopeAndCombatant<
+  Scope extends BattleExecutionScopeRef,
+>(
+  procedureRef: BattleProcedureExecutionRef,
+  scopeRef: Scope,
+  combatantId: CombatantId,
+  belongsToCombatant: (scopeRef: Scope, combatantId: CombatantId) => boolean,
+): boolean {
+  return (
+    battleProcedureExecutionRefBelongsToScope(procedureRef, scopeRef) &&
+    belongsToCombatant(scopeRef, combatantId)
   );
 }
 

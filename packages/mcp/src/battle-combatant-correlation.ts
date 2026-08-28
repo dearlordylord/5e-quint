@@ -113,6 +113,161 @@ export type BattleCombatantCorrelationIssue =
       readonly actualOrigin: BattleCreatureInit["creatureInit"]["kind"];
     };
 
+function indexBattleCorrelationParticipants<
+  const Participant extends BattleCombatantCorrelationParticipant,
+>(
+  participants: readonly Participant[],
+): Either.Either<
+  Map<CombatantId, Participant>,
+  BattleCombatantCorrelationIssue
+> {
+  const byCombatantId = new Map<CombatantId, Participant>();
+  for (const participant of participants) {
+    if (byCombatantId.has(participant.combatantId)) {
+      return Either.left({
+        tag: "duplicateParticipantCombatantId",
+        combatantId: participant.combatantId,
+      });
+    }
+    byCombatantId.set(participant.combatantId, participant);
+  }
+  return Either.right(byCombatantId);
+}
+
+function indexBattleCorrelationInitializations<
+  const Initialization extends BattleCombatantCorrelationInitialization,
+>(
+  creatureInits: readonly Initialization[],
+): Either.Either<
+  Map<CombatantId, Initialization>,
+  BattleCombatantCorrelationIssue
+> {
+  const byCombatantId = new Map<CombatantId, Initialization>();
+  for (const creatureInit of creatureInits) {
+    if (byCombatantId.has(creatureInit.combatantId)) {
+      return Either.left({
+        tag: "duplicateInitializationCombatantId",
+        combatantId: creatureInit.combatantId,
+      });
+    }
+    byCombatantId.set(creatureInit.combatantId, creatureInit);
+  }
+  return Either.right(byCombatantId);
+}
+
+function validateBattleCorrelationInitializationIds<
+  const Initialization extends BattleCombatantCorrelationInitialization,
+  const Participant extends BattleCombatantCorrelationParticipant,
+>(input: {
+  readonly participants: readonly Participant[];
+  readonly creatureInits: readonly Initialization[];
+  readonly participantByCombatantId: ReadonlyMap<CombatantId, Participant>;
+  readonly initializationByCombatantId: ReadonlyMap<
+    CombatantId,
+    Initialization
+  >;
+}): Either.Either<void, BattleCombatantCorrelationIssue> {
+  for (const creatureInit of input.creatureInits) {
+    if (!input.participantByCombatantId.has(creatureInit.combatantId)) {
+      return Either.left({
+        tag: "unexpectedInitializationCombatantId",
+        combatantId: creatureInit.combatantId,
+      });
+    }
+  }
+  for (const participant of input.participants) {
+    if (!input.initializationByCombatantId.has(participant.combatantId)) {
+      return Either.left({
+        tag: "missingInitializationCombatantId",
+        combatantId: participant.combatantId,
+      });
+    }
+  }
+  return Either.right(undefined);
+}
+
+function correlateBattleCombatantPair<
+  const Initialization extends BattleCombatantCorrelationInitialization,
+  const Participant extends BattleCombatantCorrelationParticipant,
+>(
+  participant: Participant,
+  creatureInit: Initialization,
+): Either.Either<
+  BattleCombatantCorrelationPair<Initialization, Participant>,
+  BattleCombatantCorrelationIssue
+> {
+  return Match.value(participant.origin).pipe(
+    Match.when("characterSheet", () =>
+      isCharacterBattleCombatantCorrelationInitialization(creatureInit)
+        ? Either.right({
+            participant: {
+              ...participant,
+              origin: "characterSheet" as const,
+            },
+            initialization: creatureInit,
+          })
+        : Either.left({
+            tag: "initializationOriginMismatch" as const,
+            combatantId: participant.combatantId,
+            expectedOrigin: participant.origin,
+            actualOrigin: creatureInit.creatureInit.kind,
+          }),
+    ),
+    Match.when("statBlock", () =>
+      isStatBlockBattleCombatantCorrelationInitialization(creatureInit)
+        ? Either.right({
+            participant: { ...participant, origin: "statBlock" as const },
+            initialization: creatureInit,
+          })
+        : Either.left({
+            tag: "initializationOriginMismatch" as const,
+            combatantId: participant.combatantId,
+            expectedOrigin: participant.origin,
+            actualOrigin: creatureInit.creatureInit.kind,
+          }),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function correlateBattleCombatantsInInputOrder<
+  const Initialization extends BattleCombatantCorrelationInitialization,
+  const Participant extends BattleCombatantCorrelationParticipant,
+>(input: {
+  readonly participants: ReadonlyNonEmptyArray<Participant>;
+  readonly initializationByCombatantId: ReadonlyMap<
+    CombatantId,
+    Initialization
+  >;
+}): Either.Either<
+  ReadonlyNonEmptyArray<
+    BattleCombatantCorrelationPair<Initialization, Participant>
+  >,
+  BattleCombatantCorrelationIssue
+> {
+  const orderedPairs: Array<
+    BattleCombatantCorrelationPair<Initialization, Participant>
+  > = [];
+  for (const participant of input.participants) {
+    const pair = correlateBattleCombatantPair(
+      participant,
+      requiredBattleCombatantInitialization(
+        input.initializationByCombatantId,
+        participant.combatantId,
+      ),
+    );
+    if (Either.isLeft(pair)) return Either.left(pair.left);
+    orderedPairs.push(pair.right);
+  }
+  const [firstPair, ...restPairs] = orderedPairs;
+  if (firstPair === undefined) {
+    throw new Error(
+      "Internal invariant: non-empty participant correlation returned no pair.",
+    );
+  }
+  return Either.right([firstPair, ...restPairs]);
+}
+
 export function correlateBattleCombatantInitializations<
   const Initialization extends BattleCombatantCorrelationInitialization,
   const Participant extends BattleCombatantCorrelationParticipant,
@@ -125,98 +280,23 @@ export function correlateBattleCombatantInitializations<
   >,
   BattleCombatantCorrelationIssue
 > {
-  const participantByCombatantId = new Map<CombatantId, Participant>();
-  for (const participant of input.participants) {
-    if (participantByCombatantId.has(participant.combatantId)) {
-      return Either.left({
-        tag: "duplicateParticipantCombatantId",
-        combatantId: participant.combatantId,
-      });
-    }
-    participantByCombatantId.set(participant.combatantId, participant);
-  }
-
-  const initializationByCombatantId = new Map<CombatantId, Initialization>();
-  for (const creatureInit of input.creatureInits) {
-    if (initializationByCombatantId.has(creatureInit.combatantId)) {
-      return Either.left({
-        tag: "duplicateInitializationCombatantId",
-        combatantId: creatureInit.combatantId,
-      });
-    }
-    initializationByCombatantId.set(creatureInit.combatantId, creatureInit);
-  }
-
-  for (const creatureInit of input.creatureInits) {
-    if (!participantByCombatantId.has(creatureInit.combatantId)) {
-      return Either.left({
-        tag: "unexpectedInitializationCombatantId",
-        combatantId: creatureInit.combatantId,
-      });
-    }
-  }
-
-  for (const participant of input.participants) {
-    if (!initializationByCombatantId.has(participant.combatantId)) {
-      return Either.left({
-        tag: "missingInitializationCombatantId",
-        combatantId: participant.combatantId,
-      });
-    }
-  }
-
-  // The MCP roster order is the caller's order; the owner output order is not
-  // part of this join contract.
-  const orderedPairs: Array<
-    BattleCombatantCorrelationPair<Initialization, Participant>
-  > = [];
-  for (const participant of input.participants) {
-    const creatureInit = requiredBattleCombatantInitialization(
-      initializationByCombatantId,
-      participant.combatantId,
-    );
-    const pair = Match.value(participant.origin).pipe(
-      Match.when("characterSheet", () =>
-        isCharacterBattleCombatantCorrelationInitialization(creatureInit)
-          ? Either.right({
-              participant: {
-                ...participant,
-                origin: "characterSheet" as const,
-              },
-              initialization: creatureInit,
-            })
-          : Either.left({
-              tag: "initializationOriginMismatch" as const,
-              combatantId: participant.combatantId,
-              expectedOrigin: participant.origin,
-              actualOrigin: creatureInit.creatureInit.kind,
-            }),
-      ),
-      Match.when("statBlock", () =>
-        isStatBlockBattleCombatantCorrelationInitialization(creatureInit)
-          ? Either.right({
-              participant: { ...participant, origin: "statBlock" as const },
-              initialization: creatureInit,
-            })
-          : Either.left({
-              tag: "initializationOriginMismatch" as const,
-              combatantId: participant.combatantId,
-              expectedOrigin: participant.origin,
-              actualOrigin: creatureInit.creatureInit.kind,
-            }),
-      ),
-      Match.exhaustive,
-    );
-    if (Either.isLeft(pair)) return Either.left(pair.left);
-    orderedPairs.push(pair.right);
-  }
-  const [firstPair, ...restPairs] = orderedPairs;
-  if (firstPair === undefined) {
-    throw new Error(
-      "Internal invariant: non-empty participant correlation returned no pair.",
-    );
-  }
-  return Either.right([firstPair, ...restPairs]);
+  const participants = indexBattleCorrelationParticipants(input.participants);
+  if (Either.isLeft(participants)) return Either.left(participants.left);
+  const initializations = indexBattleCorrelationInitializations(
+    input.creatureInits,
+  );
+  if (Either.isLeft(initializations)) return Either.left(initializations.left);
+  const validIds = validateBattleCorrelationInitializationIds({
+    participants: input.participants,
+    creatureInits: input.creatureInits,
+    participantByCombatantId: participants.right,
+    initializationByCombatantId: initializations.right,
+  });
+  if (Either.isLeft(validIds)) return Either.left(validIds.left);
+  return correlateBattleCombatantsInInputOrder({
+    participants: input.participants,
+    initializationByCombatantId: initializations.right,
+  });
 }
 
 export function correlateSingleBattleCombatantInitialization<

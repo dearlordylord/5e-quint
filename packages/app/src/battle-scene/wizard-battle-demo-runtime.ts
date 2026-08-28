@@ -64,29 +64,49 @@ export function requireCounterspellChoice(
   const frontier = result.envelope.frontier
   const choice =
     frontier.kind === "interruptDecision"
-      ? frontier.choices.find((candidate): candidate is CounterspellReactionChoice => {
-          if (
-            candidate.kind !== "nestedProcedure" ||
-            candidate.subject.command !== "castTriggeredReactionSpell" ||
-            candidate.subject.reactorId !== input.reactorId
-          ) {
-            return false
-          }
-          const presentation = battleSubjectPresentation(result.session, candidate.subject)
-          return (
-            presentation?.kind === "spell" &&
-            presentation.invocation.tag === "spellSlot" &&
-            presentation.invocation.procedure === "counterspell" &&
-            presentation.invocation.spellId === input.spellId &&
-            Number(presentation.invocation.slotLevel) === input.slotLevel
-          )
-        })
+      ? frontier.choices.find((candidate) => isCounterspellReactionChoiceCandidate(candidate, result.session, input))
       : undefined
   /* v8 ignore next -- @preserve -- defensive failure after the pending interrupt narrows available choices */
   if (choice === undefined) {
     throw new Error("Expected Counterspell Reaction choice.")
   }
   return choice
+}
+
+function isCounterspellReactionChoiceCandidate(
+  candidate: BattleInterruptProcedureChoice,
+  session: BattleRuntimeSession,
+  input: {
+    readonly reactorId: CombatantId
+    readonly slotLevel: number
+    readonly spellId: string
+  }
+): candidate is CounterspellReactionChoice {
+  if (
+    candidate.kind !== "nestedProcedure" ||
+    candidate.subject.command !== "castTriggeredReactionSpell" ||
+    candidate.subject.reactorId !== input.reactorId
+  ) {
+    return false
+  }
+  const presentation = battleSubjectPresentation(session, candidate.subject)
+  return hasCounterspellSpellPresentation(presentation, input)
+}
+
+function hasCounterspellSpellPresentation(
+  presentation: ReturnType<typeof battleSubjectPresentation>,
+  input: {
+    readonly slotLevel: number
+    readonly spellId: string
+  }
+): boolean {
+  if (presentation?.kind !== "spell") return false
+  return (
+    presentation.invocation.tag === "spellSlot" &&
+    presentation.invocation.procedure === "counterspell" &&
+    presentation.invocation.spellId === input.spellId &&
+    Number(presentation.invocation.slotLevel) === input.slotLevel
+  )
 }
 
 export function counterspellDecision(

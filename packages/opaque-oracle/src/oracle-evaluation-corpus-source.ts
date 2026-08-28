@@ -113,6 +113,23 @@ type BattleSourceFacts = {
   readonly interruptDecisionDecline: OracleBattleAttempt;
 };
 
+type StatBlockProcedureRef = Schema.Schema.Type<
+  typeof BattleStatBlockProcedureExecutionRef
+>;
+
+type BattleMovementFacts = {
+  readonly session: BattleRuntimeSession;
+  readonly moveSubject: MoveSubject;
+  readonly movementHole: OrdinaryMovementHole;
+  readonly movementWithoutOpportunityAttack: BattleFill;
+  readonly movementWithOpportunityAttack: BattleFill;
+};
+
+type BattleMovementStart = Pick<
+  BattleMovementFacts,
+  "session" | "moveSubject" | "movementHole"
+>;
+
 /**
  * Author the ordered source Cases once. The repeated first Case is deliberate
  * A/B/A evidence for order and multiplicity; no corpus metadata is needed.
@@ -149,6 +166,46 @@ function buildSourceCases(
     firstFill,
   };
 
+  const initial = buildInitialSourceCases(creation);
+  if (Either.isLeft(initial)) return Either.left(initial.left);
+  const sourceBattle = battleSourceFacts(services);
+  if (Either.isLeft(sourceBattle)) return Either.left(sourceBattle.left);
+  const transition = buildTransitionSourceCases(creation, sourceBattle.right);
+  if (Either.isLeft(transition)) return Either.left(transition.left);
+  const boundary = buildBoundarySourceCases(creation);
+  if (Either.isLeft(boundary)) return Either.left(boundary.left);
+  const initialCases = initial.right;
+  const transitionCases = transition.right;
+  const boundaryCases = boundary.right;
+
+  // Keep A/B/A at the beginning of the actual ordered batch. The repeated
+  // entered Case is intentional evidence for equality, order, and multiplicity.
+  return Either.right([
+    initialCases.enteredCase,
+    initialCases.exhaustedCase,
+    initialCases.enteredCase,
+    initialCases.mixedCase,
+    initialCases.wildShapeCase,
+    transitionCases.moveHolesCase,
+    transitionCases.retryCase,
+    transitionCases.resolvedMovementCase,
+    transitionCases.interruptResolutionCase,
+    boundaryCases.inputSurplusCase,
+    boundaryCases.fillRejectedCase,
+    boundaryCases.emptyRosterCase,
+  ]);
+}
+
+type InitialSourceCases = {
+  readonly enteredCase: OracleCase;
+  readonly exhaustedCase: OracleCase;
+  readonly mixedCase: OracleCase;
+  readonly wildShapeCase: OracleCase;
+};
+
+function buildInitialSourceCases(
+  creation: CreationSource,
+): Either.Either<InitialSourceCases, OracleEvaluationSourceIssue> {
   const enteredCase = decodeSourceCase({
     creation: { fillBatches: creation.fillBatches },
     sheet: { tag: "ordinary" },
@@ -180,18 +237,34 @@ function buildSourceCases(
   });
   if (Either.isLeft(wildShapeCase)) return Either.left(wildShapeCase.left);
 
-  const sourceBattle = battleSourceFacts(services);
-  if (Either.isLeft(sourceBattle)) return Either.left(sourceBattle.left);
+  return Either.right({
+    enteredCase: enteredCase.right,
+    exhaustedCase: exhaustedCase.right,
+    mixedCase: mixedCase.right,
+    wildShapeCase: wildShapeCase.right,
+  });
+}
 
+type TransitionSourceCases = {
+  readonly moveHolesCase: OracleCase;
+  readonly retryCase: OracleCase;
+  readonly resolvedMovementCase: OracleCase;
+  readonly interruptResolutionCase: OracleCase;
+};
+
+function buildTransitionSourceCases(
+  creation: CreationSource,
+  sourceBattle: BattleSourceFacts,
+): Either.Either<TransitionSourceCases, OracleEvaluationSourceIssue> {
   const moveHolesCase = decodeSourceCase({
     creation: { fillBatches: creation.fillBatches },
     sheet: { tag: "ordinary" },
     battle: {
-      ...sourceBattle.right.battle,
+      ...sourceBattle.battle,
       attempts: [
         {
           kind: "ordinarySubject",
-          subject: sourceBattle.right.moveSubject,
+          subject: sourceBattle.moveSubject,
           fills: [],
         },
       ],
@@ -203,19 +276,19 @@ function buildSourceCases(
     creation: { fillBatches: creation.fillBatches },
     sheet: { tag: "ordinary" },
     battle: {
-      ...sourceBattle.right.battle,
+      ...sourceBattle.battle,
       attempts: [
         {
           kind: "ordinarySubject",
           subject: {
-            ...sourceBattle.right.moveSubject,
+            ...sourceBattle.moveSubject,
             actorId: combatantId("corpus:wrong-actor"),
           },
           fills: [],
         },
         {
           kind: "ordinarySubject",
-          subject: sourceBattle.right.moveSubject,
+          subject: sourceBattle.moveSubject,
           fills: [],
         },
       ],
@@ -227,12 +300,12 @@ function buildSourceCases(
     creation: { fillBatches: creation.fillBatches },
     sheet: { tag: "ordinary" },
     battle: {
-      ...sourceBattle.right.battle,
+      ...sourceBattle.battle,
       attempts: [
         {
           kind: "ordinarySubject",
-          subject: sourceBattle.right.moveSubject,
-          fills: [sourceBattle.right.movementWithoutOpportunityAttack],
+          subject: sourceBattle.moveSubject,
+          fills: [sourceBattle.movementWithoutOpportunityAttack],
         },
       ],
     },
@@ -245,14 +318,14 @@ function buildSourceCases(
     creation: { fillBatches: creation.fillBatches },
     sheet: { tag: "ordinary" },
     battle: {
-      ...sourceBattle.right.battle,
+      ...sourceBattle.battle,
       attempts: [
         {
           kind: "ordinarySubject",
-          subject: sourceBattle.right.moveSubject,
-          fills: [sourceBattle.right.movementWithOpportunityAttack],
+          subject: sourceBattle.moveSubject,
+          fills: [sourceBattle.movementWithOpportunityAttack],
         },
-        sourceBattle.right.interruptDecisionDecline,
+        sourceBattle.interruptDecisionDecline,
       ],
     },
   });
@@ -260,6 +333,23 @@ function buildSourceCases(
     return Either.left(interruptResolutionCase.left);
   }
 
+  return Either.right({
+    moveHolesCase: moveHolesCase.right,
+    retryCase: retryCase.right,
+    resolvedMovementCase: resolvedMovementCase.right,
+    interruptResolutionCase: interruptResolutionCase.right,
+  });
+}
+
+type BoundarySourceCases = {
+  readonly inputSurplusCase: OracleCase;
+  readonly fillRejectedCase: OracleCase;
+  readonly emptyRosterCase: OracleCase;
+};
+
+function buildBoundarySourceCases(
+  creation: CreationSource,
+): Either.Either<BoundarySourceCases, OracleEvaluationSourceIssue> {
   const inputSurplusCase = decodeSourceCase({
     creation: {
       fillBatches: [...creation.fillBatches, [creation.firstFill]],
@@ -300,22 +390,11 @@ function buildSourceCases(
   });
   if (Either.isLeft(emptyRosterCase)) return Either.left(emptyRosterCase.left);
 
-  // Keep A/B/A at the beginning of the actual ordered batch. The repeated
-  // entered Case is intentional evidence for equality, order, and multiplicity.
-  return Either.right([
-    enteredCase.right,
-    exhaustedCase.right,
-    enteredCase.right,
-    mixedCase.right,
-    wildShapeCase.right,
-    moveHolesCase.right,
-    retryCase.right,
-    resolvedMovementCase.right,
-    interruptResolutionCase.right,
-    inputSurplusCase.right,
-    fillRejectedCase.right,
-    emptyRosterCase.right,
-  ]);
+  return Either.right({
+    inputSurplusCase: inputSurplusCase.right,
+    fillRejectedCase: fillRejectedCase.right,
+    emptyRosterCase: emptyRosterCase.right,
+  });
 }
 
 export function statBlockRosterEntryFor(
@@ -434,10 +513,7 @@ export function startStatBlockBattle(
 export function discoverStatBlockAttackProcedureRef(
   session: BattleRuntimeSession,
   actorId: CombatantId,
-): Either.Either<
-  Schema.Schema.Type<typeof BattleStatBlockProcedureExecutionRef>,
-  OracleEvaluationSourceIssue
-> {
+): Either.Either<StatBlockProcedureRef, OracleEvaluationSourceIssue> {
   const ended = endBattleRuntimeTurn({ session, actorId });
   if (ended.tag !== "resolved") {
     return Either.left({
@@ -477,13 +553,104 @@ function battleSourceFacts(
 ): Either.Either<BattleSourceFacts, OracleEvaluationSourceIssue> {
   const firstId = CORPUS_BATTLE_STAT_BLOCK_PLACEMENTS[0].combatantId;
   const secondId = CORPUS_BATTLE_STAT_BLOCK_PLACEMENTS[1].combatantId;
+  const movement = prepareBattleMovementFacts(services, firstId, secondId);
+  if (Either.isLeft(movement)) return Either.left(movement.left);
+  const interruptDecisionDecline = buildInterruptDecisionDecline(
+    services,
+    movement.right,
+  );
+  if (Either.isLeft(interruptDecisionDecline)) {
+    return Either.left(interruptDecisionDecline.left);
+  }
+  return Either.right({
+    battle: twoStatBlockBattle(),
+    moveSubject: movement.right.moveSubject,
+    movementHole: movement.right.movementHole,
+    movementWithoutOpportunityAttack:
+      movement.right.movementWithoutOpportunityAttack,
+    movementWithOpportunityAttack: movement.right.movementWithOpportunityAttack,
+    interruptDecisionDecline: interruptDecisionDecline.right,
+  });
+}
+
+function prepareBattleMovementFacts(
+  services: OracleEvaluationServices,
+  firstId: CombatantId,
+  secondId: CombatantId,
+): Either.Either<BattleMovementFacts, OracleEvaluationSourceIssue> {
+  const started = discoverBattleMovementStart(services);
+  if (Either.isLeft(started)) return Either.left(started.left);
+
+  const procedureRef = discoverStatBlockAttackProcedureRef(
+    started.right.session,
+    firstId,
+  );
+  if (Either.isLeft(procedureRef)) {
+    return Either.left(procedureRef.left);
+  }
+
+  const movementWithoutOpportunityAttack: BattleFill = {
+    kind: "movement",
+    holeId: started.right.movementHole.holeId,
+    value: {
+      speedKind: "walk",
+      movementCostFeet: movementFeet(10),
+      provokedOpportunityAttacks: [],
+    },
+  };
+  const movementWithOpportunityAttack: BattleFill = {
+    kind: "movement",
+    holeId: started.right.movementHole.holeId,
+    value: {
+      speedKind: "walk",
+      movementCostFeet: movementFeet(10),
+      provokedOpportunityAttacks: [
+        {
+          reactorId: secondId,
+          distanceFeet: movementFeet(5),
+          procedureRef: procedureRef.right,
+        },
+      ],
+    },
+  };
+  return Either.right({
+    session: started.right.session,
+    moveSubject: started.right.moveSubject,
+    movementHole: started.right.movementHole,
+    movementWithoutOpportunityAttack,
+    movementWithOpportunityAttack,
+  });
+}
+
+function discoverBattleMovementStart(
+  services: OracleEvaluationServices,
+): Either.Either<BattleMovementStart, OracleEvaluationSourceIssue> {
   const started = startStatBlockBattle(
     services,
     CORPUS_BATTLE_STAT_BLOCK_PLACEMENTS,
   );
   if (Either.isLeft(started)) return Either.left(started.left);
 
-  const moveAct = discoverBattleActs(started.right).find(
+  const moveSubject = discoverBattleMoveSubject(started.right);
+  if (Either.isLeft(moveSubject)) return Either.left(moveSubject.left);
+  const movementHole = discoverBattleMovementHole(
+    started.right,
+    moveSubject.right,
+    services.statBlockCatalog,
+  );
+  if (Either.isLeft(movementHole)) return Either.left(movementHole.left);
+
+  return Either.right({
+    session: started.right,
+    moveSubject: moveSubject.right,
+    movementHole: movementHole.right,
+  });
+}
+
+function discoverBattleMoveSubject(
+  session: BattleRuntimeSession,
+): Either.Either<MoveSubject, OracleEvaluationSourceIssue> {
+  const moveAct = discoverBattleActs(session).find(
     (act) =>
       act.subject.tag === "runtimeCommand" && act.subject.command === "move",
   );
@@ -497,17 +664,23 @@ function battleSourceFacts(
       message: "Source stat-block battle did not expose a Move act.",
     });
   }
+  return Either.right(moveAct.subject);
+}
 
-  const moveSubject = moveAct.subject;
+function discoverBattleMovementHole(
+  session: BattleRuntimeSession,
+  moveSubject: MoveSubject,
+  statBlockCatalog: OracleEvaluationServices["statBlockCatalog"],
+): Either.Either<OrdinaryMovementHole, OracleEvaluationSourceIssue> {
   const moveHoles = settleBattleRuntimeTransaction({
-    session: started.right,
+    session,
     transaction: null,
     operation: {
       kind: "ordinarySubject",
       subject: moveSubject,
       fills: [],
     },
-    statBlockCatalog: services.statBlockCatalog,
+    statBlockCatalog,
   });
   if (
     moveHoles.tag !== "needsHoles" ||
@@ -521,52 +694,25 @@ function battleSourceFacts(
   const movementHole = moveHoles.frontier.holes.find(
     (hole) => hole.kind === "movement",
   );
-  if (movementHole?.kind !== "movement") {
-    return Either.left({
-      tag: "sourceConstructionFailure",
-      message: "Source Move did not expose a movement hole.",
-    });
-  }
+  return movementHole?.kind === "movement"
+    ? Either.right(movementHole)
+    : Either.left({
+        tag: "sourceConstructionFailure",
+        message: "Source Move did not expose a movement hole.",
+      });
+}
 
-  const procedureRef = discoverStatBlockAttackProcedureRef(
-    started.right,
-    firstId,
-  );
-  if (Either.isLeft(procedureRef)) {
-    return Either.left(procedureRef.left);
-  }
-
-  const movementWithoutOpportunityAttack: BattleFill = {
-    kind: "movement",
-    holeId: movementHole.holeId,
-    value: {
-      speedKind: "walk",
-      movementCostFeet: movementFeet(10),
-      provokedOpportunityAttacks: [],
-    },
-  };
-  const movementWithOpportunityAttack: BattleFill = {
-    kind: "movement",
-    holeId: movementHole.holeId,
-    value: {
-      speedKind: "walk",
-      movementCostFeet: movementFeet(10),
-      provokedOpportunityAttacks: [
-        {
-          reactorId: secondId,
-          distanceFeet: movementFeet(5),
-          procedureRef: procedureRef.right,
-        },
-      ],
-    },
-  };
+function buildInterruptDecisionDecline(
+  services: OracleEvaluationServices,
+  movement: BattleMovementFacts,
+): Either.Either<OracleBattleAttempt, OracleEvaluationSourceIssue> {
   const opportunityAttack = settleBattleRuntimeTransaction({
-    session: started.right,
+    session: movement.session,
     transaction: null,
     operation: {
       kind: "ordinarySubject",
-      subject: moveSubject,
-      fills: [movementWithOpportunityAttack],
+      subject: movement.moveSubject,
+      fills: [movement.movementWithOpportunityAttack],
     },
     statBlockCatalog: services.statBlockCatalog,
   });
@@ -607,17 +753,7 @@ function battleSourceFacts(
     });
   }
 
-  return Either.right({
-    battle: twoStatBlockBattle(),
-    moveSubject,
-    movementHole,
-    movementWithoutOpportunityAttack,
-    movementWithOpportunityAttack,
-    interruptDecisionDecline: {
-      kind: "interruptDecision",
-      fill: declineFill.right,
-    },
-  });
+  return Either.right({ kind: "interruptDecision", fill: declineFill.right });
 }
 
 function decodeSourceCase(

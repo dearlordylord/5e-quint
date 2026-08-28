@@ -40,6 +40,17 @@ type CanonicalStructuralFrame =
       readonly depth: number;
     };
 
+type CanonicalStructuralState = {
+  readonly output: string[];
+  readonly active: Set<object>;
+  readonly frames: CanonicalStructuralFrame[];
+};
+
+type CanonicalStructuralScalar = {
+  readonly tag: "scalar";
+  readonly token: string;
+};
+
 /**
  * Produce a deterministic key for JSON-like structural equality. Object keys
  * are sorted, arrays retain order and multiplicity, and scalar type tags
@@ -47,172 +58,264 @@ type CanonicalStructuralFrame =
  * typed markers so boundary predicates remain total.
  */
 export function canonicalStructuralKey(value: unknown): string {
-  const output: string[] = [];
-  const active = new Set<object>();
-  const frames: CanonicalStructuralFrame[] = [
-    { tag: "visit", value, depth: 0 },
-  ];
+  const state: CanonicalStructuralState = {
+    output: [],
+    active: new Set<object>(),
+    frames: [{ tag: "visit", value, depth: 0 }],
+  };
 
-  while (frames.length > 0) {
-    const frame = frames.pop();
+  while (state.frames.length > 0) {
+    const frame = state.frames.pop();
     if (frame === undefined) continue;
-    if (frame.tag === "token") {
-      output.push(frame.value);
-      continue;
-    }
-    if (frame.tag === "close") {
-      active.delete(frame.value);
-      output.push(frame.token);
-      continue;
-    }
-    if (frame.tag === "arrayMember") {
-      let present: boolean;
-      try {
-        present = frame.index in frame.value;
-      } catch {
-        output.push("h:array-member");
-        continue;
-      }
-      if (!present) {
-        output.push("h:hole");
-        continue;
-      }
-      let member: unknown;
-      try {
-        member = Reflect.get(frame.value, String(frame.index));
-      } catch {
-        output.push("h:array-member");
-        continue;
-      }
-      frames.push({
-        tag: "visit",
-        value: member,
-        depth: frame.depth,
-      });
-      continue;
-    }
-    if (frame.tag === "objectMember") {
-      let member: unknown;
-      try {
-        member = Reflect.get(frame.value, frame.key);
-      } catch {
-        output.push(`k:${encodeString(frame.key)}=h:getter;`);
-        continue;
-      }
-      output.push(`k:${encodeString(frame.key)}=`);
-      frames.push({
-        tag: "visit",
-        value: member,
-        depth: frame.depth,
-      });
-      continue;
-    }
-
-    const { value: current, depth } = frame;
-    if (current === null) {
-      output.push("null;");
-      continue;
-    }
-    switch (typeof current) {
-      case "undefined":
-        output.push("undefined;");
-        continue;
-      case "boolean":
-        output.push(current ? "boolean:true;" : "boolean:false;");
-        continue;
-      case "string":
-        output.push(`string:${encodeString(current)};`);
-        continue;
-      case "number":
-        output.push(`number:${canonicalNumber(current)};`);
-        continue;
-      case "bigint":
-        output.push(`bigint:${encodeString(String(current))};`);
-        continue;
-      case "symbol":
-        output.push(`symbol:${encodeString(current.description ?? "")};`);
-        continue;
-      case "function":
-        output.push("function;");
-        continue;
-      case "object":
-        break;
-    }
-
-    if (depth > MAX_CANONICAL_STRUCTURAL_DEPTH) {
-      output.push("object:depth-limit;");
-      continue;
-    }
-    if (active.has(current)) {
-      output.push("object:cycle;");
-      continue;
-    }
-
-    let arrayValue: readonly unknown[] | undefined;
-    try {
-      arrayValue = isArrayObject(current) ? current : undefined;
-    } catch {
-      output.push("object:hostile;");
-      continue;
-    }
-    if (arrayValue !== undefined) {
-      let length: number;
-      try {
-        length = arrayValue.length;
-      } catch {
-        output.push("array:hostile;");
-        continue;
-      }
-      if (
-        !Number.isSafeInteger(length) ||
-        length > MAX_CANONICAL_STRUCTURAL_ITEMS
-      ) {
-        output.push("array:length-limit;");
-        continue;
-      }
-      active.add(current);
-      output.push(`array:${length}:[`);
-      frames.push({ tag: "close", value: current, token: "];" });
-      for (let index = length - 1; index >= 0; index -= 1) {
-        frames.push({
-          tag: "arrayMember",
-          value: current,
-          index,
-          depth: depth + 1,
-        });
-      }
-      continue;
-    }
-
-    let keys: string[];
-    try {
-      keys = Object.keys(current).sort(compareCodePoints);
-    } catch {
-      output.push("object:hostile;");
-      continue;
-    }
-    if (keys.length > MAX_CANONICAL_STRUCTURAL_ITEMS) {
-      output.push("object:key-limit;");
-      continue;
-    }
-    active.add(current);
-    output.push(`object:${keys.length}:{`);
-    frames.push({ tag: "close", value: current, token: "};" });
-    for (let index = keys.length - 1; index >= 0; index -= 1) {
-      const key = keys[index];
-      if (key === undefined) {
-        output.push("object:hostile;");
-        continue;
-      }
-      frames.push({
-        tag: "objectMember",
-        value: current,
-        key,
-        depth: depth + 1,
-      });
-    }
+    processCanonicalStructuralFrame(frame, state);
   }
-  return output.join("");
+  return state.output.join("");
+}
+
+function processCanonicalStructuralFrame(
+  frame: CanonicalStructuralFrame,
+  state: CanonicalStructuralState,
+): void {
+  if (frame.tag === "token") {
+    state.output.push(frame.value);
+    return;
+  }
+  if (frame.tag === "close") {
+    state.active.delete(frame.value);
+    state.output.push(frame.token);
+    return;
+  }
+  if (frame.tag === "arrayMember") {
+    processCanonicalArrayMember(frame, state);
+    return;
+  }
+  if (frame.tag === "objectMember") {
+    processCanonicalObjectMember(frame, state);
+    return;
+  }
+  processCanonicalStructuralValue(frame, state);
+}
+
+function processCanonicalArrayMember(
+  frame: Extract<CanonicalStructuralFrame, { readonly tag: "arrayMember" }>,
+  state: CanonicalStructuralState,
+): void {
+  let present: boolean;
+  try {
+    present = frame.index in frame.value;
+  } catch {
+    state.output.push("h:array-member");
+    return;
+  }
+  if (!present) {
+    state.output.push("h:hole");
+    return;
+  }
+  let member: unknown;
+  try {
+    member = Reflect.get(frame.value, String(frame.index));
+  } catch {
+    state.output.push("h:array-member");
+    return;
+  }
+  state.frames.push({
+    tag: "visit",
+    value: member,
+    depth: frame.depth,
+  });
+}
+
+function processCanonicalObjectMember(
+  frame: Extract<CanonicalStructuralFrame, { readonly tag: "objectMember" }>,
+  state: CanonicalStructuralState,
+): void {
+  let member: unknown;
+  try {
+    member = Reflect.get(frame.value, frame.key);
+  } catch {
+    state.output.push(`k:${encodeString(frame.key)}=h:getter;`);
+    return;
+  }
+  state.output.push(`k:${encodeString(frame.key)}=`);
+  state.frames.push({
+    tag: "visit",
+    value: member,
+    depth: frame.depth,
+  });
+}
+
+function processCanonicalStructuralValue(
+  frame: Extract<CanonicalStructuralFrame, { readonly tag: "visit" }>,
+  state: CanonicalStructuralState,
+): void {
+  const scalar = canonicalStructuralScalar(frame.value);
+  if (scalar !== undefined) {
+    state.output.push(scalar.token);
+    return;
+  }
+  if (!isNonNullStructuralObject(frame.value)) {
+    state.output.push("function;");
+    return;
+  }
+  processCanonicalObjectValue(frame.value, frame.depth, state);
+}
+
+function canonicalStructuralScalar(
+  value: unknown,
+): CanonicalStructuralScalar | undefined {
+  return value === null
+    ? { tag: "scalar", token: "null;" }
+    : canonicalNonNullStructuralScalar(value);
+}
+
+function canonicalNonNullStructuralScalar(
+  value: unknown,
+): CanonicalStructuralScalar | undefined {
+  if (value === null) return { tag: "scalar", token: "null;" };
+  return canonicalPrimitiveStructuralScalar(value);
+}
+
+function canonicalPrimitiveStructuralScalar(
+  value: unknown,
+): CanonicalStructuralScalar | undefined {
+  if (typeof value === "undefined") {
+    return { tag: "scalar", token: "undefined;" };
+  }
+  if (typeof value === "boolean") {
+    return { tag: "scalar", token: canonicalBooleanToken(value) };
+  }
+  if (typeof value === "string") {
+    return { tag: "scalar", token: `string:${encodeString(value)};` };
+  }
+  if (typeof value === "number") {
+    return { tag: "scalar", token: `number:${canonicalNumber(value)};` };
+  }
+  if (typeof value === "bigint") {
+    return {
+      tag: "scalar",
+      token: `bigint:${encodeString(String(value))};`,
+    };
+  }
+  if (typeof value === "symbol") {
+    return {
+      tag: "scalar",
+      token: `symbol:${encodeString(symbolDescription(value))};`,
+    };
+  }
+  if (typeof value === "function") {
+    return { tag: "scalar", token: "function;" };
+  }
+  return undefined;
+}
+
+function canonicalBooleanToken(value: boolean): string {
+  return value ? "boolean:true;" : "boolean:false;";
+}
+
+function symbolDescription(value: symbol): string {
+  return value.description ?? "";
+}
+
+function isNonNullStructuralObject(value: unknown): value is object {
+  return typeof value === "object" && value !== null;
+}
+
+function processCanonicalObjectValue(
+  current: object,
+  depth: number,
+  state: CanonicalStructuralState,
+): void {
+  if (depth > MAX_CANONICAL_STRUCTURAL_DEPTH) {
+    state.output.push("object:depth-limit;");
+    return;
+  }
+  if (state.active.has(current)) {
+    state.output.push("object:cycle;");
+    return;
+  }
+  const arrayValue = readCanonicalArrayValue(current);
+  if (arrayValue !== undefined) {
+    processCanonicalArrayValue(arrayValue, current, depth, state);
+    return;
+  }
+  processCanonicalRecordValue(current, depth, state);
+}
+
+function readCanonicalArrayValue(
+  value: object,
+): readonly unknown[] | undefined {
+  try {
+    return isArrayObject(value) ? value : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function processCanonicalArrayValue(
+  arrayValue: readonly unknown[],
+  current: object,
+  depth: number,
+  state: CanonicalStructuralState,
+): void {
+  let length: number;
+  try {
+    length = arrayValue.length;
+  } catch {
+    state.output.push("array:hostile;");
+    return;
+  }
+  if (
+    !Number.isSafeInteger(length) ||
+    length > MAX_CANONICAL_STRUCTURAL_ITEMS
+  ) {
+    state.output.push("array:length-limit;");
+    return;
+  }
+  state.active.add(current);
+  state.output.push(`array:${length}:[`);
+  state.frames.push({ tag: "close", value: current, token: "];" });
+  for (let index = length - 1; index >= 0; index -= 1) {
+    state.frames.push({
+      tag: "arrayMember",
+      value: current,
+      index,
+      depth: depth + 1,
+    });
+  }
+}
+
+function processCanonicalRecordValue(
+  current: object,
+  depth: number,
+  state: CanonicalStructuralState,
+): void {
+  let keys: string[];
+  try {
+    keys = Object.keys(current).sort(compareCodePoints);
+  } catch {
+    state.output.push("object:hostile;");
+    return;
+  }
+  if (keys.length > MAX_CANONICAL_STRUCTURAL_ITEMS) {
+    state.output.push("object:key-limit;");
+    return;
+  }
+  state.active.add(current);
+  state.output.push(`object:${keys.length}:{`);
+  state.frames.push({ tag: "close", value: current, token: "};" });
+  for (let index = keys.length - 1; index >= 0; index -= 1) {
+    const key = keys[index];
+    if (key === undefined) {
+      state.output.push("object:hostile;");
+      continue;
+    }
+    state.frames.push({
+      tag: "objectMember",
+      value: current,
+      key,
+      depth: depth + 1,
+    });
+  }
 }
 
 function isArrayObject(value: object): value is readonly unknown[] {

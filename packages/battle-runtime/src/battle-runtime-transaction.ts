@@ -529,22 +529,27 @@ function ownedFrozenClone<T>(value: T): T {
 }
 
 function deepFreeze<T>(value: T, seen = new WeakSet<object>()): T {
-  if (
-    value === null ||
-    (typeof value !== "object" && typeof value !== "function")
-  ) {
-    return value;
-  }
+  if (!isDeepFreezable(value)) return value;
   if (seen.has(value)) return value;
   seen.add(value);
   Object.freeze(value);
+  freezeOwnProperties(value, seen);
+  return value;
+}
+
+function isDeepFreezable(value: unknown): value is object {
+  return (
+    value !== null && (typeof value === "object" || typeof value === "function")
+  );
+}
+
+function freezeOwnProperties(value: object, seen: WeakSet<object>): void {
   for (const key of Reflect.ownKeys(value)) {
     const descriptor = Object.getOwnPropertyDescriptor(value, key);
     if (descriptor !== undefined && "value" in descriptor) {
       deepFreeze(descriptor.value, seen);
     }
   }
-  return value;
 }
 
 function isInterruptFrontier(holes: readonly BattleHole[]): boolean {
@@ -988,6 +993,124 @@ function ancestorTransactionForSubject(
   return null;
 }
 
+type InitialCompletionCursor =
+  | { readonly tag: "cursor"; readonly cursor: BattlePendingTransaction | null }
+  | { readonly tag: "result"; readonly result: BattleRuntimeTransactionResult };
+
+function initialCompletionCursor(input: {
+  readonly resolution: ResolvedResolution;
+  readonly transaction: BattlePendingTransaction | null;
+  readonly operation: BattleRuntimeTransactionOperation;
+}): InitialCompletionCursor {
+  if (input.transaction === null) return { tag: "cursor", cursor: null };
+  const transactionDataLookup = lookupBattleRuntimeTransaction(
+    input.transaction,
+  );
+  if (Option.isNone(transactionDataLookup)) {
+    return {
+      tag: "result",
+      result: transactionDefectResult(input.resolution, {
+        tag: "foreignTransaction",
+      }),
+    };
+  }
+  const transactionData = transactionDataLookup.value;
+  return {
+    tag: "cursor",
+    cursor:
+      input.operation.kind === "interruptDecision"
+        ? input.transaction
+        : transactionData.parent,
+  };
+}
+
+type CompletionCursorStep =
+  | { readonly tag: "stop" }
+  | {
+      readonly tag: "continue";
+      readonly nextTransaction: BattlePendingTransaction | null;
+    }
+  | {
+      readonly tag: "resume";
+      readonly resolution: ResolvedResolution;
+      readonly nextTransaction: BattlePendingTransaction | null;
+    }
+  | { readonly tag: "result"; readonly result: BattleRuntimeTransactionResult };
+
+function settleCompletionCursor(input: {
+  readonly resolution: ResolvedResolution;
+  readonly transaction: BattlePendingTransaction;
+  readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
+}): CompletionCursorStep {
+  const transactionDataLookup = lookupBattleRuntimeTransaction(
+    input.transaction,
+  );
+  if (Option.isNone(transactionDataLookup)) {
+    return {
+      tag: "result",
+      result: transactionDefectResult(input.resolution, {
+        tag: "foreignTransaction",
+      }),
+    };
+  }
+  const transactionData = transactionDataLookup.value;
+  if (
+    transactionData.completion.kind === "replaySubject" &&
+    transactionOwnerClosedWithAncestor(
+      transactionData,
+      input.resolution.session,
+    )
+  ) {
+    return { tag: "continue", nextTransaction: transactionData.parent };
+  }
+  if (transactionData.completion.kind === "refreshParentFrontier") {
+    return completionStepForRefresh({
+      resolution: input.resolution,
+      parent: transactionData.parent,
+    });
+  }
+  const resumedOutcome = resumePendingLayer({
+    resolution: input.resolution,
+    transaction: input.transaction,
+    ...optionalProperty("statBlockCatalog", input.statBlockCatalog),
+  });
+  if (resumedOutcome.tag !== "resolved") {
+    return { tag: "result", result: resumedOutcome.result };
+  }
+  return {
+    tag: "resume",
+    resolution: resumedOutcome.resolution,
+    nextTransaction: runtimeOwnsUnresolvedContinuation(
+      resumedOutcome.resolution.session,
+    )
+      ? transactionData.parent
+      : null,
+  };
+}
+
+function completionStepForRefresh(input: {
+  readonly resolution: ResolvedResolution;
+  readonly parent: BattlePendingTransaction | null;
+}): CompletionCursorStep {
+  const refreshed = refreshParentFrontier(input);
+  return Match.value(refreshed).pipe(
+    Match.when({ tag: "closed" }, () => ({ tag: "stop" as const })),
+    Match.when({ tag: "ownerRetained" }, ({ result }) => ({
+      tag: "result" as const,
+      result,
+    })),
+    Match.when({ tag: "ownerClosedContinueUnwind" }, ({ nextTransaction }) => ({
+      tag: "continue" as const,
+      nextTransaction,
+    })),
+    Match.when({ tag: "nestedCheckpointOpened" }, ({ result }) => ({
+      tag: "result" as const,
+      result,
+    })),
+    Match.exhaustive,
+  );
+}
+
 function settleResolvedTransaction(input: {
   readonly resolution: ResolvedResolution;
   readonly transaction: BattlePendingTransaction | null;
@@ -995,89 +1118,31 @@ function settleResolvedTransaction(input: {
   readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
 }): BattleRuntimeTransactionResult {
   let resolution = input.resolution;
-  let completionCursor: BattlePendingTransaction | null = null;
-
-  if (input.transaction !== null) {
-    const transactionDataLookup = lookupBattleRuntimeTransaction(
-      input.transaction,
-    );
-    if (Option.isNone(transactionDataLookup)) {
-      return transactionDefectResult(resolution, {
-        tag: "foreignTransaction",
-      });
-    }
-    const transactionData = transactionDataLookup.value;
-    if (input.operation.kind === "interruptDecision") {
-      completionCursor = input.transaction;
-    } else {
-      // Ordinary subjects have already been resolved by the operation and
-      // begin at their parent continuation.
-      completionCursor = transactionData.parent;
-    }
-  }
+  const initial = initialCompletionCursor(input);
+  if (initial.tag === "result") return initial.result;
+  let completionCursor = initial.cursor;
 
   if (!runtimeOwnsUnresolvedContinuation(resolution.session)) {
     completionCursor = null;
   }
 
   while (completionCursor !== null) {
-    const transactionDataLookup =
-      lookupBattleRuntimeTransaction(completionCursor);
-    if (Option.isNone(transactionDataLookup)) {
-      return transactionDefectResult(resolution, {
-        tag: "foreignTransaction",
-      });
-    }
-    const transactionData = transactionDataLookup.value;
-    if (
-      transactionData.completion.kind === "replaySubject" &&
-      transactionOwnerClosedWithAncestor(transactionData, resolution.session)
-    ) {
-      completionCursor = transactionData.parent;
-      continue;
-    }
-    if (transactionData.completion.kind === "refreshParentFrontier") {
-      const refreshed = refreshParentFrontier({
-        resolution,
-        parent: transactionData.parent,
-      });
-      const refreshAction = Match.value(refreshed).pipe(
-        Match.when({ tag: "closed" }, () => ({ tag: "stop" as const })),
-        Match.when({ tag: "ownerRetained" }, ({ result }) => ({
-          tag: "return" as const,
-          result,
-        })),
-        Match.when(
-          { tag: "ownerClosedContinueUnwind" },
-          ({ nextTransaction }) => ({
-            tag: "continue" as const,
-            nextTransaction,
-          }),
-        ),
-        Match.when({ tag: "nestedCheckpointOpened" }, ({ result }) => ({
-          tag: "return" as const,
-          result,
-        })),
-        Match.exhaustive,
-      );
-      if (refreshAction.tag === "return") return refreshAction.result;
-      if (refreshAction.tag === "stop") {
-        completionCursor = null;
-      } else {
-        completionCursor = refreshAction.nextTransaction;
-      }
-      continue;
-    }
-    const resumedOutcome = resumePendingLayer({
+    const step = settleCompletionCursor({
       resolution,
       transaction: completionCursor,
       ...optionalProperty("statBlockCatalog", input.statBlockCatalog),
     });
-    if (resumedOutcome.tag !== "resolved") return resumedOutcome.result;
-    resolution = resumedOutcome.resolution;
-    completionCursor = runtimeOwnsUnresolvedContinuation(resolution.session)
-      ? transactionData.parent
-      : null;
+    if (step.tag === "result") return step.result;
+    if (step.tag === "stop") {
+      completionCursor = null;
+      continue;
+    }
+    if (step.tag === "continue") {
+      completionCursor = step.nextTransaction;
+      continue;
+    }
+    resolution = step.resolution;
+    completionCursor = step.nextTransaction;
   }
 
   const settledIssue = settledStateIssue(resolution.session);
@@ -1094,11 +1159,44 @@ function transactionOwnerClosedWithAncestor(
   if (currentFrame === null || currentFrame.activeInterrupt !== undefined) {
     return false;
   }
+  return checkpointOwnerHasAncestor(
+    transaction,
+    interruptCheckpointIdentity(currentFrame),
+  );
+}
+
+function checkpointOwnerHasAncestor(
+  transaction: BattlePendingTransactionData,
+  currentIdentity: InterruptCheckpointIdentity,
+): boolean {
   return (
     transaction.checkpointOwnership.tag === "interruptFrontier" &&
     transaction.checkpointOwnership.ancestors.some(
-      (ancestor) => ancestor === interruptCheckpointIdentity(currentFrame),
+      (ancestor) => ancestor === currentIdentity,
     )
+  );
+}
+
+function checkpointOwnerClosedWithAncestor(
+  transaction: BattlePendingTransactionData,
+  currentIdentity: InterruptCheckpointIdentity,
+): boolean {
+  return (
+    transaction.checkpointOwnership.tag === "interruptFrontier" &&
+    currentIdentity !== transaction.checkpointOwnership.checkpoint &&
+    transaction.checkpointOwnership.ancestors.some(
+      (ancestor) => ancestor === currentIdentity,
+    )
+  );
+}
+
+function parentOwnsCheckpoint(
+  parent: BattlePendingTransactionData,
+  currentIdentity: InterruptCheckpointIdentity,
+): boolean {
+  return (
+    parent.checkpointOwnership.tag === "interruptFrontier" &&
+    currentIdentity === parent.checkpointOwnership.checkpoint
   );
 }
 
@@ -1106,8 +1204,9 @@ function refreshParentFrontier(input: {
   readonly resolution: ResolvedResolution;
   readonly parent: BattlePendingTransaction | null;
 }): RefreshParentFrontierOutcome {
-  if (input.parent === null) return { tag: "closed" };
-  const parentDataLookup = lookupBattleRuntimeTransaction(input.parent);
+  const parent = input.parent;
+  if (parent === null) return { tag: "closed" };
+  const parentDataLookup = lookupBattleRuntimeTransaction(parent);
   if (Option.isNone(parentDataLookup)) {
     return {
       tag: "ownerRetained",
@@ -1117,74 +1216,32 @@ function refreshParentFrontier(input: {
     };
   }
   const parentData = parentDataLookup.value;
-
   const currentFrame = currentInterruptCheckpoint(
     input.resolution.session.state,
   );
-  if (currentFrame === null) {
+  if (currentFrame === null || currentFrame.activeInterrupt !== undefined) {
     return { tag: "closed" };
   }
-  if (currentFrame.activeInterrupt !== undefined) {
-    return { tag: "closed" };
-  }
-
   const currentIdentity = interruptCheckpointIdentity(currentFrame);
-  const ownership = parentData.checkpointOwnership;
-  if (
-    ownership.tag === "interruptFrontier" &&
-    currentIdentity !== ownership.checkpoint &&
-    ownership.ancestors.some((ancestor) => ancestor === currentIdentity)
-  ) {
+  if (checkpointOwnerClosedWithAncestor(parentData, currentIdentity)) {
     return {
       tag: "ownerClosedContinueUnwind",
       nextTransaction: parentData.parent,
     };
   }
-  if (
-    ownership.tag !== "interruptFrontier" ||
-    currentIdentity !== ownership.checkpoint
-  ) {
-    const currentFrontier = interruptDecisionFrontier(
-      input.resolution.session.state,
-    );
-    if (currentFrontier === null) {
-      return {
-        tag: "ownerRetained",
-        result: transactionDefectResult(input.resolution, {
-          tag: "interruptFrontierMissingCheckpoint",
-        }),
-      };
-    }
-    const nestedSubject = interruptedProcedureSubject(
-      currentFrame.continuation,
-    );
-    const nestedHoles = [currentFrontier.decisionHole] as const;
-    const nestedResolution: NeedsHolesResolution = {
-      tag: "needsHoles",
-      session: input.resolution.session,
-      envelope: {
-        checkpoint: snapshotBattle(input.resolution.session.state),
-        frontier: currentFrontier,
-      },
-    };
-    const nestedTransaction = createBattlePendingTransaction({
-      baseSession: input.resolution.session,
-      currentSession: input.resolution.session,
-      subject: nestedSubject,
-      fills: [],
-      holes: nestedHoles,
-      parent: input.parent,
-      completion: completionForSubject(nestedSubject),
-    });
-    return {
-      tag: "nestedCheckpointOpened",
-      result: projectPendingTransactionFrontier(
-        nestedResolution,
-        nestedTransaction,
-      ),
-    };
+  if (!parentOwnsCheckpoint(parentData, currentIdentity)) {
+    return openNestedCheckpoint({ ...input, parent }, currentFrame);
   }
+  return retainParentFrontier({ ...input, parent }, parentData);
+}
 
+function openNestedCheckpoint(
+  input: {
+    readonly resolution: ResolvedResolution;
+    readonly parent: BattlePendingTransaction;
+  },
+  currentFrame: NonNullable<ReturnType<typeof currentInterruptCheckpoint>>,
+): RefreshParentFrontierOutcome {
   const currentFrontier = interruptDecisionFrontier(
     input.resolution.session.state,
   );
@@ -1196,10 +1253,51 @@ function refreshParentFrontier(input: {
       }),
     };
   }
-  const refreshedHoles = [currentFrontier.decisionHole] as const;
-  // The parent subject was not consumed by the one-shot overlay. Its frontier
-  // is the current, reconciled checkpoint in the post-overlay session; the
-  // parent layer retains only its accepted subject fills and completion mode.
+  const nestedSubject = interruptedProcedureSubject(currentFrame.continuation);
+  const nestedResolution: NeedsHolesResolution = {
+    tag: "needsHoles",
+    session: input.resolution.session,
+    envelope: {
+      checkpoint: snapshotBattle(input.resolution.session.state),
+      frontier: currentFrontier,
+    },
+  };
+  const nestedTransaction = createBattlePendingTransaction({
+    baseSession: input.resolution.session,
+    currentSession: input.resolution.session,
+    subject: nestedSubject,
+    fills: [],
+    holes: [currentFrontier.decisionHole],
+    parent: input.parent,
+    completion: completionForSubject(nestedSubject),
+  });
+  return {
+    tag: "nestedCheckpointOpened",
+    result: projectPendingTransactionFrontier(
+      nestedResolution,
+      nestedTransaction,
+    ),
+  };
+}
+
+function retainParentFrontier(
+  input: {
+    readonly resolution: ResolvedResolution;
+    readonly parent: BattlePendingTransaction;
+  },
+  parentData: BattlePendingTransactionData,
+): RefreshParentFrontierOutcome {
+  const currentFrontier = interruptDecisionFrontier(
+    input.resolution.session.state,
+  );
+  if (currentFrontier === null) {
+    return {
+      tag: "ownerRetained",
+      result: transactionDefectResult(input.resolution, {
+        tag: "interruptFrontierMissingCheckpoint",
+      }),
+    };
+  }
   const refreshedResolution: NeedsHolesResolution = {
     tag: "needsHoles",
     session: input.resolution.session,
@@ -1213,7 +1311,7 @@ function refreshParentFrontier(input: {
     currentSession: input.resolution.session,
     subject: parentData.subject,
     fills: parentData.fills,
-    holes: refreshedHoles,
+    holes: [currentFrontier.decisionHole],
     parent: parentData.parent,
     completion: parentData.completion,
   });

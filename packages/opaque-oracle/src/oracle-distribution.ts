@@ -148,6 +148,13 @@ export type OracleDistributionLoadResult = Either.Either<
   OracleDistributionLoadIssue
 >;
 
+type OracleDistributionAssets = {
+  readonly executable: Buffer;
+  readonly identity: Buffer;
+  readonly projection: Buffer;
+  readonly schemas: Record<OraclePublicationMember, Uint8Array>;
+};
+
 const frameLengthBytes = 8;
 const frameHeaderBytes = frameLengthBytes * 2;
 
@@ -266,6 +273,22 @@ export function loadOracleApplicationFromDirectory(input: {
   readonly directory: string;
 }): OracleDistributionLoadResult {
   const directory = resolve(input.directory);
+  const assets = readDistributionAssets(directory);
+  if (Either.isLeft(assets)) return Either.left(assets.left);
+  const distributionId = verifyDistributionIdentity(assets.right);
+  if (Either.isLeft(distributionId)) return Either.left(distributionId.left);
+  const application = buildOracleApplicationFromProjection({
+    distributionId: distributionId.right,
+    projectionBytes: assets.right.projection,
+  });
+  return Either.isLeft(application)
+    ? Either.left({ tag: "applicationBuild", issue: application.left })
+    : Either.right(application.right);
+}
+
+function readDistributionAssets(
+  directory: string,
+): Either.Either<OracleDistributionAssets, OracleDistributionLoadIssue> {
   const expectedNames = new Set<string>([
     ORACLE_DISTRIBUTION_FILE_NAMES.executable,
     ORACLE_DISTRIBUTION_FILE_NAMES.identity,
@@ -276,27 +299,15 @@ export function loadOracleApplicationFromDirectory(input: {
   ]);
   const entries = readDirectoryEntries(directory);
   if (Either.isLeft(entries)) return Either.left(entries.left);
-  for (const entry of entries.right) {
-    if (!expectedNames.has(entry.name)) {
-      return Either.left({ tag: "unexpectedAsset", name: entry.name });
-    }
+  const unexpectedAsset = entries.right.find(
+    (entry) => !expectedNames.has(entry.name),
+  );
+  if (unexpectedAsset !== undefined) {
+    return Either.left({ tag: "unexpectedAsset", name: unexpectedAsset.name });
   }
 
-  const executable = readAsset(
-    directory,
-    ORACLE_DISTRIBUTION_FILE_NAMES.executable,
-  );
-  if (Either.isLeft(executable)) return Either.left(executable.left);
-  const identity = readAsset(
-    directory,
-    ORACLE_DISTRIBUTION_FILE_NAMES.identity,
-  );
-  if (Either.isLeft(identity)) return Either.left(identity.left);
-  const projection = readAsset(
-    directory,
-    ORACLE_DISTRIBUTION_FILE_NAMES.projection,
-  );
-  if (Either.isLeft(projection)) return Either.left(projection.left);
+  const required = readRequiredDistributionAssets(directory);
+  if (Either.isLeft(required)) return Either.left(required.left);
 
   const schemas: Record<OraclePublicationMember, Uint8Array> = {
     case: new Uint8Array(0),
@@ -317,12 +328,49 @@ export function loadOracleApplicationFromDirectory(input: {
     schemas[member] = artifact.right;
   }
 
-  const decodedIdentity = decodeDistributionIdentity(identity.right);
+  return Either.right({
+    ...required.right,
+    schemas,
+  });
+}
+
+function readRequiredDistributionAssets(
+  directory: string,
+): Either.Either<
+  Pick<OracleDistributionAssets, "executable" | "identity" | "projection">,
+  OracleDistributionLoadIssue
+> {
+  const executable = readAsset(
+    directory,
+    ORACLE_DISTRIBUTION_FILE_NAMES.executable,
+  );
+  if (Either.isLeft(executable)) return Either.left(executable.left);
+  const identity = readAsset(
+    directory,
+    ORACLE_DISTRIBUTION_FILE_NAMES.identity,
+  );
+  if (Either.isLeft(identity)) return Either.left(identity.left);
+  const projection = readAsset(
+    directory,
+    ORACLE_DISTRIBUTION_FILE_NAMES.projection,
+  );
+  if (Either.isLeft(projection)) return Either.left(projection.left);
+  return Either.right({
+    executable: executable.right,
+    identity: identity.right,
+    projection: projection.right,
+  });
+}
+
+function verifyDistributionIdentity(
+  assets: OracleDistributionAssets,
+): Either.Either<DistributionId, OracleDistributionLoadIssue> {
+  const decodedIdentity = decodeDistributionIdentity(assets.identity);
   if (Either.isLeft(decodedIdentity)) return Either.left(decodedIdentity.left);
   const computed = computeOracleDistributionId({
-    executable: executable.right,
-    schemas,
-    projection: projection.right,
+    executable: assets.executable,
+    schemas: assets.schemas,
+    projection: assets.projection,
   });
   if (computed !== decodedIdentity.right.distributionId) {
     return Either.left({
@@ -331,14 +379,7 @@ export function loadOracleApplicationFromDirectory(input: {
       actual: computed,
     });
   }
-  const application = buildOracleApplicationFromProjection({
-    distributionId: computed,
-    projectionBytes: projection.right,
-  });
-  if (Either.isLeft(application)) {
-    return Either.left({ tag: "applicationBuild", issue: application.left });
-  }
-  return Either.right(application.right);
+  return Either.right(computed);
 }
 
 export function loadOracleApplicationFromExecutable(

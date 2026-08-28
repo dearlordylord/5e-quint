@@ -235,50 +235,78 @@ export function defineSrdUnitCollection(input: {
   return collection;
 }
 
-export function buildUnitCatalog(input: {
-  readonly collections: readonly SrdUnitCollection[];
-}): UnitCatalogBuildResult {
-  const issues: UnitCatalogBuildIssue[] = [];
-  const records = new Map<UnitId, UnitRecord>();
-  const spellcastingClassOwners = new Map<
+type UnitCatalogRecordState = {
+  readonly issues: UnitCatalogBuildIssue[];
+  readonly records: Map<UnitId, UnitRecord>;
+  readonly spellcastingClassOwners: Map<
     SpellcastingClassRecord["className"],
     UnitId
-  >();
+  >;
+};
 
-  for (const collection of input.collections) {
-    issues.push(...validateSrdUnitCollection(collection));
-
-    for (const unit of collection.units) {
-      if (records.has(unit.id)) {
-        issues.push({
-          code: "duplicateUnitId",
-          unitId: unit.id,
-        });
-      } else {
-        records.set(unit.id, unit);
-        if (isSpellcastingClassRecord(unit)) {
-          const existingUnitId = spellcastingClassOwners.get(unit.className);
-          if (existingUnitId === undefined) {
-            spellcastingClassOwners.set(unit.className, unit.id);
-          } else {
-            issues.push({
-              code: "duplicateSpellcastingClassName",
-              className: unit.className,
-              unitIds: [existingUnitId, unit.id],
-            });
-          }
-        }
-      }
-    }
+const appendUnitCatalogRecord = (
+  state: UnitCatalogRecordState,
+  unit: UnitRecord,
+): void => {
+  if (state.records.has(unit.id)) {
+    state.issues.push({
+      code: "duplicateUnitId",
+      unitId: unit.id,
+    });
+    return;
   }
+  state.records.set(unit.id, unit);
+  if (!isSpellcastingClassRecord(unit)) return;
+  const existingUnitId = state.spellcastingClassOwners.get(unit.className);
+  if (existingUnitId === undefined) {
+    state.spellcastingClassOwners.set(unit.className, unit.id);
+  } else {
+    state.issues.push({
+      code: "duplicateSpellcastingClassName",
+      className: unit.className,
+      unitIds: [existingUnitId, unit.id],
+    });
+  }
+};
 
-  for (const collection of input.collections) {
+const collectUnitCatalogRecords = (
+  collections: readonly SrdUnitCollection[],
+): UnitCatalogRecordState => {
+  const state: UnitCatalogRecordState = {
+    issues: [],
+    records: new Map(),
+    spellcastingClassOwners: new Map(),
+  };
+  for (const collection of collections) {
+    state.issues.push(...validateSrdUnitCollection(collection));
+    for (const unit of collection.units) appendUnitCatalogRecord(state, unit);
+  }
+  return state;
+};
+
+const validateUnitCatalogReferences = (
+  collections: readonly SrdUnitCollection[],
+  records: ReadonlyMap<UnitId, UnitRecord>,
+): UnitCatalogBuildIssue[] => {
+  const issues: UnitCatalogBuildIssue[] = [];
+  for (const collection of collections) {
     for (const unit of collection.units) {
       issues.push(...findUnknownStartingEquipmentRefs(unit, records));
       issues.push(...findInvalidSubclassChoiceRefs(unit, records));
       issues.push(...findInvalidSpeciesTraitRefs(unit, records));
     }
   }
+  return issues;
+};
+
+export function buildUnitCatalog(input: {
+  readonly collections: readonly SrdUnitCollection[];
+}): UnitCatalogBuildResult {
+  const state = collectUnitCatalogRecords(input.collections);
+  const issues = [
+    ...state.issues,
+    ...validateUnitCatalogReferences(input.collections, state.records),
+  ];
   // Class feature grant refs are intentionally not catalog-validated yet:
   // this first vertical slice can load partial class progressions while
   // unimplemented higher-level feature Units are still absent. Consumers that
@@ -293,9 +321,10 @@ export function buildUnitCatalog(input: {
   return {
     tag: "ok",
     catalog: {
-      getUnit: (id) => Option.fromNullable(records.get(UnitIdSchema.make(id))),
-      listUnits: () => Array.from(records.values()),
-      requireUnit: (id) => records.get(UnitIdSchema.make(id))!,
+      getUnit: (id) =>
+        Option.fromNullable(state.records.get(UnitIdSchema.make(id))),
+      listUnits: () => Array.from(state.records.values()),
+      requireUnit: (id) => state.records.get(UnitIdSchema.make(id))!,
     },
   };
 }

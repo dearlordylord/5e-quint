@@ -1331,9 +1331,6 @@
     "packages/surface/src/surface/schema.ts": {
       "module/binding:factorUnionAst": 11
     },
-    "packages/surface/src/surface/unit-catalog.ts": {
-      "module/binding:buildUnitCatalog": 9
-    },
     "packages/tactical-space/src/index.ts": {
       "module/binding:commitPreview": 9,
       "module/binding:directionFor": 9,

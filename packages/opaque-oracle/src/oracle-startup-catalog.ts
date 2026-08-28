@@ -224,14 +224,35 @@ export function buildOracleStartupCatalog(
   const roots = deriveCharacterCreationWorkflowRoots({
     unitLibrary: fullCatalogs.right.unitCatalog,
   });
-  const rootUnitIds = roots.unitIds;
-  const rootStatBlockIds = canonicalSurface.statBlocks.map(
-    (record) => record.id,
-  );
+  const projection = startupSurfaceProjection(canonicalSurface, roots.unitIds);
+  if (Either.isLeft(projection)) return Either.left(projection.left);
+
+  const projectionBytes = encodeOracleStartupSurface(projection.right);
+  const decodedProjection = decodeStartupProjection(projectionBytes);
+  if (Either.isLeft(decodedProjection)) {
+    return Either.left([decodeIssue(decodedProjection.left)]);
+  }
+
+  const projectedCatalogs = buildProjectedCatalogs(decodedProjection.right);
+  if (Either.isLeft(projectedCatalogs)) {
+    return Either.left(projectedCatalogs.left);
+  }
+
+  return Either.right({
+    projection: decodedProjection.right,
+    projectionBytes,
+    services: projectedCatalogs.right,
+  });
+}
+
+function startupSurfaceProjection(
+  canonicalSurface: SrdSurface,
+  rootUnitIds: readonly SrdSurface["units"][number]["id"][],
+): Either.Either<SrdSurface, OracleStartupCatalogIssues> {
   const projection = closeSrdSurface({
     surface: canonicalSurface,
     rootUnitIds,
-    rootStatBlockIds,
+    rootStatBlockIds: canonicalSurface.statBlocks.map((record) => record.id),
     relationSelection: {
       // Every mechanics dependency is part of the complete retained graph.
       // A pure reference is included when the workflow or catalog builder
@@ -243,39 +264,47 @@ export function buildOracleStartupCatalog(
           rootUnitIds.some((rootId) => rootId === relation.targetRecordId)),
     },
   });
-  if (Either.isLeft(projection)) {
-    const traversalIssues: SurfaceRelationTraversalIssues[number][] = [];
-    for (const issue of projection.left) {
-      if (issue.tag === "surfaceRelationTraversalIssue") {
-        traversalIssues.push(issue);
-      }
-    }
-    if (traversalIssues.length === projection.left.length) {
-      const nonEmptyTraversalIssues = nonEmptyIssues(traversalIssues);
-      if (nonEmptyTraversalIssues !== undefined) {
-        return Either.left([
-          relationIssue("surfaceRelations", nonEmptyTraversalIssues),
-        ]);
-      }
-    }
-    return Either.left([closureIssue(projection.left)]);
-  }
+  return Either.isLeft(projection)
+    ? Either.left(startupSurfaceProjectionIssues(projection.left))
+    : Either.right(projection.right);
+}
 
-  const projectionBytes = encodeOracleStartupSurface(projection.right);
-  const parsedProjection = parseProjectionBytes(projectionBytes);
-  if (Either.isLeft(parsedProjection)) {
-    return Either.left([decodeIssue(parsedProjection.left)]);
+function startupSurfaceProjectionIssues(
+  issues: SurfaceRelationClosureIssues,
+): OracleStartupCatalogIssues {
+  const traversalIssues: SurfaceRelationTraversalIssues[number][] = [];
+  for (const issue of issues) {
+    if (issue.tag === "surfaceRelationTraversalIssue") {
+      traversalIssues.push(issue);
+    }
   }
+  if (traversalIssues.length === issues.length) {
+    const nonEmptyTraversalIssues = nonEmptyIssues(traversalIssues);
+    if (nonEmptyTraversalIssues !== undefined) {
+      return [relationIssue("surfaceRelations", nonEmptyTraversalIssues)];
+    }
+  }
+  return [closureIssue(issues)];
+}
+
+function decodeStartupProjection(
+  bytes: Uint8Array,
+): Either.Either<SrdSurface, string> {
+  const parsedProjection = parseProjectionBytes(bytes);
+  if (Either.isLeft(parsedProjection))
+    return Either.left(parsedProjection.left);
   const decodedProjection = decodeSrdSurfaceEither(parsedProjection.right);
-  if (Either.isLeft(decodedProjection)) {
-    return Either.left([decodeIssue(String(decodedProjection.left))]);
-  }
+  return Either.isLeft(decodedProjection)
+    ? Either.left(String(decodedProjection.left))
+    : Either.right(decodedProjection.right);
+}
 
-  const unitCollection = defineSrdUnitCollection({
-    units: decodedProjection.right.units,
-  });
+function buildProjectedCatalogs(
+  projection: SrdSurface,
+): Either.Either<OracleEvaluationServices, OracleStartupCatalogIssues> {
+  const unitCollection = defineSrdUnitCollection({ units: projection.units });
   const statBlockCollection = defineSrdStatBlockCollection({
-    statBlocks: decodedProjection.right.statBlocks,
+    statBlocks: projection.statBlocks,
   });
   const unitResult = buildUnitCatalog({ collections: [unitCollection] });
   const statBlockResult = buildStatBlockCatalog({
@@ -295,13 +324,8 @@ export function buildOracleStartupCatalog(
   if (unitResult.tag === "invalid" || statBlockResult.tag === "invalid") {
     return Either.left([catalogInvariantIssue("projectedCatalog")]);
   }
-
   return Either.right({
-    projection: decodedProjection.right,
-    projectionBytes,
-    services: {
-      unitLibrary: unitResult.catalog,
-      statBlockCatalog: statBlockResult.catalog,
-    },
+    unitLibrary: unitResult.catalog,
+    statBlockCatalog: statBlockResult.catalog,
   });
 }

@@ -4,6 +4,7 @@ import {
   sameBattleSubject,
   settleBattleRuntimeTransaction,
   type BattleFill,
+  type BattlePendingTransaction,
   type BattleRuntimeResolutionResult,
   type BattleRuntimeSession,
   type BattleRuntimeTransactionOperation,
@@ -79,51 +80,8 @@ function admitBattleFillToolInput(
   if (Either.isLeft(visibleSession)) return Either.left(visibleSession.left);
 
   const previous = root.sessionStore.getPendingBattleTransaction();
-  const pendingView =
-    previous === null ? Option.none() : battlePendingTransactionView(previous);
-  if (previous !== null && Option.isNone(pendingView)) {
-    return Either.left(
-      errorContent("The stored battle transaction is invalid.", {
-        code: "BATTLE_TRANSACTION_DEFECT",
-        issue: { tag: "foreignTransaction" },
-      }),
-    );
-  }
-  if (
-    pendingView !== undefined &&
-    Option.isSome(pendingView) &&
-    !sameBattleSubject(pendingView.value.subject, input.subject)
-  ) {
-    return Either.left(
-      errorContent("A different battle subject has pending fills.", {
-        code: "BATTLE_FILL_SUBJECT_MISMATCH",
-        pendingSubject: pendingView.value.subject,
-        requestedSubject: input.subject,
-      }),
-    );
-  }
-  // Transaction admission owns the ordinary-vs-interrupt frontier rule. Run
-  // it before hole matching when a continuation exists so a caller cannot
-  // turn an interrupt-vs-ordinary protocol error into a misleading stale-hole
-  // error by choosing an arbitrary hole id.
-  if (previous !== null) {
-    const admission = admitBattleRuntimeTransactionOperation({
-      transaction: previous,
-      operation: battleRuntimeTransactionOperationForFill({
-        subject: input.subject,
-        fill: input.fill,
-      }),
-    });
-    if (admission.tag === "rejected") {
-      return Either.left(
-        battleRuntimeTransactionAdmissionError({
-          context: "fill",
-          issue: admission.issue,
-          requestedSubject: input.subject,
-        }),
-      );
-    }
-  }
+  const pendingIssue = battleFillPendingTransactionIssue(previous, input);
+  if (pendingIssue !== undefined) return Either.left(pendingIssue);
   const frontier = battleMechanicsEnvelopeForSession(
     root,
     visibleSession.right,
@@ -153,6 +111,45 @@ function admitBattleFillToolInput(
   });
 }
 
+function battleFillPendingTransactionIssue(
+  previous: BattlePendingTransaction | null,
+  input: FillBattleHoleToolInput,
+): ToolError | undefined {
+  if (previous === null) return undefined;
+  const pendingView = battlePendingTransactionView(previous);
+  if (Option.isNone(pendingView)) {
+    return errorContent("The stored battle transaction is invalid.", {
+      code: "BATTLE_TRANSACTION_DEFECT",
+      issue: { tag: "foreignTransaction" },
+    });
+  }
+  if (!sameBattleSubject(pendingView.value.subject, input.subject)) {
+    return errorContent("A different battle subject has pending fills.", {
+      code: "BATTLE_FILL_SUBJECT_MISMATCH",
+      pendingSubject: pendingView.value.subject,
+      requestedSubject: input.subject,
+    });
+  }
+  // Transaction admission owns the ordinary-vs-interrupt frontier rule. Run
+  // it before hole matching when a continuation exists so a caller cannot
+  // turn an interrupt-vs-ordinary protocol error into a misleading stale-hole
+  // error by choosing an arbitrary hole id.
+  const admission = admitBattleRuntimeTransactionOperation({
+    transaction: previous,
+    operation: battleRuntimeTransactionOperationForFill({
+      subject: input.subject,
+      fill: input.fill,
+    }),
+  });
+  return admission.tag === "rejected"
+    ? battleRuntimeTransactionAdmissionError({
+        context: "fill",
+        issue: admission.issue,
+        requestedSubject: input.subject,
+      })
+    : undefined;
+}
+
 function battleRuntimeTransactionOperationForFill(input: {
   readonly subject: BattleSubject;
   readonly fill: BattleFill;
@@ -180,7 +177,7 @@ function battleRuntimeTransactionAdmissionError(input: {
   readonly context: BattleTransactionOperationContext;
   readonly issue: BattleRuntimeTransactionOperationAdmissionIssue;
   readonly requestedSubject: BattleSubject;
-}): BattleToolResult {
+}): ToolError {
   return Match.value(input.issue).pipe(
     Match.when({ tag: "foreignTransaction" }, (issue) =>
       errorContent("The stored battle transaction is invalid.", {
@@ -243,7 +240,7 @@ function battleRuntimeTransactionPendingAdmissionError(
   pendingSubject: BattleSubject,
   fillMessage: string,
   requestedSubject: BattleSubject,
-): BattleToolResult {
+): ToolError {
   return Match.value(context).pipe(
     Match.when("fill", () =>
       errorContent(fillMessage, {
@@ -266,7 +263,7 @@ function battleRuntimeTransactionSubjectAdmissionError(
   context: BattleTransactionOperationContext,
   pendingSubject: BattleSubject,
   requestedSubject: BattleSubject,
-): BattleToolResult {
+): ToolError {
   return Match.value(context).pipe(
     Match.when("fill", () =>
       errorContent("A different battle subject has pending fills.", {
