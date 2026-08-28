@@ -5,6 +5,7 @@ import {
   type BattleHole,
   type BattleInterruptDecisionHole,
   type BattleInterruptProcedureChoice,
+  type BattleInterruptSubject,
   type BattleObjectDamageDisposition,
   type BattleObjectId,
   type BattleRuntimeContext,
@@ -26,10 +27,9 @@ export type CounterspellTriggerFact = Extract<
   { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
 >
 
-type CounterspellReactionChoice = Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
->
+type CounterspellReactionChoice = Extract<BattleInterruptProcedureChoice, { readonly kind: "nestedProcedure" }> & {
+  readonly subject: Extract<BattleInterruptSubject, { readonly command: "castTriggeredReactionSpell" }>
+}
 
 type ActionSpellAct = AvailableBattleAct & {
   readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>
@@ -65,7 +65,11 @@ export function requireCounterspellChoice(
   const choice =
     frontier.kind === "interruptDecision"
       ? frontier.choices.find((candidate): candidate is CounterspellReactionChoice => {
-          if (candidate.kind !== "castTriggeredReactionSpell" || candidate.reactorId !== input.reactorId) {
+          if (
+            candidate.kind !== "nestedProcedure" ||
+            candidate.subject.command !== "castTriggeredReactionSpell" ||
+            candidate.subject.reactorId !== input.reactorId
+          ) {
             return false
           }
           const presentation = battleSubjectPresentation(result.session, candidate.subject)

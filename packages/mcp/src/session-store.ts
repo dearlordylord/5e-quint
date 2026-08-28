@@ -41,6 +41,10 @@ import type {
 } from "./battle-roster-session-types.ts";
 import { createCharacterSessionRegistry } from "./character-session-registry.ts";
 import {
+  invalidBattleRosterStateTransition,
+  invalidBattleStateTransition,
+} from "./session-store-state-transition.ts";
+import {
   commitBattleEndTransition,
   commitBattleStartTransition,
 } from "./battle-session-store-commit.ts";
@@ -425,28 +429,4 @@ export function createMcpSessionStore(input: {
   } satisfies McpSessionStore;
 
   return store;
-}
-
-function invalidBattleStateTransition(
-  from: McpBattleState["tag"],
-  to: McpBattleState["tag"],
-): Either.Either<never, McpBattleStateTransitionIssue> {
-  return Either.left({
-    tag: "invalidBattleStateTransition",
-    from,
-    to,
-  });
-}
-
-function invalidBattleRosterStateTransition(
-  from: McpBattleState["tag"],
-  to: McpBattleState["tag"],
-): Either.Either<
-  never,
-  Extract<
-    McpBattleRosterTransitionIssue,
-    { readonly tag: "invalidBattleStateTransition" }
-  >
-> {
-  return Either.left({ tag: "invalidBattleStateTransition", from, to });
 }

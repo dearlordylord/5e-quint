@@ -160,7 +160,8 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
       serverFactoryCalls += 1;
       throw new Error("public listen accepted a server factory");
     };
-    const encodeBatchResponse = (_response: OracleBatchResponse): string => {
+    const encodeBatchResponse = (response: OracleBatchResponse): string => {
+      void response;
       throw new Error("public listen accepted a response encoder");
     };
     const result = await listenOracleHttpServer(
@@ -207,7 +208,10 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
           },
         },
         {
-          encodeBatchResponse: (_response: OracleBatchResponse): string => "",
+          encodeBatchResponse: (response: OracleBatchResponse): string => {
+            void response;
+            return "";
+          },
           serverFactory,
         },
       ),

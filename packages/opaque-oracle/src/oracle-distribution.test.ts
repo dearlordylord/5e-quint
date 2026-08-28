@@ -336,7 +336,6 @@ function evaluateOracleStreamFrame(
     let rawLine: string | undefined;
     let writesRemaining = 2;
     const timeoutMs = options.timeoutMs ?? ORACLE_STREAM_FRAME_TIMEOUT_MS;
-    let timer: ReturnType<typeof setTimeout> | undefined;
     const waiter: OracleStreamFrameWaiter = {
       accept: (line) => {
         try {
@@ -388,7 +387,7 @@ function evaluateOracleStreamFrame(
       writesRemaining -= 1;
       settleIfReady();
     };
-    timer = setTimeout(() => {
+    const timer = setTimeout(() => {
       fail(
         new Error(
           `Oracle stream frame timed out after ${timeoutMs}ms without one response.`,
@@ -629,7 +628,6 @@ async function launchOracleServe(
   try {
     readiness = await new Promise<OracleHttpReadiness>((resolve, reject) => {
       let settled = false;
-      let timeout: ReturnType<typeof setTimeout>;
       const finish = (operation: () => void): void => {
         if (settled) return;
         settled = true;
@@ -645,7 +643,7 @@ async function launchOracleServe(
           reject(cause);
         });
       }
-      timeout = setTimeout(() => {
+      const timeout = setTimeout(() => {
         fail(new Error("Oracle serve readiness timed out."));
       }, 10_000);
       lines.once("line", (line) => {
