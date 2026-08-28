@@ -428,21 +428,11 @@ function applyHastePositiveEffects(
           isHastePositiveActiveEffect(effect) &&
           effect.sourceProcedureRef === invocation.sourceProcedureRef &&
           effect.sourceCombatantId === actorId,
-        (effectRef) =>
-          hastePositiveEffects(invocation).map((effect) =>
-            effect.kind === "spellGrantedActionResource"
-              ? {
-                  ...effect,
-                  sourceProcedureRef: invocation.sourceProcedureRef,
-                  sourceCombatantId: actorId,
-                  effectRef,
-                }
-              : {
-                  ...effect,
-                  sourceProcedureRef: invocation.sourceProcedureRef,
-                  sourceCombatantId: actorId,
-                },
-          ),
+        hastePositiveEffects(invocation).map((effect) => ({
+          ...effect,
+          sourceProcedureRef: invocation.sourceProcedureRef,
+          sourceCombatantId: actorId,
+        })),
       ),
     state,
   );

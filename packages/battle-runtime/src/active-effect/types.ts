@@ -109,6 +109,9 @@ export type BattleConcentrationBrokenEarlyEnd = Extract<
   BattleSpellEffectEarlyEnd,
   { readonly kind: "concentrationBroken" }
 >;
+export type BattleEffectOccurrenceIdentity = {
+  readonly effectRef: BattleEffectExecutionRef;
+};
 export type BattleSpellEffectBase = BattleActiveEffectSource;
 export type BattleSourceTurnActiveEffectExpiration = {
   readonly kind: "startOfSourceTurn";
@@ -122,14 +125,20 @@ export type MarkedDamageRiderAbilityCheckBehavior =
   | { readonly kind: "none" }
   | { readonly kind: "abilityDisadvantage"; readonly ability: Ability }
   | MarkedDamageRiderFindingAdvantage;
-export type BattleReplayAddressableEffect = {
-  readonly effectRef: BattleEffectExecutionRef;
-};
+export type BattleReplayAddressableEffect = BattleEffectOccurrenceIdentity;
 /** Mechanical spell facts before Battle admission binds occurrence identity. */
 export type BattleSpellActiveEffectTemplate<E extends BattleSpellEffectBase> =
   E extends BattleSpellEffectBase
     ? Omit<E, "sourceProcedureRef" | "effectRef">
     : never;
+/** Source-bound effect facts before Battle admission binds occurrence identity. */
+export type BattleSourcedActiveEffectTemplate<
+  E extends BattleActiveEffect &
+    BattleActiveEffectSource &
+    BattleEffectOccurrenceIdentity,
+> = E extends BattleActiveEffect
+  ? Omit<E, "effectRef">
+  : never;
 export type BattleShapeShiftReplacementFormFacts = {
   readonly kind: "runtimeCreatureForm";
   readonly creatureSize: Size;

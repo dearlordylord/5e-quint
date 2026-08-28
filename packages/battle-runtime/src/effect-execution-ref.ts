@@ -1,4 +1,9 @@
-import type { BattleActiveEffect } from "./active-effect/types.ts";
+import type {
+  BattleActiveEffect,
+  BattleEffectOccurrenceIdentity,
+  BattleSourcedActiveEffectTemplate,
+} from "./active-effect/types.ts";
+import type { BattleActiveEffectSource } from "./active-effect/source.ts";
 import type {
   BattleEffectExecutionRef,
   CombatantId,
@@ -36,6 +41,13 @@ export type ReplayAddressableSpellActiveEffect = Extract<
   }
 >;
 export type SpellActiveEffect = ReplayAddressableSpellActiveEffect;
+export type BattleSourcedEffectOccurrence = Extract<
+  BattleActiveEffect,
+  BattleActiveEffectSource
+> &
+  BattleEffectOccurrenceIdentity;
+export type BattleSourcedEffectOccurrenceTemplate =
+  BattleSourcedActiveEffectTemplate<BattleSourcedEffectOccurrence>;
 export function spellActiveEffectExecutionRef(
   effect: ReplayAddressableSpellActiveEffect,
 ): BattleEffectExecutionRef {
@@ -102,4 +114,21 @@ export function allocateBattleEffectExecutionRefForCreature(input: {
       }),
     ),
   };
+}
+
+export function allocateBattleEffectOccurrencesForCreature(input: {
+  readonly owner: BattleCreatureState;
+  readonly effects: readonly BattleSourcedEffectOccurrenceTemplate[];
+}): {
+  readonly owner: BattleCreatureState;
+  readonly effects: readonly BattleSourcedEffectOccurrence[];
+} {
+  let owner = input.owner;
+  const effects: BattleSourcedEffectOccurrence[] = [];
+  for (const effect of input.effects) {
+    const allocation = allocateBattleEffectExecutionRefForCreature({ owner });
+    owner = allocation.owner;
+    effects.push({ ...effect, effectRef: allocation.effectRef });
+  }
+  return { owner, effects };
 }

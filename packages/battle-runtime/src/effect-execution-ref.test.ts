@@ -18,10 +18,12 @@ import {
 import { Result } from "effect";
 import type { SpellActiveEffect } from "./effect-execution-ref.ts";
 import {
+  allocateBattleEffectOccurrencesForCreature,
   allocateBattleEffectExecutionRef,
   spellActiveEffectExecutionRef,
   spellActiveEffectForExecutionRef,
 } from "./effect-execution-ref.ts";
+import type { BattleSourcedEffectOccurrenceTemplate } from "./effect-execution-ref.ts";
 
 const sourceId = combatantId("effect-source");
 
@@ -34,6 +36,25 @@ function syntheticEffect(
     effectRef: battleEffectExecutionRefForTest(
       `${sourceProcedureRef}:${condition}`,
     ),
+    sourceProcedureRef,
+    sourceCombatantId: sourceId,
+    condition,
+    conditionHadNonSpellSource: false,
+    escape: null,
+    turnStartDamage: null,
+    expiresAt: {
+      kind: "duration",
+      durationTicks: elapsedTimeTicks(60),
+    },
+  };
+}
+
+function syntheticEffectTemplate(
+  sourceProcedureRef: BattleProcedureExecutionRef,
+  condition: "charmed" | "frightened",
+): BattleSourcedEffectOccurrenceTemplate {
+  return {
+    kind: "spellCondition",
     sourceProcedureRef,
     sourceCombatantId: sourceId,
     condition,
@@ -84,6 +105,35 @@ describe("spell active-effect execution references", () => {
     );
     expect(Number(second.owner.nextEffectOrdinal)).toBe(
       Number(initial.combatants.get(fighterId)?.nextEffectOrdinal) + 2,
+    );
+  });
+
+  test("allocates one fresh occurrence reference for every effect in a sourced batch", () => {
+    const initial = fighterVsGoblinBattle();
+    const owner = initial.combatants.get(fighterId);
+    if (owner === undefined) throw new Error("Expected fighter owner.");
+    const sourceProcedureRef = battleProcedureExecutionRefForTest(
+      "effect-occurrence-batch",
+    );
+
+    const allocation = allocateBattleEffectOccurrencesForCreature({
+      owner,
+      effects: [
+        syntheticEffectTemplate(sourceProcedureRef, "charmed"),
+        syntheticEffectTemplate(sourceProcedureRef, "frightened"),
+      ],
+    });
+
+    expect(allocation.effects).toHaveLength(2);
+    expect(allocation.effects[0]?.effectRef).not.toBe(
+      allocation.effects[1]?.effectRef,
+    );
+    expect(allocation.effects.map((effect) => effect.kind)).toEqual([
+      "spellCondition",
+      "spellCondition",
+    ]);
+    expect(Number(allocation.owner.nextEffectOrdinal)).toBe(
+      Number(owner.nextEffectOrdinal) + 2,
     );
   });
 

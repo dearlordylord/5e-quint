@@ -128,6 +128,20 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
         "spellGrantedActionResource",
       ]),
     );
+    const hasteEffects = target.activeEffects.filter((effect) =>
+      isHastePositiveEffectKind(effect.kind),
+    );
+    expect(hasteEffects).toHaveLength(5);
+    expect(
+      hasteEffects.every((effect) => "effectRef" in effect),
+    ).toBe(true);
+    expect(
+      new Set(
+        hasteEffects.flatMap((effect) =>
+          "effectRef" in effect ? [effect.effectRef] : [],
+        ),
+      ).size,
+    ).toBe(hasteEffects.length);
     expect(savingThrowRollModeProjections(resolved.state, "dex")).toEqual([
       { targetId: spellTargetId, rollMode: "advantage" },
     ]);

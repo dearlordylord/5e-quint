@@ -262,12 +262,11 @@ function applyJumpMovementReplacementSpellEffect(
           effect.kind === "jumpMovementReplacement" &&
           effect.sourceProcedureRef === procedureRef &&
           effect.sourceCombatantId === actorId,
-        (effectRef) => [
+        [
           {
             ...invocation.activeEffect,
             sourceCombatantId: actorId,
             sourceProcedureRef: procedureRef,
-            effectRef,
           },
         ],
       ),
