@@ -37,7 +37,7 @@ import {
   type EffectAtom,
 } from "@dnd/surface/surface/types";
 import { Result, Match } from "effect";
-import { allocateBattleActiveEffectRefForCreature } from "../../effect-execution-ref.ts";
+import { allocateBattleEffectExecutionRefForCreature } from "../../effect-execution-ref.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { characterExecutionWithMarkedDamageRiderTransfer } from "../../character-execution-queries.ts";
 import type { MarkedDamageRiderTransferSpellProcedureExecution } from "../../character-execution.ts";
@@ -673,7 +673,7 @@ function applyMarkedDamageRiderSpellEffect(
           effectRef: invocation.activeEffect.effectRef,
           owner: caster,
         }
-      : allocateBattleActiveEffectRefForCreature({ owner: caster });
+      : allocateBattleEffectExecutionRefForCreature({ owner: caster });
   const transfer: MarkedDamageRiderTransferState = {
     kind: "awaitingTargetDrop",
     retargetTiming:

@@ -68,7 +68,7 @@ import {
   CombatantId,
 } from "../../identity.ts";
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
-import { allocateBattleActiveEffectRef } from "../../effect-execution-ref.ts";
+import { allocateBattleEffectExecutionRef } from "../../effect-execution-ref.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { spellCreatedHeldObjectHasFreeHand } from "../spell-created-held-object.ts";
@@ -471,7 +471,7 @@ function resolveSpellCreatedHeldObject(
     return resourced;
   }
   /* v8 ignore stop -- @preserve */
-  const allocation = allocateBattleActiveEffectRef({
+  const allocation = allocateBattleEffectExecutionRef({
     state: resourced.state,
     ownerId: input.actorId,
   });

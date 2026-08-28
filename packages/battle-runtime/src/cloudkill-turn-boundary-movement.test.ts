@@ -47,7 +47,7 @@ import {
   zeroAbilityWeaponAttack,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { allocateBattleActiveEffectRefForCreature } from "./effect-execution-ref.ts";
+import { allocateBattleEffectExecutionRefForCreature } from "./effect-execution-ref.ts";
 import {
   attackRollFill,
   battleEffectExecutionRefForTest,
@@ -80,7 +80,7 @@ function withSecondCloudkillMovement(state: BattleState): BattleState {
       > => candidate.kind === "cloudkillAreaHazard",
     );
     if (effect === undefined) continue;
-    const allocation = allocateBattleActiveEffectRefForCreature({
+    const allocation = allocateBattleEffectExecutionRefForCreature({
       owner: combatant,
     });
     return {

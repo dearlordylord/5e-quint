@@ -29,7 +29,7 @@ import {
 import { activeOngoingFeaturesPreventSpellInvocation } from "../spells-invocation-guards.ts";
 import { snapshotBattle } from "../interrupt-execution.ts";
 import { CombatantId } from "../../identity.ts";
-import { allocateBattleActiveEffectRefForCreature } from "../../effect-execution-ref.ts";
+import { allocateBattleEffectExecutionRefForCreature } from "../../effect-execution-ref.ts";
 import { applyDashToActor } from "../mobility-actions.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { revealHidden } from "../hole-helpers.ts";
@@ -324,7 +324,7 @@ function resolveExpeditiousRetreatDash(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const allocation = allocateBattleActiveEffectRefForCreature({
+  const allocation = allocateBattleEffectExecutionRefForCreature({
     owner: effectHost,
   });
   const effectedActor = {

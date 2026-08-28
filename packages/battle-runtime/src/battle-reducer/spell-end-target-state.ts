@@ -4,7 +4,7 @@
 import { type Round as RoundType } from "@dnd/shared/types";
 
 import { battleCreatureWithSpellActiveEffects } from "../active-effect/lifecycle.ts";
-import { allocateBattleActiveEffectRefForCreature } from "../effect-execution-ref.ts";
+import { allocateBattleEffectExecutionRefForCreature } from "../effect-execution-ref.ts";
 import type {
   BattleActiveEffect,
   BattleActiveEffectExpiration,
@@ -103,7 +103,7 @@ function battleCreatureWithSpellEndTargetStatePromotion(
     combatant.combatantId,
     timing,
   );
-  const allocation = allocateBattleActiveEffectRefForCreature({
+  const allocation = allocateBattleEffectExecutionRefForCreature({
     owner: combatant,
   });
   const promotedEffects: readonly BattleActiveEffect[] = [

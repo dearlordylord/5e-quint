@@ -160,7 +160,7 @@ describe("Stat Block execution references", () => {
   test("rejects noncanonical replay occurrence references", () => {
     const activeEffectRef = battleEffectExecutionRef(
       JSON.stringify({
-        kind: "activeEffectOccurrence",
+        kind: "effectOccurrence",
         ownerScopeRef: battleCharacterExecutionScopeRef(
           battleId("battle-reference-codec"),
           combatantId("character-a"),
@@ -178,7 +178,7 @@ describe("Stat Block execution references", () => {
     expect(() =>
       BattleEffectExecutionRef.make(
         JSON.stringify({
-          kind: "activeEffectOccurrence",
+          kind: "effectOccurrence",
           battleId: "battle-reference-codec",
           ownerId: "character-a",
           ordinal: 0,
@@ -189,7 +189,7 @@ describe("Stat Block execution references", () => {
       BattleEffectExecutionRef.make(
         JSON.stringify({
           battleId: "battle-reference-codec",
-          kind: "activeEffectOccurrence",
+          kind: "effectOccurrence",
           ownerId: "character-a",
           ordinal: 0,
           authoredId: "synthetic-effect",
@@ -1590,7 +1590,7 @@ describe("Stat Block execution references", () => {
     );
     const unboundEffectRef = battleEffectExecutionRef(
       JSON.stringify({
-        kind: "activeEffectOccurrence",
+        kind: "effectOccurrence",
         ownerScopeRef: decodedOrigin.execution.scopeRef,
         ordinal: 999,
       }),
@@ -1613,14 +1613,14 @@ describe("Stat Block execution references", () => {
     }
     const fighterEffectRef = battleEffectExecutionRef(
       JSON.stringify({
-        kind: "activeEffectOccurrence",
+        kind: "effectOccurrence",
         ownerScopeRef: encodedFighter.origin.execution.scopeRef,
         ordinal: encodedFighter.nextEffectOrdinal,
       }),
     );
     const actorEffectRef = battleEffectExecutionRef(
       JSON.stringify({
-        kind: "activeEffectOccurrence",
+        kind: "effectOccurrence",
         ownerScopeRef: decodedOrigin.execution.scopeRef,
         ordinal: encodedActor.nextEffectOrdinal,
       }),

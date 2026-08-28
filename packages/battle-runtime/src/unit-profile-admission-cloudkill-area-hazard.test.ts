@@ -15,7 +15,7 @@ import {
   requireResultHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { requireResolved } from "./battle-runtime.test-support.ts";
-import { allocateBattleActiveEffectRefForCreature } from "./effect-execution-ref.ts";
+import { allocateBattleEffectExecutionRefForCreature } from "./effect-execution-ref.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   cloudkillAreaFill,
@@ -458,7 +458,7 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     if (effect?.kind !== "cloudkillAreaHazard") {
       throw new Error("Expected active Cloudkill.");
     }
-    const allocation = allocateBattleActiveEffectRefForCreature({
+    const allocation = allocateBattleEffectExecutionRefForCreature({
       owner: caster,
     });
     const replacement = {
@@ -495,7 +495,7 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     if (effect?.kind !== "cloudkillAreaHazard") {
       throw new Error("Expected active Cloudkill.");
     }
-    const allocation = allocateBattleActiveEffectRefForCreature({
+    const allocation = allocateBattleEffectExecutionRefForCreature({
       owner: target,
     });
     const relocatedEffect = {

@@ -24,7 +24,7 @@ import { Schema } from "effect";
 import * as Result from "effect/Result";
 import { describe, expect, test } from "vitest";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
-import { allocateBattleActiveEffectRefForCreature } from "./effect-execution-ref.ts";
+import { allocateBattleEffectExecutionRefForCreature } from "./effect-execution-ref.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
 import type {
   BattleActiveEffect,
@@ -1229,7 +1229,7 @@ function stateWithBoundSpiritualWeaponEffect(sourceSpellLevel: 2 | 4): {
   if (caster === undefined) {
     throw new Error("Expected spell caster combatant.");
   }
-  const effectAllocation = allocateBattleActiveEffectRefForCreature({
+  const effectAllocation = allocateBattleEffectExecutionRefForCreature({
     owner: caster,
   });
   const effect = {

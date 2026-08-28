@@ -10,7 +10,7 @@ import type {
   BattleWardingBondSeparationFactsHole,
   SupportedSpellInvocation,
 } from "../battle-state-execution.ts";
-import { allocateBattleActiveEffectRefForCreature } from "../effect-execution-ref.ts";
+import { allocateBattleEffectExecutionRefForCreature } from "../effect-execution-ref.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   WARDING_BOND_CONNECTION_RANGE_FEET,
@@ -96,7 +96,7 @@ export function applyWardingBondSpellEffect(
   if (target === undefined) {
     return withoutPriorBonds;
   }
-  const allocation = allocateBattleActiveEffectRefForCreature({
+  const allocation = allocateBattleEffectExecutionRefForCreature({
     owner: target,
   });
   const allocatedTarget = allocation.owner;

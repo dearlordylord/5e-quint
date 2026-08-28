@@ -558,7 +558,7 @@ export function battleEffectExecutionRefForTest(
   }
   return battleEffectExecutionRef(
     JSON.stringify({
-      kind: "activeEffectOccurrence",
+      kind: "effectOccurrence",
       ownerScopeRef: battleCharacterExecutionScopeRef(
         battleId("test-battle"),
         combatantId("test-active-effect-owner"),

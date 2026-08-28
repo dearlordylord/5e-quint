@@ -52,7 +52,7 @@ export function spellActiveEffectForExecutionRef(
   );
 }
 
-export function allocateBattleActiveEffectRef(input: {
+export function allocateBattleEffectExecutionRef(input: {
   readonly state: BattleState;
   readonly ownerId: CombatantId;
 }):
@@ -67,7 +67,7 @@ export function allocateBattleActiveEffectRef(input: {
   if (owner === undefined) {
     return { tag: "ownerNotFound", ownerId: input.ownerId };
   }
-  const allocation = allocateBattleActiveEffectRefForCreature({
+  const allocation = allocateBattleEffectExecutionRefForCreature({
     owner,
   });
   const combatants = new Map(input.state.combatants).set(
@@ -82,7 +82,7 @@ export function allocateBattleActiveEffectRef(input: {
   };
 }
 
-export function allocateBattleActiveEffectRefForCreature(input: {
+export function allocateBattleEffectExecutionRefForCreature(input: {
   readonly owner: BattleCreatureState;
 }): {
   readonly owner: BattleCreatureState;
@@ -96,7 +96,7 @@ export function allocateBattleActiveEffectRefForCreature(input: {
     },
     effectRef: battleEffectExecutionRef(
       JSON.stringify({
-        kind: "activeEffectOccurrence",
+        kind: "effectOccurrence",
         ownerScopeRef: input.owner.origin.execution.scopeRef,
         ordinal,
       }),

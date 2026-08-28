@@ -40,7 +40,7 @@ import {
 import { snapshotBattle } from "../interrupt-execution.ts";
 import { type SelfTransformationModeKind } from "../domain-constants.ts";
 import { CombatantId } from "../../identity.ts";
-import { allocateBattleActiveEffectRefForCreature } from "../../effect-execution-ref.ts";
+import { allocateBattleEffectExecutionRefForCreature } from "../../effect-execution-ref.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { SELF_TRANSFORMATION_MODE_KINDS } from "../domain-constants.ts";
 
@@ -397,7 +397,7 @@ function resolveSelfTransformationMode(
       "Self-transformation effect owner is no longer in the battle.",
     );
   }
-  const allocation = allocateBattleActiveEffectRefForCreature({
+  const allocation = allocateBattleEffectExecutionRefForCreature({
     owner: effectOwner,
   });
   const allocatedState = {
@@ -476,7 +476,7 @@ export function resolveStoredGlyphSelfTransformationModeSpellRelease(input: {
       "Self-transformation effect owner is no longer in the battle.",
     );
   }
-  const allocation = allocateBattleActiveEffectRefForCreature({
+  const allocation = allocateBattleEffectExecutionRefForCreature({
     owner: effectOwner,
   });
   const allocatedState = {

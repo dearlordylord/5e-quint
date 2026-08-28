@@ -15,7 +15,7 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import { Result } from "effect";
-import { allocateBattleActiveEffectRefForCreature } from "../effect-execution-ref.ts";
+import { allocateBattleEffectExecutionRefForCreature } from "../effect-execution-ref.ts";
 import { characterExecutionWithObjectContactDamageRepeat } from "../character-execution-queries.ts";
 import type { ObjectContactDamageRepeatSpellProcedureExecution } from "../character-execution.ts";
 import {
@@ -1389,7 +1389,7 @@ function applyObjectContactDamageActiveEffect(input: {
     return input.state;
   }
   /* v8 ignore stop -- @preserve */
-  const allocation = allocateBattleActiveEffectRefForCreature({
+  const allocation = allocateBattleEffectExecutionRefForCreature({
     owner: actor,
   });
   const effect = {

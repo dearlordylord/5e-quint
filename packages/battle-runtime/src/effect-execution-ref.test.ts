@@ -18,7 +18,7 @@ import {
 import { Result } from "effect";
 import type { SpellActiveEffect } from "./effect-execution-ref.ts";
 import {
-  allocateBattleActiveEffectRef,
+  allocateBattleEffectExecutionRef,
   spellActiveEffectExecutionRef,
   spellActiveEffectForExecutionRef,
 } from "./effect-execution-ref.ts";
@@ -53,7 +53,7 @@ describe("spell active-effect execution references", () => {
     const missingOwnerId = combatantId("missing-effect-owner");
 
     expect(
-      allocateBattleActiveEffectRef({
+      allocateBattleEffectExecutionRef({
         state: initial,
         ownerId: missingOwnerId,
       }),
@@ -63,14 +63,14 @@ describe("spell active-effect execution references", () => {
   test("allocates repeated refs from canonical owner state without replacing other combatants", () => {
     const initial = fighterVsGoblinBattle();
     const goblin = initial.combatants.get(goblinId);
-    const first = allocateBattleActiveEffectRef({
+    const first = allocateBattleEffectExecutionRef({
       state: initial,
       ownerId: fighterId,
     });
     expect(first.tag).toBe("allocated");
     if (first.tag !== "allocated") return;
 
-    const second = allocateBattleActiveEffectRef({
+    const second = allocateBattleEffectExecutionRef({
       state: first.state,
       ownerId: fighterId,
     });
@@ -89,7 +89,7 @@ describe("spell active-effect execution references", () => {
 
   test("does not reuse an active-effect occurrence ref after owner re-admission", () => {
     const initial = fighterVsGoblinBattle();
-    const first = allocateBattleActiveEffectRef({
+    const first = allocateBattleEffectExecutionRef({
       state: initial,
       ownerId: fighterId,
     });
@@ -106,7 +106,7 @@ describe("spell active-effect execution references", () => {
     });
     expect(Result.isSuccess(readmitted)).toBe(true);
     if (Result.isFailure(readmitted)) return;
-    const second = allocateBattleActiveEffectRef({
+    const second = allocateBattleEffectExecutionRef({
       state: readmitted.success,
       ownerId: fighterId,
     });

@@ -66,7 +66,7 @@ export const battleStartTurnOccurrenceId: (
 export const BattleEffectExecutionRef = NonEmptyTrimmedStringSchema.pipe(
   Schema.check(
     Schema.makeFilter(battleEffectExecutionReferenceIsCanonical, {
-      message: "Invalid canonical Battle active-effect execution ref.",
+      message: "Invalid canonical Battle effect execution ref.",
     }),
   ),
   Schema.brand("BattleEffectExecutionRef"),
@@ -548,7 +548,7 @@ export function battleEffectExecutionRefOrdinalIsBefore(
   return (
     decoded !== null &&
     decoded.ownerScopeRef === scopeRef &&
-    decoded.kind === "activeEffectOccurrence" &&
+    decoded.kind === "effectOccurrence" &&
     nonNegativeIntegerProperty(decoded, "ordinal") &&
     Number(decoded.ordinal) < nextEffectOrdinal &&
     battleEffectExecutionReferenceIsCanonical(effectRef)
@@ -658,14 +658,14 @@ function battleEffectExecutionReferenceIsCanonical(
   return (
     decoded !== null &&
     hasExactKeys(decoded, ["kind", "ownerScopeRef", "ordinal"]) &&
-    decoded.kind === "activeEffectOccurrence" &&
+    decoded.kind === "effectOccurrence" &&
     typeof decoded.ownerScopeRef === "string" &&
     (Schema.is(BattleStatBlockExecutionScopeRef)(decoded.ownerScopeRef) ||
       Schema.is(BattleCharacterExecutionScopeRef)(decoded.ownerScopeRef)) &&
     nonNegativeIntegerProperty(decoded, "ordinal") &&
     reference ===
       JSON.stringify({
-        kind: "activeEffectOccurrence",
+        kind: "effectOccurrence",
         ownerScopeRef: decoded.ownerScopeRef,
         ordinal: decoded.ordinal,
       })

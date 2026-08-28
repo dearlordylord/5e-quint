@@ -36,7 +36,7 @@ import {
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
-import { allocateBattleActiveEffectRefForCreature } from "../../effect-execution-ref.ts";
+import { allocateBattleEffectExecutionRefForCreature } from "../../effect-execution-ref.ts";
 
 import { needsHolesResult } from "../needs-holes-result.ts";
 import {
@@ -325,7 +325,7 @@ function applyLevitatedCreatureSpellEffect(
     if (target === undefined) {
       return nextState;
     }
-    const allocation = allocateBattleActiveEffectRefForCreature({
+    const allocation = allocateBattleEffectExecutionRefForCreature({
       owner: target,
     });
     const allocatedTarget = allocation.owner;

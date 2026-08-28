@@ -51,8 +51,8 @@ import type {
   CombatantId,
 } from "../identity.ts";
 import {
-  allocateBattleActiveEffectRef,
-  allocateBattleActiveEffectRefForCreature,
+  allocateBattleEffectExecutionRef,
+  allocateBattleEffectExecutionRefForCreature,
 } from "../effect-execution-ref.ts";
 import {
   activeEffectProcedureMatches,
@@ -1235,7 +1235,7 @@ export function applyDancingLightsSpellEffect(
     return state;
   }
   /* v8 ignore stop -- @preserve */
-  const allocation = allocateBattleActiveEffectRefForCreature({
+  const allocation = allocateBattleEffectExecutionRefForCreature({
     owner: caster,
   });
   const owner = allocation.owner;
@@ -1576,7 +1576,7 @@ export function applyFailedSaveSpellConditionEffects(
     );
     const selectedEffect = (() => {
       if (appliedEffect.repeatSave === null) {
-        const allocation = allocateBattleActiveEffectRefForCreature({
+        const allocation = allocateBattleEffectExecutionRefForCreature({
           owner: target,
         });
         return {
@@ -2092,7 +2092,7 @@ export function applySpiritualWeaponAttackProxyEffect(input: {
   if (caster === undefined) {
     return input.state;
   }
-  const allocation = allocateBattleActiveEffectRefForCreature({
+  const allocation = allocateBattleEffectExecutionRefForCreature({
     owner: caster,
   });
   const activeEffect = {
@@ -2313,7 +2313,7 @@ export function applyInsectPlagueAreaHazardCastEffect(input: {
     { readonly procedure: "insectPlagueAreaHazard" }
   >;
 }): BattleState {
-  const allocation = allocateBattleActiveEffectRef({
+  const allocation = allocateBattleEffectExecutionRef({
     state: input.state,
     ownerId: input.actorId,
   });
@@ -2356,7 +2356,7 @@ export function applyCloudkillAreaHazardCastEffect(input: {
     { readonly procedure: "cloudkillAreaHazard" }
   >;
 }): BattleState {
-  const allocation = allocateBattleActiveEffectRef({
+  const allocation = allocateBattleEffectExecutionRef({
     state: input.state,
     ownerId: input.actorId,
   });
@@ -2759,7 +2759,7 @@ export function applyWebRestrainedCondition(
       activeEffectSourceMatches(candidate, effect) &&
       candidate.condition === "restrained",
   );
-  const allocation = allocateBattleActiveEffectRefForCreature({
+  const allocation = allocateBattleEffectExecutionRefForCreature({
     owner: target,
   });
   const activeEffects = [
@@ -2866,7 +2866,7 @@ export function applyCommandPendingEffects(
       continue;
     }
     /* v8 ignore stop -- @preserve */
-    const allocation = allocateBattleActiveEffectRefForCreature({
+    const allocation = allocateBattleEffectExecutionRefForCreature({
       owner: target,
     });
     nextState = {
@@ -3140,7 +3140,7 @@ function spellPostDamageRiderActiveEffect(input: {
       },
     })),
     Match.when({ kind: "condition" }, (rider) => {
-      const allocation = allocateBattleActiveEffectRefForCreature({
+      const allocation = allocateBattleEffectExecutionRefForCreature({
         owner: input.target,
       });
       return {
@@ -3341,7 +3341,7 @@ export function applyDragonsBreathInitialSpellEffect(
     return state;
   }
   /* v8 ignore stop -- @preserve */
-  const allocation = allocateBattleActiveEffectRefForCreature({
+  const allocation = allocateBattleEffectExecutionRefForCreature({
     owner: target,
   });
   const allocatedTarget = allocation.owner;

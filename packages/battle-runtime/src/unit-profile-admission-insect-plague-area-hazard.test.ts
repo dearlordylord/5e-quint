@@ -20,7 +20,7 @@ import {
   requireResultHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { requireResolved } from "./battle-runtime.test-support.ts";
-import { allocateBattleActiveEffectRefForCreature } from "./effect-execution-ref.ts";
+import { allocateBattleEffectExecutionRefForCreature } from "./effect-execution-ref.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   insectPlagueAreaFill,
@@ -564,7 +564,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
     if (effect?.kind !== "insectPlagueAreaHazard") {
       throw new Error("Expected active Insect Plague.");
     }
-    const allocation = allocateBattleActiveEffectRefForCreature({
+    const allocation = allocateBattleEffectExecutionRefForCreature({
       owner: caster,
     });
     const replacement = {
