@@ -2,45 +2,36 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
-import Ajv2020 from "ajv/dist/2020.js";
-
 import {
   ORACLE_PUBLICATION_ARTIFACTS,
   ORACLE_PUBLICATION_MEMBERS,
+  isOraclePublicationArtifactFileName,
 } from "../src/oracle-publication.ts";
+import {
+  formatOraclePublicationValidation,
+  validateOraclePublicationSchemaBytes,
+} from "./oracle-publication-validation.ts";
+import { Either } from "effect";
 
-const DRAFT_2020_12_SCHEMA = "https://json-schema.org/draft/2020-12/schema";
-
-type JsonRecord = { readonly [key: string]: unknown };
-
-function isJsonRecord(value: unknown): value is JsonRecord {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
+type PublicationDirectoryEntry = {
+  readonly name: string;
+  readonly isFile: () => boolean;
+};
 
 export function checkOraclePublicationSync(
   publicationDirectory = join(process.cwd(), "publication"),
 ): readonly string[] {
   const issues: string[] = [];
-  let entries: readonly {
-    readonly name: string;
-    readonly isFile: () => boolean;
-  }[];
-  try {
-    entries = readdirSync(publicationDirectory, { withFileTypes: true });
-  } catch (error) {
+  const entries = readPublicationDirectory(publicationDirectory);
+  if (Either.isLeft(entries)) {
     issues.push(
-      `publication directory cannot be read: ${error instanceof Error ? error.message : String(error)}`,
+      `publication directory cannot be read: ${safeErrorMessage(entries.left)}`,
     );
     return issues;
   }
 
-  const expectedNames = new Set<string>(
-    ORACLE_PUBLICATION_MEMBERS.map(
-      (member) => ORACLE_PUBLICATION_ARTIFACTS[member].fileName,
-    ),
-  );
-  for (const entry of entries) {
-    if (!expectedNames.has(entry.name)) {
+  for (const entry of entries.right) {
+    if (!isOraclePublicationArtifactFileName(entry.name)) {
       issues.push(`orphan publication entry: ${entry.name}`);
     }
   }
@@ -48,7 +39,7 @@ export function checkOraclePublicationSync(
   for (const member of ORACLE_PUBLICATION_MEMBERS) {
     const artifact = ORACLE_PUBLICATION_ARTIFACTS[member];
     const artifactPath = join(publicationDirectory, artifact.fileName);
-    const entry = entries.find(
+    const entry = entries.right.find(
       (candidate) => candidate.name === artifact.fileName,
     );
     if (entry === undefined) {
@@ -60,59 +51,47 @@ export function checkOraclePublicationSync(
       continue;
     }
 
-    let committedBytes: Buffer;
-    try {
-      committedBytes = readFileSync(artifactPath);
-    } catch (error) {
+    const committedBytes = readPublicationArtifact(artifactPath);
+    if (Either.isLeft(committedBytes)) {
       issues.push(
-        `publication artifact cannot be read (${artifact.fileName}): ${error instanceof Error ? error.message : String(error)}`,
+        `publication artifact cannot be read (${artifact.fileName}): ${safeErrorMessage(committedBytes.left)}`,
       );
       continue;
     }
-    if (!committedBytes.equals(artifact.bytes)) {
-      issues.push(`publication artifact is out of sync: ${artifact.fileName}`);
-    }
-
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(committedBytes.toString("utf8"));
-    } catch (error) {
-      issues.push(
-        `publication artifact is not valid JSON (${artifact.fileName}): ${error instanceof Error ? error.message : String(error)}`,
-      );
-      continue;
-    }
-    if (!isJsonRecord(parsed)) {
-      issues.push(
-        `publication artifact root is not an object: ${artifact.fileName}`,
-      );
-      continue;
-    }
-    if (parsed.$schema !== DRAFT_2020_12_SCHEMA) {
-      issues.push(
-        `publication artifact has the wrong $schema: ${artifact.fileName}`,
-      );
-    }
-    if (parsed.$id !== artifact.rootId) {
-      issues.push(
-        `publication artifact has the wrong root $id: ${artifact.fileName}`,
-      );
-    }
-
-    try {
-      new Ajv2020({
-        strict: false,
-        inlineRefs: false,
-        code: { optimize: 0 },
-      }).compile(parsed);
-    } catch (error) {
-      issues.push(
-        `publication artifact does not compile with Draft 2020-12 Ajv (${artifact.fileName}): ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
+    issues.push(
+      ...formatOraclePublicationValidation(
+        validateOraclePublicationSchemaBytes(member, committedBytes.right),
+      ),
+    );
   }
 
   return issues;
+}
+
+function readPublicationDirectory(
+  publicationDirectory: string,
+): Either.Either<readonly PublicationDirectoryEntry[], unknown> {
+  try {
+    return Either.right(
+      readdirSync(publicationDirectory, { withFileTypes: true }),
+    );
+  } catch (cause) {
+    return Either.left(cause);
+  }
+}
+
+function readPublicationArtifact(
+  artifactPath: string,
+): Either.Either<Buffer, unknown> {
+  try {
+    return Either.right(readFileSync(artifactPath));
+  } catch (cause) {
+    return Either.left(cause);
+  }
+}
+
+function safeErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 function run(): void {

@@ -2,11 +2,13 @@ import {
   battleCharacterExecutionScopeRef,
   battleExecutionScopeOrdinal,
   battleId,
+  battlePendingTransactionView,
   battlePresentedSnapshot,
   battleProcedureExecutionRef,
   combatantId,
   discoverBattleActs,
-  resolveBattleRuntimeSubject,
+  sameBattleSubject,
+  settleBattleRuntimeTransaction,
   snapshotBattle,
   type BattleInterruptProcedureChoice,
   type BattleRuntimeResolutionResult,
@@ -16,7 +18,7 @@ import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { Either } from "effect";
+import { Either, Option } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -28,7 +30,6 @@ import {
   presentedInterruptChoices,
   unknownStatBlockContent,
 } from "./battle-tool-payloads.ts";
-import { storeBattleResolution } from "./battle-tools.ts";
 import { createMcpPlaySessionRoot } from "./composition-root.ts";
 import { handleToolCall as handleWireToolCall } from "./server.ts";
 import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
@@ -39,6 +40,10 @@ function handleToolCall(
   args: unknown,
 ) {
   return handleWireToolCall(root, name, battleToolWireArgs(name, args));
+}
+
+function readToolPayload(response: ReturnType<typeof handleToolCall>) {
+  return JSON.parse(response.content[0]?.text ?? "null");
 }
 
 describe("battle tool payload boundaries", () => {
@@ -189,7 +194,7 @@ describe("battle tool payload boundaries", () => {
     ).toHaveProperty("droppedObjects", []);
   });
 
-  test("does not store needs-holes results without a pending transaction", () => {
+  test("atomically stores needs-holes transaction results", () => {
     const { root, session } = startedStatBlockBattle();
     const act = discoverBattleActs(session).find(
       (candidate) => candidate.initialHoles.length > 0,
@@ -197,19 +202,129 @@ describe("battle tool payload boundaries", () => {
     if (act === undefined) {
       throw new Error("Expected a test battle act with initial holes.");
     }
-    const result = resolveBattleRuntimeSubject({
+    const result = settleBattleRuntimeTransaction({
       session,
-      subject: act.subject,
-      fills: [],
+      transaction: null,
+      operation: {
+        kind: "ordinarySubject",
+        subject: act.subject,
+        fills: [],
+      },
       statBlockCatalog: root.statBlockCatalog,
     });
     if (result.tag !== "needsHoles") {
       throw new Error("Expected the test battle act to need hole fills.");
     }
-    expect(storeBattleResolution(root, result, null)).toEqual(
-      Either.left({ tag: "pendingBattleFillTransactionMissing" }),
+    const transactionView = battlePendingTransactionView(result.transaction);
+    expect(Option.isSome(transactionView)).toBe(true);
+    if (Option.isSome(transactionView)) {
+      expect(Object.isFrozen(transactionView.value)).toBe(true);
+      expect(Object.isFrozen(transactionView.value.subject)).toBe(true);
+      expect(Object.isFrozen(transactionView.value.fills)).toBe(true);
+      expect(Object.isFrozen(transactionView.value.holes)).toBe(true);
+      expect(Object.isFrozen(transactionView.value.holes[0])).toBe(true);
+      expect(transactionView.value.subject).not.toBe(result.resolution.subject);
+      expect(transactionView.value.holes).not.toBe(result.resolution.holes);
+    }
+    expect(
+      root.sessionStore.storeActiveBattle(result.resolution.session),
+    ).toEqual(Either.right(undefined));
+    const staleStoreSnapshot = root.sessionStore.snapshot();
+    expect(
+      root.sessionStore.storeBattleTransactionResult(session, result),
+    ).toEqual(
+      Either.left({
+        tag: "battleStateSessionChanged",
+        battleId: session.state.battleId,
+      }),
     );
-    expect(root.sessionStore.battleSession).toBe(session);
+    expect(root.sessionStore.snapshot()).toEqual(staleStoreSnapshot);
+    expect(
+      root.sessionStore.storeBattleTransactionResult(
+        result.resolution.session,
+        result,
+      ),
+    ).toEqual(Either.right(undefined));
+    expect(root.sessionStore.battleSession).toBe(result.resolution.session);
+    expect(root.sessionStore.getPendingBattleTransaction()).toBe(
+      result.transaction,
+    );
+  });
+
+  test("delegates transaction admission and maps typed runtime issues", () => {
+    const { root, session } = startedStatBlockBattle();
+    const pendingAct = discoverBattleActs(session).find(
+      (candidate) => candidate.initialHoles.length > 0,
+    );
+    if (pendingAct === undefined) {
+      throw new Error("Expected a test battle act with initial holes.");
+    }
+
+    const noPendingInterrupt = handleToolCall(root, "fill_battle_hole", {
+      subject: pendingAct.subject,
+      fill: {
+        kind: "interruptDecision",
+        holeId: "battle:synthetic-interrupt",
+        value: { kind: "decline", responderId: "goblin" },
+      },
+    });
+    expect(readToolPayload(noPendingInterrupt)).toMatchObject({
+      details: { code: "BATTLE_ACT_NOT_AVAILABLE" },
+    });
+
+    const pendingResult = settleBattleRuntimeTransaction({
+      session,
+      transaction: null,
+      operation: {
+        kind: "ordinarySubject",
+        subject: pendingAct.subject,
+        fills: [],
+      },
+      statBlockCatalog: root.statBlockCatalog,
+    });
+    if (pendingResult.tag !== "needsHoles") {
+      throw new Error("Expected the test battle act to need hole fills.");
+    }
+    expect(
+      root.sessionStore.storeBattleTransactionResult(session, pendingResult),
+    ).toEqual(Either.right(undefined));
+
+    const interruptAgainstOrdinary = handleToolCall(root, "fill_battle_hole", {
+      subject: pendingAct.subject,
+      fill: {
+        kind: "interruptDecision",
+        holeId: "battle:synthetic-interrupt",
+        value: { kind: "decline", responderId: "goblin" },
+      },
+    });
+    expect(readToolPayload(interruptAgainstOrdinary)).toMatchObject({
+      details: { code: "BATTLE_FILLS_PENDING" },
+    });
+
+    const distinctAct = discoverBattleActs(session).find(
+      (candidate) => !sameBattleSubject(candidate.subject, pendingAct.subject),
+    );
+    if (distinctAct === undefined) {
+      throw new Error("Expected a distinct test battle act.");
+    }
+    const mismatchedFill = handleToolCall(root, "fill_battle_hole", {
+      subject: distinctAct.subject,
+      fill: {
+        kind: "targetChoice",
+        holeId: "battle:synthetic-mismatch",
+        value: "goblin",
+      },
+    });
+    expect(readToolPayload(mismatchedFill)).toMatchObject({
+      details: { code: "BATTLE_FILL_SUBJECT_MISMATCH" },
+    });
+
+    const mismatchedResolve = handleToolCall(root, "resolve_battle_act", {
+      subject: distinctAct.subject,
+    });
+    expect(readToolPayload(mismatchedResolve)).toMatchObject({
+      details: { code: "BATTLE_FILLS_PENDING" },
+    });
   });
 });
 

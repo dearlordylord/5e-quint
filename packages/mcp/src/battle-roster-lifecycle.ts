@@ -132,7 +132,6 @@ function commitBattleLifecycleTransition(input: {
   );
   if (Either.isLeft(committed)) return rosterTransitionFailure(committed.left);
 
-  input.root.sessionStore.pendingBattleFills = null;
   publishAdminProjectionBestEffort(input.root);
 
   const battleState = battleStateSnapshot({
@@ -167,6 +166,12 @@ function rosterTransitionFailure(issue: McpBattleRosterTransitionIssue) {
           pendingSubject: matched.pendingSubject,
         },
       ),
+    ),
+    Match.when({ tag: "battleRosterUnknownPendingTransaction" }, () =>
+      battleLifecycleError("Battle lifecycle commit failed.", {
+        code: "BATTLE_STATE_TRANSITION_INVALID",
+        transition: { tag: "unknownPendingBattleTransaction" },
+      }),
     ),
     Match.when({ tag: "battleRosterCombatantAdmissionFailed" }, (matched) =>
       battleLifecycleError("Battle combatant admission failed.", {

@@ -10,6 +10,7 @@ import {
   type BattleSpellProcedureExecution,
 } from "../character-execution-queries.ts";
 import { currentInterruptCheckpoint } from "./battle-snapshot.ts";
+import { copyInterruptCheckpointIdentity } from "./interrupt-checkpoint-identity.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import {
   combatantCanTakeActions,
@@ -218,6 +219,7 @@ export function resolveCastAttackHitBonusActionSpellCommand(
     ...frame,
     continuation: frame.continuation,
   };
+  copyInterruptCheckpointIdentity(frame, attackDamageChangeFrame);
   const fillValidation = attackHitBonusActionSpellFillValidation(
     input,
     invocation,

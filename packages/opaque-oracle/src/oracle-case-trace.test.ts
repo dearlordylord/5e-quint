@@ -1,32 +1,19 @@
 import { statBlockId } from "@dnd/shared/game-facts";
 import {
-  battleCreatureInitFromStatBlock,
+  BattleFillSchema,
   combatantId,
-  BattleStatBlockProcedureExecutionRef,
-  discoverBattleActs,
-  endBattleRuntimeTurn,
+  BattleSubjectSchema,
   initiativeScore,
-  startBattle,
   type BattleFill,
 } from "@dnd/battle-runtime";
-import { DieRollResult, movementFeet, resourceCount } from "@dnd/shared/types";
+import { DieRollResult, movementFeet } from "@dnd/shared/types";
 import { Either, Option, Schema } from "effect";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
 import {
-  abilityScoreAssignment,
-  characterDraftId,
-  choiceCardinalityBounds,
-  createCharacterDraft,
   creationChoiceOptionId,
   creationHoleId,
-  discoverCreationHoles,
-  fillCreationHoles,
-  type CharacterDraft,
-  type CreationChoiceOptionId,
-  type CreationHole,
-  type CreationFill,
 } from "@dnd/character-creation-runtime";
 import {
   decodeOracleCase,
@@ -36,7 +23,6 @@ import {
   canonicalStructuralKey,
   evaluateOracleBatch,
   evaluateOracleCase,
-  ORACLE_BATTLE_ID,
   OracleCaseSchema,
   OracleTraceSchema,
   oracleTraceSchema,
@@ -61,6 +47,13 @@ import {
   type OracleBattleEntered,
   type OracleTrace,
 } from "./oracle-case-trace-schema.ts";
+import {
+  completeCreationFillBatches as buildCompleteCreationFillBatches,
+  discoverStatBlockAttackProcedureRef,
+  startStatBlockBattle,
+  statBlockBattleFor,
+  type OracleStatBlockBattlePlacement,
+} from "./oracle-evaluation-corpus-source.ts";
 
 const unitLibraryResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -78,21 +71,20 @@ if (statBlockLibraryResult.tag !== "ok") {
   );
 }
 const statBlockCatalog = statBlockLibraryResult.catalog;
-const skeletonRecord = statBlockCatalog.getStatBlock("stat_block_skeleton");
-if (Option.isNone(skeletonRecord)) {
-  throw new Error("SRD Skeleton Stat Block test fixture must be available.");
+const statBlockRecord = statBlockCatalog.getStatBlock("stat_block_skeleton");
+if (Option.isNone(statBlockRecord)) {
+  throw new Error("SRD stat-block fixture must be available.");
 }
-const skeletonStatBlock = skeletonRecord.value;
 const projectionFailureStatBlockCatalog: StatBlockCatalog = {
   ...statBlockCatalog,
   getStatBlock: (id) =>
-    id === skeletonRecord.value.id
+    id === statBlockRecord.value.id
       ? Option.some({
-          ...skeletonRecord.value,
+          ...statBlockRecord.value,
           statBlock: {
-            ...skeletonRecord.value.statBlock,
+            ...statBlockRecord.value.statBlock,
             immunities: {
-              ...(skeletonRecord.value.statBlock.immunities ?? {}),
+              ...(statBlockRecord.value.statBlock.immunities ?? {}),
               conditions: ["prone"] as const,
             },
           },
@@ -100,47 +92,26 @@ const projectionFailureStatBlockCatalog: StatBlockCatalog = {
       : statBlockCatalog.getStatBlock(id),
 };
 
-const statBlockBattle = {
-  roster: {
-    tag: "statBlocks" as const,
-    entries: [
-      {
-        combatantId: combatantId("oracle:stat-block"),
-        statBlockId: statBlockId("stat_block_skeleton"),
-        initiative: 0,
-        ammunitionStocks: { arrow: 0 },
-        conditions: [],
-        tempHp: 0,
-      },
-    ],
+const statBlockBattle = statBlockBattleFor([
+  {
+    combatantId: combatantId("oracle:stat-block"),
+    statBlockId: statBlockId("stat_block_skeleton"),
+    initiative: initiativeScore(0),
   },
-  attempts: [],
-};
+]);
 
-const twoSkeletonBattle = {
-  roster: {
-    tag: "statBlocks" as const,
-    entries: [
-      {
-        combatantId: combatantId("oracle:skeleton-a"),
-        statBlockId: statBlockId("stat_block_skeleton"),
-        initiative: 10,
-        ammunitionStocks: { arrow: 0 },
-        conditions: [],
-        tempHp: 0,
-      },
-      {
-        combatantId: combatantId("oracle:skeleton-b"),
-        statBlockId: statBlockId("stat_block_skeleton"),
-        initiative: 0,
-        ammunitionStocks: { arrow: 0 },
-        conditions: [],
-        tempHp: 0,
-      },
-    ],
+const twoStatBlockBattle = statBlockBattleFor([
+  {
+    combatantId: combatantId("oracle:skeleton-a"),
+    statBlockId: statBlockId("stat_block_skeleton"),
+    initiative: initiativeScore(10),
   },
-  attempts: [],
-};
+  {
+    combatantId: combatantId("oracle:skeleton-b"),
+    statBlockId: statBlockId("stat_block_skeleton"),
+    initiative: initiativeScore(0),
+  },
+]);
 
 const mixedBattle = {
   roster: {
@@ -148,7 +119,7 @@ const mixedBattle = {
     precedingStatBlocks: [],
     characterSheet: {
       combatantId: combatantId("oracle:character"),
-      initiative: 1,
+      initiative: initiativeScore(1),
       ammunitionStocks: {},
     },
     followingStatBlocks: statBlockBattle.roster.entries,
@@ -317,11 +288,11 @@ describe("Opaque Oracle Case and Trace contract", () => {
           tag: "statBlocks",
           entries: [
             {
-              ...twoSkeletonBattle.roster.entries[0],
+              ...twoStatBlockBattle.roster.entries[0],
               initiative: 0,
             },
             {
-              ...twoSkeletonBattle.roster.entries[1],
+              ...twoStatBlockBattle.roster.entries[1],
               initiative: 0,
             },
           ],
@@ -337,11 +308,11 @@ describe("Opaque Oracle Case and Trace contract", () => {
           tag: "statBlocks",
           entries: [
             {
-              ...twoSkeletonBattle.roster.entries[1],
+              ...twoStatBlockBattle.roster.entries[1],
               initiative: 0,
             },
             {
-              ...twoSkeletonBattle.roster.entries[0],
+              ...twoStatBlockBattle.roster.entries[0],
               initiative: 0,
             },
           ],
@@ -768,7 +739,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
         case: {
           creation: { fillBatches: completeCreationFillBatches() },
           sheet: { tag: "ordinary" },
-          battle: twoSkeletonBattle,
+          battle: twoStatBlockBattle,
         },
         unitLibrary,
         statBlockCatalog,
@@ -792,7 +763,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
           creation: { fillBatches: completeCreationFillBatches() },
           sheet: { tag: "ordinary" },
           battle: {
-            ...twoSkeletonBattle,
+            ...twoStatBlockBattle,
             attempts: [
               { kind: "ordinarySubject", subject: moveSubject, fills: [] },
             ],
@@ -823,7 +794,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
             {
               reactorId: combatantId("oracle:skeleton-b"),
               distanceFeet: movementFeet(5),
-              procedureRef: skeletonShortswordProcedureRef(),
+              procedureRef: statBlockAttackProcedureRef(),
             },
           ],
         },
@@ -839,7 +810,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
           creation: { fillBatches: completeCreationFillBatches() },
           sheet: { tag: "ordinary" },
           battle: {
-            ...twoSkeletonBattle,
+            ...twoStatBlockBattle,
             attempts: [moveAttempt],
           },
         },
@@ -900,7 +871,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
           creation: { fillBatches: completeCreationFillBatches() },
           sheet: { tag: "ordinary" },
           battle: {
-            ...twoSkeletonBattle,
+            ...twoStatBlockBattle,
             attempts: [moveAttempt, interruptAttempt],
           },
         },
@@ -936,7 +907,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
           creation: { fillBatches: completeCreationFillBatches() },
           sheet: { tag: "ordinary" },
           battle: {
-            ...twoSkeletonBattle,
+            ...twoStatBlockBattle,
             attempts: [
               moveAttempt,
               interruptAttempt,
@@ -973,7 +944,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
           creation: { fillBatches: completeCreationFillBatches() },
           sheet: { tag: "ordinary" },
           battle: {
-            ...twoSkeletonBattle,
+            ...twoStatBlockBattle,
             attempts: [
               moveAttempt,
               interruptAttempt,
@@ -1010,7 +981,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
           creation: { fillBatches: completeCreationFillBatches() },
           sheet: { tag: "ordinary" },
           battle: {
-            ...twoSkeletonBattle,
+            ...twoStatBlockBattle,
             attempts: [
               moveAttempt,
               interruptAttempt,
@@ -1054,7 +1025,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
           creation: { fillBatches: completeCreationFillBatches() },
           sheet: { tag: "ordinary" },
           battle: {
-            ...twoSkeletonBattle,
+            ...twoStatBlockBattle,
             attempts: [
               {
                 kind: "ordinarySubject",
@@ -1079,6 +1050,390 @@ describe("Opaque Oracle Case and Trace contract", () => {
       expect(retriedFrontierStep.frontier).toEqual(validFrontierStep.frontier);
       expect(Either.isRight(decodeOracleTrace(valid))).toBe(true);
       expect(Either.isRight(decodeOracleTrace(retry))).toBe(true);
+    },
+    ORACLE_LONG_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "keeps an outer Move interrupt pending while a Ready action reaction resolves",
+    () => {
+      const distinctReactorId = combatantId("oracle:reaction-skeleton");
+      const reactionTemplate = mixedBattle.roster.followingStatBlocks[0];
+      expect(reactionTemplate).toBeDefined();
+      if (reactionTemplate === undefined) return;
+      const readyReactionBattle = {
+        ...mixedBattle,
+        roster: {
+          ...mixedBattle.roster,
+          followingStatBlocks: [
+            ...mixedBattle.roster.followingStatBlocks,
+            {
+              ...reactionTemplate,
+              combatantId: distinctReactorId,
+              initiative: -1,
+            },
+          ],
+        },
+      };
+      const initial = evaluateDecodedCase({
+        case: {
+          creation: { fillBatches: completeCreationFillBatches() },
+          sheet: { tag: "ordinary" },
+          battle: readyReactionBattle,
+        },
+        unitLibrary,
+        statBlockCatalog,
+      });
+      const entered = requireBattleEntered(initial);
+      const readySubject = entered.frontier.acts.find(
+        (subject) =>
+          subject.tag === "action" &&
+          subject.action === "ready" &&
+          subject.actorId === combatantId("oracle:character"),
+      );
+      expect(readySubject).toBeDefined();
+      if (readySubject?.tag !== "action" || readySubject.action !== "ready") {
+        return;
+      }
+
+      const readyHolesTrace = evaluateDecodedCase({
+        case: {
+          creation: { fillBatches: completeCreationFillBatches() },
+          sheet: { tag: "ordinary" },
+          battle: {
+            ...readyReactionBattle,
+            attempts: [
+              { kind: "ordinarySubject", subject: readySubject, fills: [] },
+            ],
+          },
+        },
+        unitLibrary,
+        statBlockCatalog,
+      });
+      const readyHolesStep = requireBattleContinuation(
+        requireBattleEntered(readyHolesTrace),
+        0,
+      );
+      expect(readyHolesStep.frontier.kind).toBe("ordinaryHoles");
+      if (readyHolesStep.frontier.kind !== "ordinaryHoles") return;
+      const readyHole = readyHolesStep.frontier.holes.find(
+        (hole) => hole.kind === "readyDeclaration",
+      );
+      expect(readyHole).toBeDefined();
+      if (readyHole?.kind !== "readyDeclaration") return;
+      const dodgeResponse = readyHole.responseChoices.find(
+        (response) =>
+          response.kind === "action" &&
+          response.subject.tag === "action" &&
+          response.subject.action === "dodge",
+      );
+      expect(dodgeResponse).toBeDefined();
+      if (
+        dodgeResponse?.kind !== "action" ||
+        dodgeResponse.subject.tag !== "action" ||
+        dodgeResponse.subject.action !== "dodge"
+      ) {
+        return;
+      }
+      const readyFill = Schema.decodeUnknownEither(BattleFillSchema)({
+        kind: "readyDeclaration",
+        holeId: readyHole.holeId,
+        value: {
+          trigger: "the skeleton moves",
+          response: { kind: "action", subject: dodgeResponse.subject },
+        },
+      });
+      expect(Either.isRight(readyFill)).toBe(true);
+      if (Either.isLeft(readyFill)) return;
+      const readyAttempt = {
+        kind: "ordinarySubject" as const,
+        subject: readySubject,
+        fills: [readyFill.right],
+      } satisfies OracleBattleAttempt;
+
+      const afterReady = evaluateDecodedCase({
+        case: {
+          creation: { fillBatches: completeCreationFillBatches() },
+          sheet: { tag: "ordinary" },
+          battle: { ...readyReactionBattle, attempts: [readyAttempt] },
+        },
+        unitLibrary,
+        statBlockCatalog,
+      });
+      const afterReadyStep = requireBattleContinuation(
+        requireBattleEntered(afterReady),
+        0,
+      );
+      expect(afterReadyStep.frontier.kind).toBe("acts");
+      if (afterReadyStep.frontier.kind !== "acts") return;
+      const endTurnSubject = afterReadyStep.frontier.acts.find(
+        (subject) =>
+          subject.tag === "runtimeCommand" &&
+          subject.command === "endTurn" &&
+          subject.actorId === readySubject.actorId,
+      );
+      expect(endTurnSubject).toBeDefined();
+      if (
+        endTurnSubject?.tag !== "runtimeCommand" ||
+        endTurnSubject.command !== "endTurn"
+      ) {
+        return;
+      }
+      const endTurnAttempt = {
+        kind: "ordinarySubject" as const,
+        subject: endTurnSubject,
+        fills: [],
+      } satisfies OracleBattleAttempt;
+
+      const afterEndTurn = evaluateDecodedCase({
+        case: {
+          creation: { fillBatches: completeCreationFillBatches() },
+          sheet: { tag: "ordinary" },
+          battle: {
+            ...readyReactionBattle,
+            attempts: [readyAttempt, endTurnAttempt],
+          },
+        },
+        unitLibrary,
+        statBlockCatalog,
+      });
+      const afterEndTurnStep = requireBattleContinuation(
+        requireBattleEntered(afterEndTurn),
+        1,
+      );
+      expect(afterEndTurnStep.frontier.kind).toBe("acts");
+      if (afterEndTurnStep.frontier.kind !== "acts") return;
+      const moveSubject = afterEndTurnStep.frontier.acts.find(
+        (subject) =>
+          subject.tag === "runtimeCommand" &&
+          subject.command === "move" &&
+          subject.actorId !== distinctReactorId,
+      );
+      expect(moveSubject).toBeDefined();
+      if (
+        moveSubject?.tag !== "runtimeCommand" ||
+        moveSubject.command !== "move"
+      ) {
+        return;
+      }
+
+      const moveHoles = evaluateDecodedCase({
+        case: {
+          creation: { fillBatches: completeCreationFillBatches() },
+          sheet: { tag: "ordinary" },
+          battle: {
+            ...readyReactionBattle,
+            attempts: [
+              readyAttempt,
+              endTurnAttempt,
+              { kind: "ordinarySubject", subject: moveSubject, fills: [] },
+            ],
+          },
+        },
+        unitLibrary,
+        statBlockCatalog,
+      });
+      const moveHolesStep = requireBattleContinuation(
+        requireBattleEntered(moveHoles),
+        2,
+      );
+      expect(moveHolesStep.frontier.kind).toBe("ordinaryHoles");
+      if (moveHolesStep.frontier.kind !== "ordinaryHoles") return;
+      const movementHole = moveHolesStep.frontier.holes.find(
+        (hole) => hole.kind === "movement",
+      );
+      expect(movementHole).toBeDefined();
+      if (movementHole?.kind !== "movement") return;
+      const movementFill = Schema.decodeUnknownEither(BattleFillSchema)({
+        kind: "movement",
+        holeId: movementHole.holeId,
+        value: {
+          speedKind: "walk",
+          movementCostFeet: movementFeet(10),
+          provokedOpportunityAttacks: [
+            {
+              reactorId: distinctReactorId,
+              distanceFeet: movementFeet(5),
+              procedureRef: statBlockAttackProcedureRef(distinctReactorId),
+            },
+          ],
+        },
+      });
+      expect(Either.isRight(movementFill)).toBe(true);
+      if (Either.isLeft(movementFill)) return;
+      const moveAttempt = {
+        kind: "ordinarySubject" as const,
+        subject: moveSubject,
+        fills: [movementFill.right],
+      } satisfies OracleBattleAttempt;
+
+      const afterMove = evaluateDecodedCase({
+        case: {
+          creation: { fillBatches: completeCreationFillBatches() },
+          sheet: { tag: "ordinary" },
+          battle: {
+            ...readyReactionBattle,
+            attempts: [readyAttempt, endTurnAttempt, moveAttempt],
+          },
+        },
+        unitLibrary,
+        statBlockCatalog,
+      });
+      const afterMoveStep = requireBattleContinuation(
+        requireBattleEntered(afterMove),
+        2,
+      );
+      expect(afterMoveStep.frontier.kind).toBe("interruptDecision");
+      if (afterMoveStep.frontier.kind !== "interruptDecision") return;
+      expect(afterMoveStep.frontier.decisionHole.trigger).toBe(
+        "opportunityAttack",
+      );
+
+      const reportSubjectResult = Schema.decodeUnknownEither(
+        BattleSubjectSchema,
+      )({
+        tag: "runtimeCommand",
+        actorId: moveSubject.actorId,
+        command: "reportReadyTrigger",
+        readiedActorId: readySubject.actorId,
+      });
+      expect(Either.isRight(reportSubjectResult)).toBe(true);
+      if (Either.isLeft(reportSubjectResult)) return;
+      const reportAttempt = {
+        kind: "ordinarySubject" as const,
+        subject: reportSubjectResult.right,
+        fills: [],
+      } satisfies OracleBattleAttempt;
+      const afterReport = evaluateDecodedCase({
+        case: {
+          creation: { fillBatches: completeCreationFillBatches() },
+          sheet: { tag: "ordinary" },
+          battle: {
+            ...readyReactionBattle,
+            attempts: [
+              readyAttempt,
+              endTurnAttempt,
+              moveAttempt,
+              reportAttempt,
+            ],
+          },
+        },
+        unitLibrary,
+        statBlockCatalog,
+      });
+      const afterReportStep = requireBattleContinuation(
+        requireBattleEntered(afterReport),
+        3,
+      );
+      expect(afterReportStep.frontier.kind).toBe("interruptDecision");
+      if (afterReportStep.frontier.kind !== "interruptDecision") return;
+
+      const repeatedReport = evaluateDecodedCase({
+        case: {
+          creation: { fillBatches: completeCreationFillBatches() },
+          sheet: { tag: "ordinary" },
+          battle: {
+            ...readyReactionBattle,
+            attempts: [
+              readyAttempt,
+              endTurnAttempt,
+              moveAttempt,
+              reportAttempt,
+              reportAttempt,
+            ],
+          },
+        },
+        unitLibrary,
+        statBlockCatalog,
+      });
+      const repeatedReportStep = requireBattleContinuation(
+        requireBattleEntered(repeatedReport),
+        3,
+      );
+      expect(repeatedReportStep.frontier).toEqual(afterReportStep.frontier);
+      expect(repeatedReportStep.segment.rejections).toEqual(["staleSubject"]);
+
+      const releaseReadiedAction = afterReportStep.frontier.choices.find(
+        (choice) =>
+          choice.kind === "nestedProcedure" &&
+          choice.subject.command === "releaseReadiedAction",
+      );
+      expect(releaseReadiedAction).toBeDefined();
+      if (
+        releaseReadiedAction?.kind !== "nestedProcedure" ||
+        releaseReadiedAction.subject.command !== "releaseReadiedAction"
+      ) {
+        return;
+      }
+      const releaseFill = Schema.decodeUnknownEither(
+        OracleBattleInterruptDecisionFillSchema,
+      )({
+        kind: "interruptDecision",
+        holeId: afterReportStep.frontier.decisionHole.holeId,
+        value: {
+          kind: "resolve",
+          responderId: releaseReadiedAction.subject.reactorId,
+          choice: { kind: "releaseReadiedAction", fills: [] },
+        },
+      });
+      expect(Either.isRight(releaseFill)).toBe(true);
+      if (Either.isLeft(releaseFill)) return;
+      const releaseAttempt = {
+        kind: "interruptDecision" as const,
+        fill: releaseFill.right,
+      } satisfies OracleBattleAttempt;
+
+      const afterRelease = evaluateDecodedCase({
+        case: {
+          creation: { fillBatches: completeCreationFillBatches() },
+          sheet: { tag: "ordinary" },
+          battle: {
+            ...readyReactionBattle,
+            attempts: [
+              readyAttempt,
+              endTurnAttempt,
+              moveAttempt,
+              reportAttempt,
+              releaseAttempt,
+            ],
+          },
+        },
+        unitLibrary,
+        statBlockCatalog,
+      });
+      const afterReleaseEntered = requireBattleEntered(afterRelease);
+      const afterReleaseStep = requireBattleContinuation(
+        afterReleaseEntered,
+        4,
+      );
+      expect(afterReleaseStep.frontier.kind).toBe("interruptDecision");
+      if (afterReleaseStep.frontier.kind === "interruptDecision") {
+        expect(afterReleaseStep.frontier.decisionHole.trigger).toBe(
+          "opportunityAttack",
+        );
+      }
+      expect(afterReleaseEntered.segment.outcome.tag).toBe("next");
+      expect(Either.isRight(decodeOracleTrace(afterRelease))).toBe(true);
+      expect(afterRelease).toEqual(
+        evaluateDecodedCase({
+          case: {
+            creation: { fillBatches: completeCreationFillBatches() },
+            sheet: { tag: "ordinary" },
+            battle: {
+              ...readyReactionBattle,
+              attempts: [
+                readyAttempt,
+                endTurnAttempt,
+                moveAttempt,
+                reportAttempt,
+                releaseAttempt,
+              ],
+            },
+          },
+          unitLibrary,
+          statBlockCatalog,
+        }),
+      );
     },
     ORACLE_LONG_TEST_TIMEOUT_MS,
   );
@@ -1284,109 +1639,33 @@ describe("Opaque Oracle Case and Trace contract", () => {
     expect(Either.isLeft(invalidAdmission)).toBe(true);
   });
 
-  it("preserves the terminal checkpoint and rejects redundant terminal spellings", () => {
-    const trace = evaluateDecodedCase({
-      case: {
-        creation: { fillBatches: completeCreationFillBatches() },
-        sheet: { tag: "ordinary" },
-        battle: mixedBattle,
-      },
-      unitLibrary,
-      statBlockCatalog,
-    });
-    const entered = requireBattleEntered(trace);
-
-    const resolved = replaceBattleEntered(trace, (battle) => ({
-      ...battle,
-      segment: {
-        ...battle.segment,
-        outcome: {
-          tag: "resolved",
-          checkpoint: battle.checkpoint,
-          after: { tag: "complete" },
-        },
-      },
-    }));
-    const decodedResolved = decodeOracleTrace(resolved);
-    expect(Either.isRight(decodedResolved)).toBe(true);
-    if (Either.isRight(decodedResolved)) {
-      const decodedEntered = requireBattleEntered(decodedResolved.right);
-      expect(decodedEntered.segment.outcome).toEqual({
-        tag: "resolved",
-        checkpoint: entered.checkpoint,
-        after: { tag: "complete" },
-      });
-    }
-
-    const resolvedWithoutCheckpoint = replaceBattleEntered(trace, (battle) => ({
-      ...battle,
-      segment: {
-        ...battle.segment,
-        outcome: { tag: "resolved", after: { tag: "complete" } },
-      },
-    }));
-    expect(Either.isLeft(decodeOracleTrace(resolvedWithoutCheckpoint))).toBe(
-      true,
-    );
-
-    const resolvedWithFrontier = replaceBattleEntered(trace, (battle) => ({
-      ...battle,
-      segment: {
-        ...battle.segment,
-        outcome: {
-          tag: "resolved",
-          checkpoint: battle.checkpoint,
-          after: { tag: "complete" },
-          frontier: { kind: "terminal", outcome: "resolved" },
-        },
-      },
-    }));
-    expect(Either.isLeft(decodeOracleTrace(resolvedWithFrontier))).toBe(true);
-
-    const resolvedWithOutcome = replaceBattleEntered(trace, (battle) => ({
-      ...battle,
-      segment: {
-        ...battle.segment,
-        outcome: {
-          tag: "resolved",
-          checkpoint: battle.checkpoint,
-          after: { tag: "complete" },
-          outcome: "resolved",
-        },
-      },
-    }));
-    expect(Either.isLeft(decodeOracleTrace(resolvedWithOutcome))).toBe(true);
-
-    const terminalProgressed = replaceBattleEntered(trace, (battle) => ({
-      ...battle,
-      frontier: { kind: "terminal" },
-    }));
-    expect(Either.isLeft(decodeOracleTrace(terminalProgressed))).toBe(true);
-
-    const terminalRejection = replaceBattleEntered(trace, (battle) => ({
-      ...battle,
-      segment: {
-        ...battle.segment,
-        outcome: {
-          tag: "battleAttemptRejected",
-          checkpoint: battle.checkpoint,
-          frontier: { kind: "terminal" },
-          reason: "wrongActor",
-        },
-      },
-    }));
-    expect(Either.isLeft(decodeOracleTrace(terminalRejection))).toBe(true);
-  });
-
   it(
     "isolates nonempty A/B/A batch evaluation from singleton evaluation",
     () => {
       const caseA = caseWithMoveAttempt({
-        battle: twoSkeletonBattleFor("oracle:isolation-a", 10, 0),
+        battle: twoStatBlockBattleFor(
+          {
+            combatantId: combatantId("oracle:isolation-a:a"),
+            initiative: initiativeScore(10),
+          },
+          {
+            combatantId: combatantId("oracle:isolation-a:b"),
+            initiative: initiativeScore(0),
+          },
+        ),
         movementCostFeet: 5,
       });
       const caseB = caseWithMoveAttempt({
-        battle: twoSkeletonBattleFor("oracle:isolation-b", 8, 1),
+        battle: twoStatBlockBattleFor(
+          {
+            combatantId: combatantId("oracle:isolation-b:a"),
+            initiative: initiativeScore(8),
+          },
+          {
+            combatantId: combatantId("oracle:isolation-b:b"),
+            initiative: initiativeScore(1),
+          },
+        ),
         movementCostFeet: 10,
       });
       const singletonA = evaluateDecodedCase({
@@ -1421,11 +1700,29 @@ describe("Opaque Oracle Case and Trace contract", () => {
     () => {
       const cases = [
         caseWithMoveAttempt({
-          battle: twoSkeletonBattleFor("oracle:batch-a", 12, 0),
+          battle: twoStatBlockBattleFor(
+            {
+              combatantId: combatantId("oracle:batch-a:a"),
+              initiative: initiativeScore(12),
+            },
+            {
+              combatantId: combatantId("oracle:batch-a:b"),
+              initiative: initiativeScore(0),
+            },
+          ),
           movementCostFeet: 5,
         }),
         caseWithMoveAttempt({
-          battle: twoSkeletonBattleFor("oracle:batch-b", 9, 2),
+          battle: twoStatBlockBattleFor(
+            {
+              combatantId: combatantId("oracle:batch-b:a"),
+              initiative: initiativeScore(9),
+            },
+            {
+              combatantId: combatantId("oracle:batch-b:b"),
+              initiative: initiativeScore(2),
+            },
+          ),
           movementCostFeet: 15,
         }),
       ];
@@ -1448,7 +1745,16 @@ describe("Opaque Oracle Case and Trace contract", () => {
 
   it("keeps valid movement-distance cases deterministic and round-trippable", () => {
     const baseCase = caseWithMoveAttempt({
-      battle: twoSkeletonBattleFor("oracle:property", 10, 0),
+      battle: twoStatBlockBattleFor(
+        {
+          combatantId: combatantId("oracle:property:a"),
+          initiative: initiativeScore(10),
+        },
+        {
+          combatantId: combatantId("oracle:property:b"),
+          initiative: initiativeScore(0),
+        },
+      ),
       movementCostFeet: 5,
     });
 
@@ -1692,7 +1998,7 @@ function requireBattleContinuation(
   for (let index = 0; index <= continuationIndex; index += 1) {
     if (segment.outcome.tag !== "next") {
       throw new Error(
-        `test Trace is missing continuation ${continuationIndex}`,
+        `test Trace is missing continuation ${continuationIndex} (terminal ${segment.outcome.tag})`,
       );
     }
     const continuation = segment.outcome.continuation;
@@ -1733,79 +2039,12 @@ function replaceBattleEntered(
   };
 }
 
-function completeCreationFillBatches(): readonly [
-  CreationFill,
-  ...CreationFill[],
-][] {
-  let draft = createCharacterDraft({
-    draftId: characterDraftId("opaque-oracle:test-draft"),
-  });
-  const batches: Array<[CreationFill, ...CreationFill[]]> = [];
-  const scores = abilityScoreAssignment({
-    str: 15,
-    dex: 14,
-    con: 13,
-    int: 12,
-    wis: 10,
-    cha: 8,
-  });
-  if (Either.isLeft(scores)) throw new Error("test scores must be valid");
-
-  for (let iteration = 0; iteration < 100; iteration += 1) {
-    const holes = discoverCreationHoles({ draft, unitLibrary });
-    const hole = holes[0];
-    if (hole === undefined) {
-      return batches;
-    }
-    const accepted = acceptedFillForHole(draft, hole, scores.right);
-    batches.push([accepted.fill]);
-    draft = accepted.draft;
+function completeCreationFillBatches() {
+  const result = buildCompleteCreationFillBatches(unitLibrary);
+  if (Either.isLeft(result)) {
+    throw new Error(`test creation source failed: ${result.left.message}`);
   }
-  throw new Error("test creation did not converge");
-}
-
-function acceptedFillForHole(
-  draft: CharacterDraft,
-  hole: CreationHole,
-  scores: Extract<CreationFill, { kind: "abilityScores" }>["value"],
-): { readonly fill: CreationFill; readonly draft: CharacterDraft } {
-  if (hole.kind === "abilityScores") {
-    const fill: CreationFill = {
-      kind: "abilityScores",
-      holeId: hole.holeId,
-      method: "standardArray",
-      value: scores,
-    };
-    const result = fillCreationHoles({
-      draft,
-      unitLibrary,
-      expectedRevision: draft.revision,
-      fills: [fill],
-    });
-    if (result.tag === "accepted") return { fill, draft: result.draft };
-    throw new Error(`test ability-score fill rejected at ${hole.holeId}`);
-  }
-
-  const { min, max } = choiceCardinalityBounds(hole.cardinality);
-  const optionIds = hole.options.map((option) => option.optionId);
-  for (let size = Number(min); size <= Number(max); size += 1) {
-    const combinations = choiceCombinations(optionIds, size, 256);
-    for (const selectedOptionIds of combinations) {
-      const fill: CreationFill = {
-        kind: "choice",
-        holeId: hole.holeId,
-        optionIds: selectedOptionIds,
-      };
-      const result = fillCreationHoles({
-        draft,
-        unitLibrary,
-        expectedRevision: draft.revision,
-        fills: [fill],
-      });
-      if (result.tag === "accepted") return { fill, draft: result.draft };
-    }
-  }
-  throw new Error(`no accepted test fill for ${hole.holeId}`);
+  return result.right;
 }
 
 type EvaluationServices = Omit<
@@ -1845,33 +2084,27 @@ type OracleCaseCandidate = {
   readonly battle: OracleBattleInput;
 };
 
-function twoSkeletonBattleFor(
-  identityPrefix: string,
-  firstInitiative: number,
-  secondInitiative: number,
+type StatBlockBattleOrder = Pick<
+  OracleStatBlockBattlePlacement,
+  "combatantId" | "initiative"
+>;
+
+function twoStatBlockBattleFor(
+  first: StatBlockBattleOrder,
+  second: StatBlockBattleOrder,
 ): OracleBattleInput {
-  const roster = {
-    tag: "statBlocks" as const,
-    entries: [
-      {
-        combatantId: combatantId(`${identityPrefix}:a`),
-        statBlockId: statBlockId("stat_block_skeleton"),
-        initiative: firstInitiative,
-        ammunitionStocks: { arrow: 0 },
-        conditions: [],
-        tempHp: 0,
-      },
-      {
-        combatantId: combatantId(`${identityPrefix}:b`),
-        statBlockId: statBlockId("stat_block_skeleton"),
-        initiative: secondInitiative,
-        ammunitionStocks: { arrow: 0 },
-        conditions: [],
-        tempHp: 0,
-      },
-    ],
-  } satisfies OracleBattleInput["roster"];
-  return { roster, attempts: [] };
+  return statBlockBattleFor([
+    {
+      combatantId: first.combatantId,
+      statBlockId: statBlockId("stat_block_skeleton"),
+      initiative: first.initiative,
+    },
+    {
+      combatantId: second.combatantId,
+      statBlockId: statBlockId("stat_block_skeleton"),
+      initiative: second.initiative,
+    },
+  ]);
 }
 
 function caseWithMoveAttempt(input: {
@@ -1975,96 +2208,40 @@ function caseWithMovementCost(
   };
 }
 
-function skeletonShortswordProcedureRef() {
-  const skeletonA = battleCreatureInitFromStatBlock({
-    combatantId: combatantId("oracle:skeleton-a"),
-    statBlock: skeletonStatBlock,
-    initiative: initiativeScore(10),
-    ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(0) }],
-    conditions: [],
-  });
-  const skeletonB = battleCreatureInitFromStatBlock({
-    combatantId: combatantId("oracle:skeleton-b"),
-    statBlock: skeletonStatBlock,
-    initiative: initiativeScore(0),
-    ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(0) }],
-    conditions: [],
-  });
-  if (Either.isLeft(skeletonA) || Either.isLeft(skeletonB)) {
-    throw new Error("test skeletons must initialize");
-  }
-  const started = startBattle({
-    battleId: ORACLE_BATTLE_ID,
-    combatants: [skeletonA.right, skeletonB.right],
-  });
-  if (Either.isLeft(started)) {
-    throw new Error("test skeletons must start a battle");
-  }
-  const ended = endBattleRuntimeTurn({
-    session: started.right,
-    actorId: combatantId("oracle:skeleton-a"),
-  });
-  if (ended.tag !== "resolved") {
-    throw new Error("test skeleton A turn must end");
-  }
-  const shortsword = discoverBattleActs(ended.session).find(
-    (act) =>
-      act.subject.tag === "action" &&
-      act.subject.action === "attack" &&
-      act.presentation.kind === "attack" &&
-      act.presentation.name === "Shortsword" &&
-      !("statBlockDamageNotation" in act.subject),
+function statBlockAttackProcedureRef(
+  reactorCombatantId = combatantId("oracle:skeleton-b"),
+) {
+  const firstCombatantId = combatantId("oracle:skeleton-a");
+  const placements = [
+    {
+      combatantId: firstCombatantId,
+      statBlockId: statBlockId("stat_block_skeleton"),
+      initiative: initiativeScore(10),
+    },
+    {
+      combatantId: reactorCombatantId,
+      statBlockId: statBlockId("stat_block_skeleton"),
+      initiative: initiativeScore(0),
+    },
+  ] as const satisfies readonly [
+    OracleStatBlockBattlePlacement,
+    ...OracleStatBlockBattlePlacement[],
+  ];
+  const started = startStatBlockBattle(
+    { unitLibrary, statBlockCatalog },
+    placements,
   );
-  if (
-    shortsword?.subject.tag !== "action" ||
-    shortsword.subject.action !== "attack" ||
-    "statBlockDamageNotation" in shortsword.subject
-  ) {
-    throw new Error("test skeleton B must expose canonical Shortsword");
+  if (Either.isLeft(started)) {
+    throw new Error(`test stat-block battle failed: ${started.left.message}`);
   }
-  const procedureRef = Schema.decodeUnknownEither(
-    BattleStatBlockProcedureExecutionRef,
-  )(shortsword.subject.procedureRef);
+  const procedureRef = discoverStatBlockAttackProcedureRef(
+    started.right,
+    firstCombatantId,
+  );
   if (Either.isLeft(procedureRef)) {
-    throw new Error("test skeleton Shortsword ref must be canonical");
+    throw new Error(
+      `test stat-block attack failed: ${procedureRef.left.message}`,
+    );
   }
   return procedureRef.right;
-}
-
-function choiceCombinations(
-  values: readonly CreationChoiceOptionId[],
-  size: number,
-  limit: number,
-): readonly (readonly CreationChoiceOptionId[])[] {
-  const output: CreationChoiceOptionId[][] = [];
-  collectChoiceCombinations(values, size, 0, [], output, limit);
-  return output;
-}
-
-function collectChoiceCombinations(
-  values: readonly CreationChoiceOptionId[],
-  size: number,
-  start: number,
-  prefix: readonly CreationChoiceOptionId[],
-  output: CreationChoiceOptionId[][],
-  limit: number,
-): void {
-  if (output.length >= limit) return;
-  if (prefix.length === size) {
-    output.push([...prefix]);
-    return;
-  }
-  for (let index = start; index < values.length; index += 1) {
-    const value = values[index];
-    if (value === undefined) continue;
-    collectChoiceCombinations(
-      values,
-      size,
-      index + 1,
-      [...prefix, value],
-      output,
-      limit,
-    );
-    if (output.length >= limit) return;
-  }
 }

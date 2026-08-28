@@ -21,7 +21,11 @@ import {
   type BattleRuntimeSession,
 } from "./battle-runtime-context.ts";
 import type { CombatantId } from "./identity.ts";
-import { sameBattleSubject, type BattleSubject } from "./battle-subjects.ts";
+import {
+  isBattleReadyTriggerReportSubject,
+  sameBattleSubject,
+  type BattleSubject,
+} from "./battle-subjects.ts";
 import type {
   BattleFill,
   BattleHole,
@@ -472,9 +476,7 @@ export function resolveBattleSubject(
   input: BattleResolutionInput,
 ): BattleResolutionResult {
   const phase = input.state.subjectResolutionPhase;
-  const reportsReadyTrigger =
-    input.subject.tag === "runtimeCommand" &&
-    input.subject.command === "reportReadyTrigger";
+  const reportsReadyTrigger = isBattleReadyTriggerReportSubject(input.subject);
   if (hasStaleSubjectContinuation(phase, reportsReadyTrigger, input.subject)) {
     return {
       tag: "invalid",

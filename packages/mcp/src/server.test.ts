@@ -1183,8 +1183,6 @@ describe("MCP server route", () => {
         context,
       }),
     );
-    root.sessionStore.pendingBattleFills = null;
-
     expect(snapshotBattle(state)).toMatchObject({
       battleId: battleId("battle-root"),
       currentActorId: fighterId,
@@ -2950,7 +2948,7 @@ describe("MCP server route", () => {
         code: "BATTLE_FILLS_PENDING",
       },
     });
-    expect(root.sessionStore.pendingBattleFills).not.toBeNull();
+    expect(root.sessionStore.getPendingBattleTransaction()).not.toBeNull();
 
     const afterAttackRoll = readPayload(
       handleToolCall(root, "fill_battle_hole", {
@@ -2994,7 +2992,7 @@ describe("MCP server route", () => {
     expect(
       afterDamage.availableActs.map((act: { label: string }) => act.label),
     ).toEqual(["Adrenaline Rush: Dash", "Second Wind", "Move", "End Turn"]);
-    expect(root.sessionStore.pendingBattleFills).toBeNull();
+    expect(root.sessionStore.getPendingBattleTransaction()).toBeNull();
 
     const afterEndTurn = readPayload(
       handleToolCall(root, "end_turn", { actorId: "fighter" }),
@@ -3148,8 +3146,6 @@ describe("MCP server route", () => {
         unitLibrary: root.unitLibrary,
       }),
     );
-    root.sessionStore.pendingBattleFills = null;
-
     const shortbowSubject = battleAttackSubjectForName(
       root,
       "goblin",
@@ -3197,7 +3193,7 @@ describe("MCP server route", () => {
         },
       ],
     });
-    expect(root.sessionStore.pendingBattleFills).not.toBeNull();
+    expect(root.sessionStore.getPendingBattleTransaction()).not.toBeNull();
   });
 
   test("rejects contradictory long-range and normal-range attack target facts", () => {
@@ -3223,8 +3219,6 @@ describe("MCP server route", () => {
         unitLibrary: root.unitLibrary,
       }),
     );
-    root.sessionStore.pendingBattleFills = null;
-
     const shortbowSubject = battleAttackSubjectForName(
       root,
       "goblin",
@@ -3313,8 +3307,6 @@ describe("MCP server route", () => {
         state: { ...battleState.state, combatants },
       }),
     );
-    root.sessionStore.pendingBattleFills = null;
-
     const afterTarget = fillBattleHoleThroughTool(root, "fighter", "Dagger", {
       kind: "targetChoice",
       holeId: "battle:attack:target",
@@ -6652,7 +6644,7 @@ describe("MCP server route", () => {
     expect(
       root.sessionStore.battleSession?.state.combatants.get(goblinId)?.hp,
     ).toBe(10);
-    expect(root.sessionStore.pendingBattleFills).toMatchObject({
+    expect(root.sessionStore.snapshot().transientBattleFills).toMatchObject({
       subject: {
         actorId: "fighter",
         procedureRef: expect.any(String),
@@ -8089,8 +8081,6 @@ describe("MCP server route", () => {
         context,
       }),
     );
-    root.sessionStore.pendingBattleFills = null;
-
     const discovered = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
@@ -8175,7 +8165,7 @@ describe("MCP server route", () => {
         turn: { actionResources: [] },
       },
     });
-    expect(root.sessionStore.pendingBattleFills).toBeNull();
+    expect(root.sessionStore.getPendingBattleTransaction()).toBeNull();
   });
 
   test("returns Fire Bolt object damage and ignition through MCP battle fills", () => {
@@ -8223,8 +8213,6 @@ describe("MCP server route", () => {
         context,
       }),
     );
-    root.sessionStore.pendingBattleFills = null;
-
     const discovered = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
@@ -8334,7 +8322,7 @@ describe("MCP server route", () => {
         },
       ],
     });
-    expect(root.sessionStore.pendingBattleFills).toBeNull();
+    expect(root.sessionStore.getPendingBattleTransaction()).toBeNull();
   });
 
   test("replays Sorcerous Burst damage-type and exploding damage through MCP battle fills", () => {
@@ -8413,8 +8401,6 @@ describe("MCP server route", () => {
         context,
       }),
     );
-    root.sessionStore.pendingBattleFills = null;
-
     const discovered = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
@@ -8538,7 +8524,7 @@ describe("MCP server route", () => {
         turn: { actionResources: [] },
       },
     });
-    expect(root.sessionStore.pendingBattleFills).toBeNull();
+    expect(root.sessionStore.getPendingBattleTransaction()).toBeNull();
   });
 
   test("replays Spare the Dying stable lifecycle through MCP battle tools", () => {
@@ -8702,7 +8688,7 @@ describe("MCP server route", () => {
         turn: { actionResources: [] },
       },
     });
-    expect(root.sessionStore.pendingBattleFills).toBeNull();
+    expect(root.sessionStore.getPendingBattleTransaction()).toBeNull();
   });
 
   test("returns Starry Wisp object damage through MCP battle fills", () => {
@@ -8750,8 +8736,6 @@ describe("MCP server route", () => {
         context,
       }),
     );
-    root.sessionStore.pendingBattleFills = null;
-
     const discovered = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
@@ -8846,7 +8830,7 @@ describe("MCP server route", () => {
         },
       ],
     });
-    expect(root.sessionStore.pendingBattleFills).toBeNull();
+    expect(root.sessionStore.getPendingBattleTransaction()).toBeNull();
   });
 
   test("preserves pending reaction state while MCP replays a readied spell procedure", () => {
@@ -8894,8 +8878,6 @@ describe("MCP server route", () => {
         context,
       }),
     );
-    root.sessionStore.pendingBattleFills = null;
-
     const rayOfFrostAct = discoverBattleActs(
       battleRuntimeSessionForTest({ state, context }),
     ).find(
@@ -8971,6 +8953,13 @@ describe("MCP server route", () => {
         }),
       ],
     });
+    expect(
+      readPayload(
+        handleToolCall(root, "resolve_battle_act", {
+          subject: goblinAttack,
+        }),
+      ),
+    ).toMatchObject({ details: { code: "BATTLE_FILLS_PENDING" } });
     const releaseChoices =
       afterAttackRoll.snapshot.pendingInterrupt.choices.filter(
         (choice: BattleInterruptProcedureChoice) =>

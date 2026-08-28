@@ -13,6 +13,9 @@
   "scripts": {
     "generate:schemas": "tsx scripts/generate-schemas.ts",
     "check:schema-sync": "tsx scripts/check-schema-sync.ts",
+    "generate:corpus": "tsx scripts/oracle-evaluation-cli.ts generate",
+    "check:corpus": "tsx scripts/oracle-evaluation-cli.ts check",
+    "write:corpus": "tsx scripts/oracle-evaluation-cli.ts write",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
@@ -23,12 +26,15 @@
     "@dnd/character-sheet-runtime": "workspace:*",
     "@dnd/shared": "workspace:*",
     "@dnd/surface": "workspace:*",
-    "effect": "^3.21.0"
+    "@effect/cli": "^0.75.2",
+    "@effect/platform": "^0.96.3",
+    "@effect/platform-node": "^0.106.0",
+    "ajv": "^8.18.0",
+    "effect": "~3.21.5"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
     "@typescript/native": "npm:typescript@^7.0.2",
-    "ajv": "^8.18.0",
     "fast-check": "3.23.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",

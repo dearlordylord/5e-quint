@@ -2,12 +2,13 @@ import type {
   AttackSpellDamageAddition,
   BattleAttackHitReplayCheckpoint,
 } from "../battle-state-execution.ts";
+import { copyInterruptCheckpointIdentity } from "./interrupt-checkpoint-identity.ts";
 
 export function appendAfterHitSpellDamage(
   frame: BattleAttackHitReplayCheckpoint,
   damageAddition: AttackSpellDamageAddition,
 ): BattleAttackHitReplayCheckpoint {
-  return {
+  const updatedFrame: BattleAttackHitReplayCheckpoint = {
     ...frame,
     continuation: {
       ...frame.continuation,
@@ -17,4 +18,6 @@ export function appendAfterHitSpellDamage(
       ],
     },
   };
+  copyInterruptCheckpointIdentity(frame, updatedFrame);
+  return updatedFrame;
 }

@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
+// KERNEL-COVERAGE: runtime-owner BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
 
 import { optionalProperty } from "../optional-property.ts";
 import { Match } from "effect";
@@ -35,8 +36,10 @@ import {
 import { combatantCanTakeReactions } from "./creature-state-execution.ts";
 import {
   interruptCheckpointFrame,
+  interruptChoices,
   spendReaction,
 } from "./interrupt-execution.ts";
+import { copyInterruptCheckpointIdentity } from "./interrupt-checkpoint-identity.ts";
 import { interruptAttackExecutionSelectionsEqual } from "./movement-speed.ts";
 import {
   reactionModifierReductionRoll,
@@ -101,6 +104,32 @@ export class InterruptLifecycleExecution {
     return this.continuationResumer(input);
   }
 }
+
+/** A checkpoint whose active procedure has already completed. */
+export type InactiveBattleInterruptCheckpoint =
+  BattleInterruptCheckpoint extends infer Checkpoint
+    ? Checkpoint extends BattleInterruptCheckpoint
+      ? Omit<Checkpoint, "activeInterrupt">
+      : never
+    : never;
+
+export type BattleInterruptCheckpointReconciliation =
+  | {
+      readonly tag: "retained";
+      readonly state: BattleState;
+      readonly frame: InactiveBattleInterruptCheckpoint;
+    }
+  | {
+      readonly tag: "closed";
+      readonly result: BattleResolutionResult;
+    }
+  | {
+      readonly tag: "notReconcilable";
+      readonly reason:
+        | "checkpointMissing"
+        | "checkpointChanged"
+        | "activeProcedurePending";
+    };
 
 type InterruptDecisionFill = Extract<
   BattleFill,
@@ -252,6 +281,7 @@ export function resolveInterruptLifecycleDecision(input: {
       fills: admittedChoice.selection.fills,
     },
   };
+  copyInterruptCheckpointIdentity(frame, activeFrame);
 
   const stateWithActiveInterrupt: BattleState = {
     ...input.state,
@@ -286,6 +316,63 @@ export function resolveInterruptLifecycleDecision(input: {
   return withInterruptRoute(
     completeResolvedActiveInterruptIfPending(interruptResult, input.execution),
   );
+}
+
+/**
+ * Reconcile an inactive checkpoint after a nested procedure changed state.
+ *
+ * This intentionally computes choices directly from the post-procedure state;
+ * unlike opening a checkpoint, reconciliation does not reserve a resource or
+ * restart trigger admission. If no unoffered choice remains, the checkpoint
+ * is closed through the same continuation path as an ordinary decline.
+ */
+export function reconcileInterruptCheckpointAfterStateChange(input: {
+  readonly state: BattleState;
+  readonly frame: InactiveBattleInterruptCheckpoint;
+  readonly execution: InterruptLifecycleExecution;
+}): BattleInterruptCheckpointReconciliation {
+  const currentFrame = currentInterruptCheckpoint(input.state);
+  if (currentFrame === null) {
+    return { tag: "notReconcilable", reason: "checkpointMissing" };
+  }
+  if (currentFrame !== input.frame) {
+    return { tag: "notReconcilable", reason: "checkpointChanged" };
+  }
+  if (currentFrame.activeInterrupt !== undefined) {
+    return { tag: "notReconcilable", reason: "activeProcedurePending" };
+  }
+
+  const offeredResponders = new Set(input.frame.offeredResponders);
+  const choices = interruptChoices(input.state, input.frame).filter(
+    (choice) => !offeredResponders.has(interruptChoiceResponderId(choice)),
+  );
+  const eligibleResponders = [
+    ...new Set(choices.map(interruptChoiceResponderId)),
+  ];
+  const reconciledFrame = reconciledInterruptCheckpoint(
+    input.frame,
+    choices,
+    eligibleResponders,
+    input.frame.offeredResponders,
+  );
+  if (choices.length === 0) {
+    return {
+      tag: "closed",
+      result: closeInterruptCheckpoint({
+        state: input.state,
+        frame: reconciledFrame,
+        execution: input.execution,
+      }),
+    };
+  }
+  const nextState: BattleState = {
+    ...input.state,
+    interruptStack: [
+      ...input.state.interruptStack.slice(0, -1),
+      interruptCheckpointFrame(reconciledFrame),
+    ],
+  };
+  return { tag: "retained", state: nextState, frame: reconciledFrame };
 }
 
 function withoutInterruptRoute(
@@ -496,6 +583,7 @@ function advanceInterruptCheckpointAfterResponder(input: {
             ],
           };
         })();
+  copyInterruptCheckpointIdentity(input.frame, completedFrame);
   const remainingResponders = unofferedEligibleResponders(completedFrame);
   const stackWithoutCurrent = input.state.interruptStack.slice(0, -1);
   if (remainingResponders.length !== 0) {
@@ -506,18 +594,72 @@ function advanceInterruptCheckpointAfterResponder(input: {
         interruptCheckpointFrame(completedFrame),
       ],
     };
-    return {
-      tag: "resolved",
-      state: nextState,
-      snapshot: snapshotBattle(nextState),
-    };
+    return completeResolvedActiveInterruptIfPending(
+      {
+        tag: "resolved",
+        state: nextState,
+        snapshot: snapshotBattle(nextState),
+      },
+      input.execution,
+    );
   }
 
+  return closeInterruptCheckpoint({
+    state: input.state,
+    frame: completedFrame,
+    execution: input.execution,
+  });
+}
+
+function completeResolvedActiveInterruptIfPending(
+  result: BattleResolutionResult,
+  execution: InterruptLifecycleExecution,
+  closedFrame?: BattleInterruptCheckpoint,
+): BattleResolutionResult {
+  if (result.tag !== "resolved") {
+    return result;
+  }
+  const frame = currentInterruptCheckpoint(result.state);
+  if (frame === null) return result;
+  if (frame.activeInterrupt !== undefined) {
+    return completeActiveInterruptProcedure(result.state, execution, result);
+  }
+  if (closedFrame !== undefined && frame === closedFrame) return result;
+  if (!isInactiveInterruptCheckpoint(frame)) return result;
+  const reconciliation = reconcileInterruptCheckpointAfterStateChange({
+    state: result.state,
+    frame,
+    execution,
+  });
+  return Match.value(reconciliation).pipe(
+    Match.when({ tag: "retained" }, ({ state }) => ({
+      ...result,
+      state,
+      snapshot: snapshotBattle(state),
+    })),
+    Match.when({ tag: "closed" }, ({ result: closedResult }) => closedResult),
+    Match.when({ tag: "notReconcilable" }, () => result),
+    Match.exhaustive,
+  );
+}
+
+export function isInactiveInterruptCheckpoint(
+  frame: BattleInterruptCheckpoint,
+): frame is InactiveBattleInterruptCheckpoint {
+  return frame.activeInterrupt === undefined;
+}
+
+function closeInterruptCheckpoint(input: {
+  readonly state: BattleState;
+  readonly frame: BattleInterruptCheckpoint;
+  readonly execution: InterruptLifecycleExecution;
+}): BattleResolutionResult {
+  const stackWithoutCurrent = input.state.interruptStack.slice(0, -1);
   const closedState: BattleState = {
     ...input.state,
     interruptStack: interruptStackAfterInterruptCheckpointClosure(
       stackWithoutCurrent,
-      completedFrame,
+      input.frame,
     ),
   };
   const continuedState = stateForContinuingInterruptCheckpoint(
@@ -525,28 +667,71 @@ function advanceInterruptCheckpointAfterResponder(input: {
       closedState,
       input.frame.trigger,
     ),
-    completedFrame,
+    input.frame,
   );
+  const resumed = input.execution.resumeContinuation({
+    state: continuedState,
+    continuation: input.frame.continuation,
+    handledInterruptTrigger: input.frame.trigger,
+  });
   return completeResolvedActiveInterruptIfPending(
-    input.execution.resumeContinuation({
-      state: continuedState,
-      continuation: completedFrame.continuation,
-      handledInterruptTrigger: completedFrame.trigger,
-    }),
+    resumed,
     input.execution,
+    input.frame,
   );
 }
 
-function completeResolvedActiveInterruptIfPending(
-  result: BattleResolutionResult,
-  execution: InterruptLifecycleExecution,
-): BattleResolutionResult {
-  if (result.tag !== "resolved") {
-    return result;
-  }
-  return currentInterruptCheckpoint(result.state)?.activeInterrupt === undefined
-    ? result
-    : completeActiveInterruptProcedure(result.state, execution, result);
+function reconciledInterruptCheckpoint(
+  frame: InactiveBattleInterruptCheckpoint,
+  choices: readonly BattleInterruptProcedureChoice[],
+  eligibleResponders: readonly CombatantId[],
+  offeredResponders: readonly CombatantId[],
+): InactiveBattleInterruptCheckpoint {
+  const dynamic = {
+    choices,
+    eligibleResponders,
+    offeredResponders,
+  } satisfies Pick<
+    BattleInterruptCheckpoint,
+    "choices" | "eligibleResponders" | "offeredResponders"
+  >;
+  const reconciledFrame = Match.value(frame).pipe(
+    Match.when({ trigger: "attackHit" }, (triggerFrame) => ({
+      ...triggerFrame,
+      ...dynamic,
+    })),
+    Match.when({ trigger: "attackDamage" }, (triggerFrame) => ({
+      ...triggerFrame,
+      ...dynamic,
+    })),
+    Match.when({ trigger: "spellCast" }, (triggerFrame) => ({
+      ...triggerFrame,
+      ...dynamic,
+    })),
+    Match.when({ trigger: "saveFailed" }, (triggerFrame) => ({
+      ...triggerFrame,
+      ...dynamic,
+    })),
+    Match.when({ trigger: "afterDamage" }, (triggerFrame) => ({
+      ...triggerFrame,
+      ...dynamic,
+    })),
+    Match.when({ trigger: "creatureFalls" }, (triggerFrame) => ({
+      ...triggerFrame,
+      ...dynamic,
+    })),
+    Match.when({ trigger: "opportunityAttack" }, (triggerFrame) => ({
+      ...triggerFrame,
+      ...dynamic,
+    })),
+    Match.when({ trigger: "reportedReadyTrigger" }, (triggerFrame) => ({
+      ...triggerFrame,
+      ...dynamic,
+    })),
+    Match.exhaustive,
+  );
+  copyInterruptCheckpointIdentity(frame, reconciledFrame);
+  return reconciledFrame;
 }
 
 function appendObjectOutcomesToContinuation(
@@ -637,7 +822,7 @@ function interruptCheckpointAfterReactionModifierCompletion(
   ) {
     return frame;
   }
-  return {
+  const completedFrame: BattleInterruptCheckpoint = {
     ...frame,
     landingMitigations: [
       ...frame.landingMitigations,
@@ -648,6 +833,8 @@ function interruptCheckpointAfterReactionModifierCompletion(
       },
     ],
   };
+  copyInterruptCheckpointIdentity(frame, completedFrame);
+  return completedFrame;
 }
 
 function interruptStackAfterInterruptCheckpointClosure(
@@ -667,7 +854,7 @@ function interruptCheckpointAfterModifier(
   reduction: number,
 ): BattleInterruptCheckpoint {
   if (frame.trigger === "attackHit" && choice.kind === "attackRollReduction") {
-    return {
+    const modifiedFrame: BattleInterruptCheckpoint = {
       ...frame,
       attackRoll: {
         ...frame.attackRoll,
@@ -684,6 +871,8 @@ function interruptCheckpointAfterModifier(
             }
           : frame.continuation,
     };
+    copyInterruptCheckpointIdentity(frame, modifiedFrame);
+    return modifiedFrame;
   }
   if (
     frame.trigger === "attackHit" &&
@@ -691,7 +880,7 @@ function interruptCheckpointAfterModifier(
     frame.continuation.kind === "replay" &&
     frame.continuation.glyphStoredSpellReleaseReplay === undefined
   ) {
-    return {
+    const modifiedFrame: BattleInterruptCheckpoint = {
       ...frame,
       continuation: {
         ...frame.continuation,
@@ -710,6 +899,8 @@ function interruptCheckpointAfterModifier(
         ],
       },
     };
+    copyInterruptCheckpointIdentity(frame, modifiedFrame);
+    return modifiedFrame;
   }
   if (
     frame.trigger === "attackDamage" &&
@@ -728,10 +919,12 @@ function interruptCheckpointAfterModifier(
       kind: "rolledDamage" as const,
       damageRollByType: nextDamageEntries,
     } satisfies BattleAttackDamageEvent;
-    return {
+    const modifiedFrame: BattleInterruptCheckpoint = {
       ...frame,
       continuation: { ...frame.continuation, damageInput: nextDamageEvent },
     };
+    copyInterruptCheckpointIdentity(frame, modifiedFrame);
+    return modifiedFrame;
   }
   return frame;
 }
@@ -921,17 +1114,19 @@ function recordHandledInterruptTriggerForActiveInterrupt(
   if (frame?.activeInterrupt === undefined) {
     return state;
   }
+  const handledFrame: BattleInterruptCheckpoint = {
+    ...frame,
+    activeInterrupt: {
+      ...frame.activeInterrupt,
+      handledInterruptTrigger,
+    },
+  };
+  copyInterruptCheckpointIdentity(frame, handledFrame);
   return {
     ...state,
     interruptStack: [
       ...state.interruptStack.slice(0, -1),
-      interruptCheckpointFrame({
-        ...frame,
-        activeInterrupt: {
-          ...frame.activeInterrupt,
-          handledInterruptTrigger,
-        },
-      }),
+      interruptCheckpointFrame(handledFrame),
     ],
   };
 }

@@ -184,15 +184,6 @@ function canonicalizeBattleSegment(input: RecordInput): unknown {
       },
     };
   }
-  if (outcome.tag === "resolved" && isRecord(outcome.checkpoint)) {
-    return {
-      ...input,
-      outcome: {
-        ...outcome,
-        checkpoint: canonicalizeCheckpoint(outcome.checkpoint),
-      },
-    };
-  }
   return input;
 }
 

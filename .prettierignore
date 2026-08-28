@@ -2,6 +2,7 @@
 packages/surface/content/*.json
 packages/surface/publication/*.json
 packages/opaque-oracle/publication/*.json
+packages/opaque-oracle/corpus/*.json
 
 # Local coverage-report scratch directories contain generated reporter assets.
 **/coverage_tmp*/**

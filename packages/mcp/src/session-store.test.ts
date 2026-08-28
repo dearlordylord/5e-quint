@@ -11,6 +11,7 @@ import {
   combatantId,
   discoverBattleActs,
   initiativeScore,
+  settleBattleRuntimeTransaction,
   startBattle,
   startBattleWithInitialInitiativeSetup,
 } from "@dnd/battle-runtime";
@@ -683,7 +684,7 @@ describe("MCP character sessions", () => {
     expect(deepStoreState(store)).toEqual(beforeCommit);
   });
 
-  test("rejects a roster plan after pending-fill session identity changes", () => {
+  test("rejects a roster plan after atomic battle transaction advancement", () => {
     const root = createMcpPlaySessionRoot();
     const store = createMcpSessionStore({
       statBlockCatalog: root.statBlockCatalog,
@@ -734,20 +735,30 @@ describe("MCP character sessions", () => {
     if (subjectAct === undefined) {
       throw new Error("Expected an active battle subject for pending fills.");
     }
-    const pendingHole = subjectAct.initialHoles[0];
-    if (pendingHole === undefined) {
-      throw new Error("Expected a current pending battle hole.");
+    const pending = settleBattleRuntimeTransaction({
+      session: active,
+      transaction: null,
+      operation: {
+        kind: "ordinarySubject",
+        subject: subjectAct.subject,
+        fills: [],
+      },
+      statBlockCatalog: root.statBlockCatalog,
+    });
+    if (pending.tag !== "needsHoles") {
+      throw new Error("Expected a pending battle transaction for the plan.");
     }
-    store.pendingBattleFills = {
-      subject: subjectAct.subject,
-      fills: [],
-      holes: [pendingHole],
-      baseSession: active,
-    };
+    expect(pending.transaction).toBeDefined();
+    expect(store.storeBattleTransactionResult(active, pending)).toEqual(
+      Either.right(undefined),
+    );
     const beforeCommit = deepStoreState(store);
 
     expect(store.commitActiveBattleRosterTransition(planned.plan)).toEqual(
-      Either.left({ tag: "battleRosterPlanFillsChanged" }),
+      Either.left({
+        tag: "battleRosterPlanBattleChanged",
+        battleId: active.state.battleId,
+      }),
     );
     expect(deepStoreState(store)).toEqual(beforeCommit);
   });
@@ -759,7 +770,7 @@ function deepStoreState(store: ReturnType<typeof createMcpSessionStore>) {
     battleState: store.battleState,
     battleSession: store.battleSession,
     characters: Array.from(store.characters.entries()),
-    pendingBattleFills: store.pendingBattleFills,
+    pendingBattleTransaction: store.getPendingBattleTransaction(),
   });
 }
 

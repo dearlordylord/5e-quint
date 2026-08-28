@@ -13,7 +13,6 @@ export function completeBattleStateTransition<A>(input: {
   if (Either.isLeft(input.transition)) {
     return battleStateTransitionErrorContent(input.transition.left);
   }
-  input.root.sessionStore.pendingBattleFills = null;
   publishAdminProjectionBestEffort(input.root);
   return input.output();
 }

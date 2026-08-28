@@ -815,52 +815,6 @@ describe("Opaque Oracle document JSON Schemas", () => {
         },
       },
     });
-    const resolved = {
-      ...builtTrace,
-      creation: {
-        ...builtTrace.creation,
-        outcome: {
-          ...builtTrace.creation.outcome,
-          sheet: {
-            ...builtTrace.creation.outcome.sheet,
-            battle: {
-              ...enteredBattle,
-              segment: {
-                rejections: [],
-                outcome: {
-                  tag: "resolved",
-                  checkpoint,
-                  after: { tag: "complete" },
-                },
-              },
-            },
-          },
-        },
-      },
-    } as const;
-    const surplus = {
-      ...resolved,
-      creation: {
-        ...resolved.creation,
-        outcome: {
-          ...resolved.creation.outcome,
-          sheet: {
-            ...resolved.creation.outcome.sheet,
-            battle: {
-              ...enteredBattle,
-              segment: {
-                rejections: [],
-                outcome: {
-                  tag: "resolved",
-                  checkpoint,
-                  after: { tag: "surplus", index: 0 },
-                },
-              },
-            },
-          },
-        },
-      },
-    } as const;
     for (const [name, value] of [
       ["recursive next", recursiveNext],
       [
@@ -871,8 +825,6 @@ describe("Opaque Oracle document JSON Schemas", () => {
         "interrupt-decision continuation",
         nextTraceWithFrontier(interruptDecisionFrontier),
       ],
-      ["resolved", resolved],
-      ["surplus", surplus],
     ] as const) {
       const ajvAccepted = documentValidators.trace(value);
       const effectAccepted = Either.isRight(decodeOracleTraceDocument(value));
@@ -1615,6 +1567,7 @@ describe("Opaque Oracle document JSON Schemas", () => {
       creationHoleCardinalityCorrelation: 1,
       creationFrontierCorrelation: 0,
       checkpointFrontierCorrelation: 4,
+      corpusBatchTraceLengthCorrelation: 0,
       constraintFreeBrand: 1,
     });
 

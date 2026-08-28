@@ -1,22 +1,21 @@
 import type {
   BattleCreatureState,
+  BattlePendingTransaction,
   BattleRuntimeSession,
   CombatantId,
 } from "@dnd/battle-runtime";
 import {
   addBattleRuntimeCombatant,
   battleStateInitIssueMessage,
+  battlePendingTransactionView,
   removeBattleRuntimeCombatants,
 } from "@dnd/battle-runtime";
 import { settleCharacterSheetFromBattle } from "@dnd/character-battle-runtime";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import { Either, Match } from "effect";
+import { Either, Match, Option } from "effect";
 
-import type {
-  CharacterSessionRegistry,
-  PendingBattleFillSession,
-} from "./session-store.ts";
+import type { CharacterSessionRegistry } from "./session-store.ts";
 import {
   createActiveBattleRosterTransitionPlan,
   type ActiveBattleRosterTransitionPlan,
@@ -37,7 +36,7 @@ export type BattleRosterTransitionPlanner = {
   plan(
     operation: McpBattleRosterOperation,
     activeBattle: BattleRuntimeSession,
-    pendingBattleFills: PendingBattleFillSession | null,
+    pendingBattleFills: BattlePendingTransaction | null,
   ): Either.Either<
     ActiveBattleRosterTransitionPreview,
     McpBattleRosterTransitionIssue
@@ -45,7 +44,7 @@ export type BattleRosterTransitionPlanner = {
   commit(
     plan: ActiveBattleRosterTransitionPlan,
     activeBattle: BattleRuntimeSession,
-    pendingBattleFills: PendingBattleFillSession | null,
+    pendingBattleFills: BattlePendingTransaction | null,
   ): Either.Either<BattleRuntimeSession, McpBattleRosterTransitionIssue>;
 };
 
@@ -58,9 +57,13 @@ export function createBattleRosterTransitionPlanner(input: {
   return {
     plan(operation, activeBattle, pendingBattleFills) {
       if (pendingBattleFills !== null) {
+        const pendingView = battlePendingTransactionView(pendingBattleFills);
+        if (Option.isNone(pendingView)) {
+          return Either.left({ tag: "battleRosterUnknownPendingTransaction" });
+        }
         return Either.left({
           tag: "battleRosterPendingBattleFills",
-          pendingSubject: pendingBattleFills.subject,
+          pendingSubject: pendingView.value.subject,
         });
       }
       return planActiveBattleRosterTransition({

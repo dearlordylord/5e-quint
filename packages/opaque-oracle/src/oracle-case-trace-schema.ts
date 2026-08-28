@@ -47,7 +47,6 @@ const IntegerSchema = Schema.Number.pipe(Schema.int());
 const OracleIndexSchema = Schema.fromBrand(Index, {
   ...semanticRefinement("constraintFreeBrand"),
 })(NonNegativeIntegerSchema);
-type OracleIndex = Schema.Schema.Type<typeof OracleIndexSchema>;
 
 const CreationFillWithDistinctOptionIdsSchema = Schema.make<CreationFillFact>(
   CreationFillFactSchema.ast,
@@ -464,20 +463,11 @@ export interface OracleBattleAttemptSegment {
   readonly outcome: OracleBattleAttemptSegmentOutcome;
 }
 
-export type OracleBattleResolutionAfter =
-  | { readonly tag: "complete" }
-  | { readonly tag: "surplus"; readonly index: OracleIndex };
-
 export type OracleBattleAttemptSegmentOutcome =
   | { readonly tag: "awaitingInput" }
   | {
       readonly tag: "next";
       readonly continuation: OracleBattleContinuation;
-    }
-  | {
-      readonly tag: "resolved";
-      readonly checkpoint: OracleBattleCheckpoint;
-      readonly after: OracleBattleResolutionAfter;
     };
 
 export interface OracleBattleContinuation {
@@ -493,15 +483,6 @@ interface OracleBattleAttemptSegmentEncoded {
     | {
         readonly tag: "next";
         readonly continuation: OracleBattleContinuationEncoded;
-      }
-    | {
-        readonly tag: "resolved";
-        readonly checkpoint: Schema.Schema.Encoded<
-          typeof OracleBattleCheckpointSchema
-        >;
-        readonly after:
-          | { readonly tag: "complete" }
-          | { readonly tag: "surplus"; readonly index: number };
       };
 }
 
@@ -585,17 +566,6 @@ export const OracleBattleAttemptSegmentSchema = Schema.Struct({
     Schema.Struct({
       tag: Schema.Literal("next"),
       continuation: OracleBattleContinuationSchema,
-    }),
-    Schema.Struct({
-      tag: Schema.Literal("resolved"),
-      checkpoint: OracleBattleCheckpointSchema,
-      after: Schema.Union(
-        Schema.Struct({ tag: Schema.Literal("complete") }),
-        Schema.Struct({
-          tag: Schema.Literal("surplus"),
-          index: OracleIndexSchema,
-        }),
-      ),
     }),
   ),
 }).annotations({
