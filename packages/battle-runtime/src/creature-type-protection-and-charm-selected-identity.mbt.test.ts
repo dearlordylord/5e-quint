@@ -76,11 +76,11 @@ import {
   run,
   type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
-import type { ReplayAddressableSpellActiveEffect } from "./effect-execution-ref.ts";
+import type { BattleActiveEffectOccurrenceTemplate } from "./effect-execution-ref.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
-  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   resolveBattleSubject,
   statBlockProcedurePresentationsForStateForTest,
 } from "./battle-runtime.test-support.ts";
@@ -127,7 +127,12 @@ type ProtectionFromEvilAndGoodEvidence = {
   readonly unscopedPossessionUnprevented: boolean;
   readonly relevantCharmSaveHasAdvantage: boolean;
   readonly relevantCharmSaveCleared: boolean;
+  readonly relevantCharmSiblingPreserved: boolean;
 };
+type ProtectionRelevantCharmActiveEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "spellConditionRepeatSave" }
+>;
 type CreatureTypeProtectionAndCharmSelectedIdentityProjection = {
   readonly beastTargetAdmitted: boolean;
   readonly humanoidTargetAdmitted: boolean;
@@ -142,6 +147,7 @@ type CreatureTypeProtectionAndCharmSelectedIdentityProjection = {
   readonly unscopedPossessionUnprevented: boolean;
   readonly relevantCharmSaveHasAdvantage: boolean;
   readonly relevantCharmSaveCleared: boolean;
+  readonly relevantCharmSiblingPreserved: boolean;
   readonly targetCharmed: boolean;
   readonly animalFriendshipEffectPresent: boolean;
   readonly actionAvailable: boolean;
@@ -347,6 +353,7 @@ const selectedUnitIdentityReplays = [
           protectionEffectPresent: true,
           relevantCharmSaveHasAdvantage: true,
           relevantCharmSaveCleared: true,
+          relevantCharmSiblingPreserved: true,
           actionAvailable: false,
           firstLevelSlotsExpended: 1,
           lastResult: "protectionRelevantSaveResolved",
@@ -483,6 +490,17 @@ describe("Creature Type Protection and Charm public reducer qRoute replay", () =
   );
 });
 
+describe("Protection relevant-effect selected occurrence identity", () => {
+  it("clears the selected charm occurrence and preserves its same-shape sibling", () => {
+    const resolved = resolveProtectionFromEvilAndGoodRelevantCharmSave();
+    expect(resolved.evidence).toMatchObject({
+      relevantCharmSaveHasAdvantage: true,
+      relevantCharmSaveCleared: true,
+      relevantCharmSiblingPreserved: true,
+    });
+  });
+});
+
 defineSelectedIdentityReplayAndQntReplay({
   describeLabel: "Creature Type Protection and Charm selected identity replay",
   taskId: "creature-type-protection-and-charm-selected-identity",
@@ -512,6 +530,7 @@ defineSelectedIdentityReplayAndQntReplay({
     unscopedPossessionUnprevented: "bool",
     relevantCharmSaveHasAdvantage: "bool",
     relevantCharmSaveCleared: "bool",
+    relevantCharmSiblingPreserved: "bool",
     targetCharmed: "bool",
     animalFriendshipEffectPresent: "bool",
     actionAvailable: "bool",
@@ -770,21 +789,13 @@ function publicProtectionFromEvilAndGoodPreventionRoute(): readonly ReducerRoute
 
 function publicProtectionFromEvilAndGoodRelevantSaveRoute(): readonly ReducerRouteEvent[] {
   const resolved = resolveProtectionFromEvilAndGood();
-  const repeatCharmEffect = protectionRelevantCharmEffect();
   const targetTurn = protectionFromEvilAndGoodProtectedTargetTurn(
     resolved.state,
   );
-  const protectedTarget = requireCombatantState(targetTurn, protectedTargetId);
-  const activeEffectState: BattleState = {
-    ...targetTurn,
-    combatants: new Map(targetTurn.combatants).set(protectedTargetId, {
-      ...protectedTarget,
-      activeEffects: [...protectedTarget.activeEffects, repeatCharmEffect],
-    }),
-  };
-  const subject = protectionRelevantCharmSaveSubject(repeatCharmEffect);
+  const fixture = stateWithProtectionRelevantCharmOccurrences(targetTurn);
+  const subject = protectionRelevantCharmSaveSubject(fixture.selectedEffect);
   const needsSave = resolveBattleSubject({
-    state: activeEffectState,
+    state: fixture.state,
     subject,
     fills: [],
   });
@@ -868,7 +879,7 @@ function resolveProtectionFromEvilAndGoodWalk(): ProtectionFromEvilAndGoodWalk {
 }
 
 function protectionRelevantCharmSaveSubject(
-  effect: ReplayAddressableSpellActiveEffect,
+  effect: ProtectionRelevantCharmActiveEffect,
 ): Extract<
   BattleSubject,
   {
@@ -955,6 +966,7 @@ function expectedProjection(
     unscopedPossessionUnprevented: false,
     relevantCharmSaveHasAdvantage: false,
     relevantCharmSaveCleared: false,
+    relevantCharmSiblingPreserved: false,
     targetCharmed: false,
     animalFriendshipEffectPresent: false,
     actionAvailable: true,
@@ -977,6 +989,7 @@ function emptyProtectionFromEvilAndGoodEvidence(): ProtectionFromEvilAndGoodEvid
     unscopedPossessionUnprevented: false,
     relevantCharmSaveHasAdvantage: false,
     relevantCharmSaveCleared: false,
+    relevantCharmSiblingPreserved: false,
   };
 }
 
@@ -1270,34 +1283,26 @@ function resolveProtectionFromEvilAndGoodRelevantCharmSave(): {
   readonly evidence: ProtectionFromEvilAndGoodEvidence;
 } {
   const resolved = resolveProtectionFromEvilAndGood();
-  const repeatCharmEffect = protectionRelevantCharmEffect();
   const targetTurn = protectionFromEvilAndGoodProtectedTargetTurn(
     resolved.state,
   );
-  const protectedTarget = requireCombatantState(targetTurn, protectedTargetId);
-  const activeEffectState: BattleState = {
-    ...targetTurn,
-    combatants: new Map(targetTurn.combatants).set(protectedTargetId, {
-      ...protectedTarget,
-      activeEffects: [...protectedTarget.activeEffects, repeatCharmEffect],
-    }),
-  };
+  const fixture = stateWithProtectionRelevantCharmOccurrences(targetTurn);
   const subject = {
     tag: "runtimeCommand" as const,
     actorId: protectedTargetId,
     command: "protectionRelevantEffectSave" as const,
-    effectRef: spellActiveEffectExecutionRef(repeatCharmEffect),
+    effectRef: spellActiveEffectExecutionRef(fixture.selectedEffect),
     relevantEffect: "charmed" as const,
   };
   const needsHole = resolveBattleSubject({
-    state: activeEffectState,
+    state: fixture.state,
     subject,
     fills: [],
   });
   const saveHole = requireResultHole(needsHole, "savingThrowOutcome");
   const resolvedSave = requireResolvedState(
     resolveBattleSubject({
-      state: activeEffectState,
+      state: fixture.state,
       subject,
       fills: [
         savingThrowOutcomeFill(saveHole, [
@@ -1316,10 +1321,14 @@ function resolveProtectionFromEvilAndGoodRelevantCharmSave(): {
           rollMode.targetId === protectedTargetId &&
           rollMode.rollMode === "advantage",
       ),
-      relevantCharmSaveCleared: !requireCombatantState(
+      relevantCharmSaveCleared: !effectPresentOnProtectedTarget(
         resolvedSave,
-        protectedTargetId,
-      ).activeEffects.includes(repeatCharmEffect),
+        fixture.selectedEffect,
+      ),
+      relevantCharmSiblingPreserved: effectPresentOnProtectedTarget(
+        resolvedSave,
+        fixture.siblingEffect,
+      ),
     },
   };
 }
@@ -1775,12 +1784,11 @@ function spellConditionPresentOnProtectedTarget(
 }
 
 function protectionRelevantCharmEffect(): Extract<
-  BattleActiveEffect,
+  BattleActiveEffectOccurrenceTemplate,
   { readonly kind: "spellConditionRepeatSave" }
 > {
   return {
     kind: "spellConditionRepeatSave",
-    effectRef: battleEffectExecutionRefForTest("relevant-charm"),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       "creature-type-protection-and-charm-selected-identity-relevant-charm",
     ),
@@ -1790,6 +1798,63 @@ function protectionRelevantCharmEffect(): Extract<
     save: { ability: "wis", dc: { kind: "fixed", dc: difficultyClass(13) } },
     expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(600) },
   };
+}
+
+function stateWithProtectionRelevantCharmOccurrences(state: BattleState): {
+  readonly state: BattleState;
+  readonly selectedEffect: ProtectionRelevantCharmActiveEffect;
+  readonly siblingEffect: ProtectionRelevantCharmActiveEffect;
+} {
+  // This witness deliberately begins below spell admission with two
+  // pre-existing, same-shape effects. Canonical target-owned occurrence refs
+  // make the runtime command's selected identity observable without claiming
+  // an admitted Fey spell procedure.
+  const allocation = battleStateWithAllocatedEffectOccurrencesForTest({
+    state,
+    occurrences: [
+      {
+        kind: "activeEffect",
+        ownerId: protectedTargetId,
+        effect: protectionRelevantCharmEffect(),
+      },
+      {
+        kind: "activeEffect",
+        ownerId: protectedTargetId,
+        effect: protectionRelevantCharmEffect(),
+      },
+    ],
+  });
+  const selectedOccurrence = allocation.occurrences[0];
+  const siblingOccurrence = allocation.occurrences[1];
+  if (
+    selectedOccurrence?.kind !== "activeEffect" ||
+    selectedOccurrence.effect.kind !== "spellConditionRepeatSave" ||
+    siblingOccurrence?.kind !== "activeEffect" ||
+    siblingOccurrence.effect.kind !== "spellConditionRepeatSave"
+  ) {
+    throw new Error("Expected two allocated relevant-charm occurrences.");
+  }
+  if (
+    selectedOccurrence.effect.effectRef === siblingOccurrence.effect.effectRef
+  ) {
+    throw new Error("Relevant-charm occurrences must have distinct refs.");
+  }
+  return {
+    state: allocation.state,
+    selectedEffect: selectedOccurrence.effect,
+    siblingEffect: siblingOccurrence.effect,
+  };
+}
+
+function effectPresentOnProtectedTarget(
+  state: BattleState,
+  effect: ProtectionRelevantCharmActiveEffect,
+): boolean {
+  const effectRef = spellActiveEffectExecutionRef(effect);
+  return requireCombatantState(state, protectedTargetId).activeEffects.some(
+    (candidate) =>
+      "effectRef" in candidate && candidate.effectRef === effectRef,
+  );
 }
 
 function projectCreatureTypeProtectionAndCharmSelectedIdentityState(
@@ -1823,6 +1888,8 @@ function projectCreatureTypeProtectionAndCharmSelectedIdentityState(
     relevantCharmSaveHasAdvantage:
       protectionEvidence.relevantCharmSaveHasAdvantage,
     relevantCharmSaveCleared: protectionEvidence.relevantCharmSaveCleared,
+    relevantCharmSiblingPreserved:
+      protectionEvidence.relevantCharmSiblingPreserved,
     targetCharmed:
       target === undefined
         ? false
