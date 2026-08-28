@@ -53,14 +53,10 @@ in  { challengeRating = 0.5
       , speeds =
         [ S.speed (S.SpeedAlternative.walk { feet = 20 })
         , S.gmSpeedChoice
-            { first =
-                S.speedAlternative (S.SpeedAlternative.climb { feet = 20 })
-            , rest =
-              [ S.speedAlternative
-                  ( S.SpeedAlternative.fly
-                      (S.FlySpeed.ordinary { feet = 20 })
-                  )
-              ]
+            { first = S.SpeedAlternative.climb { feet = 20 }
+            , second =
+                S.SpeedAlternative.fly (S.FlySpeed.ordinary { feet = 20 })
+            , rest = [] : List S.SpeedAlternative
             }
         ]
       , traits =

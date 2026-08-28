@@ -6400,9 +6400,26 @@ export const StandaloneCreatureSpeedSchema = Schema.Union(
 const StatBlockGmSpeedChoiceAlternativeSchema =
   StandaloneUnrestrictedCreatureSpeedSchema;
 
-const StatBlockGmSpeedChoiceAlternativesSchema = nonEmpty(
+type StatBlockGmSpeedChoiceAlternative =
+  typeof StatBlockGmSpeedChoiceAlternativeSchema.Type;
+type StatBlockGmSpeedChoiceAlternatives = readonly [
+  StatBlockGmSpeedChoiceAlternative,
+  StatBlockGmSpeedChoiceAlternative,
+  ...StatBlockGmSpeedChoiceAlternative[],
+];
+
+const StatBlockGmSpeedChoiceAlternativesSchema = Schema.Array(
   StatBlockGmSpeedChoiceAlternativeSchema,
 ).pipe(
+  Schema.filter(
+    (alternatives): alternatives is StatBlockGmSpeedChoiceAlternatives =>
+      alternatives.length >= 2,
+    {
+      message: () =>
+        "A GM Speed choice must contain at least two authored alternatives.",
+      jsonSchema: { minItems: 2 },
+    },
+  ),
   Schema.filter(
     (alternatives) =>
       new Set(

@@ -5,6 +5,7 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
@@ -37,6 +38,16 @@ const validStatBlockRecord = readFileSync(
   "utf8",
 );
 const require = createRequire(import.meta.url);
+const statBlockDhallTypesPath = join(
+  process.cwd(),
+  "packages/surface/content/_stat_block_types.dhall",
+);
+
+const compileStatBlockDhallExpression = (expression: string) =>
+  spawnSync("dhall-to-json", ["--omit-empty"], {
+    encoding: "utf8",
+    input: `let S = ${statBlockDhallTypesPath}\nin ${expression}\n`,
+  });
 
 const SYNTHETIC_COMPLETE_STAT_BLOCK_SOURCE = `# Synthetic creatures
 
@@ -213,6 +224,38 @@ describe(
       expect(checkDhallJsonCompilerVersion("1.7.11\n")).toContain(
         `dhall-to-json ${dhallJsonToolchain.dhallJsonVersion} is required`,
       );
+    });
+
+    it("keeps GM Speed alternatives behind the closed Dhall constructor", () => {
+      const compiledChoice = compileStatBlockDhallExpression(`S.gmSpeedChoice
+  { first = S.SpeedAlternative.climb { feet = 20 }
+  , second = S.SpeedAlternative.fly (S.FlySpeed.hovering { feet = 20 })
+  , rest = [] : List S.SpeedAlternative
+  }`);
+      expect(compiledChoice.status, compiledChoice.stderr).toBe(0);
+      expect(JSON.parse(compiledChoice.stdout)).toEqual({
+        alternatives: [
+          { feet: { kind: "literal", value: 20 }, kind: "climb" },
+          {
+            feet: { kind: "literal", value: 20 },
+            hover: true,
+            kind: "fly",
+          },
+        ],
+        kind: "gm_choice",
+      });
+
+      for (const impossibleAlternative of [
+        '{ feet = { kind = "literal", value = 20 }, hover = None Bool, kind = "teleport" }',
+        '{ feet = { kind = "literal", value = 20 }, hover = Some True, kind = "climb" }',
+      ]) {
+        const rejected = compileStatBlockDhallExpression(`S.gmSpeedChoice
+  { first = ${impossibleAlternative}
+  , second = S.SpeedAlternative.fly (S.FlySpeed.ordinary { feet = 20 })
+  , rest = [] : List S.SpeedAlternative
+  }`);
+        expect(rejected.status).not.toBe(0);
+      }
     });
 
     it("accumulates missing, orphaned, drift, compile, and decode issues", () => {

@@ -535,7 +535,7 @@ describe("standalone Stat Block general facts", () => {
     }
   });
 
-  test("preserves an ordered nonempty GM choice among typed Speed alternatives", () => {
+  test("preserves an ordered GM choice of at least two typed Speed alternatives", () => {
     const gmChoice = {
       kind: "gm_choice",
       alternatives: [
@@ -552,6 +552,7 @@ describe("standalone Stat Block general facts", () => {
 
     for (const alternatives of [
       [],
+      [gmChoice.alternatives[0]],
       [gmChoice.alternatives[0], gmChoice.alternatives[0]],
       [
         {
@@ -569,9 +570,11 @@ describe("standalone Stat Block general facts", () => {
       ).toThrow();
     }
 
-    expect(
-      JSON.stringify(JSONSchema.make(StatBlockGmSpeedChoiceSchema)),
-    ).toContain('"uniqueItems":true');
+    expect(JSONSchema.make(StatBlockGmSpeedChoiceSchema)).toMatchObject({
+      properties: {
+        alternatives: { minItems: 2, uniqueItems: true },
+      },
+    });
   });
 
   test("bounds authored ability scores and sense ranges while keeping projections reusable", () => {

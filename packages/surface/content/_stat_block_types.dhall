@@ -59,6 +59,10 @@ let defaultEffect : Effect =
 
 let NonEmpty = λ(element : Type) -> { first : element, rest : List element }
 
+let AtLeastTwo =
+      λ(element : Type) ->
+        { first : element, second : element, rest : List element }
+
 let nonEmptyToList =
       λ(element : Type) ->
       λ(input : NonEmpty element) ->
@@ -118,6 +122,20 @@ let speedAlternative : SpeedAlternative -> SpeedAlternativeRecord =
           }
           input
 
+let speedAlternativesToRecords :
+      AtLeastTwo SpeedAlternative -> List SpeedAlternativeRecord =
+      λ(input : AtLeastTwo SpeedAlternative) ->
+        [ speedAlternative input.first, speedAlternative input.second ]
+        # List/fold
+            SpeedAlternative
+            input.rest
+            (List SpeedAlternativeRecord)
+            ( λ(alternative : SpeedAlternative) ->
+              λ(alternatives : List SpeedAlternativeRecord) ->
+                [ speedAlternative alternative ] # alternatives
+            )
+            ([] : List SpeedAlternativeRecord)
+
 let SpeedEntry : Type =
       { alternatives : Optional (List SpeedAlternativeRecord)
       , feet : Optional { kind : Text, value : Natural }
@@ -135,10 +153,9 @@ let speed : SpeedAlternative -> SpeedEntry =
             , kind = alternative.kind
             }
 
-let gmSpeedChoice : NonEmpty SpeedAlternativeRecord -> SpeedEntry =
-      λ(input : NonEmpty SpeedAlternativeRecord) ->
-        { alternatives = Some
-            (nonEmptyToList SpeedAlternativeRecord input)
+let gmSpeedChoice : AtLeastTwo SpeedAlternative -> SpeedEntry =
+      λ(input : AtLeastTwo SpeedAlternative) ->
+        { alternatives = Some (speedAlternativesToRecords input)
         , feet = None { kind : Text, value : Natural }
         , hover = None Bool
         , kind = "gm_choice"
@@ -650,10 +667,9 @@ in  { Effect
     , saveArea
     , spellRef
     , spellDefinitionComponents
-    , spellcasting
-    , speed
-    , speedAlternative
-    , gmSpeedChoice
+     , spellcasting
+     , speed
+     , gmSpeedChoice
     , staticDamage
     , sourceNextTurnEnd
     , targetNextTurnEnd
