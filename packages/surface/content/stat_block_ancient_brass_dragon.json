@@ -1,0 +1,373 @@
+{
+  "challengeRating": 20,
+  "id": "stat_block_ancient_brass_dragon",
+  "kind": "statBlock",
+  "name": "Ancient Brass Dragon",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-A-B.md:1218-1266"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 22,
+      "con": 25,
+      "dex": 10,
+      "int": 16,
+      "str": 27,
+      "wis": 15
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 20
+      }
+    },
+    "actions": [
+      {
+        "description": "The dragon makes three Rend attacks. It can replace one attack with a use of (A) Sleep Breath or (B) Spellcasting to cast Scorching Ray (level 3 version).",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 14
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Rend",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 10,
+                  "flat": 8
+                },
+                "kind": "fixed",
+                "static": 19
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 6
+                },
+                "kind": "fixed",
+                "static": 7
+              },
+              "damageType": "fire",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 15
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "dex",
+          "area": {
+            "kind": "line",
+            "lengthFeet": 90,
+            "widthFeet": 5
+          },
+          "dc": {
+            "dc": 21,
+            "kind": "fixed"
+          },
+          "kind": "save",
+          "name": "Fire Breath",
+          "onFail": {
+            "amount": {
+              "expr": {
+                "dice": 13,
+                "dieSize": 8
+              },
+              "kind": "fixed",
+              "static": 58
+            },
+            "damageType": "fire",
+            "kind": "damage"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      },
+      {
+        "description": "Constitution Saving Throw: DC 21, each creature in a 90-foot Cone. Failure: The target has the Incapacitated condition until the end of its next turn, at which point it repeats the save. Second Failure: The target has the Unconscious condition for 10 minutes. This effect ends for the target if it takes damage or a creature within 5 feet of it takes an action to wake it.",
+        "kind": "textOnly",
+        "name": "Sleep Breath",
+        "procedureOrdinal": 4,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "cha",
+          "components": {
+            "m": false,
+            "s": true,
+            "v": true
+          },
+          "groups": [
+            {
+              "kind": "at_will",
+              "resourceRefs": {
+                "kind": "none"
+              },
+              "spells": [
+                {
+                  "spellId": "detect_magic"
+                },
+                {
+                  "spellId": "minor_illusion"
+                },
+                {
+                  "castAtLevel": 3,
+                  "spellId": "scorching_ray"
+                },
+                {
+                  "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                  "spellId": "shapechange"
+                },
+                {
+                  "spellId": "speak_with_animals"
+                }
+              ]
+            },
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  2
+                ]
+              },
+              "spells": [
+                {
+                  "spellId": "control_weather"
+                },
+                {
+                  "spellId": "detect_thoughts"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Spellcasting",
+          "spellSaveDc": {
+            "dc": 20,
+            "kind": "fixed"
+          }
+        },
+        "procedureOrdinal": 5,
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            2
+          ]
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "good",
+      "order": "chaotic"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Common",
+          "Draconic"
+        ]
+      }
+    },
+    "creatureType": "dragon",
+    "creatureTypeTags": [
+      "metallic"
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 332
+    },
+    "immunities": {
+      "damageTypes": [
+        "fire"
+      ]
+    },
+    "initiative": {
+      "modifier": 12,
+      "score": 22
+    },
+    "legendaryActions": {
+      "entries": [
+        {
+          "description": "The dragon uses Spellcasting to cast Scorching Ray (level 3 version).",
+          "kind": "textOnly",
+          "name": "Blazing Light",
+          "procedureOrdinal": 1,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        },
+        {
+          "description": "The dragon moves up to half its Speed, and it makes one Rend attack.",
+          "kind": "textOnly",
+          "name": "Pounce",
+          "procedureOrdinal": 2,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        },
+        {
+          "description": "Dexterity Saving Throw: DC 20, one creature the dragon can see within 120 feet. Failure: 36 (8d8) Fire damage, and the target's Speed is halved until the end of its next turn. Failure or Success: The dragon can't take this action again until the start of its next turn.",
+          "kind": "textOnly",
+          "name": "Scorching Sands",
+          "procedureOrdinal": 3,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        }
+      ],
+      "uses": {
+        "additionalUsesInLair": 1,
+        "kind": "lair_bonus",
+        "usesOutsideLair": 3
+      }
+    },
+    "passivePerception": 24,
+    "resources": [
+      {
+        "limit": {
+          "kind": "recharge",
+          "minimumRoll": 5
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      },
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 1
+        },
+        "ordinal": 2,
+        "ownership": "each"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 8
+      },
+      {
+        "ability": "dex",
+        "modifier": 7
+      },
+      {
+        "ability": "con",
+        "modifier": 7
+      },
+      {
+        "ability": "int",
+        "modifier": 3
+      },
+      {
+        "ability": "wis",
+        "modifier": 9
+      },
+      {
+        "ability": "cha",
+        "modifier": 6
+      }
+    ],
+    "senses": [
+      {
+        "kind": "blindsight",
+        "rangeFeet": 60
+      },
+      {
+        "kind": "darkvision",
+        "rangeFeet": 120
+      }
+    ],
+    "size": "gargantuan",
+    "skillModifiers": [
+      {
+        "modifier": 9,
+        "skill": "history"
+      },
+      {
+        "modifier": 14,
+        "skill": "perception"
+      },
+      {
+        "modifier": 12,
+        "skill": "persuasion"
+      },
+      {
+        "modifier": 6,
+        "skill": "stealth"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "burrow"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 80
+        },
+        "kind": "fly"
+      }
+    ],
+    "traits": [
+      {
+        "description": "If the dragon fails a saving throw, it can choose to succeed instead.",
+        "name": "Legendary Resistance (4/Day, or 5/Day in Lair)"
+      }
+    ]
+  }
+}
