@@ -1,5 +1,8 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  wizardSpellcasting,
+} from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME spiritual_weapon
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-spiritual-weapon-attack-proxy
@@ -37,7 +40,6 @@ import { spellRecord } from "./unit-profile-admission-spell-record.test-support.
 import {
   abilityModifier,
   assertBattleSnapshotCodecRoundTripForTest,
-  type BattleActiveEffect,
   type BattleFill,
   type BattleHole,
   type BattleState,
@@ -64,6 +66,7 @@ import {
   spiritualWeaponUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
+import { allocateBattleEffectOccurrenceForCreature } from "./effect-execution-ref.ts";
 
 describe("L12G deterministic Spiritual Weapon admission", () => {
   test("spiritual weapon casts as a Bonus Action attack proxy with slot scaling", () => {
@@ -255,29 +258,42 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       spellSlots: [{ spellLevel: 2, count: 1 }],
       casterClassLevels: [{ className: "cleric", level: 3 }],
       targetClassLevels: [{ className: "wizard", level: 3 }],
-      targetPreparedSpells: [spellRecord(mirrorImageUnitId)],
+      targetSpellcasting: wizardSpellcasting({
+        preparedSpells: [spellRecord(mirrorImageUnitId)],
+        spellSlots: [{ spellLevel: 2, count: 1 }],
+      }),
       targetHp: 30,
       targetMaxHp: 30,
     });
     const target = requireCombatant(session.state, spellTargetId);
+    const mirrorImage = allocateBattleEffectOccurrenceForCreature({
+      owner: target,
+      effect: {
+        kind: "mirrorImageDuplicates",
+        sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+          session,
+          spellTargetId,
+          spellSlotInvocationRef(
+            mirrorImageUnitId,
+            2,
+            "mirrorImageHitInterception",
+          ),
+        ),
+        sourceCombatantId: spellTargetId,
+        remainingDuplicates: 3,
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(10),
+        },
+      },
+    });
     const mirrorImageState: BattleState = {
       ...session.state,
       combatants: new Map(session.state.combatants).set(spellTargetId, {
-        ...target,
+        ...mirrorImage.owner,
         activeEffects: [
           ...target.activeEffects,
-          {
-            kind: "mirrorImageDuplicates",
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              "synthetic-mirror-image-for-spiritual-weapon",
-            ),
-            sourceCombatantId: spellTargetId,
-            remainingDuplicates: 3,
-            expiresAt: {
-              kind: "duration",
-              durationTicks: elapsedTimeTicks(10),
-            },
-          },
+          mirrorImage.effect,
         ],
       }),
     };
@@ -1137,20 +1153,26 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       targetMaxHp: 30,
     });
     const casterBeforeCast = requireCombatant(session.state, spellCasterId);
-    const unrelatedEffect = {
-      kind: "speedDelta",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "synthetic-spiritual-weapon-composition",
-      ),
-      sourceCombatantId: spellCasterId,
-      deltaFeet: movementDeltaFeet(10),
-      expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(600) },
-    } as const satisfies BattleActiveEffect;
+    const unrelatedEffect = allocateBattleEffectOccurrenceForCreature({
+      owner: casterBeforeCast,
+      effect: {
+        kind: "speedDelta",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          "synthetic-spiritual-weapon-composition",
+        ),
+        sourceCombatantId: spellCasterId,
+        deltaFeet: movementDeltaFeet(10),
+        expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(600) },
+      },
+    });
     const state: BattleState = {
       ...session.state,
       combatants: new Map(session.state.combatants).set(spellCasterId, {
-        ...casterBeforeCast,
-        activeEffects: [...casterBeforeCast.activeEffects, unrelatedEffect],
+        ...unrelatedEffect.owner,
+        activeEffects: [
+          ...casterBeforeCast.activeEffects,
+          unrelatedEffect.effect,
+        ],
       }),
     };
     const castAct = bonusSpellAct({
@@ -1331,7 +1353,8 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     ).activeEffects.find(
       (effect) =>
         "sourceProcedureRef" in effect &&
-        effect.sourceProcedureRef === unrelatedEffect.sourceProcedureRef,
+        effect.sourceProcedureRef ===
+          unrelatedEffect.effect.sourceProcedureRef,
     );
     if (unrelatedEffectBeforeRepeat === undefined) {
       throw new Error(
@@ -1963,8 +1986,9 @@ function withSanctuaryWard(
   wardedId: typeof spellTargetId,
 ): BattleState {
   const warded = requireCombatant(state, wardedId);
-  const ward: Extract<BattleActiveEffect, { readonly kind: "sanctuaryWard" }> =
-    {
+  const ward = allocateBattleEffectOccurrenceForCreature({
+    owner: warded,
+    effect: {
       kind: "sanctuaryWard",
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String("sanctuary"),
@@ -1975,12 +1999,13 @@ function withSanctuaryWard(
         kind: "duration",
         durationTicks: elapsedTimeTicks(10),
       },
-    };
+    },
+  });
   return {
     ...state,
     combatants: new Map(state.combatants).set(wardedId, {
-      ...warded,
-      activeEffects: [...warded.activeEffects, ward],
+      ...ward.owner,
+      activeEffects: [...warded.activeEffects, ward.effect],
     }),
   };
 }
