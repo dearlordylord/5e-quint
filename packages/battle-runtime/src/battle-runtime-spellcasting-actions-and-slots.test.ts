@@ -52,6 +52,7 @@ import {
   battleId,
   battleProcedureExecutionRefForSpellHoleForTest,
   battleStateWithAllocatedEffectForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   battleStateWithAllSpellSlotsExpended,
   cantripSpellInvocationRef,
   characterSeed,
@@ -650,32 +651,57 @@ describe("battle runtime: spellcasting actions and slots", () => {
         "abilityD20TestRollModeSaveGate",
       ),
     );
-    const allocatedPenaltyState = battleStateWithAllocatedEffectForTest({
+    const allocatedPenalty = battleStateWithAllocatedEffectOccurrencesForTest({
       state: baseSession.state,
-      ownerId: wizardId,
-      effect: {
-        kind: "sourceDamageRollPenalty",
-        sourceProcedureRef: penaltyProcedureRef,
-        sourceCombatantId: fighterId,
-        amount: { dice: 1, dieSize: 8 },
-        expiresAt: {
-          kind: "concentration",
-          combatantId: fighterId,
-          durationTicks: elapsedTimeTicks(10),
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: wizardId,
+          effect: {
+            kind: "sourceDamageRollPenalty",
+            sourceProcedureRef: penaltyProcedureRef,
+            sourceCombatantId: fighterId,
+            amount: { dice: 1, dieSize: 8 },
+            expiresAt: {
+              kind: "concentration",
+              combatantId: fighterId,
+              durationTicks: elapsedTimeTicks(10),
+            },
+          },
         },
-      },
+        {
+          kind: "activeEffect",
+          ownerId: wizardId,
+          effect: {
+            kind: "abilityD20TestRollModeEndTurnSave",
+            sourceProcedureRef: penaltyProcedureRef,
+            sourceCombatantId: fighterId,
+            ability: "str",
+            mode: "disadvantage",
+            save: { ability: "con", dc: { kind: "caster_spell_save_dc" } },
+            expiresAt: {
+              kind: "concentration",
+              combatantId: fighterId,
+              durationTicks: elapsedTimeTicks(10),
+            },
+          },
+        },
+      ],
     });
-    const allocatedPenalty = allocatedPenaltyState.combatants
-      .get(wizardId)
-      ?.activeEffects.find(
-        (effect) => effect.kind === "sourceDamageRollPenalty",
-      );
-    if (allocatedPenalty === undefined) {
-      throw new Error("Expected allocated source damage penalty.");
+    const damagePenaltyOccurrence = allocatedPenalty.occurrences[0];
+    const abilityPenaltyOccurrence = allocatedPenalty.occurrences[1];
+    if (
+      damagePenaltyOccurrence?.kind !== "activeEffect" ||
+      damagePenaltyOccurrence.effect.kind !== "sourceDamageRollPenalty" ||
+      abilityPenaltyOccurrence?.kind !== "activeEffect" ||
+      abilityPenaltyOccurrence.effect.kind !==
+        "abilityD20TestRollModeEndTurnSave"
+    ) {
+      throw new Error("Expected the allocated Ray of Enfeeblement composite.");
     }
     const state: BattleState = {
-      ...allocatedPenaltyState,
-      combatants: new Map(allocatedPenaltyState.combatants).set(fighterId, {
+      ...allocatedPenalty.state,
+      combatants: new Map(allocatedPenalty.state.combatants).set(fighterId, {
         ...penaltySource,
         origin: {
           ...penaltySource.origin,
@@ -726,9 +752,17 @@ describe("battle runtime: spellcasting actions and slots", () => {
       label: "Source damage roll penalty (1d8)",
       sourceDamageRollPenalty: {
         damageRollHoleId: `${damage.holeId}:allocation:0`,
-        effectRef: allocatedPenalty.effectRef,
+        effectRef: damagePenaltyOccurrence.effect.effectRef,
       },
     });
+    expect(
+      state.combatants
+        .get(wizardId)
+        ?.activeEffects.some(
+          (effect) =>
+            effect.effectRef === abilityPenaltyOccurrence.effect.effectRef,
+        ),
+    ).toBe(true);
     const resolved = requireResolved(
       resolveBattleSubject({
         session,

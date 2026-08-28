@@ -1,13 +1,16 @@
 import { describe, expect, test } from "vitest";
 import { Result, Schema } from "effect";
-import { damageAmount, difficultyClass, Hp, Round } from "@dnd/shared/types";
+import { damageAmount, difficultyClass, Hp } from "@dnd/shared/types";
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   attackRollFill,
+  battleId,
   battleProcedureExecutionRefForTest,
-  battleStateWithAllocatedEffectForTest,
+  characterSeed,
+  combatantId,
   damageRollFill,
   discoverBattleActCandidates,
+  endTurn,
   fighterAttackSubject,
   fighterId,
   fighterVsGoblinBattle,
@@ -19,6 +22,10 @@ import {
   requireNeedsHoles,
   requireResolved,
   resolveBattleSubject,
+  savingThrowOutcomeFill,
+  spellRecord,
+  startBattleSessionRight,
+  wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import { battleObjectId } from "./identity.ts";
 import type { BattleFill } from "./battle-state-execution.ts";
@@ -33,6 +40,78 @@ import {
   objectDamageComponentsFromMap,
   objectDamageOutcomeFromComponents,
 } from "./battle-reducer/object-damage.ts";
+import {
+  spellAct,
+  spellTargetListFill,
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+
+const objectAttackRayCasterId = combatantId("object-attack-ray-caster");
+
+function fighterTurnAfterRayOfEnfeeblementSuccess() {
+  const rayOfEnfeeblement = spellRecord("ray_of_enfeeblement");
+  const session = startBattleSessionRight({
+    battleId: battleId("battle-object-attack-ray-of-enfeeblement"),
+    combatants: [
+      characterSeed({
+        combatantId: objectAttackRayCasterId,
+        displayName: "Ray caster",
+        initiative: 30,
+        attack: null,
+        classLevels: [{ className: "wizard", level: 3 }],
+        spellcasting: wizardSpellcasting({
+          preparedSpells: [rayOfEnfeeblement],
+          spellSlots: [{ spellLevel: 2, count: 1 }],
+        }),
+      }),
+      characterSeed({ combatantId: fighterId, initiative: 20 }),
+    ],
+  });
+  const act = spellAct({
+    session,
+    spellId: "ray_of_enfeeblement",
+    slotLevel: 2,
+  });
+  const targetHole = act.initialHoles.find(
+    (hole) => hole.kind === "spellTargetList",
+  );
+  if (targetHole === undefined) {
+    throw new Error("Expected Ray of Enfeeblement target selection.");
+  }
+  const targetFill = spellTargetListFill(
+    targetHole,
+    objectAttackRayCasterId,
+    "ray_of_enfeeblement",
+    [fighterId],
+  );
+  const needsSave = resolveBattleSubject({
+    state: session.state,
+    subject: act.subject,
+    fills: [targetFill],
+  });
+  const save = requireHole(needsSave, "savingThrowOutcome");
+  const cast = requireResolved(
+    resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(save, [
+          { targetId: fighterId, succeeded: true },
+        ]),
+      ],
+    }),
+  );
+  const fighterTurn = requireResolved(
+    endTurn({ state: cast.state, actorId: objectAttackRayCasterId }),
+  );
+  const oneShot = fighterTurn.state.combatants
+    .get(fighterId)
+    ?.activeEffects.find((effect) => effect.kind === "nextAttackRollBySelf");
+  if (oneShot === undefined) {
+    throw new Error("Expected Ray of Enfeeblement one-shot Disadvantage.");
+  }
+  return { state: fighterTurn.state, oneShot };
+}
 
 describe("battle runtime: ordinary object attacks", () => {
   test("damage-map adaptation preserves only actual components and reports emptiness", () => {
@@ -281,29 +360,17 @@ describe("battle runtime: ordinary object attacks", () => {
         "Object attack roll does not match the ordinary attack-roll protocol.",
     });
 
-    const fighter = state.combatants.get(fighterId);
-    if (fighter === undefined) {
-      throw new Error("Expected the fighter object-attack fixture.");
-    }
-    const disadvantagedState = battleStateWithAllocatedEffectForTest({
-      state,
-      ownerId: fighterId,
-      effect: {
-        kind: "nextAttackRollBySelf",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          "object-roll-mode-validation",
-        ),
-        sourceCombatantId: goblinId,
-        mode: "disadvantage",
-        expiresAt: {
-          kind: "endOfTurn",
-          combatantId: fighterId,
-          round: Round(1),
-        },
-      },
-    });
+    const disadvantagedState = fighterTurnAfterRayOfEnfeeblementSuccess().state;
+    const disadvantagedSubject = fighterAttackSubject(
+      disadvantagedState,
+      "Longsword",
+    );
     const disadvantagedTargetHole = requireHole(
-      resolveBattleSubject({ state: disadvantagedState, subject, fills: [] }),
+      resolveBattleSubject({
+        state: disadvantagedState,
+        subject: disadvantagedSubject,
+        fills: [],
+      }),
       "targetChoice",
     );
     const disadvantagedTargetFill = {
@@ -313,7 +380,7 @@ describe("battle runtime: ordinary object attacks", () => {
     const disadvantagedRollHole = requireHole(
       resolveBattleSubject({
         state: disadvantagedState,
-        subject,
+        subject: disadvantagedSubject,
         fills: [disadvantagedTargetFill],
       }),
       "attackRoll",
@@ -321,7 +388,7 @@ describe("battle runtime: ordinary object attacks", () => {
     expect(
       resolveBattleSubject({
         state: disadvantagedState,
-        subject,
+        subject: disadvantagedSubject,
         fills: [
           disadvantagedTargetFill,
           attackRollFill(disadvantagedRollHole, {
@@ -353,30 +420,8 @@ describe("battle runtime: ordinary object attacks", () => {
   });
 
   test("a staged object attack preserves its admitted one-shot roll mode until damage is supplied", () => {
-    const base = fighterVsGoblinBattle();
-    const state = battleStateWithAllocatedEffectForTest({
-      state: base,
-      ownerId: fighterId,
-      effect: {
-        kind: "nextAttackRollBySelf",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          "staged-object-attack",
-        ),
-        sourceCombatantId: goblinId,
-        mode: "disadvantage",
-        expiresAt: {
-          kind: "endOfTurn",
-          combatantId: fighterId,
-          round: Round(1),
-        },
-      },
-    });
-    const stagedEffect = state.combatants
-      .get(fighterId)
-      ?.activeEffects.find((effect) => effect.kind === "nextAttackRollBySelf");
-    if (stagedEffect === undefined) {
-      throw new Error("Expected the allocated staged attack-roll effect.");
-    }
+    const { state, oneShot: stagedEffect } =
+      fighterTurnAfterRayOfEnfeeblementSuccess();
     const subject = fighterAttackSubject(state, "Longsword");
     const targetHole = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),

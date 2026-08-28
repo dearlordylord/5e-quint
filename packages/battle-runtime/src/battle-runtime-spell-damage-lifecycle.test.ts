@@ -9,6 +9,7 @@ import type {
 import type { BattleSubject } from "./battle-subjects.ts";
 import type { BattleRuntimeSession } from "./battle-runtime-context.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import { battleCreatureWithSpellActiveEffects } from "./active-effect/lifecycle.ts";
 import {
   battleId,
   battleStateWithAllocatedEffectForTest,
@@ -85,7 +86,7 @@ function wizardVsWardedSkeletonBattle(): BattleRuntimeSession {
       save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
       expiresAt: {
         kind: "duration",
-        durationTicks: elapsedTimeTicks(600),
+        durationTicks: elapsedTimeTicks(10),
       },
     },
   });
@@ -256,47 +257,100 @@ describe("battle runtime: spell damage lifecycle replay", () => {
             },
           },
         },
+        {
+          kind: "activeEffect",
+          ownerId: charmSourceId,
+          effect: {
+            kind: "abilityD20TestRollModeEndTurnSave",
+            sourceProcedureRef: concentrationSourceProcedureRef,
+            sourceCombatantId: fighterId,
+            ability: "str",
+            mode: "disadvantage",
+            save: { ability: "con", dc: { kind: "caster_spell_save_dc" } },
+            expiresAt: {
+              kind: "concentration",
+              combatantId: fighterId,
+              durationTicks: elapsedTimeTicks(10),
+            },
+          },
+        },
       ],
     });
     const relationshipOccurrence = allocated.occurrences[0];
-    const concentrationOccurrence = allocated.occurrences[1];
+    const damagePenaltyOccurrence = allocated.occurrences[1];
+    const abilityPenaltyOccurrence = allocated.occurrences[2];
     if (
       relationshipOccurrence?.kind !== "activeEffect" ||
-      concentrationOccurrence?.kind !== "activeEffect"
+      damagePenaltyOccurrence?.kind !== "activeEffect" ||
+      abilityPenaltyOccurrence?.kind !== "activeEffect"
     ) {
-      throw new Error(
-        "Expected allocated relationship and concentration effects.",
-      );
+      throw new Error("Expected the allocated spell effect composite.");
     }
     const affectedTarget = allocated.state.combatants.get(fighterId);
+    const charmSource = allocated.state.combatants.get(charmSourceId);
     if (
       affectedTarget?.origin.kind !== "character" ||
-      affectedTarget.origin.spellcasting === undefined
+      affectedTarget.origin.spellcasting === undefined ||
+      charmSource?.origin.kind !== "character" ||
+      charmSource.origin.spellcasting === undefined
     ) {
-      throw new Error("Expected the allocated Orc spellcaster target.");
+      throw new Error("Expected the allocated spellcasters.");
     }
+    const charmedTarget = battleCreatureWithSpellActiveEffects(
+      affectedTarget,
+      affectedTarget.activeEffects,
+    );
     const state: BattleState = {
       ...allocated.state,
-      combatants: new Map(allocated.state.combatants).set(fighterId, {
-        ...affectedTarget,
-        origin: {
-          ...affectedTarget.origin,
-          spellcasting: {
-            ...affectedTarget.origin.spellcasting,
-            spellSlots: affectedTarget.origin.spellcasting.spellSlots.map(
-              (slot) =>
-                slot.spellLevel === 2
-                  ? { ...slot, expended: resourceCount(1) }
-                  : slot,
-            ),
+      combatants: new Map(allocated.state.combatants)
+        .set(fighterId, {
+          ...charmedTarget,
+          origin: {
+            ...affectedTarget.origin,
+            spellcasting: {
+              ...affectedTarget.origin.spellcasting,
+              spellSlots: affectedTarget.origin.spellcasting.spellSlots.map(
+                (slot) =>
+                  slot.spellLevel === 2
+                    ? { ...slot, expended: resourceCount(1) }
+                    : slot,
+              ),
+            },
           },
-        },
-        concentration: {
-          sourceProcedureRef: concentrationSourceProcedureRef,
-          effectKind: "spellEffect",
-        },
-      }),
+          concentration: {
+            sourceProcedureRef: concentrationSourceProcedureRef,
+            effectKind: "spellEffect",
+          },
+        })
+        .set(charmSourceId, {
+          ...charmSource,
+          origin: {
+            ...charmSource.origin,
+            spellcasting: {
+              ...charmSource.origin.spellcasting,
+              spellSlots: charmSource.origin.spellcasting.spellSlots.map(
+                (slot) =>
+                  slot.spellLevel === 1
+                    ? { ...slot, expended: resourceCount(1) }
+                    : slot,
+              ),
+            },
+          },
+        }),
     };
+    expect(state.combatants.get(fighterId)?.conditions.charmed).toBe(true);
+    const activeCharmSource = state.combatants.get(charmSourceId);
+    if (
+      activeCharmSource?.origin.kind !== "character" ||
+      activeCharmSource.origin.spellcasting === undefined
+    ) {
+      throw new Error("Expected active Charm Person source.");
+    }
+    expect(
+      activeCharmSource.origin.spellcasting.spellSlots.find(
+        (slot) => slot.spellLevel === 1,
+      )?.expended,
+    ).toBe(resourceCount(1));
     const subject = magicMissileAct(
       battleRuntimeSessionForTest({ state, context: baseSession.context }),
     ).subject;
@@ -373,6 +427,9 @@ describe("battle runtime: spell damage lifecycle replay", () => {
 
     expect(resolved.state.combatants.get(fighterId)?.hp).toBe(Hp(1));
     expect(resolved.state.combatants.get(fighterId)?.concentration).toBeNull();
+    expect(resolved.state.combatants.get(fighterId)?.conditions.charmed).toBe(
+      false,
+    );
     expect(
       resolved.state.combatants
         .get(fighterId)
@@ -386,7 +443,8 @@ describe("battle runtime: spell damage lifecycle replay", () => {
         .get(charmSourceId)
         ?.activeEffects.some(
           (effect) =>
-            effect.effectRef === concentrationOccurrence.effect.effectRef,
+            effect.effectRef === damagePenaltyOccurrence.effect.effectRef ||
+            effect.effectRef === abilityPenaltyOccurrence.effect.effectRef,
         ),
     ).toBe(false);
   });
