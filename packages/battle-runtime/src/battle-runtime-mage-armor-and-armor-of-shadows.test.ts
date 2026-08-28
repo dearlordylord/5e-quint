@@ -10,6 +10,7 @@ import {
   armorOfShadowsSpellInvocationRef,
   battleId,
   battleProcedureExecutionRefForSpellHoleForTest,
+  battleStateWithAllocatedEffectForTest,
   characterSeed,
   combatantId,
   defaultArmorClassState,
@@ -454,27 +455,22 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
       druidId,
       "druid_wild_shape",
     );
-    const wildShapedState = {
-      ...state,
-      combatants: new Map(state.combatants).set(druidId, {
-        ...druid,
-        activeEffects: [
-          ...druid.activeEffects,
-          {
-            kind: "druidWildShapeForm" as const,
-            sourceProcedureRef: wildShapeProcedureRef,
-            sourceCombatantId: druidId,
-            formScopeRef: catFormScopeRef,
-            formLimbs: { kind: "cannotHandleObjects" } as const,
-            equipmentDisposition: [],
-            expiresAt: {
-              kind: "duration" as const,
-              durationTicks: elapsedTimeTicks(600),
-            },
-          },
-        ],
-      }),
-    };
+    const wildShapedState = battleStateWithAllocatedEffectForTest({
+      state,
+      ownerId: druidId,
+      effect: {
+        kind: "druidWildShapeForm" as const,
+        sourceProcedureRef: wildShapeProcedureRef,
+        sourceCombatantId: druidId,
+        formScopeRef: catFormScopeRef,
+        formLimbs: { kind: "cannotHandleObjects" } as const,
+        equipmentDisposition: [],
+        expiresAt: {
+          kind: "duration" as const,
+          durationTicks: elapsedTimeTicks(600),
+        },
+      },
+    });
     const target = requireHole(
       resolveBattleSubject({
         state: wildShapedState,
@@ -569,43 +565,38 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
       druidId,
       "druid_wild_shape",
     );
-    const staleWildShapeState = {
-      ...state,
-      combatants: new Map(state.combatants).set(druidId, {
-        ...druid,
-        activeEffects: [
-          ...druid.activeEffects,
+    const staleWildShapeState = battleStateWithAllocatedEffectForTest({
+      state,
+      ownerId: druidId,
+      effect: {
+        kind: "druidWildShapeForm" as const,
+        sourceProcedureRef: wildShapeProcedureRef,
+        sourceCombatantId: druidId,
+        formScopeRef: battleStatBlockExecutionScopeRef(
+          battleId("battle-mage-armor-stale-wild-shape-target"),
+          druidId,
+          battleExecutionScopeOrdinal(999),
+        ),
+        formLimbs: { kind: "cannotHandleObjects" } as const,
+        // Stale effect claims armor is worn. With the fix, base form rules
+        // apply instead, so the armored druid remains armored and Mage
+        // Armor is illegal. Without the fix, this disposition would also
+        // make the druid appear armored, masking the stale-reference bug.
+        equipmentDisposition: [
           {
-            kind: "druidWildShapeForm" as const,
-            sourceProcedureRef: wildShapeProcedureRef,
-            sourceCombatantId: druidId,
-            formScopeRef: battleStatBlockExecutionScopeRef(
-              battleId("battle-mage-armor-stale-wild-shape-target"),
-              druidId,
-              battleExecutionScopeOrdinal(999),
-            ),
-            formLimbs: { kind: "cannotHandleObjects" } as const,
-            // Stale effect claims armor is worn. With the fix, base form rules
-            // apply instead, so the armored druid remains armored and Mage
-            // Armor is illegal. Without the fix, this disposition would also
-            // make the druid appear armored, masking the stale-reference bug.
-            equipmentDisposition: [
-              {
-                item: {
-                  kind: "armor" as const,
-                  objectId: battleObjectId("synthetic-stale-armor"),
-                },
-                disposition: "worn" as const,
-              },
-            ],
-            expiresAt: {
-              kind: "duration" as const,
-              durationTicks: elapsedTimeTicks(600),
+            item: {
+              kind: "armor" as const,
+              objectId: battleObjectId("synthetic-stale-armor"),
             },
+            disposition: "worn" as const,
           },
         ],
-      }),
-    };
+        expiresAt: {
+          kind: "duration" as const,
+          durationTicks: elapsedTimeTicks(600),
+        },
+      },
+    });
 
     const target = requireHole(
       resolveBattleSubject({
@@ -664,48 +655,50 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
       druidId,
       "druid_wild_shape",
     );
-    const staleDruid = {
-      ...druid,
-      activeEffects: [
-        ...druid.activeEffects,
-        {
-          kind: "druidWildShapeForm" as const,
-          sourceProcedureRef: wildShapeProcedureRef,
-          sourceCombatantId: druidId,
-          formScopeRef: battleStatBlockExecutionScopeRef(
-            battleId("battle-mage-armor-stale-wild-shape-unarmored"),
-            druidId,
-            battleExecutionScopeOrdinal(999),
-          ),
-          formLimbs: { kind: "cannotHandleObjects" } as const,
-          // Stale effect claims armor and shield are worn. Base form rules must
-          // win, so the unarmored, shieldless druid remains unarmored.
-          equipmentDisposition: [
-            {
-              item: {
-                kind: "armor" as const,
-                objectId: battleObjectId("synthetic-stale-armor"),
-              },
-              disposition: "worn" as const,
+    const allocatedState = battleStateWithAllocatedEffectForTest({
+      state,
+      ownerId: druidId,
+      effect: {
+        kind: "druidWildShapeForm" as const,
+        sourceProcedureRef: wildShapeProcedureRef,
+        sourceCombatantId: druidId,
+        formScopeRef: battleStatBlockExecutionScopeRef(
+          battleId("battle-mage-armor-stale-wild-shape-unarmored"),
+          druidId,
+          battleExecutionScopeOrdinal(999),
+        ),
+        formLimbs: { kind: "cannotHandleObjects" } as const,
+        // Stale effect claims armor and shield are worn. Base form rules must
+        // win, so the unarmored, shieldless druid remains unarmored.
+        equipmentDisposition: [
+          {
+            item: {
+              kind: "armor" as const,
+              objectId: battleObjectId("synthetic-stale-armor"),
             },
-            {
-              item: {
-                kind: "shield" as const,
-                objectId: battleObjectId("synthetic-stale-shield"),
-              },
-              disposition: "worn" as const,
-            },
-          ],
-          expiresAt: {
-            kind: "duration" as const,
-            durationTicks: elapsedTimeTicks(600),
+            disposition: "worn" as const,
           },
+          {
+            item: {
+              kind: "shield" as const,
+              objectId: battleObjectId("synthetic-stale-shield"),
+            },
+            disposition: "worn" as const,
+          },
+        ],
+        expiresAt: {
+          kind: "duration" as const,
+          durationTicks: elapsedTimeTicks(600),
         },
-      ],
-    };
+      },
+    });
+    const staleDruid = allocatedState.combatants.get(druidId);
+    if (staleDruid === undefined) {
+      throw new Error("Expected allocated stale Wild Shape Druid.");
+    }
 
-    expect(combatantWearingArmor(state, staleDruid)).toBe(false);
-    expect(combatantWieldingShield(state, staleDruid)).toBe(false);
+    expect(combatantWearingArmor(allocatedState, staleDruid)).toBe(false);
+    expect(combatantWieldingShield(allocatedState, staleDruid)).toBe(false);
   });
 
   test("Armor of Shadows casts self-only Mage Armor without expending a Spell Slot", () => {
