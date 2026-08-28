@@ -4,9 +4,13 @@ import { passiveSavingThrowRollModeRouteEvents } from "./index.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-BARBARIAN-DANGER-SENSE barbarian_danger_sense
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.passive-saving-throw-roll-mode
 import {
-  battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   characterBattleFeatureInitForTest,
+  requireCharacterSpellProcedureRefForTest,
+  spellRecord,
+  wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
+import { spellSlotInvocationRef } from "./index.ts";
 import { describe, expect, test } from "vitest";
 import { Result } from "effect";
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
@@ -35,7 +39,6 @@ import {
 import { characterCreature } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import type {
-  BattleActiveEffect,
   BattleRuntimeSession,
   BattleState,
   UnitRecord,
@@ -290,6 +293,11 @@ function dangerSenseBattle(): BattleRuntimeSession {
         combatantId: spellCasterId,
         displayName: "Caster",
         initiative: 20,
+        classLevels: [{ className: "wizard", level: classLevel(1) }],
+        spellcasting: wizardSpellcasting({
+          preparedSpells: [spellRecord(greaseUnitId)],
+          spellSlots: [{ spellLevel: 1, count: 1 }],
+        }),
       }),
       characterCreature({
         combatantId: spellTargetId,
@@ -322,24 +330,32 @@ function dangerSenseGreaseGroundHazardBattle(input?: {
   if (caster === undefined || target === undefined) {
     throw new Error("Expected Danger Sense Grease combatants.");
   }
-  const greaseGroundHazard: Extract<
-    BattleActiveEffect,
-    { readonly kind: "greaseGroundHazard" }
-  > = {
-    kind: "greaseGroundHazard",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(greaseUnitId),
-    ),
-    sourceCombatantId: spellCasterId,
-    areaId: greaseAreaId,
-    heightenedSpellTargetDisadvantage: null,
-    save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
-    expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
-  };
-  const nextCombatants = new Map(state.combatants).set(spellCasterId, {
-    ...caster,
-    activeEffects: [...caster.activeEffects, greaseGroundHazard],
-  });
+  const allocatedState = battleStateWithAllocatedEffectOccurrencesForTest({
+    state,
+    occurrences: [
+      {
+        kind: "activeEffect",
+        ownerId: spellCasterId,
+        effect: {
+          kind: "greaseGroundHazard",
+          sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+            session,
+            spellCasterId,
+            spellSlotInvocationRef(greaseUnitId, 1, "greaseGroundHazard"),
+          ),
+          sourceCombatantId: spellCasterId,
+          areaId: greaseAreaId,
+          heightenedSpellTargetDisadvantage: null,
+          save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
+          expiresAt: {
+            kind: "duration",
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+    ],
+  }).state;
+  const nextCombatants = new Map(allocatedState.combatants);
   if (input?.incapacitated === true) {
     nextCombatants.set(spellTargetId, {
       ...battleCreatureStateWithKnockOutPreservedConditions(
@@ -349,7 +365,7 @@ function dangerSenseGreaseGroundHazardBattle(input?: {
     });
   }
   const targetTurn = endTurn({
-    state: { ...state, combatants: nextCombatants },
+    state: { ...allocatedState, combatants: nextCombatants },
     actorId: spellCasterId,
   });
   expect(targetTurn.tag).toBe("resolved");

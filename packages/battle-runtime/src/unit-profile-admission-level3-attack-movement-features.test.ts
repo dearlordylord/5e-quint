@@ -54,9 +54,9 @@ import {
   requireResultHole,
   resolveBattleSubject,
   startBattle,
+  spellSlotInvocationRef,
 } from "./unit-profile-admission.test-support.ts";
 import { battleUnitSupportProfilesForUnit } from "./unit-feature-support.ts";
-import type { BattleActiveEffect } from "./battle-state-execution.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
 import {
   characterCreature,
@@ -75,11 +75,14 @@ import { characterUnitProcedureBindings } from "./character-execution-queries.ts
 import {
   attackExecutionSelectionForSubjectForTest,
   characterBattleFeatureInitForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   characterAttackSubjectForTest,
   endTurn,
-  requireCharacterUnitProcedureRefForTest,
+  elapsedTimeTicks,
+  requireCharacterSpellProcedureRefForTest,
   requireResolved,
   SURFACE_UNIT_RECORD_SCHEMA_NEGATIVE_TEST_TIMEOUT_MILLISECONDS,
+  wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 
 const remarkableAthleteActorId = combatantId("remarkable-athlete-actor");
@@ -91,6 +94,7 @@ function remarkableAthleteRuntimeBattle(input: { readonly selected: boolean }) {
 
 function remarkableAthleteRuntimeSession(input: {
   readonly selected: boolean;
+  readonly withFlySpell?: true;
 }) {
   const { unit, unitRef } = remarkableAthleteSelectedUnit();
   const state = startBattle({
@@ -105,7 +109,13 @@ function remarkableAthleteRuntimeSession(input: {
         displayName: "Remarkable Athlete Critical Actor",
         initiative: 18,
         characterUnitRefs: input.selected ? [unitRef] : [],
-        classLevels: [{ className: "fighter", level: 3 }],
+        classLevels:
+          input.withFlySpell === true
+            ? [
+                { className: "fighter", level: 3 },
+                { className: "wizard", level: 5 },
+              ]
+            : [{ className: "fighter", level: 3 }],
         unitFeatures: input.selected
           ? [
               characterBattleFeatureInitForTest(unit, [
@@ -113,6 +123,21 @@ function remarkableAthleteRuntimeSession(input: {
               ]),
             ]
           : [],
+        ...(input.withFlySpell === true
+          ? {
+              spellcasting: {
+                ...wizardSpellcasting({
+                  preparedSpells: [spellRecord("fly")],
+                  spellSlots: [{ spellLevel: 3, count: 1 }],
+                }),
+                spellcastingSource: {
+                  tag: "classSpellcasting" as const,
+                  className: "wizard" as const,
+                  abilityModifier: 3,
+                },
+              },
+            }
+          : {}),
       }),
       characterCreature({
         combatantId: remarkableAthleteTargetId,
@@ -129,32 +154,51 @@ function remarkableAthleteRuntimeSession(input: {
 }
 
 function remarkableAthleteRuntimeBattleWithFlySpeed() {
-  const session = remarkableAthleteRuntimeSession({ selected: true });
+  const session = remarkableAthleteRuntimeSession({
+    selected: true,
+    withFlySpell: true,
+  });
   const state = session.state;
   const actor = state.combatants.get(remarkableAthleteActorId);
   if (actor === undefined) {
     throw new Error("Expected Remarkable Athlete actor in fixture.");
   }
-  const flySpeedGrant = {
-    kind: "specialSpeedGrant",
-    sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
-      session,
-      remarkableAthleteActorId,
-      fighterRemarkableAthleteUnitId,
-    ),
-    sourceCombatantId: remarkableAthleteActorId,
-    speedKind: "fly",
-    speed: { kind: "fixed", speedFeet: movementFeet(40) },
-    hover: true,
-    expiresAt: { kind: "untilDispelled" },
-  } as const satisfies BattleActiveEffect;
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(remarkableAthleteActorId, {
-      ...actor,
-      activeEffects: [...actor.activeEffects, flySpeedGrant],
-    }),
-  };
+  const flyProcedureRef = requireCharacterSpellProcedureRefForTest(
+    session,
+    remarkableAthleteActorId,
+    spellSlotInvocationRef("fly", 3, "scalarBuff"),
+  );
+  return battleStateWithAllocatedEffectOccurrencesForTest({
+    state: {
+      ...state,
+      combatants: new Map(state.combatants).set(remarkableAthleteActorId, {
+        ...actor,
+        concentration: {
+          sourceProcedureRef: flyProcedureRef,
+          effectKind: "spellEffect",
+        },
+      }),
+    },
+    occurrences: [
+      {
+        kind: "activeEffect",
+        ownerId: remarkableAthleteActorId,
+        effect: {
+          kind: "specialSpeedGrant",
+          sourceProcedureRef: flyProcedureRef,
+          sourceCombatantId: remarkableAthleteActorId,
+          speedKind: "fly",
+          speed: { kind: "fixed", speedFeet: movementFeet(60) },
+          hover: true,
+          expiresAt: {
+            kind: "concentration",
+            combatantId: remarkableAthleteActorId,
+            durationTicks: elapsedTimeTicks(100),
+          },
+        },
+      },
+    ],
+  }).state;
 }
 
 function remarkableAthleteSelectedUnit() {
@@ -809,10 +853,10 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     expect(movement).toMatchObject({
       label: "Remarkable Athlete movement",
       actorId: remarkableAthleteActorId,
-      movementBudgetFeet: movementFeet(20),
+      movementBudgetFeet: movementFeet(30),
       speedKinds: [
         { kind: "walk", movementBudgetFeet: movementFeet(15) },
-        { kind: "fly", movementBudgetFeet: movementFeet(20) },
+        { kind: "fly", movementBudgetFeet: movementFeet(30) },
       ],
     });
 

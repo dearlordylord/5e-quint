@@ -11,9 +11,8 @@ import {
   applyCondition,
   assertBattleSnapshotCodecRoundTripForTest,
   attackRollFill,
-  battleEffectExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   battleId,
-  battleProcedureExecutionRefForTest,
   BattleSnapshotSchema,
   characterSeed,
   characterAttackSubjectForTest,
@@ -28,6 +27,7 @@ import {
   grappleOutcomeFill,
   monksFocusResource,
   movementFeet,
+  requireCharacterSpellProcedureRefForTest,
   requireHole,
   requireResolved,
   resolveBattleSubject,
@@ -36,6 +36,7 @@ import {
   startBattleRight,
   startBattleSessionRight,
   statBlockCreatureInit,
+  spellRecord,
   targetFill,
   testBattleCreatureStateWithConditions,
   type BattleFill,
@@ -43,7 +44,9 @@ import {
   type BattleRuntimeSession,
   type BattleState,
   type BattleSubject,
+  wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
+import { spellSlotInvocationRef } from "./index.ts";
 
 describe("battle runtime: Monk's Focus battle options", () => {
   test("rejects an execution ref bound to a different Unit procedure family", () => {
@@ -265,33 +268,60 @@ describe("battle runtime: Monk's Focus battle options", () => {
   });
 
   test("Step of the Wind rejects a stored Dash subject after its granted Speed disappears", () => {
-    const state = monkFocusBattle({ usesRemaining: 2 });
+    const session = monkFocusBattleSession({
+      usesRemaining: 2,
+      withMovementSpells: true,
+    });
+    const state = session.state;
     const monk = state.combatants.get(fighterId);
     if (monk === undefined) {
       throw new Error("Expected Monk combatant.");
     }
-    const speedGrantProcedureRef = battleProcedureExecutionRefForTest(
-      "monk-temporary-fly-speed",
+    const flyProcedureRef = requireCharacterSpellProcedureRefForTest(
+      session,
+      fighterId,
+      spellSlotInvocationRef("fly", 3, "scalarBuff"),
     );
-    const activeEffects = [
-      ...monk.activeEffects,
-      {
-        kind: "specialSpeedGrant",
-        sourceProcedureRef: speedGrantProcedureRef,
-        sourceCombatantId: fighterId,
-        speedKind: "fly",
-        speed: { kind: "fixed", speedFeet: movementFeet(40) },
-        hover: true,
-        expiresAt: { kind: "untilDispelled" },
+    const allocation = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: {
+        ...state,
+        combatants: new Map(state.combatants).set(fighterId, {
+          ...monk,
+          concentration: {
+            sourceProcedureRef: flyProcedureRef,
+            effectKind: "spellEffect",
+          },
+        }),
       },
-    ] as const;
-    const withFlySpeed: BattleState = {
-      ...state,
-      combatants: new Map(state.combatants).set(fighterId, {
-        ...monk,
-        activeEffects,
-      }),
-    };
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: fighterId,
+          effect: {
+            kind: "specialSpeedGrant",
+            sourceProcedureRef: flyProcedureRef,
+            sourceCombatantId: fighterId,
+            speedKind: "fly",
+            speed: { kind: "fixed", speedFeet: movementFeet(60) },
+            hover: true,
+            expiresAt: {
+              kind: "concentration",
+              combatantId: fighterId,
+              durationTicks: elapsedTimeTicks(100),
+            },
+          },
+        },
+      ],
+    });
+    const withFlySpeed = allocation.state;
+    const speedGrant = allocation.occurrences[0];
+    if (speedGrant?.kind !== "activeEffect") {
+      throw new Error("Expected an allocated speed-grant occurrence.");
+    }
+    const withFlyMonk = withFlySpeed.combatants.get(fighterId);
+    if (withFlyMonk === undefined) {
+      throw new Error("Expected allocated Monk combatant.");
+    }
     const subject = monkFocusSubject(
       withFlySpeed,
       (candidate) =>
@@ -311,11 +341,10 @@ describe("battle runtime: Monk's Focus battle options", () => {
     const withoutFlySpeed: BattleState = {
       ...withFlySpeed,
       combatants: new Map(withFlySpeed.combatants).set(fighterId, {
-        ...monk,
-        activeEffects: activeEffects.filter(
-          (effect) =>
-            effect.kind !== "specialSpeedGrant" ||
-            effect.sourceProcedureRef !== speedGrantProcedureRef,
+        ...withFlyMonk,
+        concentration: null,
+        activeEffects: withFlyMonk.activeEffects.filter(
+          (effect) => effect.effectRef !== speedGrant.effect.effectRef,
         ),
       }),
     };
@@ -522,9 +551,11 @@ describe("battle runtime: Monk's Focus battle options", () => {
   });
 
   test("Step of the Wind Focus doubles caller-witnessed Jump spell distance for the turn", () => {
-    const state = withJumpMovementReplacementEffect(
-      monkFocusBattle({ usesRemaining: 2 }),
-    );
+    const session = monkFocusBattleSession({
+      usesRemaining: 2,
+      withMovementSpells: true,
+    });
+    const state = withJumpMovementReplacementEffect(session);
     const subject = monkFocusSubject(
       state,
       (candidate) =>
@@ -569,8 +600,11 @@ describe("battle runtime: Monk's Focus battle options", () => {
   });
 
   test("Step of the Wind Focus projects doubled Jump spell distance in act discovery", () => {
-    const session = monkFocusBattleSession({ usesRemaining: 2 });
-    const state = withJumpMovementReplacementEffect(session.state);
+    const session = monkFocusBattleSession({
+      usesRemaining: 2,
+      withMovementSpells: true,
+    });
+    const state = withJumpMovementReplacementEffect(session);
     const subject = monkFocusSubject(
       state,
       (candidate) =>
@@ -598,9 +632,11 @@ describe("battle runtime: Monk's Focus battle options", () => {
   });
 
   test("Step of the Wind Focus rejects jump-route witnesses past the doubled distance", () => {
-    const state = withJumpMovementReplacementEffect(
-      monkFocusBattle({ usesRemaining: 2 }),
-    );
+    const session = monkFocusBattleSession({
+      usesRemaining: 2,
+      withMovementSpells: true,
+    });
+    const state = withJumpMovementReplacementEffect(session);
     const subject = monkFocusSubject(
       state,
       (candidate) =>
@@ -1199,6 +1235,7 @@ function monkFocusBattle(input: {
   readonly classLevel?: number;
   readonly tempHp?: number;
   readonly weaponAttackAvailable?: true;
+  readonly withMovementSpells?: true;
 }): BattleState {
   return monkFocusBattleSession(input).state;
 }
@@ -1208,6 +1245,7 @@ function monkFocusBattleSession(input: {
   readonly classLevel?: number;
   readonly tempHp?: number;
   readonly weaponAttackAvailable?: true;
+  readonly withMovementSpells?: true;
 }): BattleRuntimeSession {
   return startBattleSessionRight({
     battleId: battleId(`battle-monk-focus-${input.usesRemaining}`),
@@ -1216,10 +1254,34 @@ function monkFocusBattleSession(input: {
         combatantId: fighterId,
         displayName: "Monk",
         initiative: 20,
-        classLevels: [{ className: "monk", level: input.classLevel ?? 2 }],
+        classLevels:
+          input.withMovementSpells === true
+            ? [
+                { className: "monk", level: input.classLevel ?? 2 },
+                { className: "wizard", level: 5 },
+              ]
+            : [{ className: "monk", level: input.classLevel ?? 2 }],
         ...(input.tempHp === undefined ? {} : { tempHp: input.tempHp }),
         ...(input.weaponAttackAvailable === true ? {} : { attack: null }),
         resources: [monksFocusResource(input)],
+        ...(input.withMovementSpells === true
+          ? {
+              spellcasting: {
+                ...wizardSpellcasting({
+                  preparedSpells: [spellRecord("jump"), spellRecord("fly")],
+                  spellSlots: [
+                    { spellLevel: 1, count: 1 },
+                    { spellLevel: 3, count: 1 },
+                  ],
+                }),
+                spellcastingSource: {
+                  tag: "classSpellcasting" as const,
+                  className: "wizard" as const,
+                  abilityModifier: 3,
+                },
+              },
+            }
+          : {}),
       }),
       statBlockCreatureInit({ initiative: 10 }),
     ],
@@ -1279,32 +1341,37 @@ function monkFocusResourceForSubject(
   return resource;
 }
 
-function withJumpMovementReplacementEffect(state: BattleState): BattleState {
+function withJumpMovementReplacementEffect(
+  session: BattleRuntimeSession,
+): BattleState {
+  const state = session.state;
   const monk = state.combatants.get(fighterId);
   if (monk === undefined) {
     throw new Error("Expected Monk combatant.");
   }
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(fighterId, {
-      ...monk,
-      activeEffects: [
-        ...monk.activeEffects,
-        {
+  const jumpProcedureRef = requireCharacterSpellProcedureRefForTest(
+    session,
+    fighterId,
+    spellSlotInvocationRef("jump", 1, "jumpMovementReplacement"),
+  );
+  return battleStateWithAllocatedEffectOccurrencesForTest({
+    state,
+    occurrences: [
+      {
+        kind: "activeEffect",
+        ownerId: fighterId,
+        effect: {
           kind: "jumpMovementReplacement",
-          effectRef: battleEffectExecutionRefForTest("monk-jump"),
           sourceCombatantId: fighterId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("jump"),
-          ),
+          sourceProcedureRef: jumpProcedureRef,
           movementCostFeet: movementFeet(10),
           maxJumpDistanceFeet: movementFeet(30),
           usedThisTurn: false,
           expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
         },
-      ],
-    }),
-  };
+      },
+    ],
+  }).state;
 }
 
 function jumpMovementReplacementFill(

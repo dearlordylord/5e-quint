@@ -135,7 +135,6 @@ import type {
   BattleFill,
   BattleHole,
   BattleState,
-  BattleActiveEffect,
 } from "./battle-state-execution.ts";
 import {
   damageRollFill,
@@ -168,7 +167,6 @@ import {
   wizardId,
   wizardSpellcasting,
   spellRecord,
-  battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectOccurrencesForTest,
   unitLibrary,
   KNOCKED_OUT_UNCONSCIOUS,
@@ -1130,25 +1128,73 @@ describe("battle boundary admission owners", () => {
         },
       ),
     ).toBeUndefined();
-    const specialState = {
-      ...state,
-      combatants: new Map(state.combatants).set(fighterId, {
-        ...fighterCombatant,
-        activeEffects: [
-          ...fighterCombatant.activeEffects,
-          {
-            kind: "specialSpeedGrant" as const,
-            sourceProcedureRef:
-              battleProcedureExecutionRefForTest("boundary-fly"),
-            sourceCombatantId: fighterId,
-            speedKind: "fly" as const,
-            speed: { kind: "fixed" as const, speedFeet: movementFeet(40) },
-            hover: true,
-            expiresAt: { kind: "untilDispelled" as const },
-          },
-        ],
+    const projectionSession = startBattleSessionRight({
+      battleId: battleId("boundary-movement-effect-producers"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          attack: null,
+          classLevels: [{ className: "wizard", level: 5 }],
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("shocking_grasp")],
+            preparedSpells: [spellRecord("fly")],
+            spellSlots: [{ spellLevel: 3, count: 1 }],
+          }),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const effectProducerActs = discoverBattleActs(projectionSession);
+    const flyAct = effectProducerActs.find(
+      (act) => battleActSpellPresentation(act)?.invocation.spellId === "fly",
+    );
+    const shockingGraspAct = effectProducerActs.find(
+      (act) =>
+        battleActSpellPresentation(act)?.invocation.spellId ===
+        "shocking_grasp",
+    );
+    if (
+      flyAct?.subject.tag !== "actionSpell" ||
+      shockingGraspAct?.subject.tag !== "actionSpell"
+    ) {
+      throw new Error("Expected admitted Fly and Shocking Grasp procedures.");
+    }
+    const projectionCaster = projectionSession.state.combatants.get(fighterId);
+    if (projectionCaster === undefined) {
+      throw new Error("Expected movement effect caster.");
+    }
+    const flyConcentrationState = {
+      ...projectionSession.state,
+      combatants: new Map(projectionSession.state.combatants).set(fighterId, {
+        ...projectionCaster,
+        concentration: {
+          sourceProcedureRef: flyAct.subject.procedureRef,
+          effectKind: "spellEffect" as const,
+        },
       }),
-    } as BattleState;
+    };
+    const specialState = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: flyConcentrationState,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: fighterId,
+          effect: {
+            kind: "specialSpeedGrant",
+            sourceProcedureRef: flyAct.subject.procedureRef,
+            sourceCombatantId: fighterId,
+            speedKind: "fly",
+            speed: { kind: "fixed", speedFeet: movementFeet(60) },
+            hover: true,
+            expiresAt: {
+              kind: "concentration",
+              combatantId: fighterId,
+              durationTicks: elapsedTimeTicks(100),
+            },
+          },
+        },
+      ],
+    }).state;
     const specialSubject = {
       tag: "runtimeCommand",
       actorId: fighterId,
@@ -1210,22 +1256,21 @@ describe("battle boundary admission owners", () => {
         owner: "battleMovementResource",
       },
     ]);
-    const deniedState = {
-      ...state,
-      combatants: new Map(state.combatants).set(goblinId, {
-        ...goblinCombatant,
-        activeEffects: [
-          ...goblinCombatant.activeEffects,
-          {
-            kind: "opportunityAttackDenied" as const,
-            sourceCombatantId: goblinId,
-            sourceProcedureRef:
-              battleProcedureExecutionRefForTest("boundary-denied"),
-            expiresAt: { kind: "startOfTurn" as const, combatantId: goblinId },
+    const deniedState = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: projectionSession.state,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: goblinId,
+          effect: {
+            kind: "opportunityAttackDenied",
+            sourceCombatantId: fighterId,
+            sourceProcedureRef: shockingGraspAct.subject.procedureRef,
+            expiresAt: { kind: "startOfTurn", combatantId: goblinId },
           },
-        ],
-      }),
-    } as BattleState;
+        },
+      ],
+    }).state;
     const candidateKinds = (
       reactorId: typeof fighterId | typeof goblinId,
       moverId: typeof fighterId | typeof goblinId,
@@ -2735,37 +2780,46 @@ describe("battle boundary admission owners", () => {
           combatantId: wizardId,
           initiative: 20,
           attack: null,
-          spellcasting: wizardSpellcasting({
-            cantrips: [acidSplashWithRadius(5)],
-            preparedSpells: [],
-          }),
+          spellcasting: {
+            ...wizardSpellcasting({
+              cantrips: [acidSplashWithRadius(5)],
+              preparedSpells: [spellRecord("sanctuary")],
+            }),
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "cleric",
+              abilityModifier: 3,
+            },
+          },
         }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const warded = areaBaseSession.state.combatants.get(goblinId);
-    if (warded === undefined) {
-      throw new Error("Expected area-route ward target.");
+    const areaSanctuaryAct = discoverBattleActCandidates(
+      areaBaseSession.state,
+    ).find((act) => act.subject.tag === "bonusActionSpell");
+    if (areaSanctuaryAct?.subject.tag !== "bonusActionSpell") {
+      throw new Error("Expected admitted area-route Sanctuary procedure.");
     }
-    const sanctuaryWard: BattleActiveEffect = {
-      kind: "sanctuaryWard",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "boundary-area-sanctuary-source",
-      ),
-      sourceCombatantId: wizardId,
-      save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
-      expiresAt: {
-        kind: "duration",
-        durationTicks: elapsedTimeTicks(10),
-      },
-    };
-    const areaState = {
-      ...areaBaseSession.state,
-      combatants: new Map(areaBaseSession.state.combatants).set(goblinId, {
-        ...warded,
-        activeEffects: [sanctuaryWard],
-      }),
-    };
+    const areaState = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: areaBaseSession.state,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: goblinId,
+          effect: {
+            kind: "sanctuaryWard",
+            sourceProcedureRef: areaSanctuaryAct.subject.procedureRef,
+            sourceCombatantId: wizardId,
+            save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+            expiresAt: {
+              kind: "duration",
+              durationTicks: elapsedTimeTicks(10),
+            },
+          },
+        },
+      ],
+    }).state;
     const areaSession = battleRuntimeSessionForTest({
       state: areaState,
       context: areaBaseSession.context,

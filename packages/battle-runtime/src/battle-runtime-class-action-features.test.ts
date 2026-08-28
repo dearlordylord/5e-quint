@@ -70,6 +70,7 @@ import {
   discoverBattleActCandidates,
   discoverBattleActs,
   endTurn,
+  elapsedTimeTicks,
   movementFill,
   movementFeet,
   movementDeltaFeet,
@@ -80,6 +81,7 @@ import {
   spellSaveDcForCaster,
   startBattle,
   startBattleSessionRight,
+  battleStateWithAllocatedEffectOccurrencesForTest,
 } from "./battle-runtime.test-support.ts";
 import { BRUTAL_STRIKE_SUPPORT_PROFILE } from "./unit-feature-support.ts";
 import { activeRageDamageBonusForFrenzy } from "./battle-reducer/barbarian-frenzy.ts";
@@ -102,7 +104,7 @@ import type {
   BattleState,
   BattleSubject,
 } from "./battle-runtime.test-support.ts";
-import type { BattleRuntimeSession } from "./index.ts";
+import { spellSlotInvocationRef, type BattleRuntimeSession } from "./index.ts";
 import { describe, expect, test } from "vitest";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
@@ -3654,46 +3656,77 @@ describe("battle runtime: class action features", () => {
 
   test("Brutal Strike Forceful Blow pushes, moves, and replays combined Punch and Grab once", () => {
     const brutalStrikeUnit = unitLibrary.requireUnit("barbarian_brutal_strike");
-    const baseState = startBattleRight({
+    const forcefulSession = startBattleSessionRight({
       battleId: battleId("battle-barbarian-brutal-strike-forceful-blow"),
       combatants: [
         characterSeed({
           initiative: 20,
-          classLevels: [{ className: "barbarian", level: 9 }],
+          classLevels: [
+            { className: "barbarian", level: 9 },
+            { className: "wizard", level: 5 },
+          ],
           unitFeatures: [recklessAttackFeature()],
           characterUnitRefs: [
             supportedBattleUnitRef(brutalStrikeUnit),
             ...grapplerUnitRefs(),
           ],
+          spellcasting: {
+            ...wizardSpellcasting({
+              preparedSpells: [spellRecord("fly")],
+              spellSlots: [{ spellLevel: 3, count: 1 }],
+            }),
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "wizard",
+              abilityModifier: 3,
+            },
+          },
         }),
         characterSeed({ combatantId: wizardId, initiative: 15 }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const baseState = forcefulSession.state;
     const actor = baseState.combatants.get(fighterId);
     if (actor === undefined) {
       throw new Error("Expected the Forceful Blow actor.");
     }
-    const state = {
-      ...baseState,
-      combatants: new Map(baseState.combatants).set(fighterId, {
-        ...actor,
-        activeEffects: [
-          ...actor.activeEffects,
-          {
+    const flyProcedureRef = requireCharacterSpellProcedureRefForTest(
+      forcefulSession,
+      fighterId,
+      spellSlotInvocationRef("fly", 3, "scalarBuff"),
+    );
+    const state = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: {
+        ...baseState,
+        combatants: new Map(baseState.combatants).set(fighterId, {
+          ...actor,
+          concentration: {
+            sourceProcedureRef: flyProcedureRef,
+            effectKind: "spellEffect",
+          },
+        }),
+      },
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: fighterId,
+          effect: {
             kind: "specialSpeedGrant",
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              "synthetic-forceful-blow-fly-speed",
-            ),
+            sourceProcedureRef: flyProcedureRef,
             sourceCombatantId: fighterId,
             speedKind: "fly",
-            speed: { kind: "fixed", speedFeet: movementFeet(40) },
+            speed: { kind: "fixed", speedFeet: movementFeet(60) },
             hover: true,
-            expiresAt: { kind: "untilDispelled" },
-          } as const,
-        ],
-      }),
-    } satisfies BattleState;
+            expiresAt: {
+              kind: "concentration",
+              combatantId: fighterId,
+              durationTicks: elapsedTimeTicks(100),
+            },
+          },
+        },
+      ],
+    }).state;
     const attackSubject = fighterAttackSubject(state, "Unarmed Strike");
     const target = attackInitialTargetHole(state, attackSubject);
     const decision = requireHole(
@@ -3877,10 +3910,10 @@ describe("battle runtime: class action features", () => {
     const movement = findHole(afterMovementAccepted.holes, "movement");
     expect(movement).toMatchObject({
       actorId: fighterId,
-      movementBudgetFeet: movementFeet(20),
+      movementBudgetFeet: movementFeet(30),
       speedKinds: [
         { kind: "walk", movementBudgetFeet: movementFeet(15) },
-        { kind: "fly", movementBudgetFeet: movementFeet(20) },
+        { kind: "fly", movementBudgetFeet: movementFeet(30) },
       ],
       brutalStrikeForcefulBlow: {
         kind: "brutalStrikeForcefulBlowStraightTowardTarget",
@@ -4029,29 +4062,31 @@ describe("battle runtime: class action features", () => {
     if (targetCombatant === undefined) {
       throw new Error("Expected the Hamstring target.");
     }
-    const priorHamstring = {
-      kind: "brutalStrikeHamstring" as const,
-      sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
-        session,
-        wizardId,
-        brutalStrikeUnit.id,
-      ),
-      sourceCombatantId: wizardId,
-      effect: {
-        kind: "hamstringBlow" as const,
-        deltaFeet: movementDeltaFeet(-15),
-        stacking: "mostRecentOnly" as const,
-        expires: "startOfYourNextTurn" as const,
-      },
-      expiresAt: { kind: "startOfSourceTurn" as const },
-    };
-    const state = {
-      ...session.state,
-      combatants: new Map(session.state.combatants).set(goblinId, {
-        ...targetCombatant,
-        activeEffects: [...targetCombatant.activeEffects, priorHamstring],
-      }),
-    };
+    const state = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: session.state,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: goblinId,
+          effect: {
+            kind: "brutalStrikeHamstring",
+            sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
+              session,
+              wizardId,
+              brutalStrikeUnit.id,
+            ),
+            sourceCombatantId: wizardId,
+            effect: {
+              kind: "hamstringBlow",
+              deltaFeet: movementDeltaFeet(-15),
+              stacking: "mostRecentOnly",
+              expires: "startOfYourNextTurn",
+            },
+            expiresAt: { kind: "startOfSourceTurn" },
+          },
+        },
+      ],
+    }).state;
     const attackSubject = fighterAttackSubject(state);
     const target = attackInitialTargetHole(state, attackSubject);
     const decision = requireHole(

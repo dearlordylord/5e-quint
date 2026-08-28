@@ -14,9 +14,9 @@ import {
   movementFeet,
 } from "@dnd/shared/types";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
+import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { combatantId } from "./identity.ts";
 import type { BattleFill, BattleHole } from "./battle-state-execution.ts";
-import type { BattleActiveEffect } from "./battle-state-execution.ts";
 import type { CharacterBattleClassLevelInits } from "./character-class-level.ts";
 import {
   resolveBattleRuntimeSubjectWithTableD20TestCircumstances,
@@ -28,6 +28,7 @@ import {
   attackRollFill,
   battleId,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   characterBattleFeatureInitForTest,
   characterSeed,
   damageRollFillWithGroups,
@@ -37,10 +38,13 @@ import {
   goblinId,
   discoverBattleActs,
   findHole,
+  requireCharacterSpellProcedureRefForTest,
   requireCharacterUnitProcedureRefForTest,
   savingThrowOutcomeFill,
   startBattleSessionRight,
   statBlockCreatureInit,
+  spellRecord,
+  testBattleCreatureStateWithConditions,
   targetFill,
   secondSkeletonId,
   skeletonId,
@@ -49,6 +53,7 @@ import {
   testCharacterD20Statistics,
   unitLibrary,
 } from "./battle-runtime.test-support.ts";
+import { spellSlotInvocationRef } from "./index.ts";
 import { battleUnitRefWithSupportProfiles } from "./unit-profile-admission.test-support.ts";
 import { battleMagicActionSaveGatedConditionSupportForUnit } from "./unit-feature-support.ts";
 import {
@@ -1054,10 +1059,31 @@ describe("Table-authored per-test D20 circumstances", () => {
     const baseSession = startBattleSessionRight({
       battleId: battleId("synthetic-table-end-turn-save-requests"),
       combatants: [
-        characterSeed({ initiative: 20 }),
+        characterSeed({
+          initiative: 20,
+          attack: null,
+          classLevels: [{ className: "wizard", level: 3 }],
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [
+              spellRecord("hold_person"),
+              spellRecord("blindness_deafness"),
+            ],
+            spellSlots: [{ spellLevel: 2, count: 2 }],
+          }),
+        }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const holdPersonProcedureRef = requireCharacterSpellProcedureRefForTest(
+      baseSession,
+      fighterId,
+      spellSlotInvocationRef("hold_person", 2, "saveGatedCondition"),
+    );
+    const blindnessProcedureRef = requireCharacterSpellProcedureRefForTest(
+      baseSession,
+      fighterId,
+      spellSlotInvocationRef("blindness_deafness", 2, "saveGatedCondition"),
+    );
     const firstTurn = endBattleRuntimeTurn({
       session: baseSession,
       actorId: fighterId,
@@ -1066,32 +1092,93 @@ describe("Table-authored per-test D20 circumstances", () => {
     if (firstTurn.tag !== "resolved") return;
     const goblin = firstTurn.session.state.combatants.get(goblinId);
     if (goblin === undefined) throw new Error("Expected Goblin.");
-    const effect = (
-      procedureName: string,
-    ): Extract<
-      BattleActiveEffect,
-      { readonly kind: "spellConditionEndTurnSave" }
-    > => ({
-      kind: "spellConditionEndTurnSave",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(procedureName),
-      sourceCombatantId: fighterId,
-      condition: "frightened",
-      conditionHadNonSpellSource: false,
-      heightenedSpellTargetDisadvantage: null,
-      save: { ability: "wis", dc: { kind: "fixed", dc: difficultyClass(12) } },
-      expiresAt: {
-        kind: "concentration",
-        combatantId: fighterId,
-        durationTicks: elapsedTimeTicks(10),
-      },
-    });
-    const session = battleRuntimeSessionWithState(firstTurn.session, {
+    const caster = firstTurn.session.state.combatants.get(fighterId);
+    if (caster === undefined) throw new Error("Expected spell caster.");
+    const effect = (input: {
+      readonly sourceProcedureRef: typeof holdPersonProcedureRef;
+      readonly condition: "paralyzed" | "blinded";
+      readonly ability: "wis" | "con";
+      readonly expiresAt:
+        | {
+            readonly kind: "concentration";
+            readonly combatantId: typeof fighterId;
+            readonly durationTicks: ReturnType<typeof elapsedTimeTicks>;
+          }
+        | {
+            readonly kind: "duration";
+            readonly durationTicks: ReturnType<typeof elapsedTimeTicks>;
+          };
+    }) =>
+      ({
+        kind: "spellConditionEndTurnSave",
+        sourceProcedureRef: input.sourceProcedureRef,
+        sourceCombatantId: fighterId,
+        condition: input.condition,
+        conditionHadNonSpellSource: false,
+        heightenedSpellTargetDisadvantage: null,
+        save: {
+          ability: input.ability,
+          dc: { kind: "fixed", dc: difficultyClass(12) },
+        },
+        expiresAt: input.expiresAt,
+      }) as const;
+    const conditionedState = {
       ...firstTurn.session.state,
-      combatants: new Map(firstTurn.session.state.combatants).set(goblinId, {
-        ...goblin,
-        activeEffects: [effect("end-turn-save-a"), effect("end-turn-save-b")],
-      }),
+      combatants: new Map(firstTurn.session.state.combatants)
+        .set(fighterId, {
+          ...caster,
+          concentration: {
+            sourceProcedureRef: holdPersonProcedureRef,
+            effectKind: "spellEffect" as const,
+          },
+        })
+        .set(
+          goblinId,
+          testBattleCreatureStateWithConditions(
+            goblin,
+            applyCondition(
+              applyCondition(goblin.conditions, "paralyzed"),
+              "blinded",
+            ),
+          ),
+        ),
+    };
+    const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: conditionedState,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: goblinId,
+          effect: effect({
+            sourceProcedureRef: holdPersonProcedureRef,
+            condition: "paralyzed",
+            ability: "wis",
+            expiresAt: {
+              kind: "concentration",
+              combatantId: fighterId,
+              durationTicks: elapsedTimeTicks(10),
+            },
+          }),
+        },
+        {
+          kind: "activeEffect",
+          ownerId: goblinId,
+          effect: effect({
+            sourceProcedureRef: blindnessProcedureRef,
+            condition: "blinded",
+            ability: "con",
+            expiresAt: {
+              kind: "duration",
+              durationTicks: elapsedTimeTicks(10),
+            },
+          }),
+        },
+      ],
     });
+    const session = battleRuntimeSessionWithState(
+      firstTurn.session,
+      allocated.state,
+    );
     const result = endBattleRuntimeTurnWithTableD20TestCircumstances({
       session,
       actorId: goblinId,

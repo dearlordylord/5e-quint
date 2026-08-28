@@ -2,9 +2,8 @@ import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   assertBattleSnapshotCodecRoundTripForTest,
-  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForSpellHoleForTest,
-  battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
 } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedure-profiles/execution-composition.ts";
@@ -34,6 +33,7 @@ import type {
   BattleActiveEffect,
   BattleSpellTargetListHole,
 } from "./battle-state-execution.ts";
+import type { BattleActiveEffectOccurrenceTemplate } from "./effect-execution-ref.ts";
 import {
   EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE,
   SEEKING_SPELL_REROLL_UNSUPPORTED_ATTACK_ROLL_OWNER_MESSAGE,
@@ -955,8 +955,14 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
   test("preserves Quickened spell attack resources through Sanctuary retarget", () => {
     const baseSession = saveMetamagicBattle({
       knownOptions: [quickenedMetamagicOption()],
+      preparedSpells: ["burning_hands", "sanctuary"],
+      classLevels: [
+        { className: "sorcerer", level: 4 },
+        { className: "cleric", level: 1 },
+      ],
+      spellcastingSourceClassName: "cleric",
     });
-    const state = withSanctuaryWard(baseSession.state, skeletonId);
+    const state = withSanctuaryWard(baseSession, skeletonId);
     const session = battleSessionAtState(baseSession, state);
     const act = quickenedRayOfFrostAct(session);
     const targetHole = findHole(act.initialHoles, "targetChoice");
@@ -1021,8 +1027,14 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     const baseSession = saveMetamagicBattle({
       knownOptions: [quickenedMetamagicOption()],
       cantrips: ["eldritch_blast"],
+      preparedSpells: ["burning_hands", "sanctuary"],
+      classLevels: [
+        { className: "sorcerer", level: 4 },
+        { className: "cleric", level: 1 },
+      ],
+      spellcastingSourceClassName: "cleric",
     });
-    const state = withSanctuaryWard(baseSession.state, skeletonId);
+    const state = withSanctuaryWard(baseSession, skeletonId);
     const session = battleSessionAtState(baseSession, state);
     const act = quickenedEldritchBlastAct(session);
     const targetHoles = targetChoiceHoles(act.initialHoles);
@@ -1077,8 +1089,13 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
   test("preserves Quickened spell attack resources when Mirror Image duplicate is hit", () => {
     const baseSession = saveMetamagicBattle({
       knownOptions: [quickenedMetamagicOption()],
+      preparedSpells: ["burning_hands", "mirror_image"],
+      spellSlots: [
+        { spellLevel: 1, count: 1 },
+        { spellLevel: 2, count: 1 },
+      ],
     });
-    const state = withMirrorImageDuplicates(baseSession.state, skeletonId);
+    const state = withMirrorImageDuplicates(baseSession, skeletonId);
     const session = battleSessionAtState(baseSession, state);
     const act = quickenedRayOfFrostAct(session);
     const targetHole = findHole(act.initialHoles, "targetChoice");
@@ -2299,12 +2316,14 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
   test("Empowered Spell stays closed for spell attack damage carrying marked riders", () => {
     const baseSession = saveMetamagicBattle({
       knownOptions: [empoweredMetamagicOption()],
+      preparedSpells: ["burning_hands", "hunters_mark"],
     });
     const state = withActiveEffect(baseSession.state, wizardId, {
       kind: "spellMarkedDamageRider",
-      effectRef: battleEffectExecutionRefForTest("empowered-mark"),
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(spellRecord("hunters_mark").id),
+      sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+        baseSession,
+        wizardId,
+        spellSlotInvocationRef("hunters_mark", 1, "markedDamageRider"),
       ),
       sourceCombatantId: wizardId,
       targetCombatantId: skeletonId,
@@ -4754,13 +4773,15 @@ function bonusActionSpent(state: BattleState): BattleState {
 }
 
 function withSanctuaryWard(
-  state: BattleState,
+  session: BattleRuntimeSession,
   wardedId: ReturnType<typeof combatantId>,
 ): BattleState {
-  return withActiveEffect(state, wardedId, {
+  return withActiveEffect(session.state, wardedId, {
     kind: "sanctuaryWard",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(spellRecord("sanctuary").id),
+    sourceProcedureRef: requireAdmittedSpellProcedureRef(
+      session,
+      "sanctuary",
+      "sanctuaryTargetingInterdiction",
     ),
     sourceCombatantId: wizardId,
     save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
@@ -4769,13 +4790,15 @@ function withSanctuaryWard(
 }
 
 function withMirrorImageDuplicates(
-  state: BattleState,
+  session: BattleRuntimeSession,
   targetId: ReturnType<typeof combatantId>,
 ): BattleState {
-  return withActiveEffect(state, targetId, {
+  return withActiveEffect(session.state, targetId, {
     kind: "mirrorImageDuplicates",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(spellRecord("mirror_image").id),
+    sourceProcedureRef: requireAdmittedSpellProcedureRef(
+      session,
+      "mirror_image",
+      "mirrorImageHitInterception",
     ),
     sourceCombatantId: targetId,
     remainingDuplicates: 3,
@@ -4783,22 +4806,33 @@ function withMirrorImageDuplicates(
   });
 }
 
+function requireAdmittedSpellProcedureRef(
+  session: BattleRuntimeSession,
+  spellId: string,
+  procedure: string,
+) {
+  const subject = discoverBattleActs(session).find((act) => {
+    const presentation = battleActSpellPresentation(act);
+    return (
+      act.subject.actorId === wizardId &&
+      presentation?.invocation.procedure === procedure
+    );
+  })?.subject;
+  if (subject === undefined || !("procedureRef" in subject)) {
+    throw new Error(`Expected admitted ${spellId} ${procedure} procedure.`);
+  }
+  return subject.procedureRef;
+}
+
 function withActiveEffect(
   state: BattleState,
   targetId: ReturnType<typeof combatantId>,
-  effect: BattleActiveEffect,
+  effect: BattleActiveEffectOccurrenceTemplate,
 ): BattleState {
-  const target = state.combatants.get(targetId);
-  if (target === undefined) {
-    throw new Error("Expected active-effect target combatant.");
-  }
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(targetId, {
-      ...target,
-      activeEffects: [...target.activeEffects, effect],
-    }),
-  };
+  return battleStateWithAllocatedEffectOccurrencesForTest({
+    state,
+    occurrences: [{ kind: "activeEffect", ownerId: targetId, effect }],
+  }).state;
 }
 
 function sanctuaryRetargetFill(
@@ -5061,14 +5095,7 @@ function saveMetamagicBattle(input: {
   >["className"];
   readonly spellcastingProficiencyBonus?: ProficiencyBonus;
   readonly cantrips?: readonly ("eldritch_blast" | "ray_of_frost")[];
-  readonly preparedSpells?: readonly (
-    | "burning_hands"
-    | "calm_emotions"
-    | "color_spray"
-    | "dissonant_whispers"
-    | "faerie_fire"
-    | "scorching_ray"
-  )[];
+  readonly preparedSpells?: readonly Parameters<typeof spellRecord>[0][];
   readonly spellSlots?: readonly {
     readonly spellLevel: 1 | 2 | 3;
     readonly count: number;

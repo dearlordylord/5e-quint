@@ -17,6 +17,7 @@ import { describe, expect, test } from "vitest";
 import {
   BattleInterruptProcedureChoiceSchema,
   BattleSnapshotSchema,
+  spellSlotInvocationRef,
 } from "./index.ts";
 import {
   deriveCreatureSpaceTraversalMovementFactFromTableRoute,
@@ -107,6 +108,7 @@ import {
 } from "./battle-runtime.test-support.ts";
 import {
   assertBattleSnapshotCodecRoundTripForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
   requireCharacterUnitProcedureRefForTest,
@@ -3644,16 +3646,22 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
   });
 
   test("Fast Wrestler drag cost uses current target size after size changes", () => {
-    const state = startBattleRight({
+    const sizeChangeSession = startBattleSessionRight({
       battleId: battleId("battle-grappler-fast-wrestler-current-size"),
       combatants: [
         characterSeed({
           initiative: 20,
+          classLevels: [{ className: "wizard", level: 3 }],
           characterUnitRefs: grapplerUnitRefs(),
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("enlarge_reduce")],
+            spellSlots: [{ spellLevel: 2, count: 1 }],
+          }),
         }),
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = sizeChangeSession.state;
     const grappleSubject: BattleSubject = {
       tag: "action",
       actorId: fighterId,
@@ -3681,32 +3689,34 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         ],
       }),
     ).state;
-    const skeleton = grappled.combatants.get(skeletonId);
-    if (skeleton === undefined) {
-      throw new Error("Expected skeleton target.");
-    }
-    const enlarged = {
-      ...grappled,
-      combatants: new Map(grappled.combatants).set(skeletonId, {
-        ...skeleton,
-        activeEffects: [
-          ...skeleton.activeEffects,
-          {
-            kind: "spellCreatureSizeChange" as const,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(spellRecord("enlarge_reduce").id),
+    const enlarged = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: grappled,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: skeletonId,
+          effect: {
+            kind: "spellCreatureSizeChange",
+            sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+              sizeChangeSession,
+              fighterId,
+              spellSlotInvocationRef(
+                "enlarge_reduce",
+                2,
+                "creatureSizeIncrease",
+              ),
             ),
             sourceCombatantId: fighterId,
-            direction: "increase" as const,
+            direction: "increase",
             expiresAt: {
-              kind: "concentration" as const,
+              kind: "concentration",
               combatantId: fighterId,
               durationTicks: elapsedTimeTicks(60),
             },
           },
-        ],
-      }),
-    };
+        },
+      ],
+    }).state;
     const moveSubject: BattleSubject = {
       tag: "runtimeCommand",
       actorId: fighterId,
