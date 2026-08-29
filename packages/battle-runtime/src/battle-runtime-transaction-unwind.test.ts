@@ -496,6 +496,85 @@ describe("battle runtime transaction completion unwind", () => {
     }
   });
 
+  test("settles a standalone Ready-triggered movement after release", () => {
+    const session = readyMovementSession();
+    const reportSubject = {
+      tag: "runtimeCommand" as const,
+      actorId: goblinId,
+      command: "reportReadyTrigger" as const,
+      readiedActorId: fighterId,
+    };
+    const report = requireNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session,
+        transaction: null,
+        operation: {
+          kind: "ordinarySubject",
+          subject: reportSubject,
+          fills: [],
+        },
+      }),
+      "standalone Ready trigger report",
+    );
+    const reportFrontier = requireInterruptFrontier(
+      report.frontier,
+      "standalone Ready trigger report",
+    );
+    const releaseChoice = reportFrontier.choices.find(
+      (choice) =>
+        choice.kind === "nestedProcedure" &&
+        choice.subject.command === "releaseReadiedMovement",
+    );
+    if (
+      releaseChoice?.kind !== "nestedProcedure" ||
+      releaseChoice.subject.command !== "releaseReadiedMovement"
+    ) {
+      throw new Error(
+        "Expected the standalone readied movement release choice.",
+      );
+    }
+    const released = requireNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session: report.resolution.session,
+        transaction: report.transaction,
+        operation: {
+          kind: "interruptDecision",
+          fill: interruptDecisionFill(
+            requireHole(report, "interruptDecision"),
+            {
+              kind: "resolve",
+              responderId: fighterId,
+              choice: {
+                kind: "releaseReadiedMovement",
+                fills: [],
+              },
+            },
+          ),
+        },
+      }),
+      "standalone readied movement release",
+    );
+    const settled = settleBattleRuntimeTransaction({
+      session: released.resolution.session,
+      transaction: released.transaction,
+      operation: {
+        kind: "ordinarySubject",
+        subject: transactionSubject(released),
+        fills: [
+          movementWithoutOpportunityAttacks(requireHole(released, "movement")),
+        ],
+      },
+    });
+
+    expect(settled.tag).toBe("settled");
+    if (settled.tag !== "settled") {
+      throw new Error("Expected standalone Ready movement to settle.");
+    }
+    expect(settled.resolution.session.state.interruptStack).toEqual([]);
+    expect(settled.resolution.envelope.frontier.kind).toBe("acts");
+    expect(settled.acts.length).toBeGreaterThan(0);
+  });
+
   test("returns a typed invalid result for a report without a readied response", () => {
     const ready = readyMovementSession();
     const session = battleRuntimeSessionWithState(ready, {

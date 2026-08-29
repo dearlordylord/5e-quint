@@ -436,6 +436,12 @@ describe("battle fill equality", () => {
     } as const;
     expect(
       battleContinuationFillEquals(
+        concentration(outcomeRolledDie),
+        concentration(outcomeRolledDie),
+      ),
+    ).toBe(true);
+    expect(
+      battleContinuationFillEquals(
         concentration(naturalDecline),
         concentration(outcomeReroll),
       ),
