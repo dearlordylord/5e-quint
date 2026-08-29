@@ -3,9 +3,6 @@ import {
   battleId,
   combatantId as makeCombatantId,
   characterId as makeCharacterId,
-  endTurn,
-  resolveBattleSubject,
-  settleBattleRuntimeTransaction,
 } from "@dnd/battle-runtime";
 import { Hp } from "@dnd/shared/types";
 import { Either } from "effect";
@@ -23,17 +20,11 @@ import {
   attackExecutionSelectionForSubjectForTest,
   fighterId,
   findAct,
-  goblinAttackSubject,
   goblinId,
   movementFill,
   movementFeet,
   readyDeclarationFillForTest,
-  skeletonCreatureInit,
-  startBattleSessionRight,
-  statBlockCreatureInit,
-  characterSeed,
 } from "../../battle-runtime/src/battle-runtime.test-support.ts";
-import { battleRuntimeSessionForTest } from "../../battle-runtime/src/battle-runtime-session.test-support.ts";
 
 function handleToolCall(
   root: ReturnType<typeof createMcpPlaySessionRoot>,
@@ -49,8 +40,16 @@ function readToolPayload(response: ReturnType<typeof handleToolCall>) {
   return JSON.parse(text);
 }
 
-function startCharacterBattle() {
+function startCharacterBattle(input?: {
+  readonly battleId?: string;
+  readonly characterCombatantId?: string;
+  readonly goblinCombatantId?: string;
+}) {
   const root = createMcpPlaySessionRoot();
+  const battleIdValue = input?.battleId ?? "battle:roster-boundary";
+  const characterCombatantId =
+    input?.characterCombatantId ?? "roster-character";
+  const goblinCombatantId = input?.goblinCombatantId ?? "roster-goblin";
   const characterId = makeCharacterId("character:roster-boundary");
   const available = availableCharacterSession({
     characterId,
@@ -73,21 +72,21 @@ function startCharacterBattle() {
   root.sessionStore.characters.set(available.right);
   const started = readToolPayload(
     handleToolCall(root, "start_battle", {
-      battleId: "battle:roster-boundary",
+      battleId: battleIdValue,
       initiativeMode: "direct",
       companionAdmissions: [],
       initialCombatants: [
         {
           kind: "characterSession",
           characterId,
-          combatantId: "roster-character",
+          combatantId: characterCombatantId,
           initiative: 18,
           ammunitionStocks: [],
         },
         {
           kind: "statBlock",
           statBlockId: "stat_block_goblin_warrior",
-          combatantId: "roster-goblin",
+          combatantId: goblinCombatantId,
           initiative: 7,
           ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
           admissionSource: { kind: "encounterParticipant" },
@@ -96,7 +95,7 @@ function startCharacterBattle() {
     }),
   );
   expect(started).toMatchObject({
-    envelope: { checkpoint: { battleId: "battle:roster-boundary" } },
+    envelope: { checkpoint: { battleId: battleIdValue } },
   });
   return { root, characterId, available: available.right };
 }
@@ -140,15 +139,25 @@ function removeCharacter(
   );
 }
 
+function rootAndCharacterRegistrySnapshot(
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
+) {
+  return {
+    session: root.sessionStore.snapshot(),
+    characters: Array.from(root.sessionStore.characters.entries()),
+  };
+}
+
 function pendingInterruptTransaction() {
-  const root = createMcpPlaySessionRoot();
-  const session = startBattleSessionRight({
-    battleId: battleId("battle:mcp-transaction-admission"),
-    combatants: [
-      characterSeed({ initiative: 20 }),
-      statBlockCreatureInit({ initiative: 10 }),
-    ],
+  const { root } = startCharacterBattle({
+    battleId: "battle:mcp-transaction-admission",
+    characterCombatantId: "fighter",
+    goblinCombatantId: "goblin",
   });
+  const session = root.sessionStore.battleSession;
+  if (session === null) {
+    throw new Error("Expected the active Character Session battle.");
+  }
   const movement = findAct(session, {
     tag: "runtimeCommand",
     actorId: fighterId,
@@ -160,74 +169,58 @@ function pendingInterruptTransaction() {
   ) {
     throw new Error("Expected the fixture's Move subject.");
   }
-  const initial = settleBattleRuntimeTransaction({
-    session,
-    transaction: null,
-    operation: {
-      kind: "ordinarySubject",
-      subject: movement.subject,
-      fills: [],
-    },
-  });
-  if (initial.tag !== "needsHoles") {
-    throw new Error("Expected the fixture's Move to need a movement fill.");
-  }
-  const movementHole =
-    initial.resolution.envelope.frontier.kind === "holes"
-      ? initial.resolution.envelope.frontier.holes.find(
-          (hole) => hole.kind === "movement",
-        )
-      : undefined;
+  const movementHole = movement.initialHoles.find(
+    (hole) => hole.kind === "movement",
+  );
   if (movementHole?.kind !== "movement") {
     throw new Error("Expected the fixture's movement hole.");
   }
-  const pending = settleBattleRuntimeTransaction({
-    session: initial.resolution.session,
-    transaction: initial.transaction,
-    operation: {
-      kind: "ordinarySubject",
+  const goblinAttackProcedure = session.context.statBlocks
+    .get(goblinId)
+    ?.procedures.find((procedure) => procedure.kind === "attack");
+  if (goblinAttackProcedure === undefined) {
+    throw new Error("Expected the Goblin's admitted attack procedure.");
+  }
+  const goblinAttackSubject = {
+    tag: "action" as const,
+    actorId: goblinId,
+    action: "attack" as const,
+    procedureRef: goblinAttackProcedure.procedureRef,
+  };
+  const pending = readToolPayload(
+    handleToolCall(root, "fill_battle_hole", {
       subject: movement.subject,
-      fills: [
-        movementFill(movementHole, {
-          movementCostFeet: 5,
-          provokedOpportunityAttacks: [
-            {
-              reactorId: goblinId,
-              distanceFeet: movementFeet(5),
-              ...attackExecutionSelectionForSubjectForTest(
-                goblinAttackSubject(session.state, "Scimitar"),
-              ),
-            },
-          ],
-        }),
-      ],
-    },
-  });
-  if (
-    pending.tag !== "needsHoles" ||
-    pending.frontier.kind !== "interruptDecision"
-  ) {
+      fill: movementFill(movementHole, {
+        movementCostFeet: 5,
+        provokedOpportunityAttacks: [
+          {
+            reactorId: goblinId,
+            distanceFeet: movementFeet(5),
+            ...attackExecutionSelectionForSubjectForTest(goblinAttackSubject),
+          },
+        ],
+      }),
+    }),
+  );
+  if (pending.result?.tag !== "needsHoles") {
     throw new Error("Expected an interrupt decision after the movement fill.");
   }
-  expect(root.sessionStore.storeActiveBattle(session)).toEqual(
-    Either.right(undefined),
-  );
-  expect(
-    root.sessionStore.storeBattleTransactionResult(session, pending),
-  ).toEqual(Either.right(undefined));
+  if (pending.envelope?.frontier.kind !== "interruptDecision") {
+    throw new Error("Expected an interrupt decision frontier.");
+  }
   return { root, subject: movement.subject };
 }
 
 function pendingReadyTriggerTransaction() {
-  const root = createMcpPlaySessionRoot();
-  const initial = startBattleSessionRight({
-    battleId: battleId("battle:mcp-ready-trigger-admission"),
-    combatants: [
-      characterSeed({ initiative: 40 }),
-      statBlockCreatureInit({ initiative: 30 }),
-      skeletonCreatureInit({ initiative: 20 }),
-    ],
+  const { root } = startCharacterBattle({
+    battleId: "battle:mcp-ready-trigger-admission",
+    characterCombatantId: "fighter",
+    goblinCombatantId: "goblin",
   });
+  const initial = root.sessionStore.battleSession;
+  if (initial === null) {
+    throw new Error("Expected the active Character Session battle.");
+  }
   const readySubject = {
     tag: "action" as const,
     actorId: fighterId,
@@ -246,57 +239,46 @@ function pendingReadyTriggerTransaction() {
   if (response === undefined) {
     throw new Error("Expected a Ready movement response.");
   }
-  const readied = resolveBattleSubject({
-    state: initial.state,
-    subject: readySubject,
-    fills: [
-      readyDeclarationFillForTest(
+  const readied = readToolPayload(
+    handleToolCall(root, "fill_battle_hole", {
+      subject: readySubject,
+      fill: readyDeclarationFillForTest(
         declarationHole,
         "the goblin moves",
         response,
       ),
-    ],
-  });
-  if (readied.tag !== "resolved") {
+    }),
+  );
+  if (readied.result?.tag !== "resolved") {
     throw new Error("Expected Ready declaration to resolve.");
   }
-  const ended = endTurn({ state: readied.state, actorId: fighterId });
-  if (ended.tag !== "resolved") {
+  const ended = readToolPayload(
+    handleToolCall(root, "end_turn", { actorId: fighterId }),
+  );
+  if (ended.result?.tag !== "resolved") {
     throw new Error("Expected the Ready actor's turn to end.");
   }
-  const session = battleRuntimeSessionForTest({
-    state: ended.state,
-    context: initial.context,
-  });
+  const session = root.sessionStore.battleSession;
+  if (session === null) {
+    throw new Error("Expected the active Ready battle.");
+  }
   const reportSubject = {
     tag: "runtimeCommand" as const,
     actorId: goblinId,
     command: "reportReadyTrigger" as const,
     readiedActorId: fighterId,
   };
-  const report = settleBattleRuntimeTransaction({
-    session,
-    transaction: null,
-    operation: {
-      kind: "ordinarySubject",
-      subject: reportSubject,
-      fills: [],
-    },
-  });
-  if (report.tag !== "needsHoles") {
+  const report = readToolPayload(
+    handleToolCall(root, "resolve_battle_act", { subject: reportSubject }),
+  );
+  if (report.result?.tag !== "needsHoles") {
     throw new Error(
       "Expected a Ready trigger report to need an interrupt decision.",
     );
   }
-  if (report.frontier.kind !== "interruptDecision") {
+  if (report.envelope?.frontier.kind !== "interruptDecision") {
     throw new Error("Expected a Ready trigger interrupt decision frontier.");
   }
-  expect(root.sessionStore.storeActiveBattle(session)).toEqual(
-    Either.right(undefined),
-  );
-  expect(
-    root.sessionStore.storeBattleTransactionResult(session, report),
-  ).toEqual(Either.right(undefined));
   return { root, subject: reportSubject };
 }
 
@@ -311,7 +293,13 @@ describe("MCP Battle roster lifecycle boundaries", () => {
     expect(removeCharacter(missing.root)).toMatchObject({
       details: {
         code: "UNKNOWN_BATTLE_CHARACTER_SESSION",
-        recovery: { tag: "battleAndCharacterSessionsUnchanged" },
+        combatantId: "roster-character",
+        characterId: missing.characterId,
+        recovery: {
+          tag: "battleAndCharacterSessionsUnchanged",
+          guidance:
+            "No Battle or Character Session was committed; correct the reported conflict and retry battle_lifecycle.",
+        },
       },
     });
 
@@ -320,7 +308,12 @@ describe("MCP Battle roster lifecycle boundaries", () => {
     expect(removeCharacter(available.root)).toMatchObject({
       details: {
         code: "CHARACTER_SESSION_NOT_IN_BATTLE",
-        recovery: { tag: "battleAndCharacterSessionsUnchanged" },
+        characterId: available.characterId,
+        recovery: {
+          tag: "battleAndCharacterSessionsUnchanged",
+          guidance:
+            "No Battle or Character Session was committed; correct the reported conflict and retry battle_lifecycle.",
+        },
       },
     });
 
@@ -338,7 +331,14 @@ describe("MCP Battle roster lifecycle boundaries", () => {
     expect(removeCharacter(foreign.root)).toMatchObject({
       details: {
         code: "CHARACTER_SESSION_BATTLE_OWNERSHIP_CONFLICT",
-        recovery: { tag: "battleAndCharacterSessionsUnchanged" },
+        characterId: foreign.characterId,
+        expectedBattleId: "battle:roster-boundary",
+        actualBattleId: "battle:another-owner",
+        recovery: {
+          tag: "battleAndCharacterSessionsUnchanged",
+          guidance:
+            "No Battle or Character Session was committed; correct the reported conflict and retry battle_lifecycle.",
+        },
       },
     });
   });
@@ -363,24 +363,39 @@ describe("MCP Battle roster lifecycle boundaries", () => {
     ).toMatchObject({
       details: {
         code: "CHARACTER_ALREADY_IN_BATTLE",
-        recovery: { tag: "battleAndCharacterSessionsUnchanged" },
+        characterId,
+        battleId: "battle:roster-boundary",
+        recovery: {
+          tag: "battleAndCharacterSessionsUnchanged",
+          guidance:
+            "No Battle or Character Session was committed; correct the reported conflict and retry battle_lifecycle.",
+        },
       },
     });
   });
 
   test("keeps the battle unchanged when Character Session commit fails", () => {
     const { root, characterId } = startCharacterBattle();
-    const before = root.sessionStore.snapshot();
+    const before = rootAndCharacterRegistrySnapshot(root);
     root.sessionStore.characters.setAll = () =>
       Either.left({ tag: "unknownCharacterSession", characterId });
 
     expect(removeCharacter(root)).toMatchObject({
       details: {
         code: "CHARACTER_SESSION_COMMIT_INVALID",
-        recovery: { tag: "battleAndCharacterSessionsUnchanged" },
+        transition: {
+          tag: "battleStateCharacterSessionRegistryConflict",
+          registryIssue: { tag: "unknownCharacterSession", characterId },
+          affectedCharacterIds: [characterId],
+        },
+        recovery: {
+          tag: "battleAndCharacterSessionsUnchanged",
+          guidance:
+            "No Battle or Character Session was committed; correct the reported conflict and retry battle_lifecycle.",
+        },
       },
     });
-    expect(root.sessionStore.snapshot()).toEqual(before);
+    expect(rootAndCharacterRegistrySnapshot(root)).toEqual(before);
   });
 
   test("returns typed errors when a session-store transition targets the wrong phase", () => {
@@ -548,6 +563,7 @@ describe("MCP Battle roster lifecycle boundaries", () => {
       throw new Error(available.left.message);
     }
     root.sessionStore.characters.set(available.right);
+    const before = rootAndCharacterRegistrySnapshot(root);
     root.sessionStore.characters.setAll = () =>
       Either.left({ tag: "unknownCharacterSession", characterId });
 
@@ -573,15 +589,22 @@ describe("MCP Battle roster lifecycle boundaries", () => {
         code: "BATTLE_STATE_TRANSITION_INVALID",
         transition: {
           tag: "battleStateCharacterSessionRegistryConflict",
+          registryIssue: { tag: "unknownCharacterSession", characterId },
           affectedCharacterIds: [characterId],
+        },
+        recovery: {
+          tag: "battleAndCharacterSessionsUnchanged",
+          guidance:
+            "No Battle or Character Session was committed; correct the reported conflict and retry the operation.",
         },
       },
     });
-    expect(root.sessionStore.battleSession).toBeNull();
+    expect(rootAndCharacterRegistrySnapshot(root)).toEqual(before);
   });
 
   test("reports Character Session registry conflicts while ending a Battle", () => {
     const { root, characterId } = startCharacterBattle();
+    const before = rootAndCharacterRegistrySnapshot(root);
     root.sessionStore.characters.setAll = () =>
       Either.left({ tag: "unknownCharacterSession", characterId });
 
@@ -592,11 +615,17 @@ describe("MCP Battle roster lifecycle boundaries", () => {
         code: "BATTLE_STATE_TRANSITION_INVALID",
         transition: {
           tag: "battleStateCharacterSessionRegistryConflict",
+          registryIssue: { tag: "unknownCharacterSession", characterId },
           affectedCharacterIds: [characterId],
+        },
+        recovery: {
+          tag: "battleAndCharacterSessionsUnchanged",
+          guidance:
+            "No Battle or Character Session was committed; correct the reported conflict and retry the operation.",
         },
       },
     });
-    expect(root.sessionStore.battleSession).not.toBeNull();
+    expect(rootAndCharacterRegistrySnapshot(root)).toEqual(before);
   });
 
   test("maps an ordinary fill against an interrupt frontier to a pending-fill error", () => {

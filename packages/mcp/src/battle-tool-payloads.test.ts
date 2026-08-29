@@ -1,13 +1,10 @@
 import {
   battlePendingTransactionView,
-  currentBattleCheckpointFrontierEnvelope,
   combatantId,
   discoverBattleActs,
   resolveBattleRuntimeSubject,
   sameBattleSubject,
   settleBattleRuntimeTransaction,
-  type BattleResolvedCheckpointFrontierEnvelope,
-  type BattleRuntimeResolutionResult,
 } from "@dnd/battle-runtime";
 import { Either, Option, Schema } from "effect";
 import { describe, expect, test } from "vitest";
@@ -156,6 +153,13 @@ describe("battle tool payload boundaries", () => {
         holesFrontier.subject,
       ),
     ).toBe(true);
+    expect(
+      battleSubjectIsAvailableWithoutPendingFills(holesFrontier, {
+        tag: "runtimeCommand",
+        actorId: combatantId("different-holes-subject"),
+        command: "endTurn",
+      }),
+    ).toBe(false);
   });
 
   test("returns typed snapshot-presentation issues as tool errors", () => {
@@ -208,20 +212,26 @@ describe("battle tool payload boundaries", () => {
 
   test("retains reported dropped-object outcomes in resolved payloads", () => {
     const { session } = startedStatBlockBattle();
-    const envelope = currentBattleCheckpointFrontierEnvelope(session);
-    if (envelope.frontier.kind === "holes") {
-      throw new Error(
-        "Expected the test battle to expose a resolved frontier.",
-      );
+    const endTurnAct = discoverBattleActs(session).find(
+      ({ subject }) =>
+        subject.tag === "runtimeCommand" && subject.command === "endTurn",
+    );
+    if (endTurnAct === undefined) {
+      throw new Error("Expected the test battle's End Turn act.");
     }
-    const resolvedEnvelope =
-      envelope as BattleResolvedCheckpointFrontierEnvelope;
-    const result = {
-      tag: "resolved",
+    const settled = settleBattleRuntimeTransaction({
       session,
-      envelope: resolvedEnvelope,
-      droppedObjects: [],
-    } satisfies BattleRuntimeResolutionResult;
+      transaction: null,
+      operation: {
+        kind: "ordinarySubject",
+        subject: endTurnAct.subject,
+        fills: [],
+      },
+    });
+    if (settled.tag !== "settled") {
+      throw new Error("Expected End Turn to settle without hole fills.");
+    }
+    const result = { ...settled.resolution, droppedObjects: [] };
 
     expect(battleResolutionResultPayload(result)).toHaveProperty(
       "droppedObjects",
@@ -318,12 +328,16 @@ describe("battle tool payload boundaries", () => {
       ],
     });
     expect(invalid.tag).toBe("invalid");
-    if (invalid.tag !== "invalid") return;
+    if (invalid.tag !== "invalid") {
+      throw new Error("Expected the End Turn fill to be rejected.");
+    }
     expect(invalid.session).toBe(session);
 
     const payload = battleResolutionPayload(root, invalid);
     expect(Either.isRight(payload)).toBe(true);
-    if (Either.isLeft(payload)) return;
+    if (Either.isLeft(payload)) {
+      throw new Error("Expected the rejected fill to have a payload.");
+    }
     expect(
       Schema.decodeUnknownEither(BattleResolutionOutputSchema)(payload.right),
     ).toSatisfy((decoded) => Either.isRight(decoded));
@@ -376,7 +390,10 @@ describe("battle tool payload boundaries", () => {
       },
     });
     expect(readToolPayload(interruptAgainstOrdinary)).toMatchObject({
-      details: { code: "BATTLE_FILLS_PENDING" },
+      details: {
+        code: "BATTLE_FILLS_PENDING",
+        pendingSubject: pendingAct.subject,
+      },
     });
 
     const distinctAct = discoverBattleActs(session).find(
@@ -394,14 +411,21 @@ describe("battle tool payload boundaries", () => {
       },
     });
     expect(readToolPayload(mismatchedFill)).toMatchObject({
-      details: { code: "BATTLE_FILL_SUBJECT_MISMATCH" },
+      details: {
+        code: "BATTLE_FILL_SUBJECT_MISMATCH",
+        pendingSubject: pendingAct.subject,
+        requestedSubject: distinctAct.subject,
+      },
     });
 
     const mismatchedResolve = handleToolCall(root, "resolve_battle_act", {
       subject: distinctAct.subject,
     });
     expect(readToolPayload(mismatchedResolve)).toMatchObject({
-      details: { code: "BATTLE_FILLS_PENDING" },
+      details: {
+        code: "BATTLE_FILLS_PENDING",
+        pendingSubject: pendingAct.subject,
+      },
     });
   });
 
@@ -420,7 +444,12 @@ describe("battle tool payload boundaries", () => {
     ).toMatchObject({
       details: {
         code: "BATTLE_COMBATANT_NOT_FOUND",
-        recovery: { tag: "battleAndCharacterSessionsUnchanged" },
+        combatantId: "missing-combatant",
+        recovery: {
+          tag: "battleAndCharacterSessionsUnchanged",
+          guidance:
+            "No Battle or Character Session was committed; correct the reported conflict and retry battle_lifecycle.",
+        },
       },
     });
 
@@ -443,7 +472,14 @@ describe("battle tool payload boundaries", () => {
     ).toMatchObject({
       details: {
         code: "BATTLE_COMBATANT_ADMISSION_FAILED",
-        recovery: { tag: "battleAndCharacterSessionsUnchanged" },
+        combatantId: "goblin",
+        ownerPath: ["operation", "combatant"],
+        message: "Duplicate combatant id: goblin",
+        recovery: {
+          tag: "battleAndCharacterSessionsUnchanged",
+          guidance:
+            "No Battle or Character Session was committed; correct the reported conflict and retry battle_lifecycle.",
+        },
       },
     });
 
@@ -470,7 +506,13 @@ describe("battle tool payload boundaries", () => {
     ).toMatchObject({
       details: {
         code: "BATTLE_COMBATANT_REMOVAL_FAILED",
-        recovery: { tag: "battleAndCharacterSessionsUnchanged" },
+        combatantId: "skeleton",
+        message: "Cannot remove every combatant from a battle.",
+        recovery: {
+          tag: "battleAndCharacterSessionsUnchanged",
+          guidance:
+            "No Battle or Character Session was committed; correct the reported conflict and retry battle_lifecycle.",
+        },
       },
     });
   });
@@ -517,7 +559,12 @@ describe("battle tool payload boundaries", () => {
     ).toMatchObject({
       details: {
         code: "BATTLE_FILLS_PENDING",
-        recovery: { tag: "battleAndCharacterSessionsUnchanged" },
+        pendingSubject: pendingAct.subject,
+        recovery: {
+          tag: "battleAndCharacterSessionsUnchanged",
+          guidance:
+            "No Battle or Character Session was committed; correct the reported conflict and retry battle_lifecycle.",
+        },
       },
     });
   });
