@@ -1,5 +1,6 @@
 import { execFile, spawn, type ChildProcess } from "node:child_process";
 import { mkdtemp, cp, readFile, readdir, rm } from "node:fs/promises";
+import { request } from "node:http";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -89,6 +90,37 @@ async function runPnpm(args: readonly string[]): Promise<string> {
   return stdout;
 }
 
+async function assertContainerApplicationContract(): Promise<void> {
+  const dockerfile = await readFile(
+    resolve(REPOSITORY_ROOT, "Dockerfile"),
+    "utf8",
+  );
+  for (const requiredLine of [
+    "COPY --from=build --chown=node:node /workspace/packages/app/dist /srv/app/public",
+    "COPY --from=build --chown=node:node /workspace/packages/app/static-server.mjs /srv/app/static-server.mjs",
+    "USER node",
+    'CMD ["node", "static-server.mjs", "/srv/app/public", "5000"]',
+  ]) {
+    if (!dockerfile.includes(requiredLine)) {
+      throw new Error(
+        `application container contract is missing: ${requiredLine}`,
+      );
+    }
+  }
+}
+
+async function smokeScriptEntrypoints(): Promise<void> {
+  await runPnpm([
+    "exec",
+    "vitest",
+    "run",
+    "scripts/raw-swarm/battle-slice-server.test.ts",
+    "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts",
+    "--pool=threads",
+    "--maxWorkers=1",
+  ]);
+}
+
 async function smokeDeployedMcp(temporaryRoot: string): Promise<void> {
   const deployedMcp = join(temporaryRoot, "mcp");
   await runPnpm([
@@ -156,25 +188,94 @@ async function cleanExit(
         );
       }
     });
-    child.kill("SIGTERM");
   });
 }
 
-async function smokeBuiltApplication(temporaryRoot: string): Promise<void> {
-  await runPnpm(["--filter", "@dnd/app", "run", "build"]);
-  const deployedApp = join(temporaryRoot, "app");
-  await cp(resolve(REPOSITORY_ROOT, "packages/app/dist"), deployedApp, {
-    recursive: true,
+async function readAssetAcrossShutdown(input: {
+  readonly child: ChildProcess;
+  readonly port: number;
+  readonly path: string;
+  readonly signal: "SIGINT" | "SIGTERM";
+}): Promise<Buffer> {
+  return new Promise((resolveResponse, reject) => {
+    const outgoing = request(
+      {
+        host: "127.0.0.1",
+        port: input.port,
+        path: input.path,
+        method: "GET",
+      },
+      (incoming) => {
+        if (incoming.statusCode !== 200) {
+          incoming.resume();
+          reject(
+            new Error(
+              `application asset responded ${incoming.statusCode ?? "without status"}`,
+            ),
+          );
+          return;
+        }
+        const declaredLength = Number(incoming.headers["content-length"]);
+        const chunks: Buffer[] = [];
+        let signaled = false;
+        incoming.on("data", (chunk: Buffer) => {
+          chunks.push(Buffer.from(chunk));
+          if (signaled) return;
+          signaled = true;
+          const receivedLength = chunks.reduce(
+            (total, current) => total + current.byteLength,
+            0,
+          );
+          if (
+            !Number.isInteger(declaredLength) ||
+            declaredLength <= receivedLength
+          ) {
+            reject(
+              new Error(
+                "application asset completed before the shutdown signal could be coordinated",
+              ),
+            );
+            return;
+          }
+          incoming.pause();
+          if (!input.child.kill(input.signal)) {
+            reject(
+              new Error(
+                `application did not accept coordinated ${input.signal}`,
+              ),
+            );
+            return;
+          }
+          setImmediate(() => incoming.resume());
+        });
+        incoming.once("error", reject);
+        incoming.once("end", () => {
+          if (!signaled) {
+            reject(new Error("application asset returned no response body"));
+            return;
+          }
+          resolveResponse(Buffer.concat(chunks));
+        });
+      },
+    );
+    outgoing.once("error", reject);
+    outgoing.end();
   });
-  const deployedServer = join(temporaryRoot, "static-server.mjs");
-  await cp(
-    resolve(REPOSITORY_ROOT, "packages/app/static-server.mjs"),
-    deployedServer,
+}
+
+async function smokeApplicationSignal(input: {
+  readonly deployedApp: string;
+  readonly deployedServer: string;
+  readonly signal: "SIGINT" | "SIGTERM";
+}): Promise<void> {
+  const child = spawn(
+    process.execPath,
+    [input.deployedServer, input.deployedApp, "0"],
+    {
+      cwd: input.deployedApp,
+      stdio: ["ignore", "pipe", "pipe"],
+    },
   );
-  const child = spawn(process.execPath, [deployedServer, deployedApp, "0"], {
-    cwd: deployedApp,
-    stdio: ["ignore", "pipe", "pipe"],
-  });
   let stderr = "";
   child.stderr?.setEncoding("utf8");
   child.stderr?.on("data", (chunk: string) => {
@@ -191,13 +292,22 @@ async function smokeBuiltApplication(temporaryRoot: string): Promise<void> {
       throw new Error("built application did not serve its root document");
     }
     const scriptPath = /<script[^>]+src="([^"]+\.js)"/u.exec(index)?.[1];
-    if (scriptPath === undefined) {
+    if (scriptPath === undefined || !scriptPath.startsWith("/")) {
       throw new Error("built application root has no JavaScript entry asset");
     }
-    const scriptResponse = await fetch(`http://127.0.0.1:${port}${scriptPath}`);
-    const script = await scriptResponse.arrayBuffer();
-    if (!scriptResponse.ok || script.byteLength === 0) {
-      throw new Error("built application JavaScript entry asset is unreadable");
+    const expectedScript = await readFile(
+      join(input.deployedApp, scriptPath.slice(1)),
+    );
+    const receivedScript = await readAssetAcrossShutdown({
+      child,
+      port,
+      path: scriptPath,
+      signal: input.signal,
+    });
+    if (!receivedScript.equals(expectedScript)) {
+      throw new Error(
+        `application ${input.signal} shutdown truncated its in-flight asset response`,
+      );
     }
     await cleanExit(child, () => stderr.trim());
     if (stderr.trim() !== "") {
@@ -212,13 +322,31 @@ async function smokeBuiltApplication(temporaryRoot: string): Promise<void> {
   }
 }
 
+async function smokeBuiltApplication(temporaryRoot: string): Promise<void> {
+  await assertContainerApplicationContract();
+  await runPnpm(["--filter", "@dnd/app", "run", "build"]);
+  const deployedApp = join(temporaryRoot, "app");
+  await cp(resolve(REPOSITORY_ROOT, "packages/app/dist"), deployedApp, {
+    recursive: true,
+  });
+  const deployedServer = join(temporaryRoot, "static-server.mjs");
+  await cp(
+    resolve(REPOSITORY_ROOT, "packages/app/static-server.mjs"),
+    deployedServer,
+  );
+  for (const signal of ["SIGINT", "SIGTERM"] as const) {
+    await smokeApplicationSignal({ deployedApp, deployedServer, signal });
+  }
+}
+
 async function main(): Promise<void> {
   const temporaryRoot = await mkdtemp(join(tmpdir(), "dnd-effect4-consumer-"));
   try {
     await smokeDeployedMcp(temporaryRoot);
     await smokeBuiltApplication(temporaryRoot);
+    await smokeScriptEntrypoints();
     console.log(
-      "Effect 4 clean-consumer smoke passed for deployed MCP and built application entrypoints.",
+      "Effect 4 clean-consumer smoke passed for deployed MCP, container application, and Raw Swarm script entrypoints, including SIGINT/SIGTERM response drain.",
     );
   } finally {
     await rm(temporaryRoot, { recursive: true, force: true });

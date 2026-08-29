@@ -51,6 +51,7 @@ import {
   createMcpApplicationServices,
   toolDefinitions,
 } from "../packages/mcp/src/server.ts";
+import { compareUnicodeCodePointStrings } from "./unicode-code-point-order.ts";
 
 export const EFFECT3_BASELINE_PATH =
   "docs/migrations/effect-4/effect3-behavioral-oracle.json";
@@ -92,23 +93,6 @@ type ArtifactAuthority = {
 
 type ToolDefinitionSnapshot = ProtocolToolDefinition;
 
-function compareCodePointStrings(left: string, right: string): number {
-  const leftCodePoints = Array.from(left, (character) =>
-    character.codePointAt(0),
-  );
-  const rightCodePoints = Array.from(right, (character) =>
-    character.codePointAt(0),
-  );
-  const sharedLength = Math.min(leftCodePoints.length, rightCodePoints.length);
-  for (let index = 0; index < sharedLength; index += 1) {
-    const leftCodePoint = leftCodePoints[index];
-    const rightCodePoint = rightCodePoints[index];
-    if (leftCodePoint === rightCodePoint) continue;
-    return leftCodePoint! < rightCodePoint! ? -1 : 1;
-  }
-  return leftCodePoints.length - rightCodePoints.length;
-}
-
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return false;
@@ -135,7 +119,7 @@ function normalizeObject(
     return Object.fromEntries(
       keys
         .filter((key): key is string => typeof key === "string")
-        .sort(compareCodePointStrings)
+        .sort(compareUnicodeCodePointStrings)
         .map((key) => {
           const descriptor = Object.getOwnPropertyDescriptor(value, key);
           if (
@@ -300,7 +284,9 @@ function gitTrackedArtifacts(root: string): readonly GitTrackedArtifact[] {
       assertNoSymlinkInRepositoryPath(path);
       return { path };
     })
-    .sort((left, right) => compareCodePointStrings(left.path, right.path));
+    .sort((left, right) =>
+      compareUnicodeCodePointStrings(left.path, right.path),
+    );
 }
 
 function artifactManifest(

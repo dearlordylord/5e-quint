@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "generatedBy": "scripts/regenerate-effect4-controlled-red.mjs",
-  "generationCommand": "pnpm regenerate:effect4-controlled-red",
+  "generatedBy": "GitHub issue #386 final certification",
+  "generationCommand": "pnpm typecheck",
   "lock": "broad",
   "pnpm": "10.29.3",
   "diagnosticKey": ["source", "line", "column", "code", "message"],

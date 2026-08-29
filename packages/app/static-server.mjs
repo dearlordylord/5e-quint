@@ -1,6 +1,8 @@
-import { readFile } from "node:fs/promises"
+import { createReadStream } from "node:fs"
+import { stat } from "node:fs/promises"
 import { createServer } from "node:http"
 import { extname, resolve, sep } from "node:path"
+import { pipeline } from "node:stream/promises"
 
 const root = resolve(process.argv[2] ?? "/app")
 const configuredPort = Number(process.argv[3] ?? process.env.PORT ?? "5000")
@@ -30,14 +32,22 @@ const server = createServer(async (request, response) => {
       response.writeHead(404).end()
       return
     }
-    const body = await readFile(path)
+    const status = await stat(path)
+    if (!status.isFile()) {
+      response.writeHead(404).end()
+      return
+    }
     response.writeHead(200, {
-      "content-length": body.byteLength,
+      "content-length": status.size,
       "content-type": contentTypes.get(extname(path)) ?? "application/octet-stream"
     })
-    response.end(request.method === "HEAD" ? undefined : body)
+    if (request.method === "HEAD") {
+      response.end()
+      return
+    }
+    await pipeline(createReadStream(path), response)
   } catch {
-    response.writeHead(404).end()
+    if (!response.headersSent) response.writeHead(404).end()
   }
 })
 
@@ -51,10 +61,10 @@ let stopping = false
 const stop = () => {
   if (stopping) return
   stopping = true
-  server.closeAllConnections()
   server.close((error) => {
     process.exitCode = error === undefined ? 0 : 1
   })
+  server.closeIdleConnections()
 }
 process.once("SIGINT", stop)
 process.once("SIGTERM", stop)

@@ -5,12 +5,10 @@ Issue: [#371](https://github.com/dearlordylord/5e-quint/issues/371)
 Cutover starting point: `fba977c5ed3abf554631ce43c006b5a0ad4c5557`
 Environment: Node `v24.18.0`, pnpm `10.29.3`, Linux
 
-Status: the dependency cutover is complete and the cohort gate is green. The
-repository remains intentionally controlled-red for downstream Effect 4 API
-migration: the current owner sweep records four failing package owners and nine
-green owners, including `@dnd/shared-algebras` at zero diagnostics after #374
-and `@dnd/surface` at zero after #373. This ledger is evidence, not a waiver,
-and does not claim product or rule behavior is green.
+Status: closed by the final issue #386 certification. The current owner sweep
+records all 13 package owners green with zero raw and zero deduplicated
+diagnostics. Historical controlled-red snapshots below remain evidence of the
+migration sequence; none is a current waiver or exception.
 
 ## Scope and ownership
 
@@ -594,9 +592,10 @@ local SRD 5.2.1 spell, attack, save, damage, healing, and slot passages were
 rechecked before this schema-only migration. No #379 lifecycle or #381
 persistent-effect files were changed.
 
-## Closure conditions
+## Historical closure conditions, satisfied by #386
 
-Close this controlled-red interval only when all of the following are true:
+Issue #386 closed this controlled-red interval after all of the following
+became true:
 
 1. `pnpm check:effect4-cohort:self-test` and `pnpm check:effect4-cohort` pass
    with the exact values in this ledger, and the lockfile still contains one
@@ -1188,3 +1187,36 @@ with `SIGKILL`; no partial output was accepted as verification. The pinned
 repository emitter subsequently completed in 46 seconds, and all evidence
 above comes from the pinned repository commands. `pnpm quality:milestone` was
 not run for this issue snapshot.
+
+## Issue #386 final certification and controlled-red closure
+
+Issue #386 removes the migration exception rather than extending it. The final
+inventory covers all 13 package owners and records zero raw and zero
+deduplicated diagnostics. The retired inventory generator and mutation package
+scripts are absent; `pnpm typecheck` is the current executable owner and any
+future diagnostic is an ordinary blocking failure.
+
+The repository and installed dependency graph select Effect
+`4.0.0-rc.112`, `@effect/platform-node@4.0.0-rc.112`,
+`@effect/platform-node-shared@4.0.0-rc.112`, and
+`@effect/vitest@4.0.0-rc.112`, with no Effect 3 or unsupported Effect package.
+The clean-consumer deployment independently verifies the production MCP
+package graph, while the application and script lifecycle evidence exercises
+their exact shipped entrypoints.
+
+The Effect 3 behavioral oracle remains immutable at 12,997,527 bytes and
+SHA-256
+`dc131ce8b7e588e288d20a25881df1817552b1469b9aea1dc2b55ba3fdc6df7b`.
+The finite Effect 4 certificate records every one of the 7,338 changed JSON
+Pointer identities with its classification, operation, path, and both side
+digests or missing tags. Its verifier rejects changed baseline or candidate
+bytes, unreadable artifacts, duplicate, unclassified, multiply classified, or
+stale exact identities, and stale aggregate counts or hashes.
+
+Direct public `pnpm build`, `pnpm typecheck`, and `pnpm test` passed. The exact
+commands, process-drain proof, semantic delta disposition, reviewer findings,
+and non-migration limitations are owned by
+[`final-parity-report.md`](./final-parity-report.md). This ledger retains the
+earlier issue snapshots only as historical evidence; no controlled-red owner,
+compatibility facade, diagnostic suppression, mutable baseline path, or
+migration-time waiver remains.

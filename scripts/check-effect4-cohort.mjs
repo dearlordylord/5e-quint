@@ -1,4 +1,11 @@
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import {
+  lstat,
+  mkdtemp,
+  mkdir,
+  readFile,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import { execFile } from "node:child_process";
 import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
 import { tmpdir } from "node:os";
@@ -629,6 +636,99 @@ const validateLockfileWithPnpm = async (project, pnpm) => {
   }
 };
 
+const collectInstalledDependencyRecords = (value, records) => {
+  if (Array.isArray(value)) {
+    value.forEach((entry) => collectInstalledDependencyRecords(entry, records));
+    return;
+  }
+  if (value === null || typeof value !== "object") return;
+  if (
+    typeof value.from === "string" &&
+    typeof value.version === "string" &&
+    typeof value.path === "string" &&
+    (value.from === "effect" || value.from.startsWith("@effect/"))
+  ) {
+    records.set(value.path, {
+      name: value.from,
+      version: value.version,
+      path: value.path,
+    });
+  }
+  Object.values(value).forEach((entry) =>
+    collectInstalledDependencyRecords(entry, records),
+  );
+};
+
+const inspectInstalledEffectPackages = async (
+  project,
+  pnpm,
+  cohort,
+  errors,
+) => {
+  let stdout;
+  try {
+    ({ stdout } = await invokePnpm(
+      pnpm,
+      [
+        "--dir",
+        project,
+        "--recursive",
+        "list",
+        "--json",
+        "--depth",
+        "Infinity",
+      ],
+      { maxBuffer: 64 * 1024 * 1024 },
+    ));
+  } catch (error) {
+    const detail =
+      typeof error.stderr === "string" ? error.stderr.trim() : error.message;
+    errors.push(`installed dependency graph inspection failed: ${detail}`);
+    return 0;
+  }
+  const records = new Map();
+  collectInstalledDependencyRecords(JSON.parse(stdout), records);
+  const observed = new Set();
+  for (const record of records.values()) {
+    const expected = cohort.lockVersions.get(record.name);
+    observed.add(record.name);
+    if (expected === undefined) {
+      errors.push(
+        `installed graph contains unsupported Effect package ${record.name}@${record.version}`,
+      );
+      continue;
+    }
+    try {
+      const status = await lstat(record.path);
+      const manifest = await readJson(resolve(record.path, "package.json"));
+      if (
+        !status.isDirectory() ||
+        manifest.name !== record.name ||
+        manifest.version !== expected
+      ) {
+        errors.push(
+          `installed dependency at ${record.path} must be ${record.name}@${expected}; manifest reports ${manifest.name ?? "<missing>"}@${manifest.version ?? "<missing>"}`,
+        );
+      }
+    } catch (error) {
+      errors.push(
+        `installed dependency record is unreadable at ${record.path}: ${error.message}`,
+      );
+    }
+  }
+  for (const packageName of [
+    "effect",
+    "@effect/platform-node",
+    "@effect/platform-node-shared",
+    "@effect/vitest",
+  ]) {
+    if (!observed.has(packageName)) {
+      errors.push(`installed graph does not contain ${packageName}`);
+    }
+  }
+  return records.size;
+};
+
 const validateResolutionEntries = (entries, cohort, errors) => {
   for (const entry of entries) {
     if (entry.mode === "peer-range") continue;
@@ -904,11 +1004,19 @@ const inspectProject = async (project, cohort, options = {}) => {
     );
   }
 
-  return { errors, manifests };
+  const installedEffectPackageLocations =
+    options.validateInstalled === false
+      ? 0
+      : await inspectInstalledEffectPackages(project, pnpm, cohort, errors);
+
+  return { errors, manifests, installedEffectPackageLocations };
 };
 
 const inspectSelfTestProject = (project, cohort) =>
-  inspectProject(project, cohort, { validateLockfile: false });
+  inspectProject(project, cohort, {
+    validateInstalled: false,
+    validateLockfile: false,
+  });
 
 const assert = (condition, message) => {
   if (!condition) throw new Error(message);
@@ -1478,7 +1586,7 @@ const main = async () => {
     process.exitCode = 1;
   } else {
     console.log(
-      `Effect 4 cohort verified: ${cohort.selectedVersions.get("effect")}`,
+      `Effect 4 cohort verified: ${cohort.selectedVersions.get("effect")} (${result.installedEffectPackageLocations} installed Effect package locations inspected)`,
     );
   }
 };

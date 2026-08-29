@@ -266,7 +266,7 @@ describe("persistent spatial spell boundary procedures", () => {
     });
   });
 
-  test("Flaming Sphere commits damage then yields to the next actor's Death Save frontier", () => {
+  test("Flaming Sphere keeps damage staged while the next actor's Death Save frontier is open", () => {
     const initial = spellBattle({
       preparedSpells: [spellRecord(flamingSphereUnitId)],
       spellSlots: [{ spellLevel: 2, count: 1 }],
@@ -337,7 +337,9 @@ describe("persistent spatial spell boundary procedures", () => {
       tag: "needsHoles",
       holes: [expect.objectContaining({ kind: "deathSavingThrow" })],
     });
-    expect(resolved.state.combatants.get(spellTargetId)?.hp).toBe(7);
+    expect(resolved.state.combatants.get(spellTargetId)?.hp).toBe(
+      targetTurn.state.combatants.get(spellTargetId)?.hp,
+    );
   });
 
   test("Flaming Sphere reposition becomes stale when Concentration ends", () => {
@@ -409,7 +411,7 @@ describe("persistent spatial spell boundary procedures", () => {
     });
   });
 
-  test("Moonbeam commits damage then yields to the next actor's Death Save frontier", () => {
+  test("Moonbeam keeps damage staged while the next actor's Death Save frontier is open", () => {
     const initial = spellBattle({
       preparedSpells: [spellRecord(moonbeamUnitId)],
       spellSlots: [{ spellLevel: 2, count: 1 }],
@@ -478,7 +480,9 @@ describe("persistent spatial spell boundary procedures", () => {
       tag: "needsHoles",
       holes: [expect.objectContaining({ kind: "deathSavingThrow" })],
     });
-    expect(resolved.state.combatants.get(spellTargetId)?.hp).toBe(25);
+    expect(resolved.state.combatants.get(spellTargetId)?.hp).toBe(
+      targetTurn.state.combatants.get(spellTargetId)?.hp,
+    );
   });
 
   test("Moonbeam repeats no damage in the same turn but still returns End Turn holes", () => {

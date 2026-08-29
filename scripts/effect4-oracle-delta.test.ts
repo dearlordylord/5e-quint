@@ -78,6 +78,7 @@ describe("Effect 4 finite oracle delta", () => {
       delta: {
         totalCount: certificate.delta.totalCount + 1,
         identitySha256: certificate.delta.identitySha256,
+        identities: certificate.delta.identities,
         classifications: certificate.delta.classifications,
       },
     };
@@ -91,6 +92,39 @@ describe("Effect 4 finite oracle delta", () => {
         kind: "candidate-certificate-stale",
         message: "candidate digest does not match the reviewed certificate",
       },
+      {
+        kind: "delta-certificate-stale",
+        message:
+          "classified delta identities, counts, or hashes do not match the reviewed certificate",
+      },
+    ]);
+  });
+
+  test("rejects a stale reviewed identity even when aggregate evidence is unchanged", () => {
+    const decoded = decodeOracleDeltaCertificate(
+      JSON.parse(readFileSync(EFFECT4_ORACLE_DELTA_CERTIFICATE_PATH, "utf8")),
+    );
+    expect(Result.isSuccess(decoded)).toBe(true);
+    if (Result.isFailure(decoded)) return;
+    const certificate = decoded.success;
+    const firstIdentity = certificate.delta.identities[0];
+    expect(firstIdentity).toBeDefined();
+    if (firstIdentity === undefined) return;
+    expect(
+      compareOracleDeltaCertificate(certificate, {
+        baseline: certificate.baseline.artifact,
+        candidate: certificate.candidate,
+        delta: {
+          totalCount: certificate.delta.totalCount,
+          identitySha256: certificate.delta.identitySha256,
+          identities: [
+            { ...firstIdentity, path: `${firstIdentity.path}/stale` },
+            ...certificate.delta.identities.slice(1),
+          ],
+          classifications: certificate.delta.classifications,
+        },
+      }),
+    ).toEqual([
       {
         kind: "delta-certificate-stale",
         message:

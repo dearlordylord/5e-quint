@@ -3,7 +3,7 @@ import { lstatSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { Result, Schema } from "effect";
+import { Match, Result, Schema } from "effect";
 
 import {
   EFFECT3_BASELINE_PATH,
@@ -12,6 +12,7 @@ import {
   normalizeJsonValue,
   type BaselineJsonValue,
 } from "./effect3-baseline.ts";
+import { compareUnicodeCodePointStrings } from "./unicode-code-point-order.ts";
 
 export const EFFECT4_ORACLE_DELTA_CERTIFICATE_PATH =
   "docs/migrations/effect-4/effect4-oracle-delta-certificate.json";
@@ -19,7 +20,7 @@ export const EFFECT4_ORACLE_DELTA_CERTIFICATE_PATH =
 const REPOSITORY_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const CERTIFICATE_FORMAT_VERSION = 1;
 const CERTIFICATE_SHA256 =
-  "7f15fcc0ce9da21ba5f33d8a158d7553bb6179415235a31f1b9535d57c30026d";
+  "219b2230079265e3fd614f5e3c4b46b2ef6f30dc9c3f8c1c50a2c4b7de9cf37a";
 
 const HashSchema = Schema.String.pipe(
   Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/u)),
@@ -41,6 +42,17 @@ const ClassificationEvidenceSchema = Schema.Struct({
     changed: NonNegativeIntegerSchema,
   }),
 });
+const JsonSideSchema = Schema.Union([
+  Schema.Struct({ tag: Schema.Literal("missing") }),
+  Schema.Struct({ tag: Schema.Literal("present"), sha256: HashSchema }),
+]);
+const ReviewedDeltaIdentitySchema = Schema.Struct({
+  classificationId: Schema.String,
+  operation: Schema.Literals(["added", "removed", "changed"]),
+  path: Schema.String,
+  baseline: JsonSideSchema,
+  candidate: JsonSideSchema,
+});
 const OracleDeltaCertificateSchema = Schema.Struct({
   formatVersion: Schema.Literal(CERTIFICATE_FORMAT_VERSION),
   issue: Schema.Struct({
@@ -58,6 +70,7 @@ const OracleDeltaCertificateSchema = Schema.Struct({
     identity: Schema.String,
     totalCount: NonNegativeIntegerSchema,
     identitySha256: HashSchema,
+    identities: Schema.Array(ReviewedDeltaIdentitySchema),
     classifications: Schema.Array(ClassificationEvidenceSchema),
   }),
   review: Schema.Struct({
@@ -94,6 +107,7 @@ export type OracleDeltaEvidence = {
   readonly delta: {
     readonly totalCount: number;
     readonly identitySha256: string;
+    readonly identities: readonly ReviewedOracleDeltaIdentity[];
     readonly classifications: readonly {
       readonly id: string;
       readonly deltaCount: number;
@@ -105,6 +119,14 @@ export type OracleDeltaEvidence = {
       };
     }[];
   };
+};
+
+export type ReviewedOracleDeltaIdentity = {
+  readonly classificationId: string;
+  readonly operation: OracleDelta["operation"];
+  readonly path: string;
+  readonly baseline: JsonSide;
+  readonly candidate: JsonSide;
 };
 
 export type OracleDeltaIssue =
@@ -215,20 +237,6 @@ const isRecord = (
 ): value is { readonly [key: string]: BaselineJsonValue } =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
-const compareCodePointStrings = (left: string, right: string): number => {
-  const leftPoints = Array.from(left, (character) => character.codePointAt(0)!);
-  const rightPoints = Array.from(
-    right,
-    (character) => character.codePointAt(0)!,
-  );
-  const sharedLength = Math.min(leftPoints.length, rightPoints.length);
-  for (let index = 0; index < sharedLength; index += 1) {
-    if (leftPoints[index] === rightPoints[index]) continue;
-    return leftPoints[index]! < rightPoints[index]! ? -1 : 1;
-  }
-  return leftPoints.length - rightPoints.length;
-};
-
 function collectOracleDeltas(
   baseline: BaselineJsonValue,
   candidate: BaselineJsonValue,
@@ -270,7 +278,7 @@ function collectOracleDeltas(
   if (isRecord(baseline) && isRecord(candidate)) {
     const keys = [
       ...new Set([...Object.keys(baseline), ...Object.keys(candidate)]),
-    ].sort(compareCodePointStrings);
+    ].sort(compareUnicodeCodePointStrings);
     for (const key of keys) {
       const childSegments = [...segments, key];
       const inBaseline = Object.hasOwn(baseline, key);
@@ -333,12 +341,10 @@ export function classifyOracleDeltas(
   | { readonly tag: "invalid"; readonly issues: readonly OracleDeltaIssue[] } {
   const issues: OracleDeltaIssue[] = [];
   const identities = new Set<string>();
-  const classified = new Map(
-    categories.map(({ id }) => [
-      id,
-      [] as { readonly identity: string; readonly delta: OracleDelta }[],
-    ]),
-  );
+  const classified = new Map<
+    string,
+    { readonly identity: string; readonly delta: OracleDelta }[]
+  >(categories.map(({ id }) => [id, []]));
   for (const delta of deltas) {
     const identity = deltaIdentity(delta);
     if (identities.has(identity)) {
@@ -362,17 +368,35 @@ export function classifyOracleDeltas(
     classified.get(matches[0]!.id)!.push({ identity, delta });
   }
   if (issues.length > 0) return { tag: "invalid", issues };
-  const sortedIdentities = [...identities].sort(compareCodePointStrings);
+  const sortedIdentities = [...identities].sort(compareUnicodeCodePointStrings);
+  const reviewedIdentities = [...classified.entries()]
+    .flatMap(([classificationId, entries]) =>
+      entries.map(({ identity, delta }) => ({
+        identity,
+        value: {
+          classificationId,
+          operation: delta.operation,
+          path: delta.path,
+          baseline: delta.baseline,
+          candidate: delta.candidate,
+        },
+      })),
+    )
+    .sort((left, right) =>
+      compareUnicodeCodePointStrings(left.identity, right.identity),
+    )
+    .map(({ value }) => value);
   return {
     tag: "classified",
     evidence: {
       totalCount: deltas.length,
       identitySha256: sha256(sortedIdentities.join("")),
+      identities: reviewedIdentities,
       classifications: categories.map(({ id }) => {
         const categoryDeltas = classified.get(id)!;
         const categoryIdentities = categoryDeltas
           .map(({ identity }) => identity)
-          .sort(compareCodePointStrings);
+          .sort(compareUnicodeCodePointStrings);
         return {
           id,
           deltaCount: categoryIdentities.length,
@@ -530,6 +554,7 @@ export function compareOracleDeltaCertificate(
   if (
     certificate.delta.totalCount !== evidence.delta.totalCount ||
     certificate.delta.identitySha256 !== evidence.delta.identitySha256 ||
+    !same(certificate.delta.identities, evidence.delta.identities) ||
     !same(certificate.delta.classifications, evidence.delta.classifications)
   ) {
     issues.push({
@@ -576,16 +601,36 @@ export async function verifyEffect4OracleDelta(): Promise<OracleDeltaVerificatio
 }
 
 export function describeOracleDeltaIssue(issue: OracleDeltaIssue): string {
-  switch (issue.kind) {
-    case "duplicate-delta":
-      return `duplicate delta identity at ${issue.path}`;
-    case "unclassified-delta":
-      return `unclassified delta at ${issue.path}`;
-    case "multiply-classified-delta":
-      return `delta at ${issue.path} matched ${issue.classificationIds.join(", ")}`;
-    default:
-      return `${issue.kind}: ${issue.message}`;
-  }
+  return Match.value(issue).pipe(
+    Match.when(
+      { kind: "duplicate-delta" },
+      ({ path }) => `duplicate delta identity at ${path}`,
+    ),
+    Match.when(
+      { kind: "unclassified-delta" },
+      ({ path }) => `unclassified delta at ${path}`,
+    ),
+    Match.when(
+      { kind: "multiply-classified-delta" },
+      ({ path, classificationIds }) =>
+        `delta at ${path} matched ${classificationIds.join(", ")}`,
+    ),
+    Match.when(
+      {
+        kind: Match.is(
+          "baseline-unreadable",
+          "certificate-unreadable",
+          "certificate-digest-mismatch",
+          "certificate-invalid",
+          "baseline-certificate-stale",
+          "candidate-certificate-stale",
+          "delta-certificate-stale",
+        ),
+      },
+      ({ kind, message }) => `${kind}: ${message}`,
+    ),
+    Match.exhaustive,
+  );
 }
 
 async function main(): Promise<void> {

@@ -16,15 +16,18 @@ catalog, persisted-session codec, reducer, or Raw Swarm evidence ledger.
 
 ## Reproduction
 
-The deterministic command is:
+The final read-only verification command is:
 
 ```sh
 pnpm verify:effect3-baseline
 ```
 
-It captures the current canonical projections in memory, canonicalizes object
-keys while retaining observable array order, and compares the resulting bytes
-with the tracked certificate. The command never writes during verification.
+It retains the immutable Effect 3 certificate as one input, captures the
+current canonical projections in memory, and verifies the tracked finite
+Effect 4 delta certificate. The delta certificate records every changed JSON
+Pointer identity and authenticates both sides; the command no longer asserts
+that the current Effect 4 bytes directly equal the historical Effect 3 bytes.
+It never writes during verification.
 
 The migration-time replacement command was retired at final certification.
 The repository exposes only the read-only capture functions used by the finite
