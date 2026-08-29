@@ -43,6 +43,7 @@ import {
 } from "./character-execution-admission.ts";
 import { characterUnitProcedureRefsForAuthoredSelection } from "./battle-composition-admission.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
+import type { BattleActiveEffect } from "./active-effect/types.ts";
 
 const byTag = Match.discriminator("tag");
 
@@ -342,6 +343,16 @@ function intrinsicActPresentationText(
       }
     }
   }
+  if (subject.tag === "runtimeCommand") {
+    const spellCommandPresentation = runtimeSpellCommandPresentationText(
+      state,
+      context,
+      subject,
+    );
+    if (spellCommandPresentation !== undefined) {
+      return spellCommandPresentation;
+    }
+  }
   if (
     subject.tag === "runtimeCommand" &&
     subject.command === "jumpMovementReplacement"
@@ -382,6 +393,141 @@ function intrinsicActPresentationText(
   return { label, summary: `Use ${label}.` };
 }
 
+type RuntimeCommandSubject = Extract<
+  IntrinsicBattleSubject,
+  { readonly tag: "runtimeCommand" }
+>;
+
+type RuntimeSpellCommandPresentation =
+  | { readonly kind: "savingThrow" }
+  | { readonly kind: "disperse" }
+  | { readonly kind: "leaveArea" }
+  | { readonly kind: "removeArea" }
+  | { readonly kind: "changeDirection" }
+  | { readonly kind: "moveArea" }
+  | { readonly kind: "ram" }
+  | { readonly kind: "endEffect" }
+  | { readonly kind: "prefixOperation"; readonly operation: string }
+  | { readonly kind: "suffixOperation"; readonly operation: string };
+
+const RUNTIME_SPELL_COMMAND_PRESENTATIONS = new Map<
+  RuntimeCommandSubject["command"],
+  RuntimeSpellCommandPresentation
+>([
+  ["greaseGroundHazardSave", { kind: "savingThrow" }],
+  ["webRestraintSave", { kind: "savingThrow" }],
+  ["sleetStormAreaHazardSave", { kind: "savingThrow" }],
+  ["insectPlagueAreaHazardSave", { kind: "savingThrow" }],
+  ["cloudkillAreaHazardSave", { kind: "savingThrow" }],
+  ["gustOfWindLineSave", { kind: "savingThrow" }],
+  ["movableZoneSave", { kind: "savingThrow" }],
+  ["disperseCloudkill", { kind: "disperse" }],
+  ["disperseFogCloud", { kind: "disperse" }],
+  ["webRestrainedNoLongerInArea", { kind: "leaveArea" }],
+  ["moonbeamCylinderExit", { kind: "leaveArea" }],
+  ["webAreaRemoved", { kind: "removeArea" }],
+  ["gustOfWindLineDirectionChange", { kind: "changeDirection" }],
+  ["movableZoneReposition", { kind: "moveArea" }],
+  ["movableZoneRam", { kind: "ram" }],
+  ["wardingBondSeparation", { kind: "endEffect" }],
+  ["dragonsBreathExhale", { kind: "prefixOperation", operation: "Exhale" }],
+  ["commandGrovel", { kind: "suffixOperation", operation: "Grovel" }],
+  ["commandDrop", { kind: "suffixOperation", operation: "Drop" }],
+  ["commandApproach", { kind: "suffixOperation", operation: "Approach" }],
+  ["commandFlee", { kind: "suffixOperation", operation: "Flee" }],
+  [
+    "levitateAltitudeControl",
+    { kind: "suffixOperation", operation: "Altitude Control" },
+  ],
+]);
+
+function runtimeSpellCommandPresentationText(
+  state: BattleState,
+  context: BattleRuntimeContext,
+  subject: RuntimeCommandSubject,
+): { readonly label: string; readonly summary: string } | undefined {
+  const presentation = RUNTIME_SPELL_COMMAND_PRESENTATIONS.get(subject.command);
+  if (presentation === undefined) return undefined;
+  const source = spellPresentationSourceForRuntimeCommand(
+    state,
+    context,
+    subject,
+  );
+  if (source === undefined) return undefined;
+  const spellName = source.invocation.spell.name;
+  const label = Match.value(presentation).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      savingThrow: () => `${spellName} Saving Throw`,
+      disperse: () => `Disperse ${spellName}`,
+      leaveArea: () => `Leave ${spellName} Area`,
+      removeArea: () => `Remove ${spellName} Area`,
+      changeDirection: () => `Change ${spellName} Direction`,
+      moveArea: () => `Move ${spellName}`,
+      ram: () => `Ram with ${spellName}`,
+      endEffect: () => `End ${spellName}`,
+      prefixOperation: ({ operation }) => `${operation} ${spellName}`,
+      suffixOperation: ({ operation }) => `${spellName}: ${operation}`,
+    }),
+  );
+  return { label, summary: `Use ${label}.` };
+}
+
+function spellPresentationSourceForRuntimeCommand(
+  state: BattleState,
+  context: BattleRuntimeContext,
+  subject: RuntimeCommandSubject,
+) {
+  const effect = activeSpellEffectForRuntimeCommand(state, subject);
+  if (
+    effect === undefined ||
+    !("sourceCombatantId" in effect) ||
+    !("sourceProcedureRef" in effect)
+  ) {
+    return undefined;
+  }
+  return spellPresentationSourceForProcedure(
+    state,
+    context,
+    effect.sourceCombatantId,
+    effect.sourceProcedureRef,
+  );
+}
+
+function activeSpellEffectForRuntimeCommand(
+  state: BattleState,
+  subject: RuntimeCommandSubject,
+): BattleActiveEffect | undefined {
+  const effectRef =
+    "effectRef" in subject
+      ? subject.effectRef
+      : "areaMembershipTrigger" in subject
+        ? subject.areaMembershipTrigger.effectRef
+        : undefined;
+  if (effectRef !== undefined) {
+    for (const combatant of state.combatants.values()) {
+      const effect = spellActiveEffectForExecutionRef(
+        combatant.activeEffects,
+        effectRef,
+      );
+      if (effect !== undefined) return effect;
+    }
+  }
+  const areaId =
+    "areaId" in subject
+      ? subject.areaId
+      : "areaMembershipTrigger" in subject
+        ? subject.areaMembershipTrigger.areaId
+        : undefined;
+  if (areaId === undefined) return undefined;
+  for (const combatant of state.combatants.values()) {
+    const effect = combatant.activeEffects.find(
+      (candidate) => "areaId" in candidate && candidate.areaId === areaId,
+    );
+    if (effect !== undefined) return effect;
+  }
+  return undefined;
+}
+
 const INTRINSIC_ACTION_LABELS = {
   attack: "Attack",
   dash: "Dash",
@@ -418,34 +564,34 @@ const INTRINSIC_RUNTIME_COMMAND_LABELS = {
   releaseGrapple: "Release Grapple",
   opportunityAttack: "Opportunity Attack",
   retaliationAttack: "Retaliation Attack",
-  greaseGroundHazardSave: "Grease Saving Throw",
-  webRestraintSave: "Web Saving Throw",
-  sleetStormAreaHazardSave: "Sleet Storm Saving Throw",
-  insectPlagueAreaHazardSave: "Insect Plague Saving Throw",
-  cloudkillAreaHazardSave: "Cloudkill Saving Throw",
-  disperseCloudkill: "Disperse Cloudkill",
-  webRestrainedNoLongerInArea: "Leave Web",
-  webAreaRemoved: "Remove Web Area",
-  gustOfWindLineSave: "Gust of Wind Saving Throw",
-  gustOfWindLineDirectionChange: "Change Gust of Wind Direction",
+  greaseGroundHazardSave: "Area Saving Throw",
+  webRestraintSave: "Area Saving Throw",
+  sleetStormAreaHazardSave: "Area Saving Throw",
+  insectPlagueAreaHazardSave: "Area Saving Throw",
+  cloudkillAreaHazardSave: "Area Saving Throw",
+  disperseCloudkill: "Disperse Area",
+  webRestrainedNoLongerInArea: "Leave Area",
+  webAreaRemoved: "Remove Area",
+  gustOfWindLineSave: "Area Saving Throw",
+  gustOfWindLineDirectionChange: "Change Area Direction",
   movableZoneSave: "Movable Zone Saving Throw",
-  moonbeamCylinderExit: "Leave Moonbeam Cylinder",
+  moonbeamCylinderExit: "Leave Area",
   movableZoneReposition: "Move Movable Zone",
   movableZoneRam: "Ram with Movable Zone",
   releaseSpellCreatedHeldObject: "Release spell-created held object",
   protectionRelevantEffectSave: "Protection Saving Throw",
   creatureTypeProtectionConditionAttempt: "Protected Condition Attempt",
   creatureTypeProtectionPossessionAttempt: "Protected Possession Attempt",
-  disperseFogCloud: "Disperse Fog Cloud",
-  wardingBondSeparation: "End Warding Bond",
+  disperseFogCloud: "Disperse Area",
+  wardingBondSeparation: "End Linked Effect",
   jumpMovementReplacement: "Jump",
-  dragonsBreathExhale: "Exhale Dragon's Breath",
+  dragonsBreathExhale: "Use Granted Area Effect",
   replaceSelfTransformationMode: "Replace Self Transformation Mode",
-  commandGrovel: "Command: Grovel",
-  commandDrop: "Command: Drop",
-  commandApproach: "Command: Approach",
-  commandFlee: "Command: Flee",
-  levitateAltitudeControl: "Levitate altitude control",
+  commandGrovel: "Grovel",
+  commandDrop: "Drop",
+  commandApproach: "Approach",
+  commandFlee: "Flee",
+  levitateAltitudeControl: "Altitude Control",
   creatureFalls: "Fall",
 } as const satisfies Record<
   Extract<BattleSubject, { readonly tag: "runtimeCommand" }>["command"],
