@@ -424,6 +424,7 @@ function spatialMeleeSpellAttackProxyRepeatBattle(): BattleRuntimeSession {
       caster.origin.execution,
       {
         procedure: "spatialMeleeSpellAttackProxy",
+        operation: "repositionAndAttack",
         activeEffectRef: activeEffect.effectRef,
         activeEffectSourceProcedureRef: sourceBinding.procedureRef,
       },

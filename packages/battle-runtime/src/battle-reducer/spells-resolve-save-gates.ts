@@ -66,9 +66,9 @@ import {
   spellCastMetamagicApplicationsInput,
 } from "./spell-cast-interrupt-frame.ts";
 import {
-  applyCompelledNextTurnBehaviorPendingEffects,
+  applyCompelledNextTurnBehaviorEffects,
   applyFailedSaveAttackRollAdvantageEffects,
-  applyGreaseGroundHazardCastEffects,
+  applyPersistentAreaSaveConditionCastEffects,
   applySaveGatedConditionWithRepeatEffects,
   applyStagedSaveConditionPendingRepeatEffects,
   applyFailedSaveSpellActiveEffects,
@@ -177,7 +177,7 @@ type AreaSavingThrowOutcomeValue = BattleSpellAreaSavingThrowOutcomeValue;
 type GreaseSavingThrowOutcomeValue = AreaSavingThrowOutcomeValue & {
   readonly area: Extract<
     BattleSpellAreaChoice,
-    { readonly kind: "greaseGroundArea" }
+    { readonly kind: "persistentAreaSaveConditionArea" }
   >;
 };
 
@@ -193,12 +193,12 @@ function assertAreaSavingThrowOutcomes(
   /* v8 ignore stop -- @preserve */
 }
 
-function assertGreaseSavingThrowOutcomes(
+function assertPersistentAreaSaveConditionSavingThrowOutcomes(
   value: BattleSpellSavingThrowOutcomeValue,
 ): asserts value is GreaseSavingThrowOutcomeValue {
   assertAreaSavingThrowOutcomes(value);
   /* v8 ignore start -- @preserve -- The immediately preceding save-outcome validator dispatches Grease to its ground-area validator; this assertion protects the narrowed reducer path if that contract changes. */
-  if (value.area.kind !== "greaseGroundArea") {
+  if (value.area.kind !== "persistentAreaSaveConditionArea") {
     throw new Error(
       "Validated Grease outcomes must include ground-area facts.",
     );
@@ -269,8 +269,8 @@ export function saveMetamagicSelectionState(input: {
         | "saveGatedAreaControl"
         | "saveGatedTurnConstraintBundle"
         | "compelledNextTurnBehavior"
-        | "greaseGroundHazard"
-        | "gustOfWindLine";
+        | "persistentAreaSaveCondition"
+        | "directionalPersistentArea";
     }
   >;
   readonly fills: readonly BattleFill[];
@@ -510,8 +510,8 @@ function saveMetamagicSelectionFills(
         | "saveGatedAreaControl"
         | "saveGatedTurnConstraintBundle"
         | "compelledNextTurnBehavior"
-        | "greaseGroundHazard"
-        | "gustOfWindLine";
+        | "persistentAreaSaveCondition"
+        | "directionalPersistentArea";
     }
   >,
 ):
@@ -590,7 +590,7 @@ export function resolveGreaseGroundHazardSpellAct(input: {
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "greaseGroundHazard" }
+    { readonly procedure: "persistentAreaSaveCondition" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
@@ -682,7 +682,7 @@ export function resolveGreaseGroundHazardSpellAct(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  assertGreaseSavingThrowOutcomes(savingThrowOutcomes);
+  assertPersistentAreaSaveConditionSavingThrowOutcomes(savingThrowOutcomes);
   const area = savingThrowOutcomes.area;
 
   const failedTargets = failedSavingThrowTargetIds(
@@ -713,7 +713,7 @@ export function resolveGreaseGroundHazardSpellAct(input: {
   if (resourced.tag === "invalid") {
     return resourced;
   }
-  const nextState = applyGreaseGroundHazardCastEffects({
+  const nextState = applyPersistentAreaSaveConditionCastEffects({
     state: resourced.state,
     actorId: input.actorId,
     area,
@@ -3056,7 +3056,7 @@ export function resolveCompelledNextTurnBehaviorSpellAct(input: {
   if (resourced.tag === "invalid") {
     return resourced;
   }
-  const effected = applyCompelledNextTurnBehaviorPendingEffects(
+  const effected = applyCompelledNextTurnBehaviorEffects(
     resourced.state,
     input.actorId,
     failedTargets,
@@ -3405,8 +3405,8 @@ export function validateSavingThrowOutcomes(
       state,
     });
   }
-  if (invocation.procedure === "greaseGroundHazard") {
-    return validateGreaseGroundHazardSavingThrowOutcomes({
+  if (invocation.procedure === "persistentAreaSaveCondition") {
+    return validatePersistentAreaSaveConditionSavingThrowOutcomes({
       value,
       area: "area" in value ? value.area : undefined,
       state,
@@ -3440,23 +3440,35 @@ export function validateSavingThrowOutcomes(
     return `Save-gate spell Saving Throw outcomes require area facts for ${targeting.kind}.`;
   }
   /* v8 ignore stop -- @preserve */
-  if ("kind" in value.area && value.area.kind === "greaseGroundArea") {
+  if (
+    "kind" in value.area &&
+    value.area.kind === "persistentAreaSaveConditionArea"
+  ) {
     return "Grease ground-area facts are only valid for Grease.";
   }
-  if ("kind" in value.area && value.area.kind === "gustOfWindLineArea") {
-    if (invocation.procedure !== "gustOfWindLine") {
+  if (
+    "kind" in value.area &&
+    value.area.kind === "directionalPersistentAreaArea"
+  ) {
+    if (invocation.procedure !== "directionalPersistentArea") {
       return "Gust of Wind Line area facts are only valid for Gust of Wind.";
     }
   }
-  if ("kind" in value.area && value.area.kind === "slowArea") {
+  if (
+    "kind" in value.area &&
+    value.area.kind === "saveGatedTurnConstraintBundleArea"
+  ) {
     if (invocation.procedure !== "saveGatedTurnConstraintBundle") {
       return "Slow area facts are only valid for Slow.";
     }
   }
-  if ("sleepNonSleeperFacts" in value.area) {
+  if ("stagedConditionAutomaticSuccessFacts" in value.area) {
     return "Sleep non-sleeper facts are only valid for Sleep target admission.";
   }
-  if ("kind" in value.area && value.area.kind === "faerieFireArea") {
+  if (
+    "kind" in value.area &&
+    value.area.kind === "saveGatedTargetProjectionArea"
+  ) {
     if (invocation.procedure !== "saveGatedAttackRollAdvantage") {
       return "Faerie Fire object area facts are only valid for Faerie Fire.";
     }
@@ -3893,8 +3905,8 @@ function validateStagedSaveConditionSavingThrowOutcomes(input: {
     }
   }
   const nonSleeperTargetIds = new Set<CombatantId>();
-  if ("sleepNonSleeperFacts" in input.area) {
-    for (const fact of input.area.sleepNonSleeperFacts ?? []) {
+  if ("stagedConditionAutomaticSuccessFacts" in input.area) {
+    for (const fact of input.area.stagedConditionAutomaticSuccessFacts ?? []) {
       if (!selectedTargets.has(fact.targetId)) {
         return "Sleep non-sleeper facts must match selected Sphere targets.";
       }
@@ -3940,7 +3952,7 @@ function validateStagedSaveConditionSavingThrowOutcomes(input: {
   /* v8 ignore stop -- @preserve */
 }
 
-function validateGreaseGroundHazardSavingThrowOutcomes(input: {
+function validatePersistentAreaSaveConditionSavingThrowOutcomes(input: {
   readonly value: BattleSpellSavingThrowOutcomeValue;
   readonly area: BattleSpellAreaChoice | undefined;
   readonly state: BattleState;
@@ -3948,7 +3960,7 @@ function validateGreaseGroundHazardSavingThrowOutcomes(input: {
   if (input.area === undefined) {
     return "Grease Saving Throw outcomes require ground-area facts.";
   }
-  if (input.area.kind !== "greaseGroundArea") {
+  if (input.area.kind !== "persistentAreaSaveConditionArea") {
     return "Grease requires a ground-area id.";
   }
   if (!input.state.combatants.has(input.area.originAnchorId)) {

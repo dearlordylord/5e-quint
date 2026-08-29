@@ -1085,7 +1085,7 @@ export function spellSavingThrowOutcomeHole(
           | "saveGatedConditionWithRepeat"
           | "saveGatedAreaControl"
           | "saveGatedTurnConstraintBundle"
-          | "command"
+          | "compelledNextTurnBehavior"
           | "persistentAreaSaveCondition"
           | "directionalPersistentArea";
       }
@@ -1306,7 +1306,7 @@ export function spellSavingThrowTargeting(
         | "stagedSaveCondition"
         | "saveGatedConditionWithRepeat"
         | "saveGatedAreaControl"
-        | "command"
+        | "compelledNextTurnBehavior"
         | "persistentAreaSaveCondition"
         | "directionalPersistentArea"
         | "saveGatedTurnConstraintBundle";

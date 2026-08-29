@@ -2986,7 +2986,7 @@ export function applyCompelledNextTurnBehaviorEffects(
   targetIds: readonly CombatantId[],
   invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "command" }
+    { readonly procedure: "compelledNextTurnBehavior" }
   >,
   option: BattleCompelledBehaviorOption,
 ): BattleState {
