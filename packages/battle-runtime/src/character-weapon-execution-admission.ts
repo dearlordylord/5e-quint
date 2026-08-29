@@ -1,5 +1,8 @@
+import type { UnitId } from "@dnd/shared/game-facts";
 import type { WeaponRecord } from "@dnd/surface/surface/types";
-
+import {
+  type WeaponExecutionFacts,
+} from "@dnd/shared-algebras/weapon-execution-facts";
 import type { BattleObjectId } from "./identity.ts";
 import type { CharacterWeaponAttackExecutionWeapon } from "./battle-action-options.ts";
 import {
@@ -13,11 +16,11 @@ export type CharacterWeaponAttackExecutionAdmission = {
   readonly hasWeaponMastery: boolean;
 };
 
-export function admitCharacterWeaponExecutionWeapon(
+/** Project a decoded Surface weapon into the canonical execution facts. */
+export function weaponExecutionFactsFromRecord(
   weapon: WeaponRecord,
-): CharacterWeaponAttackExecutionWeapon {
+): WeaponExecutionFacts {
   return {
-    weaponUnitId: weapon.id,
     ...(weapon.attachedWeaponAttackOverrideEligibility === undefined
       ? {}
       : {
@@ -33,13 +36,29 @@ export function admitCharacterWeaponExecutionWeapon(
   };
 }
 
+/** Add the selected Unit identity at the character-to-battle boundary. */
+export function admitCharacterWeaponExecutionWeapon(
+  input: {
+    readonly weaponUnitId: UnitId;
+    readonly facts: WeaponExecutionFacts;
+  },
+): CharacterWeaponAttackExecutionWeapon {
+  return {
+    weaponUnitId: input.weaponUnitId,
+    ...input.facts,
+  };
+}
+
 export function admitCharacterWeaponAttackExecutionWeapon(
   weapon: WeaponRecord,
   objectId: BattleObjectId,
   weaponMasteries: readonly CharacterBattleWeaponMasterySelection[],
 ): CharacterWeaponAttackExecutionAdmission {
   return {
-    weapon: admitCharacterWeaponExecutionWeapon(weapon),
+    weapon: admitCharacterWeaponExecutionWeapon({
+      weaponUnitId: weapon.id,
+      facts: weaponExecutionFactsFromRecord(weapon),
+    }),
     weaponObjectId: objectId,
     hasWeaponMastery: weaponMasteryIsSelectedForWeapon(
       weapon.id,

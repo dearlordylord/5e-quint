@@ -13,6 +13,7 @@
   "id": "weapon_club",
   "kind": "weapon",
   "mastery": "slow",
+  "masteryUnitId": "mastery_slow",
   "name": "Club",
   "properties": [
     {

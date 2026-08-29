@@ -50,6 +50,7 @@ let weapon =
             ]
           : List WeaponProperty
       , mastery = "topple"
+      , masteryUnitId = Some "mastery_topple"
       , weightPounds = Some 4
       , costGp = 0.2
       }

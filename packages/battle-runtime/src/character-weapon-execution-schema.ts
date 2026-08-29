@@ -1,25 +1,10 @@
 import { UnitId } from "@dnd/shared/game-facts";
-import {
-  WeaponCategorySchema,
-  WeaponDamageSchema,
-  WeaponMasteryNameSchema,
-  WeaponPropertyDetailSchema,
-  WeaponUsageSchema,
-} from "@dnd/surface/surface/schema";
+import { WeaponExecutionFactsSchema } from "@dnd/shared-algebras/weapon-execution-facts";
 import { Schema } from "effect";
 
 export const CharacterWeaponAttackExecutionWeaponSchema = Schema.Struct({
   weaponUnitId: UnitId,
-  attachedWeaponAttackOverrideEligibility: Schema.optionalWith(
-    Schema.Struct({ kind: Schema.Literal("clubOrQuarterstaff") }),
-    { exact: true },
-  ),
-  category: WeaponCategorySchema,
-  usage: WeaponUsageSchema,
-  damage: WeaponDamageSchema,
-  properties: Schema.Array(WeaponPropertyDetailSchema),
-  mastery: WeaponMasteryNameSchema,
-  costGp: Schema.Number,
+  ...WeaponExecutionFactsSchema.fields,
 });
 
 export type CharacterWeaponAttackExecutionWeapon =

@@ -10,6 +10,7 @@
   "id": "weapon_flail",
   "kind": "weapon",
   "mastery": "sap",
+  "masteryUnitId": "mastery_sap",
   "name": "Flail",
   "provenance": {
     "kind": "srd-5.2.1",

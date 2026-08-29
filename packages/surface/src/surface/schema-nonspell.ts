@@ -4427,6 +4427,9 @@ export const WeaponRecordSchema = Schema.Struct({
   damage: WeaponDamageSchema,
   properties: exactOptional(Schema.Array(WeaponPropertyDetailSchema)),
   mastery: WeaponMasteryNameSchema,
+  masteryUnitId: exactOptional(
+    surfaceDependency(NonEmptyStringSchema, "unit-reference"),
+  ),
   weightPounds: exactOptional(Schema.Number),
   costGp: Schema.Number,
 });

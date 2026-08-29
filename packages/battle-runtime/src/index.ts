@@ -101,6 +101,14 @@ export {
   type UnitMechanicsAdmissionInput,
 } from "./unit-mechanics-admission.ts";
 
+export {
+  admitEquipmentDefinitionMechanics,
+  admitEquipmentDefinitionUnit,
+  isEquipmentDefinitionUnit,
+  type EquipmentDefinitionMechanicsAdmissionInput,
+  type EquipmentDefinitionUnit,
+} from "./equipment-definition-admission.ts";
+
 export type {
   BattleStatBlockExecutionSource,
   StatBlockExecutionAdmission,
@@ -971,4 +979,5 @@ export {
 export {
   admitCharacterWeaponAttackExecutionWeapon,
   admitCharacterWeaponExecutionWeapon,
+  weaponExecutionFactsFromRecord,
 } from "./character-weapon-execution-admission.ts";

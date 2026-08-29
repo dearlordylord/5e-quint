@@ -27,6 +27,7 @@ import {
   admitCharacterWeaponExecutionWeapon,
   battleObjectId,
   characterBattleCreatureInitWeaponAttack,
+  weaponExecutionFactsFromRecord,
   wildShapeKnownFormsIssueMessage,
 } from "@dnd/battle-runtime";
 
@@ -404,11 +405,16 @@ export function characterPactBladeBondedWeaponItemId(input: {
   if (Either.isLeft(unit)) {
     return battleCreatureInitIssue(battleCreatureInitIssueMessage(unit.left));
   }
+  if (unit.right.kind !== "weapon") {
+    return battleCreatureInitIssue(
+      "Pact of the Blade bond must reference a Simple or Martial Melee weapon with dice damage.",
+    );
+  }
+  const weaponFacts = weaponExecutionFactsFromRecord(unit.right);
   if (
-    unit.right.kind !== "weapon" ||
-    unit.right.usage !== "melee" ||
-    (unit.right.category !== "simple" && unit.right.category !== "martial") ||
-    unit.right.damage.kind !== "dice"
+    weaponFacts.usage !== "melee" ||
+    (weaponFacts.category !== "simple" && weaponFacts.category !== "martial") ||
+    weaponFacts.damage.kind !== "dice"
   ) {
     return battleCreatureInitIssue(
       "Pact of the Blade bond must reference a Simple or Martial Melee weapon with dice damage.",
@@ -432,14 +438,19 @@ function characterWeaponAttackActionOption(
   if (Either.isLeft(unit)) {
     return battleCreatureInitIssue(battleCreatureInitIssueMessage(unit.left));
   }
-  if (unit.right.kind !== "weapon" || unit.right.damage.kind !== "dice") {
+  if (unit.right.kind !== "weapon") {
     return Either.right(null);
   }
+  const weaponFacts = weaponExecutionFactsFromRecord(unit.right);
+  if (weaponFacts.damage.kind !== "dice") return Either.right(null);
 
   const baseAttack = {
     ...characterBattleCreatureInitWeaponAttack({
       kind: "weapon",
-      weapon: admitCharacterWeaponExecutionWeapon(unit.right),
+      weapon: admitCharacterWeaponExecutionWeapon({
+        weaponUnitId: unit.right.id,
+        facts: weaponFacts,
+      }),
       ability: "str",
       abilityModifier: battleAbilityModifier(
         scoreModifier(build.abilityScores.str),
@@ -458,7 +469,7 @@ function characterWeaponAttackActionOption(
     );
   }
   const projectedAttack =
-    martialArts.right === null || !isMonkWeapon(unit.right)
+    martialArts.right === null || !isMonkWeapon(weaponFacts)
       ? baseAttack
       : martialArtsWeaponAttack(baseAttack, build, martialArts.right);
   return Either.right(
@@ -699,7 +710,7 @@ function martialArtsLoadoutConditionHolds(input: {
   return weaponUnitIds.every((unitId) => {
     const unit = input.unitLibrary.getUnit(unitId);
     return Option.isSome(unit) && unit.value.kind === "weapon"
-      ? isMonkWeapon(unit.value)
+      ? isMonkWeapon(weaponExecutionFactsFromRecord(unit.value))
       : false;
   });
 }

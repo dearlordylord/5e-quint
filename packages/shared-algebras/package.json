@@ -26,7 +26,8 @@
     "./movement-cost-algebra": "./src/movement-cost-algebra.ts",
     "./multiclass-prerequisite-algebra": "./src/multiclass-prerequisite-algebra.ts",
     "./martial-arts-algebra": "./src/martial-arts-algebra.ts",
-    "./companion-protocol-algebra": "./src/companion-protocol-algebra.ts"
+    "./companion-protocol-algebra": "./src/companion-protocol-algebra.ts",
+    "./weapon-execution-facts": "./src/weapon-execution-facts.ts"
   },
   "imports": {
     "#/*": "./src/*"

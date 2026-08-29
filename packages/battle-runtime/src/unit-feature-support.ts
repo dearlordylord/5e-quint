@@ -1138,6 +1138,30 @@ export type BattleUnitSupportProfile =
       | "lightExtraAttackDamageAbilityModifier"
     >;
 
+export type BattleWeaponMasterySupportProfile =
+  | typeof WEAPON_MASTERY_SAP_SUPPORT_PROFILE
+  | typeof WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE
+  | typeof WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE
+  | typeof WEAPON_MASTERY_PUSH_SUPPORT_PROFILE
+  | typeof WEAPON_MASTERY_SLOW_SUPPORT_PROFILE;
+
+/**
+ * Identify the weapon-mastery support profiles emitted by the structural
+ * mastery readers. This is a mechanical-profile check, not an authored
+ * identity allowlist.
+ */
+export function isBattleWeaponMasterySupportProfile(
+  profile: BattleUnitSupportProfile,
+): profile is BattleWeaponMasterySupportProfile {
+  return (
+    profile === WEAPON_MASTERY_SAP_SUPPORT_PROFILE ||
+    profile === WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE ||
+    profile === WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE ||
+    profile === WEAPON_MASTERY_PUSH_SUPPORT_PROFILE ||
+    profile === WEAPON_MASTERY_SLOW_SUPPORT_PROFILE
+  );
+}
+
 export type BattleUnitSupportProfileIssue = {
   readonly tag: "battleUnitSupportProfileIssue";
   readonly message: string;

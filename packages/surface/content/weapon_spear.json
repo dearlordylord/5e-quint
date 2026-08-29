@@ -10,6 +10,7 @@
   "id": "weapon_spear",
   "kind": "weapon",
   "mastery": "sap",
+  "masteryUnitId": "mastery_sap",
   "name": "Spear",
   "properties": [
     {

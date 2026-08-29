@@ -10,6 +10,7 @@
   "id": "weapon_dagger",
   "kind": "weapon",
   "mastery": "nick",
+  "masteryUnitId": "mastery_nick",
   "name": "Dagger",
   "properties": [
     {

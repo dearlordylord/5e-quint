@@ -21,11 +21,14 @@ import {
 } from "@dnd/shared-algebras/armor-class-algebra";
 import { abilityScoreToMod } from "@dnd/shared-algebras/ability-score-algebra";
 import type {
+  ArmorAcFormula,
+  ArmorRecord,
   ClassFeatureComponentMechanics,
   EquipmentPredicate,
+  ShieldRecord,
   UnitRecord,
 } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Either, Match } from "effect";
 
 import {
   characterSheetIssue,
@@ -92,7 +95,7 @@ export function characterSheetArmorClassState(
 
   const base =
     armor?.right.kind === "armor"
-      ? Either.right(armorBaseSource(armor.right))
+      ? Either.right(armorBaseSource(projectArmorDefinition(armor.right)))
       : selectedUnarmoredBaseSource(input, {
           wearingArmor: false,
           wieldingShield: shield?.right.kind === "shield",
@@ -102,11 +105,12 @@ export function characterSheetArmorClassState(
 
   const bonuses: ArmorClassState["bonuses"][number][] = [];
   if (shield?.right.kind === "shield") {
+    const shieldProjection = projectShieldDefinition(shield.right);
     bonuses.push({
       kind: "shield",
-      bonus: armorClassDelta(shield.right.armorClassProjection.bonus),
-      handUse: shield.right.armorClassProjection.handUse,
-      trainingRequired: shield.right.armorClassProjection.trainingRequired,
+      bonus: armorClassDelta(shieldProjection.bonus),
+      handUse: shieldProjection.handUse,
+      trainingRequired: shieldProjection.trainingRequired,
       sourceUnitId: shield.right.id,
     });
   }
@@ -380,13 +384,64 @@ function armorClassBaseSourceForFormula(
 }
 
 function armorBaseSource(
-  armor: Extract<UnitRecord, { readonly kind: "armor" }>,
+  armor: ArmorDefinitionProjection,
 ): ArmorClassBaseSource {
   return {
     kind: "armor",
     formula: armor.acFormula,
     category: armor.category,
   };
+}
+
+type ArmorDefinitionProjection =
+  | {
+      readonly category: "light";
+      readonly acFormula: Extract<
+        ArmorAcFormula,
+        { readonly kind: "light_dex" }
+      >;
+    }
+  | {
+      readonly category: "medium";
+      readonly acFormula: Extract<
+        ArmorAcFormula,
+        { readonly kind: "medium_dex_max_2" }
+      >;
+    }
+  | {
+      readonly category: "heavy";
+      readonly acFormula: Extract<
+        ArmorAcFormula,
+        { readonly kind: "heavy_fixed" }
+      >;
+    };
+
+/** Project the selected authored armor before deriving the sheet AC source. */
+function projectArmorDefinition(
+  armor: ArmorRecord,
+): ArmorDefinitionProjection {
+  return Match.value(armor).pipe(
+    Match.when({ category: "light" }, ({ acFormula }) => ({
+      category: "light" as const,
+      acFormula,
+    })),
+    Match.when({ category: "medium" }, ({ acFormula }) => ({
+      category: "medium" as const,
+      acFormula,
+    })),
+    Match.when({ category: "heavy" }, ({ acFormula }) => ({
+      category: "heavy" as const,
+      acFormula,
+    })),
+    Match.exhaustive,
+  );
+}
+
+/** Project the selected authored shield before deriving its sheet AC bonus. */
+function projectShieldDefinition(
+  shield: ShieldRecord,
+): ShieldRecord["armorClassProjection"] {
+  return shield.armorClassProjection;
 }
 
 function characterSheetAbilityModifiers(
