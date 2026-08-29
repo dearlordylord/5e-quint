@@ -135,9 +135,9 @@ import {
   effectiveD20TestNaturalOneRerollConcentrationSavingThrow,
 } from "./d20-test-natural-one-reroll.ts";
 import {
-  battleStateAfterWardingBondCasterZeroHitPoints,
-  isWardingBondEffect,
-  wardingBondSavingThrowFlatBonusProjectionsForTarget,
+  battleStateAfterLinkedDefenseResistanceDamageShareCasterZeroHitPoints,
+  isLinkedDefenseResistanceDamageShareEffect,
+  linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget,
 } from "./warding-bond.ts";
 
 type ConcentrationSavingThrowFill = Extract<
@@ -437,7 +437,7 @@ export function applyBattleHitPointDamage(input: {
   readonly concentrationSavingThrow?:
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined;
-  readonly wardingBondDamageShareConcentrationSavingThrows?: readonly ConcentrationSavingThrowFill[];
+  readonly linkedDefenseResistanceDamageShareConcentrationSavingThrows?: readonly ConcentrationSavingThrowFill[];
   readonly saveGatedConditionWithRepeatDamageRepeatSaves?: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
@@ -447,7 +447,7 @@ export function applyBattleHitPointDamage(input: {
     | undefined;
   readonly spatialFacts?: readonly BattleTargetSpatialFact[];
   readonly relationshipDecisions?: BattleDamageRelationshipDecisions;
-  readonly suppressWardingBondDamageShare?: true;
+  readonly suppressLinkedDefenseResistanceDamageShareDamageShare?: true;
 }): BattleState {
   const damaged = applyHpDamage(input.target, input.damageAmount, {
     deathFailuresAtZeroHp: input.deathFailuresAtZeroHp,
@@ -532,22 +532,24 @@ export function applyBattleHitPointDamage(input: {
     priorHp: input.target.hp,
     nextHp: damaged.hp,
   });
-  const afterWardingBondDamageShare =
-    input.damageAmount > 0 && input.suppressWardingBondDamageShare !== true
-      ? applyWardingBondDamageShare({
+  const afterLinkedDefenseResistanceDamageShareDamageShare =
+    input.damageAmount > 0 &&
+    input.suppressLinkedDefenseResistanceDamageShareDamageShare !== true
+      ? applyLinkedDefenseResistanceDamageShareDamageShare({
           state: afterFamiliar,
           target: input.target,
           damageAmount: input.damageAmount,
           concentrationSavingThrows:
-            input.wardingBondDamageShareConcentrationSavingThrows ?? [],
+            input.linkedDefenseResistanceDamageShareConcentrationSavingThrows ??
+            [],
           saveGatedConditionWithRepeatDamageRepeatSaves:
             input.saveGatedConditionWithRepeatDamageRepeatSaves ?? [],
           saveGatedConditionWithRepeatDamageRepeatSaveEventKey:
             input.saveGatedConditionWithRepeatDamageRepeatSaveEventKey,
         })
       : afterFamiliar;
-  return battleStateAfterWardingBondCasterZeroHitPoints(
-    afterWardingBondDamageShare,
+  return battleStateAfterLinkedDefenseResistanceDamageShareCasterZeroHitPoints(
+    afterLinkedDefenseResistanceDamageShareDamageShare,
   );
 }
 
@@ -591,7 +593,7 @@ export function damageLifecycleConcentrationSavingThrowHoles(input: {
   );
   return [
     ...(targetHole === null ? [] : [targetHole]),
-    ...wardingBondSharedDamageConcentrationSavingThrowHoles(input),
+    ...linkedDefenseResistanceDamageShareConcentrationSavingThrowHoles(input),
   ];
 }
 
@@ -643,7 +645,7 @@ export function damageLifecycleConcentrationSavingThrowFillCheck(input: {
     message:
       holes.length === 0
         ? "Concentration Saving Throw fill is only valid for a concentrating damaged target."
-        : "Concentration Saving Throw fill does not match the damaged target or linked Warding Bond caster.",
+        : "Concentration Saving Throw fill does not match the damaged target or linked-protection caster.",
   };
 }
 
@@ -669,7 +671,7 @@ function concentrationD20TestNaturalOneRerollIssue(
   return null;
 }
 
-export function wardingBondSharedDamageConcentrationSavingThrowHoles(input: {
+export function linkedDefenseResistanceDamageShareConcentrationSavingThrowHoles(input: {
   readonly state: BattleState;
   readonly target: BattleCreatureState;
   readonly damageAmount: number;
@@ -677,12 +679,13 @@ export function wardingBondSharedDamageConcentrationSavingThrowHoles(input: {
   if (input.damageAmount <= 0) {
     return [];
   }
-  return wardingBondDamageShareCasters(input.state, input.target).flatMap(
-    (caster) => {
-      const hole = concentrationSavingThrowHole(caster, input.damageAmount);
-      return hole === null ? [] : [hole];
-    },
-  );
+  return linkedDefenseResistanceDamageShareCasters(
+    input.state,
+    input.target,
+  ).flatMap((caster) => {
+    const hole = concentrationSavingThrowHole(caster, input.damageAmount);
+    return hole === null ? [] : [hole];
+  });
 }
 
 export function damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck(input: {
@@ -712,29 +715,31 @@ export function damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles
           input.target,
           input.damageEventKey,
         ),
-        ...wardingBondSharedDamageSaveGatedConditionWithRepeatRepeatSaveHoles(
+        ...linkedDefenseResistanceDamageShareSaveGatedConditionWithRepeatRepeatSaveHoles(
           input,
         ),
       ]
     : [];
 }
 
-function wardingBondSharedDamageSaveGatedConditionWithRepeatRepeatSaveHoles(input: {
+function linkedDefenseResistanceDamageShareSaveGatedConditionWithRepeatRepeatSaveHoles(input: {
   readonly state: BattleState;
   readonly target: BattleCreatureState;
   readonly damageAmount: number;
   readonly damageEventKey?: string | undefined;
 }): ReturnType<typeof saveGatedConditionWithRepeatDamageRepeatSaveHoles> {
-  return wardingBondDamageShareCasters(input.state, input.target).flatMap(
-    (caster) =>
-      saveGatedConditionWithRepeatDamageRepeatSaveHoles(
-        caster,
-        input.damageEventKey,
-      ),
+  return linkedDefenseResistanceDamageShareCasters(
+    input.state,
+    input.target,
+  ).flatMap((caster) =>
+    saveGatedConditionWithRepeatDamageRepeatSaveHoles(
+      caster,
+      input.damageEventKey,
+    ),
   );
 }
 
-function applyWardingBondDamageShare(input: {
+function applyLinkedDefenseResistanceDamageShareDamageShare(input: {
   readonly state: BattleState;
   readonly target: BattleCreatureState;
   readonly damageAmount: number;
@@ -745,9 +750,9 @@ function applyWardingBondDamageShare(input: {
     | undefined;
 }): BattleState {
   return input.target.activeEffects
-    .filter(isWardingBondEffect)
+    .filter(isLinkedDefenseResistanceDamageShareEffect)
     .reduce((state, effect) => {
-      const caster = wardingBondDamageShareCaster(
+      const caster = linkedDefenseResistanceDamageShareCaster(
         state,
         input.target,
         effect.sourceCombatantId,
@@ -775,26 +780,28 @@ function applyWardingBondDamageShare(input: {
           input.saveGatedConditionWithRepeatDamageRepeatSaves,
         saveGatedConditionWithRepeatDamageRepeatSaveEventKey:
           input.saveGatedConditionWithRepeatDamageRepeatSaveEventKey,
-        suppressWardingBondDamageShare: true,
+        suppressLinkedDefenseResistanceDamageShareDamageShare: true,
       });
     }, input.state);
 }
 
-function wardingBondDamageShareCasters(
+function linkedDefenseResistanceDamageShareCasters(
   state: BattleState,
   target: BattleCreatureState,
 ): readonly BattleCreatureState[] {
-  return target.activeEffects.filter(isWardingBondEffect).flatMap((effect) => {
-    const caster = wardingBondDamageShareCaster(
-      state,
-      target,
-      effect.sourceCombatantId,
-    );
-    return caster === null ? [] : [caster];
-  });
+  return target.activeEffects
+    .filter(isLinkedDefenseResistanceDamageShareEffect)
+    .flatMap((effect) => {
+      const caster = linkedDefenseResistanceDamageShareCaster(
+        state,
+        target,
+        effect.sourceCombatantId,
+      );
+      return caster === null ? [] : [caster];
+    });
 }
 
-function wardingBondDamageShareCaster(
+function linkedDefenseResistanceDamageShareCaster(
   state: BattleState,
   target: BattleCreatureState,
   casterId: CombatantId,
@@ -954,7 +961,7 @@ export function applyAttackDamageAmount(input: {
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[];
-  readonly wardingBondDamageShareConcentrationSavingThrows?: readonly ConcentrationSavingThrowFill[];
+  readonly linkedDefenseResistanceDamageShareConcentrationSavingThrows?: readonly ConcentrationSavingThrowFill[];
   readonly spatialFacts?: readonly BattleTargetSpatialFact[];
   readonly relationshipDecisions?:
     | BattleDamageRelationshipDecisions
@@ -972,8 +979,8 @@ export function applyAttackDamageAmount(input: {
     damageDisposition: input.damageDisposition,
     damageSourceId: input.attackerId,
     concentrationSavingThrow: input.concentrationSavingThrow,
-    wardingBondDamageShareConcentrationSavingThrows:
-      input.wardingBondDamageShareConcentrationSavingThrows ?? [],
+    linkedDefenseResistanceDamageShareConcentrationSavingThrows:
+      input.linkedDefenseResistanceDamageShareConcentrationSavingThrows ?? [],
     saveGatedConditionWithRepeatDamageRepeatSaves:
       input.saveGatedConditionWithRepeatDamageRepeatSaves ?? [],
     spatialFacts: input.spatialFacts ?? [],
@@ -1583,7 +1590,9 @@ export function concentrationSavingThrowHole(
     dc: concentrationSavingThrowDc(effectiveDamage),
     damageAmount: toDamageAmount(effectiveDamage),
     targetFlatBonuses:
-      wardingBondSavingThrowFlatBonusProjectionsForTarget(combatant),
+      linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget(
+        combatant,
+      ),
     ...(combatantHasEldritchMind(combatant) ||
     combatant.concentration.maintenanceSavingThrowRollMode === "advantage"
       ? { rollMode: "advantage" as const }

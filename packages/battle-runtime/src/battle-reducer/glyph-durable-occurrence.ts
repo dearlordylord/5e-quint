@@ -227,7 +227,7 @@ function glyphStoredSpellTargetShapeForExecutionKind(
   return Match.value(executionKind).pipe(
     Match.when("areaOngoing", () => "area" as const),
     Match.when("areaControl", () => "area" as const),
-    Match.when("greaseGroundHazard", () => "area" as const),
+    Match.when("persistentAreaSaveCondition", () => "area" as const),
     Match.when("ordinaryArea", () => "area" as const),
     Match.when("saveGatedCondition", () => "singleCreature" as const),
     Match.when("fullDurationSaveGatedDamage", () => "singleCreature" as const),
@@ -1503,22 +1503,22 @@ function isGlyphStoredSelfTransformationModeSpellInvocation(
 function glyphStoredSpellInvocationHostilePlacementSubject(
   invocation: GlyphStoredSpellFacts,
 ): GlyphStoredSpellRuntimeHostilePlacementSubject | null {
-  if (invocation.procedure === "greaseGroundHazard") {
+  if (invocation.procedure === "persistentAreaSaveCondition") {
     return "traps";
   }
-  if (invocation.procedure === "spiritualWeaponAttackProxy") {
+  if (invocation.procedure === "spatialMeleeSpellAttackProxy") {
     return "harmful_objects";
   }
   return null;
 }
 
-function isGlyphStoredSpiritualWeaponInvocation(
+function isGlyphStoredSpatialMeleeSpellAttackProxyInvocation(
   invocation: GlyphStoredSpellFacts,
 ): invocation is Extract<
   GlyphStoredSpellFacts,
-  { readonly procedure: "spiritualWeaponAttackProxy" }
+  { readonly procedure: "spatialMeleeSpellAttackProxy" }
 > {
-  return invocation.procedure === "spiritualWeaponAttackProxy";
+  return invocation.procedure === "spatialMeleeSpellAttackProxy";
 }
 
 function glyphReleaseWitnessMatchesStoredOccurrence(
@@ -1691,7 +1691,9 @@ function glyphStoredSpellHostilePlacementValidation(input: {
     return "hostilePlacementTargetMismatch";
   }
   if (hostilePlacement.subject === "harmful_objects") {
-    if (!isGlyphStoredSpiritualWeaponInvocation(input.invocation)) {
+    if (
+      !isGlyphStoredSpatialMeleeSpellAttackProxyInvocation(input.invocation)
+    ) {
       return "hostilePlacementSubjectMismatch";
     }
     const invocation = input.invocation;
@@ -1705,8 +1707,8 @@ function glyphStoredSpellHostilePlacementValidation(input: {
         fill,
       ): fill is Extract<
         BattleFill,
-        { readonly kind: "spiritualWeaponForcePosition" }
-      > => fill.kind === "spiritualWeaponForcePosition",
+        { readonly kind: "spatialMeleeSpellAttackProxyPosition" }
+      > => fill.kind === "spatialMeleeSpellAttackProxyPosition",
     );
     if (forcePosition === undefined) {
       return null;
@@ -1717,7 +1719,7 @@ function glyphStoredSpellHostilePlacementValidation(input: {
     const targetWithinPlacedForceReach =
       input.witness.targeting.targetSpatialFacts.some(
         (fact) =>
-          fact.kind === "spiritualWeaponTargetWithinForceReach" &&
+          fact.kind === "spatialMeleeSpellAttackProxyTargetWithinReach" &&
           fact.casterId === input.sourceCombatantId &&
           fact.targetId === input.witness.triggeringCreatureId &&
           fact.sourceProcedureRef === input.sourceProcedureRef &&
@@ -1831,8 +1833,8 @@ function storedGlyphSpellReleasePlan(
       ),
       anchorId: triggeringCreatureId,
     })),
-    Match.when({ executionKind: "greaseGroundHazard" }, (stored) => ({
-      kind: "greaseGroundHazard" as const,
+    Match.when({ executionKind: "persistentAreaSaveCondition" }, (stored) => ({
+      kind: "persistentAreaSaveCondition" as const,
       invocation: bindStoredSpellProcedureExecutionFacts(
         stored.storedProcedure,
         procedureRef,
@@ -2030,15 +2032,14 @@ type GlyphStoredSpellFullDurationEffect = Extract<
       | "spellConditionRepeatSave"
       | "spellConditionEndTurnSave"
       | "spellConcentrationDuration"
-      | "spiritualWeapon"
-      | "fogCloudObscurement"
+      | "spatialMeleeSpellAttackProxy"
+      | "persistentAreaTrait"
       | "magicalDarknessPointOrigin"
-      | "flamingSphere"
-      | "spikeGrowthHazard"
-      | "moonbeam"
-      | "webRestraintHazard"
-      | "gustOfWindLine"
-      | "saveGatedAreaControlControl"
+      | "persistentAreaSaveDamage"
+      | "areaMovementDistanceDamage"
+      | "persistentAreaSaveConditionEscape"
+      | "directionalPersistentArea"
+      | "saveGatedAreaControl"
       | "speedDelta"
       | "speedRatio"
       | "specialSpeedGrant"
@@ -2048,7 +2049,7 @@ type GlyphStoredSpellFullDurationEffect = Extract<
       | "d20RollModifier"
       | "abilityCheckRollMode"
       | "spellCreatureSizeChange"
-      | "spellLevitatedCreature"
+      | "controlledVerticalSuspension"
       | "targetActionEndedSpellCondition"
       | "creatureTypeProtection"
       | "savingThrowRollMode"
@@ -2138,15 +2139,14 @@ function glyphStoredSpellFullDurationEffectSupportsExpiration(
     effect.kind === "spellConditionRepeatSave" ||
     effect.kind === "spellConditionEndTurnSave" ||
     effect.kind === "spellConcentrationDuration" ||
-    effect.kind === "spiritualWeapon" ||
-    effect.kind === "fogCloudObscurement" ||
+    effect.kind === "spatialMeleeSpellAttackProxy" ||
+    effect.kind === "persistentAreaTrait" ||
     effect.kind === "magicalDarknessPointOrigin" ||
-    effect.kind === "flamingSphere" ||
-    effect.kind === "spikeGrowthHazard" ||
-    effect.kind === "moonbeam" ||
-    effect.kind === "webRestraintHazard" ||
-    effect.kind === "gustOfWindLine" ||
-    effect.kind === "saveGatedAreaControlControl" ||
+    effect.kind === "persistentAreaSaveDamage" ||
+    effect.kind === "areaMovementDistanceDamage" ||
+    effect.kind === "persistentAreaSaveConditionEscape" ||
+    effect.kind === "directionalPersistentArea" ||
+    effect.kind === "saveGatedAreaControl" ||
     effect.kind === "speedDelta" ||
     effect.kind === "speedRatio" ||
     effect.kind === "specialSpeedGrant" ||
@@ -2156,7 +2156,7 @@ function glyphStoredSpellFullDurationEffectSupportsExpiration(
     effect.kind === "d20RollModifier" ||
     effect.kind === "abilityCheckRollMode" ||
     effect.kind === "spellCreatureSizeChange" ||
-    effect.kind === "spellLevitatedCreature" ||
+    effect.kind === "controlledVerticalSuspension" ||
     effect.kind === "targetActionEndedSpellCondition" ||
     effect.kind === "creatureTypeProtection" ||
     effect.kind === "savingThrowRollMode" ||
@@ -2824,7 +2824,8 @@ function applyGlyphExplosiveRuneDamage(input: {
         concentrationHoles,
         targetId,
       ),
-      wardingBondDamageShareConcentrationSavingThrows: concentrationFills,
+      linkedDefenseResistanceDamageShareConcentrationSavingThrows:
+        concentrationFills,
       saveGatedConditionWithRepeatDamageRepeatSaves:
         saveGatedConditionWithRepeatRepeatSaveFills,
     });
