@@ -36,7 +36,7 @@ import {
   completeShortRest,
   convertFontOfMagicSpellSlotToSorceryPoints,
   convertFontOfMagicSorceryPointsToSpellSlot,
-  createFreshCharacterSheet as createFreshCharacterSheetCore,
+  rebuildCharacterSheet as rebuildCharacterSheetCore,
   finishLongRest,
   finishShortRest,
   startLongRest,
@@ -907,13 +907,14 @@ function sheetFixture(
   >,
 ): CharacterSheet {
   return requireSuccess(
-    createFreshCharacterSheetCore({
+    rebuildCharacterSheetCore({
       characterId: characterSheetId(input.characterIdText),
       build: input.build,
       currentHp: Hp(input.currentHp),
       tempHp: Hp(input.tempHp ?? 0),
       hitPointMaximumReduction: Hp(0),
       conditions: input.conditions ?? [],
+      companion: { tag: "none" },
       unitLibrary,
       ...(input.spellSlotExpenditures === undefined
         ? {}
