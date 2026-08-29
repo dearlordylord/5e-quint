@@ -27,8 +27,10 @@ export const PLAY_SESSION_RESTORATION_GUIDANCE =
   "Create a new Play Session, then rebuild the desired state from model-visible or user-provided facts. The unavailable handle cannot be restored.";
 
 export const PlaySessionIdSchema = Schema.String.pipe(
-  Schema.pattern(
-    /^play-session:[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u,
+  Schema.check(
+    Schema.isPattern(
+      /^play-session:[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u,
+    ),
   ),
   Schema.brand("PlaySessionId"),
 ).annotate({

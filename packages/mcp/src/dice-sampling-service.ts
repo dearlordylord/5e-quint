@@ -22,7 +22,9 @@ export const DICE_RANDOM_SOURCE = {
 } as const;
 export const MAX_RETAINED_DICE_SAMPLINGS_PER_PLAY_SESSION = 10_000;
 
-const DiceSeedWordSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{8}$/u));
+const DiceSeedWordSchema = Schema.String.pipe(
+  Schema.check(Schema.isPattern(/^[0-9a-f]{8}$/u)),
+);
 export const DiceSeedSchema = Schema.Tuple([
   DiceSeedWordSchema,
   DiceSeedWordSchema,

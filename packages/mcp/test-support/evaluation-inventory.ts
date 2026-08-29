@@ -7,7 +7,7 @@ const McpEvaluationCaseBase = {
   prompt: Schema.String,
 };
 
-export const McpEvaluationCaseSchema = Schema.Union(
+export const McpEvaluationCaseSchema = Schema.Union([
   Schema.Struct({
     ...McpEvaluationCaseBase,
     kind: Schema.Literal("direct"),
@@ -27,16 +27,16 @@ export const McpEvaluationCaseSchema = Schema.Union(
   Schema.Struct({
     ...McpEvaluationCaseBase,
     kind: Schema.Literal("negative"),
-    expectedToolNames: Schema.Tuple(),
+    expectedToolNames: Schema.Tuple([]),
   }),
-);
+]);
 
 const SkillEvaluationCaseBase = {
   id: Schema.String,
   prompt: Schema.String,
 };
 
-export const SkillEvaluationCaseSchema = Schema.Union(
+export const SkillEvaluationCaseSchema = Schema.Union([
   Schema.Struct({
     ...SkillEvaluationCaseBase,
     kind: Schema.Literal("direct"),
@@ -63,7 +63,7 @@ export const SkillEvaluationCaseSchema = Schema.Union(
     kind: Schema.Literal("boundary"),
     expectedActivation: Schema.Literal("activate"),
   }),
-);
+]);
 
 export const CompleteWorkflowEvaluationCaseSchema = Schema.Struct({
   ...SkillEvaluationCaseBase,
@@ -79,7 +79,7 @@ const SubmissionReviewEvaluationCaseBase = {
   expectedResultShape: Schema.Trimmed.check(Schema.isNonEmpty()),
 };
 
-export const SubmissionReviewEvaluationCaseSchema = Schema.Union(
+export const SubmissionReviewEvaluationCaseSchema = Schema.Union([
   Schema.Struct({
     ...SubmissionReviewEvaluationCaseBase,
     kind: Schema.Literal("positive"),
@@ -89,7 +89,7 @@ export const SubmissionReviewEvaluationCaseSchema = Schema.Union(
     kind: Schema.Literal("negative"),
     rejectionRationale: Schema.Trimmed.check(Schema.isNonEmpty()),
   }),
-);
+]);
 
 export const EvaluationInventorySchema = Schema.Struct({
   officialGuidance: Schema.Literal(

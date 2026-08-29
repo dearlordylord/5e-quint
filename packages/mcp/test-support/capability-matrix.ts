@@ -71,7 +71,7 @@ const DerivedQueryCapabilityRowSchema = Schema.Struct({
 
 const NonDerivedCapabilityRowSchema = Schema.Struct({
   ...CapabilityRowCommonFields,
-  id: Schema.Literals([...NON_DERIVED_CAPABILITY_ROW_ID_VALUES]),
+  id: Schema.Literals(NON_DERIVED_CAPABILITY_ROW_ID_VALUES),
 });
 
 const CapabilityRowSchema = Schema.Union([

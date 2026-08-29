@@ -21,6 +21,6 @@ describe("public MCP origin", () => {
     "https://oracle.example.test/?query=yes",
     "https://oracle.example.test/#fragment",
   ])("rejects non-origin URL %s", (value) => {
-    expect(decode(value)).toMatchObject({ _tag: "Left" });
+    expect(decode(value)).toMatchObject({ _tag: "Failure" });
   });
 });

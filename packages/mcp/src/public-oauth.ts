@@ -26,10 +26,10 @@ export type PublicMcpOAuthIssue = {
 };
 
 const PublicMcpOAuthConfigurationSchema = Schema.Struct({
-  resource: Schema.URL,
-  authorizationServer: Schema.URL,
+  resource: Schema.URLFromString,
+  authorizationServer: Schema.URLFromString,
   issuer: Schema.Trimmed.check(Schema.isNonEmpty()),
-  jwksUrl: Schema.URL,
+  jwksUrl: Schema.URLFromString,
 });
 
 export function createPublicMcpOAuth(

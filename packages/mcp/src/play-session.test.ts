@@ -203,10 +203,10 @@ describe("Play Session operation scheduling", () => {
     );
     release?.();
     await first;
-    expect(await saved).toMatchObject({ _tag: "Right" });
+    expect(await saved).toMatchObject({ _tag: "Success" });
     expect(await stale).toMatchObject({
-      _tag: "Left",
-      left: { tag: "playSessionUnavailable" },
+      _tag: "Failure",
+      failure: { tag: "playSessionUnavailable" },
     });
   });
 
@@ -236,13 +236,13 @@ describe("Play Session operation scheduling", () => {
         retain: () => false,
         succeeded: () => false,
       }),
-    ).toMatchObject({ _tag: "Right" });
+    ).toMatchObject({ _tag: "Success" });
     nowMs = GUEST_INACTIVITY_RETENTION_MS;
     expect(
       await registry.run(guest.playSessionId, guest.caller, () => "expired"),
     ).toMatchObject({
-      _tag: "Left",
-      left: { tag: "playSessionUnavailable" },
+      _tag: "Failure",
+      failure: { tag: "playSessionUnavailable" },
     });
   });
 });

@@ -58,11 +58,13 @@ describe("public Play Session boundary", () => {
     legacy.close();
     try {
       const repository = openRepository(databasePath);
-      expect(
-        repository.load(
-          playSessionId("play-session:00000000-0000-4000-8000-000000000099"),
-        ),
-      ).toMatchObject({ _tag: "Right", right: { tag: "absent" } });
+      const retired = repository.load(
+        playSessionId("play-session:00000000-0000-4000-8000-000000000099"),
+      );
+      expect(Result.isSuccess(retired)).toBe(true);
+      if (Result.isSuccess(retired)) {
+        expect(retired.success).toEqual({ tag: "absent" });
+      }
       repository.close();
       const inspected = new DatabaseSync(databasePath, { readOnly: true });
       expect(
@@ -111,11 +113,13 @@ describe("public Play Session boundary", () => {
     legacy.close();
     try {
       const repository = openRepository(databasePath);
-      expect(
-        repository.load(
-          playSessionId("play-session:00000000-0000-4000-8000-000000000098"),
-        ),
-      ).toMatchObject({ _tag: "Right", right: { tag: "absent" } });
+      const retired = repository.load(
+        playSessionId("play-session:00000000-0000-4000-8000-000000000098"),
+      );
+      expect(Result.isSuccess(retired)).toBe(true);
+      if (Result.isSuccess(retired)) {
+        expect(retired.success).toEqual({ tag: "absent" });
+      }
       repository.close();
       const inspected = new DatabaseSync(databasePath, { readOnly: true });
       expect(
@@ -146,8 +150,8 @@ describe("public Play Session boundary", () => {
       () => "unreachable",
     );
     expect(deniedGuest).toMatchObject({
-      _tag: "Left",
-      left: { tag: "playSessionUnavailable" },
+      _tag: "Failure",
+      failure: { tag: "playSessionUnavailable" },
     });
 
     nowMs += 1;
@@ -156,48 +160,61 @@ describe("public Play Session boundary", () => {
       guest.guestAccessGrant,
       owner,
     );
-    expect(saved).toMatchObject({
-      _tag: "Right",
-      right: { tag: "saved", persistence: "saved" },
-    });
+    expect(Result.isSuccess(saved)).toBe(true);
+    if (Result.isSuccess(saved)) {
+      expect(saved.success).toMatchObject({
+        tag: "saved",
+        persistence: "saved",
+      });
+    }
     expect(
       await registry.run(
         guest.playSessionId,
         { tag: "guest", guestAccessGrant: guest.guestAccessGrant },
         () => "stale grant must not run",
       ),
-    ).toMatchObject({ _tag: "Left", left: { tag: "playSessionUnavailable" } });
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: { tag: "playSessionUnavailable" },
+    });
     expect(
       await registry.run(
         guest.playSessionId,
         { tag: "authenticated", principalId: other },
         () => "other principal must not run",
       ),
-    ).toMatchObject({ _tag: "Left", left: { tag: "playSessionUnavailable" } });
-    expect(registry.listSaved(other)).toMatchObject({
-      _tag: "Right",
-      right: [],
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: { tag: "playSessionUnavailable" },
     });
-    expect(registry.listSaved(owner)).toMatchObject({
-      _tag: "Right",
-      right: [{ playSessionId: guest.playSessionId }],
-    });
+    const otherSessions = registry.listSaved(other);
+    expect(Result.isSuccess(otherSessions)).toBe(true);
+    if (Result.isSuccess(otherSessions)) {
+      expect(otherSessions.success).toEqual([]);
+    }
+    const ownerSessions = registry.listSaved(owner);
+    expect(Result.isSuccess(ownerSessions)).toBe(true);
+    if (Result.isSuccess(ownerSessions)) {
+      expect(ownerSessions.success).toMatchObject([
+        { playSessionId: guest.playSessionId },
+      ]);
+    }
     expect(
       await registry.deleteSaved(guest.playSessionId, other),
     ).toMatchObject({
-      _tag: "Left",
-      left: { tag: "playSessionUnavailable" },
+      _tag: "Failure",
+      failure: { tag: "playSessionUnavailable" },
     });
-    expect(
-      await registry.deleteSaved(guest.playSessionId, owner),
-    ).toMatchObject({
-      _tag: "Right",
-      right: { tag: "playSessionDeleted" },
-    });
-    expect(registry.listSaved(owner)).toMatchObject({
-      _tag: "Right",
-      right: [],
-    });
+    const deleted = await registry.deleteSaved(guest.playSessionId, owner);
+    expect(Result.isSuccess(deleted)).toBe(true);
+    if (Result.isSuccess(deleted)) {
+      expect(deleted.success).toEqual({ tag: "playSessionDeleted" });
+    }
+    const remaining = registry.listSaved(owner);
+    expect(Result.isSuccess(remaining)).toBe(true);
+    if (Result.isSuccess(remaining)) {
+      expect(remaining.success).toEqual([]);
+    }
     repository.close();
   });
 
@@ -212,12 +229,12 @@ describe("public Play Session boundary", () => {
     guestCreation(registry.create({ tag: "anonymous" }));
     nowMs = GUEST_PRESSURE_PROTECTION_MS - 1;
     expect(registry.create({ tag: "anonymous" })).toMatchObject({
-      _tag: "Left",
-      left: { reason: "guestCapacityExceeded" },
+      _tag: "Failure",
+      failure: { reason: "guestCapacityExceeded" },
     });
     nowMs = GUEST_PRESSURE_PROTECTION_MS;
     expect(registry.create({ tag: "anonymous" })).toMatchObject({
-      _tag: "Right",
+      _tag: "Success",
     });
     expect(
       await registry.run(
@@ -225,7 +242,10 @@ describe("public Play Session boundary", () => {
         { tag: "guest", guestAccessGrant: first.guestAccessGrant },
         () => "removed by pressure cleanup",
       ),
-    ).toMatchObject({ _tag: "Left", left: { tag: "playSessionUnavailable" } });
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: { tag: "playSessionUnavailable" },
+    });
 
     repository.close();
 
@@ -245,7 +265,10 @@ describe("public Play Session boundary", () => {
         },
         () => "expired guest must not run",
       ),
-    ).toMatchObject({ _tag: "Left", left: { tag: "playSessionUnavailable" } });
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: { tag: "playSessionUnavailable" },
+    });
 
     const savedOwner = principal("principal:expiry");
     const saved = expiryRegistry.create({
@@ -260,7 +283,10 @@ describe("public Play Session boundary", () => {
         { tag: "authenticated", principalId: savedOwner },
         () => "expired saved session must not run",
       ),
-    ).toMatchObject({ _tag: "Left", left: { tag: "playSessionUnavailable" } });
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: { tag: "playSessionUnavailable" },
+    });
     expiryRepository.close();
   });
 
@@ -280,14 +306,16 @@ describe("public Play Session boundary", () => {
       },
     } satisfies PlaySessionCommand;
     const retention = { commandFor: () => command, retain: () => true };
-    expect(
-      await registry.run(
-        guest.playSessionId,
-        { tag: "guest", guestAccessGrant: guest.guestAccessGrant },
-        () => "first",
-        retention,
-      ),
-    ).toMatchObject({ _tag: "Right", right: { value: "first" } });
+    const first = await registry.run(
+      guest.playSessionId,
+      { tag: "guest", guestAccessGrant: guest.guestAccessGrant },
+      () => "first",
+      retention,
+    );
+    expect(Result.isSuccess(first)).toBe(true);
+    if (Result.isSuccess(first)) {
+      expect(first.success.value).toBe("first");
+    }
     expect(
       await registry.run(
         guest.playSessionId,
@@ -296,8 +324,8 @@ describe("public Play Session boundary", () => {
         retention,
       ),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "playSessionLimitFailure",
         reason: "retainedCommandQuotaExceeded",
       },
@@ -318,12 +346,12 @@ describe("public Play Session boundary", () => {
     };
     expect(
       await registry.run(guest.playSessionId, caller, () => "admitted"),
-    ).toMatchObject({ _tag: "Right" });
+    ).toMatchObject({ _tag: "Success" });
     expect(
       await registry.run(guest.playSessionId, caller, () => "not run"),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "playSessionLimitFailure",
         reason: "requestRateExceeded",
         retryAfterSeconds: 60,
@@ -332,7 +360,7 @@ describe("public Play Session boundary", () => {
     nowMs = 60_000;
     expect(
       await registry.run(guest.playSessionId, caller, () => "admitted again"),
-    ).toMatchObject({ _tag: "Right" });
+    ).toMatchObject({ _tag: "Success" });
     repository.close();
   });
 
@@ -350,8 +378,8 @@ describe("public Play Session boundary", () => {
           () => "unreachable",
         ),
       ).toMatchObject({
-        _tag: "Left",
-        left: { tag: "playSessionUnavailable" },
+        _tag: "Failure",
+        failure: { tag: "playSessionUnavailable" },
       });
     }
     expect(
@@ -360,7 +388,7 @@ describe("public Play Session boundary", () => {
         { tag: "guest", guestAccessGrant: guest.guestAccessGrant },
         () => "admitted",
       ),
-    ).toMatchObject({ _tag: "Right" });
+    ).toMatchObject({ _tag: "Success" });
     repository.close();
   });
 
@@ -441,7 +469,10 @@ describe("public Play Session boundary", () => {
     expect(claims.filter(Result.isSuccess)).toHaveLength(1);
     expect(claims.filter(Result.isFailure)).toEqual([
       expect.objectContaining({
-        left: { tag: "playSessionUnavailable", restoration: expect.anything() },
+        failure: {
+          tag: "playSessionUnavailable",
+          restoration: expect.anything(),
+        },
       }),
     ]);
     const listed = [
@@ -456,8 +487,8 @@ describe("public Play Session boundary", () => {
         () => undefined,
       ),
     ).toMatchObject({
-      _tag: "Left",
-      left: { tag: "playSessionUnavailable" },
+      _tag: "Failure",
+      failure: { tag: "playSessionUnavailable" },
     });
     repository.close();
   });

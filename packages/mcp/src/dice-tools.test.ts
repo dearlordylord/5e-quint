@@ -27,7 +27,6 @@ import {
 import { mcpOutputJsonSchema } from "./schema-codec.ts";
 import { jsonContentPayload } from "./tool-content.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
-import { fixedRandom, seededRandom } from "./dice-random-test-support.ts";
 
 const request = {
   requestId: requireDiceRollRequestId("00000000-0000-4000-8000-000000000001"),

@@ -179,7 +179,7 @@ function handleProjectionEvents(
   );
 
   request.on("close", () => {
-    Effect.runFork(Fiber.interruptFork(fiber));
+    Effect.runFork(Fiber.interrupt(fiber));
   });
 }
 

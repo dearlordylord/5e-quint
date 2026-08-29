@@ -181,7 +181,7 @@ describe("MCP model output JSON Schema", () => {
   test("retains distinct root and nested object branches within the bound", () => {
     const codec = Schema.Union([
       Schema.Struct({ value: Schema.Struct({ first: Schema.String }) }),
-      Schema.Struct({ value: Schema.Struct({ second: Schema.Number }) }),
+      Schema.Struct({ value: Schema.Struct({ second: Schema.Finite }) }),
       Schema.Struct({ error: Schema.String }),
     ]);
 

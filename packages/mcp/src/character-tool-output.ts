@@ -22,7 +22,7 @@ import {
 } from "./character-session-query-tool-output.ts";
 import { McpSessionSummarySchema } from "./session-snapshot-output.ts";
 
-const JsonObjectSchema = Schema.Record(Schema.String, Schema.Any);
+const JsonObjectSchema = Schema.Record(Schema.String, Schema.Unknown);
 
 const NonNegativeIntegerSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
@@ -56,7 +56,7 @@ const CharacterSessionResourceOperationResultSchema = Schema.Union([
     tag: Schema.Literal("fontOfMagicSpellSlotConvertedToSorceryPoints"),
     spellLevel: SpellSlotLevelSchema,
     spellSlotSource: Schema.optionalKey(
-      Schema.Literals([...FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES]),
+      Schema.Literals(FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES),
     ),
   }),
   Schema.Struct({
@@ -117,7 +117,7 @@ const CharacterSheetResourceDisplayRowSchema = Schema.Union([
 
 const DraftChoiceCreationHoleSourceSchema = Schema.Struct({
   tag: Schema.Literal("draft"),
-  path: Schema.Literals([...CHARACTER_DRAFT_CHOICE_PATHS]),
+  path: Schema.Literals(CHARACTER_DRAFT_CHOICE_PATHS),
 });
 const AbilityScoresCreationHoleSourceSchema = Schema.Struct({
   tag: Schema.Literal("draft"),
@@ -126,12 +126,12 @@ const AbilityScoresCreationHoleSourceSchema = Schema.Struct({
 const UnitChoiceCreationHoleSourceSchema = Schema.Struct({
   tag: Schema.Literal("unitChoice"),
   unitId: Schema.String,
-  choiceKey: Schema.Literals([...UNIT_CHOICE_KEYS]),
+  choiceKey: Schema.Literals(UNIT_CHOICE_KEYS),
 });
 const LoadoutCreationHoleSourceSchema = Schema.Struct({
   tag: Schema.Literal("loadout"),
   equipmentUnitId: Schema.String,
-  slot: Schema.Literals([...LOADOUT_SLOTS]),
+  slot: Schema.Literals(LOADOUT_SLOTS),
 });
 const ChoiceCreationHoleSourceSchema = Schema.Union([
   DraftChoiceCreationHoleSourceSchema,
@@ -166,9 +166,7 @@ const CreationHoleSchema = Schema.Union([
     kind: Schema.Literal("abilityScores"),
     holeId: Schema.String,
     source: AbilityScoresCreationHoleSourceSchema,
-    methods: Schema.Array(
-      Schema.Literals([...SUPPORTED_ABILITY_SCORE_METHODS]),
-    ),
+    methods: Schema.Array(Schema.Literals(SUPPORTED_ABILITY_SCORE_METHODS)),
   }),
 ]);
 export const CreationFinalizationSchema = Schema.Union([
@@ -230,12 +228,12 @@ const CreationFillResultSchema = Schema.Union([
           tag: Schema.Literal("illegalFill"),
           holeId: Schema.String,
           fillIndex: NonNegativeIntegerSchema,
-          code: Schema.Literals([...CREATION_FILL_ISSUE_CODES]),
+          code: Schema.Literals(CREATION_FILL_ISSUE_CODES),
           message: Schema.String,
         }),
         Schema.Struct({
           tag: Schema.Literal("illegalBatch"),
-          code: Schema.Literals([...CREATION_BATCH_ISSUE_CODES]),
+          code: Schema.Literals(CREATION_BATCH_ISSUE_CODES),
           message: Schema.String,
         }),
       ]),

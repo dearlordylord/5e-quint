@@ -9,7 +9,7 @@ import {
   SkillSchema,
 } from "@dnd/surface/surface/schema";
 import { ARMOR_TRAINING_CATEGORIES } from "@dnd/surface/surface/types";
-import { Schema } from "effect";
+import { Schema, SchemaGetter } from "effect";
 
 import { McpSessionSummarySchema } from "./session-snapshot-output.ts";
 
@@ -17,19 +17,25 @@ const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
 );
 const IntegerSchema = Schema.Number.pipe(Schema.check(Schema.isInt()));
-const MovementFeetOutputSchema = Schema.transform(MovementFeet, Schema.Number, {
-  decode: (feet) => Number(feet),
-  encode: (feet) => MovementFeet.make(feet),
-  strict: true,
-});
-const ResourceCountOutputSchema = Schema.transform(
-  ResourceCount,
-  Schema.Number,
-  {
-    decode: (count) => Number(count),
-    encode: (count) => ResourceCount.make(count),
-    strict: true,
-  },
+const MovementFeetOutputSchema = MovementFeet.pipe(
+  Schema.decodeTo(Schema.Number, {
+    decode: SchemaGetter.transform<number, MovementFeet>((feet) =>
+      Number(feet),
+    ),
+    encode: SchemaGetter.transform<MovementFeet, number>((feet) =>
+      MovementFeet.make(feet),
+    ),
+  }),
+);
+const ResourceCountOutputSchema = ResourceCount.pipe(
+  Schema.decodeTo(Schema.Number, {
+    decode: SchemaGetter.transform<number, ResourceCount>((count) =>
+      Number(count),
+    ),
+    encode: SchemaGetter.transform<ResourceCount, number>((count) =>
+      ResourceCount.make(count),
+    ),
+  }),
 );
 const CharacterSheetProjectionRetainRouteSchema = Schema.Struct({
   kind: Schema.Literal("retainCharacterSheetSelectedReferences"),
@@ -132,9 +138,9 @@ const ArmorClassStateSchema = Schema.Struct({
   base: ArmorClassBaseSchema,
   bonuses: Schema.Array(ArmorClassBonusSchema),
   floors: Schema.Array(ArmorClassFloorSchema),
-  armorTraining: Schema.Array(Schema.Literals([...ARMOR_TRAINING_CATEGORIES])),
-  leftHandUse: Schema.Literals([...HAND_USES]),
-  rightHandUse: Schema.Literals([...HAND_USES]),
+  armorTraining: Schema.Array(Schema.Literals(ARMOR_TRAINING_CATEGORIES)),
+  leftHandUse: Schema.Literals(HAND_USES),
+  rightHandUse: Schema.Literals(HAND_USES),
 });
 
 const CharacterSheetAbilityCheckAbilityProjectionSchema = Schema.Struct({

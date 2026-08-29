@@ -6,7 +6,7 @@ export function dndMcpStdioProgram<Transport>(
 ): Effect.Effect<void> {
   return Effect.promise(() => server.connect(transport)).pipe(
     Effect.flatMap(() => Effect.never),
-    Effect.catchAllCause((cause) =>
+    Effect.catchCause((cause) =>
       Effect.sync(() => {
         console.error("MCP server crashed", cause.toString());
       }),

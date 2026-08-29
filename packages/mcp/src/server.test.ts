@@ -6782,8 +6782,8 @@ describe("MCP server route", () => {
     );
 
     expect(rejected).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Retained companion current HP must be positive.",
       },
     });

@@ -123,7 +123,7 @@ function mcpManifestSchemaFor(matrix: CapabilityMatrix) {
       }),
     ),
     evidence: Schema.NonEmptyArray(rowSchema),
-    scopeAuditDecisions: Schema.Array(Schema.Any),
+    scopeAuditDecisions: Schema.Array(Schema.Unknown),
   });
 }
 const ApiMcpSelectionOperatorStepSchema = Schema.Struct({
@@ -152,7 +152,7 @@ const CompleteWorkflowOperatorStepSchema = Schema.Struct({
 });
 
 function unobservedCaseResultSchema<Kind extends string>(
-  evidenceKind: Schema.Literal<[Kind]>,
+  evidenceKind: Schema.Literal<Kind>,
 ) {
   return Schema.Union([
     Schema.Struct({
@@ -198,12 +198,12 @@ const ToolSelectionObservationSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("toolSelected"),
     selectedTool: Schema.String,
-    arguments: Schema.Record(Schema.String, Schema.Any),
+    arguments: Schema.Record(Schema.String, Schema.Unknown),
     alsoCalledTools: Schema.Array(Schema.String),
     outcome: Schema.Union([
       Schema.Struct({
         tag: Schema.Literal("success"),
-        result: Schema.Any,
+        result: Schema.Unknown,
         confirmation: ConfirmationBehaviorSchema,
       }),
       Schema.Struct({
@@ -1468,10 +1468,10 @@ function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function decodeFile<S extends Schema.Schema.AnyNoContext>(
+function decodeFile<S extends Schema.ConstraintDecoder<unknown, never>>(
   schema: S,
   path: string,
-): Schema.Schema.Type<S> {
+): S["Type"] {
   return Schema.decodeUnknownSync(schema, { onExcessProperty: "error" })(
     JSON.parse(readFileSync(path, "utf8")),
   );

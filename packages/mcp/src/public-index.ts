@@ -25,9 +25,9 @@ const PublicMcpConfigurationSchema = Schema.Struct({
   hostname: Schema.Trimmed.check(Schema.isNonEmpty()),
   port: Schema.NumberFromString.pipe(
     Schema.check(Schema.isInt()),
-    Schema.between(1, 65_535),
+    Schema.check(Schema.isBetween({ minimum: 1, maximum: 65_535 })),
   ),
-  environment: Schema.Literals([...PUBLIC_MCP_DEPLOYMENT_ENVIRONMENTS]),
+  environment: Schema.Literals(PUBLIC_MCP_DEPLOYMENT_ENVIRONMENTS),
   release: Schema.Trimmed.check(Schema.isNonEmpty()),
   publisherName: PublicMcpPublisherNameSchema,
   publicOrigin: PublicMcpOriginSchema,

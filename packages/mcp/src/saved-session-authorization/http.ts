@@ -56,7 +56,7 @@ export async function handleSavedSessionAuthorizationRequest(input: {
       input.authorization.origin,
       cancellation.signal,
     );
-    if (Result.isFailure(request)) return request;
+    if (Result.isFailure(request)) return Result.fail(request.failure);
     const response = await Effect.runPromise(
       input.authorization.service.handle(request.success).pipe(Effect.result),
     );

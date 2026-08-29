@@ -29,7 +29,7 @@ const RecoverablePlaySessionOperationsSchema = Schema.Array(
   Schema.Union([
     Schema.Struct({
       name: RecoverableStateOperationNameSchema,
-      args: Schema.Record(Schema.String, Schema.Unknown),
+      args: Schema.JsonObject,
     }),
     Schema.Struct({
       name: Schema.Literal(diceToolNames.rollDice),
@@ -38,7 +38,7 @@ const RecoverablePlaySessionOperationsSchema = Schema.Array(
   ]),
 );
 const StoredDiceSeedSchema = Schema.String.pipe(
-  Schema.pattern(/^[0-9a-f]{32}$/u),
+  Schema.check(Schema.isPattern(/^[0-9a-f]{32}$/u)),
 );
 const StoredPlaySessionRowSchema = Schema.Struct({
   format_version: Schema.Literal(RECOVERABLE_PLAY_SESSION_FORMAT_VERSION),

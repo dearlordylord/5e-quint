@@ -111,10 +111,10 @@ export function availablePlaySessionEnvelope(input: {
     return errorContent("MCP operation output projection failed.", {
       code: "INVALID_OPERATION_OUTPUT",
       operationName: input.operationName,
-      projectionIssue: unresolvedInputsResult.fail,
+      projectionIssue: unresolvedInputsResult.failure,
     });
   }
-  const unresolvedInputs = unresolvedInputsResult.succeed;
+  const unresolvedInputs = unresolvedInputsResult.success;
   const nextOperations = nextOperationsForEnvelope(
     input,
     projection,

@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-export const AuthorizationServerOriginSchema = Schema.URL.pipe(
+export const AuthorizationServerOriginSchema = Schema.URLFromString.pipe(
   Schema.check(
     Schema.makeFilter(
       (url) =>

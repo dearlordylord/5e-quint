@@ -221,7 +221,7 @@ function jsonSchemaFromCodec<A, I>(
   schema: Schema.Codec<A, I, never>,
 ): McpOutputSchema {
   return stripSchemaIds(
-    Schema.toStandardJSONSchemaV1(schema)["~standard"].jsonSchema.output({
+    Schema.toStandardJSONSchemaV1(schema)["~standard"].jsonSchema.input({
       target: "draft-2020-12",
     }),
   );

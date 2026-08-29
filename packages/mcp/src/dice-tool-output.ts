@@ -5,7 +5,7 @@ import { DICE_RANDOM_SOURCE } from "./dice-sampling-service.ts";
 
 const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt()),
-  Schema.positive(),
+  Schema.check(Schema.isGreaterThan(0)),
 );
 const DieSizeSchema = PositiveIntegerSchema.pipe(
   Schema.check(Schema.isLessThanOrEqualTo(MAX_DIE_SIZE)),
@@ -47,7 +47,7 @@ export const DiceRollGroupOutputSchema = DiceRollGroupOutputBaseSchema.pipe(
       {
         description:
           "an ordered non-empty group whose visible faces are within dieSize",
-        jsonSchema: { oneOf: dieSizeBranches },
+        toJsonSchema: () => ({ oneOf: dieSizeBranches }),
       },
     ),
   ),

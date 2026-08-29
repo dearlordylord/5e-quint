@@ -322,10 +322,10 @@ function signalMatchingProcesses(
   }
 }
 
-function decodeJsonFile<S extends Schema.Schema.AnyNoContext>(
+function decodeJsonFile<S extends Schema.ConstraintDecoder<unknown, never>>(
   schema: S,
   path: string,
-): Schema.Schema.Type<S> {
+): S["Type"] {
   return Schema.decodeUnknownSync(schema)(
     JSON.parse(readFileSync(path, "utf8")),
   );

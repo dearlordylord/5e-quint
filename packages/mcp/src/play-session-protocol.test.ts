@@ -30,8 +30,8 @@ describe("Play Session operation projection", () => {
     expect(
       unresolvedInputsFrom(characterToolNames.createCharacterDraft, {}),
     ).toMatchObject({
-      _tag: "Left",
-      left: { tag: "operationProjectionDecodeIssue" },
+      _tag: "Failure",
+      failure: { tag: "operationProjectionDecodeIssue" },
     });
   });
 

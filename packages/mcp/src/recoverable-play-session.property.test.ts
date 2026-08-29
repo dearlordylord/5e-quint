@@ -237,13 +237,13 @@ describe("recoverable Play Session properties", () => {
       expect(first.disposition).toBe("sampled");
       expect(repeated.disposition).toBe("replayed");
       const stored = repository.load(playSessionId);
-      expect(stored).toMatchObject({
-        _tag: "Right",
-        right: {
+      expect(Result.isSuccess(stored)).toBe(true);
+      if (Result.isSuccess(stored)) {
+        expect(stored.success).toMatchObject({
           tag: "found",
           record: { operations: [{ name: "roll_dice" }] },
-        },
-      });
+        });
+      }
     } finally {
       repository.close();
     }

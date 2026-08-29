@@ -105,7 +105,7 @@ export const AdminMirrorBattleHpChangeSchema = Schema.Struct({
 export type AdminMirrorBattleHpChange =
   typeof AdminMirrorBattleHpChangeSchema.Type;
 
-const JsonObjectSchema = Schema.Record(Schema.String, Schema.Any);
+const JsonObjectSchema = Schema.Record(Schema.String, Schema.Unknown);
 
 export const AdminMirrorEventDebugSchema = Schema.Struct({
   derivedInput: JsonObjectSchema,

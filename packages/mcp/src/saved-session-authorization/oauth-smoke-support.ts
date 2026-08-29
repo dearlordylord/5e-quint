@@ -8,17 +8,17 @@ import { isAnonymousVaultEmail } from "./vault-identity.ts";
 
 export const AuthorizationServerMetadataSchema = Schema.Struct({
   issuer: Schema.Trimmed.check(Schema.isNonEmpty()),
-  authorization_endpoint: Schema.URL,
-  token_endpoint: Schema.URL,
-  userinfo_endpoint: Schema.URL,
-  jwks_uri: Schema.URL,
-  registration_endpoint: Schema.URL,
+  authorization_endpoint: Schema.URLFromString,
+  token_endpoint: Schema.URLFromString,
+  userinfo_endpoint: Schema.URLFromString,
+  jwks_uri: Schema.URLFromString,
+  registration_endpoint: Schema.URLFromString,
   client_id_metadata_document_supported: Schema.Boolean,
 });
 
 export const RegisteredClientSchema = Schema.Struct({
   client_id: Schema.Trimmed.check(Schema.isNonEmpty()),
-  redirect_uris: Schema.Array(Schema.URL),
+  redirect_uris: Schema.Array(Schema.URLFromString),
   token_endpoint_auth_method: Schema.Literal("none"),
 });
 
@@ -286,17 +286,19 @@ export async function requestBody(
   return Buffer.concat(chunks);
 }
 
-export async function decodeJson<A, I>(
-  schema: Schema.Schema<A, I>,
-  response: Response,
-): Promise<A> {
+export async function decodeJson<
+  S extends Schema.ConstraintDecoder<unknown, never>,
+>(schema: S, response: Response): Promise<S["Type"]> {
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}: ${await response.text()}`);
   }
   return decodeUnknown(schema, await response.json());
 }
 
-function decodeUnknown<A, I>(schema: Schema.Schema<A, I>, value: unknown): A {
+function decodeUnknown<S extends Schema.ConstraintDecoder<unknown, never>>(
+  schema: S,
+  value: unknown,
+): S["Type"] {
   const decoded = Schema.decodeUnknownResult(schema)(value);
   if (Result.isFailure(decoded)) throw new Error(decoded.failure.message);
   return decoded.success;

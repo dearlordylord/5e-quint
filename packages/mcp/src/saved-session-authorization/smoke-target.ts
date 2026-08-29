@@ -34,7 +34,9 @@ export async function openSavedSessionAuthorizationSmokeTarget(): Promise<SavedS
 function openDeployedSmokeTarget(
   deployedEndpoint: string,
 ): SavedSessionAuthorizationSmokeTarget {
-  const endpoint = Schema.decodeUnknownSync(Schema.URL)(deployedEndpoint);
+  const endpoint = Schema.decodeUnknownSync(Schema.URLFromString)(
+    deployedEndpoint,
+  );
   const isMcpEndpoint =
     endpoint.pathname === "/mcp" &&
     endpoint.search === "" &&

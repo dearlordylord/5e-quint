@@ -43,12 +43,11 @@ function handleToolCall(
 describe("battle tool payload boundaries", () => {
   test("projects the explicit no-session state", () => {
     const root = createMcpPlaySessionRoot();
-    expect(battleSessionPayload(root, null)).toMatchObject({
-      _tag: "Right",
-      right: {
-        envelope: null,
-      },
-    });
+    const payload = battleSessionPayload(root, null);
+    expect(Result.isSuccess(payload)).toBe(true);
+    if (Result.isSuccess(payload)) {
+      expect(payload.success.envelope).toBeNull();
+    }
     expect(noStoredBattleContent()).toMatchObject({
       isError: true,
       content: [
@@ -62,20 +61,15 @@ describe("battle tool payload boundaries", () => {
   test("projects an active session without an interrupt window", () => {
     const { root, session } = startedStatBlockBattle();
 
-    expect(battleSessionPayload(root, session)).toMatchObject({
-      _tag: "Right",
-      right: {
-        envelope: {
-          checkpoint: { battleId: "battle:payload-boundaries" },
-        },
-      },
-    });
     const payload = battleSessionPayload(root, session);
     if (Result.isFailure(payload))
       throw new Error("Expected an active payload.");
     if (payload.success.envelope === null) {
       throw new Error("Expected an active battle envelope.");
     }
+    expect(payload.success.envelope.checkpoint.battleId).toBe(
+      "battle:payload-boundaries",
+    );
     expect(payload.success.envelope.checkpoint).not.toHaveProperty(
       "pendingInterrupt",
     );

@@ -58,10 +58,11 @@ describe("public MCP OAuth", () => {
         audience: "https://oracle.example.test/mcp",
         expiresIn: "5m",
       });
-      expect(await oauth.success.verifyAccessToken(valid)).toMatchObject({
-        _tag: "Right",
-        right: expect.stringMatching(/^oauth-principal:[0-9a-f]{64}$/u),
-      });
+      const verified = await oauth.success.verifyAccessToken(valid);
+      expect(Result.isSuccess(verified)).toBe(true);
+      if (Result.isSuccess(verified)) {
+        expect(verified.success).toMatch(/^oauth-principal:[0-9a-f]{64}$/u);
+      }
       const wrongAudience = await signedToken(privateKey, {
         audience: "another-resource",
         expiresIn: "5m",
@@ -69,16 +70,16 @@ describe("public MCP OAuth", () => {
       expect(
         await oauth.success.verifyAccessToken(wrongAudience),
       ).toMatchObject({
-        _tag: "Left",
-        left: { reason: "invalidToken" },
+        _tag: "Failure",
+        failure: { reason: "invalidToken" },
       });
       const expired = await signedToken(privateKey, {
         audience: "https://oracle.example.test/mcp",
         expiresIn: "-1s",
       });
       expect(await oauth.success.verifyAccessToken(expired)).toMatchObject({
-        _tag: "Left",
-        left: { reason: "invalidToken" },
+        _tag: "Failure",
+        failure: { reason: "invalidToken" },
       });
       const missingScope = await signedToken(privateKey, {
         audience: "https://oracle.example.test/mcp",
@@ -87,8 +88,8 @@ describe("public MCP OAuth", () => {
       });
       expect(await oauth.success.verifyAccessToken(missingScope)).toMatchObject(
         {
-          _tag: "Left",
-          left: { reason: "invalidToken" },
+          _tag: "Failure",
+          failure: { reason: "invalidToken" },
         },
       );
     } finally {

@@ -7,15 +7,15 @@ import publicPlaySessionPolicy from "./public-play-session-policy.json" with { t
 const PublicPlaySessionPolicySchema = Schema.Struct({
   guestInactivityRetentionMs: Schema.Number.pipe(
     Schema.check(Schema.isInt()),
-    Schema.positive(),
+    Schema.check(Schema.isGreaterThan(0)),
   ),
   guestPressureProtectionMs: Schema.Number.pipe(
     Schema.check(Schema.isInt()),
-    Schema.positive(),
+    Schema.check(Schema.isGreaterThan(0)),
   ),
   savedInactivityRetentionMs: Schema.Number.pipe(
     Schema.check(Schema.isInt()),
-    Schema.positive(),
+    Schema.check(Schema.isGreaterThan(0)),
   ),
 });
 const decodedPublicPlaySessionPolicy = Schema.decodeUnknownSync(
@@ -36,20 +36,20 @@ export const DEFAULT_PLAY_SESSION_REQUESTS_PER_MINUTE = 120;
 export const PLAY_SESSION_RATE_LIMIT_WINDOW_MS = 60_000;
 
 export const GuestAccessGrantSchema = Schema.String.pipe(
-  Schema.pattern(/^guest-access:[0-9a-f]{64}$/u),
+  Schema.check(Schema.isPattern(/^guest-access:[0-9a-f]{64}$/u)),
   Schema.brand("GuestAccessGrant"),
 );
 export type GuestAccessGrant = typeof GuestAccessGrantSchema.Type;
 export type GuestAccessGrantFactory = () => GuestAccessGrant;
 
 export const GuestAccessGrantDigestSchema = Schema.String.pipe(
-  Schema.pattern(/^[0-9a-f]{64}$/u),
+  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/u)),
   Schema.brand("GuestAccessGrantDigest"),
 );
 export type GuestAccessGrantDigest = typeof GuestAccessGrantDigestSchema.Type;
 
 const PlaySessionRateLimitKeyDigestSchema = Schema.String.pipe(
-  Schema.pattern(/^[0-9a-f]{64}$/u),
+  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/u)),
   Schema.brand("PlaySessionRateLimitKeyDigest"),
 );
 export type PlaySessionRateLimitKeyDigest =

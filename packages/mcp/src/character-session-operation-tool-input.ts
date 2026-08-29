@@ -72,7 +72,7 @@ const SpellRestBenefitOperationArgsSchema = Schema.Struct({
     Schema.check(Schema.isLessThanOrEqualTo(9)),
   ),
   spellSlotSource: Schema.optionalKey(
-    Schema.Literals([...FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES]),
+    Schema.Literals(FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES),
   ),
   recipients: Schema.NonEmptyArray(SpellRestBenefitRecipientArgsSchema),
 });
@@ -185,7 +185,7 @@ const WeaponMasteryReselectionArgsSchema = Schema.Struct({
 
 const CalendarTimeDurationArgsSchema = Schema.Struct({
   kind: Schema.Literal("timeSpan"),
-  unit: Schema.Literals([...TIME_SPAN_UNITS]),
+  unit: Schema.Literals(TIME_SPAN_UNITS),
   amount: PositiveIntegerSchema,
 });
 
@@ -203,7 +203,7 @@ const CompleteShortRestOperationArgsSchema = Schema.Struct({
   kind: Schema.Literal("completeShortRest"),
   restedTicks: NonNegativeIntegerSchema,
   fiendishResilienceDamageType: Schema.optionalKey(
-    Schema.Literals([...DAMAGE_TYPES]),
+    Schema.Literals(DAMAGE_TYPES),
   ),
   ...RestRecoveryArgsFields,
 });
@@ -222,10 +222,10 @@ const LongRestCompletionChoiceFields = {
     }),
   ),
   druidCircleLandChoice: Schema.optionalKey(
-    Schema.Literals([...DRUID_CIRCLE_LAND_CHOICES]),
+    Schema.Literals(DRUID_CIRCLE_LAND_CHOICES),
   ),
   fiendishResilienceDamageType: Schema.optionalKey(
-    Schema.Literals([...DAMAGE_TYPES]),
+    Schema.Literals(DAMAGE_TYPES),
   ),
 } as const;
 const LongRestCompletionArgsFields = {
@@ -277,7 +277,7 @@ const ConvertFontOfMagicSpellSlotToSorceryPointsOperationArgsSchema =
     kind: Schema.Literal("convertFontOfMagicSpellSlotToSorceryPoints"),
     spellLevel: SpellSlotLevelSchema,
     spellSlotSource: Schema.optionalKey(
-      Schema.Literals([...FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES]),
+      Schema.Literals(FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES),
     ),
   });
 const ConvertFontOfMagicSorceryPointsToSpellSlotOperationArgsSchema =
