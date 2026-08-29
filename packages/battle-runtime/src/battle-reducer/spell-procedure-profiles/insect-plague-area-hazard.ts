@@ -3,7 +3,7 @@ import { ongoingConcentrationAreaSpellFacts } from "../ongoing-concentration-are
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-insect-plague-area-hazard
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.STATIONARY_PERSISTENT_AREA_AREA_HAZARD_LIFECYCLE
 //
 // Insect Plague: action-time Spell Slot casting creates a caster-owned
 // Concentration Sphere. The runtime owns Spell Slot spending, Concentration
@@ -37,7 +37,7 @@ import {
 } from "../codec-building-blocks.ts";
 import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
 import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
-import { resolveInsectPlagueAreaHazardSpellAct } from "../spells-resolve-area-effects.ts";
+import { resolveStationaryPersistentAreaAreaHazardSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -48,56 +48,59 @@ import {
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 
-type InsectPlagueAreaHazardSpellInvocation = Extract<
+type StationaryPersistentAreaAreaHazardSpellInvocation = Extract<
   SupportedSpellInvocation,
-  { readonly procedure: "insectPlagueAreaHazard" }
+  {
+    readonly procedure: "persistentAreaSaveDamage";
+    readonly lifecycle: { readonly kind: "stationary" };
+  }
 >;
-type InsectPlagueAreaHazardResolveInput =
-  SpellProcedureProfileResolveInput<InsectPlagueAreaHazardSpellInvocation>;
-type InsectPlagueMechanics = Extract<
+type StationaryPersistentAreaAreaHazardResolveInput =
+  SpellProcedureProfileResolveInput<StationaryPersistentAreaAreaHazardSpellInvocation>;
+type StationaryPersistentAreaMechanics = Extract<
   BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
 >;
-type InsectPlagueSaveGate = Extract<
-  NonNullable<InsectPlagueMechanics["initialPhase"]>,
+type StationaryPersistentAreaSaveGate = Extract<
+  NonNullable<StationaryPersistentAreaMechanics["initialPhase"]>,
   { readonly kind: "save_gate" }
 >;
-type InsectPlagueProfileShape = {
+type StationaryPersistentAreaProfileShape = {
   readonly durationTicks: ElapsedTimeTicks;
   readonly rangeFeet: number;
   readonly radiusFeet: number;
   readonly damageAmount: Extract<
-    InsectPlagueSaveGate["onFail"],
+    StationaryPersistentAreaSaveGate["onFail"],
     { readonly kind: "damage" }
   >["amount"];
 };
 
-const INSECT_PLAGUE_LEVEL = 5;
-const INSECT_PLAGUE_RANGE_FEET = 300;
-const INSECT_PLAGUE_DURATION_MINUTES = 10;
-const INSECT_PLAGUE_RADIUS_FEET = 20;
-const INSECT_PLAGUE_OPERATION_COUNT = 3;
-const INSECT_PLAGUE_BASE_DAMAGE_DICE = 4;
-const INSECT_PLAGUE_DAMAGE_DIE_SIZE = 10;
-const INSECT_PLAGUE_DAMAGE_DICE_PER_SLOT_LEVEL = 1;
+const STATIONARY_PERSISTENT_AREA_LEVEL = 5;
+const STATIONARY_PERSISTENT_AREA_RANGE_FEET = 300;
+const STATIONARY_PERSISTENT_AREA_DURATION_MINUTES = 10;
+const STATIONARY_PERSISTENT_AREA_RADIUS_FEET = 20;
+const STATIONARY_PERSISTENT_AREA_OPERATION_COUNT = 3;
+const STATIONARY_PERSISTENT_AREA_BASE_DAMAGE_DICE = 4;
+const STATIONARY_PERSISTENT_AREA_DAMAGE_DIE_SIZE = 10;
+const STATIONARY_PERSISTENT_AREA_DAMAGE_DICE_PER_SLOT_LEVEL = 1;
 
-function admitInsectPlagueAreaHazard(
+function admitStationaryPersistentAreaAreaHazard(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
-): readonly InsectPlagueAreaHazardSpellInvocation[] {
-  const insectPlague = insectPlagueAreaHazardSpell(spell);
-  if (insectPlague === null) {
+): readonly StationaryPersistentAreaAreaHazardSpellInvocation[] {
+  const stationaryPersistentArea = persistentAreaSaveDamageSpell(spell);
+  if (stationaryPersistentArea === null) {
     return [];
   }
 
   return ctx.spellCastOptions.flatMap(
-    (slot): readonly InsectPlagueAreaHazardSpellInvocation[] => {
-      if (Number(slot.spellLevel) < INSECT_PLAGUE_LEVEL) {
+    (slot): readonly StationaryPersistentAreaAreaHazardSpellInvocation[] => {
+      if (Number(slot.spellLevel) < STATIONARY_PERSISTENT_AREA_LEVEL) {
         return [];
       }
       const damageExpr = supportedDamageAmountExpr({
-        amount: insectPlague.damageAmount,
-        spellLevel: INSECT_PLAGUE_LEVEL,
+        amount: stationaryPersistentArea.damageAmount,
+        spellLevel: STATIONARY_PERSISTENT_AREA_LEVEL,
         slotLevel: slot.spellLevel,
       });
       if (damageExpr === null) {
@@ -107,16 +110,17 @@ function admitInsectPlagueAreaHazard(
         {
           access: { tag: "prepared" },
           resource: spellInvocationResourceForCastOption(slot),
-          procedure: "insectPlagueAreaHazard",
+          procedure: "persistentAreaSaveDamage",
+          lifecycle: { kind: "stationary" },
           spell,
           ability: "con",
           dc: { kind: "caster_spell_save_dc" },
           targeting: {
             kind: "pointOriginSphere",
-            radiusFeet: movementFeet(insectPlague.radiusFeet),
+            radiusFeet: movementFeet(stationaryPersistentArea.radiusFeet),
           },
-          durationTicks: insectPlague.durationTicks,
-          rangeFeet: movementFeet(insectPlague.rangeFeet),
+          durationTicks: stationaryPersistentArea.durationTicks,
+          rangeFeet: movementFeet(stationaryPersistentArea.rangeFeet),
           damage: { expr: damageExpr, damageType: "piercing" },
         },
       ];
@@ -124,9 +128,9 @@ function admitInsectPlagueAreaHazard(
   );
 }
 
-function insectPlagueAreaHazardSpell(
+function persistentAreaSaveDamageSpell(
   spell: BattleSpellAdmissionSource,
-): InsectPlagueProfileShape | null {
+): StationaryPersistentAreaProfileShape | null {
   const ongoing = ongoingConcentrationAreaSpellFacts(spell);
   if (ongoing === null) {
     return null;
@@ -142,27 +146,36 @@ function insectPlagueAreaHazardSpell(
     (operation) => operation.trigger.kind === "on_creature_ends_turn_in_area",
   );
   const initialPhase = mechanics.initialPhase;
-  const initialDamageAmount = insectPlagueSaveGateDamageAmount(initialPhase);
+  const initialDamageAmount =
+    stationaryPersistentAreaSaveGateDamageAmount(initialPhase);
+  const initialUsageLimit =
+    initialPhase?.kind === "save_gate" ? initialPhase.usageLimit : undefined;
 
   if (
-    mechanics.level !== INSECT_PLAGUE_LEVEL ||
+    mechanics.level !== STATIONARY_PERSISTENT_AREA_LEVEL ||
     mechanics.castingTime.kind !== "action" ||
     mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== INSECT_PLAGUE_RANGE_FEET ||
+    mechanics.range.feet !== STATIONARY_PERSISTENT_AREA_RANGE_FEET ||
     duration.upTo.unit !== "minute" ||
-    duration.upTo.amount !== INSECT_PLAGUE_DURATION_MINUTES ||
-    mechanics.operations.length !== INSECT_PLAGUE_OPERATION_COUNT ||
+    duration.upTo.amount !== STATIONARY_PERSISTENT_AREA_DURATION_MINUTES ||
+    mechanics.operations.length !==
+      STATIONARY_PERSISTENT_AREA_OPERATION_COUNT ||
     Result.isFailure(durationTicks) ||
     area?.kind !== "area" ||
     area.origin.kind !== "point_within_range" ||
     area.shape.kind !== "sphere" ||
-    area.shape.radiusFeet !== INSECT_PLAGUE_RADIUS_FEET ||
-    !isInsectPlaguePassiveOperation(passiveOperation?.effect) ||
+    area.shape.radiusFeet !== STATIONARY_PERSISTENT_AREA_RADIUS_FEET ||
+    !isStationaryPersistentAreaPassiveOperation(passiveOperation?.effect) ||
     initialDamageAmount === null ||
-    insectPlagueSaveGateDamageAmount(enterOperation?.effect) === null ||
-    insectPlagueSaveGateDamageAmount(endTurnOperation?.effect) === null ||
-    enterOperation?.usageLimit?.kind !== "once_per_turn" ||
-    endTurnOperation?.usageLimit?.kind !== "once_per_turn"
+    stationaryPersistentAreaSaveGateDamageAmount(enterOperation?.effect) ===
+      null ||
+    stationaryPersistentAreaSaveGateDamageAmount(endTurnOperation?.effect) ===
+      null ||
+    sharedOncePerTurnLimitGroup([
+      initialUsageLimit,
+      enterOperation?.usageLimit,
+      endTurnOperation?.usageLimit,
+    ]) === null
   ) {
     return null;
   }
@@ -175,8 +188,32 @@ function insectPlagueAreaHazardSpell(
   };
 }
 
-function isInsectPlaguePassiveOperation(
-  effect: InsectPlagueMechanics["operations"][number]["effect"] | undefined,
+function sharedOncePerTurnLimitGroup(
+  limits: readonly (
+    | {
+        readonly kind: "once_per_round" | "once_per_turn";
+        readonly limitGroup?: string;
+      }
+    | undefined
+  )[],
+): string | null {
+  const [first, ...remaining] = limits;
+  return first?.kind === "once_per_turn" &&
+    typeof first.limitGroup === "string" &&
+    first.limitGroup.length > 0 &&
+    remaining.every(
+      (limit) =>
+        limit?.kind === "once_per_turn" &&
+        limit.limitGroup === first.limitGroup,
+    )
+    ? first.limitGroup
+    : null;
+}
+
+function isStationaryPersistentAreaPassiveOperation(
+  effect:
+    | StationaryPersistentAreaMechanics["operations"][number]["effect"]
+    | undefined,
 ): boolean {
   if (effect?.kind !== "composite" || effect.effects.length !== 2) {
     return false;
@@ -191,12 +228,12 @@ function isInsectPlaguePassiveOperation(
   );
 }
 
-function insectPlagueSaveGateDamageAmount(
+function stationaryPersistentAreaSaveGateDamageAmount(
   effect:
-    | InsectPlagueMechanics["initialPhase"]
-    | InsectPlagueMechanics["operations"][number]["effect"]
+    | StationaryPersistentAreaMechanics["initialPhase"]
+    | StationaryPersistentAreaMechanics["operations"][number]["effect"]
     | undefined,
-): InsectPlagueProfileShape["damageAmount"] | null {
+): StationaryPersistentAreaProfileShape["damageAmount"] | null {
   if (
     effect?.kind === "save_gate" &&
     effect.ability === "con" &&
@@ -206,21 +243,23 @@ function insectPlagueSaveGateDamageAmount(
     effect.onFail.damageType === "piercing" &&
     effect.onFail.amount.kind === "linear_per_level" &&
     effect.onFail.amount.axis === "slot" &&
-    effect.onFail.amount.startingAtLevel === INSECT_PLAGUE_LEVEL &&
-    effect.onFail.amount.base.dice === INSECT_PLAGUE_BASE_DAMAGE_DICE &&
-    effect.onFail.amount.base.dieSize === INSECT_PLAGUE_DAMAGE_DIE_SIZE &&
+    effect.onFail.amount.startingAtLevel === STATIONARY_PERSISTENT_AREA_LEVEL &&
+    effect.onFail.amount.base.dice ===
+      STATIONARY_PERSISTENT_AREA_BASE_DAMAGE_DICE &&
+    effect.onFail.amount.base.dieSize ===
+      STATIONARY_PERSISTENT_AREA_DAMAGE_DIE_SIZE &&
     effect.onFail.amount.perLevel?.dice ===
-      INSECT_PLAGUE_DAMAGE_DICE_PER_SLOT_LEVEL
+      STATIONARY_PERSISTENT_AREA_DAMAGE_DICE_PER_SLOT_LEVEL
   ) {
     return effect.onFail.amount;
   }
   return null;
 }
 
-function resolveInsectPlagueAreaHazard(
-  input: InsectPlagueAreaHazardResolveInput,
+function resolveStationaryPersistentAreaAreaHazard(
+  input: StationaryPersistentAreaAreaHazardResolveInput,
 ): BattleResolutionResult {
-  return resolveInsectPlagueAreaHazardSpellAct({
+  return resolveStationaryPersistentAreaAreaHazardSpellAct({
     input: input.input,
     actorId: input.actorId,
     invocation: input.invocation,
@@ -228,35 +267,37 @@ function resolveInsectPlagueAreaHazard(
   });
 }
 
-const InsectPlagueAreaHazardInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: LeveledSpellInvocationResourceSchema,
-    procedure: Schema.Literal("insectPlagueAreaHazard"),
-    spellRuleFacts: SpellRuleExecutionFactsSchema,
-    ability: Schema.Literal("con"),
-    dc: DcSourceSchema,
-    targeting: Schema.Struct({
-      kind: Schema.Literal("pointOriginSphere"),
-      radiusFeet: MovementFeet,
+const StationaryPersistentAreaAreaHazardInvocationSchema =
+  spellProcedureExecutionSchema(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: LeveledSpellInvocationResourceSchema,
+      procedure: Schema.Literal("persistentAreaSaveDamage"),
+      lifecycle: Schema.Struct({ kind: Schema.Literal("stationary") }),
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
+      ability: Schema.Literal("con"),
+      dc: DcSourceSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("pointOriginSphere"),
+        radiusFeet: MovementFeet,
+      }),
+      durationTicks: ElapsedTimeTicksSchema,
+      rangeFeet: MovementFeet,
+      damage: Schema.Struct({
+        expr: DiceExprSchema,
+        damageType: Schema.Literal("piercing"),
+      }),
     }),
-    durationTicks: ElapsedTimeTicksSchema,
-    rangeFeet: MovementFeet,
-    damage: Schema.Struct({
-      expr: DiceExprSchema,
-      damageType: Schema.Literal("piercing"),
-    }),
-  }),
-);
+  );
 
-export const insectPlagueAreaHazardProfile = {
-  procedure: "insectPlagueAreaHazard",
-  executionSchema: InsectPlagueAreaHazardInvocationSchema,
-  admit: admitInsectPlagueAreaHazard,
+export const persistentAreaSaveDamageProfile = {
+  procedure: "persistentAreaSaveDamage",
+  executionSchema: StationaryPersistentAreaAreaHazardInvocationSchema,
+  admit: admitStationaryPersistentAreaAreaHazard,
   discoverCastAct: discoverActionSpellAreaCastAct,
-  resolve: resolveInsectPlagueAreaHazard,
+  resolve: resolveStationaryPersistentAreaAreaHazard,
 } satisfies SpellProcedureDeclaration<
-  "insectPlagueAreaHazard",
-  InsectPlagueAreaHazardSpellInvocation
+  "persistentAreaSaveDamage",
+  StationaryPersistentAreaAreaHazardSpellInvocation
 >;
 import { spellInvocationResourceForCastOption } from "./profile.ts";
