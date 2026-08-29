@@ -1219,7 +1219,7 @@ function stateWithSyntheticWardingBondInteraction(
     state,
     ownerId: targetId,
     effect: {
-      kind: "wardingBond",
+      kind: "linkedDefenseResistanceDamageShare",
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         "synthetic-dragons-breath-interaction-warding-bond",
       ),

@@ -1791,14 +1791,14 @@ type CounterspellTriggerFact = Extract<
     BattleFill,
     { readonly kind: "targetSpatialFacts" }
   >["spatialFacts"][number],
-  { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
+  { readonly kind: "spellCastInterruptionTriggerCasterVisibleWithinRange" }
 >;
 
 function counterspellTriggerFact(
   session: BattleRuntimeSession,
 ): CounterspellTriggerFact {
   return {
-    kind: "counterspellTriggerCasterVisibleWithinRange",
+    kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
     reactorId: fighterId,
     casterId: wizardId,
     sourceProcedureRef: requireCharacterSpellProcedureRefForTest(

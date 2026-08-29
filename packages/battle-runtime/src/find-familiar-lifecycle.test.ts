@@ -1004,11 +1004,11 @@ function damageRollFill(
   };
 }
 
-function findFamiliarConnectionFill(
-  hole: Extract<BattleHole, { readonly kind: "findFamiliarConnection" }>,
-): Extract<BattleFill, { readonly kind: "findFamiliarConnection" }> {
+function spawnedCompanionConnectionFill(
+  hole: Extract<BattleHole, { readonly kind: "spawnedCompanionConnection" }>,
+): Extract<BattleFill, { readonly kind: "spawnedCompanionConnection" }> {
   return {
-    kind: "findFamiliarConnection",
+    kind: "spawnedCompanionConnection",
     holeId: hole.holeId,
     value: { withinRange: true },
   };
@@ -1022,13 +1022,17 @@ function counterspellTriggerFactsFill(
     holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
     spatialFacts: [
       {
-        kind: "counterspellTriggerCasterVisibleWithinRange",
+        kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
         reactorId: enemyId,
         casterId,
         sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
           session,
           enemyId,
-          spellSlotInvocationRef("counterspell", 3, "counterspell"),
+          spellSlotInvocationRef(
+            "counterspell",
+            3,
+            "spellCastInterruptionReaction",
+          ),
         ),
         rangeFeet: movementFeet(60),
       },
@@ -1134,7 +1138,7 @@ function pactScratchSubject(
     throw new Error("Expected admitted Scratch procedure.");
   }
   return {
-    tag: "pactOfTheChainFamiliarAttack",
+    tag: "companionAttack",
     actorId,
     familiarId: subjectFamiliarId,
     procedureRef,
@@ -2989,7 +2993,7 @@ describe("Find Familiar lifecycle", () => {
     expect(shared.state.currentTurnResources.currentHasBonusAction).toBe(false);
     const caster = shared.state.combatants.get(casterId);
     const effect = caster?.activeEffects.find(
-      (candidate) => candidate.kind === "findFamiliarSharedSenses",
+      (candidate) => candidate.kind === "spawnedCompanionSharedSenses",
     );
     expect(effect).toMatchObject({
       source: {
@@ -3077,7 +3081,7 @@ describe("Find Familiar lifecycle", () => {
       value: enemyId,
       spatialFacts: [
         {
-          kind: "findFamiliarTouchSpellTarget" as const,
+          kind: "spawnedCompanionTouchSpellTarget" as const,
           ownerId: casterId,
           familiarId,
           targetId: enemyId,
@@ -3145,22 +3149,22 @@ describe("Find Familiar lifecycle", () => {
     const acts = discoverBattleActs(runtimeSession);
     const delivery = acts.find(
       (act) =>
-        act.subject.tag === "findFamiliarTouchSpell" &&
+        act.subject.tag === "spawnedCompanionTouchSpellProxy" &&
         battleActSpellPresentation(act)?.invocation.spellId === "barkskin",
     );
     const sharedSenses = acts.find(
-      (act) => act.subject.tag === "findFamiliarSharedSenses",
+      (act) => act.subject.tag === "spawnedCompanionSharedSenses",
     );
-    expect(delivery?.subject.tag).toBe("findFamiliarTouchSpell");
-    expect(sharedSenses?.subject.tag).toBe("findFamiliarSharedSenses");
+    expect(delivery?.subject.tag).toBe("spawnedCompanionTouchSpellProxy");
+    expect(sharedSenses?.subject.tag).toBe("spawnedCompanionSharedSenses");
     if (
-      delivery?.subject.tag !== "findFamiliarTouchSpell" ||
-      sharedSenses?.subject.tag !== "findFamiliarSharedSenses"
+      delivery?.subject.tag !== "spawnedCompanionTouchSpellProxy" ||
+      sharedSenses?.subject.tag !== "spawnedCompanionSharedSenses"
     ) {
       return;
     }
-    const connection = findFamiliarConnectionFill(
-      requireHole(delivery.initialHoles, "findFamiliarConnection"),
+    const connection = spawnedCompanionConnectionFill(
+      requireHole(delivery.initialHoles, "spawnedCompanionConnection"),
     );
     const targetHole = requireHole(delivery.initialHoles, "targetChoice");
     const target = {
@@ -3169,7 +3173,7 @@ describe("Find Familiar lifecycle", () => {
       value: casterId,
       spatialFacts: [
         {
-          kind: "findFamiliarTouchSpellTarget" as const,
+          kind: "spawnedCompanionTouchSpellTarget" as const,
           ownerId: casterId,
           familiarId,
           targetId: casterId,
@@ -3187,8 +3191,8 @@ describe("Find Familiar lifecycle", () => {
       state: cast.state,
       subject: sharedSenses.subject,
       fills: [
-        findFamiliarConnectionFill(
-          requireHole(sharedSenses.initialHoles, "findFamiliarConnection"),
+        spawnedCompanionConnectionFill(
+          requireHole(sharedSenses.initialHoles, "spawnedCompanionConnection"),
         ),
       ],
     });
@@ -3198,7 +3202,7 @@ describe("Find Familiar lifecycle", () => {
     const casterAfterSharedSenses = shared.state.combatants.get(casterId);
     expect(
       casterAfterSharedSenses?.activeEffects.find(
-        (effect) => effect.kind === "findFamiliarSharedSenses",
+        (effect) => effect.kind === "spawnedCompanionSharedSenses",
       ),
     ).toEqual(expect.objectContaining({ effectRef: expect.any(String) }));
     expect(Number(casterAfterSharedSenses?.nextEffectOrdinal)).toBe(
@@ -3269,13 +3273,13 @@ describe("Find Familiar lifecycle", () => {
       }),
     ).find(
       (act) =>
-        act.subject.tag === "findFamiliarTouchSpell" &&
+        act.subject.tag === "spawnedCompanionTouchSpellProxy" &&
         battleActSpellPresentation(act)?.invocation.spellId === "barkskin",
     );
-    expect(delivery?.subject.tag).toBe("findFamiliarTouchSpell");
-    if (delivery?.subject.tag !== "findFamiliarTouchSpell") return;
-    const connection = findFamiliarConnectionFill(
-      requireHole(delivery.initialHoles, "findFamiliarConnection"),
+    expect(delivery?.subject.tag).toBe("spawnedCompanionTouchSpellProxy");
+    if (delivery?.subject.tag !== "spawnedCompanionTouchSpellProxy") return;
+    const connection = spawnedCompanionConnectionFill(
+      requireHole(delivery.initialHoles, "spawnedCompanionConnection"),
     );
     const target = {
       kind: "targetChoice" as const,
@@ -3283,7 +3287,7 @@ describe("Find Familiar lifecycle", () => {
       value: casterId,
       spatialFacts: [
         {
-          kind: "findFamiliarTouchSpellTarget" as const,
+          kind: "spawnedCompanionTouchSpellTarget" as const,
           ownerId: casterId,
           familiarId,
           targetId: casterId,
@@ -3340,14 +3344,14 @@ describe("Find Familiar lifecycle", () => {
       battleRuntimeSessionForTest({ ...session, state: cast.state }),
     ).find(
       (candidate) =>
-        candidate.subject.tag === "findFamiliarTouchSpell" &&
+        candidate.subject.tag === "spawnedCompanionTouchSpellProxy" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
           "cure_wounds",
     );
-    expect(act?.subject.tag).toBe("findFamiliarTouchSpell");
-    if (act?.subject.tag !== "findFamiliarTouchSpell") return;
-    const connectionFill = findFamiliarConnectionFill(
-      requireHole(act.initialHoles, "findFamiliarConnection"),
+    expect(act?.subject.tag).toBe("spawnedCompanionTouchSpellProxy");
+    if (act?.subject.tag !== "spawnedCompanionTouchSpellProxy") return;
+    const connectionFill = spawnedCompanionConnectionFill(
+      requireHole(act.initialHoles, "spawnedCompanionConnection"),
     );
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const targetFill = {
@@ -3356,7 +3360,7 @@ describe("Find Familiar lifecycle", () => {
       value: enemyId,
       spatialFacts: [
         {
-          kind: "findFamiliarTouchSpellTarget" as const,
+          kind: "spawnedCompanionTouchSpellTarget" as const,
           ownerId: casterId,
           familiarId,
           targetId: enemyId,
@@ -3376,7 +3380,7 @@ describe("Find Familiar lifecycle", () => {
     expect(interrupted).toMatchObject({
       tag: "needsHoles",
       subject: {
-        tag: "findFamiliarTouchSpell",
+        tag: "spawnedCompanionTouchSpellProxy",
       },
     });
     if (interrupted.tag !== "needsHoles") return;
@@ -3395,7 +3399,7 @@ describe("Find Familiar lifecycle", () => {
     expect(resumed).toMatchObject({
       tag: "needsHoles",
       subject: {
-        tag: "findFamiliarTouchSpell",
+        tag: "spawnedCompanionTouchSpellProxy",
       },
     });
     if (resumed.tag !== "needsHoles") return;
@@ -3430,14 +3434,14 @@ describe("Find Familiar lifecycle", () => {
     });
     const act = discoverBattleActs(runtimeSession).find(
       (candidate) =>
-        candidate.subject.tag === "findFamiliarTouchSpell" &&
+        candidate.subject.tag === "spawnedCompanionTouchSpellProxy" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
           "shocking_grasp",
     );
-    expect(act?.subject.tag).toBe("findFamiliarTouchSpell");
-    if (act?.subject.tag !== "findFamiliarTouchSpell") return;
-    const connectionFill = findFamiliarConnectionFill(
-      requireHole(act.initialHoles, "findFamiliarConnection"),
+    expect(act?.subject.tag).toBe("spawnedCompanionTouchSpellProxy");
+    if (act?.subject.tag !== "spawnedCompanionTouchSpellProxy") return;
+    const connectionFill = spawnedCompanionConnectionFill(
+      requireHole(act.initialHoles, "spawnedCompanionConnection"),
     );
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const targetFill = {
@@ -3446,7 +3450,7 @@ describe("Find Familiar lifecycle", () => {
       value: enemyId,
       spatialFacts: [
         {
-          kind: "findFamiliarTouchSpellTarget" as const,
+          kind: "spawnedCompanionTouchSpellTarget" as const,
           ownerId: casterId,
           familiarId,
           targetId: enemyId,
@@ -3465,7 +3469,7 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(interrupted).toMatchObject({
       tag: "needsHoles",
-      subject: { tag: "findFamiliarTouchSpell" },
+      subject: { tag: "spawnedCompanionTouchSpellProxy" },
     });
     if (interrupted.tag !== "needsHoles") return;
     expect(
@@ -3481,7 +3485,7 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(resumed).toMatchObject({
       tag: "needsHoles",
-      subject: { tag: "findFamiliarTouchSpell" },
+      subject: { tag: "spawnedCompanionTouchSpellProxy" },
     });
     if (resumed.tag !== "needsHoles") return;
     const completed = resolveBattleSubject({
@@ -3528,7 +3532,7 @@ describe("Find Familiar lifecycle", () => {
       value: enemyId,
       spatialFacts: [
         {
-          kind: "findFamiliarTouchSpellTarget",
+          kind: "spawnedCompanionTouchSpellTarget",
           ownerId: casterId,
           familiarId,
           targetId: enemyId,
@@ -3678,7 +3682,7 @@ describe("Find Familiar lifecycle", () => {
       value: enemyId,
       spatialFacts: [
         {
-          kind: "findFamiliarTouchSpellTarget" as const,
+          kind: "spawnedCompanionTouchSpellTarget" as const,
           ownerId: casterId,
           familiarId,
           targetId: enemyId,
@@ -3743,15 +3747,15 @@ describe("Find Familiar lifecycle", () => {
         act.subject.action === "permanentlyDismiss",
     );
     const shareSenses = acts.find(
-      (act) => act.subject.tag === "findFamiliarSharedSenses",
+      (act) => act.subject.tag === "spawnedCompanionSharedSenses",
     );
     expect(temporaryDismiss?.subject.tag).toBe("companionLifecycle");
     expect(permanentDismiss?.subject.tag).toBe("companionLifecycle");
-    expect(shareSenses?.subject.tag).toBe("findFamiliarSharedSenses");
+    expect(shareSenses?.subject.tag).toBe("spawnedCompanionSharedSenses");
     if (
       temporaryDismiss?.subject.tag !== "companionLifecycle" ||
       permanentDismiss?.subject.tag !== "companionLifecycle" ||
-      shareSenses?.subject.tag !== "findFamiliarSharedSenses"
+      shareSenses?.subject.tag !== "spawnedCompanionSharedSenses"
     ) {
       return;
     }
@@ -3780,8 +3784,8 @@ describe("Find Familiar lifecycle", () => {
       }),
       subject: shareSenses.subject,
       fills: [
-        findFamiliarConnectionFill(
-          requireHole(shareSenses.initialHoles, "findFamiliarConnection"),
+        spawnedCompanionConnectionFill(
+          requireHole(shareSenses.initialHoles, "spawnedCompanionConnection"),
         ),
       ],
     });
@@ -3793,7 +3797,7 @@ describe("Find Familiar lifecycle", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "findFamiliarConnection" })],
+      holes: [expect.objectContaining({ kind: "spawnedCompanionConnection" })],
     });
     expect(shared.tag).toBe("resolved");
     if (shared.tag !== "resolved") return;
@@ -4067,22 +4071,22 @@ describe("Find Familiar lifecycle", () => {
     expect(
       acts.some(
         (act) =>
-          act.subject.tag === "findFamiliarTouchSpell" &&
+          act.subject.tag === "spawnedCompanionTouchSpellProxy" &&
           battleActSpellPresentation(act)?.invocation.spellId ===
             "healing_word",
       ),
     ).toBe(false);
     const delivery = acts.find(
       (act) =>
-        act.subject.tag === "findFamiliarTouchSpell" &&
+        act.subject.tag === "spawnedCompanionTouchSpellProxy" &&
         battleActSpellPresentation(act)?.invocation.spellId === "cure_wounds",
     );
-    expect(delivery?.subject.tag).toBe("findFamiliarTouchSpell");
-    if (delivery?.subject.tag !== "findFamiliarTouchSpell") return;
+    expect(delivery?.subject.tag).toBe("spawnedCompanionTouchSpellProxy");
+    if (delivery?.subject.tag !== "spawnedCompanionTouchSpellProxy") return;
 
     const targetHole = requireHole(delivery.initialHoles, "targetChoice");
-    const connection = findFamiliarConnectionFill(
-      requireHole(delivery.initialHoles, "findFamiliarConnection"),
+    const connection = spawnedCompanionConnectionFill(
+      requireHole(delivery.initialHoles, "spawnedCompanionConnection"),
     );
     const untouched = resolveBattleSubject({
       state: cast.state,
@@ -4132,7 +4136,9 @@ describe("Find Familiar lifecycle", () => {
     expect(cast.state.combatants.get(familiarId)?.reactionAvailable).toBe(true);
     if (targetOnly.tag !== "needsHoles") return;
     expect(
-      targetOnly.holes.some((hole) => hole.kind === "findFamiliarConnection"),
+      targetOnly.holes.some(
+        (hole) => hole.kind === "spawnedCompanionConnection",
+      ),
     ).toBe(true);
     const missingFamiliarTargetFact = resolveBattleSubject({
       state: cast.state,
@@ -4163,7 +4169,7 @@ describe("Find Familiar lifecycle", () => {
       value: enemyId,
       spatialFacts: [
         {
-          kind: "findFamiliarTouchSpellTarget",
+          kind: "spawnedCompanionTouchSpellTarget",
           ownerId: casterId,
           familiarId,
           targetId: enemyId,
@@ -4653,22 +4659,22 @@ describe("Find Familiar lifecycle", () => {
         state: cast.state,
         context: session.context,
       }),
-    ).filter((act) => act.subject.tag === "pactOfTheChainFamiliarAttack");
+    ).filter((act) => act.subject.tag === "companionAttack");
     const scratchProcedureRef = pactScratchSubject(cast.state).procedureRef;
     const rolledScratchSubject = attackActs.find(
       (act) =>
-        act.subject.tag === "pactOfTheChainFamiliarAttack" &&
+        act.subject.tag === "companionAttack" &&
         act.subject.procedureRef === scratchProcedureRef &&
         act.subject.statBlockDamageNotation === undefined,
     )?.subject;
     const staticSubject = attackActs.find(
       (act) =>
-        act.subject.tag === "pactOfTheChainFamiliarAttack" &&
+        act.subject.tag === "companionAttack" &&
         act.subject.procedureRef === scratchProcedureRef &&
         act.subject.statBlockDamageNotation === "static",
     )?.subject;
     expect(rolledScratchSubject).toBeUndefined();
-    if (staticSubject?.tag !== "pactOfTheChainFamiliarAttack") {
+    if (staticSubject?.tag !== "companionAttack") {
       throw new Error("Expected the static Pact familiar Scratch act.");
     }
     const resolveHit = (subject: typeof staticSubject) => {
@@ -4766,7 +4772,7 @@ describe("Find Familiar lifecycle", () => {
           state: unableToReact,
           context: session.context,
         }),
-      ).some((act) => act.subject.tag === "pactOfTheChainFamiliarAttack"),
+      ).some((act) => act.subject.tag === "companionAttack"),
     ).toBe(false);
 
     const blocked = resolveBattleSubject({
@@ -5076,7 +5082,7 @@ describe("Find Familiar lifecycle", () => {
       value: enemyId,
       spatialFacts: [
         {
-          kind: "findFamiliarTouchSpellTarget" as const,
+          kind: "spawnedCompanionTouchSpellTarget" as const,
           ownerId: casterId,
           familiarId,
           targetId: enemyId,
@@ -5277,13 +5283,11 @@ describe("Find Familiar lifecycle", () => {
       }),
     ).find(
       (act) =>
-        act.subject.tag === "pactOfTheChainFamiliarAttack" &&
+        act.subject.tag === "companionAttack" &&
         act.subject.statBlockDamageNotation === undefined,
     );
-    expect(discoveredPactAttack?.subject.tag).toBe(
-      "pactOfTheChainFamiliarAttack",
-    );
-    if (discoveredPactAttack?.subject.tag !== "pactOfTheChainFamiliarAttack") {
+    expect(discoveredPactAttack?.subject.tag).toBe("companionAttack");
+    if (discoveredPactAttack?.subject.tag !== "companionAttack") {
       return;
     }
     const subject = discoveredPactAttack.subject;

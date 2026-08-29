@@ -2964,7 +2964,7 @@ describe("battle boundary admission owners", () => {
     });
     const candidates = discoverBattleActCandidates(session.state);
     const pactCandidates = candidates.filter(
-      (act) => act.subject.tag === "pactOfTheChainFamiliarAttack",
+      (act) => act.subject.tag === "companionAttack",
     );
     expect(pactCandidates).toHaveLength(5);
     const familiar = session.state.combatants.get(familiarId);
@@ -2974,7 +2974,7 @@ describe("battle boundary admission owners", () => {
     expect(
       pactCandidates.every((act) => {
         const subject = act.subject;
-        if (subject.tag !== "pactOfTheChainFamiliarAttack") return false;
+        if (subject.tag !== "companionAttack") return false;
         const binding = familiar.origin.execution.procedureBindings.find(
           (candidate) => candidate.procedureRef === subject.procedureRef,
         );
@@ -2987,7 +2987,7 @@ describe("battle boundary admission owners", () => {
 
     const available = discoverBattleActs(session);
     const familiarTouchSpellIds = available.flatMap((act) => {
-      if (act.subject.tag !== "findFamiliarTouchSpell") return [];
+      if (act.subject.tag !== "spawnedCompanionTouchSpellProxy") return [];
       const presentation = battleActSpellPresentation(act);
       return presentation === undefined
         ? []

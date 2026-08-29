@@ -214,8 +214,8 @@ function observeDeliverTouchSpellThroughFindFamiliarRoute(): readonly BattleRedu
   const targetFill = selectedTouchSpellTargetFill(
     requireHole(act.initialHoles, "targetChoice"),
   );
-  const connectionFill = findFamiliarConnectionFill(
-    requireHole(act.initialHoles, "findFamiliarConnection"),
+  const connectionFill = spawnedCompanionConnectionFill(
+    requireHole(act.initialHoles, "spawnedCompanionConnection"),
   );
   const awaitingHealingRoll = resolveBattleSubject({
     state,
@@ -495,7 +495,7 @@ function castRatFamiliar(state: BattleState) {
 function touchDeliveryAct(session: BattleRuntimeSession): AvailableBattleAct & {
   readonly subject: Extract<
     BattleSubject,
-    { readonly tag: "findFamiliarTouchSpell" }
+    { readonly tag: "spawnedCompanionTouchSpellProxy" }
   >;
 } {
   const act = discoverBattleActs(session).find(
@@ -504,10 +504,10 @@ function touchDeliveryAct(session: BattleRuntimeSession): AvailableBattleAct & {
     ): candidate is AvailableBattleAct & {
       readonly subject: Extract<
         BattleSubject,
-        { readonly tag: "findFamiliarTouchSpell" }
+        { readonly tag: "spawnedCompanionTouchSpellProxy" }
       >;
     } =>
-      candidate.subject.tag === "findFamiliarTouchSpell" &&
+      candidate.subject.tag === "spawnedCompanionTouchSpellProxy" &&
       battleActSpellPresentation(candidate)?.invocation.spellId ===
         cureWoundsUnitId,
   );
@@ -526,7 +526,7 @@ function selectedTouchSpellTargetFill(
     value: targetId,
     spatialFacts: [
       {
-        kind: "findFamiliarTouchSpellTarget",
+        kind: "spawnedCompanionTouchSpellTarget",
         ownerId: casterId,
         familiarId,
         targetId,
@@ -537,11 +537,11 @@ function selectedTouchSpellTargetFill(
   };
 }
 
-function findFamiliarConnectionFill(
-  hole: Extract<BattleHole, { readonly kind: "findFamiliarConnection" }>,
-): Extract<BattleFill, { readonly kind: "findFamiliarConnection" }> {
+function spawnedCompanionConnectionFill(
+  hole: Extract<BattleHole, { readonly kind: "spawnedCompanionConnection" }>,
+): Extract<BattleFill, { readonly kind: "spawnedCompanionConnection" }> {
   return {
-    kind: "findFamiliarConnection",
+    kind: "spawnedCompanionConnection",
     holeId: hole.holeId,
     value: { withinRange: true },
   };

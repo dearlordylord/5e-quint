@@ -391,8 +391,8 @@ function observeSharedSensesRoute(): readonly ReducerRouteEvent[] {
     state: session.state,
     subject: act.subject,
     fills: [
-      findFamiliarConnectionFill(
-        requireHole(act.initialHoles, "findFamiliarConnection"),
+      spawnedCompanionConnectionFill(
+        requireHole(act.initialHoles, "spawnedCompanionConnection"),
       ),
     ],
   });
@@ -406,8 +406,8 @@ function observeSharedSensesRoute(): readonly ReducerRouteEvent[] {
 function observeTouchDeliveryRoute(): readonly ReducerRouteEvent[] {
   const session = createCatFamiliar(initialRuntimeState()).battle;
   const act = touchDeliveryAct(session);
-  const connectionFill = findFamiliarConnectionFill(
-    requireHole(act.initialHoles, "findFamiliarConnection"),
+  const connectionFill = spawnedCompanionConnectionFill(
+    requireHole(act.initialHoles, "spawnedCompanionConnection"),
   );
   const targetFill = touchSpellTargetFill(
     requireHole(act.initialHoles, "targetChoice"),
@@ -450,8 +450,8 @@ function observeTouchDeliveryRoute(): readonly ReducerRouteEvent[] {
 function observeNoRollTouchDeliveryRoute(): readonly ReducerRouteEvent[] {
   const session = createCatFamiliar(initialRuntimeState()).battle;
   const act = touchDeliveryAct(session, "barkskin");
-  const connectionFill = findFamiliarConnectionFill(
-    requireHole(act.initialHoles, "findFamiliarConnection"),
+  const connectionFill = spawnedCompanionConnectionFill(
+    requireHole(act.initialHoles, "spawnedCompanionConnection"),
   );
   const targetFill = willingTouchSpellTargetFill(
     requireHole(act.initialHoles, "targetChoice"),
@@ -721,7 +721,7 @@ function findFamiliarCompanionProjection(
     telepathyAvailable: connection !== null,
     sharedSensesActive: caster.activeEffects.some(
       (effect) =>
-        effect.kind === "findFamiliarSharedSenses" &&
+        effect.kind === "spawnedCompanionSharedSenses" &&
         effect.familiarId === familiarId,
     ),
     bonusActionAvailable: canSpendBonusAction(
@@ -776,7 +776,7 @@ function actionSpellAct(
 function sharedSensesAct(session: BattleRuntimeSession): AvailableBattleAct & {
   readonly subject: Extract<
     BattleSubject,
-    { readonly tag: "findFamiliarSharedSenses" }
+    { readonly tag: "spawnedCompanionSharedSenses" }
   >;
 } {
   const act = discoverBattleActs(session).find(
@@ -785,9 +785,9 @@ function sharedSensesAct(session: BattleRuntimeSession): AvailableBattleAct & {
     ): candidate is AvailableBattleAct & {
       readonly subject: Extract<
         BattleSubject,
-        { readonly tag: "findFamiliarSharedSenses" }
+        { readonly tag: "spawnedCompanionSharedSenses" }
       >;
-    } => candidate.subject.tag === "findFamiliarSharedSenses",
+    } => candidate.subject.tag === "spawnedCompanionSharedSenses",
   );
   if (act === undefined) {
     throw new Error("Expected Share Familiar Senses act.");
@@ -801,7 +801,7 @@ function touchDeliveryAct(
 ): AvailableBattleAct & {
   readonly subject: Extract<
     BattleSubject,
-    { readonly tag: "findFamiliarTouchSpell" }
+    { readonly tag: "spawnedCompanionTouchSpellProxy" }
   >;
 } {
   const act = discoverBattleActs(session).find(
@@ -810,10 +810,10 @@ function touchDeliveryAct(
     ): candidate is AvailableBattleAct & {
       readonly subject: Extract<
         BattleSubject,
-        { readonly tag: "findFamiliarTouchSpell" }
+        { readonly tag: "spawnedCompanionTouchSpellProxy" }
       >;
     } =>
-      candidate.subject.tag === "findFamiliarTouchSpell" &&
+      candidate.subject.tag === "spawnedCompanionTouchSpellProxy" &&
       battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
   );
   if (act === undefined) {
@@ -834,7 +834,7 @@ function pactFamiliarAttackAct(
     ): candidate is AvailableBattleAct & {
       readonly subject: PactOfTheChainFamiliarAttackSubject;
     } =>
-      candidate.subject.tag === "pactOfTheChainFamiliarAttack" &&
+      candidate.subject.tag === "companionAttack" &&
       sameBattleSubject(candidate.subject, subject),
   );
   if (act === undefined) {
@@ -875,7 +875,7 @@ function touchSpellTargetFill(
     value: targetId,
     spatialFacts: [
       {
-        kind: "findFamiliarTouchSpellTarget",
+        kind: "spawnedCompanionTouchSpellTarget",
         ownerId: casterId,
         familiarId,
         targetId,
@@ -885,11 +885,11 @@ function touchSpellTargetFill(
   };
 }
 
-function findFamiliarConnectionFill(
-  hole: Extract<BattleHole, { readonly kind: "findFamiliarConnection" }>,
-): Extract<BattleFill, { readonly kind: "findFamiliarConnection" }> {
+function spawnedCompanionConnectionFill(
+  hole: Extract<BattleHole, { readonly kind: "spawnedCompanionConnection" }>,
+): Extract<BattleFill, { readonly kind: "spawnedCompanionConnection" }> {
   return {
-    kind: "findFamiliarConnection",
+    kind: "spawnedCompanionConnection",
     holeId: hole.holeId,
     value: { withinRange: true },
   };
@@ -923,7 +923,7 @@ function pactScratchSubject(
     throw new Error("Expected admitted Scratch procedure.");
   }
   return {
-    tag: "pactOfTheChainFamiliarAttack",
+    tag: "companionAttack",
     actorId: casterId,
     familiarId,
     procedureRef,
@@ -935,7 +935,7 @@ function willingTouchSpellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   procedureRef: Extract<
     BattleSubject,
-    { readonly tag: "findFamiliarTouchSpell" }
+    { readonly tag: "spawnedCompanionTouchSpellProxy" }
   >["procedureRef"],
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
@@ -944,7 +944,7 @@ function willingTouchSpellTargetFill(
     value: casterId,
     spatialFacts: [
       {
-        kind: "findFamiliarTouchSpellTarget",
+        kind: "spawnedCompanionTouchSpellTarget",
         ownerId: casterId,
         familiarId,
         targetId: casterId,

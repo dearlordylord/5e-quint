@@ -479,20 +479,23 @@ export function spiritualWeaponTargetFill(
   };
 }
 
-export function spiritualWeaponForcePositionFill(input: {
+export function spatialMeleeSpellAttackProxyPositionFill(input: {
   readonly hole: Extract<
     BattleHole,
-    { readonly kind: "spiritualWeaponForcePosition" }
+    { readonly kind: "spatialMeleeSpellAttackProxyPosition" }
   >;
   readonly positionId?: string;
   readonly distanceFromCasterFeet?: number;
   readonly moveDistanceFeet?: number;
-}): Extract<BattleFill, { readonly kind: "spiritualWeaponForcePosition" }> {
+}): Extract<
+  BattleFill,
+  { readonly kind: "spatialMeleeSpellAttackProxyPosition" }
+> {
   const positionId = battleTablePositionId(
     input.positionId ?? "spiritual-weapon-force",
   );
   return {
-    kind: "spiritualWeaponForcePosition",
+    kind: "spatialMeleeSpellAttackProxyPosition",
     holeId: input.hole.holeId,
     value:
       input.hole.mode === "cast"
@@ -534,7 +537,7 @@ export function knownWillingSpellTargetFill(
   };
 }
 
-export function wardingBondSpellTargetFill(
+export function linkedDefenseResistanceDamageShareSpellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   spellId: string,
   casterId: CombatantId,
@@ -548,13 +551,13 @@ export function wardingBondSpellTargetFill(
     spatialFacts: [
       ...(base.spatialFacts ?? []),
       {
-        kind: "wardingBondPairedWornPlatinumRings",
+        kind: "linkedEffectPairedWornComponents",
         casterId,
         targetId,
         sourceProcedureRef,
       },
       {
-        kind: "wardingBondCreaturesDistance",
+        kind: "linkedEffectCreaturesDistance",
         casterId,
         targetId,
         sourceProcedureRef,

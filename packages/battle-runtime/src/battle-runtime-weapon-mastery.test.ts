@@ -80,7 +80,7 @@ import type {
 } from "./battle-runtime.test-support.ts";
 import {
   fighterRemarkableAthleteUnitId,
-  wardingBondUnitId,
+  linkedDefenseResistanceDamageShareUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { weaponMasteryCleaveExtraAttack } from "./battle-reducer/attack-roll.ts";
 import { attackActionOptionForSubject } from "./battle-reducer/attack-damage-apply.ts";
@@ -173,10 +173,10 @@ function withWardingBondTargetAndConcentratingCaster(
         activeEffects: [
           ...target.activeEffects,
           {
-            kind: "wardingBond" as const,
+            kind: "linkedDefenseResistanceDamageShare" as const,
             effectRef: battleEffectExecutionRefForTest("mastery-ward"),
             sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(wardingBondUnitId),
+              String(linkedDefenseResistanceDamageShareUnitId),
             ),
             sourceCombatantId: casterId,
             expiresAt: {
@@ -190,7 +190,7 @@ function withWardingBondTargetAndConcentratingCaster(
         ...caster,
         concentration: {
           sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(wardingBondUnitId),
+            String(linkedDefenseResistanceDamageShareUnitId),
           ),
           effectKind: "spellEffect" as const,
         },

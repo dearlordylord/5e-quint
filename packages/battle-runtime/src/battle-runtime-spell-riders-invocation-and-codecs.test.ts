@@ -903,7 +903,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
       mode: { tag: "cast" as const },
     },
     {
-      tag: "findFamiliarTouchSpell" as const,
+      tag: "spawnedCompanionTouchSpellProxy" as const,
       companionId: goblinId,
       spellAction: "action" as const,
       mode: { tag: "cast" as const },

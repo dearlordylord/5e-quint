@@ -151,7 +151,7 @@ describe("BattleSubject identity", () => {
         sourceCombatantId: targetId,
       },
       disperseFogCloud: { areaId },
-      wardingBondSeparation: { effectRef, targetId },
+      linkedDefenseResistanceDamageShareSeparation: { effectRef, targetId },
       jumpMovementReplacement: { effectRef },
       dragonsBreathExhale: { effectRef },
       replaceSelfTransformationMode: {
@@ -298,13 +298,13 @@ describe("BattleSubject identity", () => {
     );
     const candidates = [
       {
-        tag: "pactOfTheChainFamiliarAttack",
+        tag: "companionAttack",
         actorId,
         familiarId: companionId,
         procedureRef: statBlockProcedureRef,
       },
       {
-        tag: "pactOfTheChainFamiliarAttack",
+        tag: "companionAttack",
         actorId,
         familiarId: companionId,
         procedureRef: statBlockProcedureRef,
@@ -436,12 +436,12 @@ describe("BattleSubject identity", () => {
         action: "permanentlyDismiss",
       },
       {
-        tag: "findFamiliarSharedSenses",
+        tag: "spawnedCompanionSharedSenses",
         actorId,
         familiarId: companionId,
       },
       {
-        tag: "findFamiliarTouchSpell",
+        tag: "spawnedCompanionTouchSpellProxy",
         actorId,
         procedureRef,
         companionId,
@@ -449,7 +449,7 @@ describe("BattleSubject identity", () => {
         mode: { tag: "cast" },
       },
       {
-        tag: "findFamiliarTouchSpell",
+        tag: "spawnedCompanionTouchSpellProxy",
         actorId,
         procedureRef,
         companionId,

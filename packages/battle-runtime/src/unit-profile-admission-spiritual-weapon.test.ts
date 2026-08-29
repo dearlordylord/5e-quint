@@ -645,7 +645,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       result: awaitingCounterspell,
       reactorId: spellTargetId,
       spellId: counterspellUnitId,
-      procedure: "counterspell",
+      procedure: "spellCastInterruptionReaction",
       slotLevel: 3,
     });
     const save = requireHole(choice.initialHoles, "savingThrowOutcome");
@@ -1871,7 +1871,7 @@ type CounterspellTriggerFact = Extract<
     BattleFill,
     { readonly kind: "targetSpatialFacts" }
   >["spatialFacts"][number],
-  { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
+  { readonly kind: "spellCastInterruptionTriggerCasterVisibleWithinRange" }
 >;
 function requireNeedsHoles(result: BattleResolutionResult): NeedsHolesResult {
   expect(result).toMatchObject({ tag: "needsHoles" });
@@ -1887,7 +1887,7 @@ function counterspellTriggerFact(input: {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
 }): CounterspellTriggerFact {
   return {
-    kind: "counterspellTriggerCasterVisibleWithinRange",
+    kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
     reactorId: input.reactorId,
     casterId: input.casterId,
     sourceProcedureRef: input.sourceProcedureRef,

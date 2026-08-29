@@ -414,7 +414,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
       result: awaitingCounterspell,
       reactorId: counterspellerId,
       spellId: counterspellUnitId,
-      procedure: "counterspell",
+      procedure: "spellCastInterruptionReaction",
       slotLevel: 3,
     });
     const save = requireHole(choice.initialHoles, "savingThrowOutcome");
@@ -606,7 +606,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
       result: awaitingCounterspell,
       reactorId: spellTargetId,
       spellId: counterspellUnitId,
-      procedure: "counterspell",
+      procedure: "spellCastInterruptionReaction",
       slotLevel: 3,
     });
     const save = requireHole(choice.initialHoles, "savingThrowOutcome");
@@ -778,7 +778,7 @@ type CounterspellTriggerFact = Extract<
     BattleFill,
     { readonly kind: "targetSpatialFacts" }
   >["spatialFacts"][number],
-  { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
+  { readonly kind: "spellCastInterruptionTriggerCasterVisibleWithinRange" }
 >;
 
 function counterspellTriggerFact(input: {
@@ -787,7 +787,7 @@ function counterspellTriggerFact(input: {
   readonly casterId: CombatantId;
 }): CounterspellTriggerFact {
   return {
-    kind: "counterspellTriggerCasterVisibleWithinRange",
+    kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
     reactorId: input.reactorId,
     casterId: input.casterId,
     sourceProcedureRef: requireCharacterSpellProcedureRefForTest(

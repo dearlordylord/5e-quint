@@ -399,7 +399,8 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
     const result = applyChainedSpellDamage(state, target, 5, false, {
       concentrationSavingThrow: undefined,
       damageDisposition: { kind: "ordinaryDamage" },
-      wardingBondDamageShareConcentrationSavingThrows: [],
+      linkedDefenseResistanceDamageShareDamageShareConcentrationSavingThrows:
+        [],
       hideousLaughterDamageRepeatSaves: [],
       damageSourceId: warlockId,
       spatialFacts: [],

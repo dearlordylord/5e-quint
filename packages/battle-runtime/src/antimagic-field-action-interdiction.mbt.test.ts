@@ -6,7 +6,7 @@ import {
 } from "./battle-runtime.test-support.ts";
 import {
   antimagicFieldAuraEffectTemplateForTest,
-  antimagicFieldAuraMembershipForTest,
+  magicSuppressionEmanationMembershipForTest,
   type TestAntimagicFieldAuraMembership,
 } from "./antimagic-field.test-support.ts";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
@@ -122,7 +122,7 @@ function createAntimagicActionInterdictionDriver() {
         projection = discoveryProjection(
           activeAntimagicAuraSession(
             spellInterdictionBattle(),
-            antimagicFieldAuraMembershipForTest({
+            magicSuppressionEmanationMembershipForTest({
               sourceCombatantId: spellCasterId,
               originIncluded: true,
               nonOriginCombatantIds: [],
@@ -130,7 +130,7 @@ function createAntimagicActionInterdictionDriver() {
           ),
           activeAntimagicAuraSession(
             preserveLifeBattle(),
-            antimagicFieldAuraMembershipForTest({
+            magicSuppressionEmanationMembershipForTest({
               sourceCombatantId: spellTargetId,
               originIncluded: false,
               nonOriginCombatantIds: [spellCasterId],
@@ -142,7 +142,7 @@ function createAntimagicActionInterdictionDriver() {
         projection = discoveryProjection(
           activeAntimagicAuraSession(
             spellInterdictionBattle(),
-            antimagicFieldAuraMembershipForTest({
+            magicSuppressionEmanationMembershipForTest({
               sourceCombatantId: spellCasterId,
               originIncluded: false,
               nonOriginCombatantIds: [],
@@ -158,7 +158,7 @@ function createAntimagicActionInterdictionDriver() {
           resolveBattleSubject({
             state: activeAntimagicAuraSession(
               base,
-              antimagicFieldAuraMembershipForTest({
+              magicSuppressionEmanationMembershipForTest({
                 sourceCombatantId: spellTargetId,
                 originIncluded: false,
                 nonOriginCombatantIds: [spellCasterId],
@@ -176,7 +176,7 @@ function createAntimagicActionInterdictionDriver() {
           resolveBattleSubject({
             state: activeAntimagicAuraSession(
               base,
-              antimagicFieldAuraMembershipForTest({
+              magicSuppressionEmanationMembershipForTest({
                 sourceCombatantId: spellTargetId,
                 originIncluded: false,
                 nonOriginCombatantIds: [spellCasterId],
@@ -192,7 +192,7 @@ function createAntimagicActionInterdictionDriver() {
           resolveBattleSubject({
             state: activeAntimagicAuraSession(
               spellInterdictionBattle(),
-              antimagicFieldAuraMembershipForTest({
+              magicSuppressionEmanationMembershipForTest({
                 sourceCombatantId: spellCasterId,
                 originIncluded: true,
                 nonOriginCombatantIds: [],

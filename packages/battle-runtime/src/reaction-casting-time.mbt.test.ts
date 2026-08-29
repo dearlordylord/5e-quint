@@ -837,14 +837,14 @@ type CounterspellTriggerFact = Extract<
     BattleFill,
     { readonly kind: "targetSpatialFacts" }
   >["spatialFacts"][number],
-  { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
+  { readonly kind: "spellCastInterruptionTriggerCasterVisibleWithinRange" }
 >;
 
 function counterspellTriggerFact(
   session: BattleRuntimeSession,
 ): CounterspellTriggerFact {
   return {
-    kind: "counterspellTriggerCasterVisibleWithinRange",
+    kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
     reactorId,
     casterId: triggerCreatureId,
     sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
@@ -869,7 +869,7 @@ function requireCounterspellChoice(
   return requireTriggeredReactionSpellChoice({
     result,
     spellId: counterspellUnitId,
-    procedure: "counterspell",
+    procedure: "spellCastInterruptionReaction",
     slotLevel: counterspellSlotLevel,
   });
 }

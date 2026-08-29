@@ -4,7 +4,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   antimagicFieldAuraEffectTemplateForTest,
-  antimagicFieldAuraMembershipForTest,
+  magicSuppressionEmanationMembershipForTest,
 } from "./antimagic-field.test-support.ts";
 import { battleStateWithAllocatedEffectForTest } from "./battle-runtime.test-support.ts";
 import {
@@ -170,7 +170,7 @@ function transitBattleState(): BattleState {
 
 function activeAntimagicTransitState(actorInsideAura: boolean): BattleState {
   const state = transitBattleState();
-  const aura = antimagicFieldAuraMembershipForTest({
+  const aura = magicSuppressionEmanationMembershipForTest({
     sourceCombatantId: spellTargetId,
     originIncluded: true,
     nonOriginCombatantIds: actorInsideAura ? [spellCasterId] : [],

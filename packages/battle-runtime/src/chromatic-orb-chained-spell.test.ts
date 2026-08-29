@@ -72,7 +72,9 @@ import { allocateBattleEffectOccurrenceForCreature } from "./effect-execution-re
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-hit-point-state.ts";
 
 const spellCasterId = combatantId("chromatic-orb-caster");
-const wardingBondCasterId = combatantId("chromatic-orb-warding-bond-caster");
+const linkedDefenseResistanceDamageShareCasterId = combatantId(
+  "chromatic-orb-warding-bond-caster",
+);
 const firstTargetId = combatantId("chromatic-orb-first-target");
 const secondTargetId = combatantId("chromatic-orb-second-target");
 const thirdTargetId = combatantId("chromatic-orb-third-target");
@@ -695,7 +697,7 @@ describe("Chromatic Orb chained spell attack", () => {
     );
 
     expect(concentrationHole).toMatchObject({
-      combatantId: wardingBondCasterId,
+      combatantId: linkedDefenseResistanceDamageShareCasterId,
       damageAmount: 3,
     });
 
@@ -711,17 +713,22 @@ describe("Chromatic Orb chained spell attack", () => {
       requireHole(awaitingHideousLaughter.holes, "savingThrowOutcome"),
     );
     expect(hideousLaughterHole.hideousLaughterRepeatSave).toMatchObject({
-      targetId: wardingBondCasterId,
+      targetId: linkedDefenseResistanceDamageShareCasterId,
       trigger: "damage",
     });
     const resolved = resolveResolved(state, damage.subject, [
       ...damage.fills,
       concentrationFill,
       savingThrowOutcomeFill(hideousLaughterHole, [
-        { targetId: wardingBondCasterId, succeeded: true },
+        {
+          targetId: linkedDefenseResistanceDamageShareCasterId,
+          succeeded: true,
+        },
       ]),
     ]);
-    const caster = resolved.state.combatants.get(wardingBondCasterId);
+    const caster = resolved.state.combatants.get(
+      linkedDefenseResistanceDamageShareCasterId,
+    );
 
     expect(resolved.state.combatants.get(firstTargetId)?.hp).toBe(9);
     expect(caster?.hp).toBe(9);
@@ -1027,7 +1034,7 @@ function chromaticOrbSession(input: {
   readonly priorCastHistory?:
     | "sourceDamagePenalty"
     | "targetConcentration"
-    | "wardingBondLifecycle";
+    | "linkedDefenseResistanceDamageShareLifecycle";
 }): BattleRuntimeSession {
   const casterNaturalOneRerollSupport =
     input.casterNaturalOneRerollUnit === undefined
@@ -1081,10 +1088,11 @@ function chromaticOrbSession(input: {
               ],
             }),
       }),
-      ...(input.priorCastHistory === "wardingBondLifecycle"
+      ...(input.priorCastHistory ===
+      "linkedDefenseResistanceDamageShareLifecycle"
         ? [
             characterCreature({
-              combatantId: wardingBondCasterId,
+              combatantId: linkedDefenseResistanceDamageShareCasterId,
               displayName: "Warding Bond caster",
               initiative: 15,
               classLevels: [{ className: "wizard", level: 3 }],
@@ -1154,7 +1162,8 @@ function chromaticOrbSession(input: {
             combatantId: secondTargetId,
             displayName: "Second target",
             initiative: 9,
-            ...(input.priorCastHistory === "wardingBondLifecycle"
+            ...(input.priorCastHistory ===
+            "linkedDefenseResistanceDamageShareLifecycle"
               ? {
                   spellcasting: priorCastSpellcasting(
                     spellRecord("hideous_laughter"),
@@ -1510,17 +1519,22 @@ function withSourceDamageRollPenalty(): BattleState {
 function withWardingBondSharedCasterLifecycle() {
   const session = chromaticOrbSession({
     spellLevel: 1,
-    priorCastHistory: "wardingBondLifecycle",
+    priorCastHistory: "linkedDefenseResistanceDamageShareLifecycle",
   });
   const state = stateAfterPriorSpellCasts({
     state: session.state,
     round: Round(3),
     expendedSpellLevels: [
-      { combatantId: wardingBondCasterId, spellLevel: 2 },
+      {
+        combatantId: linkedDefenseResistanceDamageShareCasterId,
+        spellLevel: 2,
+      },
       { combatantId: secondTargetId, spellLevel: 1 },
     ],
   });
-  const caster = state.combatants.get(wardingBondCasterId);
+  const caster = state.combatants.get(
+    linkedDefenseResistanceDamageShareCasterId,
+  );
   const target = state.combatants.get(firstTargetId);
   const laughterCaster = state.combatants.get(secondTargetId);
   if (
@@ -1530,27 +1544,33 @@ function withWardingBondSharedCasterLifecycle() {
   ) {
     throw new Error("Expected prior-cast lifecycle combatants.");
   }
-  const wardingBondProcedureRef = requireCharacterSpellProcedureRefForTest(
-    session,
-    wardingBondCasterId,
-    spellSlotInvocationRef("warding_bond", 2, "wardingBond"),
-  );
-  const wardingBondEffect = allocateBattleEffectOccurrenceForCreature({
-    owner: target,
-    effect: {
-      kind: "wardingBond",
-      sourceProcedureRef: wardingBondProcedureRef,
-      sourceCombatantId: wardingBondCasterId,
-      expiresAt: {
-        kind: "duration",
-        durationTicks: elapsedTimeTicks(598),
+  const linkedDefenseResistanceDamageShareProcedureRef =
+    requireCharacterSpellProcedureRefForTest(
+      session,
+      linkedDefenseResistanceDamageShareCasterId,
+      spellSlotInvocationRef(
+        "warding_bond",
+        2,
+        "linkedDefenseResistanceDamageShare",
+      ),
+    );
+  const linkedDefenseResistanceDamageShareEffect =
+    allocateBattleEffectOccurrenceForCreature({
+      owner: target,
+      effect: {
+        kind: "linkedDefenseResistanceDamageShare",
+        sourceProcedureRef: linkedDefenseResistanceDamageShareProcedureRef,
+        sourceCombatantId: linkedDefenseResistanceDamageShareCasterId,
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(598),
+        },
       },
-    },
-  });
+    });
   const ray = stateWithRayOfEnfeeblementEffects({
     session,
     state,
-    sourceId: wardingBondCasterId,
+    sourceId: linkedDefenseResistanceDamageShareCasterId,
     targetId: thirdTargetId,
     remainingDurationTicks: elapsedTimeTicks(9),
   });
@@ -1583,7 +1603,7 @@ function withWardingBondSharedCasterLifecycle() {
     state: {
       ...ray.state,
       combatants: new Map(ray.state.combatants)
-        .set(wardingBondCasterId, {
+        .set(linkedDefenseResistanceDamageShareCasterId, {
           ...battleCreatureStateWithKnockOutPreservedConditions(
             hideousLaughter.owner,
             applyCondition(
@@ -1598,8 +1618,11 @@ function withWardingBondSharedCasterLifecycle() {
           },
         })
         .set(firstTargetId, {
-          ...wardingBondEffect.owner,
-          activeEffects: [...target.activeEffects, wardingBondEffect.effect],
+          ...linkedDefenseResistanceDamageShareEffect.owner,
+          activeEffects: [
+            ...target.activeEffects,
+            linkedDefenseResistanceDamageShareEffect.effect,
+          ],
         })
         .set(secondTargetId, {
           ...laughterCaster,
