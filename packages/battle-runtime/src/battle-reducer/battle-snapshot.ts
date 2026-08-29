@@ -1,6 +1,6 @@
 import { optionalProperty } from "../optional-property.ts";
 import { initiativeOrder } from "@dnd/shared-algebras/initiative-algebra";
-import { isNonEmptyReadonlyArray } from "effect/Array";
+import { isReadonlyArrayNonEmpty } from "effect/Array";
 import { Match } from "effect";
 import { type BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type {
@@ -178,7 +178,7 @@ export function interruptDecisionFrontier(
   const frame = currentInterruptCheckpoint(state);
   return frame === null ||
     frame.activeInterrupt !== undefined ||
-    !isNonEmptyReadonlyArray(frame.choices)
+    !isReadonlyArrayNonEmpty(frame.choices)
     ? null
     : {
         kind: "interruptDecision",

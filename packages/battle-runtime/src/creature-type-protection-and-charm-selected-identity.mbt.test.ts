@@ -31,6 +31,7 @@ import {
 import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
 import {
   battleId,
+  BattleCheckpointFrontierEnvelopeSchema,
   BattleSnapshotSchema,
   battleReducerStartRouteEvent,
   characterId,
@@ -599,14 +600,20 @@ describe("Protection relevant-effect selected occurrence identity", () => {
     if (!("protectionRelevantEffectSave" in selectedHole)) {
       throw new Error("Expected Protection relevant-effect save hole.");
     }
-    const encoded = Schema.encodeSync(BattleSnapshotSchema)({
-      ...snapshotBattle(fixture.state),
-      acts: [{ subject: selectedSubject, initialHoles: [selectedHole] }],
+    const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)({
+      checkpoint: snapshotBattle(fixture.state),
+      frontier: {
+        kind: "acts",
+        acts: [{ subject: selectedSubject, initialHoles: [selectedHole] }],
+      },
     });
     expect(() =>
-      Schema.decodeUnknownSync(BattleSnapshotSchema)(encoded),
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(encoded),
     ).not.toThrow();
-    const target = encoded.combatants.find(
+    if (encoded.frontier.kind !== "acts") {
+      throw new Error("Expected the focused Protection Acts frontier.");
+    }
+    const target = encoded.checkpoint.combatants.find(
       (combatant) => combatant.combatantId === protectedTargetId,
     );
     const wrongKindEffect = target?.activeEffectOccurrences.find(
@@ -631,43 +638,53 @@ describe("Protection relevant-effect selected occurrence identity", () => {
     for (const forgedPayload of forgedPayloads) {
       const forged = {
         ...encoded,
-        acts: encoded.acts.map((act) => ({
-          ...act,
-          initialHoles: act.initialHoles.map((hole) =>
-            hole.kind === "savingThrowOutcome" &&
-            "protectionRelevantEffectSave" in hole
-              ? {
-                  ...hole,
-                  protectionRelevantEffectSave: {
-                    ...hole.protectionRelevantEffectSave,
-                    ...forgedPayload,
-                  },
-                }
-              : hole,
-          ),
-        })),
+        frontier: {
+          ...encoded.frontier,
+          acts: encoded.frontier.acts.map((act) => ({
+            ...act,
+            initialHoles: act.initialHoles.map((hole) =>
+              hole.kind === "savingThrowOutcome" &&
+              "protectionRelevantEffectSave" in hole
+                ? {
+                    ...hole,
+                    protectionRelevantEffectSave: {
+                      ...hole.protectionRelevantEffectSave,
+                      ...forgedPayload,
+                    },
+                  }
+                : hole,
+            ),
+          })),
+        },
       };
       expect(() =>
-        Schema.decodeUnknownSync(BattleSnapshotSchema)(forged),
+        Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
+          forged,
+        ),
       ).toThrow();
     }
     const forgedSubject = {
       ...encoded,
-      acts: encoded.acts.map((act) =>
-        act.subject.tag === "runtimeCommand" &&
-        act.subject.command === "protectionRelevantEffectSave"
-          ? {
-              ...act,
-              subject: {
-                ...act.subject,
-                relevantEffect: "possession" as const,
-              },
-            }
-          : act,
-      ),
+      frontier: {
+        ...encoded.frontier,
+        acts: encoded.frontier.acts.map((act) =>
+          act.subject.tag === "runtimeCommand" &&
+          act.subject.command === "protectionRelevantEffectSave"
+            ? {
+                ...act,
+                subject: {
+                  ...act.subject,
+                  relevantEffect: "possession" as const,
+                },
+              }
+            : act,
+        ),
+      },
     };
     expect(() =>
-      Schema.decodeUnknownSync(BattleSnapshotSchema)(forgedSubject),
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
+        forgedSubject,
+      ),
     ).toThrow();
   });
 
@@ -746,7 +763,6 @@ describe("Protection relevant-effect selected occurrence identity", () => {
 
     const expiredHistorical = {
       ...encoded,
-      acts: [],
       combatants: encoded.combatants.map((combatant) => ({
         ...combatant,
         activeEffectOccurrences: combatant.activeEffectOccurrences.filter(
@@ -1496,7 +1512,11 @@ function projectProtectionFromEvilAndGoodCharmBoundary(): {
 } {
   const resolved = resolveProtectionFromEvilAndGood();
   const charmState = protectionFromEvilAndGoodBattle();
-  const charmAct = spellAct(charmState, charmPersonUnitId);
+  const charmAct = spellAct(
+    charmState,
+    charmPersonUnitId,
+    "saveGatedCondition",
+  );
   const charmActor = charmState.combatants.get(charmAct.subject.actorId);
   const executableCharmInvocation =
     charmActor?.origin.kind === "character"
@@ -1752,17 +1772,32 @@ function statBlockLiteralNumber(
 }
 
 function protectionFromEvilAndGoodSpellAct(state: BattleState): ActionSpellAct {
-  return spellAct(state, protectionFromEvilAndGoodUnitId);
+  return spellAct(
+    state,
+    protectionFromEvilAndGoodUnitId,
+    "creatureTypeProtection",
+  );
 }
 
-function spellAct(state: BattleState, unitId: string): ActionSpellAct {
+function spellAct(
+  state: BattleState,
+  unitId: string,
+  expectedProcedure: "creatureTypeProtection" | "saveGatedCondition",
+): ActionSpellAct {
   const act = battleActsWithReducerRouteEvents(
     state,
     discoverBattleActCandidates(state),
-  ).find(
-    (candidate): candidate is ActionSpellAct =>
-      candidate.subject.tag === "actionSpell",
-  );
+  ).find((candidate): candidate is ActionSpellAct => {
+    if (candidate.subject.tag !== "actionSpell") return false;
+    const actor = state.combatants.get(candidate.subject.actorId);
+    return (
+      actor?.origin.kind === "character" &&
+      characterSpellProcedure(
+        actor.origin.execution,
+        candidate.subject.procedureRef,
+      )?.procedure === expectedProcedure
+    );
+  });
   if (act === undefined) {
     throw new Error(`Expected ${unitId} spell act.`);
   }
@@ -1871,7 +1906,7 @@ function resolveAnimalFriendshipFailedSave(state: BattleState): BattleState {
 }
 
 function animalFriendshipSpellAct(state: BattleState): ActionSpellAct {
-  return spellAct(state, animalFriendshipUnitId);
+  return spellAct(state, animalFriendshipUnitId, "saveGatedCondition");
 }
 
 function spellTargetListFill(

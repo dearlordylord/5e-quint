@@ -58,11 +58,9 @@ import {
   type SpellRecord,
 } from "./unit-profile-admission.test-support.ts";
 import {
-  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
   battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectForTest,
   assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
-  battleActiveEffectExecutionRefForTest,
   requireCharacterUnitProcedureRefForTest,
   requireCharacterSpellProcedureRefForTest,
   testCharacterD20Statistics,
@@ -70,7 +68,7 @@ import {
   wizardSpellcasting,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
 } from "./battle-runtime.test-support.ts";
-import { BattleSnapshotSchema } from "./index.ts";
+import { BattleCheckpointFrontierEnvelopeSchema } from "./index.ts";
 
 describe("Dragon's Breath initial cast admission", () => {
   test("stores chosen damage type, original slot, and caster save DC on the willing target", () => {
@@ -289,14 +287,16 @@ describe("Dragon's Breath initial cast admission", () => {
           }
         : hole,
     );
-    const encodedSnapshot = Schema.encodeSync(BattleSnapshotSchema)(
-      needsDamage.snapshot,
-    );
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)({
-          ...encodedSnapshot,
-          acts: [{ subject: exhaleAct.subject, initialHoles: wrongOwnerHoles }],
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)({
+          checkpoint: needsDamage.snapshot,
+          frontier: {
+            kind: "acts",
+            acts: [
+              { subject: exhaleAct.subject, initialHoles: wrongOwnerHoles },
+            ],
+          },
         }),
       ),
     ).toBe(true);

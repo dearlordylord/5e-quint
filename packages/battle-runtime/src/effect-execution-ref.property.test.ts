@@ -36,6 +36,7 @@ import {
   type CombatantId,
 } from "./identity.ts";
 import {
+  BattleCheckpointFrontierEnvelopeSchema,
   BattleHoleSchema,
   BattleSnapshotSchema,
 } from "./battle-reducer/battle-codecs.ts";
@@ -261,17 +262,6 @@ function occurrenceWithoutRef(occurrence: BattleAllocatedEffectOccurrence) {
         kind,
         emitter: { effectRef: _effectRef, ...emitter },
       }) => ({ kind, emitter }) as const,
-    }),
-  );
-}
-
-function storedLightEmitterOccurrenceRefs(
-  occurrence: BattleAllocatedEffectOccurrence,
-): readonly BattleEffectExecutionRef[] {
-  return Match.value(occurrence).pipe(
-    Match.discriminatorsExhaustive("kind")({
-      activeEffect: () => [],
-      storedLightEmitter: ({ emitter }) => [emitter.effectRef],
     }),
   );
 }
@@ -965,11 +955,7 @@ describe("durable effect occurrence allocation properties", () => {
           const goblinOccurrence = goblin.activeEffectOccurrences[0];
           const fighterOccurrence = fighterSnapshot.activeEffectOccurrences[0];
           const goblinStoredOccurrence = encoded.storedLightEmitters.find(
-            (emitter) =>
-              emitter.effectRef ===
-              allocated.occurrences.flatMap(
-                storedLightEmitterOccurrenceRefs,
-              )[0],
+            (emitter) => emitter.kind === "spellLightEmitter",
           );
           if (
             goblinOccurrence === undefined ||
@@ -1083,54 +1069,47 @@ describe("durable effect occurrence allocation properties", () => {
             }),
           );
           expect(dispelAct.subject.procedureRef).toBe(dispelProcedureRef);
-          const snapshotWithBoundStoredOccurrence = {
-            ...encoded,
-            acts: [
-              ...encoded.acts,
-              {
-                subject: dispelAct.subject,
-                initialHoles: [boundStoredOccurrenceHole],
-              },
-            ],
+          const envelopeWithBoundStoredOccurrence = {
+            checkpoint: encoded,
+            frontier: {
+              kind: "holes" as const,
+              subject: dispelAct.subject,
+              holes: [boundStoredOccurrenceHole],
+              continuation: { kind: "ordinaryReplay" as const },
+            },
           };
-          expect(
-            Result.isSuccess(
-              Schema.decodeUnknownResult(BattleSnapshotSchema)(
-                snapshotWithBoundStoredOccurrence,
-              ),
+          expect(() =>
+            Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
+              envelopeWithBoundStoredOccurrence,
             ),
-          ).toBe(true);
+          ).not.toThrow();
           const crossKind = {
-            ...snapshotWithBoundStoredOccurrence,
-            acts: snapshotWithBoundStoredOccurrence.acts.map((act, index) =>
-              index === snapshotWithBoundStoredOccurrence.acts.length - 1
-                ? {
-                    ...act,
-                    initialHoles: act.initialHoles.map((hole) =>
-                      hole.kind === "spellcastingAbilityCheck" &&
-                      hole.spellcastingAbilityCheck.target.kind ===
-                        "magicalEffect" &&
-                      hole.spellcastingAbilityCheck.target.effect.kind ===
-                        "spellLightEmitter"
-                        ? {
-                            ...hole,
-                            spellcastingAbilityCheck: {
-                              ...hole.spellcastingAbilityCheck,
-                              target: {
-                                ...hole.spellcastingAbilityCheck.target,
-                                effect: {
-                                  ...hole.spellcastingAbilityCheck.target
-                                    .effect,
-                                  effectRef: goblinOccurrence.effectRef,
-                                },
-                              },
+            ...envelopeWithBoundStoredOccurrence,
+            frontier: {
+              ...envelopeWithBoundStoredOccurrence.frontier,
+              holes: envelopeWithBoundStoredOccurrence.frontier.holes.map(
+                (hole) =>
+                  hole.kind === "spellcastingAbilityCheck" &&
+                  hole.spellcastingAbilityCheck.target.kind ===
+                    "magicalEffect" &&
+                  hole.spellcastingAbilityCheck.target.effect.kind ===
+                    "spellLightEmitter"
+                    ? {
+                        ...hole,
+                        spellcastingAbilityCheck: {
+                          ...hole.spellcastingAbilityCheck,
+                          target: {
+                            ...hole.spellcastingAbilityCheck.target,
+                            effect: {
+                              ...hole.spellcastingAbilityCheck.target.effect,
+                              effectRef: goblinOccurrence.effectRef,
                             },
-                          }
-                        : hole,
-                    ),
-                  }
-                : act,
-            ),
+                          },
+                        },
+                      }
+                    : hole,
+              ),
+            },
           };
           const injectedProjectionRef = {
             ...encoded,
@@ -1147,7 +1126,6 @@ describe("durable effect occurrence allocation properties", () => {
             duplicateAcrossKinds,
             wrongOwner,
             future,
-            crossKind,
             injectedProjectionRef,
           ]) {
             expect(
@@ -1156,6 +1134,13 @@ describe("durable effect occurrence allocation properties", () => {
               ),
             ).toBe(true);
           }
+          expect(
+            Result.isFailure(
+              Schema.decodeUnknownResult(
+                BattleCheckpointFrontierEnvelopeSchema,
+              )(crossKind),
+            ),
+          ).toBe(true);
         },
       ),
       { ...PROPERTY_OPTIONS, numRuns: 24 },

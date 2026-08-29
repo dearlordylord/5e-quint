@@ -88,7 +88,7 @@ import {
 } from "@dnd/surface/surface/unit-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Result, Match, Option } from "effect";
-import { isNonEmptyReadonlyArray } from "effect/Array";
+import { isReadonlyArrayNonEmpty } from "effect/Array";
 import {
   classSpellChoiceIsRuntimeDetached,
   omitRuntimeDetachedClassSpellChoices,
@@ -384,7 +384,7 @@ export function battleCreatureInitIssuesFromMessages(
     message,
     ...characterBattleInitIssueFactFields(reasonForIndex(index)),
   }));
-  if (!isNonEmptyReadonlyArray(leaves)) {
+  if (!isReadonlyArrayNonEmpty(leaves)) {
     return battleCreatureInitIssue(
       "Character battle initialization produced no projection issue facts.",
       reasonForIndex(0),
@@ -1125,12 +1125,12 @@ function parseCharacterBattleMagicInitiateSpellAccesses(input: {
     build: input.build,
     unitLibrary: input.unitLibrary,
   });
-  if (Result.isRight(parsed)) return Result.succeed(parsed.success);
+  if (Result.isSuccess(parsed)) return Result.succeed(parsed.success);
   const spellAccessIssues = characterBattleSpellAccessProjectionIssues(
     parsed.failure,
     input.build,
   );
-  return isNonEmptyReadonlyArray(spellAccessIssues)
+  return isReadonlyArrayNonEmpty(spellAccessIssues)
     ? battleCreatureInitIssueFromLeaves(spellAccessIssues)
     : battleCreatureInitIssue(
         "Character Battle Spell Access projection contains invalid selections.",
@@ -1147,8 +1147,8 @@ function projectCharacterBattleMagicInitiateSpellAccessesForCasting(input: {
   BattleCreatureInitIssue
 > {
   const projected = projectCharacterBattleMagicInitiateSpellAccesses(input);
-  if (Result.isRight(projected)) return Result.succeed(projected.success);
-  return isNonEmptyReadonlyArray(projected.failure)
+  if (Result.isSuccess(projected)) return Result.succeed(projected.success);
+  return isReadonlyArrayNonEmpty(projected.failure)
     ? battleCreatureInitIssueFromLeaves(projected.failure)
     : battleCreatureInitIssue(
         "Character Battle Spell Access projection contains invalid selections.",
@@ -1331,7 +1331,7 @@ function characterBattleSpellRecordsForSources(input: {
       : [],
   );
   return Result.isFailure(cantrips) || Result.isFailure(preparedSpells)
-    ? isNonEmptyReadonlyArray(issues)
+    ? isReadonlyArrayNonEmpty(issues)
       ? battleCreatureInitIssuesFromMessages(issues, () => ({
           kind: "characterBuildProjection",
           phase: "spellcasting",
@@ -1523,7 +1523,7 @@ function projectCharacterBattleMagicInitiateSpellAccess(input: {
       }),
     );
     return Result.fail(
-      isNonEmptyReadonlyArray(issues)
+      isReadonlyArrayNonEmpty(issues)
         ? issues
         : [
             {
@@ -1918,7 +1918,7 @@ function spellRecordsForIds<const UnitIds extends readonly UnitRecord["id"][]>(
     }
     spells.push(unit.success);
   }
-  if (isNonEmptyReadonlyArray(issues)) {
+  if (isReadonlyArrayNonEmpty(issues)) {
     return battleCreatureInitIssuesFromMessages(issues, () => ({
       kind: "characterBuildProjection",
       phase: "spellcasting",
@@ -1963,7 +1963,7 @@ function battleProjectedSpellRecordsForIds(input: {
   }
   return issues.length === 0
     ? Result.succeed(spells)
-    : isNonEmptyReadonlyArray(issues)
+    : isReadonlyArrayNonEmpty(issues)
       ? battleCreatureInitIssuesFromMessages(issues, () => ({
           kind: "characterBuildProjection",
           phase: "spellcasting",

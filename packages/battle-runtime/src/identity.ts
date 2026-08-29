@@ -574,19 +574,6 @@ export function battleEffectExecutionRefBelongsToScope(
   );
 }
 
-export function battleActiveEffectExecutionRefBelongsToScope(
-  effectRef: BattleActiveEffectExecutionRef,
-  scopeRef: BattleExecutionScopeRef,
-): boolean {
-  const decoded = parseExecutionReference(effectRef);
-  return (
-    decoded !== null &&
-    decoded.ownerScopeRef === scopeRef &&
-    decoded.kind === "activeEffectOccurrence" &&
-    battleActiveEffectExecutionReferenceIsCanonical(effectRef)
-  );
-}
-
 function executionReferenceBelongsToScope(
   reference: string,
   kind: "procedure" | "resourcePool",

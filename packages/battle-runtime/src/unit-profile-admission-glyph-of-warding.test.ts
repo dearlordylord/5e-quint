@@ -195,7 +195,6 @@ import {
   battleProcedureExecutionRefForSpellHoleForTest,
   battleEffectExecutionRefForTest,
   battleStateWithAllocatedEffectForTest,
-  battleActiveEffectExecutionRefForTest,
   battleFrontierInterruptDecisionForState,
   combatantId,
   battleProcedureExecutionRefForTest,

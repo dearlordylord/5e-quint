@@ -66,7 +66,7 @@ type EncodedHole = Schema.Codec.Encoded<typeof BattleHoleSchema>;
 type EncodedSnapshot = Schema.Codec.Encoded<typeof BattleSnapshotSchema>;
 type EncodedOccurrenceLocation =
   EncodedSnapshot["combatants"][number]["activeEffectOccurrences"][number]["location"];
-type EncodedEnvelope = Schema.Schema.Encoded<
+type EncodedEnvelope = Schema.Codec.Encoded<
   typeof BattleCheckpointFrontierEnvelopeSchema
 >;
 type EncodedActsFrontier = Extract<

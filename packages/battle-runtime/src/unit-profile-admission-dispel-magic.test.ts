@@ -4,10 +4,8 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING
 // RAW: .references/srd-5.2.1/Spells/Descriptions-A-D.md#Dispel-Magic
 import {
-  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
-  battleEffectExecutionRefForTest,
   assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectOccurrencesForTest,
   requireCharacterSpellProcedureRefForTest,
@@ -37,7 +35,6 @@ import type {
   BattleTrackedOngoingSpellLightEmitter,
 } from "./index.ts";
 import type { BattleStoredLightEmitterTemplate } from "./battle-state-execution.ts";
-import type { BattleObjectInvisibleRevealLightEmitter } from "./battle-state-execution.ts";
 import {
   BattleCheckpointFrontierEnvelopeSchema,
   BattleHoleSchema,
@@ -400,16 +397,23 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     if (needsCheck.tag !== "needsHoles") {
       throw new Error("Expected a Dispel Magic spellcasting ability check.");
     }
-    const encodedSnapshot = needsCheck.snapshot;
-    const deferredCheckSnapshot = {
-      ...encodedSnapshot,
-      acts: [{ subject: act.subject, initialHoles: needsCheck.holes }],
+    const encodedSnapshot = Schema.encodeSync(BattleSnapshotSchema)(
+      needsCheck.snapshot,
+    );
+    const deferredCheckEnvelope = {
+      checkpoint: encodedSnapshot,
+      frontier: {
+        kind: "holes" as const,
+        subject: act.subject,
+        holes: needsCheck.holes,
+        continuation: { kind: "ordinaryReplay" as const },
+      },
     };
-    expect(
-      Result.isSuccess(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)(deferredCheckSnapshot),
+    expect(() =>
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
+        deferredCheckEnvelope,
       ),
-    ).toBe(true);
+    ).not.toThrow();
     const mutateAggregateCheck = (
       mutate: (
         check: Exclude<
@@ -421,10 +425,10 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
         >,
       ) => unknown,
     ) => ({
-      ...deferredCheckSnapshot,
-      acts: deferredCheckSnapshot.acts.map((candidate) => ({
-        ...candidate,
-        initialHoles: candidate.initialHoles.map((hole) =>
+      ...deferredCheckEnvelope,
+      frontier: {
+        ...deferredCheckEnvelope.frontier,
+        holes: deferredCheckEnvelope.frontier.holes.map((hole) =>
           hole.kind === "spellcastingAbilityCheck"
             ? {
                 ...hole,
@@ -432,11 +436,11 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
               }
             : hole,
         ),
-      })),
+      },
     });
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           mutateAggregateCheck((check) => {
             if (check.target.kind === "magicalEffect") return check;
             return {
@@ -452,7 +456,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     ).toBe(true);
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           mutateAggregateCheck((check) => {
             if (check.target.kind === "magicalEffect") return check;
             return {
@@ -468,7 +472,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     ).toBe(true);
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           mutateAggregateCheck((check) => {
             if (check.target.kind === "magicalEffect") return check;
             return {
@@ -488,7 +492,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     ).toBe(true);
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           mutateAggregateCheck((check) => {
             if (check.target.kind === "magicalEffect") return check;
             const {
@@ -502,57 +506,71 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     ).toBe(true);
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)({
-          ...deferredCheckSnapshot,
-          storedLightEmitters: deferredCheckSnapshot.storedLightEmitters.filter(
-            (emitter) => emitter.effectRef !== allocatedEmitter.effectRef,
-          ),
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)({
+          ...deferredCheckEnvelope,
+          checkpoint: {
+            ...deferredCheckEnvelope.checkpoint,
+            storedLightEmitters:
+              deferredCheckEnvelope.checkpoint.storedLightEmitters.filter(
+                (emitter) => emitter.effectRef !== allocatedEmitter.effectRef,
+              ),
+          },
         }),
       ),
     ).toBe(true);
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)({
-          ...deferredCheckSnapshot,
-          storedLightEmitters: deferredCheckSnapshot.storedLightEmitters.filter(
-            (emitter) => emitter.effectRef !== allocatedEmitter.effectRef,
-          ),
-          combatants: deferredCheckSnapshot.combatants.map((combatant) => ({
-            ...combatant,
-            activeEffectOccurrences: [
-              ...combatant.activeEffectOccurrences,
-              ...(combatant.combatantId === spellTargetId
-                ? [
-                    {
-                      ...combatant.activeEffectOccurrences[0]!,
-                      effectRef: allocatedEmitter.effectRef,
-                    },
-                  ]
-                : []),
-            ],
-          })),
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)({
+          ...deferredCheckEnvelope,
+          checkpoint: {
+            ...deferredCheckEnvelope.checkpoint,
+            storedLightEmitters:
+              deferredCheckEnvelope.checkpoint.storedLightEmitters.filter(
+                (emitter) => emitter.effectRef !== allocatedEmitter.effectRef,
+              ),
+            combatants: deferredCheckEnvelope.checkpoint.combatants.map(
+              (combatant) => ({
+                ...combatant,
+                activeEffectOccurrences: [
+                  ...combatant.activeEffectOccurrences,
+                  ...(combatant.combatantId === spellTargetId
+                    ? [
+                        {
+                          ...combatant.activeEffectOccurrences[0]!,
+                          effectRef: allocatedEmitter.effectRef,
+                        },
+                      ]
+                    : []),
+                ],
+              }),
+            ),
+          },
         }),
       ),
     ).toBe(true);
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)({
-          ...deferredCheckSnapshot,
-          storedLightEmitters: deferredCheckSnapshot.storedLightEmitters.map(
-            (emitter) =>
-              emitter.effectRef === allocatedEmitter.effectRef &&
-              emitter.kind === "spellLightEmitter"
-                ? {
-                    ...emitter,
-                    attachment: {
-                      kind: "object" as const,
-                      objectId: battleObjectId(
-                        "contradictory-emitter-census-object",
-                      ),
-                    },
-                  }
-                : emitter,
-          ),
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)({
+          ...deferredCheckEnvelope,
+          checkpoint: {
+            ...deferredCheckEnvelope.checkpoint,
+            storedLightEmitters:
+              deferredCheckEnvelope.checkpoint.storedLightEmitters.map(
+                (emitter) =>
+                  emitter.effectRef === allocatedEmitter.effectRef &&
+                  emitter.kind === "spellLightEmitter"
+                    ? {
+                        ...emitter,
+                        attachment: {
+                          kind: "object" as const,
+                          objectId: battleObjectId(
+                            "contradictory-emitter-census-object",
+                          ),
+                        },
+                      }
+                    : emitter,
+              ),
+          },
         }),
       ),
     ).toBe(true);
@@ -561,11 +579,11 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     );
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)({
-          ...deferredCheckSnapshot,
-          acts: deferredCheckSnapshot.acts.map((candidate) => ({
-            ...candidate,
-            initialHoles: candidate.initialHoles.map((hole) =>
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)({
+          ...deferredCheckEnvelope,
+          frontier: {
+            ...deferredCheckEnvelope.frontier,
+            holes: deferredCheckEnvelope.frontier.holes.map((hole) =>
               hole.kind === "spellcastingAbilityCheck" &&
               hole.spellcastingAbilityCheck.target.kind !== "magicalEffect" &&
               hole.spellcastingAbilityCheck.checkedOccurrence!.effect.kind ===
@@ -586,7 +604,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
                   }
                 : hole,
             ),
-          })),
+          },
         }),
       ),
     ).toBe(true);
@@ -1084,12 +1102,16 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     expect(
       requireHole(act.initialHoles, "ongoingSpellTargetChoice").choices,
     ).toContainEqual(target);
-    const snapshot = snapshotBattle(state.state);
+    const snapshot = Schema.encodeSync(BattleSnapshotSchema)(
+      snapshotBattle(state.state),
+    );
     const focusedEnvelope = {
       checkpoint: snapshot,
       frontier: {
-        kind: "acts" as const,
-        acts: [{ subject: act.subject, initialHoles: act.initialHoles }],
+        kind: "holes" as const,
+        subject: act.subject,
+        holes: act.initialHoles,
+        continuation: { kind: "ordinaryReplay" as const },
       },
     };
     const focusedSnapshot = snapshot;
@@ -1143,13 +1165,11 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
         ),
       ),
     ).toBe(true);
-    expect(
-      Result.isSuccess(
-        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
-          focusedEnvelope,
-        ),
+    expect(() =>
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
+        focusedEnvelope,
       ),
-    ).toBe(true);
+    ).not.toThrow();
     const wrongOwnerEnvelope = {
       ...focusedEnvelope,
       checkpoint: {
@@ -1158,11 +1178,17 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
           combatant.combatantId === spellCasterId
             ? {
                 ...combatant,
-                activeEffectRefs: [
-                  battleActiveEffectExecutionRefForTest(
-                    "wrong-owner-spiritual-weapon",
-                  ),
-                ],
+                activeEffectOccurrences: combatant.activeEffectOccurrences.map(
+                  (occurrence) =>
+                    occurrence.effectRef === effect.effectRef
+                      ? {
+                          ...occurrence,
+                          effectRef: battleEffectExecutionRefForTest(
+                            "wrong-owner-spiritual-weapon",
+                          ),
+                        }
+                      : occurrence,
+                ),
               }
             : combatant,
         ),
@@ -1412,30 +1438,6 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       subject: act.subject,
       holes: needsCheck.holes,
     });
-    const encodedSnapshot =
-      Schema.encodeSync(BattleSnapshotSchema)(focusedSnapshot);
-    const deferredSnapshot = {
-      ...encodedSnapshot,
-      acts: [{ subject: act.subject, initialHoles: needsCheck.holes }],
-    };
-    expect(
-      Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)({
-          ...deferredSnapshot,
-          combatants: encodedSnapshot.combatants.map((combatant) =>
-            combatant.combatantId === spellCasterId
-              ? {
-                  ...combatant,
-                  activeEffectOccurrences:
-                    combatant.activeEffectOccurrences.filter(
-                      (occurrence) => occurrence.effectRef !== effect.effectRef,
-                    ),
-                }
-              : combatant,
-          ),
-        }),
-      ),
-    ).toBe(true);
     const encodedEnvelope = Schema.encodeSync(
       BattleCheckpointFrontierEnvelopeSchema,
     )({
@@ -1445,6 +1447,10 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
         acts: [{ subject: act.subject, initialHoles: needsCheck.holes }],
       },
     });
+    if (encodedEnvelope.frontier.kind !== "acts") {
+      throw new Error("Expected the focused Dispel Magic Acts frontier.");
+    }
+    const encodedActsFrontier = encodedEnvelope.frontier;
     expect(
       Result.isFailure(
         Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)({
@@ -1456,9 +1462,11 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
                 combatant.combatantId === spellCasterId
                   ? {
                       ...combatant,
-                      activeEffectRefs: combatant.activeEffectRefs.filter(
-                        (effectRef) => effectRef !== effect.effectRef,
-                      ),
+                      activeEffectOccurrences:
+                        combatant.activeEffectOccurrences.filter(
+                          (occurrence) =>
+                            occurrence.effectRef !== effect.effectRef,
+                        ),
                     }
                   : combatant,
             ),
@@ -1479,25 +1487,27 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     const forgedTargetRef = battleEffectExecutionRefForTest(
       "forged-spiritual-weapon-ability-check-target",
     );
+    type EncodedDeferredCheckHole = Extract<
+      (typeof encodedActsFrontier.acts)[number]["initialHoles"][number],
+      { readonly kind: "spellcastingAbilityCheck" }
+    >;
     const mutateDeferredCheck = (
-      mutate: (
-        hole: Extract<
-          BattleHole,
-          { readonly kind: "spellcastingAbilityCheck" }
-        >,
-      ) => unknown,
+      mutate: (hole: EncodedDeferredCheckHole) => unknown,
     ) => ({
-      ...deferredSnapshot,
-      acts: deferredSnapshot.acts.map((candidate) => ({
-        ...candidate,
-        initialHoles: candidate.initialHoles.map((hole) =>
-          hole.kind === "spellcastingAbilityCheck" ? mutate(hole) : hole,
-        ),
-      })),
+      ...encodedEnvelope,
+      frontier: {
+        ...encodedActsFrontier,
+        acts: encodedActsFrontier.acts.map((candidate) => ({
+          ...candidate,
+          initialHoles: candidate.initialHoles.map((hole) =>
+            hole.kind === "spellcastingAbilityCheck" ? mutate(hole) : hole,
+          ),
+        })),
+      },
     });
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           mutateDeferredCheck((hole) => ({
             ...hole,
             spellcastingAbilityCheck: {
@@ -1513,7 +1523,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     ).toBe(true);
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           mutateDeferredCheck((hole) => ({
             ...hole,
             spellcastingAbilityCheck: {
@@ -1532,7 +1542,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     ).toBe(true);
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           mutateDeferredCheck((hole) => ({
             ...hole,
             spellcastingAbilityCheck: {
@@ -1552,7 +1562,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     ).toBe(true);
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           mutateDeferredCheck((hole) => {
             if (hole.spellcastingAbilityCheck.target.kind !== "magicalEffect") {
               throw new Error("Expected a magical-effect Dispel check.");

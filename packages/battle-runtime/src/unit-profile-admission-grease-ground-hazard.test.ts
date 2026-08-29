@@ -8,7 +8,6 @@ import { resourceCount } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import { HEIGHTENED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
 import {
-  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
   battleEffectExecutionRefForTest,
   assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
   battleId,
@@ -35,7 +34,7 @@ import {
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
   battleAreaId,
-  BattleSnapshotSchema,
+  BattleCheckpointFrontierEnvelopeSchema,
   battleFrontierInterruptDecisionForState,
   type AvailableBattleAct,
   type BattleRuntimeSession,
@@ -858,19 +857,19 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     if (overlappingNeedsSave.tag !== "needsHoles") {
       throw new Error("Expected overlapping Grease save hole.");
     }
-    const encodedOverlapSnapshot = Schema.encodeSync(BattleSnapshotSchema)(
-      overlappingNeedsSave.snapshot,
-    );
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)({
-          ...encodedOverlapSnapshot,
-          acts: [
-            {
-              subject: overlappingAct.subject,
-              initialHoles: selected.initialHoles,
-            },
-          ],
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)({
+          checkpoint: overlappingNeedsSave.snapshot,
+          frontier: {
+            kind: "acts",
+            acts: [
+              {
+                subject: overlappingAct.subject,
+                initialHoles: selected.initialHoles,
+              },
+            ],
+          },
         }),
       ),
     ).toBe(true);

@@ -43,7 +43,6 @@ function sessionSummary(battleState: FocusedBattleState) {
     characterIds: [],
     selectedStatBlockId: null,
     battleState,
-    pendingBattleHoles: null,
   };
 }
 
@@ -53,7 +52,6 @@ function sessionSnapshot(battleState: FocusedBattleState) {
     characterIds: [],
     selectedStatBlockId: null,
     battleState,
-    transientBattleFills: null,
   };
 }
 
@@ -102,11 +100,7 @@ describe("isolated MCP session and battle output codecs", () => {
 
   test("accepts setup lifecycle output and rejects cross-branch values", () => {
     const setupOutput = {
-      battleState: setupState,
-      snapshot: null,
-      availableActs: [],
-      admittedSpellPresentations: [],
-      presentedInterruptChoices: [],
+      envelope: null,
       session: sessionSummary(setupState),
     };
     const accepted = Schema.decodeUnknownResult(
@@ -130,7 +124,7 @@ describe("isolated MCP session and battle output codecs", () => {
       Result.isFailure(
         Schema.decodeUnknownResult(Schema.toType(BattleLifecycleOutputSchema))({
           ...setupOutput,
-          snapshot: {},
+          envelope: {},
         }),
       ),
     ).toBe(true);

@@ -42,7 +42,7 @@ import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import type { StatBlockId } from "@dnd/shared/game-facts";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import { Result, Option } from "effect";
-import { isNonEmptyReadonlyArray } from "effect/Array";
+import { isReadonlyArrayNonEmpty } from "effect/Array";
 
 import {
   characterSheetBattleHandoffFactFromIssue,
@@ -355,7 +355,7 @@ function admitBattleCompanionRosterRequest(input: {
     initialCombatantOrder: input.initialCombatantOrder,
     statBlockCatalog: input.statBlockCatalog,
   });
-  if (Result.isRight(admitted)) {
+  if (Result.isSuccess(admitted)) {
     return { tag: "admitted", session: admitted.success };
   }
   const [firstIssue, ...restIssues] = admitted.failure;
@@ -440,7 +440,7 @@ export function composeBattleCompanionRoster(input: {
       issues: indexed.issues.dependentIssues,
     };
   }
-  if (!isNonEmptyReadonlyArray(indexed.issues.issues)) {
+  if (!isReadonlyArrayNonEmpty(indexed.issues.issues)) {
     return { tag: "admitted", session };
   }
   return { tag: "rejected", issues: indexed.issues.issues };

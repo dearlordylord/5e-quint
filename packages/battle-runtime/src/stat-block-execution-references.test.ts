@@ -45,12 +45,10 @@ import {
   BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
   BattleStatBlockExecutionScopeRef,
-  battleActiveEffectExecutionOrdinal,
+  battleEffectExecutionOrdinal,
   battleCharacterExecutionScopeRef,
   battleCharacterExecutionScopeRefOrdinalIsBefore,
-  BattleActiveEffectExecutionRef,
-  battleActiveEffectExecutionRef,
-  battleActiveEffectExecutionRefOrdinalIsBefore,
+  battleEffectExecutionRefOrdinalIsBefore,
   battleAttackExecutionScopeRef,
   battleAttackExecutionScopeRefOrdinalIsBefore,
   battleExecutionScopeCursor,
@@ -141,9 +139,9 @@ describe("Stat Block execution references", () => {
       characterScope,
       NonNegativeInteger(0),
     );
-    const activeEffectRef = battleActiveEffectExecutionRef(
+    const activeEffectRef = battleEffectExecutionRef(
       JSON.stringify({
-        kind: "activeEffectOccurrence",
+        kind: "effectOccurrence",
         ownerScopeRef: characterScope,
         ordinal: 0,
       }),
@@ -172,10 +170,10 @@ describe("Stat Block execution references", () => {
       ),
     ).toBe(true);
     expect(
-      battleActiveEffectExecutionRefOrdinalIsBefore(
+      battleEffectExecutionRefOrdinalIsBefore(
         activeEffectRef,
         characterScope,
-        battleActiveEffectExecutionOrdinal(1),
+        battleEffectExecutionOrdinal(1),
       ),
     ).toBe(true);
     expect(
@@ -201,10 +199,10 @@ describe("Stat Block execution references", () => {
       ),
     ).toBe(false);
     expect(
-      battleActiveEffectExecutionRefOrdinalIsBefore(
+      battleEffectExecutionRefOrdinalIsBefore(
         activeEffectRef,
         statBlockScope,
-        battleActiveEffectExecutionOrdinal(1),
+        battleEffectExecutionOrdinal(1),
       ),
     ).toBe(false);
   });
@@ -1613,9 +1611,9 @@ describe("Stat Block execution references", () => {
       decodedOrigin.execution.scopeRef,
       NonNegativeInteger(999),
     );
-    const unboundEffectRef = battleActiveEffectExecutionRef(
+    const unboundEffectRef = battleEffectExecutionRef(
       JSON.stringify({
-        kind: "activeEffectOccurrence",
+        kind: "effectOccurrence",
         ownerScopeRef: decodedOrigin.execution.scopeRef,
         ordinal: 999,
       }),
@@ -1636,18 +1634,18 @@ describe("Stat Block execution references", () => {
     if (encodedActor?.origin.kind !== "statBlock") {
       throw new Error("Expected the serialized Stat Block combatant.");
     }
-    const fighterEffectRef = battleActiveEffectExecutionRef(
+    const fighterEffectRef = battleEffectExecutionRef(
       JSON.stringify({
-        kind: "activeEffectOccurrence",
+        kind: "effectOccurrence",
         ownerScopeRef: encodedFighter.origin.execution.scopeRef,
-        ordinal: spentBattle.combatants.get(fighterId)?.nextActiveEffectOrdinal,
+        ordinal: spentBattle.combatants.get(fighterId)?.nextEffectOrdinal,
       }),
     );
-    const actorEffectRef = battleActiveEffectExecutionRef(
+    const actorEffectRef = battleEffectExecutionRef(
       JSON.stringify({
-        kind: "activeEffectOccurrence",
+        kind: "effectOccurrence",
         ownerScopeRef: decodedOrigin.execution.scopeRef,
-        ordinal: spentBattle.combatants.get(actorId)?.nextActiveEffectOrdinal,
+        ordinal: spentBattle.combatants.get(actorId)?.nextEffectOrdinal,
       }),
     );
     const escapeSubject = {
@@ -1659,7 +1657,7 @@ describe("Stat Block execution references", () => {
     };
     const snapshotWithEffectOwner = (
       ownerId: CombatantId,
-      effectRef: BattleActiveEffectExecutionRef,
+      effectRef: BattleEffectExecutionRef,
     ) => ({
       ...encodedEnvelope,
       checkpoint: {
@@ -1668,7 +1666,16 @@ describe("Stat Block execution references", () => {
           combatant.combatantId === ownerId
             ? {
                 ...combatant,
-                activeEffectRefs: [...combatant.activeEffectRefs, effectRef],
+                activeEffectOccurrences: [
+                  ...combatant.activeEffectOccurrences,
+                  {
+                    kind: "activeEffect" as const,
+                    effectRef,
+                    activeEffectKind: "hideousLaughter" as const,
+                    location: { kind: "nonSpatial" as const },
+                  },
+                ],
+                nextEffectOrdinal: Number(combatant.nextEffectOrdinal) + 1,
               }
             : combatant,
         ),
@@ -1700,9 +1707,14 @@ describe("Stat Block execution references", () => {
               combatant.combatantId === fighterId
                 ? {
                     ...combatant,
-                    activeEffectRefs: [
-                      ...combatant.activeEffectRefs,
-                      fighterEffectRef,
+                    activeEffectOccurrences: [
+                      ...combatant.activeEffectOccurrences,
+                      {
+                        kind: "activeEffect" as const,
+                        effectRef: fighterEffectRef,
+                        activeEffectKind: "hideousLaughter" as const,
+                        location: { kind: "nonSpatial" as const },
+                      },
                     ],
                   }
                 : combatant,

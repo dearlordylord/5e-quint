@@ -7,7 +7,7 @@ import {
 } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import {
-  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
+  assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
   battleEffectExecutionRefForTest,
   battleId,
   battleProcedureExecutionRefForTest,
@@ -26,7 +26,10 @@ import {
   startBattleRight,
   wizardId,
 } from "../battle-runtime.test-support.ts";
-import { BattleSnapshotSchema } from "../index.ts";
+import {
+  BattleCheckpointFrontierEnvelopeSchema,
+  BattleSnapshotSchema,
+} from "../index.ts";
 import {
   acidArrowUnitId,
   orcRelentlessEnduranceUnitId,
@@ -708,7 +711,7 @@ describe("turn-boundary active-effect occurrence updates", () => {
       kind: "spellTurnEndDamage",
       effectRef: checkpointEffectRef,
     });
-    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+    assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: awaitingDisposition.snapshot,
       subject: awaitingDisposition.subject,
       holes: awaitingDisposition.holes,
@@ -739,47 +742,53 @@ describe("turn-boundary active-effect occurrence updates", () => {
     const encodedDownstreamSnapshot = Schema.encodeSync(BattleSnapshotSchema)(
       twoOwnerAwaitingDisposition.snapshot,
     );
-    const deferredDownstreamSnapshot = {
-      ...encodedDownstreamSnapshot,
-      acts: [
-        {
-          subject: twoOwnerAwaitingDisposition.subject,
-          initialHoles: twoOwnerAwaitingDisposition.holes,
-        },
-      ],
+    const deferredDownstreamEnvelope = {
+      checkpoint: encodedDownstreamSnapshot,
+      frontier: {
+        kind: "acts" as const,
+        acts: [
+          {
+            subject: twoOwnerAwaitingDisposition.subject,
+            initialHoles: twoOwnerAwaitingDisposition.holes,
+          },
+        ],
+      },
     };
     const mutateDownstreamOccurrence = (
       mutation: "missing" | "forged" | "wrongOwner",
     ) => ({
-      ...deferredDownstreamSnapshot,
-      acts: deferredDownstreamSnapshot.acts.map((candidate) => ({
-        ...candidate,
-        initialHoles: candidate.initialHoles.map((hole) => {
-          if (hole.kind !== "attackDamageDisposition") return hole;
-          if (mutation === "missing") {
-            const { damageOccurrence: _damageOccurrence, ...withoutSource } =
-              hole;
-            return withoutSource;
-          }
-          return {
-            ...hole,
-            damageOccurrence: {
-              kind: "spellTurnEndDamage" as const,
-              effectRef:
-                mutation === "forged"
-                  ? battleEffectExecutionRefForTest(
-                      "forged-turn-end-downstream",
-                    )
-                  : otherOwnerOccurrence.effect.effectRef,
-            },
-          };
-        }),
-      })),
+      ...deferredDownstreamEnvelope,
+      frontier: {
+        ...deferredDownstreamEnvelope.frontier,
+        acts: deferredDownstreamEnvelope.frontier.acts.map((candidate) => ({
+          ...candidate,
+          initialHoles: candidate.initialHoles.map((hole) => {
+            if (hole.kind !== "attackDamageDisposition") return hole;
+            if (mutation === "missing") {
+              const { damageOccurrence: _damageOccurrence, ...withoutSource } =
+                hole;
+              return withoutSource;
+            }
+            return {
+              ...hole,
+              damageOccurrence: {
+                kind: "spellTurnEndDamage" as const,
+                effectRef:
+                  mutation === "forged"
+                    ? battleEffectExecutionRefForTest(
+                        "forged-turn-end-downstream",
+                      )
+                    : otherOwnerOccurrence.effect.effectRef,
+              },
+            };
+          }),
+        })),
+      },
     });
     for (const mutation of ["missing", "forged", "wrongOwner"] as const) {
       expect(
         Result.isFailure(
-          Schema.decodeUnknownResult(BattleSnapshotSchema)(
+          Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
             mutateDownstreamOccurrence(mutation),
           ),
         ),

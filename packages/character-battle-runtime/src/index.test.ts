@@ -1258,7 +1258,7 @@ describe("Character Sheet battle handoff", () => {
       tempHp: Hp(0),
       unitLibrary,
     });
-    expect(Result.isRight(sheet)).toBe(true);
+    expect(Result.isSuccess(sheet)).toBe(true);
     if (Result.isFailure(sheet)) return;
     const init = characterSheetBattleInit({
       sheet: sheet.success,
@@ -1269,13 +1269,13 @@ describe("Character Sheet battle handoff", () => {
       initiative: initiativeScore(20),
       ammunitionStocks: [],
     });
-    expect(Result.isRight(init)).toBe(true);
+    expect(Result.isSuccess(init)).toBe(true);
     if (Result.isFailure(init)) return;
     const session = startBattle({
       battleId: battleId("battle:companion-composition"),
       combatants: [init.success],
     });
-    expect(Result.isRight(session)).toBe(true);
+    expect(Result.isSuccess(session)).toBe(true);
     if (Result.isFailure(session)) return;
     const rejectedCompanion = composeBattleCompanionRoster({
       session: session.success,
@@ -7571,7 +7571,7 @@ describe("Character Build battle projection", () => {
     });
     expect(
       battleCreatureInitIssueLeaves(
-        projection._tag === "Left" ? projection.failure : projection.success,
+        Result.isFailure(projection) ? projection.failure : projection.success,
       ),
     ).toEqual([
       {

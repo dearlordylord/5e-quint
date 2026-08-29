@@ -78,7 +78,7 @@ import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import type { CharacterBuildProjectionIssue } from "@dnd/character-creation-runtime";
 import { Result, Match, Option } from "effect";
-import { isNonEmptyReadonlyArray } from "effect/Array";
+import { isReadonlyArrayNonEmpty } from "effect/Array";
 
 import {
   CHARACTER_BATTLE_INIT_MAX_HP_EXCEEDS_BUILD_MAX_MESSAGE,
@@ -682,7 +682,7 @@ export function composeBattleRoster(
   for (const [offset, entry] of restEntries.entries()) {
     processEntry(entry, offset + 1, issues, admissions);
   }
-  return isNonEmptyReadonlyArray(issues)
+  return isReadonlyArrayNonEmpty(issues)
     ? { tag: "rejected", admissions, issues }
     : { tag: "admitted", admissions };
 }
