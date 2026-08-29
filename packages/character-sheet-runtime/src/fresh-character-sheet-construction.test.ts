@@ -96,6 +96,13 @@ describe("fresh Character Sheet construction", () => {
     }
 
     expect(
+      parseFreshCharacterSheet(
+        JSON.parse(JSON.stringify(result.right)),
+        unitLibrary,
+      ),
+    ).toEqual(Either.right(result.right));
+
+    expect(
       freshCharacterSheetFromParsedState({
         ...result.right,
         conditions: ["blinded"],
@@ -169,6 +176,15 @@ describe("fresh Character Sheet construction", () => {
       Either.left({
         tag: "characterSheetIssue",
         message: "Fresh Character Sheet requires full current Hit Points.",
+      }),
+    );
+  });
+
+  test("propagates malformed stored input through the fresh-sheet boundary", () => {
+    expect(parseFreshCharacterSheet(null, unitLibrary)).toEqual(
+      Either.left({
+        tag: "characterSheetIssue",
+        message: "Expected Character Sheet.",
       }),
     );
   });
