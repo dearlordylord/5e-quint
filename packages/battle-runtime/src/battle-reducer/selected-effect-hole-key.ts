@@ -6,7 +6,7 @@ export function escapeSpellRestraintAbilityCheckHoleKey(
   return `battle:escape-spell-restraint:${effectRef}:athletics-check`;
 }
 
-export function dragonsBreathHoleKey(
+export function grantedAreaSaveDamageActionHoleKey(
   effectRef: BattleEffectExecutionRef,
   suffix: string,
 ): string {

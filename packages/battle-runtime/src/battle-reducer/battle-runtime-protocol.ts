@@ -40,7 +40,7 @@ export const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
   currentHasBonusAction: false,
   actionOrBonusActionExclusion: { kind: "notRestricted" },
   movementActionBonusActionExclusion: { kind: "notRestricted" },
-  commandHalt: null,
+  compelledHalt: null,
   jumpDistanceMultiplier: null,
   heightenedStepOfTheWindCarriedCreatures: [],
   spellSlotUsesThisTurn: [],
@@ -238,7 +238,7 @@ export type AttackFillSet =
         BattleFill,
         { readonly kind: "concentrationSavingThrow" }
       >[];
-      readonly hideousLaughterDamageRepeatSaves: readonly Extract<
+      readonly saveGatedConditionWithRepeatDamageRepeatSaves: readonly Extract<
         BattleFill,
         { readonly kind: "savingThrowOutcome" }
       >[];

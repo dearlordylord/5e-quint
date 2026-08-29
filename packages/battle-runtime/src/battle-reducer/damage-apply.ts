@@ -110,16 +110,16 @@ import {
   flySpeedGrantEndFallCleanupFramesForExpiredEffects,
 } from "./fly-speed-grant-end-fall-cleanup.ts";
 import {
-  checkHideousLaughterDamageRepeatSaveFills,
-  hideousLaughterDamageRepeatSaveHoles,
-  hideousLaughterRepeatSavingThrowOutcomeHole,
-  validateHideousLaughterRepeatSavingThrowOutcome,
+  checkSaveGatedConditionWithRepeatDamageRepeatSaveFills,
+  saveGatedConditionWithRepeatDamageRepeatSaveHoles,
+  saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole,
+  validateSaveGatedConditionWithRepeatRepeatSavingThrowOutcome,
 } from "./hideous-laughter-repeat-save.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
 import {
   conditionsAfterExpiringSpellConditionEffects,
-  removeHypnoticPatternControlEffectsFromTarget,
-  removeHideousLaughterEffectFromTarget,
+  removeSaveGatedAreaControlControlEffectsFromTarget,
+  removeSaveGatedConditionWithRepeatEffectFromTarget,
   removeSleepEffectsFromTarget,
 } from "./spell-condition-effects-helpers.ts";
 import { battleCreatureWithSpellCreatedHeldObjectHandStateFromActiveEffects } from "./spell-created-held-object.ts";
@@ -148,12 +148,12 @@ type SavingThrowOutcomeFill = Extract<
   BattleFill,
   { readonly kind: "savingThrowOutcome" }
 >;
-type HideousLaughterRepeatSaveHole = ReturnType<
-  typeof hideousLaughterDamageRepeatSaveHoles
+type SaveGatedConditionWithRepeatRepeatSaveHole = ReturnType<
+  typeof saveGatedConditionWithRepeatDamageRepeatSaveHoles
 >[number];
-type HideousLaughterEffect = Extract<
+type SaveGatedConditionWithRepeatEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "hideousLaughter" }
+  { readonly kind: "saveGatedConditionWithRepeat" }
 >;
 type ConcentrationSavingThrowFillHolePair = {
   readonly fill: ConcentrationSavingThrowFill;
@@ -438,11 +438,13 @@ export function applyBattleHitPointDamage(input: {
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined;
   readonly wardingBondDamageShareConcentrationSavingThrows?: readonly ConcentrationSavingThrowFill[];
-  readonly hideousLaughterDamageRepeatSaves?: readonly Extract<
+  readonly saveGatedConditionWithRepeatDamageRepeatSaves?: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[];
-  readonly hideousLaughterDamageRepeatSaveEventKey?: string | undefined;
+  readonly saveGatedConditionWithRepeatDamageRepeatSaveEventKey?:
+    | string
+    | undefined;
   readonly spatialFacts?: readonly BattleTargetSpatialFact[];
   readonly relationshipDecisions?: BattleDamageRelationshipDecisions;
   readonly suppressWardingBondDamageShare?: true;
@@ -499,23 +501,23 @@ export function applyBattleHitPointDamage(input: {
     input.damageAmount > 0
       ? removeSleepEffectsFromTarget(afterTargetActionEarlyEnd, targetId)
       : afterTargetActionEarlyEnd;
-  const afterHypnoticPattern =
+  const afterSaveGatedAreaControl =
     input.damageAmount > 0
-      ? removeHypnoticPatternControlEffectsFromTarget(afterSleep, targetId)
+      ? removeSaveGatedAreaControlControlEffectsFromTarget(afterSleep, targetId)
       : afterSleep;
-  const afterHideousLaughter =
+  const afterSaveGatedConditionWithRepeat =
     input.damageAmount > 0
-      ? applyHideousLaughterDamageRepeatSaves(
-          afterHypnoticPattern,
+      ? applySaveGatedConditionWithRepeatDamageRepeatSaves(
+          afterSaveGatedAreaControl,
           targetId,
-          input.hideousLaughterDamageRepeatSaves ?? [],
-          input.hideousLaughterDamageRepeatSaveEventKey,
+          input.saveGatedConditionWithRepeatDamageRepeatSaves ?? [],
+          input.saveGatedConditionWithRepeatDamageRepeatSaveEventKey,
         )
-      : afterHypnoticPattern;
+      : afterSaveGatedAreaControl;
   const afterEnemyZeroHitPointTemporaryHitPoints =
     input.damageAmount > 0
       ? applyEnemyZeroHitPointTemporaryHitPointsAwards({
-          state: afterHideousLaughter,
+          state: afterSaveGatedConditionWithRepeat,
           damageSourceId: input.damageSourceId,
           targetId,
           priorTarget: input.target,
@@ -523,7 +525,7 @@ export function applyBattleHitPointDamage(input: {
           spatialFacts: input.spatialFacts ?? [],
           relationshipDecisions: input.relationshipDecisions ?? [],
         })
-      : afterHideousLaughter;
+      : afterSaveGatedConditionWithRepeat;
   const afterFamiliar = applyFindFamiliarZeroHitPointDisappearanceAfterDamage({
     state: afterEnemyZeroHitPointTemporaryHitPoints,
     targetId,
@@ -538,10 +540,10 @@ export function applyBattleHitPointDamage(input: {
           damageAmount: input.damageAmount,
           concentrationSavingThrows:
             input.wardingBondDamageShareConcentrationSavingThrows ?? [],
-          hideousLaughterDamageRepeatSaves:
-            input.hideousLaughterDamageRepeatSaves ?? [],
-          hideousLaughterDamageRepeatSaveEventKey:
-            input.hideousLaughterDamageRepeatSaveEventKey,
+          saveGatedConditionWithRepeatDamageRepeatSaves:
+            input.saveGatedConditionWithRepeatDamageRepeatSaves ?? [],
+          saveGatedConditionWithRepeatDamageRepeatSaveEventKey:
+            input.saveGatedConditionWithRepeatDamageRepeatSaveEventKey,
         })
       : afterFamiliar;
   return battleStateAfterWardingBondCasterZeroHitPoints(
@@ -683,46 +685,52 @@ export function wardingBondSharedDamageConcentrationSavingThrowHoles(input: {
   );
 }
 
-export function damageLifecycleHideousLaughterDamageRepeatSaveFillCheck(input: {
+export function damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck(input: {
   readonly state: BattleState;
   readonly target: BattleCreatureState;
   readonly damageAmount: number;
   readonly fills: readonly SavingThrowOutcomeFill[];
   readonly damageEventKey?: string | undefined;
-}): ReturnType<typeof checkHideousLaughterDamageRepeatSaveFills> {
-  const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles(input);
-  return checkHideousLaughterDamageRepeatSaveFills({
+}): ReturnType<typeof checkSaveGatedConditionWithRepeatDamageRepeatSaveFills> {
+  const holes =
+    damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles(input);
+  return checkSaveGatedConditionWithRepeatDamageRepeatSaveFills({
     holes,
     fills: input.fills,
   });
 }
 
-export function damageLifecycleHideousLaughterDamageRepeatSaveHoles(input: {
+export function damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles(input: {
   readonly state: BattleState;
   readonly target: BattleCreatureState;
   readonly damageAmount: number;
   readonly damageEventKey?: string | undefined;
-}): readonly HideousLaughterRepeatSaveHole[] {
+}): readonly SaveGatedConditionWithRepeatRepeatSaveHole[] {
   return input.damageAmount > 0
     ? [
-        ...hideousLaughterDamageRepeatSaveHoles(
+        ...saveGatedConditionWithRepeatDamageRepeatSaveHoles(
           input.target,
           input.damageEventKey,
         ),
-        ...wardingBondSharedDamageHideousLaughterRepeatSaveHoles(input),
+        ...wardingBondSharedDamageSaveGatedConditionWithRepeatRepeatSaveHoles(
+          input,
+        ),
       ]
     : [];
 }
 
-function wardingBondSharedDamageHideousLaughterRepeatSaveHoles(input: {
+function wardingBondSharedDamageSaveGatedConditionWithRepeatRepeatSaveHoles(input: {
   readonly state: BattleState;
   readonly target: BattleCreatureState;
   readonly damageAmount: number;
   readonly damageEventKey?: string | undefined;
-}): ReturnType<typeof hideousLaughterDamageRepeatSaveHoles> {
+}): ReturnType<typeof saveGatedConditionWithRepeatDamageRepeatSaveHoles> {
   return wardingBondDamageShareCasters(input.state, input.target).flatMap(
     (caster) =>
-      hideousLaughterDamageRepeatSaveHoles(caster, input.damageEventKey),
+      saveGatedConditionWithRepeatDamageRepeatSaveHoles(
+        caster,
+        input.damageEventKey,
+      ),
   );
 }
 
@@ -731,8 +739,10 @@ function applyWardingBondDamageShare(input: {
   readonly target: BattleCreatureState;
   readonly damageAmount: number;
   readonly concentrationSavingThrows: readonly ConcentrationSavingThrowFill[];
-  readonly hideousLaughterDamageRepeatSaves: readonly SavingThrowOutcomeFill[];
-  readonly hideousLaughterDamageRepeatSaveEventKey?: string | undefined;
+  readonly saveGatedConditionWithRepeatDamageRepeatSaves: readonly SavingThrowOutcomeFill[];
+  readonly saveGatedConditionWithRepeatDamageRepeatSaveEventKey?:
+    | string
+    | undefined;
 }): BattleState {
   return input.target.activeEffects
     .filter(isWardingBondEffect)
@@ -761,10 +771,10 @@ function applyWardingBondDamageShare(input: {
         damageAmount: input.damageAmount,
         deathFailuresAtZeroHp: 1,
         concentrationSavingThrow,
-        hideousLaughterDamageRepeatSaves:
-          input.hideousLaughterDamageRepeatSaves,
-        hideousLaughterDamageRepeatSaveEventKey:
-          input.hideousLaughterDamageRepeatSaveEventKey,
+        saveGatedConditionWithRepeatDamageRepeatSaves:
+          input.saveGatedConditionWithRepeatDamageRepeatSaves,
+        saveGatedConditionWithRepeatDamageRepeatSaveEventKey:
+          input.saveGatedConditionWithRepeatDamageRepeatSaveEventKey,
         suppressWardingBondDamageShare: true,
       });
     }, input.state);
@@ -878,7 +888,7 @@ function removeInvalidPresentFindFamiliarAfterZeroHitPointDamage(input: {
 }
 /* v8 ignore stop -- @preserve */
 
-function applyHideousLaughterDamageRepeatSaves(
+function applySaveGatedConditionWithRepeatDamageRepeatSaves(
   state: BattleState,
   targetId: CombatantId,
   fills: readonly Extract<
@@ -893,11 +903,11 @@ function applyHideousLaughterDamageRepeatSaves(
   }
   const succeededEffects = target.activeEffects
     .filter(
-      (effect): effect is HideousLaughterEffect =>
-        effect.kind === "hideousLaughter",
+      (effect): effect is SaveGatedConditionWithRepeatEffect =>
+        effect.kind === "saveGatedConditionWithRepeat",
     )
     .filter((effect) => {
-      const hole = hideousLaughterRepeatSavingThrowOutcomeHole(
+      const hole = saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
         targetId,
         effect,
         "damage",
@@ -906,7 +916,7 @@ function applyHideousLaughterDamageRepeatSaves(
       const fill = fills.find((candidate) => candidate.holeId === hole.holeId);
       if (
         fill === undefined ||
-        validateHideousLaughterRepeatSavingThrowOutcome(
+        validateSaveGatedConditionWithRepeatRepeatSavingThrowOutcome(
           fill.value,
           targetId,
         ) !== null
@@ -917,7 +927,7 @@ function applyHideousLaughterDamageRepeatSaves(
     });
   return succeededEffects.reduce(
     (nextState, effect) =>
-      removeHideousLaughterEffectFromTarget(
+      removeSaveGatedConditionWithRepeatEffectFromTarget(
         nextState,
         targetId,
         effect.effectRef,
@@ -940,7 +950,7 @@ export function applyAttackDamageAmount(input: {
   readonly concentrationSavingThrow?:
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined;
-  readonly hideousLaughterDamageRepeatSaves?: readonly Extract<
+  readonly saveGatedConditionWithRepeatDamageRepeatSaves?: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[];
@@ -964,8 +974,8 @@ export function applyAttackDamageAmount(input: {
     concentrationSavingThrow: input.concentrationSavingThrow,
     wardingBondDamageShareConcentrationSavingThrows:
       input.wardingBondDamageShareConcentrationSavingThrows ?? [],
-    hideousLaughterDamageRepeatSaves:
-      input.hideousLaughterDamageRepeatSaves ?? [],
+    saveGatedConditionWithRepeatDamageRepeatSaves:
+      input.saveGatedConditionWithRepeatDamageRepeatSaves ?? [],
     spatialFacts: input.spatialFacts ?? [],
     ...optionalProperty("relationshipDecisions", input.relationshipDecisions),
   });

@@ -21,7 +21,7 @@ import {
   type BattleSubject,
   sameBattleSubject,
 } from "../battle-subjects.ts";
-import type { BattleCommandOption } from "../active-effect/execution-vocabulary.ts";
+import type { BattleCompelledBehaviorOption } from "../active-effect/execution-vocabulary.ts";
 import { CombatantId } from "../identity.ts";
 import { MOVEMENT_HOLE_ID } from "./battle-runtime-protocol.ts";
 import {
@@ -46,57 +46,60 @@ import {
 } from "./movement-speed.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
-import { applyCommandGrovelProneToTarget } from "./spells-active-effects.ts";
-import type { CommandPendingEffect } from "./command-procedure-discovery.ts";
+import { applyExecuteCompelledGrovelProneToTarget } from "./spells-active-effects.ts";
+import type { CompelledNextTurnBehaviorEffect } from "./command-procedure-discovery.ts";
 import {
   canonicalHeldObjectIdsForActor,
-  commandDropHeldObjectFactsHole,
-  commandDropHeldObjectFactsHoleId,
-  commandPendingEffectsForActor,
+  executeCompelledDropHeldObjectFactsHole,
+  executeCompelledDropHeldObjectFactsHoleId,
+  compelledNextTurnBehaviorEffectsForActor,
 } from "./command-procedure-discovery.ts";
 
 const COMMAND_FOLLOW_UP_BY_OPTION = {
-  approach: "commandApproach",
-  drop: "commandDrop",
-  flee: "commandFlee",
-  grovel: "commandGrovel",
+  approach: "executeCompelledApproach",
+  drop: "executeCompelledDrop",
+  flee: "executeCompelledFlee",
+  grovel: "executeCompelledGrovel",
   halt: null,
-} as const satisfies Record<BattleCommandOption, BattleRuntimeCommand | null>;
+} as const satisfies Record<
+  BattleCompelledBehaviorOption,
+  BattleRuntimeCommand | null
+>;
 
-type CommandFollowUpCommand = Exclude<
-  (typeof COMMAND_FOLLOW_UP_BY_OPTION)[BattleCommandOption],
+type CompelledBehaviorFollowUpCommand = Exclude<
+  (typeof COMMAND_FOLLOW_UP_BY_OPTION)[BattleCompelledBehaviorOption],
   null
 >;
 
-type CommandFollowUpSubject = Extract<
+type CompelledBehaviorFollowUpSubject = Extract<
   BattleSubject,
   {
     readonly tag: "runtimeCommand";
-    readonly command: CommandFollowUpCommand;
+    readonly command: CompelledBehaviorFollowUpCommand;
   }
 >;
 
-type CommandReplayRoute = {
+type CompelledBehaviorReplayRoute = {
   readonly handledInterruptTrigger?: BattleInterruptTrigger;
   readonly replayParentPosition?: BattleStartTurnOccurrenceSequenceCheckpoint;
   readonly replayObjectOutcomes?: BattleObjectOutcomeAccumulation;
 };
 
-type CommandReplayParentPositionFields =
+type CompelledBehaviorReplayParentPositionFields =
   | { readonly replayParentPosition?: never }
   | {
       readonly replayParentPosition: BattleStartTurnOccurrenceSequenceCheckpoint;
     };
 
-function commandReplayParentPositionFields(
+function compelledBehaviorReplayParentPositionFields(
   replayParentPosition: BattleStartTurnOccurrenceSequenceCheckpoint | undefined,
-): CommandReplayParentPositionFields {
+): CompelledBehaviorReplayParentPositionFields {
   return replayParentPosition === undefined ? {} : { replayParentPosition };
 }
 
-export function isCommandFollowUpSubject(
+export function isCompelledBehaviorFollowUpSubject(
   subject: BattleSubject,
-): subject is CommandFollowUpSubject {
+): subject is CompelledBehaviorFollowUpSubject {
   return (
     subject.tag === "runtimeCommand" &&
     Object.values(COMMAND_FOLLOW_UP_BY_OPTION).some(
@@ -105,10 +108,10 @@ export function isCommandFollowUpSubject(
   );
 }
 
-export function resolveCommandFollowUp(
+export function resolveCompelledBehaviorFollowUp(
   input: AdmittedBattleResolutionInput & {
-    readonly subject: CommandFollowUpSubject;
-  } & CommandReplayRoute,
+    readonly subject: CompelledBehaviorFollowUpSubject;
+  } & CompelledBehaviorReplayRoute,
 ): BattleResolutionResult {
   if (input.replayParentPosition !== undefined) {
     return resolveDelegatedEndTurnCommand(input, {
@@ -122,23 +125,23 @@ export function resolveCommandFollowUp(
     });
   }
   return Match.value(input.subject).pipe(
-    Match.when({ command: "commandGrovel" }, (subject) =>
-      resolveCommandGrovelCommand({ ...input, subject }),
+    Match.when({ command: "executeCompelledGrovel" }, (subject) =>
+      resolveExecuteCompelledGrovelCommand({ ...input, subject }),
     ),
-    Match.when({ command: "commandDrop" }, (subject) =>
-      resolveCommandDropCommand({ ...input, subject }),
+    Match.when({ command: "executeCompelledDrop" }, (subject) =>
+      resolveExecuteCompelledDropCommand({ ...input, subject }),
     ),
-    Match.when({ command: "commandApproach" }, (subject) =>
-      resolveCommandApproachCommand({ ...input, subject }),
+    Match.when({ command: "executeCompelledApproach" }, (subject) =>
+      resolveCompelledApproachCommand({ ...input, subject }),
     ),
-    Match.when({ command: "commandFlee" }, (subject) =>
-      resolveCommandFleeCommand({ ...input, subject }),
+    Match.when({ command: "executeCompelledFlee" }, (subject) =>
+      resolveCompelledFleeCommand({ ...input, subject }),
     ),
     Match.exhaustive,
   );
 }
 
-export function pendingCommandObligationIssue(
+export function pendingCompelledBehaviorObligationIssue(
   state: BattleState,
   subject: BattleSubject,
 ): string | null {
@@ -151,12 +154,13 @@ export function pendingCommandObligationIssue(
     return null;
   }
   const actorId = battleSubjectActorId(subject);
-  const pendingEffects = commandPendingEffectsForActor(state, actorId).filter(
-    (effect) => COMMAND_FOLLOW_UP_BY_OPTION[effect.option] !== null,
-  );
+  const pendingEffects = compelledNextTurnBehaviorEffectsForActor(
+    state,
+    actorId,
+  ).filter((effect) => COMMAND_FOLLOW_UP_BY_OPTION[effect.option] !== null);
   if (pendingEffects.length === 0) return null;
-  if (!isCommandFollowUpSubject(subject)) {
-    return "A pending Command effect must be resolved before other battle subjects.";
+  if (!isCompelledBehaviorFollowUpSubject(subject)) {
+    return "A pending compelled behavior effect must be resolved before other battle subjects.";
   }
   return pendingEffects.some(
     (effect) =>
@@ -164,26 +168,26 @@ export function pendingCommandObligationIssue(
       spellActiveEffectExecutionRef(effect) === subject.effectRef,
   )
     ? null
-    : "A pending Command effect must be resolved before other battle subjects.";
+    : "A pending compelled behavior effect must be resolved before other battle subjects.";
 }
 
-function commandPendingEffectForSubject(
+function compelledNextTurnBehaviorEffectForSubject(
   state: BattleState,
   subject: Extract<
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
       readonly command:
-        | "commandGrovel"
-        | "commandDrop"
-        | "commandApproach"
-        | "commandFlee";
+        | "executeCompelledGrovel"
+        | "executeCompelledDrop"
+        | "executeCompelledApproach"
+        | "executeCompelledFlee";
     }
   >,
-  option: CommandPendingEffect["option"],
-): CommandPendingEffect | null {
+  option: CompelledNextTurnBehaviorEffect["option"],
+): CompelledNextTurnBehaviorEffect | null {
   return (
-    commandPendingEffectsForActor(state, subject.actorId).find(
+    compelledNextTurnBehaviorEffectsForActor(state, subject.actorId).find(
       (effect) =>
         effect.option === option &&
         spellActiveEffectExecutionRef(effect) === subject.effectRef,
@@ -191,13 +195,13 @@ function commandPendingEffectForSubject(
   );
 }
 
-function stateWithoutCommandPendingEffect(
+function stateWithoutCompelledNextTurnBehaviorEffect(
   state: BattleState,
   actorId: CombatantId,
-  effect: CommandPendingEffect,
+  effect: CompelledNextTurnBehaviorEffect,
 ): BattleState {
   const target = state.combatants.get(actorId);
-  /* v8 ignore start -- @preserve -- Command subjects are admitted from an actor present in the committed Battle state. */
+  /* v8 ignore start -- @preserve -- compelled behavior subjects are admitted from an actor present in the committed Battle state. */
   if (target === undefined) {
     return state;
   }
@@ -213,57 +217,57 @@ function stateWithoutCommandPendingEffect(
   };
 }
 
-export function resolveCommandHaltEndTurn(
+export function resolveCompelledHaltEndTurn(
   input: BattleResolutionInputForSubject<
     Extract<
       BattleSubject,
       { readonly tag: "runtimeCommand"; readonly command: "endTurn" }
     >
   > &
-    CommandReplayRoute,
+    CompelledBehaviorReplayRoute,
 ): BattleResolutionResult {
   return resolveDelegatedEndTurnCommand(input, input);
 }
 
-function resolveCommandGrovelCommand(
+function resolveExecuteCompelledGrovelCommand(
   input: BattleResolutionInputForSubject<
     Extract<
       BattleSubject,
       {
         readonly tag: "runtimeCommand";
-        readonly command: "commandGrovel";
+        readonly command: "executeCompelledGrovel";
       }
     >
   > &
-    CommandReplayRoute,
+    CompelledBehaviorReplayRoute,
 ): BattleResolutionResult {
-  const effect = commandPendingEffectForSubject(
+  const effect = compelledNextTurnBehaviorEffectForSubject(
     input.state,
     input.subject,
     "grovel",
   );
-  /* v8 ignore start -- @preserve -- Malformed resolution request: discovery creates Command Grovel subjects only from the pending effect retained in this same battle state. */
+  /* v8 ignore start -- @preserve -- Malformed resolution request: discovery creates compelled grovel behavior subjects only from the pending effect retained in this same battle state. */
   if (effect === null) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Command Grovel is no longer pending for this actor.",
+      "compelled grovel behavior is no longer pending for this actor.",
     );
   }
   /* v8 ignore stop -- @preserve */
   const unsupportedFill = input.fills.find(
     (fill) => !isEndTurnFillKind(fill.kind),
   );
-  /* v8 ignore start -- @preserve -- Malformed fill set: the discovered Command Grovel subject exposes only the holes belonging to the delegated End Turn resolution. */
+  /* v8 ignore start -- @preserve -- Malformed fill set: the discovered compelled grovel behavior subject exposes only the holes belonging to the delegated End Turn resolution. */
   if (unsupportedFill !== undefined) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Command Grovel only accepts End Turn fills.",
+      "compelled grovel behavior only accepts End Turn fills.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  const proned = applyCommandGrovelProneToTarget(
+  const proned = applyExecuteCompelledGrovelProneToTarget(
     input.state,
     input.subject.actorId,
     effect,
@@ -279,29 +283,29 @@ function resolveCommandGrovelCommand(
   });
 }
 
-function resolveCommandDropCommand(
+function resolveExecuteCompelledDropCommand(
   input: BattleResolutionInputForSubject<
     Extract<
       BattleSubject,
       {
         readonly tag: "runtimeCommand";
-        readonly command: "commandDrop";
+        readonly command: "executeCompelledDrop";
       }
     >
   > &
-    CommandReplayRoute,
+    CompelledBehaviorReplayRoute,
 ): BattleResolutionResult {
-  const effect = commandPendingEffectForSubject(
+  const effect = compelledNextTurnBehaviorEffectForSubject(
     input.state,
     input.subject,
     "drop",
   );
-  /* v8 ignore start -- @preserve -- Malformed resolution request: discovery creates Command Drop subjects only from the pending effect retained in this same battle state. */
+  /* v8 ignore start -- @preserve -- Malformed resolution request: discovery creates compelled drop behavior subjects only from the pending effect retained in this same battle state. */
   if (effect === null) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Command Drop is no longer pending for this actor.",
+      "compelled drop behavior is no longer pending for this actor.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -309,24 +313,24 @@ function resolveCommandDropCommand(
     (fill): fill is Extract<BattleFill, { readonly kind: "heldObjectFacts" }> =>
       fill.kind === "heldObjectFacts",
   );
-  /* v8 ignore start -- @preserve -- Malformed fill set: one Command Drop held-object-facts hole cannot be filled more than once. */
+  /* v8 ignore start -- @preserve -- Malformed fill set: one compelled drop behavior held-object-facts hole cannot be filled more than once. */
   if (heldObjectFactFills.length > 1) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Command Drop held-object facts were filled twice.",
+      "compelled drop behavior held-object facts were filled twice.",
     );
   }
   /* v8 ignore stop -- @preserve */
   const unsupportedFill = input.fills.find(
     (fill) => fill.kind !== "heldObjectFacts" && !isEndTurnFillKind(fill.kind),
   );
-  /* v8 ignore start -- @preserve -- Malformed fill set: Command Drop exposes only its held-object-facts hole and the delegated End Turn holes. */
+  /* v8 ignore start -- @preserve -- Malformed fill set: compelled drop behavior exposes only its held-object-facts hole and the delegated End Turn holes. */
   if (unsupportedFill !== undefined) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Command Drop only accepts held-object facts and End Turn fills.",
+      "compelled drop behavior only accepts held-object facts and End Turn fills.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -340,26 +344,26 @@ function resolveCommandDropCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Command Drop uses canonical character loadout facts for this actor.",
+      "compelled drop behavior uses canonical character loadout facts for this actor.",
     );
   }
   /* v8 ignore stop -- @preserve */
   const heldObjectFactFill = heldObjectFactFills[0];
   if (canonicalObjectIds === null && heldObjectFactFill === undefined) {
     return needsHolesResult(input.state, input.subject, [
-      commandDropHeldObjectFactsHole(input.subject),
+      executeCompelledDropHeldObjectFactsHole(input.subject),
     ]);
   }
-  /* v8 ignore start -- @preserve -- Malformed fill: the supplied held-object facts must answer the exact hole derived from this discovered Command Drop subject. */
+  /* v8 ignore start -- @preserve -- Malformed fill: the supplied held-object facts must answer the exact hole derived from this discovered compelled drop behavior subject. */
   if (
     heldObjectFactFill !== undefined &&
     heldObjectFactFill.holeId !==
-      commandDropHeldObjectFactsHoleId(input.subject)
+      executeCompelledDropHeldObjectFactsHoleId(input.subject)
   ) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Command Drop held-object facts must use the selected Command Drop hole.",
+      "compelled drop behavior held-object facts must use the selected compelled drop behavior hole.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -369,7 +373,7 @@ function resolveCommandDropCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Command Drop requires known held-object facts.",
+      "compelled drop behavior requires known held-object facts.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -379,7 +383,7 @@ function resolveCommandDropCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Command Drop held-object facts must not duplicate objects.",
+      "compelled drop behavior held-object facts must not duplicate objects.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -400,7 +404,7 @@ function resolveCommandDropCommand(
     droppedObjects,
   };
 
-  const withoutPending = stateWithoutCommandPendingEffect(
+  const withoutPending = stateWithoutCompelledNextTurnBehaviorEffect(
     input.state,
     input.subject.actorId,
     effect,
@@ -430,29 +434,29 @@ function resolveCommandDropCommand(
   );
 }
 
-function resolveCommandApproachCommand(
+function resolveCompelledApproachCommand(
   input: BattleResolutionInputForSubject<
     Extract<
       BattleSubject,
       {
         readonly tag: "runtimeCommand";
-        readonly command: "commandApproach";
+        readonly command: "executeCompelledApproach";
       }
     >
   > &
-    CommandReplayRoute,
+    CompelledBehaviorReplayRoute,
 ): BattleResolutionResult {
-  const effect = commandPendingEffectForSubject(
+  const effect = compelledNextTurnBehaviorEffectForSubject(
     input.state,
     input.subject,
     "approach",
   );
-  /* v8 ignore start -- @preserve -- Malformed resolution request: discovery creates Command Approach subjects only from the pending effect retained in this same battle state. */
+  /* v8 ignore start -- @preserve -- Malformed resolution request: discovery creates compelled approach behavior subjects only from the pending effect retained in this same battle state. */
   if (effect === null) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Command Approach is no longer pending for this actor.",
+      "compelled approach behavior is no longer pending for this actor.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -462,16 +466,16 @@ function resolveCommandApproachCommand(
   );
   if (movementFills.length === 0) {
     if (!combatantCanMoveInState(input.state, input.subject.actorId)) {
-      /* v8 ignore start -- @preserve -- Malformed fill set: a Command Approach subject with no available movement exposes no fill holes, so callers cannot supply fills. */
+      /* v8 ignore start -- @preserve -- Malformed fill set: a compelled approach behavior subject with no available movement exposes no fill holes, so callers cannot supply fills. */
       if (input.fills.length > 0) {
         return invalidResult(
           input.state,
           "invalidFill",
-          "Command Approach cannot apply fills when no movement is available.",
+          "compelled approach behavior cannot apply fills when no movement is available.",
         );
       }
       /* v8 ignore stop -- @preserve */
-      const withoutPending = stateWithoutCommandPendingEffect(
+      const withoutPending = stateWithoutCompelledNextTurnBehaviorEffect(
         input.state,
         input.subject.actorId,
         effect,
@@ -486,32 +490,32 @@ function resolveCommandApproachCommand(
       movementHole(input.state, input.subject.actorId),
     ]);
   }
-  /* v8 ignore start -- @preserve -- Malformed fill set: Command Approach exposes exactly one Movement hole. */
+  /* v8 ignore start -- @preserve -- Malformed fill set: compelled approach behavior exposes exactly one Movement hole. */
   if (movementFills.length > 1) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Command Approach accepts one Movement fill.",
+      "compelled approach behavior accepts one Movement fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
   const movementFill = movementFills[0]!;
-  /* v8 ignore start -- @preserve -- Malformed fill: the Movement value must answer the sole canonical Movement hole exposed for Command Approach. */
+  /* v8 ignore start -- @preserve -- Malformed fill: the Movement value must answer the sole canonical Movement hole exposed for compelled approach behavior. */
   if (movementFill.holeId !== MOVEMENT_HOLE_ID) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Movement fill does not match the requested Command Approach hole.",
+      "Movement fill does not match the requested compelled approach behavior hole.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  const approachFact = movementFill.value.commandApproach;
-  /* v8 ignore start -- @preserve -- Malformed fill: a Command Approach Movement value must carry the route/proximity facts required by that command. */
+  const approachFact = movementFill.value.compelledApproach;
+  /* v8 ignore start -- @preserve -- Malformed fill: a compelled approach behavior Movement value must carry the route/proximity facts required by that command. */
   if (approachFact === undefined) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Command Approach requires caller-supplied shortest/direct route and proximity facts.",
+      "compelled approach behavior requires caller-supplied shortest/direct route and proximity facts.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -520,10 +524,10 @@ function resolveCommandApproachCommand(
     input.subject.actorId,
     movementFill,
     {
-      kind: "commandApproach",
+      kind: "compelledApproach",
     },
   );
-  /* v8 ignore start -- @preserve -- Malformed fill: parseBattleMovement rejects routes that contradict the actor's admitted position, speed, or Command Approach constraints. */
+  /* v8 ignore start -- @preserve -- Malformed fill: parseBattleMovement rejects routes that contradict the actor's admitted position, speed, or compelled approach behavior constraints. */
   if (movement.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", movement.message);
   }
@@ -553,40 +557,43 @@ function resolveCommandApproachCommand(
     );
     if (reactionWindow !== null) return reactionWindow;
   }
-  return resolveCommandApproachAfterMovement({
+  return resolveCompelledApproachAfterMovement({
     state: input.state,
     subject: input.subject,
     movement: movement.movement,
-    movedWithinFiveFeetOfCaster: approachFact.movedWithinFiveFeetOfCaster,
+    movedWithinFiveFeetOfSource: approachFact.movedWithinFiveFeetOfSource,
     parentFills: input.fills,
     endTurnFills: extraFills,
-    ...commandReplayParentPositionFields(input.replayParentPosition),
+    ...compelledBehaviorReplayParentPositionFields(input.replayParentPosition),
   });
 }
 
-function resolveCommandApproachAfterMovement(input: {
+function resolveCompelledApproachAfterMovement(input: {
   readonly state: BattleState;
   readonly subject: Extract<
     BattleSubject,
-    { readonly tag: "runtimeCommand"; readonly command: "commandApproach" }
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "executeCompelledApproach";
+    }
   >;
   readonly movement: BattleResolvedMovement;
-  readonly movedWithinFiveFeetOfCaster: boolean;
+  readonly movedWithinFiveFeetOfSource: boolean;
   readonly parentFills: readonly BattleFill[];
   readonly endTurnFills: readonly BattleFill[];
   readonly replayParentPosition?: BattleStartTurnOccurrenceSequenceCheckpoint;
 }): BattleResolutionResult {
-  const effect = commandPendingEffectForSubject(
+  const effect = compelledNextTurnBehaviorEffectForSubject(
     input.state,
     input.subject,
     "approach",
   );
-  /* v8 ignore start -- @preserve -- Malformed continuation: an interrupted Command Approach continuation retains the pending effect from the state that opened its interrupt window. */
+  /* v8 ignore start -- @preserve -- Malformed continuation: an interrupted compelled approach behavior continuation retains the pending effect from the state that opened its interrupt window. */
   if (effect === null) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Command Approach is no longer pending for this actor.",
+      "compelled approach behavior is no longer pending for this actor.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -599,18 +606,18 @@ function resolveCommandApproachAfterMovement(input: {
   if (movementEffects.tag !== "resolved") {
     return movementEffects;
   }
-  const withoutPending = stateWithoutCommandPendingEffect(
+  const withoutPending = stateWithoutCompelledNextTurnBehaviorEffect(
     movementEffects.state,
     input.subject.actorId,
     effect,
   );
-  if (!input.movedWithinFiveFeetOfCaster) {
-    /* v8 ignore start -- @preserve -- Malformed continuation fills: Command Approach delegates End Turn holes only when the admitted route reached within five feet of the caster. */
+  if (!input.movedWithinFiveFeetOfSource) {
+    /* v8 ignore start -- @preserve -- Malformed continuation fills: compelled approach behavior delegates End Turn holes only when the admitted route reached within five feet of the caster. */
     if (movementEffects.remainingFills.length > 0) {
       return invalidResult(
         input.state,
         "invalidFill",
-        "Command Approach did not end the turn, so End Turn fills do not apply.",
+        "compelled approach behavior did not end the turn, so End Turn fills do not apply.",
       );
     }
     /* v8 ignore stop -- @preserve */
@@ -625,7 +632,9 @@ function resolveCommandApproachAfterMovement(input: {
       state: input.state,
       subject: input.subject,
       fills: input.parentFills,
-      ...commandReplayParentPositionFields(input.replayParentPosition),
+      ...compelledBehaviorReplayParentPositionFields(
+        input.replayParentPosition,
+      ),
     },
     {
       state: withoutPending,
@@ -639,29 +648,29 @@ function resolveCommandApproachAfterMovement(input: {
   );
 }
 
-function resolveCommandFleeCommand(
+function resolveCompelledFleeCommand(
   input: BattleResolutionInputForSubject<
     Extract<
       BattleSubject,
       {
         readonly tag: "runtimeCommand";
-        readonly command: "commandFlee";
+        readonly command: "executeCompelledFlee";
       }
     >
   > &
-    CommandReplayRoute,
+    CompelledBehaviorReplayRoute,
 ): BattleResolutionResult {
-  const effect = commandPendingEffectForSubject(
+  const effect = compelledNextTurnBehaviorEffectForSubject(
     input.state,
     input.subject,
     "flee",
   );
-  /* v8 ignore start -- @preserve -- Malformed resolution request: discovery creates Command Flee subjects only from the pending effect retained in this same battle state. */
+  /* v8 ignore start -- @preserve -- Malformed resolution request: discovery creates compelled flee behavior subjects only from the pending effect retained in this same battle state. */
   if (effect === null) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Command Flee is no longer pending for this actor.",
+      "compelled flee behavior is no longer pending for this actor.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -671,7 +680,7 @@ function resolveCommandFleeCommand(
   );
   if (movementFills.length === 0) {
     if (!combatantCanMoveInState(input.state, input.subject.actorId)) {
-      const withoutPending = stateWithoutCommandPendingEffect(
+      const withoutPending = stateWithoutCompelledNextTurnBehaviorEffect(
         input.state,
         input.subject.actorId,
         effect,
@@ -690,32 +699,32 @@ function resolveCommandFleeCommand(
       movementHole(input.state, input.subject.actorId),
     ]);
   }
-  /* v8 ignore start -- @preserve -- Malformed fill set: Command Flee exposes exactly one Movement hole. */
+  /* v8 ignore start -- @preserve -- Malformed fill set: compelled flee behavior exposes exactly one Movement hole. */
   if (movementFills.length > 1) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Command Flee accepts one Movement fill.",
+      "compelled flee behavior accepts one Movement fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
   const movementFill = movementFills[0]!;
-  /* v8 ignore start -- @preserve -- Malformed fill: the Movement value must answer the sole canonical Movement hole exposed for Command Flee. */
+  /* v8 ignore start -- @preserve -- Malformed fill: the Movement value must answer the sole canonical Movement hole exposed for compelled flee behavior. */
   if (movementFill.holeId !== MOVEMENT_HOLE_ID) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Movement fill does not match the requested Command Flee hole.",
+      "Movement fill does not match the requested compelled flee behavior hole.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  const fleeFact = movementFill.value.commandFlee;
-  /* v8 ignore start -- @preserve -- Malformed fill: a Command Flee Movement value must carry the fastest-available moving-away route facts required by that command. */
+  const fleeFact = movementFill.value.compelledFlee;
+  /* v8 ignore start -- @preserve -- Malformed fill: a compelled flee behavior Movement value must carry the fastest-available moving-away route facts required by that command. */
   if (fleeFact === undefined) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Command Flee requires caller-supplied fastest-available moving-away route facts.",
+      "compelled flee behavior requires caller-supplied fastest-available moving-away route facts.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -724,12 +733,12 @@ function resolveCommandFleeCommand(
     input.subject.actorId,
     movementFill.value.speedKind,
   ).remainingFeet;
-  /* v8 ignore start -- @preserve -- Malformed fill: Command Flee requires the route to consume the selected remaining Movement budget exactly. */
+  /* v8 ignore start -- @preserve -- Malformed fill: compelled flee behavior requires the route to consume the selected remaining Movement budget exactly. */
   if (movementFill.value.movementCostFeet !== movementBudgetFeet) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Command Flee must spend the selected remaining Movement budget.",
+      "compelled flee behavior must spend the selected remaining Movement budget.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -738,10 +747,10 @@ function resolveCommandFleeCommand(
     input.subject.actorId,
     movementFill,
     {
-      kind: "commandFlee",
+      kind: "compelledFlee",
     },
   );
-  /* v8 ignore start -- @preserve -- Malformed fill: parseBattleMovement rejects routes that contradict the actor's admitted position, speed, or Command Flee constraints. */
+  /* v8 ignore start -- @preserve -- Malformed fill: parseBattleMovement rejects routes that contradict the actor's admitted position, speed, or compelled flee behavior constraints. */
   if (movement.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", movement.message);
   }
@@ -771,38 +780,38 @@ function resolveCommandFleeCommand(
     );
     if (reactionWindow !== null) return reactionWindow;
   }
-  return resolveCommandFleeAfterMovement({
+  return resolveCompelledFleeAfterMovement({
     state: input.state,
     subject: input.subject,
     movement: movement.movement,
     parentFills: input.fills,
     endTurnFills: extraFills,
-    ...commandReplayParentPositionFields(input.replayParentPosition),
+    ...compelledBehaviorReplayParentPositionFields(input.replayParentPosition),
   });
 }
 
-function resolveCommandFleeAfterMovement(input: {
+function resolveCompelledFleeAfterMovement(input: {
   readonly state: BattleState;
   readonly subject: Extract<
     BattleSubject,
-    { readonly tag: "runtimeCommand"; readonly command: "commandFlee" }
+    { readonly tag: "runtimeCommand"; readonly command: "executeCompelledFlee" }
   >;
   readonly movement: BattleResolvedMovement;
   readonly parentFills: readonly BattleFill[];
   readonly endTurnFills: readonly BattleFill[];
   readonly replayParentPosition?: BattleStartTurnOccurrenceSequenceCheckpoint;
 }): BattleResolutionResult {
-  const effect = commandPendingEffectForSubject(
+  const effect = compelledNextTurnBehaviorEffectForSubject(
     input.state,
     input.subject,
     "flee",
   );
-  /* v8 ignore start -- @preserve -- Malformed continuation: an interrupted Command Flee continuation retains the pending effect from the state that opened its interrupt window. */
+  /* v8 ignore start -- @preserve -- Malformed continuation: an interrupted compelled flee behavior continuation retains the pending effect from the state that opened its interrupt window. */
   if (effect === null) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Command Flee is no longer pending for this actor.",
+      "compelled flee behavior is no longer pending for this actor.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -815,7 +824,7 @@ function resolveCommandFleeAfterMovement(input: {
   if (movementEffects.tag !== "resolved") {
     return movementEffects;
   }
-  const withoutPending = stateWithoutCommandPendingEffect(
+  const withoutPending = stateWithoutCompelledNextTurnBehaviorEffect(
     movementEffects.state,
     input.subject.actorId,
     effect,
@@ -825,7 +834,9 @@ function resolveCommandFleeAfterMovement(input: {
       state: input.state,
       subject: input.subject,
       fills: input.parentFills,
-      ...commandReplayParentPositionFields(input.replayParentPosition),
+      ...compelledBehaviorReplayParentPositionFields(
+        input.replayParentPosition,
+      ),
     },
     {
       state: withoutPending,

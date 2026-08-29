@@ -8,15 +8,15 @@ import { CombatantId } from "../identity.ts";
 
 import { currentActorId } from "./creature-state-leaves.ts";
 
-type JumpMovementReplacementEffect = Extract<
+type FixedCostMovementReplacementEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "jumpMovementReplacement" }
+  { readonly kind: "fixedCostMovementReplacement" }
 >;
 
-export function maxJumpMovementReplacementDistanceFeet(
+export function maxFixedCostMovementReplacementDistanceFeet(
   state: BattleState,
   moverId: CombatantId,
-  effect: JumpMovementReplacementEffect,
+  effect: FixedCostMovementReplacementEffect,
 ): MovementFeet {
   const multiplier =
     currentActorId(state) === moverId

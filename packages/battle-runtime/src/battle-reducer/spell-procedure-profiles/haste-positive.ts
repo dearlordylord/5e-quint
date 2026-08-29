@@ -32,7 +32,7 @@ import {
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
-  type HastePositiveSpellInvocation,
+  type CompositeTargetBuffWithAftermathSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import type { BattleSourcedEffectOccurrenceTemplateList } from "../../effect-execution-ref.ts";
@@ -71,13 +71,13 @@ const HASTE_POSITIVE_ACTIONS = [
   "utilize",
 ] as const satisfies ReadonlyArray<StandardActionKind>;
 
-const HastePositiveExpirationSchema = Schema.Struct({
+const CompositeTargetBuffWithAftermathExpirationSchema = Schema.Struct({
   kind: Schema.Literal("concentration"),
   combatantId: CombatantId,
   durationTicks: ElapsedTimeTicksSchema,
 });
 
-const HastePositiveActionRestrictionSchema = Schema.Struct({
+const CompositeTargetBuffWithAftermathActionRestrictionSchema = Schema.Struct({
   kind: Schema.Literal("allow_only"),
   actions: Schema.Tuple([
     Schema.Struct({
@@ -94,24 +94,27 @@ const HastePositiveActionRestrictionSchema = Schema.Struct({
   ]),
 });
 
-function admitHastePositive(
+function admitCompositeTargetBuffWithAftermath(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
-): readonly HastePositiveSpellInvocation[] {
-  const projection = hastePositiveSpellProjection(ctx.actor.combatantId, spell);
+): readonly CompositeTargetBuffWithAftermathSpellInvocation[] {
+  const projection = compositeTargetBuffWithAftermathSpellProjection(
+    ctx.actor.combatantId,
+    spell,
+  );
   if (projection === null) {
     return [];
   }
 
   return ctx.spellCastOptions.flatMap(
-    (slot): readonly HastePositiveSpellInvocation[] =>
+    (slot): readonly CompositeTargetBuffWithAftermathSpellInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []
         : [
             {
               access: { tag: "prepared" },
               resource: spellInvocationResourceForCastOption(slot),
-              procedure: "hastePositive",
+              procedure: "compositeTargetBuffWithAftermath",
               spell,
               actionCost: "magicAction",
               ...projection,
@@ -120,11 +123,11 @@ function admitHastePositive(
   );
 }
 
-function hastePositiveSpellProjection(
+function compositeTargetBuffWithAftermathSpellProjection(
   actorId: CombatantId,
   spell: BattleSpellAdmissionSource,
 ): Pick<
-  HastePositiveSpellInvocation,
+  CompositeTargetBuffWithAftermathSpellInvocation,
   "targeting" | "activeEffects" | "rangeFeet"
 > | null {
   if (
@@ -196,7 +199,9 @@ function hastePositiveSpellProjection(
     savingThrowAdvantage.attackRollTarget !== undefined ||
     savingThrowAdvantage.count !== undefined ||
     savingThrowAdvantage.expiresOn !== undefined ||
-    !isHastePositiveActionRestriction(extraAction?.restriction) ||
+    !isCompositeTargetBuffWithAftermathActionRestriction(
+      extraAction?.restriction,
+    ) ||
     spellEndLethargy?.condition !== "incapacitated" ||
     spellEndLethargy.duration !== "end_of_target_next_turn" ||
     spellEndLethargy.speed.kind !== "set_speed" ||
@@ -295,7 +300,7 @@ function ordinaryEffectAtoms(
   return ordinaryEffects;
 }
 
-function isHastePositiveActionRestriction(
+function isCompositeTargetBuffWithAftermathActionRestriction(
   restriction: ActionRestriction | undefined,
 ): restriction is Extract<ActionRestriction, { readonly kind: "allow_only" }> {
   if (restriction?.kind !== "allow_only") {
@@ -314,10 +319,10 @@ function isHastePositiveActionRestriction(
   );
 }
 
-function discoverHastePositiveCastAct(
+function discoverCompositeTargetBuffWithAftermathCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<HastePositiveSpellInvocation>,
+  invocation: BattleExecutableSpellInvocation<CompositeTargetBuffWithAftermathSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   return actionSpellCastCandidatesForTargetHole(
@@ -327,11 +332,11 @@ function discoverHastePositiveCastAct(
   );
 }
 
-function resolveHastePositive(
-  input: SpellProcedureProfileResolveInput<HastePositiveSpellInvocation>,
+function resolveCompositeTargetBuffWithAftermath(
+  input: SpellProcedureProfileResolveInput<CompositeTargetBuffWithAftermathSpellInvocation>,
 ): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (hasNonHastePositiveFill(input.fillSet)) {
+  if (hasNonCompositeTargetBuffWithAftermathFill(input.fillSet)) {
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -343,7 +348,7 @@ function resolveHastePositive(
   const targetSelectionResolution = spellSelectionResolution(
     input.input.state,
     input.input.subject,
-    hastePositiveTargetSelection(input),
+    compositeTargetBuffWithAftermathTargetSelection(input),
   );
   if (targetSelectionResolution.tag === "resolution")
     return targetSelectionResolution.result;
@@ -354,7 +359,7 @@ function resolveHastePositive(
     targetIds: targetSelection.targetIds,
     castingResource: { kind: "magicAction" },
     applyEffect: (state) =>
-      applyHastePositiveEffects(
+      applyCompositeTargetBuffWithAftermathEffects(
         state,
         input.actorId,
         targetSelection.targetIds,
@@ -368,7 +373,7 @@ function resolveHastePositive(
   });
 }
 
-function hasNonHastePositiveFill(
+function hasNonCompositeTargetBuffWithAftermathFill(
   fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>,
 ): boolean {
   return (
@@ -383,7 +388,7 @@ function hasNonHastePositiveFill(
     fillSet.targetAbilityChoices !== undefined ||
     fillSet.abilityChoice !== undefined ||
     fillSet.conditionChoice !== undefined ||
-    fillSet.commandOptionChoice !== undefined ||
+    fillSet.compelledBehaviorOptionChoice !== undefined ||
     fillSet.areaChoice !== undefined ||
     fillSet.teleportDestination !== undefined ||
     fillSet.dancingLightsPlacement !== undefined ||
@@ -391,17 +396,17 @@ function hasNonHastePositiveFill(
     fillSet.savingThrowOutcomes !== undefined ||
     fillSet.movement !== undefined ||
     fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
-    fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
+    fillSet.saveGatedConditionWithRepeatDamageRepeatSaves.length > 0 ||
     fillSet.damageDispositions.length > 0 ||
     fillSet.concentrationSavingThrows.length > 0 ||
     fillSet.spellDamageReductionRolls.length > 0
   );
 }
 
-function hastePositiveTargetSelection(input: {
+function compositeTargetBuffWithAftermathTargetSelection(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
-  readonly invocation: BattleExecutableSpellInvocation<HastePositiveSpellInvocation>;
+  readonly invocation: BattleExecutableSpellInvocation<CompositeTargetBuffWithAftermathSpellInvocation>;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): SpellSingleTargetSelection {
   return spellSingleTargetSelection({
@@ -415,11 +420,11 @@ function hastePositiveTargetSelection(input: {
   });
 }
 
-function applyHastePositiveEffects(
+function applyCompositeTargetBuffWithAftermathEffects(
   state: BattleState,
   actorId: CombatantId,
   targetIds: readonly CombatantId[],
-  invocation: BattleExecutableSpellInvocation<HastePositiveSpellInvocation>,
+  invocation: BattleExecutableSpellInvocation<CompositeTargetBuffWithAftermathSpellInvocation>,
 ): BattleState {
   return targetIds.reduce(
     (nextState, targetId) =>
@@ -427,16 +432,16 @@ function applyHastePositiveEffects(
         nextState,
         targetId,
         (effect) =>
-          isHastePositiveActiveEffect(effect) &&
+          isCompositeTargetBuffWithAftermathActiveEffect(effect) &&
           effect.sourceProcedureRef === invocation.sourceProcedureRef &&
           effect.sourceCombatantId === actorId,
-        hastePositiveEffectTemplates(invocation, actorId),
+        compositeTargetBuffWithAftermathEffectTemplates(invocation, actorId),
       ),
     state,
   );
 }
 
-type HastePositiveActiveEffect = Extract<
+type CompositeTargetBuffWithAftermathActiveEffect = Extract<
   BattleActiveEffect,
   {
     readonly kind:
@@ -448,8 +453,8 @@ type HastePositiveActiveEffect = Extract<
   }
 >;
 
-function hastePositiveEffectTemplates(
-  invocation: BattleExecutableSpellInvocation<HastePositiveSpellInvocation>,
+function compositeTargetBuffWithAftermathEffectTemplates(
+  invocation: BattleExecutableSpellInvocation<CompositeTargetBuffWithAftermathSpellInvocation>,
   actorId: CombatantId,
 ): BattleSourcedEffectOccurrenceTemplateList {
   return [
@@ -481,9 +486,9 @@ function hastePositiveEffectTemplates(
   ];
 }
 
-function isHastePositiveActiveEffect(
+function isCompositeTargetBuffWithAftermathActiveEffect(
   effect: BattleActiveEffect,
-): effect is HastePositiveActiveEffect {
+): effect is CompositeTargetBuffWithAftermathActiveEffect {
   return (
     effect.kind === "speedRatio" ||
     effect.kind === "spellArmorClassBonus" ||
@@ -493,71 +498,72 @@ function isHastePositiveActiveEffect(
   );
 }
 
-const HastePositiveInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: LeveledSpellInvocationResourceSchema,
-    procedure: Schema.Literal("hastePositive"),
-    spellRuleFacts: SpellRuleExecutionFactsSchema,
-    actionCost: Schema.Literal("magicAction"),
-    targeting: Schema.Struct({
-      kind: Schema.Literal("targetList"),
-      minTargets: Schema.Literal(1),
-      maxTargets: Schema.Literal(1),
-      requiredTargetDisposition: Schema.Literal("willing"),
+const CompositeTargetBuffWithAftermathInvocationSchema =
+  spellProcedureExecutionSchema(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: LeveledSpellInvocationResourceSchema,
+      procedure: Schema.Literal("compositeTargetBuffWithAftermath"),
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
+      actionCost: Schema.Literal("magicAction"),
+      targeting: Schema.Struct({
+        kind: Schema.Literal("targetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Literal(1),
+        requiredTargetDisposition: Schema.Literal("willing"),
+      }),
+      activeEffects: Schema.Struct({
+        speedRatio: Schema.Struct({
+          ...BattleEffectOccurrenceTemplateSchemaFields,
+          kind: Schema.Literal("speedRatio"),
+          sourceCombatantId: CombatantId,
+          numerator: Schema.Number,
+          denominator: Schema.Number,
+          expiresAt: CompositeTargetBuffWithAftermathExpirationSchema,
+        }),
+        armorClassBonus: Schema.Struct({
+          ...BattleEffectOccurrenceTemplateSchemaFields,
+          kind: Schema.Literal("spellArmorClassBonus"),
+          sourceCombatantId: CombatantId,
+          bonus: Schema.Number,
+          negatesRepeatedDamageAllocation: Schema.Literal(false),
+          expiresAt: CompositeTargetBuffWithAftermathExpirationSchema,
+        }),
+        dexteritySavingThrowAdvantage: Schema.Struct({
+          ...BattleEffectOccurrenceTemplateSchemaFields,
+          kind: Schema.Literal("savingThrowRollMode"),
+          sourceCombatantId: CombatantId,
+          ability: Schema.Literal("dex"),
+          mode: Schema.Literal("advantage"),
+          expiresAt: CompositeTargetBuffWithAftermathExpirationSchema,
+        }),
+        grantedActionResource: Schema.Struct({
+          ...BattleEffectOccurrenceTemplateSchemaFields,
+          kind: Schema.Literal("spellGrantedActionResource"),
+          sourceCombatantId: CombatantId,
+          restriction: CompositeTargetBuffWithAftermathActionRestrictionSchema,
+          expiresAt: CompositeTargetBuffWithAftermathExpirationSchema,
+        }),
+        spellEndTargetState: Schema.Struct({
+          ...BattleEffectOccurrenceTemplateSchemaFields,
+          kind: Schema.Literal("spellEndTargetState"),
+          sourceCombatantId: CombatantId,
+          condition: Schema.Literal("incapacitated"),
+          expiresAt: CompositeTargetBuffWithAftermathExpirationSchema,
+        }),
+      }),
+      rangeFeet: MovementFeet,
     }),
-    activeEffects: Schema.Struct({
-      speedRatio: Schema.Struct({
-        ...BattleEffectOccurrenceTemplateSchemaFields,
-        kind: Schema.Literal("speedRatio"),
-        sourceCombatantId: CombatantId,
-        numerator: Schema.Number,
-        denominator: Schema.Number,
-        expiresAt: HastePositiveExpirationSchema,
-      }),
-      armorClassBonus: Schema.Struct({
-        ...BattleEffectOccurrenceTemplateSchemaFields,
-        kind: Schema.Literal("spellArmorClassBonus"),
-        sourceCombatantId: CombatantId,
-        bonus: Schema.Number,
-        negatesRepeatedDamageAllocation: Schema.Literal(false),
-        expiresAt: HastePositiveExpirationSchema,
-      }),
-      dexteritySavingThrowAdvantage: Schema.Struct({
-        ...BattleEffectOccurrenceTemplateSchemaFields,
-        kind: Schema.Literal("savingThrowRollMode"),
-        sourceCombatantId: CombatantId,
-        ability: Schema.Literal("dex"),
-        mode: Schema.Literal("advantage"),
-        expiresAt: HastePositiveExpirationSchema,
-      }),
-      grantedActionResource: Schema.Struct({
-        ...BattleEffectOccurrenceTemplateSchemaFields,
-        kind: Schema.Literal("spellGrantedActionResource"),
-        sourceCombatantId: CombatantId,
-        restriction: HastePositiveActionRestrictionSchema,
-        expiresAt: HastePositiveExpirationSchema,
-      }),
-      spellEndTargetState: Schema.Struct({
-        ...BattleEffectOccurrenceTemplateSchemaFields,
-        kind: Schema.Literal("spellEndTargetState"),
-        sourceCombatantId: CombatantId,
-        condition: Schema.Literal("incapacitated"),
-        expiresAt: HastePositiveExpirationSchema,
-      }),
-    }),
-    rangeFeet: MovementFeet,
-  }),
-);
+  );
 
-export const hastePositiveProfile = {
-  procedure: "hastePositive",
-  executionSchema: HastePositiveInvocationSchema,
-  admit: admitHastePositive,
-  discoverCastAct: discoverHastePositiveCastAct,
-  resolve: resolveHastePositive,
+export const compositeTargetBuffWithAftermathProfile = {
+  procedure: "compositeTargetBuffWithAftermath",
+  executionSchema: CompositeTargetBuffWithAftermathInvocationSchema,
+  admit: admitCompositeTargetBuffWithAftermath,
+  discoverCastAct: discoverCompositeTargetBuffWithAftermathCastAct,
+  resolve: resolveCompositeTargetBuffWithAftermath,
 } satisfies SpellProcedureDeclaration<
-  "hastePositive",
-  HastePositiveSpellInvocation
+  "compositeTargetBuffWithAftermath",
+  CompositeTargetBuffWithAftermathSpellInvocation
 >;
 import { spellInvocationResourceForCastOption } from "./profile.ts";

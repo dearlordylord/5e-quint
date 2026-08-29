@@ -71,9 +71,9 @@ import {
 type AfterHitDamageAndIlluminationInvocation =
   AfterHitDamageAndIlluminationSpellInvocation;
 
-const ShiningSmiteIlluminationEffectSchema = Schema.Struct({
+const AfterHitDamageAndIlluminationEffectSchema = Schema.Struct({
   ...BattleEffectOccurrenceTemplateSchemaFields,
-  kind: Schema.Literal("shiningSmiteIllumination"),
+  kind: Schema.Literal("afterHitDamageAndIllumination"),
   sourceCombatantId: CombatantId,
   expiresAt: Schema.Struct({
     kind: Schema.Literal("concentration"),
@@ -118,7 +118,7 @@ function admitAfterHitDamageAndIllumination(
         damageType: projection.damageType,
       },
       activeEffect: {
-        kind: "shiningSmiteIllumination",
+        kind: "afterHitDamageAndIllumination",
         sourceCombatantId: ctx.actor.combatantId,
         expiresAt: projection.expiresAt,
       },
@@ -223,7 +223,7 @@ function applyAfterHitDamageAndIlluminationSpellEffect(
     state,
     targetId,
     (effect) =>
-      effect.kind === "shiningSmiteIllumination" &&
+      effect.kind === "afterHitDamageAndIllumination" &&
       effect.sourceProcedureRef === invocation.sourceProcedureRef &&
       effect.sourceCombatantId === invocation.activeEffect.sourceCombatantId,
     {
@@ -275,7 +275,7 @@ const AfterHitDamageAndIlluminationInvocationSchema =
         expr: DiceExprSchema,
         damageType: DamageTypeSchema,
       }),
-      activeEffect: ShiningSmiteIlluminationEffectSchema,
+      activeEffect: AfterHitDamageAndIlluminationEffectSchema,
     }),
   );
 export const afterHitDamageAndIlluminationProfile = {

@@ -461,7 +461,7 @@ export function saveMetamagicSupportIssue(input: {
   ) {
     return "Save-affecting Metamagic is supported only for action-time spell casts.";
   }
-  if (input.invocation.procedure === "sleepTargetAdmission") {
+  if (input.invocation.procedure === "stagedSaveCondition") {
     return "Save-affecting Metamagic is not supported for Sleep target admission because Sleep uses a two-stage admission and repeat-save lifecycle.";
   }
   if (!spellInvocationSupportsSaveMetamagic(input.invocation)) {
@@ -516,7 +516,7 @@ function spellInvocationSupportsSaveMetamagic(
     invocation.procedure === "saveGatedCondition" ||
     invocation.procedure === "saveGatedConditionImmunity" ||
     invocation.procedure === "saveGatedAttackRollAdvantage" ||
-    invocation.procedure === "hideousLaughter" ||
+    invocation.procedure === "saveGatedConditionWithRepeat" ||
     invocation.procedure === "command" ||
     invocation.procedure === "greaseGroundHazard" ||
     invocation.procedure === "gustOfWindLine"

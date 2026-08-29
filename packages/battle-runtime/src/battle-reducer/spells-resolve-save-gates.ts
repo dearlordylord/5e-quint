@@ -50,8 +50,8 @@ import {
 import {
   breakBattleConcentration,
   damageLifecycleConcentrationSavingThrowHoles,
-  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
-  damageLifecycleHideousLaughterDamageRepeatSaveHoles,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
 import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
@@ -66,11 +66,11 @@ import {
   spellCastMetamagicApplicationsInput,
 } from "./spell-cast-interrupt-frame.ts";
 import {
-  applyCommandPendingEffects,
+  applyCompelledNextTurnBehaviorPendingEffects,
   applyFailedSaveAttackRollAdvantageEffects,
   applyGreaseGroundHazardCastEffects,
-  applyHideousLaughterEffects,
-  applySleepPendingRepeatSaveEffects,
+  applySaveGatedConditionWithRepeatEffects,
+  applyStagedSaveConditionPendingRepeatEffects,
   applyFailedSaveSpellActiveEffects,
   applyFailedSaveSpellConditionEffects,
   applySaveGatedConditionImmunityEffects,
@@ -78,7 +78,7 @@ import {
   selectFailedSaveConditionEffect,
   saveGatedAttackRollAdvantageInvocationIsFaerieFire,
   saveGateDamageResultForOutcome,
-  commandOptionChoiceHole,
+  compelledBehaviorOptionChoiceHole,
   carefulSpellProtectedTargetsHoleId,
   carefulSpellProtectedTargetsHole,
   damageAmountByTypeAfterSaveDamageResult,
@@ -265,10 +265,10 @@ export function saveMetamagicSelectionState(input: {
         | "saveGatedCondition"
         | "saveGatedConditionImmunity"
         | "saveGatedAttackRollAdvantage"
-        | "hideousLaughter"
-        | "hypnoticPattern"
-        | "slowActivePenalties"
-        | "command"
+        | "saveGatedConditionWithRepeat"
+        | "saveGatedAreaControl"
+        | "saveGatedTurnConstraintBundle"
+        | "compelledNextTurnBehavior"
         | "greaseGroundHazard"
         | "gustOfWindLine";
     }
@@ -506,10 +506,10 @@ function saveMetamagicSelectionFills(
         | "saveGatedCondition"
         | "saveGatedConditionImmunity"
         | "saveGatedAttackRollAdvantage"
-        | "hideousLaughter"
-        | "hypnoticPattern"
-        | "slowActivePenalties"
-        | "command"
+        | "saveGatedConditionWithRepeat"
+        | "saveGatedAreaControl"
+        | "saveGatedTurnConstraintBundle"
+        | "compelledNextTurnBehavior"
         | "greaseGroundHazard"
         | "gustOfWindLine";
     }
@@ -731,12 +731,12 @@ export function resolveGreaseGroundHazardSpellAct(input: {
   };
 }
 
-export function resolveSleepTargetAdmissionSpellAct(input: {
+export function resolveStagedSaveConditionSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "sleepTargetAdmission" }
+    { readonly procedure: "stagedSaveCondition" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): BattleResolutionResult {
@@ -818,7 +818,7 @@ export function resolveSleepTargetAdmissionSpellAct(input: {
   if (resourced.tag === "invalid") {
     return resourced;
   }
-  const effected = applySleepPendingRepeatSaveEffects(
+  const effected = applyStagedSaveConditionPendingRepeatEffects(
     resourced.state,
     input.actorId,
     failedTargets,
@@ -837,12 +837,12 @@ export function resolveSleepTargetAdmissionSpellAct(input: {
   };
 }
 
-export function resolveHideousLaughterSpellAct(input: {
+export function resolveSaveGatedConditionWithRepeatSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "hideousLaughter" }
+    { readonly procedure: "saveGatedConditionWithRepeat" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
@@ -964,7 +964,7 @@ export function resolveHideousLaughterSpellAct(input: {
   if (resourced.tag === "invalid") {
     return resourced;
   }
-  const effected = applyHideousLaughterEffects(
+  const effected = applySaveGatedConditionWithRepeatEffects(
     resourced.state,
     input.actorId,
     failedTargets,
@@ -1323,7 +1323,7 @@ export function resolveSaveGateDamageSpellAct(input: {
       }
       /* v8 ignore stop -- @preserve */
       const rewrittenFills = input.input.fills
-        .filter((fill) => fill.kind !== "sanctuaryInterdictionOutcome")
+        .filter((fill) => fill.kind !== "targetingSaveInterdictionOutcome")
         .map((fill) =>
           fill === originalTargetFill
             ? {
@@ -1899,54 +1899,59 @@ export function resolveSaveGateDamageSpellAct(input: {
       ...missingDamageDispositionHoles,
     ]);
   }
-  const hideousLaughterSaveChecks = resolvedTargetDamages.map(
+  const saveGatedConditionWithRepeatSaveChecks = resolvedTargetDamages.map(
     ({ target, damageAmount }) => {
-      const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
-        state: stateAfterCastConcentrationBreak,
-        target,
-        damageAmount,
-      });
-      return damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
-        state: stateAfterCastConcentrationBreak,
-        target,
-        damageAmount,
-        fills: fillsMatchingHoleIds(
-          input.fillSet.hideousLaughterDamageRepeatSaves,
-          holes,
-        ),
-      });
+      const holes =
+        damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
+          state: stateAfterCastConcentrationBreak,
+          target,
+          damageAmount,
+        });
+      return damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck(
+        {
+          state: stateAfterCastConcentrationBreak,
+          target,
+          damageAmount,
+          fills: fillsMatchingHoleIds(
+            input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+            holes,
+          ),
+        },
+      );
     },
   );
-  const invalidHideousLaughterSaveCheck = hideousLaughterSaveChecks.find(
-    (check) => check.tag === "invalid",
-  );
+  const invalidSaveGatedConditionWithRepeatSaveCheck =
+    saveGatedConditionWithRepeatSaveChecks.find(
+      (check) => check.tag === "invalid",
+    );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (invalidHideousLaughterSaveCheck?.tag === "invalid") {
+  if (invalidSaveGatedConditionWithRepeatSaveCheck?.tag === "invalid") {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered save-gate holes or current spell constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
-      invalidHideousLaughterSaveCheck.message,
+      invalidSaveGatedConditionWithRepeatSaveCheck.message,
     );
   }
   /* v8 ignore stop -- @preserve */
-  const missingHideousLaughterSaveHoles = hideousLaughterSaveChecks.flatMap(
-    (check) => (check.tag === "needsHoles" ? [...check.holes] : []),
-  );
-  if (missingHideousLaughterSaveHoles.length > 0) {
+  const missingSaveGatedConditionWithRepeatSaveHoles =
+    saveGatedConditionWithRepeatSaveChecks.flatMap((check) =>
+      check.tag === "needsHoles" ? [...check.holes] : [],
+    );
+  if (missingSaveGatedConditionWithRepeatSaveHoles.length > 0) {
     return needsHolesResult(input.input.state, input.input.subject, [
-      ...missingHideousLaughterSaveHoles,
+      ...missingSaveGatedConditionWithRepeatSaveHoles,
     ]);
   }
-  const hideousLaughterSaveHoleIds = new Set<BattleHoleId>(
-    hideousLaughterSaveChecks.flatMap((check) =>
+  const saveGatedConditionWithRepeatSaveHoleIds = new Set<BattleHoleId>(
+    saveGatedConditionWithRepeatSaveChecks.flatMap((check) =>
       check.tag === "ok" ? check.holes.map((hole) => hole.holeId) : [],
     ),
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fillSet.hideousLaughterDamageRepeatSaves.some(
-      (fill) => !hideousLaughterSaveHoleIds.has(fill.holeId),
+    input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves.some(
+      (fill) => !saveGatedConditionWithRepeatSaveHoleIds.has(fill.holeId),
     )
   ) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered save-gate holes or current spell constraints. */
@@ -2031,15 +2036,15 @@ export function resolveSaveGateDamageSpellAct(input: {
       input.fillSet.concentrationSavingThrows,
       concentrationLifecycleHoles,
     );
-    const hideousLaughterLifecycleHoles =
-      damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+    const saveGatedConditionWithRepeatLifecycleHoles =
+      damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
         state,
         target: currentTarget,
         damageAmount: resolvedDamage.damageAmount,
       });
-    const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
-      input.fillSet.hideousLaughterDamageRepeatSaves,
-      hideousLaughterLifecycleHoles,
+    const saveGatedConditionWithRepeatLifecycleFills = fillsMatchingHoleIds(
+      input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+      saveGatedConditionWithRepeatLifecycleHoles,
     );
     return applyResolvedSpellDamage(
       state,
@@ -2054,7 +2059,8 @@ export function resolveSaveGateDamageSpellAct(input: {
         concentrationSavingThrow: concentrationSaveByTargetId.get(targetId),
         wardingBondDamageShareConcentrationSavingThrows:
           concentrationLifecycleFills,
-        hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
+        saveGatedConditionWithRepeatDamageRepeatSaves:
+          saveGatedConditionWithRepeatLifecycleFills,
         damageDisposition: damageDispositionByTargetId.get(targetId),
         damageSourceId: input.actorId,
         spatialFacts: input.fillSet.targetSpatialFacts,
@@ -2900,12 +2906,12 @@ function validateSaveGatedConditionImmunityTargets(
     : "Calm Emotions condition-immunity branch affects only Humanoids.";
 }
 
-export function resolveCommandSpellAct(input: {
+export function resolveCompelledNextTurnBehaviorSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "command" }
+    { readonly procedure: "compelledNextTurnBehavior" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
@@ -2921,7 +2927,7 @@ export function resolveCommandSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Command requires a target list.",
+      "CompelledNextTurnBehavior requires a target list.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -2947,9 +2953,9 @@ export function resolveCommandSpellAct(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  if (input.fillSet.commandOptionChoice === undefined) {
+  if (input.fillSet.compelledBehaviorOptionChoice === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
-      commandOptionChoiceHole(input.invocation),
+      compelledBehaviorOptionChoiceHole(input.invocation),
     ]);
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -2963,7 +2969,7 @@ export function resolveCommandSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Command does not use attack, damage, or Concentration fills.",
+      "CompelledNextTurnBehavior does not use attack, damage, or Concentration fills.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -3050,12 +3056,12 @@ export function resolveCommandSpellAct(input: {
   if (resourced.tag === "invalid") {
     return resourced;
   }
-  const effected = applyCommandPendingEffects(
+  const effected = applyCompelledNextTurnBehaviorPendingEffects(
     resourced.state,
     input.actorId,
     failedTargets,
     input.invocation,
-    input.fillSet.commandOptionChoice,
+    input.fillSet.compelledBehaviorOptionChoice,
   );
   const nextState = extendSavingThrowOngoingFeatures(
     effected,
@@ -3392,8 +3398,8 @@ export function validateSavingThrowOutcomes(
     });
   }
   const targeting = spellSavingThrowTargeting(invocation);
-  if (invocation.procedure === "sleepTargetAdmission") {
-    return validateSleepTargetAdmissionSavingThrowOutcomes({
+  if (invocation.procedure === "stagedSaveCondition") {
+    return validateStagedSaveConditionSavingThrowOutcomes({
       value,
       area: "area" in value ? value.area : undefined,
       state,
@@ -3443,7 +3449,7 @@ export function validateSavingThrowOutcomes(
     }
   }
   if ("kind" in value.area && value.area.kind === "slowArea") {
-    if (invocation.procedure !== "slowActivePenalties") {
+    if (invocation.procedure !== "saveGatedTurnConstraintBundle") {
       return "Slow area facts are only valid for Slow.";
     }
   }
@@ -3863,7 +3869,7 @@ function validateThunderwavePushDisposition(
   return null;
 }
 
-function validateSleepTargetAdmissionSavingThrowOutcomes(input: {
+function validateStagedSaveConditionSavingThrowOutcomes(input: {
   readonly value: BattleSpellSavingThrowOutcomeValue;
   readonly area: BattleSpellAreaChoice | undefined;
   readonly state: BattleState;

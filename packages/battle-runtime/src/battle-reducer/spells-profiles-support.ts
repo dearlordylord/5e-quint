@@ -40,7 +40,7 @@ import {
   type RollModifierSpellTargeting,
   type ScalarBuffSpellEffect,
   type ScalarBuffSpellTargeting,
-  type ThaumaturgyBoomingVoiceSpellInvocation,
+  type TemporaryAbilityCheckRollModeSpellInvocation,
 } from "../battle-state-execution.ts";
 import { type BattleD20RollModifierKind } from "./domain-constants.ts";
 import type { CombatantId } from "../identity.ts";
@@ -99,11 +99,11 @@ export function sameCreatureTypeSet(
   );
 }
 
-export function thaumaturgyBoomingVoiceProjection(
+export function temporaryAbilityCheckRollModeProjection(
   actorId: CombatantId,
   spell: BattleSpellAdmissionSource,
 ): Pick<
-  ThaumaturgyBoomingVoiceSpellInvocation,
+  TemporaryAbilityCheckRollModeSpellInvocation,
   "activeEffect" | "rangeFeet"
 > | null {
   const castingTime = topLevelSpellCastingTime(spell.mechanics);
@@ -150,7 +150,7 @@ export function thaumaturgyBoomingVoiceProjection(
   }
   return {
     activeEffect: {
-      kind: "thaumaturgyBoomingVoice",
+      kind: "temporaryAbilityCheckRollMode",
       sourceCombatantId: actorId,
       expiresAt: {
         kind: "duration",

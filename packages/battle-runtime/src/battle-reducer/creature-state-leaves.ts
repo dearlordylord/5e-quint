@@ -91,8 +91,8 @@ export function combatantInvisibleBenefitDenied(
   return (
     combatant?.activeEffects.some(
       (effect) =>
-        effect.kind === "faerieFireOutline" ||
-        effect.kind === "shiningSmiteIllumination" ||
+        effect.kind === "saveGatedTargetProjection" ||
+        effect.kind === "afterHitDamageAndIllumination" ||
         effect.kind === "invisibleBenefitDenied",
     ) === true
   );
@@ -381,7 +381,7 @@ export function combatantCanTakeReactions(
     combatantCanTakeActions(combatant) &&
     combatant.reactionAvailable &&
     !combatant.activeEffects.some(
-      (effect) => effect.kind === "slowActivePenalties",
+      (effect) => effect.kind === "saveGatedTurnConstraintBundle",
     )
   );
 }

@@ -1,6 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleep-target-admission
 //
-// The sleepTargetAdmission Spell Procedure Profile: action-time Spell Slot
+// The stagedSaveCondition Spell Procedure Profile: action-time Spell Slot
 // casting where creatures chosen in a point-origin Sphere make a Wisdom Saving
 // Throw before entering Sleep's two-stage Incapacitated-to-Unconscious
 // lifecycle.
@@ -25,7 +25,7 @@ import {
 } from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { readiedSpellAct } from "../spells-discovery.ts";
-import { resolveSleepTargetAdmissionSpellAct } from "../spells-resolve-save-gates.ts";
+import { resolveStagedSaveConditionSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -44,12 +44,12 @@ import {
 import { discoverSpellMetamagicSelections } from "../metamagic-support.ts";
 import { spellSavingThrowOutcomeHole } from "../spells-holes-fills.ts";
 
-type SleepTargetAdmissionSpellInvocation = Extract<
+type StagedSaveConditionSpellInvocation = Extract<
   SupportedSpellInvocation,
-  { readonly procedure: "sleepTargetAdmission" }
+  { readonly procedure: "stagedSaveCondition" }
 >;
 
-type SleepTargetAdmissionPhase = Extract<
+type StagedSaveConditionPhase = Extract<
   ActivationPhase,
   { readonly kind: "save_gate" }
 > & {
@@ -67,30 +67,30 @@ type SleepTargetAdmissionPhase = Extract<
   };
 };
 
-type SleepTargetAdmissionResolveInput =
-  SpellProcedureProfileResolveInput<SleepTargetAdmissionSpellInvocation>;
+type StagedSaveConditionResolveInput =
+  SpellProcedureProfileResolveInput<StagedSaveConditionSpellInvocation>;
 
-function admitSleepTargetAdmission(
-  spell: SleepTargetAdmissionSpellInvocation["spell"],
+function admitStagedSaveCondition(
+  spell: StagedSaveConditionSpellInvocation["spell"],
   ctx: SpellAdmissionContext,
-): readonly SleepTargetAdmissionSpellInvocation[] {
-  return supportedPreparedSleepTargetAdmissionProfile(
+): readonly StagedSaveConditionSpellInvocation[] {
+  return supportedPreparedStagedSaveConditionProfile(
     spell,
     ctx.spellCastOptions,
   );
 }
 
-export function supportedPreparedSleepTargetAdmissionProfile(
-  spell: SleepTargetAdmissionSpellInvocation["spell"],
+export function supportedPreparedStagedSaveConditionProfile(
+  spell: StagedSaveConditionSpellInvocation["spell"],
   castOptions: SpellAdmissionContext["spellCastOptions"],
-): readonly SleepTargetAdmissionSpellInvocation[] {
-  const sleep = sleepTargetAdmissionSpell(spell);
+): readonly StagedSaveConditionSpellInvocation[] {
+  const sleep = stagedSaveConditionSpell(spell);
   if (sleep === null) {
     return [];
   }
 
   return castOptions.flatMap(
-    (slot): readonly SleepTargetAdmissionSpellInvocation[] => {
+    (slot): readonly StagedSaveConditionSpellInvocation[] => {
       if (Number(slot.spellLevel) < spell.mechanics.level) {
         return [];
       }
@@ -98,7 +98,7 @@ export function supportedPreparedSleepTargetAdmissionProfile(
         {
           access: { tag: "prepared" },
           resource: spellInvocationResourceForCastOption(slot),
-          procedure: "sleepTargetAdmission",
+          procedure: "stagedSaveCondition",
           spell,
           ability: sleep.phase.ability,
           dc: sleep.phase.dc,
@@ -110,10 +110,10 @@ export function supportedPreparedSleepTargetAdmissionProfile(
   );
 }
 
-function sleepTargetAdmissionSpell(
-  spell: SleepTargetAdmissionSpellInvocation["spell"],
+function stagedSaveConditionSpell(
+  spell: StagedSaveConditionSpellInvocation["spell"],
 ): {
-  readonly phase: SleepTargetAdmissionPhase;
+  readonly phase: StagedSaveConditionPhase;
   readonly targeting: Extract<
     SpellTargeting,
     { readonly kind: "pointOriginSphere" }
@@ -139,7 +139,7 @@ function sleepTargetAdmissionSpell(
     earlyEnd.length !== 1 ||
     earlyEnd[0]?.kind !== "target_takes_damage" ||
     spell.mechanics.phases.length !== 1 ||
-    !isSleepTargetAdmissionPhase(phase)
+    !isStagedSaveConditionPhase(phase)
   ) {
     return null;
   }
@@ -154,9 +154,9 @@ function sleepTargetAdmissionSpell(
   };
 }
 
-function isSleepTargetAdmissionPhase(
+function isStagedSaveConditionPhase(
   phase: ActivationPhase | undefined,
-): phase is SleepTargetAdmissionPhase {
+): phase is StagedSaveConditionPhase {
   const repeatSaves = phase?.kind === "save_gate" ? phase.repeatSaves : [];
   const repeatSave = repeatSaves?.length === 1 ? repeatSaves[0] : undefined;
   const repeatFailure =
@@ -183,10 +183,10 @@ function isSleepTargetAdmissionPhase(
   );
 }
 
-function discoverSleepTargetAdmissionCastAct(
+function discoverStagedSaveConditionCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<SleepTargetAdmissionSpellInvocation>,
+  invocation: BattleExecutableSpellInvocation<StagedSaveConditionSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   const initialHole = spellSavingThrowOutcomeHole(state, actorId, invocation);
@@ -216,10 +216,10 @@ function discoverSleepTargetAdmissionCastAct(
   return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
 }
 
-function resolveSleepTargetAdmission(
-  input: SleepTargetAdmissionResolveInput,
+function resolveStagedSaveCondition(
+  input: StagedSaveConditionResolveInput,
 ): BattleResolutionResult {
-  return resolveSleepTargetAdmissionSpellAct({
+  return resolveStagedSaveConditionSpellAct({
     input: input.input,
     actorId: input.actorId,
     invocation: input.invocation,
@@ -227,11 +227,11 @@ function resolveSleepTargetAdmission(
   });
 }
 
-const SleepTargetAdmissionInvocationSchema = spellProcedureExecutionSchema(
+const StagedSaveConditionInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
-    procedure: Schema.Literal("sleepTargetAdmission"),
+    procedure: Schema.Literal("stagedSaveCondition"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     ability: Schema.Literal("wis"),
     dc: DcSourceSchema,
@@ -242,14 +242,14 @@ const SleepTargetAdmissionInvocationSchema = spellProcedureExecutionSchema(
     rangeFeet: MovementFeet,
   }),
 );
-export const sleepTargetAdmissionProfile = {
-  procedure: "sleepTargetAdmission",
-  executionSchema: SleepTargetAdmissionInvocationSchema,
-  admit: admitSleepTargetAdmission,
-  discoverCastAct: discoverSleepTargetAdmissionCastAct,
-  resolve: resolveSleepTargetAdmission,
+export const stagedSaveConditionProfile = {
+  procedure: "stagedSaveCondition",
+  executionSchema: StagedSaveConditionInvocationSchema,
+  admit: admitStagedSaveCondition,
+  discoverCastAct: discoverStagedSaveConditionCastAct,
+  resolve: resolveStagedSaveCondition,
 } satisfies SpellProcedureDeclaration<
-  "sleepTargetAdmission",
-  SleepTargetAdmissionSpellInvocation
+  "stagedSaveCondition",
+  StagedSaveConditionSpellInvocation
 >;
 import { spellInvocationResourceForCastOption } from "./profile.ts";

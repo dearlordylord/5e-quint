@@ -77,12 +77,12 @@ import {
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 
-type SlowActivePenaltiesSpellInvocation = Extract<
+type SaveGatedTurnConstraintBundleSpellInvocation = Extract<
   SupportedSpellInvocation,
-  { readonly procedure: "slowActivePenalties" }
+  { readonly procedure: "saveGatedTurnConstraintBundle" }
 >;
 
-type SlowActivePenaltiesPhase = Extract<
+type SaveGatedTurnConstraintBundlePhase = Extract<
   ActivationPhase,
   { readonly kind: "save_gate" }
 > & {
@@ -102,11 +102,11 @@ type SlowActivePenaltiesPhase = Extract<
   };
 };
 
-type SlowActivePenaltiesResolveInput =
-  SpellProcedureProfileResolveInput<SlowActivePenaltiesSpellInvocation>;
+type SaveGatedTurnConstraintBundleResolveInput =
+  SpellProcedureProfileResolveInput<SaveGatedTurnConstraintBundleSpellInvocation>;
 
-type SlowActivePenaltiesProfileShape = {
-  readonly phase: SlowActivePenaltiesPhase;
+type SaveGatedTurnConstraintBundleProfileShape = {
+  readonly phase: SaveGatedTurnConstraintBundlePhase;
   readonly rangeFeet: number;
   readonly durationTicks: ElapsedTimeTicks;
   readonly maxTargets: 6;
@@ -119,23 +119,23 @@ const SLOW_ACTIVE_PENALTIES_CUBE_SIDE_FEET = 40;
 const SLOW_ACTIVE_PENALTIES_MAX_TARGETS = 6;
 const SLOW_ACTIVE_PENALTIES_FAILED_EFFECT_COUNT = 7;
 
-function admitSlowActivePenalties(
-  spell: SlowActivePenaltiesSpellInvocation["spell"],
+function admitSaveGatedTurnConstraintBundle(
+  spell: SaveGatedTurnConstraintBundleSpellInvocation["spell"],
   ctx: SpellAdmissionContext,
-): readonly SlowActivePenaltiesSpellInvocation[] {
-  const slow = slowActivePenaltiesSpell(spell);
+): readonly SaveGatedTurnConstraintBundleSpellInvocation[] {
+  const slow = saveGatedTurnConstraintBundleSpell(spell);
   if (slow === null) {
     return [];
   }
   return ctx.spellCastOptions.flatMap(
-    (slot): readonly SlowActivePenaltiesSpellInvocation[] =>
+    (slot): readonly SaveGatedTurnConstraintBundleSpellInvocation[] =>
       Number(slot.spellLevel) < SLOW_ACTIVE_PENALTIES_LEVEL
         ? []
         : [
             {
               access: { tag: "prepared" },
               resource: spellInvocationResourceForCastOption(slot),
-              procedure: "slowActivePenalties",
+              procedure: "saveGatedTurnConstraintBundle",
               spell,
               actionCost: "magicAction",
               ability: slow.phase.ability,
@@ -154,9 +154,9 @@ function admitSlowActivePenalties(
   );
 }
 
-function slowActivePenaltiesSpell(
-  spell: SlowActivePenaltiesSpellInvocation["spell"],
-): SlowActivePenaltiesProfileShape | null {
+function saveGatedTurnConstraintBundleSpell(
+  spell: SaveGatedTurnConstraintBundleSpellInvocation["spell"],
+): SaveGatedTurnConstraintBundleProfileShape | null {
   if (spell.mechanics.family !== "activation") {
     return null;
   }
@@ -175,7 +175,7 @@ function slowActivePenaltiesSpell(
     spell.mechanics.duration.upTo.amount !==
       SLOW_ACTIVE_PENALTIES_DURATION_MINUTES ||
     spell.mechanics.phases.length !== 1 ||
-    !isSlowActivePenaltiesPhase(phase) ||
+    !isSaveGatedTurnConstraintBundlePhase(phase) ||
     durationTicks === null ||
     Result.isFailure(durationTicks)
   ) {
@@ -189,9 +189,9 @@ function slowActivePenaltiesSpell(
   };
 }
 
-function isSlowActivePenaltiesPhase(
+function isSaveGatedTurnConstraintBundlePhase(
   phase: ActivationPhase | undefined,
-): phase is SlowActivePenaltiesPhase {
+): phase is SaveGatedTurnConstraintBundlePhase {
   const failedEffects =
     phase?.kind === "save_gate" && phase.onFail.kind === "composite"
       ? phase.onFail.effects
@@ -297,16 +297,16 @@ function sameStringSet(
   );
 }
 
-function discoverSlowActivePenaltiesCastAct(
+function discoverSaveGatedTurnConstraintBundleCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<SlowActivePenaltiesSpellInvocation>,
+  invocation: BattleExecutableSpellInvocation<SaveGatedTurnConstraintBundleSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return discoverSavingThrowSpellCastActs(state, actorId, invocation);
 }
 
-function resolveSlowActivePenalties(
-  input: SlowActivePenaltiesResolveInput,
+function resolveSaveGatedTurnConstraintBundle(
+  input: SaveGatedTurnConstraintBundleResolveInput,
 ): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
@@ -413,7 +413,7 @@ function applySlowActivePenaltyEffects(
   state: BattleState,
   actorId: CombatantId,
   targetIds: readonly CombatantId[],
-  invocation: BattleExecutableSpellInvocation<SlowActivePenaltiesSpellInvocation>,
+  invocation: BattleExecutableSpellInvocation<SaveGatedTurnConstraintBundleSpellInvocation>,
 ): {
   readonly state: BattleState;
   readonly appliedTargetIds: readonly CombatantId[];
@@ -428,7 +428,7 @@ function applySlowActivePenaltyEffects(
     const allocation = allocateBattleEffectOccurrenceForCreature({
       owner: target,
       effect: {
-        kind: "slowActivePenalties" as const,
+        kind: "saveGatedTurnConstraintBundle" as const,
         sourceProcedureRef: invocation.sourceProcedureRef,
         sourceCombatantId: actorId,
         save: {
@@ -446,7 +446,7 @@ function applySlowActivePenaltyEffects(
       ...allocation.owner.activeEffects.filter(
         (effect) =>
           !(
-            effect.kind === "slowActivePenalties" &&
+            effect.kind === "saveGatedTurnConstraintBundle" &&
             effect.sourceProcedureRef === invocation.sourceProcedureRef &&
             effect.sourceCombatantId === actorId
           ),
@@ -520,33 +520,34 @@ function validateSlowAreaWitness(
 }
 /* v8 ignore stop -- @preserve */
 
-const SlowActivePenaltiesInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: LeveledSpellInvocationResourceSchema,
-    procedure: Schema.Literal("slowActivePenalties"),
-    spellRuleFacts: SpellRuleExecutionFactsSchema,
-    actionCost: Schema.Literal("magicAction"),
-    ability: Schema.Literal("wis"),
-    dc: DcSourceSchema,
-    targeting: Schema.Struct({
-      kind: Schema.Literal("pointOriginCube"),
-      sideFeet: MovementFeet,
+const SaveGatedTurnConstraintBundleInvocationSchema =
+  spellProcedureExecutionSchema(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: LeveledSpellInvocationResourceSchema,
+      procedure: Schema.Literal("saveGatedTurnConstraintBundle"),
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
+      actionCost: Schema.Literal("magicAction"),
+      ability: Schema.Literal("wis"),
+      dc: DcSourceSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("pointOriginCube"),
+        sideFeet: MovementFeet,
+      }),
+      maxTargets: Schema.Literal(6),
+      rangeFeet: MovementFeet,
+      durationTicks: ElapsedTimeTicksSchema,
     }),
-    maxTargets: Schema.Literal(6),
-    rangeFeet: MovementFeet,
-    durationTicks: ElapsedTimeTicksSchema,
-  }),
-);
+  );
 
-export const slowActivePenaltiesProfile = {
-  procedure: "slowActivePenalties",
-  executionSchema: SlowActivePenaltiesInvocationSchema,
-  admit: admitSlowActivePenalties,
-  discoverCastAct: discoverSlowActivePenaltiesCastAct,
-  resolve: resolveSlowActivePenalties,
+export const saveGatedTurnConstraintBundleProfile = {
+  procedure: "saveGatedTurnConstraintBundle",
+  executionSchema: SaveGatedTurnConstraintBundleInvocationSchema,
+  admit: admitSaveGatedTurnConstraintBundle,
+  discoverCastAct: discoverSaveGatedTurnConstraintBundleCastAct,
+  resolve: resolveSaveGatedTurnConstraintBundle,
 } satisfies SpellProcedureDeclaration<
-  "slowActivePenalties",
-  SlowActivePenaltiesSpellInvocation
+  "saveGatedTurnConstraintBundle",
+  SaveGatedTurnConstraintBundleSpellInvocation
 >;
 import { spellInvocationResourceForCastOption } from "./profile.ts";

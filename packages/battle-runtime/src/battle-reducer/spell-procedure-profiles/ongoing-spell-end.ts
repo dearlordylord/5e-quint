@@ -817,8 +817,8 @@ function ongoingSpellEndUnrelatedFill(
     fillSet.skillChoice !== undefined ||
     fillSet.targetAbilityChoices !== undefined ||
     fillSet.abilityChoice !== undefined ||
-    fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
-    fillSet.commandOptionChoice !== undefined ||
+    fillSet.temporaryAbilityCheckRollModeActiveEffectCount !== undefined ||
+    fillSet.compelledBehaviorOptionChoice !== undefined ||
     fillSet.selfTransformationModeChoice !== undefined ||
     fillSet.conditionChoice !== undefined ||
     fillSet.areaChoice !== undefined ||
@@ -826,7 +826,7 @@ function ongoingSpellEndUnrelatedFill(
     fillSet.dancingLightsPlacement !== undefined ||
     fillSet.damageTypeChoice !== undefined ||
     fillSet.concentrationSavingThrows.length > 0 ||
-    fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
+    fillSet.saveGatedConditionWithRepeatDamageRepeatSaves.length > 0 ||
     fillSet.damageDispositions.length > 0 ||
     fillSet.damageRoll !== undefined ||
     fillSet.mirrorImageDuplicateRoll !== undefined ||

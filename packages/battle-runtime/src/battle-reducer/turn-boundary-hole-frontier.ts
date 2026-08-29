@@ -32,11 +32,11 @@ export function collectTurnBoundaryHoleFills<
 
 type EndTurnSaveHoleFrontiers = {
   readonly sleepRepeat: readonly BattleHole[];
-  readonly hideousLaughterRepeat: readonly BattleHole[];
+  readonly saveGatedConditionWithRepeatRepeat: readonly BattleHole[];
   readonly spellCondition: readonly BattleHole[];
   readonly countedSpellCondition: readonly BattleHole[];
   readonly unitFeatureCondition: readonly BattleHole[];
-  readonly slowActivePenalties: readonly BattleHole[];
+  readonly saveGatedTurnConstraintBundle: readonly BattleHole[];
   readonly abilityD20TestRollMode: readonly BattleHole[];
 };
 
@@ -45,11 +45,11 @@ export function firstMissingEndTurnSaveHoleFrontier(
 ): readonly BattleHole[] {
   return firstNonEmptyFrontier([
     frontiers.sleepRepeat,
-    frontiers.hideousLaughterRepeat,
+    frontiers.saveGatedConditionWithRepeatRepeat,
     frontiers.spellCondition,
     frontiers.countedSpellCondition,
     frontiers.unitFeatureCondition,
-    frontiers.slowActivePenalties,
+    frontiers.saveGatedTurnConstraintBundle,
     frontiers.abilityD20TestRollMode,
   ]);
 }

@@ -3,7 +3,7 @@ import { spellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sanctuary-targeting-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.SANCTUARY.TARGETING_INTERDICTION
 //
-// The sanctuaryTargetingInterdiction Spell Procedure Profile: a prepared Bonus
+// The targetingSaveInterdiction Spell Procedure Profile: a prepared Bonus
 // Action spell that wards one creature, asks for a Wisdom Saving Throw when a
 // direct attack roll or damaging spell targets that creature, and removes the
 // ward when the warded creature makes an attack roll, casts a spell, or deals
@@ -28,7 +28,7 @@ import {
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
-  type SanctuaryTargetingInterdictionSpellInvocation,
+  type TargetingSaveInterdictionSpellInvocation,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
@@ -37,7 +37,7 @@ import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
 import {
   battleStateAfterTargetActionEarlyEndForActor,
-  combatantWithSanctuaryWard,
+  combatantWithTargetingSaveInterdiction,
 } from "../sanctuary-targeting-interdiction.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
@@ -64,10 +64,10 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
-const SanctuaryWardTemplateSchema = Schema.Struct({
+const TargetingSaveInterdictionTemplateSchema = Schema.Struct({
   ...BattleEffectOccurrenceTemplateSchemaFields,
   sourceCombatantId: CombatantId,
-  kind: Schema.Literal("sanctuaryWard"),
+  kind: Schema.Literal("targetingSaveInterdiction"),
   save: Schema.Struct({
     ability: Schema.Literal("wis"),
     dc: DcSourceSchema,
@@ -75,18 +75,18 @@ const SanctuaryWardTemplateSchema = Schema.Struct({
   expiresAt: DurationBattleActiveEffectExpirationSchema,
 });
 
-type SanctuaryTargetingInterdictionInvocation = Extract<
+type TargetingSaveInterdictionInvocation = Extract<
   SupportedSpellInvocation,
-  { readonly procedure: "sanctuaryTargetingInterdiction" }
+  { readonly procedure: "targetingSaveInterdiction" }
 >;
-type SanctuaryTargetingInterdictionResolveInput =
-  SpellProcedureProfileResolveInput<SanctuaryTargetingInterdictionInvocation>;
+type TargetingSaveInterdictionResolveInput =
+  SpellProcedureProfileResolveInput<TargetingSaveInterdictionInvocation>;
 
-function admitSanctuaryTargetingInterdiction(
+function admitTargetingSaveInterdiction(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
-): readonly SanctuaryTargetingInterdictionInvocation[] {
-  const projection = sanctuaryTargetingInterdictionProjection(
+): readonly TargetingSaveInterdictionInvocation[] {
+  const projection = targetingSaveInterdictionProjection(
     ctx.actor.combatantId,
     spell,
   );
@@ -95,18 +95,18 @@ function admitSanctuaryTargetingInterdiction(
   }
   return preparedSpellSlotInvocations(spell, ctx, (base) => ({
     ...base,
-    procedure: "sanctuaryTargetingInterdiction",
+    procedure: "targetingSaveInterdiction",
     actionCost: "bonusAction",
     targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
     ...projection,
   }));
 }
 
-function sanctuaryTargetingInterdictionProjection(
+function targetingSaveInterdictionProjection(
   actorId: CombatantId,
   spell: BattleSpellAdmissionSource,
 ): Pick<
-  SanctuaryTargetingInterdictionSpellInvocation,
+  TargetingSaveInterdictionSpellInvocation,
   "activeEffect" | "rangeFeet"
 > | null {
   if (
@@ -162,7 +162,7 @@ function sanctuaryTargetingInterdictionProjection(
     : {
         rangeFeet: movementFeet(30),
         activeEffect: {
-          kind: "sanctuaryWard",
+          kind: "targetingSaveInterdiction",
           sourceCombatantId: actorId,
           save: { ability: "wis", dc: operation.effect.dc },
           expiresAt: { kind: "duration", durationTicks: durationTicks.success },
@@ -170,10 +170,10 @@ function sanctuaryTargetingInterdictionProjection(
       };
 }
 
-function discoverSanctuaryTargetingInterdictionCastAct(
+function discoverTargetingSaveInterdictionCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<SanctuaryTargetingInterdictionInvocation>,
+  invocation: BattleExecutableSpellInvocation<TargetingSaveInterdictionInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetListHole(state, actorId, invocation);
   return spellCastCandidatesForTargetHole(
@@ -184,8 +184,8 @@ function discoverSanctuaryTargetingInterdictionCastAct(
   );
 }
 
-function resolveSanctuaryTargetingInterdiction(
-  input: SanctuaryTargetingInterdictionResolveInput,
+function resolveTargetingSaveInterdiction(
+  input: TargetingSaveInterdictionResolveInput,
 ): BattleResolutionResult {
   const targetList = input.fillSet.targetList;
   if (targetList === undefined) {
@@ -228,7 +228,7 @@ function resolveSanctuaryTargetingInterdiction(
   /* v8 ignore stop -- @preserve */
   const combatants = new Map(spellCastState.combatants).set(
     targetId,
-    combatantWithSanctuaryWard(target, input.invocation),
+    combatantWithTargetingSaveInterdiction(target, input.invocation),
   );
   return spendSpellCastResources({
     state: { ...spellCastState, combatants },
@@ -239,30 +239,29 @@ function resolveSanctuaryTargetingInterdiction(
   });
 }
 
-const SanctuaryTargetingInterdictionInvocationSchema =
-  spellProcedureExecutionSchema(
-    Schema.Struct({
-      access: PreparedSpellAccessSchema,
-      resource: LeveledSpellInvocationResourceSchema,
-      procedure: Schema.Literal("sanctuaryTargetingInterdiction"),
-      spellRuleFacts: SpellRuleExecutionFactsSchema,
-      actionCost: Schema.Literal("bonusAction"),
-      targeting: Schema.Struct({
-        kind: Schema.Literal("targetList"),
-        minTargets: Schema.Literal(1),
-        maxTargets: Schema.Literal(1),
-      }),
-      activeEffect: SanctuaryWardTemplateSchema,
-      rangeFeet: MovementFeet,
+const TargetingSaveInterdictionInvocationSchema = spellProcedureExecutionSchema(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: LeveledSpellInvocationResourceSchema,
+    procedure: Schema.Literal("targetingSaveInterdiction"),
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
+    actionCost: Schema.Literal("bonusAction"),
+    targeting: Schema.Struct({
+      kind: Schema.Literal("targetList"),
+      minTargets: Schema.Literal(1),
+      maxTargets: Schema.Literal(1),
     }),
-  );
-export const sanctuaryTargetingInterdictionProfile = {
-  procedure: "sanctuaryTargetingInterdiction",
-  executionSchema: SanctuaryTargetingInterdictionInvocationSchema,
-  admit: admitSanctuaryTargetingInterdiction,
-  discoverCastAct: discoverSanctuaryTargetingInterdictionCastAct,
-  resolve: resolveSanctuaryTargetingInterdiction,
+    activeEffect: TargetingSaveInterdictionTemplateSchema,
+    rangeFeet: MovementFeet,
+  }),
+);
+export const targetingSaveInterdictionProfile = {
+  procedure: "targetingSaveInterdiction",
+  executionSchema: TargetingSaveInterdictionInvocationSchema,
+  admit: admitTargetingSaveInterdiction,
+  discoverCastAct: discoverTargetingSaveInterdictionCastAct,
+  resolve: resolveTargetingSaveInterdiction,
 } satisfies SpellProcedureDeclaration<
-  "sanctuaryTargetingInterdiction",
-  SanctuaryTargetingInterdictionInvocation
+  "targetingSaveInterdiction",
+  TargetingSaveInterdictionInvocation
 >;

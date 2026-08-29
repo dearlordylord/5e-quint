@@ -876,21 +876,22 @@ export function activeEffectGrantsAttackRollMode(
     target?.activeEffects.some(
       (effect) =>
         (effect.kind === "nextAttackRollAgainstSelf" && effect.mode === mode) ||
-        (effect.kind === "faerieFireOutline" &&
+        (effect.kind === "saveGatedTargetProjection" &&
           mode === "advantage" &&
           attackerCanSeeTarget) ||
-        (effect.kind === "shiningSmiteIllumination" && mode === "advantage") ||
+        (effect.kind === "afterHitDamageAndIllumination" &&
+          mode === "advantage") ||
         (effect.kind === "creatureTypeProtection" &&
           effect.attackRollMode === mode &&
           attackerCreatureType !== null &&
           effect.protectedAgainstCreatureTypes.includes(
             attackerCreatureType,
           )) ||
-        (effect.kind === "blurred" &&
+        (effect.kind === "perceptionGatedAttackRollDefense" &&
           mode === "disadvantage" &&
           attacker !== undefined &&
           target !== undefined &&
-          !attackerPerceivesBlurredTargetWithBypassSense(
+          !attackerPerceivesPerceptionGatedAttackRollDefenseTargetWithBypassSense(
             context.targetSpatialFacts ?? [],
             attacker.combatantId,
             target.combatantId,
@@ -899,14 +900,14 @@ export function activeEffectGrantsAttackRollMode(
   );
 }
 
-function attackerPerceivesBlurredTargetWithBypassSense(
+function attackerPerceivesPerceptionGatedAttackRollDefenseTargetWithBypassSense(
   facts: readonly BattleTargetSpatialFact[],
   attackerId: CombatantId,
   targetId: CombatantId,
 ): boolean {
   return facts.some(
     (fact) =>
-      fact.kind === "attackAttackerPerceivesBlurredTargetWithSense" &&
+      fact.kind === "attackerPerceivesObscuredTargetWithSense" &&
       fact.attackerId === attackerId &&
       fact.targetId === targetId,
   );

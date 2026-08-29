@@ -65,7 +65,7 @@ import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
-import type { HypnoticPatternStoredGlyphRelease } from "./resolution-contract.ts";
+import type { SaveGatedAreaControlStoredGlyphRelease } from "./resolution-contract.ts";
 import {
   DcSourceSchema,
   MovementFeet,
@@ -79,14 +79,14 @@ import {
 import { spellSavingThrowOutcomeHole } from "../spells-holes-fills.ts";
 import { failedSavingThrowTargetIds } from "../saving-throw-outcomes.ts";
 
-type HypnoticPatternSpellInvocation = Extract<
+type SaveGatedAreaControlSpellInvocation = Extract<
   SupportedSpellInvocation,
-  { readonly procedure: "hypnoticPattern" }
+  { readonly procedure: "saveGatedAreaControl" }
 >;
 type StoredGlyphAreaControlSpellInvocation =
   SpellProcedureExecution<GlyphStoredAreaControlInvocation>;
 
-type HypnoticPatternPhase = Extract<
+type SaveGatedAreaControlPhase = Extract<
   ActivationPhase,
   { readonly kind: "save_gate" }
 > & {
@@ -102,20 +102,20 @@ type HypnoticPatternPhase = Extract<
   };
 };
 
-type HypnoticPatternResolveInput =
-  SpellProcedureProfileResolveInput<HypnoticPatternSpellInvocation>;
+type SaveGatedAreaControlResolveInput =
+  SpellProcedureProfileResolveInput<SaveGatedAreaControlSpellInvocation>;
 
 export function resolveStoredGlyphAreaControlSpellRelease(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: StoredGlyphAreaControlSpellInvocation;
   readonly fillSet: Extract<
-    SpellProcedureProfileResolveInput<HypnoticPatternSpellInvocation>["fillSet"],
+    SpellProcedureProfileResolveInput<SaveGatedAreaControlSpellInvocation>["fillSet"],
     { readonly tag: "ok" }
   >;
   readonly selfOriginAreaAnchorId: CombatantId;
 }): BattleResolutionResult {
-  return resolveHypnoticPattern({
+  return resolveSaveGatedAreaControl({
     input: input.input,
     actorId: input.actorId,
     invocation: bindStoredSpellProcedureExecutionFacts(
@@ -130,43 +130,45 @@ export function resolveStoredGlyphAreaControlSpellRelease(input: {
   });
 }
 
-function admitHypnoticPattern(
-  spell: HypnoticPatternSpellInvocation["spell"],
+function admitSaveGatedAreaControl(
+  spell: SaveGatedAreaControlSpellInvocation["spell"],
   ctx: SpellAdmissionContext,
-): readonly HypnoticPatternSpellInvocation[] {
-  const hypnoticPattern = hypnoticPatternSpell(spell);
-  if (hypnoticPattern === null) {
+): readonly SaveGatedAreaControlSpellInvocation[] {
+  const saveGatedAreaControl = saveGatedAreaControlSpell(spell);
+  if (saveGatedAreaControl === null) {
     return [];
   }
   return ctx.spellCastOptions.flatMap(
-    (slot): readonly HypnoticPatternSpellInvocation[] =>
+    (slot): readonly SaveGatedAreaControlSpellInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []
         : [
             {
               access: { tag: "prepared" },
               resource: spellInvocationResourceForCastOption(slot),
-              procedure: "hypnoticPattern",
+              procedure: "saveGatedAreaControl",
               spell,
               actionCost: "magicAction",
-              ability: hypnoticPattern.phase.ability,
-              dc: hypnoticPattern.phase.dc,
+              ability: saveGatedAreaControl.phase.ability,
+              dc: saveGatedAreaControl.phase.dc,
               targeting: {
                 kind: "pointOriginCube",
                 sideFeet: movementFeet(
-                  hypnoticPattern.phase.attachment.value.shape.sideFeet,
+                  saveGatedAreaControl.phase.attachment.value.shape.sideFeet,
                 ),
               },
-              rangeFeet: movementFeet(hypnoticPattern.rangeFeet),
-              durationTicks: hypnoticPattern.durationTicks,
+              rangeFeet: movementFeet(saveGatedAreaControl.rangeFeet),
+              durationTicks: saveGatedAreaControl.durationTicks,
             },
           ],
   );
 }
 
-function hypnoticPatternSpell(spell: HypnoticPatternSpellInvocation["spell"]): {
-  readonly phase: HypnoticPatternPhase;
-  readonly durationTicks: HypnoticPatternSpellInvocation["durationTicks"];
+function saveGatedAreaControlSpell(
+  spell: SaveGatedAreaControlSpellInvocation["spell"],
+): {
+  readonly phase: SaveGatedAreaControlPhase;
+  readonly durationTicks: SaveGatedAreaControlSpellInvocation["durationTicks"];
   readonly rangeFeet: number;
 } | null {
   if (spell.mechanics.family !== "activation") {
@@ -185,7 +187,7 @@ function hypnoticPatternSpell(spell: HypnoticPatternSpellInvocation["spell"]): {
       (earlyEnd) => earlyEnd.kind === "target_takes_damage",
     ) ||
     spell.mechanics.phases.length !== 1 ||
-    !isHypnoticPatternPhase(phase)
+    !isSaveGatedAreaControlPhase(phase)
   ) {
     return null;
   }
@@ -201,9 +203,9 @@ function hypnoticPatternSpell(spell: HypnoticPatternSpellInvocation["spell"]): {
       };
 }
 
-function isHypnoticPatternPhase(
+function isSaveGatedAreaControlPhase(
   phase: ActivationPhase | undefined,
-): phase is HypnoticPatternPhase {
+): phase is SaveGatedAreaControlPhase {
   const failedEffects =
     phase?.kind === "save_gate" && phase.onFail.kind === "composite"
       ? phase.onFail.effects
@@ -228,7 +230,7 @@ function isHypnoticPatternPhase(
     failedEffects.some(
       (effect) => effect.kind === "set_speed" && effect.feet === 0,
     ) &&
-    failedEffects.some(isHypnoticPatternShakeAwakeEffect)
+    failedEffects.some(isSaveGatedAreaControlShakeAwakeEffect)
   );
 }
 
@@ -239,7 +241,7 @@ function isApplyConditionEffect(
   return effect.kind === "apply_condition" && effect.condition === condition;
 }
 
-function isHypnoticPatternShakeAwakeEffect(effect: EffectAtom): boolean {
+function isSaveGatedAreaControlShakeAwakeEffect(effect: EffectAtom): boolean {
   return (
     effect.kind === "target_effect_escape_action" &&
     effect.actor === "another_creature" &&
@@ -249,10 +251,10 @@ function isHypnoticPatternShakeAwakeEffect(effect: EffectAtom): boolean {
   );
 }
 
-function discoverHypnoticPatternCastAct(
+function discoverSaveGatedAreaControlCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<HypnoticPatternSpellInvocation>,
+  invocation: BattleExecutableSpellInvocation<SaveGatedAreaControlSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const savingThrowHole = spellSavingThrowOutcomeHole(
     state,
@@ -288,13 +290,15 @@ function discoverHypnoticPatternCastAct(
   ];
 }
 
-function hypnoticPatternReleaseResourceState(input: {
+function saveGatedAreaControlReleaseResourceState(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly invocation: HypnoticPatternResolveInput["invocation"];
+  readonly invocation: SaveGatedAreaControlResolveInput["invocation"];
   readonly errorState: BattleState;
   readonly metamagicApplications: readonly CharacterBattleMetamagicOptionFact[];
-  readonly storedGlyphRelease: HypnoticPatternStoredGlyphRelease | undefined;
+  readonly storedGlyphRelease:
+    | SaveGatedAreaControlStoredGlyphRelease
+    | undefined;
 }): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
   if (input.storedGlyphRelease !== undefined) {
     return {
@@ -314,7 +318,7 @@ function hypnoticPatternReleaseResourceState(input: {
 }
 
 function storedGlyphAreaControlReleaseUsesOrdinaryConcentration(
-  storedGlyphRelease: HypnoticPatternStoredGlyphRelease | undefined,
+  storedGlyphRelease: SaveGatedAreaControlStoredGlyphRelease | undefined,
 ): boolean {
   return storedGlyphRelease === undefined;
 }
@@ -322,7 +326,9 @@ function storedGlyphAreaControlReleaseUsesOrdinaryConcentration(
 function invalidStoredGlyphAreaCenterResult(input: {
   readonly state: BattleState;
   readonly savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue;
-  readonly storedGlyphRelease: HypnoticPatternStoredGlyphRelease | undefined;
+  readonly storedGlyphRelease:
+    | SaveGatedAreaControlStoredGlyphRelease
+    | undefined;
 }): Extract<BattleResolutionResult, { readonly tag: "invalid" }> | null {
   if (input.storedGlyphRelease === undefined) {
     return null;
@@ -341,8 +347,8 @@ function invalidStoredGlyphAreaCenterResult(input: {
   );
 }
 
-function resolveHypnoticPattern(
-  input: HypnoticPatternResolveInput,
+function resolveSaveGatedAreaControl(
+  input: SaveGatedAreaControlResolveInput,
 ): BattleResolutionResult {
   const metamagicApplications =
     input.storedGlyphRelease === undefined ? input.metamagicApplications : [];
@@ -376,7 +382,7 @@ function resolveHypnoticPattern(
   }
   const savingThrowOutcomes = areaSave.savingThrowOutcomes;
   const areaWitnessValidation =
-    validateHypnoticPatternAreaWitness(savingThrowOutcomes);
+    validateSaveGatedAreaControlAreaWitness(savingThrowOutcomes);
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (areaWitnessValidation !== null) {
     return invalidResult(
@@ -418,7 +424,7 @@ function resolveHypnoticPattern(
       return saveFailedReactionWindow;
     }
   }
-  const resourced = hypnoticPatternReleaseResourceState({
+  const resourced = saveGatedAreaControlReleaseResourceState({
     state: input.input.state,
     actorId: input.actorId,
     invocation: input.invocation,
@@ -429,7 +435,7 @@ function resolveHypnoticPattern(
   if (resourced.tag === "invalid") {
     return resourced;
   }
-  const effected = applyHypnoticPatternControlEffects(
+  const effected = applySaveGatedAreaControlControlEffects(
     resourced.state,
     input.actorId,
     failedTargets,
@@ -463,11 +469,11 @@ function resolveHypnoticPattern(
   };
 }
 
-function applyHypnoticPatternControlEffects(
+function applySaveGatedAreaControlControlEffects(
   state: BattleState,
   actorId: CombatantId,
   targetIds: readonly CombatantId[],
-  invocation: BattleExecutableSpellInvocation<HypnoticPatternSpellInvocation>,
+  invocation: BattleExecutableSpellInvocation<SaveGatedAreaControlSpellInvocation>,
 ): {
   readonly state: BattleState;
   readonly appliedTargetIds: readonly CombatantId[];
@@ -492,14 +498,14 @@ function applyHypnoticPatternControlEffects(
     }
     const replacing = target.activeEffects.filter(
       (effect) =>
-        effect.kind === "hypnoticPatternControl" &&
+        effect.kind === "saveGatedAreaControlControl" &&
         effect.sourceProcedureRef === invocation.sourceProcedureRef &&
         effect.sourceCombatantId === actorId,
     );
     const allocation = allocateBattleEffectOccurrenceForCreature({
       owner: target,
       effect: {
-        kind: "hypnoticPatternControl" as const,
+        kind: "saveGatedAreaControlControl" as const,
         sourceProcedureRef: invocation.sourceProcedureRef,
         sourceCombatantId: actorId,
         conditionHadNonSpellCharmedSource:
@@ -529,14 +535,14 @@ function applyHypnoticPatternControlEffects(
 }
 
 /* v8 ignore start -- @preserve -- Malformed area-witness validator: Hypnotic Pattern discovery supplies the typed Cube geometry, unique visible targets, and matching outcomes; admitted effect execution remains measured. */
-function validateHypnoticPatternAreaWitness(
+function validateSaveGatedAreaControlAreaWitness(
   savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue,
 ): string | null {
   if (!("area" in savingThrowOutcomes)) {
     return "Hypnotic Pattern requires a point-origin Cube area witness.";
   }
   const area = savingThrowOutcomes.area;
-  if (area.kind !== "hypnoticPatternArea") {
+  if (area.kind !== "saveGatedAreaControlArea") {
     return "Hypnotic Pattern requires explicit Cube membership and sight witnesses.";
   }
   if (area.cubeSideFeet !== 30) {
@@ -588,11 +594,11 @@ function breakConcentrationForIncapacitatedTargets(
   );
 }
 
-const HypnoticPatternInvocationSchema = spellProcedureExecutionSchema(
+const SaveGatedAreaControlInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
-    procedure: Schema.Literal("hypnoticPattern"),
+    procedure: Schema.Literal("saveGatedAreaControl"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),
     ability: Schema.Literal("wis"),
@@ -606,14 +612,14 @@ const HypnoticPatternInvocationSchema = spellProcedureExecutionSchema(
   }),
 );
 
-export const hypnoticPatternProfile = {
-  procedure: "hypnoticPattern",
-  executionSchema: HypnoticPatternInvocationSchema,
-  admit: admitHypnoticPattern,
-  discoverCastAct: discoverHypnoticPatternCastAct,
-  resolve: resolveHypnoticPattern,
+export const saveGatedAreaControlProfile = {
+  procedure: "saveGatedAreaControl",
+  executionSchema: SaveGatedAreaControlInvocationSchema,
+  admit: admitSaveGatedAreaControl,
+  discoverCastAct: discoverSaveGatedAreaControlCastAct,
+  resolve: resolveSaveGatedAreaControl,
 } satisfies SpellProcedureDeclaration<
-  "hypnoticPattern",
-  HypnoticPatternSpellInvocation
+  "saveGatedAreaControl",
+  SaveGatedAreaControlSpellInvocation
 >;
 import { spellInvocationResourceForCastOption } from "./profile.ts";

@@ -88,7 +88,7 @@ import {
   type BattleSpellSavingThrowOutcomeHole,
   type BattleSpellSkillChoiceHole,
   type BattleSpellTargetAbilityChoicesHole,
-  type BattleThaumaturgyActiveOneMinuteEffectCountHole,
+  type BattleTemporaryAbilityCheckRollModeActiveEffectCountHole,
   type BattleSpellTargetAllocation,
   type BattleSpellTargetListHole,
   type BattleState,
@@ -392,7 +392,7 @@ export function spellDamageTypeChoiceHole(
           | "chainedSpellAttackDamage"
           | "chosenDamageResistance"
           | "damageReduction"
-          | "dragonsBreathInitial"
+          | "grantedAreaSaveDamageAction"
           | "selfTransformationMode"
           | "spellAttackDamage"
           | "spellHostedWeaponAttack";
@@ -1037,16 +1037,16 @@ export function spellAbilityChoiceHole(
   };
 }
 
-export function thaumaturgyActiveOneMinuteEffectCountHole(
+export function temporaryAbilityCheckRollModeActiveEffectCountHole(
   invocation: BattleExecutableSpellInvocation<
     Extract<
       RuntimeSpellProcedure,
-      { readonly procedure: "thaumaturgyBoomingVoice" }
+      { readonly procedure: "temporaryAbilityCheckRollMode" }
     >
   >,
-): BattleThaumaturgyActiveOneMinuteEffectCountHole {
+): BattleTemporaryAbilityCheckRollModeActiveEffectCountHole {
   return {
-    kind: "thaumaturgyActiveOneMinuteEffectCount",
+    kind: "temporaryAbilityCheckRollModeActiveEffectCount",
     holeId: THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
     holeInstanceKey: THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_INSTANCE,
     label: `Spell total active 1-minute effects`,
@@ -1082,10 +1082,10 @@ export function spellSavingThrowOutcomeHole(
           | "saveGatedConditionImmunity"
           | "saveGatedAttackRollAdvantage"
           | "counterspell"
-          | "sleepTargetAdmission"
-          | "hideousLaughter"
-          | "hypnoticPattern"
-          | "slowActivePenalties"
+          | "stagedSaveCondition"
+          | "saveGatedConditionWithRepeat"
+          | "saveGatedAreaControl"
+          | "saveGatedTurnConstraintBundle"
           | "command"
           | "greaseGroundHazard"
           | "gustOfWindLine";
@@ -1269,13 +1269,13 @@ export function spellSavingThrowAbility(
         | "saveGatedConditionImmunity"
         | "saveGatedAttackRollAdvantage"
         | "counterspell"
-        | "sleepTargetAdmission"
-        | "hideousLaughter"
-        | "hypnoticPattern"
+        | "stagedSaveCondition"
+        | "saveGatedConditionWithRepeat"
+        | "saveGatedAreaControl"
         | "command"
         | "greaseGroundHazard"
         | "gustOfWindLine"
-        | "slowActivePenalties";
+        | "saveGatedTurnConstraintBundle";
     }
   >,
 ): Ability {
@@ -1304,13 +1304,13 @@ export function spellSavingThrowTargeting(
         | "saveGatedConditionImmunity"
         | "saveGatedAttackRollAdvantage"
         | "counterspell"
-        | "sleepTargetAdmission"
-        | "hideousLaughter"
-        | "hypnoticPattern"
+        | "stagedSaveCondition"
+        | "saveGatedConditionWithRepeat"
+        | "saveGatedAreaControl"
         | "command"
         | "greaseGroundHazard"
         | "gustOfWindLine"
-        | "slowActivePenalties";
+        | "saveGatedTurnConstraintBundle";
     }
   >,
 ): SpellTargeting {
@@ -1560,11 +1560,14 @@ export function savingThrowFlatBonusProjections(
 ): readonly BattleSavingThrowFlatBonusProjection[] {
   return [...state.combatants].flatMap(([, target]) => [
     ...wardingBondSavingThrowFlatBonusProjectionsForTarget(target),
-    ...slowActivePenaltiesSavingThrowFlatBonusProjection(target, ability),
+    ...saveGatedTurnConstraintBundleSavingThrowFlatBonusProjection(
+      target,
+      ability,
+    ),
   ]);
 }
 
-function slowActivePenaltiesSavingThrowFlatBonusProjection(
+function saveGatedTurnConstraintBundleSavingThrowFlatBonusProjection(
   target: BattleCreatureState,
   ability: Ability,
 ): readonly BattleSavingThrowFlatBonusProjection[] {
@@ -1576,8 +1579,8 @@ function slowActivePenaltiesSavingThrowFlatBonusProjection(
       candidate,
     ): candidate is Extract<
       BattleCreatureState["activeEffects"][number],
-      { readonly kind: "slowActivePenalties" }
-    > => candidate.kind === "slowActivePenalties",
+      { readonly kind: "saveGatedTurnConstraintBundle" }
+    > => candidate.kind === "saveGatedTurnConstraintBundle",
   );
   return effect === undefined
     ? []
@@ -2004,10 +2007,12 @@ type ResolvedSpellDamageContext = {
         { readonly kind: "concentrationSavingThrow" }
       >[]
     | undefined;
-  readonly hideousLaughterDamageRepeatSaves?:
+  readonly saveGatedConditionWithRepeatDamageRepeatSaves?:
     | readonly Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>[]
     | undefined;
-  readonly hideousLaughterDamageRepeatSaveEventKey?: string | undefined;
+  readonly saveGatedConditionWithRepeatDamageRepeatSaveEventKey?:
+    | string
+    | undefined;
   readonly damageDisposition?: BattleAttackDamageDisposition | undefined;
   readonly damageSourceId?: CombatantId | undefined;
   readonly spatialFacts: readonly BattleTargetSpatialFact[];
@@ -2046,8 +2051,8 @@ export function applyResolvedSpellDamage(
   const {
     concentrationSavingThrow,
     wardingBondDamageShareConcentrationSavingThrows,
-    hideousLaughterDamageRepeatSaves,
-    hideousLaughterDamageRepeatSaveEventKey,
+    saveGatedConditionWithRepeatDamageRepeatSaves,
+    saveGatedConditionWithRepeatDamageRepeatSaveEventKey,
     damageDisposition = { kind: "ordinaryDamage" },
     damageSourceId,
     spatialFacts,
@@ -2078,12 +2083,12 @@ export function applyResolvedSpellDamage(
       wardingBondDamageShareConcentrationSavingThrows,
     ),
     ...optionalProperty(
-      "hideousLaughterDamageRepeatSaves",
-      hideousLaughterDamageRepeatSaves,
+      "saveGatedConditionWithRepeatDamageRepeatSaves",
+      saveGatedConditionWithRepeatDamageRepeatSaves,
     ),
     ...optionalProperty(
-      "hideousLaughterDamageRepeatSaveEventKey",
-      hideousLaughterDamageRepeatSaveEventKey,
+      "saveGatedConditionWithRepeatDamageRepeatSaveEventKey",
+      saveGatedConditionWithRepeatDamageRepeatSaveEventKey,
     ),
   });
 }

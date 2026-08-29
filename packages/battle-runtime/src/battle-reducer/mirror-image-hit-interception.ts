@@ -12,7 +12,7 @@ import type {
   BattleActiveEffect,
   BattleCreatureState,
   BattleHoleId,
-  BattleMirrorImageDuplicateRollHole,
+  BattleDuplicateHitInterceptionRollHole,
   BattleRolledDiceFill,
   BattleState,
   BattleTargetSpatialFact,
@@ -23,32 +23,32 @@ import {
   MIRROR_IMAGE_DUPLICATE_DIE_SIZE,
   MIRROR_IMAGE_DUPLICATE_ROLL_HOLE_KEY_PREFIX,
   MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST,
-  type MirrorImageDuplicateCount,
+  type DuplicateHitInterceptionCount,
 } from "./domain-constants.ts";
 
-type MirrorImageDuplicates = Extract<
+type DuplicateHitInterception = Extract<
   BattleActiveEffect,
-  { readonly kind: "mirrorImageDuplicates" }
+  { readonly kind: "duplicateHitInterception" }
 >;
 
 export const MIRROR_IMAGE_HIT_INTERCEPTION_DUPLICATE_COUNTS = [
   0,
   ...MIRROR_IMAGE_DUPLICATE_COUNTS,
 ] as const;
-export type MirrorImageHitInterceptionDuplicateCount =
+export type DuplicateHitInterceptionDuplicateCount =
   (typeof MIRROR_IMAGE_HIT_INTERCEPTION_DUPLICATE_COUNTS)[number];
 
-export type MirrorImageHitInterceptionState = {
-  readonly remainingDuplicates: MirrorImageHitInterceptionDuplicateCount;
+export type DuplicateHitInterceptionState = {
+  readonly remainingDuplicates: DuplicateHitInterceptionDuplicateCount;
   readonly normalDamageContinues: boolean;
 };
 
-export type MirrorImageHitInterceptionInputState = Pick<
-  MirrorImageHitInterceptionState,
+export type DuplicateHitInterceptionInputState = Pick<
+  DuplicateHitInterceptionState,
   "remainingDuplicates"
 >;
 
-export type MirrorImageHitInterceptionFills = {
+export type DuplicateHitInterceptionFills = {
   readonly attackHits: boolean;
   readonly attackerBlinded: boolean;
   readonly attackerHasBlindsight: boolean;
@@ -56,17 +56,17 @@ export type MirrorImageHitInterceptionFills = {
   readonly duplicateRollSucceeds: boolean;
 };
 
-export type MirrorImageHitInterceptionResult =
+export type DuplicateHitInterceptionResult =
   | { readonly tag: "notAvailable" }
   | {
       readonly tag: "needsHoles";
-      readonly hole: BattleMirrorImageDuplicateRollHole;
+      readonly hole: BattleDuplicateHitInterceptionRollHole;
     }
   | { readonly tag: "invalid"; readonly message: string }
   | { readonly tag: "hitCaster" }
   | { readonly tag: "hitDuplicate"; readonly state: BattleState };
 
-export function mirrorImageDuplicateRollHoleId(
+export function duplicateHitInterceptionRollHoleId(
   triggeringAttackRollHoleId: BattleHoleId,
 ): BattleHoleId {
   return holeId(
@@ -76,7 +76,7 @@ export function mirrorImageDuplicateRollHoleId(
   );
 }
 
-export function isMirrorImageDuplicateRollFill(
+export function isDuplicateHitInterceptionDuplicateRollFill(
   fill: BattleRolledDiceFill,
 ): boolean {
   return String(fill.holeId).startsWith(
@@ -84,9 +84,9 @@ export function isMirrorImageDuplicateRollFill(
   );
 }
 
-export function mirrorImageAttackerUnaffectedByFacts(
+export function duplicateHitInterceptionAttackerUnaffectedByFacts(
   fills: Pick<
-    MirrorImageHitInterceptionFills,
+    DuplicateHitInterceptionFills,
     "attackerBlinded" | "attackerHasBlindsight" | "attackerHasTruesight"
   >,
 ): boolean {
@@ -97,22 +97,22 @@ export function mirrorImageAttackerUnaffectedByFacts(
   );
 }
 
-export function resolveMirrorImageHitInterception(
-  state: MirrorImageHitInterceptionInputState,
-  fills: MirrorImageHitInterceptionFills,
-): MirrorImageHitInterceptionState {
+export function resolveDuplicateHitInterception(
+  state: DuplicateHitInterceptionInputState,
+  fills: DuplicateHitInterceptionFills,
+): DuplicateHitInterceptionState {
   if (!fills.attackHits) {
     return {
       remainingDuplicates: state.remainingDuplicates,
       normalDamageContinues: false,
     };
   }
-  const remainingDuplicates = activeMirrorImageHitInterceptionDuplicates(
+  const remainingDuplicates = activeDuplicateHitInterceptionDuplicates(
     state.remainingDuplicates,
   );
   if (
     remainingDuplicates === null ||
-    mirrorImageAttackerUnaffectedByFacts(fills)
+    duplicateHitInterceptionAttackerUnaffectedByFacts(fills)
   ) {
     return {
       remainingDuplicates: state.remainingDuplicates,
@@ -127,20 +127,20 @@ export function resolveMirrorImageHitInterception(
   }
   return {
     remainingDuplicates:
-      mirrorImageHitInterceptionDuplicateCountAfterDestroy(remainingDuplicates),
+      duplicateHitInterceptionDuplicateCountAfterDestroy(remainingDuplicates),
     normalDamageContinues: false,
   };
 }
 
-export function mirrorImageHitInterceptionCheck(input: {
+export function duplicateHitInterceptionCheck(input: {
   readonly state: BattleState;
   readonly attacker: BattleCreatureState;
   readonly target: BattleCreatureState;
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
   readonly triggeringAttackRollHoleId: BattleHoleId;
   readonly fill: BattleRolledDiceFill | undefined;
-}): MirrorImageHitInterceptionResult {
-  const effect = activeMirrorImageDuplicates(input.target);
+}): DuplicateHitInterceptionResult {
+  const effect = activeDuplicateHitInterception(input.target);
   if (effect === null) {
     return input.fill === undefined
       ? { tag: "notAvailable" }
@@ -152,7 +152,7 @@ export function mirrorImageHitInterceptionCheck(input: {
   }
 
   if (
-    mirrorImageDoesNotAffectAttacker({
+    duplicateHitInterceptionDoesNotAffectAttacker({
       attacker: input.attacker,
       target: input.target,
       targetSpatialFacts: input.targetSpatialFacts,
@@ -167,7 +167,7 @@ export function mirrorImageHitInterceptionCheck(input: {
         };
   }
 
-  const hole = mirrorImageDuplicateRollHole(
+  const hole = duplicateHitInterceptionRollHole(
     input.triggeringAttackRollHoleId,
     input.target.combatantId,
     effect,
@@ -175,27 +175,30 @@ export function mirrorImageHitInterceptionCheck(input: {
   if (input.fill === undefined) {
     return { tag: "needsHoles", hole };
   }
-  const validation = validateMirrorImageDuplicateRoll(input.fill, hole);
+  const validation = validateDuplicateHitInterceptionDuplicateRoll(
+    input.fill,
+    hole,
+  );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (validation !== null) {
     return { tag: "invalid", message: validation };
   }
   /* v8 ignore stop -- @preserve */
-  const result = resolveMirrorImageHitInterception(
+  const result = resolveDuplicateHitInterception(
     { remainingDuplicates: effect.remainingDuplicates },
     {
       attackHits: true,
       attackerBlinded: false,
       attackerHasBlindsight: false,
       attackerHasTruesight: false,
-      duplicateRollSucceeds: mirrorImageDuplicateRollSucceeds(input.fill),
+      duplicateRollSucceeds: duplicateHitInterceptionRollSucceeds(input.fill),
     },
   );
   return result.normalDamageContinues
     ? { tag: "hitCaster" }
     : {
         tag: "hitDuplicate",
-        state: stateAfterMirrorImageDuplicateDestroyed(
+        state: stateAfterDuplicateHitInterceptionDuplicateDestroyed(
           input.state,
           input.target.combatantId,
           effect,
@@ -204,20 +207,20 @@ export function mirrorImageHitInterceptionCheck(input: {
       };
 }
 
-export function mirrorImageDuplicateRollHole(
+export function duplicateHitInterceptionRollHole(
   triggeringAttackRollHoleId: BattleHoleId,
   targetId: BattleCreatureState["combatantId"],
-  effect: MirrorImageDuplicates,
-): BattleMirrorImageDuplicateRollHole {
+  effect: DuplicateHitInterception,
+): BattleDuplicateHitInterceptionRollHole {
   const protocolId = String(
-    mirrorImageDuplicateRollHoleId(triggeringAttackRollHoleId),
+    duplicateHitInterceptionRollHoleId(triggeringAttackRollHoleId),
   );
   return {
     kind: "rolledDice",
     holeId: holeId(protocolId),
     holeInstanceKey: holeInstanceKey(protocolId),
     label: `Mirror Image duplicate roll (${effect.remainingDuplicates}d${MIRROR_IMAGE_DUPLICATE_DIE_SIZE})`,
-    mirrorImageDuplicateRoll: {
+    duplicateHitInterceptionRoll: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
@@ -228,34 +231,34 @@ export function mirrorImageDuplicateRollHole(
   };
 }
 
-function activeMirrorImageDuplicates(
+function activeDuplicateHitInterception(
   target: BattleCreatureState,
-): MirrorImageDuplicates | null {
+): DuplicateHitInterception | null {
   return (
     target.activeEffects.find(
-      (effect): effect is MirrorImageDuplicates =>
-        effect.kind === "mirrorImageDuplicates",
+      (effect): effect is DuplicateHitInterception =>
+        effect.kind === "duplicateHitInterception",
     ) ?? null
   );
 }
 
-function mirrorImageDoesNotAffectAttacker(input: {
+function duplicateHitInterceptionDoesNotAffectAttacker(input: {
   readonly attacker: BattleCreatureState;
   readonly target: BattleCreatureState;
   readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
 }): boolean {
-  return mirrorImageAttackerUnaffectedByFacts({
+  return duplicateHitInterceptionAttackerUnaffectedByFacts({
     attackerBlinded: hasCondition(input.attacker.conditions, "blinded"),
     attackerHasBlindsight: input.targetSpatialFacts.some(
       (fact) =>
-        fact.kind === "attackAttackerUnaffectedByMirrorImageWithSense" &&
+        fact.kind === "attackerUnaffectedByDuplicateHitInterceptionWithSense" &&
         fact.attackerId === input.attacker.combatantId &&
         fact.targetId === input.target.combatantId &&
         fact.sense === "blindsight",
     ),
     attackerHasTruesight: input.targetSpatialFacts.some(
       (fact) =>
-        fact.kind === "attackAttackerUnaffectedByMirrorImageWithSense" &&
+        fact.kind === "attackerUnaffectedByDuplicateHitInterceptionWithSense" &&
         fact.attackerId === input.attacker.combatantId &&
         fact.targetId === input.target.combatantId &&
         fact.sense === "truesight",
@@ -263,7 +266,9 @@ function mirrorImageDoesNotAffectAttacker(input: {
   });
 }
 
-function mirrorImageDuplicateRollSucceeds(fill: BattleRolledDiceFill): boolean {
+function duplicateHitInterceptionRollSucceeds(
+  fill: BattleRolledDiceFill,
+): boolean {
   return fill.value.some((group) =>
     group.results.some(
       (roll) => Number(roll) >= MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST,
@@ -272,9 +277,9 @@ function mirrorImageDuplicateRollSucceeds(fill: BattleRolledDiceFill): boolean {
 }
 
 /* v8 ignore start -- @preserve -- Malformed Mirror Image roll: discovery fixes the duplicate-roll hole and dice expression and does not offer attack-damage choices. */
-function validateMirrorImageDuplicateRoll(
+function validateDuplicateHitInterceptionDuplicateRoll(
   fill: BattleRolledDiceFill,
-  hole: BattleMirrorImageDuplicateRollHole,
+  hole: BattleDuplicateHitInterceptionRollHole,
 ): string | null {
   if (fill.holeId !== hole.holeId) {
     return "Mirror Image duplicate roll uses the wrong hole.";
@@ -287,25 +292,25 @@ function validateMirrorImageDuplicateRoll(
     return "Mirror Image duplicate roll cannot select attack damage riders, weapon damage dice choices, or attack damage die floor choices.";
   }
   const validation = validateRolledDiceFillForDiceExpr(fill, {
-    dice: hole.mirrorImageDuplicateRoll.remainingDuplicates,
-    dieSize: hole.mirrorImageDuplicateRoll.dieSize,
+    dice: hole.duplicateHitInterceptionRoll.remainingDuplicates,
+    dieSize: hole.duplicateHitInterceptionRoll.dieSize,
   });
   return validation;
 }
 /* v8 ignore stop -- @preserve */
 
-function stateAfterMirrorImageDuplicateDestroyed(
+function stateAfterDuplicateHitInterceptionDuplicateDestroyed(
   state: BattleState,
   targetId: BattleCreatureState["combatantId"],
-  effect: MirrorImageDuplicates,
-  remainingDuplicates: MirrorImageHitInterceptionDuplicateCount,
+  effect: DuplicateHitInterception,
+  remainingDuplicates: DuplicateHitInterceptionDuplicateCount,
 ): BattleState {
   const target = state.combatants.get(targetId);
   if (target === undefined) {
     return state;
   }
   const nextDuplicateCount =
-    activeMirrorImageHitInterceptionDuplicates(remainingDuplicates);
+    activeDuplicateHitInterceptionDuplicates(remainingDuplicates);
   const activeEffects =
     nextDuplicateCount === null
       ? target.activeEffects.filter((candidate) => candidate !== effect)
@@ -323,18 +328,18 @@ function stateAfterMirrorImageDuplicateDestroyed(
   };
 }
 
-function activeMirrorImageHitInterceptionDuplicates(
-  count: MirrorImageHitInterceptionDuplicateCount,
-): MirrorImageDuplicateCount | null {
+function activeDuplicateHitInterceptionDuplicates(
+  count: DuplicateHitInterceptionDuplicateCount,
+): DuplicateHitInterceptionCount | null {
   return (
     MIRROR_IMAGE_DUPLICATE_COUNTS.find((candidate) => candidate === count) ??
     null
   );
 }
 
-function mirrorImageHitInterceptionDuplicateCountAfterDestroy(
-  count: MirrorImageDuplicateCount,
-): MirrorImageHitInterceptionDuplicateCount {
+function duplicateHitInterceptionDuplicateCountAfterDestroy(
+  count: DuplicateHitInterceptionCount,
+): DuplicateHitInterceptionDuplicateCount {
   return Match.value(count).pipe(
     Match.when(1, () => 0 as const),
     Match.when(2, () => 1 as const),

@@ -118,7 +118,7 @@ export function executeStoredGlyphSpellProcedure(
             invocation.procedure,
           ).resolve({ ...releaseInput, invocation }),
         ),
-        byProcedure("hastePositive", (invocation) =>
+        byProcedure("compositeTargetBuffWithAftermath", (invocation) =>
           spellProcedureExecutionFor(
             executionRegistry,
             invocation.procedure,
