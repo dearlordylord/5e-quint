@@ -531,8 +531,8 @@ describe("Surface authored string role traversal", () => {
   });
 
   it("keeps recursive competing branches decoder-compatible", () => {
-    let proseRecursive: Schema.Codec<unknown, unknown>;
-    proseRecursive = Schema.suspend(() =>
+    type RecursiveCodec = Schema.Codec<unknown, unknown>;
+    const proseRecursive: RecursiveCodec = Schema.suspend(() =>
       Schema.Union([
         Schema.Struct({
           kind: Schema.Literal("leaf"),
@@ -547,8 +547,7 @@ describe("Surface authored string role traversal", () => {
         }),
       ]),
     );
-    let identityRecursive: Schema.Codec<unknown, unknown>;
-    identityRecursive = Schema.suspend(() =>
+    const identityRecursive: RecursiveCodec = Schema.suspend(() =>
       Schema.Union([
         Schema.Struct({
           kind: Schema.Literal("leaf"),
