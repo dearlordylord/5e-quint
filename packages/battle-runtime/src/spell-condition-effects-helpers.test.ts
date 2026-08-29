@@ -40,7 +40,7 @@ import {
   removeSaveGatedAreaControlEffectsFromTarget,
   removeSleepEffectsFromTarget,
   removeSpellConditionEffect,
-  sleepShakeAwakeTargetChoices,
+  hitPointBudgetConditionShakeAwakeTargetChoices,
   spellConcentrationEffectSourceFromEffect,
   validateProtectionRelevantEffectSavingThrowOutcome,
 } from "./battle-reducer/spell-condition-effects-helpers.ts";
@@ -399,9 +399,9 @@ describe("spell condition effect source ownership", () => {
       combatants: new Map(state.combatants).set(goblinId, sleeping),
     };
     expect(combatantHasSleepEffect(sleeping)).toBe(true);
-    expect(sleepShakeAwakeTargetChoices(sleepingState, fighterId)).toEqual([
-      goblinId,
-    ]);
+    expect(
+      hitPointBudgetConditionShakeAwakeTargetChoices(sleepingState, fighterId),
+    ).toEqual([goblinId]);
     expect(removeSleepEffectsFromTarget(sleepingState, goblinId)).toMatchObject(
       {
         combatants: expect.any(Map),

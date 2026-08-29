@@ -115,17 +115,16 @@ export const HELP_ATTACK_ALLY_HOLE_INSTANCE = holeInstanceKey(
 export const HELP_ATTACK_TARGET_HOLE_INSTANCE = holeInstanceKey(
   "battle:help-attack:target",
 );
-export const SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID = holeId(
-  "battle:sleep-shake-awake:target",
+export const HIT_POINT_BUDGET_CONDITION_SHAKE_AWAKE_TARGET_HOLE_ID = holeId(
+  "battle:hit-point-budget-condition-shake-awake:target",
 );
-export const SLEEP_SHAKE_AWAKE_TARGET_HOLE_INSTANCE = holeInstanceKey(
-  "battle:sleep-shake-awake:target",
+export const HIT_POINT_BUDGET_CONDITION_SHAKE_AWAKE_TARGET_HOLE_INSTANCE =
+  holeInstanceKey("battle:hit-point-budget-condition-shake-awake:target");
+export const SAVE_GATED_AREA_CONTROL_SHAKE_AWAKE_TARGET_HOLE_ID = holeId(
+  "battle:save-gated-area-control-shake-awake:target",
 );
-export const HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_ID = holeId(
-  "battle:hypnotic-pattern-shake-awake:target",
-);
-export const HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_INSTANCE =
-  holeInstanceKey("battle:hypnotic-pattern-shake-awake:target");
+export const SAVE_GATED_AREA_CONTROL_SHAKE_AWAKE_TARGET_HOLE_INSTANCE =
+  holeInstanceKey("battle:save-gated-area-control-shake-awake:target");
 export const DEATH_SAVING_THROW_HOLE_ID = holeId(
   "battle:end-turn:death-saving-throw",
 );

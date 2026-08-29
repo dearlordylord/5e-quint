@@ -1,4 +1,4 @@
-// Dragon's Breath target-granted Magic action.
+// Granted area Save damage target-granted Magic action.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-granted-action
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
 import {
@@ -84,7 +84,7 @@ export function resolveGrantedAreaSaveDamageActionCommand(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Magic action is no longer available for Dragon's Breath.",
+      "Magic action is no longer available for Granted area Save damage.",
     );
   }
   const effect = activeGrantedAreaSaveDamageActionEffect(actor, input.subject);
@@ -92,7 +92,7 @@ export function resolveGrantedAreaSaveDamageActionCommand(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Dragon's Breath requires an active target-attached effect.",
+      "Granted area Save damage requires an active target-attached effect.",
     );
   }
   const saveHole = grantedAreaSaveDamageActionSavingThrowOutcomeHole(
@@ -149,7 +149,7 @@ export function resolveGrantedAreaSaveDamageActionCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Dragon's Breath relationship facts must answer the saving-throw hole request.",
+      "Granted area Save damage relationship facts must answer the saving-throw hole request.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -297,7 +297,7 @@ export function resolveGrantedAreaSaveDamageActionCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Concentration Saving Throw fill is only valid for a concentrating Dragon's Breath damage target.",
+      "Concentration Saving Throw fill is only valid for a concentrating Granted area Save damage damage target.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -379,7 +379,7 @@ export function resolveGrantedAreaSaveDamageActionCommand(
       return invalidResult(
         input.state,
         "invalidFill",
-        "Spell damage reduction state changed before Dragon's Breath damage could resolve.",
+        "Spell damage reduction state changed before Granted area Save damage damage could resolve.",
       );
     }
     /* v8 ignore stop -- @preserve */
@@ -467,7 +467,7 @@ function grantedAreaSaveDamageActionDamageRollHole(
     kind: "rolledDice",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `Dragon's Breath damage (${expr.dice}d${expr.dieSize})`,
+    label: `Granted area Save damage damage (${expr.dice}d${expr.dieSize})`,
     grantedAreaSaveDamageAction: {
       sourceCombatantId: effect.sourceCombatantId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -497,18 +497,18 @@ function activeGrantedAreaSaveDamageActionEffect(
   );
 }
 
-/* v8 ignore start -- @preserve -- Malformed saving-throw validator: Dragon's Breath discovery supplies the exhaler-owned Cone, unique affected targets, and matching outcomes; admitted damage execution remains measured. */
+/* v8 ignore start -- @preserve -- Malformed saving-throw validator: Granted area Save damage discovery supplies the exhaler-owned Cone, unique affected targets, and matching outcomes; admitted damage execution remains measured. */
 function validateGrantedAreaSaveDamageActionSavingThrowFill(
   state: BattleState,
   actorId: CombatantId,
   fill: Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>,
 ): string | null {
   if (!("area" in fill.value)) {
-    return "Dragon's Breath requires 15-foot Cone area facts.";
+    return "Granted area Save damage requires 15-foot Cone area facts.";
   }
   const area = fill.value.area;
   if (area.originAnchorId !== actorId) {
-    return "Dragon's Breath Cone must originate from the exhaling creature.";
+    return "Granted area Save damage Cone must originate from the exhaling creature.";
   }
   const areaValidation = validateGrantedAreaSaveDamageActionArea(state, area);
   if (areaValidation !== null) {
@@ -518,44 +518,44 @@ function validateGrantedAreaSaveDamageActionSavingThrowFill(
   const seenTargets = new Set<CombatantId>();
   for (const outcome of fill.value.outcomes) {
     if (!affectedTargets.has(outcome.targetId)) {
-      return "Dragon's Breath Saving Throw outcomes must match the table-supplied Cone affected targets.";
+      return "Granted area Save damage Saving Throw outcomes must match the table-supplied Cone affected targets.";
     }
     if (seenTargets.has(outcome.targetId)) {
-      return "Dragon's Breath Saving Throw outcomes must not duplicate targets.";
+      return "Granted area Save damage Saving Throw outcomes must not duplicate targets.";
     }
     seenTargets.add(outcome.targetId);
   }
   return seenTargets.size === affectedTargets.size
     ? null
-    : "Dragon's Breath Saving Throw outcomes must cover every table-supplied Cone affected target.";
+    : "Granted area Save damage Saving Throw outcomes must cover every table-supplied Cone affected target.";
 }
 /* v8 ignore stop -- @preserve */
 
-/* v8 ignore start -- @preserve -- Malformed area-witness validator: the Dragon's Breath Cone hole fixes its geometry, origin, battle membership, and unique affected targets before resolution. */
+/* v8 ignore start -- @preserve -- Malformed area-witness validator: the Granted area Save damage Cone hole fixes its geometry, origin, battle membership, and unique affected targets before resolution. */
 function validateGrantedAreaSaveDamageActionArea(
   state: BattleState,
   area: BattleSpellAreaChoice,
 ): string | null {
   if (!state.combatants.has(area.originAnchorId)) {
-    return "Dragon's Breath Cone origin must be a combatant in this battle.";
+    return "Granted area Save damage Cone origin must be a combatant in this battle.";
   }
   if ("kind" in area || "sleepNonSleeperFacts" in area) {
-    return "Dragon's Breath uses plain Cone area facts.";
+    return "Granted area Save damage uses plain Cone area facts.";
   }
   const affectedTargets = new Set(area.affectedTargetIds);
   if (affectedTargets.size !== area.affectedTargetIds.length) {
-    return "Dragon's Breath Cone affected targets must not duplicate targets.";
+    return "Granted area Save damage Cone affected targets must not duplicate targets.";
   }
   for (const targetId of affectedTargets) {
     if (!state.combatants.has(targetId)) {
-      return "Dragon's Breath Cone affected target must be a combatant in this battle.";
+      return "Granted area Save damage Cone affected target must be a combatant in this battle.";
     }
   }
   return null;
 }
 /* v8 ignore stop -- @preserve */
 
-/* v8 ignore start -- @preserve -- Malformed fill-set validator: discovery publishes the exact Dragon's Breath hole kinds and identities; admitted fills are consumed after this boundary. */
+/* v8 ignore start -- @preserve -- Malformed fill-set validator: discovery publishes the exact Granted area Save damage hole kinds and identities; admitted fills are consumed after this boundary. */
 function validateExpectedDragonBreathFillKind(
   fills: readonly BattleFill[],
   kind: BattleFill["kind"],
@@ -568,10 +568,10 @@ function validateExpectedDragonBreathFillKind(
       continue;
     }
     if (!expected.has(fill.holeId)) {
-      return `Unexpected ${kind} fill for Dragon's Breath.`;
+      return `Unexpected ${kind} fill for Granted area Save damage.`;
     }
     if (seen.has(fill.holeId)) {
-      return `Duplicate ${kind} fill for Dragon's Breath.`;
+      return `Duplicate ${kind} fill for Granted area Save damage.`;
     }
     seen.add(fill.holeId);
   }
@@ -579,7 +579,7 @@ function validateExpectedDragonBreathFillKind(
 }
 /* v8 ignore stop -- @preserve */
 
-/* v8 ignore start -- @preserve -- Malformed fill-set validator: the resolver forwards only fills keyed by its discovered Dragon's Breath holes, so unexpected and duplicate keys are defensive rejections. */
+/* v8 ignore start -- @preserve -- Malformed fill-set validator: the resolver forwards only fills keyed by its discovered Granted area Save damage holes, so unexpected and duplicate keys are defensive rejections. */
 function validateExpectedDragonBreathFills(
   fills: readonly BattleFill[],
   expected: readonly ExpectedDragonBreathFill[],
@@ -589,10 +589,10 @@ function validateExpectedDragonBreathFills(
   for (const fill of fills) {
     const key = dragonBreathFillKey(fill);
     if (!expectedKeys.has(key)) {
-      return `Unexpected ${fill.kind} fill for Dragon's Breath.`;
+      return `Unexpected ${fill.kind} fill for Granted area Save damage.`;
     }
     if (seen.has(key)) {
-      return `Duplicate ${fill.kind} fill for Dragon's Breath.`;
+      return `Duplicate ${fill.kind} fill for Granted area Save damage.`;
     }
     seen.add(key);
   }

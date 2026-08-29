@@ -154,7 +154,7 @@ import {
   resolveReleaseGrappleCommand,
   resolveSearch,
   resolveShakeAwakeFromSaveGatedAreaControl,
-  resolveShakeAwakeFromSleep,
+  resolveShakeAwakeFromHitPointBudgetCondition,
   resolveShove,
   resolveStatBlockBonusActionOption,
 } from "./attack-resolution.ts";
@@ -702,7 +702,10 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         return resolveEscapeSpellRestraint({ ...input, subject });
       }
       if (subject.action === "shakeAwakeFromStagedCondition") {
-        return resolveShakeAwakeFromSleep({ ...input, subject });
+        return resolveShakeAwakeFromHitPointBudgetCondition({
+          ...input,
+          subject,
+        });
       }
       if (subject.action === "shakeAwakeFromAreaControl") {
         return resolveShakeAwakeFromSaveGatedAreaControl({ ...input, subject });

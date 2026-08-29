@@ -224,7 +224,7 @@ function resolveGrantedAreaSaveDamageAction(
     invocation: input.invocation,
     additionalHoleIds: [spellDamageTypeChoiceHole(input.invocation).holeId],
     invalidFillMessage:
-      "Dragon's Breath uses one target-list fill and one damage type choice.",
+      "Granted area Save damage uses one target-list fill and one damage type choice.",
   });
   if (targetSelection.tag !== "selected") {
     return targetSelection;
@@ -235,7 +235,7 @@ function resolveGrantedAreaSaveDamageAction(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Dragon's Breath must target one willing creature.",
+      "Granted area Save damage must target one willing creature.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -253,7 +253,7 @@ function resolveGrantedAreaSaveDamageAction(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Dragon's Breath damage type must be one of the selected spell's choices.",
+      "Granted area Save damage type must be one of the selected spell's choices.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -262,7 +262,7 @@ function resolveGrantedAreaSaveDamageAction(
     return invalidResult(
       input.input.state,
       "unsupportedSubject",
-      "Dragon's Breath requires a caster Spell Save DC.",
+      "Granted area Save damage requires a caster Spell Save DC.",
     );
   }
 

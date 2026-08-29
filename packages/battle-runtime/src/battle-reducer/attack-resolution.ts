@@ -116,7 +116,7 @@ import {
   searchTargetHole,
   shoveOutcomeHole,
   shoveTargetHole,
-  sleepShakeAwakeTargetHole,
+  hitPointBudgetConditionShakeAwakeTargetHole,
 } from "./hole-helpers.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { DURABLE_CONTINUATION_CHECKPOINT_BOUNDARY } from "../battle-state-execution.ts";
@@ -146,7 +146,7 @@ import {
   removeSpellConditionEffect,
   removeSleepEffectsFromTarget,
   spellRestraintEffectFor,
-  sleepShakeAwakeTargetChoices,
+  hitPointBudgetConditionShakeAwakeTargetChoices,
 } from "./spell-condition-effects-helpers.ts";
 
 import {
@@ -224,8 +224,8 @@ import {
   SEARCH_TARGET_HOLE_ID,
   SHOVE_OUTCOME_HOLE_ID,
   SHOVE_TARGET_HOLE_ID,
-  HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_ID,
-  SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID,
+  SAVE_GATED_AREA_CONTROL_SHAKE_AWAKE_TARGET_HOLE_ID,
+  HIT_POINT_BUDGET_CONDITION_SHAKE_AWAKE_TARGET_HOLE_ID,
 } from "./battle-runtime-protocol.ts";
 import {
   actorHasClassFeatureExtraAttackActionResource,
@@ -770,7 +770,7 @@ export function resolveHelpAttack(
   };
 }
 
-export function resolveShakeAwakeFromSleep(
+export function resolveShakeAwakeFromHitPointBudgetCondition(
   input: BattleResolutionInputForSubject<
     Extract<
       BattleSubject,
@@ -784,30 +784,34 @@ export function resolveShakeAwakeFromSleep(
   const [targetFill] = input.fills;
   if (targetFill === undefined) {
     return needsHolesResult(input.state, input.subject, [
-      sleepShakeAwakeTargetHole(input.state, input.subject.actorId),
+      hitPointBudgetConditionShakeAwakeTargetHole(
+        input.state,
+        input.subject.actorId,
+      ),
     ]);
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fills.length > 1 ||
     targetFill.kind !== "targetChoice" ||
-    targetFill.holeId !== SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID
+    targetFill.holeId !== HIT_POINT_BUDGET_CONDITION_SHAKE_AWAKE_TARGET_HOLE_ID
   ) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
-      "Sleep shake-awake requires one target fill.",
+      "Hit-point-budget condition shake-awake requires one target fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
   const targetId = targetFill.value;
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    !sleepShakeAwakeTargetChoices(input.state, input.subject.actorId).includes(
-      targetId,
-    ) ||
-    !hasSleepShakeAwakeSpatialFact(
+    !hitPointBudgetConditionShakeAwakeTargetChoices(
+      input.state,
+      input.subject.actorId,
+    ).includes(targetId) ||
+    !hasHitPointBudgetConditionShakeAwakeSpatialFact(
       targetFill.spatialFacts ?? [],
       input.subject.actorId,
       targetId,
@@ -817,7 +821,7 @@ export function resolveShakeAwakeFromSleep(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Sleep shake-awake target must be within 5 feet of the actor by table-supplied fact.",
+      "Hit-point-budget condition shake-awake target must be within 5 feet of the actor by table-supplied fact.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -826,7 +830,7 @@ export function resolveShakeAwakeFromSleep(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Sleep shake-awake is no longer available.",
+      "Hit-point-budget condition shake-awake is no longer available.",
     );
   }
   const nextState = removeSleepEffectsFromTarget(
@@ -864,13 +868,13 @@ export function resolveShakeAwakeFromSaveGatedAreaControl(
   if (
     input.fills.length > 1 ||
     targetFill.kind !== "targetChoice" ||
-    targetFill.holeId !== HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_ID
+    targetFill.holeId !== SAVE_GATED_AREA_CONTROL_SHAKE_AWAKE_TARGET_HOLE_ID
   ) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
-      "Hypnotic Pattern shake-awake requires one target fill.",
+      "Save-gated area-control condition shake-awake requires one target fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -891,7 +895,7 @@ export function resolveShakeAwakeFromSaveGatedAreaControl(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Hypnotic Pattern shake-awake target must be within 5 feet of the actor by table-supplied fact.",
+      "Save-gated area-control condition shake-awake target must be within 5 feet of the actor by table-supplied fact.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -900,7 +904,7 @@ export function resolveShakeAwakeFromSaveGatedAreaControl(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Hypnotic Pattern shake-awake is no longer available.",
+      "Save-gated area-control condition shake-awake is no longer available.",
     );
   }
   const nextState = removeSaveGatedAreaControlEffectsFromTarget(
@@ -1760,7 +1764,7 @@ function spellRestraintEscapeActorWithinTargetReach(
   );
 }
 
-function hasSleepShakeAwakeSpatialFact(
+function hasHitPointBudgetConditionShakeAwakeSpatialFact(
   facts: readonly BattleTargetSpatialFact[],
   actorId: CombatantId,
   targetId: CombatantId,

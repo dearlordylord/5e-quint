@@ -83,7 +83,7 @@ import {
   searchTargetHole,
   shoveTargetChoices,
   shoveTargetHole,
-  sleepShakeAwakeTargetHole,
+  hitPointBudgetConditionShakeAwakeTargetHole,
 } from "./hole-helpers.ts";
 import {
   combatantCanMoveInState,
@@ -94,7 +94,7 @@ import {
   saveGatedAreaControlShakeAwakeTargetChoices,
   protectionRelevantEffectSavingThrowOutcomeHole,
   protectionRelevantEffectsForTarget,
-  sleepShakeAwakeTargetChoices,
+  hitPointBudgetConditionShakeAwakeTargetChoices,
   spellRestraintEffectEntries,
 } from "./spell-condition-effects-helpers.ts";
 import { discoverSupportedSpellInvocations } from "./spells-discovery.ts";
@@ -490,7 +490,7 @@ function discoverBattleActsWithoutRouteEvents(
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
     hasTurnActionResource(state.currentTurnResources) &&
-    sleepShakeAwakeTargetChoices(state, actorId).length > 0
+    hitPointBudgetConditionShakeAwakeTargetChoices(state, actorId).length > 0
   ) {
     acts.push({
       subject: {
@@ -498,7 +498,9 @@ function discoverBattleActsWithoutRouteEvents(
         actorId,
         action: "shakeAwakeFromStagedCondition",
       },
-      initialHoles: [sleepShakeAwakeTargetHole(state, actorId)],
+      initialHoles: [
+        hitPointBudgetConditionShakeAwakeTargetHole(state, actorId),
+      ],
     });
   }
   if (

@@ -88,8 +88,8 @@ import {
   HIDE_ABILITY_CHECK_HOLE_ID,
   HIDE_ABILITY_CHECK_HOLE_INSTANCE,
   HIDE_DC,
-  HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_ID,
-  HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
+  SAVE_GATED_AREA_CONTROL_SHAKE_AWAKE_TARGET_HOLE_ID,
+  SAVE_GATED_AREA_CONTROL_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
   SEARCH_ABILITY_CHECK_HOLE_ID,
   SEARCH_ABILITY_CHECK_HOLE_INSTANCE,
   SEARCH_TARGET_HOLE_ID,
@@ -98,8 +98,8 @@ import {
   SHOVE_OUTCOME_HOLE_INSTANCE,
   SHOVE_TARGET_HOLE_ID,
   SHOVE_TARGET_HOLE_INSTANCE,
-  SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID,
-  SLEEP_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
+  HIT_POINT_BUDGET_CONDITION_SHAKE_AWAKE_TARGET_HOLE_ID,
+  HIT_POINT_BUDGET_CONDITION_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
 } from "./battle-runtime-protocol.ts";
 import { escapeSpellRestraintAbilityCheckHoleKey } from "./selected-effect-hole-key.ts";
 import { spellSaveDcForCaster } from "./spell-save-dc.ts";
@@ -128,7 +128,7 @@ import {
 } from "./creature-state-execution.ts";
 import {
   saveGatedAreaControlShakeAwakeTargetChoices,
-  sleepShakeAwakeTargetChoices,
+  hitPointBudgetConditionShakeAwakeTargetChoices,
 } from "./spell-condition-effects-helpers.ts";
 
 const byBattleHoleKind = Match.discriminator("kind");
@@ -844,17 +844,18 @@ export function shoveTargetHole(
   };
 }
 
-export function sleepShakeAwakeTargetHole(
+export function hitPointBudgetConditionShakeAwakeTargetHole(
   state: BattleState,
   actorId: CombatantId,
 ): BattleTargetChoiceHole {
   return {
     kind: "targetChoice",
-    holeId: SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID,
-    holeInstanceKey: SLEEP_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
+    holeId: HIT_POINT_BUDGET_CONDITION_SHAKE_AWAKE_TARGET_HOLE_ID,
+    holeInstanceKey:
+      HIT_POINT_BUDGET_CONDITION_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
     label: "Hit-point-budget condition target to shake awake",
     requiresTableSpatialFact: true,
-    choices: sleepShakeAwakeTargetChoices(state, actorId),
+    choices: hitPointBudgetConditionShakeAwakeTargetChoices(state, actorId),
   };
 }
 
@@ -864,8 +865,8 @@ export function saveGatedAreaControlShakeAwakeTargetHole(
 ): BattleTargetChoiceHole {
   return {
     kind: "targetChoice",
-    holeId: HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_ID,
-    holeInstanceKey: HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
+    holeId: SAVE_GATED_AREA_CONTROL_SHAKE_AWAKE_TARGET_HOLE_ID,
+    holeInstanceKey: SAVE_GATED_AREA_CONTROL_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
     label: "Area-control condition target to shake awake",
     requiresTableSpatialFact: true,
     choices: saveGatedAreaControlShakeAwakeTargetChoices(state, actorId),

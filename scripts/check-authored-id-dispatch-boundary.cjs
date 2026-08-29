@@ -35,10 +35,6 @@ const ALLOWLIST_PATH_RULES = [
     pattern: /^packages\/mcp\/src\/(?:composition-root|content-tools)\.ts$/,
   },
   {
-    reason: "fixture-boundary",
-    pattern: /^packages\/app\/src\/components\/trace-visualizer\//,
-  },
-  {
     reason: "character-creation-support-profile-boundary",
     pattern:
       /^packages\/character-creation-runtime\/src\/(?:phase1-manifest|support-gates)\.ts$/,
@@ -46,11 +42,6 @@ const ALLOWLIST_PATH_RULES = [
   {
     reason: "character-sheet-retained-companion-support-admission-boundary",
     pattern: /^packages\/character-sheet-runtime\/src\/companions\.ts$/,
-  },
-  {
-    reason: "battle-runtime-unit-profile-admission-test-support-boundary",
-    pattern:
-      /^packages\/battle-runtime\/src\/unit-profile-admission-spell-fill-support\.ts$/,
   },
 ];
 
@@ -113,6 +104,10 @@ const EXECUTION_IDENTITY_ARRAY_NAME_PATTERN =
   /(?:ACTION|CHECKPOINT|COMMAND|EFFECT|FILL|HOLE|KIND|PROCEDURE|PROTOCOL|REGISTRY|SUBJECT|TAG)(?:S|_KINDS|_KEYS|_REGISTRY)?$/i;
 const EXECUTION_DECLARATION_NAME_PATTERN =
   /(?:Checkpoint|Command|Effect|Execution|Fill|Hole|Invocation|Procedure|Profile|Protocol|Registry|Route|Schema|Subject|Template)/;
+const EXECUTION_PROTOCOL_DECLARATION_NAME_PATTERN =
+  /_(?:HOLE_ID|HOLE_INSTANCE|HOLE_INSTANCE_PREFIX)$/;
+const EXECUTION_DIAGNOSTIC_CALL_PATTERN =
+  /(?:^|\.)(?:fail|failure|invalid|invalidResult|invalidWitness|issue|error|validation|validate)$/i;
 const EXECUTION_DIAGNOSTIC_FIELDS = new Set([
   "detail",
   "label",
@@ -570,6 +565,18 @@ function classifyPath(relativePath, rules) {
   }
 
   return null;
+}
+
+function assertEveryPathRuleMatches(relativePaths, rules, label) {
+  const unmatched = rules.filter(
+    (rule) =>
+      !relativePaths.some((relativePath) => rule.pattern.test(relativePath)),
+  );
+  assert.deepEqual(
+    unmatched.map((rule) => rule.reason),
+    [],
+    `${label} contains rule(s) which match no repository file`,
+  );
 }
 
 function hasAuthoredIdentitySelector(text) {
@@ -2219,6 +2226,7 @@ function declarationName(node) {
     ts.isEnumDeclaration(node) ||
     ts.isInterfaceDeclaration(node) ||
     ts.isTypeAliasDeclaration(node) ||
+    ts.isFunctionDeclaration(node) ||
     (ts.isVariableDeclaration(node) &&
       variableStatement !== undefined &&
       ts.isVariableStatement(variableStatement) &&
@@ -2228,11 +2236,65 @@ function declarationName(node) {
     node.name !== undefined &&
     ts.isIdentifier(node.name) &&
     (EXECUTION_DECLARATION_NAME_PATTERN.test(node.name.text) ||
-      EXECUTION_IDENTITY_ARRAY_NAME_PATTERN.test(node.name.text))
+      EXECUTION_IDENTITY_ARRAY_NAME_PATTERN.test(node.name.text) ||
+      EXECUTION_PROTOCOL_DECLARATION_NAME_PATTERN.test(node.name.text))
   ) {
     return node.name.text;
   }
   return undefined;
+}
+
+function nearestNamedFunction(node) {
+  let current = node.parent;
+  while (current !== undefined && !ts.isSourceFile(current)) {
+    if (
+      (ts.isFunctionDeclaration(current) ||
+        ts.isFunctionExpression(current) ||
+        ts.isMethodDeclaration(current)) &&
+      current.name !== undefined
+    ) {
+      return propertyNameText(current.name);
+    }
+    if (
+      ts.isVariableDeclaration(current) &&
+      ts.isIdentifier(current.name) &&
+      (ts.isArrowFunction(current.initializer) ||
+        ts.isFunctionExpression(current.initializer))
+    ) {
+      return current.name.text;
+    }
+    current = current.parent;
+  }
+  return undefined;
+}
+
+function isPositionalDiagnosticString(node) {
+  let current = node.parent;
+  while (current !== undefined && !ts.isStatement(current)) {
+    if (ts.isCallExpression(current)) {
+      return EXECUTION_DIAGNOSTIC_CALL_PATTERN.test(
+        current.expression.getText(),
+      );
+    }
+    current = current.parent;
+  }
+  return false;
+}
+
+function isReturnedValidationString(node) {
+  let current = node.parent;
+  while (current !== undefined && !ts.isSourceFile(current)) {
+    if (ts.isReturnStatement(current)) {
+      const functionName = nearestNamedFunction(current);
+      return (
+        functionName !== undefined &&
+        /(?:fail|invalid|issue|error|validat)/i.test(functionName)
+      );
+    }
+    if (ts.isFunctionLike(current)) return false;
+    current = current.parent;
+  }
+  return false;
 }
 
 function propertyDeclaresExecutionRegistryKey(node) {
@@ -2399,11 +2461,17 @@ function executionIdentityViolationsForFile(
         EXECUTION_DIAGNOSTIC_FIELDS.has(propertyRole)
       ) {
         addMatches(node, "execution-diagnostic", node.text);
+      } else if (
+        isPositionalDiagnosticString(node) ||
+        isReturnedValidationString(node)
+      ) {
+        addMatches(node, "execution-diagnostic", node.text);
       } else {
         const containerName = nearestVariableName(node);
         if (
           containerName !== undefined &&
-          EXECUTION_IDENTITY_ARRAY_NAME_PATTERN.test(containerName)
+          (EXECUTION_IDENTITY_ARRAY_NAME_PATTERN.test(containerName) ||
+            EXECUTION_PROTOCOL_DECLARATION_NAME_PATTERN.test(containerName))
         ) {
           addMatches(node, "protocol-array-member", node.text);
         }
@@ -2477,17 +2545,22 @@ function runExecutionIdentityCohortSelfTest() {
     "packages/battle-runtime/src/battle-reducer/synthetic-procedure.ts";
   const fixture = `
     export type CloudkillAreaHazardEffect = { readonly kind: "cloudkillAreaHazard" }
+    export function resolveCloudkillProcedure() { return true }
+    export const CLOUDKILL_SAVE_HOLE_ID = holeId("battle:cloudkill:save")
     export const RUNTIME_COMMAND_KINDS = ["magicMissileDamage", "nearMissile"] as const
     export const Registry = { magicMissile: Schema.Struct({
       command: Schema.Literal("magicMissileDamage"),
     }) }
     const invalid = { message: "Cloudkill movement could not continue." }
+    function validateReplay() { return "Cloudkill replay is invalid." }
+    invalidResult(state, "invalidFill", "Cloudkill positional diagnostic.")
   `;
-  const roles = new Set(
-    executionIdentityViolationsForFile(fixturePath, fixture, lexicon).map(
-      (violation) => violation.role,
-    ),
+  const fixtureViolations = executionIdentityViolationsForFile(
+    fixturePath,
+    fixture,
+    lexicon,
   );
+  const roles = new Set(fixtureViolations.map((violation) => violation.role));
   for (const expected of [
     "declaration-identifier",
     "discriminant-literal",
@@ -2498,6 +2571,30 @@ function runExecutionIdentityCohortSelfTest() {
   ]) {
     assert.ok(roles.has(expected), `cohort self-test missed ${expected}`);
   }
+  for (const identifier of [
+    "resolveCloudkillProcedure",
+    "CLOUDKILL_SAVE_HOLE_ID",
+    "battle:cloudkill:save",
+    "Cloudkill replay is invalid.",
+    "Cloudkill positional diagnostic.",
+  ]) {
+    assert.ok(
+      fixtureViolations.some(
+        (violation) => violation.identifier === identifier,
+      ),
+      `cohort self-test missed ${identifier}`,
+    );
+  }
+  assert.throws(
+    () =>
+      assertEveryPathRuleMatches(
+        [fixturePath],
+        [{ reason: "missing-boundary", pattern: /^packages\/missing\.ts$/ }],
+        "synthetic allowlist",
+      ),
+    /missing-boundary/,
+    "cohort self-test accepted an allowlist rule matching no repository file",
+  );
   assert.equal(
     executionIdentityViolationsForFile(
       fixturePath,
@@ -3869,13 +3966,6 @@ function runSelfTest() {
 
   assert.equal(
     classifyPath(
-      "packages/battle-runtime/src/unit-profile-admission-spell-fill-support.ts",
-      ALLOWLIST_PATH_RULES,
-    ),
-    "battle-runtime-unit-profile-admission-test-support-boundary",
-  );
-  assert.equal(
-    classifyPath(
       "packages/battle-runtime/src/unit-feature-support.ts",
       ALLOWLIST_PATH_RULES,
     ),
@@ -3954,6 +4044,12 @@ function main() {
       path.relative(REPO_ROOT, filePath).replaceAll(path.sep, "/"),
     )
     .sort();
+
+  assertEveryPathRuleMatches(
+    sourceFiles,
+    ALLOWLIST_PATH_RULES,
+    "whole-file allowlist",
+  );
 
   const sourceFilesSet = new Set(sourceFiles);
   const authoredExportsByFile = buildAuthoredExportIndex(

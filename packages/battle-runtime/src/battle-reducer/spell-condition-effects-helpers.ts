@@ -604,7 +604,7 @@ export function combatantHasSleepEffect(
   return combatant?.activeEffects.some(isSleepEffect) === true;
 }
 
-export function sleepShakeAwakeTargetChoices(
+export function hitPointBudgetConditionShakeAwakeTargetChoices(
   state: BattleState,
   actorId: CombatantId,
 ): readonly CombatantId[] {
