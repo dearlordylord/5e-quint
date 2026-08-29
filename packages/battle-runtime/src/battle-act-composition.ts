@@ -142,6 +142,9 @@ export function battleAdmittedSpellPresentations(
         source.procedureRef,
       );
       if (correlated === undefined) return [];
+      if (correlated.invocation.procedure === "spawnedCompanionLifecycle") {
+        return [];
+      }
       const presentation: Extract<
         BattleActPresentation,
         { readonly kind: "spell" }
@@ -219,6 +222,9 @@ function intrinsicActPresentation(
       subject.procedureRef,
     );
     if (source === undefined) return undefined;
+    if (source.invocation.procedure === "spawnedCompanionLifecycle") {
+      return undefined;
+    }
     const release = subject.command === "releaseReadiedSpell";
     return {
       label: `${release ? "Release " : "Cast "}${source.invocation.spell.name}`,
@@ -663,6 +669,7 @@ function characterProcedurePresentationJoin(
       procedureRef,
     );
     if (invocation === undefined) return undefined;
+    if (invocation.procedure === "spawnedCompanionLifecycle") return undefined;
     const presentationText = spellProcedurePresentationText(
       state,
       context,
@@ -717,6 +724,7 @@ function characterProcedurePresentationJoin(
     );
     if (source === undefined) return undefined;
     const invocation = source.invocation;
+    if (invocation.procedure === "spawnedCompanionLifecycle") return undefined;
     const actionName = alternateActionPresentationName(subject.action);
     return {
       label: invocation.spell.name,
