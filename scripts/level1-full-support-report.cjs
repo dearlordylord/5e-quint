@@ -139,13 +139,9 @@ const level110Scope = {
 };
 const adoptedNoMatrixSrdPressureDecisionUnitIds = new Set([
   "create_or_destroy_water",
-  "disguise_self",
-  "druidcraft",
-  "elementalism",
   "floating_disk",
   "goodberry",
   "illusory_script",
-  "mage_hand",
   "message",
   "purify_food_and_drink",
   "unseen_servant",

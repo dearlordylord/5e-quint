@@ -14,6 +14,7 @@ import type {
   StatBlockSpellcastingGroup,
   StatBlockSpellReference,
   StatBlockTextOnlyReason,
+  SpellRecord,
 } from "@dnd/surface/surface/types";
 import {
   parseSourceSection,
@@ -279,6 +280,76 @@ export type StatBlockProcedurePressureRowId = string &
 const StatBlockProcedurePressureRowId =
   Brand.nominal<StatBlockProcedurePressureRowId>();
 
+export const STAT_BLOCK_SPELL_REFERENCE_CASTING_TIME_KINDS = [
+  "action",
+  "bonus_action",
+  "reaction",
+  "minutes",
+  "hours",
+  "unresolved",
+] as const;
+
+export type StatBlockSpellReferenceCastingTimeKind =
+  (typeof STAT_BLOCK_SPELL_REFERENCE_CASTING_TIME_KINDS)[number];
+
+export const STAT_BLOCK_SPELL_REFERENCE_DURATION_KINDS = [
+  "instantaneous",
+  "concentration",
+  "timed",
+  "permanent",
+  "slot_tiered",
+  "unresolved",
+] as const;
+
+export type StatBlockSpellReferenceDurationKind =
+  (typeof STAT_BLOCK_SPELL_REFERENCE_DURATION_KINDS)[number];
+
+export const STAT_BLOCK_SPELL_REFERENCE_DEFINITION_STATUS_KINDS = [
+  "shipped",
+  "unresolved",
+] as const;
+
+export type StatBlockSpellReferenceDefinitionStatus =
+  (typeof STAT_BLOCK_SPELL_REFERENCE_DEFINITION_STATUS_KINDS)[number];
+
+export const STAT_BLOCK_SPELL_REFERENCE_PROFILE_STATUS_KINDS = [
+  "profiled",
+  "unprofiled",
+] as const;
+
+export type StatBlockSpellReferenceProfileStatus =
+  (typeof STAT_BLOCK_SPELL_REFERENCE_PROFILE_STATUS_KINDS)[number];
+
+/**
+ * Identity-free join facts for an unrestricted Stat Block spell reference.
+ * The spell definition and profile maps are consulted only while building this
+ * planning row; neither map key nor authored prose is published here.
+ */
+export type StatBlockSpellReferenceClassification = {
+  readonly rowId: StatBlockProcedurePressureRowId;
+  readonly definitionStatus: StatBlockSpellReferenceDefinitionStatus;
+  readonly profileStatus: StatBlockSpellReferenceProfileStatus;
+  readonly groupKind: StatBlockSpellcastingGroup["kind"];
+  readonly section: StatBlockActionProjectionSection;
+  readonly hasCastAtLevel: boolean;
+  readonly castingTimeKind: StatBlockSpellReferenceCastingTimeKind;
+  readonly durationKind: StatBlockSpellReferenceDurationKind;
+};
+
+export type StatBlockSpellReferenceClassificationSource = {
+  readonly definitions: ReadonlyMap<string, SpellRecord>;
+  readonly profiledDefinitionIds: ReadonlySet<string>;
+  readonly resolveUnitReference: (
+    authoredReference: string,
+  ) => string | undefined;
+};
+
+export type StatBlockSpellReferenceDefinitionCounts = {
+  readonly total: number;
+  readonly shipped: number;
+  readonly unresolved: number;
+};
+
 export type StatBlockProcedurePressureRecordWitness = {
   readonly recordOrdinal: number;
   readonly statBlockId: StatBlockRecord["id"];
@@ -411,6 +482,181 @@ export function statBlockProcedurePressureOccurrences(
   addTraitOccurrences(record, add);
   addAuthoredSectionOccurrences(record, add, resourceContext);
   return occurrences;
+}
+
+/**
+ * Join the structural spell-reference rows to authored Spell Definitions and
+ * profile admission facts. This is deliberately separate from disposition:
+ * a shipped definition remains a missing-owner row until a typed runtime
+ * owner admits it. Restricted references are excluded because #418's base
+ * predicate is the unrestricted reference set.
+ */
+export function classifyUnrestrictedStatBlockSpellReferences(
+  records: readonly StatBlockRecord[],
+  sourceAuthority: StatBlockProcedurePressureSourceAuthority,
+  source: StatBlockSpellReferenceClassificationSource,
+): readonly StatBlockSpellReferenceClassification[] {
+  return records.flatMap((record, index) => {
+    const recordOrdinal = index + 1;
+    return statBlockProcedurePressureOccurrences(
+      record,
+      recordOrdinal,
+      sourceAuthority,
+    )
+      .filter(
+        (
+          occurrence,
+        ): occurrence is StatBlockProcedurePressureOccurrence & {
+          readonly kind: "spellReference";
+          readonly witness: StatBlockProcedurePressureWitness & {
+            readonly location: Extract<
+              StatBlockProcedurePressureLocation,
+              { readonly kind: "spellReference" }
+            >;
+          };
+        } =>
+          occurrence.kind === "spellReference" &&
+          occurrence.witness.location.kind === "spellReference",
+      )
+      .flatMap((occurrence) => {
+        const reference = spellReferenceAtLocation(
+          record,
+          occurrence.witness.location,
+        );
+        if (
+          reference === undefined ||
+          reference.reference.restriction !== undefined
+        ) {
+          return [];
+        }
+        const spellId =
+          source.resolveUnitReference(reference.reference.spellId) ??
+          reference.reference.spellId;
+        const definition = source.definitions.get(spellId);
+        return [
+          {
+            rowId: occurrence.rowId,
+            definitionStatus:
+              definition === undefined ? ("unresolved" as const) : "shipped",
+            profileStatus:
+              definition !== undefined &&
+              source.profiledDefinitionIds.has(definition.id)
+                ? ("profiled" as const)
+                : ("unprofiled" as const),
+            groupKind: reference.groupKind,
+            section: occurrence.witness.location.section,
+            hasCastAtLevel: reference.reference.castAtLevel !== undefined,
+            castingTimeKind: definition
+              ? spellCastingTimeKind(definition)
+              : ("unresolved" as const),
+            durationKind: definition
+              ? spellDurationKind(definition)
+              : ("unresolved" as const),
+          },
+        ];
+      });
+  });
+}
+
+/**
+ * Count distinct authored definitions in the same unrestricted reference set
+ * used by the identity-free row classifier. Only aggregate counts cross this
+ * boundary; referenced IDs remain internal to the catalog join.
+ */
+export function countUnrestrictedStatBlockSpellReferenceDefinitions(
+  records: readonly StatBlockRecord[],
+  sourceAuthority: StatBlockProcedurePressureSourceAuthority,
+  source: StatBlockSpellReferenceClassificationSource,
+): StatBlockSpellReferenceDefinitionCounts {
+  const all = new Set<string>();
+  const shipped = new Set<string>();
+  const unresolved = new Set<string>();
+  for (const [index, record] of records.entries()) {
+    for (const occurrence of statBlockProcedurePressureOccurrences(
+      record,
+      index + 1,
+      sourceAuthority,
+    )) {
+      if (
+        occurrence.kind !== "spellReference" ||
+        occurrence.witness.location.kind !== "spellReference"
+      ) {
+        continue;
+      }
+      const reference = spellReferenceAtLocation(
+        record,
+        occurrence.witness.location,
+      );
+      if (
+        reference === undefined ||
+        reference.reference.restriction !== undefined
+      ) {
+        continue;
+      }
+      const spellId =
+        source.resolveUnitReference(reference.reference.spellId) ??
+        reference.reference.spellId;
+      all.add(spellId);
+      (source.definitions.get(spellId) === undefined
+        ? unresolved
+        : shipped
+      ).add(spellId);
+    }
+  }
+  return {
+    total: all.size,
+    shipped: shipped.size,
+    unresolved: unresolved.size,
+  };
+}
+
+type SpellReferenceAtLocation = {
+  readonly reference: StatBlockSpellReference;
+  readonly groupKind: StatBlockSpellcastingGroup["kind"];
+};
+
+function spellReferenceAtLocation(
+  record: StatBlockRecord,
+  location: Extract<
+    StatBlockProcedurePressureLocation,
+    { readonly kind: "spellReference" }
+  >,
+): SpellReferenceAtLocation | undefined {
+  for (const section of authoredProcedureSections(record)) {
+    if (section.section !== location.section) continue;
+    const entry = section.entries.find(
+      (candidate) => candidate.procedureOrdinal === location.procedureOrdinal,
+    );
+    if (
+      entry === undefined ||
+      entry.kind !== "executable" ||
+      entry.procedure.kind !== "spellcasting"
+    ) {
+      return undefined;
+    }
+    const group = entry.procedure.groups[location.groupOrdinal - 1];
+    if (group === undefined) return undefined;
+    const reference = group.spells[location.spellOrdinal - 1];
+    if (reference === undefined) return undefined;
+    return {
+      reference,
+      groupKind: group.kind,
+    };
+  }
+  return undefined;
+}
+
+function spellCastingTimeKind(
+  definition: SpellRecord,
+): StatBlockSpellReferenceCastingTimeKind {
+  if (!("castingTime" in definition.mechanics)) return "unresolved";
+  return definition.mechanics.castingTime.kind;
+}
+
+function spellDurationKind(
+  definition: SpellRecord,
+): StatBlockSpellReferenceDurationKind {
+  return definition.mechanics.duration.kind;
 }
 
 type ProcedurePressureOccurrenceBuilder = (

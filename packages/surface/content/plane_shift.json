@@ -1,0 +1,55 @@
+{
+  "id": "plane_shift",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a forked, metal rod worth 250+ GP and attuned to a plane of existence",
+      "materialCostGp": 250,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 7,
+    "phases": [
+      {
+        "attachment": {
+          "holeId": "plane_shift_travelers",
+          "kind": "hole",
+          "label": "up to eight willing creatures",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "count": 8,
+              "disposition": "willing",
+              "mode": "choose_up_to",
+              "targetKinds": [
+                "creature"
+              ]
+            }
+          }
+        },
+        "effects": [
+          {
+            "kind": "none"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "conjuration"
+  },
+  "name": "Plane Shift",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-P#Plane Shift"
+  }
+}
