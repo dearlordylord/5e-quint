@@ -130,9 +130,6 @@ function projectMechanicalAlternateAbilityChoices(
   choices: ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice>,
 ): ReadonlyNonEmptyArray<MechanicalWeaponAttackAbilityChoice> {
   const [first, ...rest] = choices;
-  if (first === undefined) {
-    throw new Error("Admitted alternate attack abilities must be nonempty.");
-  }
   return [
     projectMechanicalAlternateAbilityChoice(first),
     ...rest.map(projectMechanicalAlternateAbilityChoice),
@@ -282,9 +279,6 @@ function projectMechanicalStatBlockAttackEffects(
   MechanicalRolledStatBlockAttackEffect | MechanicalStaticStatBlockAttackEffect
 > {
   const [first, ...rest] = effects;
-  if (first === undefined) {
-    throw new Error("Admitted Stat Block attack effects must be nonempty.");
-  }
   return [
     projectMechanicalStatBlockAttackEffect(first, damageNotation),
     ...rest.map((effect) =>

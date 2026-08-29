@@ -12,7 +12,6 @@ import {
 import {
   MechanicalSupportedAttackActionOptionSchema,
   SupportedAttackActionOptionSchema,
-  type MechanicalSupportedAttackActionOption,
 } from "./battle-reducer/codec-building-blocks.ts";
 import { projectMechanicalAttackActionOption } from "./battle-mechanical-attack-options.ts";
 import type { SupportedAttackActionOption } from "./battle-action-options.ts";
@@ -78,6 +77,58 @@ const unarmedStrikeAttack = {
   damageBonus: 1,
 };
 
+const weaponAttackWithDamageModifierChoice = {
+  ...weaponAttack,
+  attackDamageAbilityModifierChoice: {
+    procedureRefs: [syntheticStatBlockProcedureRef],
+    appliedDamageAbilityModifier: 2,
+    declinedDamageAbilityModifier: 0,
+  },
+};
+
+const weaponAttackWithAlternateDamageModifierChoice = {
+  ...weaponAttack,
+  alternateAbilityChoices: [
+    {
+      ability: "dex" as const,
+      abilityModifier: 3,
+      attackBonus: 5,
+      damageAbilityModifier: 3,
+      attackDamageAbilityModifierChoice: {
+        procedureRefs: [syntheticStatBlockProcedureRef],
+        appliedDamageAbilityModifier: 3,
+        declinedDamageAbilityModifier: 0,
+      },
+    },
+  ],
+};
+
+const baseUnarmedStrikeAttack = {
+  ...unarmedStrikeAttack,
+  effect: {
+    kind: "damage" as const,
+    damage: {
+      kind: "base" as const,
+      damageType: "bludgeoning" as const,
+      flat: 1 as const,
+    },
+  },
+};
+
+const procedureReplacementUnarmedStrikeAttack = {
+  ...unarmedStrikeAttack,
+  effect: {
+    kind: "damage" as const,
+    damage: {
+      kind: "procedureReplacement" as const,
+      sourceProcedureRef: syntheticStatBlockProcedureRef,
+      dice: 1 as const,
+      dieSize: 6 as const,
+      damageType: "bludgeoning" as const,
+    },
+  },
+};
+
 const staticStatBlockAttack = {
   kind: "statBlockAttack" as const,
   procedureRef: syntheticStatBlockProcedureRef,
@@ -106,24 +157,43 @@ const staticStatBlockAttack = {
   damageNotation: "static" as const,
 };
 
+const rolledRangedStatBlockAttack = {
+  kind: "statBlockAttack" as const,
+  procedureRef: syntheticStatBlockProcedureRef,
+  attack: {
+    attackAbility: "dex" as const,
+    attackBonus: { kind: "literal" as const, value: 4 },
+    attackType: "ranged" as const,
+    rangeFeet: { normal: 30, long: 120 },
+    onHit: [
+      {
+        kind: "damage" as const,
+        damageType: "piercing" as const,
+        amount: {
+          kind: "fixed" as const,
+          expr: { dice: 1, dieSize: 8 },
+        },
+      },
+      {
+        kind: "conditional_bonus_damage" as const,
+        when: { kind: "attack_roll_had_advantage" as const },
+        damageType: "piercing" as const,
+        amount: {
+          kind: "fixed" as const,
+          expr: { dice: 1, dieSize: 6 },
+        },
+      },
+    ],
+  },
+  damageNotation: "rolled" as const,
+};
+
 function decodeSupportedAttack(input: unknown): SupportedAttackActionOption {
   const decoded = Schema.decodeUnknownEither(SupportedAttackActionOptionSchema)(
     input,
   );
   if (Either.isLeft(decoded)) {
     throw new Error(`Expected an admitted attack option: ${decoded.left}`);
-  }
-  return decoded.right;
-}
-
-function decodeMechanicalAttack(
-  input: unknown,
-): MechanicalSupportedAttackActionOption {
-  const decoded = Schema.decodeUnknownEither(
-    MechanicalSupportedAttackActionOptionSchema,
-  )(input);
-  if (Either.isLeft(decoded)) {
-    throw new Error(`Expected a mechanical attack option: ${decoded.left}`);
   }
   return decoded.right;
 }
@@ -183,36 +253,197 @@ function recursivelyFindPropertySchemas(
 
 describe("mechanical attack option projection", () => {
   test("projects each admitted attack option into its strict execution shape", () => {
-    const admittedAttacks = [
-      decodeSupportedAttack(weaponAttack),
-      decodeSupportedAttack(unarmedStrikeAttack),
-      decodeSupportedAttack(staticStatBlockAttack),
-    ];
-
-    for (const admitted of admittedAttacks) {
-      const projected = projectMechanicalAttackActionOption(admitted);
-      expect(decodeMechanicalAttack(projected)).toEqual(projected);
-    }
-
     const projectedWeapon = projectMechanicalAttackActionOption(
-      admittedAttacks[0],
+      decodeSupportedAttack(weaponAttack),
     );
-    if (projectedWeapon.kind !== "weapon") {
-      throw new Error("Expected the first synthetic attack to be a weapon.");
-    }
-    expect("weaponUnitId" in projectedWeapon.weapon).toBe(false);
-    expect(projectedWeapon.weapon).toEqual({
-      category: "simple",
-      usage: "melee",
-      damage: {
-        kind: "dice",
-        dice: 1,
-        dieSize: 6,
-        damageType: "slashing",
+    expect(projectedWeapon).toEqual({
+      kind: "weapon",
+      weapon: {
+        category: "simple",
+        usage: "melee",
+        damage: {
+          kind: "dice",
+          dice: 1,
+          dieSize: 6,
+          damageType: "slashing",
+        },
+        properties: [],
+        mastery: "graze",
+        costGp: 1,
       },
-      properties: [],
-      mastery: "graze",
-      costGp: 1,
+      weaponObjectId: "synthetic-weapon-object",
+      hasWeaponMastery: false,
+      ability: "str",
+      abilityModifier: 2,
+      attackBonus: 4,
+      damageAbilityModifier: 2,
+      damageBonus: 1,
+      damageTypeChoices: ["slashing", "piercing"],
+      alternateAbilityChoices: [
+        {
+          ability: "dex",
+          abilityModifier: 3,
+          attackBonus: 5,
+          damageAbilityModifier: 3,
+        },
+      ],
+    });
+
+    expect(
+      projectMechanicalAttackActionOption(
+        decodeSupportedAttack(weaponAttackWithDamageModifierChoice),
+      ),
+    ).toEqual({
+      ...projectedWeapon,
+      attackDamageAbilityModifierChoice: {
+        procedureRefs: [syntheticStatBlockProcedureRef],
+        appliedDamageAbilityModifier: 2,
+        declinedDamageAbilityModifier: 0,
+      },
+    });
+
+    expect(
+      projectMechanicalAttackActionOption(
+        decodeSupportedAttack(weaponAttackWithAlternateDamageModifierChoice),
+      ),
+    ).toEqual({
+      ...projectedWeapon,
+      alternateAbilityChoices: [
+        {
+          ability: "dex",
+          abilityModifier: 3,
+          attackBonus: 5,
+          damageAbilityModifier: 3,
+          attackDamageAbilityModifierChoice: {
+            procedureRefs: [syntheticStatBlockProcedureRef],
+            appliedDamageAbilityModifier: 3,
+            declinedDamageAbilityModifier: 0,
+          },
+        },
+      ],
+    });
+
+    expect(
+      projectMechanicalAttackActionOption(
+        decodeSupportedAttack(unarmedStrikeAttack),
+      ),
+    ).toEqual({
+      kind: "unarmedStrike",
+      effect: {
+        kind: "damage",
+        damage: {
+          kind: "mechanicalReplacement",
+          dice: 1,
+          dieSize: 6,
+          damageType: "bludgeoning",
+        },
+      },
+      attackAbility: "str",
+      attackAbilityModifier: 2,
+      attackBonus: 3,
+      damageAbilityModifier: 2,
+      damageBonus: 1,
+    });
+
+    expect(
+      projectMechanicalAttackActionOption(
+        decodeSupportedAttack(baseUnarmedStrikeAttack),
+      ),
+    ).toEqual({
+      kind: "unarmedStrike",
+      effect: {
+        kind: "damage",
+        damage: { kind: "base", damageType: "bludgeoning", flat: 1 },
+      },
+      attackAbility: "str",
+      attackAbilityModifier: 2,
+      attackBonus: 3,
+      damageAbilityModifier: 2,
+      damageBonus: 1,
+    });
+
+    expect(
+      projectMechanicalAttackActionOption(
+        decodeSupportedAttack(procedureReplacementUnarmedStrikeAttack),
+      ),
+    ).toEqual({
+      kind: "unarmedStrike",
+      effect: {
+        kind: "damage",
+        damage: {
+          kind: "procedureReplacement",
+          sourceProcedureRef: syntheticStatBlockProcedureRef,
+          dice: 1,
+          dieSize: 6,
+          damageType: "bludgeoning",
+        },
+      },
+      attackAbility: "str",
+      attackAbilityModifier: 2,
+      attackBonus: 3,
+      damageAbilityModifier: 2,
+      damageBonus: 1,
+    });
+
+    expect(
+      projectMechanicalAttackActionOption(
+        decodeSupportedAttack(staticStatBlockAttack),
+      ),
+    ).toEqual({
+      kind: "statBlockAttack",
+      procedureRef: syntheticStatBlockProcedureRef,
+      attack: {
+        attackAbility: "str",
+        attackBonus: { kind: "literal", value: 4 },
+        attackType: "melee",
+        reachFeet: 5,
+        onHit: [
+          {
+            kind: "damage",
+            damageType: "piercing",
+            amount: {
+              kind: "fixed",
+              expr: { dice: 1, dieSize: 6 },
+              static: 4,
+            },
+          },
+          {
+            kind: "apply_condition_if_target_size_at_most",
+            condition: "prone",
+            maxCreatureSize: "large",
+          },
+        ],
+      },
+      damageNotation: "static",
+    });
+
+    expect(
+      projectMechanicalAttackActionOption(
+        decodeSupportedAttack(rolledRangedStatBlockAttack),
+      ),
+    ).toEqual({
+      kind: "statBlockAttack",
+      procedureRef: syntheticStatBlockProcedureRef,
+      attack: {
+        attackAbility: "dex",
+        attackBonus: { kind: "literal", value: 4 },
+        attackType: "ranged",
+        rangeFeet: { normal: 30, long: 120 },
+        onHit: [
+          {
+            kind: "damage",
+            damageType: "piercing",
+            amount: { kind: "fixed", expr: { dice: 1, dieSize: 8 } },
+          },
+          {
+            kind: "conditional_bonus_damage",
+            when: { kind: "attack_roll_had_advantage" },
+            damageType: "piercing",
+            amount: { kind: "fixed", expr: { dice: 1, dieSize: 6 } },
+          },
+        ],
+      },
+      damageNotation: "rolled",
     });
   });
 

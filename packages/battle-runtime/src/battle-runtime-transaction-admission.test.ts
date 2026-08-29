@@ -15,6 +15,7 @@ import {
   fighterId,
   goblinAttackSubject,
   goblinId,
+  holeId,
   interruptDecisionFill,
   movementFill,
   movementFeet,
@@ -186,6 +187,20 @@ describe("battle runtime transaction operation admission", () => {
         pendingSubject: ordinary.subject,
       },
     });
+
+    expect(
+      settleBattleRuntimeTransaction({
+        session: ordinary.result.resolution.session,
+        transaction: ordinary.result.transaction,
+        operation: interruptOperation(interrupt.result),
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      resolution: {
+        message:
+          "An interrupt decision requires a pending interrupt-decision frontier.",
+      },
+    });
   });
 
   test("rejects an ordinary subject against an interrupt-decision frontier", () => {
@@ -239,6 +254,158 @@ describe("battle runtime transaction operation admission", () => {
         operation,
       }),
     ).toEqual({ tag: "admitted", operation });
+  });
+
+  test("keeps null, foreign-subject, and overlay operations explicit", () => {
+    const ordinary = pendingOrdinaryMove();
+    const interrupt = pendingInterruptMove();
+    const differentSubject: Extract<
+      BattleRuntimeTransactionOperation,
+      { readonly kind: "ordinarySubject" }
+    > = {
+      kind: "ordinarySubject",
+      subject: {
+        tag: "action",
+        actorId: fighterId,
+        action: "ready",
+      },
+      fills: [],
+    };
+    const readyOperation: Extract<
+      BattleRuntimeTransactionOperation,
+      { readonly kind: "ordinarySubject" }
+    > = {
+      kind: "ordinarySubject",
+      subject: readyTriggerReportSubject(),
+      fills: [],
+    };
+
+    expect(
+      admitBattleRuntimeTransactionOperation({
+        transaction: null,
+        operation: interruptOperation(interrupt.result),
+      }),
+    ).toEqual({
+      tag: "rejected",
+      issue: { tag: "interruptRequiresPendingTransaction" },
+    });
+    expect(
+      admitBattleRuntimeTransactionOperation({
+        transaction: ordinary.result.transaction,
+        operation: differentSubject,
+      }),
+    ).toEqual({
+      tag: "rejected",
+      issue: {
+        tag: "differentPendingSubject",
+        pendingSubject: ordinary.subject,
+        requestedSubject: differentSubject.subject,
+      },
+    });
+    expect(
+      admitBattleRuntimeTransactionOperation({
+        transaction: interrupt.result.transaction,
+        operation: differentSubject,
+      }),
+    ).toEqual({
+      tag: "rejected",
+      issue: {
+        tag: "ordinarySubjectRequiresOrdinaryFrontier",
+        pendingSubject: interrupt.subject,
+        requestedSubject: differentSubject.subject,
+      },
+    });
+    expect(
+      admitBattleRuntimeTransactionOperation({
+        transaction: ordinary.result.transaction,
+        operation: readyOperation,
+      }),
+    ).toEqual({
+      tag: "rejected",
+      issue: {
+        tag: "readyTriggerOverlayRequiresInterruptFrontier",
+        pendingSubject: ordinary.subject,
+        requestedSubject: readyOperation.subject,
+      },
+    });
+
+    expect(
+      settleBattleRuntimeTransaction({
+        session: interrupt.result.resolution.session,
+        transaction: interrupt.result.transaction,
+        operation: differentSubject,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      transaction: interrupt.result.transaction,
+      resolution: {
+        message:
+          "An ordinary subject operation cannot run while an interrupt-decision frontier is pending.",
+      },
+    });
+    expect(
+      settleBattleRuntimeTransaction({
+        session: ordinary.result.resolution.session,
+        transaction: ordinary.result.transaction,
+        operation: readyOperation,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      transaction: ordinary.result.transaction,
+      resolution: {
+        message:
+          "A report-ready trigger may overlay only a different subject's interrupt frontier.",
+      },
+    });
+    expect(
+      settleBattleRuntimeTransaction({
+        session: ordinary.result.resolution.session,
+        transaction: ordinary.result.transaction,
+        operation: differentSubject,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      transaction: ordinary.result.transaction,
+      resolution: {
+        message: "A pending battle transaction owns a different subject.",
+      },
+    });
+    expect(
+      settleBattleRuntimeTransaction({
+        session: ordinary.session,
+        transaction: null,
+        operation: interruptOperation(interrupt.result),
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      transaction: null,
+      resolution: {
+        message: "An interrupt decision requires a pending battle transaction.",
+      },
+    });
+  });
+
+  test("returns the reducer's invalid fill through the transaction boundary", () => {
+    const ordinary = pendingOrdinaryMove();
+    const movement = movementFill(requireHole(ordinary.result, "movement"), {
+      movementCostFeet: 5,
+      provokedOpportunityAttacks: [],
+    });
+    const invalid = settleBattleRuntimeTransaction({
+      session: ordinary.result.resolution.session,
+      transaction: ordinary.result.transaction,
+      operation: {
+        kind: "ordinarySubject",
+        subject: ordinary.subject,
+        fills: [{ ...movement, holeId: holeId("stale-movement-hole") }],
+      },
+    });
+
+    expect(invalid).toMatchObject({
+      tag: "invalid",
+      transaction: ordinary.result.transaction,
+      resolution: { reason: "invalidFill" },
+    });
   });
 
   test("admits the different-subject Ready report overlay at an interrupt frontier", () => {

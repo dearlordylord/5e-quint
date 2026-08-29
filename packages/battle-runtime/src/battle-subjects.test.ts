@@ -21,6 +21,7 @@ import {
   BATTLE_RUNTIME_COMMANDS,
   battleSubjectBoundExecutionReferences,
   battleSubjectProcedureRefs,
+  battleSubjectProcedureRefsBelongToOwners,
 } from "./battle-subjects.ts";
 import {
   SUBTLE_METAMAGIC_EFFECT_KIND,
@@ -33,6 +34,7 @@ import {
   battleExecutionScopeOrdinal,
   battleId,
   battleProcedureExecutionRef,
+  battleProcedureExecutionRefBelongsToCombatant,
   battleStatBlockExecutionScopeRef,
   battleStatBlockProcedureExecutionRef,
 } from "./identity.ts";
@@ -52,20 +54,61 @@ function expectStableBattleSubjectRoundtrip(candidate: unknown): void {
   expect(battleSubjectBoundExecutionReferences(roundtripped)).toEqual(
     battleSubjectBoundExecutionReferences(subject),
   );
+  expect(battleSubjectProcedureRefsBelongToOwners(subject)).toBe(true);
+  expect(battleSubjectProcedureRefsBelongToOwners(roundtripped)).toBe(true);
 }
 
 describe("BattleSubject identity", () => {
+  test("checks ownership for each canonical procedure scope family", () => {
+    const ownerBattleId = battleId("procedure-scope-ownership-battle");
+    const ownerId = combatantId("procedure-scope-owner");
+    const wrongOwnerId = combatantId("procedure-scope-other-owner");
+    const scopes = [
+      battleCharacterExecutionScopeRef(
+        ownerBattleId,
+        ownerId,
+        battleExecutionScopeOrdinal(0),
+      ),
+      battleStatBlockExecutionScopeRef(
+        ownerBattleId,
+        ownerId,
+        battleExecutionScopeOrdinal(0),
+      ),
+    ] as const;
+
+    for (const scopeRef of scopes) {
+      const procedureRef = battleProcedureExecutionRef(
+        scopeRef,
+        NonNegativeInteger(0),
+      );
+      expect(
+        battleProcedureExecutionRefBelongsToCombatant(procedureRef, ownerId),
+      ).toBe(true);
+      expect(
+        battleProcedureExecutionRefBelongsToCombatant(
+          procedureRef,
+          wrongOwnerId,
+        ),
+      ).toBe(false);
+    }
+  });
+
   test("every runtime command roundtrips with stable execution-reference projections", () => {
     const actorId = combatantId("runtime-command-actor");
     const targetId = combatantId("runtime-command-target");
-    const procedureRef = battleProcedureExecutionRefForTest(
-      "runtime-command-procedure",
+    const targetProcedureRef = battleProcedureExecutionRef(
+      battleCharacterExecutionScopeRef(
+        battleId("runtime-command-battle"),
+        targetId,
+        battleExecutionScopeOrdinal(1),
+      ),
+      NonNegativeInteger(0),
     );
-    const attackProcedureRef = battleAttackProcedureExecutionRef(
+    const targetAttackProcedureRef = battleAttackProcedureExecutionRef(
       battleAttackExecutionScopeRef(
         battleId("runtime-command-battle"),
-        actorId,
-        battleExecutionScopeOrdinal(0),
+        targetId,
+        battleExecutionScopeOrdinal(2),
       ),
       NonNegativeInteger(0),
     );
@@ -78,30 +121,39 @@ describe("BattleSubject identity", () => {
       endConcentration: {},
       move: {},
       standFromProne: {},
-      releaseReadiedSpell: { readiedSpellCasterId: targetId, procedureRef },
+      releaseReadiedSpell: {
+        readiedSpellCasterId: targetId,
+        procedureRef: targetProcedureRef,
+      },
       releaseReadiedMovement: { readiedMovementActorId: targetId },
       reportReadyTrigger: { readiedActorId: targetId },
       releaseReadiedAction: { reactorId: targetId },
       releaseReadiedAttack: {
         reactorId: targetId,
         targetId: actorId,
-        procedureRef: attackProcedureRef,
+        procedureRef: targetAttackProcedureRef,
       },
-      castTriggeredReactionSpell: { reactorId: targetId, procedureRef },
-      castAttackHitBonusActionSpell: { casterId: targetId, procedureRef },
+      castTriggeredReactionSpell: {
+        reactorId: targetId,
+        procedureRef: targetProcedureRef,
+      },
+      castAttackHitBonusActionSpell: {
+        casterId: targetId,
+        procedureRef: targetProcedureRef,
+      },
       releaseGrapple: { targetId },
       opportunityAttack: {
         reactorId: targetId,
         targetId: actorId,
         distanceFeet: movementFeet(5),
-        procedureRef: attackProcedureRef,
+        procedureRef: targetAttackProcedureRef,
         attackAbility: "str",
         attackDamageType: "slashing",
       },
       retaliationAttack: {
         reactorId: targetId,
         targetId: actorId,
-        procedureRef: attackProcedureRef,
+        procedureRef: targetAttackProcedureRef,
         attackAbility: "str",
         attackDamageType: "slashing",
       },
@@ -171,12 +223,13 @@ describe("BattleSubject identity", () => {
     fc.assert(
       fc.property(everyCommandInRandomOrder, (commands) => {
         for (const command of commands) {
-          expectStableBattleSubjectRoundtrip({
+          const subject = {
             tag: "runtimeCommand",
             actorId,
             command,
             ...runtimeCommandExtras[command],
-          });
+          };
+          expectStableBattleSubjectRoundtrip(subject);
         }
       }),
       { numRuns: 20 },
@@ -241,12 +294,13 @@ describe("BattleSubject identity", () => {
     fc.assert(
       fc.property(everyActionInRandomOrder, (actions) => {
         for (const action of actions) {
-          expectStableBattleSubjectRoundtrip({
+          const subject = {
             tag: "action",
             actorId,
             action,
             ...actionExtras[action],
-          });
+          };
+          expectStableBattleSubjectRoundtrip(subject);
         }
       }),
       { numRuns: 20 },
@@ -273,6 +327,14 @@ describe("BattleSubject identity", () => {
       ),
       NonNegativeInteger(0),
     );
+    const actorStatBlockProcedureRef = battleStatBlockProcedureExecutionRef(
+      battleStatBlockExecutionScopeRef(
+        battle,
+        actorId,
+        battleExecutionScopeOrdinal(4),
+      ),
+      NonNegativeInteger(0),
+    );
     const attackProcedureRef = battleAttackProcedureExecutionRef(
       battleAttackExecutionScopeRef(
         battle,
@@ -291,172 +353,274 @@ describe("BattleSubject identity", () => {
     );
     const candidates = [
       {
-        tag: "pactOfTheChainFamiliarAttack",
-        actorId,
-        familiarId: companionId,
-        procedureRef: statBlockProcedureRef,
+        name: "pact familiar attack with rolled damage",
+        subject: {
+          tag: "pactOfTheChainFamiliarAttack",
+          actorId,
+          familiarId: companionId,
+          procedureRef: statBlockProcedureRef,
+        },
       },
       {
-        tag: "pactOfTheChainFamiliarAttack",
-        actorId,
-        familiarId: companionId,
-        procedureRef: statBlockProcedureRef,
-        statBlockDamageNotation: "static",
+        name: "pact familiar attack with static damage",
+        subject: {
+          tag: "pactOfTheChainFamiliarAttack",
+          actorId,
+          familiarId: companionId,
+          procedureRef: statBlockProcedureRef,
+          statBlockDamageNotation: "static",
+        },
       },
       {
-        tag: "bonusAction",
-        actorId,
-        action: "offHandAttack",
-        procedureRef: attackProcedureRef,
-        attackAbility: "str",
-        attackDamageType: "slashing",
+        name: "off-hand attack",
+        subject: {
+          tag: "bonusAction",
+          actorId,
+          action: "offHandAttack",
+          procedureRef: attackProcedureRef,
+          attackAbility: "str",
+          attackDamageType: "slashing",
+        },
       },
       {
-        tag: "bonusAction",
-        actorId,
-        action: "martialArtsUnarmedStrike",
-        procedureRef: attackProcedureRef,
-        attackAbility: "dex",
-        attackDamageType: "bludgeoning",
+        name: "martial arts unarmed strike",
+        subject: {
+          tag: "bonusAction",
+          actorId,
+          action: "martialArtsUnarmedStrike",
+          procedureRef: attackProcedureRef,
+          attackAbility: "dex",
+          attackDamageType: "bludgeoning",
+        },
       },
       {
-        tag: "bonusAction",
-        actorId,
-        action: "statBlockActionOption",
-        procedureRef: statBlockProcedureRef,
-        standardAction: "dodge",
+        name: "stat block dodge",
+        subject: {
+          tag: "bonusAction",
+          actorId,
+          action: "statBlockActionOption",
+          procedureRef: actorStatBlockProcedureRef,
+          standardAction: "dodge",
+        },
       },
       {
-        tag: "bonusActionStandardAction",
-        actorId,
-        procedureRef,
-        sourceEffectRef: effectRef,
-        action: "dash",
-        speedKind: "walk",
+        name: "stat block attack with static damage",
+        subject: {
+          tag: "action",
+          actorId,
+          action: "attack",
+          procedureRef: actorStatBlockProcedureRef,
+          statBlockDamageNotation: "static",
+        },
       },
       {
-        tag: "monkFocusOption",
-        actorId,
-        procedureRef,
-        option: "patientDefense",
-        mode: "focusDisengageDodge",
+        name: "effect-backed bonus action dash",
+        subject: {
+          tag: "bonusActionStandardAction",
+          actorId,
+          procedureRef,
+          sourceEffectRef: effectRef,
+          action: "dash",
+          speedKind: "walk",
+        },
       },
       {
-        tag: "monkFocusOption",
-        actorId,
-        procedureRef,
-        option: "flurryOfBlows",
+        name: "effect-backed bonus action disengage",
+        subject: {
+          tag: "bonusActionStandardAction",
+          actorId,
+          procedureRef,
+          action: "disengage",
+        },
       },
       {
-        tag: "monkFocusOption",
-        actorId,
-        procedureRef,
-        option: "stepOfTheWind",
-        mode: "focusDisengageDash",
-        speedKind: "fly",
+        name: "focused patient defense",
+        subject: {
+          tag: "monkFocusOption",
+          actorId,
+          procedureRef,
+          option: "patientDefense",
+          mode: "focusDisengageDodge",
+        },
       },
       {
-        tag: "monkFocusFlurryOfBlowsStrike",
-        actorId,
-        focusProcedureRef: procedureRef,
-        procedureRef: attackProcedureRef,
+        name: "focused flurry of blows",
+        subject: {
+          tag: "monkFocusOption",
+          actorId,
+          procedureRef,
+          option: "flurryOfBlows",
+        },
       },
       {
-        tag: "actionSpell",
-        actorId,
-        procedureRef,
-        mode: { tag: "cast" },
+        name: "focused step of the wind",
+        subject: {
+          tag: "monkFocusOption",
+          actorId,
+          procedureRef,
+          option: "stepOfTheWind",
+          mode: "focusDisengageDash",
+          speedKind: "fly",
+        },
       },
       {
-        tag: "actionSpell",
-        actorId,
-        procedureRef,
-        mode: { tag: "ready", trigger: "attackHit" },
-        metamagic: [
-          {
-            effectKind: TRANSMUTED_METAMAGIC_EFFECT_KIND,
-            targetDamageType: "cold",
-          },
-          { effectKind: SUBTLE_METAMAGIC_EFFECT_KIND },
-        ],
+        name: "focused flurry strike",
+        subject: {
+          tag: "monkFocusFlurryOfBlowsStrike",
+          actorId,
+          focusProcedureRef: procedureRef,
+          procedureRef: attackProcedureRef,
+        },
       },
       {
-        tag: "bonusActionSpell",
-        actorId,
-        procedureRef,
-        mode: { tag: "cast" },
+        name: "action spell cast",
+        subject: {
+          tag: "actionSpell",
+          actorId,
+          procedureRef,
+          mode: { tag: "cast" },
+        },
       },
       {
-        tag: "bonusActionDashSpell",
-        actorId,
-        procedureRef,
-        mode: { tag: "cast" },
-        speedKind: "walk",
-      },
-      { tag: "unitFeature", actorId, procedureRef },
-      {
-        tag: "unitFeatureHeldWeaponActivation",
-        actorId,
-        procedureRef,
-        weaponItemId: battleObjectId("reference-bearing-subject-weapon"),
-      },
-      {
-        tag: "druidWildShape",
-        actorId,
-        procedureRef,
-        action: "assumeForm",
-        formExecutionRef,
+        name: "action spell ready with metamagic",
+        subject: {
+          tag: "actionSpell",
+          actorId,
+          procedureRef,
+          mode: { tag: "ready", trigger: "attackHit" },
+          metamagic: [
+            {
+              effectKind: TRANSMUTED_METAMAGIC_EFFECT_KIND,
+              targetDamageType: "cold",
+            },
+            { effectKind: SUBTLE_METAMAGIC_EFFECT_KIND },
+          ],
+        },
       },
       {
-        tag: "druidWildShape",
-        actorId,
-        procedureRef,
-        action: "dismiss",
+        name: "bonus action spell cast",
+        subject: {
+          tag: "bonusActionSpell",
+          actorId,
+          procedureRef,
+          mode: { tag: "cast" },
+        },
       },
       {
-        tag: "companionLifecycle",
-        actorId,
-        action: "temporarilyDismiss",
+        name: "bonus action dash spell cast",
+        subject: {
+          tag: "bonusActionDashSpell",
+          actorId,
+          procedureRef,
+          mode: { tag: "cast" },
+          speedKind: "walk",
+        },
       },
       {
-        tag: "companionLifecycle",
-        actorId,
-        action: "reappear",
+        name: "unit feature",
+        subject: { tag: "unitFeature", actorId, procedureRef },
       },
       {
-        tag: "companionLifecycle",
-        actorId,
-        action: "permanentlyDismiss",
+        name: "unit feature held weapon activation",
+        subject: {
+          tag: "unitFeatureHeldWeaponActivation",
+          actorId,
+          procedureRef,
+          weaponItemId: battleObjectId("reference-bearing-subject-weapon"),
+        },
       },
       {
-        tag: "findFamiliarSharedSenses",
-        actorId,
-        familiarId: companionId,
+        name: "wild shape assume form",
+        subject: {
+          tag: "druidWildShape",
+          actorId,
+          procedureRef,
+          action: "assumeForm",
+          formExecutionRef,
+        },
       },
       {
-        tag: "findFamiliarTouchSpell",
-        actorId,
-        procedureRef,
-        companionId,
-        spellAction: "action",
-        mode: { tag: "cast" },
+        name: "wild shape dismiss",
+        subject: {
+          tag: "druidWildShape",
+          actorId,
+          procedureRef,
+          action: "dismiss",
+        },
       },
       {
-        tag: "findFamiliarTouchSpell",
-        actorId,
-        procedureRef,
-        companionId,
-        spellAction: "bonusAction",
-        mode: { tag: "cast" },
-        metamagic: [{ effectKind: SUBTLE_METAMAGIC_EFFECT_KIND }],
+        name: "temporarily dismiss companion",
+        subject: {
+          tag: "companionLifecycle",
+          actorId,
+          action: "temporarilyDismiss",
+        },
       },
-    ] as const satisfies ReadonlyArray<BattleSubject>;
+      {
+        name: "reappear companion",
+        subject: {
+          tag: "companionLifecycle",
+          actorId,
+          action: "reappear",
+        },
+      },
+      {
+        name: "permanently dismiss companion",
+        subject: {
+          tag: "companionLifecycle",
+          actorId,
+          action: "permanentlyDismiss",
+        },
+      },
+      {
+        name: "share familiar senses",
+        subject: {
+          tag: "findFamiliarSharedSenses",
+          actorId,
+          familiarId: companionId,
+        },
+      },
+      {
+        name: "familiar touch action spell",
+        subject: {
+          tag: "findFamiliarTouchSpell",
+          actorId,
+          procedureRef,
+          companionId,
+          spellAction: "action",
+          mode: { tag: "cast" },
+        },
+      },
+      {
+        name: "familiar touch bonus-action spell with metamagic",
+        subject: {
+          tag: "findFamiliarTouchSpell",
+          actorId,
+          procedureRef,
+          companionId,
+          spellAction: "bonusAction",
+          mode: { tag: "cast" },
+          metamagic: [{ effectKind: SUBTLE_METAMAGIC_EFFECT_KIND }],
+        },
+      },
+    ] as const satisfies ReadonlyArray<{
+      readonly name: string;
+      readonly subject: BattleSubject;
+    }>;
 
-    for (const [candidateIndex, candidate] of candidates.entries()) {
-      expectStableBattleSubjectRoundtrip(candidate);
+    for (const candidate of candidates) {
+      expectStableBattleSubjectRoundtrip(candidate.subject);
+      expect(
+        battleSubjectProcedureRefsBelongToOwners(candidate.subject),
+        candidate.name,
+      ).toBe(true);
 
-      for (const distinctCandidate of candidates.slice(candidateIndex + 1)) {
-        expect(sameBattleSubject(candidate, distinctCandidate)).toBe(false);
+      for (const distinctCandidate of candidates) {
+        if (distinctCandidate.name === candidate.name) continue;
+        expect(
+          sameBattleSubject(candidate.subject, distinctCandidate.subject),
+          `${candidate.name} vs ${distinctCandidate.name}`,
+        ).toBe(false);
       }
     }
   });
@@ -537,8 +701,28 @@ describe("BattleSubject identity", () => {
     } satisfies BattleSubject;
 
     expect(sameBattleSubject(subject, otherOccurrence)).toBe(false);
-    expect(sameBattleSubject(subject, otherOccurrence)).toBe(false);
     expect(sameBattleSubject(subject, subject)).toBe(true);
+
+    const wrongOwnerSubject = {
+      ...subject,
+      procedureRef: battleProcedureExecutionRef(
+        battleCharacterExecutionScopeRef(
+          battleId("procedure-subject-battle"),
+          combatantId("procedure-subject-wrong-owner"),
+          battleExecutionScopeOrdinal(0),
+        ),
+        NonNegativeInteger(0),
+      ),
+    } satisfies BattleSubject;
+    const ownerCases = [
+      { subject, expected: true },
+      { subject: wrongOwnerSubject, expected: false },
+    ] as const;
+    for (const { subject: candidate, expected } of ownerCases) {
+      expect(battleSubjectProcedureRefsBelongToOwners(candidate)).toBe(
+        expected,
+      );
+    }
   });
 
   test("rejects authored character-procedure selectors after binding", () => {

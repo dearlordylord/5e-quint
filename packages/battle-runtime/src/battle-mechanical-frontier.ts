@@ -71,7 +71,6 @@ export type BattleMechanicalFrontierResult =
 
 export type BattleMechanicalFrontierIssue =
   | { readonly tag: "emptyHoleFrontier" }
-  | { readonly tag: "interruptFrontierChoiceSetEmpty" }
   | { readonly tag: "interruptFrontierDecisionHoleMismatch" };
 
 export const BattleMechanicalInterruptChoiceSchema =
@@ -104,9 +103,6 @@ export function battleMechanicalFrontier(input: {
   if (result.kind === "interruptDecision") {
     if (result.trigger !== result.decisionHole.trigger) {
       return Either.left({ tag: "interruptFrontierDecisionHoleMismatch" });
-    }
-    if (result.choices.length === 0) {
-      return Either.left({ tag: "interruptFrontierChoiceSetEmpty" });
     }
     const mechanicalInterruptHole = projectMechanicalInterruptHole(
       result.decisionHole,
@@ -149,12 +145,9 @@ function projectMechanicalOrdinaryHoles(
 }
 
 function projectMechanicalChoices(
-  choices: readonly BattleInterruptProcedureChoice[],
+  choices: ReadonlyNonEmptyArray<BattleInterruptProcedureChoice>,
 ): ReadonlyNonEmptyArray<BattleMechanicalInterruptChoice> {
   const [first, ...rest] = choices;
-  if (first === undefined) {
-    throw new Error("battle interrupt choices were proven nonempty");
-  }
   return [
     projectMechanicalInterruptChoice(first),
     ...rest.map(projectMechanicalInterruptChoice),

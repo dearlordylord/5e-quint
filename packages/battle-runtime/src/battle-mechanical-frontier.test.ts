@@ -1,5 +1,6 @@
 import { Either, JSONSchema, Schema } from "effect";
 import { describe, expect, test } from "vitest";
+import { damageAmount, NonNegativeInteger } from "@dnd/shared/types";
 
 import {
   BattleMechanicalFrontierSchema,
@@ -9,15 +10,23 @@ import {
   BattleMechanicalInterruptDecisionHoleSchema,
   BattleMechanicalOrdinaryHoleSchema,
 } from "./battle-mechanical-frontier.ts";
+import { BattleHoleSchema } from "./battle-reducer/battle-codecs.ts";
 import {
   combatantId,
   attackTargetFill,
+  battleActiveEffectExecutionRefForTest,
+  battleId,
   fighterAttackSubject,
   fighterVsGoblinBattle,
   holeId,
   holeInstanceKey,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
+import {
+  battleExecutionScopeOrdinal,
+  battleProcedureExecutionRef,
+  battleStatBlockExecutionScopeRef,
+} from "./identity.ts";
 import { battleReplayStackDepth } from "./identity.ts";
 import type {
   BattleHole,
@@ -84,6 +93,436 @@ const runtimeInterruptChoice = {
   BattleInterruptProcedureChoice,
   { readonly kind: "nestedProcedure" }
 >;
+
+const decodeBattleHole = Schema.decodeUnknownSync(BattleHoleSchema);
+const projectionResponderId = combatantId("projection-responder");
+const projectionProcedureRef = battleProcedureExecutionRef(
+  battleStatBlockExecutionScopeRef(
+    battleId("mechanical-frontier-battle"),
+    projectionResponderId,
+    battleExecutionScopeOrdinal(0),
+  ),
+  NonNegativeInteger(0),
+);
+const projectionEffectRef = battleActiveEffectExecutionRefForTest(
+  "mechanical-frontier-effect",
+);
+const projectionFormExecutionRef = battleStatBlockExecutionScopeRef(
+  battleId("mechanical-frontier-battle"),
+  combatantId("mechanical-frontier-actor"),
+  battleExecutionScopeOrdinal(0),
+);
+const projectionReactionModifierChoice = {
+  kind: "reactionModifier" as const,
+  responderId: projectionResponderId,
+  modifier: {
+    kind: "fallDamageReduction" as const,
+    procedureRef: projectionProcedureRef,
+    reduction: { kind: "flat" as const, amount: damageAmount(2) },
+  },
+  initialHoles: [],
+} satisfies Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "reactionModifier" }
+>;
+const projectionBase = {
+  holeInstanceKey: "mechanical-frontier-projection-instance",
+  holeId: "mechanical-frontier-projection-hole",
+  label: "presentation-only label",
+} as const;
+
+function projectionHole(kind: string, fields: object = {}): BattleHole {
+  return decodeBattleHole({
+    ...projectionBase,
+    holeInstanceKey: `${projectionBase.holeInstanceKey}-${kind}`,
+    holeId: `${projectionBase.holeId}-${kind}`,
+    kind,
+    ...fields,
+  });
+}
+
+const projectionNestedReroll = {
+  effectKind: "d20_test_natural_one_reroll",
+  label: "reroll presentation label",
+} as const;
+
+const projectionAttackRollWithD20 = {
+  ...projectionHole("attackRoll", {
+    holeInstanceKey: `${projectionBase.holeInstanceKey}-attackRoll-with-d20`,
+    holeId: `${projectionBase.holeId}-attackRoll-with-d20`,
+    sourceProcedureRef: projectionProcedureRef,
+    attackBonus: 4,
+    spellAttackRerolls: [
+      {
+        effectKind: "missed_spell_attack_reroll",
+        sorceryPointCost: 1,
+        label: "spell reroll presentation label",
+      },
+    ],
+  }),
+  d20TestNaturalOneRerolls: [projectionNestedReroll],
+};
+
+const projectionSpellDamageRerolls = [
+  {
+    effectKind: "damage_dice_reroll" as const,
+    sorceryPointCost: 1,
+    maximumSelectedDice: 1,
+    label: "damage reroll presentation label",
+  },
+] as const;
+
+const projectionRolledDiceWithSpellDamageRerolls = {
+  ...projectionHole("rolledDice", {
+    holeInstanceKey: `${projectionBase.holeInstanceKey}-rolledDice-with-rerolls`,
+    holeId: `${projectionBase.holeId}-rolledDice-with-rerolls`,
+    critical: false,
+    sourceProcedureRef: projectionProcedureRef,
+  }),
+  spellDamageRerolls: projectionSpellDamageRerolls,
+};
+
+const projectionHoles = [
+  projectionHole("abilityCheck", {
+    ability: "dex",
+    skill: "stealth",
+    dc: 12,
+    d20TestNaturalOneRerolls: [projectionNestedReroll],
+  }),
+  projectionHole("abilityChoice", {
+    sourceProcedureRef: projectionProcedureRef,
+    choices: ["dex"],
+  }),
+  projectionHole("readyDeclaration", {
+    actorId: "projection-actor",
+    responseChoices: [],
+  }),
+  projectionHole("attackDamageDisposition", {
+    attackerId: "projection-attacker",
+    targetId: "projection-target",
+    choices: [],
+  }),
+  projectionHole("attackRoll", {
+    sourceProcedureRef: projectionProcedureRef,
+    attackBonus: 4,
+    spellAttackRerolls: [
+      {
+        effectKind: "missed_spell_attack_reroll",
+        sorceryPointCost: 1,
+        label: "spell reroll presentation label",
+      },
+    ],
+  }),
+  projectionAttackRollWithD20,
+  projectionHole("commandOptionChoice", {
+    sourceProcedureRef: projectionProcedureRef,
+    choices: ["approach"],
+  }),
+  projectionHole("companionReappearanceInitiative", {
+    ownerId: "projection-owner",
+  }),
+  projectionHole("companionReappearancePlacement", {
+    ownerId: "projection-owner",
+  }),
+  projectionHole("concentrationSavingThrow", {
+    combatantId: "projection-actor",
+    dc: 10,
+    damageAmount: 5,
+    targetFlatBonuses: [],
+  }),
+  projectionHole("conditionChoice", {
+    sourceProcedureRef: projectionProcedureRef,
+    choices: ["blinded"],
+  }),
+  projectionHole("cunningStrikeEndTurnCoverFacts", {
+    actorId: "projection-actor",
+    coverDegrees: ["none"],
+  }),
+  projectionHole("damageRelationshipDecisions", {
+    damageEventHoleId: "projection-damage-event",
+    damageSourceId: "projection-source",
+    questions: [
+      {
+        kind: "targetDamagedByCasterOrAlly",
+        questionId: "projection-question",
+        targetId: "projection-target",
+        effectSourceId: "projection-source",
+      },
+    ],
+  }),
+  projectionHole("damageTypeChoice", {
+    sourceProcedureRef: projectionProcedureRef,
+    choices: ["fire"],
+  }),
+  projectionHole("dancingLightsPlacement", {
+    sourceProcedureRef: projectionProcedureRef,
+    mode: "cast",
+    form: "separateLights",
+    activeLightIds: [],
+    rangeFeet: 120,
+    maxMoveFeet: 60,
+    spacingFeet: 20,
+    requiresTableSpatialFact: true,
+  }),
+  projectionHole("deathSavingThrow", {
+    combatantId: "projection-actor",
+  }),
+  projectionHole("findFamiliarConnection", {
+    ownerId: "projection-owner",
+    companionId: "projection-companion",
+    rangeFeet: 100,
+    requiresTableSpatialFact: true,
+  }),
+  projectionHole("grappleOutcome", {
+    actorId: "projection-actor",
+    targetId: "projection-target",
+    dc: 12,
+    mode: "grappleSave",
+  }),
+  projectionHole("gustOfWindLineDirectionChoice", {
+    sourceCombatantId: "projection-actor",
+    sourceProcedureRef: projectionProcedureRef,
+    areaId: "projection-area",
+    directionId: "projection-direction",
+    requiresTableSpatialFact: true,
+  }),
+  projectionHole("heldObjectFacts", {
+    actorId: "projection-actor",
+  }),
+  projectionHole("helpAttackAllyDecision", {
+    helperId: "projection-helper",
+    choices: [],
+  }),
+  projectionHole("helpAttackEnemyDecision", {
+    helperId: "projection-helper",
+    allyId: "projection-ally",
+    choices: [],
+  }),
+  projectionHole("hitPointHealingDistribution", {
+    requiresTableSpatialFact: true,
+    healingPool: {
+      sourceCombatantId: "projection-source",
+      sourceProcedureRef: projectionProcedureRef,
+      rangeFeet: 60,
+      poolHitPoints: 5,
+      perTargetCap: "halfHitPointMaximum",
+    },
+    choices: [],
+  }),
+  projectionHole("levitateAltitudeChange", {
+    actorId: "projection-actor",
+    targetId: "projection-target",
+    maxDistanceFeet: 20,
+    directions: ["up"],
+    requiresTargetWithinRangeFact: true,
+  }),
+  projectionHole("levitateInitialRise", {
+    actorId: "projection-actor",
+    targetId: "projection-target",
+    maxDistanceFeet: 20,
+  }),
+  projectionHole("magicWeaponTargetItem", {
+    sourceProcedureRef: projectionProcedureRef,
+    requiresTableItemFact: true,
+  }),
+  projectionHole("movableZoneRamMovement", {
+    movableZone: {
+      sourceCombatantId: "projection-source",
+      sourceProcedureRef: projectionProcedureRef,
+      targetId: "projection-target",
+      areaId: "projection-area",
+      maxMoveFeet: 20,
+    },
+    requiresTableSpatialFact: true,
+  }),
+  projectionHole("movableZoneRepositionMovement", {
+    movableZone: {
+      sourceProcedureRef: projectionProcedureRef,
+      sourceCombatantId: "projection-source",
+      areaId: "projection-area",
+      maxMoveFeet: 20,
+    },
+    requiresTableSpatialFact: true,
+  }),
+  projectionHole("movement", {
+    actorId: "projection-actor",
+    movementBudgetFeet: 30,
+    speedKinds: [],
+  }),
+  projectionHole("objectContactTargets", {
+    objectContact: {
+      sourceCombatantId: "projection-source",
+      sourceProcedureRef: projectionProcedureRef,
+      objectId: "projection-object",
+      rangeFeet: 30,
+      requiresObjectWithinRange: true,
+    },
+    choices: [],
+    requiresTableSpatialFact: true,
+  }),
+  projectionHole("objectDropResolution", {
+    objectDrop: {
+      sourceCombatantId: "projection-source",
+      sourceProcedureRef: projectionProcedureRef,
+      objectId: "projection-object",
+      targetIds: [],
+    },
+  }),
+  projectionHole("objectTargetChoice", {
+    sourceProcedureRef: projectionProcedureRef,
+    requiresTableSpatialFact: true,
+  }),
+  projectionHole("ongoingSpellTargetChoice", {
+    requiresTableSpatialFact: true,
+    casterId: "projection-caster",
+    procedureRef: projectionProcedureRef,
+    rangeFeet: 60,
+    choices: [],
+  }),
+  projectionRolledDiceWithSpellDamageRerolls,
+  projectionHole("rolledDice", {
+    sourceProcedureRef: projectionProcedureRef,
+  }),
+  projectionHole("sanctuaryInterdictionOutcome", {
+    sourceProcedureRef: projectionProcedureRef,
+    triggeringProcedureRef: projectionProcedureRef,
+    sourceCombatantId: "projection-source",
+    wardedCombatantId: "projection-warded",
+    triggeringCombatantId: "projection-trigger",
+    triggeringTargetEventId: "projection-event",
+    ability: "wis",
+    dc: { kind: "fixed", dc: 12 },
+    choices: [],
+    replacementTargetKind: "attackRoll",
+  }),
+  projectionHole("savingThrowOutcome", {
+    outcomeTargeting: "singleTarget",
+    sourceProcedureRef: projectionProcedureRef,
+    ability: "dex",
+    dc: { kind: "fixed", dc: 12 },
+    areaChoices: [],
+    targetRollModes: [],
+    targetFlatBonuses: [],
+    targetIds: ["projection-target"],
+    d20TestNaturalOneRerolls: [projectionNestedReroll],
+  }),
+  projectionHole("savingThrowOutcome", {
+    outcomeTargeting: "singleTarget",
+    sourceProcedureRef: projectionProcedureRef,
+    ability: "dex",
+    dc: { kind: "fixed", dc: 12 },
+    areaChoices: [],
+    targetRollModes: [],
+    targetFlatBonuses: [],
+    targetIds: ["projection-target"],
+  }),
+  projectionHole("selfTransformationModeChoice", {
+    sourceProcedureRef: projectionProcedureRef,
+    choices: ["naturalWeapons"],
+  }),
+  projectionHole("shoveOutcome", {
+    actorId: "projection-actor",
+    targetId: "projection-target",
+    dc: 12,
+  }),
+  projectionHole("slowSomaticSpellFailureOutcome", {
+    actorId: "projection-actor",
+    sourceProcedureRef: projectionProcedureRef,
+    failurePercent: 25,
+    activeEffectSources: [],
+  }),
+  projectionHole("skillChoice", {
+    sourceProcedureRef: projectionProcedureRef,
+    choices: ["stealth"],
+  }),
+  projectionHole("spellAreaChoice", {
+    sourceProcedureRef: projectionProcedureRef,
+    area: { kind: "pointOriginSphere", radiusFeet: 20 },
+  }),
+  projectionHole("spellTargetAllocation", {
+    sourceProcedureRef: projectionProcedureRef,
+    allocationCount: 1,
+    choices: [],
+    requiresTableSpatialFact: true,
+    spellTargetSpatialFactRequest: {
+      casterId: "projection-caster",
+      sourceProcedureRef: projectionProcedureRef,
+      rangeFeet: 60,
+      visibility: "requiresSight",
+    },
+  }),
+  projectionHole("spellTargetList", {
+    sourceProcedureRef: projectionProcedureRef,
+    minTargets: 1,
+    maxTargets: 1,
+    spatialTargeting: { kind: "individualTargets" },
+    choices: [],
+    requiresTableSpatialFact: true,
+  }),
+  projectionHole("spellcastingAbilityCheck", {
+    dc: 12,
+    spellcastingAbilityCheck: {
+      casterId: "projection-caster",
+      sourceProcedureRef: projectionProcedureRef,
+      target: { kind: "combatant", combatantId: "projection-target" },
+      effect: {
+        kind: "spellActiveEffect",
+        activeEffectKind: "spiritualWeapon",
+        effectRef: projectionEffectRef,
+      },
+      contestedSpellLevel: 1,
+    },
+  }),
+  projectionHole("spiritualWeaponForcePosition", {
+    sourceProcedureRef: projectionProcedureRef,
+    mode: "cast",
+    maxDistanceFeet: 60,
+    requiresTableSpatialFact: true,
+  }),
+  projectionHole("statBlockRechargeRoll", {
+    combatantId: "projection-actor",
+    rechargeTargets: [],
+  }),
+  projectionHole("targetAbilityChoices", {
+    sourceProcedureRef: projectionProcedureRef,
+    choices: ["dex"],
+  }),
+  projectionHole("targetChoice", {
+    choices: [],
+  }),
+  projectionHole("targetSpatialFacts", {
+    spellBeingCast: {
+      casterId: "projection-caster",
+      sourceProcedureRef: projectionProcedureRef,
+      castLevel: 1,
+      components: [],
+    },
+    requiresTableSpatialFact: true,
+  }),
+  projectionHole("teleportDestination", {
+    sourceProcedureRef: projectionProcedureRef,
+    actorId: "projection-actor",
+    maxDistanceFeet: 30,
+    requiresTableSpatialFact: true,
+  }),
+  projectionHole("thaumaturgyActiveOneMinuteEffectCount", {
+    sourceProcedureRef: projectionProcedureRef,
+    maximumActiveOneMinuteEffects: 3,
+    requiresTableSpellEffectCount: true,
+  }),
+  projectionHole("toolPossessionFacts", {
+    actorId: "projection-actor",
+    toolIds: ["poisoners_kit"],
+  }),
+  projectionHole("unitFeatureDecision", {
+    choices: ["use", "decline"],
+  }),
+  projectionHole("wildShapeEquipmentDisposition", {
+    actorId: "projection-actor",
+    formExecutionRef: projectionFormExecutionRef,
+    candidates: [],
+  }),
+] as const;
 
 type NeedsHolesResult = Extract<
   ReturnType<typeof resolveBattleSubject>,
@@ -543,5 +982,166 @@ describe("battle mechanical frontier", () => {
       acceptedFills: [],
     });
     expect(frontier).toEqual(Either.left({ tag: "emptyHoleFrontier" }));
+  });
+
+  test("projects every ordinary hole kind through the mechanical boundary", () => {
+    const result = ordinaryNeedsHolesResult();
+    const frontier = battleMechanicalFrontier({
+      result: {
+        kind: "holes",
+        subject: result.subject,
+        holes: projectionHoles,
+      },
+      acceptedFills: [],
+    });
+
+    expect(Either.isRight(frontier)).toBe(true);
+    if (Either.isLeft(frontier)) return;
+    expect(frontier.right.kind).toBe("ordinaryHoles");
+    if (frontier.right.kind !== "ordinaryHoles") return;
+    const projectedHoles = frontier.right.holes;
+    expect(
+      projectedHoles.map(({ kind, holeInstanceKey, holeId }) => ({
+        kind,
+        holeInstanceKey,
+        holeId,
+      })),
+    ).toEqual(
+      projectionHoles.map(({ kind, holeInstanceKey, holeId }) => ({
+        kind,
+        holeInstanceKey,
+        holeId,
+      })),
+    );
+    expect(projectedHoles.every((hole) => !("label" in hole))).toBe(true);
+
+    const abilityCheck = projectedHoles.find(
+      (hole) => hole.kind === "abilityCheck",
+    );
+    expect(abilityCheck).toMatchObject({
+      kind: "abilityCheck",
+      ability: "dex",
+      skill: "stealth",
+      dc: 12,
+      d20TestNaturalOneRerolls: [{ effectKind: "d20_test_natural_one_reroll" }],
+    });
+    const attackRoll = projectedHoles.find(
+      (hole) =>
+        hole.kind === "attackRoll" &&
+        hole.holeInstanceKey.endsWith("-attackRoll"),
+    );
+    expect(attackRoll).toMatchObject({
+      kind: "attackRoll",
+      sourceProcedureRef: projectionProcedureRef,
+      attackBonus: 4,
+      spellAttackRerolls: [
+        { effectKind: "missed_spell_attack_reroll", sorceryPointCost: 1 },
+      ],
+    });
+    const attackRollWithD20 = projectedHoles.find(
+      (hole) =>
+        hole.kind === "attackRoll" &&
+        hole.holeInstanceKey.endsWith("-attackRoll-with-d20"),
+    );
+    expect(attackRollWithD20).toMatchObject({
+      kind: "attackRoll",
+      d20TestNaturalOneRerolls: [{ effectKind: "d20_test_natural_one_reroll" }],
+    });
+    const rolledDice = projectedHoles.find(
+      (hole) =>
+        hole.kind === "rolledDice" &&
+        hole.holeInstanceKey.endsWith("-rolledDice-with-rerolls"),
+    );
+    expect(rolledDice).toMatchObject({
+      kind: "rolledDice",
+      critical: false,
+      sourceProcedureRef: projectionProcedureRef,
+      spellDamageRerolls: [
+        {
+          effectKind: "damage_dice_reroll",
+          sorceryPointCost: 1,
+          maximumSelectedDice: 1,
+        },
+      ],
+    });
+    const savingThrows = projectedHoles.filter(
+      (hole) => hole.kind === "savingThrowOutcome",
+    );
+    expect(savingThrows).toHaveLength(2);
+    expect(savingThrows[0]).toHaveProperty("d20TestNaturalOneRerolls");
+    expect(savingThrows[1]).not.toHaveProperty("d20TestNaturalOneRerolls");
+  });
+
+  test("projects nested interrupt choices without presentation fields", () => {
+    const interruptHole = projectionHole("interruptDecision", {
+      trigger: "afterDamage",
+      eligibleResponders: [projectionResponderId],
+    });
+    if (interruptHole.kind !== "interruptDecision") {
+      throw new Error("Expected an interrupt-decision projection hole.");
+    }
+    const choice = {
+      kind: "nestedProcedure" as const,
+      subject: {
+        tag: "runtimeCommand" as const,
+        actorId: projectionResponderId,
+        command: "releaseReadiedAction" as const,
+        reactorId: projectionResponderId,
+      },
+      initialHoles: [projectionHoles[0]],
+    } satisfies Extract<
+      BattleInterruptProcedureChoice,
+      { readonly kind: "nestedProcedure" }
+    >;
+    const frontier = battleMechanicalFrontier({
+      result: {
+        kind: "interruptDecision",
+        trigger: "afterDamage",
+        decisionHole: interruptHole,
+        choices: [choice, projectionReactionModifierChoice],
+        stackDepth: battleReplayStackDepth(1),
+      },
+      acceptedFills: [],
+    });
+
+    expect(Either.isRight(frontier)).toBe(true);
+    if (Either.isLeft(frontier)) return;
+    expect(frontier.right.kind).toBe("interruptDecision");
+    if (frontier.right.kind !== "interruptDecision") return;
+    expect(frontier.right.decisionHole).toMatchObject({
+      holeInstanceKey: interruptHole.holeInstanceKey,
+      holeId: interruptHole.holeId,
+      kind: "interruptDecision",
+      trigger: "afterDamage",
+      eligibleResponders: ["projection-responder"],
+    });
+    expect(frontier.right.decisionHole).not.toHaveProperty("label");
+    expect(frontier.right.choices[0]).toMatchObject({
+      kind: "nestedProcedure",
+      subject: choice.subject,
+      initialHoles: [
+        {
+          kind: "abilityCheck",
+          holeInstanceKey: projectionHoles[0].holeInstanceKey,
+          holeId: projectionHoles[0].holeId,
+          ability: "dex",
+          skill: "stealth",
+          dc: 12,
+        },
+      ],
+    });
+    expect(frontier.right.choices[0]?.initialHoles[0]).not.toHaveProperty(
+      "label",
+    );
+    expect(frontier.right.choices[1]).toMatchObject({
+      kind: "reactionModifier",
+      responderId: projectionReactionModifierChoice.responderId,
+      modifier: {
+        kind: "fallDamageReduction",
+        procedureRef: projectionProcedureRef,
+        reduction: { kind: "flat", amount: 2 },
+      },
+      initialHoles: [],
+    });
   });
 });
