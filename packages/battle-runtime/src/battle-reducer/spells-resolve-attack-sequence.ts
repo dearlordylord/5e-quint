@@ -57,7 +57,7 @@ import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import {
-  sanctuaryTargetingInterdictionCheck,
+  targetingSaveInterdictionCheck,
   targetChoiceFillAfterSanctuaryAttackRollReplacement,
 } from "./sanctuary-targeting-interdiction.ts";
 import {
@@ -71,8 +71,8 @@ import {
 import { concentrationSavingThrowHole } from "./damage-apply.ts";
 import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
 import {
-  hideousLaughterDamageRepeatSaveFillCheck,
-  hideousLaughterDamageRepeatSaveFillsForTarget,
+  saveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
+  saveGatedConditionWithRepeatDamageRepeatSaveFillsForTarget,
 } from "./hideous-laughter-repeat-save.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import {
@@ -376,7 +376,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     input.invocation,
     input.partIndex,
   );
-  const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
+  const sanctuaryCheck = targetingSaveInterdictionCheck({
     state: input.state,
     triggeringProcedureRef: input.invocation.sourceProcedureRef,
     triggeringCombatantId: input.actorId,
@@ -449,7 +449,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     }
     /* v8 ignore stop -- @preserve */
     const fills = input.input.fills
-      .filter((fill) => fill.kind !== "sanctuaryInterdictionOutcome")
+      .filter((fill) => fill.kind !== "targetingSaveInterdictionOutcome")
       .map(
         (fill): BattleFill =>
           fill === originalTargetFill
@@ -928,17 +928,18 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     );
   }
   const relevantHideousLaughterDamageRepeatSaves =
-    hideousLaughterDamageRepeatSaveFillsForTarget(
+    saveGatedConditionWithRepeatDamageRepeatSaveFillsForTarget(
       spellReduction.target,
       input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
       damageEventKey,
     );
-  const hideousLaughterSaveCheck = hideousLaughterDamageRepeatSaveFillCheck({
-    target: spellReduction.target,
-    damageAmount: spellDamageAmount,
-    fills: relevantHideousLaughterDamageRepeatSaves,
-    damageEventKey,
-  });
+  const hideousLaughterSaveCheck =
+    saveGatedConditionWithRepeatDamageRepeatSaveFillCheck({
+      target: spellReduction.target,
+      damageAmount: spellDamageAmount,
+      fills: relevantHideousLaughterDamageRepeatSaves,
+      damageEventKey,
+    });
   if (hideousLaughterSaveCheck.tag === "needsHoles") {
     return needsHolesResult(
       postRemarkableAthleteMovementState,
@@ -1018,7 +1019,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       sourceDamageRollPenaltyRoll,
       saveGatedConditionWithRepeatDamageRepeatSaves:
         relevantHideousLaughterDamageRepeatSaves,
-      hideousLaughterDamageRepeatSaveEventKey: damageEventKey,
+      saveGatedConditionWithRepeatDamageRepeatSaveEventKey: damageEventKey,
       damageSourceId: input.actorId,
       spatialFacts: input.target.spatialFacts,
       ...optionalProperty("relationshipDecisions", relationshipCheck.decisions),

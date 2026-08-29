@@ -54,8 +54,8 @@ import {
 import { activeEffectArmorClass } from "./creature-state-execution.ts";
 import {
   damageLifecycleConcentrationSavingThrowHoles,
-  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
-  damageLifecycleHideousLaughterDamageRepeatSaveHoles,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
 import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
@@ -80,7 +80,7 @@ import { invalidResult } from "./result-helpers.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import {
-  sanctuaryTargetingInterdictionCheck,
+  targetingSaveInterdictionCheck,
   targetChoiceFillAfterSanctuaryAttackRollReplacement,
 } from "./sanctuary-targeting-interdiction.ts";
 import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
@@ -274,7 +274,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
   /* v8 ignore stop -- @preserve */
 
   if (input.release.kind === "ordinaryCast") {
-    const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
+    const sanctuaryCheck = targetingSaveInterdictionCheck({
       state: input.input.state,
       triggeringProcedureRef: input.invocation.sourceProcedureRef,
       triggeringCombatantId: input.actorId,
@@ -350,7 +350,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
       }
       /* v8 ignore stop -- @preserve */
       const fills = input.input.fills
-        .filter((fill) => fill.kind !== "sanctuaryInterdictionOutcome")
+        .filter((fill) => fill.kind !== "targetingSaveInterdictionOutcome")
         .map(
           (fill): BattleFill =>
             fill === originalTargetFill
@@ -795,14 +795,14 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
     );
   }
   const attackHideousLaughterSaveHoles =
-    damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+    damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
       state: postRemarkableAthleteMovementState,
       target,
       damageAmount: attackDamageAmount,
       damageEventKey: attackDamageEventKey,
     });
   const attackHideousLaughterSaveCheck =
-    damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+    damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck({
       state: postRemarkableAthleteMovementState,
       target,
       damageAmount: attackDamageAmount,
@@ -863,7 +863,8 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
             spellMarkedDamageRiders,
             saveGatedConditionWithRepeatDamageRepeatSaves:
               attackHideousLaughterLifecycleFills,
-            hideousLaughterDamageRepeatSaveEventKey: attackDamageEventKey,
+            saveGatedConditionWithRepeatDamageRepeatSaveEventKey:
+              attackDamageEventKey,
             sourceDamageRollPenaltyRoll:
               sourceDamageRollPenaltyRollForDamageRoll(
                 input.fillSet.sourceDamageRollPenaltyRolls,
@@ -1195,22 +1196,25 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
       return { tag: "ok" as const, holes: [] };
     }
     /* v8 ignore stop -- @preserve */
-    const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
-      state: damagedByAttack,
-      target: damagedTarget,
-      damageAmount,
-      damageEventKey: burstDamageEventKey,
-    });
-    return damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
-      state: damagedByAttack,
-      target: damagedTarget,
-      damageAmount,
-      fills: fillsMatchingHoleIds(
-        input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
-        holes,
-      ),
-      damageEventKey: burstDamageEventKey,
-    });
+    const holes =
+      damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
+        state: damagedByAttack,
+        target: damagedTarget,
+        damageAmount,
+        damageEventKey: burstDamageEventKey,
+      });
+    return damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck(
+      {
+        state: damagedByAttack,
+        target: damagedTarget,
+        damageAmount,
+        fills: fillsMatchingHoleIds(
+          input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+          holes,
+        ),
+        damageEventKey: burstDamageEventKey,
+      },
+    );
   });
   const invalidBurstHideousLaughterSaveCheck =
     burstHideousLaughterSaveChecks.find((check) => check.tag === "invalid");
@@ -1363,7 +1367,8 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
             spellMarkedDamageRiders,
             saveGatedConditionWithRepeatDamageRepeatSaves:
               attackHideousLaughterLifecycleFills,
-            hideousLaughterDamageRepeatSaveEventKey: attackDamageEventKey,
+            saveGatedConditionWithRepeatDamageRepeatSaveEventKey:
+              attackDamageEventKey,
             sourceDamageRollPenaltyRoll:
               sourceDamageRollPenaltyRollForDamageRoll(
                 input.fillSet.sourceDamageRollPenaltyRolls,
@@ -1415,7 +1420,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
           );
           const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
             input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
-            damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+            damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
               state: damagedByAttack,
               target: damagedTarget,
               damageAmount,
@@ -1433,7 +1438,8 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
             ),
             saveGatedConditionWithRepeatDamageRepeatSaves:
               hideousLaughterLifecycleFills,
-            hideousLaughterDamageRepeatSaveEventKey: burstDamageEventKey,
+            saveGatedConditionWithRepeatDamageRepeatSaveEventKey:
+              burstDamageEventKey,
             damageSourceId: input.actorId,
             spatialFacts: input.fillSet.targetSpatialFacts,
             ...(burstRelationshipCheck.decisions === undefined

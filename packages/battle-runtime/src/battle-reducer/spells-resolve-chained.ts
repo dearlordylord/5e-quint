@@ -65,8 +65,8 @@ import {
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowFillCheck,
   damageLifecycleConcentrationSavingThrowHoles,
-  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
-  damageLifecycleHideousLaughterDamageRepeatSaveHoles,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
 } from "./damage-apply.ts";
 import {
   addDamageAmountForType,
@@ -85,7 +85,7 @@ import {
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID,
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID,
 } from "./domain-constants.ts";
-import { isHideousLaughterDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
+import { isSaveGatedConditionWithRepeatDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
 
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -96,7 +96,7 @@ import {
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import {
-  sanctuaryTargetingInterdictionCheck,
+  targetingSaveInterdictionCheck,
   targetChoiceFillAfterSanctuaryAttackRollReplacement,
 } from "./sanctuary-targeting-interdiction.ts";
 import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
@@ -305,7 +305,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
     targeted = [...targeted, target.combatantId];
 
     const targetEventId = chainedSpellTargetHoleId(input.invocation, stepIndex);
-    const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
+    const sanctuaryCheck = targetingSaveInterdictionCheck({
       state: replayState,
       triggeringProcedureRef: input.invocation.sourceProcedureRef,
       triggeringCombatantId: input.actorId,
@@ -398,7 +398,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
       }
       /* v8 ignore stop -- @preserve */
       const fills = input.input.fills
-        .filter((fill) => fill.kind !== "sanctuaryInterdictionOutcome")
+        .filter((fill) => fill.kind !== "targetingSaveInterdictionOutcome")
         .map(
           (fill): BattleFill =>
             fill === originalTargetFill
@@ -804,7 +804,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
       }
     }
     const hideousLaughterLifecycleHoles =
-      damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+      damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
         state: replayState,
         target,
         damageAmount,
@@ -815,7 +815,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
       hideousLaughterLifecycleHoles,
     );
     const hideousLaughterSaveCheck =
-      damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+      damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck({
         state: replayState,
         target,
         damageAmount,
@@ -891,7 +891,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
           concentrationLifecycleFills,
         saveGatedConditionWithRepeatDamageRepeatSaves:
           hideousLaughterLifecycleFills,
-        hideousLaughterDamageRepeatSaveEventKey: damageEventKey,
+        saveGatedConditionWithRepeatDamageRepeatSaveEventKey: damageEventKey,
         damageSourceId: input.actorId,
         spatialFacts: step.target.spatialFacts,
         ...optionalProperty(
@@ -1063,7 +1063,7 @@ export function chainedSpellFillSet(
     if (fill.kind === "damageRelationshipDecisions") {
       continue;
     }
-    if (fill.kind === "slowSomaticSpellFailureOutcome") {
+    if (fill.kind === "turnConstraintSomaticSpellFailureOutcome") {
       continue;
     }
 
@@ -1273,7 +1273,7 @@ export function chainedSpellFillSet(
     }
     if (
       fill.kind === "savingThrowOutcome" &&
-      isHideousLaughterDamageRepeatSaveFill(fill)
+      isSaveGatedConditionWithRepeatDamageRepeatSaveFill(fill)
     ) {
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
@@ -1304,7 +1304,7 @@ export function chainedSpellFillSet(
       damageDispositions.push(fill);
       continue;
     }
-    if (fill.kind === "sanctuaryInterdictionOutcome") {
+    if (fill.kind === "targetingSaveInterdictionOutcome") {
       continue;
     }
     /* v8 ignore start -- @preserve -- Malformed resolution input: every fill kind emitted for a chained-spell replay is consumed by a preceding parser branch. */
@@ -1559,7 +1559,7 @@ type ChainedSpellDamageContext = {
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[];
-  readonly hideousLaughterDamageRepeatSaveEventKey?: string;
+  readonly saveGatedConditionWithRepeatDamageRepeatSaveEventKey?: string;
   readonly damageSourceId: CombatantId;
   readonly spatialFacts: readonly BattleTargetSpatialFact[];
   readonly relationshipDecisions?: BattleDamageRelationshipDecisions;
@@ -1586,7 +1586,7 @@ export function applyChainedSpellDamage(
       context.linkedDefenseResistanceDamageShareConcentrationSavingThrows,
     saveGatedConditionWithRepeatDamageRepeatSaves:
       context.saveGatedConditionWithRepeatDamageRepeatSaves,
-    hideousLaughterDamageRepeatSaveEventKey:
-      context.hideousLaughterDamageRepeatSaveEventKey,
+    saveGatedConditionWithRepeatDamageRepeatSaveEventKey:
+      context.saveGatedConditionWithRepeatDamageRepeatSaveEventKey,
   });
 }

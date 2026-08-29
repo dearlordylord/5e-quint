@@ -2002,7 +2002,7 @@ type ResolvedSpellDamageContext = {
   readonly concentrationSavingThrow?:
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined;
-  readonly wardingBondDamageShareConcentrationSavingThrows?:
+  readonly linkedDefenseResistanceDamageShareConcentrationSavingThrows?:
     | readonly Extract<
         BattleFill,
         { readonly kind: "concentrationSavingThrow" }
@@ -2051,7 +2051,7 @@ export function applyResolvedSpellDamage(
 ): BattleState {
   const {
     concentrationSavingThrow,
-    wardingBondDamageShareConcentrationSavingThrows,
+    linkedDefenseResistanceDamageShareConcentrationSavingThrows,
     saveGatedConditionWithRepeatDamageRepeatSaves,
     saveGatedConditionWithRepeatDamageRepeatSaveEventKey,
     damageDisposition = { kind: "ordinaryDamage" },
@@ -2080,8 +2080,8 @@ export function applyResolvedSpellDamage(
     ...optionalProperty("relationshipDecisions", relationshipDecisions),
     concentrationSavingThrow,
     ...optionalProperty(
-      "wardingBondDamageShareConcentrationSavingThrows",
-      wardingBondDamageShareConcentrationSavingThrows,
+      "linkedDefenseResistanceDamageShareConcentrationSavingThrows",
+      linkedDefenseResistanceDamageShareConcentrationSavingThrows,
     ),
     ...optionalProperty(
       "saveGatedConditionWithRepeatDamageRepeatSaves",

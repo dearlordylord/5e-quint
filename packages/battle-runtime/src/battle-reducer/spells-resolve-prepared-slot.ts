@@ -32,8 +32,8 @@ import {
 import {
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowHoles,
-  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
-  damageLifecycleHideousLaughterDamageRepeatSaveHoles,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
 import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
@@ -52,7 +52,7 @@ import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spe
 import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 import {
   battleStateAfterTargetActionEarlyEndForActor,
-  sanctuaryTargetingInterdictionCheck,
+  targetingSaveInterdictionCheck,
 } from "./sanctuary-targeting-interdiction.ts";
 import {
   applyPreparedSlotSpellDamage,
@@ -145,7 +145,7 @@ export function resolvePreparedSlotSpellAct(input: {
   /* v8 ignore stop -- @preserve */
 
   for (const allocation of targetAllocation.allocations) {
-    const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
+    const sanctuaryCheck = targetingSaveInterdictionCheck({
       state: input.input.state,
       triggeringProcedureRef: input.invocation.sourceProcedureRef,
       triggeringCombatantId: input.actorId,
@@ -255,7 +255,7 @@ export function resolvePreparedSlotSpellAct(input: {
       ...replacementFacts,
     ];
     const fills = input.input.fills
-      .filter((fill) => fill.kind !== "sanctuaryInterdictionOutcome")
+      .filter((fill) => fill.kind !== "targetingSaveInterdictionOutcome")
       .map(
         (fill): BattleFill =>
           fill === originalAllocationFill
@@ -526,20 +526,23 @@ export function resolvePreparedSlotSpellAct(input: {
       /* v8 ignore stop -- @preserve */
       const damageAmount =
         damageAmountByAllocationIndex.get(allocationIndex) ?? 0;
-      const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
-        state: input.input.state,
-        target,
-        damageAmount,
-      });
-      return damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
-        state: input.input.state,
-        target,
-        damageAmount,
-        fills: fillsMatchingHoleIds(
-          input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
-          holes,
-        ),
-      });
+      const holes =
+        damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
+          state: input.input.state,
+          target,
+          damageAmount,
+        });
+      return damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck(
+        {
+          state: input.input.state,
+          target,
+          damageAmount,
+          fills: fillsMatchingHoleIds(
+            input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+            holes,
+          ),
+        },
+      );
     },
   );
   const invalidHideousLaughterSaveCheck = hideousLaughterSaveChecks.find(
@@ -655,7 +658,7 @@ export function resolvePreparedSlotSpellAct(input: {
         concentrationLifecycleHoles,
       );
       const hideousLaughterLifecycleHoles =
-        damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+        damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
           state,
           target,
           damageAmount,

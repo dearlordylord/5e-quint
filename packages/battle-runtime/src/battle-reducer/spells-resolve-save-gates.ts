@@ -60,7 +60,7 @@ import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { applyBattleMovement } from "./battle-movement.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
-import { sanctuaryTargetingInterdictionCheck } from "./sanctuary-targeting-interdiction.ts";
+import { targetingSaveInterdictionCheck } from "./sanctuary-targeting-interdiction.ts";
 import {
   spellCastInterruptFrame,
   spellCastMetamagicApplicationsInput,
@@ -1245,7 +1245,7 @@ export function resolveSaveGateDamageSpellAct(input: {
       );
     }
     /* v8 ignore stop -- @preserve */
-    const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
+    const sanctuaryCheck = targetingSaveInterdictionCheck({
       state: input.input.state,
       triggeringProcedureRef: input.invocation.sourceProcedureRef,
       triggeringCombatantId: input.actorId,

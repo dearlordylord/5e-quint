@@ -57,8 +57,8 @@ import {
 import {
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowHoles,
-  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
-  damageLifecycleHideousLaughterDamageRepeatSaveHoles,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
 import {
@@ -833,20 +833,23 @@ function resolveObjectContactDamage(input: {
   }
   const hideousLaughterSaveChecks = resolvedDamageTargets.map(
     ({ target, damage }) => {
-      const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
-        state: input.state,
-        target,
-        damageAmount: damage,
-      });
-      return damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
-        state: input.state,
-        target,
-        damageAmount: damage,
-        fills: fillsMatchingHoleIds(
-          input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
-          holes,
-        ),
-      });
+      const holes =
+        damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
+          state: input.state,
+          target,
+          damageAmount: damage,
+        });
+      return damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck(
+        {
+          state: input.state,
+          target,
+          damageAmount: damage,
+          fills: fillsMatchingHoleIds(
+            input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+            holes,
+          ),
+        },
+      );
     },
   );
   const invalidHideousLaughterSaveCheck = hideousLaughterSaveChecks.find(
@@ -1082,7 +1085,7 @@ function resolveObjectContactDamage(input: {
       concentrationLifecycleHoles,
     );
     const hideousLaughterLifecycleHoles =
-      damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+      damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
         state,
         target,
         damageAmount,

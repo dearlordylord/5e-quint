@@ -1108,7 +1108,7 @@ export function resolveMovementEffectsAfterMovement(input: {
           damageDispositionFills,
           input.movement.moverId,
         ),
-        wardingBondDamageShareConcentrationSavingThrows: [],
+        linkedDefenseResistanceDamageShareConcentrationSavingThrows: [],
         saveGatedConditionWithRepeatDamageRepeatSaves: [],
         spatialFacts: [],
       },
