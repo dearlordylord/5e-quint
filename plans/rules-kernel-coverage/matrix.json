@@ -929,7 +929,7 @@
       "parityWitnesses": [
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/companion-lifecycle.test.ts"
+          "ownerPath": "packages/battle-runtime/src/find-familiar-lifecycle.test.ts"
         },
         {
           "kind": "focused-mbt",

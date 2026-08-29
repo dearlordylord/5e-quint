@@ -576,7 +576,7 @@
     "packages/battle-runtime/src/dragons-breath-granted-action.mbt.test.ts",
     "packages/battle-runtime/src/dragons-breath-initial-effect.mbt.test.ts",
     "packages/battle-runtime/src/find-familiar-companion-lifecycle.mbt.test.ts",
-    "packages/battle-runtime/src/companion-lifecycle.test.ts",
+    "packages/battle-runtime/src/find-familiar-lifecycle.test.ts",
     "packages/battle-runtime/src/flaming-sphere-hazard-ram.mbt.test.ts",
     "packages/battle-runtime/src/gust-of-wind-line-lifecycle.mbt.test.ts",
     "packages/battle-runtime/src/haste-lethargy-lifecycle.mbt.test.ts",
