@@ -811,16 +811,11 @@ the explicit owner sweep documented above.
 
 ## Issue #381 persistent spells and active effects evidence snapshot
 
-This is a static evidence checkpoint at source HEAD
-`4e48b4ca78188eea7ed82474d13ca1ad912711b5` on
-`agent/gh381-persistent-spells-effect4`. The source delta from the preceding
-integration head `a30e81ab4` is limited to four MBT adapters:
-`mirror-image-hit-interception.mbt.test.ts`, `moonbeam-movable-zone.mbt.test.ts`,
-`ray-of-enfeeblement-lifecycle.mbt.test.ts`, and
-`see-invisibility-observer-sight.mbt.test.ts`. This lane did not change those
-adapters, production/runtime code, or the existing controlled-red inventory.
-Runtime, MBT, and dependency-backed QNT results below are deliberately marked
-pending.
+This section records the authoritative clean integration verification at source
+HEAD `e0cb1d701`. The local branch matched its remote, and the generated #381
+manifest selected 58 obligations. The historical diagnostic inventory below
+is preserved as migration history; it is not the current #381 verification
+result.
 
 The adapter diff follows the local Effect v3-to-v4 migration guidance and the
 checked-in RC migration reference: removed `Schema.standardSchemaV1`,
@@ -838,16 +833,16 @@ interdiction, Reaction, interrupt-stack, concentration-teardown, and
 turn-boundary rows in the manifest. It contains 58 obligation IDs and records
 the direct five-obligation adapter mapping:
 
-| #381 concern | Manifest evidence |
-| --- | --- |
-| Concentration and continuation | 42 IDs, including area hazards, save-gated effects, Ray of Enfeeblement, Reaction continuation, and concentration teardown |
-| Ongoing/persistent and active effects | 49 active-effect lifecycle IDs |
-| Spatial hazards | 11 IDs, including Sleet Storm, Insect Plague, Cloudkill, Web, Gust of Wind, Spike Growth, Grease, Fog Cloud, Darkness, Flaming Sphere, and Moonbeam |
-| Granted actions | Dragon's Breath initial/granted action and Haste positive-effect IDs (3) |
-| Spell reactions/interruption | Reaction offer/decline, Feather Fall, forced movement, reaction casting, interrupt replay, and concentration teardown (6) |
-| Suppression | Antimagic ongoing suppression and Magic Action interdiction (2) |
-| Expiration/cleanup | 53 active-effect, continuation, turn-boundary, and concentration teardown IDs |
-| Directly migrated adapter obligations | Mirror Image, Moonbeam, Ray of Enfeeblement D20, Ray of Enfeeblement damage penalty, and See Invisibility (5) |
+| #381 concern                          | Manifest evidence                                                                                                                                   |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Concentration and continuation        | 42 IDs, including area hazards, save-gated effects, Ray of Enfeeblement, Reaction continuation, and concentration teardown                          |
+| Ongoing/persistent and active effects | 49 active-effect lifecycle IDs                                                                                                                      |
+| Spatial hazards                       | 11 IDs, including Sleet Storm, Insect Plague, Cloudkill, Web, Gust of Wind, Spike Growth, Grease, Fog Cloud, Darkness, Flaming Sphere, and Moonbeam |
+| Granted actions                       | Dragon's Breath initial/granted action and Haste positive-effect IDs (3)                                                                            |
+| Spell reactions/interruption          | Reaction offer/decline, Feather Fall, forced movement, reaction casting, interrupt replay, and concentration teardown (6)                           |
+| Suppression                           | Antimagic ongoing suppression and Magic Action interdiction (2)                                                                                     |
+| Expiration/cleanup                    | 53 active-effect, continuation, turn-boundary, and concentration teardown IDs                                                                       |
+| Directly migrated adapter obligations | Mirror Image, Moonbeam, Ray of Enfeeblement D20, Ray of Enfeeblement damage penalty, and See Invisibility (5)                                       |
 
 The manifest also records related but unselected profile/state-transition rows
 (`READIED_RESPONSE_PROCEDURE`, `SPIRITUAL_WEAPON_ATTACK_PROXY`, the additional
@@ -931,42 +926,50 @@ audits likewise returned zero matches. `git diff --check` passed. These are
 static findings only; they do not substitute for runtime behavior or QNT
 execution evidence.
 
-### Pending dependency-backed evidence
+### Authoritative dependency-backed evidence
 
-The current shared `node_modules` resolves `effect@3.21.5`, while this branch's
-lockfile requires `effect@4.0.0-rc.112`; no RC112 installation was found. No
-package typecheck, Quint typecheck, MBT, runtime suite, or controlled-red
-regeneration is counted from this environment, and nothing was installed.
+The clean `e0cb1d701` verification passed the generated manifest self-test and
+stale check, the Rules Kernel inventory with 147 obligations, and Unit Profile
+accounting with 400 units and 258 profiles. Workspace quality inventory, MBT
+driver closure (8/8), MBT script inventory (all 147 Battle tests accounted),
+QNT inventory (775/775), and the Battle Runtime package typecheck also passed.
 
-The following commands are pending an RC112-compatible prebuilt environment:
+Public MBTs passed sequentially under their required lock: Insect Plague 4/4,
+Cloudkill 6/6, Protection selected identity 7/7, and Protection turn boundary
+8/8. Direct semantic verification passed 16 QNT typechecks and 21 Quint tests
+across the selected modules (3 + 8 + 7 + 2 + 1). Four sampled runs completed
+100 samples each: Cloudkill at maxSteps 2 with seed
+`0x66e0437b79ede492`, Insect Plague at maxSteps 8 with seed
+`0x68ab5020f627e10f`, Protection at maxSteps 8 with seed
+`0xe725c7a67c03f1bc`, and the turn-boundary route at maxSteps 4 with seed
+`0x92d9e0c1ed39d901`. `pnpm quality:milestone` was explicitly not run.
+
+The semantic-core sweep derives both its paths and expected count from the
+generated manifest:
 
 ```sh
-# Resolve the 111 semantic-core owners from the committed manifest and run
+# Resolve the semantic-core owners and count from the committed manifest, then run
 # each direct Quint typecheck sequentially under the required MBT lock.
 owner_list=$(node -e 'const fs=require("node:fs"); const m=JSON.parse(fs.readFileSync("docs/migrations/effect-4/gh381-registry-path-manifest.json","utf8")); process.stdout.write(m.qntOwnerAccounting.semanticCorePaths.join("\n"));')
+owner_count=$(node -e 'const fs=require("node:fs"); const m=JSON.parse(fs.readFileSync("docs/migrations/effect-4/gh381-registry-path-manifest.json","utf8")); process.stdout.write(String(m.qntOwnerAccounting.counts.semanticCore));')
 export GH381_QNT_OWNERS="$owner_list"
+export GH381_QNT_OWNER_COUNT="$owner_count"
 . scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-mbt-lock.sh bash -c '
   set -euo pipefail
   mapfile -t owners <<< "$GH381_QNT_OWNERS"
-  test "${#owners[@]}" -eq 111
+  test "${#owners[@]}" -eq "$GH381_QNT_OWNER_COUNT"
   for owner in "${owners[@]}"; do pnpm exec quint typecheck "$owner"; done
 '
-
-# Regenerate the post-#381 controlled-red inventory under the public broad lock.
-pnpm regenerate:effect4-controlled-red
 ```
 
 The tracked inventory is still the historical #380 snapshot
 `SHA-256 d05ae671a2671cbd1f9a2d51d13c484de37830ba164eb2419534b8c0915465f3`:
 1,129 raw and 1,006 deduplicated diagnostics (176 app, 19 battle-runtime,
 934 MCP, and zero for the other owners), recorded before source HEAD
-`4e48b4ca7`. Those numbers are not a #381 result. The refreshed hash, exact
-owner counts, Battle diagnostics, focused runtime tests, and MBT/QNT results
-remain `[pending: RC112-compatible verification environment and authoritative
-runtime/MBT worker logs]`.
+`4e48b4ca7`. Those numbers are not a #381 result and are intentionally retained
+only as the pre-#381 controlled-red diagnostic baseline.
 
 The static RAW/ubiquitous-language, architecture/connascence, API, identity,
-and ownership passes converge for this documentation checkpoint. Full
-reviewer-loop convergence and any claim of complete #381 behavior remain
-pending the dependency-backed QNT, runtime, MBT, and controlled-red evidence;
-no issue closure or merge is claimed here.
+and ownership passes converged with the dependency-backed QNT, runtime, and MBT
+evidence above. This evidence records the verified integration revision; it
+does not claim that `quality:milestone` ran.

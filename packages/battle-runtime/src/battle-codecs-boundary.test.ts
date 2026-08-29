@@ -50,7 +50,7 @@ import {
   battleTablePositionId,
 } from "./identity.ts";
 import { parseBattleSpellEffectLevel } from "./procedure-execution/spell-effect-level.ts";
-import { battleActiveEffectOccurrenceSpatialClass } from "./battle-reducer/creature-state-execution.ts";
+import { battleActiveEffectOccurrenceSpatialProjection } from "./battle-reducer/creature-state-execution.ts";
 
 type EncodedHole = Schema.Codec.Encoded<typeof BattleHoleSchema>;
 type EncodedSnapshot = Schema.Codec.Encoded<typeof BattleSnapshotSchema>;
@@ -348,6 +348,28 @@ function codecFixture() {
           heightFeet: movementFeet(20),
           save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
           savedThisTurn: [],
+          expiresAt: {
+            kind: "concentration",
+            combatantId: wizardId,
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: wizardId,
+        effect: {
+          kind: "spellObjectContactDamage",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          sourceSpellLevel: glyphSpellLevel,
+          objectId: battleObjectId("object:codec-contact-damage"),
+          rangeFeet: movementFeet(60),
+          damage: { expr: { dice: 2, dieSize: 8 }, damageType: "fire" },
+          startedOn: {
+            actorId: wizardId,
+            round: session.state.initiative.round,
+          },
           expiresAt: {
             kind: "concentration",
             combatantId: wizardId,
@@ -716,6 +738,9 @@ function codecFixture() {
     ),
     storedLightEmitterRef: skeletonStoredLightEmitter.emitter.effectRef,
     wizardStoredLightEmitterRef: storedLightEmitterRef(wizardId),
+    activeEffects: allocated.occurrences.flatMap((occurrence) =>
+      occurrence.kind === "activeEffect" ? [occurrence.effect] : [],
+    ),
   };
 }
 
@@ -1231,20 +1256,53 @@ function damageProtocolHoleWithEffectRef(
 }
 
 describe("battle codec execution-reference boundaries", () => {
-  test("canonical occurrence spatial classes agree with structural snapshot projection", () => {
+  test("the exhaustive active-effect projection owns each snapshot location", () => {
+    const projectionsByEffectRef = new Map(
+      fixture.activeEffects.map((effect) => [
+        String(effect.effectRef),
+        battleActiveEffectOccurrenceSpatialProjection(effect),
+      ]),
+    );
+    const observedSpatialClasses = new Set<string>();
+
     for (const occurrence of fixture.snapshot.combatants.flatMap(
       (combatant) => combatant.activeEffectOccurrences,
     )) {
-      const spatialClass = battleActiveEffectOccurrenceSpatialClass(
-        occurrence.activeEffectKind,
+      const projection = projectionsByEffectRef.get(
+        String(occurrence.effectRef),
       );
-      expect(
-        spatialClass === "anchored"
-          ? occurrence.location.kind === "area" ||
-              occurrence.location.kind === "object"
-          : occurrence.location.kind === spatialClass,
-      ).toBe(true);
+      expect(projection).toBeDefined();
+      expect(occurrence.location).toEqual(projection?.location);
+      if (projection !== undefined) {
+        observedSpatialClasses.add(projection.spatialClass);
+      }
     }
+
+    expect(observedSpatialClasses).toEqual(
+      new Set(["nonSpatial", "area", "line", "object", "anchored"]),
+    );
+
+    const glyph = fixture.activeEffects.find(
+      (effect) => effect.kind === "glyphDurableOccurrence",
+    );
+    if (glyph?.kind !== "glyphDurableOccurrence") {
+      throw new Error("Expected the codec Glyph effect occurrence.");
+    }
+    expect(
+      battleActiveEffectOccurrenceSpatialProjection({
+        ...glyph,
+        anchor: {
+          kind: "closeableObject",
+          objectId: battleObjectId("object:codec-glyph-anchor"),
+        },
+      }),
+    ).toEqual({
+      spatialClass: "anchored",
+      location: {
+        kind: "object",
+        objectId: battleObjectId("object:codec-glyph-anchor"),
+      },
+    });
   });
 
   test.each([
