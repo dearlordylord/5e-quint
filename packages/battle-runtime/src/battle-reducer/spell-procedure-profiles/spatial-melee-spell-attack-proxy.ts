@@ -501,6 +501,13 @@ const SpatialMeleeSpellAttackProxyRepeatAttackInvocationSchema =
       spellRuleFacts: Schema.optionalKey(Schema.Never),
       activeEffectRef: BattleEffectExecutionRef,
       activeEffectSourceProcedureRef: BattleProcedureExecutionRef,
+      repeatTargeting: Schema.Union([
+        Schema.Struct({ kind: Schema.Literal("unrestricted") }),
+        Schema.Struct({
+          kind: Schema.Literal("fixedCombatant"),
+          combatantId: CombatantId,
+        }),
+      ]),
     }),
   );
 export const spatialMeleeSpellAttackProxyProfile = {

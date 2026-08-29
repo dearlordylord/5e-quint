@@ -212,8 +212,8 @@ function spatialMeleeSpellAttackProxyRepeatTargetingAllows(
   return (
     invocation.procedure !== "spatialMeleeSpellAttackProxy" ||
     invocation.operation !== "repositionAndAttack" ||
-    invocation.activeEffect.repeatTargeting.kind === "unrestricted" ||
-    invocation.activeEffect.repeatTargeting.combatantId === targetId
+    invocation.repeatTargeting.kind === "unrestricted" ||
+    invocation.repeatTargeting.combatantId === targetId
   );
 }
 

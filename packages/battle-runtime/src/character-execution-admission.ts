@@ -2511,6 +2511,7 @@ export function spellProcedureExecution(
               repeat.activeEffect.sourceProcedureRef,
             operation: repeat.operation,
             procedure: repeat.procedure,
+            repeatTargeting: repeat.repeatTargeting,
           })),
           Match.exhaustive,
         ),

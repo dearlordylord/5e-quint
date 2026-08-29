@@ -530,11 +530,12 @@ function executableSpellProcedureFromLiveEffects(
           actionCost: "bonusAction",
           activeEffect,
           targeting: { kind: "singleCombatant" },
-          damage: activeEffect.damage,
-          attackKind: activeEffect.attackKind,
-          attackBonus: activeEffect.attackBonus,
-          forceReachFeet: activeEffect.forceReachFeet,
-          repeatMoveMaxFeet: activeEffect.repeatMoveMaxFeet,
+          repeatTargeting: stored.repeatTargeting,
+          damage: source.damage,
+          attackKind: source.attackKind,
+          attackBonus: source.attackBonus,
+          forceReachFeet: source.forceReachFeet,
+          repeatMoveMaxFeet: source.repeatMoveMaxFeet,
         }
       : undefined;
   }

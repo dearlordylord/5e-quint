@@ -30,9 +30,15 @@ import type {
   BattleResolutionResult,
   BattleSavingThrowOutcome,
   BattleState,
+  BattleTurnAnchor,
 } from "../battle-state-execution.ts";
 import { validateRolledDiceFillForDiceExpr } from "../battle-state-execution.ts";
 import type { BattleEffectExecutionRef, CombatantId } from "../identity.ts";
+import { characterRetainedSpellProcedureExecution } from "../character-execution-queries.ts";
+import type {
+  SourceTurnTranslationPersistentAreaSaveDamageSpellProcedureExecution,
+  StationaryPersistentAreaSaveDamageSpellProcedureExecution,
+} from "../procedure-execution/spell-procedure-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import { concentrationSavingThrowHole } from "./damage-apply.ts";
 import {
@@ -68,21 +74,32 @@ import {
 } from "./spells-damage-fills.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 
-type StationaryPersistentAreaAreaHazardEffect = Extract<
+type PersistentAreaSaveDamageOccurrence = Extract<
   BattleActiveEffect,
   {
     readonly kind: "persistentAreaSaveDamage";
-    readonly lifecycle: { readonly kind: "stationary" };
+    readonly appearanceOccurrence: BattleTurnAnchor;
+    readonly savedThisTurn: readonly CombatantId[];
   }
 >;
 
-export type TranslatingPersistentAreaAreaHazardEffect = Extract<
-  BattleActiveEffect,
-  {
-    readonly kind: "persistentAreaSaveDamage";
-    readonly lifecycle: { readonly kind: "sourceTurnTranslation" };
-  }
->;
+type StationaryPersistentAreaAreaHazardEffect =
+  PersistentAreaSaveDamageOccurrence & {
+    readonly save: {
+      readonly ability: StationaryPersistentAreaSaveDamageSpellProcedureExecution["ability"];
+      readonly dc: StationaryPersistentAreaSaveDamageSpellProcedureExecution["dc"];
+    };
+    readonly damage: StationaryPersistentAreaSaveDamageSpellProcedureExecution["damage"];
+  };
+
+export type TranslatingPersistentAreaAreaHazardEffect =
+  PersistentAreaSaveDamageOccurrence & {
+    readonly save: {
+      readonly ability: SourceTurnTranslationPersistentAreaSaveDamageSpellProcedureExecution["ability"];
+      readonly dc: SourceTurnTranslationPersistentAreaSaveDamageSpellProcedureExecution["dc"];
+    };
+    readonly damage: SourceTurnTranslationPersistentAreaSaveDamageSpellProcedureExecution["damage"];
+  };
 
 export type TranslatingPersistentAreaMovementSaveDamageRequest = {
   readonly effect: TranslatingPersistentAreaAreaHazardEffect;
@@ -267,12 +284,10 @@ export function resolveStationaryPersistentAreaAreaSaveDamage(
   if (allowedFillIssue !== null) {
     return allowedFillIssue;
   }
-  const locatedEffect = activeEffectForRef(
+  const locatedEffect = persistentAreaSaveDamageEffectForRef(
     resolution.state,
     resolution.subject.areaMembershipTrigger.effectRef,
-    (candidate): candidate is StationaryPersistentAreaAreaHazardEffect =>
-      candidate.kind === "persistentAreaSaveDamage" &&
-      candidate.lifecycle.kind === "stationary",
+    "stationary",
   );
   const parsed = parsePersistentAreaSaveDamageProcedure({
     kind: "stationaryPersistentArea",
@@ -298,12 +313,10 @@ export function resolveTranslatingPersistentAreaAreaSaveDamage(
   if (allowedFillIssue !== null) {
     return allowedFillIssue;
   }
-  const locatedEffect = activeEffectForRef(
+  const locatedEffect = persistentAreaSaveDamageEffectForRef(
     resolution.state,
     resolution.subject.areaMembershipTrigger.effectRef,
-    (candidate): candidate is TranslatingPersistentAreaAreaHazardEffect =>
-      candidate.kind === "persistentAreaSaveDamage" &&
-      candidate.lifecycle.kind === "sourceTurnTranslation",
+    "sourceTurnTranslation",
   );
   const parsed = parsePersistentAreaSaveDamageProcedure({
     kind: "translatingPersistentArea",
@@ -428,12 +441,10 @@ function resolveTranslatingPersistentAreaMovementSaveDamageRequest(input: {
     ),
     Match.exhaustive,
   );
-  const locatedActiveEffect = activeEffectForRef(
+  const locatedActiveEffect = persistentAreaSaveDamageEffectForRef(
     input.state,
     input.request.effect.effectRef,
-    (candidate): candidate is TranslatingPersistentAreaAreaHazardEffect =>
-      candidate.kind === "persistentAreaSaveDamage" &&
-      candidate.lifecycle.kind === "sourceTurnTranslation",
+    "sourceTurnTranslation",
   );
   if (!input.isFirstRequest && locatedActiveEffect === undefined) {
     return { tag: "stopped" };
@@ -1422,19 +1433,43 @@ function persistentAreaAdjustedDamage(input: {
   );
 }
 
-function activeEffectForRef<
-  TEffect extends BattleActiveEffect & {
-    readonly effectRef: BattleEffectExecutionRef;
-  },
->(
+function persistentAreaSaveDamageEffectForRef(
   state: BattleState,
-  effectRef: TEffect["effectRef"],
-  isExpectedEffect: (effect: BattleActiveEffect) => effect is TEffect,
+  effectRef: BattleEffectExecutionRef,
+  expectedLifecycle: "stationary",
 ):
-  | { readonly effectOwnerId: CombatantId; readonly effect: TEffect }
+  | {
+      readonly effectOwnerId: CombatantId;
+      readonly effect: StationaryPersistentAreaAreaHazardEffect;
+    }
+  | undefined;
+function persistentAreaSaveDamageEffectForRef(
+  state: BattleState,
+  effectRef: BattleEffectExecutionRef,
+  expectedLifecycle: "sourceTurnTranslation",
+):
+  | {
+      readonly effectOwnerId: CombatantId;
+      readonly effect: TranslatingPersistentAreaAreaHazardEffect;
+    }
+  | undefined;
+function persistentAreaSaveDamageEffectForRef(
+  state: BattleState,
+  effectRef: BattleEffectExecutionRef,
+  expectedLifecycle: "stationary" | "sourceTurnTranslation",
+):
+  | {
+      readonly effectOwnerId: CombatantId;
+      readonly effect:
+        | StationaryPersistentAreaAreaHazardEffect
+        | TranslatingPersistentAreaAreaHazardEffect;
+    }
   | undefined {
   let located:
-    | { readonly effectOwnerId: CombatantId; readonly effect: TEffect }
+    | {
+        readonly effectOwnerId: CombatantId;
+        readonly effect: PersistentAreaSaveDamageOccurrence;
+      }
     | undefined;
   for (const [effectOwnerId, combatant] of state.combatants) {
     for (const candidate of combatant.activeEffects) {
@@ -1442,11 +1477,43 @@ function activeEffectForRef<
         continue;
       }
       if (located !== undefined) return undefined;
-      if (!isExpectedEffect(candidate)) return undefined;
+      if (
+        candidate.kind !== "persistentAreaSaveDamage" ||
+        candidate.appearanceOccurrence === undefined ||
+        candidate.savedThisTurn === undefined ||
+        candidate.shapeShiftSuppressed !== undefined
+      ) {
+        return undefined;
+      }
       located = { effectOwnerId, effect: candidate };
     }
   }
-  return located;
+  if (located === undefined) return undefined;
+  const owner = state.combatants.get(located.effectOwnerId);
+  if (
+    owner?.origin.kind !== "character" ||
+    located.effect.sourceCombatantId !== located.effectOwnerId
+  ) {
+    return undefined;
+  }
+  const procedure = characterRetainedSpellProcedureExecution(
+    owner.origin.execution,
+    located.effect.sourceProcedureRef,
+  );
+  if (
+    procedure?.procedure !== "persistentAreaSaveDamage" ||
+    procedure.lifecycle.kind !== expectedLifecycle
+  ) {
+    return undefined;
+  }
+  return {
+    effectOwnerId: located.effectOwnerId,
+    effect: {
+      ...located.effect,
+      save: { ability: procedure.ability, dc: procedure.dc },
+      damage: procedure.damage,
+    },
+  };
 }
 
 function persistentAreaTriggerFromMembershipFact(
