@@ -66,6 +66,7 @@ export function procedureForFamily(
     Match.when("magic_circle_ward", () => "activate" as const),
     Match.when("stone_merge", () => "activate" as const),
     Match.when("ongoing_effect", () => "activate" as const),
+    Match.when("modal_ongoing_effect", () => "activate" as const),
     Match.when("activation", () => "activate" as const),
     Match.when("modal_activation", () => "activate" as const),
     Match.when("passive_hit_intercept", () => "activate" as const),
@@ -497,6 +498,8 @@ export function describeAreaShape(s: AreaShapeSpec): string {
       return `cone ${s.lengthFeet} ft`;
     case "cube":
       return `cube ${s.sideFeet} ft side`;
+    case "ground_square":
+      return `ground square ${s.sideFeet} ft side`;
     case "cube_cluster": {
       const contig = s.contiguous === true ? ", contiguous" : "";
       return `up to ${s.maxCubes} cubes (${s.sideFeet} ft side${contig})`;
@@ -534,6 +537,8 @@ export function describeAreaShapeFixed(s: AreaShapeDescriptor): string {
       return `cone ${s.lengthFeet} ft`;
     case "cube":
       return `cube ${s.sideFeet} ft side`;
+    case "ground_square":
+      return `ground square ${s.sideFeet} ft side`;
     case "cube_cluster": {
       const contig = s.contiguous === true ? ", contiguous" : "";
       return `up to ${s.maxCubes} cubes (${s.sideFeet} ft side${contig})`;
