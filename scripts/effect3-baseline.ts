@@ -1,4 +1,4 @@
-import { execFileSync, spawn, type ChildProcess } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { constants } from "node:fs";
 import {
@@ -13,7 +13,6 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { createServer as createTcpServer } from "node:net";
 import { dirname, extname, join, posix, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -39,6 +38,8 @@ import {
   removeCondition,
 } from "../packages/shared-algebras/src/conditions-algebra.ts";
 import { buildAdvertisedToolDefinitions } from "../packages/mcp/src/protocol-server.ts";
+import { createDndMcpHttpServer } from "../packages/mcp/src/public-http-server.ts";
+import { openSqlitePlaySessionRepository } from "../packages/mcp/src/recoverable-play-session.ts";
 import { playSessionToolDefinitions } from "../packages/mcp/src/play-session-tool-contract.ts";
 import { decodeStoredPlaySessionRecord } from "../packages/mcp/src/play-session-repository.ts";
 import { decodePlaySessionId } from "../packages/mcp/src/play-session.ts";
@@ -317,7 +318,7 @@ function snapshotToolDefinition(
     inputSchema: definition.inputSchema,
     ...(definition.outputSchema === undefined
       ? {}
-      : { outputSchema: definition.outputSchema }),
+      : { outputSchema: { ...definition.outputSchema } }),
     annotations: definition.annotations,
     ...(definition.securitySchemes === undefined
       ? {}
@@ -557,128 +558,17 @@ async function captureDefaultStdioMcp(): Promise<McpClientCapture> {
   }
 }
 
-async function reserveHttpPort(): Promise<number> {
-  const server = createTcpServer();
-  return new Promise((resolvePort, reject) => {
-    server.once("error", reject);
-    server.listen(0, "127.0.0.1", () => {
-      const address = server.address();
-      if (address === null || typeof address === "string") {
-        server.close();
-        reject(new Error("Could not reserve a local HTTP port."));
-        return;
-      }
-      server.close((error) => {
-        if (error !== undefined) {
-          reject(error);
-          return;
-        }
-        resolvePort(address.port);
-      });
-    });
-  });
-}
-
-async function waitForHttpHealth(
-  healthUrl: URL,
-  child: ChildProcess,
-  stderr: () => string,
-): Promise<void> {
-  const deadline = Date.now() + 120_000;
-  let childFailure: Error | undefined;
-  const recordExit = (code: number | null, signal: NodeJS.Signals | null) => {
-    childFailure = new Error(
-      `Shipped HTTP MCP entrypoint exited before health readiness: ${
-        signal ?? code ?? "unknown"
-      }${stderr() === "" ? "" : `; stderr: ${stderr()}`}`,
-    );
-  };
-  const recordError = (error: Error) => {
-    childFailure = new Error(
-      `Shipped HTTP MCP entrypoint failed to start: ${error.message}${
-        stderr() === "" ? "" : `; stderr: ${stderr()}`
-      }`,
-    );
-  };
-  child.once("exit", recordExit);
-  child.once("error", recordError);
-  try {
-    while (Date.now() < deadline) {
-      if (childFailure !== undefined) throw childFailure;
-      if (child.exitCode !== null || child.signalCode !== null) {
-        recordExit(child.exitCode, child.signalCode);
-        throw childFailure;
-      }
-      try {
-        const response = await fetch(healthUrl, {
-          signal: AbortSignal.timeout(2_000),
-        });
-        if (response.status === 200) return;
-        await response.body?.cancel();
-      } catch {
-        // The shipped entrypoint may still be loading its schemas.
-      }
-      await new Promise((resolveDelay) => setTimeout(resolveDelay, 50));
-    }
-    throw new Error(
-      `Shipped HTTP MCP entrypoint did not become healthy within 120 seconds.${
-        stderr() === "" ? "" : ` stderr: ${stderr()}`
-      }`,
-    );
-  } finally {
-    child.off("exit", recordExit);
-    child.off("error", recordError);
-  }
-}
-
-async function stopChildProcess(child: ChildProcess): Promise<void> {
-  if (child.exitCode !== null) return;
-  await new Promise<void>((resolveStop) => {
-    let settled = false;
-    const finish = () => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(forceKillTimer);
-      resolveStop();
-    };
-    const forceKillTimer = setTimeout(() => {
-      child.kill("SIGKILL");
-      finish();
-    }, 5_000);
-    child.once("exit", finish);
-    child.kill("SIGTERM");
-  });
-}
-
 async function captureHttpWithoutOAuthMcp(): Promise<McpClientCapture> {
   const directory = mkdtempSync(join(tmpdir(), "dnd-effect3-baseline-http-"));
-  const port = await reserveHttpPort();
-  const environment = { ...process.env };
-  delete environment.DND_OAUTH_RESOURCE_URL;
-  delete environment.DND_OAUTH_AUTHORIZATION_SERVER;
-  delete environment.DND_OAUTH_ISSUER;
-  delete environment.DND_OAUTH_JWKS_URL;
-  const child = spawn(
-    process.execPath,
-    ["--import", "tsx", "packages/mcp/src/public-index.ts"],
-    {
-      cwd: REPOSITORY_ROOT,
-      env: {
-        ...environment,
-        DND_MCP_HOST: "127.0.0.1",
-        PORT: String(port),
-        DND_MCP_ENVIRONMENT: "development",
-        DND_MCP_RELEASE: "effect3-baseline",
-        DND_MCP_PUBLISHER_NAME: "Effect 3 baseline",
-        DND_PLAY_SESSION_DATABASE_PATH: join(directory, "sessions.sqlite"),
-      },
-      stdio: ["ignore", "ignore", "pipe"],
-    },
+  const repository = openSqlitePlaySessionRepository(
+    join(directory, "sessions.sqlite"),
   );
-  let childStderr = "";
-  child.stderr?.setEncoding("utf8");
-  child.stderr?.on("data", (chunk: string) => {
-    childStderr = `${childStderr}${chunk}`.slice(-8_192);
+  if (Result.isFailure(repository)) {
+    rmSync(directory, { recursive: true, force: true });
+    throw new Error(repository.failure.message);
+  }
+  const server = createDndMcpHttpServer({
+    playSessionRepository: repository.success,
   });
   const client = new Client({
     name: "effect3-baseline-http",
@@ -686,11 +576,9 @@ async function captureHttpWithoutOAuthMcp(): Promise<McpClientCapture> {
   });
   let transport: StreamableHTTPClientTransport | undefined;
   try {
-    const endpoint = new URL(`http://127.0.0.1:${port}/mcp`);
-    await waitForHttpHealth(new URL("/health", endpoint), child, () =>
-      childStderr.trim(),
-    );
-    transport = new StreamableHTTPClientTransport(endpoint, {
+    const endpoint = await server.listen();
+    if (Result.isFailure(endpoint)) throw new Error(endpoint.failure.message);
+    transport = new StreamableHTTPClientTransport(endpoint.success, {
       requestInit: {
         headers: { connection: "close" },
         signal: AbortSignal.timeout(30_000),
@@ -705,7 +593,8 @@ async function captureHttpWithoutOAuthMcp(): Promise<McpClientCapture> {
       client.close(),
       ...(transport === undefined ? [] : [transport.close()]),
     ]);
-    await stopChildProcess(child);
+    await server.close();
+    repository.success.close();
     rmSync(directory, { recursive: true, force: true });
   }
 }
@@ -841,7 +730,7 @@ export async function captureEffect3Baseline(): Promise<
     advertisedDefinitions.flatMap((definition) =>
       definition.outputSchema === undefined
         ? []
-        : [[definition.name, definition.outputSchema] as const],
+        : [[definition.name, { ...definition.outputSchema }] as const],
     ),
   );
   const protocolEntrypointEvidence = mcpEntrypointEvidence(mcpEntrypoints);

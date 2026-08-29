@@ -77,7 +77,11 @@ describe("Effect 3 migration baseline", () => {
     );
     const expected = readFileSync(certificatePath, "utf8");
     const actual = renderEffect3Baseline(await captureEffect3Baseline());
-    expect(actual).toBe(expected);
+    if (actual !== expected) {
+      throw new Error(
+        `Effect 4 candidate baseline differs from the immutable Effect 3 certificate (${actual.length} candidate bytes; ${expected.length} certificate bytes).`,
+      );
+    }
 
     const baseline: unknown = JSON.parse(expected);
     const mcp = record(recordField(baseline, "mcp"));
@@ -199,9 +203,13 @@ describe("Effect 3 migration baseline", () => {
     mkdirSync(generatedRoot, { recursive: true });
     try {
       writeFileSync(dirtyArtifact, '{"generated":true}\n', "utf8");
-      expect(renderEffect3Baseline(await captureEffect3Baseline())).toBe(
-        readFileSync(certificatePath, "utf8"),
-      );
+      const expected = readFileSync(certificatePath, "utf8");
+      const actual = renderEffect3Baseline(await captureEffect3Baseline());
+      if (actual !== expected) {
+        throw new Error(
+          `Dirty-output check found an Effect 4 candidate baseline delta (${actual.length} candidate bytes; ${expected.length} certificate bytes).`,
+        );
+      }
     } finally {
       rmSync(dirtyArtifact, { force: true });
       if (!generatedRootExisted) rmSync(generatedRoot, { recursive: true });
