@@ -16,9 +16,10 @@ import {
   type MirrorSessionLoadState
 } from "./admin-mirror-session-boundary.ts"
 import {
-  initialMirrorSessionCollectionState,
-  makeMirrorSessionLoadRequest,
+  makeInitialMirrorSessionCollectionState,
+  makeMirrorSessionLoadRequestId,
   mirrorSessionCollectionLoadState,
+  mirrorSessionCollectionSessions,
   reduceMirrorSessionCollection
 } from "./admin-mirror-session-collection.ts"
 import { type MirrorStreamStatus, mirrorStreamStatusPresentation } from "./admin-mirror-stream-status.ts"
@@ -30,29 +31,29 @@ export function AdminMirrorPage() {
   const mirrorOrigin = useMemo(defaultAdminMirrorOrigin, [])
   const [sessionCollection, dispatchSessionCollection] = useReducer(
     reduceMirrorSessionCollection,
-    initialMirrorSessionCollectionState
+    mirrorOrigin,
+    makeInitialMirrorSessionCollectionState
   )
-  const sessions = sessionCollection.sessions
+  const sessions = mirrorSessionCollectionSessions(sessionCollection)
   const sessionLoadState = mirrorSessionCollectionLoadState(sessionCollection)
   const [selectedSessionId, setSelectedSessionId] = useQueryState(
     SELECTED_SESSION_QUERY_PARAM,
     parseAsString.withOptions({ history: "replace" })
   )
-  const [streamStatus, setStreamStatus] = useState<MirrorStreamStatus>({ tag: "connecting" })
+  const [streamStatus, setStreamStatus] = useState<MirrorStreamStatus>(() =>
+    Result.isFailure(mirrorOrigin) ? { tag: "configurationInvalid" } : { tag: "connecting" }
+  )
 
   const refresh = useCallback(async () => {
-    const request = makeMirrorSessionLoadRequest()
-    dispatchSessionCollection({ tag: "loadStarted", request })
-    if (Result.isFailure(mirrorOrigin)) {
-      dispatchSessionCollection({ tag: "loadFailed", issue: mirrorOrigin.failure, request })
-      return
-    }
+    if (Result.isFailure(mirrorOrigin)) return
+    const requestId = makeMirrorSessionLoadRequestId()
+    dispatchSessionCollection({ tag: "loadStarted", requestId })
     const loaded = await loadMirrorSessions(mirrorOrigin.success)
     if (Result.isFailure(loaded)) {
-      dispatchSessionCollection({ tag: "loadFailed", issue: loaded.failure, request })
+      dispatchSessionCollection({ tag: "loadFailed", issue: loaded.failure, requestId })
       return
     }
-    dispatchSessionCollection({ tag: "loadSucceeded", request, sessions: loaded.success.sessions })
+    dispatchSessionCollection({ tag: "loadSucceeded", requestId, sessions: loaded.success.sessions })
   }, [mirrorOrigin])
 
   useEffect(() => {
@@ -60,11 +61,7 @@ export function AdminMirrorPage() {
   }, [refresh])
 
   useEffect(() => {
-    setStreamStatus({ tag: "connecting" })
-    if (Result.isFailure(mirrorOrigin)) {
-      setStreamStatus({ tag: "configurationInvalid" })
-      return
-    }
+    if (Result.isFailure(mirrorOrigin)) return
     const source = new EventSource(new URL("/admin-projections/events", mirrorOrigin.success))
     const handleOpen = () => setStreamStatus({ tag: "streaming" })
     const handleError = () => setStreamStatus({ tag: "transportFailure" })

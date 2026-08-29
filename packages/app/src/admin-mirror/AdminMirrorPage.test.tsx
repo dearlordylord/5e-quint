@@ -269,20 +269,45 @@ describe("AdminMirrorPage mirror boundary", () => {
     expect(screen.getByText("seq 2 · pid 1")).toBeTruthy()
   })
 
-  test("preserves a streamed update that arrives before an older snapshot", async () => {
+  test("preserves only the latest canonical streamed record when an older snapshot arrives", async () => {
     const pendingResponse = deferredFetchResponse()
     fetchMock.mockReturnValue(pendingResponse.promise)
     render(<AdminMirrorPage />)
 
     dispatchMirrorSession(rawSessionState({ sequence: 2 }))
+    dispatchMirrorSession(rawSessionState({ sequence: 3 }))
     await act(async () => {
       pendingResponse.succeed(jsonResponse({ sessions: [rawSessionState({ sequence: 1 })] }))
       await pendingResponse.promise
     })
 
+    expect(await screen.findByText("seq 3 · pid 1")).toBeTruthy()
+    expect(screen.queryByText("seq 2 · pid 1")).toBeNull()
+    expect(screen.queryByText("seq 1 · pid 1")).toBeNull()
+    expect(screen.getAllByRole("button", { name: /demo/ })).toHaveLength(1)
+    expect(screen.queryByText("Loading mirror sessions.")).toBeNull()
+  })
+
+  test("ignores an older request completion after a newer refresh succeeds", async () => {
+    const olderResponse = deferredFetchResponse()
+    const newerResponse = deferredFetchResponse()
+    fetchMock.mockReturnValueOnce(olderResponse.promise).mockReturnValueOnce(newerResponse.promise)
+    render(<AdminMirrorPage />)
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce())
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
+    await act(async () => {
+      newerResponse.succeed(jsonResponse({ sessions: [rawSessionState({ sequence: 2 })] }))
+      await newerResponse.promise
+    })
+    await act(async () => {
+      olderResponse.succeed(jsonResponse({ sessions: [rawSessionState({ sequence: 1 })] }))
+      await olderResponse.promise
+    })
+
     expect(await screen.findByText("seq 2 · pid 1")).toBeTruthy()
     expect(screen.queryByText("seq 1 · pid 1")).toBeNull()
-    expect(screen.queryByText("Loading mirror sessions.")).toBeNull()
   })
 
   test("shows a requested session that is no longer retained", async () => {
@@ -328,12 +353,15 @@ describe("AdminMirrorPage mirror boundary", () => {
     expect(TestEventSource.latest?.url).toBe("http://configured-mirror.test/admin-projections/events")
   })
 
-  test("distinguishes invalid mirror configuration without starting I/O", async () => {
+  test("renders invalid mirror configuration immediately without loading or connecting", () => {
     vi.stubEnv("VITE_ADMIN_MIRROR_URL", "not a URL")
 
     render(<AdminMirrorPage />)
 
-    expect(await screen.findAllByText("Mirror session configuration is invalid.")).toHaveLength(2)
+    expect(screen.getAllByText("Mirror session configuration is invalid.")).toHaveLength(2)
+    expect(screen.getByText("configuration invalid")).toBeTruthy()
+    expect(screen.queryByText("Loading mirror sessions.")).toBeNull()
+    expect(screen.queryByText("connecting")).toBeNull()
     expect(fetchMock).not.toHaveBeenCalled()
     expect(TestEventSource.latest).toBeUndefined()
   })

@@ -1,27 +1,25 @@
 import type { AdminMirrorSessionState } from "@dnd/mcp/experimental-admin-mirror-contract"
-import { Match } from "effect"
+import { Match, Result } from "effect"
 
 import type {
+  AdminMirrorOrigin,
   MirrorOriginConfigurationIssue,
   MirrorSessionLoadIssue,
   MirrorSessionLoadState
 } from "./admin-mirror-session-boundary.ts"
 
-type MirrorSessionCollectionIssue = MirrorOriginConfigurationIssue | MirrorSessionLoadIssue
-
-type MirrorSessionLoadRequest = {
-  readonly tag: "mirrorSessionLoadRequest"
-  readonly token: symbol
-}
+type MirrorSessionId = AdminMirrorSessionState["envelope"]["mirrorSessionId"]
+type MirrorSessionLoadRequestId = symbol
 
 type MirrorSessionCollectionState =
+  | { readonly tag: "configurationInvalid" }
   | {
       readonly tag: "awaitingLoadStart"
       readonly sessions: ReadonlyArray<AdminMirrorSessionState>
     }
   | {
       readonly tag: "failed"
-      readonly issue: MirrorSessionCollectionIssue
+      readonly issue: MirrorSessionLoadIssue
       readonly sessions: ReadonlyArray<AdminMirrorSessionState>
     }
   | {
@@ -30,32 +28,39 @@ type MirrorSessionCollectionState =
     }
   | {
       readonly tag: "loading"
-      readonly request: MirrorSessionLoadRequest
+      readonly requestId: MirrorSessionLoadRequestId
       readonly sessions: ReadonlyArray<AdminMirrorSessionState>
-      readonly streamUpdatesSinceRequestStarted: ReadonlyArray<AdminMirrorSessionState>
+      readonly streamedSessionIdsDuringLoad: ReadonlySet<MirrorSessionId>
     }
 
 type MirrorSessionCollectionAction =
   | {
       readonly tag: "loadFailed"
-      readonly issue: MirrorSessionCollectionIssue
-      readonly request: MirrorSessionLoadRequest
+      readonly issue: MirrorSessionLoadIssue
+      readonly requestId: MirrorSessionLoadRequestId
     }
   | {
       readonly tag: "loadSucceeded"
-      readonly request: MirrorSessionLoadRequest
+      readonly requestId: MirrorSessionLoadRequestId
       readonly sessions: ReadonlyArray<AdminMirrorSessionState>
     }
-  | { readonly tag: "loadStarted"; readonly request: MirrorSessionLoadRequest }
+  | { readonly tag: "loadStarted"; readonly requestId: MirrorSessionLoadRequestId }
   | { readonly tag: "streamSessionReceived"; readonly session: AdminMirrorSessionState }
 
-export const initialMirrorSessionCollectionState: MirrorSessionCollectionState = {
-  tag: "awaitingLoadStart",
-  sessions: []
+export function makeInitialMirrorSessionCollectionState(
+  mirrorOrigin: Result.Result<AdminMirrorOrigin, MirrorOriginConfigurationIssue>
+): MirrorSessionCollectionState {
+  return Result.isFailure(mirrorOrigin) ? { tag: "configurationInvalid" } : { tag: "awaitingLoadStart", sessions: [] }
 }
 
-export function makeMirrorSessionLoadRequest(): MirrorSessionLoadRequest {
-  return { tag: "mirrorSessionLoadRequest", token: Symbol("mirrorSessionLoadRequest") }
+export function makeMirrorSessionLoadRequestId(): MirrorSessionLoadRequestId {
+  return Symbol("mirrorSessionLoadRequest")
+}
+
+export function mirrorSessionCollectionSessions(
+  state: MirrorSessionCollectionState
+): ReadonlyArray<AdminMirrorSessionState> {
+  return state.tag === "configurationInvalid" ? [] : state.sessions
 }
 
 export function reduceMirrorSessionCollection(
@@ -63,33 +68,42 @@ export function reduceMirrorSessionCollection(
   action: MirrorSessionCollectionAction
 ): MirrorSessionCollectionState {
   return Match.value(action).pipe(
-    Match.when({ tag: "loadStarted" }, ({ request }) => ({
-      tag: "loading" as const,
-      request,
-      sessions: state.sessions,
-      streamUpdatesSinceRequestStarted: []
-    })),
-    Match.when({ tag: "loadSucceeded" }, ({ request, sessions }) =>
-      state.tag !== "loading" || state.request !== request
+    Match.when({ tag: "loadStarted" }, ({ requestId }) =>
+      state.tag === "configurationInvalid"
+        ? state
+        : {
+            tag: "loading" as const,
+            requestId,
+            sessions: state.sessions,
+            streamedSessionIdsDuringLoad: new Set<MirrorSessionId>()
+          }
+    ),
+    Match.when({ tag: "loadSucceeded" }, ({ requestId, sessions }) =>
+      state.tag !== "loading" || state.requestId !== requestId
         ? state
         : {
             tag: "loaded" as const,
-            sessions: state.streamUpdatesSinceRequestStarted.reduceRight(upsertMirrorSession, sessions)
+            sessions: replaceSnapshotSessions(state.sessions, state.streamedSessionIdsDuringLoad, sessions)
           }
     ),
-    Match.when({ tag: "loadFailed" }, ({ issue, request }) =>
-      state.tag !== "loading" || state.request !== request
+    Match.when({ tag: "loadFailed" }, ({ issue, requestId }) =>
+      state.tag !== "loading" || state.requestId !== requestId
         ? state
         : { tag: "failed" as const, issue, sessions: state.sessions }
     ),
     Match.when({ tag: "streamSessionReceived" }, ({ session }) =>
-      state.tag === "loading"
-        ? {
-            ...state,
-            sessions: upsertMirrorSession(state.sessions, session),
-            streamUpdatesSinceRequestStarted: upsertMirrorSession(state.streamUpdatesSinceRequestStarted, session)
-          }
-        : { ...state, sessions: upsertMirrorSession(state.sessions, session) }
+      state.tag === "configurationInvalid"
+        ? state
+        : state.tag === "loading"
+          ? {
+              ...state,
+              sessions: upsertMirrorSession(state.sessions, session),
+              streamedSessionIdsDuringLoad: new Set([
+                ...state.streamedSessionIdsDuringLoad,
+                session.envelope.mirrorSessionId
+              ])
+            }
+          : { ...state, sessions: upsertMirrorSession(state.sessions, session) }
     ),
     Match.exhaustive
   )
@@ -97,12 +111,24 @@ export function reduceMirrorSessionCollection(
 
 export function mirrorSessionCollectionLoadState(state: MirrorSessionCollectionState): MirrorSessionLoadState {
   return Match.value(state).pipe(
+    Match.when({ tag: "configurationInvalid" }, () => ({ tag: "invalidConfiguration" as const })),
     Match.when({ tag: "awaitingLoadStart" }, () => ({ tag: "loading" as const })),
     Match.when({ tag: "loading" }, () => ({ tag: "loading" as const })),
     Match.when({ tag: "loaded" }, () => ({ tag: "loaded" as const })),
     Match.when({ tag: "failed" }, ({ issue }) => issue),
     Match.exhaustive
   )
+}
+
+function replaceSnapshotSessions(
+  currentSessions: ReadonlyArray<AdminMirrorSessionState>,
+  streamedSessionIds: ReadonlySet<MirrorSessionId>,
+  snapshotSessions: ReadonlyArray<AdminMirrorSessionState>
+): ReadonlyArray<AdminMirrorSessionState> {
+  return [
+    ...currentSessions.filter((session) => streamedSessionIds.has(session.envelope.mirrorSessionId)),
+    ...snapshotSessions.filter((session) => !streamedSessionIds.has(session.envelope.mirrorSessionId))
+  ]
 }
 
 function upsertMirrorSession(
