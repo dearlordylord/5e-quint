@@ -160,6 +160,46 @@ function catalogWithHitPointMaximumFeature(
   };
 }
 
+function buildWithSelectedHitPointFeature(
+  build: ReturnType<typeof projectionBuild>,
+  featureUnitId: UnitRecord["id"],
+): ReturnType<typeof projectionBuild> {
+  return {
+    ...build,
+    features: [
+      {
+        kind: "selectedClassChoice",
+        selectedFromUnitId: authoredUnitId("synthetic_feature_source"),
+        unitId: featureUnitId,
+      },
+    ],
+  };
+}
+
+function expectUnsupportedHitPointDelta(input: {
+  readonly build: ReturnType<typeof projectionBuild>;
+  readonly suffix: string;
+  readonly delta: HitPointMaximumDelta;
+}): void {
+  const featureUnitId = authoredUnitId(`synthetic_hit_point_${input.suffix}`);
+  expect(
+    characterBuildHitPoints(
+      buildWithSelectedHitPointFeature(input.build, featureUnitId),
+      catalogWithHitPointMaximumFeature(featureUnitId, input.delta),
+    ),
+  ).toMatchObject({
+    _tag: "Left",
+    left: [
+      {
+        cause: {
+          tag: "unsupportedHitPointMaximumGrant",
+          sourceUnitId: featureUnitId,
+        },
+      },
+    ],
+  });
+}
+
 describe("character finalization boundaries", () => {
   test("rejects unknown spellbook owners while accepting non-Wizard owners", () => {
     expect(
@@ -438,7 +478,7 @@ describe("character finalization boundaries", () => {
     expect(resourceUnitIds).not.toContain(missingFeatureUnitId);
   });
 
-  test("rejects non-deterministic retained Hit Point bonuses", () => {
+  test("rejects retained Hit Point bonuses whose value depends on a roll or runtime state", () => {
     const fighterBuild = projectionBuild(
       classUnitId(authoredUnitId("class_fighter")),
     );
@@ -462,15 +502,6 @@ describe("character finalization boundaries", () => {
         },
       },
       {
-        suffix: "threshold_tiers",
-        delta: {
-          kind: "threshold_tiers",
-          axis: "character",
-          base: { dice: 0, dieSize: 1, flat: 1 },
-          tiers: [{ atLevel: 2, override: { flat: 1 } }],
-        },
-      },
-      {
         suffix: "threshold_tiers_exploding_max_die",
         delta: {
           kind: "threshold_tiers_exploding_max_die",
@@ -484,10 +515,6 @@ describe("character finalization boundaries", () => {
       {
         suffix: "resource_spent",
         delta: { kind: "resource_spent" },
-      },
-      {
-        suffix: "proficiency_bonus",
-        delta: { kind: "proficiency_bonus" },
       },
       {
         suffix: "resource_spent_linear",
@@ -510,31 +537,42 @@ describe("character finalization boundaries", () => {
     }[];
 
     for (const { suffix, delta } of cases) {
-      const featureUnitId = authoredUnitId(`synthetic_hit_point_${suffix}`);
-      expect(
-        characterBuildHitPoints(
-          {
-            ...fighterBuild,
-            features: [
-              {
-                kind: "selectedClassChoice",
-                selectedFromUnitId: authoredUnitId("synthetic_feature_source"),
-                unitId: featureUnitId,
-              },
-            ],
-          },
-          catalogWithHitPointMaximumFeature(featureUnitId, delta),
-        ),
-      ).toMatchObject({
-        _tag: "Left",
-        left: [
-          {
-            cause: {
-              tag: "unsupportedHitPointMaximumGrant",
-              sourceUnitId: featureUnitId,
-            },
-          },
-        ],
+      expectUnsupportedHitPointDelta({
+        build: fighterBuild,
+        suffix,
+        delta,
+      });
+    }
+  });
+
+  test("rejects deterministic retained Hit Point delta kinds outside the support profile", () => {
+    const fighterBuild = projectionBuild(
+      classUnitId(authoredUnitId("class_fighter")),
+    );
+    const cases = [
+      {
+        suffix: "flat_threshold_tiers",
+        delta: {
+          kind: "threshold_tiers",
+          axis: "character",
+          base: { dice: 0, dieSize: 1, flat: 1 },
+          tiers: [{ atLevel: 2, override: { flat: 2 } }],
+        },
+      },
+      {
+        suffix: "proficiency_bonus",
+        delta: { kind: "proficiency_bonus" },
+      },
+    ] as const satisfies readonly {
+      readonly suffix: string;
+      readonly delta: HitPointMaximumDelta;
+    }[];
+
+    for (const { suffix, delta } of cases) {
+      expectUnsupportedHitPointDelta({
+        build: fighterBuild,
+        suffix,
+        delta,
       });
     }
   });
@@ -575,22 +613,25 @@ describe("character finalization boundaries", () => {
     const featureUnitId = authoredUnitId(
       "synthetic_class_axis_hit_point_bonus",
     );
-    const build = projectionBuild(
-      classUnitId(authoredUnitId("class_sorcerer")),
-    );
+    const fighterClassUnitId = classUnitId(authoredUnitId("class_fighter"));
+    const sorcererClassUnitId = classUnitId(authoredUnitId("class_sorcerer"));
+    const startingBuild = projectionBuild(fighterClassUnitId);
+    const build = {
+      ...startingBuild,
+      progression: {
+        ...startingBuild.progression,
+        advancements: [
+          {
+            classUnitId: sorcererClassUnitId,
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+          },
+        ],
+      },
+    } satisfies ReturnType<typeof projectionBuild>;
 
     expect(
       characterBuildHitPoints(
-        {
-          ...build,
-          features: [
-            {
-              kind: "selectedClassChoice",
-              selectedFromUnitId: authoredUnitId("synthetic_feature_source"),
-              unitId: featureUnitId,
-            },
-          ],
-        },
+        buildWithSelectedHitPointFeature(build, featureUnitId),
         catalogWithHitPointMaximumFeature(featureUnitId, {
           kind: "linear_per_level",
           axis: "class",
@@ -601,7 +642,7 @@ describe("character finalization boundaries", () => {
       ),
     ).toMatchObject({
       _tag: "Right",
-      right: { maximum: 7 },
+      right: { maximum: 15 },
     });
   });
 
