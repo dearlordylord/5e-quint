@@ -428,7 +428,7 @@ export const starryWispUnitId = "starry_wisp";
 
 export const viciousMockeryUnitId = "vicious_mockery";
 
-export const wardingBondUnitId = "warding_bond";
+export const linkedDefenseResistanceDamageShareUnitId = "warding_bond";
 
 export const paladinExtraAttackUnitId = "paladin_extra_attack";
 

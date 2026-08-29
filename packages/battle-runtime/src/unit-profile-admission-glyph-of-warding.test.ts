@@ -5151,7 +5151,7 @@ function counterspellTriggerFact(input: {
   readonly casterId: CombatantId;
 }): BattleSpellCastReactionFact {
   return {
-    kind: "counterspellTriggerCasterVisibleWithinRange",
+    kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
     reactorId: input.reactorId,
     casterId: input.casterId,
     sourceProcedureRef: battleProcedureExecutionRefForTest(

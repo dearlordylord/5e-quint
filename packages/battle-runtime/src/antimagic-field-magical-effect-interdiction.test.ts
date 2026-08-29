@@ -7,7 +7,7 @@ import {
 } from "./battle-runtime.test-support.ts";
 import {
   antimagicFieldAuraEffectTemplateForTest,
-  antimagicFieldAuraMembershipForTest,
+  magicSuppressionEmanationMembershipForTest,
   type TestAntimagicFieldAuraMembership,
 } from "./antimagic-field.test-support.ts";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
@@ -84,7 +84,7 @@ describe("Antimagic Field magical-effect interdiction", () => {
         targetHp: 1,
         targetMaxHp: 20,
       }),
-      antimagicFieldAuraMembershipForTest({
+      magicSuppressionEmanationMembershipForTest({
         sourceCombatantId: spellTargetId,
         originIncluded: true,
         nonOriginCombatantIds: [],
@@ -139,7 +139,7 @@ describe("Antimagic Field magical-effect interdiction", () => {
         preparedSpells: [spellRecord(burningHandsUnitId)],
         spellSlots: [{ spellLevel: 1, count: 1 }],
       }),
-      antimagicFieldAuraMembershipForTest({
+      magicSuppressionEmanationMembershipForTest({
         sourceCombatantId: spellTargetId,
         originIncluded: true,
         nonOriginCombatantIds: [],
@@ -178,7 +178,7 @@ describe("Antimagic Field magical-effect interdiction", () => {
         targetHp: 20,
         targetMaxHp: 20,
       }),
-      antimagicFieldAuraMembershipForTest({
+      magicSuppressionEmanationMembershipForTest({
         sourceCombatantId: spellTargetId,
         originIncluded: true,
         nonOriginCombatantIds: [],
@@ -278,7 +278,7 @@ describe("Antimagic Field magical-effect interdiction", () => {
         ...initialSession,
         state: casterTurn.state,
       }),
-      antimagicFieldAuraMembershipForTest({
+      magicSuppressionEmanationMembershipForTest({
         sourceCombatantId: spellTargetId,
         originIncluded: true,
         nonOriginCombatantIds: [],
@@ -312,7 +312,7 @@ describe("Antimagic Field magical-effect interdiction", () => {
   test("rejects other magical-effect targets inside the aura without spell identity", () => {
     const session = activeAntimagicAuraSession(
       preserveLifeBattle(),
-      antimagicFieldAuraMembershipForTest({
+      magicSuppressionEmanationMembershipForTest({
         sourceCombatantId: spellTargetId,
         originIncluded: true,
         nonOriginCombatantIds: [],

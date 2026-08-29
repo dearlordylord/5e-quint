@@ -35,7 +35,7 @@ import type {
 
 type BlurBypassSense = Extract<
   BattleTargetSpatialFact,
-  { readonly kind: "attackAttackerPerceivesBlurredTargetWithSense" }
+  { readonly kind: "attackerPerceivesObscuredTargetWithSense" }
 >["sense"];
 
 describe("L12G-SPELL-BLUR deterministic Blur admission", () => {
@@ -51,7 +51,7 @@ describe("L12G-SPELL-BLUR deterministic Blur admission", () => {
       },
       activeEffects: [
         expect.objectContaining({
-          kind: "blurred",
+          kind: "perceptionGatedAttackRollDefense",
           sourceProcedureRef: expect.any(String),
           sourceCombatantId: spellCasterId,
           expiresAt: {
@@ -120,7 +120,7 @@ describe("L12G-SPELL-BLUR deterministic Blur admission", () => {
       requireCombatant(concentrationBroken, spellCasterId).activeEffects,
     ).toEqual(
       expect.not.arrayContaining([
-        expect.objectContaining({ kind: "blurred" }),
+        expect.objectContaining({ kind: "perceptionGatedAttackRollDefense" }),
       ]),
     );
 
@@ -152,8 +152,10 @@ describe("L12G-SPELL-BLUR deterministic Blur admission", () => {
     const firstEffect = requireCombatant(
       firstCast.state,
       spellCasterId,
-    ).activeEffects.find((effect) => effect.kind === "blurred");
-    if (firstEffect?.kind !== "blurred") {
+    ).activeEffects.find(
+      (effect) => effect.kind === "perceptionGatedAttackRollDefense",
+    );
+    if (firstEffect?.kind !== "perceptionGatedAttackRollDefense") {
       throw new Error("Expected the first admitted Blur occurrence.");
     }
     const attackerTurn = endTurn({
@@ -201,7 +203,7 @@ describe("L12G-SPELL-BLUR deterministic Blur admission", () => {
     expect(effects[0]?.effectRef).not.toBe(firstEffect.effectRef);
     expect(effects).toContainEqual(
       expect.objectContaining({
-        kind: "blurred",
+        kind: "perceptionGatedAttackRollDefense",
         sourceProcedureRef: act.subject.procedureRef,
         expiresAt: {
           kind: "concentration",
@@ -238,7 +240,7 @@ function castBlur(
     tag: "spellSlot",
     spellId: blurUnitId,
     slotLevel: 2,
-    procedure: "blurAttackRollDefense",
+    procedure: "perceptionGatedAttackRollDefense",
   });
   const result = resolveBattleSubject({
     state: session.state,
@@ -320,7 +322,7 @@ function blurBypassFact(
   sense: BlurBypassSense,
 ): BattleTargetSpatialFact {
   return {
-    kind: "attackAttackerPerceivesBlurredTargetWithSense",
+    kind: "attackerPerceivesObscuredTargetWithSense",
     attackerId,
     targetId,
     sense,

@@ -127,7 +127,7 @@ import {
   isCharacterBattleCreatureState,
 } from "./creature-state-execution.ts";
 import {
-  hypnoticPatternShakeAwakeTargetChoices,
+  saveGatedAreaControlShakeAwakeTargetChoices,
   sleepShakeAwakeTargetChoices,
 } from "./spell-condition-effects-helpers.ts";
 
@@ -146,8 +146,8 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
       ),
       byBattleHoleKind("attackRoll", () => "attackRoll" as const),
       byBattleHoleKind(
-        "commandOptionChoice",
-        () => "commandOptionChoice" as const,
+        "compelledBehaviorOptionChoice",
+        () => "compelledBehaviorOptionChoice" as const,
       ),
       byBattleHoleKind(
         "companionReappearanceInitiative",
@@ -210,8 +210,8 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
         () => "controlledVerticalSuspensionInitialRise" as const,
       ),
       byBattleHoleKind(
-        "magicWeaponTargetItem",
-        () => "magicWeaponTargetItem" as const,
+        "weaponAttackDamageEnhancementTargetItem",
+        () => "weaponAttackDamageEnhancementTargetItem" as const,
       ),
       byBattleHoleKind(
         "movableZoneRamMovement",
@@ -249,8 +249,8 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
       ),
       byBattleHoleKind("rolledDice", () => "rolledDice" as const),
       byBattleHoleKind(
-        "sanctuaryInterdictionOutcome",
-        () => "sanctuaryInterdictionOutcome" as const,
+        "targetingSaveInterdictionOutcome",
+        () => "targetingSaveInterdictionOutcome" as const,
       ),
       byBattleHoleKind(
         "savingThrowOutcome",
@@ -261,8 +261,8 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
         () => "selfTransformationModeChoice" as const,
       ),
       byBattleHoleKind(
-        "slowSomaticSpellFailureOutcome",
-        () => "slowSomaticSpellFailureOutcome" as const,
+        "turnConstraintSomaticSpellFailureOutcome",
+        () => "turnConstraintSomaticSpellFailureOutcome" as const,
       ),
     )
     .pipe(
@@ -301,8 +301,8 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
         () => "teleportDestination" as const,
       ),
       byBattleHoleKind(
-        "thaumaturgyActiveOneMinuteEffectCount",
-        () => "thaumaturgyActiveOneMinuteEffectCount" as const,
+        "temporaryAbilityCheckRollModeActiveEffectCount",
+        () => "temporaryAbilityCheckRollModeActiveEffectCount" as const,
       ),
       byBattleHoleKind(
         "toolPossessionFacts",
@@ -418,7 +418,7 @@ export function escapeSpellRestraintAbilityCheckHole(
   };
 }
 
-export function thaumaturgyBoomingVoiceInfluenceAbilityCheckHole(
+export function temporaryAbilityCheckRollModeInfluenceAbilityCheckHole(
   state: BattleState,
   actorId: CombatantId,
   dc: DifficultyClass,
@@ -472,7 +472,7 @@ export function requiredAbilityCheckRollMode(
       "advantage",
     ) ||
     (context?.skill !== undefined &&
-      activeThaumaturgyBoomingVoiceAdvantageMatches(
+      activeTemporaryAbilityCheckRollModeAdvantageMatches(
         state,
         actorId,
         ability,
@@ -642,7 +642,7 @@ function passiveConditionEndAbilityCheckRollModeMatches(
   );
 }
 
-function activeThaumaturgyBoomingVoiceAdvantageMatches(
+function activeTemporaryAbilityCheckRollModeAdvantageMatches(
   state: BattleState,
   actorId: CombatantId,
   ability: Ability,
@@ -654,7 +654,7 @@ function activeThaumaturgyBoomingVoiceAdvantageMatches(
     skill === THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL &&
     (actor?.activeEffects.some(
       (effect) =>
-        effect.kind === "thaumaturgyBoomingVoice" &&
+        effect.kind === "temporaryAbilityCheckRollMode" &&
         effect.sourceCombatantId === actorId,
     ) ??
       false)
@@ -858,7 +858,7 @@ export function sleepShakeAwakeTargetHole(
   };
 }
 
-export function hypnoticPatternShakeAwakeTargetHole(
+export function saveGatedAreaControlShakeAwakeTargetHole(
   state: BattleState,
   actorId: CombatantId,
 ): BattleTargetChoiceHole {
@@ -868,7 +868,7 @@ export function hypnoticPatternShakeAwakeTargetHole(
     holeInstanceKey: HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
     label: "Hypnotic Pattern target to shake awake",
     requiresTableSpatialFact: true,
-    choices: hypnoticPatternShakeAwakeTargetChoices(state, actorId),
+    choices: saveGatedAreaControlShakeAwakeTargetChoices(state, actorId),
   };
 }
 

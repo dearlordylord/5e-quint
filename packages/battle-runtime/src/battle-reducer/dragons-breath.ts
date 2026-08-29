@@ -40,7 +40,7 @@ import {
 import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
 import type {
   BattleCreatureState,
-  BattleDragonsBreathDamageRollHole,
+  BattleGrantedAreaSaveDamageActionDamageRollHole,
   BattleFill,
   BattleHoleId,
   BattleResolutionInputForSubject,
@@ -52,17 +52,17 @@ import { validateRolledDiceFillForDiceExpr } from "../battle-state-execution.ts"
 import { snapshotBattle } from "./battle-snapshot.ts";
 
 import {
-  dragonsBreathSavingThrowOutcomeHole,
-  type DragonsBreathEffect,
-  type DragonsBreathExhaleSubject,
+  grantedAreaSaveDamageActionSavingThrowOutcomeHole,
+  type GrantedAreaSaveDamageActionEffect,
+  type GrantedAreaSaveDamageActionSubject,
 } from "./dragons-breath-discovery.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./ongoing-feature-relationship.ts";
-import { dragonsBreathHoleKey } from "./selected-effect-hole-key.ts";
+import { grantedAreaSaveDamageActionHoleKey } from "./selected-effect-hole-key.ts";
 type ExpectedDragonBreathFill = {
   readonly kind: BattleFill["kind"];
   readonly holeId: BattleHoleId;
 };
-type DragonsBreathDamageEntry = {
+type GrantedAreaSaveDamageActionDamageEntry = {
   readonly targetId: CombatantId;
   readonly targetForHoles: BattleCreatureState;
   readonly damageByType: ReturnType<typeof damageAmountByTypeEntriesToMap>;
@@ -73,8 +73,8 @@ type DragonsBreathDamageEntry = {
   readonly spellDamageReductionHoles: readonly ExpectedDragonBreathFill[];
 };
 
-export function resolveDragonsBreathExhaleCommand(
-  input: BattleResolutionInputForSubject<DragonsBreathExhaleSubject>,
+export function resolveGrantedAreaSaveDamageActionCommand(
+  input: BattleResolutionInputForSubject<GrantedAreaSaveDamageActionSubject>,
 ): BattleResolutionResult {
   const actor = input.state.combatants.get(input.subject.actorId);
   if (
@@ -87,7 +87,7 @@ export function resolveDragonsBreathExhaleCommand(
       "Magic action is no longer available for Dragon's Breath.",
     );
   }
-  const effect = activeDragonsBreathEffect(actor, input.subject);
+  const effect = activeGrantedAreaSaveDamageActionEffect(actor, input.subject);
   if (effect === undefined) {
     return invalidResult(
       input.state,
@@ -95,7 +95,7 @@ export function resolveDragonsBreathExhaleCommand(
       "Dragon's Breath requires an active target-attached effect.",
     );
   }
-  const saveHole = dragonsBreathSavingThrowOutcomeHole(
+  const saveHole = grantedAreaSaveDamageActionSavingThrowOutcomeHole(
     input.state,
     input.subject.actorId,
     effect,
@@ -122,7 +122,7 @@ export function resolveDragonsBreathExhaleCommand(
     /* v8 ignore stop -- @preserve */
     return needsHolesResult(input.state, input.subject, [saveHole]);
   }
-  const saveValidation = validateDragonsBreathSavingThrowFill(
+  const saveValidation = validateGrantedAreaSaveDamageActionSavingThrowFill(
     input.state,
     input.subject.actorId,
     saveFill,
@@ -162,11 +162,12 @@ export function resolveDragonsBreathExhaleCommand(
       return invalidResult(input.state, "invalidFill", fillsValidation);
     }
     /* v8 ignore stop -- @preserve */
-    const resolvedState = battleStateAfterSpendingDragonsBreathMagicAction(
-      input,
-      savingThrowTargetIds,
-      relationshipFacts,
-    );
+    const resolvedState =
+      battleStateAfterSpendingGrantedAreaSaveDamageActionMagicAction(
+        input,
+        savingThrowTargetIds,
+        relationshipFacts,
+      );
     return {
       tag: "resolved",
       state: resolvedState,
@@ -174,7 +175,7 @@ export function resolveDragonsBreathExhaleCommand(
     };
   }
 
-  const damageHole = dragonsBreathDamageRollHole(effect);
+  const damageHole = grantedAreaSaveDamageActionDamageRollHole(effect);
   const damageFill = rolledDiceFillFor(input.fills, damageHole.holeId);
   if (damageFill === undefined) {
     const damageFillsValidation = validateExpectedDragonBreathFillKind(
@@ -191,7 +192,7 @@ export function resolveDragonsBreathExhaleCommand(
   }
   const damageValidation = validateRolledDiceFillForDiceExpr(
     damageFill,
-    damageHole.dragonsBreath.expr,
+    damageHole.grantedAreaSaveDamageAction.expr,
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (damageValidation !== null) {
@@ -203,7 +204,7 @@ export function resolveDragonsBreathExhaleCommand(
     (fill): fill is Extract<BattleFill, { readonly kind: "rolledDice" }> =>
       fill.kind === "rolledDice" && isSpellDamageReductionRollFill(fill),
   );
-  const damageEntriesByTarget: DragonsBreathDamageEntry[] = [];
+  const damageEntriesByTarget: GrantedAreaSaveDamageActionDamageEntry[] = [];
   for (const outcome of outcomes) {
     // Saving-throw fill validation proves every affected outcome target belongs
     // to this battle before damage entries are projected.
@@ -359,7 +360,7 @@ export function resolveDragonsBreathExhaleCommand(
   }
   /* v8 ignore stop -- @preserve */
 
-  let damaged = battleStateAfterSpendingDragonsBreathMagicAction(
+  let damaged = battleStateAfterSpendingGrantedAreaSaveDamageActionMagicAction(
     input,
     savingThrowTargetIds,
     relationshipFacts,
@@ -435,8 +436,8 @@ export function resolveDragonsBreathExhaleCommand(
   };
 }
 
-function battleStateAfterSpendingDragonsBreathMagicAction(
-  input: BattleResolutionInputForSubject<DragonsBreathExhaleSubject>,
+function battleStateAfterSpendingGrantedAreaSaveDamageActionMagicAction(
+  input: BattleResolutionInputForSubject<GrantedAreaSaveDamageActionSubject>,
   targetIds: readonly CombatantId[],
   relationshipFacts: Parameters<typeof extendSavingThrowOngoingFeatures>[3],
 ): BattleState {
@@ -456,11 +457,11 @@ function battleStateAfterSpendingDragonsBreathMagicAction(
   );
 }
 
-function dragonsBreathDamageRollHole(
-  effect: DragonsBreathEffect,
-): BattleDragonsBreathDamageRollHole {
-  const expr = dragonsBreathDamageExpr(effect);
-  const key = dragonsBreathHoleKey(
+function grantedAreaSaveDamageActionDamageRollHole(
+  effect: GrantedAreaSaveDamageActionEffect,
+): BattleGrantedAreaSaveDamageActionDamageRollHole {
+  const expr = grantedAreaSaveDamageActionDamageExpr(effect);
+  const key = grantedAreaSaveDamageActionHoleKey(
     spellActiveEffectExecutionRef(effect),
     `damage-result:${expr.dice}d${expr.dieSize}`,
   );
@@ -469,7 +470,7 @@ function dragonsBreathDamageRollHole(
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: `Dragon's Breath damage (${expr.dice}d${expr.dieSize})`,
-    dragonsBreath: {
+    grantedAreaSaveDamageAction: {
       sourceCombatantId: effect.sourceCombatantId,
       sourceProcedureRef: effect.sourceProcedureRef,
       damageType: effect.damageType,
@@ -478,26 +479,28 @@ function dragonsBreathDamageRollHole(
   };
 }
 
-function dragonsBreathDamageExpr(effect: DragonsBreathEffect): {
+function grantedAreaSaveDamageActionDamageExpr(
+  effect: GrantedAreaSaveDamageActionEffect,
+): {
   readonly dice: number;
   readonly dieSize: 6;
 } {
   return { dice: Number(effect.originalSlotLevel) + 1, dieSize: 6 };
 }
 
-function activeDragonsBreathEffect(
+function activeGrantedAreaSaveDamageActionEffect(
   actor: BattleCreatureState | undefined,
-  subject: DragonsBreathExhaleSubject,
-): DragonsBreathEffect | undefined {
+  subject: GrantedAreaSaveDamageActionSubject,
+): GrantedAreaSaveDamageActionEffect | undefined {
   return actor?.activeEffects.find(
-    (effect): effect is DragonsBreathEffect =>
-      effect.kind === "dragonsBreath" &&
+    (effect): effect is GrantedAreaSaveDamageActionEffect =>
+      effect.kind === "grantedAreaSaveDamageAction" &&
       spellActiveEffectExecutionRef(effect) === subject.effectRef,
   );
 }
 
 /* v8 ignore start -- @preserve -- Malformed saving-throw validator: Dragon's Breath discovery supplies the exhaler-owned Cone, unique affected targets, and matching outcomes; admitted damage execution remains measured. */
-function validateDragonsBreathSavingThrowFill(
+function validateGrantedAreaSaveDamageActionSavingThrowFill(
   state: BattleState,
   actorId: CombatantId,
   fill: Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>,
@@ -509,7 +512,7 @@ function validateDragonsBreathSavingThrowFill(
   if (area.originAnchorId !== actorId) {
     return "Dragon's Breath Cone must originate from the exhaling creature.";
   }
-  const areaValidation = validateDragonsBreathArea(state, area);
+  const areaValidation = validateGrantedAreaSaveDamageActionArea(state, area);
   if (areaValidation !== null) {
     return areaValidation;
   }
@@ -531,7 +534,7 @@ function validateDragonsBreathSavingThrowFill(
 /* v8 ignore stop -- @preserve */
 
 /* v8 ignore start -- @preserve -- Malformed area-witness validator: the Dragon's Breath Cone hole fixes its geometry, origin, battle membership, and unique affected targets before resolution. */
-function validateDragonsBreathArea(
+function validateGrantedAreaSaveDamageActionArea(
   state: BattleState,
   area: BattleSpellAreaChoice,
 ): string | null {

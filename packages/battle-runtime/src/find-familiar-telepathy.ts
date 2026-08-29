@@ -43,7 +43,7 @@ export type FindFamiliarTelepathicConnection = {
 
 export type FindFamiliarSharedSensesEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "findFamiliarSharedSenses" }
+  { readonly kind: "spawnedCompanionSharedSenses" }
 >;
 
 export type FindFamiliarMechanicalTransition =
@@ -128,7 +128,7 @@ export function shareFindFamiliarSenses(input: {
   const allocation = allocateBattleEffectExecutionRefForCreature({
     owner: caster,
   });
-  const effect = findFamiliarSharedSensesEffect({
+  const effect = spawnedCompanionSharedSensesEffect({
     casterId: input.casterId,
     familiarId: connection.familiarId,
     familiarSenses: familiar.origin.mechanics.specialSenses,
@@ -138,7 +138,7 @@ export function shareFindFamiliarSenses(input: {
     ...allocation.owner,
     activeEffects: [
       ...allocation.owner.activeEffects.filter(
-        (candidate) => candidate.kind !== "findFamiliarSharedSenses",
+        (candidate) => candidate.kind !== "spawnedCompanionSharedSenses",
       ),
       effect,
     ],
@@ -323,7 +323,7 @@ function findFamiliarTouchDeliveryFills(input: {
     /* v8 ignore stop -- @preserve */
     const facts = fill.spatialFacts ?? [];
     const deliveryFact = facts.find((fact) =>
-      findFamiliarTouchSpellTargetFactMatches({
+      spawnedCompanionTouchSpellTargetFactMatches({
         fact,
         ownerId: input.ownerId,
         familiarId: input.familiarId,
@@ -339,7 +339,9 @@ function findFamiliarTouchDeliveryFills(input: {
     fills.push({
       ...fill,
       spatialFacts: [
-        ...facts.filter((fact) => fact.kind !== "findFamiliarTouchSpellTarget"),
+        ...facts.filter(
+          (fact) => fact.kind !== "spawnedCompanionTouchSpellTarget",
+        ),
         {
           kind: "spellTarget",
           casterId: input.ownerId,
@@ -361,7 +363,7 @@ function findFamiliarTouchDeliveryFills(input: {
       };
 }
 
-function findFamiliarTouchSpellTargetFactMatches(input: {
+function spawnedCompanionTouchSpellTargetFactMatches(input: {
   readonly fact: BattleTargetSpatialFact;
   readonly ownerId: CombatantId;
   readonly familiarId: CombatantId;
@@ -369,7 +371,7 @@ function findFamiliarTouchSpellTargetFactMatches(input: {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
 }): boolean {
   return (
-    input.fact.kind === "findFamiliarTouchSpellTarget" &&
+    input.fact.kind === "spawnedCompanionTouchSpellTarget" &&
     input.fact.ownerId === input.ownerId &&
     input.fact.familiarId === input.familiarId &&
     input.fact.targetId === input.targetId &&
@@ -377,14 +379,14 @@ function findFamiliarTouchSpellTargetFactMatches(input: {
   );
 }
 
-function findFamiliarSharedSensesEffect(input: {
+function spawnedCompanionSharedSensesEffect(input: {
   readonly casterId: CombatantId;
   readonly familiarId: CombatantId;
   readonly familiarSenses: readonly CreatureSense[];
   readonly effectRef: BattleEffectExecutionRef;
 }): FindFamiliarSharedSensesEffect {
   return {
-    kind: "findFamiliarSharedSenses",
+    kind: "spawnedCompanionSharedSenses",
     effectRef: input.effectRef,
     source: {
       kind: "companionSharedSenses",

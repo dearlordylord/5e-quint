@@ -30,7 +30,7 @@ import {
   passWithoutTraceUnitId,
   spellCasterId,
   spellTargetId,
-  wardingBondUnitId,
+  linkedDefenseResistanceDamageShareUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
@@ -60,7 +60,7 @@ const level2ProtectionSpellUnitIds = [
   magicWeaponUnitId,
   mirrorImageUnitId,
   passWithoutTraceUnitId,
-  wardingBondUnitId,
+  linkedDefenseResistanceDamageShareUnitId,
 ] as const;
 type Level2ProtectionSpellUnitId =
   (typeof level2ProtectionSpellUnitIds)[number];
@@ -76,7 +76,7 @@ type Level2ProtectionSpellSelectedIdentityResult =
   | "magicWeaponEnhancement"
   | "mirrorImageHitInterception"
   | "passWithoutTraceStealthModifier"
-  | "wardingBondLinkedEffect";
+  | "linkedDefenseResistanceDamageShareLinkedEffect";
 type Level2ProtectionSpellSelectedIdentityProjection = {
   readonly lastResult: Level2ProtectionSpellSelectedIdentityResult;
 };
@@ -103,7 +103,7 @@ const LEVEL2_PROTECTION_SPELL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   MagicWeaponEnhancement: "magicWeaponEnhancement",
   MirrorImageHitInterception: "mirrorImageHitInterception",
   PassWithoutTraceStealthModifier: "passWithoutTraceStealthModifier",
-  WardingBondLinkedEffect: "wardingBondLinkedEffect",
+  WardingBondLinkedEffect: "linkedDefenseResistanceDamageShareLinkedEffect",
 } as const satisfies Readonly<
   Record<string, Level2ProtectionSpellSelectedIdentityResult>
 >;
@@ -230,13 +230,13 @@ defineSelectedIdentityReplayAndQntReplay({
       ],
     },
     {
-      unitId: wardingBondUnitId,
+      unitId: linkedDefenseResistanceDamageShareUnitId,
       procedures: [
         selectedSpellProcedure("doDiscoverWardingBondLinkedEffect", {
-          spellId: wardingBondUnitId,
+          spellId: linkedDefenseResistanceDamageShareUnitId,
           actionTag: "actionSpell",
-          procedure: "wardingBond",
-          result: "wardingBondLinkedEffect",
+          procedure: "linkedDefenseResistanceDamageShare",
+          result: "linkedDefenseResistanceDamageShareLinkedEffect",
         }),
       ],
     },

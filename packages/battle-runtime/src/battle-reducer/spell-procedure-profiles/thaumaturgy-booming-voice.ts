@@ -3,24 +3,24 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-ability-check-advantage
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
 //
-// The thaumaturgyBoomingVoice Spell Procedure Profile: the Thaumaturgy cantrip
+// The temporaryAbilityCheckRollMode Spell Procedure Profile: the Thaumaturgy cantrip
 // branch that creates a one-minute self Spell Effect projecting Advantage on
 // caller-supplied Charisma (Intimidation) Ability Check witnesses.
 //
 // What lives here:
-//   - admit()           - was supportedCantripThaumaturgyBoomingVoiceSpellProfile
+//   - admit()           - was supportedCantripTemporaryAbilityCheckRollModeSpellProfile
 //                         in spells-profiles-support.ts
-//   - discoverCastAct() - was the thaumaturgyBoomingVoice branch in
+//   - discoverCastAct() - was the temporaryAbilityCheckRollMode branch in
 //                         spells-discovery.ts
-//   - castSummary()     - was the thaumaturgyBoomingVoice branch in
+//   - castSummary()     - was the temporaryAbilityCheckRollMode branch in
 //                         spells-discovery.ts
-//   - resolve()         - was resolveThaumaturgyBoomingVoiceSpellAct in
+//   - resolve()         - was resolveTemporaryAbilityCheckRollModeSpellAct in
 //                         spells-resolve-support-effects.ts
-//   - applyEffect()     - was applyThaumaturgyBoomingVoiceSpellEffect in
+//   - applyEffect()     - was applyTemporaryAbilityCheckRollModeSpellEffect in
 //                         spells-active-effects.ts
 //
 // What stays in shared infrastructure:
-//   - thaumaturgyBoomingVoiceProjection and rollModifierSkillFilter stay in
+//   - temporaryAbilityCheckRollModeProjection and rollModifierSkillFilter stay in
 //     spells-profiles-support.ts until the shared roll-modifier projection
 //     helpers are split.
 //   - The active 1-minute-effect count witness hole stays in
@@ -35,13 +35,13 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
-import { ThaumaturgyBoomingVoiceTemplateSchema } from "../../active-effect/codecs.ts";
+import { TemporaryAbilityCheckRollModeTemplateSchema } from "../../active-effect/codecs.ts";
 
 import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
-import { thaumaturgyActiveOneMinuteEffectCountHole } from "../spells-damage-fills.ts";
-import { thaumaturgyBoomingVoiceProjection } from "../spells-profiles-support.ts";
+import { temporaryAbilityCheckRollModeActiveEffectCountHole } from "../spells-damage-fills.ts";
+import { temporaryAbilityCheckRollModeProjection } from "../spells-profiles-support.ts";
 import { replaceTargetSpellActiveEffect } from "../active-effect-replacement.ts";
 import {
   THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
@@ -64,16 +64,16 @@ import {
   NoSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
-type ThaumaturgyBoomingVoiceInvocation = Extract<
+type TemporaryAbilityCheckRollModeInvocation = Extract<
   SupportedSpellInvocation,
-  { readonly procedure: "thaumaturgyBoomingVoice" }
+  { readonly procedure: "temporaryAbilityCheckRollMode" }
 >;
 
-function admitThaumaturgyBoomingVoice(
+function admitTemporaryAbilityCheckRollMode(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
-): readonly ThaumaturgyBoomingVoiceInvocation[] {
-  const projection = thaumaturgyBoomingVoiceProjection(
+): readonly TemporaryAbilityCheckRollModeInvocation[] {
+  const projection = temporaryAbilityCheckRollModeProjection(
     ctx.actor.combatantId,
     spell,
   );
@@ -83,7 +83,7 @@ function admitThaumaturgyBoomingVoice(
         {
           access: cantripSpellAccessFor(spell.castingSource),
           resource: { tag: "none" },
-          procedure: "thaumaturgyBoomingVoice",
+          procedure: "temporaryAbilityCheckRollMode",
           spell,
           actionCost: "magicAction",
           ...projection,
@@ -91,10 +91,10 @@ function admitThaumaturgyBoomingVoice(
       ];
 }
 
-function discoverThaumaturgyBoomingVoiceCastAct(
+function discoverTemporaryAbilityCheckRollModeCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<ThaumaturgyBoomingVoiceInvocation>,
+  invocation: BattleExecutableSpellInvocation<TemporaryAbilityCheckRollModeInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
@@ -104,30 +104,32 @@ function discoverThaumaturgyBoomingVoiceCastAct(
         procedureRef: invocation.sourceProcedureRef,
         mode: { tag: "cast" },
       },
-      initialHoles: [thaumaturgyActiveOneMinuteEffectCountHole(invocation)],
+      initialHoles: [
+        temporaryAbilityCheckRollModeActiveEffectCountHole(invocation),
+      ],
     },
   ];
 }
 
-function isThaumaturgyBoomingVoiceEffectForInvocation(
+function isTemporaryAbilityCheckRollModeEffectForInvocation(
   effect: BattleActiveEffect,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<ThaumaturgyBoomingVoiceInvocation>,
+  invocation: BattleExecutableSpellInvocation<TemporaryAbilityCheckRollModeInvocation>,
 ): effect is Extract<
   BattleActiveEffect,
-  { readonly kind: "thaumaturgyBoomingVoice" }
+  { readonly kind: "temporaryAbilityCheckRollMode" }
 > {
   return (
-    effect.kind === "thaumaturgyBoomingVoice" &&
+    effect.kind === "temporaryAbilityCheckRollMode" &&
     effect.sourceProcedureRef === invocation.sourceProcedureRef &&
     effect.sourceCombatantId === actorId
   );
 }
 
-function applyThaumaturgyBoomingVoiceEffect(
+function applyTemporaryAbilityCheckRollModeEffect(
   state: BattleState,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<ThaumaturgyBoomingVoiceInvocation>,
+  invocation: BattleExecutableSpellInvocation<TemporaryAbilityCheckRollModeInvocation>,
 ): BattleState {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
@@ -137,7 +139,11 @@ function applyThaumaturgyBoomingVoiceEffect(
     state,
     actorId,
     (effect) =>
-      isThaumaturgyBoomingVoiceEffectForInvocation(effect, actorId, invocation),
+      isTemporaryAbilityCheckRollModeEffectForInvocation(
+        effect,
+        actorId,
+        invocation,
+      ),
     {
       ...invocation.activeEffect,
       sourceProcedureRef: invocation.sourceProcedureRef,
@@ -146,8 +152,8 @@ function applyThaumaturgyBoomingVoiceEffect(
   );
 }
 
-function resolveThaumaturgyBoomingVoice(
-  input: SpellProcedureProfileResolveInput<ThaumaturgyBoomingVoiceInvocation>,
+function resolveTemporaryAbilityCheckRollMode(
+  input: SpellProcedureProfileResolveInput<TemporaryAbilityCheckRollModeInvocation>,
 ): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
@@ -163,10 +169,11 @@ function resolveThaumaturgyBoomingVoice(
   }
   /* v8 ignore stop -- @preserve */
 
-  const activeCountFill = input.fillSet.thaumaturgyActiveOneMinuteEffectCount;
+  const activeCountFill =
+    input.fillSet.temporaryAbilityCheckRollModeActiveEffectCount;
   if (activeCountFill === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
-      thaumaturgyActiveOneMinuteEffectCountHole(input.invocation),
+      temporaryAbilityCheckRollModeActiveEffectCountHole(input.invocation),
     ]);
   }
   const activeCount = activeCountFill.value.activeOneMinuteEffectCount;
@@ -182,7 +189,7 @@ function resolveThaumaturgyBoomingVoice(
   const actor = input.input.state.combatants.get(input.actorId);
   const existingBoomingVoiceEffectCount =
     actor?.activeEffects.filter((effect) =>
-      isThaumaturgyBoomingVoiceEffectForInvocation(
+      isTemporaryAbilityCheckRollModeEffectForInvocation(
         effect,
         input.actorId,
         input.invocation,
@@ -214,7 +221,7 @@ function resolveThaumaturgyBoomingVoice(
     targetIds: [input.actorId],
     castingResource: { kind: "magicAction" },
     applyEffect: (state) =>
-      applyThaumaturgyBoomingVoiceEffect(
+      applyTemporaryAbilityCheckRollModeEffect(
         state,
         input.actorId,
         input.invocation,
@@ -222,24 +229,25 @@ function resolveThaumaturgyBoomingVoice(
   });
 }
 
-const ThaumaturgyBoomingVoiceInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Struct({
-    access: CantripSpellAccessSchema,
-    resource: NoSpellInvocationResourceSchema,
-    procedure: Schema.Literal("thaumaturgyBoomingVoice"),
-    spellRuleFacts: SpellRuleExecutionFactsSchema,
-    actionCost: Schema.Literal("magicAction"),
-    activeEffect: ThaumaturgyBoomingVoiceTemplateSchema,
-    rangeFeet: MovementFeet,
-  }),
-);
-export const thaumaturgyBoomingVoiceProfile: SpellProcedureDeclaration<
-  "thaumaturgyBoomingVoice",
-  ThaumaturgyBoomingVoiceInvocation
+const TemporaryAbilityCheckRollModeInvocationSchema =
+  spellProcedureExecutionSchema(
+    Schema.Struct({
+      access: CantripSpellAccessSchema,
+      resource: NoSpellInvocationResourceSchema,
+      procedure: Schema.Literal("temporaryAbilityCheckRollMode"),
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
+      actionCost: Schema.Literal("magicAction"),
+      activeEffect: TemporaryAbilityCheckRollModeTemplateSchema,
+      rangeFeet: MovementFeet,
+    }),
+  );
+export const temporaryAbilityCheckRollModeProfile: SpellProcedureDeclaration<
+  "temporaryAbilityCheckRollMode",
+  TemporaryAbilityCheckRollModeInvocation
 > = {
-  procedure: "thaumaturgyBoomingVoice",
-  executionSchema: ThaumaturgyBoomingVoiceInvocationSchema,
-  admit: admitThaumaturgyBoomingVoice,
-  discoverCastAct: discoverThaumaturgyBoomingVoiceCastAct,
-  resolve: resolveThaumaturgyBoomingVoice,
+  procedure: "temporaryAbilityCheckRollMode",
+  executionSchema: TemporaryAbilityCheckRollModeInvocationSchema,
+  admit: admitTemporaryAbilityCheckRollMode,
+  discoverCastAct: discoverTemporaryAbilityCheckRollModeCastAct,
+  resolve: resolveTemporaryAbilityCheckRollMode,
 };

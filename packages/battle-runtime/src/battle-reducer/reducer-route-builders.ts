@@ -100,7 +100,8 @@ export function battleReducerRouteHole(
   if (family === "abilityCheck") return ["abilityCheck"];
   if (family === "abilityChoice") return ["abilityChoice"];
   if (family === "attackRoll") return ["attackRoll"];
-  if (family === "commandOptionChoice") return ["commandOptionChoice"];
+  if (family === "compelledBehaviorOptionChoice")
+    return ["compelledBehaviorOptionChoice"];
   if (family === "concentrationSavingThrow") {
     return ["concentrationSavingThrow"];
   }
@@ -112,12 +113,12 @@ export function battleReducerRouteHole(
   if (family === "interruptDecision") return ["interruptDecision"];
   // Magic Weapon target item identity is caller/table-supplied inventory
   // evidence, not a durable reducer-route frontier.
-  if (family === "magicWeaponTargetItem") return [];
+  if (family === "weaponAttackDamageEnhancementTargetItem") return [];
   if (family === "movement") return ["movement"];
   if (family === "objectTargetChoice") return ["targetChoice"];
   if (family === "rolledDice") return ["rolledDice"];
-  if (family === "sanctuaryInterdictionOutcome") {
-    return ["sanctuaryInterdictionOutcome"];
+  if (family === "targetingSaveInterdictionOutcome") {
+    return ["targetingSaveInterdictionOutcome"];
   }
   if (family === "savingThrowOutcome") return ["savingThrowOutcome"];
   if (family === "spellTargetAllocation") return ["spellTargetAllocation"];
@@ -147,12 +148,13 @@ export function battleReducerRouteFill(
     return "hitPointHealingDistribution";
   }
   if (kind === "interruptDecision") return "interruptDecision";
-  if (kind === "magicWeaponTargetItem") return "magicWeaponTargetItem";
+  if (kind === "weaponAttackDamageEnhancementTargetItem")
+    return "weaponAttackDamageEnhancementTargetItem";
   if (kind === "movement") return "movement";
   if (kind === "objectTargetChoice") return "targetChoice";
   if (kind === "rolledDice") return "rolledDice";
-  if (kind === "sanctuaryInterdictionOutcome") {
-    return "sanctuaryInterdictionOutcome";
+  if (kind === "targetingSaveInterdictionOutcome") {
+    return "targetingSaveInterdictionOutcome";
   }
   if (kind === "savingThrowOutcome") return "savingThrowOutcome";
   if (kind === "spellTargetAllocation") return "spellTargetAllocation";

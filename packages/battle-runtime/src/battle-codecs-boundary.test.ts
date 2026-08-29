@@ -629,7 +629,7 @@ function codecFixture() {
         kind: "activeEffect",
         ownerId: wizardId,
         effect: {
-          kind: "antimagicFieldOngoingSpellSuppression",
+          kind: "magicSuppressionEmanation",
           sourceProcedureRef: source.procedureRef,
           sourceCombatantId: wizardId,
           areaId: battleAreaId("area:codec-antimagic-field"),
@@ -784,9 +784,7 @@ function codecFixture() {
     gustOfWindEffectRef: activeEffectRef("gustOfWindLine"),
     levitateEffectRef: activeEffectRef("spellLevitatedCreature"),
     secondLevitateEffectRef: levitateEffectRefs[1]!,
-    antimagicFieldEffectRef: activeEffectRef(
-      "antimagicFieldOngoingSpellSuppression",
-    ),
+    antimagicFieldEffectRef: activeEffectRef("magicSuppressionEmanation"),
     storedLightEmitterRef: skeletonStoredLightEmitter.emitter.effectRef,
     wizardStoredLightEmitterRef: storedLightEmitterRef(wizardId),
     activeEffects: allocated.occurrences.flatMap((occurrence) =>
@@ -1000,10 +998,10 @@ const savingThrowCases: readonly CodecCase[] = [
     }),
   ),
   successCase(
-    "wardingBondSeparation",
-    hole("wardingBondSeparation", {
+    "linkedDefenseResistanceDamageShareSeparation",
+    hole("linkedDefenseResistanceDamageShareSeparation", {
       kind: "targetSpatialFacts",
-      wardingBondSeparation: {
+      linkedDefenseResistanceDamageShareSeparation: {
         sourceCombatantId: wizardId,
         targetId: skeletonId,
         sourceProcedureRef: fixture.sourceProcedureRef,

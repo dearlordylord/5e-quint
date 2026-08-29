@@ -111,7 +111,7 @@ import {
   grappleOutcomeHole,
   grappleTargetHole,
   hideAbilityCheckHole,
-  hypnoticPatternShakeAwakeTargetHole,
+  saveGatedAreaControlShakeAwakeTargetHole,
   searchAbilityCheckHole,
   searchTargetHole,
   shoveOutcomeHole,
@@ -138,11 +138,11 @@ import {
 import { discoverBattleActCandidatesWithoutReady } from "./battle-discovery.ts";
 import { applyDashToActor, applyDisengage } from "./mobility-actions.ts";
 import { spellSaveDcForCaster } from "./spell-save-dc.ts";
-import { combatantHasSlowActivePenalties } from "./slow-active-penalties-runtime.ts";
+import { combatantHasSaveGatedTurnConstraintBundle } from "./slow-active-penalties-runtime.ts";
 
 import {
-  hypnoticPatternShakeAwakeTargetChoices,
-  removeHypnoticPatternControlEffectsFromTarget,
+  saveGatedAreaControlShakeAwakeTargetChoices,
+  removeSaveGatedAreaControlControlEffectsFromTarget,
   removeSpellConditionEffect,
   removeSleepEffectsFromTarget,
   spellRestraintEffectFor,
@@ -774,7 +774,10 @@ export function resolveShakeAwakeFromSleep(
   input: BattleResolutionInputForSubject<
     Extract<
       BattleSubject,
-      { readonly tag: "action"; readonly action: "shakeAwakeFromSleep" }
+      {
+        readonly tag: "action";
+        readonly action: "shakeAwakeFromStagedCondition";
+      }
     >
   >,
 ): BattleResolutionResult {
@@ -837,13 +840,13 @@ export function resolveShakeAwakeFromSleep(
   };
 }
 
-export function resolveShakeAwakeFromHypnoticPattern(
+export function resolveShakeAwakeFromSaveGatedAreaControl(
   input: BattleResolutionInputForSubject<
     Extract<
       BattleSubject,
       {
         readonly tag: "action";
-        readonly action: "shakeAwakeFromHypnoticPattern";
+        readonly action: "shakeAwakeFromAreaControl";
       }
     >
   >,
@@ -851,7 +854,10 @@ export function resolveShakeAwakeFromHypnoticPattern(
   const [targetFill] = input.fills;
   if (targetFill === undefined) {
     return needsHolesResult(input.state, input.subject, [
-      hypnoticPatternShakeAwakeTargetHole(input.state, input.subject.actorId),
+      saveGatedAreaControlShakeAwakeTargetHole(
+        input.state,
+        input.subject.actorId,
+      ),
     ]);
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -871,11 +877,11 @@ export function resolveShakeAwakeFromHypnoticPattern(
   const targetId = targetFill.value;
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    !hypnoticPatternShakeAwakeTargetChoices(
+    !saveGatedAreaControlShakeAwakeTargetChoices(
       input.state,
       input.subject.actorId,
     ).includes(targetId) ||
-    !hasHypnoticPatternShakeAwakeSpatialFact(
+    !hasSaveGatedAreaControlShakeAwakeSpatialFact(
       targetFill.spatialFacts ?? [],
       input.subject.actorId,
       targetId,
@@ -897,7 +903,7 @@ export function resolveShakeAwakeFromHypnoticPattern(
       "Hypnotic Pattern shake-awake is no longer available.",
     );
   }
-  const nextState = removeHypnoticPatternControlEffectsFromTarget(
+  const nextState = removeSaveGatedAreaControlControlEffectsFromTarget(
     { ...input.state, currentTurnResources: spent.success },
     targetId,
   );
@@ -1014,7 +1020,9 @@ export function resolveMultiattack(
   }
   const [consumedDispatch, ...pendingDispatches] =
     multiattackBinding.procedure.dispatchProcedureRefs;
-  const grantedPendingDispatches = combatantHasSlowActivePenalties(actor)
+  const grantedPendingDispatches = combatantHasSaveGatedTurnConstraintBundle(
+    actor,
+  )
     ? []
     : pendingDispatches;
   const nextStateWithPendingDispatches = {
@@ -1759,20 +1767,20 @@ function hasSleepShakeAwakeSpatialFact(
 ): boolean {
   return facts.some(
     (fact) =>
-      fact.kind === "sleepShakeAwakeActorWithin5Feet" &&
+      fact.kind === "stagedConditionShakeAwakeActorWithin5Feet" &&
       fact.actorId === actorId &&
       fact.targetId === targetId,
   );
 }
 
-function hasHypnoticPatternShakeAwakeSpatialFact(
+function hasSaveGatedAreaControlShakeAwakeSpatialFact(
   facts: readonly BattleTargetSpatialFact[],
   actorId: CombatantId,
   targetId: CombatantId,
 ): boolean {
   return facts.some(
     (fact) =>
-      fact.kind === "hypnoticPatternShakeAwakeActorWithin5Feet" &&
+      fact.kind === "areaControlShakeAwakeActorWithin5Feet" &&
       fact.actorId === actorId &&
       fact.targetId === targetId,
   );
@@ -2366,7 +2374,9 @@ export function openClassFeatureExtraAttackResource(input: {
     input.spentResource.source === "classFeatureExtraAttack" ||
     !actionResourceAllowsAdditionalAttacks(input.spentResource) ||
     actorHasClassFeatureExtraAttackActionResource(input.state, input.actorId) ||
-    combatantHasSlowActivePenalties(input.state.combatants.get(input.actorId))
+    combatantHasSaveGatedTurnConstraintBundle(
+      input.state.combatants.get(input.actorId),
+    )
   ) {
     return input.state.currentTurnResources;
   }

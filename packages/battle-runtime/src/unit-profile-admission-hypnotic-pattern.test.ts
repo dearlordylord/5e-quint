@@ -6,7 +6,7 @@ import { describe, expect, test } from "vitest";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import { resourceCount } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import hypnoticPatternInput from "../../surface/content/hypnotic_pattern.json";
+import saveGatedAreaControlInput from "../../surface/content/hypnotic_pattern.json";
 import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
 import {
   calmEmotionsUnitId,
@@ -55,7 +55,7 @@ import {
 
 describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
   test("Hypnotic Pattern admits level-3+ area save casting and applies Charmed, Incapacitated, and Speed 0", () => {
-    const spell = hypnoticPatternSpellRecord();
+    const spell = saveGatedAreaControlSpellRecord();
     const state = spellBattle({
       preparedSpells: [spell],
       spellSlots: [
@@ -86,7 +86,11 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       procedureRef: requireCharacterSpellProcedureRefForTest(
         state,
         spellCasterId,
-        spellSlotInvocationRef(hypnoticPatternUnitId, 3, "hypnoticPattern"),
+        spellSlotInvocationRef(
+          hypnoticPatternUnitId,
+          3,
+          "saveGatedAreaControl",
+        ),
       ),
       mode: { tag: "cast" },
     });
@@ -105,7 +109,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       state: state.state,
       subject: act.subject,
       fills: [
-        hypnoticPatternSavingThrowOutcomeFill(savingThrow, [
+        saveGatedAreaControlSavingThrowOutcomeFill(savingThrow, [
           { targetId: spellTargetId, succeeded: false },
         ]),
       ],
@@ -121,7 +125,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     expect(Number(effectiveWalkSpeed(cast.state, target))).toBe(0);
     expect(target.activeEffects).toEqual([
       expect.objectContaining({
-        kind: "hypnoticPatternControl",
+        kind: "saveGatedAreaControl",
         sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         conditionHadNonSpellCharmedSource: false,
@@ -141,7 +145,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
 
   test("Hypnotic Pattern rejects generic area save fills without Cube and sight witnesses", () => {
     const state = spellBattle({
-      preparedSpells: [hypnoticPatternSpellRecord()],
+      preparedSpells: [saveGatedAreaControlSpellRecord()],
       spellSlots: [{ spellLevel: 3, count: 1 }],
     });
     const act = spellAct({
@@ -168,7 +172,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
   });
 
   test("RAW-valid creature-type protection does not cover a Humanoid Hypnotic Pattern caster", () => {
-    const spell = hypnoticPatternSpellRecord();
+    const spell = saveGatedAreaControlSpellRecord();
     const protectedTargetId = combatantId(
       "synthetic-hypnotic-protected-target",
     );
@@ -263,7 +267,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     expect(Number(effectiveWalkSpeed(cast.state, target))).toBe(0);
     expect(
       target.activeEffects.some(
-        (effect) => effect.kind === "hypnoticPatternControl",
+        (effect) => effect.kind === "saveGatedAreaControl",
       ),
     ).toBe(true);
     expect(
@@ -274,7 +278,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
   });
 
   test("failed saves blocked by Charmed condition immunity spend the slot without control or concentration", () => {
-    const spell = hypnoticPatternSpellRecord();
+    const spell = saveGatedAreaControlSpellRecord();
     const immuneTargetId = combatantId("synthetic-hypnotic-immune-target");
     const baseState = spellBattle({
       preparedSpells: [spell],
@@ -358,7 +362,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     expect(Number(effectiveWalkSpeed(cast.state, target))).toBeGreaterThan(0);
     expect(
       target.activeEffects.some(
-        (effect) => effect.kind === "hypnoticPatternControl",
+        (effect) => effect.kind === "saveGatedAreaControl",
       ),
     ).toBe(false);
     expect(
@@ -370,7 +374,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
   });
 
   test("damage ends only the Hypnotic Pattern spell control and preserves independent conditions", () => {
-    const spell = hypnoticPatternSpellRecord();
+    const spell = saveGatedAreaControlSpellRecord();
     const baseState = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 3, count: 1 }],
@@ -395,7 +399,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     const controlled = requireCombatant(cast.state, spellTargetId);
     expect(
       controlled.activeEffects.some(
-        (effect) => effect.kind === "hypnoticPatternControl",
+        (effect) => effect.kind === "saveGatedAreaControl",
       ),
     ).toBe(true);
 
@@ -405,12 +409,12 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       damageAmount: damageAmount(1),
       deathFailuresAtZeroHp: 1,
       damageSourceId: spellCasterId,
-      hideousLaughterDamageRepeatSaves: [],
+      saveGatedConditionWithRepeatDamageRepeatSaves: [],
     });
     const target = requireCombatant(damaged, spellTargetId);
     expect(
       target.activeEffects.some(
-        (effect) => effect.kind === "hypnoticPatternControl",
+        (effect) => effect.kind === "saveGatedAreaControl",
       ),
     ).toBe(false);
     expect(hasCondition(target.conditions, "charmed")).toBe(true);
@@ -421,7 +425,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
   test("breaking Concentration ends Hypnotic Pattern control", () => {
     const cast = castFailedHypnoticPattern(
       spellBattle({
-        preparedSpells: [hypnoticPatternSpellRecord()],
+        preparedSpells: [saveGatedAreaControlSpellRecord()],
         spellSlots: [{ spellLevel: 3, count: 1 }],
       }),
     );
@@ -438,7 +442,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     ).toBeGreaterThan(0);
     expect(
       target.activeEffects.some(
-        (effect) => effect.kind === "hypnoticPatternControl",
+        (effect) => effect.kind === "saveGatedAreaControl",
       ),
     ).toBe(false);
     expect(
@@ -449,7 +453,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
   test("duration expiry ends Hypnotic Pattern control", () => {
     const cast = castFailedHypnoticPattern(
       spellBattle({
-        preparedSpells: [hypnoticPatternSpellRecord()],
+        preparedSpells: [saveGatedAreaControlSpellRecord()],
         spellSlots: [{ spellLevel: 3, count: 1 }],
       }),
     );
@@ -459,7 +463,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       {
         ...controlled,
         activeEffects: controlled.activeEffects.map((effect) =>
-          effect.kind === "hypnoticPatternControl" &&
+          effect.kind === "saveGatedAreaControl" &&
           effect.expiresAt.kind === "concentration"
             ? {
                 ...effect,
@@ -497,7 +501,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
   });
 
   test("recasting preserves independent conditions after replacement cleanup", () => {
-    const spell = hypnoticPatternSpellRecord();
+    const spell = saveGatedAreaControlSpellRecord();
     const baseState = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 3, count: 2 }],
@@ -521,7 +525,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     const firstCast = castFailedHypnoticPattern(state);
     const firstControlled = requireCombatant(firstCast.state, spellTargetId);
     const firstControl = firstControlled.activeEffects.find(
-      (effect) => effect.kind === "hypnoticPatternControl",
+      (effect) => effect.kind === "saveGatedAreaControl",
     );
     if (firstControl === undefined) {
       throw new Error("Expected the first Hypnotic Pattern occurrence.");
@@ -549,12 +553,12 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     );
     const controlled = requireCombatant(recast.state, spellTargetId);
     const recastControls = controlled.activeEffects.filter(
-      (effect) => effect.kind === "hypnoticPatternControl",
+      (effect) => effect.kind === "saveGatedAreaControl",
     );
     expect(recastControls).toHaveLength(1);
     expect(controlled.activeEffects).toEqual([
       expect.objectContaining({
-        kind: "hypnoticPatternControl",
+        kind: "saveGatedAreaControl",
         effectRef: expect.any(String),
         conditionHadNonSpellCharmedSource: true,
         conditionHadNonSpellIncapacitatedSource: true,
@@ -577,12 +581,12 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       damageAmount: damageAmount(1),
       deathFailuresAtZeroHp: 1,
       damageSourceId: spellCasterId,
-      hideousLaughterDamageRepeatSaves: [],
+      saveGatedConditionWithRepeatDamageRepeatSaves: [],
     });
     const target = requireCombatant(damaged, spellTargetId);
     expect(
       target.activeEffects.some(
-        (effect) => effect.kind === "hypnoticPatternControl",
+        (effect) => effect.kind === "saveGatedAreaControl",
       ),
     ).toBe(false);
     expect(hasCondition(target.conditions, "charmed")).toBe(true);
@@ -592,7 +596,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
   test("another creature can spend an action to shake an adjacent target awake", () => {
     const cast = castFailedHypnoticPattern(
       spellBattle({
-        preparedSpells: [hypnoticPatternSpellRecord()],
+        preparedSpells: [saveGatedAreaControlSpellRecord()],
         spellSlots: [{ spellLevel: 3, count: 1 }],
       }),
     );
@@ -619,7 +623,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       (candidate) =>
         candidate.subject.tag === "action" &&
         candidate.subject.actorId === spellCasterId &&
-        candidate.subject.action === "shakeAwakeFromHypnoticPattern",
+        candidate.subject.action === "shakeAwakeFromAreaControl",
     );
     expect(act).toBeDefined();
     if (act === undefined) {
@@ -640,7 +644,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     const shaken = resolveBattleSubject({
       state: targetTurnEnded.state,
       subject: act.subject,
-      fills: [hypnoticPatternShakeAwakeTargetFill(targetHole)],
+      fills: [saveGatedAreaControlShakeAwakeTargetFill(targetHole)],
     });
     if (shaken.tag !== "resolved") {
       throw new Error("Expected Hypnotic Pattern shake-awake to resolve.");
@@ -658,7 +662,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
   test("Hypnotic Pattern shake-awake rejects a discovered action after the helper spends it", () => {
     const cast = castFailedHypnoticPattern(
       spellBattle({
-        preparedSpells: [hypnoticPatternSpellRecord()],
+        preparedSpells: [saveGatedAreaControlSpellRecord()],
         spellSlots: [{ spellLevel: 3, count: 1 }],
       }),
     );
@@ -685,7 +689,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       (candidate) =>
         candidate.subject.tag === "action" &&
         candidate.subject.actorId === spellCasterId &&
-        candidate.subject.action === "shakeAwakeFromHypnoticPattern",
+        candidate.subject.action === "shakeAwakeFromAreaControl",
     );
     if (act === undefined) {
       throw new Error("Expected Hypnotic Pattern shake-awake act.");
@@ -709,7 +713,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       resolveBattleSubject({
         state: dashed.state,
         subject: act.subject,
-        fills: [hypnoticPatternShakeAwakeTargetFill(targetHole)],
+        fills: [saveGatedAreaControlShakeAwakeTargetFill(targetHole)],
       }),
     ).toMatchObject({
       tag: "invalid",
@@ -723,18 +727,18 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       "synthetic-unrelated-hypnotic-caster",
     );
     const base = spellBattle({
-      preparedSpells: [hypnoticPatternSpellRecord()],
+      preparedSpells: [saveGatedAreaControlSpellRecord()],
       spellSlots: [{ spellLevel: 3, count: 1 }],
       extraTargetIds: [unrelatedCasterId],
       extraTargetSpellcasting: wizardSpellcasting({
-        preparedSpells: [hypnoticPatternSpellRecord()],
+        preparedSpells: [saveGatedAreaControlSpellRecord()],
         spellSlots: [{ spellLevel: 3, count: 1 }],
       }),
     });
     const unrelatedSource = requireCharacterSpellProcedureRefForTest(
       base,
       unrelatedCasterId,
-      spellSlotInvocationRef(hypnoticPatternUnitId, 3, "hypnoticPattern"),
+      spellSlotInvocationRef(hypnoticPatternUnitId, 3, "saveGatedAreaControl"),
     );
     const unrelatedCaster = requireCombatant(base.state, unrelatedCasterId);
     if (
@@ -771,7 +775,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
           kind: "activeEffect",
           ownerId: spellTargetId,
           effect: {
-            kind: "hypnoticPatternControl" as const,
+            kind: "saveGatedAreaControl" as const,
             sourceProcedureRef: unrelatedSource,
             sourceCombatantId: unrelatedCasterId,
             conditionHadNonSpellCharmedSource: false,
@@ -788,7 +792,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     const unrelatedOccurrence = allocated.occurrences[0];
     if (
       unrelatedOccurrence?.kind !== "activeEffect" ||
-      unrelatedOccurrence.effect.kind !== "hypnoticPatternControl"
+      unrelatedOccurrence.effect.kind !== "saveGatedAreaControl"
     ) {
       throw new Error("Expected allocated unrelated Hypnotic Pattern control.");
     }
@@ -804,12 +808,12 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     expect(effects).toContainEqual(unrelatedOccurrence.effect);
     const freshControl = effects.find(
       (effect) =>
-        effect.kind === "hypnoticPatternControl" &&
+        effect.kind === "saveGatedAreaControl" &&
         effect.effectRef !== unrelatedOccurrence.effect.effectRef,
     );
     expect(freshControl).toEqual(
       expect.objectContaining({
-        kind: "hypnoticPatternControl",
+        kind: "saveGatedAreaControl",
         sourceCombatantId: spellCasterId,
         expiresAt: expect.objectContaining({ kind: "concentration" }),
       }),
@@ -837,7 +841,7 @@ function castFailedHypnoticPattern(
     state: session.state,
     subject: act.subject,
     fills: [
-      hypnoticPatternSavingThrowOutcomeFill(savingThrow, [
+      saveGatedAreaControlSavingThrowOutcomeFill(savingThrow, [
         { targetId, succeeded: false },
       ]),
     ],
@@ -850,7 +854,7 @@ function castFailedHypnoticPattern(
   return battleRuntimeSessionForTest({ ...session, state: cast.state });
 }
 
-function hypnoticPatternSavingThrowOutcomeFill(
+function saveGatedAreaControlSavingThrowOutcomeFill(
   hole: BattleSpellSavingThrowOutcomeHole,
   outcomes: readonly {
     readonly targetId: CombatantId;
@@ -862,7 +866,7 @@ function hypnoticPatternSavingThrowOutcomeFill(
     holeId: hole.holeId,
     value: {
       area: {
-        kind: "hypnoticPatternArea",
+        kind: "saveGatedAreaControlArea",
         originAnchorId: spellCasterId,
         affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
         cubeSideFeet: 30,
@@ -877,8 +881,8 @@ function hypnoticPatternSavingThrowOutcomeFill(
   };
 }
 
-function hypnoticPatternSpellRecord(): SpellRecord {
-  const unit = decodeUnitRecordSync(hypnoticPatternInput);
+function saveGatedAreaControlSpellRecord(): SpellRecord {
+  const unit = decodeUnitRecordSync(saveGatedAreaControlInput);
   if (unit.kind !== "spell") {
     throw new Error("Expected Hypnotic Pattern fixture to decode as a Spell.");
   }
@@ -895,7 +899,7 @@ function requireSpellSavingThrowOutcomeHole(
   return hole;
 }
 
-function hypnoticPatternShakeAwakeTargetFill(
+function saveGatedAreaControlShakeAwakeTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
@@ -904,7 +908,7 @@ function hypnoticPatternShakeAwakeTargetFill(
     value: spellTargetId,
     spatialFacts: [
       {
-        kind: "hypnoticPatternShakeAwakeActorWithin5Feet",
+        kind: "areaControlShakeAwakeActorWithin5Feet",
         actorId: spellCasterId,
         targetId: spellTargetId,
       },

@@ -84,7 +84,7 @@ import {
 import {
   type BattleActiveEffect,
   type BattleActiveEffectExpiration,
-  type BattleCommandOption,
+  type BattleCompelledBehaviorOption,
   type BattleCreatureState,
   type BattleMovableLight,
   type BattleIllumination,
@@ -309,14 +309,14 @@ export type SaveGatedAttackRollAdvantageInvocation = Extract<
 export function saveGatedAttackRollAdvantageInvocationIsFaerieFire(
   invocation: Pick<SaveGatedAttackRollAdvantageInvocation, "effect">,
 ): boolean {
-  return invocation.effect.kind === "faerieFireOutline";
+  return invocation.effect.kind === "saveGatedTargetProjection";
 }
 
 export function activeFeatherFallDescentRateCapFeetPerRound(
   combatant: BattleCreatureState,
 ): typeof FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND | null {
   return combatant.activeEffects.some(
-    (effect) => effect.kind === "featherFallMitigation",
+    (effect) => effect.kind === "fallingCreatureMitigationReaction",
   )
     ? FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND
     : null;
@@ -328,7 +328,7 @@ export function featherFallLandingCleanupForCombatant(
   | { readonly tag: "mitigated"; readonly combatant: BattleCreatureState }
   | { readonly tag: "unmitigated"; readonly combatant: BattleCreatureState } {
   const activeEffects = combatant.activeEffects.filter(
-    (effect) => effect.kind !== "featherFallMitigation",
+    (effect) => effect.kind !== "fallingCreatureMitigationReaction",
   );
   if (activeEffects.length === combatant.activeEffects.length) {
     return { tag: "unmitigated", combatant };
@@ -447,14 +447,14 @@ export function battleLightEmitters(
     (combatant): readonly BattleLightEmitter[] =>
       combatant.activeEffects.flatMap(
         (effect): readonly BattleLightEmitter[] =>
-          effect.kind === "faerieFireOutline"
+          effect.kind === "saveGatedTargetProjection"
             ? [
                 faerieFireCombatantDimLightEmitter(
                   combatant.combatantId,
                   effect,
                 ),
               ]
-            : effect.kind === "shiningSmiteIllumination"
+            : effect.kind === "afterHitDamageAndIllumination"
               ? [
                   shiningSmiteCombatantBrightLightEmitter(
                     combatant.combatantId,
@@ -989,7 +989,10 @@ function obscurementFromIllumination(
 
 function faerieFireCombatantDimLightEmitter(
   combatantId: CombatantId,
-  effect: Extract<BattleActiveEffect, { readonly kind: "faerieFireOutline" }>,
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "saveGatedTargetProjection" }
+  >,
 ): BattleLightEmitter {
   return {
     kind: "spellLightEmitter",
@@ -1009,7 +1012,7 @@ function shiningSmiteCombatantBrightLightEmitter(
   combatantId: CombatantId,
   effect: Extract<
     BattleActiveEffect,
-    { readonly kind: "shiningSmiteIllumination" }
+    { readonly kind: "afterHitDamageAndIllumination" }
   >,
 ): BattleLightEmitter {
   return {
@@ -1804,13 +1807,13 @@ function isCountedSpellConditionRepeatSave(
   );
 }
 
-export function applySleepPendingRepeatSaveEffects(
+export function applyStagedSaveConditionPendingRepeatEffects(
   state: BattleState,
   actorId: CombatantId,
   targetIds: readonly CombatantId[],
   invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "sleepTargetAdmission" }
+    { readonly procedure: "stagedSaveCondition" }
   >,
 ): BattleState {
   const combatants = new Map(state.combatants);
@@ -1822,7 +1825,7 @@ export function applySleepPendingRepeatSaveEffects(
     const allocation = allocateBattleEffectOccurrenceForCreature({
       owner: target,
       effect: {
-        kind: "sleepPendingRepeatSave" as const,
+        kind: "stagedSaveConditionPendingRepeat" as const,
         sourceProcedureRef: invocation.sourceProcedureRef,
         sourceCombatantId: actorId,
         conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(
@@ -1860,13 +1863,13 @@ export function applySleepPendingRepeatSaveEffects(
   );
 }
 
-export function applyHideousLaughterEffects(
+export function applySaveGatedConditionWithRepeatEffects(
   state: BattleState,
   actorId: CombatantId,
   targetIds: readonly CombatantId[],
   invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "hideousLaughter" }
+    { readonly procedure: "saveGatedConditionWithRepeat" }
   >,
   heightenedSpellTargetId: CombatantId | undefined = undefined,
 ): BattleState {
@@ -1879,14 +1882,14 @@ export function applyHideousLaughterEffects(
     const allocation = allocateBattleEffectOccurrenceForCreature({
       owner: target,
       effect: {
-        kind: "hideousLaughter" as const,
+        kind: "saveGatedConditionWithRepeat" as const,
         sourceProcedureRef: invocation.sourceProcedureRef,
         sourceCombatantId: actorId,
         conditionHadNonSpellProneSource:
           conditionHadNonSpellSourceBeforeSpellEffect(target, "prone"),
         conditionHadNonSpellIncapacitatedSource:
           conditionHadNonSpellSourceBeforeSpellEffect(target, "incapacitated"),
-        repeatSaveRollMode: hideousLaughterRepeatSaveRollMode(
+        repeatSaveRollMode: saveGatedConditionWithRepeatRepeatSaveRollMode(
           targetId,
           heightenedSpellTargetId,
         ),
@@ -1924,12 +1927,12 @@ export function applyHideousLaughterEffects(
   );
 }
 
-function hideousLaughterRepeatSaveRollMode(
+function saveGatedConditionWithRepeatRepeatSaveRollMode(
   targetId: CombatantId,
   heightenedSpellTargetId: CombatantId | undefined,
 ): Extract<
   BattleActiveEffect,
-  { readonly kind: "hideousLaughter" }
+  { readonly kind: "saveGatedConditionWithRepeat" }
 >["repeatSaveRollMode"] {
   return targetId === heightenedSpellTargetId ? "disadvantage" : null;
 }
@@ -2978,7 +2981,7 @@ export function applyPersistentAreaSaveCompositeFailedSaveEffect(
   );
 }
 
-export function applyCommandPendingEffects(
+export function applyCompelledNextTurnBehaviorEffects(
   state: BattleState,
   actorId: CombatantId,
   targetIds: readonly CombatantId[],
@@ -2986,7 +2989,7 @@ export function applyCommandPendingEffects(
     BattleExecutableSpellInvocation,
     { readonly procedure: "command" }
   >,
-  option: BattleCommandOption,
+  option: BattleCompelledBehaviorOption,
 ): BattleState {
   const sourceProcedureRef = invocation.sourceProcedureRef;
   const sourceCombatantId = actorId;
@@ -3001,7 +3004,7 @@ export function applyCommandPendingEffects(
     const allocation = allocateBattleEffectOccurrenceForCreature({
       owner: target,
       effect: {
-        kind: "commandPending",
+        kind: "compelledNextTurnBehavior",
         option,
         sourceProcedureRef: invocation.sourceProcedureRef,
         sourceCombatantId: actorId,
@@ -3020,7 +3023,7 @@ export function applyCommandPendingEffects(
           ...allocation.owner.activeEffects.filter(
             (effect) =>
               !(
-                effect.kind === "commandPending" &&
+                effect.kind === "compelledNextTurnBehavior" &&
                 sourceRefsMatch(effect, sourceProcedureRef, sourceCombatantId)
               ),
           ),
@@ -3032,10 +3035,13 @@ export function applyCommandPendingEffects(
   return nextState;
 }
 
-export function applyCommandGrovelProneToTarget(
+export function applyExecuteCompelledGrovelProneToTarget(
   state: BattleState,
   targetId: CombatantId,
-  effect: Extract<BattleActiveEffect, { readonly kind: "commandPending" }>,
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "compelledNextTurnBehavior" }
+  >,
 ): BattleState {
   const target = state.combatants.get(targetId);
   /* v8 ignore start -- @preserve -- Defensive internal guard: Grovel resolution receives the current target and its pending Command effect from the admitted turn-start command. */
@@ -3115,7 +3121,7 @@ export function applyFailedSaveAttackRollAdvantageEffects(
     combatants,
     objectOutlines: [
       ...state.objectOutlines,
-      ...faerieFireObjectOutlines(actorId, area, invocation),
+      ...saveGatedTargetProjectionObjects(actorId, area, invocation),
     ],
   };
 }
@@ -3166,19 +3172,19 @@ export function applySaveGatedConditionImmunityEffects(
   }, state);
 }
 
-function faerieFireObjectOutlines(
+function saveGatedTargetProjectionObjects(
   actorId: CombatantId,
   area: BattleSpellAreaChoice | undefined,
   invocation: BattleExecutableSpellInvocation<SaveGatedAttackRollAdvantageInvocation>,
 ): readonly BattleObjectOutline[] {
   if (
-    area?.kind !== "faerieFireArea" ||
+    area?.kind !== "saveGatedTargetProjectionArea" ||
     !saveGatedAttackRollAdvantageInvocationIsFaerieFire(invocation)
   ) {
     return [];
   }
   return area.affectedObjectIds.map((objectId) => ({
-    kind: "faerieFireObjectOutline",
+    kind: "saveGatedTargetProjectionObject",
     objectId,
     sourceProcedureRef: invocation.sourceProcedureRef,
     sourceCombatantId: actorId,
@@ -3444,7 +3450,7 @@ export function endHeldLightSpellEffect(
   };
 }
 
-export function applyDragonsBreathInitialSpellEffect(
+export function applyGrantedAreaSaveDamageActionSpellEffect(
   state: BattleState,
   actorId: CombatantId,
   targetId: CombatantId,
@@ -3452,7 +3458,7 @@ export function applyDragonsBreathInitialSpellEffect(
   spellSaveDc: DifficultyClass,
   invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "dragonsBreathInitial" }
+    { readonly procedure: "grantedAreaSaveDamageAction" }
   >,
   procedureRef: BattleProcedureExecutionRef,
 ): BattleState {
@@ -3482,12 +3488,12 @@ export function applyDragonsBreathInitialSpellEffect(
   };
 }
 
-export function applyShieldReactionSpellActiveEffect(
+export function applyTriggeredArmorDefenseSpellActiveEffect(
   state: BattleState,
   reactorId: CombatantId,
   invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "shieldReaction" }
+    { readonly procedure: "triggeredArmorDefense" }
   >,
 ): BattleState {
   const reactor = state.combatants.get(reactorId);

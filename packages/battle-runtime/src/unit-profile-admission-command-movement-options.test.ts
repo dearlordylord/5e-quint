@@ -44,7 +44,7 @@ import type {
   BattleState,
 } from "./unit-profile-admission.test-support.ts";
 
-const commandApproachThreatId = combatantId(
+const executeCompelledApproachThreatId = combatantId(
   "synthetic-command-approach-opportunity-threat",
 );
 
@@ -54,7 +54,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 1, count: 1 }],
-      extraTargetIds: [commandApproachThreatId],
+      extraTargetIds: [executeCompelledApproachThreatId],
     });
     const act = spellAct({
       session,
@@ -62,7 +62,10 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       slotLevel: 1,
     });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
-    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const commandOption = requireHole(
+      act.initialHoles,
+      "compelledBehaviorOptionChoice",
+    );
     const targetFill = spellTargetListFill(
       targetHole,
       spellCasterId,
@@ -71,9 +74,9 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     );
     const optionFill: Extract<
       BattleFill,
-      { readonly kind: "commandOptionChoice" }
+      { readonly kind: "compelledBehaviorOptionChoice" }
     > = {
-      kind: "commandOptionChoice",
+      kind: "compelledBehaviorOptionChoice",
       holeId: commandOption.holeId,
       value: "approach",
     };
@@ -109,7 +112,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
         subject: expect.objectContaining({
           tag: "runtimeCommand",
           actorId: spellTargetId,
-          command: "commandApproach",
+          command: "executeCompelledApproach",
         }),
         initialHoles: [expect.objectContaining({ kind: "movement" })],
       }),
@@ -117,7 +120,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     if (
       approachAct === undefined ||
       approachAct.subject.tag !== "runtimeCommand" ||
-      approachAct.subject.command !== "commandApproach"
+      approachAct.subject.command !== "executeCompelledApproach"
     ) {
       throw new Error("Expected Command Approach act.");
     }
@@ -131,12 +134,12 @@ describe("QMBT14 deterministic Command movement option admission", () => {
           movedWithinFiveFeetOfCaster: false,
           provokedOpportunityAttacks: [
             {
-              reactorId: commandApproachThreatId,
+              reactorId: executeCompelledApproachThreatId,
               distanceFeet: movementFeet(5),
               ...attackExecutionSelectionForSubjectForTest(
                 characterAttackSubjectForTest(
                   targetTurn.state,
-                  commandApproachThreatId,
+                  executeCompelledApproachThreatId,
                   "Unarmed Strike",
                 ),
               ),
@@ -159,7 +162,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       state: opportunityAttack.state,
       fill: interruptDecisionFill(opportunityAttackDecision, {
         kind: "decline",
-        responderId: commandApproachThreatId,
+        responderId: executeCompelledApproachThreatId,
       }),
     });
     expect(approached).toMatchObject({
@@ -175,7 +178,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     });
     expect(
       requireCombatant(approached.state, spellTargetId),
-    ).not.toHaveProperty("commandApproach");
+    ).not.toHaveProperty("executeCompelledApproach");
   });
   test("command Approach rejects a delegated End Turn save after its exact occurrence ends", () => {
     const spell = spellRecord(commandUnitId);
@@ -189,7 +192,10 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       slotLevel: 1,
     });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
-    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const commandOption = requireHole(
+      act.initialHoles,
+      "compelledBehaviorOptionChoice",
+    );
     const targetFill = spellTargetListFill(
       targetHole,
       spellCasterId,
@@ -198,9 +204,9 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     );
     const optionFill: Extract<
       BattleFill,
-      { readonly kind: "commandOptionChoice" }
+      { readonly kind: "compelledBehaviorOptionChoice" }
     > = {
-      kind: "commandOptionChoice",
+      kind: "compelledBehaviorOptionChoice",
       holeId: commandOption.holeId,
       value: "approach",
     };
@@ -239,7 +245,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     if (
       approachAct === undefined ||
       approachAct.subject.tag !== "runtimeCommand" ||
-      approachAct.subject.command !== "commandApproach"
+      approachAct.subject.command !== "executeCompelledApproach"
     ) {
       throw new Error("Expected Command Approach act.");
     }
@@ -307,7 +313,10 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       slotLevel: 1,
     });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
-    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const commandOption = requireHole(
+      act.initialHoles,
+      "compelledBehaviorOptionChoice",
+    );
     const targetFill = spellTargetListFill(
       targetHole,
       spellCasterId,
@@ -316,9 +325,9 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     );
     const optionFill: Extract<
       BattleFill,
-      { readonly kind: "commandOptionChoice" }
+      { readonly kind: "compelledBehaviorOptionChoice" }
     > = {
-      kind: "commandOptionChoice",
+      kind: "compelledBehaviorOptionChoice",
       holeId: commandOption.holeId,
       value: "approach",
     };
@@ -366,7 +375,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
         subject: expect.objectContaining({
           tag: "runtimeCommand",
           actorId: spellTargetId,
-          command: "commandApproach",
+          command: "executeCompelledApproach",
         }),
         initialHoles: [],
       }),
@@ -374,7 +383,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     if (
       approachAct === undefined ||
       approachAct.subject.tag !== "runtimeCommand" ||
-      approachAct.subject.command !== "commandApproach"
+      approachAct.subject.command !== "executeCompelledApproach"
     ) {
       throw new Error("Expected no-movement Command Approach act.");
     }
@@ -415,7 +424,10 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       slotLevel: 1,
     });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
-    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const commandOption = requireHole(
+      act.initialHoles,
+      "compelledBehaviorOptionChoice",
+    );
     const targetFill = spellTargetListFill(
       targetHole,
       spellCasterId,
@@ -424,9 +436,9 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     );
     const optionFill: Extract<
       BattleFill,
-      { readonly kind: "commandOptionChoice" }
+      { readonly kind: "compelledBehaviorOptionChoice" }
     > = {
-      kind: "commandOptionChoice",
+      kind: "compelledBehaviorOptionChoice",
       holeId: commandOption.holeId,
       value: "flee",
     };
@@ -462,7 +474,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
         subject: expect.objectContaining({
           tag: "runtimeCommand",
           actorId: spellTargetId,
-          command: "commandFlee",
+          command: "executeCompelledFlee",
         }),
         initialHoles: [expect.objectContaining({ kind: "movement" })],
       }),
@@ -470,7 +482,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     if (
       fleeAct === undefined ||
       fleeAct.subject.tag !== "runtimeCommand" ||
-      fleeAct.subject.command !== "commandFlee"
+      fleeAct.subject.command !== "executeCompelledFlee"
     ) {
       throw new Error("Expected Command Flee act.");
     }
@@ -509,7 +521,10 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       slotLevel: 1,
     });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
-    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const commandOption = requireHole(
+      act.initialHoles,
+      "compelledBehaviorOptionChoice",
+    );
     const targetFill = spellTargetListFill(
       targetHole,
       spellCasterId,
@@ -518,9 +533,9 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     );
     const optionFill: Extract<
       BattleFill,
-      { readonly kind: "commandOptionChoice" }
+      { readonly kind: "compelledBehaviorOptionChoice" }
     > = {
-      kind: "commandOptionChoice",
+      kind: "compelledBehaviorOptionChoice",
       holeId: commandOption.holeId,
       value: "flee",
     };
@@ -554,7 +569,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     if (
       fleeAct === undefined ||
       fleeAct.subject.tag !== "runtimeCommand" ||
-      fleeAct.subject.command !== "commandFlee"
+      fleeAct.subject.command !== "executeCompelledFlee"
     ) {
       throw new Error("Expected Command Flee act.");
     }
@@ -587,7 +602,10 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       slotLevel: 1,
     });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
-    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const commandOption = requireHole(
+      act.initialHoles,
+      "compelledBehaviorOptionChoice",
+    );
     const targetFill = spellTargetListFill(
       targetHole,
       spellCasterId,
@@ -596,9 +614,9 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     );
     const optionFill: Extract<
       BattleFill,
-      { readonly kind: "commandOptionChoice" }
+      { readonly kind: "compelledBehaviorOptionChoice" }
     > = {
-      kind: "commandOptionChoice",
+      kind: "compelledBehaviorOptionChoice",
       holeId: commandOption.holeId,
       value: "flee",
     };
@@ -646,7 +664,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
         subject: expect.objectContaining({
           tag: "runtimeCommand",
           actorId: spellTargetId,
-          command: "commandFlee",
+          command: "executeCompelledFlee",
         }),
         initialHoles: [],
       }),
@@ -654,7 +672,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     if (
       fleeAct === undefined ||
       fleeAct.subject.tag !== "runtimeCommand" ||
-      fleeAct.subject.command !== "commandFlee"
+      fleeAct.subject.command !== "executeCompelledFlee"
     ) {
       throw new Error("Expected no-movement Command Flee act.");
     }
@@ -687,7 +705,10 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       slotLevel: 1,
     });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
-    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const commandOption = requireHole(
+      act.initialHoles,
+      "compelledBehaviorOptionChoice",
+    );
     const targetFill = spellTargetListFill(
       targetHole,
       spellCasterId,
@@ -696,9 +717,9 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     );
     const optionFill: Extract<
       BattleFill,
-      { readonly kind: "commandOptionChoice" }
+      { readonly kind: "compelledBehaviorOptionChoice" }
     > = {
-      kind: "commandOptionChoice",
+      kind: "compelledBehaviorOptionChoice",
       holeId: commandOption.holeId,
       value: "flee",
     };
@@ -737,7 +758,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     if (
       fleeAct === undefined ||
       fleeAct.subject.tag !== "runtimeCommand" ||
-      fleeAct.subject.command !== "commandFlee"
+      fleeAct.subject.command !== "executeCompelledFlee"
     ) {
       throw new Error("Expected Command Flee act.");
     }

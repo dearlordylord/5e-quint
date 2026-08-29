@@ -156,7 +156,7 @@ function admitBonusActionStandardAction(
     characterUnitProcedureQueryForSubject(subject),
   );
   return unitProcedure === undefined
-    ? admitExpeditiousRetreatDash(input, actor, subject)
+    ? admitGrantedAlternateActionCost(input, actor, subject)
     : admitUnitBonusActionStandardAction(input, actor, subject, unitProcedure);
 }
 
@@ -245,7 +245,7 @@ function dashTemporaryHitPointsProcedure(
     : undefined;
 }
 
-function admitExpeditiousRetreatDash(
+function admitGrantedAlternateActionCost(
   input: BattleResolutionInput,
   actor: CharacterBattleCreatureState,
   subject: Extract<
@@ -258,7 +258,7 @@ function admitExpeditiousRetreatDash(
     subject.procedureRef,
     actor,
   );
-  if (spellProcedure?.procedure !== "expeditiousRetreatDash") {
+  if (spellProcedure?.procedure !== "grantedAlternateActionCost") {
     return { tag: "staleCharacterProcedure" };
   }
   if (!expeditiousRetreatEffectIsActive(actor, subject)) {
@@ -271,7 +271,7 @@ function admitExpeditiousRetreatDash(
   return {
     tag: "admitted",
     input: asAdmittedBonusActionStandardAction(input, actor, {
-      kind: "expeditiousRetreatDash",
+      kind: "grantedAlternateActionCost",
     }),
   };
 }

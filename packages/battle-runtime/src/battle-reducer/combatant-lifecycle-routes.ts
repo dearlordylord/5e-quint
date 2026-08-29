@@ -438,7 +438,7 @@ function isConcentrationTeardownSubject(
   if (subject.tag === "actionSpell") {
     return (
       spellInvocationForRouteSubject(state, subject)?.procedure ===
-      "blurAttackRollDefense"
+      "perceptionGatedAttackRollDefense"
     );
   }
   if (subject.tag === "action" && subject.action === "attack") {
@@ -456,7 +456,7 @@ function isConcentrationTeardownDiscoverySubject(
   if (subject.tag === "actionSpell") {
     return (
       spellInvocationForRouteSubject(state, subject)?.procedure ===
-      "blurAttackRollDefense"
+      "perceptionGatedAttackRollDefense"
     );
   }
   return (

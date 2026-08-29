@@ -226,7 +226,7 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     ).toEqual([
       {
         effectRef: expect.any(String),
-        kind: "shiningSmiteIllumination",
+        kind: "afterHitDamageAndIllumination",
         sourceProcedureRef: choice.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         expiresAt: {
@@ -393,7 +393,7 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
       requireCombatant(concentrationBroken.state, spellTargetId).activeEffects,
     ).not.toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ kind: "shiningSmiteIllumination" }),
+        expect.objectContaining({ kind: "afterHitDamageAndIllumination" }),
       ]),
     );
     expect(snapshotBattle(concentrationBroken.state).lightEmitters).toEqual([]);

@@ -5,6 +5,7 @@ import type {
 } from "../battle-state-execution.ts";
 import type {
   RuntimeSpellProcedureExecution,
+  SpellProcedureKey,
   SpellProcedureExecution,
   SpellProcedureExecutionByProcedure,
 } from "../character-execution.ts";
@@ -137,19 +138,19 @@ const SPELL_EXECUTION_FACTS_BY_PROCEDURE = {
   afterHitDamageAndIllumination: { executionClass: "attackHitBonusAction" },
   afterHitSaveGatedCondition: { executionClass: "attackHitBonusAction" },
   afterHitTimedDamageAndSave: { executionClass: "attackHitBonusAction" },
-  antimagicFieldOngoingSpellSuppression: { executionClass: "actionCast" },
+  magicSuppressionEmanation: { executionClass: "actionCast" },
   attackBurstSaveDamage: {
     executionClass: "actionCast",
     resolution: ACTION_COST_OVERRIDE_RESOLUTION,
   },
-  blurAttackRollDefense: { executionClass: "actionCast" },
+  perceptionGatedAttackRollDefense: { executionClass: "actionCast" },
   chainedSpellAttackDamage: {
     executionClass: "actionCast",
     resolution: ACTION_COST_OVERRIDE_RESOLUTION,
   },
   chosenDamageResistance: { executionClass: "actionCast" },
-  cloudkillAreaHazard: { executionClass: "actionCast" },
-  command: {
+  persistentAreaSaveDamage: { executionClass: "actionCast" },
+  compelledNextTurnBehavior: {
     executionClass: "actionCast",
     resolution: METAMAGIC_APPLICATION_RESOLUTION,
   },
@@ -157,7 +158,9 @@ const SPELL_EXECUTION_FACTS_BY_PROCEDURE = {
     executionClass: "actionCast",
   },
   conditionRemovalProtection: { executionClass: "actionCast" },
-  counterspell: { executionClass: "triggeredReactionOrActionCast" },
+  spellCastInterruptionReaction: {
+    executionClass: "triggeredReactionOrActionCast",
+  },
   creatureSizeDecrease: {
     executionClass: "actionCast",
     resolution: QUICKENED_ACTION_COST_REWRITE_RESOLUTION,
@@ -168,9 +171,7 @@ const SPELL_EXECUTION_FACTS_BY_PROCEDURE = {
   },
   creatureTypeProtection: { executionClass: "actionCast" },
   damageReduction: { executionClass: "actionCast" },
-  dancingLightsCombinedCast: { executionClass: "actionCast" },
-  dancingLightsReposition: { executionClass: "bonusActionCast" },
-  dancingLightsSeparateCast: { executionClass: "actionCast" },
+  movableLightManifestation: { executionClass: "actionCostCast" },
   directCondition: {
     executionClass: "actionCast",
     resolution: QUICKENED_ACTION_COST_REWRITE_RESOLUTION,
@@ -180,44 +181,41 @@ const SPELL_EXECUTION_FACTS_BY_PROCEDURE = {
     executionClass: "actionCostCast",
     resolution: QUICKENED_ACTION_COST_REWRITE_RESOLUTION,
   },
-  dragonsBreathInitial: { executionClass: "bonusActionCast" },
-  expeditiousRetreatDash: { executionClass: "bonusActionDash" },
-  featherFallMitigation: {
+  grantedAreaSaveDamageAction: { executionClass: "bonusActionCast" },
+  grantedAlternateActionCost: { executionClass: "bonusActionDash" },
+  fallingCreatureMitigationReaction: {
     executionClass: "triggeredReactionOrActionCast",
   },
-  flamingSphere: { executionClass: "actionCast" },
-  fogCloudObscurement: { executionClass: "actionCast" },
-  greaseGroundHazard: {
+  persistentAreaTrait: { executionClass: "actionCast" },
+  persistentAreaSaveCondition: {
     executionClass: "actionCast",
     resolution: METAMAGIC_APPLICATION_RESOLUTION,
   },
-  gustOfWindLine: {
+  directionalPersistentArea: {
     executionClass: "actionCast",
     resolution: METAMAGIC_APPLICATION_RESOLUTION,
   },
-  hastePositive: { executionClass: "actionCast" },
+  compositeTargetBuffWithAftermath: { executionClass: "actionCast" },
   heldLight: { executionClass: "bonusActionCast" },
   heldLightHurl: {
     executionClass: "actionCast",
     resolution: SHARED_SPELL_ATTACK_ACTION_COST_OVERRIDE_RESOLUTION,
   },
-  hideousLaughter: {
+  saveGatedConditionWithRepeat: {
     executionClass: "actionCast",
     resolution: METAMAGIC_APPLICATION_RESOLUTION,
   },
-  hypnoticPattern: {
+  saveGatedAreaControl: {
     executionClass: "actionCast",
     resolution: METAMAGIC_APPLICATION_RESOLUTION,
   },
-  insectPlagueAreaHazard: { executionClass: "actionCast" },
-  jumpMovementReplacement: { executionClass: "bonusActionCast" },
-  levitatedCreature: { executionClass: "actionCast" },
-  magicWeaponEnhancement: { executionClass: "bonusActionCast" },
+  fixedCostMovementReplacement: { executionClass: "bonusActionCast" },
+  controlledVerticalSuspension: { executionClass: "actionCast" },
+  weaponAttackDamageEnhancement: { executionClass: "bonusActionCast" },
   magicalDarknessPointOrigin: { executionClass: "actionCast" },
   makeStable: { executionClass: "actionCast" },
   markedDamageRider: { executionClass: "bonusActionCast" },
-  mirrorImageHitInterception: { executionClass: "actionCast" },
-  moonbeam: { executionClass: "actionCast" },
+  duplicateHitInterception: { executionClass: "actionCast" },
   objectContactDamage: { executionClass: "actionCast" },
   objectContactDamageRepeat: { executionClass: "bonusActionCast" },
   objectLight: {
@@ -231,7 +229,7 @@ const SPELL_EXECUTION_FACTS_BY_PROCEDURE = {
     executionClass: "actionCast",
     resolution: QUICKENED_ACTION_COST_REWRITE_RESOLUTION,
   },
-  sanctuaryTargetingInterdiction: { executionClass: "bonusActionCast" },
+  targetingSaveInterdiction: { executionClass: "bonusActionCast" },
   saveGatedAttackRollAdvantage: {
     executionClass: "actionCast",
     resolution: METAMAGIC_APPLICATION_RESOLUTION,
@@ -255,10 +253,10 @@ const SPELL_EXECUTION_FACTS_BY_PROCEDURE = {
   seeInvisibleObserverSight: { executionClass: "actionCast" },
   selfTeleport: { executionClass: "bonusActionCast" },
   selfTransformationMode: { executionClass: "actionCast" },
-  shieldReaction: { executionClass: "triggeredReactionOrActionCast" },
-  sleepTargetAdmission: { executionClass: "actionCast" },
-  sleetStormAreaHazard: { executionClass: "actionCast" },
-  slowActivePenalties: {
+  triggeredArmorDefense: { executionClass: "triggeredReactionOrActionCast" },
+  saveGatedTurnConstraintBundle: { executionClass: "actionCast" },
+  persistentAreaSaveComposite: { executionClass: "actionCast" },
+  stagedSaveCondition: {
     executionClass: "actionCast",
     resolution: METAMAGIC_APPLICATION_RESOLUTION,
   },
@@ -277,22 +275,18 @@ const SPELL_EXECUTION_FACTS_BY_PROCEDURE = {
   },
   spellCreatedHeldObjectReEvoke: { executionClass: "bonusActionCast" },
   spellHostedWeaponAttack: { executionClass: "actionCast" },
-  spikeGrowthMovementHazard: { executionClass: "actionCast" },
-  spiritualWeaponAttackProxy: {
+  areaMovementDistanceDamage: { executionClass: "actionCast" },
+  spatialMeleeSpellAttackProxy: {
     executionClass: "bonusActionCast",
     resolution: DIRECT_SPELL_ATTACK_DAMAGE_RESOLUTION,
   },
-  spiritualWeaponRepeatAttack: {
-    executionClass: "bonusActionCast",
-    resolution: DIRECT_SPELL_ATTACK_DAMAGE_RESOLUTION,
-  },
-  thaumaturgyBoomingVoice: { executionClass: "actionCast" },
-  wardingBond: { executionClass: "actionCast" },
+  temporaryAbilityCheckRollMode: { executionClass: "actionCast" },
+  linkedDefenseResistanceDamageShare: { executionClass: "actionCast" },
   weaponAttackOverride: { executionClass: "bonusActionCast" },
   weaponDamageRider: { executionClass: "bonusActionCast" },
-  webRestraintHazard: { executionClass: "actionCast" },
+  persistentAreaSaveConditionEscape: { executionClass: "actionCast" },
 } as const satisfies {
-  readonly [P in SupportedSpellInvocation["procedure"]]: SpellProcedureExecutionFactsForProcedure<P>;
+  readonly [P in SpellProcedureKey]: SpellProcedureExecutionFactsForProcedure<P>;
 };
 
 export type SpellExecutionClass =

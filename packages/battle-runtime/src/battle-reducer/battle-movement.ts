@@ -51,8 +51,8 @@ export function applyBattleMovement(
       }
     : mover;
   const landedMover =
-    movement.jumpMovementReplacement?.landing.difficultTerrainAcrobatics ===
-    "failed"
+    movement.fixedCostMovementReplacement?.landing
+      .difficultTerrainAcrobatics === "failed"
       ? battleCreatureStateWithKnockOutPreservedConditions(
           nextMover,
           applyCondition(nextMover.conditions, "prone"),

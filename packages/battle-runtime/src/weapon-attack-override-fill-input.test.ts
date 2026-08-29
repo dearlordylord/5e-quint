@@ -19,11 +19,11 @@ type TargetSpatialFactsFill = Extract<
 >;
 type CounterspellTriggerFact = Extract<
   TargetSpatialFactsFill["spatialFacts"][number],
-  { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
+  { readonly kind: "spellCastInterruptionTriggerCasterVisibleWithinRange" }
 >;
 
 const counterspellTriggerFact: CounterspellTriggerFact = {
-  kind: "counterspellTriggerCasterVisibleWithinRange",
+  kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
   reactorId: spellTargetId,
   casterId: spellCasterId,
   sourceProcedureRef: battleProcedureExecutionRefForTest("counterspell"),

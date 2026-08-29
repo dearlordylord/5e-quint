@@ -19,7 +19,7 @@ import {
   companionHeldObjectFactsHole,
   companionReappearanceInitiativeHole,
   companionReappearancePlacementHole,
-  findFamiliarConnectionHole,
+  spawnedCompanionConnectionHole,
   findFamiliarTouchDeliveryTargetHoles,
 } from "../find-familiar-companion-subjects.ts";
 import {
@@ -224,10 +224,10 @@ function companionReappearanceInitiative(
 
 export function resolveFindFamiliarSharedSensesSubject(
   input: BattleResolutionInputForSubject<
-    Extract<BattleSubject, { readonly tag: "findFamiliarSharedSenses" }>
+    Extract<BattleSubject, { readonly tag: "spawnedCompanionSharedSenses" }>
   >,
 ): BattleResolutionResult {
-  const connection = findFamiliarConnectionFact({
+  const connection = spawnedCompanionConnectionFact({
     state: input.state,
     ownerId: input.subject.actorId,
     companionId: input.subject.familiarId,
@@ -260,12 +260,12 @@ export function shareFindFamiliarSenses(input: {
 
 export function resolveFindFamiliarTouchSpellSubject(
   input: BattleResolutionInputForSubject<
-    Extract<BattleSubject, { readonly tag: "findFamiliarTouchSpell" }>
+    Extract<BattleSubject, { readonly tag: "spawnedCompanionTouchSpellProxy" }>
   >,
   execution: FindFamiliarProcedureExecution,
   reactionCommitment: "uncommitted" | "committed",
 ): BattleResolutionResult {
-  const connection = findFamiliarConnectionFact({
+  const connection = spawnedCompanionConnectionFact({
     state: input.state,
     ownerId: input.subject.actorId,
     companionId: input.subject.companionId,
@@ -275,11 +275,11 @@ export function resolveFindFamiliarTouchSpellSubject(
   if (connection.tag !== "resolved") {
     return connection;
   }
-  const spellSubject = findFamiliarTouchSpellSubject(input.subject);
+  const spellSubject = spawnedCompanionTouchSpellProxySubject(input.subject);
   const spellFills = input.fills.filter(
     (fill) =>
       !(
-        fill.kind === "findFamiliarConnection" &&
+        fill.kind === "spawnedCompanionConnection" &&
         fill.holeId === connection.holeId
       ),
   );
@@ -429,7 +429,7 @@ function companionHeldObjectIdsForDismissal(
   return { tag: "resolved", objectIds: fill.value.objectIds };
 }
 
-function findFamiliarConnectionFact(input: {
+function spawnedCompanionConnectionFact(input: {
   readonly state: BattleState;
   readonly ownerId: CombatantId;
   readonly companionId: CombatantId;
@@ -445,13 +445,13 @@ function findFamiliarConnectionFact(input: {
       BattleResolutionResult,
       { readonly tag: "needsHoles" | "invalid" }
     > {
-  const expectedHole = findFamiliarConnectionHole({
+  const expectedHole = spawnedCompanionConnectionHole({
     ownerId: input.ownerId,
     companionId: input.companionId,
   });
   const fill = input.fills.find(
     (candidate) =>
-      candidate.kind === "findFamiliarConnection" &&
+      candidate.kind === "spawnedCompanionConnection" &&
       candidate.holeId === expectedHole.holeId,
   );
   if (fill === undefined) {
@@ -468,8 +468,11 @@ function findFamiliarConnectionFact(input: {
   };
 }
 
-function findFamiliarTouchSpellSubject(
-  subject: Extract<BattleSubject, { readonly tag: "findFamiliarTouchSpell" }>,
+function spawnedCompanionTouchSpellProxySubject(
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "spawnedCompanionTouchSpellProxy" }
+  >,
 ): Extract<
   BattleSubject,
   { readonly tag: "actionSpell" | "bonusActionSpell" }

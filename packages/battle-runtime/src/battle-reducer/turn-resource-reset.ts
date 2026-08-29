@@ -9,7 +9,7 @@ export function resetBattleTurnResources(
     resetTurnActionEconomy(resources);
   return {
     ...base,
-    commandHalt: null,
+    compelledHalt: null,
     jumpDistanceMultiplier: null,
     heightenedStepOfTheWindCarriedCreatures: [],
     spellSlotUsesThisTurn: [],

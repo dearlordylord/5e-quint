@@ -15,7 +15,7 @@ export type TestAntimagicFieldAuraMembership = {
   readonly membership: BattleAntimagicFieldAuraMembership;
 };
 
-export function antimagicFieldAuraMembershipForTest(input: {
+export function magicSuppressionEmanationMembershipForTest(input: {
   readonly sourceCombatantId: CombatantId;
   readonly originIncluded: boolean;
   readonly nonOriginCombatantIds: readonly CombatantId[];
@@ -23,7 +23,7 @@ export function antimagicFieldAuraMembershipForTest(input: {
   return {
     sourceCombatantId: input.sourceCombatantId,
     membership: {
-      kind: "antimagicFieldAuraMembership",
+      kind: "magicSuppressionEmanationMembership",
       originIncluded: input.originIncluded,
       nonOriginCombatantIds: input.nonOriginCombatantIds,
     },

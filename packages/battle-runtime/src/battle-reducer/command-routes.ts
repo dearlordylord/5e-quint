@@ -23,16 +23,16 @@ import type {
 } from "./reducer-route-protocol.ts";
 import { spellInvocationForRouteSubject } from "./reducer-route-spell-query.ts";
 
-export function commandRouteForDiscoveredAct(
+export function compelledBehaviorRouteForDiscoveredAct(
   state: BattleState,
   act: BattleActDiscoveryCandidate,
 ): BattleReducerRouteEvents | undefined {
-  if (!isCommandEffectDiscoverySubject(state, act.subject)) {
+  if (!isCompelledBehaviorEffectDiscoverySubject(state, act.subject)) {
     return undefined;
   }
   return [
     discoverBattleActsRoute(
-      "commandEffect",
+      "compelledBehaviorEffect",
       battleReducerRouteHoles(act.initialHoles),
       act.subject.tag === "actionSpell"
         ? "battleSpellSlotAndActionEconomy"
@@ -41,11 +41,11 @@ export function commandRouteForDiscoveredAct(
   ];
 }
 
-export function commandRouteForResolution(
+export function compelledBehaviorRouteForResolution(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
 ): BattleReducerRouteEvent | undefined {
-  if (!isCommandEffectSubject(input.state, input.subject)) {
+  if (!isCompelledBehaviorEffectSubject(input.state, input.subject)) {
     return undefined;
   }
   if (result.tag === "invalid" && result.reason !== "invalidFill") {
@@ -54,60 +54,64 @@ export function commandRouteForResolution(
 
   const fill = input.fills.at(-1);
   if (fill === undefined) {
-    return commandRouteWithoutFill(input);
+    return compelledBehaviorRouteWithoutFill(input);
   }
 
-  const routeFill = commandRouteFill(fill);
+  const routeFill = compelledBehaviorRouteFill(fill);
   if (routeFill === undefined) {
-    return commandRouteWithoutFill(input);
+    return compelledBehaviorRouteWithoutFill(input);
   }
 
   return resolveBattleSubjectRoute(
-    "commandEffect",
+    "compelledBehaviorEffect",
     routeFill,
-    commandRouteHolesAfter(input, result),
-    commandRouteOwner(input, result, routeFill),
+    compelledBehaviorRouteHolesAfter(input, result),
+    compelledBehaviorRouteOwner(input, result, routeFill),
   );
 }
 
-function commandRouteWithoutFill(
+function compelledBehaviorRouteWithoutFill(
   input: BattleResolutionInput,
 ): BattleReducerRouteEvent | undefined {
-  const owner = commandRouteOwnerWithoutFill(input);
+  const owner = compelledBehaviorRouteOwnerWithoutFill(input);
   return owner === undefined
     ? undefined
-    : resolveBattleSubjectWithoutFillRoute("commandEffect", [], owner);
+    : resolveBattleSubjectWithoutFillRoute(
+        "compelledBehaviorEffect",
+        [],
+        owner,
+      );
 }
 
-function commandRouteOwnerWithoutFill(
+function compelledBehaviorRouteOwnerWithoutFill(
   input: BattleResolutionInput,
 ): BattleReducerRouteOwnerGroup | undefined {
   const subject = input.subject;
   if (subject.tag !== "runtimeCommand") {
     return undefined;
   }
-  if (subject.command === "commandGrovel") {
+  if (subject.command === "executeCompelledGrovel") {
     return "battleConditionLifecycle";
   }
-  if (subject.command === "commandDrop") {
+  if (subject.command === "executeCompelledDrop") {
     return "battleActiveEffect";
   }
   if (
-    subject.command === "commandApproach" ||
-    subject.command === "commandFlee"
+    subject.command === "executeCompelledApproach" ||
+    subject.command === "executeCompelledFlee"
   ) {
     return "battleMovementResource";
   }
   if (
     subject.command === "endTurn" &&
-    input.state.currentTurnResources.commandHalt !== null
+    input.state.currentTurnResources.compelledHalt !== null
   ) {
     return "battleActiveEffect";
   }
   return undefined;
 }
 
-function commandRouteOwner(
+function compelledBehaviorRouteOwner(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
   fill: BattleReducerRouteFill,
@@ -119,7 +123,10 @@ function commandRouteOwner(
     return "battleHoleFrontier";
   }
   if (input.subject.tag === "runtimeCommand") {
-    if (input.subject.command === "commandFlee" && result.tag === "invalid") {
+    if (
+      input.subject.command === "executeCompelledFlee" &&
+      result.tag === "invalid"
+    ) {
       return "battleHoleFrontier";
     }
     if (
@@ -130,8 +137,8 @@ function commandRouteOwner(
       return "battleInterruptStack";
     }
     if (
-      input.subject.command === "commandApproach" ||
-      input.subject.command === "commandFlee"
+      input.subject.command === "executeCompelledApproach" ||
+      input.subject.command === "executeCompelledFlee"
     ) {
       return "battleMovementResource";
     }
@@ -139,7 +146,7 @@ function commandRouteOwner(
   return "battleActiveEffect";
 }
 
-function commandRouteHolesAfter(
+function compelledBehaviorRouteHolesAfter(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
 ): readonly BattleReducerRouteHole[] {
@@ -149,7 +156,7 @@ function commandRouteHolesAfter(
   if (
     result.tag === "invalid" &&
     input.subject.tag === "runtimeCommand" &&
-    input.subject.command === "commandFlee" &&
+    input.subject.command === "executeCompelledFlee" &&
     input.fills.at(-1)?.kind === "movement"
   ) {
     return ["movement"];
@@ -157,59 +164,63 @@ function commandRouteHolesAfter(
   return [];
 }
 
-function commandRouteFill(
+function compelledBehaviorRouteFill(
   fill: BattleFill,
 ): BattleReducerRouteFill | undefined {
   const kind = battleFillKind(fill);
-  if (kind === "commandOptionChoice") return "commandOptionChoice";
+  if (kind === "compelledBehaviorOptionChoice")
+    return "compelledBehaviorOptionChoice";
   if (kind === "movement") return "movement";
   if (kind === "savingThrowOutcome") return "savingThrowOutcome";
   if (kind === "spellTargetList") return "spellTargetList";
   return undefined;
 }
 
-function isCommandEffectSubject(
+function isCompelledBehaviorEffectSubject(
   state: BattleState,
   subject: BattleResolutionInput["subject"],
 ): boolean {
   if (subject.tag === "actionSpell") {
     return (
-      spellInvocationForRouteSubject(state, subject)?.procedure === "command"
+      spellInvocationForRouteSubject(state, subject)?.procedure ===
+      "compelledNextTurnBehavior"
     );
   }
   if (subject.tag !== "runtimeCommand") {
     return false;
   }
   return (
-    isCommandPendingRuntimeSubject(subject) || subject.command === "endTurn"
+    isCompelledNextTurnBehaviorRuntimeSubject(subject) ||
+    subject.command === "endTurn"
   );
 }
 
-function isCommandEffectDiscoverySubject(
+function isCompelledBehaviorEffectDiscoverySubject(
   state: BattleState,
   subject: BattleResolutionInput["subject"],
 ): boolean {
   if (subject.tag === "actionSpell") {
     return (
-      spellInvocationForRouteSubject(state, subject)?.procedure === "command"
+      spellInvocationForRouteSubject(state, subject)?.procedure ===
+      "compelledNextTurnBehavior"
     );
   }
   if (subject.tag !== "runtimeCommand") {
     return false;
   }
-  return isCommandPendingRuntimeSubject(subject);
+  return isCompelledNextTurnBehaviorRuntimeSubject(subject);
 }
 
-function isCommandPendingRuntimeSubject(
+function isCompelledNextTurnBehaviorRuntimeSubject(
   subject: Extract<
     BattleResolutionInput["subject"],
     { readonly tag: "runtimeCommand" }
   >,
 ): boolean {
   return (
-    subject.command === "commandGrovel" ||
-    subject.command === "commandDrop" ||
-    subject.command === "commandApproach" ||
-    subject.command === "commandFlee"
+    subject.command === "executeCompelledGrovel" ||
+    subject.command === "executeCompelledDrop" ||
+    subject.command === "executeCompelledApproach" ||
+    subject.command === "executeCompelledFlee"
   );
 }

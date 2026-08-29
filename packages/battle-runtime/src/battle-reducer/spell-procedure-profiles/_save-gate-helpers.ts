@@ -689,7 +689,7 @@ export function faerieFireSaveGateAttackRollAdvantageSpell(
       sideFeet: movementFeet(phase.attachment.value.shape.sideFeet),
     },
     effect: {
-      kind: "faerieFireOutline",
+      kind: "saveGatedTargetProjection",
       sourceCombatantId: actorId,
       expiresAt: { kind: "concentration", combatantId: actorId },
     },

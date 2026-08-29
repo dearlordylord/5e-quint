@@ -509,10 +509,8 @@ function targetAntimagicAura(
   const aura = requireCombatant(
     state.battle.state,
     spellTargetId,
-  ).activeEffects.find(
-    (effect) => effect.kind === "antimagicFieldOngoingSpellSuppression",
-  );
-  if (aura?.kind !== "antimagicFieldOngoingSpellSuppression") {
+  ).activeEffects.find((effect) => effect.kind === "magicSuppressionEmanation");
+  if (aura?.kind !== "magicSuppressionEmanation") {
     throw new Error("Expected an allocated Antimagic Field aura.");
   }
   const target = {
@@ -577,7 +575,7 @@ function dispelProjection(
       spellTargetId,
     ).activeEffects.some(
       (effect) =>
-        effect.kind === "antimagicFieldOngoingSpellSuppression" &&
+        effect.kind === "magicSuppressionEmanation" &&
         effect.areaId === antimagicFieldAreaId,
     ),
     higherLevelCheckHoleCount:
@@ -608,7 +606,7 @@ function requirePendingHigherLevelCheckState(
 
 function antimagicFieldAuraEffect(): Extract<
   BattleActiveEffectOccurrenceTemplate,
-  { readonly kind: "antimagicFieldOngoingSpellSuppression" }
+  { readonly kind: "magicSuppressionEmanation" }
 > {
   const aura = antimagicFieldAuraMembershipForTest({
     sourceCombatantId: spellTargetId,
@@ -616,7 +614,7 @@ function antimagicFieldAuraEffect(): Extract<
     nonOriginCombatantIds: [],
   });
   return {
-    kind: "antimagicFieldOngoingSpellSuppression",
+    kind: "magicSuppressionEmanation",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(antimagicFieldUnitId),
     ),

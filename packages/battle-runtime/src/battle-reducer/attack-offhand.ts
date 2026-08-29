@@ -51,7 +51,7 @@ import {
   applyAttackDamageAmount,
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowFillCheck,
-  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
 } from "./damage-apply.ts";
 import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
 
@@ -905,24 +905,24 @@ function resolveBonusActionAttack(
       );
     }
     /* v8 ignore stop -- @preserve */
-    const hideousLaughterSaveCheck =
-      damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+    const saveGatedConditionWithRepeatSaveCheck =
+      damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck({
         state: spellReducedState,
         target: spellReduction.target,
         damageAmount,
-        fills: fillSet.hideousLaughterDamageRepeatSaves,
+        fills: fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
       });
-    if (hideousLaughterSaveCheck.tag === "needsHoles") {
+    if (saveGatedConditionWithRepeatSaveCheck.tag === "needsHoles") {
       return needsHolesResult(spellReducedState, input.subject, [
-        ...hideousLaughterSaveCheck.holes,
+        ...saveGatedConditionWithRepeatSaveCheck.holes,
       ]);
     }
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (hideousLaughterSaveCheck.tag === "invalid") {
+    if (saveGatedConditionWithRepeatSaveCheck.tag === "invalid") {
       return invalidResult(
         input.state,
         "invalidFill",
-        hideousLaughterSaveCheck.message,
+        saveGatedConditionWithRepeatSaveCheck.message,
       );
     }
     /* v8 ignore stop -- @preserve */
@@ -936,8 +936,8 @@ function resolveBonusActionAttack(
       attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
       weaponDamageDiceRollChoice: selectedDamageDiceChoice ?? undefined,
       concentrationSavingThrow: primaryConcentrationSavingThrow,
-      hideousLaughterDamageRepeatSaves:
-        fillSet.hideousLaughterDamageRepeatSaves,
+      saveGatedConditionWithRepeatDamageRepeatSaves:
+        fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
       wardingBondDamageShareConcentrationSavingThrows:
         fillSet.concentrationSavingThrows,
       spatialFacts: fillSet.targetSpatialFacts,

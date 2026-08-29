@@ -34,14 +34,14 @@ import type {
   BattleAreaDifficultTerrainMovementFact,
   BattleAreaDifficultTerrainSource,
   BattleBrutalStrikeForcefulBlowMovementFact,
-  BattleCommandApproachMovementFact,
-  BattleCommandFleeMovementFact,
+  BattleCompelledApproachMovementFact,
+  BattleCompelledFleeMovementFact,
   BattleCreatureSpaceTraversalMovementFact,
   BattleCreatureState,
   BattleFill,
   BattleGrappleDragMovementFact,
   BattleDirectionalPersistentAreaMovementFact,
-  BattleJumpMovementReplacementFact,
+  BattleFixedCostMovementReplacementFact,
   BattleMovementFillValue,
   BattleOpportunityAttackThreat,
   BattleResolutionInput,
@@ -82,8 +82,8 @@ import { damageAmountAfterTargetAdjustments } from "./damage-helpers.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import { rolledDiceFillForHole } from "./fill-hole-protocol.ts";
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
-import { maxJumpMovementReplacementDistanceFeet } from "./jump-movement-replacement.ts";
 import { validateControlledVerticalSuspensionMovementFact } from "./levitate-creature.ts";
+import { maxFixedCostMovementReplacementDistanceFeet } from "./jump-movement-replacement.ts";
 import { movementHole } from "./movement-holes.ts";
 import {
   battleMovementBudgetForActor,
@@ -104,7 +104,7 @@ import { attackTargetIsLegal } from "./attack-spatial.ts";
 
 const MOVEMENT_PROCEDURE_COMMANDS = [
   "move",
-  "jumpMovementReplacement",
+  "fixedCostMovementReplacement",
   "standFromProne",
 ] as const satisfies ReadonlyArray<BattleRuntimeCommand>;
 
@@ -138,8 +138,8 @@ export function resolveMovementProcedure(
     Match.when({ command: "move" }, (subject) =>
       resolveMoveCommand({ ...input, subject }),
     ),
-    Match.when({ command: "jumpMovementReplacement" }, (subject) =>
-      resolveJumpMovementReplacementCommand({ ...input, subject }),
+    Match.when({ command: "fixedCostMovementReplacement" }, (subject) =>
+      resolveFixedCostMovementReplacementCommand({ ...input, subject }),
     ),
     Match.when({ command: "standFromProne" }, (subject) =>
       resolveStandFromProneCommand({ ...input, subject }),
@@ -253,23 +253,23 @@ function movementOpportunityReactionWindow(
   );
 }
 
-type JumpMovementReplacementEffect = Extract<
+type FixedCostMovementReplacementEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "jumpMovementReplacement" }
+  { readonly kind: "fixedCostMovementReplacement" }
 >;
 
-function resolveJumpMovementReplacementCommand(
+function resolveFixedCostMovementReplacementCommand(
   input: BattleResolutionInputForSubject<
     Extract<
       BattleSubject,
       {
         readonly tag: "runtimeCommand";
-        readonly command: "jumpMovementReplacement";
+        readonly command: "fixedCostMovementReplacement";
       }
     >
   >,
 ): BattleResolutionResult {
-  const effect = jumpMovementReplacementEffectForSubject(
+  const effect = fixedCostMovementReplacementEffectForSubject(
     input.state,
     input.subject,
   );
@@ -320,7 +320,7 @@ function resolveJumpMovementReplacementCommand(
     input.state,
     input.subject.actorId,
     fill,
-    { kind: "jumpMovementReplacement", effect },
+    { kind: "fixedCostMovementReplacement", effect },
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (movement.tag === "invalid") {
@@ -333,7 +333,7 @@ function resolveJumpMovementReplacementCommand(
     movement.movement,
   );
   if (threats.length > 0) {
-    const consumedState = markJumpMovementReplacementUsed(
+    const consumedState = markFixedCostMovementReplacementUsed(
       input.state,
       input.subject.actorId,
       effect,
@@ -372,7 +372,7 @@ function resolveJumpMovementReplacementCommand(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const consumedState = markJumpMovementReplacementUsed(
+  const consumedState = markFixedCostMovementReplacementUsed(
     movementEffects.state,
     input.subject.actorId,
     effect,
@@ -384,16 +384,16 @@ function resolveJumpMovementReplacementCommand(
   };
 }
 
-function jumpMovementReplacementEffectForSubject(
+function fixedCostMovementReplacementEffectForSubject(
   state: BattleState,
   subject: Extract<
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "jumpMovementReplacement";
+      readonly command: "fixedCostMovementReplacement";
     }
   >,
-): JumpMovementReplacementEffect | null {
+): FixedCostMovementReplacementEffect | null {
   const actor = state.combatants.get(subject.actorId);
   /* v8 ignore start -- @preserve -- Discovery creates the replacement subject from this actor's active effect. */
   if (actor === undefined) {
@@ -402,18 +402,18 @@ function jumpMovementReplacementEffectForSubject(
   /* v8 ignore stop -- @preserve */
   return (
     actor.activeEffects.find(
-      (effect): effect is JumpMovementReplacementEffect =>
-        effect.kind === "jumpMovementReplacement" &&
+      (effect): effect is FixedCostMovementReplacementEffect =>
+        effect.kind === "fixedCostMovementReplacement" &&
         spellActiveEffectExecutionRef(effect) === subject.effectRef &&
         !effect.usedThisTurn,
     ) ?? null
   );
 }
 
-function markJumpMovementReplacementUsed(
+function markFixedCostMovementReplacementUsed(
   state: BattleState,
   actorId: CombatantId,
-  consumedEffect: JumpMovementReplacementEffect,
+  consumedEffect: FixedCostMovementReplacementEffect,
 ): BattleState {
   const actor = state.combatants.get(actorId);
   /* v8 ignore start -- @preserve -- The subject is admitted from the same combatant map that supplied the consumed Jump effect. */
@@ -422,7 +422,7 @@ function markJumpMovementReplacementUsed(
   }
   /* v8 ignore stop -- @preserve */
   const activeEffects = actor.activeEffects.map((effect) =>
-    effect.kind === "jumpMovementReplacement" &&
+    effect.kind === "fixedCostMovementReplacement" &&
     spellActiveEffectExecutionRef(effect) ===
       spellActiveEffectExecutionRef(consumedEffect)
       ? { ...effect, usedThisTurn: true }
@@ -495,11 +495,11 @@ type BattleMovementParseMode =
       readonly spendsTurnMovement: boolean;
     }
   | {
-      readonly kind: "jumpMovementReplacement";
-      readonly effect: JumpMovementReplacementEffect;
+      readonly kind: "fixedCostMovementReplacement";
+      readonly effect: FixedCostMovementReplacementEffect;
     }
-  | { readonly kind: "commandApproach" }
-  | { readonly kind: "commandFlee" }
+  | { readonly kind: "compelledApproach" }
+  | { readonly kind: "compelledFlee" }
   | {
       readonly kind: "brutalStrikeForcefulBlow";
       readonly targetId: CombatantId;
@@ -588,11 +588,11 @@ export function parseBattleMovement(
   }
   /* v8 ignore stop -- @preserve */
   const areaExtraCostFeet = areaMovementExtraCostFeet(state, fill.value);
-  const jumpMovementValidation = validateJumpMovementReplacementFact(
+  const jumpMovementValidation = validateFixedCostMovementReplacementFact(
     state,
     moverId,
-    fill.value.jumpMovementReplacement,
-    mode.kind === "jumpMovementReplacement" ? mode.effect : undefined,
+    fill.value.fixedCostMovementReplacement,
+    mode.kind === "fixedCostMovementReplacement" ? mode.effect : undefined,
     fill.value.movementCostFeet,
     areaExtraCostFeet,
   );
@@ -620,27 +620,27 @@ export function parseBattleMovement(
     };
   }
   /* v8 ignore stop -- @preserve */
-  const commandApproachValidation = validateCommandApproachMovementFact(
-    fill.value.commandApproach,
-    mode.kind === "commandApproach",
+  const compelledApproachValidation = validateCompelledApproachMovementFact(
+    fill.value.compelledApproach,
+    mode.kind === "compelledApproach",
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (commandApproachValidation !== null) {
+  if (compelledApproachValidation !== null) {
     return {
       tag: "invalid",
-      message: commandApproachValidation,
+      message: compelledApproachValidation,
     };
   }
   /* v8 ignore stop -- @preserve */
-  const commandFleeValidation = validateCommandFleeMovementFact(
-    fill.value.commandFlee,
-    mode.kind === "commandFlee",
+  const compelledFleeValidation = validateCompelledFleeMovementFact(
+    fill.value.compelledFlee,
+    mode.kind === "compelledFlee",
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (commandFleeValidation !== null) {
+  if (compelledFleeValidation !== null) {
     return {
       tag: "invalid",
-      message: commandFleeValidation,
+      message: compelledFleeValidation,
     };
   }
   /* v8 ignore stop -- @preserve */
@@ -755,8 +755,8 @@ export function parseBattleMovement(
         fill.value.creatureSpaceTraversal,
       ),
       ...optionalProperty(
-        "jumpMovementReplacement",
-        fill.value.jumpMovementReplacement,
+        "fixedCostMovementReplacement",
+        fill.value.fixedCostMovementReplacement,
       ),
       ...optionalProperty(
         "controlledVerticalSuspensionMovement",
@@ -1110,7 +1110,7 @@ export function resolveMovementEffectsAfterMovement(input: {
           input.movement.moverId,
         ),
         wardingBondDamageShareConcentrationSavingThrows: [],
-        hideousLaughterDamageRepeatSaves: [],
+        saveGatedConditionWithRepeatDamageRepeatSaves: [],
         spatialFacts: [],
       },
     );
@@ -1749,7 +1749,10 @@ function validateMovementCostFacts(
     }
   }
   /* v8 ignore start -- @preserve -- Contradictory movement fill: the table adapter cannot combine Grapple drag with a spell-owned Jump replacement. */
-  if (grappleDrag.tag === "ok" && value.jumpMovementReplacement !== undefined) {
+  if (
+    grappleDrag.tag === "ok" &&
+    value.fixedCostMovementReplacement !== undefined
+  ) {
     return "Grapple drag movement facts cannot be combined with Jump movement replacement.";
   }
   /* v8 ignore stop -- @preserve */
@@ -1797,7 +1800,7 @@ function validateMovementCostFacts(
   }
   /* v8 ignore stop -- @preserve */
   if (
-    value.jumpMovementReplacement !== undefined ||
+    value.fixedCostMovementReplacement !== undefined ||
     value.controlledVerticalSuspensionMovement?.altitudeChange !== undefined
   ) {
     return null;
@@ -1943,11 +1946,11 @@ function areaMovementExtraCostFeet(
   );
 }
 
-function validateJumpMovementReplacementFact(
+function validateFixedCostMovementReplacementFact(
   state: BattleState,
   moverId: CombatantId,
-  fact: BattleJumpMovementReplacementFact | undefined,
-  effect: JumpMovementReplacementEffect | undefined,
+  fact: BattleFixedCostMovementReplacementFact | undefined,
+  effect: FixedCostMovementReplacementEffect | undefined,
   movementCostFeet: MovementFeet,
   areaExtraCostFeet: MovementFeet,
 ): string | null {
@@ -1979,7 +1982,7 @@ function validateJumpMovementReplacementFact(
   /* v8 ignore start -- @preserve -- Malformed Jump distance: the table adapter constrains the selected landing to the active spell's computed maximum. */
   if (
     Number(fact.distanceFeet) >
-    Number(maxJumpMovementReplacementDistanceFeet(state, moverId, effect))
+    Number(maxFixedCostMovementReplacementDistanceFeet(state, moverId, effect))
   ) {
     return "Jump movement replacement distance exceeds the active maximum.";
   }
@@ -1987,8 +1990,8 @@ function validateJumpMovementReplacementFact(
   return null;
 }
 
-function validateCommandApproachMovementFact(
-  fact: BattleCommandApproachMovementFact | undefined,
+function validateCompelledApproachMovementFact(
+  fact: BattleCompelledApproachMovementFact | undefined,
   required: boolean,
 ): string | null {
   if (!required) {
@@ -2006,8 +2009,8 @@ function validateCommandApproachMovementFact(
   return null;
 }
 
-function validateCommandFleeMovementFact(
-  fact: BattleCommandFleeMovementFact | undefined,
+function validateCompelledFleeMovementFact(
+  fact: BattleCompelledFleeMovementFact | undefined,
   required: boolean,
 ): string | null {
   if (!required) {

@@ -1243,10 +1243,9 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       spellTargetId,
     ).activeEffects.find(
       (effect) =>
-        effect.kind === "antimagicFieldOngoingSpellSuppression" &&
-        effect.areaId === areaId,
+        effect.kind === "magicSuppressionEmanation" && effect.areaId === areaId,
     );
-    if (aura?.kind !== "antimagicFieldOngoingSpellSuppression") {
+    if (aura?.kind !== "magicSuppressionEmanation") {
       throw new Error("Expected an allocated Antimagic Field aura.");
     }
     const act = spellAct({
@@ -1326,11 +1325,11 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     }).state;
     const targetWithBothAuras = requireCombatant(withBothAuras, spellTargetId);
     const [staleAura, activeAura] = targetWithBothAuras.activeEffects.filter(
-      (effect) => effect.kind === "antimagicFieldOngoingSpellSuppression",
+      (effect) => effect.kind === "magicSuppressionEmanation",
     );
     if (
-      staleAura?.kind !== "antimagicFieldOngoingSpellSuppression" ||
-      activeAura?.kind !== "antimagicFieldOngoingSpellSuppression"
+      staleAura?.kind !== "magicSuppressionEmanation" ||
+      activeAura?.kind !== "magicSuppressionEmanation"
     ) {
       throw new Error("Expected two allocated Antimagic Field auras.");
     }
@@ -2046,7 +2045,7 @@ function antimagicFieldAuraEffect(
   areaId: ReturnType<typeof battleAreaId>,
 ): Extract<
   BattleActiveEffectOccurrenceTemplate,
-  { readonly kind: "antimagicFieldOngoingSpellSuppression" }
+  { readonly kind: "magicSuppressionEmanation" }
 > {
   return antimagicFieldAuraEffectTemplateForTest({
     areaId,

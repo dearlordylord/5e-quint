@@ -4,7 +4,7 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 import { ConcentrationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE
 //
-// The expeditiousRetreatDash Spell Procedure Profile: a self-targeted Bonus
+// The grantedAlternateActionCost Spell Procedure Profile: a self-targeted Bonus
 // Action spell that immediately resolves Dash and stores a Concentration-owned
 // permission to take Dash as a Bonus Action while the spell lasts.
 //
@@ -60,9 +60,9 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
-type ExpeditiousRetreatDashInvocation = Extract<
+type GrantedAlternateActionCostInvocation = Extract<
   SupportedSpellInvocation,
-  { readonly procedure: "expeditiousRetreatDash" }
+  { readonly procedure: "grantedAlternateActionCost" }
 >;
 
 const SpellDashBonusActionEffectSchema = Schema.Struct({
@@ -71,14 +71,14 @@ const SpellDashBonusActionEffectSchema = Schema.Struct({
   sourceCombatantId: CombatantId,
   expiresAt: ConcentrationBattleActiveEffectExpirationSchema,
 });
-type ExpeditiousRetreatDashResolveInput =
-  SpellProcedureProfileResolveInput<ExpeditiousRetreatDashInvocation>;
+type GrantedAlternateActionCostResolveInput =
+  SpellProcedureProfileResolveInput<GrantedAlternateActionCostInvocation>;
 
-function admitExpeditiousRetreatDash(
+function admitGrantedAlternateActionCost(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
-): readonly ExpeditiousRetreatDashInvocation[] {
-  const activeEffect = expeditiousRetreatDashActiveEffect(
+): readonly GrantedAlternateActionCostInvocation[] {
+  const activeEffect = grantedAlternateActionCostActiveEffect(
     ctx.actor.combatantId,
     spell,
   );
@@ -86,14 +86,14 @@ function admitExpeditiousRetreatDash(
     return [];
   }
   return ctx.spellCastOptions.flatMap(
-    (slot): readonly ExpeditiousRetreatDashInvocation[] =>
+    (slot): readonly GrantedAlternateActionCostInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []
         : [
             {
               access: { tag: "prepared" },
               resource: spellInvocationResourceForCastOption(slot),
-              procedure: "expeditiousRetreatDash",
+              procedure: "grantedAlternateActionCost",
               spell,
               actionCost: "bonusAction",
               activeEffect,
@@ -102,10 +102,10 @@ function admitExpeditiousRetreatDash(
   );
 }
 
-function expeditiousRetreatDashActiveEffect(
+function grantedAlternateActionCostActiveEffect(
   actorId: CombatantId,
   spell: BattleSpellAdmissionSource,
-): ExpeditiousRetreatDashInvocation["activeEffect"] | null {
+): GrantedAlternateActionCostInvocation["activeEffect"] | null {
   if (spell.mechanics.family !== "ongoing_effect") {
     return null;
   }
@@ -149,10 +149,10 @@ function expeditiousRetreatDashActiveEffect(
   };
 }
 
-function discoverExpeditiousRetreatDashCastAct(
+function discoverGrantedAlternateActionCostCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<ExpeditiousRetreatDashInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<GrantedAlternateActionCostInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
@@ -170,8 +170,8 @@ function discoverExpeditiousRetreatDashCastAct(
   }));
 }
 
-function resolveExpeditiousRetreatDash(
-  input: ExpeditiousRetreatDashResolveInput,
+function resolveGrantedAlternateActionCost(
+  input: GrantedAlternateActionCostResolveInput,
 ): BattleResolutionResult {
   const subject = input.input.subject;
   const actor = input.input.state.combatants.get(subject.actorId);
@@ -364,24 +364,25 @@ function resolveExpeditiousRetreatDash(
   };
 }
 
-const ExpeditiousRetreatDashInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: LeveledSpellInvocationResourceSchema,
-    procedure: Schema.Literal("expeditiousRetreatDash"),
-    spellRuleFacts: SpellRuleExecutionFactsSchema,
-    actionCost: Schema.Literal("bonusAction"),
-    activeEffect: SpellDashBonusActionEffectSchema,
-  }),
-);
-export const expeditiousRetreatDashProfile = {
-  procedure: "expeditiousRetreatDash",
-  executionSchema: ExpeditiousRetreatDashInvocationSchema,
-  admit: admitExpeditiousRetreatDash,
-  discoverCastAct: discoverExpeditiousRetreatDashCastAct,
-  resolve: resolveExpeditiousRetreatDash,
+const GrantedAlternateActionCostInvocationSchema =
+  spellProcedureExecutionSchema(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: LeveledSpellInvocationResourceSchema,
+      procedure: Schema.Literal("grantedAlternateActionCost"),
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      activeEffect: SpellDashBonusActionEffectSchema,
+    }),
+  );
+export const grantedAlternateActionCostProfile = {
+  procedure: "grantedAlternateActionCost",
+  executionSchema: GrantedAlternateActionCostInvocationSchema,
+  admit: admitGrantedAlternateActionCost,
+  discoverCastAct: discoverGrantedAlternateActionCostCastAct,
+  resolve: resolveGrantedAlternateActionCost,
 } satisfies SpellProcedureDeclaration<
-  "expeditiousRetreatDash",
-  ExpeditiousRetreatDashInvocation
+  "grantedAlternateActionCost",
+  GrantedAlternateActionCostInvocation
 >;
 import { spellInvocationResourceForCastOption } from "./profile.ts";

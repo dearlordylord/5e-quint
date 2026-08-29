@@ -276,7 +276,14 @@ import type {
   SpellProcedureInput,
   SpellProcedureExecution,
 } from "./character-execution.ts";
-import type { SpellRuleExecutionFactsOwner } from "./procedure-execution/spell-procedure-execution.ts";
+import type {
+  SpawnedCompanionLifecycleExecutionFacts,
+  SpellRuleExecutionFactsOwner,
+  StagedSaveConditionAutomaticSuccessPredicates,
+  StagedSaveConditionEscapeAction,
+  TemporaryAbilityCheckRollModeConcurrentDurationModeLimit,
+  TemporaryAbilityCheckRollModeSelectedMode,
+} from "./procedure-execution/spell-procedure-execution.ts";
 import type {
   CantripSpellAccess,
   LeveledSpellInvocationResource,
@@ -386,7 +393,7 @@ import type {
   BattleAttackProcedureExecutionRef,
   BattleCharacterExecutionScopeRef,
   BattleCompanionFormId,
-  BattleDancingLightId,
+  BattleMovableLightId,
   BattleExecutionScopeCursor,
   BattleLineDirectionId,
   BattleObjectId,
@@ -479,7 +486,7 @@ export type BattleLightEmitterAttachment =
     }
   | {
       readonly kind: "movableLight";
-      readonly lightId: BattleDancingLightId;
+      readonly lightId: BattleMovableLightId;
       readonly positionId: BattleTablePositionId;
       readonly form: BattleMovableLightForm;
     };
@@ -650,7 +657,7 @@ export type BattleLightEmitterProjectionFact =
     }
   | {
       readonly kind: "movableLight";
-      readonly lightId: BattleDancingLightId;
+      readonly lightId: BattleMovableLightId;
       readonly positionId: BattleTablePositionId;
       readonly form: BattleMovableLightForm;
       readonly distanceFeet: MovementFeet;
@@ -2287,7 +2294,11 @@ export type BattlePointOriginCubeAreaChoice = Extract<
 >;
 export type BattlePointOriginCylinderAreaChoice = Extract<
   BattleSpellAreaIdentityChoice,
-  { readonly kind: "pointOriginCylinderArea" }
+  {
+    readonly kind:
+      | "anchoredPointOriginCylinderArea"
+      | "unanchoredPointOriginCylinderArea";
+  }
 >;
 export type BattlePointOriginSphereDiameterAreaChoice = Extract<
   BattleSpellAreaIdentityChoice,
@@ -2295,11 +2306,15 @@ export type BattlePointOriginSphereDiameterAreaChoice = Extract<
 >;
 export type BattlePointOriginSphereAreaChoice = Extract<
   BattleSpellAreaIdentityChoice,
-  { readonly kind: "pointOriginSphereArea" }
+  {
+    readonly kind:
+      | "anchoredPointOriginSphereArea"
+      | "unanchoredPointOriginSphereArea";
+  }
 >;
-export type BattleDirectionalLineAreaChoice = Extract<
+export type BattleDirectionalPersistentAreaChoice = Extract<
   BattleSpellAreaIdentityChoice,
-  { readonly kind: "directionalLineArea" }
+  { readonly kind: "directionalPersistentAreaArea" }
 >;
 export type BattleSpellAreaIdentityChoice =
   | {
@@ -2325,15 +2340,11 @@ export type BattleSpellAreaIdentityChoice =
       readonly originAnchor: BattleSpellAreaOriginAnchor;
     }
   | {
-      readonly kind: "pointOriginCylinderArea";
+      readonly kind: "unanchoredPointOriginCylinderArea";
       readonly areaId: BattleAreaId;
     }
   | {
-      readonly kind: "pointOriginSphereArea";
-      readonly areaId: BattleAreaId;
-    }
-  | {
-      readonly kind: "pointOriginSphereArea";
+      readonly kind: "unanchoredPointOriginSphereArea";
       readonly areaId: BattleAreaId;
     }
   | {
@@ -2342,17 +2353,17 @@ export type BattleSpellAreaIdentityChoice =
       readonly originAnchor: BattleSpellAreaOriginAnchor;
     }
   | {
-      readonly kind: "pointOriginSphereArea";
+      readonly kind: "anchoredPointOriginSphereArea";
       readonly areaId: BattleAreaId;
       readonly originAnchor: BattleSpellAreaOriginAnchor;
     }
   | {
-      readonly kind: "pointOriginCylinderArea";
+      readonly kind: "anchoredPointOriginCylinderArea";
       readonly areaId: BattleAreaId;
       readonly originAnchor: BattleSpellAreaOriginAnchor;
     }
   | {
-      readonly kind: "directionalLineArea";
+      readonly kind: "directionalPersistentAreaArea";
       readonly areaId: BattleAreaId;
       readonly directionId: BattleLineDirectionId;
     };
@@ -2446,7 +2457,14 @@ export type TemporaryAbilityCheckRollModeSpellInvocation = {
     >
   >;
   readonly rangeFeet: MovementFeet;
+  readonly selectedMode: TemporaryAbilityCheckRollModeSelectedMode;
+  readonly concurrentDurationModeLimit: TemporaryAbilityCheckRollModeConcurrentDurationModeLimit;
 };
+
+export type SpawnedCompanionLifecycleSpellInvocation =
+  SpawnedCompanionLifecycleExecutionFacts & {
+    readonly spell: BattleSpellAdmissionSource;
+  };
 type RollModifierSpellSaveGate = {
   readonly ability: Ability;
   readonly dc: DcSource;
@@ -3180,6 +3198,7 @@ type SupportedSpellInvocationSource =
   | SeeInvisibleObserverSightSpellInvocation
   | GrantedAreaSaveDamageActionSpellInvocation
   | CompositeTargetBuffWithAftermathSpellInvocation
+  | SpawnedCompanionLifecycleSpellInvocation
   | {
       readonly access: CantripSpellAccess;
       readonly resource: NoSpellInvocationResource;
@@ -3380,6 +3399,8 @@ type SupportedSpellInvocationSource =
         { readonly kind: "pointOriginSphere" }
       >;
       readonly rangeFeet: MovementFeet;
+      readonly automaticSuccessPredicates: StagedSaveConditionAutomaticSuccessPredicates;
+      readonly escapeAction: StagedSaveConditionEscapeAction;
     }
   | {
       readonly access: PreparedSpellAccess;
@@ -5989,7 +6010,7 @@ export type BattleMovableLightCastPlacement = {
 };
 export type BattleMovableLightRepositionPlacement =
   BattleMovableLightCastPlacement & {
-    readonly lightId: BattleDancingLightId;
+    readonly lightId: BattleMovableLightId;
     readonly moveDistanceFeet: MovementFeet;
   };
 export type BattleMovableLightCastPlacementList =
@@ -6025,7 +6046,7 @@ export type BattleMovableLightPlacementHole = {
   readonly label: string;
   readonly mode: BattleMovableLightPlacementValue["mode"];
   readonly form: BattleMovableLightForm;
-  readonly activeLightIds: readonly BattleDancingLightId[];
+  readonly activeLightIds: readonly BattleMovableLightId[];
   readonly rangeFeet: MovementFeet;
   readonly maxMoveFeet: MovementFeet;
   readonly spacingFeet: MovementFeet;
@@ -6082,12 +6103,15 @@ export type BattleSpellAreaChoice = {
   readonly affectedTargetIds: readonly CombatantId[];
 } & BattleSpellAreaChoiceKind;
 type BattleSpellAreaChoiceKind =
-  | { readonly kind?: never; readonly sleepNonSleeperFacts?: never }
   | {
       readonly kind?: never;
-      readonly sleepNonSleeperFacts: readonly [
-        BattleSleepNonSleeperFact,
-        ...BattleSleepNonSleeperFact[],
+      readonly stagedConditionAutomaticSuccessFacts?: never;
+    }
+  | {
+      readonly kind?: never;
+      readonly stagedConditionAutomaticSuccessFacts: readonly [
+        BattleStagedConditionAutomaticSuccessFact,
+        ...BattleStagedConditionAutomaticSuccessFact[],
       ];
     }
   | {
@@ -6102,7 +6126,7 @@ type BattleSpellAreaChoiceKind =
   | {
       readonly kind: "saveGatedTurnConstraintBundleArea";
       readonly cubeSideFeet: 40;
-      readonly affectedCreatureWitnesses: readonly BattleSlowAffectedCreatureWitness[];
+      readonly affectedCreatureWitnesses: readonly BattleTurnConstraintBundleAffectedCreatureWitness[];
     }
   | {
       readonly kind: "persistentAreaSaveConditionArea";
@@ -6128,7 +6152,7 @@ type BattleSpellAreaChoiceKind =
       readonly directionId: BattleLineDirectionId;
       readonly creaturePushes: readonly BattleDirectionalPersistentAreaCreaturePushOutcome[];
     };
-export type BattleSleepNonSleeperFact = {
+export type BattleStagedConditionAutomaticSuccessFact = {
   readonly kind: "doesNotSleep";
   readonly targetId: CombatantId;
 };
@@ -6137,7 +6161,7 @@ export type BattleAreaControlAffectedCreatureWitness = {
   readonly inCube: true;
   readonly canSeePattern: true;
 };
-export type BattleSlowAffectedCreatureWitness = {
+export type BattleTurnConstraintBundleAffectedCreatureWitness = {
   readonly targetId: CombatantId;
   readonly inCube: true;
   readonly chosenByCaster: true;

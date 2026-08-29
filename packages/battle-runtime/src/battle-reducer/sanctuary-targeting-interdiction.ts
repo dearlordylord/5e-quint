@@ -10,10 +10,10 @@ import type {
   BattleCreatureState,
   BattleFill,
   BattleHoleId,
-  BattleSanctuaryInterdictionOutcome,
-  BattleSanctuaryInterdictionOutcomeHole,
+  BattleTargetingSaveInterdictionOutcome,
+  BattleTargetingSaveInterdictionOutcomeHole,
   BattleState,
-  SanctuaryTargetingInterdictionSpellInvocation,
+  TargetingSaveInterdictionSpellInvocation,
 } from "../battle-state-execution.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import { battleCreatureWithSpellActiveEffects } from "../active-effect/lifecycle.ts";
@@ -22,18 +22,18 @@ import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.t
 import { parseAttackRollRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
 import { allocateBattleEffectOccurrenceForCreature } from "../effect-execution-ref.ts";
 
-type SanctuaryTargetingInterdictionCheckCommon =
+type TargetingSaveInterdictionCheckCommon =
   | { readonly tag: "notWarded" }
   | { readonly tag: "invalid"; readonly message: string }
   | { readonly tag: "saveSucceeded" }
   | { readonly tag: "lost" };
 
-type AttackRollSanctuaryTargetingInterdictionCheck =
-  | SanctuaryTargetingInterdictionCheckCommon
+type AttackRollTargetingSaveInterdictionCheck =
+  | TargetingSaveInterdictionCheckCommon
   | {
       readonly tag: "needsHoles";
       readonly hole: Extract<
-        BattleSanctuaryInterdictionOutcomeHole,
+        BattleTargetingSaveInterdictionOutcomeHole,
         { readonly replacementTargetKind: "attackRoll" }
       >;
     }
@@ -42,7 +42,7 @@ type AttackRollSanctuaryTargetingInterdictionCheck =
       readonly targetId: CombatantId;
       readonly spatialFacts: Extract<
         Exclude<
-          BattleSanctuaryInterdictionOutcome,
+          BattleTargetingSaveInterdictionOutcome,
           { readonly saveSucceeded: true }
         >["outcome"],
         { readonly kind: "newTarget" }
@@ -56,7 +56,7 @@ type AttackRollSanctuaryTargetingInterdictionCheck =
     };
 
 type SanctuaryAttackRollReplacementTarget = Extract<
-  AttackRollSanctuaryTargetingInterdictionCheck,
+  AttackRollTargetingSaveInterdictionCheck,
   { readonly tag: "newTarget" }
 >;
 
@@ -82,12 +82,12 @@ export function targetChoiceFillAfterSanctuaryAttackRollReplacement(input: {
       };
 }
 
-type NonAttackSanctuaryTargetingInterdictionCheck =
-  | SanctuaryTargetingInterdictionCheckCommon
+type NonAttackTargetingSaveInterdictionCheck =
+  | TargetingSaveInterdictionCheckCommon
   | {
       readonly tag: "needsHoles";
       readonly hole: Extract<
-        BattleSanctuaryInterdictionOutcomeHole,
+        BattleTargetingSaveInterdictionOutcomeHole,
         { readonly replacementTargetKind: "nonAttack" }
       >;
     }
@@ -96,7 +96,7 @@ type NonAttackSanctuaryTargetingInterdictionCheck =
       readonly targetId: CombatantId;
       readonly spatialFacts: Extract<
         Exclude<
-          BattleSanctuaryInterdictionOutcome,
+          BattleTargetingSaveInterdictionOutcome,
           { readonly saveSucceeded: true }
         >["outcome"],
         {
@@ -106,7 +106,7 @@ type NonAttackSanctuaryTargetingInterdictionCheck =
       >["spatialFacts"];
     };
 
-type SanctuaryTargetingInterdictionInput = {
+type TargetingSaveInterdictionInput = {
   readonly state: BattleState;
   readonly triggeringProcedureRef: BattleProcedureExecutionRef;
   readonly triggeringCombatantId: CombatantId;
@@ -115,36 +115,36 @@ type SanctuaryTargetingInterdictionInput = {
   readonly fills: readonly BattleFill[];
 };
 
-export function sanctuaryTargetingInterdictionCheck(
-  input: SanctuaryTargetingInterdictionInput & {
+export function targetingSaveInterdictionCheck(
+  input: TargetingSaveInterdictionInput & {
     readonly replacementTargetKind: "attackRoll";
   },
-): AttackRollSanctuaryTargetingInterdictionCheck;
-export function sanctuaryTargetingInterdictionCheck(
-  input: SanctuaryTargetingInterdictionInput & {
+): AttackRollTargetingSaveInterdictionCheck;
+export function targetingSaveInterdictionCheck(
+  input: TargetingSaveInterdictionInput & {
     readonly replacementTargetKind: "nonAttack";
   },
-): NonAttackSanctuaryTargetingInterdictionCheck;
-export function sanctuaryTargetingInterdictionCheck(
-  input: SanctuaryTargetingInterdictionInput & {
+): NonAttackTargetingSaveInterdictionCheck;
+export function targetingSaveInterdictionCheck(
+  input: TargetingSaveInterdictionInput & {
     readonly replacementTargetKind: "attackRoll" | "nonAttack";
   },
 ):
-  | AttackRollSanctuaryTargetingInterdictionCheck
-  | NonAttackSanctuaryTargetingInterdictionCheck {
+  | AttackRollTargetingSaveInterdictionCheck
+  | NonAttackTargetingSaveInterdictionCheck {
   const warded = input.state.combatants.get(input.wardedCombatantId);
   const effect = warded?.activeEffects.find(
     (
       candidate,
     ): candidate is Extract<
       BattleActiveEffect,
-      { readonly kind: "sanctuaryWard" }
-    > => candidate.kind === "sanctuaryWard",
+      { readonly kind: "targetingSaveInterdiction" }
+    > => candidate.kind === "targetingSaveInterdiction",
   );
   if (warded === undefined || effect === undefined) {
     return { tag: "notWarded" };
   }
-  const hole = sanctuaryTargetingInterdictionOutcomeHole({
+  const hole = targetingSaveInterdictionOutcomeHole({
     state: input.state,
     triggeringProcedureRef: input.triggeringProcedureRef,
     triggeringCombatantId: input.triggeringCombatantId,
@@ -158,9 +158,9 @@ export function sanctuaryTargetingInterdictionCheck(
       fill,
     ): fill is Extract<
       BattleFill,
-      { readonly kind: "sanctuaryInterdictionOutcome" }
+      { readonly kind: "targetingSaveInterdictionOutcome" }
     > =>
-      fill.kind === "sanctuaryInterdictionOutcome" &&
+      fill.kind === "targetingSaveInterdictionOutcome" &&
       fill.holeId === hole.holeId,
   );
   if (matchingFills.length === 0) {
@@ -244,7 +244,7 @@ export function sanctuaryTargetingInterdictionCheck(
   };
 }
 
-type SanctuaryTargetingInterdictionOutcomeHoleInput = {
+type TargetingSaveInterdictionOutcomeHoleInput = {
   readonly state: BattleState;
   readonly triggeringProcedureRef: BattleProcedureExecutionRef;
   readonly triggeringCombatantId: CombatantId;
@@ -252,36 +252,36 @@ type SanctuaryTargetingInterdictionOutcomeHoleInput = {
   readonly triggeringTargetEventId: BattleHoleId;
   readonly effect: Extract<
     BattleActiveEffect,
-    { readonly kind: "sanctuaryWard" }
+    { readonly kind: "targetingSaveInterdiction" }
   >;
 };
 
-function sanctuaryTargetingInterdictionOutcomeHole(
-  input: SanctuaryTargetingInterdictionOutcomeHoleInput & {
+function targetingSaveInterdictionOutcomeHole(
+  input: TargetingSaveInterdictionOutcomeHoleInput & {
     readonly replacementTargetKind: "attackRoll";
   },
 ): Extract<
-  BattleSanctuaryInterdictionOutcomeHole,
+  BattleTargetingSaveInterdictionOutcomeHole,
   { readonly replacementTargetKind: "attackRoll" }
 >;
-function sanctuaryTargetingInterdictionOutcomeHole(
-  input: SanctuaryTargetingInterdictionOutcomeHoleInput & {
+function targetingSaveInterdictionOutcomeHole(
+  input: TargetingSaveInterdictionOutcomeHoleInput & {
     readonly replacementTargetKind: "nonAttack";
   },
 ): Extract<
-  BattleSanctuaryInterdictionOutcomeHole,
+  BattleTargetingSaveInterdictionOutcomeHole,
   { readonly replacementTargetKind: "nonAttack" }
 >;
-function sanctuaryTargetingInterdictionOutcomeHole(
-  input: SanctuaryTargetingInterdictionOutcomeHoleInput & {
+function targetingSaveInterdictionOutcomeHole(
+  input: TargetingSaveInterdictionOutcomeHoleInput & {
     readonly replacementTargetKind: "attackRoll" | "nonAttack";
   },
-): BattleSanctuaryInterdictionOutcomeHole;
-function sanctuaryTargetingInterdictionOutcomeHole(
-  input: SanctuaryTargetingInterdictionOutcomeHoleInput & {
+): BattleTargetingSaveInterdictionOutcomeHole;
+function targetingSaveInterdictionOutcomeHole(
+  input: TargetingSaveInterdictionOutcomeHoleInput & {
     readonly replacementTargetKind: "attackRoll" | "nonAttack";
   },
-): BattleSanctuaryInterdictionOutcomeHole {
+): BattleTargetingSaveInterdictionOutcomeHole {
   const holeKey = [
     "battle",
     "sanctuary-interdiction",
@@ -293,7 +293,7 @@ function sanctuaryTargetingInterdictionOutcomeHole(
     input.replacementTargetKind,
   ].join(":");
   const base = {
-    kind: "sanctuaryInterdictionOutcome" as const,
+    kind: "targetingSaveInterdictionOutcome" as const,
     holeId: holeId(holeKey),
     holeInstanceKey: holeInstanceKey(holeKey),
     label: "Sanctuary Wisdom save and targeting outcome",
@@ -338,7 +338,7 @@ export function battleStateAfterTargetActionEarlyEndForActor(
     return state;
   }
   const sanctuaryActiveEffects = actor.activeEffects.filter(
-    (effect) => effect.kind !== "sanctuaryWard",
+    (effect) => effect.kind !== "targetingSaveInterdiction",
   );
   const sanctuaryEnded =
     sanctuaryActiveEffects.length === actor.activeEffects.length
@@ -356,13 +356,13 @@ export function battleStateAfterTargetActionEarlyEndForActor(
   );
 }
 
-export function combatantWithSanctuaryWard(
+export function combatantWithTargetingSaveInterdiction(
   target: BattleCreatureState,
-  invocation: BattleExecutableSpellInvocation<SanctuaryTargetingInterdictionSpellInvocation>,
+  invocation: BattleExecutableSpellInvocation<TargetingSaveInterdictionSpellInvocation>,
 ): BattleCreatureState {
   const replacing = target.activeEffects.filter(
     (effect) =>
-      effect.kind === "sanctuaryWard" &&
+      effect.kind === "targetingSaveInterdiction" &&
       effect.sourceProcedureRef === invocation.sourceProcedureRef,
   );
   const allocation = allocateBattleEffectOccurrenceForCreature({

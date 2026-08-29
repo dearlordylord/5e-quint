@@ -1,16 +1,16 @@
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.reaction-counterspell
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.reaction-spellCastInterruptionReaction
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.REACTION_CASTING_TIME BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 import { DcSourceSchema } from "@dnd/surface/surface/schema";
 //
-// The Counterspell Spell Procedure Profile: a prepared Reaction spell that
+// The SpellCastInterruption Spell Procedure Profile: a prepared Reaction spell that
 // interrupts a visible spell cast within range, asks for the
 // triggering caster's Constitution Saving Throw, and ends the triggering spell
 // on a failed save.
 //
 // RAW anchors:
-//   - SRD 5.2.1 Spells "Counterspell": Reaction when seeing a creature within
+//   - SRD 5.2.1 Spells "SpellCastInterruption": Reaction when seeing a creature within
 //     60 feet casting a spell with V/S/M components; range 60 feet; S
 //     component; instantaneous; target makes a Constitution save; on failure
 //     the spell dissipates with no effect and its action, Bonus Action, or
@@ -40,7 +40,7 @@ import {
   interruptedProcedureSubject,
 } from "../interrupt-execution.ts";
 import { needsHolesResult } from "../needs-holes-result.ts";
-import { counterspellReactionSpellMatchesTrigger } from "../reaction-triggered-spells.ts";
+import { spellCastInterruptionReactionReactionSpellMatchesTrigger } from "../reaction-triggered-spells.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { stateAfterSpellCastDeclared } from "../spell-cast-declaration.ts";
 import {
@@ -77,32 +77,32 @@ import {
   type SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 
-type CounterspellInvocation = Extract<
+type SpellCastInterruptionInvocation = Extract<
   SupportedSpellInvocation,
-  { readonly procedure: "counterspell" }
+  { readonly procedure: "spellCastInterruptionReaction" }
 >;
-type CounterspellResolveInput =
-  SpellProcedureProfileResolveInput<CounterspellInvocation>;
+type SpellCastInterruptionResolveInput =
+  SpellProcedureProfileResolveInput<SpellCastInterruptionInvocation>;
 
-function admitCounterspell(
+function admitSpellCastInterruption(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
-): readonly CounterspellInvocation[] {
-  const projection = counterspellSpellProjection(spell);
+): readonly SpellCastInterruptionInvocation[] {
+  const projection = spellCastInterruptionReactionSpellProjection(spell);
   if (projection === null) {
     return [];
   }
   return preparedSpellSlotInvocations(spell, ctx, (base) => ({
     ...base,
-    procedure: "counterspell",
+    procedure: "spellCastInterruptionReaction",
     ...projection,
   }));
 }
 
-function counterspellSpellProjection(
+function spellCastInterruptionReactionSpellProjection(
   spell: BattleSpellAdmissionSource,
 ): Pick<
-  CounterspellInvocation,
+  SpellCastInterruptionInvocation,
   "ability" | "dc" | "targeting" | "rangeFeet" | "triggerComponents"
 > | null {
   if (
@@ -150,18 +150,18 @@ function counterspellSpellProjection(
   };
 }
 
-/* v8 ignore start -- @preserve -- Reaction-only profile: Counterspell candidates are admitted from matching spell-cast interrupt frames, so ordinary turn discovery must return no acts. */
-function discoverCounterspellCastAct(): readonly BattleActDiscoveryCandidate[] {
+/* v8 ignore start -- @preserve -- Reaction-only profile: SpellCastInterruption candidates are admitted from matching spell-cast interrupt frames, so ordinary turn discovery must return no acts. */
+function discoverSpellCastInterruptionCastAct(): readonly BattleActDiscoveryCandidate[] {
   return [];
 }
 /* v8 ignore stop -- @preserve */
 
-function resolveCounterspell(
-  input: CounterspellResolveInput,
+function resolveSpellCastInterruption(
+  input: SpellCastInterruptionResolveInput,
 ): BattleResolutionResult {
   if (
     input.input.frame.trigger !== "spellCast" ||
-    !counterspellReactionSpellMatchesTrigger(
+    !spellCastInterruptionReactionReactionSpellMatchesTrigger(
       input.invocation,
       input.input.frame,
       input.input.subject.reactorId,
@@ -170,7 +170,7 @@ function resolveCounterspell(
     return invalidResult(
       input.input.state,
       "staleSubject",
-      "Counterspell requires a matching spell-cast Reaction trigger.",
+      "SpellCastInterruption requires a matching spell-cast Reaction trigger.",
     );
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -182,7 +182,7 @@ function resolveCounterspell(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Counterspell targets the caster from the spell-cast trigger and uses only that caster's Constitution Saving Throw when needed.",
+      "SpellCastInterruption targets the caster from the spell-cast trigger and uses only that caster's Constitution Saving Throw when needed.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -215,7 +215,7 @@ function resolveCounterspell(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Counterspell requires the triggering caster's Saving Throw outcome.",
+      "SpellCastInterruption requires the triggering caster's Saving Throw outcome.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -268,17 +268,17 @@ function resolveCounterspell(
   if (resourced.tag === "invalid") {
     return resourced;
   }
-  const counterspellState = resourced.state;
+  const spellCastInterruptionReactionState = resourced.state;
   if (triggeringCasterSaveSucceeded) {
     return {
       tag: "resolved",
-      state: counterspellState,
-      snapshot: snapshotBattle(counterspellState),
+      state: spellCastInterruptionReactionState,
+      snapshot: snapshotBattle(spellCastInterruptionReactionState),
     };
   }
 
   const counteredState = stateAfterCounteredSpellCast(
-    counterspellState,
+    spellCastInterruptionReactionState,
     input.input.frame,
   );
   if (counteredState.tag === "invalid") {
@@ -311,7 +311,7 @@ function stateAfterCounteredSpellCast(
     return {
       tag: "invalid",
       message:
-        "Counterspell can only end the current spell-cast interrupt checkpoint.",
+        "SpellCastInterruption can only end the current spell-cast interrupt checkpoint.",
     };
   }
   /* v8 ignore stop -- @preserve */
@@ -354,7 +354,7 @@ function stateAfterCounteredSpellCast(
       ...metamagicSpend.success,
       interruptStack: [
         ...state.interruptStack.slice(0, -1),
-        counterspellReactionInterruptFrame({
+        spellCastInterruptionReactionReactionInterruptFrame({
           ...spellCastCheckpoint,
           offeredResponders: spellCastCheckpoint.eligibleResponders,
           continuation: {
@@ -421,17 +421,17 @@ function turnResourcesAfterWastedSpellCastingResource(
   return Result.succeed(resources);
 }
 
-function counterspellReactionInterruptFrame(
+function spellCastInterruptionReactionReactionInterruptFrame(
   frame: BattleInterruptCheckpoint,
 ): BattleInterruptCheckpointFrame {
   return { kind: "interruptCheckpoint", frame };
 }
 
-const CounterspellInvocationSchema = spellProcedureExecutionSchema(
+const SpellCastInterruptionInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
-    procedure: Schema.Literal("counterspell"),
+    procedure: Schema.Literal("spellCastInterruptionReaction"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     triggerComponents: Schema.Array(Schema.Literals(["V", "S", "M"])),
     ability: Schema.Literal("con"),
@@ -440,10 +440,13 @@ const CounterspellInvocationSchema = spellProcedureExecutionSchema(
     rangeFeet: MovementFeet,
   }),
 );
-export const counterspellProfile = {
-  procedure: "counterspell",
-  executionSchema: CounterspellInvocationSchema,
-  admit: admitCounterspell,
-  discoverCastAct: discoverCounterspellCastAct,
-  resolve: resolveCounterspell,
-} satisfies SpellProcedureDeclaration<"counterspell", CounterspellInvocation>;
+export const spellCastInterruptionReactionProfile = {
+  procedure: "spellCastInterruptionReaction",
+  executionSchema: SpellCastInterruptionInvocationSchema,
+  admit: admitSpellCastInterruption,
+  discoverCastAct: discoverSpellCastInterruptionCastAct,
+  resolve: resolveSpellCastInterruption,
+} satisfies SpellProcedureDeclaration<
+  "spellCastInterruptionReaction",
+  SpellCastInterruptionInvocation
+>;

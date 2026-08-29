@@ -8,22 +8,22 @@
 // responsibilities.
 
 import type {
-  BattleAntimagicFieldTransitWitness,
+  BattleMagicSuppressionTransitWitness,
   BattleState,
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   activeAntimagicFieldAuraMemberships,
-  antimagicFieldAuraMembershipIncludesCombatant,
+  magicSuppressionEmanationMembershipIncludesCombatant,
 } from "./antimagic-field-action-interdiction.ts";
 
 export const ANTIMAGIC_FIELD_TRANSIT_BLOCKING_MESSAGE =
   "Teleportation into or out of an Antimagic Field aura is blocked.";
 
-export function antimagicFieldTransitInvalidReason(input: {
+export function magicSuppressionTransitInvalidReason(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly witnesses: readonly BattleAntimagicFieldTransitWitness[];
+  readonly witnesses: readonly BattleMagicSuppressionTransitWitness[];
 }): string | null {
   const activeAuras = activeAntimagicFieldAuraMemberships(input.state);
   for (const witness of input.witnesses) {
@@ -48,10 +48,8 @@ export function antimagicFieldTransitInvalidReason(input: {
     }
 
     const witness = matchingWitnesses[0];
-    const originInsideAura = antimagicFieldAuraMembershipIncludesCombatant(
-      aura,
-      input.actorId,
-    );
+    const originInsideAura =
+      magicSuppressionEmanationMembershipIncludesCombatant(aura, input.actorId);
     if (witness.originInsideAura !== originInsideAura) {
       return "Antimagic Field transit origin witness must match the active aura membership.";
     }

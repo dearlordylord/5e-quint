@@ -47,7 +47,7 @@ import {
 const FailedSaveAttackRollAdvantageEffectSchema = Schema.Struct({
   ...BattleEffectOccurrenceTemplateSchemaFields,
   sourceCombatantId: CombatantId,
-  kind: Schema.Literal("faerieFireOutline"),
+  kind: Schema.Literal("saveGatedTargetProjection"),
   expiresAt: BattleActiveEffectExpirationSchema,
 });
 

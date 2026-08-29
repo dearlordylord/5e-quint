@@ -2,7 +2,7 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-feather-fall-mitigation
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE
 //
-// The featherFallMitigation Spell Procedure Profile: a prepared Reaction spell
+// The fallingCreatureMitigationReaction Spell Procedure Profile: a prepared Reaction spell
 // that uses caller-supplied falling-trigger and falling-target witnesses to
 // attach per-target Feather Fall mitigation until landing or duration expiry.
 //
@@ -62,18 +62,18 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
-type FeatherFallMitigationInvocation = Extract<
+type FallingCreatureMitigationReactionInvocation = Extract<
   SupportedSpellInvocation,
-  { readonly procedure: "featherFallMitigation" }
+  { readonly procedure: "fallingCreatureMitigationReaction" }
 >;
-type FeatherFallMitigationResolveInput =
-  SpellProcedureProfileResolveInput<FeatherFallMitigationInvocation>;
+type FallingCreatureMitigationReactionResolveInput =
+  SpellProcedureProfileResolveInput<FallingCreatureMitigationReactionInvocation>;
 
-function admitFeatherFallMitigation(
+function admitFallingCreatureMitigationReaction(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
-): readonly FeatherFallMitigationInvocation[] {
-  const projection = featherFallMitigationSpellProjection(
+): readonly FallingCreatureMitigationReactionInvocation[] {
+  const projection = fallingCreatureMitigationReactionSpellProjection(
     ctx.actor.combatantId,
     spell,
   );
@@ -81,14 +81,14 @@ function admitFeatherFallMitigation(
     return [];
   }
   return ctx.spellCastOptions.flatMap(
-    (slot): readonly FeatherFallMitigationInvocation[] =>
+    (slot): readonly FallingCreatureMitigationReactionInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []
         : [
             {
               access: { tag: "prepared" },
               resource: spellInvocationResourceForCastOption(slot),
-              procedure: "featherFallMitigation",
+              procedure: "fallingCreatureMitigationReaction",
               spell,
               targeting: {
                 kind: "targetList",
@@ -101,10 +101,13 @@ function admitFeatherFallMitigation(
   );
 }
 
-function featherFallMitigationSpellProjection(
+function fallingCreatureMitigationReactionSpellProjection(
   actorId: CombatantId,
   spell: BattleSpellAdmissionSource,
-): Pick<FeatherFallMitigationInvocation, "activeEffect" | "rangeFeet"> | null {
+): Pick<
+  FallingCreatureMitigationReactionInvocation,
+  "activeEffect" | "rangeFeet"
+> | null {
   if (
     spell.mechanics.family !== "triggered_reaction" ||
     spell.mechanics.level !== 1 ||
@@ -160,7 +163,7 @@ function featherFallMitigationSpellProjection(
     : {
         rangeFeet: movementFeet(spell.mechanics.range.feet),
         activeEffect: {
-          kind: "featherFallMitigation",
+          kind: "fallingCreatureMitigationReaction",
           sourceCombatantId: actorId,
           expiresAt: { kind: "duration", durationTicks: durationTicks.success },
         },
@@ -168,13 +171,13 @@ function featherFallMitigationSpellProjection(
 }
 
 /* v8 ignore start -- @preserve -- Reaction-only profile: Feather Fall candidates are admitted from creature-falls interrupt frames, so ordinary turn discovery must return no acts. */
-function discoverFeatherFallMitigationCastAct(): readonly AvailableBattleAct[] {
+function discoverFallingCreatureMitigationReactionCastAct(): readonly AvailableBattleAct[] {
   return [];
 }
 /* v8 ignore stop -- @preserve */
 
-function resolveFeatherFallMitigation(
-  input: FeatherFallMitigationResolveInput,
+function resolveFallingCreatureMitigationReaction(
+  input: FallingCreatureMitigationReactionResolveInput,
 ): BattleResolutionResult {
   if (
     input.input.frame.trigger !== "creatureFalls" ||
@@ -240,34 +243,35 @@ function resolveFeatherFallMitigation(
   );
 }
 
-const FeatherFallMitigationInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: LeveledSpellInvocationResourceSchema,
-    procedure: Schema.Literal("featherFallMitigation"),
-    spellRuleFacts: SpellRuleExecutionFactsSchema,
-    targeting: Schema.Struct({
-      kind: Schema.Literal("targetList"),
-      minTargets: Schema.Literal(1),
-      maxTargets: Schema.Literal(5),
+const FallingCreatureMitigationReactionInvocationSchema =
+  spellProcedureExecutionSchema(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: LeveledSpellInvocationResourceSchema,
+      procedure: Schema.Literal("fallingCreatureMitigationReaction"),
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("targetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Literal(5),
+      }),
+      activeEffect: Schema.Struct({
+        ...BattleEffectOccurrenceTemplateSchemaFields,
+        kind: Schema.Literal("fallingCreatureMitigationReaction"),
+        sourceCombatantId: CombatantId,
+        expiresAt: DurationBattleActiveEffectExpirationSchema,
+      }),
+      rangeFeet: MovementFeet,
     }),
-    activeEffect: Schema.Struct({
-      ...BattleEffectOccurrenceTemplateSchemaFields,
-      kind: Schema.Literal("featherFallMitigation"),
-      sourceCombatantId: CombatantId,
-      expiresAt: DurationBattleActiveEffectExpirationSchema,
-    }),
-    rangeFeet: MovementFeet,
-  }),
-);
-export const featherFallMitigationProfile = {
-  procedure: "featherFallMitigation",
-  executionSchema: FeatherFallMitigationInvocationSchema,
-  admit: admitFeatherFallMitigation,
-  discoverCastAct: discoverFeatherFallMitigationCastAct,
-  resolve: resolveFeatherFallMitigation,
+  );
+export const fallingCreatureMitigationReactionProfile = {
+  procedure: "fallingCreatureMitigationReaction",
+  executionSchema: FallingCreatureMitigationReactionInvocationSchema,
+  admit: admitFallingCreatureMitigationReaction,
+  discoverCastAct: discoverFallingCreatureMitigationReactionCastAct,
+  resolve: resolveFallingCreatureMitigationReaction,
 } satisfies SpellProcedureDeclaration<
-  "featherFallMitigation",
-  FeatherFallMitigationInvocation
+  "fallingCreatureMitigationReaction",
+  FallingCreatureMitigationReactionInvocation
 >;
 import { spellInvocationResourceForCastOption } from "./profile.ts";

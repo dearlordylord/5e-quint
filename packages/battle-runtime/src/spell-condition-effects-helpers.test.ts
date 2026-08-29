@@ -134,7 +134,7 @@ describe("spell condition effect source ownership", () => {
       },
     } as const;
     const sharedSenseEffect = {
-      kind: "findFamiliarSharedSenses",
+      kind: "spawnedCompanionSharedSenses",
       effectRef: battleEffectExecutionRefForTest(
         "synthetic-shared-senses-effect",
       ),

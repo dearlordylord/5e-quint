@@ -67,7 +67,7 @@ import {
 } from "./procedure-execution-codecs.ts";
 import { SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS } from "./battle-runtime-protocol.ts";
 import {
-  dragonsBreathHoleKey as grantedAreaSaveDamageActionHoleKey,
+  grantedAreaSaveDamageActionHoleKey,
   escapeSpellRestraintAbilityCheckHoleKey,
 } from "./selected-effect-hole-key.ts";
 import { characterAttackExecutionRefsMatchLayout } from "../attack-execution.ts";
@@ -101,7 +101,7 @@ import {
   BattleAttackExecutionScopeRef,
   BattleAttackProcedureExecutionRef,
   BattleCharacterExecutionScopeRef,
-  BattleDancingLightId,
+  BattleMovableLightId,
   BattleId,
   BattleLineDirectionId,
   BattleObjectId,
@@ -436,42 +436,42 @@ const WildShapeFormLimbObjectHandlingWitnessSchema = Schema.Struct({
   kind: Schema.Literals(WILD_SHAPE_FORM_LIMB_OBJECT_HANDLING_WITNESSES),
 });
 
-const BattleDancingLightCastPlacementSchema = Schema.Struct({
+const BattleMovableLightCastPlacementSchema = Schema.Struct({
   positionId: BattleTablePositionId,
   distanceFromCasterFeet: MovementFeet,
   nearestSiblingDistanceFeet: Schema.optionalKey(MovementFeet),
 });
-const BattleDancingLightRepositionPlacementSchema = Schema.Struct({
+const BattleMovableLightRepositionPlacementSchema = Schema.Struct({
   positionId: BattleTablePositionId,
   distanceFromCasterFeet: MovementFeet,
   nearestSiblingDistanceFeet: Schema.optionalKey(MovementFeet),
-  lightId: BattleDancingLightId,
+  lightId: BattleMovableLightId,
   moveDistanceFeet: MovementFeet,
 });
 const BattleMovableLightPlacementValueSchema = Schema.Union([
   Schema.Struct({
     mode: Schema.Literal("cast"),
     form: Schema.Literal("separateLights"),
-    lights: Schema.Array(BattleDancingLightCastPlacementSchema),
+    lights: Schema.Array(BattleMovableLightCastPlacementSchema),
   }),
   Schema.Struct({
     mode: Schema.Literal("cast"),
     form: Schema.Literal("combinedMediumForm"),
-    light: BattleDancingLightCastPlacementSchema,
+    light: BattleMovableLightCastPlacementSchema,
   }),
   Schema.Struct({
     mode: Schema.Literal("reposition"),
     form: Schema.Literal("separateLights"),
-    lights: Schema.Array(BattleDancingLightRepositionPlacementSchema),
+    lights: Schema.Array(BattleMovableLightRepositionPlacementSchema),
   }),
   Schema.Struct({
     mode: Schema.Literal("reposition"),
     form: Schema.Literal("combinedMediumForm"),
-    light: BattleDancingLightRepositionPlacementSchema,
+    light: BattleMovableLightRepositionPlacementSchema,
   }),
 ]);
 
-const BattleSleepNonSleeperFactSchema = Schema.Struct({
+const BattleStagedConditionAutomaticSuccessFactSchema = Schema.Struct({
   kind: Schema.Literal("doesNotSleep"),
   targetId: CombatantId,
 });
@@ -527,20 +527,22 @@ const BattleSpellAreaChoiceSchema = Schema.Union([
     ...BattleSpellAreaChoiceBaseSchema,
     kind: Schema.optionalKey(Schema.Never),
     areaId: Schema.optionalKey(Schema.Never),
-    sleepNonSleeperFacts: Schema.optionalKey(Schema.Never),
+    stagedConditionAutomaticSuccessFacts: Schema.optionalKey(Schema.Never),
   }),
   Schema.Struct({
     ...BattleSpellAreaChoiceBaseSchema,
     kind: Schema.optionalKey(Schema.Never),
     areaId: Schema.optionalKey(Schema.Never),
-    sleepNonSleeperFacts: Schema.NonEmptyArray(BattleSleepNonSleeperFactSchema),
+    stagedConditionAutomaticSuccessFacts: Schema.NonEmptyArray(
+      BattleStagedConditionAutomaticSuccessFactSchema,
+    ),
   }),
   Schema.Struct({
     ...BattleSpellAreaChoiceBaseSchema,
     kind: Schema.Literal("saveGatedTargetProjectionArea"),
     affectedObjectIds: Schema.Array(BattleObjectId),
     areaId: Schema.optionalKey(Schema.Never),
-    sleepNonSleeperFacts: Schema.optionalKey(Schema.Never),
+    stagedConditionAutomaticSuccessFacts: Schema.optionalKey(Schema.Never),
   }),
   Schema.Struct({
     ...BattleSpellAreaChoiceBaseSchema,
@@ -554,7 +556,7 @@ const BattleSpellAreaChoiceSchema = Schema.Union([
       }),
     ),
     areaId: Schema.optionalKey(Schema.Never),
-    sleepNonSleeperFacts: Schema.optionalKey(Schema.Never),
+    stagedConditionAutomaticSuccessFacts: Schema.optionalKey(Schema.Never),
   }),
   Schema.Struct({
     ...BattleSpellAreaChoiceBaseSchema,
@@ -568,13 +570,13 @@ const BattleSpellAreaChoiceSchema = Schema.Union([
       }),
     ),
     areaId: Schema.optionalKey(Schema.Never),
-    sleepNonSleeperFacts: Schema.optionalKey(Schema.Never),
+    stagedConditionAutomaticSuccessFacts: Schema.optionalKey(Schema.Never),
   }),
   Schema.Struct({
     ...BattleSpellAreaChoiceBaseSchema,
     kind: Schema.Literal("persistentAreaSaveConditionArea"),
     areaId: BattleAreaId,
-    sleepNonSleeperFacts: Schema.optionalKey(Schema.Never),
+    stagedConditionAutomaticSuccessFacts: Schema.optionalKey(Schema.Never),
   }),
   Schema.Struct({
     ...BattleSpellAreaChoiceBaseSchema,
@@ -587,7 +589,7 @@ const BattleSpellAreaChoiceSchema = Schema.Union([
         disposition: BattleDirectionalPersistentAreaPushDispositionSchema,
       }),
     ),
-    sleepNonSleeperFacts: Schema.optionalKey(Schema.Never),
+    stagedConditionAutomaticSuccessFacts: Schema.optionalKey(Schema.Never),
   }),
   Schema.Struct({
     ...BattleSpellAreaChoiceBaseSchema,
@@ -609,7 +611,7 @@ const BattleSpellAreaChoiceSchema = Schema.Union([
       }),
     ),
     areaId: Schema.optionalKey(Schema.Never),
-    sleepNonSleeperFacts: Schema.optionalKey(Schema.Never),
+    stagedConditionAutomaticSuccessFacts: Schema.optionalKey(Schema.Never),
   }),
   Schema.Struct({
     ...BattleSpellAreaChoiceBaseSchema,
@@ -621,7 +623,7 @@ const BattleSpellAreaChoiceSchema = Schema.Union([
       }),
     ),
     areaId: Schema.optionalKey(Schema.Never),
-    sleepNonSleeperFacts: Schema.optionalKey(Schema.Never),
+    stagedConditionAutomaticSuccessFacts: Schema.optionalKey(Schema.Never),
   }),
   Schema.Struct({
     ...BattleSpellAreaChoiceBaseSchema,
@@ -640,7 +642,7 @@ const BattleSpellAreaChoiceSchema = Schema.Union([
     ),
     audibleBoom: BattleThunderwaveAudibleBoomSchema,
     areaId: Schema.optionalKey(Schema.Never),
-    sleepNonSleeperFacts: Schema.optionalKey(Schema.Never),
+    stagedConditionAutomaticSuccessFacts: Schema.optionalKey(Schema.Never),
   }),
 ]);
 
@@ -1063,7 +1065,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     targetId: CombatantId,
   }),
   Schema.Struct({
-    kind: Schema.Literal("sleepShakeAwakeActorWithin5Feet"),
+    kind: Schema.Literal("stagedConditionShakeAwakeActorWithin5Feet"),
     actorId: CombatantId,
     targetId: CombatantId,
   }),
@@ -1327,8 +1329,8 @@ const BattleLightEmitterAttachmentSchema = Schema.Union([
     objectId: BattleObjectId,
   }),
   Schema.Struct({
-    kind: Schema.Literal("dancingLight"),
-    lightId: BattleDancingLightId,
+    kind: Schema.Literal("movableLight"),
+    lightId: BattleMovableLightId,
     positionId: BattleTablePositionId,
     form: Schema.Literals(["separateLights", "combinedMediumForm"]),
   }),
@@ -2100,7 +2102,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     mode: Schema.Literals(["cast", "reposition"]),
     form: Schema.Literals(["separateLights", "combinedMediumForm"]),
-    activeLightIds: Schema.Array(BattleDancingLightId),
+    activeLightIds: Schema.Array(BattleMovableLightId),
     rangeFeet: MovementFeet,
     maxMoveFeet: MovementFeet,
     spacingFeet: MovementFeet,
@@ -3029,12 +3031,12 @@ type BattleSpellAreaChoiceEncoded = {
   | {
       readonly kind?: never;
       readonly areaId?: never;
-      readonly sleepNonSleeperFacts?: never;
+      readonly stagedConditionAutomaticSuccessFacts?: never;
     }
   | {
       readonly kind?: never;
       readonly areaId?: never;
-      readonly sleepNonSleeperFacts: readonly [
+      readonly stagedConditionAutomaticSuccessFacts: readonly [
         {
           readonly kind: "doesNotSleep";
           readonly targetId: string;
@@ -3049,7 +3051,7 @@ type BattleSpellAreaChoiceEncoded = {
       readonly kind: "saveGatedTargetProjectionArea";
       readonly affectedObjectIds: readonly string[];
       readonly areaId?: never;
-      readonly sleepNonSleeperFacts?: never;
+      readonly stagedConditionAutomaticSuccessFacts?: never;
     }
   | {
       readonly kind: "saveGatedAreaControlArea";
@@ -3060,7 +3062,7 @@ type BattleSpellAreaChoiceEncoded = {
         readonly canSeePattern: true;
       }[];
       readonly areaId?: never;
-      readonly sleepNonSleeperFacts?: never;
+      readonly stagedConditionAutomaticSuccessFacts?: never;
     }
   | {
       readonly kind: "saveGatedTurnConstraintBundleArea";
@@ -3071,12 +3073,12 @@ type BattleSpellAreaChoiceEncoded = {
         readonly chosenByCaster: true;
       }[];
       readonly areaId?: never;
-      readonly sleepNonSleeperFacts?: never;
+      readonly stagedConditionAutomaticSuccessFacts?: never;
     }
   | {
       readonly kind: "persistentAreaSaveConditionArea";
       readonly areaId: string;
-      readonly sleepNonSleeperFacts?: never;
+      readonly stagedConditionAutomaticSuccessFacts?: never;
     }
   | {
       readonly kind: "directionalPersistentAreaArea";
@@ -3098,7 +3100,7 @@ type BattleSpellAreaChoiceEncoded = {
               readonly provokesOpportunityAttacks: false;
             };
       }[];
-      readonly sleepNonSleeperFacts?: never;
+      readonly stagedConditionAutomaticSuccessFacts?: never;
     }
   | {
       readonly kind: "fireballArea";
@@ -3110,7 +3112,7 @@ type BattleSpellAreaChoiceEncoded = {
           | { readonly kind: "wornOrCarried" };
       }[];
       readonly areaId?: never;
-      readonly sleepNonSleeperFacts?: never;
+      readonly stagedConditionAutomaticSuccessFacts?: never;
     }
   | {
       readonly kind: "shatterArea";
@@ -3126,7 +3128,7 @@ type BattleSpellAreaChoiceEncoded = {
           | { readonly kind: "tableResolved" };
       }[];
       readonly areaId?: never;
-      readonly sleepNonSleeperFacts?: never;
+      readonly stagedConditionAutomaticSuccessFacts?: never;
     }
   | {
       readonly kind: "thunderwaveArea";
@@ -3167,7 +3169,7 @@ type BattleSpellAreaChoiceEncoded = {
         readonly audibleRadiusFeet: number;
       };
       readonly areaId?: never;
-      readonly sleepNonSleeperFacts?: never;
+      readonly stagedConditionAutomaticSuccessFacts?: never;
     }
 );
 
@@ -3669,15 +3671,11 @@ type BattleFillEncoded =
               | { readonly kind: "combatant"; readonly combatantId: string };
           }
         | {
-            readonly kind: "pointOriginCylinderArea";
+            readonly kind: "unanchoredPointOriginCylinderArea";
             readonly areaId: string;
           }
         | {
-            readonly kind: "pointOriginSphereArea";
-            readonly areaId: string;
-          }
-        | {
-            readonly kind: "pointOriginSphereArea";
+            readonly kind: "unanchoredPointOriginSphereArea";
             readonly areaId: string;
           }
         | {
@@ -3688,21 +3686,21 @@ type BattleFillEncoded =
               | { readonly kind: "combatant"; readonly combatantId: string };
           }
         | {
-            readonly kind: "pointOriginSphereArea";
+            readonly kind: "anchoredPointOriginSphereArea";
             readonly areaId: string;
             readonly originAnchor:
               | { readonly kind: "tableSelectedPoint" }
               | { readonly kind: "combatant"; readonly combatantId: string };
           }
         | {
-            readonly kind: "pointOriginCylinderArea";
+            readonly kind: "anchoredPointOriginCylinderArea";
             readonly areaId: string;
             readonly originAnchor:
               | { readonly kind: "tableSelectedPoint" }
               | { readonly kind: "combatant"; readonly combatantId: string };
           }
         | {
-            readonly kind: "directionalLineArea";
+            readonly kind: "directionalPersistentAreaArea";
             readonly areaId: string;
             readonly directionId: string;
           };
@@ -4831,15 +4829,11 @@ export const BattleFillSchema: Schema.Codec<
           originAnchor: BattleSpellAreaOriginAnchorSchema,
         }),
         Schema.Struct({
-          kind: Schema.Literal("pointOriginCylinderArea"),
+          kind: Schema.Literal("unanchoredPointOriginCylinderArea"),
           areaId: BattleAreaId,
         }),
         Schema.Struct({
-          kind: Schema.Literal("pointOriginSphereArea"),
-          areaId: BattleAreaId,
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("pointOriginSphereArea"),
+          kind: Schema.Literal("unanchoredPointOriginSphereArea"),
           areaId: BattleAreaId,
         }),
         Schema.Struct({
@@ -4848,17 +4842,17 @@ export const BattleFillSchema: Schema.Codec<
           originAnchor: BattleSpellAreaOriginAnchorSchema,
         }),
         Schema.Struct({
-          kind: Schema.Literal("pointOriginSphereArea"),
+          kind: Schema.Literal("anchoredPointOriginSphereArea"),
           areaId: BattleAreaId,
           originAnchor: BattleSpellAreaOriginAnchorSchema,
         }),
         Schema.Struct({
-          kind: Schema.Literal("pointOriginCylinderArea"),
+          kind: Schema.Literal("anchoredPointOriginCylinderArea"),
           areaId: BattleAreaId,
           originAnchor: BattleSpellAreaOriginAnchorSchema,
         }),
         Schema.Struct({
-          kind: Schema.Literal("directionalLineArea"),
+          kind: Schema.Literal("directionalPersistentAreaArea"),
           areaId: BattleAreaId,
           directionId: BattleLineDirectionId,
         }),

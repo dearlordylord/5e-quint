@@ -89,7 +89,7 @@ import {
   applyAttackDamageAmount,
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowFillCheck,
-  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
 } from "./damage-apply.ts";
 import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
 
@@ -178,10 +178,10 @@ import { invalidResult } from "./result-helpers.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
   battleStateAfterTargetActionEarlyEndForActor,
-  sanctuaryTargetingInterdictionCheck,
+  targetingSaveInterdictionCheck,
   targetChoiceFillAfterSanctuaryAttackRollReplacement,
 } from "./sanctuary-targeting-interdiction.ts";
-import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
+import { duplicateHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
 import { resolveOpenHandTechniqueAfterHit } from "./open-hand-technique.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { resolveStunningStrikeAfterHit } from "./stunning-strike.ts";
@@ -799,10 +799,10 @@ function resolveBrutalStrikeForcefulBlowMovement(input: {
   const {
     brutalStrikeForcefulBlow,
     additionalSpeedSegments,
-    jumpMovementReplacement: _jumpMovementReplacement,
+    fixedCostMovementReplacement: _fixedCostMovementReplacement,
     levitatedMovement: _levitatedMovement,
-    commandApproach: _commandApproach,
-    commandFlee: _commandFlee,
+    compelledApproach: _compelledApproach,
+    compelledFlee: _compelledFlee,
     ...firstSegment
   } = movementFill.value;
   /* v8 ignore start -- @preserve -- Malformed movement fill: the discovered Forceful Blow hole fixes the selected target before resolution. */
@@ -1794,7 +1794,7 @@ export function resolveSelectedAttackProcedure<
   }
   /* v8 ignore stop -- @preserve */
 
-  const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
+  const sanctuaryCheck = targetingSaveInterdictionCheck({
     state: input.state,
     triggeringProcedureRef: input.subject.procedureRef,
     triggeringCombatantId: attackerId,
@@ -1860,7 +1860,7 @@ export function resolveSelectedAttackProcedure<
         ...input,
         fills: [
           ...input.fills
-            .filter((fill) => fill.kind !== "sanctuaryInterdictionOutcome")
+            .filter((fill) => fill.kind !== "targetingSaveInterdictionOutcome")
             .map((fill) =>
               fill === originalTargetFill
                 ? targetChoiceFillAfterSanctuaryAttackRollReplacement({
@@ -2319,7 +2319,7 @@ export function resolveSelectedAttackProcedure<
       );
     }
     /* v8 ignore stop -- @preserve */
-    const mirrorImageCheck = mirrorImageHitInterceptionCheck({
+    const mirrorImageCheck = duplicateHitInterceptionCheck({
       state: attackRolledState,
       attacker: mirrorImageAttacker,
       target: requireCurrentAttackTarget(attackRolledState, target),
@@ -2944,25 +2944,25 @@ export function resolveSelectedAttackProcedure<
       );
     }
     /* v8 ignore stop -- @preserve */
-    const hideousLaughterSaveCheck =
-      damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+    const saveGatedConditionWithRepeatSaveCheck =
+      damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck({
         state: grapplerPunchAndGrab.state,
         target: spellReduction.target,
         damageAmount: reducedFixedDamageAmount,
-        fills: fillSet.hideousLaughterDamageRepeatSaves,
+        fills: fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
       });
-    if (hideousLaughterSaveCheck.tag === "needsHoles") {
+    if (saveGatedConditionWithRepeatSaveCheck.tag === "needsHoles") {
       return needsHolesResult(grapplerPunchAndGrab.state, input.subject, [
-        ...hideousLaughterSaveCheck.holes,
+        ...saveGatedConditionWithRepeatSaveCheck.holes,
       ]);
     }
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (hideousLaughterSaveCheck.tag === "invalid") {
+    if (saveGatedConditionWithRepeatSaveCheck.tag === "invalid") {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
-        hideousLaughterSaveCheck.message,
+        saveGatedConditionWithRepeatSaveCheck.message,
       );
     }
     /* v8 ignore stop -- @preserve */
@@ -2975,8 +2975,8 @@ export function resolveSelectedAttackProcedure<
       damageDisposition: fillSet.damageDisposition,
       attackDamageRiders: [],
       concentrationSavingThrow: primaryConcentrationSavingThrow,
-      hideousLaughterDamageRepeatSaves:
-        fillSet.hideousLaughterDamageRepeatSaves,
+      saveGatedConditionWithRepeatDamageRepeatSaves:
+        fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
       wardingBondDamageShareConcentrationSavingThrows:
         primaryConcentrationSavingThrows,
       spatialFacts: fillSet.targetSpatialFacts,
@@ -3466,25 +3466,25 @@ export function resolveSelectedAttackProcedure<
       );
     }
     /* v8 ignore stop -- @preserve */
-    const hideousLaughterSaveCheck =
-      damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+    const saveGatedConditionWithRepeatSaveCheck =
+      damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck({
         state: grapplerPunchAndGrab.state,
         target: spellReduction.target,
         damageAmount: reducedDamageAmount,
-        fills: fillSet.hideousLaughterDamageRepeatSaves,
+        fills: fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
       });
-    if (hideousLaughterSaveCheck.tag === "needsHoles") {
+    if (saveGatedConditionWithRepeatSaveCheck.tag === "needsHoles") {
       return needsHolesResult(grapplerPunchAndGrab.state, input.subject, [
-        ...hideousLaughterSaveCheck.holes,
+        ...saveGatedConditionWithRepeatSaveCheck.holes,
       ]);
     }
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (hideousLaughterSaveCheck.tag === "invalid") {
+    if (saveGatedConditionWithRepeatSaveCheck.tag === "invalid") {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
-        hideousLaughterSaveCheck.message,
+        saveGatedConditionWithRepeatSaveCheck.message,
       );
     }
     /* v8 ignore stop -- @preserve */
@@ -3498,8 +3498,8 @@ export function resolveSelectedAttackProcedure<
       attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
       weaponDamageDiceRollChoice: selectedDamageDiceChoice ?? undefined,
       concentrationSavingThrow: primaryConcentrationSavingThrow,
-      hideousLaughterDamageRepeatSaves:
-        fillSet.hideousLaughterDamageRepeatSaves,
+      saveGatedConditionWithRepeatDamageRepeatSaves:
+        fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
       wardingBondDamageShareConcentrationSavingThrows:
         primaryConcentrationSavingThrows,
       spatialFacts: fillSet.targetSpatialFacts,
@@ -3675,7 +3675,7 @@ function attackPostMirrorImageFillsArePresent(
     fillSet.openHandTechniqueSavingThrow !== undefined ||
     fillSet.stunningStrikeDecision !== undefined ||
     fillSet.stunningStrikeSavingThrow !== undefined ||
-    fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
+    fillSet.saveGatedConditionWithRepeatDamageRepeatSaves.length > 0 ||
     fillSet.concentrationSavingThrows.length > 0 ||
     fillSet.weaponMasteryCleaveDecision !== undefined ||
     fillSet.weaponMasteryCleaveTarget !== undefined ||
