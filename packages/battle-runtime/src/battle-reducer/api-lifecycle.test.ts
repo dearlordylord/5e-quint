@@ -445,8 +445,16 @@ describe("battle lifecycle admission issue aggregation", () => {
       expect(result.failure).toEqual({
         tag: "battleStateInitIssues",
         issues: [
-          { tag: "weaponLoadoutMismatch", slot: "main-hand" },
-          { tag: "weaponLoadoutMismatch", slot: "main-hand" },
+          {
+            tag: "weaponLoadoutMismatch",
+            slot: "main-hand",
+            ownerPath: ["initialCombatants", 0],
+          },
+          {
+            tag: "weaponLoadoutMismatch",
+            slot: "main-hand",
+            ownerPath: ["initialCombatants", 1],
+          },
         ],
       });
     }
@@ -463,9 +471,16 @@ describe("battle lifecycle admission issue aggregation", () => {
         }),
       ],
       issues: [
-        { tag: "weaponLoadoutMismatch", slot: "main-hand" },
+        {
+          tag: "weaponLoadoutMismatch",
+          slot: "main-hand",
+          ownerPath: ["initialCombatants", 0],
+        },
         {
           tag: "battleStateInitIssue",
+          kind: "duplicateCombatantId",
+          combatantId: "shared-combatant",
+          ownerPath: ["initialCombatants", 1],
           message: "Duplicate combatant id: shared-combatant",
         },
       ],
@@ -482,9 +497,16 @@ describe("battle lifecycle admission issue aggregation", () => {
       issues: [
         {
           tag: "battleStateInitIssue",
+          kind: "duplicateCombatantId",
+          combatantId: "shared-combatant",
+          ownerPath: ["initialCombatants", 1],
           message: "Duplicate combatant id: shared-combatant",
         },
-        { tag: "weaponLoadoutMismatch", slot: "main-hand" },
+        {
+          tag: "weaponLoadoutMismatch",
+          slot: "main-hand",
+          ownerPath: ["initialCombatants", 1],
+        },
       ],
     },
   ])(
@@ -519,11 +541,21 @@ describe("battle lifecycle admission issue aggregation", () => {
         issues: [
           {
             tag: "battleStateInitIssue",
+            kind: "weaponPresentationUnavailable",
+            combatantId: "missing-source-first",
+            weaponUnitId: "weapon_longsword",
+            availability: "missing",
+            ownerPath: ["initialCombatants", 0],
             message:
               "Character missing-source-first weapon weapon_longsword has missing authored presentation source.",
           },
           {
             tag: "battleStateInitIssue",
+            kind: "weaponPresentationUnavailable",
+            combatantId: "missing-source-second",
+            weaponUnitId: "weapon_longsword",
+            availability: "missing",
+            ownerPath: ["initialCombatants", 1],
             message:
               "Character missing-source-second weapon weapon_longsword has missing authored presentation source.",
           },
@@ -545,9 +577,18 @@ describe("battle lifecycle admission issue aggregation", () => {
       Result.fail({
         tag: "battleStateInitIssues",
         issues: [
-          { tag: "weaponLoadoutMismatch", slot: "main-hand" },
+          {
+            tag: "weaponLoadoutMismatch",
+            slot: "main-hand",
+            ownerPath: ["initialCombatants", 0],
+          },
           {
             tag: "battleStateInitIssue",
+            kind: "weaponPresentationUnavailable",
+            combatantId: "missing-source",
+            weaponUnitId: "weapon_longsword",
+            availability: "missing",
+            ownerPath: ["initialCombatants", 1],
             message:
               "Character missing-source weapon weapon_longsword has missing authored presentation source.",
           },

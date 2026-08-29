@@ -1583,6 +1583,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     expect(reduction.spellDamageReduction).toEqual({
       sourceProcedureRef: expect.any(String),
       sourceCombatantId: spellCasterId,
+      effectRef: expect.any(String),
       targetId: spellTargetId,
       damageType: "slashing",
       amount: { dice: 1, dieSize: 4 },

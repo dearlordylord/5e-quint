@@ -1,16 +1,13 @@
 import { execFileSync, spawn, type ChildProcess } from "node:child_process";
-import { createHash, randomUUID } from "node:crypto";
+import { createHash } from "node:crypto";
 import { constants } from "node:fs";
 import {
   closeSync,
-  fsyncSync,
   lstatSync,
   mkdtempSync,
   openSync,
   readFileSync,
-  renameSync,
   rmSync,
-  writeFileSync,
 } from "node:fs";
 import { request as requestHttp } from "node:http";
 import { tmpdir } from "node:os";
@@ -57,7 +54,6 @@ import {
 
 export const EFFECT3_BASELINE_PATH =
   "docs/migrations/effect-4/effect3-behavioral-oracle.json";
-export const EFFECT3_BASELINE_REPLACEMENT_FLAG = "--replace-reviewed-baseline";
 
 const REPOSITORY_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const JSON_INDENT_SPACES = 2;
@@ -1169,147 +1165,4 @@ export function renderEffect3Baseline(
   baseline: Readonly<Record<string, unknown>>,
 ): string {
   return canonicalBaselineJson(baseline);
-}
-
-function baselinePath(): string {
-  return absoluteRepositoryPath(EFFECT3_BASELINE_PATH);
-}
-
-function isMissingPathError(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    error.code === "ENOENT"
-  );
-}
-
-function certificateTarget(path: string): "missing" | "regular" {
-  const canonicalPath = repositoryPathFor(path);
-  assertNoSymlinkInRepositoryPath(posix.dirname(canonicalPath));
-  try {
-    const status = lstatSync(absoluteRepositoryPath(canonicalPath));
-    if (status.isSymbolicLink()) {
-      throw new Error(`Refusing to follow certificate symlink: ${path}`);
-    }
-    if (!status.isFile()) {
-      throw new Error(`Certificate path is not a regular file: ${path}`);
-    }
-    return "regular";
-  } catch (error) {
-    if (isMissingPathError(error)) return "missing";
-    throw error;
-  }
-}
-
-function writeCertificateExclusively(path: string, content: string): void {
-  const descriptor = openSync(
-    path,
-    constants.O_CREAT |
-      constants.O_EXCL |
-      constants.O_NOFOLLOW |
-      constants.O_WRONLY,
-    0o644,
-  );
-  try {
-    writeFileSync(descriptor, content, "utf8");
-    fsyncSync(descriptor);
-  } catch (error) {
-    closeSync(descriptor);
-    rmSync(path, { force: true });
-    throw error;
-  }
-  closeSync(descriptor);
-}
-
-function writeCertificateReplacement(path: string, content: string): void {
-  const temporaryPath = `${path}.${randomUUID()}.next`;
-  const descriptor = openSync(
-    temporaryPath,
-    constants.O_CREAT |
-      constants.O_EXCL |
-      constants.O_NOFOLLOW |
-      constants.O_WRONLY,
-    0o600,
-  );
-  try {
-    writeFileSync(descriptor, content, "utf8");
-    fsyncSync(descriptor);
-    closeSync(descriptor);
-  } catch (error) {
-    closeSync(descriptor);
-    rmSync(temporaryPath, { force: true });
-    throw error;
-  }
-  try {
-    renameSync(temporaryPath, path);
-  } catch (error) {
-    rmSync(temporaryPath, { force: true });
-    throw error;
-  }
-}
-
-async function capture(replaceReviewedBaseline: boolean): Promise<void> {
-  const relativePath = repositoryPathFor(EFFECT3_BASELINE_PATH);
-  const path = baselinePath();
-  const target = certificateTarget(relativePath);
-  if (target === "regular" && !replaceReviewedBaseline) {
-    throw new Error(
-      `Refusing to replace ${EFFECT3_BASELINE_PATH}. Pass ${EFFECT3_BASELINE_REPLACEMENT_FLAG} only for an explicitly reviewed baseline replacement.`,
-    );
-  }
-  const content = renderEffect3Baseline(await captureEffect3Baseline());
-  if (target === "missing") {
-    writeCertificateExclusively(path, content);
-  } else {
-    writeCertificateReplacement(path, content);
-  }
-  console.log(
-    `Captured Effect 3 baseline: ${EFFECT3_BASELINE_PATH} (${sha256(content)})`,
-  );
-}
-
-async function verify(): Promise<void> {
-  const relativePath = repositoryPathFor(EFFECT3_BASELINE_PATH);
-  if (certificateTarget(relativePath) === "missing") {
-    throw new Error(`Missing Effect 3 baseline: ${EFFECT3_BASELINE_PATH}`);
-  }
-  const expected = new TextDecoder().decode(
-    readRegularRepositoryFile(relativePath),
-  );
-  JSON.parse(expected);
-  const actual = renderEffect3Baseline(await captureEffect3Baseline());
-  if (actual !== expected) {
-    throw new Error(
-      `Effect 3 baseline differs from ${EFFECT3_BASELINE_PATH}. Review the migration delta before replacing it.`,
-    );
-  }
-  console.log(
-    `Verified Effect 3 baseline: ${EFFECT3_BASELINE_PATH} (${sha256(expected)})`,
-  );
-}
-
-async function main(): Promise<void> {
-  const command = process.argv[2];
-  if (command === "capture") {
-    await capture(process.argv.includes(EFFECT3_BASELINE_REPLACEMENT_FLAG));
-    return;
-  }
-  if (command === "verify") {
-    await verify();
-    return;
-  }
-  throw new Error(
-    `Usage: pnpm exec tsx scripts/effect3-baseline.ts capture|verify [${EFFECT3_BASELINE_REPLACEMENT_FLAG}]`,
-  );
-}
-
-if (
-  process.argv[1] !== undefined &&
-  resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))
-) {
-  main().catch((error: unknown) => {
-    console.error(error);
-    process.exitCode = 1;
-  });
 }

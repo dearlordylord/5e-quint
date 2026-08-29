@@ -184,9 +184,6 @@ describe("Effect 3 migration baseline", () => {
   }, 180_000);
 
   test("ignores dirty generated Raw Swarm output", async () => {
-    const certificatePath = fileURLToPath(
-      new URL(`../../../${EFFECT3_BASELINE_PATH}`, import.meta.url),
-    );
     const generatedRoot = fileURLToPath(
       new URL("../../../scripts/raw-swarm/out/", import.meta.url),
     );

@@ -182,6 +182,7 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
       kind: "hitPointRegainPrevented",
       sourceProcedureRef: expect.any(String),
       sourceCombatantId: wizardId,
+      effectRef: expect.any(String),
       expiresAt: {
         kind: "endOfTurn",
         combatantId: wizardId,

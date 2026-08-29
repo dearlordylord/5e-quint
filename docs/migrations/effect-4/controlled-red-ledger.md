@@ -112,16 +112,17 @@ in the later Issue #376 evidence snapshot.
 The owner sweep, totals, and tables in this subsection are retained historical
 #375 evidence and are not the current #376 counts.
 
-The canonical regeneration command is
-`pnpm regenerate:effect4-controlled-red`. Its public script acquires the
-repository broad lock, and its body asserts that lock before running
-[`regenerate-effect4-controlled-red.mjs`](../../../scripts/regenerate-effect4-controlled-red.mjs).
+The historical regeneration command was
+`pnpm regenerate:effect4-controlled-red`. During the controlled-red interval,
+its public script acquired the repository broad lock and its body asserted that
+lock before running the now-retired
+`scripts/regenerate-effect4-controlled-red.mjs` generator.
 The committed output is
 [`controlled-red-inventory.json`](./controlled-red-inventory.json). The script
 discovers each `packages/*` manifest with a `typecheck` script, runs those
 owners serially with `--pretty false`, and classifies every TypeScript code
 into the disjoint families below. It deduplicates on source path, line, column,
-code, and complete diagnostic message. Re-running the command regenerates the
+code, and complete diagnostic message. Before closure, the command regenerated the
 output used by this ledger; no totals below are an independent baseline.
 
 The inventory ran each workspace `typecheck` script once in this order:

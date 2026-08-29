@@ -118,37 +118,6 @@ async function smokeDeployedMcp(temporaryRoot: string): Promise<void> {
   });
 }
 
-const STATIC_SERVER_SOURCE = String.raw`
-import { readFile } from "node:fs/promises";
-import { createServer } from "node:http";
-import { extname, resolve, sep } from "node:path";
-
-const root = resolve(process.cwd());
-const mime = new Map([[".css", "text/css"], [".html", "text/html"], [".js", "text/javascript"], [".png", "image/png"], [".svg", "image/svg+xml"]]);
-const server = createServer(async (request, response) => {
-  try {
-    const path = new URL(request.url ?? "/", "http://127.0.0.1").pathname;
-    const requested = path === "/" ? "index.html" : path.slice(1);
-    const resolved = resolve(root, requested);
-    if (resolved !== root && !resolved.startsWith(root + sep)) throw new Error("path escaped root");
-    const body = await readFile(resolved);
-    response.writeHead(200, { "content-type": mime.get(extname(resolved)) ?? "application/octet-stream" });
-    response.end(body);
-  } catch {
-    response.writeHead(404).end();
-  }
-});
-server.listen(0, "127.0.0.1", () => {
-  const address = server.address();
-  if (address === null || typeof address === "string") process.exit(70);
-  process.stdout.write(String(address.port) + "\n");
-});
-process.once("SIGTERM", () => {
-  server.closeAllConnections();
-  server.close((error) => process.exit(error === undefined ? 0 : 1));
-});
-`;
-
 async function firstOutputLine(child: ChildProcess): Promise<string> {
   return new Promise((resolveLine, reject) => {
     let output = "";
@@ -197,11 +166,15 @@ async function smokeBuiltApplication(temporaryRoot: string): Promise<void> {
   await cp(resolve(REPOSITORY_ROOT, "packages/app/dist"), deployedApp, {
     recursive: true,
   });
-  const child = spawn(
-    process.execPath,
-    ["--input-type=module", "--eval", STATIC_SERVER_SOURCE],
-    { cwd: deployedApp, stdio: ["ignore", "pipe", "pipe"] },
+  const deployedServer = join(temporaryRoot, "static-server.mjs");
+  await cp(
+    resolve(REPOSITORY_ROOT, "packages/app/static-server.mjs"),
+    deployedServer,
   );
+  const child = spawn(process.execPath, [deployedServer, deployedApp, "0"], {
+    cwd: deployedApp,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
   let stderr = "";
   child.stderr?.setEncoding("utf8");
   child.stderr?.on("data", (chunk: string) => {

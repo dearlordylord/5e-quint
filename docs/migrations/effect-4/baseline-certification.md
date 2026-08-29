@@ -26,17 +26,10 @@ It captures the current canonical projections in memory, canonicalizes object
 keys while retaining observable array order, and compares the resulting bytes
 with the tracked certificate. The command never writes during verification.
 
-To replace the certificate after a reviewed migration decision, run the
-separate explicit operation:
-
-```sh
-pnpm capture:effect3-baseline -- --replace-reviewed-baseline
-```
-
-Capture refuses to overwrite an existing certificate without that flag. An
-Effect 4 dependency or implementation path must not call capture implicitly;
-the normal migration gate is verification against this immutable Effect 3
-oracle followed by a separately reviewed delta report.
+The migration-time replacement command was retired at final certification.
+The repository exposes only the read-only capture functions used by the finite
+delta verifier; no package script or CLI operation can replace the immutable
+Effect 3 oracle.
 
 ## Captured surfaces
 
