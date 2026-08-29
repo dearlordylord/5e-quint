@@ -2863,7 +2863,12 @@ describe("Cloudkill source-turn movement", () => {
     expect("pendingInterrupt" in secondInterrupted.snapshot).toBe(false);
     expect(
       battleFrontierInterruptDecisionForState(secondInterrupted.state),
-    ).toBeNull();
+    ).toMatchObject({
+      trigger: "saveFailed",
+      choices: [
+        expect.objectContaining({ readiedSpellCasterId: spellTargetId }),
+      ],
+    });
   });
 
   test("cancels remaining movement targets when source damage ends Cloudkill Concentration", () => {

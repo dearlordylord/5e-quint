@@ -86,10 +86,13 @@ export function projectReplayChildResult(
   return Match.value(child).pipe(
     Match.when({ tag: "needsHoles" }, (result) => {
       const state =
-        result.state.interruptStack.length > parent.state.interruptStack.length
-          ? result.state
-          : parent.state;
-      return needsHolesResult(state, parent.subject, result.holes);
+        result.checkpointBoundary !== undefined ? result.state : parent.state;
+      return needsHolesResult(
+        state,
+        parent.subject,
+        result.holes,
+        result.checkpointBoundary,
+      );
     }),
     Match.when({ tag: "invalid" }, (result) =>
       invalidResult(parent.state, result.reason, result.message),
