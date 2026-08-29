@@ -16,7 +16,7 @@ const pageFailures = vi.hoisted(() => ({
 
 vi.mock("#/components/character-creation/characterCreationRuntime.ts", async (importOriginal) => {
   const actual = await importOriginal<typeof CharacterCreationRuntime>()
-  const { Either } = await import("effect")
+  const { Result } = await import("effect")
   const { unitId } = await import("@dnd/shared/game-facts")
   const { Hp, resourceCount, spellSlotLevel } = await import("@dnd/shared/types")
   return {
@@ -62,15 +62,15 @@ vi.mock("#/components/character-creation/characterCreationRuntime.ts", async (im
     characterSheetSummary: vi.fn(
       (sheet: Parameters<typeof actual.characterSheetSummary>[0]): ReturnType<typeof actual.characterSheetSummary> => {
         if (pageFailures.sheetSummary) {
-          return Either.left({
+          return Result.fail({
             tag: "characterSheetInvalid",
             message: "Synthetic summary failure."
           })
         }
         const summary = actual.characterSheetSummary(sheet)
-        return pageFailures.richSummary && Either.isRight(summary)
-          ? Either.right({
-              ...summary.right,
+        return pageFailures.richSummary && Result.isSuccess(summary)
+          ? Result.succeed({
+              ...summary.success,
               pactSlots: {
                 count: resourceCount(2),
                 expended: resourceCount(1),
@@ -123,7 +123,7 @@ vi.mock("#/components/character-creation/characterCreationRuntime.ts", async (im
         input?: Parameters<typeof actual.createCharacterSheetFromDraft>[1]
       ): ReturnType<typeof actual.createCharacterSheetFromDraft> =>
         pageFailures.sheetCreation
-          ? Either.left({
+          ? Result.fail({
               tag: "characterSheetInvalid",
               message: "Synthetic sheet creation failure."
             })

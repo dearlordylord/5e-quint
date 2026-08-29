@@ -10,8 +10,8 @@
       "package": "@dnd/app",
       "manifest": "packages/app/package.json",
       "command": "pnpm --filter @dnd/app run typecheck --pretty false",
-      "exitCode": 1,
-      "rawDiagnostics": 60
+      "exitCode": 0,
+      "rawDiagnostics": 0
     },
     {
       "package": "@dnd/battle-runtime",
@@ -98,17 +98,17 @@
       "rawDiagnostics": 0
     }
   ],
-  "totals": { "raw": 125, "deduplicated": 125 },
+  "totals": { "raw": 65, "deduplicated": 65 },
   "families": {
     "removed-module-entrypoints": {
       "codes": ["TS2305", "TS2307"],
-      "raw": 22,
-      "deduplicated": 22
+      "raw": 8,
+      "deduplicated": 8
     },
     "removed-renamed-effect-api-members": {
       "codes": ["TS2551", "TS2694", "TS2724"],
-      "raw": 25,
-      "deduplicated": 25
+      "raw": 22,
+      "deduplicated": 22
     },
     "changed-schema-type-signatures": {
       "codes": [
@@ -129,8 +129,8 @@
     },
     "downstream-type-inference-cascade": {
       "codes": "all remaining TypeScript codes",
-      "raw": 76,
-      "deduplicated": 76
+      "raw": 33,
+      "deduplicated": 33
     }
   },
   "codes": {
@@ -141,8 +141,8 @@
     },
     "TS2305": {
       "family": "removed-module-entrypoints",
-      "raw": 15,
-      "deduplicated": 15
+      "raw": 1,
+      "deduplicated": 1
     },
     "TS2307": {
       "family": "removed-module-entrypoints",
@@ -151,8 +151,8 @@
     },
     "TS2339": {
       "family": "downstream-type-inference-cascade",
-      "raw": 47,
-      "deduplicated": 47
+      "raw": 15,
+      "deduplicated": 15
     },
     "TS2345": {
       "family": "downstream-type-inference-cascade",
@@ -161,8 +161,8 @@
     },
     "TS2551": {
       "family": "removed-renamed-effect-api-members",
-      "raw": 25,
-      "deduplicated": 25
+      "raw": 22,
+      "deduplicated": 22
     },
     "TS2554": {
       "family": "changed-schema-type-signatures",
@@ -178,11 +178,6 @@
       "family": "downstream-type-inference-cascade",
       "raw": 5,
       "deduplicated": 5
-    },
-    "TS7006": {
-      "family": "downstream-type-inference-cascade",
-      "raw": 11,
-      "deduplicated": 11
     },
     "TS7031": {
       "family": "downstream-type-inference-cascade",

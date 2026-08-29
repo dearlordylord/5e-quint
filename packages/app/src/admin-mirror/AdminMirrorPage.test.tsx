@@ -7,17 +7,16 @@ import {
   AdminMirrorSessionStateSchema
 } from "@dnd/mcp/experimental-admin-mirror-contract"
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
-import { Either, Schema } from "effect"
+import { Deferred, Effect, Result, Schema } from "effect"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
 import { WIZARD_BATTLE_DEMO_STEPS } from "../battle-scene/wizard-battle-demo.ts"
 import {
-  AdminMirrorPage,
+  decodeAdminMirrorOrigin,
   decodeMirrorSessionEvent,
-  decodeMirrorSessionResponse,
-  presentationTimelineTitle,
-  selectMirrorSession
-} from "./AdminMirrorPage.tsx"
+  decodeMirrorSessionResponse
+} from "./admin-mirror-session-boundary.ts"
+import { AdminMirrorPage, presentationTimelineTitle, selectMirrorSession } from "./AdminMirrorPage.tsx"
 
 const setSelectedSessionId = vi.fn()
 const queryState = vi.hoisted((): { value: string | null } => ({ value: null }))
@@ -32,9 +31,11 @@ vi.mock("nuqs", () => ({
 class TestEventSource extends EventTarget {
   static latest: TestEventSource | undefined
   readonly close = vi.fn()
+  readonly url: string
 
-  constructor(readonly url: string) {
+  constructor(url: string | URL) {
     super()
+    this.url = url.toString()
     TestEventSource.latest = this
   }
 }
@@ -62,7 +63,7 @@ describe("AdminMirrorPage mirror boundary", () => {
       sessions: [rawSessionState({ sequence: 0 })]
     })
 
-    expect(Either.isRight(decoded)).toBe(true)
+    expect(Result.isSuccess(decoded)).toBe(true)
   })
 
   test("rejects invalid mirror protocol values", () => {
@@ -70,25 +71,37 @@ describe("AdminMirrorPage mirror boundary", () => {
       sessions: [rawSessionState({ sequence: -1 })]
     })
 
-    expect(Either.isLeft(decoded)).toBe(true)
+    expect(Result.isFailure(decoded)).toBe(true)
+    if (Result.isSuccess(decoded)) throw new Error("Expected an invalid response parse issue.")
+    expect(decoded.failure.tag).toBe("invalidMirrorSessionResponse")
   })
 
   test("rejects malformed mirror event JSON", () => {
     const decoded = decodeMirrorSessionEvent("{")
 
-    expect(Either.isLeft(decoded)).toBe(true)
+    expect(Result.isFailure(decoded)).toBe(true)
+    if (Result.isSuccess(decoded)) throw new Error("Expected a malformed event JSON issue.")
+    expect(decoded.failure.tag).toBe("malformedMirrorSessionEventJson")
+  })
+
+  test("decodes only HTTP(S) admin mirror origins", () => {
+    expect(Result.isSuccess(decodeAdminMirrorOrigin("http://configured-mirror.test"))).toBe(true)
+    expect(Result.isFailure(decodeAdminMirrorOrigin("http://configured-mirror.test/nested"))).toBe(true)
+    expect(Result.isFailure(decodeAdminMirrorOrigin("file:///tmp/mirror"))).toBe(true)
   })
 
   test("rejects valid JSON with an invalid mirror event shape", () => {
     const decoded = decodeMirrorSessionEvent(JSON.stringify({}))
 
-    expect(Either.isLeft(decoded)).toBe(true)
+    expect(Result.isFailure(decoded)).toBe(true)
+    if (Result.isSuccess(decoded)) throw new Error("Expected an invalid event parse issue.")
+    expect(decoded.failure.tag).toBe("invalidMirrorSessionEvent")
   })
 
   test("decodes mirror session events", () => {
     const decoded = decodeMirrorSessionEvent(JSON.stringify(rawSessionState({ sequence: 2 })))
 
-    expect(Either.isRight(decoded)).toBe(true)
+    expect(Result.isSuccess(decoded)).toBe(true)
   })
 
   test("does not replace a requested missing session with the newest session", () => {
@@ -196,11 +209,6 @@ describe("AdminMirrorPage mirror boundary", () => {
     await waitFor(() => expect(screen.queryByText("Derived Input")).toBeNull())
 
     act(() => {
-      source?.dispatchEvent(new MessageEvent("message", { data: "{" }))
-    })
-    expect(await screen.findByText("offline")).toBeTruthy()
-
-    act(() => {
       source?.dispatchEvent(
         new MessageEvent("message", {
           data: JSON.stringify(rawSessionState({ mirrorSessionId: "streamed", sequence: 3 }))
@@ -208,6 +216,7 @@ describe("AdminMirrorPage mirror boundary", () => {
       )
     })
     expect(await screen.findAllByText("streamed")).toHaveLength(2)
+    expect(screen.getByText("streaming")).toBeTruthy()
 
     fireEvent.click(screen.getByRole("button", { name: "JSON" }))
     expect(screen.getByText("Event")).toBeTruthy()
@@ -237,7 +246,68 @@ describe("AdminMirrorPage mirror boundary", () => {
     cleanup()
     fetchMock.mockRejectedValueOnce(new Error("unavailable"))
     render(<AdminMirrorPage />)
-    expect(await screen.findByText("offline")).toBeTruthy()
+    expect(await screen.findAllByText("Mirror sessions are unavailable.")).toHaveLength(2)
+    expect(screen.queryByText("No mirror sessions.")).toBeNull()
+  })
+
+  test("does not present a pending mirror load as an empty collection", () => {
+    fetchMock.mockReturnValue(new Promise<Response>(() => undefined))
+    render(<AdminMirrorPage />)
+
+    expect(screen.getAllByText("Loading mirror sessions.")).toHaveLength(2)
+    expect(screen.queryByText("No mirror sessions.")).toBeNull()
+  })
+
+  test("does not treat one streamed session as snapshot completion", async () => {
+    const pendingResponse = deferredFetchResponse()
+    fetchMock.mockReturnValue(pendingResponse.promise)
+    render(<AdminMirrorPage />)
+
+    dispatchMirrorSession(rawSessionState({ sequence: 2 }))
+
+    expect(await screen.findByText("Loading mirror sessions.")).toBeTruthy()
+    expect(screen.getByText("seq 2 · pid 1")).toBeTruthy()
+  })
+
+  test("preserves only the latest canonical streamed record when an older snapshot arrives", async () => {
+    const pendingResponse = deferredFetchResponse()
+    fetchMock.mockReturnValue(pendingResponse.promise)
+    render(<AdminMirrorPage />)
+
+    dispatchMirrorSession(rawSessionState({ sequence: 2 }))
+    dispatchMirrorSession(rawSessionState({ sequence: 3 }))
+    await act(async () => {
+      pendingResponse.succeed(jsonResponse({ sessions: [rawSessionState({ sequence: 1 })] }))
+      await pendingResponse.promise
+    })
+
+    expect(await screen.findByText("seq 3 · pid 1")).toBeTruthy()
+    expect(screen.queryByText("seq 2 · pid 1")).toBeNull()
+    expect(screen.queryByText("seq 1 · pid 1")).toBeNull()
+    expect(screen.getAllByRole("button", { name: /demo/ })).toHaveLength(1)
+    expect(screen.queryByText("Loading mirror sessions.")).toBeNull()
+  })
+
+  test("ignores an older request completion after a newer refresh succeeds", async () => {
+    const olderResponse = deferredFetchResponse()
+    const newerResponse = deferredFetchResponse()
+    fetchMock.mockReturnValueOnce(olderResponse.promise).mockReturnValueOnce(newerResponse.promise)
+    render(<AdminMirrorPage />)
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce())
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
+    await act(async () => {
+      newerResponse.succeed(jsonResponse({ sessions: [rawSessionState({ sequence: 2 })] }))
+      await newerResponse.promise
+    })
+    await act(async () => {
+      olderResponse.succeed(jsonResponse({ sessions: [rawSessionState({ sequence: 1 })] }))
+      await olderResponse.promise
+    })
+
+    expect(await screen.findByText("seq 2 · pid 1")).toBeTruthy()
+    expect(screen.queryByText("seq 1 · pid 1")).toBeNull()
   })
 
   test("shows a requested session that is no longer retained", async () => {
@@ -251,12 +321,12 @@ describe("AdminMirrorPage mirror boundary", () => {
   test("rejects unsuccessful and malformed refresh responses", async () => {
     fetchMock.mockResolvedValueOnce(new Response(null, { status: 503 }))
     render(<AdminMirrorPage />)
-    expect(await screen.findByText("offline")).toBeTruthy()
+    expect(await screen.findAllByText("Mirror sessions are unavailable.")).toHaveLength(2)
 
     cleanup()
     fetchMock.mockResolvedValueOnce(jsonResponse({ sessions: "invalid" }))
     render(<AdminMirrorPage />)
-    expect(await screen.findByText("offline")).toBeTruthy()
+    expect(await screen.findAllByText("Mirror session response is invalid.")).toHaveLength(2)
   })
 
   test("renders an explicitly empty retained presentation timeline", async () => {
@@ -276,8 +346,46 @@ describe("AdminMirrorPage mirror boundary", () => {
 
     render(<AdminMirrorPage />)
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith("http://configured-mirror.test/admin-projections"))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce())
+    const requestedUrl = fetchMock.mock.calls[0]?.[0]
+    expect(requestedUrl).toBeInstanceOf(URL)
+    expect(requestedUrl.toString()).toBe("http://configured-mirror.test/admin-projections")
     expect(TestEventSource.latest?.url).toBe("http://configured-mirror.test/admin-projections/events")
+  })
+
+  test("renders invalid mirror configuration immediately without loading or connecting", () => {
+    vi.stubEnv("VITE_ADMIN_MIRROR_URL", "not a URL")
+
+    render(<AdminMirrorPage />)
+
+    expect(screen.getAllByText("Mirror session configuration is invalid.")).toHaveLength(2)
+    expect(screen.getByText("configuration invalid")).toBeTruthy()
+    expect(screen.queryByText("Loading mirror sessions.")).toBeNull()
+    expect(screen.queryByText("connecting")).toBeNull()
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect(TestEventSource.latest).toBeUndefined()
+  })
+
+  test("distinguishes an invalid stream event while retaining decoded sessions", async () => {
+    await renderRetainedMirrorPage()
+    act(() => {
+      TestEventSource.latest?.dispatchEvent(new MessageEvent("message", { data: "{" }))
+    })
+
+    expect(await screen.findByText("invalid event")).toBeTruthy()
+    expect(screen.queryByText("offline")).toBeNull()
+    expect(screen.getAllByText("battle:wizard-fireball-counterspell-demo")).toHaveLength(2)
+  })
+
+  test("distinguishes a stream transport failure while retaining decoded sessions", async () => {
+    await renderRetainedMirrorPage()
+    act(() => {
+      TestEventSource.latest?.dispatchEvent(new Event("error"))
+    })
+
+    expect(await screen.findByText("offline")).toBeTruthy()
+    expect(screen.queryByText("invalid event")).toBeNull()
+    expect(screen.getAllByText("battle:wizard-fireball-counterspell-demo")).toHaveLength(2)
   })
 })
 
@@ -286,6 +394,31 @@ function jsonResponse(value: unknown): Response {
     headers: { "content-type": "application/json" },
     status: 200
   })
+}
+
+function dispatchMirrorSession(session: unknown): void {
+  act(() => {
+    TestEventSource.latest?.dispatchEvent(new MessageEvent("message", { data: JSON.stringify(session) }))
+  })
+}
+
+async function renderRetainedMirrorPage(): Promise<void> {
+  fetchMock.mockResolvedValue(jsonResponse({ sessions: [rawDetailedSessionState()] }))
+  render(<AdminMirrorPage />)
+  expect(await screen.findAllByText("battle:wizard-fireball-counterspell-demo")).toHaveLength(2)
+}
+
+function deferredFetchResponse(): {
+  readonly promise: Promise<Response>
+  readonly succeed: (response: Response) => void
+} {
+  const deferred = Effect.runSync(Deferred.make<Response>())
+  return {
+    promise: Effect.runPromise(Deferred.await(deferred)),
+    succeed: (response) => {
+      Effect.runSync(Deferred.succeed(deferred, response))
+    }
+  }
 }
 
 function sessionState(input: {
@@ -329,7 +462,7 @@ function rawSessionState(input: { readonly mirrorSessionId?: string; readonly se
 
 function rawDetailedSessionState() {
   const base = rawSessionState({ sequence: 1 })
-  const battle = Either.getOrThrow(battlePresentedCheckpointFrontierEnvelope(WIZARD_BATTLE_DEMO_STEPS[0].session))
+  const battle = Result.getOrThrow(battlePresentedCheckpointFrontierEnvelope(WIZARD_BATTLE_DEMO_STEPS[0].session))
   const result = {
     ...base,
     envelope: {

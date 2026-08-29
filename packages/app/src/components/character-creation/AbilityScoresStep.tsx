@@ -2,7 +2,7 @@ import type { CreationFill, CreationHole, SupportedAbilityScoreMethod } from "@d
 import { BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY } from "@dnd/character-creation-runtime"
 import { ABILITIES, type Ability } from "@dnd/shared/game-facts"
 import { STANDARD_ARRAY_SCORES, totalPointBuyCost } from "@dnd/shared-algebras/ability-score-algebra"
-import { Either, Option } from "effect"
+import { Option, Result } from "effect"
 import { useState } from "react"
 
 import { type AbilityScoreInput, abilityScoresFill } from "#/components/character-creation/characterCreationRuntime.ts"
@@ -102,9 +102,9 @@ export function AbilityScoresStep({
           </div>
           <button
             className="rounded-md border border-amber-500 px-4 py-2 text-sm text-amber-200 transition hover:bg-amber-500/10 disabled:cursor-not-allowed disabled:opacity-40"
-            disabled={abilityScoreFill == null || Either.isLeft(abilityScoreFill)}
+            disabled={abilityScoreFill == null || Result.isFailure(abilityScoreFill)}
             onClick={() => {
-              if (abilityScoreFill != null && Either.isRight(abilityScoreFill)) onFill(abilityScoreFill.right)
+              if (abilityScoreFill != null && Result.isSuccess(abilityScoreFill)) onFill(abilityScoreFill.success)
             }}
             type="button"
           >
