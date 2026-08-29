@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-magic-suppression-emanation
 
 module battleRuntimeAntimagicSuppression {
+  import battleRuntimeMagicSuppression.* from "./battle-runtime-magic-suppression"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
@@ -36,8 +37,14 @@ module battleRuntimeAntimagicSuppression {
     activeEffectKind: OngoingSpellActiveEffectKind,
     effectId: int,
   ): bool =
-    antimagicSuppressedOngoingSpellEffects(state)
-      .contains(OngoingSpellActiveEffectRef({ activeEffectKind: activeEffectKind, effectId: effectId }))
+    all {
+      not(ongoingEffectFunctions({
+        insideSuppressionArea: true,
+        exemptSource: false,
+      })),
+      antimagicSuppressedOngoingSpellEffects(state)
+        .contains(OngoingSpellActiveEffectRef({ activeEffectKind: activeEffectKind, effectId: effectId })),
+    }
 
   pure def resolveAntimagicFieldOngoingSpellSuppression(
     state: BattleState,

@@ -1,13 +1,8 @@
 // -*- mode: Bluespec; -*-
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-haste-positive
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-haste-positive
 
-module spellHastePositiveEffectsCore {
-  // RAW anchors:
-  // - Spells/Descriptions-E-L.md: Haste.
-  // - UBIQUITOUS_LANGUAGE.md: Speed, Armor Class, Action Lifecycle, and
-  //   Multiattack/Extra Attack.
-
+module compositeTargetBuffCore {
   type StandardAction =
     | AttackAction
     | DashAction
@@ -27,7 +22,7 @@ module spellHastePositiveEffectsCore {
     | AdvantageRoll
     | DisadvantageRoll
 
-  type HastePositiveEffectFacts = {
+  type CompositeTargetBuffFacts = {
     speedRatioNumerator: int,
     speedRatioDenominator: int,
     armorClassBonus: int,
@@ -35,12 +30,12 @@ module spellHastePositiveEffectsCore {
     savingThrowRollMode: RollMode,
   }
 
-  type HasteExtraActionFacts = {
+  type RestrictedAdditionalActionFacts = {
     requestedAction: StandardAction,
     attackCount: int,
   }
 
-  pure def hastePositiveEffectFacts: HastePositiveEffectFacts = {
+  pure def compositeTargetBuffFacts: CompositeTargetBuffFacts = {
     speedRatioNumerator: 2,
     speedRatioDenominator: 1,
     armorClassBonus: 2,
@@ -48,7 +43,9 @@ module spellHastePositiveEffectsCore {
     savingThrowRollMode: AdvantageRoll,
   }
 
-  pure def hasteExtraActionAllowsAction(requestedAction: StandardAction): bool =
+  pure def restrictedAdditionalActionAllows(
+    requestedAction: StandardAction
+  ): bool =
     requestedAction.in(Set(
       AttackAction,
       DashAction,
@@ -57,40 +54,42 @@ module spellHastePositiveEffectsCore {
       UtilizeAction
     ))
 
-  pure def legalHasteExtraActionFacts(facts: HasteExtraActionFacts): bool =
+  pure def legalRestrictedAdditionalAction(
+    facts: RestrictedAdditionalActionFacts
+  ): bool =
     if (facts.requestedAction == AttackAction)
       facts.attackCount == 1
     else
       all {
-        hasteExtraActionAllowsAction(facts.requestedAction),
+        restrictedAdditionalActionAllows(facts.requestedAction),
         facts.attackCount == 0,
       }
 
-  pure def hasteExtraActionPermitsAdditionalAttacks(
-    facts: HasteExtraActionFacts
+  pure def restrictedAdditionalActionPermitsExtraAttacks(
+    facts: RestrictedAdditionalActionFacts
   ): bool =
     facts.requestedAction == AttackAction and facts.attackCount != 1
 
-  pure def hasteDoublesSpeed(facts: HastePositiveEffectFacts): bool =
+  pure def compositeTargetBuffDoublesSpeed(
+    facts: CompositeTargetBuffFacts
+  ): bool =
     facts.speedRatioNumerator == 2 and facts.speedRatioDenominator == 1
 
-  pure def hastePositiveEffectsValid(
-    facts: HastePositiveEffectFacts
-  ): bool =
+  pure def compositeTargetBuffValid(facts: CompositeTargetBuffFacts): bool =
     all {
-      hasteDoublesSpeed(facts),
+      compositeTargetBuffDoublesSpeed(facts),
       facts.armorClassBonus == 2,
       facts.savingThrowAbility == DexterityAbility,
       facts.savingThrowRollMode == AdvantageRoll,
     }
 
-  pure def hastePositiveProfileAdmitted(
-    effectFacts: HastePositiveEffectFacts,
-    actionFacts: HasteExtraActionFacts
+  pure def compositeTargetBuffProfileAdmitted(
+    effectFacts: CompositeTargetBuffFacts,
+    actionFacts: RestrictedAdditionalActionFacts
   ): bool =
     all {
-      hastePositiveEffectsValid(effectFacts),
-      legalHasteExtraActionFacts(actionFacts),
-      not(hasteExtraActionPermitsAdditionalAttacks(actionFacts)),
+      compositeTargetBuffValid(effectFacts),
+      legalRestrictedAdditionalAction(actionFacts),
+      not(restrictedAdditionalActionPermitsExtraAttacks(actionFacts)),
     }
 }
