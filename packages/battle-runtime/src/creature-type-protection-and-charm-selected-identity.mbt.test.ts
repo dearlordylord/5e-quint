@@ -687,6 +687,25 @@ describe("Protection relevant-effect selected occurrence identity", () => {
         },
       }),
     ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)({
+        checkpoint: encoded.checkpoint,
+        frontier: {
+          kind: "holes",
+          subject: focusedFrontier.subject,
+          holes: [
+            {
+              kind: "areaWindStrength",
+              holeId: "battle:protection:unrelated-wind",
+              holeInstanceKey: "battle:protection:unrelated-wind",
+              label: "Unrelated wind strength",
+              areaId: "area:protection:unrelated",
+            },
+          ],
+          continuation: { kind: "ordinaryReplay" },
+        },
+      }),
+    ).toThrow();
   });
 
   it("round-trips the stat-block-owned low-level source binding and rejects a contradictory effect kind", () => {

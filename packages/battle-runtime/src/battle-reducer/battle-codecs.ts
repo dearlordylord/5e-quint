@@ -8153,13 +8153,27 @@ function serializedSubjectHolesMatchSelectedOccurrence(
   );
   const matches =
     selectedOccurrenceRefs.length === 1 &&
-    (holes.length > 0 ||
-      (holes.length === 0 &&
-        selectedOccurrenceSubjectRequiresNoOccurrenceHole(subject))) &&
-    holeOccurrenceRefs.every(
-      (effectRef) => effectRef === selectedOccurrenceRefs[0],
-    );
+    (holeOccurrenceRefs.length > 0
+      ? holeOccurrenceRefs.every(
+          (effectRef) => effectRef === selectedOccurrenceRefs[0],
+        )
+      : holes.length === 0
+        ? selectedOccurrenceSubjectRequiresNoOccurrenceHole(subject)
+        : selectedOccurrenceSubjectAllowsReferenceFreeHoles(subject, holes));
   return matches;
+}
+
+function selectedOccurrenceSubjectAllowsReferenceFreeHoles(
+  subject: EncodedBattleSubject,
+  holes: readonly EncodedBattleHole[],
+): boolean {
+  return Match.value(subject).pipe(
+    Match.when(
+      { tag: "runtimeCommand", command: "disperseCloudkill" },
+      () => holes.length === 1 && holes[0]?.kind === "areaWindStrength",
+    ),
+    Match.orElse(() => false),
+  );
 }
 
 function selectedOccurrenceSubjectRequiresNoOccurrenceHole(

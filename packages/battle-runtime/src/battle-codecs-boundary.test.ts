@@ -1421,6 +1421,40 @@ describe("battle codec execution-reference boundaries", () => {
     expect(Result.isSuccess(decoded)).toBe(expected === "Right");
   });
 
+  test("accepts only the exact Cloudkill wind-strength hole pair", () => {
+    if (fixture.envelope.frontier.kind !== "acts") {
+      throw new Error("Expected the codec Acts frontier.");
+    }
+    const cloudkillAct = fixture.envelope.frontier.acts.find(
+      (act) =>
+        act.subject.tag === "runtimeCommand" &&
+        act.subject.command === "disperseCloudkill",
+    );
+    if (cloudkillAct === undefined) {
+      throw new Error("Expected the Cloudkill dispersal act.");
+    }
+    expect(cloudkillAct.initialHoles).toHaveLength(1);
+    expect(() =>
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
+        fixture.envelope,
+      ),
+    ).not.toThrow();
+    expectEnvelopeDecodeLeft({
+      ...fixture.envelope,
+      frontier: {
+        ...fixture.envelope.frontier,
+        acts: fixture.envelope.frontier.acts.map((act) =>
+          act === cloudkillAct
+            ? {
+                ...act,
+                initialHoles: [...act.initialHoles, ...act.initialHoles],
+              }
+            : act,
+        ),
+      },
+    });
+  });
+
   test.each([
     [
       "spellDamageReduction",
