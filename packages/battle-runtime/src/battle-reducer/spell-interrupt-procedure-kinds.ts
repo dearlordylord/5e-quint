@@ -2,7 +2,7 @@ export const TRIGGERED_REACTION_SPELL_PROCEDURE_CANDIDATES = [
   "triggeredArmorDefense",
   "saveGatedDamage",
   "fallingCreatureMitigationReaction",
-  "counterspell",
+  "spellCastInterruptionReaction",
 ] as const;
 export type TriggeredReactionSpellProcedureCandidate =
   (typeof TRIGGERED_REACTION_SPELL_PROCEDURE_CANDIDATES)[number];
@@ -41,7 +41,7 @@ export function isTriggeredReactionSpellInvocation<
   return (
     invocation.procedure === "triggeredArmorDefense" ||
     invocation.procedure === "fallingCreatureMitigationReaction" ||
-    invocation.procedure === "counterspell"
+    invocation.procedure === "spellCastInterruptionReaction"
   );
 }
 
