@@ -45,6 +45,7 @@ import {
   resolveBattleSubject,
   wizardId,
   wizardSpellcasting,
+  spellRecord,
 } from "./battle-runtime.test-support.ts";
 import {
   BattleInterruptDecisionFrontierSchema,
@@ -234,7 +235,17 @@ function codecFixture() {
         combatantId: wizardId,
         displayName: "Codec Caster",
         initiative: 20,
-        spellcasting: wizardSpellcasting(),
+        spellcasting: wizardSpellcasting({
+          preparedSpells: [
+            spellRecord("magic_missile"),
+            spellRecord("insect_plague"),
+            spellRecord("cloudkill"),
+          ],
+          spellSlots: [
+            { spellLevel: 1, count: 2 },
+            { spellLevel: 5, count: 2 },
+          ],
+        }),
       }),
       skeletonCreatureInit({ initiative: 10 }),
     ],
@@ -270,6 +281,19 @@ function codecFixture() {
   );
   if (sourceBinding === undefined)
     throw new Error("Expected the save-gated source to be bound.");
+  const persistentAreaSource = (spellId: "insect_plague" | "cloudkill") => {
+    const persistentSource = characterContext.spellPresentationSources.find(
+      (candidate) =>
+        candidate.invocation.procedure === "persistentAreaSaveDamage" &&
+        candidate.invocation.spell.id === spellId,
+    );
+    if (persistentSource === undefined) {
+      throw new Error(`Expected the ${spellId} presentation source.`);
+    }
+    return persistentSource;
+  };
+  const insectPlagueSource = persistentAreaSource("insect_plague");
+  const cloudkillSource = persistentAreaSource("cloudkill");
   const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
     state: session.state,
     occurrences: [
@@ -495,7 +519,7 @@ function codecFixture() {
         effect: {
           kind: "persistentAreaSaveDamage",
           lifecycle: { kind: "stationary" },
-          sourceProcedureRef: source.procedureRef,
+          sourceProcedureRef: insectPlagueSource.procedureRef,
           sourceCombatantId: wizardId,
           appearanceOccurrence: {
             actorId: wizardId,
@@ -518,7 +542,7 @@ function codecFixture() {
           lifecycle: {
             kind: "sourceTurnTranslation",
           },
-          sourceProcedureRef: source.procedureRef,
+          sourceProcedureRef: cloudkillSource.procedureRef,
           sourceCombatantId: wizardId,
           appearanceOccurrence: {
             actorId: wizardId,
@@ -736,6 +760,8 @@ function codecFixture() {
     envelope,
     snapshot: envelope.checkpoint,
     sourceProcedureRef: source.procedureRef,
+    insectPlagueSourceProcedureRef: insectPlagueSource.procedureRef,
+    cloudkillSourceProcedureRef: cloudkillSource.procedureRef,
     effectRef: nextAttackEffectRef(wizardId),
     targetEffectRef: nextAttackEffectRef(skeletonId),
     spellDamageReductionEffectRef: activeEffectRef("spellDamageReduction"),
@@ -947,20 +973,31 @@ const savingThrowCases: readonly CodecCase[] = [
   ),
   ...(
     [
-      ["persistentAreaSaveDamage", fixture.persistentAreaSaveDamageEffectRef],
-      ["persistentAreaSaveDamage", fixture.cloudkillEffectRef],
+      [
+        "persistentAreaSaveDamage",
+        fixture.persistentAreaSaveDamageEffectRef,
+        "stationary",
+        "area:codec-insect-plague",
+      ],
+      [
+        "persistentAreaSaveDamage",
+        fixture.cloudkillEffectRef,
+        "translating",
+        "area:codec-cloudkill",
+      ],
     ] as const
-  ).map(([variant, effectRef]) =>
-    successCase(
+  ).map(([variant, effectRef, topology, areaId]) =>
+    failureCase(
       variant,
       saving(variant, variant, "con", {
         ...source,
+        sourceProcedureRef:
+          topology === "stationary"
+            ? fixture.insectPlagueSourceProcedureRef
+            : fixture.cloudkillSourceProcedureRef,
+        topology,
         effectRef,
-        areaId: battleAreaId(
-          variant === "persistentAreaSaveDamage"
-            ? "area:codec-insect-plague"
-            : "area:codec-cloudkill",
-        ),
+        areaId: battleAreaId(areaId),
         trigger: "entersArea",
         save: save("con"),
       }),
@@ -987,7 +1024,7 @@ const savingThrowCases: readonly CodecCase[] = [
     "linkedDefenseResistanceDamageShareSeparation",
     hole("linkedDefenseResistanceDamageShareSeparation", {
       kind: "targetSpatialFacts",
-      linkedDefenseResistanceDamageShareSeparation: {
+      linkedEffectSeparation: {
         sourceCombatantId: wizardId,
         targetId: skeletonId,
         sourceProcedureRef: fixture.sourceProcedureRef,
@@ -1150,12 +1187,14 @@ const rolledDiceCases: readonly CodecCase[] = [
       },
     }),
   ),
-  successCase(
+  failureCase(
     "persistentAreaSaveDamage",
     rolled("persistentAreaSaveDamage", {
       critical: false,
       persistentAreaSaveDamage: {
         ...source,
+        sourceProcedureRef: fixture.insectPlagueSourceProcedureRef,
+        topology: "stationary",
         effectRef: fixture.persistentAreaSaveDamageEffectRef,
         areaId: battleAreaId("area:codec-insect-plague"),
         trigger: "entersArea",
@@ -1163,12 +1202,14 @@ const rolledDiceCases: readonly CodecCase[] = [
       },
     }),
   ),
-  successCase(
+  failureCase(
     "persistentAreaSaveDamage",
     rolled("persistentAreaSaveDamage", {
       critical: false,
       persistentAreaSaveDamage: {
         ...source,
+        sourceProcedureRef: fixture.cloudkillSourceProcedureRef,
+        topology: "translating",
         effectRef: fixture.cloudkillEffectRef,
         areaId: battleAreaId("area:codec-cloudkill"),
         trigger: "entersArea",
@@ -1412,7 +1453,10 @@ describe("battle codec execution-reference boundaries", () => {
     )(
       replaceActHole(fixture.envelope, fixture.sourceProcedureRef, replacement),
     );
-    expect(Result.isSuccess(decoded)).toBe(expected === "Success");
+    expect(
+      Result.isSuccess(decoded),
+      Result.isFailure(decoded) ? String(decoded.failure) : undefined,
+    ).toBe(expected === "Success");
   });
 
   test("accepts only the exact Cloudkill wind-strength hole pair", () => {

@@ -869,24 +869,6 @@ describe("battle boundary admission owners", () => {
           damage: { expr: { dice: 1, dieSize: 4 }, damageType: "piercing" },
         },
       }),
-      codecRolled("persistentAreaSaveDamage", {
-        persistentAreaSaveDamage: {
-          ...codecSource,
-          effectRef: occurrenceRef("persistentAreaSaveDamage"),
-          areaId: battleAreaId("boundary-insect"),
-          trigger: "entersArea",
-          damage: { expr: { dice: 1, dieSize: 6 }, damageType: "piercing" },
-        },
-      }),
-      codecRolled("cloudkill", {
-        persistentAreaSaveDamage: {
-          ...codecSource,
-          effectRef: occurrenceRef("persistentAreaSaveDamage"),
-          areaId: battleAreaId("boundary-cloudkill"),
-          trigger: "entersArea",
-          damage: { expr: { dice: 1, dieSize: 6 }, damageType: "poison" },
-        },
-      }),
     ];
     for (const replacement of codecHoles) {
       const candidate = {
