@@ -471,6 +471,134 @@ describe("MCP Battle roster lifecycle boundaries", () => {
     );
   });
 
+  test("reports lifecycle operations that require an active Battle", () => {
+    const setup = startInitialSetupBattle();
+    const add = handleToolCall(setup.root, "battle_lifecycle", {
+      operation: {
+        kind: "addCombatant",
+        combatant: {
+          kind: "statBlock",
+          statBlockId: "stat_block_goblin_warrior",
+          combatantId: "setup-add",
+          initiative: 4,
+          ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+          admissionSource: { kind: "encounterParticipant" },
+        },
+      },
+    });
+    expect(readToolPayload(add)).toMatchObject({
+      details: {
+        code: "BATTLE_LIFECYCLE_ACTIVE_BATTLE_REQUIRED",
+        operation: "addCombatant",
+      },
+    });
+
+    const remove = handleToolCall(setup.root, "battle_lifecycle", {
+      operation: {
+        kind: "removeCombatant",
+        combatantId: "setup-goblin",
+      },
+    });
+    expect(readToolPayload(remove)).toMatchObject({
+      details: {
+        code: "BATTLE_LIFECYCLE_ACTIVE_BATTLE_REQUIRED",
+        operation: "removeCombatant",
+      },
+    });
+
+    const active = startCharacterBattle();
+    expect(
+      readToolPayload(
+        handleToolCall(active.root, "battle_lifecycle", {
+          operation: {
+            kind: "applyInitiativeSwap",
+            sourceId: "roster-character",
+            candidateId: "roster-goblin",
+            candidateWitness: { tag: "willingAlly" },
+          },
+        }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "INITIAL_INITIATIVE_SETUP_ALREADY_FINALIZED",
+        battleId: "battle:roster-boundary",
+      },
+    });
+  });
+
+  test("reports Character Session registry conflicts while starting a Battle", () => {
+    const root = createMcpPlaySessionRoot();
+    const characterId = makeCharacterId("character:roster-start-conflict");
+    const available = availableCharacterSession({
+      characterId,
+      build: armorClassBuild({
+        startingClass: "class_fighter",
+        armor: "armor_chain_mail",
+        shield: true,
+        weapon: "weapon_longsword",
+      }),
+      currentHp: Hp(10),
+      tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
+      conditions: [],
+      companion: { tag: "none" },
+      unitLibrary: root.unitLibrary,
+    });
+    if (Either.isLeft(available)) {
+      throw new Error(available.left.message);
+    }
+    root.sessionStore.characters.set(available.right);
+    root.sessionStore.characters.setAll = () =>
+      Either.left({ tag: "unknownCharacterSession", characterId });
+
+    expect(
+      readToolPayload(
+        handleToolCall(root, "start_battle", {
+          battleId: "battle:roster-start-conflict",
+          initiativeMode: "direct",
+          companionAdmissions: [],
+          initialCombatants: [
+            {
+              kind: "characterSession",
+              characterId,
+              combatantId: "start-conflict-character",
+              initiative: 18,
+              ammunitionStocks: [],
+            },
+          ],
+        }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "BATTLE_STATE_TRANSITION_INVALID",
+        transition: {
+          tag: "battleStateCharacterSessionRegistryConflict",
+          affectedCharacterIds: [characterId],
+        },
+      },
+    });
+    expect(root.sessionStore.battleSession).toBeNull();
+  });
+
+  test("reports Character Session registry conflicts while ending a Battle", () => {
+    const { root, characterId } = startCharacterBattle();
+    root.sessionStore.characters.setAll = () =>
+      Either.left({ tag: "unknownCharacterSession", characterId });
+
+    expect(
+      readToolPayload(handleToolCall(root, "end_battle", {})),
+    ).toMatchObject({
+      details: {
+        code: "BATTLE_STATE_TRANSITION_INVALID",
+        transition: {
+          tag: "battleStateCharacterSessionRegistryConflict",
+          affectedCharacterIds: [characterId],
+        },
+      },
+    });
+    expect(root.sessionStore.battleSession).not.toBeNull();
+  });
+
   test("maps an ordinary fill against an interrupt frontier to a pending-fill error", () => {
     const { root, subject } = pendingInterruptTransaction();
     const session = root.sessionStore.battleSession;
