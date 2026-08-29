@@ -1,29 +1,29 @@
-// Standalone Flaming Sphere state machine used by the focused MBT parity driver.
+// Standalone ram-movable persistent area state machine used by the focused MBT parity driver.
 
 import { Match } from "effect";
 
 import { expendActionSpellSlot } from "./action-spell-slot-expenditure.ts";
 import { applyDamageToPositiveHitPoints } from "./focused-spell-hazard-damage.ts";
 import {
-  flamingSphereDamageAfterSave,
-  flamingSphereMoveDistanceAccepted,
+  ramMovablePersistentAreaDamageAfterSave,
+  ramMovablePersistentAreaMoveDistanceAccepted,
 } from "./flaming-sphere-hazard-ram.ts";
 
 const byTag = Match.discriminator("tag");
 
-export const FLAMING_SPHERE_HAZARD_RAM_ENTRYPOINTS = [
+export const RAM_MOVABLE_PERSISTENT_AREA_HAZARD_RAM_ENTRYPOINTS = [
   "endWithinFiveFeet",
   "ram",
 ] as const;
-export type FlamingSphereHazardRamEntrypoint =
-  (typeof FLAMING_SPHERE_HAZARD_RAM_ENTRYPOINTS)[number];
+export type RamMovablePersistentAreaHazardRamEntrypoint =
+  (typeof RAM_MOVABLE_PERSISTENT_AREA_HAZARD_RAM_ENTRYPOINTS)[number];
 
-const FLAMING_SPHERE_DURATION_TICKS = 10;
-const FLAMING_SPHERE_RAM_MAX_MOVE_FEET = 30;
-const FLAMING_SPHERE_MINIMUM_SLOT_LEVEL = 2;
-const FLAMING_SPHERE_BASE_DAMAGE_DICE = 2;
+const RAM_MOVABLE_PERSISTENT_AREA_DURATION_TICKS = 10;
+const RAM_MOVABLE_PERSISTENT_AREA_RAM_MAX_MOVE_FEET = 30;
+const RAM_MOVABLE_PERSISTENT_AREA_MINIMUM_SLOT_LEVEL = 2;
+const RAM_MOVABLE_PERSISTENT_AREA_BASE_DAMAGE_DICE = 2;
 
-export type FlamingSphereHazardRamState = {
+export type RamMovablePersistentAreaHazardRamState = {
   readonly actionAvailable: boolean;
   readonly casterHasBonusAction: boolean;
   readonly sphere:
@@ -49,21 +49,21 @@ export type FlamingSphereHazardRamState = {
   };
 };
 
-export type FlamingSphereHazardRamFills = {
+export type RamMovablePersistentAreaHazardRamFills = {
   readonly savingThrowSucceeded: boolean;
   readonly rolledDamage: number;
   readonly moveFeet: number;
 };
 
-function flamingSphereDamageDice(slotLevel: number): number {
+function ramMovablePersistentAreaDamageDice(slotLevel: number): number {
   return (
-    FLAMING_SPHERE_BASE_DAMAGE_DICE +
+    RAM_MOVABLE_PERSISTENT_AREA_BASE_DAMAGE_DICE +
     Math.floor(slotLevel) -
-    FLAMING_SPHERE_MINIMUM_SLOT_LEVEL
+    RAM_MOVABLE_PERSISTENT_AREA_MINIMUM_SLOT_LEVEL
   );
 }
 
-function flamingSphereDamageRollAccepted(input: {
+function ramMovablePersistentAreaDamageRollAccepted(input: {
   readonly rolledDamage: number;
   readonly damageDice: number;
 }): boolean {
@@ -74,14 +74,14 @@ function flamingSphereDamageRollAccepted(input: {
   );
 }
 
-export function resolveFlamingSphereCast(
-  state: FlamingSphereHazardRamState,
+export function resolveRamMovablePersistentAreaCast(
+  state: RamMovablePersistentAreaHazardRamState,
   slotLevel: number,
-): FlamingSphereHazardRamState {
+): RamMovablePersistentAreaHazardRamState {
   const slotExpenditure = expendActionSpellSlot(
     state,
     slotLevel,
-    FLAMING_SPHERE_MINIMUM_SLOT_LEVEL,
+    RAM_MOVABLE_PERSISTENT_AREA_MINIMUM_SLOT_LEVEL,
   );
   if (slotExpenditure === undefined) return state;
   return {
@@ -89,24 +89,24 @@ export function resolveFlamingSphereCast(
     actionAvailable: false,
     sphere: {
       tag: "active",
-      damageDice: flamingSphereDamageDice(slotLevel),
-      durationTicks: FLAMING_SPHERE_DURATION_TICKS,
-      ramMaxMoveFeet: FLAMING_SPHERE_RAM_MAX_MOVE_FEET,
+      damageDice: ramMovablePersistentAreaDamageDice(slotLevel),
+      durationTicks: RAM_MOVABLE_PERSISTENT_AREA_DURATION_TICKS,
+      ramMaxMoveFeet: RAM_MOVABLE_PERSISTENT_AREA_RAM_MAX_MOVE_FEET,
     },
     ...slotExpenditure,
   };
 }
 
-export function applyFlamingSphereHazardDamage(
-  state: FlamingSphereHazardRamState,
+export function applyRamMovablePersistentAreaHazardDamage(
+  state: RamMovablePersistentAreaHazardRamState,
   damageDice: number,
   fills: Pick<
-    FlamingSphereHazardRamFills,
+    RamMovablePersistentAreaHazardRamFills,
     "savingThrowSucceeded" | "rolledDamage"
   >,
-): FlamingSphereHazardRamState {
+): RamMovablePersistentAreaHazardRamState {
   if (
-    !flamingSphereDamageRollAccepted({
+    !ramMovablePersistentAreaDamageRollAccepted({
       rolledDamage: fills.rolledDamage,
       damageDice,
     })
@@ -117,27 +117,31 @@ export function applyFlamingSphereHazardDamage(
     ...state,
     targetVitals: applyDamageToPositiveHitPoints(
       state.targetVitals,
-      flamingSphereDamageAfterSave(fills),
+      ramMovablePersistentAreaDamageAfterSave(fills),
     ),
   };
 }
 
-export function resolveFlamingSphereHazardRam(
-  state: FlamingSphereHazardRamState,
-  entrypoint: FlamingSphereHazardRamEntrypoint,
-  fills: FlamingSphereHazardRamFills,
-): FlamingSphereHazardRamState {
+export function resolveRamMovablePersistentAreaHazardRam(
+  state: RamMovablePersistentAreaHazardRamState,
+  entrypoint: RamMovablePersistentAreaHazardRamEntrypoint,
+  fills: RamMovablePersistentAreaHazardRamFills,
+): RamMovablePersistentAreaHazardRamState {
   return Match.value(state.sphere).pipe(
     byTag("absent", () => state),
     byTag("active", (sphere) =>
       Match.value(entrypoint).pipe(
         Match.when("endWithinFiveFeet", () =>
-          applyFlamingSphereHazardDamage(state, sphere.damageDice, fills),
+          applyRamMovablePersistentAreaHazardDamage(
+            state,
+            sphere.damageDice,
+            fills,
+          ),
         ),
         Match.when("ram", () => {
           if (
             !state.casterHasBonusAction ||
-            !flamingSphereMoveDistanceAccepted({
+            !ramMovablePersistentAreaMoveDistanceAccepted({
               moveFeet: fills.moveFeet,
               maxMoveFeet: sphere.ramMaxMoveFeet,
             })
@@ -145,7 +149,11 @@ export function resolveFlamingSphereHazardRam(
             return state;
           }
           return {
-            ...applyFlamingSphereHazardDamage(state, sphere.damageDice, fills),
+            ...applyRamMovablePersistentAreaHazardDamage(
+              state,
+              sphere.damageDice,
+              fills,
+            ),
             casterHasBonusAction: false,
           };
         }),

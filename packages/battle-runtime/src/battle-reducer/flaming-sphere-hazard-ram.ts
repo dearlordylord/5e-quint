@@ -1,16 +1,16 @@
-// Flaming Sphere hazard and ram runtime calculations.
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE
+// ram-movable persistent area hazard and ram runtime calculations.
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.RAM_MOVABLE_PERSISTENT_AREA_HAZARD_LIFECYCLE
 
 import { halfDamageAfterSuccessfulSave } from "./focused-spell-hazard-damage.ts";
 
-export function flamingSphereDamageAfterSave(input: {
+export function ramMovablePersistentAreaDamageAfterSave(input: {
   readonly rolledDamage: number;
   readonly savingThrowSucceeded: boolean;
 }): number {
   return halfDamageAfterSuccessfulSave(input);
 }
 
-export function flamingSphereMoveDistanceAccepted(input: {
+export function ramMovablePersistentAreaMoveDistanceAccepted(input: {
   readonly moveFeet: number;
   readonly maxMoveFeet: number;
 }): boolean {

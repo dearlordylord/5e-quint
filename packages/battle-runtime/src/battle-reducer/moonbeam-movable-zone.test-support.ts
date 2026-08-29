@@ -1,4 +1,4 @@
-// Standalone Moonbeam state machine used by the focused MBT parity driver.
+// Standalone MovablePersistentArea state machine used by the focused MBT parity driver.
 
 import { Match } from "effect";
 
@@ -10,25 +10,25 @@ import {
 import { expendActionSpellSlot } from "./action-spell-slot-expenditure.ts";
 import { applyDamageToPositiveHitPoints } from "./focused-spell-hazard-damage.ts";
 import {
-  moonbeamDamageAfterSave,
-  moonbeamMoveDistanceAccepted,
+  movablePersistentAreaDamageAfterSave,
+  movablePersistentAreaMoveDistanceAccepted,
 } from "./moonbeam-movable-zone.ts";
 
 const byTag = Match.discriminator("tag");
 
-export type MoonbeamSaveTrigger =
+export type MovablePersistentAreaSaveTrigger =
   | "appearsInArea"
   | "areaMovesIntoSpace"
   | "entersArea"
   | "endsTurnInArea";
 
-const MOONBEAM_DURATION_TICKS = 10;
-const MOONBEAM_REPOSITION_MAX_MOVE_FEET = 60;
-const MOONBEAM_MINIMUM_SLOT_LEVEL = 2;
-const MOONBEAM_BASE_DAMAGE_DICE = 2;
-const MOONBEAM_DAMAGE_DIE_SIZE = 10;
+const MOVABLE_PERSISTENT_AREA_DURATION_TICKS = 10;
+const MOVABLE_PERSISTENT_AREA_REPOSITION_MAX_MOVE_FEET = 60;
+const MOVABLE_PERSISTENT_AREA_MINIMUM_SLOT_LEVEL = 2;
+const MOVABLE_PERSISTENT_AREA_BASE_DAMAGE_DICE = 2;
+const MOVABLE_PERSISTENT_AREA_DAMAGE_DIE_SIZE = 10;
 
-export type MoonbeamMovableZoneCreatureVitals = {
+export type MovablePersistentAreaMovableZoneCreatureVitals = {
   readonly kind: "monsterCreature";
   readonly hitPoints: number;
   readonly hitPointMaximum: number;
@@ -37,7 +37,7 @@ export type MoonbeamMovableZoneCreatureVitals = {
   readonly unconscious: boolean;
 };
 
-export type MoonbeamMovableZone =
+export type MovablePersistentAreaMovableZone =
   | { readonly tag: "absent" }
   | {
       readonly tag: "active";
@@ -47,66 +47,67 @@ export type MoonbeamMovableZone =
       readonly savedThisTurn: boolean;
     };
 
-export type MoonbeamTargetShapeShiftState =
+export type MovablePersistentAreaTargetShapeShiftState =
   | {
       readonly tag: "unsuppressed";
       readonly shapeShift: BattleShapeShiftedRuntimeState;
     }
   | { readonly tag: "suppressedTrueForm" };
 
-export type MoonbeamMovableZoneState = {
+export type MovablePersistentAreaMovableZoneState = {
   readonly actionAvailable: boolean;
-  readonly zone: MoonbeamMovableZone;
+  readonly zone: MovablePersistentAreaMovableZone;
   readonly slotLedger: {
     readonly slotLevel: number;
     readonly slotsRemaining: number;
   };
   readonly slotSpellCastThisTurn: boolean;
-  readonly targetVitals: MoonbeamMovableZoneCreatureVitals;
-  readonly targetShapeShift: MoonbeamTargetShapeShiftState;
+  readonly targetVitals: MovablePersistentAreaMovableZoneCreatureVitals;
+  readonly targetShapeShift: MovablePersistentAreaTargetShapeShiftState;
 };
 
-const MOONBEAM_TARGET_TRUE_FORM = {
+const MOVABLE_PERSISTENT_AREA_TARGET_TRUE_FORM = {
   tag: "unsuppressed",
   shapeShift: trueFormRuntimeState(),
-} as const satisfies MoonbeamTargetShapeShiftState;
-const MOONBEAM_TARGET_SUPPRESSED_TRUE_FORM = {
+} as const satisfies MovablePersistentAreaTargetShapeShiftState;
+const MOVABLE_PERSISTENT_AREA_TARGET_SUPPRESSED_TRUE_FORM = {
   tag: "suppressedTrueForm",
-} as const satisfies MoonbeamTargetShapeShiftState;
+} as const satisfies MovablePersistentAreaTargetShapeShiftState;
 
-type MoonbeamMovableZoneFills = {
+type MovablePersistentAreaMovableZoneFills = {
   readonly savingThrowSucceeded: boolean;
   readonly rolledDamage: number;
   readonly moveFeet: number;
 };
 
-function moonbeamDamageDice(slotLevel: number): number {
+function movablePersistentAreaDamageDice(slotLevel: number): number {
   return (
-    MOONBEAM_BASE_DAMAGE_DICE +
+    MOVABLE_PERSISTENT_AREA_BASE_DAMAGE_DICE +
     Math.floor(slotLevel) -
-    MOONBEAM_MINIMUM_SLOT_LEVEL
+    MOVABLE_PERSISTENT_AREA_MINIMUM_SLOT_LEVEL
   );
 }
 
-function moonbeamDamageRollAccepted(input: {
+function movablePersistentAreaDamageRollAccepted(input: {
   readonly rolledDamage: number;
   readonly damageDice: number;
 }): boolean {
   return (
     Number.isInteger(input.rolledDamage) &&
     input.rolledDamage >= input.damageDice &&
-    input.rolledDamage <= input.damageDice * MOONBEAM_DAMAGE_DIE_SIZE
+    input.rolledDamage <=
+      input.damageDice * MOVABLE_PERSISTENT_AREA_DAMAGE_DIE_SIZE
   );
 }
 
-export function resolveMoonbeamCast(
-  state: MoonbeamMovableZoneState,
+export function resolveMovablePersistentAreaCast(
+  state: MovablePersistentAreaMovableZoneState,
   slotLevel: number,
-): MoonbeamMovableZoneState {
+): MovablePersistentAreaMovableZoneState {
   const slotExpenditure = expendActionSpellSlot(
     state,
     slotLevel,
-    MOONBEAM_MINIMUM_SLOT_LEVEL,
+    MOVABLE_PERSISTENT_AREA_MINIMUM_SLOT_LEVEL,
   );
   if (slotExpenditure === undefined) return state;
   return {
@@ -114,26 +115,26 @@ export function resolveMoonbeamCast(
     actionAvailable: false,
     zone: {
       tag: "active",
-      damageDice: moonbeamDamageDice(slotLevel),
-      durationTicks: MOONBEAM_DURATION_TICKS,
-      repositionMaxMoveFeet: MOONBEAM_REPOSITION_MAX_MOVE_FEET,
+      damageDice: movablePersistentAreaDamageDice(slotLevel),
+      durationTicks: MOVABLE_PERSISTENT_AREA_DURATION_TICKS,
+      repositionMaxMoveFeet: MOVABLE_PERSISTENT_AREA_REPOSITION_MAX_MOVE_FEET,
       savedThisTurn: false,
     },
     ...slotExpenditure,
   };
 }
 
-export function resolveMoonbeamSave(
-  state: MoonbeamMovableZoneState,
-  _trigger: MoonbeamSaveTrigger,
-  fills: MoonbeamMovableZoneFills,
-): MoonbeamMovableZoneState {
+export function resolveMovablePersistentAreaSave(
+  state: MovablePersistentAreaMovableZoneState,
+  _trigger: MovablePersistentAreaSaveTrigger,
+  fills: MovablePersistentAreaMovableZoneFills,
+): MovablePersistentAreaMovableZoneState {
   return Match.value(state.zone).pipe(
     byTag("absent", () => state),
     byTag("active", (zone) => {
       if (
         zone.savedThisTurn ||
-        !moonbeamDamageRollAccepted({
+        !movablePersistentAreaDamageRollAccepted({
           rolledDamage: fills.rolledDamage,
           damageDice: zone.damageDice,
         })
@@ -144,31 +145,31 @@ export function resolveMoonbeamSave(
         ...state,
         targetVitals: applyDamageToPositiveHitPoints(
           state.targetVitals,
-          moonbeamDamageAfterSave(fills),
+          movablePersistentAreaDamageAfterSave(fills),
         ),
       };
-      const shifted = applyMoonbeamShapeShiftRider(
+      const shifted = applyMovablePersistentAreaShapeShiftRider(
         damaged,
         fills.savingThrowSucceeded,
       );
       return {
         ...shifted,
-        zone: moonbeamZoneWithSavedThisTurn(shifted.zone, true),
+        zone: movablePersistentAreaZoneWithSavedThisTurn(shifted.zone, true),
       };
     }),
     Match.exhaustive,
   );
 }
 
-export function resolveMoonbeamReposition(
-  state: MoonbeamMovableZoneState,
+export function resolveMovablePersistentAreaReposition(
+  state: MovablePersistentAreaMovableZoneState,
   moveFeet: number,
-): MoonbeamMovableZoneState {
+): MovablePersistentAreaMovableZoneState {
   return Match.value(state.zone).pipe(
     byTag("absent", () => state),
     byTag("active", (zone) =>
       !state.actionAvailable ||
-      !moonbeamMoveDistanceAccepted({
+      !movablePersistentAreaMoveDistanceAccepted({
         moveFeet,
         maxMoveFeet: zone.repositionMaxMoveFeet,
       })
@@ -179,22 +180,22 @@ export function resolveMoonbeamReposition(
   );
 }
 
-export function resetMoonbeamSavedThisTurn(
-  state: MoonbeamMovableZoneState,
-): MoonbeamMovableZoneState {
+export function resetMovablePersistentAreaSavedThisTurn(
+  state: MovablePersistentAreaMovableZoneState,
+): MovablePersistentAreaMovableZoneState {
   return {
     ...state,
-    zone: moonbeamZoneWithSavedThisTurn(state.zone, false),
+    zone: movablePersistentAreaZoneWithSavedThisTurn(state.zone, false),
   };
 }
 
-export function beginMoonbeamLaterTurn(
-  state: MoonbeamMovableZoneState,
-): MoonbeamMovableZoneState {
+export function beginMovablePersistentAreaLaterTurn(
+  state: MovablePersistentAreaMovableZoneState,
+): MovablePersistentAreaMovableZoneState {
   return Match.value(state.zone).pipe(
     byTag("absent", () => state),
     byTag("active", () => ({
-      ...resetMoonbeamSavedThisTurn(state),
+      ...resetMovablePersistentAreaSavedThisTurn(state),
       actionAvailable: true,
       slotSpellCastThisTurn: false,
     })),
@@ -202,29 +203,32 @@ export function beginMoonbeamLaterTurn(
   );
 }
 
-export function resolveMoonbeamCylinderExit(
-  state: MoonbeamMovableZoneState,
-): MoonbeamMovableZoneState {
+export function resolveMovablePersistentAreaCylinderExit(
+  state: MovablePersistentAreaMovableZoneState,
+): MovablePersistentAreaMovableZoneState {
   return Match.value(state.targetShapeShift).pipe(
     byTag("unsuppressed", () => state),
     byTag("suppressedTrueForm", () => ({
       ...state,
-      targetShapeShift: MOONBEAM_TARGET_TRUE_FORM,
+      targetShapeShift: MOVABLE_PERSISTENT_AREA_TARGET_TRUE_FORM,
     })),
     Match.exhaustive,
   );
 }
 
-export function resolveMoonbeamSpellCleanup(
-  state: MoonbeamMovableZoneState,
-): MoonbeamMovableZoneState {
-  return { ...resolveMoonbeamCylinderExit(state), zone: { tag: "absent" } };
+export function resolveMovablePersistentAreaSpellCleanup(
+  state: MovablePersistentAreaMovableZoneState,
+): MovablePersistentAreaMovableZoneState {
+  return {
+    ...resolveMovablePersistentAreaCylinderExit(state),
+    zone: { tag: "absent" },
+  };
 }
 
-function applyMoonbeamShapeShiftRider(
-  state: MoonbeamMovableZoneState,
+function applyMovablePersistentAreaShapeShiftRider(
+  state: MovablePersistentAreaMovableZoneState,
   savingThrowSucceeded: boolean,
-): MoonbeamMovableZoneState {
+): MovablePersistentAreaMovableZoneState {
   if (savingThrowSucceeded) return state;
   return Match.value(state.targetShapeShift).pipe(
     byTag("suppressedTrueForm", () => state),
@@ -236,7 +240,7 @@ function applyMoonbeamShapeShiftRider(
         byTag("alreadyTrueForm", () => state),
         byTag("revertedToTrueForm", () => ({
           ...state,
-          targetShapeShift: MOONBEAM_TARGET_SUPPRESSED_TRUE_FORM,
+          targetShapeShift: MOVABLE_PERSISTENT_AREA_TARGET_SUPPRESSED_TRUE_FORM,
         })),
         Match.exhaustive,
       );
@@ -245,10 +249,10 @@ function applyMoonbeamShapeShiftRider(
   );
 }
 
-function moonbeamZoneWithSavedThisTurn(
-  zone: MoonbeamMovableZone,
+function movablePersistentAreaZoneWithSavedThisTurn(
+  zone: MovablePersistentAreaMovableZone,
   savedThisTurn: boolean,
-): MoonbeamMovableZone {
+): MovablePersistentAreaMovableZone {
   return Match.value(zone).pipe(
     byTag("absent", () => zone),
     byTag("active", (active) => ({ ...active, savedThisTurn })),
