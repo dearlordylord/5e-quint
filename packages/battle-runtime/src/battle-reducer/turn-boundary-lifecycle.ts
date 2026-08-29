@@ -1,17 +1,17 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-controlledVerticalSuspension-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard spell.invocation-grease-ground-hazard spell.invocation-flaming-sphere-hazard-ram spell.invocation-gust-of-wind-line spell.invocation-web-restraint-hazard spell.invocation-insect-plague-area-hazard spell.invocation-cloudkill-area-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-persistent-area-save-composite-area-hazard spell.invocation-persistent-area-save-condition spell.invocation-ram-movable-persistent-area-hazard-ram spell.invocation-directional-persistent-area-line spell.invocation-persistent-area-save-condition-escape-hazard spell.invocation-stationary-persistent-area-area-hazard spell.invocation-translatingPersistentArea-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-command-halt-grovel spell.invocation-command-drop-held-object spell.invocation-command-approach-route spell.invocation-command-flee-route
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-jump-movement-replacement spell.invocation-moonbeam-movable-zone spell.invocation-spike-growth-movement-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-jump-movement-replacement spell.invocation-movablePersistentArea-movable-zone spell.invocation-area-movement-distance-damage-movement-hazard
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.CONTROLLED_VERTICAL_SUSPENSIOND_CREATURE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
@@ -26,8 +26,8 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE BATTLE.COMMAND.OPTION_AND_NEXT_TURN
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.STATIONARY_PERSISTENT_AREA_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.TRANSLATING_PERSISTENT_AREA_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.RAM_MOVABLE_PERSISTENT_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE BATTLE.SPELL.MOVABLE_PERSISTENT_AREA_MOVABLE_ZONE_LIFECYCLE BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.d20-test-natural-one-reroll unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import { enableMovementActionBonusActionExclusion } from "@dnd/shared-algebras/action-economy-algebra";
@@ -61,7 +61,7 @@ import type {
   BattleAttackDamageDispositionHole,
   BattleCreatureState,
   BattleConcentrationSavingThrowHole,
-  BattleCloudkillMovementHole,
+  BattlePersistentAreaSourceTurnTranslationHole,
   BattleStartTurnOccurrenceOrderHole,
   BattleFill,
   BattleFlySpeedGrantEndFallCleanupFrame,
@@ -147,11 +147,11 @@ import {
 import { saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole } from "./hideous-laughter-repeat-save.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import {
-  cloudkillMovementSavingThrowHoleId,
-  resolveCloudkillMovementSaveDamageSequence,
-  type CloudkillAreaHazardEffect,
-  type CloudkillMovementSaveDamageRequest,
-  type CloudkillMovementSaveDamageSequenceResult,
+  persistentAreaSourceTurnTranslationSavingThrowHoleId,
+  resolveTranslatingPersistentAreaMovementSaveDamageSequence,
+  type TranslatingPersistentAreaAreaHazardEffect,
+  type TranslatingPersistentAreaMovementSaveDamageRequest,
+  type TranslatingPersistentAreaMovementSaveDamageSequenceResult,
 } from "./persistent-area-save-damage.ts";
 import { isBattleContinuationComparableFill } from "./battle-fill-equality.ts";
 import {
@@ -180,11 +180,11 @@ import {
 import { spellGrantedActionResourceTurnResources } from "./spell-granted-action-resource.ts";
 import {
   expireBattleLightEmitters,
-  resetAllCloudkillSavedThisTurn,
-  resetAllInsectPlagueSavedThisTurn,
-  resetAllMoonbeamSavedThisTurn,
-  resetAllSleetStormSavedThisTurn,
-  resetAllWebSavedThisTurn,
+  resetAllTranslatingPersistentAreaSavedThisTurn,
+  resetAllStationaryPersistentAreaSavedThisTurn,
+  resetAllMovablePersistentAreaSavedThisTurn,
+  resetAllPersistentAreaSaveCompositeSavedThisTurn,
+  resetAllPersistentAreaSaveConditionEscapeSavedThisTurn,
   tickDurationBattleLightEmitters,
 } from "./spells-active-effects.ts";
 import {
@@ -257,54 +257,57 @@ type ResolvedTurnBoundaryFills = {
     BattleFill,
     { readonly kind: "attackDamageDisposition" }
   >[];
-  readonly spellTurnStartDamageEffectsBeforeCloudkillMovement: readonly SpellTurnStartDamageEffect[];
-  readonly turnStartTemporaryHitPointProcedureRefsBeforeCloudkillMovement: readonly BattleProcedureExecutionRef[];
+  readonly spellTurnStartDamageEffectsBeforeTranslatingPersistentAreaMovement: readonly SpellTurnStartDamageEffect[];
+  readonly turnStartTemporaryHitPointProcedureRefsBeforeTranslatingPersistentAreaMovement: readonly BattleProcedureExecutionRef[];
   readonly deferStatBlockRecharge: boolean;
 };
 
-const CLOUDKILL_START_TURN_MOVE_FEET = movementFeet(10);
+const TRANSLATING_PERSISTENT_AREA_START_TURN_MOVE_FEET = movementFeet(10);
 
-function cloudkillStartTurnMovementEffects(
+function translatingPersistentAreaStartTurnMovementEffects(
   state: BattleState,
   sourceCombatantId: CombatantId,
-): readonly CloudkillAreaHazardEffect[] {
+): readonly TranslatingPersistentAreaAreaHazardEffect[] {
   return [...state.combatants.values()].flatMap((combatant) =>
     combatant.activeEffects.filter(
-      (effect): effect is CloudkillAreaHazardEffect =>
-        effect.kind === "cloudkillAreaHazard" &&
+      (effect): effect is TranslatingPersistentAreaAreaHazardEffect =>
+        effect.kind === "persistentAreaSaveDamage" &&
         effect.sourceCombatantId === sourceCombatantId,
     ),
   );
 }
 
-function cloudkillStartTurnMovementHole(
+function translatingPersistentAreaStartTurnMovementHole(
   sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"],
   effect: Pick<
-    CloudkillAreaHazardEffect,
+    TranslatingPersistentAreaAreaHazardEffect,
     "effectRef" | "sourceCombatantId" | "sourceProcedureRef" | "areaId"
   >,
-): BattleCloudkillMovementHole {
-  const key = cloudkillStartTurnMovementHoleKey(sourceTurn, effect.effectRef);
+): BattlePersistentAreaSourceTurnTranslationHole {
+  const key = translatingPersistentAreaStartTurnMovementHoleKey(
+    sourceTurn,
+    effect.effectRef,
+  );
   return {
-    kind: "cloudkillMovement",
+    kind: "persistentAreaSourceTurnTranslation",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: "Cloudkill start-turn movement",
+    label: "TranslatingPersistentArea start-turn movement",
     sourceCombatantId: effect.sourceCombatantId,
     sourceProcedureRef: effect.sourceProcedureRef,
     effectRef: effect.effectRef,
     areaId: effect.areaId,
-    distanceFeet: CLOUDKILL_START_TURN_MOVE_FEET,
+    distanceFeet: TRANSLATING_PERSISTENT_AREA_START_TURN_MOVE_FEET,
     directionRequirement: "awayFromSource",
     requiresTableSpatialFact: true,
   };
 }
 
-function cloudkillStartTurnMovementHoleKey(
+function translatingPersistentAreaStartTurnMovementHoleKey(
   sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"],
-  effectRef: CloudkillAreaHazardEffect["effectRef"],
+  effectRef: TranslatingPersistentAreaAreaHazardEffect["effectRef"],
 ): string {
-  return `battle:cloudkill-start-turn-movement:${effectRef}:${Number(sourceTurn.round)}`;
+  return `battle:translatingPersistentArea-start-turn-movement:${effectRef}:${Number(sourceTurn.round)}`;
 }
 
 type StartTurnOccurrenceOption =
@@ -378,8 +381,8 @@ type StartTurnOccurrenceHandle =
       >;
     }
   | {
-      readonly kind: "cloudkillMovement";
-      readonly effect: CloudkillAreaHazardEffect;
+      readonly kind: "persistentAreaSourceTurnTranslation";
+      readonly effect: TranslatingPersistentAreaAreaHazardEffect;
     };
 
 function startTurnOccurrenceOption(
@@ -396,15 +399,15 @@ function startTurnOccurrenceOption(
   };
 }
 
-function cloudkillMovementOccurrenceOption(
-  effect: Pick<CloudkillAreaHazardEffect, "effectRef">,
+function persistentAreaSourceTurnTranslationOccurrenceOption(
+  effect: Pick<TranslatingPersistentAreaAreaHazardEffect, "effectRef">,
 ): StartTurnOccurrenceOption {
   return startTurnOccurrenceOption(
-    "cloudkillMovement",
+    "persistentAreaSourceTurnTranslation",
     {
       effectRef: effect.effectRef,
     },
-    "Move Cloudkill",
+    "Move TranslatingPersistentArea",
   );
 }
 
@@ -439,8 +442,8 @@ function startTurnOccurrenceOptionForHandle(
     Match.when({ kind: "spellTurnStartDamageAndSave" }, ({ effect }) =>
       spellTurnStartDamageOccurrenceOption(effect),
     ),
-    Match.when({ kind: "cloudkillMovement" }, ({ effect }) =>
-      cloudkillMovementOccurrenceOption(effect),
+    Match.when({ kind: "persistentAreaSourceTurnTranslation" }, ({ effect }) =>
+      persistentAreaSourceTurnTranslationOccurrenceOption(effect),
     ),
     Match.exhaustive,
   );
@@ -469,9 +472,9 @@ function startTurnOccurrenceHandlesForState(
           ? { kind: "spellConditionTurnStartDamage", effect }
           : { kind: "spellTurnStartDamageAndSave", effect },
     ),
-    ...cloudkillStartTurnMovementEffects(state, actorId).map(
+    ...translatingPersistentAreaStartTurnMovementEffects(state, actorId).map(
       (effect): StartTurnOccurrenceHandle => ({
-        kind: "cloudkillMovement",
+        kind: "persistentAreaSourceTurnTranslation",
         effect,
       }),
     ),
@@ -499,23 +502,24 @@ function startTurnOccurrenceOrderHoleKey(
   return `battle:start-turn-occurrence-order:${sourceTurn.actorId}:${Number(sourceTurn.round)}`;
 }
 
-type CloudkillMovementFill = Extract<
+type TranslatingPersistentAreaMovementFill = Extract<
   BattleFill,
-  { readonly kind: "cloudkillMovement" }
+  { readonly kind: "persistentAreaSourceTurnTranslation" }
 >;
 
-type CloudkillMovementBoundary = {
-  readonly effect: CloudkillAreaHazardEffect;
-  readonly hole: BattleCloudkillMovementHole;
+type TranslatingPersistentAreaMovementBoundary = {
+  readonly effect: TranslatingPersistentAreaAreaHazardEffect;
+  readonly hole: BattlePersistentAreaSourceTurnTranslationHole;
 };
 
-type CloudkillMovementBoundaryRequest = CloudkillMovementBoundary & {
-  readonly fill: CloudkillMovementFill;
-};
+type TranslatingPersistentAreaMovementBoundaryRequest =
+  TranslatingPersistentAreaMovementBoundary & {
+    readonly fill: TranslatingPersistentAreaMovementFill;
+  };
 
-function cloudkillMovementAffectedCombatantIssue(
+function persistentAreaSourceTurnTranslationAffectedCombatantIssue(
   state: BattleState,
-  fills: readonly CloudkillMovementFill[],
+  fills: readonly TranslatingPersistentAreaMovementFill[],
 ): "duplicate" | "missing" | null {
   if (
     fills.some(
@@ -535,22 +539,22 @@ function cloudkillMovementAffectedCombatantIssue(
     : null;
 }
 
-type CloudkillMovementSaveSubject = Extract<
+type TranslatingPersistentAreaMovementSaveSubject = Extract<
   BattleSubject,
   {
     readonly tag: "runtimeCommand";
-    readonly command: "cloudkillAreaHazardSave";
+    readonly command: "persistentAreaSaveDamageSave";
   }
 >;
 
-function cloudkillMovementSaveSubject(
+function persistentAreaSourceTurnTranslationSaveSubject(
   targetId: CombatantId,
-  effect: CloudkillAreaHazardEffect,
-): CloudkillMovementSaveSubject {
+  effect: TranslatingPersistentAreaAreaHazardEffect,
+): TranslatingPersistentAreaMovementSaveSubject {
   return {
     tag: "runtimeCommand",
     actorId: targetId,
-    command: "cloudkillAreaHazardSave",
+    command: "persistentAreaSaveDamageSave",
     areaMembershipTrigger: {
       kind: "areaMovesIntoSpace",
       areaId: effect.areaId,
@@ -559,20 +563,20 @@ function cloudkillMovementSaveSubject(
   };
 }
 
-function cloudkillMovementSaveDamageRequests(
-  requests: readonly CloudkillMovementBoundaryRequest[],
-): readonly CloudkillMovementSaveDamageRequest[] {
+function persistentAreaSourceTurnTranslationSaveDamageRequests(
+  requests: readonly TranslatingPersistentAreaMovementBoundaryRequest[],
+): readonly TranslatingPersistentAreaMovementSaveDamageRequest[] {
   return requests.flatMap(({ effect, fill }) => {
     return fill.value.affectedCombatantIdsInResolutionOrder.map((targetId) => ({
       effect,
-      subject: cloudkillMovementSaveSubject(targetId, effect),
+      subject: persistentAreaSourceTurnTranslationSaveSubject(targetId, effect),
     }));
   });
 }
 
-function cloudkillMovementCheckpointMatchesRequest(
+function persistentAreaSourceTurnTranslationCheckpointMatchesRequest(
   checkpoint: BattleStartTurnOccurrenceSequenceCheckpoint,
-  request: CloudkillMovementSaveDamageRequest,
+  request: TranslatingPersistentAreaMovementSaveDamageRequest,
 ): boolean {
   return (
     request.effect.effectRef === checkpoint.child.effectRef &&
@@ -580,7 +584,7 @@ function cloudkillMovementCheckpointMatchesRequest(
   );
 }
 
-function completeCloudkillMovementSequenceResume(
+function completeTranslatingPersistentAreaMovementSequenceResume(
   state: BattleState,
   fills: readonly BattleFill[],
   checkpoint: BattleStartTurnOccurrenceSequenceCheckpoint,
@@ -622,7 +626,7 @@ function resolveStartTurnOccurrenceSuffixAfterMovement(input: {
       kind: "replay",
       previouslyAcceptedMovementFillHoleIds: [
         holeId(
-          cloudkillStartTurnMovementHoleKey(
+          translatingPersistentAreaStartTurnMovementHoleKey(
             checkpoint.sourceTurn,
             checkpoint.child.effectRef,
           ),
@@ -687,7 +691,8 @@ function validateRetainedStartTurnSequence(input: {
     Match.when({ kind: "single" }, ({ occurrenceId }) => {
       if (
         occurrenceId !==
-          cloudkillMovementOccurrenceOption(checkpoint.child).occurrenceId ||
+          persistentAreaSourceTurnTranslationOccurrenceOption(checkpoint.child)
+            .occurrenceId ||
         orderFills.length > 0
       ) {
         return {
@@ -748,9 +753,10 @@ function validateRetainedStartTurnSequence(input: {
     Match.exhaustive,
   );
   if (sequence.tag === "invalid") return sequence;
-  const currentOccurrenceId = cloudkillMovementOccurrenceOption(
-    checkpoint.child,
-  ).occurrenceId;
+  const currentOccurrenceId =
+    persistentAreaSourceTurnTranslationOccurrenceOption(
+      checkpoint.child,
+    ).occurrenceId;
   const currentIndex =
     sequence.value.occurrenceIds.indexOf(currentOccurrenceId);
   if (currentIndex === -1) {
@@ -820,40 +826,45 @@ function validateCompletedStartTurnPrefix(input: {
   }
   return { tag: "valid", value: completedPrefixHoleIds };
 }
-function resolveCloudkillMovementSequenceResume(input: {
+function resolveTranslatingPersistentAreaMovementSequenceResume(input: {
   readonly resolution: EndTurnResolutionInput;
   readonly parent: ReplayParentContinuation;
   readonly checkpoint: BattleStartTurnOccurrenceSequenceCheckpoint;
 }): BattleResolutionResult {
   const { checkpoint, resolution } = input;
-  const sourceTurnIssue = cloudkillMovementResumeSourceTurnIssue(
-    resolution.state,
-    checkpoint,
-  );
+  const sourceTurnIssue =
+    persistentAreaSourceTurnTranslationResumeSourceTurnIssue(
+      resolution.state,
+      checkpoint,
+    );
   if (sourceTurnIssue !== null) return sourceTurnIssue;
 
-  const boundaries = cloudkillStartTurnMovementEffects(
+  const boundaries = translatingPersistentAreaStartTurnMovementEffects(
     resolution.state,
     checkpoint.sourceTurn.actorId,
   ).map(
-    (effect): CloudkillMovementBoundary => ({
+    (effect): TranslatingPersistentAreaMovementBoundary => ({
       effect,
-      hole: cloudkillStartTurnMovementHole(checkpoint.sourceTurn, effect),
+      hole: translatingPersistentAreaStartTurnMovementHole(
+        checkpoint.sourceTurn,
+        effect,
+      ),
     }),
   );
   const movementFills = resolution.fills.filter(
-    (fill): fill is CloudkillMovementFill => fill.kind === "cloudkillMovement",
+    (fill): fill is TranslatingPersistentAreaMovementFill =>
+      fill.kind === "persistentAreaSourceTurnTranslation",
   );
   const checkpointBoundary = boundaries.find(
     ({ effect }) => effect.effectRef === checkpoint.child.effectRef,
   );
   if (checkpointBoundary === undefined) {
-    return completeCloudkillMovementSequenceResume(
+    return completeTranslatingPersistentAreaMovementSequenceResume(
       resolution.state,
       resolution.fills,
       checkpoint,
       input.parent,
-      [cloudkillMovementSavingThrowHoleId(checkpoint)],
+      [persistentAreaSourceTurnTranslationSavingThrowHoleId(checkpoint)],
     );
   }
   const checkpointMovementFills = movementFills.filter(
@@ -863,50 +874,54 @@ function resolveCloudkillMovementSequenceResume(input: {
     return invalidResult(
       resolution.state,
       "staleSubject",
-      "Cloudkill movement continuation no longer has its exact movement facts.",
+      "TranslatingPersistentArea movement continuation no longer has its exact movement facts.",
     );
   }
-  const affectedCombatantIssue = cloudkillMovementAffectedCombatantIssue(
-    resolution.state,
-    checkpointMovementFills,
-  );
+  const affectedCombatantIssue =
+    persistentAreaSourceTurnTranslationAffectedCombatantIssue(
+      resolution.state,
+      checkpointMovementFills,
+    );
   if (affectedCombatantIssue !== null) {
     return invalidResult(
       resolution.state,
       "invalidFill",
-      cloudkillMovementAffectedCombatantMessage(affectedCombatantIssue),
+      persistentAreaSourceTurnTranslationAffectedCombatantMessage(
+        affectedCombatantIssue,
+      ),
     );
   }
-  const requests = cloudkillMovementSaveDamageRequests([
+  const requests = persistentAreaSourceTurnTranslationSaveDamageRequests([
     {
       ...checkpointBoundary,
       fill: checkpointMovementFills[0]!,
     },
   ]);
-  const pending = cloudkillMovementPendingResumeRequests({
+  const pending = persistentAreaSourceTurnTranslationPendingResumeRequests({
     state: resolution.state,
     checkpoint,
     requests,
   });
   if (pending.tag === "invalid") return pending.result;
   if (pending.tag === "complete") {
-    return completeCloudkillMovementSequenceResume(
+    return completeTranslatingPersistentAreaMovementSequenceResume(
       resolution.state,
       resolution.fills,
       checkpoint,
       input.parent,
-      [cloudkillMovementSavingThrowHoleId(checkpoint)],
+      [persistentAreaSourceTurnTranslationSavingThrowHoleId(checkpoint)],
     );
   }
-  const checkpointRequestPending = cloudkillMovementCheckpointMatchesRequest(
-    checkpoint,
-    pending.firstRequest,
-  );
-  const resumed = resolveCloudkillMovementSaveDamageSequence({
+  const checkpointRequestPending =
+    persistentAreaSourceTurnTranslationCheckpointMatchesRequest(
+      checkpoint,
+      pending.firstRequest,
+    );
+  const resumed = resolveTranslatingPersistentAreaMovementSaveDamageSequence({
     advancedState: resolution.state,
     parent: input.parent,
     requests: pending.requests,
-    replayPlan: cloudkillMovementResumeReplayPlan(
+    replayPlan: persistentAreaSourceTurnTranslationResumeReplayPlan(
       checkpoint,
       checkpointRequestPending,
     ),
@@ -914,7 +929,7 @@ function resolveCloudkillMovementSequenceResume(input: {
   if (resumed.tag === "result") {
     return resumed.result;
   }
-  return completeCloudkillMovementSequenceResume(
+  return completeTranslatingPersistentAreaMovementSequenceResume(
     resumed.state,
     resolution.fills,
     checkpoint,
@@ -928,18 +943,18 @@ function resolveCloudkillMovementSequenceResume(input: {
   );
 }
 
-function cloudkillMovementResumeReplayPlan(
+function persistentAreaSourceTurnTranslationResumeReplayPlan(
   checkpoint: BattleStartTurnOccurrenceSequenceCheckpoint,
   checkpointRequestPending: boolean,
 ): Parameters<
-  typeof resolveCloudkillMovementSaveDamageSequence
+  typeof resolveTranslatingPersistentAreaMovementSaveDamageSequence
 >[0]["replayPlan"] {
   return checkpointRequestPending
     ? { kind: "advancedPrefixAtCheckpoint", checkpoint }
     : { kind: "advancedPrefixAfterCheckpoint", checkpoint };
 }
 
-function cloudkillMovementResumeSourceTurnIssue(
+function persistentAreaSourceTurnTranslationResumeSourceTurnIssue(
   state: BattleState,
   checkpoint: BattleStartTurnOccurrenceSequenceCheckpoint,
 ): BattleResolutionResult | null {
@@ -952,36 +967,39 @@ function cloudkillMovementResumeSourceTurnIssue(
   return invalidResult(
     state,
     "staleSubject",
-    "Cloudkill movement continuation no longer matches its source turn.",
+    "TranslatingPersistentArea movement continuation no longer matches its source turn.",
   );
 }
 
-function cloudkillMovementAffectedCombatantMessage(
+function persistentAreaSourceTurnTranslationAffectedCombatantMessage(
   issue: NonNullable<
-    ReturnType<typeof cloudkillMovementAffectedCombatantIssue>
+    ReturnType<typeof persistentAreaSourceTurnTranslationAffectedCombatantIssue>
   >,
 ): string {
   return issue === "duplicate"
-    ? "Cloudkill movement affected combatants must be unique."
-    : "Cloudkill movement affected combatants must exist in the battle.";
+    ? "TranslatingPersistentArea movement affected combatants must be unique."
+    : "TranslatingPersistentArea movement affected combatants must exist in the battle.";
 }
 
-type CloudkillMovementPendingResumeRequests =
+type TranslatingPersistentAreaMovementPendingResumeRequests =
   | { readonly tag: "complete" }
   | { readonly tag: "invalid"; readonly result: BattleResolutionResult }
   | {
       readonly tag: "pending";
-      readonly requests: readonly CloudkillMovementSaveDamageRequest[];
-      readonly firstRequest: CloudkillMovementSaveDamageRequest;
+      readonly requests: readonly TranslatingPersistentAreaMovementSaveDamageRequest[];
+      readonly firstRequest: TranslatingPersistentAreaMovementSaveDamageRequest;
     };
 
-function cloudkillMovementPendingResumeRequests(input: {
+function persistentAreaSourceTurnTranslationPendingResumeRequests(input: {
   readonly state: BattleState;
   readonly checkpoint: BattleStartTurnOccurrenceSequenceCheckpoint;
-  readonly requests: readonly CloudkillMovementSaveDamageRequest[];
-}): CloudkillMovementPendingResumeRequests {
+  readonly requests: readonly TranslatingPersistentAreaMovementSaveDamageRequest[];
+}): TranslatingPersistentAreaMovementPendingResumeRequests {
   const checkpointIndex = input.requests.findIndex((request) =>
-    cloudkillMovementCheckpointMatchesRequest(input.checkpoint, request),
+    persistentAreaSourceTurnTranslationCheckpointMatchesRequest(
+      input.checkpoint,
+      request,
+    ),
   );
   if (checkpointIndex === -1) {
     return {
@@ -989,7 +1007,7 @@ function cloudkillMovementPendingResumeRequests(input: {
       result: invalidResult(
         input.state,
         "staleSubject",
-        "Cloudkill movement continuation no longer has its exact affected occurrence.",
+        "TranslatingPersistentArea movement continuation no longer has its exact affected occurrence.",
       ),
     };
   }
@@ -1007,7 +1025,7 @@ function cloudkillMovementPendingResumeRequests(input: {
       result: invalidResult(
         input.state,
         "staleSubject",
-        "Cloudkill movement continuation lost its pending occurrence.",
+        "TranslatingPersistentArea movement continuation lost its pending occurrence.",
       ),
     };
   }
@@ -1031,8 +1049,8 @@ function resolveEndTurn({
   turnBoundarySaveGatedConditionWithRepeatDamageRepeatSaves,
   concentrationSavingThrows,
   damageDispositions,
-  spellTurnStartDamageEffectsBeforeCloudkillMovement,
-  turnStartTemporaryHitPointProcedureRefsBeforeCloudkillMovement,
+  spellTurnStartDamageEffectsBeforeTranslatingPersistentAreaMovement,
+  turnStartTemporaryHitPointProcedureRefsBeforeTranslatingPersistentAreaMovement,
   deferStatBlockRecharge,
 }: ResolvedTurnBoundaryFills): Extract<
   BattleResolutionResult,
@@ -1179,25 +1197,29 @@ function resolveEndTurn({
     combatantsAfterStartOngoingFeatures,
     nextActorId,
   );
-  const combatantsAfterMoonbeamReset = resetAllMoonbeamSavedThisTurn(
-    combatantsAfterStartEffects,
-  );
-  const combatantsAfterWebSaveReset = resetAllWebSavedThisTurn(
-    combatantsAfterMoonbeamReset,
-  );
-  const combatantsAfterSleetStormSaveReset = resetAllSleetStormSavedThisTurn(
-    combatantsAfterWebSaveReset,
-  );
-  const combatantsAfterInsectPlagueSaveReset =
-    resetAllInsectPlagueSavedThisTurn(combatantsAfterSleetStormSaveReset);
-  const combatantsAfterCloudkillSaveReset = resetAllCloudkillSavedThisTurn(
-    combatantsAfterInsectPlagueSaveReset,
-  );
+  const combatantsAfterMovablePersistentAreaReset =
+    resetAllMovablePersistentAreaSavedThisTurn(combatantsAfterStartEffects);
+  const combatantsAfterPersistentAreaSaveConditionEscapeSaveReset =
+    resetAllPersistentAreaSaveConditionEscapeSavedThisTurn(
+      combatantsAfterMovablePersistentAreaReset,
+    );
+  const combatantsAfterPersistentAreaSaveCompositeSaveReset =
+    resetAllPersistentAreaSaveCompositeSavedThisTurn(
+      combatantsAfterPersistentAreaSaveConditionEscapeSaveReset,
+    );
+  const combatantsAfterStationaryPersistentAreaSaveReset =
+    resetAllStationaryPersistentAreaSavedThisTurn(
+      combatantsAfterPersistentAreaSaveCompositeSaveReset,
+    );
+  const combatantsAfterTranslatingPersistentAreaSaveReset =
+    resetAllTranslatingPersistentAreaSavedThisTurn(
+      combatantsAfterStationaryPersistentAreaSaveReset,
+    );
   const combatantsAfterStartTurnEffects =
     applyStartOfTurnTemporaryHitPointEffects(
-      combatantsAfterCloudkillSaveReset,
+      combatantsAfterTranslatingPersistentAreaSaveReset,
       nextActorId,
-      turnStartTemporaryHitPointProcedureRefsBeforeCloudkillMovement,
+      turnStartTemporaryHitPointProcedureRefsBeforeTranslatingPersistentAreaMovement,
     );
   const combatantsAfterSpellTurnStartDamage = applyStartTurnSpellDamageFills(
     {
@@ -1211,7 +1233,7 @@ function resolveEndTurn({
     concentrationSavingThrows,
     damageDispositions,
     turnBoundarySaveGatedConditionWithRepeatDamageRepeatSaves,
-    spellTurnStartDamageEffectsBeforeCloudkillMovement,
+    spellTurnStartDamageEffectsBeforeTranslatingPersistentAreaMovement,
   ).combatants;
   const durationTick = {
     value: combatantsAfterSpellTurnStartDamage,
@@ -3701,7 +3723,8 @@ function resolveOrderedStartTurnOccurrences(input: {
 }): OrderedStartTurnOccurrenceSequenceResult {
   const accumulation = orderedStartTurnOccurrenceAccumulation(input);
   const movementFills = input.fills.filter(
-    (fill): fill is CloudkillMovementFill => fill.kind === "cloudkillMovement",
+    (fill): fill is TranslatingPersistentAreaMovementFill =>
+      fill.kind === "persistentAreaSourceTurnTranslation",
   );
   for (const occurrenceId of startTurnOccurrenceTraversalIds(input.traversal)) {
     const handle = startTurnOccurrenceHandleForId(
@@ -3832,7 +3855,7 @@ function resolveOrderedStartTurnOccurrenceHandle(input: {
   readonly state: BattleState;
   readonly resultState: BattleState;
   readonly handle: StartTurnOccurrenceHandle;
-  readonly movementFills: readonly CloudkillMovementFill[];
+  readonly movementFills: readonly TranslatingPersistentAreaMovementFill[];
   readonly acceptedHoleIds: ReadonlySet<BattleHoleId>;
   readonly matchedMovementFillHoleIds: ReadonlySet<BattleHoleId>;
 }): OrderedStartTurnOccurrenceSequenceResult {
@@ -3852,8 +3875,11 @@ function resolveOrderedStartTurnOccurrenceHandle(input: {
     Match.when({ kind: "spellTurnStartDamageAndSave" }, (handle) =>
       resolveOrderedSpellTurnStartDamageOccurrence({ ...input, handle }),
     ),
-    Match.when({ kind: "cloudkillMovement" }, (handle) =>
-      resolveOrderedCloudkillMovementOccurrence({ ...input, handle }),
+    Match.when({ kind: "persistentAreaSourceTurnTranslation" }, (handle) =>
+      resolveOrderedTranslatingPersistentAreaMovementOccurrence({
+        ...input,
+        handle,
+      }),
     ),
     Match.exhaustive,
   );
@@ -4108,33 +4134,36 @@ function resolveOrderedSpellTurnStartDamageOccurrence(input: {
     : ordinaryStartTurnOccurrenceAdvance(step.state, step.acceptedHoleIds);
 }
 
-type OrderedCloudkillMovementFillStage =
+type OrderedTranslatingPersistentAreaMovementFillStage =
   | { readonly tag: "result"; readonly result: BattleResolutionResult }
   | { readonly tag: "skipped" }
   | {
       readonly tag: "resolved";
-      readonly effect: CloudkillMovementBoundary["effect"];
-      readonly hole: BattleCloudkillMovementHole;
-      readonly fill: CloudkillMovementFill;
+      readonly effect: TranslatingPersistentAreaMovementBoundary["effect"];
+      readonly hole: BattlePersistentAreaSourceTurnTranslationHole;
+      readonly fill: TranslatingPersistentAreaMovementFill;
     };
 
-function resolveOrderedCloudkillMovementFill(input: {
+function resolveOrderedTranslatingPersistentAreaMovementFill(input: {
   readonly input: OrderedStartTurnOccurrenceInput;
   readonly state: BattleState;
   readonly resultState: BattleState;
   readonly handle: Extract<
     StartTurnOccurrenceHandle,
-    { readonly kind: "cloudkillMovement" }
+    { readonly kind: "persistentAreaSourceTurnTranslation" }
   >;
-  readonly movementFills: readonly CloudkillMovementFill[];
+  readonly movementFills: readonly TranslatingPersistentAreaMovementFill[];
   readonly matchedMovementFillHoleIds: ReadonlySet<BattleHoleId>;
-}): OrderedCloudkillMovementFillStage {
-  const effect = cloudkillStartTurnMovementEffects(
+}): OrderedTranslatingPersistentAreaMovementFillStage {
+  const effect = translatingPersistentAreaStartTurnMovementEffects(
     input.state,
     input.input.sourceTurn.actorId,
   ).find((candidate) => candidate.effectRef === input.handle.effect.effectRef);
   if (effect === undefined) return { tag: "skipped" };
-  const hole = cloudkillStartTurnMovementHole(input.input.sourceTurn, effect);
+  const hole = translatingPersistentAreaStartTurnMovementHole(
+    input.input.sourceTurn,
+    effect,
+  );
   const matchingFills = input.movementFills.filter(
     (fill) => fill.holeId === hole.holeId,
   );
@@ -4149,7 +4178,7 @@ function resolveOrderedCloudkillMovementFill(input: {
         result: invalidResult(
           input.resultState,
           "invalidFill",
-          "Cloudkill movement fill does not match the next ordered occurrence.",
+          "TranslatingPersistentArea movement fill does not match the next ordered occurrence.",
         ),
       };
     }
@@ -4164,40 +4193,43 @@ function resolveOrderedCloudkillMovementFill(input: {
       result: invalidResult(
         input.resultState,
         "invalidFill",
-        "Cloudkill movement fills must match each ordered occurrence exactly once.",
+        "TranslatingPersistentArea movement fills must match each ordered occurrence exactly once.",
       ),
     };
   }
   const fill = matchingFills[0]!;
-  const affectedIssue = cloudkillMovementAffectedCombatantIssue(input.state, [
-    fill,
-  ]);
+  const affectedIssue =
+    persistentAreaSourceTurnTranslationAffectedCombatantIssue(input.state, [
+      fill,
+    ]);
   if (affectedIssue !== null) {
     return {
       tag: "result",
       result: invalidResult(
         input.resultState,
         "invalidFill",
-        cloudkillMovementAffectedCombatantMessage(affectedIssue),
+        persistentAreaSourceTurnTranslationAffectedCombatantMessage(
+          affectedIssue,
+        ),
       ),
     };
   }
   return { tag: "resolved", effect, hole, fill };
 }
 
-function resolveOrderedCloudkillMovementOccurrence(input: {
+function resolveOrderedTranslatingPersistentAreaMovementOccurrence(input: {
   readonly input: OrderedStartTurnOccurrenceInput;
   readonly state: BattleState;
   readonly resultState: BattleState;
   readonly handle: Extract<
     StartTurnOccurrenceHandle,
-    { readonly kind: "cloudkillMovement" }
+    { readonly kind: "persistentAreaSourceTurnTranslation" }
   >;
-  readonly movementFills: readonly CloudkillMovementFill[];
+  readonly movementFills: readonly TranslatingPersistentAreaMovementFill[];
   readonly acceptedHoleIds: ReadonlySet<BattleHoleId>;
   readonly matchedMovementFillHoleIds: ReadonlySet<BattleHoleId>;
 }): OrderedStartTurnOccurrenceSequenceResult {
-  const movement = resolveOrderedCloudkillMovementFill(input);
+  const movement = resolveOrderedTranslatingPersistentAreaMovementFill(input);
   if (movement.tag === "result") return movement;
   if (movement.tag === "skipped") {
     return ordinaryStartTurnOccurrenceAdvance(input.state);
@@ -4208,30 +4240,37 @@ function resolveOrderedCloudkillMovementOccurrence(input: {
       result: invalidResult(
         input.resultState,
         "staleSubject",
-        "Cloudkill movement lost its owning start-turn occurrence sequence.",
+        "TranslatingPersistentArea movement lost its owning start-turn occurrence sequence.",
       ),
     };
   }
-  const resolution = resolveCloudkillMovementSaveDamageSequence({
-    advancedState: input.state,
-    parent: input.input.parent,
-    requests: cloudkillMovementSaveDamageRequests([movement]),
-    replayPlan: {
-      kind: "turnBoundaryReplay",
-      sourceTurn: input.input.sourceTurn,
-      sequence: input.input.traversal,
-      completedPrefixHoleIds: [...input.acceptedHoleIds].sort(),
-      roundDurationCohort: input.input.roundDurationCohort,
+  const resolution = resolveTranslatingPersistentAreaMovementSaveDamageSequence(
+    {
+      advancedState: input.state,
+      parent: input.input.parent,
+      requests: persistentAreaSourceTurnTranslationSaveDamageRequests([
+        movement,
+      ]),
+      replayPlan: {
+        kind: "turnBoundaryReplay",
+        sourceTurn: input.input.sourceTurn,
+        sequence: input.input.traversal,
+        completedPrefixHoleIds: [...input.acceptedHoleIds].sort(),
+        roundDurationCohort: input.input.roundDurationCohort,
+      },
     },
-  });
+  );
   if (resolution.tag === "result") return resolution;
-  return cloudkillMovementOccurrenceAdvance(movement.fill, resolution);
+  return persistentAreaSourceTurnTranslationOccurrenceAdvance(
+    movement.fill,
+    resolution,
+  );
 }
 
-function cloudkillMovementOccurrenceAdvance(
-  fill: CloudkillMovementFill,
+function persistentAreaSourceTurnTranslationOccurrenceAdvance(
+  fill: TranslatingPersistentAreaMovementFill,
   resolution: Extract<
-    CloudkillMovementSaveDamageSequenceResult,
+    TranslatingPersistentAreaMovementSaveDamageSequenceResult,
     { readonly tag: "resolved" }
   >,
 ): OrderedStartTurnOccurrenceAdvanced {
@@ -4883,7 +4922,7 @@ function resolveEndTurnCommandForParent(
   /* v8 ignore stop -- @preserve */
 
   if (input.replayParentPosition !== undefined) {
-    return resolveCloudkillMovementSequenceResume({
+    return resolveTranslatingPersistentAreaMovementSequenceResume({
       resolution: input,
       parent,
       checkpoint: input.replayParentPosition,
@@ -5109,7 +5148,11 @@ function resolveEndTurnCommandForParent(
         ),
     );
   if (missingStartTurnOccurrenceOrderHoles.length > 0) {
-    if (input.fills.some((fill) => fill.kind === "cloudkillMovement")) {
+    if (
+      input.fills.some(
+        (fill) => fill.kind === "persistentAreaSourceTurnTranslation",
+      )
+    ) {
       return invalidResult(
         input.state,
         "invalidFill",
@@ -5322,7 +5365,7 @@ function resolveEndTurnCommandForParent(
   const endTurnDamageRollRequests = endTurnDamageRollCollection.resolved.map(
     ({ request, fill: roll }) => ({ ...request, roll }),
   );
-  const startTurnDamageRollRequestsBeforeCloudkillMovement: readonly {
+  const startTurnDamageRollRequestsBeforeTranslatingPersistentAreaMovement: readonly {
     readonly effect: SpellTurnStartDamageEffect;
     readonly roll: Extract<BattleFill, { readonly kind: "rolledDice" }>;
   }[] = [];
@@ -5431,33 +5474,35 @@ function resolveEndTurnCommandForParent(
     ]);
   }
   const startTurnSaveGatedConditionWithRepeatDamageRepeatSaveChecks =
-    startTurnDamageRollRequestsBeforeCloudkillMovement.map((request) => {
-      /* v8 ignore start -- @preserve -- Internal turn-boundary invariant: startTurnDamageRollRequests can contain an entry only when that effect was read from nextActor. */
-      if (nextActor === undefined) {
-        return { tag: "ok" as const, holes: [] };
-      }
-      /* v8 ignore stop -- @preserve */
-      const damageAmount = spellTurnStartDamageAmount(
-        input.state,
-        nextActor,
-        request.effect,
-        request.roll,
-      );
-      const holes =
-        damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
-          state: input.state,
-          target: nextActor,
-          damageAmount,
-        });
-      return damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck(
-        {
-          state: input.state,
-          target: nextActor,
-          damageAmount,
-          fills: fillsMatchingHoleIds(savingThrowOutcomeFills, holes),
-        },
-      );
-    });
+    startTurnDamageRollRequestsBeforeTranslatingPersistentAreaMovement.map(
+      (request) => {
+        /* v8 ignore start -- @preserve -- Internal turn-boundary invariant: startTurnDamageRollRequests can contain an entry only when that effect was read from nextActor. */
+        if (nextActor === undefined) {
+          return { tag: "ok" as const, holes: [] };
+        }
+        /* v8 ignore stop -- @preserve */
+        const damageAmount = spellTurnStartDamageAmount(
+          input.state,
+          nextActor,
+          request.effect,
+          request.roll,
+        );
+        const holes =
+          damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
+            state: input.state,
+            target: nextActor,
+            damageAmount,
+          });
+        return damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck(
+          {
+            state: input.state,
+            target: nextActor,
+            damageAmount,
+            fills: fillsMatchingHoleIds(savingThrowOutcomeFills, holes),
+          },
+        );
+      },
+    );
   const invalidStartTurnSaveGatedConditionWithRepeatDamageRepeatSaveCheck =
     startTurnSaveGatedConditionWithRepeatDamageRepeatSaveChecks.find(
       (check) => check.tag === "invalid",
@@ -5663,7 +5708,7 @@ function resolveEndTurnCommandForParent(
     }
     /* v8 ignore stop -- @preserve */
   }
-  for (const request of startTurnDamageRollRequestsBeforeCloudkillMovement) {
+  for (const request of startTurnDamageRollRequestsBeforeTranslatingPersistentAreaMovement) {
     const damage = spellTurnStartDamageForEffect(request.effect);
     const validation = validateRolledDiceFillForDiceExpr(
       request.roll,
@@ -5699,26 +5744,28 @@ function resolveEndTurnCommandForParent(
     },
   );
   const startTurnConcentrationHoles =
-    startTurnDamageRollRequestsBeforeCloudkillMovement.flatMap((request) => {
-      const target = nextActor;
-      /* v8 ignore start -- @preserve -- Internal turn-boundary invariant: a start-turn damage request exists only when its target nextActor supplied the source effect. */
-      if (target === undefined) {
-        return [];
-      }
-      /* v8 ignore stop -- @preserve */
-      return spellTurnStartDamageConcentrationSavingThrowHoles({
-        state: input.state,
-        target,
-        effect: request.effect,
-        damageAmount: spellTurnStartDamageAmount(
-          input.state,
+    startTurnDamageRollRequestsBeforeTranslatingPersistentAreaMovement.flatMap(
+      (request) => {
+        const target = nextActor;
+        /* v8 ignore start -- @preserve -- Internal turn-boundary invariant: a start-turn damage request exists only when its target nextActor supplied the source effect. */
+        if (target === undefined) {
+          return [];
+        }
+        /* v8 ignore stop -- @preserve */
+        return spellTurnStartDamageConcentrationSavingThrowHoles({
+          state: input.state,
           target,
-          request.effect,
-          request.roll,
-        ),
-        sourceTurn: nextSourceTurn,
-      });
-    });
+          effect: request.effect,
+          damageAmount: spellTurnStartDamageAmount(
+            input.state,
+            target,
+            request.effect,
+            request.roll,
+          ),
+          sourceTurn: nextSourceTurn,
+        });
+      },
+    );
   const turnBoundaryConcentrationHoles = [
     ...endTurnConcentrationHoles,
     ...startTurnConcentrationHoles,
@@ -5755,8 +5802,9 @@ function resolveEndTurnCommandForParent(
     ...endTurnDamageRollRequests.flatMap((request) =>
       endTurnDamageDispositionHoles(input.state, actorId, [request]),
     ),
-    ...startTurnDamageRollRequestsBeforeCloudkillMovement.flatMap((request) =>
-      startTurnDamageDispositionHoles(input.state, nextSourceTurn, [request]),
+    ...startTurnDamageRollRequestsBeforeTranslatingPersistentAreaMovement.flatMap(
+      (request) =>
+        startTurnDamageDispositionHoles(input.state, nextSourceTurn, [request]),
     ),
   ];
   const damageDispositionValidation = damageDispositionFillsValidation({
@@ -5867,8 +5915,9 @@ function resolveEndTurnCommandForParent(
       concentrationHoleIds.has(fill.holeId),
     ),
     damageDispositions: damageDispositionFills,
-    spellTurnStartDamageEffectsBeforeCloudkillMovement: [],
-    turnStartTemporaryHitPointProcedureRefsBeforeCloudkillMovement: [],
+    spellTurnStartDamageEffectsBeforeTranslatingPersistentAreaMovement: [],
+    turnStartTemporaryHitPointProcedureRefsBeforeTranslatingPersistentAreaMovement:
+      [],
     deferStatBlockRecharge: true,
   });
   const orderedOccurrenceResolution = resolveOrderedStartTurnOccurrences({
@@ -5892,11 +5941,12 @@ function resolveEndTurnCommandForParent(
   if (orderedOccurrenceResolution.tag === "result") {
     return orderedOccurrenceResolution.result;
   }
-  const cloudkillMovementFills = input.fills.filter(
-    (fill): fill is CloudkillMovementFill => fill.kind === "cloudkillMovement",
+  const persistentAreaSourceTurnTranslationFills = input.fills.filter(
+    (fill): fill is TranslatingPersistentAreaMovementFill =>
+      fill.kind === "persistentAreaSourceTurnTranslation",
   );
   if (
-    cloudkillMovementFills.some(
+    persistentAreaSourceTurnTranslationFills.some(
       (fill) =>
         !orderedOccurrenceResolution.matchedMovementFillHoleIds.has(
           fill.holeId,
@@ -5906,7 +5956,7 @@ function resolveEndTurnCommandForParent(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Cloudkill movement fill does not belong to an applicable ordered occurrence.",
+      "TranslatingPersistentArea movement fill does not belong to an applicable ordered occurrence.",
     );
   }
   const orderedOccurrenceHoleIds = orderedOccurrenceResolution.acceptedHoleIds;
@@ -5950,7 +6000,7 @@ function resolveEndTurnCommandForParent(
 
 const END_TURN_FILL_KINDS = [
   "attackDamageDisposition",
-  "cloudkillMovement",
+  "persistentAreaSourceTurnTranslation",
   "startTurnOccurrenceOrder",
   "temporaryHitPointChoice",
   "concentrationSavingThrow",

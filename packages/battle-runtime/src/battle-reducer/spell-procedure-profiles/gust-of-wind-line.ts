@@ -38,7 +38,7 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
-import { resolveGustOfWindLineSpellAct } from "../spells-resolve-area-effects.ts";
+import { resolveDirectionalPersistentAreaSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -56,18 +56,18 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
-type GustOfWindLineSpellInvocation = Extract<
+type DirectionalPersistentAreaSpellInvocation = Extract<
   SupportedSpellInvocation,
-  { readonly procedure: "gustOfWindLine" }
+  { readonly procedure: "directionalPersistentArea" }
 >;
-type GustOfWindLineResolveInput =
-  SpellProcedureProfileResolveInput<GustOfWindLineSpellInvocation>;
+type DirectionalPersistentAreaResolveInput =
+  SpellProcedureProfileResolveInput<DirectionalPersistentAreaSpellInvocation>;
 
 type OngoingOperationEffect = Extract<
   BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
 >["operations"][number]["effect"];
-type GustOfWindLineInitialPhase = Extract<
+type DirectionalPersistentAreaInitialPhase = Extract<
   BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
 >["initialPhase"];
@@ -75,13 +75,13 @@ type OngoingSaveGateEffect = Extract<
   OngoingOperationEffect,
   { readonly kind: "save_gate" }
 >;
-type GustOfWindLineSaveEffect = OngoingSaveGateEffect & {
+type DirectionalPersistentAreaSaveEffect = OngoingSaveGateEffect & {
   readonly onFail: Extract<
     OngoingSaveGateEffect["onFail"],
     { readonly kind: "force_move" }
   >;
 };
-type GustOfWindLineProfileShape = {
+type DirectionalPersistentAreaProfileShape = {
   readonly durationTicks: ElapsedTimeTicks;
   readonly lengthFeet: number;
   readonly widthFeet: number;
@@ -97,17 +97,17 @@ const GUST_OF_WIND_LINE_WIDTH_FEET = 10;
 const GUST_OF_WIND_PUSH_DISTANCE_FEET = 15;
 const GUST_OF_WIND_MOVEMENT_COST_MULTIPLIER = 2;
 
-function admitGustOfWindLine(
+function admitDirectionalPersistentArea(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
-): readonly GustOfWindLineSpellInvocation[] {
-  const line = gustOfWindLineSpell(spell);
+): readonly DirectionalPersistentAreaSpellInvocation[] {
+  const line = directionalPersistentAreaSpell(spell);
   if (line === null) {
     return [];
   }
 
   return ctx.spellCastOptions.flatMap(
-    (slot): readonly GustOfWindLineSpellInvocation[] => {
+    (slot): readonly DirectionalPersistentAreaSpellInvocation[] => {
       if (Number(slot.spellLevel) < GUST_OF_WIND_LEVEL) {
         return [];
       }
@@ -115,7 +115,7 @@ function admitGustOfWindLine(
         {
           access: { tag: "prepared" },
           resource: spellInvocationResourceForCastOption(slot),
-          procedure: "gustOfWindLine",
+          procedure: "directionalPersistentArea",
           spell,
           ability: "str",
           dc: { kind: "caster_spell_save_dc" },
@@ -137,9 +137,9 @@ function admitGustOfWindLine(
   );
 }
 
-function gustOfWindLineSpell(
+function directionalPersistentAreaSpell(
   spell: BattleSpellAdmissionSource,
-): GustOfWindLineProfileShape | null {
+): DirectionalPersistentAreaProfileShape | null {
   if (spell.mechanics.family !== "ongoing_effect") {
     return null;
   }
@@ -154,7 +154,10 @@ function gustOfWindLineSpell(
       : null;
   const lineArea = lineHole?.value ?? null;
   const initialPhase = spell.mechanics.initialPhase;
-  const initialSave = isGustOfWindLineSaveGate(initialPhase, lineHole?.holeId)
+  const initialSave = isDirectionalPersistentAreaSaveGate(
+    initialPhase,
+    lineHole?.holeId,
+  )
     ? initialPhase
     : null;
   const strongWindOperation = spell.mechanics.operations.find(
@@ -193,7 +196,10 @@ function gustOfWindLineSpell(
     lineArea.shape.lengthFeet !== GUST_OF_WIND_LINE_LENGTH_FEET ||
     lineArea.shape.widthFeet !== GUST_OF_WIND_LINE_WIDTH_FEET ||
     initialSave === null ||
-    !isGustOfWindLineSaveGate(endTurnOperation?.effect, lineHole?.holeId) ||
+    !isDirectionalPersistentAreaSaveGate(
+      endTurnOperation?.effect,
+      lineHole?.holeId,
+    ) ||
     strongWindOperation?.effect.kind !== "area_has_strong_wind" ||
     movementCostOperation?.effect.kind !== "area_movement_cost_multiplier" ||
     movementCostOperation.effect.multiplier !==
@@ -212,10 +218,13 @@ function gustOfWindLineSpell(
   };
 }
 
-function isGustOfWindLineSaveGate(
-  effect: OngoingOperationEffect | GustOfWindLineInitialPhase | undefined,
+function isDirectionalPersistentAreaSaveGate(
+  effect:
+    | OngoingOperationEffect
+    | DirectionalPersistentAreaInitialPhase
+    | undefined,
   areaHoleId: string | undefined,
-): effect is GustOfWindLineSaveEffect {
+): effect is DirectionalPersistentAreaSaveEffect {
   return (
     effect?.kind === "save_gate" &&
     areaHoleId !== undefined &&
@@ -237,18 +246,18 @@ function isGustOfWindLineSaveGate(
   );
 }
 
-function discoverGustOfWindLineCastAct(
+function discoverDirectionalPersistentAreaCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<GustOfWindLineSpellInvocation>,
+  invocation: BattleExecutableSpellInvocation<DirectionalPersistentAreaSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return discoverSavingThrowSpellCastActs(state, actorId, invocation);
 }
 
-function resolveGustOfWindLine(
-  input: GustOfWindLineResolveInput,
+function resolveDirectionalPersistentArea(
+  input: DirectionalPersistentAreaResolveInput,
 ): BattleResolutionResult {
-  return resolveGustOfWindLineSpellAct({
+  return resolveDirectionalPersistentAreaSpellAct({
     input: input.input,
     actorId: input.actorId,
     invocation: input.invocation,
@@ -257,11 +266,11 @@ function resolveGustOfWindLine(
   });
 }
 
-const GustOfWindLineInvocationSchema = spellProcedureExecutionSchema(
+const DirectionalPersistentAreaInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
-    procedure: Schema.Literal("gustOfWindLine"),
+    procedure: Schema.Literal("directionalPersistentArea"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     ability: Schema.Literal("str"),
     dc: DcSourceSchema,
@@ -279,14 +288,14 @@ const GustOfWindLineInvocationSchema = spellProcedureExecutionSchema(
     }),
   }),
 );
-export const gustOfWindLineProfile = {
-  procedure: "gustOfWindLine",
-  executionSchema: GustOfWindLineInvocationSchema,
-  admit: admitGustOfWindLine,
-  discoverCastAct: discoverGustOfWindLineCastAct,
-  resolve: resolveGustOfWindLine,
+export const directionalPersistentAreaProfile = {
+  procedure: "directionalPersistentArea",
+  executionSchema: DirectionalPersistentAreaInvocationSchema,
+  admit: admitDirectionalPersistentArea,
+  discoverCastAct: discoverDirectionalPersistentAreaCastAct,
+  resolve: resolveDirectionalPersistentArea,
 } satisfies SpellProcedureDeclaration<
-  "gustOfWindLine",
-  GustOfWindLineSpellInvocation
+  "directionalPersistentArea",
+  DirectionalPersistentAreaSpellInvocation
 >;
 import { spellInvocationResourceForCastOption } from "./profile.ts";

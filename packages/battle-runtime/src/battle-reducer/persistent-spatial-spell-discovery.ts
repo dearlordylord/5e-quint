@@ -9,52 +9,64 @@ import {
 } from "./spells-damage-fills.ts";
 import type {
   BattleActiveEffect,
-  BattleFlamingSphereRamMovementHole,
-  BattleFlamingSphereSavingThrowOutcomeHole,
-  BattleFlamingSphereTrigger,
-  BattleGreaseGroundHazardSavingThrowOutcomeHole,
-  BattleGustOfWindLineDirectionChoiceHole,
-  BattleGustOfWindLineSavingThrowOutcomeHole,
-  BattleMoonbeamSaveTrigger,
-  BattleMoonbeamSavingThrowOutcomeHole,
+  BattlePersistentAreaSaveDamageRamMovementHole,
+  BattleCollisionRepositionPersistentAreaSaveDamageSavingThrowOutcomeHole,
+  BattleCollisionRepositionPersistentAreaSaveDamageTrigger,
+  BattlePersistentAreaSaveConditionSavingThrowOutcomeHole,
+  BattleDirectionalPersistentAreaDirectionChoiceHole,
+  BattleDirectionalPersistentAreaSavingThrowOutcomeHole,
+  BattleDirectedRepositionPersistentAreaSaveDamageTrigger,
+  BattleDirectedRepositionPersistentAreaSaveDamageSavingThrowOutcomeHole,
   BattleMovableZoneRepositionMovementHole,
   BattleSavingThrowRollModeProjection,
   BattleState,
-  BattleWebRestraintSavingThrowOutcomeHole,
-  BattleWebRestraintTrigger,
+  BattlePersistentAreaSaveConditionEscapeSavingThrowOutcomeHole,
+  BattlePersistentAreaSaveConditionEscapeTrigger,
 } from "../battle-state-execution.ts";
 
-export type GreaseGroundHazardEffect = Extract<
+export type PersistentAreaSaveConditionEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "greaseGroundHazard" }
+  { readonly kind: "persistentAreaSaveCondition" }
 >;
 
-export type WebRestraintHazardEffect = Extract<
+export type PersistentAreaSaveConditionEscapeEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "webRestraintHazard" }
+  { readonly kind: "persistentAreaSaveConditionEscape" }
 >;
 
-export type FlamingSphereEffect = Extract<
+export type RamMovablePersistentAreaEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "flamingSphere" }
+  {
+    readonly kind: "persistentAreaSaveDamage";
+    readonly lifecycle: {
+      readonly kind: "casterActionReposition";
+      readonly actionCost: "bonusAction";
+    };
+  }
 >;
 
-export type MoonbeamEffect = Extract<
+export type MovablePersistentAreaEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "moonbeam" }
+  {
+    readonly kind: "persistentAreaSaveDamage";
+    readonly lifecycle: {
+      readonly kind: "casterActionReposition";
+      readonly actionCost: "magicAction";
+    };
+  }
 >;
 
-export type GustOfWindLineEffect = Extract<
+export type DirectionalPersistentAreaEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "gustOfWindLine" }
+  { readonly kind: "directionalPersistentArea" }
 >;
 
 type HazardSavingThrow =
-  | GreaseGroundHazardEffect["save"]
-  | GustOfWindLineEffect["save"]
-  | MoonbeamEffect["save"];
+  | PersistentAreaSaveConditionEffect["save"]
+  | DirectionalPersistentAreaEffect["save"]
+  | MovablePersistentAreaEffect["save"];
 type SingleTargetSavingThrowProjections<Save extends HazardSavingThrow> = Pick<
-  BattleFlamingSphereSavingThrowOutcomeHole,
+  BattleCollisionRepositionPersistentAreaSaveDamageSavingThrowOutcomeHole,
   "areaChoices" | "targetRollModes" | "targetFlatBonuses"
 > & {
   readonly ability: Save["ability"];
@@ -83,19 +95,19 @@ function singleTargetSavingThrowProjections<Save extends HazardSavingThrow>(
     ).filter((projection) => projection.targetId === targetId),
   };
 }
-export function greaseGroundHazardSavingThrowOutcomeHole(
+export function persistentAreaSaveConditionSavingThrowOutcomeHole(
   state: BattleState,
   targetId: CombatantId,
-  effect: GreaseGroundHazardEffect,
+  effect: PersistentAreaSaveConditionEffect,
   trigger: "entersArea" | "endsTurnInArea",
-): BattleGreaseGroundHazardSavingThrowOutcomeHole {
-  const key = `battle:grease-ground-hazard-save:${targetId}:${effect.effectRef}:${trigger}`;
+): BattlePersistentAreaSaveConditionSavingThrowOutcomeHole {
+  const key = `battle:persistent-area-save-condition-save:${targetId}:${effect.effectRef}:${trigger}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: `${trigger === "entersArea" ? "Entry" : "End-turn"} DEX save`,
-    greaseGroundHazard: {
+    persistentAreaSaveCondition: {
       targetId,
       effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -108,13 +120,13 @@ export function greaseGroundHazardSavingThrowOutcomeHole(
       state,
       targetId,
       effect.save,
-      greaseGroundHazardHeightenedRollModeProjection(effect, targetId),
+      persistentAreaSaveConditionHeightenedRollModeProjection(effect, targetId),
     ),
   };
 }
 
-function greaseGroundHazardHeightenedRollModeProjection(
-  effect: GreaseGroundHazardEffect,
+function persistentAreaSaveConditionHeightenedRollModeProjection(
+  effect: PersistentAreaSaveConditionEffect,
   targetId: CombatantId,
 ): BattleSavingThrowRollModeProjection | undefined {
   return effect.heightenedSpellTargetDisadvantage?.targetId === targetId
@@ -122,19 +134,19 @@ function greaseGroundHazardHeightenedRollModeProjection(
     : undefined;
 }
 
-export function webRestraintSavingThrowOutcomeHole(
+export function persistentAreaSaveConditionEscapeSavingThrowOutcomeHole(
   state: BattleState,
   targetId: CombatantId,
-  effect: WebRestraintHazardEffect,
-  trigger: BattleWebRestraintTrigger,
-): BattleWebRestraintSavingThrowOutcomeHole {
-  const key = `battle:web-restraint-save:${targetId}:${effect.effectRef}:${trigger}`;
+  effect: PersistentAreaSaveConditionEscapeEffect,
+  trigger: BattlePersistentAreaSaveConditionEscapeTrigger,
+): BattlePersistentAreaSaveConditionEscapeSavingThrowOutcomeHole {
+  const key = `battle:persistent-area-save-condition-escape-save:${targetId}:${effect.effectRef}:${trigger}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: `${trigger === "entersArea" ? "Entry" : "Start-turn"} DEX save`,
-    webRestraint: {
+    persistentAreaSaveConditionEscape: {
       targetId,
       effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -147,19 +159,19 @@ export function webRestraintSavingThrowOutcomeHole(
   };
 }
 
-export function gustOfWindLineSavingThrowOutcomeHole(
+export function directionalPersistentAreaSavingThrowOutcomeHole(
   state: BattleState,
   targetId: CombatantId,
-  effect: GustOfWindLineEffect,
+  effect: DirectionalPersistentAreaEffect,
   trigger: "endsTurnInLine",
-): BattleGustOfWindLineSavingThrowOutcomeHole {
-  const key = `battle:gust-of-wind-line-save:${targetId}:${effect.effectRef}:${effect.directionId}:${trigger}`;
+): BattleDirectionalPersistentAreaSavingThrowOutcomeHole {
+  const key = `battle:directional-persistent-area-line-save:${targetId}:${effect.effectRef}:${effect.directionId}:${trigger}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: "End-turn STR save",
-    gustOfWindLine: {
+    directionalPersistentArea: {
       targetId,
       effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -174,13 +186,13 @@ export function gustOfWindLineSavingThrowOutcomeHole(
       state,
       targetId,
       effect.save,
-      gustOfWindLineHeightenedRollModeProjection(effect, targetId),
+      directionalPersistentAreaHeightenedRollModeProjection(effect, targetId),
     ),
   };
 }
 
-function gustOfWindLineHeightenedRollModeProjection(
-  effect: GustOfWindLineEffect,
+function directionalPersistentAreaHeightenedRollModeProjection(
+  effect: DirectionalPersistentAreaEffect,
   targetId: CombatantId,
 ): BattleSavingThrowRollModeProjection | undefined {
   return effect.heightenedSpellTargetDisadvantage?.targetId === targetId
@@ -188,12 +200,12 @@ function gustOfWindLineHeightenedRollModeProjection(
     : undefined;
 }
 
-export function gustOfWindLineDirectionChoiceHole(
-  effect: GustOfWindLineEffect,
-): BattleGustOfWindLineDirectionChoiceHole {
-  const key = `battle:gust-of-wind-line-direction:${effect.effectRef}:${effect.directionId}`;
+export function directionalPersistentAreaDirectionChoiceHole(
+  effect: DirectionalPersistentAreaEffect,
+): BattleDirectionalPersistentAreaDirectionChoiceHole {
+  const key = `battle:directional-persistent-area-line-direction:${effect.effectRef}:${effect.directionId}`;
   return {
-    kind: "gustOfWindLineDirectionChoice",
+    kind: "directionalPersistentAreaDirectionChoice",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: "Line direction",
@@ -206,8 +218,8 @@ export function gustOfWindLineDirectionChoiceHole(
   };
 }
 
-export function flamingSphereTriggerLabel(
-  trigger: BattleFlamingSphereTrigger,
+export function ramMovablePersistentAreaTriggerLabel(
+  trigger: BattleCollisionRepositionPersistentAreaSaveDamageTrigger,
 ): "ram" | "end-within-5-feet" {
   if (trigger === "rammedBySphere") {
     return "ram";
@@ -219,11 +231,11 @@ export function flamingSphereTriggerLabel(
   return _;
 }
 
-export function flamingSphereRamMovementHole(
+export function ramMovablePersistentAreaRamMovementHole(
   targetId: CombatantId,
-  effect: FlamingSphereEffect,
-): BattleFlamingSphereRamMovementHole {
-  const key = `battle:flaming-sphere-ram-movement:${targetId}:${effect.effectRef}`;
+  effect: RamMovablePersistentAreaEffect,
+): BattlePersistentAreaSaveDamageRamMovementHole {
+  const key = `battle:ram-movable-persistent-area-ram-movement:${targetId}:${effect.effectRef}`;
   return {
     kind: "movableZoneRamMovement",
     holeId: holeId(key),
@@ -241,10 +253,10 @@ export function flamingSphereRamMovementHole(
   };
 }
 
-export function flamingSphereRepositionMovementHole(
-  effect: FlamingSphereEffect,
+export function ramMovablePersistentAreaRepositionMovementHole(
+  effect: RamMovablePersistentAreaEffect,
 ): BattleMovableZoneRepositionMovementHole {
-  const key = `battle:flaming-sphere-reposition-movement:${effect.effectRef}`;
+  const key = `battle:ram-movable-persistent-area-reposition-movement:${effect.effectRef}`;
   return {
     kind: "movableZoneRepositionMovement",
     holeId: holeId(key),
@@ -261,20 +273,20 @@ export function flamingSphereRepositionMovementHole(
   };
 }
 
-export function flamingSphereSavingThrowOutcomeHole(
+export function ramMovablePersistentAreaSavingThrowOutcomeHole(
   state: BattleState,
   targetId: CombatantId,
-  effect: FlamingSphereEffect,
-  trigger: BattleFlamingSphereTrigger,
-): BattleFlamingSphereSavingThrowOutcomeHole {
-  const key = `battle:flaming-sphere-save:${targetId}:${effect.effectRef}:${trigger}`;
+  effect: RamMovablePersistentAreaEffect,
+  trigger: BattleCollisionRepositionPersistentAreaSaveDamageTrigger,
+): BattleCollisionRepositionPersistentAreaSaveDamageSavingThrowOutcomeHole {
+  const key = `battle:ram-movable-persistent-area-save:${targetId}:${effect.effectRef}:${trigger}`;
   return {
     ...movableZoneSavingThrowOutcomeHoleBase(
       state,
       targetId,
       effect.save,
       key,
-      `${flamingSphereTriggerLabel(trigger)} DEX save`,
+      `${ramMovablePersistentAreaTriggerLabel(trigger)} DEX save`,
     ),
     movableZone: {
       targetId,
@@ -288,8 +300,8 @@ export function flamingSphereSavingThrowOutcomeHole(
   };
 }
 
-export function moonbeamTriggerLabel(
-  trigger: BattleMoonbeamSaveTrigger,
+export function movablePersistentAreaTriggerLabel(
+  trigger: BattleDirectedRepositionPersistentAreaSaveDamageTrigger,
 ):
   | "appears-in-area"
   | "area-moves-into-space"
@@ -311,20 +323,20 @@ export function moonbeamTriggerLabel(
   return _;
 }
 
-export function moonbeamSavingThrowOutcomeHole(
+export function movablePersistentAreaSavingThrowOutcomeHole(
   state: BattleState,
   targetId: CombatantId,
-  effect: MoonbeamEffect,
-  trigger: BattleMoonbeamSaveTrigger,
-): BattleMoonbeamSavingThrowOutcomeHole {
-  const key = `battle:moonbeam-save:${targetId}:${effect.effectRef}:${trigger}`;
+  effect: MovablePersistentAreaEffect,
+  trigger: BattleDirectedRepositionPersistentAreaSaveDamageTrigger,
+): BattleDirectedRepositionPersistentAreaSaveDamageSavingThrowOutcomeHole {
+  const key = `battle:movablePersistentArea-save:${targetId}:${effect.effectRef}:${trigger}`;
   return {
     ...movableZoneSavingThrowOutcomeHoleBase(
       state,
       targetId,
       effect.save,
       key,
-      `${moonbeamTriggerLabel(trigger)} CON save`,
+      `${movablePersistentAreaTriggerLabel(trigger)} CON save`,
     ),
     movableZone: {
       targetId,
@@ -339,7 +351,9 @@ export function moonbeamSavingThrowOutcomeHole(
 }
 
 function movableZoneSavingThrowOutcomeHoleBase<
-  Save extends FlamingSphereEffect["save"] | MoonbeamEffect["save"],
+  Save extends
+    | RamMovablePersistentAreaEffect["save"]
+    | MovablePersistentAreaEffect["save"],
 >(
   state: BattleState,
   targetId: CombatantId,
@@ -356,10 +370,10 @@ function movableZoneSavingThrowOutcomeHoleBase<
   };
 }
 
-export function moonbeamRepositionMovementHole(
-  effect: MoonbeamEffect,
+export function movablePersistentAreaRepositionMovementHole(
+  effect: MovablePersistentAreaEffect,
 ): BattleMovableZoneRepositionMovementHole {
-  const key = `battle:moonbeam-reposition-movement:${effect.effectRef}`;
+  const key = `battle:movablePersistentArea-reposition-movement:${effect.effectRef}`;
   return {
     kind: "movableZoneRepositionMovement",
     holeId: holeId(key),

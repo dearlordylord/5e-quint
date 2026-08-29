@@ -15,21 +15,21 @@ import type {
 import { snapshotBattle } from "./battle-snapshot.ts";
 import { combatantCanTakeActions } from "./creature-state-execution.ts";
 import {
-  levitatedTargetWithinSpellRangeFactPresent,
-  levitateAltitudeChangeHole,
-  updateLevitatedCreatureAltitude,
+  controlledVerticalSuspensionTargetWithinRangeFactPresent,
+  controlledVerticalSuspensionAltitudeChangeHole,
+  updateControlledVerticalSuspensionAltitude,
 } from "./levitate-creature.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { applySelfTransformationModeEffect } from "./spells-active-effects.ts";
 
-export function resolveLevitateAltitudeControlCommand(
+export function resolveControlledVerticalSuspensionAltitudeControlCommand(
   input: BattleResolutionInputForSubject<
     Extract<
       BattleSubject,
       {
         readonly tag: "runtimeCommand";
-        readonly command: "levitateAltitudeControl";
+        readonly command: "controlledVerticalSuspensionAltitudeControl";
       }
     >
   >,
@@ -42,7 +42,7 @@ export function resolveLevitateAltitudeControlCommand(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Magic action is no longer available for Levitate altitude control.",
+      "Magic action is no longer available for ControlledVerticalSuspension altitude control.",
     );
   }
   const target = input.state.combatants.get(input.subject.targetId);
@@ -54,7 +54,7 @@ export function resolveLevitateAltitudeControlCommand(
           input.subject.effectRef,
         );
   const effect =
-    selectedEffect?.kind === "spellLevitatedCreature"
+    selectedEffect?.kind === "controlledVerticalSuspension"
       ? selectedEffect
       : undefined;
   if (
@@ -65,10 +65,10 @@ export function resolveLevitateAltitudeControlCommand(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Levitate altitude control is no longer active for the target.",
+      "ControlledVerticalSuspension altitude control is no longer active for the target.",
     );
   }
-  const hole = levitateAltitudeChangeHole({
+  const hole = controlledVerticalSuspensionAltitudeChangeHole({
     actorId: input.subject.actorId,
     targetId: input.subject.targetId,
     effectRef: effect.effectRef,
@@ -81,7 +81,7 @@ export function resolveLevitateAltitudeControlCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Levitate altitude control uses one altitude-change fill.",
+      "ControlledVerticalSuspension altitude control uses one altitude-change fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -89,12 +89,15 @@ export function resolveLevitateAltitudeControlCommand(
     return needsHolesResult(input.state, input.subject, [hole]);
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (fill.kind !== "levitateAltitudeChange" || fill.holeId !== hole.holeId) {
+  if (
+    fill.kind !== "controlledVerticalSuspensionAltitudeChange" ||
+    fill.holeId !== hole.holeId
+  ) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
-      "Levitate altitude control requires the selected altitude-change fill.",
+      "ControlledVerticalSuspension altitude control requires the selected altitude-change fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -109,13 +112,13 @@ export function resolveLevitateAltitudeControlCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Levitate altitude change must be a positive whole number no greater than the spell limit.",
+      "ControlledVerticalSuspension altitude change must be a positive whole number no greater than the spell limit.",
     );
   }
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    !levitatedTargetWithinSpellRangeFactPresent({
+    !controlledVerticalSuspensionTargetWithinRangeFactPresent({
       facts: fill.spatialFacts,
       effectRef: effect.effectRef,
       sourceCombatantId: effect.sourceCombatantId,
@@ -128,7 +131,7 @@ export function resolveLevitateAltitudeControlCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Levitate altitude control requires a table fact that the target remains within the spell's range.",
+      "ControlledVerticalSuspension altitude control requires a table fact that the target remains within the spell's range.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -138,7 +141,7 @@ export function resolveLevitateAltitudeControlCommand(
       spendAction(input.state.currentTurnResources, "magic"),
     ),
   };
-  const nextState = updateLevitatedCreatureAltitude({
+  const nextState = updateControlledVerticalSuspensionAltitude({
     state: spentState,
     targetId: input.subject.targetId,
     effectRef: effect.effectRef,

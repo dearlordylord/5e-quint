@@ -10,7 +10,7 @@ import {
   currentActorId,
   normalizeBattleGrapples,
 } from "./creature-state-leaves.ts";
-import { updateLevitatedCreatureAltitude } from "./levitate-creature.ts";
+import { updateControlledVerticalSuspensionAltitude } from "./levitate-creature.ts";
 import { readiedMovementBudgetForActor } from "./movement-holes.ts";
 import {
   battleMovementBudgetForActor,
@@ -72,15 +72,18 @@ export function applyBattleMovement(
         : state.currentTurnResources,
     combatants,
   });
-  const levitatedMovement = movement.levitatedMovement;
-  return levitatedMovement?.altitudeChange === undefined
+  const controlledVerticalSuspensionMovement =
+    movement.controlledVerticalSuspensionMovement;
+  return controlledVerticalSuspensionMovement?.altitudeChange === undefined
     ? movedState
-    : updateLevitatedCreatureAltitude({
+    : updateControlledVerticalSuspensionAltitude({
         state: movedState,
         targetId: movement.moverId,
-        effectRef: levitatedMovement.effectRef,
-        sourceCombatantId: levitatedMovement.sourceCombatantId,
-        sourceProcedureRef: levitatedMovement.sourceProcedureRef,
-        change: levitatedMovement.altitudeChange,
+        effectRef: controlledVerticalSuspensionMovement.effectRef,
+        sourceCombatantId:
+          controlledVerticalSuspensionMovement.sourceCombatantId,
+        sourceProcedureRef:
+          controlledVerticalSuspensionMovement.sourceProcedureRef,
+        change: controlledVerticalSuspensionMovement.altitudeChange,
       });
 }

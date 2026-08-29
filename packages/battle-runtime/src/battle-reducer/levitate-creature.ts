@@ -1,6 +1,6 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
-// Levitate creature-branch state and caller-witnessed altitude controls.
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-controlledVerticalSuspension-creature
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONTROLLED_VERTICAL_SUSPENSIOND_CREATURE_LIFECYCLE
+// ControlledVerticalSuspension creature-branch state and caller-witnessed altitude controls.
 
 import { movementFeet, type MovementFeet } from "@dnd/shared/types";
 import type {
@@ -10,69 +10,72 @@ import type {
 } from "../identity.ts";
 import type {
   BattleCreatureState,
-  BattleLevitateAltitudeChangeHole,
-  BattleLevitateAltitudeDirection,
-  BattleLevitateInitialRiseHole,
-  BattleLevitatedMovementFact,
+  BattleControlledVerticalSuspensionAltitudeChangeHole,
+  BattleVerticalSuspensionAltitudeDirection,
+  BattleControlledVerticalSuspensionInitialRiseHole,
+  BattleControlledVerticalSuspensionMovementFact,
   BattleMovementFillValue,
   BattleState,
   BattleTargetSpatialFact,
-  SpellLevitatedCreatureActiveEffect,
+  ControlledVerticalSuspensionActiveEffect,
 } from "../battle-state-execution.ts";
 import { Match } from "effect";
 import {
-  LEVITATE_ALTITUDE_CHANGE_HOLE_ID,
-  LEVITATE_ALTITUDE_CHANGE_HOLE_INSTANCE,
-  LEVITATE_INITIAL_RISE_HOLE_ID,
-  LEVITATE_INITIAL_RISE_HOLE_INSTANCE,
+  CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CHANGE_HOLE_ID,
+  CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CHANGE_HOLE_INSTANCE,
+  CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_HOLE_ID,
+  CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_HOLE_INSTANCE,
 } from "./battle-runtime-protocol.ts";
 
-export const LEVITATE_INITIAL_RISE_FEET = movementFeet(20);
-export const LEVITATE_ALTITUDE_CONTROL_FEET = movementFeet(20);
+export const CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_FEET =
+  movementFeet(20);
+export const CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CONTROL_FEET =
+  movementFeet(20);
 
-export function activeLevitatedCreatureEffect(
+export function activeControlledVerticalSuspensionEffect(
   combatant: BattleCreatureState | undefined,
   occurrence?: {
     readonly effectRef: BattleEffectExecutionRef;
   },
-): SpellLevitatedCreatureActiveEffect | undefined {
+): ControlledVerticalSuspensionActiveEffect | undefined {
   return combatant?.activeEffects.find(
-    (effect): effect is SpellLevitatedCreatureActiveEffect =>
-      effect.kind === "spellLevitatedCreature" &&
+    (effect): effect is ControlledVerticalSuspensionActiveEffect =>
+      effect.kind === "controlledVerticalSuspension" &&
       (occurrence === undefined || effect.effectRef === occurrence.effectRef),
   );
 }
 
-export function activeLevitatedCreatureTargetsControlledBy(
+export function activeControlledVerticalSuspensionTargetsControlledBy(
   state: BattleState,
   sourceCombatantId: CombatantId,
 ): readonly {
   readonly targetId: CombatantId;
-  readonly effect: SpellLevitatedCreatureActiveEffect;
+  readonly effect: ControlledVerticalSuspensionActiveEffect;
 }[] {
   return [...state.combatants].flatMap(([targetId, combatant]) => {
     const effects = combatant.activeEffects.filter(
-      (effect): effect is SpellLevitatedCreatureActiveEffect =>
+      (effect): effect is ControlledVerticalSuspensionActiveEffect =>
         targetId !== sourceCombatantId &&
-        effect.kind === "spellLevitatedCreature" &&
+        effect.kind === "controlledVerticalSuspension" &&
         effect.sourceCombatantId === sourceCombatantId,
     );
     return effects.map((effect) => ({ targetId, effect }));
   });
 }
 
-export function levitateAltitudeChangeHole(input: {
+export function controlledVerticalSuspensionAltitudeChangeHole(input: {
   readonly actorId: CombatantId;
   readonly targetId: CombatantId;
   readonly effectRef: BattleEffectExecutionRef;
   readonly maxDistanceFeet: MovementFeet;
-}): BattleLevitateAltitudeChangeHole {
+}): BattleControlledVerticalSuspensionAltitudeChangeHole {
   return {
-    kind: "levitateAltitudeChange",
+    kind: "controlledVerticalSuspensionAltitudeChange",
     effectRef: input.effectRef,
-    holeInstanceKey: LEVITATE_ALTITUDE_CHANGE_HOLE_INSTANCE,
-    holeId: LEVITATE_ALTITUDE_CHANGE_HOLE_ID,
-    label: "Levitate altitude change",
+    holeInstanceKey:
+      CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CHANGE_HOLE_INSTANCE,
+    holeId: CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CHANGE_HOLE_ID,
+    label: "ControlledVerticalSuspension altitude change",
     actorId: input.actorId,
     targetId: input.targetId,
     maxDistanceFeet: input.maxDistanceFeet,
@@ -81,16 +84,16 @@ export function levitateAltitudeChangeHole(input: {
   };
 }
 
-export function levitateInitialRiseHole(input: {
+export function controlledVerticalSuspensionInitialRiseHole(input: {
   readonly actorId: CombatantId;
   readonly targetId: CombatantId;
   readonly maxDistanceFeet: MovementFeet;
-}): BattleLevitateInitialRiseHole {
+}): BattleControlledVerticalSuspensionInitialRiseHole {
   return {
-    kind: "levitateInitialRise",
-    holeInstanceKey: LEVITATE_INITIAL_RISE_HOLE_INSTANCE,
-    holeId: LEVITATE_INITIAL_RISE_HOLE_ID,
-    label: "Levitate initial rise",
+    kind: "controlledVerticalSuspensionInitialRise",
+    holeInstanceKey: CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_HOLE_INSTANCE,
+    holeId: CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_HOLE_ID,
+    label: "ControlledVerticalSuspension initial rise",
     actorId: input.actorId,
     targetId: input.targetId,
     maxDistanceFeet: input.maxDistanceFeet,
@@ -100,7 +103,7 @@ export function levitateInitialRiseHole(input: {
 export function altitudeAfterChange(
   altitudeFeet: MovementFeet,
   change: {
-    readonly direction: BattleLevitateAltitudeDirection;
+    readonly direction: BattleVerticalSuspensionAltitudeDirection;
     readonly distanceFeet: MovementFeet;
   },
 ): MovementFeet {
@@ -111,19 +114,19 @@ export function altitudeAfterChange(
   return movementFeet(next);
 }
 
-export function updateLevitatedCreatureAltitude(input: {
+export function updateControlledVerticalSuspensionAltitude(input: {
   readonly state: BattleState;
   readonly targetId: CombatantId;
   readonly effectRef: BattleEffectExecutionRef;
   readonly sourceCombatantId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly change: {
-    readonly direction: BattleLevitateAltitudeDirection;
+    readonly direction: BattleVerticalSuspensionAltitudeDirection;
     readonly distanceFeet: MovementFeet;
   };
 }): BattleState {
   const target = input.state.combatants.get(input.targetId);
-  const effect = activeLevitatedCreatureEffect(target, input);
+  const effect = activeControlledVerticalSuspensionEffect(target, input);
   if (
     target === undefined ||
     effect === undefined ||
@@ -147,7 +150,7 @@ export function updateLevitatedCreatureAltitude(input: {
   };
 }
 
-export function levitatedTargetWithinSpellRangeFactPresent(input: {
+export function controlledVerticalSuspensionTargetWithinRangeFactPresent(input: {
   readonly facts: readonly BattleTargetSpatialFact[];
   readonly effectRef: BattleEffectExecutionRef;
   readonly sourceCombatantId: CombatantId;
@@ -157,7 +160,7 @@ export function levitatedTargetWithinSpellRangeFactPresent(input: {
 }): boolean {
   return input.facts.some(
     (fact) =>
-      fact.kind === "levitatedTargetWithinSpellRange" &&
+      fact.kind === "controlledVerticalSuspensionTargetWithinRange" &&
       fact.effectRef === input.effectRef &&
       fact.sourceCombatantId === input.sourceCombatantId &&
       fact.sourceProcedureRef === input.sourceProcedureRef &&
@@ -166,59 +169,66 @@ export function levitatedTargetWithinSpellRangeFactPresent(input: {
   );
 }
 
-export function validateLevitatedMovementFact(input: {
+export function validateControlledVerticalSuspensionMovementFact(input: {
   readonly combatant: BattleCreatureState;
-  readonly fact: BattleLevitatedMovementFact | undefined;
+  readonly fact: BattleControlledVerticalSuspensionMovementFact | undefined;
   readonly speedKind: BattleMovementFillValue["speedKind"];
   readonly movementCostFeet: BattleMovementFillValue["movementCostFeet"];
   readonly areaExtraCostFeet: MovementFeet;
 }): string | null {
   return Match.value(
-    levitatedMovementEffectAdmission(input.combatant, input.fact),
+    controlledVerticalSuspensionMovementEffectAdmission(
+      input.combatant,
+      input.fact,
+    ),
   ).pipe(
     Match.discriminatorsExhaustive("tag")({
       notApplicable: () => null,
       invalid: ({ message }) => message,
       matched: ({ effect, fact }) =>
-        validateMatchedLevitatedMovementFact(input, effect, fact),
+        validateMatchedControlledVerticalSuspensionMovementFact(
+          input,
+          effect,
+          fact,
+        ),
     }),
   );
 }
 
-type LevitatedMovementEffectAdmission =
+type ControlledVerticalSuspensionMovementEffectAdmission =
   | { readonly tag: "notApplicable" }
   | { readonly tag: "invalid"; readonly message: string }
   | {
       readonly tag: "matched";
-      readonly effect: SpellLevitatedCreatureActiveEffect;
-      readonly fact: BattleLevitatedMovementFact;
+      readonly effect: ControlledVerticalSuspensionActiveEffect;
+      readonly fact: BattleControlledVerticalSuspensionMovementFact;
     };
 
-function levitatedMovementEffectAdmission(
+function controlledVerticalSuspensionMovementEffectAdmission(
   combatant: BattleCreatureState,
-  fact: BattleLevitatedMovementFact | undefined,
-): LevitatedMovementEffectAdmission {
-  const activeEffect = activeLevitatedCreatureEffect(combatant);
+  fact: BattleControlledVerticalSuspensionMovementFact | undefined,
+): ControlledVerticalSuspensionMovementEffectAdmission {
+  const activeEffect = activeControlledVerticalSuspensionEffect(combatant);
   if (fact === undefined) {
     return activeEffect === undefined
       ? { tag: "notApplicable" }
       : {
           tag: "invalid",
           message:
-            "Levitated targets require a fixed-object or surface-within-reach movement witness.",
+            "ControlledVerticalSuspension targets require a fixed-object or surface-within-reach movement witness.",
         };
   }
-  const effect = activeLevitatedCreatureEffect(combatant, fact);
+  const effect = activeControlledVerticalSuspensionEffect(combatant, fact);
   if (effect === undefined) {
     return {
       tag: "invalid",
       message:
         activeEffect === undefined
-          ? "Levitated movement witness was supplied for a target that is not levitated."
-          : "Levitated movement witness does not match the active Levitate effect.",
+          ? "ControlledVerticalSuspension movement witness was supplied for a target that is not controlledVerticalSuspension."
+          : "ControlledVerticalSuspension movement witness does not match the active ControlledVerticalSuspension effect.",
     };
   }
-  /* v8 ignore start -- @preserve -- Stale Levitate witness: discovery copies the active effect's source combatant and procedure identity into the movement fact. */
+  /* v8 ignore start -- @preserve -- Stale ControlledVerticalSuspension witness: discovery copies the active effect's source combatant and procedure identity into the movement fact. */
   if (
     fact.sourceCombatantId !== effect.sourceCombatantId ||
     fact.sourceProcedureRef !== effect.sourceProcedureRef
@@ -226,38 +236,38 @@ function levitatedMovementEffectAdmission(
     return {
       tag: "invalid",
       message:
-        "Levitated movement witness does not match the active Levitate effect.",
+        "ControlledVerticalSuspension movement witness does not match the active ControlledVerticalSuspension effect.",
     };
   }
   /* v8 ignore stop -- @preserve */
   return { tag: "matched", effect, fact };
 }
 
-function validateMatchedLevitatedMovementFact(
+function validateMatchedControlledVerticalSuspensionMovementFact(
   input: {
     readonly speedKind: BattleMovementFillValue["speedKind"];
     readonly movementCostFeet: BattleMovementFillValue["movementCostFeet"];
     readonly areaExtraCostFeet: MovementFeet;
   },
-  effect: SpellLevitatedCreatureActiveEffect,
-  fact: BattleLevitatedMovementFact,
+  effect: ControlledVerticalSuspensionActiveEffect,
+  fact: BattleControlledVerticalSuspensionMovementFact,
 ): string | null {
-  /* v8 ignore start -- @preserve -- Malformed Levitate witness: movement discovery publishes altitude movement only when a fixed object or surface is within reach. */
+  /* v8 ignore start -- @preserve -- Malformed ControlledVerticalSuspension witness: movement discovery publishes altitude movement only when a fixed object or surface is within reach. */
   if (!fact.fixedObjectOrSurfaceWithinReach) {
-    return "Levitated movement requires a fixed object or surface within reach.";
+    return "ControlledVerticalSuspension movement requires a fixed object or surface within reach.";
   }
   /* v8 ignore stop -- @preserve */
   const altitudeChange = fact.altitudeChange;
   if (altitudeChange === undefined) {
     return null;
   }
-  /* v8 ignore start -- @preserve -- Malformed raw altitude change: the Levitate movement choice offers positive whole feet no greater than the active spell limit. */
+  /* v8 ignore start -- @preserve -- Malformed raw altitude change: the ControlledVerticalSuspension movement choice offers positive whole feet no greater than the active spell limit. */
   if (
     altitudeChange.distanceFeet <= 0 ||
     altitudeChange.distanceFeet > effect.maxAltitudeChangeFeet ||
     !Number.isInteger(altitudeChange.distanceFeet)
   ) {
-    return "Levitated movement altitude change must be a positive whole number no greater than the spell limit.";
+    return "ControlledVerticalSuspension movement altitude change must be a positive whole number no greater than the spell limit.";
   }
   /* v8 ignore stop -- @preserve */
   const expectedMovementCostFeet = movementFeet(
@@ -265,9 +275,9 @@ function validateMatchedLevitatedMovementFact(
       (input.speedKind === "climb" ? 1 : 2) +
       Number(input.areaExtraCostFeet),
   );
-  /* v8 ignore start -- @preserve -- Malformed Levitate movement cost: discovery derives the exact climb-or-other altitude cost plus area surcharge from the submitted change. */
+  /* v8 ignore start -- @preserve -- Malformed ControlledVerticalSuspension movement cost: discovery derives the exact climb-or-other altitude cost plus area surcharge from the submitted change. */
   if (input.movementCostFeet !== expectedMovementCostFeet) {
-    return "Levitated movement must spend the altitude-change distance as climbing, plus any area movement costs.";
+    return "ControlledVerticalSuspension movement must spend the altitude-change distance as climbing, plus any area movement costs.";
   }
   /* v8 ignore stop -- @preserve */
   return null;

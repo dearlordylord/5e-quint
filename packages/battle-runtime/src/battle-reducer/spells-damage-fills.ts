@@ -9,7 +9,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-dice-reroll
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spatial-melee-spell-attack-proxy-attack-proxy
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
@@ -161,7 +161,9 @@ function runtimeSpellPrimaryDamage(invocation: RuntimeDamageSpellProcedure): {
   readonly expr: DiceExpr;
   readonly damageType: DamageType;
 } {
-  return invocation.procedure === "objectContactDamageRepeat"
+  return invocation.procedure === "objectContactDamageRepeat" ||
+    (invocation.procedure === "spatialMeleeSpellAttackProxy" &&
+      invocation.operation === "repositionAndAttack")
     ? invocation.activeEffect.damage
     : invocation.damage;
 }
@@ -281,8 +283,7 @@ export function spellAttackRollHole(
           | "attackBurstSaveDamage"
           | "heldLightHurl"
           | "spellCreatedHeldObjectAttack"
-          | "spiritualWeaponAttackProxy"
-          | "spiritualWeaponRepeatAttack"
+          | "spatialMeleeSpellAttackProxy"
           | "spellAttackDamage";
       }
     >
@@ -364,8 +365,7 @@ function spellAttackRollHoleBase(
           | "attackBurstSaveDamage"
           | "heldLightHurl"
           | "spellCreatedHeldObjectAttack"
-          | "spiritualWeaponAttackProxy"
-          | "spiritualWeaponRepeatAttack"
+          | "spatialMeleeSpellAttackProxy"
           | "spellAttackDamage";
       }
     >
@@ -709,8 +709,7 @@ export function spellDamageTypes(
         | "heldLightHurl"
         | "spellCreatedHeldObjectAttack"
         | "spellAttackSequence"
-        | "spiritualWeaponAttackProxy"
-        | "spiritualWeaponRepeatAttack"
+        | "spatialMeleeSpellAttackProxy"
         | "spellAttackDamage";
     }
   >,
@@ -1076,19 +1075,19 @@ export function spellSavingThrowOutcomeHole(
           | "rollModifier"
           | "creatureSizeIncrease"
           | "creatureSizeDecrease"
-          | "levitatedCreature"
+          | "controlledVerticalSuspension"
           | "saveGatedDamage"
           | "saveGatedCondition"
           | "saveGatedConditionImmunity"
           | "saveGatedAttackRollAdvantage"
-          | "counterspell"
+          | "spellCastInterruptionReaction"
           | "stagedSaveCondition"
           | "saveGatedConditionWithRepeat"
           | "saveGatedAreaControl"
           | "saveGatedTurnConstraintBundle"
           | "command"
-          | "greaseGroundHazard"
-          | "gustOfWindLine";
+          | "persistentAreaSaveCondition"
+          | "directionalPersistentArea";
       }
     >
   >,
@@ -1264,17 +1263,17 @@ export function spellSavingThrowAbility(
         | "saveGatedDamage"
         | "creatureSizeIncrease"
         | "creatureSizeDecrease"
-        | "levitatedCreature"
+        | "controlledVerticalSuspension"
         | "saveGatedCondition"
         | "saveGatedConditionImmunity"
         | "saveGatedAttackRollAdvantage"
-        | "counterspell"
+        | "spellCastInterruptionReaction"
         | "stagedSaveCondition"
         | "saveGatedConditionWithRepeat"
         | "saveGatedAreaControl"
         | "command"
-        | "greaseGroundHazard"
-        | "gustOfWindLine"
+        | "persistentAreaSaveCondition"
+        | "directionalPersistentArea"
         | "saveGatedTurnConstraintBundle";
     }
   >,
@@ -1299,22 +1298,22 @@ export function spellSavingThrowTargeting(
         | "saveGatedDamage"
         | "creatureSizeIncrease"
         | "creatureSizeDecrease"
-        | "levitatedCreature"
+        | "controlledVerticalSuspension"
         | "saveGatedCondition"
         | "saveGatedConditionImmunity"
         | "saveGatedAttackRollAdvantage"
-        | "counterspell"
+        | "spellCastInterruptionReaction"
         | "stagedSaveCondition"
         | "saveGatedConditionWithRepeat"
         | "saveGatedAreaControl"
         | "command"
-        | "greaseGroundHazard"
-        | "gustOfWindLine"
+        | "persistentAreaSaveCondition"
+        | "directionalPersistentArea"
         | "saveGatedTurnConstraintBundle";
     }
   >,
 ): SpellTargeting {
-  return invocation.procedure === "counterspell"
+  return invocation.procedure === "spellCastInterruptionReaction"
     ? { kind: "singleCombatant" }
     : invocation.procedure === "attackBurstSaveDamage"
       ? invocation.burst.targeting

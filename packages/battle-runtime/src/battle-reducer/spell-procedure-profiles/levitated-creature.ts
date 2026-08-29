@@ -10,11 +10,11 @@ import {
 } from "../battle-runtime-protocol.ts";
 import { spellSavingThrowOutcomeHoleId } from "../spells-damage-fills.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-controlledVerticalSuspension-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
 //
-// The levitatedCreature Spell Procedure Profile: a prepared Magic Action spell
+// The controlledVerticalSuspension Spell Procedure Profile: a prepared Magic Action spell
 // that suspends one visible creature target, stores spell-owned altitude state,
 // and gates initial rise, target movement, caster altitude control, and cleanup
 // through caller/table-supplied witnesses.
@@ -32,7 +32,7 @@ import {
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
-  type LevitatedCreatureSpellInvocation,
+  type ControlledVerticalSuspensionSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
@@ -47,7 +47,7 @@ import {
 import {
   LEVITATE_ALTITUDE_CONTROL_FEET,
   LEVITATE_INITIAL_RISE_FEET,
-  levitateInitialRiseHole,
+  controlledVerticalSuspensionInitialRiseHole,
 } from "../levitate-creature.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
 import { spellTargetHole } from "../spells-targeting.ts";
@@ -72,15 +72,16 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
-type LevitatedCreatureInvocation = LevitatedCreatureSpellInvocation;
-type LevitatedCreatureResolveInput =
-  SpellProcedureProfileResolveInput<LevitatedCreatureInvocation>;
+type ControlledVerticalSuspensionInvocation =
+  ControlledVerticalSuspensionSpellInvocation;
+type ControlledVerticalSuspensionResolveInput =
+  SpellProcedureProfileResolveInput<ControlledVerticalSuspensionInvocation>;
 
-function admitLevitatedCreature(
+function admitControlledVerticalSuspension(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
-): readonly LevitatedCreatureInvocation[] {
-  const projection = levitatedCreatureSpellProjection(
+): readonly ControlledVerticalSuspensionInvocation[] {
+  const projection = controlledVerticalSuspensionSpellProjection(
     ctx.actor.combatantId,
     spell,
   );
@@ -88,7 +89,7 @@ function admitLevitatedCreature(
     return [];
   }
   return ctx.spellCastOptions.flatMap(
-    (slot): readonly LevitatedCreatureInvocation[] =>
+    (slot): readonly ControlledVerticalSuspensionInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []
         : [
@@ -103,11 +104,11 @@ function admitLevitatedCreature(
   );
 }
 
-function levitatedCreatureSpellProjection(
+function controlledVerticalSuspensionSpellProjection(
   actorId: CombatantId,
   spell: BattleSpellAdmissionSource,
 ): Omit<
-  LevitatedCreatureInvocation,
+  ControlledVerticalSuspensionInvocation,
   "access" | "resource" | "spell" | "actionCost"
 > | null {
   if (
@@ -169,14 +170,14 @@ function levitatedCreatureSpellProjection(
     return null;
   }
   return {
-    procedure: "levitatedCreature",
+    procedure: "controlledVerticalSuspension",
     ability: "con",
     dc: phase.dc,
     targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
     rangeFeet: movementFeet(60),
     maxInitialRiseFeet: LEVITATE_INITIAL_RISE_FEET,
     activeEffect: {
-      kind: "spellLevitatedCreature",
+      kind: "controlledVerticalSuspension",
       sourceCombatantId: actorId,
       maxAltitudeChangeFeet: LEVITATE_ALTITUDE_CONTROL_FEET,
       rangeFeet: movementFeet(60),
@@ -189,10 +190,10 @@ function levitatedCreatureSpellProjection(
   };
 }
 
-function discoverLevitatedCreatureCastAct(
+function discoverControlledVerticalSuspensionCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<LevitatedCreatureInvocation>,
+  invocation: BattleExecutableSpellInvocation<ControlledVerticalSuspensionInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   return actionSpellCastCandidatesForTargetHole(
@@ -202,8 +203,8 @@ function discoverLevitatedCreatureCastAct(
   );
 }
 
-function resolveLevitatedCreature(
-  input: LevitatedCreatureResolveInput,
+function resolveControlledVerticalSuspension(
+  input: ControlledVerticalSuspensionResolveInput,
 ): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
@@ -217,7 +218,7 @@ function resolveLevitatedCreature(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Levitate's creature branch uses one target, one initial-rise fill, and, for unwilling targets, one Constitution Saving Throw fill.",
+      "ControlledVerticalSuspension's creature branch uses one target, one initial-rise fill, and, for unwilling targets, one Constitution Saving Throw fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -229,7 +230,7 @@ function resolveLevitatedCreature(
     targetId: input.fillSet.targetId,
     targetSpatialFacts: input.fillSet.targetSpatialFacts,
     invalidTargetMessage:
-      "Levitate creature target must be a combatant within 60 feet that the caster can see.",
+      "ControlledVerticalSuspension creature target must be a combatant within 60 feet that the caster can see.",
   });
   if (targetSelection.tag !== "selected") {
     return targetSelection;
@@ -242,7 +243,7 @@ function resolveLevitatedCreature(
     targetSpatialFacts: input.fillSet.targetSpatialFacts,
     savingThrowOutcomes: input.fillSet.savingThrowOutcomes,
     willingTargetSaveMessage:
-      "Willing Levitate creature targets do not make a Saving Throw.",
+      "Willing ControlledVerticalSuspension creature targets do not make a Saving Throw.",
   });
   if (saveResolution.tag !== "saveGate") {
     return saveResolution;
@@ -253,11 +254,13 @@ function resolveLevitatedCreature(
   }
   if (saveGate.tag === "unaffected") {
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (input.fillSet.levitateInitialRiseFeet !== undefined) {
+    if (
+      input.fillSet.controlledVerticalSuspensionInitialRiseFeet !== undefined
+    ) {
       return invalidResult(
         input.input.state,
         "invalidFill",
-        "Successful Levitate creature saves are unaffected and do not use an initial-rise fill.",
+        "Successful ControlledVerticalSuspension creature saves are unaffected and do not use an initial-rise fill.",
       );
     }
     /* v8 ignore stop -- @preserve */
@@ -274,9 +277,9 @@ function resolveLevitatedCreature(
     return resolutionFromStateResult(resourced);
   }
 
-  if (input.fillSet.levitateInitialRiseFeet === undefined) {
+  if (input.fillSet.controlledVerticalSuspensionInitialRiseFeet === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
-      levitateInitialRiseHole({
+      controlledVerticalSuspensionInitialRiseHole({
         actorId: input.actorId,
         targetId: target.combatantId,
         maxDistanceFeet: input.invocation.maxInitialRiseFeet,
@@ -290,12 +293,12 @@ function resolveLevitatedCreature(
       : spellRequiresConcentration(input.invocation)
         ? breakBattleConcentration(input.input.state, input.actorId)
         : input.input.state;
-  const effected = applyLevitatedCreatureSpellEffect(
+  const effected = applyControlledVerticalSuspensionSpellEffect(
     concentrationBase,
     input.actorId,
     [target.combatantId],
     input.invocation,
-    input.fillSet.levitateInitialRiseFeet,
+    input.fillSet.controlledVerticalSuspensionInitialRiseFeet,
     input.input.subject.procedureRef,
   );
   if (input.storedGlyphRelease !== undefined) {
@@ -313,11 +316,11 @@ function resolveLevitatedCreature(
   return resolutionFromStateResult(resourced);
 }
 
-function applyLevitatedCreatureSpellEffect(
+function applyControlledVerticalSuspensionSpellEffect(
   state: BattleState,
   actorId: CombatantId,
   targetIds: readonly CombatantId[],
-  invocation: LevitatedCreatureResolveInput["invocation"],
+  invocation: ControlledVerticalSuspensionResolveInput["invocation"],
   initialRiseFeet: MovementFeet,
   procedureRef: ActionSpellBattleResolutionInput["subject"]["procedureRef"],
 ): BattleState {
@@ -342,11 +345,11 @@ function applyLevitatedCreatureSpellEffect(
       altitudeFeet: initialRiseFeet,
     };
     const displacedEffects = allocatedTarget.activeEffects.filter(
-      (effect) => effect.kind === "spellLevitatedCreature",
+      (effect) => effect.kind === "controlledVerticalSuspension",
     );
     const activeEffects = [
       ...allocatedTarget.activeEffects.filter(
-        (effect) => effect.kind !== "spellLevitatedCreature",
+        (effect) => effect.kind !== "controlledVerticalSuspension",
       ),
       nextEffect,
     ];
@@ -359,44 +362,45 @@ function applyLevitatedCreatureSpellEffect(
   }, state);
 }
 
-const LevitatedCreatureInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: LeveledSpellInvocationResourceSchema,
-    procedure: Schema.Literal("levitatedCreature"),
-    spellRuleFacts: SpellRuleExecutionFactsSchema,
-    actionCost: Schema.Literal("magicAction"),
-    ability: Schema.Literal("con"),
-    dc: DcSourceSchema,
-    targeting: Schema.Struct({
-      kind: Schema.Literal("targetList"),
-      minTargets: Schema.Literal(1),
-      maxTargets: Schema.Literal(1),
-    }),
-    activeEffect: Schema.Struct({
-      ...BattleEffectOccurrenceTemplateSchemaFields,
-      kind: Schema.Literal("spellLevitatedCreature"),
-      sourceCombatantId: CombatantId,
-      maxAltitudeChangeFeet: MovementFeet,
-      rangeFeet: MovementFeet,
-      expiresAt: Schema.Struct({
-        kind: Schema.Literal("concentration"),
-        combatantId: CombatantId,
-        durationTicks: ElapsedTimeTicksSchema,
+const ControlledVerticalSuspensionInvocationSchema =
+  spellProcedureExecutionSchema(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: LeveledSpellInvocationResourceSchema,
+      procedure: Schema.Literal("controlledVerticalSuspension"),
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
+      actionCost: Schema.Literal("magicAction"),
+      ability: Schema.Literal("con"),
+      dc: DcSourceSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("targetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Literal(1),
       }),
+      activeEffect: Schema.Struct({
+        ...BattleEffectOccurrenceTemplateSchemaFields,
+        kind: Schema.Literal("controlledVerticalSuspension"),
+        sourceCombatantId: CombatantId,
+        maxAltitudeChangeFeet: MovementFeet,
+        rangeFeet: MovementFeet,
+        expiresAt: Schema.Struct({
+          kind: Schema.Literal("concentration"),
+          combatantId: CombatantId,
+          durationTicks: ElapsedTimeTicksSchema,
+        }),
+      }),
+      maxInitialRiseFeet: MovementFeet,
+      rangeFeet: MovementFeet,
     }),
-    maxInitialRiseFeet: MovementFeet,
-    rangeFeet: MovementFeet,
-  }),
-);
-export const levitatedCreatureProfile: SpellProcedureDeclaration<
-  "levitatedCreature",
-  LevitatedCreatureInvocation
+  );
+export const controlledVerticalSuspensionProfile: SpellProcedureDeclaration<
+  "controlledVerticalSuspension",
+  ControlledVerticalSuspensionInvocation
 > = {
-  procedure: "levitatedCreature",
-  executionSchema: LevitatedCreatureInvocationSchema,
-  admit: admitLevitatedCreature,
-  discoverCastAct: discoverLevitatedCreatureCastAct,
-  resolve: resolveLevitatedCreature,
+  procedure: "controlledVerticalSuspension",
+  executionSchema: ControlledVerticalSuspensionInvocationSchema,
+  admit: admitControlledVerticalSuspension,
+  discoverCastAct: discoverControlledVerticalSuspensionCastAct,
+  resolve: resolveControlledVerticalSuspension,
 };
 import { spellInvocationResourceForCastOption } from "./profile.ts";

@@ -21,7 +21,7 @@ import {
   type BattleActiveEffect,
   type BattleResolutionInputForSubject,
   type BattleResolutionResult,
-  type BattleDancingLightsPlacementValue,
+  type BattleMovableLightPlacementValue,
   type BattleState,
   type BattleCreatureState,
   type BattleExecutableSpellInvocation,
@@ -34,7 +34,7 @@ import { spellReplayContinuation } from "./spell-reaction-continuation.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
-import { battleDancingLightId, type CombatantId } from "../identity.ts";
+import { battleMovableLightId, type CombatantId } from "../identity.ts";
 import {
   damageDispositionFillFor,
   damageDispositionFillsValidation,
@@ -49,14 +49,18 @@ import {
 } from "./attack-roll.ts";
 import { activeEffectArmorClass } from "./creature-state-execution.ts";
 import {
-  type DancingLightsCastPlan,
-  type DancingLightsRepositionPlan,
+  applyMovableLightSpellEffect,
+  applySpatialMeleeSpellAttackProxyEffect,
+  movableLightFromEffect,
+  repositionMovableLightSpellEffect,
+  type MovableLightCastPlan,
+  type MovableLightRepositionPlan,
 } from "./spells-active-effects.ts";
 import {
   breakBattleConcentration,
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowFillCheck,
-  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
   fillsMatchingHoleIds,
   damageLifecycleConcentrationSavingThrowHoles,
 } from "./damage-apply.ts";
@@ -82,10 +86,7 @@ import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlet
 import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
 import {
-  applyDancingLightsSpellEffect,
   releaseSpellCreatedHeldObjectState,
-  repositionDancingLightsSpellEffect,
-  dancingLightsFromEffect,
   applySpellActiveEffects,
   applySpellLightEmitterEffects,
   applySpellDamage,
@@ -99,7 +100,6 @@ import {
   spellTargetIsLegal,
   validateSpellDamageFill,
 } from "./spells-holes-fills.ts";
-import { applySpiritualWeaponAttackProxyEffect } from "./spells-active-effects.ts";
 import { markSpellSlotExpendedThisTurn } from "./spell-turn-resources.ts";
 import {
   clearPendingAttackRollMissToHitReplacementSelection,
@@ -121,9 +121,9 @@ import { readiedSpellTargetSelection } from "./spells-resolve-readied-target.ts"
 import { fillsBelongToSpellCastHoles } from "./fill-hole-protocol.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
-  spellDancingLightsPlacementHole,
-  spiritualWeaponForcePositionHole,
-  spiritualWeaponForcePositionInvalidReason,
+  spellMovableLightPlacementHole,
+  spatialMeleeSpellAttackProxyPositionHole,
+  spatialMeleeSpellAttackProxyPositionInvalidReason,
 } from "./spells-targeting.ts";
 
 type StoredGlyphAreaRelease = Extract<
@@ -137,7 +137,9 @@ type StoredGlyphTriggeringCreatureRelease = Extract<
 type StoredGlyphDirectTargetReleaseInvocation = Extract<
   StoredGlyphTriggeringCreatureRelease["invocation"],
   {
-    readonly procedure: "attackBurstSaveDamage" | "spiritualWeaponAttackProxy";
+    readonly procedure:
+      | "attackBurstSaveDamage"
+      | "spatialMeleeSpellAttackProxy";
   }
 >;
 
@@ -163,7 +165,7 @@ type TargetedSpellReleaseInvocation = Extract<
     readonly procedure:
       | "attackBurstSaveDamage"
       | "spellAttackDamage"
-      | "spiritualWeaponAttackProxy";
+      | "spatialMeleeSpellAttackProxy";
   }
 >;
 
@@ -206,7 +208,7 @@ type NonSpiritualSpellReleaseRequest =
         {
           readonly procedure:
             | "attackBurstSaveDamage"
-            | "spiritualWeaponAttackProxy";
+            | "spatialMeleeSpellAttackProxy";
         }
       >;
     });
@@ -261,40 +263,39 @@ export function resolveReleaseSpellCreatedHeldObjectCommand(
   };
 }
 
-export function resolveDancingLightsCastSpellAct(input: {
+export function resolveMovableLightCastSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
     {
-      readonly procedure:
-        | "dancingLightsSeparateCast"
-        | "dancingLightsCombinedCast";
+      readonly procedure: "movableLightManifestation";
+      readonly operation: "create";
     }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (dancingLightsFillSetHasUnrelatedFills(input.fillSet)) {
+  if (movableLightFillSetHasUnrelatedFills(input.fillSet)) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Dancing Lights spells use only a Dancing Lights placement fill.",
+      "Movable-light manifestation uses only a movable-light placement fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  const placement = input.fillSet.dancingLightsPlacement?.value;
+  const placement = input.fillSet.movableLightPlacement?.value;
   if (placement === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
-      spellDancingLightsPlacementHole(
+      spellMovableLightPlacementHole(
         input.invocation,
         input.invocation.form,
         [],
       ),
     ]);
   }
-  const placementPlan = dancingLightsCastPlacementPlan(
+  const placementPlan = movableLightCastPlacementPlan(
     input.actorId,
     input.invocation,
     placement,
@@ -333,7 +334,7 @@ export function resolveDancingLightsCastSpellAct(input: {
   /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher admission proves this cantrip's Magic Action, and spell-cast interrupt replay cannot spend the caster's Action before this synchronous commit. */
   if (resourced.tag === "invalid") return resourced;
   /* v8 ignore stop -- @preserve */
-  const effected = applyDancingLightsSpellEffect(
+  const effected = applyMovableLightSpellEffect(
     resourced.state,
     input.actorId,
     input.invocation,
@@ -346,22 +347,25 @@ export function resolveDancingLightsCastSpellAct(input: {
   };
 }
 
-export function resolveDancingLightsRepositionSpellAct(input: {
+export function resolveMovableLightRepositionSpellAct(input: {
   readonly input: BonusActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "dancingLightsReposition" }
+    {
+      readonly procedure: "movableLightManifestation";
+      readonly operation: "reposition";
+    }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (dancingLightsFillSetHasUnrelatedFills(input.fillSet)) {
+  if (movableLightFillSetHasUnrelatedFills(input.fillSet)) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Dancing Lights spells use only a Dancing Lights placement fill.",
+      "Movable-light manifestation uses only a movable-light placement fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -372,32 +376,32 @@ export function resolveDancingLightsRepositionSpellAct(input: {
         candidate,
       ): candidate is Extract<
         BattleActiveEffect,
-        { readonly kind: "dancingLights" }
+        { readonly kind: "movableLightManifestation" }
       > =>
-        candidate.kind === "dancingLights" &&
+        candidate.kind === "movableLightManifestation" &&
         candidate.effectRef === input.invocation.activeEffectRef &&
         candidate.sourceProcedureRef ===
-          input.invocation.sourceDancingLightsProcedureRef &&
+          input.invocation.sourceManifestationProcedureRef &&
         candidate.sourceCombatantId === input.actorId,
     );
   if (activeEffect === undefined) {
     return invalidResult(
       input.input.state,
       "staleSubject",
-      "Dancing Lights movement requires active lights from this spell.",
+      "Movable-light reposition requires an active manifestation from this spell.",
     );
   }
-  const placement = input.fillSet.dancingLightsPlacement?.value;
+  const placement = input.fillSet.movableLightPlacement?.value;
   if (placement === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
-      spellDancingLightsPlacementHole(
+      spellMovableLightPlacementHole(
         input.invocation,
         activeEffect.form,
-        dancingLightsFromEffect(activeEffect).map((light) => light.lightId),
+        movableLightFromEffect(activeEffect).map((light) => light.lightId),
       ),
     ]);
   }
-  const placementPlan = dancingLightsRepositionPlacementPlan(
+  const placementPlan = movableLightRepositionPlacementPlan(
     input.invocation,
     activeEffect,
     placement,
@@ -412,7 +416,7 @@ export function resolveDancingLightsRepositionSpellAct(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  const effected = repositionDancingLightsSpellEffect(
+  const effected = repositionMovableLightSpellEffect(
     input.input.state,
     input.actorId,
     placementPlan.success,
@@ -440,30 +444,29 @@ export function resolveDancingLightsRepositionSpellAct(input: {
   };
 }
 
-function dancingLightsCastPlacementPlan(
+function movableLightCastPlacementPlan(
   actorId: CombatantId,
   invocation: Extract<
     BattleExecutableSpellInvocation,
     {
-      readonly procedure:
-        | "dancingLightsSeparateCast"
-        | "dancingLightsCombinedCast";
+      readonly procedure: "movableLightManifestation";
+      readonly operation: "create";
     }
   >,
-  placement: BattleDancingLightsPlacementValue,
-): Result.Result<DancingLightsCastPlan, string> {
+  placement: BattleMovableLightPlacementValue,
+): Result.Result<MovableLightCastPlan, string> {
   if (placement.mode !== "cast" || placement.form !== invocation.form) {
     return Result.fail(
-      "Dancing Lights placement does not match the selected form.",
+      "Movable-light placement does not match the selected form.",
     );
   }
   if (placement.form === "combinedMediumForm") {
     return placement.light.distanceFromCasterFeet > invocation.rangeFeet
-      ? Result.fail("Dancing Lights placement must be within the spell range.")
+      ? Result.fail("Movable-light placement must be within spell range.")
       : Result.succeed({
           form: "combinedMediumForm",
           light: {
-            lightId: battleDancingLightId(
+            lightId: battleMovableLightId(
               `${actorId}:${invocation.sourceProcedureRef}:combinedMediumForm:1`,
             ),
             positionId: placement.light.positionId,
@@ -473,10 +476,10 @@ function dancingLightsCastPlacementPlan(
   const placements = oneToFourFromArray(placement.lights);
   if (placements === null) {
     return Result.fail(
-      "Dancing Lights separate form requires one to four lights.",
+      "Movable-light separate form requires one to four lights.",
     );
   }
-  const placementError = dancingLightsSeparatePlacementError(
+  const placementError = movableLightSeparatePlacementError(
     placements,
     invocation.rangeFeet,
     invocation.spacingFeet,
@@ -487,7 +490,7 @@ function dancingLightsCastPlacementPlan(
   return Result.succeed({
     form: "separateLights",
     lights: mapOneToFour(placements, (light, index) => ({
-      lightId: battleDancingLightId(
+      lightId: battleMovableLightId(
         `${actorId}:${invocation.sourceProcedureRef}:separateLights:${index + 1}`,
       ),
       positionId: light.positionId,
@@ -495,22 +498,26 @@ function dancingLightsCastPlacementPlan(
   });
 }
 
-function dancingLightsRepositionPlacementPlan(
+function movableLightRepositionPlacementPlan(
   invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "dancingLightsReposition" }
+    {
+      readonly procedure: "movableLightManifestation";
+      readonly operation: "reposition";
+    }
   >,
-  effect: Extract<BattleActiveEffect, { readonly kind: "dancingLights" }>,
-  placement: BattleDancingLightsPlacementValue,
-): Result.Result<DancingLightsRepositionPlan, string> {
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "movableLightManifestation" }
+  >,
+  placement: BattleMovableLightPlacementValue,
+): Result.Result<MovableLightRepositionPlan, string> {
   if (placement.mode !== "reposition") {
-    return Result.fail(
-      "Dancing Lights movement requires reposition placement.",
-    );
+    return Result.fail("Movable-light movement requires reposition placement.");
   }
   if (placement.form !== effect.form) {
     return Result.fail(
-      "Dancing Lights movement form does not match the active lights.",
+      "Movable-light movement form does not match the active manifestation.",
     );
   }
   const placements =
@@ -522,21 +529,21 @@ function dancingLightsRepositionPlacementPlan(
       (candidate) => candidate.moveDistanceFeet > invocation.maxMoveFeet,
     )
   ) {
-    return Result.fail("Dancing Lights can move a light up to 60 feet.");
+    return Result.fail("Movable-light reposition exceeds its movement limit.");
   }
-  const currentDancingLightIds = dancingLightsFromEffect(effect).map(
-    (dancingLight) => dancingLight.lightId,
+  const currentMovableLightIds = movableLightFromEffect(effect).map(
+    (movableLight) => movableLight.lightId,
   );
   const placedLightIds = placements.map((candidate) => candidate.lightId);
   const narrowedPlacements = oneToFourFromArray(placements);
   if (
     narrowedPlacements === null ||
     placedLightIds.length !== new Set(placedLightIds).size ||
-    placedLightIds.length !== currentDancingLightIds.length ||
-    placedLightIds.some((lightId) => !currentDancingLightIds.includes(lightId))
+    placedLightIds.length !== currentMovableLightIds.length ||
+    placedLightIds.some((lightId) => !currentMovableLightIds.includes(lightId))
   ) {
     return Result.fail(
-      "Dancing Lights movement must place each active light identity.",
+      "Movable-light movement must place each active light identity.",
     );
   }
   const inRange = oneToFourFromArray(
@@ -551,7 +558,7 @@ function dancingLightsRepositionPlacementPlan(
     });
   }
   if (placement.form === "separateLights") {
-    const placementError = dancingLightsSeparatePlacementError(
+    const placementError = movableLightSeparatePlacementError(
       inRange,
       invocation.rangeFeet,
       invocation.spacingFeet,
@@ -584,7 +591,7 @@ function dancingLightsRepositionPlacementPlan(
   });
 }
 
-function dancingLightsFillSetHasUnrelatedFills(
+function movableLightFillSetHasUnrelatedFills(
   fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>,
 ): boolean {
   return (
@@ -658,7 +665,7 @@ function mapOneToFour<T, U>(
           ];
 }
 
-function dancingLightsSeparatePlacementError(
+function movableLightSeparatePlacementError(
   placements: OneToFour<{
     readonly distanceFromCasterFeet: number;
     readonly nearestSiblingDistanceFeet?: number;
@@ -669,7 +676,7 @@ function dancingLightsSeparatePlacementError(
   if (
     placements.some((candidate) => candidate.distanceFromCasterFeet > rangeFeet)
   ) {
-    return "Dancing Lights placement must be within the spell range.";
+    return "Movable-light placement must be within spell range.";
   }
   if (
     placements.length > 1 &&
@@ -679,7 +686,7 @@ function dancingLightsSeparatePlacementError(
         candidate.nearestSiblingDistanceFeet > spacingFeet,
     )
   ) {
-    return "Dancing Lights separate lights must stay within 20 feet of another light.";
+    return "Separate movable lights must remain within their spacing limit.";
   }
   return null;
 }
@@ -853,7 +860,7 @@ export function resolveSpellRelease(
         triggeringTargetId: request.targetId,
       });
     }
-    return invocation.procedure === "spiritualWeaponAttackProxy"
+    return invocation.procedure === "spatialMeleeSpellAttackProxy"
       ? resolveStoredGlyphDirectTargetRelease(
           input,
           invocation,
@@ -1027,14 +1034,14 @@ function resolveStoredGlyphDirectTargetRelease(
   }
   /* v8 ignore stop -- @preserve */
   const invocation = selectedInvocation.invocation;
-  if (invocation.procedure === "spiritualWeaponAttackProxy") {
-    if (fillSet.spiritualWeaponForcePosition === undefined) {
+  if (invocation.procedure === "spatialMeleeSpellAttackProxy") {
+    if (fillSet.spatialMeleeSpellAttackProxyPosition === undefined) {
       return needsHolesResult(input.state, input.subject, [
-        spiritualWeaponForcePositionHole(invocation),
+        spatialMeleeSpellAttackProxyPositionHole(invocation),
       ]);
     }
-    const placementError = spiritualWeaponForcePositionInvalidReason(
-      fillSet.spiritualWeaponForcePosition,
+    const placementError = spatialMeleeSpellAttackProxyPositionInvalidReason(
+      fillSet.spatialMeleeSpellAttackProxyPosition,
       invocation,
     );
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -1295,7 +1302,7 @@ function resolveTargetedSpellAttackPreparation(
 ): TargetedSpellAttackPreparation {
   if (
     input.invocation.procedure !== "spellAttackDamage" &&
-    input.invocation.procedure !== "spiritualWeaponAttackProxy"
+    input.invocation.procedure !== "spatialMeleeSpellAttackProxy"
   ) {
     return input.fillSet.attackRoll != null
       ? {
@@ -1365,19 +1372,20 @@ function resolveTargetedSpellAttackAfterRoll(
           },
         };
   }
-  const spiritualWeaponRepeatTargeting = {
+  const spatialMeleeSpellAttackProxyRepeatTargeting = {
     kind: "fixedCombatant" as const,
     combatantId: input.target.combatantId,
   };
   const releaseResolutionStateAfterCriticalMovement =
-    input.invocation.procedure === "spiritualWeaponAttackProxy" &&
-    input.fillSet.spiritualWeaponForcePosition !== undefined
-      ? applySpiritualWeaponAttackProxyEffect({
+    input.invocation.procedure === "spatialMeleeSpellAttackProxy" &&
+    input.invocation.operation === "createAndAttack" &&
+    input.fillSet.spatialMeleeSpellAttackProxyPosition !== undefined
+      ? applySpatialMeleeSpellAttackProxyEffect({
           state: remarkableAthleteMovement.state,
           actorId: input.input.subject.actorId,
           forcePositionId:
-            input.fillSet.spiritualWeaponForcePosition.positionId,
-          repeatTargeting: spiritualWeaponRepeatTargeting,
+            input.fillSet.spatialMeleeSpellAttackProxyPosition.positionId,
+          repeatTargeting: spatialMeleeSpellAttackProxyRepeatTargeting,
           invocation: input.invocation,
         })
       : remarkableAthleteMovement.state;
@@ -1566,7 +1574,7 @@ function targetedSpellReleaseAttackRoll(
 ): ReturnType<typeof effectiveD20TestNaturalOneRerollAttackRoll> | undefined {
   if (
     input.invocation.procedure !== "spellAttackDamage" &&
-    input.invocation.procedure !== "spiritualWeaponAttackProxy"
+    input.invocation.procedure !== "spatialMeleeSpellAttackProxy"
   ) {
     return undefined;
   }
@@ -1811,7 +1819,7 @@ function resolveTargetedSpellHideousLaughterLifecycle(
   input: TargetedSpellDamageAmountInput,
 ): TargetedSpellHideousLaughterPreparation {
   const hideousLaughterSaveCheck =
-    damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+    damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck({
       state: input.releaseDamageBaseState,
       target: input.target,
       damageAmount: input.spellDamageAmount,
@@ -2033,7 +2041,8 @@ function applyTargetedSpellDamageLifecycle(
       damageDisposition: input.damageDisposition,
       spellMarkedDamageRiders: input.spellMarkedDamageRiders,
       sourceDamageRollPenaltyRoll: input.sourceDamageRollPenaltyRoll,
-      hideousLaughterDamageRepeatSaves: input.hideousLaughterLifecycleFills,
+      saveGatedConditionWithRepeatDamageRepeatSaves:
+        input.hideousLaughterLifecycleFills,
       damageSourceId: input.input.subject.actorId,
       spatialFacts: input.fillSet.targetSpatialFacts,
       ...optionalProperty("relationshipDecisions", input.relationshipDecisions),

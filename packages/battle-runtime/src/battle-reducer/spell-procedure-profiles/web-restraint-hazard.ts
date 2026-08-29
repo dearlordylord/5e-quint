@@ -34,7 +34,7 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
-import { resolveWebRestraintHazardSpellAct } from "../spells-resolve-area-effects.ts";
+import { resolvePersistentAreaSaveConditionEscapeSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -52,12 +52,12 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
-type WebRestraintHazardSpellInvocation = Extract<
+type PersistentAreaSaveConditionEscapeSpellInvocation = Extract<
   SupportedSpellInvocation,
-  { readonly procedure: "webRestraintHazard" }
+  { readonly procedure: "persistentAreaSaveConditionEscape" }
 >;
-type WebRestraintHazardResolveInput =
-  SpellProcedureProfileResolveInput<WebRestraintHazardSpellInvocation>;
+type PersistentAreaSaveConditionEscapeResolveInput =
+  SpellProcedureProfileResolveInput<PersistentAreaSaveConditionEscapeSpellInvocation>;
 type OngoingOperationEffect = Extract<
   BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
@@ -70,13 +70,13 @@ type OngoingSaveGateEffect = Extract<
   OngoingOperationEffect,
   { readonly kind: "save_gate" }
 >;
-type WebRestraintSaveEffect = OngoingSaveGateEffect & {
+type PersistentAreaSaveConditionEscapeSaveEffect = OngoingSaveGateEffect & {
   readonly onFail: Extract<
     OngoingSaveGateEffect["onFail"],
     { readonly kind: "apply_condition_while_in_area_or_until_escape" }
   >;
 };
-type WebRestraintHazardProfileShape = {
+type PersistentAreaSaveConditionEscapeProfileShape = {
   readonly durationTicks: ElapsedTimeTicks;
   readonly rangeFeet: number;
   readonly sideFeet: number;
@@ -88,17 +88,17 @@ const WEB_DURATION_HOURS = 1;
 const WEB_OPERATION_COUNT = 7;
 const WEB_CUBE_SIDE_FEET = 20;
 
-function admitWebRestraintHazard(
+function admitPersistentAreaSaveConditionEscape(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
-): readonly WebRestraintHazardSpellInvocation[] {
-  const web = webRestraintHazardSpell(spell);
+): readonly PersistentAreaSaveConditionEscapeSpellInvocation[] {
+  const web = persistentAreaSaveConditionEscapeSpell(spell);
   if (web === null) {
     return [];
   }
 
   return ctx.spellCastOptions.flatMap(
-    (slot): readonly WebRestraintHazardSpellInvocation[] => {
+    (slot): readonly PersistentAreaSaveConditionEscapeSpellInvocation[] => {
       if (Number(slot.spellLevel) < WEB_LEVEL) {
         return [];
       }
@@ -106,7 +106,7 @@ function admitWebRestraintHazard(
         {
           access: { tag: "prepared" },
           resource: spellInvocationResourceForCastOption(slot),
-          procedure: "webRestraintHazard",
+          procedure: "persistentAreaSaveConditionEscape",
           spell,
           ability: "dex",
           dc: { kind: "caster_spell_save_dc" },
@@ -122,9 +122,9 @@ function admitWebRestraintHazard(
   );
 }
 
-function webRestraintHazardSpell(
+function persistentAreaSaveConditionEscapeSpell(
   spell: BattleSpellAdmissionSource,
-): WebRestraintHazardProfileShape | null {
+): PersistentAreaSaveConditionEscapeProfileShape | null {
   const ongoing = ongoingConcentrationAreaSpellFacts(spell);
   if (ongoing === null) {
     return null;
@@ -174,10 +174,10 @@ function webRestraintHazardSpell(
     area.origin.kind !== "point_within_range" ||
     area.shape.kind !== "cube" ||
     area.shape.sideFeet !== WEB_CUBE_SIDE_FEET ||
-    !isWebRestraintSaveGate(enterOperation?.effect) ||
+    !isPersistentAreaSaveConditionEscapeSaveGate(enterOperation?.effect) ||
     enterOperation?.usageLimit?.kind !== "once_per_turn" ||
-    !isWebRestraintSaveGate(startTurnOperation?.effect) ||
-    !isWebRestraintEscapeOperation(escapeOperation) ||
+    !isPersistentAreaSaveConditionEscapeSaveGate(startTurnOperation?.effect) ||
+    !isPersistentAreaSaveConditionEscapeEscapeOperation(escapeOperation) ||
     difficultTerrainOperation === undefined ||
     lightlyObscuredOperation === undefined ||
     anchorOperation?.effect.kind !== "area_anchor_or_layering_requirement" ||
@@ -193,9 +193,9 @@ function webRestraintHazardSpell(
   };
 }
 
-function isWebRestraintSaveGate(
+function isPersistentAreaSaveConditionEscapeSaveGate(
   effect: OngoingOperationEffect | undefined,
-): effect is WebRestraintSaveEffect {
+): effect is PersistentAreaSaveConditionEscapeSaveEffect {
   return (
     effect?.kind === "save_gate" &&
     effect.ability === "dex" &&
@@ -206,7 +206,7 @@ function isWebRestraintSaveGate(
   );
 }
 
-function isWebRestraintEscapeOperation(
+function isPersistentAreaSaveConditionEscapeEscapeOperation(
   operation: OngoingOperation | undefined,
 ): boolean {
   return (
@@ -223,10 +223,10 @@ function isWebRestraintEscapeOperation(
   );
 }
 
-function resolveWebRestraintHazard(
-  input: WebRestraintHazardResolveInput,
+function resolvePersistentAreaSaveConditionEscape(
+  input: PersistentAreaSaveConditionEscapeResolveInput,
 ): BattleResolutionResult {
-  return resolveWebRestraintHazardSpellAct({
+  return resolvePersistentAreaSaveConditionEscapeSpellAct({
     input: input.input,
     actorId: input.actorId,
     invocation: input.invocation,
@@ -234,30 +234,31 @@ function resolveWebRestraintHazard(
   });
 }
 
-const WebRestraintHazardInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: LeveledSpellInvocationResourceSchema,
-    procedure: Schema.Literal("webRestraintHazard"),
-    spellRuleFacts: SpellRuleExecutionFactsSchema,
-    ability: Schema.Literal("dex"),
-    dc: DcSourceSchema,
-    targeting: Schema.Struct({
-      kind: Schema.Literal("pointOriginCube"),
-      sideFeet: MovementFeet,
+const PersistentAreaSaveConditionEscapeInvocationSchema =
+  spellProcedureExecutionSchema(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: LeveledSpellInvocationResourceSchema,
+      procedure: Schema.Literal("persistentAreaSaveConditionEscape"),
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
+      ability: Schema.Literal("dex"),
+      dc: DcSourceSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("pointOriginCube"),
+        sideFeet: MovementFeet,
+      }),
+      durationTicks: ElapsedTimeTicksSchema,
+      rangeFeet: MovementFeet,
     }),
-    durationTicks: ElapsedTimeTicksSchema,
-    rangeFeet: MovementFeet,
-  }),
-);
-export const webRestraintHazardProfile = {
-  procedure: "webRestraintHazard",
-  executionSchema: WebRestraintHazardInvocationSchema,
-  admit: admitWebRestraintHazard,
+  );
+export const persistentAreaSaveConditionEscapeProfile = {
+  procedure: "persistentAreaSaveConditionEscape",
+  executionSchema: PersistentAreaSaveConditionEscapeInvocationSchema,
+  admit: admitPersistentAreaSaveConditionEscape,
   discoverCastAct: discoverActionSpellAreaCastAct,
-  resolve: resolveWebRestraintHazard,
+  resolve: resolvePersistentAreaSaveConditionEscape,
 } satisfies SpellProcedureDeclaration<
-  "webRestraintHazard",
-  WebRestraintHazardSpellInvocation
+  "persistentAreaSaveConditionEscape",
+  PersistentAreaSaveConditionEscapeSpellInvocation
 >;
 import { spellInvocationResourceForCastOption } from "./profile.ts";

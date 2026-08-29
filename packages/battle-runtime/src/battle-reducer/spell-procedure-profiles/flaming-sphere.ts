@@ -2,9 +2,9 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.RAM_MOVABLE_PERSISTENT_AREA_HAZARD_LIFECYCLE
 //
-// The flamingSphere Spell Procedure Profile: action-time Spell Slot casting
+// The ramMovablePersistentArea Spell Procedure Profile: action-time Spell Slot casting
 // creates a caster-owned Concentration sphere hazard. The runtime owns Spell
 // Slot spending, Concentration duration, Dexterity Saving Throw-gated Fire
 // damage, and Bonus Action ram/reposition command witnesses; the table owns
@@ -33,7 +33,7 @@ import {
 } from "../../battle-state-execution.ts";
 import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
 import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
-import { resolveFlamingSphereSpellAct } from "../spells-resolve-area-effects.ts";
+import { resolveRamMovablePersistentAreaSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -52,12 +52,18 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
-type FlamingSphereSpellInvocation = Extract<
+type RamMovablePersistentAreaSpellInvocation = Extract<
   SupportedSpellInvocation,
-  { readonly procedure: "flamingSphere" }
+  {
+    readonly procedure: "persistentAreaSaveDamage";
+    readonly lifecycle: {
+      readonly kind: "casterActionReposition";
+      readonly actionCost: "bonusAction";
+    };
+  }
 >;
-type FlamingSphereResolveInput =
-  SpellProcedureProfileResolveInput<FlamingSphereSpellInvocation>;
+type RamMovablePersistentAreaResolveInput =
+  SpellProcedureProfileResolveInput<RamMovablePersistentAreaSpellInvocation>;
 
 type OngoingOperationEffect = Extract<
   BattleSpellAdmissionSource["mechanics"],
@@ -67,38 +73,39 @@ type OngoingSaveGateEffect = Extract<
   OngoingOperationEffect,
   { readonly kind: "save_gate" }
 >;
-type FlamingSphereSaveEffect = OngoingSaveGateEffect & {
+type RamMovablePersistentAreaSaveEffect = OngoingSaveGateEffect & {
   readonly onFail: Extract<
     OngoingSaveGateEffect["onFail"],
     { readonly kind: "damage" }
   >;
 };
-type FlamingSphereProfileShape = {
+type RamMovablePersistentAreaProfileShape = {
   readonly durationTicks: ElapsedTimeTicks;
   readonly diameterFeet: number;
   readonly ramMaxMoveFeet: number;
-  readonly damageAmount: FlamingSphereSaveEffect["onFail"]["amount"];
+  readonly damageAmount: RamMovablePersistentAreaSaveEffect["onFail"]["amount"];
 };
 
-const FLAMING_SPHERE_LEVEL = 2;
-const FLAMING_SPHERE_RANGE_FEET = 60;
-const FLAMING_SPHERE_DURATION_MINUTES = 1;
-const FLAMING_SPHERE_OPERATION_COUNT = 5;
-const FLAMING_SPHERE_DIAMETER_FEET = 5;
-const FLAMING_SPHERE_RADIUS_FEET = FLAMING_SPHERE_DIAMETER_FEET / 2;
-const FLAMING_SPHERE_END_DISTANCE_FEET = 5;
-const FLAMING_SPHERE_RAM_MAX_MOVE_FEET = 30;
-const FLAMING_SPHERE_LIGHT_BRIGHT_RADIUS_FEET = 20;
-const FLAMING_SPHERE_LIGHT_DIM_ADDITIONAL_FEET = 20;
-const FLAMING_SPHERE_BASE_DAMAGE_DICE = 2;
-const FLAMING_SPHERE_DAMAGE_DIE_SIZE = 6;
-const FLAMING_SPHERE_DAMAGE_DICE_PER_SLOT_LEVEL = 1;
+const RAM_MOVABLE_PERSISTENT_AREA_LEVEL = 2;
+const RAM_MOVABLE_PERSISTENT_AREA_RANGE_FEET = 60;
+const RAM_MOVABLE_PERSISTENT_AREA_DURATION_MINUTES = 1;
+const RAM_MOVABLE_PERSISTENT_AREA_OPERATION_COUNT = 5;
+const RAM_MOVABLE_PERSISTENT_AREA_DIAMETER_FEET = 5;
+const RAM_MOVABLE_PERSISTENT_AREA_RADIUS_FEET =
+  RAM_MOVABLE_PERSISTENT_AREA_DIAMETER_FEET / 2;
+const RAM_MOVABLE_PERSISTENT_AREA_END_DISTANCE_FEET = 5;
+const RAM_MOVABLE_PERSISTENT_AREA_RAM_MAX_MOVE_FEET = 30;
+const RAM_MOVABLE_PERSISTENT_AREA_LIGHT_BRIGHT_RADIUS_FEET = 20;
+const RAM_MOVABLE_PERSISTENT_AREA_LIGHT_DIM_ADDITIONAL_FEET = 20;
+const RAM_MOVABLE_PERSISTENT_AREA_BASE_DAMAGE_DICE = 2;
+const RAM_MOVABLE_PERSISTENT_AREA_DAMAGE_DIE_SIZE = 6;
+const RAM_MOVABLE_PERSISTENT_AREA_DAMAGE_DICE_PER_SLOT_LEVEL = 1;
 
-function admitFlamingSphere(
+function admitRamMovablePersistentArea(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
-): readonly FlamingSphereSpellInvocation[] {
-  const sphere = flamingSphereSpell(spell);
+): readonly RamMovablePersistentAreaSpellInvocation[] {
+  const sphere = ramMovablePersistentAreaSpell(spell);
   if (sphere === null) {
     return [];
   }
@@ -113,7 +120,13 @@ function admitFlamingSphere(
       ? null
       : {
           ...base,
-          procedure: "flamingSphere",
+          procedure: "persistentAreaSaveDamage",
+          lifecycle: {
+            kind: "casterActionReposition",
+            actionCost: "bonusAction",
+            movedAreaOperation: "saveDamage",
+            collisionDisposition: "stopAndAffectAdjacent",
+          },
           ability: "dex",
           dc: { kind: "caster_spell_save_dc" },
           targeting: {
@@ -121,16 +134,16 @@ function admitFlamingSphere(
             diameterFeet: movementFeet(sphere.diameterFeet),
           },
           durationTicks: sphere.durationTicks,
-          rangeFeet: movementFeet(FLAMING_SPHERE_RANGE_FEET),
+          rangeFeet: movementFeet(RAM_MOVABLE_PERSISTENT_AREA_RANGE_FEET),
           ramMaxMoveFeet: movementFeet(sphere.ramMaxMoveFeet),
           damage: { expr: damageExpr, damageType: "fire" },
         };
   });
 }
 
-function flamingSphereSpell(
+function ramMovablePersistentAreaSpell(
   spell: BattleSpellAdmissionSource,
-): FlamingSphereProfileShape | null {
+): RamMovablePersistentAreaProfileShape | null {
   if (spell.mechanics.family !== "ongoing_effect") {
     return null;
   }
@@ -148,7 +161,8 @@ function flamingSphereSpell(
     (operation) =>
       operation.trigger.kind ===
         "on_creature_ends_turn_within_distance_of_area" &&
-      operation.trigger.distanceFeet === FLAMING_SPHERE_END_DISTANCE_FEET,
+      operation.trigger.distanceFeet ===
+        RAM_MOVABLE_PERSISTENT_AREA_END_DISTANCE_FEET,
   );
   const ramOperation = spell.mechanics.operations.find(
     (operation) =>
@@ -172,49 +186,57 @@ function flamingSphereSpell(
   );
 
   if (
-    spell.mechanics.level !== FLAMING_SPHERE_LEVEL ||
+    spell.mechanics.level !== RAM_MOVABLE_PERSISTENT_AREA_LEVEL ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== FLAMING_SPHERE_RANGE_FEET ||
+    spell.mechanics.range.feet !== RAM_MOVABLE_PERSISTENT_AREA_RANGE_FEET ||
     spell.mechanics.duration.kind !== "concentration" ||
     spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== FLAMING_SPHERE_DURATION_MINUTES ||
-    spell.mechanics.operations.length !== FLAMING_SPHERE_OPERATION_COUNT ||
+    spell.mechanics.duration.upTo.amount !==
+      RAM_MOVABLE_PERSISTENT_AREA_DURATION_MINUTES ||
+    spell.mechanics.operations.length !==
+      RAM_MOVABLE_PERSISTENT_AREA_OPERATION_COUNT ||
     durationTicks === null ||
     Result.isFailure(durationTicks) ||
     sphereHole?.holeId !== "flaming_sphere_area" ||
     sphereArea?.kind !== "area" ||
     sphereArea?.origin.kind !== "point_within_range" ||
     sphereArea.shape.kind !== "sphere" ||
-    sphereArea.shape.radiusFeet !== FLAMING_SPHERE_RADIUS_FEET ||
-    !isFlamingSphereSaveEffect(endTurnOperation?.effect, sphereHole?.holeId) ||
-    !isFlamingSphereSaveEffect(ramOperation?.effect, sphereHole?.holeId) ||
+    sphereArea.shape.radiusFeet !== RAM_MOVABLE_PERSISTENT_AREA_RADIUS_FEET ||
+    !isRamMovablePersistentAreaSaveEffect(
+      endTurnOperation?.effect,
+      sphereHole?.holeId,
+    ) ||
+    !isRamMovablePersistentAreaSaveEffect(
+      ramOperation?.effect,
+      sphereHole?.holeId,
+    ) ||
     repositionOperation?.effect.kind !== "reposition_attachment" ||
     repositionOperation.effect.maxMoveFeet !==
-      FLAMING_SPHERE_RAM_MAX_MOVE_FEET ||
+      RAM_MOVABLE_PERSISTENT_AREA_RAM_MAX_MOVE_FEET ||
     igniteOperation?.effect.kind !== "ignite_objects" ||
     igniteOperation.effect.filter.material !== "flammable" ||
     igniteOperation.effect.filter.targetRelation !== "not_worn_or_carried" ||
     lightOperation?.effect.kind !== "emit_light" ||
     lightOperation.effect.brightRadiusFeet !==
-      FLAMING_SPHERE_LIGHT_BRIGHT_RADIUS_FEET ||
+      RAM_MOVABLE_PERSISTENT_AREA_LIGHT_BRIGHT_RADIUS_FEET ||
     lightOperation.effect.dimAdditionalFeet !==
-      FLAMING_SPHERE_LIGHT_DIM_ADDITIONAL_FEET
+      RAM_MOVABLE_PERSISTENT_AREA_LIGHT_DIM_ADDITIONAL_FEET
   ) {
     return null;
   }
   return {
     durationTicks: durationTicks.success,
-    diameterFeet: FLAMING_SPHERE_DIAMETER_FEET,
+    diameterFeet: RAM_MOVABLE_PERSISTENT_AREA_DIAMETER_FEET,
     ramMaxMoveFeet: repositionOperation.effect.maxMoveFeet,
     damageAmount: endTurnOperation.effect.onFail.amount,
   };
 }
 
-function isFlamingSphereSaveEffect(
+function isRamMovablePersistentAreaSaveEffect(
   effect: OngoingOperationEffect | undefined,
   areaHoleId: string | undefined,
-): effect is FlamingSphereSaveEffect {
+): effect is RamMovablePersistentAreaSaveEffect {
   if (effect?.kind !== "save_gate") {
     return false;
   }
@@ -226,7 +248,8 @@ function isFlamingSphereSaveEffect(
     effect.attachment.value.kind === "area" &&
     effect.attachment.value.origin.kind === "point_within_range" &&
     effect.attachment.value.shape.kind === "sphere" &&
-    effect.attachment.value.shape.radiusFeet === FLAMING_SPHERE_RADIUS_FEET &&
+    effect.attachment.value.shape.radiusFeet ===
+      RAM_MOVABLE_PERSISTENT_AREA_RADIUS_FEET &&
     effect.ability === "dex" &&
     effect.dc.kind === "caster_spell_save_dc" &&
     effect.onSuccess.kind === "half_damage" &&
@@ -234,18 +257,19 @@ function isFlamingSphereSaveEffect(
     effect.onFail.damageType === "fire" &&
     amount?.kind === "linear_per_level" &&
     amount.axis === "slot" &&
-    amount.startingAtLevel === FLAMING_SPHERE_LEVEL &&
-    amount.base.dice === FLAMING_SPHERE_BASE_DAMAGE_DICE &&
-    amount.base.dieSize === FLAMING_SPHERE_DAMAGE_DIE_SIZE &&
-    amount.perLevel.dice === FLAMING_SPHERE_DAMAGE_DICE_PER_SLOT_LEVEL &&
-    amount.perLevel.dieSize === FLAMING_SPHERE_DAMAGE_DIE_SIZE
+    amount.startingAtLevel === RAM_MOVABLE_PERSISTENT_AREA_LEVEL &&
+    amount.base.dice === RAM_MOVABLE_PERSISTENT_AREA_BASE_DAMAGE_DICE &&
+    amount.base.dieSize === RAM_MOVABLE_PERSISTENT_AREA_DAMAGE_DIE_SIZE &&
+    amount.perLevel.dice ===
+      RAM_MOVABLE_PERSISTENT_AREA_DAMAGE_DICE_PER_SLOT_LEVEL &&
+    amount.perLevel.dieSize === RAM_MOVABLE_PERSISTENT_AREA_DAMAGE_DIE_SIZE
   );
 }
 
-function resolveFlamingSphere(
-  input: FlamingSphereResolveInput,
+function resolveRamMovablePersistentArea(
+  input: RamMovablePersistentAreaResolveInput,
 ): BattleResolutionResult {
-  return resolveFlamingSphereSpellAct({
+  return resolveRamMovablePersistentAreaSpellAct({
     input: input.input,
     actorId: input.actorId,
     invocation: input.invocation,
@@ -253,11 +277,17 @@ function resolveFlamingSphere(
   });
 }
 
-const FlamingSphereInvocationSchema = spellProcedureExecutionSchema(
+const RamMovablePersistentAreaInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
-    procedure: Schema.Literal("flamingSphere"),
+    procedure: Schema.Literal("persistentAreaSaveDamage"),
+    lifecycle: Schema.Struct({
+      kind: Schema.Literal("casterActionReposition"),
+      actionCost: Schema.Literal("bonusAction"),
+      movedAreaOperation: Schema.Literal("saveDamage"),
+      collisionDisposition: Schema.Literal("stopAndAffectAdjacent"),
+    }),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     ability: Schema.Literal("dex"),
     dc: DcSourceSchema,
@@ -274,13 +304,13 @@ const FlamingSphereInvocationSchema = spellProcedureExecutionSchema(
     }),
   }),
 );
-export const flamingSphereProfile = {
-  procedure: "flamingSphere",
-  executionSchema: FlamingSphereInvocationSchema,
-  admit: admitFlamingSphere,
+export const ramMovablePersistentAreaProfile = {
+  procedure: "persistentAreaSaveDamage",
+  executionSchema: RamMovablePersistentAreaInvocationSchema,
+  admit: admitRamMovablePersistentArea,
   discoverCastAct: discoverActionSpellAreaCastAct,
-  resolve: resolveFlamingSphere,
+  resolve: resolveRamMovablePersistentArea,
 } satisfies SpellProcedureDeclaration<
-  "flamingSphere",
-  FlamingSphereSpellInvocation
+  "persistentAreaSaveDamage",
+  RamMovablePersistentAreaSpellInvocation
 >;

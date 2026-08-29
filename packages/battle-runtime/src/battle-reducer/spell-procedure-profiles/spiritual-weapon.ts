@@ -7,7 +7,7 @@ import { spellCastCandidate } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SPATIAL_MELEE_SPELL_ATTACK_PROXY_ATTACK_PROXY
 //
 // The Spiritual Weapon profile family: a prepared Bonus Action spell creates a
 // spell-owned spectral force attack proxy, and later Bonus Actions move the
@@ -62,7 +62,7 @@ import {
 } from "../../identity.ts";
 import { magicSuppressionOngoingSpellEffectRefForActiveEffect } from "../antimagic-field-suppression.ts";
 import {
-  spiritualWeaponForcePositionHole,
+  spatialMeleeSpellAttackProxyPositionHole,
   spellTargetHole,
 } from "../spells-targeting.ts";
 import { resolveBonusActionSpellAttackProxyAct } from "../spells-resolve.ts";
@@ -88,52 +88,59 @@ import {
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 
-type SpiritualWeaponAttackProxyInvocation = Extract<
+type SpatialMeleeSpellAttackProxyAttackProxyInvocation = Extract<
   SupportedSpellInvocation,
-  { readonly procedure: "spiritualWeaponAttackProxy" }
+  {
+    readonly procedure: "spatialMeleeSpellAttackProxy";
+    readonly operation: "createAndAttack";
+  }
 >;
-type SpiritualWeaponRepeatAttackInvocation = Extract<
+type SpatialMeleeSpellAttackProxyRepeatAttackInvocation = Extract<
   SupportedSpellInvocation,
-  { readonly procedure: "spiritualWeaponRepeatAttack" }
+  {
+    readonly procedure: "spatialMeleeSpellAttackProxy";
+    readonly operation: "repositionAndAttack";
+  }
 >;
-type SpiritualWeaponInvocation =
-  | SpiritualWeaponAttackProxyInvocation
-  | SpiritualWeaponRepeatAttackInvocation;
-type SpiritualWeaponResolveInput =
-  SpellProcedureProfileResolveInput<SpiritualWeaponInvocation>;
+type SpatialMeleeSpellAttackProxyInvocation =
+  | SpatialMeleeSpellAttackProxyAttackProxyInvocation
+  | SpatialMeleeSpellAttackProxyRepeatAttackInvocation;
+type SpatialMeleeSpellAttackProxyResolveInput =
+  SpellProcedureProfileResolveInput<SpatialMeleeSpellAttackProxyInvocation>;
 type LinearPerLevelDiceAmount = Extract<
   DiceAmount,
   { readonly kind: "linear_per_level" }
 >;
-type SupportedSpiritualWeaponDamageAmount = LinearPerLevelDiceAmount & {
-  readonly axis: "slot";
-  readonly base: DiceExpr & {
-    readonly dice: 1;
-    readonly dieSize: 8;
-    readonly flat?: undefined;
-    readonly spellcastingMod: true;
-    readonly abilityModifier?: undefined;
+type SupportedSpatialMeleeSpellAttackProxyDamageAmount =
+  LinearPerLevelDiceAmount & {
+    readonly axis: "slot";
+    readonly base: DiceExpr & {
+      readonly dice: 1;
+      readonly dieSize: 8;
+      readonly flat?: undefined;
+      readonly spellcastingMod: true;
+      readonly abilityModifier?: undefined;
+    };
+    readonly perLevel: DiceExprDelta & {
+      readonly dice: 1;
+      readonly dieSize: 8;
+      readonly flat?: undefined;
+    };
+    readonly startingAtLevel: 2;
   };
-  readonly perLevel: DiceExprDelta & {
-    readonly dice: 1;
-    readonly dieSize: 8;
-    readonly flat?: undefined;
-  };
-  readonly startingAtLevel: 2;
-};
-type SupportedSpiritualWeaponDamageEffect = Extract<
+type SupportedSpatialMeleeSpellAttackProxyDamageEffect = Extract<
   EffectAtom,
   { readonly kind: "damage" }
 > & {
   readonly damageType: "force";
-  readonly amount: SupportedSpiritualWeaponDamageAmount;
+  readonly amount: SupportedSpatialMeleeSpellAttackProxyDamageAmount;
 };
 
-function admitSpiritualWeaponAttackProxy(
+function admitSpatialMeleeSpellAttackProxyAttackProxy(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
-): readonly SpiritualWeaponAttackProxyInvocation[] {
-  const proxy = spiritualWeaponSpell(spell);
+): readonly SpatialMeleeSpellAttackProxyAttackProxyInvocation[] {
+  const proxy = spatialMeleeSpellAttackProxySpell(spell);
   if (proxy === null) {
     return [];
   }
@@ -148,7 +155,8 @@ function admitSpiritualWeaponAttackProxy(
       ? null
       : {
           ...base,
-          procedure: "spiritualWeaponAttackProxy",
+          procedure: "spatialMeleeSpellAttackProxy",
+          operation: "createAndAttack",
           actionCost: "bonusAction",
           targeting: { kind: "singleCombatant" },
           durationTicks: proxy.durationTicks,
@@ -164,7 +172,7 @@ function admitSpiritualWeaponAttackProxy(
             damageType: "force",
           },
           attackKind: "melee_spell_attack",
-          attackBonus: spiritualWeaponAttackBonus({
+          attackBonus: spatialMeleeSpellAttackProxyAttackBonus({
             spellcastingAbilityModifier: ctx.castingSource.abilityModifier,
             proficiencyBonus: spellcasting.proficiencyBonus,
           }),
@@ -172,23 +180,23 @@ function admitSpiritualWeaponAttackProxy(
   });
 }
 
-function admitSpiritualWeaponRepeatAttack(
+function admitSpatialMeleeSpellAttackProxyRepeatAttack(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
-): readonly SpiritualWeaponRepeatAttackInvocation[] {
-  if (spiritualWeaponSpell(spell) === null) {
+): readonly SpatialMeleeSpellAttackProxyRepeatAttackInvocation[] {
+  if (spatialMeleeSpellAttackProxySpell(spell) === null) {
     return [];
   }
   return ctx.actor.activeEffects.flatMap(
-    (effect): readonly SpiritualWeaponRepeatAttackInvocation[] => {
+    (effect): readonly SpatialMeleeSpellAttackProxyRepeatAttackInvocation[] => {
       if (
-        effect.kind !== "spiritualWeapon" ||
+        effect.kind !== "spatialMeleeSpellAttackProxy" ||
         effect.sourceCombatantId !== ctx.actor.combatantId ||
         spellAdmissionOngoingSpellEffectSuppressed(
           ctx,
           magicSuppressionOngoingSpellEffectRefForActiveEffect(effect),
         ) ||
-        !spiritualWeaponRepeatIsLaterTurn(effect, ctx)
+        !spatialMeleeSpellAttackProxyRepeatIsLaterTurn(effect, ctx)
       ) {
         return [];
       }
@@ -199,7 +207,8 @@ function admitSpiritualWeaponRepeatAttack(
             sourceCombatantId: effect.sourceCombatantId,
           },
           resource: { tag: "none" },
-          procedure: "spiritualWeaponRepeatAttack",
+          procedure: "spatialMeleeSpellAttackProxy",
+          operation: "repositionAndAttack",
           spell,
           actionCost: "bonusAction",
           activeEffect: effect,
@@ -215,7 +224,7 @@ function admitSpiritualWeaponRepeatAttack(
   );
 }
 
-function spiritualWeaponAttackBonus(input: {
+function spatialMeleeSpellAttackProxyAttackBonus(input: {
   readonly spellcastingAbilityModifier: AbilityModifier;
   readonly proficiencyBonus: ProficiencyBonusType;
 }) {
@@ -224,8 +233,11 @@ function spiritualWeaponAttackBonus(input: {
   );
 }
 
-function spiritualWeaponRepeatIsLaterTurn(
-  effect: Extract<BattleActiveEffect, { readonly kind: "spiritualWeapon" }>,
+function spatialMeleeSpellAttackProxyRepeatIsLaterTurn(
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "spatialMeleeSpellAttackProxy" }
+  >,
   ctx: SpellAdmissionContext,
 ): boolean {
   const battleTurn = spellAdmissionBattleTurn(ctx);
@@ -235,7 +247,7 @@ function spiritualWeaponRepeatIsLaterTurn(
   );
 }
 
-function spiritualWeaponSpell(spell: BattleSpellAdmissionSource) {
+function spatialMeleeSpellAttackProxySpell(spell: BattleSpellAdmissionSource) {
   if (spell.mechanics.family !== "ongoing_effect") {
     return null;
   }
@@ -276,14 +288,14 @@ function spiritualWeaponSpell(spell: BattleSpellAdmissionSource) {
     initialAttack?.kind !== "attack_roll" ||
     initialAttack.attackKind !== "melee_spell_attack" ||
     initialAttack.attachment.kind !== "hole" ||
-    !spiritualWeaponAttackTargetMatchesForce(
+    !spatialMeleeSpellAttackProxyAttackTargetMatchesForce(
       initialAttack.attachment,
       forceAttachment.holeId,
     ) ||
     initialAttack.onHit.length !== 1 ||
     initialAttack.onMiss.length !== 1 ||
-    !isSupportedSpiritualWeaponDamageEffect(initialHit) ||
-    !isSupportedSpiritualWeaponMissEffect(initialMiss) ||
+    !isSupportedSpatialMeleeSpellAttackProxyDamageEffect(initialHit) ||
+    !isSupportedSpatialMeleeSpellAttackProxyMissEffect(initialMiss) ||
     repeatOperation?.trigger.kind !== "on_caster_spends_action" ||
     repeatOperation.trigger.cost.kind !== "bonus_action" ||
     repeatOperation.trigger.laterTurnsOnly !== true ||
@@ -296,15 +308,15 @@ function spiritualWeaponSpell(spell: BattleSpellAdmissionSource) {
     reposition.maxMoveFeet !== 20 ||
     repeatAttack?.kind !== "attack_roll" ||
     repeatAttack.attackKind !== "melee_spell_attack" ||
-    !spiritualWeaponAttackTargetMatchesForce(
+    !spatialMeleeSpellAttackProxyAttackTargetMatchesForce(
       repeatAttack.attachment,
       forceAttachment.holeId,
     ) ||
     repeatAttack.onHit.length !== 1 ||
     repeatAttack.onMiss.length !== 1 ||
-    !isSupportedSpiritualWeaponDamageEffect(repeatHit) ||
-    !isSupportedSpiritualWeaponMissEffect(repeatMiss) ||
-    !sameSpiritualWeaponDamageEffect(initialHit, repeatHit)
+    !isSupportedSpatialMeleeSpellAttackProxyDamageEffect(repeatHit) ||
+    !isSupportedSpatialMeleeSpellAttackProxyMissEffect(repeatMiss) ||
+    !sameSpatialMeleeSpellAttackProxyDamageEffect(initialHit, repeatHit)
   ) {
     return null;
   }
@@ -317,27 +329,27 @@ function spiritualWeaponSpell(spell: BattleSpellAdmissionSource) {
   };
 }
 
-function isSupportedSpiritualWeaponDamageEffect(
+function isSupportedSpatialMeleeSpellAttackProxyDamageEffect(
   effect: EffectAtom | undefined,
-): effect is SupportedSpiritualWeaponDamageEffect {
+): effect is SupportedSpatialMeleeSpellAttackProxyDamageEffect {
   if (effect?.kind !== "damage") {
     return false;
   }
   return (
     effect.damageType === "force" &&
-    isSupportedSpiritualWeaponDamageAmount(effect.amount)
+    isSupportedSpatialMeleeSpellAttackProxyDamageAmount(effect.amount)
   );
 }
 
-function isSupportedSpiritualWeaponMissEffect(
+function isSupportedSpatialMeleeSpellAttackProxyMissEffect(
   effect: EffectAtom | undefined,
 ): effect is Extract<EffectAtom, { readonly kind: "none" }> {
   return effect?.kind === "none";
 }
 
-function isSupportedSpiritualWeaponDamageAmount(
+function isSupportedSpatialMeleeSpellAttackProxyDamageAmount(
   amount: DiceAmount,
-): amount is SupportedSpiritualWeaponDamageAmount {
+): amount is SupportedSpatialMeleeSpellAttackProxyDamageAmount {
   return (
     amount.kind === "linear_per_level" &&
     amount.axis === "slot" &&
@@ -353,9 +365,9 @@ function isSupportedSpiritualWeaponDamageAmount(
   );
 }
 
-function sameSpiritualWeaponDamageEffect(
-  left: SupportedSpiritualWeaponDamageEffect,
-  right: SupportedSpiritualWeaponDamageEffect,
+function sameSpatialMeleeSpellAttackProxyDamageEffect(
+  left: SupportedSpatialMeleeSpellAttackProxyDamageEffect,
+  right: SupportedSpatialMeleeSpellAttackProxyDamageEffect,
 ): boolean {
   return (
     left.damageType === right.damageType &&
@@ -372,7 +384,7 @@ function sameSpiritualWeaponDamageEffect(
   );
 }
 
-function spiritualWeaponAttackTargetMatchesForce(
+function spatialMeleeSpellAttackProxyAttackTargetMatchesForce(
   attachment: Attachment | undefined,
   forceHoleId: string,
 ): boolean {
@@ -397,30 +409,42 @@ function spiritualWeaponAttackTargetMatchesForce(
   );
 }
 
-function discoverSpiritualWeaponAttackProxyCastAct(
+function discoverSpatialMeleeSpellAttackProxyAttackProxyCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<SpiritualWeaponAttackProxyInvocation>,
+  invocation: BattleExecutableSpellInvocation<SpatialMeleeSpellAttackProxyAttackProxyInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
-  return spiritualWeaponAttackCandidate(state, actorId, invocation);
+  return spatialMeleeSpellAttackProxyAttackCandidate(
+    state,
+    actorId,
+    invocation,
+  );
 }
 
-function discoverSpiritualWeaponRepeatAttackCastAct(
+function discoverSpatialMeleeSpellAttackProxyRepeatAttackCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<SpiritualWeaponRepeatAttackInvocation>,
+  invocation: BattleExecutableSpellInvocation<SpatialMeleeSpellAttackProxyInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
+  if (invocation.operation !== "repositionAndAttack") {
+    return [];
+  }
   if (!ongoingSpellRepeatCastIsAvailable(state, invocation.activeEffect)) {
     return [];
   }
-  return spiritualWeaponAttackCandidate(state, actorId, invocation);
+  return spatialMeleeSpellAttackProxyAttackCandidate(
+    state,
+    actorId,
+    invocation,
+  );
 }
 
-function spiritualWeaponAttackCandidate(
+function spatialMeleeSpellAttackProxyAttackCandidate(
   state: BattleState,
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<
-    SpiritualWeaponAttackProxyInvocation | SpiritualWeaponRepeatAttackInvocation
+    | SpatialMeleeSpellAttackProxyAttackProxyInvocation
+    | SpatialMeleeSpellAttackProxyRepeatAttackInvocation
   >,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
@@ -431,24 +455,25 @@ function spiritualWeaponAttackCandidate(
           "bonusActionSpell",
           actorId,
           invocation.sourceProcedureRef,
-          [spiritualWeaponForcePositionHole(invocation), targetHole],
+          [spatialMeleeSpellAttackProxyPositionHole(invocation), targetHole],
         ),
       ];
 }
 
-function resolveSpiritualWeapon(
-  input: SpiritualWeaponResolveInput,
+function resolveSpatialMeleeSpellAttackProxy(
+  input: SpatialMeleeSpellAttackProxyResolveInput,
   executionRegistry: SpellProcedureExecutionRegistry,
 ): BattleResolutionResult {
   return resolveBonusActionSpellAttackProxyAct(input.input, executionRegistry);
 }
 
-const SpiritualWeaponAttackProxyInvocationSchema =
+const SpatialMeleeSpellAttackProxyAttackProxyInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
-      procedure: Schema.Literal("spiritualWeaponAttackProxy"),
+      procedure: Schema.Literal("spatialMeleeSpellAttackProxy"),
+      operation: Schema.Literal("createAndAttack"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("bonusAction"),
       targeting: Schema.Struct({
@@ -468,33 +493,34 @@ const SpiritualWeaponAttackProxyInvocationSchema =
     }),
   );
 
-const SpiritualWeaponRepeatAttackInvocationSchema =
+const SpatialMeleeSpellAttackProxyRepeatAttackInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
-      procedure: Schema.Literal("spiritualWeaponRepeatAttack"),
+      procedure: Schema.Literal("spatialMeleeSpellAttackProxy"),
+      operation: Schema.Literal("repositionAndAttack"),
       spellRuleFacts: Schema.optionalKey(Schema.Never),
       activeEffectRef: BattleEffectExecutionRef,
       activeEffectSourceProcedureRef: BattleProcedureExecutionRef,
     }),
   );
-export const spiritualWeaponAttackProxyProfile: SpellProcedureDeclaration<
-  "spiritualWeaponAttackProxy",
-  SpiritualWeaponAttackProxyInvocation
+export const spatialMeleeSpellAttackProxyAttackProxyProfile: SpellProcedureDeclaration<
+  "spatialMeleeSpellAttackProxy",
+  SpatialMeleeSpellAttackProxyAttackProxyInvocation
 > = {
-  procedure: "spiritualWeaponAttackProxy",
-  executionSchema: SpiritualWeaponAttackProxyInvocationSchema,
-  admit: admitSpiritualWeaponAttackProxy,
-  discoverCastAct: discoverSpiritualWeaponAttackProxyCastAct,
-  resolve: resolveSpiritualWeapon,
+  procedure: "spatialMeleeSpellAttackProxy",
+  executionSchema: SpatialMeleeSpellAttackProxyAttackProxyInvocationSchema,
+  admit: admitSpatialMeleeSpellAttackProxyAttackProxy,
+  discoverCastAct: discoverSpatialMeleeSpellAttackProxyAttackProxyCastAct,
+  resolve: resolveSpatialMeleeSpellAttackProxy,
 };
 
-export const spiritualWeaponRepeatAttackProfile: SpellProcedureDeclaration<
-  "spiritualWeaponRepeatAttack",
-  SpiritualWeaponRepeatAttackInvocation
+export const spatialMeleeSpellAttackProxyRepeatAttackProfile: SpellProcedureDeclaration<
+  "spatialMeleeSpellAttackProxy",
+  SpatialMeleeSpellAttackProxyRepeatAttackInvocation
 > = {
-  procedure: "spiritualWeaponRepeatAttack",
-  executionSchema: SpiritualWeaponRepeatAttackInvocationSchema,
-  admit: admitSpiritualWeaponRepeatAttack,
-  discoverCastAct: discoverSpiritualWeaponRepeatAttackCastAct,
-  resolve: resolveSpiritualWeapon,
+  procedure: "spatialMeleeSpellAttackProxy",
+  executionSchema: SpatialMeleeSpellAttackProxyRepeatAttackInvocationSchema,
+  admit: admitSpatialMeleeSpellAttackProxyRepeatAttack,
+  discoverCastAct: discoverSpatialMeleeSpellAttackProxyRepeatAttackCastAct,
+  resolve: resolveSpatialMeleeSpellAttackProxy,
 };
