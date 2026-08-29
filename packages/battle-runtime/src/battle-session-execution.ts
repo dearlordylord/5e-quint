@@ -3,6 +3,7 @@
 import { optionalProperty } from "./optional-property.ts";
 import { Match } from "effect";
 import * as Either from "effect/Either";
+import type { BattleInterruptTrigger } from "./battle-interrupt-triggers.ts";
 import type { BattleReducerRouteEvents } from "./battle-reducer/reducer-route-protocol.ts";
 import { battleReducerRouteForResolution } from "./battle-reducer/reducer-route.ts";
 import {
@@ -391,6 +392,29 @@ function rolledD20TestRequests(
 export function resolveBattleRuntimeSubject(
   input: BattleRuntimeResolutionInput,
 ): BattleRuntimeResolutionResult {
+  return resolveBattleRuntimeSubjectWithHandledInterruptTrigger(input);
+}
+
+/**
+ * Replay a transaction layer after an interrupt decision. The reducer needs
+ * the trigger that was just handled in order to advance the checkpoint rather
+ * than reject the replay as a new subject selection.
+ */
+export function resolveBattleRuntimeSubjectForReplay(input: {
+  readonly session: BattleRuntimeSession;
+  readonly subject: BattleSubject;
+  readonly fills: BattleResolutionInput["fills"];
+  readonly handledInterruptTrigger?: BattleInterruptTrigger;
+  readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
+}): BattleRuntimeResolutionResult {
+  return resolveBattleRuntimeSubjectWithHandledInterruptTrigger(input);
+}
+
+function resolveBattleRuntimeSubjectWithHandledInterruptTrigger(
+  input: BattleRuntimeResolutionInput & {
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
+  },
+): BattleRuntimeResolutionResult {
   if (
     input.subject.tag === "companionLifecycle" &&
     input.subject.action === "reappear"
@@ -428,11 +452,14 @@ export function resolveBattleRuntimeSubject(
   }
   return battleRuntimeResolutionFromMechanical(
     input.session,
-    resolveBattleSubject({
-      state: input.session.state,
-      subject: input.subject,
-      fills: input.fills,
-    }),
+    resolveBattleSubjectWithHandledInterruptTrigger(
+      {
+        state: input.session.state,
+        subject: input.subject,
+        fills: input.fills,
+      },
+      input.handledInterruptTrigger,
+    ),
     "ordinary",
     input,
   );
@@ -842,6 +869,13 @@ export function openCreatureFallsRuntimeInterruptWindow(input: {
 export function resolveBattleSubject(
   input: BattleResolutionInput,
 ): BattleResolutionResult {
+  return resolveBattleSubjectWithHandledInterruptTrigger(input);
+}
+
+function resolveBattleSubjectWithHandledInterruptTrigger(
+  input: BattleResolutionInput,
+  handledInterruptTrigger?: BattleInterruptTrigger,
+): BattleResolutionResult {
   const phase = input.state.subjectResolutionPhase;
   const reportsReadyTrigger = isBattleReadyTriggerReportSubject(input.subject);
   if (hasStaleSubjectContinuation(phase, reportsReadyTrigger, input.subject)) {
@@ -867,9 +901,11 @@ export function resolveBattleSubject(
   }
   const mechanical = resolveAdmittedBattleSubject(
     admission.input,
-    phase.kind === "subjectContinuation" && !reportsReadyTrigger
-      ? phase.handledInterruptTrigger
-      : undefined,
+    interruptRouteOptionsForSubjectResolution({
+      phase,
+      reportsReadyTrigger,
+      ...optionalProperty("handledInterruptTrigger", handledInterruptTrigger),
+    }),
   );
   const result = reportsReadyTrigger
     ? mechanicalResultWithPreservedSubjectPhase(
@@ -879,6 +915,27 @@ export function resolveBattleSubject(
     : mechanical;
   const routeEvents = battleReducerRouteForResolution(admission.input, result);
   return routeEvents === undefined ? result : { ...result, routeEvents };
+}
+
+function interruptRouteOptionsForSubjectResolution(input: {
+  readonly phase: BattleResolutionInput["state"]["subjectResolutionPhase"];
+  readonly reportsReadyTrigger: boolean;
+  readonly handledInterruptTrigger?: BattleInterruptTrigger;
+}): {
+  readonly handledInterruptTrigger?: BattleInterruptTrigger;
+  readonly replayingInterruptedProcedure?: true;
+} {
+  const effectiveHandledInterruptTrigger =
+    input.handledInterruptTrigger ??
+    (input.phase.kind === "subjectContinuation" && !input.reportsReadyTrigger
+      ? input.phase.handledInterruptTrigger
+      : undefined);
+  return effectiveHandledInterruptTrigger === undefined
+    ? {}
+    : {
+        handledInterruptTrigger: effectiveHandledInterruptTrigger,
+        replayingInterruptedProcedure: true,
+      };
 }
 
 function hasStaleSubjectContinuation(

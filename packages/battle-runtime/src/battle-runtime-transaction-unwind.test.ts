@@ -496,6 +496,142 @@ describe("battle runtime transaction completion unwind", () => {
     }
   });
 
+  test("returns a typed invalid result for a report without a readied response", () => {
+    const ready = readyMovementSession();
+    const session = battleRuntimeSessionWithState(ready, {
+      ...ready.state,
+      readiedResponses: new Map(),
+    });
+
+    const result = settleBattleRuntimeTransaction({
+      session,
+      transaction: null,
+      operation: {
+        kind: "ordinarySubject",
+        subject: {
+          tag: "runtimeCommand",
+          actorId: goblinId,
+          command: "reportReadyTrigger",
+          readiedActorId: fighterId,
+        },
+        fills: [],
+      },
+    });
+
+    expect(result.tag).toBe("invalid");
+    if (result.tag !== "invalid") {
+      throw new Error("Expected a typed invalid Ready report result.");
+    }
+    expect(result.resolution.reason).toBe("staleSubject");
+  });
+
+  test("returns the existing interrupt frontier after a root Ready report closes", () => {
+    const session = readyMovementSession();
+    const outerSubject = moveSubjectFor(session, goblinId);
+    const initial = requireNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session,
+        transaction: null,
+        operation: {
+          kind: "ordinarySubject",
+          subject: outerSubject,
+          fills: [],
+        },
+      }),
+      "root-over-stack initial Move",
+    );
+    const outerInterrupt = requireNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session: initial.resolution.session,
+        transaction: initial.transaction,
+        operation: {
+          kind: "ordinarySubject",
+          subject: outerSubject,
+          fills: [
+            movementWithOpportunityAttack(
+              requireHole(initial, "movement"),
+              skeletonId,
+              statBlockAttackSubjectForTest(
+                session.state,
+                skeletonId,
+                "Shortsword",
+                "actions",
+              ),
+            ),
+          ],
+        },
+      }),
+      "root-over-stack opportunity attack",
+    );
+    const rootReport = requireNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session: outerInterrupt.resolution.session,
+        transaction: null,
+        operation: {
+          kind: "ordinarySubject",
+          subject: {
+            tag: "runtimeCommand",
+            actorId: goblinId,
+            command: "reportReadyTrigger",
+            readiedActorId: fighterId,
+          },
+          fills: [],
+        },
+      }),
+      "root Ready report over interrupt stack",
+    );
+
+    const closed = settledByDeclining(rootReport, fighterId);
+    const remaining = requireNeedsHoles(
+      closed,
+      "the existing Opportunity Attack after root Ready decline",
+    );
+    const remainingFrontier = requireInterruptFrontier(
+      remaining.frontier,
+      "the existing Opportunity Attack after root Ready decline",
+    );
+    expect(remainingFrontier.decisionHole.trigger).toBe("opportunityAttack");
+  });
+
+  test("returns a typed defect when a root Ready report overlays a subject continuation", () => {
+    const session = readyMovementSession();
+    const outerSubject = moveSubjectFor(session, goblinId);
+    const continuationSession = battleRuntimeSessionWithState(session, {
+      ...session.state,
+      subjectResolutionPhase: {
+        kind: "subjectContinuation",
+        subject: outerSubject,
+      },
+    });
+    const report = requireNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session: continuationSession,
+        transaction: null,
+        operation: {
+          kind: "ordinarySubject",
+          subject: {
+            tag: "runtimeCommand",
+            actorId: goblinId,
+            command: "reportReadyTrigger",
+            readiedActorId: fighterId,
+          },
+          fills: [],
+        },
+      }),
+      "root Ready report over subject continuation",
+    );
+
+    const closed = settledByDeclining(report, fighterId);
+
+    expect(closed.tag).toBe("defect");
+    if (closed.tag !== "defect") {
+      throw new Error(
+        "Expected the root Ready report to retain the subject continuation.",
+      );
+    }
+    expect(closed.issue).toEqual({ tag: "unsettledSubjectContinuation" });
+  });
+
   test("replays an outer attack when a nested reaction changes a hit to a miss", () => {
     const unit = cuttingWordsAttackOnlyUnit();
     const highArmorClass = {
@@ -1032,13 +1168,144 @@ describe("battle runtime transaction completion unwind", () => {
       },
     });
     expect(resumed.tag).toBe("needsHoles");
-    if (resumed.tag === "needsHoles") {
-      if (resumed.frontier.kind !== "ordinaryHoles") return;
-      expect(resumed.frontier.subject).toEqual(subject);
-      expect(resumed.frontier.holes.map((hole) => hole.kind)).toEqual([
-        "rolledDice",
-      ]);
+    if (resumed.tag !== "needsHoles") {
+      throw new Error("Expected the outer attack to need its damage roll.");
     }
+    expect(resumed.frontier.kind).toBe("ordinaryHoles");
+    if (resumed.frontier.kind !== "ordinaryHoles") {
+      throw new Error("Expected the outer attack's ordinary Hole frontier.");
+    }
+    expect(resumed.frontier.subject).toEqual(subject);
+    expect(resumed.frontier.holes.map((hole) => hole.kind)).toEqual([
+      "rolledDice",
+    ]);
+  });
+
+  test("keeps the next Ready responder after the first attack-hit decline", () => {
+    const base = fighterTurnWithReadiedAcidAndSecondReadiedRay();
+    const secondReadiedSpell = base.readiedSpells.get(secondWizardId);
+    if (secondReadiedSpell === undefined) {
+      throw new Error("Expected the second Wizard to hold a readied spell.");
+    }
+    const state = {
+      ...base,
+      readiedSpells: new Map(base.readiedSpells).set(secondWizardId, {
+        ...secondReadiedSpell,
+        trigger: "attackHit" as const,
+      }),
+    };
+    const session = battleRuntimeSessionForTest({
+      state,
+      context: battleRuntimeContextForStateForTest(state),
+    });
+    const subject = fighterAttackSubject(state);
+    const target = attackInitialTargetHole(state, subject);
+    const attackRoll = attackRollHoleAfterTarget(state, target, subject);
+    const opened = requireNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session,
+        transaction: null,
+        operation: {
+          kind: "ordinarySubject",
+          subject,
+          fills: [
+            targetFill(target, goblinId),
+            attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
+          ],
+        },
+      }),
+      "two-responder attack-hit interrupt",
+    );
+    requireInterruptFrontier(
+      opened.frontier,
+      "two-responder attack-hit interrupt",
+    );
+    expect(requireHole(opened, "interruptDecision").eligibleResponders).toEqual(
+      [wizardId, secondWizardId],
+    );
+
+    const declined = settledByDeclining(opened, wizardId);
+    const remaining = requireNeedsHoles(
+      declined,
+      "the remaining Ready responder after first decline",
+    );
+    requireInterruptFrontier(remaining.frontier, "remaining Ready responder");
+    expect(
+      requireHole(remaining, "interruptDecision").eligibleResponders,
+    ).toEqual([secondWizardId]);
+    expect(remaining.resolution.session.state.interruptStack).not.toEqual([]);
+
+    const afterSecondDecline = requireNeedsHoles(
+      settledByDeclining(remaining, secondWizardId),
+      "the resumed attack after both Ready responders decline",
+    );
+    expect(afterSecondDecline.frontier.kind).toBe("ordinaryHoles");
+    expect(requireHole(afterSecondDecline, "rolledDice")).toMatchObject({
+      kind: "rolledDice",
+    });
+  });
+
+  test("preserves sequential attack fills while opening the reaction frontier", () => {
+    const base = fighterTurnWithReadiedAcidAndSecondReadiedRay();
+    const secondReadiedSpell = base.readiedSpells.get(secondWizardId);
+    if (secondReadiedSpell === undefined) {
+      throw new Error("Expected the second Wizard to hold a readied spell.");
+    }
+    const state = {
+      ...base,
+      readiedSpells: new Map(base.readiedSpells).set(secondWizardId, {
+        ...secondReadiedSpell,
+        trigger: "attackHit" as const,
+      }),
+    };
+    const session = battleRuntimeSessionForTest({
+      state,
+      context: battleRuntimeContextForStateForTest(state),
+    });
+    const subject = fighterAttackSubject(state);
+    const initial = requireNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session,
+        transaction: null,
+        operation: { kind: "ordinarySubject", subject, fills: [] },
+      }),
+      "attack target frontier",
+    );
+    const target = attackInitialTargetHole(state, subject);
+    const afterTarget = requireNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session: initial.resolution.session,
+        transaction: initial.transaction,
+        operation: {
+          kind: "ordinarySubject",
+          subject,
+          fills: [targetFill(target, goblinId)],
+        },
+      }),
+      "attack roll frontier",
+    );
+    const attackRoll = requireHole(afterTarget, "attackRoll");
+    const afterRoll = requireNeedsHoles(
+      settleBattleRuntimeTransaction({
+        session: afterTarget.resolution.session,
+        transaction: afterTarget.transaction,
+        operation: {
+          kind: "ordinarySubject",
+          subject,
+          fills: [attackRollFill(attackRoll, { total: 15, naturalD20: 10 })],
+        },
+      }),
+      "attack-hit reaction frontier after sequential fills",
+    );
+
+    const frontier = requireInterruptFrontier(
+      afterRoll.frontier,
+      "attack-hit reaction frontier after sequential fills",
+    );
+    expect(frontier.decisionHole.trigger).toBe("attackHit");
+    expect(
+      requireHole(afterRoll, "interruptDecision").eligibleResponders,
+    ).toEqual([wizardId, secondWizardId]);
   });
 
   test("unwinds Ready ordinary and nested interrupt holes to the parent frontier once", () => {
