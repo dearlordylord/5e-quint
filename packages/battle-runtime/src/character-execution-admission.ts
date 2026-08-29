@@ -12,7 +12,7 @@ export {
   DRUID_WILD_SHAPE_PROCEDURE_QUERY,
   MONK_FOCUS_PROCEDURE_QUERY,
   bindStoredSpellProcedureExecutionFacts,
-  characterExecutionWithDancingLightsReposition,
+  characterExecutionWithMovableLightReposition,
   characterExecutionWithHeldLightHurl,
   characterExecutionWithMarkedDamageRiderTransfer,
   characterExecutionWithObjectContactDamageRepeat,

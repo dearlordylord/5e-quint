@@ -37,7 +37,7 @@ import {
   saveGatedAreaControlShakeAwakeTargetChoices,
   protectionRelevantEffectsForTarget,
   removeSaveGatedConditionWithRepeatEffectFromTarget,
-  removeSaveGatedAreaControlControlEffectsFromTarget,
+  removeSaveGatedAreaControlEffectsFromTarget,
   removeSleepEffectsFromTarget,
   removeSpellConditionEffect,
   sleepShakeAwakeTargetChoices,
@@ -456,7 +456,7 @@ describe("spell condition effect source ownership", () => {
       saveGatedAreaControlShakeAwakeTargetChoices(hypnotizedState, fighterId),
     ).toEqual([goblinId]);
     expect(
-      removeSaveGatedAreaControlControlEffectsFromTarget(
+      removeSaveGatedAreaControlEffectsFromTarget(
         hypnotizedState,
         goblinId,
       ).combatants.get(goblinId)?.activeEffects,
