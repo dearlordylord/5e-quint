@@ -48,7 +48,7 @@ import type {
   BattleResolutionInputForSubject,
   BattleResolutionResult,
   BattleResolvedMovement,
-  BattleAreaMovementDistanceDamageMovementDamageRollHole,
+  BattleAreaMovementDistanceDamageRollHole,
   BattleState,
   BattleTargetSpatialFact,
 } from "../battle-state-execution.ts";
@@ -798,29 +798,29 @@ function opportunityAttackThreatIdentityKey(
   return JSON.stringify([reactorId, attackExecutionSelectionKey(selection)]);
 }
 
-type AreaMovementDistanceDamageHazardEffect = Extract<
+type AreaMovementDistanceDamageEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "areaMovementDistanceDamageHazard" }
+  { readonly kind: "areaMovementDistanceDamage" }
 >;
 
-type AreaMovementDistanceDamageMovementDamageRequest = {
-  readonly effect: AreaMovementDistanceDamageHazardEffect;
+type AreaMovementDistanceDamageRequest = {
+  readonly effect: AreaMovementDistanceDamageEffect;
   readonly distanceFeet: MovementFeet;
-  readonly damage: AreaMovementDistanceDamageHazardEffect["damage"];
+  readonly damage: AreaMovementDistanceDamageEffect["damage"];
 };
 
-function areaMovementDistanceDamageHazardEffectFor(
+function areaMovementDistanceDamageEffectFor(
   state: BattleState,
   source: Extract<
     BattleAreaDifficultTerrainSource,
-    { readonly kind: "areaMovementDistanceDamageHazard" }
+    { readonly kind: "areaMovementDistanceDamage" }
   >,
-): AreaMovementDistanceDamageHazardEffect | undefined {
+): AreaMovementDistanceDamageEffect | undefined {
   const combatant = state.combatants.get(source.sourceCombatantId);
   const effect = combatant?.activeEffects.find(
     (candidate) => candidate.effectRef === source.effectRef,
   );
-  return effect?.kind === "areaMovementDistanceDamageHazard" &&
+  return effect?.kind === "areaMovementDistanceDamage" &&
     effect.sourceCombatantId === source.sourceCombatantId &&
     effect.sourceProcedureRef === source.sourceProcedureRef &&
     effect.areaId === source.areaId
@@ -829,9 +829,9 @@ function areaMovementDistanceDamageHazardEffectFor(
 }
 
 function scaledAreaMovementDistanceDamageDamage(
-  effect: AreaMovementDistanceDamageHazardEffect,
+  effect: AreaMovementDistanceDamageEffect,
   distanceFeet: MovementFeet,
-): AreaMovementDistanceDamageHazardEffect["damage"] | null {
+): AreaMovementDistanceDamageEffect["damage"] | null {
   const increments = Math.floor(
     Number(distanceFeet) / Number(effect.damagePerFeet),
   );
@@ -850,19 +850,19 @@ function scaledAreaMovementDistanceDamageDamage(
   };
 }
 
-function areaMovementDistanceDamageMovementDamageRequests(
+function areaMovementDistanceDamageRequests(
   state: BattleState,
   movement: BattleResolvedMovement,
-): readonly AreaMovementDistanceDamageMovementDamageRequest[] {
+): readonly AreaMovementDistanceDamageRequest[] {
   const areaDifficultTerrain = movement.areaDifficultTerrain;
   if (areaDifficultTerrain === undefined) {
     return [];
   }
   return areaDifficultTerrain.sources.flatMap((source) => {
-    if (source.kind !== "areaMovementDistanceDamageHazard") {
+    if (source.kind !== "areaMovementDistanceDamage") {
       return [];
     }
-    const effect = areaMovementDistanceDamageHazardEffectFor(state, source);
+    const effect = areaMovementDistanceDamageEffectFor(state, source);
     if (effect === undefined) {
       return [];
     }
@@ -882,17 +882,17 @@ function areaMovementDistanceDamageMovementDamageRequests(
   });
 }
 
-function areaMovementDistanceDamageMovementDamageRollHole(
+function areaMovementDistanceDamageRollHole(
   targetId: CombatantId,
-  request: AreaMovementDistanceDamageMovementDamageRequest,
-): BattleAreaMovementDistanceDamageMovementDamageRollHole {
+  request: AreaMovementDistanceDamageRequest,
+): BattleAreaMovementDistanceDamageRollHole {
   const key = `battle:area-movement-distance-damage-movement-damage:${targetId}:${request.effect.effectRef}:${request.distanceFeet}`;
   return {
     kind: "rolledDice",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: "Movement damage",
-    areaMovementDistanceDamageMovement: {
+    areaMovementDistanceDamage: {
       targetId,
       effectRef: request.effect.effectRef,
       sourceProcedureRef: request.effect.sourceProcedureRef,
@@ -905,9 +905,9 @@ function areaMovementDistanceDamageMovementDamageRollHole(
   };
 }
 
-function validateAreaMovementDistanceDamageMovementDamageRoll(
+function validateAreaMovementDistanceDamageRoll(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
-  hole: BattleAreaMovementDistanceDamageMovementDamageRollHole,
+  hole: BattleAreaMovementDistanceDamageRollHole,
 ): string | null {
   /* v8 ignore start -- @preserve -- The selected Movement damage hole is the only hole admitted for this fill. */
   if (fill.holeId !== hole.holeId) {
@@ -916,14 +916,14 @@ function validateAreaMovementDistanceDamageMovementDamageRoll(
   /* v8 ignore stop -- @preserve */
   return validateRolledDiceFillForDiceExpr(
     fill,
-    hole.areaMovementDistanceDamageMovement.damage.expr,
+    hole.areaMovementDistanceDamage.damage.expr,
   );
 }
 
-function areaMovementDistanceDamageMovementDamageAmount(
+function areaMovementDistanceDamageAmount(
   state: BattleState,
   target: BattleCreatureState,
-  request: AreaMovementDistanceDamageMovementDamageRequest,
+  request: AreaMovementDistanceDamageRequest,
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
 ): number {
   return damageAmountAfterTargetAdjustments(
@@ -971,7 +971,7 @@ export function resolveMovementEffectsAfterMovement(input: {
   const consumedFills = new Set<BattleFill>();
 
   const movedState = applyBattleMovement(input.state, input.movement);
-  const requests = areaMovementDistanceDamageMovementDamageRequests(
+  const requests = areaMovementDistanceDamageRequests(
     movedState,
     input.movement,
   );
@@ -997,7 +997,7 @@ export function resolveMovementEffectsAfterMovement(input: {
       };
     }
     /* v8 ignore stop -- @preserve */
-    const damageHole = areaMovementDistanceDamageMovementDamageRollHole(
+    const damageHole = areaMovementDistanceDamageRollHole(
       input.movement.moverId,
       request,
     );
@@ -1012,18 +1012,17 @@ export function resolveMovementEffectsAfterMovement(input: {
       return needsHolesResult(input.state, input.subject, [damageHole]);
     }
     consumedFills.add(damageFill);
-    const damageValidation =
-      validateAreaMovementDistanceDamageMovementDamageRoll(
-        damageFill,
-        damageHole,
-      );
+    const damageValidation = validateAreaMovementDistanceDamageRoll(
+      damageFill,
+      damageHole,
+    );
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (damageValidation !== null) {
       return invalidResult(input.state, "invalidFill", damageValidation);
     }
     /* v8 ignore stop -- @preserve */
 
-    const damageAmount = areaMovementDistanceDamageMovementDamageAmount(
+    const damageAmount = areaMovementDistanceDamageAmount(
       input.state,
       target,
       request,
@@ -1189,7 +1188,7 @@ function activeAreaDifficultTerrainSourceMatches(
         effect.areaId === terrainSource.areaId,
     ),
     byAreaDifficultTerrainSourceKind(
-      "persistentAreaSaveConditionEscapeAreaHazard",
+      "persistentAreaSaveConditionEscape",
       (terrainSource) =>
         effect?.kind === "persistentAreaSaveConditionEscape" &&
         effect.sourceCombatantId === terrainSource.sourceCombatantId &&
@@ -1197,7 +1196,7 @@ function activeAreaDifficultTerrainSourceMatches(
         effect.areaId === terrainSource.areaId,
     ),
     byAreaDifficultTerrainSourceKind(
-      "persistentAreaSaveCompositeHazard",
+      "persistentAreaSaveComposite",
       (terrainSource) =>
         effect?.kind === "persistentAreaSaveComposite" &&
         effect.sourceCombatantId === terrainSource.sourceCombatantId &&
@@ -1205,7 +1204,7 @@ function activeAreaDifficultTerrainSourceMatches(
         effect.areaId === terrainSource.areaId,
     ),
     byAreaDifficultTerrainSourceKind(
-      "stationaryPersistentAreaHazard",
+      "persistentAreaSaveDamage",
       (terrainSource) =>
         effect?.kind === "persistentAreaSaveDamage" &&
         effect.sourceCombatantId === terrainSource.sourceCombatantId &&
@@ -1213,9 +1212,9 @@ function activeAreaDifficultTerrainSourceMatches(
         effect.areaId === terrainSource.areaId,
     ),
     byAreaDifficultTerrainSourceKind(
-      "areaMovementDistanceDamageHazard",
+      "areaMovementDistanceDamage",
       (terrainSource) =>
-        effect?.kind === "areaMovementDistanceDamageHazard" &&
+        effect?.kind === "areaMovementDistanceDamage" &&
         effect.sourceCombatantId === terrainSource.sourceCombatantId &&
         effect.sourceProcedureRef === terrainSource.sourceProcedureRef &&
         effect.areaId === terrainSource.areaId,
@@ -1300,7 +1299,7 @@ function validateAreaDifficultTerrainMovementFact(
     }
     /* v8 ignore stop -- @preserve */
     sourceKeys.add(key);
-    if (source.kind === "areaMovementDistanceDamageHazard") {
+    if (source.kind === "areaMovementDistanceDamage") {
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         !Number.isInteger(source.damageDistanceFeet) ||

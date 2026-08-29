@@ -3,7 +3,7 @@ import type {
   BattleFill,
   BattleSpellCastReactionFact,
 } from "../battle-state-execution.ts";
-import type { BattleFillAfterSlowSomaticSpellFailureOutcome } from "./slow-active-penalties-runtime.ts";
+import type { BattleFillAfterTurnConstraintSomaticSpellFailureOutcome } from "./slow-active-penalties-runtime.ts";
 import { parseSpellCastReactionFactsFill } from "./spells-resolve-fill-set.ts";
 
 export type WeaponAttackOverrideFillInput = {
@@ -45,7 +45,7 @@ function classifyTargetSpatialFactsFill(
 }
 
 function classifyWeaponAttackOverrideFill(
-  fill: BattleFillAfterSlowSomaticSpellFailureOutcome,
+  fill: BattleFillAfterTurnConstraintSomaticSpellFailureOutcome,
 ): WeaponAttackOverrideFillClassification {
   return Match.value(fill).pipe(
     Match.discriminatorsExhaustive("kind")({
@@ -62,16 +62,16 @@ function classifyWeaponAttackOverrideFill(
       abilityChoice: ordinaryFillIsInvalid,
       targetAbilityChoices: ordinaryFillIsInvalid,
       temporaryAbilityCheckRollModeActiveEffectCount: ordinaryFillIsInvalid,
-      commandOptionChoice: ordinaryFillIsInvalid,
+      compelledBehaviorOptionChoice: ordinaryFillIsInvalid,
       selfTransformationModeChoice: ordinaryFillIsInvalid,
       wildShapeEquipmentDisposition: ordinaryFillIsInvalid,
-      dancingLightsPlacement: ordinaryFillIsInvalid,
+      movableLightPlacement: ordinaryFillIsInvalid,
       unitFeatureDecision: ordinaryFillIsInvalid,
       hitPointHealingDistribution: ordinaryFillIsInvalid,
       heldObjectFacts: ordinaryFillIsInvalid,
       toolPossessionFacts: ordinaryFillIsInvalid,
       cunningStrikeEndTurnCoverFacts: ordinaryFillIsInvalid,
-      findFamiliarConnection: ordinaryFillIsInvalid,
+      spawnedCompanionConnection: ordinaryFillIsInvalid,
       companionReappearancePlacement: ordinaryFillIsInvalid,
       companionReappearanceInitiative: ordinaryFillIsInvalid,
       weaponAttackDamageEnhancementTargetItem: ordinaryFillIsInvalid,
@@ -83,25 +83,25 @@ function classifyWeaponAttackOverrideFill(
       objectContactTargets: ordinaryFillIsInvalid,
       objectDropResolution: ordinaryFillIsInvalid,
       spellAreaChoice: ordinaryFillIsInvalid,
-      gustOfWindLineDirectionChoice: ordinaryFillIsInvalid,
+      directionalPersistentAreaDirectionChoice: ordinaryFillIsInvalid,
       movableZoneRamMovement: ordinaryFillIsInvalid,
       movableZoneRepositionMovement: ordinaryFillIsInvalid,
-      cloudkillMovement: ordinaryFillIsInvalid,
+      persistentAreaSourceTurnTranslation: ordinaryFillIsInvalid,
       startTurnOccurrenceOrder: ordinaryFillIsInvalid,
       temporaryHitPointChoice: ordinaryFillIsInvalid,
       teleportDestination: ordinaryFillIsInvalid,
-      spiritualWeaponForcePosition: ordinaryFillIsInvalid,
+      spatialMeleeSpellAttackProxyPosition: ordinaryFillIsInvalid,
       spellTargetAllocation: ordinaryFillIsInvalid,
       spellTargetList: ordinaryFillIsInvalid,
       deathSavingThrow: ordinaryFillIsInvalid,
       statBlockRechargeRoll: ordinaryFillIsInvalid,
       concentrationSavingThrow: ordinaryFillIsInvalid,
       attackDamageDisposition: ordinaryFillIsInvalid,
-      sanctuaryInterdictionOutcome: ordinaryFillIsInvalid,
+      targetingSaveInterdictionOutcome: ordinaryFillIsInvalid,
       interruptDecision: ordinaryFillIsInvalid,
       movement: ordinaryFillIsInvalid,
-      levitateAltitudeChange: ordinaryFillIsInvalid,
-      levitateInitialRise: ordinaryFillIsInvalid,
+      controlledVerticalSuspensionAltitudeChange: ordinaryFillIsInvalid,
+      controlledVerticalSuspensionInitialRise: ordinaryFillIsInvalid,
       abilityCheck: ordinaryFillIsInvalid,
       grappleOutcome: ordinaryFillIsInvalid,
       shoveOutcome: ordinaryFillIsInvalid,
@@ -110,7 +110,7 @@ function classifyWeaponAttackOverrideFill(
 }
 
 export function parseWeaponAttackOverrideFillInput(
-  fills: readonly BattleFillAfterSlowSomaticSpellFailureOutcome[],
+  fills: readonly BattleFillAfterTurnConstraintSomaticSpellFailureOutcome[],
 ): WeaponAttackOverrideFillInputParseResult {
   let reactionFacts: readonly BattleSpellCastReactionFact[] = [];
   let reactionFactsWereSupplied = false;

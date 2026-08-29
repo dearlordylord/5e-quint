@@ -177,8 +177,8 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
       ),
       byBattleHoleKind("deathSavingThrow", () => "deathSavingThrow" as const),
       byBattleHoleKind(
-        "findFamiliarConnection",
-        () => "findFamiliarConnection" as const,
+        "spawnedCompanionConnection",
+        () => "spawnedCompanionConnection" as const,
       ),
       byBattleHoleKind("grappleOutcome", () => "grappleOutcome" as const),
       byBattleHoleKind(

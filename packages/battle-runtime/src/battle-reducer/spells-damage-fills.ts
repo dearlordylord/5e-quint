@@ -121,7 +121,7 @@ import {
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
 } from "./domain-constants.ts";
 import { spellAttackSequencePartName } from "./spells-execution-facts.ts";
-import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
+import { linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
 import {
   activeCreatureSizeChangeEffect,
   creatureSizeChangeStrengthRollMode,
@@ -1271,7 +1271,7 @@ export function spellSavingThrowAbility(
         | "stagedSaveCondition"
         | "saveGatedConditionWithRepeat"
         | "saveGatedAreaControl"
-        | "command"
+        | "compelledNextTurnBehavior"
         | "persistentAreaSaveCondition"
         | "directionalPersistentArea"
         | "saveGatedTurnConstraintBundle";
@@ -1558,7 +1558,9 @@ export function savingThrowFlatBonusProjections(
   ability: Ability,
 ): readonly BattleSavingThrowFlatBonusProjection[] {
   return [...state.combatants].flatMap(([, target]) => [
-    ...wardingBondSavingThrowFlatBonusProjectionsForTarget(target),
+    ...linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget(
+      target,
+    ),
     ...saveGatedTurnConstraintBundleSavingThrowFlatBonusProjection(
       target,
       ability,

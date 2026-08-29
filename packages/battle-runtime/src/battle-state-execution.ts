@@ -3844,6 +3844,7 @@ type AnySupportedDamageSpellInvocation = Exclude<
       | "makeStable"
       | "damageReduction"
       | "linkedDefenseResistanceDamageShare"
+      | "spawnedCompanionLifecycle"
       | "temporaryAbilityCheckRollMode"
       | "spellHostedWeaponAttack"
       | "weaponAttackOverride"
