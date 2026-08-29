@@ -164,6 +164,7 @@ import {
   characterBattleInitIssueReasonFromFact,
   battleCreatureInitIssuesFromMessages,
   battleCreatureInitIssueLeaves,
+  type CharacterBattleRuntimeIssue,
   type CharacterBattleInitIssueReason,
 } from "./index.ts";
 import type { BattleRosterIssue } from "./index.ts";
@@ -244,19 +245,10 @@ function characterSpellcasting(
 function startBattleFromProjectedRosterFixture(input: {
   readonly battleId: Parameters<typeof startBattle>[0]["battleId"];
   readonly projections: readonly [
-    Either.Either<
-      BattleCreatureInit,
-      BattleStateInitIssue | BattleCreatureInitIssue
-    >,
-    ...Either.Either<
-      BattleCreatureInit,
-      BattleStateInitIssue | BattleCreatureInitIssue
-    >[],
+    Either.Either<BattleCreatureInit, CharacterBattleRuntimeIssue>,
+    ...Either.Either<BattleCreatureInit, CharacterBattleRuntimeIssue>[],
   ];
-}): Either.Either<
-  BattleRuntimeSession,
-  BattleStateInitIssue | BattleCreatureInitIssue
-> {
+}): Either.Either<BattleRuntimeSession, CharacterBattleRuntimeIssue> {
   const combatants: BattleCreatureInit[] = [];
   for (const projection of input.projections) {
     if (Either.isLeft(projection)) return Either.left(projection.left);
@@ -8452,7 +8444,7 @@ describe("Character Build battle projection", () => {
     }
     const [wizardSource] = wizardSpellcasting.sources;
 
-    expect(
+    const projection = expectRight(
       characterSpellcasting({
         build: {
           ...wizard,
@@ -8473,14 +8465,15 @@ describe("Character Build battle projection", () => {
         },
         unitLibrary,
       }),
-    ).toMatchObject({
-      _tag: "Right",
-      right: {
-        cantrips: [expect.objectContaining({ id: "true_strike" })],
-        preparedSpells: [],
-        spellbookRitualSpellAccesses: [],
-      },
-    });
+    );
+    expect(projection.cantrips).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "true_strike" }),
+        expect.objectContaining({ id: "mage_hand" }),
+      ]),
+    );
+    expect(projection.preparedSpells).toEqual([]);
+    expect(projection.spellbookRitualSpellAccesses).toEqual([]);
   });
 
   test("projects an empty weapon loadout and rejects a non-Weapon off-hand reference", () => {

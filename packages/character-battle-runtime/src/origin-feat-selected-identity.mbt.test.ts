@@ -1,6 +1,10 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay B7-FEAT-IDENTITY-BATCH alert
 // UNIT-IDENTITY-REPLAY: B7-FEAT-IDENTITY-BATCH alert doFinalizeCriminalAlertOriginFeat doProjectAlertInitiativeHandoff
-import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import {
+  statBlockId as authoredStatBlockId,
+  unitId as authoredUnitId,
+} from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
@@ -399,7 +403,10 @@ function publicStartBattleSelectedReferenceRuntimeRoute(
   };
   const statBlockEntryInput = {
     combatantId: combatantId("combatant:origin-feat-skeleton"),
-    statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+    statBlock: assertStatBlockForTest(
+      statBlockCatalog,
+      authoredStatBlockId("stat_block_skeleton"),
+    ),
     initiative: initiativeScore(10),
     ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
     conditions: [],

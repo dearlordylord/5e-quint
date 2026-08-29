@@ -1,5 +1,6 @@
 import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import * as path from "node:path";
 
 import {
@@ -1042,7 +1043,10 @@ function metamagicBridgeUsesSharedPointPoolRoute(
         characterInit,
         battleCreatureInitFromStatBlock({
           combatantId: targetCombatantId,
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_skeleton"),
+          ),
           initiative: initiativeScore(10),
         }),
       ],
@@ -1533,7 +1537,10 @@ function originFeatSelectedReferenceInitiativeHandoffRoute(): readonly Character
           kind: "available",
           input: {
             combatantId: combatantId("combatant:route-origin-feat-skeleton"),
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(10),
             ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
             conditions: [],
