@@ -32,9 +32,11 @@ import type {
 } from "./character-session-query-tool-input.ts";
 import type { AvailableCharacterSession } from "./session-store.ts";
 
-type RightProjection<Result> =
-  Result extends Result.Result<infer Projection, unknown> ? Projection : never;
-type CharacterSheetAbilityCheckProficiencyBonusProjection = RightProjection<
+type SuccessProjection<Candidate> =
+  Candidate extends Result.Result<infer Projection, unknown>
+    ? Projection
+    : never;
+type CharacterSheetAbilityCheckProficiencyBonusProjection = SuccessProjection<
   ReturnType<typeof characterSheetAbilityCheckProficiencyBonusProjection>
 >;
 

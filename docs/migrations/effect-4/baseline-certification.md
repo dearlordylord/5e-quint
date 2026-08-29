@@ -48,6 +48,19 @@ oracle followed by a separately reviewed delta report.
 | Reducers            | Representative shared-algebra, Character Creation discovery, Character Sheet hit-point, and condition lifecycle outcomes from their production functions.                                                                                                                                                                                                                                                                                                                   |
 | Raw Swarm           | Byte authorities for tracked regular JSON, JSONL, SQLite, Markdown, and text artifacts under the Raw Swarm owner directory; ignored/generated output is excluded.                                                                                                                                                                                                                                                                                                           |
 
+The MCP row describes how the immutable Effect 3 certificate was produced.
+The current Effect 4 candidate verifier keeps that serialized shape unchanged:
+the historical `httpWithoutOAuth` lane is reproduced through the canonical
+unauthenticated server constructor and remains parity-checked against stdio.
+Since `public-index.ts` now requires OAuth configuration, the verifier also
+launches that shipped entrypoint as a separately asserted, nonserialized lane.
+It checks the current 27-tool order and security declarations against the
+canonical authenticated projection, checks representative calls against stdio,
+then sends SIGTERM while an HTTP request is incomplete and requires the response
+to drain before a clean process exit. The eventual reviewed finite-delta
+certificate remains owned by #386; this bootstrap/lifecycle probe does not
+rewrite or add fields to the Effect 3 oracle.
+
 The artifact manifest records its ownership boundary explicitly: it reads the
 Git tracked index, admits regular files only, stores canonical POSIX paths, and
 orders them by Unicode code point. Symlinked or escaping paths are rejected.

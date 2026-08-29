@@ -3,13 +3,19 @@ import { Effect } from "effect";
 export function dndMcpStdioProgram<Transport>(
   server: { readonly connect: (transport: Transport) => Promise<void> },
   transport: Transport,
-): Effect.Effect<void> {
-  return Effect.promise(() => server.connect(transport)).pipe(
-    Effect.flatMap(() => Effect.never),
-    Effect.catchCause((cause) =>
+) {
+  return Effect.tryPromise({
+    try: () => server.connect(transport),
+    catch: (error) =>
+      error instanceof Error
+        ? error
+        : new Error("MCP transport connection failed.", { cause: error }),
+  }).pipe(
+    Effect.tapError((error) =>
       Effect.sync(() => {
-        console.error("MCP server crashed", cause.toString());
+        console.error("MCP server crashed", error.toString());
       }),
     ),
+    Effect.flatMap(() => Effect.never),
   );
 }

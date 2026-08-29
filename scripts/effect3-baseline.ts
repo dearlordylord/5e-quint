@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn, type ChildProcess } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { constants } from "node:fs";
 import {
@@ -12,7 +12,9 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
+import { request as requestHttp } from "node:http";
 import { tmpdir } from "node:os";
+import { createServer as createTcpServer } from "node:net";
 import { dirname, extname, join, posix, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -107,7 +109,10 @@ function compareCodePointStrings(left: string, right: string): number {
   return leftCodePoints.length - rightCodePoints.length;
 }
 
-function isPlainRecord(value: object): value is Record<string, unknown> {
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return false;
+  }
   const prototype = Object.getPrototypeOf(value);
   return prototype === Object.prototype || prototype === null;
 }
@@ -522,6 +527,7 @@ type McpClientCapture = {
 type McpEntrypointCapture = {
   readonly defaultStdio: McpClientCapture;
   readonly httpWithoutOAuth: McpClientCapture;
+  readonly shippedHttpAnonymous: McpClientCapture;
 };
 
 async function captureMcpClient(client: Client): Promise<McpClientCapture> {
@@ -558,6 +564,214 @@ async function captureDefaultStdioMcp(): Promise<McpClientCapture> {
   }
 }
 
+async function reserveHttpPort(): Promise<number> {
+  const server = createTcpServer();
+  return new Promise((resolvePort, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address();
+      if (address === null || typeof address === "string") {
+        server.close();
+        reject(new Error("Could not reserve a local HTTP port."));
+        return;
+      }
+      server.close((error) => {
+        if (error !== undefined) {
+          reject(error);
+          return;
+        }
+        resolvePort(address.port);
+      });
+    });
+  });
+}
+
+async function waitForHttpHealth(
+  healthUrl: URL,
+  child: ChildProcess,
+  stderr: () => string,
+): Promise<void> {
+  const deadline = Date.now() + 120_000;
+  let childFailure: Error | undefined;
+  const recordExit = (code: number | null, signal: NodeJS.Signals | null) => {
+    childFailure = new Error(
+      `Shipped HTTP MCP entrypoint exited before health readiness: ${
+        signal ?? code ?? "unknown"
+      }${stderr() === "" ? "" : `; stderr: ${stderr()}`}`,
+    );
+  };
+  const recordError = (error: Error) => {
+    childFailure = new Error(
+      `Shipped HTTP MCP entrypoint failed to start: ${error.message}${
+        stderr() === "" ? "" : `; stderr: ${stderr()}`
+      }`,
+    );
+  };
+  child.once("exit", recordExit);
+  child.once("error", recordError);
+  try {
+    while (Date.now() < deadline) {
+      if (childFailure !== undefined) throw childFailure;
+      if (child.exitCode !== null || child.signalCode !== null) {
+        recordExit(child.exitCode, child.signalCode);
+        throw childFailure;
+      }
+      try {
+        const response = await fetch(healthUrl, {
+          signal: AbortSignal.timeout(2_000),
+        });
+        if (response.status === 200) {
+          await response.body?.cancel();
+          return;
+        }
+        await response.body?.cancel();
+      } catch {
+        // The shipped entrypoint may still be loading its schemas.
+      }
+      await new Promise((resolveDelay) => setTimeout(resolveDelay, 50));
+    }
+    throw new Error(
+      `Shipped HTTP MCP entrypoint did not become healthy within 120 seconds.${
+        stderr() === "" ? "" : ` stderr: ${stderr()}`
+      }`,
+    );
+  } finally {
+    child.off("exit", recordExit);
+    child.off("error", recordError);
+  }
+}
+
+async function stopChildProcess(
+  child: ChildProcess,
+  stderr: () => string,
+): Promise<void> {
+  if (child.exitCode !== null || child.signalCode !== null) {
+    if (child.exitCode !== 0 || child.signalCode !== null) {
+      throw new Error(
+        `Shipped HTTP MCP entrypoint exited ${
+          child.signalCode ?? child.exitCode ?? "unknown"
+        }.${stderr() === "" ? "" : ` stderr: ${stderr()}`}`,
+      );
+    }
+    return;
+  }
+  await new Promise<void>((resolveStop, reject) => {
+    let settled = false;
+    const finish = (code: number | null, signal: NodeJS.Signals | null) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(forceKillTimer);
+      if (code === 0 && signal === null) {
+        resolveStop();
+      } else {
+        reject(
+          new Error(
+            `Shipped HTTP MCP entrypoint did not shut down cleanly: ${
+              signal ?? code ?? "unknown"
+            }.`,
+          ),
+        );
+      }
+    };
+    const forceKillTimer = setTimeout(() => {
+      child.kill("SIGKILL");
+    }, 5_000);
+    child.once("exit", finish);
+    child.kill("SIGTERM");
+  });
+}
+
+async function verifyShippedHttpResponseDrain(
+  port: number,
+  child: ChildProcess,
+  stderr: () => string,
+): Promise<void> {
+  const body = '{"jsonrpc":"2.0","id":99,"method":"tools/list"}';
+  let resolveResponse!: (response: {
+    readonly body: string;
+    readonly statusCode: number | undefined;
+  }) => void;
+  let rejectResponse!: (error: unknown) => void;
+  const response = new Promise<{
+    readonly body: string;
+    readonly statusCode: number | undefined;
+  }>((resolve, reject) => {
+    resolveResponse = resolve;
+    rejectResponse = reject;
+  });
+  const request = requestHttp({
+    host: "127.0.0.1",
+    port,
+    path: "/mcp",
+    method: "POST",
+    headers: {
+      accept: "application/json, text/event-stream",
+      connection: "close",
+      "content-length": Buffer.byteLength(body),
+      "content-type": "application/json",
+    },
+  });
+  request.once("response", (incoming) => {
+    const chunks: Buffer[] = [];
+    incoming.on("data", (chunk: Buffer | string) => {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    });
+    incoming.once("end", () => {
+      resolveResponse({
+        body: Buffer.concat(chunks).toString("utf8"),
+        statusCode: incoming.statusCode,
+      });
+    });
+    incoming.once("error", rejectResponse);
+  });
+  request.once("error", rejectResponse);
+  request.setTimeout(30_000, () =>
+    request.destroy(new Error("Shipped HTTP response drain timed out.")),
+  );
+  try {
+    await new Promise<void>((resolveWrite, rejectWrite) => {
+      request.write(body.slice(0, -1), (error) =>
+        error === undefined || error === null
+          ? resolveWrite()
+          : rejectWrite(error),
+      );
+    });
+    const shutdown = stopChildProcess(child, stderr);
+    request.end(body.slice(-1));
+    const [completedResponse, processExit] = await Promise.allSettled([
+      response,
+      shutdown,
+    ]);
+    const failures = [completedResponse, processExit].flatMap((result) =>
+      result.status === "rejected" ? [result.reason] : [],
+    );
+    if (failures.length > 0) {
+      throw new AggregateError(failures, "Shipped HTTP response drain failed.");
+    }
+    if (completedResponse.status !== "fulfilled") {
+      throw new Error("Shipped HTTP response drain produced no response.");
+    }
+    if (completedResponse.value.statusCode !== 200) {
+      throw new Error(
+        `Shipped HTTP shutdown returned status ${completedResponse.value.statusCode ?? "unknown"}.`,
+      );
+    }
+    const payload: unknown = JSON.parse(completedResponse.value.body);
+    if (
+      !isPlainRecord(payload) ||
+      payload.id !== 99 ||
+      !isPlainRecord(payload.result) ||
+      !Array.isArray(payload.result.tools)
+    ) {
+      throw new Error(
+        "Shipped HTTP shutdown did not drain the complete tools/list response.",
+      );
+    }
+  } finally {
+    request.destroy();
+  }
+}
+
 async function captureHttpWithoutOAuthMcp(): Promise<McpClientCapture> {
   const directory = mkdtempSync(join(tmpdir(), "dnd-effect3-baseline-http-"));
   const repository = openSqlitePlaySessionRepository(
@@ -584,18 +798,129 @@ async function captureHttpWithoutOAuthMcp(): Promise<McpClientCapture> {
         signal: AbortSignal.timeout(30_000),
       },
     });
-    // The SDK transport class supplies the protocol Transport contract at runtime;
-    // its declaration is narrower than Client.connect's shared transport type.
     await client.connect(transport as Transport);
     return await captureMcpClient(client);
   } finally {
-    await Promise.allSettled([
+    const cleanupFailures: unknown[] = [];
+    const protocolCleanup = await Promise.allSettled([
       client.close(),
       ...(transport === undefined ? [] : [transport.close()]),
     ]);
-    await server.close();
-    repository.success.close();
-    rmSync(directory, { recursive: true, force: true });
+    cleanupFailures.push(
+      ...protocolCleanup.flatMap((result) =>
+        result.status === "rejected" ? [result.reason] : [],
+      ),
+    );
+    try {
+      const closed = await server.close();
+      if (Result.isFailure(closed)) cleanupFailures.push(closed.failure);
+    } catch (error) {
+      cleanupFailures.push(error);
+    }
+    try {
+      repository.success.close();
+    } catch (error) {
+      cleanupFailures.push(error);
+    }
+    try {
+      rmSync(directory, { recursive: true, force: true });
+    } catch (error) {
+      cleanupFailures.push(error);
+    }
+    if (cleanupFailures.length > 0) {
+      throw new AggregateError(
+        cleanupFailures,
+        "Unauthenticated HTTP MCP capture cleanup failed.",
+      );
+    }
+  }
+}
+
+async function captureShippedHttpAnonymousMcp(): Promise<McpClientCapture> {
+  const directory = mkdtempSync(join(tmpdir(), "dnd-effect3-baseline-http-"));
+  const port = await reserveHttpPort();
+  const endpointOrigin = `http://127.0.0.1:${port}`;
+  const configuredPublicOrigin = `https://127.0.0.1:${port}`;
+  const child = spawn(
+    process.execPath,
+    ["--import", "tsx", "packages/mcp/src/public-index.ts"],
+    {
+      cwd: REPOSITORY_ROOT,
+      env: {
+        ...process.env,
+        DND_MCP_HOST: "127.0.0.1",
+        PORT: String(port),
+        DND_MCP_ENVIRONMENT: "development",
+        DND_MCP_RELEASE: "effect4-candidate",
+        DND_MCP_PUBLISHER_NAME: "Effect 4 candidate",
+        DND_MCP_PUBLIC_ORIGIN: configuredPublicOrigin,
+        DND_PLAY_SESSION_DATABASE_PATH: join(directory, "sessions.sqlite"),
+        DND_SAVED_SESSION_AUTHORIZATION_DATABASE_PATH: join(
+          directory,
+          "authorization.sqlite",
+        ),
+        DND_SAVED_SESSION_AUTHORIZATION_SECRET:
+          "effect4-candidate-secret-at-least-32-characters",
+      },
+      stdio: ["ignore", "ignore", "pipe"],
+    },
+  );
+  let childStderr = "";
+  child.stderr?.setEncoding("utf8");
+  child.stderr?.on("data", (chunk: string) => {
+    childStderr = `${childStderr}${chunk}`.slice(-8_192);
+  });
+  const client = new Client({
+    name: "effect3-baseline-http",
+    version: "0.1.0",
+  });
+  let transport: StreamableHTTPClientTransport | undefined;
+  try {
+    const endpoint = new URL("/mcp", endpointOrigin);
+    await waitForHttpHealth(new URL("/health", endpointOrigin), child, () =>
+      childStderr.trim(),
+    );
+    transport = new StreamableHTTPClientTransport(endpoint, {
+      requestInit: {
+        headers: { connection: "close" },
+        signal: AbortSignal.timeout(30_000),
+      },
+    });
+    // The SDK transport class supplies the protocol Transport contract at runtime;
+    // its declaration is narrower than Client.connect's shared transport type.
+    await client.connect(transport as Transport);
+    const capture = await captureMcpClient(client);
+    await Promise.all([client.close(), transport.close()]);
+    transport = undefined;
+    await verifyShippedHttpResponseDrain(port, child, () => childStderr.trim());
+    return capture;
+  } finally {
+    const cleanupFailures: unknown[] = [];
+    const protocolCleanup = await Promise.allSettled([
+      client.close(),
+      ...(transport === undefined ? [] : [transport.close()]),
+    ]);
+    cleanupFailures.push(
+      ...protocolCleanup.flatMap((result) =>
+        result.status === "rejected" ? [result.reason] : [],
+      ),
+    );
+    try {
+      await stopChildProcess(child, () => childStderr.trim());
+    } catch (error) {
+      cleanupFailures.push(error);
+    }
+    try {
+      rmSync(directory, { recursive: true, force: true });
+    } catch (error) {
+      cleanupFailures.push(error);
+    }
+    if (cleanupFailures.length > 0) {
+      throw new AggregateError(
+        cleanupFailures,
+        "Shipped HTTP MCP entrypoint cleanup failed.",
+      );
+    }
   }
 }
 
@@ -606,6 +931,7 @@ async function captureMcpEntrypoints(): Promise<McpEntrypointCapture> {
   mcpEntrypointCapture = (async () => {
     const defaultStdio = await captureDefaultStdioMcp();
     const httpWithoutOAuth = await captureHttpWithoutOAuthMcp();
+    const shippedHttpAnonymous = await captureShippedHttpAnonymousMcp();
     if (
       canonicalBaselineJson(defaultStdio.tools) !==
       canonicalBaselineJson(httpWithoutOAuth.tools)
@@ -624,7 +950,49 @@ async function captureMcpEntrypoints(): Promise<McpEntrypointCapture> {
         );
       }
     }
-    return { defaultStdio, httpWithoutOAuth };
+    const shippedDefinitions = buildAdvertisedToolDefinitions(toolDefinitions);
+    const expectedShippedTools = canonicalBaselineJson(
+      shippedDefinitions.map((definition) => {
+        const {
+          securitySchemes: _wireOmittedSecuritySchemes,
+          ...wireDefinition
+        } = snapshotToolDefinition(definition);
+        return wireDefinition;
+      }),
+    );
+    const actualShippedTools = canonicalBaselineJson(
+      shippedHttpAnonymous.tools,
+    );
+    if (expectedShippedTools !== actualShippedTools) {
+      let differenceIndex = 0;
+      const sharedLength = Math.min(
+        expectedShippedTools.length,
+        actualShippedTools.length,
+      );
+      while (
+        differenceIndex < sharedLength &&
+        expectedShippedTools[differenceIndex] ===
+          actualShippedTools[differenceIndex]
+      ) {
+        differenceIndex += 1;
+      }
+      throw new Error(
+        `Shipped HTTP anonymous tools/list differs from the authenticated projection at byte ${differenceIndex}: expected ${JSON.stringify(expectedShippedTools.slice(differenceIndex, differenceIndex + 160))}; received ${JSON.stringify(actualShippedTools.slice(differenceIndex, differenceIndex + 160))}.`,
+      );
+    }
+    for (const representativeCall of REPRESENTATIVE_MCP_CALLS) {
+      if (
+        canonicalBaselineJson(defaultStdio.calls[representativeCall.key]) !==
+        canonicalBaselineJson(
+          shippedHttpAnonymous.calls[representativeCall.key],
+        )
+      ) {
+        throw new Error(
+          `Shipped HTTP anonymous ${representativeCall.name} response differs from default stdio.`,
+        );
+      }
+    }
+    return { defaultStdio, httpWithoutOAuth, shippedHttpAnonymous };
   })();
   return mcpEntrypointCapture;
 }

@@ -72,36 +72,84 @@ async function openLocalSmokeTarget(): Promise<SavedSessionAuthorizationSmokeTar
       secret: "saved-session-smoke-secret-at-least-32-characters",
     }),
   );
-  const service = await runtime.runPromise(SavedSessionAuthorization);
-  const oauth = createPublicMcpOAuth({
-    resource: resource.toString(),
-    authorizationServer: new URL("/api/auth", origin).toString(),
-    issuer: new URL("/api/auth", origin).toString().replace(/\/$/u, ""),
-    jwksUrl: new URL("/api/auth/jwks", origin).toString(),
-  });
-  if (Result.isFailure(oauth)) throw new Error(oauth.failure.message);
-  const repository = openSqlitePlaySessionRepository(
-    join(scratchDirectory, "mcp-play-sessions.sqlite"),
-  );
-  if (Result.isFailure(repository)) throw new Error(repository.failure.message);
-  const server = createDndMcpHttpServer({
-    hostname: "127.0.0.1",
-    port: 9876,
-    playSessionRepository: repository.success,
-    oauth: oauth.success,
-    savedSessionAuthorization: { origin, service },
-  });
-  const endpoint = await server.listen();
-  if (Result.isFailure(endpoint)) throw new Error(endpoint.failure.message);
-  return {
-    tag: "local",
-    endpoint: endpoint.success,
-    origin,
-    close: async () => {
-      await server.close();
-      repository.success.close();
+  let closeServer: (() => Promise<void>) | undefined;
+  let closeRepository: (() => void) | undefined;
+  let closed = false;
+  const close = async () => {
+    if (closed) return;
+    closed = true;
+    const failures: unknown[] = [];
+    if (closeServer !== undefined) {
+      try {
+        await closeServer();
+      } catch (error) {
+        failures.push(error);
+      }
+    }
+    if (closeRepository !== undefined) {
+      try {
+        closeRepository();
+      } catch (error) {
+        failures.push(error);
+      }
+    }
+    try {
       await runtime.dispose();
+    } catch (error) {
+      failures.push(error);
+    }
+    try {
       await rm(scratchDirectory, { recursive: true });
-    },
+    } catch (error) {
+      failures.push(error);
+    }
+    if (failures.length > 0) {
+      throw new AggregateError(
+        failures,
+        "Saved-session authorization smoke target cleanup failed.",
+      );
+    }
   };
+
+  try {
+    const service = await runtime.runPromise(SavedSessionAuthorization);
+    const oauth = createPublicMcpOAuth({
+      resource: resource.toString(),
+      authorizationServer: new URL("/api/auth", origin).toString(),
+      issuer: new URL("/api/auth", origin).toString().replace(/\/$/u, ""),
+      jwksUrl: new URL("/api/auth/jwks", origin).toString(),
+    });
+    if (Result.isFailure(oauth)) throw new Error(oauth.failure.message);
+    const repository = openSqlitePlaySessionRepository(
+      join(scratchDirectory, "mcp-play-sessions.sqlite"),
+    );
+    if (Result.isFailure(repository)) {
+      throw new Error(repository.failure.message);
+    }
+    closeRepository = () => repository.success.close();
+    const server = createDndMcpHttpServer({
+      hostname: "127.0.0.1",
+      port: 9876,
+      playSessionRepository: repository.success,
+      oauth: oauth.success,
+      savedSessionAuthorization: { origin, service },
+    });
+    closeServer = async () => {
+      const result = await server.close();
+      if (Result.isFailure(result)) throw result.failure;
+    };
+    const endpoint = await server.listen();
+    if (Result.isFailure(endpoint)) throw new Error(endpoint.failure.message);
+    return { tag: "local", endpoint: endpoint.success, origin, close };
+  } catch (error) {
+    try {
+      await close();
+    } catch (cleanupError) {
+      throw new AggregateError(
+        [error, cleanupError],
+        "Saved-session authorization smoke target initialization failed.",
+      );
+    }
+    throw error;
+  }
 }

@@ -38,7 +38,7 @@ export function decodeToolArgs<A, I>(
   toolName: string,
 ): ToolInputResult<A> {
   const input = args === undefined ? {} : args;
-  const decoded = Schema.decodeUnknownResult(Schema.toType(schema), {
+  const decoded = Schema.decodeUnknownResult(schema, {
     onExcessProperty: "error",
   })(input);
   return Result.isFailure(decoded)

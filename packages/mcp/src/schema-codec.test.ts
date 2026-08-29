@@ -1,9 +1,10 @@
 import fc from "fast-check";
-import { Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { MODEL_OUTPUT_SCHEMA_MAX_DEPTH } from "./model-output-json-schema.ts";
 import {
+  decodeToolArgs,
   mcpObjectJsonSchema,
   mcpObjectJsonSchemaWithCopiedObjects,
   mcpModelOutputJsonSchema,
@@ -22,6 +23,20 @@ const schemaProperties = fc.uniqueArray(
 );
 
 describe("MCP output JSON Schema identity", () => {
+  test("decodes the same encoded representation advertised for transformed inputs", () => {
+    const codec = Schema.Struct({ count: Schema.NumberFromString });
+
+    expect(mcpObjectJsonSchema(codec)).toMatchObject({
+      properties: { count: { type: "string" } },
+    });
+    expect(decodeToolArgs(codec, { count: "12" }, "transform_test")).toEqual(
+      Result.succeed({ count: 12 }),
+    );
+    expect(
+      Result.isFailure(decodeToolArgs(codec, { count: 12 }, "transform_test")),
+    ).toBe(true);
+  });
+
   test("reuses one generated schema per Effect Schema codec", () => {
     const codec = Schema.Struct({ value: Schema.String });
 
