@@ -32,6 +32,9 @@ import {
   frenzyDamageTypeDecision,
   weaponTargetConstraint,
 } from "./battle-reducer/statblock-attacks.ts";
+import { attackExecutionSelectionForOption } from "./battle-action-options.ts";
+import { statBlockAttackDamageSelectionKey } from "./stat-block-attack-damage-selection.ts";
+import { sameBattleSubject } from "./battle-subjects.ts";
 import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-apply.ts";
 import {
   battleContinuationFillEquals,
@@ -2669,25 +2672,77 @@ describe("battle boundary admission owners", () => {
     const pactCandidates = candidates.filter(
       (act) => act.subject.tag === "pactOfTheChainFamiliarAttack",
     );
-    expect(pactCandidates).toHaveLength(5);
     const familiar = session.state.combatants.get(familiarId);
     if (familiar?.origin.kind !== "statBlock") {
       throw new Error("Expected admitted familiar Stat Block.");
     }
+    const familiarActionProcedureRefs = new Set(
+      familiar.origin.execution.procedureBindings.flatMap((binding) =>
+        binding.procedure.kind === "unarmedStrike" ||
+        (binding.procedure.kind === "attack" &&
+          binding.procedure.section === "actions")
+          ? [binding.procedureRef]
+          : [],
+      ),
+    );
+    const familiarActionAttackOptions = statBlockAttackActionOptions(
+      familiar.origin.execution,
+    ).filter((attack) => familiarActionProcedureRefs.has(attack.procedureRef));
     expect(
-      pactCandidates.every((act) => {
-        const subject = act.subject;
-        if (subject.tag !== "pactOfTheChainFamiliarAttack") return false;
-        const binding = familiar.origin.execution.procedureBindings.find(
-          (candidate) => candidate.procedureRef === subject.procedureRef,
-        );
-        return (
-          binding?.procedure.kind === "unarmedStrike" ||
-          (binding?.procedure.kind === "attack" &&
-            binding.procedure.section === "actions")
-        );
-      }),
+      familiarActionAttackOptions.some(
+        (attack) => attack.attack.onHit.damage.advantageBonus !== undefined,
+      ),
     ).toBe(true);
+    const expectedPactSelectionKeys = familiarActionAttackOptions.map(
+      (attack) => {
+        const selection =
+          attackExecutionSelectionForOption(attack).statBlockDamageSelection;
+        return JSON.stringify([
+          attack.procedureRef,
+          statBlockAttackDamageSelectionKey(selection),
+        ]);
+      },
+    );
+    const pactSubjects = pactCandidates.map((act) => {
+      const subject = act.subject;
+      if (subject.tag !== "pactOfTheChainFamiliarAttack") {
+        throw new Error("Expected a Pact familiar attack candidate.");
+      }
+      return subject;
+    });
+    expect(
+      pactSubjects.every((subject) =>
+        familiarActionProcedureRefs.has(subject.procedureRef),
+      ),
+    ).toBe(true);
+    const actualPactSelectionKeys = pactSubjects.map((subject) => {
+      return JSON.stringify([
+        subject.procedureRef,
+        statBlockAttackDamageSelectionKey(subject.statBlockDamageSelection),
+      ]);
+    });
+    const distinctPactProcedureRefs = new Set(
+      pactSubjects.map((subject) => subject.procedureRef),
+    );
+    expect(actualPactSelectionKeys.length).toBeGreaterThan(
+      distinctPactProcedureRefs.size,
+    );
+    expect(new Set(actualPactSelectionKeys).size).toBe(
+      actualPactSelectionKeys.length,
+    );
+    expect(
+      pactSubjects.every((candidate, index) =>
+        pactSubjects
+          .slice(index + 1)
+          .every((other) => !sameBattleSubject(candidate, other)),
+      ),
+    ).toBe(true);
+    expect(new Set(actualPactSelectionKeys)).toEqual(
+      new Set(expectedPactSelectionKeys),
+    );
+    expect(actualPactSelectionKeys).toHaveLength(
+      expectedPactSelectionKeys.length,
+    );
 
     const available = discoverBattleActs(session);
     const familiarTouchSpellIds = available.flatMap((act) => {
