@@ -130,7 +130,7 @@ function battleCreatureInitFromStatBlock(
     "ammunitionStocks" | "conditions"
   >,
 ) {
-  return expectRight(
+  return expectSuccess(
     parseBattleCreatureInitFromStatBlock({
       ...input,
       ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
@@ -648,7 +648,7 @@ function layOnHandsRestoresHpAndRemovesPoisonedRoute(
     restoreHp: Hp(2),
     removePoisoned: true,
   });
-  const accepted = expectRight(result);
+  const accepted = expectSuccess(result);
   expect(characterSheetCurrentHp(accepted.target)).toBe(5);
   expect(accepted.target.conditions).not.toContain("poisoned");
   return appendObservedFeatureResourceRoute(route, {
@@ -688,7 +688,7 @@ function longRestClearsLayOnHandsPoolRoute(
     build: featureResourceBaseBuild({ startingClass: "class_paladin" }),
     currentHp: 6,
   });
-  const spent = expectRight(
+  const spent = expectSuccess(
     applyLayOnHands({
       source,
       target: source,
@@ -955,7 +955,7 @@ function uncannyMetabolismRecoversFocusAndHealsRoute(
     unitLibrary,
     martialArtsRoll: DieRollResult(4),
   });
-  const recovered = expectRight(result);
+  const recovered = expectSuccess(result);
   expect(characterSheetCurrentHp(recovered)).toBe(14);
   expect(characterSheetTempHp(recovered)).toBe(3);
   return appendObservedFeatureResourceRoute(route, {
@@ -967,7 +967,7 @@ function uncannyMetabolismRecoversFocusAndHealsRoute(
 function rejectUncannyMetabolismRepeatUseRoute(
   route: readonly CharacterBattleRouteEvent[],
 ): readonly CharacterBattleRouteEvent[] {
-  const used = expectRight(
+  const used = expectSuccess(
     useMonkUncannyMetabolismWhenRollingInitiative({
       sheet: featureResourceSheetFixture({
         characterIdText: "character:route-uncanny-repeat",
@@ -1019,7 +1019,7 @@ function metamagicBridgeUsesSharedPointPoolRoute(
       },
     ],
   });
-  const characterInit = expectRight(
+  const characterInit = expectSuccess(
     characterSheetBattleInit({
       sheet,
       unitLibrary,
@@ -1034,7 +1034,7 @@ function metamagicBridgeUsesSharedPointPoolRoute(
     throw new Error("Expected character battle creature init.");
   }
   const targetCombatantId = combatantId("combatant:route-metamagic-skeleton");
-  const battle = expectRight(
+  const battle = expectSuccess(
     startBattle({
       battleId: battleId("battle:route-metamagic-feature-resource-bridge"),
       combatants: [
@@ -1243,8 +1243,8 @@ function rolledDiceGroup(
 }
 
 function completeShortRestForFeatureResourceRoute(sheet: CharacterSheet) {
-  const rest = expectRight(startShortRest({ sheet }));
-  const completion = expectRight(
+  const rest = expectSuccess(startShortRest({ sheet }));
+  const completion = expectSuccess(
     finishShortRest({
       rest,
       restedTicks: elapsedTimeTicks(600),
@@ -1254,10 +1254,10 @@ function completeShortRestForFeatureResourceRoute(sheet: CharacterSheet) {
 }
 
 function completeLongRestForFeatureResourceRoute(sheet: CharacterSheet) {
-  const rest = expectRight(
+  const rest = expectSuccess(
     startLongRest({ sheet, timing: { tag: "noPriorLongRest" } }),
   );
-  const completion = expectRight(
+  const completion = expectSuccess(
     finishLongRest({
       rest,
       restedTicks: elapsedTimeTicks(4800),
@@ -1279,7 +1279,7 @@ function fontOfMagicCreatedLevel3RouteSheet(): CharacterSheet {
     }),
     currentHp: 24,
   });
-  return expectRight(
+  return expectSuccess(
     convertFontOfMagicSorceryPointsToSpellSlot({
       sheet,
       unitLibrary,
@@ -1305,7 +1305,7 @@ function featureResourceSheetFixture(
     >
   >,
 ): CharacterSheet {
-  const fresh = expectRight(
+  const fresh = expectSuccess(
     createFreshCharacterSheet({
       characterId: characterSheetId(input.characterIdText),
       build: input.build,
@@ -1347,14 +1347,14 @@ function featureResourceSheetFixture(
   };
   if ("bookOfShadowsPresence" in fresh) {
     if (fresh.bookOfShadowsPresence === undefined) {
-      return expectRight(
+      return expectSuccess(
         rebuildCharacterSheet({
           ...rebuildInput,
           build: fresh.build,
         }),
       );
     }
-    return expectRight(
+    return expectSuccess(
       rebuildCharacterSheet({
         ...rebuildInput,
         build: fresh.build,
@@ -1362,7 +1362,7 @@ function featureResourceSheetFixture(
       }),
     );
   }
-  return expectRight(
+  return expectSuccess(
     rebuildCharacterSheet({
       ...rebuildInput,
       build: fresh.build,
@@ -1387,7 +1387,7 @@ function featureResourceBaseBuild(input: {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: expectRight(
+    abilityScores: expectSuccess(
       abilityScoreAssignment({
         str: 13,
         dex: 14,
@@ -1468,14 +1468,14 @@ function featureResourceSorcererMetamagicBuild(): CharacterBuild {
       {
         kind: "selectedSorcererMetamagicOption",
         selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
-        optionId: expectRight(
+        optionId: expectSuccess(
           sorcererMetamagicOptionId("sorcerer_empowered_spell"),
         ),
       },
       {
         kind: "selectedSorcererMetamagicOption",
         selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
-        optionId: expectRight(
+        optionId: expectSuccess(
           sorcererMetamagicOptionId("sorcerer_heightened_spell"),
         ),
       },
@@ -1727,7 +1727,7 @@ function completeFighterDraftForBackground(input: {
           kind: "abilityScores",
           holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
           method: "standardArray",
-          value: expectRight(
+          value: expectSuccess(
             abilityScoreAssignment({
               str: 15,
               dex: 14,
@@ -1880,10 +1880,10 @@ function loadoutHoleId(
   });
 }
 
-function expectRight<T, E>(result: Result.Result<T, E>): T {
+function expectSuccess<T, E>(result: Result.Result<T, E>): T {
   if (Result.isFailure(result)) {
     throw new Error(
-      `Expected Right, received ${JSON.stringify(result.failure)}`,
+      `Expected Result success, received ${JSON.stringify(result.failure)}`,
     );
   }
   return result.success;

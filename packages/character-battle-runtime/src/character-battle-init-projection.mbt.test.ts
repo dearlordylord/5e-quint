@@ -61,7 +61,7 @@ function battleCreatureInitFromStatBlock(
     "ammunitionStocks" | "conditions"
   >,
 ) {
-  return expectRight(
+  return expectSuccess(
     parseBattleCreatureInitFromStatBlock({
       ...input,
       ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
@@ -218,7 +218,7 @@ function createBattleInitProjectionDriver() {
 
 function sheetHitPointsArmorClassConditionsAndProfilesProjection(): BattleInitProjection {
   const combatantIdValue = combatantId("combatant:battle-init-fighter");
-  const sheet = expectRight(
+  const sheet = expectSuccess(
     rebuildCharacterSheet({
       characterId: characterSheetId("character:battle-init-fighter"),
       build: defenseBuild({ wearingArmor: true }),
@@ -242,7 +242,7 @@ function sheetHitPointsArmorClassConditionsAndProfilesProjection(): BattleInitPr
 }
 
 function sheetSpellcastingAndMetamagicProjection(): BattleInitProjection {
-  const sheet = expectRight(
+  const sheet = expectSuccess(
     rebuildCharacterSheet({
       characterId: characterSheetId("character:battle-init-sorcerer"),
       build: sorcererMetamagicBuild(),
@@ -254,7 +254,7 @@ function sheetSpellcastingAndMetamagicProjection(): BattleInitProjection {
       unitLibrary,
     }),
   );
-  const withCreatedSlot = expectRight(
+  const withCreatedSlot = expectSuccess(
     convertFontOfMagicSorceryPointsToSpellSlot({
       sheet,
       unitLibrary,
@@ -274,7 +274,7 @@ function sheetSpellcastingAndMetamagicProjection(): BattleInitProjection {
 }
 
 function purePactMagicSlotProjection(): BattleInitProjection {
-  const sheet = expectRight(
+  const sheet = expectSuccess(
     rebuildCharacterSheet({
       characterId: characterSheetId("character:battle-init-warlock"),
       build: warlockPactMagicBuild(),
@@ -297,7 +297,7 @@ function purePactMagicSlotProjection(): BattleInitProjection {
 
 function runtimeDetachedSpellChoiceProjection(): BattleInitProjection {
   const build = wizardRuntimeDetachedSpellChoiceBuild();
-  const sheet = expectRight(
+  const sheet = expectSuccess(
     rebuildCharacterSheet({
       characterId: characterSheetId(
         "character:battle-init-runtime-detached-spell",
@@ -339,7 +339,7 @@ function runtimeDetachedSpellChoiceProjection(): BattleInitProjection {
 
 function rejectMixedSpellAndPactSlotInitProjection(): BattleInitProjection {
   const result = characterSheetBattleInit({
-    sheet: expectRight(
+    sheet: expectSuccess(
       rebuildCharacterSheet({
         characterId: characterSheetId("character:battle-init-mixed-slots"),
         build: mixedSpellAndPactSlotBuild(),
@@ -388,7 +388,7 @@ function rejectBuildMaximumAboveBuildMaximumProjection(): BattleInitProjection {
 
 function rejectStableRecoveryProgressDuringInitProjection(): BattleInitProjection {
   const result = characterSheetBattleInit({
-    sheet: expectRight(
+    sheet: expectSuccess(
       rebuildCharacterSheet({
         characterId: characterSheetId("character:stable-recovery-init"),
         build: defenseBuild({ wearingArmor: true }),
@@ -433,7 +433,7 @@ function projectCharacterBattle(input: {
   readonly combatantId: ReturnType<typeof combatantId>;
   readonly sheet: CharacterSheet;
 }) {
-  const characterInit = expectRight(
+  const characterInit = expectSuccess(
     characterSheetBattleInit({
       sheet: input.sheet,
       unitLibrary,
@@ -444,7 +444,7 @@ function projectCharacterBattle(input: {
       ammunitionStocks: [],
     }),
   );
-  const session = expectRight(
+  const session = expectSuccess(
     startBattle({
       battleId: battleId(input.battleIdText),
       combatants: [
@@ -563,7 +563,7 @@ function defenseBuild(input: {
 }): CharacterBuild {
   const armorItemId = characterEquipmentItemId({
     slot: "armor",
-    unitId: expectRight(
+    unitId: expectSuccess(
       characterEquipmentItemUnitId(authoredUnitId("armor_chain_mail")),
     ),
   });
@@ -578,7 +578,7 @@ function defenseBuild(input: {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: expectRight(
+    abilityScores: expectSuccess(
       abilityScoreAssignment({
         str: 15,
         dex: 14,
@@ -625,7 +625,7 @@ function sorcererMetamagicBuild(): CharacterBuild {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: expectRight(
+    abilityScores: expectSuccess(
       abilityScoreAssignment({
         str: 8,
         dex: 14,
@@ -640,14 +640,14 @@ function sorcererMetamagicBuild(): CharacterBuild {
       {
         kind: "selectedSorcererMetamagicOption",
         selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
-        optionId: expectRight(
+        optionId: expectSuccess(
           sorcererMetamagicOptionId("sorcerer_empowered_spell"),
         ),
       },
       {
         kind: "selectedSorcererMetamagicOption",
         selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
-        optionId: expectRight(
+        optionId: expectSuccess(
           sorcererMetamagicOptionId("sorcerer_heightened_spell"),
         ),
       },
@@ -694,7 +694,7 @@ function wizardRuntimeDetachedSpellChoiceBuild(): CharacterBuild {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: expectRight(
+    abilityScores: expectSuccess(
       abilityScoreAssignment({
         str: 8,
         dex: 14,
@@ -742,7 +742,7 @@ function warlockPactMagicBuild(): CharacterBuild {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: expectRight(
+    abilityScores: expectSuccess(
       abilityScoreAssignment({
         str: 8,
         dex: 14,
@@ -996,9 +996,9 @@ function nullaryVariantTag(raw: unknown, field: string): string {
   throw new Error(`Expected Quint variant field ${field}.`);
 }
 
-function expectRight<A, E>(either: Result.Result<A, E>): A {
-  if (Result.isSuccess(either)) return either.success;
+function expectSuccess<A, E>(result: Result.Result<A, E>): A {
+  if (Result.isSuccess(result)) return result.success;
   throw new Error(
-    `Expected Result.succeed, got ${JSON.stringify(either.failure)}.`,
+    `Expected Result.succeed, got ${JSON.stringify(result.failure)}.`,
   );
 }

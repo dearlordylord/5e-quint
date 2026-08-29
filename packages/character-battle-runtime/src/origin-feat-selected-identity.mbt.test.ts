@@ -520,7 +520,7 @@ function completeFighterDraftForBackground(input: {
           kind: "abilityScores",
           holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
           method: "standardArray",
-          value: expectRight(
+          value: expectSuccess(
             abilityScoreAssignment({
               str: 15,
               dex: 14,
@@ -766,7 +766,7 @@ function numberFromQuintInt(raw: unknown, field: string): number {
   throw new Error(`Expected Quint integer field ${field}.`);
 }
 
-function expectRight<T, E>(result: Result.Result<T, E>): T {
+function expectSuccess<T, E>(result: Result.Result<T, E>): T {
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
     throw new Error(String(result.failure));
