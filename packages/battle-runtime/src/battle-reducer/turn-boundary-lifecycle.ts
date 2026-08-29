@@ -1913,7 +1913,7 @@ function sleepRepeatSavingThrowOutcomeHole(
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: "Repeat WIS save",
-    sleepRepeatSave: {
+    stagedConditionRepeatSave: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
@@ -2239,7 +2239,7 @@ function saveGatedTurnConstraintBundleEndTurnSavingThrowOutcomeHole(
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: "End-turn WIS save",
-    saveGatedTurnConstraintBundleEndTurnSave: {
+    turnConstraintEndTurnSave: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
@@ -5675,7 +5675,7 @@ function resolveEndTurnCommandForParent(
       );
     const validation = validateSleepRepeatSavingThrowOutcome(
       fill.value,
-      hole?.saveGatedConditionWithRepeatRepeatSave.targetId ?? nextActorId,
+      hole?.saveGatedConditionRepeatSave.targetId ?? nextActorId,
     );
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (validation !== null) {
@@ -5689,7 +5689,7 @@ function resolveEndTurnCommandForParent(
     );
     const validation = validateSleepRepeatSavingThrowOutcome(
       fill.value,
-      hole?.saveGatedConditionWithRepeatRepeatSave.targetId ?? actorId,
+      hole?.saveGatedConditionRepeatSave.targetId ?? actorId,
     );
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (validation !== null) {

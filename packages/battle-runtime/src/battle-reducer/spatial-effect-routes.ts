@@ -121,7 +121,7 @@ export function spatialEffectCompositionRouteForResolution(
   const invocation = spellInvocationForRouteSubject(input.state, input.subject);
   const procedure = invocation?.procedure;
   if (
-    procedure === "movableLightManifestation" &&
+    invocation?.procedure === "movableLightManifestation" &&
     invocation.operation === "create"
   ) {
     return [
@@ -140,7 +140,7 @@ export function spatialEffectCompositionRouteForResolution(
     ];
   }
   if (
-    procedure === "movableLightManifestation" &&
+    invocation?.procedure === "movableLightManifestation" &&
     invocation.operation === "reposition"
   ) {
     return [
@@ -192,7 +192,7 @@ export function spatialEffectCompositionRouteForResolution(
       ),
     ];
   }
-  if (procedure === "persistentAreaTrait") {
+  if (invocation?.procedure === "persistentAreaTrait") {
     return [
       spatialCompositionResolve(
         "spatialEffect",
@@ -218,7 +218,7 @@ export function spatialEffectCompositionRouteForResolution(
       ),
     ];
   }
-  if (procedure === "persistentAreaSaveCondition") {
+  if (invocation?.procedure === "persistentAreaSaveCondition") {
     return [
       spatialCompositionResolve(
         "spatialEffect",
@@ -238,9 +238,9 @@ export function spatialEffectCompositionRouteForResolution(
     ];
   }
   if (
-    procedure === "persistentAreaSaveDamage" ||
-    procedure === "areaMovementDistanceDamage" ||
-    procedure === "persistentAreaSaveConditionEscape"
+    invocation?.procedure === "persistentAreaSaveDamage" ||
+    invocation?.procedure === "areaMovementDistanceDamage" ||
+    invocation?.procedure === "persistentAreaSaveConditionEscape"
   ) {
     return [
       spatialCompositionResolve(
@@ -322,10 +322,9 @@ export function spatialEffectCompositionRouteForResolution(
       ),
     ];
   }
-  if (procedure !== "saveGatedDamage") {
+  if (invocation?.procedure !== "saveGatedDamage") {
     return undefined;
   }
-  const invocation = spellInvocationForRouteSubject(input.state, input.subject);
   if (
     invocation === undefined ||
     !isThunderwavePostSaveAreaEffect(invocation)
