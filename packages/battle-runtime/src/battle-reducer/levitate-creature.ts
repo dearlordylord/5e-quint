@@ -3,6 +3,10 @@
 // ControlledVerticalSuspension creature-branch state and caller-witnessed altitude controls.
 
 import { movementFeet, type MovementFeet } from "@dnd/shared/types";
+import {
+  holeId,
+  holeInstanceKey,
+} from "@dnd/shared-algebras/runtime-hole-algebra";
 import type {
   BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
@@ -20,12 +24,17 @@ import type {
   ControlledVerticalSuspensionActiveEffect,
 } from "../battle-state-execution.ts";
 import { Match } from "effect";
-import {
-  CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CHANGE_HOLE_ID,
-  CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CHANGE_HOLE_INSTANCE,
-  CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_HOLE_ID,
-  CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_HOLE_INSTANCE,
-} from "./battle-runtime-protocol.ts";
+
+const CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CHANGE_HOLE_ID = holeId(
+  "battle:controlled-vertical-suspension:altitude-change",
+);
+const CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CHANGE_HOLE_INSTANCE =
+  holeInstanceKey("battle:controlled-vertical-suspension:altitude-change");
+const CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_HOLE_ID = holeId(
+  "battle:controlled-vertical-suspension:initial-rise",
+);
+const CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_HOLE_INSTANCE =
+  holeInstanceKey("battle:controlled-vertical-suspension:initial-rise");
 
 export const CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_FEET =
   movementFeet(20);
