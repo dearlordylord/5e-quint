@@ -929,12 +929,14 @@ function resolveSpellAttackSequenceCreaturePart(input: {
   }
   const relevantHideousLaughterDamageRepeatSaves =
     saveGatedConditionWithRepeatDamageRepeatSaveFillsForTarget(
+      postRemarkableAthleteMovementState,
       spellReduction.target,
       input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
       damageEventKey,
     );
   const hideousLaughterSaveCheck =
     saveGatedConditionWithRepeatDamageRepeatSaveFillCheck({
+      state: postRemarkableAthleteMovementState,
       target: spellReduction.target,
       damageAmount: spellDamageAmount,
       fills: relevantHideousLaughterDamageRepeatSaves,

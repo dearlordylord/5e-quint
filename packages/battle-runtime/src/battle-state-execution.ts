@@ -2788,7 +2788,12 @@ export type TargetingSaveInterdictionSpellInvocation = {
   };
   readonly activeEffect: BattleSpellActiveEffectTemplate<
     Extract<BattleActiveEffect, { readonly kind: "targetingSaveInterdiction" }>
-  >;
+  > & {
+    readonly save: {
+      readonly ability: "wis";
+      readonly dc: DcSource;
+    };
+  };
   readonly rangeFeet: MovementFeet;
 };
 export type DirectConditionSpellInvocation = {

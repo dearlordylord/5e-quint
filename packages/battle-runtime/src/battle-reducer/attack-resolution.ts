@@ -1021,6 +1021,7 @@ export function resolveMultiattack(
   const [consumedDispatch, ...pendingDispatches] =
     multiattackBinding.procedure.dispatchProcedureRefs;
   const grantedPendingDispatches = combatantHasSaveGatedTurnConstraintBundle(
+    input.state,
     actor,
   )
     ? []
@@ -2375,6 +2376,7 @@ export function openClassFeatureExtraAttackResource(input: {
     !actionResourceAllowsAdditionalAttacks(input.spentResource) ||
     actorHasClassFeatureExtraAttackActionResource(input.state, input.actorId) ||
     combatantHasSaveGatedTurnConstraintBundle(
+      input.state,
       input.state.combatants.get(input.actorId),
     )
   ) {

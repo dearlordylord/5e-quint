@@ -592,10 +592,6 @@ export type BattleActiveEffect = (
       BattleReplayAddressableEffect & {
         readonly kind: "stagedSaveConditionPendingRepeat";
         readonly conditionHadNonSpellSource: boolean;
-        readonly save: {
-          readonly ability: Extract<Ability, "wis">;
-          readonly dc: DcSource;
-        };
         readonly repeatAt: Extract<
           BattleActiveEffectExpiration,
           { readonly kind: "endOfTurn" }
@@ -622,10 +618,6 @@ export type BattleActiveEffect = (
         AttackRollMode,
         "disadvantage"
       > | null;
-      readonly save: {
-        readonly ability: Extract<Ability, "wis">;
-        readonly dc: DcSource;
-      };
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "concentration" }
@@ -644,10 +636,6 @@ export type BattleActiveEffect = (
     })
   | (BattleSpellEffectBase & {
       readonly kind: "saveGatedTurnConstraintBundle";
-      readonly save: {
-        readonly ability: Extract<Ability, "wis">;
-        readonly dc: DcSource;
-      };
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "concentration" }
@@ -1000,10 +988,6 @@ export type BattleActiveEffect = (
     })
   | (BattleSpellEffectBase & {
       readonly kind: "targetingSaveInterdiction";
-      readonly save: {
-        readonly ability: Extract<Ability, "wis">;
-        readonly dc: DcSource;
-      };
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "duration" }

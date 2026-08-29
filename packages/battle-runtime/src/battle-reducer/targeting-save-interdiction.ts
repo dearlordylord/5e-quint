@@ -5,7 +5,6 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type {
   BattleExecutableSpellInvocation,
-  BattleActiveEffect,
   BattleAttackRollRelationshipFact,
   BattleCreatureState,
   BattleFill,
@@ -21,6 +20,10 @@ import { battleStateAfterDirectConditionTargetActionEarlyEndForActor } from "./d
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.ts";
 import { parseAttackRollRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
 import { allocateBattleEffectOccurrenceForCreature } from "../effect-execution-ref.ts";
+import {
+  boundTargetingSaveInterdictionEffect,
+  type BoundTargetingSaveInterdictionEffect,
+} from "./spell-modifier-binding.ts";
 
 type TargetingSaveInterdictionCheckCommon =
   | { readonly tag: "notWarded" }
@@ -133,14 +136,13 @@ export function targetingSaveInterdictionCheck(
   | AttackRollTargetingSaveInterdictionCheck
   | NonAttackTargetingSaveInterdictionCheck {
   const warded = input.state.combatants.get(input.wardedCombatantId);
-  const effect = warded?.activeEffects.find(
-    (
-      candidate,
-    ): candidate is Extract<
-      BattleActiveEffect,
-      { readonly kind: "targetingSaveInterdiction" }
-    > => candidate.kind === "targetingSaveInterdiction",
+  const durableEffect = warded?.activeEffects.find(
+    (candidate) => candidate.kind === "targetingSaveInterdiction",
   );
+  const effect =
+    durableEffect?.kind === "targetingSaveInterdiction"
+      ? boundTargetingSaveInterdictionEffect(input.state, durableEffect)
+      : undefined;
   if (warded === undefined || effect === undefined) {
     return { tag: "notWarded" };
   }
@@ -250,10 +252,7 @@ type TargetingSaveInterdictionOutcomeHoleInput = {
   readonly triggeringCombatantId: CombatantId;
   readonly wardedCombatantId: CombatantId;
   readonly triggeringTargetEventId: BattleHoleId;
-  readonly effect: Extract<
-    BattleActiveEffect,
-    { readonly kind: "targetingSaveInterdiction" }
-  >;
+  readonly effect: BoundTargetingSaveInterdictionEffect;
 };
 
 function targetingSaveInterdictionOutcomeHole(
@@ -368,8 +367,10 @@ export function combatantWithTargetingSaveInterdiction(
   const allocation = allocateBattleEffectOccurrenceForCreature({
     owner: target,
     effect: {
-      ...invocation.activeEffect,
+      kind: "targetingSaveInterdiction",
+      sourceCombatantId: invocation.activeEffect.sourceCombatantId,
       sourceProcedureRef: invocation.sourceProcedureRef,
+      expiresAt: invocation.activeEffect.expiresAt,
     },
   });
   return battleCreatureWithSpellActiveEffects(allocation.owner, [

@@ -1008,7 +1008,12 @@ export type TargetingSaveInterdictionSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
     readonly actionCost: "bonusAction";
-    readonly activeEffect: SpellActiveEffectTemplate<"targetingSaveInterdiction">;
+    readonly activeEffect: SpellActiveEffectTemplate<"targetingSaveInterdiction"> & {
+      readonly save: {
+        readonly ability: "wis";
+        readonly dc: DcSource;
+      };
+    };
     readonly procedure: "targetingSaveInterdiction";
     readonly rangeFeet: MovementFeet;
     readonly resource: LeveledSpellInvocationResource;

@@ -1863,10 +1863,6 @@ export function applyStagedSaveConditionPendingRepeatEffects(
           target,
           "incapacitated",
         ),
-        save: {
-          ability: invocation.ability,
-          dc: invocation.dc,
-        },
         repeatAt: endOfNextTurnExpiration(
           state,
           targetId,
@@ -1924,10 +1920,6 @@ export function applySaveGatedConditionWithRepeatEffects(
           targetId,
           heightenedSpellTargetId,
         ),
-        save: {
-          ability: invocation.ability,
-          dc: invocation.dc,
-        },
         expiresAt: {
           kind: "concentration" as const,
           combatantId: actorId,

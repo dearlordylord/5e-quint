@@ -46,16 +46,18 @@ type SlowSomaticSpellFailureResolution =
   | BattleResolutionResult;
 
 export function combatantHasSaveGatedTurnConstraintBundle(
+  state: BattleState,
   combatant: BattleCreatureState | undefined,
 ): boolean {
-  return saveGatedTurnConstraintBundleEffects(combatant).length > 0;
+  return saveGatedTurnConstraintBundleEffects(state, combatant).length > 0;
 }
 
 export function slowActionOrBonusActionTurnResources(
+  state: BattleState,
   resources: BattleTurnResources,
   actor: BattleCreatureState | undefined,
 ): BattleTurnResources {
-  return combatantHasSaveGatedTurnConstraintBundle(actor)
+  return combatantHasSaveGatedTurnConstraintBundle(state, actor)
     ? enableActionOrBonusActionExclusion(resources)
     : resources;
 }
