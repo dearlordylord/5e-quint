@@ -32,6 +32,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import { describe, expect, it } from "vitest";
 import {
   battleProcedureExecutionRefForSpellHoleForTest,
+  battleFrontierInterruptDecisionForState,
   requireCharacterSpellProcedureRefForTest,
   resolveBattleSubject,
   spellSlotInvocationRef,
@@ -896,7 +897,9 @@ function requireTriggeredReactionSpellChoice(input: {
   BattleInterruptProcedureChoice,
   { readonly kind: "castTriggeredReactionSpell" }
 > {
-  const choice = input.result.snapshot.pendingInterrupt?.choices.find(
+  const choice = battleFrontierInterruptDecisionForState(
+    input.result.state,
+  )?.choices.find(
     (
       candidate,
     ): candidate is Extract<
@@ -935,7 +938,9 @@ function requirePendingReactionTrigger(
   result: NeedsHolesResult,
   trigger: "spellCast" | "afterDamage",
 ): void {
-  if (result.snapshot.pendingInterrupt?.trigger !== trigger) {
+  if (
+    battleFrontierInterruptDecisionForState(result.state)?.trigger !== trigger
+  ) {
     throw new Error(`Expected ${trigger} Reaction window.`);
   }
 }
@@ -1091,7 +1096,8 @@ function reactionCastingTimeProjection(
       3,
     ),
     reactionWindowCleared:
-      state.lastResult !== "init" && snapshot.pendingInterrupt === null,
+      state.lastResult !== "init" &&
+      battleFrontierInterruptDecisionForState(state.battle) === null,
     lastResult: state.lastResult,
   };
 }

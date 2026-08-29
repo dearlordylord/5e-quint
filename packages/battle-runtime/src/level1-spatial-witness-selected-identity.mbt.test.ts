@@ -18,6 +18,7 @@ import { describe, expect, it } from "vitest";
 import {
   resolveBattleSubject,
   characterAttackSubjectForTest,
+  battleFrontierInterruptDecisionForState,
 } from "./battle-runtime.test-support.ts";
 import { characterSpellProcedureExecution } from "./character-execution-admission.ts";
 
@@ -2079,13 +2080,15 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
       const unwitnessedTrigger = openFeatherFallWindow(state, []);
       const unwitnessedTriggerRejected =
         unwitnessedTrigger.tag === "resolved" &&
-        unwitnessedTrigger.snapshot.pendingInterrupt === null;
+        battleFrontierInterruptDecisionForState(unwitnessedTrigger.state) ===
+          null;
       const awaitingReaction = openFeatherFallWindow(state, [
         featherFallTriggerFact(featherFallProcedureRef(state)),
       ]);
       const triggerOffered =
         awaitingReaction.tag === "needsHoles" &&
-        awaitingReaction.snapshot.pendingInterrupt?.trigger === "creatureFalls";
+        battleFrontierInterruptDecisionForState(awaitingReaction.state)
+          ?.trigger === "creatureFalls";
       if (awaitingReaction.tag !== "needsHoles") {
         throw new Error(
           "Expected Feather Fall falling-trigger Reaction window.",
@@ -4139,7 +4142,9 @@ function featherFallTriggerFact(
 function featherFallReactionChoice(
   result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
 ) {
-  const choice = result.snapshot.pendingInterrupt?.choices.find((candidate) => {
+  const choice = battleFrontierInterruptDecisionForState(
+    result.state,
+  )?.choices.find((candidate) => {
     if (candidate.kind !== "castTriggeredReactionSpell") return false;
     const reactor = result.state.combatants.get(candidate.reactorId);
     return (

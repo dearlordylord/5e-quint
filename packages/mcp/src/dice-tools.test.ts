@@ -2,7 +2,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 import type { JsonSchemaType } from "@modelcontextprotocol/sdk/validation";
-import { Result, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -11,6 +11,7 @@ import {
 } from "./composition-root.ts";
 import {
   decodeDiceToolCall,
+  decodeDiceRollRequestId,
   MAX_DICE_PER_GROUP,
   MAX_DICE_GROUPS_PER_CALL,
   MAX_TOTAL_DICE,
@@ -19,12 +20,17 @@ import {
 } from "./dice-tool-input.ts";
 import { RollDiceOutputSchema } from "./dice-tool-output.ts";
 import { handleDiceToolCall, rollDice } from "./dice-tools.ts";
+import {
+  createDiceSamplingService,
+  decodeDiceSeed,
+} from "./dice-sampling-service.ts";
 import { mcpOutputJsonSchema } from "./schema-codec.ts";
 import { jsonContentPayload } from "./tool-content.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
 import { fixedRandom, seededRandom } from "./dice-random-test-support.ts";
 
 const request = {
+  requestId: requireDiceRollRequestId("00000000-0000-4000-8000-000000000001"),
   groups: [
     { dice: 2, dieSize: 6 },
     { dice: 1, dieSize: 4 },
@@ -32,10 +38,11 @@ const request = {
 } as const;
 
 describe("structured MCP bulk dice roller", () => {
-  test("rejects empty groups and caller correlation/idempotency fields", () => {
+  test("rejects empty groups and requires a caller idempotency key", () => {
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(Schema.toType(RollDiceArgsSchema))({
+        Schema.decodeUnknownResult(RollDiceArgsSchema)({
+          requestId: request.requestId,
           groups: [],
         }),
       ),
@@ -43,7 +50,7 @@ describe("structured MCP bulk dice roller", () => {
 
     const decoded = decodeDiceToolCall({
       name: "roll_dice",
-      args: { ...request, correlationId: "caller-supplied" },
+      args: { groups: request.groups },
     });
     expect(Result.isFailure(decoded)).toBe(true);
   });
@@ -53,6 +60,7 @@ describe("structured MCP bulk dice roller", () => {
       ajvJsonSchema(rollDiceInputSchema),
     );
     const tooManyInOneGroup = {
+      requestId: request.requestId,
       groups: [{ dice: MAX_DICE_PER_GROUP + 1, dieSize: 6 }],
     };
     expect(validateInput(tooManyInOneGroup).valid).toBe(false);
@@ -63,6 +71,7 @@ describe("structured MCP bulk dice roller", () => {
     ).toBe(true);
 
     const atPerGroupBoundary = {
+      requestId: request.requestId,
       groups: [{ dice: MAX_DICE_PER_GROUP, dieSize: 6 }],
     };
     expect(validateInput(atPerGroupBoundary).valid).toBe(true);
@@ -73,6 +82,7 @@ describe("structured MCP bulk dice roller", () => {
     ).toBe(true);
 
     const atAggregateBoundary = {
+      requestId: request.requestId,
       groups: Array.from({ length: 10 }, () => ({
         dice: MAX_DICE_PER_GROUP,
         dieSize: 6,
@@ -84,6 +94,7 @@ describe("structured MCP bulk dice roller", () => {
       ),
     ).toBe(true);
     const overAggregateBoundary = {
+      requestId: request.requestId,
       groups: [
         ...Array.from({ length: MAX_TOTAL_DICE / MAX_DICE_PER_GROUP }, () => ({
           dice: MAX_DICE_PER_GROUP,
@@ -98,6 +109,7 @@ describe("structured MCP bulk dice roller", () => {
       ),
     ).toBe(true);
     const tooManyGroups = {
+      requestId: request.requestId,
       groups: Array.from({ length: MAX_DICE_GROUPS_PER_CALL + 1 }, () => ({
         dice: 1,
         dieSize: 1,
@@ -112,15 +124,16 @@ describe("structured MCP bulk dice roller", () => {
   });
 
   test("returns ordered visible faces in each requested group", () => {
-    const result = rollDice(request, fixedRandom([0, 1 / 6, 1 / 2]));
-
-    expect(result.groups).toEqual([
-      { dieSize: 6, results: [1, 2] },
-      { dieSize: 4, results: [3] },
-    ]);
-    expect(result.correlationId).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u,
+    const service = createDiceSamplingService(
+      requireDiceSeed(["00000001", "00000002", "00000003", "00000004"]),
     );
+    const sampled = Effect.runSync(
+      service.sample(request.requestId, request.groups),
+    );
+    const result = rollDice(sampled);
+
+    expect(result.requestId).toBe(request.requestId);
+    expect(result.disposition).toBe("sampled");
     for (const [index, group] of result.groups.entries()) {
       expect(group.results).toHaveLength(request.groups[index]?.dice);
       for (const face of group.results) {
@@ -132,7 +145,14 @@ describe("structured MCP bulk dice roller", () => {
 
   test("rejects invalid range at both Effect and emitted AJV schemas", () => {
     const invalid = {
-      correlationId: "00000000-0000-4000-8000-000000000000",
+      requestId: request.requestId,
+      disposition: "sampled",
+      randomSource: {
+        diceGroupSemanticProfile:
+          "dice-groups-v1/ordered-atomic-rejection-5-blocks-x-5-attempts",
+        prngSequenceProfile: "xoshiro128ss-1.1/warmup16-msb-chunk-rejection-2",
+        stateSchemaVersion: 1,
+      },
       groups: [{ dieSize: 6, results: [1, 7] }],
     };
     expect(
@@ -148,23 +168,54 @@ describe("structured MCP bulk dice roller", () => {
     );
     expect(validate(invalid).valid).toBe(false);
     const emptyResults = {
-      correlationId: invalid.correlationId,
+      ...invalid,
       groups: [{ dieSize: 6, results: [] }],
     };
     expect(validate(emptyResults).valid).toBe(false);
   });
 
-  test("reproduces a seeded sequence while separate streams remain isolated", () => {
-    const first = seededRandom("dice-seed");
-    const second = seededRandom("dice-seed");
-
-    const firstCall = rollDice(request, first);
-    const secondCall = rollDice(request, first);
-    const isolatedCall = rollDice(request, second);
+  test("reproduces a seeded sequence and makes request ids idempotent", () => {
+    const seed = requireDiceSeed([
+      "00000001",
+      "00000002",
+      "00000003",
+      "00000004",
+    ]);
+    const first = createDiceSamplingService(seed);
+    const second = createDiceSamplingService(seed);
+    const firstCall = Effect.runSync(
+      first.sample(request.requestId, request.groups),
+    );
+    const repeatedCall = Effect.runSync(
+      first.sample(request.requestId, request.groups),
+    );
+    const isolatedCall = Effect.runSync(
+      second.sample(request.requestId, request.groups),
+    );
 
     expect(firstCall.groups).toEqual(isolatedCall.groups);
-    expect(secondCall.groups).not.toEqual(firstCall.groups);
-    expect(secondCall.correlationId).not.toBe(firstCall.correlationId);
+    expect(repeatedCall.groups).toEqual(firstCall.groups);
+    expect(repeatedCall.disposition).toBe("replayed");
+    expect(
+      Result.isFailure(
+        Effect.runSync(
+          Effect.either(
+            first.sample(request.requestId, [{ dice: 1, dieSize: 20 }]),
+          ),
+        ),
+      ),
+    ).toBe(true);
+    const nextRequestId = requireDiceRollRequestId(
+      "00000000-0000-4000-8000-000000000002",
+    );
+    const afterConflict = Effect.runSync(
+      first.sample(nextRequestId, request.groups),
+    );
+    Effect.runSync(second.sample(request.requestId, request.groups));
+    const withoutConflict = Effect.runSync(
+      second.sample(nextRequestId, request.groups),
+    );
+    expect(afterConflict.groups).toEqual(withoutConflict.groups);
   });
 
   test("does not read or mutate Battle pending-fill state", () => {
@@ -172,7 +223,7 @@ describe("structured MCP bulk dice roller", () => {
     const root = createMcpPlaySessionRoot(
       services,
       services.configuredAdminMirrorSessionId,
-      fixedRandom([0]),
+      requireDiceSeed(["00000001", "00000002", "00000003", "00000004"]),
     );
     const before = root.sessionStore.snapshot();
     const content = handleDiceToolCall(root, {
@@ -181,10 +232,8 @@ describe("structured MCP bulk dice roller", () => {
     });
 
     expect(jsonContentPayload(content)).toMatchObject({
-      groups: [
-        { dieSize: 6, results: [1, 1] },
-        { dieSize: 4, results: [1] },
-      ],
+      requestId: request.requestId,
+      disposition: "sampled",
     });
     expect(root.sessionStore.snapshot()).toEqual(before);
     expect(root.sessionStore.pendingBattleFills).toBeNull();
@@ -203,7 +252,7 @@ describe("structured MCP bulk dice roller", () => {
       const definition = listed.tools.find((tool) => tool.name === "roll_dice");
       expect(definition).toBeDefined();
       expect(definition?.inputSchema.required).toEqual(
-        expect.arrayContaining(["groups"]),
+        expect.arrayContaining(["requestId", "groups"]),
       );
       if (definition?.outputSchema === undefined) {
         throw new Error("roll_dice omitted outputSchema");
@@ -231,32 +280,37 @@ describe("structured MCP bulk dice roller", () => {
         arguments: {
           playSessionId,
           guestAccessGrant,
+          requestId: "00000000-0000-4000-8000-000000000010",
           groups: [{ dice: 2, dieSize: 6 }],
         },
       });
       expect(valid.isError, JSON.stringify(valid)).not.toBe(true);
       expect(validateOutput(valid.structuredContent).valid).toBe(true);
 
-      const missingCorrelation = await client.callTool({
+      const repeated = await client.callTool({
         name: "roll_dice",
         arguments: {
           playSessionId,
           guestAccessGrant,
-          groups: [{ dice: 1, dieSize: 4 }],
+          requestId: "00000000-0000-4000-8000-000000000010",
+          groups: [{ dice: 2, dieSize: 6 }],
         },
       });
-      expect(missingCorrelation.isError).not.toBe(true);
+      expect(repeated.isError).not.toBe(true);
+      expect(repeated.structuredContent).toMatchObject({
+        operation: { result: { disposition: "replayed" } },
+      });
 
-      const callerCorrelation = await client.callTool({
+      const conflictingRequest = await client.callTool({
         name: "roll_dice",
         arguments: {
           playSessionId,
           guestAccessGrant,
+          requestId: "00000000-0000-4000-8000-000000000010",
           groups: [{ dice: 1, dieSize: 4 }],
-          correlationId: "00000000-0000-4000-8000-000000000000",
         },
       });
-      expect(callerCorrelation.isError).toBe(true);
+      expect(conflictingRequest.isError).toBe(true);
 
       for (const groups of [
         [],
@@ -268,7 +322,12 @@ describe("structured MCP bulk dice roller", () => {
       ]) {
         const invalid = await client.callTool({
           name: "roll_dice",
-          arguments: { playSessionId, guestAccessGrant, groups },
+          arguments: {
+            playSessionId,
+            guestAccessGrant,
+            requestId: "00000000-0000-4000-8000-000000000011",
+            groups,
+          },
         });
         expect(invalid.isError).toBe(true);
       }
@@ -278,6 +337,7 @@ describe("structured MCP bulk dice roller", () => {
         arguments: {
           playSessionId,
           guestAccessGrant,
+          requestId: "00000000-0000-4000-8000-000000000012",
           groups: [
             ...Array.from(
               { length: MAX_TOTAL_DICE / MAX_DICE_PER_GROUP },
@@ -298,6 +358,7 @@ describe("structured MCP bulk dice roller", () => {
         arguments: {
           playSessionId,
           guestAccessGrant,
+          requestId: "00000000-0000-4000-8000-000000000013",
           groups: Array.from({ length: MAX_DICE_GROUPS_PER_CALL + 1 }, () => ({
             dice: 1,
             dieSize: 1,
@@ -341,4 +402,16 @@ function ajvJsonSchema(schema: unknown): JsonSchemaType {
   // The MCP client has already protocol-decoded this object as a JSON Schema;
   // the assertion only bridges the SDK's readonly tool type to AJV's mutable alias.
   return schema as JsonSchemaType;
+}
+
+function requireDiceRollRequestId(input: string) {
+  const decoded = decodeDiceRollRequestId(input);
+  if (Result.isFailure(decoded)) throw new Error(decoded.failure.message);
+  return decoded.success;
+}
+
+function requireDiceSeed(input: readonly [string, string, string, string]) {
+  const decoded = decodeDiceSeed(input);
+  if (Result.isFailure(decoded)) throw new Error(decoded.failure.message);
+  return decoded.success;
 }

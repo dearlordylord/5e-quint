@@ -7,7 +7,7 @@ import {
   type DiceToolName,
 } from "./dice-tool-input.ts";
 import {
-  NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
+  IDEMPOTENT_NON_DESTRUCTIVE_CLOSED_WORLD_TOOL_ANNOTATIONS,
   type ProtocolToolDefinition,
 } from "./tool-definition-contract.ts";
 
@@ -16,9 +16,9 @@ export const diceToolDefinitions = [
     name: diceToolNames.rollDice,
     title: "Roll Dice",
     description:
-      "Roll an ordered, non-empty batch of structured dice groups and return visible raw faces. This independent roller never reads Battle Holes, derives modifiers or outcomes, or fills a Hole; copy its faces into an ordinary typed fill only when the current runtime Hole supplies the required facts.",
+      "Sample an ordered, non-empty batch of structured dice groups with deterministic non-cryptographic DRDice and return visible raw faces. A caller UUID makes retries idempotent. This independent sampler never reads Battle Holes, derives modifiers or outcomes, or fills a Hole; copy its faces into an ordinary typed fill only when the current runtime Hole supplies the required facts.",
     inputSchema: rollDiceInputSchema,
-    annotations: NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
+    annotations: IDEMPOTENT_NON_DESTRUCTIVE_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(RollDiceOutputSchema),
   },
 ] as const satisfies readonly ProtocolToolDefinition[];

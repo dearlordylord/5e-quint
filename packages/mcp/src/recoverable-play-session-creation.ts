@@ -15,7 +15,7 @@ import {
 } from "./play-session-access.ts";
 import {
   creationFailure,
-  generatedPlaySessionRandomSeed,
+  generatedPlaySessionDiceReplay,
   initialTenure,
   rootFromRecord,
 } from "./recoverable-play-session-support.ts";
@@ -63,8 +63,8 @@ function createAttempt(
   creationTime: EpochMilliseconds,
 ): CreationAttempt {
   const playSessionId = runtime.input.playSessionIdFactory();
-  const randomSeed =
-    runtime.input.randomSeedFactory?.() ?? generatedPlaySessionRandomSeed();
+  const diceReplay =
+    runtime.input.diceReplayFactory?.() ?? generatedPlaySessionDiceReplay();
   const creationTenure = initialTenure(
     caller,
     creationTime,
@@ -73,7 +73,7 @@ function createAttempt(
   const record: RecoverablePlaySessionRecord = {
     playSessionId,
     formatVersion: RECOVERABLE_PLAY_SESSION_FORMAT_VERSION,
-    randomSeed,
+    diceReplay,
     revision: 0,
     operations: [],
     tenure: creationTenure.tenure,

@@ -6,7 +6,7 @@ import {
   startBattleRight,
   startBattleSessionRight,
   assertBattleSnapshotCodecRoundTripForTest,
-  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
+  assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
   fighterVsGoblinBattle,
   criticalRange19UnitRefs,
   fighterAttackSubject,
@@ -871,7 +871,7 @@ describe("battle runtime: attack rolls and damage", () => {
     if (awaitingRoll.tag !== "needsHoles") {
       throw new Error("Expected the weapon attack to await its attack roll.");
     }
-    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+    assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: awaitingRoll.snapshot,
       subject,
       holes: awaitingRoll.holes,
@@ -971,7 +971,6 @@ describe("battle runtime: attack rolls and damage", () => {
     expect(awaitingDamage).toMatchObject({
       tag: "needsHoles",
       snapshot: {
-        acts: [],
         turn: { attackRollMadeThisTurn: true },
       },
     });
@@ -1337,7 +1336,7 @@ describe("battle runtime: attack rolls and damage", () => {
     if (awaitingRoll.tag !== "needsHoles") {
       throw new Error("Expected the Unarmed Strike to await its attack roll.");
     }
-    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+    assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: awaitingRoll.snapshot,
       subject,
       holes: awaitingRoll.holes,
@@ -1502,7 +1501,7 @@ describe("battle runtime: attack rolls and damage", () => {
     expect(result).toMatchObject({
       tag: "resolved",
       snapshot: {
-        turn: { bonusActionAvailable: false },
+        turn: { bonusActionQuotaAvailable: false },
         combatants: [
           { combatantId: fighterId },
           { combatantId: goblinId, hp: 3 },

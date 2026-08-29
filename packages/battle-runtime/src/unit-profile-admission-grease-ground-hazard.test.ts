@@ -10,6 +10,7 @@ import { HEIGHTENED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts"
 import {
   assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
   battleEffectExecutionRefForTest,
+  assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
   battleId,
   battleStateWithAllocatedEffectForTest,
   battleStateWithAllSpellSlotsExpended,
@@ -35,6 +36,7 @@ import {
 import {
   battleAreaId,
   BattleSnapshotSchema,
+  battleFrontierInterruptDecisionForState,
   type AvailableBattleAct,
   type BattleRuntimeSession,
   type BattleState,
@@ -364,8 +366,10 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     });
     expect(afterDecline.snapshot).toMatchObject({
       currentActorId: spellCasterId,
-      pendingInterrupt: null,
     });
+    expect(
+      battleFrontierInterruptDecisionForState(afterDecline.state),
+    ).toBeNull();
   });
   test("Grease entry failure opens a readied-spell Reaction before applying Prone", () => {
     const spell = spellRecord(greaseUnitId);
@@ -1051,7 +1055,7 @@ function castHeightenedGreaseWithSelectedTarget(): BattleRuntimeSession {
   if (awaitingSave.tag !== "needsHoles") {
     throw new Error("Expected Heightened Grease to request a save hole.");
   }
-  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+  assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
     snapshot: awaitingSave.snapshot,
     subject: act.subject,
     holes: awaitingSave.holes,

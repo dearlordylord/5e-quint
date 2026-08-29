@@ -1381,7 +1381,6 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
           movementCostFeet: movementFeet(15),
         }),
       ],
-      snapshot: { pendingInterrupt: null },
     });
   });
 

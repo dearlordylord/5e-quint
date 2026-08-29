@@ -9,12 +9,15 @@ import {
   attackExecutionSelectionForSubjectForTest,
   attackTargetDistanceSpatialFact,
   attackInitialTargetHole,
+  battleFrontierInterruptDecisionForState,
   attackRollFill,
   attackRollHoleAfterTarget,
   BATTLE_READIED_SPELL_TRIGGERS,
+  BattleCheckpointFrontierEnvelopeSchema,
   BattleFillSchema,
   BattleSnapshotSchema,
   BattleSubjectSchema,
+  battleCheckpointFrontierEnvelope,
   cantripSpellInvocationRef,
   concentrationSavingThrowFill,
   damageRollFill,
@@ -64,7 +67,7 @@ function readiedSpellAttackHitPending() {
   });
   if (
     result.tag !== "needsHoles" ||
-    result.snapshot.pendingInterrupt === null
+    battleFrontierInterruptDecisionForState(result.state) === null
   ) {
     throw new Error("Expected a pending Readied Spell attack-hit interrupt.");
   }
@@ -113,7 +116,9 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
     }
 
-    expect(awaitingReaction.snapshot.pendingInterrupt).toMatchObject({
+    expect(
+      battleFrontierInterruptDecisionForState(awaitingReaction.state),
+    ).toMatchObject({
       decisionHole: {
         kind: "interruptDecision",
         trigger: "attackHit",
@@ -131,7 +136,8 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     const declined = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
+        battleFrontierInterruptDecisionForState(awaitingReaction.state)!
+          .decisionHole,
         { kind: "decline", responderId: wizardId },
       ),
     });
@@ -140,7 +146,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       tag: "needsHoles",
       holes: [{ kind: "rolledDice" }],
       snapshot: {
-        pendingInterrupt: null,
         combatants: expect.arrayContaining([
           expect.objectContaining({
             combatantId: wizardId,
@@ -169,7 +174,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
     }
     const choice = reactionChoiceWithSubject(
-      awaitingReaction.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(awaitingReaction.state)!.choices,
     );
     if (
       choice.subject.tag !== "runtimeCommand" ||
@@ -182,7 +187,8 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       resolveBattleInterrupt({
         state: awaitingReaction.state,
         fill: interruptDecisionFill(
-          awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
+          battleFrontierInterruptDecisionForState(awaitingReaction.state)!
+            .decisionHole,
           {
             kind: "resolve",
             responderId: wizardId,
@@ -200,7 +206,8 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
+        battleFrontierInterruptDecisionForState(awaitingReaction.state)!
+          .decisionHole,
         {
           kind: "resolve",
           responderId: wizardId,
@@ -219,7 +226,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       subject: choice.subject,
       holes: [{ kind: "targetChoice" }],
       snapshot: {
-        pendingInterrupt: { trigger: "attackHit" },
         combatants: expect.arrayContaining([
           expect.objectContaining({
             combatantId: wizardId,
@@ -265,7 +271,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       tag: "needsHoles",
       holes: [{ kind: "rolledDice" }],
       snapshot: {
-        pendingInterrupt: null,
         readiedResponses: { spells: [] },
         combatants: expect.arrayContaining([
           expect.objectContaining({
@@ -296,7 +301,8 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       );
     }
     const releaseChoice = reactionChoiceWithSubject(
-      awaitingAttackReaction.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(awaitingAttackReaction.state)!
+        .choices,
     );
     if (
       releaseChoice.subject.tag !== "runtimeCommand" ||
@@ -307,7 +313,8 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     const released = resolveBattleInterrupt({
       state: awaitingAttackReaction.state,
       fill: interruptDecisionFill(
-        awaitingAttackReaction.snapshot.pendingInterrupt!.decisionHole,
+        battleFrontierInterruptDecisionForState(awaitingAttackReaction.state)!
+          .decisionHole,
         {
           kind: "resolve",
           responderId: wizardId,
@@ -340,15 +347,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     expect(nestedReaction).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
-      snapshot: {
-        pendingInterrupt: {
-          stackDepth: 2,
-          trigger: "saveFailed",
-          choices: [
-            expect.objectContaining({ readiedSpellCasterId: secondWizardId }),
-          ],
-        },
-      },
     });
     if (nestedReaction.tag !== "needsHoles") {
       throw new Error(`Expected nested reaction, got ${nestedReaction.tag}.`);
@@ -357,7 +355,8 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     const declinedNested = resolveBattleInterrupt({
       state: nestedReaction.state,
       fill: interruptDecisionFill(
-        nestedReaction.snapshot.pendingInterrupt!.decisionHole,
+        battleFrontierInterruptDecisionForState(nestedReaction.state)!
+          .decisionHole,
         { kind: "decline", responderId: secondWizardId },
       ),
     });
@@ -366,12 +365,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       tag: "needsHoles",
       subject: releaseChoice.subject,
       holes: [{ kind: "rolledDice" }],
-      snapshot: {
-        pendingInterrupt: {
-          stackDepth: 1,
-          trigger: "attackHit",
-        },
-      },
     });
     if (declinedNested.tag !== "needsHoles") {
       throw new Error(
@@ -411,7 +404,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       subject,
       holes: [{ kind: "rolledDice" }],
       snapshot: {
-        pendingInterrupt: null,
         readiedResponses: { spells: [{ casterId: secondWizardId }] },
         combatants: expect.arrayContaining([
           expect.objectContaining({
@@ -446,9 +438,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "interruptDecision", trigger: "spellCast" }],
-      snapshot: {
-        pendingInterrupt: { trigger: "spellCast" },
-      },
     });
   });
 
@@ -683,7 +672,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     }
 
     const choice = reactionChoiceWithSubject(
-      awaitingReaction.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(awaitingReaction.state)!.choices,
     );
     if (
       choice.subject.tag !== "runtimeCommand" ||
@@ -694,7 +683,8 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
-        awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
+        battleFrontierInterruptDecisionForState(awaitingReaction.state)!
+          .decisionHole,
         {
           kind: "resolve",
           responderId: wizardId,
@@ -766,7 +756,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     });
     expect(secondDeclined).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null },
     });
   });
 
@@ -814,13 +803,52 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     );
   });
 
+  test("checkpoint codec roundtrips a runtime-produced attack-hit Readied Spell frontier", () => {
+    const awaiting = readiedSpellAttackHitPending();
+    const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+      battleCheckpointFrontierEnvelope(awaiting.state),
+    );
+    if (encoded.frontier.kind !== "interruptDecision") {
+      throw new Error("Expected an encoded Readied Spell interrupt frontier.");
+    }
+    expect(encoded.frontier).toMatchObject({
+      trigger: "attackHit",
+      decisionHole: { trigger: "attackHit" },
+      choices: [expect.objectContaining({ kind: "releaseReadiedSpell" })],
+    });
+    expect(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
+          encoded,
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)({
+          ...encoded,
+          frontier: {
+            ...encoded.frontier,
+            trigger: "spellCast",
+            decisionHole: {
+              ...encoded.frontier.decisionHole,
+              trigger: "spellCast",
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+  });
+
   test("snapshot decoding rejects unbound, wrong-kind, and mismatched Readied Spell owners", () => {
     const awaiting = readiedSpellAttackHitPending();
-    const encoded = Schema.encodeSync(BattleSnapshotSchema)(awaiting.snapshot);
-    if (encoded.pendingInterrupt === null) {
+    const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+      battleCheckpointFrontierEnvelope(awaiting.state),
+    );
+    if (encoded.frontier.kind !== "interruptDecision") {
       throw new Error("Expected an encoded pending interrupt.");
     }
-    const pendingInterrupt = encoded.pendingInterrupt;
+    const pendingInterrupt = encoded.frontier;
     const releaseChoice = pendingInterrupt.choices.find(
       (choice) => choice.kind === "releaseReadiedSpell",
     );
@@ -845,7 +873,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       kind: "procedure",
       ordinal: 999,
     });
-    const wizard = encoded.combatants.find(
+    const wizard = encoded.checkpoint.combatants.find(
       (combatant) => combatant.combatantId === wizardId,
     );
     if (wizard?.origin.kind !== "character") {
@@ -868,7 +896,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       readonly casterId?: string;
     }) => ({
       ...encoded,
-      pendingInterrupt: {
+      frontier: {
         ...pendingInterrupt,
         choices: pendingInterrupt.choices.map((choice) =>
           choice.kind === "releaseReadiedSpell" &&
@@ -900,7 +928,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     }
     const releaseChoiceWithUnboundHole = {
       ...encoded,
-      pendingInterrupt: {
+      frontier: {
         ...pendingInterrupt,
         choices: pendingInterrupt.choices.map((choice) =>
           choice !== releaseChoice
@@ -918,7 +946,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     };
     const releaseChoiceWithMismatchedSourceHole = {
       ...encoded,
-      pendingInterrupt: {
+      frontier: {
         ...pendingInterrupt,
         choices: pendingInterrupt.choices.map((choice) =>
           choice !== releaseChoice
@@ -950,39 +978,43 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
 
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           replaceReleaseChoice({ procedureRef: unboundRef }),
         ),
       ),
     ).toBe(true);
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)({
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)({
           ...encoded,
-          readiedResponses: {
-            ...encoded.readiedResponses,
-            spells: encoded.readiedResponses.spells.map((readied) =>
-              readied.casterId === wizardId
-                ? {
-                    ...readied,
-                    procedureRef: differentSpellBinding.procedureRef,
-                  }
-                : readied,
-            ),
+          checkpoint: {
+            ...encoded.checkpoint,
+            readiedResponses: {
+              ...encoded.checkpoint.readiedResponses,
+              spells: encoded.checkpoint.readiedResponses.spells.map(
+                (readied) =>
+                  readied.casterId === wizardId
+                    ? {
+                        ...readied,
+                        procedureRef: differentSpellBinding.procedureRef,
+                      }
+                    : readied,
+              ),
+            },
           },
         }),
       ),
     ).toBe(true);
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           replaceReleaseChoice({ procedureRef: wrongKindRef }),
         ),
       ),
     ).toBe(true);
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           replaceReleaseChoice({
             procedureRef: releaseChoice.subject.procedureRef,
             reactorId: goblinId,
@@ -992,14 +1024,14 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     ).toBe(true);
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           releaseChoiceWithUnboundHole,
         ),
       ),
     ).toBe(true);
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           releaseChoiceWithMismatchedSourceHole,
         ),
       ),

@@ -157,14 +157,15 @@ installation or evidence-contract change makes repetition necessary.
 
 - Do not stop or inspect unrelated agent processes beyond what is necessary to
   avoid a demonstrated collision.
-- Do not touch #332 campaign worktrees or branches.
 - Do not prune worktrees, branches, stashes, pnpm stores, tunnel profiles, or
   browser profiles.
 - Public repository verification shares locks through the linked worktrees'
   common Git directory. Do not wrap public pnpm commands in another lock.
-- The current `pnpm quality` command invokes model-backed Raw Swarm work. Do not
-  run it concurrently with #332 without explicit operator coordination. Run
-  focused checks first and report any deferred aggregate verification exactly.
+- Reserve `pnpm quality:milestone` for stable integration revisions. Raw Swarm
+  deterministic verification runs in its separate path-filtered workflow. Do
+  not run either lane concurrently with another active campaign without
+  explicit operator coordination. Run focused checks first and report any
+  deferred aggregate verification exactly.
 
 Minimum focused verification:
 

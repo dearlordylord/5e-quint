@@ -122,7 +122,7 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
       tag: "resolved",
       snapshot: {
         turn: {
-          bonusActionAvailable: false,
+          bonusActionQuotaAvailable: false,
           spellSlotUsesThisTurn: [
             { kind: "committed", combatantId: spellCasterId },
           ],

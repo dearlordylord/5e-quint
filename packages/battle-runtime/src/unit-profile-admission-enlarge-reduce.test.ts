@@ -1,6 +1,8 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
+  battleFrontierInterruptDecisionForState,
+  battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectForTest,
   battleStateWithAllocatedEffectOccurrencesForTest,
@@ -1829,7 +1831,9 @@ function requireCounterspellChoice(
   BattleInterruptProcedureChoice,
   { readonly kind: "castTriggeredReactionSpell" }
 > {
-  const choice = result.snapshot.pendingInterrupt?.choices.find(
+  const choice = battleFrontierInterruptDecisionForState(
+    result.state,
+  )?.choices.find(
     (
       candidate,
     ): candidate is Extract<

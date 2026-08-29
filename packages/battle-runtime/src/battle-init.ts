@@ -48,7 +48,7 @@ import type {
 export type { BattleDruidWildShapeKnownForm } from "./druid-wild-shape-known-form-execution.ts";
 import type {
   BattleAmmunitionStock,
-  BattleStateInitIssue,
+  BattleStatBlockInitializationIssue,
   CharacterBattleUnarmoredArmorClassBases,
 } from "./battle-state-execution.ts";
 import {
@@ -335,14 +335,26 @@ export type BattleCreatureInit = {
     | StatBlockBattleCreatureInit;
 };
 
+/** Stat Block projection cannot admit a Character combatant. */
+export type BattleStatBlockCreatureInitResult = Omit<
+  BattleCreatureInit,
+  "creatureInit"
+> & {
+  readonly creatureInit: StatBlockBattleCreatureInit;
+};
+
 export function battleCreatureInitFromStatBlock(
   input: StatBlockBattleInitInput,
-): Result.Result<BattleCreatureInit, BattleStateInitIssue> {
+): Result.Result<
+  BattleStatBlockCreatureInitResult,
+  BattleStatBlockInitializationIssue
+> {
   const source = battleStatBlockCombatantSource(input.statBlock);
   if (Result.isFailure(source)) return Result.fail(source.failure);
   const initialConditionImmunityIssue = statBlockInitialConditionImmunityIssue(
     source.success,
     input.conditions,
+    input.combatantId,
   );
   if (initialConditionImmunityIssue !== null) {
     return Result.fail(initialConditionImmunityIssue);

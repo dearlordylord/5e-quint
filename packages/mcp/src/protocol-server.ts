@@ -4,7 +4,7 @@ import {
   ListToolsRequestSchema,
   type CallToolRequest,
 } from "@modelcontextprotocol/sdk/types.js";
-import { Match, Random } from "effect";
+import { Match } from "effect";
 
 import {
   createMcpApplicationServices,
@@ -16,6 +16,7 @@ import {
 } from "./server.ts";
 import { adminMirrorSessionId } from "./admin-mirror-contract.ts";
 import { errorContent } from "./tool-content.ts";
+import type { DiceSeed } from "./dice-sampling-service.ts";
 import {
   handleCreatePlaySession,
   handleDeleteSavedPlaySession,
@@ -56,6 +57,7 @@ import type { BattleToolName } from "./battle-tool-input.ts";
 import type { CharacterToolName } from "./character-tool-input.ts";
 import type { DiceToolName } from "./dice-tool-input.ts";
 import { projectModelOutputJsonSchema } from "./model-output-json-schema.ts";
+import { isMcpModelOutputSchema } from "./schema-codec.ts";
 import type { ProtocolToolDefinition } from "./tool-definition-contract.ts";
 import {
   NO_AUTH_SECURITY_SCHEMES,
@@ -76,12 +78,12 @@ type CommonMcpProtocolServerOptions = {
 
 type ProcessLifetimeMcpProtocolServerOptions =
   CommonMcpProtocolServerOptions & {
-    readonly playSessionRandomFactory?: () => Random.Random;
+    readonly playSessionDiceSeedFactory?: () => DiceSeed;
     readonly playSessionRepository?: undefined;
   };
 
 type RecoverableMcpProtocolServerOptions = CommonMcpProtocolServerOptions & {
-  readonly playSessionRandomFactory?: never;
+  readonly playSessionDiceSeedFactory?: never;
   readonly playSessionRepository: PlaySessionRepository;
 };
 
@@ -116,7 +118,9 @@ export function buildAdvertisedToolDefinitions(
           : {
               ...definition,
               outputSchema: {
-                ...projectModelOutputJsonSchema(definition.outputSchema),
+                ...(isMcpModelOutputSchema(definition.outputSchema)
+                  ? definition.outputSchema
+                  : projectModelOutputJsonSchema(definition.outputSchema)),
                 type: "object",
               },
             };
@@ -318,8 +322,8 @@ function playSessionRegistry(
   }
   return createPlaySessionRegistry({
     createRoot: (playSessionId) => {
-      const random = options.playSessionRandomFactory?.();
-      return random === undefined
+      const diceSeed = options.playSessionDiceSeedFactory?.();
+      return diceSeed === undefined
         ? createMcpPlaySessionRoot(
             applicationServices,
             adminMirrorSessionId(playSessionId),
@@ -327,7 +331,7 @@ function playSessionRegistry(
         : createMcpPlaySessionRoot(
             applicationServices,
             adminMirrorSessionId(playSessionId),
-            random,
+            diceSeed,
           );
     },
     ...(options.playSessionIdFactory === undefined

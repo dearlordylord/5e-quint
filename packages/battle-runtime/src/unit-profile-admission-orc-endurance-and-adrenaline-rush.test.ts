@@ -520,7 +520,7 @@ describe("QMBT53 deterministic Adrenaline Rush admission", () => {
       tag: "resolved",
       snapshot: {
         turn: {
-          bonusActionAvailable: false,
+          bonusActionQuotaAvailable: false,
           dashMovementBonusFeet: 30,
         },
         combatants: expect.arrayContaining([

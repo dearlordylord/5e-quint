@@ -31,6 +31,7 @@ export {
   PLAY_SESSION_NEXT_OPERATION_NAMES,
   PLAY_SESSION_OPERATION_NAMES,
   PLAY_SESSION_TOOL_NAMES,
+  SAVED_PLAY_SESSION_TOOL_NAMES,
   playSessionToolNames,
   type PlaySessionNextOperationName,
   type PlaySessionOperationName,

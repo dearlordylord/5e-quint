@@ -6,6 +6,8 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
   battleEffectExecutionRefForTest,
+  assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
+  battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectOccurrencesForTest,
   requireCharacterSpellProcedureRefForTest,
@@ -35,7 +37,12 @@ import type {
   BattleTrackedOngoingSpellLightEmitter,
 } from "./index.ts";
 import type { BattleStoredLightEmitterTemplate } from "./battle-state-execution.ts";
-import { BattleHoleSchema, BattleSnapshotSchema } from "./index.ts";
+import type { BattleObjectInvisibleRevealLightEmitter } from "./battle-state-execution.ts";
+import {
+  BattleCheckpointFrontierEnvelopeSchema,
+  BattleHoleSchema,
+  BattleSnapshotSchema,
+} from "./index.ts";
 import {
   antimagicFieldUnitId,
   continualFlameUnitId,
@@ -1078,14 +1085,14 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       requireHole(act.initialHoles, "ongoingSpellTargetChoice").choices,
     ).toContainEqual(target);
     const snapshot = snapshotBattle(state.state);
-    const focusedSnapshot = {
-      ...snapshot,
-      acts: snapshot.acts.filter(
-        (candidate) =>
-          "procedureRef" in candidate.subject &&
-          candidate.subject.procedureRef === act.subject.procedureRef,
-      ),
+    const focusedEnvelope = {
+      checkpoint: snapshot,
+      frontier: {
+        kind: "acts" as const,
+        acts: [{ subject: act.subject, initialHoles: act.initialHoles }],
+      },
     };
+    const focusedSnapshot = snapshot;
     expect(
       Result.isSuccess(
         Schema.decodeUnknownResult(BattleSnapshotSchema)(focusedSnapshot),
@@ -1133,6 +1140,38 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       Result.isFailure(
         Schema.decodeUnknownResult(BattleSnapshotSchema)(
           wrongOccurrenceKindSnapshot,
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
+          focusedEnvelope,
+        ),
+      ),
+    ).toBe(true);
+    const wrongOwnerEnvelope = {
+      ...focusedEnvelope,
+      checkpoint: {
+        ...focusedEnvelope.checkpoint,
+        combatants: focusedEnvelope.checkpoint.combatants.map((combatant) =>
+          combatant.combatantId === spellCasterId
+            ? {
+                ...combatant,
+                activeEffectRefs: [
+                  battleActiveEffectExecutionRefForTest(
+                    "wrong-owner-spiritual-weapon",
+                  ),
+                ],
+              }
+            : combatant,
+        ),
+      },
+    };
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
+          wrongOwnerEnvelope,
         ),
       ),
     ).toBe(true);
@@ -1368,7 +1407,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       throw new Error("Expected a Dispel Magic spellcasting ability check.");
     }
     const focusedSnapshot = needsCheck.snapshot;
-    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+    assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: focusedSnapshot,
       subject: act.subject,
       holes: needsCheck.holes,
@@ -1394,6 +1433,36 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
                 }
               : combatant,
           ),
+        }),
+      ),
+    ).toBe(true);
+    const encodedEnvelope = Schema.encodeSync(
+      BattleCheckpointFrontierEnvelopeSchema,
+    )({
+      checkpoint: focusedSnapshot,
+      frontier: {
+        kind: "acts",
+        acts: [{ subject: act.subject, initialHoles: needsCheck.holes }],
+      },
+    });
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)({
+          ...encodedEnvelope,
+          checkpoint: {
+            ...encodedEnvelope.checkpoint,
+            combatants: encodedEnvelope.checkpoint.combatants.map(
+              (combatant) =>
+                combatant.combatantId === spellCasterId
+                  ? {
+                      ...combatant,
+                      activeEffectRefs: combatant.activeEffectRefs.filter(
+                        (effectRef) => effectRef !== effect.effectRef,
+                      ),
+                    }
+                  : combatant,
+            ),
+          },
         }),
       ),
     ).toBe(true);

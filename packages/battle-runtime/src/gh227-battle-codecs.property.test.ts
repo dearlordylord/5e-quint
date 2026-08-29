@@ -3,8 +3,8 @@ import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
+  BattleCheckpointFrontierEnvelopeSchema,
   BattleFillSchema,
-  BattleSnapshotSchema,
   StatBlockExecutionSnapshotSchema,
 } from "./battle-reducer/battle-codecs.ts";
 import {
@@ -15,6 +15,7 @@ import {
 import {
   attackRollFill,
   battleProcedureExecutionRefForTest,
+  battleCheckpointFrontierEnvelope,
   fighterAttackSubject,
   fighterTurnWithReadiedAcidAndSecondReadiedRay,
   fighterTurnWithReadiedRay,
@@ -25,9 +26,9 @@ import {
   monsterResourceStatBlock,
   requireHole,
   resolveBattleSubject,
-  snapshotBattle,
   targetFill,
 } from "./battle-runtime.test-support.ts";
+import type { BattleHole } from "./battle-runtime.test-support.ts";
 import { statBlockExecutionAdmissionCohort } from "./stat-block-execution.ts";
 
 const PROPERTY_OPTIONS = { numRuns: 64, seed: 0x227c0dec } as const;
@@ -65,7 +66,7 @@ function replaceRecordField(
 
 function encodedSnapshots() {
   const state = fighterVsGoblinBattle();
-  const initial = snapshotBattle(state);
+  const initial = battleCheckpointFrontierEnvelope(state);
   const attack = resolveBattleSubject({
     state,
     subject: fighterAttackSubject(state),
@@ -74,12 +75,31 @@ function encodedSnapshots() {
   if (attack.tag !== "needsHoles") {
     throw new Error("Expected a reachable attack discovery snapshot.");
   }
-  const readied = snapshotBattle(fighterTurnWithReadiedRay("attackHit"));
-  const nestedReadied = snapshotBattle(
+  const firstAttackHole = attack.holes[0];
+  if (firstAttackHole === undefined) {
+    throw new Error("Expected a non-empty attack frontier.");
+  }
+  const attackHoles: [BattleHole, ...BattleHole[]] = [
+    firstAttackHole,
+    ...attack.holes.slice(1),
+  ];
+  const attackEnvelope = {
+    checkpoint: attack.snapshot,
+    frontier: {
+      kind: "holes" as const,
+      subject: attack.subject,
+      holes: attackHoles,
+      continuation: { kind: "ordinaryReplay" as const },
+    },
+  };
+  const readied = battleCheckpointFrontierEnvelope(
+    fighterTurnWithReadiedRay("attackHit"),
+  );
+  const nestedReadied = battleCheckpointFrontierEnvelope(
     fighterTurnWithReadiedAcidAndSecondReadiedRay(),
   );
-  return [initial, attack.snapshot, readied, nestedReadied].map((snapshot) =>
-    Schema.encodeSync(BattleSnapshotSchema)(snapshot),
+  return [initial, attackEnvelope, readied, nestedReadied].map((envelope) =>
+    Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(envelope),
   );
 }
 
@@ -133,14 +153,18 @@ function encodedStatBlockSnapshots() {
 
 describe("GH-227 battle codec properties", () => {
   test.each(encodedSnapshots())(
-    "reachable snapshot %# preserves its decoded graph under encode/decode",
+    "reachable checkpoint frontier envelope %# preserves its decoded graph under encode/decode",
     (encoded) => {
-      const decoded = Schema.decodeUnknownResult(BattleSnapshotSchema)(encoded);
+      const decoded = Schema.decodeUnknownResult(
+        BattleCheckpointFrontierEnvelopeSchema,
+      )(encoded);
       expect(Result.isSuccess(decoded)).toBe(true);
       if (Result.isFailure(decoded)) return;
-      expect(Schema.encodeSync(BattleSnapshotSchema)(decoded.success)).toEqual(
-        encoded,
-      );
+      expect(
+        Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+          decoded.success,
+        ),
+      ).toEqual(encoded);
     },
   );
 
@@ -196,27 +220,34 @@ describe("GH-227 battle codec properties", () => {
     );
   });
 
-  test("generated duplicate ammunition ownership is rejected at the unknown snapshot boundary", () => {
+  test("generated duplicate ammunition ownership is rejected at the unknown envelope boundary", () => {
     const encoded = encodedSnapshots()[0];
     fc.assert(
       fc.property(
         fc.nat({ max: 100 }),
         fc.nat({ max: 100 }),
         (firstRemaining, secondRemaining) => {
-          const malformed = replaceFirstRecordInArray(
+          const malformed = replaceRecordField(
             encoded,
-            "combatants",
-            (combatant) => ({
-              ...combatant,
-              ammunitionStocks: [
-                { ammunition: "arrow", remaining: firstRemaining },
-                { ammunition: "arrow", remaining: secondRemaining },
-              ],
-            }),
+            "checkpoint",
+            (checkpoint) =>
+              replaceFirstRecordInArray(
+                checkpoint,
+                "combatants",
+                (combatant) => ({
+                  ...combatant,
+                  ammunitionStocks: [
+                    { ammunition: "arrow", remaining: firstRemaining },
+                    { ammunition: "arrow", remaining: secondRemaining },
+                  ],
+                }),
+              ),
           );
           expect(
             Result.isFailure(
-              Schema.decodeUnknownResult(BattleSnapshotSchema)(malformed),
+              Schema.decodeUnknownResult(
+                BattleCheckpointFrontierEnvelopeSchema,
+              )(malformed),
             ),
           ).toBe(true);
         },
@@ -227,30 +258,39 @@ describe("GH-227 battle codec properties", () => {
 
   test("single act-owner and readied-spell mutations are rejected precisely", () => {
     const encoded = encodedSnapshots()[2];
-    const unknownActOwner = replaceFirstRecordInArray(encoded, "acts", (act) =>
-      replaceRecordField(act, "subject", (subject) => ({
-        ...subject,
-        actorId: "missing-combatant",
-      })),
+    const unknownActOwner = replaceRecordField(
+      encoded,
+      "frontier",
+      (frontier) =>
+        replaceFirstRecordInArray(frontier, "acts", (act) =>
+          replaceRecordField(act, "subject", (subject) => ({
+            ...subject,
+            actorId: "missing-combatant",
+          })),
+        ),
     );
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)(unknownActOwner),
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
+          unknownActOwner,
+        ),
       ),
     ).toBe(true);
 
     const unknownReadiedProcedure = replaceRecordField(
       encoded,
-      "readiedResponses",
-      (responses) =>
-        replaceFirstRecordInArray(responses, "spells", (spell) => ({
-          ...spell,
-          procedureRef: "unbound-readied-spell",
-        })),
+      "checkpoint",
+      (checkpoint) =>
+        replaceRecordField(checkpoint, "readiedResponses", (responses) =>
+          replaceFirstRecordInArray(responses, "spells", (spell) => ({
+            ...spell,
+            procedureRef: "unbound-readied-spell",
+          })),
+        ),
     );
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           unknownReadiedProcedure,
         ),
       ),

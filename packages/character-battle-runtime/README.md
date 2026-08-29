@@ -15,6 +15,13 @@ projections before any sheet state is written.
 
 Owned boundary functions:
 
+- `composeBattleRoster` admits a non-empty arbitrary roster in caller order,
+  retaining whether each successful entry originated from a Character Sheet or
+  Stat Block and accumulating identity, source, and projection issues without
+  exposing partial battle state. `composeBattleCompanionRoster` performs the
+  dependent companion admissions against the resulting runtime session and
+  likewise retains each indexed issue until the owning tool decides whether to
+  commit.
 - `characterSheetBattleInit` projects an existing Character Sheet plus caller
   battle facts into battle-runtime creature initialization. Canonical
   class-spell-list selections without an installed Spell Definition remain on

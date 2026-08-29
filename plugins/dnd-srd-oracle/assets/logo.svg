@@ -1,8 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 160" role="img" aria-labelledby="title">
   <title id="title">5.5e SRD Oracle</title>
+  <defs>
+    <linearGradient id="mark-background" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4FB8B2"/>
+      <stop offset="1" stop-color="#287571"/>
+    </linearGradient>
+  </defs>
   <rect width="640" height="160" rx="24" fill="#f8fafc"/>
-  <path fill="#4f46e5" d="m80 18 55 32v61l-55 32-55-32V50z"/>
-  <path fill="none" stroke="#fff" stroke-width="7" stroke-linejoin="round" d="m80 31 41 24-15 44-52 1-15-45zm-41 24 41 29 41-29M80 84v43"/>
-  <text x="165" y="78" fill="#111827" font-family="system-ui,sans-serif" font-size="42" font-weight="700">5.5e SRD Oracle</text>
-  <text x="167" y="119" fill="#475569" font-family="system-ui,sans-serif" font-size="24">Characters and rules-backed battles</text>
+  <rect x="18" y="18" width="124" height="124" rx="23" fill="url(#mark-background)"/>
+  <g fill="#fff" font-family="DejaVu Sans" font-weight="700">
+    <text x="34" y="98" font-size="43">5</text>
+    <circle cx="68" cy="91" r="3.6"/>
+    <text x="75" y="98" font-size="43">5</text>
+    <text x="106" y="78" font-size="20">e</text>
+  </g>
+  <g transform="translate(112.5 52) scale(.0435)" fill="#fff">
+    <path d="M256 68c-100 0-160 72-160 160 0 60 28 108 72 136l8 36h160l8-36c44-28 72-76 72-136 0-88-60-160-160-160z"/>
+    <ellipse cx="208" cy="216" rx="40" ry="44" fill="#287571"/>
+    <ellipse cx="304" cy="216" rx="40" ry="44" fill="#287571"/>
+    <path d="M244 280l12 28 12-28c-4-4-10-6-12-6s-8 2-12 6z" fill="#287571"/>
+    <path d="M168 364h176v16c0 36-16 64-88 64s-88-28-88-64v-16z"/>
+    <path fill="#287571" d="M188 364h24v32h-24zm32 0h24v32h-24zm32 0h24v32h-24zm32 0h24v32h-24zm32 0h24v32h-24z"/>
+  </g>
+  <text x="165" y="78" fill="#111827" font-family="DejaVu Sans" font-size="42" font-weight="700">5.5e SRD Oracle</text>
+  <text x="167" y="119" fill="#475569" font-family="DejaVu Sans" font-size="24">Characters and rules-backed battles</text>
 </svg>

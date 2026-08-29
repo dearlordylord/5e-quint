@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import {
   battleFillKind,
+  battleHoleAcceptsFill,
   battleHoleFamilyKind,
   battleSubjectKind,
   type BattleFill,
@@ -115,6 +116,23 @@ describe("battle hole family kind vocabulary", () => {
       const fill = { kind: row.fillKind } as BattleFill;
       expect(battleFillKind(fill), row.id).toBe(row.fillKind);
     }
+  });
+
+  test("accepts the canonical Ability Check fill for a Spellcasting Ability Check hole", () => {
+    // The compatibility relation reads only protocol kinds; full payloads are
+    // irrelevant for this boundary contract.
+    const spellcastingAbilityCheckHole = {
+      kind: "spellcastingAbilityCheck",
+    } as BattleHole;
+    const abilityCheckFill = { kind: "abilityCheck" } as BattleFill;
+    const unrelatedFill = { kind: "rolledDice" } as BattleFill;
+
+    expect(
+      battleHoleAcceptsFill(spellcastingAbilityCheckHole, abilityCheckFill),
+    ).toBe(true);
+    expect(
+      battleHoleAcceptsFill(spellcastingAbilityCheckHole, unrelatedFill),
+    ).toBe(false);
   });
 
   test("BattleSubject mapping matches the frontier registry", () => {

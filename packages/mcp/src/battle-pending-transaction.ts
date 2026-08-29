@@ -1,83 +1,144 @@
 import {
-  battleSubjectPresentation,
   sameBattleSubject,
   type BattleFill,
-  type BattleHole,
   type BattleRuntimeResolutionResult,
   type BattleRuntimeSession,
+  type BattleSubject,
 } from "@dnd/battle-runtime";
 import { Match } from "effect";
 
-import type {
-  BattleFillSession,
-  PendingBattleFillSession,
-} from "./session-store-types.ts";
+import type { PendingBattleFillSession } from "./session-store-types.ts";
 
+type NeedsHolesBattleRuntimeResult = Extract<
+  BattleRuntimeResolutionResult,
+  { readonly tag: "needsHoles" }
+>;
+type BattleHolesFrontier = Extract<
+  NeedsHolesBattleRuntimeResult["envelope"]["frontier"],
+  { readonly kind: "holes" }
+>;
+
+/**
+ * Retain only the replay source, selected subject, and accepted fills.  The
+ * executable frontier is always re-read from the runtime envelope after a
+ * recovery or retry; storing holes here would create a second frontier owner.
+ */
 export function pendingTransactionForResult({
   result,
   filledSubject,
   previous,
   fills,
   replaySession,
-  isInterruptDecision,
 }: {
   readonly result: BattleRuntimeResolutionResult;
-  readonly filledSubject: BattleFillSession["subject"];
+  readonly filledSubject: BattleSubject;
   readonly previous: PendingBattleFillSession | null;
   readonly fills: readonly BattleFill[];
   readonly replaySession: BattleRuntimeSession;
-  readonly isInterruptDecision: boolean;
 }): PendingBattleFillSession | null {
-  if (result.tag !== "needsHoles") return null;
-  const resultPresentation = battleSubjectPresentation(
-    result.session,
-    result.subject,
-  );
-  if (resultPresentation === undefined) return null;
-  const firstHole = result.holes[0];
-  if (firstHole === undefined) return null;
-  const holes: readonly [BattleHole, ...BattleHole[]] = [
-    firstHole,
-    ...result.holes.slice(1),
-  ];
-  const interruptContinuation = {
-    isInterruptDecision,
-    previous,
-    resultSubject: result.subject,
-    filledSubject,
-  };
-  if (continuesPreviousInterruptTransaction(interruptContinuation)) {
-    return {
-      baseSession: interruptContinuation.previous.baseSession,
-      subject: result.subject,
-      fills: interruptContinuation.previous.fills,
-      holes,
-    };
-  }
-  const transactionHistory = Match.value(isInterruptDecision).pipe(
-    Match.when(true, () => ({ baseSession: result.session, fills: [] })),
-    Match.when(false, () => ({ baseSession: replaySession, fills })),
+  return Match.value(result).pipe(
+    Match.when({ tag: "resolved" }, (resolved) =>
+      resolved.envelope.frontier.kind === "interruptDecision"
+        ? interruptDecisionPendingTransaction(resolved.session, filledSubject)
+        : null,
+    ),
+    Match.when({ tag: "needsHoles" }, (needsHoles) =>
+      needsHolesPendingTransaction({
+        result: needsHoles,
+        filledSubject,
+        previous,
+        fills,
+        replaySession,
+      }),
+    ),
+    Match.when({ tag: "invalid" }, () => null),
     Match.exhaustive,
   );
+}
+
+function needsHolesPendingTransaction(input: {
+  readonly result: NeedsHolesBattleRuntimeResult;
+  readonly filledSubject: BattleSubject;
+  readonly previous: PendingBattleFillSession | null;
+  readonly fills: readonly BattleFill[];
+  readonly replaySession: BattleRuntimeSession;
+}): PendingBattleFillSession {
+  return Match.value(input.result.envelope.frontier).pipe(
+    Match.when({ kind: "interruptDecision" }, () =>
+      interruptDecisionPendingTransaction(
+        input.result.session,
+        input.filledSubject,
+      ),
+    ),
+    Match.when({ kind: "holes" }, (frontier) =>
+      holesPendingTransaction({ ...input, frontier }),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function interruptDecisionPendingTransaction(
+  session: BattleRuntimeSession,
+  subject: BattleSubject,
+): PendingBattleFillSession {
+  return { baseSession: session, subject, fills: [] };
+}
+
+function holesPendingTransaction(input: {
+  readonly result: NeedsHolesBattleRuntimeResult;
+  readonly frontier: BattleHolesFrontier;
+  readonly filledSubject: BattleSubject;
+  readonly previous: PendingBattleFillSession | null;
+  readonly fills: readonly BattleFill[];
+  readonly replaySession: BattleRuntimeSession;
+}): PendingBattleFillSession {
+  if (input.frontier.continuation.kind === "runtimeOwnedInterrupt") {
+    return runtimeOwnedInterruptPendingTransaction(input);
+  }
+  if (
+    input.previous !== null &&
+    sameBattleSubject(input.previous.subject, input.filledSubject)
+  ) {
+    return {
+      baseSession: input.previous.baseSession,
+      subject: input.frontier.subject,
+      fills: input.fills,
+    };
+  }
   return {
-    baseSession: transactionHistory.baseSession,
-    subject: result.subject,
-    fills: transactionHistory.fills,
-    holes,
+    baseSession:
+      input.previous === null ? input.result.session : input.replaySession,
+    subject: input.frontier.subject,
+    fills: input.fills,
   };
 }
 
-function continuesPreviousInterruptTransaction(input: {
-  readonly isInterruptDecision: boolean;
+function runtimeOwnedInterruptPendingTransaction(input: {
+  readonly result: NeedsHolesBattleRuntimeResult;
+  readonly frontier: BattleHolesFrontier;
+  readonly filledSubject: BattleSubject;
   readonly previous: PendingBattleFillSession | null;
-  readonly resultSubject: BattleFillSession["subject"];
-  readonly filledSubject: BattleFillSession["subject"];
-}): input is typeof input & {
-  readonly previous: PendingBattleFillSession;
-} {
-  return (
-    input.isInterruptDecision &&
+  readonly fills: readonly BattleFill[];
+}): PendingBattleFillSession {
+  if (
     input.previous !== null &&
-    sameBattleSubject(input.resultSubject, input.filledSubject)
-  );
+    input.fills.at(-1)?.kind !== "interruptDecision" &&
+    sameBattleSubject(input.previous.subject, input.filledSubject) &&
+    sameBattleSubject(input.previous.subject, input.frontier.subject)
+  ) {
+    return {
+      baseSession: input.previous.baseSession,
+      subject: input.frontier.subject,
+      fills: input.fills,
+    };
+  }
+  // The returned session already contains the accepted interrupt response.
+  // Reset the replay source at this durable boundary; replaying the nested
+  // interrupt fill as an ordinary subject fill would resurrect the old
+  // decision frontier on the next request or after recovery.
+  return {
+    baseSession: input.result.session,
+    subject: input.frontier.subject,
+    fills: [],
+  };
 }

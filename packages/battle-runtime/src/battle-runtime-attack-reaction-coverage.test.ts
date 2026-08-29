@@ -1,8 +1,11 @@
 import { describe, expect, test } from "vitest";
+import { Schema } from "effect";
+import * as Either from "effect/Either";
 
 import {
   attackRollFill,
   attackDamageDispositionFill,
+  battleFrontierInterruptDecisionForState,
   battleId,
   characterSeed,
   combatantId,
@@ -25,11 +28,13 @@ import {
   unitLibrary,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
-import type {
-  AvailableBattleAct,
-  BattleFill,
-  BattleInterruptProcedureChoice,
-  BattleSubject,
+import {
+  BattleCheckpointFrontierEnvelopeSchema,
+  battleCheckpointFrontierEnvelope,
+  type AvailableBattleAct,
+  type BattleFill,
+  type BattleInterruptProcedureChoice,
+  type BattleSubject,
 } from "./index.ts";
 
 const damagerId = combatantId("attack-reaction-damager");
@@ -126,7 +131,9 @@ describe("battle runtime: attack reaction coverage", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Hellish Rebuke after-damage reaction window.");
     }
-    const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
+    const choice = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    )?.choices.find(
       (
         candidate,
       ): candidate is Extract<
@@ -139,6 +146,16 @@ describe("battle runtime: attack reaction coverage", () => {
     if (choice === undefined) {
       throw new Error("Expected Hellish Rebuke reaction choice.");
     }
+    const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+      battleCheckpointFrontierEnvelope(awaitingReaction.state),
+    );
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+          encoded,
+        ),
+      ),
+    ).toBe(true);
     const saveHole = findHole(choice.initialHoles, "savingThrowOutcome");
     const damageHole = findHole(choice.initialHoles, "rolledDice");
     const reactionFills = [
@@ -187,7 +204,6 @@ describe("battle runtime: attack reaction coverage", () => {
     });
     expect(resumed).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null },
     });
     if (resumed.tag !== "resolved") {
       throw new Error("Expected Hellish Rebuke replacement to resolve.");

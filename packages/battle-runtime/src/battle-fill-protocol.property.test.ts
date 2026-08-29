@@ -93,6 +93,7 @@ import {
 } from "./battle-runtime.test-support.ts";
 import { spellTargetListFill } from "./unit-profile-admission-spell-fill.test-support.ts";
 import type { BattleUnitRef } from "./index.ts";
+import { validateRolledDiceFillForDiceExpr } from "./battle-state-execution.ts";
 import type { RuntimeDamageSpellProcedure } from "./battle-reducer/spells-damage-fills.ts";
 import { combatantId, type CombatantId } from "./identity.ts";
 
@@ -1787,6 +1788,15 @@ describe("battle fill protocol boundary owners", () => {
         selection: "apply" as const,
       },
     };
+    const unsupportedCunningStrike = {
+      ...fill,
+      cunningStrikeOption: {
+        procedureRef: battleProcedureExecutionRefForTest(
+          "boundary-unsupported-cunning-strike",
+        ),
+        optionId: "poison" as const,
+      },
+    };
     expect(validatePreparedSlotSpellDamageGroups(fill, allocation)).toBeNull();
     expect(
       validatePreparedSlotSpellDamageGroups(unsupportedDieFloor, allocation),
@@ -1800,6 +1810,30 @@ describe("battle fill protocol boundary owners", () => {
       ),
     ).toBe(
       "Attack damage ability modifier choices are not available for this damage-roll owner.",
+    );
+    expect(
+      validateRolledDiceFillForDiceExpr(unsupportedDieFloor, {
+        dice: 3,
+        dieSize: 6,
+      }),
+    ).toBe(
+      "Attack damage die floor choices are not available for this damage-roll owner.",
+    );
+    expect(
+      validateRolledDiceFillForDiceExpr(unsupportedAbilityModifier, {
+        dice: 3,
+        dieSize: 6,
+      }),
+    ).toBe(
+      "Attack damage ability modifier choices are not available for this damage-roll owner.",
+    );
+    expect(
+      validateRolledDiceFillForDiceExpr(unsupportedCunningStrike, {
+        dice: 3,
+        dieSize: 6,
+      }),
+    ).toBe(
+      "Cunning Strike options are not available for this damage-roll owner.",
     );
     expect(
       validatePreparedSlotSpellDamageGroups(tooFewGroups, allocation),

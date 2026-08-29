@@ -1,6 +1,7 @@
 import { Schema } from "effect";
 
-import { MAX_DIE_SIZE } from "./dice-tool-input.ts";
+import { DiceRollRequestIdSchema, MAX_DIE_SIZE } from "./dice-tool-input.ts";
+import { DICE_RANDOM_SOURCE } from "./dice-sampling-service.ts";
 
 const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.int(),
@@ -54,9 +55,19 @@ export const DiceRollGroupOutputSchema = DiceRollGroupOutputBaseSchema.pipe(
 });
 
 export const RollDiceOutputSchema = Schema.Struct({
-  correlationId: Schema.UUID.annotations({
+  requestId: DiceRollRequestIdSchema.annotations({
+    description: "The caller-supplied idempotency key for this sampling.",
+  }),
+  disposition: Schema.Literal("sampled", "replayed"),
+  randomSource: Schema.Struct({
+    diceGroupSemanticProfile: Schema.Literal(
+      DICE_RANDOM_SOURCE.diceGroupSemanticProfile,
+    ),
+    prngSequenceProfile: Schema.Literal(DICE_RANDOM_SOURCE.prngSequenceProfile),
+    stateSchemaVersion: Schema.Literal(DICE_RANDOM_SOURCE.stateSchemaVersion),
+  }).annotations({
     description:
-      "A server-generated per-call correlation value. It is not retained as history or accepted as an idempotency key.",
+      "Deterministic non-cryptographic sampling identities for replay and compatibility checks; these are not proof of wagering-grade fairness.",
   }),
   groups: Schema.NonEmptyArray(DiceRollGroupOutputSchema),
 }).annotations({
@@ -65,3 +76,5 @@ export const RollDiceOutputSchema = Schema.Struct({
 });
 
 export type RollDiceResult = typeof RollDiceOutputSchema.Type;
+export const decodeRollDiceResult =
+  Schema.decodeUnknownEither(RollDiceOutputSchema);

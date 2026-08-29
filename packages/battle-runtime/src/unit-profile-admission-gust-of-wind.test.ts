@@ -58,6 +58,7 @@ import {
   type BattleRuntimeSession,
   type BattleState,
 } from "./unit-profile-admission.test-support.ts";
+import { battleFrontierInterruptDecisionForState } from "./index.ts";
 import {
   greaseAreaId,
   greaseUnitId,
@@ -346,8 +347,8 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     const declined = declineTargetReadiedSpellAfterFailedSave(awaitingReaction);
     expect(declined.snapshot).toMatchObject({
       currentActorId: spellCasterId,
-      pendingInterrupt: null,
     });
+    expect(battleFrontierInterruptDecisionForState(declined.state)).toBeNull();
   });
 
   test("movement closer to the caster through the Line spends two feet per foot", () => {
@@ -716,7 +717,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
 
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { turn: { bonusActionAvailable: false } },
+      snapshot: { turn: { bonusActionQuotaAvailable: false } },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Gust of Wind direction change to resolve.");

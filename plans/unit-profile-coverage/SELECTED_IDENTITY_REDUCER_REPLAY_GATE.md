@@ -31,6 +31,6 @@ public battle runtime entrypoints such as `startBattle`, `discoverBattleActs`,
 witnesses that do not execute a battle step must still reach package-public
 runtime code exported from `src/index.ts`.
 
-`pnpm quality` runs `pnpm unit-profile-coverage:check`, so installed Unit
+`pnpm quality:milestone` runs `pnpm unit-profile-coverage:check`, so installed Unit
 inventory drift, stale owner metadata, missing deterministic replay data, and
 missing reducer/runtime reachability fail the normal gate.

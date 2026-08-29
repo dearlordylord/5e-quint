@@ -66,5 +66,5 @@ describe("RootApp route boot", () => {
     })
 
     expect(await screen.findByText("D&D 5e SRD Character Tools")).toBeTruthy()
-  }, 15_000)
+  })
 })

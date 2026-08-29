@@ -77,7 +77,7 @@ A source-owned, language-neutral ordered trace returned by evaluating an Oracle 
 _Avoid_: Internal execution trace, final observation only
 
 **Oracle Continuation Frontier**:
-The one decision boundary at which a successful Oracle Case may stop after Battle entry: either the canonical set of currently available Battle Acts or the ordered non-empty Runtime Holes for one selected Act. Character Creation input exhaustion is an Oracle Workflow Rejection rather than a continuation frontier.
+The one decision boundary at which a successful Oracle Case may stop after Battle entry: the canonical set of currently available Battle Acts, the ordered non-empty ordinary Runtime Holes for one selected Act, or one interrupt decision with its mechanical choices. Character Creation input exhaustion is an Oracle Workflow Rejection rather than a continuation frontier.
 _Avoid_: Active battle marker, creation continuation, internal replay state
 
 **Oracle Workflow Rejection**:

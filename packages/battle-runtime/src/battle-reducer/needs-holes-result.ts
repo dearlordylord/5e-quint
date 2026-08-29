@@ -1,9 +1,11 @@
+import { optionalProperty } from "../optional-property.ts";
 import {
   battleSubjectForReplay,
   type BattleSubject,
 } from "../battle-subjects.ts";
 import type {
   BattleHole,
+  BattleResolutionCheckpointBoundary,
   BattleResolutionResult,
   BattleState,
 } from "../battle-state-execution.ts";
@@ -14,6 +16,7 @@ export function needsHolesResult(
   state: BattleState,
   subject: BattleSubject,
   holes: readonly BattleHole[],
+  checkpointBoundary?: BattleResolutionCheckpointBoundary,
 ): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
   return {
     tag: "needsHoles",
@@ -21,6 +24,7 @@ export function needsHolesResult(
     subject: battleSubjectForReplay(subject),
     holes,
     snapshot: snapshotBattle(state),
+    ...optionalProperty("checkpointBoundary", checkpointBoundary),
   };
 }
 

@@ -7,6 +7,8 @@ import {
   openPrimaryAttackAfterDamageSequenceInterruptWindow,
 } from "./battle-reducer/interrupt-execution.ts";
 import { currentInterruptCheckpoint } from "./battle-reducer/battle-snapshot.ts";
+import { battleCheckpointFrontierEnvelope } from "./battle-session-execution.ts";
+import { resolveReplayContinuationFromState as resolveComposedReplayContinuationFromState } from "./battle-execution-composition.ts";
 import { replayContinuationFrame } from "./battle-reducer/replay-continuation.ts";
 import {
   ReplayContinuationExecution,
@@ -35,6 +37,7 @@ import {
   attackRollFill,
   attackRollHoleAfterTarget,
   battleProcedureExecutionRefForTest,
+  battleFrontierInterruptDecisionForState,
   battleId,
   breakBattleConcentration,
   characterBattleFeatureInitForTest,
@@ -137,7 +140,7 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
     if (resumed.tag !== "resolved") {
       throw new Error("Expected the declined Reaction window to resolve.");
     }
-    expect(resumed.snapshot.pendingInterrupt).toBeNull();
+    expect(battleFrontierInterruptDecisionForState(resumed.state)).toBeNull();
 
     const checkpoint = currentInterruptCheckpoint(result.state);
     const choice = checkpoint?.choices.find(
@@ -217,6 +220,20 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
       subject,
       fills: [],
     });
+    expect(
+      resolveComposedReplayContinuationFromState(
+        state,
+        continuation,
+        "afterDamage",
+        [],
+      ).tag,
+    ).toBe("needsHoles");
+    expect(
+      battleCheckpointFrontierEnvelope({
+        ...state,
+        interruptStack: [replayContinuationFrame(continuation, "afterDamage")],
+      }).checkpoint.battleId,
+    ).toBe(state.battleId);
     expect(replay).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "interruptDecision", trigger: "attackHit" }],
@@ -224,6 +241,9 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
     if (replay.tag !== "needsHoles") {
       throw new Error("Expected the replay to open an attack-hit Reaction.");
     }
+    expect(battleCheckpointFrontierEnvelope(replay.state).frontier.kind).toBe(
+      "interruptDecision",
+    );
     const choice = currentInterruptCheckpoint(replay.state)?.choices.find(
       (candidate) => candidate.kind === "releaseReadiedSpell",
     );
@@ -247,6 +267,9 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
     if (started.tag !== "needsHoles") {
       throw new Error("Expected the readied spell to request target holes.");
     }
+    expect(battleCheckpointFrontierEnvelope(started.state).frontier.kind).toBe(
+      "holes",
+    );
     const activeSubject = currentInterruptCheckpoint(started.state)
       ?.activeInterrupt?.subject;
     if (activeSubject === undefined) {
@@ -413,6 +436,12 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
       },
     ]) {
       expect(
+        battleCheckpointFrontierEnvelope({
+          ...state,
+          interruptStack: [frame],
+        }).checkpoint.battleId,
+      ).toBe(state.battleId);
+      expect(
         resolveActiveInterruptContinuation({
           state: input.state,
           frame: input.frame,
@@ -450,7 +479,7 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
       throw new Error("Expected an attack-hit Reaction window.");
     }
     const choice = reactionModifierChoice(
-      opened.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(opened.state)!.choices,
       unit.id,
       "attackRollReduction",
     );
@@ -513,7 +542,7 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
       throw new Error("Expected an attack-hit Reaction window.");
     }
     const choice = reactionModifierChoice(
-      opened.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(opened.state)!.choices,
       unit.id,
       "attackRollReduction",
     );
@@ -612,7 +641,7 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
       throw new Error("Expected an attack-damage Reaction window.");
     }
     const choice = reactionModifierChoice(
-      awaitingDamage.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(awaitingDamage.state)!.choices,
       unit.id,
       "damageRollReduction",
     );

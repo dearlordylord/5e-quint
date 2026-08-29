@@ -48,6 +48,7 @@ import {
   characterId,
   combatantId,
   concentrationSavingThrowDc,
+  battleFrontierInterruptDecisionForState,
   endTurn,
   initiativeScore,
   resolveBattleConcentrationDamage,
@@ -249,7 +250,7 @@ function createRuleCoreReactionDriver() {
           }),
         ),
       doTakeOpportunityAttack: () => {
-        const pendingInterrupt = snapshotBattle(state).pendingInterrupt;
+        const pendingInterrupt = battleFrontierInterruptDecisionForState(state);
         const rawOpportunityChoice = pendingInterrupt?.choices.find(
           (candidate) =>
             candidate.kind === "opportunityAttack" &&
@@ -372,7 +373,9 @@ function createRuleCoreReactionDriver() {
     };
 
     function resolveReadiedMovementReaction(movementCostFeet: number): void {
-      const choice = snapshotBattle(state).pendingInterrupt?.choices.find(
+      const choice = battleFrontierInterruptDecisionForState(
+        state,
+      )?.choices.find(
         (candidate) =>
           candidate.kind === "releaseReadiedMovement" &&
           candidate.readiedMovementActorId === reactorId,
@@ -580,9 +583,10 @@ function projectRuleCoreReactionState(input: {
     interruptedConcentration: interrupted.concentrating,
     reactorConcentration: reactor.concentrating,
     pendingTrigger: pendingTrigger(
-      snapshot.pendingInterrupt?.trigger ?? "none",
+      battleFrontierInterruptDecisionForState(input.state)?.trigger ?? "none",
     ),
-    pendingStackDepth: snapshot.pendingInterrupt?.stackDepth ?? 0,
+    pendingStackDepth:
+      battleFrontierInterruptDecisionForState(input.state)?.stackDepth ?? 0,
     holes: input.holes.map(projectReactionHole),
     lastConcentrationSaveDc: input.lastConcentrationSaveDc,
     lastResult: input.lastResult,

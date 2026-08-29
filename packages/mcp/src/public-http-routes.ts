@@ -10,6 +10,10 @@ import { RECOVERABLE_PLAY_SESSION_FORMAT_VERSION } from "./play-session-reposito
 import type { PublicMcpOAuth } from "./public-oauth.ts";
 import type { PlaySessionRequestIdentity } from "./play-session-protocol.ts";
 import {
+  PUBLIC_PLUGIN_DEMO_PATH,
+  publicPluginDemoResponse,
+} from "./public-plugin-demo.ts";
+import {
   isPublicPublisherSitePath,
   publicPublisherSiteResponse,
 } from "./public-publisher-site.ts";
@@ -55,36 +59,83 @@ export async function handlePublicHttpRequest(
 
 export function publicRouteLabel(pathname: string): string {
   if (isPublicPublisherSitePath(pathname)) return "publisher-site";
-  if (pathname === "/mcp") return "/mcp";
-  if (pathname === "/health") return "/health";
-  if (pathname === "/version") return "/version";
-  if (pathname === "/metrics") return "/metrics";
+  const exactLabel = PUBLIC_ROUTE_LABELS.get(pathname);
+  if (exactLabel !== undefined) return exactLabel;
+  if (pathname.startsWith("/api/auth/")) return "/api/auth/*";
   if (pathname.startsWith("/.well-known/")) return "/.well-known/*";
   return "other";
 }
+
+const PUBLIC_ROUTE_LABELS: ReadonlyMap<string, string> = new Map([
+  ["/saved-session-vault", "saved-session-authorization-page"],
+  ["/saved-session-consent", "saved-session-authorization-page"],
+  ["/api/auth", "/api/auth/*"],
+  ["/mcp", "/mcp"],
+  ["/health", "/health"],
+  ["/version", "/version"],
+  ["/metrics", "/metrics"],
+  [PUBLIC_PLUGIN_DEMO_PATH, "plugin-demo"],
+] as const);
+
+type FixedPublicRouteHandler = (
+  input: PublicHttpRequestInput,
+  pathname: string,
+) => Promise<PublicHttpRequestObservation | undefined>;
 
 async function handleFixedPublicRoute(
   input: PublicHttpRequestInput,
   pathname: string,
 ): Promise<PublicHttpRequestObservation | undefined> {
-  const publisherSite = await handlePublisherSiteRoute(input, pathname);
-  if (publisherSite !== undefined) return publisherSite;
-  const health = await handleHealthRoute(input, pathname);
-  if (health !== undefined) return health;
-  const version = await handleVersionRoute(input, pathname);
-  if (version !== undefined) return version;
-  const challenge = await handleAppsChallengeRoute(input, pathname);
-  if (challenge !== undefined) return challenge;
-  const metrics = await handleMetricsRoute(input, pathname);
-  if (metrics !== undefined) return metrics;
-  const oauth = await handleProtectedResourceRoute(input, pathname);
-  if (oauth !== undefined) return oauth;
+  const observation = await resolveFixedPublicRoute(input, pathname);
+  if (observation !== undefined) return observation;
   if (pathname === "/mcp") return undefined;
   await writePublicHttpResponse(
     input.outgoing,
     new Response("Not found", { status: 404 }),
   );
   return { status: 404, outcome: "rejected" };
+}
+
+async function resolveFixedPublicRoute(
+  input: PublicHttpRequestInput,
+  pathname: string,
+): Promise<PublicHttpRequestObservation | undefined> {
+  for (const handler of FIXED_PUBLIC_ROUTE_HANDLERS) {
+    const observation = await handler(input, pathname);
+    if (observation !== undefined) return observation;
+  }
+  return undefined;
+}
+
+const FIXED_PUBLIC_ROUTE_HANDLERS: readonly FixedPublicRouteHandler[] = [
+  handlePublisherSiteRoute,
+  handlePluginDemoRoute,
+  handleHealthRoute,
+  handleVersionRoute,
+  handleAppsChallengeRoute,
+  handleMetricsRoute,
+  handleProtectedResourceRoute,
+] as const;
+
+async function handlePluginDemoRoute(
+  input: PublicHttpRequestInput,
+  pathname: string,
+): Promise<PublicHttpRequestObservation | undefined> {
+  const response = await publicPluginDemoResponse(
+    pathname,
+    input.incoming.method,
+  );
+  if (response === undefined) return undefined;
+  await writePublicHttpResponse(input.outgoing, response);
+  return {
+    status: response.status,
+    outcome:
+      response.status < 400
+        ? "accepted"
+        : response.status === 503
+          ? "failed"
+          : "rejected",
+  };
 }
 
 async function handlePublisherSiteRoute(
@@ -277,10 +328,20 @@ async function webRequest(
   return Either.right(
     new Request(new URL(incoming.url ?? "/", `http://${hostname}`).toString(), {
       headers,
-      ...(incoming.method === undefined ? {} : { method: incoming.method }),
-      ...(body.right.byteLength === 0 ? {} : { body: body.right }),
+      ...optionalRequestMethod(incoming.method),
+      ...optionalRequestBody(body.right),
     }),
   );
+}
+
+function optionalRequestMethod(method: string | undefined): {
+  readonly method?: string;
+} {
+  return method === undefined ? {} : { method };
+}
+
+function optionalRequestBody(body: Uint8Array): { readonly body?: Uint8Array } {
+  return body.byteLength === 0 ? {} : { body };
 }
 
 function requestHeaders(incoming: IncomingMessage): Headers {

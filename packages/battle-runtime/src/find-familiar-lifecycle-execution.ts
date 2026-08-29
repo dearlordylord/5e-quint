@@ -4,7 +4,7 @@ import {
 } from "./optional-property.ts";
 import { spendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { Hp } from "@dnd/shared/types";
-import { Result } from "effect";
+import { Match, Result } from "effect";
 import type {
   BattleDroppedObjectOutcome,
   BattleAmmunitionStock,
@@ -602,17 +602,68 @@ export function findFamiliarIdentityIssue(
   casterId: CombatantId,
   familiarId: CombatantId,
 ): string | null {
+  const issue = findFamiliarIdentityIssueFacts(state, casterId, familiarId);
+  return issue === null ? null : findFamiliarIdentityIssueMessage(issue);
+}
+
+export type FindFamiliarIdentityIssue =
+  | {
+      readonly tag: "casterCollision";
+      readonly casterId: CombatantId;
+      readonly familiarId: CombatantId;
+    }
+  | {
+      readonly tag: "ownedByAnotherCaster";
+      readonly familiarId: CombatantId;
+      readonly existingOwnerId: CombatantId;
+    }
+  | {
+      readonly tag: "ordinaryCombatantCollision";
+      readonly familiarId: CombatantId;
+    };
+
+export function findFamiliarIdentityIssueFacts(
+  state: BattleState,
+  casterId: CombatantId,
+  familiarId: CombatantId,
+): FindFamiliarIdentityIssue | null {
   if (familiarId === casterId) {
-    return "Find Familiar familiar identity must be distinct from its caster.";
+    return { tag: "casterCollision", casterId, familiarId };
   }
   const existing = findPresentFamiliarById(state, familiarId);
   if (existing !== null && existing.ownerId !== casterId) {
-    return "Find Familiar familiar identity is already owned by another caster.";
+    return {
+      tag: "ownedByAnotherCaster",
+      familiarId,
+      existingOwnerId: existing.ownerId,
+    };
   }
   if (state.combatants.has(familiarId) && existing === null) {
-    return "Find Familiar familiar identity must not identify an ordinary combatant.";
+    return { tag: "ordinaryCombatantCollision", familiarId };
   }
   return null;
+}
+
+export function findFamiliarIdentityIssueMessage(
+  issue: FindFamiliarIdentityIssue,
+): string {
+  return Match.value(issue).pipe(
+    Match.when(
+      { tag: "casterCollision" },
+      () => "Find Familiar familiar identity must be distinct from its caster.",
+    ),
+    Match.when(
+      { tag: "ownedByAnotherCaster" },
+      () =>
+        "Find Familiar familiar identity is already owned by another caster.",
+    ),
+    Match.when(
+      { tag: "ordinaryCombatantCollision" },
+      () =>
+        "Find Familiar familiar identity must not identify an ordinary combatant.",
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function spendFindFamiliarMagicAction(

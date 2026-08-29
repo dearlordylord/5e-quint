@@ -1,10 +1,28 @@
 type JsonSchema = Readonly<Record<string, unknown>>;
 
 const MODEL_VISIBLE_RESULT_PATH_DEPTH = 4;
+const MODEL_OUTPUT_SCHEMA_MAX_DEPTH_VALUES = [5] as const;
 
-export function projectModelOutputJsonSchema(schema: JsonSchema): JsonSchema {
+type ModelOutputSchemaMaxDepth =
+  (typeof MODEL_OUTPUT_SCHEMA_MAX_DEPTH_VALUES)[number];
+
+export const MODEL_OUTPUT_SCHEMA_MAX_DEPTH =
+  MODEL_OUTPUT_SCHEMA_MAX_DEPTH_VALUES[0];
+
+export type ModelOutputSchemaProjectionOptions = {
+  readonly maxDepth?: ModelOutputSchemaMaxDepth;
+};
+
+export function projectModelOutputJsonSchema(
+  schema: JsonSchema,
+  options: ModelOutputSchemaProjectionOptions = {},
+): JsonSchema {
   const definitions = isJsonObject(schema.$defs) ? schema.$defs : {};
-  return projectValue(schema, definitions, MODEL_VISIBLE_RESULT_PATH_DEPTH);
+  return projectValue(
+    schema,
+    definitions,
+    options.maxDepth ?? MODEL_VISIBLE_RESULT_PATH_DEPTH,
+  );
 }
 
 function projectObject(

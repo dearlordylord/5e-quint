@@ -92,7 +92,7 @@ function fixedFactProjection(): PlayerCurrentTurnProjection {
     hitPointsRegained: false,
   } as const;
   return {
-    ...projection(1, { kind: "none" }),
+    ...projection(1, { kind: "acts", acts: [] }),
     changes: [
       ...["wolf-a", "wolf-b", "goblin-warrior-a"].map((id) => ({
         kind: "combatant" as const,

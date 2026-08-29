@@ -3,6 +3,8 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
   assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
   battleEffectExecutionRefForTest,
+  assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
+  battleActiveEffectExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE web
@@ -401,7 +403,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
       spellTargetId,
       "startsTurnInArea",
     );
-    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+    assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: snapshotBattle(targetTurn.state),
       subject: entryAct.subject,
       holes: entryAct.initialHoles,

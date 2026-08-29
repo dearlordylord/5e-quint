@@ -14,6 +14,7 @@ import { Match } from "effect";
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { battleFillKind } from "../battle-protocol-kinds.ts";
 import {
   difficultyClass,
   type Condition,
@@ -61,6 +62,7 @@ import {
   type BattleActDiscoveryCandidate,
   type BattleAbilityCheckHole,
   type BattleActiveEffect,
+  type BattleFill,
   type BattleCreatureState,
   type BattleGrappleLink,
   type BattleGrappleOutcomeHole,
@@ -313,6 +315,22 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
       ),
       Match.exhaustive,
     );
+}
+
+/**
+ * Matches a fill to a Hole's protocol kind. Hole identity and fill value
+ * validation remain owned by the procedure that consumes the pair.
+ */
+export function battleHoleAcceptsFill(
+  hole: BattleHole,
+  fill: BattleFill,
+): boolean {
+  const holeKind = battleHoleFamilyKind(hole);
+  const fillKind = battleFillKind(fill);
+  return (
+    holeKind === fillKind ||
+    (holeKind === "spellcastingAbilityCheck" && fillKind === "abilityCheck")
+  );
 }
 
 export function bonusActionDashSubjectForSpeedKind(

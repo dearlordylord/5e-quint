@@ -337,14 +337,6 @@ export function createMcpSessionStore(input: {
         characterIds,
         selectedStatBlockId,
         battleState: battleStateSnapshot(store.battleState),
-        transientBattleFills:
-          store.pendingBattleFills === null
-            ? null
-            : {
-                subject: store.pendingBattleFills.subject,
-                fills: store.pendingBattleFills.fills,
-                holes: store.pendingBattleFills.holes,
-              },
       };
     },
   } satisfies McpSessionStore;

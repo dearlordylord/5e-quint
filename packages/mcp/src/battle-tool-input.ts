@@ -33,7 +33,8 @@ import {
 const EmptyArgsSchema = Schema.Struct({});
 const CombatantIdTextSchema = Schema.Trimmed.check(Schema.isNonEmpty()).pipe(
   Schema.annotate({
-    description: "Combatant id from the current battle snapshot.",
+    description:
+      "Combatant id from the current battle checkpoint/frontier envelope.",
   }),
 );
 const SelectStatBlockArgsSchema = Schema.Struct({

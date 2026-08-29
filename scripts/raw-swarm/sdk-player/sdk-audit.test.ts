@@ -19,13 +19,38 @@ import {
 } from "./sdk-audit.ts";
 
 function fixture() {
-  const initialSession = { battle: { round: 1, hp: 10 } };
-  const outputSession = { battle: { round: 1, hp: 6 } };
+  const initialSession = {
+    battle: {
+      state: {
+        battleId: "battle:a",
+        initiative: { stillToAct: [{ creature: "a" }] },
+      },
+      round: 1,
+      hp: 10,
+    },
+  };
+  const outputSession = {
+    battle: {
+      state: {
+        battleId: "battle:a",
+        initiative: { stillToAct: [{ creature: "a" }] },
+      },
+      round: 1,
+      hp: 6,
+    },
+  };
   const result = {
     tag: "needsHoles",
     session: outputSession,
-    snapshot: { large: "omitted" },
-    holes: [{ kind: "damageRoll", label: "Damage", choices: [1, 2] }],
+    envelope: {
+      checkpoint: { battleId: "battle:a", currentActorId: "a" },
+      frontier: {
+        kind: "holes",
+        subject: { tag: "action", actorId: "a", action: "attack" },
+        continuation: { kind: "ordinaryReplay" },
+        holes: [{ kind: "damageRoll", label: "Damage", choices: [1, 2] }],
+      },
+    },
   };
   const header = {
     type: "sdk-player-header",
@@ -207,6 +232,7 @@ describe("SDK player derived audit evidence", () => {
       reason: "invalidFill",
       message: "The supplied roll mode is invalid.",
       session: call.outputSession,
+      envelope: call.result.envelope,
     };
     expect(
       sdkAuditTranscript({
@@ -301,6 +327,33 @@ describe("SDK player derived audit evidence", () => {
         }).tag,
       ).toBe("invalid");
     }
+
+    const emptyHolesResult = {
+      ...call.result,
+      envelope: {
+        ...call.result.envelope,
+        frontier: {
+          ...call.result.envelope.frontier,
+          holes: [],
+        },
+      },
+    };
+    expect(
+      sdkAuditTranscript({
+        records: [
+          header,
+          {
+            ...call,
+            result: emptyHolesResult,
+            resultSha256: sha256Canonical(emptyHolesResult),
+          },
+        ],
+        transcriptPath: "scripts/raw-swarm/out/audit/evidence/sdk-calls.jsonl",
+        transcriptByteLength: 123,
+        transcriptSha256: "3".repeat(64),
+        replaySupervisorSha256: "b".repeat(64),
+      }).tag,
+    ).toBe("invalid");
   });
 
   test("rejects an AvailableBattleAct with missing initial holes", () => {
@@ -341,6 +394,206 @@ describe("SDK player derived audit evidence", () => {
     ).toEqual({
       tag: "invalid",
       message: "SDK call seq 1 cannot be projected into typed audit facts.",
+    });
+  });
+
+  test("counts interrupt choices at the frontier and rejects decision-hole impostors", () => {
+    const { header, call } = fixture();
+    const reactionChoice = {
+      kind: "reactionRollOrDamageReduction" as const,
+      reactorId: "a",
+      initialHoles: [],
+      choice: {
+        kind: "fallDamageReduction" as const,
+        procedureRef: JSON.stringify({
+          scopeRef: JSON.stringify({
+            battleId: "battle:a",
+            combatantId: "a",
+            kind: "attackExecution",
+            ordinal: 1,
+          }),
+          kind: "procedure",
+          ordinal: 0,
+        }),
+        reduction: { kind: "flat" as const, amount: 1 },
+      },
+    };
+    const interruptFrontier = {
+      ...call.result.envelope.frontier,
+      kind: "interruptDecision" as const,
+      decisionHole: {
+        kind: "interruptDecision",
+        label: "Respond to the interruption",
+      },
+      choices: [reactionChoice, reactionChoice],
+    };
+    const interruptResult = {
+      ...call.result,
+      tag: "resolved" as const,
+      envelope: {
+        ...call.result.envelope,
+        frontier: interruptFrontier,
+      },
+    };
+    const interruptCall = {
+      ...call,
+      operation: "resolveBattleRuntimeInterrupt" as const,
+      result: interruptResult,
+      resultSha256: sha256Canonical(interruptResult),
+    };
+    const audited = sdkAuditTranscript({
+      records: [header, interruptCall],
+      transcriptPath: "scripts/raw-swarm/out/audit/evidence/sdk-calls.jsonl",
+      transcriptByteLength: 123,
+      transcriptSha256: "3".repeat(64),
+      replaySupervisorSha256: "b".repeat(64),
+    });
+    expect(audited).toMatchObject({
+      tag: "valid",
+      audit: {
+        calls: [
+          {
+            reviewFacts: {
+              kind: "resolution",
+              tag: "resolved",
+              holes: [
+                {
+                  kind: "interruptDecision",
+                  label: "Respond to the interruption",
+                  choiceCount: 2,
+                },
+              ],
+            },
+          },
+        ],
+      },
+    });
+
+    const invalidInterruptResult = {
+      ...interruptResult,
+      tag: "invalid" as const,
+      reason: "invalidFill",
+      message: "The response no longer matches the interrupt frontier.",
+    };
+    expect(
+      sdkAuditTranscript({
+        records: [
+          header,
+          {
+            ...interruptCall,
+            result: invalidInterruptResult,
+            resultSha256: sha256Canonical(invalidInterruptResult),
+          },
+        ],
+        transcriptPath: "scripts/raw-swarm/out/audit/evidence/sdk-calls.jsonl",
+        transcriptByteLength: 123,
+        transcriptSha256: "3".repeat(64),
+        replaySupervisorSha256: "b".repeat(64),
+      }).tag,
+    ).toBe("valid");
+
+    const { choices: frontierChoices, ...frontierWithoutChoices } =
+      interruptFrontier;
+    void frontierChoices;
+    const decisionHoleChoices = {
+      ...interruptResult,
+      envelope: {
+        ...interruptResult.envelope,
+        frontier: {
+          ...frontierWithoutChoices,
+          decisionHole: {
+            ...interruptFrontier.decisionHole,
+            choices: [{ kind: "decline" }],
+          },
+        },
+      },
+    };
+    expect(
+      sdkAuditTranscript({
+        records: [
+          header,
+          {
+            ...interruptCall,
+            result: decisionHoleChoices,
+            resultSha256: sha256Canonical(decisionHoleChoices),
+          },
+        ],
+        transcriptPath: "scripts/raw-swarm/out/audit/evidence/sdk-calls.jsonl",
+        transcriptByteLength: 123,
+        transcriptSha256: "3".repeat(64),
+        replaySupervisorSha256: "b".repeat(64),
+      }).tag,
+    ).toBe("invalid");
+  });
+
+  test("rejects a self-hashed cross-Battle envelope at the audit boundary", () => {
+    const { header, call } = fixture();
+    const session = {
+      battle: {
+        state: {
+          battleId: "battle:a",
+          initiative: { stillToAct: [{ creature: "a" }] },
+        },
+      },
+    };
+    const correlatedResult = {
+      ...call.result,
+      session,
+      envelope: {
+        ...call.result.envelope,
+        checkpoint: { battleId: "battle:a", currentActorId: "a" },
+      },
+    };
+    const correlatedHeader = {
+      ...header,
+      initialSession: session,
+      initialSessionSha256: sha256Canonical(session),
+    };
+    const correlatedCall = {
+      ...call,
+      inputSession: session,
+      inputSessionSha256: sha256Canonical(session),
+      outputSession: session,
+      outputSessionSha256: sha256Canonical(session),
+      result: correlatedResult,
+      resultSha256: sha256Canonical(correlatedResult),
+    };
+    expect(
+      sdkAuditTranscript({
+        records: [correlatedHeader, correlatedCall],
+        transcriptPath: "scripts/raw-swarm/out/audit/evidence/sdk-calls.jsonl",
+        transcriptByteLength: 123,
+        transcriptSha256: "3".repeat(64),
+        replaySupervisorSha256: "b".repeat(64),
+      }).tag,
+    ).toBe("valid");
+
+    const forgedResult = {
+      ...correlatedResult,
+      envelope: {
+        ...correlatedResult.envelope,
+        checkpoint: { battleId: "battle:other", currentActorId: "a" },
+      },
+    };
+    expect(
+      sdkAuditTranscript({
+        records: [
+          correlatedHeader,
+          {
+            ...correlatedCall,
+            result: forgedResult,
+            resultSha256: sha256Canonical(forgedResult),
+          },
+        ],
+        transcriptPath: "scripts/raw-swarm/out/audit/evidence/sdk-calls.jsonl",
+        transcriptByteLength: 123,
+        transcriptSha256: "3".repeat(64),
+        replaySupervisorSha256: "b".repeat(64),
+      }),
+    ).toEqual({
+      tag: "invalid",
+      message:
+        "SDK call seq 1 has a Battle envelope/session identity mismatch.",
     });
   });
 

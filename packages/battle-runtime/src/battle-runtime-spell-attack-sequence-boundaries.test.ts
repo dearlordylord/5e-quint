@@ -172,7 +172,6 @@ describe("battle runtime: spell attack sequence public boundaries", () => {
 
     expect(awaitingHeldSpell).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
   });
 
@@ -236,12 +235,6 @@ describe("battle runtime: spell attack sequence public boundaries", () => {
     });
     expect(awaiting).toMatchObject({
       tag: "needsHoles",
-      snapshot: {
-        pendingInterrupt: {
-          trigger: "spellCast",
-          decisionHole: { kind: "interruptDecision", trigger: "spellCast" },
-        },
-      },
     });
   });
 

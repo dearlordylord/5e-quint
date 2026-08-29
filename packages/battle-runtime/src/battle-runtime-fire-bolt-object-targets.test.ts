@@ -66,7 +66,6 @@ describe("battle runtime: Fire Bolt object targets", () => {
     } = scenario;
     expect(awaitingRelease).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
     });
     expect(releaseStart).toMatchObject({
       tag: "needsHoles",
@@ -93,7 +92,6 @@ describe("battle runtime: Fire Bolt object targets", () => {
       tag: "needsHoles",
       holes: [expect.objectContaining({ kind: "rolledDice" })],
       snapshot: {
-        pendingInterrupt: null,
         readiedResponses: { spells: [] },
       },
     });

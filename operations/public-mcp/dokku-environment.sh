@@ -8,7 +8,6 @@ load_dokku_environment() {
 
   deployment_environment="$1"
   dokku_host="49.13.172.86"
-  expected_dockerfile="operations/public-mcp/Dockerfile"
   case "$deployment_environment" in
     staging)
       dokku_app="dnd-oracle-staging"
@@ -27,6 +26,6 @@ load_dokku_environment() {
   dokku_remote_url="dokku@$dokku_host:$dokku_app"
   expected_storage_mount="-v /var/lib/dokku/data/storage/$dokku_app:/var/lib/dnd-oracle"
 
-  readonly deployment_environment dokku_host expected_dockerfile dokku_app
+  readonly deployment_environment dokku_host dokku_app
   readonly public_origin dokku_remote dokku_remote_url expected_storage_mount
 }

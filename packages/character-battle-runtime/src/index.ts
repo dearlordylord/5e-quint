@@ -11,14 +11,15 @@ import {
   KNOCKED_OUT_UNCONSCIOUS,
   parseSupportedUnitFeatureProfile,
   battleCreatureInitFromStatBlock,
-  startBattle,
+  battleInitializationIssueFactFields,
   type BattleCreatureInit,
   type BattleId,
   type BattleCreatureState,
   type BattleStateInitIssue,
+  type BattleStatBlockInitializationIssue,
+  type BattleInitializationIssueFacts,
   type BattleState,
   type BattleRuntimeContext,
-  type BattleRuntimeSession,
   type CharacterBattleResourceOwnership,
   type CharacterBattleResourceState,
   type CharacterBattleClassLevels,
@@ -32,6 +33,7 @@ import {
   characterSheetCurrentHp,
   characterSheetDruidWildShapeKnownForms,
   characterSheetHitPointMaximum,
+  characterSheetHitPointMaximumProjectionWithIssues,
   characterSheetPactSlots,
   characterSheetResources,
   characterSheetSpellSlotSourceState,
@@ -53,6 +55,7 @@ import {
   type CharacterSheetSpellSlotSourceState,
   type CharacterSheetSpellSlotState,
   type CharacterSheetStableRecovery,
+  type CharacterSheetHitPointMaximumProjectionIssue,
   type CharacterSheetUseCountResourceUnitId,
   type CharacterSheetZeroHpLifecycleInput,
 } from "@dnd/character-sheet-runtime";
@@ -61,6 +64,8 @@ import {
   CONDITIONS,
   resourceCount,
   type Condition,
+  type Hp,
+  type ReadonlyNonEmptyArray,
   type ResourceCount,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
@@ -71,21 +76,35 @@ import {
 import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import { Option, Result } from "effect";
+import type { CharacterBuildProjectionIssue } from "@dnd/character-creation-runtime";
+import { Result, Match, Option } from "effect";
+import { isNonEmptyReadonlyArray } from "effect/Array";
 
 import {
   CHARACTER_BATTLE_INIT_MAX_HP_EXCEEDS_BUILD_MAX_MESSAGE,
   battleCreatureInitFromCharacterBuild,
+  type CharacterBattleCreatureInitResult,
   type CharacterBuildCreatureInput,
 } from "./battle-creature-init.ts";
-import { type BattleCreatureInitIssue } from "./battle-character-build-projection.ts";
+import {
+  type BattleCreatureInitIssue,
+  battleCreatureInitIssue,
+  battleCreatureInitIssueMessage,
+  battleCreatureInitIssuesFromCharacterBuildProjection,
+  battleCreatureInitIssueLeaves,
+  characterBattleInitIssueFactFields,
+  type CharacterBattleInitIssueFact,
+  type CharacterBattleSpellAccessProjectionIssue,
+} from "./battle-character-build-projection.ts";
 import { characterBattleOriginFeatSelectedReferenceProjection } from "./origin-feat-selected-reference-projection.ts";
 import {
+  characterSheetBattleHandoffIssuesFromStateInit,
   characterSheetBattleHandoffIssue,
+  characterSheetBattleHandoffIssueFromIssue,
+  type CharacterSheetBattleHandoffValidationCheck,
   type CharacterSheetBattleHandoffIssue,
 } from "./battle-handoff-issue.ts";
 import {
-  characterBattleEncounterCompositionRoute,
   enterBattleRuntimeRoute,
   projectCharacterSheetToBattleRoute,
   recordCharacterBattleHandoffFactsRoute,
@@ -94,12 +113,25 @@ import {
 } from "./character-battle-route.ts";
 import { settleCompanionFromBattle } from "./companion-handoff.ts";
 
+function characterBattleHandoffValidationIssue(
+  check: CharacterSheetBattleHandoffValidationCheck,
+  message: string,
+): Result.Result<never, CharacterSheetBattleHandoffIssue> {
+  return characterSheetBattleHandoffIssue(
+    { handoffReason: "validation", check },
+    message,
+  );
+}
+
 export function characterBattleRuntimeIssueMessage(
   issue: BattleCreatureInitIssue | BattleStateInitIssue,
 ): string {
-  return issue.tag === "battleCreatureInitIssue"
-    ? issue.message
-    : battleStateInitIssueMessage(issue);
+  return issue.tag === "battleCreatureInitIssues"
+    ? battleCreatureInitIssueMessage(issue)
+    : issue.tag === "battleCreatureInitIssue" ||
+        issue.tag === "characterBattleSpellAccessProjectionIssue"
+      ? issue.message
+      : battleStateInitIssueMessage(issue);
 }
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
@@ -112,12 +144,18 @@ export {
   battleCreatureInitFromCharacterBuild,
   characterBattleInitiativeScore,
   characterBattleResourceInitsFromBuild,
-  startBattleFromCharacterBuildAndStatBlock,
   type CharacterBattleInitiativeProficiencyChoice,
   type CharacterBuildCreatureInput,
 } from "./battle-creature-init.ts";
 export {
   battleCreatureInitIssue,
+  characterBattleInitIssueFactFields,
+  characterBattleInitIssueReasonFromFact,
+  battleCreatureInitIssueFromLeaves,
+  battleCreatureInitIssuesFromMessages,
+  battleCreatureInitIssueLeaves,
+  battleCreatureInitIssueMessage,
+  battleCreatureInitIssues,
   characterArmorClassState,
   characterAttackActionOption,
   characterBaseUnarmedStrikeActionOption,
@@ -126,6 +164,10 @@ export {
   characterSpellcasting,
   getRequiredUnit,
   type BattleCreatureInitIssue,
+  type BattleCreatureInitIssueLeaf,
+  type BattleCreatureInitLeafIssue,
+  type CharacterBattleInitIssueFact,
+  type CharacterBattleInitIssueReason,
   type CharacterBattleSpellAccessProjectionIssue,
 } from "./battle-character-build-projection.ts";
 export {
@@ -134,10 +176,19 @@ export {
   type CharacterBattleSupportProjection,
   type BattleSupportProfileIssue,
 } from "./battle-support-profiles.ts";
-export type { CharacterSheetBattleHandoffIssue } from "./battle-handoff-issue.ts";
+export type {
+  CharacterSheetBattleHandoffFact,
+  CharacterSheetBattleHandoffIssue,
+  CharacterSheetBattleHandoffValidationCheck,
+} from "./battle-handoff-issue.ts";
 export {
   admitCharacterSheetCompanionToBattle,
+  composeBattleCompanionRoster,
   type CharacterSheetCompanionBattleAdmissionInput,
+  type BattleCompanionRosterComposition,
+  type BattleCompanionRosterIssue,
+  type BattleCompanionRosterOwner,
+  type BattleCompanionRosterRequest,
 } from "./companion-handoff.ts";
 export {
   CHARACTER_BATTLE_ENCOUNTER_COMPOSITION_ROUTE_ACTIONS,
@@ -204,25 +255,208 @@ export type CharacterSheetBattleInitInput = Omit<
 };
 
 export type CharacterBattleInitProjection = {
-  readonly init: BattleCreatureInit;
+  readonly init: BattleRosterCharacterCombatant;
   readonly routeEvents: readonly CharacterBattleRouteEvent[];
 };
 
-export type CharacterBattleInitProjectionIssue = {
-  readonly issue: BattleCreatureInitIssue;
+export type CharacterBattleInitProjectionIssue = BattleCreatureInitIssue & {
   readonly routeEvents: readonly CharacterBattleRouteEvent[];
 };
 
-export type CharacterBattleRuntimeEntry = {
-  readonly session: BattleRuntimeSession;
-  readonly initProjectionRouteEvents: readonly CharacterBattleRouteEvent[];
-  readonly encounterCompositionRouteEvents: readonly CharacterBattleRouteEvent[];
+export type BattleRosterCharacterCombatant = Omit<
+  BattleCreatureInit,
+  "creatureInit"
+> & {
+  readonly creatureInit: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >;
 };
 
-export type CharacterBattleRuntimeEntryIssue = {
-  readonly issue: BattleCreatureInitIssue | BattleStateInitIssue;
-  readonly routeEvents: readonly CharacterBattleRouteEvent[];
+export type BattleRosterStatBlockCombatant = Omit<
+  BattleCreatureInit,
+  "creatureInit"
+> & {
+  readonly creatureInit: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "statBlock" }
+  >;
 };
+
+export type BattleRosterCharacterSource =
+  | {
+      readonly kind: "available";
+      readonly input: CharacterSheetBattleInitInput;
+    }
+  | {
+      readonly kind: "missing";
+      readonly characterId: CharacterSheet["characterId"];
+      readonly combatantId: CharacterSheetBattleInitInput["combatantId"];
+    }
+  | {
+      readonly kind: "inBattle";
+      readonly characterId: CharacterSheet["characterId"];
+      readonly combatantId: CharacterSheetBattleInitInput["combatantId"];
+      readonly battleId: BattleId;
+    };
+
+export type BattleRosterStatBlockSource =
+  | {
+      readonly kind: "available";
+      readonly input: StatBlockBattleInitInput;
+    }
+  | {
+      readonly kind: "missing";
+      readonly statBlockId: StatBlockRecord["id"];
+      readonly combatantId: StatBlockBattleInitInput["combatantId"];
+    };
+
+export type BattleRosterEntry =
+  | {
+      readonly kind: "characterSheet";
+      readonly source: BattleRosterCharacterSource;
+    }
+  | {
+      readonly kind: "statBlock";
+      readonly source: BattleRosterStatBlockSource;
+    };
+
+export type BattleRosterEntries = readonly [
+  BattleRosterEntry,
+  ...BattleRosterEntry[],
+];
+
+type BattleRosterStatBlockProjectionFact = {
+  [K in BattleInitializationIssueFacts["kind"]]: Omit<
+    Extract<BattleInitializationIssueFacts, { readonly kind: K }>,
+    "kind"
+  > & { readonly reason: K };
+}[BattleInitializationIssueFacts["kind"]];
+
+type BattleRosterCharacterProjectionIssue = {
+  readonly kind: "characterSheetProjection";
+  readonly index: number;
+  readonly characterId: CharacterSheet["characterId"];
+  readonly issueTag: "battleCreatureInitIssue";
+  readonly message: string;
+} & CharacterBattleInitIssueFact;
+
+type BattleRosterStatBlockProjectionIssue = {
+  readonly kind: "statBlockProjection";
+  readonly index: number;
+  readonly combatantId: BattleCreatureInit["combatantId"];
+  readonly issueTag: "battleStateInitIssue";
+  readonly message: string;
+} & BattleRosterStatBlockProjectionFact;
+
+export type BattleRosterAdmission =
+  | {
+      readonly index: number;
+      readonly kind: "characterSheet";
+      readonly combatant: BattleRosterCharacterCombatant;
+      readonly routeEvents: readonly CharacterBattleRouteEvent[];
+    }
+  | {
+      readonly index: number;
+      readonly kind: "statBlock";
+      readonly combatant: BattleRosterStatBlockCombatant;
+      readonly routeEvents: readonly [];
+    };
+
+export type BattleRosterIssue =
+  | {
+      readonly kind: "duplicateCombatantId";
+      readonly index: number;
+      readonly combatantId: BattleCreatureInit["combatantId"];
+      readonly firstIndex: number;
+    }
+  | {
+      readonly kind: "duplicateCharacterId";
+      readonly index: number;
+      readonly characterId: CharacterSheet["characterId"];
+      readonly firstIndex: number;
+    }
+  | {
+      readonly kind: "characterSheetSourceUnavailable";
+      readonly index: number;
+      readonly characterId: CharacterSheet["characterId"];
+      readonly reason: "missing";
+    }
+  | {
+      readonly kind: "characterSheetSourceUnavailable";
+      readonly index: number;
+      readonly characterId: CharacterSheet["characterId"];
+      readonly reason: "inBattle";
+      readonly battleId: BattleId;
+    }
+  | {
+      readonly kind: "statBlockSourceUnavailable";
+      readonly index: number;
+      readonly statBlockId: StatBlockRecord["id"];
+      readonly combatantId: BattleCreatureInit["combatantId"];
+    }
+  | BattleRosterCharacterProjectionIssue
+  | {
+      readonly kind: "characterSheetProjection";
+      readonly index: number;
+      readonly characterId: CharacterSheet["characterId"];
+      readonly issueTag: "characterBattleSpellAccessProjectionIssue";
+      readonly accessIndex: number;
+      readonly featUnitId: UnitRecord["id"];
+      readonly cause:
+        | "missingSourceUnit"
+        | "unsupportedSourceUnit"
+        | "missingSpellListSource";
+      readonly message: string;
+    }
+  | {
+      readonly kind: "characterSheetProjection";
+      readonly index: number;
+      readonly characterId: CharacterSheet["characterId"];
+      readonly issueTag: "characterBattleSpellAccessProjectionIssue";
+      readonly accessIndex: number;
+      readonly featUnitId: UnitRecord["id"];
+      readonly cause: "invalidSpellSelection";
+      readonly issueIndex: number;
+      readonly message: string;
+    }
+  | {
+      readonly kind: "characterSheetProjection";
+      readonly index: number;
+      readonly characterId: CharacterSheet["characterId"];
+      readonly issueTag: "characterBattleSpellAccessProjectionIssue";
+      readonly issueIndex: number;
+      readonly cause: "invalidBuildSpellAccess";
+      readonly message: string;
+    }
+  | BattleRosterStatBlockProjectionIssue;
+
+function battleRosterIssueList(
+  issue: BattleRosterIssue,
+): ReadonlyNonEmptyArray<BattleRosterIssue> {
+  return [issue];
+}
+
+export type BattleRosterComposition =
+  | {
+      readonly tag: "admitted";
+      readonly admissions: ReadonlyNonEmptyArray<BattleRosterAdmission>;
+    }
+  | {
+      readonly tag: "rejected";
+      readonly admissions: readonly BattleRosterAdmission[];
+      readonly issues: ReadonlyNonEmptyArray<BattleRosterIssue>;
+    };
+
+function characterBattleInitProjectionFromInit(
+  init: CharacterBattleCreatureInitResult,
+  routeEvents: readonly CharacterBattleRouteEvent[],
+): Result.Result<
+  CharacterBattleInitProjection,
+  CharacterBattleInitProjectionIssue
+> {
+  return Result.succeed({ init, routeEvents });
+}
 
 type CharacterBattleCreatureState = BattleCreatureState & {
   readonly origin: Extract<
@@ -237,10 +471,19 @@ function isCharacterBattleCreatureState(
   return combatant.origin.kind === "character";
 }
 
+function characterBattleInitIssueWithoutRouteEvents(
+  issue: CharacterBattleInitProjectionIssue,
+): BattleCreatureInitIssue {
+  const { routeEvents: _routeEvents, ...routeFreeIssue } = issue;
+  return routeFreeIssue;
+}
+
 export function characterSheetBattleInit(input: CharacterSheetBattleInitInput) {
   const projection = characterSheetBattleInitWithRoute(input);
   return Result.isFailure(projection)
-    ? Result.fail(projection.failure.issue)
+    ? Result.fail(
+        characterBattleInitIssueWithoutRouteEvents(projection.failure),
+      )
     : Result.succeed(projection.success.init);
 }
 
@@ -254,19 +497,23 @@ export function characterSheetBattleInitWithRoute(
   const stableRecoveryIssue = unsupportedStableRecoveryBattleBoundary(sheet);
   if (stableRecoveryIssue !== null) {
     return Result.fail({
-      issue: {
-        tag: "battleCreatureInitIssue",
-        message: stableRecoveryIssue,
-      },
+      tag: "battleCreatureInitIssue",
+      message: stableRecoveryIssue,
+      ...characterBattleInitIssueFactFields({
+        kind: "characterBuildProjection",
+        phase: "derivedState",
+      }),
       routeEvents: rejectStableRecoveryBattleInitRoute(),
     });
   }
   if (hasMixedSpellAndPactSlotState(sheet)) {
     return Result.fail({
-      issue: {
-        tag: "battleCreatureInitIssue",
-        message: mixedSpellAndPactSlotStateMessage,
-      },
+      tag: "battleCreatureInitIssue",
+      message: mixedSpellAndPactSlotStateMessage,
+      ...characterBattleInitIssueFactFields({
+        kind: "characterBuildProjection",
+        phase: "spellcasting",
+      }),
       routeEvents: rejectMixedSpellAndPactSlotBattleInitRoute(),
     });
   }
@@ -277,7 +524,7 @@ export function characterSheetBattleInitWithRoute(
     });
   if (Result.isFailure(selectedReference)) {
     return Result.fail({
-      issue: selectedReference.failure,
+      ...selectedReference.failure,
       routeEvents: rejectCharacterBattleInitProjectionRoute(),
     });
   }
@@ -286,16 +533,14 @@ export function characterSheetBattleInitWithRoute(
       sheet,
       statBlockCatalog,
     });
-  const hitPointMaximum = characterSheetHitPointMaximum({
+  const hitPointMaximum = characterSheetHitPointMaximumProjectionWithIssues({
     sheet,
     unitLibrary,
   });
   if (Result.isFailure(hitPointMaximum)) {
+    const issue = characterBattleHitPointMaximumIssue(hitPointMaximum.failure);
     return Result.fail({
-      issue: {
-        tag: "battleCreatureInitIssue",
-        message: hitPointMaximum.failure.message,
-      },
+      ...issue,
       routeEvents: rejectBuildHitPointBattleInitRoute(),
     });
   }
@@ -304,7 +549,7 @@ export function characterSheetBattleInitWithRoute(
     unitLibrary,
     build: sheet.build,
     characterId: sheet.characterId,
-    hitPointMaximum: hitPointMaximum.success,
+    hitPointMaximum: hitPointMaximum.success.effectiveHitPointMaximum,
     currentHp: characterSheetCurrentHp(sheet),
     tempHp: characterSheetTempHp(sheet),
     ...withDefinedCharacterBattleSheetState(sheet),
@@ -312,15 +557,456 @@ export function characterSheetBattleInitWithRoute(
       ? {}
       : { druidWildShapeAvailableForms }),
   });
-  return Result.isFailure(init)
-    ? Result.fail({
-        issue: init.failure,
-        routeEvents: rejectCharacterBattleInitProjectionRoute(),
-      })
-    : Result.succeed({
-        init: init.success,
-        routeEvents: acceptedCharacterSheetBattleInitRoute({ sheet }),
+  if (Result.isFailure(init)) {
+    return Result.fail({
+      ...init.failure,
+      routeEvents: rejectCharacterBattleInitProjectionRoute(),
+    });
+  }
+  return characterBattleInitProjectionFromInit(
+    init.success,
+    acceptedCharacterSheetBattleInitRoute({ sheet }),
+  );
+}
+
+function characterBattleHitPointMaximumIssue(
+  issue: CharacterSheetHitPointMaximumProjectionIssue,
+): BattleCreatureInitIssue {
+  if (isCharacterBuildProjectionIssues(issue)) {
+    return Result.merge(
+      battleCreatureInitIssuesFromCharacterBuildProjection(issue, "hitPoints"),
+    );
+  }
+  return Result.merge(
+    battleCreatureInitIssue(issue.message, {
+      kind: "characterBuildProjection",
+      phase: "hitPoints",
+    }),
+  );
+}
+
+function isCharacterBuildProjectionIssues(
+  issue: CharacterSheetHitPointMaximumProjectionIssue,
+): issue is ReadonlyNonEmptyArray<CharacterBuildProjectionIssue> {
+  return Array.isArray(issue);
+}
+
+/**
+ * Admit an arbitrary mixed-origin initial roster in caller order.  The
+ * operation owns identity checks and source/projection admission so callers
+ * can inspect every entry before deciding whether to start a battle.
+ */
+export function composeBattleRoster(
+  entries: BattleRosterEntries,
+): BattleRosterComposition {
+  const combatantOwners = new Map<BattleCreatureInit["combatantId"], number>();
+  const characterOwners = new Map<CharacterSheet["characterId"], number>();
+  const recordIdentity = (
+    entry: BattleRosterEntry,
+    index: number,
+    issues: BattleRosterIssue[],
+  ) => {
+    const combatantId = rosterEntryCombatantId(entry);
+    const firstCombatantIndex = combatantOwners.get(combatantId);
+    const duplicateCombatant = firstCombatantIndex !== undefined;
+    if (duplicateCombatant) {
+      issues.push({
+        kind: "duplicateCombatantId",
+        index,
+        combatantId,
+        firstIndex: firstCombatantIndex,
       });
+    } else {
+      combatantOwners.set(combatantId, index);
+    }
+
+    const characterId = rosterEntryCharacterId(entry);
+    const firstCharacterIndex =
+      characterId === undefined ? undefined : characterOwners.get(characterId);
+    const duplicateCharacter = firstCharacterIndex !== undefined;
+    if (duplicateCharacter && characterId !== undefined) {
+      issues.push({
+        kind: "duplicateCharacterId",
+        index,
+        characterId,
+        firstIndex: firstCharacterIndex,
+      });
+    } else if (characterId !== undefined) {
+      characterOwners.set(characterId, index);
+    }
+    return { duplicateCombatant, duplicateCharacter };
+  };
+  const processEntry = (
+    entry: BattleRosterEntry,
+    index: number,
+    issues: BattleRosterIssue[],
+    admissions: BattleRosterAdmission[],
+  ): void => {
+    const { duplicateCombatant, duplicateCharacter } = recordIdentity(
+      entry,
+      index,
+      issues,
+    );
+
+    const projection = projectBattleRosterEntry(entry, index);
+    if (Result.isFailure(projection)) {
+      issues.push(...projection.failure);
+      return;
+    }
+    if (duplicateCombatant || duplicateCharacter) return;
+    admissions.push(projection.success);
+  };
+
+  const [firstEntry, ...restEntries] = entries;
+  const firstIdentityIssues: BattleRosterIssue[] = [];
+  recordIdentity(firstEntry, 0, firstIdentityIssues);
+  const firstProjection = projectBattleRosterEntry(firstEntry, 0);
+  if (Result.isFailure(firstProjection)) {
+    const [firstIssue, ...restIssues] = firstProjection.failure;
+    const issues: [BattleRosterIssue, ...BattleRosterIssue[]] = [
+      firstIssue,
+      ...restIssues,
+    ];
+    issues.unshift(...firstIdentityIssues);
+    const admissions: BattleRosterAdmission[] = [];
+    for (const [offset, entry] of restEntries.entries()) {
+      processEntry(entry, offset + 1, issues, admissions);
+    }
+    return { tag: "rejected", admissions, issues };
+  }
+
+  const admissions: [BattleRosterAdmission, ...BattleRosterAdmission[]] = [
+    firstProjection.success,
+  ];
+  const issues: BattleRosterIssue[] = [];
+  for (const [offset, entry] of restEntries.entries()) {
+    processEntry(entry, offset + 1, issues, admissions);
+  }
+  return isNonEmptyReadonlyArray(issues)
+    ? { tag: "rejected", admissions, issues }
+    : { tag: "admitted", admissions };
+}
+
+function rosterEntryCombatantId(
+  entry: BattleRosterEntry,
+): BattleCreatureInit["combatantId"] {
+  return Match.value(entry).pipe(
+    Match.when({ kind: "characterSheet" }, ({ source }) =>
+      characterRosterSourceCombatantId(source),
+    ),
+    Match.when({ kind: "statBlock" }, ({ source }) =>
+      statBlockRosterSourceCombatantId(source),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function characterRosterSourceCombatantId(
+  source: BattleRosterCharacterSource,
+): BattleCreatureInit["combatantId"] {
+  return Match.value(source).pipe(
+    Match.when({ kind: "available" }, ({ input }) => input.combatantId),
+    Match.when({ kind: "missing" }, ({ combatantId }) => combatantId),
+    Match.when({ kind: "inBattle" }, ({ combatantId }) => combatantId),
+    Match.exhaustive,
+  );
+}
+
+function statBlockRosterSourceCombatantId(
+  source: BattleRosterStatBlockSource,
+): BattleCreatureInit["combatantId"] {
+  return Match.value(source).pipe(
+    Match.when({ kind: "available" }, ({ input }) => input.combatantId),
+    Match.when({ kind: "missing" }, ({ combatantId }) => combatantId),
+    Match.exhaustive,
+  );
+}
+
+function rosterEntryCharacterId(
+  entry: BattleRosterEntry,
+): CharacterSheet["characterId"] | undefined {
+  return Match.value(entry).pipe(
+    Match.when({ kind: "characterSheet" }, ({ source }) =>
+      Match.value(source).pipe(
+        Match.when(
+          { kind: "available" },
+          ({ input }) => input.sheet.characterId,
+        ),
+        Match.when({ kind: "missing" }, ({ characterId }) => characterId),
+        Match.when({ kind: "inBattle" }, ({ characterId }) => characterId),
+        Match.exhaustive,
+      ),
+    ),
+    Match.when({ kind: "statBlock" }, () => undefined),
+    Match.exhaustive,
+  );
+}
+
+function battleRosterCharacterProjectionIssues(input: {
+  readonly index: number;
+  readonly characterId: CharacterSheet["characterId"];
+  readonly issue: BattleCreatureInitIssue;
+}): ReadonlyNonEmptyArray<BattleRosterIssue> {
+  const [firstIssue, ...restIssues] = battleCreatureInitIssueLeaves(
+    input.issue,
+  );
+  return [
+    Match.value(firstIssue).pipe(
+      Match.when(
+        { tag: "battleCreatureInitIssue" },
+        ({ message, ...facts }) => ({
+          kind: "characterSheetProjection" as const,
+          index: input.index,
+          characterId: input.characterId,
+          issueTag: "battleCreatureInitIssue" as const,
+          ...facts,
+          message,
+        }),
+      ),
+      Match.when(
+        { tag: "characterBattleSpellAccessProjectionIssue" },
+        (spellAccessIssue) =>
+          battleRosterCharacterSpellAccessProjectionIssue({
+            index: input.index,
+            characterId: input.characterId,
+            issue: spellAccessIssue,
+          }),
+      ),
+      Match.exhaustive,
+    ),
+    ...restIssues.map((issue) =>
+      Match.value(issue).pipe(
+        Match.when(
+          { tag: "battleCreatureInitIssue" },
+          ({ message, ...facts }) => ({
+            kind: "characterSheetProjection" as const,
+            index: input.index,
+            characterId: input.characterId,
+            issueTag: "battleCreatureInitIssue" as const,
+            ...facts,
+            message,
+          }),
+        ),
+        Match.when(
+          { tag: "characterBattleSpellAccessProjectionIssue" },
+          (spellAccessIssue) =>
+            battleRosterCharacterSpellAccessProjectionIssue({
+              index: input.index,
+              characterId: input.characterId,
+              issue: spellAccessIssue,
+            }),
+        ),
+        Match.exhaustive,
+      ),
+    ),
+  ];
+}
+
+function battleRosterCharacterSpellAccessProjectionIssue(input: {
+  readonly index: number;
+  readonly characterId: CharacterSheet["characterId"];
+  readonly issue: CharacterBattleSpellAccessProjectionIssue;
+}): Extract<BattleRosterIssue, { kind: "characterSheetProjection" }> {
+  return Match.value(input.issue).pipe(
+    Match.when(
+      { cause: "invalidBuildSpellAccess" },
+      ({ issueIndex, cause, message }) => ({
+        kind: "characterSheetProjection" as const,
+        index: input.index,
+        characterId: input.characterId,
+        issueTag: "characterBattleSpellAccessProjectionIssue" as const,
+        issueIndex,
+        cause,
+        message,
+      }),
+    ),
+    Match.when(
+      { cause: "missingSourceUnit" },
+      ({ accessIndex, featUnitId, cause, message }) => ({
+        kind: "characterSheetProjection" as const,
+        index: input.index,
+        characterId: input.characterId,
+        issueTag: "characterBattleSpellAccessProjectionIssue" as const,
+        accessIndex,
+        featUnitId,
+        cause,
+        message,
+      }),
+    ),
+    Match.when(
+      { cause: "unsupportedSourceUnit" },
+      ({ accessIndex, featUnitId, cause, message }) => ({
+        kind: "characterSheetProjection" as const,
+        index: input.index,
+        characterId: input.characterId,
+        issueTag: "characterBattleSpellAccessProjectionIssue" as const,
+        accessIndex,
+        featUnitId,
+        cause,
+        message,
+      }),
+    ),
+    Match.when(
+      { cause: "missingSpellListSource" },
+      ({ accessIndex, featUnitId, cause, message }) => ({
+        kind: "characterSheetProjection" as const,
+        index: input.index,
+        characterId: input.characterId,
+        issueTag: "characterBattleSpellAccessProjectionIssue" as const,
+        accessIndex,
+        featUnitId,
+        cause,
+        message,
+      }),
+    ),
+    Match.when(
+      { cause: "invalidSpellSelection" },
+      ({ accessIndex, featUnitId, cause, issueIndex, message }) => ({
+        kind: "characterSheetProjection" as const,
+        index: input.index,
+        characterId: input.characterId,
+        issueTag: "characterBattleSpellAccessProjectionIssue" as const,
+        accessIndex,
+        featUnitId,
+        cause,
+        issueIndex,
+        message,
+      }),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function battleRosterStatBlockProjectionIssue(input: {
+  readonly index: number;
+  readonly combatantId: BattleCreatureInit["combatantId"];
+  readonly issue: BattleStatBlockInitializationIssue;
+  readonly issueIndex: number;
+}): Extract<BattleRosterIssue, { kind: "statBlockProjection" }> {
+  const { message, ...fields } = input.issue;
+  return {
+    kind: "statBlockProjection" as const,
+    index: input.index,
+    combatantId: input.combatantId,
+    issueTag: "battleStateInitIssue" as const,
+    ...battleInitializationIssueFactFields(
+      "kind" in fields
+        ? fields
+        : {
+            kind: "runtimeAdmissionInvalid" as const,
+            combatantId: input.combatantId,
+            origin: "statBlock" as const,
+            issueIndex: input.issueIndex,
+          },
+    ),
+    message,
+  };
+}
+
+function battleRosterStatBlockProjectionIssues(input: {
+  readonly index: number;
+  readonly combatantId: BattleCreatureInit["combatantId"];
+  readonly issue: BattleStatBlockInitializationIssue;
+}): ReadonlyNonEmptyArray<BattleRosterIssue> {
+  return [
+    battleRosterStatBlockProjectionIssue({
+      index: input.index,
+      combatantId: input.combatantId,
+      issue: input.issue,
+      issueIndex: 0,
+    }),
+  ];
+}
+
+function projectBattleRosterEntry(
+  entry: BattleRosterEntry,
+  index: number,
+): Result.Result<
+  BattleRosterAdmission,
+  ReadonlyNonEmptyArray<BattleRosterIssue>
+> {
+  return Match.value(entry).pipe(
+    Match.when({ kind: "characterSheet" }, (matched) => {
+      return Match.value(matched.source).pipe(
+        Match.when({ kind: "missing" }, (source) =>
+          Result.fail(
+            battleRosterIssueList({
+              kind: "characterSheetSourceUnavailable" as const,
+              index,
+              characterId: source.characterId,
+              reason: "missing" as const,
+            }),
+          ),
+        ),
+        Match.when({ kind: "inBattle" }, (source) =>
+          Result.fail(
+            battleRosterIssueList({
+              kind: "characterSheetSourceUnavailable" as const,
+              index,
+              characterId: source.characterId,
+              reason: "inBattle" as const,
+              battleId: source.battleId,
+            }),
+          ),
+        ),
+        Match.when({ kind: "available" }, (source) => {
+          const projection = characterSheetBattleInitWithRoute(source.input);
+          if (Result.isFailure(projection)) {
+            return Result.fail(
+              battleRosterCharacterProjectionIssues({
+                index,
+                characterId: source.input.sheet.characterId,
+                issue: characterBattleInitIssueWithoutRouteEvents(
+                  projection.failure,
+                ),
+              }),
+            );
+          }
+          return Result.succeed({
+            kind: "characterSheet" as const,
+            index,
+            combatant: projection.success.init,
+            routeEvents: projection.success.routeEvents,
+          });
+        }),
+        Match.exhaustive,
+      );
+    }),
+    Match.when({ kind: "statBlock" }, (matched) => {
+      return Match.value(matched.source).pipe(
+        Match.when({ kind: "missing" }, (source) =>
+          Result.fail(
+            battleRosterIssueList({
+              kind: "statBlockSourceUnavailable" as const,
+              index,
+              statBlockId: source.statBlockId,
+              combatantId: source.combatantId,
+            }),
+          ),
+        ),
+        Match.when({ kind: "available" }, (source) => {
+          const projection = battleCreatureInitFromStatBlock(source.input);
+          if (Result.isFailure(projection)) {
+            return Result.fail(
+              battleRosterStatBlockProjectionIssues({
+                index,
+                combatantId: source.input.combatantId,
+                issue: projection.failure,
+              }),
+            );
+          }
+          return Result.succeed({
+            kind: "statBlock" as const,
+            index,
+            combatant: projection.success,
+            routeEvents: [] as const,
+          });
+        }),
+        Match.exhaustive,
+      );
+    }),
+    Match.exhaustive,
+  );
 }
 
 export function battleCreatureInitFromCharacterBuildWithRoute(
@@ -332,29 +1018,27 @@ export function battleCreatureInitFromCharacterBuildWithRoute(
   CharacterBattleInitProjectionIssue
 > {
   const init = battleCreatureInitFromCharacterBuild(input);
-  return Result.isFailure(init)
-    ? Result.fail({
-        issue: init.failure,
-        routeEvents: characterBuildInitIssueRoute(init.failure),
-      })
-    : Result.succeed({
-        init: init.success,
-        routeEvents: [
-          projectCharacterSheetToBattleRoute({
-            subject: "sheetToBattleInit",
-            owner: "characterBattleBuildProjection",
-          }),
-          recordCharacterBattleHandoffFactsRoute({
-            subject: "sheetToBattleInit",
-            facts: ["buildHitPointMaximumInput"],
-            owner: "characterBattleBuildProjection",
-          }),
-          enterBattleRuntimeRoute({
-            subject: "sheetToBattleInit",
-            owner: "characterBattleInitProjection",
-          }),
-        ],
-      });
+  if (Result.isFailure(init)) {
+    return Result.fail({
+      ...init.failure,
+      routeEvents: characterBuildInitIssueRoute(init.failure),
+    });
+  }
+  return characterBattleInitProjectionFromInit(init.success, [
+    projectCharacterSheetToBattleRoute({
+      subject: "sheetToBattleInit",
+      owner: "characterBattleBuildProjection",
+    }),
+    recordCharacterBattleHandoffFactsRoute({
+      subject: "sheetToBattleInit",
+      facts: ["buildHitPointMaximumInput"],
+      owner: "characterBattleBuildProjection",
+    }),
+    enterBattleRuntimeRoute({
+      subject: "sheetToBattleInit",
+      owner: "characterBattleInitProjection",
+    }),
+  ]);
 }
 
 function characterBuildInitIssueRoute(
@@ -364,47 +1048,6 @@ function characterBuildInitIssueRoute(
     CHARACTER_BATTLE_INIT_MAX_HP_EXCEEDS_BUILD_MAX_MESSAGE
     ? rejectBuildHitPointBattleInitRoute()
     : rejectCharacterBattleInitProjectionRoute();
-}
-
-export function startBattleFromCharacterSheetAndStatBlock(input: {
-  readonly battleId: BattleId;
-  readonly character: CharacterSheetBattleInitInput;
-  readonly statBlockBattleInput: StatBlockBattleInitInput;
-}): Result.Result<
-  CharacterBattleRuntimeEntry,
-  CharacterBattleRuntimeEntryIssue
-> {
-  const characterInit = characterSheetBattleInitWithRoute(input.character);
-  if (Result.isFailure(characterInit)) {
-    return Result.fail({
-      issue: characterInit.failure.issue,
-      routeEvents: characterInit.failure.routeEvents,
-    });
-  }
-  const statBlockInit = battleCreatureInitFromStatBlock(
-    input.statBlockBattleInput,
-  );
-  if (Result.isFailure(statBlockInit)) {
-    return Result.fail({
-      issue: statBlockInit.failure,
-      routeEvents: characterInit.success.routeEvents,
-    });
-  }
-  const session = startBattle({
-    battleId: input.battleId,
-    combatants: [characterInit.success.init, statBlockInit.success],
-  });
-  if (Result.isFailure(session)) {
-    return Result.fail({
-      issue: session.failure,
-      routeEvents: characterInit.success.routeEvents,
-    });
-  }
-  return Result.succeed({
-    session: session.success,
-    initProjectionRouteEvents: characterInit.success.routeEvents,
-    encounterCompositionRouteEvents: characterBattleEncounterCompositionRoute(),
-  });
 }
 
 function acceptedCharacterSheetBattleInitRoute(input: {
@@ -524,13 +1167,15 @@ export function settleCharacterSheetFromBattle(input: {
 }): Result.Result<CharacterSheet, CharacterSheetBattleHandoffIssue> {
   const combatant = input.combatant;
   if (!isCharacterBattleCreatureState(combatant)) {
-    return characterSheetBattleHandoffIssue(
+    return characterBattleHandoffValidationIssue(
+      "combatantNotCharacter",
       "Battle handoff combatant is not a character.",
     );
   }
   const runtimeContext = input.context.characters.get(combatant.combatantId);
   if (runtimeContext === undefined) {
-    return characterSheetBattleHandoffIssue(
+    return characterBattleHandoffValidationIssue(
+      "runtimeContextMissing",
       "Battle handoff character has no authored runtime ownership context.",
     );
   }
@@ -556,15 +1201,14 @@ export function settleCharacterSheetFromBattle(input: {
   });
 }
 
-function settleBattleCombatantIntoCharacterSheet(input: {
+function validateBattleCombatantForCharacterSheet(input: {
   readonly sheet: CharacterSheet;
   readonly combatant: CharacterBattleCreatureState;
   readonly unitLibrary: UnitCatalog;
-  readonly statBlockCatalog?: StatBlockCatalog;
-  readonly runtimeContext: CharacterBattleRuntimeContext;
-}): Result.Result<CharacterSheet, CharacterSheetBattleHandoffIssue> {
+}): Result.Result<Hp, CharacterSheetBattleHandoffIssue> {
   if (input.combatant.origin.characterId !== input.sheet.characterId) {
-    return characterSheetBattleHandoffIssue(
+    return characterBattleHandoffValidationIssue(
+      "characterIdentityMismatch",
       "Battle handoff character identity does not match Character Sheet.",
     );
   }
@@ -572,30 +1216,58 @@ function settleBattleCombatantIntoCharacterSheet(input: {
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
   });
-  if (Result.isFailure(hitPointMaximum))
-    return Result.fail(hitPointMaximum.failure);
+  if (Result.isFailure(hitPointMaximum)) {
+    return Result.fail(
+      characterSheetBattleHandoffIssueFromIssue(hitPointMaximum.failure),
+    );
+  }
   if (input.combatant.maxHp !== hitPointMaximum.success) {
-    return characterSheetBattleHandoffIssue(
+    return characterBattleHandoffValidationIssue(
+      "maximumHitPointMismatch",
       "Battle handoff maximum HP does not match Character Sheet.",
     );
   }
   if (input.combatant.hp > hitPointMaximum.success) {
-    return characterSheetBattleHandoffIssue(
+    return characterBattleHandoffValidationIssue(
+      "currentHitPointsExceedMaximum",
       "Battle handoff current HP exceeds Character Sheet maximum HP.",
     );
   }
   if (hasMixedSpellAndPactSlotState(input.sheet)) {
-    return characterSheetBattleHandoffIssue(mixedSpellAndPactSlotStateMessage);
+    return characterBattleHandoffValidationIssue(
+      "mixedSpellAndPactSlotState",
+      mixedSpellAndPactSlotStateMessage,
+    );
   }
   if (combatantHasActiveDruidWildShape(input.combatant)) {
-    return characterSheetBattleHandoffIssue(
+    return characterBattleHandoffValidationIssue(
+      "activeDruidWildShape",
       "Battle handoff while Wild Shape is active is blocked; dismiss or resolve reversion before Character Sheet handoff.",
     );
   }
   if (combatantHasActiveBattleLocalState(input.combatant)) {
-    return characterSheetBattleHandoffIssue(
+    return characterBattleHandoffValidationIssue(
+      "activeBattleLocalState",
       "Battle handoff while active battle effects or Concentration are present is blocked; end or resolve battle-local effects before Character Sheet handoff.",
     );
+  }
+  return Result.succeed(hitPointMaximum.success);
+}
+
+function settleBattleCombatantIntoCharacterSheet(input: {
+  readonly sheet: CharacterSheet;
+  readonly combatant: CharacterBattleCreatureState;
+  readonly unitLibrary: UnitCatalog;
+  readonly statBlockCatalog?: StatBlockCatalog;
+  readonly runtimeContext: CharacterBattleRuntimeContext;
+}): Result.Result<CharacterSheet, CharacterSheetBattleHandoffIssue> {
+  const validatedHitPointMaximum = validateBattleCombatantForCharacterSheet({
+    sheet: input.sheet,
+    combatant: input.combatant,
+    unitLibrary: input.unitLibrary,
+  });
+  if (Result.isFailure(validatedHitPointMaximum)) {
+    return Result.fail(validatedHitPointMaximum.failure);
   }
 
   const zeroHpLifecycle =
@@ -603,18 +1275,23 @@ function settleBattleCombatantIntoCharacterSheet(input: {
       ? characterZeroHpLifecycleFromBattle(input)
       : undefined;
   if (zeroHpLifecycle !== undefined && Result.isFailure(zeroHpLifecycle)) {
-    return Result.fail(zeroHpLifecycle.failure);
+    return Result.fail(
+      characterSheetBattleHandoffIssueFromIssue(zeroHpLifecycle.failure),
+    );
   }
   const knockedOut = combatantKnockedOutUnconscious(input.combatant);
   if (Result.isFailure(knockedOut)) {
-    return characterSheetBattleHandoffIssue(
-      battleStateInitIssueMessage(knockedOut.failure),
+    const [firstIssue] = characterSheetBattleHandoffIssuesFromStateInit(
+      knockedOut.failure,
     );
+    return Result.fail(firstIssue);
   }
   const pactSlots = characterSheetPactSlots(input.sheet);
   const resourceExpenditures = characterResourceExpendituresFromBattle(input);
   if (Result.isFailure(resourceExpenditures)) {
-    return Result.fail(resourceExpenditures.failure);
+    return Result.fail(
+      characterSheetBattleHandoffIssueFromIssue(resourceExpenditures.failure),
+    );
   }
   const bookOfShadowsPresence = bookOfShadowsPresenceFromBattle(input);
   const druidWildShapeKnownForms = characterSheetDruidWildShapeKnownForms(
@@ -622,14 +1299,18 @@ function settleBattleCombatantIntoCharacterSheet(input: {
   );
   const spellSlotState = characterSheetSpellSlotSourceStateFromBattle(input);
   if (Result.isFailure(spellSlotState)) {
-    return Result.fail(spellSlotState.failure);
+    return Result.fail(
+      characterSheetBattleHandoffIssueFromIssue(spellSlotState.failure),
+    );
   }
   const pactSlotExpenditure =
     pactSlots === undefined
       ? Result.succeed(undefined)
       : characterSheetPactSlotExpenditureFromBattle(input, pactSlots);
   if (Result.isFailure(pactSlotExpenditure)) {
-    return Result.fail(pactSlotExpenditure.failure);
+    return Result.fail(
+      characterSheetBattleHandoffIssueFromIssue(pactSlotExpenditure.failure),
+    );
   }
 
   const sheet = rebuildCharacterSheet({
@@ -667,14 +1348,21 @@ function settleBattleCombatantIntoCharacterSheet(input: {
       ? {}
       : { statBlockCatalog: input.statBlockCatalog }),
   });
-  if (Result.isFailure(sheet)) return Result.fail(sheet.failure);
-  return spellSlotState.success === undefined
-    ? Result.succeed(sheet.success)
-    : replaceCharacterSheetSpellSlotSourceState({
-        sheet: sheet.success,
-        unitLibrary: input.unitLibrary,
-        spellSlotState: spellSlotState.success,
-      });
+  if (Result.isFailure(sheet)) {
+    return Result.fail(
+      characterSheetBattleHandoffIssueFromIssue(sheet.failure),
+    );
+  }
+  if (spellSlotState.success === undefined)
+    return Result.succeed(sheet.success);
+  const replaced = replaceCharacterSheetSpellSlotSourceState({
+    sheet: sheet.success,
+    unitLibrary: input.unitLibrary,
+    spellSlotState: spellSlotState.success,
+  });
+  return Result.isFailure(replaced)
+    ? Result.fail(characterSheetBattleHandoffIssueFromIssue(replaced.failure))
+    : Result.succeed(replaced.success);
 }
 
 function characterSheetSpellSlotSourceStateFromBattle(input: {
@@ -699,7 +1387,8 @@ function characterSheetSpellSlotSourceStateFromBattle(input: {
   if (sheetSpellSlots === undefined || sheetSlotState === undefined) {
     return battleSpellcasting.spellSlots.length === 0
       ? Result.succeed(undefined)
-      : characterSheetBattleHandoffIssue(
+      : characterBattleHandoffValidationIssue(
+          "spellSlotStateMissing",
           "Battle handoff Spell Slot state requires Character Sheet Spell Slot or Pact Slot state.",
         );
   }
@@ -707,13 +1396,15 @@ function characterSheetSpellSlotSourceStateFromBattle(input: {
   const battleLevels = new Set<number>();
   for (const battleSlot of battleSpellcasting.spellSlots) {
     if (battleLevels.has(battleSlot.spellLevel)) {
-      return characterSheetBattleHandoffIssue(
+      return characterBattleHandoffValidationIssue(
+        "duplicateBattleSpellSlotLevel",
         "Battle handoff Spell Slot state must not duplicate spell levels.",
       );
     }
     battleLevels.add(battleSlot.spellLevel);
     if (battleSlot.expended > battleSlot.count) {
-      return characterSheetBattleHandoffIssue(
+      return characterBattleHandoffValidationIssue(
+        "battleSpellSlotExpenditureExceedsCount",
         "Battle handoff Spell Slot expenditure must not exceed its count.",
       );
     }
@@ -727,12 +1418,14 @@ function characterSheetSpellSlotSourceStateFromBattle(input: {
       (candidate) => candidate.spellLevel === sheetSlot.spellLevel,
     );
     if (battleSlot === undefined || battleSlot.count !== sheetSlot.count) {
-      return characterSheetBattleHandoffIssue(
+      return characterBattleHandoffValidationIssue(
+        "battleSpellSlotCapacityMismatch",
         "Battle handoff Spell Slot capacity must match Character Sheet Spell Slot capacity.",
       );
     }
     if (battleSlot.expended < sheetSlot.expended) {
-      return characterSheetBattleHandoffIssue(
+      return characterBattleHandoffValidationIssue(
+        "battleSpellSlotExpenditureRegressed",
         "Battle handoff Spell Slot expenditure cannot be lower than the pre-battle Character Sheet expenditure.",
       );
     }
@@ -758,7 +1451,8 @@ function characterSheetSpellSlotSourceStateFromBattle(input: {
         (sheetSlot) => sheetSlot.spellLevel === battleSlot.spellLevel,
       )
     ) {
-      return characterSheetBattleHandoffIssue(
+      return characterBattleHandoffValidationIssue(
+        "battleSpellSlotLevelMismatch",
         "Battle handoff Spell Slot state must match Character Sheet Spell Slot levels.",
       );
     }
@@ -795,12 +1489,17 @@ function spellSlotSourceSpendForBattleDelta(input: {
   const minimumCreatedSpend = Math.max(0, input.delta - ordinaryAvailable);
   const maximumCreatedSpend = Math.min(input.delta, createdAvailable);
   if (minimumCreatedSpend > maximumCreatedSpend) {
-    return characterSheetBattleHandoffIssue(
+    return characterBattleHandoffValidationIssue(
+      "battleSpellSlotExpenditureExceedsAvailable",
       "Battle handoff Spell Slot expenditure exceeds available Character Sheet Spell Slots.",
     );
   }
   if (minimumCreatedSpend < maximumCreatedSpend) {
     return characterSheetBattleHandoffIssue(
+      {
+        handoffReason: "spellSlotSourceAmbiguous",
+        spellLevel: input.spellLevel,
+      },
       `Battle handoff Spell Slot expenditure is source-ambiguous for level ${input.spellLevel}.`,
     );
   }
@@ -843,7 +1542,9 @@ function characterResourceExpendituresFromBattle(input: {
     input.unitLibrary,
   );
   if (Result.isFailure(sheetResources)) {
-    return characterSheetBattleHandoffIssue(sheetResources.failure.message);
+    return Result.fail(
+      characterSheetBattleHandoffIssueFromIssue(sheetResources.failure),
+    );
   }
   const origin = input.combatant.origin;
   const ownedBattleResources = characterBattleResourcesWithOwnership({
@@ -922,7 +1623,8 @@ function characterResourceExpendituresFromBattle(input: {
         (classLevel) => classLevel.className === resourceUnit.className,
       )
     ) {
-      return characterSheetBattleHandoffIssue(
+      return characterBattleHandoffValidationIssue(
+        "classFeatureResourceClassLevelMissing",
         "Class feature battle resources require a matching class level during battle handoff.",
       );
     }
@@ -946,7 +1648,8 @@ function characterResourceExpendituresFromBattle(input: {
       !characterBattleResourceIsPointPool(resource.state)
     ) {
       if (!isFixedUseCountBattleResourceState(resource.state)) {
-        return characterSheetBattleHandoffIssue(
+        return characterBattleHandoffValidationIssue(
+          "spellAccessFreeCastCapShapeInvalid",
           "Spell Access free casts must use a fixed battle resource cap during battle handoff.",
         );
       }
@@ -958,13 +1661,15 @@ function characterResourceExpendituresFromBattle(input: {
       });
       if (Result.isFailure(sheetCount)) return Result.fail(sheetCount.failure);
       if (resource.state.resource.cap.uses !== sheetCount.success) {
-        return characterSheetBattleHandoffIssue(
+        return characterBattleHandoffValidationIssue(
+          "spellAccessFreeCastCapacityMismatch",
           "Spell Access free-cast battle capacity must match Character Sheet resource capacity.",
         );
       }
       const expended = fixedUses - resource.state.usesRemaining;
       if (expended < 0) {
-        return characterSheetBattleHandoffIssue(
+        return characterBattleHandoffValidationIssue(
+          "spellAccessFreeCastRemainingUsesInvalid",
           "Spell Access free-cast remaining uses exceed the battle resource cap during battle handoff.",
         );
       }
@@ -997,7 +1702,8 @@ function characterResourceExpendituresFromBattle(input: {
         classLevels: input.combatant.origin.classLevels,
       });
       if (maxUses === undefined || resource.state.usesRemaining === undefined) {
-        return characterSheetBattleHandoffIssue(
+        return characterBattleHandoffValidationIssue(
+          "classFeatureUseCountRemainingUsesInvalid",
           "Class feature use-count resources must carry finite remaining uses during battle handoff.",
         );
       }
@@ -1007,13 +1713,15 @@ function characterResourceExpendituresFromBattle(input: {
       });
       if (Result.isFailure(sheetCount)) return Result.fail(sheetCount.failure);
       if (maxUses !== sheetCount.success) {
-        return characterSheetBattleHandoffIssue(
+        return characterBattleHandoffValidationIssue(
+          "classFeatureUseCountCapacityMismatch",
           "Class feature use-count battle capacity must match Character Sheet resource capacity.",
         );
       }
       const expended = Number(maxUses) - Number(resource.state.usesRemaining);
       if (expended < 0) {
-        return characterSheetBattleHandoffIssue(
+        return characterBattleHandoffValidationIssue(
+          "classFeatureUseCountRemainingUsesInvalid",
           "Class feature use-count remaining uses exceed the battle resource cap during battle handoff.",
         );
       }
@@ -1061,7 +1769,8 @@ function characterSheetPointPoolExpenditureFromBattle(input: {
     classLevels: input.classLevels,
   });
   if (maxPoints === undefined) {
-    return characterSheetBattleHandoffIssue(
+    return characterBattleHandoffValidationIssue(
+      "pointPoolRemainingPointsInvalid",
       "Class feature point-pool resources must carry finite remaining points during battle handoff.",
     );
   }
@@ -1071,14 +1780,16 @@ function characterSheetPointPoolExpenditureFromBattle(input: {
   });
   if (Result.isFailure(sheetCount)) return Result.fail(sheetCount.failure);
   if (maxPoints !== sheetCount.success) {
-    return characterSheetBattleHandoffIssue(
+    return characterBattleHandoffValidationIssue(
+      "pointPoolCapacityMismatch",
       "Class feature point-pool battle capacity must match Character Sheet resource capacity.",
     );
   }
   const expended =
     Number(maxPoints) - Number(input.resource.state.pointsRemaining);
   if (expended < 0) {
-    return characterSheetBattleHandoffIssue(
+    return characterBattleHandoffValidationIssue(
+      "pointPoolRemainingPointsInvalid",
       "Class feature point-pool remaining points exceed the battle resource cap during battle handoff.",
     );
   }
@@ -1108,7 +1819,8 @@ function characterSheetSpellAccessFreeCastExpenditureFromBattle(input: {
     return Result.succeed(null);
   }
   if (!isFixedUseCountBattleResourceState(input.resource.state)) {
-    return characterSheetBattleHandoffIssue(
+    return characterBattleHandoffValidationIssue(
+      "spellAccessFreeCastCapShapeInvalid",
       "Spell Access free casts must use a fixed battle resource cap during battle handoff.",
     );
   }
@@ -1120,7 +1832,8 @@ function characterSheetSpellAccessFreeCastExpenditureFromBattle(input: {
   });
   if (Result.isFailure(sheetCount)) return Result.fail(sheetCount.failure);
   if (input.resource.state.resource.cap.uses !== sheetCount.success) {
-    return characterSheetBattleHandoffIssue(
+    return characterBattleHandoffValidationIssue(
+      "spellAccessFreeCastCapacityMismatch",
       "Spell Access free-cast battle capacity must match Character Sheet resource capacity.",
     );
   }
@@ -1183,14 +1896,16 @@ function characterBattleResourcesWithOwnership(input: {
   CharacterSheetBattleHandoffIssue
 > {
   if (input.resources.length !== input.ownership.length) {
-    return characterSheetBattleHandoffIssue(
+    return characterBattleHandoffValidationIssue(
+      "resourceOwnershipLengthMismatch",
       "Battle handoff resource ownership must cover every mechanical resource exactly once.",
     );
   }
   const seenOwnershipRefs = new Set<string>();
   for (const ownership of input.ownership) {
     if (seenOwnershipRefs.has(ownership.resourcePoolRef)) {
-      return characterSheetBattleHandoffIssue(
+      return characterBattleHandoffValidationIssue(
+        "duplicateResourceOwnership",
         "Battle handoff resource ownership contains a duplicate resource pool reference.",
       );
     }
@@ -1200,7 +1915,8 @@ function characterBattleResourcesWithOwnership(input: {
   const seenStateRefs = new Set<string>();
   for (const state of input.resources) {
     if (seenStateRefs.has(state.resourcePoolRef)) {
-      return characterSheetBattleHandoffIssue(
+      return characterBattleHandoffValidationIssue(
+        "duplicateMechanicalResourcePool",
         "Battle handoff contains a duplicate mechanical resource pool reference.",
       );
     }
@@ -1209,7 +1925,8 @@ function characterBattleResourcesWithOwnership(input: {
       (candidate) => candidate.resourcePoolRef === state.resourcePoolRef,
     );
     if (ownership === undefined) {
-      return characterSheetBattleHandoffIssue(
+      return characterBattleHandoffValidationIssue(
+        "mechanicalResourceOwnershipMissing",
         "Battle handoff mechanical resource has no authored ownership context.",
       );
     }
@@ -1246,7 +1963,8 @@ function sheetPointPoolResourceCapacity(input: {
       candidate.unitId === input.unitId,
   );
   return resource === undefined
-    ? characterSheetBattleHandoffIssue(
+    ? characterBattleHandoffValidationIssue(
+        "pointPoolCapacityMissing",
         "Class feature point-pool battle resource requires matching Character Sheet resource capacity.",
       )
     : Result.succeed(resource.count);
@@ -1261,7 +1979,8 @@ function sheetUseCountResourceCapacity(input: {
       candidate.tag === "useCountResource" && candidate.unitId === input.unitId,
   );
   return resource === undefined
-    ? characterSheetBattleHandoffIssue(
+    ? characterBattleHandoffValidationIssue(
+        "useCountCapacityMissing",
         "Class feature use-count battle resource requires matching Character Sheet resource capacity.",
       )
     : Result.succeed(resource.count);
@@ -1279,7 +1998,8 @@ function sheetFreeCastResourceCapacity(input: {
       candidate.spellId === input.spellId,
   );
   return resource === undefined
-    ? characterSheetBattleHandoffIssue(
+    ? characterBattleHandoffValidationIssue(
+        "freeCastCapacityMissing",
         "Spell Access free-cast battle resource requires matching Character Sheet resource capacity.",
       )
     : Result.succeed(resource.count);
@@ -1306,7 +2026,8 @@ function druidWildShapeBattleResourceProjection(
         ?.kind === "druidWildShapeKnownForm",
   );
   if (resources.length > 1) {
-    return characterSheetBattleHandoffIssue(
+    return characterBattleHandoffValidationIssue(
+      "wildShapeResourceDuplicate",
       "Battle handoff supports exactly one Druid Wild Shape resource.",
     );
   }
@@ -1314,7 +2035,8 @@ function druidWildShapeBattleResourceProjection(
   if (resource === undefined) return Result.succeed({ tag: "absent" });
   const unitId = resource.ownership.unit.id;
   if (!isCharacterSheetUseCountResourceUnitId(unitId)) {
-    return characterSheetBattleHandoffIssue(
+    return characterBattleHandoffValidationIssue(
+      "wildShapeResourceTypeInvalid",
       "Druid Wild Shape must use a Character Sheet use-count resource during battle handoff.",
     );
   }
@@ -1349,7 +2071,8 @@ function druidWildShapeResourceExpenditureFromBattle(input: {
     return Result.succeed(undefined);
   const { resource, unitId } = input.wildShapeResource;
   if (!("usesRemaining" in resource.state)) {
-    return characterSheetBattleHandoffIssue(
+    return characterBattleHandoffValidationIssue(
+      "wildShapeRemainingUsesMissing",
       "Druid Wild Shape must carry remaining uses during battle handoff.",
     );
   }
@@ -1363,13 +2086,15 @@ function druidWildShapeResourceExpenditureFromBattle(input: {
   });
   if (Result.isFailure(sheetCount)) return Result.fail(sheetCount.failure);
   if (maxUses === undefined || maxUses !== sheetCount.success) {
-    return characterSheetBattleHandoffIssue(
+    return characterBattleHandoffValidationIssue(
+      "wildShapeCapacityMismatch",
       "Druid Wild Shape battle capacity must match Character Sheet resource capacity.",
     );
   }
   const expended = Number(maxUses) - Number(resource.state.usesRemaining);
   if (expended < 0) {
-    return characterSheetBattleHandoffIssue(
+    return characterBattleHandoffValidationIssue(
+      "wildShapeRemainingUsesInvalid",
       "Druid Wild Shape remaining uses exceed the character resource cap during battle handoff.",
     );
   }
@@ -1497,7 +2222,8 @@ function characterSheetPactSlotExpenditureFromBattle(
     return Result.succeed({ expended: pactSlots.expended });
   }
   if (battleSpellcasting.spellSlots.length !== 1) {
-    return characterSheetBattleHandoffIssue(
+    return characterBattleHandoffValidationIssue(
+      "pactSlotCapacityMismatch",
       "Battle handoff Pact Slot state must match Character Sheet Pact Slot capacity.",
     );
   }
@@ -1510,7 +2236,8 @@ function characterSheetPactSlotExpenditureFromBattle(
     battleSlot.expended < pactSlots.expended ||
     battleSlot.expended > pactSlots.count
   ) {
-    return characterSheetBattleHandoffIssue(
+    return characterBattleHandoffValidationIssue(
+      "pactSlotCapacityMismatch",
       "Battle handoff Pact Slot state must match Character Sheet Pact Slot capacity.",
     );
   }
@@ -1587,7 +2314,8 @@ function characterZeroHpLifecycleFromBattle(input: {
   CharacterSheetBattleHandoffIssue
 > {
   if (input.combatant.zeroHpLifecycle.policy !== "usesDeathSavingThrows") {
-    return characterSheetBattleHandoffIssue(
+    return characterBattleHandoffValidationIssue(
+      "zeroHpLifecycleUnsupported",
       "Battle character has unsupported zero-HP lifecycle.",
     );
   }
@@ -1600,7 +2328,10 @@ function characterZeroHpLifecycleFromBattle(input: {
       input.sheet,
     );
     if (stableRecoveryIssue !== null) {
-      return characterSheetBattleHandoffIssue(stableRecoveryIssue);
+      return characterBattleHandoffValidationIssue(
+        "stableRecoveryUnsupported",
+        stableRecoveryIssue,
+      );
     }
     return Result.succeed({
       tag: "stable",

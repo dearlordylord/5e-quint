@@ -74,6 +74,7 @@ import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts"
 import { characterUnitProcedureBindings } from "./character-execution-queries.ts";
 import {
   attackExecutionSelectionForSubjectForTest,
+  battleFrontierInterruptDecisionForState,
   characterBattleFeatureInitForTest,
   characterAttackSubjectForTest,
   endTurn,
@@ -777,7 +778,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     });
     expect(moved.tag).not.toBe("invalid");
     if (moved.tag === "resolved") {
-      expect(moved.snapshot.pendingInterrupt).toBeNull();
+      expect(battleFrontierInterruptDecisionForState(moved.state)).toBeNull();
       expect(
         moved.state.combatants.get(remarkableAthleteActorId)?.movementSpentFeet,
       ).toEqual(movementFeet(0));

@@ -226,15 +226,36 @@ export function battleCreatureStateAdmissionFromInit(
   const creatureInit = input.creatureInit;
   const ammunitionIssues = ammunitionStockIssues(creatureInit.ammunitionStocks);
   if (ammunitionIssues.length > 0) {
+    const duplicateAmmunitionKinds = creatureInit.ammunitionStocks.flatMap(
+      (stock, index, stocks) =>
+        stocks
+          .slice(0, index)
+          .some((previous) => previous.ammunition === stock.ammunition)
+          ? [stock.ammunition]
+          : [],
+    );
     const [firstIssue, ...remainingIssues] = ammunitionIssues;
+    const issueForIndex = (message: string, issueIndex: number) => {
+      const ammunition = duplicateAmmunitionKinds[issueIndex];
+      return {
+        tag: "battleStateInitIssue" as const,
+        message,
+        ...(ammunition === undefined
+          ? {}
+          : {
+              kind: "ammunitionStockInvalid" as const,
+              combatantId: input.combatantId,
+              ammunition,
+            }),
+      };
+    };
     return {
       tag: "invalid",
       issues: [
-        { tag: "battleStateInitIssue", message: firstIssue },
-        ...remainingIssues.map((message) => ({
-          tag: "battleStateInitIssue" as const,
-          message,
-        })),
+        issueForIndex(firstIssue, 0),
+        ...remainingIssues.map((message, index) =>
+          issueForIndex(message, index + 1),
+        ),
       ],
     };
   }
@@ -252,12 +273,18 @@ export function battleCreatureStateAdmissionFromInit(
         {
           tag: "battleStateInitIssue",
           message: "Battle initialization current HP exceeds max HP.",
+          kind: "currentHpExceedsMaximum",
+          combatantId: input.combatantId,
+          currentHp: creatureInit.currentHp,
+          maximumHp: maxHp,
         },
       ],
     };
   }
-  const zeroHpLifecycleResult =
-    initialZeroHpLifecycleForCreatureOrigin(creatureInit);
+  const zeroHpLifecycleResult = initialZeroHpLifecycleForCreatureOrigin(
+    creatureInit,
+    input.combatantId,
+  );
   if (Result.isFailure(zeroHpLifecycleResult)) {
     return {
       tag: "invalid",
@@ -266,7 +293,10 @@ export function battleCreatureStateAdmissionFromInit(
   }
   const zeroHpLifecycle = zeroHpLifecycleResult.success;
   const initialConditionImmunityIssue =
-    initialConditionImmunityIssueForCreatureInit(creatureInit);
+    initialConditionImmunityIssueForCreatureInit(
+      creatureInit,
+      input.combatantId,
+    );
   if (initialConditionImmunityIssue !== null) {
     return {
       tag: "invalid",
@@ -388,8 +418,10 @@ export function battleCreatureStateAdmissionFromInit(
     ].flatMap((issue) =>
       issue !== null && Result.isFailure(issue) ? [issue.failure] : [],
     );
-    const initInvariantIssues =
-      characterBattleInitInvariantIssues(creatureInit);
+    const initInvariantIssues = characterBattleInitInvariantIssues(
+      input.combatantId,
+      creatureInit,
+    );
     const initIssuesWithSupportProfile = initIssues.map((issue) => ({
       tag: "battleUnitSupportProfileIssue" as const,
       message: battleStateInitIssueMessage(issue),
@@ -554,17 +586,19 @@ export function battleCreatureStateAdmissionFromInit(
     creatureInit.ammunitionStocks,
   );
   if (isNonEmptyReadonlyArray(missingAmmunitionKinds)) {
+    const issueForAmmunition = (ammunition: string) => ({
+      tag: "battleStateInitIssue" as const,
+      message: `Stat Block battle initialization requires an explicit ${ammunition} ammunition stock.`,
+      kind: "ammunitionStockInvalid" as const,
+      combatantId: input.combatantId,
+      ammunition,
+    });
+    const [firstAmmunition, ...remainingAmmunition] = missingAmmunitionKinds;
     return {
       tag: "invalid",
       issues: [
-        {
-          tag: "battleStateInitIssue" as const,
-          message: `Stat Block battle initialization requires an explicit ${missingAmmunitionKinds[0]} ammunition stock.`,
-        },
-        ...missingAmmunitionKinds.slice(1).map((ammunition) => ({
-          tag: "battleStateInitIssue" as const,
-          message: `Stat Block battle initialization requires an explicit ${ammunition} ammunition stock.`,
-        })),
+        issueForAmmunition(firstAmmunition),
+        ...remainingAmmunition.map(issueForAmmunition),
       ],
     };
   }
@@ -596,41 +630,74 @@ export function battleCreatureStateAdmissionFromInit(
 
 function initialConditionImmunityIssueForCreatureInit(
   creatureInit: BattleCreatureInit["creatureInit"],
+  combatantId: CombatantId,
 ): BattleStateInitLeafIssue | null {
   return Match.value(creatureInit).pipe(
     Match.when({ kind: "character" }, () => null),
     Match.when({ kind: "statBlock" }, ({ source, conditions }) =>
-      statBlockInitialConditionImmunityIssue(source, conditions),
+      statBlockInitialConditionImmunityIssue(source, conditions, combatantId),
     ),
     Match.exhaustive,
   );
 }
 
-export function hidePrerequisitesReferenceCombatantsIssue(
+export type HidePrerequisiteReferenceCombatantsIssue = {
+  readonly kind: "unknownCombatant" | "selfReference";
+  readonly combatantId: CombatantId;
+  readonly referencedCombatantId?: CombatantId;
+  readonly issue: BattleStateInitLeafIssue;
+};
+
+export function hidePrerequisitesReferenceCombatantsIssues(
   hidePrerequisites: ReadonlyMap<CombatantId, BattleHidePrerequisite>,
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
-): Result.Result<never, BattleStateInitIssue> | null {
+): readonly HidePrerequisiteReferenceCombatantsIssue[] {
+  const issues: HidePrerequisiteReferenceCombatantsIssue[] = [];
   for (const [combatantId, prerequisite] of hidePrerequisites) {
     for (const referencedId of hidePrerequisiteReferencedCombatantIds(
       combatantId,
       prerequisite,
     )) {
       if (!combatants.has(referencedId)) {
-        return battleStateInitIssue(
-          "Hide prerequisite references unknown combatant.",
-        );
+        issues.push({
+          kind: "unknownCombatant",
+          combatantId,
+          referencedCombatantId: referencedId,
+          issue: {
+            tag: "battleStateInitIssue",
+            message: "Hide prerequisite references unknown combatant.",
+          },
+        });
       }
     }
     if (
       prerequisite.kind === "obscuredOnlyByCreatureOutOfEnemyLineOfSight" &&
       prerequisite.obscuringCreatureId === combatantId
     ) {
-      return battleStateInitIssue(
-        "Creature-obscurement Hide prerequisite cannot name the hiding combatant as the obscuring creature.",
-      );
+      issues.push({
+        kind: "selfReference",
+        combatantId,
+        referencedCombatantId: combatantId,
+        issue: {
+          tag: "battleStateInitIssue",
+          message:
+            "Creature-obscurement Hide prerequisite cannot name the hiding combatant as the obscuring creature.",
+        },
+      });
     }
   }
-  return null;
+  return issues;
+}
+
+export function hidePrerequisitesReferenceCombatantsIssue(
+  hidePrerequisites: ReadonlyMap<CombatantId, BattleHidePrerequisite>,
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+): Result.Result<never, BattleStateInitIssue> | null {
+  const [firstIssue] = hidePrerequisitesReferenceCombatantsIssues(
+    hidePrerequisites,
+    combatants,
+  );
+  return firstIssue === undefined ? null : Result.fail(firstIssue.issue);
 }
 
 export function hidePrerequisiteReferencedCombatantIds(
@@ -643,6 +710,7 @@ export function hidePrerequisiteReferencedCombatantIds(
 }
 
 function characterBattleInitInvariantIssues(
+  combatantId: CombatantId,
   creatureInit: CharacterBattleCreatureInit,
 ): BattleStateInitLeafIssue[] {
   const attacks = [creatureInit.attack, creatureInit.offHandAttack].flatMap(
@@ -662,12 +730,20 @@ function characterBattleInitInvariantIssues(
     ).map((ammunition) => ({
       tag: "battleStateInitIssue" as const,
       message: `Character battle initialization requires an explicit ${ammunition} ammunition stock.`,
+      kind: "ammunitionStockInvalid" as const,
+      combatantId,
+      ammunition,
     })),
-    ...duplicateCharacterBattleResourceUnitIssues(creatureInit.resources ?? []),
+    ...duplicateCharacterBattleResourceUnitIssues(
+      combatantId,
+      creatureInit.resources ?? [],
+    ),
     ...duplicateCharacterBattleFeatureUnitIssues(
+      combatantId,
       creatureInit.unitFeatures ?? [],
     ),
     ...duplicateCharacterBattleWeaponMasteryIssues(
+      combatantId,
       creatureInit.weaponMasteries,
     ),
     ...characterBattleLoadoutIssues(creatureInit),
@@ -675,15 +751,19 @@ function characterBattleInitInvariantIssues(
 }
 
 function duplicateCharacterBattleResourceUnitIssues(
+  combatantId: CombatantId,
   resources: readonly CharacterBattleResourceInit[],
 ): BattleStateInitLeafIssue[] {
   const seen = new Set<UnitRecord["id"]>();
   const issues: BattleStateInitLeafIssue[] = [];
-  for (const resource of resources) {
+  for (const [issueIndex, resource] of resources.entries()) {
     if (seen.has(resource.unit.id)) {
       issues.push({
         tag: "battleStateInitIssue",
         message: `Duplicate character battle resource unit: ${resource.unit.id}`,
+        kind: "characterResourceInvalid",
+        combatantId,
+        issueIndex,
       });
       continue;
     }
@@ -693,15 +773,19 @@ function duplicateCharacterBattleResourceUnitIssues(
 }
 
 function duplicateCharacterBattleFeatureUnitIssues(
+  combatantId: CombatantId,
   features: readonly CharacterBattleFeatureInit[],
 ): BattleStateInitLeafIssue[] {
   const seen = new Set<string>();
   const issues: BattleStateInitLeafIssue[] = [];
-  for (const feature of features) {
+  for (const [issueIndex, feature] of features.entries()) {
     if (seen.has(feature.unit.id)) {
       issues.push({
         tag: "battleStateInitIssue",
         message: `Duplicate character battle feature unit: ${feature.unit.id}`,
+        kind: "characterFeatureInvalid",
+        combatantId,
+        issueIndex,
       });
       continue;
     }
@@ -711,15 +795,19 @@ function duplicateCharacterBattleFeatureUnitIssues(
 }
 
 function duplicateCharacterBattleWeaponMasteryIssues(
+  combatantId: CombatantId,
   weaponMasteries: readonly CharacterBattleWeaponMasterySelection[],
 ): BattleStateInitLeafIssue[] {
   const seen = new Set<UnitRecord["id"]>();
   const issues: BattleStateInitLeafIssue[] = [];
-  for (const weaponMastery of weaponMasteries) {
+  for (const [issueIndex, weaponMastery] of weaponMasteries.entries()) {
     if (seen.has(weaponMastery.weaponUnitId)) {
       issues.push({
         tag: "battleStateInitIssue",
         message: `Duplicate character battle weapon mastery selection: ${weaponMastery.weaponUnitId}`,
+        kind: "characterFeatureInvalid",
+        combatantId,
+        issueIndex,
       });
       continue;
     }
@@ -832,6 +920,7 @@ export function combatantInitiativeInsertionIndex(
 
 function initialZeroHpLifecycleForCreatureOrigin(
   creatureInit: BattleCreatureInit["creatureInit"],
+  combatantId: CombatantId,
 ): Result.Result<ZeroHpLifecycle, BattleStateInitLeafIssue> {
   return Match.value(creatureInit).pipe(
     Match.when({ kind: "statBlock" }, () =>
@@ -844,16 +933,26 @@ function initialZeroHpLifecycleForCreatureOrigin(
       };
       if (Number(characterInit.currentHp) > 0) {
         if (characterInit.zeroHpLifecycle !== undefined) {
-          return battleStateInitIssue(
-            "Positive-HP character battle initialization cannot carry zero-HP lifecycle state.",
-          );
+          return Result.fail({
+            tag: "battleStateInitIssue" as const,
+            message:
+              "Positive-HP character battle initialization cannot carry zero-HP lifecycle state.",
+            kind: "zeroHpLifecycleInvalid" as const,
+            combatantId,
+            requirement: "absentAtPositiveHp" as const,
+          });
         }
         return Result.succeed(zeroHpLifecycle);
       }
       if (!validDeathSaveRuntimeState(zeroHpLifecycle.deathSaves)) {
-        return battleStateInitIssue(
-          "Character battle initialization zero-HP lifecycle is invalid.",
-        );
+        return Result.fail({
+          tag: "battleStateInitIssue" as const,
+          message:
+            "Character battle initialization zero-HP lifecycle is invalid.",
+          kind: "zeroHpLifecycleInvalid" as const,
+          combatantId,
+          requirement: "validDeathSaves" as const,
+        });
       }
       return Result.succeed(zeroHpLifecycle);
     }),
@@ -872,14 +971,24 @@ export function positiveHpUnconsciousInitIssue(
     return null;
   }
   if (Number(creatureInit.currentHp) !== 1) {
-    return battleStateInitIssue(
-      "Knocked Out Unconscious initialization requires exactly 1 current HP.",
-    );
+    return Result.fail({
+      tag: "battleStateInitIssue" as const,
+      message:
+        "Knocked Out Unconscious initialization requires exactly 1 current HP.",
+      kind: "positiveHpUnconsciousInvalid" as const,
+      combatantId: input.combatantId,
+      requirement: "oneCurrentHp" as const,
+    });
   }
   if (!(creatureInit.conditions ?? []).includes("unconscious")) {
-    return battleStateInitIssue(
-      "Knocked Out Unconscious initialization requires the Unconscious condition.",
-    );
+    return Result.fail({
+      tag: "battleStateInitIssue" as const,
+      message:
+        "Knocked Out Unconscious initialization requires the Unconscious condition.",
+      kind: "positiveHpUnconsciousInvalid" as const,
+      combatantId: input.combatantId,
+      requirement: "unconsciousCondition" as const,
+    });
   }
   return null;
 }

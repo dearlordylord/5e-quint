@@ -24,7 +24,7 @@ build:
 
 Each registry-owned Play Session root then creates one in-memory store for
 character drafts, finalized Character Builds, durable post-battle character
-state, selected Stat Block identity, durable battle state, and transient battle
+state, selected Stat Block identity, durable battle state, and accepted battle
 fills, plus its own Admin Mirror publication.
 
 The protocol host keeps those mutable facts in isolated **Play Sessions**.
@@ -93,13 +93,16 @@ already-finalized result; it never reconstructs both lifecycle owners. Active
 Battle recovery continues the same Character + Goblin Warrior workflow across
 the target, attack-roll, and damage Runtime Holes: the target fill is retained
 before replacement, competing attack-roll fills settle as one `needsHoles` and
-one typed `invalidFill`, the server-correlated damage roll resolves after
+one typed `invalidFill`, the idempotent damage sampling resolves after
 replacement, and another replacement reconstructs the damaged combatant before
 atomic closeout. A final replacement reconstructs the complete available
-Character Session roster with no active Battle. The serialized random seed and
-retained command prefix also have a bounded property test over arbitrary valid
-dice-group sequences: two independently reconstructed owners produce identical
-raw faces for every prefix without a parallel dice cursor.
+Character Session roster with no active Battle. Recoverable records retain the
+DRDice Seed, Dice Group Semantic Profile, PRNG Sequence Profile, State Schema
+Identity, and command prefix. A bounded property test over arbitrary valid Dice
+Groups proves that independently reconstructed owners produce identical faces
+for every prefix without a parallel dice cursor. Opening a format-2 database
+preserves its Effect Random rows in `retired_effect_random_play_sessions_v2`;
+they are not replayed under DRDice semantics.
 The boundary stores only a digest of a guest grant, compares presented grants
 in constant time, and never returns another user's session through list,
 resume, save, or delete. The default limits are 1,000 retained guest sessions,
@@ -108,39 +111,33 @@ stateful requests per minute per capability or principal. Limit failures are
 typed and rate failures include a retry delay. HTTP bodies over 1 MiB are
 rejected before MCP parsing.
 
-Run the provider-neutral Node HTTP entrypoint with an explicit database path:
+Run the provider-neutral Node HTTP entrypoint with explicit application and
+authorization state paths:
 
 ```sh
+DND_MCP_PUBLIC_ORIGIN=https://oracle.example.test \
 DND_PLAY_SESSION_DATABASE_PATH=/var/lib/dnd-oracle/play-sessions.sqlite \
+DND_SAVED_SESSION_AUTHORIZATION_DATABASE_PATH=/var/lib/dnd-oracle/saved-session-authorization.sqlite \
+DND_SAVED_SESSION_AUTHORIZATION_SECRET=replace-with-at-least-32-random-characters \
   pnpm --filter @dnd/mcp serve:http
 ```
 
 `DND_MCP_HOST` defaults to `0.0.0.0` and `PORT` defaults to `8787`. Stdio
 development continues to use `pnpm --filter @dnd/mcp dev`; Secure MCP Tunnel
-continues to launch that stdio entrypoint rather than the public database.
-Guest play and stateless catalog discovery need no OAuth configuration. To
-enable saved-session creation, save, list, resume, and delete, set the complete
-provider-neutral OAuth configuration; a partial configuration fails startup:
+continues to launch that stdio entrypoint rather than the public database. To
+exercise the same public composition during development, expose `serve:http`
+through an HTTPS tunnel and set `DND_MCP_PUBLIC_ORIGIN` to that tunnel origin.
 
-```sh
-DND_OAUTH_RESOURCE_URL=https://oracle.example.test/mcp \
-DND_OAUTH_AUTHORIZATION_SERVER=https://identity.example.test \
-DND_OAUTH_ISSUER=https://identity.example.test \
-DND_OAUTH_JWKS_URL=https://identity.example.test/.well-known/jwks.json \
-DND_PLAY_SESSION_DATABASE_PATH=/var/lib/dnd-oracle/play-sessions.sqlite \
-  pnpm --filter @dnd/mcp serve:http
-```
-
-The MCP resource URL is also the required access-token audience; it is one
-canonical resource identity rather than a separately configurable pair. The
-server publishes OAuth protected-resource metadata at
+Guest play and stateless catalog discovery remain anonymous. The same public
+process owns credential-free saved-session authorization under `/api/auth`;
+there is no external identity-provider configuration and no provider-specific
+hosting dependency. The public origin canonically derives the MCP resource,
+OAuth issuer, audience, and JWKS URLs. The server publishes protected-resource
+metadata at
 `/.well-known/oauth-protected-resource`. It verifies token signature, issuer,
 audience, expiry, subject, and the `play-sessions` scope on every bearer
 request. The OAuth provider and hosting provider are not application owners and
 can be replaced without changing the session model.
-When OAuth is not configured, the server advertises anonymous security only and
-omits the save/list/delete tools instead of offering capabilities that cannot
-run.
 The executable parity test starts both real transports, compares the server
 instructions and complete advertised tool contracts, compares representative
 static and stateful results, and runs the complete newcomer journey through
@@ -294,24 +291,29 @@ The battle-session tool boundary exposes these user-facing tools:
   Initiative facts through existing SDK contracts; it performs no Initiative
   arithmetic or roll-mode interpretation.
 - `read_battle_state` returns the canonical stored `BattleState` projection and
-  current battle snapshot. The Play Session projection has exactly one Battle
-  workflow state: `none`, `initialInitiativeSetup`, or `activeBattle`.
+  one presented checkpoint/frontier envelope for an active battle. The Play
+  Session projection has exactly one Battle workflow state: `none`,
+  `initialInitiativeSetup`, or `activeBattle`.
   Character occupancy remains visible through the Character Session read models
   while the SDK setup object or active Battle owns the combat facts.
-- `roll_dice` is an optional independent bounded raw-face roller. It returns
-  server-correlated results, but never derives modifiers or outcomes, inspects
-  or auto-fills Battle holes, retains history, or provides caller idempotency;
-  calculations must use canonical returned facts.
+- `roll_dice` is an optional independent bounded raw-face sampler backed by
+  `@drdice/dice`. It requires a caller UUID: identical retries return the
+  original faces without consuming state, while conflicting reuse is rejected.
+  Results declare the Dice Group, PRNG Sequence, and State Schema profiles. The
+  tool never derives modifiers or outcomes or inspects or auto-fills Battle
+  holes; calculations must use canonical returned facts. DRDice is reproducible
+  non-cryptographic sampling, not commit/reveal or wagering-grade fairness.
 - `discover_battle_acts` returns the current actor's battle acts. The battle
   runtime is the source of truth for which acts are currently available.
 - `fill_battle_hole` submits one fill at a time for a selected battle act
-  subject. MCP stores transient target, spell target allocation, attack-roll,
-  damage-result, and feature-roll fills until `@dnd/battle-runtime` resolves the
-  act, then stores the returned `BattleState` and clears the transient fills.
+  subject. MCP retains only the base session, selected subject, and accepted
+  fills until `@dnd/battle-runtime` resolves the act; each read or retry
+  reprojects the single runtime-owned envelope, then clears accepted fills on
+  commit.
 - `resolve_battle_act` resolves selected battle act subjects that need no
   holes, such as Fighter 2 Action Surge.
-- `end_turn` resolves the End Turn runtime command for the current actor, stores
-  the returned `BattleState`, and clears transient battle fills.
+- `end_turn` resolves the End Turn runtime command for the current actor,
+  stores the returned `BattleState`, and clears accepted battle fills.
 - `end_battle` computes every character-origin settlement first, then commits
   the whole Character Session roster in one atomic registry operation. On
   success it returns the complete Character Session list, the SDK-derived
@@ -399,11 +401,13 @@ Selected Stat Block state stores only the catalog Stat Block id. The full Stat
 Block record is resolved through the MCP root's installed `statBlockCatalog`,
 so MCP session state cannot drift from the SRD stat-block catalog.
 
-Transient battle fills are MCP session state. They are kept separate from
-`BattleState` so battle replay remains owned by `@dnd/battle-runtime`.
+Accepted battle fills are MCP workflow state. The base session, selected
+subject, and ordered fills are kept separate from `BattleState`; the current
+checkpoint/frontier envelope remains owned by `@dnd/battle-runtime`.
 
 MCP session state belongs here when it is tool workflow state:
-draft handles, selected content ids, durable battle ids, and transient fills.
+draft handles, selected content ids, durable battle ids, and accepted battle
+fills.
 Reducer state and rules behavior remain owned by the runtime packages.
 
 MCP tools should use their final user-facing tool names. The implementation
@@ -420,7 +424,7 @@ output codecs therefore share one generated schema in the server and one AJV
 validator in clients that honor JSON Schema `$id`; changing a schema shape
 changes its identity automatically.
 
-Character-tool session outputs omit transient battle subjects and fills. That
+Character-tool session outputs omit accepted battle subjects and fills. That
 wire projection is derived from the canonical session snapshot; it does not add
 separate session state. The model-facing schemas for capacity-rich battle
 results retain each canonical result's root branches, fields, requiredness, and
@@ -456,15 +460,14 @@ models. Those capacities must come from projections such as
 `characterSheetSpellSlots`, `characterSheetPactSlots`, and
 `characterSheetResources`; MCP must not maintain a parallel capacity table.
 
-This package also owns cross-runtime composition helpers. Character Build to
-creature-init mapping lives in `src/battle-creature-init.ts`, where finalized
-character facts and Unit lookups are projected into battle-owned
-initialization data before calling `startBattle`. This keeps character
-draft/session concepts out of `@dnd/battle-runtime` without introducing a new
-intermediate language. This is package ownership, not a domain term:
-`@dnd/mcp` may see Character Builds, authored Units, authored Stat Blocks, and
-battle creature-init APIs together because its job is wiring runtimes for
-tools.
+The character-battle-runtime package owns cross-runtime composition. MCP maps
+tool arguments and session/catalog lookups into the canonical arbitrary-roster
+operation in `@dnd/character-battle-runtime`, which projects Character Sheet
+and Stat Block origins, checks identity, and returns all independent admission
+issues before MCP asks `@dnd/battle-runtime` to initialize a session. Companion
+admissions use that package's companion-roster phase as well; MCP owns only the
+tool protocol and session commit. No MCP-private battle-creature-init helper,
+duplicate registry, or parallel admission algorithm is permitted.
 
 `start_battle` must receive caller-supplied Initiative scores for every
 combatant in `initialCombatants`. MCP must not derive Initiative as

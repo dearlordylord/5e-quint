@@ -4,10 +4,14 @@
   "dndWorkspacePackageKind": "production",
   "type": "module",
   "exports": {
-    "./experimental-admin-mirror-contract": "./src/admin-mirror-contract.ts"
+    "./experimental-admin-mirror-contract": "./src/admin-mirror-contract.ts",
+    "./test-support/cross-boundary-battle": "./test-support/cross-boundary-battle.ts"
   },
   "scripts": {
     "dev": "tsx src/index.ts",
+    "smoke:saved-session-authorization": "tsx src/saved-session-authorization/smoke.ts",
+    "smoke:saved-session-guest": "tsx src/saved-session-authorization/guest-smoke.ts",
+    "evidence:saved-session-registrations": "tsx src/saved-session-authorization/registration-evidence.ts",
     "serve:http": "tsx src/public-index.ts",
     "verify:staging": "tsx src/staging-http-smoke.ts",
     "mirror": "tsx src/admin-mirror-server.ts",
@@ -18,6 +22,11 @@
     "test:mcp-scenario-evidence": "vitest run src/mcp-scenario-evidence.test.ts src/mcp-protocol.test.ts src/mcp-level-five-sheet-scenario.test.ts src/mcp-level-six-sheet-scenario.test.ts src/mcp-level-nine-scenario.test.ts src/mcp-level-ten-scenario.test.ts"
   },
   "dependencies": {
+    "@better-auth/cimd": "1.7.1",
+    "@better-auth/core": "1.7.1",
+    "@better-auth/mcp": "1.7.1",
+    "@better-auth/oauth-provider": "1.7.1",
+    "@better-auth/utils": "0.4.2",
     "@dnd/battle-runtime": "workspace:*",
     "@dnd/character-battle-runtime": "workspace:*",
     "@dnd/character-creation-runtime": "workspace:*",
@@ -25,17 +34,20 @@
     "@dnd/shared": "workspace:*",
     "@dnd/shared-algebras": "workspace:*",
     "@dnd/surface": "workspace:*",
+    "@drdice/dice": "0.4.0",
+    "@drdice/prng": "0.4.0",
     "@effect/platform-node": "4.0.0-rc.112",
     "@modelcontextprotocol/sdk": "^1.30.0",
+    "better-auth": "1.7.1",
     "effect": "4.0.0-rc.112",
     "redis": "6.2.1",
-    "jose": "^6.2.2"
+    "jose": "^6.2.10",
+    "tsx": "^4.19.2"
   },
   "devDependencies": {
     "@types/node": "22.19.15",
     "@typescript/native": "npm:typescript@^7.0.2",
     "fast-check": "3.23.2",
-    "tsx": "^4.19.2",
     "typescript": "5.9.3",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "4.1.11"

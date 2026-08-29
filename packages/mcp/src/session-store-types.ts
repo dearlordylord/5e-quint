@@ -1,7 +1,6 @@
 import type { CharacterDraftId } from "@dnd/character-creation-runtime";
 import type {
   BattleFill,
-  BattleHole,
   BattleId,
   BattleRuntimeSession,
   BattleSubject,
@@ -17,7 +16,6 @@ import type {
   CharacterSheetZeroHpLifecycle,
   CharacterSheetZeroHpLifecycleInput,
 } from "@dnd/character-sheet-runtime";
-import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog";
 import type { Result } from "effect";
 
@@ -67,14 +65,10 @@ export type CharacterSessionRegistry = {
   keys(): IterableIterator<CharacterId>;
 };
 
-export type BattleFillSession = {
+export type PendingBattleFillSession = {
+  readonly baseSession: BattleRuntimeSession;
   readonly subject: BattleSubject;
   readonly fills: readonly BattleFill[];
-  /** The current executable frontier retained after the last needsHoles result. */
-  readonly holes: ReadonlyNonEmptyArray<BattleHole>;
-};
-export type PendingBattleFillSession = BattleFillSession & {
-  readonly baseSession: BattleRuntimeSession;
 };
 
 export type McpBattleState =
@@ -142,7 +136,6 @@ export type McpSessionSnapshot = {
   readonly characterIds: readonly CharacterId[];
   readonly selectedStatBlockId: StatBlockId | null;
   readonly battleState: McpBattleStateSnapshot;
-  readonly transientBattleFills: BattleFillSession | null;
 };
 export type McpBattleSessionSnapshot = Extract<
   McpBattleStateSnapshot,

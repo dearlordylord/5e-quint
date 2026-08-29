@@ -1,7 +1,7 @@
 // Pure leaf helpers that depend only on shared algebra and domain types.
 // RAW-COVERAGE: runtime-owner RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001
 
-import { Result } from "effect";
+import { Match, Result } from "effect";
 import type { CreatureType } from "@dnd/shared/game-facts";
 import {
   difficultyClass,
@@ -51,7 +51,32 @@ export function battleStateInitIssueMessage(
 export function battleStateInitIssueLeaves(
   issue: BattleStateInitIssue,
 ): ReadonlyNonEmptyArray<BattleStateInitLeafIssue> {
-  return issue.tag === "battleStateInitIssues" ? issue.issues : [issue];
+  return Match.value(issue).pipe(
+    Match.when({ tag: "battleStateInitIssues" }, ({ issues }) => {
+      const [firstIssue, ...restIssues] = issues;
+      return prependBattleStateInitLeaves(
+        battleStateInitIssueLeaves(firstIssue),
+        restIssues.flatMap(battleStateInitIssueLeaves),
+      );
+    }),
+    Match.when({ tag: "battleStateInitIssue" }, battleStateInitLeafList),
+    Match.when({ tag: "weaponLoadoutMismatch" }, battleStateInitLeafList),
+    Match.exhaustive,
+  );
+}
+
+function battleStateInitLeafList(
+  leaf: BattleStateInitLeafIssue,
+): ReadonlyNonEmptyArray<BattleStateInitLeafIssue> {
+  return [leaf];
+}
+
+function prependBattleStateInitLeaves(
+  first: ReadonlyNonEmptyArray<BattleStateInitLeafIssue>,
+  rest: readonly BattleStateInitLeafIssue[],
+): ReadonlyNonEmptyArray<BattleStateInitLeafIssue> {
+  const [firstLeaf, ...restLeaves] = first;
+  return [firstLeaf, ...restLeaves, ...rest];
 }
 
 export function battleStateInitIssues(

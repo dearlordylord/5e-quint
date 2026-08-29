@@ -15,11 +15,22 @@ curl --fail --silent --show-error "$origin/version" | jq -e --arg release "$expe
 for publisher_path in / /support /privacy /terms; do
   curl --fail --silent --show-error "$origin$publisher_path" >/dev/null
 done
+[[ "$(curl --fail --silent --show-error --head --write-out '%{content_type}' --output /dev/null "$origin/plugin-demo.mp4")" == "video/mp4" ]]
 if [[ -n "${DND_OPENAI_APPS_CHALLENGE:-}" ]]; then
   [[ "$(curl --fail --silent --show-error "$origin/.well-known/openai-apps-challenge")" == "$DND_OPENAI_APPS_CHALLENGE" ]]
 fi
-if [[ "$DND_MCP_PUBLICATION_MODE" == enabled ]]; then
-  curl --fail --silent --show-error "$origin/.well-known/oauth-protected-resource" | jq -e --arg resource "$origin/mcp" '.resource == $resource' >/dev/null
-fi
+curl --fail --silent --show-error "$origin/.well-known/oauth-protected-resource" |
+  jq -e --arg resource "$origin/mcp" --arg authorization_server "$origin/api/auth" \
+    '.resource == $resource and .authorization_servers == [$authorization_server]' >/dev/null
+authorization_metadata="$(curl --fail --silent --show-error "$origin/api/auth/.well-known/oauth-authorization-server")"
+jq -e --arg issuer "$origin/api/auth" \
+  '.issuer == $issuer and (.code_challenge_methods_supported | index("S256") != null)' \
+  <<<"$authorization_metadata" >/dev/null
+curl --fail --silent --show-error "$origin/api/auth/jwks" |
+  jq -e '.keys | type == "array" and length > 0' >/dev/null
 
 DND_MCP_STAGING_URL="$origin/mcp" pnpm --filter @dnd/mcp verify:staging
+if [[ "$expected_environment" == staging ]]; then
+  DND_MCP_SAVED_SESSION_URL="$origin/mcp" \
+    pnpm --filter @dnd/mcp smoke:saved-session-authorization
+fi

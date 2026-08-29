@@ -30,7 +30,8 @@ import {
   discoverBattleActs,
   initiativeScore,
   BattleHoleSchema,
-  BattleSnapshotSchema,
+  BattleCheckpointFrontierEnvelopeSchema,
+  battleCheckpointFrontierEnvelope,
   snapshotBattle,
   startBattle,
   type BattleCreatureInit,
@@ -46,7 +47,7 @@ import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 import { targetChoiceFillAfterSanctuaryAttackRollReplacement } from "./battle-reducer/sanctuary-targeting-interdiction.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
-  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
+  assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
   damageRollFillWithGroups,
   resolveBattleSubject,
   attackExecutionSelectionForSubjectForTest,
@@ -157,8 +158,13 @@ describe("Sanctuary targeting interdiction", () => {
     if (wrongOwnerProcedureRef === undefined) {
       throw new Error("Expected another combatant's bound procedure ref.");
     }
-    const encoded = Schema.encodeSync(BattleSnapshotSchema)(snapshot);
-    const sanctuaryAct = encoded.acts.find(
+    const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+      battleCheckpointFrontierEnvelope(state.state),
+    );
+    if (encoded.frontier.kind !== "acts") {
+      throw new Error("Expected an Acts frontier.");
+    }
+    const sanctuaryAct = encoded.frontier.acts.find(
       (candidate) =>
         "procedureRef" in candidate.subject &&
         candidate.subject.procedureRef === sanctuaryProcedureRef,
@@ -168,56 +174,66 @@ describe("Sanctuary targeting interdiction", () => {
     }
     const wrongTargetListOwner = {
       ...encoded,
-      acts: encoded.acts.map((candidate) =>
-        candidate !== sanctuaryAct
-          ? candidate
-          : {
-              ...candidate,
-              initialHoles: candidate.initialHoles.map((hole) =>
-                hole.kind === "spellTargetList"
-                  ? { ...hole, sourceProcedureRef: wrongOwnerProcedureRef }
-                  : hole,
-              ),
-            },
-      ),
+      frontier: {
+        ...encoded.frontier,
+        acts: encoded.frontier.acts.map((candidate) =>
+          candidate !== sanctuaryAct
+            ? candidate
+            : {
+                ...candidate,
+                initialHoles: candidate.initialHoles.map((hole) =>
+                  hole.kind === "spellTargetList"
+                    ? { ...hole, sourceProcedureRef: wrongOwnerProcedureRef }
+                    : hole,
+                ),
+              },
+        ),
+      },
     };
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)(wrongTargetListOwner),
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
+          wrongTargetListOwner,
+        ),
       ),
     ).toBe(true);
 
     const nestedWrongOwner = {
       ...encoded,
-      acts: encoded.acts.map((candidate) =>
-        candidate !== sanctuaryAct
-          ? candidate
-          : {
-              ...candidate,
-              initialHoles: candidate.initialHoles.map((hole) =>
-                hole.kind === "spellTargetList"
-                  ? {
-                      kind: "objectContactTargets" as const,
-                      holeId: hole.holeId,
-                      label: "Synthetic nested execution-ref witness",
-                      objectContact: {
-                        sourceCombatantId: casterId,
-                        sourceProcedureRef: wrongOwnerProcedureRef,
-                        objectId: "synthetic-object",
-                        rangeFeet: 30,
-                        requiresObjectWithinRange: true,
-                      },
-                      choices: [],
-                      requiresTableSpatialFact: true as const,
-                    }
-                  : hole,
-              ),
-            },
-      ),
+      frontier: {
+        ...encoded.frontier,
+        acts: encoded.frontier.acts.map((candidate) =>
+          candidate !== sanctuaryAct
+            ? candidate
+            : {
+                ...candidate,
+                initialHoles: candidate.initialHoles.map((hole) =>
+                  hole.kind === "spellTargetList"
+                    ? {
+                        kind: "objectContactTargets" as const,
+                        holeId: hole.holeId,
+                        label: "Synthetic nested execution-ref witness",
+                        objectContact: {
+                          sourceCombatantId: casterId,
+                          sourceProcedureRef: wrongOwnerProcedureRef,
+                          objectId: "synthetic-object",
+                          rangeFeet: 30,
+                          requiresObjectWithinRange: true,
+                        },
+                        choices: [],
+                        requiresTableSpatialFact: true as const,
+                      }
+                    : hole,
+                ),
+              },
+        ),
+      },
     };
     expect(
       Result.isFailure(
-        Schema.decodeUnknownResult(BattleSnapshotSchema)(nestedWrongOwner),
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
+          nestedWrongOwner,
+        ),
       ),
     ).toBe(true);
   });
@@ -249,7 +265,7 @@ describe("Sanctuary targeting interdiction", () => {
         `Expected Sanctuary interdiction hole: ${JSON.stringify(needsSanctuary)}`,
       );
     }
-    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+    assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: needsSanctuary.snapshot,
       subject: attack.subject,
       holes: needsSanctuary.holes,

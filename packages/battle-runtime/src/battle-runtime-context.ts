@@ -40,6 +40,8 @@ export type CharacterSpellPresentationSource = {
  * settlement. Reducer state and snapshots must never retain this value.
  */
 export type CharacterBattleRuntimeContext = {
+  /** Presentation-only label joined by the boundary, never copied into state. */
+  readonly displayName?: string;
   readonly resourceOwnership: readonly CharacterBattleResourceOwnership[];
   readonly spellcastingPresentationSource?: CharacterBattleSpellcastingState;
   readonly spellPresentationSources: readonly CharacterSpellPresentationSource[];

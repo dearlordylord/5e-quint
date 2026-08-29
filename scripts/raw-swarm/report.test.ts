@@ -3,21 +3,39 @@ import { createHash } from "node:crypto";
 import {
   chmodSync,
   existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { relative, resolve } from "node:path";
+import { tmpdir } from "node:os";
+import { dirname, relative, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
 import { Either, Schema } from "effect";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
-import { openArtifactIndex } from "./artifact-index.ts";
+import {
+  openArtifactIndex,
+  PortableManifestArtifactSchema,
+  PortableManifestSchema,
+  PortableRelativePathSchema,
+  type PortableManifest,
+  type PortableManifestArtifact,
+} from "./artifact-index.ts";
+import { projectGenerationFindings } from "./generation-findings.ts";
+import {
+  FindingsProjectionSchema,
+  writeFindingsProjection,
+  type FindingsProjection,
+} from "./findings.ts";
 import { controlledReviewEvidenceFixture } from "./review-invocation-evidence.test-support.ts";
 import { rawSwarmTestOutputDirectory } from "./test-output.ts";
 import {
   GitHubIssueNumberSchema,
+  auditPortableReportBundle,
   makeGitHubIssueLinker,
   SwarmFingerprintSchema,
   type GitHubCommandRunner,
@@ -26,6 +44,7 @@ import { repoRoot } from "./transcript.ts";
 
 const reportScript = resolve(repoRoot, "scripts/raw-swarm/report.ts");
 const temporaryDirectories: string[] = [];
+const temporaryExternalDirectories: string[] = [];
 
 function temporaryDirectory(): string {
   const directory = rawSwarmTestOutputDirectory("report-test-");
@@ -33,8 +52,61 @@ function temporaryDirectory(): string {
   return directory;
 }
 
+function decodePortableManifest(bytes: Uint8Array): PortableManifest {
+  const value: unknown = JSON.parse(Buffer.from(bytes).toString("utf8"));
+  const decoded = Schema.decodeUnknownEither(PortableManifestSchema, {
+    onExcessProperty: "error",
+  })(value);
+  if (Either.isLeft(decoded)) {
+    throw new Error(`Portable manifest fixture is invalid: ${decoded.left}`);
+  }
+  return decoded.right;
+}
+
+function decodePortableArtifact(row: unknown): PortableManifestArtifact {
+  const decoded = Schema.decodeUnknownEither(PortableManifestArtifactSchema, {
+    onExcessProperty: "error",
+  })(row);
+  if (Either.isLeft(decoded)) {
+    throw new Error(`Portable artifact fixture is invalid: ${decoded.left}`);
+  }
+  return decoded.right;
+}
+
+const PortableFindingsRowSchema = Schema.Struct({
+  sha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
+  path: Schema.String,
+});
+
+function decodePortableFindingsRow(row: unknown): {
+  readonly sha256: string;
+  readonly path: string;
+} {
+  const decoded = Schema.decodeUnknownEither(PortableFindingsRowSchema, {
+    onExcessProperty: "error",
+  })(row);
+  if (Either.isLeft(decoded)) {
+    throw new Error(`Portable findings row is invalid: ${decoded.left}`);
+  }
+  return decoded.right;
+}
+
+function decodeFindingsProjection(bytes: Uint8Array): FindingsProjection {
+  const value: unknown = JSON.parse(Buffer.from(bytes).toString("utf8"));
+  const decoded = Schema.decodeUnknownEither(FindingsProjectionSchema, {
+    onExcessProperty: "error",
+  })(value);
+  if (Either.isLeft(decoded)) {
+    throw new Error(`Portable findings fixture is invalid: ${decoded.left}`);
+  }
+  return decoded.right;
+}
+
 afterEach(() => {
   for (const directory of temporaryDirectories.splice(0)) {
+    rmSync(directory, { recursive: true, force: true });
+  }
+  for (const directory of temporaryExternalDirectories.splice(0)) {
     rmSync(directory, { recursive: true, force: true });
   }
 });
@@ -63,7 +135,94 @@ function query(dbPath: string, sql: string): unknown {
   }
 }
 
+function snapshotDirectory(directory: string) {
+  const entries = readdirSync(directory).sort();
+  const files = entries.map((name) => {
+    const bytes = readFileSync(resolve(directory, name));
+    return {
+      name,
+      bytes,
+      sha256: createHash("sha256").update(bytes).digest("hex"),
+    };
+  });
+  return { entries, files };
+}
+
+function expectDirectoryUnchanged(
+  directory: string,
+  before: ReturnType<typeof snapshotDirectory>,
+): void {
+  const after = snapshotDirectory(directory);
+  expect(after.entries).toEqual(before.entries);
+  expect(after.files.map(({ name }) => name)).toEqual(
+    before.files.map(({ name }) => name),
+  );
+  expect(after.files.map(({ sha256 }) => sha256)).toEqual(
+    before.files.map(({ sha256 }) => sha256),
+  );
+  expect(after.files.map(({ bytes }) => bytes)).toEqual(
+    before.files.map(({ bytes }) => bytes),
+  );
+}
+
+type ReadOnlyReportAssertion = (invoke: () => string) => void;
+
+const readOnlyReportCommands: readonly {
+  readonly args: readonly string[];
+  readonly assert: ReadOnlyReportAssertion;
+}[] = [
+  {
+    args: ["summary"],
+    assert: (invoke) => expect(invoke()).toContain("Executions: 0"),
+  },
+  {
+    args: ["issues"],
+    assert: (invoke) => expect(invoke()).toBe(""),
+  },
+  {
+    args: ["audit", "--execution-row", "1"],
+    assert: (invoke) => expect(invoke).toThrow(/no indexed findings artifact/),
+  },
+  {
+    args: ["generation-audit", "--campaign-row", "1"],
+    assert: (invoke) => expect(invoke).toThrow(/no indexed findings artifact/),
+  },
+];
+
+function expectReadOnlyReportCommandsPreserve(
+  dbPath: string,
+  directorySnapshots: readonly {
+    readonly directory: string;
+    readonly before: ReturnType<typeof snapshotDirectory>;
+  }[],
+): void {
+  const dbArgument = relative(repoRoot, dbPath);
+  for (const command of readOnlyReportCommands) {
+    command.assert(() => report([...command.args, "--db", dbArgument]));
+    for (const snapshot of directorySnapshots) {
+      expectDirectoryUnchanged(snapshot.directory, snapshot.before);
+    }
+  }
+}
+
 describe("RAW swarm artifact report index", () => {
+  test("rejects direct and nested traversal in portable artifact paths", () => {
+    for (const path of ["../escape.json", "nested/../../escape.json"]) {
+      expect(
+        Either.isLeft(
+          Schema.decodeUnknownEither(PortableRelativePathSchema)(path),
+        ),
+      ).toBe(true);
+    }
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(PortableRelativePathSchema)(
+          "nested/artifact.json",
+        ),
+      ),
+    ).toBe(true);
+  });
+
   test("rejects the unnamed review-replay flag with a value", () => {
     expect(() =>
       report([
@@ -129,6 +288,510 @@ describe("RAW swarm artifact report index", () => {
       ]),
     ).toThrow(/--review-replay-milestone requires a value/);
   }, 15_000);
+
+  test("keeps source and portable directories stable across read-only report commands", () => {
+    const directory = temporaryDirectory();
+    const sourceDirectory = resolve(directory, "source");
+    const dbPath = resolve(sourceDirectory, "source.sqlite");
+    const source = openArtifactIndex(relative(repoRoot, dbPath));
+    source.close();
+    const sourceDirectoryBefore = snapshotDirectory(sourceDirectory);
+    const destination = resolve(directory, "portable");
+    report([
+      "export",
+      "--db",
+      relative(repoRoot, dbPath),
+      "--destination",
+      relative(repoRoot, destination),
+    ]);
+
+    const portableIndexPath = resolve(destination, "index.sqlite");
+    expectDirectoryUnchanged(sourceDirectory, sourceDirectoryBefore);
+    const portableDirectoryBefore = snapshotDirectory(destination);
+    const directorySnapshots = [
+      { directory: sourceDirectory, before: sourceDirectoryBefore },
+      { directory: destination, before: portableDirectoryBefore },
+    ];
+    expectReadOnlyReportCommandsPreserve(dbPath, directorySnapshots);
+    expectReadOnlyReportCommandsPreserve(portableIndexPath, directorySnapshots);
+  }, 60_000);
+
+  test("preserves the legacy inventory obstruction for read-only report commands", () => {
+    const directory = temporaryDirectory();
+    const dbPath = resolve(directory, "legacy.sqlite");
+    const legacy = new DatabaseSync(dbPath);
+    legacy.exec(
+      "CREATE TABLE steps(id INTEGER PRIMARY KEY); INSERT INTO steps VALUES (1);",
+    );
+    legacy.close();
+    const indexBefore = readFileSync(dbPath);
+
+    expect(() =>
+      report(["summary", "--db", relative(repoRoot, dbPath)]),
+    ).toThrow(
+      /Legacy Raw Swarm database must be inventoried and rebuilt before use/,
+    );
+    expect(readFileSync(dbPath)).toEqual(indexBefore);
+  }, 30_000);
+
+  test("audits populated portable Execution and Campaign bundles after relocation", () => {
+    const directory = temporaryDirectory();
+    const externalRoot = mkdtempSync(resolve(tmpdir(), "raw-swarm-report-"));
+    temporaryExternalDirectories.push(externalRoot);
+    const evidence = controlledReviewEvidenceFixture({
+      directory: resolve(directory, "execution-evidence"),
+      ledgerEntries: [
+        {
+          schemaVersion: 4,
+          phase: "postPlayReview",
+          stagePlanReason: "The fixture stage requires post-play review.",
+          invocationId: "relocated-review",
+          model: "gpt-5.6-luna",
+          reasoningEffort: "max",
+          startedAt: "2026-08-17T00:00:00.000Z",
+          elapsedMilliseconds: 1,
+          exit: { tag: "exited", status: 0 },
+          result: { tag: "succeeded" },
+          usage: {
+            tag: "unavailable",
+            reason:
+              "The first-party event stream exposed no turn.completed usage object.",
+          },
+        },
+      ],
+    });
+    const executionDbPath = resolve(directory, "execution.sqlite");
+    report([
+      "ingest",
+      relative(repoRoot, evidence.transcriptPath),
+      "--db",
+      relative(repoRoot, executionDbPath),
+    ]);
+    report([
+      "review",
+      relative(repoRoot, evidence.reviewPath),
+      "--db",
+      relative(repoRoot, executionDbPath),
+      "--execution-row",
+      "1",
+      "--review-invocation-evidence",
+      relative(repoRoot, evidence.manifestPath),
+    ]);
+    report([
+      "findings",
+      relative(repoRoot, evidence.transcriptPath),
+      "--db",
+      relative(repoRoot, executionDbPath),
+      "--review",
+      relative(repoRoot, evidence.reviewPath),
+      "--generation-ledger",
+      relative(repoRoot, evidence.ledgerPath),
+      "--review-replay-milestone",
+      relative(repoRoot, evidence.replayPrePlayReviewInputPaths[0]!),
+      "--review-replay-final",
+      relative(repoRoot, evidence.replayPrePlayReviewInputPaths[1]!),
+    ]);
+    const sourceFindingsPath = resolve(
+      dirname(dirname(evidence.transcriptPath)),
+      "evidence/findings.json",
+    );
+    const sourceFindingsBytes = readFileSync(sourceFindingsPath);
+    expect(
+      report([
+        "audit",
+        "--execution-row",
+        "1",
+        "--db",
+        relative(repoRoot, executionDbPath),
+      ]),
+    ).toContain("fixture-execution");
+    writeFileSync(
+      sourceFindingsPath,
+      Buffer.concat([sourceFindingsBytes, Buffer.from("replacement")]),
+    );
+    expect(() =>
+      report([
+        "audit",
+        "--execution-row",
+        "1",
+        "--db",
+        relative(repoRoot, executionDbPath),
+      ]),
+    ).toThrow(/Source findings artifact does not match its indexed authority/);
+    writeFileSync(sourceFindingsPath, sourceFindingsBytes);
+    const executionPortablePath = resolve(externalRoot, "execution");
+    report([
+      "export",
+      "--db",
+      relative(repoRoot, executionDbPath),
+      "--destination",
+      relative(repoRoot, executionPortablePath),
+    ]);
+    rmSync(resolve(directory, "execution-evidence"), {
+      recursive: true,
+      force: true,
+    });
+    const relocatedExecutionIndex = resolve(
+      executionPortablePath,
+      "index.sqlite",
+    );
+    const executionIndexBefore = readFileSync(relocatedExecutionIndex);
+    const executionManifestBefore = readFileSync(
+      resolve(executionPortablePath, "manifest.json"),
+    );
+    const executionManifest = decodePortableManifest(executionManifestBefore);
+    expect(executionManifest.artifacts.length).toBeGreaterThan(0);
+    expect(
+      report([
+        "audit",
+        "--execution-row",
+        "1",
+        "--db",
+        relative(repoRoot, relocatedExecutionIndex),
+      ]),
+    ).toContain("fixture-execution");
+    expect(readFileSync(relocatedExecutionIndex)).toEqual(executionIndexBefore);
+    const executionManifestPath = resolve(
+      executionPortablePath,
+      "manifest.json",
+    );
+    expect(readFileSync(executionManifestPath)).toEqual(
+      executionManifestBefore,
+    );
+
+    const { schemaVersion: _schemaVersion, ...withoutSchemaVersion } =
+      executionManifest;
+    const invalidManifests: readonly unknown[] = [
+      withoutSchemaVersion,
+      { ...executionManifest, schemaVersion: 1 },
+      { ...executionManifest, unexpected: true },
+      {
+        ...executionManifest,
+        index: { ...executionManifest.index, unexpected: true },
+      },
+      {
+        ...executionManifest,
+        artifacts: [
+          { ...executionManifest.artifacts[0]!, unexpected: true },
+          ...executionManifest.artifacts.slice(1),
+        ],
+      },
+      {
+        ...executionManifest,
+        controlledAttachments: [
+          { ...executionManifest.artifacts[0]!, tag: "unclassified" },
+        ],
+      },
+      {
+        ...executionManifest,
+        controlledAttachments: [
+          {
+            ...executionManifest.artifacts[0]!,
+            tag: "controlledReportingTiming",
+          },
+          {
+            ...executionManifest.artifacts[0]!,
+            tag: "controlledReportingTiming",
+          },
+        ],
+      },
+    ];
+    for (const invalidManifest of invalidManifests) {
+      writeFileSync(
+        executionManifestPath,
+        `${JSON.stringify(invalidManifest, null, 2)}\n`,
+      );
+      expect(() =>
+        report([
+          "audit",
+          "--execution-row",
+          "1",
+          "--db",
+          relative(repoRoot, relocatedExecutionIndex),
+        ]),
+      ).toThrow(/Portable report manifest is invalid/);
+    }
+    writeFileSync(executionManifestPath, executionManifestBefore);
+
+    const portableForUnrelated = new DatabaseSync(relocatedExecutionIndex, {
+      readOnly: true,
+    });
+    const findingsRow = decodePortableFindingsRow(
+      portableForUnrelated
+        .prepare(
+          `SELECT artifacts.sha256, artifacts.path
+         FROM runArtifacts
+         JOIN artifacts ON artifacts.sha256 = runArtifacts.artifactSha256
+         WHERE runArtifacts.runId = 1 AND runArtifacts.role = 'findings'`,
+        )
+        .get(),
+    );
+    const findingsValue = decodeFindingsProjection(
+      readFileSync(resolve(executionPortablePath, findingsRow.path)),
+    );
+    const referencedFindingArtifacts = new Set([
+      findingsRow.sha256,
+      ...(findingsValue.authorities ?? []).flatMap((authority) =>
+        typeof authority.sha256 === "string" ? [authority.sha256] : [],
+      ),
+    ]);
+    const unrelatedArtifact = portableForUnrelated
+      .prepare("SELECT sha256, byteLength, path FROM artifacts ORDER BY sha256")
+      .all()
+      .map(decodePortableArtifact)
+      .find((artifact) => !referencedFindingArtifacts.has(artifact.sha256));
+    portableForUnrelated.close();
+    if (unrelatedArtifact === undefined) {
+      throw new Error(
+        "Portable fixture did not contain an unrelated artifact.",
+      );
+    }
+    const unrelatedArtifactPath = resolve(
+      executionPortablePath,
+      unrelatedArtifact.path,
+    );
+    const unrelatedArtifactBytes = readFileSync(unrelatedArtifactPath);
+    rmSync(unrelatedArtifactPath);
+    expect(() =>
+      report([
+        "audit",
+        "--execution-row",
+        "1",
+        "--db",
+        relative(repoRoot, relocatedExecutionIndex),
+      ]),
+    ).toThrow(/Portable report artifact is unreadable/);
+    writeFileSync(
+      unrelatedArtifactPath,
+      Buffer.concat([unrelatedArtifactBytes, Buffer.from("tampered")]),
+    );
+    expect(() =>
+      report([
+        "audit",
+        "--execution-row",
+        "1",
+        "--db",
+        relative(repoRoot, relocatedExecutionIndex),
+      ]),
+    ).toThrow(/Portable report artifact hash verification failed/);
+    writeFileSync(unrelatedArtifactPath, unrelatedArtifactBytes);
+
+    const arbitraryManifestOnlyBytes = Buffer.from(
+      "arbitrary manifest-only artifact\n",
+    );
+    const arbitraryManifestOnlyPath = resolve(
+      executionPortablePath,
+      "arbitrary-manifest-only.txt",
+    );
+    writeFileSync(arbitraryManifestOnlyPath, arbitraryManifestOnlyBytes);
+    writeFileSync(
+      executionManifestPath,
+      `${JSON.stringify(
+        {
+          ...executionManifest,
+          artifacts: [
+            ...executionManifest.artifacts,
+            {
+              path: "arbitrary-manifest-only.txt",
+              sha256: createHash("sha256")
+                .update(arbitraryManifestOnlyBytes)
+                .digest("hex"),
+              byteLength: arbitraryManifestOnlyBytes.byteLength,
+            },
+          ],
+        },
+        null,
+        2,
+      )}\n`,
+    );
+    expect(() =>
+      report([
+        "audit",
+        "--execution-row",
+        "1",
+        "--db",
+        relative(repoRoot, relocatedExecutionIndex),
+      ]),
+    ).toThrow(/Portable report artifact inventory does not match its manifest/);
+    writeFileSync(executionManifestPath, executionManifestBefore);
+    rmSync(arbitraryManifestOnlyPath);
+
+    const unreferencedBytes = Buffer.from("unreferenced portable artifact\n");
+    const unreferencedSha256 = createHash("sha256")
+      .update(unreferencedBytes)
+      .digest("hex");
+    writeFileSync(
+      resolve(executionPortablePath, "unreferenced-artifact.txt"),
+      unreferencedBytes,
+    );
+    const tamperedPortable = new DatabaseSync(relocatedExecutionIndex);
+    tamperedPortable
+      .prepare(
+        "INSERT INTO artifacts(sha256, byteLength, mediaType, path) VALUES (?, ?, ?, ?)",
+      )
+      .run(
+        unreferencedSha256,
+        unreferencedBytes.byteLength,
+        "text/plain",
+        "unreferenced-artifact.txt",
+      );
+    tamperedPortable.close();
+    const tamperedIndexBytes = readFileSync(relocatedExecutionIndex);
+    const tamperedManifest = {
+      ...executionManifest,
+      index: { ...executionManifest.index },
+    };
+    tamperedManifest.index.sha256 = createHash("sha256")
+      .update(tamperedIndexBytes)
+      .digest("hex");
+    tamperedManifest.index.byteLength = tamperedIndexBytes.byteLength;
+    writeFileSync(
+      executionManifestPath,
+      `${JSON.stringify(tamperedManifest, null, 2)}\n`,
+    );
+    expect(() =>
+      report([
+        "audit",
+        "--execution-row",
+        "1",
+        "--db",
+        relative(repoRoot, relocatedExecutionIndex),
+      ]),
+    ).toThrow(/Portable report artifact inventory does not match its manifest/);
+    writeFileSync(executionManifestPath, executionManifestBefore);
+
+    const generationRoot = resolve(directory, "generation-evidence");
+    mkdirSync(generationRoot, { recursive: true });
+    const campaignPath = resolve(generationRoot, "campaign.json");
+    writeFileSync(
+      campaignPath,
+      `${JSON.stringify({
+        type: "raw-swarm-scenario-campaign",
+        schemaVersion: 1,
+        campaignId: "relocated-campaign",
+        plannedScenarioId: "relocated-scenario",
+        evidenceSetId: "relocated-evidence",
+        gitSha: "a".repeat(40),
+        startedAt: "2026-08-18T00:00:00.000Z",
+        configSha256: "c".repeat(64),
+      })}\n`,
+    );
+    const generationFindingsPath = resolve(
+      generationRoot,
+      "generation-findings.json",
+    );
+    const generationProjection = projectGenerationFindings({
+      authorityPaths: [
+        { role: "campaign", path: relative(repoRoot, campaignPath) },
+      ],
+      generationLedgerPaths: [],
+      scenarioReviewPaths: [],
+      stagePlanPaths: [],
+      stagePlanFindingsPaths: [],
+      disposition: {
+        tag: "campaignFailure",
+        reason: "The relocated campaign fixture stopped before admission.",
+      },
+    });
+    writeFindingsProjection({
+      projection: generationProjection,
+      path: relative(repoRoot, generationFindingsPath),
+    });
+    const generationDbPath = resolve(directory, "generation.sqlite");
+    report([
+      "generation-findings",
+      relative(repoRoot, generationFindingsPath),
+      "--db",
+      relative(repoRoot, generationDbPath),
+    ]);
+    const generationPortablePath = resolve(externalRoot, "generation");
+    report([
+      "export",
+      "--db",
+      relative(repoRoot, generationDbPath),
+      "--destination",
+      relative(repoRoot, generationPortablePath),
+    ]);
+    rmSync(generationRoot, { recursive: true, force: true });
+    const relocatedGenerationIndex = resolve(
+      generationPortablePath,
+      "index.sqlite",
+    );
+    const generationIndexBefore = readFileSync(relocatedGenerationIndex);
+    const generationManifestBefore = readFileSync(
+      resolve(generationPortablePath, "manifest.json"),
+    );
+    const generationManifest = decodePortableManifest(generationManifestBefore);
+    expect(generationManifest.artifacts.length).toBeGreaterThan(0);
+    expect(
+      report([
+        "generation-audit",
+        "--campaign-row",
+        "1",
+        "--db",
+        relative(repoRoot, relocatedGenerationIndex),
+      ]),
+    ).toContain("relocated-campaign");
+    expect(readFileSync(relocatedGenerationIndex)).toEqual(
+      generationIndexBefore,
+    );
+    expect(
+      readFileSync(resolve(generationPortablePath, "manifest.json")),
+    ).toEqual(generationManifestBefore);
+  }, 60_000);
+
+  test("rejects direct and nested timing traversal in controlled reporting", () => {
+    const directory = temporaryDirectory();
+    const controlledEvidence = controlledReviewEvidenceFixture({
+      directory: resolve(directory, "controlled-evidence"),
+      ledgerEntries: [
+        {
+          schemaVersion: 4,
+          phase: "postPlayReview",
+          stagePlanReason: "The fixture stage requires post-play review.",
+          invocationId: "traversal-review",
+          model: "gpt-5.6-luna",
+          reasoningEffort: "max",
+          startedAt: "2026-08-17T00:00:00.000Z",
+          elapsedMilliseconds: 1,
+          exit: { tag: "exited", status: 0 },
+          result: { tag: "succeeded" },
+          usage: {
+            tag: "unavailable",
+            reason:
+              "The first-party event stream exposed no turn.completed usage object.",
+          },
+        },
+      ],
+    });
+
+    for (const [name, timingArgument] of [
+      ["direct", relative(repoRoot, resolve(directory, "outside-direct.json"))],
+      [
+        "nested",
+        `${relative(repoRoot, resolve(directory, "portable-nested"))}/nested/../../outside-nested.json`,
+      ],
+    ] as const) {
+      const destination = resolve(directory, `portable-${name}`);
+      const escapedTimingPath = resolve(directory, `outside-${name}.json`);
+      expect(() =>
+        report([
+          "controlled-reporting",
+          relative(repoRoot, controlledEvidence.transcriptPath),
+          relative(repoRoot, controlledEvidence.reviewPath),
+          "--db",
+          relative(repoRoot, resolve(directory, `${name}.sqlite`)),
+          "--destination",
+          relative(repoRoot, destination),
+          "--timing",
+          timingArgument,
+          "--review-invocation-evidence",
+          relative(repoRoot, controlledEvidence.manifestPath),
+        ]),
+      ).toThrow(/inside the portable export/);
+      expect(existsSync(escapedTimingPath)).toBe(false);
+    }
+  }, 60_000);
 
   test("rejects unclassified historical input and retains controlled Execution verdict facts", () => {
     const directory = temporaryDirectory();
@@ -223,18 +886,36 @@ describe("RAW swarm artifact report index", () => {
     expect(existsSync(resolve(controlledExportPath, "manifest.json"))).toBe(
       true,
     );
-    // The production export wrote a schema-owned manifest at this exact path;
-    // the test narrows only the artifacts field it asserts below.
-    const controlledManifest = JSON.parse(
-      readFileSync(resolve(controlledExportPath, "manifest.json"), "utf8"),
-    ) as { readonly artifacts: readonly { readonly sha256: string }[] };
-    expect(controlledManifest.artifacts).toEqual(
+    const controlledManifest = decodePortableManifest(
+      readFileSync(resolve(controlledExportPath, "manifest.json")),
+    );
+    const controlledTimingSha256 = createHash("sha256")
+      .update(readFileSync(controlledTimingPath))
+      .digest("hex");
+    expect(
+      query(
+        controlledDbPath,
+        `SELECT 1 FROM artifacts WHERE sha256 = '${controlledTimingSha256}'`,
+      ),
+    ).toBeUndefined();
+    expect(controlledManifest.controlledAttachments).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          sha256: createHash("sha256")
-            .update(readFileSync(controlledTimingPath))
-            .digest("hex"),
+          tag: "controlledReportingTiming",
+          sha256: controlledTimingSha256,
         }),
+      ]),
+    );
+    expect(controlledManifest.controlledAttachments).toHaveLength(1);
+    expect(controlledManifest.artifacts).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sha256: controlledTimingSha256,
+        }),
+      ]),
+    );
+    expect(controlledManifest.artifacts).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           sha256: createHash("sha256")
             .update(readFileSync(controlledEvidence.manifestPath))
@@ -284,6 +965,32 @@ describe("RAW swarm artifact report index", () => {
       "--review-replay-final",
       relative(repoRoot, controlledEvidence.replayPrePlayReviewInputPaths[1]!),
     ]);
+    const controlledPortableIndexPath = resolve(
+      controlledExportPath,
+      "index.sqlite",
+    );
+    expect(() =>
+      auditPortableReportBundle(
+        relative(repoRoot, controlledPortableIndexPath),
+      ),
+    ).not.toThrow();
+    const controlledTimingBytes = readFileSync(controlledTimingPath);
+    rmSync(controlledTimingPath);
+    expect(() =>
+      auditPortableReportBundle(
+        relative(repoRoot, controlledPortableIndexPath),
+      ),
+    ).toThrow(/Portable report artifact is unreadable/);
+    writeFileSync(
+      controlledTimingPath,
+      Buffer.concat([controlledTimingBytes, Buffer.from("tampered")]),
+    );
+    expect(() =>
+      auditPortableReportBundle(
+        relative(repoRoot, controlledPortableIndexPath),
+      ),
+    ).toThrow(/Portable report artifact hash verification failed/);
+    writeFileSync(controlledTimingPath, controlledTimingBytes);
     expect(
       report([
         "audit",
@@ -293,7 +1000,7 @@ describe("RAW swarm artifact report index", () => {
         relative(repoRoot, controlledDbPath),
       ]),
     ).toContain("fixture-execution");
-  }, 30_000);
+  }, 60_000);
 
   test("establishes and verifies the GitHub backlink and label idempotently", () => {
     let body = "Existing issue body";

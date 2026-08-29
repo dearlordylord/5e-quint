@@ -24,10 +24,26 @@ const SUPPORTED_VITEST_TEST_FILE_SUFFIXES = Object.freeze(
   ),
 );
 
+const DETERMINISTIC_WORKFLOW_PATH_FILTERS = Object.freeze([
+  ".github/workflows/raw-swarm-deterministic.yml",
+  "mise.toml",
+  "package.json",
+  "pnpm-lock.yaml",
+  "pnpm-workspace.yaml",
+  "packages/**",
+  "scripts/raw-swarm/**",
+  "scripts/assert-resource-lock.sh",
+  "scripts/process-supervision.sh",
+  "scripts/resource-lock-owner.sh",
+  "scripts/with-broad-workspace-lock.sh",
+  "scripts/with-resource-lock.sh",
+  "vitest.config.ts",
+]);
+
 // Consumer distribution is compiled from these repository-owned child
 // entrypoints at runtime. The builder and deterministic capability scanner
 // share this named inventory so an esbuild entry cannot become an invisible
-// quality-path dependency.
+// deterministic-lane dependency.
 const CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS = Object.freeze({
   supervisor: "scripts/raw-swarm/sdk-player/supervisor-cli.ts",
   playerClient: "scripts/raw-swarm/sdk-player/player-client.ts",
@@ -45,7 +61,7 @@ function isSupportedVitestTestFilename(path) {
   );
 }
 
-const QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS = [
+const DETERMINISTIC_RAW_SWARM_TESTS = [
   "scripts/raw-swarm/artifact-index.test.ts",
   "scripts/raw-swarm/capability-projection.test.ts",
   "scripts/raw-swarm/complete-path-comparison.test.ts",
@@ -99,16 +115,16 @@ const DETERMINISTIC_TRUSTED_BOUNDARY_TESTS = Object.freeze(
   ].sort(),
 );
 const GUARDED_DETERMINISTIC_RAW_SWARM_TESTS = Object.freeze(
-  QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS.filter(
+  DETERMINISTIC_RAW_SWARM_TESTS.filter(
     (testPath) => !DETERMINISTIC_TRUSTED_BOUNDARY_TESTS.includes(testPath),
   ),
 );
 
-const RAW_SWARM_TESTS_OUTSIDE_QUALITY = Object.freeze({
+const RAW_SWARM_TESTS_OUTSIDE_DETERMINISTIC_LANE = Object.freeze({
   "scripts/raw-swarm/battle-slice-tools.test.ts":
-    "Pre-existing MCP tool-surface prototype contract; not part of the established Raw Swarm quality command.",
+    "Pre-existing MCP tool-surface prototype contract; not part of the established Raw Swarm deterministic lane.",
   "scripts/raw-swarm/transcript.property.test.ts":
-    "Pre-existing MCP transcript prototype property suite; not part of the established Raw Swarm quality command.",
+    "Pre-existing MCP transcript prototype property suite; not part of the established Raw Swarm deterministic lane.",
 });
 
 const MODEL_BACKED_OPERATIONS = Object.freeze({
@@ -174,10 +190,11 @@ const MODEL_BACKED_ENTRYPOINTS = Object.freeze(
 );
 
 // These implementation files are intentionally model-backed even when a
-// deterministic test exercises their process-lifecycle or evidence boundary.
+// deterministic-lane test exercises their process-lifecycle or evidence
+// boundary.
 // The hygiene checker inventories them explicitly instead of treating an
 // imported model command as deterministic merely because its caller is a
-// quality-owned test.
+// deterministic-lane test.
 const MODEL_BACKED_SOURCE_FILES = Object.freeze(
   [
     ...MODEL_BACKED_ENTRYPOINTS,
@@ -188,8 +205,8 @@ const MODEL_BACKED_SOURCE_FILES = Object.freeze(
 
 // The MCP composition root carries an optional, disabled-by-default admin
 // mirror publisher. It is an explicit external capability boundary rather
-// than a deterministic Raw Swarm implementation dependency; quality tests
-// exercise the disabled projection path and never invoke its publisher.
+// than a deterministic Raw Swarm implementation dependency; deterministic
+// tests exercise the disabled projection path and never invoke its publisher.
 const DETERMINISTIC_TRANSITIVE_SCAN_BOUNDARIES = Object.freeze([
   "packages/mcp/src/admin-mirror.ts",
 ]);
@@ -250,11 +267,12 @@ module.exports = {
   CONSUMER_DISTRIBUTION_RUNTIME_ENTRYPOINTS,
   SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS,
   SUPPORTED_VITEST_TEST_FILE_SUFFIXES,
+  DETERMINISTIC_WORKFLOW_PATH_FILTERS,
   isSupportedVitestTestFilename,
-  QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
+  DETERMINISTIC_RAW_SWARM_TESTS,
   DETERMINISTIC_TRUSTED_BOUNDARY_TESTS,
   GUARDED_DETERMINISTIC_RAW_SWARM_TESTS,
-  RAW_SWARM_TESTS_OUTSIDE_QUALITY,
+  RAW_SWARM_TESTS_OUTSIDE_DETERMINISTIC_LANE,
   MODEL_BACKED_OPERATIONS,
   MODEL_BACKED_ENTRYPOINTS,
   MODEL_BACKED_SOURCE_FILES,

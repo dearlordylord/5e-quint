@@ -1,90 +1,98 @@
 import {
-  BattleActPresentationSchema,
   BattleInitiativePositionSchema,
-  BattleInterruptProcedureChoiceSchema,
-  CombatantId,
-  BattleSpellPresentationSchema,
-  BattleDroppedObjectOutcomeSchema,
-  BattleHoleSchema,
   BattleObjectDamageOutcomeSchema,
   BattleObjectIgnitionOutcomeSchema,
+  BattleDroppedObjectOutcomeSchema,
   BattleShovePushOutcomeSchema,
-  BattlePresentedSnapshotSchema,
-  BattleSubjectSchema,
-} from "@dnd/battle-runtime/protocol-codecs";
+  BATTLE_INVALID_REASON_CODES,
+  BattlePresentedCheckpointFrontierEnvelopeSchema,
+  CombatantId,
+} from "@dnd/battle-runtime";
 import { Schema } from "effect";
 
+import { battleEnvelopeMatchesActiveSession } from "./battle-envelope-correlation.ts";
 import {
-  McpActiveBattleStateSnapshotSchema,
   McpActiveSessionSnapshotSchema,
-  McpInitialInitiativeSetupSnapshotSchema,
-  McpNoneBattleStateSnapshotSchema,
-  McpSessionSnapshotSchema,
+  McpInitialInitiativeSetupSessionSnapshotSchema,
+  McpNoneSessionSnapshotSchema,
   McpSessionSummarySchema,
 } from "./session-snapshot-output.ts";
 
 const JsonObjectSchema = Schema.Record(Schema.String, Schema.Unknown);
-const BattleResolutionResultSchema = Schema.Union([
-  Schema.Struct({
-    tag: Schema.Literal("resolved"),
-    snapshot: BattlePresentedSnapshotSchema,
-    objectDamages: Schema.optionalKey(
-      Schema.Array(BattleObjectDamageOutcomeSchema),
-    ),
-    objectIgnitions: Schema.optionalKey(
-      Schema.Array(BattleObjectIgnitionOutcomeSchema),
-    ),
-    droppedObjects: Schema.optionalKey(
-      Schema.Array(BattleDroppedObjectOutcomeSchema),
-    ),
-    shovePushes: Schema.optionalKey(Schema.Array(BattleShovePushOutcomeSchema)),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("needsHoles"),
-    subject: BattleSubjectSchema,
-    holes: Schema.Array(BattleHoleSchema),
-    snapshot: BattlePresentedSnapshotSchema,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("invalid"),
-    reason: Schema.String,
-    message: Schema.String,
-    snapshot: BattlePresentedSnapshotSchema,
-  }),
-]);
 
-const AvailableBattleActSchema = Schema.Struct({
-  subject: BattleSubjectSchema,
-  initialHoles: Schema.Array(BattleHoleSchema),
-  label: Schema.Trimmed.check(Schema.isNonEmpty()),
-  summary: Schema.Trimmed.check(Schema.isNonEmpty()),
-  presentation: BattleActPresentationSchema,
+const BattleResolutionResolvedResultSchema = Schema.Struct({
+  tag: Schema.Literal("resolved"),
+  objectDamages: Schema.optionalKey(
+    Schema.Array(BattleObjectDamageOutcomeSchema),
+  ),
+  objectIgnitions: Schema.optionalKey(
+    Schema.Array(BattleObjectIgnitionOutcomeSchema),
+  ),
+  droppedObjects: Schema.optionalKey(
+    Schema.Array(BattleDroppedObjectOutcomeSchema),
+  ),
+  shovePushes: Schema.optionalKey(Schema.Array(BattleShovePushOutcomeSchema)),
 });
 
-const PresentedBattleInterruptChoiceSchema = Schema.Struct({
-  choice: BattleInterruptProcedureChoiceSchema,
-  presentation: BattleActPresentationSchema,
+const BattleResolutionNeedsHolesResultSchema = Schema.Struct({
+  tag: Schema.Literal("needsHoles"),
 });
 
-const BattlePresentationProjectionFields = {
-  availableActs: Schema.Array(AvailableBattleActSchema),
-  admittedSpellPresentations: Schema.Array(BattleSpellPresentationSchema),
-  presentedInterruptChoices: Schema.Array(PresentedBattleInterruptChoiceSchema),
-};
+const BattleResolutionInvalidResultSchema = Schema.Struct({
+  tag: Schema.Literal("invalid"),
+  reason: Schema.Literals(BATTLE_INVALID_REASON_CODES),
+  message: Schema.String,
+});
+
+export const BattlePresentationEnvelopeSchema =
+  BattlePresentedCheckpointFrontierEnvelopeSchema;
+
+const BattleResolvedPresentationEnvelopeSchema =
+  BattlePresentationEnvelopeSchema.pipe(
+    Schema.filter(
+      (envelope) =>
+        envelope.frontier.kind === "acts" ||
+        envelope.frontier.kind === "interruptDecision",
+      {
+        message: () =>
+          "A resolved Battle result must expose an Acts or interrupt-decision frontier.",
+      },
+    ),
+  );
+
+const BattleNeedsHolesPresentationEnvelopeSchema =
+  BattlePresentationEnvelopeSchema.pipe(
+    Schema.filter(
+      (envelope) =>
+        envelope.frontier.kind === "holes" ||
+        envelope.frontier.kind === "interruptDecision",
+      {
+        message: () =>
+          "A needsHoles Battle result must expose a Holes or interrupt-decision frontier.",
+      },
+    ),
+  );
+
+const BattleActivePresentationBranchSchema = Schema.Struct({
+  envelope: BattlePresentationEnvelopeSchema,
+  session: McpActiveSessionSnapshotSchema,
+}).pipe(
+  Schema.filter(battleEnvelopeMatchesActiveSession, {
+    message: () =>
+      "An active Battle envelope must match its session Battle and actor.",
+  }),
+);
 
 const BattlePresentationBranches = {
-  none: {
-    battleState: McpNoneBattleStateSnapshotSchema,
-    snapshot: Schema.Null,
-  },
-  initialInitiativeSetup: {
-    battleState: McpInitialInitiativeSetupSnapshotSchema,
-    snapshot: Schema.Null,
-  },
-  activeBattle: {
-    battleState: McpActiveBattleStateSnapshotSchema,
-    snapshot: BattlePresentedSnapshotSchema,
-  },
+  none: Schema.Struct({
+    envelope: Schema.Null,
+    session: McpNoneSessionSnapshotSchema,
+  }),
+  initialInitiativeSetup: Schema.Struct({
+    envelope: Schema.Null,
+    session: McpInitialInitiativeSetupSessionSnapshotSchema,
+  }),
+  activeBattle: BattleActivePresentationBranchSchema,
 } as const;
 
 const BattleLifecycleResultSchema = Schema.Union([
@@ -99,24 +107,12 @@ const BattleLifecycleResultSchema = Schema.Union([
   }),
 ]);
 
-function battlePresentationOutputSchema(session: Schema.Constraint) {
+function battlePresentationOutputSchema() {
   return Schema.toCodecIso(
     Schema.Union([
-      Schema.Struct({
-        ...BattlePresentationBranches.none,
-        ...BattlePresentationProjectionFields,
-        session,
-      }),
-      Schema.Struct({
-        ...BattlePresentationBranches.initialInitiativeSetup,
-        ...BattlePresentationProjectionFields,
-        session,
-      }),
-      Schema.Struct({
-        ...BattlePresentationBranches.activeBattle,
-        ...BattlePresentationProjectionFields,
-        session,
-      }),
+      BattlePresentationBranches.none,
+      BattlePresentationBranches.initialInitiativeSetup,
+      BattlePresentationBranches.activeBattle,
     ]),
   );
 }
@@ -126,33 +122,37 @@ export const SelectStatBlockOutputSchema = Schema.Struct({
   session: McpSessionSummarySchema,
 });
 
-export const BattleSessionOutputSchema = battlePresentationOutputSchema(
-  McpSessionSnapshotSchema,
-);
+export const BattleSessionOutputSchema = battlePresentationOutputSchema();
 
-export const StartBattleOutputSchema = battlePresentationOutputSchema(
-  McpSessionSummarySchema,
+export const StartBattleOutputSchema = Schema.toCodecIso(
+  Schema.Union([
+    BattlePresentationBranches.initialInitiativeSetup,
+    BattlePresentationBranches.activeBattle,
+  ]),
 );
 
 const BattleLifecycleInitialInitiativeSetupOutputSchema = Schema.Struct({
-  ...BattlePresentationBranches.initialInitiativeSetup,
-  ...BattlePresentationProjectionFields,
-  session: McpSessionSummarySchema,
+  envelope: Schema.Null,
+  session: McpInitialInitiativeSetupSessionSnapshotSchema,
 });
 
-const BattleLifecycleActiveSetupOutputSchema = Schema.Struct({
-  ...BattlePresentationBranches.activeBattle,
-  ...BattlePresentationProjectionFields,
-  session: McpSessionSummarySchema,
-});
+const BattleLifecycleActiveSetupOutputSchema =
+  BattleActivePresentationBranchSchema;
 
 const BattleLifecycleActiveOutputSchema = Schema.Struct({
-  battleState: McpActiveBattleStateSnapshotSchema,
   result: BattleLifecycleResultSchema,
-  snapshot: BattlePresentedSnapshotSchema,
-  ...BattlePresentationProjectionFields,
+  envelope: BattlePresentationEnvelopeSchema,
   session: McpActiveSessionSnapshotSchema,
-});
+}).pipe(
+  Schema.filter(
+    ({ envelope, session }) =>
+      battleEnvelopeMatchesActiveSession({ envelope, session }),
+    {
+      message: () =>
+        "An active Battle envelope must match its session Battle and actor.",
+    },
+  ),
+);
 
 export const BattleLifecycleOutputSchema = Schema.toCodecIso(
   Schema.Union([
@@ -162,13 +162,57 @@ export const BattleLifecycleOutputSchema = Schema.toCodecIso(
   ]),
 );
 
-export const BattleResolutionOutputSchema = Schema.Struct({
-  battleState: McpActiveBattleStateSnapshotSchema,
-  result: BattleResolutionResultSchema,
-  snapshot: BattlePresentedSnapshotSchema,
-  ...BattlePresentationProjectionFields,
-  session: McpActiveSessionSnapshotSchema,
-});
+export const BattleResolutionOutputSchema = Schema.toCodecIso(
+  Schema.Union([
+    Schema.Struct({
+      result: BattleResolutionResolvedResultSchema,
+      envelope: BattleResolvedPresentationEnvelopeSchema,
+      session: McpActiveSessionSnapshotSchema,
+    }).pipe(
+      Schema.filter(
+        ({ envelope, session }) =>
+          battleEnvelopeMatchesActiveSession({ envelope, session }),
+        {
+          message: () =>
+            "An active Battle envelope must match its session Battle and actor.",
+        },
+      ),
+    ),
+    Schema.Struct({
+      result: BattleResolutionNeedsHolesResultSchema,
+      envelope: BattleNeedsHolesPresentationEnvelopeSchema,
+      session: McpActiveSessionSnapshotSchema,
+    }).pipe(
+      Schema.filter(
+        ({ envelope, session }) =>
+          battleEnvelopeMatchesActiveSession({ envelope, session }),
+        {
+          message: () =>
+            "An active Battle envelope must match its session Battle and actor.",
+        },
+      ),
+    ),
+    Schema.Struct({
+      result: BattleResolutionInvalidResultSchema,
+      envelope: BattlePresentationEnvelopeSchema,
+      session: McpActiveSessionSnapshotSchema,
+    }).pipe(
+      Schema.filter(
+        ({ envelope, session }) =>
+          battleEnvelopeMatchesActiveSession({ envelope, session }),
+        {
+          message: () =>
+            "An active Battle envelope must match its session Battle and actor.",
+        },
+      ),
+    ),
+  ]),
+);
+
+export type BattleResolutionResultPayload =
+  | Schema.Schema.Type<typeof BattleResolutionResolvedResultSchema>
+  | Schema.Schema.Type<typeof BattleResolutionNeedsHolesResultSchema>
+  | Schema.Schema.Type<typeof BattleResolutionInvalidResultSchema>;
 
 export const EndBattleOutputSchema = Schema.Struct({
   endedBattleId: Schema.String,

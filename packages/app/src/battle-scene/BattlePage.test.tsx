@@ -2,6 +2,7 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { SHARED_HOST_TEST_TIMEOUT_MILLISECONDS as TEST_TIMEOUT } from "../../../../scripts/shared-host-test-policy.mjs"
 import { BattlePage } from "./BattlePage.tsx"
 import { WIZARD_BATTLE_DEMO_META, WIZARD_BATTLE_DEMO_STEPS } from "./wizard-battle-demo.ts"
 
@@ -20,20 +21,24 @@ afterEach(() => {
 })
 
 describe("BattlePage", () => {
-  it("renders every wizard battle playback step without page errors", () => {
-    for (const [index] of WIZARD_BATTLE_DEMO_STEPS.entries()) {
-      cleanup()
-      window.history.replaceState(null, "", `/battle?step=${index}`)
+  it(
+    "renders every wizard battle playback step without page errors",
+    () => {
+      for (const [index] of WIZARD_BATTLE_DEMO_STEPS.entries()) {
+        cleanup()
+        window.history.replaceState(null, "", `/battle?step=${index}`)
 
-      const { container } = render(<BattlePage steps={WIZARD_BATTLE_DEMO_STEPS} meta={WIZARD_BATTLE_DEMO_META} />)
-      const step = WIZARD_BATTLE_DEMO_STEPS[index] ?? WIZARD_BATTLE_DEMO_STEPS[0]
+        const { container } = render(<BattlePage steps={WIZARD_BATTLE_DEMO_STEPS} meta={WIZARD_BATTLE_DEMO_META} />)
+        const step = WIZARD_BATTLE_DEMO_STEPS[index] ?? WIZARD_BATTLE_DEMO_STEPS[0]
 
-      expect(screen.getByText("Battle Visualizer")).toBeTruthy()
-      expect(screen.getAllByText(step.title).length).toBeGreaterThan(0)
-      expect(container.innerHTML).toContain("/sprites/5.png")
-      expect(consoleErrorSpy).not.toHaveBeenCalled()
-    }
-  }, 30_000)
+        expect(screen.getByText("Battle Visualizer")).toBeTruthy()
+        expect(screen.getAllByText(step.title).length).toBeGreaterThan(0)
+        expect(container.innerHTML).toContain("/sprites/5.png")
+        expect(consoleErrorSpy).not.toHaveBeenCalled()
+      }
+    },
+    TEST_TIMEOUT
+  )
 
   it("highlights the current reaction creature in the initiative tracker", () => {
     window.history.replaceState(null, "", "/battle?step=4")

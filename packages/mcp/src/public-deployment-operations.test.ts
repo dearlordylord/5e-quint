@@ -22,6 +22,53 @@ const repositoryRoot = resolve(
 const operationsDirectory = join(repositoryRoot, "operations/public-mcp");
 
 describe("public MCP deployment operations", () => {
+  test("builds the production image off-host and prevents memory overlap", () => {
+    const dockerfile = readFileSync(
+      join(operationsDirectory, "Dockerfile"),
+      "utf8",
+    );
+    const deployDokku = readFileSync(
+      join(operationsDirectory, "deploy-dokku.sh"),
+      "utf8",
+    );
+    const memorySafety = readFileSync(
+      join(operationsDirectory, "configure-dokku-memory-safety.sh"),
+      "utf8",
+    );
+    const imageWorkflow = readFileSync(
+      join(repositoryRoot, ".github/workflows/public-mcp-image.yml"),
+      "utf8",
+    );
+
+    expect(dockerfile).toContain("FROM node:22-bookworm-slim AS builder");
+    expect(dockerfile).toContain("deploy --prod --legacy /srv/deploy");
+    expect(dockerfile).toContain("COPY --from=builder");
+    expect(deployDokku).toContain("public-mcp-image.yml");
+    expect(deployDokku).toContain('artifact_name="dnd-oracle-image"');
+    expect(deployDokku).toContain("--checks-disabled-list");
+    expect(deployDokku).toContain("minimum_available_memory_kib");
+    expect(deployDokku).toContain("minimum_available_swap_kib");
+    expect(deployDokku).toContain("git:load-image");
+    expect(deployDokku).toContain("rollback_image");
+    expect(deployDokku).toContain("rollback_archive");
+    expect(deployDokku).toContain("docker image tag");
+    expect(deployDokku).toContain("docker image save");
+    expect(deployDokku).toContain("docker image load");
+    expect(deployDokku).toContain("dokku_not_deployed_report");
+    expect(deployDokku).toContain(
+      '"$deployment_environment" == production && "$publication_mode" == enabled',
+    );
+    expect(deployDokku).not.toContain("git push");
+    expect(memorySafety).toContain("fallocate -l 2G");
+    expect(memorySafety).toContain('checks:disable "$app" web');
+    expect(memorySafety).toContain(
+      'builder-dockerfile:set "$app" dockerfile-path',
+    );
+    expect(imageWorkflow).toContain("Build deployable image off-host");
+    expect(imageWorkflow).toContain("name: dnd-oracle-image");
+    expect(imageWorkflow).toContain("docker image save");
+  });
+
   test("records and restores the preceding immutable image and release", () => {
     const temporaryDirectory = mkdtempSync(
       join(tmpdir(), "dnd-public-deployment-"),
@@ -39,7 +86,7 @@ describe("public MCP deployment operations", () => {
     mkdirSync(caddyDirectory);
     try {
       installFakeCommand(binaryDirectory, "docker", commandLog);
-      installFakeCommand(binaryDirectory, "curl", commandLog, "{}");
+      installFakeCommand(binaryDirectory, "curl", commandLog, "video/mp4");
       installFakeCommand(binaryDirectory, "jq", commandLog, "2", true);
       installFakeCommand(binaryDirectory, "pnpm", commandLog);
       installFakeCommand(binaryDirectory, "stat", commandLog, "1000");
@@ -216,6 +263,20 @@ describe("public MCP deployment operations", () => {
       expectReleaseHistory(releaseDirectory, ["3", "1"]);
 
       const disabledConfiguration = readFileSync(environmentFile, "utf8");
+      writeFileSync(
+        environmentFile,
+        disabledConfiguration.replace(
+          "synthetic-saved-session-authorization-secret",
+          "replace-with-at-least-32-random-characters",
+        ),
+      );
+      expect(
+        runVerification(environmentFile, binaryDirectory, commandLog),
+      ).toMatchObject({
+        status: 65,
+        stderr: expect.stringContaining("not a placeholder"),
+      });
+      writeFileSync(environmentFile, disabledConfiguration);
       const enabledConfiguration = disabledConfiguration.replace(
         "DND_MCP_PUBLICATION_MODE=disabled",
         "DND_MCP_PUBLICATION_MODE=enabled",
@@ -224,22 +285,9 @@ describe("public MCP deployment operations", () => {
       expect(
         runVerification(environmentFile, binaryDirectory, commandLog).status,
       ).toBe(65);
-      const partialOAuth = `${enabledConfiguration}DND_OPENAI_APPS_CHALLENGE=challenge\nDND_OAUTH_RESOURCE_URL=https://wrong.oracle.invalid/mcp\n`;
-      writeFileSync(environmentFile, partialOAuth);
-      expect(
-        runVerification(environmentFile, binaryDirectory, commandLog).status,
-      ).toBe(65);
-      const completeOAuth = `${partialOAuth}DND_OAUTH_AUTHORIZATION_SERVER=https://identity.oracle.invalid\nDND_OAUTH_ISSUER=https://identity.oracle.invalid\nDND_OAUTH_JWKS_URL=https://identity.oracle.invalid/jwks\n`;
-      writeFileSync(environmentFile, completeOAuth);
-      expect(
-        runVerification(environmentFile, binaryDirectory, commandLog).status,
-      ).toBe(65);
       writeFileSync(
         environmentFile,
-        completeOAuth.replace(
-          "https://wrong.oracle.invalid/mcp",
-          "https://staging.oracle.invalid/mcp",
-        ),
+        `${enabledConfiguration}DND_OPENAI_APPS_CHALLENGE=challenge\n`,
       );
       expect(
         runVerification(environmentFile, binaryDirectory, commandLog).status,
@@ -419,6 +467,7 @@ function writeEnvironment(
       `DND_MCP_STATE_DIRECTORY=${stateDirectory}`,
       `DND_MCP_RELEASE_DIRECTORY=${releaseDirectory}`,
       "DND_MCP_METRICS_TOKEN=synthetic-metrics-token",
+      "DND_SAVED_SESSION_AUTHORIZATION_SECRET=synthetic-saved-session-authorization-secret",
       "DND_MCP_BUDGET_ALERT_RECIPIENT=operator@example.invalid",
       "DND_MCP_FIXED_HOST_MONTHLY_USD=5",
       "DND_MCP_PUBLICATION_MODE=disabled",
@@ -468,10 +517,9 @@ function installDokkuPublicationSsh(
       "  *DND_MCP_PUBLICATION_MODE) value=enabled ;;",
       "  *DND_MCP_PUBLISHER_NAME) value='Verified Publisher' ;;",
       "  *DND_MCP_RELEASE) value='1111111111111111111111111111111111111111' ;;",
-      "  *DND_OAUTH_RESOURCE_URL) value='https://dnd-oracle.apps.loskutoff.com/mcp' ;;",
-      "  *DND_OAUTH_AUTHORIZATION_SERVER) value='https://identity.example.invalid' ;;",
-      "  *DND_OAUTH_ISSUER) value='https://identity.example.invalid' ;;",
-      "  *DND_OAUTH_JWKS_URL) value='https://identity.example.invalid/jwks' ;;",
+      "  *DND_MCP_PUBLIC_ORIGIN) value='https://dnd-oracle.apps.loskutoff.com' ;;",
+      "  *DND_SAVED_SESSION_AUTHORIZATION_DATABASE_PATH) value='/var/lib/dnd-oracle/saved-session-authorization.sqlite' ;;",
+      "  *DND_SAVED_SESSION_AUTHORIZATION_SECRET) value='synthetic-saved-session-authorization-secret' ;;",
       "  *DND_OPENAI_APPS_CHALLENGE) value='synthetic-domain-challenge' ;;",
       "  *) exit 1 ;;",
       "esac",
@@ -497,10 +545,11 @@ function installDokkuPublicationCurl(
       'case "$url" in',
       '  */health) value=\'{"status":"ok"}\' ;;',
       '  */version) value=\'{"environment":"production","release":"1111111111111111111111111111111111111111","publisher":"Verified Publisher"}\' ;;',
-      '  */.well-known/oauth-protected-resource) value=\'{"resource":"https://dnd-oracle.apps.loskutoff.com/mcp","authorization_servers":["https://identity.example.invalid"],"scopes_supported":["play-sessions"]}\' ;;',
-      '  */.well-known/oauth-authorization-server) value=\'{"issuer":"https://identity.example.invalid","authorization_endpoint":"https://identity.example.invalid/authorize","token_endpoint":"https://identity.example.invalid/token","registration_endpoint":"https://identity.example.invalid/register","code_challenge_methods_supported":["S256"],"token_endpoint_auth_methods_supported":["none"],"scopes_supported":["play-sessions"]}\' ;;',
-      '  */jwks) value=\'{"keys":[{"kty":"RSA"}]}\' ;;',
+      '  */.well-known/oauth-protected-resource) value=\'{"resource":"https://dnd-oracle.apps.loskutoff.com/mcp","authorization_servers":["https://dnd-oracle.apps.loskutoff.com/api/auth"],"scopes_supported":["play-sessions"]}\' ;;',
+      '  */api/auth/.well-known/oauth-authorization-server) value=\'{"issuer":"https://dnd-oracle.apps.loskutoff.com/api/auth","authorization_endpoint":"https://dnd-oracle.apps.loskutoff.com/api/auth/oauth2/authorize","token_endpoint":"https://dnd-oracle.apps.loskutoff.com/api/auth/oauth2/token","registration_endpoint":"https://dnd-oracle.apps.loskutoff.com/api/auth/oauth2/register","jwks_uri":"https://dnd-oracle.apps.loskutoff.com/api/auth/jwks","code_challenge_methods_supported":["S256"],"token_endpoint_auth_methods_supported":["none"],"scopes_supported":["play-sessions"],"client_id_metadata_document_supported":true}\' ;;',
+      '  */api/auth/jwks) value=\'{"keys":[{"kty":"RSA"}]}\' ;;',
       "  */.well-known/openai-apps-challenge) value='synthetic-domain-challenge' ;;",
+      "  */plugin-demo.mp4) value='video/mp4' ;;",
       "  */|*/support|*/privacy|*/terms) value='<html></html>' ;;",
       "  *) exit 22 ;;",
       "esac",

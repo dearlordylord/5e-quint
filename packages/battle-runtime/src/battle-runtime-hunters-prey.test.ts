@@ -960,7 +960,6 @@ describe("battle runtime: Hunter's Prey", () => {
     expect(awaitingAttackHit).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "interruptDecision", trigger: "attackHit" }],
-      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
     });
     if (awaitingAttackHit.tag !== "needsHoles") {
       throw new Error(

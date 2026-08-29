@@ -172,7 +172,7 @@ import {
   type SupportedSpellInvocation,
 } from "./index.ts";
 import {
-  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
+  assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
   assertBattleSnapshotCodecRoundTripForTest,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
@@ -237,7 +237,7 @@ export {
   abilityModifier,
   ACROBATIC_MOVEMENT_SUPPORT_PROFILE,
   ALTERNATE_ACTION_COST_ACTIONS,
-  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
+  assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
   assertBattleSnapshotCodecRoundTripForTest,
   applyBattleHitPointDamage,
   applyCondition,

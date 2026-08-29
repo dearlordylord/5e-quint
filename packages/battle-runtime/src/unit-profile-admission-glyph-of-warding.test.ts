@@ -97,6 +97,7 @@ import {
 } from "./battle-reducer/spells-effective-level.ts";
 import {
   alterSelfUnitId,
+  barbarianDangerSenseUnitId,
   blindnessDeafnessUnitId,
   counterspellUnitId,
   darknessUnitId,
@@ -166,6 +167,7 @@ import {
   battleObjectId,
   battleTablePositionId,
   battleD20TestNaturalOneRerollSupportForUnit,
+  battlePassiveSavingThrowRollModeSupportForUnit,
   breakBattleConcentration,
   discoverBattleActCandidates,
   endTurn,
@@ -182,7 +184,6 @@ import {
   hasCondition,
   resolveBattleInterrupt,
   resolveBattleSubject,
-  snapshotBattle,
   spellSaveDcForCaster,
 } from "./unit-profile-admission.test-support.ts";
 import {
@@ -194,6 +195,8 @@ import {
   battleProcedureExecutionRefForSpellHoleForTest,
   battleEffectExecutionRefForTest,
   battleStateWithAllocatedEffectForTest,
+  battleActiveEffectExecutionRefForTest,
+  battleFrontierInterruptDecisionForState,
   combatantId,
   battleProcedureExecutionRefForTest,
   characterBattleFeatureInitForTest,
@@ -2598,7 +2601,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     });
     if (awaitingSaveFailedReaction.tag !== "needsHoles") return;
     expect(
-      snapshotBattle(awaitingSaveFailedReaction.state).pendingInterrupt
+      battleFrontierInterruptDecisionForState(awaitingSaveFailedReaction.state)
         ?.choices,
     ).toEqual(
       expect.arrayContaining([
@@ -2621,7 +2624,9 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
 
     expect(afterDecline.tag).toBe("resolved");
     if (afterDecline.tag !== "resolved") return;
-    expect(afterDecline.snapshot.pendingInterrupt).toBeNull();
+    expect(
+      battleFrontierInterruptDecisionForState(afterDecline.state),
+    ).toBeNull();
     const caster = requireCombatant(afterDecline.state, spellCasterId);
     const target = requireCombatant(afterDecline.state, spellTargetId);
     const control = target.activeEffects.find(
@@ -4171,6 +4176,53 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       reason: "savingThrowOutcomeMismatch",
     });
 
+    const dangerSenseUnit = unitLibrary.requireUnit(barbarianDangerSenseUnitId);
+    const dangerSenseSupport =
+      battlePassiveSavingThrowRollModeSupportForUnit(dangerSenseUnit);
+    if (dangerSenseSupport === null || dangerSenseSupport === "unsupported") {
+      throw new Error("Expected admitted Danger Sense support.");
+    }
+    const dangerSenseState = stateWithGlyphEffect(
+      requireCompletedGlyphEffect({
+        anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+      }),
+      glyphBattle({
+        targetHp: 50,
+        targetMaxHp: 50,
+        targetUnitRefs: [
+          {
+            unit: dangerSenseUnit,
+            supportProfiles: [dangerSenseSupport],
+          },
+        ],
+        targetUnitFeatures: [
+          characterBattleFeatureInitForTest(dangerSenseUnit),
+        ],
+      }),
+    );
+    const dangerSenseEffect = glyphEffects(dangerSenseState)[0];
+    if (dangerSenseEffect === undefined) {
+      throw new Error("Expected a Glyph effect in the Danger Sense fixture.");
+    }
+    expect(
+      releaseGlyphExplosiveRune({
+        state: dangerSenseState,
+        profile,
+        witness: glyphExplosiveRuneReleaseWitness({
+          effect: dangerSenseEffect,
+          profile,
+          state: dangerSenseState,
+          outcomes: [
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              naturalD20: DieRollResult(10),
+            },
+          ],
+        }),
+      }).tag,
+    ).toBe("released");
+
     const luckUnit = unitLibrary.requireUnit(speciesHalflingLuckUnitId);
     const luckSupport = battleD20TestNaturalOneRerollSupportForUnit(luckUnit);
     expect(luckSupport).toMatchObject({
@@ -4605,6 +4657,29 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         withoutRoll: true,
       },
     ]);
+    const resumed = releaseGlyphExplosiveRune({
+      state: baseState,
+      profile,
+      witness: {
+        kind: "tableWitnessedGlyphExplosiveRuneRelease",
+        triggerOccurrence: glyphTriggerOccurrenceWitness(),
+        coveredAreaId: glyphCoveredAreaId,
+        areaMembership: {
+          ...areaMembership,
+          hideousLaughterDamageRepeatSaves: [repeatSaveFill],
+        },
+      },
+    });
+    expect(resumed.tag).not.toBe("invalidWitness");
+    if (resumed.tag === "needsHoles") {
+      expect(
+        resumed.holes.some(
+          (hole) =>
+            hole.kind === "savingThrowOutcome" &&
+            "hideousLaughterRepeatSave" in hole,
+        ),
+      ).toBe(false);
+    }
 
     expect(
       releaseGlyphExplosiveRune({

@@ -7,6 +7,7 @@
   "scripts": {
     "deploy:mcp:dokku-staging": "operations/public-mcp/deploy-dokku.sh staging",
     "deploy:mcp:dokku-production": "operations/public-mcp/deploy-dokku.sh production",
+    "configure:mcp:dokku-memory": "operations/public-mcp/configure-dokku-memory-safety.sh",
     "verify:mcp:dokku-publication": "operations/public-mcp/verify-dokku-publication.sh",
     "raw-swarm:catalogue": "mise exec -- pnpm exec tsx scripts/raw-swarm/scenario-catalogue-cli.ts",
     "raw-swarm:model:trial": ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/raw-swarm/with-model-lane-lock.sh trial node scripts/raw-swarm/run-model-backed.mjs trial",
@@ -69,7 +70,8 @@
     "build:turbo": "scripts/assert-resource-lock.sh broad && turbo build --concurrency=1",
     "coverage": ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-broad-workspace-lock.sh pnpm run coverage:body",
     "coverage:body": "scripts/assert-resource-lock.sh broad && node scripts/workspace-quality-harness.mjs coverage",
-    "quality": ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-broad-workspace-lock.sh pnpm run quality:body",
+    "quality": "node scripts/quality-milestone-guidance.cjs",
+    "quality:milestone": ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-broad-workspace-lock.sh pnpm run quality:body",
     "quality:body": "scripts/assert-resource-lock.sh broad && pnpm check:effect4-cohort:self-test && pnpm check:effect4-cohort && pnpm run build:turbo && pnpm check:workspace-quality-inventory && pnpm check:authored-id-dispatch && pnpm check:battle-runtime-import-ownership && pnpm check:battle-runtime-test-support-boundary && pnpm check:character-sheet-runtime-split && pnpm check:surface-publication-typecheck && pnpm check:surface-publication-self-test && pnpm check:surface-content-publication && pnpm check:cleanroom-provenance && pnpm check:markdown-links && pnpm check:mbt-driver-closure && pnpm check:qnt-proof-closure && pnpm check:qnt-proof-harness && pnpm check:qnt-proof-timing-report && pnpm check:test-lane-hygiene && pnpm check:mbt-script-inventory && pnpm check:qnt-inventory && pnpm check:qnt-run-block-separation && pnpm check:resource-lock && pnpm check:raw-swarm-lane-hygiene && pnpm check:raw-swarm-deterministic:body && pnpm rules-kernel-coverage:check && pnpm unit-profile-coverage:check && pnpm gh381-registry-path-manifest:check && pnpm sdk-raw-integration-inventory:check && pnpm lint && pnpm check:complexity:self-test && pnpm check:complexity && pnpm duplication && pnpm circular && pnpm run typecheck:turbo && pnpm run test:turbo && pnpm run coverage:body",
     "typecheck": ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-broad-workspace-lock.sh pnpm run typecheck:turbo",
     "typecheck:turbo": "scripts/assert-resource-lock.sh broad && turbo typecheck --concurrency=1",
@@ -109,7 +111,10 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild"
-    ]
+    ],
+    "patchedDependencies": {
+      "better-call@1.4.0": "patches/better-call@1.4.0.patch"
+    }
   },
   "lint-staged": {
     "*.{cjs,css,cts,html,js,jsx,json,md,mjs,mts,scss,ts,tsx}": "prettier --write",

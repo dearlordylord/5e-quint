@@ -292,8 +292,7 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
       snapshot: {
-        pendingInterrupt: { trigger: "spellCast" },
-        turn: { bonusActionAvailable: false },
+        turn: { bonusActionQuotaAvailable: true },
       },
     });
     if (awaitingReaction.tag !== "needsHoles") {
@@ -719,7 +718,7 @@ describe("SRDINV31A deterministic weapon damage rider Spell Unit admission", () 
       tag: "resolved",
       snapshot: {
         turn: {
-          bonusActionAvailable: false,
+          bonusActionQuotaAvailable: false,
           spellSlotUsesThisTurn: [
             { kind: "committed", combatantId: spellCasterId },
           ],
@@ -1146,7 +1145,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       tag: "resolved",
       snapshot: {
         turn: {
-          bonusActionAvailable: false,
+          bonusActionQuotaAvailable: false,
           spellSlotUsesThisTurn: [
             { kind: "committed", combatantId: spellCasterId },
           ],

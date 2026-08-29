@@ -61,6 +61,8 @@ import {
   assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
   battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectForTest,
+  assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
+  battleActiveEffectExecutionRefForTest,
   requireCharacterUnitProcedureRefForTest,
   requireCharacterSpellProcedureRefForTest,
   testCharacterD20Statistics,
@@ -267,7 +269,7 @@ describe("Dragon's Breath initial cast admission", () => {
     if (needsDamage.tag !== "needsHoles") {
       throw new Error("Expected Dragon's Breath damage dice.");
     }
-    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+    assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: needsDamage.snapshot,
       subject: exhaleAct.subject,
       holes: needsDamage.holes,

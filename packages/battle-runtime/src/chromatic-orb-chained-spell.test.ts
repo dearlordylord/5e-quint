@@ -234,7 +234,6 @@ describe("Chromatic Orb chained spell attack", () => {
       ]),
     ).toMatchObject({
       holes: [{ kind: "interruptDecision", trigger: "spellCast" }],
-      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
   });
 
@@ -251,7 +250,6 @@ describe("Chromatic Orb chained spell attack", () => {
       resolveNeedsHoles(session.state, attack.subject, attack.fills),
     ).toMatchObject({
       holes: [{ kind: "interruptDecision", trigger: "attackHit" }],
-      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
     });
   });
 

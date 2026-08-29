@@ -32,6 +32,7 @@ import {
 
 import {
   battleId,
+  battleFrontierInterruptDecisionForState,
   characterId,
   combatantId,
   initiativeScore,
@@ -480,7 +481,8 @@ function projectRuleCoreMovementState(input: {
     grappleEscapeDc: grapple === undefined ? 0 : Number(grapple.escapeDc),
     holes: input.holes.map(projectMovementHole),
     pendingOpportunityAttack:
-      snapshot.pendingInterrupt?.trigger === "opportunityAttack",
+      battleFrontierInterruptDecisionForState(input.state)?.trigger ===
+      "opportunityAttack",
     lastResult: input.lastResult,
     lastInvalidReason: input.lastInvalidReason,
   });

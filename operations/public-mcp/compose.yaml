@@ -8,15 +8,14 @@ services:
     environment:
       DND_MCP_ENVIRONMENT: ${DND_MCP_ENVIRONMENT:?set staging or production}
       DND_MCP_PUBLISHER_NAME: ${DND_MCP_PUBLISHER_NAME:?set the exact publisher identity}
+      DND_MCP_PUBLIC_ORIGIN: https://${DND_MCP_DOMAIN:?set the public domain}
       DND_MCP_HOST: 0.0.0.0
       PORT: 8787
       DND_PLAY_SESSION_DATABASE_PATH: /var/lib/dnd-oracle/play-sessions.sqlite
+      DND_SAVED_SESSION_AUTHORIZATION_DATABASE_PATH: /var/lib/dnd-oracle/saved-session-authorization.sqlite
+      DND_SAVED_SESSION_AUTHORIZATION_SECRET: ${DND_SAVED_SESSION_AUTHORIZATION_SECRET:?set the saved-session authorization secret}
       DND_OPENAI_APPS_CHALLENGE: ${DND_OPENAI_APPS_CHALLENGE:-}
       DND_MCP_METRICS_TOKEN: ${DND_MCP_METRICS_TOKEN:?set a metrics bearer token}
-      DND_OAUTH_RESOURCE_URL: ${DND_OAUTH_RESOURCE_URL:-}
-      DND_OAUTH_AUTHORIZATION_SERVER: ${DND_OAUTH_AUTHORIZATION_SERVER:-}
-      DND_OAUTH_ISSUER: ${DND_OAUTH_ISSUER:-}
-      DND_OAUTH_JWKS_URL: ${DND_OAUTH_JWKS_URL:-}
     volumes:
       - type: bind
         source: ${DND_MCP_STATE_DIRECTORY:?set an environment-specific absolute state directory}

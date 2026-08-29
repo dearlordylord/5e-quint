@@ -10,6 +10,7 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import {
   requireCharacterSpellProcedureRefForTest,
+  battleFrontierInterruptDecisionForState,
   characterSpellInvocationRefForProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { decodeSpellRecordSync } from "@dnd/surface/surface/schema";
@@ -666,8 +667,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     expect(countered).toMatchObject({
       tag: "resolved",
       snapshot: {
-        pendingInterrupt: null,
-        turn: { bonusActionAvailable: false },
+        turn: { bonusActionQuotaAvailable: false },
       },
     });
     if (countered.tag !== "resolved") {
@@ -856,7 +856,9 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         ],
       }),
     );
-    expect(awaitingShield.snapshot.pendingInterrupt).toMatchObject({
+    expect(
+      battleFrontierInterruptDecisionForState(awaitingShield.state),
+    ).toMatchObject({
       trigger: "attackHit",
     });
     expect(
@@ -887,8 +889,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     expect(resolved).toMatchObject({
       tag: "resolved",
       snapshot: {
-        pendingInterrupt: null,
-        turn: { bonusActionAvailable: false },
+        turn: { bonusActionQuotaAvailable: false },
       },
     });
     if (resolved.tag !== "resolved") {
@@ -955,7 +956,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
 
     expect(lost).toMatchObject({
       tag: "resolved",
-      snapshot: { turn: { bonusActionAvailable: false } },
+      snapshot: { turn: { bonusActionQuotaAvailable: false } },
     });
     if (lost.tag !== "resolved") {
       throw new Error("Expected Sanctuary-lost Spiritual Weapon to resolve.");
@@ -1670,7 +1671,9 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         fills: repeatFills,
       }),
     );
-    expect(awaitingShield.snapshot.pendingInterrupt).toMatchObject({
+    expect(
+      battleFrontierInterruptDecisionForState(awaitingShield.state),
+    ).toMatchObject({
       trigger: "attackHit",
     });
 
@@ -1693,8 +1696,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     expect(resolved).toMatchObject({
       tag: "resolved",
       snapshot: {
-        pendingInterrupt: null,
-        turn: { bonusActionAvailable: false },
+        turn: { bonusActionQuotaAvailable: false },
       },
     });
     if (resolved.tag !== "resolved") {
@@ -1844,7 +1846,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
 
     expect(lost).toMatchObject({
       tag: "resolved",
-      snapshot: { turn: { bonusActionAvailable: false } },
+      snapshot: { turn: { bonusActionQuotaAvailable: false } },
     });
     if (lost.tag !== "resolved") {
       throw new Error("Expected Sanctuary-lost repeat attack to resolve.");
@@ -1918,7 +1920,9 @@ function requireTriggeredReactionSpellChoice(input: {
   BattleInterruptProcedureChoice,
   { readonly kind: "castTriggeredReactionSpell" }
 > {
-  const choice = input.result.snapshot.pendingInterrupt?.choices.find(
+  const choice = battleFrontierInterruptDecisionForState(
+    input.result.state,
+  )?.choices.find(
     (
       candidate,
     ): candidate is Extract<

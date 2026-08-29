@@ -1,10 +1,11 @@
-import { Either, Match } from "effect";
-import type { BattleRuntimeSession, CombatantId } from "@dnd/battle-runtime";
-import type { BattleLifecycleToolInput } from "./battle-lifecycle-tool-input.ts";
 import {
-  battlePresentationProjection,
-  battleSnapshotPresentationIssueContent,
-} from "./battle-tool-payloads.ts";
+  battlePresentedCheckpointFrontierEnvelope,
+  type BattleRuntimeSession,
+  type CombatantId,
+} from "@dnd/battle-runtime";
+import { Either, Match } from "effect";
+import type { BattleLifecycleToolInput } from "./battle-lifecycle-tool-input.ts";
+import { battlePresentationIssueContent } from "./battle-tool-payloads.ts";
 import { BattleLifecycleOutputSchema } from "./battle-tool-output.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import {
@@ -59,7 +60,11 @@ function addCombatant(
     { readonly kind: "addCombatant" }
   >["combatant"],
 ) {
-  const projection = projectBattleCombatant({ root, combatant });
+  const projection = projectBattleCombatant({
+    root,
+    combatant,
+    ownerPath: ["operation", "combatant"],
+  });
   if (Either.isLeft(projection)) {
     return lifecycleFailureFromToolError(projection.left);
   }
@@ -68,9 +73,9 @@ function addCombatant(
     McpBattleRosterOperation,
     { readonly kind: "addCharacter" | "addStatBlock" }
   > =
-    projection.right.tag === "characterSession"
-      ? { kind: "addCharacter", combatant: projection.right.creatureInit }
-      : { kind: "addStatBlock", combatant: projection.right.creatureInit };
+    projection.right.kind === "characterSheet"
+      ? { kind: "addCharacter", combatant: projection.right.combatant }
+      : { kind: "addStatBlock", combatant: projection.right.combatant };
   const planned = root.sessionStore.planActiveBattleRosterTransition(operation);
   if (Either.isLeft(planned)) return rosterTransitionFailure(planned.left);
 
@@ -140,20 +145,16 @@ function commitBattleLifecycleTransition(input: {
     session: committed.right,
   });
   return schemaJsonContent(BattleLifecycleOutputSchema, {
-    battleState,
     result: input.result,
-    snapshot: presentation.right.snapshot,
-    availableActs: presentation.right.availableActs,
-    admittedSpellPresentations: presentation.right.admittedSpellPresentations,
-    presentedInterruptChoices: presentation.right.presentedInterruptChoices,
+    envelope: presentation.right,
     session: { ...input.root.sessionStore.snapshot(), battleState },
   });
 }
 
 function battlePresentationForCommit(nextBattle: BattleRuntimeSession) {
   return Either.mapLeft(
-    battlePresentationProjection(nextBattle),
-    battleSnapshotPresentationIssueContent,
+    battlePresentedCheckpointFrontierEnvelope(nextBattle),
+    battlePresentationIssueContent,
   );
 }
 
@@ -172,6 +173,7 @@ function rosterTransitionFailure(issue: McpBattleRosterTransitionIssue) {
       battleLifecycleError("Battle combatant admission failed.", {
         code: "BATTLE_COMBATANT_ADMISSION_FAILED",
         combatantId: matched.combatantId,
+        ownerPath: matched.ownerPath,
         message: matched.message,
       }),
     ),
@@ -287,11 +289,14 @@ function lifecycleFailureFromToolError(failure: ToolError) {
     });
   }
   const details = isJsonObject(payload.details) ? payload.details : {};
+  const issues = Array.isArray(details.issues) ? details.issues : [];
+  const singleIssue =
+    issues.length === 1 && isJsonObject(issues[0]) ? issues[0] : undefined;
   return battleLifecycleError(
     typeof payload.error === "string"
       ? payload.error
       : "Battle lifecycle operation failed.",
-    details,
+    singleIssue ?? details,
   );
 }
 

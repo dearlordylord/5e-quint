@@ -1,17 +1,20 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { relative } from "node:path";
-import { Either } from "effect";
+import { Either, Schema } from "effect";
 
-import type { ArtifactAuthority } from "./artifact-authority-schema.ts";
+import {
+  ArtifactAuthoritySchema,
+  type ArtifactAuthority,
+} from "./artifact-authority-schema.ts";
 import {
   canonicalRepositoryReadPath,
   canonicalRunnerOwnedReadPath,
 } from "./repository-path.ts";
 import { repoRoot } from "./transcript.ts";
 
-export { ArtifactAuthoritySchema } from "./artifact-authority-schema.ts";
-export type { ArtifactAuthority } from "./artifact-authority-schema.ts";
+export { ArtifactAuthoritySchema };
+export type { ArtifactAuthority };
 
 function fail(message: string): never {
   throw new Error(message);
@@ -36,11 +39,11 @@ export function artifactAuthorityForBytes(
   path: string,
   bytes: Uint8Array,
 ): ArtifactAuthority {
-  return {
+  return Schema.decodeUnknownSync(ArtifactAuthoritySchema)({
     path,
     byteLength: bytes.byteLength,
     sha256: createHash("sha256").update(bytes).digest("hex"),
-  };
+  });
 }
 
 function readJsonLinesAtPath(

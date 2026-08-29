@@ -1,5 +1,4 @@
 import {
-  battleCreatureInitFromStatBlock,
   battleAvailableDruidWildShapeKnownForms,
   characterBattleResourceForUnit,
   characterBattleResourceMaxPoints,
@@ -9,7 +8,6 @@ import {
   parseSupportedUnitFeatureProfile,
   INITIATIVE_PROFICIENCY_AND_SWAP_SUPPORT_PROFILE,
   scoreModifier,
-  startBattle,
   initiativeScore,
   type CharacterBattleFeatureInit,
   type CharacterBattleMetamagicInit,
@@ -19,22 +17,17 @@ import {
   type CharacterBattleClassLevels,
   type CharacterBattleCreatureInit,
   type CharacterZeroHpLifecycleInit,
-  type BattleId,
-  type BattleRuntimeSession,
-  type BattleStateInitIssue,
   type CharacterId,
   type CombatantId,
   type BattleCreatureInit,
   type BattleDruidWildShapeKnownForm,
   type InitiativeScore,
-  type StatBlockBattleInitInput,
 } from "@dnd/battle-runtime";
 import {
   characterBuildDruidWildShapeFacts,
   characterBuildFeatureUnitIds,
   characterBuildHitPoints,
   characterBuildProficiencies,
-  characterCreationIssueMessage,
   characterBuildSorcererFontOfMagicFacts,
   characterBuildSorcererMetamagicFacts,
   characterBuildUnitRefs,
@@ -69,6 +62,9 @@ import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Option, Result } from "effect";
 import {
   battleCreatureInitIssue,
+  battleCreatureInitIssueMessage,
+  battleCreatureInitIssuesFromCharacterBuildProjection,
+  battleCreatureInitIssuesFromMessages,
   characterArmorClassState,
   characterUnarmoredArmorClassBases,
   characterAttackActionOption,
@@ -129,6 +125,17 @@ export type CharacterBuildCreatureInput = {
       >["itemId"];
 };
 
+/** Character-build projection cannot admit a Stat Block creature. */
+export type CharacterBattleCreatureInitResult = Omit<
+  BattleCreatureInit,
+  "creatureInit"
+> & {
+  readonly creatureInit: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >;
+};
+
 export const CHARACTER_BATTLE_INIT_MAX_HP_EXCEEDS_BUILD_MAX_MESSAGE =
   "Character battle initialization max HP exceeds build-derived max HP.";
 
@@ -154,7 +161,9 @@ export function characterBattleInitiativeScore(input: {
     input.unitLibrary,
   );
   if (Result.isFailure(classLevels)) {
-    return battleCreatureInitIssue(classLevels.failure.message);
+    return battleCreatureInitIssue(
+      battleCreatureInitIssueMessage(classLevels.failure),
+    );
   }
   const supportProjection = characterBattleSupportProjection(
     input.build,
@@ -163,8 +172,12 @@ export function characterBattleInitiativeScore(input: {
     classLevels.success,
   );
   if (Result.isFailure(supportProjection)) {
-    return battleCreatureInitIssue(
-      supportProjection.failure.map((issue) => issue.message).join("; "),
+    return battleCreatureInitIssuesFromMessages(
+      supportProjection.failure.map((issue) => issue.message),
+      (issueIndex) => ({
+        kind: "characterBattleSupportProjection",
+        issueIndex,
+      }),
     );
   }
   const hasInitiativeProficiency = supportProjection.success.unitRefs.some(
@@ -188,43 +201,16 @@ export function characterBattleInitiativeScore(input: {
   return Result.succeed(initiativeScore(input.rollTotal + proficiencyBonus));
 }
 
-export function startBattleFromCharacterBuildAndStatBlock(input: {
-  readonly battleId: BattleId;
-  readonly character: CharacterBuildCreatureInput;
-  readonly statBlockBattleInput: StatBlockBattleInitInput;
-  readonly unitLibrary: UnitCatalog;
-}): Result.Result<
-  BattleRuntimeSession,
-  BattleStateInitIssue | BattleCreatureInitIssue
-> {
-  const characterInit = battleCreatureInitFromCharacterBuild({
-    ...input.character,
-    unitLibrary: input.unitLibrary,
-  });
-  if (Result.isFailure(characterInit)) {
-    return battleCreatureInitIssue(characterInit.failure.message);
-  }
-  const statBlockInit = battleCreatureInitFromStatBlock(
-    input.statBlockBattleInput,
-  );
-  if (Result.isFailure(statBlockInit))
-    return Result.fail(statBlockInit.failure);
-
-  return startBattle({
-    battleId: input.battleId,
-    combatants: [characterInit.success, statBlockInit.success],
-  });
-}
-
 export function battleCreatureInitFromCharacterBuild(
   input: CharacterBuildCreatureInput & {
     readonly unitLibrary: UnitCatalog;
   },
-): Result.Result<BattleCreatureInit, BattleCreatureInitIssue> {
+): Result.Result<CharacterBattleCreatureInitResult, BattleCreatureInitIssue> {
   const hitPoints = characterBuildHitPoints(input.build, input.unitLibrary);
   if (Result.isFailure(hitPoints)) {
-    return battleCreatureInitIssue(
-      hitPoints.failure.map(characterCreationIssueMessage).join("; "),
+    return battleCreatureInitIssuesFromCharacterBuildProjection(
+      hitPoints.failure,
+      "hitPoints",
     );
   }
   const buildMaximumHp = Hp(hitPoints.success.maximum);
@@ -244,8 +230,12 @@ export function battleCreatureInitFromCharacterBuild(
     input.unitLibrary,
   );
   if (Result.isFailure(weaponMasteries)) {
-    return battleCreatureInitIssue(
-      weaponMasteries.failure.map((issue) => issue.message).join("; "),
+    return battleCreatureInitIssuesFromMessages(
+      weaponMasteries.failure.map((issue) => issue.message),
+      () => ({
+        kind: "characterBuildProjection",
+        phase: "equipment",
+      }),
     );
   }
   const currentHp = input.currentHp ?? maxHp;
@@ -311,8 +301,12 @@ export function battleCreatureInitFromCharacterBuild(
     );
     const parsedClassLevels = parseCharacterBattleClassLevels(classLevels);
     if (Result.isFailure(parsedClassLevels)) {
-      return yield* battleCreatureInitIssue(
-        parsedClassLevels.failure.messages.join("; "),
+      return yield* battleCreatureInitIssuesFromMessages(
+        parsedClassLevels.failure.messages,
+        (issueIndex) => ({
+          kind: "characterBattleClassLevelsProjection",
+          issueIndex,
+        }),
       );
     }
     const supportProjection = characterBattleSupportProjection(
@@ -322,8 +316,12 @@ export function battleCreatureInitFromCharacterBuild(
       classLevels,
     );
     if (Result.isFailure(supportProjection)) {
-      return yield* battleCreatureInitIssue(
-        supportProjection.failure.map((issue) => issue.message).join("; "),
+      return yield* battleCreatureInitIssuesFromMessages(
+        supportProjection.failure.map((issue) => issue.message),
+        (issueIndex) => ({
+          kind: "characterBattleSupportProjection",
+          issueIndex,
+        }),
       );
     }
     const pactBladeBondedWeaponItemId =
@@ -379,8 +377,9 @@ export function battleCreatureInitFromCharacterBuild(
       input.unitLibrary,
     );
     if (Result.isFailure(proficiencies)) {
-      return yield* battleCreatureInitIssue(
-        proficiencies.failure.map(characterCreationIssueMessage).join("; "),
+      return yield* battleCreatureInitIssuesFromCharacterBuildProjection(
+        proficiencies.failure,
+        "proficiencies",
       );
     }
     const spellcasting =
@@ -589,7 +588,9 @@ function characterBattleClassLevels(
   for (const entry of progressionClassLevels(build.progression)) {
     const classUnit = getRequiredUnit(unitLibrary, entry.classUnitId);
     if (Result.isFailure(classUnit)) {
-      return battleCreatureInitIssue(classUnit.failure.message);
+      return battleCreatureInitIssue(
+        battleCreatureInitIssueMessage(classUnit.failure),
+      );
     }
     if (classUnit.success.kind !== "class") {
       return battleCreatureInitIssue(
@@ -678,8 +679,12 @@ export function characterBattleResourceInitsFromBuild(
       ? parseCharacterBattleClassLevels(classLevels.success)
       : Result.succeed(parsedClassLevels);
   if (Result.isFailure(parsedLevelsResult)) {
-    return battleCreatureInitIssue(
-      parsedLevelsResult.failure.messages.join("; "),
+    return battleCreatureInitIssuesFromMessages(
+      parsedLevelsResult.failure.messages,
+      (issueIndex) => ({
+        kind: "characterBattleClassLevelsProjection",
+        issueIndex,
+      }),
     );
   }
   const supportProjection = characterBattleSupportProjection(
@@ -689,8 +694,12 @@ export function characterBattleResourceInitsFromBuild(
     classLevels.success,
   );
   if (Result.isFailure(supportProjection)) {
-    return battleCreatureInitIssue(
-      supportProjection.failure.map(({ message }) => message).join("; "),
+    return battleCreatureInitIssuesFromMessages(
+      supportProjection.failure.map(({ message }) => message),
+      (issueIndex) => ({
+        kind: "characterBattleSupportProjection",
+        issueIndex,
+      }),
     );
   }
   const resourceProjectionFacts = characterBattleResourceProjectionFacts(
@@ -744,7 +753,10 @@ function characterBattleResourceInits(
     ...spellAccessResourceProjection.issues,
   ];
   if (issues.length > 0) {
-    return battleCreatureInitIssue(issues.join("; "));
+    return battleCreatureInitIssuesFromMessages(issues, (issueIndex) => ({
+      kind: "characterBattleResourceProjection",
+      issueIndex,
+    }));
   }
   return Result.succeed([
     ...admittedResourceProjection.resources,
@@ -788,7 +800,7 @@ function characterBattleResourceInitsFromAdmittedUnits(
       druidWildShapeFacts,
     );
     if (Result.isFailure(init)) {
-      issues.push(init.failure.message);
+      issues.push(battleCreatureInitIssueMessage(init.failure));
     } else {
       resources.push(init.success);
     }

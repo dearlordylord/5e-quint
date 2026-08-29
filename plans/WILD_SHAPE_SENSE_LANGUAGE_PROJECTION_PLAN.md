@@ -139,7 +139,7 @@ the same state as an authored `None` entry.
    `CharacterBattleCreatureInit` and the character origin state in
    `BattleCreatureState`. In `@dnd/character-battle-runtime`, derive it from
    `build.originLanguages` plus `build.classFeatureLanguages.map((f) =>
-   f.language)`, with uniqueness at the projection boundary. This is a battle
+f.language)`, with uniqueness at the projection boundary. This is a battle
    init projection, not a second Character Build source of truth.
 2. Add the shared projection helper in battle-runtime.
    Export `combatantPerceptionCommunicationProjection(combatant)` and smaller
@@ -219,8 +219,8 @@ update coverage artifacts in the same implementation task:
 - Run `pnpm unit-profile-coverage:check`,
   `pnpm rules-kernel-coverage:check`, and
   `pnpm check:mbt-driver-closure`.
-- Run `pnpm quality` before handoff unless broad verification exposes an
-  unrelated baseline failure outside the touched ownership surface.
+- Run `pnpm quality:milestone` before handoff unless broad verification exposes
+  an unrelated baseline failure outside the touched ownership surface.
 - Reviewer-loop convergence: repeat RAW traceability,
   ubiquitous-language/domain naming, architecture/connascence, and code-review
   passes until no reasonable finding remains. Reject notes only with a concrete

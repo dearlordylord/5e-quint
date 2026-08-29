@@ -1,16 +1,24 @@
 import { Either } from "effect";
-
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { BattleToolName } from "./battle-tool-input.ts";
 import {
   decodeGuestAccessGrant,
   type PlaySessionCaller,
 } from "./play-session-access.ts";
-import type { CharacterToolName } from "./character-tool-input.ts";
-import type { DiceToolName } from "./dice-tool-input.ts";
+import {
+  characterToolNames,
+  type CharacterToolName,
+} from "./character-tool-input.ts";
+import {
+  decodeDiceToolCall,
+  diceToolNames,
+  type DiceToolName,
+} from "./dice-tool-input.ts";
+import { decodeRollDiceResult } from "./dice-tool-output.ts";
 import {
   decodePlaySessionId,
   type PlaySessionAccessFailure,
+  type PlaySessionCommand,
   type PlaySessionId,
   type PlaySessionRegistry,
 } from "./play-session.ts";
@@ -27,8 +35,14 @@ import {
 } from "./play-session-request-identity.ts";
 import {
   availablePlaySessionEnvelope,
+  recoverableOperationResult,
   unavailablePlaySessionEnvelope,
 } from "./play-session-envelope.ts";
+import { createdCharacterDraftId } from "./play-session-command.ts";
+import {
+  battleSessionPayload,
+  battlePresentationIssueContent,
+} from "./battle-tool-payloads.ts";
 
 export {
   unresolvedInputsFrom,
@@ -107,12 +121,34 @@ export async function handleReadPlaySession(
   const result = await registry.run(
     routed.right.playSessionId,
     routed.right.caller,
-    (root) => ({
-      projection: root.sessionStore.snapshot(),
-      hasAvailableCharacterSession: Array.from(
-        root.sessionStore.characters.entries(),
-      ).some(([, session]) => session.tag !== "inBattle"),
-    }),
+    (root) => {
+      const battleEnvelope = readBattleEnvelopeForRoot(root);
+      if (Either.isLeft(battleEnvelope)) {
+        const operationContent = battlePresentationIssueContent(
+          battleEnvelope.left,
+        );
+        return {
+          operationResult: jsonContentPayload(operationContent),
+          isError: true as const,
+          projection: root.sessionStore.snapshot(),
+          hasAvailableCharacterSession: Array.from(
+            root.sessionStore.characters.entries(),
+          ).some(([, session]) => session.tag !== "inBattle"),
+        };
+      }
+      return {
+        operationResult: {
+          tag: "playSessionResumed" as const,
+          playSessionId: routed.right.playSessionId,
+          battleEnvelope: battleEnvelope.right,
+        },
+        isError: false as const,
+        projection: root.sessionStore.snapshot(),
+        hasAvailableCharacterSession: Array.from(
+          root.sessionStore.characters.entries(),
+        ).some(([, session]) => session.tag !== "inBattle"),
+      };
+    },
   );
   if (Either.isLeft(result)) {
     return result.left.tag === "playSessionUnavailable"
@@ -125,13 +161,11 @@ export async function handleReadPlaySession(
   return availablePlaySessionEnvelope({
     playSessionId: routed.right.playSessionId,
     operationName: playSessionToolNames.read,
-    operationResult: {
-      tag: "playSessionResumed",
-      playSessionId: routed.right.playSessionId,
-    },
+    operationResult: result.right.value.operationResult,
     projection: result.right.value.projection,
     hasAvailableCharacterSession:
       result.right.value.hasAvailableCharacterSession,
+    isError: result.right.value.isError,
     tenure: result.right.tenure,
     identity,
   });
@@ -158,22 +192,44 @@ export async function handlePlaySessionOperation(input: {
   const result = await input.registry.run(
     routed.right.playSessionId,
     routed.right.caller,
-    async (root) => ({
-      operationContent: await input.handle(root, routed.right.operationArgs),
-      projection: root.sessionStore.snapshot(),
-      hasAvailableCharacterSession: Array.from(
-        root.sessionStore.characters.entries(),
-      ).some(([, session]) => session.tag !== "inBattle"),
-    }),
+    async (root) => {
+      const operationContent = await input.handle(
+        root,
+        routed.right.operationArgs,
+      );
+      const operationResult = isToolContent(operationContent)
+        ? "structuredContent" in operationContent
+          ? operationContent.structuredContent
+          : jsonContentPayload(operationContent)
+        : undefined;
+      return {
+        operationContent,
+        operationResult: recoverableOperationResult(
+          root,
+          operationResult,
+          isToolContent(operationContent) && operationContent.isError === true,
+        ),
+        projection: root.sessionStore.snapshot(),
+        hasAvailableCharacterSession: Array.from(
+          root.sessionStore.characters.entries(),
+        ).some(([, session]) => session.tag !== "inBattle"),
+      };
+    },
     {
-      command: {
-        name: input.operationName,
-        args: routed.right.operationArgs,
-      },
+      commandFor: (operation) =>
+        retainedPlaySessionCommand(
+          input.operationName,
+          routed.right.operationArgs,
+          operation.operationContent,
+        ),
       retain: (operation) =>
         input.recordOperation &&
         isToolContent(operation.operationContent) &&
-        operation.operationContent.isError !== true,
+        operation.operationContent.isError !== true &&
+        operationShouldBeRetained(
+          input.operationName,
+          operation.operationContent,
+        ),
       succeeded: (operation) =>
         isToolContent(operation.operationContent) &&
         operation.operationContent.isError !== true,
@@ -198,10 +254,7 @@ export async function handlePlaySessionOperation(input: {
   return availablePlaySessionEnvelope({
     playSessionId: routed.right.playSessionId,
     operationName: input.operationName,
-    operationResult:
-      "structuredContent" in operationContent
-        ? operationContent.structuredContent
-        : jsonContentPayload(operationContent),
+    operationResult: result.right.value.operationResult,
     projection: result.right.value.projection,
     hasAvailableCharacterSession:
       result.right.value.hasAvailableCharacterSession,
@@ -209,6 +262,51 @@ export async function handlePlaySessionOperation(input: {
     tenure: result.right.tenure,
     identity: input.identity ?? GUEST_ONLY_REQUEST_IDENTITY,
   });
+}
+
+function readBattleEnvelopeForRoot(root: McpPlaySessionRoot) {
+  const battleState = root.sessionStore.battleState;
+  if (battleState.tag !== "activeBattle") return Either.right(null);
+  return Either.map(
+    battleSessionPayload(root, battleState.session),
+    (payload) => payload.envelope,
+  );
+}
+
+function operationShouldBeRetained(
+  operationName: CharacterToolName | BattleToolName | DiceToolName,
+  content:
+    | ReturnType<typeof errorContent>
+    | {
+        readonly structuredContent?: unknown;
+      },
+): boolean {
+  if (operationName !== diceToolNames.rollDice) return true;
+  const payload =
+    "structuredContent" in content ? content.structuredContent : undefined;
+  const decoded = decodeRollDiceResult(payload);
+  return Either.isRight(decoded) && decoded.right.disposition === "sampled";
+}
+
+function retainedPlaySessionCommand(
+  operationName: CharacterToolName | BattleToolName | DiceToolName,
+  args: Readonly<Record<string, unknown>>,
+  operationContent: unknown,
+): PlaySessionCommand {
+  if (operationName === characterToolNames.createCharacterDraft) {
+    const draftId = createdCharacterDraftId(operationContent);
+    return { name: operationName, args: { ...args, draftId } };
+  }
+  if (operationName === diceToolNames.rollDice) {
+    const decoded = decodeDiceToolCall({ name: operationName, args });
+    if (Either.isLeft(decoded)) {
+      throw new Error(
+        "A retained successful dice operation no longer decodes as its command.",
+      );
+    }
+    return { name: operationName, args: decoded.right.args };
+  }
+  return { name: operationName, args };
 }
 
 type RoutedArgs = {

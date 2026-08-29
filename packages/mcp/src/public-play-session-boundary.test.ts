@@ -27,6 +27,7 @@ import {
   handleReadPlaySession,
 } from "./play-session-protocol.ts";
 import { jsonContentPayload } from "./tool-content.ts";
+import { decodeDiceRollRequestId } from "./dice-tool-input.ts";
 import {
   createRecoverablePlaySessionRegistry,
   openSqlitePlaySessionRepository,
@@ -68,6 +69,59 @@ describe("public Play Session boundary", () => {
         inspected
           .prepare(
             "SELECT COUNT(*) AS count FROM retired_unowned_play_sessions_v1",
+          )
+          .get(),
+      ).toEqual({ count: 1 });
+      inspected.close();
+    } finally {
+      rmSync(directory, { force: true, recursive: true });
+    }
+  });
+
+  test("preserves Effect Random records in a retired format-2 table", () => {
+    const directory = mkdtempSync(
+      join(tmpdir(), "dnd-effect-random-sessions-"),
+    );
+    const databasePath = join(directory, "sessions.sqlite");
+    const legacy = new DatabaseSync(databasePath);
+    legacy.exec(`
+      CREATE TABLE play_sessions (
+        play_session_id TEXT PRIMARY KEY,
+        format_version INTEGER NOT NULL,
+        random_seed TEXT NOT NULL,
+        revision INTEGER NOT NULL,
+        operations_json TEXT NOT NULL,
+        tenure_kind TEXT NOT NULL,
+        guest_access_grant_digest TEXT,
+        principal_id TEXT,
+        last_activity_at_ms INTEGER NOT NULL
+      ) STRICT;
+      INSERT INTO play_sessions VALUES (
+        'play-session:00000000-0000-4000-8000-000000000098',
+        2,
+        '${"1".repeat(64)}',
+        0,
+        '[]',
+        'guest',
+        '${"2".repeat(64)}',
+        NULL,
+        1000
+      );
+    `);
+    legacy.close();
+    try {
+      const repository = openRepository(databasePath);
+      expect(
+        repository.load(
+          playSessionId("play-session:00000000-0000-4000-8000-000000000098"),
+        ),
+      ).toMatchObject({ _tag: "Right", right: { tag: "absent" } });
+      repository.close();
+      const inspected = new DatabaseSync(databasePath, { readOnly: true });
+      expect(
+        inspected
+          .prepare(
+            "SELECT COUNT(*) AS count FROM retired_effect_random_play_sessions_v2",
           )
           .get(),
       ).toEqual({ count: 1 });
@@ -218,9 +272,14 @@ describe("public Play Session boundary", () => {
     const guest = guestCreation(registry.create({ tag: "anonymous" }));
     const command = {
       name: "roll_dice",
-      args: { groups: [{ dice: 1, dieSize: 4 }] },
+      args: {
+        requestId: requireDiceRollRequestId(
+          "00000000-0000-4000-8000-000000000301",
+        ),
+        groups: [{ dice: 1, dieSize: 4 }],
+      },
     } satisfies PlaySessionCommand;
-    const retention = { command, retain: () => true };
+    const retention = { commandFor: () => command, retain: () => true };
     expect(
       await registry.run(
         guest.playSessionId,
@@ -564,4 +623,10 @@ function rightValue<A>(either: Either.Either<A, unknown>): A {
 
 function isJsonObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function requireDiceRollRequestId(input: string) {
+  const decoded = decodeDiceRollRequestId(input);
+  if (Either.isLeft(decoded)) throw new Error(decoded.left.message);
+  return decoded.right;
 }

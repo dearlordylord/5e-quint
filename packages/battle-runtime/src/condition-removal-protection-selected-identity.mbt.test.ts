@@ -436,7 +436,7 @@ function projectConditionRemovalProtectionSelectedIdentityState(
     actionAvailable: snapshot.turn.actionResources.some(
       (resource) => resource.source === "turn",
     ),
-    bonusActionAvailable: snapshot.turn.bonusActionAvailable,
+    bonusActionAvailable: snapshot.turn.bonusActionQuotaAvailable,
     lastResult,
   };
 }

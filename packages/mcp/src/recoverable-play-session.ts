@@ -32,7 +32,7 @@ export type {
   PlaySessionRepository,
   PlaySessionRepositoryIssue,
 } from "./play-session-repository.ts";
-export { decodePlaySessionRandomSeed } from "./play-session-repository.ts";
+export { decodeDiceSeed as decodePlaySessionDiceSeed } from "./dice-sampling-service.ts";
 
 export function createRecoverablePlaySessionRegistry(
   input: RecoverableRegistryInput,

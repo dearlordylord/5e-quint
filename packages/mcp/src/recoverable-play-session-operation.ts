@@ -8,6 +8,8 @@ import {
 import {
   PLAY_SESSION_UNAVAILABLE,
   type PlaySessionAccessFailure,
+  type PlaySessionCommand,
+  type PlaySessionCommandRetention,
   type PlaySessionRunResult,
 } from "./play-session.ts";
 import type { RecoverablePlaySessionRecord } from "./play-session-repository.ts";
@@ -136,28 +138,51 @@ async function commitRunOperation<A>(
   root: McpPlaySessionRoot,
 ): Promise<RunAttemptResult<A>> {
   const operationResult = await context.operation(root);
-  const succeeded =
-    context.commandRetention?.succeeded?.(operationResult) ?? true;
-  if (!succeeded) {
-    return nonRetainedRunResult(operationResult, record);
-  }
-  const retainCommand =
-    context.commandRetention?.retain(operationResult) ?? false;
-  const retentionFailure = retainedCommandLimitFailure(
-    context,
-    record,
-    retainCommand,
+  return Match.value(
+    commandRetentionDecision(context.commandRetention, operationResult),
+  ).pipe(
+    Match.when({ tag: "operationFailed" }, () =>
+      nonRetainedRunResult(operationResult, record),
+    ),
+    Match.when({ tag: "succeededWithoutCommand" }, () =>
+      commitSucceededRun(context, record, root, operationResult, undefined),
+    ),
+    Match.when({ tag: "succeededWithCommand" }, ({ command }) => {
+      const retentionFailure = retainedCommandLimitFailure(
+        context,
+        record,
+        true,
+      );
+      return retentionFailure === undefined
+        ? commitSucceededRun(context, record, root, operationResult, command)
+        : { tag: "result" as const, result: Either.left(retentionFailure) };
+    }),
+    Match.exhaustive,
   );
-  if (retentionFailure !== undefined) {
-    return { tag: "result", result: Either.left(retentionFailure) };
+}
+
+type CommandRetentionDecision =
+  | { readonly tag: "operationFailed" }
+  | { readonly tag: "succeededWithoutCommand" }
+  | {
+      readonly tag: "succeededWithCommand";
+      readonly command: PlaySessionCommand;
+    };
+
+function commandRetentionDecision<A>(
+  retention: PlaySessionCommandRetention<A> | undefined,
+  operationResult: A,
+): CommandRetentionDecision {
+  if (retention === undefined) return { tag: "succeededWithoutCommand" };
+  if (retention.succeeded?.(operationResult) === false) {
+    return { tag: "operationFailed" };
   }
-  return commitSucceededRun(
-    context,
-    record,
-    root,
-    operationResult,
-    retainCommand,
-  );
+  return retention.retain(operationResult)
+    ? {
+        tag: "succeededWithCommand",
+        command: retention.commandFor(operationResult),
+      }
+    : { tag: "succeededWithoutCommand" };
 }
 
 function nonRetainedRunResult<A>(
@@ -196,7 +221,7 @@ function commitSucceededRun<A>(
   record: RecoverablePlaySessionRecord,
   root: McpPlaySessionRoot,
   operationResult: A,
-  retainCommand: boolean,
+  command: PlaySessionCommand | undefined,
 ): RunAttemptResult<A> {
   const tenure = {
     ...record.tenure,
@@ -204,9 +229,7 @@ function commitSucceededRun<A>(
   };
   const committed = context.runtime.input.repository.commit(record, {
     tenure,
-    ...(retainCommand && context.commandRetention !== undefined
-      ? { operation: context.commandRetention.command }
-      : {}),
+    ...(command === undefined ? {} : { operation: command }),
   });
   if (Either.isLeft(committed)) {
     return {

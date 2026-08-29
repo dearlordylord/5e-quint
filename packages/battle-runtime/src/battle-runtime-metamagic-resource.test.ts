@@ -289,6 +289,11 @@ describe("battle runtime: Sorcerer Metamagic resource bridge", () => {
     ).toEqual(
       Result.fail({
         tag: "battleStateInitIssue",
+        kind: "characterAdmissionInvalid",
+        combatantId: "combatant:sorcerer-metamagic-resource-over-cap",
+        phase: "executionBindings",
+        issueIndex: 0,
+        ownerPath: ["initialCombatants", 0],
         message:
           "Point-pool character battle resource remaining points must not exceed its maximum.",
       }),

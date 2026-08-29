@@ -14,7 +14,10 @@ import {
   startBattle,
   startBattleWithInitialInitiativeSetup,
 } from "@dnd/battle-runtime";
-import { characterSheetBattleInit } from "@dnd/character-battle-runtime";
+import {
+  characterSheetBattleInit,
+  type BattleRosterStatBlockCombatant,
+} from "@dnd/character-battle-runtime";
 import {
   characterSheetDruidWildShapeKnownForms,
   characterSheetId,
@@ -32,7 +35,6 @@ import {
   availableCharacterSession,
   createMcpSessionStore,
 } from "./session-store.ts";
-import type { StatBlockBattleRosterCombatant } from "./battle-roster-session-types.ts";
 import { createMcpPlaySessionRoot } from "./composition-root.ts";
 
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource
@@ -736,14 +738,9 @@ describe("MCP character sessions", () => {
     if (subjectAct === undefined) {
       throw new Error("Expected an active battle subject for pending fills.");
     }
-    const pendingHole = subjectAct.initialHoles[0];
-    if (pendingHole === undefined) {
-      throw new Error("Expected a current pending battle hole.");
-    }
     store.pendingBattleFills = {
       subject: subjectAct.subject,
       fills: [],
-      holes: [pendingHole],
       baseSession: active,
     };
     const beforeCommit = deepStoreState(store);
@@ -829,7 +826,7 @@ function expectRight<T, E>(value: Result.Result<T, E>): T {
 
 function expectStatBlockCombatant(
   combatant: import("@dnd/battle-runtime").BattleCreatureInit,
-): StatBlockBattleRosterCombatant {
+): BattleRosterStatBlockCombatant {
   if (combatant.creatureInit.kind !== "statBlock") {
     throw new Error("Expected a Stat Block combatant.");
   }

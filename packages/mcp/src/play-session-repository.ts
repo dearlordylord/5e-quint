@@ -2,8 +2,13 @@ import { Either, Schema } from "effect";
 
 import { BATTLE_TOOL_NAMES } from "./battle-tool-input.ts";
 import { CHARACTER_TOOL_NAMES } from "./character-tool-input.ts";
-import { DICE_TOOL_NAMES } from "./dice-tool-input.ts";
+import { RollDiceArgsSchema, diceToolNames } from "./dice-tool-input.ts";
 import { type PlaySessionCommand, type PlaySessionId } from "./play-session.ts";
+import {
+  DICE_RANDOM_SOURCE,
+  decodeDiceSeed,
+  type DiceSeed,
+} from "./dice-sampling-service.ts";
 import {
   GuestAccessGrantDigestSchema,
   EpochMillisecondsSchema,
@@ -14,26 +19,35 @@ import {
   type StoredPlaySessionTenure,
 } from "./play-session-access.ts";
 
-export const RECOVERABLE_PLAY_SESSION_FORMAT_VERSION = 2 as const;
+export const RECOVERABLE_PLAY_SESSION_FORMAT_VERSION = 3 as const;
 
-const RecoverableOperationNameSchema = Schema.Literal(
+const RecoverableStateOperationNameSchema = Schema.Literal(
   ...CHARACTER_TOOL_NAMES,
   ...BATTLE_TOOL_NAMES,
-  ...DICE_TOOL_NAMES,
 );
 const RecoverablePlaySessionOperationsSchema = Schema.Array(
-  Schema.Struct({
-    name: RecoverableOperationNameSchema,
-    args: Schema.Record({ key: Schema.String, value: Schema.Unknown }),
-  }),
+  Schema.Union(
+    Schema.Struct({
+      name: RecoverableStateOperationNameSchema,
+      args: Schema.Record({ key: Schema.String, value: Schema.Unknown }),
+    }),
+    Schema.Struct({
+      name: Schema.Literal(diceToolNames.rollDice),
+      args: RollDiceArgsSchema,
+    }),
+  ),
 );
-const RandomSeedSchema = Schema.String.pipe(
-  Schema.pattern(/^[0-9a-f]{64}$/u),
-  Schema.brand("PlaySessionRandomSeed"),
+const StoredDiceSeedSchema = Schema.String.pipe(
+  Schema.pattern(/^[0-9a-f]{32}$/u),
 );
 const StoredPlaySessionRowSchema = Schema.Struct({
   format_version: Schema.Literal(RECOVERABLE_PLAY_SESSION_FORMAT_VERSION),
-  random_seed: RandomSeedSchema,
+  dice_seed: StoredDiceSeedSchema,
+  dice_group_semantic_profile: Schema.Literal(
+    DICE_RANDOM_SOURCE.diceGroupSemanticProfile,
+  ),
+  prng_sequence_profile: Schema.Literal(DICE_RANDOM_SOURCE.prngSequenceProfile),
+  state_schema_version: Schema.Literal(DICE_RANDOM_SOURCE.stateSchemaVersion),
   revision: Schema.NonNegativeInt,
   operations_json: Schema.String,
   tenure_kind: Schema.Literal("guest", "saved"),
@@ -42,11 +56,14 @@ const StoredPlaySessionRowSchema = Schema.Struct({
   last_activity_at_ms: EpochMillisecondsSchema,
 });
 
-export type PlaySessionRandomSeed = typeof RandomSeedSchema.Type;
+export type PlaySessionDiceReplay = {
+  readonly seed: DiceSeed;
+  readonly randomSource: typeof DICE_RANDOM_SOURCE;
+};
 export type RecoverablePlaySessionRecord = {
   readonly playSessionId: PlaySessionId;
   readonly formatVersion: typeof RECOVERABLE_PLAY_SESSION_FORMAT_VERSION;
-  readonly randomSeed: PlaySessionRandomSeed;
+  readonly diceReplay: PlaySessionDiceReplay;
   readonly revision: number;
   readonly operations: readonly PlaySessionCommand[];
   readonly tenure: StoredPlaySessionTenure;
@@ -133,9 +150,6 @@ export type PlaySessionRepository = {
   close(): void;
 };
 
-export const decodePlaySessionRandomSeed =
-  Schema.decodeUnknownEither(RandomSeedSchema);
-
 export function decodeStoredPlaySessionRecord(
   row: unknown,
   playSessionId: PlaySessionId,
@@ -162,14 +176,32 @@ export function decodeStoredPlaySessionRecord(
   }
   const tenure = decodeStoredTenure(decodedRow.right);
   if (Either.isLeft(tenure)) return Either.left(tenure.left);
+  const diceSeed = decodeDiceSeed(
+    splitStoredDiceSeed(decodedRow.right.dice_seed),
+  );
+  if (Either.isLeft(diceSeed)) {
+    return Either.left(invalidStoredRecordIssue(diceSeed.left.message));
+  }
   return Either.right({
     playSessionId,
     formatVersion: decodedRow.right.format_version,
-    randomSeed: decodedRow.right.random_seed,
+    diceReplay: {
+      seed: diceSeed.right,
+      randomSource: DICE_RANDOM_SOURCE,
+    },
     revision: decodedRow.right.revision,
     operations: decodedOperations.right,
     tenure: tenure.right,
   });
+}
+
+function splitStoredDiceSeed(seed: string) {
+  return [
+    seed.slice(0, 8),
+    seed.slice(8, 16),
+    seed.slice(16, 24),
+    seed.slice(24, 32),
+  ];
 }
 
 function decodeStoredTenure(

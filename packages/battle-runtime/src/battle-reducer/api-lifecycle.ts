@@ -50,15 +50,15 @@ import {
 import {
   battleCreatureStateAdmissionFromInit,
   combatantInitiativeInsertionIndex,
-  hidePrerequisitesReferenceCombatantsIssue,
+  hidePrerequisitesReferenceCombatantsIssues,
   isCharacterBattleCreatureState,
   positiveHpUnconsciousInitIssue,
 } from "./creature-state.ts";
 import { admittedSpellActs } from "./spells-profiles.ts";
 
 import {
-  battleStateInitIssue,
   battleStateInitIssueLeaves,
+  battleStateInitIssue,
   battleStateInitIssues,
 } from "./domain-helpers.ts";
 
@@ -67,6 +67,10 @@ export { removeBattleCombatants } from "./combatant-removal.ts";
 
 import type {
   BattleCreatureState,
+  BattleInitializationIssueFact,
+  BattleInitializationIssue,
+  BattleInitializationIssueFacts,
+  BattleInitializationLeafIssue,
   BattleExecutionScopeAllocation,
   BattleHidePrerequisite,
   BattleState,
@@ -92,6 +96,79 @@ function admissionIssueToInitIssue(
     return { tag: "battleStateInitIssue", message: issue.message };
   }
   return issue;
+}
+
+function battleInitializationIssue(
+  facts: BattleInitializationIssueFacts,
+  message: string,
+  ownerPath?: readonly (string | number)[],
+): BattleInitializationLeafIssue {
+  return {
+    tag: "battleStateInitIssue",
+    message,
+    ...facts,
+    ...(ownerPath === undefined ? {} : { ownerPath }),
+  };
+}
+
+function battleInitializationLeafIssueFromStateIssue(
+  issue: BattleStateInitLeafIssue,
+  fallbackFacts: BattleInitializationIssueFacts,
+  ownerPath?: readonly (string | number)[],
+): BattleInitializationLeafIssue {
+  const resolvedOwnerPath = issue.ownerPath ?? ownerPath;
+  if (issue.tag === "weaponLoadoutMismatch") {
+    return resolvedOwnerPath === undefined
+      ? issue
+      : { ...issue, ownerPath: resolvedOwnerPath };
+  }
+  if ("kind" in issue) {
+    return resolvedOwnerPath === undefined
+      ? issue
+      : { ...issue, ownerPath: resolvedOwnerPath };
+  }
+  return {
+    ...issue,
+    ...fallbackFacts,
+    ...(resolvedOwnerPath === undefined
+      ? {}
+      : { ownerPath: resolvedOwnerPath }),
+  };
+}
+
+function battleInitializationIssueFromLeafIssues(
+  issues: ReadonlyNonEmptyArray<BattleInitializationLeafIssue>,
+): Result.Result<never, BattleInitializationIssue> {
+  const [first, second, ...rest] = issues;
+  return second === undefined
+    ? Result.fail(first)
+    : Result.fail({
+        tag: "battleStateInitIssues",
+        issues: [first, second, ...rest],
+      });
+}
+
+function battleInitializationFactsForAdmission(
+  combatant: BattleCreatureInit,
+  issue: BattleStateInitLeafIssue | BattleUnitSupportProfileIssue,
+  issueIndex: number,
+): BattleInitializationIssueFacts {
+  return issue.tag === "battleUnitSupportProfileIssue"
+    ? {
+        kind: "characterAdmissionInvalid",
+        combatantId: combatant.combatantId,
+        phase: "executionBindings",
+        issueIndex,
+      }
+    : {
+        kind: "runtimeAdmissionInvalid",
+        combatantId: combatant.combatantId,
+        origin:
+          combatant.creatureInit.kind === "character"
+            ? "character"
+            : "statBlock",
+        issueIndex,
+      };
 }
 
 export function battleStateInitIssueFromAdmissionIssues(
@@ -162,17 +239,324 @@ class InitialInitiativeSetupWorkflow {
   }
 }
 
+export function battleInitializationIssueLeaves(
+  issue: BattleInitializationIssue,
+): ReadonlyNonEmptyArray<BattleInitializationLeafIssue> {
+  return Match.value(issue).pipe(
+    Match.when({ tag: "battleStateInitIssues" }, ({ issues }) => {
+      const [firstIssue, ...restIssues] = issues;
+      return prependBattleInitializationLeaves(
+        battleInitializationIssueLeaves(firstIssue),
+        restIssues.flatMap(battleInitializationIssueLeaves),
+      );
+    }),
+    Match.when({ tag: "battleStateInitIssue" }, battleInitializationLeafList),
+    Match.when({ tag: "weaponLoadoutMismatch" }, battleInitializationLeafList),
+    Match.exhaustive,
+  );
+}
+
+function battleInitializationLeafList(
+  leaf: BattleInitializationLeafIssue,
+): ReadonlyNonEmptyArray<BattleInitializationLeafIssue> {
+  return [leaf];
+}
+
+function prependBattleInitializationLeaves(
+  first: ReadonlyNonEmptyArray<BattleInitializationLeafIssue>,
+  rest: readonly BattleInitializationLeafIssue[],
+): ReadonlyNonEmptyArray<BattleInitializationLeafIssue> {
+  const [firstLeaf, ...restLeaves] = first;
+  return [firstLeaf, ...restLeaves, ...rest];
+}
+
+export function battleInitializationIssueFactFields(
+  facts: BattleInitializationIssueFacts,
+): BattleInitializationIssueFact {
+  return Match.value(facts).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      emptyRoster: ({ kind }) => ({ reason: kind }),
+      duplicateCombatantId: ({ kind, combatantId }) => ({
+        reason: kind,
+        combatantId,
+      }),
+      ammunitionStockInvalid: ({ kind, combatantId, ammunition }) => ({
+        reason: kind,
+        combatantId,
+        ammunition,
+      }),
+      currentHpExceedsMaximum: ({
+        kind,
+        combatantId,
+        currentHp,
+        maximumHp,
+      }) => ({
+        reason: kind,
+        combatantId,
+        currentHp,
+        maximumHp,
+      }),
+      positiveHpUnconsciousInvalid: ({ kind, combatantId, requirement }) => ({
+        reason: kind,
+        combatantId,
+        requirement,
+      }),
+      zeroHpLifecycleInvalid: ({ kind, combatantId, requirement }) => ({
+        reason: kind,
+        combatantId,
+        requirement,
+      }),
+      initialConditionImmune: ({ kind, combatantId, condition }) => ({
+        reason: kind,
+        combatantId,
+        condition,
+      }),
+      statBlockSourceInvalid: ({ kind, statBlockId, constraint }) => ({
+        reason: kind,
+        statBlockId,
+        constraint,
+      }),
+      statBlockCombatantInvalid: ({ kind, combatantId, constraint }) => ({
+        reason: kind,
+        combatantId,
+        constraint,
+      }),
+      characterClassLevelsInvalid: ({ kind, combatantId, issueIndex }) => ({
+        reason: kind,
+        combatantId,
+        issueIndex,
+      }),
+      characterSupportProjectionInvalid: ({
+        kind,
+        combatantId,
+        issueIndex,
+      }) => ({
+        reason: kind,
+        combatantId,
+        issueIndex,
+      }),
+      characterResourceInvalid: ({ kind, combatantId, issueIndex }) => ({
+        reason: kind,
+        combatantId,
+        issueIndex,
+      }),
+      characterFeatureInvalid: ({ kind, combatantId, issueIndex }) => ({
+        reason: kind,
+        combatantId,
+        issueIndex,
+      }),
+      characterSpellcastingInvalid: ({ kind, combatantId, issueIndex }) => ({
+        reason: kind,
+        combatantId,
+        issueIndex,
+      }),
+      characterAdmissionInvalid: ({
+        kind,
+        combatantId,
+        phase,
+        issueIndex,
+      }) => ({
+        reason: kind,
+        combatantId,
+        phase,
+        issueIndex,
+      }),
+      executionScopeUnavailable: ({ kind, combatantId }) => ({
+        reason: kind,
+        combatantId,
+      }),
+      runtimeContextMissing: ({ kind, combatantId }) => ({
+        reason: kind,
+        combatantId,
+      }),
+      weaponPresentationUnavailable: ({
+        kind,
+        combatantId,
+        weaponUnitId,
+        availability,
+      }) => ({
+        reason: kind,
+        combatantId,
+        weaponUnitId,
+        availability,
+      }),
+      hidePrerequisiteReferencesUnknownCombatant: ({
+        kind,
+        combatantId,
+        referencedCombatantId,
+      }) => ({
+        reason: kind,
+        combatantId,
+        referencedCombatantId,
+      }),
+      hidePrerequisiteSelfReference: ({ kind, combatantId }) => ({
+        reason: kind,
+        combatantId,
+      }),
+      initialCombatantOrderMissing: ({ kind, combatantId }) => ({
+        reason: kind,
+        combatantId,
+      }),
+      initialInitiativeInvalid: ({ kind, initializationReason }) => ({
+        reason: kind,
+        initializationReason,
+      }),
+      runtimeAdmissionInvalid: ({ kind, combatantId, origin, issueIndex }) => ({
+        reason: kind,
+        combatantId,
+        origin,
+        issueIndex,
+      }),
+      companionOwnerMissing: ({ kind, ownerId }) => ({
+        reason: kind,
+        ownerId,
+      }),
+      companionDurableIdentityMissing: ({ kind, ownerId }) => ({
+        reason: kind,
+        ownerId,
+      }),
+      companionOwnerAlreadyHasCompanion: ({ kind, ownerId }) => ({
+        reason: kind,
+        ownerId,
+      }),
+      companionDurableIdentityInUse: ({
+        kind,
+        ownerId,
+        durableCompanionId,
+        existingOwnerId,
+      }) => ({
+        reason: kind,
+        ownerId,
+        durableCompanionId,
+        existingOwnerId,
+      }),
+      companionManifestationInvalid: ({ kind, ownerId, requirement }) => ({
+        reason: kind,
+        ownerId,
+        requirement,
+      }),
+      companionFormStatBlockMissing: ({
+        kind,
+        formAccess,
+        resolvedStatBlockId,
+      }) => ({
+        reason: kind,
+        formAccess,
+        resolvedStatBlockId,
+      }),
+      companionFormAccessMismatch: ({
+        kind,
+        storedFormAccess,
+        eligibilityFormAccess,
+      }) => ({
+        reason: kind,
+        storedFormAccess,
+        eligibilityFormAccess,
+      }),
+      companionFormResolvedStatBlockMismatch: ({
+        kind,
+        formAccess,
+        expectedStatBlockId,
+        resolvedStatBlockId,
+      }) => ({
+        reason: kind,
+        formAccess,
+        expectedStatBlockId,
+        resolvedStatBlockId,
+      }),
+      companionFormSelectionStatBlockMissing: ({
+        kind,
+        formAccess,
+        selectedStatBlockId,
+      }) => ({
+        reason: kind,
+        formAccess,
+        selectedStatBlockId,
+      }),
+      companionFormSelectionStatBlockInvalid: ({
+        kind,
+        formAccess,
+        selectedStatBlockId,
+        expectedCreatureType,
+        expectedChallengeRating,
+      }) => ({
+        reason: kind,
+        formAccess,
+        selectedStatBlockId,
+        expectedCreatureType,
+        expectedChallengeRating,
+      }),
+      companionFormSpecialFormUnknown: ({ kind, formAccess, formId }) => ({
+        reason: kind,
+        formAccess,
+        formId,
+      }),
+      companionFormNormalFormIneligible: ({ kind, formAccess, formId }) => ({
+        reason: kind,
+        formAccess,
+        formId,
+      }),
+      companionCombatantAdmissionInvalid: ({
+        kind,
+        ownerId,
+        companionCombatantId,
+      }) => ({
+        reason: kind,
+        ownerId,
+        companionCombatantId,
+      }),
+      companionInitialInitiativeInvalid: ({
+        kind,
+        ownerId,
+        companionCombatantId,
+        requirement,
+      }) => ({
+        reason: kind,
+        ownerId,
+        companionCombatantId,
+        requirement,
+      }),
+      companionOwnerRuntimeContextMissing: ({ kind, ownerId }) => ({
+        reason: kind,
+        ownerId,
+      }),
+      companionPresentationStatBlockMissing: ({
+        kind,
+        companionCombatantId,
+        statBlockId,
+      }) => ({
+        reason: kind,
+        companionCombatantId,
+        statBlockId,
+      }),
+      companionPresentationCombatantMissing: ({
+        kind,
+        companionCombatantId,
+        statBlockId,
+      }) => ({
+        reason: kind,
+        companionCombatantId,
+        statBlockId,
+      }),
+    }),
+  );
+}
+
 export type InitialInitiativeSetup = InitialInitiativeSetupWorkflow;
 
-type StartBattleInput = {
+export type BattleStartInput = {
   readonly battleId: BattleId;
   readonly combatants: readonly BattleCreatureInit[];
   readonly hidePrerequisites?: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
+  readonly ownerPathForCombatant?: (
+    combatant: BattleCreatureInit,
+    index: number,
+  ) => readonly (string | number)[];
 };
 
 export function startBattleWithInitialInitiativeSetup(
-  input: StartBattleInput,
-): Result.Result<InitialInitiativeSetup, BattleStateInitIssue> {
+  input: BattleStartInput,
+): Result.Result<InitialInitiativeSetup, BattleInitializationIssue> {
   const session = startBattle(input);
   return Result.isFailure(session)
     ? Result.fail(session.failure)
@@ -215,127 +599,289 @@ export function requiredInitiativeRollModeForCombatant(
   return hasRemarkableAthleteAdvantage ? "advantage" : undefined;
 }
 
-export function startBattle(
-  input: StartBattleInput,
-): Result.Result<BattleRuntimeSession, BattleStateInitIssue> {
-  if (input.combatants.length === 0) {
-    return battleStateInitIssue("startBattle requires at least one combatant.");
-  }
+type ValidBattleCreatureAdmission = Extract<
+  ReturnType<typeof battleCreatureStateAdmissionFromInit>,
+  { readonly tag: "admitted" }
+>;
 
-  const combatants = new Map<CombatantId, BattleCreatureState>();
-  const executionScopeCursors = new Map<
+type InitialBattleAdmissionAccumulator = {
+  readonly initializationIssues: BattleInitializationLeafIssue[];
+  readonly seenCombatantIds: Set<CombatantId>;
+  readonly combatants: Map<CombatantId, BattleCreatureState>;
+  readonly executionScopeCursors: Map<
     CombatantId,
     BattleExecutionScopeAllocation
-  >();
-  const characterContexts = new Map<
+  >;
+  readonly characterContexts: Map<CombatantId, CharacterBattleRuntimeContext>;
+  readonly statBlockPresentations: Map<
     CombatantId,
-    CharacterBattleRuntimeContext
-  >();
-  const statBlockPresentations = new Map<
-    CombatantId,
-    import("../battle-runtime-context.ts").BattleStatBlockPresentationSource
-  >();
-  const initializationIssues: BattleStateInitLeafIssue[] = [];
-  const seenCombatantIds = new Set<CombatantId>();
-  for (const combatant of input.combatants) {
-    const duplicateCombatantId = seenCombatantIds.has(combatant.combatantId);
-    seenCombatantIds.add(combatant.combatantId);
-    if (duplicateCombatantId) {
-      initializationIssues.push({
-        tag: "battleStateInitIssue",
-        message: `Duplicate combatant id: ${combatant.combatantId}`,
-      });
-    }
-    const positiveHpUnconsciousIssue =
-      positiveHpUnconsciousInitIssue(combatant);
-    if (positiveHpUnconsciousIssue !== null) {
-      if (Result.isFailure(positiveHpUnconsciousIssue)) {
-        initializationIssues.push(
-          ...battleStateInitIssueLeaves(positiveHpUnconsciousIssue.failure),
-        );
-      }
-      continue;
-    }
-    const admission = battleCreatureStateAdmissionFromInit(
-      input.battleId,
-      combatant,
-      battleExecutionScopeOrdinal(0),
-    );
-    if (admission.tag === "invalid") {
-      initializationIssues.push(
-        ...admission.issues.map(admissionIssueToInitIssue),
-      );
-      continue;
-    }
-    if (admission.nextScopeOrdinal <= 0) {
-      initializationIssues.push({
-        tag: "battleStateInitIssue",
-        message: `Combatant ${combatant.combatantId} admission allocated no execution scope.`,
-      });
-      continue;
-    }
-    if (duplicateCombatantId) continue;
-    combatants.set(combatant.combatantId, admission.creature);
-    if ("runtimeContext" in admission) {
-      characterContexts.set(combatant.combatantId, admission.runtimeContext);
-    }
-    if ("statBlockPresentation" in admission) {
-      statBlockPresentations.set(
-        combatant.combatantId,
-        admission.statBlockPresentation,
-      );
-    }
-    executionScopeCursors.set(combatant.combatantId, {
-      kind: "active",
-      nextScopeOrdinal: battleExecutionScopeCursor(admission.nextScopeOrdinal),
+    BattleStatBlockPresentationSource
+  >;
+};
+
+function initialBattleAdmissionAccumulator(): InitialBattleAdmissionAccumulator {
+  return {
+    initializationIssues: [],
+    seenCombatantIds: new Set(),
+    combatants: new Map(),
+    executionScopeCursors: new Map(),
+    characterContexts: new Map(),
+    statBlockPresentations: new Map(),
+  };
+}
+
+function appendDuplicateCombatantIssue(
+  accumulator: InitialBattleAdmissionAccumulator,
+  combatant: BattleCreatureInit,
+  ownerPath: readonly (string | number)[],
+): boolean {
+  const duplicate = accumulator.seenCombatantIds.has(combatant.combatantId);
+  accumulator.seenCombatantIds.add(combatant.combatantId);
+  if (!duplicate) return false;
+  accumulator.initializationIssues.push(
+    battleInitializationIssue(
+      {
+        kind: "duplicateCombatantId",
+        combatantId: combatant.combatantId,
+      },
+      `Duplicate combatant id: ${combatant.combatantId}`,
+      ownerPath,
+    ),
+  );
+  return true;
+}
+
+function appendPositiveHpUnconsciousIssue(
+  accumulator: InitialBattleAdmissionAccumulator,
+  combatant: BattleCreatureInit,
+  ownerPath: readonly (string | number)[],
+): boolean {
+  const issue = positiveHpUnconsciousInitIssue(combatant);
+  if (issue === null || !Result.isFailure(issue)) return issue !== null;
+  accumulator.initializationIssues.push(
+    ...battleStateInitIssueLeaves(issue.failure).map((leaf) =>
+      battleInitializationLeafIssueFromStateIssue(
+        leaf,
+        {
+          kind: "positiveHpUnconsciousInvalid",
+          combatantId: combatant.combatantId,
+          requirement: "oneCurrentHp",
+        },
+        ownerPath,
+      ),
+    ),
+  );
+  return true;
+}
+
+function appendInvalidBattleCreatureAdmissionIssues(
+  accumulator: InitialBattleAdmissionAccumulator,
+  combatant: BattleCreatureInit,
+  admission: ReturnType<typeof battleCreatureStateAdmissionFromInit>,
+  ownerPath: readonly (string | number)[],
+): admission is ValidBattleCreatureAdmission {
+  if (admission.tag !== "invalid") return true;
+  accumulator.initializationIssues.push(
+    ...admission.issues.map((issue, issueIndex) =>
+      battleInitializationLeafIssueFromStateIssue(
+        admissionIssueToInitIssue(issue),
+        battleInitializationFactsForAdmission(combatant, issue, issueIndex),
+        ownerPath,
+      ),
+    ),
+  );
+  return false;
+}
+
+function recordValidInitialBattleCombatant(input: {
+  readonly accumulator: InitialBattleAdmissionAccumulator;
+  readonly combatant: BattleCreatureInit;
+  readonly admission: ValidBattleCreatureAdmission;
+  readonly ownerPath: readonly (string | number)[];
+}): void {
+  const { accumulator, combatant, admission, ownerPath } = input;
+  accumulator.combatants.set(combatant.combatantId, admission.creature);
+  if ("runtimeContext" in admission) {
+    accumulator.characterContexts.set(combatant.combatantId, {
+      ...admission.runtimeContext,
+      displayName: combatant.displayName,
     });
   }
-  for (const [combatantId, combatant] of combatants) {
-    if (!isCharacterBattleCreatureState(combatant)) continue;
-    const characterContext = characterContexts.get(combatantId);
-    if (characterContext === undefined) {
-      initializationIssues.push({
-        tag: "battleStateInitIssue",
-        message: `Character ${combatantId} is missing its runtime context.`,
-      });
-      continue;
-    }
-    for (const attack of [
-      combatant.origin.attack,
-      combatant.origin.offHandAttack,
-    ]) {
-      if (attack == null) continue;
-      const presentationSource = characterWeaponPresentationSource(
-        characterContext,
-        attack.weapon.weaponUnitId,
-      );
-      if (Result.isFailure(presentationSource)) {
-        initializationIssues.push({
-          tag: "battleStateInitIssue",
-          message: `Character ${combatantId} weapon ${attack.weapon.weaponUnitId} has ${presentationSource.failure.reason} authored presentation source.`,
-        });
-      }
-    }
+  if ("statBlockPresentation" in admission) {
+    accumulator.statBlockPresentations.set(
+      combatant.combatantId,
+      admission.statBlockPresentation,
+    );
   }
-  if (isNonEmptyReadonlyArray(initializationIssues)) {
-    return battleStateInitIssueFromAdmissionIssues(initializationIssues);
+  if (admission.nextScopeOrdinal <= 0) {
+    accumulator.initializationIssues.push(
+      battleInitializationIssue(
+        {
+          kind: "executionScopeUnavailable",
+          combatantId: combatant.combatantId,
+        },
+        `Combatant ${combatant.combatantId} admission allocated no execution scope.`,
+        ownerPath,
+      ),
+    );
+    accumulator.combatants.delete(combatant.combatantId);
+    accumulator.characterContexts.delete(combatant.combatantId);
+    accumulator.statBlockPresentations.delete(combatant.combatantId);
+    return;
   }
-  const hidePrerequisiteIssue = hidePrerequisitesReferenceCombatantsIssue(
-    input.hidePrerequisites ?? new Map(),
-    combatants,
-  );
-  if (hidePrerequisiteIssue !== null) return hidePrerequisiteIssue;
+  accumulator.executionScopeCursors.set(combatant.combatantId, {
+    kind: "active",
+    nextScopeOrdinal: battleExecutionScopeCursor(admission.nextScopeOrdinal),
+  });
+}
 
+function admitInitialBattleCombatant(input: {
+  readonly battleId: BattleId;
+  readonly combatant: BattleCreatureInit;
+  readonly index: number;
+  readonly ownerPath: readonly (string | number)[];
+  readonly accumulator: InitialBattleAdmissionAccumulator;
+}): void {
+  const { accumulator, combatant, ownerPath } = input;
+  const duplicate = appendDuplicateCombatantIssue(
+    accumulator,
+    combatant,
+    ownerPath,
+  );
+  const hasPositiveHpUnconsciousIssue = appendPositiveHpUnconsciousIssue(
+    accumulator,
+    combatant,
+    ownerPath,
+  );
+  const admission = battleCreatureStateAdmissionFromInit(
+    input.battleId,
+    combatant,
+    battleExecutionScopeOrdinal(0),
+  );
+  if (
+    !appendInvalidBattleCreatureAdmissionIssues(
+      accumulator,
+      combatant,
+      admission,
+      ownerPath,
+    )
+  ) {
+    return;
+  }
+  if (duplicate || hasPositiveHpUnconsciousIssue) return;
+  recordValidInitialBattleCombatant({
+    accumulator,
+    combatant,
+    admission,
+    ownerPath,
+  });
+}
+
+function admitInitialBattleCombatants(
+  input: BattleStartInput,
+): InitialBattleAdmissionAccumulator {
+  const accumulator = initialBattleAdmissionAccumulator();
+  for (const [index, combatant] of input.combatants.entries()) {
+    admitInitialBattleCombatant({
+      battleId: input.battleId,
+      combatant,
+      index,
+      ownerPath:
+        input.ownerPathForCombatant?.(combatant, index) ??
+        (["initialCombatants", index] as const),
+      accumulator,
+    });
+  }
+  return accumulator;
+}
+
+function appendInitialHidePrerequisiteIssues(
+  input: BattleStartInput,
+  accumulator: InitialBattleAdmissionAccumulator,
+): void {
+  const hidePrerequisiteIssues = hidePrerequisitesReferenceCombatantsIssues(
+    input.hidePrerequisites ?? new Map(),
+    accumulator.combatants,
+  );
+  accumulator.initializationIssues.push(
+    ...hidePrerequisiteIssues.map(
+      ({ kind, combatantId, referencedCombatantId, issue }) =>
+        battleInitializationLeafIssueFromStateIssue(
+          issue,
+          kind === "unknownCombatant"
+            ? {
+                kind: "hidePrerequisiteReferencesUnknownCombatant",
+                combatantId,
+                referencedCombatantId: referencedCombatantId ?? combatantId,
+              }
+            : { kind: "hidePrerequisiteSelfReference", combatantId },
+          ownerPathForAdmittedCombatant(input, combatantId),
+        ),
+    ),
+  );
+}
+
+function appendInitialInitiativeIssues(
+  accumulator: InitialBattleAdmissionAccumulator,
+  initiative: Result.Result<BattleState["initiative"], BattleStateInitIssue>,
+): void {
+  if (accumulator.combatants.size === 0 || Result.isSuccess(initiative)) return;
+  accumulator.initializationIssues.push(
+    ...battleStateInitIssueLeaves(initiative.failure).map((issue) =>
+      battleInitializationLeafIssueFromStateIssue(
+        issue,
+        {
+          kind: "initialInitiativeInvalid",
+          initializationReason: "stackConstruction",
+        },
+        ["battleInitialization", "initiative"],
+      ),
+    ),
+  );
+}
+
+function initialBattleState(
+  input: BattleStartInput,
+  accumulator: InitialBattleAdmissionAccumulator,
+): Result.Result<BattleState, BattleInitializationIssue> {
   const initiative = createInitialInitiativeForCombatants({
-    combatants: input.combatants,
+    combatants: [...accumulator.combatants.values()],
     emptyRosterMessage: "startBattle requires at least one combatant.",
   });
-  if (Result.isFailure(initiative)) return Result.fail(initiative.failure);
-  const state: BattleState = {
+  appendInitialInitiativeIssues(accumulator, initiative);
+  if (Result.isFailure(initiative)) {
+    if (isNonEmptyReadonlyArray(accumulator.initializationIssues)) {
+      return battleInitializationIssueFromLeafIssues(
+        accumulator.initializationIssues,
+      );
+    }
+    return Result.fail(
+      battleInitializationIssue(
+        {
+          kind: "initialInitiativeInvalid",
+          initializationReason: "emptyRoster",
+        },
+        initiative.failure.tag === "battleStateInitIssue"
+          ? initiative.failure.message
+          : "Battle initialization could not create an initiative stack.",
+        ["battleInitialization", "initiative"],
+      ),
+    );
+  }
+  if (
+    accumulator.initializationIssues.length > 0 &&
+    accumulator.combatants.size === 0 &&
+    isNonEmptyReadonlyArray(accumulator.initializationIssues)
+  ) {
+    return battleInitializationIssueFromLeafIssues(
+      accumulator.initializationIssues,
+    );
+  }
+  return Result.succeed({
     battleId: input.battleId,
     initiative: initiative.success,
-    combatants,
-    executionScopeCursors,
+    combatants: accumulator.combatants,
+    executionScopeCursors: accumulator.executionScopeCursors,
     companions: new Map(),
     groundObjects: new Map(),
     objectOutlines: [],
@@ -349,34 +895,132 @@ export function startBattle(
     grapples: [],
     interruptStack: [],
     legendaryActionWindow: null,
-  };
-  const combatantsWithCharacterExecutions = new Map(state.combatants);
-  for (const [combatantId, combatant] of state.combatants) {
+  });
+}
+
+function appendCharacterWeaponPresentationIssues(input: {
+  readonly combatant: CharacterBattleCreatureState;
+  readonly characterContext: CharacterBattleRuntimeContext;
+  readonly ownerPath: readonly (string | number)[];
+  readonly initializationIssues: BattleInitializationLeafIssue[];
+}): void {
+  for (const attack of [
+    input.combatant.origin.attack,
+    input.combatant.origin.offHandAttack,
+  ]) {
+    if (attack == null) continue;
+    const presentationSource = characterWeaponPresentationSource(
+      input.characterContext,
+      attack.weapon.weaponUnitId,
+    );
+    if (Result.isFailure(presentationSource)) {
+      input.initializationIssues.push(
+        battleInitializationIssue(
+          {
+            kind: "weaponPresentationUnavailable",
+            combatantId: input.combatant.combatantId,
+            weaponUnitId: attack.weapon.weaponUnitId,
+            availability: presentationSource.failure.reason,
+          },
+          `Character ${input.combatant.combatantId} weapon ${attack.weapon.weaponUnitId} has ${presentationSource.failure.reason} authored presentation source.`,
+          input.ownerPath,
+        ),
+      );
+    }
+  }
+}
+
+function initializeCharacterBattleExecutions(input: {
+  readonly state: BattleState;
+  readonly battleInput: BattleStartInput;
+  readonly characterContexts: Map<CombatantId, CharacterBattleRuntimeContext>;
+  readonly initializationIssues: BattleInitializationLeafIssue[];
+}): Map<CombatantId, BattleCreatureState> {
+  const combatantsWithCharacterExecutions = new Map(input.state.combatants);
+  for (const [combatantId, combatant] of input.state.combatants) {
     if (!isCharacterBattleCreatureState(combatant)) continue;
-    const characterContext = characterContexts.get(combatantId);
-    /* v8 ignore start -- @preserve -- The presentation-validation pass above rejects every admitted character without a runtime context before this execution pass. */
-    if (characterContext === undefined) continue;
-    /* v8 ignore stop -- @preserve */
+    const characterContext = input.characterContexts.get(combatantId);
+    if (characterContext === undefined) {
+      input.initializationIssues.push(
+        battleInitializationIssue(
+          { kind: "runtimeContextMissing", combatantId },
+          `Character ${combatantId} is missing its runtime context.`,
+          ownerPathForAdmittedCombatant(input.battleInput, combatantId),
+        ),
+      );
+      continue;
+    }
+    appendCharacterWeaponPresentationIssues({
+      combatant,
+      characterContext,
+      ownerPath: ownerPathForAdmittedCombatant(input.battleInput, combatantId),
+      initializationIssues: input.initializationIssues,
+    });
     const spellAdmission = admitCharacterSpellExecution({
       combatant,
-      state,
+      state: input.state,
       runtimeContext: characterContext,
     });
     combatantsWithCharacterExecutions.set(combatantId, spellAdmission.creature);
-    characterContexts.set(combatantId, spellAdmission.runtimeContext);
+    input.characterContexts.set(combatantId, spellAdmission.runtimeContext);
+  }
+  return combatantsWithCharacterExecutions;
+}
+
+export function startBattle(
+  input: BattleStartInput,
+): Result.Result<BattleRuntimeSession, BattleInitializationIssue> {
+  if (input.combatants.length === 0) {
+    return Result.fail(
+      battleInitializationIssue(
+        { kind: "emptyRoster" },
+        "startBattle requires at least one combatant.",
+      ),
+    );
+  }
+  const admission = admitInitialBattleCombatants(input);
+  appendInitialHidePrerequisiteIssues(input, admission);
+  const state = initialBattleState(input, admission);
+  if (Result.isFailure(state)) return Result.fail(state.failure);
+  const combatantsWithCharacterExecutions = initializeCharacterBattleExecutions(
+    {
+      state: state.success,
+      battleInput: input,
+      characterContexts: admission.characterContexts,
+      initializationIssues: admission.initializationIssues,
+    },
+  );
+  if (isNonEmptyReadonlyArray(admission.initializationIssues)) {
+    return battleInitializationIssueFromLeafIssues(
+      admission.initializationIssues,
+    );
   }
   return Result.succeed(
     battleRuntimeSessionFromAdmittedContext(
       {
-        ...state,
+        ...state.success,
         combatants: combatantsWithCharacterExecutions,
       },
       battleRuntimeContextFromCharacterAdmission(
-        characterContexts,
-        statBlockPresentations,
+        admission.characterContexts,
+        admission.statBlockPresentations,
       ),
     ),
   );
+}
+
+function ownerPathForAdmittedCombatant(
+  input: BattleStartInput,
+  combatantId: CombatantId,
+): readonly (string | number)[] {
+  const index = input.combatants.findIndex(
+    (candidate) => candidate.combatantId === combatantId,
+  );
+  const combatant = input.combatants[index];
+  return combatant === undefined
+    ? (["battleInitialization", "hidePrerequisite"] as const)
+    : (input.ownerPathForCombatant?.(combatant, index) ??
+        (["initialCombatants", index] as const));
 }
 
 type InitialInitiativeCombatant = Pick<
@@ -749,7 +1393,10 @@ export function addBattleRuntimeCombatant(input: {
     (admission) => {
       const characters = new Map(input.session.context.characters);
       if (admission.characterContext !== undefined) {
-        characters.set(input.combatant.combatantId, admission.characterContext);
+        characters.set(input.combatant.combatantId, {
+          ...admission.characterContext,
+          displayName: input.combatant.displayName,
+        });
       }
       const statBlocks = new Map(input.session.context.statBlocks);
       if (admission.statBlockPresentation !== undefined) {

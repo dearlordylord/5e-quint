@@ -6,8 +6,10 @@ import {
   type BattleRuntimeSession,
   type RetainedCompanionBattleSelection,
 } from "./battle-runtime-context.ts";
-import type { BattleStateInitIssue } from "./battle-state-execution.ts";
-import type { BattleResolutionResult } from "./battle-state-execution.ts";
+import type {
+  BattleResolutionResult,
+  BattleStateInitIssue,
+} from "./battle-state-execution.ts";
 import type { BattleStatBlockPresentationSource } from "./battle-runtime-context.ts";
 import type { CombatantId } from "./identity.ts";
 import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
@@ -64,6 +66,8 @@ export function admitCompanionToBattleRuntime(
   if (session === undefined) {
     return Result.fail({
       tag: "battleStateInitIssue" as const,
+      kind: "companionOwnerRuntimeContextMissing" as const,
+      ownerId: input.ownerId,
       message:
         "Retained companion admission owner has no authored runtime context.",
     });
@@ -231,6 +235,9 @@ function companionPresentationFromCatalog(input: {
   if (Option.isNone(statBlock)) {
     return Result.fail({
       tag: "battleStateInitIssue",
+      kind: "companionPresentationStatBlockMissing",
+      companionCombatantId: input.combatantId,
+      statBlockId: input.statBlockId,
       message:
         "Committed companion presentation Stat Block is missing from the catalog.",
     });
@@ -259,6 +266,9 @@ function companionPresentationFromSource(input: {
   if (combatant?.origin.kind !== "statBlock") {
     return Result.fail({
       tag: "battleStateInitIssue",
+      kind: "companionPresentationCombatantMissing",
+      companionCombatantId: input.combatantId,
+      statBlockId: input.statBlock.id,
       message:
         "Committed companion presentation requires its Stat Block combatant.",
     });

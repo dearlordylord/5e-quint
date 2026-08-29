@@ -51,6 +51,9 @@ import {
   fighterId,
   fighterVsGoblinBattle,
   fighterTurnWithReadiedAcidAndSecondReadiedRay,
+  battleCheckpointFrontierEnvelope,
+  battleFrontierInterruptDecision,
+  battleFrontierInterruptDecisionForState,
   findHole,
   goblinId,
   interruptDecisionFill,
@@ -61,6 +64,7 @@ import {
   wizardId,
 } from "./battle-runtime.test-support.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { currentInterruptCheckpoint } from "./battle-reducer/battle-snapshot.ts";
 import { replayContinuationFrame } from "./battle-reducer/replay-continuation.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
@@ -291,8 +295,14 @@ function nestedDeclineResumesOuterInterrupt(): InterruptStackResumeRuntimeState 
   if (awaitingAttackReaction.tag !== "needsHoles") {
     throw new Error("Expected outer attack-hit interrupt window.");
   }
+  const awaitingAttackDecision = battleFrontierInterruptDecisionForState(
+    awaitingAttackReaction.state,
+  );
+  if (awaitingAttackDecision === null) {
+    throw new Error("Expected outer attack-hit interrupt decision.");
+  }
   const releaseChoice = reactionChoiceWithSubject(
-    awaitingAttackReaction.snapshot.pendingInterrupt!.choices,
+    awaitingAttackDecision.choices,
   );
   if (
     releaseChoice.subject.tag !== "runtimeCommand" ||
@@ -302,19 +312,16 @@ function nestedDeclineResumesOuterInterrupt(): InterruptStackResumeRuntimeState 
   }
   const released = resolveBattleInterrupt({
     state: awaitingAttackReaction.state,
-    fill: interruptDecisionFill(
-      awaitingAttackReaction.snapshot.pendingInterrupt!.decisionHole,
-      {
-        kind: "resolve",
-        responderId: wizardId,
-        choice: {
-          kind: "releaseReadiedSpell",
-          readiedSpellCasterId: wizardId,
-          procedureRef: releaseChoice.subject.procedureRef,
-          fills: [],
-        },
+    fill: interruptDecisionFill(awaitingAttackDecision.decisionHole, {
+      kind: "resolve",
+      responderId: wizardId,
+      choice: {
+        kind: "releaseReadiedSpell",
+        readiedSpellCasterId: wizardId,
+        procedureRef: releaseChoice.subject.procedureRef,
+        fills: [],
       },
-    ),
+    }),
   });
   if (released.tag !== "needsHoles") {
     throw new Error("Expected released readied spell holes.");
@@ -335,17 +342,17 @@ function nestedDeclineResumesOuterInterrupt(): InterruptStackResumeRuntimeState 
   if (nested.tag !== "needsHoles") {
     throw new Error("Expected nested save-failed interrupt window.");
   }
-  const maxStackDepthObserved =
-    nested.snapshot.pendingInterrupt?.stackDepth ?? 0;
+  const nestedDecision = battleFrontierInterruptDecisionForState(nested.state);
+  if (nestedDecision === null) {
+    throw new Error("Expected nested save-failed interrupt decision.");
+  }
+  const maxStackDepthObserved = nestedDecision.stackDepth;
   const declinedNested = resolveBattleInterrupt({
     state: nested.state,
-    fill: interruptDecisionFill(
-      nested.snapshot.pendingInterrupt!.decisionHole,
-      {
-        kind: "decline",
-        responderId: secondWizardId,
-      },
-    ),
+    fill: interruptDecisionFill(nestedDecision.decisionHole, {
+      kind: "decline",
+      responderId: secondWizardId,
+    }),
   });
   if (declinedNested.tag !== "needsHoles") {
     throw new Error("Expected nested decline to resume released spell damage.");
@@ -395,23 +402,25 @@ function shieldMutationResumesInterruptedAttack(): InterruptStackResumeRuntimeSt
   if (awaitingReaction.tag !== "needsHoles") {
     throw new Error("Expected Shield to open an attack-hit interrupt window.");
   }
-  const maxStackDepthObserved =
-    awaitingReaction.snapshot.pendingInterrupt?.stackDepth ?? 0;
+  const awaitingDecision = battleFrontierInterruptDecisionForState(
+    awaitingReaction.state,
+  );
+  if (awaitingDecision === null) {
+    throw new Error("Expected Shield interrupt decision.");
+  }
+  const maxStackDepthObserved = awaitingDecision.stackDepth;
   const choice = requireShieldReactionChoice(awaitingReaction);
   const resolved = resolveBattleInterrupt({
     state: awaitingReaction.state,
-    fill: interruptDecisionFill(
-      awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
-      {
-        kind: "resolve",
-        responderId: shieldCasterId,
-        choice: {
-          kind: "castTriggeredReactionSpell",
-          procedureRef: choice.subject.procedureRef,
-          fills: [],
-        },
+    fill: interruptDecisionFill(awaitingDecision.decisionHole, {
+      kind: "resolve",
+      responderId: shieldCasterId,
+      choice: {
+        kind: "castTriggeredReactionSpell",
+        procedureRef: choice.subject.procedureRef,
+        fills: [],
       },
-    ),
+    }),
   });
   if (resolved.tag !== "resolved") {
     throw new Error("Expected Shield active effect to resume the attack.");
@@ -645,7 +654,9 @@ function requireShieldReactionChoice(
   BattleInterruptProcedureChoice,
   { readonly kind: "castTriggeredReactionSpell" }
 > {
-  const choice = result.snapshot.pendingInterrupt?.choices.find(
+  const choice = battleFrontierInterruptDecisionForState(
+    result.state,
+  )?.choices.find(
     (
       candidate,
     ): candidate is Extract<
@@ -700,6 +711,14 @@ function interruptStackResumeProjection(
   state: InterruptStackResumeRuntimeState,
 ): InterruptStackResumeProjection {
   const snapshot = snapshotBattle(state.battle);
+  const envelope = battleCheckpointFrontierEnvelope(state.battle);
+  const pending = battleFrontierInterruptDecision(envelope);
+  const currentFrame = state.battle.interruptStack.at(-1);
+  const currentCheckpoint = currentInterruptCheckpoint(state.battle);
+  const handledInterruptTrigger =
+    currentFrame?.kind === "replayContinuation"
+      ? currentFrame.handledInterruptTrigger
+      : undefined;
   const responder = snapshot.combatants.find(
     (combatant) => combatant.combatantId === state.responderId,
   );
@@ -711,9 +730,16 @@ function interruptStackResumeProjection(
   }
   return {
     maxStackDepthObserved: state.maxStackDepthObserved,
-    finalStackDepth: snapshot.pendingInterrupt?.stackDepth ?? 0,
+    finalStackDepth:
+      pending?.stackDepth ??
+      (envelope.frontier.kind === "holes"
+        ? state.battle.interruptStack.length
+        : 0),
     pendingTrigger: interruptStackResumeTrigger(
-      snapshot.pendingInterrupt?.trigger ?? "none",
+      pending?.trigger ??
+        currentCheckpoint?.trigger ??
+        handledInterruptTrigger ??
+        "none",
     ),
     resumedHole: state.resumedHole,
     activeEffectMutationSeenOnResume: state.activeEffectMutationSeenOnResume,

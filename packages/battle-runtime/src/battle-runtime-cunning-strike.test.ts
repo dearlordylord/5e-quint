@@ -10,7 +10,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME rogue_cunning_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-08-ROGUE-SUPREME-SNEAK rogue_supreme_sneak
 import {
-  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
+  assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
 import {
@@ -39,6 +39,7 @@ import {
   attackRollFill,
   attackRollHoleAfterTarget,
   attackTargetFill,
+  battleFrontierInterruptDecisionForState,
   battleId,
   characterBattleFeatureInitForTest,
   characterBonusAttackSubjectForTest,
@@ -80,6 +81,7 @@ import {
 } from "./battle-runtime.test-support.ts";
 import { spellSlotInvocationRef } from "./battle-subjects.ts";
 import { battleCunningStrikeOptionGrantSupportForUnit } from "./unit-feature-support.ts";
+import { battleCheckpointFrontierEnvelope } from "./battle-session-execution.ts";
 
 describe("battle runtime: Cunning Strike", () => {
   test("Surface rejects malformed same-family Cunning Strike records", () => {
@@ -398,6 +400,9 @@ describe("battle runtime: Cunning Strike", () => {
     if (needsTripSave.tag !== "needsHoles") {
       throw new Error("Expected Cunning Strike Trip staged save.");
     }
+    expect(
+      battleCheckpointFrontierEnvelope(needsTripSave.state).checkpoint.battleId,
+    ).toBe(needsTripSave.state.battleId);
 
     expect(targetTempHp(needsTripSave.state)).toBe(40);
 
@@ -752,7 +757,7 @@ describe("battle runtime: Cunning Strike", () => {
     if (repeatSaveRequest.tag !== "needsHoles") {
       throw new Error("Expected Cunning Strike Poison repeat save.");
     }
-    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+    assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: repeatSaveRequest.snapshot,
       subject: repeatSaveRequest.subject,
       holes: repeatSaveRequest.holes,
@@ -1113,12 +1118,13 @@ function cunningStrikeOpportunityAttackDamageWindow(
     throw new Error("Expected Cunning Strike Opportunity Attack interrupt.");
   }
   const choice = reactionChoiceWithSubject(
-    awaitingReaction.snapshot.pendingInterrupt!.choices,
+    battleFrontierInterruptDecisionForState(awaitingReaction.state)!.choices,
   );
   const startedReaction = resolveBattleInterrupt({
     state: awaitingReaction.state,
     fill: interruptDecisionFill(
-      awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
+      battleFrontierInterruptDecisionForState(awaitingReaction.state)!
+        .decisionHole,
       {
         kind: "resolve",
         responderId: fighterId,

@@ -22,6 +22,11 @@ import {
   publicMcpTraceContext,
   type PublicMcpServiceOperations,
 } from "./public-service-operations.ts";
+import {
+  handleSavedSessionAuthorizationRequest,
+  isSavedSessionAuthorizationPath,
+  type SavedSessionAuthorizationHttp,
+} from "./saved-session-authorization/http.ts";
 
 export type DndMcpHttpServer = {
   listen(): Promise<Either.Either<URL, DndMcpHttpServerIssue>>;
@@ -57,12 +62,33 @@ export function createDndMcpHttpServer(input: {
   readonly port?: number;
   readonly oauth?: PublicMcpOAuth;
   readonly operations?: PublicMcpServiceOperations;
+  readonly savedSessionAuthorization?: SavedSessionAuthorizationHttp;
 }): DndMcpHttpServer {
   const applicationServices =
     input.applicationServices ?? createMcpApplicationServices();
   const hostname = input.hostname ?? "127.0.0.1";
   const port = input.port ?? 0;
+  const operations = input.operations ?? {
+    environment: "development" as const,
+    release: "development",
+    publisherName: DEFAULT_PUBLIC_MCP_PUBLISHER_NAME,
+  };
   const server = createServer((incoming, outgoing) => {
+    const pathname = new URL(incoming.url ?? "/", `http://${hostname}`)
+      .pathname;
+    if (
+      input.savedSessionAuthorization !== undefined &&
+      isSavedSessionAuthorizationPath(pathname)
+    ) {
+      handleSavedSessionAuthorizationNodeRequest({
+        authorization: input.savedSessionAuthorization,
+        incoming,
+        operations,
+        outgoing,
+        pathname,
+      }).catch(() => outgoing.destroy());
+      return;
+    }
     handleNodeRequest({
       incoming,
       outgoing,
@@ -70,11 +96,7 @@ export function createDndMcpHttpServer(input: {
       applicationServices,
       playSessionRepository: input.playSessionRepository,
       ...(input.oauth === undefined ? {} : { oauth: input.oauth }),
-      operations: input.operations ?? {
-        environment: "development",
-        release: "development",
-        publisherName: DEFAULT_PUBLIC_MCP_PUBLISHER_NAME,
-      },
+      operations,
     }).catch(() => {
       if (outgoing.headersSent) {
         outgoing.destroy();
@@ -128,6 +150,93 @@ export function createDndMcpHttpServer(input: {
       });
     },
   };
+}
+
+async function handleSavedSessionAuthorizationNodeRequest(input: {
+  readonly authorization: SavedSessionAuthorizationHttp;
+  readonly incoming: Parameters<
+    typeof handleSavedSessionAuthorizationRequest
+  >[0]["incoming"];
+  readonly operations: PublicMcpServiceOperations;
+  readonly outgoing: Parameters<
+    typeof handleSavedSessionAuthorizationRequest
+  >[0]["outgoing"];
+  readonly pathname: string;
+}): Promise<void> {
+  const startedAt = performance.now();
+  const trace = publicMcpTraceContext();
+  const observation = await savedSessionAuthorizationRequestAttempt(input);
+  observePublicMcpRequest({
+    environment: input.operations.environment,
+    release: input.operations.release,
+    traceId: trace.traceId,
+    spanId: trace.spanId,
+    method: publicMcpHttpMethod(input.incoming.method),
+    route: publicRouteLabel(input.pathname),
+    durationMilliseconds: Math.round(performance.now() - startedAt),
+    ...observation,
+  });
+}
+
+async function savedSessionAuthorizationRequestAttempt(input: {
+  readonly authorization: SavedSessionAuthorizationHttp;
+  readonly incoming: Parameters<
+    typeof handleSavedSessionAuthorizationRequest
+  >[0]["incoming"];
+  readonly outgoing: Parameters<
+    typeof handleSavedSessionAuthorizationRequest
+  >[0]["outgoing"];
+  readonly pathname: string;
+}): Promise<{
+  readonly status: number;
+  readonly outcome: "accepted" | "rejected" | "failed";
+}> {
+  try {
+    const result = await handleSavedSessionAuthorizationRequest(input);
+    if (Either.isLeft(result)) {
+      return writeSavedSessionAuthorizationIssue(
+        input.outgoing,
+        result.left.reason,
+      );
+    }
+    const status = input.outgoing.statusCode;
+    return { status, outcome: status < 400 ? "accepted" : "rejected" };
+  } catch {
+    await writeSavedSessionAuthorizationFailure(input.outgoing, 500);
+    return { status: 500, outcome: "failed" };
+  }
+}
+
+async function writeSavedSessionAuthorizationIssue(
+  outgoing: Parameters<typeof writePublicHttpResponse>[0],
+  reason: "requestFailed" | "requestTooLarge",
+): Promise<{
+  readonly status: number;
+  readonly outcome: "rejected" | "failed";
+}> {
+  if (reason === "requestTooLarge") {
+    await writeSavedSessionAuthorizationFailure(outgoing, 413);
+    return { status: 413, outcome: "rejected" };
+  }
+  await writeSavedSessionAuthorizationFailure(outgoing, 500);
+  return { status: 500, outcome: "failed" };
+}
+
+async function writeSavedSessionAuthorizationFailure(
+  outgoing: Parameters<typeof writePublicHttpResponse>[0],
+  status: 413 | 500,
+): Promise<void> {
+  if (outgoing.headersSent) {
+    outgoing.destroy();
+    return;
+  }
+  await writePublicHttpResponse(
+    outgoing,
+    new Response(
+      status === 413 ? "Request body is too large" : "Internal server error",
+      { status },
+    ),
+  );
 }
 
 function httpServerIssue(

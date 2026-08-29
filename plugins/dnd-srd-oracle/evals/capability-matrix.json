@@ -361,7 +361,11 @@
         },
         {
           "toolName": "roll_dice",
-          "pathSegments": ["operation", "result", "correlationId"]
+          "pathSegments": ["operation", "result", "requestId"]
+        },
+        {
+          "toolName": "roll_dice",
+          "pathSegments": ["operation", "result", "randomSource"]
         }
       ],
       "mcpEvidence": {
@@ -503,11 +507,17 @@
       "modelVisibleProjection": [
         {
           "toolName": "start_battle",
-          "pathSegments": ["operation", "result", "battleState"]
+          "pathSegments": ["operation", "result", "envelope"]
         },
         {
           "toolName": "start_battle",
-          "pathSegments": ["operation", "result", "snapshot"]
+          "pathSegments": [
+            "operation",
+            "result",
+            "envelope",
+            "checkpoint",
+            "combatants"
+          ]
         },
         {
           "toolName": "start_battle",
@@ -579,15 +589,27 @@
       "modelVisibleProjection": [
         {
           "toolName": "start_battle",
-          "pathSegments": ["operation", "result", "snapshot", "turnOrder"]
+          "pathSegments": [
+            "operation",
+            "result",
+            "envelope",
+            "checkpoint",
+            "turnOrder"
+          ]
         },
         {
           "toolName": "start_battle",
-          "pathSegments": ["operation", "result", "snapshot", "currentActorId"]
+          "pathSegments": [
+            "operation",
+            "result",
+            "envelope",
+            "checkpoint",
+            "currentActorId"
+          ]
         },
         {
           "toolName": "start_battle",
-          "pathSegments": ["operation", "result", "battleState"]
+          "pathSegments": ["operation", "result", "envelope"]
         }
       ],
       "mcpEvidence": {
@@ -613,11 +635,23 @@
       "modelVisibleProjection": [
         {
           "toolName": "start_battle",
-          "pathSegments": ["operation", "result", "battleState", "tag"]
+          "pathSegments": [
+            "operation",
+            "result",
+            "session",
+            "battleState",
+            "tag"
+          ]
         },
         {
           "toolName": "start_battle",
-          "pathSegments": ["operation", "result", "battleState", "combatants"]
+          "pathSegments": [
+            "operation",
+            "result",
+            "session",
+            "battleState",
+            "combatants"
+          ]
         },
         {
           "toolName": "start_battle",
@@ -625,7 +659,7 @@
         },
         {
           "toolName": "start_battle",
-          "pathSegments": ["operation", "result", "snapshot"]
+          "pathSegments": ["operation", "result", "session"]
         }
       ],
       "mcpEvidence": {
@@ -659,7 +693,13 @@
         },
         {
           "toolName": "read_battle_state",
-          "pathSegments": ["operation", "result", "snapshot", "combatants"]
+          "pathSegments": [
+            "operation",
+            "result",
+            "envelope",
+            "checkpoint",
+            "combatants"
+          ]
         },
         {
           "toolName": "battle_lifecycle",
@@ -693,15 +733,21 @@
       "modelVisibleProjection": [
         {
           "toolName": "read_battle_state",
-          "pathSegments": ["operation", "result", "snapshot"]
+          "pathSegments": ["operation", "result", "envelope"]
         },
         {
           "toolName": "read_battle_state",
-          "pathSegments": ["operation", "result", "availableActs"]
+          "pathSegments": ["operation", "result", "envelope", "frontier"]
         },
         {
           "toolName": "read_battle_state",
-          "pathSegments": ["operation", "result", "snapshot", "currentActorId"]
+          "pathSegments": [
+            "operation",
+            "result",
+            "envelope",
+            "checkpoint",
+            "currentActorId"
+          ]
         },
         {
           "toolName": "read_battle_state",
@@ -731,14 +777,26 @@
       "modelVisibleProjection": [
         {
           "toolName": "discover_battle_acts",
-          "pathSegments": ["operation", "result", "availableActs"]
+          "pathSegments": ["operation", "result", "envelope", "frontier"]
         },
         {
           "toolName": "discover_battle_acts",
           "pathSegments": [
             "operation",
             "result",
-            "availableActs",
+            "envelope",
+            "frontier",
+            "acts"
+          ]
+        },
+        {
+          "toolName": "discover_battle_acts",
+          "pathSegments": [
+            "operation",
+            "result",
+            "envelope",
+            "frontier",
+            "acts",
             "[]",
             "subject"
           ]
@@ -748,14 +806,32 @@
           "pathSegments": [
             "operation",
             "result",
-            "availableActs",
+            "envelope",
+            "frontier",
+            "acts",
             "[]",
             "initialHoles"
           ]
         },
         {
           "toolName": "discover_battle_acts",
-          "pathSegments": ["operation", "result", "snapshot", "currentActorId"]
+          "pathSegments": [
+            "operation",
+            "result",
+            "envelope",
+            "frontier",
+            "holes"
+          ]
+        },
+        {
+          "toolName": "discover_battle_acts",
+          "pathSegments": [
+            "operation",
+            "result",
+            "envelope",
+            "checkpoint",
+            "currentActorId"
+          ]
         }
       ],
       "mcpEvidence": {
@@ -785,20 +861,21 @@
         },
         {
           "toolName": "resolve_battle_act",
-          "pathSegments": ["operation", "result", "result", "holes"]
+          "pathSegments": ["operation", "result", "envelope", "frontier"]
         },
         {
           "toolName": "resolve_battle_act",
           "pathSegments": [
             "operation",
             "result",
-            "session",
-            "transientBattleFills"
+            "envelope",
+            "frontier",
+            "holes"
           ]
         },
         {
           "toolName": "resolve_battle_act",
-          "pathSegments": ["operation", "result", "snapshot"]
+          "pathSegments": ["operation", "result", "envelope"]
         }
       ],
       "mcpEvidence": {
@@ -824,11 +901,23 @@
       "modelVisibleProjection": [
         {
           "toolName": "end_turn",
-          "pathSegments": ["operation", "result", "snapshot", "currentActorId"]
+          "pathSegments": [
+            "operation",
+            "result",
+            "envelope",
+            "checkpoint",
+            "currentActorId"
+          ]
         },
         {
           "toolName": "end_turn",
-          "pathSegments": ["operation", "result", "snapshot", "turnOrder"]
+          "pathSegments": [
+            "operation",
+            "result",
+            "envelope",
+            "checkpoint",
+            "turnOrder"
+          ]
         },
         {
           "toolName": "end_turn",

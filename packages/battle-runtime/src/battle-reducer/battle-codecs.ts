@@ -50,9 +50,7 @@ import {
 } from "../active-effect/codecs.ts";
 import {
   BATTLE_CUNNING_STRIKE_OPTION_SELECTION_IDS,
-  BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   CUNNING_STRIKE_END_TURN_COVER_DEGREES,
-  DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE,
   MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
 } from "../unit-feature-support.ts";
@@ -103,28 +101,26 @@ import {
   BattleStatBlockExecutionScopeRef,
   BattleStatBlockProcedureExecutionRef,
   BattleProcedureExecutionRef,
-  BattleProcedureExecutionCursor,
-  BattleExecutionScopeCursor,
+  BattleReplayStackDepth,
+  battleActiveEffectExecutionRefBelongsToScope,
   battleProcedureExecutionRefBelongsToScope,
   battleProcedureExecutionRefOrdinalIsBefore,
   battleEffectExecutionRefBelongsToScope,
   battleEffectExecutionRefOrdinalIsBefore,
   battleCharacterExecutionScopeRefBelongsToBattle,
   battleCharacterExecutionScopeRefBelongsToCombatant,
-  battleCharacterExecutionScopeRefOrdinalIsBefore,
   battleAttackExecutionScopeRefBelongsToBattle,
   battleAttackExecutionScopeRefBelongsToCombatant,
-  battleAttackExecutionScopeRefOrdinalIsBefore,
   battleResourcePoolExecutionRefBelongsToScope,
   battleStatBlockExecutionScopeRefBelongsToBattle,
   battleStatBlockExecutionScopeRefBelongsToCombatant,
   battleStatBlockExecutionScopeRefIsWellFormed,
-  battleStatBlockExecutionScopeRefOrdinalIsBefore,
   BattleSpellEffectOccurrenceId,
   BattleStartTurnOccurrenceId,
   BattleTablePositionId,
   CombatantId,
 } from "../identity.ts";
+import type { BattleExecutionScopeRef } from "../identity.ts";
 import { creatureAttackRollMechanicsAreSupported } from "../statblock-action-support.ts";
 import { ATTACK_DAMAGE_ABILITY_MODIFIER_CHOICE_SELECTIONS } from "./attack-damage-ability-modifier-choice.ts";
 import { ATTACK_DAMAGE_DIE_FLOOR_CHOICE_SELECTIONS } from "./attack-damage-die-floor-choice.ts";
@@ -5501,7 +5497,7 @@ export const RuntimeActionResourceSchema = Schema.Union([
 
 const BattleTurnSnapshotSchema = Schema.Struct({
   actionResources: Schema.Array(RuntimeActionResourceSchema),
-  bonusActionAvailable: Schema.Boolean,
+  bonusActionQuotaAvailable: Schema.Boolean,
   spellSlotUsesThisTurn: Schema.Array(
     Schema.Union([
       Schema.Struct({
@@ -5822,7 +5818,10 @@ const CharacterBattleCreatureOriginSnapshotSchema = Schema.Struct({
   characterId: Schema.String,
   execution: Schema.Struct({
     scopeRef: BattleCharacterExecutionScopeRef,
-    nextProcedureOrdinal: BattleProcedureExecutionCursor,
+    // Procedure allocation is runtime state, never part of a durable
+    // checkpoint. The exact optional field rejects legacy cursor payloads
+    // instead of silently accepting a second snapshot shape.
+    nextProcedureOrdinal: Schema.optionalWith(Schema.Never, { exact: true }),
     procedureBindings: Schema.Array(
       Schema.Struct({
         procedureRef: BattleProcedureExecutionRef,
@@ -5993,14 +5992,11 @@ function battleCreatureSnapshotInvariantsHold(
       snapshot.combatantId,
     ) &&
     characterOrigin.execution.procedureBindings.every((binding) =>
-      battleProcedureExecutionRefOrdinalIsBefore(
+      battleProcedureExecutionRefBelongsToScope(
         binding.procedureRef,
         characterOrigin.execution.scopeRef,
-        characterOrigin.execution.nextProcedureOrdinal,
       ),
     ) &&
-    characterOrigin.execution.procedureBindings.length ===
-      characterOrigin.execution.nextProcedureOrdinal &&
     new Set(
       characterOrigin.execution.procedureBindings.map(
         (binding) => binding.procedureRef,
@@ -6111,7 +6107,7 @@ const battleCreatureSnapshotInvariantAnnotations = {
 const BattleCreatureSnapshotShapeSchema = Schema.Union([
   Schema.Struct({
     ...BattleCreatureSnapshotCommonFields,
-    displayName: Schema.String,
+    displayName: Schema.optionalWith(Schema.Never, { exact: true }),
     origin: CharacterBattleCreatureOriginSnapshotSchema,
   }),
   Schema.Struct({
@@ -6336,7 +6332,7 @@ const BattleReactionModifierChoiceSchema = Schema.Union([
   }),
 ]);
 
-export const BattleInterruptProcedureChoiceSchema = Schema.Union([
+const BattleInterruptProcedureChoiceWithSubjectPayloadSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("releaseReadiedSpell"),
     reactorId: CombatantId,
@@ -6387,61 +6383,74 @@ export const BattleInterruptProcedureChoiceSchema = Schema.Union([
     subject: BattleSubjectSchema,
     initialHoles: Schema.Array(BattleHoleSchema),
   }),
-  Schema.Struct({
-    kind: Schema.Literal("reactionRollOrDamageReduction"),
-    reactorId: CombatantId,
-    choice: BattleReactionModifierChoiceSchema,
-    initialHoles: Schema.Array(BattleHoleSchema),
-  }),
-]).pipe(
-  Schema.check(
-    Schema.makeFilter(
-      (choice) =>
-        Match.value(choice).pipe(
-          Match.discriminatorsExhaustive("kind")({
-            releaseReadiedSpell: (value) =>
-              value.subject.tag === "runtimeCommand" &&
-              value.subject.command === "releaseReadiedSpell" &&
-              value.reactorId === value.readiedSpellCasterId &&
-              value.reactorId === value.subject.readiedSpellCasterId,
-            releaseReadiedMovement: (value) =>
-              value.subject.tag === "runtimeCommand" &&
-              value.subject.command === "releaseReadiedMovement" &&
-              value.reactorId === value.readiedMovementActorId &&
-              value.reactorId === value.subject.readiedMovementActorId,
-            releaseReadiedAction: (value) =>
-              value.subject.tag === "runtimeCommand" &&
-              value.subject.command === "releaseReadiedAction" &&
-              value.reactorId === value.subject.reactorId,
-            releaseReadiedAttack: (value) =>
-              value.subject.tag === "runtimeCommand" &&
-              value.subject.command === "releaseReadiedAttack" &&
-              value.reactorId === value.subject.reactorId,
-            castTriggeredReactionSpell: (value) =>
-              value.subject.tag === "runtimeCommand" &&
-              value.subject.command === "castTriggeredReactionSpell" &&
-              value.reactorId === value.subject.reactorId,
-            castAttackHitBonusActionSpell: (value) =>
-              value.subject.tag === "runtimeCommand" &&
-              value.subject.command === "castAttackHitBonusActionSpell" &&
-              value.reactorId === value.subject.casterId,
-            opportunityAttack: (value) =>
-              value.subject.tag === "runtimeCommand" &&
-              value.subject.command === "opportunityAttack" &&
-              value.reactorId === value.subject.reactorId,
-            retaliationAttack: (value) =>
-              value.subject.tag === "runtimeCommand" &&
-              value.subject.command === "retaliationAttack" &&
-              value.reactorId === value.subject.reactorId,
-            reactionRollOrDamageReduction: () => true,
-          }),
-        ),
-      {
-        message:
-          "Interrupt choices must own the matching reference-bearing runtime subject.",
-      },
+);
+
+export const BattleInterruptProcedureModifierChoiceSchema = Schema.Struct({
+  kind: Schema.Literal("reactionRollOrDamageReduction"),
+  reactorId: CombatantId,
+  choice: BattleReactionModifierChoiceSchema,
+  initialHoles: Schema.Array(BattleHoleSchema),
+});
+
+const battleInterruptProcedureChoiceInvariantAnnotations = {
+  message: () =>
+    "Interrupt choices must own the matching reference-bearing runtime subject.",
+};
+
+function battleInterruptProcedureChoiceInvariantHolds(
+  choice: typeof BattleInterruptProcedureChoiceWithSubjectPayloadSchema.Type,
+): boolean {
+  return Match.value(choice).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      releaseReadiedSpell: (value) =>
+        value.subject.tag === "runtimeCommand" &&
+        value.subject.command === "releaseReadiedSpell" &&
+        value.reactorId === value.readiedSpellCasterId &&
+        value.reactorId === value.subject.readiedSpellCasterId,
+      releaseReadiedMovement: (value) =>
+        value.subject.tag === "runtimeCommand" &&
+        value.subject.command === "releaseReadiedMovement" &&
+        value.reactorId === value.readiedMovementActorId &&
+        value.reactorId === value.subject.readiedMovementActorId,
+      releaseReadiedAction: (value) =>
+        value.subject.tag === "runtimeCommand" &&
+        value.subject.command === "releaseReadiedAction" &&
+        value.reactorId === value.subject.reactorId,
+      releaseReadiedAttack: (value) =>
+        value.subject.tag === "runtimeCommand" &&
+        value.subject.command === "releaseReadiedAttack" &&
+        value.reactorId === value.subject.reactorId,
+      castTriggeredReactionSpell: (value) =>
+        value.subject.tag === "runtimeCommand" &&
+        value.subject.command === "castTriggeredReactionSpell" &&
+        value.reactorId === value.subject.reactorId,
+      castAttackHitBonusActionSpell: (value) =>
+        value.subject.tag === "runtimeCommand" &&
+        value.subject.command === "castAttackHitBonusActionSpell" &&
+        value.reactorId === value.subject.casterId,
+      opportunityAttack: (value) =>
+        value.subject.tag === "runtimeCommand" &&
+        value.subject.command === "opportunityAttack" &&
+        value.reactorId === value.subject.reactorId,
+      retaliationAttack: (value) =>
+        value.subject.tag === "runtimeCommand" &&
+        value.subject.command === "retaliationAttack" &&
+        value.reactorId === value.subject.reactorId,
+    }),
+  );
+}
+
+export const BattleInterruptProcedureChoiceWithSubjectSchema =
+  BattleInterruptProcedureChoiceWithSubjectPayloadSchema.pipe(
+    Schema.filter(
+      battleInterruptProcedureChoiceInvariantHolds,
+      battleInterruptProcedureChoiceInvariantAnnotations,
     ),
-  ),
+  );
+
+export const BattleInterruptProcedureChoiceSchema = Schema.Union(
+  BattleInterruptProcedureChoiceWithSubjectSchema,
+  BattleInterruptProcedureModifierChoiceSchema,
 );
 
 const BattlePendingReactionSnapshotSchema = Schema.Struct({
@@ -6695,15 +6704,15 @@ const BattleCompanionSnapshotSchema = Schema.Union([
 ]);
 
 type EncodedBattleCreatureSnapshot = BattleCreatureSnapshotInvariantInput;
-type EncodedBattleInterruptChoice =
-  typeof BattleInterruptProcedureChoiceSchema.Type;
 type EncodedBattleReadiedSpellSnapshot =
   typeof BattleReadiedSpellSnapshotSchema.Type;
 type EncodedBattleReadiedResponseSnapshot =
   typeof BattleReadiedResponseSnapshotSchema.Type;
-type EncodedBattleActExecutionCandidate =
-  typeof BattleActExecutionCandidateSchema.Type;
 type EncodedBattleSubject = typeof BattleSubjectSchema.Type;
+type EncodedRuntimeCommandBattleSubject = Extract<
+  EncodedBattleSubject,
+  { readonly tag: "runtimeCommand" }
+>;
 type EncodedBattleHole = typeof BattleHolePayloadUnionSchema.Type;
 type EncodedBattleStoredLightEmitter =
   typeof BattleStoredLightEmitterSchema.Type;
@@ -6729,6 +6738,10 @@ type SerializedEffectOccurrenceExpectation =
       readonly location: SerializedActiveEffectLocationExpectation;
     }
   | { readonly kind: "storedLightEmitter" };
+type EncodedBattleActDiscoveryCandidate =
+  typeof BattleActDiscoveryCandidateSchema.Type;
+type EncodedBattleInterruptProcedureChoice =
+  typeof BattleInterruptProcedureChoiceSchema.Type;
 
 type SerializedExecutionReferenceOwnership =
   | {
@@ -7552,6 +7565,145 @@ function serializedBattleHoleExecutionReferences(
   );
 }
 
+type SerializedRuntimeCommandReferencePolicy =
+  | {
+      readonly kind: "opportunityAttackProcedureOwned";
+      readonly ownerId: CombatantId;
+      readonly targetId: CombatantId;
+      readonly procedureRef: BattleProcedureExecutionRef;
+    }
+  | {
+      readonly kind: "retaliationAttackProcedureOwned";
+      readonly ownerId: CombatantId;
+      readonly targetId: CombatantId;
+      readonly procedureRef: BattleProcedureExecutionRef;
+    }
+  | {
+      readonly kind: "combatantOwned";
+      readonly ownerId: CombatantId;
+    }
+  | {
+      readonly kind: "spellInvocationOwned";
+      readonly ownerId: CombatantId;
+      readonly procedureRef: BattleProcedureExecutionRef;
+      readonly executionFactsKind:
+        | "attackHitBonusActionSpell"
+        | "triggeredReactionSpell";
+    }
+  | {
+      readonly kind: "readiedAttackOwned";
+      readonly ownerId: CombatantId;
+      readonly targetId: CombatantId;
+      readonly procedureRef: BattleProcedureExecutionRef;
+    }
+  | {
+      readonly kind: "readiedSpellOwned";
+      readonly ownerId: CombatantId;
+      readonly procedureRef: BattleProcedureExecutionRef;
+    };
+
+function serializedRuntimeCommandReferencePolicy(
+  subject: EncodedRuntimeCommandBattleSubject,
+): SerializedRuntimeCommandReferencePolicy {
+  const combatantOwned = (
+    ownerId: CombatantId,
+  ): SerializedRuntimeCommandReferencePolicy => ({
+    kind: "combatantOwned",
+    ownerId,
+  });
+  const actorOwned = (
+    command: EncodedRuntimeCommandBattleSubject,
+  ): SerializedRuntimeCommandReferencePolicy => combatantOwned(command.actorId);
+  return Match.value(subject).pipe(
+    Match.discriminatorsExhaustive("command")({
+      castAttackHitBonusActionSpell: (
+        command,
+      ): SerializedRuntimeCommandReferencePolicy => ({
+        kind: "spellInvocationOwned",
+        ownerId: command.casterId,
+        procedureRef: command.procedureRef,
+        executionFactsKind: "attackHitBonusActionSpell",
+      }),
+      castTriggeredReactionSpell: (
+        command,
+      ): SerializedRuntimeCommandReferencePolicy => ({
+        kind: "spellInvocationOwned",
+        ownerId: command.reactorId,
+        procedureRef: command.procedureRef,
+        executionFactsKind: "triggeredReactionSpell",
+      }),
+      cloudkillAreaHazardSave: actorOwned,
+      commandApproach: actorOwned,
+      commandDrop: actorOwned,
+      commandFlee: actorOwned,
+      commandGrovel: actorOwned,
+      creatureFalls: actorOwned,
+      creatureTypeProtectionConditionAttempt: actorOwned,
+      creatureTypeProtectionPossessionAttempt: actorOwned,
+      disperseCloudkill: actorOwned,
+      disperseFogCloud: actorOwned,
+      dragonsBreathExhale: actorOwned,
+      endConcentration: actorOwned,
+      endTurn: actorOwned,
+      greaseGroundHazardSave: actorOwned,
+      gustOfWindLineDirectionChange: actorOwned,
+      gustOfWindLineSave: actorOwned,
+      insectPlagueAreaHazardSave: actorOwned,
+      jumpMovementReplacement: actorOwned,
+      levitateAltitudeControl: actorOwned,
+      moonbeamCylinderExit: actorOwned,
+      movableZoneRam: actorOwned,
+      movableZoneReposition: actorOwned,
+      movableZoneSave: actorOwned,
+      move: actorOwned,
+      opportunityAttack: (
+        command,
+      ): SerializedRuntimeCommandReferencePolicy => ({
+        kind: "opportunityAttackProcedureOwned",
+        ownerId: command.reactorId,
+        targetId: command.targetId,
+        procedureRef: command.procedureRef,
+      }),
+      protectionRelevantEffectSave: actorOwned,
+      releaseGrapple: actorOwned,
+      releaseReadiedAction: actorOwned,
+      releaseReadiedAttack: (
+        command,
+      ): SerializedRuntimeCommandReferencePolicy => ({
+        kind: "readiedAttackOwned",
+        ownerId: command.reactorId,
+        targetId: command.targetId,
+        procedureRef: command.procedureRef,
+      }),
+      releaseReadiedMovement: actorOwned,
+      releaseReadiedSpell: (
+        command,
+      ): SerializedRuntimeCommandReferencePolicy => ({
+        kind: "readiedSpellOwned",
+        ownerId: command.readiedSpellCasterId,
+        procedureRef: command.procedureRef,
+      }),
+      releaseSpellCreatedHeldObject: actorOwned,
+      replaceSelfTransformationMode: actorOwned,
+      reportReadyTrigger: actorOwned,
+      retaliationAttack: (
+        command,
+      ): SerializedRuntimeCommandReferencePolicy => ({
+        kind: "retaliationAttackProcedureOwned",
+        ownerId: command.reactorId,
+        targetId: command.targetId,
+        procedureRef: command.procedureRef,
+      }),
+      sleetStormAreaHazardSave: actorOwned,
+      standFromProne: actorOwned,
+      wardingBondSeparation: actorOwned,
+      webAreaRemoved: actorOwned,
+      webRestrainedNoLongerInArea: actorOwned,
+      webRestraintSave: actorOwned,
+    }),
+  );
+}
+
 function serializedStatBlockAuthoritativeExecutionReferences(
   execution: Schema.Schema.Type<typeof StatBlockExecutionSnapshotSchema>,
 ): readonly string[] {
@@ -7597,7 +7749,6 @@ function serializedCombatantAuthoritativeExecutionReferences(
     ),
   ];
 }
-
 function characterProcedureBindingKind(
   combatants: readonly EncodedBattleCreatureSnapshot[],
   combatantId: CombatantId,
@@ -7627,45 +7778,6 @@ function characterProcedureBinding(
   );
 }
 
-function serializedUnitProcedureExecutionKind(procedure: {
-  readonly execution: string | { readonly kind: string };
-}): string {
-  return typeof procedure.execution === "string"
-    ? procedure.execution
-    : procedure.execution.kind;
-}
-
-function serializedSpellProcedureRefIsBound(
-  combatants: readonly EncodedBattleCreatureSnapshot[],
-  combatantId: CombatantId,
-  procedureRef: BattleProcedureExecutionRef,
-): boolean {
-  const kind = characterProcedureBindingKind(
-    combatants,
-    combatantId,
-    procedureRef,
-  );
-  return kind === "spellInvocation" || kind === "unavailableSpellInvocation";
-}
-
-function serializedReactionModifierProcedureRefIsBound(
-  combatants: readonly EncodedBattleCreatureSnapshot[],
-  combatantId: CombatantId,
-  procedureRef: BattleProcedureExecutionRef,
-): boolean {
-  const binding = characterProcedureBinding(
-    combatants,
-    combatantId,
-    procedureRef,
-  );
-  return (
-    (binding?.procedure.kind === "unitFeature" ||
-      binding?.procedure.kind === "unitSupportProfile") &&
-    serializedUnitProcedureExecutionKind(binding.procedure) ===
-      REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE
-  );
-}
-
 function serializedReadiedSpellOwnsInvocation(
   combatants: readonly EncodedBattleCreatureSnapshot[],
   readied: EncodedBattleReadiedSpellSnapshot,
@@ -7682,37 +7794,6 @@ function serializedReadiedSpellOwnsInvocation(
   );
 }
 
-function serializedImmediateSpellChoiceIsBound(
-  combatants: readonly EncodedBattleCreatureSnapshot[],
-  choice: Extract<
-    EncodedBattleInterruptChoice,
-    {
-      readonly kind:
-        | "castTriggeredReactionSpell"
-        | "castAttackHitBonusActionSpell";
-    }
-  >,
-): boolean {
-  if (
-    choice.subject.tag !== "runtimeCommand" ||
-    (choice.subject.command !== "castTriggeredReactionSpell" &&
-      choice.subject.command !== "castAttackHitBonusActionSpell")
-  )
-    return false;
-  const binding = characterProcedureBinding(
-    combatants,
-    choice.reactorId,
-    choice.subject.procedureRef,
-  );
-  if (binding?.procedure.kind !== "spellInvocation") return false;
-  return (
-    binding.procedure.executionFacts.kind ===
-    (choice.kind === "castTriggeredReactionSpell"
-      ? "triggeredReactionSpell"
-      : "attackHitBonusActionSpell")
-  );
-}
-
 function serializedAttackProcedureRefIsBound(
   combatants: readonly EncodedBattleCreatureSnapshot[],
   combatantId: CombatantId,
@@ -7723,18 +7804,51 @@ function serializedAttackProcedureRefIsBound(
   );
   if (combatant === undefined) return false;
   if (combatant.origin.kind === "character") {
-    return (
-      combatant.origin.attackExecution.attackProcedureRef === procedureRef ||
-      combatant.origin.attackExecution.unarmedStrikeProcedureRef ===
-        procedureRef ||
-      combatant.origin.attackExecution.offHandAttackProcedureRef ===
-        procedureRef
+    return serializedCharacterAttackProcedureRefIsBound(
+      combatant,
+      procedureRef,
     );
   }
   return combatant.origin.execution.procedureBindings.some(
     (binding) =>
       binding.procedureRef === procedureRef &&
       binding.procedure.kind === "attack",
+  );
+}
+
+function serializedCharacterAttackProcedureRefIsBound(
+  combatant: EncodedBattleCreatureSnapshot | undefined,
+  procedureRef: BattleProcedureExecutionRef,
+): boolean {
+  if (combatant?.origin.kind !== "character") return false;
+  const attackExecution = combatant.origin.attackExecution;
+  return (
+    attackExecution.attackProcedureRef === procedureRef ||
+    attackExecution.unarmedStrikeProcedureRef === procedureRef ||
+    attackExecution.offHandAttackProcedureRef === procedureRef
+  );
+}
+
+function serializedOpportunityAttackProcedureRefIsBound(
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+  combatantId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+): boolean {
+  if (
+    serializedAttackProcedureRefIsBound(combatants, combatantId, procedureRef)
+  ) {
+    return true;
+  }
+  const combatant = combatants.find(
+    (candidate) => candidate.combatantId === combatantId,
+  );
+  if (combatant?.origin.kind !== "character") return false;
+  return combatant.origin.druidWildShapeAvailableForms.some((form) =>
+    form.execution.procedureBindings.some(
+      (binding) =>
+        binding.procedureRef === procedureRef &&
+        binding.procedure.kind === "attack",
+    ),
   );
 }
 
@@ -8386,7 +8500,7 @@ function serializedBattleActOwnsBoundProcedure(
 }
 
 function serializedBattleSubjectOwnsBoundExecutionReferences(
-  subject: EncodedBattleActExecutionCandidate["subject"],
+  subject: EncodedBattleSubject,
   combatants: readonly EncodedBattleCreatureSnapshot[],
 ): boolean {
   return battleSubjectBoundExecutionReferences(subject).every((reference) => {
@@ -8553,73 +8667,270 @@ function serializedActiveEffectMatchesSubjectLocation(
   );
 }
 
-function pendingInterruptChoiceOwnsBoundProcedure(input: {
-  readonly choice: EncodedBattleInterruptChoice;
+function serializedBattleSubjectOwnsBoundProcedure(
+  subject: EncodedBattleSubject,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+  readiedSpells: readonly EncodedBattleReadiedSpellSnapshot[],
+  readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[],
+): boolean {
+  const procedureRefs = battleSubjectProcedureRefs(subject);
+  if (procedureRefs.length === 0) return true;
+  const actorOwnsProcedureRefs = (ownedSubject: {
+    readonly actorId: CombatantId;
+  }): boolean =>
+    serializedProcedureRefsBelongToCombatant(
+      ownedSubject.actorId,
+      procedureRefs,
+      combatants,
+    );
+
+  return Match.value(subject).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      action: actorOwnsProcedureRefs,
+      actionSpell: actorOwnsProcedureRefs,
+      bonusAction: actorOwnsProcedureRefs,
+      bonusActionDashSpell: actorOwnsProcedureRefs,
+      bonusActionSpell: actorOwnsProcedureRefs,
+      bonusActionStandardAction: actorOwnsProcedureRefs,
+      companionLifecycle: actorOwnsProcedureRefs,
+      druidWildShape: actorOwnsProcedureRefs,
+      findFamiliarSharedSenses: actorOwnsProcedureRefs,
+      findFamiliarTouchSpell: actorOwnsProcedureRefs,
+      monkFocusFlurryOfBlowsStrike: (strike) =>
+        serializedMonkFocusStrikeOwnsBoundProcedures(strike, combatants),
+      monkFocusOption: actorOwnsProcedureRefs,
+      pactOfTheChainFamiliarAttack: (attack) =>
+        serializedProcedureRefsBelongToCombatant(
+          attack.familiarId,
+          procedureRefs,
+          combatants,
+        ),
+      runtimeCommand: (command) =>
+        serializedRuntimeCommandOwnsBoundProcedure({
+          command,
+          procedureRefs,
+          combatants,
+          readiedSpells,
+          readiedResponses,
+        }),
+      unitFeature: actorOwnsProcedureRefs,
+      unitFeatureHeldWeaponActivation: actorOwnsProcedureRefs,
+    }),
+  );
+}
+
+function serializedRuntimeCommandOwnsBoundProcedure(input: {
+  readonly command: EncodedRuntimeCommandBattleSubject;
+  readonly procedureRefs: readonly BattleProcedureExecutionRef[];
   readonly combatants: readonly EncodedBattleCreatureSnapshot[];
   readonly readiedSpells: readonly EncodedBattleReadiedSpellSnapshot[];
   readonly readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[];
 }): boolean {
-  const { choice } = input;
-  if (choice.kind === "releaseReadiedMovement") {
-    return pendingReadiedMovementChoiceOwnsBoundResponse(
-      choice,
-      input.readiedResponses,
-    );
-  }
-  if (choice.kind === "releaseReadiedAction") {
-    return pendingReadiedActionChoiceOwnsBoundResponse(
-      choice,
-      input.readiedResponses,
-    );
-  }
-  if (choice.kind === "reactionRollOrDamageReduction") {
-    return serializedReactionModifierProcedureRefIsBound(
-      input.combatants,
-      choice.reactorId,
-      choice.choice.procedureRef,
-    );
-  }
-  if (choice.kind === "releaseReadiedSpell") {
-    return pendingReadiedSpellChoiceOwnsBoundResponse(
-      choice,
-      input.combatants,
-      input.readiedSpells,
-    );
-  }
-  if (
-    choice.kind === "castTriggeredReactionSpell" ||
-    choice.kind === "castAttackHitBonusActionSpell"
-  ) {
-    return pendingImmediateSpellChoiceOwnsBoundProcedure(
-      choice,
-      input.combatants,
-    );
-  }
-  return pendingAttackChoiceOwnsBoundProcedure(
-    choice,
-    input.combatants,
-    input.readiedResponses,
+  const {
+    command,
+    procedureRefs,
+    combatants,
+    readiedSpells,
+    readiedResponses,
+  } = input;
+  const policy = serializedRuntimeCommandReferencePolicy(command);
+  return Match.value(policy).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      combatantOwned: ({ ownerId }) =>
+        serializedProcedureRefsBelongToCombatant(
+          ownerId,
+          procedureRefs,
+          combatants,
+        ),
+      readiedAttackOwned: ({ ownerId, procedureRef }) =>
+        readiedResponses.some(
+          (readied) =>
+            readied.actorId === ownerId &&
+            readied.response.kind === "attack" &&
+            readied.response.procedureRef === procedureRef,
+        ),
+      readiedSpellOwned: ({ ownerId, procedureRef }) =>
+        readiedSpells.some(
+          (readied) =>
+            readied.casterId === ownerId &&
+            readied.procedureRef === procedureRef,
+        ),
+      opportunityAttackProcedureOwned: ({ ownerId, procedureRef }) =>
+        serializedOpportunityAttackProcedureRefIsBound(
+          combatants,
+          ownerId,
+          procedureRef,
+        ),
+      retaliationAttackProcedureOwned: ({ ownerId, procedureRef }) =>
+        serializedCharacterAttackProcedureRefIsBound(
+          combatants.find((combatant) => combatant.combatantId === ownerId),
+          procedureRef,
+        ),
+      spellInvocationOwned: ({ ownerId, procedureRef, executionFactsKind }) => {
+        const binding = characterProcedureBinding(
+          combatants,
+          ownerId,
+          procedureRef,
+        );
+        return (
+          binding?.procedure.kind === "spellInvocation" &&
+          binding.procedure.executionFacts.kind === executionFactsKind
+        );
+      },
+    }),
   );
 }
 
-function pendingReadiedMovementChoiceOwnsBoundResponse(
+function serializedMonkFocusStrikeOwnsBoundProcedures(
+  subject: Extract<
+    EncodedBattleSubject,
+    { readonly tag: "monkFocusFlurryOfBlowsStrike" }
+  >,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+): boolean {
+  const owner = combatants.find(
+    (combatant) => combatant.combatantId === subject.actorId,
+  );
+  if (owner?.origin.kind !== "character") return false;
+  const focusBinding = owner.origin.execution.procedureBindings.find(
+    (binding) => binding.procedureRef === subject.focusProcedureRef,
+  );
+  return (
+    owner.origin.attackExecution.unarmedStrikeProcedureRef ===
+      subject.procedureRef &&
+    focusBinding !== undefined &&
+    focusBinding.procedure.kind === "unitSupportProfile" &&
+    (typeof focusBinding.procedure.execution === "string"
+      ? focusBinding.procedure.execution
+      : focusBinding.procedure.execution.kind) ===
+      MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE
+  );
+}
+
+function serializedProcedureRefsBelongToCombatant(
+  ownerId: CombatantId,
+  procedureRefs: readonly BattleProcedureExecutionRef[],
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+): boolean {
+  const owner = combatants.find(
+    (combatant) => combatant.combatantId === ownerId,
+  );
+  return (
+    owner !== undefined &&
+    procedureRefs.every((procedureRef) =>
+      serializedCombatantAuthoritativeExecutionReferences(owner).includes(
+        procedureRef,
+      ),
+    )
+  );
+}
+
+function serializedInterruptChoiceOwnsBoundProcedure(input: {
+  readonly choice: EncodedBattleInterruptProcedureChoice;
+  readonly combatants: readonly EncodedBattleCreatureSnapshot[];
+  readonly readiedSpells: readonly EncodedBattleReadiedSpellSnapshot[];
+  readonly readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[];
+}): boolean {
+  const { choice, combatants, readiedSpells, readiedResponses } = input;
+  const subjectChoiceOwnsBoundProcedure = (
+    subjectChoice: EncodedBattleSubjectInterruptProcedureChoice,
+  ): boolean =>
+    serializedBattleSubjectOwnsBoundProcedure(
+      subjectChoice.subject,
+      combatants,
+      readiedSpells,
+      readiedResponses,
+    ) &&
+    serializedReadiedInterruptChoiceOwnsResponse(
+      subjectChoice,
+      readiedResponses,
+    );
+  return Match.value(choice).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      castAttackHitBonusActionSpell: subjectChoiceOwnsBoundProcedure,
+      castTriggeredReactionSpell: subjectChoiceOwnsBoundProcedure,
+      opportunityAttack: subjectChoiceOwnsBoundProcedure,
+      reactionRollOrDamageReduction: (reaction) =>
+        serializedReactionReductionChoiceOwnsBoundProcedure(
+          reaction,
+          combatants,
+        ),
+      releaseReadiedAction: subjectChoiceOwnsBoundProcedure,
+      releaseReadiedAttack: subjectChoiceOwnsBoundProcedure,
+      releaseReadiedMovement: subjectChoiceOwnsBoundProcedure,
+      releaseReadiedSpell: subjectChoiceOwnsBoundProcedure,
+      retaliationAttack: subjectChoiceOwnsBoundProcedure,
+    }),
+  );
+}
+
+function serializedReactionReductionChoiceOwnsBoundProcedure(
   choice: Extract<
-    EncodedBattleInterruptChoice,
+    EncodedBattleInterruptProcedureChoice,
+    { readonly kind: "reactionRollOrDamageReduction" }
+  >,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+): boolean {
+  const reactor = combatants.find(
+    (combatant) => combatant.combatantId === choice.reactorId,
+  );
+  if (reactor?.origin.kind !== "character") return false;
+  const binding = reactor.origin.execution.procedureBindings.find(
+    (candidate) => candidate.procedureRef === choice.choice.procedureRef,
+  );
+  return (
+    binding !== undefined &&
+    (binding.procedure.kind === "unitFeature" ||
+      binding.procedure.kind === "unitSupportProfile") &&
+    (typeof binding.procedure.execution === "string"
+      ? binding.procedure.execution
+      : binding.procedure.execution.kind) ===
+      REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE
+  );
+}
+
+type EncodedBattleSubjectInterruptProcedureChoice = Exclude<
+  EncodedBattleInterruptProcedureChoice,
+  { readonly kind: "reactionRollOrDamageReduction" }
+>;
+
+function serializedReadiedInterruptChoiceOwnsResponse(
+  choice: EncodedBattleSubjectInterruptProcedureChoice,
+  readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[],
+): boolean {
+  return Match.value(choice).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      castAttackHitBonusActionSpell: () => true,
+      castTriggeredReactionSpell: () => true,
+      opportunityAttack: () => true,
+      releaseReadiedAction: (release) =>
+        serializedReadiedActionChoiceOwnsResponse(release, readiedResponses),
+      releaseReadiedAttack: () => true,
+      releaseReadiedMovement: (release) =>
+        serializedReadiedMovementChoiceOwnsResponse(release, readiedResponses),
+      releaseReadiedSpell: () => true,
+      retaliationAttack: () => true,
+    }),
+  );
+}
+
+function serializedReadiedMovementChoiceOwnsResponse(
+  choice: Extract<
+    EncodedBattleInterruptProcedureChoice,
     { readonly kind: "releaseReadiedMovement" }
   >,
   readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[],
 ): boolean {
   return readiedResponses.some(
     (readied) =>
-      readied.actorId === choice.reactorId &&
       readied.actorId === choice.readiedMovementActorId &&
       readied.response.kind === "movement",
   );
 }
 
-function pendingReadiedActionChoiceOwnsBoundResponse(
+function serializedReadiedActionChoiceOwnsResponse(
   choice: Extract<
-    EncodedBattleInterruptChoice,
+    EncodedBattleInterruptProcedureChoice,
     { readonly kind: "releaseReadiedAction" }
   >,
   readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[],
@@ -8843,19 +9154,6 @@ function retiredExecutionScopeOwnershipIsValid(input: {
 
 const BattleSnapshotCommonFields = {
   battleId: BattleId,
-  executionScopeCursors: Schema.Array(
-    Schema.Struct({
-      combatantId: CombatantId,
-      nextScopeOrdinal: BattleExecutionScopeCursor,
-    }),
-  ),
-  retiredExecutionScopeAllocations: Schema.Array(
-    Schema.Struct({
-      combatantId: CombatantId,
-      nextScopeOrdinal: BattleExecutionScopeCursor,
-      ownership: BattleRetiredExecutionScopeOwnershipSchema,
-    }),
-  ),
   round: Schema.Number,
   currentActorId: CombatantId,
   turnOrder: Schema.Array(CombatantId),
@@ -8863,17 +9161,23 @@ const BattleSnapshotCommonFields = {
   storedLightEmitters: Schema.Array(BattleStoredLightEmitterSchema),
   lightEmitters: Schema.Array(BattleLightEmitterSchema),
   obscurementZones: Schema.Array(BattleObscurementZoneSchema),
-  acts: Schema.Array(BattleActExecutionCandidateSchema),
   turn: BattleTurnSnapshotSchema,
   readiedResponses: Schema.Struct({
     spells: Schema.Array(BattleReadiedSpellSnapshotSchema),
     actionsOrMovements: Schema.Array(BattleReadiedResponseSnapshotSchema),
   }),
   helpAttackMarkers: Schema.Array(BattleHelpAttackSnapshotSchema),
-  pendingInterrupt: Schema.Union([
-    BattlePendingReactionSnapshotSchema,
-    Schema.Null,
-  ]),
+};
+
+const BattleSnapshotExcludedFields = {
+  // Execution allocation, replay, and continuation frontier state are owned
+  // by the runtime/continuation envelopes, not by the durable checkpoint.
+  executionScopeCursors: Schema.optionalWith(Schema.Never, { exact: true }),
+  retiredExecutionScopeAllocations: Schema.optionalWith(Schema.Never, {
+    exact: true,
+  }),
+  acts: Schema.optionalWith(Schema.Never, { exact: true }),
+  pendingInterrupt: Schema.optionalWith(Schema.Never, { exact: true }),
 };
 
 const BattleSnapshotInvariantShapeSchema = Schema.Struct({
@@ -8888,42 +9192,11 @@ type BattleSnapshotInvariantInput = Schema.Schema.Type<
 function battleSnapshotInvariantsHold(
   snapshot: BattleSnapshotInvariantInput,
 ): boolean {
-  const executionScopes = snapshot.combatants.flatMap((combatant) =>
-    (combatant.origin.kind === "statBlock"
-      ? [combatant.origin.execution.scopeRef]
-      : [
-          combatant.origin.execution.scopeRef,
-          combatant.origin.attackExecution.scopeRef,
-          ...combatant.origin.druidWildShapeAvailableForms.map(
-            (form) => form.execution.scopeRef,
-          ),
-        ]
-    ).map((scopeRef) => ({
-      combatantId: combatant.combatantId,
-      scopeRef,
-    })),
-  );
-  const executionScopeRefs = executionScopes.map(
-    (executionScope) => executionScope.scopeRef,
-  );
-  const retiredExecutionScopeRefs =
-    snapshot.retiredExecutionScopeAllocations.flatMap((allocation) =>
-      retiredExecutionScopeOwnershipRefs(allocation.ownership),
-    );
-  const cursorByCombatant = new Map(
-    snapshot.executionScopeCursors.map((cursor) => [
-      cursor.combatantId,
-      cursor.nextScopeOrdinal,
-    ]),
-  );
-  const retiredAllocationByCombatant = new Map(
-    snapshot.retiredExecutionScopeAllocations.map((allocation) => [
-      allocation.combatantId,
-      allocation,
-    ]),
-  );
   const liveCombatantIds = new Set(
     snapshot.combatants.map((combatant) => combatant.combatantId),
+  );
+  const executionScopeRefs = snapshot.combatants.flatMap(
+    battleSnapshotExecutionScopeRefs,
   );
   const boundExecutionRefs = new Set([
     ...snapshot.combatants.flatMap(
@@ -8941,51 +9214,13 @@ function battleSnapshotInvariantsHold(
     battleSnapshotLiveCombatantIdsAreUnique(snapshot, liveCombatantIds) &&
     new Set(effectOccurrenceRefs).size === effectOccurrenceRefs.length &&
     serializedEffectOccurrenceSourceBindingsMatch(snapshot.combatants) &&
-    new Set([...executionScopeRefs, ...retiredExecutionScopeRefs]).size ===
-      executionScopeRefs.length + retiredExecutionScopeRefs.length &&
-    cursorByCombatant.size === snapshot.executionScopeCursors.length &&
-    cursorByCombatant.size === liveCombatantIds.size &&
-    retiredAllocationByCombatant.size ===
-      snapshot.retiredExecutionScopeAllocations.length &&
-    snapshot.retiredExecutionScopeAllocations.every(
-      (allocation) =>
-        !liveCombatantIds.has(allocation.combatantId) &&
-        retiredExecutionScopeOwnershipIsValid({
-          ownership: allocation.ownership,
-          combatantId: allocation.combatantId,
-          battleId: snapshot.battleId,
-          nextScopeOrdinal: allocation.nextScopeOrdinal,
-        }),
-    ) &&
-    snapshot.acts.every(
-      (act) =>
-        serializedBattleSubjectOwnsBoundExecutionReferences(
-          act.subject,
-          snapshot.combatants,
-        ) &&
-        serializedBattleActHolesMatchSelectedOccurrence(act) &&
-        serializedBattleActOwnsBoundProcedure(
-          act,
-          snapshot.combatants,
-          snapshot.readiedResponses.spells,
-        ) &&
-        serializedBattleHolesOwnBoundExecutionReferences({
-          holes: act.initialHoles,
-          combatants: snapshot.combatants,
-          storedLightEmitters: snapshot.storedLightEmitters,
-          boundExecutionRefs,
-          expectedProcedureRefs: serializedBattleSubjectProcedureRefs(
-            act.subject,
-          ),
-        }),
-    ) &&
+    new Set(executionScopeRefs).size === executionScopeRefs.length &&
     snapshot.readiedResponses.spells.every((readied) =>
       serializedReadiedSpellOwnsInvocation(snapshot.combatants, readied),
     ) &&
     snapshot.readiedResponses.actionsOrMovements.every((readied) =>
       serializedReadiedResponseIsBound(snapshot.combatants, readied),
     ) &&
-    battleSnapshotPendingInterruptIsValid(snapshot, boundExecutionRefs) &&
     snapshot.storedLightEmitters.every((emitter) => {
       const owners = snapshot.combatants.filter((combatant) =>
         battleEffectExecutionRefBelongsToScope(
@@ -9009,35 +9244,9 @@ function battleSnapshotInvariantsHold(
     snapshot.obscurementZones.every((zone) =>
       serializedObscurementZoneOwnsSource(zone, snapshot.combatants),
     ) &&
-    executionScopes.every((executionScope) => {
-      const cursor = cursorByCombatant.get(executionScope.combatantId);
-      return Schema.is(BattleAttackExecutionScopeRef)(executionScope.scopeRef)
-        ? battleAttackExecutionScopeRefOrdinalIsBefore(
-            executionScope.scopeRef,
-            cursor,
-          ) &&
-            battleAttackExecutionScopeRefBelongsToBattle(
-              executionScope.scopeRef,
-              snapshot.battleId,
-            )
-        : Schema.is(BattleCharacterExecutionScopeRef)(executionScope.scopeRef)
-          ? battleCharacterExecutionScopeRefOrdinalIsBefore(
-              executionScope.scopeRef,
-              cursor,
-            ) &&
-            battleCharacterExecutionScopeRefBelongsToBattle(
-              executionScope.scopeRef,
-              snapshot.battleId,
-            )
-          : battleStatBlockExecutionScopeRefOrdinalIsBefore(
-              executionScope.scopeRef,
-              cursor,
-            ) &&
-            battleStatBlockExecutionScopeRefBelongsToBattle(
-              executionScope.scopeRef,
-              snapshot.battleId,
-            );
-    })
+    snapshot.combatants.every((combatant) =>
+      battleSnapshotExecutionScopesBelongToBattle(snapshot.battleId, combatant),
+    )
   );
 }
 
@@ -9081,6 +9290,20 @@ function serializedEffectOccurrenceSourceBindingsMatch(
   );
 }
 
+function battleSnapshotExecutionScopeRefs(
+  combatant: EncodedBattleCreatureSnapshot,
+): readonly BattleExecutionScopeRef[] {
+  return combatant.origin.kind === "statBlock"
+    ? [combatant.origin.execution.scopeRef]
+    : [
+        combatant.origin.execution.scopeRef,
+        combatant.origin.attackExecution.scopeRef,
+        ...combatant.origin.druidWildShapeAvailableForms.map(
+          (form) => form.execution.scopeRef,
+        ),
+      ];
+}
+
 function battleSnapshotLiveCombatantIdsAreUnique(
   snapshot: BattleSnapshotInvariantInput,
   liveCombatantIds: ReadonlySet<CombatantId>,
@@ -9088,41 +9311,30 @@ function battleSnapshotLiveCombatantIdsAreUnique(
   return liveCombatantIds.size === snapshot.combatants.length;
 }
 
-function battleSnapshotPendingInterruptIsValid(
-  snapshot: BattleSnapshotInvariantInput,
-  boundExecutionRefs: ReadonlySet<string>,
+function battleSnapshotExecutionScopesBelongToBattle(
+  battleId: BattleId,
+  combatant: EncodedBattleCreatureSnapshot,
 ): boolean {
-  const pendingInterrupt = snapshot.pendingInterrupt;
-  if (pendingInterrupt === null) return true;
+  if (combatant.origin.kind === "statBlock") {
+    return battleStatBlockExecutionScopeRefBelongsToBattle(
+      combatant.origin.execution.scopeRef,
+      battleId,
+    );
+  }
   return (
-    pendingInterrupt.choices.every((choice) =>
-      serializedInterruptChoiceOwnsBoundSubjectReferences(
-        choice,
-        snapshot.combatants,
-      ),
+    battleCharacterExecutionScopeRefBelongsToBattle(
+      combatant.origin.execution.scopeRef,
+      battleId,
     ) &&
-    serializedBattleHoleOwnsBoundExecutionReferences({
-      hole: pendingInterrupt.decisionHole,
-      combatants: snapshot.combatants,
-      storedLightEmitters: snapshot.storedLightEmitters,
-      boundExecutionRefs,
-      expectedProcedureRefs: undefined,
-    }) &&
-    pendingInterrupt.choices.every(
-      (choice) =>
-        pendingInterruptChoiceOwnsBoundProcedure({
-          choice,
-          combatants: snapshot.combatants,
-          readiedSpells: snapshot.readiedResponses.spells,
-          readiedResponses: snapshot.readiedResponses.actionsOrMovements,
-        }) &&
-        serializedBattleHolesOwnBoundExecutionReferences({
-          holes: choice.initialHoles,
-          combatants: snapshot.combatants,
-          storedLightEmitters: snapshot.storedLightEmitters,
-          boundExecutionRefs,
-          expectedProcedureRefs: serializedInterruptChoiceProcedureRefs(choice),
-        }),
+    battleAttackExecutionScopeRefBelongsToBattle(
+      combatant.origin.attackExecution.scopeRef,
+      battleId,
+    ) &&
+    combatant.origin.druidWildShapeAvailableForms.every((form) =>
+      battleStatBlockExecutionScopeRefBelongsToBattle(
+        form.execution.scopeRef,
+        battleId,
+      ),
     )
   );
 }
@@ -9134,6 +9346,7 @@ const battleSnapshotInvariantAnnotations = {
 
 export const BattlePresentedSnapshotSchema = Schema.Struct({
   ...BattleSnapshotCommonFields,
+  ...BattleSnapshotExcludedFields,
   combatants: Schema.Array(BattlePresentedCreatureSnapshotSchema),
 }).pipe(
   Schema.check(
@@ -9149,6 +9362,7 @@ export const BattlePresentedSnapshotSchema = Schema.Struct({
 
 export const BattleSnapshotSchema = Schema.Struct({
   ...BattleSnapshotCommonFields,
+  ...BattleSnapshotExcludedFields,
   combatants: Schema.Array(BattleCreatureSnapshotSchema),
 }).pipe(
   Schema.check(
@@ -9160,5 +9374,304 @@ export const BattleSnapshotSchema = Schema.Struct({
     ),
   ),
   Schema.annotate({ identifier: "BattleSnapshot" }),
+);
+
+export const BattleActDiscoveryCandidateSchema = Schema.Struct({
+  subject: BattleSubjectSchema,
+  initialHoles: Schema.Array(BattleHoleSchema),
+});
+
+const BattleInterruptDecisionHoleSchema = Schema.Struct({
+  holeInstanceKey: BattleHoleInstanceKeySchema,
+  holeId: BattleHoleIdSchema,
+  kind: Schema.Literal("interruptDecision"),
+  label: Schema.String,
+  trigger: Schema.Literals(BATTLE_INTERRUPT_TRIGGERS),
+  eligibleResponders: Schema.Array(CombatantId),
+});
+
+export const BattleInterruptDecisionFrontierSchema = Schema.Struct({
+  kind: Schema.Literal("interruptDecision"),
+  trigger: Schema.Literals(BATTLE_INTERRUPT_TRIGGERS),
+  decisionHole: BattleInterruptDecisionHoleSchema,
+  choices: Schema.NonEmptyArray(BattleInterruptProcedureChoiceSchema),
+  stackDepth: BattleReplayStackDepth,
+});
+
+export const BattleCheckpointFrontierHolesSchema = Schema.Struct({
+  kind: Schema.Literal("holes"),
+  subject: BattleSubjectSchema,
+  holes: Schema.NonEmptyArray(BattleHoleSchema),
+  continuation: Schema.Union([
+    Schema.Struct({ kind: Schema.Literal("ordinaryReplay") }),
+    Schema.Struct({ kind: Schema.Literal("runtimeOwnedInterrupt") }),
+  ]),
+});
+
+type EncodedBattleCheckpointFrontier =
+  | {
+      readonly kind: "acts";
+      readonly acts: readonly EncodedBattleActDiscoveryCandidate[];
+    }
+  | Schema.Schema.Type<typeof BattleCheckpointFrontierHolesSchema>
+  | Schema.Schema.Type<typeof BattleInterruptDecisionFrontierSchema>;
+
+type EncodedBattleCheckpointFrontierEnvelope = {
+  readonly checkpoint: Schema.Schema.Type<typeof BattleSnapshotSchema>;
+  readonly frontier: EncodedBattleCheckpointFrontier;
+};
+
+function serializedInterruptChoiceSubject(
+  choice: EncodedBattleInterruptProcedureChoice,
+): EncodedRuntimeCommandBattleSubject | undefined {
+  const runtimeCommandSubject = (
+    subjectChoice: EncodedBattleSubjectInterruptProcedureChoice,
+  ): EncodedRuntimeCommandBattleSubject | undefined =>
+    subjectChoice.subject.tag === "runtimeCommand"
+      ? subjectChoice.subject
+      : undefined;
+  return Match.value(choice).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      castAttackHitBonusActionSpell: runtimeCommandSubject,
+      castTriggeredReactionSpell: runtimeCommandSubject,
+      opportunityAttack: runtimeCommandSubject,
+      reactionRollOrDamageReduction: () => undefined,
+      releaseReadiedAction: runtimeCommandSubject,
+      releaseReadiedAttack: runtimeCommandSubject,
+      releaseReadiedMovement: runtimeCommandSubject,
+      releaseReadiedSpell: runtimeCommandSubject,
+      retaliationAttack: runtimeCommandSubject,
+    }),
+  );
+}
+
+function serializedInterruptChoiceTargetIsLive(
+  subject: EncodedRuntimeCommandBattleSubject | undefined,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+): boolean {
+  if (subject === undefined) return true;
+  return serializedRuntimeCommandTargetIsLive(subject, combatants);
+}
+
+function serializedRuntimeCommandTargetIsLive(
+  command: EncodedRuntimeCommandBattleSubject,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+): boolean {
+  const targetIsLive = (targetId: CombatantId): boolean =>
+    combatants.some((combatant) => combatant.combatantId === targetId);
+  return Match.value(serializedRuntimeCommandReferencePolicy(command)).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      combatantOwned: () => true,
+      opportunityAttackProcedureOwned: ({ targetId }) => targetIsLive(targetId),
+      readiedAttackOwned: ({ targetId }) => targetIsLive(targetId),
+      readiedSpellOwned: () => true,
+      retaliationAttackProcedureOwned: ({ targetId }) => targetIsLive(targetId),
+      spellInvocationOwned: () => true,
+    }),
+  );
+}
+
+function serializedInterruptChoiceMatchesTrigger(
+  choice: EncodedBattleInterruptProcedureChoice,
+  trigger: (typeof BATTLE_INTERRUPT_TRIGGERS)[number],
+  readiedSpells: readonly EncodedBattleReadiedSpellSnapshot[],
+): boolean {
+  return Match.value(choice).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      castAttackHitBonusActionSpell: () => trigger === "attackHit",
+      castTriggeredReactionSpell: () =>
+        trigger === "attackHit" ||
+        trigger === "spellCast" ||
+        trigger === "afterDamage" ||
+        trigger === "creatureFalls",
+      opportunityAttack: () => trigger === "opportunityAttack",
+      reactionRollOrDamageReduction: ({ choice: modifier }) =>
+        Match.value(modifier.kind).pipe(
+          Match.when("abilityCheckReduction", () => false),
+          Match.when("attackDamageReduction", () => trigger === "attackHit"),
+          Match.when("attackRollReduction", () => trigger === "attackHit"),
+          Match.when("damageRollReduction", () => trigger === "attackDamage"),
+          Match.when("fallDamageReduction", () => trigger === "creatureFalls"),
+          Match.exhaustive,
+        ),
+      releaseReadiedAction: () => trigger === "reportedReadyTrigger",
+      releaseReadiedAttack: () => trigger === "reportedReadyTrigger",
+      releaseReadiedMovement: () => trigger === "reportedReadyTrigger",
+      releaseReadiedSpell: (release) =>
+        serializedReadiedSpellChoiceMatchesTrigger(
+          release,
+          trigger,
+          readiedSpells,
+        ),
+      retaliationAttack: () => trigger === "afterDamage",
+    }),
+  );
+}
+
+function serializedReadiedSpellChoiceMatchesTrigger(
+  choice: Extract<
+    EncodedBattleInterruptProcedureChoice,
+    { readonly kind: "releaseReadiedSpell" }
+  >,
+  trigger: (typeof BATTLE_INTERRUPT_TRIGGERS)[number],
+  readiedSpells: readonly EncodedBattleReadiedSpellSnapshot[],
+): boolean {
+  const subject = choice.subject;
+  if (
+    subject.tag !== "runtimeCommand" ||
+    subject.command !== "releaseReadiedSpell"
+  ) {
+    return false;
+  }
+  return readiedSpells.some(
+    (readied) =>
+      readied.casterId === choice.readiedSpellCasterId &&
+      readied.procedureRef === subject.procedureRef &&
+      readied.trigger === trigger,
+  );
+}
+
+function serializedInterruptChoiceExpectedProcedureRefs(
+  choice: EncodedBattleInterruptProcedureChoice,
+): ReadonlySet<BattleProcedureExecutionRef> {
+  const subjectProcedureRefs = (
+    subjectChoice: EncodedBattleSubjectInterruptProcedureChoice,
+  ): ReadonlySet<BattleProcedureExecutionRef> =>
+    new Set(battleSubjectProcedureRefs(subjectChoice.subject));
+  return Match.value(choice).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      castAttackHitBonusActionSpell: subjectProcedureRefs,
+      castTriggeredReactionSpell: subjectProcedureRefs,
+      opportunityAttack: subjectProcedureRefs,
+      reactionRollOrDamageReduction: (reaction) =>
+        new Set([reaction.choice.procedureRef]),
+      releaseReadiedAction: subjectProcedureRefs,
+      releaseReadiedAttack: subjectProcedureRefs,
+      releaseReadiedMovement: subjectProcedureRefs,
+      releaseReadiedSpell: subjectProcedureRefs,
+      retaliationAttack: subjectProcedureRefs,
+    }),
+  );
+}
+
+function serializedInterruptChoiceInvariantsHold(input: {
+  readonly choice: EncodedBattleInterruptProcedureChoice;
+  readonly trigger: (typeof BATTLE_INTERRUPT_TRIGGERS)[number];
+  readonly combatants: readonly EncodedBattleCreatureSnapshot[];
+  readonly readiedSpells: readonly EncodedBattleReadiedSpellSnapshot[];
+  readonly readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[];
+  readonly subjectIsBound: (subject: EncodedBattleSubject) => boolean;
+  readonly holesAreBound: (
+    holes: readonly EncodedBattleHole[],
+    expectedProcedureRefs: ReadonlySet<BattleProcedureExecutionRef>,
+  ) => boolean;
+}): boolean {
+  const { choice, combatants, readiedSpells, readiedResponses, trigger } =
+    input;
+  const subject = serializedInterruptChoiceSubject(choice);
+  const subjectIsBound = subject === undefined || input.subjectIsBound(subject);
+  return (
+    serializedInterruptChoiceMatchesTrigger(choice, trigger, readiedSpells) &&
+    serializedInterruptChoiceTargetIsLive(subject, combatants) &&
+    subjectIsBound &&
+    serializedInterruptChoiceOwnsBoundProcedure({
+      choice,
+      combatants,
+      readiedSpells,
+      readiedResponses,
+    }) &&
+    input.holesAreBound(
+      choice.initialHoles,
+      serializedInterruptChoiceExpectedProcedureRefs(choice),
+    )
+  );
+}
+
+function battleCheckpointFrontierInvariantsHold(
+  envelope: EncodedBattleCheckpointFrontierEnvelope,
+): boolean {
+  const { checkpoint, frontier } = envelope;
+  const boundExecutionRefs = new Set(
+    checkpoint.combatants.flatMap(
+      serializedCombatantAuthoritativeExecutionReferences,
+    ),
+  );
+  const readiedSpells = checkpoint.readiedResponses.spells;
+  const readiedResponses = checkpoint.readiedResponses.actionsOrMovements;
+  const subjectIsBound = (subject: EncodedBattleSubject): boolean =>
+    serializedBattleSubjectOwnsBoundExecutionReferences(
+      subject,
+      checkpoint.combatants,
+    ) &&
+    serializedBattleSubjectOwnsBoundProcedure(
+      subject,
+      checkpoint.combatants,
+      readiedSpells,
+      readiedResponses,
+    );
+  const holesAreBound = (
+    holes: readonly EncodedBattleHole[],
+    expectedProcedureRefs: ReadonlySet<BattleProcedureExecutionRef>,
+  ): boolean =>
+    serializedBattleHolesOwnBoundExecutionReferences({
+      holes,
+      combatants: checkpoint.combatants,
+      storedLightEmitters: checkpoint.storedLightEmitters,
+      boundExecutionRefs,
+      expectedProcedureRefs,
+    });
+
+  return Match.value(frontier).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      acts: (value) =>
+        value.acts.every(
+          (act) =>
+            subjectIsBound(act.subject) &&
+            holesAreBound(
+              act.initialHoles,
+              new Set(battleSubjectProcedureRefs(act.subject)),
+            ),
+        ),
+      holes: (value) =>
+        subjectIsBound(value.subject) &&
+        holesAreBound(
+          value.holes,
+          new Set(battleSubjectProcedureRefs(value.subject)),
+        ),
+      interruptDecision: (value) =>
+        value.trigger === value.decisionHole.trigger &&
+        value.choices.every((choice) =>
+          serializedInterruptChoiceInvariantsHold({
+            choice,
+            trigger: value.trigger,
+            combatants: checkpoint.combatants,
+            readiedSpells,
+            readiedResponses,
+            subjectIsBound,
+            holesAreBound,
+          }),
+        ),
+    }),
+  );
+}
+
+export const BattleCheckpointFrontierEnvelopeSchema = Schema.Struct({
+  checkpoint: BattleSnapshotSchema,
+  frontier: Schema.Union([
+    Schema.Struct({
+      kind: Schema.Literal("acts"),
+      acts: Schema.Array(BattleActDiscoveryCandidateSchema),
+    }),
+    BattleCheckpointFrontierHolesSchema,
+    BattleInterruptDecisionFrontierSchema,
+  ]),
+}).pipe(
+  Schema.check(
+    Schema.makeFilter(battleCheckpointFrontierInvariantsHold, {
+      message:
+        "Battle checkpoint frontier references must be bound to the checkpoint and its subjects.",
+    }),
+  ),
+  Schema.annotate({ identifier: "BattleCheckpointFrontierEnvelope" }),
 );
 // KERNEL-COVERAGE: runtime-owner BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE

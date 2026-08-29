@@ -122,10 +122,12 @@ forest of reusable rule-core slices and focused runtime/MBT owners; see
 
 ## Verification and review
 
-Run public scripts directly. `pnpm typecheck`, `pnpm test`, and `pnpm quality`
-acquire the shared heavy-verification lock and cap workspace concurrency; do not
-wrap them in another lock, run raw Turbo, or call their internal `:body`/`:turbo`
-scripts. For another broad command use:
+Run public scripts directly. `pnpm typecheck`, `pnpm test`, and
+`pnpm quality:milestone` acquire the shared heavy-verification lock and cap
+workspace concurrency; do not wrap them in another lock, run raw Turbo, or call
+their internal `:body`/`:turbo` scripts. Use focused checks during implementation
+and reserve `pnpm quality:milestone` for a stable integration revision after
+reviewer convergence. For another broad command use:
 
 ```sh
 . scripts/resource-lock-owner.sh && \

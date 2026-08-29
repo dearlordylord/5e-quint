@@ -46,8 +46,7 @@
     },
     "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts": {
       "module/binding:admitBattleCombatant": 11,
-      "module/binding:applyInitiativeSwap": 12,
-      "module/binding:startBattle": 19
+      "module/binding:applyInitiativeSwap": 12
     },
     "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts": {
       "module/binding:attackActionOptionsForActor": 9,
@@ -104,10 +103,7 @@
       "module/binding:weaponHostedAttackCompositionRouteForResolution": 23
     },
     "packages/battle-runtime/src/battle-reducer/battle-codecs.ts": {
-      "module/binding:battleCreatureSnapshotInvariantsHold": 14,
-      "module/binding:battleSnapshotInvariantsHold": 13,
-      "module/binding:serializedBattleActOwnsBoundProcedure": 59,
-      "module/binding:serializedBattleHoleExecutionReferences/binding:rolledDiceReferences/call:Match.when:argument-1:selector-4fcf1a150972": 9,
+      "module/binding:battleCreatureSnapshotInvariantsHold": 13,
       "module/binding:statBlockExecutionSnapshotGraphIsValid": 12,
       "module/binding:statBlockExecutionSnapshotGraphIsValid/call:snapshot.procedureBindings.every:argument-0": 19
     },
@@ -865,7 +861,6 @@
       "module/binding:withFindFamiliarCombatant": 11
     },
     "packages/battle-runtime/src/find-familiar-lifecycle.ts": {
-      "module/binding:admitCompanionToBattle": 10,
       "module/binding:castResolvedFindFamiliar": 13,
       "module/binding:castWildCompanion": 14,
       "module/binding:selectedStoredFormStatBlockId": 9,
@@ -987,7 +982,7 @@
       "module/binding:characterResourceExpendituresFromBattle": 35,
       "module/binding:characterSheetPactSlotExpenditureFromBattle": 9,
       "module/binding:characterSheetSpellSlotSourceStateFromBattle": 19,
-      "module/binding:settleBattleCombatantIntoCharacterSheet": 25,
+      "module/binding:settleBattleCombatantIntoCharacterSheet": 20,
       "module/binding:spellSlotSourceSpendForBattleDelta": 11
     },
     "packages/character-creation-runtime/src/character-build-advancement.ts": {
@@ -1218,9 +1213,6 @@
     "packages/mcp/src/admin-mirror-server.ts": {
       "module/binding:handleAdminMirrorRequest": 20
     },
-    "packages/mcp/src/battle-tools.ts": {
-      "module/binding:handleBattleToolCall/call:Match.when:argument-1:selector-808174cea28e": 12
-    },
     "packages/mcp/src/character-session-sheet-rebuild.ts": {
       "module/binding:rebuildCharacterSheetForOperation": 9
     },
@@ -1229,9 +1221,6 @@
     },
     "packages/mcp/src/play-session-next-operations.ts": {
       "module/binding:nextOperationsFrom": 10
-    },
-    "packages/mcp/src/start-battle-tool.ts": {
-      "module/binding:admitCompanionAdmissions": 9
     },
     "packages/shared-algebras/src/ability-score-algebra.ts": {
       "module/binding:pointBuyCost": 9

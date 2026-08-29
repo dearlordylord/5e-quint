@@ -21,8 +21,8 @@ command also requires a lowercase `RAW_SWARM_OPERATION_ID` and a future
 `RAW_SWARM_OPERATION_DEADLINE_UTC`. They fail before the selected operation if
 the Codex CLI is not authenticated. Model work uses one of three repository
 model-lane locks; catalogue-writing operations additionally use the canonical
-one-at-a-time authoring protocol. The active #332 operation remains responsible
-for assigning distinct worktrees and Evidence Sets to its three lanes.
+one-at-a-time authoring protocol. Each durable campaign's operator assigns
+distinct worktrees and Evidence Sets to its configured lanes.
 The public commands are the only supported model entrypoints: they perform
 the lock, credential, revision, and configuration checks before handing off a
 guarded process. Direct model scripts reject invocation without that handoff.
@@ -42,11 +42,20 @@ Available model operations are `scenario-campaign`, `scenario-review`,
 catalogue rendering, replay, report, assembly, and comparison commands remain
 direct commands because they do not call a model.
 
-The quality gate runs `check:raw-swarm-lane-hygiene` before the deterministic
-check. The hygiene check preserves the classified quality-owned test inventory,
+The workspace quality gate runs `check:raw-swarm-lane-hygiene` without running
+the expensive deterministic suite. The full suite follows the same ownership
+pattern as QNT proofs: `.github/workflows/raw-swarm-deterministic.yml` runs it
+for relevant pull-request and `master` changes, and `workflow_dispatch` admits
+an explicit milestone run. Run `pnpm check:raw-swarm-deterministic` locally
+after the integration revision is stable and before merging a change covered
+by that workflow's path filters. Any subsequent revision change invalidates
+that result.
+
+The hygiene check preserves the classified deterministic-lane test inventory,
 classifies the two pre-existing MCP prototype tests in a closed exclusion list,
-and rejects any new unclassified test or quality command that reaches a public
-model lane. Its closed Vitest filename inventory expands Vitest's default
+verifies the separate workflow and its path filters, and rejects any new
+unclassified test or deterministic command that reaches a public model lane.
+Its closed Vitest filename inventory expands Vitest's default
 include glob, `**/*.{test,spec}.?(c|m)[jt]s?(x)`, into every `.test` and `.spec`
 JavaScript/TypeScript form, including JSX/TSX and CJS/MJS/CTS/MTS variants.
 That same canonical extension inventory drives conservative internal-import
@@ -55,7 +64,7 @@ during transitive capability scanning. The deterministic runner statically
 inventories reachable repository-owned sources. Its guarded repository phase
 preloads a Node capability guard and prepends failing shims for known
 coding-agent and network CLI names.
-The quality inventory is partitioned into two mandatory subphases. The closed
+The deterministic inventory is partitioned into two mandatory subphases. The closed
 boundary-test partition runs under the native supervisor's `--supervise-only`
 process-tree mode without the outer JavaScript preload, so its nested
 supervisor, signal, permission, and synthetic-agent fixtures can exercise the
@@ -165,6 +174,9 @@ These terms have one package-wide meaning:
   Scenario.
 - A **Scenario** is one immutable, admitted authored input with a semantic
   identity, title, purpose, retained review, and retained stage authorities.
+- A **Contained Scenario authority** is an immutable admitted Scenario retained
+  for historical relationship validation but excluded from future authoring
+  and live catalogue comparison.
 - An **Execution** is one externally identified attempt to exercise exactly
   one admitted Scenario through the public SDK, whether it reaches the first
   SDK call or is obstructed during character or setup authoring.
@@ -193,15 +205,18 @@ prototype commands and existing MCP/direct-SDK evidence procedures. Read the
 role protocol first; it owns the procedure for that role. Role protocols link
 back here for vocabulary and must not redefine these terms.
 
-Render the one-entry-per-admitted-Scenario catalogue before authoring:
+Render the live, one-entry-per-admitted-Scenario catalogue before authoring:
 
 ```sh
 mise exec -- pnpm raw-swarm:catalogue -- --json
 ```
 
-The command reads the canonical admission records and their referenced
-authorities. It fails on unreadable, mismatched, dangling, or incomplete
-evidence; do not replace a failed read with a sample or a hand-maintained list.
+The command emits the live admitted Scenario projection from direct
+`.scenario.json` records. Contained Scenario authorities (see the vocabulary
+above) remain available for historical relationship validation but are excluded
+from the authoring projection and live catalogue comparison. It fails on
+unreadable, mismatched, dangling, or incomplete evidence; do not replace a
+failed read with a sample or a hand-maintained list.
 
 Scenario generation is instructions-first. Do not add a novelty score,
 embedding index, retrieval service, Campaign mode, scenario DSL, or automated

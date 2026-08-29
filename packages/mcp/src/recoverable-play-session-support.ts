@@ -1,6 +1,4 @@
-import { randomBytes } from "node:crypto";
-
-import { Either, Random } from "effect";
+import { Either } from "effect";
 
 import {
   publishAdminProjectionBestEffort,
@@ -30,12 +28,15 @@ import {
   type StoredPlaySessionTenure,
 } from "./play-session-access.ts";
 import {
-  decodePlaySessionRandomSeed,
-  type PlaySessionRandomSeed,
+  type PlaySessionDiceReplay,
   type PlaySessionRepository,
   type PlaySessionRepositoryIssue,
   type RecoverablePlaySessionRecord,
 } from "./play-session-repository.ts";
+import {
+  DICE_RANDOM_SOURCE,
+  generatedDiceSeed,
+} from "./dice-sampling-service.ts";
 import { handleToolCall } from "./server.ts";
 
 export function rootFromRecord(
@@ -45,7 +46,7 @@ export function rootFromRecord(
   const root = createMcpPlaySessionRoot(
     applicationServices,
     adminMirrorSessionId(record.playSessionId),
-    Random.make(record.randomSeed),
+    record.diceReplay.seed,
   );
   for (const operation of record.operations) {
     const replayed = handleToolCall(root, operation.name, operation.args);
@@ -78,12 +79,11 @@ export function publishCurrentProjection(
   });
 }
 
-export function generatedPlaySessionRandomSeed(): PlaySessionRandomSeed {
-  const decoded = decodePlaySessionRandomSeed(randomBytes(32).toString("hex"));
-  if (Either.isLeft(decoded)) {
-    throw new Error("Generated Play Session random seed was invalid.");
-  }
-  return decoded.right;
+export function generatedPlaySessionDiceReplay(): PlaySessionDiceReplay {
+  return {
+    seed: generatedDiceSeed(),
+    randomSource: DICE_RANDOM_SOURCE,
+  };
 }
 
 export function creationFailure(

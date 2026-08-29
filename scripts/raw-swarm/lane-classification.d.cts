@@ -9,9 +9,12 @@ export const CONSUMER_DISTRIBUTION_RUNTIME_ENTRYPOINTS: Readonly<{
 }>;
 export const SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS: readonly string[];
 export const SUPPORTED_VITEST_TEST_FILE_SUFFIXES: readonly string[];
+export const DETERMINISTIC_WORKFLOW_PATH_FILTERS: readonly string[];
 export function isSupportedVitestTestFilename(path: string): boolean;
-export const QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS: readonly string[];
-export const RAW_SWARM_TESTS_OUTSIDE_QUALITY: Readonly<Record<string, string>>;
+export const DETERMINISTIC_RAW_SWARM_TESTS: readonly string[];
+export const RAW_SWARM_TESTS_OUTSIDE_DETERMINISTIC_LANE: Readonly<
+  Record<string, string>
+>;
 export const MODEL_BACKED_OPERATIONS: Readonly<
   Record<
     string,

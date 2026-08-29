@@ -62,6 +62,7 @@ const EXPECTED_EXPORTS = [
   "CharacterSheetHitDieSpend",
   "CharacterSheetHitDieState",
   "CharacterSheetHitPointMaximumProjection",
+  "CharacterSheetHitPointMaximumProjectionIssue",
   "CharacterSheetHitPointMaximumProjectionRoute",
   "CharacterSheetIdSchema",
   "CharacterSheetHitPoints",
@@ -185,6 +186,7 @@ const EXPECTED_EXPORTS = [
   "characterSheetHitDice",
   "characterSheetHitPointMaximum",
   "characterSheetHitPointMaximumProjection",
+  "characterSheetHitPointMaximumProjectionWithIssues",
   "characterSheetHitPoints",
   "characterSheetHitPointsCurrentHp",
   "characterSheetNormalHitPointMaximum",
@@ -291,9 +293,19 @@ const EXPECTED_EXPORT_RECONCILIATION_REASONS = [
       "Character Sheet owns the typed Hit Point Maximum projection result so normal maximum, effective maximum, maximum reduction, and qRoute evidence remain one public projection outcome without adding durable duplicate state.",
   },
   {
+    name: "CharacterSheetHitPointMaximumProjectionIssue",
+    reason:
+      "Character Sheet owns the structured Hit Point Maximum projection failure union so Character Build projection leaves remain available to battle admission without parsing presentation prose or duplicating HP validation.",
+  },
+  {
     name: "CharacterSheetHitPointMaximumProjectionRoute",
     reason:
       "Character Sheet owns the Hit Point projection and build arithmetic-input fact-recording route shape; exporting it keeps the route event tuple typed at the projection boundary.",
+  },
+  {
+    name: "characterSheetHitPointMaximumProjectionWithIssues",
+    reason:
+      "Character Sheet owns the Hit Point Maximum projection operation; exposing its structured-failure variant lets battle admission retain every independent build cause while the ordinary projection wrapper derives presentation-only issues.",
   },
   {
     name: "replaceOrdinarySpellSlotExpenditure",

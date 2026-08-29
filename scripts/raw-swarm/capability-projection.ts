@@ -115,6 +115,13 @@ export type CapabilityBoundary = Schema.Schema.Type<
   typeof CapabilityBoundarySchema
 >;
 
+export const STAT_BLOCK_INITIALIZATION_CAPABILITY_BOUNDARY =
+  "battleCreatureInitFromStatBlock accepts a resolved currentHp and typed initial conditions, but the public SDK does not surface the Table's fixed-vs-rolled monster Hit Points selection or roll workflow.";
+export const SUPPORTED_ONLY_CAPABILITY_REVISION_POLICY =
+  "For supportedOnly generation and review, a Candidate requiring an absent public-SDK operation must be classified as unsupported and needsRevision, never marked ready.";
+export const SCENARIO_AUTHORITY_RECONCILIATION_BOUNDARY =
+  "Reviews must reconcile every concrete quantity or count, coordinate or position, derived distance or range, size or shape, and other numeric fact across Candidate prose, typed stage facts, and catalogue-comparison evidence. Contradictions or unresolved mismatches are needsRevision findings and must never be silently repaired, normalized, or resolved by choosing one authority.";
+
 type CanonicalCapabilityDescriptor = {
   readonly id: string;
   readonly roles: readonly CapabilityRole[];
@@ -220,9 +227,8 @@ const CANONICAL_CAPABILITIES = [
     roles: ["setupAuthoring"],
     operation: "battleCreatureInitFromStatBlock",
     summary:
-      "Construct a battle creature from a supplied canonical stat block with an explicit supported initial-condition collection.",
-    boundary:
-      "Use the admitted catalog record and only the initializer's typed supported initial conditions; do not dispatch mechanics by authored name, id, slug, or provenance.",
+      "Construct a battle creature from a supplied canonical stat block with a resolved currentHp and explicit supported initial conditions.",
+    boundary: `${STAT_BLOCK_INITIALIZATION_CAPABILITY_BOUNDARY} Use the admitted catalog record and only the initializer's typed supported initial conditions; do not dispatch mechanics by authored name, id, slug, or provenance.`,
   },
   {
     id: "character-battle-init",
@@ -301,6 +307,21 @@ const CANONICAL_CAPABILITIES = [
 ] as const satisfies readonly CanonicalCapabilityDescriptor[];
 
 const CANONICAL_BOUNDARIES = [
+  {
+    id: "stat-block-initialization-boundary",
+    roles: ["generation", "review"],
+    statement: STAT_BLOCK_INITIALIZATION_CAPABILITY_BOUNDARY,
+  },
+  {
+    id: "supported-only-capability-revision",
+    roles: ["generation", "review"],
+    statement: SUPPORTED_ONLY_CAPABILITY_REVISION_POLICY,
+  },
+  {
+    id: "scenario-authority-reconciliation",
+    roles: ["generation", "review"],
+    statement: SCENARIO_AUTHORITY_RECONCILIATION_BOUNDARY,
+  },
   {
     id: "geometry-auxiliary",
     roles: ["generation", "setupAuthoring", "player", "review"],

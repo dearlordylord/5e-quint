@@ -4,7 +4,10 @@ import { Hp, type Size } from "@dnd/shared/types";
 import type { StatBlockMechanics } from "@dnd/surface/surface/types";
 import { Brand, Result } from "effect";
 
-import type { BattleStateInitLeafIssue } from "./battle-state-execution.ts";
+import type {
+  BattleInitializationIssueFacts,
+  BattleStatBlockInitializationIssue,
+} from "./battle-state-execution.ts";
 import {
   battleExecutionScopeCursor,
   type BattleExecutionScopeOrdinal,
@@ -40,7 +43,8 @@ const BattleStatBlockCombatantSource =
 export function statBlockInitialConditionImmunityIssue(
   source: BattleStatBlockCombatantSource,
   conditions: readonly Condition[],
-): BattleStateInitLeafIssue | null {
+  combatantId: CombatantId,
+): BattleStatBlockInitializationIssue | null {
   const immuneInitialCondition = conditions.find((condition) =>
     source.statBlock.immunities?.conditions?.includes(condition),
   );
@@ -49,6 +53,9 @@ export function statBlockInitialConditionImmunityIssue(
     : {
         tag: "battleStateInitIssue",
         message: `Stat Block combatant is immune to initial ${immuneInitialCondition} condition.`,
+        kind: "initialConditionImmune",
+        combatantId,
+        condition: immuneInitialCondition,
       };
 }
 
@@ -57,7 +64,10 @@ export function admitBattleStatBlockCombatant(input: {
   readonly combatantId: CombatantId;
   readonly statBlock: BattleStatBlockExecutionSource;
   readonly startingScopeOrdinal: BattleExecutionScopeOrdinal;
-}): Result.Result<AdmittedBattleStatBlockCombatant, BattleStateInitLeafIssue> {
+}): Result.Result<
+  AdmittedBattleStatBlockCombatant,
+  BattleStatBlockInitializationIssue
+> {
   const source = battleStatBlockCombatantSource(input.statBlock);
   if (Result.isFailure(source)) return Result.fail(source.failure);
   return admitBattleStatBlockCombatantSource({
@@ -73,14 +83,26 @@ export function admitBattleStatBlockCombatantSource(input: {
   readonly combatantId: CombatantId;
   readonly source: BattleStatBlockCombatantSource;
   readonly startingScopeOrdinal: BattleExecutionScopeOrdinal;
-}): Result.Result<AdmittedBattleStatBlockCombatant, BattleStateInitLeafIssue> {
+}): Result.Result<
+  AdmittedBattleStatBlockCombatant,
+  BattleStatBlockInitializationIssue
+> {
   const statBlock = input.source;
   if (typeof statBlock.statBlock.creatureType !== "string") {
-    return issue("Battle runtime requires a concrete creature type.");
+    return issue("Battle runtime requires a concrete creature type.", {
+      kind: "statBlockCombatantInvalid",
+      combatantId: input.combatantId,
+      constraint: "concreteCreatureTypeRequired",
+    });
   }
   if (statBlock.statBlock.resistances?.kind === "choose_one_from") {
     return issue(
       "Battle runtime requires Stat Block resistance choices to be resolved before admission.",
+      {
+        kind: "statBlockCombatantInvalid",
+        combatantId: input.combatantId,
+        constraint: "resolvedResistanceChoiceRequired",
+      },
     );
   }
   const from = input.startingScopeOrdinal;
@@ -130,12 +152,23 @@ export function admitBattleStatBlockCombatantSource(input: {
 
 export function battleStatBlockCombatantSource(
   statBlock: BattleStatBlockExecutionSource,
-): Result.Result<BattleStatBlockCombatantSource, BattleStateInitLeafIssue> {
+): Result.Result<
+  BattleStatBlockCombatantSource,
+  BattleStatBlockInitializationIssue
+> {
   if (statBlock.statBlock.ac.kind !== "literal") {
-    return issue("Battle runtime requires literal Stat Block Armor Class.");
+    return issue("Battle runtime requires literal Stat Block Armor Class.", {
+      kind: "statBlockSourceInvalid",
+      statBlockId: statBlock.id,
+      constraint: "literalArmorClassRequired",
+    });
   }
   if (statBlock.statBlock.hp.kind !== "literal") {
-    return issue("Battle runtime requires literal Stat Block maximum HP.");
+    return issue("Battle runtime requires literal Stat Block maximum HP.", {
+      kind: "statBlockSourceInvalid",
+      statBlockId: statBlock.id,
+      constraint: "literalMaximumHitPointsRequired",
+    });
   }
   if (
     !Number.isInteger(statBlock.statBlock.hp.value) ||
@@ -143,10 +176,19 @@ export function battleStatBlockCombatantSource(
   ) {
     return issue(
       "Battle runtime requires Stat Block maximum HP to be a positive integer.",
+      {
+        kind: "statBlockSourceInvalid",
+        statBlockId: statBlock.id,
+        constraint: "positiveMaximumHitPointsRequired",
+      },
     );
   }
   if (typeof statBlock.statBlock.size !== "string") {
-    return issue("Battle runtime requires a concrete creature Size.");
+    return issue("Battle runtime requires a concrete creature Size.", {
+      kind: "statBlockSourceInvalid",
+      statBlockId: statBlock.id,
+      constraint: "concreteSizeRequired",
+    });
   }
   return Result.succeed(
     BattleStatBlockCombatantSource({
@@ -163,6 +205,11 @@ export function battleStatBlockCombatantSource(
 
 function issue(
   message: string,
-): Result.Result<never, BattleStateInitLeafIssue> {
-  return Result.fail({ tag: "battleStateInitIssue", message });
+  facts: BattleInitializationIssueFacts,
+): Result.Result<never, BattleStatBlockInitializationIssue> {
+  return Result.fail({
+    tag: "battleStateInitIssue",
+    message,
+    ...facts,
+  });
 }

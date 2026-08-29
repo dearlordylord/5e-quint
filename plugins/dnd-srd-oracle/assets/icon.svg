@@ -1,6 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
-  <title id="title">5.5e SRD Oracle die</title>
-  <path fill="#4f46e5" d="M64 5 116 35v58l-52 30L12 93V35z"/>
-  <path fill="none" stroke="#fff" stroke-width="7" stroke-linejoin="round" d="m64 18 39 23-14 48-50 1-14-49zM25 41l39 28 39-28M64 69v39M39 90l25-21 25 20"/>
-  <circle cx="64" cy="69" r="7" fill="#fff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">5.5e SRD Oracle monogram with skull</title>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4FB8B2"/>
+      <stop offset="1" stop-color="#287571"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#background)"/>
+  <g fill="#fff" font-family="DejaVu Sans" font-weight="700">
+    <text x="68" y="330" font-size="178">5</text>
+    <circle cx="207" cy="302" r="15"/>
+    <text x="236" y="330" font-size="178">5</text>
+    <text x="365" y="246" font-size="84">e</text>
+  </g>
+  <g transform="translate(390 140) scale(.18)" fill="#fff">
+    <path d="M256 68c-100 0-160 72-160 160 0 60 28 108 72 136l8 36h160l8-36c44-28 72-76 72-136 0-88-60-160-160-160z"/>
+    <ellipse cx="208" cy="216" rx="40" ry="44" fill="#287571"/>
+    <ellipse cx="304" cy="216" rx="40" ry="44" fill="#287571"/>
+    <path d="M244 280l12 28 12-28c-4-4-10-6-12-6s-8 2-12 6z" fill="#287571"/>
+    <path d="M168 364h176v16c0 36-16 64-88 64s-88-28-88-64v-16z"/>
+    <path fill="#287571" d="M188 364h24v32h-24zm32 0h24v32h-24zm32 0h24v32h-24zm32 0h24v32h-24zm32 0h24v32h-24z"/>
+  </g>
 </svg>

@@ -84,7 +84,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
       tag: "resolved",
       snapshot: {
         turn: {
-          bonusActionAvailable: false,
+          bonusActionQuotaAvailable: false,
           spellSlotUsesThisTurn: [
             { kind: "committed", combatantId: spellCasterId },
           ],
@@ -451,7 +451,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
       tag: "resolved",
       snapshot: {
         turn: {
-          bonusActionAvailable: false,
+          bonusActionQuotaAvailable: false,
           spellSlotUsesThisTurn: [],
         },
         lightEmitters: [

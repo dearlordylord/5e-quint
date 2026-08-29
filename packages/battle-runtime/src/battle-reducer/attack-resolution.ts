@@ -119,6 +119,7 @@ import {
   sleepShakeAwakeTargetHole,
 } from "./hole-helpers.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
+import { DURABLE_CONTINUATION_CHECKPOINT_BOUNDARY } from "../battle-state-execution.ts";
 
 import {
   combatantProficiencyBonus,
@@ -321,9 +322,12 @@ export function needsAttackDamageConcentrationResult(input: {
     return spent;
   }
   /* v8 ignore stop -- @preserve */
-  return needsHolesResult(spent.state, input.subject, [
-    input.concentrationSave,
-  ]);
+  return needsHolesResult(
+    spent.state,
+    input.subject,
+    [input.concentrationSave],
+    DURABLE_CONTINUATION_CHECKPOINT_BOUNDARY,
+  );
 }
 
 export function resolveDash(
