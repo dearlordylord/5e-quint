@@ -196,7 +196,7 @@ import {
 import { parseBattleSpellEffectLevel } from "./procedure-execution/spell-effect-level.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { castResolvedFindFamiliar } from "./companion-lifecycle.ts";
+import { castResolvedSpawnedCompanion } from "./companion-lifecycle.ts";
 
 const PROPERTY_OPTIONS = { numRuns: 64, seed: 0x5eed18 } as const;
 
@@ -3063,7 +3063,7 @@ describe("battle boundary admission owners", () => {
             },
             invocationSpellAccesses: [
               {
-                tag: "pactOfTheChainFindFamiliar",
+                tag: "pactOfTheChainSpawnedCompanion",
                 spell: spellRecord("find_familiar"),
               },
             ],
@@ -3072,7 +3072,7 @@ describe("battle boundary admission owners", () => {
       ],
     });
     const familiarId = combatantId("boundary-familiar");
-    const cast = castResolvedFindFamiliar({
+    const cast = castResolvedSpawnedCompanion({
       state: ownerSession.state,
       casterId: wizardId,
       familiarId,

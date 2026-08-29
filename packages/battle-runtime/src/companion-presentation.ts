@@ -15,11 +15,11 @@ import type { CombatantId } from "./identity.ts";
 import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
 import {
   admitCompanionToBattle,
-  castResolvedFindFamiliar,
+  castResolvedSpawnedCompanion,
   type CompanionBattleAdmissionInput,
-  type FindFamiliarCastInput,
+  type SpawnedCompanionCastInput,
 } from "./companion-lifecycle.ts";
-import { resolveFindFamiliarForm } from "@dnd/surface/surface/find-familiar-forms";
+import { resolveSpawnedCompanionForm } from "@dnd/surface/surface/find-familiar-forms";
 import { snapshotBattle } from "./battle-reducer/battle-snapshot.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
@@ -78,9 +78,9 @@ export function admitCompanionToBattleRuntime(
 function retainedCompanionSelection(
   storedForm: CompanionBattleAdmissionInput["manifestation"]["storedForm"],
 ): RetainedCompanionBattleSelection {
-  return storedForm.formAccess === "findFamiliar"
+  return storedForm.formAccess === "spawnedCompanion"
     ? {
-        formAccess: "findFamiliar",
+        formAccess: "spawnedCompanion",
         selectedForm: storedForm.formSelection,
       }
     : {
@@ -112,8 +112,8 @@ export type RetainedCompanionRuntimeCastResult =
       >["snapshot"];
     };
 
-export function castRetainedFindFamiliarRuntime(
-  input: Omit<FindFamiliarCastInput, "state"> & {
+export function castRetainedSpawnedCompanionRuntime(
+  input: Omit<SpawnedCompanionCastInput, "state"> & {
     readonly session: BattleRuntimeSession;
   },
 ): RetainedCompanionRuntimeCastResult {
@@ -128,7 +128,7 @@ export function castRetainedFindFamiliarRuntime(
       snapshot: snapshotBattle(input.session.state),
     };
   }
-  const resolvedForm = resolveFindFamiliarForm({
+  const resolvedForm = resolveSpawnedCompanionForm({
     catalog: input.catalog,
     eligibility: input.eligibility,
     selection: input.selection,
@@ -143,7 +143,7 @@ export function castRetainedFindFamiliarRuntime(
       snapshot: snapshotBattle(input.session.state),
     };
   }
-  const result = castResolvedFindFamiliar({
+  const result = castResolvedSpawnedCompanion({
     state: input.session.state,
     casterId: input.casterId,
     familiarId: input.familiarId,
@@ -197,7 +197,7 @@ export function castRetainedFindFamiliarRuntime(
     input.casterId,
     result.state,
     {
-      formAccess: "findFamiliar",
+      formAccess: "spawnedCompanion",
       selectedForm: input.selection,
     },
     presentation.success,

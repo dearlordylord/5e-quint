@@ -4017,7 +4017,7 @@ describe("MCP server route", () => {
   test("start_battle admits a retained companion from Character Sheet state", () => {
     const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-companion-admission";
-    createFinalizedWizardWithFindFamiliar(root, draftId);
+    createFinalizedWizardWithSpawnedCompanion(root, draftId);
     setStoredRetainedFamiliarCompanion(root, draftId, {
       formId: "cat",
       currentHp: Hp(1),
@@ -4064,7 +4064,7 @@ describe("MCP server route", () => {
         {
           ownerId: "wizard",
           companionId: "wizard-familiar",
-          formAccess: "findFamiliar",
+          formAccess: "spawnedCompanion",
           resolvedStatBlockId: "stat_block_cat",
           creatureTypeOverride: "fey",
         },
@@ -4115,7 +4115,7 @@ describe("MCP server route", () => {
   test("fills companion reappearance holes one at a time through MCP", () => {
     const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-find-familiar-reappearance-fills";
-    createFinalizedWizardWithFindFamiliar(root, draftId);
+    createFinalizedWizardWithSpawnedCompanion(root, draftId);
     setRetainedFamiliarCompanion(root, draftId);
 
     readPayload(
@@ -4351,7 +4351,7 @@ describe("MCP server route", () => {
     const root = createMcpPlaySessionRoot();
     const wizardDraftId = "draft:gh324-round-trip-wizard";
     const fighterDraftId = "draft:gh324-round-trip-fighter";
-    createFinalizedWizardWithFindFamiliar(root, wizardDraftId);
+    createFinalizedWizardWithSpawnedCompanion(root, wizardDraftId);
     setRetainedFamiliarCompanion(root, wizardDraftId);
     createFinalizedFighterSheet(root, fighterDraftId);
 
@@ -5008,7 +5008,7 @@ describe("MCP server route", () => {
   test("start_battle delegates companion admission and Stat Block HP initialization", () => {
     const companionRoot = createMcpPlaySessionRoot();
     const draftId = "draft:start-without-retained-companion";
-    createFinalizedWizardWithFindFamiliar(companionRoot, draftId);
+    createFinalizedWizardWithSpawnedCompanion(companionRoot, draftId);
     expect(
       readPayload(
         handleToolCall(companionRoot, "start_battle", {
@@ -5050,7 +5050,7 @@ describe("MCP server route", () => {
     });
 
     const defaultCompanionIdRoot = createMcpPlaySessionRoot();
-    createFinalizedWizardWithFindFamiliar(
+    createFinalizedWizardWithSpawnedCompanion(
       defaultCompanionIdRoot,
       "draft:start-without-retained-companion-default-id",
     );
@@ -5242,7 +5242,7 @@ describe("MCP server route", () => {
   test("fills familiar touch spell delivery holes one at a time through MCP", () => {
     const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-find-familiar-touch-delivery-fills";
-    createFinalizedWizardWithFindFamiliar(root, draftId, {
+    createFinalizedWizardWithSpawnedCompanion(root, draftId, {
       preparedSpells: ["find_familiar", "cure_wounds"],
       spellcastingSafeLoadout: true,
     });
@@ -5294,7 +5294,7 @@ describe("MCP server route", () => {
           readonly invocation?: { readonly spellId?: string };
         };
       }) =>
-        act.subject.tag === "findFamiliarTouchSpell" &&
+        act.subject.tag === "spawnedCompanionTouchSpell" &&
         act.presentation.kind === "spell" &&
         act.presentation.invocation?.spellId === "cure_wounds",
     );
@@ -5304,7 +5304,7 @@ describe("MCP server route", () => {
     if (deliveryAct.subject.procedureRef === undefined) return;
     const connectionHole = deliveryAct.initialHoles.find(
       (hole: { readonly kind: string }) =>
-        hole.kind === "findFamiliarConnection",
+        hole.kind === "spawnedCompanionConnection",
     );
     expect(connectionHole).toBeDefined();
     if (connectionHole === undefined) return;
@@ -5313,7 +5313,7 @@ describe("MCP server route", () => {
       handleToolCall(root, "fill_battle_hole", {
         subject: deliveryAct.subject,
         fill: {
-          kind: "findFamiliarConnection",
+          kind: "spawnedCompanionConnection",
           holeId: connectionHole.holeId,
           value: { withinRange: true },
         },
@@ -5322,7 +5322,7 @@ describe("MCP server route", () => {
     expect(afterConnection.result.tag).toBe("needsHoles");
     expect(root.sessionStore.pendingBattleFills).toMatchObject({
       subject: deliveryAct.subject,
-      fills: [expect.objectContaining({ kind: "findFamiliarConnection" })],
+      fills: [expect.objectContaining({ kind: "spawnedCompanionConnection" })],
     });
     expect(
       root.sessionStore.battleSession?.state.combatants.get(
@@ -5347,7 +5347,7 @@ describe("MCP server route", () => {
           value: "goblin",
           spatialFacts: [
             {
-              kind: "findFamiliarTouchSpellTarget",
+              kind: "spawnedCompanionTouchSpellTarget",
               ownerId: "wizard",
               familiarId: "wizard-familiar",
               targetId: "goblin",
@@ -5397,7 +5397,7 @@ describe("MCP server route", () => {
   test("start_battle admits a retained companion without prepared Find Familiar", () => {
     const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-find-familiar-spellbook-ritual-admission";
-    createFinalizedWizardWithFindFamiliar(root, draftId, {
+    createFinalizedWizardWithSpawnedCompanion(root, draftId, {
       preparedSpells: [],
     });
     setRetainedFamiliarCompanion(root, draftId, {
@@ -5435,7 +5435,7 @@ describe("MCP server route", () => {
         {
           ownerId: "wizard",
           companionId: "wizard-familiar",
-          formAccess: "findFamiliar",
+          formAccess: "spawnedCompanion",
           resolvedStatBlockId: "stat_block_owl",
         },
       ],
@@ -5445,7 +5445,7 @@ describe("MCP server route", () => {
   test("apply_character_session_operation retains a companion from ordinary Spell Slot casting", () => {
     const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-find-familiar-spell-slot-retain";
-    createFinalizedWizardWithFindFamiliar(root, draftId);
+    createFinalizedWizardWithSpawnedCompanion(root, draftId);
 
     const retained = readPayload(
       handleToolCall(root, "apply_character_session_operation", {
@@ -6307,8 +6307,8 @@ describe("MCP server route", () => {
     const root = createMcpPlaySessionRoot();
     const firstDraftId = "draft:mcp-duplicate-durable-familiar-first";
     const secondDraftId = "draft:mcp-duplicate-durable-familiar-second";
-    createFinalizedWizardWithFindFamiliar(root, firstDraftId);
-    createFinalizedWizardWithFindFamiliar(root, secondDraftId);
+    createFinalizedWizardWithSpawnedCompanion(root, firstDraftId);
+    createFinalizedWizardWithSpawnedCompanion(root, secondDraftId);
 
     readPayload(
       handleToolCall(root, "apply_character_session_operation", {
@@ -6361,7 +6361,7 @@ describe("MCP server route", () => {
   test("apply_character_session_operation rejects caller-minted companion HP", () => {
     const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-find-familiar-hp-input-rejected";
-    createFinalizedWizardWithFindFamiliar(root, draftId);
+    createFinalizedWizardWithSpawnedCompanion(root, draftId);
 
     const rejected = readPayload(
       handleToolCall(root, "apply_character_session_operation", {
@@ -6405,7 +6405,7 @@ describe("MCP server route", () => {
     ).toMatchObject({ details: { code: "UNKNOWN_CHARACTER_SESSION" } });
 
     const draftId = "draft:mcp-in-battle-operation";
-    createFinalizedWizardWithFindFamiliar(root, draftId);
+    createFinalizedWizardWithSpawnedCompanion(root, draftId);
     const id = testCharacterId(draftId);
     const session = root.sessionStore.characters.get(id);
     if (session?.tag !== "available") {
@@ -6430,7 +6430,7 @@ describe("MCP server route", () => {
   test("apply_character_session_operation rejects an unknown special form", () => {
     const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-unknown-special-form";
-    createFinalizedWizardWithFindFamiliar(root, draftId);
+    createFinalizedWizardWithSpawnedCompanion(root, draftId);
 
     expect(
       readPayload(
@@ -6458,7 +6458,7 @@ describe("MCP server route", () => {
   test("delegates a catalogued special-form selection to runtime admission", () => {
     const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-catalogued-special-form";
-    createFinalizedWizardWithFindFamiliar(root, draftId);
+    createFinalizedWizardWithSpawnedCompanion(root, draftId);
     const specialForm = PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS[0];
     if (specialForm === undefined) {
       throw new Error("Expected a catalogued special-form fixture.");
@@ -6514,7 +6514,7 @@ describe("MCP server route", () => {
   ])("delegates $label companion-source admission", ({ source }) => {
     const root = createMcpPlaySessionRoot();
     const draftId = `draft:mcp-source-${source.tag}`;
-    createFinalizedWizardWithFindFamiliar(root, draftId);
+    createFinalizedWizardWithSpawnedCompanion(root, draftId);
 
     expect(
       readPayload(
@@ -6536,7 +6536,7 @@ describe("MCP server route", () => {
   test("start_battle orders retained companion ties after the initial owner roster", () => {
     const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-find-familiar-tie-order";
-    createFinalizedWizardWithFindFamiliar(root, draftId);
+    createFinalizedWizardWithSpawnedCompanion(root, draftId);
     setRetainedFamiliarCompanion(root, draftId, {
       formId: "owl",
     });
@@ -6574,7 +6574,7 @@ describe("MCP server route", () => {
   test("end_battle clears a retained companion permanently dismissed in battle", () => {
     const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-find-familiar-permanent-dismiss-handoff";
-    createFinalizedWizardWithFindFamiliar(root, draftId);
+    createFinalizedWizardWithSpawnedCompanion(root, draftId);
     setRetainedFamiliarCompanion(root, draftId, {
       formId: "owl",
     });
@@ -6643,7 +6643,7 @@ describe("MCP server route", () => {
   test("end_battle leaves a retained companion untouched when it was never admitted", () => {
     const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-find-familiar-never-admitted-handoff";
-    createFinalizedWizardWithFindFamiliar(root, draftId);
+    createFinalizedWizardWithSpawnedCompanion(root, draftId);
     setRetainedFamiliarCompanion(root, draftId, { formId: "owl" });
 
     readPayload(
@@ -6765,7 +6765,7 @@ describe("MCP server route", () => {
   test("Character Sheet rejects invalid retained companion HP before MCP admission", () => {
     const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-find-familiar-invalid-form";
-    createFinalizedWizardWithFindFamiliar(root, draftId);
+    createFinalizedWizardWithSpawnedCompanion(root, draftId);
     const session = root.sessionStore.characters.get(testCharacterId(draftId));
     if (session?.tag !== "available") {
       throw new Error("Expected test character session.");
@@ -10178,7 +10178,7 @@ function createFinalizedDruidSheet(
   return build;
 }
 
-function createFinalizedWizardWithFindFamiliar(
+function createFinalizedWizardWithSpawnedCompanion(
   root: ReturnType<typeof createMcpPlaySessionRoot>,
   draftId: string,
   input: {

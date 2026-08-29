@@ -11,7 +11,7 @@ import type { CharacterSheetIssue } from "@dnd/character-sheet-runtime";
 import type { ReadonlyNonEmptyArray, SpellSlotLevel } from "@dnd/shared/types";
 import type { StatBlockId } from "@dnd/shared/game-facts";
 import type {
-  FindFamiliarNormalFormRef,
+  SpawnedCompanionNormalFormRef,
   PactOfTheChainSpecialFormRef,
 } from "@dnd/surface/surface/find-familiar-forms";
 import { Match } from "effect";
@@ -125,7 +125,7 @@ export type CharacterSheetBattleHandoffFact =
   | {
       readonly handoffReason: "companionFormProof";
       readonly check: "normalFormNotEligible" | "normalFormSelectionMismatch";
-      readonly formId: FindFamiliarNormalFormRef["formId"];
+      readonly formId: SpawnedCompanionNormalFormRef["formId"];
       readonly resolvedStatBlockId: StatBlockId;
     }
   | {

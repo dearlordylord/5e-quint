@@ -41,7 +41,7 @@ type SpellActSubject = Extract<
     readonly tag: "actionSpell" | "bonusActionSpell" | "bonusActionDashSpell";
   }
 >;
-export type ActiveAntimagicFieldAuraMembership = {
+export type ActiveMagicSuppressionEmanationMembership = {
   readonly areaId: BattleAreaId;
   readonly sourceCombatantId: CombatantId;
   readonly membership: BattleMagicSuppressionEmanationMembership;
@@ -55,11 +55,11 @@ const NON_SPELLCASTING_SPELL_ACT_PROCEDURES = [
   "movableLightManifestation",
 ] as const satisfies ReadonlyArray<SpellProcedureExecution["procedure"]>;
 
-export function combatantInsideActiveAntimagicFieldAura(
+export function combatantInsideActiveMagicSuppressionEmanation(
   state: BattleState,
   combatantId: CombatantId,
 ): boolean {
-  return activeAntimagicFieldAuraMemberships(state).some((membership) =>
+  return activeMagicSuppressionEmanationMemberships(state).some((membership) =>
     magicSuppressionEmanationMembershipIncludesCombatant(
       membership,
       combatantId,
@@ -74,7 +74,7 @@ export function battleSubjectInterdictedByMagicSuppressionEmanation(
   const interdiction = magicSuppressionSubjectInterdiction(state, subject);
   return (
     interdiction !== null &&
-    combatantInsideActiveAntimagicFieldAura(state, interdiction.actorId)
+    combatantInsideActiveMagicSuppressionEmanation(state, interdiction.actorId)
   );
 }
 
@@ -97,9 +97,9 @@ export function spellInvocationActInterdictedByMagicSuppressionEmanation(
   );
 }
 
-export function activeAntimagicFieldAuraMemberships(
+export function activeMagicSuppressionEmanationMemberships(
   state: BattleState,
-): readonly ActiveAntimagicFieldAuraMembership[] {
+): readonly ActiveMagicSuppressionEmanationMembership[] {
   return [...state.combatants.values()].flatMap((combatant) =>
     combatant.activeEffects.flatMap((effect) =>
       effect.kind === "magicSuppressionEmanation"
@@ -116,7 +116,7 @@ export function activeAntimagicFieldAuraMemberships(
 }
 
 export function magicSuppressionEmanationMembershipIncludesCombatant(
-  membership: ActiveAntimagicFieldAuraMembership,
+  membership: ActiveMagicSuppressionEmanationMembership,
   combatantId: CombatantId,
 ): boolean {
   return combatantId === membership.sourceCombatantId

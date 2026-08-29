@@ -21,7 +21,7 @@ import {
   battleReducerRouteForFallingCreatureMitigationLanding,
 } from "./interrupt-route-projection.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
-import { featherFallLandingCleanupForCombatant } from "./spells-holes-fills.ts";
+import { fallingCreatureMitigationLandingCleanupForCombatant } from "./spells-holes-fills.ts";
 
 export function openCreatureFallsInterruptWindow(input: {
   readonly state: BattleState;
@@ -228,7 +228,7 @@ function resolveFeatherFallLandingForTarget(
   BattleFallingCreatureMitigationLandingResult,
   { readonly tag: "invalid" }
 > {
-  const cleanup = featherFallLandingCleanupForCombatant(target);
+  const cleanup = fallingCreatureMitigationLandingCleanupForCombatant(target);
   if (cleanup.tag === "unmitigated") {
     return {
       tag: "unmitigated",

@@ -914,7 +914,10 @@ describe("manual MCP battle surface coverage", () => {
             sourceClassName: "warlock",
             abilityModifier: 3,
             invocationSpellAccesses: [
-              { tag: "pactOfTheChainFindFamiliar", spellId: "find_familiar" },
+              {
+                tag: "pactOfTheChainSpawnedCompanion",
+                spellId: "find_familiar",
+              },
             ],
             slots: [{ spellLevel: 1, count: 1 }],
           }),
@@ -931,7 +934,7 @@ describe("manual MCP battle surface coverage", () => {
     if (chainWarlock?.origin.kind !== "character") return;
     expect(chainSpellcasting?.invocationSpellAccesses).toEqual([
       expect.objectContaining({
-        tag: "pactOfTheChainFindFamiliar",
+        tag: "pactOfTheChainSpawnedCompanion",
         spell: expect.objectContaining({ id: "find_familiar" }),
       }),
     ]);
@@ -1580,7 +1583,9 @@ function spellcasting(
       readonly spellcastingFocus: "book_of_shadows";
     }[];
     readonly invocationSpellAccesses?: readonly {
-      readonly tag: "armorOfShadowsMageArmor" | "pactOfTheChainFindFamiliar";
+      readonly tag:
+        | "armorOfShadowsMageArmor"
+        | "pactOfTheChainSpawnedCompanion";
       readonly spellId: string;
     }[];
     readonly slots?: readonly {

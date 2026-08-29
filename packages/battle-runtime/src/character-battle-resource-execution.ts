@@ -91,7 +91,7 @@ export type CharacterBattleSpellcastingExecutionState = {
   readonly proficiencyBonus: ProficiencyBonus;
   readonly canCastSpells: boolean;
   readonly spellSlots: readonly CharacterBattleSpellSlotState[];
-  readonly pactOfTheChainFindFamiliarInvocationMode: CompanionReactionInvocationMode | null;
+  readonly pactOfTheChainSpawnedCompanionInvocationMode: CompanionReactionInvocationMode | null;
 };
 export type CharacterBattlePointPoolSpendIssue = {
   readonly tag: "characterBattlePointPoolSpendIssue";

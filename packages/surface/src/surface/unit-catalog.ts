@@ -152,7 +152,7 @@ import fireballInput from "../../content/fireball.json";
 import flameBladeInput from "../../content/flame_blade.json";
 import flameStrikeInput from "../../content/flame_strike.json";
 import flyInput from "../../content/fly.json";
-import findFamiliarInput from "../../content/find_familiar.json";
+import spawnedCompanionInput from "../../content/find_familiar.json";
 import findTrapsInput from "../../content/find_traps.json";
 import flamingSphereInput from "../../content/flaming_sphere.json";
 import fogCloudInput from "../../content/fog_cloud.json";
@@ -900,7 +900,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     fireballInput,
     flameBladeInput,
     flameStrikeInput,
-    findFamiliarInput,
+    spawnedCompanionInput,
     findTrapsInput,
     flamingSphereInput,
     fogCloudInput,

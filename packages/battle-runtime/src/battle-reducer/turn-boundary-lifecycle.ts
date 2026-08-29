@@ -160,7 +160,7 @@ import {
   type ReplayParentContinuation,
 } from "./replay-continuation.ts";
 import { invalidResult } from "./result-helpers.ts";
-import { slowActionOrBonusActionTurnResources } from "./save-gated-turn-constraint-runtime.ts";
+import { saveGatedTurnConstraintActionOrBonusActionTurnResources } from "./save-gated-turn-constraint-runtime.ts";
 import {
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffectsForSources,
@@ -1272,11 +1272,12 @@ function resolveEndTurn({
     initiative,
     currentTurnResources: resetTurnResources,
   });
-  const currentTurnResourcesAfterSlow = slowActionOrBonusActionTurnResources(
-    stateAfterCompelledHalt,
-    stateAfterCompelledHalt.currentTurnResources,
-    stateAfterCompelledHalt.combatants.get(nextActorId),
-  );
+  const currentTurnResourcesAfterSlow =
+    saveGatedTurnConstraintActionOrBonusActionTurnResources(
+      stateAfterCompelledHalt,
+      stateAfterCompelledHalt.currentTurnResources,
+      stateAfterCompelledHalt.combatants.get(nextActorId),
+    );
   const currentTurnResourcesAfterActionRestriction =
     moveActionBonusActionTurnResources(
       currentTurnResourcesAfterSlow,

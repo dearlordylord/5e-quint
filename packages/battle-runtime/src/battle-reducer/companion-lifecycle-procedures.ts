@@ -14,7 +14,7 @@ import type {
   BattleResolutionResult,
   BattleState,
 } from "../battle-state-execution.ts";
-import type { AdmittedFindFamiliarReappearance } from "../companion-admission-state.ts";
+import type { AdmittedSpawnedCompanionReappearance } from "../companion-admission-state.ts";
 import {
   companionHeldObjectFactsHole,
   companionReappearanceInitiativeHole,
@@ -23,16 +23,16 @@ import {
   spawnedCompanionTouchDeliveryTargetHoles,
 } from "../companion-subjects.ts";
 import {
-  permanentlyDismissFindFamiliar,
-  reappearAdmittedTemporarilyDismissedFindFamiliar,
-  temporarilyDismissFindFamiliar,
+  permanentlyDismissSpawnedCompanion,
+  reappearAdmittedTemporarilyDismissedSpawnedCompanion,
+  temporarilyDismissSpawnedCompanion,
 } from "../companion-lifecycle-execution.ts";
-import { findFamiliarCompanionEntryForOwner } from "../spawned-companion-state.ts";
+import { spawnedCompanionEntryForOwner } from "../spawned-companion-state.ts";
 import {
-  prepareTouchSpellDeliveryThroughFindFamiliar,
-  shareFindFamiliarSenses as applyFindFamiliarSharedSenses,
+  prepareTouchSpellDeliveryThroughSpawnedCompanion,
+  shareSpawnedCompanionSenses as applySpawnedCompanionSharedSenses,
   spendSpawnedCompanionTouchDeliveryReaction,
-  type FindFamiliarWithin100FeetFact,
+  type SpawnedCompanionWithin100FeetFact,
 } from "../companion-communication.ts";
 import type { CombatantId } from "../identity.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
@@ -41,7 +41,7 @@ import { needsHolesResult } from "./needs-holes-result.ts";
 import { admitBattleResolutionInput } from "./resolution-admission.ts";
 import { invalidResult } from "./result-helpers.ts";
 
-type ResolveAdmittedFindFamiliarSpell = (
+type ResolveAdmittedSpawnedCompanionSpell = (
   input:
     | AdmittedActionSpellBattleResolutionInput
     | AdmittedBonusActionSpellBattleResolutionInput,
@@ -49,11 +49,11 @@ type ResolveAdmittedFindFamiliarSpell = (
 
 export class CompanionLifecycleProcedureExecution {
   private constructor(
-    private readonly resolveAdmittedSpell: ResolveAdmittedFindFamiliarSpell,
+    private readonly resolveAdmittedSpell: ResolveAdmittedSpawnedCompanionSpell,
   ) {}
 
   static fromResolver(
-    resolver: ResolveAdmittedFindFamiliarSpell,
+    resolver: ResolveAdmittedSpawnedCompanionSpell,
   ): CompanionLifecycleProcedureExecution {
     return new CompanionLifecycleProcedureExecution(resolver);
   }
@@ -72,7 +72,7 @@ export function resolveCompanionLifecycleSubject(
     Extract<BattleSubject, { readonly tag: "companionLifecycle" }>
   >,
 ): BattleResolutionResult {
-  const familiarEntry = findFamiliarCompanionEntryForOwner(
+  const familiarEntry = spawnedCompanionEntryForOwner(
     input.state,
     input.subject.actorId,
   );
@@ -99,7 +99,7 @@ export function resolveCompanionLifecycleSubject(
     if (heldObjectIds.tag === "invalid") {
       return heldObjectIds;
     }
-    return temporarilyDismissFindFamiliar({
+    return temporarilyDismissSpawnedCompanion({
       state: input.state,
       casterId: input.subject.actorId,
       heldObjectIds: heldObjectIds.objectIds,
@@ -113,7 +113,7 @@ export function resolveCompanionLifecycleSubject(
     );
   }
   if (input.subject.action === "permanentlyDismiss") {
-    return permanentlyDismissFindFamiliar({
+    return permanentlyDismissSpawnedCompanion({
       state: input.state,
       casterId: input.subject.actorId,
     });
@@ -126,7 +126,7 @@ export function resolveCompanionLifecycleSubject(
 
 export function resolveAdmittedCompanionReappearanceSubject(input: {
   readonly fills: readonly BattleFill[];
-  readonly admission: AdmittedFindFamiliarReappearance;
+  readonly admission: AdmittedSpawnedCompanionReappearance;
 }): BattleResolutionResult {
   const { state, subject } = input.admission;
   const resolutionInput = { state, subject, fills: input.fills };
@@ -138,7 +138,7 @@ export function resolveAdmittedCompanionReappearanceSubject(input: {
   if (initiative.tag === "needsHoles") {
     return initiative;
   }
-  const result = reappearAdmittedTemporarilyDismissedFindFamiliar({
+  const result = reappearAdmittedTemporarilyDismissedSpawnedCompanion({
     admission: input.admission,
     initiative: initiative.initiative,
     placement: placement.placement,
@@ -236,19 +236,19 @@ export function resolveSpawnedCompanionSharedSensesSubject(
   });
   return connection.tag !== "resolved"
     ? connection
-    : shareFindFamiliarSenses({
+    : shareSpawnedCompanionSenses({
         state: input.state,
         casterId: input.subject.actorId,
         fact: connection.fact,
       });
 }
 
-export function shareFindFamiliarSenses(input: {
+export function shareSpawnedCompanionSenses(input: {
   readonly state: BattleState;
   readonly casterId: CombatantId;
-  readonly fact: FindFamiliarWithin100FeetFact;
+  readonly fact: SpawnedCompanionWithin100FeetFact;
 }): BattleResolutionResult {
-  const transition = applyFindFamiliarSharedSenses(input);
+  const transition = applySpawnedCompanionSharedSenses(input);
   return transition.tag === "invalid"
     ? invalidResult(input.state, transition.reason, transition.message)
     : {
@@ -283,7 +283,7 @@ export function resolveSpawnedCompanionTouchSpellSubject(
         fill.holeId === connection.holeId
       ),
   );
-  const delivered = deliverTouchSpellThroughFindFamiliar(
+  const delivered = deliverTouchSpellThroughSpawnedCompanion(
     {
       state: input.state,
       subject: spellSubject,
@@ -306,7 +306,7 @@ export function resolveSpawnedCompanionTouchSpellSubject(
     : delivered;
 }
 
-export function deliverTouchSpellThroughFindFamiliar(
+export function deliverTouchSpellThroughSpawnedCompanion(
   input: {
     readonly state: BattleState;
     readonly subject: Extract<
@@ -314,7 +314,7 @@ export function deliverTouchSpellThroughFindFamiliar(
       { readonly tag: "actionSpell" | "bonusActionSpell" }
     >;
     readonly fills: BattleResolutionInput["fills"];
-    readonly fact: FindFamiliarWithin100FeetFact;
+    readonly fact: SpawnedCompanionWithin100FeetFact;
     readonly reactionContinuation: {
       readonly subject: BattleSubject;
       readonly fills: readonly BattleFill[];
@@ -323,7 +323,7 @@ export function deliverTouchSpellThroughFindFamiliar(
   execution: CompanionLifecycleProcedureExecution,
   reactionCommitment: "uncommitted" | "committed",
 ): BattleResolutionResult {
-  const prepared = prepareTouchSpellDeliveryThroughFindFamiliar({
+  const prepared = prepareTouchSpellDeliveryThroughSpawnedCompanion({
     ...input,
     reactionCommitment,
   });
@@ -363,7 +363,7 @@ export function deliverTouchSpellThroughFindFamiliar(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const admittedSpell = admittedFindFamiliarSpell(
+  const admittedSpell = admittedSpawnedCompanionSpell(
     admission.input,
     input.subject,
   );
@@ -381,7 +381,7 @@ export function deliverTouchSpellThroughFindFamiliar(
   return cast;
 }
 
-function admittedFindFamiliarSpell(
+function admittedSpawnedCompanionSpell(
   input: Extract<
     AdmittedBattleResolutionInput,
     { readonly admissionKind: "general" }
@@ -438,7 +438,7 @@ function spawnedCompanionConnectionFact(input: {
 }):
   | {
       readonly tag: "resolved";
-      readonly fact: FindFamiliarWithin100FeetFact;
+      readonly fact: SpawnedCompanionWithin100FeetFact;
       readonly holeId: BattleFill["holeId"];
     }
   | Extract<

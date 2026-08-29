@@ -25,8 +25,8 @@ import type {
   SpellConditionRepeatSave,
 } from "../active-effect/execution-vocabulary.ts";
 import type {
-  EldritchBlastBeamCount,
-  ScorchingRayRayCount,
+  MultiBeamSpellAttackBeamCount,
+  MultiRaySpellAttackRayCount,
 } from "../battle-reducer/domain-constants.ts";
 import type { SpellTargeting } from "./spell-invocation-vocabulary.ts";
 
@@ -43,7 +43,7 @@ export type BattleLightEmission =
 
 export type SpellComponent = "V" | "S" | "M";
 
-export type BattleThunderwaveAudibleBoom = {
+export type BattleImmediateAreaAudibleBoom = {
   readonly sound: "thunderous boom";
   readonly audibleRadiusFeet: MovementFeet;
 };
@@ -119,7 +119,7 @@ export type SpellPostSaveAreaEffect =
         readonly originDirection: "away_from_caster";
         readonly objectLocation: "entirely_within_area";
       };
-      readonly audibleBoom: BattleThunderwaveAudibleBoom;
+      readonly audibleBoom: BattleImmediateAreaAudibleBoom;
     };
 
 export type SpellFailedSaveConditionExpiration =
@@ -293,13 +293,13 @@ export type SpellAttackDamageTargeting = Extract<
 export type CantripSpellAttackSequenceTargeting = {
   readonly kind: "spellAttackSequenceCreatureOrObject";
   readonly countSource: "characterLevel";
-  readonly attackCount: EldritchBlastBeamCount;
+  readonly attackCount: MultiBeamSpellAttackBeamCount;
 };
 
 export type PreparedSpellAttackSequenceTargeting = {
   readonly kind: "spellAttackSequenceCreatureOrObject";
   readonly countSource: "spellSlotLevel";
-  readonly attackCount: ScorchingRayRayCount;
+  readonly attackCount: MultiRaySpellAttackRayCount;
 };
 
 export type SpellAttackDamagePayload =

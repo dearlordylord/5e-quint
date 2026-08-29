@@ -43,7 +43,7 @@ import { stateAfterSpellCastDeclared } from "../spell-cast-declaration.ts";
 import { selectSpellTargetList } from "../spell-target-list-selection.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
 import { completeReactionSpellSlotCast } from "../reaction-spell-resolution.ts";
-import { featherFallReactionSpellMatchesTrigger } from "../reaction-triggered-spells.ts";
+import { fallingCreatureMitigationReactionSpellMatchesTrigger } from "../reaction-triggered-spells.ts";
 import { spendSpellAccessFreeCastResource } from "../spells-resolve-resources.ts";
 import { replaceTargetSpellActiveEffect } from "../active-effect-replacement.ts";
 
@@ -181,7 +181,10 @@ function resolveFallingCreatureMitigationReaction(
 ): BattleResolutionResult {
   if (
     input.input.frame.trigger !== "creatureFalls" ||
-    !featherFallReactionSpellMatchesTrigger(input.invocation, input.input.frame)
+    !fallingCreatureMitigationReactionSpellMatchesTrigger(
+      input.invocation,
+      input.input.frame,
+    )
   ) {
     return invalidResult(
       input.input.state,

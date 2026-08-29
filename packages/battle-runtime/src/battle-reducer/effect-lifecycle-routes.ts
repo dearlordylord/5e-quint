@@ -909,7 +909,7 @@ function stagedSaveConditionRouteHoles(
   );
   if (savingThrowHoles.length !== 1) {
     throw new Error(
-      "Admitted Sleep target selection must own exactly one Saving Throw outcome hole.",
+      "Admitted hit-point-budget condition target selection must own exactly one Saving Throw outcome hole.",
     );
   }
   return battleReducerRouteHoles(savingThrowHoles);

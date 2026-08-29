@@ -32,7 +32,7 @@ import {
   CompanionLifecycleProcedureExecution,
   resolveAdmittedCompanionReappearanceSubject as resolveAdmittedCompanionReappearanceSubjectStateOnly,
   resolveSpawnedCompanionTouchSpellSubject,
-  shareFindFamiliarSenses as shareFindFamiliarSensesStateOnly,
+  shareSpawnedCompanionSenses as shareSpawnedCompanionSensesStateOnly,
 } from "./battle-reducer/companion-lifecycle-procedures.ts";
 import { spawnedCompanionConnectionHole } from "./companion-subjects.ts";
 import {
@@ -46,7 +46,7 @@ import {
   battleSnapshotProjection as battleSnapshotProjectionFromState,
   snapshotBattle as snapshotBattleFromState,
 } from "./battle-reducer/battle-snapshot.ts";
-import type { FindFamiliarWithin100FeetFact } from "./companion-communication.ts";
+import type { SpawnedCompanionWithin100FeetFact } from "./companion-communication.ts";
 import type { CombatantId } from "./identity.ts";
 import { ATTACK_RESOLVERS } from "./battle-reducer/attack-main.ts";
 import { resolveMonkFocusFlurryOfBlowsStrike } from "./battle-reducer/monk-flurry-attack.ts";
@@ -143,14 +143,14 @@ export function endTurn(input: {
   );
 }
 
-export function deliverTouchSpellThroughFindFamiliar(input: {
+export function deliverTouchSpellThroughSpawnedCompanion(input: {
   readonly state: BattleState;
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "actionSpell" | "bonusActionSpell" }
   >;
   readonly fills: BattleResolutionInput["fills"];
-  readonly fact: FindFamiliarWithin100FeetFact;
+  readonly fact: SpawnedCompanionWithin100FeetFact;
 }): BattleResolutionResult {
   const executionRegistry = spellProcedureExecutionRegistry();
   if (input.subject.mode.tag !== "cast") {
@@ -205,12 +205,12 @@ export function deliverTouchSpellThroughFindFamiliar(input: {
   );
 }
 
-export function shareFindFamiliarSenses(
-  input: Parameters<typeof shareFindFamiliarSensesStateOnly>[0],
+export function shareSpawnedCompanionSenses(
+  input: Parameters<typeof shareSpawnedCompanionSensesStateOnly>[0],
 ): BattleResolutionResult {
   return battleResolutionWithExecutionSnapshot(
     input.state,
-    shareFindFamiliarSensesStateOnly(input),
+    shareSpawnedCompanionSensesStateOnly(input),
   );
 }
 

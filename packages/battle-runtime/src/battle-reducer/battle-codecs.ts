@@ -475,7 +475,7 @@ const BattleStagedConditionAutomaticSuccessFactSchema = Schema.Struct({
   kind: Schema.Literal("doesNotSleep"),
   targetId: CombatantId,
 });
-const BattleThunderwavePushDispositionSchema = Schema.Union([
+const BattleImmediateAreaPushDispositionSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("pushed"),
     distanceFeet: MovementFeet,
@@ -490,7 +490,7 @@ const BattleThunderwavePushDispositionSchema = Schema.Union([
   }),
 ]);
 const BattleDirectionalPersistentAreaPushDispositionSchema =
-  BattleThunderwavePushDispositionSchema;
+  BattleImmediateAreaPushDispositionSchema;
 
 const BattleSpellAreaOriginAnchorSchema = Schema.Union([
   Schema.Struct({
@@ -631,13 +631,13 @@ const BattleSpellAreaChoiceSchema = Schema.Union([
     creaturePushes: Schema.Array(
       Schema.Struct({
         targetId: CombatantId,
-        disposition: BattleThunderwavePushDispositionSchema,
+        disposition: BattleImmediateAreaPushDispositionSchema,
       }),
     ),
     unsecuredObjectPushes: Schema.Array(
       Schema.Struct({
         objectId: BattleObjectId,
-        disposition: BattleThunderwavePushDispositionSchema,
+        disposition: BattleImmediateAreaPushDispositionSchema,
       }),
     ),
     audibleBoom: BattleAudibleBoomSchema,
@@ -695,7 +695,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
       attackAbility: BattleAttackExecutionAbilitySchema,
       attackDamageType: DamageTypeSchema,
       attackName: Schema.optionalKey(Schema.Never),
-      disposition: BattleThunderwavePushDispositionSchema,
+      disposition: BattleImmediateAreaPushDispositionSchema,
     }),
     Schema.Struct({
       kind: Schema.Literal("weaponMasteryPushDisposition"),
@@ -705,7 +705,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
       attackAbility: Schema.optionalKey(Schema.Never),
       attackDamageType: Schema.optionalKey(Schema.Never),
       attackName: Schema.optionalKey(Schema.Never),
-      disposition: BattleThunderwavePushDispositionSchema,
+      disposition: BattleImmediateAreaPushDispositionSchema,
     }),
   ]),
   Schema.Union([
@@ -5369,7 +5369,7 @@ export const BattleFillSchema: Schema.Codec<
             }),
             Schema.Struct({
               kind: Schema.Literal("pushAway"),
-              disposition: BattleThunderwavePushDispositionSchema,
+              disposition: BattleImmediateAreaPushDispositionSchema,
             }),
           ]),
         }),
@@ -6629,7 +6629,7 @@ const BattleCompanionSnapshotSchema = Schema.Union([
     companionId: CombatantId,
     identity: BattleCompanionIdentitySchema,
     protocol: BattleCompanionProtocolSchema,
-    formAccess: Schema.Literal("findFamiliar"),
+    formAccess: Schema.Literal("spawnedCompanion"),
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
     creatureTypeOverride: SpawnedCompanionCreatureTypeOverrideSchema,
     initiative: Schema.Number,
@@ -6653,7 +6653,7 @@ const BattleCompanionSnapshotSchema = Schema.Union([
     identity: BattleCompanionIdentitySchema,
     protocol: BattleCompanionProtocolSchema,
     reappearanceCombatantId: CombatantId,
-    formAccess: Schema.Literal("findFamiliar"),
+    formAccess: Schema.Literal("spawnedCompanion"),
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
     creatureTypeOverride: SpawnedCompanionCreatureTypeOverrideSchema,
     hitPoints: BattleCompanionHitPointsSchema,
@@ -6678,7 +6678,7 @@ const BattleCompanionSnapshotSchema = Schema.Union([
     ownerId: CombatantId,
     identity: BattleCompanionIdentitySchema,
     protocol: BattleCompanionProtocolSchema,
-    formAccess: Schema.Literal("findFamiliar"),
+    formAccess: Schema.Literal("spawnedCompanion"),
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
     creatureTypeOverride: SpawnedCompanionCreatureTypeOverrideSchema,
     reactionAvailable: Schema.Boolean,

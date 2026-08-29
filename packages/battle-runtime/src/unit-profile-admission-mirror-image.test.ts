@@ -330,7 +330,10 @@ describe("L12G-MISSING-MIRROR-IMAGE deterministic Mirror Image admission", () =>
   test("successful roll with the final duplicate removes the active effect", () => {
     const attackerId = combatantId("unit-profile-mirror-image-final-attacker");
     const cast = castMirrorImage(mirrorImageBattle(attackerId));
-    const oneDuplicate = withMirrorImageDuplicateCount(cast.state, 1);
+    const oneDuplicate = withDuplicateHitInterceptionDuplicateCount(
+      cast.state,
+      1,
+    );
     const attack = attackThroughRoll({
       session: battleRuntimeSessionForTest({ ...cast, state: oneDuplicate }),
       attackerId,
@@ -598,7 +601,7 @@ function activeMirrorImage(
   );
 }
 
-function withMirrorImageDuplicateCount(
+function withDuplicateHitInterceptionDuplicateCount(
   state: BattleState,
   remainingDuplicates: 1 | 2 | 3,
 ): BattleState {

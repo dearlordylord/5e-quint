@@ -4,6 +4,9 @@ const fs = require("node:fs");
 const path = require("node:path");
 const assert = require("node:assert/strict");
 const ts = require("typescript");
+const {
+  battleRuntimeExecutionImportClosure,
+} = require("./check-battle-runtime-import-ownership.cjs");
 
 const REPO_ROOT = path.resolve(__dirname, "..");
 const PACKAGES_ROOT = path.join(REPO_ROOT, "packages");
@@ -179,7 +182,7 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
   ...exactCollision(
     "knock",
     "knockOut",
-    ["discriminant-literal", "schema-discriminant-literal"],
+    ["discriminant-literal"],
     "knock out is the zero-hit-point combat choice",
   ),
   ...["heldLight", "heldLightHurl", "objectLight"].flatMap((identifier) =>
@@ -205,7 +208,7 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
   ...exactCollision(
     "light",
     "spellLightEmitter",
-    ["discriminant-literal", "registry-key", "schema-discriminant-literal"],
+    ["discriminant-literal"],
     "light is an illumination mechanic",
   ),
   ...exactCollision(
@@ -227,7 +230,7 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
   ...exactCollision(
     "shield",
     "shield",
-    DISCRIMINANT_ROLES,
+    ["discriminant-literal", "protocol-array-member"],
     "shield is an equipment category",
   ),
   ...exactCollision(
@@ -249,12 +252,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "darkvision is a creature sense",
   ),
   ...exactCollision(
-    "shield",
-    "Character battle loadout cannot wield shield and off-hand weapon.",
-    ["execution-diagnostic"],
-    "shield is the equipment category",
-  ),
-  ...exactCollision(
     "sleep",
     "does_not_sleep",
     ["discriminant-literal"],
@@ -265,11 +262,9 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "AttackHitBonusActionSpellCommandSubject",
     "BattleRuntimeCommand",
     "CompelledBehaviorFollowUpCommand",
-    "EncodedRuntimeCommandBattleSubject",
     "PersistentSpatialSpellProcedureCommand",
     "ReactionAttackCommandContext",
     "RuntimeCommandSubject",
-    "SerializedRuntimeCommandReferencePolicy",
   ].flatMap((identifier) =>
     exactCollision(
       "command",
@@ -294,13 +289,13 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
   ...exactCollision(
     "darkness",
     "magicalDarknessArea",
-    ["discriminant-literal", "schema-discriminant-literal"],
+    ["discriminant-literal"],
     "darkness is the projected visibility mechanic",
   ),
   ...exactCollision(
     "darkness",
     "spellMagicalDarknessZone",
-    ["discriminant-literal", "registry-key", "schema-discriminant-literal"],
+    ["discriminant-literal"],
     "darkness is the projected visibility mechanic",
   ),
   ...exactCollision(
@@ -353,11 +348,7 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
       "light names an illumination or weapon-property mechanic",
     ),
   ),
-  ...[
-    "emit_light",
-    "movableLightManifestation",
-    "movableLightPlacement",
-  ].flatMap((identifier) =>
+  ...["emit_light", "movableLightManifestation"].flatMap((identifier) =>
     exactCollision(
       "light",
       identifier,
@@ -373,8 +364,14 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
   ),
   ...exactCollision(
     "light",
+    "movableLightPlacement",
+    ["discriminant-literal", "registry-key"],
+    "light names an illumination mechanic",
+  ),
+  ...exactCollision(
+    "light",
     "movableLight",
-    ["discriminant-literal", "schema-discriminant-literal"],
+    ["discriminant-literal"],
     "light names an illumination mechanic",
   ),
   ...exactCollision(
@@ -388,14 +385,14 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
       exactCollision(
         "light",
         identifier,
-        ["discriminant-literal", "registry-key", "schema-discriminant-literal"],
+        ["discriminant-literal"],
         "light names an illumination mechanic",
       ),
   ),
   ...exactCollision(
     "light",
     "spellCreatedLightOverlapsArea",
-    ["discriminant-literal", "schema-discriminant-literal"],
+    ["discriminant-literal"],
     "light names an illumination mechanic",
   ),
   ...["spellDistantObjectLightTarget", "spellObjectLightTarget"].flatMap(
@@ -403,18 +400,14 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
       exactCollision(
         "light",
         identifier,
-        [
-          "discriminant-literal",
-          "protocol-array-member",
-          "schema-discriminant-literal",
-        ],
+        ["discriminant-literal", "protocol-array-member"],
         "light names an illumination mechanic",
       ),
   ),
   ...exactCollision(
     "light",
     "storedLightEmitter",
-    ["discriminant-literal", "registry-key"],
+    ["discriminant-literal"],
     "light names an illumination mechanic",
   ),
   ...exactCollision(
@@ -511,9 +504,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "resolveReplaceSelfTransformationModeCommand",
     "resolveCastAttackHitBonusActionSpellCommand",
     "resolveReleaseGrappleCommand",
-    "serializedRuntimeCommandReferencePolicy",
-    "serializedRuntimeCommandOwnsBoundProcedure",
-    "serializedRuntimeCommandTargetIsLive",
     "resolveExecuteCompelledGrovelCommand",
     "resolveExecuteCompelledDropCommand",
     "resolveCompelledApproachCommand",
@@ -658,8 +648,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
   ),
   ...[
     "Chosen damage Resistance spells use one target fill and one damage type choice.",
-    "Battle runtime requires Stat Block resistance choices to be resolved before admission.",
-    "resolvedResistanceChoiceRequired",
   ].flatMap((identifier) =>
     exactCollision(
       "resistance",
@@ -695,7 +683,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
   ),
   ...[
     "Fly Speed end-fall witness must be resolved before other battle subjects.",
-    "flySpeed",
   ].flatMap((identifier) =>
     exactCollision(
       "fly",
@@ -727,6 +714,164 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "hit-point-budget condition targets that do not sleep or have Exhaustion Immunity automatically succeed and must not receive a rolled Saving Throw outcome.",
     ["execution-diagnostic"],
     "sleep names a biological creature-state predicate",
+  ),
+  ...[
+    "BattleMovableLight",
+    "BattleMovableLightList",
+    "isLightMeleeWeapon",
+    "isTrackedOngoingSpellLightEmitter",
+    "heldLightHurlMechanicalFacts",
+    "movableLightResolutionSubjectMatchesOperation",
+    "battleLightEmitters",
+    "battleLightEmitterProjection",
+    "battleIlluminationFromLightEmitters",
+    "battleMagicalDarknessNonmagicalLightIllumination",
+    "expireBattleLightEmitters",
+    "tickDurationBattleLightEmitters",
+    "MovableLightCastPlan",
+    "MovableLightRepositionPlan",
+    "isDimLightEmissionRiderShape",
+    "stateAfterResolvedHeldLightHurl",
+    "resolveMovableLightCastSpellAct",
+    "resolveMovableLightRepositionSpellAct",
+    "ObjectLightTargetFact",
+    "spellObjectLightTargetFact",
+    "BattleLightEmitterAttachment",
+    "BattleTrackedOngoingSpellLightEmitterMechanicalFacts",
+    "BattleProjectedSpellLightEmitter",
+    "BattleTrackedOngoingSpellLightEmitter",
+    "BattleSpellLightEmitter",
+    "BattleUnitFeatureLightEmitter",
+    "BattleObjectInvisibleRevealLightEmitter",
+    "BattleStoredLightEmitter",
+    "BattleLightEmitterMechanicalFacts",
+    "BattleLightEmitter",
+    "BattleMovableLightForm",
+    "BattleLightEmitterProjectionFact",
+    "BattleLightEmitterProjection",
+    "BattleMagicalDarknessNonmagicalLightProjectionFact",
+    "BattleSpellCreatedLightAreaOverlap",
+    "SpellLightEmissionPostDamageRider",
+    "BattleMovableLightCastPlacement",
+    "BattleMovableLightRepositionPlacement",
+    "BattleMovableLightCastPlacementList",
+    "BattleMovableLightRepositionPlacementList",
+    "BattleMovableLightPlacementValue",
+    "allocateBattleStoredLightEmitterForCreature",
+    "BattleMovableLightId",
+    "BattleLightEmission",
+    "HeldLightHurlMechanicalFacts",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "light",
+      identifier,
+      ["declaration-identifier"],
+      "light names the illumination or weapon-property mechanic",
+    ),
+  ),
+  ...[
+    "magicalDarknessPointOriginRadiusFeet",
+    "battleMagicalDarknessSightObscurement",
+    "battleMagicalDarknessNonmagicalLightIllumination",
+    "resolveMagicalDarknessPointOriginSpellAct",
+    "BattleMagicalDarknessZone",
+    "BattleMagicalDarknessSightProjectionFact",
+    "BattleMagicalDarknessNonmagicalLightProjectionFact",
+    "BattleMagicalDarknessAreaChoice",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "darkness",
+      identifier,
+      ["declaration-identifier"],
+      "darkness names the visibility mechanic",
+    ),
+  ),
+  ...[
+    "combatantHasLinkedDefenseResistanceDamageShareResistance",
+    "linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget",
+    "linkedDefenseResistanceDamageShareCastFactsAreSatisfied",
+    "battleStateWithoutLinkedDefenseResistanceDamageShareConnectedToCombatants",
+    "battleStateAfterLinkedDefenseResistanceDamageShareCasterZeroHitPoints",
+    "linkedDefenseResistanceDamageShareSeparationFactsAreSatisfied",
+    "battleStateAfterLinkedDefenseResistanceDamageShareSeparation",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "resistance",
+      identifier,
+      ["declaration-identifier"],
+      "resistance names the damage relationship mechanic",
+    ),
+  ),
+  ...[
+    "battleCreatureStateWithKnockOutPreservedConditions",
+    "nonKnockOutLifecycleFields",
+    "battleCreatureStateWithoutKnockOut",
+    "damageAllowsKnockOut",
+    "attackCanCarryKnockOutChoice",
+    "KnockOutEligibleBattleCreatureState",
+    "BattleCreatureKnockOutLifecycle",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "knock",
+      identifier,
+      ["declaration-identifier"],
+      "knock out names the zero-hit-point combat choice",
+    ),
+  ),
+  ...[
+    "FlySpeedGrantEndFallCleanupFramesResult",
+    "battleStateWithFlySpeedGrantEndFallCleanupFrames",
+    "isEndedFlySpeedGrant",
+    "EndedFlySpeedGrant",
+    "BattleFlySpeedGrantEndFallCleanupFrame",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "fly",
+      identifier,
+      ["declaration-identifier"],
+      "fly names the movement mode",
+    ),
+  ),
+  ...["BattleJumpLandingFact", "BattleJumpDistanceMultiplier"].flatMap(
+    (identifier) =>
+      exactCollision(
+        "jump",
+        identifier,
+        ["declaration-identifier"],
+        "jump names the movement operation",
+      ),
+  ),
+  ...["HealAmount", "healAmount"].flatMap((identifier) =>
+    exactCollision(
+      "heal",
+      identifier,
+      ["declaration-identifier"],
+      "heal names hit-point restoration",
+    ),
+  ),
+  ...exactCollision(
+    "shield",
+    "combatantWieldingShield",
+    ["declaration-identifier"],
+    "shield names the equipment category",
+  ),
+  ...exactCollision(
+    "slow",
+    "applyWeaponMasterySlowAfterDamage",
+    ["declaration-identifier"],
+    "slow names the weapon-mastery property",
+  ),
+  ...exactCollision(
+    "shield",
+    "unarmored_no_shield",
+    ["discriminant-literal"],
+    "shield names the equipment category",
+  ),
+  ...exactCollision(
+    "light",
+    "light_dex",
+    ["discriminant-literal"],
+    "light names the armor category",
   ),
 ];
 
@@ -2429,9 +2574,9 @@ function executionIdentityBoundaryReason(relativePath) {
   return classifyPath(relativePath, EXECUTION_IDENTITY_BOUNDARIES);
 }
 
-function isExecutionIdentitySource(relativePath) {
+function isExecutionIdentitySource(relativePath, executionImportClosure) {
   return (
-    /^packages\/battle-runtime\/src\//.test(relativePath) &&
+    executionImportClosure.has(relativePath) &&
     executionIdentityBoundaryReason(relativePath) === null
   );
 }
@@ -2444,6 +2589,8 @@ function declarationName(node) {
   const variableStatement = ts.isVariableDeclaration(node)
     ? node.parent?.parent
     : undefined;
+  const isExportedDeclaration =
+    !ts.isVariableDeclaration(node) && hasExportModifier(node);
   const isExecutionContractDeclaration =
     ts.isClassDeclaration(node) ||
     ts.isEnumDeclaration(node) ||
@@ -2458,7 +2605,8 @@ function declarationName(node) {
     isExecutionContractDeclaration &&
     node.name !== undefined &&
     ts.isIdentifier(node.name) &&
-    (EXECUTION_DECLARATION_NAME_PATTERN.test(node.name.text) ||
+    (isExportedDeclaration ||
+      EXECUTION_DECLARATION_NAME_PATTERN.test(node.name.text) ||
       EXECUTION_IDENTITY_ARRAY_NAME_PATTERN.test(node.name.text) ||
       EXECUTION_PROTOCOL_DECLARATION_NAME_PATTERN.test(node.name.text))
   ) {
@@ -2498,6 +2646,13 @@ function isPositionalDiagnosticString(node) {
       return EXECUTION_DIAGNOSTIC_CALL_PATTERN.test(
         current.expression.getText(),
       );
+    }
+    if (
+      ts.isNewExpression(current) &&
+      ts.isIdentifier(current.expression) &&
+      current.expression.text === "Error"
+    ) {
+      return true;
     }
     current = current.parent;
   }
@@ -2623,8 +2778,11 @@ function executionIdentityViolationsForFile(
   relativePath,
   content,
   spellLexicon,
+  executionImportClosure = new Set([relativePath]),
 ) {
-  if (!isExecutionIdentitySource(relativePath)) return [];
+  if (!isExecutionIdentitySource(relativePath, executionImportClosure)) {
+    return [];
+  }
   const source = ts.createSourceFile(
     relativePath,
     content,
@@ -2769,6 +2927,7 @@ function runExecutionIdentityCohortSelfTest() {
   const fixture = `
     export type CloudkillAreaHazardEffect = { readonly kind: "cloudkillAreaHazard" }
     export function resolveCloudkillProcedure() { return true }
+    export function resolveCloudkillMechanic() { return true }
     export const CLOUDKILL_SAVE_HOLE_ID = holeId("battle:cloudkill:save")
     export const RUNTIME_COMMAND_KINDS = ["magicMissileDamage", "nearMissile"] as const
     export const Registry = { magicMissile: Schema.Struct({
@@ -2777,6 +2936,7 @@ function runExecutionIdentityCohortSelfTest() {
     const invalid = { message: "Cloudkill movement could not continue." }
     function validateReplay() { return "Cloudkill replay is invalid." }
     invalidResult(state, "invalidFill", "Cloudkill positional diagnostic.")
+    throw new Error("Cloudkill constructor diagnostic.")
   `;
   const fixtureViolations = executionIdentityViolationsForFile(
     fixturePath,
@@ -2796,10 +2956,12 @@ function runExecutionIdentityCohortSelfTest() {
   }
   for (const identifier of [
     "resolveCloudkillProcedure",
+    "resolveCloudkillMechanic",
     "CLOUDKILL_SAVE_HOLE_ID",
     "battle:cloudkill:save",
     "Cloudkill replay is invalid.",
     "Cloudkill positional diagnostic.",
+    "Cloudkill constructor diagnostic.",
   ]) {
     assert.ok(
       fixtureViolations.some(
@@ -2835,6 +2997,28 @@ function runExecutionIdentityCohortSelfTest() {
     ).length,
     0,
     "cohort scanner rejected the explicit admission boundary",
+  );
+  const executionFacingSharedPath =
+    "packages/shared-algebras/src/synthetic-cloudkill-mechanics.ts";
+  const executionClosure = new Set([fixturePath, executionFacingSharedPath]);
+  assert.ok(
+    executionIdentityViolationsForFile(
+      executionFacingSharedPath,
+      `export const cloudkillMechanic = { kind: "cloudkillAreaHazard" }`,
+      lexicon,
+      executionClosure,
+    ).length > 0,
+    "cohort scanner did not inspect an execution-reachable shared-package module",
+  );
+  assert.equal(
+    executionIdentityViolationsForFile(
+      "packages/shared-algebras/src/unreachable-cloudkill-mechanics.ts",
+      `export const cloudkillMechanic = { kind: "cloudkillAreaHazard" }`,
+      lexicon,
+      executionClosure,
+    ).length,
+    0,
+    "cohort scanner inspected a module outside the execution import closure",
   );
   const collision = executionIdentityViolationsForFile(
     fixturePath,
@@ -4275,6 +4459,17 @@ function main() {
   );
 
   const sourceFilesSet = new Set(sourceFiles);
+  const executionImportClosure = new Set(battleRuntimeExecutionImportClosure());
+  const missingExecutionSources = [...executionImportClosure].filter(
+    (relativePath) =>
+      executionIdentityBoundaryReason(relativePath) === null &&
+      !sourceFilesSet.has(relativePath),
+  );
+  assert.deepEqual(
+    missingExecutionSources,
+    [],
+    "execution import closure contains production source outside the authored-identity scanner input",
+  );
   const authoredExportsByFile = buildAuthoredExportIndex(
     sourceFiles,
     sourceFilesSet,
@@ -4316,6 +4511,7 @@ function main() {
         relativePath,
         content,
         surfaceSpellLexicon,
+        executionImportClosure,
       ),
     );
     violations.push(

@@ -3,7 +3,7 @@ import type { AttackPresentationJoinIssue } from "./attack-presentation-contract
 import type {
   AbilityCheckRollModeSpellEffect,
   BattleLightEmission,
-  BattleThunderwaveAudibleBoom,
+  BattleImmediateAreaAudibleBoom,
   CantripSpellAttackSequenceTargeting,
   ConditionImmunityActiveEffectTemplate,
   CreatureTypeProtectionSpellTargeting,
@@ -33,7 +33,7 @@ import type {
 export type {
   AbilityCheckRollModeSpellEffect,
   BattleLightEmission,
-  BattleThunderwaveAudibleBoom,
+  BattleImmediateAreaAudibleBoom,
   CantripSpellAttackSequenceTargeting,
   ConditionImmunityActiveEffectTemplate,
   CreatureTypeProtectionSpellTargeting,
@@ -367,12 +367,12 @@ import type {
 } from "./battle-reducer/wild-shape-equipment.ts";
 import {
   BATTLE_ATTACK_RANGE_BANDS,
-  type BlurAttackRollBypassSense,
+  type PerceptionGatedAttackRollDefenseBypassSense,
   CRITICAL_HIT_THRESHOLDS,
   DIRECT_CONDITION_REMOVAL_CONDITIONS,
   HUNTERS_MARK_FINDING_SKILLS,
-  type MirrorImageDuplicateCount as DuplicateHitInterceptionCount,
-  type MirrorImageUnaffectedSense as DuplicateHitInterceptionUnaffectedSense,
+  type DuplicateHitInterceptionDuplicateCount as DuplicateHitInterceptionCount,
+  type DuplicateHitInterceptionUnaffectedSense as DuplicateHitInterceptionUnaffectedSense,
   OPEN_HAND_TECHNIQUE_DECISION_CHOICES,
   type OpenHandTechniqueDecisionChoice,
   type SelfTransformationModeKind,
@@ -445,7 +445,7 @@ export type {
   MarkedDamageRiderRetargetTiming,
   MarkedDamageRiderTransferState,
   ObjectContactPenaltyActiveEffect,
-  ProtectionFromEvilAndGoodPreventedCondition,
+  CreatureTypeProtectionPreventedCondition,
   SelfTransformationModeEffectPayload,
   SelfTransformationNaturalWeaponFacts,
   SpellConditionAbilityCheckActor,
@@ -1723,7 +1723,7 @@ export type BattleTargetSpatialFact =
       readonly kind: "attackerPerceivesObscuredTargetWithSense";
       readonly attackerId: CombatantId;
       readonly targetId: CombatantId;
-      readonly sense: BlurAttackRollBypassSense;
+      readonly sense: PerceptionGatedAttackRollDefenseBypassSense;
     }
   | {
       readonly kind: "attackerUnaffectedByDuplicateHitInterceptionWithSense";
@@ -2141,7 +2141,7 @@ export type BattleDamageRelationshipDecisionFill = {
     ...BattleDamageRelationshipAnswer[],
   ];
 };
-export type BattleThunderwavePushDisposition =
+export type BattleImmediateAreaPushDisposition =
   | {
       readonly kind: "pushed";
       readonly distanceFeet: MovementFeet;
@@ -2154,13 +2154,13 @@ export type BattleThunderwavePushDisposition =
       readonly reason: "blocked" | "noLegalDestination";
       readonly provokesOpportunityAttacks: false;
     };
-export type BattleThunderwaveCreaturePushOutcome = {
+export type BattleImmediateAreaCreaturePushOutcome = {
   readonly targetId: CombatantId;
-  readonly disposition: BattleThunderwavePushDisposition;
+  readonly disposition: BattleImmediateAreaPushDisposition;
 };
-export type BattleThunderwaveUnsecuredObjectPushOutcome = {
+export type BattleImmediateAreaUnsecuredObjectPushOutcome = {
   readonly objectId: BattleObjectId;
-  readonly disposition: BattleThunderwavePushDisposition;
+  readonly disposition: BattleImmediateAreaPushDisposition;
 };
 export type BattleDirectionalPersistentAreaPushDisposition =
   | {
@@ -4548,28 +4548,28 @@ export type BattleInitializationIssueFacts =
     }
   | {
       readonly kind: "companionFormStatBlockMissing";
-      readonly formAccess: "findFamiliar" | "pactOfTheChain";
+      readonly formAccess: "spawnedCompanion" | "pactOfTheChain";
       readonly resolvedStatBlockId: StatBlockId;
     }
   | {
       readonly kind: "companionFormAccessMismatch";
-      readonly storedFormAccess: "findFamiliar" | "pactOfTheChain";
-      readonly eligibilityFormAccess: "findFamiliar" | "pactOfTheChain";
+      readonly storedFormAccess: "spawnedCompanion" | "pactOfTheChain";
+      readonly eligibilityFormAccess: "spawnedCompanion" | "pactOfTheChain";
     }
   | {
       readonly kind: "companionFormResolvedStatBlockMismatch";
-      readonly formAccess: "findFamiliar" | "pactOfTheChain";
+      readonly formAccess: "spawnedCompanion" | "pactOfTheChain";
       readonly expectedStatBlockId: StatBlockId;
       readonly resolvedStatBlockId: StatBlockId;
     }
   | {
       readonly kind: "companionFormSelectionStatBlockMissing";
-      readonly formAccess: "findFamiliar" | "pactOfTheChain";
+      readonly formAccess: "spawnedCompanion" | "pactOfTheChain";
       readonly selectedStatBlockId: StatBlockId;
     }
   | {
       readonly kind: "companionFormSelectionStatBlockInvalid";
-      readonly formAccess: "findFamiliar" | "pactOfTheChain";
+      readonly formAccess: "spawnedCompanion" | "pactOfTheChain";
       readonly selectedStatBlockId: StatBlockId;
       readonly expectedCreatureType: "beast";
       readonly expectedChallengeRating: 0;
@@ -4581,7 +4581,7 @@ export type BattleInitializationIssueFacts =
     }
   | {
       readonly kind: "companionFormNormalFormIneligible";
-      readonly formAccess: "findFamiliar" | "pactOfTheChain";
+      readonly formAccess: "spawnedCompanion" | "pactOfTheChain";
       readonly formId: BattleCompanionFormId;
     }
   | {
@@ -5067,11 +5067,11 @@ export type BattleObjectOutcomeAccumulation =
       readonly objectIgnitions?: ReadonlyNonEmptyArray<BattleObjectIgnitionOutcome>;
       readonly droppedObjects: readonly BattleDroppedObjectOutcome[];
     };
-export type BattleFireballObjectIgnitionFact = {
+export type BattleAreaDamageObjectIgnitionFact = {
   readonly objectId: BattleObjectId;
   readonly disposition: BattleObjectIgnitionDisposition;
 };
-export type BattleShatterNonmagicalUnattendedObjectDamageFact = {
+export type BattleAreaDamageNonmagicalUnattendedObjectDamageFact = {
   readonly objectId: BattleObjectId;
   readonly disposition: BattleObjectDamageDisposition;
 };
@@ -6154,17 +6154,17 @@ type BattleSpellAreaChoiceKind =
     }
   | {
       readonly kind: "pointOriginSphereSaveDamageArea";
-      readonly objectIgnitionFacts: readonly BattleFireballObjectIgnitionFact[];
+      readonly objectIgnitionFacts: readonly BattleAreaDamageObjectIgnitionFact[];
     }
   | {
       readonly kind: "pointOriginSphereObjectDamageArea";
-      readonly nonmagicalUnattendedObjectDamageFacts: readonly BattleShatterNonmagicalUnattendedObjectDamageFact[];
+      readonly nonmagicalUnattendedObjectDamageFacts: readonly BattleAreaDamageNonmagicalUnattendedObjectDamageFact[];
     }
   | {
       readonly kind: "selfOriginCubePushArea";
-      readonly creaturePushes: readonly BattleThunderwaveCreaturePushOutcome[];
-      readonly unsecuredObjectPushes: readonly BattleThunderwaveUnsecuredObjectPushOutcome[];
-      readonly audibleBoom: BattleThunderwaveAudibleBoom;
+      readonly creaturePushes: readonly BattleImmediateAreaCreaturePushOutcome[];
+      readonly unsecuredObjectPushes: readonly BattleImmediateAreaUnsecuredObjectPushOutcome[];
+      readonly audibleBoom: BattleImmediateAreaAudibleBoom;
     }
   | {
       readonly kind: "directionalPersistentAreaArea";

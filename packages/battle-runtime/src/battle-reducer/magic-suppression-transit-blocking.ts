@@ -13,7 +13,7 @@ import type {
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import {
-  activeAntimagicFieldAuraMemberships,
+  activeMagicSuppressionEmanationMemberships,
   magicSuppressionEmanationMembershipIncludesCombatant,
 } from "./magic-suppression-action-interdiction.ts";
 
@@ -25,7 +25,7 @@ export function magicSuppressionTransitInvalidReason(input: {
   readonly actorId: CombatantId;
   readonly witnesses: readonly BattleMagicSuppressionTransitWitness[];
 }): string | null {
-  const activeAuras = activeAntimagicFieldAuraMemberships(input.state);
+  const activeAuras = activeMagicSuppressionEmanationMemberships(input.state);
   for (const witness of input.witnesses) {
     const matchingAuras = activeAuras.filter(
       (aura) =>

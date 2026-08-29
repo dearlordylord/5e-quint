@@ -48,8 +48,8 @@ import {
   type SupportedUnitFeatureFacts,
 } from "./unit-feature-support.ts";
 import {
-  pactOfTheChainFindFamiliarFormEligibilityForSpell,
-  type PactOfTheChainFindFamiliarFormEligibility,
+  pactOfTheChainSpawnedCompanionFormEligibilityForSpell,
+  type PactOfTheChainSpawnedCompanionFormEligibility,
 } from "@dnd/surface/surface/find-familiar-forms";
 import {
   battleResourcePoolExecutionRef,
@@ -159,19 +159,19 @@ type FamiliarFormCatalog = Extract<
   SpawnedCreatureMechanics["creature"],
   { readonly kind: "familiar_form_catalog" }
 >;
-type PactOfTheChainFindFamiliarSpellRecord = SpellRecord & {
+type PactOfTheChainSpawnedCompanionSpellRecord = SpellRecord & {
   readonly mechanics: SpawnedCreatureMechanics & {
     readonly creature: FamiliarFormCatalog;
   };
 };
-type PactOfTheChainFindFamiliarSpellProfile = {
-  readonly spell: PactOfTheChainFindFamiliarSpellRecord;
-  readonly eligibleForms: PactOfTheChainFindFamiliarFormEligibility;
+type PactOfTheChainSpawnedCompanionSpellProfile = {
+  readonly spell: PactOfTheChainSpawnedCompanionSpellRecord;
+  readonly eligibleForms: PactOfTheChainSpawnedCompanionFormEligibility;
 };
-type PactOfTheChainFindFamiliarSpellProfileParseResult =
+type PactOfTheChainSpawnedCompanionSpellProfileParseResult =
   | {
       readonly tag: "parsed";
-      readonly profile: PactOfTheChainFindFamiliarSpellProfile;
+      readonly profile: PactOfTheChainSpawnedCompanionSpellProfile;
     }
   | { readonly tag: "missingFamiliarFormCatalog" }
   | { readonly tag: "unsupported" };
@@ -269,7 +269,7 @@ export type CharacterBattleSpellbookRitualSpellAccessInit = {
 };
 
 export type CharacterBattleInvocationSpellAccessInit = {
-  readonly tag: "armorOfShadowsMageArmor" | "pactOfTheChainFindFamiliar";
+  readonly tag: "armorOfShadowsMageArmor" | "pactOfTheChainSpawnedCompanion";
   readonly spell: SpellRecord;
 };
 
@@ -291,10 +291,10 @@ export type CharacterBattleInvocationSpellAccessState =
       readonly admission: PersistentArmorEffectAdmission;
     }
   | {
-      readonly tag: "pactOfTheChainFindFamiliar";
-      readonly spell: PactOfTheChainFindFamiliarSpellRecord;
+      readonly tag: "pactOfTheChainSpawnedCompanion";
+      readonly spell: PactOfTheChainSpawnedCompanionSpellRecord;
       readonly invocationMode: typeof PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE;
-      readonly eligibleForms: PactOfTheChainFindFamiliarFormEligibility;
+      readonly eligibleForms: PactOfTheChainSpawnedCompanionFormEligibility;
     };
 
 type CharacterBattleInvocationSpellAccessParseResult =
@@ -399,17 +399,18 @@ export type { CharacterBattleSpellcastingExecutionState } from "./character-batt
 export function characterSpellcastingExecutionState(
   state: CharacterBattleSpellcastingState,
 ): import("./character-battle-resource-execution.ts").CharacterBattleSpellcastingExecutionState {
-  const hasPactOfTheChainFindFamiliar = state.invocationSpellAccesses.some(
-    (access) => access.tag === "pactOfTheChainFindFamiliar",
+  const hasPactOfTheChainSpawnedCompanion = state.invocationSpellAccesses.some(
+    (access) => access.tag === "pactOfTheChainSpawnedCompanion",
   );
   return {
     spellcastingSource: state.spellcastingSource,
     proficiencyBonus: state.proficiencyBonus,
     canCastSpells: state.canCastSpells,
     spellSlots: state.spellSlots,
-    pactOfTheChainFindFamiliarInvocationMode: hasPactOfTheChainFindFamiliar
-      ? PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE
-      : null,
+    pactOfTheChainSpawnedCompanionInvocationMode:
+      hasPactOfTheChainSpawnedCompanion
+        ? PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE
+        : null,
   };
 }
 
@@ -564,7 +565,7 @@ export function parseCharacterBattleInvocationSpellAccesses(
       });
       continue;
     }
-    const profileResult = pactOfTheChainFindFamiliarSpellProfileForSpell(
+    const profileResult = pactOfTheChainSpawnedCompanionSpellProfileForSpell(
       access.spell,
     );
     if (profileResult.tag === "missingFamiliarFormCatalog") {
@@ -1604,9 +1605,9 @@ export function characterSpellcastingState(
   };
 }
 
-function pactOfTheChainFindFamiliarSpellProfileForSpell(
+function pactOfTheChainSpawnedCompanionSpellProfileForSpell(
   spell: SpellRecord,
-): PactOfTheChainFindFamiliarSpellProfileParseResult {
+): PactOfTheChainSpawnedCompanionSpellProfileParseResult {
   const components = spell.mechanics.components;
   const castingTime = topLevelSpellCastingTime(spell.mechanics);
 
@@ -1627,7 +1628,7 @@ function pactOfTheChainFindFamiliarSpellProfileForSpell(
     return { tag: "unsupported" };
   }
   const eligibleForms =
-    pactOfTheChainFindFamiliarFormEligibilityForSpell(spell);
+    pactOfTheChainSpawnedCompanionFormEligibilityForSpell(spell);
   return eligibleForms === null
     ? { tag: "missingFamiliarFormCatalog" }
     : {

@@ -55,7 +55,7 @@ import {
   bardicInspirationUnit,
   characterSeed,
   decodeUnitRecordSync,
-  findFamiliarInput,
+  spawnedCompanionInput,
   spellRecord,
   startBattle,
   statBlockCreatureInit,
@@ -536,7 +536,7 @@ describe("character battle resource projections", () => {
           ...wizardSpellcasting({
             invocationSpellAccesses: [
               {
-                tag: "pactOfTheChainFindFamiliar",
+                tag: "pactOfTheChainSpawnedCompanion",
                 spell: spellRecord("fire_bolt"),
               },
             ],
@@ -795,7 +795,7 @@ describe("character battle resource projections", () => {
     expect(
       parseCharacterBattleInvocationSpellAccesses([
         {
-          tag: "pactOfTheChainFindFamiliar",
+          tag: "pactOfTheChainSpawnedCompanion",
           spell: spellRecord("fire_bolt"),
         },
       ]),
@@ -804,10 +804,10 @@ describe("character battle resource projections", () => {
       message: "Pact of the Chain Spell Access must grant Find Familiar.",
     });
 
-    const malformedFindFamiliar = decodeUnitRecordSync({
-      ...findFamiliarInput,
+    const malformedSpawnedCompanion = decodeUnitRecordSync({
+      ...spawnedCompanionInput,
       mechanics: {
-        ...findFamiliarInput.mechanics,
+        ...spawnedCompanionInput.mechanics,
         mode: {
           label: "creature type",
           options: [
@@ -820,14 +820,14 @@ describe("character battle resource projections", () => {
         },
       },
     });
-    if (malformedFindFamiliar.kind !== "spell") {
+    if (malformedSpawnedCompanion.kind !== "spell") {
       throw new Error("Expected malformed Find Familiar spell fixture.");
     }
     expect(
       parseCharacterBattleInvocationSpellAccesses([
         {
-          tag: "pactOfTheChainFindFamiliar",
-          spell: malformedFindFamiliar,
+          tag: "pactOfTheChainSpawnedCompanion",
+          spell: malformedSpawnedCompanion,
         },
       ]),
     ).toEqual({

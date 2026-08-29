@@ -57,8 +57,8 @@ import {
   characterBattleResourceForUnit,
   characterId,
   combatantId,
-  castFindFamiliar,
-  castRetainedFindFamiliarRuntime,
+  castSpawnedCompanion,
+  castRetainedSpawnedCompanionRuntime,
   discoverBattleActs,
   initiativeScore,
   KNOCKED_OUT_UNCONSCIOUS,
@@ -68,7 +68,7 @@ import {
   startBattle,
   battleTablePositionId,
 } from "@dnd/battle-runtime";
-import { findFamiliarFormEligibilityForSpell } from "@dnd/surface/surface/find-familiar-forms";
+import { spawnedCompanionFormEligibilityForSpell } from "@dnd/surface/surface/find-familiar-forms";
 import { battleResourcePoolExecutionRefForTest } from "./sdk-integration.test-support.ts";
 import { characterUnarmoredArmorClassBases } from "./battle-character-build-projection.ts";
 import {
@@ -2959,7 +2959,7 @@ describe("Character Sheet battle handoff", () => {
       }),
     );
     const selection = {
-      formAccess: "findFamiliar",
+      formAccess: "spawnedCompanion",
       selectedForm: { tag: "normalNamedForm", formId: "cat" },
     } as const;
     const settle = (
@@ -3195,7 +3195,7 @@ describe("Character Sheet battle handoff", () => {
     ) {
       throw new Error("Expected embodied retained companion fixture.");
     }
-    if (companion.formAccess !== "findFamiliar") {
+    if (companion.formAccess !== "spawnedCompanion") {
       throw new Error("Expected Find Familiar companion fixture.");
     }
     const storedCompanionBase = {
@@ -3254,7 +3254,7 @@ describe("Character Sheet battle handoff", () => {
         ownerCombatantId: ownerId,
         unitLibrary,
         retainedCompanionSelection: {
-          formAccess: "findFamiliar",
+          formAccess: "spawnedCompanion",
           selectedForm: {
             tag: "challengeRatingZeroBeast",
             statBlockId: authoredStatBlockId("stat_block_cat"),
@@ -3383,15 +3383,16 @@ describe("Character Sheet battle handoff", () => {
         companionId,
       ),
     ).toBe("Cat");
-    const findFamiliarUnit = unitLibrary.requireUnit("find_familiar");
-    if (findFamiliarUnit.kind !== "spell") {
+    const spawnedCompanionUnit = unitLibrary.requireUnit("find_familiar");
+    if (spawnedCompanionUnit.kind !== "spell") {
       throw new Error("Find Familiar fixture must be a Spell.");
     }
-    const eligibility = findFamiliarFormEligibilityForSpell(findFamiliarUnit);
+    const eligibility =
+      spawnedCompanionFormEligibilityForSpell(spawnedCompanionUnit);
     if (eligibility === null) {
       throw new Error("Find Familiar fixture must expose form eligibility.");
     }
-    const recast = castRetainedFindFamiliarRuntime({
+    const recast = castRetainedSpawnedCompanionRuntime({
       session: admitted,
       casterId: ownerId,
       familiarId: companionId,
@@ -3945,15 +3946,16 @@ describe("Character Sheet battle handoff", () => {
         combatants: [ownerInit],
       }),
     );
-    const findFamiliarUnit = unitLibrary.requireUnit("find_familiar");
-    if (findFamiliarUnit.kind !== "spell") {
+    const spawnedCompanionUnit = unitLibrary.requireUnit("find_familiar");
+    if (spawnedCompanionUnit.kind !== "spell") {
       throw new Error("Find Familiar fixture must be a Spell.");
     }
-    const eligibility = findFamiliarFormEligibilityForSpell(findFamiliarUnit);
+    const eligibility =
+      spawnedCompanionFormEligibilityForSpell(spawnedCompanionUnit);
     if (eligibility === null) {
       throw new Error("Find Familiar fixture must expose form eligibility.");
     }
-    const cast = castFindFamiliar({
+    const cast = castSpawnedCompanion({
       state: state.state,
       casterId: ownerId,
       familiarId: battleOnlyCompanionId,
@@ -6050,7 +6052,7 @@ describe("Character Sheet battle handoff", () => {
               },
               proficiencyBonus: proficiencyBonus(3),
               canCastSpells: true,
-              pactOfTheChainFindFamiliarInvocationMode: null,
+              pactOfTheChainSpawnedCompanionInvocationMode: null,
               spellSlots: [
                 {
                   spellLevel: spellSlotLevel(1),
@@ -6097,7 +6099,7 @@ describe("Character Sheet battle handoff", () => {
             },
             proficiencyBonus: proficiencyBonus(3),
             canCastSpells: true,
-            pactOfTheChainFindFamiliarInvocationMode: null,
+            pactOfTheChainSpawnedCompanionInvocationMode: null,
             spellSlots: [
               {
                 spellLevel: spellSlotLevel(1),
@@ -6192,7 +6194,7 @@ describe("Character Sheet battle handoff", () => {
               },
               proficiencyBonus: proficiencyBonus(3),
               canCastSpells: true,
-              pactOfTheChainFindFamiliarInvocationMode: null,
+              pactOfTheChainSpawnedCompanionInvocationMode: null,
               spellSlots: [
                 {
                   spellLevel: spellSlotLevel(1),
@@ -9319,7 +9321,7 @@ describe("Character Build battle projection", () => {
     expect(spellcasting.featurePreparedSpells).toEqual([]);
     expect(spellcasting.invocationSpellAccesses).toEqual([
       {
-        tag: "pactOfTheChainFindFamiliar",
+        tag: "pactOfTheChainSpawnedCompanion",
         spell: unitLibrary.requireUnit("find_familiar"),
       },
     ]);
@@ -9890,7 +9892,7 @@ describe("Character Build battle projection", () => {
 
     expect(
       spellcasting.invocationSpellAccesses.some(
-        (access) => access.tag === "pactOfTheChainFindFamiliar",
+        (access) => access.tag === "pactOfTheChainSpawnedCompanion",
       ),
     ).toBe(false);
   });
@@ -13188,7 +13190,7 @@ function handoffSpellcastingState(
     },
     proficiencyBonus: proficiencyBonus(2),
     canCastSpells: true,
-    pactOfTheChainFindFamiliarInvocationMode: null,
+    pactOfTheChainSpawnedCompanionInvocationMode: null,
     spellSlots: input.spellSlots ?? [
       {
         spellLevel: spellSlotLevel(1),
@@ -13212,7 +13214,7 @@ function pactMagicHandoffSpellcastingState(input: {
     },
     proficiencyBonus: proficiencyBonus(2),
     canCastSpells: true,
-    pactOfTheChainFindFamiliarInvocationMode: null,
+    pactOfTheChainSpawnedCompanionInvocationMode: null,
     spellSlots: [
       {
         spellLevel: input.spellLevel ?? spellSlotLevel(1),
@@ -13568,19 +13570,19 @@ function retainedCompanionSheetWithManifestation(
 }
 
 function unitLibraryWithSyntheticFamiliarFormCatalog(): UnitCatalog {
-  const findFamiliarUnit = unitLibrary.requireUnit("find_familiar");
-  if (findFamiliarUnit.kind !== "spell") {
+  const spawnedCompanionUnit = unitLibrary.requireUnit("find_familiar");
+  if (spawnedCompanionUnit.kind !== "spell") {
     throw new Error("Find Familiar fixture must be a Spell.");
   }
   const syntheticCatalog = {
-    ...findFamiliarUnit,
+    ...spawnedCompanionUnit,
     id: authoredUnitId("synthetic_familiar_form_catalog"),
     name: "Synthetic Familiar Form Catalog",
     provenance: {
-      ...findFamiliarUnit.provenance,
+      ...spawnedCompanionUnit.provenance,
       section: "Synthetic Familiar Form Catalog",
     },
-  } satisfies typeof findFamiliarUnit;
+  } satisfies typeof spawnedCompanionUnit;
   return {
     getUnit: (id) =>
       id === syntheticCatalog.id

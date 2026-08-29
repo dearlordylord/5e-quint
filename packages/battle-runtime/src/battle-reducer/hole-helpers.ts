@@ -25,7 +25,7 @@ import {
   type DifficultyClass,
 } from "@dnd/shared/types";
 import type { Ability, Skill } from "@dnd/surface/surface/types";
-import { isPresentFindFamiliarCombatant } from "../spawned-companion-state.ts";
+import { isPresentSpawnedCompanionCombatant } from "../spawned-companion-state.ts";
 import { mechanicalD20TestRollMode } from "../d20-test-circumstance.ts";
 import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import type {
@@ -1282,7 +1282,10 @@ export function grappleTargetChoices(
   actorId: CombatantId,
 ): readonly CombatantId[] {
   const actor = state.combatants.get(actorId);
-  if (actor === undefined || isPresentFindFamiliarCombatant(state, actorId)) {
+  if (
+    actor === undefined ||
+    isPresentSpawnedCompanionCombatant(state, actorId)
+  ) {
     return [];
   }
   return [...state.combatants.keys()].filter((targetId) => {
@@ -1302,7 +1305,10 @@ export function shoveTargetChoices(
   actorId: CombatantId,
 ): readonly CombatantId[] {
   const actor = state.combatants.get(actorId);
-  if (actor === undefined || isPresentFindFamiliarCombatant(state, actorId)) {
+  if (
+    actor === undefined ||
+    isPresentSpawnedCompanionCombatant(state, actorId)
+  ) {
     return [];
   }
   return [...state.combatants.keys()].filter((targetId) => {

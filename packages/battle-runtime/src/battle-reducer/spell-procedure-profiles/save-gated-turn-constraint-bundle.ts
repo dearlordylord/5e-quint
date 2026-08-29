@@ -66,7 +66,7 @@ import {
 } from "../codec-building-blocks.ts";
 import { currentActorId } from "../creature-state-leaves.ts";
 import { failedSavingThrowTargetIds } from "../saving-throw-outcomes.ts";
-import { slowActionOrBonusActionTurnResources } from "../save-gated-turn-constraint-runtime.ts";
+import { saveGatedTurnConstraintActionOrBonusActionTurnResources } from "../save-gated-turn-constraint-runtime.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -459,7 +459,7 @@ function applyTurnHinderingActivePenaltyEffects(
   }
   const currentTurnActorId = currentActorId(state);
   const currentTurnResources = appliedTargetIds.includes(currentTurnActorId)
-    ? slowActionOrBonusActionTurnResources(
+    ? saveGatedTurnConstraintActionOrBonusActionTurnResources(
         { ...state, combatants },
         state.currentTurnResources,
         combatants.get(currentTurnActorId),

@@ -4,7 +4,7 @@ import { Result, Option, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import { type UnitId, UnitId as UnitIdSchema } from "@dnd/shared/game-facts";
 
-import findFamiliarInput from "../../content/find_familiar.json";
+import spawnedCompanionInput from "../../content/find_familiar.json";
 import flyInput from "../../content/fly.json";
 import glyphOfWardingInput from "../../content/glyph_of_warding.json";
 import hasteInput from "../../content/haste.json";
@@ -8073,17 +8073,17 @@ describe("SRD Unit catalog boundary", () => {
 
     expect(result.tag).toBe("ok");
     if (result.tag === "ok") {
-      const findFamiliar = result.catalog.requireUnit("find_familiar");
+      const spawnedCompanion = result.catalog.requireUnit("find_familiar");
 
-      expect(findFamiliar.kind).toBe("spell");
-      if (findFamiliar.kind !== "spell") {
+      expect(spawnedCompanion.kind).toBe("spell");
+      if (spawnedCompanion.kind !== "spell") {
         throw new Error("Expected Find Familiar spell record.");
       }
-      expect(findFamiliar.mechanics.family).toBe("spawned_creature");
-      if (findFamiliar.mechanics.family !== "spawned_creature") {
+      expect(spawnedCompanion.mechanics.family).toBe("spawned_creature");
+      if (spawnedCompanion.mechanics.family !== "spawned_creature") {
         throw new Error("Expected spawned creature mechanics.");
       }
-      expect(findFamiliar.mechanics.creature).toEqual({
+      expect(spawnedCompanion.mechanics.creature).toEqual({
         kind: "familiar_form_catalog",
         normalForms: [
           { displayName: "Bat", formId: "bat", statBlockId: "stat_block_bat" },
@@ -8184,9 +8184,9 @@ describe("SRD Unit catalog boundary", () => {
     expect(
       Result.isFailure(
         decodeUnitRecordResult({
-          ...findFamiliarInput,
+          ...spawnedCompanionInput,
           mechanics: {
-            ...findFamiliarInput.mechanics,
+            ...spawnedCompanionInput.mechanics,
             creature: {
               kind: "familiar_form_catalog",
               normalForms: [

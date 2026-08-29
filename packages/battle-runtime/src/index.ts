@@ -249,27 +249,27 @@ export {
 
 export {
   admitCompanionToBattle,
-  applyFindFamiliarZeroHitPointDisappearance,
-  castFindFamiliar,
+  applySpawnedCompanionZeroHitPointDisappearance,
+  castSpawnedCompanion,
   castWildCompanion,
-  permanentlyDismissFindFamiliar,
-  reappearTemporarilyDismissedFindFamiliar,
+  permanentlyDismissSpawnedCompanion,
+  reappearTemporarilyDismissedSpawnedCompanion,
   retainedStoredFormForPresentCompanion,
-  temporarilyDismissFindFamiliar,
+  temporarilyDismissSpawnedCompanion,
   type CompanionBattleAdmissionInput,
   type CompanionBattleEmbodiedAdmissionManifestation,
   type CompanionBattleAdmissionFormEligibility,
   type CompanionBattleAdmissionManifestation,
   type CompanionBattleStoredAdmissionManifestation,
-  type FindFamiliarCastInput,
-  type FindFamiliarLifecycleInputBase,
-  type FindFamiliarReappearanceInput,
+  type SpawnedCompanionCastInput,
+  type SpawnedCompanionLifecycleInputBase,
+  type SpawnedCompanionReappearanceInput,
   type WildCompanionCastInput,
   type WildCompanionSpend,
 } from "./companion-lifecycle.ts";
 export {
   admitCompanionToBattleRuntime,
-  castRetainedFindFamiliarRuntime,
+  castRetainedSpawnedCompanionRuntime,
   type RetainedCompanionRuntimeCastResult,
 } from "./companion-presentation.ts";
 
@@ -285,22 +285,22 @@ export type {
 } from "./companion-state.ts";
 
 export {
-  findFamiliarCompanionEntryForOwner,
-  findFamiliarCompanionForOwner,
-  findFamiliarCreatureTypeOverrideForOwner,
+  spawnedCompanionEntryForOwner,
+  spawnedCompanionForOwner,
+  spawnedCompanionCreatureTypeOverrideForOwner,
 } from "./spawned-companion-state.ts";
 
 export {
   FIND_FAMILIAR_TELEPATHY_RANGE_FEET,
-  findFamiliarTelepathicConnection,
+  spawnedCompanionTelepathicConnection,
   type CompanionSharedSensesEffect,
-  type FindFamiliarTelepathicConnection,
-  type FindFamiliarWithin100FeetFact,
+  type SpawnedCompanionTelepathicConnection,
+  type SpawnedCompanionWithin100FeetFact,
 } from "./companion-communication.ts";
 
 export {
-  deliverTouchSpellThroughFindFamiliar,
-  shareFindFamiliarSenses,
+  deliverTouchSpellThroughSpawnedCompanion,
+  shareSpawnedCompanionSenses,
 } from "./battle-execution-composition.ts";
 
 export type { PactOfTheChainFamiliarAttackSubject } from "./companion-reaction-attack.ts";
@@ -599,7 +599,7 @@ export {
   type InitiativeSwapCandidateWitness,
 } from "./battle-reducer/api-lifecycle.ts";
 export {
-  activeFeatherFallDescentRateCapFeetPerRound,
+  activeFallingCreatureMitigationDescentRateCapFeetPerRound,
   activeSelfTransformationModeEffect,
   battleIlluminationFromLightEmitters,
   battleMagicalDarknessNonmagicalLightIllumination,

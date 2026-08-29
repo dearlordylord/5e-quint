@@ -28,7 +28,7 @@ import { reactionRollOrDamageReductionChoices } from "./reaction-modifiers.ts";
 import { triggeredReactionSpellChoices } from "./reaction-triggered-spells.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "./targeting-save-interdiction.ts";
-import { combatantInsideActiveAntimagicFieldAura } from "./magic-suppression-action-interdiction.ts";
+import { combatantInsideActiveMagicSuppressionEmanation } from "./magic-suppression-action-interdiction.ts";
 import { afterHitSaveGatedConditionSavingThrowOutcomeHole } from "./after-hit-save-gated-condition-hole.ts";
 import { isAttackHitBonusActionSpellInvocation } from "./spell-interrupt-procedure-kinds.ts";
 import {
@@ -795,7 +795,7 @@ export function attackHitBonusActionSpellReactionChoices(
     target === undefined ||
     !combatantCanTakeActions(actor) ||
     !canSpendBonusAction(state.currentTurnResources) ||
-    combatantInsideActiveAntimagicFieldAura(state, frame.attackerId)
+    combatantInsideActiveMagicSuppressionEmanation(state, frame.attackerId)
   ) {
     return [];
   }

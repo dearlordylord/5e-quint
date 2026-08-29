@@ -39,7 +39,7 @@ import type {
   BattleTargetSpatialFact,
 } from "./battle-state-execution.ts";
 import type { BattleStatBlockExecutionCatalog } from "./battle-state-execution.ts";
-import { admitFindFamiliarReappearance } from "./companion-admission.ts";
+import { admitSpawnedCompanionReappearance } from "./companion-admission.ts";
 import {
   admitTableD20TestCircumstanceDecisions,
   battleD20TestCircumstanceRequests,
@@ -382,7 +382,7 @@ export function resolveBattleRuntimeSubject(
         "Familiar reappearance requires a Stat Block catalog.",
       );
     }
-    const admission = admitFindFamiliarReappearance({
+    const admission = admitSpawnedCompanionReappearance({
       state: input.session.state,
       casterId: input.subject.actorId,
       catalog: input.statBlockCatalog,

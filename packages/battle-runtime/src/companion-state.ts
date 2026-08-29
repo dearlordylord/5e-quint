@@ -3,7 +3,7 @@
 import type { RetainedCompanionProtocol } from "@dnd/shared-algebras/companion-protocol-algebra";
 import { Hp, type PositiveInteger } from "@dnd/shared/types";
 import type {
-  FindFamiliarCreatureTypeOverride,
+  SpawnedCompanionCreatureTypeOverride,
   StatBlockId,
 } from "@dnd/shared/game-facts";
 import type {
@@ -36,7 +36,7 @@ export type BattleCompanionPlacement =
 
 export type BattleCompanionStoredForm =
   | {
-      readonly formAccess: "findFamiliar";
+      readonly formAccess: "spawnedCompanion";
       // Authored identity retained for familiar reappearance / settlement. Not
       // used to select reducer behavior.
       readonly resolvedStatBlockId: StatBlockId;
@@ -49,7 +49,7 @@ export type BattleCompanionStoredForm =
     };
 
 export type BattleCompanionFormAccess =
-  | { readonly formAccess: "findFamiliar" }
+  | { readonly formAccess: "spawnedCompanion" }
   | { readonly formAccess: "pactOfTheChain" };
 
 export type BattleCompanionCurrentHitPoints = Hp & PositiveInteger;
@@ -67,7 +67,7 @@ export type BattleCompanionProtocolState = {
   readonly ownerId: CombatantId;
   readonly identity: BattleCompanionIdentity;
   readonly protocol: BattleCompanionProtocol;
-  readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
+  readonly creatureTypeOverride: SpawnedCompanionCreatureTypeOverride;
 };
 
 export type BattleCompanionPresentState = BattleCompanionFormAccess &
@@ -94,11 +94,11 @@ export type BattleCompanionDisappearedAtZeroHitPointsState =
       readonly status: "disappearedAtZeroHitPoints";
     };
 
-export function findFamiliarDisappearedAtZeroHitPointsState(input: {
+export function spawnedCompanionDisappearedAtZeroHitPointsState(input: {
   readonly storedForm: BattleCompanionStoredForm;
   readonly identity: BattleCompanionIdentity;
   readonly protocol: BattleCompanionProtocol;
-  readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
+  readonly creatureTypeOverride: SpawnedCompanionCreatureTypeOverride;
   readonly ownerId: CombatantId;
   readonly reactionAvailable: boolean;
 }): BattleCompanionDisappearedAtZeroHitPointsState {

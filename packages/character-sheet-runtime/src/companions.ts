@@ -24,17 +24,17 @@ import {
 } from "@dnd/shared-algebras/companion-protocol-algebra";
 import {
   PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS,
-  findFamiliarFormEligibilityForSpell,
-  isFindFamiliarCreatureTypeOverride,
-  pactOfTheChainFindFamiliarFormEligibilityForSpell,
-  resolveFindFamiliarForm,
-  resolvePactOfTheChainFindFamiliarForm,
-  type FindFamiliarCreatureTypeOverride,
-  type FindFamiliarCreatureTypeOverrideChoice,
-  type FindFamiliarFormEligibility,
-  type FindFamiliarFormSelection,
-  type PactOfTheChainFindFamiliarFormEligibility,
-  type PactOfTheChainFindFamiliarFormSelection,
+  spawnedCompanionFormEligibilityForSpell,
+  isSpawnedCompanionCreatureTypeOverride,
+  pactOfTheChainSpawnedCompanionFormEligibilityForSpell,
+  resolveSpawnedCompanionForm,
+  resolvePactOfTheChainSpawnedCompanionForm,
+  type SpawnedCompanionCreatureTypeOverride,
+  type SpawnedCompanionCreatureTypeOverrideChoice,
+  type SpawnedCompanionFormEligibility,
+  type SpawnedCompanionFormSelection,
+  type PactOfTheChainSpawnedCompanionFormEligibility,
+  type PactOfTheChainSpawnedCompanionFormSelection,
 } from "@dnd/surface/surface/find-familiar-forms";
 import type {
   ClassFeatureRecord,
@@ -71,7 +71,7 @@ import { isRecord, isSpellcastingBuild } from "./stored-sheet-parser.ts";
 type RetainedCompanionCreationSourceFacts =
   | {
       readonly tag: "ordinaryFamiliarLike";
-      readonly eligibility: FindFamiliarFormEligibility;
+      readonly eligibility: SpawnedCompanionFormEligibility;
       readonly protocol: CharacterSheetRetainedCompanionProtocol;
       readonly spend:
         | { readonly tag: "none" }
@@ -80,16 +80,16 @@ type RetainedCompanionCreationSourceFacts =
     }
   | {
       readonly tag: "pactFamiliarLike";
-      readonly eligibility: PactOfTheChainFindFamiliarFormEligibility;
+      readonly eligibility: PactOfTheChainSpawnedCompanionFormEligibility;
       readonly protocol: CharacterSheetRetainedCompanionProtocol;
       readonly spend: { readonly tag: "none" };
       readonly fixedCreatureTypeOverrideChoiceId?: never;
     }
   | {
       readonly tag: "ownerLongRestExpiringFamiliarLike";
-      readonly eligibility: FindFamiliarFormEligibility;
+      readonly eligibility: SpawnedCompanionFormEligibility;
       readonly protocol: CharacterSheetRetainedCompanionProtocol;
-      readonly fixedCreatureTypeOverrideChoiceId: FindFamiliarCreatureTypeOverrideChoice["optionId"];
+      readonly fixedCreatureTypeOverrideChoiceId: SpawnedCompanionCreatureTypeOverrideChoice["optionId"];
       readonly spend: Extract<
         CharacterSheetRetainedCompanionCreationSource,
         { readonly tag: "classFeatureSpellCast" }
@@ -407,7 +407,7 @@ function retainedCompanionCreationSource(
         "Retained companion spell-slot source requires a slot at least as high as the selected spell level.",
       );
     }
-    const eligibility = findFamiliarFormEligibilityForSpell(spell.success);
+    const eligibility = spawnedCompanionFormEligibilityForSpell(spell.success);
     return eligibility === null
       ? characterSheetIssue(
           "Retained companion spell-slot source must provide familiar form eligibility.",
@@ -434,7 +434,7 @@ function retainedCompanionCreationSource(
     );
     /* v8 ignore next -- @preserve -- Malformed support catalog: the admitted retained-companion ritual spell id must resolve to its Spell Unit. */
     if (Result.isFailure(spell)) return Result.fail(spell.failure);
-    const eligibility = findFamiliarFormEligibilityForSpell(spell.success);
+    const eligibility = spawnedCompanionFormEligibilityForSpell(spell.success);
     return eligibility === null
       ? characterSheetIssue(
           "Retained companion ritual source must provide familiar form eligibility.",
@@ -453,7 +453,7 @@ function retainedCompanionCreationSource(
       spellId: source.spellId,
     });
     if (Result.isFailure(spell)) return Result.fail(spell.failure);
-    const eligibility = pactOfTheChainFindFamiliarFormEligibilityForSpell(
+    const eligibility = pactOfTheChainSpawnedCompanionFormEligibilityForSpell(
       spell.success,
     );
     return eligibility === null
@@ -481,7 +481,7 @@ function retainedCompanionCreationSource(
   );
   /* v8 ignore next -- @preserve -- Malformed support catalog: the admitted retained-companion feature spell id must resolve to its Spell Unit. */
   if (Result.isFailure(spell)) return Result.fail(spell.failure);
-  const eligibility = findFamiliarFormEligibilityForSpell(spell.success);
+  const eligibility = spawnedCompanionFormEligibilityForSpell(spell.success);
   return eligibility === null
     ? characterSheetIssue(
         "Retained companion class-feature spell source must provide familiar form eligibility.",
@@ -622,16 +622,16 @@ function retainedCompanionFeatureSpendIssue(input: {
 function retainedCompanionResolvedForm(input: {
   readonly source: RetainedCompanionCreationSourceFacts;
   readonly selectedForm:
-    | FindFamiliarFormSelection
-    | PactOfTheChainFindFamiliarFormSelection;
+    | SpawnedCompanionFormSelection
+    | PactOfTheChainSpawnedCompanionFormSelection;
   readonly statBlockCatalog: CharacterSheetRetainedCompanionCreationInput["statBlockCatalog"];
   readonly creatureTypeOverrideChoiceId:
-    | FindFamiliarCreatureTypeOverrideChoice["optionId"]
+    | SpawnedCompanionCreatureTypeOverrideChoice["optionId"]
     | undefined;
 }): Result.Result<
   {
     readonly statBlock: StatBlockRecord;
-    readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
+    readonly creatureTypeOverride: SpawnedCompanionCreatureTypeOverride;
   },
   CharacterSheetIssue
 > {
@@ -645,7 +645,7 @@ function retainedCompanionResolvedForm(input: {
   }
   const resolved =
     input.source.tag === "pactFamiliarLike"
-      ? resolvePactOfTheChainFindFamiliarForm({
+      ? resolvePactOfTheChainSpawnedCompanionForm({
           catalog: input.statBlockCatalog,
           eligibility: input.source.eligibility,
           selection: input.selectedForm,
@@ -657,7 +657,7 @@ function retainedCompanionResolvedForm(input: {
             message:
               "Retained companion source does not allow special familiar forms.",
           }
-        : resolveFindFamiliarForm({
+        : resolveSpawnedCompanionForm({
             catalog: input.statBlockCatalog,
             eligibility: input.source.eligibility,
             selection: input.selectedForm,
@@ -847,5 +847,5 @@ export function parseCharacterSheetRetainedCompanionCurrentHitPoints(
 function isCharacterSheetCompanionCreatureTypeOverride(
   value: unknown,
 ): value is CharacterSheetCompanionCreatureTypeOverride {
-  return isFindFamiliarCreatureTypeOverride(value);
+  return isSpawnedCompanionCreatureTypeOverride(value);
 }

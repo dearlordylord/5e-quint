@@ -28,7 +28,7 @@ import {
   spellCastCanTriggerSpellCastInterruption,
 } from "./spell-cast-interruption-reaction-discovery.ts";
 import { spellCastReactionFactsHole } from "./spell-cast-interrupt-frame.ts";
-import { combatantInsideActiveAntimagicFieldAura } from "./magic-suppression-action-interdiction.ts";
+import { combatantInsideActiveMagicSuppressionEmanation } from "./magic-suppression-action-interdiction.ts";
 import { isTriggeredReactionSpellInvocation } from "./spell-interrupt-procedure-kinds.ts";
 import type {
   BattleInterruptCheckpointInput,
@@ -74,7 +74,7 @@ export function triggeredReactionSpellChoices(
       if (
         !isCharacterBattleCreatureState(reactor) ||
         !combatantCanTakeReactions(reactor) ||
-        combatantInsideActiveAntimagicFieldAura(state, reactorId)
+        combatantInsideActiveMagicSuppressionEmanation(state, reactorId)
       ) {
         return [];
       }
@@ -206,7 +206,7 @@ export function triggeredReactionSpellMatchesTrigger(
     return triggeredArmorDefenseSpellMatchesTrigger(invocation, frame);
   }
   if (invocation.procedure === "saveGatedDamage") {
-    return hellishRebukeReactionSpellMatchesTrigger(invocation, frame);
+    return afterDamageRetaliationReactionSpellMatchesTrigger(invocation, frame);
   }
   if (invocation.procedure === "spellCastInterruptionReaction") {
     return spellCastInterruptionReactionReactionSpellMatchesTrigger(
@@ -215,7 +215,10 @@ export function triggeredReactionSpellMatchesTrigger(
       reactorId,
     );
   }
-  return featherFallReactionSpellMatchesTrigger(invocation, frame);
+  return fallingCreatureMitigationReactionSpellMatchesTrigger(
+    invocation,
+    frame,
+  );
 }
 
 export function spellCastInterruptionReactionReactionSpellMatchesTrigger(
@@ -250,7 +253,7 @@ export function spellCastInterruptionReactionReactionSpellMatchesTrigger(
   );
 }
 
-export function hellishRebukeReactionSpellMatchesTrigger(
+export function afterDamageRetaliationReactionSpellMatchesTrigger(
   invocation: BattleExecutableSpellInvocation<
     Extract<SpellProcedureExecution, { readonly procedure: "saveGatedDamage" }>
   >,
@@ -291,7 +294,7 @@ export function reactionSpellTargetFactsForAfterDamage(input: {
   );
 }
 
-export function featherFallReactionSpellMatchesTrigger(
+export function fallingCreatureMitigationReactionSpellMatchesTrigger(
   invocation: BattleExecutableSpellInvocation<
     Extract<
       SpellProcedureExecution,

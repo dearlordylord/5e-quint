@@ -81,7 +81,7 @@ import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import { setCompanion } from "../companion-state.ts";
 import { findPresentFamiliarById } from "../spawned-companion-state.ts";
 import { retainedStoredFormForPresentCompanion } from "../companion-stored-form.ts";
-import { findFamiliarDisappearedAtZeroHitPointsState } from "../companion-state.ts";
+import { spawnedCompanionDisappearedAtZeroHitPointsState } from "../companion-state.ts";
 import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";
 import { removeBattleCombatants } from "./combatant-removal.ts";
 import {
@@ -526,12 +526,13 @@ export function applyBattleHitPointDamage(input: {
           relationshipDecisions: input.relationshipDecisions ?? [],
         })
       : afterSaveGatedConditionWithRepeat;
-  const afterFamiliar = applyFindFamiliarZeroHitPointDisappearanceAfterDamage({
-    state: afterEnemyZeroHitPointTemporaryHitPoints,
-    targetId,
-    priorHp: input.target.hp,
-    nextHp: damaged.hp,
-  });
+  const afterFamiliar =
+    applySpawnedCompanionZeroHitPointDisappearanceAfterDamage({
+      state: afterEnemyZeroHitPointTemporaryHitPoints,
+      targetId,
+      priorHp: input.target.hp,
+      nextHp: damaged.hp,
+    });
   const afterLinkedDefenseResistanceDamageShareDamageShare =
     input.damageAmount > 0 &&
     input.suppressLinkedDefenseResistanceDamageShareDamageShare !== true
@@ -819,7 +820,7 @@ function linkedDefenseResistanceDamageShareCaster(
   return caster;
 }
 
-function applyFindFamiliarZeroHitPointDisappearanceAfterDamage(input: {
+function applySpawnedCompanionZeroHitPointDisappearanceAfterDamage(input: {
   readonly state: BattleState;
   readonly targetId: CombatantId;
   readonly priorHp: Hp;
@@ -838,7 +839,7 @@ function applyFindFamiliarZeroHitPointDisappearanceAfterDamage(input: {
     companion: entry.familiar,
   });
   if (typeof retainedForm === "string") {
-    return removeInvalidPresentFindFamiliarAfterZeroHitPointDamage({
+    return removeInvalidPresentSpawnedCompanionAfterZeroHitPointDamage({
       state: input.state,
       companionId: entry.companionId,
       ownerId: entry.ownerId,
@@ -847,14 +848,14 @@ function applyFindFamiliarZeroHitPointDisappearanceAfterDamage(input: {
   const target = input.state.combatants.get(input.targetId);
   /* v8 ignore start -- @preserve -- A present familiar is removed only after its live combatant has been resolved; a missing entry is malformed cross-record state. */
   if (target === undefined) {
-    return removeInvalidPresentFindFamiliarAfterZeroHitPointDamage({
+    return removeInvalidPresentSpawnedCompanionAfterZeroHitPointDamage({
       state: input.state,
       companionId: entry.companionId,
       ownerId: entry.ownerId,
     });
   }
   /* v8 ignore stop -- @preserve */
-  const disappearedFamiliar = findFamiliarDisappearedAtZeroHitPointsState({
+  const disappearedFamiliar = spawnedCompanionDisappearedAtZeroHitPointsState({
     storedForm: retainedForm,
     ownerId: entry.ownerId,
     identity: entry.familiar.identity,
@@ -879,7 +880,7 @@ function applyFindFamiliarZeroHitPointDisappearanceAfterDamage(input: {
 }
 
 /* v8 ignore start -- @preserve -- Malformed cross-record state repair: runtime admission creates present familiars with matching Stat Block combatants; this branch defensively removes an independently decoded or forged inconsistent companion record. */
-function removeInvalidPresentFindFamiliarAfterZeroHitPointDamage(input: {
+function removeInvalidPresentSpawnedCompanionAfterZeroHitPointDamage(input: {
   readonly state: BattleState;
   readonly companionId: CombatantId;
   readonly ownerId: CombatantId;

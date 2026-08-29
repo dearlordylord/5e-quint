@@ -37,7 +37,7 @@ import {
 } from "./spell-execution-facts.ts";
 import { spellCastReactionFactsHole } from "./spell-cast-interrupt-frame.ts";
 import {
-  combatantInsideActiveAntimagicFieldAura,
+  combatantInsideActiveMagicSuppressionEmanation,
   spellInvocationActInterdictedByMagicSuppressionEmanation,
 } from "./magic-suppression-action-interdiction.ts";
 import {
@@ -250,7 +250,7 @@ export function discoverSupportedSpellInvocations(
     return [];
   }
   const spellcastingPreventedByAntimagicField =
-    combatantInsideActiveAntimagicFieldAura(state, actorId);
+    combatantInsideActiveMagicSuppressionEmanation(state, actorId);
   const invocations = supportedSpellActs(state, actor);
   const executionInvocations = invocations;
   const interruptionReactors =

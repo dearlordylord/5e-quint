@@ -18,7 +18,7 @@ import { combatantCanTakeReactions } from "./battle-reducer/creature-state-execu
 import { spellInvocationIsSpellcasting } from "./battle-reducer/spell-turn-resources.ts";
 import { characterSpellProcedure } from "./character-execution-queries.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
-import { findFamiliarCompanionEntryForOwner } from "./spawned-companion-state.ts";
+import { spawnedCompanionEntryForOwner } from "./spawned-companion-state.ts";
 import { allocateBattleEffectExecutionRefForCreature } from "./effect-execution-ref.ts";
 import type {
   BattleEffectExecutionRef,
@@ -28,13 +28,13 @@ import type {
 
 export const FIND_FAMILIAR_TELEPATHY_RANGE_FEET = movementFeet(100);
 
-export type FindFamiliarWithin100FeetFact = {
+export type SpawnedCompanionWithin100FeetFact = {
   readonly kind: "companionWithinCommunicationRangeOfOwner";
   readonly ownerId: CombatantId;
   readonly familiarId: CombatantId;
 };
 
-export type FindFamiliarTelepathicConnection = {
+export type SpawnedCompanionTelepathicConnection = {
   readonly ownerId: CombatantId;
   readonly familiarId: CombatantId;
   readonly rangeFeet: MovementFeet;
@@ -46,7 +46,7 @@ export type CompanionSharedSensesEffect = Extract<
   { readonly kind: "spawnedCompanionSharedSenses" }
 >;
 
-export type FindFamiliarMechanicalTransition =
+export type SpawnedCompanionMechanicalTransition =
   | { readonly tag: "resolved"; readonly state: BattleState }
   | {
       readonly tag: "invalid";
@@ -57,15 +57,15 @@ export type FindFamiliarMechanicalTransition =
 function invalidTransition(
   reason: BattleInvalidReasonCode,
   message: string,
-): Extract<FindFamiliarMechanicalTransition, { readonly tag: "invalid" }> {
+): Extract<SpawnedCompanionMechanicalTransition, { readonly tag: "invalid" }> {
   return { tag: "invalid", reason, message };
 }
 
-export function findFamiliarTelepathicConnection(
+export function spawnedCompanionTelepathicConnection(
   state: BattleState,
-  fact: FindFamiliarWithin100FeetFact,
-): FindFamiliarTelepathicConnection | null {
-  const familiarEntry = findFamiliarCompanionEntryForOwner(state, fact.ownerId);
+  fact: SpawnedCompanionWithin100FeetFact,
+): SpawnedCompanionTelepathicConnection | null {
+  const familiarEntry = spawnedCompanionEntryForOwner(state, fact.ownerId);
   if (
     familiarEntry?.companion.status !== "present" ||
     familiarEntry.companion.combatantId !== fact.familiarId
@@ -80,12 +80,15 @@ export function findFamiliarTelepathicConnection(
   };
 }
 
-export function shareFindFamiliarSenses(input: {
+export function shareSpawnedCompanionSenses(input: {
   readonly state: BattleState;
   readonly casterId: CombatantId;
-  readonly fact: FindFamiliarWithin100FeetFact;
-}): FindFamiliarMechanicalTransition {
-  const connection = findFamiliarTelepathicConnection(input.state, input.fact);
+  readonly fact: SpawnedCompanionWithin100FeetFact;
+}): SpawnedCompanionMechanicalTransition {
+  const connection = spawnedCompanionTelepathicConnection(
+    input.state,
+    input.fact,
+  );
   if (connection === null || connection.ownerId !== input.casterId) {
     return invalidTransition(
       "invalidFill",
@@ -154,25 +157,28 @@ export function shareFindFamiliarSenses(input: {
   };
 }
 
-export type PreparedFindFamiliarTouchSpellDelivery = {
+export type PreparedSpawnedCompanionTouchSpellDelivery = {
   readonly tag: "prepared";
   readonly fills: BattleResolutionInput["fills"];
   readonly familiarId: CombatantId;
   readonly targetChoiceCount: number;
 };
 
-export function prepareTouchSpellDeliveryThroughFindFamiliar(input: {
+export function prepareTouchSpellDeliveryThroughSpawnedCompanion(input: {
   readonly state: BattleState;
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "actionSpell" | "bonusActionSpell" }
   >;
   readonly fills: BattleResolutionInput["fills"];
-  readonly fact: FindFamiliarWithin100FeetFact;
+  readonly fact: SpawnedCompanionWithin100FeetFact;
   readonly reactionCommitment: "uncommitted" | "committed";
 }):
-  | PreparedFindFamiliarTouchSpellDelivery
-  | Exclude<FindFamiliarMechanicalTransition, { readonly tag: "resolved" }> {
+  | PreparedSpawnedCompanionTouchSpellDelivery
+  | Exclude<
+      SpawnedCompanionMechanicalTransition,
+      { readonly tag: "resolved" }
+    > {
   const actor = input.state.combatants.get(input.subject.actorId);
   /* v8 ignore start -- @preserve -- Familiar delivery acts are projected only for a character caster; reaching this guard requires a forged subject owner. */
   if (actor?.origin.kind !== "character") {
@@ -205,7 +211,10 @@ export function prepareTouchSpellDeliveryThroughFindFamiliar(input: {
       "Find Familiar can deliver only spells with a range of Touch.",
     );
   }
-  const connection = findFamiliarTelepathicConnection(input.state, input.fact);
+  const connection = spawnedCompanionTelepathicConnection(
+    input.state,
+    input.fact,
+  );
   if (connection === null || connection.ownerId !== input.subject.actorId) {
     return invalidTransition(
       "invalidFill",

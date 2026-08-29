@@ -5,16 +5,16 @@ import type {
   BattleStatBlockExecutionCatalog,
   BattleState,
 } from "./battle-state-execution.ts";
-import type { FindFamiliarCreatureTypeOverride } from "@dnd/shared/game-facts";
+import type { SpawnedCompanionCreatureTypeOverride } from "@dnd/shared/game-facts";
 import {
   findCompanionEntryByOwner,
   type BattleCompanionStoredForm,
 } from "./companion-state.ts";
-import type { AdmittedFindFamiliarReappearance } from "./companion-admission-state.ts";
+import type { AdmittedSpawnedCompanionReappearance } from "./companion-admission-state.ts";
 import type { BattleStatBlockPresentationSource } from "./battle-runtime-context.ts";
 import {
   familiarStatBlockWithCreatureTypeOverride,
-  findFamiliarIdentityIssue,
+  spawnedCompanionIdentityIssue,
 } from "./companion-lifecycle-execution.ts";
 import {
   battleExecutionScopeInitialOrNextOrdinal,
@@ -28,16 +28,16 @@ import {
   statBlockProcedurePresentations,
 } from "./stat-block-presentation.ts";
 
-const AdmittedFindFamiliarReappearance =
-  Brand.nominal<AdmittedFindFamiliarReappearance>();
+const AdmittedSpawnedCompanionReappearance =
+  Brand.nominal<AdmittedSpawnedCompanionReappearance>();
 
-export function admitFindFamiliarReappearance(input: {
+export function admitSpawnedCompanionReappearance(input: {
   readonly state: BattleState;
   readonly casterId: CombatantId;
   readonly catalog: BattleStatBlockExecutionCatalog;
 }): Result.Result<
   {
-    readonly mechanics: AdmittedFindFamiliarReappearance;
+    readonly mechanics: AdmittedSpawnedCompanionReappearance;
     readonly presentation: BattleStatBlockPresentationSource;
   },
   {
@@ -59,13 +59,13 @@ export function admitFindFamiliarReappearance(input: {
     );
   }
   const familiar = entry.companion;
-  const identityIssue = findFamiliarIdentityIssue(
+  const identityIssue = spawnedCompanionIdentityIssue(
     input.state,
     input.casterId,
     familiar.reappearanceCombatantId,
   );
   if (identityIssue !== null) return issue(input.state, identityIssue);
-  const resolvedForm = resolveStoredFindFamiliarReappearanceForm({
+  const resolvedForm = resolveStoredSpawnedCompanionReappearanceForm({
     catalog: input.catalog,
     storedForm: familiar,
     creatureTypeOverride: familiar.creatureTypeOverride,
@@ -94,7 +94,7 @@ export function admitFindFamiliarReappearance(input: {
     );
   }
   return Result.succeed({
-    mechanics: AdmittedFindFamiliarReappearance({
+    mechanics: AdmittedSpawnedCompanionReappearance({
       state: input.state,
       subject: {
         tag: "companionLifecycle",
@@ -114,14 +114,14 @@ export function admitFindFamiliarReappearance(input: {
   });
 }
 
-function resolveStoredFindFamiliarReappearanceForm(input: {
+function resolveStoredSpawnedCompanionReappearanceForm(input: {
   readonly catalog: BattleStatBlockExecutionCatalog;
   readonly storedForm: BattleCompanionStoredForm;
-  readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
+  readonly creatureTypeOverride: SpawnedCompanionCreatureTypeOverride;
 }): Result.Result<
   {
     readonly statBlock: BattleStatBlockExecutionSource;
-    readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
+    readonly creatureTypeOverride: SpawnedCompanionCreatureTypeOverride;
   },
   string
 > {

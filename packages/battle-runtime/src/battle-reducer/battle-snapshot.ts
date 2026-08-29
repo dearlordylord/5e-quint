@@ -163,7 +163,7 @@ function presentFamiliarSnapshotFacts(
   const combatant = state.combatants.get(familiarId);
   if (combatant?.origin.kind !== "statBlock") {
     throw new Error(
-      "Present Find Familiar snapshot requires a Stat Block combatant.",
+      "Present spawned-companion snapshot requires a Stat Block combatant.",
     );
   }
   return {

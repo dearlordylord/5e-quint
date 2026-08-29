@@ -294,7 +294,7 @@ export function saveGatedAttackRollAdvantageInvocationIsVisibilityGrantingArea(
   return invocation.effect.kind === "saveGatedTargetProjection";
 }
 
-export function activeFeatherFallDescentRateCapFeetPerRound(
+export function activeFallingCreatureMitigationDescentRateCapFeetPerRound(
   combatant: BattleCreatureState,
 ): typeof FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND | null {
   return combatant.activeEffects.some(
@@ -304,7 +304,7 @@ export function activeFeatherFallDescentRateCapFeetPerRound(
     : null;
 }
 
-export function featherFallLandingCleanupForCombatant(
+export function fallingCreatureMitigationLandingCleanupForCombatant(
   combatant: BattleCreatureState,
 ):
   | { readonly tag: "mitigated"; readonly combatant: BattleCreatureState }

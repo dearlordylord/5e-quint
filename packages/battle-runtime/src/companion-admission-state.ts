@@ -10,8 +10,8 @@ export type CompanionReappearanceSubject = Omit<
   "action"
 > & { readonly action: "reappear" };
 
-export type AdmittedFindFamiliarReappearance = {
+export type AdmittedSpawnedCompanionReappearance = {
   readonly state: BattleState;
   readonly subject: CompanionReappearanceSubject;
   readonly combatantAdmission: AdmittedBattleStatBlockCombatant;
-} & Brand.Brand<"AdmittedFindFamiliarReappearance">;
+} & Brand.Brand<"AdmittedSpawnedCompanionReappearance">;

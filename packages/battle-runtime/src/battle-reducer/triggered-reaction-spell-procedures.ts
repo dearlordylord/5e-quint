@@ -44,7 +44,7 @@ import {
 } from "./interrupt-execution.ts";
 import { currentInterruptCheckpoint } from "./battle-snapshot.ts";
 import {
-  hellishRebukeReactionSpellMatchesTrigger,
+  afterDamageRetaliationReactionSpellMatchesTrigger,
   reactionSpellTargetFactsForAfterDamage,
   triggeredReactionSpellTurnResourceAvailable,
 } from "./reaction-triggered-spells.ts";
@@ -446,7 +446,10 @@ export function resolveTriggeredReactionSaveGatedDamage(
   if (
     input.frame.trigger !== "afterDamage" ||
     input.frame.damagedId !== input.subject.reactorId ||
-    !hellishRebukeReactionSpellMatchesTrigger(input.invocation, input.frame)
+    !afterDamageRetaliationReactionSpellMatchesTrigger(
+      input.invocation,
+      input.frame,
+    )
   ) {
     return invalidResult(
       input.state,

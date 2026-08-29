@@ -8,7 +8,7 @@
 
 import type { BattleState } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
-import { combatantInsideActiveAntimagicFieldAura } from "./magic-suppression-action-interdiction.ts";
+import { combatantInsideActiveMagicSuppressionEmanation } from "./magic-suppression-action-interdiction.ts";
 
 const MAGICAL_EFFECT_SOURCE_KINDS = [
   "spell",
@@ -46,7 +46,7 @@ export function magicalEffectTargetsInterdictedByMagicSuppressionEmanation(input
   return (
     magicalEffectSourceIsBlockedByMagicSuppressionEmanation(input.source) &&
     input.targetIds.some((targetId) =>
-      combatantInsideActiveAntimagicFieldAura(input.state, targetId),
+      combatantInsideActiveMagicSuppressionEmanation(input.state, targetId),
     )
   );
 }

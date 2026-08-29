@@ -139,7 +139,7 @@ import {
   type BattleSpellAreaChoice,
   type BattleSpellSavingThrowOutcomeValue,
   type BattleState,
-  type BattleThunderwavePushDisposition,
+  type BattleImmediateAreaPushDisposition,
   type SpellTargeting,
   type BonusActionSpellBattleResolutionInput,
   type SaveDamageResult,
@@ -3880,7 +3880,7 @@ function validateForcedMovementCubeBurstAreaEffect(input: {
 }
 
 function validateThunderwavePushDisposition(
-  disposition: BattleThunderwavePushDisposition,
+  disposition: BattleImmediateAreaPushDisposition,
   distanceFeet: MovementFeet,
 ): string | null {
   if (disposition.distanceFeet !== distanceFeet) {

@@ -208,6 +208,19 @@ function executionEntryPoints() {
   ].sort();
 }
 
+function battleRuntimeExecutionImportClosure() {
+  const entryPoints = [
+    ...executionEntryPoints(),
+    normalizedRepoPath(SPELL_DECLARATION_REGISTRY_MODULE),
+  ];
+  if (entryPoints.length === 0) {
+    throw new Error("No battle-runtime execution entry points were found.");
+  }
+  return [...reachableFiles(importGraph(entryPoints), entryPoints)]
+    .map(toRepoPath)
+    .sort();
+}
+
 function declaredDirectoryEntryPoints(directories) {
   return directories.flatMap((directory) => {
     if (!fs.existsSync(directory) || !fs.statSync(directory).isDirectory()) {
@@ -925,30 +938,30 @@ function dispatcherEntryPoint() {
   );
 }
 
-const cliArguments = process.argv.slice(2);
-const supportedArguments = new Set(["--self-test"]);
-const unknownArguments = cliArguments.filter(
-  (argument) => !supportedArguments.has(argument),
-);
-if (unknownArguments.length > 0) {
-  throw new Error(
-    `Unknown battle-runtime import ownership argument(s): ${unknownArguments.join(", ")}.`,
-  );
-}
-if (cliArguments.length > 1) {
-  throw new Error("Choose exactly one battle-runtime import ownership mode.");
-}
+module.exports = { battleRuntimeExecutionImportClosure };
 
-runSelfTests();
-
-if (cliArguments.includes("--self-test")) {
-  console.log(
-    "Battle-runtime import ownership synthetic tests passed: reachable import closure traversal and shortest violation paths.",
+if (require.main === module) {
+  const cliArguments = process.argv.slice(2);
+  const supportedArguments = new Set(["--self-test"]);
+  const unknownArguments = cliArguments.filter(
+    (argument) => !supportedArguments.has(argument),
   );
-} else {
-  const entryPoints = executionEntryPoints();
-  if (entryPoints.length === 0) {
-    throw new Error("No battle-runtime execution entry points were found.");
+  if (unknownArguments.length > 0) {
+    throw new Error(
+      `Unknown battle-runtime import ownership argument(s): ${unknownArguments.join(", ")}.`,
+    );
   }
-  checkEntryPoints(entryPoints, true);
+  if (cliArguments.length > 1) {
+    throw new Error("Choose exactly one battle-runtime import ownership mode.");
+  }
+
+  runSelfTests();
+
+  if (cliArguments.includes("--self-test")) {
+    console.log(
+      "Battle-runtime import ownership synthetic tests passed: reachable import closure traversal and shortest violation paths.",
+    );
+  } else {
+    checkEntryPoints(executionEntryPoints(), true);
+  }
 }

@@ -46,7 +46,7 @@ export function removeBattleCombatants(input: {
   readonly state: BattleState;
   readonly combatantIds: readonly CombatantId[];
 }): Result.Result<BattleState, BattleStateInitIssue> {
-  const removeIds = combatantIdsWithPresentFindFamiliarDependents(
+  const removeIds = combatantIdsWithPresentSpawnedCompanionDependents(
     input.state,
     input.combatantIds,
   );
@@ -195,7 +195,7 @@ function hidePrerequisiteReferencedCombatantIds(
     : [combatantId];
 }
 
-function combatantIdsWithPresentFindFamiliarDependents(
+function combatantIdsWithPresentSpawnedCompanionDependents(
   state: BattleState,
   combatantIds: readonly CombatantId[],
 ): ReadonlySet<CombatantId> {

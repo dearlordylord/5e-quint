@@ -65,9 +65,9 @@ import type {
   StatBlockId,
 } from "@dnd/surface/surface/stat-block-catalog";
 import type {
-  FindFamiliarCreatureTypeOverride,
-  FindFamiliarCreatureTypeOverrideChoice,
-  PactOfTheChainFindFamiliarFormSelection,
+  SpawnedCompanionCreatureTypeOverride,
+  SpawnedCompanionCreatureTypeOverrideChoice,
+  PactOfTheChainSpawnedCompanionFormSelection,
 } from "@dnd/surface/surface/find-familiar-forms";
 import {
   type ChargePoolResource,
@@ -537,10 +537,10 @@ export function characterSheetModifyMemoryTargetId(
 }
 
 export type CharacterSheetCompanionCreatureTypeOverride =
-  FindFamiliarCreatureTypeOverride;
+  SpawnedCompanionCreatureTypeOverride;
 
 export type CharacterSheetCompanionFormSelection =
-  PactOfTheChainFindFamiliarFormSelection;
+  PactOfTheChainSpawnedCompanionFormSelection;
 
 export { RETAINED_COMPANION_PROTOCOL_TAGS, retainedCompanionProtocolFacts };
 
@@ -626,7 +626,7 @@ export type CharacterSheetRetainedCompanionCreationInput = {
   readonly companionId: CharacterSheetRetainedCompanionId;
   readonly source: CharacterSheetRetainedCompanionCreationSource;
   readonly selectedForm: CharacterSheetCompanionFormSelection;
-  readonly creatureTypeOverrideChoiceId?: FindFamiliarCreatureTypeOverrideChoice["optionId"];
+  readonly creatureTypeOverrideChoiceId?: SpawnedCompanionCreatureTypeOverrideChoice["optionId"];
 };
 
 export type SpellcastingCharacterBuild = CharacterBuild & {

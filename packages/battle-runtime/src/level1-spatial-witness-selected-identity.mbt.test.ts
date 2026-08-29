@@ -57,7 +57,7 @@ import {
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
-  activeFeatherFallDescentRateCapFeetPerRound,
+  activeFallingCreatureMitigationDescentRateCapFeetPerRound,
   battleAreaId,
   battleId,
   battleIlluminationFromLightEmitters,
@@ -236,7 +236,7 @@ const greaseUnitId = "grease";
 const jumpUnitId = "jump";
 const lightUnitId = "light";
 const produceFlameUnitId = "produce_flame";
-const thunderwaveUnitId = "selfOriginCubePush";
+const thunderwaveUnitId = "thunderwave";
 const starryWispUnitId = "starry_wisp";
 type Level1SpatialWitnessSelectedUnitId =
   | typeof dancingLightsUnitId
@@ -782,7 +782,7 @@ const selectedUnitIdentityReplays = [
   },
   {
     taskId: "level1-spatial-witness",
-    unitId: "selfOriginCubePush",
+    unitId: "thunderwave",
     actions: ["doThunderwaveSavePushObjectsBoom"],
     sequences: [
       {
@@ -2155,17 +2155,17 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         mitigatedTargetCountBeforeLanding:
           fallingCreatureMitigationReactionTargetCount(resolved.state),
         landedTargetDescentRateCapFeetPerRound:
-          activeFeatherFallDescentRateCapFeetPerRound(
+          activeFallingCreatureMitigationDescentRateCapFeetPerRound(
             featherFallCombatant(resolved.state, featherFallFallingAllyId),
           ) ?? 0,
         landingFallDamagePrevented: landing.fallDamagePrevented,
         landingFallingPronePrevented: landing.fallingPronePrevented,
         landedTargetMitigationCleared:
-          activeFeatherFallDescentRateCapFeetPerRound(
+          activeFallingCreatureMitigationDescentRateCapFeetPerRound(
             featherFallCombatant(landing.state, featherFallFallingAllyId),
           ) === null,
         otherTargetStillMitigated:
-          activeFeatherFallDescentRateCapFeetPerRound(
+          activeFallingCreatureMitigationDescentRateCapFeetPerRound(
             featherFallCombatant(landing.state, featherFallOtherFallingAllyId),
           ) === FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
       };
@@ -5309,7 +5309,7 @@ function fallingCreatureMitigationReactionTargetCount(
 ): number {
   return [featherFallFallingAllyId, featherFallOtherFallingAllyId].filter(
     (targetId) =>
-      activeFeatherFallDescentRateCapFeetPerRound(
+      activeFallingCreatureMitigationDescentRateCapFeetPerRound(
         featherFallCombatant(state, targetId),
       ) === FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
   ).length;

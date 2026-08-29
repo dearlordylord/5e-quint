@@ -17,10 +17,10 @@ export type MembersOf<Owner, Members extends Owner> = Members;
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84E fog_cloud
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV87C ranger_favored_enemy
 import {
-  findFamiliarFormEligibilityForSpell,
-  pactOfTheChainFindFamiliarFormEligibilityForSpell,
-  resolveFindFamiliarForm,
-  resolvePactOfTheChainFindFamiliarForm,
+  spawnedCompanionFormEligibilityForSpell,
+  pactOfTheChainSpawnedCompanionFormEligibilityForSpell,
+  resolveSpawnedCompanionForm,
+  resolvePactOfTheChainSpawnedCompanionForm,
 } from "@dnd/surface/surface/find-familiar-forms";
 import { Match, Result, Schema } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
@@ -33,7 +33,7 @@ import { attackActionOptionName } from "./battle-reducer/statblock-attacks.ts";
 import { statBlockAttackProcedureSection } from "./battle-reducer/statblock.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
 import { statBlockProcedurePresentations } from "./stat-block-presentation.ts";
-import { admitFindFamiliarReappearance } from "./companion-admission.ts";
+import { admitSpawnedCompanionReappearance } from "./companion-admission.ts";
 import { resolveAdmittedCompanionReappearanceSubject } from "./battle-reducer/companion-lifecycle-procedures.ts";
 
 import {
@@ -103,7 +103,7 @@ import chainLightningInput from "../../surface/content/chain_lightning.json";
 import chillTouchInput from "../../surface/content/chill_touch.json";
 import colorSprayInput from "../../surface/content/color_spray.json";
 import eldritchBlastInput from "../../surface/content/eldritch_blast.json";
-import findFamiliarInput from "../../surface/content/find_familiar.json";
+import spawnedCompanionInput from "../../surface/content/find_familiar.json";
 import fireBoltInput from "../../surface/content/fire_bolt.json";
 import fogCloudInput from "../../surface/content/fog_cloud.json";
 import greaseInput from "../../surface/content/grease.json";
@@ -320,7 +320,7 @@ type BonusActionDashSpellSubjectForTest = Extract<
   CharacterProcedureSubjectForTest,
   { readonly tag: "bonusActionDashSpell" }
 >;
-type FindFamiliarTouchSpellSubjectForTest = Extract<
+type SpawnedCompanionTouchSpellSubjectForTest = Extract<
   CharacterProcedureSubjectForTest,
   { readonly tag: "spawnedCompanionTouchSpellProxy" }
 >;
@@ -355,10 +355,10 @@ type SpellProcedureSelectorForTest =
       readonly actorId: CombatantId;
       readonly invocation: SpellInvocationRef;
       readonly procedureRef?: BattleProcedureExecutionRef;
-      readonly companionId: FindFamiliarTouchSpellSubjectForTest["companionId"];
-      readonly spellAction: FindFamiliarTouchSpellSubjectForTest["spellAction"];
-      readonly mode: FindFamiliarTouchSpellSubjectForTest["mode"];
-      readonly metamagic?: FindFamiliarTouchSpellSubjectForTest["metamagic"];
+      readonly companionId: SpawnedCompanionTouchSpellSubjectForTest["companionId"];
+      readonly spellAction: SpawnedCompanionTouchSpellSubjectForTest["spellAction"];
+      readonly mode: SpawnedCompanionTouchSpellSubjectForTest["mode"];
+      readonly metamagic?: SpawnedCompanionTouchSpellSubjectForTest["metamagic"];
     };
 
 type UnitFeatureSelectorForTest =
@@ -1018,8 +1018,9 @@ const testSpellRecords = new Map(
         : [],
     ),
 );
-const spawnedCompanionLifecycleSpellRecord =
-  decodeUnitRecordSync(findFamiliarInput);
+const spawnedCompanionLifecycleSpellRecord = decodeUnitRecordSync(
+  spawnedCompanionInput,
+);
 if (spawnedCompanionLifecycleSpellRecord.kind !== "spell") {
   throw new Error("Find Familiar test input must decode to a spell record.");
 }
@@ -2330,7 +2331,7 @@ function resolveBattleSubjectWithOptionalFamiliarAdmission(
   ) {
     return resolveBattleSubjectRuntime(input);
   }
-  const admission = admitFindFamiliarReappearance({
+  const admission = admitSpawnedCompanionReappearance({
     state: input.state,
     casterId: input.subject.actorId,
     catalog,
@@ -6036,8 +6037,8 @@ export {
   Result,
   elapsedTimeTicks,
   endTurn,
-  findFamiliarFormEligibilityForSpell,
-  findFamiliarInput,
+  spawnedCompanionFormEligibilityForSpell,
+  spawnedCompanionInput,
   hasCondition,
   holeId,
   holeInstanceKey,
@@ -6048,7 +6049,7 @@ export {
   movementFeet,
   objectInvisibleBenefitDenied,
   PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
-  pactOfTheChainFindFamiliarFormEligibilityForSpell,
+  pactOfTheChainSpawnedCompanionFormEligibilityForSpell,
   removeCondition,
   requiredAbilityCheckRollMode,
   resolveBardicInspirationFailedD20Test,
@@ -6056,8 +6057,8 @@ export {
   resolveBattleInterrupt,
   resolveBattleSubject,
   resolveFailedAbilityCheckResourceBoost,
-  resolveFindFamiliarForm,
-  resolvePactOfTheChainFindFamiliarForm,
+  resolveSpawnedCompanionForm,
+  resolvePactOfTheChainSpawnedCompanionForm,
   resolveSuccessfulAbilityCheckReactionReduction,
   resourceCount,
   sameBattleSubject,

@@ -12,7 +12,7 @@ import type {
   BattleState,
   BattleTurnResources,
 } from "../battle-state-execution.ts";
-import { isPresentFindFamiliarCombatant } from "../spawned-companion-state.ts";
+import { isPresentSpawnedCompanionCombatant } from "../spawned-companion-state.ts";
 import { canSpendEscapeGrappleActionResource } from "./action-resource-kinds.ts";
 import {
   combatantCanTakeActions,
@@ -108,7 +108,7 @@ export function battleSubjectActionEligibilityIssue(
     return actorUnavailableIssue(facts);
   }
   if (
-    isPresentFindFamiliarCombatant(state, actorId) &&
+    isPresentSpawnedCompanionCombatant(state, actorId) &&
     familiarCannotUseActionFacts(facts)
   ) {
     return ACTION_ELIGIBILITY_ISSUES.familiarCannotAttack;

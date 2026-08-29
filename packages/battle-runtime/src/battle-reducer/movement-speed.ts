@@ -54,7 +54,7 @@ import {
   currentActorId,
   grappledBy,
 } from "./creature-state-leaves.ts";
-import { isPresentFindFamiliarCombatant } from "../spawned-companion-state.ts";
+import { isPresentSpawnedCompanionCombatant } from "../spawned-companion-state.ts";
 import { GRAPPLE_TARGET_REACH_FEET } from "./domain-constants.ts";
 import {
   activeDruidWildShapeForm,
@@ -235,7 +235,7 @@ export function opportunityAttackOptionForReactor(
   targetId: CombatantId,
   selection: BattleOpportunityAttackSelection,
 ): BoundSupportedAttackActionOption | undefined {
-  if (isPresentFindFamiliarCombatant(state, reactorId)) {
+  if (isPresentSpawnedCompanionCombatant(state, reactorId)) {
     return undefined;
   }
   if (

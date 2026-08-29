@@ -26,12 +26,12 @@ import {
 } from "./battle-reducer/statblock.ts";
 import { findPresentFamiliarById } from "./spawned-companion-state.ts";
 import type { CombatantId } from "./identity.ts";
-import { combatantHasPactOfTheChainFindFamiliar } from "./companion-reaction-feature-facts.ts";
+import { combatantHasPactOfTheChainSpawnedCompanion } from "./companion-reaction-feature-facts.ts";
 import {
   ammunitionForAttackIsAvailable,
   spendAmmunitionForAcceptedAttack,
 } from "./battle-ammunition.ts";
-export { combatantHasPactOfTheChainFindFamiliar } from "./companion-reaction-feature-facts.ts";
+export { combatantHasPactOfTheChainSpawnedCompanion } from "./companion-reaction-feature-facts.ts";
 
 export type PactOfTheChainFamiliarAttackSubject = Extract<
   BattleSubject,
@@ -46,7 +46,10 @@ export function resolvePactOfTheChainFamiliarReactionAttack(
   input: PactOfTheChainFamiliarReactionAttackSubjectInput,
 ): BattleResolutionResult {
   if (
-    !combatantHasPactOfTheChainFindFamiliar(input.state, input.subject.actorId)
+    !combatantHasPactOfTheChainSpawnedCompanion(
+      input.state,
+      input.subject.actorId,
+    )
   ) {
     return invalidResult(
       input.state,

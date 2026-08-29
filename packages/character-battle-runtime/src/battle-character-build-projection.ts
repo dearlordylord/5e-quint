@@ -1769,7 +1769,7 @@ function invocationSpellAccess(input: {
     const access = invocationSpellAccessForSpell({
       unitLibrary: input.unitLibrary,
       spellId: authoredUnitId(PACT_OF_THE_CHAIN_SPELL_ID),
-      tag: "pactOfTheChainFindFamiliar",
+      tag: "pactOfTheChainSpawnedCompanion",
     });
     if (Result.isFailure(access)) {
       return Result.fail(access.failure);

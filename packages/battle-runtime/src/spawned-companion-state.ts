@@ -2,7 +2,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 import type { BattleState } from "./battle-state-execution.ts";
 import type { CombatantId } from "./identity.ts";
-import type { FindFamiliarCreatureTypeOverride } from "@dnd/shared/game-facts";
+import type { SpawnedCompanionCreatureTypeOverride } from "@dnd/shared/game-facts";
 import type {
   BattleCompanionEntry,
   BattleCompanionPresentState,
@@ -21,24 +21,24 @@ export function battleCompanionEntries(
   return companionEntries(state.companions);
 }
 
-export function findFamiliarCompanionEntryForOwner(
+export function spawnedCompanionEntryForOwner(
   state: BattleState,
   ownerId: CombatantId,
 ): BattleCompanionEntry | null {
   return findCompanionEntryByOwner(state.companions, ownerId) ?? null;
 }
 
-export function findFamiliarCompanionForOwner(
+export function spawnedCompanionForOwner(
   state: BattleState,
   ownerId: CombatantId,
 ): BattleCompanionState | null {
   return findCompanionByOwner(state.companions, ownerId) ?? null;
 }
 
-export function findFamiliarCreatureTypeOverrideForOwner(
+export function spawnedCompanionCreatureTypeOverrideForOwner(
   state: BattleState,
   ownerId: CombatantId,
-): FindFamiliarCreatureTypeOverride | null {
+): SpawnedCompanionCreatureTypeOverride | null {
   return (
     findCompanionByOwner(state.companions, ownerId)?.creatureTypeOverride ??
     null
@@ -64,7 +64,7 @@ export function findPresentFamiliarById(
   return null;
 }
 
-export function isPresentFindFamiliarCombatant(
+export function isPresentSpawnedCompanionCombatant(
   state: BattleState,
   familiarId: CombatantId,
 ): boolean {

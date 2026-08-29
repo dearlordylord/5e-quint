@@ -2,7 +2,7 @@
 import {
   admitCompanionToBattle,
   admitCompanionToBattleRuntime,
-  findFamiliarCompanionEntryForOwner,
+  spawnedCompanionEntryForOwner,
   retainedStoredFormForPresentCompanion,
   type BattleCompanionPlacement,
   type BattleCompanionState,
@@ -32,10 +32,10 @@ import {
   type CharacterSheetRetainedCompanionResolvedFormProof,
 } from "@dnd/character-sheet-runtime";
 import {
-  findFamiliarFormEligibilityForSpell,
+  spawnedCompanionFormEligibilityForSpell,
   PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS,
-  type FindFamiliarFormEligibility,
-  type FindFamiliarFormSelection,
+  type SpawnedCompanionFormEligibility,
+  type SpawnedCompanionFormSelection,
 } from "@dnd/surface/surface/find-familiar-forms";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
@@ -713,11 +713,11 @@ function battleStoredFormForSheetCompanion(input: {
   });
   if (Result.isFailure(formEligibility))
     return Result.fail(formEligibility.failure);
-  if (formSelectionAccess.success.formAccess === "findFamiliar") {
+  if (formSelectionAccess.success.formAccess === "spawnedCompanion") {
     return Result.succeed({
       formEligibility: formEligibility.success,
       storedForm: {
-        formAccess: "findFamiliar",
+        formAccess: "spawnedCompanion",
         formSelection: formSelectionAccess.success.selectedForm,
         resolvedStatBlockId: proof.resolvedStatBlockId,
       },
@@ -866,15 +866,15 @@ function retainedCompanionResolvedFormProofIssue(input: {
 function retainedFamiliarLikeFormEligibility(
   unitLibrary: UnitCatalog,
 ): Result.Result<
-  FindFamiliarFormEligibility,
+  SpawnedCompanionFormEligibility,
   CharacterSheetBattleHandoffIssue
 > {
   const eligible = unitLibrary
     .listUnits()
     .flatMap((unit) =>
       unit.kind === "spell"
-        ? [findFamiliarFormEligibilityForSpell(unit)].filter(
-            (eligibility): eligibility is FindFamiliarFormEligibility =>
+        ? [spawnedCompanionFormEligibilityForSpell(unit)].filter(
+            (eligibility): eligibility is SpawnedCompanionFormEligibility =>
               eligibility !== null,
           )
         : [],
@@ -895,7 +895,7 @@ function retainedFamiliarLikeFormEligibility(
 }
 
 function retainedFamiliarLikeNormalFormProofIssue(input: {
-  readonly eligibility: FindFamiliarFormEligibility;
+  readonly eligibility: SpawnedCompanionFormEligibility;
   readonly selectedForm: Extract<
     CharacterSheetCompanionFormSelection,
     { readonly tag: "normalNamedForm" }
@@ -939,8 +939,8 @@ function retainedFamiliarLikeNormalFormProofIssue(input: {
 
 type BattleFormSelectionAccess =
   | {
-      readonly formAccess: "findFamiliar";
-      readonly selectedForm: FindFamiliarFormSelection;
+      readonly formAccess: "spawnedCompanion";
+      readonly selectedForm: SpawnedCompanionFormSelection;
     }
   | {
       readonly formAccess: "pactOfTheChain";
@@ -981,7 +981,7 @@ export function settleCompanionFromBattle(input: {
   readonly statBlockCatalog?: StatBlockCatalog;
   readonly retainedCompanionSelection?: RetainedCompanionBattleSelection;
 }): Result.Result<CharacterSheet, CharacterSheetBattleHandoffIssue> {
-  const battleEntry = findFamiliarCompanionEntryForOwner(
+  const battleEntry = spawnedCompanionEntryForOwner(
     input.state,
     input.ownerCombatantId,
   );

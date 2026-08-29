@@ -350,7 +350,7 @@ export const FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPES = [
   "fey",
   "fiend",
 ] as const satisfies ReadonlyArray<CreatureType>;
-export type FindFamiliarCreatureTypeOverride =
+export type SpawnedCompanionCreatureTypeOverride =
   (typeof FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPES)[number];
 
 export function featureSaveDC(

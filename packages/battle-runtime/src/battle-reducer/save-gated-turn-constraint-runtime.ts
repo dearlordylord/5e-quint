@@ -52,7 +52,7 @@ export function combatantHasSaveGatedTurnConstraintBundle(
   return saveGatedTurnConstraintBundleEffects(state, combatant).length > 0;
 }
 
-export function slowActionOrBonusActionTurnResources(
+export function saveGatedTurnConstraintActionOrBonusActionTurnResources(
   state: BattleState,
   resources: BattleTurnResources,
   actor: BattleCreatureState | undefined,
@@ -62,7 +62,7 @@ export function slowActionOrBonusActionTurnResources(
     : resources;
 }
 
-export function resolveSlowSomaticSpellFailure(input: {
+export function resolveSaveGatedTurnConstraintSomaticSpellFailure(input: {
   readonly state: BattleState;
   readonly castingState: BattleState;
   readonly subject: SaveGatedSomaticSpellFailureSubject;

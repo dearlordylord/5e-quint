@@ -20,7 +20,7 @@ import {
 } from "@dnd/surface/surface/unit-catalog";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
-  activeFeatherFallDescentRateCapFeetPerRound,
+  activeFallingCreatureMitigationDescentRateCapFeetPerRound,
   battleId,
   characterId,
   combatantId,
@@ -319,9 +319,9 @@ describe("Feather Fall Reaction spell", () => {
           expiresAt: expect.objectContaining({ kind: "duration" }),
         }),
       );
-      expect(activeFeatherFallDescentRateCapFeetPerRound(target)).toBe(
-        FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
-      );
+      expect(
+        activeFallingCreatureMitigationDescentRateCapFeetPerRound(target),
+      ).toBe(FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND);
     }
   });
 
@@ -341,15 +341,14 @@ describe("Feather Fall Reaction spell", () => {
       fallDamagePrevented: true,
       fallingPronePrevented: true,
       slowFallReductionAmount: damageAmount(0),
-      featherFallMitigated: true,
     });
     if (landing.tag !== "landed") {
       throw new Error("Expected Feather Fall landing mitigation.");
     }
     const landedTarget = requireCombatant(landing.state, fallingAId);
-    expect(activeFeatherFallDescentRateCapFeetPerRound(landedTarget)).toBe(
-      null,
-    );
+    expect(
+      activeFallingCreatureMitigationDescentRateCapFeetPerRound(landedTarget),
+    ).toBe(null);
     expect(landing.snapshot.combatants).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -361,7 +360,9 @@ describe("Feather Fall Reaction spell", () => {
 
     const stillFallingTarget = requireCombatant(landing.state, fallingBId);
     expect(
-      activeFeatherFallDescentRateCapFeetPerRound(stillFallingTarget),
+      activeFallingCreatureMitigationDescentRateCapFeetPerRound(
+        stillFallingTarget,
+      ),
     ).toBe(FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND);
   });
 

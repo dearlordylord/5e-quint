@@ -31,7 +31,7 @@ import type {
   BattleProtectionRelevantEffectSavingThrowOutcomeHole,
   BattleSavingThrowOutcomeValue,
   BattleState,
-  ProtectionFromEvilAndGoodPreventedCondition,
+  CreatureTypeProtectionPreventedCondition,
 } from "../battle-state-execution.ts";
 import { KnockedOutConditionState as KnockedOutConditionStateBrand } from "./knocked-out-state.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
@@ -43,7 +43,7 @@ import {
   isConditionApplyingActiveEffect,
 } from "../active-effect/lifecycle.ts";
 export { conditionsAfterApplyingSpellConditionEffects };
-type ProtectionRelevantCondition = ProtectionFromEvilAndGoodPreventedCondition;
+type ProtectionRelevantCondition = CreatureTypeProtectionPreventedCondition;
 type ProtectionRelevantEffect =
   | Extract<BattleActiveEffect, { readonly kind: "spellConditionRepeatSave" }>
   | Extract<BattleActiveEffect, { readonly kind: "possession" }>;
@@ -176,7 +176,7 @@ export function conditionApplicationPreventedByCreatureTypeProtection(
   target: BattleCreatureState,
   condition: Condition,
 ): boolean {
-  if (!isProtectionFromEvilAndGoodPreventedCondition(condition)) {
+  if (!isCreatureTypeProtectionPreventedCondition(condition)) {
     return false;
   }
   const sourceCreatureType = battleCreatureTypeForCombatant(
@@ -406,9 +406,9 @@ function battleCreatureTypeForCombatant(
   return combatant === undefined ? null : battleCreatureType(combatant);
 }
 
-function isProtectionFromEvilAndGoodPreventedCondition(
+function isCreatureTypeProtectionPreventedCondition(
   condition: Condition,
-): condition is ProtectionFromEvilAndGoodPreventedCondition {
+): condition is CreatureTypeProtectionPreventedCondition {
   return condition === "charmed" || condition === "frightened";
 }
 

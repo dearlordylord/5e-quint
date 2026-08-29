@@ -3,7 +3,7 @@ import { StatBlockId as StatBlockIdSchema } from "@dnd/shared/game-facts";
 
 // Content JSON is generated from the matching content/*.dhall source.
 // Keep authoring changes in Dhall, then regenerate JSON and trace output.
-import findFamiliarStatBlocksInput from "../../content/stat_block_find_familiar_forms.json";
+import spawnedCompanionStatBlocksInput from "../../content/stat_block_find_familiar_forms.json";
 import goblinWarriorInput from "../../content/stat_block_goblin_warrior.json";
 import skeletonInput from "../../content/stat_block_skeleton.json";
 import sphinxOfWonderInput from "../../content/stat_block_sphinx_of_wonder.json";
@@ -111,7 +111,7 @@ export function defineSrdStatBlockCollection(input: {
 
 export const srdStatBlockCollection = defineSrdStatBlockCollection({
   statBlocks: [
-    ...findFamiliarStatBlocksInput.map((input) =>
+    ...spawnedCompanionStatBlocksInput.map((input) =>
       assertSrd521StatBlock(decodeStatBlockRecordSync(input)),
     ),
     ...wildShapeRecommendedFormsInput.map((input) =>

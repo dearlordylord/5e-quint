@@ -17,17 +17,17 @@ import type { WeaponId } from "@dnd/shared/game-facts";
 import type { WeaponRecord } from "@dnd/surface/surface/types";
 import { Result } from "effect";
 import type {
-  FindFamiliarFormSelection,
-  PactOfTheChainFindFamiliarFormSelection,
+  SpawnedCompanionFormSelection,
+  PactOfTheChainSpawnedCompanionFormSelection,
 } from "@dnd/surface/surface/find-familiar-forms";
 export type RetainedCompanionBattleSelection =
   | {
-      readonly formAccess: "findFamiliar";
-      readonly selectedForm: FindFamiliarFormSelection;
+      readonly formAccess: "spawnedCompanion";
+      readonly selectedForm: SpawnedCompanionFormSelection;
     }
   | {
       readonly formAccess: "pactOfTheChain";
-      readonly selectedForm: PactOfTheChainFindFamiliarFormSelection;
+      readonly selectedForm: PactOfTheChainSpawnedCompanionFormSelection;
     };
 
 export type CharacterSpellPresentationSource = {

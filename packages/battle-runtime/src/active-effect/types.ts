@@ -64,7 +64,7 @@ import type {
   PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
   SPELL_CONDITION_ABILITY_CHECK_ACTORS,
   SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
-  MirrorImageDuplicateCount,
+  DuplicateHitInterceptionDuplicateCount,
   SelfTransformationNonNaturalWeaponModeKind,
 } from "../battle-reducer/domain-constants.ts";
 import type {
@@ -165,7 +165,7 @@ export type SpellConditionAbilityCheckSuccessEnd =
   (typeof SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS)[number];
 export type SpellConditionAbilityCheckActor =
   (typeof SPELL_CONDITION_ABILITY_CHECK_ACTORS)[number];
-export type ProtectionFromEvilAndGoodPreventedCondition =
+export type CreatureTypeProtectionPreventedCondition =
   (typeof PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS)[number];
 export type BattlePossessionAttemptDisposition =
   | {
@@ -544,7 +544,7 @@ export type BattleActiveEffect = (
   | (BattleSpellEffectBase &
       BattleReplayAddressableEffect & {
         readonly kind: "spellConditionRepeatSave";
-        readonly condition: ProtectionFromEvilAndGoodPreventedCondition;
+        readonly condition: CreatureTypeProtectionPreventedCondition;
         readonly conditionHadNonSpellSource: boolean;
         readonly save: SpellConditionRepeatSave;
         readonly expiresAt: BattleActiveEffectExpiration;
@@ -782,7 +782,7 @@ export type BattleActiveEffect = (
     })
   | (BattleSpellEffectBase & {
       readonly kind: "duplicateHitInterception";
-      readonly remainingDuplicates: MirrorImageDuplicateCount;
+      readonly remainingDuplicates: DuplicateHitInterceptionDuplicateCount;
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "duration" }
@@ -837,7 +837,7 @@ export type BattleActiveEffect = (
       readonly kind: "creatureTypeProtection";
       readonly attackRollMode: "disadvantage";
       readonly protectedAgainstCreatureTypes: readonly CreatureType[];
-      readonly preventedConditions: readonly ProtectionFromEvilAndGoodPreventedCondition[];
+      readonly preventedConditions: readonly CreatureTypeProtectionPreventedCondition[];
       readonly preventsPossession: boolean;
       readonly expiresAt: BattleActiveEffectExpiration;
     })

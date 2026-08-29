@@ -26,7 +26,7 @@ import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   characterUnitProcedure,
 } from "../character-execution-queries.ts";
-import { isPresentFindFamiliarCombatant } from "../spawned-companion-state.ts";
+import { isPresentSpawnedCompanionCombatant } from "../spawned-companion-state.ts";
 import {
   attackExecutionSelectionForOption,
   boundAttackExecutionSelectionKey,
@@ -405,7 +405,7 @@ export function attackActionOptionsForActor(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BoundSupportedAttackActionOption[] {
-  if (isPresentFindFamiliarCombatant(state, actorId)) {
+  if (isPresentSpawnedCompanionCombatant(state, actorId)) {
     return [];
   }
   const actor = state.combatants.get(actorId);

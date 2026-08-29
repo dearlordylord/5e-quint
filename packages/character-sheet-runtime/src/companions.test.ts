@@ -894,10 +894,10 @@ describe("Character Sheet runtime / companions", () => {
   );
 
   test("rejects a prepared familiar-like spell cast below its spell level", () => {
-    const findFamiliar = requiredSpellFixture("find_familiar");
-    const levelTwoFindFamiliar = {
-      ...findFamiliar,
-      mechanics: { ...findFamiliar.mechanics, level: 2 },
+    const spawnedCompanion = requiredSpellFixture("find_familiar");
+    const levelTwoSpawnedCompanion = {
+      ...spawnedCompanion,
+      mechanics: { ...spawnedCompanion.mechanics, level: 2 },
     } as const;
     const sheet = spellbookRitualSheet({
       characterIdText: "character:underleveled-familiar-slot",
@@ -910,7 +910,7 @@ describe("Character Sheet runtime / companions", () => {
         sheet,
         unitLibrary: unitLibraryReplacing(
           "find_familiar",
-          levelTwoFindFamiliar,
+          levelTwoSpawnedCompanion,
         ),
         statBlockCatalog,
         companionId: retainedCompanionId("companion:underleveled-slot"),

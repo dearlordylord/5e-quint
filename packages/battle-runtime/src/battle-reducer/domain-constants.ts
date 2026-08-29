@@ -86,20 +86,20 @@ export const BLUR_ATTACK_ROLL_BYPASS_SENSES = [
   "blindsight",
   "truesight",
 ] as const satisfies ReadonlyArray<CreatureSense["kind"]>;
-export type BlurAttackRollBypassSense =
+export type PerceptionGatedAttackRollDefenseBypassSense =
   (typeof BLUR_ATTACK_ROLL_BYPASS_SENSES)[number];
 export const MIRROR_IMAGE_UNAFFECTED_SENSES = BLUR_ATTACK_ROLL_BYPASS_SENSES;
-export type MirrorImageUnaffectedSense =
+export type DuplicateHitInterceptionUnaffectedSense =
   (typeof MIRROR_IMAGE_UNAFFECTED_SENSES)[number];
 export const MIRROR_IMAGE_UNAFFECTED_BY = [
   "blinded",
   ...MIRROR_IMAGE_UNAFFECTED_SENSES,
 ] as const satisfies ReadonlyArray<Condition | CreatureSense["kind"]>;
 export const MIRROR_IMAGE_DUPLICATE_COUNTS = [1, 2, 3] as const;
-export type MirrorImageDuplicateCount =
+export type DuplicateHitInterceptionDuplicateCount =
   (typeof MIRROR_IMAGE_DUPLICATE_COUNTS)[number];
 export const MIRROR_IMAGE_INITIAL_DUPLICATES =
-  3 satisfies MirrorImageDuplicateCount;
+  3 satisfies DuplicateHitInterceptionDuplicateCount;
 export const MIRROR_IMAGE_DUPLICATE_DIE_SIZE = 6;
 export const MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST = 3;
 export const MIRROR_IMAGE_DUPLICATE_ROLL_HOLE_KEY_PREFIX =
@@ -257,14 +257,15 @@ export const ELDRITCH_BLAST_BEAM_COUNTS = [
   1,
   ...ELDRITCH_BLAST_BEAM_COUNT_TIERS.map((tier) => tier.value),
 ] as const;
-export type EldritchBlastBeamCount =
+export type MultiBeamSpellAttackBeamCount =
   (typeof ELDRITCH_BLAST_BEAM_COUNTS)[number];
 export const SCORCHING_RAY_RAY_COUNTS = [3, 4, 5, 6, 7, 8, 9, 10] as const;
-export type ScorchingRayRayCount = (typeof SCORCHING_RAY_RAY_COUNTS)[number];
+export type MultiRaySpellAttackRayCount =
+  (typeof SCORCHING_RAY_RAY_COUNTS)[number];
 
-export function scorchingRayRayCount(
+export function multiRaySpellAttackRayCount(
   value: number,
-): ScorchingRayRayCount | null {
+): MultiRaySpellAttackRayCount | null {
   return SCORCHING_RAY_RAY_COUNTS.find((count) => count === value) ?? null;
 }
 export const ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_TARGET_HOLE_ID =

@@ -247,13 +247,13 @@ export function supportedSaveGateConditionSpell(
   spell: BattleSpellAdmissionSource,
 ): SaveGateConditionSpell | null {
   return (
-    animalFriendshipSaveGateConditionSpell(spell) ??
-    blindnessDeafnessSaveGateConditionSpell(spell) ??
-    charmPersonSaveGateConditionSpell(spell) ??
-    holdPersonSaveGateConditionSpell(spell) ??
-    holdMonsterSaveGateConditionSpell(spell) ??
-    colorSpraySaveGateConditionSpell(spell) ??
-    entangleSaveGateConditionSpell(spell)
+    creatureTypeRestrictedCharmSaveGateConditionSpell(spell) ??
+    sensoryConditionChoiceSaveGateSpell(spell) ??
+    humanoidCharmSaveGateConditionSpell(spell) ??
+    humanoidParalysisSaveGateConditionSpell(spell) ??
+    creatureParalysisSaveGateConditionSpell(spell) ??
+    hitPointBudgetBlindedSaveGateConditionSpell(spell) ??
+    persistentAreaRestrainedSaveGateConditionSpell(spell)
   );
 }
 
@@ -262,7 +262,7 @@ export function supportedPreparedSaveGateAttackRollAdvantageProfile(
   spell: BattleSpellAdmissionSource,
   castOptions: SpellAdmissionContext["spellCastOptions"],
 ): readonly SupportedSpellInvocation[] {
-  const attackRollAdvantageSpell = faerieFireSaveGateAttackRollAdvantageSpell(
+  const attackRollAdvantageSpell = areaSaveGatedAttackRollAdvantageSpell(
     actorId,
     spell,
   );
@@ -645,7 +645,7 @@ function sameAbilitySet(
   return Array.isArray(actual) && sameStringSet(actual, expected);
 }
 
-export function faerieFireSaveGateAttackRollAdvantageSpell(
+export function areaSaveGatedAttackRollAdvantageSpell(
   actorId: CombatantId,
   spell: BattleSpellAdmissionSource,
 ): SaveGateAttackRollAdvantageSpell | null {
@@ -718,7 +718,7 @@ function visibilityGrantingAreaFailedSaveAttackAdvantageEffect(
     : null;
 }
 
-export function animalFriendshipSaveGateConditionSpell(
+export function creatureTypeRestrictedCharmSaveGateConditionSpell(
   spell: BattleSpellAdmissionSource,
 ): SaveGateConditionSpell | null {
   return creatureTypeCharmedSaveGateConditionSpell({
@@ -729,7 +729,7 @@ export function animalFriendshipSaveGateConditionSpell(
   });
 }
 
-export function charmPersonSaveGateConditionSpell(
+export function humanoidCharmSaveGateConditionSpell(
   spell: BattleSpellAdmissionSource,
 ): SaveGateConditionSpell | null {
   return creatureTypeCharmedSaveGateConditionSpell({
@@ -740,7 +740,7 @@ export function charmPersonSaveGateConditionSpell(
   });
 }
 
-export function blindnessDeafnessSaveGateConditionSpell(
+export function sensoryConditionChoiceSaveGateSpell(
   spell: BattleSpellAdmissionSource,
 ): SaveGateConditionSpell | null {
   if (spell.mechanics.family !== "activation") {
@@ -831,7 +831,7 @@ export function blindnessDeafnessSaveGateConditionSpell(
   };
 }
 
-export function holdPersonSaveGateConditionSpell(
+export function humanoidParalysisSaveGateConditionSpell(
   spell: BattleSpellAdmissionSource,
 ): SaveGateConditionSpell | null {
   return paralyzedTargetListSaveGateConditionSpell({
@@ -842,7 +842,7 @@ export function holdPersonSaveGateConditionSpell(
   });
 }
 
-export function holdMonsterSaveGateConditionSpell(
+export function creatureParalysisSaveGateConditionSpell(
   spell: BattleSpellAdmissionSource,
 ): SaveGateConditionSpell | null {
   return paralyzedTargetListSaveGateConditionSpell({
@@ -1063,7 +1063,7 @@ function creatureTypeCharmedSaveGateConditionSpell(input: {
   };
 }
 
-export function colorSpraySaveGateConditionSpell(
+export function hitPointBudgetBlindedSaveGateConditionSpell(
   spell: BattleSpellAdmissionSource,
 ): SaveGateConditionSpell | null {
   if (spell.mechanics.family !== "activation") {
@@ -1116,7 +1116,7 @@ export function colorSpraySaveGateConditionSpell(
   };
 }
 
-export function entangleSaveGateConditionSpell(
+export function persistentAreaRestrainedSaveGateConditionSpell(
   spell: BattleSpellAdmissionSource,
 ): SaveGateConditionSpell | null {
   if (spell.mechanics.family !== "activation") {
@@ -1783,7 +1783,7 @@ export function supportedFailedSavePostDamageRiders(
       effect.count !== 1 ||
       effect.expiresOn?.kind !== "end_of_next_turn" ||
       (effect.affects ?? "self_roll") !== "self_roll" ||
-      !isViciousMockeryNextAttackRiderShape(spell, phase)
+      !isPsychicDamageNextAttackDisadvantageRiderShape(spell, phase)
     ) {
       return null;
     }
@@ -2056,7 +2056,7 @@ function isThunderwaveFailedSaveDamageShape(
   );
 }
 
-export function isViciousMockeryNextAttackRiderShape(
+export function isPsychicDamageNextAttackDisadvantageRiderShape(
   spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
 ): boolean {

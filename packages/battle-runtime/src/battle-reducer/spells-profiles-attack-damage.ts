@@ -44,9 +44,9 @@ import {
   CHROMATIC_ORB_DAMAGE_TYPES,
   CHROMATIC_ORB_LEAP_RANGE_FEET,
   ELDRITCH_BLAST_BEAM_COUNT_TIERS,
-  scorchingRayRayCount,
-  type EldritchBlastBeamCount,
-  type ScorchingRayRayCount,
+  multiRaySpellAttackRayCount,
+  type MultiBeamSpellAttackBeamCount,
+  type MultiRaySpellAttackRayCount,
 } from "./domain-constants.ts";
 import {
   sameDiceExpr,
@@ -130,7 +130,7 @@ export function supportedSpellPostDamageRiders(
       effect.kind === "apply_condition" &&
       effect.condition === "poisoned" &&
       effect.duration === "end_of_caster_next_turn" &&
-      isRayOfSicknessPoisonedRiderShape(spell, phase)
+      isPoisonedConditionRiderShape(spell, phase)
     ) {
       riders.push({
         kind: "condition",
@@ -141,7 +141,7 @@ export function supportedSpellPostDamageRiders(
     }
     if (
       effect.kind === "deny_opportunity_attack" &&
-      isShockingGraspOpportunityAttackRiderShape(spell, phase)
+      isOpportunityAttackPreventionRiderShape(spell, phase)
     ) {
       riders.push({
         kind: "opportunityAttackDenied",
@@ -153,7 +153,7 @@ export function supportedSpellPostDamageRiders(
       effect.kind === "modify_roll_advantage" &&
       effect.mode === "advantage" &&
       sameStringSet(effect.on ?? [], ["attack_roll"]) &&
-      isGuidingBoltNextAttackRiderShape(spell, phase)
+      isNextAttackAdvantageRiderShape(spell, phase)
     ) {
       riders.push({
         kind: "nextAttackRollAgainstTarget",
@@ -165,7 +165,7 @@ export function supportedSpellPostDamageRiders(
     if (
       effect.kind === "prevent_hit_point_regain" &&
       effect.expiresAt === "end_of_caster_next_turn" &&
-      isChillTouchHitPointRegainPreventionRiderShape(spell, phase)
+      isHitPointRegainPreventionRiderShape(spell, phase)
     ) {
       riders.push({
         kind: "hitPointRegainPrevented",
@@ -177,7 +177,7 @@ export function supportedSpellPostDamageRiders(
       effect.kind === "emit_dim_light" &&
       effect.radiusFeet === 10 &&
       effect.expiresAt === "end_of_caster_next_turn" &&
-      isStarryWispDimLightRiderShape(spell, phase)
+      isDimLightEmissionRiderShape(spell, phase)
     ) {
       riders.push({
         kind: "lightEmission",
@@ -192,7 +192,7 @@ export function supportedSpellPostDamageRiders(
     if (
       effect.kind === "suppress_condition_benefit" &&
       effect.condition === "invisible" &&
-      isStarryWispInvisibleBenefitDenialRiderShape(spell, phase)
+      isInvisibleTargetBenefitDenialRiderShape(spell, phase)
     ) {
       riders.push({
         kind: "invisibleBenefitDenied",
@@ -250,14 +250,14 @@ function supportedSpellAttackLaterDamage(
   };
 }
 
-export function isStarryWispInvisibleBenefitDenialRiderShape(
+export function isInvisibleTargetBenefitDenialRiderShape(
   spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
 ): boolean {
-  return isStarryWispDimLightRiderShape(spell, phase);
+  return isDimLightEmissionRiderShape(spell, phase);
 }
 
-export function isStarryWispDimLightRiderShape(
+export function isDimLightEmissionRiderShape(
   spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
 ): boolean {
@@ -268,7 +268,7 @@ export function isStarryWispDimLightRiderShape(
   );
 }
 
-export function isChillTouchHitPointRegainPreventionRiderShape(
+export function isHitPointRegainPreventionRiderShape(
   spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
 ): boolean {
@@ -279,7 +279,7 @@ export function isChillTouchHitPointRegainPreventionRiderShape(
   );
 }
 
-export function isRayOfSicknessPoisonedRiderShape(
+export function isPoisonedConditionRiderShape(
   spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
 ): boolean {
@@ -290,7 +290,7 @@ export function isRayOfSicknessPoisonedRiderShape(
   );
 }
 
-export function isShockingGraspOpportunityAttackRiderShape(
+export function isOpportunityAttackPreventionRiderShape(
   spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
 ): boolean {
@@ -301,7 +301,7 @@ export function isShockingGraspOpportunityAttackRiderShape(
   );
 }
 
-export function isGuidingBoltNextAttackRiderShape(
+export function isNextAttackAdvantageRiderShape(
   spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "attack_roll" }>,
 ): boolean {
@@ -444,7 +444,7 @@ export function supportedPreparedChainedSpellAttackDamageProfile(
     continuation.when.kind !== "damage_roll_has_duplicate_faces" ||
     continuation.when.minimumMultiplicity !== 2 ||
     continuation.next.length !== 1 ||
-    !isChromaticOrbContinuationLimitSetShape(continuation.limits) ||
+    !isBouncingAttackContinuationLimitSetShape(continuation.limits) ||
     hitDamage?.kind !== "damage" ||
     leapHitDamage?.kind !== "damage" ||
     typeof hitDamage.damageType !== "object" ||
@@ -505,7 +505,7 @@ export function supportedPreparedChainedSpellAttackDamageProfile(
   });
 }
 
-export function isChromaticOrbContinuationLimitSetShape(
+export function isBouncingAttackContinuationLimitSetShape(
   limits: readonly { readonly kind: string }[],
 ): boolean {
   return (
@@ -983,12 +983,12 @@ function scorchingRaySelectionIsCanonical(
 function scorchingRayAttackCount(
   countProgression: ScorchingRayCountProgression,
   slotLevel: SpellSlotLevel,
-): ScorchingRayRayCount | null {
+): MultiRaySpellAttackRayCount | null {
   const slotOffset = Number(slotLevel) - countProgression.baseLevel;
   if (slotOffset < 0) {
     return null;
   }
-  return scorchingRayRayCount(
+  return multiRaySpellAttackRayCount(
     countProgression.base + slotOffset * countProgression.perSlotAboveBase,
   );
 }
@@ -996,7 +996,7 @@ function scorchingRayAttackCount(
 function eldritchBlastBeamCount(
   selection: TargetSelection,
   characterLevel: number,
-): EldritchBlastBeamCount | null {
+): MultiBeamSpellAttackBeamCount | null {
   if (selection.mode !== "choose_up_to" || selection.repeatsAllowed !== true) {
     return null;
   }
@@ -1022,7 +1022,7 @@ function eldritchBlastBeamCount(
   ) {
     return null;
   }
-  return ELDRITCH_BLAST_BEAM_COUNT_TIERS.reduce<EldritchBlastBeamCount>(
+  return ELDRITCH_BLAST_BEAM_COUNT_TIERS.reduce<MultiBeamSpellAttackBeamCount>(
     (current, tier) => (characterLevel >= tier.atLevel ? tier.value : current),
     count.base,
   );

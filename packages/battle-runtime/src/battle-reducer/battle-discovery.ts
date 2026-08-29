@@ -35,10 +35,10 @@ import type {
 } from "../battle-subjects.ts";
 import { CombatantId } from "../identity.ts";
 import {
-  findFamiliarCompanionEntryForOwner,
-  isPresentFindFamiliarCombatant,
+  spawnedCompanionEntryForOwner,
+  isPresentSpawnedCompanionCombatant,
 } from "../spawned-companion-state.ts";
-import { combatantHasPactOfTheChainFindFamiliar } from "../companion-reaction-feature-facts.ts";
+import { combatantHasPactOfTheChainSpawnedCompanion } from "../companion-reaction-feature-facts.ts";
 import { ammunitionForAttackIsAvailable } from "../battle-ammunition.ts";
 import {
   companionHeldObjectFactsHole,
@@ -101,7 +101,7 @@ import { discoverSupportedSpellInvocations } from "./spells-discovery.ts";
 import type { SpellProcedureExecutionRegistry } from "./spell-procedure-profiles/execution-registry.ts";
 import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
 import { supportedSpellActs } from "./supported-spell-acts.ts";
-import { combatantInsideActiveAntimagicFieldAura } from "./magic-suppression-action-interdiction.ts";
+import { combatantInsideActiveMagicSuppressionEmanation } from "./magic-suppression-action-interdiction.ts";
 import {
   statBlockBonusActionOptionBindings,
   statBlockMultiattackBindings,
@@ -440,7 +440,7 @@ function discoverBattleActsWithoutRouteEvents(
   acts.push(...startTurnAreaControlActs);
   acts.push(...selfTransformationModeReplacementActs(state, actorId));
   acts.push(...controlledVerticalSuspensionAltitudeControlActs(state, actorId));
-  if (!combatantInsideActiveAntimagicFieldAura(state, actorId)) {
+  if (!combatantInsideActiveMagicSuppressionEmanation(state, actorId)) {
     acts.push(...grantedAreaSaveDamageActionActs(state, actorId));
   }
   appendOrdinaryAttackActs(state, actorId, acts);
@@ -545,7 +545,7 @@ function discoverBattleActsWithoutRouteEvents(
   }
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
-    !isPresentFindFamiliarCombatant(state, actorId) &&
+    !isPresentSpawnedCompanionCombatant(state, actorId) &&
     !actorHasStatBlockMultiattackActionResource(state, actorId) &&
     canSpendUnarmedStrikeActionResource(state.currentTurnResources) &&
     grappleTargetChoices(state, actorId).length > 0
@@ -557,7 +557,7 @@ function discoverBattleActsWithoutRouteEvents(
   }
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
-    !isPresentFindFamiliarCombatant(state, actorId) &&
+    !isPresentSpawnedCompanionCombatant(state, actorId) &&
     !actorHasStatBlockMultiattackActionResource(state, actorId) &&
     canSpendUnarmedStrikeActionResource(state.currentTurnResources) &&
     shoveTargetChoices(state, actorId).length > 0
@@ -714,7 +714,7 @@ function companionProtocolActs(
   actorId: CombatantId,
   spellActs: readonly BattleActDiscoveryCandidate[],
 ): readonly BattleActDiscoveryCandidate[] {
-  const familiarEntry = findFamiliarCompanionEntryForOwner(state, actorId);
+  const familiarEntry = spawnedCompanionEntryForOwner(state, actorId);
   if (familiarEntry === null) {
     return [];
   }
@@ -893,7 +893,7 @@ function controlledVerticalSuspensionAltitudeControlActs(
   if (
     !combatantCanTakeActions(actor) ||
     !canSpendAction(state.currentTurnResources, "magic") ||
-    combatantInsideActiveAntimagicFieldAura(state, actorId)
+    combatantInsideActiveMagicSuppressionEmanation(state, actorId)
   ) {
     return [];
   }
@@ -955,7 +955,7 @@ function selfTransformationModeReplacementActs(
     activeEffect.sourceCombatantId !== actorId ||
     !combatantCanTakeActions(actor) ||
     !canSpendAction(state.currentTurnResources, "magic") ||
-    combatantInsideActiveAntimagicFieldAura(state, actorId)
+    combatantInsideActiveMagicSuppressionEmanation(state, actorId)
   ) {
     return [];
   }
@@ -1001,11 +1001,11 @@ function companionAttackActs(
   if (
     !combatantCanTakeActions(state.combatants.get(actorId)) ||
     !canSpendAction(state.currentTurnResources, "attack") ||
-    !combatantHasPactOfTheChainFindFamiliar(state, actorId)
+    !combatantHasPactOfTheChainSpawnedCompanion(state, actorId)
   ) {
     return [];
   }
-  const familiarEntry = findFamiliarCompanionEntryForOwner(state, actorId);
+  const familiarEntry = spawnedCompanionEntryForOwner(state, actorId);
   if (familiarEntry?.companion.status !== "present") {
     return [];
   }
@@ -1655,7 +1655,7 @@ function movablePersistentAreaRepositionActs(
   if (
     !canSpendAction(state.currentTurnResources, "magic") ||
     !combatantCanTakeActions(state.combatants.get(actorId)) ||
-    combatantInsideActiveAntimagicFieldAura(state, actorId)
+    combatantInsideActiveMagicSuppressionEmanation(state, actorId)
   ) {
     return [];
   }
