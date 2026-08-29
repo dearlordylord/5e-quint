@@ -3,7 +3,6 @@ import {
   statBlockId,
   unitId as parseSharedUnitId,
 } from "@dnd/shared/game-facts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.magic-action-area-save-damage-healing
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-08-DRUID-LANDS-AID-RUNTIME druid_lands_aid
@@ -14,6 +13,7 @@ import * as Either from "effect/Either";
 import {
   type BattleFill,
   type BattleHole,
+  type BattleProcedureExecutionRef,
   type BattleResolutionResult,
   type BattleState,
   type BattleTargetSpatialFact,
@@ -378,18 +378,16 @@ function landsAidBattle(
   return result.right.state;
 }
 
-function landsAidAct(
-  state: BattleState,
-): ReturnType<typeof discoverBattleActCandidates>[number] {
+function landsAidAct(state: BattleState) {
   const act = discoverBattleActCandidates(state).find(
     (candidate) =>
       candidate.subject.tag === "unitFeature" &&
       candidate.subject.actorId === spellCasterId,
   );
-  if (act === undefined) {
+  if (act === undefined || act.subject.tag !== "unitFeature") {
     throw new Error("Expected Land's Aid act.");
   }
-  return act;
+  return { ...act, subject: act.subject };
 }
 
 function resolveLandsAid(
@@ -421,7 +419,12 @@ function resolveLandsAid(
     state,
     subject: act.subject,
     fills: [
-      landsAidSavingThrowFill(save, input.outcomes, input.areaTargetIds),
+      landsAidSavingThrowFill(
+        save,
+        act.subject.procedureRef,
+        input.outcomes,
+        input.areaTargetIds,
+      ),
       rolledDiceFill(damage, input.damageRolls),
       targetChoiceFill(target, input.healingTargetId),
       rolledDiceFill(healing, input.healingRolls),
@@ -431,6 +434,7 @@ function resolveLandsAid(
 
 function landsAidSavingThrowFill(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   outcomes: readonly {
     readonly targetId: CombatantId;
     readonly succeeded: boolean;
@@ -442,19 +446,20 @@ function landsAidSavingThrowFill(
     holeId: hole.holeId,
     value: { outcomes },
     spatialFacts:
-      areaTargetIds.length === 0 ? [] : [landsAidAreaFact(areaTargetIds)],
+      areaTargetIds.length === 0
+        ? []
+        : [landsAidAreaFact(sourceProcedureRef, areaTargetIds)],
   };
 }
 
 function landsAidAreaFact(
+  sourceProcedureRef: BattleProcedureExecutionRef,
   targetIds: readonly CombatantId[],
 ): BattleTargetSpatialFact {
   return {
     kind: "magicActionAreaSaveDamageHealingTargetsInSphere",
     actorId: spellCasterId,
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(druidLandsAidUnitId),
-    ),
+    sourceProcedureRef,
     originWithinRangeFeet: movementFeet(60),
     radiusFeet: movementFeet(10),
     targetIds,
