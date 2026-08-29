@@ -11,7 +11,11 @@ import { Result, Schema } from "effect"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
 import { WIZARD_BATTLE_DEMO_STEPS } from "../battle-scene/wizard-battle-demo.ts"
-import { decodeMirrorSessionEvent, decodeMirrorSessionResponse } from "./admin-mirror-session-boundary.ts"
+import {
+  decodeAdminMirrorOrigin,
+  decodeMirrorSessionEvent,
+  decodeMirrorSessionResponse
+} from "./admin-mirror-session-boundary.ts"
 import { AdminMirrorPage, presentationTimelineTitle, selectMirrorSession } from "./AdminMirrorPage.tsx"
 
 const setSelectedSessionId = vi.fn()
@@ -27,9 +31,11 @@ vi.mock("nuqs", () => ({
 class TestEventSource extends EventTarget {
   static latest: TestEventSource | undefined
   readonly close = vi.fn()
+  readonly url: string
 
-  constructor(readonly url: string) {
+  constructor(url: string | URL) {
     super()
+    this.url = url.toString()
     TestEventSource.latest = this
   }
 }
@@ -72,6 +78,12 @@ describe("AdminMirrorPage mirror boundary", () => {
     const decoded = decodeMirrorSessionEvent("{")
 
     expect(Result.isFailure(decoded)).toBe(true)
+  })
+
+  test("decodes only HTTP(S) admin mirror origins", () => {
+    expect(Result.isSuccess(decodeAdminMirrorOrigin("http://configured-mirror.test"))).toBe(true)
+    expect(Result.isFailure(decodeAdminMirrorOrigin("http://configured-mirror.test/nested"))).toBe(true)
+    expect(Result.isFailure(decodeAdminMirrorOrigin("file:///tmp/mirror"))).toBe(true)
   })
 
   test("rejects valid JSON with an invalid mirror event shape", () => {
@@ -283,8 +295,21 @@ describe("AdminMirrorPage mirror boundary", () => {
 
     render(<AdminMirrorPage />)
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith("http://configured-mirror.test/admin-projections"))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce())
+    const requestedUrl = fetchMock.mock.calls[0]?.[0]
+    expect(requestedUrl).toBeInstanceOf(URL)
+    expect(requestedUrl.toString()).toBe("http://configured-mirror.test/admin-projections")
     expect(TestEventSource.latest?.url).toBe("http://configured-mirror.test/admin-projections/events")
+  })
+
+  test("distinguishes invalid mirror configuration without starting I/O", async () => {
+    vi.stubEnv("VITE_ADMIN_MIRROR_URL", "not a URL")
+
+    render(<AdminMirrorPage />)
+
+    expect(await screen.findAllByText("Mirror session configuration is invalid.")).toHaveLength(2)
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect(TestEventSource.latest).toBeUndefined()
   })
 })
 

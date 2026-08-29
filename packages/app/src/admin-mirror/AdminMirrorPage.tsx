@@ -11,16 +11,16 @@ import { BTN_SM } from "#/components/styles.ts"
 
 import {
   decodeMirrorSessionEvent,
+  defaultAdminMirrorOrigin,
   loadMirrorSessions,
   type MirrorSessionLoadState
 } from "./admin-mirror-session-boundary.ts"
 
-const DEFAULT_MIRROR_PORT = 8787
 const EVENT_JSON_INDENT_SPACES = 2
 const SELECTED_SESSION_QUERY_PARAM = "session"
 
 export function AdminMirrorPage() {
-  const mirrorUrl = useMemo(defaultMirrorUrl, [])
+  const mirrorOrigin = useMemo(defaultAdminMirrorOrigin, [])
   const [sessions, setSessions] = useState<ReadonlyArray<AdminMirrorSessionState>>([])
   const [sessionLoadState, setSessionLoadState] = useState<MirrorSessionLoadState>({ tag: "loading" })
   const [selectedSessionId, setSelectedSessionId] = useQueryState(
@@ -31,7 +31,12 @@ export function AdminMirrorPage() {
 
   const refresh = useCallback(async () => {
     setSessionLoadState({ tag: "loading" })
-    const loaded = await loadMirrorSessions(mirrorUrl)
+    if (Result.isFailure(mirrorOrigin)) {
+      setConnection("offline")
+      setSessionLoadState(mirrorOrigin.failure)
+      return
+    }
+    const loaded = await loadMirrorSessions(mirrorOrigin.success)
     if (Result.isFailure(loaded)) {
       setConnection("offline")
       setSessionLoadState(loaded.failure)
@@ -40,7 +45,7 @@ export function AdminMirrorPage() {
     setSessions(loaded.success.sessions)
     setSessionLoadState({ tag: "loaded" })
     setConnection((current) => (current === "streaming" ? current : "offline"))
-  }, [mirrorUrl])
+  }, [mirrorOrigin])
 
   useEffect(() => {
     void refresh()
@@ -48,7 +53,11 @@ export function AdminMirrorPage() {
 
   useEffect(() => {
     setConnection("connecting")
-    const source = new EventSource(`${mirrorUrl}/admin-projections/events`)
+    if (Result.isFailure(mirrorOrigin)) {
+      setConnection("offline")
+      return
+    }
+    const source = new EventSource(new URL("/admin-projections/events", mirrorOrigin.success))
     const handleOpen = () => setConnection("streaming")
     const handleError = () => setConnection("offline")
     const handleMessage = (event: MessageEvent<string>) => {
@@ -70,7 +79,7 @@ export function AdminMirrorPage() {
       source.removeEventListener("message", handleMessage)
       source.close()
     }
-  }, [mirrorUrl])
+  }, [mirrorOrigin])
 
   const selectedSession = selectMirrorSession(sessions, selectedSessionId)
   const visibleSelectedSessionId = selectedSession?.envelope.mirrorSessionId ?? null
@@ -155,6 +164,7 @@ function mirrorSessionLoadMessage(state: MirrorSessionLoadState, loadedMessage: 
   return Match.value(state).pipe(
     Match.when({ tag: "loading" }, () => "Loading mirror sessions."),
     Match.when({ tag: "loaded" }, loadedMessage),
+    Match.when({ tag: "invalidConfiguration" }, () => "Mirror session configuration is invalid."),
     Match.when({ tag: "invalidResponse" }, () => "Mirror session response is invalid."),
     Match.when({ tag: "unavailable" }, () => "Mirror sessions are unavailable."),
     Match.exhaustive
@@ -398,14 +408,6 @@ export function selectMirrorSession(
     return sessions.find((session) => session.envelope.mirrorSessionId === selectedSessionId) ?? null
   }
   return sessions[0] ?? null
-}
-
-function defaultMirrorUrl(): string {
-  const configured = import.meta.env.VITE_ADMIN_MIRROR_URL
-  if (configured !== undefined && configured.length > 0) return configured
-  /* v8 ignore next -- @preserve -- this browser page only constructs its default URL while rendering in a browser */
-  if (typeof window === "undefined") return `http://localhost:${DEFAULT_MIRROR_PORT}`
-  return `${window.location.protocol}//${window.location.hostname}:${DEFAULT_MIRROR_PORT}`
 }
 
 function connectionClass(connection: "connecting" | "offline" | "streaming"): string {
