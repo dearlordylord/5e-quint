@@ -6,7 +6,7 @@ import {
   type BattleFill,
   type BattleSubject,
 } from "../../../packages/battle-runtime/src/index.ts";
-import { Result, Match, Schema } from "effect";
+import { Result, Match, Schema, SchemaGetter } from "effect";
 
 import type {
   EndBattleRuntimeTurnInput,
@@ -103,22 +103,28 @@ const PlayerHelpAttackEnemyDecisionFillSchema = Schema.Struct({
   ),
   targetEnemyId: CombatantId,
 });
+type CanonicalBattleFillExcludingHelpEnemyDecision = Exclude<
+  BattleFill,
+  { readonly kind: "helpAttackEnemyDecision" }
+>;
+const CanonicalBattleFillExcludingHelpEnemyDecisionTypeSchema =
+  Schema.declare<CanonicalBattleFillExcludingHelpEnemyDecision>(
+    (fill): fill is CanonicalBattleFillExcludingHelpEnemyDecision =>
+      typeof fill === "object" &&
+      fill !== null &&
+      "kind" in fill &&
+      fill.kind !== "helpAttackEnemyDecision",
+    {
+      description:
+        "A canonical BattleFill other than the ScenarioSession-owned Help enemy decision.",
+    },
+  );
 const CanonicalBattleFillExcludingHelpEnemyDecisionSchema =
   BattleFillSchema.pipe(
-    Schema.check(
-      Schema.makeFilter(
-        (
-          fill,
-        ): fill is Exclude<
-          BattleFill,
-          { readonly kind: "helpAttackEnemyDecision" }
-        > => fill.kind !== "helpAttackEnemyDecision",
-        {
-          description:
-            "The Raw Swarm player chooses the Help enemy without supplying the ScenarioSession-owned adjacency witness.",
-        },
-      ),
-    ),
+    Schema.decodeTo(CanonicalBattleFillExcludingHelpEnemyDecisionTypeSchema, {
+      decode: SchemaGetter.passthrough({ strict: false }),
+      encode: SchemaGetter.passthroughSubtype(),
+    }),
   );
 const PlayerBattleFillSchema = Schema.Union([
   PlayerHelpAttackEnemyDecisionFillSchema,
