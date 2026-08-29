@@ -7,6 +7,7 @@
   "exports": {
     "./surface/character-creation-readers": "./src/surface/character-creation-readers.ts",
     "./surface/catalog-install": "./src/surface/catalog-install.ts",
+    "./surface/feature-mastery-procedure-admission": "./src/surface/feature-mastery-procedure-admission.ts",
     "./surface/druid-wild-shape-readers": "./src/surface/druid-wild-shape-readers.ts",
     "./surface/find-familiar-forms": "./src/surface/find-familiar-forms.ts",
     "./surface/portable-surface": "./src/surface/portable-surface.ts",
