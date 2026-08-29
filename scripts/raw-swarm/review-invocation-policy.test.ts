@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { tmpdir } from "node:os";
 
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -189,12 +189,12 @@ describe("review invocation policy", () => {
 
   test("rejects unknown, duplicate, and ambiguous policy CLI options", () => {
     expect(
-      Either.isLeft(
+      Result.isFailure(
         parseReviewInvocationPolicyArgs(["events.jsonl", "--unknown", "value"]),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         parseReviewInvocationPolicyArgs([
           "events.jsonl",
           "--profile",
@@ -205,7 +205,7 @@ describe("review invocation policy", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         parseReviewInvocationPolicyArgs([
           "events.jsonl",
           "--context-path",

@@ -1,4 +1,4 @@
-import { Either, Match, Schema } from "effect";
+import { Result, Match, Schema } from "effect";
 
 import { ScenarioIdSchema } from "./transcript.ts";
 import {
@@ -6,34 +6,36 @@ import {
   ScenarioCandidateIdSchema,
 } from "./raw-swarm-identities.ts";
 
-const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
+const HashSchema = Schema.String.pipe(
+  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+);
 
-const ScenarioCharacterRequirementSchema = Schema.Union(
+const ScenarioCharacterRequirementSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("statBlocksOnly"),
-    evidence: Schema.NonEmptyTrimmedString,
+    evidence: Schema.Trimmed.check(Schema.isNonEmpty()),
   }),
   Schema.Struct({
     tag: Schema.Literal("characterSheetsRequired"),
-    evidence: Schema.NonEmptyTrimmedString,
+    evidence: Schema.Trimmed.check(Schema.isNonEmpty()),
   }),
-);
+]);
 
-const ScenarioSpatialRequirementSchema = Schema.Union(
+const ScenarioSpatialRequirementSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("notRequired"),
-    evidence: Schema.NonEmptyTrimmedString,
+    evidence: Schema.Trimmed.check(Schema.isNonEmpty()),
   }),
   Schema.Struct({
     tag: Schema.Literal("geometryAssisted"),
-    evidence: Schema.NonEmptyTrimmedString,
+    evidence: Schema.Trimmed.check(Schema.isNonEmpty()),
   }),
   Schema.Struct({
     tag: Schema.Literal("outsideExperimentEnvelope"),
-    resolution: Schema.Literal("tableAuthored", "incoherent"),
-    evidence: Schema.NonEmptyTrimmedString,
+    resolution: Schema.Literals(["tableAuthored", "incoherent"]),
+    evidence: Schema.Trimmed.check(Schema.isNonEmpty()),
   }),
-);
+]);
 
 /**
  * Typed facts retained by the generation/controller boundary for the harness
@@ -64,10 +66,10 @@ const AdmittedIdentitySchema = Schema.Struct({
   scenarioSha256: HashSchema,
   scenarioReviewSha256: HashSchema,
 });
-const StagePlanIdentitySchema = Schema.Union(
+const StagePlanIdentitySchema = Schema.Union([
   CandidateIdentitySchema,
   AdmittedIdentitySchema,
-);
+]);
 export type StagePlanIdentity = Schema.Schema.Type<
   typeof StagePlanIdentitySchema
 >;
@@ -99,14 +101,14 @@ export const RAW_SWARM_STAGE_PLAN_REASONS = {
 } as const satisfies Record<RawSwarmStageName, string>;
 
 const StagePlanEntryFields = {
-  stage: Schema.Literal(...RAW_SWARM_STAGE_NAMES),
-  determinedBy: Schema.Literal(
+  stage: Schema.Literals(RAW_SWARM_STAGE_NAMES),
+  determinedBy: Schema.Literals([
     "admission",
     "characterRequirement",
     "spatialRequirement",
     "pipelineOrder",
-  ),
-  reason: Schema.NonEmptyTrimmedString,
+  ]),
+  reason: Schema.Trimmed.check(Schema.isNonEmpty()),
 } as const;
 
 /**
@@ -115,7 +117,7 @@ const StagePlanEntryFields = {
  * skipped/rejected stage was recorded, or that a required stage has no
  * invocation obligation.
  */
-const StagePlanEntrySchema = Schema.Union(
+const StagePlanEntrySchema = Schema.Union([
   Schema.Struct({
     ...StagePlanEntryFields,
     decision: Schema.Literal("completed"),
@@ -136,34 +138,36 @@ const StagePlanEntrySchema = Schema.Union(
     decision: Schema.Literal("rejected"),
     modelInvocation: Schema.Literal("none"),
   }),
-);
+]);
 export type ScenarioStagePlanEntry = Schema.Schema.Type<
   typeof StagePlanEntrySchema
 >;
 
 const StagePlanEntriesSchema = Schema.Array(StagePlanEntrySchema).pipe(
-  Schema.filter(
-    (stages) =>
-      stages.length === RAW_SWARM_STAGE_NAMES.length &&
-      stages.every(
-        ({ stage }, index) => stage === RAW_SWARM_STAGE_NAMES[index],
-      ),
-    {
-      message: () =>
-        "A scenario stage plan must identify each Raw Swarm stage once in canonical order.",
-    },
+  Schema.check(
+    Schema.makeFilter(
+      (stages) =>
+        stages.length === RAW_SWARM_STAGE_NAMES.length &&
+        stages.every(
+          ({ stage }, index) => stage === RAW_SWARM_STAGE_NAMES[index],
+        ),
+      {
+        message:
+          "A scenario stage plan must identify each Raw Swarm stage once in canonical order.",
+      },
+    ),
   ),
 );
 
-const StagePlanOutcomeSchema = Schema.Union(
+const StagePlanOutcomeSchema = Schema.Union([
   Schema.Struct({ tag: Schema.Literal("admitted") }),
   Schema.Struct({ tag: Schema.Literal("reviewRequired") }),
   Schema.Struct({
     tag: Schema.Literal("rejected"),
-    reason: Schema.NonEmptyTrimmedString,
-    determinedBy: Schema.Literal("spatialRequirement", "admission"),
+    reason: Schema.Trimmed.check(Schema.isNonEmpty()),
+    determinedBy: Schema.Literals(["spatialRequirement", "admission"]),
   }),
-);
+]);
 
 type ScenarioStagePlanOutcome = Schema.Schema.Type<
   typeof StagePlanOutcomeSchema
@@ -278,10 +282,12 @@ export const ScenarioStagePlanSchema = Schema.Struct({
   outcome: StagePlanOutcomeSchema,
   stages: StagePlanEntriesSchema,
 }).pipe(
-  Schema.filter(stagePlanIsSemanticallyConsistent, {
-    message: () =>
-      "Scenario stage plan facts, outcome, and stage decisions are inconsistent.",
-  }),
+  Schema.check(
+    Schema.makeFilter(stagePlanIsSemanticallyConsistent, {
+      message:
+        "Scenario stage plan facts, outcome, and stage decisions are inconsistent.",
+    }),
+  ),
   Schema.brand("ScenarioStagePlan"),
 );
 export type ScenarioStagePlan = Schema.Schema.Type<
@@ -305,15 +311,15 @@ export type ScenarioStagePlanFinding = {
 export const ScenarioStagePlanFindingSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
   identity: StagePlanIdentitySchema,
-  stage: Schema.Literal(...RAW_SWARM_STAGE_NAMES),
-  disposition: Schema.Literal("skipped", "rejected"),
-  determinedBy: Schema.Literal(
+  stage: Schema.Literals(RAW_SWARM_STAGE_NAMES),
+  disposition: Schema.Literals(["skipped", "rejected"]),
+  determinedBy: Schema.Literals([
     "admission",
     "characterRequirement",
     "spatialRequirement",
     "pipelineOrder",
-  ),
-  reason: Schema.NonEmptyTrimmedString,
+  ]),
+  reason: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
 export const ScenarioStagePlanFindingsSchema = Schema.Array(
   ScenarioStagePlanFindingSchema,
@@ -542,17 +548,19 @@ function admittedPlan(input: ScenarioStagePlanInput): ScenarioStagePlanShape {
 /** Plan the harness pipeline without reading or interpreting scenario prose. */
 export function planScenarioStages(
   input: ScenarioStagePlanInput,
-): Either.Either<ScenarioStagePlan, string> {
-  const decoded = Schema.decodeUnknownEither(ScenarioStageFactsSchema, {
+): Result.Result<ScenarioStagePlan, string> {
+  const decoded = Schema.decodeUnknownResult(ScenarioStageFactsSchema, {
     onExcessProperty: "error",
   })(input.facts);
-  if (Either.isLeft(decoded)) {
-    return Either.left(`Invalid scenario stage facts: ${decoded.left.message}`);
+  if (Result.isFailure(decoded)) {
+    return Result.fail(
+      `Invalid scenario stage facts: ${decoded.failure.message}`,
+    );
   }
   const plan =
     input.identity.tag === "candidate"
-      ? candidatePlan({ ...input, facts: decoded.right })
-      : admittedPlan({ ...input, facts: decoded.right });
+      ? candidatePlan({ ...input, facts: decoded.success })
+      : admittedPlan({ ...input, facts: decoded.success });
   return validateScenarioStagePlan(plan);
 }
 
@@ -563,14 +571,16 @@ export function planScenarioStages(
  */
 export function validateScenarioStagePlan(
   value: unknown,
-): Either.Either<ScenarioStagePlan, string> {
-  const decoded = Schema.decodeUnknownEither(ScenarioStagePlanSchema, {
+): Result.Result<ScenarioStagePlan, string> {
+  const decoded = Schema.decodeUnknownResult(ScenarioStagePlanSchema, {
     onExcessProperty: "error",
   })(value);
-  if (Either.isLeft(decoded)) {
-    return Either.left(`Invalid scenario stage plan: ${decoded.left.message}`);
+  if (Result.isFailure(decoded)) {
+    return Result.fail(
+      `Invalid scenario stage plan: ${decoded.failure.message}`,
+    );
   }
-  return Either.right(decoded.right);
+  return Result.succeed(decoded.success);
 }
 
 export function planAdmittedScenarioStages(input: {
@@ -578,7 +588,7 @@ export function planAdmittedScenarioStages(input: {
   readonly scenarioSha256: string;
   readonly scenarioReviewSha256: string;
   readonly facts: ScenarioStageFacts;
-}): Either.Either<ScenarioStagePlan, string> {
+}): Result.Result<ScenarioStagePlan, string> {
   return planScenarioStages({
     identity: {
       tag: "admitted",

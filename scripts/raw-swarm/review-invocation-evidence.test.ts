@@ -1,7 +1,7 @@
 import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { relative, resolve } from "node:path";
 
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { afterEach, describe, expect, test } from "vitest";
 
 import {
@@ -1001,7 +1001,7 @@ describe("review invocation evidence", () => {
         },
       ],
     });
-    const retained = Schema.decodeUnknownEither(
+    const retained = Schema.decodeUnknownResult(
       RetainedScenarioReviewInputSchema,
       { onExcessProperty: "error" },
     )(
@@ -1012,20 +1012,20 @@ describe("review invocation evidence", () => {
     const ledger = parseModelInvocationLedgerEntry(
       parseJsonRecord(readFileSync(fixture.ledgerPath, "utf8").split("\n")[0]!),
     );
-    expect(Either.isRight(retained)).toBe(true);
-    expect(Either.isRight(ledger)).toBe(true);
-    if (Either.isLeft(retained) || Either.isLeft(ledger)) return;
+    expect(Result.isSuccess(retained)).toBe(true);
+    expect(Result.isSuccess(ledger)).toBe(true);
+    if (Result.isFailure(retained) || Result.isFailure(ledger)) return;
     const binding = retainedScenarioReviewMatchesReplayBinding(
-      retained.right,
-      ledger.right,
+      retained.success,
+      ledger.success,
       {
         tag: "scenario",
         reviewStage: "milestone",
         scenarioId: "same",
       },
     );
-    expect(Either.isRight(binding)).toBe(true);
-    if (Either.isLeft(binding)) return;
+    expect(Result.isSuccess(binding)).toBe(true);
+    if (Result.isFailure(binding)) return;
     writeFileSync(
       fixture.replayPrePlayReviewInputPaths[0],
       '{"tampered":true}\n',
@@ -1037,8 +1037,8 @@ describe("review invocation evidence", () => {
       .map(parseJsonRecord);
     expect(() =>
       validateRetainedScenarioReviewInvocation({
-        binding: binding.right,
-        eventSha256: ledger.right.eventsSha256,
+        binding: binding.success,
+        eventSha256: ledger.success.eventsSha256,
         events,
       }),
     ).not.toThrow();
@@ -1175,7 +1175,7 @@ describe("review invocation evidence", () => {
     expect(() =>
       readReviewInvocationEvidenceManifest(fixture.manifestPath),
     ).toThrow(/replay input|invocation event output|composite-review/);
-    const retained = Schema.decodeUnknownEither(
+    const retained = Schema.decodeUnknownResult(
       RetainedScenarioReviewInputSchema,
       { onExcessProperty: "error" },
     )(
@@ -1183,13 +1183,13 @@ describe("review invocation evidence", () => {
         readFileSync(fixture.replayPrePlayReviewInputPaths[0], "utf8"),
       ),
     );
-    expect(Either.isRight(retained)).toBe(true);
-    if (Either.isLeft(retained)) return;
+    expect(Result.isSuccess(retained)).toBe(true);
+    if (Result.isFailure(retained)) return;
     await expect(
       replayRetainedScenarioReview({
-        retainedInput: retained.right,
+        retainedInput: retained.success,
         ledgerPath: resolve(directory, "review-ledger.jsonl"),
-        gitSha: retained.right.sourceGitSha,
+        gitSha: retained.success.sourceGitSha,
       }),
     ).rejects.toThrow(/result does not match its canonical output schema/);
   });
@@ -1257,20 +1257,22 @@ describe("review invocation evidence", () => {
       schemaVersion: 3,
       outputJsonSchema: broadSchema,
     });
-    expect(Either.isRight(legacy)).toBe(true);
-    if (Either.isLeft(legacy)) return;
-    expect(legacy.right.tag).toBe("legacyCurrent");
-    expect(Either.isRight(legacy.right.decodeResult(incidentResult))).toBe(
+    expect(Result.isSuccess(legacy)).toBe(true);
+    if (Result.isFailure(legacy)) return;
+    expect(legacy.success.tag).toBe("legacyCurrent");
+    expect(Result.isSuccess(legacy.success.decodeResult(incidentResult))).toBe(
       true,
     );
     const strict = classifyScenarioReviewOutputSchema({
       schemaVersion: 3,
       outputJsonSchema: strictSchema,
     });
-    expect(Either.isRight(strict)).toBe(true);
-    if (Either.isLeft(strict)) return;
-    expect(strict.right.tag).toBe("intentSpecificCurrent");
-    expect(Either.isLeft(strict.right.decodeResult(incidentResult))).toBe(true);
+    expect(Result.isSuccess(strict)).toBe(true);
+    if (Result.isFailure(strict)) return;
+    expect(strict.success.tag).toBe("intentSpecificCurrent");
+    expect(Result.isFailure(strict.success.decodeResult(incidentResult))).toBe(
+      true,
+    );
 
     const subjects = [
       {
@@ -1313,7 +1315,7 @@ describe("review invocation evidence", () => {
       ),
     );
     for (const [index, subject] of subjects.entries()) {
-      const retained = Schema.decodeUnknownEither(
+      const retained = Schema.decodeUnknownResult(
         RetainedScenarioReviewInputSchema,
         { onExcessProperty: "error" },
       )(
@@ -1329,12 +1331,12 @@ describe("review invocation evidence", () => {
           readFileSync(fixture.ledgerPath, "utf8").trim().split("\n")[index]!,
         ),
       );
-      expect(Either.isRight(retained)).toBe(true);
-      expect(Either.isRight(ledger)).toBe(true);
-      if (Either.isLeft(retained) || Either.isLeft(ledger)) continue;
+      expect(Result.isSuccess(retained)).toBe(true);
+      expect(Result.isSuccess(ledger)).toBe(true);
+      if (Result.isFailure(retained) || Result.isFailure(ledger)) continue;
       const binding = retainedScenarioReviewMatchesReplayBinding(
-        retained.right,
-        ledger.right,
+        retained.success,
+        ledger.success,
         index === 1
           ? {
               tag: "candidate",
@@ -1350,12 +1352,12 @@ describe("review invocation evidence", () => {
               campaign,
             },
       );
-      expect(Either.isRight(binding)).toBe(true);
-      if (Either.isLeft(binding)) continue;
+      expect(Result.isSuccess(binding)).toBe(true);
+      if (Result.isFailure(binding)) continue;
       expect(() =>
         validateRetainedScenarioReviewInvocation({
-          binding: binding.right,
-          eventSha256: ledger.right.eventsSha256,
+          binding: binding.success,
+          eventSha256: ledger.success.eventsSha256,
           events: readFileSync(fixture.eventPaths[index]!, "utf8")
             .trim()
             .split("\n")

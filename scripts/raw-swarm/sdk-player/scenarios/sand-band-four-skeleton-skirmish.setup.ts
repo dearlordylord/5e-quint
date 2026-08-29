@@ -67,14 +67,14 @@ export const setupScenario: ScenarioSetup = (context) => {
         kind: "obstructed",
         obstruction:
           "A completed Character Sheet could not be projected through the " +
-          `canonical battle initializer: ${sdk.characterBattleRuntimeIssueMessage(projected.left)}`,
+          `canonical battle initializer: ${sdk.characterBattleRuntimeIssueMessage(projected.failure)}`,
         observation: {
           scenarioId: "sand-band-four-skeleton-skirmish",
           characterBattleInitializationSucceeded: false,
         },
       };
     }
-    combatants.push(projected.right);
+    combatants.push(projected.success);
   }
 
   const skeletonInits = skeletonIds.map((combatantId) =>
@@ -94,14 +94,14 @@ export const setupScenario: ScenarioSetup = (context) => {
         kind: "obstructed",
         obstruction:
           "The canonical Skeleton Stat Block could not be initialized: " +
-          sdk.battleStateInitIssueMessage(projected.left),
+          sdk.battleStateInitIssueMessage(projected.failure),
         observation: {
           scenarioId: "sand-band-four-skeleton-skirmish",
           skeletonBattleInitializationSucceeded: false,
         },
       };
     }
-    combatants.push(projected.right);
+    combatants.push(projected.success);
   }
 
   const battle = sdk.startBattle({
@@ -113,7 +113,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       kind: "obstructed",
       obstruction:
         "The canonical battle could not be started: " +
-        sdk.battleStateInitIssueMessage(battle.left),
+        sdk.battleStateInitIssueMessage(battle.failure),
       observation: {
         scenarioId: "sand-band-four-skeleton-skirmish",
         battleStarted: false,
@@ -149,7 +149,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   ];
 
   const session = sdk.createScenarioSession({
-    battle: battle.right,
+    battle: battle.success,
     spatial: {
       kind: "geometryDerived",
       arena: {
@@ -190,7 +190,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       kind: "obstructed",
       obstruction:
         "The canonical scenario session rejected the fixed battlefield facts: " +
-        sdk.scenarioSessionIssueMessage(session.left),
+        sdk.scenarioSessionIssueMessage(session.failure),
       observation: {
         scenarioId: "sand-band-four-skeleton-skirmish",
         sessionCreated: false,
@@ -200,7 +200,7 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   return {
     kind: "ready",
-    session: session.right,
+    session: session.success,
     observation: {
       scenarioId: "sand-band-four-skeleton-skirmish",
       initiativeRolls: {

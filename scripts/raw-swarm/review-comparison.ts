@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import { ReviewOutputSchema } from "./review-contract.ts";
 import {
@@ -17,20 +17,31 @@ import { repoRoot } from "./transcript.ts";
 const ReviewComparisonSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
   scenarioId: ScenarioIdSchema,
-  transcriptSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
+  transcriptSha256: Schema.String.pipe(
+    Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+  ),
   mappings: Schema.Array(
     Schema.Struct({
-      baselineVerdict: Schema.Number.pipe(Schema.int(), Schema.positive()),
-      disposition: Schema.Literal("reproduced", "rejected", "superseded"),
-      candidateVerdicts: Schema.Array(
-        Schema.Number.pipe(Schema.int(), Schema.positive()),
+      baselineVerdict: Schema.Number.pipe(
+        Schema.check(Schema.isInt()),
+        Schema.check(Schema.isGreaterThan(0)),
       ),
-      claim: Schema.NonEmptyTrimmedString,
-      evidence: Schema.NonEmptyTrimmedString,
+      disposition: Schema.Literals(["reproduced", "rejected", "superseded"]),
+      candidateVerdicts: Schema.Array(
+        Schema.Number.pipe(
+          Schema.check(Schema.isInt()),
+          Schema.check(Schema.isGreaterThan(0)),
+        ),
+      ),
+      claim: Schema.Trimmed.check(Schema.isNonEmpty()),
+      evidence: Schema.Trimmed.check(Schema.isNonEmpty()),
     }),
   ),
   newCandidateVerdicts: Schema.Array(
-    Schema.Number.pipe(Schema.int(), Schema.positive()),
+    Schema.Number.pipe(
+      Schema.check(Schema.isInt()),
+      Schema.check(Schema.isGreaterThan(0)),
+    ),
   ),
 });
 
@@ -43,12 +54,12 @@ function fail(message: string): never {
 function decodeReview(
   path: string,
 ): Schema.Schema.Type<typeof ReviewOutputSchema> {
-  const decoded = Schema.decodeUnknownEither(ReviewOutputSchema, {
+  const decoded = Schema.decodeUnknownResult(ReviewOutputSchema, {
     onExcessProperty: "error",
   })(JSON.parse(readFileSync(resolve(repoRoot, path), "utf8")));
-  return Either.isRight(decoded)
-    ? decoded.right
-    : fail(`Invalid review ${path}: ${decoded.left.message}`);
+  return Result.isSuccess(decoded)
+    ? decoded.success
+    : fail(`Invalid review ${path}: ${decoded.failure.message}`);
 }
 
 export function verifyReviewComparison(input: {
@@ -59,12 +70,12 @@ export function verifyReviewComparison(input: {
 }): ReviewComparison {
   const baseline = decodeReview(input.baselineReviewPath);
   const candidate = decodeReview(input.candidateReviewPath);
-  const decoded = Schema.decodeUnknownEither(ReviewComparisonSchema, {
+  const decoded = Schema.decodeUnknownResult(ReviewComparisonSchema, {
     onExcessProperty: "error",
   })(input.comparison);
-  if (Either.isLeft(decoded))
-    fail(`Invalid review comparison: ${decoded.left.message}`);
-  const comparison = decoded.right;
+  if (Result.isFailure(decoded))
+    fail(`Invalid review comparison: ${decoded.failure.message}`);
+  const comparison = decoded.success;
   if (
     baseline.scenarioId !== candidate.scenarioId ||
     baseline.gitSha !== candidate.gitSha ||
@@ -144,15 +155,15 @@ function main(args: readonly string[]): void {
   );
   const audit = readSdkAudit(resolve(repoRoot, auditPath));
   if (audit.tag === "invalid") fail(audit.message);
-  const comparisonIdentity = Schema.decodeUnknownEither(
+  const comparisonIdentity = Schema.decodeUnknownResult(
     ReviewComparisonSchema,
     {
       onExcessProperty: "error",
     },
   )(comparison);
   if (
-    Either.isLeft(comparisonIdentity) ||
-    comparisonIdentity.right.transcriptSha256 !==
+    Result.isFailure(comparisonIdentity) ||
+    comparisonIdentity.success.transcriptSha256 !==
       audit.audit.header.transcriptSha256
   )
     fail("Review comparison audit identity does not match.");

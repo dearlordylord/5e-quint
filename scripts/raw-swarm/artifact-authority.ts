@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { relative } from "node:path";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   ArtifactAuthoritySchema,
@@ -22,10 +22,10 @@ function fail(message: string): never {
 
 function repositoryReadPath(path: string): string {
   const canonical = canonicalRepositoryReadPath(repoRoot, path);
-  if (Either.isLeft(canonical)) {
-    fail(`Artifact is not repository-owned: ${path}: ${canonical.left}`);
+  if (Result.isFailure(canonical)) {
+    fail(`Artifact is not repository-owned: ${path}: ${canonical.failure}`);
   }
-  return canonical.right;
+  return canonical.success;
 }
 
 export function artifactAuthority(path: string): ArtifactAuthority {
@@ -78,8 +78,8 @@ export function readRunnerOwnedJsonLines(
   path: string,
 ): readonly unknown[] {
   const canonical = canonicalRunnerOwnedReadPath(runnerRoot, path);
-  if (Either.isLeft(canonical)) {
-    return fail(`Artifact is not runner-owned: ${path}: ${canonical.left}`);
+  if (Result.isFailure(canonical)) {
+    return fail(`Artifact is not runner-owned: ${path}: ${canonical.failure}`);
   }
-  return readJsonLinesAtPath(canonical.right, path);
+  return readJsonLinesAtPath(canonical.success, path);
 }

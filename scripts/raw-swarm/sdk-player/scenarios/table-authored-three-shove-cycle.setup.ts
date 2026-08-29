@@ -48,7 +48,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(shoveDistance)) {
     return {
       kind: "obstructed",
-      obstruction: shoveDistance.left.message,
+      obstruction: shoveDistance.failure.message,
       observation: {
         scenarioId: "table-authored-three-shove-cycle",
         obstruction: "invalid-shove-distance",
@@ -66,7 +66,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       },
       answer: {
         direction: "north",
-        distanceFeet: shoveDistance.right,
+        distanceFeet: shoveDistance.success,
         attackerCanSeeTarget: true,
         cover: "none",
         traversal: "open",
@@ -81,7 +81,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       },
       answer: {
         direction: "east",
-        distanceFeet: shoveDistance.right,
+        distanceFeet: shoveDistance.success,
         attackerCanSeeTarget: true,
         cover: "none",
         traversal: "open",
@@ -96,7 +96,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       },
       answer: {
         direction: "south-west",
-        distanceFeet: shoveDistance.right,
+        distanceFeet: shoveDistance.success,
         attackerCanSeeTarget: true,
         cover: "none",
         traversal: "open",
@@ -110,7 +110,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     if (sdk.isLeft(decision)) {
       return {
         kind: "obstructed",
-        obstruction: decision.left.message,
+        obstruction: decision.failure.message,
         observation: {
           scenarioId: "table-authored-three-shove-cycle",
           obstruction: "invalid-table-authored-spatial-decision",
@@ -118,7 +118,7 @@ export const setupScenario: ScenarioSetup = (context) => {
         },
       };
     }
-    spatialDecisions.push(decision.right);
+    spatialDecisions.push(decision.success);
   }
 
   const combatantInits = [
@@ -148,7 +148,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (invalidCombatant !== undefined) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(invalidCombatant.left),
+      obstruction: sdk.battleStateInitIssueMessage(invalidCombatant.failure),
       observation: {
         scenarioId: "table-authored-three-shove-cycle",
         obstruction: "stat-block-battle-initialization-failed",
@@ -157,7 +157,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   }
   const combatants = combatantInits
     .filter((combatant) => !sdk.isLeft(combatant))
-    .map((combatant) => combatant.right);
+    .map((combatant) => combatant.success);
 
   const battle = sdk.startBattle({
     battleId: sdk.battleId("table-authored-three-shove-cycle"),
@@ -166,7 +166,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(battle)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(battle.left),
+      obstruction: sdk.battleStateInitIssueMessage(battle.failure),
       observation: {
         scenarioId: "table-authored-three-shove-cycle",
         obstruction: "battle-start-failed",
@@ -175,7 +175,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   }
 
   const session = sdk.createScenarioSession({
-    battle: battle.right,
+    battle: battle.success,
     spatial: {
       kind: "tableAuthored",
       spatialDecisions,
@@ -194,7 +194,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(session)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.scenarioSessionIssueMessage(session.left),
+      obstruction: sdk.scenarioSessionIssueMessage(session.failure),
       observation: {
         scenarioId: "table-authored-three-shove-cycle",
         obstruction: "scenario-session-composition-failed",
@@ -204,7 +204,7 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   return {
     kind: "ready",
-    session: session.right,
+    session: session.success,
     observation: { scenarioId: "table-authored-three-shove-cycle" },
   };
 };

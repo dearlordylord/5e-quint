@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -30,26 +30,26 @@ describe("retained stage-plan authorities", () => {
         },
       },
     });
-    expect(Either.isRight(plan)).toBe(true);
-    if (Either.isLeft(plan)) return;
-    const findings = scenarioStagePlanFindings(plan.right);
+    expect(Result.isSuccess(plan)).toBe(true);
+    if (Result.isFailure(plan)) return;
+    const findings = scenarioStagePlanFindings(plan.success);
     expect(
       validateAdmittedScenarioStagePlanEvidence({
-        plan: plan.right,
+        plan: plan.success,
         findings,
         scenarioId: identity.scenarioId,
         scenarioSha256: identity.scenarioSha256,
         scenarioReviewSha256: identity.scenarioReviewSha256,
       }),
-    ).toEqual(Either.right(undefined));
+    ).toEqual(Result.succeed(undefined));
     expect(
       validateAdmittedScenarioStagePlanEvidence({
-        plan: plan.right,
+        plan: plan.success,
         findings: findings.slice(1),
         scenarioId: identity.scenarioId,
         scenarioSha256: identity.scenarioSha256,
         scenarioReviewSha256: identity.scenarioReviewSha256,
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
   });
 });

@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   currentGitRevision,
@@ -22,16 +22,16 @@ async function main(args: readonly string[]): Promise<void> {
     fail("Usage: run-freeplay.ts <scenario-id>");
   }
   const decodedScenarioId = decodeScenarioId(scenarioIdInput);
-  if (Either.isLeft(decodedScenarioId)) fail(decodedScenarioId.left);
-  const scenarioId = decodedScenarioId.right;
+  if (Result.isFailure(decodedScenarioId)) fail(decodedScenarioId.failure);
+  const scenarioId = decodedScenarioId.success;
   const revision = currentGitRevision();
   if (revision.tag === "dirty") {
     fail(
       "Player recording requires a clean Git worktree so its SHA identifies the tested code.",
     );
   }
-  const gitSha = Schema.decodeUnknownEither(GitShaSchema)(revision.sha);
-  if (Either.isLeft(gitSha)) fail(gitSha.left.message);
+  const gitSha = Schema.decodeUnknownResult(GitShaSchema)(revision.sha);
+  if (Result.isFailure(gitSha)) fail(gitSha.failure.message);
   const swarmDirectory = resolve(repoRoot, "scripts/raw-swarm");
   const promptPath = resolve(
     swarmDirectory,
@@ -93,7 +93,7 @@ async function main(args: readonly string[]): Promise<void> {
     stagePlanReason:
       "The freeplay MCP prototype owns one bounded player invocation.",
     subject: { tag: "scenario", scenarioId },
-    gitSha: gitSha.right,
+    gitSha: gitSha.success,
     fallbackInvocationId: `${scenarioId}-freeplay-player`,
     model: "gpt-5.6-sol",
     reasoningEffort: "medium",

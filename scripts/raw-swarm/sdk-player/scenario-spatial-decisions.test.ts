@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { Either } from "effect";
+import { Result } from "effect";
 import {
   battleAttackExecutionScopeRef,
   battleAttackProcedureExecutionRef,
@@ -129,8 +129,8 @@ describe("table-authored spatial decision normalization", () => {
     const normalized = tableAuthoredSpatialDecision(nonMovementDecision(kind));
 
     expect(normalized).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      success: {
         decisionId: `normalize-${kind}`,
         question: { kind },
       },
@@ -146,8 +146,8 @@ describe("table-authored spatial decision normalization", () => {
     );
 
     expect(normalized).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      success: {
         question: { kind: "movementRoute" },
         answer: {
           postMoveSpatialState: {
@@ -166,7 +166,7 @@ describe("table-authored spatial decision normalization", () => {
     });
     expect(
       tableAuthoredSpatialDecision(movementDecision(validFingerprint)),
-    ).toMatchObject({ _tag: "Right" });
+    ).toMatchObject({ _tag: "Success" });
 
     for (const invalidFingerprint of [
       "",
@@ -177,9 +177,9 @@ describe("table-authored spatial decision normalization", () => {
       const normalized = tableAuthoredSpatialDecision(
         movementDecision(invalidFingerprint),
       );
-      expect(Either.isLeft(normalized)).toBe(true);
-      if (Either.isLeft(normalized)) {
-        expect(normalized.left).toMatchObject({
+      expect(Result.isFailure(normalized)).toBe(true);
+      if (Result.isFailure(normalized)) {
+        expect(normalized.failure).toMatchObject({
           tag: "invalid-spatial-decision",
           message: expect.stringContaining(
             "canonical table spatial fingerprint",

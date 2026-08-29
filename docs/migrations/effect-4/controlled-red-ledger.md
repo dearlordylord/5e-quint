@@ -1118,3 +1118,72 @@ compatibility adapters or duplicate decoding, and the authored-identity,
 provenance, PHB+, architecture, and connascence boundaries.
 
 `pnpm quality:milestone` was not run for this package-scoped issue snapshot.
+
+## Issue #385 scripts and Raw Swarm evidence snapshot
+
+This section records the Effect-bearing script, Raw Swarm, and battle-slice
+server migration at source revision `b587ca28a`. The migration replaces the
+Effect 3 `Either` and Schema compatibility surface with the pinned Effect 4
+`Result`, `Schema`, `JsonSchema`, `@effect/platform-node`, and runtime teardown
+contracts. Boundary inputs are decoded once and carried forward as narrowed
+values; unsupported input remains fail-closed, accumulated review reporting is
+preserved, and no compatibility adapter or parallel decoder was introduced.
+
+The battle-slice entry point now supplies a native runtime teardown that waits
+for queued standard output before delegating to Effect's default teardown. Its
+lifecycle test initializes the MCP server, starts a roughly 239 KiB
+`tools/list` response, observes a partial response without a newline, and sends
+each of `SIGINT` and `SIGTERM` while that response is in flight. Both cases
+then prove complete newline-framed JSON, byte-for-byte output ownership, exit
+code 130, empty standard error, and cleanup; no timing sleep is used.
+
+The public declaration graph has a reviewed deterministic measure of 512 files
+and 9,997,813 bytes. The file limit is exactly 512. The byte limit is 10 MiB,
+the smallest round binary-megabyte bound above the graph, with a 487,947-byte
+margin. Tests prove acceptance exactly at both caps and fail-closed rejection
+at each cap plus one, and the real public distribution must equal the reviewed
+measure. Raw Swarm lane hygiene again enforces that `quality:body` does not
+invoke the deterministic `:body` command; the public deterministic owner
+continues to acquire its documented lock itself.
+
+The scenario campaign's content/capability admission union is the Cartesian
+product of both owning schema unions' `members`, so either owner widening is
+reflected without a separately maintained identity table. The four
+integration-added battle-hole variants (`areaWindStrength`,
+`cloudkillMovement`, `startTurnOccurrenceOrder`, and
+`temporaryHitPointChoice`) are covered only by the exhaustive typed admission
+record and canonical `BattleHoleSchema` decoder. They are generic runtime
+projection plumbing: there is no authored name, id, slug, or provenance
+dispatch and no new user-visible D&D rule calculation. Accordingly, this
+exhaustive migration did not touch a D&D rule and required no new RAW lookup.
+
+### Verification and review convergence
+
+- The controlled SDK-player TypeScript inventory moved from 2,483 diagnostics
+  to zero.
+- `pnpm check:effect4-cohort:self-test` and `pnpm check:effect4-cohort` passed;
+  the repository remains pinned to Effect `4.0.0-rc.112`.
+- Focused lifecycle, scenario campaign, complete-path, and consumer
+  distribution tests passed: 4 files and 95 tests.
+- The post-#384 scenario setup runtime suite passed: 30 tests.
+- `pnpm check:raw-swarm-lane-hygiene` passed with 38 deterministic-lane tests,
+  2 closed prototype exclusions, and 8 explicit model-backed operations.
+- `pnpm check:raw-swarm-deterministic` passed at `b587ca28a`: the trusted lane
+  passed 5 files and 257 tests, and the guarded lane passed 33 files and 418
+  tests.
+
+The two-axis review against fixed point `2db3b42c5` converged after the
+in-flight response lifecycle proof, measured declaration limits and boundary
+tests, strict lane separation, and derived admission-product corrections. The
+Standards/RAW axis otherwise found the authored-identity, provenance, PHB+,
+architecture, connascence, and rule-traceability boundaries clean. The Spec
+axis found no remaining issue #385 gap after the corrections above.
+
+An exploratory declaration-emitter probe accidentally selected the host's
+unbounded native TypeScript 7 path and reached approximately 20.6 GiB RSS over
+five minutes. Cgroup memory events showed no limit or OOM event. After it did
+not respond to `SIGTERM`, only the confirmed probe PID `3013979` was stopped
+with `SIGKILL`; no partial output was accepted as verification. The pinned
+repository emitter subsequently completed in 46 seconds, and all evidence
+above comes from the pinned repository commands. `pnpm quality:milestone` was
+not run for this issue snapshot.

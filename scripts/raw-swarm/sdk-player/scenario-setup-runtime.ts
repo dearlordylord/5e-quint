@@ -26,7 +26,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "../../../packages/surface/src/surface/unit-catalog.ts";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 
 import { canonicalJson } from "../transcript.ts";
 import type { JsonValue } from "./continuation-contract.ts";
@@ -124,7 +124,7 @@ function setupContext(
               scenarioTableSpatialFingerprint,
               scenarioSessionIssueMessage,
               tableAuthoredSpatialDecision,
-              isLeft: Either.isLeft,
+              isLeft: Result.isFailure,
             },
           },
         })),

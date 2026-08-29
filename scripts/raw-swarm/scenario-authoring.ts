@@ -1,4 +1,4 @@
-import { Either, Match, Schema } from "effect";
+import { Result, Match, Schema } from "effect";
 
 import { ArtifactAuthoritySchema } from "./artifact-authority-schema.ts";
 import { ScenarioIdSchema, type ScenarioId } from "./transcript.ts";
@@ -12,8 +12,8 @@ const CHARACTER_REQUIREMENT_TAGS = [
   "statBlocksOnly",
   "characterSheetsRequired",
 ] as const;
-const CharacterRequirementTagSchema = Schema.Literal(
-  ...CHARACTER_REQUIREMENT_TAGS,
+const CharacterRequirementTagSchema = Schema.Literals(
+  CHARACTER_REQUIREMENT_TAGS,
 );
 type CharacterRequirementTag = (typeof CHARACTER_REQUIREMENT_TAGS)[number];
 
@@ -23,15 +23,15 @@ const SPATIAL_CONTEXTS = [
   "tableAuthored",
   "incoherent",
 ] as const;
-const SpatialContextSchema = Schema.Literal(...SPATIAL_CONTEXTS);
+const SpatialContextSchema = Schema.Literals(SPATIAL_CONTEXTS);
 type SpatialContext = (typeof SPATIAL_CONTEXTS)[number];
 
 const CONTENT_AVAILABILITY_INTENTS = [
   "availableOnly",
   "probeUnavailableContent",
 ] as const;
-const ContentAvailabilityIntentSchema = Schema.Literal(
-  ...CONTENT_AVAILABILITY_INTENTS,
+const ContentAvailabilityIntentSchema = Schema.Literals(
+  CONTENT_AVAILABILITY_INTENTS,
 );
 type ContentAvailabilityIntent = (typeof CONTENT_AVAILABILITY_INTENTS)[number];
 
@@ -42,7 +42,7 @@ const SDK_SUPPORT_BOUNDARIES = [
   "probeUnsupportedCapability/explicitUnsupportedProbe",
   "probeUnsupportedCapability/missingUnsupportedProbe",
 ] as const;
-const SdkSupportBoundarySchema = Schema.Literal(...SDK_SUPPORT_BOUNDARIES);
+const SdkSupportBoundarySchema = Schema.Literals(SDK_SUPPORT_BOUNDARIES);
 type SdkSupportBoundary = (typeof SDK_SUPPORT_BOUNDARIES)[number];
 
 type CatalogueScenarioForProjection = Readonly<{
@@ -81,16 +81,16 @@ export const SCENARIO_CATALOGUE_CONCLUSIONS = [
   "purposefulOverlap",
   "redundant",
 ] as const;
-export const ScenarioCatalogueConclusionSchema = Schema.Literal(
-  ...SCENARIO_CATALOGUE_CONCLUSIONS,
+export const ScenarioCatalogueConclusionSchema = Schema.Literals(
+  SCENARIO_CATALOGUE_CONCLUSIONS,
 );
 export type ScenarioCatalogueConclusion =
   (typeof SCENARIO_CATALOGUE_CONCLUSIONS)[number];
 
 export const ScenarioCatalogueProjectionSchema = Schema.Struct({
   scenarioId: ScenarioIdSchema,
-  title: Schema.NonEmptyTrimmedString,
-  purpose: Schema.NonEmptyTrimmedString,
+  title: Schema.Trimmed.check(Schema.isNonEmpty()),
+  purpose: Schema.Trimmed.check(Schema.isNonEmpty()),
   authoredSource: ArtifactAuthoritySchema,
   characterRequirement: CharacterRequirementTagSchema,
   spatialContext: SpatialContextSchema,
@@ -102,24 +102,24 @@ export type ScenarioCatalogueProjection = Schema.Schema.Type<
 >;
 
 const ComparedScenarioDimensionsSchema = Schema.Struct({
-  exploratoryPurpose: Schema.NonEmptyTrimmedString,
-  materiallyRelevantMechanics: Schema.NonEmptyTrimmedString,
-  encounterComposition: Schema.NonEmptyTrimmedString,
-  interactionSequence: Schema.NonEmptyTrimmedString,
-  tacticalQuestion: Schema.NonEmptyTrimmedString,
-  sdkSupportBoundary: Schema.NonEmptyTrimmedString,
-  spatialContext: Schema.Union(
+  exploratoryPurpose: Schema.Trimmed.check(Schema.isNonEmpty()),
+  materiallyRelevantMechanics: Schema.Trimmed.check(Schema.isNonEmpty()),
+  encounterComposition: Schema.Trimmed.check(Schema.isNonEmpty()),
+  interactionSequence: Schema.Trimmed.check(Schema.isNonEmpty()),
+  tacticalQuestion: Schema.Trimmed.check(Schema.isNonEmpty()),
+  sdkSupportBoundary: Schema.Trimmed.check(Schema.isNonEmpty()),
+  spatialContext: Schema.Union([
     Schema.Struct({ tag: Schema.Literal("notMaterial") }),
     Schema.Struct({
       tag: Schema.Literal("supporting"),
-      evidence: Schema.NonEmptyTrimmedString,
+      evidence: Schema.Trimmed.check(Schema.isNonEmpty()),
     }),
-  ),
+  ]),
 });
 
 const NonNegativeIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.isGreaterThanOrEqualTo(0)),
 );
 
 export const ScenarioCatalogueComparisonBatchSchema = Schema.Struct({
@@ -161,17 +161,17 @@ export function scenarioCatalogueComparisonBoundary(input: {
   };
 }
 
-const ComparisonBasisSchema = Schema.Union(
+const ComparisonBasisSchema = Schema.Union([
   Schema.Struct({ tag: Schema.Literal("noAdmittedScenarios") }),
   Schema.Struct({
     tag: Schema.Literal("compared"),
     batches: Schema.Array(ScenarioCatalogueComparisonBatchSchema),
   }),
-);
+]);
 
 const ClosestMatchSchema = Schema.Struct({
   scenarioId: ScenarioIdSchema,
-  reason: Schema.NonEmptyTrimmedString,
+  reason: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
 
 /**
@@ -184,7 +184,9 @@ export const ScenarioCatalogueComparisonSchema = Schema.Struct({
   conclusion: ScenarioCatalogueConclusionSchema,
   comparedScenarioIds: Schema.Array(ScenarioIdSchema),
   closestMatches: Schema.Array(ClosestMatchSchema),
-  materialDifferentiators: Schema.Array(Schema.NonEmptyTrimmedString),
+  materialDifferentiators: Schema.Array(
+    Schema.Trimmed.check(Schema.isNonEmpty()),
+  ),
   basis: ComparisonBasisSchema,
 });
 export type ScenarioCatalogueComparison = Schema.Schema.Type<
@@ -212,7 +214,7 @@ export function scenarioCatalogueComparisonPrompt(input: {
   readonly candidateIndex: number;
   readonly batchIndex: number;
   readonly batch: readonly ScenarioCatalogueProjection[];
-}): Either.Either<string, string> {
+}): Result.Result<string, string> {
   const prompt = `Compare this complete Scenario Candidate with every admitted Scenario in the supplied canonical catalogue batch. This is Candidate ${input.candidateIndex}, catalogue batch ${input.batchIndex}; inspect the Candidate prose and each projection's referenced authored source when a concrete mechanic, composition, interaction sequence, or tactical question is needed. Read source authorities exactly; never sample, silently truncate, or infer missing catalogue entries.
 
 Return one closed comparison object. The comparedScenarioIds must exactly equal this batch's ids, and basis.batches must contain exactly one object with batchIndex ${input.batchIndex}, those same ids, and complete dimension evidence. Use conclusion meaningfullyDistinct only for a material exploratory difference, purposefulOverlap only with a material differentiator, or redundant only when the Candidate repeats a useful admitted purpose and behavior; redundant requires closestMatches naming the closest admitted Scenario. Retain all dimensions for this batch; do not merge this batch with another invocation.
@@ -224,8 +226,8 @@ Canonical admitted catalogue batch ${input.batchIndex}:
 ${JSON.stringify(input.batch, null, 2)}`;
   const bytes = Buffer.byteLength(prompt, "utf8");
   return bytes <= SCENARIO_CATALOGUE_COMPARISON_MODEL_INPUT_BYTE_LIMIT
-    ? Either.right(prompt)
-    : Either.left(
+    ? Result.succeed(prompt)
+    : Result.fail(
         `Scenario catalogue comparison model input is ${bytes} UTF-8 bytes, exceeding the conservative ${SCENARIO_CATALOGUE_COMPARISON_MODEL_INPUT_BYTE_LIMIT}-byte bound.`,
       );
 }
@@ -236,7 +238,7 @@ ${JSON.stringify(input.batch, null, 2)}`;
  */
 export function batchScenarioCatalogueProjections(
   projections: readonly ScenarioCatalogueProjection[],
-): Either.Either<readonly (readonly ScenarioCatalogueProjection[])[], string> {
+): Result.Result<readonly (readonly ScenarioCatalogueProjection[])[], string> {
   const batches: ScenarioCatalogueProjection[][] = [];
   let current: ScenarioCatalogueProjection[] = [];
   for (const projection of projections) {
@@ -244,7 +246,7 @@ export function batchScenarioCatalogueProjections(
     if (
       encodedBytes(singleton) > SCENARIO_CATALOGUE_COMPARISON_BATCH_BYTE_LIMIT
     ) {
-      return Either.left(
+      return Result.fail(
         `Scenario catalogue projection ${projection.scenarioId} exceeds the ${SCENARIO_CATALOGUE_COMPARISON_BATCH_BYTE_LIMIT}-byte comparison batch limit.`,
       );
     }
@@ -260,7 +262,7 @@ export function batchScenarioCatalogueProjections(
     }
   }
   if (current.length > 0) batches.push(current);
-  return Either.right(batches);
+  return Result.succeed(batches);
 }
 
 function spatialContext(
@@ -331,14 +333,14 @@ function sameScenarioIds(
 
 function comparisonBatchEvidence(
   comparison: ScenarioCatalogueComparison,
-): Either.Either<ScenarioCatalogueComparisonBatch, string> {
+): Result.Result<ScenarioCatalogueComparisonBatch, string> {
   if (comparison.basis.tag !== "compared") {
-    return Either.left(
+    return Result.fail(
       "A nonempty catalogue comparison must retain dimension evidence.",
     );
   }
   if (comparison.basis.batches.length !== 1) {
-    return Either.left(
+    return Result.fail(
       "Each model comparison must retain exactly one named catalogue batch.",
     );
   }
@@ -346,23 +348,23 @@ function comparisonBatchEvidence(
   if (
     !sameScenarioIds(comparison.comparedScenarioIds, batch.comparedScenarioIds)
   ) {
-    return Either.left(
+    return Result.fail(
       "A model comparison must retain the exact top-level Scenario ids for its named batch.",
     );
   }
-  return Either.right(batch);
+  return Result.succeed(batch);
 }
 
 function validateBatchCoverage(input: {
   readonly batches: readonly ScenarioCatalogueComparisonBatch[];
   readonly expectedScenarioIds: readonly ScenarioId[];
   readonly expectedBatches?: readonly ScenarioCatalogueBatchExpectation[];
-}): Either.Either<void, string> {
+}): Result.Result<void, string> {
   const flattened = input.batches.flatMap(
     ({ comparedScenarioIds }) => comparedScenarioIds,
   );
   if (!sameScenarioIds(flattened, input.expectedScenarioIds)) {
-    return Either.left(
+    return Result.fail(
       `Catalogue comparison covered ${flattened.length} of ${input.expectedScenarioIds.length} admitted Scenarios without silent sampling or truncation.`,
     );
   }
@@ -373,13 +375,13 @@ function validateBatchCoverage(input: {
         new Set(comparedScenarioIds).size !== comparedScenarioIds.length,
     )
   ) {
-    return Either.left(
+    return Result.fail(
       "Catalogue comparison batches must cover every admitted Scenario exactly once.",
     );
   }
   if (input.expectedBatches !== undefined) {
     if (input.batches.length !== input.expectedBatches.length) {
-      return Either.left(
+      return Result.fail(
         "Catalogue comparison retained a different number of canonical batches.",
       );
     }
@@ -390,7 +392,7 @@ function validateBatchCoverage(input: {
         actual.batchIndex !== expected.batchIndex ||
         !sameScenarioIds(actual.comparedScenarioIds, expected.scenarioIds)
       ) {
-        return Either.left(
+        return Result.fail(
           `Catalogue comparison batch ${expected.batchIndex} did not retain its canonical Scenario identity.`,
         );
       }
@@ -401,12 +403,12 @@ function validateBatchCoverage(input: {
       indexes.some((batchIndex, position) => batchIndex !== position) ||
       new Set(indexes).size !== indexes.length
     ) {
-      return Either.left(
+      return Result.fail(
         "Catalogue comparison batch indexes must be contiguous and unique.",
       );
     }
   }
-  return Either.right(undefined);
+  return Result.succeed(undefined);
 }
 
 /**
@@ -418,26 +420,26 @@ export function validateScenarioCatalogueComparison(input: {
   readonly comparison: ScenarioCatalogueComparison;
   readonly expectedScenarioIds: readonly ScenarioId[];
   readonly expectedBatches?: readonly ScenarioCatalogueBatchExpectation[];
-}): Either.Either<ScenarioCatalogueComparison, string> {
-  const decoded = Schema.decodeUnknownEither(
+}): Result.Result<ScenarioCatalogueComparison, string> {
+  const decoded = Schema.decodeUnknownResult(
     ScenarioCatalogueComparisonSchema,
     {
       onExcessProperty: "error",
     },
   )(input.comparison);
-  if (Either.isLeft(decoded)) return Either.left(decoded.left.message);
-  const comparison = decoded.right;
+  if (Result.isFailure(decoded)) return Result.fail(decoded.failure.message);
+  const comparison = decoded.success;
   if (
     comparison.comparedScenarioIds.length !== input.expectedScenarioIds.length
   ) {
-    return Either.left(
+    return Result.fail(
       `Catalogue comparison covered ${comparison.comparedScenarioIds.length} of ${input.expectedScenarioIds.length} admitted Scenarios without silent sampling or truncation.`,
     );
   }
   if (
     !sameScenarioIds(comparison.comparedScenarioIds, input.expectedScenarioIds)
   ) {
-    return Either.left(
+    return Result.fail(
       "Catalogue comparison introduced, omitted, or duplicated a canonical Scenario identity.",
     );
   }
@@ -447,7 +449,7 @@ export function validateScenarioCatalogueComparison(input: {
       ({ scenarioId }) => !expectedScenarioIds.has(scenarioId),
     )
   ) {
-    return Either.left(
+    return Result.fail(
       "A closest match must identify an admitted Scenario in the compared catalogue.",
     );
   }
@@ -455,7 +457,7 @@ export function validateScenarioCatalogueComparison(input: {
     comparison.conclusion === "redundant" &&
     comparison.closestMatches.length === 0
   ) {
-    return Either.left(
+    return Result.fail(
       "A redundant Candidate comparison must identify its closest admitted Scenario.",
     );
   }
@@ -463,7 +465,7 @@ export function validateScenarioCatalogueComparison(input: {
     comparison.conclusion === "purposefulOverlap" &&
     comparison.materialDifferentiators.length === 0
   ) {
-    return Either.left(
+    return Result.fail(
       "A purposeful-overlap comparison must name a material differentiator.",
     );
   }
@@ -471,7 +473,7 @@ export function validateScenarioCatalogueComparison(input: {
     input.expectedScenarioIds.length > 0 &&
     comparison.basis.tag !== "compared"
   ) {
-    return Either.left(
+    return Result.fail(
       "A nonempty catalogue comparison must retain dimension evidence.",
     );
   }
@@ -479,7 +481,7 @@ export function validateScenarioCatalogueComparison(input: {
     input.expectedScenarioIds.length === 0 &&
     comparison.basis.tag !== "noAdmittedScenarios"
   ) {
-    return Either.left(
+    return Result.fail(
       "An empty admitted catalogue must be retained as noAdmittedScenarios.",
     );
   }
@@ -487,7 +489,7 @@ export function validateScenarioCatalogueComparison(input: {
     input.expectedScenarioIds.length === 0 &&
     comparison.conclusion !== "meaningfullyDistinct"
   ) {
-    return Either.left(
+    return Result.fail(
       "A Candidate cannot overlap or repeat an empty admitted catalogue.",
     );
   }
@@ -500,9 +502,9 @@ export function validateScenarioCatalogueComparison(input: {
         ? {}
         : { expectedBatches: input.expectedBatches }),
     });
-    if (Either.isLeft(coverage)) return Either.left(coverage.left);
+    if (Result.isFailure(coverage)) return Result.fail(coverage.failure);
   }
-  return Either.right(comparison);
+  return Result.succeed(comparison);
 }
 
 /** Combine strict per-batch reviews without losing coverage evidence. */
@@ -510,10 +512,10 @@ export function aggregateScenarioCatalogueComparisons(input: {
   readonly comparisons: readonly ScenarioCatalogueComparison[];
   readonly expectedScenarioIds: readonly ScenarioId[];
   readonly expectedBatches?: readonly ScenarioCatalogueBatchExpectation[];
-}): Either.Either<ScenarioCatalogueComparison, string> {
+}): Result.Result<ScenarioCatalogueComparison, string> {
   if (input.expectedScenarioIds.length === 0) {
     if (input.comparisons.length > 0) {
-      return Either.left(
+      return Result.fail(
         "An empty admitted catalogue cannot retain a nonempty comparison batch.",
       );
     }
@@ -530,15 +532,15 @@ export function aggregateScenarioCatalogueComparisons(input: {
     });
   }
   if (input.comparisons.length === 0) {
-    return Either.left(
+    return Result.fail(
       "A nonempty admitted catalogue requires at least one comparison batch.",
     );
   }
   const batches: ScenarioCatalogueComparisonBatch[] = [];
   for (const comparison of input.comparisons) {
     const evidence = comparisonBatchEvidence(comparison);
-    if (Either.isLeft(evidence)) return Either.left(evidence.left);
-    batches.push(evidence.right);
+    if (Result.isFailure(evidence)) return Result.fail(evidence.failure);
+    batches.push(evidence.success);
   }
   const retainedComparedScenarioIds = input.comparisons.flatMap(
     ({ comparedScenarioIds: ids }) => ids,
@@ -546,7 +548,7 @@ export function aggregateScenarioCatalogueComparisons(input: {
   if (
     !sameScenarioIds(retainedComparedScenarioIds, input.expectedScenarioIds)
   ) {
-    return Either.left(
+    return Result.fail(
       "Aggregated catalogue comparison must retain the exact complete top-level Scenario id set.",
     );
   }

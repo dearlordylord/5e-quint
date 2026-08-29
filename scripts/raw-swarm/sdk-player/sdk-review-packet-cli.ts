@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, relative, resolve } from "node:path";
 
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import { repoRoot } from "../transcript.ts";
 import { PlayerExecutionStateSchema } from "../player-continuation-evidence.ts";
@@ -146,7 +146,7 @@ function main(args: readonly string[]): void {
   const evidenceSetDirectory = resolve(transcriptPath, "../..");
   const runState =
     header.setupOutcome === "ready"
-      ? Schema.decodeUnknownEither(
+      ? Schema.decodeUnknownResult(
           Schema.Struct({ run: PlayerExecutionStateSchema }),
         )(
           JSON.parse(
@@ -157,7 +157,7 @@ function main(args: readonly string[]): void {
           ),
         )
       : undefined;
-  if (runState !== undefined && Either.isLeft(runState)) {
+  if (runState !== undefined && Result.isFailure(runState)) {
     fail("SDK review packet player terminal evidence is invalid.");
   }
   const finalArtifactExists = existsSync(
@@ -167,7 +167,7 @@ function main(args: readonly string[]): void {
     runState === undefined
       ? ({ tag: "valid", roles: [] } as const)
       : sdkReviewPacketReadyArtifacts({
-          run: runState.right.run,
+          run: runState.success.run,
           finalArtifactExists,
         });
   if (readyArtifactResult.tag === "invalid") {

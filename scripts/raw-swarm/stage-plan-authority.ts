@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   planAdmittedScenarioStages,
@@ -20,7 +20,9 @@ import {
 } from "./transcript.ts";
 import type { ScenarioCandidateId } from "./raw-swarm-identities.ts";
 
-const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
+const HashSchema = Schema.String.pipe(
+  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+);
 
 /**
  * Controller-owned facts emitted with a newly generated candidate.
@@ -81,27 +83,29 @@ export function retainedRejectedScenarioStagePlanFindingsPath(
 function writeCanonicalOnce<A>(input: {
   readonly path: string;
   readonly value: A;
-  readonly decode: (value: unknown) => Either.Either<A, string>;
-}): Either.Either<A, string> {
+  readonly decode: (value: unknown) => Result.Result<A, string>;
+}): Result.Result<A, string> {
   try {
     mkdirSync(resolve(input.path, ".."), { recursive: true });
     if (existsSync(input.path)) {
       const existing = input.decode(
         JSON.parse(readFileSync(input.path, "utf8")),
       );
-      if (Either.isLeft(existing)) {
-        return Either.left(`Retained authority is invalid: ${existing.left}`);
+      if (Result.isFailure(existing)) {
+        return Result.fail(
+          `Retained authority is invalid: ${existing.failure}`,
+        );
       }
-      return canonicalJson(existing.right) === canonicalJson(input.value)
-        ? Either.right(input.value)
-        : Either.left(`Retained authority diverges: ${input.path}`);
+      return canonicalJson(existing.success) === canonicalJson(input.value)
+        ? Result.succeed(input.value)
+        : Result.fail(`Retained authority diverges: ${input.path}`);
     }
     writeFileSync(input.path, `${JSON.stringify(input.value, null, 2)}\n`, {
       flag: "wx",
     });
-    return Either.right(input.value);
+    return Result.succeed(input.value);
   } catch (error) {
-    return Either.left(
+    return Result.fail(
       `Unable to retain authority: ${
         error instanceof Error ? error.message : String(error)
       }`,
@@ -115,7 +119,7 @@ export function retainScenarioStageFacts(input: {
   readonly scenarioPath: string;
   readonly scenarioSha256: string;
   readonly facts: ScenarioStageFacts;
-}): Either.Either<ScenarioStageFactsAuthority, string> {
+}): Result.Result<ScenarioStageFactsAuthority, string> {
   const authority: ScenarioStageFactsAuthority = {
     schemaVersion: 1,
     scenarioId: input.scenarioId,
@@ -127,13 +131,13 @@ export function retainScenarioStageFacts(input: {
     path: retainedScenarioStageFactsPath(input.scenarioPath),
     value: authority,
     decode: (value) => {
-      const decoded = Schema.decodeUnknownEither(
+      const decoded = Schema.decodeUnknownResult(
         ScenarioStageFactsAuthoritySchema,
         { onExcessProperty: "error" },
       )(value);
-      return Either.isLeft(decoded)
-        ? Either.left(decoded.left.message)
-        : Either.right(decoded.right);
+      return Result.isFailure(decoded)
+        ? Result.fail(decoded.failure.message)
+        : Result.succeed(decoded.success);
     },
   });
 }
@@ -142,34 +146,34 @@ function readScenarioStageFacts(input: {
   readonly scenarioId: ScenarioId;
   readonly scenarioPath: string;
   readonly scenarioSha256: string;
-}): Either.Either<ScenarioStageFacts, string> {
+}): Result.Result<ScenarioStageFacts, string> {
   const path = retainedScenarioStageFactsPath(input.scenarioPath);
   if (!existsSync(path)) {
-    return Either.left(
+    return Result.fail(
       `Scenario stage facts are unavailable for this historical artifact: ${path}. Regenerate the scenario to create the controller-owned facts authority.`,
     );
   }
   try {
-    const decoded = Schema.decodeUnknownEither(
+    const decoded = Schema.decodeUnknownResult(
       ScenarioStageFactsAuthoritySchema,
       { onExcessProperty: "error" },
     )(JSON.parse(readFileSync(path, "utf8")));
-    if (Either.isLeft(decoded)) {
-      return Either.left(
-        `Scenario stage facts authority is invalid: ${decoded.left.message}`,
+    if (Result.isFailure(decoded)) {
+      return Result.fail(
+        `Scenario stage facts authority is invalid: ${decoded.failure.message}`,
       );
     }
     if (
-      decoded.right.scenarioId !== input.scenarioId ||
-      decoded.right.scenarioSha256 !== input.scenarioSha256
+      decoded.success.scenarioId !== input.scenarioId ||
+      decoded.success.scenarioSha256 !== input.scenarioSha256
     ) {
-      return Either.left(
+      return Result.fail(
         `Scenario stage facts authority does not match the admitted scenario: ${path}`,
       );
     }
-    return Either.right(decoded.right.facts);
+    return Result.succeed(decoded.success.facts);
   } catch (error) {
-    return Either.left(
+    return Result.fail(
       `Unable to read scenario stage facts authority: ${
         error instanceof Error ? error.message : String(error)
       }`,
@@ -180,19 +184,19 @@ function readScenarioStageFacts(input: {
 function retainPlanFindings(input: {
   readonly path: string;
   readonly plan: ScenarioStagePlan;
-}): Either.Either<readonly ScenarioStagePlanFinding[], string> {
+}): Result.Result<readonly ScenarioStagePlanFinding[], string> {
   const findings = scenarioStagePlanFindings(input.plan);
   return writeCanonicalOnce({
     path: input.path,
     value: findings,
     decode: (value) => {
-      const decoded = Schema.decodeUnknownEither(
+      const decoded = Schema.decodeUnknownResult(
         ScenarioStagePlanFindingsSchema,
         { onExcessProperty: "error" },
       )(value);
-      return Either.isLeft(decoded)
-        ? Either.left(decoded.left.message)
-        : Either.right(decoded.right);
+      return Result.isFailure(decoded)
+        ? Result.fail(decoded.failure.message)
+        : Result.succeed(decoded.success);
     },
   });
 }
@@ -209,7 +213,7 @@ export function retainAdmittedScenarioStagePlan(input: {
   readonly scenarioPath: string;
   readonly scenarioSha256: string;
   readonly scenarioReviewSha256: string;
-}): Either.Either<ScenarioStagePlan, string> {
+}): Result.Result<ScenarioStagePlan, string> {
   return retainAdmittedScenarioStagePlanAtPaths({
     ...input,
     stagePlanPath: retainedScenarioStagePlanPath(input.scenarioId),
@@ -226,40 +230,40 @@ export function retainAdmittedScenarioStagePlanAtPaths(input: {
   readonly scenarioReviewSha256: string;
   readonly stagePlanPath: string;
   readonly stagePlanFindingsPath: string;
-}): Either.Either<ScenarioStagePlan, string> {
+}): Result.Result<ScenarioStagePlan, string> {
   const facts = readScenarioStageFacts({
     scenarioId: input.scenarioId,
     scenarioPath: input.scenarioPath,
     scenarioSha256: input.scenarioSha256,
   });
-  if (Either.isLeft(facts)) return Either.left(facts.left);
+  if (Result.isFailure(facts)) return Result.fail(facts.failure);
   const planned = planAdmittedScenarioStages({
     scenarioId: input.scenarioId,
     scenarioSha256: input.scenarioSha256,
     scenarioReviewSha256: input.scenarioReviewSha256,
-    facts: facts.right,
+    facts: facts.success,
   });
-  if (Either.isLeft(planned)) return Either.left(planned.left);
+  if (Result.isFailure(planned)) return Result.fail(planned.failure);
   const retained = writeCanonicalOnce({
     path: input.stagePlanPath,
-    value: planned.right,
+    value: planned.success,
     decode: (value) => {
       return validateScenarioStagePlan(value);
     },
   });
-  if (Either.isLeft(retained)) return retained;
+  if (Result.isFailure(retained)) return retained;
   const findings = retainPlanFindings({
     path: input.stagePlanFindingsPath,
-    plan: retained.right,
+    plan: retained.success,
   });
-  return Either.isLeft(findings) ? Either.left(findings.left) : retained;
+  return Result.isFailure(findings) ? Result.fail(findings.failure) : retained;
 }
 
 export function retainCandidateScenarioStagePlan(input: {
   readonly candidateId: ScenarioCandidateId;
   readonly candidateScenarioSha256: string;
   readonly plan: ScenarioStagePlan;
-}): Either.Either<ScenarioStagePlan, string> {
+}): Result.Result<ScenarioStagePlan, string> {
   return retainCandidateScenarioStagePlanAtPaths({
     ...input,
     stagePlanPath: retainedRejectedScenarioStagePlanPath(input.candidateId),
@@ -276,22 +280,22 @@ export function retainCandidateScenarioStagePlanAtPaths(input: {
   readonly plan: ScenarioStagePlan;
   readonly stagePlanPath: string;
   readonly stagePlanFindingsPath: string;
-}): Either.Either<ScenarioStagePlan, string> {
+}): Result.Result<ScenarioStagePlan, string> {
   const validated = validateScenarioStagePlan(input.plan);
-  if (Either.isLeft(validated)) return Either.left(validated.left);
-  const plan = validated.right;
+  if (Result.isFailure(validated)) return Result.fail(validated.failure);
+  const plan = validated.success;
   if (plan.identity.tag !== "candidate") {
-    return Either.left(
+    return Result.fail(
       "Candidate stage-plan retention requires candidate identity.",
     );
   }
   if (plan.identity.candidateId !== input.candidateId) {
-    return Either.left(
+    return Result.fail(
       "Candidate stage plan identity does not match the retained candidate.",
     );
   }
   if (plan.identity.candidateScenarioSha256 !== input.candidateScenarioSha256) {
-    return Either.left(
+    return Result.fail(
       "Candidate stage plan identity does not match scenario content.",
     );
   }
@@ -302,12 +306,12 @@ export function retainCandidateScenarioStagePlanAtPaths(input: {
       return validateScenarioStagePlan(value);
     },
   });
-  if (Either.isLeft(retained)) return retained;
+  if (Result.isFailure(retained)) return retained;
   const findings = retainPlanFindings({
     path: input.stagePlanFindingsPath,
-    plan: retained.right,
+    plan: retained.success,
   });
-  return Either.isLeft(findings) ? Either.left(findings.left) : retained;
+  return Result.isFailure(findings) ? Result.fail(findings.failure) : retained;
 }
 
 /** Validate the plan/findings pair retained with a replayable Execution. */
@@ -317,30 +321,32 @@ export function validateAdmittedScenarioStagePlanEvidence(input: {
   readonly scenarioId: ScenarioId;
   readonly scenarioSha256: string;
   readonly scenarioReviewSha256: string;
-}): Either.Either<void, string> {
+}): Result.Result<void, string> {
   const plan = validateScenarioStagePlan(input.plan);
-  if (Either.isLeft(plan)) return Either.left(plan.left);
+  if (Result.isFailure(plan)) return Result.fail(plan.failure);
   if (
-    plan.right.identity.tag !== "admitted" ||
-    plan.right.identity.scenarioId !== input.scenarioId ||
-    plan.right.identity.scenarioSha256 !== input.scenarioSha256 ||
-    plan.right.identity.scenarioReviewSha256 !== input.scenarioReviewSha256
+    plan.success.identity.tag !== "admitted" ||
+    plan.success.identity.scenarioId !== input.scenarioId ||
+    plan.success.identity.scenarioSha256 !== input.scenarioSha256 ||
+    plan.success.identity.scenarioReviewSha256 !== input.scenarioReviewSha256
   ) {
-    return Either.left("Admitted stage-plan identity does not match replay.");
+    return Result.fail("Admitted stage-plan identity does not match replay.");
   }
-  const findings = Schema.decodeUnknownEither(ScenarioStagePlanFindingsSchema, {
+  const findings = Schema.decodeUnknownResult(ScenarioStagePlanFindingsSchema, {
     onExcessProperty: "error",
   })(input.findings);
-  if (Either.isLeft(findings)) {
-    return Either.left(`Invalid stage-plan findings: ${findings.left.message}`);
+  if (Result.isFailure(findings)) {
+    return Result.fail(
+      `Invalid stage-plan findings: ${findings.failure.message}`,
+    );
   }
   if (
-    canonicalJson(findings.right) !==
-    canonicalJson(scenarioStagePlanFindings(plan.right))
+    canonicalJson(findings.success) !==
+    canonicalJson(scenarioStagePlanFindings(plan.success))
   ) {
-    return Either.left(
+    return Result.fail(
       "Replay stage-plan findings do not match the canonical retained plan.",
     );
   }
-  return Either.right(undefined);
+  return Result.succeed(undefined);
 }

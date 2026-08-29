@@ -16,7 +16,7 @@ import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { FreshCharacterSheet } from "@dnd/character-sheet-runtime";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
-import type { Either } from "effect";
+import type { Result } from "effect";
 import type { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { Hp, movementFeet } from "@dnd/shared/types";
 
@@ -84,7 +84,7 @@ export type ScenarioSetupSdk = {
   readonly scenarioSessionIssueMessage: typeof scenarioSessionIssueMessage;
   readonly tableAuthoredSpatialDecision: typeof tableAuthoredSpatialDecision;
   readonly scenarioSessionWithTableD20TestCircumstance: typeof scenarioSessionWithTableD20TestCircumstance;
-  readonly isLeft: typeof Either.isLeft;
+  readonly isLeft: typeof Result.isFailure;
 };
 
 export type ScenarioSetupContext = {

@@ -34,7 +34,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
   if (sdk.isLeft(wolfInit)) {
     return {
       kind: "obstructed",
-      obstruction: `The public battle initializer rejected the required Wolf: ${sdk.battleStateInitIssueMessage(wolfInit.left)}`,
+      obstruction: `The public battle initializer rejected the required Wolf: ${sdk.battleStateInitIssueMessage(wolfInit.failure)}`,
       observation: { stage: "wolf-initialization" },
     };
   }
@@ -50,19 +50,19 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
   if (sdk.isLeft(skeletonInit)) {
     return {
       kind: "obstructed",
-      obstruction: `The public battle initializer rejected the required Skeleton with zero arrows: ${sdk.battleStateInitIssueMessage(skeletonInit.left)}`,
+      obstruction: `The public battle initializer rejected the required Skeleton with zero arrows: ${sdk.battleStateInitIssueMessage(skeletonInit.failure)}`,
       observation: { stage: "skeleton-initialization" },
     };
   }
 
   const battle = sdk.startBattle({
     battleId: sdk.battleId("open-grid-wolf-skeleton-pursuit"),
-    combatants: [wolfInit.right, skeletonInit.right],
+    combatants: [wolfInit.success, skeletonInit.success],
   });
   if (sdk.isLeft(battle)) {
     return {
       kind: "obstructed",
-      obstruction: `The public battle initializer could not start the required encounter: ${sdk.battleStateInitIssueMessage(battle.left)}`,
+      obstruction: `The public battle initializer could not start the required encounter: ${sdk.battleStateInitIssueMessage(battle.failure)}`,
       observation: { stage: "battle-start" },
     };
   }
@@ -74,7 +74,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
   }));
 
   const session = sdk.createScenarioSession({
-    battle: battle.right,
+    battle: battle.success,
     spatial: {
       kind: "geometryDerived",
       arena: { cells, boundaries: [] },
@@ -101,14 +101,14 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
   if (sdk.isLeft(session)) {
     return {
       kind: "obstructed",
-      obstruction: `The public scenario-session surface rejected the required battlefield: ${sdk.scenarioSessionIssueMessage(session.left)}`,
+      obstruction: `The public scenario-session surface rejected the required battlefield: ${sdk.scenarioSessionIssueMessage(session.failure)}`,
       observation: { stage: "scenario-session" },
     };
   }
 
   return {
     kind: "ready",
-    session: session.right,
+    session: session.success,
     observation: {
       scenarioId: "open-grid-wolf-skeleton-pursuit",
       combatants: ["wolf", "skeleton"],

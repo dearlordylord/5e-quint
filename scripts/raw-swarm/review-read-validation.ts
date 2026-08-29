@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 
 export type StrictShellWords = Readonly<{
   readonly quoted: readonly boolean[];
@@ -50,7 +50,7 @@ function isStrictReadExecutable(value: string): value is StrictReadExecutable {
 /** Parse one literal shell command without allowing expansion or composition. */
 export function parseStrictShellWords(
   value: string,
-): Either.Either<StrictShellWords, string> {
+): Result.Result<StrictShellWords, string> {
   const words: string[] = [];
   const quoted: boolean[] = [];
   let current = "";
@@ -67,7 +67,7 @@ export function parseStrictShellWords(
   for (let index = 0; index < value.length; index += 1) {
     const character = value[index] ?? "";
     if (character === "\0" || character === "\n" || character === "\r") {
-      return Either.left("command uses unsupported shell syntax");
+      return Result.fail("command uses unsupported shell syntax");
     }
     if (character === "\\") {
       if (quote === "'") {
@@ -75,11 +75,11 @@ export function parseStrictShellWords(
         continue;
       }
       if (quote !== '"') {
-        return Either.left("command uses unquoted backslash escaping");
+        return Result.fail("command uses unquoted backslash escaping");
       }
       const escaped = value[index + 1];
       if (escaped === undefined || escaped === "$" || escaped === "`") {
-        return Either.left("command uses unsupported shell syntax");
+        return Result.fail("command uses unsupported shell syntax");
       }
       if (escaped === '"' || escaped === "\\") {
         current += escaped;
@@ -94,7 +94,7 @@ export function parseStrictShellWords(
         quote = undefined;
         wasQuoted = true;
       } else if (quote === '"' && (character === "$" || character === "`")) {
-        return Either.left("command uses unsupported shell syntax");
+        return Result.fail("command uses unsupported shell syntax");
       } else {
         current += character;
       }
@@ -115,7 +115,7 @@ export function parseStrictShellWords(
       character === "]" ||
       SHELL_OPERATOR_CHARACTERS.has(character)
     ) {
-      return Either.left("command uses unsupported shell syntax");
+      return Result.fail("command uses unsupported shell syntax");
     }
     if (/\s/.test(character)) {
       flush();
@@ -123,9 +123,9 @@ export function parseStrictShellWords(
     }
     current += character;
   }
-  if (quote !== undefined) return Either.left("command has an unmatched quote");
+  if (quote !== undefined) return Result.fail("command has an unmatched quote");
   flush();
-  return Either.right({ quoted, words });
+  return Result.succeed({ quoted, words });
 }
 
 /**
@@ -135,37 +135,37 @@ export function parseStrictShellWords(
  */
 export function parseStrictReadCommand(
   value: string,
-): Either.Either<StrictReadCommand, string> {
+): Result.Result<StrictReadCommand, string> {
   const outer = parseStrictShellWords(value);
-  if (Either.isLeft(outer)) return Either.left(outer.left);
+  if (Result.isFailure(outer)) return Result.fail(outer.failure);
   if (
-    outer.right.words.length !== 3 ||
+    outer.success.words.length !== 3 ||
     !STRICT_READ_SHELL_EXECUTABLES.some(
-      (executable) => executable === outer.right.words[0],
+      (executable) => executable === outer.success.words[0],
     ) ||
-    !["-c", "-lc"].includes(outer.right.words[1] ?? "") ||
-    outer.right.quoted[2] !== true
+    !["-c", "-lc"].includes(outer.success.words[1] ?? "") ||
+    outer.success.quoted[2] !== true
   ) {
-    return Either.left(
+    return Result.fail(
       "command must be one quoted supported-shell read operation",
     );
   }
-  const inner = parseStrictShellWords(outer.right.words[2] ?? "");
-  if (Either.isLeft(inner)) return Either.left(inner.left);
-  const [executable, ...args] = inner.right.words;
+  const inner = parseStrictShellWords(outer.success.words[2] ?? "");
+  if (Result.isFailure(inner)) return Result.fail(inner.failure);
+  const [executable, ...args] = inner.success.words;
   if (
     executable === undefined ||
     executable.includes("/") ||
     !isStrictReadExecutable(executable)
   ) {
-    return Either.left(
+    return Result.fail(
       `context read uses a non-read executable: ${executable ?? "<missing>"}`,
     );
   }
-  if (args.length === 0) return Either.left("read operation names no file");
-  return Either.right({
+  if (args.length === 0) return Result.fail("read operation names no file");
+  return Result.succeed({
     executable,
     args,
-    words: inner.right.words,
+    words: inner.success.words,
   });
 }

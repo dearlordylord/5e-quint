@@ -14,7 +14,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 
-import { Either, Match, Option, Schema } from "effect";
+import { Result, Match, Option, Schema } from "effect";
 
 import {
   artifactAuthority,
@@ -129,7 +129,9 @@ function benchmarkReviewSchemaVersion(profile: FixedBenchmarkProfile): 2 | 3 {
 
 const FIXED_BENCHMARK_ROOT = "scripts/raw-swarm/out/fixed-scenario-benchmark";
 export const FIXED_BENCHMARK_CONTEXT_ROLES = BENCHMARK_CONTEXT_ROLES;
-const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
+const HashSchema = Schema.String.pipe(
+  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+);
 type ScenarioCharacterEvaluation = Awaited<
   ReturnType<typeof evaluateScenarioCharacters>
 >;
@@ -138,8 +140,8 @@ type FixedBenchmarkInvocation =
 
 function fixedScenarioId(): ScenarioId {
   const decoded = decodeScenarioId(FIXED_SCENARIO_ID);
-  if (Either.isLeft(decoded)) fail(decoded.left);
-  return decoded.right;
+  if (Result.isFailure(decoded)) fail(decoded.failure);
+  return decoded.success;
 }
 
 export type FixedScenarioCanonicalPaths = Readonly<{
@@ -238,13 +240,13 @@ export function fixedScenarioCanonicalBundle(): FixedScenarioCanonicalBundle {
     reviewPath: paths.scenarioReview,
     recordPath: paths.scenario.replace(/\.md$/, ".scenario.json"),
   });
-  if (Either.isLeft(admission)) fail(admission.left);
-  const review = Schema.decodeUnknownEither(
-    Schema.parseJson(FinalScenarioReviewSchema),
+  if (Result.isFailure(admission)) fail(admission.failure);
+  const review = Schema.decodeUnknownResult(
+    Schema.fromJsonString(FinalScenarioReviewSchema),
     { onExcessProperty: "error" },
   )(readFileSync(paths.scenarioReview, "utf8"));
-  if (Either.isLeft(review))
-    fail("Tracked scenario review is invalid: " + review.left.message);
+  if (Result.isFailure(review))
+    fail("Tracked scenario review is invalid: " + review.failure.message);
   return {
     paths,
     authorities: {
@@ -254,8 +256,8 @@ export function fixedScenarioCanonicalBundle(): FixedScenarioCanonicalBundle {
       characters: artifactAuthority(repoRelative(paths.characters)),
       setup: artifactAuthority(repoRelative(paths.setup)),
     },
-    scenarioSha256: admission.right.scenarioSha256,
-    scenarioReviewSha256: admission.right.scenarioReviewSha256,
+    scenarioSha256: admission.success.scenarioSha256,
+    scenarioReviewSha256: admission.success.scenarioReviewSha256,
   };
 }
 
@@ -329,11 +331,11 @@ function assertPreparationState(
       "Fixed benchmark preparation requires the original clean Git worktree.",
     );
   }
-  const currentSha = Schema.decodeUnknownEither(GitShaSchema)(revision.sha);
-  if (Either.isLeft(currentSha)) fail(currentSha.left.message);
-  if (currentSha.right !== state.gitSha) {
+  const currentSha = Schema.decodeUnknownResult(GitShaSchema)(revision.sha);
+  if (Result.isFailure(currentSha)) fail(currentSha.failure.message);
+  if (currentSha.success !== state.gitSha) {
     fail(
-      `Fixed benchmark Git revision changed during preparation: expected ${state.gitSha}, got ${currentSha.right}.`,
+      `Fixed benchmark Git revision changed during preparation: expected ${state.gitSha}, got ${currentSha.success}.`,
     );
   }
   assertFixedScenarioCanonicalBundle(state.bundle);
@@ -428,20 +430,20 @@ export function initializeFixedBenchmarkProfileDirectory(
 
 function assertBenchmarkId(benchmarkId: string | undefined): BenchmarkId {
   const decoded = decodeBenchmarkId(benchmarkId);
-  if (Either.isLeft(decoded)) return fail(decoded.left);
-  return decoded.right;
+  if (Result.isFailure(decoded)) return fail(decoded.failure);
+  return decoded.success;
 }
 
 function freshBenchmarkExecutionId(): ExecutionId {
   const decoded = decodeExecutionId(`execution-${randomUUID()}`);
-  if (Either.isLeft(decoded)) return fail(decoded.left);
-  return decoded.right;
+  if (Result.isFailure(decoded)) return fail(decoded.failure);
+  return decoded.success;
 }
 
 function freshBenchmarkEvidenceSetId(): EvidenceSetId {
   const decoded = decodeEvidenceSetId(`evidence-${randomUUID()}`);
-  if (Either.isLeft(decoded)) return fail(decoded.left);
-  return decoded.right;
+  if (Result.isFailure(decoded)) return fail(decoded.failure);
+  return decoded.success;
 }
 
 /** Canonical unbounded context retained by the historical benchmark profile. */
@@ -492,11 +494,11 @@ function writeProfileContexts(
     scenarioId: fixedScenarioId(),
     sources,
   };
-  const decoded = Schema.decodeUnknownEither(
+  const decoded = Schema.decodeUnknownResult(
     BenchmarkContextSourceManifestDocumentSchema,
     { onExcessProperty: "error" },
   )(document);
-  if (Either.isLeft(decoded)) fail(decoded.left.message);
+  if (Result.isFailure(decoded)) fail(decoded.failure.message);
   writeJsonExclusive(paths.contextManifest, document);
   return artifactAuthority(repoRelative(paths.contextManifest));
 }
@@ -506,24 +508,24 @@ function retainStagePlan(
   paths: FixedBenchmarkProfilePaths,
 ): ScenarioStagePlan {
   const facts = fixedScenarioStageFacts();
-  const decodedFacts = Schema.decodeUnknownEither(ScenarioStageFactsSchema, {
+  const decodedFacts = Schema.decodeUnknownResult(ScenarioStageFactsSchema, {
     onExcessProperty: "error",
   })(facts);
-  if (Either.isLeft(decodedFacts)) fail(decodedFacts.left.message);
+  if (Result.isFailure(decodedFacts)) fail(decodedFacts.failure.message);
   const planned = planAdmittedScenarioStages({
     scenarioId: fixedScenarioId(),
     scenarioSha256: bundle.scenarioSha256,
     scenarioReviewSha256: bundle.scenarioReviewSha256,
-    facts: decodedFacts.right,
+    facts: decodedFacts.success,
   });
-  if (Either.isLeft(planned)) fail(planned.left);
+  if (Result.isFailure(planned)) fail(planned.failure);
   writeJsonExclusive(paths.stageFacts, facts);
-  writeJsonExclusive(paths.stagePlan, planned.right);
+  writeJsonExclusive(paths.stagePlan, planned.success);
   writeJsonExclusive(
     paths.stagePlanFindings,
-    scenarioStagePlanFindings(planned.right),
+    scenarioStagePlanFindings(planned.success),
   );
-  return planned.right;
+  return planned.success;
 }
 
 function initializeLedger(path: string): void {
@@ -866,10 +868,10 @@ function validateNamedFile(
 function commandArguments(
   command: string,
   input: BenchmarkPreparationEventValidationInput,
-): Either.Either<readonly string[], string> {
+): Result.Result<readonly string[], string> {
   const parsed = parseStrictReadCommand(command);
-  if (Either.isLeft(parsed)) return Either.left(parsed.left);
-  const { executable, args, words } = parsed.right;
+  if (Result.isFailure(parsed)) return Result.fail(parsed.failure);
+  const { executable, args, words } = parsed.success;
   const validateFiles = (files: readonly string[]): string | undefined => {
     for (const file of files) {
       const issue = validateNamedFile(file, input);
@@ -882,10 +884,10 @@ function commandArguments(
     case "sha256sum": {
       const files = args.filter((value) => !value.startsWith("-"));
       if (files.length === 0 || files.length !== args.length) {
-        return Either.left(`${executable} has unsupported arguments`);
+        return Result.fail(`${executable} has unsupported arguments`);
       }
       const issue = validateFiles(files);
-      return issue === undefined ? Either.right(words) : Either.left(issue);
+      return issue === undefined ? Result.succeed(words) : Result.fail(issue);
     }
     case "head":
     case "tail": {
@@ -896,10 +898,10 @@ function commandArguments(
             : []
           : args;
       if (files.length === 0 || files.some((value) => value.startsWith("-"))) {
-        return Either.left(`${executable} has unsupported arguments`);
+        return Result.fail(`${executable} has unsupported arguments`);
       }
       const issue = validateFiles(files);
-      return issue === undefined ? Either.right(words) : Either.left(issue);
+      return issue === undefined ? Result.succeed(words) : Result.fail(issue);
     }
     case "sed": {
       const [option, script, ...files] = args;
@@ -909,12 +911,12 @@ function commandArguments(
         !/^\d+(?:,\d+)?p$/.test(script) ||
         files.length === 0
       ) {
-        return Either.left(
+        return Result.fail(
           "sed must use only a numeric print range and named files",
         );
       }
       const issue = validateFiles(files);
-      return issue === undefined ? Either.right(words) : Either.left(issue);
+      return issue === undefined ? Result.succeed(words) : Result.fail(issue);
     }
     case "wc": {
       const files = args.filter((value) => !value.startsWith("-"));
@@ -923,10 +925,10 @@ function commandArguments(
         files.length === 0 ||
         options.some((value) => !["-c", "-l", "-m", "-w"].includes(value))
       ) {
-        return Either.left("wc has unsupported arguments");
+        return Result.fail("wc has unsupported arguments");
       }
       const issue = validateFiles(files);
-      return issue === undefined ? Either.right(words) : Either.left(issue);
+      return issue === undefined ? Result.succeed(words) : Result.fail(issue);
     }
     case "od": {
       const files = args.filter((value) => !value.startsWith("-"));
@@ -935,10 +937,10 @@ function commandArguments(
         files.length !== 1 ||
         options.some((value) => !/^(?:-An|-tx[0-9]+|-N\d+|-j\d+)$/.test(value))
       ) {
-        return Either.left("od has unsupported arguments");
+        return Result.fail("od has unsupported arguments");
       }
       const issue = validateFiles(files);
-      return issue === undefined ? Either.right(words) : Either.left(issue);
+      return issue === undefined ? Result.succeed(words) : Result.fail(issue);
     }
     case "rg": {
       let operandIndex = 0;
@@ -951,7 +953,7 @@ function commandArguments(
         if (BENCHMARK_PREPARATION_RG_COUNT_OPTIONS.has(argument)) {
           const count = args[operandIndex + 1];
           if (!isCanonicalUnsignedDecimal(count)) {
-            return Either.left("rg has unsupported arguments");
+            return Result.fail("rg has unsupported arguments");
           }
           operandIndex += 2;
           continue;
@@ -961,19 +963,19 @@ function commandArguments(
           continue;
         }
         if (argument.startsWith("-")) {
-          return Either.left("rg has unsupported arguments");
+          return Result.fail("rg has unsupported arguments");
         }
         break;
       }
       const operands = args.slice(operandIndex);
       if (operands.length < 2) {
-        return Either.left("rg must name a scratch file after its pattern");
+        return Result.fail("rg must name a scratch file after its pattern");
       }
       const issue = validateFiles(operands.slice(1));
-      return issue === undefined ? Either.right(words) : Either.left(issue);
+      return issue === undefined ? Result.succeed(words) : Result.fail(issue);
     }
   }
-  return Either.left(
+  return Result.fail(
     `preparation command uses an unsupported read operation: ${executable}`,
   );
 }
@@ -1003,11 +1005,11 @@ function validatePreparationEventItem(
     if (typeof item.command !== "string")
       return "command execution has no structured command";
     const command = commandArguments(item.command, input);
-    if (Either.isLeft(command)) return command.left;
+    if (Result.isFailure(command)) return command.failure;
     if (eventType === "item.completed") {
       const completed = item.status === "completed" && item.exit_code === 0;
       const noRipgrepMatches =
-        command.right[0] === "rg" &&
+        command.success[0] === "rg" &&
         item.status === "failed" &&
         item.exit_code === 1;
       if (!completed && !noRipgrepMatches) {
@@ -1038,21 +1040,23 @@ function validatePreparationEventItem(
  */
 export function validateBenchmarkPreparationEventStream(
   input: BenchmarkPreparationEventValidationInput,
-): Either.Either<void, string> {
+): Result.Result<void, string> {
   const parsed = readCodexEvents(input.eventPath);
-  if (parsed.tag === "invalid") return Either.left(parsed.message);
+  if (parsed.tag === "invalid") return Result.fail(parsed.message);
   const invocationFailure = firstPartyCodexFailureReason(parsed.events);
-  if (Either.isLeft(invocationFailure)) return invocationFailure;
+  if (Result.isFailure(invocationFailure)) {
+    return Result.fail(invocationFailure.failure);
+  }
   let completedReadCount = 0;
   for (const [index, event] of parsed.events.entries()) {
     if (!isJsonRecord(event)) {
-      return Either.left(
+      return Result.fail(
         `Preparation event line ${String(index + 1)} must be a JSON record.`,
       );
     }
     const eventType = event.type;
     if (typeof eventType !== "string") {
-      return Either.left(
+      return Result.fail(
         `Preparation event line ${String(index + 1)} has no event type.`,
       );
     }
@@ -1060,13 +1064,13 @@ export function validateBenchmarkPreparationEventStream(
       continue;
     }
     if (!BENCHMARK_PREPARATION_EVENT_TYPES.has(eventType)) {
-      return Either.left(
+      return Result.fail(
         `Preparation event line ${String(index + 1)} has an unsupported event type: ${eventType}`,
       );
     }
     if (eventType === "item.started" || eventType === "item.completed") {
       if (!isJsonRecord(event.item)) {
-        return Either.left(
+        return Result.fail(
           `Preparation event line ${String(index + 1)} has no item.`,
         );
       }
@@ -1076,7 +1080,7 @@ export function validateBenchmarkPreparationEventStream(
         input,
       );
       if (itemIssue !== undefined) {
-        return Either.left(
+        return Result.fail(
           `Preparation event line ${String(index + 1)}: ${itemIssue}`,
         );
       }
@@ -1088,24 +1092,24 @@ export function validateBenchmarkPreparationEventStream(
       }
     }
   }
-  if (Option.isSome(invocationFailure.right)) {
-    return Either.left(
-      `Preparation model invocation failed: ${invocationFailure.right.value}`,
+  if (Option.isSome(invocationFailure.success)) {
+    return Result.fail(
+      `Preparation model invocation failed: ${invocationFailure.success.value}`,
     );
   }
   if (completedReadCount === 0) {
-    return Either.left(
+    return Result.fail(
       "Preparation event stream has no successfully completed scratch read.",
     );
   }
-  return Either.right(undefined);
+  return Result.succeed(undefined);
 }
 
 function assertBenchmarkPreparationEventStream(
   input: BenchmarkPreparationEventValidationInput,
 ): void {
   const validation = validateBenchmarkPreparationEventStream(input);
-  if (Either.isLeft(validation)) fail(validation.left);
+  if (Result.isFailure(validation)) fail(validation.failure);
 }
 
 type StructuredCallResult<A> = Readonly<{
@@ -1126,7 +1130,7 @@ async function runStructuredCall<A, I>(input: {
     | "scenarioCompositeReview"
     | "scenarioSetupNeutralAuthoring"
     | "scenarioSetupControllerAuthoring";
-  readonly schema: Schema.Schema<A, I>;
+  readonly schema: Schema.Codec<A, I>;
   readonly prompt: string;
   readonly model: string;
   readonly reasoningEffort: string;
@@ -1212,15 +1216,15 @@ async function runStructuredCall<A, I>(input: {
     if (row === undefined) fail("Current invocation row was not retained.");
     const entry = parseModelInvocationLedgerEntry(row);
     if (
-      Either.isLeft(entry) ||
-      (entry.right.schemaVersion !== 4 && entry.right.schemaVersion !== 5)
+      Result.isFailure(entry) ||
+      (entry.success.schemaVersion !== 4 && entry.success.schemaVersion !== 5)
     ) {
       fail("Current invocation row is not a current schema version.");
     }
     return {
       value: decoded.result,
       eventPath: events,
-      currentEntry: entry.right,
+      currentEntry: entry.success,
     };
   } finally {
     assertPreparationState(input.preparation, input.profilePaths);
@@ -1271,7 +1275,7 @@ async function runAuxiliaryStructuredCall<A, I>(input: {
   readonly bundle: FixedScenarioCanonicalBundle;
   readonly ordinal: number;
   readonly kind: BenchmarkAuxiliaryInvocationKind;
-  readonly schema: Schema.Schema<A, I>;
+  readonly schema: Schema.Codec<A, I>;
   readonly prompt: string;
   readonly gitSha: GitSha;
   readonly scenarioId: ScenarioId;
@@ -1344,15 +1348,15 @@ async function runAuxiliaryStructuredCall<A, I>(input: {
       scratch,
       namedInputs,
     });
-    if (Either.isLeft(result)) fail(result.left);
-    if (result.right.tag === "failed") {
+    if (Result.isFailure(result)) fail(result.failure);
+    if (result.success.tag === "failed") {
       fail(
         input.kind.phase +
           " Codex invocation failed: " +
-          result.right.cause.reason,
+          result.success.cause.reason,
       );
     }
-    const decoded = result.right.output.value;
+    const decoded = result.success.output.value;
     appendCopiedLedgerEntry(
       input.profilePaths.auxiliaryLedger,
       input.profilePaths.benchmarkLedger,
@@ -1360,11 +1364,11 @@ async function runAuxiliaryStructuredCall<A, I>(input: {
     const row = readJsonLines(input.profilePaths.auxiliaryLedger).at(-1);
     if (row === undefined) fail("Auxiliary invocation row was not retained.");
     const entry = parseBenchmarkModelInvocationLedgerEntry(row);
-    if (Either.isLeft(entry)) fail(entry.left.message);
+    if (Result.isFailure(entry)) fail(entry.failure.message);
     return {
       value: decoded.result,
       eventPath: events,
-      auxiliaryEntry: entry.right,
+      auxiliaryEntry: entry.success,
     };
   } finally {
     assertPreparationState(input.preparation, input.profilePaths);
@@ -1390,18 +1394,18 @@ export function validateBenchmarkReviewAuthority(input: {
   readonly schemaVersion: 2 | 3;
   readonly result: unknown;
   readonly outputJsonSchema: unknown;
-}): Either.Either<void, string> {
+}): Result.Result<void, string> {
   if (
     input.profile === "boundedCapabilityProjection" &&
     input.reviewStage === "milestone"
   ) {
-    return Either.left(
+    return Result.fail(
       "The bounded capability-projection benchmark retains only its final composite review.",
     );
   }
   const expectedSchemaVersion = benchmarkReviewSchemaVersion(input.profile);
   if (input.schemaVersion !== expectedSchemaVersion) {
-    return Either.left(
+    return Result.fail(
       `Benchmark ${input.profile} review must use schema version ${String(expectedSchemaVersion)}.`,
     );
   }
@@ -1411,32 +1415,32 @@ export function validateBenchmarkReviewAuthority(input: {
   });
   const expectedTag =
     input.profile === "documentDeclarationSet" ? "historical" : "legacyCurrent";
-  if (Either.isLeft(compatibility)) {
-    return Either.left(compatibility.left);
+  if (Result.isFailure(compatibility)) {
+    return Result.fail(compatibility.failure);
   }
-  if (compatibility.right.tag !== expectedTag) {
-    return Either.left("Benchmark review retained the wrong output schema.");
+  if (compatibility.success.tag !== expectedTag) {
+    return Result.fail("Benchmark review retained the wrong output schema.");
   }
-  const parsed = compatibility.right.decodeResult(input.result);
-  if (Either.isLeft(parsed)) return Either.left(parsed.left.message);
+  const parsed = compatibility.success.decodeResult(input.result);
+  if (Result.isFailure(parsed)) return Result.fail(parsed.failure.message);
   if (
     input.profile === "documentDeclarationSet" &&
-    "scenarioQuality" in parsed.right
+    "scenarioQuality" in parsed.success
   ) {
-    return Either.left(
+    return Result.fail(
       "Baseline composite review must not include scenarioQuality.",
     );
   }
   if (
     input.profile === "boundedCapabilityProjection" &&
-    !("scenarioQuality" in parsed.right)
+    !("scenarioQuality" in parsed.success)
   ) {
-    return Either.left(
+    return Result.fail(
       "Bounded composite review must include scenarioQuality.",
     );
   }
   const admissionIssues = [
-    ...Match.value(parsed.right.raw).pipe(
+    ...Match.value(parsed.success.raw).pipe(
       Match.when({ classification: "supported" }, () => [] as const),
       Match.when(
         { classification: "unsupported" },
@@ -1449,7 +1453,7 @@ export function validateBenchmarkReviewAuthority(input: {
       ),
       Match.exhaustive,
     ),
-    ...Match.value(parsed.right.contentAvailability).pipe(
+    ...Match.value(parsed.success.contentAvailability).pipe(
       Match.when({ classification: "supplied" }, () => [] as const),
       Match.when(
         { classification: "explicitUnavailableProbe" },
@@ -1474,7 +1478,7 @@ export function validateBenchmarkReviewAuthority(input: {
       ),
       Match.exhaustive,
     ),
-    ...Match.value(parsed.right.sdkCapability).pipe(
+    ...Match.value(parsed.success.sdkCapability).pipe(
       Match.when({ classification: "supported" }, () => [] as const),
       Match.when(
         { classification: "unsupported" },
@@ -1499,7 +1503,7 @@ export function validateBenchmarkReviewAuthority(input: {
       ),
       Match.exhaustive,
     ),
-    ...Match.value(parsed.right.artifactPolicy).pipe(
+    ...Match.value(parsed.success.artifactPolicy).pipe(
       Match.when({ classification: "safe" }, () => [] as const),
       Match.when(
         { classification: "violation" },
@@ -1510,12 +1514,12 @@ export function validateBenchmarkReviewAuthority(input: {
       ),
       Match.exhaustive,
     ),
-    ...scenarioQualityAdmissionIssues(parsed.right),
+    ...scenarioQualityAdmissionIssues(parsed.success),
   ];
   if (admissionIssues.length > 0) {
-    return Either.left(admissionIssues.join(" "));
+    return Result.fail(admissionIssues.join(" "));
   }
-  return Either.right(undefined);
+  return Result.succeed(undefined);
 }
 
 function scenarioQualityAdmissionIssues(
@@ -1606,7 +1610,7 @@ function retainReviewEnvelope(input: {
     result: input.result,
     outputJsonSchema,
   });
-  if (Either.isLeft(valid)) fail(valid.left);
+  if (Result.isFailure(valid)) fail(valid.failure);
   const envelope =
     input.profile === "documentDeclarationSet"
       ? {
@@ -1640,15 +1644,15 @@ function retainReviewEnvelope(input: {
             scenarioId: fixedScenarioId(),
           },
         };
-  const parsed = Schema.decodeUnknownEither(RetainedScenarioReviewInputSchema, {
+  const parsed = Schema.decodeUnknownResult(RetainedScenarioReviewInputSchema, {
     onExcessProperty: "error",
   })(envelope);
-  if (Either.isLeft(parsed)) fail(parsed.left.message);
+  if (Result.isFailure(parsed)) fail(parsed.failure.message);
   const replayPath =
     input.stage === "milestone"
       ? input.profilePaths.milestoneReviewInput
       : input.profilePaths.finalReviewInput;
-  writeJsonExclusive(replayPath, parsed.right);
+  writeJsonExclusive(replayPath, parsed.success);
   retainBenchmarkReviewReplayEvents(input.eventPath, replayPath);
   return replayPath;
 }
@@ -1692,12 +1696,12 @@ function retainReadinessEnvelope(input: {
     outputJsonSchema,
     result: input.result,
   };
-  const parsed = Schema.decodeUnknownEither(BenchmarkReadinessInputSchema, {
+  const parsed = Schema.decodeUnknownResult(BenchmarkReadinessInputSchema, {
     onExcessProperty: "error",
   })(envelope);
-  if (Either.isLeft(parsed)) fail(parsed.left.message);
+  if (Result.isFailure(parsed)) fail(parsed.failure.message);
   const path = input.profilePaths.readinessInput;
-  writeJsonExclusive(path, parsed.right);
+  writeJsonExclusive(path, parsed.success);
   return path;
 }
 
@@ -1781,11 +1785,11 @@ async function characterSourceCall(input: {
       scratch,
       namedInputs,
     });
-    if (Either.isLeft(result)) fail(result.left);
-    if (result.right.tag === "failed") {
+    if (Result.isFailure(result)) fail(result.failure);
+    if (result.success.tag === "failed") {
       fail(
         "Redundant character preparation invocation failed: " +
-          result.right.cause.reason,
+          result.success.cause.reason,
       );
     }
     if (
@@ -2021,8 +2025,8 @@ async function prepareProfile(input: {
   const revision = currentGitRevision();
   if (revision.tag === "dirty")
     fail("Fixed benchmark preparation requires a clean Git worktree.");
-  const gitSha = Schema.decodeUnknownEither(GitShaSchema)(revision.sha);
-  if (Either.isLeft(gitSha)) fail(gitSha.left.message);
+  const gitSha = Schema.decodeUnknownResult(GitShaSchema)(revision.sha);
+  if (Result.isFailure(gitSha)) fail(gitSha.failure.message);
   const paths = fixedBenchmarkProfilePaths(input.benchmarkId, input.profile);
   const executionId = freshBenchmarkExecutionId();
   const evidenceSetId = freshBenchmarkEvidenceSetId();
@@ -2049,11 +2053,11 @@ async function prepareProfile(input: {
     evidenceSetId,
     profile: input.profile,
     scenarioId: FIXED_SCENARIO_ID,
-    implementationGitSha: gitSha.right,
+    implementationGitSha: gitSha.success,
     scenarioBundle,
     contextManifest,
   });
-  const preparation = preparationState(bundle, paths, gitSha.right);
+  const preparation = preparationState(bundle, paths, gitSha.success);
   assertPreparationState(preparation, paths);
   const generationContext = resolve(
     paths.contextDirectory,
@@ -2072,7 +2076,7 @@ async function prepareProfile(input: {
       model: "gpt-5.6-sol",
       reasoningEffort: "medium",
       stagePlanReason: RAW_SWARM_STAGE_PLAN_REASONS.scenarioGeneration,
-      gitSha: gitSha.right,
+      gitSha: gitSha.success,
       scenarioId: fixedScenarioId(),
     });
     if (
@@ -2097,7 +2101,7 @@ async function prepareProfile(input: {
       contextPath: reviewContext,
       bundle,
       prompt: reviewPrompt(input.profile, "milestone", reviewContext, bundle),
-      gitSha: gitSha.right,
+      gitSha: gitSha.success,
     });
     if (milestone.currentEntry === undefined)
       fail("Milestone review row is missing.");
@@ -2122,7 +2126,7 @@ async function prepareProfile(input: {
       schema: ScenarioQualityReviewSchema,
       prompt:
         "Read BENCHMARK_CONTEXT.md, SCENARIO.md, and SCENARIO_REVIEW.json in the supplied scratch manifest, then return the separate historical scenario-quality readiness result. Do not add it to a composite review.",
-      gitSha: gitSha.right,
+      gitSha: gitSha.success,
       scenarioId: fixedScenarioId(),
     });
     writeJsonExclusive(paths.readinessResult, readiness.value);
@@ -2155,7 +2159,7 @@ async function prepareProfile(input: {
     contextPath: reviewContext,
     bundle,
     prompt: reviewPrompt(input.profile, "final", reviewContext, bundle),
-    gitSha: gitSha.right,
+    gitSha: gitSha.success,
   });
   if (final.currentEntry === undefined) fail("Final review row is missing.");
   retainReviewEnvelope({
@@ -2179,7 +2183,7 @@ async function prepareProfile(input: {
       ordinal: 6,
       profile: input.profile,
       bundle,
-      gitSha: gitSha.right,
+      gitSha: gitSha.success,
     });
     await characterSourceCall({
       paths,
@@ -2187,7 +2191,7 @@ async function prepareProfile(input: {
       ordinal: 7,
       profile: input.profile,
       bundle,
-      gitSha: gitSha.right,
+      gitSha: gitSha.success,
     });
   }
   await setupSourceCalls({
@@ -2195,7 +2199,7 @@ async function prepareProfile(input: {
     preparation,
     profile: input.profile,
     bundle,
-    gitSha: gitSha.right,
+    gitSha: gitSha.success,
     firstOrdinal: input.profile === "documentDeclarationSet" ? 8 : 4,
     characters: characterResult,
   });
@@ -2205,7 +2209,7 @@ async function prepareProfile(input: {
     profile: input.profile,
     executionId,
     evidenceSetId,
-    implementationGitSha: gitSha.right,
+    implementationGitSha: gitSha.success,
     paths,
     bundle,
   });
@@ -2241,25 +2245,25 @@ function validateRetainedReviewAuthority(
       ? profilePaths.milestoneReviewInput
       : profilePaths.finalReviewInput;
   if (!existsSync(path)) fail("Missing retained " + stage + " review input.");
-  const parsed = Schema.decodeUnknownEither(RetainedScenarioReviewInputSchema, {
+  const parsed = Schema.decodeUnknownResult(RetainedScenarioReviewInputSchema, {
     onExcessProperty: "error",
   })(JSON.parse(readFileSync(path, "utf8")));
-  if (Either.isLeft(parsed)) fail(parsed.left.message);
-  const retainedScenarioId = retainedScenarioReviewScenarioId(parsed.right);
-  if (Either.isLeft(retainedScenarioId)) fail(retainedScenarioId.left);
+  if (Result.isFailure(parsed)) fail(parsed.failure.message);
+  const retainedScenarioId = retainedScenarioReviewScenarioId(parsed.success);
+  if (Result.isFailure(retainedScenarioId)) fail(retainedScenarioId.failure);
   if (
-    retainedScenarioId.right !== FIXED_SCENARIO_ID ||
-    parsed.right.reviewStage !== stage ||
-    parsed.right.sourceGitSha !== implementationGitSha
+    retainedScenarioId.success !== FIXED_SCENARIO_ID ||
+    parsed.success.reviewStage !== stage ||
+    parsed.success.sourceGitSha !== implementationGitSha
   ) {
     fail(
       "Retained review input is bound to a different scenario, stage, or implementation revision.",
     );
   }
-  const subject = retainedScenarioReviewSubject(parsed.right);
+  const subject = retainedScenarioReviewSubject(parsed.success);
   if (profile === "boundedCapabilityProjection") {
     if (
-      parsed.right.schemaVersion !== 3 ||
+      parsed.success.schemaVersion !== 3 ||
       subject.tag !== "benchmark" ||
       subject.benchmarkId !== profilePaths.benchmarkId ||
       subject.profile !== profile ||
@@ -2273,11 +2277,11 @@ function validateRetainedReviewAuthority(
   const valid = validateBenchmarkReviewAuthority({
     profile,
     reviewStage: stage,
-    schemaVersion: parsed.right.schemaVersion,
-    result: parsed.right.result,
-    outputJsonSchema: parsed.right.outputJsonSchema,
+    schemaVersion: parsed.success.schemaVersion,
+    result: parsed.success.result,
+    outputJsonSchema: parsed.success.outputJsonSchema,
   });
-  if (Either.isLeft(valid)) fail(valid.left);
+  if (Result.isFailure(valid)) fail(valid.failure);
 }
 
 function validateRetainedReadinessAuthority(
@@ -2290,38 +2294,38 @@ function validateRetainedReadinessAuthority(
     fail("Missing retained scenario readiness input.");
   if (!existsSync(paths.readinessResult))
     fail("Missing retained scenario readiness result.");
-  const parsed = Schema.decodeUnknownEither(BenchmarkReadinessInputSchema, {
+  const parsed = Schema.decodeUnknownResult(BenchmarkReadinessInputSchema, {
     onExcessProperty: "error",
   })(JSON.parse(readFileSync(paths.readinessInput, "utf8")));
-  if (Either.isLeft(parsed)) fail(parsed.left.message);
+  if (Result.isFailure(parsed)) fail(parsed.failure.message);
   if (
-    parsed.right.scenarioId !== FIXED_SCENARIO_ID ||
-    parsed.right.sourceGitSha !== implementationGitSha
+    parsed.success.scenarioId !== FIXED_SCENARIO_ID ||
+    parsed.success.sourceGitSha !== implementationGitSha
   ) {
     fail(
       "Retained scenario readiness is bound to a different scenario or implementation revision.",
     );
   }
   const result = JSON.parse(readFileSync(paths.readinessResult, "utf8"));
-  if (sha256Canonical(result) !== sha256Canonical(parsed.right.result)) {
+  if (sha256Canonical(result) !== sha256Canonical(parsed.success.result)) {
     fail(
       "Retained scenario readiness result does not match its input envelope.",
     );
   }
   if (
-    sha256Canonical(parsed.right.outputJsonSchema) !==
+    sha256Canonical(parsed.success.outputJsonSchema) !==
     sha256Canonical(codexOutputJsonSchema(ScenarioQualityReviewSchema))
   ) {
     fail("Retained scenario readiness used the wrong output schema.");
   }
-  const decodedResult = Schema.decodeUnknownEither(
+  const decodedResult = Schema.decodeUnknownResult(
     ScenarioQualityReviewSchema,
     {
       onExcessProperty: "error",
     },
   )(result);
-  if (Either.isLeft(decodedResult)) fail(decodedResult.left.message);
-  Match.value(decodedResult.right).pipe(
+  if (Result.isFailure(decodedResult)) fail(decodedResult.failure.message);
+  Match.value(decodedResult.success).pipe(
     Match.when({ classification: "ready" }, () => undefined),
     Match.when({ classification: "needsRevision" }, () =>
       fail(
@@ -2343,14 +2347,14 @@ function validateContextDeliveryEvidence(input: {
   if (!existsSync(input.path)) {
     fail(`Missing retained ${input.role} context-delivery evidence.`);
   }
-  const parsed = Schema.decodeUnknownEither(
+  const parsed = Schema.decodeUnknownResult(
     BenchmarkContextDeliveryEvidenceSchema,
     { onExcessProperty: "error" },
   )(JSON.parse(readFileSync(input.path, "utf8")));
-  if (Either.isLeft(parsed)) fail(parsed.left.message);
+  if (Result.isFailure(parsed)) fail(parsed.failure.message);
   if (
-    parsed.right.profile !== input.profile ||
-    parsed.right.role !== input.role
+    parsed.success.profile !== input.profile ||
+    parsed.success.role !== input.role
   ) {
     fail(
       `Retained ${input.role} context delivery is bound to another profile or role.`,
@@ -2361,9 +2365,9 @@ function validateContextDeliveryEvidence(input: {
     fail(`Context manifest has no ${input.role} authority.`);
   }
   if (
-    parsed.right.path !== source.authority.path ||
-    parsed.right.byteLength !== source.authority.byteLength ||
-    parsed.right.sha256 !== source.authority.sha256
+    parsed.success.path !== source.authority.path ||
+    parsed.success.byteLength !== source.authority.byteLength ||
+    parsed.success.sha256 !== source.authority.sha256
   ) {
     fail(
       `Retained ${input.role} context delivery does not match its manifest authority.`,
@@ -2385,15 +2389,15 @@ function assembleProfile(
 ): void {
   const bundle = fixedScenarioCanonicalBundle();
   const paths = fixedBenchmarkProfilePaths(benchmarkId, profile);
-  const executionProfileDescriptor = Schema.decodeUnknownEither(
+  const executionProfileDescriptor = Schema.decodeUnknownResult(
     BenchmarkExecutionProfileDescriptorSchema,
     { onExcessProperty: "error" },
   )(JSON.parse(readFileSync(paths.executionProfileDescriptor, "utf8")));
-  if (Either.isLeft(executionProfileDescriptor))
-    fail(executionProfileDescriptor.left.message);
+  if (Result.isFailure(executionProfileDescriptor))
+    fail(executionProfileDescriptor.failure.message);
   if (
-    executionProfileDescriptor.right.profile !== profile ||
-    executionProfileDescriptor.right.scenarioId !== FIXED_SCENARIO_ID
+    executionProfileDescriptor.success.profile !== profile ||
+    executionProfileDescriptor.success.scenarioId !== FIXED_SCENARIO_ID
   ) {
     fail(
       "Fixed benchmark execution profile descriptor is bound to another execution, profile, or scenario.",
@@ -2402,7 +2406,7 @@ function assembleProfile(
   const plan = validateScenarioStagePlan(
     JSON.parse(readFileSync(paths.stagePlan, "utf8")),
   );
-  if (Either.isLeft(plan)) fail(plan.left);
+  if (Result.isFailure(plan)) fail(plan.failure);
   const preparedBundle = {
     scenario: bundle.authorities.scenario,
     scenarioRecord: bundle.authorities.scenarioRecord,
@@ -2415,11 +2419,11 @@ function assembleProfile(
   const contextManifestAuthority = artifactAuthority(
     repoRelative(paths.contextManifest),
   );
-  const contextManifest = Schema.decodeUnknownEither(
+  const contextManifest = Schema.decodeUnknownResult(
     BenchmarkContextSourceManifestDocumentSchema,
     { onExcessProperty: "error" },
   )(JSON.parse(readFileSync(paths.contextManifest, "utf8")));
-  if (Either.isLeft(contextManifest)) fail(contextManifest.left.message);
+  if (Result.isFailure(contextManifest)) fail(contextManifest.failure.message);
   const playerContextDelivery = resolve(
     paths.playerDirectory,
     "evidence/context-delivery.json",
@@ -2433,7 +2437,7 @@ function assembleProfile(
     path: playerContextDelivery,
     profile,
     role: "player",
-    manifest: contextManifest.right,
+    manifest: contextManifest.success,
   });
   const transcript = resolve(paths.playerDirectory, "evidence/sdk-calls.jsonl");
   const observations = resolve(
@@ -2458,7 +2462,7 @@ function assembleProfile(
       path: paths.postPlayContextDelivery,
       profile,
       role: "postPlayReview",
-      manifest: contextManifest.right,
+      manifest: contextManifest.success,
     });
   } else if (postPlayRan) {
     fail(
@@ -2466,9 +2470,9 @@ function assembleProfile(
     );
   }
   if (
-    sha256Canonical(executionProfileDescriptor.right.scenarioBundle) !==
+    sha256Canonical(executionProfileDescriptor.success.scenarioBundle) !==
       sha256Canonical(preparedBundle) ||
-    sha256Canonical(executionProfileDescriptor.right.contextManifest) !==
+    sha256Canonical(executionProfileDescriptor.success.contextManifest) !==
       sha256Canonical(contextManifestAuthority)
   ) {
     fail(
@@ -2486,8 +2490,8 @@ function assembleProfile(
     continuationObservationPath: repoRelative(observations),
     finalArtifactPath: repoRelative(finalArtifact),
   });
-  if (Either.isLeft(derivedOutcome)) fail(derivedOutcome.left);
-  const completed = derivedOutcome.right.tag === "completed";
+  if (Result.isFailure(derivedOutcome)) fail(derivedOutcome.failure);
+  const completed = derivedOutcome.success.tag === "completed";
   if (
     completed &&
     (!existsSync(replay) ||
@@ -2506,13 +2510,13 @@ function assembleProfile(
       profile,
       paths,
       stage,
-      executionProfileDescriptor.right.implementationGitSha,
+      executionProfileDescriptor.success.implementationGitSha,
     );
   }
   validateRetainedReadinessAuthority(
     profile,
     paths,
-    executionProfileDescriptor.right.implementationGitSha,
+    executionProfileDescriptor.success.implementationGitSha,
   );
   const benchmarkLedger = artifactAuthority(
     repoRelative(paths.benchmarkLedger),
@@ -2534,19 +2538,19 @@ function assembleProfile(
   const invocations = values.flatMap(
     (value): readonly FixedBenchmarkInvocation[] => {
       const current = parseModelInvocationLedgerEntry(value);
-      if (Either.isRight(current)) {
+      if (Result.isSuccess(current)) {
         if (
-          current.right.schemaVersion !== 4 &&
-          current.right.schemaVersion !== 5
+          current.success.schemaVersion !== 4 &&
+          current.success.schemaVersion !== 5
         ) {
           return fail(
             "Historical invocation rows cannot enter schema-3 assembly.",
           );
         }
-        return [current.right];
+        return [current.success];
       }
       const auxiliary = parseBenchmarkModelInvocationLedgerEntry(value);
-      if (Either.isRight(auxiliary)) return [auxiliary.right];
+      if (Result.isSuccess(auxiliary)) return [auxiliary.success];
       return fail("A retained benchmark invocation row is invalid.");
     },
   );
@@ -2662,9 +2666,9 @@ function assembleProfile(
   if (
     findings.subject.tag !== "execution" ||
     findings.subject.executionId !==
-      executionProfileDescriptor.right.executionId ||
+      executionProfileDescriptor.success.executionId ||
     findings.subject.evidenceSetId !==
-      executionProfileDescriptor.right.evidenceSetId
+      executionProfileDescriptor.success.evidenceSetId
   ) {
     fail(
       "Fixed benchmark descriptor execution identity does not match the retained player Execution findings subject.",
@@ -2680,25 +2684,28 @@ function assembleProfile(
   const measurementCommon = {
     schemaVersion: 5 as const,
     pathId: (() => {
-      const decoded = Schema.decodeUnknownEither(PerformancePathIdSchema)(
+      const decoded = Schema.decodeUnknownResult(PerformancePathIdSchema)(
         benchmarkId + "-" + profile,
       );
-      return Either.isRight(decoded)
-        ? decoded.right
-        : fail(`Invalid benchmark performance path identity: ${decoded.left}`);
+      return Result.isSuccess(decoded)
+        ? decoded.success
+        : fail(
+            `Invalid benchmark performance path identity: ${decoded.failure}`,
+          );
     })(),
     scenarioId: fixedScenarioId(),
-    executionId: executionProfileDescriptor.right.executionId,
-    evidenceSetId: executionProfileDescriptor.right.evidenceSetId,
-    implementationGitSha: executionProfileDescriptor.right.implementationGitSha,
+    executionId: executionProfileDescriptor.success.executionId,
+    evidenceSetId: executionProfileDescriptor.success.evidenceSetId,
+    implementationGitSha:
+      executionProfileDescriptor.success.implementationGitSha,
     scenarioBundle: preparedBundle,
     contextSourceManifest: contextManifestAuthority,
-    stagePlan: plan.right,
+    stagePlan: plan.success,
     invocationLedgers: ledgers,
     invocationEvents,
     findingsAuthority: artifactAuthority(findingsPath),
     findings,
-    outcome: derivedOutcome.right,
+    outcome: derivedOutcome.success,
   };
   const measurement: CurrentBenchmarkMeasurement =
     profile === "documentDeclarationSet"
@@ -2715,22 +2722,22 @@ function assembleProfile(
           ),
         };
   const parsed = parseBenchmarkMeasurement(measurement);
-  if (Either.isLeft(parsed)) fail(parsed.left.message);
+  if (Result.isFailure(parsed)) fail(parsed.failure.message);
   const validated = validateCompletePathMeasurement(measurement);
-  if (Either.isLeft(validated)) fail(validated.left);
+  if (Result.isFailure(validated)) fail(validated.failure);
   writeJsonExclusive(paths.measurement, measurement);
 }
 
 export function parseFixedBenchmarkProfile(
   value: unknown,
-): Either.Either<FixedBenchmarkProfile, string> {
+): Result.Result<FixedBenchmarkProfile, string> {
   if (
     value === "documentDeclarationSet" ||
     value === "boundedCapabilityProjection"
   ) {
-    return Either.right(value);
+    return Result.succeed(value);
   }
-  return Either.left("Unknown fixed benchmark profile: " + String(value));
+  return Result.fail("Unknown fixed benchmark profile: " + String(value));
 }
 
 async function main(args: readonly string[]): Promise<void> {
@@ -2749,8 +2756,8 @@ async function main(args: readonly string[]): Promise<void> {
         ? FIXED_BENCHMARK_PROFILES
         : (() => {
             const parsed = parseFixedBenchmarkProfile(profileInput);
-            if (Either.isLeft(parsed)) fail(parsed.left);
-            return [parsed.right] as const;
+            if (Result.isFailure(parsed)) fail(parsed.failure);
+            return [parsed.success] as const;
           })();
     for (const profile of profiles) {
       await prepareProfile({
@@ -2771,8 +2778,8 @@ async function main(args: readonly string[]): Promise<void> {
       );
     }
     const parsed = parseFixedBenchmarkProfile(profileInput);
-    if (Either.isLeft(parsed)) fail(parsed.left);
-    assembleProfile(assertBenchmarkId(benchmarkId), parsed.right);
+    if (Result.isFailure(parsed)) fail(parsed.failure);
+    assembleProfile(assertBenchmarkId(benchmarkId), parsed.success);
     return;
   }
   if (command === "compare") {
@@ -2803,8 +2810,8 @@ async function main(args: readonly string[]): Promise<void> {
       candidate,
       outputPath: profileInput,
     });
-    if (Either.isLeft(result)) fail(result.left);
-    const benchmarkRecord = Schema.decodeUnknownEither(BenchmarkRecordSchema, {
+    if (Result.isFailure(result)) fail(result.failure);
+    const benchmarkRecord = Schema.decodeUnknownResult(BenchmarkRecordSchema, {
       onExcessProperty: "error",
     })({
       schemaVersion: 1,
@@ -2812,18 +2819,19 @@ async function main(args: readonly string[]): Promise<void> {
       evidenceSetId: freshBenchmarkEvidenceSetId(),
       comparisonTargets: FIXED_BENCHMARK_PROFILES.map((profile) => {
         const paths = fixedBenchmarkProfilePaths(acceptedBenchmarkId, profile);
-        const descriptor = Schema.decodeUnknownEither(
+        const descriptor = Schema.decodeUnknownResult(
           BenchmarkExecutionProfileDescriptorSchema,
           { onExcessProperty: "error" },
         )(JSON.parse(readFileSync(paths.executionProfileDescriptor, "utf8")));
-        if (Either.isLeft(descriptor)) fail(descriptor.left.message);
+        if (Result.isFailure(descriptor)) fail(descriptor.failure.message);
         return {
           tag: "executionProfile" as const,
-          executionId: descriptor.right.executionId,
+          executionId: descriptor.success.executionId,
         };
       }),
     });
-    if (Either.isLeft(benchmarkRecord)) fail(benchmarkRecord.left.message);
+    if (Result.isFailure(benchmarkRecord))
+      fail(benchmarkRecord.failure.message);
     writeJsonExclusive(
       resolve(
         repoRoot,
@@ -2831,7 +2839,7 @@ async function main(args: readonly string[]): Promise<void> {
         acceptedBenchmarkId,
         "benchmark.json",
       ),
-      benchmarkRecord.right,
+      benchmarkRecord.success,
     );
     return;
   }

@@ -1,4 +1,4 @@
-import { Either, Match, Schema } from "effect";
+import { Result, Match, Schema } from "effect";
 
 import { ScenarioCompositeReviewSchema } from "./scenario-campaign.ts";
 import type { ScenarioCampaignManifest } from "./evidence-manifests.ts";
@@ -29,13 +29,13 @@ export const RETAINED_SCENARIO_REVIEW_REASONING_EFFORTS = [
   "medium",
   "max",
 ] as const;
-export const RetainedScenarioReviewReasoningEffortSchema = Schema.Literal(
-  ...RETAINED_SCENARIO_REVIEW_REASONING_EFFORTS,
+export const RetainedScenarioReviewReasoningEffortSchema = Schema.Literals(
+  RETAINED_SCENARIO_REVIEW_REASONING_EFFORTS,
 );
 
 const RetainedScenarioReviewCommonFields = {
   phase: Schema.Literal("scenarioCompositeReview"),
-  reviewStage: Schema.Literal("milestone", "final"),
+  reviewStage: Schema.Literals(["milestone", "final"]),
   sourceGitSha: GitShaSchema,
   invocationId: Schema.NonEmptyString,
   model: Schema.Literal("gpt-5.6-luna"),
@@ -51,14 +51,14 @@ const HistoricalRetainedScenarioReviewInputSchema = Schema.Struct({
   scenarioId: HistoricalScenarioIdSchema,
 });
 
-const RetainedScenarioReviewSubjectSchema = Schema.Union(
+const RetainedScenarioReviewSubjectSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("scenarioCandidate"),
     campaignId: ScenarioCampaignIdSchema,
     evidenceSetId: EvidenceSetIdSchema,
     candidateId: ScenarioCandidateIdSchema,
     candidateScenarioSha256: Schema.String.pipe(
-      Schema.pattern(/^[0-9a-f]{64}$/),
+      Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
     ),
     plannedScenarioId: PlannedScenarioIdSchema,
   }),
@@ -69,13 +69,13 @@ const RetainedScenarioReviewSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("benchmark"),
     benchmarkId: BenchmarkIdSchema,
-    profile: Schema.Literal(
+    profile: Schema.Literals([
       "documentDeclarationSet",
       "boundedCapabilityProjection",
-    ),
+    ]),
     scenarioId: ScenarioIdSchema,
   }),
-);
+]);
 export type RetainedScenarioReviewSubject = Schema.Schema.Type<
   typeof RetainedScenarioReviewSubjectSchema
 >;
@@ -94,10 +94,10 @@ const CurrentRetainedScenarioReviewInputSchema = Schema.Struct({
   subject: RetainedScenarioReviewSubjectSchema,
 });
 
-export const RetainedScenarioReviewInputSchema = Schema.Union(
+export const RetainedScenarioReviewInputSchema = Schema.Union([
   HistoricalRetainedScenarioReviewInputSchema,
   CurrentRetainedScenarioReviewInputSchema,
-);
+]);
 
 export type RetainedScenarioReviewInput = Schema.Schema.Type<
   typeof RetainedScenarioReviewInputSchema
@@ -118,14 +118,14 @@ export function retainedScenarioReviewSubject(
 
 export function retainedScenarioReviewScenarioId(
   input: RetainedScenarioReviewInput,
-): Either.Either<
+): Result.Result<
   Schema.Schema.Type<typeof ScenarioIdSchema> | HistoricalScenarioId,
   string
 > {
   const subject = retainedScenarioReviewSubject(input);
   return subject.tag === "scenario" || subject.tag === "benchmark"
-    ? Either.right(subject.scenarioId)
-    : Either.left(
+    ? Result.succeed(subject.scenarioId)
+    : Result.fail(
         "A Scenario Candidate review reservation cannot satisfy an admitted Scenario identity.",
       );
 }
@@ -136,34 +136,34 @@ export function retainedScenarioReviewMatchesAdmission(
     readonly scenarioId: RetainedScenarioReviewScenarioReference;
     readonly scenarioSha256: ScenarioReviewSourceSha256;
   }>,
-): Either.Either<ReturnType<typeof retainedScenarioReviewSubject>, string> {
+): Result.Result<ReturnType<typeof retainedScenarioReviewSubject>, string> {
   const subject = retainedScenarioReviewSubject(input);
   if (subject.tag === "scenario" || subject.tag === "benchmark") {
     return subject.scenarioId === admission.scenarioId
-      ? Either.right(subject)
-      : Either.left(
+      ? Result.succeed(subject)
+      : Result.fail(
           `Review scenario ${subject.scenarioId} does not match admitted scenario ${admission.scenarioId}.`,
         );
   }
   if (String(subject.plannedScenarioId) !== String(admission.scenarioId)) {
-    return Either.left(
+    return Result.fail(
       `Review Candidate plans scenario ${subject.plannedScenarioId}, not admitted scenario ${admission.scenarioId}.`,
     );
   }
   return subject.candidateScenarioSha256 === admission.scenarioSha256
-    ? Either.right(subject)
-    : Either.left(
+    ? Result.succeed(subject)
+    : Result.fail(
         `Review Candidate source hash does not match admitted scenario ${admission.scenarioId}.`,
       );
 }
 
 export function retainedScenarioReviewPlannedScenarioId(
   input: RetainedScenarioReviewInput,
-): Either.Either<Schema.Schema.Type<typeof PlannedScenarioIdSchema>, string> {
+): Result.Result<Schema.Schema.Type<typeof PlannedScenarioIdSchema>, string> {
   const subject = retainedScenarioReviewSubject(input);
   return subject.tag === "scenarioCandidate"
-    ? Either.right(subject.plannedScenarioId)
-    : Either.left(
+    ? Result.succeed(subject.plannedScenarioId)
+    : Result.fail(
         "An admitted Scenario review does not carry a Campaign reservation identity.",
       );
 }
@@ -418,15 +418,15 @@ function replayLedgerSchemaVersion(
   input: RetainedScenarioReviewInput,
   ledgerEntry: ModelInvocationLedgerEntry,
   invocationId: string,
-): Either.Either<2 | 4 | 5, string> {
+): Result.Result<2 | 4 | 5, string> {
   if (input.schemaVersion === 2) {
-    if (ledgerEntry.schemaVersion === 2) return Either.right(2);
+    if (ledgerEntry.schemaVersion === 2) return Result.succeed(2);
     if (ledgerEntry.schemaVersion !== 4 && ledgerEntry.schemaVersion !== 5) {
-      return Either.left(
+      return Result.fail(
         `Historical review invocation ${invocationId} does not match the expected ledger version.`,
       );
     }
-    return Either.right(ledgerEntry.schemaVersion);
+    return Result.succeed(ledgerEntry.schemaVersion);
   }
   if (ledgerEntry.schemaVersion !== 4 && ledgerEntry.schemaVersion !== 5) {
     const lifecycle = Match.value(input.subject).pipe(
@@ -435,16 +435,16 @@ function replayLedgerSchemaVersion(
       Match.when({ tag: "scenario" }, () => "Scenario" as const),
       Match.exhaustive,
     );
-    return Either.left(
+    return Result.fail(
       `Current ${lifecycle} review invocation ${invocationId} requires current ledger evidence.`,
     );
   }
   if (canonicalJson(ledgerEntry.subject) !== canonicalJson(input.subject)) {
-    return Either.left(
+    return Result.fail(
       `Current review invocation ${invocationId} does not match its lifecycle subject.`,
     );
   }
-  return Either.right(ledgerEntry.schemaVersion);
+  return Result.succeed(ledgerEntry.schemaVersion);
 }
 
 function isCandidateReplayLedgerEntry(
@@ -496,9 +496,9 @@ export function retainedScenarioReviewMatchesReplayBinding(
   input: RetainedScenarioReviewInput,
   ledgerEntry: ModelInvocationLedgerEntry,
   expected: RetainedScenarioReviewReplayExpectation,
-): Either.Either<RetainedScenarioReviewReplayBinding, string> {
+): Result.Result<RetainedScenarioReviewReplayBinding, string> {
   if (input.reviewStage !== expected.reviewStage) {
-    return Either.left(
+    return Result.fail(
       `Review stage ${input.reviewStage} does not match expected ${expected.reviewStage}.`,
     );
   }
@@ -524,7 +524,7 @@ export function retainedScenarioReviewMatchesReplayBinding(
       inputTag !== "benchmark") ||
     (expected.tag === "historicalScenario" && input.schemaVersion !== 2)
   ) {
-    return Either.left(
+    return Result.fail(
       `Review invocation ${input.invocationId} has lifecycle ${inputTag}, not expected ${expected.tag}.`,
     );
   }
@@ -533,15 +533,15 @@ export function retainedScenarioReviewMatchesReplayBinding(
       scenarioId: expected.scenarioId,
       scenarioSha256: expected.admittedScenarioSha256,
     });
-    if (Either.isLeft(admission)) return Either.left(admission.left);
+    if (Result.isFailure(admission)) return Result.fail(admission.failure);
   }
   if (ledgerEntry.invocationId !== input.invocationId) {
-    return Either.left(
+    return Result.fail(
       `Review invocation ${input.invocationId} does not match ledger invocation ${ledgerEntry.invocationId}.`,
     );
   }
   if (ledgerEntry.phase !== "scenarioCompositeReview") {
-    return Either.left(
+    return Result.fail(
       `Review invocation ${input.invocationId} is not a composite-review ledger entry.`,
     );
   }
@@ -550,7 +550,7 @@ export function retainedScenarioReviewMatchesReplayBinding(
     ledgerEntry.model !== input.model ||
     ledgerEntry.reasoningEffort !== input.reasoningEffort
   ) {
-    return Either.left(
+    return Result.fail(
       `Review invocation ${input.invocationId} does not match its source Git, model, or reasoning effort.`,
     );
   }
@@ -597,7 +597,7 @@ export function retainedScenarioReviewMatchesReplayBinding(
       ),
       Match.exhaustive,
     );
-    return Either.left(mismatchMessage);
+    return Result.fail(mismatchMessage);
   }
 
   const ledgerSchemaVersion = replayLedgerSchemaVersion(
@@ -605,15 +605,15 @@ export function retainedScenarioReviewMatchesReplayBinding(
     ledgerEntry,
     input.invocationId,
   );
-  if (Either.isLeft(ledgerSchemaVersion))
-    return Either.left(ledgerSchemaVersion.left);
+  if (Result.isFailure(ledgerSchemaVersion))
+    return Result.fail(ledgerSchemaVersion.failure);
 
   if (
     expected.tag === "historicalScenario" &&
     (ledgerEntry.schemaVersion === 4 || ledgerEntry.schemaVersion === 5)
   ) {
     if (ledgerEntry.subject.tag !== "scenarioCandidate") {
-      return Either.left(
+      return Result.fail(
         `Historical review invocation ${input.invocationId} requires a scenarioCandidate lifecycle row when migrated to ledger schema ${String(ledgerEntry.schemaVersion)}.`,
       );
     }
@@ -623,7 +623,7 @@ export function retainedScenarioReviewMatchesReplayBinding(
       ledgerEntry.subject.plannedScenarioId !==
         expected.campaign.plannedScenarioId
     ) {
-      return Either.left(
+      return Result.fail(
         `Historical review Candidate ${ledgerEntry.subject.candidateId} does not belong to the expected Campaign, Evidence Set, and planned Scenario.`,
       );
     }
@@ -632,7 +632,7 @@ export function retainedScenarioReviewMatchesReplayBinding(
       ledgerEntry.subject.candidateScenarioSha256 !==
         expected.admittedScenarioSha256
     ) {
-      return Either.left(
+      return Result.fail(
         `Historical review Candidate ${ledgerEntry.subject.candidateId} does not match the admitted Scenario source hash.`,
       );
     }
@@ -654,7 +654,7 @@ export function retainedScenarioReviewMatchesReplayBinding(
         Match.when({ tag: "benchmark" }, () => input.invocationId),
         Match.exhaustive,
       );
-      return Either.left(
+      return Result.fail(
         `Review Candidate ${candidateIdentity} does not belong to the expected Campaign, Evidence Set, and planned Scenario.`,
       );
     }
@@ -662,7 +662,7 @@ export function retainedScenarioReviewMatchesReplayBinding(
 
   if (expected.tag === "benchmark") {
     if (!isBenchmarkReplayLedgerEntry(ledgerEntry)) {
-      return Either.left(
+      return Result.fail(
         `Benchmark review invocation ${input.invocationId} requires a benchmark lifecycle ledger entry.`,
       );
     }
@@ -671,7 +671,7 @@ export function retainedScenarioReviewMatchesReplayBinding(
       ledgerEntry.subject.profile !== expected.benchmark.profile ||
       ledgerEntry.subject.scenarioId !== expected.scenarioId
     ) {
-      return Either.left(
+      return Result.fail(
         `Benchmark review invocation ${input.invocationId} does not match its benchmark, profile, or scenario identity.`,
       );
     }
@@ -679,11 +679,11 @@ export function retainedScenarioReviewMatchesReplayBinding(
       !isBenchmarkRetainedScenarioReviewInput(input) &&
       input.schemaVersion !== 2
     ) {
-      return Either.left(
+      return Result.fail(
         `Benchmark review invocation ${input.invocationId} has an invalid parsed lifecycle binding.`,
       );
     }
-    return Either.right({
+    return Result.succeed({
       tag: "benchmark",
       retainedInput: input,
       ledgerEntry,
@@ -695,11 +695,11 @@ export function retainedScenarioReviewMatchesReplayBinding(
       !isCandidateRetainedScenarioReviewInput(input) ||
       !isCandidateReplayLedgerEntry(ledgerEntry)
     ) {
-      return Either.left(
+      return Result.fail(
         `Current Candidate review invocation ${input.invocationId} has an invalid parsed lifecycle binding.`,
       );
     }
-    return Either.right({
+    return Result.succeed({
       tag: "candidate",
       retainedInput: input,
       ledgerEntry,
@@ -707,11 +707,11 @@ export function retainedScenarioReviewMatchesReplayBinding(
   }
   if (input.schemaVersion === 2) {
     if (!isHistoricalReplayLedgerEntry(ledgerEntry)) {
-      return Either.left(
+      return Result.fail(
         `Historical review invocation ${input.invocationId} has an invalid parsed lifecycle binding.`,
       );
     }
-    return Either.right({
+    return Result.succeed({
       tag: "historicalScenario",
       retainedInput: input,
       ledgerEntry,
@@ -721,11 +721,11 @@ export function retainedScenarioReviewMatchesReplayBinding(
     !isScenarioRetainedScenarioReviewInput(input) ||
     !isScenarioReplayLedgerEntry(ledgerEntry)
   ) {
-    return Either.left(
+    return Result.fail(
       `Scenario review invocation ${input.invocationId} has an invalid parsed lifecycle binding.`,
     );
   }
-  return Either.right({
+  return Result.succeed({
     tag: "scenario",
     retainedInput: input,
     ledgerEntry,

@@ -35,7 +35,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
   if (sdk.isLeft(meleeGoblinWarrior)) {
     return {
       kind: "obstructed",
-      obstruction: `The public battle initializer rejected the melee Goblin Warrior: ${sdk.battleStateInitIssueMessage(meleeGoblinWarrior.left)}`,
+      obstruction: `The public battle initializer rejected the melee Goblin Warrior: ${sdk.battleStateInitIssueMessage(meleeGoblinWarrior.failure)}`,
       observation: {
         scenarioId: "prone-target-roll-mode-distance-probe",
         stage: "melee-goblin-warrior-initialization",
@@ -53,7 +53,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
   if (sdk.isLeft(rangedGoblinWarrior)) {
     return {
       kind: "obstructed",
-      obstruction: `The public battle initializer rejected the ranged Goblin Warrior: ${sdk.battleStateInitIssueMessage(rangedGoblinWarrior.left)}`,
+      obstruction: `The public battle initializer rejected the ranged Goblin Warrior: ${sdk.battleStateInitIssueMessage(rangedGoblinWarrior.failure)}`,
       observation: {
         scenarioId: "prone-target-roll-mode-distance-probe",
         stage: "ranged-goblin-warrior-initialization",
@@ -71,7 +71,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
   if (sdk.isLeft(wolfCreature)) {
     return {
       kind: "obstructed",
-      obstruction: `The public battle initializer rejected the Wolf's initial Prone condition: ${sdk.battleStateInitIssueMessage(wolfCreature.left)}`,
+      obstruction: `The public battle initializer rejected the Wolf's initial Prone condition: ${sdk.battleStateInitIssueMessage(wolfCreature.failure)}`,
       observation: {
         scenarioId: "prone-target-roll-mode-distance-probe",
         stage: "wolf-initialization",
@@ -83,15 +83,15 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
   const battle = sdk.startBattle({
     battleId: sdk.battleId("prone-target-roll-mode-distance-probe"),
     combatants: [
-      meleeGoblinWarrior.right,
-      rangedGoblinWarrior.right,
-      wolfCreature.right,
+      meleeGoblinWarrior.success,
+      rangedGoblinWarrior.success,
+      wolfCreature.success,
     ],
   });
   if (sdk.isLeft(battle)) {
     return {
       kind: "obstructed",
-      obstruction: `The public battle initializer could not start the required encounter: ${sdk.battleStateInitIssueMessage(battle.left)}`,
+      obstruction: `The public battle initializer could not start the required encounter: ${sdk.battleStateInitIssueMessage(battle.failure)}`,
       observation: {
         scenarioId: "prone-target-roll-mode-distance-probe",
         stage: "battle-start",
@@ -113,7 +113,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
   const rangedGoblinWarriorCoordinate = { x: 14, y: 10 };
 
   const session = sdk.createScenarioSession({
-    battle: battle.right,
+    battle: battle.success,
     spatial: {
       kind: "geometryDerived",
       arena: { cells, boundaries: [] },
@@ -151,7 +151,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
   if (sdk.isLeft(session)) {
     return {
       kind: "obstructed",
-      obstruction: `The public scenario-session surface rejected the required battlefield: ${sdk.scenarioSessionIssueMessage(session.left)}`,
+      obstruction: `The public scenario-session surface rejected the required battlefield: ${sdk.scenarioSessionIssueMessage(session.failure)}`,
       observation: {
         scenarioId: "prone-target-roll-mode-distance-probe",
         stage: "scenario-session",
@@ -161,7 +161,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
 
   return {
     kind: "ready",
-    session: session.right,
+    session: session.success,
     observation: {
       scenarioId: "prone-target-roll-mode-distance-probe",
       arena: {

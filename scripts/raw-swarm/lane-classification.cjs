@@ -63,6 +63,7 @@ function isSupportedVitestTestFilename(path) {
 
 const DETERMINISTIC_RAW_SWARM_TESTS = [
   "scripts/raw-swarm/artifact-index.test.ts",
+  "scripts/raw-swarm/battle-slice-server.test.ts",
   "scripts/raw-swarm/capability-projection.test.ts",
   "scripts/raw-swarm/complete-path-comparison.test.ts",
   "scripts/raw-swarm/deterministic-capability.test.ts",
@@ -108,6 +109,7 @@ const DETERMINISTIC_RAW_SWARM_TESTS = [
 // deliberately closed; the guarded phase is derived as its exact complement.
 const DETERMINISTIC_TRUSTED_BOUNDARY_TESTS = Object.freeze(
   [
+    "scripts/raw-swarm/battle-slice-server.test.ts",
     "scripts/raw-swarm/model-telemetry.test.ts",
     "scripts/raw-swarm/run-sdk-player.test.ts",
     "scripts/raw-swarm/runner-boundaries.test.ts",

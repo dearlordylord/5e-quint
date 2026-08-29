@@ -11,7 +11,7 @@ import {
 import { tmpdir } from "node:os";
 import { relative, resolve } from "node:path";
 
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { afterEach, describe, expect, test } from "vitest";
 
 import {
@@ -138,14 +138,14 @@ function fixture() {
       },
     },
   });
-  if (stagePlan._tag === "Left") throw new Error(stagePlan.left);
+  if (Result.isFailure(stagePlan)) throw new Error(stagePlan.failure);
   writeFileSync(
     resolve(evidence, "stage-plan.json"),
-    `${JSON.stringify(stagePlan.right, null, 2)}\n`,
+    `${JSON.stringify(stagePlan.success, null, 2)}\n`,
   );
   writeFileSync(
     resolve(evidence, "stage-plan-findings.json"),
-    `${JSON.stringify(scenarioStagePlanFindings(stagePlan.right), null, 2)}\n`,
+    `${JSON.stringify(scenarioStagePlanFindings(stagePlan.success), null, 2)}\n`,
   );
   const transcriptPath = resolve(evidence, "sdk-calls.jsonl");
   const header = {
@@ -380,11 +380,11 @@ const FINDINGS_REVIEW_SUBJECT = {
 } as const satisfies CompositeReviewFixtureSubject;
 
 function findingsCampaignManifest(root: string): ScenarioCampaignManifest {
-  const decoded = Schema.decodeUnknownEither(ScenarioCampaignManifestSchema, {
+  const decoded = Schema.decodeUnknownResult(ScenarioCampaignManifestSchema, {
     onExcessProperty: "error",
   })(parseJsonRecord(readFileSync(resolve(root, "campaign.json"), "utf8")));
-  if (Either.isLeft(decoded)) throw new Error(decoded.left.message);
-  return decoded.right;
+  if (Result.isFailure(decoded)) throw new Error(decoded.failure.message);
+  return decoded.success;
 }
 
 function retainedCandidateCompositeReviewInput(input: {
@@ -759,11 +759,11 @@ describe("Raw Swarm findings projection", () => {
       role: "replay-final",
       path: relative(repoRoot, path),
     });
-    expect(source._tag).toBe("Right");
-    if (Either.isLeft(source)) return;
-    const original = authorityFor(source.right);
+    expect(source._tag).toBe("Success");
+    if (Result.isFailure(source)) return;
+    const original = authorityFor(source.success);
     writeFileSync(path, '{"value":"after"}\n');
-    expect(authorityFor(source.right)).toEqual(original);
+    expect(authorityFor(source.success)).toEqual(original);
   });
 
   test("public validation cannot substitute an arbitrary authority reader", () => {
@@ -797,7 +797,7 @@ describe("Raw Swarm findings projection", () => {
       projection,
       {
         readAuthorityBytes: (path: string) =>
-          Either.right(originalBytes.get(path) ?? new Uint8Array()),
+          Result.succeed(originalBytes.get(path) ?? new Uint8Array()),
       },
     ]);
     expect(validation).toMatchObject({
@@ -1027,18 +1027,21 @@ describe("Raw Swarm findings projection", () => {
       throw new Error("Synthetic final Candidate ledger entry is incomplete.");
     }
     const finalLedgerEntry = parseModelInvocationLedgerEntry(finalLedgerValue);
-    const finalReplayInput = Schema.decodeUnknownEither(
+    const finalReplayInput = Schema.decodeUnknownResult(
       RetainedScenarioReviewInputSchema,
       { onExcessProperty: "error" },
     )(finalInput);
-    expect(Either.isRight(finalLedgerEntry)).toBe(true);
-    expect(Either.isRight(finalReplayInput)).toBe(true);
-    if (Either.isLeft(finalLedgerEntry) || Either.isLeft(finalReplayInput)) {
+    expect(Result.isSuccess(finalLedgerEntry)).toBe(true);
+    expect(Result.isSuccess(finalReplayInput)).toBe(true);
+    if (
+      Result.isFailure(finalLedgerEntry) ||
+      Result.isFailure(finalReplayInput)
+    ) {
       return;
     }
     const finalBinding = retainedScenarioReviewMatchesReplayBinding(
-      finalReplayInput.right,
-      finalLedgerEntry.right,
+      finalReplayInput.success,
+      finalLedgerEntry.success,
       {
         tag: "candidate",
         reviewStage: "final",
@@ -1047,15 +1050,15 @@ describe("Raw Swarm findings projection", () => {
         campaign: findingsCampaignManifest(input.root),
       },
     );
-    expect(Either.isRight(finalBinding)).toBe(true);
-    if (Either.isLeft(finalBinding)) return;
-    expect(finalBinding.right).toMatchObject({
+    expect(Result.isSuccess(finalBinding)).toBe(true);
+    if (Result.isFailure(finalBinding)) return;
+    expect(finalBinding.success).toMatchObject({
       tag: "candidate",
       retainedInput: { subject: finalSubject },
       ledgerEntry: { subject: finalSubject },
     });
-    expect(finalBinding.right).not.toHaveProperty("candidateScenarioSha256");
-    expect(finalBinding.right).not.toHaveProperty("campaign");
+    expect(finalBinding.success).not.toHaveProperty("candidateScenarioSha256");
+    expect(finalBinding.success).not.toHaveProperty("campaign");
 
     const milestoneLedgerValue = readFileSync(
       resolve(repoRoot, generationLedgerRelative),
@@ -1072,21 +1075,21 @@ describe("Raw Swarm findings projection", () => {
     }
     const milestoneLedgerEntry =
       parseModelInvocationLedgerEntry(milestoneLedgerValue);
-    const milestoneReplayInput = Schema.decodeUnknownEither(
+    const milestoneReplayInput = Schema.decodeUnknownResult(
       RetainedScenarioReviewInputSchema,
       { onExcessProperty: "error" },
     )(milestoneInput);
-    expect(Either.isRight(milestoneLedgerEntry)).toBe(true);
-    expect(Either.isRight(milestoneReplayInput)).toBe(true);
+    expect(Result.isSuccess(milestoneLedgerEntry)).toBe(true);
+    expect(Result.isSuccess(milestoneReplayInput)).toBe(true);
     if (
-      Either.isLeft(milestoneLedgerEntry) ||
-      Either.isLeft(milestoneReplayInput)
+      Result.isFailure(milestoneLedgerEntry) ||
+      Result.isFailure(milestoneReplayInput)
     ) {
       return;
     }
     const milestoneBinding = retainedScenarioReviewMatchesReplayBinding(
-      milestoneReplayInput.right,
-      milestoneLedgerEntry.right,
+      milestoneReplayInput.success,
+      milestoneLedgerEntry.success,
       {
         tag: "candidate",
         reviewStage: "milestone",
@@ -1094,14 +1097,14 @@ describe("Raw Swarm findings projection", () => {
         campaign: findingsCampaignManifest(input.root),
       },
     );
-    expect(Either.isRight(milestoneBinding)).toBe(true);
-    if (Either.isLeft(milestoneBinding)) return;
-    expect(milestoneBinding.right).toMatchObject({
+    expect(Result.isSuccess(milestoneBinding)).toBe(true);
+    if (Result.isFailure(milestoneBinding)) return;
+    expect(milestoneBinding.success).toMatchObject({
       tag: "candidate",
       retainedInput: { subject: milestoneSubject },
       ledgerEntry: { subject: milestoneSubject },
     });
-    expect(milestoneBinding.right).not.toHaveProperty(
+    expect(milestoneBinding.success).not.toHaveProperty(
       "candidateScenarioSha256",
     );
   });
@@ -1149,7 +1152,7 @@ describe("Raw Swarm findings projection", () => {
     expect(
       projection.authorities.some(({ role }) => role === "replay-final"),
     ).toBe(true);
-    const retained = Schema.decodeUnknownEither(
+    const retained = Schema.decodeUnknownResult(
       RetainedScenarioReviewInputSchema,
       { onExcessProperty: "error" },
     )(parseJsonRecord(readFileSync(finalPath, "utf8")));
@@ -1158,12 +1161,12 @@ describe("Raw Swarm findings projection", () => {
         readFileSync(resolve(repoRoot, generationLedgerRelative), "utf8"),
       ),
     );
-    expect(Either.isRight(retained)).toBe(true);
-    expect(Either.isRight(ledgerEntry)).toBe(true);
-    if (Either.isLeft(retained) || Either.isLeft(ledgerEntry)) return;
+    expect(Result.isSuccess(retained)).toBe(true);
+    expect(Result.isSuccess(ledgerEntry)).toBe(true);
+    if (Result.isFailure(retained) || Result.isFailure(ledgerEntry)) return;
     const binding = retainedScenarioReviewMatchesReplayBinding(
-      retained.right,
-      ledgerEntry.right,
+      retained.success,
+      ledgerEntry.success,
       {
         tag: "historicalScenario",
         reviewStage: "final",
@@ -1172,9 +1175,9 @@ describe("Raw Swarm findings projection", () => {
         campaign: findingsCampaignManifest(input.root),
       },
     );
-    expect(Either.isRight(binding)).toBe(true);
-    if (Either.isLeft(binding)) return;
-    expect(binding.right).toMatchObject({
+    expect(Result.isSuccess(binding)).toBe(true);
+    if (Result.isFailure(binding)) return;
+    expect(binding.success).toMatchObject({
       tag: "historicalScenario",
       retainedInput: { scenarioId: "findings-example" },
       ledgerEntry: {
@@ -1182,10 +1185,10 @@ describe("Raw Swarm findings projection", () => {
         scenarioId: "findings-example",
       },
     });
-    expect(binding.right).not.toHaveProperty("scenarioId");
-    expect(binding.right).not.toHaveProperty("envelopeSubject");
-    expect(binding.right).not.toHaveProperty("ledgerSchemaVersion");
-    expect(binding.right).not.toHaveProperty("campaign");
+    expect(binding.success).not.toHaveProperty("scenarioId");
+    expect(binding.success).not.toHaveProperty("envelopeSubject");
+    expect(binding.success).not.toHaveProperty("ledgerSchemaVersion");
+    expect(binding.success).not.toHaveProperty("campaign");
   });
 
   test("binds a current v5 fixed-benchmark replay to benchmark lifecycle ownership", () => {
@@ -1211,7 +1214,7 @@ describe("Raw Swarm findings projection", () => {
       result: { tag: "succeeded" },
       usage: { tag: "unavailable", reason: "synthetic" },
     });
-    const replay = Schema.decodeUnknownEither(
+    const replay = Schema.decodeUnknownResult(
       RetainedScenarioReviewInputSchema,
       { onExcessProperty: "error" },
     )({
@@ -1238,12 +1241,12 @@ describe("Raw Swarm findings projection", () => {
       },
       subject: benchmarkSubject,
     });
-    expect(Either.isRight(ledger)).toBe(true);
-    expect(Either.isRight(replay)).toBe(true);
-    if (Either.isLeft(ledger) || Either.isLeft(replay)) return;
+    expect(Result.isSuccess(ledger)).toBe(true);
+    expect(Result.isSuccess(replay)).toBe(true);
+    if (Result.isFailure(ledger) || Result.isFailure(replay)) return;
     const binding = retainedScenarioReviewMatchesReplayBinding(
-      replay.right,
-      ledger.right,
+      replay.success,
+      ledger.success,
       {
         tag: "benchmark",
         reviewStage: "final",
@@ -1254,9 +1257,9 @@ describe("Raw Swarm findings projection", () => {
         },
       },
     );
-    expect(Either.isRight(binding)).toBe(true);
-    if (Either.isLeft(binding)) return;
-    expect(binding.right).toMatchObject({
+    expect(Result.isSuccess(binding)).toBe(true);
+    if (Result.isFailure(binding)) return;
+    expect(binding.success).toMatchObject({
       tag: "benchmark",
       retainedInput: { subject: benchmarkSubject },
       ledgerEntry: { schemaVersion: 5, subject: benchmarkSubject },
@@ -1337,7 +1340,7 @@ describe("Raw Swarm findings projection", () => {
         ],
       },
     );
-    const retained = Schema.decodeUnknownEither(
+    const retained = Schema.decodeUnknownResult(
       RetainedScenarioReviewInputSchema,
       { onExcessProperty: "error" },
     )(
@@ -1351,12 +1354,12 @@ describe("Raw Swarm findings projection", () => {
         readFileSync(resolve(repoRoot, generationLedgerRelative), "utf8"),
       ),
     );
-    expect(Either.isRight(retained)).toBe(true);
-    expect(Either.isRight(ledger)).toBe(true);
-    if (Either.isLeft(retained) || Either.isLeft(ledger)) return;
+    expect(Result.isSuccess(retained)).toBe(true);
+    expect(Result.isSuccess(ledger)).toBe(true);
+    if (Result.isFailure(retained) || Result.isFailure(ledger)) return;
     const binding = retainedScenarioReviewMatchesReplayBinding(
-      retained.right,
-      ledger.right,
+      retained.success,
+      ledger.success,
       {
         tag: "historicalScenario",
         reviewStage: "final",
@@ -1365,19 +1368,19 @@ describe("Raw Swarm findings projection", () => {
         campaign: findingsCampaignManifest(input.root),
       },
     );
-    expect(Either.isRight(binding)).toBe(true);
-    if (Either.isLeft(binding)) return;
-    expect(binding.right).toMatchObject({
+    expect(Result.isSuccess(binding)).toBe(true);
+    if (Result.isFailure(binding)) return;
+    expect(binding.success).toMatchObject({
       tag: "historicalScenario",
       retainedInput: { scenarioId: "findings-example" },
       ledgerEntry: { schemaVersion: 4, subject: candidateSubject },
     });
-    expect(binding.right).not.toHaveProperty("scenarioId");
-    expect(binding.right).not.toHaveProperty("envelopeSubject");
-    expect(binding.right).not.toHaveProperty("campaign");
+    expect(binding.success).not.toHaveProperty("scenarioId");
+    expect(binding.success).not.toHaveProperty("envelopeSubject");
+    expect(binding.success).not.toHaveProperty("campaign");
 
     const sameOwnerWrongHashLedger = {
-      ...ledger.right,
+      ...ledger.success,
       subject: {
         ...candidateSubject,
         candidateScenarioSha256: "f".repeat(64),
@@ -1385,7 +1388,7 @@ describe("Raw Swarm findings projection", () => {
     };
     const sameOwnerWrongHashBinding =
       retainedScenarioReviewMatchesReplayBinding(
-        retained.right,
+        retained.success,
         sameOwnerWrongHashLedger,
         {
           tag: "historicalScenario",
@@ -1395,14 +1398,14 @@ describe("Raw Swarm findings projection", () => {
           campaign: findingsCampaignManifest(input.root),
         },
       );
-    expect(Either.isLeft(sameOwnerWrongHashBinding)).toBe(true);
-    if (Either.isRight(sameOwnerWrongHashBinding)) return;
-    expect(sameOwnerWrongHashBinding.left).toContain(
+    expect(Result.isFailure(sameOwnerWrongHashBinding)).toBe(true);
+    if (Result.isSuccess(sameOwnerWrongHashBinding)) return;
+    expect(sameOwnerWrongHashBinding.failure).toContain(
       "admitted Scenario source hash",
     );
 
     const foreignLedger = {
-      ...ledger.right,
+      ...ledger.success,
       subject: {
         ...candidateSubject,
         campaignId: "foreign-campaign",
@@ -1410,7 +1413,7 @@ describe("Raw Swarm findings projection", () => {
       },
     };
     const foreignBinding = retainedScenarioReviewMatchesReplayBinding(
-      retained.right,
+      retained.success,
       foreignLedger,
       {
         tag: "historicalScenario",
@@ -1420,9 +1423,9 @@ describe("Raw Swarm findings projection", () => {
         campaign: findingsCampaignManifest(input.root),
       },
     );
-    expect(Either.isLeft(foreignBinding)).toBe(true);
-    if (Either.isRight(foreignBinding)) return;
-    expect(foreignBinding.left).toMatch(/Campaign, Evidence Set/);
+    expect(Result.isFailure(foreignBinding)).toBe(true);
+    if (Result.isSuccess(foreignBinding)) return;
+    expect(foreignBinding.failure).toMatch(/Campaign, Evidence Set/);
   });
 
   test("rejects a current same-name Scenario replay under Campaign ownership", () => {
@@ -1491,7 +1494,7 @@ describe("Raw Swarm findings projection", () => {
         ],
       },
     );
-    const retained = Schema.decodeUnknownEither(
+    const retained = Schema.decodeUnknownResult(
       RetainedScenarioReviewInputSchema,
       { onExcessProperty: "error" },
     )(
@@ -1505,12 +1508,12 @@ describe("Raw Swarm findings projection", () => {
         readFileSync(resolve(repoRoot, generationLedgerRelative), "utf8"),
       ),
     );
-    expect(Either.isRight(retained)).toBe(true);
-    expect(Either.isRight(ledger)).toBe(true);
-    if (Either.isLeft(retained) || Either.isLeft(ledger)) return;
+    expect(Result.isSuccess(retained)).toBe(true);
+    expect(Result.isSuccess(ledger)).toBe(true);
+    if (Result.isFailure(retained) || Result.isFailure(ledger)) return;
     const binding = retainedScenarioReviewMatchesReplayBinding(
-      retained.right,
-      ledger.right,
+      retained.success,
+      ledger.success,
       {
         tag: "historicalScenario",
         reviewStage: "milestone",
@@ -1518,7 +1521,7 @@ describe("Raw Swarm findings projection", () => {
         campaign: findingsCampaignManifest(input.root),
       },
     );
-    expect(Either.isRight(binding)).toBe(true);
+    expect(Result.isSuccess(binding)).toBe(true);
   });
 
   test("rejects replay when the generation Campaign manifest is missing", () => {
@@ -2494,11 +2497,11 @@ describe("Raw Swarm findings projection", () => {
         },
       },
     });
-    if (stagePlan._tag === "Left") throw new Error(stagePlan.left);
+    if (Result.isFailure(stagePlan)) throw new Error(stagePlan.failure);
     const stagePlanPath = resolve(root, "stage-plan.json");
     writeFileSync(
       stagePlanPath,
-      `${JSON.stringify(stagePlan.right, null, 2)}\n`,
+      `${JSON.stringify(stagePlan.success, null, 2)}\n`,
     );
     writeFileSync(
       ledger,
@@ -2519,7 +2522,7 @@ describe("Raw Swarm findings projection", () => {
     );
     writeFileSync(
       stagePlanFindings,
-      `${JSON.stringify(scenarioStagePlanFindings(stagePlan.right), null, 2)}\n`,
+      `${JSON.stringify(scenarioStagePlanFindings(stagePlan.success), null, 2)}\n`,
     );
     writeFileSync(
       candidateRejection,
@@ -2636,7 +2639,7 @@ describe("Raw Swarm findings projection", () => {
     writeFileSync(
       mismatchedStagePlanFindings,
       `${JSON.stringify(
-        scenarioStagePlanFindings(stagePlan.right).map((finding) => ({
+        scenarioStagePlanFindings(stagePlan.success).map((finding) => ({
           ...finding,
           identity: {
             tag: "admitted" as const,
@@ -2668,7 +2671,7 @@ describe("Raw Swarm findings projection", () => {
     writeFileSync(
       wrongCandidateHashFindings,
       `${JSON.stringify(
-        scenarioStagePlanFindings(stagePlan.right).map((finding) => ({
+        scenarioStagePlanFindings(stagePlan.success).map((finding) => ({
           ...finding,
           identity: {
             tag: "candidate" as const,

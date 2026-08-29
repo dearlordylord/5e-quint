@@ -17,13 +17,15 @@ export const VERDICT_CLASSES = [
 export const ReviewOutputSchema = Schema.Struct({
   scenarioId: ScenarioIdSchema,
   gitSha: GitShaSchema,
-  transcriptSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
-  reviewer: Schema.NonEmptyTrimmedString,
+  transcriptSha256: Schema.String.pipe(
+    Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+  ),
+  reviewer: Schema.Trimmed.check(Schema.isNonEmpty()),
   verdicts: Schema.Array(
     Schema.Struct({
-      class: Schema.Literal(...VERDICT_CLASSES),
-      claim: Schema.NonEmptyTrimmedString,
-      evidence: Schema.NonEmptyTrimmedString,
+      class: Schema.Literals(VERDICT_CLASSES),
+      claim: Schema.Trimmed.check(Schema.isNonEmpty()),
+      evidence: Schema.Trimmed.check(Schema.isNonEmpty()),
     }),
-  ).pipe(Schema.minItems(1)),
+  ).pipe(Schema.check(Schema.isMinLength(1))),
 });

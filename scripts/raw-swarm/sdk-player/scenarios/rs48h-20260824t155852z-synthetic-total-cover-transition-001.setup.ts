@@ -53,7 +53,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(skeletonOne)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(skeletonOne.left),
+      obstruction: sdk.battleStateInitIssueMessage(skeletonOne.failure),
       observation: {
         capability: "stat-block-creature-init",
         combatant: "Skeleton One",
@@ -63,7 +63,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(skeletonTwo)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(skeletonTwo.left),
+      obstruction: sdk.battleStateInitIssueMessage(skeletonTwo.failure),
       observation: {
         capability: "stat-block-creature-init",
         combatant: "Skeleton Two",
@@ -73,7 +73,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(goblinWarrior)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(goblinWarrior.left),
+      obstruction: sdk.battleStateInitIssueMessage(goblinWarrior.failure),
       observation: {
         capability: "stat-block-creature-init",
         combatant: "Goblin Warrior",
@@ -85,13 +85,17 @@ export const setupScenario: ScenarioSetup = (context) => {
     battleId: sdk.battleId(
       "rs48h-20260824t155852z-synthetic-total-cover-transition-001",
     ),
-    combatants: [skeletonOne.right, skeletonTwo.right, goblinWarrior.right],
+    combatants: [
+      skeletonOne.success,
+      skeletonTwo.success,
+      goblinWarrior.success,
+    ],
   });
 
   if (sdk.isLeft(battle)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(battle.left),
+      obstruction: sdk.battleStateInitIssueMessage(battle.failure),
       observation: {
         capability: "battle-setup",
         operation: "startBattle",
@@ -118,7 +122,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   ).flat();
 
   const session = sdk.createScenarioSession({
-    battle: battle.right,
+    battle: battle.success,
     spatial: {
       kind: "geometryDerived",
       arena: {
@@ -169,7 +173,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(session)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.scenarioSessionIssueMessage(session.left),
+      obstruction: sdk.scenarioSessionIssueMessage(session.failure),
       observation: {
         capability: "scenario-session",
         operation: "createScenarioSession",

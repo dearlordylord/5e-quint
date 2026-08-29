@@ -10,7 +10,7 @@ import {
 import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { DatabaseSync } from "node:sqlite";
-import { Either, Match, Option, Schema } from "effect";
+import { Result, Match, Option, Schema } from "effect";
 
 import { artifactAuthorityForBytes } from "./artifact-authority.ts";
 import {
@@ -81,19 +81,19 @@ const ISSUE_LINK_FILTERS = [
 type IssueLinkFilter = (typeof ISSUE_LINK_FILTERS)[number]["kind"];
 
 export const GitHubIssueNumberSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.positive(),
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.isGreaterThan(0)),
   Schema.brand("GitHubIssueNumber"),
 );
 type GitHubIssueNumber = Schema.Schema.Type<typeof GitHubIssueNumberSchema>;
 
 export const SwarmFingerprintSchema = Schema.String.pipe(
-  Schema.pattern(/^[a-f0-9]{64}$/),
+  Schema.check(Schema.isPattern(/^[a-f0-9]{64}$/)),
   Schema.brand("SwarmFingerprint"),
 );
 type SwarmFingerprint = Schema.Schema.Type<typeof SwarmFingerprintSchema>;
 
-const GitHubIssueSchema = Schema.parseJson(
+const GitHubIssueSchema = Schema.fromJsonString(
   Schema.Struct({
     body: Schema.String,
     labels: Schema.Array(Schema.Struct({ name: Schema.String })),
@@ -104,7 +104,7 @@ export interface GitHubIssueLinker {
   readonly ensureLinked: (
     issueNumber: GitHubIssueNumber,
     fingerprint: SwarmFingerprint,
-  ) => Either.Either<void, string>;
+  ) => Result.Result<void, string>;
 }
 
 interface LinkGithubIssueArgs {
@@ -219,20 +219,20 @@ const liveGitHubCommandRunner: GitHubCommandRunner = {
 function readGitHubIssue(
   issueNumber: GitHubIssueNumber,
   runner: GitHubCommandRunner,
-): Either.Either<Schema.Schema.Type<typeof GitHubIssueSchema>, string> {
+): Result.Result<Schema.Schema.Type<typeof GitHubIssueSchema>, string> {
   const result = runner.run(
     ["issue", "view", String(issueNumber), "--json", "body,labels"],
     undefined,
   );
   if (result.tag === "failure") {
-    return Either.left(result.message);
+    return Result.fail(result.message);
   }
-  const decoded = Schema.decodeUnknownEither(GitHubIssueSchema)(result.stdout);
-  return Either.isLeft(decoded)
-    ? Either.left(
-        `gh issue view returned invalid JSON: ${String(decoded.left)}`,
+  const decoded = Schema.decodeUnknownResult(GitHubIssueSchema)(result.stdout);
+  return Result.isFailure(decoded)
+    ? Result.fail(
+        `gh issue view returned invalid JSON: ${String(decoded.failure)}`,
       )
-    : Either.right(decoded.right);
+    : Result.succeed(decoded.success);
 }
 
 function githubIssueHasFingerprint(
@@ -249,19 +249,19 @@ export function makeGitHubIssueLinker(
   return {
     ensureLinked: (issueNumber, fingerprint) => {
       const before = readGitHubIssue(issueNumber, runner);
-      if (Either.isLeft(before)) return before;
+      if (Result.isFailure(before)) return Result.fail(before.failure);
       const marker = `Raw-Swarm-Fingerprint: ${fingerprint}`;
       const hasFingerprint = githubIssueHasFingerprint(
-        before.right.body,
+        before.success.body,
         fingerprint,
       );
-      const hasLabel = before.right.labels.some(
+      const hasLabel = before.success.labels.some(
         (label) => label.name === RAW_SWARM_GITHUB_LABEL,
       );
-      if (hasFingerprint && hasLabel) return Either.right(undefined);
+      if (hasFingerprint && hasLabel) return Result.succeed(undefined);
       const body = hasFingerprint
-        ? before.right.body
-        : `${before.right.body.trimEnd()}\n\n${marker}\n`;
+        ? before.success.body
+        : `${before.success.body.trimEnd()}\n\n${marker}\n`;
       const edited = runner.run(
         [
           "issue",
@@ -275,16 +275,16 @@ export function makeGitHubIssueLinker(
         body,
       );
       if (edited.tag === "failure") {
-        return Either.left(edited.message);
+        return Result.fail(edited.message);
       }
       const verified = readGitHubIssue(issueNumber, runner);
-      if (Either.isLeft(verified)) return verified;
-      return githubIssueHasFingerprint(verified.right.body, fingerprint) &&
-        verified.right.labels.some(
+      if (Result.isFailure(verified)) return Result.fail(verified.failure);
+      return githubIssueHasFingerprint(verified.success.body, fingerprint) &&
+        verified.success.labels.some(
           (label) => label.name === RAW_SWARM_GITHUB_LABEL,
         )
-        ? Either.right(undefined)
-        : Either.left(
+        ? Result.succeed(undefined)
+        : Result.fail(
             `GitHub issue #${issueNumber} is missing its verified swarm backlink or label`,
           );
     },
@@ -333,7 +333,9 @@ const PersistedExecutionIdentitySchema = Schema.Struct({
   scenarioId: ScenarioIdSchema,
   gitSha: GitShaSchema,
   startedAt: StartedAtSchema,
-  transcriptSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
+  transcriptSha256: Schema.String.pipe(
+    Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+  ),
 });
 type PersistedExecutionIdentity = Schema.Schema.Type<
   typeof PersistedExecutionIdentitySchema
@@ -341,10 +343,12 @@ type PersistedExecutionIdentity = Schema.Schema.Type<
 const PersistedExecutionAuditSchema = Schema.Struct({
   ...PersistedExecutionIdentitySchema.fields,
   findingsPath: Schema.String,
-  findingsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
+  findingsSha256: Schema.String.pipe(
+    Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+  ),
   findingsByteLength: Schema.Number.pipe(
-    Schema.int(),
-    Schema.greaterThanOrEqualTo(0),
+    Schema.check(Schema.isInt()),
+    Schema.check(Schema.isGreaterThanOrEqualTo(0)),
   ),
 });
 const PersistedExecutionReviewSchema = Schema.Struct({
@@ -358,10 +362,12 @@ const PersistedCampaignAuditSchema = Schema.Struct({
   gitSha: GitShaSchema,
   startedAt: StartedAtSchema,
   findingsPath: Schema.String,
-  findingsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
+  findingsSha256: Schema.String.pipe(
+    Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+  ),
   findingsByteLength: Schema.Number.pipe(
-    Schema.int(),
-    Schema.greaterThanOrEqualTo(0),
+    Schema.check(Schema.isInt()),
+    Schema.check(Schema.isGreaterThanOrEqualTo(0)),
   ),
 });
 
@@ -401,15 +407,15 @@ function readPortableReportManifest(manifestPath: string): PortableManifest {
       );
     }
   })();
-  const decoded = Schema.decodeUnknownEither(PortableManifestSchema, {
+  const decoded = Schema.decodeUnknownResult(PortableManifestSchema, {
     onExcessProperty: "error",
   })(value);
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     return fail(
-      `Portable report manifest is invalid: ${manifestPath}: ${decoded.left.message}`,
+      `Portable report manifest is invalid: ${manifestPath}: ${decoded.failure.message}`,
     );
   }
-  return decoded.right;
+  return decoded.success;
 }
 
 function readPortableReportIndexBytes(indexPath: string): Buffer {
@@ -429,16 +435,16 @@ function indexedReportArtifacts(
     .prepare("SELECT sha256, byteLength, path FROM artifacts ORDER BY sha256")
     .all()
     .map((row, index) => {
-      const decoded = Schema.decodeUnknownEither(
+      const decoded = Schema.decodeUnknownResult(
         PortableManifestArtifactSchema,
         { onExcessProperty: "error" },
       )(row);
-      if (Either.isLeft(decoded)) {
+      if (Result.isFailure(decoded)) {
         return fail(
           `Portable artifact index row ${String(index + 1)} is invalid.`,
         );
       }
-      return decoded.right;
+      return decoded.success;
     });
 }
 
@@ -630,13 +636,13 @@ function readPortableFindingsProjection(
       );
     }
   })();
-  const decoded = Schema.decodeUnknownEither(FindingsProjectionSchema, {
+  const decoded = Schema.decodeUnknownResult(FindingsProjectionSchema, {
     onExcessProperty: "error",
   })(value);
-  if (Either.isLeft(decoded)) {
-    return fail(`Invalid findings projection: ${decoded.left.message}`);
+  if (Result.isFailure(decoded)) {
+    return fail(`Invalid findings projection: ${decoded.failure.message}`);
   }
-  const snapshots = decoded.right.authorities.map((authority) => {
+  const snapshots = decoded.success.authorities.map((authority) => {
     const indexedAuthority = artifacts.find(
       (artifact) => artifact.sha256 === authority.sha256,
     );
@@ -652,9 +658,11 @@ function readPortableFindingsProjection(
     }
     const bytes = portableReportArtifactBytes(bundle, indexedAuthority);
     const snapshot = portableFindingAuthoritySnapshotForBytes(authority, bytes);
-    return Either.isRight(snapshot) ? snapshot.right : fail(snapshot.left);
+    return Result.isSuccess(snapshot)
+      ? snapshot.success
+      : fail(snapshot.failure);
   });
-  const validation = validateFindingsProjection(decoded.right, snapshots);
+  const validation = validateFindingsProjection(decoded.success, snapshots);
   return validation.tag === "valid"
     ? validation.projection
     : fail(`Invalid findings projection: ${validation.message}`);
@@ -667,14 +675,14 @@ function readRepositoryFindingsProjection(
     repoRoot,
     findingsArtifact.path,
   );
-  if (Either.isLeft(canonical)) {
+  if (Result.isFailure(canonical)) {
     return fail(
-      `Source findings artifact is not repository-owned: ${findingsArtifact.path}: ${canonical.left}`,
+      `Source findings artifact is not repository-owned: ${findingsArtifact.path}: ${canonical.failure}`,
     );
   }
   const bytes = (() => {
     try {
-      return readFileSync(canonical.right);
+      return readFileSync(canonical.success);
     } catch (error) {
       return fail(
         `Source findings artifact is unreadable: ${findingsArtifact.path}: ${error instanceof Error ? error.message : String(error)}`,
@@ -682,7 +690,7 @@ function readRepositoryFindingsProjection(
     }
   })();
   const authority = artifactAuthorityForBytes(
-    relative(repoRoot, canonical.right),
+    relative(repoRoot, canonical.success),
     bytes,
   );
   if (
@@ -729,7 +737,7 @@ function readIndexedFindingsProjection(input: {
     return readPortableFindingsProjection(bundle, findingsArtifact, artifacts);
   }
   const database = canonicalRepositoryReadPath(repoRoot, input.dbPath);
-  if (Either.isLeft(database)) {
+  if (Result.isFailure(database)) {
     return fail(
       `Portable report index requires a manifest.json beside the relocated database: ${input.dbPath}`,
     );
@@ -771,16 +779,16 @@ function runByTranscript(
       "SELECT id, executionId, evidenceSetId, scenarioId, gitSha, startedAt, transcriptSha256 FROM runs WHERE transcriptSha256 = ? AND evidenceKind = 'currentExecution'",
     )
     .get(transcriptSha256);
-  const decoded = Schema.decodeUnknownEither(PersistedExecutionIdentitySchema, {
+  const decoded = Schema.decodeUnknownResult(PersistedExecutionIdentitySchema, {
     onExcessProperty: "error",
   })(row);
   if (
-    Either.isLeft(decoded) ||
-    decoded.right.transcriptSha256 !== transcriptSha256
+    Result.isFailure(decoded) ||
+    decoded.success.transcriptSha256 !== transcriptSha256
   ) {
     fail(`Transcript ${transcriptPath} is not indexed in the artifact index.`);
   }
-  return decoded.right;
+  return decoded.success;
 }
 
 function issueLinksForRun(
@@ -1155,14 +1163,14 @@ function audit(args: readonly string[]): void {
          WHERE runs.id = ? AND runs.evidenceKind = 'currentExecution'`,
       )
       .get(runId);
-    const decodedRow = Schema.decodeUnknownEither(
+    const decodedRow = Schema.decodeUnknownResult(
       PersistedExecutionAuditSchema,
       { onExcessProperty: "error" },
     )(row);
-    if (Either.isLeft(decodedRow)) {
+    if (Result.isFailure(decodedRow)) {
       fail(`Execution row ${String(runId)} has no indexed findings artifact.`);
     }
-    const execution = decodedRow.right;
+    const execution = decodedRow.success;
     const projection = readIndexedFindingsProjection({
       db,
       dbPath,
@@ -1220,16 +1228,16 @@ function generationAudit(args: readonly string[]): void {
          WHERE scenarioCampaigns.id = ?`,
       )
       .get(campaignRowId);
-    const decodedRow = Schema.decodeUnknownEither(
+    const decodedRow = Schema.decodeUnknownResult(
       PersistedCampaignAuditSchema,
       { onExcessProperty: "error" },
     )(row);
-    if (Either.isLeft(decodedRow)) {
+    if (Result.isFailure(decodedRow)) {
       fail(
         `Scenario Campaign row ${String(campaignRowId)} has no indexed findings artifact.`,
       );
     }
-    const campaign = decodedRow.right;
+    const campaign = decodedRow.success;
     const projection = readIndexedFindingsProjection({
       db,
       dbPath,
@@ -1326,13 +1334,13 @@ function controlledReporting(args: readonly string[]): void {
   }
   const absoluteDestination = resolve(repoRoot, destination);
   const absoluteTimingPath = resolve(repoRoot, timingPath);
-  const decodedPortableTimingPath = Schema.decodeUnknownEither(
+  const decodedPortableTimingPath = Schema.decodeUnknownResult(
     PortableRelativePathSchema,
   )(relative(absoluteDestination, absoluteTimingPath));
-  if (Either.isLeft(decodedPortableTimingPath)) {
+  if (Result.isFailure(decodedPortableTimingPath)) {
     fail("Controlled reporting timing must be inside the portable export.");
   }
-  const portableTimingPath = decodedPortableTimingPath.right;
+  const portableTimingPath = decodedPortableTimingPath.success;
   if (existsSync(absoluteTimingPath)) {
     fail("Refusing to overwrite controlled reporting timing evidence.");
   }
@@ -1699,11 +1707,11 @@ export function review(args: readonly string[]): void {
       resolve(repoRoot, reviewPath)
   )
     fail("Review does not match its invocation evidence.");
-  const decoded = Schema.decodeUnknownEither(ReviewOutputSchema, {
+  const decoded = Schema.decodeUnknownResult(ReviewOutputSchema, {
     onExcessProperty: "error",
   })(JSON.parse(readFileSync(resolve(repoRoot, reviewPath), "utf8")));
-  if (Either.isLeft(decoded))
-    fail(`Invalid review output: ${decoded.left.message}`);
+  if (Result.isFailure(decoded))
+    fail(`Invalid review output: ${decoded.failure.message}`);
 
   const db = openArtifactIndex(dbPath);
   const row = db
@@ -1713,14 +1721,14 @@ export function review(args: readonly string[]): void {
        WHERE r.id = ? AND r.evidenceKind = 'currentExecution'`,
     )
     .get(runId);
-  const persisted = Schema.decodeUnknownEither(PersistedExecutionReviewSchema, {
+  const persisted = Schema.decodeUnknownResult(PersistedExecutionReviewSchema, {
     onExcessProperty: "error",
   })(row);
-  if (Either.isLeft(persisted)) {
+  if (Result.isFailure(persisted)) {
     db.close();
     fail(`Unknown Execution row ${runId}`);
   }
-  const run = persisted.right;
+  const run = persisted.success;
   const finalFindingsPath = findingsArtifactPath(
     defaultEvidenceSetDirectory(run.transcriptPath),
   );
@@ -1742,9 +1750,9 @@ export function review(args: readonly string[]): void {
     .update(readFileSync(resolve(repoRoot, run.transcriptPath)))
     .digest("hex");
   if (
-    run.scenarioId !== decoded.right.scenarioId ||
-    run.gitSha !== decoded.right.gitSha ||
-    run.transcriptSha256 !== decoded.right.transcriptSha256 ||
+    run.scenarioId !== decoded.success.scenarioId ||
+    run.gitSha !== decoded.success.gitSha ||
+    run.transcriptSha256 !== decoded.success.transcriptSha256 ||
     currentTranscriptSha256 !== run.transcriptSha256
   ) {
     db.close();
@@ -1797,14 +1805,14 @@ export function review(args: readonly string[]): void {
   try {
     const reviewRound = insertReviewRound.run(
       runId,
-      decoded.right.reviewer,
+      decoded.success.reviewer,
       reviewArtifact.sha256,
       auditArtifact?.sha256 ?? null,
       ledgerArtifact?.sha256 ?? null,
       createdAt,
     );
     const reviewRoundId = Number(reviewRound.lastInsertRowid);
-    for (const row of decoded.right.verdicts) {
+    for (const row of decoded.success.verdicts) {
       const issueFingerprint = recordBugIssue(
         db,
         row.class,
@@ -1816,7 +1824,7 @@ export function review(args: readonly string[]): void {
         row.class,
         row.claim,
         row.evidence,
-        decoded.right.reviewer,
+        decoded.success.reviewer,
         createdAt,
         reviewRoundId,
         Option.getOrNull(issueFingerprint),
@@ -1828,7 +1836,7 @@ export function review(args: readonly string[]): void {
     throw error;
   }
   console.log(
-    `Imported ${decoded.right.verdicts.length} verdict(s) for Execution row ${runId}`,
+    `Imported ${decoded.success.verdicts.length} verdict(s) for Execution row ${runId}`,
   );
   db.close();
 }
@@ -2000,54 +2008,56 @@ function parseLinkGithubIssueArgs(
       "link-github-issue requires exactly one --db, --fingerprint, and --github-issue value",
     );
   }
-  const parsedFingerprint = Schema.decodeUnknownEither(SwarmFingerprintSchema)(
+  const parsedFingerprint = Schema.decodeUnknownResult(SwarmFingerprintSchema)(
     fingerprint,
   );
-  if (Either.isLeft(parsedFingerprint)) {
+  if (Result.isFailure(parsedFingerprint)) {
     fail("--fingerprint must be a lowercase SHA-256 value");
   }
   const githubIssueNumberInput = Number(githubIssueNumberText);
-  const parsedGithubIssueNumber = Schema.decodeUnknownEither(
+  const parsedGithubIssueNumber = Schema.decodeUnknownResult(
     GitHubIssueNumberSchema,
   )(githubIssueNumberInput);
-  if (Either.isLeft(parsedGithubIssueNumber)) {
+  if (Result.isFailure(parsedGithubIssueNumber)) {
     fail("--github-issue must be a positive integer");
   }
   return {
     dbPath,
-    fingerprint: parsedFingerprint.right,
-    githubIssueNumber: parsedGithubIssueNumber.right,
+    fingerprint: parsedFingerprint.success,
+    githubIssueNumber: parsedGithubIssueNumber.success,
   };
 }
 
 function currentGithubIssueNumber(
   db: DatabaseSync,
   fingerprint: SwarmFingerprint,
-): Either.Either<IssueGithubLink, string> {
+): Result.Result<IssueGithubLink, string> {
   const existing = db
     .prepare(
       "SELECT fingerprint, githubIssueNumber FROM issues WHERE fingerprint = ?",
     )
     .get(fingerprint);
   if (!isJsonRecord(existing) || existing.fingerprint !== fingerprint) {
-    return Either.left(`Unknown issue fingerprint ${fingerprint}`);
+    return Result.fail(`Unknown issue fingerprint ${fingerprint}`);
   }
   return existing.githubIssueNumber === null
-    ? Either.right({ kind: "unlinked" })
-    : Schema.decodeUnknownEither(GitHubIssueNumberSchema)(
+    ? Result.succeed({ kind: "unlinked" })
+    : Schema.decodeUnknownResult(GitHubIssueNumberSchema)(
         existing.githubIssueNumber,
       ).pipe(
-        Either.map(
+        Result.map(
           (issueNumber): IssueGithubLink => ({ kind: "linked", issueNumber }),
         ),
-        Either.mapLeft(() => `Issue ${fingerprint} has an invalid GitHub link`),
+        Result.mapError(
+          () => `Issue ${fingerprint} has an invalid GitHub link`,
+        ),
       );
 }
 
 function readCurrentGithubIssueNumber(
   dbPath: string,
   fingerprint: SwarmFingerprint,
-): Either.Either<IssueGithubLink, string> {
+): Result.Result<IssueGithubLink, string> {
   const db = openArtifactIndex(dbPath);
   try {
     return currentGithubIssueNumber(db, fingerprint);
@@ -2079,9 +2089,9 @@ function linkGithubIssueParsed(
   github: GitHubIssueLinker,
 ): void {
   const current = readCurrentGithubIssueNumber(args.dbPath, args.fingerprint);
-  if (Either.isLeft(current)) fail(current.left);
+  if (Result.isFailure(current)) fail(current.failure);
   rejectConflictingLink(
-    current.right,
+    current.success,
     args.githubIssueNumber,
     args.fingerprint,
   );
@@ -2090,16 +2100,16 @@ function linkGithubIssueParsed(
     args.githubIssueNumber,
     args.fingerprint,
   );
-  if (Either.isLeft(githubResult)) fail(githubResult.left);
+  if (Result.isFailure(githubResult)) fail(githubResult.failure);
 
   const db = openArtifactIndex(args.dbPath);
   try {
     db.exec("BEGIN IMMEDIATE");
     try {
       const rechecked = currentGithubIssueNumber(db, args.fingerprint);
-      if (Either.isLeft(rechecked)) fail(rechecked.left);
+      if (Result.isFailure(rechecked)) fail(rechecked.failure);
       rejectConflictingLink(
-        rechecked.right,
+        rechecked.success,
         args.githubIssueNumber,
         args.fingerprint,
       );

@@ -17,7 +17,7 @@ import type {
   FreshCharacterSheet,
 } from "@dnd/character-sheet-runtime";
 import type { Hp } from "@dnd/shared/types";
-import type { Either } from "effect";
+import type { Result } from "effect";
 
 import type { JsonValue } from "./continuation-contract.ts";
 
@@ -35,7 +35,7 @@ export type ScenarioCharacterSdk = {
   readonly fillCreationHoles: typeof fillCreationHoles;
   readonly finalizeCharacterDraft: typeof finalizeCharacterDraft;
   readonly hp: typeof Hp;
-  readonly isLeft: typeof Either.isLeft;
+  readonly isLeft: typeof Result.isFailure;
 };
 
 export type ScenarioCharacterContext = {

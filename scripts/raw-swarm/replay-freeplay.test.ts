@@ -1,5 +1,6 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { decodePlaySessionId } from "../../packages/mcp/src/play-session.ts";
@@ -15,8 +16,8 @@ import {
 const recordedPlaySessionId = decodePlaySessionId(
   "play-session:00000000-0000-4000-8000-000000000000",
 );
-if (recordedPlaySessionId._tag === "Left") {
-  throw new Error(recordedPlaySessionId.left);
+if (Result.isFailure(recordedPlaySessionId)) {
+  throw new Error(recordedPlaySessionId.failure);
 }
 
 describe("RAW swarm MCP replay", () => {
@@ -24,7 +25,7 @@ describe("RAW swarm MCP replay", () => {
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
     const { server } = createDndMcpProtocolServer(undefined, undefined, {
-      playSessionIdFactory: () => recordedPlaySessionId.right,
+      playSessionIdFactory: () => recordedPlaySessionId.success,
     });
     const client = new Client({
       name: "raw-swarm-transcript-probe",
@@ -40,13 +41,13 @@ describe("RAW swarm MCP replay", () => {
       });
       const read = await client.callTool({
         name: "read_battle_state",
-        arguments: { playSessionId: recordedPlaySessionId.right },
+        arguments: { playSessionId: recordedPlaySessionId.success },
       });
       const steps: McpTranscriptStep[] = [
         toolCall(1, 1, "create_play_session", {}),
         toolResult(2, 1, created),
         toolCall(3, 2, "read_battle_state", {
-          playSessionId: recordedPlaySessionId.right,
+          playSessionId: recordedPlaySessionId.success,
         }),
         toolResult(4, 2, read),
       ];
@@ -70,7 +71,7 @@ describe("RAW swarm MCP replay", () => {
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
     const { server } = createDndMcpProtocolServer(undefined, undefined, {
-      playSessionIdFactory: () => recordedPlaySessionId.right,
+      playSessionIdFactory: () => recordedPlaySessionId.success,
     });
     const client = new Client({
       name: "raw-swarm-malformed-create-probe",
@@ -90,7 +91,7 @@ describe("RAW swarm MCP replay", () => {
       });
       const read = await client.callTool({
         name: "read_battle_state",
-        arguments: { playSessionId: recordedPlaySessionId.right },
+        arguments: { playSessionId: recordedPlaySessionId.success },
       });
       const parsed = parsePlayerTranscript([
         {
@@ -104,7 +105,7 @@ describe("RAW swarm MCP replay", () => {
         toolCall(3, 2, "create_play_session", {}),
         toolResult(4, 2, created),
         toolCall(5, 3, "read_battle_state", {
-          playSessionId: recordedPlaySessionId.right,
+          playSessionId: recordedPlaySessionId.success,
         }),
         toolResult(6, 3, read),
       ]);
@@ -121,7 +122,7 @@ describe("RAW swarm MCP replay", () => {
       content: [{ type: "text", text: "{}" }],
       structuredContent: {
         tag: "playSessionAvailable",
-        playSessionId: recordedPlaySessionId.right,
+        playSessionId: recordedPlaySessionId.success,
       },
     };
     const exchanges: McpToolExchange[] = [
@@ -139,7 +140,7 @@ describe("RAW swarm MCP replay", () => {
       content: [{ type: "text", text: "{}" }],
       structuredContent: {
         tag: "playSessionAvailable",
-        playSessionId: recordedPlaySessionId.right,
+        playSessionId: recordedPlaySessionId.success,
         operation: {
           name: "create_play_session",
           result: {

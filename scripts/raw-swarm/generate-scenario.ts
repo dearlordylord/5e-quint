@@ -12,7 +12,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { Either, Match, Schema } from "effect";
+import { Result, Match, Schema } from "effect";
 
 import {
   capabilityContextForRole,
@@ -152,17 +152,19 @@ export function retainCodexInvocationArtifacts(input: {
     eventPath: input.eventPath,
     event: retention.event,
   });
-  if (Either.isLeft(artifact)) fail(artifact.left);
+  if (Result.isFailure(artifact)) fail(artifact.failure);
   const retainedArtifactPath = codexRawRetentionArtifactPath(
     input.retainedEventPath,
     retention.event,
   );
-  writeFileSync(retainedArtifactPath, artifact.right.contents, { flag: "wx" });
+  writeFileSync(retainedArtifactPath, artifact.success.contents, {
+    flag: "wx",
+  });
   const retainedArtifact = readCodexRawRetentionArtifact({
     eventPath: input.retainedEventPath,
     event: retention.event,
   });
-  if (Either.isLeft(retainedArtifact)) fail(retainedArtifact.left);
+  if (Result.isFailure(retainedArtifact)) fail(retainedArtifact.failure);
 }
 
 export function rollbackScenarioAdmissionBundle(
@@ -339,7 +341,7 @@ function isCandidateRejection(
 
 async function runCodexJson<A, I>(
   prompt: string,
-  schema: Schema.Schema<A, I>,
+  schema: Schema.Codec<A, I>,
   execution: {
     readonly model: "gpt-5.6-sol" | "gpt-5.6-luna";
     readonly reasoningEffort: "medium" | "max";
@@ -644,8 +646,8 @@ ${scenario}`,
         batchIndex,
         batch,
       });
-      if (Either.isLeft(prompt)) fail(prompt.left);
-      return runCodexJson(prompt.right, ScenarioCatalogueComparisonSchema, {
+      if (Result.isFailure(prompt)) fail(prompt.failure);
+      return runCodexJson(prompt.success, ScenarioCatalogueComparisonSchema, {
         ...reviewerExecution,
         subject: {
           tag: "scenarioCandidate",
@@ -675,13 +677,13 @@ export async function replayRetainedScenarioReview(input: {
     schemaVersion: input.retainedInput.schemaVersion,
     outputJsonSchema: input.retainedInput.outputJsonSchema,
   });
-  if (Either.isLeft(compatibility)) {
-    fail(compatibility.left);
+  if (Result.isFailure(compatibility)) {
+    fail(compatibility.failure);
   }
-  const retainedResult = compatibility.right.decodeResult(
+  const retainedResult = compatibility.success.decodeResult(
     input.retainedInput.result,
   );
-  if (Either.isLeft(retainedResult)) {
+  if (Result.isFailure(retainedResult)) {
     fail(
       "Retained scenario review result does not match its canonical output schema.",
     );
@@ -699,7 +701,7 @@ export async function replayRetainedScenarioReview(input: {
       reviewStage: input.retainedInput.reviewStage,
     },
   } as const;
-  const schema = Match.value(compatibility.right).pipe(
+  const schema = Match.value(compatibility.success).pipe(
     Match.when({ tag: "intentSpecificCurrent" }, ({ schema }) => schema),
     Match.when({ tag: "legacyCurrent" }, ({ schema }) => schema),
     Match.when({ tag: "historical" }, () =>
@@ -720,21 +722,21 @@ function verifyRetainedScenario(
   catalogue: ScenarioCatalogueAdmissionContext,
 ): void {
   const scenarioBytes = readFileSync(scenarioPath, "utf8");
-  const decodedGitSha = Schema.decodeUnknownEither(GitShaSchema)(gitSha);
-  if (Either.isLeft(decodedGitSha)) {
+  const decodedGitSha = Schema.decodeUnknownResult(GitShaSchema)(gitSha);
+  if (Result.isFailure(decodedGitSha)) {
     fail("Retained scenario has an invalid Git revision.");
   }
   const verification = verifyFinalScenarioReview(
     JSON.parse(readFileSync(reviewPath, "utf8")),
     {
       scenarioId,
-      gitSha: decodedGitSha.right,
+      gitSha: decodedGitSha.success,
       scenarioBytes,
       catalogue,
     },
   );
-  if (Either.isLeft(verification)) {
-    fail(verification.left);
+  if (Result.isFailure(verification)) {
+    fail(verification.failure);
   }
 }
 
@@ -765,20 +767,20 @@ async function main(args: readonly string[]): Promise<void> {
   if (revision.tag === "dirty") {
     fail("Scenario generation requires a clean Git worktree.");
   }
-  const gitSha = Schema.decodeUnknownEither(GitShaSchema)(revision.sha);
-  if (Either.isLeft(gitSha)) {
+  const gitSha = Schema.decodeUnknownResult(GitShaSchema)(revision.sha);
+  if (Result.isFailure(gitSha)) {
     fail("Scenario generation found an invalid Git revision.");
   }
   const configPath = resolve(repoRoot, configInput);
   const configJson: unknown = JSON.parse(readFileSync(configPath, "utf8"));
-  const decodedConfig = Schema.decodeUnknownEither(
+  const decodedConfig = Schema.decodeUnknownResult(
     ScenarioCampaignConfigSchema,
     {
       onExcessProperty: "error",
     },
   )(configJson);
-  if (Either.isLeft(decodedConfig)) {
-    fail(`Invalid scenario campaign: ${decodedConfig.left.message}`);
+  if (Result.isFailure(decodedConfig)) {
+    fail(`Invalid scenario campaign: ${decodedConfig.failure.message}`);
   }
   const catalogue = readRawSwarmCatalogue({
     repositoryRoot: repoRoot,
@@ -788,20 +790,20 @@ async function main(args: readonly string[]): Promise<void> {
     ),
     evidenceDirectory: resolve(repoRoot, "scripts/raw-swarm/out"),
   });
-  if (Either.isLeft(catalogue)) {
+  if (Result.isFailure(catalogue)) {
     fail(
-      `Unable to read the complete admitted Scenario catalogue: ${JSON.stringify(catalogue.left)}`,
+      `Unable to read the complete admitted Scenario catalogue: ${JSON.stringify(catalogue.failure)}`,
     );
   }
   const catalogueProjections = projectScenarioCatalogueForAuthoring(
-    catalogue.right,
+    catalogue.success,
   );
   const catalogueBatches =
     batchScenarioCatalogueProjections(catalogueProjections);
-  if (Either.isLeft(catalogueBatches)) fail(catalogueBatches.left);
+  if (Result.isFailure(catalogueBatches)) fail(catalogueBatches.failure);
   const catalogueBoundary = scenarioCatalogueComparisonBoundary({
     projections: catalogueProjections,
-    batches: catalogueBatches.right,
+    batches: catalogueBatches.success,
   });
   const admittedDirectory = resolve(
     repoRoot,
@@ -813,11 +815,11 @@ async function main(args: readonly string[]): Promise<void> {
   );
   const admittedPath = resolve(
     admittedDirectory,
-    `${decodedConfig.right.plannedScenarioId}.md`,
+    `${decodedConfig.success.plannedScenarioId}.md`,
   );
   const rejectedPath = resolve(
     rejectedDirectory,
-    `${decodedConfig.right.plannedScenarioId}.md`,
+    `${decodedConfig.success.plannedScenarioId}.md`,
   );
   if (
     existsSync(admittedPath) ||
@@ -832,11 +834,11 @@ async function main(args: readonly string[]): Promise<void> {
   }
   const ledgerPath = resolve(
     repoRoot,
-    `scripts/raw-swarm/out/${decodedConfig.right.evidenceSetId}/generation-invocations.jsonl`,
+    `scripts/raw-swarm/out/${decodedConfig.success.evidenceSetId}/generation-invocations.jsonl`,
   );
   const campaignEvidenceDirectory = resolve(
     repoRoot,
-    `scripts/raw-swarm/out/${decodedConfig.right.evidenceSetId}`,
+    `scripts/raw-swarm/out/${decodedConfig.success.evidenceSetId}`,
   );
   const campaignManifestPath = resolve(
     campaignEvidenceDirectory,
@@ -858,10 +860,10 @@ async function main(args: readonly string[]): Promise<void> {
       {
         type: "raw-swarm-scenario-campaign",
         schemaVersion: 1,
-        campaignId: decodedConfig.right.campaignId,
-        evidenceSetId: decodedConfig.right.evidenceSetId,
-        plannedScenarioId: decodedConfig.right.plannedScenarioId,
-        gitSha: gitSha.right,
+        campaignId: decodedConfig.success.campaignId,
+        evidenceSetId: decodedConfig.success.evidenceSetId,
+        plannedScenarioId: decodedConfig.success.plannedScenarioId,
+        gitSha: gitSha.success,
         startedAt: generationStartedAt,
         configSha256: createHash("sha256")
           .update(readFileSync(configPath))
@@ -1046,19 +1048,19 @@ async function main(args: readonly string[]): Promise<void> {
       }
       return value;
     };
-    const retainedProjection = Schema.decodeUnknownEither(
+    const retainedProjection = Schema.decodeUnknownResult(
       FindingsProjectionSchema,
       { onExcessProperty: "error" },
     )(replacePath(projection));
-    if (Either.isLeft(retainedProjection)) {
+    if (Result.isFailure(retainedProjection)) {
       fail(
-        `Rewritten generation findings projection is invalid: ${retainedProjection.left.message}`,
+        `Rewritten generation findings projection is invalid: ${retainedProjection.failure.message}`,
       );
     }
     const retainedFindingsPath =
       options.path ?? findingsArtifactPath(campaignEvidenceDirectory);
     writeFindingsProjection({
-      projection: retainedProjection.right,
+      projection: retainedProjection.success,
       path: retainedFindingsPath,
     });
     if (options.ingest !== false) {
@@ -1068,24 +1070,24 @@ async function main(args: readonly string[]): Promise<void> {
       });
     }
   };
-  let result: Either.Either<ScenarioCampaignResult, string>;
+  let result: Result.Result<ScenarioCampaignResult, string>;
   try {
     result = await runScenarioCampaign(
-      decodedConfig.right,
+      decodedConfig.success,
       scenarioCampaignAgents({
         ledgerPath,
         eventDirectory: resolve(campaignEvidenceDirectory, "invocation-events"),
-        campaignId: decodedConfig.right.campaignId,
-        evidenceSetId: decodedConfig.right.evidenceSetId,
-        plannedScenarioId: decodedConfig.right.plannedScenarioId,
-        gitSha: gitSha.right,
+        campaignId: decodedConfig.success.campaignId,
+        evidenceSetId: decodedConfig.success.evidenceSetId,
+        plannedScenarioId: decodedConfig.success.plannedScenarioId,
+        gitSha: gitSha.success,
       }),
       {
         select: randomInt,
       },
       {
         tag: "required",
-        batches: catalogueBatches.right,
+        batches: catalogueBatches.success,
         expectedScenarioIds: catalogueProjections.map(
           ({ scenarioId }) => scenarioId,
         ),
@@ -1096,11 +1098,11 @@ async function main(args: readonly string[]): Promise<void> {
     emitGenerationFindings({ tag: "campaignFailure", reason: message });
     throw error;
   }
-  if (Either.isLeft(result)) {
-    emitGenerationFindings({ tag: "campaignFailure", reason: result.left });
-    fail(result.left);
+  if (Result.isFailure(result)) {
+    emitGenerationFindings({ tag: "campaignFailure", reason: result.failure });
+    fail(result.failure);
   }
-  if (!retentionRevisionMatches(gitSha.right, currentGitRevision())) {
+  if (!retentionRevisionMatches(gitSha.success, currentGitRevision())) {
     emitGenerationFindings({
       tag: "campaignFailure",
       reason:
@@ -1110,35 +1112,36 @@ async function main(args: readonly string[]): Promise<void> {
       "Git revision changed during scenario generation; nothing was retained.",
     );
   }
-  const scenarioBytes = `${result.right.scenario.trim()}\n`;
-  const scenarioSha256 = scenarioContentSha256(result.right.scenario);
-  if (isCandidateRejection(result.right)) {
+  const scenarioBytes = `${result.success.scenario.trim()}\n`;
+  const scenarioSha256 = scenarioContentSha256(result.success.scenario);
+  if (isCandidateRejection(result.success)) {
     const outputDirectory = rejectedDirectory;
     const outputPath = resolve(
       outputDirectory,
-      `${result.right.candidateId}.md`,
+      `${result.success.candidateId}.md`,
     );
     mkdirSync(outputDirectory, { recursive: true });
     const rejectionReason =
-      result.right.candidateStagePlan.outcome.tag === "rejected"
-        ? result.right.candidateStagePlan.outcome.reason
+      result.success.candidateStagePlan.outcome.tag === "rejected"
+        ? result.success.candidateStagePlan.outcome.reason
         : "Candidate stage plan was rejected.";
-    if (result.right.catalogueComparison.tag !== "retained") {
+    if (result.success.catalogueComparison.tag !== "retained") {
       fail("Candidate rejection must retain catalogue comparison evidence.");
     }
-    const rejectionRecord = Schema.decodeUnknownEither(
+    const rejectionRecord = Schema.decodeUnknownResult(
       RejectedScenarioCandidateRecordSchema,
       { onExcessProperty: "error" },
     )({
       schemaVersion: 1,
-      candidateId: result.right.candidateId,
-      campaignId: result.right.campaignId,
-      evidenceSetId: decodedConfig.right.evidenceSetId,
+      candidateId: result.success.candidateId,
+      campaignId: result.success.campaignId,
+      evidenceSetId: decodedConfig.success.evidenceSetId,
       reason: rejectionReason,
       ...catalogueBoundary,
-      catalogueComparison: result.right.catalogueComparison.comparison,
+      catalogueComparison: result.success.catalogueComparison.comparison,
     });
-    if (Either.isLeft(rejectionRecord)) fail(rejectionRecord.left.message);
+    if (Result.isFailure(rejectionRecord))
+      fail(rejectionRecord.failure.message);
     const candidateRejectionPath = resolve(
       campaignEvidenceDirectory,
       "candidate-rejection.json",
@@ -1154,25 +1157,25 @@ async function main(args: readonly string[]): Promise<void> {
     const stagedFindings = resolve(staging, "findings.json");
     const findingsPath = findingsArtifactPath(campaignEvidenceDirectory);
     const stagePlanPath = retainedRejectedScenarioStagePlanPath(
-      result.right.candidateId,
+      result.success.candidateId,
     );
     const stagePlanFindingsPath = retainedRejectedScenarioStagePlanFindingsPath(
-      result.right.candidateId,
+      result.success.candidateId,
     );
     let publication: ScenarioRejectionPublication | undefined;
     try {
       writeFileSync(stagedScenario, scenarioBytes, { flag: "wx" });
       const retainedPlan = retainCandidateScenarioStagePlanAtPaths({
-        candidateId: result.right.candidateId,
+        candidateId: result.success.candidateId,
         candidateScenarioSha256: scenarioSha256,
-        plan: result.right.candidateStagePlan,
+        plan: result.success.candidateStagePlan,
         stagePlanPath: stagedStagePlan,
         stagePlanFindingsPath: stagedStagePlanFindings,
       });
-      if (Either.isLeft(retainedPlan)) fail(retainedPlan.left);
+      if (Result.isFailure(retainedPlan)) fail(retainedPlan.failure);
       writeFileSync(
         stagedRejection,
-        `${JSON.stringify(rejectionRecord.right, null, 2)}\n`,
+        `${JSON.stringify(rejectionRecord.success, null, 2)}\n`,
         { flag: "wx" },
       );
       emitGenerationFindings(
@@ -1211,65 +1214,65 @@ async function main(args: readonly string[]): Promise<void> {
       rmSync(staging, { recursive: true, force: true });
     }
     console.log(
-      `Rejected ${outputPath} before whole-scenario review after ${result.right.iterations} iteration(s): ${result.right.candidateStagePlan.outcome.tag === "rejected" ? result.right.candidateStagePlan.outcome.reason : "candidate stage plan rejection"}.`,
+      `Rejected ${outputPath} before whole-scenario review after ${result.success.iterations} iteration(s): ${result.success.candidateStagePlan.outcome.tag === "rejected" ? result.success.candidateStagePlan.outcome.reason : "candidate stage plan rejection"}.`,
     );
     return;
   }
-  const admittedScenarioId = decodeScenarioId(result.right.plannedScenarioId);
-  if (Either.isLeft(admittedScenarioId)) {
+  const admittedScenarioId = decodeScenarioId(result.success.plannedScenarioId);
+  if (Result.isFailure(admittedScenarioId)) {
     fail(
-      `Planned Scenario identity cannot become an admitted Scenario: ${admittedScenarioId.left}`,
+      `Planned Scenario identity cannot become an admitted Scenario: ${admittedScenarioId.failure}`,
     );
   }
-  const disposition = finalScenarioDisposition(result.right);
-  if (result.right.catalogueComparison.tag !== "retained") {
+  const disposition = finalScenarioDisposition(result.success);
+  if (result.success.catalogueComparison.tag !== "retained") {
     fail("Scenario admission requires retained catalogue comparison evidence.");
   }
   const reviewInput = {
     ...(disposition === "admitted"
-      ? { scenarioId: admittedScenarioId.right, scenarioSha256 }
+      ? { scenarioId: admittedScenarioId.success, scenarioSha256 }
       : {
-          campaignId: result.right.campaignId,
-          candidateId: result.right.candidateId,
+          campaignId: result.success.campaignId,
+          candidateId: result.success.candidateId,
           candidateScenarioSha256: scenarioSha256,
         }),
-    gitSha: gitSha.right,
-    reviewScope: result.right.reviewScope,
-    contentAvailabilityIntent: result.right.contentAvailabilityIntent,
-    sdkCapabilityIntent: result.right.sdkCapabilityIntent,
-    admitReviewedUnsupported: result.right.admitReviewedUnsupported,
-    rawReview: result.right.rawReview,
-    contentReview: result.right.contentReview,
-    sdkCapabilityReview: result.right.sdkCapabilityReview,
-    policyReview: result.right.policyReview,
-    scenarioQuality: result.right.scenarioQuality,
-    catalogueComparison: result.right.catalogueComparison.comparison,
+    gitSha: gitSha.success,
+    reviewScope: result.success.reviewScope,
+    contentAvailabilityIntent: result.success.contentAvailabilityIntent,
+    sdkCapabilityIntent: result.success.sdkCapabilityIntent,
+    admitReviewedUnsupported: result.success.admitReviewedUnsupported,
+    rawReview: result.success.rawReview,
+    contentReview: result.success.contentReview,
+    sdkCapabilityReview: result.success.sdkCapabilityReview,
+    policyReview: result.success.policyReview,
+    scenarioQuality: result.success.scenarioQuality,
+    catalogueComparison: result.success.catalogueComparison.comparison,
   };
   const retainedReview: object = (() => {
     if (disposition === "admitted") {
-      const decoded = Schema.decodeUnknownEither(FinalScenarioReviewSchema, {
+      const decoded = Schema.decodeUnknownResult(FinalScenarioReviewSchema, {
         onExcessProperty: "error",
       })(reviewInput);
-      if (Either.isLeft(decoded)) {
-        fail(`Invalid final scenario review: ${decoded.left.message}`);
+      if (Result.isFailure(decoded)) {
+        fail(`Invalid final scenario review: ${decoded.failure.message}`);
       }
-      return decoded.right;
+      return decoded.success;
     }
-    const decoded = Schema.decodeUnknownEither(
+    const decoded = Schema.decodeUnknownResult(
       RejectedScenarioCandidateReviewSchema,
       { onExcessProperty: "error" },
     )(reviewInput);
-    if (Either.isLeft(decoded)) {
-      fail(`Invalid final candidate review: ${decoded.left.message}`);
+    if (Result.isFailure(decoded)) {
+      fail(`Invalid final candidate review: ${decoded.failure.message}`);
     }
-    return decoded.right;
+    return decoded.success;
   })();
   const outputDirectory =
     disposition === "admitted" ? admittedDirectory : rejectedDirectory;
   const outputIdentity =
     disposition === "admitted"
-      ? admittedScenarioId.right
-      : result.right.candidateId;
+      ? admittedScenarioId.success
+      : result.success.candidateId;
   const outputPath = resolve(outputDirectory, `${outputIdentity}.md`);
   const reviewPath = `${outputPath}.${disposition === "admitted" ? "scenario" : "candidate"}-review.json`;
   mkdirSync(outputDirectory, { recursive: true });
@@ -1299,19 +1302,19 @@ async function main(args: readonly string[]): Promise<void> {
       const stagedFindings = resolve(staging, "findings.json");
       const findingsPath = findingsArtifactPath(campaignEvidenceDirectory);
       const retainedStagePlanPath = retainedScenarioStagePlanPath(
-        admittedScenarioId.right,
+        admittedScenarioId.success,
       );
       const retainedStagePlanFindingsPath =
-        retainedScenarioStagePlanFindingsPath(admittedScenarioId.right);
+        retainedScenarioStagePlanFindingsPath(admittedScenarioId.success);
       const retainedFacts = retainScenarioStageFacts({
-        scenarioId: admittedScenarioId.right,
+        scenarioId: admittedScenarioId.success,
         scenarioPath: stagedScenario,
         scenarioSha256,
-        facts: result.right.stageFacts,
+        facts: result.success.stageFacts,
       });
-      if (Either.isLeft(retainedFacts)) fail(retainedFacts.left);
+      if (Result.isFailure(retainedFacts)) fail(retainedFacts.failure);
       const retainedPlan = retainAdmittedScenarioStagePlanAtPaths({
-        scenarioId: admittedScenarioId.right,
+        scenarioId: admittedScenarioId.success,
         scenarioPath: stagedScenario,
         scenarioSha256,
         scenarioReviewSha256: createHash("sha256")
@@ -1320,22 +1323,22 @@ async function main(args: readonly string[]): Promise<void> {
         stagePlanPath: stagedStagePlan,
         stagePlanFindingsPath: stagedStagePlanFindings,
       });
-      if (Either.isLeft(retainedPlan)) fail(retainedPlan.left);
-      if (retainedPlan.right.outcome.tag !== "admitted") {
+      if (Result.isFailure(retainedPlan)) fail(retainedPlan.failure);
+      if (retainedPlan.success.outcome.tag !== "admitted") {
         fail(
-          retainedPlan.right.outcome.tag === "rejected"
-            ? retainedPlan.right.outcome.reason
+          retainedPlan.success.outcome.tag === "rejected"
+            ? retainedPlan.success.outcome.reason
             : "The retained stage plan did not admit the generated scenario.",
         );
       }
-      const scenarioRecord = Schema.decodeUnknownEither(
+      const scenarioRecord = Schema.decodeUnknownResult(
         AdmittedScenarioRecordSchema,
         { onExcessProperty: "error" },
       )({
         schemaVersion: 2,
-        scenarioId: admittedScenarioId.right,
-        title: result.right.scenarioTitle,
-        purpose: result.right.scenarioPurpose,
+        scenarioId: admittedScenarioId.success,
+        title: result.success.scenarioTitle,
+        purpose: result.success.scenarioPurpose,
         predecessorScenarioIds: catalogueProjections.map(
           ({ scenarioId }) => scenarioId,
         ),
@@ -1352,17 +1355,18 @@ async function main(args: readonly string[]): Promise<void> {
           readFileSync(`${stagedScenario}.stage-facts.json`),
         ),
       });
-      if (Either.isLeft(scenarioRecord)) fail(scenarioRecord.left.message);
+      if (Result.isFailure(scenarioRecord))
+        fail(scenarioRecord.failure.message);
       writeFileSync(
         stagedScenarioRecord,
-        `${JSON.stringify(scenarioRecord.right, null, 2)}\n`,
+        `${JSON.stringify(scenarioRecord.success, null, 2)}\n`,
         { flag: "wx" },
       );
       verifyRetainedScenario(
-        admittedScenarioId.right,
+        admittedScenarioId.success,
         stagedScenario,
         stagedReview,
-        gitSha.right,
+        gitSha.success,
         (() => {
           if (catalogueProjections.length === 0) {
             return { tag: "noAdmittedScenarios" as const };
@@ -1370,7 +1374,7 @@ async function main(args: readonly string[]): Promise<void> {
           const scenarioIds = catalogueProjections.map(
             ({ scenarioId }) => scenarioId,
           );
-          const batches = catalogueBatches.right.map((batch, batchIndex) => ({
+          const batches = catalogueBatches.success.map((batch, batchIndex) => ({
             batchIndex,
             scenarioIds: batch.map(({ scenarioId }) => scenarioId),
           }));
@@ -1475,25 +1479,26 @@ async function main(args: readonly string[]): Promise<void> {
   }
   if (disposition === "rejected") {
     const rejectionReason = [
-      `RAW=${result.right.rawReview.classification}`,
-      `content=${result.right.contentReview.classification}`,
-      `SDK=${result.right.sdkCapabilityReview.classification}`,
-      `policy=${result.right.policyReview.classification}`,
-      `quality=${result.right.scenarioQuality.classification}`,
+      `RAW=${result.success.rawReview.classification}`,
+      `content=${result.success.contentReview.classification}`,
+      `SDK=${result.success.sdkCapabilityReview.classification}`,
+      `policy=${result.success.policyReview.classification}`,
+      `quality=${result.success.scenarioQuality.classification}`,
     ].join(", ");
-    const rejectionRecord = Schema.decodeUnknownEither(
+    const rejectionRecord = Schema.decodeUnknownResult(
       RejectedScenarioCandidateRecordSchema,
       { onExcessProperty: "error" },
     )({
       schemaVersion: 1,
-      candidateId: result.right.candidateId,
-      campaignId: result.right.campaignId,
-      evidenceSetId: decodedConfig.right.evidenceSetId,
+      candidateId: result.success.candidateId,
+      campaignId: result.success.campaignId,
+      evidenceSetId: decodedConfig.success.evidenceSetId,
       reason: rejectionReason,
       ...catalogueBoundary,
-      catalogueComparison: result.right.catalogueComparison.comparison,
+      catalogueComparison: result.success.catalogueComparison.comparison,
     });
-    if (Either.isLeft(rejectionRecord)) fail(rejectionRecord.left.message);
+    if (Result.isFailure(rejectionRecord))
+      fail(rejectionRecord.failure.message);
     const candidateRejectionPath = resolve(
       campaignEvidenceDirectory,
       "candidate-rejection.json",
@@ -1512,10 +1517,10 @@ async function main(args: readonly string[]): Promise<void> {
     const stagedFindings = resolve(staging, "findings.json");
     const findingsPath = findingsArtifactPath(campaignEvidenceDirectory);
     const stagePlanPath = retainedRejectedScenarioStagePlanPath(
-      result.right.candidateId,
+      result.success.candidateId,
     );
     const stagePlanFindingsPath = retainedRejectedScenarioStagePlanFindingsPath(
-      result.right.candidateId,
+      result.success.candidateId,
     );
     let publication: ScenarioRejectionPublication | undefined;
     try {
@@ -1526,16 +1531,16 @@ async function main(args: readonly string[]): Promise<void> {
         { flag: "wx" },
       );
       const retainedPlan = retainCandidateScenarioStagePlanAtPaths({
-        candidateId: result.right.candidateId,
+        candidateId: result.success.candidateId,
         candidateScenarioSha256: scenarioSha256,
-        plan: result.right.candidateStagePlan,
+        plan: result.success.candidateStagePlan,
         stagePlanPath: stagedStagePlan,
         stagePlanFindingsPath: stagedStagePlanFindings,
       });
-      if (Either.isLeft(retainedPlan)) fail(retainedPlan.left);
+      if (Result.isFailure(retainedPlan)) fail(retainedPlan.failure);
       writeFileSync(
         stagedRejection,
-        `${JSON.stringify(rejectionRecord.right, null, 2)}\n`,
+        `${JSON.stringify(rejectionRecord.success, null, 2)}\n`,
         { flag: "wx" },
       );
       emitGenerationFindings(
@@ -1577,12 +1582,12 @@ async function main(args: readonly string[]): Promise<void> {
       rmSync(staging, { recursive: true, force: true });
     }
     console.log(
-      `Rejected Candidate ${result.right.candidateId}; no Scenario was admitted.`,
+      `Rejected Candidate ${result.success.candidateId}; no Scenario was admitted.`,
     );
     return;
   }
   console.log(
-    `Generated ${outputPath} in ${result.right.iterations} iteration(s), stopped by ${result.right.stopReason}, ${disposition}.`,
+    `Generated ${outputPath} in ${result.success.iterations} iteration(s), stopped by ${result.success.stopReason}, ${disposition}.`,
   );
 }
 

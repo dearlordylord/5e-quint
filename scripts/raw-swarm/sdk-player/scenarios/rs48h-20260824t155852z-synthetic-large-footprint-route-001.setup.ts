@@ -101,13 +101,13 @@ export const setupScenario: ScenarioSetup = (context) => {
     if (sdk.isLeft(combatant)) {
       return {
         kind: "obstructed",
-        obstruction: sdk.battleStateInitIssueMessage(combatant.left),
+        obstruction: sdk.battleStateInitIssueMessage(combatant.failure),
         observation: {
           capability: "canonical-stat-block-battle-initialization",
         },
       };
     }
-    initializedCombatants.push(combatant.right);
+    initializedCombatants.push(combatant.success);
   }
 
   const battle = sdk.startBattle({
@@ -119,7 +119,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(battle)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(battle.left),
+      obstruction: sdk.battleStateInitIssueMessage(battle.failure),
       observation: { capability: "canonical-battle-start" },
     };
   }

@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
-import { Either, Match, ParseResult, Schema } from "effect";
+import { Result, Match, Schema } from "effect";
 
 import {
   artifactAuthority,
@@ -112,29 +112,34 @@ import {
   type ScenarioCandidateId,
 } from "./raw-swarm-identities.ts";
 
-const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
+const HashSchema = Schema.String.pipe(
+  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+);
 const NonNegativeIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.isGreaterThanOrEqualTo(0)),
 );
 
 const ExecutionDescriptorSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
-  reviewInvocationEvidencePath: Schema.NonEmptyTrimmedString,
-  continuationObservationPath: Schema.NonEmptyTrimmedString,
-  supervisorTimingPath: Schema.NonEmptyTrimmedString,
-  reportingTimingPath: Schema.NonEmptyTrimmedString,
-  reportingManifestPath: Schema.NonEmptyTrimmedString,
+  reviewInvocationEvidencePath: Schema.Trimmed.check(Schema.isNonEmpty()),
+  continuationObservationPath: Schema.Trimmed.check(Schema.isNonEmpty()),
+  supervisorTimingPath: Schema.Trimmed.check(Schema.isNonEmpty()),
+  reportingTimingPath: Schema.Trimmed.check(Schema.isNonEmpty()),
+  reportingManifestPath: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
 
 const ReportingTimingSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
-  operations: Schema.Tuple(
+  operations: Schema.Tuple([
     Schema.Literal("ingest"),
     Schema.Literal("review"),
     Schema.Literal("portableExport"),
+  ]),
+  runId: Schema.Number.pipe(
+    Schema.check(Schema.isInt()),
+    Schema.check(Schema.isGreaterThan(0)),
   ),
-  runId: Schema.Number.pipe(Schema.int(), Schema.positive()),
   transcriptSha256: HashSchema,
   reviewSha256: HashSchema,
   indexSha256: HashSchema,
@@ -148,17 +153,23 @@ export const LegacyExecutionEvidenceSchema = Schema.Struct({
   scenarioReviewSha256: HashSchema,
   charactersSha256: HashSchema,
   setupSha256: HashSchema,
-  calls: Schema.Number.pipe(Schema.int(), Schema.positive()),
-  continuations: Schema.Number.pipe(Schema.int(), Schema.positive()),
+  calls: Schema.Number.pipe(
+    Schema.check(Schema.isInt()),
+    Schema.check(Schema.isGreaterThan(0)),
+  ),
+  continuations: Schema.Number.pipe(
+    Schema.check(Schema.isInt()),
+    Schema.check(Schema.isGreaterThan(0)),
+  ),
   player: Schema.Struct({
-    model: Schema.NonEmptyTrimmedString,
-    reasoningEffort: Schema.NonEmptyTrimmedString,
+    model: Schema.Trimmed.check(Schema.isNonEmpty()),
+    reasoningEffort: Schema.Trimmed.check(Schema.isNonEmpty()),
     footerTokens: NonNegativeIntegerSchema,
     elapsedMilliseconds: NonNegativeIntegerSchema,
   }),
   postPlayReview: Schema.Struct({
-    model: Schema.NonEmptyTrimmedString,
-    reasoningEffort: Schema.NonEmptyTrimmedString,
+    model: Schema.Trimmed.check(Schema.isNonEmpty()),
+    reasoningEffort: Schema.Trimmed.check(Schema.isNonEmpty()),
     footerTokens: NonNegativeIntegerSchema,
     elapsedMilliseconds: NonNegativeIntegerSchema,
   }),
@@ -183,40 +194,44 @@ type UsageTotals = Schema.Schema.Type<typeof UsageTotalsSchema>;
 const PhaseSummarySchema = Schema.Struct({
   invocationCount: NonNegativeIntegerSchema,
   elapsedMilliseconds: NonNegativeIntegerSchema,
-  models: Schema.Array(Schema.NonEmptyTrimmedString),
-  reasoningEfforts: Schema.Array(Schema.NonEmptyTrimmedString),
-  usage: Schema.Union(
+  models: Schema.Array(Schema.Trimmed.check(Schema.isNonEmpty())),
+  reasoningEfforts: Schema.Array(Schema.Trimmed.check(Schema.isNonEmpty())),
+  usage: Schema.Union([
     Schema.Struct({
       tag: Schema.Literal("available"),
       totals: UsageTotalsSchema,
     }),
     Schema.Struct({
       tag: Schema.Literal("unavailable"),
-      reasons: Schema.Array(Schema.NonEmptyTrimmedString),
+      reasons: Schema.Array(Schema.Trimmed.check(Schema.isNonEmpty())),
     }),
-  ),
+  ]),
 });
 type PhaseSummary = Schema.Schema.Type<typeof PhaseSummarySchema>;
 
-const NormalizedTokensSchema = Schema.Union(
+const NormalizedTokensSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("available"),
-    perInvocation: Schema.Number.pipe(Schema.nonNegative()),
-    perContinuation: Schema.Number.pipe(Schema.nonNegative()),
-    perCall: Schema.Number.pipe(Schema.nonNegative()),
+    perInvocation: Schema.Number.pipe(
+      Schema.check(Schema.isGreaterThanOrEqualTo(0)),
+    ),
+    perContinuation: Schema.Number.pipe(
+      Schema.check(Schema.isGreaterThanOrEqualTo(0)),
+    ),
+    perCall: Schema.Number.pipe(Schema.check(Schema.isGreaterThanOrEqualTo(0))),
   }),
   Schema.Struct({ tag: Schema.Literal("unavailable") }),
-);
+]);
 type NormalizedTokens = Schema.Schema.Type<typeof NormalizedTokensSchema>;
 
-const PhaseRecordSchema = Schema.Record({
-  key: Schema.Literal(...MODEL_INVOCATION_PHASES),
-  value: PhaseSummarySchema,
-});
+const PhaseRecordSchema = Schema.Record(
+  Schema.Literals(MODEL_INVOCATION_PHASES),
+  PhaseSummarySchema,
+);
 const SupervisorTimingSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
   transcriptHeaderSha256: HashSchema,
-  continuation: Schema.Number.pipe(Schema.int()),
+  continuation: Schema.Number.pipe(Schema.check(Schema.isInt())),
   phases: Schema.Struct({
     continuationTypecheckMilliseconds: NonNegativeIntegerSchema,
     priorCallVerificationReplayMilliseconds: NonNegativeIntegerSchema,
@@ -234,21 +249,36 @@ const ControlledExecutionPerformanceSchema = Schema.Struct({
   scenarioReviewSha256: HashSchema,
   charactersSha256: HashSchema,
   setupSha256: HashSchema,
-  calls: Schema.Number.pipe(Schema.int(), Schema.positive()),
-  continuations: Schema.Number.pipe(Schema.int(), Schema.positive()),
+  calls: Schema.Number.pipe(
+    Schema.check(Schema.isInt()),
+    Schema.check(Schema.isGreaterThan(0)),
+  ),
+  continuations: Schema.Number.pipe(
+    Schema.check(Schema.isInt()),
+    Schema.check(Schema.isGreaterThan(0)),
+  ),
   phases: PhaseRecordSchema,
   supervisor: Schema.Struct({
-    continuationCount: Schema.Number.pipe(Schema.int(), Schema.positive()),
+    continuationCount: Schema.Number.pipe(
+      Schema.check(Schema.isInt()),
+      Schema.check(Schema.isGreaterThan(0)),
+    ),
     typecheckMilliseconds: NonNegativeIntegerSchema,
     replayMilliseconds: NonNegativeIntegerSchema,
     sdkExecutionMilliseconds: NonNegativeIntegerSchema,
     evidenceWritingMilliseconds: NonNegativeIntegerSchema,
     nonModelMilliseconds: NonNegativeIntegerSchema,
-    perContinuationMilliseconds: Schema.Number.pipe(Schema.nonNegative()),
-    perCallMilliseconds: Schema.Number.pipe(Schema.nonNegative()),
+    perContinuationMilliseconds: Schema.Number.pipe(
+      Schema.check(Schema.isGreaterThanOrEqualTo(0)),
+    ),
+    perCallMilliseconds: Schema.Number.pipe(
+      Schema.check(Schema.isGreaterThanOrEqualTo(0)),
+    ),
     replayCacheDecision: Schema.Struct({
       cumulativeReplayMilliseconds: NonNegativeIntegerSchema,
-      shareOfNonModelSupervisor: Schema.Number.pipe(Schema.between(0, 1)),
+      shareOfNonModelSupervisor: Schema.Number.pipe(
+        Schema.check(Schema.isBetween({ minimum: 0, maximum: 1 })),
+      ),
       admitted: Schema.Boolean,
     }),
   }),
@@ -261,7 +291,7 @@ const ControlledExecutionPerformanceSchema = Schema.Struct({
     postPlayReview: NormalizedTokensSchema,
   }),
   sources: Schema.Struct({
-    prePlayReviews: Schema.Tuple(
+    prePlayReviews: Schema.Tuple([
       Schema.Struct({
         reviewStage: Schema.Literal("milestone"),
         sourceInput: ArtifactAuthoritySchema,
@@ -272,11 +302,11 @@ const ControlledExecutionPerformanceSchema = Schema.Struct({
         sourceInput: ArtifactAuthoritySchema,
         replayInput: ArtifactAuthoritySchema,
       }),
-    ),
+    ]),
     reviewInvocationEvidence: ArtifactAuthoritySchema,
     transcript: ArtifactAuthoritySchema,
     review: ArtifactAuthoritySchema,
-    invocationLedgers: Schema.Tuple(ArtifactAuthoritySchema),
+    invocationLedgers: Schema.Tuple([ArtifactAuthoritySchema]),
     invocationEvents: Schema.NonEmptyArray(ArtifactAuthoritySchema),
     invocationRawArtifacts: Schema.Array(ArtifactAuthoritySchema),
     continuationObservations: ArtifactAuthoritySchema,
@@ -296,8 +326,8 @@ function fail(message: string): never {
 
 function ledgerEntry(value: unknown): ModelInvocationLedgerEntry {
   const parsed = parseModelInvocationLedgerEntry(value);
-  return Either.isRight(parsed)
-    ? parsed.right
+  return Result.isSuccess(parsed)
+    ? parsed.success
     : fail("Invocation ledger entry is invalid.");
 }
 
@@ -462,10 +492,10 @@ export function summarizeControlledExecution(
   }
   const timingRows = readJsonLines(input.supervisorTimingPath);
   const timing = timingRows.map((value) => {
-    const decoded = Schema.decodeUnknownEither(SupervisorTimingSchema, {
+    const decoded = Schema.decodeUnknownResult(SupervisorTimingSchema, {
       onExcessProperty: "error",
     })(value);
-    if (Either.isRight(decoded)) return decoded.right;
+    if (Result.isSuccess(decoded)) return decoded.success;
     return fail(
       isJsonRecord(value) && isJsonRecord(value.phases)
         ? "Supervisor timing row has invalid phase durations."
@@ -508,7 +538,7 @@ export function summarizeControlledExecution(
       evidenceWritingMilliseconds: 0,
     },
   );
-  const phaseRecord = Schema.decodeUnknownEither(PhaseRecordSchema, {
+  const phaseRecord = Schema.decodeUnknownResult(PhaseRecordSchema, {
     onExcessProperty: "error",
   })(
     Object.fromEntries(
@@ -518,9 +548,11 @@ export function summarizeControlledExecution(
       ]),
     ),
   );
-  const phases = Either.isRight(phaseRecord)
-    ? phaseRecord.right
-    : fail(`Unable to construct model invocation phases: ${phaseRecord.left}`);
+  const phases = Result.isSuccess(phaseRecord)
+    ? phaseRecord.success
+    : fail(
+        `Unable to construct model invocation phases: ${phaseRecord.failure}`,
+      );
   if (continuations.length > 0 && phases.player.invocationCount === 0) {
     fail(
       "Recorded player continuations require at least one player invocation.",
@@ -1038,11 +1070,13 @@ export function compareControlledExecutions(
   };
 }
 
-function decode<A, I>(schema: Schema.Schema<A, I>, path: string): A {
-  const decoded = Schema.decodeUnknownEither(schema, {
+function decode<A, I>(schema: Schema.Codec<A, I>, path: string): A {
+  const decoded = Schema.decodeUnknownResult(schema, {
     onExcessProperty: "error",
   })(JSON.parse(readFileSync(resolve(repoRoot, path), "utf8")));
-  return Either.isRight(decoded) ? decoded.right : fail(decoded.left.message);
+  return Result.isSuccess(decoded)
+    ? decoded.success
+    : fail(decoded.failure.message);
 }
 
 export function readControlledPerformance(
@@ -1206,16 +1240,16 @@ export function readControlledPerformance(
   return run;
 }
 
-export const PathOutcomeSchema = Schema.Union(
+export const PathOutcomeSchema = Schema.Union([
   Schema.Struct({ tag: Schema.Literal("completed") }),
   Schema.Struct({
     tag: Schema.Literal("failed"),
-    reason: Schema.NonEmptyTrimmedString,
+    reason: Schema.Trimmed.check(Schema.isNonEmpty()),
   }),
-);
+]);
 const UnavailableEvidenceSchema = Schema.Struct({
   tag: Schema.Literal("unavailable"),
-  reason: Schema.NonEmptyTrimmedString,
+  reason: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
 export const COMPLETE_PATH_PHASE_STAGE = [
   {
@@ -1322,8 +1356,8 @@ export const BENCHMARK_IMPLEMENTATION_PROFILES = [
 ] as const;
 export type BenchmarkImplementationProfile =
   (typeof BENCHMARK_IMPLEMENTATION_PROFILES)[number];
-const BenchmarkImplementationProfileSchema = Schema.Literal(
-  ...BENCHMARK_IMPLEMENTATION_PROFILES,
+const BenchmarkImplementationProfileSchema = Schema.Literals(
+  BENCHMARK_IMPLEMENTATION_PROFILES,
 );
 const ImplementationGitShaSchema = GitShaSchema;
 
@@ -1397,7 +1431,7 @@ function benchmarkContextSourceManifestSourcesSchema<
   SourceKind extends BenchmarkContextSourceKind,
   DeliveryMode extends BenchmarkContextDeliveryMode,
 >(sourceKind: SourceKind, deliveryMode: DeliveryMode) {
-  return Schema.Tuple(
+  return Schema.Tuple([
     benchmarkContextSourceManifestEntrySchema(
       BENCHMARK_CONTEXT_SOURCE_ROLES[0],
       sourceKind,
@@ -1428,7 +1462,7 @@ function benchmarkContextSourceManifestSourcesSchema<
       sourceKind,
       deliveryMode,
     ),
-  );
+  ]);
 }
 
 const BenchmarkContextSourceManifestCommonFields = {
@@ -1454,18 +1488,18 @@ const BenchmarkBoundedCapabilityProjectionSourceManifestSchema = Schema.Struct({
   ),
 });
 
-export const BenchmarkContextSourceManifestDocumentSchema = Schema.Union(
+export const BenchmarkContextSourceManifestDocumentSchema = Schema.Union([
   BenchmarkDocumentDeclarationSetSourceManifestSchema,
   BenchmarkBoundedCapabilityProjectionSourceManifestSchema,
-);
+]);
 export type BenchmarkContextSourceManifestDocument = Schema.Schema.Type<
   typeof BenchmarkContextSourceManifestDocumentSchema
 >;
 
-export const BenchmarkInvocationSchema = Schema.Union(
+export const BenchmarkInvocationSchema = Schema.Union([
   CurrentModelInvocationLedgerEntrySchema,
   BenchmarkAuxiliaryModelInvocationLedgerEntrySchema,
-);
+]);
 export type BenchmarkInvocation = Schema.Schema.Type<
   typeof BenchmarkInvocationSchema
 >;
@@ -1492,10 +1526,10 @@ const BaselineBenchmarkMeasurementSchema = Schema.Struct({
   findingsAuthority: ArtifactAuthoritySchema,
   profile: Schema.Literal("documentDeclarationSet"),
   invocations: Schema.NonEmptyArray(
-    Schema.Union(
+    Schema.Union([
       CurrentModelInvocationLedgerEntrySchema,
       BenchmarkAuxiliaryModelInvocationLedgerEntrySchema,
-    ),
+    ]),
   ),
 });
 
@@ -1512,10 +1546,10 @@ const BoundedBenchmarkMeasurementSchema = Schema.Struct({
  * immutable scenario bundle while allowing the baseline's historical
  * auxiliary invocations to remain visible as separate telemetry rows.
  */
-export const CurrentBenchmarkMeasurementSchema = Schema.Union(
+export const CurrentBenchmarkMeasurementSchema = Schema.Union([
   BaselineBenchmarkMeasurementSchema,
   BoundedBenchmarkMeasurementSchema,
-);
+]);
 export type CurrentBenchmarkMeasurement = Schema.Schema.Type<
   typeof CurrentBenchmarkMeasurementSchema
 >;
@@ -1534,10 +1568,10 @@ const LegacyUnboundBaselineBenchmarkMeasurementSchema = Schema.Struct({
   outcome: PathOutcomeSchema,
   profile: Schema.Literal("documentDeclarationSet"),
   invocations: Schema.NonEmptyArray(
-    Schema.Union(
+    Schema.Union([
       CurrentModelInvocationLedgerEntrySchema,
       BenchmarkAuxiliaryModelInvocationLedgerEntrySchema,
-    ),
+    ]),
   ),
 });
 
@@ -1557,10 +1591,10 @@ const LegacyUnboundBoundedBenchmarkMeasurementSchema = Schema.Struct({
   invocations: Schema.NonEmptyArray(CurrentModelInvocationLedgerEntrySchema),
 });
 
-const LegacyUnboundBenchmarkMeasurementSchema = Schema.Union(
+const LegacyUnboundBenchmarkMeasurementSchema = Schema.Union([
   LegacyUnboundBaselineBenchmarkMeasurementSchema,
   LegacyUnboundBoundedBenchmarkMeasurementSchema,
-);
+]);
 
 /**
  * Paths are assembled from retained authority files, not copied ledger rows
@@ -1571,10 +1605,14 @@ const LegacyUnboundBenchmarkMeasurementSchema = Schema.Union(
 export const CompletePathAssemblyDescriptorSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
   pathId: PerformancePathIdSchema,
-  stagePlanPath: Schema.NonEmptyTrimmedString,
-  findingsPath: Schema.NonEmptyTrimmedString,
-  invocationLedgerPaths: Schema.NonEmptyArray(Schema.NonEmptyTrimmedString),
-  invocationEventPaths: Schema.NonEmptyArray(Schema.NonEmptyTrimmedString),
+  stagePlanPath: Schema.Trimmed.check(Schema.isNonEmpty()),
+  findingsPath: Schema.Trimmed.check(Schema.isNonEmpty()),
+  invocationLedgerPaths: Schema.NonEmptyArray(
+    Schema.Trimmed.check(Schema.isNonEmpty()),
+  ),
+  invocationEventPaths: Schema.NonEmptyArray(
+    Schema.Trimmed.check(Schema.isNonEmpty()),
+  ),
   outcome: PathOutcomeSchema,
 });
 export type CompletePathAssemblyDescriptor = Schema.Schema.Type<
@@ -1591,23 +1629,23 @@ const HistoricalCompletePathMeasurementSchema = Schema.Struct({
   pathId: PerformancePathIdSchema,
   legacy: LegacyExecutionEvidenceSchema,
   stagePlan: UnavailableEvidenceSchema,
-  invocations: Schema.Union(
+  invocations: Schema.Union([
     UnavailableEvidenceSchema,
     // Historical v1 entries remain parseable through the canonical versioned
     // ledger union. No second telemetry declaration is maintained here.
     Schema.Array(ModelInvocationLedgerEntrySchema),
-  ),
+  ]),
   findings: UnavailableEvidenceSchema,
   outcome: UnavailableEvidenceSchema,
 });
 
-export const CompletePathMeasurementSchema = Schema.Union(
+export const CompletePathMeasurementSchema = Schema.Union([
   HistoricalCompletePathMeasurementSchema,
   LegacyUnboundCompletePathMeasurementSchema,
   LegacyUnboundBenchmarkMeasurementSchema,
   CurrentCompletePathMeasurementSchema,
   CurrentBenchmarkMeasurementSchema,
-);
+]);
 export type CompletePathMeasurement = Schema.Schema.Type<
   typeof CompletePathMeasurementSchema
 >;
@@ -1659,11 +1697,14 @@ const BenchmarkFrozenPrefixSchema = Schema.Struct({
 
 const BenchmarkFinalArtifactSchema = Schema.Struct({
   transcriptHeaderSha256: HashSchema,
-  continuation: Schema.Number.pipe(Schema.int(), Schema.greaterThan(0)),
+  continuation: Schema.Number.pipe(
+    Schema.check(Schema.isInt()),
+    Schema.check(Schema.isGreaterThan(0)),
+  ),
   kind: Schema.Literal("playerConcluded"),
   projection: Schema.Unknown,
   tacticalNote: Schema.String,
-  conclusion: Schema.NonEmptyTrimmedString,
+  conclusion: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
 
 /**
@@ -1676,15 +1717,15 @@ export function deriveBenchmarkPathOutcome(input: {
   readonly frozenPrefixPath: string;
   readonly continuationObservationPath: string;
   readonly finalArtifactPath?: string;
-}): Either.Either<PathOutcome, string> {
+}): Result.Result<PathOutcome, string> {
   try {
     const transcript = parseSdkTranscript(readJsonLines(input.transcriptPath));
     if (transcript.tag === "invalid") {
-      return Either.left(
+      return Result.fail(
         `Benchmark player transcript is invalid: ${transcript.message}`,
       );
     }
-    const frozenPrefix = Schema.decodeUnknownEither(
+    const frozenPrefix = Schema.decodeUnknownResult(
       BenchmarkFrozenPrefixSchema,
       { onExcessProperty: "error" },
     )(
@@ -1692,12 +1733,12 @@ export function deriveBenchmarkPathOutcome(input: {
         readFileSync(resolve(repoRoot, input.frozenPrefixPath), "utf8"),
       ),
     );
-    if (Either.isLeft(frozenPrefix)) {
-      return Either.left(
-        `Benchmark frozen-prefix evidence is invalid: ${frozenPrefix.left.message}`,
+    if (Result.isFailure(frozenPrefix)) {
+      return Result.fail(
+        `Benchmark frozen-prefix evidence is invalid: ${frozenPrefix.failure.message}`,
       );
     }
-    const prefix = frozenPrefix.right;
+    const prefix = frozenPrefix.success;
     const observations = readJsonLines(input.continuationObservationPath);
     const continuationEvidence = playerContinuationEvidence({
       transcriptHeaderSha256: sha256Canonical(transcript.value.header),
@@ -1707,7 +1748,7 @@ export function deriveBenchmarkPathOutcome(input: {
       ),
     });
     if (continuationEvidence.tag === "invalid") {
-      return Either.left(
+      return Result.fail(
         `Benchmark player continuation evidence is invalid: ${continuationEvidence.message}`,
       );
     }
@@ -1716,7 +1757,7 @@ export function deriveBenchmarkPathOutcome(input: {
       "program.ts",
     );
     if (!existsSync(programPath)) {
-      return Either.left(
+      return Result.fail(
         "Benchmark frozen-prefix evidence has no retained program authority.",
       );
     }
@@ -1725,7 +1766,7 @@ export function deriveBenchmarkPathOutcome(input: {
       program.byteLength !== prefix.frozenByteLength ||
       sha256Text(program.toString("utf8")) !== prefix.frozenSha256
     ) {
-      return Either.left(
+      return Result.fail(
         "Benchmark frozen-prefix evidence is not bound to the retained program authority.",
       );
     }
@@ -1735,7 +1776,7 @@ export function deriveBenchmarkPathOutcome(input: {
       existsSync(resolve(repoRoot, input.finalArtifactPath));
     const concluded = prefix.run.kind === "playerConcluded";
     if (concluded !== finalArtifactExists) {
-      return Either.left("Player terminal state and final artifact disagree.");
+      return Result.fail("Player terminal state and final artifact disagree.");
     }
 
     const greatestContinuation = transcript.value.calls.reduce(
@@ -1747,7 +1788,7 @@ export function deriveBenchmarkPathOutcome(input: {
       continuationEvidence.lastContinuation !==
         (prefix.continuationCount === 0 ? undefined : prefix.continuationCount)
     ) {
-      return Either.left(
+      return Result.fail(
         "Benchmark player continuation evidence must cover every contiguous continuation through the frozen-prefix count.",
       );
     }
@@ -1765,25 +1806,25 @@ export function deriveBenchmarkPathOutcome(input: {
           (continuation) => !recordedCallContinuations.has(continuation),
         ))
     ) {
-      return Either.left(
+      return Result.fail(
         "Benchmark failed player evidence must retain exact continuation coverage for its transcript.",
       );
     }
     if (prefix.run.kind === "playerObstructed") {
-      return Either.right({
+      return Result.succeed({
         tag: "failed",
         reason: prefix.run.obstruction.message,
       });
     }
     if (prefix.run.kind === "active") {
-      return Either.right({
+      return Result.succeed({
         tag: "failed",
         reason:
           "Player execution ended without a playerConcluded terminal state.",
       });
     }
     if (transcript.value.calls.length === 0) {
-      return Either.right({
+      return Result.succeed({
         tag: "failed",
         reason:
           "Player terminal evidence claims playerConcluded without an SDK call.",
@@ -1796,7 +1837,7 @@ export function deriveBenchmarkPathOutcome(input: {
       !Number.isInteger(finalObservation.continuation) ||
       typeof finalObservation.kind !== "string"
     ) {
-      return Either.left(
+      return Result.fail(
         "Benchmark player continuation evidence has no valid terminal observation.",
       );
     }
@@ -1804,17 +1845,17 @@ export function deriveBenchmarkPathOutcome(input: {
       finalObservation.continuation !== prefix.continuationCount ||
       finalObservation.kind !== "playerConcluded"
     ) {
-      return Either.left(
+      return Result.fail(
         "Benchmark terminal observation is not bound to the last contiguous continuation.",
       );
     }
     if (input.finalArtifactPath === undefined) {
-      return Either.left(
+      return Result.fail(
         "Player terminal evidence claims playerConcluded without a final artifact.",
       );
     }
 
-    const finalArtifact = Schema.decodeUnknownEither(
+    const finalArtifact = Schema.decodeUnknownResult(
       BenchmarkFinalArtifactSchema,
       { onExcessProperty: "error" },
     )(
@@ -1822,15 +1863,15 @@ export function deriveBenchmarkPathOutcome(input: {
         readFileSync(resolve(repoRoot, input.finalArtifactPath), "utf8"),
       ),
     );
-    if (Either.isLeft(finalArtifact)) {
-      return Either.left(
-        `Benchmark final player artifact is invalid: ${finalArtifact.left.message}`,
+    if (Result.isFailure(finalArtifact)) {
+      return Result.fail(
+        `Benchmark final player artifact is invalid: ${finalArtifact.failure.message}`,
       );
     }
-    const final = finalArtifact.right;
+    const final = finalArtifact.success;
     const transcriptHeaderSha256 = sha256Canonical(transcript.value.header);
     if (final.transcriptHeaderSha256 !== transcriptHeaderSha256) {
-      return Either.left(
+      return Result.fail(
         "Benchmark final player artifact is not bound to the retained transcript header.",
       );
     }
@@ -1845,7 +1886,7 @@ export function deriveBenchmarkPathOutcome(input: {
         canonicalJson(final.projection) ||
       finalObservation.conclusion !== final.conclusion
     ) {
-      return Either.left(
+      return Result.fail(
         "Benchmark final player artifact is not bound to the terminal state or transcript continuation.",
       );
     }
@@ -1854,7 +1895,7 @@ export function deriveBenchmarkPathOutcome(input: {
       holeEvidenceSource: { kind: "recordedCurrentRuntime" },
     });
     if (projected.tag === "invalid") {
-      return Either.left(
+      return Result.fail(
         `Benchmark player transcript cannot produce the canonical terminal projection: ${projected.message}`,
       );
     }
@@ -1863,13 +1904,13 @@ export function deriveBenchmarkPathOutcome(input: {
       terminalProjection === undefined ||
       canonicalJson(final.projection) !== canonicalJson(terminalProjection)
     ) {
-      return Either.left(
+      return Result.fail(
         "Benchmark final player artifact projection does not match the retained transcript.",
       );
     }
-    return Either.right({ tag: "completed" });
+    return Result.succeed({ tag: "completed" });
   } catch (error: unknown) {
-    return Either.left(
+    return Result.fail(
       error instanceof Error
         ? error.message
         : `Unable to read benchmark player evidence: ${String(error)}`,
@@ -2174,42 +2215,45 @@ function benchmarkReviewResult(
   profile: BenchmarkImplementationProfile,
   readiness: Schema.Schema.Type<typeof ScenarioQualityReviewSchema> | undefined,
 ): BenchmarkReviewClassifications {
-  const envelope = Schema.decodeUnknownEither(
+  const envelope = Schema.decodeUnknownResult(
     RetainedScenarioReviewInputSchema,
     {
       onExcessProperty: "error",
     },
   )(value);
-  if (Either.isLeft(envelope)) {
+  if (Result.isFailure(envelope)) {
     return fail(
       "Validated retained benchmark review envelope became unreadable.",
     );
   }
   const compatibility = classifyScenarioReviewOutputSchema({
-    schemaVersion: envelope.right.schemaVersion,
-    outputJsonSchema: envelope.right.outputJsonSchema,
+    schemaVersion: envelope.success.schemaVersion,
+    outputJsonSchema: envelope.success.outputJsonSchema,
   });
   const expectedTag =
     profile === "documentDeclarationSet" ? "historical" : "legacyCurrent";
-  if (Either.isLeft(compatibility) || compatibility.right.tag !== expectedTag) {
+  if (
+    Result.isFailure(compatibility) ||
+    compatibility.success.tag !== expectedTag
+  ) {
     return fail("Validated benchmark review authority became unreadable.");
   }
-  const decoded = compatibility.right.decodeResult(envelope.right.result);
-  if (Either.isLeft(decoded)) {
+  const decoded = compatibility.success.decodeResult(envelope.success.result);
+  if (Result.isFailure(decoded)) {
     return fail("Validated benchmark review authority became unreadable.");
   }
-  const result = decoded.right;
+  const result = decoded.success;
   const scenarioQuality =
     profile === "documentDeclarationSet"
       ? readiness?.classification
       : "scenarioQuality" in result
         ? (() => {
-            const quality = Schema.decodeUnknownEither(
+            const quality = Schema.decodeUnknownResult(
               ScenarioQualityReviewSchema,
               { onExcessProperty: "error" },
             )(result.scenarioQuality);
-            return Either.isRight(quality)
-              ? quality.right.classification
+            return Result.isSuccess(quality)
+              ? quality.success.classification
               : undefined;
           })()
         : undefined;
@@ -2248,12 +2292,12 @@ function benchmarkReviewIdentity(
   const readiness =
     measurement.profile === "documentDeclarationSet"
       ? (() => {
-          const decoded = Schema.decodeUnknownEither(
+          const decoded = Schema.decodeUnknownResult(
             ScenarioQualityReviewSchema,
             { onExcessProperty: "error" },
           )(jsonFor("prePlayReviewReadinessResult"));
-          return Either.isRight(decoded)
-            ? decoded.right
+          return Result.isSuccess(decoded)
+            ? decoded.success
             : fail("Validated readiness authority became unreadable.");
         })()
       : undefined;
@@ -2273,20 +2317,22 @@ function benchmarkReviewIdentity(
       return fail("Validated benchmark post-play review authority is missing.");
     }
     const authorityValue = readAuthorityJson(postPlayAuthority);
-    const decoded = Schema.decodeUnknownEither(ReviewOutputSchema, {
+    const decoded = Schema.decodeUnknownResult(ReviewOutputSchema, {
       onExcessProperty: "error",
     })(
       authorityValue.tag === "valid"
         ? authorityValue.value
         : fail("Validated benchmark post-play review authority is unreadable."),
     );
-    if (Either.isLeft(decoded)) {
+    if (Result.isFailure(decoded)) {
       return fail("Validated post-play review authority became unreadable.");
     }
     return {
       verdictClasses: [
         ...new Set(
-          decoded.right.verdicts.map(({ class: verdictClass }) => verdictClass),
+          decoded.success.verdicts.map(
+            ({ class: verdictClass }) => verdictClass,
+          ),
         ),
       ].sort(),
     };
@@ -2331,16 +2377,16 @@ function benchmarkContextIdentity(
     "context-source manifest",
     [],
   );
-  const decoded = Schema.decodeUnknownEither(
+  const decoded = Schema.decodeUnknownResult(
     BenchmarkContextSourceManifestDocumentSchema,
     { onExcessProperty: "error" },
   )(value);
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     return fail("Validated benchmark context manifest became unreadable.");
   }
   return {
-    profile: decoded.right.profile,
-    roles: [...decoded.right.sources.map(({ role }) => role)].sort(),
+    profile: decoded.success.profile,
+    roles: [...decoded.success.sources.map(({ role }) => role)].sort(),
   };
 }
 
@@ -2905,16 +2951,16 @@ function inputComparison(
 
 export function parseCompletePathMeasurement(
   value: unknown,
-): Either.Either<CompletePathMeasurement, ParseResult.ParseError> {
-  return Schema.decodeUnknownEither(CompletePathMeasurementSchema, {
+): Result.Result<CompletePathMeasurement, Schema.SchemaError> {
+  return Schema.decodeUnknownResult(CompletePathMeasurementSchema, {
     onExcessProperty: "error",
   })(value);
 }
 
 export function parseBenchmarkMeasurement(
   value: unknown,
-): Either.Either<CurrentBenchmarkMeasurement, ParseResult.ParseError> {
-  return Schema.decodeUnknownEither(CurrentBenchmarkMeasurementSchema, {
+): Result.Result<CurrentBenchmarkMeasurement, Schema.SchemaError> {
+  return Schema.decodeUnknownResult(CurrentBenchmarkMeasurementSchema, {
     onExcessProperty: "error",
   })(value);
 }
@@ -2932,21 +2978,24 @@ function currentInvocationEntriesFromLedger(
   }
   return values.map((value) => {
     const parsed = parseModelInvocationLedgerEntry(value);
-    if (Either.isLeft(parsed)) {
+    if (Result.isFailure(parsed)) {
       fail(
         "Invalid invocation ledger entry in " +
           path +
           ": " +
-          parsed.left.message,
+          parsed.failure.message,
       );
     }
-    if (parsed.right.schemaVersion !== 4 && parsed.right.schemaVersion !== 5) {
+    if (
+      parsed.success.schemaVersion !== 4 &&
+      parsed.success.schemaVersion !== 5
+    ) {
       fail(
         "Current complete-path assembly requires current ledger evidence: " +
           path,
       );
     }
-    return parsed.right;
+    return parsed.success;
   });
 }
 
@@ -2965,62 +3014,65 @@ function mapNonEmpty<A, B>(
  */
 export function assembleCompletePathMeasurement(
   value: unknown,
-): Either.Either<ValidatedCompletePathMeasurement, string> {
-  const descriptor = Schema.decodeUnknownEither(
+): Result.Result<ValidatedCompletePathMeasurement, string> {
+  const descriptor = Schema.decodeUnknownResult(
     CompletePathAssemblyDescriptorSchema,
     { onExcessProperty: "error" },
   )(value);
-  if (Either.isLeft(descriptor)) return Either.left(descriptor.left.message);
+  if (Result.isFailure(descriptor))
+    return Result.fail(descriptor.failure.message);
   try {
     const stagePlanAuthority = artifactAuthority(
-      descriptor.right.stagePlanPath,
+      descriptor.success.stagePlanPath,
     );
-    const stagePlanDecoded = Schema.decodeUnknownEither(
+    const stagePlanDecoded = Schema.decodeUnknownResult(
       ScenarioStagePlanSchema,
       { onExcessProperty: "error" },
     )(readJsonAuthority(stagePlanAuthority.path));
-    if (Either.isLeft(stagePlanDecoded)) {
-      return Either.left(
-        "Invalid complete-path stage plan: " + stagePlanDecoded.left.message,
+    if (Result.isFailure(stagePlanDecoded)) {
+      return Result.fail(
+        "Invalid complete-path stage plan: " + stagePlanDecoded.failure.message,
       );
     }
-    const findingsAuthority = artifactAuthority(descriptor.right.findingsPath);
-    const findingsDecoded = Schema.decodeUnknownEither(
+    const findingsAuthority = artifactAuthority(
+      descriptor.success.findingsPath,
+    );
+    const findingsDecoded = Schema.decodeUnknownResult(
       FindingsProjectionSchema,
       { onExcessProperty: "error" },
     )(readJsonAuthority(findingsAuthority.path));
-    if (Either.isLeft(findingsDecoded)) {
-      return Either.left(
+    if (Result.isFailure(findingsDecoded)) {
+      return Result.fail(
         "Invalid complete-path findings projection: " +
-          findingsDecoded.left.message,
+          findingsDecoded.failure.message,
       );
     }
     const eventAuthorityCache = eventAuthoritySnapshotsForPaths([
-      ...descriptor.right.invocationEventPaths,
-      ...findingsDecoded.right.authorities
+      ...descriptor.success.invocationEventPaths,
+      ...findingsDecoded.success.authorities
         .filter(({ role }) => isPrePlayReviewEventsAuthorityRole(role))
         .map(({ path }) => path),
     ]);
     const findingsValidation = validateFindingsProjection(
-      findingsDecoded.right,
+      findingsDecoded.success,
       findingAuthoritySnapshots(
         eventAuthorityCache,
-        findingsDecoded.right.authorities,
+        findingsDecoded.success.authorities,
       ),
     );
     if (findingsValidation.tag === "invalid") {
-      return Either.left(
+      return Result.fail(
         "Invalid complete-path findings projection: " +
           findingsValidation.message,
       );
     }
     const ledgerAuthorities = mapNonEmpty(
-      descriptor.right.invocationLedgerPaths,
+      descriptor.success.invocationLedgerPaths,
       artifactAuthority,
     );
     const ledgerPaths = new Set(ledgerAuthorities.map(({ path }) => path));
     if (ledgerPaths.size !== ledgerAuthorities.length) {
-      return Either.left(
+      return Result.fail(
         "Complete-path invocation ledger authorities must have distinct paths.",
       );
     }
@@ -3028,40 +3080,40 @@ export function assembleCompletePathMeasurement(
       currentInvocationEntriesFromLedger(path),
     );
     const eventAuthorities = mapNonEmpty(
-      descriptor.right.invocationEventPaths,
+      descriptor.success.invocationEventPaths,
       (path) => {
         const snapshot = eventAuthoritySnapshotAtPath(
           eventAuthorityCache,
           path,
         );
-        if (Either.isLeft(snapshot)) fail(snapshot.left);
-        return snapshot.right.authority;
+        if (Result.isFailure(snapshot)) fail(snapshot.failure);
+        return snapshot.success.authority;
       },
     );
     const eventPaths = new Set(eventAuthorities.map(({ path }) => path));
     if (eventPaths.size !== eventAuthorities.length) {
-      return Either.left(
+      return Result.fail(
         "Complete-path invocation event authorities must have distinct paths.",
       );
     }
     const measurement: CurrentCompletePathMeasurement = {
       schemaVersion: 4,
-      pathId: descriptor.right.pathId,
-      stagePlan: stagePlanDecoded.right,
+      pathId: descriptor.success.pathId,
+      stagePlan: stagePlanDecoded.success,
       stagePlanAuthority,
       invocationLedgers: ledgerAuthorities,
       invocations,
       invocationEvents: eventAuthorities,
       findingsAuthority,
       findings: findingsValidation.projection,
-      outcome: descriptor.right.outcome,
+      outcome: descriptor.success.outcome,
     };
     return validateParsedCompletePathMeasurement(
       measurement,
       eventAuthorityCache,
     );
   } catch (error: unknown) {
-    return Either.left(
+    return Result.fail(
       error instanceof Error
         ? error.message
         : "Unable to assemble complete-path measurement: " + String(error),
@@ -3072,18 +3124,18 @@ export function assembleCompletePathMeasurement(
 export function writeCompletePathMeasurement(input: {
   readonly descriptor: unknown;
   readonly outputPath: string;
-}): Either.Either<ValidatedCompletePathMeasurement, string> {
+}): Result.Result<ValidatedCompletePathMeasurement, string> {
   const assembled = assembleCompletePathMeasurement(input.descriptor);
-  if (Either.isLeft(assembled)) return assembled;
+  if (Result.isFailure(assembled)) return assembled;
   try {
     writeFileSync(
       resolve(repoRoot, input.outputPath),
-      JSON.stringify(assembled.right, null, 2) + "\n",
+      JSON.stringify(assembled.success, null, 2) + "\n",
       { flag: "wx" },
     );
     return assembled;
   } catch (error: unknown) {
-    return Either.left(
+    return Result.fail(
       error instanceof Error
         ? error.message
         : "Unable to write complete-path measurement: " + String(error),
@@ -3100,8 +3152,8 @@ type ParsedEventAuthority = Readonly<{
 }>;
 
 type EventAuthorityCacheEntry = Readonly<{
-  readonly rawContents: Either.Either<Buffer, string>;
-  readonly parsed: Either.Either<ParsedEventAuthority, string>;
+  readonly rawContents: Result.Result<Buffer, string>;
+  readonly parsed: Result.Result<ParsedEventAuthority, string>;
 }>;
 
 type EventAuthoritySnapshotCache = ReadonlyMap<
@@ -3116,11 +3168,11 @@ function eventAuthorityCacheKey(path: string): string {
 function readEventAuthorityAtPath(path: string): EventAuthorityCacheEntry {
   try {
     const parsed = readCodexEventsWithSource(resolve(repoRoot, path));
-    const rawContents = Either.right(parsed.rawContents);
+    const rawContents = Result.succeed(parsed.rawContents);
     const parsedResult =
       parsed.tag === "invalid"
-        ? Either.left(parsed.message)
-        : Either.right({
+        ? Result.fail(parsed.message)
+        : Result.succeed({
             authority: artifactAuthorityForBytes(path, parsed.rawContents),
             events: parsed.events,
             rawContents: parsed.rawContents,
@@ -3129,8 +3181,8 @@ function readEventAuthorityAtPath(path: string): EventAuthorityCacheEntry {
   } catch {
     const message = `Authority ${path} is unreadable or malformed JSONL.`;
     return {
-      rawContents: Either.left(message),
-      parsed: Either.left(message),
+      rawContents: Result.fail(message),
+      parsed: Result.fail(message),
     };
   }
 }
@@ -3151,17 +3203,17 @@ function eventAuthoritySnapshotsForPaths(
 function eventAuthoritySnapshot(
   snapshots: EventAuthoritySnapshotCache,
   authority: FindingAuthority | ArtifactAuthority,
-): Either.Either<ParsedEventAuthority, string> {
+): Result.Result<ParsedEventAuthority, string> {
   return eventAuthoritySnapshotAtPath(snapshots, authority.path);
 }
 
 function eventAuthoritySnapshotAtPath(
   snapshots: EventAuthoritySnapshotCache,
   path: string,
-): Either.Either<ParsedEventAuthority, string> {
+): Result.Result<ParsedEventAuthority, string> {
   const entry = snapshots.get(eventAuthorityCacheKey(path));
   return entry === undefined
-    ? Either.left(`Event authority is not retained: ${path}.`)
+    ? Result.fail(`Event authority is not retained: ${path}.`)
     : entry.parsed;
 }
 
@@ -3171,12 +3223,12 @@ function findingAuthoritySnapshots(
 ): readonly CanonicalFindingAuthoritySnapshot[] {
   return authorities.flatMap((authority) => {
     const entry = snapshots.get(eventAuthorityCacheKey(authority.path));
-    if (entry === undefined || Either.isLeft(entry.rawContents)) return [];
+    if (entry === undefined || Result.isFailure(entry.rawContents)) return [];
     const snapshot = canonicalFindingAuthoritySnapshotForBytes(
       authority,
-      entry.rawContents.right,
+      entry.rawContents.success,
     );
-    return Either.isRight(snapshot) ? [snapshot.right] : [];
+    return Result.isSuccess(snapshot) ? [snapshot.success] : [];
   });
 }
 
@@ -3368,14 +3420,14 @@ function replayCampaignManifestForFindings(
   );
   if (authority === undefined) return undefined;
   const value = benchmarkAuthorityJson(authority, "campaign", issues);
-  const decoded = Schema.decodeUnknownEither(ScenarioCampaignManifestSchema, {
+  const decoded = Schema.decodeUnknownResult(ScenarioCampaignManifestSchema, {
     onExcessProperty: "error",
   })(value);
-  if (Either.isLeft(decoded)) {
-    issues.push(`Campaign authority is invalid: ${decoded.left.message}`);
+  if (Result.isFailure(decoded)) {
+    issues.push(`Campaign authority is invalid: ${decoded.failure.message}`);
     return undefined;
   }
-  return decoded.right;
+  return decoded.success;
 }
 
 function currentAuthorityContentIssues(
@@ -3462,16 +3514,16 @@ function currentAuthorityContentIssues(
         issues.push(value.message);
         return [];
       }
-      const decoded = Schema.decodeUnknownEither(FinalScenarioReviewSchema, {
+      const decoded = Schema.decodeUnknownResult(FinalScenarioReviewSchema, {
         onExcessProperty: "error",
       })(value.value);
-      if (Either.isLeft(decoded)) {
+      if (Result.isFailure(decoded)) {
         issues.push(
           `Scenario-review authority ${authority.role} has an unsupported current schema.`,
         );
         return [];
       }
-      return [{ authority, review: decoded.right }];
+      return [{ authority, review: decoded.success }];
     },
   );
   const scenarioReviewGitSha: GitSha | undefined =
@@ -3503,19 +3555,19 @@ function currentAuthorityContentIssues(
       issues.push(value.message);
       continue;
     }
-    const decoded = Schema.decodeUnknownEither(ReviewOutputSchema, {
+    const decoded = Schema.decodeUnknownResult(ReviewOutputSchema, {
       onExcessProperty: "error",
     })(value.value);
-    if (Either.isLeft(decoded)) {
+    if (Result.isFailure(decoded)) {
       issues.push(
         `Post-play review authority ${authority.role} has an unsupported schema.`,
       );
       continue;
     }
     if (
-      decoded.right.scenarioId !== findings.subject.scenarioId ||
-      decoded.right.gitSha !== findings.subject.gitSha ||
-      decoded.right.transcriptSha256 !==
+      decoded.success.scenarioId !== findings.subject.scenarioId ||
+      decoded.success.gitSha !== findings.subject.gitSha ||
+      decoded.success.transcriptSha256 !==
         findingsTranscriptSha256(findings.subject)
     ) {
       issues.push(
@@ -3544,17 +3596,17 @@ function currentAuthorityContentIssues(
       issues.push(value.message);
       continue;
     }
-    const decoded = Schema.decodeUnknownEither(
+    const decoded = Schema.decodeUnknownResult(
       RetainedScenarioReviewInputSchema,
       { onExcessProperty: "error" },
     )(value.value);
-    if (Either.isLeft(decoded)) {
+    if (Result.isFailure(decoded)) {
       issues.push(
         `Replay authority ${authority.role} has an unsupported retained-review schema.`,
       );
       continue;
     }
-    const replay = decoded.right;
+    const replay = decoded.success;
     const namedReplayStage =
       reviewStageForAuthorityRole(authority.role, "replay") ??
       reviewStageForAuthorityRole(authority.role, "prePlayReviewReplayInput");
@@ -3570,14 +3622,14 @@ function currentAuthorityContentIssues(
       schemaVersion: replay.schemaVersion,
       outputJsonSchema: replay.outputJsonSchema,
     });
-    const retainedResult = Either.isRight(compatibility)
-      ? compatibility.right.decodeResult(replay.result)
+    const retainedResult = Result.isSuccess(compatibility)
+      ? compatibility.success.decodeResult(replay.result)
       : undefined;
     if (
-      Either.isLeft(compatibility) ||
+      Result.isFailure(compatibility) ||
       retainedResult === undefined ||
-      Either.isLeft(retainedResult) ||
-      compatibility.right.tag === "historical"
+      Result.isFailure(retainedResult) ||
+      compatibility.success.tag === "historical"
     ) {
       issues.push(
         `Replay authority ${authority.role} is not bound to a current scenario review schema and identity.`,
@@ -3592,7 +3644,7 @@ function currentAuthorityContentIssues(
       replay.reviewStage;
     const binding =
       invocation === undefined
-        ? Either.left("No matching composite-review invocation was retained.")
+        ? Result.fail("No matching composite-review invocation was retained.")
         : (() => {
             if (
               "responsibility" in invocation ||
@@ -3601,7 +3653,7 @@ function currentAuthorityContentIssues(
               invocation.model !== replay.model ||
               invocation.reasoningEffort !== replay.reasoningEffort
             ) {
-              return Either.left(
+              return Result.fail(
                 "No matching composite-review invocation was retained.",
               );
             }
@@ -3651,7 +3703,7 @@ function currentAuthorityContentIssues(
               );
             }
             if (expectedReplayCampaign === undefined) {
-              return Either.left(
+              return Result.fail(
                 "Current Candidate replay binding requires an expected Campaign and Evidence Set identity.",
               );
             }
@@ -3679,9 +3731,9 @@ function currentAuthorityContentIssues(
               },
             );
           })();
-    if (Either.isLeft(binding)) {
+    if (Result.isFailure(binding)) {
       issues.push(
-        `Replay authority ${authority.role} does not identify a matching composite-review invocation: ${binding.left}`,
+        `Replay authority ${authority.role} does not identify a matching composite-review invocation: ${binding.failure}`,
       );
     }
     if (replayStages.has(replay.reviewStage)) {
@@ -3691,8 +3743,8 @@ function currentAuthorityContentIssues(
     }
     replayStages.set(replay.reviewStage, replay.invocationId);
     replayAuthoritiesByStage.set(replay.reviewStage, authority);
-    if (Either.isRight(binding)) {
-      replayBindingsByStage.set(replay.reviewStage, binding.right);
+    if (Result.isSuccess(binding)) {
+      replayBindingsByStage.set(replay.reviewStage, binding.success);
     }
   }
   if (!replayStages.has("milestone"))
@@ -3771,16 +3823,17 @@ function currentAuthorityContentIssues(
       eventAuthorityCache,
       authority,
     );
-    if (Either.isLeft(parsedEventAuthority)) {
-      issues.push(parsedEventAuthority.left);
+    if (Result.isFailure(parsedEventAuthority)) {
+      issues.push(parsedEventAuthority.failure);
     } else if (
-      parsedEventAuthority.right.authority.path !== authority.path ||
-      parsedEventAuthority.right.authority.byteLength !==
+      parsedEventAuthority.success.authority.path !== authority.path ||
+      parsedEventAuthority.success.authority.byteLength !==
         authority.byteLength ||
-      parsedEventAuthority.right.authority.sha256 !== authority.sha256 ||
+      parsedEventAuthority.success.authority.sha256 !== authority.sha256 ||
       invocationEvent === undefined ||
-      parsedEventAuthority.right.authority.sha256 !== invocationEvent.sha256 ||
-      parsedEventAuthority.right.authority.sha256 !==
+      parsedEventAuthority.success.authority.sha256 !==
+        invocationEvent.sha256 ||
+      parsedEventAuthority.success.authority.sha256 !==
         binding.ledgerEntry.eventsSha256
     ) {
       issues.push(
@@ -3790,8 +3843,8 @@ function currentAuthorityContentIssues(
       try {
         validateRetainedScenarioReviewInvocation({
           binding,
-          eventSha256: parsedEventAuthority.right.authority.sha256,
-          events: parsedEventAuthority.right.events,
+          eventSha256: parsedEventAuthority.success.authority.sha256,
+          events: parsedEventAuthority.success.events,
         });
       } catch (error: unknown) {
         issues.push(
@@ -3836,25 +3889,25 @@ function currentAuthorityContentIssues(
     if (value.tag === "invalid") {
       issues.push(value.message);
     } else {
-      const decoded = Schema.decodeUnknownEither(
+      const decoded = Schema.decodeUnknownResult(
         SdkReplayResultEvidenceSchema,
         { onExcessProperty: "error" },
       )(value.value);
-      if (Either.isLeft(decoded)) {
+      if (Result.isFailure(decoded)) {
         issues.push(
-          `Replay-result authority ${replayResultAuthority.role} has an unsupported schema: ${decoded.left.message}`,
+          `Replay-result authority ${replayResultAuthority.role} has an unsupported schema: ${decoded.failure.message}`,
         );
       } else if (replaySupervisorAuthority === undefined) {
         issues.push(
           "Replay-result authority cannot be bound without the replay supervisor authority.",
         );
       } else if (
-        decoded.right.scenarioId !== findings.subject.scenarioId ||
-        decoded.right.transcriptSha256 !==
+        decoded.success.scenarioId !== findings.subject.scenarioId ||
+        decoded.success.transcriptSha256 !==
           findingsTranscriptSha256(findings.subject) ||
-        decoded.right.replaySupervisorSha256 !==
+        decoded.success.replaySupervisorSha256 !==
           replaySupervisorAuthority.sha256 ||
-        decoded.right.matchedCallCount !==
+        decoded.success.matchedCallCount !==
           findingsSdkCallCount(findings.subject)
       ) {
         issues.push(
@@ -4008,13 +4061,13 @@ function currentAuthorityIssues(
     }
     return parsed.value.flatMap((value) => {
       const decoded = parseModelInvocationLedgerEntry(value);
-      if (Either.isLeft(decoded)) {
+      if (Result.isFailure(decoded)) {
         issues.push(
-          `Invocation ledger authority ${authority.path} has an invalid entry: ${decoded.left.message}`,
+          `Invocation ledger authority ${authority.path} has an invalid entry: ${decoded.failure.message}`,
         );
         return [];
       }
-      return [decoded.right];
+      return [decoded.success];
     });
   });
   if (canonicalJson(ledgerEntries) !== canonicalJson(measurement.invocations)) {
@@ -4062,17 +4115,17 @@ function currentAuthorityIssues(
       eventAuthorityCache,
       authority,
     );
-    if (Either.isLeft(parsedEventAuthority)) {
+    if (Result.isFailure(parsedEventAuthority)) {
       issues.push(
-        `Invocation ${invocation.invocationId} event authority is unreadable: ${parsedEventAuthority.left}`,
+        `Invocation ${invocation.invocationId} event authority is unreadable: ${parsedEventAuthority.failure}`,
       );
       continue;
     }
     if (
-      parsedEventAuthority.right.authority.path !== authority.path ||
-      parsedEventAuthority.right.authority.byteLength !==
+      parsedEventAuthority.success.authority.path !== authority.path ||
+      parsedEventAuthority.success.authority.byteLength !==
         authority.byteLength ||
-      parsedEventAuthority.right.authority.sha256 !== authority.sha256
+      parsedEventAuthority.success.authority.sha256 !== authority.sha256
     ) {
       issues.push(
         `Invocation ${invocation.invocationId} event authority hash is not canonical.`,
@@ -4080,7 +4133,7 @@ function currentAuthorityIssues(
       continue;
     }
     const evidence = modelInvocationEvidenceFromEvents(
-      parsedEventAuthority.right.events,
+      parsedEventAuthority.success.events,
     );
     if (
       evidence.tag === "invalid" ||
@@ -4162,13 +4215,15 @@ function findingsProjectionAuthorityIssues(input: {
     if (canonicalJson(actual) !== canonicalJson(input.authority)) {
       return [`${input.label} authority hash is not canonical.`];
     }
-    const decoded = Schema.decodeUnknownEither(FindingsProjectionSchema, {
+    const decoded = Schema.decodeUnknownResult(FindingsProjectionSchema, {
       onExcessProperty: "error",
     })(readJsonAuthority(input.authority.path));
-    if (Either.isLeft(decoded)) {
-      return [`${input.label} authority is invalid: ${decoded.left.message}`];
+    if (Result.isFailure(decoded)) {
+      return [
+        `${input.label} authority is invalid: ${decoded.failure.message}`,
+      ];
     }
-    return canonicalJson(decoded.right) === canonicalJson(input.findings)
+    return canonicalJson(decoded.success) === canonicalJson(input.findings)
       ? []
       : [`${input.label} authority does not match the measurement.`];
   } catch {
@@ -4266,13 +4321,13 @@ function benchmarkContextDeliveryAuthorityIssues(input: {
     `${input.role} context delivery`,
     issues,
   );
-  const decoded = Schema.decodeUnknownEither(
+  const decoded = Schema.decodeUnknownResult(
     BenchmarkContextDeliveryEvidenceSchema,
     { onExcessProperty: "error" },
   )(value);
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     issues.push(
-      `Benchmark ${input.role} context-delivery authority is invalid: ${decoded.left.message}`,
+      `Benchmark ${input.role} context-delivery authority is invalid: ${decoded.failure.message}`,
     );
     return issues;
   }
@@ -4281,7 +4336,7 @@ function benchmarkContextDeliveryAuthorityIssues(input: {
     issues.push(`Benchmark context manifest has no ${input.role} authority.`);
     return issues;
   }
-  const evidence = decoded.right;
+  const evidence = decoded.success;
   if (
     evidence.profile !== input.profile ||
     evidence.role !== input.role ||
@@ -4309,26 +4364,26 @@ function benchmarkInvocationEntriesFromAuthorities(
     }
     for (const value of parsed.value) {
       const current = parseModelInvocationLedgerEntry(value);
-      if (Either.isRight(current)) {
+      if (Result.isSuccess(current)) {
         if (
-          current.right.schemaVersion !== 4 &&
-          current.right.schemaVersion !== 5
+          current.success.schemaVersion !== 4 &&
+          current.success.schemaVersion !== 5
         ) {
           issues.push(
             `Benchmark invocation ledger ${authority.path} cannot use historical evidence.`,
           );
         } else {
-          entries.push(current.right);
+          entries.push(current.success);
         }
         continue;
       }
       const auxiliary = parseBenchmarkModelInvocationLedgerEntry(value);
-      if (Either.isLeft(auxiliary)) {
+      if (Result.isFailure(auxiliary)) {
         issues.push(
-          `Benchmark invocation ledger ${authority.path} has an invalid entry: ${auxiliary.left.message}`,
+          `Benchmark invocation ledger ${authority.path} has an invalid entry: ${auxiliary.failure.message}`,
         );
       } else {
-        entries.push(auxiliary.right);
+        entries.push(auxiliary.success);
       }
     }
   }
@@ -4418,13 +4473,13 @@ function benchmarkReadinessResultEventIssue(input: {
   readonly expected: BenchmarkReadinessInput;
 }): string | undefined {
   try {
-    const output = Schema.decodeUnknownEither(
+    const output = Schema.decodeUnknownResult(
       Schema.Struct({ result: ScenarioQualityReviewSchema }),
       { onExcessProperty: "error" },
     )(finalAgentMessage(input.eventAuthority.events));
     if (
-      Either.isLeft(output) ||
-      canonicalJson(output.right.result) !==
+      Result.isFailure(output) ||
+      canonicalJson(output.success.result) !==
         canonicalJson(input.expected.result)
     ) {
       return "Benchmark readiness result does not match its invocation event output.";
@@ -4566,55 +4621,56 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
       issues.push(replayValue.message);
       continue;
     }
-    const replay = Schema.decodeUnknownEither(
+    const replay = Schema.decodeUnknownResult(
       RetainedScenarioReviewInputSchema,
       { onExcessProperty: "error" },
     )(replayValue.value);
-    if (Either.isLeft(replay)) {
+    if (Result.isFailure(replay)) {
       issues.push(
         `Benchmark ${reviewStage} pre-play review authority is not a retained review envelope.`,
       );
       continue;
     }
     const compatibility = classifyScenarioReviewOutputSchema({
-      schemaVersion: replay.right.schemaVersion,
-      outputJsonSchema: replay.right.outputJsonSchema,
+      schemaVersion: replay.success.schemaVersion,
+      outputJsonSchema: replay.success.outputJsonSchema,
     });
-    const result = Either.isRight(compatibility)
-      ? compatibility.right.decodeResult(replay.right.result)
+    const result = Result.isSuccess(compatibility)
+      ? compatibility.success.decodeResult(replay.success.result)
       : undefined;
     if (
-      Either.isLeft(compatibility) ||
+      Result.isFailure(compatibility) ||
       result === undefined ||
-      Either.isLeft(result) ||
-      compatibility.right.tag !== expectedReviewSchema
+      Result.isFailure(result) ||
+      compatibility.success.tag !== expectedReviewSchema
     ) {
       issues.push(
         `Benchmark ${reviewStage} pre-play review authority is not a retained review envelope.`,
       );
       continue;
     }
-    const replaySubject = retainedScenarioReviewSubject(replay.right);
+    const replaySubject = retainedScenarioReviewSubject(replay.success);
     const replayScenarioId =
       replaySubject.tag === "scenarioCandidate"
         ? replaySubject.plannedScenarioId
         : replaySubject.scenarioId;
     const replayLifecycleValid =
-      (replay.right.schemaVersion === 2 || replaySubject.tag === "benchmark") &&
-      replay.right.reviewStage === reviewStage;
+      (replay.success.schemaVersion === 2 ||
+        replaySubject.tag === "benchmark") &&
+      replay.success.reviewStage === reviewStage;
     const replayIdentityValid =
       replayLifecycleValid &&
       String(replayScenarioId) === String(measurement.scenarioId) &&
-      replay.right.sourceGitSha === measurement.implementationGitSha &&
-      Either.isRight(compatibility) &&
-      compatibility.right.tag === expectedReviewSchema;
+      replay.success.sourceGitSha === measurement.implementationGitSha &&
+      Result.isSuccess(compatibility) &&
+      compatibility.success.tag === expectedReviewSchema;
     if (!replayIdentityValid) {
       issues.push(
         `Benchmark ${reviewStage} pre-play review authority is not bound to the ${measurement.profile} composite-review schema, scenario identity, implementation revision, and Git authority.`,
       );
       continue;
     }
-    const invocation = invocationById.get(replay.right.invocationId);
+    const invocation = invocationById.get(replay.success.invocationId);
     const eventAuthority = eventAuthoritiesByPath.get(
       replayEventsAuthority.path,
     );
@@ -4637,14 +4693,14 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
       "responsibility" in invocation ||
       (invocation.schemaVersion !== 4 && invocation.schemaVersion !== 5) ||
       invocation.phase !== "scenarioCompositeReview"
-        ? Either.left("No matching composite-review invocation was retained.")
+        ? Result.fail("No matching composite-review invocation was retained.")
         : benchmarkInvocation !== undefined
           ? expectedReplayBenchmark === undefined
-            ? Either.left(
+            ? Result.fail(
                 "Benchmark replay requires a benchmark lifecycle identity.",
               )
             : retainedScenarioReviewMatchesReplayBinding(
-                replay.right,
+                replay.success,
                 invocation,
                 {
                   tag: "benchmark",
@@ -4655,15 +4711,15 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
               )
           : candidateInvocation !== undefined
             ? expectedReplayCampaign === undefined
-              ? Either.left(
+              ? Result.fail(
                   "Historical benchmark Candidate replay requires Campaign, Evidence Set, and planned Scenario identity.",
                 )
               : expectedScenarioSha256 === undefined
-                ? Either.left(
+                ? Result.fail(
                     "Historical benchmark Candidate replay requires an admitted Scenario source hash.",
                   )
                 : retainedScenarioReviewMatchesReplayBinding(
-                    replay.right,
+                    replay.success,
                     invocation,
                     reviewStage === "final"
                       ? {
@@ -4681,7 +4737,7 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
                         },
                   )
             : retainedScenarioReviewMatchesReplayBinding(
-                replay.right,
+                replay.success,
                 invocation,
                 {
                   tag: "scenario",
@@ -4689,30 +4745,31 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
                   scenarioId: measurement.scenarioId,
                 },
               );
-    if (Either.isLeft(binding)) {
+    if (Result.isFailure(binding)) {
       issues.push(
-        `Benchmark ${reviewStage} pre-play replay event authority does not match its retained composite-review invocation: ${binding.left}`,
+        `Benchmark ${reviewStage} pre-play replay event authority does not match its retained composite-review invocation: ${binding.failure}`,
       );
     } else {
       const parsedEventAuthority = eventAuthoritySnapshot(
         input.eventAuthorityCache,
         replayEventsAuthority,
       );
-      if (Either.isLeft(parsedEventAuthority)) {
+      if (Result.isFailure(parsedEventAuthority)) {
         issues.push(
-          `Benchmark ${reviewStage} pre-play replay event authority is invalid: ${parsedEventAuthority.left}`,
+          `Benchmark ${reviewStage} pre-play replay event authority is invalid: ${parsedEventAuthority.failure}`,
         );
       } else if (
-        parsedEventAuthority.right.authority.path !==
+        parsedEventAuthority.success.authority.path !==
           replayEventsAuthority.path ||
-        parsedEventAuthority.right.authority.byteLength !==
+        parsedEventAuthority.success.authority.byteLength !==
           replayEventsAuthority.byteLength ||
-        parsedEventAuthority.right.authority.sha256 !==
+        parsedEventAuthority.success.authority.sha256 !==
           replayEventsAuthority.sha256 ||
         eventAuthority === undefined ||
-        parsedEventAuthority.right.authority.sha256 !== eventAuthority.sha256 ||
-        parsedEventAuthority.right.authority.sha256 !==
-          binding.right.ledgerEntry.eventsSha256
+        parsedEventAuthority.success.authority.sha256 !==
+          eventAuthority.sha256 ||
+        parsedEventAuthority.success.authority.sha256 !==
+          binding.success.ledgerEntry.eventsSha256
       ) {
         issues.push(
           `Benchmark ${reviewStage} pre-play replay event authority does not match its retained composite-review invocation.`,
@@ -4720,9 +4777,9 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
       } else {
         try {
           validateRetainedScenarioReviewInvocation({
-            binding: binding.right,
-            eventSha256: parsedEventAuthority.right.authority.sha256,
-            events: parsedEventAuthority.right.events,
+            binding: binding.success,
+            eventSha256: parsedEventAuthority.success.authority.sha256,
+            events: parsedEventAuthority.success.events,
           });
         } catch (error: unknown) {
           issues.push(
@@ -4793,17 +4850,17 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
               "readiness source",
               issues,
             );
-            const decoded = Schema.decodeUnknownEither(
+            const decoded = Schema.decodeUnknownResult(
               BenchmarkReadinessInputSchema,
               { onExcessProperty: "error" },
             )(readinessSource);
-            if (Either.isLeft(decoded)) {
+            if (Result.isFailure(decoded)) {
               issues.push(
-                `Benchmark readiness source authority is not a retained readiness envelope: ${decoded.left.message}`,
+                `Benchmark readiness source authority is not a retained readiness envelope: ${decoded.failure.message}`,
               );
               return undefined;
             }
-            const input = decoded.right;
+            const input = decoded.success;
             if (
               input.scenarioId !== measurement.scenarioId ||
               input.sourceGitSha !== measurement.implementationGitSha ||
@@ -4834,16 +4891,16 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
         "readiness result",
         issues,
       );
-      const decoded = Schema.decodeUnknownEither(ScenarioQualityReviewSchema, {
+      const decoded = Schema.decodeUnknownResult(ScenarioQualityReviewSchema, {
         onExcessProperty: "error",
       })(readinessResult);
-      if (Either.isLeft(decoded)) {
+      if (Result.isFailure(decoded)) {
         issues.push(
-          `Benchmark readiness result authority is not a scenario-quality result: ${decoded.left.message}`,
+          `Benchmark readiness result authority is not a scenario-quality result: ${decoded.failure.message}`,
         );
       } else if (
         readinessInput !== undefined &&
-        canonicalJson(decoded.right) !== canonicalJson(readinessInput.result)
+        canonicalJson(decoded.success) !== canonicalJson(readinessInput.result)
       ) {
         issues.push(
           "Benchmark readiness result authority does not match its retained readiness source.",
@@ -4869,10 +4926,10 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
         input.eventAuthorityCache,
         readinessEventsAuthority,
       );
-      const outputIssue = Either.isLeft(readinessEvent)
-        ? `Benchmark readiness event authority is invalid: ${readinessEvent.left}`
+      const outputIssue = Result.isFailure(readinessEvent)
+        ? `Benchmark readiness event authority is invalid: ${readinessEvent.failure}`
         : benchmarkReadinessResultEventIssue({
-            eventAuthority: readinessEvent.right,
+            eventAuthority: readinessEvent.success,
             expected: readinessInput,
           });
       if (outputIssue !== undefined) issues.push(outputIssue);
@@ -4925,10 +4982,10 @@ function benchmarkPlayerEvidenceIssues(input: {
         ? {}
         : { finalArtifactPath: finalArtifact.path }),
     });
-    if (Either.isLeft(derived)) {
-      issues.push(derived.left);
+    if (Result.isFailure(derived)) {
+      issues.push(derived.failure);
     } else if (
-      canonicalJson(derived.right) !== canonicalJson(measurement.outcome)
+      canonicalJson(derived.success) !== canonicalJson(measurement.outcome)
     ) {
       issues.push(
         "Benchmark measurement outcome does not match the retained player terminal evidence.",
@@ -4969,19 +5026,19 @@ function benchmarkCompleteEvidenceIssues(input: {
       issues.push(value.message);
       continue;
     }
-    const decoded = Schema.decodeUnknownEither(ReviewOutputSchema, {
+    const decoded = Schema.decodeUnknownResult(ReviewOutputSchema, {
       onExcessProperty: "error",
     })(value.value);
-    if (Either.isLeft(decoded)) {
+    if (Result.isFailure(decoded)) {
       issues.push(
-        `Benchmark post-play review authority ${authority.role} has an unsupported schema: ${decoded.left.message}`,
+        `Benchmark post-play review authority ${authority.role} has an unsupported schema: ${decoded.failure.message}`,
       );
       continue;
     }
     if (
-      decoded.right.scenarioId !== measurement.scenarioId ||
-      decoded.right.gitSha !== measurement.implementationGitSha ||
-      decoded.right.transcriptSha256 !==
+      decoded.success.scenarioId !== measurement.scenarioId ||
+      decoded.success.gitSha !== measurement.implementationGitSha ||
+      decoded.success.transcriptSha256 !==
         findingsTranscriptSha256(findings.subject)
     ) {
       issues.push(
@@ -5019,12 +5076,12 @@ function benchmarkCompleteEvidenceIssues(input: {
       issues.push(value.message);
       continue;
     }
-    const decoded = Schema.decodeUnknownEither(SdkReplayResultEvidenceSchema, {
+    const decoded = Schema.decodeUnknownResult(SdkReplayResultEvidenceSchema, {
       onExcessProperty: "error",
     })(value.value);
-    if (Either.isLeft(decoded)) {
+    if (Result.isFailure(decoded)) {
       issues.push(
-        `Benchmark replay-result authority ${authority.role} has an unsupported schema: ${decoded.left.message}`,
+        `Benchmark replay-result authority ${authority.role} has an unsupported schema: ${decoded.failure.message}`,
       );
       continue;
     }
@@ -5035,11 +5092,12 @@ function benchmarkCompleteEvidenceIssues(input: {
       continue;
     }
     if (
-      decoded.right.scenarioId !== measurement.scenarioId ||
-      decoded.right.transcriptSha256 !==
+      decoded.success.scenarioId !== measurement.scenarioId ||
+      decoded.success.transcriptSha256 !==
         findingsTranscriptSha256(findings.subject) ||
-      decoded.right.replaySupervisorSha256 !== supervisor.sha256 ||
-      decoded.right.matchedCallCount !== findingsSdkCallCount(findings.subject)
+      decoded.success.replaySupervisorSha256 !== supervisor.sha256 ||
+      decoded.success.matchedCallCount !==
+        findingsSdkCallCount(findings.subject)
     ) {
       issues.push(
         "Benchmark replay-result authority is not bound to the retained transcript, replay supervisor, or exact SDK call count.",
@@ -5081,25 +5139,25 @@ function benchmarkAuthorityIssues(
     "context-source manifest",
     issues,
   );
-  const manifest = Schema.decodeUnknownEither(
+  const manifest = Schema.decodeUnknownResult(
     BenchmarkContextSourceManifestDocumentSchema,
     { onExcessProperty: "error" },
   )(manifestValue);
-  if (Either.isLeft(manifest)) {
+  if (Result.isFailure(manifest)) {
     issues.push(
-      `Benchmark context-source manifest is invalid: ${manifest.left.message}`,
+      `Benchmark context-source manifest is invalid: ${manifest.failure.message}`,
     );
   } else {
     if (
-      manifest.right.profile !== measurement.profile ||
-      manifest.right.scenarioId !== measurement.scenarioId
+      manifest.success.profile !== measurement.profile ||
+      manifest.success.scenarioId !== measurement.scenarioId
     ) {
       issues.push(
         "Benchmark context-source manifest is not bound to the benchmark profile and scenario.",
       );
     }
     const roles = new Set<string>();
-    for (const source of manifest.right.sources) {
+    for (const source of manifest.success.sources) {
       if (roles.has(source.role)) {
         issues.push(
           `Benchmark context-source manifest repeats role ${source.role}.`,
@@ -5125,7 +5183,7 @@ function benchmarkAuthorityIssues(
         ? "declarationSet"
         : "capabilityProjection";
     for (const role of BENCHMARK_CONTEXT_SOURCE_ROLES) {
-      const source = manifest.right.sources.find(
+      const source = manifest.success.sources.find(
         (candidate) => candidate.role === role,
       );
       if (source === undefined) {
@@ -5150,7 +5208,7 @@ function benchmarkAuthorityIssues(
                 ? "playerContextDelivery"
                 : "postPlayReviewContextDelivery"),
           ),
-          manifest: manifest.right,
+          manifest: manifest.success,
           outcome: measurement.outcome,
           postPlayRan:
             measurement.invocations.some(
@@ -5169,15 +5227,15 @@ function benchmarkAuthorityIssues(
     "stage-facts",
     issues,
   );
-  const facts = Schema.decodeUnknownEither(ScenarioStageFactsSchema, {
+  const facts = Schema.decodeUnknownResult(ScenarioStageFactsSchema, {
     onExcessProperty: "error",
   })(factsValue);
-  if (Either.isLeft(facts)) {
+  if (Result.isFailure(facts)) {
     issues.push(
-      `Benchmark stage-facts authority is invalid: ${facts.left.message}`,
+      `Benchmark stage-facts authority is invalid: ${facts.failure.message}`,
     );
   } else if (
-    canonicalJson(facts.right) !== canonicalJson(measurement.stagePlan.facts)
+    canonicalJson(facts.success) !== canonicalJson(measurement.stagePlan.facts)
   ) {
     issues.push(
       "Benchmark stage-facts authority does not match the stage plan.",
@@ -5189,15 +5247,15 @@ function benchmarkAuthorityIssues(
     "stage-plan",
     issues,
   );
-  const decodedStagePlan = Schema.decodeUnknownEither(ScenarioStagePlanSchema, {
+  const decodedStagePlan = Schema.decodeUnknownResult(ScenarioStagePlanSchema, {
     onExcessProperty: "error",
   })(stagePlanValue);
-  if (Either.isLeft(decodedStagePlan)) {
+  if (Result.isFailure(decodedStagePlan)) {
     issues.push(
-      `Benchmark stage-plan authority is invalid: ${decodedStagePlan.left.message}`,
+      `Benchmark stage-plan authority is invalid: ${decodedStagePlan.failure.message}`,
     );
   } else if (
-    canonicalJson(decodedStagePlan.right) !==
+    canonicalJson(decodedStagePlan.success) !==
     canonicalJson(measurement.stagePlan)
   ) {
     issues.push(
@@ -5210,19 +5268,19 @@ function benchmarkAuthorityIssues(
     "scenario review",
     issues,
   );
-  const decodedScenarioReview = Schema.decodeUnknownEither(
+  const decodedScenarioReview = Schema.decodeUnknownResult(
     FinalScenarioReviewSchema,
     { onExcessProperty: "error" },
   )(scenarioReviewValue);
-  if (Either.isLeft(decodedScenarioReview)) {
+  if (Result.isFailure(decodedScenarioReview)) {
     issues.push(
-      `Benchmark scenario-review authority is invalid: ${decodedScenarioReview.left.message}`,
+      `Benchmark scenario-review authority is invalid: ${decodedScenarioReview.failure.message}`,
     );
   } else {
     if (
-      decodedScenarioReview.right.scenarioId !== measurement.scenarioId ||
+      decodedScenarioReview.success.scenarioId !== measurement.scenarioId ||
       !scenarioSha256MatchesArtifact({
-        scenarioSha256: decodedScenarioReview.right.scenarioSha256,
+        scenarioSha256: decodedScenarioReview.success.scenarioSha256,
         artifactSha256: bundle.scenario.sha256,
       })
     ) {
@@ -5443,24 +5501,24 @@ function benchmarkAuthorityIssues(
       eventAuthorityCache,
       authority,
     );
-    if (Either.isLeft(parsedEventAuthority)) {
+    if (Result.isFailure(parsedEventAuthority)) {
       issues.push(
-        `Benchmark invocation event authority is unreadable: ${parsedEventAuthority.left}`,
+        `Benchmark invocation event authority is unreadable: ${parsedEventAuthority.failure}`,
       );
       continue;
     }
     if (
-      parsedEventAuthority.right.authority.path !== authority.path ||
-      parsedEventAuthority.right.authority.byteLength !==
+      parsedEventAuthority.success.authority.path !== authority.path ||
+      parsedEventAuthority.success.authority.byteLength !==
         authority.byteLength ||
-      parsedEventAuthority.right.authority.sha256 !== authority.sha256
+      parsedEventAuthority.success.authority.sha256 !== authority.sha256
     ) {
       issues.push(
         "Benchmark invocation event authority hash is not canonical.",
       );
       continue;
     }
-    parsedEventAuthorities.set(authority.sha256, parsedEventAuthority.right);
+    parsedEventAuthorities.set(authority.sha256, parsedEventAuthority.success);
   }
   for (const invocation of measurement.invocations) {
     const parsedEventAuthority = parsedEventAuthorities.get(
@@ -5712,16 +5770,16 @@ function benchmarkSemanticIssues(
 function validateParsedCompletePathMeasurement(
   parsed: CompletePathMeasurement,
   eventAuthorityCache: EventAuthoritySnapshotCache,
-): Either.Either<ValidatedCompletePathMeasurement, string> {
+): Result.Result<ValidatedCompletePathMeasurement, string> {
   if (parsed.schemaVersion === 2 || parsed.schemaVersion === 4) {
     const issues = currentAuthorityIssues(parsed, eventAuthorityCache);
-    if (issues.length > 0) return Either.left([...new Set(issues)].join(" "));
+    if (issues.length > 0) return Result.fail([...new Set(issues)].join(" "));
   }
   if (parsed.schemaVersion === 3 || parsed.schemaVersion === 5) {
     const issues = benchmarkAuthorityIssues(parsed, eventAuthorityCache);
-    if (issues.length > 0) return Either.left([...new Set(issues)].join(" "));
+    if (issues.length > 0) return Result.fail([...new Set(issues)].join(" "));
   }
-  return Either.right({
+  return Result.succeed({
     ...parsed,
     [completePathMeasurementValidated]: true,
   } as ValidatedCompletePathMeasurement);
@@ -5729,14 +5787,14 @@ function validateParsedCompletePathMeasurement(
 
 export function validateCompletePathMeasurement(
   value: unknown,
-): Either.Either<ValidatedCompletePathMeasurement, string> {
+): Result.Result<ValidatedCompletePathMeasurement, string> {
   const parsed = parseCompletePathMeasurement(value);
-  if (Either.isLeft(parsed)) return Either.left(parsed.left.message);
+  if (Result.isFailure(parsed)) return Result.fail(parsed.failure.message);
   const eventAuthorityCache = eventAuthoritySnapshotsForPaths(
-    eventAuthorityPathsForMeasurement(parsed.right),
+    eventAuthorityPathsForMeasurement(parsed.success),
   );
   return validateParsedCompletePathMeasurement(
-    parsed.right,
+    parsed.success,
     eventAuthorityCache,
   );
 }
@@ -5751,9 +5809,9 @@ export function readCompletePathMeasurement(
     fail(`Complete-path measurement ${path} is unreadable JSON.`);
   }
   const validated = validateCompletePathMeasurement(value);
-  return Either.isRight(validated)
-    ? validated.right
-    : fail(`Invalid complete-path measurement: ${validated.left}`);
+  return Result.isSuccess(validated)
+    ? validated.success
+    : fail(`Invalid complete-path measurement: ${validated.failure}`);
 }
 
 export function compareCompleteEquivalentPaths(input: {
@@ -5913,7 +5971,7 @@ export function writeCompletePathComparison(input: {
   readonly baseline: ValidatedCompletePathMeasurement;
   readonly candidate: ValidatedCompletePathMeasurement;
   readonly outputPath: string;
-}): Either.Either<CompletePathComparison, string> {
+}): Result.Result<CompletePathComparison, string> {
   const comparison = compareCompleteEquivalentPaths(input);
   const gateFailure = (
     label: string,
@@ -5944,16 +6002,16 @@ export function writeCompletePathComparison(input: {
     ),
     ...gateFailure("input tokens", comparison.inputTokens),
   ];
-  if (gateFailures.length > 0) return Either.left(gateFailures.join(" "));
+  if (gateFailures.length > 0) return Result.fail(gateFailures.join(" "));
   try {
     writeFileSync(
       resolve(repoRoot, input.outputPath),
       JSON.stringify(comparison, null, 2) + "\n",
       { flag: "wx" },
     );
-    return Either.right(comparison);
+    return Result.succeed(comparison);
   } catch (error: unknown) {
-    return Either.left(
+    return Result.fail(
       error instanceof Error
         ? error.message
         : "Unable to write complete-path comparison: " + String(error),
@@ -5986,8 +6044,10 @@ function main(args: readonly string[]): void {
       descriptor,
       outputPath,
     });
-    if (Either.isLeft(assembled)) {
-      fail("Unable to assemble complete-path measurement: " + assembled.left);
+    if (Result.isFailure(assembled)) {
+      fail(
+        "Unable to assemble complete-path measurement: " + assembled.failure,
+      );
     }
     return;
   }
@@ -6071,8 +6131,8 @@ function main(args: readonly string[]): void {
       candidate: readCompletePathMeasurement(candidatePath),
       outputPath,
     });
-    if (Either.isLeft(written))
-      fail("Unable to retain complete-path comparison: " + written.left);
+    if (Result.isFailure(written))
+      fail("Unable to retain complete-path comparison: " + written.failure);
     return;
   }
   fail(

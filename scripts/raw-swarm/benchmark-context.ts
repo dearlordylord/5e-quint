@@ -26,23 +26,28 @@ export const BENCHMARK_CONTEXT_PROFILES = [
 export type BenchmarkContextProfile =
   (typeof BENCHMARK_CONTEXT_PROFILES)[number];
 
-export const BenchmarkContextProfileSchema = Schema.Literal(
-  ...BENCHMARK_CONTEXT_PROFILES,
+export const BenchmarkContextProfileSchema = Schema.Literals(
+  BENCHMARK_CONTEXT_PROFILES,
 );
 
-export const BenchmarkContextRoleSchema = Schema.Literal(
-  ...BENCHMARK_CONTEXT_ROLES,
+export const BenchmarkContextRoleSchema = Schema.Literals(
+  BENCHMARK_CONTEXT_ROLES,
 );
 
-const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
+const HashSchema = Schema.String.pipe(
+  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+);
 
 /** The immutable bytes actually delivered to one benchmark model role. */
 export const BenchmarkContextDeliveryEvidenceSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
   profile: BenchmarkContextProfileSchema,
   role: BenchmarkContextRoleSchema,
-  path: Schema.NonEmptyTrimmedString,
-  byteLength: Schema.Number.pipe(Schema.int(), Schema.nonNegative()),
+  path: Schema.Trimmed.check(Schema.isNonEmpty()),
+  byteLength: Schema.Number.pipe(
+    Schema.check(Schema.isInt()),
+    Schema.check(Schema.isGreaterThanOrEqualTo(0)),
+  ),
   sha256: HashSchema,
 });
 

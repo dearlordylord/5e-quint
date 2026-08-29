@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { lstatSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { Either, Match, Schema } from "effect";
+import { Result, Match, Schema } from "effect";
 
 import type { ArtifactAuthority } from "./artifact-authority.ts";
 import {
@@ -140,7 +140,7 @@ export type RejectedScenarioCandidateRecord =
 
 export const ScenarioExecutionRecordSchema = ScenarioExecutionIdentitySchema;
 
-const BenchmarkComparisonTargetSchema = Schema.Union(
+const BenchmarkComparisonTargetSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("execution"),
     executionId: ExecutionIdSchema,
@@ -149,23 +149,28 @@ const BenchmarkComparisonTargetSchema = Schema.Union(
     tag: Schema.Literal("executionProfile"),
     executionId: ExecutionIdSchema,
   }),
-);
+]);
 
 export const BenchmarkRecordSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
   benchmarkId: BenchmarkIdSchema,
   evidenceSetId: EvidenceSetIdSchema,
-  comparisonTargets: Schema.Tuple(
-    [BenchmarkComparisonTargetSchema, BenchmarkComparisonTargetSchema],
-    BenchmarkComparisonTargetSchema,
+  comparisonTargets: Schema.TupleWithRest(
+    Schema.Tuple([
+      BenchmarkComparisonTargetSchema,
+      BenchmarkComparisonTargetSchema,
+    ]),
+    [BenchmarkComparisonTargetSchema],
   ).pipe(
-    Schema.filter(
-      (targets) =>
-        new Set(targets.map(({ executionId }) => executionId)).size ===
-        targets.length,
-      {
-        message: () => "benchmark comparison target identities must be unique",
-      },
+    Schema.check(
+      Schema.makeFilter(
+        (targets) =>
+          new Set(targets.map(({ executionId }) => executionId)).size ===
+          targets.length,
+        {
+          message: "benchmark comparison target identities must be unique",
+        },
+      ),
     ),
   ),
 });
@@ -199,7 +204,7 @@ const HistoricalRejectedScenarioCandidateRecordSchema = Schema.Struct({
   candidateId: ScenarioCandidateIdSchema,
   campaignId: ScenarioCampaignIdSchema,
   evidenceSetId: EvidenceSetIdSchema,
-  reason: Schema.NonEmptyTrimmedString,
+  reason: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
 
 const CurrentRejectedScenarioCandidateRecordSchema = Schema.Struct({
@@ -208,8 +213,8 @@ const CurrentRejectedScenarioCandidateRecordSchema = Schema.Struct({
   predecessorBatches: Schema.Array(
     Schema.Struct({
       batchIndex: Schema.Number.pipe(
-        Schema.int(),
-        Schema.greaterThanOrEqualTo(0),
+        Schema.check(Schema.isInt()),
+        Schema.check(Schema.isGreaterThanOrEqualTo(0)),
       ),
       scenarioIds: Schema.Array(ScenarioIdSchema),
     }),
@@ -222,16 +227,19 @@ const BenchmarkRecordPersistenceSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
   benchmarkId: BenchmarkIdSchema,
   evidenceSetId: EvidenceSetIdSchema,
-  comparisonTargets: Schema.Tuple(
-    [BenchmarkComparisonTargetSchema, BenchmarkComparisonTargetSchema],
-    BenchmarkComparisonTargetSchema,
+  comparisonTargets: Schema.TupleWithRest(
+    Schema.Tuple([
+      BenchmarkComparisonTargetSchema,
+      BenchmarkComparisonTargetSchema,
+    ]),
+    [BenchmarkComparisonTargetSchema],
   ),
 });
 
-export const RejectedScenarioCandidateRecordSchema = Schema.Union(
+export const RejectedScenarioCandidateRecordSchema = Schema.Union([
   CurrentRejectedScenarioCandidateRecordSchema,
   HistoricalRejectedScenarioCandidateRecordSchema,
-);
+]);
 
 export type ScenarioCatalogueFailure =
   | Readonly<{
@@ -292,15 +300,15 @@ export type RawSwarmCatalogue = Readonly<{
 export function findAuthorableScenarioInCatalogue(input: {
   readonly catalogue: RawSwarmCatalogue;
   readonly scenarioId: ScenarioId;
-}): Either.Either<RawSwarmCatalogue["scenarios"][number], string> {
+}): Result.Result<RawSwarmCatalogue["scenarios"][number], string> {
   const scenario = input.catalogue.scenarios.find(
     ({ scenarioId }) => scenarioId === input.scenarioId,
   );
   return scenario === undefined
-    ? Either.left(
+    ? Result.fail(
         `Scenario ${input.scenarioId} is not present in the canonically validated authorable catalogue.`,
       )
-    : Either.right(scenario);
+    : Result.succeed(scenario);
 }
 
 const duplicates = <A>(values: readonly A[]): readonly A[] => {
@@ -334,7 +342,7 @@ export function projectRawSwarmCatalogue(
     readonly benchmarks: readonly BenchmarkRecord[];
     readonly rejectedCandidates: readonly RejectedScenarioCandidateRecord[];
   }>,
-): Either.Either<RawSwarmCatalogue, NonEmptyIssues<ScenarioCatalogueFailure>> {
+): Result.Result<RawSwarmCatalogue, NonEmptyIssues<ScenarioCatalogueFailure>> {
   const issues: ScenarioCatalogueFailure[] = [];
   const containedScenarioSources = input.containedScenarios;
   const allScenarioSources = [...input.scenarios, ...containedScenarioSources];
@@ -477,7 +485,7 @@ export function projectRawSwarmCatalogue(
   }
 
   const catalogueIssues = nonEmptyIssues(issues);
-  if (catalogueIssues !== undefined) return Either.left(catalogueIssues);
+  if (catalogueIssues !== undefined) return Result.fail(catalogueIssues);
 
   const projectScenarioRecords = (
     sources: readonly ScenarioCatalogueSource[],
@@ -506,7 +514,7 @@ export function projectRawSwarmCatalogue(
   const scenarios = projectScenarioRecords(input.scenarios);
   const containedScenarios = projectScenarioRecords(containedScenarioSources);
 
-  return Either.right({
+  return Result.succeed({
     scenarios,
     containedScenarios,
     rejectedCandidates: [...input.rejectedCandidates].sort((left, right) =>
@@ -627,7 +635,7 @@ function relationshipRecordPaths(
     };
   }
   const canonicalRoot = canonicalRepositoryReadPath(repositoryRoot, directory);
-  if (Either.isLeft(canonicalRoot)) {
+  if (Result.isFailure(canonicalRoot)) {
     return {
       executions: [],
       executionProfiles: [],
@@ -641,7 +649,7 @@ function relationshipRecordPaths(
   const benchmarks: string[] = [];
   const rejections: string[] = [];
   const issues: CatalogueReadFailure[] = [];
-  const pending = [canonicalRoot.right];
+  const pending = [canonicalRoot.success];
   const visitedDirectories = new Set<string>();
   while (pending.length > 0) {
     const current = pending.pop();
@@ -652,7 +660,7 @@ function relationshipRecordPaths(
       for (const entry of readdirSync(current, { withFileTypes: true })) {
         const path = resolve(current, entry.name);
         const canonicalPath = canonicalRepositoryReadPath(repositoryRoot, path);
-        if (Either.isLeft(canonicalPath)) {
+        if (Result.isFailure(canonicalPath)) {
           issues.push({
             tag: "unreadableEvidenceDirectory",
             path,
@@ -662,17 +670,17 @@ function relationshipRecordPaths(
         const isDirectory = entry.isDirectory()
           ? true
           : entry.isSymbolicLink() &&
-            statSync(canonicalPath.right).isDirectory();
+            statSync(canonicalPath.success).isDirectory();
         if (isDirectory) {
-          pending.push(canonicalPath.right);
+          pending.push(canonicalPath.success);
         } else if (entry.name === "execution.json") {
-          executions.push(canonicalPath.right);
+          executions.push(canonicalPath.success);
         } else if (entry.name === "execution-profile.json") {
-          executionProfiles.push(canonicalPath.right);
+          executionProfiles.push(canonicalPath.success);
         } else if (entry.name === "benchmark.json") {
-          benchmarks.push(canonicalPath.right);
+          benchmarks.push(canonicalPath.success);
         } else if (entry.name === "candidate-rejection.json") {
-          rejections.push(canonicalPath.right);
+          rejections.push(canonicalPath.success);
         }
       }
     } catch {
@@ -690,23 +698,23 @@ function relationshipRecordPaths(
 
 function readRelationshipRecords<A, I>(
   paths: readonly string[],
-  schema: Schema.Schema<A, I, never>,
-): Either.Either<readonly A[], NonEmptyIssues<CatalogueReadFailure>> {
+  schema: Schema.Codec<A, I, never>,
+): Result.Result<readonly A[], NonEmptyIssues<CatalogueReadFailure>> {
   const records: A[] = [];
   const issues: CatalogueReadFailure[] = [];
   for (const path of paths) {
     try {
-      const decoded = Schema.decodeUnknownEither(schema, {
+      const decoded = Schema.decodeUnknownResult(schema, {
         onExcessProperty: "error",
       })(JSON.parse(readFileSync(path, "utf8")));
-      if (Either.isLeft(decoded)) {
+      if (Result.isFailure(decoded)) {
         issues.push({
           tag: "invalidRelationshipRecord",
           path,
-          message: decoded.left.message,
+          message: decoded.failure.message,
         });
       } else {
-        records.push(decoded.right);
+        records.push(decoded.success);
       }
     } catch (error) {
       issues.push({
@@ -718,8 +726,8 @@ function readRelationshipRecords<A, I>(
   }
   const relationshipIssues = nonEmptyIssues(issues);
   return relationshipIssues === undefined
-    ? Either.right(records)
-    : Either.left(relationshipIssues);
+    ? Result.succeed(records)
+    : Result.fail(relationshipIssues);
 }
 
 function validateRejectedCandidateComparisons(input: {
@@ -781,12 +789,12 @@ function validateRejectedCandidateComparisons(input: {
       expectedScenarioIds: record.predecessorScenarioIds,
       expectedBatches: record.predecessorBatches,
     });
-    return Either.isLeft(comparison)
+    return Result.isFailure(comparison)
       ? [
           {
             tag: "invalidRelationshipRecord" as const,
             path,
-            message: `Catalogue comparison is incomplete: ${comparison.left}`,
+            message: `Catalogue comparison is incomplete: ${comparison.failure}`,
           },
         ]
       : [];
@@ -852,29 +860,29 @@ function validateCurrentAdmissionComparisons(input: {
       predecessorProjections.push(projection);
     }
     const batches = batchScenarioCatalogueProjections(predecessorProjections);
-    if (Either.isLeft(batches)) {
+    if (Result.isFailure(batches)) {
       return [
         {
           tag: "invalidCatalogueRecord" as const,
           path,
-          message: `Canonical predecessor batching failed: ${batches.left}`,
+          message: `Canonical predecessor batching failed: ${batches.failure}`,
         },
       ];
     }
     const comparison = validateScenarioCatalogueComparison({
       comparison: admissionComparison.comparison,
       expectedScenarioIds: source.predecessorScenarioIds,
-      expectedBatches: batches.right.map((batch, batchIndex) => ({
+      expectedBatches: batches.success.map((batch, batchIndex) => ({
         batchIndex,
         scenarioIds: batch.map(({ scenarioId }) => scenarioId),
       })),
     });
-    return Either.isLeft(comparison)
+    return Result.isFailure(comparison)
       ? [
           {
             tag: "invalidCatalogueRecord" as const,
             path,
-            message: `Catalogue comparison is incomplete at its admission boundary: ${comparison.left}`,
+            message: `Catalogue comparison is incomplete at its admission boundary: ${comparison.failure}`,
           },
         ]
       : [];
@@ -885,32 +893,32 @@ function readAuthority(
   repositoryRoot: string,
   authority: ArtifactAuthority,
   role: "authoredSource" | "admissionReview" | "stageFacts",
-): Either.Either<string, CatalogueReadFailure> {
+): Result.Result<string, CatalogueReadFailure> {
   const canonicalPath = canonicalRepositoryReadPath(
     repositoryRoot,
     authority.path,
   );
-  if (Either.isLeft(canonicalPath)) {
-    return Either.left({
+  if (Result.isFailure(canonicalPath)) {
+    return Result.fail({
       tag: "unreadableCatalogueAuthority",
       path: authority.path,
     });
   }
   try {
-    const bytes = readFileSync(canonicalPath.right);
+    const bytes = readFileSync(canonicalPath.success);
     if (
       bytes.byteLength !== authority.byteLength ||
       createHash("sha256").update(bytes).digest("hex") !== authority.sha256
     ) {
-      return Either.left({
+      return Result.fail({
         tag: "catalogueAuthorityMismatch",
         path: authority.path,
         role,
       });
     }
-    return Either.right(bytes.toString("utf8"));
+    return Result.succeed(bytes.toString("utf8"));
   } catch {
-    return Either.left({
+    return Result.fail({
       tag: "unreadableCatalogueAuthority",
       path: authority.path,
     });
@@ -921,42 +929,42 @@ function readScenarioCatalogueSource(
   repositoryRoot: string,
   path: string,
   scope: ScenarioCatalogueScope,
-): Either.Either<
+): Result.Result<
   ScenarioCatalogueReadSource,
   NonEmptyIssues<CatalogueReadFailure>
 > {
   const canonicalRecordPath = canonicalRepositoryReadPath(repositoryRoot, path);
-  if (Either.isLeft(canonicalRecordPath)) {
-    return Either.left([{ tag: "unreadableCatalogueAuthority", path }]);
+  if (Result.isFailure(canonicalRecordPath)) {
+    return Result.fail([{ tag: "unreadableCatalogueAuthority", path }]);
   }
-  const recordPath = canonicalRecordPath.right;
-  const input = Either.try({
+  const recordPath = canonicalRecordPath.success;
+  const input = Result.try({
     try: (): unknown => JSON.parse(readFileSync(recordPath, "utf8")),
     catch: (): CatalogueReadFailure => ({
       tag: "unreadableCatalogueAuthority",
       path: recordPath,
     }),
   });
-  if (Either.isLeft(input)) return Either.left([input.left]);
-  const decoded = Schema.decodeUnknownEither(AdmittedScenarioRecordSchema, {
+  if (Result.isFailure(input)) return Result.fail([input.failure]);
+  const decoded = Schema.decodeUnknownResult(AdmittedScenarioRecordSchema, {
     onExcessProperty: "error",
-  })(input.right);
-  if (Either.isLeft(decoded)) {
-    return Either.left([
+  })(input.success);
+  if (Result.isFailure(decoded)) {
+    return Result.fail([
       {
         tag: "invalidCatalogueRecord",
         path: recordPath,
-        message: decoded.left.message,
+        message: decoded.failure.message,
       },
     ]);
   }
-  const record = decoded.right;
+  const record = decoded.success;
   const expectedName =
     scope === "live"
       ? `${record.scenarioId}.scenario.json`
       : `${record.scenarioId}.scenario.contained.json`;
   if (!recordPath.endsWith(`/${expectedName}`)) {
-    return Either.left([
+    return Result.fail([
       {
         tag: "catalogueScenarioIdentityMismatch",
         scenarioId: record.scenarioId,
@@ -980,51 +988,51 @@ function readScenarioCatalogueSource(
     "stageFacts",
   );
   const authorityIssues = nonEmptyIssues([
-    ...(Either.isLeft(prose) ? [prose.left] : []),
-    ...(Either.isLeft(reviewBytes) ? [reviewBytes.left] : []),
-    ...(Either.isLeft(factsBytes) ? [factsBytes.left] : []),
+    ...(Result.isFailure(prose) ? [prose.failure] : []),
+    ...(Result.isFailure(reviewBytes) ? [reviewBytes.failure] : []),
+    ...(Result.isFailure(factsBytes) ? [factsBytes.failure] : []),
   ]);
-  if (authorityIssues !== undefined) return Either.left(authorityIssues);
+  if (authorityIssues !== undefined) return Result.fail(authorityIssues);
   if (
-    Either.isLeft(prose) ||
-    Either.isLeft(reviewBytes) ||
-    Either.isLeft(factsBytes)
+    Result.isFailure(prose) ||
+    Result.isFailure(reviewBytes) ||
+    Result.isFailure(factsBytes)
   ) {
-    return Either.left([
+    return Result.fail([
       { tag: "unreadableCatalogueAuthority", path: recordPath },
     ]);
   }
-  const review = Schema.decodeUnknownEither(
-    Schema.parseJson(FinalScenarioReviewSchema),
+  const review = Schema.decodeUnknownResult(
+    Schema.fromJsonString(FinalScenarioReviewSchema),
     { onExcessProperty: "error" },
-  )(reviewBytes.right);
-  const facts = Schema.decodeUnknownEither(
-    Schema.parseJson(ScenarioStageFactsAuthoritySchema),
+  )(reviewBytes.success);
+  const facts = Schema.decodeUnknownResult(
+    Schema.fromJsonString(ScenarioStageFactsAuthoritySchema),
     { onExcessProperty: "error" },
-  )(factsBytes.right);
+  )(factsBytes.success);
   const decodeIssues = nonEmptyIssues([
-    ...(Either.isLeft(review)
+    ...(Result.isFailure(review)
       ? [
           {
             tag: "invalidCatalogueRecord",
             path: record.admissionReview.path,
-            message: review.left.message,
+            message: review.failure.message,
           } satisfies CatalogueReadFailure,
         ]
       : []),
-    ...(Either.isLeft(facts)
+    ...(Result.isFailure(facts)
       ? [
           {
             tag: "invalidCatalogueRecord",
             path: record.stageFacts.path,
-            message: facts.left.message,
+            message: facts.failure.message,
           } satisfies CatalogueReadFailure,
         ]
       : []),
   ]);
-  if (decodeIssues !== undefined) return Either.left(decodeIssues);
-  if (Either.isLeft(review) || Either.isLeft(facts)) {
-    return Either.left([
+  if (decodeIssues !== undefined) return Result.fail(decodeIssues);
+  if (Result.isFailure(review) || Result.isFailure(facts)) {
+    return Result.fail([
       {
         tag: "invalidCatalogueRecord",
         path: recordPath,
@@ -1032,15 +1040,15 @@ function readScenarioCatalogueSource(
       },
     ]);
   }
-  const proseSha256 = createHash("sha256").update(prose.right).digest("hex");
+  const proseSha256 = createHash("sha256").update(prose.success).digest("hex");
   if (
-    review.right.scenarioId !== record.scenarioId ||
-    review.right.scenarioSha256 !== proseSha256 ||
-    finalScenarioDisposition(review.right) !== "admitted" ||
-    facts.right.scenarioId !== record.scenarioId ||
-    facts.right.scenarioSha256 !== proseSha256
+    review.success.scenarioId !== record.scenarioId ||
+    review.success.scenarioSha256 !== proseSha256 ||
+    finalScenarioDisposition(review.success) !== "admitted" ||
+    facts.success.scenarioId !== record.scenarioId ||
+    facts.success.scenarioSha256 !== proseSha256
   ) {
-    return Either.left([
+    return Result.fail([
       {
         tag: "catalogueScenarioIdentityMismatch",
         scenarioId: record.scenarioId,
@@ -1048,18 +1056,18 @@ function readScenarioCatalogueSource(
       },
     ]);
   }
-  return Either.right({
+  return Result.succeed({
     path,
     source: {
       ...record,
-      characterRequirement: facts.right.facts.characterRequirement,
-      spatialRequirement: facts.right.facts.spatialRequirement,
-      contentAvailability: scenarioContentAdmission(review.right),
-      sdkCapability: scenarioSdkCapability(review.right),
+      characterRequirement: facts.success.facts.characterRequirement,
+      spatialRequirement: facts.success.facts.spatialRequirement,
+      contentAvailability: scenarioContentAdmission(review.success),
+      sdkCapability: scenarioSdkCapability(review.success),
     },
     admissionComparison:
-      "catalogueComparison" in review.right
-        ? { tag: "current", comparison: review.right.catalogueComparison }
+      "catalogueComparison" in review.success
+        ? { tag: "current", comparison: review.success.catalogueComparison }
         : { tag: "historical" },
   });
 }
@@ -1070,13 +1078,13 @@ export function readRawSwarmCatalogue(
     readonly scenarioDirectory: string;
     readonly evidenceDirectory: string;
   }>,
-): Either.Either<RawSwarmCatalogue, NonEmptyIssues<CatalogueReadFailure>> {
+): Result.Result<RawSwarmCatalogue, NonEmptyIssues<CatalogueReadFailure>> {
   const canonicalScenarioDirectory = canonicalRepositoryReadPath(
     input.repositoryRoot,
     input.scenarioDirectory,
   );
-  if (Either.isLeft(canonicalScenarioDirectory)) {
-    return Either.left([
+  if (Result.isFailure(canonicalScenarioDirectory)) {
+    return Result.fail([
       {
         tag: "unreadableCatalogueAuthority",
         path: input.scenarioDirectory,
@@ -1084,30 +1092,30 @@ export function readRawSwarmCatalogue(
     ]);
   }
   const recordDiscoveryIssues: CatalogueReadFailure[] = [];
-  const recordNames = Either.try({
-    try: () => readdirSync(canonicalScenarioDirectory.right).sort(),
+  const recordNames = Result.try({
+    try: () => readdirSync(canonicalScenarioDirectory.success).sort(),
     catch: (): CatalogueReadFailure => ({
       tag: "unreadableCatalogueAuthority",
-      path: canonicalScenarioDirectory.right,
+      path: canonicalScenarioDirectory.success,
     }),
   });
-  if (Either.isLeft(recordNames)) return Either.left([recordNames.left]);
+  if (Result.isFailure(recordNames)) return Result.fail([recordNames.failure]);
   const discoverRecordPaths = (suffix: string): readonly string[] =>
-    recordNames.right
+    recordNames.success
       .filter((name) => name.endsWith(suffix))
       .flatMap((name) => {
         const canonicalRecordPath = canonicalRepositoryReadPath(
           input.repositoryRoot,
-          resolve(canonicalScenarioDirectory.right, name),
+          resolve(canonicalScenarioDirectory.success, name),
         );
-        if (Either.isLeft(canonicalRecordPath)) {
+        if (Result.isFailure(canonicalRecordPath)) {
           recordDiscoveryIssues.push({
             tag: "unreadableCatalogueAuthority",
-            path: resolve(canonicalScenarioDirectory.right, name),
+            path: resolve(canonicalScenarioDirectory.success, name),
           });
           return [];
         }
-        return [canonicalRecordPath.right];
+        return [canonicalRecordPath.success];
       });
   const liveRecordPaths = discoverRecordPaths(".scenario.json").filter(
     (path) => !path.endsWith(".scenario.contained.json"),
@@ -1122,8 +1130,8 @@ export function readRawSwarmCatalogue(
       path,
       "live",
     );
-    if (Either.isLeft(scenario)) scenarioIssues.push(...scenario.left);
-    else liveScenarioReads.push(scenario.right);
+    if (Result.isFailure(scenario)) scenarioIssues.push(...scenario.failure);
+    else liveScenarioReads.push(scenario.success);
   }
   for (const path of containedRecordPaths) {
     const scenario = readScenarioCatalogueSource(
@@ -1131,8 +1139,8 @@ export function readRawSwarmCatalogue(
       path,
       "contained",
     );
-    if (Either.isLeft(scenario)) scenarioIssues.push(...scenario.left);
-    else containedScenarioReads.push(scenario.right);
+    if (Result.isFailure(scenario)) scenarioIssues.push(...scenario.failure);
+    else containedScenarioReads.push(scenario.success);
   }
   const scenarios = liveScenarioReads.map(({ source }) => source);
   const containedScenarios = containedScenarioReads.map(({ source }) => source);
@@ -1160,20 +1168,20 @@ export function readRawSwarmCatalogue(
   const readIssues = nonEmptyIssues([
     ...scenarioIssues,
     ...relationshipPaths.issues,
-    ...(Either.isLeft(executions) ? executions.left : []),
-    ...(Either.isLeft(executionProfiles) ? executionProfiles.left : []),
-    ...(Either.isLeft(benchmarks) ? benchmarks.left : []),
-    ...(Either.isLeft(rejectedCandidates) ? rejectedCandidates.left : []),
+    ...(Result.isFailure(executions) ? executions.failure : []),
+    ...(Result.isFailure(executionProfiles) ? executionProfiles.failure : []),
+    ...(Result.isFailure(benchmarks) ? benchmarks.failure : []),
+    ...(Result.isFailure(rejectedCandidates) ? rejectedCandidates.failure : []),
   ]);
-  if (readIssues !== undefined) return Either.left(readIssues);
-  if (Either.isLeft(executions)) return Either.left(executions.left);
-  if (Either.isLeft(executionProfiles))
-    return Either.left(executionProfiles.left);
-  if (Either.isLeft(benchmarks)) return Either.left(benchmarks.left);
-  if (Either.isLeft(rejectedCandidates))
-    return Either.left(rejectedCandidates.left);
+  if (readIssues !== undefined) return Result.fail(readIssues);
+  if (Result.isFailure(executions)) return Result.fail(executions.failure);
+  if (Result.isFailure(executionProfiles))
+    return Result.fail(executionProfiles.failure);
+  if (Result.isFailure(benchmarks)) return Result.fail(benchmarks.failure);
+  if (Result.isFailure(rejectedCandidates))
+    return Result.fail(rejectedCandidates.failure);
   const rejectionComparisonIssues = validateRejectedCandidateComparisons({
-    records: rejectedCandidates.right,
+    records: rejectedCandidates.success,
     paths: relationshipPaths.rejections,
     scenarios: allScenarios,
   });
@@ -1194,13 +1202,13 @@ export function readRawSwarmCatalogue(
     ...rejectionComparisonIssues,
     ...admissionComparisonIssues,
   ]);
-  if (allReadIssues !== undefined) return Either.left(allReadIssues);
+  if (allReadIssues !== undefined) return Result.fail(allReadIssues);
   return projectRawSwarmCatalogue({
     scenarios,
     containedScenarios,
-    executions: executions.right,
-    executionProfiles: executionProfiles.right,
-    benchmarks: benchmarks.right,
-    rejectedCandidates: rejectedCandidates.right,
+    executions: executions.success,
+    executionProfiles: executionProfiles.success,
+    benchmarks: benchmarks.success,
+    rejectedCandidates: rejectedCandidates.success,
   });
 }
