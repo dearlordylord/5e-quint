@@ -6086,12 +6086,15 @@ export type BattleSpellAreaChoice = {
   readonly affectedTargetIds: readonly CombatantId[];
 } & BattleSpellAreaChoiceKind;
 type BattleSpellAreaChoiceKind =
-  | { readonly kind?: never; readonly sleepNonSleeperFacts?: never }
   | {
       readonly kind?: never;
-      readonly sleepNonSleeperFacts: readonly [
-        BattleSleepNonSleeperFact,
-        ...BattleSleepNonSleeperFact[],
+      readonly stagedConditionAutomaticSuccessFacts?: never;
+    }
+  | {
+      readonly kind?: never;
+      readonly stagedConditionAutomaticSuccessFacts: readonly [
+        BattleStagedConditionAutomaticSuccessFact,
+        ...BattleStagedConditionAutomaticSuccessFact[],
       ];
     }
   | {
@@ -6106,7 +6109,7 @@ type BattleSpellAreaChoiceKind =
   | {
       readonly kind: "saveGatedTurnConstraintBundleArea";
       readonly cubeSideFeet: 40;
-      readonly affectedCreatureWitnesses: readonly BattleSlowAffectedCreatureWitness[];
+      readonly affectedCreatureWitnesses: readonly BattleTurnConstraintBundleAffectedCreatureWitness[];
     }
   | {
       readonly kind: "persistentAreaSaveConditionArea";
@@ -6132,7 +6135,7 @@ type BattleSpellAreaChoiceKind =
       readonly directionId: BattleLineDirectionId;
       readonly creaturePushes: readonly BattleDirectionalPersistentAreaCreaturePushOutcome[];
     };
-export type BattleSleepNonSleeperFact = {
+export type BattleStagedConditionAutomaticSuccessFact = {
   readonly kind: "doesNotSleep";
   readonly targetId: CombatantId;
 };
@@ -6141,7 +6144,7 @@ export type BattleAreaControlAffectedCreatureWitness = {
   readonly inCube: true;
   readonly canSeePattern: true;
 };
-export type BattleSlowAffectedCreatureWitness = {
+export type BattleTurnConstraintBundleAffectedCreatureWitness = {
   readonly targetId: CombatantId;
   readonly inCube: true;
   readonly chosenByCaster: true;
