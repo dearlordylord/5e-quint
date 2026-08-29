@@ -241,6 +241,251 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     ["discriminant-literal", "schema-discriminant-literal"],
     "sleep is a creature-state predicate",
   ),
+  ...[
+    "AttackHitBonusActionSpellCommandInput",
+    "AttackHitBonusActionSpellCommandSubject",
+    "BattleRuntimeCommand",
+    "CompelledBehaviorFollowUpCommand",
+    "EncodedRuntimeCommandBattleSubject",
+    "PersistentSpatialSpellProcedureCommand",
+    "ReactionAttackCommandContext",
+    "RuntimeCommandSubject",
+    "SerializedRuntimeCommandReferencePolicy",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "command",
+      identifier,
+      ["declaration-identifier"],
+      "command names the generic runtime request protocol",
+    ),
+  ),
+  ...[
+    "MagicalDarknessPointOriginProfileShape",
+    "MagicalDarknessPointOriginSpellInvocation",
+    "MagicalDarknessPointOriginSpellProcedureExecution",
+    "magicalDarknessPointOriginProfile",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "darkness",
+      identifier,
+      ["declaration-identifier"],
+      "darkness is the projected visibility mechanic",
+    ),
+  ),
+  ...exactCollision(
+    "darkness",
+    "magicalDarknessArea",
+    ["discriminant-literal", "schema-discriminant-literal"],
+    "darkness is the projected visibility mechanic",
+  ),
+  ...exactCollision(
+    "darkness",
+    "spellMagicalDarknessZone",
+    ["discriminant-literal", "registry-key", "schema-discriminant-literal"],
+    "darkness is the projected visibility mechanic",
+  ),
+  ...exactCollision(
+    "darkness",
+    "magical-darkness-point-origin",
+    ["execution-filename"],
+    "darkness is the projected visibility mechanic",
+  ),
+  ...[
+    "AllocatedStoredLightEmitterForTemplate",
+    "BattleLightEmitterOpaqueCoverInteraction",
+    "BattleMovableLightPlacementHole",
+    "BattleStoredLightEmitterTemplate",
+    "CombinedMovableLightManifestationSpellProcedureExecution",
+    "ExecutableMovableLightCastInvocation",
+    "ExecutableMovableLightManifestationInvocation",
+    "ExecutableMovableLightRepositionInvocation",
+    "HeldLightHurlInvocation",
+    "HeldLightHurlSpellInvocation",
+    "HeldLightHurlSpellProcedureExecution",
+    "HeldLightInvocation",
+    "HeldLightSpellInvocation",
+    "HeldLightSpellProcedureExecution",
+    "LightExtraAttackDamageAbilityModifierProcedureExecutionSchema",
+    "MovableLightActiveEffect",
+    "MovableLightCastInvocation",
+    "MovableLightCombinedCastInvocation",
+    "MovableLightEffect",
+    "MovableLightEffectShape",
+    "MovableLightManifestationSpellInvocation",
+    "MovableLightRepositionInvocation",
+    "MovableLightSeparateCastInvocation",
+    "MovableLightSpellProfile",
+    "ObjectLightClassCantripSpellProcedureExecution",
+    "ObjectLightInvocation",
+    "ObjectLightPreparedSpellProcedureExecution",
+    "ObjectLightSpellInvocation",
+    "ObjectLightSpellInvocationBase",
+    "RepositionMovableLightManifestationSpellProcedureExecution",
+    "SeparateMovableLightManifestationSpellProcedureExecution",
+    "heldLightHurlProfile",
+    "heldLightProfile",
+    "movableLightManifestationProfile",
+    "objectLightProfile",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "light",
+      identifier,
+      ["declaration-identifier"],
+      "light names an illumination or weapon-property mechanic",
+    ),
+  ),
+  ...[
+    "emit_light",
+    "movableLightManifestation",
+    "movableLightPlacement",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "light",
+      identifier,
+      [
+        "discriminant-literal",
+        "protocol-array-member",
+        ...(identifier === "emit_light"
+          ? []
+          : ["registry-key", "schema-discriminant-literal"]),
+      ],
+      "light names an illumination mechanic",
+    ),
+  ),
+  ...exactCollision(
+    "light",
+    "movableLight",
+    ["discriminant-literal", "schema-discriminant-literal"],
+    "light names an illumination mechanic",
+  ),
+  ...exactCollision(
+    "light",
+    "nonmagicalLightInArea",
+    ["discriminant-literal"],
+    "light names an illumination mechanic",
+  ),
+  ...["objectInvisibleRevealLightEmitter", "unitFeatureLightEmitter"].flatMap(
+    (identifier) =>
+      exactCollision(
+        "light",
+        identifier,
+        ["discriminant-literal", "registry-key", "schema-discriminant-literal"],
+        "light names an illumination mechanic",
+      ),
+  ),
+  ...exactCollision(
+    "light",
+    "spellCreatedLightOverlapsArea",
+    ["discriminant-literal", "schema-discriminant-literal"],
+    "light names an illumination mechanic",
+  ),
+  ...["spellDistantObjectLightTarget", "spellObjectLightTarget"].flatMap(
+    (identifier) =>
+      exactCollision(
+        "light",
+        identifier,
+        [
+          "discriminant-literal",
+          "protocol-array-member",
+          "schema-discriminant-literal",
+        ],
+        "light names an illumination mechanic",
+      ),
+  ),
+  ...exactCollision(
+    "light",
+    "storedLightEmitter",
+    ["discriminant-literal", "registry-key"],
+    "light names an illumination mechanic",
+  ),
+  ...exactCollision(
+    "light",
+    "lightCantripObject",
+    ["discriminant-literal", "schema-discriminant-literal"],
+    "light names the object-illumination execution shape",
+  ),
+  ...exactCollision(
+    "light",
+    "lightExtraAttackDamageAbilityModifier",
+    ["schema-discriminant-literal"],
+    "light names the weapon-property mechanic",
+  ),
+  ...exactCollision(
+    "light",
+    "weaponWithLightProperty",
+    ["schema-discriminant-literal"],
+    "light names the weapon-property mechanic",
+  ),
+  ...["held-light", "held-light-hurl", "object-light"].flatMap((identifier) =>
+    exactCollision(
+      "light",
+      identifier,
+      ["execution-filename"],
+      "light names an illumination mechanic",
+    ),
+  ),
+  ...[
+    "Light Property Bonus Action Attack",
+    "movable-light manifestation placement does not match this spell act.",
+    "movable-light manifestation placement must use the selected spell act placement hole.",
+    "movable-light manifestation placement was filled twice.",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "light",
+      identifier,
+      ["execution-diagnostic"],
+      "light names an illumination or weapon-property mechanic",
+    ),
+  ),
+  ...[
+    "ChosenDamageResistanceInvocationSchema",
+    "ChosenDamageResistanceSpellInvocation",
+    "ChosenDamageResistanceSpellProcedureExecution",
+    "LinkedDefenseResistanceDamageShareEffect",
+    "LinkedDefenseResistanceDamageShareSpellInvocation",
+    "LinkedDefenseResistanceDamageShareSpellProcedureExecution",
+    "LinkedDefenseResistanceDamageShareTemplate",
+    "LinkedDefenseResistanceDamageShareTemplateSchema",
+    "PassiveDamageResistanceProcedureExecutionSchema",
+    "chosenDamageResistanceProfile",
+    "linkedDefenseResistanceDamageShareProfile",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "resistance",
+      identifier,
+      ["declaration-identifier"],
+      "resistance names a damage relationship mechanic",
+    ),
+  ),
+  ...[
+    "linkedDefenseResistanceDamageShare",
+    "linkedDefenseResistanceDamageShareSeparation",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "resistance",
+      identifier,
+      DISCRIMINANT_ROLES,
+      "resistance names a damage relationship mechanic",
+    ),
+  ),
+  ...exactCollision(
+    "resistance",
+    "passiveDamageResistance",
+    ["schema-discriminant-literal"],
+    "resistance names a damage relationship mechanic",
+  ),
+  ...exactCollision(
+    "resistance",
+    "chosen-damage-resistance",
+    ["execution-filename"],
+    "resistance names a damage relationship mechanic",
+  ),
+  ...exactCollision(
+    "resistance",
+    "Resistance damage reduction (1d4)",
+    ["execution-diagnostic"],
+    "resistance names a damage relationship mechanic",
+  ),
 ];
 
 function escapeForRegExp(text) {
