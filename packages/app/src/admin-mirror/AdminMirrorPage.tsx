@@ -4,7 +4,7 @@ import {
 } from "@dnd/mcp/experimental-admin-mirror-contract"
 import { Match, Result } from "effect"
 import { parseAsString, useQueryState } from "nuqs"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useReducer, useState } from "react"
 
 import { PageShell } from "#/components/PageShell.tsx"
 import { BTN_SM } from "#/components/styles.ts"
@@ -15,36 +15,44 @@ import {
   loadMirrorSessions,
   type MirrorSessionLoadState
 } from "./admin-mirror-session-boundary.ts"
+import {
+  initialMirrorSessionCollectionState,
+  makeMirrorSessionLoadRequest,
+  mirrorSessionCollectionLoadState,
+  reduceMirrorSessionCollection
+} from "./admin-mirror-session-collection.ts"
+import { type MirrorStreamStatus, mirrorStreamStatusPresentation } from "./admin-mirror-stream-status.ts"
 
 const EVENT_JSON_INDENT_SPACES = 2
 const SELECTED_SESSION_QUERY_PARAM = "session"
 
 export function AdminMirrorPage() {
   const mirrorOrigin = useMemo(defaultAdminMirrorOrigin, [])
-  const [sessions, setSessions] = useState<ReadonlyArray<AdminMirrorSessionState>>([])
-  const [sessionLoadState, setSessionLoadState] = useState<MirrorSessionLoadState>({ tag: "loading" })
+  const [sessionCollection, dispatchSessionCollection] = useReducer(
+    reduceMirrorSessionCollection,
+    initialMirrorSessionCollectionState
+  )
+  const sessions = sessionCollection.sessions
+  const sessionLoadState = mirrorSessionCollectionLoadState(sessionCollection)
   const [selectedSessionId, setSelectedSessionId] = useQueryState(
     SELECTED_SESSION_QUERY_PARAM,
     parseAsString.withOptions({ history: "replace" })
   )
-  const [connection, setConnection] = useState<"connecting" | "offline" | "streaming">("connecting")
+  const [streamStatus, setStreamStatus] = useState<MirrorStreamStatus>({ tag: "connecting" })
 
   const refresh = useCallback(async () => {
-    setSessionLoadState({ tag: "loading" })
+    const request = makeMirrorSessionLoadRequest()
+    dispatchSessionCollection({ tag: "loadStarted", request })
     if (Result.isFailure(mirrorOrigin)) {
-      setConnection("offline")
-      setSessionLoadState(mirrorOrigin.failure)
+      dispatchSessionCollection({ tag: "loadFailed", issue: mirrorOrigin.failure, request })
       return
     }
     const loaded = await loadMirrorSessions(mirrorOrigin.success)
     if (Result.isFailure(loaded)) {
-      setConnection("offline")
-      setSessionLoadState(loaded.failure)
+      dispatchSessionCollection({ tag: "loadFailed", issue: loaded.failure, request })
       return
     }
-    setSessions(loaded.success.sessions)
-    setSessionLoadState({ tag: "loaded" })
-    setConnection((current) => (current === "streaming" ? current : "offline"))
+    dispatchSessionCollection({ tag: "loadSucceeded", request, sessions: loaded.success.sessions })
   }, [mirrorOrigin])
 
   useEffect(() => {
@@ -52,23 +60,23 @@ export function AdminMirrorPage() {
   }, [refresh])
 
   useEffect(() => {
-    setConnection("connecting")
+    setStreamStatus({ tag: "connecting" })
     if (Result.isFailure(mirrorOrigin)) {
-      setConnection("offline")
+      setStreamStatus({ tag: "configurationInvalid" })
       return
     }
     const source = new EventSource(new URL("/admin-projections/events", mirrorOrigin.success))
-    const handleOpen = () => setConnection("streaming")
-    const handleError = () => setConnection("offline")
+    const handleOpen = () => setStreamStatus({ tag: "streaming" })
+    const handleError = () => setStreamStatus({ tag: "transportFailure" })
     const handleMessage = (event: MessageEvent<string>) => {
       const decoded = decodeMirrorSessionEvent(event.data)
       if (Result.isFailure(decoded)) {
-        setConnection("offline")
+        setStreamStatus({ tag: "invalidEvent" })
         return
       }
       const session = decoded.success
-      setSessions((current) => upsertSession(current, session))
-      setSessionLoadState({ tag: "loaded" })
+      dispatchSessionCollection({ tag: "streamSessionReceived", session })
+      setStreamStatus({ tag: "streaming" })
     }
     source.addEventListener("open", handleOpen)
     source.addEventListener("error", handleError)
@@ -83,6 +91,7 @@ export function AdminMirrorPage() {
 
   const selectedSession = selectMirrorSession(sessions, selectedSessionId)
   const visibleSelectedSessionId = selectedSession?.envelope.mirrorSessionId ?? null
+  const streamStatusPresentation = mirrorStreamStatusPresentation(streamStatus)
 
   useEffect(() => {
     if (visibleSelectedSessionId !== null && selectedSessionId !== visibleSelectedSessionId)
@@ -94,7 +103,7 @@ export function AdminMirrorPage() {
       title="MCP Admin Mirror"
       actions={
         <div className="flex items-center gap-2 text-xs text-gray-400">
-          <span className={connectionClass(connection)}>{connection}</span>
+          <span className={streamStatusPresentation.className}>{streamStatusPresentation.label}</span>
           <button className={BTN_SM} onClick={() => void refresh()} type="button">
             Refresh
           </button>
@@ -107,32 +116,39 @@ export function AdminMirrorPage() {
           {sessions.length === 0 ? (
             <p className="text-sm text-gray-500">{emptyMirrorSessionCollectionMessage(sessionLoadState)}</p>
           ) : (
-            <ol className="space-y-2">
-              {sessions.map((session) => {
-                const selected = session.envelope.mirrorSessionId === visibleSelectedSessionId
-                return (
-                  <li key={session.envelope.mirrorSessionId}>
-                    <button
-                      className={`w-full rounded-md border px-3 py-2 text-left text-sm ${
-                        selected
-                          ? "border-amber-400 bg-amber-400/10 text-amber-100"
-                          : "border-gray-800 bg-black/20 text-gray-300 hover:border-gray-700"
-                      }`}
-                      onClick={() => void setSelectedSessionId(session.envelope.mirrorSessionId)}
-                      type="button"
-                    >
-                      <span className="block truncate font-medium">{session.envelope.mirrorSessionId}</span>
-                      <span className="mt-1 block text-xs text-gray-500">
-                        seq {session.envelope.sequence} · pid {session.envelope.sourceProcessId}
-                      </span>
-                      {session.multiSource ? (
-                        <span className="mt-1 block text-xs text-amber-300">multiple publishers</span>
-                      ) : null}
-                    </button>
-                  </li>
-                )
-              })}
-            </ol>
+            <>
+              {sessionLoadState.tag === "loaded" ? null : (
+                <p className="mb-2 text-xs text-amber-300">
+                  {mirrorSessionLoadMessage(sessionLoadState, () => "Mirror sessions loaded.")}
+                </p>
+              )}
+              <ol className="space-y-2">
+                {sessions.map((session) => {
+                  const selected = session.envelope.mirrorSessionId === visibleSelectedSessionId
+                  return (
+                    <li key={session.envelope.mirrorSessionId}>
+                      <button
+                        className={`w-full rounded-md border px-3 py-2 text-left text-sm ${
+                          selected
+                            ? "border-amber-400 bg-amber-400/10 text-amber-100"
+                            : "border-gray-800 bg-black/20 text-gray-300 hover:border-gray-700"
+                        }`}
+                        onClick={() => void setSelectedSessionId(session.envelope.mirrorSessionId)}
+                        type="button"
+                      >
+                        <span className="block truncate font-medium">{session.envelope.mirrorSessionId}</span>
+                        <span className="mt-1 block text-xs text-gray-500">
+                          seq {session.envelope.sequence} · pid {session.envelope.sourceProcessId}
+                        </span>
+                        {session.multiSource ? (
+                          <span className="mt-1 block text-xs text-amber-300">multiple publishers</span>
+                        ) : null}
+                      </button>
+                    </li>
+                  )
+                })}
+              </ol>
+            </>
           )}
         </aside>
 
@@ -389,16 +405,6 @@ function hpChangeTitle(change: AdminMirrorPresentationTimelineEntry["hpChanges"]
   return `${change.displayName} HP changed`
 }
 
-function upsertSession(
-  sessions: ReadonlyArray<AdminMirrorSessionState>,
-  session: AdminMirrorSessionState
-): ReadonlyArray<AdminMirrorSessionState> {
-  return [
-    session,
-    ...sessions.filter((current) => current.envelope.mirrorSessionId !== session.envelope.mirrorSessionId)
-  ]
-}
-
 export function selectMirrorSession(
   sessions: ReadonlyArray<AdminMirrorSessionState>,
   selectedSessionId: string | null
@@ -408,10 +414,4 @@ export function selectMirrorSession(
     return sessions.find((session) => session.envelope.mirrorSessionId === selectedSessionId) ?? null
   }
   return sessions[0] ?? null
-}
-
-function connectionClass(connection: "connecting" | "offline" | "streaming"): string {
-  if (connection === "streaming") return "text-emerald-300"
-  if (connection === "connecting") return "text-amber-300"
-  return "text-rose-300"
 }

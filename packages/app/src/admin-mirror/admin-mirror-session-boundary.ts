@@ -28,7 +28,16 @@ const AdminMirrorOriginSchema = Schema.URLFromString.pipe(
 
 export type AdminMirrorOrigin = typeof AdminMirrorOriginSchema.Type
 export type MirrorOriginConfigurationIssue = { readonly tag: "invalidConfiguration" }
-type MirrorSessionLoadIssue = { readonly tag: "invalidResponse" } | { readonly tag: "unavailable" }
+type MirrorSessionInvalidResponseIssue = { readonly tag: "invalidResponse" }
+type MirrorSessionUnavailableIssue = { readonly tag: "unavailable" }
+export type MirrorSessionLoadIssue = MirrorSessionInvalidResponseIssue | MirrorSessionUnavailableIssue
+type MirrorSessionResponseParseIssue = {
+  readonly tag: "invalidMirrorSessionResponse"
+  readonly message: string
+}
+type MirrorSessionEventParseIssue =
+  | { readonly tag: "invalidMirrorSessionEvent"; readonly message: string }
+  | { readonly tag: "malformedMirrorSessionEventJson"; readonly message: string }
 
 export type MirrorSessionLoadState =
   | MirrorOriginConfigurationIssue
@@ -45,7 +54,7 @@ export async function loadMirrorSessions(
   return decodeMirrorHttpResponse(response.success)
 }
 
-async function fetchMirrorSessionResponse(url: URL): Promise<Result.Result<Response, MirrorSessionLoadIssue>> {
+async function fetchMirrorSessionResponse(url: URL): Promise<Result.Result<Response, MirrorSessionUnavailableIssue>> {
   try {
     return Result.succeed(await fetch(url))
   } catch {
@@ -71,7 +80,7 @@ export function defaultAdminMirrorOrigin(): Result.Result<AdminMirrorOrigin, Mir
 
 async function decodeMirrorHttpResponse(
   response: Response
-): Promise<Result.Result<AdminMirrorSessionListResponse, MirrorSessionLoadIssue>> {
+): Promise<Result.Result<AdminMirrorSessionListResponse, MirrorSessionInvalidResponseIssue>> {
   try {
     return Result.mapError(decodeMirrorSessionResponse(await response.json()), () => ({ tag: "invalidResponse" }))
   } catch {
@@ -79,17 +88,30 @@ async function decodeMirrorHttpResponse(
   }
 }
 
-export function decodeMirrorSessionResponse(value: unknown): Result.Result<AdminMirrorSessionListResponse, string> {
+export function decodeMirrorSessionResponse(
+  value: unknown
+): Result.Result<AdminMirrorSessionListResponse, MirrorSessionResponseParseIssue> {
   const decoded = Schema.decodeUnknownResult(AdminMirrorSessionListResponseSchema)(value)
-  return Result.mapError(decoded, (error) => error.message)
+  return Result.mapError(decoded, (error) => ({
+    tag: "invalidMirrorSessionResponse",
+    message: error.message
+  }))
 }
 
-export function decodeMirrorSessionEvent(value: string): Result.Result<AdminMirrorSessionState, string> {
+export function decodeMirrorSessionEvent(
+  value: string
+): Result.Result<AdminMirrorSessionState, MirrorSessionEventParseIssue> {
   try {
     const parsed: unknown = JSON.parse(value)
     const decoded = Schema.decodeUnknownResult(AdminMirrorSessionStateSchema)(parsed)
-    return Result.mapError(decoded, (error) => error.message)
+    return Result.mapError(decoded, (error) => ({
+      tag: "invalidMirrorSessionEvent",
+      message: error.message
+    }))
   } catch {
-    return Result.fail("Expected JSON mirror session event.")
+    return Result.fail({
+      tag: "malformedMirrorSessionEventJson",
+      message: "Expected JSON mirror session event."
+    })
   }
 }
