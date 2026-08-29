@@ -3916,8 +3916,8 @@ describe("battle runtime: class action features", () => {
       const {
         fixedCostMovementReplacement: _fixedCostMovementReplacement,
         levitatedMovement: _levitatedMovement,
-        executeCompelledApproach: _executeCompelledApproach,
-        executeCompelledFlee: _executeCompelledFlee,
+        compelledApproach: _executeCompelledApproach,
+        compelledFlee: _executeCompelledFlee,
         brutalStrikeForcefulBlow: _brutalStrikeForcefulBlow,
         ...movementValue
       } = fill.value;

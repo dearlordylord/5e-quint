@@ -435,8 +435,8 @@ const GLYPH_STORED_SINGLE_CREATURE_ACTIVE_EFFECT_RELEASE_CASES: ReadonlyArray<Gl
       effectKinds: ["spellLevitatedCreature"],
       targetFacts: storedKnownWillingSingleCreatureSpellTargetFacts,
       fillsFromHoles: (holes) => [
-        levitateInitialRiseFill(
-          requireReleaseHole(holes, "levitateInitialRise"),
+        controlledVerticalSuspensionInitialRiseFill(
+          requireReleaseHole(holes, "controlledVerticalSuspensionInitialRise"),
         ),
       ],
     },
@@ -5763,11 +5763,17 @@ function storedSpiritualWeaponDamageFrontier(
   };
 }
 
-function levitateInitialRiseFill(
-  hole: Extract<BattleHole, { readonly kind: "levitateInitialRise" }>,
-): Extract<BattleFill, { readonly kind: "levitateInitialRise" }> {
+function controlledVerticalSuspensionInitialRiseFill(
+  hole: Extract<
+    BattleHole,
+    { readonly kind: "controlledVerticalSuspensionInitialRise" }
+  >,
+): Extract<
+  BattleFill,
+  { readonly kind: "controlledVerticalSuspensionInitialRise" }
+> {
   return {
-    kind: "levitateInitialRise",
+    kind: "controlledVerticalSuspensionInitialRise",
     holeId: hole.holeId,
     value: { distanceFeet: movementFeet(12) },
   };

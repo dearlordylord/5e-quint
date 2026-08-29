@@ -306,7 +306,7 @@ export const charmPersonUnitId = "charm_person";
 
 export const chillTouchUnitId = "chill_touch";
 
-export const commandUnitId = "command";
+export const commandUnitId = "compelledNextTurnBehavior";
 
 export const commandLegendaryActorId = combatantId(
   "unit-profile-command-legendary",

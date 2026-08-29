@@ -29,7 +29,11 @@ type BattleHoleFrontierRow = {
 
 type BattleSubjectKindCase = {
   readonly tag: string;
-  readonly discriminator?: "action" | "command" | "option" | "spellAction";
+  readonly discriminator?:
+    | "action"
+    | "compelledNextTurnBehavior"
+    | "option"
+    | "spellAction";
   readonly discriminatorValue?: string;
   readonly subjectKind: string;
 };

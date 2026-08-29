@@ -245,7 +245,7 @@ describe("extracted route owner boundaries", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const act = findAct(session, magicSubject("command"));
+    const act = findAct(session, magicSubject("compelledNextTurnBehavior"));
     expect(commandRouteForDiscoveredAct(session.state, act)).toEqual([
       expect.objectContaining({
         subject: "commandEffect",

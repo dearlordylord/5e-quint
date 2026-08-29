@@ -344,7 +344,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
         },
         activeEffects: expect.arrayContaining([
           expect.objectContaining({
-            kind: "blurred",
+            kind: "perceptionGatedAttackRollDefense",
             sourceProcedureRef: blur.subject.procedureRef,
           }),
         ]),

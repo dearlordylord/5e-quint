@@ -1689,7 +1689,7 @@ describe("battle codec execution-reference boundaries", () => {
       },
     });
     const altitudeChange = Schema.decodeUnknownSync(BattleFillSchema)({
-      kind: "levitateAltitudeChange",
+      kind: "controlledVerticalSuspensionAltitudeChange",
       holeId: holeId("exact-levitate-altitude"),
       value: { direction: "up", distanceFeet: 10 },
       spatialFacts: [
@@ -1774,7 +1774,7 @@ describe("battle codec execution-reference boundaries", () => {
       },
     },
     {
-      kind: "levitateAltitudeChange",
+      kind: "controlledVerticalSuspensionAltitudeChange",
       holeId: holeId("missing-levitate-spatial-occurrence"),
       value: { direction: "up", distanceFeet: 10 },
       spatialFacts: [
@@ -1797,8 +1797,8 @@ describe("battle codec execution-reference boundaries", () => {
   );
 
   test("binds a Levitate altitude act and hole to the same target-owned active effect", () => {
-    const altitudeHole = hole("levitateAltitudeChange", {
-      kind: "levitateAltitudeChange",
+    const altitudeHole = hole("controlledVerticalSuspensionAltitudeChange", {
+      kind: "controlledVerticalSuspensionAltitudeChange",
       effectRef: fixture.levitateEffectRef,
       actorId: wizardId,
       targetId: skeletonId,

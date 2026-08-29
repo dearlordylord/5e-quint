@@ -37,7 +37,7 @@ import {
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   bonusSpellAct,
-  magicWeaponTargetItemFill,
+  weaponAttackDamageEnhancementTargetItemFill,
   spellAct,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
@@ -677,9 +677,9 @@ describe("weapon-hosted reducer route call segments", () => {
     });
     const magicTarget = requireHole(
       magicAct.initialHoles,
-      "magicWeaponTargetItem",
+      "weaponAttackDamageEnhancementTargetItem",
     );
-    const magicFill = magicWeaponTargetItemFill(magicTarget, {
+    const magicFill = weaponAttackDamageEnhancementTargetItemFill(magicTarget, {
       holderCombatantId: spellCasterId,
       itemId: battleObjectId("main:weapon_longsword"),
     });

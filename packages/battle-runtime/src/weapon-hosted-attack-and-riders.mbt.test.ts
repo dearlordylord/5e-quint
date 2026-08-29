@@ -51,7 +51,7 @@ import {
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   bonusSpellAct,
-  magicWeaponTargetItemFill,
+  weaponAttackDamageEnhancementTargetItemFill,
   spellAct,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
@@ -949,13 +949,16 @@ function routeWeaponEnhancementItemTarget(): readonly ReducerRouteEvent[] {
   if (discovered.pending.tag !== "magicWeaponTarget") {
     throw new Error("Expected pending Magic Weapon target.");
   }
-  const target = requireHole(discovered.holes, "magicWeaponTargetItem");
+  const target = requireHole(
+    discovered.holes,
+    "weaponAttackDamageEnhancementTargetItem",
+  );
   const result = requireResolved(
     resolveBattleSubject({
       state: discovered.battle.state,
       subject: discovered.pending.subject,
       fills: [
-        magicWeaponTargetItemFill(target, {
+        weaponAttackDamageEnhancementTargetItemFill(target, {
           holderCombatantId: spellCasterId,
           itemId: battleObjectId("main:weapon_longsword"),
         }),
@@ -1581,13 +1584,16 @@ function fillMagicWeaponTarget(
   if (state.pending.tag !== "magicWeaponTarget") {
     throw new Error("Expected pending Magic Weapon target.");
   }
-  const target = requireHole(state.holes, "magicWeaponTargetItem");
+  const target = requireHole(
+    state.holes,
+    "weaponAttackDamageEnhancementTargetItem",
+  );
   const cast = requireResolved(
     resolveBattleSubject({
       state: state.battle.state,
       subject: state.pending.subject,
       fills: [
-        magicWeaponTargetItemFill(target, {
+        weaponAttackDamageEnhancementTargetItemFill(target, {
           holderCombatantId: spellCasterId,
           itemId: battleObjectId("main:weapon_longsword"),
         }),
@@ -1783,7 +1789,8 @@ function battleHolesToWeaponHostedHoles(
       if (hole.kind === "targetChoice") return "TargetChoice";
       if (hole.kind === "attackRoll") return "AttackRoll";
       if (hole.kind === "rolledDice") return "AttackDamageRoll";
-      if (hole.kind === "magicWeaponTargetItem") return "MagicWeaponTargetItem";
+      if (hole.kind === "weaponAttackDamageEnhancementTargetItem")
+        return "MagicWeaponTargetItem";
       throw new Error(
         `Unexpected weapon-hosted ${pending.tag} hole ${hole.kind}.`,
       );

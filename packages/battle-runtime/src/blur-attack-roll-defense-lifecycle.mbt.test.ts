@@ -194,7 +194,7 @@ describe("Blur attack-roll defense lifecycle MBT parity", () => {
     const cast = castBlur(initialRuntimeState());
     const caster = requireCombatant(cast.battle.state, spellCasterId);
     const blurredEffect = caster.activeEffects.find(
-      (effect) => effect.kind === "blurred",
+      (effect) => effect.kind === "perceptionGatedAttackRollDefense",
     );
     expect(blurredEffect).toBeDefined();
 
@@ -205,7 +205,7 @@ describe("Blur attack-roll defense lifecycle MBT parity", () => {
       },
       activeEffects: [
         expect.objectContaining({
-          kind: "blurred",
+          kind: "perceptionGatedAttackRollDefense",
           sourceCombatantId: spellCasterId,
           expiresAt: {
             kind: "concentration",
@@ -266,7 +266,7 @@ describe("Blur attack-roll defense lifecycle MBT parity", () => {
         .activeEffects,
     ).toEqual(
       expect.not.arrayContaining([
-        expect.objectContaining({ kind: "blurred" }),
+        expect.objectContaining({ kind: "perceptionGatedAttackRollDefense" }),
       ]),
     );
     expect(
@@ -375,7 +375,7 @@ function perceptionGatedAttackRollDefenseProjection(
   const caster = requireCombatant(state.battle.state, spellCasterId);
   const spellSlotExpended = casterSpellSlotExpended(state.battle.state);
   const blurredEffect = caster.activeEffects.find(
-    (effect) => effect.kind === "blurred",
+    (effect) => effect.kind === "perceptionGatedAttackRollDefense",
   );
   const attackRollMode = attackerAttackRollMode(state);
   return {

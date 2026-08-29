@@ -978,7 +978,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         forceFill,
         targetFill,
         sanctuaryOutcomeFill(
-          requireHole(needsSanctuary.holes, "sanctuaryInterdictionOutcome"),
+          requireHole(needsSanctuary.holes, "targetingSaveInterdictionOutcome"),
           { saveSucceeded: false, outcome: { kind: "loseAttackOrSpell" } },
         ),
       ],
@@ -1876,7 +1876,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         repeatForceFill,
         repeatTargetFill,
         sanctuaryOutcomeFill(
-          requireHole(needsSanctuary.holes, "sanctuaryInterdictionOutcome"),
+          requireHole(needsSanctuary.holes, "targetingSaveInterdictionOutcome"),
           { saveSucceeded: false, outcome: { kind: "loseAttackOrSpell" } },
         ),
       ],
@@ -2014,13 +2014,20 @@ function triggeredReactionSpellDecision(
 }
 
 function sanctuaryOutcomeFill(
-  hole: Extract<BattleHole, { readonly kind: "sanctuaryInterdictionOutcome" }>,
+  hole: Extract<
+    BattleHole,
+    { readonly kind: "targetingSaveInterdictionOutcome" }
+  >,
   value: Extract<
     BattleFill,
-    { readonly kind: "sanctuaryInterdictionOutcome" }
+    { readonly kind: "targetingSaveInterdictionOutcome" }
   >["value"],
-): Extract<BattleFill, { readonly kind: "sanctuaryInterdictionOutcome" }> {
-  return { kind: "sanctuaryInterdictionOutcome", holeId: hole.holeId, value };
+): Extract<BattleFill, { readonly kind: "targetingSaveInterdictionOutcome" }> {
+  return {
+    kind: "targetingSaveInterdictionOutcome",
+    holeId: hole.holeId,
+    value,
+  };
 }
 
 function withSanctuaryWard(

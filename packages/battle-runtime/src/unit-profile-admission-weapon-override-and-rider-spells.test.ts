@@ -51,7 +51,7 @@ import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.
 import {
   bonusSpellAct,
   bonusSpellActForItem,
-  magicWeaponTargetItemFill,
+  weaponAttackDamageEnhancementTargetItemFill,
   maybeBonusSpellAct,
   spellAct,
   spellTargetFill,
@@ -1130,7 +1130,10 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       ),
       mode: { tag: "cast" },
     });
-    const targetHole = requireHole(act.initialHoles, "magicWeaponTargetItem");
+    const targetHole = requireHole(
+      act.initialHoles,
+      "weaponAttackDamageEnhancementTargetItem",
+    );
     expect(targetHole).toEqual(
       expect.objectContaining({
         label: "Spell target item",
@@ -1142,7 +1145,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       state: session.state,
       subject: act.subject,
       fills: [
-        magicWeaponTargetItemFill(targetHole, {
+        weaponAttackDamageEnhancementTargetItemFill(targetHole, {
           holderCombatantId: spellCasterId,
           itemId: battleObjectId("main:weapon_longsword"),
         }),
@@ -1217,12 +1220,15 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       spellId: magicWeaponUnitId,
       slotLevel: 6,
     });
-    const targetHole = requireHole(act.initialHoles, "magicWeaponTargetItem");
+    const targetHole = requireHole(
+      act.initialHoles,
+      "weaponAttackDamageEnhancementTargetItem",
+    );
     const cast = resolveBattleSubject({
       state: session.state,
       subject: act.subject,
       fills: [
-        magicWeaponTargetItemFill(targetHole, {
+        weaponAttackDamageEnhancementTargetItemFill(targetHole, {
           holderCombatantId: spellCasterId,
           itemId: battleObjectId("main:weapon_longsword"),
         }),
@@ -1339,12 +1345,15 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       spellId: magicWeaponUnitId,
       slotLevel: 2,
     });
-    const targetHole = requireHole(act.initialHoles, "magicWeaponTargetItem");
+    const targetHole = requireHole(
+      act.initialHoles,
+      "weaponAttackDamageEnhancementTargetItem",
+    );
     const cast = resolveBattleSubject({
       state: session.state,
       subject: act.subject,
       fills: [
-        magicWeaponTargetItemFill(targetHole, {
+        weaponAttackDamageEnhancementTargetItemFill(targetHole, {
           holderCombatantId: spellTargetId,
           itemId: battleObjectId("main:weapon_longsword"),
         }),
@@ -1422,12 +1431,15 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       spellId: magicWeaponUnitId,
       slotLevel: 3,
     });
-    const targetHole = requireHole(act.initialHoles, "magicWeaponTargetItem");
+    const targetHole = requireHole(
+      act.initialHoles,
+      "weaponAttackDamageEnhancementTargetItem",
+    );
     const recast = resolveBattleSubject({
       state: priorSession.state,
       subject: act.subject,
       fills: [
-        magicWeaponTargetItemFill(targetHole, {
+        weaponAttackDamageEnhancementTargetItemFill(targetHole, {
           holderCombatantId: spellCasterId,
           itemId: battleObjectId("main:weapon_longsword"),
         }),
@@ -1486,14 +1498,14 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
     });
     const rejectedHole = requireHole(
       rejectedAct.initialHoles,
-      "magicWeaponTargetItem",
+      "weaponAttackDamageEnhancementTargetItem",
     );
     expect(
       resolveBattleSubject({
         state: alreadyMagicalSession.state,
         subject: rejectedAct.subject,
         fills: [
-          magicWeaponTargetItemFill(rejectedHole, {
+          weaponAttackDamageEnhancementTargetItemFill(rejectedHole, {
             holderCombatantId: spellCasterId,
             itemId: battleObjectId("main:weapon_longsword"),
           }),
@@ -1509,12 +1521,15 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       spellId: magicWeaponUnitId,
       slotLevel: 2,
     });
-    const targetHole = requireHole(act.initialHoles, "magicWeaponTargetItem");
+    const targetHole = requireHole(
+      act.initialHoles,
+      "weaponAttackDamageEnhancementTargetItem",
+    );
     const cast = resolveBattleSubject({
       state: session.state,
       subject: act.subject,
       fills: [
-        magicWeaponTargetItemFill(targetHole, {
+        weaponAttackDamageEnhancementTargetItemFill(targetHole, {
           holderCombatantId: spellCasterId,
           itemId: battleObjectId("main:weapon_longsword"),
         }),
@@ -1593,12 +1608,15 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
         },
       },
     });
-    const targetHole = requireHole(act.initialHoles, "magicWeaponTargetItem");
+    const targetHole = requireHole(
+      act.initialHoles,
+      "weaponAttackDamageEnhancementTargetItem",
+    );
     const cast = resolveBattleSubject({
       state,
       subject: act.subject,
       fills: [
-        magicWeaponTargetItemFill(targetHole, {
+        weaponAttackDamageEnhancementTargetItemFill(targetHole, {
           holderCombatantId: spellCasterId,
           itemId: battleObjectId("main:weapon_longsword"),
         }),

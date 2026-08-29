@@ -275,15 +275,21 @@ function characterSpellProcedureObjectId(
       : undefined;
 }
 
-export function magicWeaponTargetItemFill(
-  hole: Extract<BattleHole, { readonly kind: "magicWeaponTargetItem" }>,
+export function weaponAttackDamageEnhancementTargetItemFill(
+  hole: Extract<
+    BattleHole,
+    { readonly kind: "weaponAttackDamageEnhancementTargetItem" }
+  >,
   target: {
     readonly holderCombatantId: CombatantId;
     readonly itemId: BattleObjectId;
   },
-): Extract<BattleFill, { readonly kind: "magicWeaponTargetItem" }> {
+): Extract<
+  BattleFill,
+  { readonly kind: "weaponAttackDamageEnhancementTargetItem" }
+> {
   return {
-    kind: "magicWeaponTargetItem",
+    kind: "weaponAttackDamageEnhancementTargetItem",
     holeId: hole.holeId,
     value: {
       kind: "nonmagicalWeaponItem",
@@ -1356,7 +1362,7 @@ export function executeCompelledApproachMovementFill(
       speedKind: "walk",
       movementCostFeet: movementFeet(value.movementCostFeet),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
-      executeCompelledApproach: {
+      compelledApproach: {
         kind: "compelledApproachShortestDirectRouteTowardSource",
         movedWithinFiveFeetOfCaster: value.movedWithinFiveFeetOfCaster,
       },
@@ -1381,7 +1387,7 @@ export function executeCompelledFleeMovementFill(
       speedKind: "walk",
       movementCostFeet: movementFeet(value.movementCostFeet),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
-      executeCompelledFlee: {
+      compelledFlee: {
         kind: "compelledFleeFastestAvailableRouteAwayFromSource",
       },
     },

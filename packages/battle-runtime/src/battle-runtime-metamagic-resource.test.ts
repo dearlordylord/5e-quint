@@ -977,7 +977,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     });
     const sanctuaryHole = findHole(
       needsSanctuary.tag === "needsHoles" ? needsSanctuary.holes : [],
-      "sanctuaryInterdictionOutcome",
+      "targetingSaveInterdictionOutcome",
     );
     const sanctuaryRetarget = sanctuaryRetargetFill(sanctuaryHole, fighterId);
     const awaitingAttackRoll = resolveBattleSubject({
@@ -1056,7 +1056,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     });
     const sanctuaryHole = findHole(
       needsSanctuary.tag === "needsHoles" ? needsSanctuary.holes : [],
-      "sanctuaryInterdictionOutcome",
+      "targetingSaveInterdictionOutcome",
     );
     const sanctuaryRetarget = sanctuaryRetargetFill(sanctuaryHole, fighterId);
     const fills: BattleFill[] = [
@@ -4851,12 +4851,12 @@ function withHuntersMark(
 function sanctuaryRetargetFill(
   hole: BattleHole,
   targetId: ReturnType<typeof combatantId>,
-): Extract<BattleFill, { readonly kind: "sanctuaryInterdictionOutcome" }> {
-  if (hole.kind !== "sanctuaryInterdictionOutcome") {
+): Extract<BattleFill, { readonly kind: "targetingSaveInterdictionOutcome" }> {
+  if (hole.kind !== "targetingSaveInterdictionOutcome") {
     throw new Error("Expected Sanctuary interdiction outcome hole.");
   }
   return {
-    kind: "sanctuaryInterdictionOutcome",
+    kind: "targetingSaveInterdictionOutcome",
     holeId: hole.holeId,
     value: {
       saveSucceeded: false,
@@ -6167,7 +6167,8 @@ function carefulCommandAct(session: BattleRuntimeSession): ActionSpellAct {
   const act = discoverBattleActs(session).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId === "command" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        "compelledNextTurnBehavior" &&
       candidate.subject.metamagic?.some(
         (selection) => selection.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
       ) === true,

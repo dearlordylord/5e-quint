@@ -808,19 +808,25 @@ function requireSlowEndTurnSaveHole(holes: readonly BattleHole[]): Extract<
 
 function requireSlowSomaticSpellFailureHole(
   holes: readonly BattleHole[],
-): Extract<BattleHole, { readonly kind: "slowSomaticSpellFailureOutcome" }> {
-  return requireHole(holes, "slowSomaticSpellFailureOutcome");
+): Extract<
+  BattleHole,
+  { readonly kind: "turnConstraintSomaticSpellFailureOutcome" }
+> {
+  return requireHole(holes, "turnConstraintSomaticSpellFailureOutcome");
 }
 
 function slowSomaticSpellFailureFill(
   hole: Extract<
     BattleHole,
-    { readonly kind: "slowSomaticSpellFailureOutcome" }
+    { readonly kind: "turnConstraintSomaticSpellFailureOutcome" }
   >,
   spellFailed: boolean,
-): Extract<BattleFill, { readonly kind: "slowSomaticSpellFailureOutcome" }> {
+): Extract<
+  BattleFill,
+  { readonly kind: "turnConstraintSomaticSpellFailureOutcome" }
+> {
   return {
-    kind: "slowSomaticSpellFailureOutcome",
+    kind: "turnConstraintSomaticSpellFailureOutcome",
     holeId: hole.holeId,
     value: { spellFailed },
   };
@@ -833,7 +839,7 @@ function slowHole(hole: BattleHole): SlowHole {
   ) {
     return "EndTurnSave";
   }
-  if (hole.kind === "slowSomaticSpellFailureOutcome") {
+  if (hole.kind === "turnConstraintSomaticSpellFailureOutcome") {
     return "SomaticFailure";
   }
   throw new Error(`Unexpected Slow MBT hole ${hole.kind}.`);

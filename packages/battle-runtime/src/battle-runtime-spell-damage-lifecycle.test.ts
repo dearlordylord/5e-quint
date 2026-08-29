@@ -440,10 +440,10 @@ describe("battle runtime: spell damage lifecycle replay", () => {
     });
     const sanctuaryHole = requireHole(
       needsSanctuary,
-      "sanctuaryInterdictionOutcome",
+      "targetingSaveInterdictionOutcome",
     );
     const lostFill: BattleFill = {
-      kind: "sanctuaryInterdictionOutcome",
+      kind: "targetingSaveInterdictionOutcome",
       holeId: sanctuaryHole.holeId,
       value: {
         saveSucceeded: false,
@@ -523,7 +523,7 @@ describe("battle runtime: spell damage lifecycle replay", () => {
         subject: releaseSubject,
         fills: [allocationFill],
       }),
-      "sanctuaryInterdictionOutcome",
+      "targetingSaveInterdictionOutcome",
     );
     const released = requireResolved(
       resolveBattleSubject({
@@ -532,7 +532,7 @@ describe("battle runtime: spell damage lifecycle replay", () => {
         fills: [
           allocationFill,
           {
-            kind: "sanctuaryInterdictionOutcome",
+            kind: "targetingSaveInterdictionOutcome",
             holeId: sanctuaryHole.holeId,
             value: {
               saveSucceeded: false,

@@ -169,8 +169,8 @@ describe("BattleSubject identity", () => {
       },
       executeCompelledGrovel: { effectRef },
       executeCompelledDrop: { effectRef },
-      executeCompelledApproach: { effectRef },
-      executeCompelledFlee: { effectRef },
+      compelledApproach: { effectRef },
+      compelledFlee: { effectRef },
       controlledVerticalSuspensionAltitudeControl: { effectRef, targetId },
       creatureFalls: { fallingCreatureId: targetId },
     } as const satisfies Record<

@@ -131,7 +131,7 @@ function isSavingThrowInvocation(
     case "saveGatedConditionWithRepeat":
     case "saveGatedAreaControl":
     case "saveGatedTurnConstraintBundle":
-    case "command":
+    case "compelledNextTurnBehavior":
     case "persistentAreaSaveCondition":
     case "directionalPersistentArea":
       return true;
@@ -163,7 +163,7 @@ function isSaveMetamagicInvocation(
     case "saveGatedConditionWithRepeat":
     case "saveGatedAreaControl":
     case "saveGatedTurnConstraintBundle":
-    case "command":
+    case "compelledNextTurnBehavior":
     case "persistentAreaSaveCondition":
     case "directionalPersistentArea":
       return true;

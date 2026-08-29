@@ -1030,7 +1030,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
           ...fill,
           value: {
             ...fill.value,
-            executeCompelledFlee: {
+            compelledFlee: {
               kind: "compelledFleeFastestAvailableRouteAwayFromSource",
             },
           },
@@ -1092,7 +1092,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     expect(
       Result.isFailure(
         Schema.decodeUnknownResult(BattleHoleSchema)({
-          kind: "sanctuaryInterdictionOutcome",
+          kind: "targetingSaveInterdictionOutcome",
           holeId: holeId("battle:test:invalid-sanctuary-save"),
           holeInstanceKey: holeInstanceKey(
             "battle:test:invalid-sanctuary-save",
@@ -1119,7 +1119,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     expect(
       Result.isFailure(
         Schema.decodeUnknownResult(BattleFillSchema)({
-          kind: "sanctuaryInterdictionOutcome",
+          kind: "targetingSaveInterdictionOutcome",
           holeId: holeId("battle:test:invalid-sanctuary-replacement-fact"),
           value: {
             saveSucceeded: false,

@@ -452,7 +452,7 @@ function resolveUnwillingFailedSaveWithInitialRise(
   }
   const initialRise = requireHole(
     needsInitialRise.holes,
-    "levitateInitialRise",
+    "controlledVerticalSuspensionInitialRise",
   );
   return requireResolved(
     resolveBattleSubject({
@@ -461,7 +461,10 @@ function resolveUnwillingFailedSaveWithInitialRise(
       fills: [
         targetFill,
         saveFill,
-        levitateInitialRiseFill(initialRise, initialRiseFeet),
+        controlledVerticalSuspensionInitialRiseFill(
+          initialRise,
+          initialRiseFeet,
+        ),
       ],
     }),
     "Expected failed Levitate save with selected initial rise to resolve.",
@@ -502,7 +505,10 @@ function castWillingLevitate(
 ): LevitateCreatureRuntimeState {
   const act = levitateActInState(state.battle);
   const target = requireHole(act.initialHoles, "targetChoice");
-  const initialRise = requireHole(state.holes, "levitateInitialRise");
+  const initialRise = requireHole(
+    state.holes,
+    "controlledVerticalSuspensionInitialRise",
+  );
   const resolved = requireResolved(
     resolveBattleSubject({
       state: state.battle.state,
@@ -514,7 +520,10 @@ function castWillingLevitate(
           spellCasterId,
           spellTargetId,
         ),
-        levitateInitialRiseFill(initialRise, initialRiseFeet),
+        controlledVerticalSuspensionInitialRiseFill(
+          initialRise,
+          initialRiseFeet,
+        ),
       ],
     }),
     "Expected willing Levitate with selected initial rise to resolve.",
@@ -621,13 +630,16 @@ function discoverCasterControl(
 function rejectOutOfRangeCasterControl(
   state: LevitateCreatureRuntimeState,
 ): LevitateCreatureRuntimeState {
-  const hole = requireHole(state.holes, "levitateAltitudeChange");
+  const hole = requireHole(
+    state.holes,
+    "controlledVerticalSuspensionAltitudeChange",
+  );
   const result = resolveBattleSubject({
     state: state.battle.state,
     subject: controlledVerticalSuspensionAltitudeControlActInState(
       state.battle.state,
     ).subject,
-    fills: [levitateAltitudeChangeFill(hole, "up", 10, [])],
+    fills: [controlledVerticalSuspensionAltitudeChangeFill(hole, "up", 10, [])],
   });
   expect(result).toMatchObject({ tag: "invalid" });
   return {
@@ -640,7 +652,10 @@ function rejectOutOfRangeCasterControl(
 function controlAltitudeDown10Feet(
   state: LevitateCreatureRuntimeState,
 ): LevitateCreatureRuntimeState {
-  const hole = requireHole(state.holes, "levitateAltitudeChange");
+  const hole = requireHole(
+    state.holes,
+    "controlledVerticalSuspensionAltitudeChange",
+  );
   const effect = requireLevitateCreatureEffect(state.battle.state);
   const resolved = requireResolved(
     resolveBattleSubject({
@@ -649,7 +664,7 @@ function controlAltitudeDown10Feet(
         state.battle.state,
       ).subject,
       fills: [
-        levitateAltitudeChangeFill(hole, "down", 10, [
+        controlledVerticalSuspensionAltitudeChangeFill(hole, "down", 10, [
           {
             kind: "levitatedTargetWithinSpellRange",
             effectRef: effect.effectRef,
@@ -787,29 +802,41 @@ function isLevitateAltitudeControlAct(
   );
 }
 
-function levitateAltitudeChangeFill(
-  hole: Extract<BattleHole, { readonly kind: "levitateAltitudeChange" }>,
+function controlledVerticalSuspensionAltitudeChangeFill(
+  hole: Extract<
+    BattleHole,
+    { readonly kind: "controlledVerticalSuspensionAltitudeChange" }
+  >,
   direction: "up" | "down",
   distanceFeet: number,
   spatialFacts: Extract<
     BattleFill,
-    { readonly kind: "levitateAltitudeChange" }
+    { readonly kind: "controlledVerticalSuspensionAltitudeChange" }
   >["spatialFacts"],
-): Extract<BattleFill, { readonly kind: "levitateAltitudeChange" }> {
+): Extract<
+  BattleFill,
+  { readonly kind: "controlledVerticalSuspensionAltitudeChange" }
+> {
   return {
-    kind: "levitateAltitudeChange",
+    kind: "controlledVerticalSuspensionAltitudeChange",
     holeId: hole.holeId,
     value: { direction, distanceFeet: movementFeet(distanceFeet) },
     spatialFacts,
   };
 }
 
-function levitateInitialRiseFill(
-  hole: Extract<BattleHole, { readonly kind: "levitateInitialRise" }>,
+function controlledVerticalSuspensionInitialRiseFill(
+  hole: Extract<
+    BattleHole,
+    { readonly kind: "controlledVerticalSuspensionInitialRise" }
+  >,
   distanceFeet: number,
-): Extract<BattleFill, { readonly kind: "levitateInitialRise" }> {
+): Extract<
+  BattleFill,
+  { readonly kind: "controlledVerticalSuspensionInitialRise" }
+> {
   return {
-    kind: "levitateInitialRise",
+    kind: "controlledVerticalSuspensionInitialRise",
     holeId: hole.holeId,
     value: { distanceFeet: movementFeet(distanceFeet) },
   };
@@ -886,13 +913,13 @@ function battleHolesToLevitateCreatureHoles(
       if (hole.kind === "savingThrowOutcome") {
         return "SavingThrowOutcome";
       }
-      if (hole.kind === "levitateInitialRise") {
+      if (hole.kind === "controlledVerticalSuspensionInitialRise") {
         return "LevitateInitialRise";
       }
       if (hole.kind === "movement") {
         return "Movement";
       }
-      if (hole.kind === "levitateAltitudeChange") {
+      if (hole.kind === "controlledVerticalSuspensionAltitudeChange") {
         return "LevitateAltitudeChange";
       }
       throw new Error(`Unexpected Levitate creature hole ${hole.kind}.`);

@@ -1059,7 +1059,7 @@ function projectAreaEffectExclusion(): SanctuarySelectedIdentityProjection {
     "Expected area-effect spell to continue to damage roll.",
   );
   requireHole(needsDamage.holes, "rolledDice");
-  if (hasHole(needsDamage.holes, "sanctuaryInterdictionOutcome")) {
+  if (hasHole(needsDamage.holes, "targetingSaveInterdictionOutcome")) {
     throw new Error("Area-effect spell must not request Sanctuary outcome.");
   }
 
@@ -1591,19 +1591,26 @@ function savingThrowOutcomeFill(
 }
 
 function sanctuaryOutcomeFill(
-  hole: Extract<BattleHole, { readonly kind: "sanctuaryInterdictionOutcome" }>,
+  hole: Extract<
+    BattleHole,
+    { readonly kind: "targetingSaveInterdictionOutcome" }
+  >,
   value: Extract<
     BattleFill,
-    { readonly kind: "sanctuaryInterdictionOutcome" }
+    { readonly kind: "targetingSaveInterdictionOutcome" }
   >["value"],
-): Extract<BattleFill, { readonly kind: "sanctuaryInterdictionOutcome" }> {
-  return { kind: "sanctuaryInterdictionOutcome", holeId: hole.holeId, value };
+): Extract<BattleFill, { readonly kind: "targetingSaveInterdictionOutcome" }> {
+  return {
+    kind: "targetingSaveInterdictionOutcome",
+    holeId: hole.holeId,
+    value,
+  };
 }
 
 function sanctuaryInterdictionHole(
   result: NeedsHolesBattleResult,
-): Extract<BattleHole, { readonly kind: "sanctuaryInterdictionOutcome" }> {
-  const hole = requireHole(result.holes, "sanctuaryInterdictionOutcome");
+): Extract<BattleHole, { readonly kind: "targetingSaveInterdictionOutcome" }> {
+  const hole = requireHole(result.holes, "targetingSaveInterdictionOutcome");
   if (hole.ability !== "wis") {
     throw new Error(`Expected Sanctuary Wisdom save, got ${hole.ability}.`);
   }
