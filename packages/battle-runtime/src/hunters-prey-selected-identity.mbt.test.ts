@@ -1,4 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.hunters-prey
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME ranger_hunters_prey
@@ -7,19 +6,21 @@ import { movementFeet } from "@dnd/shared/types";
 
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
-import type { BattleHole, BattleUnitRef } from "./index.ts";
+import type { BattleUnitRef } from "./index.ts";
 import {
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   battleUnitRefWithSupportProfiles,
 } from "./unit-feature-support.ts";
 import {
   attackDamageHoleAfterHit,
+  attackExecutionSelectionForSubjectForTest,
   attackInitialTargetHole,
   attackRollFill,
   attackRollHoleAfterTarget,
   attackTargetFill,
   attackTargetSpatialFact,
   battleId,
+  battleProcedureExecutionRefForSpellHoleForTest,
   characterSeed,
   damageRollFillWithGroups,
   Either,
@@ -48,14 +49,6 @@ type HuntersPreyProjection = {
 };
 
 type HuntersPreyOptionId = "colossusSlayer" | "hordeBreaker";
-const syntheticExtraAttackUnitId = "test_hunters_prey_extra_attack";
-
-function requireBoundAttackSelection(hole: BattleHole) {
-  if (hole.kind !== "targetChoice" || hole.attack === undefined) {
-    throw new Error("Expected bound Hunter's Prey attack selection.");
-  }
-  return hole.attack.selection;
-}
 
 const HUNTERS_PREY_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   Init: "init",
@@ -337,13 +330,13 @@ function projectRejectSameTarget(): HuntersPreyProjection {
         attackTargetSpatialFact(
           fighterId,
           goblinId,
-          requireBoundAttackSelection(window.hordeTarget),
+          attackExecutionSelectionForSubjectForTest(window.subject),
         ),
         {
           kind: "hordeBreakerSecondTargetEligible",
           attackerId: fighterId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("ranger_hunters_prey"),
+          sourceProcedureRef: battleProcedureExecutionRefForSpellHoleForTest(
+            window.hordeTarget,
           ),
           originalTargetId: goblinId,
           secondTargetId: goblinId,
@@ -369,7 +362,7 @@ function projectRejectInvalidTargetPredicate(): HuntersPreyProjection {
         attackTargetSpatialFact(
           fighterId,
           skeletonId,
-          requireBoundAttackSelection(window.hordeTarget),
+          attackExecutionSelectionForSubjectForTest(window.subject),
         ),
       ]),
     ],
@@ -427,13 +420,13 @@ function resolveHordeBreakerUse(input: { readonly primaryHit?: boolean } = {}) {
     attackTargetSpatialFact(
       fighterId,
       skeletonId,
-      requireBoundAttackSelection(window.hordeTarget),
+      attackExecutionSelectionForSubjectForTest(window.subject),
     ),
     {
       kind: "hordeBreakerSecondTargetEligible",
       attackerId: fighterId,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String("ranger_hunters_prey"),
+      sourceProcedureRef: battleProcedureExecutionRefForSpellHoleForTest(
+        window.hordeTarget,
       ),
       originalTargetId: goblinId,
       secondTargetId: skeletonId,
@@ -615,7 +608,7 @@ function huntersPreyUnitRef(optionId: HuntersPreyOptionId): BattleUnitRef {
 
 function extraAttackUnitRef(): BattleUnitRef {
   return {
-    unit: unitLibrary.requireUnit(syntheticExtraAttackUnitId),
+    unit: unitLibrary.requireUnit("fighter_extra_attack"),
     supportProfiles: [
       {
         kind: ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
