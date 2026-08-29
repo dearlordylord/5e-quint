@@ -2496,10 +2496,17 @@ export function spellProcedureExecution(
           })),
           Match.exhaustive,
         ),
-      spawnedCompanionLifecycle: (value) => {
-        const { spell: _spell, ...execution } = value;
-        return execution;
-      },
+      spawnedCompanionLifecycle: (value) => ({
+        casting: value.casting,
+        control: value.control,
+        formEligibility: value.formEligibility,
+        initialPlacement: value.initialPlacement,
+        lifecycle: value.lifecycle,
+        procedure: value.procedure,
+        sharedSensesActionCost: value.sharedSensesActionCost,
+        telepathyRangeFeet: value.telepathyRangeFeet,
+        touchSpellProxy: value.touchSpellProxy,
+      }),
       temporaryAbilityCheckRollMode: (value) => ({
         spellRuleFacts,
         access: value.access,

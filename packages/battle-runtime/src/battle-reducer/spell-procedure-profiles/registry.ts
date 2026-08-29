@@ -8,7 +8,7 @@ import { afterHitDamageAndIlluminationProfile } from "./after-hit-damage-and-ill
 import { afterHitDamageProfile } from "./after-hit-damage.ts";
 import { afterHitSaveGatedConditionProfile } from "./after-hit-save-gated-condition.ts";
 import { afterHitTimedDamageAndSaveProfile } from "./after-hit-timed-damage-and-save.ts";
-import { antimagicFieldOngoingSpellSuppressionProfile } from "./antimagic-field-ongoing-spell-suppression.ts";
+import { magicSuppressionEmanationProfile } from "./antimagic-field-ongoing-spell-suppression.ts";
 import { attackBurstSaveDamageProfile } from "./attack-burst-save-damage.ts";
 import { perceptionGatedAttackRollDefenseProfile } from "./blur-attack-roll-defense.ts";
 import { compelledNextTurnBehaviorProfile } from "./command.ts";
@@ -17,7 +17,7 @@ import { chosenDamageResistanceProfile } from "./chosen-damage-resistance.ts";
 import { cloudkillAreaHazardProfile } from "./cloudkill-area-hazard.ts";
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./condition-immunity-turn-start-temporary-hit-points.ts";
 import { conditionRemovalProtectionProfile } from "./condition-removal-protection.ts";
-import { counterspellProfile } from "./counterspell.ts";
+import { spellCastInterruptionReactionProfile } from "./counterspell.ts";
 import {
   creatureSizeChangeProfile,
   creatureSizeDecreaseProfile,
@@ -89,7 +89,7 @@ import {
   spiritualWeaponRepeatAttackProfile,
 } from "./spiritual-weapon.ts";
 import { temporaryAbilityCheckRollModeProfile } from "./thaumaturgy-booming-voice.ts";
-import { wardingBondProfile } from "./warding-bond.ts";
+import { linkedDefenseResistanceDamageShareProfile } from "./warding-bond.ts";
 import { weaponAttackOverrideProfile } from "./weapon-attack-override.ts";
 import { weaponDamageRiderProfile } from "./weapon-damage-rider.ts";
 import type { SupportedSpellInvocation } from "../../battle-state-execution.ts";
@@ -187,7 +187,9 @@ export function registeredSpellProcedureDeclarations(): RegisteredSpellProcedure
     weaponAttackDamageEnhancement: registeredSpellProcedureDeclaration(
       weaponAttackDamageEnhancementProfile,
     ),
-    wardingBond: registeredSpellProcedureDeclaration(wardingBondProfile),
+    linkedDefenseResistanceDamageShare: registeredSpellProcedureDeclaration(
+      linkedDefenseResistanceDamageShareProfile,
+    ),
     creatureTypeProtection: registeredSpellProcedureDeclaration(
       creatureTypeProtectionProfile,
     ),
@@ -318,13 +320,15 @@ export function registeredSpellProcedureDeclarations(): RegisteredSpellProcedure
     magicalDarknessPointOrigin: registeredSpellProcedureDeclaration(
       magicalDarknessPointOriginProfile,
     ),
-    antimagicFieldOngoingSpellSuppression: registeredSpellProcedureDeclaration(
-      antimagicFieldOngoingSpellSuppressionProfile,
+    magicSuppressionEmanation: registeredSpellProcedureDeclaration(
+      magicSuppressionEmanationProfile,
     ),
     compelledNextTurnBehavior: registeredSpellProcedureDeclaration(
       compelledNextTurnBehaviorProfile,
     ),
-    counterspell: registeredSpellProcedureDeclaration(counterspellProfile),
+    spellCastInterruptionReaction: registeredSpellProcedureDeclaration(
+      spellCastInterruptionReactionProfile,
+    ),
     triggeredArmorDefense: registeredSpellProcedureDeclaration(
       triggeredArmorDefenseProfile,
     ),

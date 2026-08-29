@@ -2977,7 +2977,7 @@ export function resolveSelectedAttackProcedure<
       concentrationSavingThrow: primaryConcentrationSavingThrow,
       saveGatedConditionWithRepeatDamageRepeatSaves:
         fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
-      wardingBondDamageShareConcentrationSavingThrows:
+      linkedDefenseResistanceDamageShareConcentrationSavingThrows:
         primaryConcentrationSavingThrows,
       spatialFacts: fillSet.targetSpatialFacts,
       relationshipDecisions: relationshipCheck.decisions,
@@ -3500,7 +3500,7 @@ export function resolveSelectedAttackProcedure<
       concentrationSavingThrow: primaryConcentrationSavingThrow,
       saveGatedConditionWithRepeatDamageRepeatSaves:
         fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
-      wardingBondDamageShareConcentrationSavingThrows:
+      linkedDefenseResistanceDamageShareConcentrationSavingThrows:
         primaryConcentrationSavingThrows,
       spatialFacts: fillSet.targetSpatialFacts,
       relationshipDecisions: relationshipCheck.decisions,

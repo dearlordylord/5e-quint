@@ -98,14 +98,14 @@ import {
   spellObjectTargetHole,
 } from "./spells-targeting.ts";
 import {
-  antimagicFieldOngoingSpellEffectRefForActiveEffect,
+  magicSuppressionOngoingSpellEffectRefForActiveEffect,
   ongoingSpellEffectSuppressedByAntimagicField,
 } from "./antimagic-field-suppression.ts";
 import {
   SPELL_MAGICAL_EFFECT_SOURCE,
   magicalEffectTargetsInterdictionMessage,
 } from "./antimagic-field-magical-effect-interdiction.ts";
-import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
+import { linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
 
 type ObjectContactDamageInvocation = Extract<
   SupportedSpellInvocation,
@@ -329,7 +329,7 @@ export function resolveObjectContactDamageRepeatSpellAct(input: {
   if (
     ongoingSpellEffectSuppressedByAntimagicField(
       input.input.state,
-      antimagicFieldOngoingSpellEffectRefForActiveEffect(
+      magicSuppressionOngoingSpellEffectRefForActiveEffect(
         input.invocation.activeEffect,
       ),
     )
@@ -1099,7 +1099,7 @@ function resolveObjectContactDamage(input: {
               concentrationLifecycleFills,
               concentrationSave,
             ),
-      wardingBondDamageShareConcentrationSavingThrows:
+      linkedDefenseResistanceDamageShareConcentrationSavingThrows:
         concentrationLifecycleFills,
       damageDisposition: damageDispositionByTargetId.get(targetId),
       hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
@@ -1182,7 +1182,7 @@ function objectContactSavingThrowOutcomeHole(input: {
     areaChoices: [],
     targetRollModes: savingThrowRollModeProjections(input.state, "con"),
     targetFlatBonuses: input.targets.flatMap(
-      wardingBondSavingThrowFlatBonusProjectionsForTarget,
+      linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget,
     ),
   };
 }

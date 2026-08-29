@@ -55,7 +55,7 @@ import {
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../../identity.ts";
-import { antimagicFieldOngoingSpellEffectRefForActiveEffect } from "../antimagic-field-suppression.ts";
+import { magicSuppressionOngoingSpellEffectRefForActiveEffect } from "../antimagic-field-suppression.ts";
 import {
   resolveObjectContactDamageRepeatSpellAct,
   resolveObjectContactDamageSpellAct,
@@ -158,7 +158,7 @@ function admitObjectContactDamageRepeat(
         effect.sourceCombatantId !== ctx.actor.combatantId ||
         spellAdmissionOngoingSpellEffectSuppressed(
           ctx,
-          antimagicFieldOngoingSpellEffectRefForActiveEffect(effect),
+          magicSuppressionOngoingSpellEffectRefForActiveEffect(effect),
         ) ||
         !objectContactDamageRepeatIsDiscoverable(effect, ctx)
       ) {

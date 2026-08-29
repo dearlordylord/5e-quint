@@ -35,7 +35,7 @@ import type {
 } from "../battle-state-execution.ts";
 import { KnockedOutConditionState as KnockedOutConditionStateBrand } from "./knocked-out-state.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
-import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
+import { linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
 
 import {
   activeEffectCondition,
@@ -295,7 +295,9 @@ export function protectionRelevantEffectSavingThrowOutcomeHole(
       ? [{ targetId, rollMode: "advantage" }]
       : [],
     targetFlatBonuses: [...state.combatants].flatMap(([, target]) =>
-      wardingBondSavingThrowFlatBonusProjectionsForTarget(target),
+      linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget(
+        target,
+      ),
     ),
   };
 }

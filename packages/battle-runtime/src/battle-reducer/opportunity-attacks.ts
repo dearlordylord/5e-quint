@@ -1446,7 +1446,7 @@ function resolveReactionAttackDamageTransaction(input: {
     concentrationSavingThrow: primaryConcentrationSavingThrow,
     saveGatedConditionWithRepeatDamageRepeatSaves:
       fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
-    wardingBondDamageShareConcentrationSavingThrows:
+    linkedDefenseResistanceDamageShareConcentrationSavingThrows:
       fillSet.concentrationSavingThrows,
     spatialFacts: targetSpatialFacts,
     relationshipDecisions: relationshipCheck.decisions,

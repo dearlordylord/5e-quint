@@ -1700,7 +1700,7 @@ function applySpellTurnStartDamage(
   concentrationSavingThrow:
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined,
-  wardingBondDamageShareConcentrationSavingThrows: readonly Extract<
+  linkedDefenseResistanceDamageShareConcentrationSavingThrows: readonly Extract<
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
   >[],
@@ -1717,7 +1717,7 @@ function applySpellTurnStartDamage(
     spellTurnStartDamageAmount(state, target, effect, roll),
     {
       concentrationSavingThrow,
-      wardingBondDamageShareConcentrationSavingThrows,
+      linkedDefenseResistanceDamageShareConcentrationSavingThrows,
       damageDisposition,
       saveGatedConditionWithRepeatDamageRepeatSaves,
       saveGatedConditionWithRepeatDamageRepeatSaveEventKey,
@@ -3652,7 +3652,7 @@ function applyEndTurnSpellDamageFills(
     );
     return applyPreparedSlotSpellDamage(nextState, actorId, damageAmount, {
       concentrationSavingThrow: concentrationFill,
-      wardingBondDamageShareConcentrationSavingThrows:
+      linkedDefenseResistanceDamageShareConcentrationSavingThrows:
         concentrationLifecycleFills,
       damageDisposition: damageDispositionForTarget(
         rawDispositionHoles,

@@ -1,12 +1,12 @@
 import type { BattleState } from "../battle-state-execution.ts";
 import {
-  antimagicFieldOngoingSpellEffectRefForActiveEffect,
+  magicSuppressionOngoingSpellEffectRefForActiveEffect,
   ongoingSpellEffectSuppressedByAntimagicField,
 } from "./antimagic-field-suppression.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 
 type RepeatableOngoingSpellEffect = Parameters<
-  typeof antimagicFieldOngoingSpellEffectRefForActiveEffect
+  typeof magicSuppressionOngoingSpellEffectRefForActiveEffect
 >[0] & {
   readonly startedOn: {
     readonly actorId: ReturnType<typeof currentActorId>;
@@ -43,7 +43,7 @@ export function ongoingSpellRepeatCastIsAvailable(
     ) &&
     !ongoingSpellEffectSuppressedByAntimagicField(
       state,
-      antimagicFieldOngoingSpellEffectRefForActiveEffect(effect),
+      magicSuppressionOngoingSpellEffectRefForActiveEffect(effect),
     )
   );
 }

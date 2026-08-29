@@ -2028,7 +2028,7 @@ function applyTargetedSpellDamageLifecycle(
     input.critical,
     {
       concentrationSavingThrow: input.concentrationFill,
-      wardingBondDamageShareConcentrationSavingThrows:
+      linkedDefenseResistanceDamageShareConcentrationSavingThrows:
         input.concentrationLifecycleFills,
       damageDisposition: input.damageDisposition,
       spellMarkedDamageRiders: input.spellMarkedDamageRiders,

@@ -887,7 +887,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
       {
         concentrationSavingThrow: concentrationFill,
         damageDisposition,
-        wardingBondDamageShareConcentrationSavingThrows:
+        linkedDefenseResistanceDamageShareConcentrationSavingThrows:
           concentrationLifecycleFills,
         hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
         hideousLaughterDamageRepeatSaveEventKey: damageEventKey,
@@ -1550,7 +1550,7 @@ type ChainedSpellDamageContext = {
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined;
   readonly damageDisposition: BattleAttackDamageDisposition;
-  readonly wardingBondDamageShareConcentrationSavingThrows: readonly Extract<
+  readonly linkedDefenseResistanceDamageShareConcentrationSavingThrows: readonly Extract<
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
   >[];
@@ -1581,8 +1581,8 @@ export function applyChainedSpellDamage(
     spatialFacts: context.spatialFacts,
     ...optionalProperty("relationshipDecisions", context.relationshipDecisions),
     concentrationSavingThrow: context.concentrationSavingThrow,
-    wardingBondDamageShareConcentrationSavingThrows:
-      context.wardingBondDamageShareConcentrationSavingThrows,
+    linkedDefenseResistanceDamageShareConcentrationSavingThrows:
+      context.linkedDefenseResistanceDamageShareConcentrationSavingThrows,
     hideousLaughterDamageRepeatSaves: context.hideousLaughterDamageRepeatSaves,
     hideousLaughterDamageRepeatSaveEventKey:
       context.hideousLaughterDamageRepeatSaveEventKey,

@@ -2057,7 +2057,7 @@ export function resolveSaveGateDamageSpellAct(input: {
       false,
       {
         concentrationSavingThrow: concentrationSaveByTargetId.get(targetId),
-        wardingBondDamageShareConcentrationSavingThrows:
+        linkedDefenseResistanceDamageShareConcentrationSavingThrows:
           concentrationLifecycleFills,
         saveGatedConditionWithRepeatDamageRepeatSaves:
           saveGatedConditionWithRepeatLifecycleFills,

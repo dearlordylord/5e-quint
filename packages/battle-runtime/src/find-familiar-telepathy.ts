@@ -188,7 +188,11 @@ export function prepareTouchSpellDeliveryThroughFindFamiliar(input: {
     actor,
   );
   /* v8 ignore start -- @preserve -- Familiar delivery acts retain their admitted spell binding; a missing or non-spell procedure requires a forged procedure reference. */
-  if (procedure === undefined || !spellInvocationIsSpellcasting(procedure)) {
+  if (
+    procedure === undefined ||
+    !("spellRuleFacts" in procedure) ||
+    !spellInvocationIsSpellcasting(procedure)
+  ) {
     return invalidTransition(
       "unsupportedActOption",
       "Find Familiar touch delivery requires a supported spell invocation.",

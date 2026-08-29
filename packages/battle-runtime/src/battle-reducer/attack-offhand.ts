@@ -938,7 +938,7 @@ function resolveBonusActionAttack(
       concentrationSavingThrow: primaryConcentrationSavingThrow,
       saveGatedConditionWithRepeatDamageRepeatSaves:
         fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
-      wardingBondDamageShareConcentrationSavingThrows:
+      linkedDefenseResistanceDamageShareConcentrationSavingThrows:
         fillSet.concentrationSavingThrows,
       spatialFacts: fillSet.targetSpatialFacts,
       relationshipDecisions: relationshipCheck.decisions,

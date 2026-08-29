@@ -17,7 +17,7 @@ import {
   HIDEOUS_LAUGHTER_END_TURN_REPEAT_SAVE_HOLE_KEY_PREFIX,
 } from "./domain-constants.ts";
 import { uniqueSavingThrowRollModeProjections } from "./saving-throw-roll-mode-projections.ts";
-import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
+import { linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
 
 const DEFAULT_DAMAGE_REPEAT_SAVE_EVENT_KEY = "damage";
 
@@ -148,7 +148,9 @@ export function saveGatedConditionWithRepeatDamageRepeatSaveHoles(
             effect,
             "damage",
             damageEventKey,
-            wardingBondSavingThrowFlatBonusProjectionsForTarget(target),
+            linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget(
+              target,
+            ),
           ),
         ]
       : [],

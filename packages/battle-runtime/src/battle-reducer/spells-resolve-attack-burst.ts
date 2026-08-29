@@ -853,7 +853,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
           input.fillSet.attackBurstDamageRoll,
           critical,
           {
-            wardingBondDamageShareConcentrationSavingThrows:
+            linkedDefenseResistanceDamageShareConcentrationSavingThrows:
               attackConcentrationLifecycleFills,
             damageDisposition: damageDispositionForTarget(
               attackDamageDispositionHoles,
@@ -1348,7 +1348,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
             concentrationSavingThrow: concentrationSaveByTargetId.get(
               target.combatantId,
             ),
-            wardingBondDamageShareConcentrationSavingThrows:
+            linkedDefenseResistanceDamageShareConcentrationSavingThrows:
               fillsMatchingHoleIds(
                 input.fillSet.concentrationSavingThrows,
                 damageLifecycleConcentrationSavingThrowHoles({
@@ -1424,7 +1424,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
           );
           return applyPreparedSlotSpellDamage(state, targetId, damageAmount, {
             concentrationSavingThrow: concentrationSaveByTargetId.get(targetId),
-            wardingBondDamageShareConcentrationSavingThrows:
+            linkedDefenseResistanceDamageShareConcentrationSavingThrows:
               concentrationLifecycleFills,
             damageDisposition: damageDispositionForTarget(
               burstDamageDispositionHoles,

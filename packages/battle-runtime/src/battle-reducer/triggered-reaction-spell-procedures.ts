@@ -751,7 +751,7 @@ export function resolveTriggeredReactionSaveGatedDamage(
     false,
     {
       concentrationSavingThrow: concentrationFill,
-      linkedDefenseResistanceDamageShareDamageShareConcentrationSavingThrows:
+      linkedDefenseResistanceDamageShareConcentrationSavingThrows:
         concentrationLifecycleFills,
       saveDamageResult,
       damageDisposition,

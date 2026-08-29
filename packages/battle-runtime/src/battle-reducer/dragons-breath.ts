@@ -418,10 +418,8 @@ export function resolveGrantedAreaSaveDamageActionCommand(
           : concentrationFills.find(
               (fill) => fill.holeId === targetConcentrationHole.holeId,
             ),
-      wardingBondDamageShareConcentrationSavingThrows: fillsMatchingHoleIds(
-        concentrationFills,
-        concentrationLifecycleHoles,
-      ),
+      linkedDefenseResistanceDamageShareConcentrationSavingThrows:
+        fillsMatchingHoleIds(concentrationFills, concentrationLifecycleHoles),
       damageDisposition:
         dispositionHole === null
           ? { kind: "ordinaryDamage" }
