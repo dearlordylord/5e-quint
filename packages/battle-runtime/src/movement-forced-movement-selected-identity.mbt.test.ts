@@ -79,7 +79,7 @@ import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts"
 
 type MovementCompelledMovementSpellId =
   | "dissonant_whispers"
-  | "compelledNextTurnBehavior"
+  | "command"
   | "expeditious_retreat";
 type MovementCompelledMovementFeatureId =
   | "ranger_roving"
@@ -479,7 +479,7 @@ function replayCommandFleeTargetTurnRoute(): readonly BattleReducerRouteEvent[] 
     sourceClassName: "cleric",
     preparedSpells: [spellRecord("command")],
   });
-  const act = actionSpellAct(state, "compelledNextTurnBehavior");
+  const act = actionSpellAct(state, "command");
   const target = requireHole(act.initialHoles, "spellTargetList");
   const commandOption = requireHole(
     act.initialHoles,
@@ -1420,7 +1420,7 @@ function resolveCommandFleeTargetTurn(
   onCastResolved: (castState: BattleState) => void,
   onMovementFillRequired: () => void,
 ): BattleResolutionResult {
-  const act = actionSpellAct(state, "compelledNextTurnBehavior");
+  const act = actionSpellAct(state, "command");
   const target = requireHole(act.initialHoles, "spellTargetList");
   const commandOption = requireHole(
     act.initialHoles,
@@ -1770,7 +1770,7 @@ function actionSpellAct(
   state: BattleState,
   spellId: Extract<
     MovementCompelledMovementSpellId,
-    "compelledNextTurnBehavior" | "dissonant_whispers"
+    "command" | "dissonant_whispers"
   >,
 ): ActionSpellAct {
   const act = discoverBattleActCandidates(state).find(

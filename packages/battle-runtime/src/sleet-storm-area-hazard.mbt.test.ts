@@ -55,7 +55,7 @@ import {
   spellCasterId,
   spellTargetId,
 } from "./unit-profile-admission-catalog.test-support.ts";
-import type { SleetStormAreaHazardEffect } from "./battle-reducer/persistent-spatial-spell-procedures.ts";
+import type { PersistentAreaSaveCompositeEffect } from "./battle-reducer/persistent-spatial-spell-procedures.ts";
 
 const sleetStormMovementSpentFeet = 15;
 const syntheticTargetConcentrationSpellId =
@@ -459,7 +459,7 @@ function moveWithDifficultTerrain(
     state.battle.state,
     spellCasterId,
   ).activeEffects.find(
-    (effect): effect is SleetStormAreaHazardEffect =>
+    (effect): effect is PersistentAreaSaveCompositeEffect =>
       effect.kind === "persistentAreaSaveComposite" &&
       effect.sourceCombatantId === spellCasterId &&
       effect.areaId === sleetStormAreaId,
@@ -541,7 +541,7 @@ function sleetStormProjection(
   const caster = requireCombatant(state.battle.state, spellCasterId);
   const target = requireCombatant(state.battle.state, spellTargetId);
   const hazard = caster.activeEffects.find(
-    (effect): effect is SleetStormAreaHazardEffect =>
+    (effect): effect is PersistentAreaSaveCompositeEffect =>
       effect.kind === "persistentAreaSaveComposite" &&
       effect.sourceCombatantId === spellCasterId &&
       effect.areaId === sleetStormAreaId,

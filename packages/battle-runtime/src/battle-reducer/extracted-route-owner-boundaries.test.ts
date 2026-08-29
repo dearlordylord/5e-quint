@@ -28,8 +28,8 @@ import {
   zeroHitPointStabilizationRouteForDiscoveredAct,
 } from "./combatant-lifecycle-routes.ts";
 import {
-  commandRouteForDiscoveredAct,
-  commandRouteForResolution,
+  compelledBehaviorRouteForDiscoveredAct,
+  compelledBehaviorRouteForResolution,
 } from "./command-routes.ts";
 import {
   companionRouteForDiscoveredAct,
@@ -246,7 +246,7 @@ describe("extracted route owner boundaries", () => {
       ],
     });
     const act = findAct(session, magicSubject("compelledNextTurnBehavior"));
-    expect(commandRouteForDiscoveredAct(session.state, act)).toEqual([
+    expect(compelledBehaviorRouteForDiscoveredAct(session.state, act)).toEqual([
       expect.objectContaining({
         subject: "compelledBehaviorEffect",
         owner: "battleSpellSlotAndActionEconomy",
@@ -263,7 +263,7 @@ describe("extracted route owner boundaries", () => {
     });
 
     expect(
-      commandRouteForResolution(
+      compelledBehaviorRouteForResolution(
         { state: session.state, subject: act.subject, fills },
         result,
       ),

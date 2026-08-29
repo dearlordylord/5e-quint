@@ -60,7 +60,10 @@ import {
 
 type InsectPlagueEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "persistentAreaSaveDamage" }
+  {
+    readonly kind: "persistentAreaSaveDamage";
+    readonly lifecycle: { readonly kind: "stationary" };
+  }
 >;
 
 type InsectPlagueMbtProjection = {

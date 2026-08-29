@@ -14,6 +14,7 @@ import { describe, expect, test } from "vitest";
 import {
   activeDruidWildShapeForm,
   combatantShapeShiftingSuppressed,
+  type BattleActiveEffect,
   type BattleRuntimeSession,
   type BattleState,
   type BattleSubject,
@@ -80,10 +81,21 @@ import {
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE } from "./battle-reducer/spell-reroll-issues.ts";
 import {
-  addMoonbeamShapeShiftSuppression,
-  markMoonbeamSavedThisTurn,
-  removeMoonbeamShapeShiftSuppression,
+  addMovablePersistentAreaShapeShiftSuppression,
+  markMovablePersistentAreaSavedThisTurn,
+  removeMovablePersistentAreaShapeShiftSuppression,
 } from "./battle-reducer/spells-active-effects.ts";
+
+type MoonbeamEffect = Extract<
+  BattleActiveEffect,
+  {
+    readonly kind: "persistentAreaSaveDamage";
+    readonly lifecycle: {
+      readonly kind: "casterActionReposition";
+      readonly actionCost: "magicAction";
+    };
+  }
+>;
 
 describe("L12G deterministic Moonbeam admission", () => {
   test("persistentAreaSaveDamage discovery projects a movable Cylinder CON-save radiant hazard", () => {
@@ -405,18 +417,21 @@ describe("L12G deterministic Moonbeam admission", () => {
       persistentAreaSaveDamageCast.state,
       spellCasterId,
     ).activeEffects.find(
-      (effect) => effect.kind === "persistentAreaSaveDamage",
+      (effect): effect is MoonbeamEffect =>
+        effect.kind === "persistentAreaSaveDamage" &&
+        effect.lifecycle.kind === "casterActionReposition" &&
+        effect.lifecycle.actionCost === "magicAction",
     );
     if (persistentAreaSaveDamageEffect?.kind !== "persistentAreaSaveDamage") {
       throw new Error("Expected Moonbeam active effect.");
     }
 
-    const marked = markMoonbeamSavedThisTurn(
+    const marked = markMovablePersistentAreaSavedThisTurn(
       persistentAreaSaveDamageCast.state,
       spellTargetId,
       persistentAreaSaveDamageEffect,
     );
-    const suppressed = addMoonbeamShapeShiftSuppression(
+    const suppressed = addMovablePersistentAreaShapeShiftSuppression(
       marked,
       spellTargetId,
       persistentAreaSaveDamageEffect,
@@ -439,7 +454,7 @@ describe("L12G deterministic Moonbeam admission", () => {
         }),
       ]),
     );
-    const restored = removeMoonbeamShapeShiftSuppression(
+    const restored = removeMovablePersistentAreaShapeShiftSuppression(
       suppressed,
       spellTargetId,
       persistentAreaSaveDamageEffect,
@@ -1017,13 +1032,20 @@ describe("L12G deterministic Moonbeam admission", () => {
       succeeded: false,
     });
     const effect = requireCombatant(failed, spellCasterId).activeEffects.find(
-      (activeEffect) => activeEffect.kind === "persistentAreaSaveDamage",
+      (activeEffect): activeEffect is MoonbeamEffect =>
+        activeEffect.kind === "persistentAreaSaveDamage" &&
+        activeEffect.lifecycle.kind === "casterActionReposition" &&
+        activeEffect.lifecycle.actionCost === "magicAction",
     );
     if (effect === undefined || effect.kind !== "persistentAreaSaveDamage") {
       throw new Error("Expected Moonbeam marker effect after failed save.");
     }
 
-    const replayed = markMoonbeamSavedThisTurn(failed, spellTargetId, effect);
+    const replayed = markMovablePersistentAreaSavedThisTurn(
+      failed,
+      spellTargetId,
+      effect,
+    );
 
     expect(
       requireCombatant(replayed, spellCasterId).activeEffects.find(

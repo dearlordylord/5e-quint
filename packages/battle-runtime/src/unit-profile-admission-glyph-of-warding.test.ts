@@ -105,7 +105,7 @@ import {
   dissonantWhispersUnitId,
   enlargeReduceUnitId,
   fireballUnitId,
-  persistentAreaSaveDamageUnitId,
+  flamingSphereUnitId,
   greaseAreaId,
   greaseUnitId,
   gustOfWindUnitId,
@@ -121,7 +121,7 @@ import {
   invisibilityUnitId,
   levitateUnitId,
   mindSpikeUnitId,
-  persistentAreaSaveDamageUnitId,
+  moonbeamUnitId,
   orcRelentlessEnduranceUnitId,
   protectionFromEvilAndGoodUnitId,
   speciesHalflingLuckUnitId,
@@ -146,13 +146,13 @@ import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.
 import {
   maybeSpellAct,
   spellAct,
-  persistentAreaSaveDamageAreaFill,
+  flamingSphereAreaFill,
   greaseSavingThrowOutcomeFill,
   directionalPersistentAreaSavingThrowOutcomeFill,
-  persistentAreaSaveDamageAreaFill,
+  moonbeamAreaFill,
   savingThrowOutcomeFill,
   spellTargetListFill,
-  areaMovementDistanceDamageAreaFill,
+  spikeGrowthAreaFill,
   spatialMeleeSpellAttackProxyTargetFill,
   spatialMeleeSpellAttackProxyPositionFill,
   thunderwaveArea,
@@ -319,13 +319,13 @@ const GLYPH_STORED_AREA_ONGOING_RELEASE_CASES = [
   },
   {
     label: "Flaming Sphere",
-    spellId: persistentAreaSaveDamageUnitId,
+    spellId: flamingSphereUnitId,
     slotLevel: 2,
     procedure: "persistentAreaSaveDamage",
     effectKind: "persistentAreaSaveDamage",
     areaId: glyphStoredFlamingSphereAreaId,
     fillsFromHoles: (holes, originAnchor = glyphStoredAreaOriginAnchor) => [
-      persistentAreaSaveDamageAreaFill(
+      flamingSphereAreaFill(
         requireReleaseHole(holes, "spellAreaChoice"),
         glyphStoredFlamingSphereAreaId,
         originAnchor,
@@ -340,7 +340,7 @@ const GLYPH_STORED_AREA_ONGOING_RELEASE_CASES = [
     effectKind: "areaMovementDistanceDamage",
     areaId: glyphStoredSpikeGrowthAreaId,
     fillsFromHoles: (holes, originAnchor = glyphStoredAreaOriginAnchor) => [
-      areaMovementDistanceDamageAreaFill(
+      spikeGrowthAreaFill(
         requireReleaseHole(holes, "spellAreaChoice"),
         glyphStoredSpikeGrowthAreaId,
         originAnchor,
@@ -349,13 +349,13 @@ const GLYPH_STORED_AREA_ONGOING_RELEASE_CASES = [
   },
   {
     label: "Moonbeam",
-    spellId: persistentAreaSaveDamageUnitId,
+    spellId: moonbeamUnitId,
     slotLevel: 2,
     procedure: "persistentAreaSaveDamage",
     effectKind: "persistentAreaSaveDamage",
     areaId: glyphStoredMoonbeamAreaId,
     fillsFromHoles: (holes, originAnchor = glyphStoredAreaOriginAnchor) => [
-      persistentAreaSaveDamageAreaFill(
+      moonbeamAreaFill(
         requireReleaseHole(holes, "spellAreaChoice"),
         glyphStoredMoonbeamAreaId,
         originAnchor,
@@ -4924,7 +4924,9 @@ function storedSpellInvocation(
       ): candidate is AuthoredSelectedSpellInvocation &
         GlyphStoredSpellInvocationCandidate =>
         candidate.spell.id === storedSpellId &&
+        "access" in candidate &&
         candidate.access.tag === "prepared" &&
+        "resource" in candidate &&
         candidate.resource.tag === "spellSlot" &&
         Number(candidate.resource.slotLevel) === slotLevel &&
         ("targeting" in candidate ||

@@ -802,7 +802,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       "savingThrowOutcome",
     );
     expect(repeatSave).toMatchObject({
-      saveGatedConditionWithRepeatDamageRepeatSave: {
+      saveGatedConditionWithRepeatRepeatSave: {
         targetId: spellTargetId,
         trigger: "damage",
       },
@@ -1106,10 +1106,10 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
         hole,
       ): hole is Extract<BattleHole, { readonly kind: "savingThrowOutcome" }> =>
         hole.kind === "savingThrowOutcome" &&
-        "saveGatedConditionWithRepeatDamageRepeatSave" in hole &&
-        hole.saveGatedConditionWithRepeatDamageRepeatSave.targetId ===
+        "saveGatedConditionWithRepeatRepeatSave" in hole &&
+        hole.saveGatedConditionWithRepeatRepeatSave.targetId ===
           spellCasterId &&
-        hole.saveGatedConditionWithRepeatDamageRepeatSave.trigger === "endTurn",
+        hole.saveGatedConditionWithRepeatRepeatSave.trigger === "endTurn",
     );
     if (endTurnRepeatSave === undefined) {
       throw new Error("Expected Hideous Laughter end-turn save.");
@@ -1157,15 +1157,14 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
         hole,
       ): hole is Extract<BattleHole, { readonly kind: "savingThrowOutcome" }> =>
         hole.kind === "savingThrowOutcome" &&
-        "saveGatedConditionWithRepeatDamageRepeatSave" in hole &&
-        hole.saveGatedConditionWithRepeatDamageRepeatSave.targetId ===
-          spellCasterId,
+        "saveGatedConditionWithRepeatRepeatSave" in hole &&
+        hole.saveGatedConditionWithRepeatRepeatSave.targetId === spellCasterId,
     );
     if (repeatSave === undefined) {
       throw new Error("Expected caster Hideous Laughter damage repeat save.");
     }
     expect(repeatSave).toMatchObject({
-      saveGatedConditionWithRepeatDamageRepeatSave: {
+      saveGatedConditionWithRepeatRepeatSave: {
         targetId: spellCasterId,
         sourceProcedureRef: expect.any(String),
         trigger: "damage",

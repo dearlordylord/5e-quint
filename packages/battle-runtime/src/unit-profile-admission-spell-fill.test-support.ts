@@ -131,6 +131,28 @@ import {
   characterSpellProcedure,
   type SpellProcedureExecution,
 } from "./character-execution-admission.ts";
+import type {
+  BattleStationaryPersistentAreaSaveDamageTrigger as BattleStationaryPersistentAreaMembershipTrigger,
+  BattleTranslatingPersistentAreaSaveDamageTrigger as BattleTranslatingPersistentAreaMembershipTrigger,
+} from "./battle-subjects.ts";
+
+type StationaryPersistentAreaSaveDamageSubject = Extract<
+  BattleSubject,
+  {
+    readonly tag: "runtimeCommand";
+    readonly command: "persistentAreaSaveDamageSave";
+    readonly areaMembershipTrigger: BattleStationaryPersistentAreaMembershipTrigger;
+  }
+>;
+
+type TranslatingPersistentAreaSaveDamageSubject = Extract<
+  BattleSubject,
+  {
+    readonly tag: "runtimeCommand";
+    readonly command: "persistentAreaSaveDamageSave";
+    readonly areaMembershipTrigger: BattleTranslatingPersistentAreaMembershipTrigger;
+  }
+>;
 function spellInvocationForAvailableAct(
   _state: BattleState,
   act: AvailableBattleAct,
@@ -1544,25 +1566,13 @@ export function insectPlagueAreaHazardSaveAct(
   actorId: CombatantId,
   trigger: BattleStationaryPersistentAreaSaveDamageTrigger,
 ): AvailableBattleAct & {
-  readonly subject: Extract<
-    BattleSubject,
-    {
-      readonly tag: "runtimeCommand";
-      readonly command: "persistentAreaSaveDamageSave";
-    }
-  >;
+  readonly subject: StationaryPersistentAreaSaveDamageSubject;
 } {
   const effect = activeInsectPlagueAreaHazardEffect(session.state);
   if (effect === undefined) {
     throw new Error("Expected active Insect Plague area hazard.");
   }
-  const subject: Extract<
-    BattleSubject,
-    {
-      readonly tag: "runtimeCommand";
-      readonly command: "persistentAreaSaveDamageSave";
-    }
-  > = {
+  const subject: StationaryPersistentAreaSaveDamageSubject = {
     tag: "runtimeCommand",
     actorId,
     command: "persistentAreaSaveDamageSave",
@@ -1612,25 +1622,13 @@ export function cloudkillAreaHazardSaveAct(
   actorId: CombatantId,
   trigger: BattleTranslatingPersistentAreaSaveDamageTrigger,
 ): AvailableBattleAct & {
-  readonly subject: Extract<
-    BattleSubject,
-    {
-      readonly tag: "runtimeCommand";
-      readonly command: "persistentAreaSaveDamageSave";
-    }
-  >;
+  readonly subject: TranslatingPersistentAreaSaveDamageSubject;
 } {
   const effect = activeCloudkillAreaHazardEffect(session.state);
   if (effect === undefined) {
     throw new Error("Expected active Cloudkill area hazard.");
   }
-  const subject: Extract<
-    BattleSubject,
-    {
-      readonly tag: "runtimeCommand";
-      readonly command: "persistentAreaSaveDamageSave";
-    }
-  > = {
+  const subject: TranslatingPersistentAreaSaveDamageSubject = {
     tag: "runtimeCommand",
     actorId,
     command: "persistentAreaSaveDamageSave",

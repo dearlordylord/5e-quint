@@ -52,7 +52,7 @@ import {
   type BattleRuntimeSession,
   type BattleSubject,
 } from "./index.ts";
-import type { WebRestraintHazardEffect } from "./battle-reducer/persistent-spatial-spell-discovery.ts";
+import type { PersistentAreaSaveConditionEscapeEffect } from "./battle-reducer/persistent-spatial-spell-discovery.ts";
 
 const webMovementSpentFeet = 15;
 
@@ -420,7 +420,7 @@ function moveWithDifficultTerrain(state: WebRuntimeState): WebRuntimeState {
     state.battle.state,
     spellCasterId,
   ).activeEffects.find(
-    (effect): effect is WebRestraintHazardEffect =>
+    (effect): effect is PersistentAreaSaveConditionEscapeEffect =>
       effect.kind === "persistentAreaSaveConditionEscape" &&
       effect.areaId === webAreaId,
   );
@@ -503,7 +503,7 @@ function webProjection(state: WebRuntimeState): WebRestraintHazardState {
   const caster = requireCombatant(state.battle.state, spellCasterId);
   const target = requireCombatant(state.battle.state, spellTargetId);
   const hazard = caster.activeEffects.find(
-    (effect): effect is WebRestraintHazardEffect =>
+    (effect): effect is PersistentAreaSaveConditionEscapeEffect =>
       effect.kind === "persistentAreaSaveConditionEscape" &&
       effect.sourceCombatantId === spellCasterId &&
       effect.areaId === webAreaId,
@@ -550,8 +550,8 @@ function requireWebSaveHole(
       { readonly kind: "savingThrowOutcome" }
     > =>
       candidate.kind === "savingThrowOutcome" &&
-      "webRestraint" in candidate &&
-      candidate.webRestraint.trigger === trigger,
+      "persistentAreaSaveConditionEscape" in candidate &&
+      candidate.persistentAreaSaveConditionEscape.trigger === trigger,
   );
   if (hole === undefined) {
     throw new Error(`Expected Web ${trigger} Saving Throw outcome hole.`);
@@ -564,8 +564,11 @@ function battleHolesToWebHoles(
 ): readonly WebHole[] {
   return holes
     .map((hole) => {
-      if (hole.kind === "savingThrowOutcome" && "webRestraint" in hole) {
-        return hole.webRestraint.trigger === "entersArea"
+      if (
+        hole.kind === "savingThrowOutcome" &&
+        "persistentAreaSaveConditionEscape" in hole
+      ) {
+        return hole.persistentAreaSaveConditionEscape.trigger === "entersArea"
           ? "EntrySavingThrowOutcome"
           : "StartTurnSavingThrowOutcome";
       }

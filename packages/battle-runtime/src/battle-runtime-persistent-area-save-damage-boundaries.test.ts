@@ -18,7 +18,7 @@ import {
 } from "./battle-runtime.test-support.ts";
 import {
   cloudkillAreaFill,
-  persistentAreaSaveDamageSaveAct,
+  cloudkillAreaHazardSaveAct,
   singleTargetSavingThrowOutcomeFill,
   spellAct,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
@@ -74,7 +74,7 @@ function castCloudkill(input: {
 
 function malformedAreaSaveFill(
   hole: Extract<
-    ReturnType<typeof persistentAreaSaveDamageSaveAct>["initialHoles"][number],
+    ReturnType<typeof cloudkillAreaHazardSaveAct>["initialHoles"][number],
     { readonly kind: "savingThrowOutcome" }
   >,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
@@ -93,7 +93,7 @@ function malformedAreaSaveFill(
 
 function malformedTargetSaveFill(
   hole: Extract<
-    ReturnType<typeof persistentAreaSaveDamageSaveAct>["initialHoles"][number],
+    ReturnType<typeof cloudkillAreaHazardSaveAct>["initialHoles"][number],
     { readonly kind: "savingThrowOutcome" }
   >,
   outcomes: readonly {
@@ -111,7 +111,7 @@ function malformedTargetSaveFill(
 describe("persistent area save/damage public boundaries", () => {
   test("rejects parser-accepted area facts on a single-target Cloudkill save", () => {
     const { cast, session } = castCloudkill({});
-    const saveAct = persistentAreaSaveDamageSaveAct(
+    const saveAct = cloudkillAreaHazardSaveAct(
       session,
       spellTargetId,
       "appearsInArea",
@@ -147,7 +147,7 @@ describe("persistent area save/damage public boundaries", () => {
     "rejects $name in a parser-accepted single-target Cloudkill save",
     ({ outcomes }) => {
       const { cast, session } = castCloudkill({});
-      const saveAct = persistentAreaSaveDamageSaveAct(
+      const saveAct = cloudkillAreaHazardSaveAct(
         session,
         spellTargetId,
         "appearsInArea",
@@ -205,7 +205,7 @@ describe("persistent area save/damage public boundaries", () => {
       ...targetSession,
       state: ready.state,
     });
-    const saveAct = persistentAreaSaveDamageSaveAct(
+    const saveAct = cloudkillAreaHazardSaveAct(
       readySession,
       spellTargetId,
       "endsTurnInArea",
@@ -254,7 +254,7 @@ describe("persistent area save/damage public boundaries", () => {
       ...targetSession,
       state: fogCast.state,
     });
-    const saveAct = persistentAreaSaveDamageSaveAct(
+    const saveAct = cloudkillAreaHazardSaveAct(
       concentratedSession,
       spellTargetId,
       "endsTurnInArea",

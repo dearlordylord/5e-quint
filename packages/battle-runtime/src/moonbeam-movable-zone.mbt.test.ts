@@ -17,17 +17,17 @@ import {
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import {
-  beginMoonbeamLaterTurn,
-  resolveMoonbeamCast,
-  resolveMoonbeamCylinderExit,
-  resolveMoonbeamReposition,
-  resolveMoonbeamSave,
-  resetMoonbeamSavedThisTurn,
-  resolveMoonbeamSpellCleanup,
-  type MoonbeamMovableZoneState,
-  type MoonbeamSaveTrigger,
-  type MoonbeamTargetShapeShiftState,
-} from "./battle-reducer/persistentAreaSaveDamage-movable-zone.test-support.ts";
+  beginMovablePersistentAreaLaterTurn,
+  resolveMovablePersistentAreaCast,
+  resolveMovablePersistentAreaCylinderExit,
+  resolveMovablePersistentAreaReposition,
+  resolveMovablePersistentAreaSave,
+  resetMovablePersistentAreaSavedThisTurn,
+  resolveMovablePersistentAreaSpellCleanup,
+  type MovablePersistentAreaMovableZoneState,
+  type MovablePersistentAreaSaveTrigger,
+  type MovablePersistentAreaTargetShapeShiftState,
+} from "./battle-reducer/moonbeam-movable-zone.test-support.ts";
 import {
   battleSpellEffectOccurrenceId,
   combatantId,
@@ -53,7 +53,7 @@ const syntheticSpellShapeShiftEffect: SpellShapeShiftedFormActiveEffect = {
 };
 
 function syntheticSpellEffectTargetShapeShift(): Extract<
-  MoonbeamTargetShapeShiftState,
+  MovablePersistentAreaTargetShapeShiftState,
   { readonly tag: "unsuppressed" }
 > {
   return {
@@ -65,7 +65,9 @@ function syntheticSpellEffectTargetShapeShift(): Extract<
   };
 }
 
-function initialState(slotLedgerLevel: number): MoonbeamMovableZoneState {
+function initialState(
+  slotLedgerLevel: number,
+): MovablePersistentAreaMovableZoneState {
   return {
     actionAvailable: true,
     zone: { tag: "absent" },
@@ -117,10 +119,10 @@ function createMoonbeamMovableZoneDriver() {
         state = initialState(slotLedgerLevel);
       },
       doCastMoonbeam: ({ slotLevel }) => {
-        state = resolveMoonbeamCast(state, slotLevel);
+        state = resolveMovablePersistentAreaCast(state, slotLevel);
       },
       doMoonbeamSave: ({ savingThrowSucceeded, rolledDamage, trigger }) => {
-        state = resolveMoonbeamSave(
+        state = resolveMovablePersistentAreaSave(
           state,
           persistentAreaSaveDamageSaveTriggerFromQuint(trigger),
           {
@@ -131,19 +133,19 @@ function createMoonbeamMovableZoneDriver() {
         );
       },
       doReposition: ({ moveFeet }) => {
-        state = resolveMoonbeamReposition(state, moveFeet);
+        state = resolveMovablePersistentAreaReposition(state, moveFeet);
       },
       doBeginLaterTurn: () => {
-        state = beginMoonbeamLaterTurn(state);
+        state = beginMovablePersistentAreaLaterTurn(state);
       },
       doResetSavedThisTurn: () => {
-        state = resetMoonbeamSavedThisTurn(state);
+        state = resetMovablePersistentAreaSavedThisTurn(state);
       },
       doCylinderExit: () => {
-        state = resolveMoonbeamCylinderExit(state);
+        state = resolveMovablePersistentAreaCylinderExit(state);
       },
       doSpellCleanup: () => {
-        state = resolveMoonbeamSpellCleanup(state);
+        state = resolveMovablePersistentAreaSpellCleanup(state);
       },
       doShapeShift: () => {
         if (state.targetShapeShift.tag !== "suppressedTrueForm") {
@@ -161,18 +163,18 @@ function createMoonbeamMovableZoneDriver() {
 
 const persistentAreaSaveDamageMovableZoneStateCheck = stateCheck(
   normalizeMoonbeamMovableZoneQuintState,
-  compareMoonbeamMovableZoneState,
+  compareMovablePersistentAreaMovableZoneState,
 );
 
 describe("Moonbeam movable zone MBT parity", () => {
   it("rejects a cast whose requested slot level does not match the ledger", () => {
     const state = initialState(2);
 
-    expect(resolveMoonbeamCast(state, 3)).toEqual(state);
+    expect(resolveMovablePersistentAreaCast(state, 3)).toEqual(state);
   });
 
   it("derives active zone damage dice from the matching expended slot level", () => {
-    expect(resolveMoonbeamCast(initialState(4), 4)).toMatchObject({
+    expect(resolveMovablePersistentAreaCast(initialState(4), 4)).toMatchObject({
       zone: {
         tag: "active",
         damageDice: 4,
@@ -186,60 +188,70 @@ describe("Moonbeam movable zone MBT parity", () => {
   });
 
   it("limits Moonbeam damage to once per creature per turn", () => {
-    const cast = resolveMoonbeamCast(initialState(2), 2);
-    const first = resolveMoonbeamSave(cast, "appearsInArea", {
+    const cast = resolveMovablePersistentAreaCast(initialState(2), 2);
+    const first = resolveMovablePersistentAreaSave(cast, "appearsInArea", {
       savingThrowSucceeded: false,
       rolledDamage: 10,
       moveFeet: 0,
     });
 
     expect(
-      resolveMoonbeamSave(first, "endsTurnInArea", {
+      resolveMovablePersistentAreaSave(first, "endsTurnInArea", {
         savingThrowSucceeded: false,
         rolledDamage: 10,
         moveFeet: 0,
       }),
     ).toEqual(first);
     expect(
-      resolveMoonbeamSave(resetMoonbeamSavedThisTurn(first), "endsTurnInArea", {
-        savingThrowSucceeded: true,
-        rolledDamage: 10,
-        moveFeet: 0,
-      }).targetVitals.hitPoints,
+      resolveMovablePersistentAreaSave(
+        resetMovablePersistentAreaSavedThisTurn(first),
+        "endsTurnInArea",
+        {
+          savingThrowSucceeded: true,
+          rolledDamage: 10,
+          moveFeet: 0,
+        },
+      ).targetVitals.hitPoints,
     ).toBe(5);
   });
 
   it("reverts admitted shape-shift on failed save and clears suppression on exit", () => {
     const cast = {
-      ...resolveMoonbeamCast(initialState(2), 2),
+      ...resolveMovablePersistentAreaCast(initialState(2), 2),
       targetShapeShift: syntheticSpellEffectTargetShapeShift(),
     };
-    const failed = resolveMoonbeamSave(cast, "entersArea", {
+    const failed = resolveMovablePersistentAreaSave(cast, "entersArea", {
       savingThrowSucceeded: false,
       rolledDamage: 8,
       moveFeet: 0,
     });
 
     expect(failed.targetShapeShift.tag).toBe("suppressedTrueForm");
-    expect(resolveMoonbeamCylinderExit(failed).targetShapeShift).toEqual({
+    expect(
+      resolveMovablePersistentAreaCylinderExit(failed).targetShapeShift,
+    ).toEqual({
       tag: "unsuppressed",
       shapeShift: trueFormRuntimeState(),
     });
   });
 
   it("repositions an active later-turn Moonbeam and consumes the Magic Action", () => {
-    const cast = resolveMoonbeamCast(initialState(2), 2);
-    const laterTurn = beginMoonbeamLaterTurn(cast);
+    const cast = resolveMovablePersistentAreaCast(initialState(2), 2);
+    const laterTurn = beginMovablePersistentAreaLaterTurn(cast);
 
     expect(laterTurn).toMatchObject({
       actionAvailable: true,
       slotSpellCastThisTurn: false,
       zone: { tag: "active", savedThisTurn: false },
     });
-    expect(resolveMoonbeamReposition(laterTurn, 60)).toMatchObject({
-      actionAvailable: false,
-    });
-    expect(resolveMoonbeamReposition(laterTurn, 61)).toEqual(laterTurn);
+    expect(resolveMovablePersistentAreaReposition(laterTurn, 60)).toMatchObject(
+      {
+        actionAvailable: false,
+      },
+    );
+    expect(resolveMovablePersistentAreaReposition(laterTurn, 61)).toEqual(
+      laterTurn,
+    );
   });
 
   it(
@@ -265,7 +277,7 @@ describe("Moonbeam movable zone MBT parity", () => {
 
 function normalizeMoonbeamMovableZoneQuintState(
   raw: unknown,
-): MoonbeamMovableZoneState {
+): MovablePersistentAreaMovableZoneState {
   if (raw == null || typeof raw !== "object" || Array.isArray(raw)) {
     throw new Error("Expected Quint Moonbeam movable-zone state.");
   }
@@ -320,7 +332,7 @@ function normalizeMoonbeamMovableZoneQuintState(
 
 function zoneFromQuintState(
   state: Readonly<Record<string, unknown>>,
-): MoonbeamMovableZoneState["zone"] {
+): MovablePersistentAreaMovableZoneState["zone"] {
   const zoneActive = booleanValue(state["qZoneActive"], "qZoneActive");
   return zoneActive
     ? {
@@ -345,9 +357,9 @@ function zoneFromQuintState(
     : { tag: "absent" };
 }
 
-function compareMoonbeamMovableZoneState(
-  runtime: MoonbeamMovableZoneState,
-  quint: MoonbeamMovableZoneState,
+function compareMovablePersistentAreaMovableZoneState(
+  runtime: MovablePersistentAreaMovableZoneState,
+  quint: MovablePersistentAreaMovableZoneState,
 ): boolean {
   try {
     expect(runtime).toEqual(quint);
@@ -362,7 +374,7 @@ function compareMoonbeamMovableZoneState(
 
 function persistentAreaSaveDamageSaveTriggerFromQuint(
   raw: unknown,
-): MoonbeamSaveTrigger {
+): MovablePersistentAreaSaveTrigger {
   const tag = quintVariantTag(raw);
   if (tag === "MoonbeamAppearsInArea") return "appearsInArea";
   if (tag === "MoonbeamAreaMovesIntoSpace") return "areaMovesIntoSpace";
@@ -373,7 +385,7 @@ function persistentAreaSaveDamageSaveTriggerFromQuint(
 
 function targetShapeShiftStateFromQuint(
   raw: unknown,
-): MoonbeamTargetShapeShiftState {
+): MovablePersistentAreaTargetShapeShiftState {
   const tag = quintVariantTag(raw);
   if (tag === "MoonbeamTargetSuppressedTrueForm") {
     return { tag: "suppressedTrueForm" };

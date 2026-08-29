@@ -119,8 +119,8 @@ type Level1SpatialWitnessSelectedIdentityProjection = {
   readonly lightOpaqueCoverIllumination: BattleIllumination;
   readonly lightRecastReplacedPriorEmitter: boolean;
   readonly lightDurationCleanupClearedEmitter: boolean;
-  readonly saveGatedTargetProjectiondCreatureCount: number;
-  readonly saveGatedTargetProjectiondObjectCount: number;
+  readonly saveGatedTargetProjectedCreatureCount: number;
+  readonly saveGatedTargetProjectedObjectCount: number;
   readonly faerieFireCreatureAttackRollMode: ProjectedAttackRollMode;
   readonly faerieFireInvisibleCreatureAttackRollMode: ProjectedAttackRollMode;
   readonly faerieFireObjectAttackRollMode: ProjectedAttackRollMode;
@@ -568,8 +568,8 @@ const selectedUnitIdentityReplays = [
         expected: expectedProjection({
           lightEmitterCount: 2,
           dimLightEmitterCount: 2,
-          saveGatedTargetProjectiondCreatureCount: 1,
-          saveGatedTargetProjectiondObjectCount: 1,
+          saveGatedTargetProjectedCreatureCount: 1,
+          saveGatedTargetProjectedObjectCount: 1,
           faerieFireCreatureAttackRollMode: "advantage",
           faerieFireInvisibleCreatureAttackRollMode: "advantage",
           faerieFireObjectAttackRollMode: "advantage",
@@ -849,7 +849,11 @@ defineSelectedIdentityReplayAndQntReplay({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintFieldNames: {
+    lastResult: "qScenarioOutcome",
+    saveGatedTargetProjectedCreatureCount: "qFaerieFireOutlinedCreatureCount",
+    saveGatedTargetProjectedObjectCount: "qFaerieFireOutlinedObjectCount",
+  },
   quintVariantFieldTags: {
     lastResult:
       LEVEL1_SPATIAL_WITNESS_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
@@ -865,8 +869,8 @@ defineSelectedIdentityReplayAndQntReplay({
     lightOpaqueCoverIllumination: "str",
     lightRecastReplacedPriorEmitter: "bool",
     lightDurationCleanupClearedEmitter: "bool",
-    saveGatedTargetProjectiondCreatureCount: "int",
-    saveGatedTargetProjectiondObjectCount: "int",
+    saveGatedTargetProjectedCreatureCount: "int",
+    saveGatedTargetProjectedObjectCount: "int",
     faerieFireCreatureAttackRollMode: "str",
     faerieFireInvisibleCreatureAttackRollMode: "str",
     faerieFireObjectAttackRollMode: "str",
@@ -2876,8 +2880,8 @@ function expectedProjection(
     lightOpaqueCoverIllumination: "darkness",
     lightRecastReplacedPriorEmitter: false,
     lightDurationCleanupClearedEmitter: false,
-    saveGatedTargetProjectiondCreatureCount: 0,
-    saveGatedTargetProjectiondObjectCount: 0,
+    saveGatedTargetProjectedCreatureCount: 0,
+    saveGatedTargetProjectedObjectCount: 0,
     faerieFireCreatureAttackRollMode: "normal",
     faerieFireInvisibleCreatureAttackRollMode: "normal",
     faerieFireObjectAttackRollMode: "normal",
@@ -4847,10 +4851,10 @@ function projectLevel1SpatialWitnessSelectedIdentityState(
     lightRecastReplacedPriorEmitter: lightProjection.recastReplacedPriorEmitter,
     lightDurationCleanupClearedEmitter:
       lightProjection.durationCleanupClearedEmitter,
-    saveGatedTargetProjectiondCreatureCount:
-      saveGatedTargetProjectiondCreatureCount(state),
-    saveGatedTargetProjectiondObjectCount:
-      saveGatedTargetProjectiondObjectCount(state),
+    saveGatedTargetProjectedCreatureCount:
+      saveGatedTargetProjectedCreatureCount(state),
+    saveGatedTargetProjectedObjectCount:
+      saveGatedTargetProjectedObjectCount(state),
     faerieFireCreatureAttackRollMode,
     faerieFireInvisibleCreatureAttackRollMode,
     faerieFireObjectAttackRollMode,
@@ -5219,7 +5223,7 @@ function projectionFactForEmitter(
   };
 }
 
-function saveGatedTargetProjectiondCreatureCount(state: BattleState): number {
+function saveGatedTargetProjectedCreatureCount(state: BattleState): number {
   return [...state.combatants.values()].reduce(
     (count, combatant) =>
       count +
@@ -5232,7 +5236,7 @@ function saveGatedTargetProjectiondCreatureCount(state: BattleState): number {
   );
 }
 
-function saveGatedTargetProjectiondObjectCount(state: BattleState): number {
+function saveGatedTargetProjectedObjectCount(state: BattleState): number {
   return state.objectOutlines.filter(
     (outline) =>
       outline.kind === "saveGatedTargetProjectionObject" &&

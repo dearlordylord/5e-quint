@@ -36,8 +36,8 @@ import {
   conditionHasNonSpellSource,
   saveGatedAreaControlShakeAwakeTargetChoices,
   protectionRelevantEffectsForTarget,
-  removeHideousLaughterEffectFromTarget,
-  removeHypnoticPatternControlEffectsFromTarget,
+  removeSaveGatedConditionWithRepeatEffectFromTarget,
+  removeSaveGatedAreaControlControlEffectsFromTarget,
   removeSleepEffectsFromTarget,
   removeSpellConditionEffect,
   sleepShakeAwakeTargetChoices,
@@ -456,7 +456,7 @@ describe("spell condition effect source ownership", () => {
       saveGatedAreaControlShakeAwakeTargetChoices(hypnotizedState, fighterId),
     ).toEqual([goblinId]);
     expect(
-      removeHypnoticPatternControlEffectsFromTarget(
+      removeSaveGatedAreaControlControlEffectsFromTarget(
         hypnotizedState,
         goblinId,
       ).combatants.get(goblinId)?.activeEffects,
@@ -496,7 +496,7 @@ describe("spell condition effect source ownership", () => {
       combatants: new Map(state.combatants).set(goblinId, laughing),
     };
     expect(
-      removeHideousLaughterEffectFromTarget(
+      removeSaveGatedConditionWithRepeatEffectFromTarget(
         laughingState,
         goblinId,
         laughterAllocation.effect.effectRef,
@@ -509,7 +509,7 @@ describe("spell condition effect source ownership", () => {
       conditions: knockedOutConditionState(laughing.conditions),
     };
     expect(
-      removeHideousLaughterEffectFromTarget(
+      removeSaveGatedConditionWithRepeatEffectFromTarget(
         {
           ...state,
           combatants: new Map(state.combatants).set(
@@ -584,7 +584,7 @@ describe("spell condition effect source ownership", () => {
         }),
     };
 
-    const cleaned = removeHideousLaughterEffectFromTarget(
+    const cleaned = removeSaveGatedConditionWithRepeatEffectFromTarget(
       currentState,
       goblinId,
       staleClone.effectRef,

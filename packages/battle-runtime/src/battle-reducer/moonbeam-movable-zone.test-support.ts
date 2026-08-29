@@ -12,7 +12,7 @@ import { applyDamageToPositiveHitPoints } from "./focused-spell-hazard-damage.ts
 import {
   movablePersistentAreaDamageAfterSave,
   movablePersistentAreaMoveDistanceAccepted,
-} from "./persistentAreaSaveDamage-movable-zone.ts";
+} from "./moonbeam-movable-zone.ts";
 
 const byTag = Match.discriminator("tag");
 

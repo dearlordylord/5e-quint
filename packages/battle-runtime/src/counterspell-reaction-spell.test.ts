@@ -42,7 +42,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { spellCastInterruptionReactionCapableReactors } from "./battle-reducer/spellCastInterruptionReaction-reaction-discovery.ts";
+import { spellCastInterruptionReactionCapableReactors } from "./battle-reducer/counterspell-reaction-discovery.ts";
 import {
   cantripSpellInvocationRef,
   spellSlotInvocationRef,

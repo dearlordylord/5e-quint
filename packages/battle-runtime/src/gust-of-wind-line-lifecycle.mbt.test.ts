@@ -59,7 +59,7 @@ import {
   type BattleProcedureExecutionRef,
   type BattleSubject,
 } from "./index.ts";
-import type { GustOfWindLineEffect } from "./battle-reducer/persistent-spatial-spell-discovery.ts";
+import type { DirectionalPersistentAreaEffect } from "./battle-reducer/persistent-spatial-spell-discovery.ts";
 
 const gustMovementTotalFeet = 5;
 const gustMovementCloserFeet = 5;
@@ -565,10 +565,12 @@ function gustProjection(state: GustRuntimeState): GustOfWindLineState {
   return projection;
 }
 
-function gustLineEffect(state: BattleState): GustOfWindLineEffect | undefined {
+function gustLineEffect(
+  state: BattleState,
+): DirectionalPersistentAreaEffect | undefined {
   const caster = requireCombatant(state, spellCasterId);
   return caster.activeEffects.find(
-    (effect): effect is GustOfWindLineEffect =>
+    (effect): effect is DirectionalPersistentAreaEffect =>
       effect.kind === "directionalPersistentArea" &&
       effect.sourceCombatantId === spellCasterId &&
       effect.areaId === gustOfWindAreaId,
@@ -583,7 +585,9 @@ function effectDirectionId(state: BattleState): BattleLineDirectionId {
   return effect.directionId;
 }
 
-function lineDirection(effect: GustOfWindLineEffect): GustLineDirection {
+function lineDirection(
+  effect: DirectionalPersistentAreaEffect,
+): GustLineDirection {
   if (effect.directionId === gustOfWindNorthDirectionId) return "north";
   if (effect.directionId === gustOfWindEastDirectionId) return "east";
   throw new Error(`Unexpected Gust of Wind direction ${effect.directionId}.`);
