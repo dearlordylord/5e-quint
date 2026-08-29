@@ -11,7 +11,9 @@ import {
   KNOCKED_OUT_UNCONSCIOUS,
   parseSupportedUnitFeatureProfile,
   battleCreatureInitFromStatBlock,
+  authoredStatBlockBattleInitIssueMessage,
   battleInitializationIssueFactFields,
+  type AuthoredStatBlockBattleInitIssue,
   type BattleCreatureInit,
   type BattleId,
   type BattleCreatureState,
@@ -124,9 +126,17 @@ function characterBattleHandoffValidationIssue(
   );
 }
 
+export type CharacterBattleRuntimeIssue =
+  | BattleCreatureInitIssue
+  | BattleStateInitIssue
+  | AuthoredStatBlockBattleInitIssue;
+
 export function characterBattleRuntimeIssueMessage(
-  issue: BattleCreatureInitIssue | BattleStateInitIssue,
+  issue: CharacterBattleRuntimeIssue,
 ): string {
+  if (issue.tag === "statBlockProjectionFailure") {
+    return authoredStatBlockBattleInitIssueMessage(issue);
+  }
   return issue.tag === "battleCreatureInitIssues"
     ? battleCreatureInitIssueMessage(issue)
     : issue.tag === "battleCreatureInitIssue" ||
@@ -264,25 +274,15 @@ export type CharacterBattleInitProjectionIssue = BattleCreatureInitIssue & {
   readonly routeEvents: readonly CharacterBattleRouteEvent[];
 };
 
-export type BattleRosterCharacterCombatant = Omit<
+export type BattleRosterCharacterCombatant = Extract<
   BattleCreatureInit,
-  "creatureInit"
-> & {
-  readonly creatureInit: Extract<
-    BattleCreatureInit["creatureInit"],
-    { readonly kind: "character" }
-  >;
-};
+  { readonly creatureInit: { readonly kind: "character" } }
+>;
 
-export type BattleRosterStatBlockCombatant = Omit<
+export type BattleRosterStatBlockCombatant = Extract<
   BattleCreatureInit,
-  "creatureInit"
-> & {
-  readonly creatureInit: Extract<
-    BattleCreatureInit["creatureInit"],
-    { readonly kind: "statBlock" }
-  >;
-};
+  { readonly creatureInit: { readonly kind: "statBlock" } }
+>;
 
 export type BattleRosterCharacterSource =
   | {
@@ -346,9 +346,26 @@ type BattleRosterStatBlockProjectionIssue = {
   readonly kind: "statBlockProjection";
   readonly index: number;
   readonly combatantId: BattleCreatureInit["combatantId"];
-  readonly issueTag: "battleStateInitIssue";
   readonly message: string;
-} & BattleRosterStatBlockProjectionFact;
+} & (
+  | ({
+      readonly issueTag: "battleStateInitIssue";
+    } & BattleRosterStatBlockProjectionFact)
+  | {
+      readonly issueTag: "statBlockResourceGraphIssue";
+      readonly issues: Extract<
+        AuthoredStatBlockBattleInitIssue,
+        { readonly tag: "statBlockResourceGraphIssue" }
+      >["issues"];
+    }
+  | {
+      readonly issueTag: "statBlockProjectionFailure";
+      readonly failure: Extract<
+        AuthoredStatBlockBattleInitIssue,
+        { readonly tag: "statBlockProjectionFailure" }
+      >["failure"];
+    }
+);
 
 export type BattleRosterAdmission =
   | {
@@ -905,16 +922,33 @@ function battleRosterStatBlockProjectionIssue(input: {
 function battleRosterStatBlockProjectionIssues(input: {
   readonly index: number;
   readonly combatantId: BattleCreatureInit["combatantId"];
-  readonly issue: BattleStatBlockInitializationIssue;
+  readonly issue: AuthoredStatBlockBattleInitIssue;
 }): ReadonlyNonEmptyArray<BattleRosterIssue> {
-  return [
-    battleRosterStatBlockProjectionIssue({
-      index: input.index,
-      combatantId: input.combatantId,
-      issue: input.issue,
-      issueIndex: 0,
-    }),
-  ];
+  const common = {
+    kind: "statBlockProjection" as const,
+    index: input.index,
+    combatantId: input.combatantId,
+    message: authoredStatBlockBattleInitIssueMessage(input.issue),
+  };
+  return Match.value(input.issue).pipe(
+    Match.when({ tag: "battleStateInitIssue" }, (issue) =>
+      battleRosterIssueList(
+        battleRosterStatBlockProjectionIssue({
+          index: input.index,
+          combatantId: input.combatantId,
+          issue,
+          issueIndex: 0,
+        }),
+      ),
+    ),
+    Match.when({ tag: "statBlockResourceGraphIssue" }, ({ tag, issues }) =>
+      battleRosterIssueList({ ...common, issueTag: tag, issues }),
+    ),
+    Match.when({ tag: "statBlockProjectionFailure" }, ({ tag, failure }) =>
+      battleRosterIssueList({ ...common, issueTag: tag, failure }),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function projectBattleRosterEntry(

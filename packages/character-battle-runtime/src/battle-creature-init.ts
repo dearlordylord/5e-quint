@@ -1,5 +1,6 @@
 import {
   battleAvailableDruidWildShapeKnownForms,
+  wildShapeKnownFormsIssueMessage,
   characterBattleResourceForUnit,
   characterBattleResourceMaxPoints,
   characterBattleResourceMaxUses,
@@ -126,15 +127,10 @@ export type CharacterBuildCreatureInput = {
 };
 
 /** Character-build projection cannot admit a Stat Block creature. */
-export type CharacterBattleCreatureInitResult = Omit<
+export type CharacterBattleCreatureInitResult = Extract<
   BattleCreatureInit,
-  "creatureInit"
-> & {
-  readonly creatureInit: Extract<
-    BattleCreatureInit["creatureInit"],
-    { readonly kind: "character" }
-  >;
-};
+  { readonly creatureInit: { readonly kind: "character" } }
+>;
 
 export const CHARACTER_BATTLE_INIT_MAX_HP_EXCEEDS_BUILD_MAX_MESSAGE =
   "Character battle initialization max HP exceeds build-derived max HP.";
@@ -548,7 +544,9 @@ function battleDruidWildShapeAvailableFormsFromInput(
     profile: projection.profile,
   });
   if (Either.isLeft(availableForms)) {
-    return battleCreatureInitIssue(availableForms.left.message);
+    return battleCreatureInitIssue(
+      wildShapeKnownFormsIssueMessage(availableForms.left.issues),
+    );
   }
   return Either.right(availableForms.right);
 }

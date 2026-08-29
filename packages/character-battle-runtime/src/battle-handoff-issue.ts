@@ -90,6 +90,13 @@ export type CharacterSheetBattleHandoffFact =
       readonly slot: "main-hand" | "off-hand";
     }
   | {
+      readonly handoffReason: "battleInitializationResourceGraph";
+      readonly issues: Extract<
+        BattleStateInitLeafIssue,
+        { readonly tag: "statBlockResourceGraphIssue" }
+      >["issues"];
+    }
+  | {
       readonly handoffReason: "delegatedCharacterSheetIssue";
       readonly delegatedIssueTag: "characterSheetIssue";
     }
@@ -197,6 +204,10 @@ function characterSheetBattleHandoffFactFromStateInitLeaf(
       handoffReason: "battleInitializationUnavailable" as const,
       initializationTag: "weaponLoadoutMismatch" as const,
       slot,
+    })),
+    Match.when({ tag: "statBlockResourceGraphIssue" }, ({ issues }) => ({
+      handoffReason: "battleInitializationResourceGraph" as const,
+      issues,
     })),
     Match.exhaustive,
   );
