@@ -35,7 +35,6 @@ import { Result } from "effect";
 
 import {
   type ActionSpellBattleResolutionInput,
-  type BattleActDiscoveryCandidate,
   type BattleMagicSuppressionAffectedOngoingSpellEffect,
   type BattleMagicSuppressionAreaChoice,
   type BattleResolutionResult,
@@ -59,6 +58,7 @@ import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
 import { spellAreaChoiceHoleId } from "../spells-targeting.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import { replaceTargetSpellActiveEffect } from "../active-effect-replacement.ts";
+import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -355,21 +355,7 @@ export const magicSuppressionEmanationProfile = {
   procedure: "magicSuppressionEmanation",
   executionSchema: MagicSuppressionEmanationInvocationSchema,
   admit: admitMagicSuppressionEmanation,
-  discoverCastAct: (
-    _state: BattleState,
-    actorId: CombatantId,
-    invocation: MagicSuppressionEmanationInvocation,
-  ): readonly BattleActDiscoveryCandidate[] => [
-    {
-      subject: {
-        tag: "actionSpell",
-        actorId,
-        procedureRef: invocation.sourceProcedureRef,
-        mode: { tag: "cast" },
-      },
-      initialHoles: [spellAreaChoiceHole(invocation)],
-    },
-  ],
+  discoverCastAct: discoverActionSpellAreaCastAct,
   resolve: resolveMagicSuppressionEmanation,
 } satisfies SpellProcedureDeclaration<
   "magicSuppressionEmanation",
