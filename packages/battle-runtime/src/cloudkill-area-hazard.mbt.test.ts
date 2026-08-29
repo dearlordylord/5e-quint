@@ -27,7 +27,10 @@ import {
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { concentrationSavingThrowFill } from "./battle-runtime.test-support.ts";
+import {
+  battleFrontierInterruptDecisionForState,
+  concentrationSavingThrowFill,
+} from "./battle-runtime.test-support.ts";
 import { battleObscurementZones } from "./unit-profile-admission.test-support.ts";
 import {
   damageRollFillWithGroups,
@@ -975,7 +978,9 @@ function declineCloudkillFailedSaveInterrupt(
   result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
 ): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
   const decisionHole = requireResultHole(result, "interruptDecision");
-  const responder = result.snapshot.pendingInterrupt?.choices[0];
+  expect("pendingInterrupt" in result.snapshot).toBe(false);
+  const responder = battleFrontierInterruptDecisionForState(result.state)
+    ?.choices[0];
   if (responder === undefined) {
     throw new Error("Expected a Cloudkill failed-save reaction responder.");
   }

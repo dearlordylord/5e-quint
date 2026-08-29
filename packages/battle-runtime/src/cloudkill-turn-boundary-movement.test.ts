@@ -56,6 +56,7 @@ import { allocateBattleEffectExecutionRefForCreature } from "./effect-execution-
 import { updateCombatantWithActiveEffectOccurrence } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import {
   attackRollFill,
+  battleFrontierInterruptDecisionForState,
   battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectForTest,
@@ -2372,11 +2373,13 @@ describe("Cloudkill source-turn movement", () => {
       holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
       snapshot: {
         currentActorId: spellCasterId,
-        pendingInterrupt: { trigger: "saveFailed" },
       },
     });
     if (interrupted.tag !== "needsHoles") return;
-    const pendingInterrupt = interrupted.snapshot.pendingInterrupt;
+    expect("pendingInterrupt" in interrupted.snapshot).toBe(false);
+    const pendingInterrupt = battleFrontierInterruptDecisionForState(
+      interrupted.state,
+    );
     if (pendingInterrupt === null) {
       throw new Error("Expected the failed-save interrupt checkpoint.");
     }
@@ -2392,7 +2395,6 @@ describe("Cloudkill source-turn movement", () => {
       holes: [{ kind: "rolledDice" }],
       snapshot: {
         currentActorId: spellCasterId,
-        pendingInterrupt: null,
       },
     });
     if (declined.tag !== "needsHoles") return;
@@ -2408,7 +2410,6 @@ describe("Cloudkill source-turn movement", () => {
       holes: [{ kind: "concentrationSavingThrow" }],
       snapshot: {
         currentActorId: spellCasterId,
-        pendingInterrupt: null,
       },
     });
     if (concentrationFrontier.tag !== "needsHoles") return;
@@ -2438,7 +2439,6 @@ describe("Cloudkill source-turn movement", () => {
       snapshot: {
         round: 2,
         currentActorId: spellCasterId,
-        pendingInterrupt: null,
       },
     });
   });
@@ -2523,7 +2523,7 @@ describe("Cloudkill source-turn movement", () => {
     if (interrupted.tag !== "needsHoles") {
       throw new Error("Expected the first movement failed-save interrupt.");
     }
-    const pending = interrupted.snapshot.pendingInterrupt;
+    const pending = battleFrontierInterruptDecisionForState(interrupted.state);
     if (pending === null) {
       throw new Error("Expected a pending failed-save interrupt.");
     }
@@ -2856,15 +2856,14 @@ describe("Cloudkill source-turn movement", () => {
     expect(secondInterrupted).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
-      snapshot: {
-        pendingInterrupt: {
-          trigger: "saveFailed",
-          choices: [
-            expect.objectContaining({ readiedSpellCasterId: spellTargetId }),
-          ],
-        },
-      },
     });
+    if (secondInterrupted.tag !== "needsHoles") {
+      throw new Error("Expected the second failed-save interrupt frontier.");
+    }
+    expect("pendingInterrupt" in secondInterrupted.snapshot).toBe(false);
+    expect(
+      battleFrontierInterruptDecisionForState(secondInterrupted.state),
+    ).toBeNull();
   });
 
   test("cancels remaining movement targets when source damage ends Cloudkill Concentration", () => {
@@ -3077,8 +3076,13 @@ describe("Cloudkill source-turn movement", () => {
     expect(secondDamageFrontier).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "rolledDice" }],
-      snapshot: { pendingInterrupt: null },
     });
+    if (secondDamageFrontier.tag !== "needsHoles") {
+      throw new Error("Expected the second movement damage frontier.");
+    }
+    expect(
+      battleFrontierInterruptDecisionForState(secondDamageFrontier.state),
+    ).toBeNull();
   });
 
   test("preserves and resolves movement interrupt replay through delegated Command End Turn", () => {
@@ -3183,7 +3187,7 @@ describe("Cloudkill source-turn movement", () => {
     expect(
       replayCheckpoint.frame.continuation.parentPosition.child,
     ).not.toHaveProperty("saveHoleId");
-    const pending = interrupted.snapshot.pendingInterrupt;
+    const pending = battleFrontierInterruptDecisionForState(interrupted.state);
     if (pending === null) {
       throw new Error("Expected delegated pending interrupt.");
     }
@@ -3235,7 +3239,6 @@ describe("Cloudkill source-turn movement", () => {
       snapshot: {
         round: 2,
         currentActorId: spellCasterId,
-        pendingInterrupt: null,
       },
     });
   });
@@ -3307,7 +3310,7 @@ describe("Cloudkill source-turn movement", () => {
         }),
       ]),
     );
-    const pending = interrupted.snapshot.pendingInterrupt;
+    const pending = battleFrontierInterruptDecisionForState(interrupted.state);
     if (pending === null) {
       throw new Error("Expected the movement failed-save interrupt.");
     }
@@ -3354,7 +3357,6 @@ describe("Cloudkill source-turn movement", () => {
       snapshot: {
         round: 2,
         currentActorId: spellCasterId,
-        pendingInterrupt: null,
       },
     });
     if (resumed.tag !== "resolved") return;
@@ -3422,7 +3424,7 @@ describe("Cloudkill source-turn movement", () => {
     if (interrupted.tag !== "needsHoles") {
       throw new Error("Expected Command Drop movement interruption.");
     }
-    const pending = interrupted.snapshot.pendingInterrupt;
+    const pending = battleFrontierInterruptDecisionForState(interrupted.state);
     if (pending === null) {
       throw new Error("Expected the movement failed-save interrupt.");
     }
@@ -3464,7 +3466,6 @@ describe("Cloudkill source-turn movement", () => {
       snapshot: {
         round: 2,
         currentActorId: spellCasterId,
-        pendingInterrupt: null,
       },
     });
   });
@@ -3555,7 +3556,6 @@ describe("Cloudkill source-turn movement", () => {
       holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
       snapshot: {
         currentActorId: spellTargetId,
-        pendingInterrupt: { trigger: "saveFailed" },
       },
     });
     if (greaseInterrupted.tag !== "needsHoles") {
@@ -3578,7 +3578,6 @@ describe("Cloudkill source-turn movement", () => {
       snapshot: {
         round: 1,
         currentActorId: spellTargetId,
-        pendingInterrupt: null,
         combatants: expect.arrayContaining([
           expect.objectContaining({
             combatantId: spellTargetId,
@@ -3625,7 +3624,6 @@ describe("Cloudkill source-turn movement", () => {
       holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
       snapshot: {
         currentActorId: spellCasterId,
-        pendingInterrupt: { trigger: "saveFailed" },
       },
     });
   });
@@ -3683,7 +3681,7 @@ describe("Cloudkill source-turn movement", () => {
     if (interrupted.tag !== "needsHoles") {
       throw new Error("Expected the failed-save reaction window.");
     }
-    const pending = interrupted.snapshot.pendingInterrupt;
+    const pending = battleFrontierInterruptDecisionForState(interrupted.state);
     if (pending === null) {
       throw new Error("Expected a pending failed-save interrupt.");
     }
@@ -3757,7 +3755,6 @@ describe("Cloudkill source-turn movement", () => {
       snapshot: {
         round: 2,
         currentActorId: spellCasterId,
-        pendingInterrupt: null,
         combatants: expect.arrayContaining([
           expect.objectContaining({
             combatantId: spellCasterId,
@@ -3848,7 +3845,7 @@ describe("Cloudkill source-turn movement", () => {
     if (interrupted.tag !== "needsHoles") {
       throw new Error("Expected the failed-save reaction window.");
     }
-    const pending = interrupted.snapshot.pendingInterrupt;
+    const pending = battleFrontierInterruptDecisionForState(interrupted.state);
     if (pending === null) {
       throw new Error("Expected a pending failed-save interrupt.");
     }
@@ -3950,7 +3947,6 @@ describe("Cloudkill source-turn movement", () => {
       snapshot: {
         round: 2,
         currentActorId: spellCasterId,
-        pendingInterrupt: null,
       },
     });
     if (completed.tag !== "resolved") return;
