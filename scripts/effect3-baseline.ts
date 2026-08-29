@@ -560,7 +560,7 @@ async function captureDefaultStdioMcp(): Promise<McpClientCapture> {
     await client.connect(transport as Transport);
     return await captureMcpClient(client);
   } finally {
-    await Promise.allSettled([client.close(), transport.close()]);
+    await client.close();
   }
 }
 
@@ -788,11 +788,10 @@ async function captureHttpWithoutOAuthMcp(): Promise<McpClientCapture> {
     name: "effect3-baseline-http",
     version: "0.1.0",
   });
-  let transport: StreamableHTTPClientTransport | undefined;
   try {
     const endpoint = await server.listen();
     if (Result.isFailure(endpoint)) throw new Error(endpoint.failure.message);
-    transport = new StreamableHTTPClientTransport(endpoint.success, {
+    const transport = new StreamableHTTPClientTransport(endpoint.success, {
       requestInit: {
         headers: { connection: "close" },
         signal: AbortSignal.timeout(30_000),
@@ -802,10 +801,7 @@ async function captureHttpWithoutOAuthMcp(): Promise<McpClientCapture> {
     return await captureMcpClient(client);
   } finally {
     const cleanupFailures: unknown[] = [];
-    const protocolCleanup = await Promise.allSettled([
-      client.close(),
-      ...(transport === undefined ? [] : [transport.close()]),
-    ]);
+    const protocolCleanup = await Promise.allSettled([client.close()]);
     cleanupFailures.push(
       ...protocolCleanup.flatMap((result) =>
         result.status === "rejected" ? [result.reason] : [],
@@ -874,13 +870,18 @@ async function captureShippedHttpAnonymousMcp(): Promise<McpClientCapture> {
     name: "effect3-baseline-http",
     version: "0.1.0",
   });
-  let transport: StreamableHTTPClientTransport | undefined;
+  let clientCloseAttempted = false;
+  const closeClientOnce = async () => {
+    if (clientCloseAttempted) return;
+    clientCloseAttempted = true;
+    await client.close();
+  };
   try {
     const endpoint = new URL("/mcp", endpointOrigin);
     await waitForHttpHealth(new URL("/health", endpointOrigin), child, () =>
       childStderr.trim(),
     );
-    transport = new StreamableHTTPClientTransport(endpoint, {
+    const transport = new StreamableHTTPClientTransport(endpoint, {
       requestInit: {
         headers: { connection: "close" },
         signal: AbortSignal.timeout(30_000),
@@ -890,16 +891,12 @@ async function captureShippedHttpAnonymousMcp(): Promise<McpClientCapture> {
     // its declaration is narrower than Client.connect's shared transport type.
     await client.connect(transport as Transport);
     const capture = await captureMcpClient(client);
-    await Promise.all([client.close(), transport.close()]);
-    transport = undefined;
+    await closeClientOnce();
     await verifyShippedHttpResponseDrain(port, child, () => childStderr.trim());
     return capture;
   } finally {
     const cleanupFailures: unknown[] = [];
-    const protocolCleanup = await Promise.allSettled([
-      client.close(),
-      ...(transport === undefined ? [] : [transport.close()]),
-    ]);
+    const protocolCleanup = await Promise.allSettled([closeClientOnce()]);
     cleanupFailures.push(
       ...protocolCleanup.flatMap((result) =>
         result.status === "rejected" ? [result.reason] : [],
