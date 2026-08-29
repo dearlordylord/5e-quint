@@ -5,7 +5,7 @@
 import { spawn } from "node:child_process";
 import { createWriteStream, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   currentGitRevision,
@@ -43,8 +43,8 @@ function parseArgs(args: readonly string[]): {
     );
   }
   const decodedScenarioId = decodeScenarioId(scenarioIdInput);
-  if (Either.isLeft(decodedScenarioId)) fail(decodedScenarioId.left);
-  return { transcriptPath, scenarioId: decodedScenarioId.right };
+  if (Result.isFailure(decodedScenarioId)) fail(decodedScenarioId.failure);
+  return { transcriptPath, scenarioId: decodedScenarioId.success };
 }
 
 const { transcriptPath, scenarioId } = parseArgs(process.argv.slice(2));

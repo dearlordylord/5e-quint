@@ -1,4 +1,4 @@
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -52,10 +52,10 @@ describe("Raw Swarm deterministic stage planning", () => {
         },
       ),
     });
-    expect(Either.isRight(planned)).toBe(true);
-    if (Either.isLeft(planned)) return;
+    expect(Result.isSuccess(planned)).toBe(true);
+    if (Result.isFailure(planned)) return;
     const characterStage = stagePlanEntry(
-      planned.right,
+      planned.success,
       "scenarioCharacterAuthoring",
     );
     expect(characterStage).toMatchObject({
@@ -64,10 +64,13 @@ describe("Raw Swarm deterministic stage planning", () => {
       modelInvocation: "none",
     });
     expect(
-      stageRequiresModelInvocation(planned.right, "scenarioCharacterAuthoring"),
+      stageRequiresModelInvocation(
+        planned.success,
+        "scenarioCharacterAuthoring",
+      ),
     ).toBe(false);
     expect(
-      stageRequiresModelInvocation(planned.right, "scenarioSetupAuthoring"),
+      stageRequiresModelInvocation(planned.success, "scenarioSetupAuthoring"),
     ).toBe(true);
   });
 
@@ -85,15 +88,15 @@ describe("Raw Swarm deterministic stage planning", () => {
         },
       ),
     });
-    expect(Either.isRight(planned)).toBe(true);
-    if (Either.isLeft(planned)) return;
+    expect(Result.isSuccess(planned)).toBe(true);
+    if (Result.isFailure(planned)) return;
     expect(
-      stagePlanEntry(planned.right, "scenarioCharacterAuthoring"),
+      stagePlanEntry(planned.success, "scenarioCharacterAuthoring"),
     ).toMatchObject({
       decision: "required",
       modelInvocation: "planned",
     });
-    expect(planned.right.outcome).toEqual({ tag: "admitted" });
+    expect(planned.success.outcome).toEqual({ tag: "admitted" });
   });
 
   test("keeps geometry-assisted and coherent Table-authored decisions executable", () => {
@@ -115,17 +118,17 @@ describe("Raw Swarm deterministic stage planning", () => {
         },
       ),
     });
-    expect(Either.isRight(geometry)).toBe(true);
-    expect(Either.isRight(table)).toBe(true);
-    if (Either.isLeft(geometry) || Either.isLeft(table)) return;
-    expect(geometry.right.outcome).toEqual({ tag: "admitted" });
-    expect(table.right.outcome).toEqual({ tag: "admitted" });
-    expect(stagePlanEntry(table.right, "scenarioSetupAuthoring")).toMatchObject(
-      {
-        decision: "required",
-        determinedBy: "pipelineOrder",
-      },
-    );
+    expect(Result.isSuccess(geometry)).toBe(true);
+    expect(Result.isSuccess(table)).toBe(true);
+    if (Result.isFailure(geometry) || Result.isFailure(table)) return;
+    expect(geometry.success.outcome).toEqual({ tag: "admitted" });
+    expect(table.success.outcome).toEqual({ tag: "admitted" });
+    expect(
+      stagePlanEntry(table.success, "scenarioSetupAuthoring"),
+    ).toMatchObject({
+      decision: "required",
+      determinedBy: "pipelineOrder",
+    });
   });
 
   test("rejects an incoherent outside-envelope candidate before whole-scenario review", () => {
@@ -145,33 +148,33 @@ describe("Raw Swarm deterministic stage planning", () => {
         },
       ),
     });
-    expect(Either.isRight(planned)).toBe(true);
-    if (Either.isLeft(planned)) return;
-    expect(planned.right.outcome.tag).toBe("rejected");
-    expect(planned.right.identity).toEqual({
+    expect(Result.isSuccess(planned)).toBe(true);
+    if (Result.isFailure(planned)) return;
+    expect(planned.success.outcome.tag).toBe("rejected");
+    expect(planned.success.identity).toEqual({
       tag: "candidate",
       campaignId: "stage-plan-campaign",
       candidateId: "stage-plan-candidate",
       candidateScenarioSha256: "c".repeat(64),
     });
-    const invalidCandidateIdentity = Schema.decodeUnknownEither(
+    const invalidCandidateIdentity = Schema.decodeUnknownResult(
       ScenarioStagePlanSchema,
     )({
-      ...planned.right,
+      ...planned.success,
       identity: { tag: "candidate", candidateId: "stage-plan-candidate" },
     });
-    expect(Either.isLeft(invalidCandidateIdentity)).toBe(true);
+    expect(Result.isFailure(invalidCandidateIdentity)).toBe(true);
     expect(
-      stagePlanEntry(planned.right, "scenarioCompositeReview"),
+      stagePlanEntry(planned.success, "scenarioCompositeReview"),
     ).toMatchObject({
       decision: "rejected",
       modelInvocation: "none",
     });
     expect(
-      stageRequiresModelInvocation(planned.right, "scenarioCompositeReview"),
+      stageRequiresModelInvocation(planned.success, "scenarioCompositeReview"),
     ).toBe(false);
     const findings: unknown[] = [];
-    emitScenarioStagePlanFindings(planned.right, (finding) =>
+    emitScenarioStagePlanFindings(planned.success, (finding) =>
       findings.push(finding),
     );
     expect(findings).toHaveLength(5);
@@ -181,10 +184,10 @@ describe("Raw Swarm deterministic stage planning", () => {
         disposition: "rejected",
       }),
     );
-    const retained = scenarioStagePlanFindings(planned.right);
+    const retained = scenarioStagePlanFindings(planned.success);
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(ScenarioStagePlanFindingsSchema)(retained),
+      Result.isSuccess(
+        Schema.decodeUnknownResult(ScenarioStagePlanFindingsSchema)(retained),
       ),
     ).toBe(true);
   });
@@ -197,17 +200,20 @@ describe("Raw Swarm deterministic stage planning", () => {
         { tag: "notRequired", evidence: "No spatial witness is needed." },
       ),
     });
-    expect(Either.isRight(planned)).toBe(true);
-    if (Either.isLeft(planned)) return;
+    expect(Result.isSuccess(planned)).toBe(true);
+    if (Result.isFailure(planned)) return;
     const ledgerEntries: string[] = [];
     if (
-      stageRequiresModelInvocation(planned.right, "scenarioCharacterAuthoring")
+      stageRequiresModelInvocation(
+        planned.success,
+        "scenarioCharacterAuthoring",
+      )
     ) {
       ledgerEntries.push("scenarioCharacterAuthoring");
     }
     expect(ledgerEntries).toEqual([]);
     expect(
-      stagePlanEntry(planned.right, "scenarioCharacterAuthoring"),
+      stagePlanEntry(planned.success, "scenarioCharacterAuthoring"),
     ).toMatchObject({ modelInvocation: "none", decision: "skipped" });
   });
 
@@ -219,28 +225,28 @@ describe("Raw Swarm deterministic stage planning", () => {
         { tag: "notRequired", evidence: "No spatial witness is needed." },
       ),
     });
-    expect(Either.isRight(planned)).toBe(true);
-    if (Either.isLeft(planned)) return;
+    expect(Result.isSuccess(planned)).toBe(true);
+    if (Result.isFailure(planned)) return;
     const character = stagePlanEntry(
-      planned.right,
+      planned.success,
       "scenarioCharacterAuthoring",
     );
     expect(character).toBeDefined();
     if (character === undefined) return;
     const invalid = {
-      ...planned.right,
-      stages: planned.right.stages.map((stage) =>
+      ...planned.success,
+      stages: planned.success.stages.map((stage) =>
         stage.stage === "scenarioCharacterAuthoring"
           ? { ...stage, modelInvocation: "recorded" }
           : stage,
       ),
     };
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(ScenarioStagePlanSchema)(invalid),
+      Result.isFailure(
+        Schema.decodeUnknownResult(ScenarioStagePlanSchema)(invalid),
       ),
     ).toBe(true);
-    expect(Either.isLeft(validateScenarioStagePlan(invalid))).toBe(true);
+    expect(Result.isFailure(validateScenarioStagePlan(invalid))).toBe(true);
   });
 
   test("parses empty invocation evidence as an explicit zero-invocation stream", async () => {
@@ -255,10 +261,10 @@ describe("Raw Swarm deterministic stage planning", () => {
         { tag: "notRequired", evidence: "No spatial witness is needed." },
       ),
     });
-    expect(Either.isRight(planned)).toBe(true);
-    if (Either.isLeft(planned)) return;
+    expect(Result.isSuccess(planned)).toBe(true);
+    if (Result.isFailure(planned)) return;
     expect(
-      stagePlanEntry(planned.right, "scenarioCharacterAuthoring"),
+      stagePlanEntry(planned.success, "scenarioCharacterAuthoring"),
     ).toMatchObject({ decision: "skipped", modelInvocation: "none" });
   });
 });

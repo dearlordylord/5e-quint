@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import { replayRetainedScenarioReview } from "./generate-scenario.ts";
 import { assertModelEntryPointGuard } from "./model-entrypoint-guard.ts";
@@ -14,15 +14,17 @@ function fail(message: string): never {
 
 function retainedInput(path: string) {
   const value: unknown = JSON.parse(readFileSync(path, "utf8"));
-  const decoded = Schema.decodeUnknownEither(
+  const decoded = Schema.decodeUnknownResult(
     RetainedScenarioReviewInputSchema,
     {
       onExcessProperty: "error",
     },
   )(value);
-  return Either.isRight(decoded)
-    ? decoded.right
-    : fail(`Invalid retained scenario review input: ${decoded.left.message}`);
+  return Result.isSuccess(decoded)
+    ? decoded.success
+    : fail(
+        `Invalid retained scenario review input: ${decoded.failure.message}`,
+      );
 }
 
 async function main(args: readonly string[]): Promise<void> {
@@ -45,15 +47,15 @@ async function main(args: readonly string[]): Promise<void> {
   if (revision.tag === "dirty") {
     fail("Scenario review requires a clean Git worktree.");
   }
-  const gitSha = Schema.decodeUnknownEither(GitShaSchema)(revision.sha);
-  if (Either.isLeft(gitSha)) fail(gitSha.left.message);
+  const gitSha = Schema.decodeUnknownResult(GitShaSchema)(revision.sha);
+  if (Result.isFailure(gitSha)) fail(gitSha.failure.message);
   if (existsSync(outputPath)) {
     fail(`Refusing to overwrite scenario review output: ${outputPath}`);
   }
   const result = await replayRetainedScenarioReview({
     retainedInput: retainedInput(inputPath),
     ledgerPath,
-    gitSha: gitSha.right,
+    gitSha: gitSha.success,
   });
   writeFileSync(outputPath, `${JSON.stringify(result, null, 2)}\n`, {
     flag: "wx",

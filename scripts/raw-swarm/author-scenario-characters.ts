@@ -11,7 +11,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
-import { Either, Match, Schema } from "effect";
+import { Result, Match, Schema } from "effect";
 
 import { admittedScenarioIdentity } from "./scenario-admission.ts";
 import { assertModelEntryPointGuard } from "./model-entrypoint-guard.ts";
@@ -45,23 +45,23 @@ async function main(args: readonly string[]): Promise<void> {
   assertModelEntryPointGuard();
   const [scenarioInput, ...unexpected] = args;
   const scenarioId = decodeScenarioId(scenarioInput);
-  if (Either.isLeft(scenarioId) || unexpected.length > 0) {
+  if (Result.isFailure(scenarioId) || unexpected.length > 0) {
     fail("Usage: author-scenario-characters.ts <scenario-id>");
   }
   const revision = currentGitRevision();
   if (revision.tag === "dirty") {
     fail("Scenario character authoring requires a clean Git worktree.");
   }
-  const gitSha = Schema.decodeUnknownEither(GitShaSchema)(revision.sha);
-  if (Either.isLeft(gitSha)) fail(gitSha.left.message);
+  const gitSha = Schema.decodeUnknownResult(GitShaSchema)(revision.sha);
+  if (Result.isFailure(gitSha)) fail(gitSha.failure.message);
   const scenarioPath = resolve(
     repoRoot,
-    `scripts/raw-swarm/sdk-player/scenarios/${scenarioId.right}.md`,
+    `scripts/raw-swarm/sdk-player/scenarios/${scenarioId.success}.md`,
   );
   const reviewPath = `${scenarioPath}.scenario-review.json`;
   const outputPath = resolve(
     repoRoot,
-    `scripts/raw-swarm/sdk-player/scenarios/${scenarioId.right}.characters.ts`,
+    `scripts/raw-swarm/sdk-player/scenarios/${scenarioId.success}.characters.ts`,
   );
   if (!existsSync(scenarioPath) || !existsSync(reviewPath)) {
     fail("Scenario characters require an admitted prose scenario and review.");
@@ -70,21 +70,21 @@ async function main(args: readonly string[]): Promise<void> {
     fail(`Refusing to overwrite scenario characters: ${outputPath}`);
   }
   const admission = admittedScenarioIdentity({
-    scenarioId: scenarioId.right,
+    scenarioId: scenarioId.success,
     scenarioPath,
     reviewPath,
     recordPath: scenarioPath.replace(/\.md$/, ".scenario.json"),
   });
-  if (Either.isLeft(admission)) fail(admission.left);
+  if (Result.isFailure(admission)) fail(admission.failure);
 
   const retainedPlan = retainAdmittedScenarioStagePlan({
-    scenarioId: scenarioId.right,
+    scenarioId: scenarioId.success,
     scenarioPath,
-    scenarioSha256: admission.right.scenarioSha256,
-    scenarioReviewSha256: admission.right.scenarioReviewSha256,
+    scenarioSha256: admission.success.scenarioSha256,
+    scenarioReviewSha256: admission.success.scenarioReviewSha256,
   });
-  if (Either.isLeft(retainedPlan)) fail(retainedPlan.left);
-  const stagePlan = retainedPlan.right;
+  if (Result.isFailure(retainedPlan)) fail(retainedPlan.failure);
+  const stagePlan = retainedPlan.success;
   if (stagePlan.outcome.tag === "rejected") {
     fail(`Scenario stage plan rejected authoring: ${stagePlan.outcome.reason}`);
   }
@@ -125,7 +125,7 @@ async function main(args: readonly string[]): Promise<void> {
       : (["--dangerously-bypass-approvals-and-sandbox"] as const);
     const evidenceDirectory = resolve(repoRoot, "scripts/raw-swarm/out");
     mkdirSync(evidenceDirectory, { recursive: true });
-    const invocationStem = `${scenarioId.right}-character-authoring-${randomUUID()}`;
+    const invocationStem = `${scenarioId.success}-character-authoring-${randomUUID()}`;
     const eventPath = resolve(
       evidenceDirectory,
       `${invocationStem}-events.jsonl`,
@@ -133,7 +133,7 @@ async function main(args: readonly string[]): Promise<void> {
     const logPath = resolve(evidenceDirectory, `${invocationStem}-agent.log`);
     const ledgerPath = resolve(
       evidenceDirectory,
-      `${scenarioId.right}-authoring-invocations.jsonl`,
+      `${scenarioId.success}-authoring-invocations.jsonl`,
     );
     const result = await runCodexInvocation({
       args: [
@@ -164,9 +164,9 @@ async function main(args: readonly string[]): Promise<void> {
       ledgerPath,
       phase: "scenarioCharacterAuthoring",
       stagePlanReason: RAW_SWARM_STAGE_PLAN_REASONS.scenarioCharacterAuthoring,
-      subject: { tag: "scenario", scenarioId: scenarioId.right },
-      gitSha: gitSha.right,
-      fallbackInvocationId: `${scenarioId.right}-character-authoring`,
+      subject: { tag: "scenario", scenarioId: scenarioId.success },
+      gitSha: gitSha.success,
+      fallbackInvocationId: `${scenarioId.success}-character-authoring`,
       model: "gpt-5.6-sol",
       reasoningEffort: "medium",
       operation: { tag: "noOutput" },

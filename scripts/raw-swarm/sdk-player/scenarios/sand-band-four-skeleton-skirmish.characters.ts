@@ -112,7 +112,7 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
         observation: {
           characterId: plan.id,
           stage: "abilityScores",
-          issues: abilityScores.left,
+          issues: abilityScores.failure,
         },
       };
     }
@@ -138,7 +138,7 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
             kind: "abilityScores" as const,
             holeId: hole.holeId,
             method: "standardArray" as const,
-            value: abilityScores.right,
+            value: abilityScores.success,
           };
         }
         const labels =
@@ -194,7 +194,7 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
             kind: "abilityScores" as const,
             holeId: hole.holeId,
             method: "standardArray" as const,
-            value: abilityScores.right,
+            value: abilityScores.success,
           };
         }
         const optionIdsByChoiceKey: Readonly<
@@ -255,7 +255,7 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
             kind: "abilityScores" as const,
             holeId: hole.holeId,
             method: "standardArray" as const,
-            value: abilityScores.right,
+            value: abilityScores.success,
           };
         }
         return {
@@ -318,15 +318,15 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
     if (sdk.isLeft(sheet)) {
       return {
         kind: "obstructed",
-        obstruction: `The public SDK finalized ${plan.id}'s build but could not create its fresh Character Sheet: ${sdk.characterSheetConstructionIssuesSummary(sheet.left)}`,
+        obstruction: `The public SDK finalized ${plan.id}'s build but could not create its fresh Character Sheet: ${sdk.characterSheetConstructionIssuesSummary(sheet.failure)}`,
         observation: {
           characterId: plan.id,
           stage: "freshSheet",
-          issues: sheet.left,
+          issues: sheet.failure,
         },
       };
     }
-    characterSheets.push(sheet.right);
+    characterSheets.push(sheet.success);
   }
 
   return {

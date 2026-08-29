@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { relative, resolve } from "node:path";
 
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("node:fs", async (importOriginal) => {
@@ -128,8 +128,8 @@ const stagePlanResult = planAdmittedScenarioStages({
     },
   },
 });
-if (Either.isLeft(stagePlanResult)) throw new Error(stagePlanResult.left);
-const stagePlan = stagePlanResult.right;
+if (Result.isFailure(stagePlanResult)) throw new Error(stagePlanResult.failure);
+const stagePlan = stagePlanResult.success;
 const stageReason = (
   stage: (typeof stagePlan.stages)[number]["stage"],
 ): string => {
@@ -766,11 +766,11 @@ function retainBenchmarkAuxiliaryInvocation(
     exit: { tag: "exited", status: 0 },
     result: { tag: "succeeded" },
   });
-  if (Either.isLeft(started) || Either.isLeft(completed)) {
+  if (Result.isFailure(started) || Result.isFailure(completed)) {
     throw new Error("Synthetic benchmark event fixture is invalid.");
   }
   const events = [
-    started.right,
+    started.success,
     ...(input.result === undefined
       ? []
       : [
@@ -793,7 +793,7 @@ function retainBenchmarkAuxiliaryInvocation(
         reasoning_output_tokens: 1,
       },
     },
-    completed.right,
+    completed.success,
   ];
   const authority = writeAuthority(
     root,
@@ -1386,8 +1386,8 @@ function validated(
   value: CompletePathMeasurement,
 ): ValidatedCompletePathMeasurement {
   const result = validateCompletePathMeasurement(value);
-  if (Either.isLeft(result)) throw new Error(result.left);
-  return result.right;
+  if (Result.isFailure(result)) throw new Error(result.failure);
+  return result.success;
 }
 
 describe("complete Raw Swarm path comparison", () => {
@@ -1421,7 +1421,7 @@ describe("complete Raw Swarm path comparison", () => {
       ...source.invocations.slice(2),
     ]);
     expect(validateCompletePathMeasurement(interleaved)).toEqual(
-      expect.objectContaining({ _tag: "Right" }),
+      expect.objectContaining({ _tag: "Success" }),
     );
 
     const afterFinalReview = retainOrdered([
@@ -1431,9 +1431,9 @@ describe("complete Raw Swarm path comparison", () => {
     ]);
     const finalReviewValidation =
       validateCompletePathMeasurement(afterFinalReview);
-    expect(Either.isLeft(finalReviewValidation)).toBe(true);
-    if (Either.isRight(finalReviewValidation)) return;
-    expect(finalReviewValidation.left).toContain(
+    expect(Result.isFailure(finalReviewValidation)).toBe(true);
+    if (Result.isSuccess(finalReviewValidation)) return;
+    expect(finalReviewValidation.failure).toContain(
       "follow the retained final review",
     );
 
@@ -1443,9 +1443,9 @@ describe("complete Raw Swarm path comparison", () => {
       ...source.invocations.slice(5),
     ]);
     const validation = validateCompletePathMeasurement(reversed);
-    expect(Either.isLeft(validation)).toBe(true);
-    if (Either.isRight(validation)) return;
-    expect(validation.left).toContain("out of order");
+    expect(Result.isFailure(validation)).toBe(true);
+    if (Result.isSuccess(validation)) return;
+    expect(validation.failure).toContain("out of order");
   });
 
   test("recognizes the hyphenated pre-play replay authority role", () => {
@@ -1462,7 +1462,7 @@ describe("complete Raw Swarm path comparison", () => {
     };
     expect(
       validateCompletePathMeasurement(withRetainedFindings(source, findings)),
-    ).toEqual(expect.objectContaining({ _tag: "Right" }));
+    ).toEqual(expect.objectContaining({ _tag: "Success" }));
   });
 
   test("compares consolidated implementations when outcome and evidence semantics match", () => {
@@ -1562,8 +1562,8 @@ describe("complete Raw Swarm path comparison", () => {
     };
     expect(validateCompletePathMeasurement(wrongEffortCandidate)).toMatchObject(
       {
-        _tag: "Left",
-        left: expect.stringContaining(
+        _tag: "Failure",
+        failure: expect.stringContaining(
           "boundedCapabilityProjection benchmark scenarioCompositeReview invocation must use medium reasoning",
         ),
       },
@@ -1580,8 +1580,8 @@ describe("complete Raw Swarm path comparison", () => {
       },
     };
     expect(validateCompletePathMeasurement(malformedBundle)).toMatchObject({
-      _tag: "Left",
-      left: expect.stringContaining("setup authority"),
+      _tag: "Failure",
+      failure: expect.stringContaining("setup authority"),
     });
   }, 120_000);
 
@@ -1662,9 +1662,9 @@ describe("complete Raw Swarm path comparison", () => {
       findings: foreignFindings,
       findingsAuthority: foreignFindingsAuthority,
     });
-    expect(Either.isLeft(validation)).toBe(true);
-    if (Either.isRight(validation)) return;
-    expect(validation.left).toMatch(
+    expect(Result.isFailure(validation)).toBe(true);
+    if (Result.isSuccess(validation)) return;
+    expect(validation.failure).toMatch(
       /Campaign, Evidence Set|admitted Scenario source hash/,
     );
   }, 120_000);
@@ -1717,8 +1717,8 @@ describe("complete Raw Swarm path comparison", () => {
     const staleFinalValidation =
       validateCompletePathMeasurement(retainedObstruction);
     expect(staleFinalValidation).toMatchObject({
-      _tag: "Left",
-      left: expect.stringContaining(
+      _tag: "Failure",
+      failure: expect.stringContaining(
         "terminal state and final artifact disagree",
       ),
     });
@@ -1741,8 +1741,8 @@ describe("complete Raw Swarm path comparison", () => {
     const validatedObstruction = validateCompletePathMeasurement(
       obstructionWithoutStaleFinal,
     );
-    expect(validatedObstruction).toMatchObject({ _tag: "Right" });
-    if (Either.isLeft(validatedObstruction)) return;
+    expect(validatedObstruction).toMatchObject({ _tag: "Success" });
+    if (Result.isFailure(validatedObstruction)) return;
     const missingPlayerContext = validateCompletePathMeasurement(
       withRetainedFindings(obstructionWithoutStaleFinal, {
         ...obstructionWithoutStaleFinal.findings,
@@ -1752,8 +1752,8 @@ describe("complete Raw Swarm path comparison", () => {
       }),
     );
     expect(missingPlayerContext).toMatchObject({
-      _tag: "Left",
-      left: expect.stringContaining(
+      _tag: "Failure",
+      failure: expect.stringContaining(
         "no retained player context-delivery authority",
       ),
     });
@@ -1766,13 +1766,13 @@ describe("complete Raw Swarm path comparison", () => {
       }),
     );
     expect(missingPostPlayContext).toMatchObject({
-      _tag: "Left",
-      left: expect.stringContaining(
+      _tag: "Failure",
+      failure: expect.stringContaining(
         "no retained postPlayReview context-delivery authority",
       ),
     });
     const comparison = compareCompleteEquivalentPaths({
-      baseline: validatedObstruction.right,
+      baseline: validatedObstruction.success,
       candidate: validatedCompletedCandidate,
     });
     expect(comparison.identity).toBe("different-path");
@@ -1863,9 +1863,9 @@ describe("complete Raw Swarm path comparison", () => {
       continuationObservationPath: noCallObservations.path,
       finalArtifactPath: noCallFinal.path,
     });
-    expect(Either.isRight(noCallOutcome)).toBe(true);
-    if (Either.isLeft(noCallOutcome)) return;
-    expect(noCallOutcome.right).toEqual({
+    expect(Result.isSuccess(noCallOutcome)).toBe(true);
+    if (Result.isFailure(noCallOutcome)) return;
+    expect(noCallOutcome.success).toEqual({
       tag: "failed",
       reason:
         "Player terminal evidence claims playerConcluded without an SDK call.",
@@ -1909,14 +1909,14 @@ describe("complete Raw Swarm path comparison", () => {
       ),
     };
     const noCallMeasurement = withRetainedFindings(
-      { ...obstructed, outcome: noCallOutcome.right },
+      { ...obstructed, outcome: noCallOutcome.success },
       noCallFindings,
     );
     const validatedNoCall = validateCompletePathMeasurement(noCallMeasurement);
-    expect(validatedNoCall).toMatchObject({ _tag: "Right" });
-    if (Either.isLeft(validatedNoCall)) return;
+    expect(validatedNoCall).toMatchObject({ _tag: "Success" });
+    if (Result.isFailure(validatedNoCall)) return;
     const noCallComparison = compareCompleteEquivalentPaths({
-      baseline: validatedNoCall.right,
+      baseline: validatedNoCall.success,
       candidate: validatedCompletedCandidate,
     });
     expect(noCallComparison.identity).toBe("different-path");
@@ -1947,8 +1947,8 @@ describe("complete Raw Swarm path comparison", () => {
       },
     });
     expect(validation).toMatchObject({
-      _tag: "Left",
-      left: expect.stringContaining("final player artifact is invalid"),
+      _tag: "Failure",
+      failure: expect.stringContaining("final player artifact is invalid"),
     });
   }, 60_000);
 
@@ -1987,8 +1987,8 @@ describe("complete Raw Swarm path comparison", () => {
       },
     });
     expect(validation).toMatchObject({
-      _tag: "Left",
-      left: expect.stringContaining("continuation evidence is invalid"),
+      _tag: "Failure",
+      failure: expect.stringContaining("continuation evidence is invalid"),
     });
   }, 60_000);
 
@@ -2004,7 +2004,7 @@ describe("complete Raw Swarm path comparison", () => {
       alternateGitSha,
     );
     expect(validateCompletePathMeasurement(candidate)).toMatchObject({
-      _tag: "Right",
+      _tag: "Success",
     });
     const comparison = compareCompleteEquivalentPaths({
       baseline: validated(baseline),
@@ -2381,8 +2381,8 @@ describe("complete Raw Swarm path comparison", () => {
       },
     };
     expect(validateCompletePathMeasurement(tampered)).toMatchObject({
-      _tag: "Left",
-      left: expect.stringContaining(
+      _tag: "Failure",
+      failure: expect.stringContaining(
         "findings projection authority does not match the measurement",
       ),
     });
@@ -2434,13 +2434,13 @@ describe("complete Raw Swarm path comparison", () => {
       ...candidateEvidence,
       schemaVersion: 3,
     });
-    expect(baseline).toMatchObject({ _tag: "Right" });
-    expect(candidate).toMatchObject({ _tag: "Right" });
-    if (Either.isLeft(baseline) || Either.isLeft(candidate)) return;
+    expect(baseline).toMatchObject({ _tag: "Success" });
+    expect(candidate).toMatchObject({ _tag: "Success" });
+    if (Result.isFailure(baseline) || Result.isFailure(candidate)) return;
     expect(
       compareCompleteEquivalentPaths({
-        baseline: baseline.right,
-        candidate: candidate.right,
+        baseline: baseline.success,
+        candidate: candidate.success,
       }),
     ).toMatchObject({
       identity: "different-path",
@@ -2460,8 +2460,8 @@ describe("complete Raw Swarm path comparison", () => {
       ),
     });
     expect(validation).toMatchObject({
-      _tag: "Left",
-      left: expect.stringContaining("different implementation revision"),
+      _tag: "Failure",
+      failure: expect.stringContaining("different implementation revision"),
     });
   });
 
@@ -2485,10 +2485,10 @@ describe("complete Raw Swarm path comparison", () => {
       ),
     };
     const parsed = parseBenchmarkMeasurement(tampered);
-    expect(Either.isRight(parsed)).toBe(true);
-    if (Either.isRight(parsed)) {
-      expect(validateCompletePathMeasurement(parsed.right)).toMatchObject({
-        _tag: "Left",
+    expect(Result.isSuccess(parsed)).toBe(true);
+    if (Result.isSuccess(parsed)) {
+      expect(validateCompletePathMeasurement(parsed.success)).toMatchObject({
+        _tag: "Failure",
       });
     }
   });
@@ -2501,11 +2501,11 @@ describe("complete Raw Swarm path comparison", () => {
       evidenceSetId: "swapped-benchmark-evidence",
     };
     const parsed = parseBenchmarkMeasurement(tampered);
-    expect(Either.isRight(parsed)).toBe(true);
-    if (Either.isRight(parsed)) {
-      expect(validateCompletePathMeasurement(parsed.right)).toMatchObject({
-        _tag: "Left",
-        left: expect.stringContaining(
+    expect(Result.isSuccess(parsed)).toBe(true);
+    if (Result.isSuccess(parsed)) {
+      expect(validateCompletePathMeasurement(parsed.success)).toMatchObject({
+        _tag: "Failure",
+        failure: expect.stringContaining(
           "does not match the retained player Execution",
         ),
       });
@@ -2555,8 +2555,8 @@ describe("complete Raw Swarm path comparison", () => {
       contextSourceManifest: swappedManifest,
     });
     expect(validation).toMatchObject({
-      _tag: "Left",
-      left: expect.stringContaining("canonical"),
+      _tag: "Failure",
+      failure: expect.stringContaining("canonical"),
     });
 
     if (typeof playerAuthority.path !== "string") return;
@@ -2566,8 +2566,8 @@ describe("complete Raw Swarm path comparison", () => {
     );
     const tamperedValidation = validateCompletePathMeasurement(benchmark);
     expect(tamperedValidation).toMatchObject({
-      _tag: "Left",
-      left: expect.stringContaining("context"),
+      _tag: "Failure",
+      failure: expect.stringContaining("context"),
     });
   });
 
@@ -2592,8 +2592,8 @@ describe("complete Raw Swarm path comparison", () => {
     );
     const validation = validateCompletePathMeasurement(benchmark);
     expect(validation).toMatchObject({
-      _tag: "Left",
-      left: expect.stringContaining("context"),
+      _tag: "Failure",
+      failure: expect.stringContaining("context"),
     });
   });
 
@@ -2609,8 +2609,8 @@ describe("complete Raw Swarm path comparison", () => {
       },
     });
     expect(withoutPostPlay).toMatchObject({
-      _tag: "Left",
-      left: expect.stringContaining("post-play"),
+      _tag: "Failure",
+      failure: expect.stringContaining("post-play"),
     });
 
     const withoutReplay = validateCompletePathMeasurement({
@@ -2623,8 +2623,8 @@ describe("complete Raw Swarm path comparison", () => {
       },
     });
     expect(withoutReplay).toMatchObject({
-      _tag: "Left",
-      left: expect.stringContaining("pre-play replay"),
+      _tag: "Failure",
+      failure: expect.stringContaining("pre-play replay"),
     });
   });
 
@@ -2660,8 +2660,8 @@ describe("complete Raw Swarm path comparison", () => {
       },
     });
     expect(validation).toMatchObject({
-      _tag: "Left",
-      left: expect.stringContaining(
+      _tag: "Failure",
+      failure: expect.stringContaining(
         "result does not match its invocation event output",
       ),
     });
@@ -2708,8 +2708,8 @@ describe("complete Raw Swarm path comparison", () => {
       },
     });
     expect(validation).toMatchObject({
-      _tag: "Left",
-      left: expect.stringContaining(
+      _tag: "Failure",
+      failure: expect.stringContaining(
         "readiness result does not match its invocation event output",
       ),
     });
@@ -2743,8 +2743,8 @@ describe("complete Raw Swarm path comparison", () => {
         },
       });
       expect(validation).toMatchObject({
-        _tag: "Left",
-        left: expect.stringContaining("retired"),
+        _tag: "Failure",
+        failure: expect.stringContaining("retired"),
       });
     },
   );
@@ -2753,7 +2753,7 @@ describe("complete Raw Swarm path comparison", () => {
     const bounded = benchmarkMeasurement("boundedCapabilityProjection");
     expect(
       parseBenchmarkMeasurement({ ...bounded, invocations: [] }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
 
     const baseline = benchmarkMeasurement("documentDeclarationSet");
     const auxiliary = baseline.invocations.find(
@@ -2766,7 +2766,7 @@ describe("complete Raw Swarm path comparison", () => {
         ...bounded,
         invocations: [...bounded.invocations, auxiliary],
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
   });
 
   test("binds an admitted benchmark stage plan to the scenario and review bundle hashes", () => {
@@ -2798,8 +2798,8 @@ describe("complete Raw Swarm path comparison", () => {
       },
     });
     expect(validation).toMatchObject({
-      _tag: "Left",
-      left: expect.stringContaining(
+      _tag: "Failure",
+      failure: expect.stringContaining(
         "Admitted benchmark stage-plan scenario hash is not bound",
       ),
     });
@@ -2831,8 +2831,8 @@ describe("complete Raw Swarm path comparison", () => {
       },
     });
     expect(validation).toMatchObject({
-      _tag: "Left",
-      left: expect.stringContaining(
+      _tag: "Failure",
+      failure: expect.stringContaining(
         "Benchmark scenario-review authority is not bound",
       ),
     });
@@ -2849,8 +2849,8 @@ describe("complete Raw Swarm path comparison", () => {
     };
     const validation = validateCompletePathMeasurement(malformed);
     expect(validation).toMatchObject({
-      _tag: "Left",
-      left: expect.stringContaining("exact bijection"),
+      _tag: "Failure",
+      failure: expect.stringContaining("exact bijection"),
     });
   });
 
@@ -2862,8 +2862,8 @@ describe("complete Raw Swarm path comparison", () => {
     writeFileSync(path, `${readFileSync(path, "utf8")}\n{"tampered":true}\n`);
     const validation = validateCompletePathMeasurement(source);
     expect(validation).toMatchObject({
-      _tag: "Left",
-      left: expect.stringContaining("event authority hash is not canonical"),
+      _tag: "Failure",
+      failure: expect.stringContaining("event authority hash is not canonical"),
     });
   });
 
@@ -2875,8 +2875,8 @@ describe("complete Raw Swarm path comparison", () => {
     writeFileSync(path, `${readFileSync(path, "utf8")}\n{"tampered":true}\n`);
     const validation = validateCompletePathMeasurement(source);
     expect(validation).toMatchObject({
-      _tag: "Left",
-      left: expect.stringContaining(
+      _tag: "Failure",
+      failure: expect.stringContaining(
         "Benchmark invocation event authority hash is not canonical",
       ),
     });
@@ -2912,7 +2912,7 @@ describe("complete Raw Swarm path comparison", () => {
         ([path]) => path === absolutePath,
       );
       reads.mockImplementation(originalRead);
-      expect(validation._tag).toBe("Right");
+      expect(validation._tag).toBe("Success");
       expect(eventReads).toHaveLength(1);
     },
   );
@@ -2965,8 +2965,8 @@ describe("complete Raw Swarm path comparison", () => {
       baselineWithHistoricalReview,
     );
     expect(historicalValidation).toMatchObject({
-      _tag: "Left",
-      left: expect.stringContaining("not a retained review envelope"),
+      _tag: "Failure",
+      failure: expect.stringContaining("not a retained review envelope"),
     });
 
     const candidate = benchmarkMeasurement("boundedCapabilityProjection");
@@ -2994,8 +2994,8 @@ describe("complete Raw Swarm path comparison", () => {
       candidateWithReadiness,
     );
     expect(readinessValidation).toMatchObject({
-      _tag: "Left",
-      left: expect.stringContaining("retains no readiness"),
+      _tag: "Failure",
+      failure: expect.stringContaining("retains no readiness"),
     });
   });
 
@@ -3026,8 +3026,8 @@ describe("complete Raw Swarm path comparison", () => {
       contextSourceManifest: incompleteManifest,
     });
     expect(validation).toMatchObject({
-      _tag: "Left",
-      left: expect.stringContaining("postPlayReview"),
+      _tag: "Failure",
+      failure: expect.stringContaining("postPlayReview"),
     });
   });
 
@@ -3040,13 +3040,13 @@ describe("complete Raw Swarm path comparison", () => {
       ),
     );
     const decodeManifest = (value: unknown) =>
-      Schema.decodeUnknownEither(BenchmarkContextSourceManifestDocumentSchema, {
+      Schema.decodeUnknownResult(BenchmarkContextSourceManifestDocumentSchema, {
         onExcessProperty: "error",
       })(value);
-    expect(Either.isRight(decodeManifest(manifest))).toBe(true);
+    expect(Result.isSuccess(decodeManifest(manifest))).toBe(true);
     if (!Array.isArray(manifest.sources)) return;
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodeManifest({
           ...manifest,
           sources: [...manifest.sources].reverse(),
@@ -3054,7 +3054,7 @@ describe("complete Raw Swarm path comparison", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodeManifest({
           ...manifest,
           sources: manifest.sources.slice(0, -1),
@@ -3062,7 +3062,7 @@ describe("complete Raw Swarm path comparison", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodeManifest({
           ...manifest,
           profile: "documentDeclarationSet",
@@ -3074,9 +3074,9 @@ describe("complete Raw Swarm path comparison", () => {
   test("parses benchmark measurements without widening production complete-path parsing", () => {
     const benchmark = benchmarkMeasurement("boundedCapabilityProjection");
     const parsed = parseBenchmarkMeasurement(benchmark);
-    expect(Either.isRight(parsed)).toBe(true);
+    expect(Result.isSuccess(parsed)).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         parseCompletePathMeasurement({
           ...benchmark,
           schemaVersion: 2,
@@ -3118,7 +3118,7 @@ describe("complete Raw Swarm path comparison", () => {
       candidate,
       outputPath,
     });
-    expect(Either.isRight(written)).toBe(true);
+    expect(Result.isSuccess(written)).toBe(true);
     const output = parseJsonRecord(readFileSync(outputPath, "utf8"));
     expect(output).toMatchObject({
       schemaVersion: 3,
@@ -3133,7 +3133,7 @@ describe("complete Raw Swarm path comparison", () => {
       candidate,
       outputPath,
     });
-    expect(overwrite).toMatchObject({ _tag: "Left" });
+    expect(overwrite).toMatchObject({ _tag: "Failure" });
   });
 
   test("gates input tokens and model-invocation elapsed without claiming total tokens", () => {
@@ -3161,17 +3161,17 @@ describe("complete Raw Swarm path comparison", () => {
       candidate,
       outputPath: resolve(root, "comparison.json"),
     });
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isLeft(result)) return;
-    expect(result.right.inputTokens).toMatchObject({
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isFailure(result)) return;
+    expect(result.success.inputTokens).toMatchObject({
       tag: "comparable",
       reduction: 0.5,
     });
-    expect(result.right.modelInvocationElapsedMilliseconds).toMatchObject({
+    expect(result.success.modelInvocationElapsedMilliseconds).toMatchObject({
       tag: "comparable",
       reduction: 0.5,
     });
-    expect(result.right).not.toHaveProperty("totalTokens");
+    expect(result.success).not.toHaveProperty("totalTokens");
   });
 
   test("refuses to write a comparison below the forty-percent reduction gate", () => {
@@ -3185,8 +3185,8 @@ describe("complete Raw Swarm path comparison", () => {
       outputPath: resolve(root, "comparison.json"),
     });
     expect(result).toMatchObject({
-      _tag: "Left",
-      left: expect.stringContaining("below the required"),
+      _tag: "Failure",
+      failure: expect.stringContaining("below the required"),
     });
   });
 
@@ -3213,8 +3213,8 @@ describe("complete Raw Swarm path comparison", () => {
       outputPath: resolve(root, "comparison.json"),
     });
     expect(result).toMatchObject({
-      _tag: "Left",
-      left: expect.stringContaining("incomparable"),
+      _tag: "Failure",
+      failure: expect.stringContaining("incomparable"),
     });
   });
 
@@ -3351,9 +3351,9 @@ describe("complete Raw Swarm path comparison", () => {
       outcome: { tag: "completed" },
     });
     const validation = validateCompletePathMeasurement(malformed);
-    expect(Either.isLeft(validation)).toBe(true);
-    if (Either.isRight(validation)) return;
-    expect(validation.left).toContain("completed complete path");
+    expect(Result.isFailure(validation)).toBe(true);
+    if (Result.isSuccess(validation)) return;
+    expect(validation.failure).toContain("completed complete path");
   });
 
   test("binds invocation reasons and order to the retained stage plan", () => {
@@ -3365,9 +3365,9 @@ describe("complete Raw Swarm path comparison", () => {
       ),
     });
     const wrongReasonValidation = validateCompletePathMeasurement(wrongReason);
-    expect(Either.isLeft(wrongReasonValidation)).toBe(true);
-    if (Either.isRight(wrongReasonValidation)) return;
-    expect(wrongReasonValidation.left).toContain("stage-plan reason");
+    expect(Result.isFailure(wrongReasonValidation)).toBe(true);
+    if (Result.isSuccess(wrongReasonValidation)) return;
+    expect(wrongReasonValidation.failure).toContain("stage-plan reason");
 
     const ordered = measurement().invocations;
     const outOfOrder = measurement({
@@ -3379,9 +3379,9 @@ describe("complete Raw Swarm path comparison", () => {
       ],
     });
     const outOfOrderValidation = validateCompletePathMeasurement(outOfOrder);
-    expect(Either.isLeft(outOfOrderValidation)).toBe(true);
-    if (Either.isRight(outOfOrderValidation)) return;
-    expect(outOfOrderValidation.left).toContain("out of order");
+    expect(Result.isFailure(outOfOrderValidation)).toBe(true);
+    if (Result.isSuccess(outOfOrderValidation)) return;
+    expect(outOfOrderValidation.failure).toContain("out of order");
   });
 
   test("keeps unavailable dimensions unavailable instead of treating them as zero", () => {
@@ -3455,10 +3455,10 @@ describe("complete Raw Swarm path comparison", () => {
       },
     };
     const parsed = parseCompletePathMeasurement(historical);
-    expect(Either.isRight(parsed)).toBe(true);
-    if (Either.isLeft(parsed)) return;
+    expect(Result.isSuccess(parsed)).toBe(true);
+    if (Result.isFailure(parsed)) return;
     const comparison = compareCompleteEquivalentPaths({
-      baseline: validated(parsed.right),
+      baseline: validated(parsed.success),
       candidate: validated(measurement()),
     });
     expect(comparison).toMatchObject({
@@ -3478,14 +3478,14 @@ describe("complete Raw Swarm path comparison", () => {
 
   test("rejects unversioned or structurally widened measurements at the boundary", () => {
     const parsed = parseCompletePathMeasurement(measurement());
-    expect(Either.isRight(parsed)).toBe(true);
+    expect(Result.isSuccess(parsed)).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         parseCompletePathMeasurement({ ...measurement(), schemaVersion: 1 }),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         parseCompletePathMeasurement({ ...measurement(), unexpected: true }),
       ),
     ).toBe(true);
@@ -3506,7 +3506,7 @@ describe("complete Raw Swarm path comparison", () => {
 
   test("requires hash-linked findings, stage-plan, and invocation authorities", () => {
     const validated = validateCompletePathMeasurement(measurement());
-    expect(Either.isRight(validated)).toBe(true);
+    expect(Result.isSuccess(validated)).toBe(true);
     const malformed = validateCompletePathMeasurement({
       ...measurement(),
       findings: {
@@ -3514,9 +3514,9 @@ describe("complete Raw Swarm path comparison", () => {
         subjectIdentity: "e".repeat(64),
       },
     });
-    expect(Either.isLeft(malformed)).toBe(true);
-    if (Either.isRight(malformed)) return;
-    expect(malformed.left).toContain("Findings authority");
+    expect(Result.isFailure(malformed)).toBe(true);
+    if (Result.isSuccess(malformed)) return;
+    expect(malformed.failure).toContain("Findings authority");
   });
 
   test("rejects an incident-shaped classification under a strict current replay schema", () => {
@@ -3558,9 +3558,9 @@ describe("complete Raw Swarm path comparison", () => {
     const validation = validateCompletePathMeasurement(
       withRetainedFindings(source, findings),
     );
-    expect(Either.isLeft(validation)).toBe(true);
-    if (Either.isRight(validation)) return;
-    expect(validation.left).toContain(
+    expect(Result.isFailure(validation)).toBe(true);
+    if (Result.isSuccess(validation)) return;
+    expect(validation.failure).toContain(
       "Replay authority replay-final is not bound to a current scenario review schema",
     );
   });
@@ -3671,7 +3671,7 @@ describe("complete Raw Swarm path comparison", () => {
     );
 
     const validation = validateCompletePathMeasurement(revised);
-    expect(Either.isRight(validation)).toBe(true);
+    expect(Result.isSuccess(validation)).toBe(true);
   });
 
   test("rejects swapped named replay authorities even when each path and hash is valid", () => {
@@ -3708,9 +3708,9 @@ describe("complete Raw Swarm path comparison", () => {
     const invalid = validateCompletePathMeasurement(
       withRetainedFindings(source, swappedFindings),
     );
-    expect(Either.isLeft(invalid)).toBe(true);
-    if (Either.isRight(invalid)) return;
-    expect(invalid.left).toContain("Replay authority role replay-milestone");
+    expect(Result.isFailure(invalid)).toBe(true);
+    if (Result.isSuccess(invalid)) return;
+    expect(invalid.failure).toContain("Replay authority role replay-milestone");
   });
 
   test("rejects numbered replay authorities without milestone/final stage names", () => {
@@ -3728,9 +3728,9 @@ describe("complete Raw Swarm path comparison", () => {
     const invalid = validateCompletePathMeasurement(
       withRetainedFindings(source, numberedFindings),
     );
-    expect(Either.isLeft(invalid)).toBe(true);
-    if (Either.isRight(invalid)) return;
-    expect(invalid.left).toMatch(
+    expect(Result.isFailure(invalid)).toBe(true);
+    if (Result.isSuccess(invalid)) return;
+    expect(invalid.failure).toMatch(
       /replay-(?:1|2)|retained milestone and one final/,
     );
   });
@@ -3759,9 +3759,9 @@ describe("complete Raw Swarm path comparison", () => {
     const invalid = validateCompletePathMeasurement(
       withRetainedFindings(source, legacyFindings),
     );
-    expect(Either.isLeft(invalid)).toBe(true);
-    if (Either.isRight(invalid)) return;
-    expect(invalid.left).toContain("role is not closed: replay");
+    expect(Result.isFailure(invalid)).toBe(true);
+    if (Result.isSuccess(invalid)) return;
+    expect(invalid.failure).toContain("role is not closed: replay");
   });
 
   test("assembles and writes a current measurement from canonical authorities", () => {
@@ -3782,9 +3782,9 @@ describe("complete Raw Swarm path comparison", () => {
       outcome: source.outcome,
     };
     const assembled = assembleCompletePathMeasurement(descriptor);
-    expect(Either.isRight(assembled)).toBe(true);
-    if (Either.isLeft(assembled)) return;
-    expect(assembled.right).toMatchObject({
+    expect(Result.isSuccess(assembled)).toBe(true);
+    if (Result.isFailure(assembled)) return;
+    expect(assembled.success).toMatchObject({
       schemaVersion: 4,
       pathId: source.pathId,
       invocations: source.invocations,
@@ -3796,7 +3796,7 @@ describe("complete Raw Swarm path comparison", () => {
       descriptor,
       outputPath,
     });
-    expect(Either.isRight(written)).toBe(true);
+    expect(Result.isSuccess(written)).toBe(true);
     expect(
       readCompletePathMeasurement(relative(repoRoot, outputPath)),
     ).toMatchObject({
@@ -3944,6 +3944,6 @@ describe("complete Raw Swarm path comparison", () => {
         findings,
       ),
     );
-    expect(Either.isRight(validation)).toBe(true);
+    expect(Result.isSuccess(validation)).toBe(true);
   });
 });

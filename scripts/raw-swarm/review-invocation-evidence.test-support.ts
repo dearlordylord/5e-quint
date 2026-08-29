@@ -1,6 +1,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { relative, resolve } from "node:path";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   codexOutputJsonSchema,
@@ -36,9 +36,9 @@ import {
   scenarioStagePlanFindings,
 } from "./scenario-stage-plan.ts";
 
-function eventValue<A, E>(result: Either.Either<A, E>): A {
-  if (Either.isLeft(result)) throw new Error(String(result.left));
-  return result.right;
+function eventValue<A, E>(result: Result.Result<A, E>): A {
+  if (Result.isFailure(result)) throw new Error(String(result.failure));
+  return result.success;
 }
 
 export function controlledReviewEvidenceFixture(input: {
@@ -195,14 +195,14 @@ export function controlledReviewEvidenceFixture(input: {
       },
     },
   });
-  if (Either.isLeft(stagePlan)) throw new Error(stagePlan.left);
+  if (Result.isFailure(stagePlan)) throw new Error(stagePlan.failure);
   writeFileSync(
     resolve(evidenceDirectory, "stage-plan.json"),
-    `${JSON.stringify(stagePlan.right)}\n`,
+    `${JSON.stringify(stagePlan.success)}\n`,
   );
   writeFileSync(
     resolve(evidenceDirectory, "stage-plan-findings.json"),
-    `${JSON.stringify(scenarioStagePlanFindings(stagePlan.right))}\n`,
+    `${JSON.stringify(scenarioStagePlanFindings(stagePlan.success))}\n`,
   );
   writeFileSync(replaySupervisorPath, replaySupervisor);
   writeFileSync(programPath, program);

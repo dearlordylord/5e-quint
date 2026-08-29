@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 
-import { Either } from "effect";
+import { Result } from "effect";
 
 import { createDndMcpProtocolServer } from "../../packages/mcp/src/protocol-server.ts";
 import {
@@ -43,10 +43,10 @@ export async function replayMcpExchanges(
   let nextPlaySessionId = 0;
   let nextGuestAccessGrant = 0;
   const initialReplayTime = decodeEpochMilliseconds(0);
-  if (Either.isLeft(initialReplayTime)) {
-    throw new Error(initialReplayTime.left.message);
+  if (Result.isFailure(initialReplayTime)) {
+    throw new Error(initialReplayTime.failure.message);
   }
-  let replayTime = initialReplayTime.right;
+  let replayTime = initialReplayTime.success;
   const { server } = createDndMcpProtocolServer(undefined, undefined, {
     playSessionIdFactory: () => {
       const recorded = recordedPlaySessionIds[nextPlaySessionId];
@@ -132,12 +132,12 @@ function recordedActivityTime(
   const decoded = decodeEpochMilliseconds(
     inactiveExpiresAt - retentionMilliseconds,
   );
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     fail(
-      `Replay encountered an invalid Play Session activity time: ${decoded.left.message}`,
+      `Replay encountered an invalid Play Session activity time: ${decoded.failure.message}`,
     );
   }
-  return decoded.right;
+  return decoded.success;
 }
 
 function successfulRecordedGuestAccessGrants(
@@ -187,12 +187,12 @@ function successfulRecordedGuestAccessGrants(
       );
     }
     const decoded = decodeGuestAccessGrant(access.guestAccessGrant);
-    if (Either.isLeft(decoded)) {
+    if (Result.isFailure(decoded)) {
       fail(
-        `Replay requires a valid Guest Play Session access grant at transcript seq ${exchange.seq}: ${decoded.left}`,
+        `Replay requires a valid Guest Play Session access grant at transcript seq ${exchange.seq}: ${decoded.failure}`,
       );
     }
-    return [decoded.right];
+    return [decoded.success];
   });
 }
 
@@ -230,12 +230,12 @@ function successfulRecordedPlaySessionId(
     );
   }
   const decoded = decodePlaySessionId(structuredContent.playSessionId);
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     fail(
-      `Replay requires a valid Play Session handle at transcript seq ${exchange.seq}: ${decoded.left}`,
+      `Replay requires a valid Play Session handle at transcript seq ${exchange.seq}: ${decoded.failure}`,
     );
   }
-  return decoded.right;
+  return decoded.success;
 }
 
 async function main(): Promise<void> {

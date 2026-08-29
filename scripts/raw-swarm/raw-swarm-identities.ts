@@ -1,8 +1,8 @@
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { basename, resolve } from "node:path";
 
 const SemanticIdentitySchema = Schema.String.pipe(
-  Schema.pattern(/^[a-z0-9][a-z0-9-]*$/),
+  Schema.check(Schema.isPattern(/^[a-z0-9][a-z0-9-]*$/)),
 );
 
 const HISTORICAL_GENERATED_BATTLE_PREFIX = "generated-battle";
@@ -22,12 +22,14 @@ export type ScenarioCandidateId = Schema.Schema.Type<
 >;
 
 export const ScenarioIdSchema = SemanticIdentitySchema.pipe(
-  Schema.filter(
-    (value) => !value.startsWith(HISTORICAL_GENERATED_BATTLE_PREFIX),
-    {
-      message: () =>
-        "scenario id must be semantic; generated-battle-prefixed ids are evidence history, not scenario identity",
-    },
+  Schema.check(
+    Schema.makeFilter(
+      (value) => !value.startsWith(HISTORICAL_GENERATED_BATTLE_PREFIX),
+      {
+        message:
+          "scenario id must be semantic; generated-battle-prefixed ids are evidence history, not scenario identity",
+      },
+    ),
   ),
   Schema.brand("RawSwarmScenarioId"),
 );
@@ -68,9 +70,9 @@ export const EvidenceSetIdSchema = SemanticIdentitySchema.pipe(
 export type EvidenceSetId = Schema.Schema.Type<typeof EvidenceSetIdSchema>;
 
 /** Identity of a persisted performance comparison path. */
-export const PerformancePathIdSchema = Schema.NonEmptyTrimmedString.pipe(
-  Schema.brand("RawSwarmPerformancePathId"),
-);
+export const PerformancePathIdSchema = Schema.Trimmed.check(
+  Schema.isNonEmpty(),
+).pipe(Schema.brand("RawSwarmPerformancePathId"));
 export type PerformancePathId = Schema.Schema.Type<
   typeof PerformancePathIdSchema
 >;
@@ -91,12 +93,12 @@ export type ScenarioExecutionIdentity = Schema.Schema.Type<
 >;
 
 function decodeIdentity<A, I>(
-  schema: Schema.Schema<A, I>,
+  schema: Schema.Codec<A, I>,
   role: string,
   value: unknown,
-): Either.Either<A, string> {
-  return Schema.decodeUnknownEither(schema)(value).pipe(
-    Either.mapLeft(
+): Result.Result<A, string> {
+  return Schema.decodeUnknownResult(schema)(value).pipe(
+    Result.mapError(
       () => `${role} must be lowercase letters, digits, and hyphens`,
     ),
   );
@@ -129,6 +131,6 @@ export function evidenceSetDirectory(
 
 export function decodeEvidenceSetDirectory(
   directory: string,
-): Either.Either<EvidenceSetId, string> {
+): Result.Result<EvidenceSetId, string> {
   return decodeEvidenceSetId(basename(directory));
 }

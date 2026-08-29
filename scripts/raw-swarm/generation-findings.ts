@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { Either, Match, Schema } from "effect";
+import { Result, Match, Schema } from "effect";
 
 import {
   addSource,
@@ -150,12 +150,12 @@ function generationLedgerEntries(
           );
         }
         const decoded = parseModelInvocationLedgerEntry(value);
-        if (Either.isLeft(decoded)) {
+        if (Result.isFailure(decoded)) {
           fail(
-            `Generation ledger ${canonical} line ${String(index + 1)} is malformed: ${decoded.left.message}`,
+            `Generation ledger ${canonical} line ${String(index + 1)} is malformed: ${decoded.failure.message}`,
           );
         }
-        return [decoded.right];
+        return [decoded.success];
       });
   });
 }
@@ -247,8 +247,8 @@ function addGenerationInvocationAuthorities(input: {
         eventPath: resolve(repoRoot, canonical),
         event: retention.event,
       });
-      if (Either.isLeft(artifact)) fail(artifact.left);
-      const rawPath = sourcePath(artifact.right.path);
+      if (Result.isFailure(artifact)) fail(artifact.failure);
+      const rawPath = sourcePath(artifact.success.path);
       const rawRole = addSource(
         input.sources,
         rawPath,
@@ -284,15 +284,15 @@ function findingsManifestIdentity(
       "Transcriptless findings require a campaign or execution manifest authority.",
     );
   }
-  const decoded = Schema.decodeUnknownEither(FindingsManifestSchema, {
+  const decoded = Schema.decodeUnknownResult(FindingsManifestSchema, {
     onExcessProperty: "error",
   })(readSourceRecord(source.path));
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     fail(
-      `Findings manifest is invalid: ${source.path}: ${decoded.left.message}`,
+      `Findings manifest is invalid: ${source.path}: ${decoded.failure.message}`,
     );
   }
-  return Match.value(decoded.right).pipe(
+  return Match.value(decoded.success).pipe(
     Match.when(
       { type: "raw-swarm-scenario-campaign" },
       (campaign): FindingsManifestIdentity => ({
@@ -326,15 +326,15 @@ function campaignManifestFromSources(
   if (source === undefined) {
     fail("Campaign findings require a Campaign manifest authority.");
   }
-  const decoded = Schema.decodeUnknownEither(ScenarioCampaignManifestSchema, {
+  const decoded = Schema.decodeUnknownResult(ScenarioCampaignManifestSchema, {
     onExcessProperty: "error",
   })(readSourceRecord(source.path));
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     fail(
-      `Campaign manifest authority is invalid: ${source.path}: ${decoded.left.message}`,
+      `Campaign manifest authority is invalid: ${source.path}: ${decoded.failure.message}`,
     );
   }
-  return decoded.right;
+  return decoded.success;
 }
 
 function authoredScenarioIdentity(identity: FindingsManifestIdentity) {
@@ -357,13 +357,13 @@ function admittedScenarioIdentity(
   identity: FindingsManifestIdentity,
 ): ScenarioId {
   const candidate = authoredScenarioIdentity(identity).scenarioId;
-  const decoded = Schema.decodeUnknownEither(ScenarioIdSchema)(candidate);
-  if (Either.isLeft(decoded)) {
+  const decoded = Schema.decodeUnknownResult(ScenarioIdSchema)(candidate);
+  if (Result.isFailure(decoded)) {
     fail(
-      `Completed Scenario evidence requires an admitted Scenario identity: ${decoded.left.message}`,
+      `Completed Scenario evidence requires an admitted Scenario identity: ${decoded.failure.message}`,
     );
   }
-  return decoded.right;
+  return decoded.success;
 }
 
 function makeProjection(input: {
@@ -549,20 +549,20 @@ export function projectGenerationFindings(
   const rejectionRecord =
     rejectionSource === undefined
       ? undefined
-      : Schema.decodeUnknownEither(RejectedScenarioCandidateRecordSchema, {
+      : Schema.decodeUnknownResult(RejectedScenarioCandidateRecordSchema, {
           onExcessProperty: "error",
         })(
           JSON.parse(
             readFileSync(resolve(repoRoot, rejectionSource.path), "utf8"),
           ),
         );
-  if (rejectionRecord !== undefined && Either.isLeft(rejectionRecord)) {
+  if (rejectionRecord !== undefined && Result.isFailure(rejectionRecord)) {
     fail(
-      `Candidate rejection authority is malformed: ${rejectionRecord.left.message}`,
+      `Candidate rejection authority is malformed: ${rejectionRecord.failure.message}`,
     );
   }
   if (candidateRejection !== undefined) {
-    if (rejectionRecord === undefined || Either.isLeft(rejectionRecord)) {
+    if (rejectionRecord === undefined || Result.isFailure(rejectionRecord)) {
       fail("A Candidate rejection requires its rejection authority.");
     }
     sourceFindings.push(
@@ -571,7 +571,7 @@ export function projectGenerationFindings(
         category: "scenario-author-defect",
         kind: "generation-rejection",
         summary: "Scenario Candidate was rejected before admission.",
-        detail: rejectionRecord.right.reason,
+        detail: rejectionRecord.success.reason,
         pointer: pointerForSource("candidateRejection"),
       }),
     );
@@ -588,25 +588,27 @@ export function projectGenerationFindings(
       `candidateReview-${String(index + 1)}`,
     );
     if (role === undefined) continue;
-    const review = Schema.decodeUnknownEither(
+    const review = Schema.decodeUnknownResult(
       RejectedScenarioCandidateReviewSchema,
       { onExcessProperty: "error" },
     )(JSON.parse(readFileSync(resolve(repoRoot, canonical), "utf8")));
-    if (Either.isLeft(review)) {
-      fail(`Candidate review authority is malformed: ${review.left.message}`);
+    if (Result.isFailure(review)) {
+      fail(
+        `Candidate review authority is malformed: ${review.failure.message}`,
+      );
     }
     if (
       manifestIdentity.tag !== "scenarioCampaign" ||
       rejectionRecord === undefined ||
-      Either.isLeft(rejectionRecord) ||
+      Result.isFailure(rejectionRecord) ||
       scenarioSha256 === undefined ||
-      review.right.campaignId !== manifestIdentity.campaignId ||
-      review.right.candidateId !== rejectionRecord.right.candidateId ||
+      review.success.campaignId !== manifestIdentity.campaignId ||
+      review.success.candidateId !== rejectionRecord.success.candidateId ||
       !scenarioSha256MatchesArtifact({
-        scenarioSha256: review.right.candidateScenarioSha256,
+        scenarioSha256: review.success.candidateScenarioSha256,
         artifactSha256: scenarioSha256,
       }) ||
-      review.right.gitSha !== manifestIdentity.gitSha
+      review.success.gitSha !== manifestIdentity.gitSha
     ) {
       fail("Candidate review authority identity does not match generation.");
     }
@@ -644,9 +646,9 @@ export function projectGenerationFindings(
     const plan = validateScenarioStagePlan(
       JSON.parse(readFileSync(resolve(repoRoot, canonical), "utf8")),
     );
-    if (Either.isLeft(plan)) fail(plan.left);
-    retainedPlans.push(plan.right);
-    const identity = plan.right.identity;
+    if (Result.isFailure(plan)) fail(plan.failure);
+    retainedPlans.push(plan.success);
+    const identity = plan.success.identity;
     const identityMatches =
       admittedStagePlanIdentity === undefined
         ? identity.tag === "candidate" &&
@@ -654,10 +656,11 @@ export function projectGenerationFindings(
           manifestIdentity.tag === "scenarioCampaign" &&
           identity.campaignId === manifestIdentity.campaignId &&
           rejectionRecord !== undefined &&
-          Either.isRight(rejectionRecord) &&
-          identity.candidateId === rejectionRecord.right.candidateId &&
-          rejectionRecord.right.campaignId === manifestIdentity.campaignId &&
-          rejectionRecord.right.evidenceSetId === manifestIdentity.evidenceSetId
+          Result.isSuccess(rejectionRecord) &&
+          identity.candidateId === rejectionRecord.success.candidateId &&
+          rejectionRecord.success.campaignId === manifestIdentity.campaignId &&
+          rejectionRecord.success.evidenceSetId ===
+            manifestIdentity.evidenceSetId
         : identity.tag === "admitted" &&
           identity.scenarioId === admittedStagePlanIdentity.scenarioId &&
           identity.scenarioSha256 ===
@@ -702,17 +705,17 @@ export function projectGenerationFindings(
           `Stage-plan findings have no matching retained plan: ${canonical}`,
         );
       }
-      const decodedFindings = Schema.decodeUnknownEither(
+      const decodedFindings = Schema.decodeUnknownResult(
         ScenarioStagePlanFindingsSchema,
         { onExcessProperty: "error" },
       )(readSourceRecord(canonical));
-      if (Either.isLeft(decodedFindings)) {
+      if (Result.isFailure(decodedFindings)) {
         fail(
-          `Invalid stage-plan findings authority: ${canonical}: ${decodedFindings.left.message}`,
+          `Invalid stage-plan findings authority: ${canonical}: ${decodedFindings.failure.message}`,
         );
       }
       if (
-        canonicalJson(decodedFindings.right) !==
+        canonicalJson(decodedFindings.success) !==
         canonicalJson(scenarioStagePlanFindings(retainedPlan))
       ) {
         fail(

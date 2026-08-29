@@ -6,7 +6,7 @@ import {
   type BattleFill,
   type BattleSubject,
 } from "../../../packages/battle-runtime/src/index.ts";
-import { Either, Match, Schema } from "effect";
+import { Result, Match, Schema } from "effect";
 
 import type {
   EndBattleRuntimeTurnInput,
@@ -93,56 +93,60 @@ export type CanonicalSdkCallInputResult =
 
 const EmptyInputSchema = Schema.Struct({});
 const InitialRelationInputSchema = Schema.Struct({
-  sourceId: Schema.NonEmptyTrimmedString,
-  targetId: Schema.NonEmptyTrimmedString,
+  sourceId: Schema.Trimmed.check(Schema.isNonEmpty()),
+  targetId: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
 const PlayerHelpAttackEnemyDecisionFillSchema = Schema.Struct({
   kind: Schema.Literal("helpAttackEnemyDecision"),
-  holeId: Schema.NonEmptyTrimmedString.pipe(Schema.brand("HoleId")),
+  holeId: Schema.Trimmed.check(Schema.isNonEmpty()).pipe(
+    Schema.brand("HoleId"),
+  ),
   targetEnemyId: CombatantId,
 });
 const CanonicalBattleFillExcludingHelpEnemyDecisionSchema =
   BattleFillSchema.pipe(
-    Schema.filter(
-      (
-        fill,
-      ): fill is Exclude<
-        BattleFill,
-        { readonly kind: "helpAttackEnemyDecision" }
-      > => fill.kind !== "helpAttackEnemyDecision",
-      {
-        description:
-          "The Raw Swarm player chooses the Help enemy without supplying the ScenarioSession-owned adjacency witness.",
-      },
+    Schema.check(
+      Schema.makeFilter(
+        (
+          fill,
+        ): fill is Exclude<
+          BattleFill,
+          { readonly kind: "helpAttackEnemyDecision" }
+        > => fill.kind !== "helpAttackEnemyDecision",
+        {
+          description:
+            "The Raw Swarm player chooses the Help enemy without supplying the ScenarioSession-owned adjacency witness.",
+        },
+      ),
     ),
   );
-const PlayerBattleFillSchema = Schema.Union(
+const PlayerBattleFillSchema = Schema.Union([
   PlayerHelpAttackEnemyDecisionFillSchema,
   CanonicalBattleFillExcludingHelpEnemyDecisionSchema,
-);
+]);
 const ResolveInputSchema = Schema.Struct({
   subject: BattleSubjectSchema,
   fills: Schema.Array(PlayerBattleFillSchema),
 });
-const ScenarioMovementInputSchema = Schema.Union(
+const ScenarioMovementInputSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("route"),
     subject: BattleSubjectSchema,
     route: Schema.NonEmptyArray(
       Schema.Struct({ x: Schema.Number, y: Schema.Number }),
     ),
-    speedKind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
+    speedKind: Schema.Literals(BATTLE_MOVEMENT_SPEED_KINDS),
     fills: Schema.Array(BattleFillSchema),
   }),
   Schema.Struct({
     kind: Schema.Literal("continue"),
     fills: Schema.Array(BattleFillSchema),
   }),
-);
+]);
 const InterruptInputSchema = Schema.Struct({ fill: BattleFillSchema });
 const EndTurnInputSchema = Schema.Struct({
   actorId: CombatantId,
-  fills: Schema.optionalWith(Schema.Array(BattleFillSchema), { exact: true }),
+  fills: Schema.optionalKey(Schema.Array(BattleFillSchema)),
 });
 
 export function decodeSdkCallInput(
@@ -236,19 +240,19 @@ export function canonicalSdkCallInput(input: {
 }
 
 function decodeInput<A, I, R extends SdkCallInput>(
-  schema: Schema.Schema<A, I>,
+  schema: Schema.Codec<A, I>,
   input: unknown,
   project: (decoded: A) => R | ParseResult<R>,
 ): ParseResult<R> {
-  const decoded = Schema.decodeUnknownEither(schema, {
+  const decoded = Schema.decodeUnknownResult(schema, {
     onExcessProperty: "error",
   })(input);
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     return {
       tag: "invalid",
-      message: `SDK call input is invalid: ${decoded.left.message}`,
+      message: `SDK call input is invalid: ${decoded.failure.message}`,
     };
   }
-  const projected = project(decoded.right);
+  const projected = project(decoded.success);
   return "tag" in projected ? projected : { tag: "valid", value: projected };
 }

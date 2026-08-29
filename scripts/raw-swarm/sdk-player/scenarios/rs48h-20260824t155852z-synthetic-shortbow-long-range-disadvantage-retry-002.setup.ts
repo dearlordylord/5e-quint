@@ -52,7 +52,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(skeletonInit)) {
     return {
       kind: "obstructed",
-      obstruction: `The canonical Skeleton could not be initialized: ${sdk.battleStateInitIssueMessage(skeletonInit.left)}`,
+      obstruction: `The canonical Skeleton could not be initialized: ${sdk.battleStateInitIssueMessage(skeletonInit.failure)}`,
       observation: {
         stage: "stat-block-creature-init",
         combatant: "stat_block_skeleton",
@@ -72,7 +72,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(wolfInit)) {
     return {
       kind: "obstructed",
-      obstruction: `The canonical Wolf could not be initialized: ${sdk.battleStateInitIssueMessage(wolfInit.left)}`,
+      obstruction: `The canonical Wolf could not be initialized: ${sdk.battleStateInitIssueMessage(wolfInit.failure)}`,
       observation: {
         stage: "stat-block-creature-init",
         combatant: "stat_block_wolf",
@@ -82,19 +82,19 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   const battle = sdk.startBattle({
     battleId: sdk.battleId(SCENARIO_ID),
-    combatants: [skeletonInit.right, wolfInit.right],
+    combatants: [skeletonInit.success, wolfInit.success],
   });
 
   if (sdk.isLeft(battle)) {
     return {
       kind: "obstructed",
-      obstruction: `The canonical battle could not be started: ${sdk.battleStateInitIssueMessage(battle.left)}`,
+      obstruction: `The canonical battle could not be started: ${sdk.battleStateInitIssueMessage(battle.failure)}`,
       observation: { stage: "battle-setup" },
     };
   }
 
   const session = sdk.createScenarioSession({
-    battle: battle.right,
+    battle: battle.success,
     spatial: {
       kind: "geometryDerived",
       arena: {
@@ -124,14 +124,14 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(session)) {
     return {
       kind: "obstructed",
-      obstruction: `The public scenario-session surface rejected the fixed battlefield: ${sdk.scenarioSessionIssueMessage(session.left)}`,
+      obstruction: `The public scenario-session surface rejected the fixed battlefield: ${sdk.scenarioSessionIssueMessage(session.failure)}`,
       observation: { stage: "scenario-session" },
     };
   }
 
   return {
     kind: "ready",
-    session: session.right,
+    session: session.success,
     observation: {
       scenarioId: SCENARIO_ID,
       spatialSource: "geometryDerived",

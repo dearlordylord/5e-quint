@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { Either, JSONSchema, Match, ParseResult, Schema } from "effect";
+import { JsonSchema, Match, Result, Schema, Tuple } from "effect";
 
 import type { ArtifactSha256 } from "./artifact-authority-schema.ts";
 
@@ -36,12 +36,21 @@ import {
 } from "./scenario-authoring.ts";
 
 const PositiveIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.positive(),
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.isGreaterThan(0)),
 );
 
-export function codexOutputJsonSchema<A, I>(schema: Schema.Schema<A, I>) {
-  return JSONSchema.make(Schema.Struct({ result: schema }));
+export function codexOutputJsonSchema<A, I>(schema: Schema.Codec<A, I>) {
+  const document = JsonSchema.toDocumentDraft07(
+    Schema.toJsonSchemaDocument(Schema.Struct({ result: schema })),
+  );
+  return {
+    $schema: JsonSchema.META_SCHEMA_URI_DRAFT_07,
+    ...document.schema,
+    ...(Object.keys(document.definitions).length === 0
+      ? {}
+      : { definitions: document.definitions }),
+  };
 }
 
 /** Hash the exact retained scenario bytes, including the canonical newline. */
@@ -50,82 +59,84 @@ export function scenarioContentSha256(scenario: string): string {
 }
 
 export const ScenarioCandidateSchema = Schema.Struct({
-  prose: Schema.NonEmptyTrimmedString,
+  prose: Schema.Trimmed.check(Schema.isNonEmpty()),
   stageFacts: ScenarioStageFactsSchema,
 });
 
 export const ScenarioCandidateBatchSchema = Schema.Struct({
   candidates: Schema.Array(ScenarioCandidateSchema).pipe(
-    Schema.minItems(2),
-    Schema.filter(
-      (candidates) =>
-        new Set(candidates.map(({ prose }) => prose)).size ===
-        candidates.length,
-      { message: () => "scenario candidates must be distinct" },
+    Schema.check(Schema.isMinLength(2)),
+    Schema.check(
+      Schema.makeFilter(
+        (candidates) =>
+          new Set(candidates.map(({ prose }) => prose)).size ===
+          candidates.length,
+        { message: "scenario candidates must be distinct" },
+      ),
     ),
   ),
 });
 
 const SupportedScenarioRawReviewSchema = Schema.Struct({
   classification: Schema.Literal("supported"),
-  evidence: Schema.NonEmptyTrimmedString,
+  evidence: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
 const UnsupportedScenarioRawReviewSchema = Schema.Struct({
   classification: Schema.Literal("unsupported"),
-  evidence: Schema.NonEmptyTrimmedString,
-  critique: Schema.NonEmptyTrimmedString,
+  evidence: Schema.Trimmed.check(Schema.isNonEmpty()),
+  critique: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
 const ContradictoryScenarioRawReviewSchema = Schema.Struct({
   classification: Schema.Literal("contradictory"),
-  evidence: Schema.NonEmptyTrimmedString,
-  critique: Schema.NonEmptyTrimmedString,
+  evidence: Schema.Trimmed.check(Schema.isNonEmpty()),
+  critique: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
-export const ScenarioRawReviewSchema = Schema.Union(
+export const ScenarioRawReviewSchema = Schema.Union([
   SupportedScenarioRawReviewSchema,
   UnsupportedScenarioRawReviewSchema,
   ContradictoryScenarioRawReviewSchema,
-);
+]);
 
 const SuppliedScenarioContentReviewSchema = Schema.Struct({
   classification: Schema.Literal("supplied"),
-  evidence: Schema.NonEmptyTrimmedString,
+  evidence: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
 const ExplicitUnavailableProbeReviewSchema = Schema.Struct({
   classification: Schema.Literal("explicitUnavailableProbe"),
-  evidence: Schema.NonEmptyTrimmedString,
+  evidence: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
 const MissingUnavailableProbeReviewSchema = Schema.Struct({
   classification: Schema.Literal("missingUnavailableProbe"),
-  evidence: Schema.NonEmptyTrimmedString,
-  critique: Schema.NonEmptyTrimmedString,
+  evidence: Schema.Trimmed.check(Schema.isNonEmpty()),
+  critique: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
 const InvalidUnavailableSelectionReviewSchema = Schema.Struct({
   classification: Schema.Literal("invalidUnavailableSelection"),
-  evidence: Schema.NonEmptyTrimmedString,
-  critique: Schema.NonEmptyTrimmedString,
+  evidence: Schema.Trimmed.check(Schema.isNonEmpty()),
+  critique: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
-const AvailableOnlyScenarioContentReviewSchema = Schema.Union(
+const AvailableOnlyScenarioContentReviewSchema = Schema.Union([
   SuppliedScenarioContentReviewSchema,
   InvalidUnavailableSelectionReviewSchema,
-);
-const ProbeUnavailableContentScenarioContentReviewSchema = Schema.Union(
+]);
+const ProbeUnavailableContentScenarioContentReviewSchema = Schema.Union([
   ExplicitUnavailableProbeReviewSchema,
   MissingUnavailableProbeReviewSchema,
   InvalidUnavailableSelectionReviewSchema,
-);
-export const ScenarioContentReviewSchema = Schema.Union(
+]);
+export const ScenarioContentReviewSchema = Schema.Union([
   SuppliedScenarioContentReviewSchema,
   ExplicitUnavailableProbeReviewSchema,
   MissingUnavailableProbeReviewSchema,
   InvalidUnavailableSelectionReviewSchema,
-);
+]);
 
 export const CONTENT_AVAILABILITY_INTENTS = [
   "availableOnly",
   "probeUnavailableContent",
 ] as const;
-export const ContentAvailabilityIntentSchema = Schema.Literal(
-  ...CONTENT_AVAILABILITY_INTENTS,
+export const ContentAvailabilityIntentSchema = Schema.Literals(
+  CONTENT_AVAILABILITY_INTENTS,
 );
 export type ContentAvailabilityIntent =
   (typeof CONTENT_AVAILABILITY_INTENTS)[number];
@@ -138,53 +149,53 @@ const ProbeUnavailableContentScenarioContentAdmissionSchema = Schema.Struct({
   contentAvailabilityIntent: Schema.Literal("probeUnavailableContent"),
   contentReview: ProbeUnavailableContentScenarioContentReviewSchema,
 });
-export const ScenarioContentAdmissionSchema = Schema.Union(
+export const ScenarioContentAdmissionSchema = Schema.Union([
   AvailableOnlyScenarioContentAdmissionSchema,
   ProbeUnavailableContentScenarioContentAdmissionSchema,
-);
+]);
 
 export const SDK_CAPABILITY_INTENTS = [
   "supportedOnly",
   "probeUnsupportedCapability",
 ] as const;
-export const SdkCapabilityIntentSchema = Schema.Literal(
-  ...SDK_CAPABILITY_INTENTS,
+export const SdkCapabilityIntentSchema = Schema.Literals(
+  SDK_CAPABILITY_INTENTS,
 );
 export type SdkCapabilityIntent = (typeof SDK_CAPABILITY_INTENTS)[number];
 
 const SupportedScenarioSdkCapabilityReviewSchema = Schema.Struct({
   classification: Schema.Literal("supported"),
-  evidence: Schema.NonEmptyTrimmedString,
+  evidence: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
 const UnsupportedScenarioSdkCapabilityReviewSchema = Schema.Struct({
   classification: Schema.Literal("unsupported"),
-  evidence: Schema.NonEmptyTrimmedString,
-  critique: Schema.NonEmptyTrimmedString,
+  evidence: Schema.Trimmed.check(Schema.isNonEmpty()),
+  critique: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
 const ExplicitUnsupportedSdkCapabilityProbeReviewSchema = Schema.Struct({
   classification: Schema.Literal("explicitUnsupportedProbe"),
-  evidence: Schema.NonEmptyTrimmedString,
+  evidence: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
 const MissingUnsupportedSdkCapabilityProbeReviewSchema = Schema.Struct({
   classification: Schema.Literal("missingUnsupportedProbe"),
-  evidence: Schema.NonEmptyTrimmedString,
-  critique: Schema.NonEmptyTrimmedString,
+  evidence: Schema.Trimmed.check(Schema.isNonEmpty()),
+  critique: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
-const SupportedOnlyScenarioSdkCapabilityReviewSchema = Schema.Union(
+const SupportedOnlyScenarioSdkCapabilityReviewSchema = Schema.Union([
   SupportedScenarioSdkCapabilityReviewSchema,
   UnsupportedScenarioSdkCapabilityReviewSchema,
-);
+]);
 const ProbeUnsupportedCapabilityScenarioSdkCapabilityReviewSchema =
-  Schema.Union(
+  Schema.Union([
     ExplicitUnsupportedSdkCapabilityProbeReviewSchema,
     MissingUnsupportedSdkCapabilityProbeReviewSchema,
-  );
-export const ScenarioSdkCapabilityReviewSchema = Schema.Union(
+  ]);
+export const ScenarioSdkCapabilityReviewSchema = Schema.Union([
   SupportedScenarioSdkCapabilityReviewSchema,
   UnsupportedScenarioSdkCapabilityReviewSchema,
   ExplicitUnsupportedSdkCapabilityProbeReviewSchema,
   MissingUnsupportedSdkCapabilityProbeReviewSchema,
-);
+]);
 
 const SupportedOnlyScenarioSdkCapabilityAdmissionSchema = Schema.Struct({
   sdkCapabilityIntent: Schema.Literal("supportedOnly"),
@@ -196,24 +207,43 @@ const ProbeUnsupportedCapabilityScenarioSdkCapabilityAdmissionSchema =
     sdkCapabilityReview:
       ProbeUnsupportedCapabilityScenarioSdkCapabilityReviewSchema,
   });
-export const ScenarioSdkCapabilityAdmissionSchema = Schema.Union(
+export const ScenarioSdkCapabilityAdmissionSchema = Schema.Union([
   SupportedOnlyScenarioSdkCapabilityAdmissionSchema,
   ProbeUnsupportedCapabilityScenarioSdkCapabilityAdmissionSchema,
-);
+]);
+
+const ScenarioContentSdkCapabilityAdmissionSchema = Schema.Union([
+  Schema.Struct({
+    ...AvailableOnlyScenarioContentAdmissionSchema.fields,
+    ...SupportedOnlyScenarioSdkCapabilityAdmissionSchema.fields,
+  }),
+  Schema.Struct({
+    ...AvailableOnlyScenarioContentAdmissionSchema.fields,
+    ...ProbeUnsupportedCapabilityScenarioSdkCapabilityAdmissionSchema.fields,
+  }),
+  Schema.Struct({
+    ...ProbeUnavailableContentScenarioContentAdmissionSchema.fields,
+    ...SupportedOnlyScenarioSdkCapabilityAdmissionSchema.fields,
+  }),
+  Schema.Struct({
+    ...ProbeUnavailableContentScenarioContentAdmissionSchema.fields,
+    ...ProbeUnsupportedCapabilityScenarioSdkCapabilityAdmissionSchema.fields,
+  }),
+]);
 
 const SafeScenarioPolicyReviewSchema = Schema.Struct({
   classification: Schema.Literal("safe"),
-  evidence: Schema.NonEmptyTrimmedString,
+  evidence: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
 const ViolatingScenarioPolicyReviewSchema = Schema.Struct({
   classification: Schema.Literal("violation"),
-  evidence: Schema.NonEmptyTrimmedString,
-  critique: Schema.NonEmptyTrimmedString,
+  evidence: Schema.Trimmed.check(Schema.isNonEmpty()),
+  critique: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
-export const ScenarioPolicyReviewSchema = Schema.Union(
+export const ScenarioPolicyReviewSchema = Schema.Union([
   SafeScenarioPolicyReviewSchema,
   ViolatingScenarioPolicyReviewSchema,
-);
+]);
 
 /**
  * Scenario-quality responsibility retained from the former readiness pass.
@@ -222,17 +252,17 @@ export const ScenarioPolicyReviewSchema = Schema.Union(
  */
 const ReadyScenarioQualityReviewSchema = Schema.Struct({
   classification: Schema.Literal("ready"),
-  evidence: Schema.NonEmptyTrimmedString,
+  evidence: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
 const NeedsRevisionScenarioQualityReviewSchema = Schema.Struct({
   classification: Schema.Literal("needsRevision"),
-  evidence: Schema.NonEmptyTrimmedString,
-  critique: Schema.NonEmptyTrimmedString,
+  evidence: Schema.Trimmed.check(Schema.isNonEmpty()),
+  critique: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
-export const ScenarioQualityReviewSchema = Schema.Union(
+export const ScenarioQualityReviewSchema = Schema.Union([
   ReadyScenarioQualityReviewSchema,
   NeedsRevisionScenarioQualityReviewSchema,
-);
+]);
 
 export const HistoricalScenarioCompositeReviewSchema = Schema.Struct({
   raw: ScenarioRawReviewSchema,
@@ -247,10 +277,10 @@ export const CurrentScenarioCompositeReviewSchema = Schema.Struct({
   artifactPolicy: ScenarioPolicyReviewSchema,
   scenarioQuality: ScenarioQualityReviewSchema,
 });
-export const ScenarioCompositeReviewSchema = Schema.Union(
+export const ScenarioCompositeReviewSchema = Schema.Union([
   HistoricalScenarioCompositeReviewSchema,
   CurrentScenarioCompositeReviewSchema,
-);
+]);
 export type ScenarioCompositeReview = Schema.Schema.Type<
   typeof ScenarioCompositeReviewSchema
 >;
@@ -281,7 +311,7 @@ export type ScenarioCompositeReviewForIntents<
   readonly sdkCapability: ScenarioSdkCapabilityReviewForIntent<SdkIntent>;
 };
 export const ScenarioSha256Schema = Schema.String.pipe(
-  Schema.pattern(/^[0-9a-f]{64}$/),
+  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
   Schema.brand("RawSwarmScenarioSha256"),
 );
 export type ScenarioSha256 = Schema.Schema.Type<typeof ScenarioSha256Schema>;
@@ -306,81 +336,96 @@ const FinalScenarioReviewBaseSchema = Schema.Struct({
   policyReview: ScenarioPolicyReviewSchema,
 });
 
-const RawContentPolicyScenarioReviewSchema = Schema.Struct({
-  ...FinalScenarioReviewBaseSchema.fields,
-  reviewScope: Schema.Literal("rawContentPolicy"),
-}).pipe(Schema.extend(ScenarioContentAdmissionSchema));
+const RawContentPolicyScenarioReviewSchema =
+  ScenarioContentAdmissionSchema.mapMembers(
+    Tuple.map(
+      Schema.fieldsAssign({
+        ...FinalScenarioReviewBaseSchema.fields,
+        reviewScope: Schema.Literal("rawContentPolicy"),
+      }),
+    ),
+  );
 
-const RawContentSdkCapabilityPolicyScenarioReviewSchema = Schema.Struct({
-  ...FinalScenarioReviewBaseSchema.fields,
-  reviewScope: Schema.Literal("rawContentSdkCapabilityPolicy"),
-}).pipe(
-  Schema.extend(ScenarioContentAdmissionSchema),
-  Schema.extend(ScenarioSdkCapabilityAdmissionSchema),
-);
+const RawContentSdkCapabilityPolicyScenarioReviewSchema =
+  ScenarioContentSdkCapabilityAdmissionSchema.mapMembers(
+    Tuple.map(
+      Schema.fieldsAssign({
+        ...FinalScenarioReviewBaseSchema.fields,
+        reviewScope: Schema.Literal("rawContentSdkCapabilityPolicy"),
+      }),
+    ),
+  );
 
-const CurrentFinalScenarioReviewSchema = Schema.Struct({
-  ...FinalScenarioReviewBaseSchema.fields,
-  reviewScope: Schema.Literal("rawContentSdkCapabilityPolicyQuality"),
-  scenarioQuality: ScenarioQualityReviewSchema,
-  catalogueComparison: ScenarioCatalogueComparisonSchema,
-}).pipe(
-  Schema.extend(ScenarioContentAdmissionSchema),
-  Schema.extend(ScenarioSdkCapabilityAdmissionSchema),
-);
+const CurrentFinalScenarioReviewSchema =
+  ScenarioContentSdkCapabilityAdmissionSchema.mapMembers(
+    Tuple.map(
+      Schema.fieldsAssign({
+        ...FinalScenarioReviewBaseSchema.fields,
+        reviewScope: Schema.Literal("rawContentSdkCapabilityPolicyQuality"),
+        scenarioQuality: ScenarioQualityReviewSchema,
+        catalogueComparison: ScenarioCatalogueComparisonSchema,
+      }),
+    ),
+  );
 
 /** Historical current-scope reviews predate catalogue comparison evidence. */
-const HistoricalCurrentFinalScenarioReviewSchema = Schema.Struct({
-  ...FinalScenarioReviewBaseSchema.fields,
-  reviewScope: Schema.Literal("rawContentSdkCapabilityPolicyQuality"),
-  scenarioQuality: ScenarioQualityReviewSchema,
-}).pipe(
-  Schema.extend(ScenarioContentAdmissionSchema),
-  Schema.extend(ScenarioSdkCapabilityAdmissionSchema),
-);
+const HistoricalCurrentFinalScenarioReviewSchema =
+  ScenarioContentSdkCapabilityAdmissionSchema.mapMembers(
+    Tuple.map(
+      Schema.fieldsAssign({
+        ...FinalScenarioReviewBaseSchema.fields,
+        reviewScope: Schema.Literal("rawContentSdkCapabilityPolicyQuality"),
+        scenarioQuality: ScenarioQualityReviewSchema,
+      }),
+    ),
+  );
 
-const CurrentRejectedScenarioCandidateReviewSchema = Schema.Struct({
-  campaignId: ScenarioCampaignIdSchema,
-  candidateId: ScenarioCandidateIdSchema,
-  candidateScenarioSha256: ScenarioSha256Schema,
-  gitSha: GitShaSchema,
-  admitReviewedUnsupported: Schema.Boolean,
-  rawReview: ScenarioRawReviewSchema,
-  policyReview: ScenarioPolicyReviewSchema,
-  reviewScope: Schema.Literal("rawContentSdkCapabilityPolicyQuality"),
-  scenarioQuality: ScenarioQualityReviewSchema,
-  catalogueComparison: ScenarioCatalogueComparisonSchema,
-}).pipe(
-  Schema.extend(ScenarioContentAdmissionSchema),
-  Schema.extend(ScenarioSdkCapabilityAdmissionSchema),
-);
+const CurrentRejectedScenarioCandidateReviewSchema =
+  ScenarioContentSdkCapabilityAdmissionSchema.mapMembers(
+    Tuple.map(
+      Schema.fieldsAssign({
+        campaignId: ScenarioCampaignIdSchema,
+        candidateId: ScenarioCandidateIdSchema,
+        candidateScenarioSha256: ScenarioSha256Schema,
+        gitSha: GitShaSchema,
+        admitReviewedUnsupported: Schema.Boolean,
+        rawReview: ScenarioRawReviewSchema,
+        policyReview: ScenarioPolicyReviewSchema,
+        reviewScope: Schema.Literal("rawContentSdkCapabilityPolicyQuality"),
+        scenarioQuality: ScenarioQualityReviewSchema,
+        catalogueComparison: ScenarioCatalogueComparisonSchema,
+      }),
+    ),
+  );
 
-const HistoricalRejectedScenarioCandidateReviewSchema = Schema.Struct({
-  campaignId: ScenarioCampaignIdSchema,
-  candidateId: ScenarioCandidateIdSchema,
-  candidateScenarioSha256: ScenarioSha256Schema,
-  gitSha: GitShaSchema,
-  admitReviewedUnsupported: Schema.Boolean,
-  rawReview: ScenarioRawReviewSchema,
-  policyReview: ScenarioPolicyReviewSchema,
-  reviewScope: Schema.Literal("rawContentSdkCapabilityPolicyQuality"),
-  scenarioQuality: ScenarioQualityReviewSchema,
-}).pipe(
-  Schema.extend(ScenarioContentAdmissionSchema),
-  Schema.extend(ScenarioSdkCapabilityAdmissionSchema),
-);
+const HistoricalRejectedScenarioCandidateReviewSchema =
+  ScenarioContentSdkCapabilityAdmissionSchema.mapMembers(
+    Tuple.map(
+      Schema.fieldsAssign({
+        campaignId: ScenarioCampaignIdSchema,
+        candidateId: ScenarioCandidateIdSchema,
+        candidateScenarioSha256: ScenarioSha256Schema,
+        gitSha: GitShaSchema,
+        admitReviewedUnsupported: Schema.Boolean,
+        rawReview: ScenarioRawReviewSchema,
+        policyReview: ScenarioPolicyReviewSchema,
+        reviewScope: Schema.Literal("rawContentSdkCapabilityPolicyQuality"),
+        scenarioQuality: ScenarioQualityReviewSchema,
+      }),
+    ),
+  );
 
-export const RejectedScenarioCandidateReviewSchema = Schema.Union(
+export const RejectedScenarioCandidateReviewSchema = Schema.Union([
   CurrentRejectedScenarioCandidateReviewSchema,
   HistoricalRejectedScenarioCandidateReviewSchema,
-);
+]);
 
-export const FinalScenarioReviewSchema = Schema.Union(
+export const FinalScenarioReviewSchema = Schema.Union([
   RawContentPolicyScenarioReviewSchema,
   RawContentSdkCapabilityPolicyScenarioReviewSchema,
   CurrentFinalScenarioReviewSchema,
   HistoricalCurrentFinalScenarioReviewSchema,
-);
+]);
 
 export type ScenarioContentAdmission = Schema.Schema.Type<
   typeof ScenarioContentAdmissionSchema
@@ -400,11 +445,17 @@ export function scenarioCompositeReviewSchemaForIntents<
 >(input: {
   readonly contentAvailabilityIntent: ContentIntent;
   readonly sdkCapabilityIntent: SdkIntent;
-}): Schema.Schema<ScenarioCompositeReviewForIntents<ContentIntent, SdkIntent>>;
+}): Schema.Codec<
+  ScenarioCompositeReviewForIntents<ContentIntent, SdkIntent>,
+  ScenarioCompositeReviewForIntents<ContentIntent, SdkIntent>
+>;
 export function scenarioCompositeReviewSchemaForIntents(input: {
   readonly contentAvailabilityIntent: ContentAvailabilityIntent;
   readonly sdkCapabilityIntent: SdkCapabilityIntent;
-}): Schema.Schema<CurrentScenarioCompositeReview> {
+}): Schema.Codec<
+  CurrentScenarioCompositeReview,
+  CurrentScenarioCompositeReview
+> {
   return Schema.Struct({
     raw: ScenarioRawReviewSchema,
     contentAvailability: Match.value(input.contentAvailabilityIntent).pipe(
@@ -436,22 +487,22 @@ export function scenarioCompositeReviewSchemaForIntents(input: {
 
 type ScenarioReviewResultDecoder<Result> = (
   value: unknown,
-) => Either.Either<Result, ParseResult.ParseError>;
+) => Result.Result<Result, Schema.SchemaError>;
 type ScenarioReviewOutputDecoder<Result> = ScenarioReviewResultDecoder<{
   readonly result: Result;
 }>;
 
 function scenarioReviewResultDecoder<A, I>(
-  schema: Schema.Schema<A, I>,
+  schema: Schema.Codec<A, I>,
 ): ScenarioReviewResultDecoder<A> {
-  const decode = Schema.decodeUnknownEither(schema, {
+  const decode = Schema.decodeUnknownResult(schema, {
     onExcessProperty: "error",
   });
   return (value) => decode(value);
 }
 
 function scenarioReviewOutputDecoder<A, I>(
-  schema: Schema.Schema<A, I>,
+  schema: Schema.Codec<A, I>,
 ): ScenarioReviewOutputDecoder<A> {
   return scenarioReviewResultDecoder(Schema.Struct({ result: schema }));
 }
@@ -462,14 +513,14 @@ type ScenarioReviewSchemaCompatibility<
   Encoded,
 > = Readonly<{
   readonly tag: Tag;
-  readonly schema: Schema.Schema<Result, Encoded>;
+  readonly schema: Schema.Codec<Result, Encoded>;
   readonly decodeResult: ScenarioReviewResultDecoder<Result>;
   readonly decodeOutput: ScenarioReviewOutputDecoder<Result>;
 }>;
 
 function scenarioReviewSchemaCompatibility<Tag extends string, Result, Encoded>(
   tag: Tag,
-  schema: Schema.Schema<Result, Encoded>,
+  schema: Schema.Codec<Result, Encoded>,
 ): ScenarioReviewSchemaCompatibility<Tag, Result, Encoded> {
   return {
     tag,
@@ -483,12 +534,12 @@ export type ScenarioReviewOutputSchemaCompatibility =
   | ScenarioReviewSchemaCompatibility<
       "historical",
       Schema.Schema.Type<typeof HistoricalScenarioCompositeReviewSchema>,
-      Schema.Schema.Encoded<typeof HistoricalScenarioCompositeReviewSchema>
+      Schema.Codec.Encoded<typeof HistoricalScenarioCompositeReviewSchema>
     >
   | ScenarioReviewSchemaCompatibility<
       "legacyCurrent",
       Schema.Schema.Type<typeof CurrentScenarioCompositeReviewSchema>,
-      Schema.Schema.Encoded<typeof CurrentScenarioCompositeReviewSchema>
+      Schema.Codec.Encoded<typeof CurrentScenarioCompositeReviewSchema>
     >
   | (ScenarioReviewSchemaCompatibility<
       "intentSpecificCurrent",
@@ -515,7 +566,7 @@ export type ScenarioReviewOutputSchemaCompatibility =
 export function classifyScenarioReviewOutputSchema(input: {
   readonly schemaVersion: 2 | 3;
   readonly outputJsonSchema: unknown;
-}): Either.Either<ScenarioReviewOutputSchemaCompatibility, string> {
+}): Result.Result<ScenarioReviewOutputSchemaCompatibility, string> {
   const outputJson = canonicalJson(input.outputJsonSchema);
   const historicalJson = canonicalJson(
     codexOutputJsonSchema(HistoricalScenarioCompositeReviewSchema),
@@ -545,14 +596,14 @@ export function classifyScenarioReviewOutputSchema(input: {
   return Match.value(input.schemaVersion).pipe(
     Match.when(2, () => {
       if (outputJson === historicalJson) {
-        return Either.right({
+        return Result.succeed({
           ...scenarioReviewSchemaCompatibility(
             "historical" as const,
             HistoricalScenarioCompositeReviewSchema,
           ),
         });
       }
-      return Either.left(
+      return Result.fail(
         "Historical scenario review input does not use the historical composite-review schema.",
       );
     }),
@@ -562,7 +613,7 @@ export function classifyScenarioReviewOutputSchema(input: {
           contentAvailabilityIntent: matching[0],
           sdkCapabilityIntent: matching[1],
         });
-        return Either.right({
+        return Result.succeed({
           ...scenarioReviewSchemaCompatibility(
             "intentSpecificCurrent" as const,
             schema,
@@ -572,14 +623,14 @@ export function classifyScenarioReviewOutputSchema(input: {
         });
       }
       if (outputJson === currentJson) {
-        return Either.right({
+        return Result.succeed({
           ...scenarioReviewSchemaCompatibility(
             "legacyCurrent" as const,
             CurrentScenarioCompositeReviewSchema,
           ),
         });
       }
-      return Either.left(
+      return Result.fail(
         "Current scenario review input does not use a canonical intent-specific or legacy composite-review schema.",
       );
     }),
@@ -599,27 +650,27 @@ type ScenarioAdmissionReviews = Schema.Schema.Type<
 function validateScenarioContentAdmission(input: {
   readonly contentAvailabilityIntent: ContentAvailabilityIntent;
   readonly contentReview: ScenarioContentReview;
-}): Either.Either<ScenarioContentAdmission, string> {
+}): Result.Result<ScenarioContentAdmission, string> {
   return Match.value(input.contentAvailabilityIntent).pipe(
     Match.when("availableOnly", () => {
-      const decoded = Schema.decodeUnknownEither(
+      const decoded = Schema.decodeUnknownResult(
         AvailableOnlyScenarioContentAdmissionSchema,
         { onExcessProperty: "error" },
       )(input);
-      return Either.isRight(decoded)
-        ? Either.right(decoded.right)
-        : Either.left(
+      return Result.isSuccess(decoded)
+        ? Result.succeed(decoded.success)
+        : Result.fail(
             "Scenario content reviewer returned a result inconsistent with the campaign intent.",
           );
     }),
     Match.when("probeUnavailableContent", () => {
-      const decoded = Schema.decodeUnknownEither(
+      const decoded = Schema.decodeUnknownResult(
         ProbeUnavailableContentScenarioContentAdmissionSchema,
         { onExcessProperty: "error" },
       )(input);
-      return Either.isRight(decoded)
-        ? Either.right(decoded.right)
-        : Either.left(
+      return Result.isSuccess(decoded)
+        ? Result.succeed(decoded.success)
+        : Result.fail(
             "Scenario content reviewer returned a result inconsistent with the campaign intent.",
           );
     }),
@@ -635,27 +686,27 @@ function validateScenarioContentAdmission(input: {
 function validateScenarioSdkCapabilityAdmission(input: {
   readonly sdkCapabilityIntent: SdkCapabilityIntent;
   readonly sdkCapabilityReview: ScenarioSdkCapabilityReview;
-}): Either.Either<ScenarioSdkCapabilityAdmission, string> {
+}): Result.Result<ScenarioSdkCapabilityAdmission, string> {
   return Match.value(input.sdkCapabilityIntent).pipe(
     Match.when("supportedOnly", () => {
-      const decoded = Schema.decodeUnknownEither(
+      const decoded = Schema.decodeUnknownResult(
         SupportedOnlyScenarioSdkCapabilityAdmissionSchema,
         { onExcessProperty: "error" },
       )(input);
-      return Either.isRight(decoded)
-        ? Either.right(decoded.right)
-        : Either.left(
+      return Result.isSuccess(decoded)
+        ? Result.succeed(decoded.success)
+        : Result.fail(
             "Scenario SDK capability reviewer returned a result inconsistent with the campaign intent.",
           );
     }),
     Match.when("probeUnsupportedCapability", () => {
-      const decoded = Schema.decodeUnknownEither(
+      const decoded = Schema.decodeUnknownResult(
         ProbeUnsupportedCapabilityScenarioSdkCapabilityAdmissionSchema,
         { onExcessProperty: "error" },
       )(input);
-      return Either.isRight(decoded)
-        ? Either.right(decoded.right)
-        : Either.left(
+      return Result.isSuccess(decoded)
+        ? Result.succeed(decoded.success)
+        : Result.fail(
             "Scenario SDK capability reviewer returned a result inconsistent with the campaign intent.",
           );
     }),
@@ -690,7 +741,8 @@ function catalogueComparisonDisposition(
     comparison,
     expectedScenarioIds: comparison.comparedScenarioIds,
   });
-  return Either.isRight(validated) && validated.right.conclusion !== "redundant"
+  return Result.isSuccess(validated) &&
+    validated.success.conclusion !== "redundant"
     ? "admitted"
     : "rejected";
 }
@@ -868,49 +920,49 @@ export function verifyFinalScenarioReview(
     readonly scenarioBytes: string;
     readonly catalogue: ScenarioCatalogueAdmissionContext;
   },
-): Either.Either<Schema.Schema.Type<typeof FinalScenarioReviewSchema>, string> {
-  const decoded = Schema.decodeUnknownEither(FinalScenarioReviewSchema, {
+): Result.Result<Schema.Schema.Type<typeof FinalScenarioReviewSchema>, string> {
+  const decoded = Schema.decodeUnknownResult(FinalScenarioReviewSchema, {
     onExcessProperty: "error",
   })(input);
-  if (Either.isLeft(decoded)) {
-    return Either.left(
-      `Invalid final scenario review: ${decoded.left.message}`,
+  if (Result.isFailure(decoded)) {
+    return Result.fail(
+      `Invalid final scenario review: ${decoded.failure.message}`,
     );
   }
   if (
-    decoded.right.scenarioId !== expected.scenarioId ||
-    decoded.right.gitSha !== expected.gitSha ||
-    decoded.right.scenarioSha256 !==
+    decoded.success.scenarioId !== expected.scenarioId ||
+    decoded.success.gitSha !== expected.gitSha ||
+    decoded.success.scenarioSha256 !==
       createHash("sha256").update(expected.scenarioBytes).digest("hex")
   ) {
-    return Either.left("Final scenario review identity does not match.");
+    return Result.fail("Final scenario review identity does not match.");
   }
   if (
     expected.catalogue.tag === "admittedScenarios" &&
     (expected.catalogue.scenarioIds.length === 0 ||
       expected.catalogue.batches.length === 0)
   ) {
-    return Either.left(
+    return Result.fail(
       "A nonempty admitted catalogue must retain canonical Scenario ids and batches.",
     );
   }
-  if ("catalogueComparison" in decoded.right) {
+  if ("catalogueComparison" in decoded.success) {
     const expectedScenarioIds =
       expected.catalogue.tag === "noAdmittedScenarios"
         ? []
         : expected.catalogue.scenarioIds;
     const comparison = validateScenarioCatalogueComparison({
-      comparison: decoded.right.catalogueComparison,
+      comparison: decoded.success.catalogueComparison,
       expectedScenarioIds,
       ...(expected.catalogue.tag === "noAdmittedScenarios"
         ? {}
         : { expectedBatches: expected.catalogue.batches }),
     });
-    if (Either.isLeft(comparison)) {
-      return Either.left(`Invalid catalogue comparison: ${comparison.left}`);
+    if (Result.isFailure(comparison)) {
+      return Result.fail(`Invalid catalogue comparison: ${comparison.failure}`);
     }
   }
-  return Either.right(decoded.right);
+  return Result.succeed(decoded.success);
 }
 
 export function retentionRevisionMatches(
@@ -925,26 +977,30 @@ export function retentionRevisionMatches(
 export const ScenarioCampaignConfigSchema = Schema.Struct({
   campaignId: ScenarioCampaignIdSchema,
   plannedScenarioId: PlannedScenarioIdSchema,
-  scenarioTitle: Schema.NonEmptyTrimmedString,
-  scenarioPurpose: Schema.NonEmptyTrimmedString,
+  scenarioTitle: Schema.Trimmed.check(Schema.isNonEmpty()),
+  scenarioPurpose: Schema.Trimmed.check(Schema.isNonEmpty()),
   evidenceSetId: EvidenceSetIdSchema,
-  distributionPreference: Schema.NonEmptyTrimmedString,
+  distributionPreference: Schema.Trimmed.check(Schema.isNonEmpty()),
   contentAvailabilityIntent: ContentAvailabilityIntentSchema,
   sdkCapabilityIntent: SdkCapabilityIntentSchema,
   minimumIterations: PositiveIntegerSchema,
   maximumIterations: PositiveIntegerSchema,
-  candidatesPerIteration: PositiveIntegerSchema.pipe(Schema.greaterThan(1)),
+  candidatesPerIteration: PositiveIntegerSchema.pipe(
+    Schema.check(Schema.isGreaterThan(1)),
+  ),
   reviewMilestone: PositiveIntegerSchema,
   admitReviewedUnsupported: Schema.Boolean,
 }).pipe(
-  Schema.filter(
-    (config) =>
-      config.minimumIterations <= config.maximumIterations &&
-      config.reviewMilestone < config.maximumIterations,
-    {
-      message: () =>
-        "campaign bounds require minimum <= maximum and one review milestone below maximum",
-    },
+  Schema.check(
+    Schema.makeFilter(
+      (config) =>
+        config.minimumIterations <= config.maximumIterations &&
+        config.reviewMilestone < config.maximumIterations,
+      {
+        message:
+          "campaign bounds require minimum <= maximum and one review milestone below maximum",
+      },
+    ),
   ),
 );
 
@@ -1092,7 +1148,7 @@ export type ScenarioCampaignResult =
       ScenarioSdkCapabilityAdmission)
   | ScenarioCampaignCandidateRejection;
 
-function selectedCandidateId(): Either.Either<ScenarioCandidateId, string> {
+function selectedCandidateId(): Result.Result<ScenarioCandidateId, string> {
   return decodeScenarioCandidateId(`candidate-${randomUUID()}`);
 }
 
@@ -1109,14 +1165,14 @@ export async function runScenarioCampaign(
   comparisonContext: ScenarioCatalogueComparisonContext = {
     tag: "notConfigured",
   },
-): Promise<Either.Either<ScenarioCampaignResult, string>> {
-  const decoded = Schema.decodeUnknownEither(ScenarioCampaignConfigSchema, {
+): Promise<Result.Result<ScenarioCampaignResult, string>> {
+  const decoded = Schema.decodeUnknownResult(ScenarioCampaignConfigSchema, {
     onExcessProperty: "error",
   })(configInput);
-  if (Either.isLeft(decoded)) {
-    return Either.left(`Invalid scenario campaign: ${decoded.left.message}`);
+  if (Result.isFailure(decoded)) {
+    return Result.fail(`Invalid scenario campaign: ${decoded.failure.message}`);
   }
-  const config = decoded.right;
+  const config = decoded.success;
   if (comparisonContext.tag === "required") {
     const batchScenarioIds = comparisonContext.batches.flatMap((batch) =>
       batch.map(({ scenarioId }) => scenarioId),
@@ -1134,7 +1190,7 @@ export async function runScenarioCampaign(
         (scenarioId) => !expectedScenarioIds.has(scenarioId),
       )
     ) {
-      return Either.left(
+      return Result.fail(
         "Scenario Campaign requires complete, non-duplicated catalogue batches.",
       );
     }
@@ -1174,29 +1230,30 @@ export async function runScenarioCampaign(
             },
       candidateCount: config.candidatesPerIteration,
     });
-    const candidates = Schema.decodeUnknownEither(
+    const candidates = Schema.decodeUnknownResult(
       ScenarioCandidateBatchSchema,
       {
         onExcessProperty: "error",
       },
     )(batch);
     if (
-      Either.isLeft(candidates) ||
-      candidates.right.candidates.length !== config.candidatesPerIteration
+      Result.isFailure(candidates) ||
+      candidates.success.candidates.length !== config.candidatesPerIteration
     ) {
-      return Either.left(
+      return Result.fail(
         "Scenario generator returned an invalid candidate batch.",
       );
     }
     const candidateIds: ScenarioCandidateId[] = [];
     for (
       let candidateIndex = 0;
-      candidateIndex < candidates.right.candidates.length;
+      candidateIndex < candidates.success.candidates.length;
       candidateIndex += 1
     ) {
       const candidateId = selectedCandidateId();
-      if (Either.isLeft(candidateId)) return Either.left(candidateId.left);
-      candidateIds.push(candidateId.right);
+      if (Result.isFailure(candidateId))
+        return Result.fail(candidateId.failure);
+      candidateIds.push(candidateId.success);
     }
     const candidateComparisons: ScenarioCatalogueComparison[] = [];
     if (comparisonContext.tag === "required") {
@@ -1204,7 +1261,7 @@ export async function runScenarioCampaign(
         comparisonContext.batches.length > 0 &&
         agents.compareCandidate === undefined
       ) {
-        return Either.left(
+        return Result.fail(
           "Scenario Campaign requires a catalogue comparison agent.",
         );
       }
@@ -1212,16 +1269,16 @@ export async function runScenarioCampaign(
       for (const [
         candidateIndex,
         candidate,
-      ] of candidates.right.candidates.entries()) {
+      ] of candidates.success.candidates.entries()) {
         const batchComparisons: ScenarioCatalogueComparison[] = [];
         const candidateId = candidateIds[candidateIndex];
         if (candidateId === undefined) {
-          return Either.left("Scenario Campaign lost a Candidate identity.");
+          return Result.fail("Scenario Campaign lost a Candidate identity.");
         }
         const candidateScenarioSha256 = scenarioContentSha256(candidate.prose);
         for (const [batchIndex, batch] of comparisonContext.batches.entries()) {
           if (compareCandidate === undefined) {
-            return Either.left(
+            return Result.fail(
               "Scenario Campaign lost its catalogue comparison agent.",
             );
           }
@@ -1245,30 +1302,30 @@ export async function runScenarioCampaign(
             }),
           ),
         });
-        if (Either.isLeft(aggregate)) return Either.left(aggregate.left);
-        candidateComparisons.push(aggregate.right);
+        if (Result.isFailure(aggregate)) return Result.fail(aggregate.failure);
+        candidateComparisons.push(aggregate.success);
       }
     }
-    const selected = selector.select(candidates.right.candidates.length);
+    const selected = selector.select(candidates.success.candidates.length);
     if (
       !Number.isInteger(selected) ||
       selected < 0 ||
-      selected >= candidates.right.candidates.length
+      selected >= candidates.success.candidates.length
     ) {
-      return Either.left(
+      return Result.fail(
         "Scenario selector returned an invalid candidate index.",
       );
     }
-    const candidate = candidates.right.candidates[selected];
+    const candidate = candidates.success.candidates[selected];
     if (candidate === undefined) {
-      return Either.left("Scenario selector did not select a candidate.");
+      return Result.fail("Scenario selector did not select a candidate.");
     }
     const selectedComparison = candidateComparisons[selected];
     if (
       comparisonContext.tag === "required" &&
       selectedComparison === undefined
     ) {
-      return Either.left(
+      return Result.fail(
         "Scenario Campaign lost the selected Candidate's catalogue comparison.",
       );
     }
@@ -1278,7 +1335,7 @@ export async function runScenarioCampaign(
         : { tag: "notConfigured" };
     const candidateId = candidateIds[selected];
     if (candidateId === undefined) {
-      return Either.left(
+      return Result.fail(
         "Scenario Campaign lost the selected Candidate identity.",
       );
     }
@@ -1292,8 +1349,9 @@ export async function runScenarioCampaign(
       },
       facts: candidate.stageFacts,
     });
-    if (Either.isLeft(candidatePlan)) return Either.left(candidatePlan.left);
-    if (candidatePlan.right.outcome.tag === "rejected") {
+    if (Result.isFailure(candidatePlan))
+      return Result.fail(candidatePlan.failure);
+    if (candidatePlan.success.outcome.tag === "rejected") {
       const catalogueCritiques =
         selectedCatalogueComparison.tag === "retained" &&
         selectedCatalogueComparison.comparison.conclusion === "redundant"
@@ -1308,13 +1366,16 @@ export async function runScenarioCampaign(
         prose: candidate.prose,
         candidateId,
         iteration,
-        critiques: [candidatePlan.right.outcome.reason, ...catalogueCritiques],
+        critiques: [
+          candidatePlan.success.outcome.reason,
+          ...catalogueCritiques,
+        ],
         stageFacts: candidate.stageFacts,
-        candidateStagePlan: candidatePlan.right,
+        candidateStagePlan: candidatePlan.success,
         catalogueComparison: selectedCatalogueComparison,
       };
       if (iteration === config.maximumIterations) {
-        return Either.right({
+        return Result.succeed({
           tag: "candidateRejected",
           campaignId: config.campaignId,
           candidateId,
@@ -1322,7 +1383,7 @@ export async function runScenarioCampaign(
           iterations: iteration,
           stopReason: "candidateRejected",
           stageFacts: rejected.stageFacts,
-          candidateStagePlan: candidatePlan.right,
+          candidateStagePlan: candidatePlan.success,
           catalogueComparison: selectedCatalogueComparison,
         });
       }
@@ -1357,10 +1418,10 @@ export async function runScenarioCampaign(
         contentAvailabilityIntent: config.contentAvailabilityIntent,
         contentReview: review.contentAvailability,
       });
-      if (Either.isLeft(contentAdmission)) {
-        return Either.left(contentAdmission.left);
+      if (Result.isFailure(contentAdmission)) {
+        return Result.fail(contentAdmission.failure);
       }
-      Match.value(contentAdmission.right.contentReview).pipe(
+      Match.value(contentAdmission.success.contentReview).pipe(
         Match.when(
           { classification: "invalidUnavailableSelection" },
           ({ critique }) => critiques.push(critique),
@@ -1380,10 +1441,10 @@ export async function runScenarioCampaign(
         sdkCapabilityIntent: config.sdkCapabilityIntent,
         sdkCapabilityReview: review.sdkCapability,
       });
-      if (Either.isLeft(sdkCapabilityAdmission)) {
-        return Either.left(sdkCapabilityAdmission.left);
+      if (Result.isFailure(sdkCapabilityAdmission)) {
+        return Result.fail(sdkCapabilityAdmission.failure);
       }
-      Match.value(sdkCapabilityAdmission.right.sdkCapabilityReview).pipe(
+      Match.value(sdkCapabilityAdmission.success.sdkCapabilityReview).pipe(
         Match.when({ classification: "unsupported" }, ({ critique }) =>
           critiques.push(critique),
         ),
@@ -1414,7 +1475,7 @@ export async function runScenarioCampaign(
       iteration,
       critiques,
       stageFacts: candidate.stageFacts,
-      candidateStagePlan: candidatePlan.right,
+      candidateStagePlan: candidatePlan.success,
       catalogueComparison: selectedCatalogueComparison,
     };
     if (iteration === config.maximumIterations) {
@@ -1430,7 +1491,7 @@ export async function runScenarioCampaign(
   }
 
   if (draft.tag === "unstarted") {
-    return Either.left("Scenario campaign produced no scenario.");
+    return Result.fail("Scenario campaign produced no scenario.");
   }
   const finalReview = await agents.reviewScenario({
     scenario: draft.prose,
@@ -1450,15 +1511,15 @@ export async function runScenarioCampaign(
     contentAvailabilityIntent: config.contentAvailabilityIntent,
     contentReview: finalReview.contentAvailability,
   });
-  if (Either.isLeft(finalContentAdmission)) {
-    return Either.left(finalContentAdmission.left);
+  if (Result.isFailure(finalContentAdmission)) {
+    return Result.fail(finalContentAdmission.failure);
   }
   const finalSdkCapabilityAdmission = validateScenarioSdkCapabilityAdmission({
     sdkCapabilityIntent: config.sdkCapabilityIntent,
     sdkCapabilityReview: finalReview.sdkCapability,
   });
-  if (Either.isLeft(finalSdkCapabilityAdmission)) {
-    return Either.left(finalSdkCapabilityAdmission.left);
+  if (Result.isFailure(finalSdkCapabilityAdmission)) {
+    return Result.fail(finalSdkCapabilityAdmission.failure);
   }
   const resultBase = {
     campaignId: config.campaignId,
@@ -1478,8 +1539,8 @@ export async function runScenarioCampaign(
     stageFacts: draft.stageFacts,
     candidateStagePlan: draft.candidateStagePlan,
     catalogueComparison: draft.catalogueComparison,
-    ...finalContentAdmission.right,
-    ...finalSdkCapabilityAdmission.right,
+    ...finalContentAdmission.success,
+    ...finalSdkCapabilityAdmission.success,
   } as const;
-  return Either.right(resultBase);
+  return Result.succeed(resultBase);
 }

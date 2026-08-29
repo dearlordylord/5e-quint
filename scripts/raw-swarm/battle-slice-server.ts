@@ -13,6 +13,5 @@ const { server } = createDndMcpProtocolServer(
 const program = dndMcpStdioProgram(server, new StdioServerTransport());
 
 NodeRuntime.runMain(program, {
-  disablePrettyLogger: true,
   disableErrorReporting: true,
 });

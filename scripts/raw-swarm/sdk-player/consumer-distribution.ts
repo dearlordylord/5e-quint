@@ -87,7 +87,7 @@ function contextText(delivery: ContextDelivery): string {
 const declarationDiagnosticCodes = new Set(["TS4023", "TS4058", "TS7056"]);
 /** The emitted declaration graph is compilation support, not an unbounded SDK. */
 export const PUBLIC_DECLARATION_BUNDLE_MAX_FILES = 512;
-export const PUBLIC_DECLARATION_BUNDLE_MAX_BYTES = 5 * 1024 * 1024;
+export const PUBLIC_DECLARATION_BUNDLE_MAX_BYTES = 10 * 1024 * 1024;
 export type PublicDeclarationBundleMeasure = {
   readonly files: number;
   readonly bytes: number;

@@ -1,6 +1,6 @@
 import { canonicalJson } from "../transcript.ts";
 import { createHash } from "node:crypto";
-import { Either, Match, Schema } from "effect";
+import { Result, Match, Schema } from "effect";
 import {
   BattleHoleSchema,
   BattleInterruptDecisionFrontierSchema,
@@ -185,17 +185,21 @@ const PLAYER_HOLE_ADMISSION = {
   attackDamageDisposition: true,
   ongoingSpellTargetChoice: true,
   wildShapeEquipmentDisposition: true,
+  areaWindStrength: true,
+  cloudkillMovement: true,
+  startTurnOccurrenceOrder: true,
+  temporaryHitPointChoice: true,
 } as const satisfies Record<BattleHole["kind"], true>;
 
 const CharacterResourceStateSchema = Schema.Struct({
   resourcePoolRef: BattleResourcePoolExecutionRef,
-  resource: Schema.Union(UseCountResourceSchema, PointPoolResourceSchema),
-  usesRemaining: Schema.optionalWith(ResourceCount, { exact: true }),
-  usedThisTurn: Schema.optionalWith(Schema.Boolean, { exact: true }),
-  pointsRemaining: Schema.optionalWith(ResourceCount, { exact: true }),
+  resource: Schema.Union([UseCountResourceSchema, PointPoolResourceSchema]),
+  usesRemaining: Schema.optionalKey(ResourceCount),
+  usedThisTurn: Schema.optionalKey(Schema.Boolean),
+  pointsRemaining: Schema.optionalKey(ResourceCount),
 });
 
-const StatBlockResourceStateSchema = Schema.Union(
+const StatBlockResourceStateSchema = Schema.Union([
   Schema.Struct({
     resourcePoolRef: BattleResourcePoolExecutionRef,
     kind: Schema.Literal("daily"),
@@ -219,7 +223,7 @@ const StatBlockResourceStateSchema = Schema.Union(
     usesMax: ResourceCount,
     usesRemaining: ResourceCount,
   }),
-);
+]);
 
 export type PlayerActProjection = {
   readonly ref: `subject:${string}`;
@@ -583,12 +587,12 @@ function characterResourceProjection(
   if (!Array.isArray(value)) return undefined;
   const projected: PlayerCombatantProjection["resources"][number][] = [];
   for (const encodedEntry of value) {
-    const decodedEntry = Schema.decodeUnknownEither(
+    const decodedEntry = Schema.decodeUnknownResult(
       CharacterResourceStateSchema,
       { onExcessProperty: "error" },
     )(encodedEntry);
-    if (Either.isLeft(decodedEntry)) return undefined;
-    const entry = decodedEntry.right;
+    if (Result.isFailure(decodedEntry)) return undefined;
+    const entry = decodedEntry.success;
     const ref = entry.resourcePoolRef;
     const resource = entry.resource;
     const projection = Match.value(resource.kind).pipe(
@@ -633,12 +637,12 @@ function statBlockResourceProjection(
   if (!Array.isArray(value)) return undefined;
   const projected: PlayerCombatantProjection["resources"][number][] = [];
   for (const encodedEntry of value) {
-    const decodedEntry = Schema.decodeUnknownEither(
+    const decodedEntry = Schema.decodeUnknownResult(
       StatBlockResourceStateSchema,
       { onExcessProperty: "error" },
     )(encodedEntry);
-    if (Either.isLeft(decodedEntry)) return undefined;
-    const entry = decodedEntry.right;
+    if (Result.isFailure(decodedEntry)) return undefined;
+    const entry = decodedEntry.success;
     const ref = entry.resourcePoolRef;
     const projection = Match.value(entry).pipe(
       Match.when({ kind: "daily" }, (entry) => {
@@ -1110,12 +1114,14 @@ function decodeHole(
   value: unknown,
   source: PlayerHoleEvidenceSource,
 ): PlayerHoleProjection | undefined {
-  const decoded = Schema.decodeUnknownEither(BattleHoleSchema, {
+  const decoded = Schema.decodeUnknownResult(BattleHoleSchema, {
     onExcessProperty:
       source.kind === "recordedCurrentRuntime" ? "error" : "ignore",
   })(value);
-  if (Either.isLeft(decoded)) return undefined;
-  return PLAYER_HOLE_ADMISSION[decoded.right.kind] ? decoded.right : undefined;
+  if (Result.isFailure(decoded)) return undefined;
+  return PLAYER_HOLE_ADMISSION[decoded.success.kind]
+    ? decoded.success
+    : undefined;
 }
 
 function holeOccurrences(
@@ -1184,21 +1190,21 @@ function projectEnvelopeFrontier(
         };
   }
   if (frontier.kind !== "interruptDecision") return undefined;
-  const decoded = Schema.decodeUnknownEither(
+  const decoded = Schema.decodeUnknownResult(
     BattleInterruptDecisionFrontierSchema,
     {
       onExcessProperty:
         source.kind === "recordedCurrentRuntime" ? "error" : "ignore",
     },
   )(frontier);
-  if (Either.isLeft(decoded)) return undefined;
-  const [firstChoice, ...remainingChoices] = decoded.right.choices;
+  if (Result.isFailure(decoded)) return undefined;
+  const [firstChoice, ...remainingChoices] = decoded.success.choices;
   return {
     kind: "interruptDecision",
-    trigger: decoded.right.trigger,
-    decisionHole: jsonValue(decoded.right.decisionHole),
+    trigger: decoded.success.trigger,
+    decisionHole: jsonValue(decoded.success.decisionHole),
     choices: [jsonValue(firstChoice), ...remainingChoices.map(jsonValue)],
-    stackDepth: decoded.right.stackDepth,
+    stackDepth: decoded.success.stackDepth,
   };
 }
 

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import { classifyScenarioReviewOutputSchema } from "./scenario-campaign.ts";
 import { modelInvocationEvidenceFromEvents } from "./model-telemetry.ts";
@@ -28,19 +28,19 @@ export function retainedReviewInput<const Stage extends "milestone" | "final">(
   path: string,
   expectedStage: Stage,
 ): RetainedScenarioReviewInput {
-  const decoded = Schema.decodeUnknownEither(
+  const decoded = Schema.decodeUnknownResult(
     RetainedScenarioReviewInputSchema,
     { onExcessProperty: "error" },
   )(json(path));
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     fail(
-      `Retained ${expectedStage} review input is invalid: ${decoded.left.message}`,
+      `Retained ${expectedStage} review input is invalid: ${decoded.failure.message}`,
     );
   }
-  if (decoded.right.reviewStage !== expectedStage) {
+  if (decoded.success.reviewStage !== expectedStage) {
     fail(`Retained ${expectedStage} review input has the wrong stage.`);
   }
-  return decoded.right;
+  return decoded.success;
 }
 
 export function finalAgentMessage(events: readonly unknown[]): unknown {
@@ -115,23 +115,24 @@ export function validateRetainedScenarioReviewInvocation(input: {
     schemaVersion: retained.schemaVersion,
     outputJsonSchema: retained.outputJsonSchema,
   });
-  if (Either.isLeft(compatibility)) {
+  if (Result.isFailure(compatibility)) {
     fail(
       `Retained ${reviewStage} review input has an unsupported output schema.`,
     );
   }
-  const retainedResult = compatibility.right.decodeResult(retained.result);
-  if (Either.isLeft(retainedResult)) {
+  const retainedResult = compatibility.success.decodeResult(retained.result);
+  if (Result.isFailure(retainedResult)) {
     fail(
       `Retained ${reviewStage} review input result does not match its output schema.`,
     );
   }
-  const output = compatibility.right.decodeOutput(
+  const output = compatibility.success.decodeOutput(
     finalAgentMessage(input.events),
   );
   if (
-    Either.isLeft(output) ||
-    canonicalJson(output.right.result) !== canonicalJson(retainedResult.right)
+    Result.isFailure(output) ||
+    canonicalJson(output.success.result) !==
+      canonicalJson(retainedResult.success)
   ) {
     fail(
       `Retained ${reviewStage} review input result does not match its invocation event output.`,

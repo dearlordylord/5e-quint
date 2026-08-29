@@ -1,4 +1,4 @@
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -14,10 +14,10 @@ import {
 
 describe("Raw Swarm capability projection", () => {
   test("is one versioned projection that validates at its boundary", () => {
-    const decoded = Schema.decodeUnknownEither(CapabilityProjectionSchema, {
+    const decoded = Schema.decodeUnknownResult(CapabilityProjectionSchema, {
       onExcessProperty: "error",
     })(CANONICAL_CAPABILITY_PROJECTION);
-    expect(Either.isRight(decoded)).toBe(true);
+    expect(Result.isSuccess(decoded)).toBe(true);
     expect(CANONICAL_CAPABILITY_PROJECTION.schemaVersion).toBe(
       CAPABILITY_PROJECTION_SCHEMA_VERSION,
     );
@@ -62,8 +62,8 @@ describe("Raw Swarm capability projection", () => {
     expect(characterCapability).toBeDefined();
     if (characterCapability === undefined) return;
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(CapabilityProjectionSchema, {
+      Result.isFailure(
+        Schema.decodeUnknownResult(CapabilityProjectionSchema, {
           onExcessProperty: "error",
         })({
           ...CANONICAL_CAPABILITY_PROJECTION,
@@ -72,8 +72,8 @@ describe("Raw Swarm capability projection", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(CapabilityProjectionSchema, {
+      Result.isFailure(
+        Schema.decodeUnknownResult(CapabilityProjectionSchema, {
           onExcessProperty: "error",
         })({
           ...CANONICAL_CAPABILITY_PROJECTION,
@@ -143,7 +143,7 @@ describe("Raw Swarm capability projection", () => {
   });
 
   test("rejects an unrecognized role instead of widening the projection", () => {
-    expect(Either.isLeft(parseCapabilityRole("reviewer"))).toBe(true);
-    expect(Either.isRight(parseCapabilityRole("review"))).toBe(true);
+    expect(Result.isFailure(parseCapabilityRole("reviewer"))).toBe(true);
+    expect(Result.isSuccess(parseCapabilityRole("review"))).toBe(true);
   });
 });

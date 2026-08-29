@@ -10,7 +10,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import { admittedScenarioIdentity } from "./scenario-admission.ts";
 import { assertModelEntryPointGuard } from "./model-entrypoint-guard.ts";
@@ -119,27 +119,27 @@ async function main(args: readonly string[]): Promise<void> {
   assertModelEntryPointGuard();
   const [scenarioInput, ...unexpected] = args;
   const scenarioId = decodeScenarioId(scenarioInput);
-  if (Either.isLeft(scenarioId) || unexpected.length > 0) {
+  if (Result.isFailure(scenarioId) || unexpected.length > 0) {
     fail("Usage: author-scenario-setup.ts <scenario-id>");
   }
   const revision = currentGitRevision();
   if (revision.tag === "dirty") {
     fail("Scenario setup authoring requires a clean Git worktree.");
   }
-  const gitSha = Schema.decodeUnknownEither(GitShaSchema)(revision.sha);
-  if (Either.isLeft(gitSha)) fail(gitSha.left.message);
+  const gitSha = Schema.decodeUnknownResult(GitShaSchema)(revision.sha);
+  if (Result.isFailure(gitSha)) fail(gitSha.failure.message);
   const scenarioPath = resolve(
     repoRoot,
-    `scripts/raw-swarm/sdk-player/scenarios/${scenarioId.right}.md`,
+    `scripts/raw-swarm/sdk-player/scenarios/${scenarioId.success}.md`,
   );
   const reviewPath = `${scenarioPath}.scenario-review.json`;
   const charactersPath = resolve(
     repoRoot,
-    `scripts/raw-swarm/sdk-player/scenarios/${scenarioId.right}.characters.ts`,
+    `scripts/raw-swarm/sdk-player/scenarios/${scenarioId.success}.characters.ts`,
   );
   const outputPath = resolve(
     repoRoot,
-    `scripts/raw-swarm/sdk-player/scenarios/${scenarioId.right}.setup.ts`,
+    `scripts/raw-swarm/sdk-player/scenarios/${scenarioId.success}.setup.ts`,
   );
   if (
     !existsSync(scenarioPath) ||
@@ -154,23 +154,23 @@ async function main(args: readonly string[]): Promise<void> {
     fail(`Refusing to overwrite scenario setup: ${outputPath}`);
   }
   const admission = admittedScenarioIdentity({
-    scenarioId: scenarioId.right,
+    scenarioId: scenarioId.success,
     scenarioPath,
     reviewPath,
     recordPath: scenarioPath.replace(/\.md$/, ".scenario.json"),
   });
-  if (Either.isLeft(admission)) fail(admission.left);
+  if (Result.isFailure(admission)) fail(admission.failure);
 
   const retainedPlan = retainAdmittedScenarioStagePlan({
-    scenarioId: scenarioId.right,
+    scenarioId: scenarioId.success,
     scenarioPath,
-    scenarioSha256: admission.right.scenarioSha256,
-    scenarioReviewSha256: admission.right.scenarioReviewSha256,
+    scenarioSha256: admission.success.scenarioSha256,
+    scenarioReviewSha256: admission.success.scenarioReviewSha256,
   });
-  if (Either.isLeft(retainedPlan)) fail(retainedPlan.left);
-  if (retainedPlan.right.outcome.tag === "rejected") {
+  if (Result.isFailure(retainedPlan)) fail(retainedPlan.failure);
+  if (retainedPlan.success.outcome.tag === "rejected") {
     fail(
-      `Scenario stage plan rejected setup authoring: ${retainedPlan.right.outcome.reason}`,
+      `Scenario stage plan rejected setup authoring: ${retainedPlan.success.outcome.reason}`,
     );
   }
 
@@ -212,8 +212,8 @@ async function main(args: readonly string[]): Promise<void> {
           scratch,
           codexHome,
           permissionArgs,
-          scenarioId: scenarioId.right,
-          gitSha: gitSha.right,
+          scenarioId: scenarioId.success,
+          gitSha: gitSha.success,
           evidenceDirectory,
           role,
           instruction:
