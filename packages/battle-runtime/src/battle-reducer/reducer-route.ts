@@ -48,8 +48,8 @@ import {
   rollModifierRouteForResolution,
   scalarBuffRouteForDiscoveredAct,
   scalarBuffRouteForResolution,
-  sleepRepeatSaveRouteForDiscoveredAct,
-  sleepRepeatSaveRouteForResolution,
+  hitPointBudgetConditionRepeatSaveRouteForDiscoveredAct,
+  hitPointBudgetConditionRepeatSaveRouteForResolution,
   spellBaseArmorClassEffectTurnBoundaryRouteForResolution,
   spellDamageReductionAdjustmentDiscoveryRouteForResolution,
   spellDamageReductionAdjustmentRouteForResolution,
@@ -113,7 +113,7 @@ import {
   spatialEffectCompositionRouteForDiscoveredAct,
   spatialEffectCompositionRouteForResolution,
   spatialEffectCompositionRuntimeRouteForDiscoveredAct,
-  thunderwavePresentationRouteForDiscoveredAct,
+  forcedMovementCubeBurstPresentationRouteForDiscoveredAct,
 } from "./spatial-effect-routes.ts";
 import {
   spellAttackProcedureRouteForResolution,
@@ -191,7 +191,9 @@ export function battleReducerRouteEventsForDiscoveredAct(
       eventRoute(scalarBuffRouteForDiscoveredAct(state, act)),
     ),
     terminalRouteCandidate(() =>
-      eventRoute(sleepRepeatSaveRouteForDiscoveredAct(state, act)),
+      eventRoute(
+        hitPointBudgetConditionRepeatSaveRouteForDiscoveredAct(state, act),
+      ),
     ),
     terminalRouteCandidate(() =>
       eventRoute(
@@ -239,10 +241,8 @@ export function battleReducerRouteEventsForDiscoveredAct(
         state,
         act,
       );
-      const presentationRoute = thunderwavePresentationRouteForDiscoveredAct(
-        state,
-        act,
-      );
+      const presentationRoute =
+        forcedMovementCubeBurstPresentationRouteForDiscoveredAct(state, act);
       if (
         spatialRoute === undefined &&
         runtimeRoute === undefined &&
@@ -290,7 +290,8 @@ export function battleReducerRouteForResolution(
   input: AdmittedBattleResolutionInput,
   result: BattleResolutionResult,
 ): BattleReducerRouteEvents | undefined {
-  const sleepRepeatSaveRoute = sleepRepeatSaveRouteForResolution(input, result);
+  const sleepRepeatSaveRoute =
+    hitPointBudgetConditionRepeatSaveRouteForResolution(input, result);
   const firstExclusiveRoute = composeReducerRouteCandidates([
     terminalRouteCandidate(() =>
       passiveProjectionRouteForResolution(input, result),

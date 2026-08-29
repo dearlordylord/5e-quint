@@ -10,7 +10,7 @@ import { spellCastCandidate } from "../spell-cast-candidate.ts";
 //   - admit()                         - was
 //                                       supportedCantripHeldLightSpellProfile
 //                                       in spells-profiles.ts
-//   - isProduceFlameOngoingEffectSpell - shared shape parser for the paired
+//   - isHeldFlameAttackOngoingEffectSpell - shared shape parser for the paired
 //                                       heldLightHurl profile
 //   - discoverCastAct()               - was the heldLight branch in
 //                                       spells-discovery.ts:discoverBattleActs
@@ -73,7 +73,7 @@ type HeldLightInvocation = Extract<
   { readonly procedure: "heldLight" }
 >;
 
-export function isProduceFlameOngoingEffectSpell(
+export function isHeldFlameAttackOngoingEffectSpell(
   spell: BattleSpellAdmissionSource,
 ): spell is BattleSpellAdmissionSource & {
   readonly mechanics: Extract<
@@ -103,7 +103,7 @@ function admitHeldLight(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly HeldLightInvocation[] {
-  if (!isProduceFlameOngoingEffectSpell(spell)) {
+  if (!isHeldFlameAttackOngoingEffectSpell(spell)) {
     return [];
   }
   const lightOperation = spell.mechanics.operations.find(
@@ -152,7 +152,7 @@ export function heldLightHurlMechanicalFacts(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): HeldLightHurlMechanicalFacts | null {
-  if (!isProduceFlameOngoingEffectSpell(spell)) return null;
+  if (!isHeldFlameAttackOngoingEffectSpell(spell)) return null;
   const hurlOperation = spell.mechanics.operations.find(
     (operation) =>
       operation.trigger.kind === "on_caster_spends_action" &&

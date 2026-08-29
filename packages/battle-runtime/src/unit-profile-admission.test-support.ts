@@ -76,7 +76,7 @@ import {
   supportedPreparedSaveGateConditionProfile,
 } from "./battle-reducer/spell-procedure-profiles/_save-gate-helpers.ts";
 import { supportedPreparedStagedSaveConditionProfile } from "./battle-reducer/spell-procedure-profiles/hit-point-budget-condition-admission.ts";
-import { supportedPreparedHellishRebukeReactionSpellProfile } from "./battle-reducer/spells-profiles.ts";
+import { supportedPreparedAfterDamageReactionSaveSpellProfile } from "./battle-reducer/spells-profiles.ts";
 import { validateSavingThrowOutcomes } from "./battle-reducer/spells-resolve-save-gates.ts";
 import { characterBattleResourceForUnit } from "./character-battle-resources.ts";
 import {
@@ -389,7 +389,7 @@ export {
   startBattle,
   startBattleWithInitialInitiativeSetup,
   STUNNING_STRIKE_SUPPORT_PROFILE,
-  supportedPreparedHellishRebukeReactionSpellProfile,
+  supportedPreparedAfterDamageReactionSaveSpellProfile,
   supportedPreparedSaveGatedConditionWithRepeatProfile,
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,

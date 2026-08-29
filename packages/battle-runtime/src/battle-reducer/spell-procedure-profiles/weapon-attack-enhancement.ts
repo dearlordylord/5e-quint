@@ -228,7 +228,7 @@ function resolveWeaponAttackDamageEnhancement(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Magic Weapon uses one nonmagical weapon item target fill and spell-cast Reaction facts only.",
+      "weapon attack enhancement uses one nonmagical weapon item target fill and spell-cast Reaction facts only.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -249,7 +249,7 @@ function resolveWeaponAttackDamageEnhancement(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Magic Weapon target item must identify a held nonmagical weapon item.",
+      "weapon attack enhancement target item must identify a held nonmagical weapon item.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -268,7 +268,7 @@ function resolveWeaponAttackDamageEnhancement(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Magic Weapon target item is already magical from an active Magic Weapon effect.",
+      "weapon attack enhancement target item is already magical from an active weapon attack enhancement effect.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -287,7 +287,7 @@ function resolveWeaponAttackDamageEnhancement(
     return invalidResult(
       input.input.state,
       "missingCombatant",
-      "Magic Weapon caster is not in this battle.",
+      "weapon attack enhancement caster is not in this battle.",
     );
   }
   /* v8 ignore stop -- @preserve */

@@ -1310,7 +1310,7 @@ function resolveTargetedSpellAttackPreparation(
           result: invalidResult(
             input.input.state,
             "invalidFill",
-            "Magic Missile does not use an attack roll.",
+            "multi-projectile automatic-hit spell does not use an attack roll.",
           ),
         }
       : {

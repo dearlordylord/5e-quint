@@ -42,7 +42,7 @@ import {
   damageDispositionFillFor,
   damageDispositionFillsValidation,
   damageDispositionForTarget,
-  iceKnifeDamageDispositionHoleKey,
+  attackBurstDamageDispositionHoleKey,
   zeroHitPointReplacementDispositionHole,
 } from "./attack-damage-apply.ts";
 import {
@@ -81,7 +81,7 @@ import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlet
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import {
   targetingSaveInterdictionCheck,
-  targetChoiceFillAfterSanctuaryAttackRollReplacement,
+  targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement,
 } from "./targeting-save-interdiction.ts";
 import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 import {
@@ -329,7 +329,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
         return invalidResult(
           input.input.state,
           "invalidFill",
-          "Sanctuary replacement Ice Knife target must be legal for the selected spell.",
+          "attack-redirection ward replacement attack-burst damage target must be legal for the selected spell.",
         );
       }
       /* v8 ignore stop -- @preserve */
@@ -345,7 +345,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
         return invalidResult(
           input.input.state,
           "invalidFill",
-          "Sanctuary replacement requires the original Ice Knife target fill.",
+          "attack-redirection ward replacement requires the original attack-burst damage target fill.",
         );
       }
       /* v8 ignore stop -- @preserve */
@@ -354,10 +354,12 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
         .map(
           (fill): BattleFill =>
             fill === originalTargetFill
-              ? targetChoiceFillAfterSanctuaryAttackRollReplacement({
-                  fill,
-                  replacement: sanctuaryCheck,
-                })
+              ? targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement(
+                  {
+                    fill,
+                    replacement: sanctuaryCheck,
+                  },
+                )
               : fill,
         );
       const fillSet = spellFillSet(
@@ -554,7 +556,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Mirror Image duplicate roll is only valid after a hit.",
+      "duplicate-hit interception duplicate roll is only valid after a hit.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -578,7 +580,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Mirror Image attacker is no longer present.",
+      "duplicate-hit interception attacker is no longer present.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -661,7 +663,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Ice Knife attack damage can only be filled after a hit.",
+      "attack-burst damage attack damage can only be filled after a hit.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -745,7 +747,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
         )
       : 0;
   const attackDamageEventKey = String(
-    iceKnifeDamageDispositionHoleKey("attack", target.combatantId).holeId,
+    attackBurstDamageDispositionHoleKey("attack", target.combatantId).holeId,
   );
   const attackDamageDispositionHole =
     attackDamageAmount > 0
@@ -753,7 +755,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
           damageSourceId: input.actorId,
           target,
           damageAmount: attackDamageAmount,
-          holeKey: iceKnifeDamageDispositionHoleKey(
+          holeKey: attackBurstDamageDispositionHoleKey(
             "attack",
             target.combatantId,
           ),
@@ -962,7 +964,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Ice Knife burst damage can only be filled when at least one target fails the Dexterity Saving Throw.",
+      "attack-burst damage burst damage can only be filled when at least one target fails the Dexterity Saving Throw.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -1085,7 +1087,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
         damageSourceId: input.actorId,
         target: burstTarget,
         damageAmount,
-        holeKey: iceKnifeDamageDispositionHoleKey("burst", targetId),
+        holeKey: attackBurstDamageDispositionHoleKey("burst", targetId),
       });
     },
   ).flatMap((hole) => (hole === null ? [] : [hole]));
@@ -1189,7 +1191,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
     const damagedTarget = damagedByAttack.combatants.get(targetId);
     const damageAmount = burstDamageByTargetId.get(targetId) ?? 0;
     const burstDamageEventKey = String(
-      iceKnifeDamageDispositionHoleKey("burst", targetId).holeId,
+      attackBurstDamageDispositionHoleKey("burst", targetId).holeId,
     );
     /* v8 ignore start -- @preserve -- Internal replay invariant: failedTargets was validated against the battle roster, and attack damage application preserves those combatants. */
     if (damagedTarget === undefined) {
@@ -1255,7 +1257,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Hideous Laughter damage repeat save fill must match a requested damaged target.",
+      "damage-triggered repeat-save condition damage repeat save fill must match a requested damaged target.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -1416,7 +1418,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
             }),
           );
           const burstDamageEventKey = String(
-            iceKnifeDamageDispositionHoleKey("burst", targetId).holeId,
+            attackBurstDamageDispositionHoleKey("burst", targetId).holeId,
           );
           const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
             input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,

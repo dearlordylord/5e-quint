@@ -30,7 +30,7 @@ import {
   presentFindFamiliarHitPoints,
   reappearAdmittedTemporarilyDismissedFindFamiliar,
   resolvedFindFamiliarResult,
-  spendFindFamiliarMagicAction,
+  spendSpawnedCompanionMagicAction,
   withFindFamiliarCombatant,
 } from "./companion-lifecycle-execution.ts";
 import { findFamiliarDisappearedAtZeroHitPointsState } from "./companion-state.ts";
@@ -1220,7 +1220,7 @@ function spendWildCompanionCost(input: {
 }):
   | { readonly tag: "resolved"; readonly state: BattleState }
   | Extract<BattleResolutionResult, { readonly tag: "invalid" }> {
-  const spentAction = spendFindFamiliarMagicAction(
+  const spentAction = spendSpawnedCompanionMagicAction(
     input.state,
     input.casterId,
     "Wild Companion",
@@ -1231,7 +1231,7 @@ function spendWildCompanionCost(input: {
   }
   /* v8 ignore stop -- @preserve */
   const actor = spentAction.state.combatants.get(input.casterId);
-  /* v8 ignore start -- @preserve -- Internal sequencing invariant: spendFindFamiliarMagicAction just resolved for the admitted character caster supplied by Wild Companion discovery. */
+  /* v8 ignore start -- @preserve -- Internal sequencing invariant: spendSpawnedCompanionMagicAction just resolved for the admitted character caster supplied by Wild Companion discovery. */
   if (actor?.origin.kind !== "character") {
     return invalidFindFamiliarResult(
       input.state,

@@ -167,7 +167,7 @@ function resolveSeeInvisibleObserverSight(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "See Invisibility uses no target, roll, damage, or selection fills.",
+      "concealment-visibility override uses no target, roll, damage, or selection fills.",
     );
   }
   /* v8 ignore stop -- @preserve */

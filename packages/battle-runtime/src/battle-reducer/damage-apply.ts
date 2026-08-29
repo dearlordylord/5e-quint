@@ -120,7 +120,7 @@ import {
   conditionsAfterExpiringSpellConditionEffects,
   removeSaveGatedAreaControlEffectsFromTarget,
   removeSaveGatedConditionWithRepeatEffectFromTarget,
-  removeSleepEffectsFromTarget,
+  removeHitPointBudgetConditionEffectsFromTarget,
 } from "./spell-condition-effects-helpers.ts";
 import { battleCreatureWithSpellCreatedHeldObjectHandStateFromActiveEffects } from "./spell-created-held-object.ts";
 import {
@@ -499,7 +499,10 @@ export function applyBattleHitPointDamage(input: {
       : afterCasterOrAllyDamageEscapes;
   const afterSleep =
     input.damageAmount > 0
-      ? removeSleepEffectsFromTarget(afterTargetActionEarlyEnd, targetId)
+      ? removeHitPointBudgetConditionEffectsFromTarget(
+          afterTargetActionEarlyEnd,
+          targetId,
+        )
       : afterTargetActionEarlyEnd;
   const afterSaveGatedAreaControl =
     input.damageAmount > 0

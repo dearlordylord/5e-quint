@@ -230,7 +230,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Antimagic Field non-origin aura membership cannot include the source combatant.",
+        "magic-suppression emanation non-origin aura membership cannot include the source combatant.",
     });
   });
 

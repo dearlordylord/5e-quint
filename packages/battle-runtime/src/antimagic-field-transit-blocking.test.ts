@@ -84,7 +84,9 @@ describe("Antimagic Field teleport transit witnesses", () => {
           },
         ],
       }),
-    ).toBe("Antimagic Field transit witness must reference one active aura.");
+    ).toBe(
+      "magic-suppression emanation transit witness must reference one active aura.",
+    );
   });
 
   test.each([
@@ -113,7 +115,7 @@ describe("Antimagic Field teleport transit witnesses", () => {
         witnesses,
       }),
     ).toBe(
-      "Teleport destination table fact must include one Antimagic Field transit witness for each active aura.",
+      "Teleport destination table fact must include one magic-suppression emanation transit witness for each active aura.",
     );
   });
 
@@ -130,7 +132,7 @@ describe("Antimagic Field teleport transit witnesses", () => {
         ],
       }),
     ).toBe(
-      "Antimagic Field transit origin witness must match the active aura membership.",
+      "magic-suppression emanation transit origin witness must match the active aura membership.",
     );
   });
 

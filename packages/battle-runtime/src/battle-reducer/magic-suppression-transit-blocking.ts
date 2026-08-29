@@ -33,7 +33,7 @@ export function magicSuppressionTransitInvalidReason(input: {
         aura.sourceCombatantId === witness.sourceCombatantId,
     );
     if (matchingAuras.length !== 1) {
-      return "Antimagic Field transit witness must reference one active aura.";
+      return "magic-suppression emanation transit witness must reference one active aura.";
     }
   }
 
@@ -44,14 +44,14 @@ export function magicSuppressionTransitInvalidReason(input: {
         witness.sourceCombatantId === aura.sourceCombatantId,
     );
     if (matchingWitnesses.length !== 1) {
-      return "Teleport destination table fact must include one Antimagic Field transit witness for each active aura.";
+      return "Teleport destination table fact must include one magic-suppression emanation transit witness for each active aura.";
     }
 
     const witness = matchingWitnesses[0];
     const originInsideAura =
       magicSuppressionEmanationMembershipIncludesCombatant(aura, input.actorId);
     if (witness.originInsideAura !== originInsideAura) {
-      return "Antimagic Field transit origin witness must match the active aura membership.";
+      return "magic-suppression emanation transit origin witness must match the active aura membership.";
     }
     if (witness.originInsideAura !== witness.destinationInsideAura) {
       return ANTIMAGIC_FIELD_TRANSIT_BLOCKING_MESSAGE;

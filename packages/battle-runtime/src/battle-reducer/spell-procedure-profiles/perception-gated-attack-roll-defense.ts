@@ -169,7 +169,7 @@ function resolvePerceptionGatedAttackRollDefense(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Blur uses no target, roll, damage, or selection fills.",
+      "temporary attack-roll disadvantage uses no target, roll, damage, or selection fills.",
     );
   }
   /* v8 ignore stop -- @preserve */

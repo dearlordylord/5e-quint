@@ -180,7 +180,7 @@ function resolveGrantedAlternateActionCost(
     return invalidResult(
       input.input.state,
       "missingCombatant",
-      "Expeditious Retreat caster is not in this battle.",
+      "bonus-action Dash effect caster is not in this battle.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -189,7 +189,7 @@ function resolveGrantedAlternateActionCost(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Expeditious Retreat accepts only spell-cast Reaction trigger facts.",
+      "bonus-action Dash effect accepts only spell-cast Reaction trigger facts.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -197,7 +197,7 @@ function resolveGrantedAlternateActionCost(
     return invalidResult(
       input.input.state,
       "staleSubject",
-      "Expeditious Retreat no longer has its required runtime spell resource.",
+      "bonus-action Dash effect no longer has its required runtime spell resource.",
     );
   }
   if (
@@ -218,7 +218,7 @@ function resolveGrantedAlternateActionCost(
     return invalidResult(
       input.input.state,
       "unsupportedActOption",
-      "Expeditious Retreat Dash speed kind is not represented for this combatant.",
+      "bonus-action Dash effect Dash speed kind is not represented for this combatant.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -232,7 +232,7 @@ function resolveGrantedAlternateActionCost(
     return invalidResult(
       input.input.state,
       "staleSubject",
-      "Expeditious Retreat is unavailable while an active ongoing feature prevents spellcasting.",
+      "bonus-action Dash effect is unavailable while an active ongoing feature prevents spellcasting.",
     );
   }
 
@@ -263,7 +263,7 @@ function resolveGrantedAlternateActionCost(
     return invalidResult(
       input.input.state,
       "staleSubject",
-      "Expeditious Retreat Bonus Action is no longer available for the current actor.",
+      "bonus-action Dash effect Bonus Action is no longer available for the current actor.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -322,7 +322,7 @@ function resolveGrantedAlternateActionCost(
     return invalidResult(
       input.input.state,
       "missingCombatant",
-      "Expeditious Retreat caster is not in this battle.",
+      "bonus-action Dash effect caster is not in this battle.",
     );
   }
   /* v8 ignore stop -- @preserve */

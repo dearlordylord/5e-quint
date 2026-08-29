@@ -230,26 +230,24 @@ export const THAUMATURGY_BOOMING_VOICE_DURATION_TICKS = elapsedTimeTicks(10);
 export const THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL =
   "intimidation" as const satisfies Skill;
 export const TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS = 3;
-export const THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID = holeId(
+export const MINOR_WONDER_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID = holeId(
   "battle:spell:active-one-minute-effect-count",
 );
-export const THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_INSTANCE =
+export const MINOR_WONDER_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_INSTANCE =
   holeInstanceKey("battle:spell:active-one-minute-effect-count");
-export const THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID = holeId(
-  "battle:spell:booming-voice:influence-ability-check",
-);
-export const THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE =
+export const MINOR_WONDER_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID =
+  holeId("battle:spell:booming-voice:influence-ability-check");
+export const MINOR_WONDER_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE =
   holeInstanceKey("battle:spell:booming-voice:influence-ability-check");
 export const WARDING_BOND_ARMOR_CLASS_BONUS = 1;
 export const WARDING_BOND_SAVING_THROW_BONUS = 1;
 export const WARDING_BOND_CAST_RANGE_FEET = movementFeet(5);
 export const WARDING_BOND_CONNECTION_RANGE_FEET = movementFeet(60);
-export const WARDING_BOND_SEPARATION_FACTS_HOLE_ID = holeId(
-  "battle:spell:warding-bond:separation-facts",
+export const LINKED_DEFENSE_DAMAGE_SHARE_SEPARATION_FACTS_HOLE_ID = holeId(
+  "battle:linked-defense-damage-share:separation-facts",
 );
-export const WARDING_BOND_SEPARATION_FACTS_HOLE_INSTANCE = holeInstanceKey(
-  "battle:spell:warding-bond:separation-facts",
-);
+export const LINKED_DEFENSE_DAMAGE_SHARE_SEPARATION_FACTS_HOLE_INSTANCE =
+  holeInstanceKey("battle:linked-defense-damage-share:separation-facts");
 export const ELDRITCH_BLAST_BEAM_COUNT_TIERS = [
   { atLevel: 5, value: 2 },
   { atLevel: 11, value: 3 },

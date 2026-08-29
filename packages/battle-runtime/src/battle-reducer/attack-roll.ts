@@ -109,7 +109,7 @@ import {
   currentActorId,
   grappledBy,
 } from "./creature-state-leaves.ts";
-import { ongoingSpellEffectSuppressedByAntimagicField } from "./magic-suppression-ongoing-effect.ts";
+import { ongoingSpellEffectSuppressedByMagicSuppressionEmanation } from "./magic-suppression-ongoing-effect.ts";
 import {
   activeOngoingFeatureOccurrenceFromExecution,
   extendOngoingFeatureToEndOfNextTurn,
@@ -866,7 +866,7 @@ export function activeEffectGrantsAttackRollMode(
           (effect.kind === "abilityD20TestRollModeEndTurnSave" &&
             attackUsesAbility(context.attack, effect.ability)) ||
           (effect.kind === "selfAttackRollAndAbilityCheckRollMode" &&
-            !ongoingSpellEffectSuppressedByAntimagicField(state, {
+            !ongoingSpellEffectSuppressedByMagicSuppressionEmanation(state, {
               kind: "spellActiveEffect",
               activeEffectKind: "spellObjectContactDamage",
               effectRef: effect.sourceEffectRef,

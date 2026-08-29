@@ -116,8 +116,8 @@ import {
 import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
 import {
   SLOW_ACTIVE_PENALTIES_DEX_SAVE_DELTA,
-  THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
-  THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_INSTANCE,
+  MINOR_WONDER_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
+  MINOR_WONDER_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_INSTANCE,
   TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
 } from "./domain-constants.ts";
 import { spellAttackSequencePartName } from "./spells-execution-facts.ts";
@@ -1046,8 +1046,8 @@ export function temporaryAbilityCheckRollModeActiveEffectCountHole(
 ): BattleTemporaryAbilityCheckRollModeActiveEffectCountHole {
   return {
     kind: "temporaryAbilityCheckRollModeActiveEffectCount",
-    holeId: THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
-    holeInstanceKey: THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_INSTANCE,
+    holeId: MINOR_WONDER_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
+    holeInstanceKey: MINOR_WONDER_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_INSTANCE,
     label: `Spell total active 1-minute effects`,
     sourceProcedureRef: invocation.sourceProcedureRef,
     maximumActiveOneMinuteEffects:
@@ -1952,7 +1952,7 @@ export function validateSpellBurstDamageFill(
   >,
 ): string | null {
   if (fill.holeId !== spellBurstDamageHoleId(invocation)) {
-    return "Ice Knife burst damage must use the burst damage hole.";
+    return "attack-burst damage burst damage must use the burst damage hole.";
   }
   return validateRolledDiceFillForDiceExpr(fill, {
     dice: invocation.burst.damage.expr.dice,

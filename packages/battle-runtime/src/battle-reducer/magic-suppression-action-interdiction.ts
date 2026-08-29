@@ -67,7 +67,7 @@ export function combatantInsideActiveAntimagicFieldAura(
   );
 }
 
-export function battleSubjectInterdictedByAntimagicField(
+export function battleSubjectInterdictedByMagicSuppressionEmanation(
   state: BattleState,
   subject: BattleSubject,
 ): boolean {
@@ -88,7 +88,7 @@ export function magicSuppressionInterdictionMessage(
     : "Spellcasting is blocked inside an Antimagic Field aura.";
 }
 
-export function spellInvocationActInterdictedByAntimagicField(
+export function spellInvocationActInterdictedByMagicSuppressionEmanation(
   invocation: RuntimeSpellProcedureExecution,
 ): boolean {
   return (
@@ -200,11 +200,11 @@ function runtimeCommandSubjectSpendsMagicAction(
   }
   return (
     subject.command === "movableZoneReposition" &&
-    activeMoonbeamEffectForRepositionSubject(state, subject)
+    activeMovableRadiantCylinderEffectForRepositionSubject(state, subject)
   );
 }
 
-function activeMoonbeamEffectForRepositionSubject(
+function activeMovableRadiantCylinderEffectForRepositionSubject(
   state: BattleState,
   subject: RuntimeCommandSubject,
 ): boolean {

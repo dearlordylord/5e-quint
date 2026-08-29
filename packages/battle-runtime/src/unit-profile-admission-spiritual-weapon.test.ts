@@ -1042,7 +1042,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Spiritual Weapon force position must use the selected spell act position hole.",
+        "spatial melee spell-attack proxy force position must use the selected spell act position hole.",
     });
 
     const overRange = resolveBattleSubject({
@@ -1061,7 +1061,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Spiritual Weapon force placement must be within the spell range.",
+        "spatial melee spell-attack proxy force placement must be within the spell range.",
     });
   });
 
@@ -1317,7 +1317,8 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     expect(overlongMove).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Spiritual Weapon force movement exceeds the spell's maximum.",
+      message:
+        "spatial melee spell-attack proxy force movement exceeds the spell's maximum.",
     });
 
     const repeatAttackRoll = requireResultHole(
@@ -1365,7 +1366,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       tag: "invalid",
       reason: "staleSubject",
       message:
-        "Spiritual Weapon repeat attack is only available on later turns.",
+        "spatial melee spell-attack proxy repeat attack is only available on later turns.",
     });
     // The discovered repeat also fails closed if another operation spends the
     // current Bonus Action before this subject resolves.

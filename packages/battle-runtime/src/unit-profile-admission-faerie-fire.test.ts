@@ -126,7 +126,8 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
         originAnchorId: spellCasterId,
         affectedTargetIds: [spellTargetId],
       },
-      message: "Grease ground-area facts are only valid for Grease.",
+      message:
+        "Ground-area prone-hazard facts are only valid for the ground-area prone-hazard profile.",
     },
     {
       name: "Gust of Wind area facts on a non-Gust spell",
@@ -136,7 +137,8 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
         originAnchorId: spellCasterId,
         affectedTargetIds: [spellTargetId],
       },
-      message: "Gust of Wind Line area facts are only valid for Gust of Wind.",
+      message:
+        "Directional persistent-line area facts are only valid for the directional persistent-line profile.",
     },
     {
       name: "Slow area facts on a non-Slow spell",
@@ -146,7 +148,8 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
         originAnchorId: spellCasterId,
         affectedTargetIds: [spellTargetId],
       },
-      message: "Slow area facts are only valid for Slow.",
+      message:
+        "Turn-hindering area facts are only valid for the turn-hindering profile.",
     },
     {
       name: "Sleep non-sleeper facts on a non-Sleep spell",
@@ -157,7 +160,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
         affectedTargetIds: [spellTargetId],
       },
       message:
-        "Sleep non-sleeper facts are only valid for Sleep target admission.",
+        "Hit-point-budget condition non-sleeper facts are only valid for its target admission.",
     },
     {
       name: "Faerie Fire area facts on a non-Faerie Fire spell",
@@ -168,7 +171,8 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
         affectedTargetIds: [],
         affectedObjectIds: [],
       },
-      message: "Faerie Fire object area facts are only valid for Faerie Fire.",
+      message:
+        "Visibility-granting object-area facts are only valid for the visibility-granting profile.",
     },
     {
       name: "duplicate Faerie Fire object ids",
@@ -183,7 +187,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
         ],
       },
       message:
-        "Faerie Fire area affected objects must not duplicate object ids.",
+        "Visibility-granting area affected objects must not duplicate object ids.",
     },
     {
       name: "self-origin Cone anchored away from the caster",
@@ -253,7 +257,8 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
         originAnchorId: spellCasterId,
         affectedTargetIds: [spellTargetId],
       },
-      message: "Thunderwave push facts are only valid for Thunderwave.",
+      message:
+        "Forced-movement cube-burst push facts are only valid for the forced-movement cube-burst profile.",
     },
     {
       name: "Fireball ignition facts on a non-Fireball spell",
@@ -263,7 +268,8 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
         originAnchorId: spellCasterId,
         affectedTargetIds: [spellTargetId],
       },
-      message: "Fireball object ignition facts are only valid for Fireball.",
+      message:
+        "Object-igniting spherical-burst facts are only valid for the object-igniting spherical-burst profile.",
     },
     {
       name: "Shatter object facts on a non-Shatter spell",
@@ -273,7 +279,8 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
         originAnchorId: spellCasterId,
         affectedTargetIds: [spellTargetId],
       },
-      message: "Shatter object damage facts are only valid for Shatter.",
+      message:
+        "Object-affecting thunder-burst facts are only valid for the object-affecting thunder-burst profile.",
     },
   ] as const)("public save-gate area validation: $name", (testCase) => {
     const state = spellBattle({
@@ -696,7 +703,9 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
         spellCasterId,
         undefined,
       ),
-    ).toBe("Faerie Fire area affected objects must not duplicate object ids.");
+    ).toBe(
+      "Visibility-granting area affected objects must not duplicate object ids.",
+    );
     expect(
       validateSavingThrowOutcomes(
         {

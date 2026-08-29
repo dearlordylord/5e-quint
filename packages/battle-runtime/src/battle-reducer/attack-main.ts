@@ -179,7 +179,7 @@ import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.t
 import {
   battleStateAfterTargetActionEarlyEndForActor,
   targetingSaveInterdictionCheck,
-  targetChoiceFillAfterSanctuaryAttackRollReplacement,
+  targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement,
 } from "./targeting-save-interdiction.ts";
 import { duplicateHitInterceptionCheck } from "./duplicate-hit-interception.ts";
 import { resolveOpenHandTechniqueAfterHit } from "./open-hand-technique.ts";
@@ -1837,7 +1837,7 @@ export function resolveSelectedAttackProcedure<
       return invalidResult(
         input.state,
         "invalidFill",
-        "Sanctuary replacement attack target must be legal for the selected attack.",
+        "attack-redirection ward replacement attack target must be legal for the selected attack.",
       );
     }
     /* v8 ignore stop -- @preserve */
@@ -1851,7 +1851,7 @@ export function resolveSelectedAttackProcedure<
       return invalidResult(
         input.state,
         "invalidFill",
-        "Sanctuary replacement requires the original attack target fill.",
+        "attack-redirection ward replacement requires the original attack target fill.",
       );
     }
     /* v8 ignore stop -- @preserve */
@@ -1863,10 +1863,12 @@ export function resolveSelectedAttackProcedure<
             .filter((fill) => fill.kind !== "targetingSaveInterdictionOutcome")
             .map((fill) =>
               fill === originalTargetFill
-                ? targetChoiceFillAfterSanctuaryAttackRollReplacement({
-                    fill,
-                    replacement: sanctuaryCheck,
-                  })
+                ? targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement(
+                    {
+                      fill,
+                      replacement: sanctuaryCheck,
+                    },
+                  )
                 : fill,
             ),
         ],
@@ -2304,7 +2306,7 @@ export function resolveSelectedAttackProcedure<
     return invalidResult(
       input.state,
       "invalidFill",
-      "Mirror Image duplicate roll is only valid after an attack-roll hit.",
+      "duplicate-hit interception duplicate roll is only valid after an attack-roll hit.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -2344,12 +2346,12 @@ export function resolveSelectedAttackProcedure<
     /* v8 ignore stop -- @preserve */
     if (mirrorImageCheck.tag === "hitDuplicate") {
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (attackPostMirrorImageFillsArePresent(fillSet)) {
+      if (attackPostDuplicateHitInterceptionFillsArePresent(fillSet)) {
         /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
         return invalidResult(
           input.state,
           "invalidFill",
-          "Attack damage and after-hit fills are not valid when Mirror Image redirects the hit to a duplicate.",
+          "Attack damage and after-hit fills are not valid when duplicate-hit interception redirects the hit to a duplicate.",
         );
       }
       /* v8 ignore stop -- @preserve */
@@ -3656,7 +3658,7 @@ function withOpenHandTechniqueShovePushes(
     : result;
 }
 
-function attackPostMirrorImageFillsArePresent(
+function attackPostDuplicateHitInterceptionFillsArePresent(
   fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
 ): boolean {
   return (

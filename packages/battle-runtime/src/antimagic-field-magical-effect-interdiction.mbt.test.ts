@@ -20,7 +20,7 @@ import { describe, expect, it } from "vitest";
 import {
   OTHER_MAGICAL_EFFECT_SOURCE,
   SPELL_MAGICAL_EFFECT_SOURCE,
-  magicalEffectTargetsInterdictedByAntimagicField,
+  magicalEffectTargetsInterdictedByMagicSuppressionEmanation,
 } from "./battle-reducer/magic-suppression-magical-effect-interdiction.ts";
 import {
   burningHandsUnitId,
@@ -275,7 +275,7 @@ function spellTargetInterdicted(session: BattleRuntimeSession): boolean {
     ],
   });
   return (
-    magicalEffectTargetsInterdictedByAntimagicField({
+    magicalEffectTargetsInterdictedByMagicSuppressionEmanation({
       state: session.state,
       source: SPELL_MAGICAL_EFFECT_SOURCE,
       targetIds: [spellTargetId],
@@ -360,7 +360,7 @@ function otherMagicalEffectTargetInterdicted(
     ],
   });
   return (
-    magicalEffectTargetsInterdictedByAntimagicField({
+    magicalEffectTargetsInterdictedByMagicSuppressionEmanation({
       state: session.state,
       source: OTHER_MAGICAL_EFFECT_SOURCE,
       targetIds: [spellTargetId],

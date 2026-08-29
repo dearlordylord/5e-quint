@@ -38,13 +38,13 @@ export const OTHER_MAGICAL_EFFECT_SOURCE = {
 export const ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION_MESSAGE =
   "Magical effects can't target or otherwise affect things inside an Antimagic Field aura.";
 
-export function magicalEffectTargetsInterdictedByAntimagicField(input: {
+export function magicalEffectTargetsInterdictedByMagicSuppressionEmanation(input: {
   readonly state: BattleState;
   readonly source: BattleMagicalEffectSource;
   readonly targetIds: readonly CombatantId[];
 }): boolean {
   return (
-    magicalEffectSourceIsBlockedByAntimagicField(input.source) &&
+    magicalEffectSourceIsBlockedByMagicSuppressionEmanation(input.source) &&
     input.targetIds.some((targetId) =>
       combatantInsideActiveAntimagicFieldAura(input.state, targetId),
     )
@@ -56,12 +56,12 @@ export function magicalEffectTargetsInterdictionMessage(input: {
   readonly source: BattleMagicalEffectSource;
   readonly targetIds: readonly CombatantId[];
 }): string | null {
-  return magicalEffectTargetsInterdictedByAntimagicField(input)
+  return magicalEffectTargetsInterdictedByMagicSuppressionEmanation(input)
     ? ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION_MESSAGE
     : null;
 }
 
-function magicalEffectSourceIsBlockedByAntimagicField(
+function magicalEffectSourceIsBlockedByMagicSuppressionEmanation(
   source: BattleMagicalEffectSource,
 ): boolean {
   return MAGICAL_EFFECT_SOURCE_KINDS.includes(source.kind);

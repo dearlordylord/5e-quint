@@ -1368,7 +1368,7 @@ describe("battle runtime: Sleep", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Sleep shake-awake target must be within 5 feet of the actor by table-supplied fact.",
+        "Hit-point-budget condition shake-awake target must be within 5 feet of the actor by table-supplied fact.",
     });
 
     const shaken = requireResolved(
@@ -1452,7 +1452,7 @@ describe("battle runtime: Sleep", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Sleep shake-awake is no longer available.",
+      message: "Hit-point-budget condition shake-awake is no longer available.",
     });
   });
 
@@ -1484,7 +1484,7 @@ describe("battle runtime: Sleep", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Sleep shake-awake target must be within 5 feet of the actor by table-supplied fact.",
+        "Hit-point-budget condition shake-awake target must be within 5 feet of the actor by table-supplied fact.",
     });
   });
 
@@ -1683,7 +1683,7 @@ describe("battle runtime: Sleep", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Sleep targets that do not sleep or have Exhaustion Immunity automatically succeed and must not receive a rolled Saving Throw outcome.",
+        "hit-point-budget condition targets that do not sleep or have Exhaustion Immunity automatically succeed and must not receive a rolled Saving Throw outcome.",
     });
   });
 
@@ -1741,7 +1741,7 @@ describe("battle runtime: Sleep", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Sleep targets that do not sleep or have Exhaustion Immunity automatically succeed and must not receive a rolled Saving Throw outcome.",
+        "hit-point-budget condition targets that do not sleep or have Exhaustion Immunity automatically succeed and must not receive a rolled Saving Throw outcome.",
     });
 
     const resolved = requireResolved(
@@ -1835,7 +1835,8 @@ describe("battle runtime: Sleep", () => {
       }),
     ).toMatchObject({
       tag: "invalid",
-      message: "Sleep non-sleeper facts must match selected Sphere targets.",
+      message:
+        "hit-point-budget condition non-sleeper facts must match selected Sphere targets.",
     });
 
     expect(
@@ -1862,7 +1863,8 @@ describe("battle runtime: Sleep", () => {
       }),
     ).toMatchObject({
       tag: "invalid",
-      message: "Sleep non-sleeper facts must not duplicate targets.",
+      message:
+        "hit-point-budget condition non-sleeper facts must not duplicate targets.",
     });
   });
 

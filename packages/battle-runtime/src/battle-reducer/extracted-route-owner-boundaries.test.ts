@@ -39,7 +39,7 @@ import {
   conditionImmunityTemporaryHitPointRouteForDiscoveredAct,
   conditionImmunityTemporaryHitPointRouteForResolution,
 } from "./condition-immunity-temporary-hit-point-routes.ts";
-import { sleepRepeatSaveRouteForDiscoveredAct } from "./effect-lifecycle-routes.ts";
+import { hitPointBudgetConditionRepeatSaveRouteForDiscoveredAct } from "./effect-lifecycle-routes.ts";
 import { unitFeatureBonusActionRouteForDiscoveredAct } from "./feature-action-routes.ts";
 import { markedDamageRiderRouteForDiscoveredAct } from "./marked-damage-routes.ts";
 import { protectionCharmRouteForDiscoveredAct } from "./protection-charm-routes.ts";
@@ -141,7 +141,10 @@ describe("extracted route owner boundaries", () => {
       ),
     ).toMatchObject({ subject: "spatialEffect" });
     expect(
-      sleepRepeatSaveRouteForDiscoveredAct(session.state, routedAct("sleep")),
+      hitPointBudgetConditionRepeatSaveRouteForDiscoveredAct(
+        session.state,
+        routedAct("sleep"),
+      ),
     ).toMatchObject({ subject: "repeatSaveConditionEffect" });
   });
 

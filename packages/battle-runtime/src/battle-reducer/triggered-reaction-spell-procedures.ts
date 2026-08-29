@@ -451,7 +451,7 @@ export function resolveTriggeredReactionSaveGatedDamage(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Hellish Rebuke requires a matching after-damage Reaction trigger.",
+      "after-damage reaction save requires a matching after-damage Reaction trigger.",
     );
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -464,7 +464,7 @@ export function resolveTriggeredReactionSaveGatedDamage(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Hellish Rebuke targets the creature from the after-damage trigger.",
+      "after-damage reaction save targets the creature from the after-damage trigger.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -496,7 +496,7 @@ export function resolveTriggeredReactionSaveGatedDamage(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Hellish Rebuke requires the damaging creature's Saving Throw outcome.",
+      "after-damage reaction save requires the damaging creature's Saving Throw outcome.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -538,7 +538,7 @@ export function resolveTriggeredReactionSaveGatedDamage(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Hellish Rebuke target is no longer in the battle.",
+      "after-damage reaction save target is no longer in the battle.",
     );
   }
   /* v8 ignore stop -- @preserve */

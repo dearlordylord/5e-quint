@@ -22,7 +22,7 @@ import {
   MAGIC_ITEM_MAGICAL_EFFECT_SOURCE,
   OTHER_MAGICAL_EFFECT_SOURCE,
   SPELL_MAGICAL_EFFECT_SOURCE,
-  magicalEffectTargetsInterdictedByAntimagicField,
+  magicalEffectTargetsInterdictedByMagicSuppressionEmanation,
 } from "./battle-reducer/magic-suppression-magical-effect-interdiction.ts";
 import {
   burningHandsUnitId,
@@ -99,14 +99,14 @@ describe("Antimagic Field magical-effect interdiction", () => {
 
     expect(targetHole.choices).not.toContain(spellTargetId);
     expect(
-      magicalEffectTargetsInterdictedByAntimagicField({
+      magicalEffectTargetsInterdictedByMagicSuppressionEmanation({
         state: session.state,
         source: SPELL_MAGICAL_EFFECT_SOURCE,
         targetIds: [spellTargetId],
       }),
     ).toBe(true);
     expect(
-      magicalEffectTargetsInterdictedByAntimagicField({
+      magicalEffectTargetsInterdictedByMagicSuppressionEmanation({
         state: session.state,
         source: MAGIC_ITEM_MAGICAL_EFFECT_SOURCE,
         targetIds: [spellTargetId],
@@ -326,7 +326,7 @@ describe("Antimagic Field magical-effect interdiction", () => {
 
     expect(distribution.choices).not.toContain(spellTargetId);
     expect(
-      magicalEffectTargetsInterdictedByAntimagicField({
+      magicalEffectTargetsInterdictedByMagicSuppressionEmanation({
         state: session.state,
         source: OTHER_MAGICAL_EFFECT_SOURCE,
         targetIds: [spellTargetId],

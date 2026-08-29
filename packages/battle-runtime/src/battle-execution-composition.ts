@@ -31,7 +31,7 @@ import {
 import {
   CompanionLifecycleProcedureExecution,
   resolveAdmittedCompanionReappearanceSubject as resolveAdmittedCompanionReappearanceSubjectStateOnly,
-  resolveFindFamiliarTouchSpellSubject,
+  resolveSpawnedCompanionTouchSpellSubject,
   shareFindFamiliarSenses as shareFindFamiliarSensesStateOnly,
 } from "./battle-reducer/companion-lifecycle-procedures.ts";
 import { spawnedCompanionConnectionHole } from "./companion-subjects.ts";
@@ -180,7 +180,7 @@ export function deliverTouchSpellThroughFindFamiliar(input: {
   });
   return battleResolutionWithExecutionSnapshot(
     input.state,
-    resolveFindFamiliarTouchSpellSubject(
+    resolveSpawnedCompanionTouchSpellSubject(
       {
         state: input.state,
         subject,

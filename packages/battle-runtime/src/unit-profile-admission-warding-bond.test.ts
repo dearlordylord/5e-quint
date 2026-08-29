@@ -1646,7 +1646,8 @@ function separateWardingBond(state: BattleState): BattleState {
   ).toMatchObject({
     tag: "invalid",
     reason: "staleSubject",
-    message: "Warding Bond is no longer active for this connected target.",
+    message:
+      "The linked defense effect is no longer active for this connected target.",
   });
   return resolved.state;
 }

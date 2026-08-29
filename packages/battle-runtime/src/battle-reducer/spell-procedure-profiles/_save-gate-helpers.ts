@@ -655,7 +655,7 @@ export function faerieFireSaveGateAttackRollAdvantageSpell(
   const phase = spell.mechanics.phases[0];
   const failedEffect = phase?.kind === "save_gate" ? phase.onFail : undefined;
   const attackAdvantageEffect =
-    faerieFireFailedSaveAttackAdvantageEffect(failedEffect);
+    visibilityGrantingAreaFailedSaveAttackAdvantageEffect(failedEffect);
   if (
     spell.mechanics.level !== 1 ||
     !spellHasActionCastingTime(spell) ||
@@ -696,7 +696,7 @@ export function faerieFireSaveGateAttackRollAdvantageSpell(
   };
 }
 
-function faerieFireFailedSaveAttackAdvantageEffect(
+function visibilityGrantingAreaFailedSaveAttackAdvantageEffect(
   effect: SaveGateFailedEffect | undefined,
 ): ModifyRollAdvantageEffect | null {
   if (effect?.kind !== "composite" || effect.effects.length !== 2) {
@@ -1845,9 +1845,9 @@ function saveGatedDamagePostSaveAreaEffect(
   directPhase: SpellActivationPhase | undefined,
 ): SpellPostSaveAreaEffect | null {
   return (
-    fireballPostSaveAreaEffect(spell, phase, directPhase) ??
-    shatterPostSaveAreaEffect(spell, phase, directPhase) ??
-    thunderwavePostSaveAreaEffect(spell, phase, directPhase)
+    objectIgnitingSphericalBurstPostSaveAreaEffect(spell, phase, directPhase) ??
+    objectAffectingThunderBurstPostSaveAreaEffect(spell, phase, directPhase) ??
+    forcedMovementCubeBurstPostSaveAreaEffect(spell, phase, directPhase)
   );
 }
 
@@ -1874,7 +1874,7 @@ function saveGatedDamageSaveRollModeRule(
     : null;
 }
 
-function fireballPostSaveAreaEffect(
+function objectIgnitingSphericalBurstPostSaveAreaEffect(
   spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   directPhase: SpellActivationPhase | undefined,
@@ -1921,7 +1921,7 @@ function fireballPostSaveAreaEffect(
   return { kind: "areaObjectIgnition" };
 }
 
-function shatterPostSaveAreaEffect(
+function objectAffectingThunderBurstPostSaveAreaEffect(
   spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   directPhase: SpellActivationPhase | undefined,
@@ -1966,7 +1966,7 @@ function isShatterSaveGateDamageShape(
   );
 }
 
-function thunderwavePostSaveAreaEffect(
+function forcedMovementCubeBurstPostSaveAreaEffect(
   spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   directPhase: SpellActivationPhase | undefined,

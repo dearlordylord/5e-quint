@@ -34,7 +34,7 @@ import {
   rollModifierRouteForResolution,
   scalarBuffRouteForDiscoveredAct,
   scalarBuffRouteForResolution,
-  sleepRepeatSaveRouteForResolution,
+  hitPointBudgetConditionRepeatSaveRouteForResolution,
   spellBaseArmorClassEffectTurnBoundaryRouteForResolution,
   spellDamageReductionRouteForDiscoveredAct,
   spellDamageReductionRouteForResolution,
@@ -411,7 +411,7 @@ describe("effect lifecycle route boundary", () => {
     };
     const needsSave = endTurn({ state: sleeping, actorId: goblinId });
     expect(
-      sleepRepeatSaveRouteForResolution(
+      hitPointBudgetConditionRepeatSaveRouteForResolution(
         { state: sleeping, subject: endTurnSubject, fills: [] },
         needsSave,
       ),
@@ -440,7 +440,7 @@ describe("effect lifecycle route boundary", () => {
     });
     expect(repeated.tag).toBe("resolved");
     expect(
-      sleepRepeatSaveRouteForResolution(
+      hitPointBudgetConditionRepeatSaveRouteForResolution(
         { state: sleeping, subject: endTurnSubject, fills: [saveFill] },
         repeated,
       ),
@@ -474,7 +474,7 @@ describe("effect lifecycle route boundary", () => {
       fills: [],
     });
     expect(
-      sleepRepeatSaveRouteForResolution(
+      hitPointBudgetConditionRepeatSaveRouteForResolution(
         {
           state: wizardTurnWithSleep,
           subject: endConcentrationSubject,

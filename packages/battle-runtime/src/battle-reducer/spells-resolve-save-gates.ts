@@ -76,7 +76,7 @@ import {
   applySaveGatedConditionImmunityEffects,
   applyResolvedSpellDamage,
   selectFailedSaveConditionEffect,
-  saveGatedAttackRollAdvantageInvocationIsFaerieFire,
+  saveGatedAttackRollAdvantageInvocationIsVisibilityGrantingArea,
   saveGateDamageResultForOutcome,
   compelledBehaviorOptionChoiceHole,
   carefulSpellProtectedTargetsHoleId,
@@ -605,7 +605,7 @@ export function resolveGreaseGroundHazardSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Grease uses one ground-area Saving Throw fill.",
+      "ground-area prone hazard uses one ground-area Saving Throw fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -621,7 +621,7 @@ export function resolveGreaseGroundHazardSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Grease does not use attack, damage, or Concentration fills.",
+      "ground-area prone hazard does not use attack, damage, or Concentration fills.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -754,7 +754,7 @@ export function resolveStagedSaveConditionSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Sleep target admission uses one point-origin Sphere Saving Throw fill.",
+      "hit-point-budget condition target admission uses one point-origin Sphere Saving Throw fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -769,7 +769,7 @@ export function resolveStagedSaveConditionSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Sleep target admission does not use attack or damage fills.",
+      "hit-point-budget condition target admission does not use attack or damage fills.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -869,7 +869,7 @@ export function resolveSaveGatedConditionWithRepeatSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Hideous Laughter uses target-list and Saving Throw outcome fills.",
+      "damage-triggered repeat-save condition uses target-list and Saving Throw outcome fills.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -1302,7 +1302,7 @@ export function resolveSaveGateDamageSpellAct(input: {
         return invalidResult(
           input.input.state,
           "invalidFill",
-          "Sanctuary replacement spell target must be legal for the selected spell.",
+          "attack-redirection ward replacement spell target must be legal for the selected spell.",
         );
       }
       /* v8 ignore stop -- @preserve */
@@ -1318,7 +1318,7 @@ export function resolveSaveGateDamageSpellAct(input: {
         return invalidResult(
           input.input.state,
           "invalidFill",
-          "Sanctuary replacement requires the original spell target fill.",
+          "attack-redirection ward replacement requires the original spell target fill.",
         );
       }
       /* v8 ignore stop -- @preserve */
@@ -1958,7 +1958,7 @@ export function resolveSaveGateDamageSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Hideous Laughter damage repeat save fill must match a requested damaged target.",
+      "damage-triggered repeat-save condition damage repeat save fill must match a requested damaged target.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -2398,7 +2398,7 @@ function resolveFailedSaveForcedReactionMovement(input: {
       : invalidResult(
           input.state,
           "invalidFill",
-          "Dissonant Whispers movement is only valid after a failed save.",
+          "Failed-save forced reaction movement is only valid after a failed save.",
         );
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -2407,7 +2407,7 @@ function resolveFailedSaveForcedReactionMovement(input: {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Dissonant Whispers forced movement requires exactly one failed target.",
+      "Failed-save forced reaction movement requires exactly one failed target.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -2418,7 +2418,7 @@ function resolveFailedSaveForcedReactionMovement(input: {
       : invalidResult(
           input.state,
           "invalidFill",
-          "Dissonant Whispers movement is unavailable when the failed target has no Reaction.",
+          "Failed-save forced reaction movement is unavailable when the failed target has no Reaction.",
         );
   }
   const movementHole = readiedMovementHole(input.state, targetId);
@@ -2432,7 +2432,7 @@ function resolveFailedSaveForcedReactionMovement(input: {
       return invalidResult(
         input.state,
         "invalidFill",
-        "Dissonant Whispers movement is unavailable when the failed target cannot move.",
+        "Failed-save forced reaction movement is unavailable when the failed target cannot move.",
       );
     }
     /* v8 ignore stop -- @preserve */
@@ -2903,7 +2903,7 @@ function validateSaveGatedConditionImmunityTargets(
     );
   })
     ? null
-    : "Calm Emotions condition-immunity branch affects only Humanoids.";
+    : "emotion-suppression area condition-immunity branch affects only Humanoids.";
 }
 
 export function resolveCompelledNextTurnBehaviorSpellAct(input: {
@@ -3444,14 +3444,14 @@ export function validateSavingThrowOutcomes(
     "kind" in value.area &&
     value.area.kind === "persistentAreaSaveConditionArea"
   ) {
-    return "Grease ground-area facts are only valid for Grease.";
+    return "Ground-area prone-hazard facts are only valid for the ground-area prone-hazard profile.";
   }
   if (
     "kind" in value.area &&
     value.area.kind === "directionalPersistentAreaArea"
   ) {
     if (invocation.procedure !== "directionalPersistentArea") {
-      return "Gust of Wind Line area facts are only valid for Gust of Wind.";
+      return "Directional persistent-line area facts are only valid for the directional persistent-line profile.";
     }
   }
   if (
@@ -3459,27 +3459,31 @@ export function validateSavingThrowOutcomes(
     value.area.kind === "saveGatedTurnConstraintBundleArea"
   ) {
     if (invocation.procedure !== "saveGatedTurnConstraintBundle") {
-      return "Slow area facts are only valid for Slow.";
+      return "Turn-hindering area facts are only valid for the turn-hindering profile.";
     }
   }
   if ("stagedConditionAutomaticSuccessFacts" in value.area) {
-    return "Sleep non-sleeper facts are only valid for Sleep target admission.";
+    return "Hit-point-budget condition non-sleeper facts are only valid for its target admission.";
   }
   if (
     "kind" in value.area &&
     value.area.kind === "saveGatedTargetProjectionArea"
   ) {
     if (invocation.procedure !== "saveGatedAttackRollAdvantage") {
-      return "Faerie Fire object area facts are only valid for Faerie Fire.";
+      return "Visibility-granting object-area facts are only valid for the visibility-granting profile.";
     }
     /* v8 ignore start -- @preserve -- The typed save-gated attack-advantage procedure admits this area shape only for its corresponding execution facts; this defensive cross-check has no public counterexample. */
-    if (!saveGatedAttackRollAdvantageInvocationIsFaerieFire(invocation)) {
-      return "Faerie Fire object area facts are only valid for Faerie Fire.";
+    if (
+      !saveGatedAttackRollAdvantageInvocationIsVisibilityGrantingArea(
+        invocation,
+      )
+    ) {
+      return "Visibility-granting object-area facts are only valid for the visibility-granting profile.";
     }
     /* v8 ignore stop -- @preserve */
     const affectedObjects = new Set(value.area.affectedObjectIds);
     if (affectedObjects.size !== value.area.affectedObjectIds.length) {
-      return "Faerie Fire area affected objects must not duplicate object ids.";
+      return "Visibility-granting area affected objects must not duplicate object ids.";
     }
   }
   if (!state.combatants.has(value.area.originAnchorId)) {
@@ -3501,7 +3505,7 @@ export function validateSavingThrowOutcomes(
     targeting.kind === "primaryTargetOriginEmanation" &&
     value.area.originAnchorId !== targetId
   ) {
-    return "Ice Knife burst area must originate from the primary target.";
+    return "attack-burst damage burst area must originate from the primary target.";
   }
   const affectedTargets = new Set(value.area.affectedTargetIds);
   if (affectedTargets.size !== value.area.affectedTargetIds.length) {
@@ -3512,13 +3516,13 @@ export function validateSavingThrowOutcomes(
     targetId !== undefined &&
     !affectedTargets.has(targetId)
   ) {
-    return "Ice Knife burst area must include the primary target.";
+    return "attack-burst damage burst area must include the primary target.";
   }
   if (
     targeting.kind === "pointOriginCubeExcludingCaster" &&
     affectedTargets.has(actorId)
   ) {
-    return "Entangle area affected targets must exclude the caster.";
+    return "Restraining ground-area affected targets must exclude the caster.";
   }
   if (
     "kind" in value.area &&
@@ -3526,7 +3530,7 @@ export function validateSavingThrowOutcomes(
     (!("postSaveAreaEffect" in invocation) ||
       invocation.postSaveAreaEffect?.kind !== "selfOriginCubePush")
   ) {
-    return "Thunderwave push facts are only valid for Thunderwave.";
+    return "Forced-movement cube-burst push facts are only valid for the forced-movement cube-burst profile.";
   }
   if (
     "kind" in value.area &&
@@ -3534,7 +3538,7 @@ export function validateSavingThrowOutcomes(
     (!("postSaveAreaEffect" in invocation) ||
       invocation.postSaveAreaEffect?.kind !== "areaObjectIgnition")
   ) {
-    return "Fireball object ignition facts are only valid for Fireball.";
+    return "Object-igniting spherical-burst facts are only valid for the object-igniting spherical-burst profile.";
   }
   if (
     "kind" in value.area &&
@@ -3542,7 +3546,7 @@ export function validateSavingThrowOutcomes(
     (!("postSaveAreaEffect" in invocation) ||
       invocation.postSaveAreaEffect?.kind !== "areaObjectDamage")
   ) {
-    return "Shatter object damage facts are only valid for Shatter.";
+    return "Object-affecting thunder-burst facts are only valid for the object-affecting thunder-burst profile.";
   }
   for (const targetId of affectedTargets) {
     if (!state.combatants.has(targetId)) {
@@ -3665,29 +3669,29 @@ function validatePostSaveAreaEffect(input: {
     /* v8 ignore start -- @preserve -- Malformed post-save area fill: discovery only requests Fireball, Shatter, or Thunderwave area facts when the invocation owns the matching post-save effect. These branches reject caller-mutated cross-spell facts. */
     if (input.area !== undefined && "kind" in input.area) {
       if (input.area.kind === "pointOriginSphereSaveDamageArea") {
-        return "Fireball object ignition facts are only valid for Fireball.";
+        return "Object-igniting spherical-burst facts are only valid for the object-igniting spherical-burst profile.";
       }
       if (input.area.kind === "pointOriginSphereObjectDamageArea") {
-        return "Shatter object damage facts are only valid for Shatter.";
+        return "Object-affecting thunder-burst facts are only valid for the object-affecting thunder-burst profile.";
       }
-      return "Thunderwave push facts are only valid for Thunderwave.";
+      return "Forced-movement cube-burst push facts are only valid for the forced-movement cube-burst profile.";
     }
     /* v8 ignore stop -- @preserve */
     return null;
   }
   const effect = input.invocation.postSaveAreaEffect;
   if (effect.kind === "areaObjectIgnition") {
-    return validateFireballAreaEffect(input.area);
+    return validateObjectIgnitingSphericalBurstAreaEffect(input.area);
   }
   if (effect.kind === "selfOriginCubePush") {
-    return validateThunderwaveAreaEffect({
+    return validateForcedMovementCubeBurstAreaEffect({
       area: input.area,
       failedTargetIds: input.failedTargetIds,
       effect,
     });
   }
   if (effect.kind === "areaObjectDamage") {
-    return validateShatterAreaEffect(input.area);
+    return validateObjectAffectingThunderBurstAreaEffect(input.area);
   }
   /* v8 ignore start -- @preserve -- The post-save area-effect union is exhausted above; widening it without a validator arm fails compilation at this assignment. */
   const exhaustive: never = effect;
@@ -3695,19 +3699,19 @@ function validatePostSaveAreaEffect(input: {
   /* v8 ignore stop -- @preserve */
 }
 
-function validateFireballAreaEffect(
+function validateObjectIgnitingSphericalBurstAreaEffect(
   area: BattleSpellAreaChoice | undefined,
 ): string | null {
   /* v8 ignore start -- @preserve -- Malformed Fireball area fill: discovery supplies Fireball-specific area facts, so this rejects only a missing or cross-spell caller mutation. */
   if (area === undefined || area.kind !== "pointOriginSphereSaveDamageArea") {
-    return "Fireball requires caller-supplied object ignition area facts.";
+    return "object-igniting spherical burst requires caller-supplied object ignition area facts.";
   }
   /* v8 ignore stop -- @preserve */
   const objectIds = new Set<string>();
   for (const fact of area.objectIgnitionFacts) {
     /* v8 ignore start -- @preserve -- Malformed Fireball object witness: the table adapter emits each object identity once, so this rejects only a caller-mutated duplicate. */
     if (objectIds.has(fact.objectId)) {
-      return "Fireball object ignition facts must not duplicate objects.";
+      return "object-igniting spherical burst object ignition facts must not duplicate objects.";
     }
     /* v8 ignore stop -- @preserve */
     objectIds.add(fact.objectId);
@@ -3743,19 +3747,19 @@ function postSaveAreaObjectIgnitions(input: {
   );
 }
 
-function validateShatterAreaEffect(
+function validateObjectAffectingThunderBurstAreaEffect(
   area: BattleSpellAreaChoice | undefined,
 ): string | null {
   /* v8 ignore start -- @preserve -- Malformed Shatter area fill: discovery supplies Shatter-specific area facts, so this rejects only a missing or cross-spell caller mutation. */
   if (area === undefined || area.kind !== "pointOriginSphereObjectDamageArea") {
-    return "Shatter requires caller-supplied nonmagical unattended object damage area facts.";
+    return "object-affecting thunder burst requires caller-supplied nonmagical unattended object damage area facts.";
   }
   /* v8 ignore stop -- @preserve */
   const objectIds = new Set<string>();
   for (const fact of area.nonmagicalUnattendedObjectDamageFacts) {
     /* v8 ignore start -- @preserve -- Malformed Shatter object witness: the table adapter emits each object identity once, so this rejects only a caller-mutated duplicate. */
     if (objectIds.has(fact.objectId)) {
-      return "Shatter object damage facts must not duplicate objects.";
+      return "object-affecting thunder burst object damage facts must not duplicate objects.";
     }
     /* v8 ignore stop -- @preserve */
     objectIds.add(fact.objectId);
@@ -3810,7 +3814,7 @@ function postSaveAreaObjectDamages(input: {
   };
 }
 
-function validateThunderwaveAreaEffect(input: {
+function validateForcedMovementCubeBurstAreaEffect(input: {
   readonly area: BattleSpellAreaChoice | undefined;
   readonly failedTargetIds: readonly CombatantId[];
   readonly effect: Extract<
@@ -3827,16 +3831,16 @@ function validateThunderwaveAreaEffect(input: {
     input.area === undefined ||
     input.area.kind !== "selfOriginCubePushArea"
   ) {
-    return "Thunderwave requires caller-supplied push, object, and audible-boom area facts.";
+    return "forced-movement cube burst requires caller-supplied push, object, and audible-boom area facts.";
   }
   const failedTargetIds = new Set(input.failedTargetIds);
   const pushedTargetIds = new Set<CombatantId>();
   for (const push of input.area.creaturePushes) {
     if (!failedTargetIds.has(push.targetId)) {
-      return "Thunderwave creature push facts must match failed-save targets.";
+      return "forced-movement cube burst creature push facts must match failed-save targets.";
     }
     if (pushedTargetIds.has(push.targetId)) {
-      return "Thunderwave creature push facts must not duplicate targets.";
+      return "forced-movement cube burst creature push facts must not duplicate targets.";
     }
     pushedTargetIds.add(push.targetId);
     const dispositionValidation = validateThunderwavePushDisposition(
@@ -3848,12 +3852,12 @@ function validateThunderwaveAreaEffect(input: {
     }
   }
   if (pushedTargetIds.size !== failedTargetIds.size) {
-    return "Thunderwave creature push facts must cover every failed-save target.";
+    return "forced-movement cube burst creature push facts must cover every failed-save target.";
   }
   const objectIds = new Set<string>();
   for (const push of input.area.unsecuredObjectPushes) {
     if (objectIds.has(push.objectId)) {
-      return "Thunderwave unsecured-object push facts must not duplicate objects.";
+      return "forced-movement cube burst unsecured-object push facts must not duplicate objects.";
     }
     objectIds.add(push.objectId);
     const dispositionValidation = validateThunderwavePushDisposition(
@@ -3871,7 +3875,7 @@ function validateThunderwaveAreaEffect(input: {
   ) {
     return null;
   }
-  return "Thunderwave audible-boom fact must match the spell's thunderous boom within 300 feet.";
+  return "forced-movement cube burst audible-boom fact must match the spell's thunderous boom within 300 feet.";
 }
 
 function validateThunderwavePushDisposition(
@@ -3879,7 +3883,7 @@ function validateThunderwavePushDisposition(
   distanceFeet: MovementFeet,
 ): string | null {
   if (disposition.distanceFeet !== distanceFeet) {
-    return "Thunderwave push disposition must use the spell's 10-foot distance.";
+    return "forced-movement cube burst push disposition must use the spell's 10-foot distance.";
   }
   return null;
 }
@@ -3890,31 +3894,31 @@ function validateStagedSaveConditionSavingThrowOutcomes(input: {
   readonly state: BattleState;
 }): string | null {
   if (input.area === undefined) {
-    return "Sleep Saving Throw outcomes require point-origin Sphere target facts.";
+    return "hit-point-budget condition Saving Throw outcomes require point-origin Sphere target facts.";
   }
   if (!input.state.combatants.has(input.area.originAnchorId)) {
-    return "Sleep point-origin Sphere origin anchor must be a combatant in this battle.";
+    return "hit-point-budget condition point-origin Sphere origin anchor must be a combatant in this battle.";
   }
   const selectedTargets = new Set(input.area.affectedTargetIds);
   if (selectedTargets.size !== input.area.affectedTargetIds.length) {
-    return "Sleep point-origin Sphere targets must not duplicate targets.";
+    return "hit-point-budget condition point-origin Sphere targets must not duplicate targets.";
   }
   if (input.area.affectedTargetIds.length === 0) {
-    return "Sleep must target at least one selected creature.";
+    return "hit-point-budget condition must target at least one selected creature.";
   }
   for (const targetId of selectedTargets) {
     if (!input.state.combatants.has(targetId)) {
-      return "Sleep point-origin Sphere target must be a combatant in this battle.";
+      return "hit-point-budget condition point-origin Sphere target must be a combatant in this battle.";
     }
   }
   const nonSleeperTargetIds = new Set<CombatantId>();
   if ("stagedConditionAutomaticSuccessFacts" in input.area) {
     for (const fact of input.area.stagedConditionAutomaticSuccessFacts ?? []) {
       if (!selectedTargets.has(fact.targetId)) {
-        return "Sleep non-sleeper facts must match selected Sphere targets.";
+        return "hit-point-budget condition non-sleeper facts must match selected Sphere targets.";
       }
       if (nonSleeperTargetIds.has(fact.targetId)) {
-        return "Sleep non-sleeper facts must not duplicate targets.";
+        return "hit-point-budget condition non-sleeper facts must not duplicate targets.";
       }
       nonSleeperTargetIds.add(fact.targetId);
     }
@@ -3932,18 +3936,18 @@ function validateStagedSaveConditionSavingThrowOutcomes(input: {
   const outcomeTargetIds = new Set<CombatantId>();
   for (const outcome of input.value.outcomes) {
     if (!selectedTargets.has(outcome.targetId)) {
-      return "Sleep Saving Throw outcomes must match selected Sphere targets.";
+      return "hit-point-budget condition Saving Throw outcomes must match selected Sphere targets.";
     }
     if (autoSuccessTargetIds.has(outcome.targetId)) {
-      return "Sleep targets that do not sleep or have Exhaustion Immunity automatically succeed and must not receive a rolled Saving Throw outcome.";
+      return "hit-point-budget condition targets that do not sleep or have Exhaustion Immunity automatically succeed and must not receive a rolled Saving Throw outcome.";
     }
     if (outcomeTargetIds.has(outcome.targetId)) {
-      return "Sleep Saving Throw outcomes must not duplicate targets.";
+      return "hit-point-budget condition Saving Throw outcomes must not duplicate targets.";
     }
     outcomeTargetIds.add(outcome.targetId);
   }
   if (outcomeTargetIds.size !== nonAutomaticTargetIds.length) {
-    return "Sleep Saving Throw outcomes must cover every selected target that is not an automatic success.";
+    return "hit-point-budget condition Saving Throw outcomes must cover every selected target that is not an automatic success.";
   }
   if (
     nonAutomaticTargetIds.every((targetId) => outcomeTargetIds.has(targetId))
@@ -3951,7 +3955,7 @@ function validateStagedSaveConditionSavingThrowOutcomes(input: {
     return null;
   }
   /* v8 ignore start -- @preserve -- The preceding subset, uniqueness, and equal-cardinality checks prove that every non-automatic target is present. */
-  return "Sleep Saving Throw outcomes must cover every selected target that is not an automatic success.";
+  return "hit-point-budget condition Saving Throw outcomes must cover every selected target that is not an automatic success.";
   /* v8 ignore stop -- @preserve */
 }
 
@@ -3961,37 +3965,37 @@ function validatePersistentAreaSaveConditionSavingThrowOutcomes(input: {
   readonly state: BattleState;
 }): string | null {
   if (input.area === undefined) {
-    return "Grease Saving Throw outcomes require ground-area facts.";
+    return "ground-area prone hazard Saving Throw outcomes require ground-area facts.";
   }
   if (input.area.kind !== "persistentAreaSaveConditionArea") {
-    return "Grease requires a ground-area id.";
+    return "ground-area prone hazard requires a ground-area id.";
   }
   if (!input.state.combatants.has(input.area.originAnchorId)) {
-    return "Grease ground-area origin anchor must be a combatant in this battle.";
+    return "ground-area prone hazard ground-area origin anchor must be a combatant in this battle.";
   }
   const selectedTargets = new Set(input.area.affectedTargetIds);
   if (selectedTargets.size !== input.area.affectedTargetIds.length) {
-    return "Grease ground-area affected targets must not duplicate targets.";
+    return "ground-area prone hazard ground-area affected targets must not duplicate targets.";
   }
   for (const targetId of selectedTargets) {
     if (!input.state.combatants.has(targetId)) {
-      return "Grease ground-area affected target must be a combatant in this battle.";
+      return "ground-area prone hazard ground-area affected target must be a combatant in this battle.";
     }
   }
   const outcomeTargetIds = new Set<CombatantId>();
   for (const outcome of input.value.outcomes) {
     if (!selectedTargets.has(outcome.targetId)) {
-      return "Grease Saving Throw outcomes must match the table-supplied ground-area affected targets.";
+      return "ground-area prone hazard Saving Throw outcomes must match the table-supplied ground-area affected targets.";
     }
     if (outcomeTargetIds.has(outcome.targetId)) {
-      return "Grease Saving Throw outcomes must not duplicate targets.";
+      return "ground-area prone hazard Saving Throw outcomes must not duplicate targets.";
     }
     outcomeTargetIds.add(outcome.targetId);
   }
   if (outcomeTargetIds.size === selectedTargets.size) {
     return null;
   }
-  return "Grease Saving Throw outcomes must cover every table-supplied ground-area affected target.";
+  return "ground-area prone hazard Saving Throw outcomes must cover every table-supplied ground-area affected target.";
 }
 
 function sleepTargetAutomaticallySucceeds(

@@ -1050,7 +1050,7 @@ export function resolveDruidWildShapeUnitFeature(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Druid Wild Shape is suppressed while the creature remains in the Moonbeam Cylinder.",
+      "Druid Wild Shape is suppressed while the creature remains in the movable radiant cylinder Cylinder.",
     );
   }
   if (!resourceHasUsesRemaining(resource)) {

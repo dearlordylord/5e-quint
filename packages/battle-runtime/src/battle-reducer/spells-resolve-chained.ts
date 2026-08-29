@@ -97,7 +97,7 @@ import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spe
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import {
   targetingSaveInterdictionCheck,
-  targetChoiceFillAfterSanctuaryAttackRollReplacement,
+  targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement,
 } from "./targeting-save-interdiction.ts";
 import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 import {
@@ -271,7 +271,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
       return invalidResult(
         input.input.state,
         "invalidFill",
-        "Chromatic Orb cannot target a creature more than once in the same casting.",
+        "chosen-damage bouncing attack cannot target a creature more than once in the same casting.",
       );
     }
     /* v8 ignore stop -- @preserve */
@@ -298,7 +298,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
         "invalidFill",
         stepIndex === 0
           ? "Spell target must be a combatant within the selected spell's supported range."
-          : "Chromatic Orb leap target must be different and within 30 feet of the previous target.",
+          : "chosen-damage bouncing attack leap target must be different and within 30 feet of the previous target.",
       );
     }
     /* v8 ignore stop -- @preserve */
@@ -376,8 +376,8 @@ export function resolveChainedSpellAttackDamageAct(input: {
           input.input.state,
           "invalidFill",
           stepIndex === 0
-            ? "Sanctuary replacement Chromatic Orb target must be legal for the selected spell."
-            : "Sanctuary replacement Chromatic Orb leap target must be different and within 30 feet of the previous target.",
+            ? "attack-redirection ward replacement chosen-damage bouncing attack target must be legal for the selected spell."
+            : "Attack-redirection ward replacement chosen-damage bouncing attack leap target must be different and within 30 feet of the previous target.",
         );
       }
       /* v8 ignore stop -- @preserve */
@@ -393,7 +393,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
         return invalidResult(
           input.input.state,
           "invalidFill",
-          "Sanctuary replacement requires the original Chromatic Orb target fill.",
+          "attack-redirection ward replacement requires the original chosen-damage bouncing attack target fill.",
         );
       }
       /* v8 ignore stop -- @preserve */
@@ -402,10 +402,12 @@ export function resolveChainedSpellAttackDamageAct(input: {
         .map(
           (fill): BattleFill =>
             fill === originalTargetFill
-              ? targetChoiceFillAfterSanctuaryAttackRollReplacement({
-                  fill,
-                  replacement: sanctuaryCheck,
-                })
+              ? targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement(
+                  {
+                    fill,
+                    replacement: sanctuaryCheck,
+                  },
+                )
               : fill,
         );
       const replacementFillSet = chainedSpellFillSet(
@@ -617,7 +619,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
         return invalidResult(
           input.input.state,
           "invalidFill",
-          "Chromatic Orb chain cannot continue after a missed attack roll.",
+          "chosen-damage bouncing attack chain cannot continue after a missed attack roll.",
         );
       }
       /* v8 ignore stop -- @preserve */
@@ -921,7 +923,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
         return invalidResult(
           input.input.state,
           "invalidFill",
-          "Chromatic Orb chain can continue only after duplicate d8 damage faces and remaining leap budget.",
+          "chosen-damage bouncing attack chain can continue only after duplicate d8 damage faces and remaining leap budget.",
         );
       }
       /* v8 ignore stop -- @preserve */
@@ -956,7 +958,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
   return invalidResult(
     input.input.state,
     "invalidFill",
-    "Chromatic Orb chain exceeded its spell-slot leap budget.",
+    "chosen-damage bouncing attack chain exceeded its spell-slot leap budget.",
   );
   /* v8 ignore stop -- @preserve */
 }
@@ -1483,7 +1485,7 @@ export function validateChainedSpellFollowUpFills(input: {
         !input.hideousLaughterDamageRepeatSaveHoleIds.has(String(fill.holeId)),
     )
   ) {
-    return "Hideous Laughter repeat save fills are only valid for a damaged target affected by Hideous Laughter.";
+    return "damage-triggered repeat-save condition repeat save fills are only valid for a damaged target affected by damage-triggered repeat-save condition.";
   }
   /* v8 ignore stop -- @preserve */
   return damageDispositionFillsValidation({

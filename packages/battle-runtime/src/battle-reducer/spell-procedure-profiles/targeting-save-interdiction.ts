@@ -198,7 +198,7 @@ function resolveTargetingSaveInterdiction(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Sanctuary must target exactly one creature.",
+      "attack-redirection ward must target exactly one creature.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -222,7 +222,7 @@ function resolveTargetingSaveInterdiction(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Sanctuary target must be a combatant within range.",
+      "attack-redirection ward target must be a combatant within range.",
     );
   }
   /* v8 ignore stop -- @preserve */

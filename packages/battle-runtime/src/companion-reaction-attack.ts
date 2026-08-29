@@ -51,7 +51,7 @@ export function resolvePactOfTheChainFamiliarReactionAttack(
     return invalidResult(
       input.state,
       "unsupportedActOption",
-      "Pact of the Chain familiar attack requires selected Pact of the Chain Find Familiar access.",
+      "Pact of the Chain familiar attack requires selected Pact of the Chain spawned companion lifecycle access.",
     );
   }
   const familiar = findPresentFamiliarById(

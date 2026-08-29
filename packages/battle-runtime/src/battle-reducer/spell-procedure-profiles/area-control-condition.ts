@@ -364,7 +364,7 @@ function resolveSaveGatedAreaControl(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Hypnotic Pattern uses an area Saving Throw outcome fill.",
+      "save-gated area control uses an area Saving Throw outcome fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -539,14 +539,14 @@ function validateSaveGatedAreaControlAreaWitness(
   savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue,
 ): string | null {
   if (!("area" in savingThrowOutcomes)) {
-    return "Hypnotic Pattern requires a point-origin Cube area witness.";
+    return "save-gated area control requires a point-origin Cube area witness.";
   }
   const area = savingThrowOutcomes.area;
   if (area.kind !== "saveGatedAreaControlArea") {
-    return "Hypnotic Pattern requires explicit Cube membership and sight witnesses.";
+    return "save-gated area control requires explicit Cube membership and sight witnesses.";
   }
   if (area.cubeSideFeet !== 30) {
-    return "Hypnotic Pattern requires a 30-foot Cube witness.";
+    return "save-gated area control requires a 30-foot Cube witness.";
   }
   const outcomeTargetIds = savingThrowOutcomes.outcomes.map(
     (outcome) => outcome.targetId,
@@ -556,23 +556,23 @@ function validateSaveGatedAreaControlAreaWitness(
     affectedTargetIds.size !== outcomeTargetIds.length ||
     outcomeTargetIds.some((targetId) => !affectedTargetIds.has(targetId))
   ) {
-    return "Hypnotic Pattern Cube affected targets must match its Saving Throw outcomes.";
+    return "save-gated area control Cube affected targets must match its Saving Throw outcomes.";
   }
   const witnessTargetIds = new Set<CombatantId>();
   for (const witness of area.affectedCreatureWitnesses) {
     if (witnessTargetIds.has(witness.targetId)) {
-      return "Hypnotic Pattern Cube witnesses must not duplicate a target.";
+      return "save-gated area control Cube witnesses must not duplicate a target.";
     }
     witnessTargetIds.add(witness.targetId);
     if (witness.inCube !== true || witness.canSeePattern !== true) {
-      return "Hypnotic Pattern affected-creature witnesses must prove Cube membership and sight.";
+      return "save-gated area control affected-creature witnesses must prove Cube membership and sight.";
     }
   }
   if (
     witnessTargetIds.size !== outcomeTargetIds.length ||
     outcomeTargetIds.some((targetId) => !witnessTargetIds.has(targetId))
   ) {
-    return "Hypnotic Pattern requires a Cube and sight witness for every affected target.";
+    return "save-gated area control requires a Cube and sight witness for every affected target.";
   }
   return null;
 }

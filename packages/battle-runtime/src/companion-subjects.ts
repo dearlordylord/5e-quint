@@ -18,7 +18,7 @@ import type { CombatantId } from "./identity.ts";
 export const FIND_FAMILIAR_TOUCH_DELIVERY_TARGET_LABEL =
   "Familiar touch delivery target";
 
-export function findFamiliarTouchDeliveryTargetHoles(
+export function spawnedCompanionTouchDeliveryTargetHoles(
   holes: readonly BattleHole[],
 ): readonly BattleHole[] {
   return holes.map((hole) =>

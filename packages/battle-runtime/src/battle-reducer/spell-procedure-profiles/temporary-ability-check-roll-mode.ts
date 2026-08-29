@@ -48,7 +48,7 @@ import { temporaryAbilityCheckRollModeActiveEffectCountHole } from "../spells-da
 import { temporaryAbilityCheckRollModeProjection } from "../spells-profiles-support.ts";
 import { replaceTargetSpellActiveEffect } from "../active-effect-replacement.ts";
 import {
-  THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
+  MINOR_WONDER_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
   TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
 } from "../domain-constants.ts";
 import type {
@@ -162,13 +162,13 @@ function resolveTemporaryAbilityCheckRollMode(
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !fillsBelongToSpellCastHoles(input.input.fills, [
-      THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
+      MINOR_WONDER_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
     ])
   ) {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Thaumaturgy Booming Voice uses only the total active 1-minute effect count witness.",
+      "minor-wonder profile Booming Voice uses only the total active 1-minute effect count witness.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -186,7 +186,7 @@ function resolveTemporaryAbilityCheckRollMode(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Thaumaturgy active 1-minute effect count must be a non-negative integer.",
+      "minor-wonder profile active 1-minute effect count must be a non-negative integer.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -204,7 +204,7 @@ function resolveTemporaryAbilityCheckRollMode(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Thaumaturgy active 1-minute effect count must include active Booming Voice effects tracked by battle runtime.",
+      "minor-wonder profile active 1-minute effect count must include active Booming Voice effects tracked by battle runtime.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -217,7 +217,7 @@ function resolveTemporaryAbilityCheckRollMode(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Thaumaturgy can have at most three active 1-minute effects after this cast.",
+      "minor-wonder profile can have at most three active 1-minute effects after this cast.",
     );
   }
   /* v8 ignore stop -- @preserve */

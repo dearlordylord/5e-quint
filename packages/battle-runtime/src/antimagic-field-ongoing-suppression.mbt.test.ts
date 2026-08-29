@@ -17,7 +17,7 @@ import {
 import { describe, expect, it } from "vitest";
 
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
-import { ongoingSpellEffectSuppressedByAntimagicField } from "./battle-reducer/magic-suppression-ongoing-effect.ts";
+import { ongoingSpellEffectSuppressedByMagicSuppressionEmanation } from "./battle-reducer/magic-suppression-ongoing-effect.ts";
 import {
   allocateBattleEffectExecutionRefForCreature,
   type BattleActiveEffectOccurrenceTemplate,
@@ -468,10 +468,11 @@ function antimagicProjection(
     suppressionActive: suppression !== undefined,
     suppressedEffectRefCount:
       suppression?.suppressedOngoingSpellEffects.length ?? 0,
-    ongoingSpellSuppressed: ongoingSpellEffectSuppressedByAntimagicField(
-      state.battle.state,
-      ongoingSpellRef,
-    ),
+    ongoingSpellSuppressed:
+      ongoingSpellEffectSuppressedByMagicSuppressionEmanation(
+        state.battle.state,
+        ongoingSpellRef,
+      ),
     antimagicCasterConcentrating:
       suppression !== undefined &&
       antimagicCaster.concentration?.sourceProcedureRef ===

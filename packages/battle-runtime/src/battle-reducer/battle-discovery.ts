@@ -45,7 +45,7 @@ import {
   companionReappearanceInitiativeHole,
   companionReappearancePlacementHole,
   spawnedCompanionConnectionHole,
-  findFamiliarTouchDeliveryTargetHoles,
+  spawnedCompanionTouchDeliveryTargetHoles,
 } from "../companion-subjects.ts";
 import {
   attackActionOptionsForActor,
@@ -855,7 +855,7 @@ function spawnedCompanionTouchSpellProxyActs(input: {
               ownerId: input.actorId,
               companionId: input.companionId,
             }),
-            ...findFamiliarTouchDeliveryTargetHoles(act.initialHoles),
+            ...spawnedCompanionTouchDeliveryTargetHoles(act.initialHoles),
           ],
         },
       ];

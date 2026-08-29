@@ -109,7 +109,7 @@ export function ongoingSpellEffectRefKey(
   );
 }
 
-export function ongoingSpellEffectRefForAntimagicFieldAura(input: {
+export function ongoingSpellEffectRefForMagicSuppressionEmanation(input: {
   readonly effectRef: Extract<
     BattleActiveEffect,
     { readonly kind: "magicSuppressionEmanation" }
@@ -151,7 +151,7 @@ export function magicSuppressionOngoingSpellEffectKeys(
   );
 }
 
-export function ongoingSpellEffectSuppressedByAntimagicField(
+export function ongoingSpellEffectSuppressedByMagicSuppressionEmanation(
   state: BattleState,
   effect: BattleMagicSuppressionOngoingSpellEffectRef,
 ): boolean {

@@ -38,7 +38,7 @@ import {
 import { spellCastReactionFactsHole } from "./spell-cast-interrupt-frame.ts";
 import {
   combatantInsideActiveAntimagicFieldAura,
-  spellInvocationActInterdictedByAntimagicField,
+  spellInvocationActInterdictedByMagicSuppressionEmanation,
 } from "./magic-suppression-action-interdiction.ts";
 import {
   spellCastInterruptionReactionCapableReactors,
@@ -266,7 +266,9 @@ export function discoverSupportedSpellInvocations(
       }
       if (
         spellcastingPreventedByAntimagicField &&
-        spellInvocationActInterdictedByAntimagicField(executionInvocation)
+        spellInvocationActInterdictedByMagicSuppressionEmanation(
+          executionInvocation,
+        )
       ) {
         return [];
       }

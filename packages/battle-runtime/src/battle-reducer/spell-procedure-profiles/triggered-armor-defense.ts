@@ -164,7 +164,7 @@ function resolveTriggeredArmorDefense(
     return invalidResult(
       input.input.state,
       "staleSubject",
-      "Shield requires a matching attack-hit or Magic Missile Reaction trigger.",
+      "attack-hit defense reaction requires a matching attack-hit or multi-projectile automatic-hit spell Reaction trigger.",
     );
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -172,7 +172,7 @@ function resolveTriggeredArmorDefense(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Shield accepts only spell-cast Reaction trigger facts.",
+      "attack-hit defense reaction accepts only spell-cast Reaction trigger facts.",
     );
   }
   /* v8 ignore stop -- @preserve */

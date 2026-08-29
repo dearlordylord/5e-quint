@@ -197,7 +197,7 @@ export function resolvePreparedSlotSpellAct(input: {
       return invalidResult(
         input.input.state,
         "invalidFill",
-        "Sanctuary replacement Magic Missile target must include allocation-compatible spell target facts.",
+        "attack-redirection ward replacement multi-projectile automatic-hit spell target must include allocation-compatible spell target facts.",
       );
     }
     /* v8 ignore stop -- @preserve */
@@ -209,7 +209,7 @@ export function resolvePreparedSlotSpellAct(input: {
       return invalidResult(
         input.input.state,
         "invalidFill",
-        "Sanctuary replacement Magic Missile target must be a combatant in this battle.",
+        "attack-redirection ward replacement multi-projectile automatic-hit spell target must be a combatant in this battle.",
       );
     }
     /* v8 ignore stop -- @preserve */
@@ -228,7 +228,7 @@ export function resolvePreparedSlotSpellAct(input: {
       return invalidResult(
         input.input.state,
         "invalidFill",
-        "Sanctuary replacement requires the original Magic Missile allocation fill.",
+        "attack-redirection ward replacement requires the original multi-projectile automatic-hit spell allocation fill.",
       );
     }
     /* v8 ignore stop -- @preserve */
@@ -579,7 +579,7 @@ export function resolvePreparedSlotSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Hideous Laughter damage repeat save fill must match a requested damaged target.",
+      "damage-triggered repeat-save condition damage repeat save fill must match a requested damaged target.",
     );
   }
   /* v8 ignore stop -- @preserve */

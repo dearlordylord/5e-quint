@@ -309,7 +309,7 @@ function resolveLinkedDefenseResistanceDamageShare(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Warding Bond uses one willing target with paired worn rings and connection range facts.",
+      "linked defense damage share uses one willing target with paired worn rings and connection range facts.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -347,7 +347,7 @@ function resolveLinkedDefenseResistanceDamageShare(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Warding Bond target must be another willing creature with paired worn platinum rings within 60 feet.",
+      "linked defense damage share target must be another willing creature with paired worn platinum rings within 60 feet.",
     );
   }
   /* v8 ignore stop -- @preserve */

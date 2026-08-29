@@ -95,7 +95,7 @@ import {
 import { companionRouteForResolution } from "./battle-reducer/companion-routes.ts";
 import { admitFindFamiliarReappearance } from "./companion-admission.ts";
 import { castResolvedFindFamiliar } from "./companion-lifecycle.ts";
-import { spendFindFamiliarTouchDeliveryReaction } from "./companion-communication.ts";
+import { spendSpawnedCompanionTouchDeliveryReaction } from "./companion-communication.ts";
 import {
   assertBattleSnapshotCodecRoundTripForTest,
   characterBattleFeatureInitForTest,
@@ -3934,7 +3934,8 @@ describe("Find Familiar lifecycle", () => {
       tag: "invalid",
       session: reappearanceSession,
       reason: "invalidFill",
-      message: "Find Familiar can reappear only from temporary dismissal.",
+      message:
+        "spawned companion lifecycle can reappear only from temporary dismissal.",
     });
 
     const awaitingPlacement = resolveBattleRuntimeSubject({
@@ -5135,7 +5136,7 @@ describe("Find Familiar lifecycle", () => {
     expect(firstDelivery.tag).toBe("needsHoles");
     if (firstDelivery.tag !== "needsHoles") return;
     expect(
-      spendFindFamiliarTouchDeliveryReaction({
+      spendSpawnedCompanionTouchDeliveryReaction({
         state: firstDelivery.state,
         familiarId,
       }),

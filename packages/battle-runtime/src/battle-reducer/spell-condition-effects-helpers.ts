@@ -335,11 +335,11 @@ export function validateProtectionRelevantEffectSavingThrowOutcome(
   targetId: CombatantId,
 ): string | null {
   if ("area" in value) {
-    return "Protection from Evil and Good relevant-effect save must not include area facts.";
+    return "creature-type protection relevant-effect save must not include area facts.";
   }
   return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
     ? null
-    : "Protection from Evil and Good relevant-effect save must match the affected target exactly once.";
+    : "creature-type protection relevant-effect save must match the affected target exactly once.";
 }
 
 function isProtectionRelevantEffect(
@@ -598,10 +598,12 @@ export function removeSpellConditionEffect(
   };
 }
 
-export function combatantHasSleepEffect(
+export function combatantHasHitPointBudgetConditionEffect(
   combatant: BattleCreatureState | undefined,
 ): combatant is BattleCreatureState {
-  return combatant?.activeEffects.some(isSleepEffect) === true;
+  return (
+    combatant?.activeEffects.some(isHitPointBudgetConditionEffect) === true
+  );
 }
 
 export function hitPointBudgetConditionShakeAwakeTargetChoices(
@@ -610,7 +612,8 @@ export function hitPointBudgetConditionShakeAwakeTargetChoices(
 ): readonly CombatantId[] {
   return [...state.combatants]
     .filter(
-      ([id, combatant]) => id !== actorId && combatantHasSleepEffect(combatant),
+      ([id, combatant]) =>
+        id !== actorId && combatantHasHitPointBudgetConditionEffect(combatant),
     )
     .map(([id]) => id);
 }
@@ -628,7 +631,7 @@ export function saveGatedAreaControlShakeAwakeTargetChoices(
     .map(([id]) => id);
 }
 
-export function removeSleepEffectsFromTarget(
+export function removeHitPointBudgetConditionEffectsFromTarget(
   state: BattleState,
   targetId: CombatantId,
 ): BattleState {
@@ -636,7 +639,7 @@ export function removeSleepEffectsFromTarget(
   if (target === undefined) {
     return state;
   }
-  const expiring = target.activeEffects.filter(isSleepEffect);
+  const expiring = target.activeEffects.filter(isHitPointBudgetConditionEffect);
   if (expiring.length === 0) {
     return state;
   }
@@ -661,7 +664,7 @@ export function removeSleepEffectsFromTarget(
   };
 }
 
-function isSleepEffect(effect: BattleActiveEffect): boolean {
+function isHitPointBudgetConditionEffect(effect: BattleActiveEffect): boolean {
   return (
     effect.kind === "stagedSaveConditionPendingRepeat" ||
     effect.kind === "stagedSaveConditionApplied"

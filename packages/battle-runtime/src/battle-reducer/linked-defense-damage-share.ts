@@ -14,8 +14,8 @@ import { allocateBattleEffectExecutionRefForCreature } from "../effect-execution
 import type { CombatantId } from "../identity.ts";
 import {
   WARDING_BOND_CONNECTION_RANGE_FEET,
-  WARDING_BOND_SEPARATION_FACTS_HOLE_ID,
-  WARDING_BOND_SEPARATION_FACTS_HOLE_INSTANCE,
+  LINKED_DEFENSE_DAMAGE_SHARE_SEPARATION_FACTS_HOLE_ID,
+  LINKED_DEFENSE_DAMAGE_SHARE_SEPARATION_FACTS_HOLE_INSTANCE,
   WARDING_BOND_SAVING_THROW_BONUS,
 } from "./domain-constants.ts";
 
@@ -163,8 +163,8 @@ export function linkedDefenseResistanceDamageShareSeparationFactsHole(input: {
 }): BattleLinkedEffectSeparationFactsHole {
   return {
     kind: "targetSpatialFacts",
-    holeId: WARDING_BOND_SEPARATION_FACTS_HOLE_ID,
-    holeInstanceKey: WARDING_BOND_SEPARATION_FACTS_HOLE_INSTANCE,
+    holeId: LINKED_DEFENSE_DAMAGE_SHARE_SEPARATION_FACTS_HOLE_ID,
+    holeInstanceKey: LINKED_DEFENSE_DAMAGE_SHARE_SEPARATION_FACTS_HOLE_INSTANCE,
     label: "Linked-effect separation facts",
     linkedEffectSeparation: {
       sourceCombatantId: input.sourceCombatantId,

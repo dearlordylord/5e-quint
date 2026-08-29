@@ -183,7 +183,7 @@ function resolveMagicSuppressionEmanation(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Antimagic Field uses one table-supplied antimagic Emanation fill.",
+      "magic-suppression emanation uses one table-supplied antimagic Emanation fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -200,7 +200,7 @@ function resolveMagicSuppressionEmanation(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Antimagic Field area id must be a non-empty antimagic Emanation area.",
+      "magic-suppression emanation area id must be a non-empty antimagic Emanation area.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -213,7 +213,7 @@ function resolveMagicSuppressionEmanation(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Antimagic Field non-origin aura membership cannot include the source combatant.",
+      "magic-suppression emanation non-origin aura membership cannot include the source combatant.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -263,7 +263,7 @@ function magicSuppressionAreaChoiceInvalidReason(
   const trackedEffects = trackedOngoingSpellEffectKeys(state);
   for (const affected of areaChoice.affectedOngoingSpellEffects) {
     if (!trackedEffects.has(ongoingSpellEffectRefKey(affected.effect))) {
-      return "Antimagic Field affected effect must reference a tracked ongoing spell effect.";
+      return "magic-suppression emanation affected effect must reference a tracked ongoing spell effect.";
     }
   }
   return null;

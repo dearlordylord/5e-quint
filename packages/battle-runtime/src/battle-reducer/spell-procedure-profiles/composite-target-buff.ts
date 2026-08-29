@@ -340,7 +340,7 @@ function resolveCompositeTargetBuffWithAftermath(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Haste positive effects use one target fill.",
+      "positive turn-speed effect positive effects use one target fill.",
     );
   }
   /* v8 ignore stop -- @preserve */

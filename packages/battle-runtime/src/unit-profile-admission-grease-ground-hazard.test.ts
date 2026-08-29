@@ -499,7 +499,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       }),
     ).toMatchObject({
       tag: "invalid",
-      message: "Grease requires a ground-area id.",
+      message: "ground-area prone hazard requires a ground-area id.",
     });
   });
   test("grease entry saves are table-triggered through the active ground hazard", () => {
@@ -569,7 +569,8 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Grease ground-hazard save is no longer available.",
+      message:
+        "PersistentAreaSaveCondition ground-hazard save is no longer available.",
     });
     const entrySucceeded = resolveBattleSubject({
       state: targetTurn.state,

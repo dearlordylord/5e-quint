@@ -277,7 +277,7 @@ function resolveFixedCostMovementReplacementCommand(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Jump movement replacement is not available.",
+      "distance-multiplier effect movement replacement is not available.",
     );
   }
   if (input.fills.length === 0) {
@@ -290,7 +290,7 @@ function resolveFixedCostMovementReplacementCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Jump movement replacement requires a Movement fill first.",
+      "distance-multiplier effect movement replacement requires a Movement fill first.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -302,7 +302,7 @@ function resolveFixedCostMovementReplacementCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Jump movement replacement requires exactly one Movement fill.",
+      "distance-multiplier effect movement replacement requires exactly one Movement fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -312,7 +312,7 @@ function resolveFixedCostMovementReplacementCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Movement fill does not match the requested Jump movement replacement hole.",
+      "Movement fill does not match the requested distance-multiplier effect movement replacement hole.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -368,7 +368,7 @@ function resolveFixedCostMovementReplacementCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Jump movement replacement only accepts Movement, area movement-distance damage damage, Concentration, and damage disposition fills.",
+      "distance-multiplier effect movement replacement only accepts Movement, area movement-distance damage damage, Concentration, and damage disposition fills.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -1752,7 +1752,7 @@ function validateMovementCostFacts(
     grappleDrag.tag === "ok" &&
     value.fixedCostMovementReplacement !== undefined
   ) {
-    return "Grapple drag movement facts cannot be combined with Jump movement replacement.";
+    return "Grapple drag movement facts cannot be combined with distance-multiplier effect movement replacement.";
   }
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Contradictory movement fill: the table adapter cannot combine Grapple drag with a ControlledVerticalSuspension altitude change. */
@@ -1957,12 +1957,12 @@ function validateFixedCostMovementReplacementFact(
     /* v8 ignore start -- @preserve -- Malformed movement fill: discovery does not request Jump facts for ordinary movement, so this rejects only caller-supplied cross-procedure data. */
     return fact === undefined
       ? null
-      : "Jump movement replacement facts cannot be supplied for ordinary Movement.";
+      : "distance-multiplier effect movement replacement facts cannot be supplied for ordinary Movement.";
     /* v8 ignore stop -- @preserve */
   }
   /* v8 ignore start -- @preserve -- Malformed Jump fill: discovery requests distance and landing facts whenever the active spell replacement is selected. */
   if (fact === undefined) {
-    return "Jump movement replacement requires caller-supplied jump distance and landing facts.";
+    return "distance-multiplier effect movement replacement requires caller-supplied jump distance and landing facts.";
   }
   /* v8 ignore stop -- @preserve */
   const expectedMovementCostFeet = movementFeet(
@@ -1970,12 +1970,12 @@ function validateFixedCostMovementReplacementFact(
   );
   /* v8 ignore start -- @preserve -- Malformed Jump cost projection: the table adapter sums the spell-owned movement cost and any area surcharge. */
   if (movementCostFeet !== expectedMovementCostFeet) {
-    return "Jump movement replacement must spend the spell's Movement cost plus any area movement costs.";
+    return "distance-multiplier effect movement replacement must spend the spell's Movement cost plus any area movement costs.";
   }
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed Jump distance: the table adapter supplies a positive whole-foot landing distance. */
   if (!Number.isInteger(fact.distanceFeet) || fact.distanceFeet <= 0) {
-    return "Jump movement replacement distance must be a positive integer.";
+    return "distance-multiplier effect movement replacement distance must be a positive integer.";
   }
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed Jump distance: the table adapter constrains the selected landing to the active spell's computed maximum. */
@@ -1983,7 +1983,7 @@ function validateFixedCostMovementReplacementFact(
     Number(fact.distanceFeet) >
     Number(maxFixedCostMovementReplacementDistanceFeet(state, moverId, effect))
   ) {
-    return "Jump movement replacement distance exceeds the active maximum.";
+    return "distance-multiplier effect movement replacement distance exceeds the active maximum.";
   }
   /* v8 ignore stop -- @preserve */
   return null;
@@ -1997,12 +1997,12 @@ function validateCompelledApproachMovementFact(
     /* v8 ignore start -- @preserve -- Malformed Command fill: discovery does not request Approach route facts for ordinary movement. */
     return fact === undefined
       ? null
-      : "Command Approach route facts cannot be supplied for ordinary Movement.";
+      : "Compelled approach route facts cannot be supplied for ordinary Movement.";
     /* v8 ignore stop -- @preserve */
   }
   /* v8 ignore start -- @preserve -- Malformed Command fill: discovery requests the table-owned Approach route whenever that command movement is pending. */
   if (fact === undefined) {
-    return "Command Approach requires caller-supplied route facts.";
+    return "Compelled approach requires caller-supplied route facts.";
   }
   /* v8 ignore stop -- @preserve */
   return null;
@@ -2016,12 +2016,12 @@ function validateCompelledFleeMovementFact(
     /* v8 ignore start -- @preserve -- Malformed Command fill: discovery does not request Flee route facts for ordinary movement. */
     return fact === undefined
       ? null
-      : "Command Flee route facts cannot be supplied for ordinary Movement.";
+      : "Compelled flee route facts cannot be supplied for ordinary Movement.";
     /* v8 ignore stop -- @preserve */
   }
   /* v8 ignore start -- @preserve -- Malformed Command fill: discovery requests the table-owned Flee route whenever that command movement is pending. */
   if (fact === undefined) {
-    return "Command Flee requires caller-supplied route facts.";
+    return "Compelled flee requires caller-supplied route facts.";
   }
   /* v8 ignore stop -- @preserve */
   return null;

@@ -327,7 +327,7 @@ export function spatialEffectCompositionRouteForResolution(
   }
   if (
     invocation === undefined ||
-    !isThunderwavePostSaveAreaEffect(invocation)
+    !isForcedMovementCubeBurstPostSaveAreaEffect(invocation)
   ) {
     return undefined;
   }
@@ -545,7 +545,7 @@ function spatialEffectCompositionRuntimeRouteForResolution(
   ];
 }
 
-export function thunderwavePresentationRouteForDiscoveredAct(
+export function forcedMovementCubeBurstPresentationRouteForDiscoveredAct(
   state: BattleState,
   act: BattleActDiscoveryCandidate,
 ): BattleReducerRouteEvent | undefined {
@@ -558,7 +558,7 @@ export function thunderwavePresentationRouteForDiscoveredAct(
   const invocation = spellInvocationForRouteSubject(state, act.subject);
   if (
     invocation === undefined ||
-    !isThunderwavePostSaveAreaEffect(invocation)
+    !isForcedMovementCubeBurstPostSaveAreaEffect(invocation)
   ) {
     return undefined;
   }
@@ -605,7 +605,7 @@ function isObjectLightDiscoverySubject(
   return invocation.procedure === "objectLight";
 }
 
-function isThunderwavePostSaveAreaEffect(
+function isForcedMovementCubeBurstPostSaveAreaEffect(
   invocation: BattleSpellProcedureExecution,
 ): boolean {
   return (

@@ -1,7 +1,7 @@
 import type { BattleState } from "../battle-state-execution.ts";
 import {
   magicSuppressionOngoingSpellEffectRefForActiveEffect,
-  ongoingSpellEffectSuppressedByAntimagicField,
+  ongoingSpellEffectSuppressedByMagicSuppressionEmanation,
 } from "./magic-suppression-ongoing-effect.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 
@@ -41,7 +41,7 @@ export function ongoingSpellRepeatCastIsAvailable(
       },
       effect,
     ) &&
-    !ongoingSpellEffectSuppressedByAntimagicField(
+    !ongoingSpellEffectSuppressedByMagicSuppressionEmanation(
       state,
       magicSuppressionOngoingSpellEffectRefForActiveEffect(effect),
     )

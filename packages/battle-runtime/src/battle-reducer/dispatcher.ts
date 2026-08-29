@@ -82,8 +82,8 @@ import { consumeOrCloseLegendaryActionWindow } from "./legendary-action-window.t
 import {
   CompanionLifecycleProcedureExecution,
   resolveCompanionLifecycleSubject,
-  resolveFindFamiliarSharedSensesSubject,
-  resolveFindFamiliarTouchSpellSubject,
+  resolveSpawnedCompanionSharedSensesSubject,
+  resolveSpawnedCompanionTouchSpellSubject,
 } from "./companion-lifecycle-procedures.ts";
 import {
   type AdmittedReplayContinuationSubject,
@@ -122,7 +122,7 @@ import { battleReducerRouteForInterrupt } from "./interrupt-route-projection.ts"
 import { battleReducerRouteForResolution } from "./reducer-route.ts";
 import {
   magicSuppressionInterdictionMessage,
-  battleSubjectInterdictedByAntimagicField,
+  battleSubjectInterdictedByMagicSuppressionEmanation,
 } from "./magic-suppression-action-interdiction.ts";
 import type { SpellProcedureExecutionRegistry } from "./spell-procedure-profiles/execution-registry.ts";
 import {
@@ -600,7 +600,12 @@ function battleSubjectObligationAdmissionResult(
       "Pending Stat Block Multiattack dispatches must be resolved, Movement may be taken between attacks, or the turn must end before other battle subjects.",
     );
   }
-  if (battleSubjectInterdictedByAntimagicField(input.state, input.subject)) {
+  if (
+    battleSubjectInterdictedByMagicSuppressionEmanation(
+      input.state,
+      input.subject,
+    )
+  ) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -757,10 +762,10 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       return resolveCompanionLifecycleSubject({ ...input, subject });
     }
     if (subject.tag === "spawnedCompanionSharedSenses") {
-      return resolveFindFamiliarSharedSensesSubject({ ...input, subject });
+      return resolveSpawnedCompanionSharedSensesSubject({ ...input, subject });
     }
     if (subject.tag === "spawnedCompanionTouchSpellProxy") {
-      return resolveFindFamiliarTouchSpellSubject(
+      return resolveSpawnedCompanionTouchSpellSubject(
         { ...input, subject },
         CompanionLifecycleProcedureExecution.fromResolver((admitted) =>
           resolveBattleSubjectInternal(admitted, options),

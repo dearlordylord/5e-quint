@@ -39,7 +39,7 @@ export function resolveProtectionRelevantEffectSaveCommand(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Protection from Evil and Good relevant-effect save requires a matching active effect on the target.",
+      "creature-type protection relevant-effect save requires a matching active effect on the target.",
     );
   }
   const hole = protectionRelevantEffectSavingThrowOutcomeHole(
@@ -83,7 +83,7 @@ export function resolveProtectionRelevantEffectSaveCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Protection from Evil and Good save relationship facts were not requested.",
+      "creature-type protection save relationship facts were not requested.",
     );
   }
   /* v8 ignore stop -- @preserve */

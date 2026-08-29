@@ -302,7 +302,7 @@ describe("Self-teleport lifecycle MBT parity", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Teleport destination table fact must include one Antimagic Field transit witness for each active aura.",
+        "Teleport destination table fact must include one magic-suppression emanation transit witness for each active aura.",
     });
   });
 

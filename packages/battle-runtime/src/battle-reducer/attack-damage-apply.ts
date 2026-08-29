@@ -230,7 +230,7 @@ export function zeroHitPointReplacementDispositionHole(input: {
     : null;
 }
 
-export function iceKnifeDamageDispositionHoleKey(
+export function attackBurstDamageDispositionHoleKey(
   part: "attack" | "burst",
   targetId: CombatantId,
 ): {

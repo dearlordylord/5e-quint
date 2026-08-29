@@ -166,7 +166,7 @@ export function temporarilyDismissFindFamiliar(
     );
   }
   const familiarId = familiar.combatantId;
-  const spent = spendFindFamiliarMagicAction(
+  const spent = spendSpawnedCompanionMagicAction(
     input.state,
     input.casterId,
     "Find Familiar temporary dismissal",
@@ -270,7 +270,7 @@ export function permanentlyDismissFindFamiliar(
     );
   }
   const familiar = familiarEntry.companion;
-  const spent = spendFindFamiliarMagicAction(
+  const spent = spendSpawnedCompanionMagicAction(
     input.state,
     input.casterId,
     "Find Familiar permanent dismissal",
@@ -356,7 +356,7 @@ export function reappearAdmittedTemporarilyDismissedFindFamiliar(
     placement: input.placement,
     ownerId: casterId,
   });
-  const spent = spendFindFamiliarMagicAction(
+  const spent = spendSpawnedCompanionMagicAction(
     state,
     casterId,
     "Find Familiar reappearance",
@@ -666,7 +666,7 @@ export function findFamiliarIdentityIssueMessage(
   );
 }
 
-export function spendFindFamiliarMagicAction(
+export function spendSpawnedCompanionMagicAction(
   state: BattleState,
   casterId: CombatantId,
   actionLabel: string,

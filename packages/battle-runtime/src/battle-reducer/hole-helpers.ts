@@ -51,7 +51,7 @@ import {
   resourceHasUsesRemaining,
   type CharacterBattleUseCountResourceState,
 } from "../character-battle-resource-execution.ts";
-import { ongoingSpellEffectSuppressedByAntimagicField } from "./magic-suppression-ongoing-effect.ts";
+import { ongoingSpellEffectSuppressedByMagicSuppressionEmanation } from "./magic-suppression-ongoing-effect.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.ts";
 import {
   activeCreatureSizeChangeEffect,
@@ -118,8 +118,8 @@ import {
 import { activeSpellWeaponDamageRiders } from "./damage-helpers.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import {
-  THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID,
-  THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE,
+  MINOR_WONDER_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID,
+  MINOR_WONDER_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE,
   THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL,
 } from "./domain-constants.ts";
 import {
@@ -428,8 +428,8 @@ export function temporaryAbilityCheckRollModeInfluenceAbilityCheckHole(
   });
   return {
     holeInstanceKey:
-      THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE,
-    holeId: THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID,
+      MINOR_WONDER_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE,
+    holeId: MINOR_WONDER_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID,
     kind: "abilityCheck",
     label: `Influence Charisma (Intimidation) check (DC ${dc})`,
     ability: "cha",
@@ -581,7 +581,7 @@ function activeAbilityCheckRollModeEffectMatches(
           (effect.kind === "abilityD20TestRollModeEndTurnSave" &&
             effect.ability === ability) ||
           (effect.kind === "selfAttackRollAndAbilityCheckRollMode" &&
-            !ongoingSpellEffectSuppressedByAntimagicField(state, {
+            !ongoingSpellEffectSuppressedByMagicSuppressionEmanation(state, {
               kind: "spellActiveEffect",
               activeEffectKind: "spellObjectContactDamage",
               effectRef: effect.sourceEffectRef,
@@ -602,7 +602,7 @@ function activeAnyAbilityCheckRollModeEffectMatches(
     actor?.activeEffects.some(
       (effect) =>
         effect.kind === "selfAttackRollAndAbilityCheckRollMode" &&
-        !ongoingSpellEffectSuppressedByAntimagicField(state, {
+        !ongoingSpellEffectSuppressedByMagicSuppressionEmanation(state, {
           kind: "spellActiveEffect",
           activeEffectKind: "spellObjectContactDamage",
           effectRef: effect.sourceEffectRef,

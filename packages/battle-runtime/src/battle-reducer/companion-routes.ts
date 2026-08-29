@@ -91,13 +91,13 @@ export function companionRouteForResolution(
       : undefined;
   }
   if (input.subject.tag === "spawnedCompanionTouchSpellProxy")
-    return findFamiliarTouchDeliveryRouteForResolution(input, result);
+    return spawnedCompanionTouchDeliveryRouteForResolution(input, result);
   if (input.subject.tag === "companionAttack")
     return pactFamiliarReactionAttackRouteForResolution(input, result);
   return undefined;
 }
 
-function findFamiliarTouchDeliveryRouteForResolution(
+function spawnedCompanionTouchDeliveryRouteForResolution(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
 ): BattleReducerRouteEvents | undefined {

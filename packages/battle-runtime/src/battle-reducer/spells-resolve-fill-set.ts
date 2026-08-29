@@ -106,7 +106,7 @@ import { effectiveD20TestNaturalOneRerollSavingThrowOutcomes } from "./d20-test-
 import {
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID,
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID,
-  THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
+  MINOR_WONDER_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
 } from "./domain-constants.ts";
 
 type RuntimeSpellProcedure = RuntimeSpellProcedureExecution;
@@ -1772,7 +1772,7 @@ export function spellFillSet(
       }
       /* v8 ignore stop -- @preserve */
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (fill.holeId !== THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID) {
+      if (fill.holeId !== MINOR_WONDER_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID) {
         /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",

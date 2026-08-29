@@ -55,7 +55,7 @@ export function admitFindFamiliarReappearance(input: {
   ) {
     return issue(
       input.state,
-      "Find Familiar can reappear only from temporary dismissal.",
+      "spawned companion lifecycle can reappear only from temporary dismissal.",
     );
   }
   const familiar = entry.companion;

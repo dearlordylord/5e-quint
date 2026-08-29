@@ -58,7 +58,7 @@ import { invalidResult } from "./result-helpers.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import {
   targetingSaveInterdictionCheck,
-  targetChoiceFillAfterSanctuaryAttackRollReplacement,
+  targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement,
 } from "./targeting-save-interdiction.ts";
 import {
   activeMarkedDamageRiders,
@@ -453,7 +453,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       .map(
         (fill): BattleFill =>
           fill === originalTargetFill
-            ? targetChoiceFillAfterSanctuaryAttackRollReplacement({
+            ? targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement({
                 fill,
                 replacement: sanctuaryCheck,
               })
@@ -642,7 +642,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
         return invalidResult(
           input.input.state,
           "invalidFill",
-          "Spell attack sequence damage is not valid when Mirror Image redirects the hit to a duplicate.",
+          "Spell attack sequence damage is not valid when duplicate-hit interception redirects the hit to a duplicate.",
         );
       }
       /* v8 ignore stop -- @preserve */
@@ -1097,7 +1097,7 @@ function resolveSpellAttackSequenceObjectPart(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Mirror Image duplicate roll is only valid for a hit against a combatant.",
+      "duplicate-hit interception duplicate roll is only valid for a hit against a combatant.",
     );
   }
   /* v8 ignore stop -- @preserve */

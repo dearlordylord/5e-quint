@@ -20,7 +20,7 @@ import {
   companionReappearanceInitiativeHole,
   companionReappearancePlacementHole,
   spawnedCompanionConnectionHole,
-  findFamiliarTouchDeliveryTargetHoles,
+  spawnedCompanionTouchDeliveryTargetHoles,
 } from "../companion-subjects.ts";
 import {
   permanentlyDismissFindFamiliar,
@@ -31,7 +31,7 @@ import { findFamiliarCompanionEntryForOwner } from "../spawned-companion-state.t
 import {
   prepareTouchSpellDeliveryThroughFindFamiliar,
   shareFindFamiliarSenses as applyFindFamiliarSharedSenses,
-  spendFindFamiliarTouchDeliveryReaction,
+  spendSpawnedCompanionTouchDeliveryReaction,
   type FindFamiliarWithin100FeetFact,
 } from "../companion-communication.ts";
 import type { CombatantId } from "../identity.ts";
@@ -222,7 +222,7 @@ function companionReappearanceInitiative(
     : { tag: "resolved", initiative: fill.value };
 }
 
-export function resolveFindFamiliarSharedSensesSubject(
+export function resolveSpawnedCompanionSharedSensesSubject(
   input: BattleResolutionInputForSubject<
     Extract<BattleSubject, { readonly tag: "spawnedCompanionSharedSenses" }>
   >,
@@ -258,7 +258,7 @@ export function shareFindFamiliarSenses(input: {
       };
 }
 
-export function resolveFindFamiliarTouchSpellSubject(
+export function resolveSpawnedCompanionTouchSpellSubject(
   input: BattleResolutionInputForSubject<
     Extract<BattleSubject, { readonly tag: "spawnedCompanionTouchSpellProxy" }>
   >,
@@ -301,7 +301,7 @@ export function resolveFindFamiliarTouchSpellSubject(
     ? {
         ...delivered,
         subject: input.subject,
-        holes: findFamiliarTouchDeliveryTargetHoles(delivered.holes),
+        holes: spawnedCompanionTouchDeliveryTargetHoles(delivered.holes),
       }
     : delivered;
 }
@@ -333,7 +333,7 @@ export function deliverTouchSpellThroughFindFamiliar(
   const reactionState =
     reactionCommitment === "committed" || prepared.targetChoiceCount === 0
       ? { tag: "resolved" as const, state: input.state }
-      : spendFindFamiliarTouchDeliveryReaction({
+      : spendSpawnedCompanionTouchDeliveryReaction({
           state: input.state,
           familiarId: prepared.familiarId,
         });

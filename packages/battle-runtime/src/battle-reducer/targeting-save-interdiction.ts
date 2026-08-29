@@ -60,7 +60,7 @@ type SanctuaryAttackRollReplacementTarget = Extract<
   { readonly tag: "newTarget" }
 >;
 
-export function targetChoiceFillAfterSanctuaryAttackRollReplacement(input: {
+export function targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement(input: {
   readonly fill: Extract<BattleFill, { readonly kind: "targetChoice" }>;
   readonly replacement: SanctuaryAttackRollReplacementTarget;
 }): Extract<BattleFill, { readonly kind: "targetChoice" }> {

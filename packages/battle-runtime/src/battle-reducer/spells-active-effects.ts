@@ -306,7 +306,7 @@ export type SaveGatedAttackRollAdvantageInvocation = Extract<
   { readonly procedure: "saveGatedAttackRollAdvantage" }
 >;
 
-export function saveGatedAttackRollAdvantageInvocationIsFaerieFire(
+export function saveGatedAttackRollAdvantageInvocationIsVisibilityGrantingArea(
   invocation: Pick<SaveGatedAttackRollAdvantageInvocation, "effect">,
 ): boolean {
   return invocation.effect.kind === "saveGatedTargetProjection";
@@ -3178,7 +3178,7 @@ function saveGatedTargetProjectionObjects(
 ): readonly BattleObjectOutline[] {
   if (
     area?.kind !== "saveGatedTargetProjectionArea" ||
-    !saveGatedAttackRollAdvantageInvocationIsFaerieFire(invocation)
+    !saveGatedAttackRollAdvantageInvocationIsVisibilityGrantingArea(invocation)
   ) {
     return [];
   }

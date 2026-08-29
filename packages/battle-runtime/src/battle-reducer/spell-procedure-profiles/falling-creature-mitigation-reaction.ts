@@ -186,7 +186,7 @@ function resolveFallingCreatureMitigationReaction(
     return invalidResult(
       input.input.state,
       "staleSubject",
-      "Feather Fall requires a matching falling Reaction trigger.",
+      "triggered fall arrest requires a matching falling Reaction trigger.",
     );
   }
   const targetSelection = selectSpellTargetList({

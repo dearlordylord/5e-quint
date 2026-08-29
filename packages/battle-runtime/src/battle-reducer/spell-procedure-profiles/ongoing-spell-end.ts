@@ -57,7 +57,7 @@ import {
   magicSuppressionOngoingSpellEffectRefForActiveEffect,
   magicSuppressionOngoingSpellEffectRefForEmitter,
   ongoingSpellEffectRefEquals,
-  ongoingSpellEffectRefForAntimagicFieldAura,
+  ongoingSpellEffectRefForMagicSuppressionEmanation,
   ongoingSpellEffectRefForActiveEffect,
   ongoingSpellEffectRefForEmitter,
   ongoingSpellEffectRefKey,
@@ -690,7 +690,7 @@ function ongoingSpellTargetChoices(
       if (effect.kind === "magicSuppressionEmanation") {
         pushUniqueOngoingSpellTarget(choices, {
           kind: "magicalEffect",
-          effect: ongoingSpellEffectRefForAntimagicFieldAura({
+          effect: ongoingSpellEffectRefForMagicSuppressionEmanation({
             effectRef: effect.effectRef,
             areaId: effect.areaId,
             sourceCombatantId: effect.sourceCombatantId,

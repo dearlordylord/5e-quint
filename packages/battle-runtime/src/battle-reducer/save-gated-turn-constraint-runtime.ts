@@ -88,7 +88,7 @@ export function resolveSlowSomaticSpellFailure(input: {
       : invalidResult(
           input.state,
           "invalidFill",
-          "Slow Somatic spell failure fills are valid only for slowed spell casts with an effective Somatic component.",
+          "turn-hindering effect Somatic spell failure fills are valid only for slowed spell casts with an effective Somatic component.",
         );
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -96,7 +96,7 @@ export function resolveSlowSomaticSpellFailure(input: {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Slow Somatic spell failure outcome was filled twice.",
+      "turn-hindering effect Somatic spell failure outcome was filled twice.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -109,7 +109,7 @@ export function resolveSlowSomaticSpellFailure(input: {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Slow Somatic spell failure fill must use the selected Slow chance hole.",
+      "turn-hindering effect Somatic spell failure fill must use the selected turn-hindering effect chance hole.",
     );
   }
   /* v8 ignore stop -- @preserve */

@@ -220,10 +220,10 @@ function isSaveGatedTurnConstraintBundlePhase(
     selection.count === SLOW_ACTIVE_PENALTIES_MAX_TARGETS &&
     sameStringSet(selection.targetKinds, ["creature"]) &&
     failedEffects.length === SLOW_ACTIVE_PENALTIES_FAILED_EFFECT_COUNT &&
-    failedEffects.some(isSlowSpeedRatioEffect) &&
-    failedEffects.some(isSlowArmorClassPenaltyEffect) &&
-    failedEffects.some(isSlowDexteritySavingThrowPenaltyEffect) &&
-    failedEffects.some(isSlowReactionRestrictionEffect) &&
+    failedEffects.some(isTurnHinderingSpeedRatioEffect) &&
+    failedEffects.some(isTurnHinderingArmorClassPenaltyEffect) &&
+    failedEffects.some(isTurnHinderingDexteritySavingThrowPenaltyEffect) &&
+    failedEffects.some(isTurnHinderingReactionRestrictionEffect) &&
     failedEffects.some(
       (effect) => effect.kind === "choose_action_or_bonus_action_each_turn",
     ) &&
@@ -244,7 +244,7 @@ function isSaveGatedTurnConstraintBundlePhase(
   );
 }
 
-function isSlowSpeedRatioEffect(effect: EffectAtom): boolean {
+function isTurnHinderingSpeedRatioEffect(effect: EffectAtom): boolean {
   return (
     effect.kind === "set_speed_ratio" &&
     effect.numerator === SLOW_ACTIVE_PENALTIES_SPEED_RATIO.numerator &&
@@ -252,7 +252,7 @@ function isSlowSpeedRatioEffect(effect: EffectAtom): boolean {
   );
 }
 
-function isSlowArmorClassPenaltyEffect(effect: EffectAtom): boolean {
+function isTurnHinderingArmorClassPenaltyEffect(effect: EffectAtom): boolean {
   return (
     effect.kind === "modify_ac" &&
     effect.delta.kind === "fixed_number" &&
@@ -261,7 +261,9 @@ function isSlowArmorClassPenaltyEffect(effect: EffectAtom): boolean {
   );
 }
 
-function isSlowDexteritySavingThrowPenaltyEffect(effect: EffectAtom): boolean {
+function isTurnHinderingDexteritySavingThrowPenaltyEffect(
+  effect: EffectAtom,
+): boolean {
   if (effect.kind !== "modify_roll_numeric") {
     return false;
   }
@@ -279,7 +281,7 @@ function isSlowDexteritySavingThrowPenaltyEffect(effect: EffectAtom): boolean {
   );
 }
 
-function isSlowReactionRestrictionEffect(effect: EffectAtom): boolean {
+function isTurnHinderingReactionRestrictionEffect(effect: EffectAtom): boolean {
   return (
     effect.kind === "restrict_action_usage" &&
     sameStringSet(effect.actions, ["reaction"])
@@ -320,7 +322,7 @@ function resolveSaveGatedTurnConstraintBundle(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Slow uses an area Saving Throw outcome fill.",
+      "turn-hindering effect uses an area Saving Throw outcome fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -382,7 +384,7 @@ function resolveSaveGatedTurnConstraintBundle(
   if (resourced.tag === "invalid") {
     return resourced;
   }
-  const effected = applySlowActivePenaltyEffects(
+  const effected = applyTurnHinderingActivePenaltyEffects(
     resourced.state,
     input.actorId,
     failedTargets,
@@ -409,7 +411,7 @@ function resolveSaveGatedTurnConstraintBundle(
   };
 }
 
-function applySlowActivePenaltyEffects(
+function applyTurnHinderingActivePenaltyEffects(
   state: BattleState,
   actorId: CombatantId,
   targetIds: readonly CombatantId[],
@@ -478,7 +480,7 @@ function validateSlowAreaWitness(
   maxTargets: 6,
 ): string | null {
   if (!("area" in savingThrowOutcomes)) {
-    return "Slow requires a point-origin Cube area witness.";
+    return "turn-hindering effect requires a point-origin Cube area witness.";
   }
   const area = savingThrowOutcomes.area;
   if (area.kind !== "saveGatedTurnConstraintBundleArea") {

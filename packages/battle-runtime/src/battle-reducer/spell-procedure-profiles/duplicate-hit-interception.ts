@@ -176,7 +176,7 @@ function resolveDuplicateHitInterception(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Mirror Image uses no target, roll, damage, or selection fills.",
+      "duplicate-hit interception uses no target, roll, damage, or selection fills.",
     );
   }
   /* v8 ignore stop -- @preserve */

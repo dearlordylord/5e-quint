@@ -282,14 +282,14 @@ function validateDuplicateHitInterceptionDuplicateRoll(
   hole: BattleDuplicateHitInterceptionRollHole,
 ): string | null {
   if (fill.holeId !== hole.holeId) {
-    return "Mirror Image duplicate roll uses the wrong hole.";
+    return "duplicate-hit interception duplicate roll uses the wrong hole.";
   }
   if (
     fill.selectedAttackDamageRiderProcedureRefs !== undefined ||
     fill.weaponDamageDiceRollChoice !== undefined ||
     fill.attackDamageDieFloorChoice !== undefined
   ) {
-    return "Mirror Image duplicate roll cannot select attack damage riders, weapon damage dice choices, or attack damage die floor choices.";
+    return "duplicate-hit interception duplicate roll cannot select attack damage riders, weapon damage dice choices, or attack damage die floor choices.";
   }
   const validation = validateRolledDiceFillForDiceExpr(fill, {
     dice: hole.duplicateHitInterceptionRoll.remainingDuplicates,

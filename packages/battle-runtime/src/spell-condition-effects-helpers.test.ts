@@ -28,7 +28,7 @@ import { difficultyClass } from "./unit-profile-admission.test-support.ts";
 import {
   applyProtectionRelevantEffectSaveOutcome,
   battleCreatureAfterConditionRemoval,
-  combatantHasSleepEffect,
+  combatantHasHitPointBudgetConditionEffect,
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
   concentrationSpellEffectSourcesDirectlyApplyingCondition,
   conditionsAfterExpiringSpellConditionEffects,
@@ -38,7 +38,7 @@ import {
   protectionRelevantEffectsForTarget,
   removeSaveGatedConditionWithRepeatEffectFromTarget,
   removeSaveGatedAreaControlEffectsFromTarget,
-  removeSleepEffectsFromTarget,
+  removeHitPointBudgetConditionEffectsFromTarget,
   removeSpellConditionEffect,
   hitPointBudgetConditionShakeAwakeTargetChoices,
   spellConcentrationEffectSourceFromEffect,
@@ -231,9 +231,12 @@ describe("spell condition effect source ownership", () => {
       ),
     ).toBe(withSpellEffectState.combatants);
 
-    expect(removeSleepEffectsFromTarget(state, combatantId("missing"))).toBe(
-      state,
-    );
+    expect(
+      removeHitPointBudgetConditionEffectsFromTarget(
+        state,
+        combatantId("missing"),
+      ),
+    ).toBe(state);
     expect(
       hasCondition(
         battleCreatureStateWithKnockOutPreservedConditions(
@@ -398,15 +401,15 @@ describe("spell condition effect source ownership", () => {
       ...state,
       combatants: new Map(state.combatants).set(goblinId, sleeping),
     };
-    expect(combatantHasSleepEffect(sleeping)).toBe(true);
+    expect(combatantHasHitPointBudgetConditionEffect(sleeping)).toBe(true);
     expect(
       hitPointBudgetConditionShakeAwakeTargetChoices(sleepingState, fighterId),
     ).toEqual([goblinId]);
-    expect(removeSleepEffectsFromTarget(sleepingState, goblinId)).toMatchObject(
-      {
-        combatants: expect.any(Map),
-      },
-    );
+    expect(
+      removeHitPointBudgetConditionEffectsFromTarget(sleepingState, goblinId),
+    ).toMatchObject({
+      combatants: expect.any(Map),
+    });
     const knockedOutSleeping = {
       ...sleeping,
       hp: knockedOutOneHp(),
@@ -414,7 +417,7 @@ describe("spell condition effect source ownership", () => {
       conditions: knockedOutConditionState(sleeping.conditions),
     };
     expect(
-      removeSleepEffectsFromTarget(
+      removeHitPointBudgetConditionEffectsFromTarget(
         {
           ...state,
           combatants: new Map(state.combatants).set(

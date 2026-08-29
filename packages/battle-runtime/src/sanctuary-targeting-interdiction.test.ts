@@ -44,7 +44,7 @@ import {
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
-import { targetChoiceFillAfterSanctuaryAttackRollReplacement } from "./battle-reducer/targeting-save-interdiction.ts";
+import { targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement } from "./battle-reducer/targeting-save-interdiction.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
@@ -88,7 +88,7 @@ describe("Sanctuary targeting interdiction", () => {
     };
 
     expect(
-      targetChoiceFillAfterSanctuaryAttackRollReplacement({
+      targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement({
         fill: {
           kind: "targetChoice",
           holeId: holeId("synthetic-sanctuary-target"),

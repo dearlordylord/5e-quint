@@ -231,7 +231,7 @@ export function prepareTouchSpellDeliveryThroughFindFamiliar(input: {
       "Companion touch delivery continuation requires its committed Reaction.",
     );
   }
-  const deliveryFills = findFamiliarTouchDeliveryFills({
+  const deliveryFills = spawnedCompanionTouchDeliveryFills({
     fills: input.fills,
     ownerId: input.subject.actorId,
     familiarId: connection.familiarId,
@@ -248,7 +248,7 @@ export function prepareTouchSpellDeliveryThroughFindFamiliar(input: {
   };
 }
 
-export function spendFindFamiliarTouchDeliveryReaction(input: {
+export function spendSpawnedCompanionTouchDeliveryReaction(input: {
   readonly state: BattleState;
   readonly familiarId: CombatantId;
 }):
@@ -283,7 +283,7 @@ export function spendFindFamiliarTouchDeliveryReaction(input: {
   };
 }
 
-function findFamiliarTouchDeliveryFills(input: {
+function spawnedCompanionTouchDeliveryFills(input: {
   readonly fills: BattleResolutionInput["fills"];
   readonly ownerId: CombatantId;
   readonly familiarId: CombatantId;

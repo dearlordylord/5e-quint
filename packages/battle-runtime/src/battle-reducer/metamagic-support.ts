@@ -462,7 +462,7 @@ export function saveMetamagicSupportIssue(input: {
     return "Save-affecting Metamagic is supported only for action-time spell casts.";
   }
   if (input.invocation.procedure === "stagedSaveCondition") {
-    return "Save-affecting Metamagic is not supported for Sleep target admission because Sleep uses a two-stage admission and repeat-save lifecycle.";
+    return "Save-affecting Metamagic is not supported for hit-point-budget condition target admission because hit-point-budget condition uses a two-stage admission and repeat-save lifecycle.";
   }
   if (!spellInvocationSupportsSaveMetamagic(input.invocation)) {
     return "Selected Metamagic option effect is not supported for this spell procedure.";

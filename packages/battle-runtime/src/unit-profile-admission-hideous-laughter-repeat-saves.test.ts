@@ -59,7 +59,7 @@ import {
   spellSlotLevel,
   spellSlotInvocationRef,
   startBattle,
-  supportedPreparedHellishRebukeReactionSpellProfile,
+  supportedPreparedAfterDamageReactionSaveSpellProfile,
   supportedPreparedSaveGatedConditionWithRepeatProfile,
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
@@ -1102,7 +1102,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       ),
     ).toEqual([]);
     expect(
-      supportedPreparedHellishRebukeReactionSpellProfile(
+      supportedPreparedAfterDamageReactionSaveSpellProfile(
         spellAdmissionSource(hellishRebukeWithRepeatSave),
         spellSlots,
       ),

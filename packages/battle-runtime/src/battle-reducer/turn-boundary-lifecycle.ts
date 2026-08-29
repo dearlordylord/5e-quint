@@ -1115,18 +1115,19 @@ function resolveEndTurn({
     currentActorId(state),
     state.initiative.round,
   );
-  const stateAfterSleepRepeatSaves = applySleepRepeatSaveFills(
-    {
-      ...state,
-      combatants: combatantsAfterEndTurnOngoingFeatures,
-      readiedSpells,
-      readiedResponses,
-      helpAttacks,
-    },
-    currentActorId(state),
-    state.initiative.round,
-    sleepRepeatSaves,
-  );
+  const stateAfterSleepRepeatSaves =
+    applyHitPointBudgetConditionRepeatSaveFills(
+      {
+        ...state,
+        combatants: combatantsAfterEndTurnOngoingFeatures,
+        readiedSpells,
+        readiedResponses,
+        helpAttacks,
+      },
+      currentActorId(state),
+      state.initiative.round,
+      sleepRepeatSaves,
+    );
   const combatantsAfterSleepRepeatSaves = stateAfterSleepRepeatSaves.combatants;
   const combatantsAfterSaveGatedConditionWithRepeatRepeatSaves =
     applySaveGatedConditionWithRepeatRepeatSaveFills(
@@ -1902,7 +1903,7 @@ function stagedSaveConditionPendingRepeatEffects(
   );
 }
 
-function sleepRepeatSavingThrowOutcomeHole(
+function hitPointBudgetConditionRepeatSavingThrowOutcomeHole(
   targetId: CombatantId,
   effect: StagedSaveConditionPendingRepeatEffect,
   targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
@@ -1950,7 +1951,7 @@ function endTurnSavingThrowFlatBonuses(
       );
 }
 
-export function sleepRepeatSaveSavingThrowHoleIds(
+export function hitPointBudgetConditionRepeatSaveSavingThrowHoleIds(
   state: BattleState,
   actorId: CombatantId,
 ): ReadonlySet<BattleHoleId> {
@@ -1962,7 +1963,7 @@ export function sleepRepeatSaveSavingThrowHoleIds(
         actorId,
         state.initiative.round,
       ).map((effect) =>
-        sleepRepeatSavingThrowOutcomeHole(
+        hitPointBudgetConditionRepeatSavingThrowOutcomeHole(
           actorId,
           effect,
           endTurnSavingThrowFlatBonuses(state, actorId, effect.save.ability),
@@ -2344,11 +2345,11 @@ function validateSleepRepeatSavingThrowOutcome(
 ): string | null {
   /* v8 ignore start -- @preserve -- Malformed fill: a Sleep repeat-save hole is single-target and cannot carry area geometry or an outcome for a different combatant. */
   if ("area" in value) {
-    return "Sleep repeat Saving Throw outcome must not include area facts.";
+    return "hit-point-budget condition repeat Saving Throw outcome must not include area facts.";
   }
   return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
     ? null
-    : "Sleep repeat Saving Throw outcome must match the ending-turn target.";
+    : "hit-point-budget condition repeat Saving Throw outcome must match the ending-turn target.";
   /* v8 ignore stop -- @preserve */
 }
 
@@ -2372,15 +2373,15 @@ function validateSaveGatedTurnConstraintBundleEndTurnSavingThrowOutcome(
 ): string | null {
   /* v8 ignore start -- @preserve -- Malformed fill: a Slow end-turn save is single-target and cannot carry area geometry or an outcome for a different combatant. */
   if ("area" in value) {
-    return "Slow end-turn Saving Throw outcome must not include area facts.";
+    return "turn-hindering effect end-turn Saving Throw outcome must not include area facts.";
   }
   return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
     ? null
-    : "Slow end-turn Saving Throw outcome must match the ending-turn target.";
+    : "turn-hindering effect end-turn Saving Throw outcome must match the ending-turn target.";
   /* v8 ignore stop -- @preserve */
 }
 
-function applySleepRepeatSaveFills(
+function applyHitPointBudgetConditionRepeatSaveFills(
   state: BattleState,
   actorId: CombatantId,
   round: RoundType,
@@ -2404,7 +2405,10 @@ function applySleepRepeatSaveFills(
     if (target === undefined) {
       return nextState;
     }
-    const hole = sleepRepeatSavingThrowOutcomeHole(actorId, effect);
+    const hole = hitPointBudgetConditionRepeatSavingThrowOutcomeHole(
+      actorId,
+      effect,
+    );
     const save = sleepRepeatSavingThrowOutcomeFor(saves, hole);
     if (save === undefined) {
       return nextState;
@@ -4940,7 +4944,7 @@ function resolveEndTurnCommandForParent(
     input.state.initiative.round,
   ).map((effect) => ({
     effect,
-    hole: sleepRepeatSavingThrowOutcomeHole(
+    hole: hitPointBudgetConditionRepeatSavingThrowOutcomeHole(
       actorId,
       effect,
       endTurnSavingThrowFlatBonuses(input.state, actorId, effect.save.ability),

@@ -99,7 +99,7 @@ import {
 } from "./spells-targeting.ts";
 import {
   magicSuppressionOngoingSpellEffectRefForActiveEffect,
-  ongoingSpellEffectSuppressedByAntimagicField,
+  ongoingSpellEffectSuppressedByMagicSuppressionEmanation,
 } from "./magic-suppression-ongoing-effect.ts";
 import {
   SPELL_MAGICAL_EFFECT_SOURCE,
@@ -327,7 +327,7 @@ export function resolveObjectContactDamageRepeatSpellAct(input: {
   }
   /* v8 ignore stop -- @preserve */
   if (
-    ongoingSpellEffectSuppressedByAntimagicField(
+    ongoingSpellEffectSuppressedByMagicSuppressionEmanation(
       input.input.state,
       magicSuppressionOngoingSpellEffectRefForActiveEffect(
         input.invocation.activeEffect,
@@ -337,7 +337,7 @@ export function resolveObjectContactDamageRepeatSpellAct(input: {
     return invalidResult(
       input.input.state,
       "staleSubject",
-      "Object-contact damage is suppressed by Antimagic Field.",
+      "Object-contact damage is suppressed by magic-suppression emanation.",
     );
   }
   const contactSelection = validateObjectContactTargets({
@@ -888,7 +888,7 @@ function resolveObjectContactDamage(input: {
     return invalidResult(
       input.errorState,
       "invalidFill",
-      "Hideous Laughter damage repeat save fill must match a requested damaged target.",
+      "damage-triggered repeat-save condition damage repeat save fill must match a requested damaged target.",
     );
   }
   /* v8 ignore stop -- @preserve */

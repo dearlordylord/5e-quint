@@ -186,7 +186,7 @@ import {
 } from "./spells-targeting.ts";
 import {
   magicSuppressionOngoingSpellEffectRefForActiveEffect,
-  ongoingSpellEffectSuppressedByAntimagicField,
+  ongoingSpellEffectSuppressedByMagicSuppressionEmanation,
 } from "./magic-suppression-ongoing-effect.ts";
 
 import {
@@ -280,7 +280,7 @@ import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spe
 import {
   battleStateAfterTargetActionEarlyEndForActor,
   targetingSaveInterdictionCheck,
-  targetChoiceFillAfterSanctuaryAttackRollReplacement,
+  targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement,
 } from "./targeting-save-interdiction.ts";
 import {
   spellCastInterruptFrame,
@@ -1557,7 +1557,7 @@ function potentCantripAppliesToMissedSpellAttack(input: {
   );
 }
 
-function spellAttackPostMirrorImageFillsArePresent(
+function spellAttackPostDuplicateHitInterceptionFillsArePresent(
   fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>,
 ): boolean {
   return (
@@ -1840,7 +1840,7 @@ function resolveSpellActInternal(
   if (
     invocation.procedure === "spatialMeleeSpellAttackProxy" &&
     invocation.operation === "repositionAndAttack" &&
-    ongoingSpellEffectSuppressedByAntimagicField(
+    ongoingSpellEffectSuppressedByMagicSuppressionEmanation(
       input.state,
       magicSuppressionOngoingSpellEffectRefForActiveEffect(
         invocation.activeEffect,
@@ -1850,7 +1850,7 @@ function resolveSpellActInternal(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Spiritual Weapon repeat attack is suppressed by Antimagic Field.",
+      "spatial melee spell-attack proxy repeat attack is suppressed by magic-suppression emanation.",
     );
   }
   if (
@@ -2282,7 +2282,7 @@ function resolveSpellActInternal(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Spiritual Weapon target adjacency must match the selected force position.",
+      "spatial melee spell-attack proxy target adjacency must match the selected force position.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -2354,7 +2354,7 @@ function resolveSpellActInternal(
         return invalidResult(
           input.state,
           "invalidFill",
-          "Sanctuary replacement spell target must be legal for the selected spell.",
+          "attack-redirection ward replacement spell target must be legal for the selected spell.",
         );
       }
       /* v8 ignore stop -- @preserve */
@@ -2370,7 +2370,7 @@ function resolveSpellActInternal(
         return invalidResult(
           input.state,
           "invalidFill",
-          "Sanctuary replacement requires the original spell target fill.",
+          "attack-redirection ward replacement requires the original spell target fill.",
         );
       }
       /* v8 ignore stop -- @preserve */
@@ -2384,10 +2384,12 @@ function resolveSpellActInternal(
               )
               .map((fill) =>
                 fill === originalTargetFill
-                  ? targetChoiceFillAfterSanctuaryAttackRollReplacement({
-                      fill,
-                      replacement: sanctuaryCheck,
-                    })
+                  ? targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement(
+                      {
+                        fill,
+                        replacement: sanctuaryCheck,
+                      },
+                    )
                   : fill,
               ),
           ],
@@ -2667,7 +2669,7 @@ function resolveSpellActInternal(
       return invalidResult(
         input.state,
         "invalidFill",
-        "Mirror Image duplicate roll is only valid after an attack-roll hit.",
+        "duplicate-hit interception duplicate roll is only valid after an attack-roll hit.",
       );
     }
     /* v8 ignore stop -- @preserve */
@@ -2713,12 +2715,12 @@ function resolveSpellActInternal(
       /* v8 ignore stop -- @preserve */
       if (mirrorImageCheck.tag === "hitDuplicate") {
         /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-        if (spellAttackPostMirrorImageFillsArePresent(fillSet)) {
+        if (spellAttackPostDuplicateHitInterceptionFillsArePresent(fillSet)) {
           /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
           return invalidResult(
             input.state,
             "invalidFill",
-            "Spell attack damage and after-hit fills are not valid when Mirror Image redirects the hit to a duplicate.",
+            "Spell attack damage and after-hit fills are not valid when duplicate-hit interception redirects the hit to a duplicate.",
           );
         }
         /* v8 ignore stop -- @preserve */
@@ -3334,7 +3336,7 @@ function stateAfterSpatialMeleeSpellAttackProxyCastProxyCreatedBeforeImmediateAt
   return spendSpellActResolutionResources(input);
 }
 
-function spiritualWeaponProxyEffectMatches(input: {
+function spatialMeleeSpellAttackProxyEffectMatches(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly invocation:
@@ -3387,7 +3389,7 @@ function spiritualWeaponCastCommitAlreadyApplied(input: {
     actor?.concentration?.effectKind === "spellEffect" &&
     actor.concentration.sourceProcedureRef ===
       input.invocation.sourceProcedureRef &&
-    spiritualWeaponProxyEffectMatches(input)
+    spatialMeleeSpellAttackProxyEffectMatches(input)
   );
 }
 
@@ -3458,7 +3460,7 @@ function spiritualWeaponRepeatTargetingInvalidReason(
   }
   return repeatTargeting.combatantId === targetId
     ? null
-    : "Glyph-stored Spiritual Weapon repeat attacks must target the triggering creature.";
+    : "Glyph-stored spatial melee spell-attack proxy repeat attacks must target the triggering creature.";
 }
 
 function spendSpellActResolutionResources(input: {
@@ -3486,7 +3488,7 @@ function spendSpellActResolutionResources(input: {
       return invalidResult(
         input.errorState,
         "invalidFill",
-        "Spiritual Weapon cast requires a table-supplied force position.",
+        "spatial melee spell-attack proxy cast requires a table-supplied force position.",
       );
     }
     /* v8 ignore stop -- @preserve */
@@ -3542,7 +3544,7 @@ function spendSpellActResolutionResources(input: {
       return invalidResult(
         input.errorState,
         "staleSubject",
-        "Spiritual Weapon repeat attack is only available on later turns.",
+        "spatial melee spell-attack proxy repeat attack is only available on later turns.",
       );
     }
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -3554,7 +3556,7 @@ function spendSpellActResolutionResources(input: {
       return invalidResult(
         input.errorState,
         "invalidFill",
-        "Spiritual Weapon repeat attack requires a table-supplied reposition.",
+        "spatial melee spell-attack proxy repeat attack requires a table-supplied reposition.",
       );
     }
     /* v8 ignore stop -- @preserve */
@@ -3926,7 +3928,7 @@ export function resolveBonusActionDashSpellAct(
     return invalidResult(
       input.state,
       "unsupportedActOption",
-      "Bonus Action Dash spell act requires a supported Expeditious Retreat spell.",
+      "Bonus Action Dash spell act requires a supported bonus-action Dash effect spell.",
     );
   }
   /* v8 ignore stop -- @preserve */

@@ -106,14 +106,17 @@ type CompelledBehaviorPhase = Extract<
 type CompelledBehaviorResolveInput =
   SpellProcedureProfileResolveInput<CompelledNextTurnBehaviorSpellInvocation>;
 
-function admitCommand(
+function admitCompelledNextTurnBehavior(
   spell: CompelledNextTurnBehaviorSpellInvocation["spell"],
   ctx: SpellAdmissionContext,
 ): readonly CompelledNextTurnBehaviorSpellInvocation[] {
-  return supportedPreparedCommandProfile(spell, ctx.spellCastOptions);
+  return supportedPreparedCompelledNextTurnBehaviorProfile(
+    spell,
+    ctx.spellCastOptions,
+  );
 }
 
-export function supportedPreparedCommandProfile(
+export function supportedPreparedCompelledNextTurnBehaviorProfile(
   spell: CompelledNextTurnBehaviorSpellInvocation["spell"],
   castOptions: SpellAdmissionContext["spellCastOptions"],
 ): readonly CompelledNextTurnBehaviorSpellInvocation[] {
@@ -214,7 +217,7 @@ function isCompelledBehaviorPhase(
   );
 }
 
-function discoverCommandCastAct(
+function discoverCompelledNextTurnBehaviorCastAct(
   state: BattleState,
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation<CompelledNextTurnBehaviorSpellInvocation>,
@@ -241,7 +244,7 @@ function discoverCommandCastAct(
   });
 }
 
-function resolveCommand(
+function resolveCompelledNextTurnBehavior(
   input: CompelledBehaviorResolveInput,
 ): BattleResolutionResult {
   return resolveCompelledNextTurnBehaviorSpellAct({
@@ -272,9 +275,9 @@ const CommandInvocationSchema = spellProcedureExecutionSchema(
 export const compelledNextTurnBehaviorProfile = {
   procedure: "compelledNextTurnBehavior",
   executionSchema: CommandInvocationSchema,
-  admit: admitCommand,
-  discoverCastAct: discoverCommandCastAct,
-  resolve: resolveCommand,
+  admit: admitCompelledNextTurnBehavior,
+  discoverCastAct: discoverCompelledNextTurnBehaviorCastAct,
+  resolve: resolveCompelledNextTurnBehavior,
 } satisfies SpellProcedureDeclaration<
   "compelledNextTurnBehavior",
   CompelledNextTurnBehaviorSpellInvocation

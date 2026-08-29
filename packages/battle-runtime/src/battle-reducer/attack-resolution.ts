@@ -144,7 +144,7 @@ import {
   saveGatedAreaControlShakeAwakeTargetChoices,
   removeSaveGatedAreaControlEffectsFromTarget,
   removeSpellConditionEffect,
-  removeSleepEffectsFromTarget,
+  removeHitPointBudgetConditionEffectsFromTarget,
   spellRestraintEffectFor,
   hitPointBudgetConditionShakeAwakeTargetChoices,
 } from "./spell-condition-effects-helpers.ts";
@@ -833,7 +833,7 @@ export function resolveShakeAwakeFromHitPointBudgetCondition(
       "Hit-point-budget condition shake-awake is no longer available.",
     );
   }
-  const nextState = removeSleepEffectsFromTarget(
+  const nextState = removeHitPointBudgetConditionEffectsFromTarget(
     { ...input.state, currentTurnResources: spent.success },
     targetId,
   );

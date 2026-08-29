@@ -99,7 +99,8 @@ describe("battle runtime spatial-effect coverage", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Grease ground-hazard save is no longer available.",
+      message:
+        "PersistentAreaSaveCondition ground-hazard save is no longer available.",
     });
   });
 
