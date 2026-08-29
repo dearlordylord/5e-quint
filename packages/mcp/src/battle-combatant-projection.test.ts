@@ -4,7 +4,10 @@ import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
+  battleCombatantCorrelationIssueContent,
   correlateBattleCombatantInitializations,
+  correlateSingleBattleCombatantInitialization,
+  type BattleCombatantCorrelationIssue,
   type BattleCombatantCorrelationInitialization,
   type BattleCombatantCorrelationParticipant,
 } from "./battle-combatant-correlation.ts";
@@ -55,6 +58,22 @@ describe("battle combatant initialization correlation", () => {
       { participant: participants[0], initialization: first },
       { participant: participants[1], initialization: second },
     ]);
+  });
+
+  test("correlates one projected combatant through the same identity join", () => {
+    const id = combatantId("correlation-single");
+    const initialization = statBlockInitialization(id, "Single initialization");
+    const matched = correlateSingleBattleCombatantInitialization({
+      participant: participant("statBlock", "correlation-single"),
+      creatureInits: [initialization],
+    });
+
+    expect(matched).toEqual(
+      Either.right({
+        participant: participant("statBlock", "correlation-single"),
+        initialization,
+      }),
+    );
   });
 
   test("rejects an initialization whose id is not in the participant roster", () => {
@@ -154,4 +173,50 @@ describe("battle combatant initialization correlation", () => {
       actualOrigin: "statBlock",
     });
   });
+
+  test.each([
+    "duplicateParticipantCombatantId",
+    "duplicateInitializationCombatantId",
+    "unexpectedInitializationCombatantId",
+    "missingInitializationCombatantId",
+    "initializationOriginMismatch",
+  ] satisfies readonly BattleCombatantCorrelationIssue["tag"][])(
+    "projects %s as a typed correlation failure",
+    (tag) => {
+      const issue = correlationIssueForTag(tag);
+      const content = battleCombatantCorrelationIssueContent(issue);
+
+      expect(content).toMatchObject({
+        isError: true,
+        content: [
+          {
+            text: expect.stringContaining(`"reason": "${tag}"`),
+          },
+        ],
+      });
+    },
+  );
 });
+
+function correlationIssueForTag(
+  tag: BattleCombatantCorrelationIssue["tag"],
+): BattleCombatantCorrelationIssue {
+  const id = combatantId(`correlation-content-${tag}`);
+  switch (tag) {
+    case "duplicateParticipantCombatantId":
+      return { tag, combatantId: id };
+    case "duplicateInitializationCombatantId":
+      return { tag, combatantId: id };
+    case "unexpectedInitializationCombatantId":
+      return { tag, combatantId: id };
+    case "missingInitializationCombatantId":
+      return { tag, combatantId: id };
+    case "initializationOriginMismatch":
+      return {
+        tag,
+        combatantId: id,
+        expectedOrigin: "characterSheet",
+        actualOrigin: "statBlock",
+      };
+  }
+}

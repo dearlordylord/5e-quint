@@ -15,12 +15,14 @@ import { describe, expect, test } from "vitest";
 import {
   battleResolutionResultPayload,
   battleResolutionPayload,
+  battleMechanicsEnvelopeForSession,
   battleSessionPayload,
   battlePresentationIssueContent,
   noStoredBattleContent,
   pendingBattleFillsContent,
   unknownStatBlockContent,
 } from "./battle-tool-payloads.ts";
+import { battleSubjectIsAvailableWithoutPendingFills } from "./battle-tool-frontier.ts";
 import { BattleResolutionOutputSchema } from "./battle-tool-output.ts";
 import { createMcpPlaySessionRoot } from "./composition-root.ts";
 import { handleToolCall as handleWireToolCall } from "./server.ts";
@@ -76,6 +78,84 @@ describe("battle tool payload boundaries", () => {
     expect(payload.right.envelope.checkpoint).not.toHaveProperty(
       "pendingInterrupt",
     );
+  });
+
+  test("checks subject availability across ordinary and holes frontiers", () => {
+    const { root, session } = startedStatBlockBattle();
+    const actsFrontier = battleMechanicsEnvelopeForSession(
+      root,
+      session,
+    ).frontier;
+    if (actsFrontier.kind !== "acts") {
+      throw new Error("Expected an acts frontier before a transaction starts.");
+    }
+    const availableSubject = actsFrontier.acts[0]?.subject;
+    if (availableSubject === undefined) {
+      throw new Error("Expected an available battle subject.");
+    }
+    expect(
+      battleSubjectIsAvailableWithoutPendingFills(
+        actsFrontier,
+        availableSubject,
+      ),
+    ).toBe(true);
+    expect(
+      battleSubjectIsAvailableWithoutPendingFills(actsFrontier, {
+        tag: "runtimeCommand",
+        actorId: combatantId("unavailable-subject"),
+        command: "endTurn",
+      }),
+    ).toBe(false);
+
+    const pendingAct = actsFrontier.acts.find(
+      (act) => act.initialHoles.length > 0,
+    );
+    if (pendingAct === undefined) {
+      throw new Error("Expected an act with holes.");
+    }
+    expect(
+      readToolPayload(
+        handleToolCall(root, "resolve_battle_act", {
+          subject: pendingAct.subject,
+        }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "BATTLE_ACT_REQUIRES_HOLES",
+        subject: pendingAct.subject,
+      },
+    });
+    const pending = settleBattleRuntimeTransaction({
+      session,
+      transaction: null,
+      operation: {
+        kind: "ordinarySubject",
+        subject: pendingAct.subject,
+        fills: [],
+      },
+      statBlockCatalog: root.statBlockCatalog,
+    });
+    if (pending.tag !== "needsHoles") {
+      throw new Error("Expected the selected act to need holes.");
+    }
+    expect(
+      root.sessionStore.storeBattleTransactionResult(session, pending),
+    ).toEqual(Either.right(undefined));
+    const holesFrontier = battleMechanicsEnvelopeForSession(
+      root,
+      pending.resolution.session,
+    ).frontier;
+    if (holesFrontier.kind !== "holes") {
+      throw new Error(
+        "Expected a holes frontier after starting a transaction.",
+      );
+    }
+    expect(
+      battleSubjectIsAvailableWithoutPendingFills(
+        holesFrontier,
+        holesFrontier.subject,
+      ),
+    ).toBe(true);
   });
 
   test("returns typed snapshot-presentation issues as tool errors", () => {
@@ -322,6 +402,123 @@ describe("battle tool payload boundaries", () => {
     });
     expect(readToolPayload(mismatchedResolve)).toMatchObject({
       details: { code: "BATTLE_FILLS_PENDING" },
+    });
+  });
+
+  test("maps active roster transition outcomes through the lifecycle boundary", () => {
+    const { root } = startedStatBlockBattle();
+
+    expect(
+      readToolPayload(
+        handleToolCall(root, "battle_lifecycle", {
+          operation: {
+            kind: "removeCombatant",
+            combatantId: "missing-combatant",
+          },
+        }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "BATTLE_COMBATANT_NOT_FOUND",
+        recovery: { tag: "battleAndCharacterSessionsUnchanged" },
+      },
+    });
+
+    expect(
+      readToolPayload(
+        handleToolCall(root, "battle_lifecycle", {
+          operation: {
+            kind: "addCombatant",
+            combatant: {
+              kind: "statBlock",
+              ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+              statBlockId: "stat_block_skeleton",
+              combatantId: "goblin",
+              initiative: 4,
+              admissionSource: { kind: "encounterParticipant" },
+            },
+          },
+        }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "BATTLE_COMBATANT_ADMISSION_FAILED",
+        recovery: { tag: "battleAndCharacterSessionsUnchanged" },
+      },
+    });
+
+    expect(
+      readToolPayload(
+        handleToolCall(root, "battle_lifecycle", {
+          operation: { kind: "removeCombatant", combatantId: "goblin" },
+        }),
+      ),
+    ).toMatchObject({
+      result: {
+        tag: "combatantRemoved",
+        combatantId: "goblin",
+        removedCombatantIds: ["goblin"],
+      },
+    });
+
+    expect(
+      readToolPayload(
+        handleToolCall(root, "battle_lifecycle", {
+          operation: { kind: "removeCombatant", combatantId: "skeleton" },
+        }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "BATTLE_COMBATANT_REMOVAL_FAILED",
+        recovery: { tag: "battleAndCharacterSessionsUnchanged" },
+      },
+    });
+  });
+
+  test("rejects roster changes while a battle transaction owns pending fills", () => {
+    const { root, session } = startedStatBlockBattle();
+    const pendingAct = discoverBattleActs(session).find(
+      (candidate) => candidate.initialHoles.length > 0,
+    );
+    if (pendingAct === undefined) {
+      throw new Error("Expected a battle act with a pending fill frontier.");
+    }
+    const pending = settleBattleRuntimeTransaction({
+      session,
+      transaction: null,
+      operation: {
+        kind: "ordinarySubject",
+        subject: pendingAct.subject,
+        fills: [],
+      },
+      statBlockCatalog: root.statBlockCatalog,
+    });
+    expect(pending.tag).toBe("needsHoles");
+    expect(
+      root.sessionStore.storeBattleTransactionResult(session, pending),
+    ).toEqual(Either.right(undefined));
+
+    expect(
+      readToolPayload(
+        handleToolCall(root, "battle_lifecycle", {
+          operation: {
+            kind: "addCombatant",
+            combatant: {
+              kind: "statBlock",
+              ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+              statBlockId: "stat_block_wolf",
+              combatantId: "pending-roster-add",
+              initiative: 4,
+              admissionSource: { kind: "encounterParticipant" },
+            },
+          },
+        }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "BATTLE_FILLS_PENDING",
+        recovery: { tag: "battleAndCharacterSessionsUnchanged" },
+      },
     });
   });
 });
