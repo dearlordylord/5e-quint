@@ -127,6 +127,11 @@ import {
 import { boundPersistentAreaSaveDamageEffect } from "./persistent-area-save-damage-binding.ts";
 import { spellProcedureBoundToActiveEffect } from "./spell-active-effect-binding.ts";
 import {
+  boundDirectionalPersistentAreaEffect,
+  boundPersistentAreaSaveConditionEffect,
+  boundPersistentAreaSaveConditionEscapeEffect,
+} from "./persistent-spell-area-binding.ts";
+import {
   canonicalHeldObjectIdsForActor,
   executeCompelledDropHeldObjectFactsHole,
   compelledNextTurnBehaviorEffectsForActor,
@@ -1146,11 +1151,18 @@ function persistentAreaSaveConditionEntrySaveActs(
         if (effect.kind !== "persistentAreaSaveCondition") {
           return [];
         }
+        const boundEffect = boundPersistentAreaSaveConditionEffect(
+          state,
+          effect,
+        );
+        if (boundEffect === undefined) {
+          return [];
+        }
         return [
           persistentAreaSaveConditionSaveAct(
             state,
             actorId,
-            effect,
+            boundEffect,
             "entersArea",
           ),
         ];
@@ -1169,11 +1181,18 @@ function persistentAreaSaveConditionEndTurnActs(
         if (effect.kind !== "persistentAreaSaveCondition") {
           return [];
         }
+        const boundEffect = boundPersistentAreaSaveConditionEffect(
+          state,
+          effect,
+        );
+        if (boundEffect === undefined) {
+          return [];
+        }
         return [
           persistentAreaSaveConditionSaveAct(
             state,
             actorId,
-            effect,
+            boundEffect,
             "endsTurnInArea",
           ),
         ];
@@ -1212,10 +1231,16 @@ function activePersistentAreaSaveConditionEscapeEffects(
   state: BattleState,
 ): readonly PersistentAreaSaveConditionEscapeEffect[] {
   return [...state.combatants].flatMap(([, combatant]) =>
-    combatant.activeEffects.filter(
-      (effect): effect is PersistentAreaSaveConditionEscapeEffect =>
-        effect.kind === "persistentAreaSaveConditionEscape",
-    ),
+    combatant.activeEffects.flatMap((effect) => {
+      if (effect.kind !== "persistentAreaSaveConditionEscape") {
+        return [];
+      }
+      const boundEffect = boundPersistentAreaSaveConditionEscapeEffect(
+        state,
+        effect,
+      );
+      return boundEffect === undefined ? [] : [boundEffect];
+    }),
   );
 }
 
@@ -1343,10 +1368,13 @@ function activeDirectionalPersistentAreaEffects(
   state: BattleState,
 ): readonly DirectionalPersistentAreaEffect[] {
   return [...state.combatants.values()].flatMap((combatant) =>
-    combatant.activeEffects.filter(
-      (effect): effect is DirectionalPersistentAreaEffect =>
-        effect.kind === "directionalPersistentArea",
-    ),
+    combatant.activeEffects.flatMap((effect) => {
+      if (effect.kind !== "directionalPersistentArea") {
+        return [];
+      }
+      const boundEffect = boundDirectionalPersistentAreaEffect(state, effect);
+      return boundEffect === undefined ? [] : [boundEffect];
+    }),
   );
 }
 

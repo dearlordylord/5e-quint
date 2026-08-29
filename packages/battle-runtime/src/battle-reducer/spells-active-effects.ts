@@ -143,6 +143,12 @@ import {
   battleCreatureWithoutSpellCreatedHeldObjectHand,
 } from "../active-effect/lifecycle.ts";
 import {
+  boundPersistentAreaSaveCompositeEffect,
+  boundPersistentAreaSaveConditionEscapeEffect,
+  magicalDarknessPointOriginRadiusFeet,
+  persistentAreaTraitRadiusFeet,
+} from "./persistent-spell-area-binding.ts";
+import {
   endOfNextTurnExpiration,
   END_OF_NEXT_TURN_DURING_TURN,
 } from "./spell-end-target-state.ts";
@@ -1071,24 +1077,34 @@ export function battleObscurementZones(
   return [...state.combatants.values()].flatMap(
     (combatant): readonly BattleObscurementZone[] =>
       combatant.activeEffects.flatMap(
-        (effect): readonly BattleObscurementZone[] =>
-          effect.kind === "persistentAreaTrait"
-            ? [
-                {
-                  kind: "spellObscurementZone",
-                  sourceProcedureRef: effect.sourceProcedureRef,
-                  sourceCombatantId: effect.sourceCombatantId,
-                  obscurement: "heavilyObscured",
-                  area: {
-                    kind: "pointOriginSphere",
-                    areaId: effect.areaId,
-                    radiusFeet: effect.radiusFeet,
+        (effect): readonly BattleObscurementZone[] => {
+          if (effect.kind === "persistentAreaTrait") {
+            const radiusFeet = persistentAreaTraitRadiusFeet(state, effect);
+            return radiusFeet === undefined
+              ? []
+              : [
+                  {
+                    kind: "spellObscurementZone",
+                    sourceProcedureRef: effect.sourceProcedureRef,
+                    sourceCombatantId: effect.sourceCombatantId,
+                    obscurement: "heavilyObscured",
+                    area: {
+                      kind: "pointOriginSphere",
+                      areaId: effect.areaId,
+                      radiusFeet,
+                    },
+                    expiresAt: effect.expiresAt,
                   },
-                  expiresAt: effect.expiresAt,
-                },
-              ]
-            : effect.kind === "magicalDarknessPointOrigin"
-              ? [
+                ];
+          }
+          if (effect.kind === "magicalDarknessPointOrigin") {
+            const radiusFeet = magicalDarknessPointOriginRadiusFeet(
+              state,
+              effect,
+            );
+            return radiusFeet === undefined
+              ? []
+              : [
                   {
                     kind: "spellMagicalDarknessZone",
                     sourceProcedureRef: effect.sourceProcedureRef,
@@ -1096,45 +1112,61 @@ export function battleObscurementZones(
                     area: {
                       kind: "pointOriginSphere",
                       areaId: effect.areaId,
-                      radiusFeet: effect.radiusFeet,
+                      radiusFeet,
                     },
                     expiresAt: effect.expiresAt,
                   },
-                ]
-              : effect.kind === "persistentAreaSaveConditionEscape"
-                ? [
-                    {
-                      kind: "spellObscurementZone",
-                      sourceProcedureRef: effect.sourceProcedureRef,
-                      sourceCombatantId: effect.sourceCombatantId,
-                      obscurement: "lightlyObscured",
-                      area: {
-                        kind: "pointOriginCube",
-                        areaId: effect.areaId,
-                        sideFeet: effect.sideFeet,
-                      },
-                      expiresAt: effect.expiresAt,
+                ];
+          }
+          if (effect.kind === "persistentAreaSaveConditionEscape") {
+            const boundEffect = boundPersistentAreaSaveConditionEscapeEffect(
+              state,
+              effect,
+            );
+            return boundEffect === undefined
+              ? []
+              : [
+                  {
+                    kind: "spellObscurementZone",
+                    sourceProcedureRef: effect.sourceProcedureRef,
+                    sourceCombatantId: effect.sourceCombatantId,
+                    obscurement: "lightlyObscured",
+                    area: {
+                      kind: "pointOriginCube",
+                      areaId: effect.areaId,
+                      sideFeet: boundEffect.sideFeet,
                     },
-                  ]
-                : effect.kind === "persistentAreaSaveComposite"
-                  ? [
-                      {
-                        kind: "spellObscurementZone",
-                        sourceProcedureRef: effect.sourceProcedureRef,
-                        sourceCombatantId: effect.sourceCombatantId,
-                        obscurement: "heavilyObscured",
-                        area: {
-                          kind: "pointOriginCylinder",
-                          areaId: effect.areaId,
-                          radiusFeet: effect.radiusFeet,
-                          heightFeet: effect.heightFeet,
-                        },
-                        expiresAt: effect.expiresAt,
-                      },
-                    ]
-                  : effect.kind === "persistentAreaSaveDamage"
-                    ? persistentAreaSaveDamageObscurementZone(combatant, effect)
-                    : [],
+                    expiresAt: effect.expiresAt,
+                  },
+                ];
+          }
+          if (effect.kind === "persistentAreaSaveComposite") {
+            const boundEffect = boundPersistentAreaSaveCompositeEffect(
+              state,
+              effect,
+            );
+            return boundEffect === undefined
+              ? []
+              : [
+                  {
+                    kind: "spellObscurementZone",
+                    sourceProcedureRef: effect.sourceProcedureRef,
+                    sourceCombatantId: effect.sourceCombatantId,
+                    obscurement: "heavilyObscured",
+                    area: {
+                      kind: "pointOriginCylinder",
+                      areaId: effect.areaId,
+                      radiusFeet: boundEffect.radiusFeet,
+                      heightFeet: boundEffect.heightFeet,
+                    },
+                    expiresAt: effect.expiresAt,
+                  },
+                ];
+          }
+          return effect.kind === "persistentAreaSaveDamage"
+            ? persistentAreaSaveDamageObscurementZone(combatant, effect)
+            : [];
+        },
       ),
   );
 }
@@ -1965,10 +1997,6 @@ export function applyPersistentAreaSaveConditionCastEffects(input: {
               kind: "heightenedSpellTargetDisadvantage" as const,
               targetId: input.heightenedSpellTargetId,
             },
-      save: {
-        ability: input.invocation.ability,
-        dc: input.invocation.dc,
-      },
       expiresAt: {
         kind: "duration" as const,
         durationTicks: input.invocation.durationTicks,
@@ -2074,7 +2102,6 @@ export function applyPersistentAreaTraitCastEffect(input: {
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
-      radiusFeet: input.invocation.targeting.radiusFeet,
       expiresAt: {
         kind: "concentration" as const,
         combatantId: input.actorId,
@@ -2104,7 +2131,6 @@ export function applyMagicalDarknessPointOriginCastEffect(input: {
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.areaChoice.areaId,
-      radiusFeet: input.invocation.targeting.radiusFeet,
       expiresAt: {
         kind: "concentration" as const,
         combatantId: input.actorId,
@@ -2281,8 +2307,6 @@ export function applyAreaMovementDistanceDamageCastEffect(input: {
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
-      damage: input.invocation.damage,
-      damagePerFeet: input.invocation.damagePerFeet,
       expiresAt: {
         kind: "concentration" as const,
         combatantId: input.actorId,
@@ -2344,11 +2368,6 @@ export function applyPersistentAreaSaveConditionEscapeCastEffect(input: {
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
-      sideFeet: input.invocation.targeting.sideFeet,
-      save: {
-        ability: input.invocation.ability,
-        dc: input.invocation.dc,
-      },
       entrySavedThisTurn: [],
       startTurnSavedThisTurn: [],
       expiresAt: {
@@ -2377,12 +2396,6 @@ export function applyPersistentAreaSaveCompositeCastEffect(input: {
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
-      radiusFeet: input.invocation.targeting.radiusFeet,
-      heightFeet: input.invocation.targeting.heightFeet,
-      save: {
-        ability: input.invocation.ability,
-        dc: input.invocation.dc,
-      },
       savedThisTurn: [],
       expiresAt: {
         kind: "concentration" as const,
@@ -2496,16 +2509,6 @@ export function applyDirectionalPersistentAreaCastEffect(input: {
         actorId: input.actorId,
         round: input.state.initiative.round,
       },
-      line: {
-        lengthFeet: input.invocation.targeting.lengthFeet,
-        widthFeet: input.invocation.targeting.widthFeet,
-      },
-      save: {
-        ability: input.invocation.ability,
-        dc: input.invocation.dc,
-      },
-      pushDistanceFeet: input.invocation.pushDistanceFeet,
-      movementCost: input.invocation.movementCost,
       expiresAt: {
         kind: "concentration" as const,
         combatantId: input.actorId,

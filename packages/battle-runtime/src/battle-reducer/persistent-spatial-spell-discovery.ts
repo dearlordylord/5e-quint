@@ -27,16 +27,17 @@ import type {
   CollisionRepositionPersistentAreaSaveDamageSpellProcedureExecution,
   DirectedRepositionPersistentAreaSaveDamageSpellProcedureExecution,
 } from "../procedure-execution/spell-procedure-execution.ts";
+import type {
+  BoundDirectionalPersistentAreaEffect,
+  BoundPersistentAreaSaveConditionEffect,
+  BoundPersistentAreaSaveConditionEscapeEffect,
+} from "./persistent-spell-area-binding.ts";
 
-export type PersistentAreaSaveConditionEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "persistentAreaSaveCondition" }
->;
+export type PersistentAreaSaveConditionEffect =
+  BoundPersistentAreaSaveConditionEffect;
 
-export type PersistentAreaSaveConditionEscapeEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "persistentAreaSaveConditionEscape" }
->;
+export type PersistentAreaSaveConditionEscapeEffect =
+  BoundPersistentAreaSaveConditionEscapeEffect;
 
 export type RamMovablePersistentAreaEffect = Extract<
   BattleActiveEffect,
@@ -72,10 +73,8 @@ export type MovablePersistentAreaEffect = Extract<
   readonly damage: DirectedRepositionPersistentAreaSaveDamageSpellProcedureExecution["damage"];
 };
 
-export type DirectionalPersistentAreaEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "directionalPersistentArea" }
->;
+export type DirectionalPersistentAreaEffect =
+  BoundDirectionalPersistentAreaEffect;
 
 type HazardSavingThrow =
   | PersistentAreaSaveConditionEffect["save"]

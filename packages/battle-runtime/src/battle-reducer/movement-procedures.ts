@@ -83,6 +83,12 @@ import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import { rolledDiceFillForHole } from "./fill-hole-protocol.ts";
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { validateControlledVerticalSuspensionMovementFact } from "./controlled-vertical-suspension.ts";
+import {
+  boundAreaMovementDistanceDamageEffect,
+  boundDirectionalPersistentAreaEffect,
+  type BoundAreaMovementDistanceDamageEffect,
+  type BoundDirectionalPersistentAreaEffect,
+} from "./persistent-spell-area-binding.ts";
 import { maxFixedCostMovementReplacementDistanceFeet } from "./fixed-cost-movement-replacement.ts";
 import { movementHole } from "./movement-holes.ts";
 import {
@@ -799,10 +805,7 @@ function opportunityAttackThreatIdentityKey(
   return JSON.stringify([reactorId, attackExecutionSelectionKey(selection)]);
 }
 
-type AreaMovementDistanceDamageEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "areaMovementDistanceDamage" }
->;
+type AreaMovementDistanceDamageEffect = BoundAreaMovementDistanceDamageEffect;
 
 type AreaMovementDistanceDamageRequest = {
   readonly effect: AreaMovementDistanceDamageEffect;
@@ -825,7 +828,7 @@ function areaMovementDistanceDamageEffectFor(
     effect.sourceCombatantId === source.sourceCombatantId &&
     effect.sourceProcedureRef === source.sourceProcedureRef &&
     effect.areaId === source.areaId
-    ? effect
+    ? boundAreaMovementDistanceDamageEffect(state, effect)
     : undefined;
 }
 
@@ -1438,10 +1441,7 @@ function validateDirectionalPersistentAreaMovementFact(
 function activeDirectionalPersistentAreaForMovementFact(
   state: BattleState,
   fact: BattleDirectionalPersistentAreaMovementFact,
-): Extract<
-  BattleActiveEffect,
-  { readonly kind: "directionalPersistentArea" }
-> | null {
+): BoundDirectionalPersistentAreaEffect | null {
   const source = state.combatants.get(fact.sourceCombatantId);
   const effect = source?.activeEffects.find(
     (candidate) => candidate.effectRef === fact.effectRef,
@@ -1455,7 +1455,7 @@ function activeDirectionalPersistentAreaForMovementFact(
   ) {
     return null;
   }
-  return effect;
+  return boundDirectionalPersistentAreaEffect(state, effect) ?? null;
 }
 
 type AreaMovementCostFactResult =
