@@ -78,7 +78,7 @@ type SpellProcedureSubject = Extract<
       | "actionSpell"
       | "bonusActionSpell"
       | "bonusActionDashSpell"
-      | "findFamiliarTouchSpell";
+      | "spawnedCompanionTouchSpellProxy";
   }
 >;
 

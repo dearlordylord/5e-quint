@@ -1441,7 +1441,9 @@ function glyphStoredSpellInvocationRequiresFullDurationOwner(
   return (
     ("spellRuleFacts" in invocation
       ? invocation.spellRuleFacts.duration.kind
-      : invocation.spell.mechanics.duration.kind) === "concentration"
+      : "spell" in invocation
+        ? invocation.spell.mechanics.duration.kind
+        : null) === "concentration"
   );
 }
 
@@ -2124,6 +2126,65 @@ function glyphStoredConcentrationFullDurationEffect(input: {
     input.effect.sourceProcedureRef !== input.sourceProcedureRef
   ) {
     return input.effect;
+  }
+  if (input.effect.kind === "persistentAreaSaveDamage") {
+    return Match.value(input.effect).pipe(
+      Match.when(
+        { lifecycle: { kind: "stationary" } },
+        (effect) =>
+          ({
+            ...effect,
+            expiresAt: {
+              kind: "duration",
+              durationTicks: input.fullDurationTicks,
+            },
+          }) satisfies BattleActiveEffect,
+      ),
+      Match.when(
+        { lifecycle: { kind: "sourceTurnTranslation" } },
+        (effect) =>
+          ({
+            ...effect,
+            expiresAt: {
+              kind: "duration",
+              durationTicks: input.fullDurationTicks,
+            },
+          }) satisfies BattleActiveEffect,
+      ),
+      Match.when(
+        {
+          lifecycle: {
+            kind: "casterActionReposition",
+            collisionDisposition: "stopAndAffectAdjacent",
+          },
+        },
+        (effect) =>
+          ({
+            ...effect,
+            expiresAt: {
+              kind: "duration",
+              durationTicks: input.fullDurationTicks,
+            },
+          }) satisfies BattleActiveEffect,
+      ),
+      Match.when(
+        {
+          lifecycle: {
+            kind: "casterActionReposition",
+            collisionDisposition: "ignoreObstacles",
+          },
+        },
+        (effect) =>
+          ({
+            ...effect,
+            expiresAt: {
+              kind: "duration",
+              durationTicks: input.fullDurationTicks,
+            },
+          }) satisfies BattleActiveEffect,
+      ),
+      Match.exhaustive,
+    );
   }
   return {
     ...input.effect,

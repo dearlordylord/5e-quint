@@ -46,7 +46,7 @@ export function executeStoredGlyphSpellProcedure(
         selfOriginAreaAnchorId: release.anchorId,
       }),
     ),
-    byReleaseKind("greaseGroundHazard", (release) =>
+    byReleaseKind("persistentAreaSaveCondition", (release) =>
       resolveGreaseGroundHazardSpellAct({
         input: glyphInput,
         actorId,

@@ -607,6 +607,9 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
     ) {
       throw new Error("Expected active Insect Plague.");
     }
+    if (effect.expiresAt.kind !== "concentration") {
+      throw new Error("Expected an ordinary concentration effect.");
+    }
     const allocation = allocateBattleEffectExecutionRefForCreature({
       owner: caster,
     });
@@ -703,12 +706,16 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
     ) {
       throw new Error("Expected active Insect Plague.");
     }
+    const concentrationExpiration = {
+      kind: "concentration" as const,
+      combatantId: effect.sourceCombatantId,
+    };
     const collidingUnrelatedEffect = {
       kind: "spellDashBonusAction" as const,
       effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
-      expiresAt: effect.expiresAt,
+      expiresAt: concentrationExpiration,
     };
     const stateWithCrossKindCollision = {
       ...cast,

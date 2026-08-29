@@ -37,8 +37,8 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import type { TriggeredReactionSaveGatedDamageResolution } from "./resolution-contract.ts";
-import { Schema } from "effect";
+import { Match, Schema } from "effect";
+import { invalidResult } from "../result-helpers.ts";
 import {
   AbilitySchema,
   CantripSpellAccessSchema,
@@ -226,21 +226,44 @@ function readiedSaveGatedDamageActs(
 function resolveSaveGatedDamage(
   input: SaveGatedDamageResolveInput,
 ): BattleResolutionResult {
-  if (isTriggeredReactionSaveGatedDamageResolution(input)) {
-    return resolveTriggeredReactionSaveGatedDamage(
-      { ...input.input, invocation: input.invocation },
-      input.fillSet,
-    );
-  }
-  return resolveSaveGateDamageSpellAct(spellProcedureResolutionContext(input));
-}
-
-function isTriggeredReactionSaveGatedDamageResolution(
-  input: SaveGatedDamageResolveInput,
-): input is TriggeredReactionSaveGatedDamageResolution {
-  return (
-    input.input.subject.tag === "runtimeCommand" &&
-    input.input.subject.command === "castTriggeredReactionSpell"
+  return Match.value(input).pipe(
+    Match.when(
+      {
+        invocation: {
+          access: { tag: "prepared" },
+          castingTime: { kind: "reaction" },
+          resource: { tag: "spellSlot" },
+        },
+        input: {
+          subject: {
+            tag: "runtimeCommand",
+            command: "castTriggeredReactionSpell",
+          },
+        },
+      },
+      (triggered) =>
+        resolveTriggeredReactionSaveGatedDamage(
+          { ...triggered.input, invocation: triggered.invocation },
+          triggered.fillSet,
+        ),
+    ),
+    Match.when({ input: { subject: { tag: "actionSpell" } } }, (ordinary) =>
+      resolveSaveGateDamageSpellAct(spellProcedureResolutionContext(ordinary)),
+    ),
+    Match.when(
+      { input: { subject: { tag: "bonusActionSpell" } } },
+      (ordinary) =>
+        resolveSaveGateDamageSpellAct(
+          spellProcedureResolutionContext(ordinary),
+        ),
+    ),
+    Match.orElse(() =>
+      invalidResult(
+        input.input.state,
+        "unsupportedSubject",
+        "Save-gated damage procedure requires a spell-cast resolution lane.",
+      ),
+    ),
   );
 }
 

@@ -206,7 +206,7 @@ type StoredGlyphOrdinaryReleaseInvocation = Exclude<
       | GlyphStoredSingleCreatureActiveEffectProcedure
       | "saveGatedDamage"
       | "saveGatedCondition"
-      | "greaseGroundHazard";
+      | "persistentAreaSaveCondition";
   }
 >;
 
@@ -288,11 +288,11 @@ export type StoredGlyphSpellReleasePlan =
       readonly anchorId: CombatantId;
     }
   | {
-      readonly kind: "greaseGroundHazard";
+      readonly kind: "persistentAreaSaveCondition";
       readonly invocation: StoredGlyphExecution<
         Extract<
           GlyphStoredSpellInvocation,
-          { readonly procedure: "greaseGroundHazard" }
+          { readonly procedure: "persistentAreaSaveCondition" }
         >
       >;
     }

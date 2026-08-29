@@ -723,10 +723,7 @@ export type BattleActiveEffect = (
           readonly damageType: Extract<DamageType, "piercing">;
         };
         readonly savedThisTurn: readonly CombatantId[];
-        readonly expiresAt: Extract<
-          BattleActiveEffectExpiration,
-          { readonly kind: "concentration" }
-        > & { readonly durationTicks: ElapsedTimeTicks };
+        readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
       })
   | (BattleSpellEffectBase &
       BattleReplayAddressableEffect & {
@@ -750,10 +747,7 @@ export type BattleActiveEffect = (
           readonly damageType: Extract<DamageType, "poison">;
         };
         readonly savedThisTurn: readonly CombatantId[];
-        readonly expiresAt: Extract<
-          BattleActiveEffectExpiration,
-          { readonly kind: "concentration" }
-        > & { readonly durationTicks: ElapsedTimeTicks };
+        readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
       })
   | (BattleSpellEffectBase & {
       readonly kind: "persistentAreaSaveDamage";
