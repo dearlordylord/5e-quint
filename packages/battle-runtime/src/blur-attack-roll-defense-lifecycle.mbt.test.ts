@@ -93,7 +93,7 @@ const BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG: Readonly<
 
 type BlurBypassSense = Extract<
   BattleTargetSpatialFact,
-  { readonly kind: "attackAttackerPerceivesBlurredTargetWithSense" }
+  { readonly kind: "attackerPerceivesObscuredTargetWithSense" }
 >["sense"];
 
 type BlurAttackRollDefenseProjection = {
@@ -135,7 +135,7 @@ const driverSchema = {
 
 function createBlurAttackRollDefenseLifecycleDriver() {
   return defineDriver(driverSchema, () => {
-    let state = initialRuntimeState();
+    let state: BlurAttackRollDefenseRuntimeState = initialRuntimeState();
     return {
       init: () => {
         state = initialRuntimeState();
@@ -460,7 +460,7 @@ function attackTargetFacts(
   const facts: BattleTargetSpatialFact[] = [];
   if (state.bypassSense !== undefined) {
     facts.push({
-      kind: "attackAttackerPerceivesBlurredTargetWithSense",
+      kind: "attackerPerceivesObscuredTargetWithSense",
       attackerId: state.attackerId,
       targetId: spellCasterId,
       sense: state.bypassSense,

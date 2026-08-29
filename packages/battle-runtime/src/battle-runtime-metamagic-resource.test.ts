@@ -1144,7 +1144,9 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     );
     expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(2));
     expect(resolved.state.combatants.get(fighterId)?.hp).toBe(12);
-    expect(mirrorImageDuplicatesRemaining(resolved.state, fighterId)).toBe(2);
+    expect(duplicateHitInterceptionRemaining(resolved.state, fighterId)).toBe(
+      2,
+    );
   });
 
   test("discovers and resolves Quickened action spells after the Magic action is already spent", () => {
@@ -4703,7 +4705,11 @@ function supportedInvocationFor(
   const invocation = supportedSpellActs(session.state, actor).find(
     (candidate) => candidate.sourceProcedureRef === procedureRef,
   );
-  if (invocation === undefined) {
+  if (
+    invocation === undefined ||
+    !("spellRuleFacts" in invocation) ||
+    !("resource" in invocation)
+  ) {
     throw new Error(`Expected ${targetSpellId} ${procedure} invocation.`);
   }
   return invocation;
@@ -4713,7 +4719,7 @@ function admittedSubtleProjection(
   state: BattleState,
   invocation: ReturnType<typeof supportedSpellActs>[number],
 ) {
-  if (invocation.resource.tag !== "spellSlot") {
+  if (!("resource" in invocation) || invocation.resource.tag !== "spellSlot") {
     throw new Error("Expected Spell Slot invocation.");
   }
   const admission = admitSpellMetamagicApplications({
@@ -4890,7 +4896,7 @@ function sanctuaryRetargetFill(
   };
 }
 
-function mirrorImageDuplicatesRemaining(
+function duplicateHitInterceptionRemaining(
   state: BattleState,
   targetId: ReturnType<typeof combatantId>,
 ): number | null {
@@ -4900,8 +4906,8 @@ function mirrorImageDuplicatesRemaining(
       candidate,
     ): candidate is Extract<
       BattleActiveEffect,
-      { readonly kind: "mirrorImageDuplicates" }
-    > => candidate.kind === "mirrorImageDuplicates",
+      { readonly kind: "duplicateHitInterception" }
+    > => candidate.kind === "duplicateHitInterception",
   );
   return effect?.remainingDuplicates ?? null;
 }

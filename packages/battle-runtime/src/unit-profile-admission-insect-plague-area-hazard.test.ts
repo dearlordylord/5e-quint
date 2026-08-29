@@ -20,15 +20,15 @@ import { requireResolved } from "./battle-runtime.test-support.ts";
 import { allocateBattleEffectExecutionRefForCreature } from "./effect-execution-ref.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
-  persistentAreaSaveDamageAreaFill,
-  persistentAreaSaveDamageSaveAct,
+  insectPlagueAreaFill,
+  insectPlagueAreaHazardSaveAct,
   singleTargetSavingThrowOutcomeFill,
   spellAct,
   spellHoleInvocation,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
-  persistentAreaSaveDamageAreaId,
-  persistentAreaSaveDamageUnitId,
+  insectPlagueAreaId,
+  insectPlagueUnitId,
   spellCasterId,
   spellTargetId,
 } from "./unit-profile-admission-catalog.test-support.ts";
@@ -42,7 +42,7 @@ import {
   spellSlotInvocationRef,
   type BattleSubject,
 } from "./unit-profile-admission.test-support.ts";
-import type { BattleInsectPlagueAreaHazardTrigger } from "./battle-state-execution.ts";
+import type { BattleStationaryPersistentAreaSaveDamageTrigger } from "./battle-state-execution.ts";
 import { resolveInsectPlagueAreaSaveDamage } from "./battle-reducer/persistent-area-save-damage.ts";
 
 function castInsectPlague() {
@@ -55,14 +55,14 @@ function castInsectPlague() {
   });
   const act = spellAct({
     session,
-    spellId: persistentAreaSaveDamageUnitId,
+    spellId: insectPlagueUnitId,
     slotLevel: 5,
   });
   const area = requireHole(act.initialHoles, "spellAreaChoice");
   const cast = resolveBattleSubject({
     state: session.state,
     subject: act.subject,
-    fills: [persistentAreaSaveDamageAreaFill(area)],
+    fills: [insectPlagueAreaFill(area)],
   });
   if (cast.tag !== "resolved") {
     throw new Error(
@@ -103,7 +103,7 @@ function persistentAreaSaveDamageDifficultTerrainFact(
         effectRef: effect.effectRef,
         sourceCombatantId: spellCasterId,
         sourceProcedureRef: effect.sourceProcedureRef,
-        areaId: persistentAreaSaveDamageAreaId,
+        areaId: insectPlagueAreaId,
       },
     ],
     totalDistanceFeet: movementFeet(10),
@@ -114,9 +114,9 @@ function persistentAreaSaveDamageDifficultTerrainFact(
 function resolveInsectPlagueSave(input: {
   readonly session: BattleRuntimeSession;
   readonly succeeded: boolean;
-  readonly trigger: BattleInsectPlagueAreaHazardTrigger;
+  readonly trigger: BattleStationaryPersistentAreaSaveDamageTrigger;
 }) {
-  const saveAct = persistentAreaSaveDamageSaveAct(
+  const saveAct = insectPlagueAreaHazardSaveAct(
     input.session,
     spellTargetId,
     input.trigger,
@@ -191,7 +191,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
       tag: "actionSpell",
       actorId: spellCasterId,
       invocation: spellSlotInvocationRef(
-        persistentAreaSaveDamageUnitId,
+        insectPlagueUnitId,
         5,
         "persistentAreaSaveDamage",
       ),
@@ -233,7 +233,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
           kind: "persistentAreaSaveDamage",
           sourceProcedureRef: act.subject.procedureRef,
           sourceCombatantId: spellCasterId,
-          areaId: persistentAreaSaveDamageAreaId,
+          areaId: insectPlagueAreaId,
           radiusFeet: movementFeet(20),
           save: { ability: "con", dc: { kind: "caster_spell_save_dc" } },
           damage: { expr: { dice: 4, dieSize: 10 }, damageType: "piercing" },
@@ -254,7 +254,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
         obscurement: "lightlyObscured",
         area: {
           kind: "pointOriginSphere",
-          areaId: persistentAreaSaveDamageAreaId,
+          areaId: insectPlagueAreaId,
           radiusFeet: movementFeet(20),
         },
       }),
@@ -267,7 +267,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
         },
         subject: act.subject,
         fills: [
-          persistentAreaSaveDamageAreaFill(
+          insectPlagueAreaFill(
             requireHole(act.initialHoles, "spellAreaChoice"),
           ),
         ],
@@ -380,7 +380,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
       state: cast,
       context: session.context,
     });
-    const appearanceAct = persistentAreaSaveDamageSaveAct(
+    const appearanceAct = insectPlagueAreaHazardSaveAct(
       appearanceSession,
       spellTargetId,
       "appearsInArea",
@@ -436,7 +436,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
       spellTargetId,
     ]);
 
-    const entryAct = persistentAreaSaveDamageSaveAct(
+    const entryAct = insectPlagueAreaHazardSaveAct(
       battleRuntimeSessionForTest({
         state: appeared.state,
         context: session.context,
@@ -481,7 +481,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
     expect(
       resolveBattleSubject({
         state: entrySaved.state,
-        subject: persistentAreaSaveDamageSaveAct(
+        subject: insectPlagueAreaHazardSaveAct(
           battleRuntimeSessionForTest({
             state: entrySaved.state,
             context: session.context,
@@ -513,7 +513,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
     const targetTurn = requireResolved(
       endTurn({ state: appeared.state, actorId: spellCasterId }),
     );
-    const fabricatedAppearance = persistentAreaSaveDamageSaveAct(
+    const fabricatedAppearance = insectPlagueAreaHazardSaveAct(
       battleRuntimeSessionForTest({
         state: targetTurn.state,
         context: session.context,
@@ -538,7 +538,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
 
   test("rejects a previously discovered save after concentration removes the hazard", () => {
     const { session, cast } = castInsectPlague();
-    const saveAct = persistentAreaSaveDamageSaveAct(
+    const saveAct = insectPlagueAreaHazardSaveAct(
       battleRuntimeSessionForTest({ state: cast, context: session.context }),
       spellTargetId,
       "appearsInArea",
@@ -571,7 +571,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
 
   test("binds a discovered save to the exact Insect Plague occurrence across same-area replacement", () => {
     const { session, cast } = castInsectPlague();
-    const saveAct = persistentAreaSaveDamageSaveAct(
+    const saveAct = insectPlagueAreaHazardSaveAct(
       battleRuntimeSessionForTest({ state: cast, context: session.context }),
       spellTargetId,
       "appearsInArea",
@@ -612,7 +612,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
 
   test("rejects a save when one owner contains duplicate effect occurrence references", () => {
     const { session, cast } = castInsectPlague();
-    const saveAct = persistentAreaSaveDamageSaveAct(
+    const saveAct = insectPlagueAreaHazardSaveAct(
       battleRuntimeSessionForTest({ state: cast, context: session.context }),
       spellTargetId,
       "appearsInArea",
@@ -643,7 +643,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
 
   test("rejects a save when a different effect kind collides with its occurrence reference", () => {
     const { session, cast } = castInsectPlague();
-    const saveAct = persistentAreaSaveDamageSaveAct(
+    const saveAct = insectPlagueAreaHazardSaveAct(
       battleRuntimeSessionForTest({ state: cast, context: session.context }),
       spellTargetId,
       "appearsInArea",

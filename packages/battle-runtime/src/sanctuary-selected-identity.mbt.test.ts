@@ -70,8 +70,8 @@ import {
   requireResultHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
-  persistentAreaSaveDamageAreaFill,
-  persistentAreaSaveDamageRamMovementFill,
+  flamingSphereAreaFill,
+  flamingSphereRamMovementFill,
   singleTargetSavingThrowOutcomeFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 
@@ -1384,9 +1384,7 @@ function castFlamingSphereAsAttacker(
       state: session.state,
       subject: act.subject,
       fills: [
-        persistentAreaSaveDamageAreaFill(
-          requireHole(act.initialHoles, "spellAreaChoice"),
-        ),
+        flamingSphereAreaFill(requireHole(act.initialHoles, "spellAreaChoice")),
       ],
     }),
   );
@@ -1397,7 +1395,7 @@ function resolveWardedFlamingSphereRamDamage(
   state: BattleState,
 ): ResolvedBattleResult {
   const act = persistentAreaSaveDamageRamAct(state, wardedId);
-  const movementFill = persistentAreaSaveDamageRamMovementFill(
+  const movementFill = flamingSphereRamMovementFill(
     requireHole(act.initialHoles, "movableZoneRamMovement"),
   );
   const saveFill = singleTargetSavingThrowOutcomeFill(

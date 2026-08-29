@@ -55,7 +55,7 @@ import {
   bardicInspirationUnit,
   characterSeed,
   decodeUnitRecordSync,
-  spawnedCompanionLifecycleInput,
+  findFamiliarInput,
   spellRecord,
   startBattle,
   statBlockCreatureInit,
@@ -536,7 +536,7 @@ describe("character battle resource projections", () => {
           ...wizardSpellcasting({
             invocationSpellAccesses: [
               {
-                tag: "spawnedCompanionLifecycle",
+                tag: "pactOfTheChainFindFamiliar",
                 spell: spellRecord("fire_bolt"),
               },
             ],
@@ -795,7 +795,7 @@ describe("character battle resource projections", () => {
     expect(
       parseCharacterBattleInvocationSpellAccesses([
         {
-          tag: "spawnedCompanionLifecycle",
+          tag: "pactOfTheChainFindFamiliar",
           spell: spellRecord("fire_bolt"),
         },
       ]),
@@ -805,9 +805,9 @@ describe("character battle resource projections", () => {
     });
 
     const malformedFindFamiliar = decodeUnitRecordSync({
-      ...spawnedCompanionLifecycleInput,
+      ...findFamiliarInput,
       mechanics: {
-        ...spawnedCompanionLifecycleInput.mechanics,
+        ...findFamiliarInput.mechanics,
         mode: {
           label: "creature type",
           options: [
@@ -826,7 +826,7 @@ describe("character battle resource projections", () => {
     expect(
       parseCharacterBattleInvocationSpellAccesses([
         {
-          tag: "spawnedCompanionLifecycle",
+          tag: "pactOfTheChainFindFamiliar",
           spell: malformedFindFamiliar,
         },
       ]),

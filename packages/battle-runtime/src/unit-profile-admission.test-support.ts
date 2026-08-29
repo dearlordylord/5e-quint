@@ -70,12 +70,12 @@ import {
   spellSavingThrowOutcomeHole,
   validateSpellDamageFill,
 } from "./battle-reducer/spells-damage-fills.ts";
-import { supportedPreparedHideousLaughterProfile } from "./battle-reducer/spell-procedure-profiles/hideous-laughter.ts";
+import { supportedPreparedSaveGatedConditionWithRepeatProfile } from "./battle-reducer/spell-procedure-profiles/hideous-laughter.ts";
 import {
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
 } from "./battle-reducer/spell-procedure-profiles/_save-gate-helpers.ts";
-import { supportedPreparedSleepTargetAdmissionProfile } from "./battle-reducer/spell-procedure-profiles/sleep-target-admission.ts";
+import { supportedPreparedStagedSaveConditionProfile } from "./battle-reducer/spell-procedure-profiles/sleep-target-admission.ts";
 import { supportedPreparedHellishRebukeReactionSpellProfile } from "./battle-reducer/spells-profiles.ts";
 import { validateSavingThrowOutcomes } from "./battle-reducer/spells-resolve-save-gates.ts";
 import { characterBattleResourceForUnit } from "./character-battle-resources.ts";
@@ -390,10 +390,10 @@ export {
   startBattleWithInitialInitiativeSetup,
   STUNNING_STRIKE_SUPPORT_PROFILE,
   supportedPreparedHellishRebukeReactionSpellProfile,
-  supportedPreparedHideousLaughterProfile,
+  supportedPreparedSaveGatedConditionWithRepeatProfile,
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
-  supportedPreparedSleepTargetAdmissionProfile,
+  supportedPreparedStagedSaveConditionProfile,
   trueStrikeInput,
   validateSavingThrowOutcomes,
   validateSpellDamageFill,

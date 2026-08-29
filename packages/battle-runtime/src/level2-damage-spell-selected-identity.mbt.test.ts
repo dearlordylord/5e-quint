@@ -36,24 +36,24 @@ import {
 } from "./index.ts";
 import {
   acidArrowUnitId,
-  grantedAreaSaveDamageActionUnitId,
+  dragonsBreathUnitId,
   flameBladeUnitId,
-  persistentAreaSaveDamageUnitId,
+  flamingSphereUnitId,
   heatMetalUnitId,
-  persistentAreaSaveDamageUnitId,
+  moonbeamUnitId,
   scorchingRayUnitId,
   shatterUnitId,
   spellCasterId,
   spellTargetId,
-  spatialMeleeSpellAttackProxyUnitId,
+  spiritualWeaponUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   bonusSpellAct,
-  persistentAreaSaveDamageAreaFill,
-  persistentAreaSaveDamageEndTurnAct,
-  persistentAreaSaveDamageAreaFill,
-  persistentAreaSaveDamageEndTurnSaveAct,
+  flamingSphereAreaFill,
+  flamingSphereEndTurnAct,
+  moonbeamAreaFill,
+  moonbeamEndTurnSaveAct,
   singleTargetSavingThrowOutcomeFill,
   spellAct,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
@@ -65,9 +65,9 @@ type Level2DamageSpellUnitId =
   | typeof acidArrowUnitId
   | typeof grantedAreaSaveDamageActionUnitId
   | typeof flameBladeUnitId
-  | typeof persistentAreaSaveDamageUnitId
+  | typeof flamingSphereUnitId
   | typeof heatMetalUnitId
-  | typeof persistentAreaSaveDamageUnitId
+  | typeof moonbeamUnitId
   | typeof rayOfEnfeeblementUnitId
   | typeof scorchingRayUnitId
   | typeof shatterUnitId
@@ -166,10 +166,10 @@ defineSelectedIdentityReplayAndQntReplay({
       ],
     },
     {
-      unitId: persistentAreaSaveDamageUnitId,
+      unitId: flamingSphereUnitId,
       procedures: [
         selectedSpellProcedure("doDiscoverFlamingSphereHazard", {
-          spellId: persistentAreaSaveDamageUnitId,
+          spellId: flamingSphereUnitId,
           actionTag: "actionSpell",
           slotLevel: 2,
           procedure: "persistentAreaSaveDamage",
@@ -190,10 +190,10 @@ defineSelectedIdentityReplayAndQntReplay({
       ],
     },
     {
-      unitId: persistentAreaSaveDamageUnitId,
+      unitId: moonbeamUnitId,
       procedures: [
         selectedSpellProcedure("doDiscoverMoonbeamMovableZone", {
-          spellId: persistentAreaSaveDamageUnitId,
+          spellId: moonbeamUnitId,
           actionTag: "actionSpell",
           slotLevel: 2,
           procedure: "persistentAreaSaveDamage",
@@ -286,21 +286,19 @@ type HazardCastReplay = {
 };
 
 function replayFlamingSphereHazardRoute(): readonly BattleReducerRouteEvent[] {
-  return persistentAreaSaveDamageHazardCastReplay().route;
+  return flamingSphereHazardCastReplay().route;
 }
 
 function replayMoonbeamHazardRoute(): readonly BattleReducerRouteEvent[] {
-  return persistentAreaSaveDamageHazardCastReplay().route;
+  return moonbeamHazardCastReplay().route;
 }
 
-function persistentAreaSaveDamageHazardCastReplay(): HazardCastReplay {
+function flamingSphereHazardCastReplay(): HazardCastReplay {
   const route: BattleReducerRouteEvent[] = [startRoute()];
-  const state = selectedSpellBattle(
-    spellRecord(persistentAreaSaveDamageUnitId),
-  );
+  const state = selectedSpellBattle(spellRecord(flamingSphereUnitId));
   const act = spellAct({
     session: state,
-    spellId: persistentAreaSaveDamageUnitId,
+    spellId: flamingSphereUnitId,
     slotLevel: 2,
   });
   route.push(...routeEventsOfSubject(act, "Flaming Sphere discovery"));
@@ -308,7 +306,7 @@ function persistentAreaSaveDamageHazardCastReplay(): HazardCastReplay {
   const cast = resolveBattleSubject({
     state: state.state,
     subject: act.subject,
-    fills: [persistentAreaSaveDamageAreaFill(area)],
+    fills: [flamingSphereAreaFill(area)],
   });
   route.push(...routeEventsOfSubject(cast, "Flaming Sphere cast"));
   if (cast.tag !== "resolved") {
@@ -319,14 +317,12 @@ function persistentAreaSaveDamageHazardCastReplay(): HazardCastReplay {
   return { route, state: cast.state, session: state };
 }
 
-function persistentAreaSaveDamageHazardCastReplay(): HazardCastReplay {
+function moonbeamHazardCastReplay(): HazardCastReplay {
   const route: BattleReducerRouteEvent[] = [startRoute()];
-  const state = selectedSpellBattle(
-    spellRecord(persistentAreaSaveDamageUnitId),
-  );
+  const state = selectedSpellBattle(spellRecord(moonbeamUnitId));
   const act = spellAct({
     session: state,
-    spellId: persistentAreaSaveDamageUnitId,
+    spellId: moonbeamUnitId,
     slotLevel: 2,
   });
   route.push(...routeEventsOfSubject(act, "Moonbeam discovery"));
@@ -334,7 +330,7 @@ function persistentAreaSaveDamageHazardCastReplay(): HazardCastReplay {
   const cast = resolveBattleSubject({
     state: state.state,
     subject: act.subject,
-    fills: [persistentAreaSaveDamageAreaFill(area)],
+    fills: [moonbeamAreaFill(area)],
   });
   route.push(...routeEventsOfSubject(cast, "Moonbeam cast"));
   if (cast.tag !== "resolved") {
@@ -344,13 +340,13 @@ function persistentAreaSaveDamageHazardCastReplay(): HazardCastReplay {
 }
 
 function replayFlamingSphereExactDamageRoute(): readonly BattleReducerRouteEvent[] {
-  const replay = persistentAreaSaveDamageHazardCastReplay();
+  const replay = flamingSphereHazardCastReplay();
   const route = [...replay.route];
   const targetTurn = endTurn({ state: replay.state, actorId: spellCasterId });
   if (targetTurn.tag !== "resolved") {
     throw new Error("Expected Flaming Sphere caster end turn to resolve.");
   }
-  const saveAct = persistentAreaSaveDamageEndTurnAct(
+  const saveAct = flamingSphereEndTurnAct(
     battleRuntimeSessionForTest({
       ...replay.session,
       state: targetTurn.state,
@@ -380,13 +376,13 @@ function replayFlamingSphereExactDamageRoute(): readonly BattleReducerRouteEvent
 }
 
 function replayMoonbeamExactDamageRoute(): readonly BattleReducerRouteEvent[] {
-  const replay = persistentAreaSaveDamageHazardCastReplay();
+  const replay = moonbeamHazardCastReplay();
   const route = [...replay.route];
   const targetTurn = endTurn({ state: replay.state, actorId: spellCasterId });
   if (targetTurn.tag !== "resolved") {
     throw new Error("Expected Moonbeam caster end turn to resolve.");
   }
-  const saveAct = persistentAreaSaveDamageEndTurnSaveAct(
+  const saveAct = moonbeamEndTurnSaveAct(
     battleRuntimeSessionForTest({
       ...replay.session,
       state: targetTurn.state,

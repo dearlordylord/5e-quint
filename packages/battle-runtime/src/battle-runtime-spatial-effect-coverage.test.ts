@@ -13,7 +13,7 @@ import {
   requireResultHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
-  persistentAreaSaveDamageUnitId,
+  flamingSphereUnitId,
   greaseUnitId,
   sleetStormUnitId,
   spellCasterId,
@@ -22,9 +22,9 @@ import {
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
-  persistentAreaSaveDamageAreaFill,
-  persistentAreaSaveDamageRamAct,
-  persistentAreaSaveDamageRamMovementFill,
+  flamingSphereAreaFill,
+  flamingSphereRamAct,
+  flamingSphereRamMovementFill,
   persistentAreaSaveConditionEndTurnAct,
   greaseSavingThrowOutcomeFill,
   singleTargetSavingThrowOutcomeFill,
@@ -219,7 +219,7 @@ describe("battle runtime spatial-effect coverage", () => {
 
   test("Flaming Sphere ram discovers and resolves a target Concentration save before spending its Bonus Action", () => {
     const initial = spellBattle({
-      preparedSpells: [spellRecord(persistentAreaSaveDamageUnitId)],
+      preparedSpells: [spellRecord(flamingSphereUnitId)],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       casterClassLevels: [{ className: "wizard", level: 3 }],
       targetClassLevels: [{ className: "wizard", level: 3 }],
@@ -232,7 +232,7 @@ describe("battle runtime spatial-effect coverage", () => {
     });
     const sphereAct = spellAct({
       session: initial,
-      spellId: persistentAreaSaveDamageUnitId,
+      spellId: flamingSphereUnitId,
       slotLevel: 2,
     });
     const cast = requireResolved(
@@ -240,7 +240,7 @@ describe("battle runtime spatial-effect coverage", () => {
         state: initial.state,
         subject: sphereAct.subject,
         fills: [
-          persistentAreaSaveDamageAreaFill(
+          flamingSphereAreaFill(
             requireHole(sphereAct.initialHoles, "spellAreaChoice"),
           ),
         ],
@@ -276,10 +276,10 @@ describe("battle runtime spatial-effect coverage", () => {
       ...initial,
       state: casterTurn.state,
     });
-    const ram = persistentAreaSaveDamageRamAct(casterSession);
+    const ram = flamingSphereRamAct(casterSession);
     const movement = requireHole(ram.initialHoles, "movableZoneRamMovement");
     const save = requireHole(ram.initialHoles, "savingThrowOutcome");
-    const movementFill = persistentAreaSaveDamageRamMovementFill(movement, 30);
+    const movementFill = flamingSphereRamMovementFill(movement, 30);
     const saveFill = singleTargetSavingThrowOutcomeFill(
       save,
       spellTargetId,

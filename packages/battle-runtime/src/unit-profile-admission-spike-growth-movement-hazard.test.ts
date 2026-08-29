@@ -21,7 +21,7 @@ import {
   fixedCostMovementReplacementAct,
   spellAct,
   spellHoleInvocation,
-  areaMovementDistanceDamageAreaFill,
+  spikeGrowthAreaFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
@@ -44,7 +44,7 @@ import {
   orcRelentlessEnduranceUnitId,
   spellCasterId,
   spellTargetId,
-  areaMovementDistanceDamageAreaId,
+  spikeGrowthAreaId,
   spikeGrowthUnitId,
   unitLibrary,
   webAreaId,
@@ -109,7 +109,7 @@ function spikeGrowthTargetTurnState(
   const cast = resolveBattleSubject({
     state: state.state,
     subject: act.subject,
-    fills: [areaMovementDistanceDamageAreaFill(area)],
+    fills: [spikeGrowthAreaFill(area)],
   });
   if (cast.tag !== "resolved") {
     throw new Error("Expected Spike Growth cast to resolve.");
@@ -158,7 +158,7 @@ function areaMovementDistanceDamageAreaDifficultTerrain(
         effectRef: hazard.effectRef,
         sourceCombatantId: spellCasterId,
         sourceProcedureRef: hazard.sourceProcedureRef,
-        areaId: areaMovementDistanceDamageAreaId,
+        areaId: spikeGrowthAreaId,
         damageDistanceFeet: movementFeet(input.damageDistanceFeet),
       },
     ],
@@ -380,7 +380,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
     const resolved = resolveBattleSubject({
       state: state.state,
       subject: act.subject,
-      fills: [areaMovementDistanceDamageAreaFill(area)],
+      fills: [spikeGrowthAreaFill(area)],
     });
     expect(resolved).toMatchObject({
       tag: "resolved",
@@ -401,7 +401,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
           kind: "areaMovementDistanceDamage",
           sourceProcedureRef: expect.any(String),
           sourceCombatantId: spellCasterId,
-          areaId: areaMovementDistanceDamageAreaId,
+          areaId: spikeGrowthAreaId,
           damage: {
             expr: { dice: 2, dieSize: 4 },
             damageType: "piercing",
@@ -432,7 +432,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
     const cast = resolveBattleSubject({
       state: state.state,
       subject: act.subject,
-      fills: [areaMovementDistanceDamageAreaFill(area)],
+      fills: [spikeGrowthAreaFill(area)],
     });
     if (cast.tag !== "resolved") {
       throw new Error("Expected Spike Growth cast to resolve.");
@@ -482,7 +482,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
                 effectRef: hazard.effectRef,
                 sourceCombatantId: spellCasterId,
                 sourceProcedureRef: hazard.sourceProcedureRef,
-                areaId: areaMovementDistanceDamageAreaId,
+                areaId: spikeGrowthAreaId,
                 damageDistanceFeet: movementFeet(5),
               },
             ],
@@ -513,7 +513,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
                   effectRef: hazard.effectRef,
                   sourceCombatantId: spellCasterId,
                   sourceProcedureRef: hazard.sourceProcedureRef,
-                  areaId: areaMovementDistanceDamageAreaId,
+                  areaId: spikeGrowthAreaId,
                   damageDistanceFeet: movementFeet(5),
                 },
               ],
@@ -541,7 +541,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
             effectRef: hazard.effectRef,
             sourceCombatantId: spellCasterId,
             sourceProcedureRef: hazard.sourceProcedureRef,
-            areaId: areaMovementDistanceDamageAreaId,
+            areaId: spikeGrowthAreaId,
             damageDistanceFeet: movementFeet(5),
           },
         ],
@@ -592,7 +592,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
                 effectRef: hazard.effectRef,
                 sourceCombatantId: spellCasterId,
                 sourceProcedureRef: hazard.sourceProcedureRef,
-                areaId: areaMovementDistanceDamageAreaId,
+                areaId: spikeGrowthAreaId,
                 damageDistanceFeet: movementFeet(5),
               },
             ],
@@ -642,7 +642,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       state: session.state,
       subject: spikeGrowthAct.subject,
       fills: [
-        areaMovementDistanceDamageAreaFill(
+        spikeGrowthAreaFill(
           requireHole(spikeGrowthAct.initialHoles, "spellAreaChoice"),
         ),
       ],
@@ -859,7 +859,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
     const cast = resolveBattleSubject({
       state: state.state,
       subject: act.subject,
-      fills: [areaMovementDistanceDamageAreaFill(area)],
+      fills: [spikeGrowthAreaFill(area)],
     });
     if (cast.tag !== "resolved") {
       throw new Error("Expected Spike Growth cast to resolve.");
@@ -902,7 +902,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
                   effectRef: hazard.effectRef,
                   sourceCombatantId: spellCasterId,
                   sourceProcedureRef: hazard.sourceProcedureRef,
-                  areaId: areaMovementDistanceDamageAreaId,
+                  areaId: spikeGrowthAreaId,
                   damageDistanceFeet: movementFeet(20),
                 },
               ],
@@ -934,7 +934,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
     const spikeCast = resolveBattleSubject({
       state: state.state,
       subject: spikeAct.subject,
-      fills: [areaMovementDistanceDamageAreaFill(spikeArea)],
+      fills: [spikeGrowthAreaFill(spikeArea)],
     });
     if (spikeCast.tag !== "resolved") {
       throw new Error("Expected Spike Growth cast to resolve.");
@@ -1018,7 +1018,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
                 effectRef: spikeHazard.effectRef,
                 sourceCombatantId: spellCasterId,
                 sourceProcedureRef: spikeHazard.sourceProcedureRef,
-                areaId: areaMovementDistanceDamageAreaId,
+                areaId: spikeGrowthAreaId,
                 damageDistanceFeet: movementFeet(5),
               },
               {
@@ -1419,7 +1419,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
     const cast = resolveBattleSubject({
       state: state.state,
       subject: act.subject,
-      fills: [areaMovementDistanceDamageAreaFill(area)],
+      fills: [spikeGrowthAreaFill(area)],
     });
     if (cast.tag !== "resolved") {
       throw new Error("Expected Spike Growth cast to resolve.");
@@ -1489,7 +1489,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
     const cast = resolveBattleSubject({
       state: state.state,
       subject: act.subject,
-      fills: [areaMovementDistanceDamageAreaFill(area)],
+      fills: [spikeGrowthAreaFill(area)],
     });
     if (cast.tag !== "resolved") {
       throw new Error("Expected Spike Growth cast to resolve.");

@@ -34,7 +34,7 @@ import type {
   BattleState,
 } from "./index.ts";
 import { endTurn, snapshotBattle } from "./index.ts";
-import type { BattleInsectPlagueAreaHazardTrigger } from "./battle-state-execution.ts";
+import type { BattleStationaryPersistentAreaSaveDamageTrigger } from "./battle-state-execution.ts";
 import type { BattleEffectExecutionRef } from "./identity.ts";
 import {
   damageRollFillWithGroups,
@@ -45,15 +45,15 @@ import {
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
-  persistentAreaSaveDamageAreaFill,
-  persistentAreaSaveDamageSaveAct,
+  insectPlagueAreaFill,
+  insectPlagueAreaHazardSaveAct,
   singleTargetSavingThrowOutcomeFill,
   spellAct,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
-  persistentAreaSaveDamageAreaId,
-  persistentAreaSaveDamageUnitId,
+  insectPlagueAreaId,
+  insectPlagueUnitId,
   spellCasterId,
   spellTargetId,
 } from "./unit-profile-admission-catalog.test-support.ts";
@@ -149,7 +149,7 @@ describe("Insect Plague area-hazard MBT parity", () => {
   it("uses the exact cast occurrence across save holes and concentration cleanup", () => {
     const cast = castInsectPlague(initialRuntimeState(6));
     const effect = requireInsectPlagueEffect(cast.session.state);
-    const saveAct = persistentAreaSaveDamageSaveAct(
+    const saveAct = insectPlagueAreaHazardSaveAct(
       cast.session,
       spellTargetId,
       "appearsInArea",
@@ -244,7 +244,7 @@ describe("Insect Plague area-hazard MBT parity", () => {
                 effectRef: effect.effectRef,
                 sourceCombatantId: spellCasterId,
                 sourceProcedureRef: effect.sourceProcedureRef,
-                areaId: persistentAreaSaveDamageAreaId,
+                areaId: insectPlagueAreaId,
               },
             ],
             totalDistanceFeet: movementFeet(10),
@@ -300,7 +300,7 @@ function initialRuntimeState(
   slotLevel: InsectPlagueRuntimeState["slotLevel"],
 ): InsectPlagueRuntimeState {
   const session = spellBattle({
-    preparedSpells: [spellRecord(persistentAreaSaveDamageUnitId)],
+    preparedSpells: [spellRecord(insectPlagueUnitId)],
     spellSlots: [{ spellLevel: slotLevel, count: 1 }],
     targetHp: 500,
     targetMaxHp: 500,
@@ -319,14 +319,14 @@ function castInsectPlague(
 ): InsectPlagueRuntimeState {
   const act = spellAct({
     session: state.session,
-    spellId: persistentAreaSaveDamageUnitId,
+    spellId: insectPlagueUnitId,
     slotLevel: state.slotLevel,
   });
   const areaHole = requireHole(act.initialHoles, "spellAreaChoice");
   const resolved = resolveBattleSubject({
     state: state.session.state,
     subject: act.subject,
-    fills: [persistentAreaSaveDamageAreaFill(areaHole)],
+    fills: [insectPlagueAreaFill(areaHole)],
   });
   if (resolved.tag !== "resolved") {
     throw new Error(
@@ -349,12 +349,12 @@ function resolveInsectPlagueSave(
   input: {
     readonly savingThrowSucceeded: boolean;
     readonly rolledDamage: number;
-    readonly trigger: BattleInsectPlagueAreaHazardTrigger;
+    readonly trigger: BattleStationaryPersistentAreaSaveDamageTrigger;
   },
 ): InsectPlagueRuntimeState {
   const effect = requireInsectPlagueEffect(state.session.state);
   assertExactEffectRef(state, effect);
-  const saveAct = persistentAreaSaveDamageSaveAct(
+  const saveAct = insectPlagueAreaHazardSaveAct(
     state.session,
     spellTargetId,
     input.trigger,
@@ -487,7 +487,7 @@ function persistentAreaSaveDamageRuntimeProjection(
       zone.kind === "spellObscurementZone" &&
       zone.sourceCombatantId === spellCasterId &&
       zone.area.kind === "pointOriginSphere" &&
-      zone.area.areaId === persistentAreaSaveDamageAreaId &&
+      zone.area.areaId === insectPlagueAreaId &&
       zone.obscurement === "lightlyObscured",
   );
   const concentrationActive =
@@ -578,7 +578,7 @@ function persistentAreaSaveDamageSlotLevel(value: number): 5 | 6 | 7 {
 
 function persistentAreaSaveDamageTriggerFromQuint(
   raw: unknown,
-): BattleInsectPlagueAreaHazardTrigger {
+): BattleStationaryPersistentAreaSaveDamageTrigger {
   const tag = quintVariantTag(raw);
   if (tag === "InsectPlagueAppearanceOccurrence") return "appearsInArea";
   if (tag === "InsectPlagueFirstEntryOccurrence") return "entersArea";

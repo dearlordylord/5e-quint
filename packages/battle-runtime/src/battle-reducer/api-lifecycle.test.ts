@@ -281,28 +281,28 @@ describe("battle lifecycle admission issue aggregation", () => {
       },
       {
         kind: "companionFormStatBlockMissing",
-        formAccess: "spawnedCompanionLifecycle",
+        formAccess: "findFamiliar",
         resolvedStatBlockId: factStatBlockId,
       },
       {
         kind: "companionFormAccessMismatch",
-        storedFormAccess: "spawnedCompanionLifecycle",
+        storedFormAccess: "findFamiliar",
         eligibilityFormAccess: "pactOfTheChain",
       },
       {
         kind: "companionFormResolvedStatBlockMismatch",
-        formAccess: "spawnedCompanionLifecycle",
+        formAccess: "findFamiliar",
         expectedStatBlockId: factStatBlockId,
         resolvedStatBlockId: otherFactStatBlockId,
       },
       {
         kind: "companionFormSelectionStatBlockMissing",
-        formAccess: "spawnedCompanionLifecycle",
+        formAccess: "findFamiliar",
         selectedStatBlockId: factStatBlockId,
       },
       {
         kind: "companionFormSelectionStatBlockInvalid",
-        formAccess: "spawnedCompanionLifecycle",
+        formAccess: "findFamiliar",
         selectedStatBlockId: factStatBlockId,
         expectedCreatureType: "beast",
         expectedChallengeRating: 0,
@@ -314,7 +314,7 @@ describe("battle lifecycle admission issue aggregation", () => {
       },
       {
         kind: "companionFormNormalFormIneligible",
-        formAccess: "spawnedCompanionLifecycle",
+        formAccess: "findFamiliar",
         formId: battleCompanionFormId("initialization-fact-normal-form"),
       },
       {

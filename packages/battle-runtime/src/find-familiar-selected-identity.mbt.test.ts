@@ -13,7 +13,7 @@ import {
   proficiencyBonus,
 } from "@dnd/shared/types";
 import {
-  spawnedCompanionLifecycleFormEligibilityForSpell,
+  findFamiliarFormEligibilityForSpell,
   type FindFamiliarFormEligibility,
 } from "@dnd/surface/surface/find-familiar-forms";
 import type { SpellRecord } from "@dnd/surface/surface/types";
@@ -39,7 +39,7 @@ import {
   castFindFamiliar,
   deliverTouchSpellThroughFindFamiliar,
   discoverBattleActs,
-  spawnedCompanionLifecycleCompanionForOwner,
+  findFamiliarCompanionForOwner,
   initiativeScore,
   reappearTemporarilyDismissedFindFamiliar,
   startBattle,
@@ -84,9 +84,7 @@ const spawnedCompanionLifecycleSpell = requireSpellRecord(
 const cureWoundsSpell = requireSpellRecord(cureWoundsUnitId);
 const healingWordSpell = requireSpellRecord(healingWordUnitId);
 const familiarEligibility = requireFindFamiliarEligibility(
-  spawnedCompanionLifecycleFormEligibilityForSpell(
-    spawnedCompanionLifecycleSpell,
-  ),
+  findFamiliarFormEligibilityForSpell(spawnedCompanionLifecycleSpell),
 );
 const firstTypeOverride = familiarEligibility.creatureTypeOverrideChoices[0];
 if (firstTypeOverride === undefined) {
@@ -381,7 +379,7 @@ function deliverTouchSpellThroughFindFamiliarProjection(): FindFamiliarSelectedI
     subject: cureWoundsAct.subject,
     fills: [targetFill],
     fact: {
-      kind: "spawnedCompanionWithin100FeetOfOwner",
+      kind: "findFamiliarWithin100FeetOfOwner",
       ownerId: casterId,
       familiarId,
     },
@@ -403,7 +401,7 @@ function deliverTouchSpellThroughFindFamiliarProjection(): FindFamiliarSelectedI
       },
     ],
     fact: {
-      kind: "spawnedCompanionWithin100FeetOfOwner",
+      kind: "findFamiliarWithin100FeetOfOwner",
       ownerId: casterId,
       familiarId,
     },
@@ -628,7 +626,7 @@ function projectBattleCompanionState(
   state: BattleState,
   lastResult: FindFamiliarSelectedIdentityProjection["lastResult"],
 ): FindFamiliarSelectedIdentityProjection {
-  const familiar = spawnedCompanionLifecycleCompanionForOwner(state, casterId);
+  const familiar = findFamiliarCompanionForOwner(state, casterId);
   return {
     familiarStatus: familiar?.status ?? "none",
     formId:

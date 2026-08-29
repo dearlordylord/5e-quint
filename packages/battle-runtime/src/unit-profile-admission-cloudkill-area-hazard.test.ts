@@ -19,7 +19,7 @@ import { allocateBattleEffectExecutionRefForCreature } from "./effect-execution-
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   cloudkillAreaFill,
-  persistentAreaSaveDamageSaveAct,
+  cloudkillAreaHazardSaveAct,
   singleTargetSavingThrowOutcomeFill,
   spellAct,
   spellHoleInvocation,
@@ -40,7 +40,7 @@ import {
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./unit-profile-admission.test-support.ts";
-import type { BattleCloudkillAreaHazardTrigger } from "./battle-state-execution.ts";
+import type { BattleTranslatingPersistentAreaSaveDamageTrigger } from "./battle-state-execution.ts";
 import { resolveCloudkillAreaSaveDamage } from "./battle-reducer/persistent-area-save-damage.ts";
 
 function castCloudkill() {
@@ -90,9 +90,9 @@ function resolveCloudkillSave(input: {
   readonly session: ReturnType<typeof castCloudkill>["session"];
   readonly state: ReturnType<typeof castCloudkill>["cast"];
   readonly succeeded: boolean;
-  readonly trigger: BattleCloudkillAreaHazardTrigger;
+  readonly trigger: BattleTranslatingPersistentAreaSaveDamageTrigger;
 }) {
-  const saveAct = persistentAreaSaveDamageSaveAct(
+  const saveAct = cloudkillAreaHazardSaveAct(
     battleRuntimeSessionForTest({ ...input.session, state: input.state }),
     spellTargetId,
     input.trigger,
@@ -297,7 +297,7 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
       ...session,
       state: cast,
     });
-    const appearanceAct = persistentAreaSaveDamageSaveAct(
+    const appearanceAct = cloudkillAreaHazardSaveAct(
       appearanceSession,
       spellTargetId,
       "appearsInArea",
@@ -332,7 +332,7 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     );
     expect(cloudkillSavedThisTurn(appeared.state)).toEqual([spellTargetId]);
 
-    const entryAct = persistentAreaSaveDamageSaveAct(
+    const entryAct = cloudkillAreaHazardSaveAct(
       battleRuntimeSessionForTest({ ...session, state: appeared.state }),
       spellTargetId,
       "entersArea",
@@ -378,7 +378,7 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     const targetTurn = requireResolved(
       endTurn({ state: appeared.state, actorId: spellCasterId }),
     );
-    const fabricatedAppearance = persistentAreaSaveDamageSaveAct(
+    const fabricatedAppearance = cloudkillAreaHazardSaveAct(
       battleRuntimeSessionForTest({ ...session, state: targetTurn.state }),
       spellTargetId,
       "appearsInArea",
@@ -400,7 +400,7 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
 
   test("a discovered save becomes stale when Cloudkill Concentration ends", () => {
     const { targetTurn, session } = castCloudkill();
-    const saveAct = persistentAreaSaveDamageSaveAct(
+    const saveAct = cloudkillAreaHazardSaveAct(
       battleRuntimeSessionForTest({ ...session, state: targetTurn }),
       spellTargetId,
       "endsTurnInArea",
@@ -421,7 +421,7 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
 
   test("a discovered save becomes stale when its target leaves the battle state", () => {
     const { targetTurn, session } = castCloudkill();
-    const saveAct = persistentAreaSaveDamageSaveAct(
+    const saveAct = cloudkillAreaHazardSaveAct(
       battleRuntimeSessionForTest({ ...session, state: targetTurn }),
       spellTargetId,
       "endsTurnInArea",
@@ -446,7 +446,7 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
 
   test("binds a discovered save to the exact Cloudkill occurrence across same-area replacement", () => {
     const { targetTurn, session } = castCloudkill();
-    const saveAct = persistentAreaSaveDamageSaveAct(
+    const saveAct = cloudkillAreaHazardSaveAct(
       battleRuntimeSessionForTest({ ...session, state: targetTurn }),
       spellTargetId,
       "endsTurnInArea",

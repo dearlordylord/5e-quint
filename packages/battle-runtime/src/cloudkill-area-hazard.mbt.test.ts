@@ -40,7 +40,7 @@ import {
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
   cloudkillAreaFill,
-  persistentAreaSaveDamageSaveAct,
+  cloudkillAreaHazardSaveAct,
   maybeSpellAct,
   singleTargetSavingThrowOutcomeFill,
   spellAct,
@@ -476,7 +476,7 @@ function castCloudkill(
 function discoverAppearanceSave(
   state: CloudkillMbtRuntimeState,
 ): CloudkillMbtRuntimeState {
-  const act = persistentAreaSaveDamageSaveAct(
+  const act = cloudkillAreaHazardSaveAct(
     state.battle,
     spellTargetId,
     "appearsInArea",

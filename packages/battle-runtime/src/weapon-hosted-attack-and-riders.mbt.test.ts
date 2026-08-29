@@ -187,7 +187,7 @@ type PendingInvocation =
       readonly attackFill: Extract<BattleFill, { readonly kind: "attackRoll" }>;
     }
   | {
-      readonly tag: "magicWeaponTarget";
+      readonly tag: "weaponAttackDamageEnhancementTarget";
       readonly subject: Extract<
         BattleSubject,
         { readonly tag: "bonusActionSpell" }
@@ -946,7 +946,7 @@ function routeWeaponEnhancementItemTarget(): readonly ReducerRouteEvent[] {
   const discovered = discoverMagicWeapon(
     initialRuntimeState("weaponAttackDamageEnhancement"),
   );
-  if (discovered.pending.tag !== "magicWeaponTarget") {
+  if (discovered.pending.tag !== "weaponAttackDamageEnhancementTarget") {
     throw new Error("Expected pending Magic Weapon target.");
   }
   const target = requireHole(
@@ -1573,7 +1573,10 @@ function discoverMagicWeapon(
     ...state,
     phase: "weaponTargetNeeded",
     holes: act.initialHoles,
-    pending: { tag: "magicWeaponTarget", subject: act.subject },
+    pending: {
+      tag: "weaponAttackDamageEnhancementTarget",
+      subject: act.subject,
+    },
     lastResult: "needsHoles",
   };
 }
@@ -1581,7 +1584,7 @@ function discoverMagicWeapon(
 function fillMagicWeaponTarget(
   state: WeaponHostedRuntimeState,
 ): WeaponHostedRuntimeState {
-  if (state.pending.tag !== "magicWeaponTarget") {
+  if (state.pending.tag !== "weaponAttackDamageEnhancementTarget") {
     throw new Error("Expected pending Magic Weapon target.");
   }
   const target = requireHole(

@@ -48,7 +48,7 @@ import {
   invisibilityUnitId,
   levitateUnitId,
   seeInvisibilityUnitId,
-  areaMovementDistanceDamageAreaId,
+  spikeGrowthAreaId,
   spellCasterId,
   spellTargetId,
   spikeGrowthUnitId,
@@ -63,7 +63,7 @@ import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.
 import {
   singleTargetSavingThrowOutcomeFill,
   spellAct,
-  areaMovementDistanceDamageAreaFill,
+  spikeGrowthAreaFill,
   webAreaFill,
   persistentAreaSaveConditionEscapeSaveAct,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
@@ -372,7 +372,7 @@ function areaMovementDistanceDamageCastReplay(): HazardCastReplay {
   const cast = resolveBattleSubject({
     state: state.state,
     subject: act.subject,
-    fills: [areaMovementDistanceDamageAreaFill(area)],
+    fills: [spikeGrowthAreaFill(area)],
   });
   route.push(...routeEventsOfSubject(cast, "Spike Growth cast"));
   if (cast.tag !== "resolved") {
@@ -472,7 +472,7 @@ function spikeGrowthMovementFill(
           effectRef: effect.effectRef,
           sourceCombatantId: spellCasterId,
           sourceProcedureRef: effect.sourceProcedureRef,
-          areaId: areaMovementDistanceDamageAreaId,
+          areaId: spikeGrowthAreaId,
           damageDistanceFeet: movementFeet(5),
         },
       ],

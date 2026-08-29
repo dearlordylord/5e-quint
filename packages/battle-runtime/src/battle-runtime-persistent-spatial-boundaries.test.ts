@@ -19,25 +19,25 @@ import {
   resolveBattleSubject,
 } from "./unit-profile-admission.test-support.ts";
 import {
-  persistentAreaSaveDamageAreaFill,
-  persistentAreaSaveDamageEndTurnAct,
-  persistentAreaSaveDamageRepositionAct,
+  flamingSphereAreaFill,
+  flamingSphereEndTurnAct,
+  flamingSphereRepositionAct,
   directionalPersistentAreaDirectionChangeAct,
   directionalPersistentAreaDirectionChoiceFill,
   directionalPersistentAreaEndTurnSaveAct,
   directionalPersistentAreaSavingThrowOutcomeFill,
   persistentAreaSaveConditionEndTurnAct,
   greaseSavingThrowOutcomeFill,
-  persistentAreaSaveDamageAreaFill,
-  persistentAreaSaveDamageEndTurnSaveAct,
+  moonbeamAreaFill,
+  moonbeamEndTurnSaveAct,
   singleTargetSavingThrowOutcomeFill,
   spellAct,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
-  persistentAreaSaveDamageUnitId,
+  flamingSphereUnitId,
   greaseUnitId,
   gustOfWindUnitId,
-  persistentAreaSaveDamageUnitId,
+  moonbeamUnitId,
   spellCasterId,
   spellTargetId,
   statBlockCatalog,
@@ -269,7 +269,7 @@ describe("persistent spatial spell boundary procedures", () => {
 
   test("Flaming Sphere keeps damage staged while the next actor's Death Save frontier is open", () => {
     const initial = spellBattle({
-      preparedSpells: [spellRecord(persistentAreaSaveDamageUnitId)],
+      preparedSpells: [spellRecord(flamingSphereUnitId)],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       casterClassLevels: [{ className: "wizard", level: 3 }],
       extraTargetIds: [deathSaveFrontierActorId],
@@ -278,7 +278,7 @@ describe("persistent spatial spell boundary procedures", () => {
     });
     const castAct = spellAct({
       session: initial,
-      spellId: persistentAreaSaveDamageUnitId,
+      spellId: flamingSphereUnitId,
       slotLevel: 2,
     });
     const cast = requireResolved(
@@ -286,7 +286,7 @@ describe("persistent spatial spell boundary procedures", () => {
         state: initial.state,
         subject: castAct.subject,
         fills: [
-          persistentAreaSaveDamageAreaFill(
+          flamingSphereAreaFill(
             requireHole(castAct.initialHoles, "spellAreaChoice"),
           ),
         ],
@@ -295,7 +295,7 @@ describe("persistent spatial spell boundary procedures", () => {
     const targetTurn = requireResolved(
       endTurn({ state: cast.state, actorId: spellCasterId }),
     );
-    const saveAct = persistentAreaSaveDamageEndTurnAct(
+    const saveAct = flamingSphereEndTurnAct(
       battleRuntimeSessionForTest({
         ...initial,
         state: targetTurn.state,
@@ -365,13 +365,13 @@ describe("persistent spatial spell boundary procedures", () => {
 
   test("Flaming Sphere reposition becomes stale when Concentration ends", () => {
     const initial = spellBattle({
-      preparedSpells: [spellRecord(persistentAreaSaveDamageUnitId)],
+      preparedSpells: [spellRecord(flamingSphereUnitId)],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       casterClassLevels: [{ className: "wizard", level: 3 }],
     });
     const castAct = spellAct({
       session: initial,
-      spellId: persistentAreaSaveDamageUnitId,
+      spellId: flamingSphereUnitId,
       slotLevel: 2,
     });
     const cast = requireResolved(
@@ -379,7 +379,7 @@ describe("persistent spatial spell boundary procedures", () => {
         state: initial.state,
         subject: castAct.subject,
         fills: [
-          persistentAreaSaveDamageAreaFill(
+          flamingSphereAreaFill(
             requireHole(castAct.initialHoles, "spellAreaChoice"),
           ),
         ],
@@ -388,7 +388,7 @@ describe("persistent spatial spell boundary procedures", () => {
     const targetTurn = requireResolved(
       endTurn({ state: cast.state, actorId: spellCasterId }),
     );
-    const saveAct = persistentAreaSaveDamageEndTurnAct(
+    const saveAct = flamingSphereEndTurnAct(
       battleRuntimeSessionForTest({ ...initial, state: targetTurn.state }),
       spellTargetId,
     );
@@ -415,7 +415,7 @@ describe("persistent spatial spell boundary procedures", () => {
         ],
       }),
     );
-    const reposition = persistentAreaSaveDamageRepositionAct(
+    const reposition = flamingSphereRepositionAct(
       battleRuntimeSessionForTest({ ...initial, state: afterTarget.state }),
       spellCasterId,
     );
@@ -434,7 +434,7 @@ describe("persistent spatial spell boundary procedures", () => {
 
   test("Moonbeam keeps damage staged while the next actor's Death Save frontier is open", () => {
     const initial = spellBattle({
-      preparedSpells: [spellRecord(persistentAreaSaveDamageUnitId)],
+      preparedSpells: [spellRecord(moonbeamUnitId)],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       casterClassLevels: [{ className: "druid", level: 3 }],
       targetHp: 30,
@@ -445,7 +445,7 @@ describe("persistent spatial spell boundary procedures", () => {
     });
     const castAct = spellAct({
       session: initial,
-      spellId: persistentAreaSaveDamageUnitId,
+      spellId: moonbeamUnitId,
       slotLevel: 2,
     });
     const cast = requireResolved(
@@ -453,7 +453,7 @@ describe("persistent spatial spell boundary procedures", () => {
         state: initial.state,
         subject: castAct.subject,
         fills: [
-          persistentAreaSaveDamageAreaFill(
+          moonbeamAreaFill(
             requireHole(castAct.initialHoles, "spellAreaChoice"),
           ),
         ],
@@ -462,7 +462,7 @@ describe("persistent spatial spell boundary procedures", () => {
     const targetTurn = requireResolved(
       endTurn({ state: cast.state, actorId: spellCasterId }),
     );
-    const saveAct = persistentAreaSaveDamageEndTurnSaveAct(
+    const saveAct = moonbeamEndTurnSaveAct(
       battleRuntimeSessionForTest({ ...initial, state: targetTurn.state }),
     );
     const save = requireHole(saveAct.initialHoles, "savingThrowOutcome");
@@ -528,7 +528,7 @@ describe("persistent spatial spell boundary procedures", () => {
 
   test("Moonbeam repeats no damage in the same turn but still returns End Turn holes", () => {
     const initial = spellBattle({
-      preparedSpells: [spellRecord(persistentAreaSaveDamageUnitId)],
+      preparedSpells: [spellRecord(moonbeamUnitId)],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       casterClassLevels: [{ className: "druid", level: 3 }],
       targetHp: 30,
@@ -539,7 +539,7 @@ describe("persistent spatial spell boundary procedures", () => {
     });
     const castAct = spellAct({
       session: initial,
-      spellId: persistentAreaSaveDamageUnitId,
+      spellId: moonbeamUnitId,
       slotLevel: 2,
     });
     const cast = requireResolved(
@@ -547,7 +547,7 @@ describe("persistent spatial spell boundary procedures", () => {
         state: initial.state,
         subject: castAct.subject,
         fills: [
-          persistentAreaSaveDamageAreaFill(
+          moonbeamAreaFill(
             requireHole(castAct.initialHoles, "spellAreaChoice"),
           ),
         ],
@@ -556,7 +556,7 @@ describe("persistent spatial spell boundary procedures", () => {
     const targetTurn = requireResolved(
       endTurn({ state: cast.state, actorId: spellCasterId }),
     );
-    const endTurnAct = persistentAreaSaveDamageEndTurnSaveAct(
+    const endTurnAct = moonbeamEndTurnSaveAct(
       battleRuntimeSessionForTest({ ...initial, state: targetTurn.state }),
     );
     const entersSubject = {
@@ -653,7 +653,7 @@ describe("persistent spatial spell boundary procedures", () => {
           classLevels: [{ className: "druid", level: 3 }],
           spellcasting: {
             ...wizardSpellcasting({
-              preparedSpells: [spellRecord(persistentAreaSaveDamageUnitId)],
+              preparedSpells: [spellRecord(moonbeamUnitId)],
               spellSlots: [{ spellLevel: 2, count: 1 }],
             }),
             spellcastingSource: {
@@ -720,7 +720,7 @@ describe("persistent spatial spell boundary procedures", () => {
         ...initial,
         state: casterTurn.state,
       }),
-      spellId: persistentAreaSaveDamageUnitId,
+      spellId: moonbeamUnitId,
       slotLevel: 2,
     });
     const cast = requireResolved(
@@ -728,7 +728,7 @@ describe("persistent spatial spell boundary procedures", () => {
         state: casterTurn.state,
         subject: castAct.subject,
         fills: [
-          persistentAreaSaveDamageAreaFill(
+          moonbeamAreaFill(
             requireHole(castAct.initialHoles, "spellAreaChoice"),
           ),
         ],
@@ -737,7 +737,7 @@ describe("persistent spatial spell boundary procedures", () => {
     const targetTurn = requireResolved(
       endTurn({ state: cast.state, actorId: spellCasterId }),
     );
-    const endTurnAct = persistentAreaSaveDamageEndTurnSaveAct(
+    const endTurnAct = moonbeamEndTurnSaveAct(
       battleRuntimeSessionForTest({ ...initial, state: targetTurn.state }),
     );
     const appearsSubject = {

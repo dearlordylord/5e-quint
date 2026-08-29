@@ -117,9 +117,6 @@ describe("BattleSubject identity", () => {
         areaMembershipTrigger: { kind: "turnStartInArea", areaId, effectRef },
       },
       persistentAreaSaveDamageSave: {
-        areaMembershipTrigger: { kind: "turnEndInArea", areaId, effectRef },
-      },
-      persistentAreaSaveDamageSave: {
         areaMembershipTrigger: {
           kind: "areaMovesIntoSpace",
           areaId,
@@ -130,8 +127,6 @@ describe("BattleSubject identity", () => {
         effectOwnerId: actorId,
         effectRef,
       },
-      webRestrainedNoLongerInArea: { areaId, effectRef },
-      persistentAreaSaveConditionEscapeAreaRemoved: { areaId, effectRef },
       directionalPersistentAreaSave: {
         areaId,
         effectRef,
@@ -172,8 +167,8 @@ describe("BattleSubject identity", () => {
       },
       executeCompelledGrovel: { effectRef },
       executeCompelledDrop: { effectRef },
-      compelledApproach: { effectRef },
-      compelledFlee: { effectRef },
+      executeCompelledApproach: { effectRef },
+      executeCompelledFlee: { effectRef },
       controlledVerticalSuspensionAltitudeControl: { effectRef, targetId },
       creatureFalls: { fallingCreatureId: targetId },
     } as const satisfies Record<
@@ -243,7 +238,7 @@ describe("BattleSubject identity", () => {
       escapeGrapple: {},
       escapeSpellRestraint: { targetId, effectRef },
       shakeAwakeFromStagedCondition: {},
-      shakeAwakeFromSaveGatedAreaControl: {},
+      shakeAwakeFromAreaControl: {},
     } as const satisfies Record<
       BattleSubjectAction,
       Readonly<Record<string, unknown>>

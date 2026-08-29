@@ -15,20 +15,20 @@ import {
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import {
   MIRROR_IMAGE_HIT_INTERCEPTION_DUPLICATE_COUNTS,
-  resolveMirrorImageHitInterception,
-  type MirrorImageHitInterceptionDuplicateCount,
-  type MirrorImageHitInterceptionFills,
-  type MirrorImageHitInterceptionState,
+  resolveDuplicateHitInterception,
+  type DuplicateHitInterceptionDuplicateCount,
+  type DuplicateHitInterceptionFills,
+  type DuplicateHitInterceptionState,
 } from "./battle-reducer/mirror-image-hit-interception.ts";
 
-const initialState: MirrorImageHitInterceptionState = {
+const initialState: DuplicateHitInterceptionState = {
   remainingDuplicates: 3,
   normalDamageContinues: false,
 };
 
 const driverSchema = {
   init: {},
-  doResolveMirrorImageHitInterception: {
+  doResolveDuplicateHitInterception: {
     attackHits: mbtPickSchemas.bool,
     attackerBlinded: mbtPickSchemas.bool,
     attackerHasBlindsight: mbtPickSchemas.bool,
@@ -38,17 +38,17 @@ const driverSchema = {
   step: {},
 } as const;
 
-function createMirrorImageHitInterceptionDriver() {
+function createDuplicateHitInterceptionDriver() {
   return defineDriver(driverSchema, () => {
     let state = initialState;
     return {
       init: () => {
         state = initialState;
       },
-      doResolveMirrorImageHitInterception: (
-        fills: MirrorImageHitInterceptionFills,
+      doResolveDuplicateHitInterception: (
+        fills: DuplicateHitInterceptionFills,
       ) => {
-        state = resolveMirrorImageHitInterception(state, fills);
+        state = resolveDuplicateHitInterception(state, fills);
       },
       step: () => {},
       getState: () => state,
@@ -57,8 +57,8 @@ function createMirrorImageHitInterceptionDriver() {
 }
 
 const duplicateHitInterceptionStateCheck = stateCheck(
-  normalizeMirrorImageHitInterceptionQuintState,
-  compareMirrorImageHitInterceptionState,
+  normalizeDuplicateHitInterceptionQuintState,
+  compareDuplicateHitInterceptionState,
 );
 
 describe("Mirror Image hit-interception MBT parity", () => {
@@ -72,7 +72,7 @@ describe("Mirror Image hit-interception MBT parity", () => {
         ),
         init: "init",
         step: "step",
-        driver: createMirrorImageHitInterceptionDriver(),
+        driver: createDuplicateHitInterceptionDriver(),
         backend: "typescript",
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(6),
@@ -83,9 +83,9 @@ describe("Mirror Image hit-interception MBT parity", () => {
   );
 });
 
-function normalizeMirrorImageHitInterceptionQuintState(
+function normalizeDuplicateHitInterceptionQuintState(
   raw: unknown,
-): MirrorImageHitInterceptionState {
+): DuplicateHitInterceptionState {
   if (raw == null || typeof raw !== "object" || Array.isArray(raw)) {
     throw new Error("Expected Quint Mirror Image hit-interception state.");
   }
@@ -103,9 +103,9 @@ function normalizeMirrorImageHitInterceptionQuintState(
   };
 }
 
-function compareMirrorImageHitInterceptionState(
-  runtime: MirrorImageHitInterceptionState,
-  quint: MirrorImageHitInterceptionState,
+function compareDuplicateHitInterceptionState(
+  runtime: DuplicateHitInterceptionState,
+  quint: DuplicateHitInterceptionState,
 ): boolean {
   try {
     expect(runtime).toEqual(quint);
@@ -120,7 +120,7 @@ function compareMirrorImageHitInterceptionState(
 
 function duplicateHitInterceptionDuplicateCount(
   value: number,
-): MirrorImageHitInterceptionDuplicateCount {
+): DuplicateHitInterceptionDuplicateCount {
   const count = MIRROR_IMAGE_HIT_INTERCEPTION_DUPLICATE_COUNTS.find(
     (candidate) => candidate === value,
   );

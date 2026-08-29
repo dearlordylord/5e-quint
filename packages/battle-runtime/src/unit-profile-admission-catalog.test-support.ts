@@ -330,18 +330,18 @@ export const flameBladeUnitId = "flame_blade";
 
 export const flyUnitId = "fly";
 
-export const persistentAreaSaveDamageUnitId = "flaming_sphere";
-export const spatialMeleeSpellAttackProxyUnitId = "spiritual_weapon";
+export const flamingSphereUnitId = "flaming_sphere";
+export const spiritualWeaponUnitId = "spiritual_weapon";
 
 export const spikeGrowthUnitId = "spike_growth";
 
-export const persistentAreaSaveDamageUnitId = "persistentAreaSaveDamage";
+export const moonbeamUnitId = "moonbeam";
 
 export const webUnitId = "web";
 
 export const sleetStormUnitId = "sleet_storm";
 
-export const persistentAreaSaveDamageUnitId = "insect_plague";
+export const insectPlagueUnitId = "insect_plague";
 
 export const cloudkillUnitId = "cloudkill";
 
@@ -472,23 +472,19 @@ export const ensnaringStrikeHelperId = combatantId(
 
 export const greaseAreaId = battleAreaId("unit-profile-grease-ground-area");
 
-export const persistentAreaSaveDamageAreaId = battleAreaId(
+export const flamingSphereAreaId = battleAreaId(
   "unit-profile-flaming-sphere-area",
 );
 
-export const areaMovementDistanceDamageAreaId = battleAreaId(
-  "unit-profile-spike-growth-area",
-);
+export const spikeGrowthAreaId = battleAreaId("unit-profile-spike-growth-area");
 
-export const persistentAreaSaveDamageAreaId = battleAreaId(
-  "unit-profile-persistentAreaSaveDamage-area",
-);
+export const moonbeamAreaId = battleAreaId("unit-profile-moonbeam-area");
 
 export const webAreaId = battleAreaId("unit-profile-web-area");
 
 export const sleetStormAreaId = battleAreaId("unit-profile-sleet-storm-area");
 
-export const persistentAreaSaveDamageAreaId = battleAreaId(
+export const insectPlagueAreaId = battleAreaId(
   "unit-profile-insect-plague-area",
 );
 

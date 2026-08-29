@@ -31,13 +31,13 @@ import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.
 import {
   maybeSpellAct,
   spellAct,
-  areaMovementDistanceDamageAreaFill,
+  spikeGrowthAreaFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   spellCasterId,
   spellTargetId,
-  areaMovementDistanceDamageAreaId,
+  spikeGrowthAreaId,
   spikeGrowthUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import {
@@ -286,7 +286,7 @@ function castSpikeGrowth(
     resolveBattleSubject({
       state: state.battle,
       subject: act.subject,
-      fills: [areaMovementDistanceDamageAreaFill(area)],
+      fills: [spikeGrowthAreaFill(area)],
     }),
     "Expected Spike Growth cast to resolve.",
   );
@@ -340,7 +340,7 @@ function discoverMovementDamage(
     (effect): effect is SpikeGrowthHazardEffect =>
       effect.kind === "areaMovementDistanceDamage" &&
       effect.sourceCombatantId === spellCasterId &&
-      effect.areaId === areaMovementDistanceDamageAreaId,
+      effect.areaId === spikeGrowthAreaId,
   );
   if (hazard === undefined) {
     throw new Error("Expected active Spike Growth hazard.");
@@ -429,7 +429,7 @@ function spikeGrowthMovementFill(
           effectRef: hazard.effectRef,
           sourceCombatantId: spellCasterId,
           sourceProcedureRef: hazard.sourceProcedureRef,
-          areaId: areaMovementDistanceDamageAreaId,
+          areaId: spikeGrowthAreaId,
           damageDistanceFeet: movementFeet(damageDistanceFeet),
         },
       ],
@@ -448,7 +448,7 @@ function spikeGrowthProjection(
     (effect): effect is SpikeGrowthHazardEffect =>
       effect.kind === "areaMovementDistanceDamage" &&
       effect.sourceCombatantId === spellCasterId &&
-      effect.areaId === areaMovementDistanceDamageAreaId,
+      effect.areaId === spikeGrowthAreaId,
   );
   const projection = {
     currentTurnRole: state.currentTurnRole,

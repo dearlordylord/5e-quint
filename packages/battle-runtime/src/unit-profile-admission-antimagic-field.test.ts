@@ -19,8 +19,8 @@ import {
   endTurn,
   snapshotBattle,
   type BattleActiveEffect,
-  type BattleAntimagicFieldAffectedOngoingSpellEffect,
-  type BattleAntimagicFieldAuraMembership,
+  type BattleMagicSuppressionAffectedOngoingSpellEffect,
+  type BattleMagicSuppressionEmanationMembership,
   type BattleFill,
   type BattleHole,
   type BattleRuntimeSession,
@@ -36,7 +36,7 @@ import {
   heatMetalUnitId,
   spellCasterId,
   spellTargetId,
-  spatialMeleeSpellAttackProxyUnitId,
+  spiritualWeaponUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import {
   requireCombatant,
@@ -370,7 +370,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
 
   test("suppresses tracked Spiritual Weapon spell effects without deleting the occurrence", () => {
     const sourceEffectId = battleSpellEffectOccurrenceId(
-      `${spellCasterId}:${spatialMeleeSpellAttackProxyUnitId}:unit-profile-antimagic-spiritual-weapon`,
+      `${spellCasterId}:${spiritualWeaponUnitId}:unit-profile-antimagic-spiritual-weapon`,
     );
     const spatialMeleeSpellAttackProxyEffect =
       spatialMeleeSpellAttackProxyActiveEffect({
@@ -381,7 +381,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       activeEffects: [spatialMeleeSpellAttackProxyEffect],
       preparedSpells: [
         spellRecord(antimagicFieldUnitId),
-        spellRecord(spatialMeleeSpellAttackProxyUnitId),
+        spellRecord(spiritualWeaponUnitId),
       ],
       spellSlots: [
         { spellLevel: 8, count: 1 },
@@ -449,7 +449,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
 
   test("rejects a stale Spiritual Weapon repeat subject after Antimagic Field suppression", () => {
     const sourceEffectId = battleSpellEffectOccurrenceId(
-      `${spellCasterId}:${spatialMeleeSpellAttackProxyUnitId}:unit-profile-antimagic-stale-spiritual-weapon`,
+      `${spellCasterId}:${spiritualWeaponUnitId}:unit-profile-antimagic-stale-spiritual-weapon`,
     );
     const spatialMeleeSpellAttackProxyEffect =
       spatialMeleeSpellAttackProxyActiveEffect({
@@ -460,7 +460,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       activeEffects: [spatialMeleeSpellAttackProxyEffect],
       preparedSpells: [
         spellRecord(antimagicFieldUnitId),
-        spellRecord(spatialMeleeSpellAttackProxyUnitId),
+        spellRecord(spiritualWeaponUnitId),
       ],
       spellSlots: [
         { spellLevel: 8, count: 1 },
@@ -491,7 +491,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       }),
       spatialMeleeSpellAttackProxyTargetFill(
         targetHole,
-        spatialMeleeSpellAttackProxyUnitId,
+        spiritualWeaponUnitId,
         spellCasterId,
         spellTargetId,
         battleTablePositionId(movedForceId),
@@ -561,7 +561,7 @@ function maybeSpiritualWeaponRepeatAct(session: BattleRuntimeSession) {
     (candidate) =>
       candidate.subject.tag === "bonusActionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.spellId ===
-        spatialMeleeSpellAttackProxyUnitId &&
+        spiritualWeaponUnitId &&
       battleActSpellPresentation(candidate)?.invocation.procedure ===
         "spatialMeleeSpellAttackProxy",
   );
@@ -670,7 +670,7 @@ function antimagicFieldBattle(input?: {
 
 function castAntimagicField(
   session: BattleRuntimeSession,
-  affectedOngoingSpellEffects: readonly BattleAntimagicFieldAffectedOngoingSpellEffect[],
+  affectedOngoingSpellEffects: readonly BattleMagicSuppressionAffectedOngoingSpellEffect[],
 ): Extract<
   ReturnType<typeof resolveBattleSubject>,
   { readonly tag: "resolved" }
@@ -700,8 +700,8 @@ function castAntimagicField(
 
 function antimagicFieldAreaFill(input: {
   readonly hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>;
-  readonly affectedOngoingSpellEffects: readonly BattleAntimagicFieldAffectedOngoingSpellEffect[];
-  readonly auraMembership?: BattleAntimagicFieldAuraMembership;
+  readonly affectedOngoingSpellEffects: readonly BattleMagicSuppressionAffectedOngoingSpellEffect[];
+  readonly auraMembership?: BattleMagicSuppressionEmanationMembership;
 }): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
   return {
     kind: "spellAreaChoice",
@@ -721,8 +721,8 @@ function antimagicFieldAreaFill(input: {
 
 function antimagicAffectedLight(
   effectRef: ReturnType<typeof battleEffectExecutionRefForTest>,
-  sourceKind: BattleAntimagicFieldAffectedOngoingSpellEffect["sourceKind"],
-): BattleAntimagicFieldAffectedOngoingSpellEffect {
+  sourceKind: BattleMagicSuppressionAffectedOngoingSpellEffect["sourceKind"],
+): BattleMagicSuppressionAffectedOngoingSpellEffect {
   return {
     kind: "magicSuppressionAffectedOngoingSpellEffect",
     effect: {
@@ -735,8 +735,8 @@ function antimagicAffectedLight(
 
 function antimagicAffectedSpellObjectContactDamage(
   sourceEffectId: ReturnType<typeof battleSpellEffectOccurrenceId>,
-  sourceKind: BattleAntimagicFieldAffectedOngoingSpellEffect["sourceKind"],
-): BattleAntimagicFieldAffectedOngoingSpellEffect {
+  sourceKind: BattleMagicSuppressionAffectedOngoingSpellEffect["sourceKind"],
+): BattleMagicSuppressionAffectedOngoingSpellEffect {
   return {
     kind: "magicSuppressionAffectedOngoingSpellEffect",
     effect: {
@@ -750,8 +750,8 @@ function antimagicAffectedSpellObjectContactDamage(
 
 function antimagicAffectedSpiritualWeapon(
   sourceEffectId: ReturnType<typeof battleSpellEffectOccurrenceId>,
-  sourceKind: BattleAntimagicFieldAffectedOngoingSpellEffect["sourceKind"],
-): BattleAntimagicFieldAffectedOngoingSpellEffect {
+  sourceKind: BattleMagicSuppressionAffectedOngoingSpellEffect["sourceKind"],
+): BattleMagicSuppressionAffectedOngoingSpellEffect {
   return {
     kind: "magicSuppressionAffectedOngoingSpellEffect",
     effect: {
@@ -765,7 +765,7 @@ function antimagicAffectedSpiritualWeapon(
 
 function antimagicFieldSuppressing(
   state: BattleState,
-  affectedOngoingSpellEffects: readonly BattleAntimagicFieldAffectedOngoingSpellEffect[],
+  affectedOngoingSpellEffects: readonly BattleMagicSuppressionAffectedOngoingSpellEffect[],
 ): BattleState {
   const antimagicCaster = requireCombatant(state, spellTargetId);
   const stateWithConcentration = {
@@ -898,7 +898,7 @@ function spatialMeleeSpellAttackProxyActiveEffect(input: {
     kind: "spatialMeleeSpellAttackProxy",
     effectRef: effectRefForTest(input.effectId),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(spatialMeleeSpellAttackProxyUnitId),
+      String(spiritualWeaponUnitId),
     ),
     sourceCombatantId: spellCasterId,
     sourceSpellLevel,

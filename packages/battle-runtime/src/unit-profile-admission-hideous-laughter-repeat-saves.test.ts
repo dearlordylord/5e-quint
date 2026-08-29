@@ -60,7 +60,7 @@ import {
   spellSlotInvocationRef,
   startBattle,
   supportedPreparedHellishRebukeReactionSpellProfile,
-  supportedPreparedHideousLaughterProfile,
+  supportedPreparedSaveGatedConditionWithRepeatProfile,
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
 } from "./unit-profile-admission.test-support.ts";
@@ -1005,14 +1005,14 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
     ];
 
     expect(
-      supportedPreparedHideousLaughterProfile(
+      supportedPreparedSaveGatedConditionWithRepeatProfile(
         spellAdmissionSource(spell),
         spellSlots,
       ),
     ).toHaveLength(1);
 
     expect(
-      supportedPreparedHideousLaughterProfile(
+      supportedPreparedSaveGatedConditionWithRepeatProfile(
         spellAdmissionSource(
           saveGatedConditionWithRepeatWithPhase(spell, (phase) => {
             if (phase.onFail.kind !== "composite") {
@@ -1035,7 +1035,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
     ).toEqual([]);
 
     expect(
-      supportedPreparedHideousLaughterProfile(
+      supportedPreparedSaveGatedConditionWithRepeatProfile(
         spellAdmissionSource(
           saveGatedConditionWithRepeatWithPhase(spell, (phase) => {
             if (phase.repeatSaves === undefined) {
