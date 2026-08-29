@@ -666,7 +666,7 @@ function controlAltitudeDown10Feet(
       fills: [
         controlledVerticalSuspensionAltitudeChangeFill(hole, "down", 10, [
           {
-            kind: "levitatedTargetWithinSpellRange",
+            kind: "controlledVerticalSuspensionTargetWithinRange",
             effectRef: effect.effectRef,
             sourceCombatantId: spellCasterId,
             sourceProcedureRef: effect.sourceProcedureRef,
@@ -691,9 +691,12 @@ function controlAltitudeDown10Feet(
 
 function requireLevitateCreatureEffect(
   state: BattleState,
-): Extract<BattleActiveEffect, { readonly kind: "spellLevitatedCreature" }> {
+): Extract<
+  BattleActiveEffect,
+  { readonly kind: "controlledVerticalSuspension" }
+> {
   const effect = requireCombatant(state, spellTargetId).activeEffects.find(
-    (candidate) => candidate.kind === "spellLevitatedCreature",
+    (candidate) => candidate.kind === "controlledVerticalSuspension",
   );
   if (effect === undefined) {
     throw new Error("Expected active Levitate creature effect.");
@@ -724,7 +727,7 @@ function expireLevitateDuration(
     combatants: new Map(state.battle.state.combatants).set(spellTargetId, {
       ...target,
       activeEffects: target.activeEffects.map((effect) =>
-        effect.kind === "spellLevitatedCreature" &&
+        effect.kind === "controlledVerticalSuspension" &&
         effect.expiresAt.kind === "concentration"
           ? {
               ...effect,
@@ -881,7 +884,7 @@ function levitateCreatureProjection(
 ): LevitateCreatureProjection {
   const target = requireCombatant(state.battle.state, spellTargetId);
   const effect = target.activeEffects.find(
-    (candidate) => candidate.kind === "spellLevitatedCreature",
+    (candidate) => candidate.kind === "controlledVerticalSuspension",
   );
   return {
     actionAvailable: canSpendAction(

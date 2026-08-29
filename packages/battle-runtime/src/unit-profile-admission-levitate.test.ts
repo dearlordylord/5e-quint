@@ -71,7 +71,7 @@ describe("L12G deterministic Levitate creature admission", () => {
 
     expect(requireLevitatedEffect(cast.state)).toEqual(
       expect.objectContaining({
-        kind: "spellLevitatedCreature",
+        kind: "controlledVerticalSuspension",
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         altitudeFeet: movementFeet(12),
@@ -146,7 +146,7 @@ describe("L12G deterministic Levitate creature admission", () => {
     ).toBeNull();
     expect(
       requireCombatant(saved.state, spellTargetId).activeEffects.some(
-        (effect) => effect.kind === "spellLevitatedCreature",
+        (effect) => effect.kind === "controlledVerticalSuspension",
       ),
     ).toBe(false);
   });
@@ -419,7 +419,7 @@ describe("L12G deterministic Levitate creature admission", () => {
     const witnessedAltitudeChange =
       controlledVerticalSuspensionAltitudeChangeFill(hole, "up", 10, [
         {
-          kind: "levitatedTargetWithinSpellRange",
+          kind: "controlledVerticalSuspensionTargetWithinRange",
           effectRef: levitated.effectRef,
           sourceCombatantId: spellCasterId,
           sourceProcedureRef: levitated.sourceProcedureRef,
@@ -486,7 +486,7 @@ describe("L12G deterministic Levitate creature admission", () => {
       state: casterTurn,
       ownerId: spellTargetId,
       effect: {
-        kind: "spellLevitatedCreature",
+        kind: "controlledVerticalSuspension",
         sourceProcedureRef: original.sourceProcedureRef,
         sourceCombatantId: original.sourceCombatantId,
         altitudeFeet: original.altitudeFeet,
@@ -505,10 +505,10 @@ describe("L12G deterministic Levitate creature admission", () => {
     );
     const selected = targetAfterAllocation.activeEffects.find(
       (effect) =>
-        effect.kind === "spellLevitatedCreature" &&
+        effect.kind === "controlledVerticalSuspension" &&
         effect.effectRef !== original.effectRef,
     );
-    if (selected?.kind !== "spellLevitatedCreature") {
+    if (selected?.kind !== "controlledVerticalSuspension") {
       throw new Error("Expected a second allocated Levitate occurrence.");
     }
     expect(Number(targetAfterAllocation.nextEffectOrdinal)).toBe(
@@ -547,7 +547,7 @@ describe("L12G deterministic Levitate creature admission", () => {
     }
     assertBattleSnapshotCodecRoundTripForTest(awaitingAltitudeChange.snapshot);
     const staleRangeFact = {
-      kind: "levitatedTargetWithinSpellRange" as const,
+      kind: "controlledVerticalSuspensionTargetWithinRange" as const,
       effectRef: original.effectRef,
       sourceCombatantId: spellCasterId,
       sourceProcedureRef: original.sourceProcedureRef,
@@ -571,7 +571,7 @@ describe("L12G deterministic Levitate creature admission", () => {
       fills: [
         controlledVerticalSuspensionAltitudeChangeFill(hole, "up", 10, [
           {
-            kind: "levitatedTargetWithinSpellRange",
+            kind: "controlledVerticalSuspensionTargetWithinRange",
             effectRef: selected.effectRef,
             sourceCombatantId: spellCasterId,
             sourceProcedureRef: selected.sourceProcedureRef,
@@ -590,7 +590,7 @@ describe("L12G deterministic Levitate creature admission", () => {
       raised.state,
       spellTargetId,
     ).activeEffects.filter(
-      (effect) => effect.kind === "spellLevitatedCreature",
+      (effect) => effect.kind === "controlledVerticalSuspension",
     );
     expect(levitateEffects).toEqual(
       expect.arrayContaining([
@@ -675,7 +675,7 @@ describe("L12G deterministic Levitate creature admission", () => {
     ).toBeNull();
     expect(
       requireCombatant(concentrationBroken, spellTargetId).activeEffects.some(
-        (effect) => effect.kind === "spellLevitatedCreature",
+        (effect) => effect.kind === "controlledVerticalSuspension",
       ),
     ).toBe(false);
 
@@ -685,7 +685,7 @@ describe("L12G deterministic Levitate creature admission", () => {
       combatants: new Map(cast.state.combatants).set(spellTargetId, {
         ...target,
         activeEffects: target.activeEffects.map((effect) =>
-          effect.kind === "spellLevitatedCreature" &&
+          effect.kind === "controlledVerticalSuspension" &&
           effect.expiresAt.kind === "concentration"
             ? {
                 ...effect,
@@ -702,7 +702,7 @@ describe("L12G deterministic Levitate creature admission", () => {
     expect(requireCombatant(expired, spellCasterId).concentration).toBeNull();
     expect(
       requireCombatant(expired, spellTargetId).activeEffects.some(
-        (effect) => effect.kind === "spellLevitatedCreature",
+        (effect) => effect.kind === "controlledVerticalSuspension",
       ),
     ).toBe(false);
   });
@@ -738,7 +738,7 @@ describe("L12G deterministic Levitate creature admission", () => {
     );
     expect(
       brokenTarget.activeEffects.some(
-        (effect) => effect.kind === "spellLevitatedCreature",
+        (effect) => effect.kind === "controlledVerticalSuspension",
       ),
     ).toBe(false);
   });
@@ -817,7 +817,7 @@ function requireLevitatedEffect(
 ) {
   const target = requireCombatant(state, targetId);
   const effect = target.activeEffects.find(
-    (candidate) => candidate.kind === "spellLevitatedCreature",
+    (candidate) => candidate.kind === "controlledVerticalSuspension",
   );
   if (effect === undefined) {
     throw new Error("Expected Levitate active effect.");

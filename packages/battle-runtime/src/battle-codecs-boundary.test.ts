@@ -595,7 +595,7 @@ function codecFixture() {
         kind: "activeEffect",
         ownerId: skeletonId,
         effect: {
-          kind: "spellLevitatedCreature",
+          kind: "controlledVerticalSuspension",
           sourceProcedureRef: source.procedureRef,
           sourceCombatantId: wizardId,
           altitudeFeet: movementFeet(20),
@@ -612,7 +612,7 @@ function codecFixture() {
         kind: "activeEffect",
         ownerId: skeletonId,
         effect: {
-          kind: "spellLevitatedCreature",
+          kind: "controlledVerticalSuspension",
           sourceProcedureRef: source.procedureRef,
           sourceCombatantId: wizardId,
           altitudeFeet: movementFeet(10),
@@ -734,7 +734,7 @@ function codecFixture() {
   }
   const levitateEffectRefs = allocated.occurrences.flatMap((occurrence) =>
     occurrence.kind === "activeEffect" &&
-    occurrence.effect.kind === "spellLevitatedCreature"
+    occurrence.effect.kind === "controlledVerticalSuspension"
       ? [occurrence.effect.effectRef]
       : [],
   );
@@ -788,7 +788,7 @@ function codecFixture() {
     cloudkillEffectRef: activeEffectRef("persistentAreaSaveDamage"),
     spikeGrowthEffectRef: activeEffectRef("areaMovementDistanceDamage"),
     gustOfWindEffectRef: activeEffectRef("directionalPersistentArea"),
-    levitateEffectRef: activeEffectRef("spellLevitatedCreature"),
+    levitateEffectRef: activeEffectRef("controlledVerticalSuspension"),
     secondLevitateEffectRef: levitateEffectRefs[1]!,
     antimagicFieldEffectRef: activeEffectRef("magicSuppressionEmanation"),
     storedLightEmitterRef: skeletonStoredLightEmitter.emitter.effectRef,
@@ -1402,7 +1402,7 @@ describe("battle codec execution-reference boundaries", () => {
     ],
     ["glyphDurableOccurrence", { kind: "nonSpatial" }],
     [
-      "spellLevitatedCreature",
+      "controlledVerticalSuspension",
       { kind: "area", areaId: battleAreaId("area:codec-wrong-class") },
     ],
   ] as const)(
@@ -1694,7 +1694,7 @@ describe("battle codec execution-reference boundaries", () => {
       value: { direction: "up", distanceFeet: 10 },
       spatialFacts: [
         {
-          kind: "levitatedTargetWithinSpellRange",
+          kind: "controlledVerticalSuspensionTargetWithinRange",
           effectRef: fixture.levitateEffectRef,
           sourceCombatantId: wizardId,
           sourceProcedureRef: fixture.sourceProcedureRef,
@@ -1779,7 +1779,7 @@ describe("battle codec execution-reference boundaries", () => {
       value: { direction: "up", distanceFeet: 10 },
       spatialFacts: [
         {
-          kind: "levitatedTargetWithinSpellRange",
+          kind: "controlledVerticalSuspensionTargetWithinRange",
           sourceCombatantId: wizardId,
           sourceProcedureRef: fixture.sourceProcedureRef,
           targetId: skeletonId,

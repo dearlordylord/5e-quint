@@ -432,7 +432,7 @@ const GLYPH_STORED_SINGLE_CREATURE_ACTIVE_EFFECT_RELEASE_CASES: ReadonlyArray<Gl
       spellId: levitateUnitId,
       slotLevel: 2,
       procedure: "controlledVerticalSuspension",
-      effectKinds: ["spellLevitatedCreature"],
+      effectKinds: ["controlledVerticalSuspension"],
       targetFacts: storedKnownWillingSingleCreatureSpellTargetFacts,
       fillsFromHoles: (holes) => [
         controlledVerticalSuspensionInitialRiseFill(
