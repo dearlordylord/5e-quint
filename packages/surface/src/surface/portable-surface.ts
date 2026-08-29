@@ -5,8 +5,10 @@ import {
   PublishedSrdStatBlockRecordSchema,
   PublishedSrdSurfaceSchema,
   PublishedSrdUnitRecordSchema,
+  SrdUnitRecordSchema,
   type PublishedSrdSurface,
 } from "./schema.ts";
+import type { SrdUnitRecord } from "./types.ts";
 import {
   readSurfaceSchemaRole,
   type SurfaceSchemaFieldRole,
@@ -75,7 +77,7 @@ type PublishedStatBlock = Schema.Schema.Type<
   typeof PublishedSrdStatBlockRecordSchema
 >;
 
-type AuthoredDependency = {
+export type SurfaceAuthoredDependency = {
   readonly path: string;
   readonly targetKind: "unit" | "statBlock";
   readonly targetId: string;
@@ -85,8 +87,8 @@ type AuthoredDependency = {
   >["relation"];
 };
 
-type AuthoredDependencyCollection = {
-  readonly dependencies: readonly AuthoredDependency[];
+export type SurfaceAuthoredDependencyCollection = {
+  readonly dependencies: readonly SurfaceAuthoredDependency[];
   readonly issues: readonly PortableSrdSurfaceIssue[];
 };
 
@@ -662,7 +664,7 @@ type DependencyWalkContext = {
   readonly current: DependencyWalkItem;
   readonly role: SurfaceSchemaFieldRole | undefined;
   readonly pending: DependencyWalkItem[];
-  readonly dependencies: AuthoredDependency[];
+  readonly dependencies: SurfaceAuthoredDependency[];
   readonly issues: PortableSrdSurfaceIssue[];
 };
 
@@ -824,8 +826,8 @@ function collectAuthoredDependencies(
   schema: Schema.Schema.AnyNoContext,
   value: unknown,
   rootPath: string,
-): AuthoredDependencyCollection {
-  const dependencies: AuthoredDependency[] = [];
+): SurfaceAuthoredDependencyCollection {
+  const dependencies: SurfaceAuthoredDependency[] = [];
   const issues: PortableSrdSurfaceIssue[] = [];
   const pending: DependencyWalkItem[] = [
     { ast: schema.ast, value, path: rootPath, inheritedRole: undefined },
@@ -847,6 +849,17 @@ function collectAuthoredDependencies(
   }
 
   return { dependencies, issues };
+}
+
+/**
+ * Project the schema-declared dependencies of one canonical Unit record.
+ * Static mechanics admission consumes this same schema-owned relation rather
+ * than maintaining a second list of dependency-bearing fields.
+ */
+export function srdUnitAuthoredDependencies(
+  unit: SrdUnitRecord,
+): SurfaceAuthoredDependencyCollection {
+  return collectAuthoredDependencies(SrdUnitRecordSchema, unit, "$.unit");
 }
 
 function dependencyIssues(members: DecodedMembers): PortableSrdSurfaceIssue[] {

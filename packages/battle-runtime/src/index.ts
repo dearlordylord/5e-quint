@@ -95,6 +95,12 @@ export {
   characterProcedureBindingSnapshots,
 } from "./character-execution-admission.ts";
 
+export {
+  admitCompleteUnitMechanics,
+  admitCompleteUnitMechanicsGraph,
+  type UnitMechanicsAdmissionInput,
+} from "./unit-mechanics-admission.ts";
+
 export type {
   BattleStatBlockExecutionSource,
   StatBlockExecutionAdmission,

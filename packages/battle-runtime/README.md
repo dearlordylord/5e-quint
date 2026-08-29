@@ -132,6 +132,14 @@ by:
   for reducer-semantic obligations and parity;
 - focused tests beside `src/` for admission and replay evidence.
 
+`admitCompleteUnitMechanicsGraph` is the context-independent catalog-install
+view of that same parser. It checks every composite branch separately, checks
+schema-declared authored dependencies through Surface's canonical dependency
+walker, and returns only typed non-empty rejection issues or `admitted`. It
+does not create a support registry, admission receipt, executable projection,
+or Runtime Hole. This boundary changes no rule or reducer semantics, so it has
+no RAW, QNT, or battle-MBT owner of its own.
+
 When behavior widens, update the registry source, executable owner, and focused
 QNT/runtime evidence together, then regenerate the reports through their public
 checks.
