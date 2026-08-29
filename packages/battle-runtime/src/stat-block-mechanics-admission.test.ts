@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Either, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import armorChainMailInput from "../../surface/content/armor_chain_mail.json";
@@ -23,6 +23,7 @@ import {
   admitCompleteStatBlockMechanics,
   admitCompleteStatBlockMechanicsGraph,
 } from "./stat-block-mechanics-admission.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 
 const decode = (input: unknown): SrdStatBlockRecord =>
   Schema.decodeUnknownSync(SrdStatBlockRecordSchema, {
@@ -41,8 +42,13 @@ if (source === undefined) {
 }
 
 const permissiveAdmission: SurfaceMechanicsAdmission = {
-  admitUnit: () => ({ tag: "admitted" }),
-  admitStatBlock: () => ({ tag: "admitted" }),
+  admitUnit: () => ({ tag: "admitted", execution: [] }),
+  admitStatBlock: ({ statBlock }) => {
+    const execution = projectAuthoredStatBlock(statBlock);
+    if (Either.isLeft(execution))
+      return { tag: "rejected", issues: [] as never };
+    return { tag: "admitted", execution: execution.right };
+  },
 };
 
 function surfaceWithStatBlock(statBlock: SrdStatBlockRecord): SrdSurface {
@@ -62,13 +68,13 @@ describe("complete Stat Block mechanics admission", () => {
         statBlock: source,
         surface,
       }),
-    ).toEqual({ tag: "admitted" });
+    ).toMatchObject({ tag: "admitted" });
     expect(
       admitCompleteStatBlockMechanicsGraph({
         statBlock: renamed,
         surface: surfaceWithStatBlock(renamed),
       }),
-    ).toEqual({ tag: "admitted" });
+    ).toMatchObject({ tag: "admitted" });
   });
 
   test.each([

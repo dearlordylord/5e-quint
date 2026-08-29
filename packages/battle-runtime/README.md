@@ -137,9 +137,12 @@ view of that same parser. It checks every composite branch separately, checks
 every represented passive branch against the admitted profile projection,
 checks schema-declared authored dependencies and references through Surface's
 canonical authored-link walker, requires the root to be the exact member of
-that decoded Surface, and returns only typed non-empty rejection issues or
-`admitted`. It does not create a support registry, admission receipt,
-executable projection, or Runtime Hole.
+that decoded Surface, and returns typed non-empty rejection issues or a
+parse-once support plan. That plan retains static typed families needed to
+apply Character class levels, source facts, and an authored selection later;
+binding never reparses the authored Unit. Battle installation adds a private
+nominal proof that only these Unit and Stat Block authorities can establish.
+It does not create a support registry, admission receipt, or Runtime Hole.
 This boundary changes no rule or reducer semantics, so it has no RAW, QNT, or
 battle-MBT owner of its own.
 

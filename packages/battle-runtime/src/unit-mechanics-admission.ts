@@ -5,7 +5,6 @@ import * as Either from "effect/Either";
 
 import { PositiveInteger } from "@dnd/shared/types";
 import type {
-  SurfaceMechanicsAdmission,
   UnitMechanicsAdmissionIssueDraft,
   UnitMechanicsAdmissionResult,
 } from "@dnd/surface/surface/catalog-install";
@@ -23,7 +22,9 @@ import type {
 } from "@dnd/surface/surface/types";
 
 import {
+  admitBattleUnitSupportPlan,
   battleUnitSupportProfilesForUnit,
+  type AdmittedBattleUnitSupportPlan,
   type BattleUnitSupportProfile,
 } from "./unit-feature-support.ts";
 
@@ -34,6 +35,8 @@ export type UnitMechanicsAdmissionInput = {
   readonly surface: SrdSurface;
 };
 
+export type AdmittedUnitMechanics = AdmittedBattleUnitSupportPlan;
+
 /**
  * Admit a complete decoded Unit graph without consulting an actor or live
  * runtime state. Schema-declared dependencies and the runtime's existing
@@ -41,21 +44,33 @@ export type UnitMechanicsAdmissionInput = {
  */
 export function admitCompleteUnitMechanicsGraph(
   input: UnitMechanicsAdmissionInput,
-): UnitMechanicsAdmissionResult {
+): UnitMechanicsAdmissionResult<UnitMechanicsPath, AdmittedUnitMechanics> {
   const issues: AdmissionIssue[] = [];
   inspectRootMembership(input, issues);
   inspectAuthoredLinks(input, issues);
-  inspectExecutionSupport(input.unit, issues);
+  const execution = inspectExecutionSupport(input.unit, issues);
 
   const [firstIssue, ...remainingIssues] = issues;
-  return firstIssue === undefined
-    ? { tag: "admitted" }
-    : { tag: "rejected", issues: [firstIssue, ...remainingIssues] };
+  if (firstIssue !== undefined) {
+    return { tag: "rejected", issues: [firstIssue, ...remainingIssues] };
+  }
+  if (execution === undefined) {
+    return {
+      tag: "rejected",
+      issues: [
+        {
+          reason: "unsupported_mechanics",
+          mechanicsPath: mechanicsRootPath(input.unit),
+          message: "The Unit execution support plan was not admitted.",
+        },
+      ],
+    };
+  }
+  return { tag: "admitted", execution };
 }
 
 /** The callback shape expected by the atomic Surface installer. */
-export const admitCompleteUnitMechanics: SurfaceMechanicsAdmission["admitUnit"] =
-  admitCompleteUnitMechanicsGraph;
+export const admitCompleteUnitMechanics = admitCompleteUnitMechanicsGraph;
 
 function inspectRootMembership(
   input: UnitMechanicsAdmissionInput,
@@ -123,7 +138,19 @@ function inspectAuthoredLinks(
 function inspectExecutionSupport(
   unit: SrdUnitRecord,
   issues: AdmissionIssue[],
-): void {
+): AdmittedUnitMechanics | undefined {
+  const admittedPlan = admitBattleUnitSupportPlan(unit);
+  if (
+    Either.isLeft(admittedPlan) &&
+    !(unit.kind === "class_feature" && unit.mechanics.family === "composite")
+  ) {
+    addIssue(
+      issues,
+      "unsupported_mechanics",
+      mechanicsRootPath(unit),
+      admittedPlan.left.message,
+    );
+  }
   if (unit.kind === "class_feature" && unit.mechanics.family === "composite") {
     const before = issues.length;
     for (const [index, mechanics] of unit.mechanics.parts.entries()) {
@@ -140,17 +167,20 @@ function inspectExecutionSupport(
         issues,
       );
     }
-    if (issues.length > before) return;
+    if (issues.length > before) {
+      return Either.isRight(admittedPlan) ? admittedPlan.right : undefined;
+    }
   }
 
   inspectUnitProfileCoverage(unit, mechanicsRootPath(unit), issues);
+  return Either.isRight(admittedPlan) ? admittedPlan.right : undefined;
 }
 
 function inspectUnitProfileCoverage(
   unit: SrdUnitRecord,
   mechanicsPath: UnitMechanicsPath,
   issues: AdmissionIssue[],
-): void {
+): readonly BattleUnitSupportProfile[] {
   const support = battleUnitSupportProfilesForUnit({ unit });
   const before = issues.length;
   inspectProfileResult(support, mechanicsPath, issues);
@@ -160,7 +190,7 @@ function inspectUnitProfileCoverage(
     !("mechanics" in unit) ||
     unit.mechanics.family !== "passive"
   ) {
-    return;
+    return Either.isLeft(support) ? [] : support.right;
   }
   inspectPassiveMechanicsCoverage(
     unit,
@@ -169,6 +199,7 @@ function inspectUnitProfileCoverage(
     mechanicsPath,
     issues,
   );
+  return support.right;
 }
 
 function inspectPassiveMechanicsCoverage(

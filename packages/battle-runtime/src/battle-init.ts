@@ -664,6 +664,26 @@ export function battleCreatureInitFromStatBlock(
   });
 }
 
+export function battleCreatureInitFromBoundStatBlock(
+  input: Omit<AuthoredStatBlockBattleInitInput, "statBlock"> & {
+    readonly binding: import("./admitted-mechanics-binding.ts").BoundStatBlockMechanicsGraph;
+  },
+): Either.Either<
+  StatBlockBattleCombatantInit,
+  StatBlockBattleInitIssue | StatBlockResourceGraphCombatantAdmissionIssue
+> {
+  const source = battleStatBlockCombatantSource(
+    input.binding.execution.runtime,
+  );
+  if (Either.isLeft(source)) return Either.left(source.left);
+  const { binding, ...battleInput } = input;
+  return battleCreatureInitFromRuntimeStatBlock({
+    ...battleInput,
+    statBlock: source.right,
+    presentation: binding.execution.presentation,
+  });
+}
+
 function battleCreatureInitFromRuntimeStatBlock(
   input: RuntimeStatBlockBattleInitInput,
 ): Either.Either<StatBlockBattleCombatantInit, StatBlockBattleInitIssue> {

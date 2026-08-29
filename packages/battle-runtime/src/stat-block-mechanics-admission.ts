@@ -8,7 +8,6 @@ import { PositiveInteger } from "@dnd/shared/types";
 import type {
   StatBlockMechanicsAdmissionIssueDraft,
   StatBlockMechanicsAdmissionResult,
-  SurfaceMechanicsAdmission,
 } from "@dnd/surface/surface/catalog-install";
 import {
   statBlockMechanicsPath,
@@ -36,6 +35,11 @@ import { parseStatBlockRuntimeResource } from "./stat-block-execution-state.ts";
 import { admitStatBlockSpellInvocationDeltas } from "./procedure-admission/stat-block-spell-invocation-deltas.ts";
 import { authoredStatBlockProcedureExecutionDecision } from "./procedure-admission/stat-block-procedure-execution-decision.ts";
 import type { StatBlockProcedureSection } from "./procedure-execution/stat-block-procedure-sections.ts";
+import {
+  battleStatBlockProjectionFailureMessage,
+  projectAuthoredStatBlock,
+  type AuthoredStatBlockProjection,
+} from "./stat-block-authored-projection.ts";
 
 type AdmissionIssue =
   StatBlockMechanicsAdmissionIssueDraft<StatBlockMechanicsPath>;
@@ -94,7 +98,10 @@ type Section = {
  */
 export function admitCompleteStatBlockMechanicsGraph(
   input: StatBlockMechanicsAdmissionInput,
-): StatBlockMechanicsAdmissionResult {
+): StatBlockMechanicsAdmissionResult<
+  StatBlockMechanicsPath,
+  AuthoredStatBlockProjection
+> {
   const issues: AdmissionIssue[] = [];
   const source = input.statBlock.statBlock;
   inspectRootMembership(input, issues);
@@ -124,16 +131,35 @@ export function admitCompleteStatBlockMechanicsGraph(
     );
   }
 
+  const projection = projectAuthoredStatBlock(input.statBlock);
+  if (Either.isLeft(projection) && issues.length === 0) {
+    addIssue(
+      issues,
+      "unsupported_mechanics",
+      path({ kind: "singleton", role: "recordMechanics" }),
+      battleStatBlockProjectionFailureMessage(projection.left),
+    );
+  }
+
   const [firstIssue, ...remainingIssues] = issues;
-  if (firstIssue === undefined) return { tag: "admitted" };
+  if (firstIssue === undefined && Either.isRight(projection)) {
+    return { tag: "admitted", execution: projection.right };
+  }
   return {
     tag: "rejected",
-    issues: [firstIssue, ...remainingIssues],
+    issues: [
+      firstIssue ?? {
+        reason: "unsupported_mechanics",
+        mechanicsPath: path({ kind: "singleton", role: "recordMechanics" }),
+        message: "The Stat Block execution projection is unsupported.",
+      },
+      ...remainingIssues,
+    ],
   };
 }
 
 /** The callback shape expected by the atomic Surface installer. */
-export const admitCompleteStatBlockMechanics: SurfaceMechanicsAdmission["admitStatBlock"] =
+export const admitCompleteStatBlockMechanics =
   admitCompleteStatBlockMechanicsGraph;
 
 function inspectRootMembership(

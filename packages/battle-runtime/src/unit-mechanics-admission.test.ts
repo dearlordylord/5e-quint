@@ -50,13 +50,13 @@ describe("complete Unit mechanics admission", () => {
 
     expect(
       admitCompleteUnitMechanicsGraph({ unit: roving, surface: baseSurface }),
-    ).toEqual({ tag: "admitted" });
+    ).toMatchObject({ tag: "admitted" });
     expect(
       admitCompleteUnitMechanicsGraph({
         unit: renamed,
         surface: surfaceWithUnit(renamed),
       }),
-    ).toEqual({ tag: "admitted" });
+    ).toMatchObject({ tag: "admitted" });
   });
 
   test("rejects the whole composite when an extension branch is unsupported", () => {
@@ -126,7 +126,7 @@ describe("complete Unit mechanics admission", () => {
       },
       mechanicsAdmission: {
         admitUnit: admitCompleteUnitMechanics,
-        admitStatBlock: () => ({ tag: "admitted" }),
+        admitStatBlock: () => ({ tag: "admitted", execution: {} }),
       },
     });
     expect(installation.tag).toBe("rejected");
@@ -373,15 +373,15 @@ describe("complete Unit mechanics admission", () => {
       },
       mechanicsAdmission: {
         admitUnit: admitCompleteUnitMechanics,
-        admitStatBlock: () => ({ tag: "admitted" }),
+        admitStatBlock: () => ({ tag: "admitted", execution: {} }),
       },
     });
 
     expect(result.tag).toBe("accepted");
     if (result.tag !== "accepted") return;
-    expect(result.catalog.unitCatalog.listUnits()).toHaveLength(1);
+    expect(result.catalog.unitLibrary.listUnits()).toHaveLength(1);
     expect(Object.keys(result.catalog)).toEqual([
-      "unitCatalog",
+      "unitLibrary",
       "statBlockCatalog",
     ]);
   });

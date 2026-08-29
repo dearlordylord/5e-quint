@@ -98,8 +98,20 @@ export {
 export {
   admitCompleteUnitMechanics,
   admitCompleteUnitMechanicsGraph,
+  type AdmittedUnitMechanics,
   type UnitMechanicsAdmissionInput,
 } from "./unit-mechanics-admission.ts";
+
+export {
+  bindInstalledStatBlockMechanics,
+  bindInstalledUnitMechanics,
+  installBattleSrdSurface,
+  type AuthoredMechanicsSelectionIssue,
+  type BattleInstalledSrdSurfaceCatalog,
+  type BattleSrdSurfaceInstallResult,
+  type BoundStatBlockMechanicsGraph,
+  type BoundUnitMechanicsGraph,
+} from "./admitted-mechanics-binding.ts";
 
 export type {
   BattleStatBlockExecutionSource,
@@ -644,7 +656,10 @@ export type {
   BattleReducerRouteOwnerGroup,
   BattleReducerRouteSubjectFamily,
 } from "./battle-reducer/reducer-route-protocol.ts";
-export { battleCreatureInitFromStatBlock } from "./battle-init.ts";
+export {
+  battleCreatureInitFromStatBlock,
+  battleCreatureInitFromBoundStatBlock,
+} from "./battle-init.ts";
 export { battleAmmunitionStock } from "./battle-ammunition.ts";
 export type {
   BattleAmmunitionKind,
@@ -829,6 +844,10 @@ export {
   parseSupportedUnitFeatureProfile,
   battleUnitRefWithSupportProfiles,
   battleUnitSupportProfilesForUnit,
+  admitBattleUnitSupportPlan,
+  bindAdmittedBattleUnitSupportPlan,
+  type AdmittedBattleUnitSupportPlan,
+  type BattleUnitSupportPlanBindingInput,
   battleAttackDamageDieFloorSupportForUnit,
   failedSavingThrowRerollProfileForUnit,
   battleLightExtraAttackDamageAbilityModifierSupportForUnit,

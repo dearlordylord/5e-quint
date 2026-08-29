@@ -51,8 +51,11 @@ const noMechanicsIssues: SurfaceMechanicsAdmission<
   UnitMechanicsPath,
   StatBlockMechanicsPath
 > = {
-  admitUnit: () => ({ tag: "admitted" }),
-  admitStatBlock: () => ({ tag: "admitted" }),
+  admitUnit: () => ({ tag: "admitted", execution: "unit-execution" }),
+  admitStatBlock: () => ({
+    tag: "admitted",
+    execution: "stat-block-execution",
+  }),
 };
 
 describe("atomic Surface catalog installation", () => {
@@ -64,12 +67,15 @@ describe("atomic Surface catalog installation", () => {
         admitUnit: ({ unit }) => {
           seen.push(`unit:${unit.id}`);
           expect(Object.hasOwn(unit, "rulesExcerpt")).toBe(false);
-          return { tag: "admitted" };
+          return { tag: "admitted", execution: "unit-execution" };
         },
         admitStatBlock: ({ statBlock }) => {
           seen.push(`statBlock:${statBlock.id}`);
           expect(Object.hasOwn(statBlock, "rulesExcerpt")).toBe(false);
-          return { tag: "admitted" };
+          return {
+            tag: "admitted",
+            execution: "stat-block-execution",
+          };
         },
       },
     });
@@ -82,7 +88,7 @@ describe("atomic Surface catalog installation", () => {
     if (result.tag !== "accepted") return;
 
     expect(
-      Option.isSome(result.catalog.unitCatalog.getUnit(armorChainMailInput.id)),
+      Option.isSome(result.catalog.unitLibrary.getUnit(armorChainMailInput.id)),
     ).toBe(true);
     expect(
       Option.isSome(
@@ -91,7 +97,7 @@ describe("atomic Surface catalog installation", () => {
     ).toBe(true);
     expect(Object.keys(result)).toEqual(["tag", "catalog"]);
     expect(Object.keys(result.catalog)).toEqual([
-      "unitCatalog",
+      "unitLibrary",
       "statBlockCatalog",
     ]);
   });
@@ -103,6 +109,55 @@ describe("atomic Surface catalog installation", () => {
     });
 
     expect(result.tag).toBe("accepted");
+  });
+
+  test("retains admitted execution and authored mechanics once in installed entries", () => {
+    const unitExecution = { procedure: "synthetic-unit-procedure" } as const;
+    const statBlockExecution = {
+      procedure: "synthetic-stat-block-procedure",
+    } as const;
+    let unitAdmissionCalls = 0;
+    let statBlockAdmissionCalls = 0;
+    let admittedUnit: unknown;
+    let admittedStatBlock: unknown;
+    const result = installSrdSurface({
+      raw: portableSurface,
+      mechanicsAdmission: {
+        admitUnit: ({ unit }) => {
+          unitAdmissionCalls += 1;
+          admittedUnit = unit;
+          return { tag: "admitted", execution: unitExecution };
+        },
+        admitStatBlock: ({ statBlock }) => {
+          statBlockAdmissionCalls += 1;
+          admittedStatBlock = statBlock;
+          return { tag: "admitted", execution: statBlockExecution };
+        },
+      },
+    });
+    expect(result.tag).toBe("accepted");
+    if (result.tag !== "accepted") return;
+
+    const unitBinding = result.catalog.unitLibrary.getInstalledUnit(
+      armorChainMailInput.id,
+    );
+    const statBlockBinding =
+      result.catalog.statBlockCatalog.getInstalledStatBlock(goblinWarriorId);
+    expect(Option.isSome(unitBinding)).toBe(true);
+    expect(Option.isSome(statBlockBinding)).toBe(true);
+    if (Option.isNone(unitBinding) || Option.isNone(statBlockBinding)) return;
+
+    expect(unitBinding.value.kind).toBe("unit");
+    expect(statBlockBinding.value.kind).toBe("statBlock");
+    expect(unitBinding.value.authored).toBe(admittedUnit);
+    expect(statBlockBinding.value.authored).toBe(admittedStatBlock);
+    expect(unitBinding.value.execution).toBe(unitExecution);
+    expect(statBlockBinding.value.execution).toBe(statBlockExecution);
+
+    result.catalog.unitLibrary.getInstalledUnit(armorChainMailInput.id);
+    result.catalog.statBlockCatalog.getInstalledStatBlock(goblinWarriorId);
+    expect(unitAdmissionCalls).toBe(1);
+    expect(statBlockAdmissionCalls).toBe(1);
   });
 
   test("accumulates independent mechanics issues with family roots and paths", () => {
@@ -192,11 +247,14 @@ describe("atomic Surface catalog installation", () => {
       mechanicsAdmission: {
         admitUnit: () => {
           admissionCalled = true;
-          return { tag: "admitted" };
+          return { tag: "admitted", execution: "unit-execution" };
         },
         admitStatBlock: () => {
           admissionCalled = true;
-          return { tag: "admitted" };
+          return {
+            tag: "admitted",
+            execution: "stat-block-execution",
+          };
         },
       },
     });

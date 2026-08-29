@@ -1,4 +1,7 @@
 import type {
+  InstalledSrdSurfaceCatalog,
+  InstalledStatBlockCatalog,
+  InstalledUnitCatalog,
   SurfaceCatalogInstallIssue,
   SurfaceMechanicsAdmission,
 } from "./catalog-install.ts";
@@ -41,6 +44,15 @@ export type StatBlockRootCarriesStatBlockPath = Assert<
     ? true
     : false
 >;
+
+declare const ordinaryUnitCatalog: InstalledUnitCatalog<unknown>;
+declare const ordinaryStatBlockCatalog: InstalledStatBlockCatalog<unknown>;
+
+// @ts-expect-error ordinary family catalogs cannot forge atomic installation
+export const forgedInstalledCatalog: InstalledSrdSurfaceCatalog = {
+  unitLibrary: ordinaryUnitCatalog,
+  statBlockCatalog: ordinaryStatBlockCatalog,
+};
 
 export type UnitRootRejectsStatBlockPath = Assert<
   Extract<

@@ -8,9 +8,10 @@ import type { PublishedSrdSurface, SrdSurface } from "./schema.ts";
 import {
   buildStatBlockCatalog,
   type SrdStatBlockCollection,
-  type StatBlockCatalog,
+  type SrdStatBlockCatalog,
   type StatBlockCatalogBuildIssue,
 } from "./stat-block-catalog.ts";
+import { Option } from "effect";
 import type { SrdStatBlockRecord, SrdUnitRecord } from "./types.ts";
 import type {
   StatBlockMechanicsPath as SurfaceStatBlockMechanicsPath,
@@ -65,8 +66,12 @@ export type StatBlockMechanicsAdmissionIssueDraft<
 
 export type UnitMechanicsAdmissionResult<
   UnitMechanicsPath extends SurfaceUnitMechanicsPath = SurfaceUnitMechanicsPath,
+  UnitExecutionProjection = unknown,
 > =
-  | { readonly tag: "admitted" }
+  | {
+      readonly tag: "admitted";
+      readonly execution: UnitExecutionProjection;
+    }
   | {
       readonly tag: "rejected";
       readonly issues: readonly [
@@ -78,8 +83,12 @@ export type UnitMechanicsAdmissionResult<
 export type StatBlockMechanicsAdmissionResult<
   StatBlockMechanicsPath extends SurfaceStatBlockMechanicsPath =
     SurfaceStatBlockMechanicsPath,
+  StatBlockExecutionProjection = unknown,
 > =
-  | { readonly tag: "admitted" }
+  | {
+      readonly tag: "admitted";
+      readonly execution: StatBlockExecutionProjection;
+    }
   | {
       readonly tag: "rejected";
       readonly issues: readonly [
@@ -99,15 +108,23 @@ export type SurfaceMechanicsAdmission<
   UnitMechanicsPath extends SurfaceUnitMechanicsPath = SurfaceUnitMechanicsPath,
   StatBlockMechanicsPath extends SurfaceStatBlockMechanicsPath =
     SurfaceStatBlockMechanicsPath,
+  UnitExecutionProjection = unknown,
+  StatBlockExecutionProjection = unknown,
 > = {
   readonly admitUnit: (input: {
     readonly unit: SrdUnitRecord;
     readonly surface: SrdSurface;
-  }) => UnitMechanicsAdmissionResult<UnitMechanicsPath>;
+  }) => UnitMechanicsAdmissionResult<
+    UnitMechanicsPath,
+    UnitExecutionProjection
+  >;
   readonly admitStatBlock: (input: {
     readonly statBlock: SrdStatBlockRecord;
     readonly surface: SrdSurface;
-  }) => StatBlockMechanicsAdmissionResult<StatBlockMechanicsPath>;
+  }) => StatBlockMechanicsAdmissionResult<
+    StatBlockMechanicsPath,
+    StatBlockExecutionProjection
+  >;
 };
 
 export type SurfaceCatalogDecodeIssue =
@@ -142,20 +159,60 @@ export type SurfaceCatalogInstallIssue<
       readonly root: Extract<SurfaceAuthoredRecordRoot, { kind: "statBlock" }>;
     } & StatBlockMechanicsAdmissionIssueDraft<StatBlockMechanicsPath>);
 
+export type InstalledUnitMechanicsGraph<UnitExecutionProjection> = {
+  readonly kind: "unit";
+  readonly authored: SrdUnitRecord;
+  readonly execution: UnitExecutionProjection;
+};
+
+export type InstalledStatBlockMechanicsGraph<StatBlockExecutionProjection> = {
+  readonly kind: "statBlock";
+  readonly authored: SrdStatBlockRecord;
+  readonly execution: StatBlockExecutionProjection;
+};
+
+export type InstalledUnitCatalog<UnitExecutionProjection> = UnitCatalog & {
+  readonly getInstalledUnit: (
+    id: string,
+  ) => Option.Option<InstalledUnitMechanicsGraph<UnitExecutionProjection>>;
+  readonly listInstalledUnits: () => readonly InstalledUnitMechanicsGraph<UnitExecutionProjection>[];
+};
+
+export type InstalledStatBlockCatalog<StatBlockExecutionProjection> =
+  SrdStatBlockCatalog & {
+    readonly getInstalledStatBlock: (
+      id: SrdStatBlockRecord["id"],
+    ) => Option.Option<
+      InstalledStatBlockMechanicsGraph<StatBlockExecutionProjection>
+    >;
+    readonly listInstalledStatBlocks: () => readonly InstalledStatBlockMechanicsGraph<StatBlockExecutionProjection>[];
+  };
+
+declare const InstalledSrdSurfaceCatalogTypeId: unique symbol;
+
 /** The only executable state exposed after a successful installation. */
-export type InstalledSrdSurfaceCatalog = {
-  readonly unitCatalog: UnitCatalog;
-  readonly statBlockCatalog: StatBlockCatalog;
+export type InstalledSrdSurfaceCatalog<
+  UnitExecutionProjection = unknown,
+  StatBlockExecutionProjection = unknown,
+> = {
+  readonly unitLibrary: InstalledUnitCatalog<UnitExecutionProjection>;
+  readonly statBlockCatalog: InstalledStatBlockCatalog<StatBlockExecutionProjection>;
+  readonly [InstalledSrdSurfaceCatalogTypeId]: typeof InstalledSrdSurfaceCatalogTypeId;
 };
 
 export type SurfaceCatalogInstallResult<
   UnitMechanicsPath extends SurfaceUnitMechanicsPath = SurfaceUnitMechanicsPath,
   StatBlockMechanicsPath extends SurfaceStatBlockMechanicsPath =
     SurfaceStatBlockMechanicsPath,
+  UnitExecutionProjection = unknown,
+  StatBlockExecutionProjection = unknown,
 > =
   | {
       readonly tag: "accepted";
-      readonly catalog: InstalledSrdSurfaceCatalog;
+      readonly catalog: InstalledSrdSurfaceCatalog<
+        UnitExecutionProjection,
+        StatBlockExecutionProjection
+      >;
     }
   | {
       readonly tag: "rejected";
@@ -172,11 +229,15 @@ export type InstallSrdSurfaceInput<
   UnitMechanicsPath extends SurfaceUnitMechanicsPath = SurfaceUnitMechanicsPath,
   StatBlockMechanicsPath extends SurfaceStatBlockMechanicsPath =
     SurfaceStatBlockMechanicsPath,
+  UnitExecutionProjection = unknown,
+  StatBlockExecutionProjection = unknown,
 > = {
   readonly raw: unknown;
   readonly mechanicsAdmission: SurfaceMechanicsAdmission<
     UnitMechanicsPath,
-    StatBlockMechanicsPath
+    StatBlockMechanicsPath,
+    UnitExecutionProjection,
+    StatBlockExecutionProjection
   >;
 };
 
@@ -184,11 +245,15 @@ export type InstallSrdSurfaceTextInput<
   UnitMechanicsPath extends SurfaceUnitMechanicsPath = SurfaceUnitMechanicsPath,
   StatBlockMechanicsPath extends SurfaceStatBlockMechanicsPath =
     SurfaceStatBlockMechanicsPath,
+  UnitExecutionProjection = unknown,
+  StatBlockExecutionProjection = unknown,
 > = {
   readonly text: string;
   readonly mechanicsAdmission: SurfaceMechanicsAdmission<
     UnitMechanicsPath,
-    StatBlockMechanicsPath
+    StatBlockMechanicsPath,
+    UnitExecutionProjection,
+    StatBlockExecutionProjection
   >;
 };
 
@@ -202,9 +267,21 @@ export type InstallSrdSurfaceTextInput<
 export function installSrdSurface<
   UnitMechanicsPath extends SurfaceUnitMechanicsPath,
   StatBlockMechanicsPath extends SurfaceStatBlockMechanicsPath,
+  UnitExecutionProjection,
+  StatBlockExecutionProjection,
 >(
-  input: InstallSrdSurfaceInput<UnitMechanicsPath, StatBlockMechanicsPath>,
-): SurfaceCatalogInstallResult<UnitMechanicsPath, StatBlockMechanicsPath> {
+  input: InstallSrdSurfaceInput<
+    UnitMechanicsPath,
+    StatBlockMechanicsPath,
+    UnitExecutionProjection,
+    StatBlockExecutionProjection
+  >,
+): SurfaceCatalogInstallResult<
+  UnitMechanicsPath,
+  StatBlockMechanicsPath,
+  UnitExecutionProjection,
+  StatBlockExecutionProjection
+> {
   return installSrdSurfaceFromPortableDecode(
     () => decodePortableSrdSurface(input.raw),
     input.mechanicsAdmission,
@@ -215,9 +292,21 @@ export function installSrdSurface<
 export function installSrdSurfaceText<
   UnitMechanicsPath extends SurfaceUnitMechanicsPath,
   StatBlockMechanicsPath extends SurfaceStatBlockMechanicsPath,
+  UnitExecutionProjection,
+  StatBlockExecutionProjection,
 >(
-  input: InstallSrdSurfaceTextInput<UnitMechanicsPath, StatBlockMechanicsPath>,
-): SurfaceCatalogInstallResult<UnitMechanicsPath, StatBlockMechanicsPath> {
+  input: InstallSrdSurfaceTextInput<
+    UnitMechanicsPath,
+    StatBlockMechanicsPath,
+    UnitExecutionProjection,
+    StatBlockExecutionProjection
+  >,
+): SurfaceCatalogInstallResult<
+  UnitMechanicsPath,
+  StatBlockMechanicsPath,
+  UnitExecutionProjection,
+  StatBlockExecutionProjection
+> {
   return installSrdSurfaceFromPortableDecode(
     () => decodePortableSrdSurfaceText(input.text),
     input.mechanicsAdmission,
@@ -227,16 +316,30 @@ export function installSrdSurfaceText<
 function installSrdSurfaceFromPortableDecode<
   UnitMechanicsPath extends SurfaceUnitMechanicsPath,
   StatBlockMechanicsPath extends SurfaceStatBlockMechanicsPath,
+  UnitExecutionProjection,
+  StatBlockExecutionProjection,
 >(
   decode: () => PortableSrdSurfaceDecodeResult,
   mechanicsAdmission: SurfaceMechanicsAdmission<
     UnitMechanicsPath,
-    StatBlockMechanicsPath
+    StatBlockMechanicsPath,
+    UnitExecutionProjection,
+    StatBlockExecutionProjection
   >,
-): SurfaceCatalogInstallResult<UnitMechanicsPath, StatBlockMechanicsPath> {
+): SurfaceCatalogInstallResult<
+  UnitMechanicsPath,
+  StatBlockMechanicsPath,
+  UnitExecutionProjection,
+  StatBlockExecutionProjection
+> {
   const decoded = decode();
   if (decoded.tag === "rejected") {
-    return rejected(
+    return rejected<
+      UnitMechanicsPath,
+      StatBlockMechanicsPath,
+      UnitExecutionProjection,
+      StatBlockExecutionProjection
+    >(
       decoded.issues.map((issue) => ({
         phase: "decode" as const,
         issue: { kind: "portable-surface" as const, issue },
@@ -270,26 +373,38 @@ function installSrdSurfaceFromPortableDecode<
       : []),
   ];
 
+  const unitAdmissions = surface.units.map((unit) => ({
+    unit,
+    result: mechanicsAdmission.admitUnit({ unit, surface }),
+  }));
+  const statBlockAdmissions = surface.statBlocks.map((statBlock) => ({
+    statBlock,
+    result: mechanicsAdmission.admitStatBlock({ statBlock, surface }),
+  }));
   const admissionIssues: SurfaceCatalogInstallIssue<
     UnitMechanicsPath,
     StatBlockMechanicsPath
   >[] = [
-    ...surface.units.flatMap((unit) =>
-      unitAdmissionIssues(mechanicsAdmission.admitUnit({ unit, surface }), {
+    ...unitAdmissions.flatMap(({ unit, result }) =>
+      unitAdmissionIssues(result, {
         kind: "unit",
         id: unit.id,
       }),
     ),
-    ...surface.statBlocks.flatMap((statBlock) =>
-      statBlockAdmissionIssues(
-        mechanicsAdmission.admitStatBlock({ statBlock, surface }),
-        { kind: "statBlock", id: statBlock.id },
-      ),
+    ...statBlockAdmissions.flatMap(({ statBlock, result }) =>
+      statBlockAdmissionIssues(result, { kind: "statBlock", id: statBlock.id }),
     ),
   ];
 
   const issues = [...decodeIssues, ...admissionIssues];
-  if (issues.length > 0) return rejected(issues);
+  if (issues.length > 0) {
+    return rejected<
+      UnitMechanicsPath,
+      StatBlockMechanicsPath,
+      UnitExecutionProjection,
+      StatBlockExecutionProjection
+    >(issues);
+  }
 
   /* v8 ignore start -- the preceding issue projection proves both builders succeeded */
   if (unitBuild.tag !== "ok" || statBlockBuild.tag !== "ok") {
@@ -297,19 +412,87 @@ function installSrdSurfaceFromPortableDecode<
   }
   /* v8 ignore stop */
 
+  const installedUnits = new Map<
+    string,
+    InstalledUnitMechanicsGraph<UnitExecutionProjection>
+  >(
+    unitAdmissions.map(({ unit, result }) => {
+      if (result.tag !== "admitted") {
+        throw new Error("Rejected Unit admission survived issue projection");
+      }
+      const installed: InstalledUnitMechanicsGraph<UnitExecutionProjection> = {
+        kind: "unit",
+        authored: unit,
+        execution: result.execution,
+      };
+      return [unit.id, installed] as const;
+    }),
+  );
+  const installedStatBlocks = new Map<
+    SrdStatBlockRecord["id"],
+    InstalledStatBlockMechanicsGraph<StatBlockExecutionProjection>
+  >(
+    statBlockAdmissions.map(({ statBlock, result }) => {
+      if (result.tag !== "admitted") {
+        throw new Error(
+          "Rejected Stat Block admission survived issue projection",
+        );
+      }
+      const installed: InstalledStatBlockMechanicsGraph<StatBlockExecutionProjection> =
+        {
+          kind: "statBlock",
+          authored: statBlock,
+          execution: result.execution,
+        };
+      return [statBlock.id, installed] as const;
+    }),
+  );
+  const catalog = {
+    unitLibrary: {
+      getUnit: (id: string) =>
+        Option.map(
+          Option.fromNullable(installedUnits.get(id)),
+          (entry) => entry.authored,
+        ),
+      listUnits: () =>
+        Array.from(installedUnits.values(), (entry) => entry.authored),
+      requireUnit: (id: string) => installedUnits.get(id)!.authored,
+      getInstalledUnit: (id: string) =>
+        Option.fromNullable(installedUnits.get(id)),
+      listInstalledUnits: () => Array.from(installedUnits.values()),
+    },
+    statBlockCatalog: {
+      getStatBlock: (id: SrdStatBlockRecord["id"]) =>
+        Option.map(
+          Option.fromNullable(installedStatBlocks.get(id)),
+          (entry) => entry.authored,
+        ),
+      listStatBlocks: () =>
+        Array.from(installedStatBlocks.values(), (entry) => entry.authored),
+      getInstalledStatBlock: (id: SrdStatBlockRecord["id"]) =>
+        Option.fromNullable(installedStatBlocks.get(id)),
+      listInstalledStatBlocks: () => Array.from(installedStatBlocks.values()),
+    },
+  };
   return {
     tag: "accepted",
-    catalog: {
-      unitCatalog: unitBuild.catalog,
-      statBlockCatalog: statBlockBuild.catalog,
-    },
+    // Brands are erased at runtime. The local value has every public field;
+    // only this successful atomic operation may establish its private brand.
+    catalog: catalog as unknown as InstalledSrdSurfaceCatalog<
+      UnitExecutionProjection,
+      StatBlockExecutionProjection
+    >,
   };
 }
 
 function unitAdmissionIssues<
   UnitMechanicsPath extends SurfaceUnitMechanicsPath,
+  UnitExecutionProjection,
 >(
-  result: UnitMechanicsAdmissionResult<UnitMechanicsPath>,
+  result: UnitMechanicsAdmissionResult<
+    UnitMechanicsPath,
+    UnitExecutionProjection
+  >,
   root: Extract<SurfaceAuthoredRecordRoot, { kind: "unit" }>,
 ): readonly SurfaceCatalogInstallIssue<UnitMechanicsPath, never>[] {
   return result.tag === "rejected"
@@ -323,8 +506,12 @@ function unitAdmissionIssues<
 
 function statBlockAdmissionIssues<
   StatBlockMechanicsPath extends SurfaceStatBlockMechanicsPath,
+  StatBlockExecutionProjection,
 >(
-  result: StatBlockMechanicsAdmissionResult<StatBlockMechanicsPath>,
+  result: StatBlockMechanicsAdmissionResult<
+    StatBlockMechanicsPath,
+    StatBlockExecutionProjection
+  >,
   root: Extract<SurfaceAuthoredRecordRoot, { kind: "statBlock" }>,
 ): readonly SurfaceCatalogInstallIssue<never, StatBlockMechanicsPath>[] {
   return result.tag === "rejected"
@@ -386,12 +573,19 @@ function mapNonEmpty<T, U>(
 function rejected<
   UnitMechanicsPath extends SurfaceUnitMechanicsPath,
   StatBlockMechanicsPath extends SurfaceStatBlockMechanicsPath,
+  UnitExecutionProjection,
+  StatBlockExecutionProjection,
 >(
   issues: readonly SurfaceCatalogInstallIssue<
     UnitMechanicsPath,
     StatBlockMechanicsPath
   >[],
-): SurfaceCatalogInstallResult<UnitMechanicsPath, StatBlockMechanicsPath> {
+): SurfaceCatalogInstallResult<
+  UnitMechanicsPath,
+  StatBlockMechanicsPath,
+  UnitExecutionProjection,
+  StatBlockExecutionProjection
+> {
   const [first, ...rest] = issues;
   if (first === undefined) {
     throw new Error("Catalog install rejection requires at least one issue");
