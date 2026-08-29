@@ -333,8 +333,8 @@ describe("L12G deterministic Levitate creature admission", () => {
         movementFill(movementHole, {
           movementCostFeet: 5,
           provokedOpportunityAttacks: [],
-          levitatedMovement: {
-            kind: "levitatedMovement",
+          controlledVerticalSuspensionMovement: {
+            kind: "controlledVerticalSuspensionMovement",
             effectRef: requireLevitatedEffect(targetTurn.state).effectRef,
             sourceCombatantId: spellCasterId,
             sourceProcedureRef: requireLevitatedEffect(targetTurn.state)
@@ -361,8 +361,8 @@ describe("L12G deterministic Levitate creature admission", () => {
         movementFill(movementHole, {
           movementCostFeet: 10,
           provokedOpportunityAttacks: [],
-          levitatedMovement: {
-            kind: "levitatedMovement",
+          controlledVerticalSuspensionMovement: {
+            kind: "controlledVerticalSuspensionMovement",
             effectRef: requireLevitatedEffect(targetTurn.state).effectRef,
             sourceCombatantId: spellCasterId,
             sourceProcedureRef: requireLevitatedEffect(targetTurn.state)
@@ -637,8 +637,8 @@ describe("L12G deterministic Levitate creature admission", () => {
         movementFill(movementHole, {
           movementCostFeet: 10,
           provokedOpportunityAttacks: [],
-          levitatedMovement: {
-            kind: "levitatedMovement",
+          controlledVerticalSuspensionMovement: {
+            kind: "controlledVerticalSuspensionMovement",
             effectRef: requireLevitatedEffect(casterTurn, spellCasterId)
               .effectRef,
             sourceCombatantId: spellCasterId,

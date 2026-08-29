@@ -126,7 +126,10 @@ describe("BattleSubject identity", () => {
           effectRef,
         },
       },
-      disperseCloudkill: { effectOwnerId: actorId, effectRef },
+      endPersistentAreaSaveDamageForEnvironment: {
+        effectOwnerId: actorId,
+        effectRef,
+      },
       webRestrainedNoLongerInArea: { areaId, effectRef },
       persistentAreaSaveConditionEscapeAreaRemoved: { areaId, effectRef },
       directionalPersistentAreaSave: {
@@ -158,7 +161,7 @@ describe("BattleSubject identity", () => {
       creatureTypeProtectionPossessionAttempt: {
         sourceCombatantId: targetId,
       },
-      disperseFogCloud: { areaId },
+      endPersistentAreaTraitForEnvironment: { areaId },
       linkedDefenseResistanceDamageShareSeparation: { effectRef, targetId },
       fixedCostMovementReplacement: { effectRef },
       grantedAreaSaveDamageAction: { effectRef },
@@ -239,7 +242,7 @@ describe("BattleSubject identity", () => {
       shove: {},
       escapeGrapple: {},
       escapeSpellRestraint: { targetId, effectRef },
-      shakeAwakeFromSleep: {},
+      shakeAwakeFromStagedCondition: {},
       shakeAwakeFromSaveGatedAreaControl: {},
     } as const satisfies Record<
       BattleSubjectAction,

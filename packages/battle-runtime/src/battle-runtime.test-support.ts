@@ -17,8 +17,8 @@ export type MembersOf<Owner, Members extends Owner> = Members;
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84E fog_cloud
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV87C ranger_favored_enemy
 import {
-  spawnedCompanionLifecycleFormEligibilityForSpell,
-  spawnedCompanionLifecycleFormEligibilityForSpell,
+  findFamiliarFormEligibilityForSpell,
+  pactOfTheChainFindFamiliarFormEligibilityForSpell,
   resolveFindFamiliarForm,
   resolvePactOfTheChainFindFamiliarForm,
 } from "@dnd/surface/surface/find-familiar-forms";
@@ -103,7 +103,7 @@ import chainLightningInput from "../../surface/content/chain_lightning.json";
 import chillTouchInput from "../../surface/content/chill_touch.json";
 import colorSprayInput from "../../surface/content/color_spray.json";
 import eldritchBlastInput from "../../surface/content/eldritch_blast.json";
-import spawnedCompanionLifecycleInput from "../../surface/content/find_familiar.json";
+import findFamiliarInput from "../../surface/content/find_familiar.json";
 import fireBoltInput from "../../surface/content/fire_bolt.json";
 import fogCloudInput from "../../surface/content/fog_cloud.json";
 import greaseInput from "../../surface/content/grease.json";
@@ -1011,9 +1011,8 @@ const testSpellRecords = new Map(
         : [],
     ),
 );
-const spawnedCompanionLifecycleSpellRecord = decodeUnitRecordSync(
-  spawnedCompanionLifecycleInput,
-);
+const spawnedCompanionLifecycleSpellRecord =
+  decodeUnitRecordSync(findFamiliarInput);
 if (spawnedCompanionLifecycleSpellRecord.kind !== "spell") {
   throw new Error("Find Familiar test input must decode to a spell record.");
 }
@@ -1064,86 +1063,11 @@ export function requireNeedsHoles(
   return result;
 }
 
-export function subjectName(
-  subject: BattleSubject,
-):
-  | "attack"
-  | "dash"
-  | "disengage"
-  | "dodge"
-  | "helpAttack"
-  | "hide"
-  | "multiattack"
-  | "ready"
-  | "search"
-  | "grapple"
-  | "shove"
-  | "escapeGrapple"
-  | "escapeSpellRestraint"
-  | "shakeAwakeFromSleep"
-  | "offHandAttack"
-  | "martialArtsUnarmedStrike"
-  | "statBlockActionOption"
-  | "actionSpell"
-  | "bonusActionSpell"
-  | "bonusActionDashSpell"
-  | "pactOfTheChainFamiliarAttack"
-  | "monkFocusOption"
-  | "monkFocusFlurryOfBlowsStrike"
-  | "unitFeature"
-  | "unitFeatureHeldWeaponActivation"
-  | "druidWildShape"
-  | "companionLifecycle"
-  | "spawnedCompanionSharedSenses"
-  | "spawnedCompanionTouchSpellProxy"
-  | "endTurn"
-  | "endConcentration"
-  | "move"
-  | "standFromProne"
-  | "releaseGrapple"
-  | "releaseReadiedSpell"
-  | "releaseReadiedMovement"
-  | "reportReadyTrigger"
-  | "releaseReadiedAction"
-  | "releaseReadiedAttack"
-  | "releaseSpellCreatedHeldObject"
-  | "castTriggeredReactionSpell"
-  | "castAttackHitBonusActionSpell"
-  | "opportunityAttack"
-  | "retaliationAttack"
-  | "persistentAreaSaveConditionSave"
-  | "persistentAreaSaveConditionEscapeSave"
-  | "persistentAreaSaveCompositeSave"
-  | "persistentAreaSaveDamageSave"
-  | "persistentAreaSaveDamageSave"
-  | "webRestrainedNoLongerInArea"
-  | "persistentAreaSaveConditionEscapeAreaRemoved"
-  | "directionalPersistentAreaSave"
-  | "directionalPersistentAreaDirectionChange"
-  | "movableZoneSave"
-  | "persistentAreaSaveDamageExit"
-  | "movableZoneReposition"
-  | "movableZoneRam"
-  | "fixedCostMovementReplacement"
-  | "controlledVerticalSuspensionAltitudeControl"
-  | "grantedAreaSaveDamageAction"
-  | "replaceSelfTransformationMode"
-  | "executeCompelledGrovel"
-  | "executeCompelledDrop"
-  | "executeCompelledApproach"
-  | "executeCompelledFlee"
-  | "disperseFogCloud"
-  | "disperseCloudkill"
-  | "linkedDefenseResistanceDamageShareSeparation"
-  | "shakeAwakeFromSaveGatedAreaControl"
-  | "protectionRelevantEffectSave"
-  | "creatureTypeProtectionConditionAttempt"
-  | "creatureTypeProtectionPossessionAttempt"
-  | "creatureFalls" {
+export function subjectName(subject: BattleSubject) {
   if (subject.tag === "action") {
     return subject.action;
   }
-  if (subject.tag === "pactOfTheChainFamiliarAttack") {
+  if (subject.tag === "companionAttack") {
     return subject.tag;
   }
   if (subject.tag === "bonusAction") {
@@ -2518,17 +2442,21 @@ export function battleSubjectSelection(subject: BattleSubject) {
 
 type SleepShakeAwakeSubject = Extract<
   BattleSubject,
-  { readonly tag: "action"; readonly action: "shakeAwakeFromSleep" }
+  { readonly tag: "action"; readonly action: "shakeAwakeFromStagedCondition" }
 >;
 
 export function sleepShakeAwakeSubject(): SleepShakeAwakeSubject {
-  return { tag: "action", actorId: fighterId, action: "shakeAwakeFromSleep" };
+  return {
+    tag: "action",
+    actorId: fighterId,
+    action: "shakeAwakeFromStagedCondition",
+  };
 }
 
 export function sleepShakeAwakeTargetFill(hole: BattleHole): BattleFill {
   return targetFill(hole, goblinId, [
     {
-      kind: "sleepShakeAwakeActorWithin5Feet",
+      kind: "stagedConditionShakeAwakeActorWithin5Feet",
       actorId: fighterId,
       targetId: goblinId,
     },
@@ -6101,8 +6029,8 @@ export {
   Result,
   elapsedTimeTicks,
   endTurn,
-  spawnedCompanionLifecycleFormEligibilityForSpell,
-  spawnedCompanionLifecycleInput,
+  findFamiliarFormEligibilityForSpell,
+  findFamiliarInput,
   hasCondition,
   holeId,
   holeInstanceKey,
@@ -6113,7 +6041,7 @@ export {
   movementFeet,
   objectInvisibleBenefitDenied,
   PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
-  spawnedCompanionLifecycleFormEligibilityForSpell,
+  pactOfTheChainFindFamiliarFormEligibilityForSpell,
   removeCondition,
   requiredAbilityCheckRollMode,
   resolveBardicInspirationFailedD20Test,

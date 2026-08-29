@@ -24,7 +24,7 @@ import {
   proficiencyBonus,
 } from "@dnd/shared/types";
 import {
-  spawnedCompanionLifecycleFormEligibilityForSpell,
+  findFamiliarFormEligibilityForSpell,
   type FindFamiliarFormEligibility,
 } from "@dnd/surface/surface/find-familiar-forms";
 import { Result } from "effect";
@@ -56,8 +56,8 @@ import {
   combatantId,
   deliverTouchSpellThroughFindFamiliar,
   discoverBattleActs,
-  spawnedCompanionLifecycleCompanionEntryForOwner,
-  spawnedCompanionLifecycleTelepathicConnection,
+  findFamiliarCompanionEntryForOwner,
+  findFamiliarTelepathicConnection,
   initiativeScore,
   reappearTemporarilyDismissedFindFamiliar,
   sameBattleSubject,
@@ -140,9 +140,7 @@ const spawnedCompanionLifecycleSpell = spellRecord("find_familiar");
 const cureWoundsSpell = spellRecord("cure_wounds");
 const barkskinSpell = spellRecord("barkskin");
 const familiarEligibility = requireFindFamiliarEligibility(
-  spawnedCompanionLifecycleFormEligibilityForSpell(
-    spawnedCompanionLifecycleSpell,
-  ),
+  findFamiliarFormEligibilityForSpell(spawnedCompanionLifecycleSpell),
 );
 
 const driverSchema = {
@@ -553,7 +551,7 @@ function initialRuntimeState(): FindFamiliarCompanionRuntimeState {
           spellbookRitualSpellAccesses: [],
           invocationSpellAccesses: [
             {
-              tag: "spawnedCompanionLifecycle",
+              tag: "pactOfTheChainFindFamiliar",
               spell: spawnedCompanionLifecycleSpell,
             },
           ],
@@ -701,7 +699,7 @@ function resolvePactFamiliarAttack(
 function spawnedCompanionLifecycleCompanionProjection(
   state: FindFamiliarCompanionRuntimeState,
 ): FindFamiliarCompanionProjection {
-  const familiarEntry = spawnedCompanionLifecycleCompanionEntryForOwner(
+  const familiarEntry = findFamiliarCompanionEntryForOwner(
     state.battle.state,
     casterId,
   );
@@ -717,7 +715,7 @@ function spawnedCompanionLifecycleCompanionProjection(
       (use) => use.kind === "committed",
     );
   const targetHp = Number(requireCombatant(state.battle.state, targetId).hp);
-  const connection = spawnedCompanionLifecycleTelepathicConnection(
+  const connection = findFamiliarTelepathicConnection(
     state.battle.state,
     familiarWithin100FeetFact(),
   );
@@ -761,7 +759,7 @@ function spawnedCompanionLifecycleCompanionProjection(
 
 function familiarWithin100FeetFact() {
   return {
-    kind: "spawnedCompanionWithin100FeetOfOwner" as const,
+    kind: "findFamiliarWithin100FeetOfOwner" as const,
     ownerId: casterId,
     familiarId,
   };

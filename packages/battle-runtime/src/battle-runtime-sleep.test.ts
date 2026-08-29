@@ -1729,7 +1729,7 @@ describe("battle runtime: Sleep", () => {
               area: {
                 originAnchorId: wizardId,
                 affectedTargetIds: [goblinId],
-                sleepNonSleeperFacts: [
+                stagedConditionAutomaticSuccessFacts: [
                   { kind: "doesNotSleep", targetId: goblinId },
                 ],
               },
@@ -1756,7 +1756,7 @@ describe("battle runtime: Sleep", () => {
               area: {
                 originAnchorId: wizardId,
                 affectedTargetIds: [goblinId],
-                sleepNonSleeperFacts: [
+                stagedConditionAutomaticSuccessFacts: [
                   { kind: "doesNotSleep", targetId: goblinId },
                 ],
               },
@@ -1824,7 +1824,7 @@ describe("battle runtime: Sleep", () => {
               area: {
                 originAnchorId: wizardId,
                 affectedTargetIds: [goblinId],
-                sleepNonSleeperFacts: [
+                stagedConditionAutomaticSuccessFacts: [
                   { kind: "doesNotSleep", targetId: fighterId },
                 ],
               },
@@ -1850,7 +1850,7 @@ describe("battle runtime: Sleep", () => {
               area: {
                 originAnchorId: wizardId,
                 affectedTargetIds: [goblinId],
-                sleepNonSleeperFacts: [
+                stagedConditionAutomaticSuccessFacts: [
                   { kind: "doesNotSleep", targetId: goblinId },
                   { kind: "doesNotSleep", targetId: goblinId },
                 ],

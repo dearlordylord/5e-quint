@@ -1451,7 +1451,7 @@ describe("battle codec execution-reference boundaries", () => {
     const cloudkillAct = fixture.envelope.frontier.acts.find(
       (act) =>
         act.subject.tag === "runtimeCommand" &&
-        act.subject.command === "disperseCloudkill",
+        act.subject.command === "endPersistentAreaSaveDamageForEnvironment",
     );
     if (cloudkillAct === undefined) {
       throw new Error("Expected the Cloudkill dispersal act.");
@@ -1679,8 +1679,8 @@ describe("battle codec execution-reference boundaries", () => {
           totalDistanceFeet: 10,
           closerDistanceFeet: 5,
         },
-        levitatedMovement: {
-          kind: "levitatedMovement",
+        controlledVerticalSuspensionMovement: {
+          kind: "controlledVerticalSuspensionMovement",
           effectRef: fixture.levitateEffectRef,
           sourceCombatantId: wizardId,
           sourceProcedureRef: fixture.sourceProcedureRef,
@@ -1765,8 +1765,8 @@ describe("battle codec execution-reference boundaries", () => {
         speedKind: "walk",
         movementCostFeet: 10,
         provokedOpportunityAttacks: [],
-        levitatedMovement: {
-          kind: "levitatedMovement",
+        controlledVerticalSuspensionMovement: {
+          kind: "controlledVerticalSuspensionMovement",
           sourceCombatantId: wizardId,
           sourceProcedureRef: fixture.sourceProcedureRef,
           fixedObjectOrSurfaceWithinReach: true,

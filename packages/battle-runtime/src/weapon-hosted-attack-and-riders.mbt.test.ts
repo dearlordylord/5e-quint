@@ -56,8 +56,8 @@ import {
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
-  battleWeaponItemHasMagicWeaponEnhancement,
-  battleWeaponItemMagicWeaponEnhancementBonus,
+  battleWeaponItemHasWeaponAttackDamageEnhancement,
+  battleWeaponItemWeaponAttackDamageEnhancementBonus,
   battleReducerStartRouteEvent,
   endTurn,
   type BattleActiveEffect,
@@ -1065,7 +1065,7 @@ function routeWeaponEnhancementDurationCleanup(): readonly ReducerRouteEvent[] {
     combatants: new Map(enhanced.battle.state.combatants).set(spellCasterId, {
       ...caster,
       activeEffects: caster.activeEffects.map((effect) =>
-        effect.kind === "spellWeaponAttackDamageEnhancement"
+        effect.kind === "weaponAttackDamageEnhancement"
           ? {
               ...effect,
               expiresAt: {
@@ -1602,14 +1602,14 @@ function fillMagicWeaponTarget(
     "Expected Magic Weapon to resolve.",
   );
   expect(
-    battleWeaponItemHasMagicWeaponEnhancement(
+    battleWeaponItemHasWeaponAttackDamageEnhancement(
       cast.state,
       spellCasterId,
       battleObjectId("main:weapon_longsword"),
     ),
   ).toBe(true);
   expect(
-    battleWeaponItemMagicWeaponEnhancementBonus(
+    battleWeaponItemWeaponAttackDamageEnhancementBonus(
       cast.state,
       spellCasterId,
       battleObjectId("main:weapon_longsword"),
@@ -1634,7 +1634,7 @@ function cleanMagicWeaponDuration(
     combatants: new Map(state.battle.state.combatants).set(spellCasterId, {
       ...caster,
       activeEffects: caster.activeEffects.map((effect) =>
-        effect.kind === "spellWeaponAttackDamageEnhancement"
+        effect.kind === "weaponAttackDamageEnhancement"
           ? {
               ...effect,
               expiresAt: {
@@ -1693,7 +1693,7 @@ function weaponHostedProjection(
     damageTypeChoiceApplied: damageTypeChoiceApplied(state),
     damageRiderPresent: damageRiderPresent(state),
     weaponEnhancementBonus:
-      battleWeaponItemMagicWeaponEnhancementBonus(
+      battleWeaponItemWeaponAttackDamageEnhancementBonus(
         state.battle.state,
         spellCasterId,
         battleObjectId("main:weapon_longsword"),
@@ -1723,7 +1723,7 @@ function activeEffectPresent(
     );
   }
   if (scenario === "weaponAttackDamageEnhancement") {
-    return battleWeaponItemHasMagicWeaponEnhancement(
+    return battleWeaponItemHasWeaponAttackDamageEnhancement(
       battle,
       spellCasterId,
       battleObjectId("main:weapon_longsword"),

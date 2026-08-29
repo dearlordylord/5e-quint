@@ -10,10 +10,10 @@ import {
   battleId,
   decodeUnitRecordSync,
   discoverBattleActs,
-  spawnedCompanionLifecycleFormEligibilityForSpell,
-  spawnedCompanionLifecycleInput,
+  findFamiliarFormEligibilityForSpell,
+  findFamiliarInput,
   PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
-  spawnedCompanionLifecycleFormEligibilityForSpell,
+  pactOfTheChainFindFamiliarFormEligibilityForSpell,
   resolveFindFamiliarForm,
   resolvePactOfTheChainFindFamiliarForm,
   startBattle,
@@ -23,7 +23,7 @@ import { describe, expect, test } from "vitest";
 describe("battle runtime: Find Familiar and Pact of the Chain", () => {
   test("Pact of the Chain Spell Access retains no-slot Find Familiar forms", () => {
     const spawnedCompanionLifecycle = spellRecord("find_familiar");
-    const eligibleForms = spawnedCompanionLifecycleFormEligibilityForSpell(
+    const eligibleForms = pactOfTheChainFindFamiliarFormEligibilityForSpell(
       spawnedCompanionLifecycle,
     );
 
@@ -45,7 +45,7 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
             spellSlots: [{ spellLevel: 1, count: 1 }],
             invocationSpellAccesses: [
               {
-                tag: "spawnedCompanionLifecycle",
+                tag: "pactOfTheChainFindFamiliar",
                 spell: spawnedCompanionLifecycle,
               },
             ],
@@ -63,7 +63,7 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
     }
     expect(spellcasting?.invocationSpellAccesses).toEqual([
       {
-        tag: "spawnedCompanionLifecycle",
+        tag: "pactOfTheChainFindFamiliar",
         spell: spawnedCompanionLifecycle,
         invocationMode: PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
         eligibleForms,
@@ -79,7 +79,7 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
   });
 
   test("Pact of the Chain special form resolution keeps type override as invocation input", () => {
-    const eligibleForms = spawnedCompanionLifecycleFormEligibilityForSpell(
+    const eligibleForms = pactOfTheChainFindFamiliarFormEligibilityForSpell(
       spellRecord("find_familiar"),
     );
 
@@ -118,7 +118,7 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
   });
 
   test("Find Familiar base form eligibility does not include Pact-only special forms", () => {
-    const eligibleForms = spawnedCompanionLifecycleFormEligibilityForSpell(
+    const eligibleForms = findFamiliarFormEligibilityForSpell(
       spellRecord("find_familiar"),
     );
 
@@ -140,9 +140,9 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
 
   test("Find Familiar form eligibility requires creature type override choices from spell mode", () => {
     const malformedFindFamiliar = decodeUnitRecordSync({
-      ...spawnedCompanionLifecycleInput,
+      ...findFamiliarInput,
       mechanics: {
-        ...spawnedCompanionLifecycleInput.mechanics,
+        ...findFamiliarInput.mechanics,
         mode: {
           label: "creature type",
           options: [
@@ -163,19 +163,19 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
       );
     }
     expect(
-      spawnedCompanionLifecycleFormEligibilityForSpell(malformedFindFamiliar),
+      findFamiliarFormEligibilityForSpell(malformedFindFamiliar),
     ).toBeNull();
   });
 
   test("Find Familiar form eligibility rejects creature type overrides outside Celestial, Fey, and Fiend", () => {
     const malformedFindFamiliar = decodeUnitRecordSync({
-      ...spawnedCompanionLifecycleInput,
+      ...findFamiliarInput,
       mechanics: {
-        ...spawnedCompanionLifecycleInput.mechanics,
+        ...findFamiliarInput.mechanics,
         mode: {
           label: "creature type",
           options: [
-            ...spawnedCompanionLifecycleInput.mechanics.mode.options,
+            ...findFamiliarInput.mechanics.mode.options,
             {
               displayName: "Beast",
               id: "beast",
@@ -193,19 +193,19 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
       );
     }
     expect(
-      spawnedCompanionLifecycleFormEligibilityForSpell(malformedFindFamiliar),
+      findFamiliarFormEligibilityForSpell(malformedFindFamiliar),
     ).toBeNull();
   });
 
   test("Find Familiar form eligibility rejects duplicate normal form ids", () => {
     const malformedFindFamiliar = decodeUnitRecordSync({
-      ...spawnedCompanionLifecycleInput,
+      ...findFamiliarInput,
       mechanics: {
-        ...spawnedCompanionLifecycleInput.mechanics,
+        ...findFamiliarInput.mechanics,
         creature: {
-          ...spawnedCompanionLifecycleInput.mechanics.creature,
+          ...findFamiliarInput.mechanics.creature,
           normalForms: [
-            ...spawnedCompanionLifecycleInput.mechanics.creature.normalForms,
+            ...findFamiliarInput.mechanics.creature.normalForms,
             {
               displayName: "Duplicate Owl",
               formId: "owl",
@@ -223,15 +223,15 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
       );
     }
     expect(
-      spawnedCompanionLifecycleFormEligibilityForSpell(malformedFindFamiliar),
+      findFamiliarFormEligibilityForSpell(malformedFindFamiliar),
     ).toBeNull();
   });
 
   test("Find Familiar form eligibility rejects duplicate creature type option ids", () => {
     const malformedFindFamiliar = decodeUnitRecordSync({
-      ...spawnedCompanionLifecycleInput,
+      ...findFamiliarInput,
       mechanics: {
-        ...spawnedCompanionLifecycleInput.mechanics,
+        ...findFamiliarInput.mechanics,
         mode: {
           label: "creature type",
           options: [
@@ -262,12 +262,12 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
       );
     }
     expect(
-      spawnedCompanionLifecycleFormEligibilityForSpell(malformedFindFamiliar),
+      findFamiliarFormEligibilityForSpell(malformedFindFamiliar),
     ).toBeNull();
   });
 
   test("Find Familiar normal forms resolve only through CR 0 Beast Stat Blocks", () => {
-    const eligibleForms = spawnedCompanionLifecycleFormEligibilityForSpell(
+    const eligibleForms = findFamiliarFormEligibilityForSpell(
       spellRecord("find_familiar"),
     );
 
@@ -321,13 +321,13 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
 
   test("Pact of the Chain Spell Access rejects the old inline placeholder shape", () => {
     const inlinePlaceholderCreatureTypeOptions =
-      spawnedCompanionLifecycleInput.mechanics.mode.options.map(
+      findFamiliarInput.mechanics.mode.options.map(
         (option) => option.overrides.creatureType,
       );
     const inlinePlaceholderUnitRecord = decodeUnitRecordSync({
-      ...spawnedCompanionLifecycleInput,
+      ...findFamiliarInput,
       mechanics: {
-        ...spawnedCompanionLifecycleInput.mechanics,
+        ...findFamiliarInput.mechanics,
         creature: {
           kind: "inline",
           statBlock: {
@@ -373,7 +373,7 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
               spellSlots: [{ spellLevel: 1, count: 1 }],
               invocationSpellAccesses: [
                 {
-                  tag: "spawnedCompanionLifecycle",
+                  tag: "pactOfTheChainFindFamiliar",
                   spell: inlinePlaceholderUnitRecord,
                 },
               ],
@@ -421,7 +421,7 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
               spellSlots: [{ spellLevel: 1, count: 1 }],
               invocationSpellAccesses: [
                 {
-                  tag: "spawnedCompanionLifecycle",
+                  tag: "pactOfTheChainFindFamiliar",
                   spell: spawnedCompanionLifecycleWithWrongMaterialCost,
                 },
               ],

@@ -773,7 +773,7 @@ function disperseWithStrongWind(
   const act = discoverBattleActs(state.battle).find(
     (candidate) =>
       candidate.subject.tag === "runtimeCommand" &&
-      candidate.subject.command === "disperseCloudkill",
+      candidate.subject.command === "endPersistentAreaSaveDamageForEnvironment",
   );
   if (act === undefined) {
     throw new Error("Expected active Cloudkill strong-wind dispersal act.");

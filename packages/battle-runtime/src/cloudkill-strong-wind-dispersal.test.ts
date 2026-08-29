@@ -63,7 +63,7 @@ function cloudkillDispersalAct() {
   ).find(
     (candidate) =>
       candidate.subject.tag === "runtimeCommand" &&
-      candidate.subject.command === "disperseCloudkill",
+      candidate.subject.command === "endPersistentAreaSaveDamageForEnvironment",
   );
   if (act === undefined) {
     throw new Error("Expected active Cloudkill dispersal act.");
@@ -110,7 +110,8 @@ describe("Cloudkill strong-wind dispersal", () => {
     ).find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
-        candidate.subject.command === "disperseCloudkill",
+        candidate.subject.command ===
+          "endPersistentAreaSaveDamageForEnvironment",
     );
     if (act === undefined) {
       throw new Error("Expected relocated Cloudkill dispersal act.");
@@ -312,7 +313,8 @@ describe("Cloudkill strong-wind dispersal", () => {
     ).find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
-        candidate.subject.command === "disperseCloudkill",
+        candidate.subject.command ===
+          "endPersistentAreaSaveDamageForEnvironment",
     );
     if (dispersal === undefined) {
       throw new Error("Expected active Cloudkill dispersal act.");

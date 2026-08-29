@@ -151,7 +151,7 @@ describe("battle runtime: Fog Cloud", () => {
     const command = discoverBattleActs(cast.session).find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
-        candidate.subject.command === "disperseFogCloud" &&
+        candidate.subject.command === "endPersistentAreaTraitForEnvironment" &&
         candidate.subject.areaId === "fog-1",
     );
     if (command === undefined) {

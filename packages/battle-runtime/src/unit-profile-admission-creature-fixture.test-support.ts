@@ -761,10 +761,10 @@ export function movementFill(
       BattleFill,
       { readonly kind: "movement" }
     >["value"]["fixedCostMovementReplacement"];
-    readonly levitatedMovement?: Extract<
+    readonly controlledVerticalSuspensionMovement?: Extract<
       BattleFill,
       { readonly kind: "movement" }
-    >["value"]["levitatedMovement"];
+    >["value"]["controlledVerticalSuspensionMovement"];
     readonly areaDifficultTerrain?: Extract<
       BattleFill,
       { readonly kind: "movement" }
@@ -789,9 +789,12 @@ export function movementFill(
       ...(value.fixedCostMovementReplacement === undefined
         ? {}
         : { fixedCostMovementReplacement: value.fixedCostMovementReplacement }),
-      ...(value.levitatedMovement === undefined
+      ...(value.controlledVerticalSuspensionMovement === undefined
         ? {}
-        : { levitatedMovement: value.levitatedMovement }),
+        : {
+            controlledVerticalSuspensionMovement:
+              value.controlledVerticalSuspensionMovement,
+          }),
       ...(value.areaDifficultTerrain === undefined
         ? {}
         : { areaDifficultTerrain: value.areaDifficultTerrain }),

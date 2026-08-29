@@ -3915,7 +3915,8 @@ describe("battle runtime: class action features", () => {
       });
       const {
         fixedCostMovementReplacement: _fixedCostMovementReplacement,
-        levitatedMovement: _levitatedMovement,
+        controlledVerticalSuspensionMovement:
+          _controlledVerticalSuspensionMovement,
         compelledApproach: _executeCompelledApproach,
         compelledFlee: _executeCompelledFlee,
         brutalStrikeForcefulBlow: _brutalStrikeForcefulBlow,

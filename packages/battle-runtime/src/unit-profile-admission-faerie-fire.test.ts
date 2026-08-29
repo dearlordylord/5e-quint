@@ -152,7 +152,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       name: "Sleep non-sleeper facts on a non-Sleep spell",
       spellId: faerieFireUnitId,
       area: {
-        sleepNonSleeperFacts: [],
+        stagedConditionAutomaticSuccessFacts: [],
         originAnchorId: spellCasterId,
         affectedTargetIds: [spellTargetId],
       },

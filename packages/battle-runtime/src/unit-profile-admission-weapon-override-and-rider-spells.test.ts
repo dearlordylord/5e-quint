@@ -60,8 +60,8 @@ import { spellRecord } from "./unit-profile-admission-spell-record.test-support.
 import {
   abilityModifier,
   attackBonus,
-  battleWeaponItemHasMagicWeaponEnhancement,
-  battleWeaponItemMagicWeaponEnhancementBonus,
+  battleWeaponItemHasWeaponAttackDamageEnhancement,
+  battleWeaponItemWeaponAttackDamageEnhancementBonus,
   discoverBattleActs,
   elapsedTimeTicks,
   endTurn,
@@ -1170,7 +1170,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       cast.state.combatants.get(spellCasterId)?.activeEffects,
     ).toContainEqual(
       expect.objectContaining({
-        kind: "spellWeaponAttackDamageEnhancement",
+        kind: "weaponAttackDamageEnhancement",
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         holderCombatantId: spellCasterId,
@@ -1183,14 +1183,14 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       }),
     );
     expect(
-      battleWeaponItemHasMagicWeaponEnhancement(
+      battleWeaponItemHasWeaponAttackDamageEnhancement(
         cast.state,
         spellCasterId,
         battleObjectId("main:weapon_longsword"),
       ),
     ).toBe(true);
     expect(
-      battleWeaponItemMagicWeaponEnhancementBonus(
+      battleWeaponItemWeaponAttackDamageEnhancementBonus(
         cast.state,
         spellCasterId,
         battleObjectId("main:weapon_longsword"),
@@ -1300,7 +1300,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       state: session.state,
       ownerId: spellCasterId,
       effect: {
-        kind: "spellWeaponAttackDamageEnhancement",
+        kind: "weaponAttackDamageEnhancement",
         sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         holderCombatantId: spellCasterId,
@@ -1409,7 +1409,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
         state: session.state,
         ownerId: spellCasterId,
         effect: {
-          kind: "spellWeaponAttackDamageEnhancement",
+          kind: "weaponAttackDamageEnhancement",
           sourceProcedureRef: bonusSpellAct({
             session,
             spellId: magicWeaponUnitId,
@@ -1452,7 +1452,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       recast.state,
       spellCasterId,
     ).activeEffects.filter(
-      (effect) => effect.kind === "spellWeaponAttackDamageEnhancement",
+      (effect) => effect.kind === "weaponAttackDamageEnhancement",
     );
     expect(effects).toEqual([
       expect.objectContaining({
@@ -1476,7 +1476,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
         state: session.state,
         ownerId: spellTargetId,
         effect: {
-          kind: "spellWeaponAttackDamageEnhancement",
+          kind: "weaponAttackDamageEnhancement",
           sourceProcedureRef: battleProcedureExecutionRefForTest(
             "other-magic-weapon-caster",
           ),
@@ -1544,7 +1544,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       combatants: new Map(cast.state.combatants).set(spellCasterId, {
         ...caster,
         activeEffects: caster.activeEffects.map((effect) =>
-          effect.kind === "spellWeaponAttackDamageEnhancement"
+          effect.kind === "weaponAttackDamageEnhancement"
             ? {
                 ...effect,
                 expiresAt: {
@@ -1571,7 +1571,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       throw new Error("Expected Magic Weapon duration tick to resolve.");
     }
     expect(
-      battleWeaponItemHasMagicWeaponEnhancement(
+      battleWeaponItemHasWeaponAttackDamageEnhancement(
         expired.state,
         spellCasterId,
         battleObjectId("main:weapon_longsword"),
@@ -1635,7 +1635,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       }),
     );
     expect(
-      battleWeaponItemHasMagicWeaponEnhancement(
+      battleWeaponItemHasWeaponAttackDamageEnhancement(
         cast.state,
         spellCasterId,
         battleObjectId("main:weapon_longsword"),

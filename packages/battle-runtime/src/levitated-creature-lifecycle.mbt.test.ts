@@ -587,8 +587,8 @@ function moveTargetWithWitnessUp5Feet(
         movementFill(movement, {
           movementCostFeet: 10,
           provokedOpportunityAttacks: [],
-          levitatedMovement: {
-            kind: "levitatedMovement",
+          controlledVerticalSuspensionMovement: {
+            kind: "controlledVerticalSuspensionMovement",
             effectRef: effect.effectRef,
             sourceCombatantId: spellCasterId,
             sourceProcedureRef: effect.sourceProcedureRef,

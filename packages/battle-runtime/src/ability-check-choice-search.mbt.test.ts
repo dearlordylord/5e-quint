@@ -182,7 +182,7 @@ type AbilityCheckChoiceSearchRouteProjection = {
 };
 
 const ABILITY_CHECK_SEARCH_ROUTE_SUBJECT =
-  "abilityCheckSearch" satisfies ReducerRouteSubjectFamily;
+  "passiveAbilityCheckRollMode" satisfies ReducerRouteSubjectFamily;
 const ROLL_MODIFIER_ROUTE_SUBJECT =
   "rollModifierEffect" satisfies ReducerRouteSubjectFamily;
 const ROUTE_START_OWNER =
