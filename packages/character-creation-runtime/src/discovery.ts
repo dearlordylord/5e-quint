@@ -160,6 +160,10 @@ import {
   isWizardSpellcastingCreation,
   type ReadableClassSpellcasting,
 } from "./class-spellcasting.ts";
+import {
+  projectCharacterDefinition,
+  type CharacterDefinitionProjection,
+} from "./character-definition-projection.ts";
 
 type GrantExpertiseEffect = Extract<
   EffectAtom,
@@ -245,13 +249,13 @@ export function discoverClassGrantedHoles(input: {
   const startingUnitId = startingClassUnitId(progression);
   const classUnitId = startingUnitId;
   const classUnit = input.unitLibrary.getUnit(classUnitId);
-  /* v8 ignore start -- @preserve -- Supported progression admission resolves its starting class from this same catalog and parses its class facts. */
+  /* v8 ignore start -- @preserve -- Supported progression admission resolves its starting class from this same catalog and projects its class facts. */
   if (Option.isNone(classUnit)) {
     return [];
   }
-  const facts = readClassCreationFacts(classUnit.value);
+  const projection = projectCharacterDefinition(classUnit.value);
   const classLevel = classLevelForUnit(progression, classUnitId);
-  if (facts.tag !== "readable") {
+  if (projection.tag !== "readable" || projection.value.kind !== "class") {
     return [];
   }
   /* v8 ignore stop -- @preserve */
@@ -262,20 +266,23 @@ export function discoverClassGrantedHoles(input: {
       choiceHole({
         source: unitSource(classUnitId, CLASS_SKILL_PROFICIENCY_CHOICE_KEY),
         cardinality: exactChoiceCardinality(
-          facts.value.skillProficiencyChoice.choose,
+          projection.value.facts.skillProficiencyChoice.choose,
         ),
-        options: facts.value.skillProficiencyChoice.options.map(skillOption),
+        options:
+          projection.value.facts.skillProficiencyChoice.options.map(
+            skillOption,
+          ),
       }),
       input.supportProfile,
     ),
     ...classToolProficiencyChoiceHoles(
       input.draft,
       classUnitId,
-      facts.value,
+      projection.value.facts,
       input.supportProfile,
     ),
     ...discoverClassFeatureGrantHolesInLevelOrder(
-      facts.value.featureGrants,
+      projection.value.facts.featureGrants,
       classLevel,
       input.draft,
       input.unitLibrary,
@@ -286,18 +293,23 @@ export function discoverClassGrantedHoles(input: {
       ),
       input.supportProfile,
     ),
-    ...discoverSubclassHoles(classUnitId, classLevel, facts.value, input),
+    ...discoverSubclassHoles(
+      classUnitId,
+      classLevel,
+      projection.value.facts,
+      input,
+    ),
     ...discoverSelectedSubclassFeatureGrantHoles(
       classUnitId,
       classLevel,
-      facts.value,
+      projection.value.facts,
       input,
     ),
     ...discoverSelectedFeatAbilityScoreIncreaseHoles(input),
     ...selectedClassFeatureAcquisitionGrantChoiceHoles({
       choices: input.draft.selections.choices,
       classUnitId,
-      classFacts: facts.value,
+      classFacts: projection.value.facts,
       classLevel,
       unitLibrary: input.unitLibrary,
     }).flatMap((hole) =>
@@ -307,14 +319,14 @@ export function discoverClassGrantedHoles(input: {
       input.draft,
       startingEquipmentChoiceHole(
         unitSource(classUnitId, CLASS_EQUIPMENT_CHOICE_KEY),
-        facts.value.startingEquipment,
+        projection.value.facts.startingEquipment,
       ),
       input.supportProfile,
     ),
     ...discoverClassSpellcastingHoles(
       classUnitId,
       classLevel,
-      facts.value,
+      projection.value.facts,
       input.draft,
       input.supportProfile,
     ),
@@ -333,9 +345,9 @@ export function discoverClassGrantedHoles(input: {
 }
 
 export type ReadableClassCreationFacts = Extract<
-  ReturnType<typeof readClassCreationFacts>,
-  { readonly tag: "readable" }
->["value"];
+  CharacterDefinitionProjection,
+  { readonly kind: "class" }
+>["facts"];
 function discoverClassSpellcastingHoles(
   classUnitId: UnitRecord["id"],
   classLevel: number,
@@ -579,16 +591,20 @@ function discoverSelectedSubclassFeatureGrantHoles(
   return selectedSubclassIds.flatMap((subclassId) => {
     const subclass = input.unitLibrary.getUnit(subclassId);
     /* v8 ignore start -- @preserve -- Supported subclass selections retain an installed subclass owned by the selected class. */
+    if (Option.isNone(subclass)) {
+      return [];
+    }
+    const subclassProjection = projectCharacterDefinition(subclass.value);
     if (
-      Option.isNone(subclass) ||
-      subclass.value.kind !== "subclass" ||
-      subclass.value.className !== facts.className
+      subclassProjection.tag !== "readable" ||
+      subclassProjection.value.kind !== "subclass" ||
+      subclassProjection.value.facts.className !== facts.className
     ) {
       return [];
     }
     /* v8 ignore stop -- @preserve */
 
-    return subclass.value.featureGrants.flatMap((grant) =>
+    return subclassProjection.value.facts.featureGrants.flatMap((grant) =>
       grant.level <= classLevel
         ? discoverClassFeatureGrantHoles(
             grant.unitId,

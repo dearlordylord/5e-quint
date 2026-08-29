@@ -66,12 +66,19 @@ export type WizardClassCreationFacts =
     readonly spellcasting: WizardSpellcastingCreation;
   };
 
+export type NonWizardSpellcastingClassCreationFacts =
+  CommonClassCreationFacts<NonWizardClassRecord> & {
+    readonly spellcasting: ClassSpellcastingCreation;
+  };
+
+export type NonSpellcastingClassCreationFacts =
+  CommonClassCreationFacts<NonWizardClassRecord> & {
+    readonly spellcasting?: never;
+  };
+
 export type NonWizardClassCreationFacts =
-  CommonClassCreationFacts<NonWizardClassRecord> &
-    (
-      | { readonly spellcasting: ClassSpellcastingCreation }
-      | { readonly spellcasting?: never }
-    );
+  | NonWizardSpellcastingClassCreationFacts
+  | NonSpellcastingClassCreationFacts;
 
 export type ClassCreationFacts =
   | WizardClassCreationFacts
@@ -224,14 +231,20 @@ export function readBackgroundCreationFacts(
 
   return {
     tag: "readable",
-    value: {
-      recordId: unit.id,
-      abilityScoreIncrease: unit.abilityScoreIncrease,
-      originFeatId: unit.originFeatId,
-      skillProficiencies: unit.skillProficiencies,
-      toolProficiency: unit.toolProficiency,
-      startingEquipment: unit.startingEquipment,
-    },
+    value: backgroundCreationFacts(unit),
+  };
+}
+
+export function backgroundCreationFacts(
+  unit: BackgroundRecord,
+): BackgroundCreationFacts {
+  return {
+    recordId: unit.id,
+    abilityScoreIncrease: unit.abilityScoreIncrease,
+    originFeatId: unit.originFeatId,
+    skillProficiencies: unit.skillProficiencies,
+    toolProficiency: unit.toolProficiency,
+    startingEquipment: unit.startingEquipment,
   };
 }
 
@@ -244,11 +257,17 @@ export function readSubclassCreationFacts(
 
   return {
     tag: "readable",
-    value: {
-      recordId: unit.id,
-      className: unit.className,
-      featureGrants: unit.featureGrants,
-    },
+    value: subclassCreationFacts(unit),
+  };
+}
+
+export function subclassCreationFacts(
+  unit: SubclassRecord,
+): SubclassCreationFacts {
+  return {
+    recordId: unit.id,
+    className: unit.className,
+    featureGrants: unit.featureGrants,
   };
 }
 
@@ -289,24 +308,13 @@ export function readSpeciesCreationFacts(
 
   return {
     tag: "readable",
-    value: readSpeciesRecord(unit),
+    value: speciesCreationFacts(unit),
   };
 }
 
-export function readOrcSpeciesCreationFacts(
-  unit: UnitRecord,
-): UnitReaderResult<OrcSpeciesCreationFacts> {
-  if (unit.kind !== "species" || unit.species !== "orc") {
-    return unsupportedKind(unit, "species");
-  }
-
-  return {
-    tag: "readable",
-    value: readOrcSpeciesRecord(unit),
-  };
-}
-
-function readSpeciesRecord(unit: SpeciesRecord): SpeciesCreationFacts {
+export function speciesCreationFacts(
+  unit: SpeciesRecord,
+): SpeciesCreationFacts {
   if ("draconicAncestry" in unit) {
     return {
       recordId: unit.id,
@@ -326,6 +334,19 @@ function readSpeciesRecord(unit: SpeciesRecord): SpeciesCreationFacts {
     size: unit.size,
     speed: unit.speed,
     traits: unit.traits,
+  };
+}
+
+export function readOrcSpeciesCreationFacts(
+  unit: UnitRecord,
+): UnitReaderResult<OrcSpeciesCreationFacts> {
+  if (unit.kind !== "species" || unit.species !== "orc") {
+    return unsupportedKind(unit, "species");
+  }
+
+  return {
+    tag: "readable",
+    value: readOrcSpeciesRecord(unit),
   };
 }
 

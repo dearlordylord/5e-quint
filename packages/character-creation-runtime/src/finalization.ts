@@ -83,6 +83,7 @@ import {
   startingEquipmentChoiceHole,
   startingEquipmentUnitIds,
 } from "./discovery.ts";
+import { projectCharacterDefinition } from "./character-definition-projection.ts";
 import {
   decodeAbilityScoreIncreaseOptionId,
   decodeProficiencyGrantSubjectOptionId,
@@ -2401,19 +2402,23 @@ function selectedSubclassFeatureGrantUnitIds(input: {
 }): readonly UnitRecord["id"][] {
   return input.selectedClassChoiceUnitIds.flatMap((unitId) => {
     const unit = input.unitLibrary.getUnit(unitId);
-    if (Option.isNone(unit) || unit.value.kind !== "subclass") {
+    if (Option.isNone(unit)) {
+      return [];
+    }
+    const projection = projectCharacterDefinition(unit.value);
+    if (projection.tag !== "readable" || projection.value.kind !== "subclass") {
       return [];
     }
     const classUnitId = classUnitIdForSubclass({
       build: input.build,
-      subclass: unit.value,
+      subclassClassName: projection.value.facts.className,
       unitLibrary: input.unitLibrary,
     });
     if (classUnitId === undefined) {
       return [];
     }
     const classLevel = classLevelForUnit(input.build.progression, classUnitId);
-    return unit.value.featureGrants
+    return projection.value.facts.featureGrants
       .filter((grant) => grant.level <= classLevel)
       .map((grant) => grant.unitId);
   });
@@ -2421,7 +2426,10 @@ function selectedSubclassFeatureGrantUnitIds(input: {
 
 function classUnitIdForSubclass(input: {
   readonly build: Pick<CharacterBuild, "progression">;
-  readonly subclass: Extract<UnitRecord, { readonly kind: "subclass" }>;
+  readonly subclassClassName: Extract<
+    UnitRecord,
+    { readonly kind: "subclass" }
+  >["className"];
   readonly unitLibrary: UnitCatalog;
 }): UnitRecord["id"] | undefined {
   return progressionClassUnitIds(input.build.progression).find(
@@ -2430,7 +2438,7 @@ function classUnitIdForSubclass(input: {
       return (
         Option.isSome(unit) &&
         unit.value.kind === "class" &&
-        unit.value.className === input.subclass.className
+        unit.value.className === input.subclassClassName
       );
     },
   );
@@ -3269,17 +3277,21 @@ function selectedSubclassFeatureGrantChoiceHoles(input: {
 
     return selectedSubclassIds.flatMap((subclassId) => {
       const subclass = input.unitLibrary.getUnit(subclassId);
-      /* v8 ignore start -- @preserve -- Support admission retains only an installed subclass owned by the selected class. */
+      /* v8 ignore start -- @preserve -- Support admission retains only an installed subclass owned by the selected class and projects its creation facts. */
+      if (Option.isNone(subclass)) {
+        return [];
+      }
+      const subclassProjection = projectCharacterDefinition(subclass.value);
       if (
-        Option.isNone(subclass) ||
-        subclass.value.kind !== "subclass" ||
-        subclass.value.className !== facts.className
+        subclassProjection.tag !== "readable" ||
+        subclassProjection.value.kind !== "subclass" ||
+        subclassProjection.value.facts.className !== facts.className
       ) {
         return [];
       }
       /* v8 ignore stop -- @preserve */
 
-      return subclass.value.featureGrants
+      return subclassProjection.value.facts.featureGrants
         .filter((grant) => grant.level <= classLevel)
         .flatMap((grant) =>
           classFeatureGrantChoiceHoles(grant.unitId, input.unitLibrary, {
@@ -3673,15 +3685,22 @@ function characterBuildSelectedSubclassFeatureUnitIds(
   return build.features.flatMap((feature) => {
     if (feature.kind !== "selectedClassChoice") return [];
     const unit = unitLibrary.getUnit(feature.unitId);
-    if (Option.isNone(unit) || unit.value.kind !== "subclass") return [];
-    const subclassUnit = unit.value;
+    if (Option.isNone(unit)) return [];
+    const subclassProjection = projectCharacterDefinition(unit.value);
+    if (
+      subclassProjection.tag !== "readable" ||
+      subclassProjection.value.kind !== "subclass"
+    ) {
+      return [];
+    }
+    const subclassFacts = subclassProjection.value.facts;
     const classLevel = progressionClassUnitIds(build.progression).reduce(
       (level, classUnitId) => {
         const classUnit = unitLibrary.getUnit(classUnitId);
         if (
           Option.isSome(classUnit) &&
           classUnit.value.kind === "class" &&
-          classUnit.value.className === subclassUnit.className
+          classUnit.value.className === subclassFacts.className
         ) {
           return classLevelForUnit(build.progression, classUnitId);
         }
@@ -3689,7 +3708,7 @@ function characterBuildSelectedSubclassFeatureUnitIds(
       },
       0,
     );
-    return subclassUnit.featureGrants
+    return subclassFacts.featureGrants
       .filter((grant) => grant.level <= classLevel)
       .map((grant) => grant.unitId);
   });
