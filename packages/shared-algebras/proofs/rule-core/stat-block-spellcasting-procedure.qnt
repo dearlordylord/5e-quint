@@ -80,6 +80,7 @@ module statBlockSpellcastingProcedure {
   type StatBlockSpellcastingUnsupportedReason =
     | UnsupportedSection
     | EmptyGroupList
+    | InvalidSpellSaveDc
     | InvalidGroupShape
 
   type StatBlockSpellcastingAdmission =
@@ -103,12 +104,29 @@ module statBlockSpellcastingProcedure {
     outcomes: List[StatBlockSpellcastingInvocationOutcome]
   ): bool = outcomes.length() > 0
 
+  pure def legalStatBlockSpellcastingSaveDc(
+    saveDc: StatBlockSpellcastingOptionalSaveDc
+  ): bool = match saveDc {
+    | NoSpellSaveDc => true
+    | FixedSpellSaveDc(data) => data.value >= 1
+  }
+
+  pure def statBlockSpellcastingResourceOrdinalSet(
+    ordinals: List[int]
+  ): Set[int] = ordinals.foldl(
+    Set(),
+    (seen, ordinal) => seen.union(Set(ordinal))
+  )
+
   pure def legalStatBlockSpellcastingResourceOrdinals(
     ordinals: List[int]
-  ): bool = ordinals.foldl(
-    true,
-    (legal, ordinal) => legal and ordinal >= 1
-  )
+  ): bool = all {
+    ordinals.foldl(
+      true,
+      (legal, ordinal) => legal and ordinal >= 1
+    ),
+    statBlockSpellcastingResourceOrdinalSet(ordinals).size() == ordinals.length(),
+  }
 
   pure def legalStatBlockSpellcastingGroup(
     group: StatBlockSpellcastingGroup
@@ -127,6 +145,7 @@ module statBlockSpellcastingProcedure {
     facts: StatBlockSpellcastingProcedureFacts
   ): bool = all {
     statBlockSpellcastingSectionIsSupported(facts.section),
+    legalStatBlockSpellcastingSaveDc(facts.spellSaveDc),
     facts.groups.length() > 0,
     facts.groups.foldl(
       true,
@@ -141,6 +160,8 @@ module statBlockSpellcastingProcedure {
       UnsupportedStatBlockSpellcastingProcedure({ reason: UnsupportedSection })
     else if (facts.groups.length() == 0)
       UnsupportedStatBlockSpellcastingProcedure({ reason: EmptyGroupList })
+    else if (not(legalStatBlockSpellcastingSaveDc(facts.spellSaveDc)))
+      UnsupportedStatBlockSpellcastingProcedure({ reason: InvalidSpellSaveDc })
     else if (not(legalStatBlockSpellcastingProcedureFacts(facts)))
       UnsupportedStatBlockSpellcastingProcedure({ reason: InvalidGroupShape })
     else AdmittedStatBlockSpellcastingProcedure({

@@ -88,6 +88,26 @@ module statBlockSpellcastingProcedureExamples {
         LimitedGroup({ resourceOrdinals: List(), invocations: List(Restricted) }),
       ),
     }
+    val invalidSaveDc = {
+      section: Actions,
+      ability: IntelligenceAbility,
+      spellSaveDc: FixedSpellSaveDc({ value: 0 }),
+      spellAttackBonus: NoSpellAttackBonus,
+      components: NoComponents,
+      groups: List(
+        AtWillGroup({ invocations: List(Unrestricted) }),
+      ),
+    }
+    val duplicateResourceOrdinals = {
+      section: Actions,
+      ability: IntelligenceAbility,
+      spellSaveDc: NoSpellSaveDc,
+      spellAttackBonus: NoSpellAttackBonus,
+      components: NoComponents,
+      groups: List(
+        LimitedGroup({ resourceOrdinals: List(1, 1), invocations: List(Unrestricted) }),
+      ),
+    }
     all {
       assert(
         admitStatBlockSpellcastingProcedure(unsupportedSection) ==
@@ -95,6 +115,14 @@ module statBlockSpellcastingProcedureExamples {
       ),
       assert(
         admitStatBlockSpellcastingProcedure(invalidGroup) ==
+          UnsupportedStatBlockSpellcastingProcedure({ reason: InvalidGroupShape })
+      ),
+      assert(
+        admitStatBlockSpellcastingProcedure(invalidSaveDc) ==
+          UnsupportedStatBlockSpellcastingProcedure({ reason: InvalidSpellSaveDc })
+      ),
+      assert(
+        admitStatBlockSpellcastingProcedure(duplicateResourceOrdinals) ==
           UnsupportedStatBlockSpellcastingProcedure({ reason: InvalidGroupShape })
       ),
     }
