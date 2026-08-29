@@ -1413,6 +1413,23 @@ describe("Stat Block execution references", () => {
     expect(() =>
       Schema.decodeUnknownSync(StatBlockExecutionSnapshotSchema)(malformed),
     ).toThrow();
+
+    const malformedTopLevelResourceBinding = {
+      ...snapshot,
+      procedureBindings: snapshot.procedureBindings.map((binding) =>
+        binding.procedureRef === spellcastingBinding.procedureRef
+          ? {
+              ...binding,
+              resourcePoolRefs: [legendaryPool.resourcePoolRef],
+            }
+          : binding,
+      ),
+    };
+    expect(() =>
+      Schema.decodeUnknownSync(StatBlockExecutionSnapshotSchema)(
+        malformedTopLevelResourceBinding,
+      ),
+    ).toThrow();
   });
 
   test("spends a procedure's complete resource set atomically", () => {
@@ -1512,6 +1529,7 @@ describe("Stat Block execution references", () => {
     expect(twice).toBe(once);
     expect(once.resourcePools).toEqual(
       admission.execution.resourcePools.map((pool) =>
+        binding.procedure.kind !== "spellcasting" &&
         binding.resourcePoolRefs.includes(pool.resourcePoolRef)
           ? pool.kind === "daily" || pool.kind === "legendaryActions"
             ? { ...pool, usesRemaining: Number(pool.usesRemaining) - 1 }

@@ -23,10 +23,11 @@ import {
 import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { statBlockRecord } from "./battle-runtime.test-support.ts";
 import { syntheticSpellcastingProcedureEntry } from "./stat-block-spellcasting-procedure.test-support.ts";
+import { statBlockSpellcastingActionCost } from "./stat-block-execution-state.ts";
 
 type SpellcastingSection = "actions" | "bonusActions";
 type SpellcastingInvocationOutcome = "unrestricted" | "restricted";
-type SpellcastingActionCost = "magic" | "bonus";
+type SpellcastingActionCost = "magicAction" | "bonusAction";
 
 type SpellcastingProcedureProjection = {
   readonly section: SpellcastingSection;
@@ -120,7 +121,7 @@ function projectSpellcastingProcedure(
   }
   return {
     section,
-    actionCost: section === "actions" ? "magic" : "bonus",
+    actionCost: statBlockSpellcastingActionCost(procedure),
     atWillOutcomes: atWill.invocations.map(({ kind }) => kind),
     limitedOutcomes: limited.invocations.map(({ kind }) => kind),
     limitedResourceOrdinals: limited.resourceRefs.map((ordinal) => ordinal),
@@ -165,7 +166,7 @@ function normalizeSpellcastingProcedureQuintState(
     actionCost: quintVariantMappedValue(
       quintField(state, "qActionCost"),
       "qActionCost",
-      { MagicActionCost: "magic", BonusActionCost: "bonus" },
+      { MagicActionCost: "magicAction", BonusActionCost: "bonusAction" },
       "Stat Block spellcasting action cost",
     ),
     atWillOutcomes: normalizeOutcomes(

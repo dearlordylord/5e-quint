@@ -28,12 +28,17 @@ module statBlockSpellcastingProcedureExamples {
     }
     val admission = admitStatBlockSpellcastingProcedure(facts)
     all {
-      assert(admission == AdmittedStatBlockSpellcastingProcedure({ facts: facts })),
+      assert(match admission {
+        | AdmittedStatBlockSpellcastingProcedure(data) => all {
+            data.facts.section == SpellcastingActions,
+            admittedStatBlockSpellcastingActionCost(data.facts) == MagicActionCost,
+          }
+        | UnsupportedStatBlockSpellcastingProcedure(_) => false
+      }),
       assert(
         statBlockSpellcastingProcedureInvocationOutcomes(facts) ==
           List(List(Unrestricted, Restricted), List(Unrestricted))
       ),
-      assert(admittedStatBlockSpellcastingActionCost(facts) == MagicActionCost),
     }
   }
 
@@ -48,12 +53,17 @@ module statBlockSpellcastingProcedureExamples {
         AtWillGroup({ invocations: List(Restricted, Unrestricted) }),
       ),
     }
+    val admission = admitStatBlockSpellcastingProcedure(facts)
     all {
       assert(
-        admitStatBlockSpellcastingProcedure(facts) ==
-          AdmittedStatBlockSpellcastingProcedure({ facts: facts })
-      ),
-      assert(admittedStatBlockSpellcastingActionCost(facts) == BonusActionCost),
+        match admission {
+          | AdmittedStatBlockSpellcastingProcedure(data) => all {
+              data.facts.section == SpellcastingBonusActions,
+              admittedStatBlockSpellcastingActionCost(data.facts) == BonusActionCost,
+            }
+          | UnsupportedStatBlockSpellcastingProcedure(_) => false
+        }
+      )
     }
   }
 

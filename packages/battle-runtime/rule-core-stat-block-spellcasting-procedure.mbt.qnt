@@ -49,7 +49,11 @@ module ruleCoreStatBlockSpellcastingProcedureMbt {
     val outcomes = statBlockSpellcastingProcedureInvocationOutcomes(facts)
     all {
       qSection' = section,
-      qActionCost' = admittedStatBlockSpellcastingActionCost(facts),
+      qActionCost' = match admission {
+        | AdmittedStatBlockSpellcastingProcedure(data) =>
+            admittedStatBlockSpellcastingActionCost(data.facts)
+        | UnsupportedStatBlockSpellcastingProcedure(_) => qActionCost
+      },
       qAtWillOutcomes' = outcomes[0],
       qLimitedOutcomes' = outcomes[1],
       qLimitedResourceOrdinals' = List(1),

@@ -16,6 +16,10 @@ module statBlockSpellcastingProcedure {
     | Reactions
     | LegendaryActions
 
+  type StatBlockSpellcastingActionSection =
+    | SpellcastingActions
+    | SpellcastingBonusActions
+
   type StatBlockSpellcastingInvocationOutcome =
     | Unrestricted
     | Restricted
@@ -64,6 +68,15 @@ module statBlockSpellcastingProcedure {
     groups: List[StatBlockSpellcastingGroup],
   }
 
+  type StatBlockSpellcastingAdmittedProcedureFacts = {
+    section: StatBlockSpellcastingActionSection,
+    ability: StatBlockSpellcastingAbility,
+    spellSaveDc: StatBlockSpellcastingOptionalSaveDc,
+    spellAttackBonus: StatBlockSpellcastingOptionalAttackBonus,
+    components: StatBlockSpellcastingOptionalComponents,
+    groups: List[StatBlockSpellcastingGroup],
+  }
+
   type StatBlockSpellcastingUnsupportedReason =
     | UnsupportedSection
     | EmptyGroupList
@@ -71,7 +84,7 @@ module statBlockSpellcastingProcedure {
 
   type StatBlockSpellcastingAdmission =
     | AdmittedStatBlockSpellcastingProcedure({
-        facts: StatBlockSpellcastingProcedureFacts,
+        facts: StatBlockSpellcastingAdmittedProcedureFacts,
       })
     | UnsupportedStatBlockSpellcastingProcedure({
         reason: StatBlockSpellcastingUnsupportedReason,
@@ -130,19 +143,31 @@ module statBlockSpellcastingProcedure {
       UnsupportedStatBlockSpellcastingProcedure({ reason: EmptyGroupList })
     else if (not(legalStatBlockSpellcastingProcedureFacts(facts)))
       UnsupportedStatBlockSpellcastingProcedure({ reason: InvalidGroupShape })
-    else AdmittedStatBlockSpellcastingProcedure({ facts: facts })
+    else AdmittedStatBlockSpellcastingProcedure({
+      facts: {
+        section:
+          if (facts.section == Actions)
+            SpellcastingActions
+          else SpellcastingBonusActions,
+        ability: facts.ability,
+        spellSaveDc: facts.spellSaveDc,
+        spellAttackBonus: facts.spellAttackBonus,
+        components: facts.components,
+        groups: facts.groups,
+      },
+    })
 
   pure def statBlockSpellcastingActionCost(
-    section: StatBlockSpellcastingSection
+    section: StatBlockSpellcastingActionSection
   ): StatBlockSpellcastingActionCost =
-    if (section == BonusActions) BonusActionCost
+    if (section == SpellcastingBonusActions) BonusActionCost
     else MagicActionCost
 
   // This operation only exposes the generic procedure's action cost. It does
   // not select a group or an invocation; those typed child outcomes belong to
   // their later owners.
   pure def admittedStatBlockSpellcastingActionCost(
-    facts: StatBlockSpellcastingProcedureFacts
+    facts: StatBlockSpellcastingAdmittedProcedureFacts
   ): StatBlockSpellcastingActionCost =
     statBlockSpellcastingActionCost(facts.section)
 

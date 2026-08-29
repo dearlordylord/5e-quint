@@ -620,8 +620,10 @@ test("an active Wild Shape form restores a spent recharge action from its start-
   const rechargeBinding =
     rechargePool === undefined
       ? undefined
-      : active?.admission.execution.procedureBindings.find((binding) =>
-          binding.resourcePoolRefs.includes(rechargePool.resourcePoolRef),
+      : active?.admission.execution.procedureBindings.find(
+          (binding) =>
+            binding.procedure.kind !== "spellcasting" &&
+            binding.resourcePoolRefs.includes(rechargePool.resourcePoolRef),
         );
   if (
     active === null ||

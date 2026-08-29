@@ -535,6 +535,24 @@ export type StatBlockSpellcastingProcedure = {
   readonly groups: ReadonlyNonEmptyArray<StatBlockSpellcastingGroup>;
 };
 
+export type StatBlockSpellcastingActionCost = "magicAction" | "bonusAction";
+
+/**
+ * Project an admitted Stat Block spellcasting procedure into the battle
+ * action-economy vocabulary. The procedure shape has already narrowed the
+ * section to Actions or Bonus Actions; unsupported action sections cannot
+ * reach this owner.
+ */
+export function statBlockSpellcastingActionCost(
+  procedure: Pick<StatBlockSpellcastingProcedure, "kind" | "section">,
+): StatBlockSpellcastingActionCost {
+  return Match.value(procedure.section).pipe(
+    Match.when("actions", () => "magicAction" as const),
+    Match.when("bonusActions", () => "bonusAction" as const),
+    Match.exhaustive,
+  );
+}
+
 export type StatBlockProcedure =
   | StatBlockAttackProcedure
   | StatBlockUnarmedStrikeProcedure
@@ -542,11 +560,21 @@ export type StatBlockProcedure =
   | StatBlockBonusActionOptionProcedure
   | StatBlockSpellcastingProcedure;
 
+/**
+ * A known spellcasting procedure has no procedure-owned resource pools;
+ * group invocation selection owns those references. The non-distributive
+ * conditional preserves the existing heterogeneous binding collection while
+ * making the concrete spellcasting specialization's empty tuple structural.
+ */
 export type StatBlockProcedureBindingFor<
   TProcedure extends StatBlockProcedure,
 > = {
   readonly procedureRef: BattleStatBlockProcedureExecutionRef;
-  readonly resourcePoolRefs: readonly BattleResourcePoolExecutionRef[];
+  readonly resourcePoolRefs: [TProcedure] extends [
+    StatBlockSpellcastingProcedure,
+  ]
+    ? readonly []
+    : readonly BattleResourcePoolExecutionRef[];
   readonly procedure: TProcedure;
 };
 
