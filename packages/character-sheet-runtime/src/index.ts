@@ -47,6 +47,11 @@ export {
   characterSheetUnarmoredArmorClassBase,
 } from "./armor-class.ts";
 export {
+  EQUIPMENT_DEFINITION_PROJECTION_ISSUE_REASONS,
+  isEquipmentDefinitionUnit,
+  projectEquipmentDefinition,
+} from "./equipment-definition-admission.ts";
+export {
   characterSheetClassFeaturePreparedSpellAccessesForBuild,
   characterSheetClassFeatureSelectedReferenceProjection,
   characterSheetSpellAccessesForBuild,
@@ -116,6 +121,17 @@ export {
   replaceCharacterSheetSpellSlotSourceState,
 } from "./spell-slots.ts";
 export { timePassed } from "./time-passage.ts";
+export type {
+  ArmorDefinitionProjection,
+  EquipmentDefinitionProjection,
+  EquipmentDefinitionProjectionIssue,
+  EquipmentDefinitionProjectionIssues,
+  EquipmentDefinitionProjectionIssueReason,
+  EquipmentDefinitionProjectionPath,
+  EquipmentDefinitionUnit,
+  ShieldDefinitionProjection,
+  WeaponDefinitionProjection,
+} from "./equipment-definition-admission.ts";
 export type {
   CharacterPactSlotExpenditure,
   CharacterSheetConstructionIssue,
