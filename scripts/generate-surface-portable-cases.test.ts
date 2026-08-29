@@ -74,7 +74,7 @@ describe("independent portable Surface expectations", () => {
       contract,
     );
 
-    expect(expectations.size).toBe(31);
+    expect(expectations.size).toBe(32);
     expect(expectations.get("valid published aggregate")).toMatchObject({
       name: "valid published aggregate",
       expected: { tag: "accepted" },
