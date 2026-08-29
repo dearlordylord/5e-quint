@@ -25,17 +25,27 @@ Stat Block, and not in-play Character Sheet state.
 
 ## Boundary
 
-| Source outside runtime                     | Runtime operation                 | Runtime output                 |
-| ------------------------------------------ | --------------------------------- | ------------------------------ |
-| Unit catalog                               | `discoverCreationHoles`           | fillable `CreationHole[]`      |
-| caller-submitted batch of `CreationFill`s  | `fillCreationHoles`               | accepted/rejected draft update |
-| complete legal draft plus Unit facts       | `finalizeCharacterDraft`          | finalized `CharacterBuild`     |
-| finalized `CharacterBuild` plus level gain | `advanceCharacterBuildClassLevel` | advanced `CharacterBuild`      |
-| finalized `CharacterBuild`                 | application composition outside   | battle creature initialization |
+| Source outside runtime                     | Runtime operation                   | Runtime output                            |
+| ------------------------------------------ | ----------------------------------- | ----------------------------------------- |
+| Unit catalog                               | `discoverCreationHoles`             | fillable `CreationHole[]`                 |
+| decoded Character Definition Unit          | `projectCharacterDefinition`        | source-free static creation facts         |
+| decoded Character Definition graph         | `admitCharacterDefinitionMechanics` | admitted projection or typed graph issues |
+| caller-submitted batch of `CreationFill`s  | `fillCreationHoles`                 | accepted/rejected draft update            |
+| complete legal draft plus Unit facts       | `finalizeCharacterDraft`            | finalized `CharacterBuild`                |
+| finalized `CharacterBuild` plus level gain | `advanceCharacterBuildClassLevel`   | advanced `CharacterBuild`                 |
+| finalized `CharacterBuild`                 | application composition outside     | battle creature initialization            |
 
 `@dnd/character-creation-runtime` must not import `@dnd/battle-runtime` or own
 battle execution. Battle initialization from a `CharacterBuild` belongs to the
 composition layer and battle runtime boundary.
+
+`character-definition-projection.ts` owns the context-independent Character
+Definition boundary for class, subclass, background, and species roots. It
+projects the already-decoded structural facts once, strips authored root
+identity from mechanics, and admits schema-declared dependency/reference paths
+against the call-local Surface. The admission callback is an owner leaf for
+aggregate Surface admission; it does not decide Slice membership or replace
+the mutable draft reducer.
 
 ## Runtime Flow
 

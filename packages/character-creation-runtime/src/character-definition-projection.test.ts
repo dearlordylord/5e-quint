@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Either, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -15,11 +15,23 @@ import {
 import {
   decodeUnitRecordEither,
   decodeUnitRecordSync,
+  SrdUnitRecordSchema,
 } from "@dnd/surface/surface/schema";
+import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { srdUnitCollection } from "@dnd/surface/surface/unit-catalog";
-import type { SrdUnitRecord } from "@dnd/surface/surface/types";
+import type {
+  SrdSurface,
+  SrdUnitRecord,
+  UnitRecord,
+} from "@dnd/surface/surface/types";
 
-import { projectCharacterDefinition } from "./character-definition-projection.ts";
+import {
+  admitCharacterDefinitionMechanicsGraph,
+  projectCharacterDefinition,
+} from "./character-definition-projection.ts";
+import { srdUnitAuthoredLinks } from "@dnd/surface/surface/portable-surface";
+import { PositiveInteger } from "@dnd/shared/types";
+import { unitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 
 const CHARACTER_DEFINITION_ROOT_KINDS = [
   "class",
@@ -49,6 +61,8 @@ const characterDefinitionRoots = srdUnitCollection.units.filter(
     unit.kind === "background" ||
     unit.kind === "species",
 );
+
+const completeSurface = surfaceWithUnits(srdUnitCollection.units);
 
 describe("Character Definition static projection", () => {
   test("covers all canonical class, subclass, background, and species roots", () => {
@@ -108,12 +122,32 @@ describe("Character Definition static projection", () => {
     const classRoot = characterDefinitionRoots.find(
       (unit) => unit.kind === "class",
     );
+    const wizardRoot = characterDefinitionRoots.find(
+      (unit) => unit.kind === "class" && unit.className === "wizard",
+    );
     const speciesRoot = characterDefinitionRoots.find(
       (unit) => unit.kind === "species",
     );
-    if (classRoot === undefined || speciesRoot === undefined) {
+    const subclassRoot = characterDefinitionRoots.find(
+      (unit) => unit.kind === "subclass",
+    );
+    const dragonbornRoot = characterDefinitionRoots.find(
+      (
+        unit,
+      ): unit is Extract<
+        CharacterDefinitionRoot,
+        { readonly kind: "species"; readonly species: "dragonborn" }
+      > => unit.kind === "species" && unit.species === "dragonborn",
+    );
+    if (
+      classRoot === undefined ||
+      wizardRoot === undefined ||
+      speciesRoot === undefined ||
+      subclassRoot === undefined ||
+      dragonbornRoot === undefined
+    ) {
       throw new Error(
-        "The SRD test catalog must contain class and species roots.",
+        "The SRD test catalog must contain class, wizard, subclass, species, and Dragonborn roots.",
       );
     }
 
@@ -125,12 +159,36 @@ describe("Character Definition static projection", () => {
       projectCharacterDefinition(speciesRoot),
       speciesRoot.id,
     );
+    const wizardProjection = readable(
+      projectCharacterDefinition(wizardRoot),
+      wizardRoot.id,
+    );
+    const subclassProjection = readable(
+      projectCharacterDefinition(subclassRoot),
+      subclassRoot.id,
+    );
+    const dragonbornProjection = readable(
+      projectCharacterDefinition(dragonbornRoot),
+      dragonbornRoot.id,
+    );
 
     expect(classProjection.facts).toMatchObject({
       className: classRoot.className,
     });
+    expect(wizardProjection.facts).toMatchObject({
+      className: "wizard",
+      spellcasting: wizardRoot.spellcasting,
+    });
+    expect(subclassProjection.facts).toMatchObject({
+      className: subclassRoot.className,
+      featureGrants: subclassRoot.featureGrants,
+    });
     expect(speciesProjection.facts).toMatchObject({
       species: speciesRoot.species,
+    });
+    expect(dragonbornProjection.facts).toMatchObject({
+      species: "dragonborn",
+      draconicAncestry: dragonbornRoot.draconicAncestry,
     });
   });
 
@@ -148,6 +206,192 @@ describe("Character Definition static projection", () => {
           message: "Expected a Character Definition root, received spell.",
           unitId: spell.id,
         },
+      ],
+    });
+  });
+
+  test("does not admit a non-root through the Character Definition owner", () => {
+    const spell = srdUnitCollection.units.find((unit) => unit.kind === "spell");
+    if (spell === undefined) {
+      throw new Error("The SRD test catalog must contain a spell Unit.");
+    }
+
+    expect(
+      admitCharacterDefinitionMechanicsGraph({
+        unit: spell,
+        surface: completeSurface,
+      }),
+    ).toMatchObject({
+      tag: "rejected",
+      issues: [
+        expect.objectContaining({
+          reason: "unsupported_mechanics",
+          mechanicsPath: unitMechanicsPath([
+            { kind: "singleton", role: "recordMechanics" },
+          ]),
+        }),
+      ],
+    });
+  });
+
+  test("admits every canonical root with its source-free projection", () => {
+    for (const root of characterDefinitionRoots) {
+      const result = admitCharacterDefinitionMechanicsGraph({
+        unit: root,
+        surface: completeSurface,
+      });
+
+      expect(result.tag, root.id).toBe("admitted");
+      if (result.tag !== "admitted") continue;
+      expect(result.execution).toEqual(
+        readable(projectCharacterDefinition(root), root.id),
+      );
+    }
+
+    const classRoot = characterDefinitionRoots.find(
+      (
+        unit,
+      ): unit is Extract<CharacterDefinitionRoot, { readonly kind: "class" }> =>
+        unit.kind === "class",
+    );
+    if (classRoot === undefined) {
+      throw new Error("The SRD test catalog must contain a class root.");
+    }
+    const structurallyClonedRoot = Schema.decodeUnknownSync(
+      SrdUnitRecordSchema,
+      { onExcessProperty: "error" },
+    )(classRoot);
+    expect(structurallyClonedRoot).not.toBe(classRoot);
+    expect(
+      admitCharacterDefinitionMechanicsGraph({
+        unit: structurallyClonedRoot,
+        surface: completeSurface,
+      }).tag,
+    ).toBe("admitted");
+  });
+
+  test("reports a missing authored dependency at a mechanics path", () => {
+    const classRoot = characterDefinitionRoots.find(
+      (
+        unit,
+      ): unit is Extract<CharacterDefinitionRoot, { readonly kind: "class" }> =>
+        unit.kind === "class" && unit.className === "fighter",
+    );
+    if (classRoot === undefined) {
+      throw new Error("The SRD test catalog must contain a fighter root.");
+    }
+    const dependency = srdUnitAuthoredLinks(classRoot).links.find(
+      (link) => link.category === "dependency",
+    );
+    if (dependency === undefined) {
+      throw new Error("The fighter root must contain an authored dependency.");
+    }
+    const dependencyIndex = srdUnitAuthoredLinks(classRoot).links.findIndex(
+      (link) =>
+        link.category === dependency.category &&
+        link.path === dependency.path &&
+        link.targetId === dependency.targetId,
+    );
+    if (dependencyIndex < 0) {
+      throw new Error("The fighter dependency must retain its authored link.");
+    }
+    const missingDependencySurface = surfaceWithUnits(
+      completeSurface.units.filter((unit) => unit.id !== dependency.targetId),
+    );
+
+    const result = admitCharacterDefinitionMechanicsGraph({
+      unit: classRoot,
+      surface: missingDependencySurface,
+    });
+
+    expect(result).toMatchObject({
+      tag: "rejected",
+      issues: [
+        expect.objectContaining({
+          reason: "incomplete_graph",
+          mechanicsPath: {
+            family: "unit",
+            nodes: [
+              { kind: "singleton", role: "recordMechanics" },
+              {
+                kind: "occurrence",
+                role: "dependency",
+                ordinal: PositiveInteger(dependencyIndex + 1),
+              },
+            ],
+          },
+        }),
+      ],
+    });
+  });
+
+  test("reports an ambiguous dependency that the decoded schema permits", () => {
+    const classRoot = characterDefinitionRoots.find(
+      (
+        unit,
+      ): unit is Extract<CharacterDefinitionRoot, { readonly kind: "class" }> =>
+        unit.kind === "class" && unit.className === "fighter",
+    );
+    const spell = srdUnitCollection.units.find((unit) => unit.kind === "spell");
+    if (classRoot === undefined || spell === undefined) {
+      throw new Error(
+        "The SRD test catalog must contain fighter and spell roots.",
+      );
+    }
+    const firstFeatureGrant = classRoot.featureGrants[0];
+    if (firstFeatureGrant === undefined) {
+      throw new Error("The fighter root must contain a feature grant.");
+    }
+    const malformedRaw = {
+      ...classRoot,
+      featureGrants: [
+        { ...firstFeatureGrant, unitId: spell.id },
+        ...classRoot.featureGrants.slice(1),
+      ],
+    };
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(SrdUnitRecordSchema, {
+          onExcessProperty: "error",
+        })(malformedRaw),
+      ),
+    ).toBe(true);
+    const malformed = Schema.decodeUnknownSync(SrdUnitRecordSchema, {
+      onExcessProperty: "error",
+    })(malformedRaw);
+    expect(projectCharacterDefinition(malformed).tag).toBe("readable");
+    const malformedLinkIndex = srdUnitAuthoredLinks(malformed).links.findIndex(
+      (link) => link.path.endsWith(".featureGrants[0].unitId"),
+    );
+    if (malformedLinkIndex < 0) {
+      throw new Error(
+        "The malformed class must retain its feature grant link.",
+      );
+    }
+
+    const result = admitCharacterDefinitionMechanicsGraph({
+      unit: malformed,
+      surface: surfaceWithUnits(
+        completeSurface.units.map((unit) =>
+          unit.id === classRoot.id ? malformed : unit,
+        ),
+      ),
+    });
+
+    expect(result).toMatchObject({
+      tag: "rejected",
+      issues: [
+        expect.objectContaining({
+          reason: "ambiguous_mechanics",
+          mechanicsPath: unitMechanicsPath([
+            { kind: "singleton", role: "recordMechanics" },
+            {
+              kind: "occurrence",
+              role: "dependency",
+              ordinal: PositiveInteger(malformedLinkIndex + 1),
+            },
+          ]),
+        }),
       ],
     });
   });
@@ -201,9 +445,28 @@ function readable<T>(result: UnitReaderResult<T>, label: string): T {
   return result.value;
 }
 
-function withoutRecordId<Fact extends { readonly recordId: string }>(
-  facts: Fact,
-): Omit<Fact, "recordId"> {
+function withoutRecordId<
+  Fact extends {
+    readonly recordId: UnitRecord["id"];
+  },
+>(facts: Fact): Omit<Fact, "recordId"> {
   const { recordId: _recordId, ...mechanics } = facts;
   return mechanics;
+}
+
+function surfaceWithUnits(units: readonly SrdUnitRecord[]): SrdSurface {
+  const [first, ...rest] = units;
+  if (first === undefined) {
+    throw new Error("A test Surface must retain at least one Unit.");
+  }
+  const [firstStatBlock, ...remainingStatBlocks] =
+    srdStatBlockCollection.statBlocks;
+  if (firstStatBlock === undefined) {
+    throw new Error("A test Surface must retain at least one Stat Block.");
+  }
+  return {
+    kind: "srd-5.2.1-surface-catalog",
+    units: [first, ...rest],
+    statBlocks: [firstStatBlock, ...remainingStatBlocks],
+  };
 }
