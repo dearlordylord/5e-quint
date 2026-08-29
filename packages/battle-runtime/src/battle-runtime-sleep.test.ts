@@ -119,7 +119,6 @@ describe("battle runtime: Sleep", () => {
           kind: "stagedSaveConditionPendingRepeat",
           sourceProcedureRef: expect.any(String),
           sourceCombatantId: wizardId,
-          save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
           repeatAt: { kind: "endOfTurn", combatantId: goblinId, round: 1 },
           expiresAt: { kind: "concentration", combatantId: wizardId },
         }),

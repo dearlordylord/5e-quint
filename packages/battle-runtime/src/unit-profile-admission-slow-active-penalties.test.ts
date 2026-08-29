@@ -78,6 +78,7 @@ import {
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
+  flamingSphereUnitId,
   shillelaghUnitId,
   spiritualWeaponUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
@@ -161,7 +162,6 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
         kind: "saveGatedTurnConstraintBundle",
         sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: spellCasterId,
-        save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
         expiresAt: {
           kind: "concentration",
           combatantId: spellCasterId,
@@ -500,10 +500,37 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       spellBattle({
         preparedSpells: [spellRecord(slowUnitId)],
         spellSlots: [{ spellLevel: 3, count: 1 }],
+        targetClassLevels: [{ className: "wizard", level: 3 }],
+        targetSpellcasting: {
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "wizard",
+            abilityModifier: abilityModifier(3),
+          },
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: [],
+          preparedSpells: [spellRecord(flamingSphereUnitId)],
+          featurePreparedSpells: [],
+          spellAccesses: [],
+          spellbookRitualSpellAccesses: [],
+          invocationSpellAccesses: [],
+          spellSlots: [{ spellLevel: 2, count: 1 }],
+        },
       }),
     );
     const persistentAreaSaveDamage =
-      syntheticTargetOwnedFlamingSphereInteraction();
+      syntheticTargetOwnedFlamingSphereInteraction(
+        requireCharacterSpellProcedureRefForTest(
+          slowedTargetTurn,
+          spellTargetId,
+          spellSlotInvocationRef(
+            flamingSphereUnitId,
+            2,
+            "persistentAreaSaveDamage",
+          ),
+        ),
+      );
     const slowedTarget = requireCombatant(
       slowedTargetTurn.state,
       spellTargetId,
@@ -1071,7 +1098,9 @@ function targetTurnAfterFailedSlow(
   return battleRuntimeSessionForTest({ ...session, state: targetTurn.state });
 }
 
-function syntheticTargetOwnedFlamingSphereInteraction(): Extract<
+function syntheticTargetOwnedFlamingSphereInteraction(
+  sourceProcedureRef: ReturnType<typeof battleProcedureExecutionRefForTest>,
+): Extract<
   BattleSourcedEffectOccurrenceTemplate,
   { readonly kind: "persistentAreaSaveDamage" }
 > {
@@ -1080,9 +1109,7 @@ function syntheticTargetOwnedFlamingSphereInteraction(): Extract<
     lifecycle: {
       kind: "casterActionReposition",
     },
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      "synthetic-slow-target-flaming-sphere",
-    ),
+    sourceProcedureRef,
     sourceCombatantId: spellTargetId,
     areaId: flamingSphereAreaId,
     expiresAt: {

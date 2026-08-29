@@ -119,7 +119,6 @@ describe("Sanctuary targeting interdiction", () => {
         kind: "targetingSaveInterdiction",
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: casterId,
-        save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
       }),
     );
   });

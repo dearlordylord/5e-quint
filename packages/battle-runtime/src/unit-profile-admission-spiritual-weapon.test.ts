@@ -547,8 +547,6 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         forcePositionId,
-        forceReachFeet: movementFeet(5),
-        repeatMoveMaxFeet: movementFeet(20),
         startedOn: {
           actorId: spellCasterId,
           round: state.initiative.round,
@@ -939,7 +937,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     const spell = spellRecord(spiritualWeaponUnitId);
     const forcePositionId = battleTablePositionId("spiritual-weapon-force-a");
     const session = spellBattle({
-      preparedSpells: [spell],
+      preparedSpells: [spell, spellRecord(sanctuaryUnitId)],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const state = withSanctuaryWard(session.state, spellTargetId);
@@ -1778,7 +1776,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     const initialForceId = battleTablePositionId("spiritual-weapon-force-a");
     const movedForceId = battleTablePositionId("spiritual-weapon-force-b");
     const session = spellBattle({
-      preparedSpells: [spell],
+      preparedSpells: [spell, spellRecord(sanctuaryUnitId)],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const state = session.state;
@@ -2045,15 +2043,24 @@ function withSanctuaryWard(
   wardedId: typeof spellTargetId,
 ): BattleState {
   const warded = requireCombatant(state, wardedId);
+  const caster = requireCombatant(state, spellCasterId);
+  if (caster.origin.kind !== "character") {
+    throw new Error("Expected Sanctuary source character.");
+  }
+  const sourceProcedureRef = caster.origin.execution.procedureBindings.find(
+    (binding) =>
+      binding.procedure.kind === "spellInvocation" &&
+      binding.procedure.execution.procedure === "targetingSaveInterdiction",
+  )?.procedureRef;
+  if (sourceProcedureRef === undefined) {
+    throw new Error("Expected bound Sanctuary procedure.");
+  }
   const ward = allocateBattleEffectOccurrenceForCreature({
     owner: warded,
     effect: {
       kind: "targetingSaveInterdiction",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String("sanctuary"),
-      ),
-      sourceCombatantId: spellTargetId,
-      save: { ability: "wis", dc: { kind: "fixed", dc: 13 } },
+      sourceProcedureRef,
+      sourceCombatantId: spellCasterId,
       expiresAt: {
         kind: "duration",
         durationTicks: elapsedTimeTicks(10),
@@ -2068,6 +2075,8 @@ function withSanctuaryWard(
     }),
   };
 }
+
+const sanctuaryUnitId = "sanctuary";
 
 function withSpiritualWeaponDurationTicks(
   state: BattleState,

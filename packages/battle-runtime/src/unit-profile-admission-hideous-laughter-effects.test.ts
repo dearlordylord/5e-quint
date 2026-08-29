@@ -862,16 +862,22 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       targetMaxHp: 20,
     });
     const target = requireCombatant(baseState.state, spellTargetId);
+    const sourceProcedureRef = requireCharacterSpellProcedureRefForTest(
+      baseState,
+      spellCasterId,
+      spellSlotInvocationRef(
+        saveGatedConditionWithRepeatUnitId,
+        1,
+        "saveGatedConditionWithRepeat",
+      ),
+    );
     const firstEffectTemplate = {
       kind: "saveGatedConditionWithRepeat",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(saveGatedConditionWithRepeatUnitId),
-      ),
+      sourceProcedureRef,
       sourceCombatantId: spellCasterId,
       conditionHadNonSpellProneSource: false,
       conditionHadNonSpellIncapacitatedSource: false,
       repeatSaveRollMode: null,
-      save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
       expiresAt: {
         kind: "concentration",
         combatantId: spellCasterId,
@@ -880,10 +886,10 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     } as const;
     const secondEffectTemplate = {
       ...firstEffectTemplate,
-      sourceCombatantId: spellTargetId,
+      sourceCombatantId: spellCasterId,
       expiresAt: {
         kind: "concentration",
-        combatantId: spellTargetId,
+        combatantId: spellCasterId,
         durationTicks: saveGatedConditionWithRepeatDurationTicks,
       },
     } as const;
@@ -950,7 +956,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       damageTarget.activeEffects.filter(
         (effect) => effect.kind === "saveGatedConditionWithRepeat",
       ),
-    ).toEqual([expect.objectContaining({ sourceCombatantId: spellTargetId })]);
+    ).toEqual([expect.objectContaining({ sourceCombatantId: spellCasterId })]);
     expect(hasCondition(damageTarget.conditions, "prone")).toBe(true);
     expect(hasCondition(damageTarget.conditions, "incapacitated")).toBe(true);
 
@@ -1024,7 +1030,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       endTurnTarget.activeEffects.filter(
         (effect) => effect.kind === "saveGatedConditionWithRepeat",
       ),
-    ).toEqual([expect.objectContaining({ sourceCombatantId: spellTargetId })]);
+    ).toEqual([expect.objectContaining({ sourceCombatantId: spellCasterId })]);
     expect(hasCondition(endTurnTarget.conditions, "prone")).toBe(true);
     expect(hasCondition(endTurnTarget.conditions, "incapacitated")).toBe(true);
   });

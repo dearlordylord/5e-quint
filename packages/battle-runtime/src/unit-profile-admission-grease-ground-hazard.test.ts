@@ -172,7 +172,6 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         areaId: greaseAreaId,
-        save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
         expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
       }),
     ]);

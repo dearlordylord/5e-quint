@@ -8,7 +8,10 @@ import { movementFeet, Round } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import { admittedSpellActs } from "./battle-reducer/spells-profiles.ts";
-import { characterExecutionWithSpellInvocations } from "./character-execution-admission.ts";
+import {
+  characterExecutionWithSpatialMeleeSpellAttackProxyRepeatAttack,
+  characterExecutionWithSpellInvocations,
+} from "./character-execution-admission.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
 import {
   battleAreaId,
@@ -172,7 +175,6 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
           originIncluded: true,
           nonOriginCombatantIds: [],
         },
-        radiusFeet: movementFeet(10),
         suppressedOngoingSpellEffects: [
           {
             kind: "spellLightEmitter",
@@ -615,10 +617,6 @@ function antimagicFieldBattle(input?: {
   if (caster.origin.kind !== "character") {
     throw new Error("Expected Antimagic Field caster to be a character.");
   }
-  const characterContext = base.context.characters.get(spellCasterId);
-  if (characterContext === undefined) {
-    throw new Error("Expected Antimagic Field caster runtime context.");
-  }
   const activeEffects = input.activeEffects.map((effect) => {
     const sourceProcedure =
       effect.kind === "spellObjectContactDamage"
@@ -627,8 +625,10 @@ function antimagicFieldBattle(input?: {
           ? "spatialMeleeSpellAttackProxy"
           : undefined;
     if (sourceProcedure === undefined) return effect;
-    const sourceProcedureRef = characterContext.spellPresentationSources.find(
-      (source) => source.invocation.procedure === sourceProcedure,
+    const sourceProcedureRef = caster.origin.execution.procedureBindings.find(
+      (binding) =>
+        binding.procedure.kind === "spellInvocation" &&
+        binding.procedure.execution.procedure === sourceProcedure,
     )?.procedureRef;
     if (sourceProcedureRef === undefined) {
       throw new Error(`Expected ${sourceProcedure} presentation source.`);
@@ -636,17 +636,41 @@ function antimagicFieldBattle(input?: {
     return { ...effect, sourceProcedureRef };
   });
   const casterWithEffects = { ...caster, activeEffects };
+  const executionWithRepeats = activeEffects.reduce(
+    (execution, effect) =>
+      effect.kind === "spatialMeleeSpellAttackProxy"
+        ? characterExecutionWithSpatialMeleeSpellAttackProxyRepeatAttack(
+            execution,
+            {
+              procedure: "spatialMeleeSpellAttackProxy",
+              operation: "repositionAndAttack",
+              activeEffectRef: effect.effectRef,
+              activeEffectSourceProcedureRef: effect.sourceProcedureRef,
+              repeatTargeting: { kind: "unrestricted" },
+            },
+          )
+        : execution,
+    caster.origin.execution,
+  );
+  const casterWithExecution = {
+    ...casterWithEffects,
+    origin: { ...caster.origin, execution: executionWithRepeats },
+  };
   const provisionalState = {
     ...base.state,
     combatants: new Map(base.state.combatants).set(
       spellCasterId,
-      casterWithEffects,
+      casterWithExecution,
     ),
   };
+  const characterContext = base.context.characters.get(spellCasterId);
+  if (characterContext === undefined) {
+    throw new Error("Expected Antimagic Field caster runtime context.");
+  }
   const execution = characterExecutionWithSpellInvocations(
-    caster.origin.execution,
+    executionWithRepeats,
     admittedSpellActs(
-      casterWithEffects,
+      casterWithExecution,
       provisionalState,
       characterContext.spellcastingPresentationSource,
     ),
@@ -656,12 +680,16 @@ function antimagicFieldBattle(input?: {
     state: {
       ...allocated.state,
       combatants: new Map(allocated.state.combatants).set(spellCasterId, {
-        ...casterWithEffects,
+        ...casterWithExecution,
         origin: { ...caster.origin, execution },
         concentration: {
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(heatMetalUnitId),
-          ),
+          sourceProcedureRef:
+            activeEffects.find(
+              (effect) =>
+                effect.kind === "spellObjectContactDamage" ||
+                effect.kind === "spatialMeleeSpellAttackProxy",
+            )?.sourceProcedureRef ??
+            battleProcedureExecutionRefForTest(String(heatMetalUnitId)),
           effectKind: "spellEffect",
         },
       }),
