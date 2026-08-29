@@ -27,7 +27,7 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { MovementFeet, movementFeet } from "@dnd/shared/types";
-import { Result } from "effect";
+import { Match, Result } from "effect";
 
 import {
   type BattleActDiscoveryCandidate,
@@ -58,7 +58,6 @@ import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
-  SynthesizedSpellProcedureDeclaration,
 } from "./profile.ts";
 import { cantripSpellAccessFor } from "./profile.ts";
 import { Schema } from "effect";
@@ -408,33 +407,40 @@ const MovableLightRepositionInvocationSchema = spellProcedureExecutionSchema(
     spacingFeet: MovementFeet,
   }),
 );
-export const movableLightSeparateCastProfile: SpellProcedureDeclaration<
-  "movableLightManifestation",
-  MovableLightSeparateCastInvocation
-> = {
+export const movableLightManifestationProfile = {
   procedure: "movableLightManifestation",
-  executionSchema: MovableLightSeparateCastInvocationSchema,
-  admit: admitMovableLightSeparateCast,
-  discoverCastAct: discoverMovableLightCastAct,
-  resolve: resolveMovableLightCast,
-};
-
-export const movableLightCombinedCastProfile: SpellProcedureDeclaration<
+  executionSchema: Schema.Union([
+    MovableLightSeparateCastInvocationSchema,
+    MovableLightCombinedCastInvocationSchema,
+    MovableLightRepositionInvocationSchema,
+  ]),
+  admit: (spell, context) => [
+    ...admitMovableLightSeparateCast(spell, context),
+    ...admitMovableLightCombinedCast(spell, context),
+  ],
+  discoverCastAct: (state, actorId, invocation) =>
+    Match.value(invocation).pipe(
+      Match.when({ operation: "create" }, (createInvocation) =>
+        discoverMovableLightCastAct(state, actorId, createInvocation),
+      ),
+      Match.when({ operation: "reposition" }, (repositionInvocation) =>
+        discoverMovableLightRepositionAct(state, actorId, repositionInvocation),
+      ),
+      Match.exhaustive,
+    ),
+  resolve: (input) =>
+    Match.value(input.invocation).pipe(
+      Match.when({ operation: "create" }, (invocation) =>
+        resolveMovableLightCast({ ...input, invocation }),
+      ),
+      Match.when({ operation: "reposition" }, (invocation) =>
+        resolveMovableLightReposition({ ...input, invocation }),
+      ),
+      Match.exhaustive,
+    ),
+} satisfies SpellProcedureDeclaration<
   "movableLightManifestation",
-  MovableLightCombinedCastInvocation
-> = {
-  procedure: "movableLightManifestation",
-  executionSchema: MovableLightCombinedCastInvocationSchema,
-  admit: admitMovableLightCombinedCast,
-  discoverCastAct: discoverMovableLightCastAct,
-  resolve: resolveMovableLightCast,
-};
-
-export const movableLightRepositionProfile: SynthesizedSpellProcedureDeclaration<"movableLightManifestation"> =
-  {
-    admission: "synthesized",
-    procedure: "movableLightManifestation",
-    executionSchema: MovableLightRepositionInvocationSchema,
-    discoverCastAct: discoverMovableLightRepositionAct,
-    resolve: resolveMovableLightReposition,
-  };
+  | MovableLightSeparateCastInvocation
+  | MovableLightCombinedCastInvocation
+  | MovableLightRepositionInvocation
+>;

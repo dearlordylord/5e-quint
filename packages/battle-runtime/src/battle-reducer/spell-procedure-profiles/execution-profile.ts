@@ -7,6 +7,7 @@ import type {
 } from "../../battle-state-execution.ts";
 import type {
   BattleSpellProcedureExecution,
+  SpellProcedureInput,
   SpellProcedureExecutionByProcedure,
   SpellProcedureKey,
 } from "../../character-execution.ts";
@@ -44,9 +45,14 @@ export function spellProcedureResolutionContext<
   };
 }
 
-export type SpellProcedureProfileResolveInput<
-  I extends { readonly procedure: SpellProcedureKey },
-> = SpellProcedureDeclarationResolution<I["procedure"]>;
+export type SpellProcedureProfileResolveInput<I extends SpellProcedureInput> =
+  SpellProcedureDeclarationResolution<I["procedure"]> extends infer Resolution
+    ? Resolution extends { readonly invocation: unknown }
+      ? Omit<Resolution, "invocation"> & {
+          readonly invocation: BattleSpellProcedureExecution<I>;
+        }
+      : never
+    : never;
 
 export type SpellProcedureExecutionDeclaration<P extends SpellProcedureKey> = {
   readonly procedure: P;

@@ -304,7 +304,7 @@ const RamMovablePersistentAreaInvocationSchema = spellProcedureExecutionSchema(
     }),
   }),
 );
-export const ramMovablePersistentAreaProfile = {
+export const collisionRepositionPersistentAreaSaveDamageProfile = {
   procedure: "persistentAreaSaveDamage",
   executionSchema: RamMovablePersistentAreaInvocationSchema,
   admit: admitRamMovablePersistentArea,

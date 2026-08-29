@@ -290,7 +290,7 @@ const StationaryPersistentAreaAreaHazardInvocationSchema =
     }),
   );
 
-export const persistentAreaSaveDamageProfile = {
+export const stationaryPersistentAreaSaveDamageProfile = {
   procedure: "persistentAreaSaveDamage",
   executionSchema: StationaryPersistentAreaAreaHazardInvocationSchema,
   admit: admitStationaryPersistentAreaAreaHazard,

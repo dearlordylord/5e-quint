@@ -308,7 +308,7 @@ const TranslatingPersistentAreaAreaHazardInvocationSchema =
     }),
   );
 
-export const persistentAreaSaveDamageProfile = {
+export const sourceTurnTranslationPersistentAreaSaveDamageProfile = {
   procedure: "persistentAreaSaveDamage",
   executionSchema: TranslatingPersistentAreaAreaHazardInvocationSchema,
   admit: admitTranslatingPersistentAreaAreaHazard,

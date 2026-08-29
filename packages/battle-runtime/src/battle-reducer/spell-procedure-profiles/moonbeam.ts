@@ -339,7 +339,7 @@ const MovablePersistentAreaInvocationSchema = spellProcedureExecutionSchema(
   }),
 );
 
-export const movablePersistentAreaProfile = {
+export const directedRepositionPersistentAreaSaveDamageProfile = {
   procedure: "persistentAreaSaveDamage",
   executionSchema: MovablePersistentAreaInvocationSchema,
   admit: admitMovablePersistentArea,

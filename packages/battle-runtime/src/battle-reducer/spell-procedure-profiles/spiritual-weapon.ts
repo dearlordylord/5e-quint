@@ -46,7 +46,7 @@ import type {
   DiceExprDelta,
   EffectAtom,
 } from "@dnd/surface/surface/types";
-import { Result } from "effect";
+import { Match, Result } from "effect";
 import {
   type BattleActDiscoveryCandidate,
   type BattleActiveEffect,
@@ -503,24 +503,36 @@ const SpatialMeleeSpellAttackProxyRepeatAttackInvocationSchema =
       activeEffectSourceProcedureRef: BattleProcedureExecutionRef,
     }),
   );
-export const spatialMeleeSpellAttackProxyAttackProxyProfile: SpellProcedureDeclaration<
-  "spatialMeleeSpellAttackProxy",
-  SpatialMeleeSpellAttackProxyAttackProxyInvocation
-> = {
+export const spatialMeleeSpellAttackProxyProfile = {
   procedure: "spatialMeleeSpellAttackProxy",
-  executionSchema: SpatialMeleeSpellAttackProxyAttackProxyInvocationSchema,
-  admit: admitSpatialMeleeSpellAttackProxyAttackProxy,
-  discoverCastAct: discoverSpatialMeleeSpellAttackProxyAttackProxyCastAct,
+  executionSchema: Schema.Union([
+    SpatialMeleeSpellAttackProxyAttackProxyInvocationSchema,
+    SpatialMeleeSpellAttackProxyRepeatAttackInvocationSchema,
+  ]),
+  admit: (spell, context) => [
+    ...admitSpatialMeleeSpellAttackProxyAttackProxy(spell, context),
+    ...admitSpatialMeleeSpellAttackProxyRepeatAttack(spell, context),
+  ],
+  discoverCastAct: (state, actorId, invocation) =>
+    Match.value(invocation).pipe(
+      Match.when({ operation: "createAndAttack" }, (createInvocation) =>
+        discoverSpatialMeleeSpellAttackProxyAttackProxyCastAct(
+          state,
+          actorId,
+          createInvocation,
+        ),
+      ),
+      Match.when({ operation: "repositionAndAttack" }, (repeatInvocation) =>
+        discoverSpatialMeleeSpellAttackProxyRepeatAttackCastAct(
+          state,
+          actorId,
+          repeatInvocation,
+        ),
+      ),
+      Match.exhaustive,
+    ),
   resolve: resolveSpatialMeleeSpellAttackProxy,
-};
-
-export const spatialMeleeSpellAttackProxyRepeatAttackProfile: SpellProcedureDeclaration<
+} satisfies SpellProcedureDeclaration<
   "spatialMeleeSpellAttackProxy",
-  SpatialMeleeSpellAttackProxyRepeatAttackInvocation
-> = {
-  procedure: "spatialMeleeSpellAttackProxy",
-  executionSchema: SpatialMeleeSpellAttackProxyRepeatAttackInvocationSchema,
-  admit: admitSpatialMeleeSpellAttackProxyRepeatAttack,
-  discoverCastAct: discoverSpatialMeleeSpellAttackProxyRepeatAttackCastAct,
-  resolve: resolveSpatialMeleeSpellAttackProxy,
-};
+  SpatialMeleeSpellAttackProxyInvocation
+>;
