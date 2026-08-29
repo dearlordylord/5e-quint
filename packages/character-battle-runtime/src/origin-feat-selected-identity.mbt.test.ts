@@ -32,7 +32,7 @@ import {
 } from "@dnd/battle-runtime";
 import {
   characterSheetId,
-  createFreshCharacterSheet,
+  rebuildCharacterSheet,
 } from "@dnd/character-sheet-runtime";
 import { Hp } from "@dnd/shared/types";
 import {
@@ -46,6 +46,8 @@ import {
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Result } from "effect";
 import { describe, expect, it } from "vitest";
+
+import { requireResultSuccess as expectSuccess } from "./result.test-support.ts";
 
 import {
   characterBattleInitiativeScore,
@@ -175,24 +177,36 @@ describe("Character Battle origin feat selected identity replay", () => {
         originFeatUnitId: "feat_magic_initiate_cleric",
         asiOptionId: "two_and_one:int:wis",
         toolOptionId: "calligraphers_supplies",
+        magicInitiate: {
+          cantrips: ["guidance", "sacred_flame"],
+          levelOneSpell: "bless",
+          ability: "wis",
+        },
       },
       {
         backgroundUnitId: CRIMINAL_BACKGROUND_UNIT_ID,
         originFeatUnitId: ALERT_UNIT_ID,
         asiOptionId: "two_and_one:dex:con",
         toolOptionId: "thieves_tools",
+        magicInitiate: false,
       },
       {
         backgroundUnitId: "background_sage",
         originFeatUnitId: "feat_magic_initiate_wizard",
         asiOptionId: "two_and_one:int:wis",
         toolOptionId: "calligraphers_supplies",
+        magicInitiate: {
+          cantrips: ["fire_bolt", "light"],
+          levelOneSpell: "burning_hands",
+          ability: "int",
+        },
       },
       {
         backgroundUnitId: "background_soldier",
         originFeatUnitId: "feat_savage_attacker",
         asiOptionId: "two_and_one:str:con",
         toolOptionId: "tool_dice_set",
+        magicInitiate: false,
       },
     ] as const;
 
@@ -219,6 +233,7 @@ describe("Character Battle origin feat selected identity replay", () => {
       originFeatUnitId: ALERT_UNIT_ID,
       asiOptionId: "two_and_one:dex:con",
       toolOptionId: "thieves_tools",
+      magicInitiate: false,
     });
     const unitRefIds = characterBuildUnitRefs(build, unitLibrary).map(
       (ref) => ref.unitId,
@@ -322,6 +337,7 @@ function criminalAlertOriginFeatProjection(): OriginFeatSelectedIdentityProjecti
     originFeatUnitId: ALERT_UNIT_ID,
     asiOptionId: "two_and_one:dex:con",
     toolOptionId: "thieves_tools",
+    magicInitiate: false,
   });
   const unitRefIds = characterBuildUnitRefs(build, unitLibrary).map(
     (ref) => ref.unitId,
@@ -346,6 +362,7 @@ function alertInitiativeHandoffProjection(): OriginFeatSelectedIdentityProjectio
     originFeatUnitId: ALERT_UNIT_ID,
     asiOptionId: "two_and_one:dex:con",
     toolOptionId: "thieves_tools",
+    magicInitiate: false,
   });
   const score = characterBattleInitiativeScore({
     build,
@@ -441,13 +458,14 @@ function selectedReferenceRouteEvents(
 }
 
 function characterSheetForBuild(build: CharacterBuild) {
-  const sheet = createFreshCharacterSheet({
+  const sheet = rebuildCharacterSheet({
     characterId: characterSheetId("character:origin-feat"),
     build,
     currentHp: Hp(10),
     tempHp: Hp(0),
     hitPointMaximumReduction: Hp(0),
     conditions: [],
+    companion: { tag: "none" },
     unitLibrary,
   });
   if (Result.isFailure(sheet)) {
@@ -474,6 +492,13 @@ function finalizedFighterBuildForBackground(input: {
   readonly originFeatUnitId: string;
   readonly asiOptionId: string;
   readonly toolOptionId: string;
+  readonly magicInitiate:
+    | false
+    | {
+        readonly cantrips: readonly [string, string];
+        readonly levelOneSpell: string;
+        readonly ability: "int" | "wis" | "cha";
+      };
 }): CharacterBuild {
   const finalized = finalizeCharacterDraft({
     draft: completeFighterDraftForBackground(input),
@@ -481,7 +506,7 @@ function finalizedFighterBuildForBackground(input: {
   });
   if (finalized.tag !== "ready") {
     throw new Error(
-      `Expected ${input.backgroundUnitId} origin feat draft to finalize, received ${finalized.tag}.`,
+      `Expected ${input.backgroundUnitId} origin feat draft to finalize, received ${finalized.tag}${finalized.tag === "incomplete" ? ` with holes ${JSON.stringify(finalized.holes.map((hole) => hole.holeId))}` : ` with issues ${JSON.stringify(finalized.issues)}`}.`,
     );
   }
   const unitRefIds = characterBuildUnitRefs(finalized.build, unitLibrary).map(
@@ -497,8 +522,16 @@ function finalizedFighterBuildForBackground(input: {
 
 function completeFighterDraftForBackground(input: {
   readonly backgroundUnitId: string;
+  readonly originFeatUnitId: string;
   readonly asiOptionId: string;
   readonly toolOptionId: string;
+  readonly magicInitiate:
+    | false
+    | {
+        readonly cantrips: readonly [string, string];
+        readonly levelOneSpell: string;
+        readonly ability: "int" | "wis" | "cha";
+      };
 }): CharacterDraft {
   const draft = createCharacterDraft({
     unitLibrary,
@@ -536,11 +569,44 @@ function completeFighterDraftForBackground(input: {
       ],
     }),
   );
+  const afterOriginFeatChoices =
+    input.magicInitiate === false
+      ? afterInitial
+      : requireAcceptedBatch(
+          fillCreationHoles({
+            draft: afterInitial,
+            unitLibrary,
+            expectedRevision: afterInitial.revision,
+            fills: [
+              choiceFill(
+                unitChoiceHoleId(
+                  input.originFeatUnitId,
+                  "origin_feat_magic_initiate_cantrip_choice",
+                ),
+                ...input.magicInitiate.cantrips,
+              ),
+              choiceFill(
+                unitChoiceHoleId(
+                  input.originFeatUnitId,
+                  "origin_feat_magic_initiate_level_one_spell_choice",
+                ),
+                input.magicInitiate.levelOneSpell,
+              ),
+              choiceFill(
+                unitChoiceHoleId(
+                  input.originFeatUnitId,
+                  "origin_feat_magic_initiate_spellcasting_ability_choice",
+                ),
+                input.magicInitiate.ability,
+              ),
+            ],
+          }),
+        );
   const afterChoices = requireAcceptedBatch(
     fillCreationHoles({
-      draft: afterInitial,
+      draft: afterOriginFeatChoices,
       unitLibrary,
-      expectedRevision: afterInitial.revision,
+      expectedRevision: afterOriginFeatChoices.revision,
       fills: [
         choiceFill(
           unitChoiceHoleId("class_fighter", "class_skill_proficiency_choice"),
@@ -764,12 +830,4 @@ function numberFromQuintInt(raw: unknown, field: string): number {
   if (typeof raw === "number") return raw;
   if (typeof raw === "bigint") return Number(raw);
   throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function expectSuccess<T, E>(result: Result.Result<T, E>): T {
-  expect(Result.isSuccess(result)).toBe(true);
-  if (Result.isFailure(result)) {
-    throw new Error(String(result.failure));
-  }
-  return result.success;
 }

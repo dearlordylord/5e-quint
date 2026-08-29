@@ -70,6 +70,7 @@ import {
 } from "./index.ts";
 
 import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
+import { requireResultSuccess as requireSuccess } from "./result.test-support.ts";
 
 function battleCreatureInitFromStatBlock(
   input: Omit<
@@ -1349,13 +1350,6 @@ function nullaryVariantTag(raw: unknown, field: string): string {
     if (typeof tag === "string") return tag;
   }
   throw new Error(`Expected Quint variant field ${field}.`);
-}
-
-function requireSuccess<A, E>(result: Result.Result<A, E>): A {
-  if (Result.isSuccess(result)) return result.success;
-  throw new Error(
-    `Expected Result.succeed, got ${JSON.stringify(result.failure)}.`,
-  );
 }
 
 function recordField(

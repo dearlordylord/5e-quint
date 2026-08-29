@@ -75,10 +75,11 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
-import { Result } from "effect";
-
 import { characterSheetBattleInit } from "./index.ts";
 import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
+import { requireResultSuccess as requireSuccess } from "./result.test-support.ts";
+
+export { requireSuccess };
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -1513,13 +1514,6 @@ export function requireCharacterCombatant(
 
 export function characterResources(combatant: CharacterCombatantState) {
   return combatant.origin.resources;
-}
-
-export function requireSuccess<A, E>(either: Result.Result<A, E>): A {
-  if (Result.isSuccess(either)) return either.success;
-  throw new Error(
-    `Expected Result.succeed, got ${JSON.stringify(either.failure)}.`,
-  );
 }
 
 function rolledDiceGroup(

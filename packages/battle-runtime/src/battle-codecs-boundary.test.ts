@@ -80,7 +80,7 @@ type EncodedInterruptChoice = Extract<
 >["choices"][number];
 type CodecCase = {
   readonly name: string;
-  readonly expected: "Right" | "Left";
+  readonly expected: "Success" | "Failure";
   readonly hole: EncodedHole;
 };
 
@@ -210,12 +210,12 @@ const encodedEnvelopeFromState = (
     battleCheckpointFrontierEnvelope(state),
   );
 
-function expectSnapshotDecodeLeft(snapshot: EncodedSnapshot): void {
+function expectSnapshotDecodeFailure(snapshot: EncodedSnapshot): void {
   const decoded = Schema.decodeUnknownResult(BattleSnapshotSchema)(snapshot);
   expect(Result.isFailure(decoded)).toBe(true);
 }
 
-function expectEnvelopeDecodeLeft(envelope: EncodedEnvelope): void {
+function expectEnvelopeDecodeFailure(envelope: EncodedEnvelope): void {
   const decoded = Schema.decodeUnknownResult(
     BattleCheckpointFrontierEnvelopeSchema,
   )(envelope);
@@ -825,14 +825,14 @@ const saving = (
   });
 const rolled = (name: string, value: object) =>
   hole(name, { kind: "rolledDice", ...value });
-const right = (name: string, holeValue: EncodedHole): CodecCase => ({
+const successCase = (name: string, holeValue: EncodedHole): CodecCase => ({
   name,
-  expected: "Right",
+  expected: "Success",
   hole: holeValue,
 });
-const left = (name: string, holeValue: EncodedHole): CodecCase => ({
+const failureCase = (name: string, holeValue: EncodedHole): CodecCase => ({
   name,
-  expected: "Left",
+  expected: "Failure",
   hole: holeValue,
 });
 
@@ -901,7 +901,7 @@ function staticDartSubject(
 }
 
 const savingThrowCases: readonly CodecCase[] = [
-  right(
+  successCase(
     "spellTurnStartSave",
     saving("spellTurnStartSave", "spellTurnStartSave", "wis", {
       ...source,
@@ -909,7 +909,7 @@ const savingThrowCases: readonly CodecCase[] = [
       save: { ...save("wis"), successEnds: "spell" },
     }),
   ),
-  right(
+  successCase(
     "hideousLaughterRepeatSave",
     saving("hideousLaughterRepeatSave", "hideousLaughterRepeatSave", "wis", {
       ...source,
@@ -918,7 +918,7 @@ const savingThrowCases: readonly CodecCase[] = [
       save: save("wis"),
     }),
   ),
-  right(
+  successCase(
     "spellConditionEndTurnSave",
     saving("spellConditionEndTurnSave", "spellConditionEndTurnSave", "dex", {
       ...source,
@@ -926,7 +926,7 @@ const savingThrowCases: readonly CodecCase[] = [
       save: save("dex"),
     }),
   ),
-  right(
+  successCase(
     "protectionRelevantEffectSave",
     saving(
       "protectionRelevantEffectSave",
@@ -950,7 +950,7 @@ const savingThrowCases: readonly CodecCase[] = [
       ],
     ] as const
   ).map(([variant, effectRef, areaId]) =>
-    right(
+    successCase(
       variant,
       saving(variant, variant, "dex", {
         ...source,
@@ -967,7 +967,7 @@ const savingThrowCases: readonly CodecCase[] = [
       ["cloudkillAreaHazard", fixture.cloudkillEffectRef],
     ] as const
   ).map(([variant, effectRef]) =>
-    right(
+    successCase(
       variant,
       saving(variant, variant, "con", {
         ...source,
@@ -982,7 +982,7 @@ const savingThrowCases: readonly CodecCase[] = [
       }),
     ),
   ),
-  right(
+  successCase(
     "glyphExplosiveRune",
     hole("glyphExplosiveRune", {
       kind: "savingThrowOutcome",
@@ -999,7 +999,7 @@ const savingThrowCases: readonly CodecCase[] = [
       targetFlatBonuses: [],
     }),
   ),
-  right(
+  successCase(
     "wardingBondSeparation",
     hole("wardingBondSeparation", {
       kind: "targetSpatialFacts",
@@ -1012,7 +1012,7 @@ const savingThrowCases: readonly CodecCase[] = [
       requiresTableSpatialFact: true,
     }),
   ),
-  right(
+  successCase(
     "gustOfWindLineSave",
     saving("gustOfWindLineSave", "gustOfWindLine", "str", {
       targetId: skeletonId,
@@ -1026,7 +1026,7 @@ const savingThrowCases: readonly CodecCase[] = [
       pushDistanceFeet: 15,
     }),
   ),
-  right(
+  successCase(
     "dragonsBreathSave",
     saving("dragonsBreathSave", "dragonsBreath", "dex", {
       targetId: skeletonId,
@@ -1050,7 +1050,7 @@ const markedRider = {
   expiresAt: { kind: "untilDispelled" },
 };
 const rolledDiceCases: readonly CodecCase[] = [
-  right(
+  successCase(
     "sourceProcedureRefWithMarkedRider",
     rolled("sourceProcedureRefWithMarkedRider", {
       critical: false,
@@ -1058,7 +1058,7 @@ const rolledDiceCases: readonly CodecCase[] = [
       spellMarkedDamageRiders: [markedRider],
     }),
   ),
-  right(
+  successCase(
     "glyphExplosiveRuneDamage",
     rolled("glyphExplosiveRuneDamage", {
       critical: false,
@@ -1070,7 +1070,7 @@ const rolledDiceCases: readonly CodecCase[] = [
       },
     }),
   ),
-  right(
+  successCase(
     "spellDamageReduction",
     rolled("spellDamageReduction", {
       spellDamageReduction: {
@@ -1083,7 +1083,7 @@ const rolledDiceCases: readonly CodecCase[] = [
       },
     }),
   ),
-  right(
+  successCase(
     "sourceDamageRollPenalty",
     rolled("sourceDamageRollPenalty", {
       sourceDamageRollPenalty: {
@@ -1096,7 +1096,7 @@ const rolledDiceCases: readonly CodecCase[] = [
       },
     }),
   ),
-  right(
+  successCase(
     "mirrorImageDuplicateRoll",
     rolled("mirrorImageDuplicateRoll", {
       mirrorImageDuplicateRoll: {
@@ -1109,7 +1109,7 @@ const rolledDiceCases: readonly CodecCase[] = [
       },
     }),
   ),
-  right(
+  successCase(
     "spellTurnStartDamage",
     rolled("spellTurnStartDamage", {
       spellTurnStartDamage: {
@@ -1120,7 +1120,7 @@ const rolledDiceCases: readonly CodecCase[] = [
       },
     }),
   ),
-  right(
+  successCase(
     "spellTurnEndDamage",
     rolled("spellTurnEndDamage", {
       spellTurnEndDamage: {
@@ -1130,7 +1130,7 @@ const rolledDiceCases: readonly CodecCase[] = [
       },
     }),
   ),
-  right(
+  successCase(
     "movableZone",
     rolled("movableZone", {
       critical: false,
@@ -1143,7 +1143,7 @@ const rolledDiceCases: readonly CodecCase[] = [
       },
     }),
   ),
-  right(
+  successCase(
     "spikeGrowthMovement",
     rolled("spikeGrowthMovement", {
       critical: false,
@@ -1156,7 +1156,7 @@ const rolledDiceCases: readonly CodecCase[] = [
       },
     }),
   ),
-  right(
+  successCase(
     "insectPlagueAreaHazard",
     rolled("insectPlagueAreaHazard", {
       critical: false,
@@ -1169,7 +1169,7 @@ const rolledDiceCases: readonly CodecCase[] = [
       },
     }),
   ),
-  right(
+  successCase(
     "cloudkillAreaHazard",
     rolled("cloudkillAreaHazard", {
       critical: false,
@@ -1182,7 +1182,7 @@ const rolledDiceCases: readonly CodecCase[] = [
       },
     }),
   ),
-  right(
+  successCase(
     "dragonsBreathDamage",
     rolled("dragonsBreathDamage", {
       dragonsBreath: {
@@ -1246,7 +1246,7 @@ const sourceOwningHoleCases: readonly EncodedHole[] = [
 const cases: readonly CodecCase[] = [
   ...savingThrowCases,
   ...rolledDiceCases,
-  left(
+  failureCase(
     "spellTurnStartSaveUnboundSource",
     encodeHole({
       ...baseHole("spellTurnStartSaveUnboundSource"),
@@ -1264,7 +1264,7 @@ const cases: readonly CodecCase[] = [
       targetFlatBonuses: [],
     }),
   ),
-  left(
+  failureCase(
     "hideousLaughterRepeatSaveWrongOwner",
     saving(
       "hideousLaughterRepeatSaveWrongOwner",
@@ -1279,7 +1279,7 @@ const cases: readonly CodecCase[] = [
     ),
   ),
   ...sourceOwningHoleCases.map((replacement) =>
-    left(`${replacement.kind}UnboundSource`, replacement),
+    failureCase(`${replacement.kind}UnboundSource`, replacement),
   ),
 ];
 
@@ -1408,7 +1408,7 @@ describe("battle codec execution-reference boundaries", () => {
         })),
       };
       expect(replacementCount).toBe(1);
-      expectSnapshotDecodeLeft(snapshot);
+      expectSnapshotDecodeFailure(snapshot);
     },
   );
 
@@ -1418,7 +1418,7 @@ describe("battle codec execution-reference boundaries", () => {
     )(
       replaceActHole(fixture.envelope, fixture.sourceProcedureRef, replacement),
     );
-    expect(Result.isSuccess(decoded)).toBe(expected === "Right");
+    expect(Result.isSuccess(decoded)).toBe(expected === "Success");
   });
 
   test("accepts only the exact Cloudkill wind-strength hole pair", () => {
@@ -1439,7 +1439,7 @@ describe("battle codec execution-reference boundaries", () => {
         fixture.envelope,
       ),
     ).not.toThrow();
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       ...fixture.envelope,
       frontier: {
         ...fixture.envelope.frontier,
@@ -1490,7 +1490,7 @@ describe("battle codec execution-reference boundaries", () => {
         },
       };
 
-      expectEnvelopeDecodeLeft(withoutOccurrence);
+      expectEnvelopeDecodeFailure(withoutOccurrence);
     },
   );
 
@@ -1503,7 +1503,7 @@ describe("battle codec execution-reference boundaries", () => {
       if (entry === undefined) {
         throw new Error("Expected the damage protocol codec case.");
       }
-      expectEnvelopeDecodeLeft(
+      expectEnvelopeDecodeFailure(
         replaceActHole(
           fixture.envelope,
           fixture.sourceProcedureRef,
@@ -1533,7 +1533,7 @@ describe("battle codec execution-reference boundaries", () => {
       if (entry === undefined) {
         throw new Error("Expected the damage protocol codec case.");
       }
-      expectEnvelopeDecodeLeft(
+      expectEnvelopeDecodeFailure(
         replaceActHole(
           fixture.envelope,
           fixture.sourceProcedureRef,
@@ -1573,7 +1573,7 @@ describe("battle codec execution-reference boundaries", () => {
           pushDistanceFeet: 15,
         },
       );
-      expectEnvelopeDecodeLeft(
+      expectEnvelopeDecodeFailure(
         replaceActHole(
           fixture.envelope,
           fixture.sourceProcedureRef,
@@ -1592,7 +1592,7 @@ describe("battle codec execution-reference boundaries", () => {
       if (entry === undefined) {
         throw new Error("Expected the damage protocol codec case.");
       }
-      expectEnvelopeDecodeLeft(
+      expectEnvelopeDecodeFailure(
         replaceActHole(
           fixture.envelope,
           fixture.sourceProcedureRef,
@@ -1620,7 +1620,7 @@ describe("battle codec execution-reference boundaries", () => {
       },
     };
 
-    expectEnvelopeDecodeLeft(invalidCursor);
+    expectEnvelopeDecodeFailure(invalidCursor);
   });
 
   test("round-trips exact movement and Levitate spatial occurrence references", () => {
@@ -1798,7 +1798,7 @@ describe("battle codec execution-reference boundaries", () => {
       fixture.gustOfWindEffectRef,
       fixture.storedLightEmitterRef,
     ]) {
-      expectEnvelopeDecodeLeft(
+      expectEnvelopeDecodeFailure(
         replaceCastActWithLevitateAltitudeControl(fixture.envelope, {
           sourceProcedureRef: fixture.sourceProcedureRef,
           subjectEffectRef: fixture.levitateEffectRef,
@@ -1806,7 +1806,7 @@ describe("battle codec execution-reference boundaries", () => {
         }),
       );
     }
-    expectEnvelopeDecodeLeft(
+    expectEnvelopeDecodeFailure(
       replaceCastActWithLevitateAltitudeControl(fixture.envelope, {
         sourceProcedureRef: fixture.sourceProcedureRef,
         subjectEffectRef: fixture.levitateEffectRef,
@@ -1866,7 +1866,7 @@ describe("battle codec execution-reference boundaries", () => {
       fixture.levitateEffectRef,
       fixture.wizardStoredLightEmitterRef,
     ]) {
-      expectEnvelopeDecodeLeft(
+      expectEnvelopeDecodeFailure(
         replaceActHole(
           fixture.envelope,
           fixture.sourceProcedureRef,
@@ -1883,7 +1883,7 @@ describe("battle codec execution-reference boundaries", () => {
       );
     }
 
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       ...envelope,
       checkpoint: {
         ...envelope.checkpoint,
@@ -2073,7 +2073,7 @@ describe("battle codec act ownership boundaries", () => {
     if (pendingEnvelope.frontier.kind !== "interruptDecision") {
       throw new Error("Expected a pending interrupt-decision frontier.");
     }
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       ...pendingEnvelope,
       frontier: {
         ...pendingEnvelope.frontier,
@@ -2083,7 +2083,7 @@ describe("battle codec act ownership boundaries", () => {
         },
       },
     });
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       ...pendingEnvelope,
       frontier: {
         ...pendingEnvelope.frontier,
@@ -2101,7 +2101,7 @@ describe("battle codec act ownership boundaries", () => {
     if (readiedAttackSnapshot?.response.kind !== "attack") {
       throw new Error("Expected an encoded readied-attack snapshot.");
     }
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       ...pendingEnvelope,
       checkpoint: {
         ...pendingEnvelope.checkpoint,
@@ -2116,7 +2116,7 @@ describe("battle codec act ownership boundaries", () => {
         },
       },
     });
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       ...pendingEnvelope,
       checkpoint: {
         ...pendingEnvelope.checkpoint,
@@ -2133,7 +2133,7 @@ describe("battle codec act ownership boundaries", () => {
         },
       },
     });
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       ...pendingEnvelope,
       checkpoint: {
         ...pendingEnvelope.checkpoint,
@@ -2220,7 +2220,7 @@ describe("battle codec act ownership boundaries", () => {
       },
       initialHoles: [],
     };
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       checkpoint: pendingEnvelope.checkpoint,
       frontier: {
         kind: "acts",
@@ -2238,7 +2238,7 @@ describe("battle codec act ownership boundaries", () => {
         ],
       },
     });
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       checkpoint: pendingEnvelope.checkpoint,
       frontier: {
         kind: "acts",
@@ -2340,7 +2340,7 @@ describe("battle codec act ownership boundaries", () => {
       });
       expect(Result.isFailure(decoded)).toBe(true);
     }
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       ...pendingEnvelope,
       frontier: {
         ...pendingEnvelope.frontier,
@@ -2352,7 +2352,7 @@ describe("battle codec act ownership boundaries", () => {
         choices: [statBlockRetaliationChoice],
       },
     });
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       ...pendingEnvelope,
       frontier: {
         ...pendingEnvelope.frontier,
@@ -2364,7 +2364,7 @@ describe("battle codec act ownership boundaries", () => {
         choices: [statBlockReactionModifierChoice],
       },
     });
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       ...pendingEnvelope,
       frontier: {
         ...pendingEnvelope.frontier,
@@ -2376,7 +2376,7 @@ describe("battle codec act ownership boundaries", () => {
         choices: [fighterAttackReactionModifierChoice],
       },
     });
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       ...pendingEnvelope,
       frontier: {
         ...pendingEnvelope.frontier,
@@ -2396,7 +2396,7 @@ describe("battle codec act ownership boundaries", () => {
         trigger: "opportunityAttack" as const,
       },
     };
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       ...pendingEnvelope,
       frontier: {
         ...opportunityFrontier,
@@ -2415,7 +2415,7 @@ describe("battle codec act ownership boundaries", () => {
         ],
       },
     });
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       ...pendingEnvelope,
       frontier: {
         ...opportunityFrontier,
@@ -2459,7 +2459,7 @@ describe("battle codec act ownership boundaries", () => {
         ] as const,
       },
     };
-    expectEnvelopeDecodeLeft(malformedTargetEnvelope);
+    expectEnvelopeDecodeFailure(malformedTargetEnvelope);
     const targetSpatialFacts = {
       kind: "targetSpatialFacts" as const,
       holeId: ATTACK_TARGET_HOLE_ID,
@@ -2646,7 +2646,7 @@ describe("battle codec act ownership boundaries", () => {
         act.subject.actorId === wizardId,
       combatantId("codec-unknown"),
     );
-    expectEnvelopeDecodeLeft(malformed);
+    expectEnvelopeDecodeFailure(malformed);
   });
   test("rejects a stat-block multiattack owned by a character", () => {
     const session = startBattleSessionRight({
@@ -2677,7 +2677,7 @@ describe("battle codec act ownership boundaries", () => {
         act.subject.actorId === skeletonId,
       wizardId,
     );
-    expectEnvelopeDecodeLeft(malformed);
+    expectEnvelopeDecodeFailure(malformed);
   });
   test("rejects a character off-hand attack owned by a stat block", () => {
     const session = startBattleSessionRight({
@@ -2733,6 +2733,6 @@ describe("battle codec act ownership boundaries", () => {
         act.subject.actorId === wizardId,
       skeletonId,
     );
-    expectEnvelopeDecodeLeft(malformed);
+    expectEnvelopeDecodeFailure(malformed);
   });
 });

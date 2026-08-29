@@ -123,6 +123,7 @@ import {
 } from "./index.ts";
 
 import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
+import { requireResultSuccess as expectSuccess } from "./result.test-support.ts";
 
 function battleCreatureInitFromStatBlock(
   input: Omit<
@@ -1878,15 +1879,6 @@ function loadoutHoleId(
     equipmentUnitId: parsedEquipmentUnitId.success,
     slot,
   });
-}
-
-function expectSuccess<T, E>(result: Result.Result<T, E>): T {
-  if (Result.isFailure(result)) {
-    throw new Error(
-      `Expected Result success, received ${JSON.stringify(result.failure)}`,
-    );
-  }
-  return result.success;
 }
 
 function indexedActionEntries<const Schema extends RouteDriverSchema>(

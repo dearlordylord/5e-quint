@@ -8169,6 +8169,18 @@ function selectedOccurrenceSubjectAllowsReferenceFreeHoles(
 ): boolean {
   return Match.value(subject).pipe(
     Match.when(
+      { tag: "action", action: "escapeSpellRestraint" },
+      () => holes.length === 1 && holes[0]?.kind === "abilityCheck",
+    ),
+    Match.when(
+      { tag: "runtimeCommand", command: "dragonsBreathExhale" },
+      () =>
+        holes.length === 1 &&
+        ((holes[0]?.kind === "savingThrowOutcome" &&
+          "dragonsBreath" in holes[0]) ||
+          (holes[0]?.kind === "rolledDice" && "dragonsBreath" in holes[0])),
+    ),
+    Match.when(
       { tag: "runtimeCommand", command: "disperseCloudkill" },
       () => holes.length === 1 && holes[0]?.kind === "areaWindStrength",
     ),
@@ -8180,6 +8192,7 @@ function selectedOccurrenceSubjectRequiresNoOccurrenceHole(
   subject: EncodedBattleSubject,
 ): boolean {
   return Match.value(subject).pipe(
+    Match.when({ tag: "action", action: "escapeSpellRestraint" }, () => true),
     Match.when(
       { tag: "bonusActionStandardAction" },
       (value) => value.sourceEffectRef !== undefined,

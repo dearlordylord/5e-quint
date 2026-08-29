@@ -32,7 +32,7 @@ import {
 import {
   characterSheetId,
   characterSheetSpellSlots,
-  createFreshCharacterSheet as createFreshCharacterSheetCore,
+  rebuildCharacterSheet as rebuildCharacterSheetCore,
   type CharacterSheet,
 } from "@dnd/character-sheet-runtime";
 import {
@@ -51,7 +51,6 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -61,6 +60,7 @@ import {
 import { battleProcedureExecutionRefForHole } from "./sdk-integration.test-support.ts";
 
 import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
+import { requireResultSuccess as expectSuccess } from "./result.test-support.ts";
 
 function battleCreatureInitFromStatBlock(
   input: Omit<
@@ -611,12 +611,13 @@ function startSheetDerivedSession(
 ): SheetDerivedSession {
   const levelOneSlotsExpended = input?.levelOneSlotsExpended ?? 0;
   const sheet = expectSuccess(
-    createFreshCharacterSheetCore({
+    rebuildCharacterSheetCore({
       characterId: characterSheetId("character:sheet-derived-caster"),
       build,
       currentHp: Hp(7),
       tempHp: Hp(0),
       conditions: [],
+      companion: { tag: "none" },
       hitPointMaximumReduction: Hp(0),
       spellSlotExpenditures:
         build.spellcasting === undefined
@@ -931,15 +932,6 @@ function damageRollFill(
       },
     ],
   };
-}
-
-function expectSuccess<A, E>(value: Result.Result<A, E>): A {
-  if (Result.isFailure(value)) {
-    throw new Error(
-      `Expected Result success, got ${JSON.stringify(value.failure)}.`,
-    );
-  }
-  return value.success;
 }
 
 function normalizeSheetDerivedQuintState(raw: unknown): SheetDerivedProjection {

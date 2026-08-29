@@ -57,7 +57,6 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -66,6 +65,7 @@ import {
 } from "./index.ts";
 
 import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
+import { requireResultSuccess as requireSuccess } from "./result.test-support.ts";
 
 function battleCreatureInitFromStatBlock(
   input: Omit<
@@ -934,11 +934,4 @@ function numberFromQuintInt(raw: unknown, field: string): number {
 function booleanField(raw: unknown, field: string): boolean {
   if (typeof raw === "boolean") return raw;
   throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function requireSuccess<A, E>(result: Result.Result<A, E>): A {
-  if (Result.isSuccess(result)) return result.success;
-  throw new Error(
-    `Expected Result.succeed, got ${JSON.stringify(result.failure)}.`,
-  );
 }

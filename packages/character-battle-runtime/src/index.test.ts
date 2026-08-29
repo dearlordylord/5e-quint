@@ -187,6 +187,7 @@ import {
 } from "./battle-handoff-issue.ts";
 
 import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
+import { requireResultSuccess as expectSuccess } from "./result.test-support.ts";
 
 function battleCreatureInitFromStatBlock(
   input: Omit<
@@ -13451,16 +13452,6 @@ function requireSheetWithSpellSlots(
     spellSlotExpenditures: sheet.spellSlotExpenditures,
     createdSpellSlots: sheet.createdSpellSlots,
   };
-}
-
-function expectSuccess<T, E>(result: Result.Result<T, E>): T {
-  if (Result.isFailure(result)) {
-    throw new Error(
-      `Expected Result success, got ${JSON.stringify(result.failure)}`,
-    );
-  }
-  expect(Result.isSuccess(result)).toBe(true);
-  return result.success;
 }
 
 function forgeHpForBoundaryTest(value: number): ReturnType<typeof Hp> {
