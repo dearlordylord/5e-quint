@@ -26,6 +26,7 @@ export function spellHasAvailableSpend(
   if (actor.origin.kind !== "character") {
     return false;
   }
+  if (invocation.procedure === "spawnedCompanionLifecycle") return false;
   const resource = invocation.resource;
   if (resource.tag === "none") {
     return true;
@@ -53,6 +54,7 @@ export function spellActTurnResourceAvailable(
     readonly actionCostOverride?: "magicAction" | "bonusAction";
   },
 ): boolean {
+  if (invocation.procedure === "spawnedCompanionLifecycle") return false;
   if (
     spellInvocationIsLevelOnePlus(invocation) &&
     combatantHasQuickenedLevelOnePlusSpellCastThisTurn(resources, actorId)
@@ -99,6 +101,7 @@ function spellInvocationActionCost(
 export function spellInvocationIsLevelOnePlus(
   invocation: RuntimeSpellProcedure,
 ): boolean {
+  if (invocation.procedure === "spawnedCompanionLifecycle") return true;
   return (
     spellInvocationIsSpellcasting(invocation) &&
     invocation.spellRuleFacts.level >= 1
