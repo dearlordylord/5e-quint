@@ -66,6 +66,10 @@ import {
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
+  boundTargetingSaveInterdictionEffect,
+  type BoundTargetingSaveInterdictionEffect,
+} from "./battle-reducer/spell-modifier-binding.ts";
+import {
   damageRollFillWithGroups,
   requireResultHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
@@ -171,10 +175,7 @@ type ResolvedBattleResult = Extract<
   BattleResolutionResult,
   { readonly tag: "resolved" }
 >;
-type SanctuaryWardEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "targetingSaveInterdiction" }
->;
+type SanctuaryWardEffect = BoundTargetingSaveInterdictionEffect;
 
 const sanctuaryUnitId = "sanctuary";
 const burningHandsUnitId = "burning_hands";
@@ -1672,8 +1673,15 @@ function sanctuaryWard(
   state: BattleState,
   combatantIdValue: CombatantId,
 ): SanctuaryWardEffect | undefined {
-  return combatant(state, combatantIdValue).activeEffects.find(
-    (effect): effect is SanctuaryWardEffect =>
-      effect.kind === "targetingSaveInterdiction",
+  const effect = combatant(state, combatantIdValue).activeEffects.find(
+    (
+      effect,
+    ): effect is Extract<
+      BattleActiveEffect,
+      { readonly kind: "targetingSaveInterdiction" }
+    > => effect.kind === "targetingSaveInterdiction",
   );
+  return effect === undefined
+    ? undefined
+    : boundTargetingSaveInterdictionEffect(state, effect);
 }

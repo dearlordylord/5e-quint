@@ -621,7 +621,6 @@ function magicSuppressionEmanationEffect(): Extract<
     sourceCombatantId: spellTargetId,
     areaId: antimagicFieldAreaId,
     auraMembership: aura.membership,
-    radiusFeet: movementFeet(10),
     suppressedOngoingSpellEffects: [],
     expiresAt: {
       kind: "concentration",

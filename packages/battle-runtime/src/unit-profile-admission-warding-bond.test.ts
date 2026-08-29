@@ -1559,10 +1559,6 @@ function withHideousLaughterOnTarget(state: BattleState): BattleState {
       conditionHadNonSpellProneSource: false,
       conditionHadNonSpellIncapacitatedSource: false,
       repeatSaveRollMode: null,
-      save: {
-        ability: "wis" as const,
-        dc: { kind: "caster_spell_save_dc" as const },
-      },
       expiresAt: {
         kind: "concentration" as const,
         combatantId: spellCasterId,
@@ -1609,10 +1605,6 @@ function withHideousLaughterOnCaster(state: BattleState): BattleState {
       conditionHadNonSpellProneSource: false,
       conditionHadNonSpellIncapacitatedSource: false,
       repeatSaveRollMode: null,
-      save: {
-        ability: "wis" as const,
-        dc: { kind: "caster_spell_save_dc" as const },
-      },
       expiresAt: {
         kind: "concentration" as const,
         combatantId: spellTargetId,

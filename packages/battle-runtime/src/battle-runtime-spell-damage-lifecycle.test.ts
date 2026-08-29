@@ -87,7 +87,6 @@ function wizardVsWardedSkeletonBattle(): BattleRuntimeSession {
       kind: "targetingSaveInterdiction",
       sourceProcedureRef: sanctuaryProcedureRef,
       sourceCombatantId: sanctuaryCasterId,
-      save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
       expiresAt: {
         kind: "duration",
         durationTicks: elapsedTimeTicks(10),

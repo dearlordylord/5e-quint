@@ -1305,7 +1305,6 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
         sourceCombatantId: spellCasterId,
         holderCombatantId: spellCasterId,
         weaponItemId: battleObjectId("other:weapon_longsword"),
-        bonus: 3,
         expiresAt: {
           kind: "duration",
           durationTicks: magicWeaponDurationTicks,
@@ -1418,7 +1417,6 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
           sourceCombatantId: spellCasterId,
           holderCombatantId: spellCasterId,
           weaponItemId: battleObjectId("main:weapon_longsword"),
-          bonus: 1,
           expiresAt: {
             kind: "duration",
             durationTicks: elapsedTimeTicks(1),
@@ -1483,7 +1481,6 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
           sourceCombatantId: spellTargetId,
           holderCombatantId: spellCasterId,
           weaponItemId: battleObjectId("main:weapon_longsword"),
-          bonus: 1,
           expiresAt: {
             kind: "duration",
             durationTicks: magicWeaponDurationTicks,

@@ -1142,10 +1142,6 @@ function withGreaseGroundHazard(session: BattleRuntimeSession): BattleState {
       sourceProcedureRef,
       areaId: greaseAreaId,
       heightenedSpellTargetDisadvantage: null,
-      save: {
-        ability: "dex" as const,
-        dc: { kind: "caster_spell_save_dc" as const },
-      },
       expiresAt: {
         kind: "duration" as const,
         durationTicks: elapsedTimeTicks(10),

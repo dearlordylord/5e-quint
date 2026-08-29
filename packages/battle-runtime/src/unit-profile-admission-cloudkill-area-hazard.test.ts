@@ -468,7 +468,10 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     const effect = caster.activeEffects.find(
       (candidate) => candidate.kind === "persistentAreaSaveDamage",
     );
-    if (effect?.kind !== "persistentAreaSaveDamage") {
+    if (
+      effect?.kind !== "persistentAreaSaveDamage" ||
+      effect.lifecycle.kind !== "sourceTurnTranslation"
+    ) {
       throw new Error("Expected active Cloudkill.");
     }
     const allocation = allocateBattleEffectExecutionRefForCreature({
@@ -477,7 +480,6 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     const replacement = {
       ...effect,
       effectRef: allocation.effectRef,
-      savedThisTurn: [],
     };
     const replacedState = {
       ...targetTurn,

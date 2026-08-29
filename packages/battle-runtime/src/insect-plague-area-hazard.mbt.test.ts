@@ -36,6 +36,7 @@ import type {
 import { endTurn, snapshotBattle } from "./index.ts";
 import type { BattleStationaryPersistentAreaSaveDamageTrigger } from "./battle-state-execution.ts";
 import type { BattleEffectExecutionRef } from "./identity.ts";
+import { boundPersistentAreaSaveDamageEffect } from "./battle-reducer/persistent-area-save-damage-binding.ts";
 import {
   damageRollFillWithGroups,
   movementFill,
@@ -399,7 +400,11 @@ function resolveInsectPlagueSave(
     );
   }
   const damageFill = damageRollFillWithGroups(damageHole, [
-    diceResults(effect.damage.expr.dice, input.rolledDamage),
+    diceResults(
+      requireBoundInsectPlagueFacts(state.session.state, effect).damage.expr
+        .dice,
+      input.rolledDamage,
+    ),
   ]);
   const resolved = resolveBattleSubject({
     state: state.session.state,
@@ -472,6 +477,13 @@ function persistentAreaSaveDamageRuntimeProjection(
   const caster = requireCombatant(battle, spellCasterId);
   const target = requireCombatant(battle, spellTargetId);
   const effect = persistentAreaSaveDamageEffects(battle)[0];
+  const boundEffect =
+    effect === undefined
+      ? undefined
+      : boundPersistentAreaSaveDamageEffect(caster, effect);
+  if (boundEffect !== undefined && boundEffect.kind !== "stationary") {
+    throw new Error("Expected stationary Insect Plague facts.");
+  }
   const areaActive = effect !== undefined;
   if (effect !== undefined) {
     assertExactEffectRef(state, effect);
@@ -501,12 +513,15 @@ function persistentAreaSaveDamageRuntimeProjection(
     targetTurn: currentActorId === spellTargetId,
     areaActive,
     areaOccurrenceOrdinal: effect === undefined ? 0 : state.occurrenceOrdinal,
-    areaDamageDice: effect === undefined ? 0 : effect.damage.expr.dice,
+    areaDamageDice: boundEffect?.facts.damage.expr.dice ?? 0,
     areaDurationTicks:
       effect?.expiresAt.kind === "concentration"
         ? Number(effect.expiresAt.durationTicks)
         : 0,
-    areaRadiusFeet: effect === undefined ? 0 : Number(effect.radiusFeet),
+    areaRadiusFeet:
+      boundEffect === undefined
+        ? 0
+        : Number(boundEffect.facts.targeting.radiusFeet),
     appearanceOccurrenceOpen:
       effect !== undefined &&
       effect.appearanceOccurrence.actorId === currentActorId &&
@@ -548,6 +563,21 @@ function requireInsectPlagueEffect(state: BattleState): InsectPlagueEffect {
     throw new Error("Expected one exact active Insect Plague occurrence.");
   }
   return effects[0];
+}
+
+function requireBoundInsectPlagueFacts(
+  state: BattleState,
+  effect: InsectPlagueEffect,
+) {
+  const owner = state.combatants.get(effect.sourceCombatantId);
+  const binding =
+    owner === undefined
+      ? undefined
+      : boundPersistentAreaSaveDamageEffect(owner, effect);
+  if (binding?.kind !== "stationary") {
+    throw new Error("Expected stationary Insect Plague procedure facts.");
+  }
+  return binding.facts;
 }
 
 function assertExactEffectRef(

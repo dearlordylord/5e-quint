@@ -20,6 +20,14 @@ import {
 } from "./battle-reducer/persistent-area-save-damage.ts";
 import { persistentAreaSaveCompositeSavingThrowOutcomeHole } from "./battle-reducer/persistent-spatial-spell-procedures.ts";
 import {
+  boundPersistentAreaSaveCompositeEffect,
+  type BoundPersistentAreaSaveCompositeEffect,
+} from "./battle-reducer/persistent-spell-area-binding.ts";
+import {
+  boundPersistentAreaSaveDamageEffect,
+  type BoundPersistentAreaSaveDamageEffect,
+} from "./battle-reducer/persistent-area-save-damage-binding.ts";
+import {
   battleAreaId,
   battleActSpellPresentation,
   battleObjectId,
@@ -160,24 +168,39 @@ function spellInvocationForAvailableAct(
   return battleActSpellPresentation(act)?.invocation;
 }
 
-type SleetStormAreaHazardEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "persistentAreaSaveComposite" }
->;
+type SleetStormAreaHazardEffect = BoundPersistentAreaSaveCompositeEffect;
 type InsectPlagueAreaHazardEffect = Extract<
-  BattleActiveEffect,
-  {
-    readonly kind: "persistentAreaSaveDamage";
-    readonly lifecycle: { readonly kind: "stationary" };
-  }
->;
+  BoundPersistentAreaSaveDamageEffect,
+  { readonly kind: "stationary" }
+>["effect"] & {
+  readonly save: Pick<
+    Extract<
+      BoundPersistentAreaSaveDamageEffect,
+      { readonly kind: "stationary" }
+    >["facts"],
+    "ability" | "dc"
+  >;
+  readonly damage: Extract<
+    BoundPersistentAreaSaveDamageEffect,
+    { readonly kind: "stationary" }
+  >["facts"]["damage"];
+};
 type CloudkillAreaHazardEffect = Extract<
-  BattleActiveEffect,
-  {
-    readonly kind: "persistentAreaSaveDamage";
-    readonly lifecycle: { readonly kind: "sourceTurnTranslation" };
-  }
->;
+  BoundPersistentAreaSaveDamageEffect,
+  { readonly kind: "sourceTurnTranslation" }
+>["effect"] & {
+  readonly save: Pick<
+    Extract<
+      BoundPersistentAreaSaveDamageEffect,
+      { readonly kind: "sourceTurnTranslation" }
+    >["facts"],
+    "ability" | "dc"
+  >;
+  readonly damage: Extract<
+    BoundPersistentAreaSaveDamageEffect,
+    { readonly kind: "sourceTurnTranslation" }
+  >["facts"]["damage"];
+};
 const tableSelectedPointAreaOriginAnchor = {
   kind: "tableSelectedPoint",
 } as const satisfies BattleSpellAreaOriginAnchor;
@@ -1713,40 +1736,94 @@ export function cloudkillAreaHazardSaveAct(
 function activeInsectPlagueAreaHazardEffect(
   state: BattleState,
 ): InsectPlagueAreaHazardEffect | undefined {
-  return [...state.combatants.values()]
+  const effect = [...state.combatants.values()]
     .flatMap((combatant) => combatant.activeEffects)
     .find(
-      (effect): effect is InsectPlagueAreaHazardEffect =>
+      (
+        effect,
+      ): effect is Extract<
+        BattleActiveEffect,
+        {
+          readonly kind: "persistentAreaSaveDamage";
+          readonly lifecycle: { readonly kind: "stationary" };
+        }
+      > =>
         effect.kind === "persistentAreaSaveDamage" &&
         effect.sourceCombatantId === spellCasterId &&
         effect.areaId === insectPlagueAreaId,
     );
+  const owner =
+    effect === undefined
+      ? undefined
+      : state.combatants.get(effect.sourceCombatantId);
+  const binding =
+    effect === undefined || owner === undefined
+      ? undefined
+      : boundPersistentAreaSaveDamageEffect(owner, effect);
+  return binding?.kind === "stationary"
+    ? {
+        ...binding.effect,
+        save: { ability: binding.facts.ability, dc: binding.facts.dc },
+        damage: binding.facts.damage,
+      }
+    : undefined;
 }
 
 function activeCloudkillAreaHazardEffect(
   state: BattleState,
 ): CloudkillAreaHazardEffect | undefined {
-  return [...state.combatants.values()]
+  const effect = [...state.combatants.values()]
     .flatMap((combatant) => combatant.activeEffects)
     .find(
-      (effect): effect is CloudkillAreaHazardEffect =>
+      (
+        effect,
+      ): effect is Extract<
+        BattleActiveEffect,
+        {
+          readonly kind: "persistentAreaSaveDamage";
+          readonly lifecycle: { readonly kind: "sourceTurnTranslation" };
+        }
+      > =>
         effect.kind === "persistentAreaSaveDamage" &&
         effect.sourceCombatantId === spellCasterId &&
         effect.areaId === cloudkillAreaId,
     );
+  const owner =
+    effect === undefined
+      ? undefined
+      : state.combatants.get(effect.sourceCombatantId);
+  const binding =
+    effect === undefined || owner === undefined
+      ? undefined
+      : boundPersistentAreaSaveDamageEffect(owner, effect);
+  return binding?.kind === "sourceTurnTranslation"
+    ? {
+        ...binding.effect,
+        save: { ability: binding.facts.ability, dc: binding.facts.dc },
+        damage: binding.facts.damage,
+      }
+    : undefined;
 }
 
 function activeSleetStormAreaHazardEffect(
   state: BattleState,
 ): SleetStormAreaHazardEffect | undefined {
-  return [...state.combatants.values()]
+  const effect = [...state.combatants.values()]
     .flatMap((combatant) => combatant.activeEffects)
     .find(
-      (effect): effect is SleetStormAreaHazardEffect =>
+      (
+        effect,
+      ): effect is Extract<
+        BattleActiveEffect,
+        { readonly kind: "persistentAreaSaveComposite" }
+      > =>
         effect.kind === "persistentAreaSaveComposite" &&
         effect.sourceCombatantId === spellCasterId &&
         effect.areaId === sleetStormAreaId,
     );
+  return effect === undefined
+    ? undefined
+    : boundPersistentAreaSaveCompositeEffect(state, effect);
 }
 
 export function webRestrainedNoLongerInAreaAct(

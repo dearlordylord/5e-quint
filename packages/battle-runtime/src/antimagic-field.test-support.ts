@@ -1,5 +1,4 @@
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet } from "@dnd/shared/types";
 
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import type {
@@ -47,7 +46,6 @@ export function magicSuppressionEmanationEffectTemplateForTest(input: {
     sourceCombatantId: input.aura.sourceCombatantId,
     areaId: input.areaId,
     auraMembership: input.aura.membership,
-    radiusFeet: movementFeet(10),
     suppressedOngoingSpellEffects: input.suppressedOngoingSpellEffects ?? [],
     expiresAt: {
       kind: "concentration",

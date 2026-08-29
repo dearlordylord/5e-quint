@@ -39,6 +39,7 @@ import {
   movementFeet,
   resolveBattleSubject,
 } from "./unit-profile-admission.test-support.ts";
+import { spellProcedureBoundToActiveEffect } from "./battle-reducer/spell-active-effect-binding.ts";
 
 describe("L12G deterministic Levitate creature admission", () => {
   test("levitate admits the creature branch as a level-2 Magic Action Spell Slot profile", () => {
@@ -490,8 +491,6 @@ describe("L12G deterministic Levitate creature admission", () => {
         sourceProcedureRef: original.sourceProcedureRef,
         sourceCombatantId: original.sourceCombatantId,
         altitudeFeet: original.altitudeFeet,
-        maxAltitudeChangeFeet: original.maxAltitudeChangeFeet,
-        rangeFeet: original.rangeFeet,
         expiresAt: original.expiresAt,
       },
     });
@@ -822,7 +821,15 @@ function requireLevitatedEffect(
   if (effect === undefined) {
     throw new Error("Expected Levitate active effect.");
   }
-  return effect;
+  const facts = spellProcedureBoundToActiveEffect(state, effect);
+  if (facts?.procedure !== "controlledVerticalSuspension") {
+    throw new Error("Expected bound Levitate procedure facts.");
+  }
+  return {
+    ...effect,
+    maxAltitudeChangeFeet: facts.maxAltitudeChangeFeet,
+    rangeFeet: facts.rangeFeet,
+  };
 }
 
 function controlledVerticalSuspensionAltitudeChangeFill(

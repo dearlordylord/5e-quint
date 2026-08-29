@@ -966,11 +966,6 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
           String(webUnitId),
         ),
         areaId: webAreaId,
-        sideFeet: movementFeet(20),
-        save: {
-          ability: "dex",
-          dc: { kind: "caster_spell_save_dc" },
-        },
         entrySavedThisTurn: [],
         startTurnSavedThisTurn: [],
         expiresAt: {
@@ -1158,8 +1153,6 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
             sourceProcedureRef: battleProcedureExecutionRefForTest(
               String(spikeGrowthUnitId),
             ),
-            movementCostFeet: movementFeet(10),
-            maxJumpDistanceFeet: movementFeet(30),
             usedThisTurn: false,
             expiresAt: {
               kind: "duration" as const,

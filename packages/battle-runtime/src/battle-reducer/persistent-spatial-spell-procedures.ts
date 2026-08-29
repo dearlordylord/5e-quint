@@ -122,11 +122,25 @@ import {
   type MovablePersistentAreaEffect,
   type PersistentAreaSaveConditionEscapeEffect,
 } from "./persistent-spatial-spell-discovery.ts";
+import {
+  boundDirectionalPersistentAreaEffect,
+  boundPersistentAreaSaveCompositeEffect,
+  boundPersistentAreaSaveConditionEffect,
+  boundPersistentAreaSaveConditionEscapeEffect,
+  type BoundPersistentAreaSaveCompositeEffect,
+} from "./persistent-spell-area-binding.ts";
+import {
+  boundPersistentAreaSaveDamageEffect,
+  type BoundPersistentAreaSaveDamageEffect,
+} from "./persistent-area-save-damage-binding.ts";
 
 export type PersistentAreaSaveCompositeEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "persistentAreaSaveComposite" }
 >;
+
+type ResolvedPersistentAreaSaveCompositeEffect =
+  BoundPersistentAreaSaveCompositeEffect;
 
 const PERSISTENT_SPATIAL_SPELL_PROCEDURE_COMMANDS = [
   "persistentAreaSaveConditionSave",
@@ -383,13 +397,20 @@ function persistentAreaSaveConditionEffectFor(
     }
   >,
 ): PersistentAreaSaveConditionEffect | undefined {
-  return activeEffectForArea(
+  const effect = activeEffectForArea(
     state,
     subject.effectRef,
     subject.areaId,
-    (effect): effect is PersistentAreaSaveConditionEffect =>
-      effect.kind === "persistentAreaSaveCondition",
+    (
+      effect,
+    ): effect is Extract<
+      BattleActiveEffect,
+      { readonly kind: "persistentAreaSaveCondition" }
+    > => effect.kind === "persistentAreaSaveCondition",
   );
+  return effect === undefined
+    ? undefined
+    : boundPersistentAreaSaveConditionEffect(state, effect);
 }
 
 function activeEffectForArea<
@@ -554,13 +575,20 @@ function persistentAreaSaveConditionEscapeEffectFor(
     }
   >,
 ): PersistentAreaSaveConditionEscapeEffect | undefined {
-  return activeEffectForArea(
+  const effect = activeEffectForArea(
     state,
     subject.effectRef,
     subject.areaId,
-    (effect): effect is PersistentAreaSaveConditionEscapeEffect =>
-      effect.kind === "persistentAreaSaveConditionEscape",
+    (
+      effect,
+    ): effect is Extract<
+      BattleActiveEffect,
+      { readonly kind: "persistentAreaSaveConditionEscape" }
+    > => effect.kind === "persistentAreaSaveConditionEscape",
   );
+  return effect === undefined
+    ? undefined
+    : boundPersistentAreaSaveConditionEscapeEffect(state, effect);
 }
 
 function validatePersistentAreaSaveConditionEscapeSavingThrowOutcome(
@@ -715,14 +743,17 @@ function persistentAreaSaveCompositeEffectFor(
       readonly command: "persistentAreaSaveCompositeSave";
     }
   >,
-): PersistentAreaSaveCompositeEffect | undefined {
-  return activeEffectForArea(
+): ResolvedPersistentAreaSaveCompositeEffect | undefined {
+  const effect = activeEffectForArea(
     state,
     subject.areaMembershipTrigger.effectRef,
     subject.areaMembershipTrigger.areaId,
     (effect): effect is PersistentAreaSaveCompositeEffect =>
       effect.kind === "persistentAreaSaveComposite",
   );
+  return effect === undefined
+    ? undefined
+    : boundPersistentAreaSaveCompositeEffect(state, effect);
 }
 
 const byPersistentAreaSaveCompositeAreaMembershipTriggerKind =
@@ -747,7 +778,7 @@ function persistentAreaSaveCompositeTriggerFromMembershipFact(
 export function persistentAreaSaveCompositeSavingThrowOutcomeHole(
   state: BattleState,
   targetId: CombatantId,
-  effect: PersistentAreaSaveCompositeEffect,
+  effect: ResolvedPersistentAreaSaveCompositeEffect,
   trigger: BattlePersistentAreaSaveCompositeTrigger,
 ): BattlePersistentAreaSaveCompositeSavingThrowOutcomeHole {
   const key = `battle:persistent-area-save-composite-area-hazard-save:${targetId}:${effect.effectRef}:${trigger}`;
@@ -794,7 +825,7 @@ function validatePersistentAreaSaveCompositeSavingThrowOutcome(
 }
 
 function persistentAreaSaveCompositeSaveAlreadyResolved(
-  effect: PersistentAreaSaveCompositeEffect,
+  effect: ResolvedPersistentAreaSaveCompositeEffect,
   targetId: CombatantId,
 ): boolean {
   return effect.savedThisTurn.includes(targetId);
@@ -930,10 +961,26 @@ function persistentAreaSaveDamageLifecycleFor(
   state: BattleState,
   subject: PersistentAreaSaveDamageSubject,
 ): "stationary" | "sourceTurnTranslation" | undefined {
-  const effect = activeEffectForArea(
+  const binding = persistentAreaSaveDamageBindingForArea(
     state,
     subject.areaMembershipTrigger.effectRef,
     subject.areaMembershipTrigger.areaId,
+  );
+  return binding?.kind === "stationary" ||
+    binding?.kind === "sourceTurnTranslation"
+    ? binding.kind
+    : undefined;
+}
+
+function persistentAreaSaveDamageBindingForArea(
+  state: BattleState,
+  effectRef: BattleEffectExecutionRef,
+  areaId: BattleAreaId,
+): BoundPersistentAreaSaveDamageEffect | undefined {
+  const effect = activeEffectForArea(
+    state,
+    effectRef,
+    areaId,
     (
       candidate,
     ): candidate is Extract<
@@ -941,10 +988,11 @@ function persistentAreaSaveDamageLifecycleFor(
       { readonly kind: "persistentAreaSaveDamage" }
     > => candidate.kind === "persistentAreaSaveDamage",
   );
-  return effect?.lifecycle.kind === "stationary" ||
-    effect?.lifecycle.kind === "sourceTurnTranslation"
-    ? effect.lifecycle.kind
-    : undefined;
+  if (effect === undefined) return undefined;
+  const owner = state.combatants.get(effect.sourceCombatantId);
+  return owner === undefined
+    ? undefined
+    : boundPersistentAreaSaveDamageEffect(owner, effect);
 }
 
 function resolvePersistentAreaSaveDamageCommand(
@@ -1112,14 +1160,22 @@ function directionalPersistentAreaEffectFor(
     }
   >,
 ): DirectionalPersistentAreaEffect | undefined {
-  return activeEffectForArea(
+  const effect = activeEffectForArea(
     state,
     subject.effectRef,
     subject.areaId,
-    (effect): effect is DirectionalPersistentAreaEffect =>
+    (
+      effect,
+    ): effect is Extract<
+      BattleActiveEffect,
+      { readonly kind: "directionalPersistentArea" }
+    > =>
       effect.kind === "directionalPersistentArea" &&
       effect.directionId === subject.directionId,
   );
+  return effect === undefined
+    ? undefined
+    : boundDirectionalPersistentAreaEffect(state, effect);
 }
 
 function validateDirectionalPersistentAreaSavingThrowOutcome(
@@ -1366,13 +1422,20 @@ function ramMovablePersistentAreaEffectFor(
     }
   >,
 ): RamMovablePersistentAreaEffect | undefined {
-  return activeEffectForArea(
+  const binding = persistentAreaSaveDamageBindingForArea(
     state,
     subject.effectRef,
     subject.areaId,
-    (effect): effect is RamMovablePersistentAreaEffect =>
-      effect.kind === "persistentAreaSaveDamage",
   );
+  return binding?.kind === "collisionReposition"
+    ? {
+        ...binding.effect,
+        lifecycle: binding.facts.lifecycle,
+        save: { ability: binding.facts.ability, dc: binding.facts.dc },
+        ramMaxMoveFeet: binding.facts.ramMaxMoveFeet,
+        damage: binding.facts.damage,
+      }
+    : undefined;
 }
 
 function ramMovablePersistentAreaDamageRollHole(
@@ -2065,13 +2128,20 @@ function movablePersistentAreaEffectFor(
     }
   >,
 ): MovablePersistentAreaEffect | undefined {
-  return activeEffectForArea(
+  const binding = persistentAreaSaveDamageBindingForArea(
     state,
     subject.effectRef,
     subject.areaId,
-    (effect): effect is MovablePersistentAreaEffect =>
-      effect.kind === "persistentAreaSaveDamage",
   );
+  return binding?.kind === "directedReposition"
+    ? {
+        ...binding.effect,
+        lifecycle: binding.facts.lifecycle,
+        save: { ability: binding.facts.ability, dc: binding.facts.dc },
+        repositionMaxMoveFeet: binding.facts.repositionMaxMoveFeet,
+        damage: binding.facts.damage,
+      }
+    : undefined;
 }
 
 function movablePersistentAreaDamageRollHole(

@@ -14,7 +14,6 @@ import { battleActUnitPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
-  attackBonus,
   classLevel,
   Hp,
   movementFeet,
@@ -24,7 +23,6 @@ import {
 import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import { removeBattleCombatants } from "./battle-reducer/api-lifecycle.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
 import { characterExecutionWithSpatialMeleeSpellAttackProxyRepeatAttack } from "./character-execution-admission.ts";
@@ -435,6 +433,7 @@ function spatialMeleeSpellAttackProxyRepeatBattle(): BattleRuntimeSession {
         operation: "repositionAndAttack",
         activeEffectRef: activeEffect.effectRef,
         activeEffectSourceProcedureRef: sourceBinding.procedureRef,
+        repeatTargeting: { kind: "unrestricted" },
       },
     );
   return battleRuntimeSessionForTest({
@@ -456,32 +455,17 @@ function spatialMeleeSpellAttackProxyActiveEffectTemplate(
   BattleActiveEffectOccurrenceTemplate,
   { readonly kind: "spatialMeleeSpellAttackProxy" }
 > {
-  const sourceSpellLevel = parseBattleSpellEffectLevel(2);
-  if (sourceSpellLevel === null) {
-    throw new Error("Expected valid Spiritual Weapon spell effect level.");
-  }
   return {
     kind: "spatialMeleeSpellAttackProxy",
     sourceProcedureRef,
     sourceCombatantId: spellCasterId,
-    sourceSpellLevel,
     forcePositionId: battleTablePositionId(
       "antimagic-action-spiritual-weapon-force",
     ),
-    forceReachFeet: movementFeet(5),
-    repeatMoveMaxFeet: movementFeet(20),
-    repeatTargeting: { kind: "unrestricted" },
     startedOn: {
       actorId: spellTargetId,
       round: Round(1),
     },
-    damage: {
-      kind: "fixedSpellAttackDamage",
-      expr: { dice: 1, dieSize: 8, flat: 3 },
-      damageType: "force",
-    },
-    attackKind: "melee_spell_attack",
-    attackBonus: attackBonus(5),
     expiresAt: {
       kind: "concentration",
       combatantId: spellCasterId,

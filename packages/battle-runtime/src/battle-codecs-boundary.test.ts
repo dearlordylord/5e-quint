@@ -344,7 +344,6 @@ function codecFixture() {
           conditionHadNonSpellProneSource: false,
           conditionHadNonSpellIncapacitatedSource: false,
           repeatSaveRollMode: null,
-          save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
           expiresAt: {
             kind: "concentration",
             combatantId: wizardId,
@@ -375,7 +374,6 @@ function codecFixture() {
           sourceCombatantId: wizardId,
           areaId: battleAreaId("area:codec-grease"),
           heightenedSpellTargetDisadvantage: null,
-          save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
           expiresAt: {
             kind: "duration",
             durationTicks: elapsedTimeTicks(10),
@@ -390,9 +388,6 @@ function codecFixture() {
           sourceProcedureRef: source.procedureRef,
           sourceCombatantId: wizardId,
           areaId: battleAreaId("area:codec-sleet-storm"),
-          radiusFeet: movementFeet(40),
-          heightFeet: movementFeet(20),
-          save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
           savedThisTurn: [],
           expiresAt: {
             kind: "concentration",
@@ -468,16 +463,10 @@ function codecFixture() {
           kind: "persistentAreaSaveDamage",
           lifecycle: {
             kind: "casterActionReposition",
-            actionCost: "bonusAction",
-            movedAreaOperation: "saveDamage",
-            collisionDisposition: "stopAndAffectAdjacent",
           },
           sourceProcedureRef: source.procedureRef,
           sourceCombatantId: wizardId,
           areaId: battleAreaId("area:codec-flaming-sphere"),
-          save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
-          damage: { expr: { dice: 2, dieSize: 6 }, damageType: "fire" },
-          ramMaxMoveFeet: movementFeet(30),
           expiresAt: {
             kind: "concentration",
             combatantId: wizardId,
@@ -513,12 +502,6 @@ function codecFixture() {
             round: session.state.initiative.round,
           },
           areaId: battleAreaId("area:codec-insect-plague"),
-          radiusFeet: movementFeet(20),
-          save: { ability: "con", dc: { kind: "caster_spell_save_dc" } },
-          damage: {
-            expr: { dice: 4, dieSize: 10 },
-            damageType: "piercing",
-          },
           savedThisTurn: [],
           expiresAt: {
             kind: "concentration",
@@ -534,10 +517,6 @@ function codecFixture() {
           kind: "persistentAreaSaveDamage",
           lifecycle: {
             kind: "sourceTurnTranslation",
-            distanceFeet: movementFeet(10),
-            direction: "awayFromSource",
-            movedAreaOperation: "saveDamage",
-            environmentalEnd: "strongWind",
           },
           sourceProcedureRef: source.procedureRef,
           sourceCombatantId: wizardId,
@@ -546,12 +525,6 @@ function codecFixture() {
             round: session.state.initiative.round,
           },
           areaId: battleAreaId("area:codec-cloudkill"),
-          radiusFeet: movementFeet(20),
-          save: { ability: "con", dc: { kind: "caster_spell_save_dc" } },
-          damage: {
-            expr: { dice: 5, dieSize: 8 },
-            damageType: "poison",
-          },
           savedThisTurn: [],
           expiresAt: {
             kind: "concentration",
@@ -568,11 +541,6 @@ function codecFixture() {
           sourceProcedureRef: source.procedureRef,
           sourceCombatantId: wizardId,
           areaId: battleAreaId("area:codec-spike-growth"),
-          damage: {
-            expr: { dice: 2, dieSize: 4 },
-            damageType: "piercing",
-          },
-          damagePerFeet: movementFeet(5),
           expiresAt: {
             kind: "concentration",
             combatantId: wizardId,
@@ -594,10 +562,6 @@ function codecFixture() {
             actorId: wizardId,
             round: session.state.initiative.round,
           },
-          line: { lengthFeet: movementFeet(60), widthFeet: movementFeet(10) },
-          save: { ability: "str", dc: { kind: "caster_spell_save_dc" } },
-          pushDistanceFeet: movementFeet(15),
-          movementCost: { multiplier: 2, appliesTo: "towardSource" },
           expiresAt: {
             kind: "concentration",
             combatantId: wizardId,
@@ -613,8 +577,6 @@ function codecFixture() {
           sourceProcedureRef: source.procedureRef,
           sourceCombatantId: wizardId,
           altitudeFeet: movementFeet(20),
-          maxAltitudeChangeFeet: movementFeet(20),
-          rangeFeet: movementFeet(60),
           expiresAt: {
             kind: "concentration",
             combatantId: wizardId,
@@ -630,8 +592,6 @@ function codecFixture() {
           sourceProcedureRef: source.procedureRef,
           sourceCombatantId: wizardId,
           altitudeFeet: movementFeet(10),
-          maxAltitudeChangeFeet: movementFeet(20),
-          rangeFeet: movementFeet(60),
           expiresAt: {
             kind: "concentration",
             combatantId: wizardId,
@@ -652,7 +612,6 @@ function codecFixture() {
             originIncluded: false,
             nonOriginCombatantIds: [],
           },
-          radiusFeet: movementFeet(10),
           suppressedOngoingSpellEffects: [],
           expiresAt: {
             kind: "concentration",

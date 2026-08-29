@@ -36,6 +36,7 @@ import {
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
+import { magicalDarknessPointOriginRadiusFeet } from "./battle-reducer/persistent-spell-area-binding.ts";
 import {
   battleSpellEffectOccurrenceId,
   type BattleEffectExecutionRef,
@@ -538,7 +539,7 @@ function magicalDarknessActiveEffect(
   | Extract<BattleActiveEffect, { readonly kind: "magicalDarknessPointOrigin" }>
   | undefined {
   const caster = requireCombatant(state, spellCasterId);
-  return caster.activeEffects.find(
+  const effect = caster.activeEffects.find(
     (
       effect,
     ): effect is Extract<
@@ -547,11 +548,14 @@ function magicalDarknessActiveEffect(
     > =>
       effect.kind === "magicalDarknessPointOrigin" &&
       effect.areaId === DARKNESS_AREA_ID &&
-      effect.radiusFeet === movementFeet(15) &&
       effect.expiresAt.kind === "concentration" &&
       effect.expiresAt.combatantId === spellCasterId &&
       effect.expiresAt.durationTicks === DARKNESS_DURATION_TICKS,
   );
+  return effect !== undefined &&
+    magicalDarknessPointOriginRadiusFeet(state, effect) === movementFeet(15)
+    ? effect
+    : undefined;
 }
 
 function spellLightEmitterActive(

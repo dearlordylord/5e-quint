@@ -537,7 +537,6 @@ describe("battle boundary admission owners", () => {
               conditionHadNonSpellProneSource: false,
               conditionHadNonSpellIncapacitatedSource: false,
               repeatSaveRollMode: null,
-              save: { ability: "wis", dc: { kind: "fixed", dc: 12 } },
               expiresAt: {
                 kind: "concentration",
                 combatantId: wizardId,
@@ -629,16 +628,10 @@ describe("battle boundary admission owners", () => {
               kind: "persistentAreaSaveDamage",
               lifecycle: {
                 kind: "casterActionReposition",
-                actionCost: "bonusAction",
-                movedAreaOperation: "saveDamage",
-                collisionDisposition: "stopAndAffectAdjacent",
               },
               sourceProcedureRef: codecProcedureRef,
               sourceCombatantId: wizardId,
               areaId: battleAreaId("boundary-movable"),
-              save: { ability: "dex", dc: { kind: "fixed", dc: 12 } },
-              damage: { expr: { dice: 1, dieSize: 6 }, damageType: "fire" },
-              ramMaxMoveFeet: movementFeet(30),
               expiresAt: {
                 kind: "duration",
                 durationTicks: elapsedTimeTicks(10),
@@ -653,8 +646,6 @@ describe("battle boundary admission owners", () => {
               sourceProcedureRef: codecProcedureRef,
               sourceCombatantId: wizardId,
               areaId: battleAreaId("boundary-spike"),
-              damage: { expr: { dice: 2, dieSize: 4 }, damageType: "piercing" },
-              damagePerFeet: movementFeet(5),
               expiresAt: {
                 kind: "duration",
                 durationTicks: elapsedTimeTicks(10),
@@ -674,12 +665,6 @@ describe("battle boundary admission owners", () => {
                 round: codecSession.state.initiative.round,
               },
               areaId: battleAreaId("boundary-insect"),
-              radiusFeet: movementFeet(20),
-              save: { ability: "con", dc: { kind: "fixed", dc: 12 } },
-              damage: {
-                expr: { dice: 4, dieSize: 10 },
-                damageType: "piercing",
-              },
               savedThisTurn: [],
               expiresAt: {
                 kind: "concentration",
@@ -695,10 +680,6 @@ describe("battle boundary admission owners", () => {
               kind: "persistentAreaSaveDamage",
               lifecycle: {
                 kind: "sourceTurnTranslation",
-                distanceFeet: movementFeet(10),
-                direction: "awayFromSource",
-                movedAreaOperation: "saveDamage",
-                environmentalEnd: "strongWind",
               },
               sourceProcedureRef: codecProcedureRef,
               sourceCombatantId: wizardId,
@@ -707,9 +688,6 @@ describe("battle boundary admission owners", () => {
                 round: codecSession.state.initiative.round,
               },
               areaId: battleAreaId("boundary-cloudkill"),
-              radiusFeet: movementFeet(20),
-              save: { ability: "con", dc: { kind: "fixed", dc: 12 } },
-              damage: { expr: { dice: 5, dieSize: 8 }, damageType: "poison" },
               savedThisTurn: [],
               expiresAt: {
                 kind: "concentration",

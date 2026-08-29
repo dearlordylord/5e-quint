@@ -980,10 +980,6 @@ function stagedSaveConditionPendingRepeatEffect(): Extract<
   return {
     kind: "stagedSaveConditionPendingRepeat",
     conditionHadNonSpellSource: false,
-    save: {
-      ability: "wis",
-      dc: { kind: "fixed", dc: difficultyClass(10) },
-    },
     repeatAt: { kind: "endOfTurn", combatantId: fighterId, round: Round(1) },
     expiresAt: { kind: "concentration", combatantId: goblinId },
   };

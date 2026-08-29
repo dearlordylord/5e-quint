@@ -8,15 +8,9 @@ import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { abilityModifier } from "@dnd/shared-algebras/armor-class-algebra";
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import {
-  attackBonus,
-  movementFeet,
-  proficiencyBonus,
-  Round,
-} from "@dnd/shared/types";
+import { movementFeet, proficiencyBonus, Round } from "@dnd/shared/types";
 import { describe, expect, it } from "vitest";
 
-import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import { ongoingSpellEffectSuppressedByMagicSuppressionEmanation } from "./battle-reducer/magic-suppression-ongoing-effect.ts";
 import {
   allocateBattleEffectExecutionRefForCreature,
@@ -573,34 +567,19 @@ function spatialMeleeSpellAttackProxyActiveEffectTemplate(): Extract<
   BattleActiveEffectOccurrenceTemplate,
   { readonly kind: "spatialMeleeSpellAttackProxy" }
 > {
-  const sourceSpellLevel = parseBattleSpellEffectLevel(2);
-  if (sourceSpellLevel === null) {
-    throw new Error("Expected valid Spiritual Weapon spell effect level.");
-  }
   return {
     kind: "spatialMeleeSpellAttackProxy",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       "spiritual-weapon-effect-fixture",
     ),
     sourceCombatantId: spellCasterId,
-    sourceSpellLevel,
     forcePositionId: battleTablePositionId(
       "focused-antimagic-spiritual-weapon-force",
     ),
-    forceReachFeet: movementFeet(5),
-    repeatMoveMaxFeet: movementFeet(20),
-    repeatTargeting: { kind: "unrestricted" },
     startedOn: {
       actorId: spellTargetId,
       round: Round(1),
     },
-    damage: {
-      kind: "fixedSpellAttackDamage",
-      expr: { dice: 1, dieSize: 8, flat: 3 },
-      damageType: "force",
-    },
-    attackKind: "melee_spell_attack",
-    attackBonus: attackBonus(5),
     expiresAt: {
       kind: "concentration",
       combatantId: spellCasterId,

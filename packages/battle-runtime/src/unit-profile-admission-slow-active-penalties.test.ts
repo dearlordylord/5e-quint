@@ -48,7 +48,6 @@ import {
   flamingSphereRepositionMovementFill,
   greaseUnitId,
   maybeSpellAct,
-  movementFeet,
   requireCombatant,
   requireHole,
   requireResultHole,
@@ -943,10 +942,6 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
         kind: "saveGatedTurnConstraintBundle",
         sourceProcedureRef: unrelatedSource,
         sourceCombatantId: spellTargetId,
-        save: {
-          ability: "wis",
-          dc: { kind: "caster_spell_save_dc" },
-        },
         expiresAt: {
           kind: "concentration",
           combatantId: spellTargetId,
@@ -1084,18 +1079,12 @@ function syntheticTargetOwnedFlamingSphereInteraction(): Extract<
     kind: "persistentAreaSaveDamage",
     lifecycle: {
       kind: "casterActionReposition",
-      actionCost: "bonusAction",
-      movedAreaOperation: "saveDamage",
-      collisionDisposition: "stopAndAffectAdjacent",
     },
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       "synthetic-slow-target-flaming-sphere",
     ),
     sourceCombatantId: spellTargetId,
     areaId: flamingSphereAreaId,
-    save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
-    damage: { expr: { dice: 2, dieSize: 6 }, damageType: "fire" },
-    ramMaxMoveFeet: movementFeet(30),
     expiresAt: {
       kind: "concentration",
       combatantId: spellTargetId,

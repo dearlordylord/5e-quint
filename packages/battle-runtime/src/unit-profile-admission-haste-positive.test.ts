@@ -754,10 +754,6 @@ function stateWithSleepPendingRepeatSave(
     ),
     sourceCombatantId: spellTargetId,
     conditionHadNonSpellSource: false,
-    save: {
-      ability: "wis",
-      dc: { kind: "caster_spell_save_dc" },
-    },
     repeatAt: {
       kind: "endOfTurn",
       combatantId,

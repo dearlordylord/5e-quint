@@ -64,7 +64,6 @@ import {
   spellRecord,
 } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
-  attackBonus,
   battleAreaId,
   battleObjectId,
   battleTablePositionId,
@@ -1815,9 +1814,7 @@ function stateWithBoundSpiritualWeaponEffect(sourceSpellLevel: 2 | 4): {
     owner: caster,
   });
   const effect = {
-    ...spatialMeleeSpellAttackProxyEffect({
-      sourceSpellLevel,
-    }),
+    ...spatialMeleeSpellAttackProxyEffect(),
     effectRef: effectAllocation.effectRef,
     sourceProcedureRef: boundProcedureRef,
   };
@@ -1961,11 +1958,11 @@ function objectSpellEmitter(input: {
     kind: "spellLightEmitter",
     sourceProcedureRef: input.sourceProcedureRef,
     sourceCombatantId: input.sourceCombatantId ?? spellTargetId,
+    sourceSpellLevel: testBattleSpellEffectLevel(input.sourceSpellLevel),
     sourceEffectId: battleSpellEffectOccurrenceId(
       input.sourceEffectId ??
         `${spellTargetId}:${input.sourceProcedureRef}:${input.objectId}:test-effect`,
     ),
-    sourceSpellLevel: testBattleSpellEffectLevel(input.sourceSpellLevel),
     attachment: { kind: "object", objectId: input.objectId },
     emission: {
       kind: "brightAndDim",
@@ -2008,9 +2005,7 @@ function heatMetalObjectContactDamageEffect(input: {
   };
 }
 
-function spatialMeleeSpellAttackProxyEffect(input: {
-  readonly sourceSpellLevel: number;
-}): Extract<
+function spatialMeleeSpellAttackProxyEffect(): Extract<
   BattleActiveEffectOccurrenceTemplate,
   { readonly kind: "spatialMeleeSpellAttackProxy" }
 > {
@@ -2020,19 +2015,8 @@ function spatialMeleeSpellAttackProxyEffect(input: {
       String(spiritualWeaponUnitId),
     ),
     sourceCombatantId: spellCasterId,
-    sourceSpellLevel: testBattleSpellEffectLevel(input.sourceSpellLevel),
     forcePositionId: battleTablePositionId("dispel-spiritual-weapon-force"),
-    forceReachFeet: movementFeet(5),
-    repeatMoveMaxFeet: movementFeet(20),
-    repeatTargeting: { kind: "unrestricted" },
     startedOn: { actorId: spellCasterId, round: Round(1) },
-    damage: {
-      kind: "fixedSpellAttackDamage",
-      expr: { dice: 1, dieSize: 8, flat: 4 },
-      damageType: "force",
-    },
-    attackKind: "melee_spell_attack",
-    attackBonus: attackBonus(6),
     expiresAt: {
       kind: "concentration",
       combatantId: spellCasterId,

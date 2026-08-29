@@ -85,17 +85,10 @@ import {
   markMovablePersistentAreaSavedThisTurn,
   removeMovablePersistentAreaShapeShiftSuppression,
 } from "./battle-reducer/spells-active-effects.ts";
+import { boundPersistentAreaSaveDamageEffect } from "./battle-reducer/persistent-area-save-damage-binding.ts";
+import type { MovablePersistentAreaEffect } from "./battle-reducer/persistent-spatial-spell-discovery.ts";
 
-type MoonbeamEffect = Extract<
-  BattleActiveEffect,
-  {
-    readonly kind: "persistentAreaSaveDamage";
-    readonly lifecycle: {
-      readonly kind: "casterActionReposition";
-      readonly actionCost: "magicAction";
-    };
-  }
->;
+type MoonbeamEffect = MovablePersistentAreaEffect;
 
 describe("L12G deterministic Moonbeam admission", () => {
   test("persistentAreaSaveDamage discovery projects a movable Cylinder CON-save radiant hazard", () => {
@@ -413,18 +406,9 @@ describe("L12G deterministic Moonbeam admission", () => {
     if (persistentAreaSaveDamageCast.tag !== "resolved") {
       throw new Error("Expected Moonbeam cast to resolve.");
     }
-    const persistentAreaSaveDamageEffect = requireCombatant(
+    const persistentAreaSaveDamageEffect = requireMoonbeamEffect(
       persistentAreaSaveDamageCast.state,
-      spellCasterId,
-    ).activeEffects.find(
-      (effect): effect is MoonbeamEffect =>
-        effect.kind === "persistentAreaSaveDamage" &&
-        effect.lifecycle.kind === "casterActionReposition" &&
-        effect.lifecycle.actionCost === "magicAction",
     );
-    if (persistentAreaSaveDamageEffect?.kind !== "persistentAreaSaveDamage") {
-      throw new Error("Expected Moonbeam active effect.");
-    }
 
     const marked = markMovablePersistentAreaSavedThisTurn(
       persistentAreaSaveDamageCast.state,
@@ -1031,15 +1015,7 @@ describe("L12G deterministic Moonbeam admission", () => {
       trigger: "appearsInArea",
       succeeded: false,
     });
-    const effect = requireCombatant(failed, spellCasterId).activeEffects.find(
-      (activeEffect): activeEffect is MoonbeamEffect =>
-        activeEffect.kind === "persistentAreaSaveDamage" &&
-        activeEffect.lifecycle.kind === "casterActionReposition" &&
-        activeEffect.lifecycle.actionCost === "magicAction",
-    );
-    if (effect === undefined || effect.kind !== "persistentAreaSaveDamage") {
-      throw new Error("Expected Moonbeam marker effect after failed save.");
-    }
+    const effect = requireMoonbeamEffect(failed);
 
     const replayed = markMovablePersistentAreaSavedThisTurn(
       failed,
@@ -1564,4 +1540,32 @@ function activeMoonbeamEffectRef(state: BattleState) {
     throw new Error("Expected active Moonbeam occurrence.");
   }
   return effect.effectRef;
+}
+
+function requireMoonbeamEffect(state: BattleState): MoonbeamEffect {
+  const owner = requireCombatant(state, spellCasterId);
+  const effect = owner.activeEffects.find(
+    (
+      candidate,
+    ): candidate is Extract<
+      BattleActiveEffect,
+      { readonly kind: "persistentAreaSaveDamage" }
+    > =>
+      candidate.kind === "persistentAreaSaveDamage" &&
+      candidate.areaId === moonbeamAreaId,
+  );
+  const binding =
+    effect === undefined
+      ? undefined
+      : boundPersistentAreaSaveDamageEffect(owner, effect);
+  if (binding?.kind !== "directedReposition") {
+    throw new Error("Expected bound Moonbeam active effect.");
+  }
+  return {
+    ...binding.effect,
+    lifecycle: binding.facts.lifecycle,
+    save: { ability: binding.facts.ability, dc: binding.facts.dc },
+    repositionMaxMoveFeet: binding.facts.repositionMaxMoveFeet,
+    damage: binding.facts.damage,
+  };
 }

@@ -107,6 +107,11 @@ import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import { battleActsWithReducerRouteEvents } from "./battle-act-composition.ts";
+import { persistentAreaTraitRadiusFeet } from "./battle-reducer/persistent-spell-area-binding.ts";
+import {
+  boundFixedCostMovementReplacementEffect,
+  type BoundFixedCostMovementReplacementEffect,
+} from "./battle-reducer/spell-modifier-binding.ts";
 
 type Level1SpatialWitnessSelectedIdentityProjection = {
   readonly lightEmitterCount: number;
@@ -4487,8 +4492,12 @@ function projectFogCloudReplay(
   const activeZone = persistentAreaTraitZone(activeState);
   const activeZoneArea =
     activeZone?.area.kind === "pointOriginSphere" ? activeZone.area : undefined;
+  const activeEffectRadius =
+    activeEffect === undefined
+      ? undefined
+      : persistentAreaTraitRadiusFeet(activeState, activeEffect);
   const radiusMatches =
-    activeEffect?.radiusFeet === fogCloudLevelOneRadiusFeet &&
+    activeEffectRadius === fogCloudLevelOneRadiusFeet &&
     activeZoneArea?.radiusFeet === fogCloudLevelOneRadiusFeet;
   return {
     areaIdentityRetained:
@@ -4769,12 +4778,15 @@ function thunderwaveCombatant(state: BattleState, id: CombatantId) {
 function fixedCostMovementReplacementEffect(
   state: BattleState,
   id: CombatantId,
-): JumpMovementReplacementEffect | undefined {
-  return jumpCombatant(state, id).activeEffects.find(
+): BoundFixedCostMovementReplacementEffect | undefined {
+  const effect = jumpCombatant(state, id).activeEffects.find(
     (effect): effect is JumpMovementReplacementEffect =>
       effect.kind === "fixedCostMovementReplacement" &&
       effect.sourceCombatantId === casterId,
   );
+  return effect === undefined
+    ? undefined
+    : boundFixedCostMovementReplacementEffect(state, effect);
 }
 
 function jumpTargetEffectInstalled(state: BattleState): boolean {

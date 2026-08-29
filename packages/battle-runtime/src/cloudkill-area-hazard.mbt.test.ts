@@ -73,6 +73,7 @@ import type {
   BattlePersistentAreaSourceTurnTranslationFill,
   BattlePersistentAreaSourceTurnTranslationHole,
 } from "./battle-state-execution.ts";
+import { boundPersistentAreaSaveDamageEffect } from "./battle-reducer/persistent-area-save-damage-binding.ts";
 
 type CloudkillMbtTarget = "none" | "source" | "primary" | "secondary";
 type CloudkillMbtPending =
@@ -812,6 +813,20 @@ function cloudkillMbtProjection(
   const snapshot =
     state.pendingProcedure?.result.snapshot ?? snapshotBattle(battleState);
   const effect = activeCloudkill(battleState);
+  const effectOwner =
+    effect === undefined
+      ? undefined
+      : battleState.combatants.get(effect.sourceCombatantId);
+  const boundEffect =
+    effect === undefined || effectOwner === undefined
+      ? undefined
+      : boundPersistentAreaSaveDamageEffect(effectOwner, effect);
+  if (
+    boundEffect !== undefined &&
+    boundEffect.kind !== "sourceTurnTranslation"
+  ) {
+    throw new Error("Expected Cloudkill source-turn translation facts.");
+  }
   const casterSnapshot = snapshot.combatants.find(
     (combatant) => combatant.combatantId === spellCasterId,
   );
@@ -837,12 +852,15 @@ function cloudkillMbtProjection(
     hazardActive: effect !== undefined,
     casterConcentrating: effect !== undefined && casterSnapshot.concentrating,
     slotLevel: state.configuredSlotLevel,
-    damageDice: effect?.damage.expr.dice ?? 0,
+    damageDice: boundEffect?.facts.damage.expr.dice ?? 0,
     durationTicks:
       effect?.expiresAt.kind === "concentration"
         ? Number(effect.expiresAt.durationTicks)
         : 0,
-    radiusFeet: effect === undefined ? 0 : Number(effect.radiusFeet),
+    radiusFeet:
+      boundEffect === undefined
+        ? 0
+        : Number(boundEffect.facts.targeting.radiusFeet),
     heavilyObscured: battleObscurementZones(battleState).some(
       (zone) =>
         zone.kind === "spellObscurementZone" &&
