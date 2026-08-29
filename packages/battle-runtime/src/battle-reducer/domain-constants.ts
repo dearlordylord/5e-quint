@@ -111,7 +111,7 @@ export const CHROMATIC_ORB_DAMAGE_TYPES = [
   "thunder",
 ] as const satisfies ReadonlyArray<DamageType>;
 export const CHROMATIC_ORB_LEAP_RANGE_FEET = movementFeet(30);
-export const CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS = [
+export const CHAINED_SPELL_ATTACK_CONTINUATION_LIMIT_KINDS = [
   "max_leaps_from_slot_level",
   "exclude_already_targeted_in_same_cast",
 ] as const;
@@ -227,7 +227,7 @@ export const HUNTERS_MARK_FINDING_SKILLS = [
 export const THAUMATURGY_BOOMING_VOICE_DURATION_TICKS = elapsedTimeTicks(10);
 export const THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL =
   "intimidation" as const satisfies Skill;
-export const THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS = 3;
+export const TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS = 3;
 export const THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID = holeId(
   "battle:spell:active-one-minute-effect-count",
 );

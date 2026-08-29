@@ -1377,7 +1377,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "missingCombatant",
-      message: "Fly Speed end-fall witness target is not in this battle.",
+      message: "Granted-flight end-fall witness target is not in this battle.",
     });
     const groundedState = breakBattleConcentration(cast.state, spellCasterId);
     expect(
@@ -2260,7 +2260,7 @@ function requirePendingFlySpeedGrantCleanup(
 ): EndedFlySpeedGrant {
   const frame = state.interruptStack.find(
     (candidate): candidate is BattleFlySpeedGrantEndFallCleanupFrame =>
-      candidate.kind === "flySpeedGrantEndFallCleanup" &&
+      candidate.kind === "grantedFlightEndFallCleanup" &&
       candidate.targetId === targetId,
   );
   if (frame === undefined) {

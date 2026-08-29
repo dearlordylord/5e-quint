@@ -172,7 +172,7 @@ export function targetingSaveInterdictionCheck(
   if (matchingFills.length > 1) {
     return {
       tag: "invalid",
-      message: "Sanctuary targeting interdiction was filled twice.",
+      message: "Targeting-save interdiction was filled twice.",
     };
   }
   /* v8 ignore stop -- @preserve */
@@ -188,7 +188,7 @@ export function targetingSaveInterdictionCheck(
     return {
       tag: "invalid",
       message:
-        "Sanctuary replacement target must differ from the warded target.",
+        "Interdiction replacement target must differ from the warded target.",
     };
   }
   /* v8 ignore stop -- @preserve */
@@ -197,7 +197,7 @@ export function targetingSaveInterdictionCheck(
     return {
       tag: "invalid",
       message:
-        "Sanctuary replacement target must be a combatant in this battle.",
+        "Interdiction replacement target must be a combatant in this battle.",
     };
   }
   /* v8 ignore stop -- @preserve */
@@ -206,7 +206,7 @@ export function targetingSaveInterdictionCheck(
     return {
       tag: "invalid",
       message:
-        "Sanctuary replacement target facts must match the triggering procedure.",
+        "Interdiction replacement target facts must match the triggering procedure.",
     };
   }
   /* v8 ignore stop -- @preserve */
@@ -232,7 +232,7 @@ export function targetingSaveInterdictionCheck(
     return {
       tag: "invalid",
       message:
-        "Sanctuary replacement relationship facts must answer the attack-roll hole request.",
+        "Interdiction replacement relationship facts must answer the attack-roll hole request.",
     };
   }
   /* v8 ignore stop -- @preserve */
@@ -296,7 +296,7 @@ function targetingSaveInterdictionOutcomeHole(
     kind: "targetingSaveInterdictionOutcome" as const,
     holeId: holeId(holeKey),
     holeInstanceKey: holeInstanceKey(holeKey),
-    label: "Sanctuary Wisdom save and targeting outcome",
+    label: "Targeting-interdiction Wisdom save and outcome",
     sourceProcedureRef: input.effect.sourceProcedureRef,
     triggeringProcedureRef: input.triggeringProcedureRef,
     sourceCombatantId: input.effect.sourceCombatantId,

@@ -874,7 +874,7 @@ export function transmutedSpellDamageInvocation<
   if (
     invocation.procedure === "spellAttackDamage" &&
     (invocation.damage.kind === "fixedSpellAttackDamage" ||
-      invocation.damage.kind === "selectedSorcerousBurstDamage")
+      invocation.damage.kind === "selectedSpellAttackDamage")
   ) {
     // TypeScript cannot preserve the exact generic invocation subtype through
     // this nested spread. The procedure and damage-kind guards establish the
@@ -901,7 +901,7 @@ function transmutableSpellInvocationDamageType(
   if (
     invocation.procedure === "spellAttackDamage" &&
     (invocation.damage.kind === "fixedSpellAttackDamage" ||
-      invocation.damage.kind === "selectedSorcerousBurstDamage") &&
+      invocation.damage.kind === "selectedSpellAttackDamage") &&
     isTransmutedSpellDamageType(invocation.damage.damageType)
   ) {
     return invocation.damage.damageType;

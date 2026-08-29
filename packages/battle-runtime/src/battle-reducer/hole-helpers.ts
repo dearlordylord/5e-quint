@@ -852,7 +852,7 @@ export function sleepShakeAwakeTargetHole(
     kind: "targetChoice",
     holeId: SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID,
     holeInstanceKey: SLEEP_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
-    label: "Sleep target to shake awake",
+    label: "Hit-point-budget condition target to shake awake",
     requiresTableSpatialFact: true,
     choices: sleepShakeAwakeTargetChoices(state, actorId),
   };
@@ -866,7 +866,7 @@ export function saveGatedAreaControlShakeAwakeTargetHole(
     kind: "targetChoice",
     holeId: HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_ID,
     holeInstanceKey: HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
-    label: "Hypnotic Pattern target to shake awake",
+    label: "Area-control condition target to shake awake",
     requiresTableSpatialFact: true,
     choices: saveGatedAreaControlShakeAwakeTargetChoices(state, actorId),
   };

@@ -231,7 +231,7 @@ const greaseUnitId = "grease";
 const jumpUnitId = "jump";
 const lightUnitId = "light";
 const produceFlameUnitId = "produce_flame";
-const thunderwaveUnitId = "thunderwave";
+const thunderwaveUnitId = "selfOriginCubePush";
 const starryWispUnitId = "starry_wisp";
 type Level1SpatialWitnessSelectedUnitId =
   | typeof dancingLightsUnitId
@@ -409,7 +409,7 @@ type ProduceFlameProjection = {
 };
 type ThunderwaveAreaChoice = Extract<
   BattleSpellAreaChoice,
-  { readonly kind: "thunderwaveArea" }
+  { readonly kind: "selfOriginCubePushArea" }
 >;
 type ThunderwavePushDisposition =
   ThunderwaveAreaChoice["creaturePushes"][number]["disposition"];
@@ -777,7 +777,7 @@ const selectedUnitIdentityReplays = [
   },
   {
     taskId: "level1-spatial-witness",
-    unitId: "thunderwave",
+    unitId: "selfOriginCubePush",
     actions: ["doThunderwaveSavePushObjectsBoom"],
     sequences: [
       {
@@ -1718,7 +1718,7 @@ function replaySavePushPresentationRoute(): readonly BattleReducerRouteEvent[] {
   );
   const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
   const outcomes = thunderwaveSavingThrowOutcomes();
-  const acceptedArea = thunderwaveAreaChoice();
+  const acceptedArea = selfOriginCubePushAreaChoice();
   const awaitingDamage = resolveBattleSubject({
     state,
     subject: act.subject,
@@ -1761,7 +1761,7 @@ function replaySaveGatedSpellOrderingRoute(): readonly BattleReducerRouteEvent[]
   );
   const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
   const outcomes = thunderwaveSavingThrowOutcomes();
-  const acceptedArea = thunderwaveAreaChoice();
+  const acceptedArea = selfOriginCubePushAreaChoice();
   const awaitingDamage = resolveBattleSubject({
     state,
     subject: act.subject,
@@ -2750,7 +2750,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
       const act = thunderwaveAct(state);
       const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
       const outcomes = thunderwaveSavingThrowOutcomes();
-      const acceptedArea = thunderwaveAreaChoice();
+      const acceptedArea = selfOriginCubePushAreaChoice();
 
       const missingAreaFacts = resolveBattleSubject({
         state,
@@ -2775,7 +2775,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
           thunderwaveSavingThrowOutcomeFill(
             savingThrow,
             outcomes,
-            thunderwaveAreaChoice({
+            selfOriginCubePushAreaChoice({
               audibleBoom: {
                 sound: "thunderous boom",
                 audibleRadiusFeet: movementFeet(100),
@@ -3882,13 +3882,13 @@ function thunderwaveSavingThrowOutcomeFill(
   };
 }
 
-function thunderwaveAreaChoice(
+function selfOriginCubePushAreaChoice(
   input: {
     readonly audibleBoom?: ThunderwaveAreaChoice["audibleBoom"];
   } = {},
 ): ThunderwaveAreaChoice {
   return {
-    kind: "thunderwaveArea",
+    kind: "selfOriginCubePushArea",
     originAnchorId: casterId,
     affectedTargetIds: thunderwaveSavingThrowOutcomes().map(
       (outcome) => outcome.targetId,

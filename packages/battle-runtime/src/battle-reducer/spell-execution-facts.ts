@@ -443,7 +443,7 @@ export function spellInvocationHasReadiedSpellExecutionShape<
   if (invocation.procedure !== "spellAttackDamage") {
     return true;
   }
-  return invocation.damage.kind !== "sorcerousBurstDamageTypeChoice";
+  return invocation.damage.kind !== "spellAttackDamageTypeChoice";
 }
 
 function executionClassForInvocation(invocation: {

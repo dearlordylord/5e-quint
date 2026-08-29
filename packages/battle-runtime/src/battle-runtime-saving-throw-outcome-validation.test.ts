@@ -27,7 +27,7 @@ import {
   spellAct,
   spellTargetFill,
   spellTargetListFill,
-  thunderwaveArea,
+  selfOriginCubePushArea,
   thunderwaveSavingThrowOutcomeFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
@@ -529,7 +529,7 @@ describe("public Saving Throw outcome validation", () => {
         "Thunderwave requires caller-supplied push, object, and audible-boom area facts.",
     });
 
-    const area = thunderwaveArea([spellTargetId], [spellTargetId]);
+    const area = selfOriginCubePushArea([spellTargetId], [spellTargetId]);
     const fill = thunderwaveSavingThrowOutcomeFill(save, outcomeInput);
     expect(
       resolveBattleSubject({

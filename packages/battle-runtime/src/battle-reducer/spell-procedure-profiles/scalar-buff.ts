@@ -66,7 +66,7 @@ import {
 } from "../damage-apply.ts";
 import {
   battleStateWithFlySpeedGrantEndFallCleanupFrames,
-  flySpeedGrantEndFallCleanupFramesForExpiredEffects,
+  grantedFlightEndFallCleanupFramesForExpiredEffects,
 } from "../granted-flight-end-fall-cleanup.ts";
 import {
   needsHolesResult,
@@ -424,7 +424,7 @@ function applyScalarBuffEffect(
     };
     return battleStateWithFlySpeedGrantEndFallCleanupFrames(
       applied,
-      flySpeedGrantEndFallCleanupFramesForExpiredEffects(targetId, replacing),
+      grantedFlightEndFallCleanupFramesForExpiredEffects(targetId, replacing),
     );
   }, state);
 }

@@ -99,10 +99,9 @@ type AbilityChoiceHoleFilter = {
     readonly options: readonly [Ability, ...Ability[]];
   };
 };
-type ContagionChosenAbilitySaveDisadvantageEffect =
-  ModifyRollAdvantageEffect & {
-    readonly saveAbilityFilter: AbilityChoiceHoleFilter;
-  };
+type ChosenAbilitySaveDisadvantageEffect = ModifyRollAdvantageEffect & {
+  readonly saveAbilityFilter: AbilityChoiceHoleFilter;
+};
 type TimedBattleSpell = BattleSpellAdmissionSource & {
   readonly mechanics: BattleSpellAdmissionSource["mechanics"] & {
     readonly duration: Extract<
@@ -1538,7 +1537,10 @@ export function supportedSaveGateFailedSaveEffects(
   readonly conditionEffects: readonly SpellFailedSaveConditionEffect[];
   readonly abilityChoices: readonly Ability[] | null;
 } | null {
-  if (postSaveAreaEffect?.kind === "thunderwave" && effect.kind === "damage") {
+  if (
+    postSaveAreaEffect?.kind === "selfOriginCubePush" &&
+    effect.kind === "damage"
+  ) {
     return null;
   }
   if (effect.kind === "damage") {
@@ -1569,13 +1571,13 @@ export function supportedSaveGateFailedSaveEffects(
     (component) => component.kind !== "damage",
   );
   if (
-    postSaveAreaEffect?.kind === "thunderwave" &&
+    postSaveAreaEffect?.kind === "selfOriginCubePush" &&
     !isThunderwaveFailedSaveDamageShape(damage)
   ) {
     return null;
   }
   if (
-    postSaveAreaEffect?.kind === "thunderwave" &&
+    postSaveAreaEffect?.kind === "selfOriginCubePush" &&
     riders.filter((rider) => isThunderwaveCreaturePushRiderShape(phase, rider))
       .length !== 1
   ) {
@@ -1722,7 +1724,7 @@ function isContagionSaveGateSpellShape(
 
 function isContagionChosenAbilitySaveDisadvantage(
   effect: SaveGateFailureEffect,
-): effect is ContagionChosenAbilitySaveDisadvantageEffect {
+): effect is ChosenAbilitySaveDisadvantageEffect {
   return (
     effect.kind === "modify_roll_advantage" &&
     effect.mode === "disadvantage" &&
@@ -1756,7 +1758,7 @@ export function supportedFailedSavePostDamageRiders(
   const riders: SpellFailedSavePostDamageRider[] = [];
   for (const effect of effects) {
     if (
-      postSaveAreaEffect?.kind === "thunderwave" &&
+      postSaveAreaEffect?.kind === "selfOriginCubePush" &&
       isThunderwaveCreaturePushRiderShape(phase, effect)
     ) {
       continue;
@@ -1856,9 +1858,9 @@ function saveGatedDamagePhaseCount(
     return 1;
   }
   return Match.value(postSaveAreaEffect).pipe(
-    Match.when({ kind: "fireballObjectIgnition" }, () => 2),
-    Match.when({ kind: "thunderwave" }, () => 2),
-    Match.when({ kind: "shatterObjectDamage" }, () => 1),
+    Match.when({ kind: "areaObjectIgnition" }, () => 2),
+    Match.when({ kind: "selfOriginCubePush" }, () => 2),
+    Match.when({ kind: "areaObjectDamage" }, () => 1),
     Match.exhaustive,
   );
 }
@@ -1916,7 +1918,7 @@ function fireballPostSaveAreaEffect(
   ) {
     return null;
   }
-  return { kind: "fireballObjectIgnition" };
+  return { kind: "areaObjectIgnition" };
 }
 
 function shatterPostSaveAreaEffect(
@@ -1925,7 +1927,7 @@ function shatterPostSaveAreaEffect(
   directPhase: SpellActivationPhase | undefined,
 ): SpellPostSaveAreaEffect | null {
   return directPhase === undefined && isShatterSaveGateDamageShape(spell, phase)
-    ? { kind: "shatterObjectDamage" }
+    ? { kind: "areaObjectDamage" }
     : null;
 }
 
@@ -2003,7 +2005,7 @@ function thunderwavePostSaveAreaEffect(
     return null;
   }
   return {
-    kind: "thunderwave",
+    kind: "selfOriginCubePush",
     creaturePush: {
       distanceFeet: movementFeet(10),
       originDirection: "away_from_caster",

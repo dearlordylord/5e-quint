@@ -678,7 +678,7 @@ export function compelledBehaviorOptionChoiceHole(
     kind: "compelledBehaviorOptionChoice",
     holeId: compelledBehaviorOptionChoiceHoleId(invocation),
     holeInstanceKey: holeInstanceKey(holeKey),
-    label: `Spell command option`,
+    label: `Compelled-behavior option`,
     sourceProcedureRef: invocation.sourceProcedureRef,
     choices: COMMAND_OPTIONS,
   };

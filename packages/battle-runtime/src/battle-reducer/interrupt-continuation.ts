@@ -413,7 +413,7 @@ export function resolveActiveInterruptContinuation(input: {
     byInterruptFrameKind("interruptCheckpoint", (frame) =>
       notActiveContinuation(frame),
     ),
-    byInterruptFrameKind("flySpeedGrantEndFallCleanup", (frame) =>
+    byInterruptFrameKind("grantedFlightEndFallCleanup", (frame) =>
       notActiveContinuation(frame),
     ),
     byInterruptFrameKind("fallDamageLandingMitigation", (frame) =>
@@ -435,7 +435,7 @@ function notActiveContinuation(
     {
       readonly kind:
         | "interruptCheckpoint"
-        | "flySpeedGrantEndFallCleanup"
+        | "grantedFlightEndFallCleanup"
         | "fallDamageLandingMitigation";
     }
   >,

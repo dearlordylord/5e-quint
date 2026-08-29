@@ -1121,7 +1121,7 @@ export function thunderwaveSavingThrowOutcomeFill(
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
     value: {
-      area: thunderwaveArea(
+      area: selfOriginCubePushArea(
         outcomes.map((outcome) => outcome.targetId),
         outcomes.flatMap((outcome) =>
           outcome.succeeded ? [] : [outcome.targetId],
@@ -1132,12 +1132,12 @@ export function thunderwaveSavingThrowOutcomeFill(
   };
 }
 
-export function thunderwaveArea(
+export function selfOriginCubePushArea(
   affectedTargetIds: readonly CombatantId[],
   failedTargetIds: readonly CombatantId[],
-): Extract<BattleSpellAreaChoice, { readonly kind: "thunderwaveArea" }> {
+): Extract<BattleSpellAreaChoice, { readonly kind: "selfOriginCubePushArea" }> {
   return {
-    kind: "thunderwaveArea",
+    kind: "selfOriginCubePushArea",
     originAnchorId: spellCasterId,
     affectedTargetIds,
     creaturePushes: failedTargetIds.map((targetId) => ({
@@ -2126,12 +2126,12 @@ export function isSelectedSorcerousBurstDamageInvocation(
       SpellProcedureExecution,
       { readonly procedure: "spellAttackDamage" }
     >["damage"],
-    { readonly kind: "selectedSorcerousBurstDamage" }
+    { readonly kind: "selectedSpellAttackDamage" }
   >;
 } {
   return (
     invocation.procedure === "spellAttackDamage" &&
-    invocation.damage.kind === "selectedSorcerousBurstDamage"
+    invocation.damage.kind === "selectedSpellAttackDamage"
   );
 }
 

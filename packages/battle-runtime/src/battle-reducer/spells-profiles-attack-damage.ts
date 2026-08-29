@@ -40,7 +40,7 @@ import {
 } from "../battle-state-execution.ts";
 import type { CharacterBattleSpellcastingExecutionState } from "../character-battle-resource-execution.ts";
 import {
-  CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS,
+  CHAINED_SPELL_ATTACK_CONTINUATION_LIMIT_KINDS,
   CHROMATIC_ORB_DAMAGE_TYPES,
   CHROMATIC_ORB_LEAP_RANGE_FEET,
   ELDRITCH_BLAST_BEAM_COUNT_TIERS,
@@ -509,8 +509,8 @@ export function isChromaticOrbContinuationLimitSetShape(
   limits: readonly { readonly kind: string }[],
 ): boolean {
   return (
-    limits.length === CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS.length &&
-    CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS.every((requiredKind) =>
+    limits.length === CHAINED_SPELL_ATTACK_CONTINUATION_LIMIT_KINDS.length &&
+    CHAINED_SPELL_ATTACK_CONTINUATION_LIMIT_KINDS.every((requiredKind) =>
       limits.some((limit) => limit.kind === requiredKind),
     )
   );
@@ -764,7 +764,7 @@ export function supportedSpellAttackDamageProfile(
           damageType: damageTypeProjection.damageType,
         }
       : {
-          kind: "sorcerousBurstDamageTypeChoice" as const,
+          kind: "spellAttackDamageTypeChoice" as const,
           expr: damageExpr,
           damageTypeChoices: damageTypeProjection.projection.damageTypes,
           maxDieAdditionalDiceLimit:

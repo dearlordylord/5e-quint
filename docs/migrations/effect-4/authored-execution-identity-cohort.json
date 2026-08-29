@@ -298,7 +298,7 @@
     "shield": ["shieldReaction"],
     "sleep": [
       "shakeAwakeFromSleep",
-      "sleepPendingRepeatSave",
+      "stagedConditionPendingRepeatSave",
       "sleepShakeAwakeActorWithin5Feet",
       "sleepTargetAdmission",
       "sleepUnconscious"

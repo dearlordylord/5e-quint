@@ -8,15 +8,15 @@ import type { CombatantId } from "../identity.ts";
 
 export type FlySpeedGrantEndFallCleanupFramesResult<T> = {
   readonly value: T;
-  readonly flySpeedGrantEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
+  readonly grantedFlightEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
 };
 
-export function flySpeedGrantEndFallCleanupFramesForExpiredEffects(
+export function grantedFlightEndFallCleanupFramesForExpiredEffects(
   targetId: CombatantId,
   expiring: readonly BattleActiveEffect[],
 ): readonly BattleFlySpeedGrantEndFallCleanupFrame[] {
   return expiring.filter(isEndedFlySpeedGrant).map((endedEffect) => ({
-    kind: "flySpeedGrantEndFallCleanup" as const,
+    kind: "grantedFlightEndFallCleanup" as const,
     targetId,
     endedEffect,
   }));

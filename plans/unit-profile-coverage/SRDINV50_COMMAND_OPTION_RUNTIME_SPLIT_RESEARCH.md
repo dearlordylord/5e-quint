@@ -33,7 +33,7 @@ Relevant RAW facts:
 
 ## Existing Runtime Boundary
 
-The Surface record already models Command as a `command_target_next_turn`
+The Surface record already models Command as a `compelled_target_next_turn`
 failed-save atom with typed option facts. That is authored grammar only. It
 does not choose an option at cast time, create a pending next-turn Spell Effect,
 resolve route/pathfinding, identify held objects, suppress action resources,

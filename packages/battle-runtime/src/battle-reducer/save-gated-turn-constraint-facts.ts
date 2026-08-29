@@ -53,7 +53,7 @@ export function turnConstraintSomaticSpellFailureOutcomeHole(input: {
     holeInstanceKey: holeInstanceKey(key),
     holeId: holeId(key),
     kind: "turnConstraintSomaticSpellFailureOutcome",
-    label: "Slow Somatic spell failure chance",
+    label: "Save-gated Somatic spell failure chance",
     actorId: input.actorId,
     sourceProcedureRef: input.invocation.sourceProcedureRef,
     failurePercent: SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT,

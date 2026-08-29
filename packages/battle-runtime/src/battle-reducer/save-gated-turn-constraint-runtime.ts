@@ -28,7 +28,7 @@ import {
 import type { SpellMetamagicApplicationFact } from "./metamagic-support.ts";
 export { turnConstraintSomaticSpellFailureOutcomeHole } from "./save-gated-turn-constraint-facts.ts";
 
-type SlowSomaticSpellFailureSubject =
+type SaveGatedSomaticSpellFailureSubject =
   | ActionSpellBattleResolutionInput["subject"]
   | BonusActionSpellBattleResolutionInput["subject"]
   | BonusActionDashSpellBattleResolutionInput["subject"];
@@ -63,7 +63,7 @@ export function slowActionOrBonusActionTurnResources(
 export function resolveSlowSomaticSpellFailure(input: {
   readonly state: BattleState;
   readonly castingState: BattleState;
-  readonly subject: SlowSomaticSpellFailureSubject;
+  readonly subject: SaveGatedSomaticSpellFailureSubject;
   readonly actorId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation;
   readonly fills: readonly BattleFill[];

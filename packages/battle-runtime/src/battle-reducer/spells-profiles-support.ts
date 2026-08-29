@@ -49,7 +49,7 @@ import {
   BATTLE_D20_ROLL_MODIFIER_KINDS,
   THAUMATURGY_BOOMING_VOICE_DURATION_TICKS,
   THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL,
-  THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
+  TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
 } from "./domain-constants.ts";
 import {
   sameStringSet,
@@ -167,7 +167,7 @@ export function temporaryAbilityCheckRollModeProjection(
       effectDuration: "spellDuration",
     },
     concurrentDurationModeLimit: {
-      maximumActive: THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
+      maximumActive: TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
     },
   };
 }

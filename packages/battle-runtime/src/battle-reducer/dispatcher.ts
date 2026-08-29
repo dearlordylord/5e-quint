@@ -373,7 +373,7 @@ function resolvePendingInterruptSubject(input: {
     }
     const nonContinuationFrame = activeContinuation.frame;
     /* v8 ignore start -- @preserve -- Defensive stale-subject rejection: these typed cleanup frames are resolved by their dedicated witness APIs, not ordinary subject dispatch. */
-    if (nonContinuationFrame.kind === "flySpeedGrantEndFallCleanup") {
+    if (nonContinuationFrame.kind === "grantedFlightEndFallCleanup") {
       return invalidResult(
         input.input.state,
         "staleSubject",

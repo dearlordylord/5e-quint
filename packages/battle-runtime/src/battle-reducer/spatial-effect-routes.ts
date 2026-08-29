@@ -610,7 +610,7 @@ function isThunderwavePostSaveAreaEffect(
 ): boolean {
   return (
     invocation.procedure === "saveGatedDamage" &&
-    invocation.postSaveAreaEffect?.kind === "thunderwave"
+    invocation.postSaveAreaEffect?.kind === "selfOriginCubePush"
   );
 }
 

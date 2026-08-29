@@ -268,7 +268,7 @@ describe("turn-boundary active-effect occurrence updates", () => {
       },
     ]);
     expect(ticked.value.get(fighterId)?.concentration).toBeNull();
-    expect(ticked.flySpeedGrantEndFallCleanupFrames).toEqual([]);
+    expect(ticked.grantedFlightEndFallCleanupFrames).toEqual([]);
   });
 
   test("duration expiry preserves a knocked-out target while ending its caster's concentration", () => {

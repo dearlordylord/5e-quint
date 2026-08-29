@@ -2610,7 +2610,7 @@ describe("SRD Unit catalog boundary", () => {
       if (phase?.kind !== "save_gate") return;
 
       expect(phase.onFail).toEqual({
-        kind: "command_target_next_turn",
+        kind: "compelled_target_next_turn",
         execution: "target_next_turn",
         options: {
           approach: {
@@ -4150,7 +4150,7 @@ describe("SRD Unit catalog boundary", () => {
       {
         trigger: { kind: "passive" },
         effect: {
-          kind: "grant_magic_weapon_enhancement",
+          kind: "grant_weapon_attack_enhancement",
           bonus: {
             kind: "threshold_tiers",
             axis: "slot",
@@ -4207,7 +4207,7 @@ describe("SRD Unit catalog boundary", () => {
       expect(
         Result.isFailure(
           decode({
-            kind: "grant_magic_weapon_enhancement",
+            kind: "grant_weapon_attack_enhancement",
             bonus,
           }),
         ),

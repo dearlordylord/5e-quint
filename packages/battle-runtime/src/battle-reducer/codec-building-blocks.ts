@@ -73,20 +73,20 @@ export const SpellDamageSchema = Schema.Struct({
 
 export const BattleConditionSchema = Schema.Literals(ALL_CONDITIONS);
 
-export const BattleThunderwaveAudibleBoomSchema = Schema.Struct({
+export const BattleAudibleBoomSchema = Schema.Struct({
   sound: Schema.Literal("thunderous boom"),
   audibleRadiusFeet: MovementFeet,
 });
 
 export const SpellPostSaveAreaEffectSchema = Schema.Union([
   Schema.Struct({
-    kind: Schema.Literal("fireballObjectIgnition"),
+    kind: Schema.Literal("areaObjectIgnition"),
   }),
   Schema.Struct({
-    kind: Schema.Literal("shatterObjectDamage"),
+    kind: Schema.Literal("areaObjectDamage"),
   }),
   Schema.Struct({
-    kind: Schema.Literal("thunderwave"),
+    kind: Schema.Literal("selfOriginCubePush"),
     creaturePush: Schema.Struct({
       distanceFeet: MovementFeet,
       originDirection: Schema.Literal("away_from_caster"),
@@ -96,7 +96,7 @@ export const SpellPostSaveAreaEffectSchema = Schema.Union([
       originDirection: Schema.Literal("away_from_caster"),
       objectLocation: Schema.Literal("entirely_within_area"),
     }),
-    audibleBoom: BattleThunderwaveAudibleBoomSchema,
+    audibleBoom: BattleAudibleBoomSchema,
   }),
 ]);
 
@@ -447,7 +447,7 @@ export const SpellAttackDamagePayloadSchema = Schema.Union([
     damageType: DamageTypeSchema,
   }),
   Schema.Struct({
-    kind: Schema.Literal("sorcerousBurstDamageTypeChoice"),
+    kind: Schema.Literal("spellAttackDamageTypeChoice"),
     expr: DiceExprSchema,
     damageTypeChoices: Schema.NonEmptyArray(DamageTypeSchema),
     maxDieAdditionalDiceLimit: Schema.Number.pipe(
@@ -456,7 +456,7 @@ export const SpellAttackDamagePayloadSchema = Schema.Union([
     ),
   }),
   Schema.Struct({
-    kind: Schema.Literal("selectedSorcerousBurstDamage"),
+    kind: Schema.Literal("selectedSpellAttackDamage"),
     expr: DiceExprSchema,
     damageType: DamageTypeSchema,
     maxDieAdditionalDiceLimit: Schema.Number.pipe(

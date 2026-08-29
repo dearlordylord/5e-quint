@@ -116,10 +116,10 @@ export function resolveFlySpeedGrantEndFallCleanup(input: {
       state: input.state,
       snapshot: snapshotBattle(input.state),
       reason: "missingCombatant",
-      message: "Fly Speed end-fall witness target is not in this battle.",
+      message: "Granted-flight end-fall witness target is not in this battle.",
     };
   }
-  const cleanup = flySpeedGrantEndFallCleanupFrame(input.state, input.targetId);
+  const cleanup = grantedFlightEndFallCleanupFrame(input.state, input.targetId);
   if (cleanup === null) {
     return {
       tag: "invalid",
@@ -127,7 +127,7 @@ export function resolveFlySpeedGrantEndFallCleanup(input: {
       snapshot: snapshotBattle(input.state),
       reason: "cleanupFrameMissing",
       message:
-        "Fly Speed end-fall witness requires a pending cleanup frame emitted by Fly effect cleanup.",
+        "Granted-flight end-fall witness requires its pending cleanup frame.",
     };
   }
   const cleanupFrame = cleanup.frame;
@@ -139,7 +139,7 @@ export function resolveFlySpeedGrantEndFallCleanup(input: {
       snapshot: snapshotBattle(input.state),
       reason: "effectStillActive",
       message:
-        "Fly Speed end-fall witness can only resolve after the emitted Fly effect cleanup removed the ended grant.",
+        "Granted-flight end-fall witness can only resolve after cleanup removed the ended grant.",
     };
   }
   /* v8 ignore stop -- @preserve */
@@ -181,20 +181,20 @@ export function resolveFlySpeedGrantEndFallCleanup(input: {
   };
 }
 
-function flySpeedGrantEndFallCleanupFrame(
+function grantedFlightEndFallCleanupFrame(
   state: BattleState,
   targetId: CombatantId,
 ): {
   readonly frameIndex: number;
   readonly frame: Extract<
     BattleInterruptFrame,
-    { readonly kind: "flySpeedGrantEndFallCleanup" }
+    { readonly kind: "grantedFlightEndFallCleanup" }
   >;
 } | null {
   for (let index = state.interruptStack.length - 1; index >= 0; index -= 1) {
     const frame = state.interruptStack[index];
     if (
-      frame?.kind === "flySpeedGrantEndFallCleanup" &&
+      frame?.kind === "grantedFlightEndFallCleanup" &&
       frame.targetId === targetId
     ) {
       return { frameIndex: index, frame };
@@ -214,7 +214,8 @@ export function resolveFeatherFallLanding(input: {
       state: input.state,
       snapshot: snapshotBattle(input.state),
       reason: "missingCombatant",
-      message: "Feather Fall landing target is not in this battle.",
+      message:
+        "Falling-creature mitigation landing target is not in this battle.",
     };
   }
   return resolveFeatherFallLandingForTarget(input.state, target);

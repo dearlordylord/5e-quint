@@ -1965,7 +1965,7 @@ export async function verifyLevelFiveWizardFireballBattleHandoff(
       holeId: savingThrowHole.holeId,
       value: {
         area: {
-          kind: "fireballArea",
+          kind: "pointOriginSphereSaveDamageArea",
           originAnchorId: "sphinx",
           affectedTargetIds: ["sphinx"],
           objectIgnitionFacts: [],

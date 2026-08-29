@@ -107,7 +107,7 @@ import {
 import { concentrationSavingThrowDc } from "./domain-helpers.ts";
 import {
   battleStateWithFlySpeedGrantEndFallCleanupFrames,
-  flySpeedGrantEndFallCleanupFramesForExpiredEffects,
+  grantedFlightEndFallCleanupFramesForExpiredEffects,
 } from "./granted-flight-end-fall-cleanup.ts";
 import {
   checkSaveGatedConditionWithRepeatDamageRepeatSaveFills,
@@ -192,7 +192,7 @@ export function breakBattleConcentration(
       ),
       readiedSpells,
     },
-    broken.flySpeedGrantEndFallCleanupFrames,
+    broken.grantedFlightEndFallCleanupFrames,
   );
   const cleanedState =
     battleStateWithoutCurrentActorSpellGrantedActionResourcesForEffects(
@@ -234,7 +234,7 @@ export function breakBattleConcentrationAfterDamage(input: {
 
 type BreakCombatantConcentrationResult = {
   readonly value: ReadonlyMap<CombatantId, BattleCreatureState>;
-  readonly flySpeedGrantEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
+  readonly grantedFlightEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
   readonly spellEndTargetStatePromotionIds: readonly CombatantId[];
 };
 
@@ -270,7 +270,7 @@ function battleStateAfterCombatantConcentrationBreak(input: {
     input.combatantId,
     input.priorConcentration,
   );
-  const priorFrames = flySpeedGrantEndFallCleanupFramesForExpiredEffects(
+  const priorFrames = grantedFlightEndFallCleanupFramesForExpiredEffects(
     input.priorCombatant.combatantId,
     input.priorCombatant.activeEffects.filter((effect) =>
       concentrationBrokenEffectFrom(
@@ -281,7 +281,7 @@ function battleStateAfterCombatantConcentrationBreak(input: {
     ),
   ).filter(
     (frame) =>
-      !broken.flySpeedGrantEndFallCleanupFrames.some(
+      !broken.grantedFlightEndFallCleanupFrames.some(
         (candidate) => candidate.endedEffect === frame.endedEffect,
       ),
   );
@@ -290,7 +290,7 @@ function battleStateAfterCombatantConcentrationBreak(input: {
       ...input.state,
       combatants: broken.value,
     },
-    [...broken.flySpeedGrantEndFallCleanupFrames, ...priorFrames],
+    [...broken.grantedFlightEndFallCleanupFrames, ...priorFrames],
   );
   const cleanedState =
     battleStateWithoutCurrentActorSpellGrantedActionResourcesForEffects(
@@ -1672,11 +1672,11 @@ export function breakCombatantConcentration(
   if (broken === undefined) {
     return {
       value: combatants,
-      flySpeedGrantEndFallCleanupFrames: [],
+      grantedFlightEndFallCleanupFrames: [],
       spellEndTargetStatePromotionIds: [],
     };
   }
-  const flySpeedGrantEndFallCleanupFrames: BattleFlySpeedGrantEndFallCleanupFrame[] =
+  const grantedFlightEndFallCleanupFrames: BattleFlySpeedGrantEndFallCleanupFrame[] =
     [];
   const spellEndTargetStatePromotionIds: CombatantId[] = [];
   const value = new Map(
@@ -1687,8 +1687,8 @@ export function breakCombatantConcentration(
       if (expiring.some(spellEndTargetStatePromotesIncapacitated)) {
         spellEndTargetStatePromotionIds.push(id);
       }
-      flySpeedGrantEndFallCleanupFrames.push(
-        ...flySpeedGrantEndFallCleanupFramesForExpiredEffects(id, expiring),
+      grantedFlightEndFallCleanupFrames.push(
+        ...grantedFlightEndFallCleanupFramesForExpiredEffects(id, expiring),
       );
       const activeEffects = combatant.activeEffects.filter(
         (effect) => !expiring.includes(effect),
@@ -1731,7 +1731,7 @@ export function breakCombatantConcentration(
   );
   return {
     value,
-    flySpeedGrantEndFallCleanupFrames,
+    grantedFlightEndFallCleanupFrames,
     spellEndTargetStatePromotionIds,
   };
 }

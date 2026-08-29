@@ -1090,7 +1090,8 @@ export function tacticalMasterAttackWithReplacement<
   if (!isTacticalMasterReplacementMasteryProperty(input.decision.value)) {
     return {
       tag: "invalid",
-      message: "Tactical Master replacement choice is not Push, Sap, or Slow.",
+      message:
+        "Tactical Master replacement choice is not one of the supported mastery options.",
     };
   }
   /* v8 ignore stop -- @preserve */

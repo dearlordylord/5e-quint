@@ -1323,7 +1323,7 @@ function assertSelectedSpellProcedureProfile(
       targeting: { kind: "singleCreatureOrObject" },
       attackKind: "ranged_spell_attack",
       damage: {
-        kind: "sorcerousBurstDamageTypeChoice",
+        kind: "spellAttackDamageTypeChoice",
         expr: { dice: 1, dieSize: 8 },
         maxDieAdditionalDiceLimit: 3,
         damageTypeChoices: [...sorcerousBurstDamageTypes],

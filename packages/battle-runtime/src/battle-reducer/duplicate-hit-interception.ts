@@ -147,7 +147,7 @@ export function duplicateHitInterceptionCheck(input: {
       : {
           tag: "invalid",
           message:
-            "Mirror Image duplicate roll is only valid for a hit against a target with active Mirror Image duplicates.",
+            "Duplicate-interception roll requires a hit against a target with active duplicates.",
         };
   }
 
@@ -163,7 +163,7 @@ export function duplicateHitInterceptionCheck(input: {
       : {
           tag: "invalid",
           message:
-            "Mirror Image duplicate roll is not valid when the attacker is unaffected by Mirror Image.",
+            "Duplicate-interception roll is invalid when the attacker bypasses the active duplicates.",
         };
   }
 

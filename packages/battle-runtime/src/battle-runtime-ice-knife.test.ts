@@ -506,7 +506,7 @@ describe("battle runtime: Ice Knife", () => {
       "attackDamageDisposition",
     );
     expect(disposition).toMatchObject({
-      label: "Ice Knife attack damage disposition",
+      label: "Attack-burst initial damage disposition",
       targetId: primaryTargetId,
       choices: expect.arrayContaining([
         {
@@ -686,7 +686,7 @@ describe("battle runtime: Ice Knife", () => {
       "attackDamageDisposition",
     );
     expect(disposition).toMatchObject({
-      label: "Ice Knife burst damage disposition",
+      label: "Attack-burst secondary damage disposition",
       targetId: primaryTargetId,
       choices: expect.arrayContaining([
         {
@@ -787,7 +787,7 @@ describe("battle runtime: Ice Knife", () => {
     });
     expect(invalidAttackDamage).toMatchObject({
       tag: "invalid",
-      message: "Ice Knife damage must use an Ice Knife damage hole.",
+      message: "Attack-burst damage must use its matching damage hole.",
     });
     const missingPrimary = resolveBattleSubject({
       state,

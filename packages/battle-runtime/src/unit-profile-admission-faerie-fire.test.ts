@@ -249,7 +249,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       name: "Thunderwave push facts on a non-Thunderwave spell",
       spellId: burningHandsUnitId,
       area: {
-        kind: "thunderwaveArea",
+        kind: "selfOriginCubePushArea",
         originAnchorId: spellCasterId,
         affectedTargetIds: [spellTargetId],
       },
@@ -259,7 +259,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       name: "Fireball ignition facts on a non-Fireball spell",
       spellId: burningHandsUnitId,
       area: {
-        kind: "fireballArea",
+        kind: "pointOriginSphereSaveDamageArea",
         originAnchorId: spellCasterId,
         affectedTargetIds: [spellTargetId],
       },
@@ -269,7 +269,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       name: "Shatter object facts on a non-Shatter spell",
       spellId: burningHandsUnitId,
       area: {
-        kind: "shatterArea",
+        kind: "pointOriginSphereObjectDamageArea",
         originAnchorId: spellCasterId,
         affectedTargetIds: [spellTargetId],
       },

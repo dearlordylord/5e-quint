@@ -103,13 +103,13 @@ export type SpellFailedSavePostDamageRider =
 
 export type SpellPostSaveAreaEffect =
   | {
-      readonly kind: "fireballObjectIgnition";
+      readonly kind: "areaObjectIgnition";
     }
   | {
-      readonly kind: "shatterObjectDamage";
+      readonly kind: "areaObjectDamage";
     }
   | {
-      readonly kind: "thunderwave";
+      readonly kind: "selfOriginCubePush";
       readonly creaturePush: {
         readonly distanceFeet: MovementFeet;
         readonly originDirection: "away_from_caster";
@@ -309,13 +309,13 @@ export type SpellAttackDamagePayload =
       readonly damageType: DamageType;
     }
   | {
-      readonly kind: "sorcerousBurstDamageTypeChoice";
+      readonly kind: "spellAttackDamageTypeChoice";
       readonly expr: DiceExpr;
       readonly damageTypeChoices: readonly [DamageType, ...DamageType[]];
       readonly maxDieAdditionalDiceLimit: number;
     }
   | {
-      readonly kind: "selectedSorcerousBurstDamage";
+      readonly kind: "selectedSpellAttackDamage";
       readonly expr: DiceExpr;
       readonly damageType: DamageType;
       readonly maxDieAdditionalDiceLimit: number;

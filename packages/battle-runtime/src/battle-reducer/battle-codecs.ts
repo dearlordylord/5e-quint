@@ -142,7 +142,7 @@ import {
   OPEN_HAND_TECHNIQUE_DECISION_CHOICES,
   SELF_TRANSFORMATION_MODE_KINDS,
   SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT,
-  THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
+  TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
 } from "./domain-constants.ts";
 import { BattleDamageRelationshipQuestionIdSchema } from "./damage-relationship-question-id.ts";
 import {
@@ -150,7 +150,7 @@ import {
   AbilitySchema,
   AttackBonus,
   BATTLE_SURFACE_SKILLS,
-  BattleThunderwaveAudibleBoomSchema,
+  BattleAudibleBoomSchema,
   DamageAmount,
   DamageDieSizeSchema,
   DamageTypeSchema,
@@ -593,7 +593,7 @@ const BattleSpellAreaChoiceSchema = Schema.Union([
   }),
   Schema.Struct({
     ...BattleSpellAreaChoiceBaseSchema,
-    kind: Schema.Literal("fireballArea"),
+    kind: Schema.Literal("pointOriginSphereSaveDamageArea"),
     objectIgnitionFacts: Schema.Array(
       Schema.Struct({
         objectId: BattleObjectId,
@@ -615,7 +615,7 @@ const BattleSpellAreaChoiceSchema = Schema.Union([
   }),
   Schema.Struct({
     ...BattleSpellAreaChoiceBaseSchema,
-    kind: Schema.Literal("shatterArea"),
+    kind: Schema.Literal("pointOriginSphereObjectDamageArea"),
     nonmagicalUnattendedObjectDamageFacts: Schema.Array(
       Schema.Struct({
         objectId: BattleObjectId,
@@ -627,7 +627,7 @@ const BattleSpellAreaChoiceSchema = Schema.Union([
   }),
   Schema.Struct({
     ...BattleSpellAreaChoiceBaseSchema,
-    kind: Schema.Literal("thunderwaveArea"),
+    kind: Schema.Literal("selfOriginCubePushArea"),
     creaturePushes: Schema.Array(
       Schema.Struct({
         targetId: CombatantId,
@@ -640,7 +640,7 @@ const BattleSpellAreaChoiceSchema = Schema.Union([
         disposition: BattleThunderwavePushDispositionSchema,
       }),
     ),
-    audibleBoom: BattleThunderwaveAudibleBoomSchema,
+    audibleBoom: BattleAudibleBoomSchema,
     areaId: Schema.optionalKey(Schema.Never),
     stagedConditionAutomaticSuccessFacts: Schema.optionalKey(Schema.Never),
   }),
@@ -2077,7 +2077,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     sourceProcedureRef: BattleProcedureExecutionRef,
     label: Schema.String,
     maximumActiveOneMinuteEffects: Schema.Literal(
-      THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
+      TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
     ),
     requiresTableSpellEffectCount: Schema.Literal(true),
   }),
@@ -3111,7 +3111,7 @@ type BattleSpellAreaChoiceEncoded = {
       readonly stagedConditionAutomaticSuccessFacts?: never;
     }
   | {
-      readonly kind: "fireballArea";
+      readonly kind: "pointOriginSphereSaveDamageArea";
       readonly objectIgnitionFacts: readonly {
         readonly objectId: string;
         readonly disposition:
@@ -3123,7 +3123,7 @@ type BattleSpellAreaChoiceEncoded = {
       readonly stagedConditionAutomaticSuccessFacts?: never;
     }
   | {
-      readonly kind: "shatterArea";
+      readonly kind: "pointOriginSphereObjectDamageArea";
       readonly nonmagicalUnattendedObjectDamageFacts: readonly {
         readonly objectId: string;
         readonly disposition:
@@ -3139,7 +3139,7 @@ type BattleSpellAreaChoiceEncoded = {
       readonly stagedConditionAutomaticSuccessFacts?: never;
     }
   | {
-      readonly kind: "thunderwaveArea";
+      readonly kind: "selfOriginCubePushArea";
       readonly creaturePushes: readonly {
         readonly targetId: string;
         readonly disposition:

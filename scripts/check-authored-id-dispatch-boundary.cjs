@@ -241,6 +241,30 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     ["discriminant-literal", "schema-discriminant-literal"],
     "sleep is a creature-state predicate",
   ),
+  ...exactCollision(
+    "command",
+    "command",
+    ["protocol-array-member"],
+    "command is the generic runtime protocol category",
+  ),
+  ...exactCollision(
+    "darkvision",
+    "darkvision",
+    ["discriminant-literal"],
+    "darkvision is a creature sense",
+  ),
+  ...exactCollision(
+    "shield",
+    "Character battle loadout cannot wield shield and off-hand weapon.",
+    ["execution-diagnostic"],
+    "shield is the equipment category",
+  ),
+  ...exactCollision(
+    "sleep",
+    "does_not_sleep",
+    ["discriminant-literal"],
+    "sleep is a creature-state predicate",
+  ),
   ...[
     "AttackHitBonusActionSpellCommandInput",
     "AttackHitBonusActionSpellCommandSubject",

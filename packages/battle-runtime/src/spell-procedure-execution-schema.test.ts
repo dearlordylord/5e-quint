@@ -55,7 +55,7 @@ describe("spell procedure execution schema constraint", () => {
       throw new Error(String(decoded.failure));
     }
     expect(decoded.success.postSaveAreaEffect).toEqual({
-      kind: "thunderwave",
+      kind: "selfOriginCubePush",
       creaturePush: {
         distanceFeet: 10,
         originDirection: "away_from_caster",

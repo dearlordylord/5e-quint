@@ -566,7 +566,7 @@ const seededSdkScenarioRows = [
           'attackKind: "ranged_spell_attack"',
           'targeting: { kind: "singleCreatureOrObject" }',
           "rangeFeet: 120",
-          'kind: "sorcerousBurstDamageTypeChoice"',
+          'kind: "spellAttackDamageTypeChoice"',
           "expr: { dice: 1, dieSize: 8 }",
           'damageTypeChoices: expect.arrayContaining(["thunder"])',
           "maxDieAdditionalDiceLimit: 2",
@@ -3019,7 +3019,7 @@ const seededSdkScenarioRows = [
       {
         anchor: "function thunderwaveSavingThrowOutcomeFill",
         needles: [
-          "area: thunderwaveArea(",
+          "area: selfOriginCubePushArea(",
           "outcomes.flatMap(",
           "originAnchorId",
         ],
@@ -3034,9 +3034,9 @@ const seededSdkScenarioRows = [
         ],
       },
       {
-        anchor: "function thunderwaveArea",
+        anchor: "function selfOriginCubePushArea",
         needles: [
-          'kind: "thunderwaveArea"',
+          'kind: "selfOriginCubePushArea"',
           "creaturePushes:",
           "distanceFeet: movementFeet(10)",
           "battleTablePositionId(",
@@ -3115,7 +3115,7 @@ const seededSdkScenarioRows = [
       {
         anchor: "function thunderwaveSavingThrowOutcomeFill",
         needles: [
-          "area: thunderwaveArea(",
+          "area: selfOriginCubePushArea(",
           "outcomes.flatMap(",
           "originAnchorId",
         ],
@@ -3130,9 +3130,9 @@ const seededSdkScenarioRows = [
         ],
       },
       {
-        anchor: "function thunderwaveArea",
+        anchor: "function selfOriginCubePushArea",
         needles: [
-          'kind: "thunderwaveArea"',
+          'kind: "selfOriginCubePushArea"',
           "creaturePushes:",
           "distanceFeet: movementFeet(10)",
           "battleTablePositionId(",

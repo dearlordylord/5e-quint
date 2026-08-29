@@ -118,7 +118,7 @@ import {
   SLOW_ACTIVE_PENALTIES_DEX_SAVE_DELTA,
   THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
   THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_INSTANCE,
-  THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
+  TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
 } from "./domain-constants.ts";
 import { spellAttackSequencePartName } from "./spells-execution-facts.ts";
 import { linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget } from "./linked-defense-damage-share.ts";
@@ -212,7 +212,7 @@ export function selectedSpellAttackDamageProcedure(
   | { readonly tag: "invalid"; readonly message: string } {
   if (
     invocation.procedure !== "spellAttackDamage" ||
-    invocation.damage.kind !== "sorcerousBurstDamageTypeChoice"
+    invocation.damage.kind !== "spellAttackDamageTypeChoice"
   ) {
     return { tag: "ok", invocation };
   }
@@ -237,7 +237,7 @@ export function selectedSpellAttackDamageProcedure(
     invocation: {
       ...invocation,
       damage: {
-        kind: "selectedSorcerousBurstDamage",
+        kind: "selectedSpellAttackDamage",
         expr: invocation.damage.expr,
         damageType: selectedDamageType,
         maxDieAdditionalDiceLimit: invocation.damage.maxDieAdditionalDiceLimit,
@@ -257,7 +257,7 @@ type SpellAttackDamageInvocationWithMaxDieAdditionalDiceLimit = Extract<
   { readonly procedure: "spellAttackDamage" }
 > & {
   readonly damage: {
-    readonly kind: "selectedSorcerousBurstDamage";
+    readonly kind: "selectedSpellAttackDamage";
     readonly maxDieAdditionalDiceLimit: number;
   };
 };
@@ -408,7 +408,7 @@ export function spellDamageTypeChoiceHole(
     invocation.procedure === "selfTransformationMode"
       ? invocation.naturalWeaponFacts.damage.damageTypeChoices
       : invocation.procedure === "spellAttackDamage"
-        ? invocation.damage.kind === "sorcerousBurstDamageTypeChoice"
+        ? invocation.damage.kind === "spellAttackDamageTypeChoice"
           ? invocation.damage.damageTypeChoices
           : []
         : invocation.damageTypeChoices;
@@ -1050,7 +1050,8 @@ export function temporaryAbilityCheckRollModeActiveEffectCountHole(
     holeInstanceKey: THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_INSTANCE,
     label: `Spell total active 1-minute effects`,
     sourceProcedureRef: invocation.sourceProcedureRef,
-    maximumActiveOneMinuteEffects: THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
+    maximumActiveOneMinuteEffects:
+      TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
     requiresTableSpellEffectCount: true,
   };
 }
@@ -1752,7 +1753,7 @@ export function validateSpellDamageFill(
   }
   if (
     invocation.procedure === "spellAttackDamage" &&
-    invocation.damage.kind === "selectedSorcerousBurstDamage"
+    invocation.damage.kind === "selectedSpellAttackDamage"
   ) {
     return null;
   }
@@ -1824,7 +1825,7 @@ function hasMaxDieAdditionalDiceLimit(
 ): invocation is SpellAttackDamageInvocationWithMaxDieAdditionalDiceLimit {
   return (
     invocation.procedure === "spellAttackDamage" &&
-    invocation.damage.kind === "selectedSorcerousBurstDamage"
+    invocation.damage.kind === "selectedSpellAttackDamage"
   );
 }
 

@@ -437,7 +437,7 @@
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/compelled-next-turn-behavior.ts": {
       "module/binding:commandSpell": 15,
-      "module/binding:isCommandPhase": 26
+      "module/binding:isCompelledBehaviorPhase": 26
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts": {
       "module/binding:conditionImmunityAndTurnStartTemporaryHitPointsSpellProjection": 17

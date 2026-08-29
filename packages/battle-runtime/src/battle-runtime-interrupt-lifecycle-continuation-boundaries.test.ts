@@ -392,7 +392,7 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
     );
     const flyFrame = afterFlyEnded.interruptStack.find(
       (frame): frame is BattleFlySpeedGrantEndFallCleanupFrame =>
-        frame.kind === "flySpeedGrantEndFallCleanup" &&
+        frame.kind === "grantedFlightEndFallCleanup" &&
         frame.targetId === spellCasterId,
     );
     if (flyFrame === undefined) {

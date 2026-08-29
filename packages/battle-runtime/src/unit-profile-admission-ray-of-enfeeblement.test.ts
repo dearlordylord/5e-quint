@@ -1377,7 +1377,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       holeId: save.holeId,
       value: {
         area: {
-          kind: "shatterArea",
+          kind: "pointOriginSphereObjectDamageArea",
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellCasterId],
           nonmagicalUnattendedObjectDamageFacts: [

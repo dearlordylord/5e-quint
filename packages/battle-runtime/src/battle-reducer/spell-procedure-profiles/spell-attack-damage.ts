@@ -109,7 +109,7 @@ function discoverSpellAttackDamageCastAct(
   if (invocation.targeting.kind === "singleCreatureOrObject") {
     const targetHole = spellTargetHole(state, actorId, invocation);
     const initialHoles = [
-      ...(invocation.damage.kind === "sorcerousBurstDamageTypeChoice"
+      ...(invocation.damage.kind === "spellAttackDamageTypeChoice"
         ? [spellDamageTypeChoiceHole(invocation)]
         : []),
       ...(targetHole.choices.length === 0 ? [] : [targetHole]),
@@ -132,7 +132,7 @@ function discoverSpellAttackDamageCastAct(
           {
             subject: spellCastSelectionSubject(actorId, invocation),
             initialHoles: [
-              ...(invocation.damage.kind === "sorcerousBurstDamageTypeChoice"
+              ...(invocation.damage.kind === "spellAttackDamageTypeChoice"
                 ? [spellDamageTypeChoiceHole(invocation)]
                 : []),
               targetHole,

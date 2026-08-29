@@ -42,7 +42,7 @@ export type OutcomeEffectAtom = Extract<
       | "suppress_condition_self_end"
       | "restrict_action_usage"
       | "target_effect_escape_action"
-      | "command_target_next_turn"
+      | "compelled_target_next_turn"
       | "forced_reaction_movement"
       | "jump_movement_replacement"
       | "feather_fall_mitigation"
@@ -454,14 +454,14 @@ export function traceOutcomeEffectAtom(
       });
       return id;
     }
-    case "command_target_next_turn": {
+    case "compelled_target_next_turn": {
       const id = ids("eff");
       nodes.push({
         id,
         category: "effect",
-        atomKind: "command_target_next_turn",
+        atomKind: "compelled_target_next_turn",
         label: [
-          "command_target_next_turn",
+          "compelled_target_next_turn",
           e.execution,
           `approach: ${e.options.approach.route}, end within ${e.options.approach.endsTurnWhenWithinFeet} ft`,
           `drop: ${e.options.drop.objectSet}, then ${e.options.drop.afterward}`,

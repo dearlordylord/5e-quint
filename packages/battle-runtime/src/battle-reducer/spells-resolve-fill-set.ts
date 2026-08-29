@@ -939,7 +939,8 @@ export function spellFillSet(
         /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
-          message: "Magic Weapon item target does not match this spell act.",
+          message:
+            "Weapon-enhancement item target does not match this spell act.",
         };
       }
       /* v8 ignore stop -- @preserve */
@@ -952,7 +953,7 @@ export function spellFillSet(
         return {
           tag: "invalid",
           message:
-            "Magic Weapon item target must use the selected spell act item-target hole.",
+            "Weapon-enhancement item target must use the selected spell act item-target hole.",
         };
       }
       /* v8 ignore stop -- @preserve */
@@ -961,7 +962,7 @@ export function spellFillSet(
         /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
-          message: "Magic Weapon item target was filled twice.",
+          message: "Weapon-enhancement item target was filled twice.",
         };
       }
       /* v8 ignore stop -- @preserve */
@@ -1260,7 +1261,7 @@ export function spellFillSet(
           /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
-            message: "Hideous Laughter repeat save was filled twice.",
+            message: "Staged-condition repeat save was filled twice.",
           };
         }
         /* v8 ignore stop -- @preserve */
@@ -1394,7 +1395,8 @@ export function spellFillSet(
         /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
-          message: "Command option choice does not match this spell act.",
+          message:
+            "Compelled-behavior option choice does not match this spell act.",
         };
       }
       /* v8 ignore stop -- @preserve */
@@ -1404,7 +1406,7 @@ export function spellFillSet(
         return {
           tag: "invalid",
           message:
-            "Command option choice must use the selected spell act command-option hole.",
+            "Compelled-behavior option choice must use the selected spell act option hole.",
         };
       }
       /* v8 ignore stop -- @preserve */
@@ -1413,7 +1415,7 @@ export function spellFillSet(
         /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
-          message: "Command option choice was filled twice.",
+          message: "Compelled-behavior option choice was filled twice.",
         };
       }
       /* v8 ignore stop -- @preserve */
@@ -1765,7 +1767,7 @@ export function spellFillSet(
         return {
           tag: "invalid",
           message:
-            "Thaumaturgy active-effect count does not match this spell act.",
+            "Temporary ability-check roll-mode active-effect count does not match this spell act.",
         };
       }
       /* v8 ignore stop -- @preserve */
@@ -1775,7 +1777,7 @@ export function spellFillSet(
         return {
           tag: "invalid",
           message:
-            "Thaumaturgy active-effect count must use the selected spell act count hole.",
+            "Temporary ability-check roll-mode active-effect count must use the selected spell act count hole.",
         };
       }
       /* v8 ignore stop -- @preserve */
@@ -1784,7 +1786,8 @@ export function spellFillSet(
         /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
-          message: "Thaumaturgy active-effect count was filled twice.",
+          message:
+            "Temporary ability-check roll-mode active-effect count was filled twice.",
         };
       }
       /* v8 ignore stop -- @preserve */
@@ -1800,7 +1803,7 @@ export function spellFillSet(
         invocation.procedure !== "grantedAreaSaveDamageAction" &&
         !(
           invocation.procedure === "spellAttackDamage" &&
-          invocation.damage.kind === "sorcerousBurstDamageTypeChoice"
+          invocation.damage.kind === "spellAttackDamageTypeChoice"
         ) &&
         invocation.procedure !== "selfTransformationMode" &&
         invocation.procedure !== "spellHostedWeaponAttack"
@@ -1903,7 +1906,7 @@ export function spellFillSet(
           return {
             tag: "invalid",
             message:
-              "Mirror Image duplicate roll does not match this spell act.",
+              "Duplicate-interception roll does not match this spell act.",
           };
         }
         /* v8 ignore stop -- @preserve */
@@ -1918,7 +1921,7 @@ export function spellFillSet(
             return {
               tag: "invalid",
               message:
-                "Mirror Image duplicate roll does not match this spell attack sequence.",
+                "Duplicate-interception roll does not match this spell attack sequence.",
             };
           }
           /* v8 ignore stop -- @preserve */
@@ -1928,7 +1931,7 @@ export function spellFillSet(
             /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
             return {
               tag: "invalid",
-              message: "Mirror Image duplicate roll is outside this spell act.",
+              message: "Duplicate-interception roll is outside this spell act.",
             };
           }
           /* v8 ignore stop -- @preserve */
@@ -1940,7 +1943,7 @@ export function spellFillSet(
             return {
               tag: "invalid",
               message:
-                "Spell attack sequence Mirror Image duplicate roll was filled twice.",
+                "Spell attack sequence duplicate-interception roll was filled twice.",
             };
           }
           /* v8 ignore stop -- @preserve */
@@ -1955,7 +1958,7 @@ export function spellFillSet(
           /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
-            message: "Mirror Image duplicate roll was filled twice.",
+            message: "Duplicate-interception roll was filled twice.",
           };
         }
         /* v8 ignore stop -- @preserve */
@@ -2064,7 +2067,7 @@ export function spellFillSet(
             /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
             return {
               tag: "invalid",
-              message: "Ice Knife attack damage was filled twice.",
+              message: "Attack-burst initial damage was filled twice.",
             };
           }
           /* v8 ignore stop -- @preserve */
@@ -2077,7 +2080,7 @@ export function spellFillSet(
             /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
             return {
               tag: "invalid",
-              message: "Ice Knife burst damage was filled twice.",
+              message: "Attack-burst secondary damage was filled twice.",
             };
           }
           /* v8 ignore stop -- @preserve */
@@ -2087,7 +2090,7 @@ export function spellFillSet(
         /* v8 ignore start -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
-          message: "Ice Knife damage must use an Ice Knife damage hole.",
+          message: "Attack-burst damage must use its matching damage hole.",
         };
         /* v8 ignore stop -- @preserve */
       }
@@ -2346,7 +2349,7 @@ export function parseSpellCastReactionFactsFill(
     : {
         tag: "invalid",
         message:
-          "Spell-cast Reaction trigger facts must describe Counterspell caster visibility.",
+          "Spell-cast Reaction trigger facts must describe interrupted-caster visibility.",
       };
 }
 

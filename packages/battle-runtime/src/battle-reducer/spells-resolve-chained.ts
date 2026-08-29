@@ -1283,7 +1283,7 @@ export function chainedSpellFillSet(
       ) {
         return {
           tag: "invalid",
-          message: "Hideous Laughter repeat save was filled twice.",
+          message: "Staged-condition repeat save was filled twice.",
         };
       }
       /* v8 ignore stop -- @preserve */

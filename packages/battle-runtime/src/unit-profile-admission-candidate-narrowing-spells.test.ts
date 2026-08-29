@@ -280,14 +280,14 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     if (
       unselectedSorcerousBurstInvocation.procedure !== "spellAttackDamage" ||
       unselectedSorcerousBurstInvocation.damage.kind !==
-        "sorcerousBurstDamageTypeChoice"
+        "spellAttackDamageTypeChoice"
     ) {
       throw new Error("Expected Sorcerous Burst spell attack damage choice.");
     }
     const selectedSorcerousBurstSource = {
       ...unselectedSorcerousBurstInvocation,
       damage: {
-        kind: "selectedSorcerousBurstDamage" as const,
+        kind: "selectedSpellAttackDamage" as const,
         expr: unselectedSorcerousBurstInvocation.damage.expr,
         damageType: "thunder" as const,
         maxDieAdditionalDiceLimit:

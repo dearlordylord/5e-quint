@@ -65,7 +65,7 @@ type WeaponAttackDamageEnhancementProjection = {
   >["durationTicks"];
   readonly bonus: Extract<
     EffectAtom,
-    { readonly kind: "grant_magic_weapon_enhancement" }
+    { readonly kind: "grant_weapon_attack_enhancement" }
   >["bonus"];
 };
 
@@ -124,7 +124,7 @@ function weaponAttackDamageEnhancementProjection(
   );
   if (
     operation?.trigger.kind !== "passive" ||
-    operation.effect.kind !== "grant_magic_weapon_enhancement" ||
+    operation.effect.kind !== "grant_weapon_attack_enhancement" ||
     Result.isFailure(durationTicks)
   ) {
     return null;

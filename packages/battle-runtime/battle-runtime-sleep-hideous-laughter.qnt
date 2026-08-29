@@ -22,7 +22,7 @@ module battleRuntimeSleepHideousLaughter {
     else
       state.initiative.round + 1
 
-  pure def sleepPendingRepeatSaveEffect(
+  pure def stagedConditionPendingRepeatSaveEffect(
     state: BattleState,
     target: Actor,
     source: Actor,
@@ -60,7 +60,7 @@ module battleRuntimeSleepHideousLaughter {
                 | SleepUnconscious(existing) => existing.source != source
                 | _ => true
               })
-              .union(Set(sleepPendingRepeatSaveEffect(state, targetActor, source, data.hadIncapacitated))),
+              .union(Set(stagedConditionPendingRepeatSaveEffect(state, targetActor, source, data.hadIncapacitated))),
           }
           breakConcentrationFromSleepAppliedIncapacitated(slept, targetActor)
         }

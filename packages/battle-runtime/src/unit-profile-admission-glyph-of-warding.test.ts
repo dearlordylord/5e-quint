@@ -155,7 +155,7 @@ import {
   spikeGrowthAreaFill,
   spatialMeleeSpellAttackProxyTargetFill,
   spatialMeleeSpellAttackProxyPositionFill,
-  thunderwaveArea,
+  selfOriginCubePushArea,
   webAreaFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
@@ -5922,7 +5922,7 @@ function fireballGlyphSavingThrowOutcomeFill(
     holeId: hole.holeId,
     value: {
       area: {
-        kind: "fireballArea",
+        kind: "pointOriginSphereSaveDamageArea",
         originAnchorId: spellTargetId,
         affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
         objectIgnitionFacts,
@@ -5944,7 +5944,7 @@ function thunderwaveGlyphSavingThrowOutcomeFill(
     holeId: hole.holeId,
     value: {
       area: {
-        ...thunderwaveArea(
+        ...selfOriginCubePushArea(
           outcomes.map((outcome) => outcome.targetId),
           outcomes.flatMap((outcome) =>
             outcome.succeeded ? [] : [outcome.targetId],

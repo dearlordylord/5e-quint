@@ -245,8 +245,8 @@ export function iceKnifeDamageDispositionHoleKey(
     ),
     label:
       part === "attack"
-        ? "Ice Knife attack damage disposition"
-        : "Ice Knife burst damage disposition",
+        ? "Attack-burst initial damage disposition"
+        : "Attack-burst secondary damage disposition",
   };
 }
 

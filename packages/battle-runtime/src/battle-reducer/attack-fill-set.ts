@@ -1097,7 +1097,7 @@ function processRolledDiceFill(
     return rememberSelectedAttackFill(
       context.duplicateHitInterceptionRoll,
       fill,
-      "Mirror Image duplicate roll was filled twice.",
+      "Duplicate-interception roll was filled twice.",
       (value) => {
         context.duplicateHitInterceptionRoll = value;
       },

@@ -283,7 +283,7 @@ function battleCurrentContinuation(state: BattleRuntimeSession["state"]): {
       { kind: "attackDamageContinuationCunningStrike" },
       attackDamageContinuation,
     ),
-    Match.when({ kind: "flySpeedGrantEndFallCleanup" }, () => null),
+    Match.when({ kind: "grantedFlightEndFallCleanup" }, () => null),
     Match.when({ kind: "fallDamageLandingMitigation" }, () => null),
     Match.exhaustive,
   );

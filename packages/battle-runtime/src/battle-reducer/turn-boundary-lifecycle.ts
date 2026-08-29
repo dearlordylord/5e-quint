@@ -142,7 +142,7 @@ import {
 } from "./druid-wild-shape.ts";
 import {
   battleStateWithFlySpeedGrantEndFallCleanupFrames,
-  flySpeedGrantEndFallCleanupFramesForExpiredEffects,
+  grantedFlightEndFallCleanupFramesForExpiredEffects,
 } from "./granted-flight-end-fall-cleanup.ts";
 import { saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole } from "./staged-condition-repeat-save.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
@@ -1093,7 +1093,7 @@ function resolveEndTurn({
   const helpAttacks = state.helpAttacks.filter(
     (help) => help.expiresAt.combatantId !== nextActorId,
   );
-  const flySpeedGrantEndFallCleanupFrames: BattleFlySpeedGrantEndFallCleanupFrame[] =
+  const grantedFlightEndFallCleanupFrames: BattleFlySpeedGrantEndFallCleanupFrame[] =
     [];
   let combatantsAfterExpiredReadiedSpells = afterDeathSavingThrow;
   for (const casterId of expiringReadiedSpellCasterIds) {
@@ -1106,8 +1106,8 @@ function resolveEndTurn({
       casterId,
     );
     combatantsAfterExpiredReadiedSpells = broken.value;
-    flySpeedGrantEndFallCleanupFrames.push(
-      ...broken.flySpeedGrantEndFallCleanupFrames,
+    grantedFlightEndFallCleanupFrames.push(
+      ...broken.grantedFlightEndFallCleanupFrames,
     );
   }
   const combatantsAfterEndTurnOngoingFeatures = expireEndOfTurnOngoingFeatures(
@@ -1237,12 +1237,12 @@ function resolveEndTurn({
   ).combatants;
   const durationTick = {
     value: combatantsAfterSpellTurnStartDamage,
-    flySpeedGrantEndFallCleanupFrames: [],
+    grantedFlightEndFallCleanupFrames: [],
     spellEndTargetStatePromotionIds: [],
   };
   const combatantsAfterDurationTick = durationTick.value;
-  flySpeedGrantEndFallCleanupFrames.push(
-    ...durationTick.flySpeedGrantEndFallCleanupFrames,
+  grantedFlightEndFallCleanupFrames.push(
+    ...durationTick.grantedFlightEndFallCleanupFrames,
   );
   const combatantsAfterRecharge = deferStatBlockRecharge
     ? combatantsAfterDurationTick
@@ -1287,7 +1287,7 @@ function resolveEndTurn({
         consumed: false,
       },
     },
-    flySpeedGrantEndFallCleanupFrames,
+    grantedFlightEndFallCleanupFrames,
   );
   const nextStateWithSpellEndTargetStateConcentrationBreaks =
     battleStateAfterSpellEndTargetStatePromotionConcentrationBreaks(
@@ -1356,7 +1356,7 @@ function applyRoundDurationTickAfterStartTurnOccurrences(
           : [emitter],
       ),
     },
-    durationTick.flySpeedGrantEndFallCleanupFrames,
+    durationTick.grantedFlightEndFallCleanupFrames,
   );
   return battleStateAfterSpellEndTargetStatePromotionConcentrationBreaks(
     stateAfterTick,
@@ -2486,7 +2486,7 @@ function applySleepRepeatSaveFills(
         ...stateWithSleepFailure,
         combatants: broken.value,
       },
-      broken.flySpeedGrantEndFallCleanupFrames,
+      broken.grantedFlightEndFallCleanupFrames,
     );
     return battleStateAfterSpellEndTargetStatePromotionConcentrationBreaks(
       brokenState,
@@ -4406,11 +4406,11 @@ export function tickDurationEffects(
   cohortEffectRefs?: ReadonlySet<BattleEffectExecutionRef>,
 ): {
   readonly value: ReadonlyMap<CombatantId, BattleCreatureState>;
-  readonly flySpeedGrantEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
+  readonly grantedFlightEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
   readonly spellEndTargetStatePromotionIds: readonly CombatantId[];
 } {
   const expiredConcentrationSources: ConcentrationEffectSource[] = [];
-  const flySpeedGrantEndFallCleanupFrames: BattleFlySpeedGrantEndFallCleanupFrame[] =
+  const grantedFlightEndFallCleanupFrames: BattleFlySpeedGrantEndFallCleanupFrame[] =
     [];
   const spellEndTargetStatePromotionIds: CombatantId[] = [];
   const tickedCombatants = new Map<CombatantId, BattleCreatureState>();
@@ -4423,8 +4423,8 @@ export function tickDurationEffects(
     });
     tickedCombatants.set(id, ticked.combatant);
     expiredConcentrationSources.push(...ticked.expiredConcentrationSources);
-    flySpeedGrantEndFallCleanupFrames.push(
-      ...ticked.flySpeedGrantEndFallCleanupFrames,
+    grantedFlightEndFallCleanupFrames.push(
+      ...ticked.grantedFlightEndFallCleanupFrames,
     );
     spellEndTargetStatePromotionIds.push(
       ...ticked.spellEndTargetStatePromotionIds,
@@ -4438,9 +4438,9 @@ export function tickDurationEffects(
     );
   return {
     value: concentrationExpired.value,
-    flySpeedGrantEndFallCleanupFrames: [
-      ...flySpeedGrantEndFallCleanupFrames,
-      ...concentrationExpired.flySpeedGrantEndFallCleanupFrames,
+    grantedFlightEndFallCleanupFrames: [
+      ...grantedFlightEndFallCleanupFrames,
+      ...concentrationExpired.grantedFlightEndFallCleanupFrames,
     ],
     spellEndTargetStatePromotionIds: [
       ...spellEndTargetStatePromotionIds,
@@ -4519,7 +4519,7 @@ function tickCombatantDurationEffects(input: {
 }): {
   readonly combatant: BattleCreatureState;
   readonly expiredConcentrationSources: readonly ConcentrationEffectSource[];
-  readonly flySpeedGrantEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
+  readonly grantedFlightEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
   readonly spellEndTargetStatePromotionIds: readonly CombatantId[];
 } {
   const partition = partitionTickingDurationEffects(
@@ -4557,8 +4557,8 @@ function tickCombatantDurationEffects(input: {
       partition.expiringEffects,
     ),
     expiredConcentrationSources: partition.expiredConcentrationSources,
-    flySpeedGrantEndFallCleanupFrames:
-      flySpeedGrantEndFallCleanupFramesForExpiredEffects(
+    grantedFlightEndFallCleanupFrames:
+      grantedFlightEndFallCleanupFramesForExpiredEffects(
         input.id,
         partition.expiringEffects,
       ),
@@ -4617,7 +4617,7 @@ function expireConcentrationDurationSourcesWithFlySpeedGrantEndFallCleanupFrames
   context?: DurationTickContext,
 ): {
   readonly value: ReadonlyMap<CombatantId, BattleCreatureState>;
-  readonly flySpeedGrantEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
+  readonly grantedFlightEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
   readonly spellEndTargetStatePromotionIds: readonly CombatantId[];
 } {
   const uniqueSources = [
@@ -4630,11 +4630,11 @@ function expireConcentrationDurationSourcesWithFlySpeedGrantEndFallCleanupFrames
   ];
   const initial: {
     readonly value: ReadonlyMap<CombatantId, BattleCreatureState>;
-    readonly flySpeedGrantEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
+    readonly grantedFlightEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
     readonly spellEndTargetStatePromotionIds: readonly CombatantId[];
   } = {
     value: combatants,
-    flySpeedGrantEndFallCleanupFrames: [],
+    grantedFlightEndFallCleanupFrames: [],
     spellEndTargetStatePromotionIds: [],
   };
   return uniqueSources.reduce((current, source) => {
@@ -4646,9 +4646,9 @@ function expireConcentrationDurationSourcesWithFlySpeedGrantEndFallCleanupFrames
       );
     return {
       value: expired.value,
-      flySpeedGrantEndFallCleanupFrames: [
-        ...current.flySpeedGrantEndFallCleanupFrames,
-        ...expired.flySpeedGrantEndFallCleanupFrames,
+      grantedFlightEndFallCleanupFrames: [
+        ...current.grantedFlightEndFallCleanupFrames,
+        ...expired.grantedFlightEndFallCleanupFrames,
       ],
       spellEndTargetStatePromotionIds: [
         ...current.spellEndTargetStatePromotionIds,
@@ -4664,10 +4664,10 @@ function expireConcentrationDurationSourceWithFlySpeedGrantEndFallCleanupFrames(
   context?: DurationTickContext,
 ): {
   readonly value: ReadonlyMap<CombatantId, BattleCreatureState>;
-  readonly flySpeedGrantEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
+  readonly grantedFlightEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
   readonly spellEndTargetStatePromotionIds: readonly CombatantId[];
 } {
-  const flySpeedGrantEndFallCleanupFrames: BattleFlySpeedGrantEndFallCleanupFrame[] =
+  const grantedFlightEndFallCleanupFrames: BattleFlySpeedGrantEndFallCleanupFrame[] =
     [];
   const spellEndTargetStatePromotionIds: CombatantId[] = [];
   const value = new Map(
@@ -4681,8 +4681,8 @@ function expireConcentrationDurationSourceWithFlySpeedGrantEndFallCleanupFrames(
       ) {
         spellEndTargetStatePromotionIds.push(id);
       }
-      flySpeedGrantEndFallCleanupFrames.push(
-        ...flySpeedGrantEndFallCleanupFramesForExpiredEffects(id, expiring),
+      grantedFlightEndFallCleanupFrames.push(
+        ...grantedFlightEndFallCleanupFramesForExpiredEffects(id, expiring),
       );
       const activeEffects = combatant.activeEffects.filter(
         (effect) => !expiring.includes(effect),
@@ -4735,7 +4735,7 @@ function expireConcentrationDurationSourceWithFlySpeedGrantEndFallCleanupFrames(
   );
   return {
     value,
-    flySpeedGrantEndFallCleanupFrames,
+    grantedFlightEndFallCleanupFrames,
     spellEndTargetStatePromotionIds,
   };
 }

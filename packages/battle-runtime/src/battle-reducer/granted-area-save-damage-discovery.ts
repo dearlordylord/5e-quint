@@ -80,7 +80,7 @@ export function grantedAreaSaveDamageActionSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: "Dragon's Breath 15-foot Cone Saving Throw outcomes",
+    label: "Granted area-save-damage Cone Saving Throw outcomes",
     grantedAreaSaveDamageAction: {
       sourceCombatantId: effect.sourceCombatantId,
       sourceProcedureRef: effect.sourceProcedureRef,

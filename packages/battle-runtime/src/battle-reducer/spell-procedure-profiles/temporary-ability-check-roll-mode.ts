@@ -49,7 +49,7 @@ import { temporaryAbilityCheckRollModeProjection } from "../spells-profiles-supp
 import { replaceTargetSpellActiveEffect } from "../active-effect-replacement.ts";
 import {
   THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
-  THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
+  TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
 } from "../domain-constants.ts";
 import type {
   SpellAdmissionContext,
@@ -211,7 +211,9 @@ function resolveTemporaryAbilityCheckRollMode(
   const activeCountAfterCast =
     activeCount - existingBoomingVoiceEffectCount + 1;
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (activeCountAfterCast > THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS) {
+  if (
+    activeCountAfterCast > TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS
+  ) {
     return invalidResult(
       input.input.state,
       "invalidFill",

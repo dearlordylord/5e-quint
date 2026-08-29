@@ -3522,25 +3522,25 @@ export function validateSavingThrowOutcomes(
   }
   if (
     "kind" in value.area &&
-    value.area.kind === "thunderwaveArea" &&
+    value.area.kind === "selfOriginCubePushArea" &&
     (!("postSaveAreaEffect" in invocation) ||
-      invocation.postSaveAreaEffect?.kind !== "thunderwave")
+      invocation.postSaveAreaEffect?.kind !== "selfOriginCubePush")
   ) {
     return "Thunderwave push facts are only valid for Thunderwave.";
   }
   if (
     "kind" in value.area &&
-    value.area.kind === "fireballArea" &&
+    value.area.kind === "pointOriginSphereSaveDamageArea" &&
     (!("postSaveAreaEffect" in invocation) ||
-      invocation.postSaveAreaEffect?.kind !== "fireballObjectIgnition")
+      invocation.postSaveAreaEffect?.kind !== "areaObjectIgnition")
   ) {
     return "Fireball object ignition facts are only valid for Fireball.";
   }
   if (
     "kind" in value.area &&
-    value.area.kind === "shatterArea" &&
+    value.area.kind === "pointOriginSphereObjectDamageArea" &&
     (!("postSaveAreaEffect" in invocation) ||
-      invocation.postSaveAreaEffect?.kind !== "shatterObjectDamage")
+      invocation.postSaveAreaEffect?.kind !== "areaObjectDamage")
   ) {
     return "Shatter object damage facts are only valid for Shatter.";
   }
@@ -3664,10 +3664,10 @@ function validatePostSaveAreaEffect(input: {
   if (input.invocation.postSaveAreaEffect === undefined) {
     /* v8 ignore start -- @preserve -- Malformed post-save area fill: discovery only requests Fireball, Shatter, or Thunderwave area facts when the invocation owns the matching post-save effect. These branches reject caller-mutated cross-spell facts. */
     if (input.area !== undefined && "kind" in input.area) {
-      if (input.area.kind === "fireballArea") {
+      if (input.area.kind === "pointOriginSphereSaveDamageArea") {
         return "Fireball object ignition facts are only valid for Fireball.";
       }
-      if (input.area.kind === "shatterArea") {
+      if (input.area.kind === "pointOriginSphereObjectDamageArea") {
         return "Shatter object damage facts are only valid for Shatter.";
       }
       return "Thunderwave push facts are only valid for Thunderwave.";
@@ -3676,17 +3676,17 @@ function validatePostSaveAreaEffect(input: {
     return null;
   }
   const effect = input.invocation.postSaveAreaEffect;
-  if (effect.kind === "fireballObjectIgnition") {
+  if (effect.kind === "areaObjectIgnition") {
     return validateFireballAreaEffect(input.area);
   }
-  if (effect.kind === "thunderwave") {
+  if (effect.kind === "selfOriginCubePush") {
     return validateThunderwaveAreaEffect({
       area: input.area,
       failedTargetIds: input.failedTargetIds,
       effect,
     });
   }
-  if (effect.kind === "shatterObjectDamage") {
+  if (effect.kind === "areaObjectDamage") {
     return validateShatterAreaEffect(input.area);
   }
   /* v8 ignore start -- @preserve -- The post-save area-effect union is exhausted above; widening it without a validator arm fails compilation at this assignment. */
@@ -3699,7 +3699,7 @@ function validateFireballAreaEffect(
   area: BattleSpellAreaChoice | undefined,
 ): string | null {
   /* v8 ignore start -- @preserve -- Malformed Fireball area fill: discovery supplies Fireball-specific area facts, so this rejects only a missing or cross-spell caller mutation. */
-  if (area === undefined || area.kind !== "fireballArea") {
+  if (area === undefined || area.kind !== "pointOriginSphereSaveDamageArea") {
     return "Fireball requires caller-supplied object ignition area facts.";
   }
   /* v8 ignore stop -- @preserve */
@@ -3724,8 +3724,8 @@ function postSaveAreaObjectIgnitions(input: {
   >;
 }): readonly BattleObjectIgnitionOutcome[] {
   if (
-    input.invocation.postSaveAreaEffect?.kind !== "fireballObjectIgnition" ||
-    input.area?.kind !== "fireballArea"
+    input.invocation.postSaveAreaEffect?.kind !== "areaObjectIgnition" ||
+    input.area?.kind !== "pointOriginSphereSaveDamageArea"
   ) {
     return [];
   }
@@ -3747,7 +3747,7 @@ function validateShatterAreaEffect(
   area: BattleSpellAreaChoice | undefined,
 ): string | null {
   /* v8 ignore start -- @preserve -- Malformed Shatter area fill: discovery supplies Shatter-specific area facts, so this rejects only a missing or cross-spell caller mutation. */
-  if (area === undefined || area.kind !== "shatterArea") {
+  if (area === undefined || area.kind !== "pointOriginSphereObjectDamageArea") {
     return "Shatter requires caller-supplied nonmagical unattended object damage area facts.";
   }
   /* v8 ignore stop -- @preserve */
@@ -3771,11 +3771,11 @@ function postSaveAreaObjectDamageFacts(input: {
   >;
 }): Extract<
   BattleSpellAreaChoice,
-  { readonly kind: "shatterArea" }
+  { readonly kind: "pointOriginSphereObjectDamageArea" }
 >["nonmagicalUnattendedObjectDamageFacts"] {
   if (
-    input.invocation.postSaveAreaEffect?.kind !== "shatterObjectDamage" ||
-    input.area?.kind !== "shatterArea"
+    input.invocation.postSaveAreaEffect?.kind !== "areaObjectDamage" ||
+    input.area?.kind !== "pointOriginSphereObjectDamageArea"
   ) {
     return [];
   }
@@ -3786,7 +3786,7 @@ function postSaveAreaObjectDamages(input: {
   readonly facts: ReadonlyArray<
     Extract<
       BattleSpellAreaChoice,
-      { readonly kind: "shatterArea" }
+      { readonly kind: "pointOriginSphereObjectDamageArea" }
     >["nonmagicalUnattendedObjectDamageFacts"][number]
   >;
   readonly damageByType: ReadonlyMap<DamageType, number>;
@@ -3820,10 +3820,13 @@ function validateThunderwaveAreaEffect(input: {
         { readonly procedure: "saveGatedDamage" }
       >["postSaveAreaEffect"]
     >,
-    { readonly kind: "thunderwave" }
+    { readonly kind: "selfOriginCubePush" }
   >;
 }): string | null {
-  if (input.area === undefined || input.area.kind !== "thunderwaveArea") {
+  if (
+    input.area === undefined ||
+    input.area.kind !== "selfOriginCubePushArea"
+  ) {
     return "Thunderwave requires caller-supplied push, object, and audible-boom area facts.";
   }
   const failedTargetIds = new Set(input.failedTargetIds);

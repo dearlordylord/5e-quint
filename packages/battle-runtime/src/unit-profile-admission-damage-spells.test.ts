@@ -2214,7 +2214,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         successDamage: "half",
         rangeFeet: 150,
         failedSavePostDamageRiders: [],
-        postSaveAreaEffect: { kind: "fireballObjectIgnition" },
+        postSaveAreaEffect: { kind: "areaObjectIgnition" },
       }),
     );
   });
@@ -2584,7 +2584,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
           creatureType: "construct",
           mode: "disadvantage",
         },
-        postSaveAreaEffect: { kind: "shatterObjectDamage" },
+        postSaveAreaEffect: { kind: "areaObjectDamage" },
       }),
     );
   });
@@ -2772,7 +2772,7 @@ function fireballSavingThrowOutcomeFill(
     holeId: hole.holeId,
     value: {
       area: {
-        kind: "fireballArea",
+        kind: "pointOriginSphereSaveDamageArea",
         originAnchorId: spellCasterId,
         affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
         objectIgnitionFacts,
@@ -2798,7 +2798,7 @@ function shatterSavingThrowOutcomeFill(
     holeId: hole.holeId,
     value: {
       area: {
-        kind: "shatterArea",
+        kind: "pointOriginSphereObjectDamageArea",
         originAnchorId: spellCasterId,
         affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
         nonmagicalUnattendedObjectDamageFacts,

@@ -60,7 +60,10 @@ type CompelledNextTurnBehaviorSpellInvocation = Extract<
   { readonly procedure: "compelledNextTurnBehavior" }
 >;
 
-type CommandPhase = Extract<ActivationPhase, { readonly kind: "save_gate" }> & {
+type CompelledBehaviorPhase = Extract<
+  ActivationPhase,
+  { readonly kind: "save_gate" }
+> & {
   readonly ability: "wis";
   readonly attachment: {
     readonly kind: "hole";
@@ -70,7 +73,7 @@ type CommandPhase = Extract<ActivationPhase, { readonly kind: "save_gate" }> & {
     };
   };
   readonly onFail: {
-    readonly kind: "command_target_next_turn";
+    readonly kind: "compelled_target_next_turn";
     readonly execution: "target_next_turn";
     readonly options: {
       readonly approach: {
@@ -100,7 +103,7 @@ type CommandPhase = Extract<ActivationPhase, { readonly kind: "save_gate" }> & {
   };
 };
 
-type CommandResolveInput =
+type CompelledBehaviorResolveInput =
   SpellProcedureProfileResolveInput<CompelledNextTurnBehaviorSpellInvocation>;
 
 function admitCommand(
@@ -136,7 +139,7 @@ export function supportedPreparedCommandProfile(
 function commandSpell(
   spell: CompelledNextTurnBehaviorSpellInvocation["spell"],
 ): {
-  readonly phase: CommandPhase;
+  readonly phase: CompelledBehaviorPhase;
   readonly targeting: (
     slotLevel: SpellSlotLevel,
   ) => Extract<SpellTargeting, { readonly kind: "targetList" }>;
@@ -152,7 +155,7 @@ function commandSpell(
     spell.mechanics.range.feet !== 60 ||
     spell.mechanics.duration.kind !== "instantaneous" ||
     spell.mechanics.phases.length !== 1 ||
-    !isCommandPhase(phase)
+    !isCompelledBehaviorPhase(phase)
   ) {
     return null;
   }
@@ -181,9 +184,9 @@ function commandSpell(
   };
 }
 
-function isCommandPhase(
+function isCompelledBehaviorPhase(
   phase: ActivationPhase | undefined,
-): phase is CommandPhase {
+): phase is CompelledBehaviorPhase {
   const failedEffect = phase?.kind === "save_gate" ? phase.onFail : undefined;
   return (
     phase?.kind === "save_gate" &&
@@ -193,7 +196,7 @@ function isCommandPhase(
     phase.onSuccess.kind === "none" &&
     phase.attachment.kind === "hole" &&
     phase.attachment.value.kind === "target" &&
-    failedEffect?.kind === "command_target_next_turn" &&
+    failedEffect?.kind === "compelled_target_next_turn" &&
     failedEffect.execution === "target_next_turn" &&
     failedEffect.options.approach.route === "shortest_direct_to_caster" &&
     failedEffect.options.approach.endsTurnWhenWithinFeet === 5 &&
@@ -238,7 +241,9 @@ function discoverCommandCastAct(
   });
 }
 
-function resolveCommand(input: CommandResolveInput): BattleResolutionResult {
+function resolveCommand(
+  input: CompelledBehaviorResolveInput,
+): BattleResolutionResult {
   return resolveCompelledNextTurnBehaviorSpellAct({
     input: input.input,
     actorId: input.actorId,

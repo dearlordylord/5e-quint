@@ -374,7 +374,7 @@ import {
   OPEN_HAND_TECHNIQUE_DECISION_CHOICES,
   type OpenHandTechniqueDecisionChoice,
   type SelfTransformationModeKind,
-  THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS as TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
+  TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS as TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
   type BattleMagicSuppressionOngoingSpellEffectSourceKind as BattleMagicSuppressionOngoingSpellEffectSourceKind,
 } from "./battle-reducer/domain-constants.ts";
 import {
@@ -1331,7 +1331,7 @@ export type EndedFlySpeedGrant = Extract<
   { readonly kind: "specialSpeedGrant"; readonly speedKind: "fly" }
 >;
 export type BattleFlySpeedGrantEndFallCleanupFrame = {
-  readonly kind: "flySpeedGrantEndFallCleanup";
+  readonly kind: "grantedFlightEndFallCleanup";
   readonly targetId: CombatantId;
   readonly endedEffect: EndedFlySpeedGrant;
 };
@@ -3166,7 +3166,7 @@ export type PersistentArmorSpellInvocation =
 export type ResolvedSpellAttackDamagePayload = Extract<
   SpellAttackDamagePayload,
   {
-    readonly kind: "fixedSpellAttackDamage" | "selectedSorcerousBurstDamage";
+    readonly kind: "fixedSpellAttackDamage" | "selectedSpellAttackDamage";
   }
 >;
 
@@ -3175,7 +3175,7 @@ export function spellAttackDamagePayloadIsResolved(
 ): damage is ResolvedSpellAttackDamagePayload {
   return (
     damage.kind === "fixedSpellAttackDamage" ||
-    damage.kind === "selectedSorcerousBurstDamage"
+    damage.kind === "selectedSpellAttackDamage"
   );
 }
 
@@ -6139,15 +6139,15 @@ type BattleSpellAreaChoiceKind =
       readonly areaId: BattleAreaId;
     }
   | {
-      readonly kind: "fireballArea";
+      readonly kind: "pointOriginSphereSaveDamageArea";
       readonly objectIgnitionFacts: readonly BattleFireballObjectIgnitionFact[];
     }
   | {
-      readonly kind: "shatterArea";
+      readonly kind: "pointOriginSphereObjectDamageArea";
       readonly nonmagicalUnattendedObjectDamageFacts: readonly BattleShatterNonmagicalUnattendedObjectDamageFact[];
     }
   | {
-      readonly kind: "thunderwaveArea";
+      readonly kind: "selfOriginCubePushArea";
       readonly creaturePushes: readonly BattleThunderwaveCreaturePushOutcome[];
       readonly unsecuredObjectPushes: readonly BattleThunderwaveUnsecuredObjectPushOutcome[];
       readonly audibleBoom: BattleThunderwaveAudibleBoom;

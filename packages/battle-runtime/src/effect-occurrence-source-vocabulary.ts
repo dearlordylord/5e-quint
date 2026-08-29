@@ -2,7 +2,7 @@ import type { BattleEffectExecutionRef } from "./identity.ts";
 
 export const EFFECT_OCCURRENCE_SOURCE_KINDS = [
   "nextAttackRollBySelf",
-  "sleepPendingRepeatSave",
+  "stagedConditionPendingRepeatSave",
   "stagedSaveConditionPendingRepeat",
   "spellCondition",
   "spellConditionEndTurnSave",

@@ -1084,7 +1084,7 @@ type EffectAtom =
   | ActionBonusActionChoiceEffect
   | TargetEffectEscapeAction
   | {
-      readonly kind: "command_target_next_turn";
+      readonly kind: "compelled_target_next_turn";
       readonly execution: "target_next_turn";
       readonly options: CommandTargetNextTurnOptions;
     }
@@ -1174,7 +1174,7 @@ type EffectAtom =
       readonly minimumDamageTotal?: 1;
     }
   | {
-      readonly kind: "grant_magic_weapon_enhancement";
+      readonly kind: "grant_weapon_attack_enhancement";
       readonly bonus: MagicWeaponEnhancementBonus;
     }
   | {
@@ -3434,7 +3434,7 @@ export const EffectAtomSchema: Schema.Codec<EffectAtom, unknown, never, never> =
           outcome: Schema.Literal("end_current_effect"),
         }),
         strictStruct({
-          kind: Schema.Literal("command_target_next_turn"),
+          kind: Schema.Literal("compelled_target_next_turn"),
           execution: Schema.Literal("target_next_turn"),
           options: CommandTargetNextTurnOptionsSchema,
         }),
@@ -3530,7 +3530,7 @@ export const EffectAtomSchema: Schema.Codec<EffectAtom, unknown, never, never> =
           minimumDamageTotal: optionalExact(Schema.Literal(1)),
         }),
         strictStruct({
-          kind: Schema.Literal("grant_magic_weapon_enhancement"),
+          kind: Schema.Literal("grant_weapon_attack_enhancement"),
           bonus: MagicWeaponEnhancementBonusSchema,
         }),
         Schema.Struct({

@@ -31,7 +31,7 @@ import {
   spellAct,
   spellHoleInvocation,
   spellTargetFill,
-  thunderwaveArea,
+  selfOriginCubePushArea,
   thunderwaveSavingThrowOutcomeFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
@@ -99,7 +99,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
         rangeFeet: 0,
         failedSavePostDamageRiders: [],
         postSaveAreaEffect: {
-          kind: "thunderwave",
+          kind: "selfOriginCubePush",
           creaturePush: {
             distanceFeet: 10,
             originDirection: "away_from_caster",
@@ -323,7 +323,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
               { targetId: spellTargetId, succeeded: false },
             ]).value,
             area: {
-              ...thunderwaveArea([spellTargetId], [spellTargetId]),
+              ...selfOriginCubePushArea([spellTargetId], [spellTargetId]),
               creaturePushes: [],
             },
           },
@@ -340,7 +340,7 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
 
   test.each(
     (() => {
-      const area = thunderwaveArea([spellTargetId], [spellTargetId]);
+      const area = selfOriginCubePushArea([spellTargetId], [spellTargetId]);
       return [
         {
           caseName: "a creature push for a target that did not fail",

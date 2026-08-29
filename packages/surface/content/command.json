@@ -44,7 +44,7 @@
         "kind": "save_gate",
         "onFail": {
           "execution": "target_next_turn",
-          "kind": "command_target_next_turn",
+          "kind": "compelled_target_next_turn",
           "options": {
             "approach": {
               "endsTurnWhenWithinFeet": 5,
