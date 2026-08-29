@@ -125,6 +125,7 @@ import {
   type MovablePersistentAreaEffect,
 } from "./persistent-spatial-spell-discovery.ts";
 import { boundPersistentAreaSaveDamageEffect } from "./persistent-area-save-damage-binding.ts";
+import { spellProcedureBoundToActiveEffect } from "./spell-active-effect-binding.ts";
 import {
   canonicalHeldObjectIdsForActor,
   executeCompelledDropHeldObjectFactsHole,
@@ -891,23 +892,30 @@ function controlledVerticalSuspensionAltitudeControlActs(
   return activeControlledVerticalSuspensionTargetsControlledBy(
     state,
     actorId,
-  ).map(({ targetId, effect }) => ({
-    subject: {
-      tag: "runtimeCommand" as const,
-      actorId,
-      command: "controlledVerticalSuspensionAltitudeControl" as const,
-      effectRef: spellActiveEffectExecutionRef(effect),
-      targetId,
-    },
-    initialHoles: [
-      controlledVerticalSuspensionAltitudeChangeHole({
-        actorId,
-        targetId,
-        effectRef: effect.effectRef,
-        maxDistanceFeet: effect.maxAltitudeChangeFeet,
-      }),
-    ],
-  }));
+  ).flatMap(({ targetId, effect }) => {
+    const sourceProcedure = spellProcedureBoundToActiveEffect(state, effect);
+    return sourceProcedure?.procedure === "controlledVerticalSuspension"
+      ? [
+          {
+            subject: {
+              tag: "runtimeCommand" as const,
+              actorId,
+              command: "controlledVerticalSuspensionAltitudeControl" as const,
+              effectRef: spellActiveEffectExecutionRef(effect),
+              targetId,
+            },
+            initialHoles: [
+              controlledVerticalSuspensionAltitudeChangeHole({
+                actorId,
+                targetId,
+                effectRef: effect.effectRef,
+                maxDistanceFeet: sourceProcedure.maxAltitudeChangeFeet,
+              }),
+            ],
+          },
+        ]
+      : [];
+  });
 }
 
 function spellCreatedHeldObjectReleaseActs(

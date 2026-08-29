@@ -606,6 +606,7 @@ export function parseBattleMovement(
   /* v8 ignore stop -- @preserve */
   const controlledVerticalSuspensionMovementValidation =
     validateControlledVerticalSuspensionMovementFact({
+      state,
       combatant: mover,
       fact: fill.value.controlledVerticalSuspensionMovement,
       speedKind: fill.value.speedKind,

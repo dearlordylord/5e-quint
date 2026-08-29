@@ -24,6 +24,7 @@ import type {
   ControlledVerticalSuspensionActiveEffect,
 } from "../battle-state-execution.ts";
 import { Match } from "effect";
+import { spellProcedureBoundToActiveEffect } from "./spell-active-effect-binding.ts";
 
 const CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CHANGE_HOLE_ID = holeId(
   "battle:controlled-vertical-suspension:altitude-change",
@@ -179,6 +180,7 @@ export function controlledVerticalSuspensionTargetWithinRangeFactPresent(input: 
 }
 
 export function validateControlledVerticalSuspensionMovementFact(input: {
+  readonly state: BattleState;
   readonly combatant: BattleCreatureState;
   readonly fact: BattleControlledVerticalSuspensionMovementFact | undefined;
   readonly speedKind: BattleMovementFillValue["speedKind"];
@@ -187,6 +189,7 @@ export function validateControlledVerticalSuspensionMovementFact(input: {
 }): string | null {
   return Match.value(
     controlledVerticalSuspensionMovementEffectAdmission(
+      input.state,
       input.combatant,
       input.fact,
     ),
@@ -209,11 +212,14 @@ type ControlledVerticalSuspensionMovementEffectAdmission =
   | { readonly tag: "invalid"; readonly message: string }
   | {
       readonly tag: "matched";
-      readonly effect: ControlledVerticalSuspensionActiveEffect;
+      readonly effect: ControlledVerticalSuspensionActiveEffect & {
+        readonly maxAltitudeChangeFeet: MovementFeet;
+      };
       readonly fact: BattleControlledVerticalSuspensionMovementFact;
     };
 
 function controlledVerticalSuspensionMovementEffectAdmission(
+  state: BattleState,
   combatant: BattleCreatureState,
   fact: BattleControlledVerticalSuspensionMovementFact | undefined,
 ): ControlledVerticalSuspensionMovementEffectAdmission {
@@ -249,7 +255,21 @@ function controlledVerticalSuspensionMovementEffectAdmission(
     };
   }
   /* v8 ignore stop -- @preserve */
-  return { tag: "matched", effect, fact };
+  const sourceProcedure = spellProcedureBoundToActiveEffect(state, effect);
+  return sourceProcedure?.procedure === "controlledVerticalSuspension"
+    ? {
+        tag: "matched",
+        effect: {
+          ...effect,
+          maxAltitudeChangeFeet: sourceProcedure.maxAltitudeChangeFeet,
+        },
+        fact,
+      }
+    : {
+        tag: "invalid",
+        message:
+          "ControlledVerticalSuspension movement source procedure is unavailable.",
+      };
 }
 
 function validateMatchedControlledVerticalSuspensionMovementFact(
@@ -258,7 +278,9 @@ function validateMatchedControlledVerticalSuspensionMovementFact(
     readonly movementCostFeet: BattleMovementFillValue["movementCostFeet"];
     readonly areaExtraCostFeet: MovementFeet;
   },
-  effect: ControlledVerticalSuspensionActiveEffect,
+  effect: ControlledVerticalSuspensionActiveEffect & {
+    readonly maxAltitudeChangeFeet: MovementFeet;
+  },
   fact: BattleControlledVerticalSuspensionMovementFact,
 ): string | null {
   /* v8 ignore start -- @preserve -- Malformed ControlledVerticalSuspension witness: movement discovery publishes altitude movement only when a fixed object or surface is within reach. */

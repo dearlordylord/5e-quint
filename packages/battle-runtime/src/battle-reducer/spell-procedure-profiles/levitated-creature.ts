@@ -175,13 +175,11 @@ function controlledVerticalSuspensionSpellProjection(
     dc: phase.dc,
     targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
     rangeFeet: movementFeet(60),
+    maxAltitudeChangeFeet: CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CONTROL_FEET,
     maxInitialRiseFeet: CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_FEET,
     activeEffect: {
       kind: "controlledVerticalSuspension",
       sourceCombatantId: actorId,
-      maxAltitudeChangeFeet:
-        CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CONTROL_FEET,
-      rangeFeet: movementFeet(60),
       expiresAt: {
         kind: "concentration",
         combatantId: actorId,
@@ -390,6 +388,7 @@ const ControlledVerticalSuspensionInvocationSchema =
           durationTicks: ElapsedTimeTicksSchema,
         }),
       }),
+      maxAltitudeChangeFeet: MovementFeet,
       maxInitialRiseFeet: MovementFeet,
       rangeFeet: MovementFeet,
     }),

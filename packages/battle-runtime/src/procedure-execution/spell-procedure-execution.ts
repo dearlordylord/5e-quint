@@ -762,6 +762,7 @@ export type ControlledVerticalSuspensionSpellProcedureExecution =
       "sourceProcedureRef" | "effectRef"
     >;
     readonly dc: DcSource;
+    readonly maxAltitudeChangeFeet: MovementFeet;
     readonly maxInitialRiseFeet: MovementFeet;
     readonly procedure: "controlledVerticalSuspension";
     readonly rangeFeet: MovementFeet;

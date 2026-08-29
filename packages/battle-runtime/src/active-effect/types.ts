@@ -161,8 +161,6 @@ export type ControlledVerticalSuspensionActiveEffect = BattleSpellEffectBase &
   BattleReplayAddressableEffect & {
     readonly kind: "controlledVerticalSuspension";
     readonly altitudeFeet: MovementFeet;
-    readonly maxAltitudeChangeFeet: MovementFeet;
-    readonly rangeFeet: MovementFeet;
     readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
   };
 export type BattleUnitFeatureEffectBase = BattleActiveEffectSource;

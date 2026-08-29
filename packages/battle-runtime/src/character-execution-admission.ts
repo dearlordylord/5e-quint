@@ -2038,6 +2038,7 @@ export function spellProcedureExecution(
         actionCost: value.actionCost,
         activeEffect: value.activeEffect,
         dc: value.dc,
+        maxAltitudeChangeFeet: value.maxAltitudeChangeFeet,
         maxInitialRiseFeet: value.maxInitialRiseFeet,
         procedure: value.procedure,
         rangeFeet: value.rangeFeet,

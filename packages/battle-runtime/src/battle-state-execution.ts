@@ -2536,6 +2536,7 @@ export type ControlledVerticalSuspensionSpellInvocation = {
   readonly activeEffect: BattleSpellActiveEffectTemplate<
     Omit<ControlledVerticalSuspensionActiveEffect, "altitudeFeet">
   >;
+  readonly maxAltitudeChangeFeet: MovementFeet;
   readonly maxInitialRiseFeet: MovementFeet;
   readonly rangeFeet: MovementFeet;
 };
