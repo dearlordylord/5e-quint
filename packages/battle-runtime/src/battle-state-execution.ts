@@ -1480,8 +1480,8 @@ export type BattleMovementFillValueCommon = {
 export type BattleOrdinaryMovementFillValue = BattleMovementFillValueCommon & {
   readonly fixedCostMovementReplacement?: BattleFixedCostMovementReplacementFact;
   readonly controlledVerticalSuspensionMovement?: BattleControlledVerticalSuspensionMovementFact;
-  readonly commandApproach?: BattleCommandApproachMovementFact;
-  readonly commandFlee?: BattleCommandFleeMovementFact;
+  readonly compelledApproach?: BattleCompelledApproachMovementFact;
+  readonly compelledFlee?: BattleCompelledFleeMovementFact;
   readonly brutalStrikeForcefulBlow?: never;
   readonly additionalSpeedSegments?: never;
 };
@@ -1489,8 +1489,8 @@ export type BattleBrutalStrikeForcefulBlowMovementFillValue =
   BattleMovementFillValueCommon & {
     readonly fixedCostMovementReplacement?: never;
     readonly controlledVerticalSuspensionMovement?: never;
-    readonly commandApproach?: never;
-    readonly commandFlee?: never;
+    readonly compelledApproach?: never;
+    readonly compelledFlee?: never;
     // The first segment is represented by the common fields above. Later
     // segments make RAW switching between represented Speeds explicit without
     // duplicating the first segment or a derived total distance.
@@ -1589,11 +1589,11 @@ export type BattleCreatureSpaceTraversalMovementFact = {
         readonly positionId: BattleTablePositionId;
       };
 };
-export type BattleCommandApproachMovementFact = {
+export type BattleCompelledApproachMovementFact = {
   readonly kind: "compelledApproachShortestDirectRouteTowardSource";
-  readonly movedWithinFiveFeetOfCaster: boolean;
+  readonly movedWithinFiveFeetOfSource: boolean;
 };
-export type BattleCommandFleeMovementFact = {
+export type BattleCompelledFleeMovementFact = {
   readonly kind: "compelledFleeFastestAvailableRouteAwayFromSource";
 };
 export type BattleBrutalStrikeForcefulBlowMovementFact = {

@@ -1425,6 +1425,56 @@ export type PersistentAreaSaveConditionEscapeSpellProcedureExecution =
     };
   };
 
+/**
+ * Authored-free facts shared by companion admission and the retained-companion
+ * lifecycle. Casting resource settlement remains outside the battle spell
+ * procedure union because ritual casting does not spend a battle action.
+ */
+export type SpawnedCompanionLifecycleExecutionFacts = {
+  readonly procedure: "spawnedCompanionLifecycle";
+  readonly casting: {
+    readonly kind: "ritualOrPreparedSlot";
+    readonly castingTimeMinutes: 60;
+    readonly nonRitualSlotLevel: 1;
+  };
+  readonly initialPlacement: {
+    readonly kind: "unoccupiedSpaceWithinRange";
+    readonly rangeFeet: MovementFeet;
+  };
+  readonly formEligibility: {
+    readonly baseCreatureType: "beast";
+    readonly challengeRating: 0;
+    readonly creatureTypeOverrides: readonly ["celestial", "fey", "fiend"];
+  };
+  readonly lifecycle: {
+    readonly maximumCompanionsPerOwner: 1;
+    readonly recastDisposition: "adoptEligibleForm";
+    readonly zeroHitPointsDisposition: "disappearUntilRecast";
+    readonly temporaryDismissal: {
+      readonly actionCost: "magicAction";
+      readonly destination: "pocketDimension";
+    };
+    readonly recall: {
+      readonly actionCost: "magicAction";
+      readonly destination: "unoccupiedSpaceWithinRange";
+      readonly rangeFeet: MovementFeet;
+    };
+  };
+  readonly control: {
+    readonly initiative: "own";
+    readonly agency: "independentObeysCommands";
+    readonly canAttack: false;
+  };
+  readonly telepathyRangeFeet: MovementFeet;
+  readonly sharedSensesActionCost: "bonusAction";
+  readonly touchSpellProxy: {
+    readonly requiredSpellRange: "touch";
+    readonly companionRangeFeet: MovementFeet;
+    readonly companionActionCost: "reaction";
+    readonly timing: "cast";
+  };
+};
+
 export interface SpellProcedureExecutionByProcedure {
   readonly abilityD20TestRollModeSaveGate: AbilityD20TestRollModeSaveGateSpellProcedureExecution;
   readonly afterHitDamage: AfterHitDamageSpellProcedureExecution;
