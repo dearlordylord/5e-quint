@@ -11,12 +11,7 @@ import {
   type SelectableStandardLanguage,
 } from "@dnd/shared/game-facts";
 import { SUPPORTED_ABILITY_SCORE_METHODS } from "@dnd/shared-algebras/ability-score-algebra";
-import {
-  readBackgroundCreationFacts,
-  readClassCreationFacts,
-  readMagicInitiateSpellAccessSourceFacts,
-  readSpeciesCreationFacts,
-} from "@dnd/surface/surface/character-creation-readers";
+import { readMagicInitiateSpellAccessSourceFacts } from "@dnd/surface/surface/character-creation-readers";
 import {
   allCantripsFromClassSpellList,
   classSpellListForClassName,
@@ -348,6 +343,10 @@ export type ReadableClassCreationFacts = Extract<
   CharacterDefinitionProjection,
   { readonly kind: "class" }
 >["facts"];
+type ReadableSpeciesCreationFacts = Extract<
+  CharacterDefinitionProjection,
+  { readonly kind: "species" }
+>["facts"];
 function discoverClassSpellcastingHoles(
   classUnitId: UnitRecord["id"],
   classLevel: number,
@@ -630,15 +629,15 @@ function discoverAdditionalClassGrantedHoles(
   if (Option.isNone(classUnit)) {
     return [];
   }
-  const facts = readClassCreationFacts(classUnit.value);
-  if (facts.tag !== "readable") {
+  const projection = projectCharacterDefinition(classUnit.value);
+  if (projection.tag !== "readable" || projection.value.kind !== "class") {
     return [];
   }
   /* v8 ignore stop -- @preserve */
 
   return [
     ...discoverClassFeatureGrantHolesInLevelOrder(
-      facts.value.featureGrants,
+      projection.value.facts.featureGrants,
       classLevel,
       draft,
       unitLibrary,
@@ -647,12 +646,12 @@ function discoverAdditionalClassGrantedHoles(
     ),
     ...proficiencyGrantChoiceHoles(
       classUnitId,
-      facts.value.multiclassProficiencies,
+      projection.value.facts.multiclassProficiencies,
     ).flatMap((hole) => unselectedUnitChoiceHole(draft, hole, supportProfile)),
     ...selectedClassFeatureAcquisitionGrantChoiceHoles({
       choices: draft.selections.choices,
       classUnitId,
-      classFacts: facts.value,
+      classFacts: projection.value.facts,
       classLevel,
       unitLibrary,
     }).flatMap((hole) => unselectedUnitChoiceHole(draft, hole, supportProfile)),
@@ -949,8 +948,8 @@ export function discoverBackgroundGrantedHoles(input: {
   if (Option.isNone(backgroundUnit)) {
     return [];
   }
-  const facts = readBackgroundCreationFacts(backgroundUnit.value);
-  if (facts.tag !== "readable") {
+  const projection = projectCharacterDefinition(backgroundUnit.value);
+  if (projection.tag !== "readable" || projection.value.kind !== "background") {
     return [];
   }
   /* v8 ignore stop -- @preserve */
@@ -965,21 +964,21 @@ export function discoverBackgroundGrantedHoles(input: {
         ),
         cardinality: EXACTLY_ONE_CHOICE,
         options: backgroundAbilityScoreIncreaseOptions(
-          facts.value.abilityScoreIncrease.abilities,
+          projection.value.facts.abilityScoreIncrease.abilities,
         ),
       }),
     ),
     ...backgroundToolChoiceHole(
       input.draft,
       unitSource(backgroundUnitId, BACKGROUND_TOOL_CHOICE_KEY),
-      facts.value.toolProficiency,
+      projection.value.facts.toolProficiency,
       input.supportProfile,
     ),
     ...unselectedUnitChoiceHole(
       input.draft,
       startingEquipmentChoiceHole(
         unitSource(backgroundUnitId, BACKGROUND_EQUIPMENT_CHOICE_KEY),
-        facts.value.startingEquipment,
+        projection.value.facts.startingEquipment,
       ),
       input.supportProfile,
     ),
@@ -1007,14 +1006,15 @@ function discoverBackgroundOriginFeatGrantHoles(input: {
   if (Option.isNone(backgroundUnit)) {
     return [];
   }
-  const facts = readBackgroundCreationFacts(backgroundUnit.value);
-  if (facts.tag !== "readable") {
+  const projection = projectCharacterDefinition(backgroundUnit.value);
+  if (projection.tag !== "readable" || projection.value.kind !== "background") {
     return [];
   }
   /* v8 ignore stop -- @preserve */
 
+  const backgroundFacts = projection.value.facts;
   return originFeatGrantChoiceHoles(
-    facts.value.originFeatId,
+    backgroundFacts.originFeatId,
     input.unitLibrary,
     {
       ownedSkillProficiencies: draftOwnedSkillProficiencies(
@@ -1022,7 +1022,7 @@ function discoverBackgroundOriginFeatGrantHoles(input: {
         input.unitLibrary,
         (selection) =>
           selection.kind === "unitChoice" &&
-          selection.source.unitId === facts.value.originFeatId &&
+          selection.source.unitId === backgroundFacts.originFeatId &&
           selection.source.choiceKey === ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
       ),
       ownedToolProficiencies: draftOwnedToolProficiencies(
@@ -1030,7 +1030,7 @@ function discoverBackgroundOriginFeatGrantHoles(input: {
         input.unitLibrary,
         (selection) =>
           selection.kind === "unitChoice" &&
-          selection.source.unitId === facts.value.originFeatId &&
+          selection.source.unitId === backgroundFacts.originFeatId &&
           selection.source.choiceKey === ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
       ),
     },
@@ -1172,13 +1172,13 @@ function selectedSpeciesTraitUnits(input: {
   if (Option.isNone(speciesUnit)) {
     return [];
   }
-  const facts = readSpeciesCreationFacts(speciesUnit.value);
-  if (facts.tag !== "readable") {
+  const projection = projectCharacterDefinition(speciesUnit.value);
+  if (projection.tag !== "readable" || projection.value.kind !== "species") {
     return [];
   }
   /* v8 ignore stop -- @preserve */
 
-  return Object.values(facts.value.traits).flatMap((traitUnitId) => {
+  return Object.values(projection.value.facts.traits).flatMap((traitUnitId) => {
     const traitUnit = input.unitLibrary.getUnit(traitUnitId);
     /* v8 ignore start -- @preserve -- Admitted species facts reference installed species-trait Units in the same catalog. */
     return Option.isSome(traitUnit) && traitUnit.value.kind === "species_trait"
@@ -1363,16 +1363,21 @@ function selectedClassStartingEquipmentUnitIdsForDraft(
   if (classUnitId == null) return [];
   const classUnit = input.unitLibrary.getUnit(classUnitId);
   if (Option.isNone(classUnit)) return [];
-  const classFacts = readClassCreationFacts(classUnit.value);
-  if (classFacts.tag !== "readable") return [];
+  const classProjection = projectCharacterDefinition(classUnit.value);
+  if (
+    classProjection.tag !== "readable" ||
+    classProjection.value.kind !== "class"
+  ) {
+    return [];
+  }
   return startingEquipmentUnitIds(
     selectedStartingEquipmentChoice(
       input.draft,
       startingEquipmentChoiceHole(
         unitSource(classUnitId, CLASS_EQUIPMENT_CHOICE_KEY),
-        classFacts.value.startingEquipment,
+        classProjection.value.facts.startingEquipment,
       ),
-      classFacts.value.startingEquipment,
+      classProjection.value.facts.startingEquipment,
       input.supportProfile,
     ),
   );
@@ -1387,16 +1392,21 @@ function selectedBackgroundStartingEquipmentUnitIdsForDraft(input: {
   if (backgroundUnitId == null) return [];
   const backgroundUnit = input.unitLibrary.getUnit(backgroundUnitId);
   if (Option.isNone(backgroundUnit)) return [];
-  const backgroundFacts = readBackgroundCreationFacts(backgroundUnit.value);
-  if (backgroundFacts.tag !== "readable") return [];
+  const backgroundProjection = projectCharacterDefinition(backgroundUnit.value);
+  if (
+    backgroundProjection.tag !== "readable" ||
+    backgroundProjection.value.kind !== "background"
+  ) {
+    return [];
+  }
   return startingEquipmentUnitIds(
     selectedStartingEquipmentChoice(
       input.draft,
       startingEquipmentChoiceHole(
         unitSource(backgroundUnitId, BACKGROUND_EQUIPMENT_CHOICE_KEY),
-        backgroundFacts.value.startingEquipment,
+        backgroundProjection.value.facts.startingEquipment,
       ),
-      backgroundFacts.value.startingEquipment,
+      backgroundProjection.value.facts.startingEquipment,
       input.supportProfile,
     ),
   );
@@ -1480,9 +1490,14 @@ export function hasSupportedCoinEquipmentPath(input: {
   if (Option.isNone(classUnit) || Option.isNone(backgroundUnit)) {
     return false;
   }
-  const classFacts = readClassCreationFacts(classUnit.value);
-  const backgroundFacts = readBackgroundCreationFacts(backgroundUnit.value);
-  if (classFacts.tag !== "readable" || backgroundFacts.tag !== "readable") {
+  const classProjection = projectCharacterDefinition(classUnit.value);
+  const backgroundProjection = projectCharacterDefinition(backgroundUnit.value);
+  if (
+    classProjection.tag !== "readable" ||
+    classProjection.value.kind !== "class" ||
+    backgroundProjection.tag !== "readable" ||
+    backgroundProjection.value.kind !== "background"
+  ) {
     return false;
   }
   /* v8 ignore stop -- @preserve */
@@ -1492,18 +1507,18 @@ export function hasSupportedCoinEquipmentPath(input: {
       draft,
       startingEquipmentChoiceHole(
         unitSource(classUnitId, CLASS_EQUIPMENT_CHOICE_KEY),
-        classFacts.value.startingEquipment,
+        classProjection.value.facts.startingEquipment,
       ),
-      classFacts.value.startingEquipment,
+      classProjection.value.facts.startingEquipment,
       input.supportProfile,
     ) != null &&
     selectedCoinGrantStartingEquipmentChoice(
       draft,
       startingEquipmentChoiceHole(
         unitSource(backgroundUnitId, BACKGROUND_EQUIPMENT_CHOICE_KEY),
-        backgroundFacts.value.startingEquipment,
+        backgroundProjection.value.facts.startingEquipment,
       ),
-      backgroundFacts.value.startingEquipment,
+      backgroundProjection.value.facts.startingEquipment,
       input.supportProfile,
     ) != null
   );
@@ -2402,13 +2417,13 @@ function draftOwnedFixedClassFeatureLanguages(
       if (Option.isNone(unit)) {
         return [];
       }
-      const facts = readClassCreationFacts(unit.value);
-      if (facts.tag !== "readable") {
+      const projection = projectCharacterDefinition(unit.value);
+      if (projection.tag !== "readable" || projection.value.kind !== "class") {
         return [];
       }
       /* v8 ignore stop -- @preserve */
 
-      return facts.value.featureGrants
+      return projection.value.facts.featureGrants
         .filter(
           (grant) =>
             grant.level <= classLevelForUnit(progression, classUnitId) &&
@@ -2669,16 +2684,20 @@ function draftFixedClassToolProficiencies(
       if (Option.isNone(unit)) {
         return [];
       }
-      const facts = readClassCreationFacts(unit.value);
-      if (facts.tag !== "readable") {
+      const projection = projectCharacterDefinition(unit.value);
+      if (projection.tag !== "readable" || projection.value.kind !== "class") {
         return [];
       }
       /* v8 ignore stop -- @preserve */
 
       const subjects =
         classUnitId === startingUnitId
-          ? fixedClassToolProficiencySubjects(facts.value.toolProficiencies)
-          : fixedProficiencySubjects(facts.value.multiclassProficiencies);
+          ? fixedClassToolProficiencySubjects(
+              projection.value.facts.toolProficiencies,
+            )
+          : fixedProficiencySubjects(
+              projection.value.facts.multiclassProficiencies,
+            );
       return toolProficiencyIdsFromSubjects(subjects);
     }),
   );
@@ -2746,8 +2765,10 @@ function backgroundSkillProficiencies(
   if (Option.isNone(backgroundUnit)) {
     return [];
   }
-  const facts = readBackgroundCreationFacts(backgroundUnit.value);
-  return facts.tag === "readable" ? facts.value.skillProficiencies : [];
+  const projection = projectCharacterDefinition(backgroundUnit.value);
+  return projection.tag === "readable" && projection.value.kind === "background"
+    ? projection.value.facts.skillProficiencies
+    : [];
   /* v8 ignore stop -- @preserve */
 }
 
@@ -2865,8 +2886,10 @@ function backgroundOriginFeatUnitIds(
   if (backgroundUnitId == null) return [];
   const background = unitLibrary.getUnit(backgroundUnitId);
   if (Option.isNone(background)) return [];
-  const facts = readBackgroundCreationFacts(background.value);
-  return facts.tag === "readable" ? [facts.value.originFeatId] : [];
+  const projection = projectCharacterDefinition(background.value);
+  return projection.tag === "readable" && projection.value.kind === "background"
+    ? [projection.value.facts.originFeatId]
+    : [];
 }
 
 export function magicInitiateSpellListsForUnitIds(
@@ -3100,15 +3123,19 @@ export function draftHole(
       return undefined;
     }
     /* v8 ignore stop -- @preserve */
-    const facts = readSpeciesCreationFacts(unit.value);
-    if (facts.tag !== "readable" || facts.value.size.kind !== "choice") {
+    const projection = projectCharacterDefinition(unit.value);
+    if (
+      projection.tag !== "readable" ||
+      projection.value.kind !== "species" ||
+      projection.value.facts.size.kind !== "choice"
+    ) {
       return undefined;
     }
 
     return choiceHole({
       source: draftSource(path),
       cardinality: EXACTLY_ONE_CHOICE,
-      options: facts.value.size.options.map(speciesSizeOption),
+      options: projection.value.facts.size.options.map(speciesSizeOption),
     });
   }
 
@@ -3123,7 +3150,11 @@ export function draftHole(
       return undefined;
     }
     /* v8 ignore stop -- @preserve */
-    const source = draconicAncestryDamageTypeSource(unit.value);
+    const projection = projectCharacterDefinition(unit.value);
+    if (projection.tag !== "readable" || projection.value.kind !== "species") {
+      return undefined;
+    }
+    const source = draconicAncestryDamageTypeSource(projection.value.facts);
     if (source === undefined) {
       return undefined;
     }
@@ -3177,10 +3208,10 @@ function speciesSizeOption(size: Extract<Size, "medium" | "small">) {
 }
 
 function draconicAncestryDamageTypeSource(
-  unit: UnitRecord,
+  facts: ReadableSpeciesCreationFacts,
 ): DragonbornSpeciesRecord["draconicAncestry"]["damageType"] | undefined {
-  return unit.kind === "species" && "draconicAncestry" in unit
-    ? unit.draconicAncestry.damageType
+  return "draconicAncestry" in facts
+    ? facts.draconicAncestry.damageType
     : undefined;
 }
 

@@ -271,6 +271,29 @@ describe("Character Definition static projection", () => {
         surface: completeSurface,
       }).tag,
     ).toBe("admitted");
+
+    const alteredRoot = Schema.decodeUnknownSync(SrdUnitRecordSchema, {
+      onExcessProperty: "error",
+    })({
+      ...classRoot,
+      hitPointDie: classRoot.hitPointDie === 6 ? 8 : 6,
+    });
+    expect(
+      admitCharacterDefinitionMechanicsGraph({
+        unit: alteredRoot,
+        surface: completeSurface,
+      }),
+    ).toMatchObject({
+      tag: "rejected",
+      issues: [
+        expect.objectContaining({
+          reason: "ambiguous_mechanics",
+          mechanicsPath: unitMechanicsPath([
+            { kind: "singleton", role: "recordMechanics" },
+          ]),
+        }),
+      ],
+    });
   });
 
   test("reports a missing authored dependency at a mechanics path", () => {
@@ -398,6 +421,79 @@ describe("Character Definition static projection", () => {
               ordinal: PositiveInteger(malformedLinkIndex + 1),
             },
           ]),
+        }),
+      ],
+    });
+  });
+
+  test("rejects a subclass choice owned by a different class", () => {
+    const classRoot = characterDefinitionRoots.find(
+      (
+        unit,
+      ): unit is Extract<CharacterDefinitionRoot, { readonly kind: "class" }> =>
+        unit.kind === "class" && unit.className === "fighter",
+    );
+    const otherClassSubclass = characterDefinitionRoots.find(
+      (
+        unit,
+      ): unit is Extract<
+        CharacterDefinitionRoot,
+        { readonly kind: "subclass" }
+      > => unit.kind === "subclass" && unit.className !== "fighter",
+    );
+    if (classRoot === undefined || otherClassSubclass === undefined) {
+      throw new Error(
+        "The SRD test catalog must contain fighter and another class subclass.",
+      );
+    }
+    const firstChoice = classRoot.subclassChoices[0];
+    if (firstChoice === undefined) {
+      throw new Error("The fighter root must contain a subclass choice.");
+    }
+    const malformed = Schema.decodeUnknownSync(SrdUnitRecordSchema, {
+      onExcessProperty: "error",
+    })({
+      ...classRoot,
+      subclassChoices: [
+        {
+          ...firstChoice,
+          options: [otherClassSubclass.id, ...firstChoice.options.slice(1)],
+        },
+        ...classRoot.subclassChoices.slice(1),
+      ],
+    });
+    const malformedLinkIndex = characterDefinitionRootRelations(
+      malformed,
+    ).findIndex((link) =>
+      link.fieldPath.endsWith("subclassChoices[0].options[0]"),
+    );
+    if (malformedLinkIndex < 0) {
+      throw new Error("The malformed class must retain its subclass link.");
+    }
+
+    const result = admitCharacterDefinitionMechanicsGraph({
+      unit: malformed,
+      surface: surfaceWithUnits(
+        completeSurface.units.map((unit) =>
+          unit.id === classRoot.id ? malformed : unit,
+        ),
+      ),
+    });
+
+    expect(result).toMatchObject({
+      tag: "rejected",
+      issues: [
+        expect.objectContaining({
+          reason: "ambiguous_mechanics",
+          mechanicsPath: unitMechanicsPath([
+            { kind: "singleton", role: "recordMechanics" },
+            {
+              kind: "occurrence",
+              role: "reference",
+              ordinal: PositiveInteger(malformedLinkIndex + 1),
+            },
+          ]),
+          message: expect.stringContaining("must belong to fighter"),
         }),
       ],
     });

@@ -38,6 +38,7 @@ import {
   StandardActionKindSchema,
   surfaceSchemaRole,
   type SurfaceIdentityKind,
+  type SurfaceLinkSourceRole,
   type SurfaceProjectionKind,
   type SurfaceProtocolKind,
   type SurfaceUnitDependencyRelation,
@@ -96,12 +97,17 @@ const surfaceProjection = <A extends string, I, RD, RE>(
 const surfaceReference = <A extends string, I, RD, RE>(
   schema: Schema.Codec<A, I, RD, RE>,
   relation: SurfaceUnitReferenceRelation,
+  sourceRole?: SurfaceLinkSourceRole,
 ): Schema.Codec<UnitIdType, I, RD, RE> => {
-  const role = {
-    category: "reference",
-    relation,
-    targetKind: "unit",
-  } as const;
+  const role =
+    sourceRole === undefined
+      ? ({ category: "reference", relation, targetKind: "unit" } as const)
+      : ({
+          category: "reference",
+          relation,
+          targetKind: "unit",
+          sourceRole,
+        } as const);
   return surfaceSchemaRole(
     surfaceSchemaRole(schema, role).pipe(Schema.decodeTo(UnitId)),
     role,
@@ -111,12 +117,17 @@ const surfaceReference = <A extends string, I, RD, RE>(
 const surfaceDependency = <A extends string, I, RD, RE>(
   schema: Schema.Codec<A, I, RD, RE>,
   relation: SurfaceUnitDependencyRelation,
+  sourceRole?: SurfaceLinkSourceRole,
 ): Schema.Codec<UnitIdType, I, RD, RE> => {
-  const role = {
-    category: "dependency",
-    relation,
-    targetKind: "unit",
-  } as const;
+  const role =
+    sourceRole === undefined
+      ? ({ category: "dependency", relation, targetKind: "unit" } as const)
+      : ({
+          category: "dependency",
+          relation,
+          targetKind: "unit",
+          sourceRole,
+        } as const);
   return surfaceSchemaRole(
     surfaceSchemaRole(schema, role).pipe(Schema.decodeTo(UnitId)),
     role,
@@ -2659,7 +2670,11 @@ export const StartingEquipmentChoiceSchema = Schema.Union([
 ]);
 
 export const ClassFeatureGrantSchema = Schema.Struct({
-  unitId: surfaceDependency(NonEmptyStringSchema, "unit-reference"),
+  unitId: surfaceDependency(
+    NonEmptyStringSchema,
+    "unit-reference",
+    "class-feature-grant",
+  ),
   level: PositiveIntegerSchema,
 });
 
@@ -3411,7 +3426,11 @@ const ClassRecordBaseFields = {
     Schema.Struct({
       level: PositiveIntegerSchema,
       options: Schema.NonEmptyArray(
-        surfaceReference(NonEmptyStringSchema, "subclass-choice"),
+        surfaceReference(
+          NonEmptyStringSchema,
+          "subclass-choice",
+          "class-subclass-choice",
+        ),
       ),
     }),
   ),

@@ -1,6 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.species-lineage-trait-projection
 import { Result, Option } from "effect";
-import { readSpeciesCreationFacts } from "@dnd/surface/surface/character-creation-readers";
 import type {
   GnomishLineageMechanics,
   SpeciesTraitRecord,
@@ -12,6 +11,7 @@ import type {
   UnitCatalog,
 } from "./types.ts";
 import { GNOMISH_LINEAGE_CHOICE_KEY } from "./phase1-manifest.ts";
+import { projectCharacterDefinition } from "./character-definition-projection.ts";
 
 type GnomishLineageTraitUnit = SpeciesTraitRecord & {
   readonly mechanics: GnomishLineageMechanics;
@@ -96,14 +96,17 @@ function gnomishLineageSourceForBuild(input: {
     );
   }
 
-  const speciesFacts = readSpeciesCreationFacts(speciesUnit.value);
-  if (speciesFacts.tag !== "readable") {
+  const speciesProjection = projectCharacterDefinition(speciesUnit.value);
+  if (
+    speciesProjection.tag !== "readable" ||
+    speciesProjection.value.kind !== "species"
+  ) {
     return projectionIssue(
       "Selected Gnomish Lineage requires a readable species Unit.",
     );
   }
 
-  const sources = Object.values(speciesFacts.value.traits).flatMap(
+  const sources = Object.values(speciesProjection.value.facts.traits).flatMap(
     (traitUnitId): readonly GnomishLineageSource[] => {
       const traitUnit = input.unitLibrary.getUnit(traitUnitId);
       if (
