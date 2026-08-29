@@ -973,3 +973,66 @@ The static RAW/ubiquitous-language, architecture/connascence, API, identity,
 and ownership passes converged with the dependency-backed QNT, runtime, and MBT
 evidence above. This evidence records the verified integration revision; it
 does not claim that `quality:milestone` ran.
+
+## Issue #383 MCP schemas, protocols, and lifecycle evidence snapshot
+
+This section records clean integration verification at source revision
+`e31deed2676527c0a54863d5fe362d818f9c8bf1` for the #383 MCP migration. The
+canonical Effect 4 schema seam decodes the original transport codec, preserving
+encoded-wire behavior such as `NumberFromString`; it does not decode only the
+codec's type-side projection. HTTP, stdio, OAuth, saved-session, admin, and
+public-server lifecycle paths use the migrated Effect 4 contracts. Expected
+transport and lifecycle failures remain typed and observable. The shipped
+public-server probe owns each attached client transport exactly once and
+exercises graceful SIGTERM completion while an MCP request is active.
+
+The immutable historical certificate remains a separate oracle lane. The
+current shipped public entry point is exercised with its full normalized
+27-tool definition and representative stdio calls, but its result is not
+serialized into the historical oracle. The whole immutable comparison reaches
+the intentional controlled delta: the Effect 4 candidate is 51,966,797 bytes
+and the Effect 3 oracle is 12,997,527 bytes. This is not recorded as a green
+comparison. Eliminating the differences or admitting them through the reviewed
+finite delta certificate remains owned by #386.
+
+### RAW, ubiquitous language, and identity boundary
+
+The local SRD 5.2.1 corpus was searched in bounded `rg -uu` commands and the
+likely files were then inspected directly. The retained companion behavior is
+grounded by `Spells/Descriptions-E-L.md#Find-Familiar`: the familiar uses the
+chosen Beast statistics, acts on its own initiative, and disappears at 0 Hit
+Points. `Monsters/Overview.md#Hit-Points`, `Rules-Glossary.md#Hit-Points`, and
+`Playing-the-Game.md#Hit-Points` provide the directly inspected Hit Point and
+damage boundaries. Existing assumptions A46 and A47 continue to identify the
+choices left outside those passages. Dice limits in this lane are transport
+work budgets, not D&D rules.
+
+The migration adds no rule behavior, authored-identity dispatch, PHB+ content,
+or provenance change. The existing ubiquitous-language and runtime ownership
+boundaries remain intact: transport schemas admit and project inputs while the
+runtime consumes typed facts rather than names, ids, slugs, or provenance.
+
+### Verification and review convergence
+
+- `pnpm --filter @dnd/mcp typecheck --pretty false`: passed.
+- Focused schema, stdio, and authorization service tests: 3 files and 13 tests
+  passed.
+- Operational saved-session smoke tests: 1 file and 3 tests passed.
+- Clean broad MCP suite excluding the intentionally red immutable baseline:
+  56 files and 412 tests passed in 184.94 seconds.
+- Controlled-red diagnostic inventory: 125 raw and 125 deduplicated
+  diagnostics; `@dnd/mcp` has zero. The remaining owners are app (60),
+  battle-runtime (62), and character-sheet-runtime (3). Inventory SHA-256:
+  `ded8ee2d2924af59d5cd9b1504282a04097346c8d101f0dea6e5a1baf3fa7bfe`.
+- The baseline live-process probe completed its shipped-server assertions and
+  then reached only the explicit 51,966,797-byte versus 12,997,527-byte global
+  oracle mismatch described above.
+
+The repeated two-axis review against fixed point `f7343b470` converged with no
+remaining findings. The Standards axis passed after checking the repository
+rules, local RAW traceability, ubiquitous language, architecture/connascence,
+authored identity, provenance, and PHB+ boundaries. The Spec axis passed for
+#383 after the encoded-schema, interruption, live-entry-point, in-flight
+shutdown, and exact-once cleanup corrections. The global immutable-oracle delta
+is explicitly retained for its #386 owner and is not counted as #383 green
+evidence. `pnpm quality:milestone` was not run for this issue snapshot.
