@@ -2943,7 +2943,8 @@
         "packages/battle-runtime/src/battle-reducer/statblock-attacks.ts",
         "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
         "packages/battle-runtime/src/statblock-attack-hit-condition-support.ts",
-        "packages/battle-runtime/src/battle-reducer/statblock-attack-hit-condition-riders.ts"
+        "packages/battle-runtime/src/battle-reducer/statblock-attack-hit-condition-riders.ts",
+        "packages/battle-runtime/src/procedure-admission/stat-block-procedure-execution-decision.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -3069,7 +3070,8 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/stat-block-authored-projection.ts",
         "packages/battle-runtime/src/stat-block-execution-state.ts",
-        "packages/battle-runtime/src/stat-block-execution.ts"
+        "packages/battle-runtime/src/stat-block-execution.ts",
+        "packages/battle-runtime/src/procedure-admission/stat-block-procedure-execution-decision.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
