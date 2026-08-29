@@ -19,19 +19,23 @@ import type {
   SrdStatBlockRecord,
   SrdSurface,
   StatBlockProcedureEntry,
+  StatBlockProcedureOrdinal,
+  StatBlockProcedureResourceOrdinal,
   StatBlockReactionSection,
   StatBlockSpellReference,
   AuthoredStatBlockReactionTrigger,
   StandaloneStatBlock,
 } from "@dnd/surface/surface/types";
 
-import { authoredStatBlockProcedureExecutionDecision } from "./stat-block-authored-projection.ts";
 import { statBlockTraitSupport } from "./statblock-action-execution-support.ts";
-import { creatureAttackRollMechanicsAreSupported } from "./statblock-attack-execution-mechanics.ts";
-import { supportedStatBlockAttackHitConditionRiderEffect } from "./statblock-attack-hit-condition-support.ts";
+import {
+  statBlockAttackMechanicsSupport,
+  statBlockProcedureEffectIsSupported,
+} from "./statblock-attack-execution-mechanics.ts";
 import { parseStatBlockRuntimeResource } from "./stat-block-execution-state.ts";
 import { admitStatBlockSpellInvocationDeltas } from "./procedure-admission/stat-block-spell-invocation-deltas.ts";
-import type { StatBlockActionProjectionSection } from "./stat-block-presentation-contract.ts";
+import { authoredStatBlockProcedureExecutionDecision } from "./procedure-admission/stat-block-procedure-execution-decision.ts";
+import type { StatBlockProcedureSection } from "./procedure-execution/stat-block-procedure-sections.ts";
 
 type AdmissionIssue =
   StatBlockMechanicsAdmissionIssueDraft<StatBlockMechanicsPath>;
@@ -73,7 +77,7 @@ type Section = {
     MechanicsGraphPathNode,
     { readonly kind: "singleton" }
   >["role"];
-  readonly section: StatBlockActionProjectionSection;
+  readonly section: StatBlockProcedureSection;
   readonly entries: readonly AnyProcedureEntry[] | undefined;
 };
 
@@ -94,12 +98,18 @@ export function admitCompleteStatBlockMechanicsGraph(
   const issues: AdmissionIssue[] = [];
   const source = input.statBlock.statBlock;
   const unitIds = new Set(input.surface.units.map((unit) => String(unit.id)));
+  const spellUnitIds = new Set(
+    input.surface.units
+      .filter((unit) => unit.kind === "spell")
+      .map((unit) => String(unit.id)),
+  );
   const resourceOrdinals = inspectResources(source, issues);
   inspectGeneralFacts(source, issues);
   inspectTraits(source.traits, issues);
   const admittedProcedureCount = inspectSections(
     source,
     unitIds,
+    spellUnitIds,
     resourceOrdinals,
     issues,
   );
@@ -213,13 +223,21 @@ function inspectGeneralSwarmFact(
 function inspectSections(
   source: StandaloneStatBlock,
   unitIds: ReadonlySet<string>,
+  spellUnitIds: ReadonlySet<string>,
   resourceOrdinals: ReadonlySet<number>,
   issues: AdmissionIssue[],
 ): number {
   return sections(source).reduce(
     (admittedProcedureCount, section) =>
       admittedProcedureCount +
-      inspectSection(source, unitIds, resourceOrdinals, section, issues),
+      inspectSection(
+        source,
+        unitIds,
+        spellUnitIds,
+        resourceOrdinals,
+        section,
+        issues,
+      ),
     0,
   );
 }
@@ -227,6 +245,7 @@ function inspectSections(
 function inspectSection(
   source: StandaloneStatBlock,
   unitIds: ReadonlySet<string>,
+  spellUnitIds: ReadonlySet<string>,
   resourceOrdinals: ReadonlySet<number>,
   section: Section,
   issues: AdmissionIssue[],
@@ -251,6 +270,7 @@ function inspectSection(
     inspectProcedureEntry(
       source,
       unitIds,
+      spellUnitIds,
       resourceOrdinals,
       section,
       entry,
@@ -270,7 +290,7 @@ function inspectTraits(
 ): void {
   if (traits === undefined) return;
   for (const [index, trait] of traits.entries()) {
-    const traitPath = path(occurrence("trait", index + 1));
+    const traitPath = path(occurrenceAt("trait", index));
     const support = statBlockTraitSupport(trait);
     if (support.kind !== "supported") {
       addIssue(
@@ -290,7 +310,7 @@ function inspectResources(
   const ordinals = new Set<number>();
   for (const resource of source.resources ?? []) {
     const ordinal = Number(resource.ordinal);
-    const resourcePath = path(occurrence("resource", ordinal));
+    const resourcePath = path(occurrence("resource", resource.ordinal));
     if (ordinals.has(ordinal)) {
       addIssue(
         issues,
@@ -323,7 +343,7 @@ function inspectLegendaryUses(
   addIssue(
     issues,
     "ambiguous_mechanics",
-    path(occurrence("legendaryAction", 1), {
+    path(occurrenceAt("legendaryAction", 0), {
       kind: "singleton",
       role: "extension",
     }),
@@ -334,6 +354,7 @@ function inspectLegendaryUses(
 function inspectProcedureEntry(
   source: StandaloneStatBlock,
   unitIds: ReadonlySet<string>,
+  spellUnitIds: ReadonlySet<string>,
   resourceOrdinals: ReadonlySet<number>,
   section: Section,
   entry: AnyProcedureEntry,
@@ -364,6 +385,7 @@ function inspectProcedureEntry(
     inspectReactionTrigger(
       entry.trigger,
       unitIds,
+      spellUnitIds,
       append(entryPath, { kind: "singleton", role: "extension" }),
       issues,
     );
@@ -386,7 +408,7 @@ function inspectProcedureEntry(
 
   inspectProcedureChildren(
     source,
-    unitIds,
+    spellUnitIds,
     resourceOrdinals,
     section,
     entry,
@@ -397,7 +419,7 @@ function inspectProcedureEntry(
 
 function inspectProcedureChildren(
   source: StandaloneStatBlock,
-  unitIds: ReadonlySet<string>,
+  spellUnitIds: ReadonlySet<string>,
   resourceOrdinals: ReadonlySet<number>,
   section: Section,
   entry: AnyProcedureEntry,
@@ -412,8 +434,8 @@ function inspectProcedureChildren(
   const procedure = entry.procedure;
   Match.value(procedure).pipe(
     Match.when({ kind: "attack_roll" }, (attack) => {
-      inspectEffects(
-        attack.onHit,
+      inspectAttackEffects(
+        attack,
         append(entryPath, { kind: "singleton", role: "procedure" }),
         issues,
       );
@@ -446,7 +468,7 @@ function inspectProcedureChildren(
     Match.when({ kind: "spellcasting" }, (spellcasting) => {
       inspectSpellcasting(
         spellcasting.groups,
-        unitIds,
+        spellUnitIds,
         resourceOrdinals,
         procedurePath,
         issues,
@@ -463,42 +485,54 @@ function inspectEffects(
   issues: AdmissionIssue[],
 ): void {
   for (const [index, effect] of effects.entries()) {
-    if (effectIsSupported(effect)) continue;
+    if (statBlockProcedureEffectIsSupported(effect)) continue;
     addIssue(
       issues,
       "unsupported_mechanics",
       append(procedurePath, {
         kind: "occurrence",
         role: "effect",
-        ordinal: positive(index + 1),
+        ordinal: occurrenceOrdinalAt(index),
       }),
       "The Stat Block procedure effect has no executable support owner.",
     );
   }
 }
 
-function effectIsSupported(effect: ProcedureEffect): boolean {
-  return Match.value(effect).pipe(
-    Match.when({ kind: "damage" }, () => true),
-    Match.when(
-      { kind: "conditional_bonus_damage" },
-      (bonus) => bonus.when.kind === "attack_roll_had_advantage",
-    ),
-    Match.when(
-      { kind: "apply_condition_if_target_size_at_most" },
-      (condition) =>
-        supportedStatBlockAttackHitConditionRiderEffect(condition) !== null,
-    ),
-    Match.when({ kind: "apply_condition" }, () => false),
-    Match.exhaustive,
+function inspectAttackEffects(
+  attack: AttackProcedure,
+  procedurePath: StatBlockMechanicsPath,
+  issues: AdmissionIssue[],
+): void {
+  const support = statBlockAttackMechanicsSupport(
+    authoredAttackMechanics(attack),
   );
+  if (support.kind !== "unsupported") return;
+  for (const issue of support.issues) {
+    if (issue.kind !== "unsupportedEffect") continue;
+    addIssue(
+      issues,
+      "unsupported_mechanics",
+      append(procedurePath, {
+        kind: "occurrence",
+        role: "effect",
+        ordinal: issue.effectOrdinal,
+      }),
+      "The Stat Block procedure effect has no executable support owner.",
+    );
+  }
+}
+
+function authoredAttackMechanics(attack: AttackProcedure) {
+  const { kind: _kind, name: _name, ...mechanics } = attack;
+  return mechanics;
 }
 
 function inspectMultiattackDispatches(
   source: StandaloneStatBlock,
   section: Section,
   dispatches: readonly {
-    readonly procedureOrdinal: number;
+    readonly procedureOrdinal: StatBlockProcedureOrdinal;
   }[],
   entryPath: StatBlockMechanicsPath,
   issues: AdmissionIssue[],
@@ -507,8 +541,9 @@ function inspectMultiattackDispatches(
     (source.actions ?? []).flatMap((entry) =>
       entry.kind === "executable" &&
       entry.procedure.kind === "attack_roll" &&
-      attackMechanicsAreSupported(entry)
-        ? [Number(entry.procedureOrdinal)]
+      statBlockAttackMechanicsSupport(authoredAttackMechanics(entry.procedure))
+        .kind === "supported"
+        ? [entry.procedureOrdinal]
         : [],
     ),
   );
@@ -516,11 +551,11 @@ function inspectMultiattackDispatches(
     const dispatchPath = append(entryPath, {
       kind: "occurrence",
       role: "reference",
-      ordinal: positive(index + 1),
+      ordinal: occurrenceOrdinalAt(index),
     });
     if (
       section.section !== "actions" ||
-      !supportedAttackOrdinals.has(Number(dispatch.procedureOrdinal))
+      !supportedAttackOrdinals.has(dispatch.procedureOrdinal)
     ) {
       addIssue(
         issues,
@@ -532,17 +567,9 @@ function inspectMultiattackDispatches(
   }
 }
 
-function attackMechanicsAreSupported(
-  entry: Extract<StatBlockProcedureEntry, { readonly kind: "executable" }>,
-): boolean {
-  if (entry.procedure.kind !== "attack_roll") return false;
-  const { kind: _kind, name: _name, ...attack } = entry.procedure;
-  return creatureAttackRollMechanicsAreSupported(attack);
-}
-
 function inspectSpellcasting(
   groups: SpellcastingProcedure["groups"],
-  unitIds: ReadonlySet<string>,
+  spellUnitIds: ReadonlySet<string>,
   resourceOrdinals: ReadonlySet<number>,
   entryPath: StatBlockMechanicsPath,
   issues: AdmissionIssue[],
@@ -551,7 +578,7 @@ function inspectSpellcasting(
     const groupPath = append(entryPath, {
       kind: "occurrence",
       role: "extension",
-      ordinal: positive(groupIndex + 1),
+      ordinal: occurrenceOrdinalAt(groupIndex),
     });
     addIssue(
       issues,
@@ -570,11 +597,11 @@ function inspectSpellcasting(
     for (const [spellIndex, spell] of group.spells.entries()) {
       inspectSpellReference(
         spell,
-        unitIds,
+        spellUnitIds,
         append(groupPath, {
           kind: "occurrence",
           role: "reference",
-          ordinal: positive(spellIndex + 1),
+          ordinal: occurrenceOrdinalAt(spellIndex),
         }),
         issues,
       );
@@ -584,11 +611,11 @@ function inspectSpellcasting(
 
 function inspectSpellReference(
   spell: StatBlockSpellReference,
-  unitIds: ReadonlySet<string>,
+  spellUnitIds: ReadonlySet<string>,
   spellPath: StatBlockMechanicsPath,
   issues: AdmissionIssue[],
 ): void {
-  if (!unitIds.has(String(spell.spellId))) {
+  if (!spellUnitIds.has(String(spell.spellId))) {
     addIssue(
       issues,
       "incomplete_graph",
@@ -613,7 +640,7 @@ function inspectSpellReference(
       append(spellPath, {
         kind: "occurrence",
         role: "extension",
-        ordinal: positive(index + 1),
+        ordinal: occurrenceOrdinalAt(index),
       }),
       "The Stat Block spell invocation extension has no executable support owner.",
     );
@@ -623,6 +650,7 @@ function inspectSpellReference(
 function inspectReactionTrigger(
   trigger: AuthoredStatBlockReactionTrigger,
   unitIds: ReadonlySet<string>,
+  spellUnitIds: ReadonlySet<string>,
   triggerPath: StatBlockMechanicsPath,
   issues: AdmissionIssue[],
 ): void {
@@ -636,7 +664,7 @@ function inspectReactionTrigger(
     Match.when({ kind: "targeted_by_named_spell" }, (namedSpell) => {
       inspectReferencedUnit(
         namedSpell.spellId,
-        unitIds,
+        spellUnitIds,
         append(triggerPath, { kind: "singleton", role: "reference" }),
         issues,
       );
@@ -655,10 +683,11 @@ function inspectReactionTrigger(
         inspectReactionTrigger(
           child,
           unitIds,
+          spellUnitIds,
           append(triggerPath, {
             kind: "occurrence",
             role: "extension",
-            ordinal: positive(index + 1),
+            ordinal: occurrenceOrdinalAt(index),
           }),
           issues,
         );
@@ -699,7 +728,7 @@ function inspectResourceReferences(
     addIssue(
       issues,
       "incomplete_graph",
-      append(entryPath, occurrence("dependency", Number(ordinal))),
+      append(entryPath, occurrence("dependency", ordinal)),
       "The Stat Block procedure references an undeclared resource.",
     );
   }
@@ -779,9 +808,9 @@ function sections(source: StandaloneStatBlock): readonly Section[] {
 
 function procedurePath(
   section: Section,
-  ordinal: number,
+  ordinal: StatBlockProcedureOrdinal,
 ): StatBlockMechanicsPath {
-  return path(occurrence(section.role, Number(ordinal)));
+  return path(occurrence(section.role, ordinal));
 }
 
 function path(
@@ -804,17 +833,27 @@ function append(
 
 function occurrence(
   role: Extract<MechanicsGraphPathNode, { readonly kind: "singleton" }>["role"],
-  ordinal: number,
+  ordinal:
+    | PositiveInteger
+    | StatBlockProcedureOrdinal
+    | StatBlockProcedureResourceOrdinal,
 ): MechanicsGraphPathNode {
-  const parsed = PositiveInteger.either(ordinal);
-  return Either.isRight(parsed)
-    ? { kind: "occurrence", role, ordinal: parsed.right }
-    : { kind: "singleton", role };
+  return {
+    kind: "occurrence",
+    role,
+    ordinal: PositiveInteger(Number(ordinal)),
+  };
 }
 
-function positive(value: number): PositiveInteger {
-  const parsed = PositiveInteger.either(value);
-  return Either.isRight(parsed) ? parsed.right : PositiveInteger(1);
+function occurrenceAt(
+  role: Extract<MechanicsGraphPathNode, { readonly kind: "singleton" }>["role"],
+  index: number,
+): MechanicsGraphPathNode {
+  return occurrence(role, occurrenceOrdinalAt(index));
+}
+
+function occurrenceOrdinalAt(index: number): PositiveInteger {
+  return PositiveInteger(index + 1);
 }
 
 function addIssue(

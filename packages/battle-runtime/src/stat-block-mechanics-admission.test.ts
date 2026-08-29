@@ -2,6 +2,7 @@ import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import armorChainMailInput from "../../surface/content/armor_chain_mail.json";
+import magicMissileInput from "../../surface/content/magic_missile.json";
 import goblinWarriorInput from "../../surface/content/stat_block_goblin_warrior.json";
 import { statBlockId } from "@dnd/shared/game-facts";
 import {
@@ -26,7 +27,7 @@ const decode = (input: unknown): SrdStatBlockRecord =>
 
 const surface = decodeSrdSurfaceSync({
   kind: "srd-5.2.1-surface-catalog",
-  units: [armorChainMailInput],
+  units: [armorChainMailInput, magicMissileInput],
   statBlocks: [goblinWarriorInput],
 });
 
@@ -107,6 +108,16 @@ describe("complete Stat Block mechanics admission", () => {
         ],
       },
     };
+    const bonusAction = {
+      kind: "executable" as const,
+      procedureOrdinal: 1,
+      procedure: {
+        kind: "action_option" as const,
+        name: "Synthetic Unsupported Bonus Action",
+        options: ["attack" as const],
+      },
+      resourceRefs: { kind: "none" as const },
+    };
     const record = decode({
       ...source,
       statBlock: {
@@ -123,9 +134,14 @@ describe("complete Stat Block mechanics admission", () => {
           },
         ],
         actions: [malformedAction, originalLegendaryAction],
+        bonusActions: [bonusAction],
         reactions: [reaction],
         legendaryActions: {
-          uses: { kind: "fixed", uses: 3 },
+          uses: {
+            kind: "lair_bonus",
+            usesOutsideLair: 2,
+            additionalUsesInLair: 1,
+          },
           entries: [originalLegendaryAction],
         },
       },
@@ -155,10 +171,12 @@ describe("complete Stat Block mechanics admission", () => {
         ["trait"],
         ["action", "procedure"],
         ["action", "procedure", "effect"],
+        ["bonusAction", "procedure"],
         ["reaction"],
         ["reaction", "extension"],
         ["reaction", "extension", "extension"],
         ["reaction", "extension", "extension", "reference"],
+        ["legendaryAction", "extension"],
       ]),
     );
   });
@@ -247,13 +265,18 @@ describe("complete Stat Block mechanics admission", () => {
   });
 
   test("reports spellcasting groups, references, and restriction extensions separately", () => {
-    const record = decode({
+    const decodedRecord = decode({
       ...goblinWarriorInput,
       statBlock: {
         ...source.statBlock,
         resources: [
           {
             ordinal: 1,
+            ownership: "shared" as const,
+            limit: { kind: "daily" as const, uses: 1 },
+          },
+          {
+            ordinal: 2,
             ownership: "shared" as const,
             limit: { kind: "daily" as const, uses: 1 },
           },
@@ -275,7 +298,7 @@ describe("complete Stat Block mechanics admission", () => {
                   },
                   spells: [
                     {
-                      spellId: armorChainMailInput.id,
+                      spellId: magicMissileInput.id,
                       restriction: {
                         authoredExpression: "synthetic restriction",
                         deltas: [
@@ -286,6 +309,8 @@ describe("complete Stat Block mechanics admission", () => {
                         ],
                       },
                     },
+                    { spellId: armorChainMailInput.id },
+                    { spellId: "unit_missing_synthetic_spell" },
                   ],
                 },
               ],
@@ -295,6 +320,20 @@ describe("complete Stat Block mechanics admission", () => {
         ],
       },
     });
+    // Deliberately remove the declaration after schema decoding so the
+    // profile's nested dependency path is exercised at its typed boundary.
+    const decodedResources = decodedRecord.statBlock.resources;
+    const declaredSecondResource = decodedResources?.[1];
+    if (declaredSecondResource === undefined) {
+      throw new Error("Expected the synthetic resource fixture.");
+    }
+    const record: SrdStatBlockRecord = {
+      ...decodedRecord,
+      statBlock: {
+        ...decodedRecord.statBlock,
+        resources: [declaredSecondResource],
+      },
+    };
 
     const result = admitCompleteStatBlockMechanicsGraph({
       statBlock: record,
@@ -309,8 +348,19 @@ describe("complete Stat Block mechanics admission", () => {
     expect(paths).toEqual(
       expect.arrayContaining([
         ["action", "procedure", "extension"],
+        ["action", "procedure", "extension", "dependency"],
         ["action", "procedure", "extension", "reference"],
         ["action", "procedure", "extension", "reference", "extension"],
+      ]),
+    );
+    const incompletePaths = result.issues
+      .filter(({ reason }) => reason === "incomplete_graph")
+      .map(({ mechanicsPath }) => mechanicsPath.nodes.at(-1));
+    expect(incompletePaths).toEqual(
+      expect.arrayContaining([
+        { kind: "occurrence", role: "dependency", ordinal: 1 },
+        { kind: "occurrence", role: "reference", ordinal: 2 },
+        { kind: "occurrence", role: "reference", ordinal: 3 },
       ]),
     );
   });
