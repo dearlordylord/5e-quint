@@ -61,8 +61,8 @@ describe("battle runtime: Barbarian Retaliation", () => {
       battleCheckpointFrontierEnvelope(awaitingRetaliation.state),
     );
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           encoded,
         ),
       ),

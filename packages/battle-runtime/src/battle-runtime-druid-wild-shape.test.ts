@@ -32,8 +32,7 @@ import {
 import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import druidWildShapeInput from "../../surface/content/druid_wild_shape.json";
-import { Schema } from "effect";
-import { Result } from "effect";
+import { Result, Schema } from "effect";
 import { expect, test } from "vitest";
 import { resolveReplayContinuationFromState } from "./battle-execution-composition.ts";
 import {
@@ -410,8 +409,8 @@ test("roundtrips a runtime-produced Wild Shape Opportunity Attack frontier", () 
     battleCheckpointFrontierEnvelope(awaitingOpportunity.state),
   );
   expect(
-    Either.isRight(
-      Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+    Result.isSuccess(
+      Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
         encoded,
       ),
     ),

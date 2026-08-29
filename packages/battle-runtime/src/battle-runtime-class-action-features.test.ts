@@ -771,7 +771,6 @@ describe("battle runtime: class action features", () => {
     expect(Number(actorAfterAim?.nextEffectOrdinal)).toBe(
       Number(actorBeforeAim?.nextEffectOrdinal) + 2,
     );
-    expect(aimed.snapshot.turn.bonusActionAvailable).toBe(false);
     expect(aimed.snapshot.turn.bonusActionQuotaAvailable).toBe(false);
     expect(
       aimed.snapshot.combatants.find(

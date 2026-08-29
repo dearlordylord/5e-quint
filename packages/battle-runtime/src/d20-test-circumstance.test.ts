@@ -1201,12 +1201,18 @@ describe("Table-authored per-test D20 circumstances", () => {
       subject: holdAct.subject,
       fills: [holdTargetFill],
     });
-    if (awaitingHoldSave.tag !== "needsHoles") {
+    if (
+      awaitingHoldSave.tag !== "needsHoles" ||
+      awaitingHoldSave.envelope.frontier.kind !== "holes"
+    ) {
       throw new Error(
         `Expected Hold Person's initial save, got ${awaitingHoldSave.tag}${"message" in awaitingHoldSave ? `: ${awaitingHoldSave.message}` : ""}.`,
       );
     }
-    const holdSave = findHole(awaitingHoldSave.holes, "savingThrowOutcome");
+    const holdSave = findHole(
+      awaitingHoldSave.envelope.frontier.holes,
+      "savingThrowOutcome",
+    );
     const held = resolveBattleRuntimeSubject({
       session: baseSession,
       subject: holdAct.subject,
@@ -1230,8 +1236,16 @@ describe("Table-authored per-test D20 circumstances", () => {
       actorId: goblinId,
     });
     expect(firstRepeat.tag).toBe("needsHoles");
-    if (firstRepeat.tag !== "needsHoles") return;
-    const holdRepeatSave = findHole(firstRepeat.holes, "savingThrowOutcome");
+    if (
+      firstRepeat.tag !== "needsHoles" ||
+      firstRepeat.envelope.frontier.kind !== "holes"
+    ) {
+      return;
+    }
+    const holdRepeatSave = findHole(
+      firstRepeat.envelope.frontier.holes,
+      "savingThrowOutcome",
+    );
     const casterTurn = endBattleRuntimeTurn({
       session: targetTurn.session,
       actorId: goblinId,
@@ -1270,11 +1284,14 @@ describe("Table-authored per-test D20 circumstances", () => {
       subject: blindnessAct.subject,
       fills: [blindnessTargetFill, blindnessConditionFill],
     });
-    if (awaitingBlindnessSave.tag !== "needsHoles") {
+    if (
+      awaitingBlindnessSave.tag !== "needsHoles" ||
+      awaitingBlindnessSave.envelope.frontier.kind !== "holes"
+    ) {
       throw new Error("Expected Blindness/Deafness's initial save.");
     }
     const blindnessSave = findHole(
-      awaitingBlindnessSave.holes,
+      awaitingBlindnessSave.envelope.frontier.holes,
       "savingThrowOutcome",
     );
     const blinded = resolveBattleRuntimeSubject({

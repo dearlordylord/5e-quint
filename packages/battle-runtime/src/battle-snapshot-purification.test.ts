@@ -1,5 +1,4 @@
-import { Schema } from "effect";
-import * as Either from "effect/Either";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import {
   currentInterruptCheckpoint,
@@ -93,7 +92,9 @@ describe("BattleSnapshot durable checkpoint", () => {
 
     expect(snapshot.combatants).toHaveLength(4);
     expect(
-      Either.isRight(Schema.decodeUnknownEither(BattleSnapshotSchema)(encoded)),
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(encoded),
+      ),
     ).toBe(true);
   });
 
@@ -174,6 +175,9 @@ describe("BattleSnapshot durable checkpoint", () => {
   test("rejects legacy frontier and allocator fields at the codec boundary", () => {
     const snapshot = snapshotBattle(fighterVsGoblinBattle());
     const encoded = Schema.encodeSync(BattleSnapshotSchema)(snapshot);
+    const decodeSnapshot = Schema.decodeUnknownResult(BattleSnapshotSchema, {
+      onExcessProperty: "error",
+    });
 
     for (const field of [
       "acts",
@@ -182,8 +186,8 @@ describe("BattleSnapshot durable checkpoint", () => {
       "retiredExecutionScopeAllocations",
     ] as const) {
       expect(
-        Either.isLeft(
-          Schema.decodeUnknownEither(BattleSnapshotSchema)({
+        Result.isFailure(
+          decodeSnapshot({
             ...encoded,
             [field]: [],
           }),
@@ -198,11 +202,7 @@ describe("BattleSnapshot durable checkpoint", () => {
         displayName: "Goblin Warrior",
       })),
     };
-    expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(withPresentationLabel),
-      ),
-    ).toBe(true);
+    expect(Result.isFailure(decodeSnapshot(withPresentationLabel))).toBe(true);
 
     const withNestedCursor = {
       ...encoded,
@@ -211,11 +211,7 @@ describe("BattleSnapshot durable checkpoint", () => {
         nextActiveEffectOrdinal: 0,
       })),
     };
-    expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(withNestedCursor),
-      ),
-    ).toBe(true);
+    expect(Result.isFailure(decodeSnapshot(withNestedCursor))).toBe(true);
 
     const withCharacterCursor = {
       ...encoded,
@@ -234,10 +230,6 @@ describe("BattleSnapshot durable checkpoint", () => {
           : combatant,
       ),
     };
-    expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(withCharacterCursor),
-      ),
-    ).toBe(true);
+    expect(Result.isFailure(decodeSnapshot(withCharacterCursor))).toBe(true);
   });
 });

@@ -223,7 +223,6 @@ function snapshotCombatantMechanicalProjection(
     tempHp: Number(combatant.tempHp),
     nextEffectOrdinal: combatant.nextEffectOrdinal,
     activeEffectOccurrences: combatant.activeEffectOccurrences,
-    activeEffectRefs: combatant.activeEffectRefs,
     armorClass: combatant.armorClass,
     size: combatant.size,
     zeroHpLifecycle: combatant.zeroHpLifecycle,

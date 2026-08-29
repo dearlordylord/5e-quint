@@ -2,8 +2,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-SHINING-SMITE shining_smite
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage-illumination
-import { Schema } from "effect";
-import * as Either from "effect/Either";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import {
   BattleCheckpointFrontierEnvelopeSchema,
@@ -143,8 +142,8 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
       battleCheckpointFrontierEnvelope(awaitingReaction.state),
     );
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           encoded,
         ),
       ),
@@ -224,16 +223,19 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     });
     expect(
       requireCombatant(afterWeaponDamage.state, spellTargetId).activeEffects,
-    ).toContainEqual({
-      kind: "shiningSmiteIllumination",
-      sourceProcedureRef: choice.subject.procedureRef,
-      sourceCombatantId: spellCasterId,
-      expiresAt: {
-        kind: "concentration",
-        combatantId: spellCasterId,
-        durationTicks: elapsedTimeTicks(10),
+    ).toEqual([
+      {
+        effectRef: expect.any(String),
+        kind: "shiningSmiteIllumination",
+        sourceProcedureRef: choice.subject.procedureRef,
+        sourceCombatantId: spellCasterId,
+        expiresAt: {
+          kind: "concentration",
+          combatantId: spellCasterId,
+          durationTicks: elapsedTimeTicks(10),
+        },
       },
-    });
+    ]);
     expect(snapshotBattle(afterWeaponDamage.state).lightEmitters).toEqual([
       {
         kind: "spellLightEmitter",

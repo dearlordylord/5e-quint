@@ -1,7 +1,6 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleFrontierInterruptDecisionForState,
-  battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectForTest,
 } from "./battle-runtime.test-support.ts";
 import {

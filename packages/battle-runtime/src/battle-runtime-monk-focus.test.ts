@@ -18,8 +18,6 @@ import {
   assertBattleSnapshotCodecRoundTripForTest,
   attackRollFill,
   battleId,
-  BattleSnapshotSchema,
-  battleProcedureExecutionRefForTest,
   BattleCheckpointFrontierEnvelopeSchema,
   battleCheckpointFrontierEnvelope,
   characterSeed,

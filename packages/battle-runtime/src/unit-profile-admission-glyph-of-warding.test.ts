@@ -4208,6 +4208,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         state: dangerSenseState,
         profile,
         witness: glyphExplosiveRuneReleaseWitness({
+          effectRef: glyphEffectRef(dangerSenseState),
           effect: dangerSenseEffect,
           profile,
           state: dangerSenseState,
@@ -4661,7 +4662,9 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       profile,
       witness: {
         kind: "tableWitnessedGlyphExplosiveRuneRelease",
-        triggerOccurrence: glyphTriggerOccurrenceWitness(),
+        triggerOccurrence: glyphTriggerOccurrenceWitness(
+          glyphEffectRef(baseState),
+        ),
         coveredAreaId: glyphCoveredAreaId,
         areaMembership: {
           ...areaMembership,

@@ -324,7 +324,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     });
 
     expect(structured).toEqual(
-      Either.left([
+      Result.fail([
         {
           tag: "characterBuildProjection",
           cause: {
@@ -344,7 +344,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
         unitLibrary,
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "characterSheetIssue",
         message: expect.stringContaining(missingSpecies),
       }),
@@ -356,21 +356,21 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       sheet: { build, hitPointMaximumReduction: Hp(0) },
       unitLibrary,
     });
-    expect(successful).toMatchObject({
-      _tag: "Right",
-      right: {
+    expect(Result.isSuccess(successful)).toBe(true);
+    if (Result.isSuccess(successful)) {
+      expect(successful.success).toMatchObject({
         normalHitPointMaximum: 11,
         effectiveHitPointMaximum: 11,
         hitPointMaximumReduction: 0,
-      },
-    });
+      });
+    }
 
     const invalidReduction = characterSheetHitPointMaximumProjectionWithIssues({
       sheet: { build, hitPointMaximumReduction: Hp(11) },
       unitLibrary,
     });
     expect(invalidReduction).toEqual(
-      Either.left({
+      Result.fail({
         tag: "characterSheetIssue",
         message:
           "Character Sheet Hit Point maximum reduction must leave a positive Hit Point maximum.",

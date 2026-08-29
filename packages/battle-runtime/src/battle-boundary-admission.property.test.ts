@@ -178,7 +178,6 @@ import {
   wizardSpellcasting,
   spellRecord,
   battleStateWithAllocatedEffectOccurrencesForTest,
-  battleProcedureExecutionRefForTest,
   battleCheckpointFrontierEnvelope,
   battleFrontierInterruptDecisionForState,
   unitLibrary,

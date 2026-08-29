@@ -717,7 +717,7 @@ function interruptStackResumeProjection(
   const currentCheckpoint = currentInterruptCheckpoint(state.battle);
   const handledInterruptTrigger =
     currentFrame?.kind === "replayContinuation"
-      ? currentFrame.handledInterruptTrigger
+      ? currentFrame.handledInterruptOccurrence.trigger
       : undefined;
   const responder = snapshot.combatants.find(
     (combatant) => combatant.combatantId === state.responderId,

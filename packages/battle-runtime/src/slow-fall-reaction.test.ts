@@ -1,8 +1,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.reaction-roll-or-damage-reduction
 import { describe, expect, test } from "vitest";
 import { classLevel } from "@dnd/shared/types";
-import { Schema } from "effect";
-import * as Either from "effect/Either";
+import { Result, Schema } from "effect";
 
 import {
   battleFrontierInterruptDecisionForState,
@@ -79,8 +78,8 @@ describe("Slow Fall Reaction", () => {
       battleCheckpointFrontierEnvelope(awaitingReaction.state),
     );
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           encoded,
         ),
       ),
@@ -89,8 +88,8 @@ describe("Slow Fall Reaction", () => {
       throw new Error("Expected the encoded Slow Fall Reaction frontier.");
     }
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)({
           ...encoded,
           frontier: {
             ...encoded.frontier,

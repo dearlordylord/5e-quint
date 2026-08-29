@@ -224,14 +224,16 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
       resolveComposedReplayContinuationFromState(
         state,
         continuation,
-        "afterDamage",
+        { trigger: "afterDamage" },
         [],
       ).tag,
     ).toBe("needsHoles");
     expect(
       battleCheckpointFrontierEnvelope({
         ...state,
-        interruptStack: [replayContinuationFrame(continuation, "afterDamage")],
+        interruptStack: [
+          replayContinuationFrame(continuation, { trigger: "afterDamage" }),
+        ],
       }).checkpoint.battleId,
     ).toBe(state.battleId);
     expect(replay).toMatchObject({
@@ -438,7 +440,7 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
       expect(
         battleCheckpointFrontierEnvelope({
           ...state,
-          interruptStack: [frame],
+          interruptStack: [input.frame],
         }).checkpoint.battleId,
       ).toBe(state.battleId);
       expect(
