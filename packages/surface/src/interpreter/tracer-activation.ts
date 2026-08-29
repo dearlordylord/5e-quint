@@ -432,10 +432,9 @@ export function traceEffectModeChoice(
     category: "procedure",
     atomKind: "choose",
     label: `choose\n${mode.label}\n${mode.options
-      .map((option) =>
-        option.effects === undefined
-          ? `${option.displayName} (DM-owned)`
-          : option.displayName,
+      .map(
+        (option) =>
+          `${option.displayName}${option.effectDuration === undefined ? "" : ` [${option.effectDuration.replaceAll("_", " ")}]`}${option.effects === undefined ? " (DM-owned)" : ""}`,
       )
       .join(" | ")}${switchTag}`,
   });

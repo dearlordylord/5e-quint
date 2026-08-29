@@ -420,6 +420,9 @@ export const CastTimeEffectModeChoiceSchema = Schema.Struct({
     Schema.Struct({
       id: surfaceProtocol(Schema.String, "optionId"),
       displayName: surfaceIdentity(Schema.String, "displayName"),
+      effectDuration: optionalExact(
+        Schema.Literals(["instantaneous", "spell_duration"]),
+      ),
       effects: optionalExact(
         Schema.suspend(() => nonEmpty(EffectAtomSchema)).pipe(
           Schema.annotate({
@@ -4811,6 +4814,23 @@ export const OngoingEffectMechanicsSchema = SpellMechanicsHeaderSchema.pipe(
   ),
 );
 
+export const ModalOngoingEffectMechanicsSchema =
+  SpellMechanicsHeaderSchema.pipe(
+    Schema.fieldsAssign(
+      strictStruct({
+        family: Schema.Literal("modal_ongoing_effect"),
+        attachment: AttachmentSchema,
+        mode: CastTimeEffectModeChoiceSchema,
+        concurrentEffectLimit: optionalExact(
+          strictStruct({
+            maximumActive: PositiveIntegerSchema,
+            appliesTo: Schema.Literal("spell_duration_modes"),
+          }),
+        ),
+      }).fields,
+    ),
+  );
+
 export const ActivationMechanicsSchema = SpellMechanicsHeaderSchema.pipe(
   Schema.fieldsAssign(
     Schema.Struct({
@@ -6052,6 +6072,7 @@ export const MinorMagicEffectMenuMechanicsSchema =
 
 export const SpellMechanicsSchema = Schema.Union([
   OngoingEffectMechanicsSchema,
+  ModalOngoingEffectMechanicsSchema,
   ActivationMechanicsSchema,
   ModalActivationMechanicsSchema,
   TriggeredReactionMechanicsSchema,

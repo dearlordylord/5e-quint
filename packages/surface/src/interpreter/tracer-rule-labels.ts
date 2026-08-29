@@ -66,6 +66,7 @@ export function procedureForFamily(
     Match.when("magic_circle_ward", () => "activate" as const),
     Match.when("stone_merge", () => "activate" as const),
     Match.when("ongoing_effect", () => "activate" as const),
+    Match.when("modal_ongoing_effect", () => "activate" as const),
     Match.when("activation", () => "activate" as const),
     Match.when("modal_activation", () => "activate" as const),
     Match.when("passive_hit_intercept", () => "activate" as const),

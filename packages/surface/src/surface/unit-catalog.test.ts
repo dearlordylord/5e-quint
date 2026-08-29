@@ -9598,6 +9598,185 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("retains authored execution facts for persistent and modal spell procedures", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("cloudkill")).toMatchObject({
+      kind: "spell",
+      mechanics: {
+        family: "ongoing_effect",
+        initialPhase: {
+          usageLimit: {
+            kind: "once_per_turn",
+            limitGroup: "cloudkill_save_per_turn",
+          },
+        },
+        operations: [
+          { trigger: { kind: "passive" } },
+          {
+            trigger: { kind: "on_caster_turn_start" },
+            effect: {
+              kind: "move_area",
+              distanceFeet: 10,
+              direction: "away_from_caster",
+            },
+          },
+          {
+            trigger: { kind: "on_area_moves_into_creature_space" },
+            usageLimit: {
+              kind: "once_per_turn",
+              limitGroup: "cloudkill_save_per_turn",
+            },
+          },
+          {
+            trigger: { kind: "on_creature_enters_area" },
+            usageLimit: {
+              kind: "once_per_turn",
+              limitGroup: "cloudkill_save_per_turn",
+            },
+          },
+          {
+            trigger: { kind: "on_creature_ends_turn_in_area" },
+            usageLimit: {
+              kind: "once_per_turn",
+              limitGroup: "cloudkill_save_per_turn",
+            },
+          },
+        ],
+      },
+    });
+    expect(result.catalog.requireUnit("insect_plague")).toMatchObject({
+      kind: "spell",
+      mechanics: {
+        initialPhase: {
+          usageLimit: {
+            kind: "once_per_turn",
+            limitGroup: "insect_plague_save_per_turn",
+          },
+        },
+        operations: [
+          { trigger: { kind: "passive" } },
+          {
+            trigger: { kind: "on_creature_enters_area" },
+            usageLimit: {
+              kind: "once_per_turn",
+              limitGroup: "insect_plague_save_per_turn",
+            },
+          },
+          {
+            trigger: { kind: "on_creature_ends_turn_in_area" },
+            usageLimit: {
+              kind: "once_per_turn",
+              limitGroup: "insect_plague_save_per_turn",
+            },
+          },
+        ],
+      },
+    });
+    expect(result.catalog.requireUnit("grease")).toMatchObject({
+      kind: "spell",
+      mechanics: {
+        family: "ongoing_effect",
+        attachment: {
+          value: { shape: { kind: "ground_square", sideFeet: 10 } },
+        },
+        operations: [
+          {
+            trigger: { kind: "passive" },
+            effect: { kind: "area_is_difficult_terrain" },
+          },
+          { trigger: { kind: "on_creature_enters_area" } },
+          { trigger: { kind: "on_creature_ends_turn_in_area" } },
+        ],
+      },
+    });
+    expect(result.catalog.requireUnit("find_familiar")).toMatchObject({
+      kind: "spell",
+      mechanics: {
+        companionLifecycle: {
+          kind: "bound_companion",
+          touchSpellDelivery: {
+            spellRange: "touch",
+            companionWithinFeetOfCaster: 100,
+            companionCost: "reaction",
+          },
+          temporaryDismissal: {
+            recall: {
+              cost: "magic_action",
+              placement: {
+                kind: "unoccupied_space_within_feet_of_caster",
+                maxDistanceFeet: 30,
+              },
+            },
+          },
+          recast: {
+            existingCompanion: "adopt_new_eligible_form",
+            zeroHitPointDisappearance: "reappear",
+          },
+        },
+      },
+    });
+    expect(result.catalog.requireUnit("sleep")).toMatchObject({
+      kind: "spell",
+      mechanics: {
+        phases: [
+          {
+            autoSuccessIfTarget: {
+              kind: "any",
+              predicates: [
+                { kind: "does_not_sleep" },
+                {
+                  kind: "has_condition_immunity",
+                  condition: "exhaustion",
+                },
+              ],
+            },
+            onFail: {
+              kind: "composite",
+              effects: [
+                { kind: "apply_condition", condition: "incapacitated" },
+                {
+                  kind: "target_effect_escape_action",
+                  actor: "another_creature",
+                  cost: "action",
+                  method: "shake_awake",
+                  outcome: "end_current_effect",
+                },
+              ],
+            },
+          },
+        ],
+      },
+    });
+    expect(result.catalog.requireUnit("thaumaturgy")).toMatchObject({
+      kind: "spell",
+      mechanics: {
+        family: "modal_ongoing_effect",
+        concurrentEffectLimit: {
+          maximumActive: 3,
+          appliesTo: "spell_duration_modes",
+        },
+        mode: {
+          options: [
+            { id: "altered_eyes", effectDuration: "spell_duration" },
+            {
+              id: "booming_voice",
+              effectDuration: "spell_duration",
+              effects: [{ kind: "modify_roll_advantage" }],
+            },
+            { id: "fire_play", effectDuration: "spell_duration" },
+            { id: "invisible_hand", effectDuration: "instantaneous" },
+            { id: "phantom_sound", effectDuration: "instantaneous" },
+            { id: "tremors", effectDuration: "spell_duration" },
+          ],
+        },
+      },
+    });
+  });
+
   test("rejects class subclass choices that point at a different class subclass", () => {
     const fighter = srdUnitCollection.units.find(
       (unit) => unit.id === "class_fighter",
