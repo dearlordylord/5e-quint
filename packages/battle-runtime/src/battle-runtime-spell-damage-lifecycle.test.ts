@@ -78,7 +78,7 @@ function wizardVsWardedSkeletonBattle(): BattleRuntimeSession {
   const sanctuaryProcedureRef = requireCharacterSpellProcedureRefForTest(
     baseSession,
     sanctuaryCasterId,
-    spellSlotInvocationRef("sanctuary", 1, "sanctuaryTargetingInterdiction"),
+    spellSlotInvocationRef("sanctuary", 1, "targetingSaveInterdiction"),
   );
   const allocated = battleStateWithAllocatedEffectForTest({
     state: baseSession.state,

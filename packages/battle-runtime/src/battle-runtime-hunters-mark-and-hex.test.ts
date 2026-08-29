@@ -842,7 +842,9 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
 
   test("Counterspell suspends Hunter's Mark after its Bonus Action is spent but before Spell Slot or effect commitment", () => {
     const session = startBattleSessionRight({
-      battleId: battleId("battle-hunters-mark-counterspell-window"),
+      battleId: battleId(
+        "battle-hunters-mark-spellCastInterruptionReaction-window",
+      ),
       combatants: [
         characterSeed({
           initiative: 20,
@@ -864,7 +866,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
           displayName: "Counterspell reactor",
           initiative: 10,
           spellcasting: wizardSpellcasting({
-            preparedSpells: [spellRecord("counterspell")],
+            preparedSpells: [spellRecord("spellCastInterruptionReaction")],
             spellSlots: [{ spellLevel: 3, count: 1 }],
           }),
         }),
@@ -896,7 +898,11 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
               sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
                 session,
                 skeletonId,
-                spellSlotInvocationRef("counterspell", 3, "counterspell"),
+                spellSlotInvocationRef(
+                  "spellCastInterruptionReaction",
+                  3,
+                  "spellCastInterruptionReaction",
+                ),
               ),
               rangeFeet: movementFeet(60),
             },

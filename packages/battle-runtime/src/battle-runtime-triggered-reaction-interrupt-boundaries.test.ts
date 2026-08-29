@@ -54,7 +54,9 @@ type AttackAct = AvailableBattleAct & {
 describe("triggered Reaction spell interrupt boundaries", () => {
   test("does not reopen a spell-cast window when the caller handled that trigger", () => {
     const magicMissile = spellRecord("magic_missile");
-    const counterspell = spellRecord("counterspell");
+    const spellCastInterruptionReaction = spellRecord(
+      "spellCastInterruptionReaction",
+    );
     const session = startBattleSessionRight({
       battleId: battleId("battle-triggered-reaction-spell-cast-guard"),
       combatants: [
@@ -74,7 +76,7 @@ describe("triggered Reaction spell interrupt boundaries", () => {
           initiative: 10,
           attack: null,
           spellcasting: wizardSpellcasting({
-            preparedSpells: [counterspell],
+            preparedSpells: [spellCastInterruptionReaction],
             spellSlots: [{ spellLevel: 3, count: 1 }],
           }),
         }),

@@ -48,7 +48,7 @@ import {
   invisibilityUnitId,
   levitateUnitId,
   seeInvisibilityUnitId,
-  spikeGrowthAreaId,
+  areaMovementDistanceDamageAreaId,
   spellCasterId,
   spellTargetId,
   spikeGrowthUnitId,
@@ -63,9 +63,9 @@ import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.
 import {
   singleTargetSavingThrowOutcomeFill,
   spellAct,
-  spikeGrowthAreaFill,
+  areaMovementDistanceDamageAreaFill,
   webAreaFill,
-  webRestraintSaveAct,
+  persistentAreaSaveConditionEscapeSaveAct,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import { spellSlotInvocationRef } from "./unit-profile-admission.test-support.ts";
@@ -89,12 +89,12 @@ type Level2ControlSpellSelectedIdentityResult =
   | "charmPersonSaveGatedCondition"
   | "darknessPointOrigin"
   | "enthrallPerceptionPenalty"
-  | "gustOfWindLine"
+  | "directionalPersistentArea"
   | "invisibilityDirectCondition"
   | "levitateCreature"
   | "seeInvisibilityObserverSight"
-  | "spikeGrowthMovementHazard"
-  | "webRestraintHazard";
+  | "areaMovementDistanceDamage"
+  | "persistentAreaSaveConditionEscape";
 type Level2ControlSpellSelectedIdentityProjection = {
   readonly lastResult: Level2ControlSpellSelectedIdentityResult;
 };
@@ -111,12 +111,12 @@ const LEVEL2_CONTROL_SPELL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   CharmPersonSaveGatedCondition: "charmPersonSaveGatedCondition",
   DarknessPointOrigin: "darknessPointOrigin",
   EnthrallPerceptionPenalty: "enthrallPerceptionPenalty",
-  GustOfWindLine: "gustOfWindLine",
+  GustOfWindLine: "directionalPersistentArea",
   InvisibilityDirectCondition: "invisibilityDirectCondition",
   LevitateCreature: "levitateCreature",
   SeeInvisibilityObserverSight: "seeInvisibilityObserverSight",
-  SpikeGrowthMovementHazard: "spikeGrowthMovementHazard",
-  WebRestraintHazard: "webRestraintHazard",
+  SpikeGrowthMovementHazard: "areaMovementDistanceDamage",
+  WebRestraintHazard: "persistentAreaSaveConditionEscape",
 } as const satisfies Readonly<
   Record<string, Level2ControlSpellSelectedIdentityResult>
 >;
@@ -188,8 +188,8 @@ defineSelectedIdentityReplayAndQntReplay({
         selectedSpellProcedure("doDiscoverGustOfWindLine", {
           spellId: gustOfWindUnitId,
           slotLevel: 2,
-          procedure: "gustOfWindLine",
-          result: "gustOfWindLine",
+          procedure: "directionalPersistentArea",
+          result: "directionalPersistentArea",
         }),
       ],
     },
@@ -210,7 +210,7 @@ defineSelectedIdentityReplayAndQntReplay({
         selectedSpellProcedure("doDiscoverLevitateCreature", {
           spellId: levitateUnitId,
           slotLevel: 2,
-          procedure: "levitatedCreature",
+          procedure: "controlledVerticalSuspension",
           result: "levitateCreature",
         }),
       ],
@@ -232,8 +232,8 @@ defineSelectedIdentityReplayAndQntReplay({
         selectedSpellProcedure("doDiscoverSpikeGrowthMovementHazard", {
           spellId: spikeGrowthUnitId,
           slotLevel: 2,
-          procedure: "spikeGrowthMovementHazard",
-          result: "spikeGrowthMovementHazard",
+          procedure: "areaMovementDistanceDamage",
+          result: "areaMovementDistanceDamage",
         }),
       ],
     },
@@ -243,8 +243,8 @@ defineSelectedIdentityReplayAndQntReplay({
         selectedSpellProcedure("doDiscoverWebRestraintHazard", {
           spellId: webUnitId,
           slotLevel: 2,
-          procedure: "webRestraintHazard",
-          result: "webRestraintHazard",
+          procedure: "persistentAreaSaveConditionEscape",
+          result: "persistentAreaSaveConditionEscape",
         }),
       ],
     },
@@ -278,7 +278,7 @@ type HazardCastReplay = {
 };
 
 function replaySpikeGrowthMovementHazardRoute(): readonly BattleReducerRouteEvent[] {
-  const cast = spikeGrowthHazardCastReplay();
+  const cast = areaMovementDistanceDamageCastReplay();
   const route = [...cast.route];
   const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
   if (targetTurn.tag !== "resolved") {
@@ -330,7 +330,7 @@ function replayWebRestraintHazardRoute(): readonly BattleReducerRouteEvent[] {
   if (targetTurn.tag !== "resolved") {
     throw new Error("Expected Web caster End Turn to resolve.");
   }
-  const saveAct = webRestraintSaveAct(
+  const saveAct = persistentAreaSaveConditionEscapeSaveAct(
     battleRuntimeSessionForTest({ ...cast.session, state: targetTurn.state }),
     spellTargetId,
     "entersArea",
@@ -359,7 +359,7 @@ function replayWebRestraintHazardRoute(): readonly BattleReducerRouteEvent[] {
   return route;
 }
 
-function spikeGrowthHazardCastReplay(): HazardCastReplay {
+function areaMovementDistanceDamageCastReplay(): HazardCastReplay {
   const route: BattleReducerRouteEvent[] = [startRoute()];
   const state = selectedSpellBattle(spellRecord(spikeGrowthUnitId), 2);
   const act = spellAct({
@@ -372,7 +372,7 @@ function spikeGrowthHazardCastReplay(): HazardCastReplay {
   const cast = resolveBattleSubject({
     state: state.state,
     subject: act.subject,
-    fills: [spikeGrowthAreaFill(area)],
+    fills: [areaMovementDistanceDamageAreaFill(area)],
   });
   route.push(...routeEventsOfSubject(cast, "Spike Growth cast"));
   if (cast.tag !== "resolved") {
@@ -456,7 +456,10 @@ function moveAct(state: BattleState): BattleActDiscoveryCandidate & {
 
 function spikeGrowthMovementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
-  effect: Extract<BattleActiveEffect, { readonly kind: "spikeGrowthHazard" }>,
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "areaMovementDistanceDamage" }
+  >,
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   return movementFill(hole, {
     movementCostFeet: 15,
@@ -465,11 +468,11 @@ function spikeGrowthMovementFill(
       kind: "areaDifficultTerrain",
       sources: [
         {
-          kind: "spikeGrowthHazard",
+          kind: "areaMovementDistanceDamage",
           effectRef: effect.effectRef,
           sourceCombatantId: spellCasterId,
           sourceProcedureRef: effect.sourceProcedureRef,
-          areaId: spikeGrowthAreaId,
+          areaId: areaMovementDistanceDamageAreaId,
           damageDistanceFeet: movementFeet(5),
         },
       ],
@@ -481,10 +484,15 @@ function spikeGrowthMovementFill(
 
 function requireSpikeGrowthHazardEffect(
   state: BattleState,
-): Extract<BattleActiveEffect, { readonly kind: "spikeGrowthHazard" }> {
+): Extract<
+  BattleActiveEffect,
+  { readonly kind: "areaMovementDistanceDamage" }
+> {
   const effect = state.combatants
     .get(spellCasterId)
-    ?.activeEffects.find((candidate) => candidate.kind === "spikeGrowthHazard");
+    ?.activeEffects.find(
+      (candidate) => candidate.kind === "areaMovementDistanceDamage",
+    );
   if (effect === undefined) {
     throw new Error("Expected active Spike Growth hazard.");
   }

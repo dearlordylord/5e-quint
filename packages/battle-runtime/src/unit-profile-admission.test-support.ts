@@ -58,7 +58,7 @@ import type {
 } from "./battle-state-execution.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-state.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
-import { hideousLaughterRepeatSavingThrowOutcomeHole } from "./battle-reducer/hideous-laughter-repeat-save.ts";
+import { saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole } from "./battle-reducer/hideous-laughter-repeat-save.ts";
 import { conditionApplicationPreventedByCreatureTypeProtection } from "./battle-reducer/spell-condition-effects-helpers.ts";
 import {
   applyFailedSaveSpellConditionEffects,
@@ -330,7 +330,7 @@ export {
   hasCondition,
   HIDE_ACTION_OBSCUREMENT_PERMISSION_SUPPORT_PROFILE,
   hideActionObscurementPermissionProfileForUnit,
-  hideousLaughterRepeatSavingThrowOutcomeHole,
+  saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole,
   holeId,
   Hp,
   HUNTERS_PREY_SUPPORT_PROFILE,

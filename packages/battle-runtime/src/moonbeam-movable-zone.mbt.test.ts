@@ -27,7 +27,7 @@ import {
   type MoonbeamMovableZoneState,
   type MoonbeamSaveTrigger,
   type MoonbeamTargetShapeShiftState,
-} from "./battle-reducer/moonbeam-movable-zone.test-support.ts";
+} from "./battle-reducer/persistentAreaSaveDamage-movable-zone.test-support.ts";
 import {
   battleSpellEffectOccurrenceId,
   combatantId,
@@ -122,7 +122,7 @@ function createMoonbeamMovableZoneDriver() {
       doMoonbeamSave: ({ savingThrowSucceeded, rolledDamage, trigger }) => {
         state = resolveMoonbeamSave(
           state,
-          moonbeamSaveTriggerFromQuint(trigger),
+          persistentAreaSaveDamageSaveTriggerFromQuint(trigger),
           {
             savingThrowSucceeded,
             rolledDamage,
@@ -159,7 +159,7 @@ function createMoonbeamMovableZoneDriver() {
   });
 }
 
-const moonbeamMovableZoneStateCheck = stateCheck(
+const persistentAreaSaveDamageMovableZoneStateCheck = stateCheck(
   normalizeMoonbeamMovableZoneQuintState,
   compareMoonbeamMovableZoneState,
 );
@@ -256,7 +256,7 @@ describe("Moonbeam movable zone MBT parity", () => {
         backend: "typescript",
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(6),
-        stateCheck: moonbeamMovableZoneStateCheck,
+        stateCheck: persistentAreaSaveDamageMovableZoneStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,
@@ -360,7 +360,9 @@ function compareMoonbeamMovableZoneState(
   return true;
 }
 
-function moonbeamSaveTriggerFromQuint(raw: unknown): MoonbeamSaveTrigger {
+function persistentAreaSaveDamageSaveTriggerFromQuint(
+  raw: unknown,
+): MoonbeamSaveTrigger {
   const tag = quintVariantTag(raw);
   if (tag === "MoonbeamAppearsInArea") return "appearsInArea";
   if (tag === "MoonbeamAreaMovesIntoSpace") return "areaMovesIntoSpace";

@@ -122,7 +122,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       name: "Grease area facts on a non-Grease spell",
       spellId: faerieFireUnitId,
       area: {
-        kind: "greaseGroundArea",
+        kind: "persistentAreaSaveConditionArea",
         originAnchorId: spellCasterId,
         affectedTargetIds: [spellTargetId],
       },
@@ -132,7 +132,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       name: "Gust of Wind area facts on a non-Gust spell",
       spellId: faerieFireUnitId,
       area: {
-        kind: "gustOfWindLineArea",
+        kind: "directionalPersistentAreaArea",
         originAnchorId: spellCasterId,
         affectedTargetIds: [spellTargetId],
       },

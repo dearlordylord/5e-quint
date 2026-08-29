@@ -43,9 +43,9 @@ import {
   endTurn,
   expeditiousRetreatUnitId,
   extraAttackBattleUnitRef,
-  flamingSphereAreaId,
-  flamingSphereRepositionAct,
-  flamingSphereRepositionMovementFill,
+  persistentAreaSaveDamageAreaId,
+  persistentAreaSaveDamageRepositionAct,
+  persistentAreaSaveDamageRepositionMovementFill,
   greaseUnitId,
   maybeSpellAct,
   movementFeet,
@@ -80,7 +80,7 @@ import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   shillelaghUnitId,
-  spiritualWeaponUnitId,
+  spatialMeleeSpellAttackProxyUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
 import type { BattleSourcedEffectOccurrenceTemplate } from "./effect-execution-ref.ts";
@@ -503,7 +503,8 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
         spellSlots: [{ spellLevel: 3, count: 1 }],
       }),
     );
-    const flamingSphere = syntheticTargetOwnedFlamingSphereInteraction();
+    const persistentAreaSaveDamage =
+      syntheticTargetOwnedFlamingSphereInteraction();
     const slowedTarget = requireCombatant(
       slowedTargetTurn.state,
       spellTargetId,
@@ -515,7 +516,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
         {
           ...slowedTarget,
           concentration: {
-            sourceProcedureRef: flamingSphere.sourceProcedureRef,
+            sourceProcedureRef: persistentAreaSaveDamage.sourceProcedureRef,
             effectKind: "spellEffect" as const,
           },
         },
@@ -526,11 +527,14 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       state: battleStateWithAllocatedEffectForTest({
         state: stateWithConcentration,
         ownerId: spellTargetId,
-        effect: flamingSphere,
+        effect: persistentAreaSaveDamage,
       }),
     });
 
-    const reposition = flamingSphereRepositionAct(targetTurn, spellTargetId);
+    const reposition = persistentAreaSaveDamageRepositionAct(
+      targetTurn,
+      spellTargetId,
+    );
     const movement = requireHole(
       reposition.initialHoles,
       "movableZoneRepositionMovement",
@@ -538,7 +542,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     const moved = resolveBattleSubject({
       state: targetTurn.state,
       subject: reposition.subject,
-      fills: [flamingSphereRepositionMovementFill(movement)],
+      fills: [persistentAreaSaveDamageRepositionMovementFill(movement)],
     });
     if (moved.tag !== "resolved") {
       throw new Error(
@@ -775,7 +779,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     expect(
       requireCombatant(failed.state, spellTargetId).activeEffects,
     ).not.toContainEqual(
-      expect.objectContaining({ kind: "greaseGroundHazard" }),
+      expect.objectContaining({ kind: "persistentAreaSaveCondition" }),
     );
     expect(failed.state.currentTurnResources.actionResources).toEqual([]);
     expect(
@@ -804,7 +808,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
           cantrips: [],
-          preparedSpells: [spellRecord(spiritualWeaponUnitId)],
+          preparedSpells: [spellRecord(spatialMeleeSpellAttackProxyUnitId)],
           featurePreparedSpells: [],
           spellAccesses: [],
           spellbookRitualSpellAccesses: [],
@@ -816,7 +820,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     const act = spellActForActor(
       targetTurn,
       spellTargetId,
-      spiritualWeaponUnitId,
+      spatialMeleeSpellAttackProxyUnitId,
     );
     const slowChance = requireSlowSomaticSpellFailureHole(act.initialHoles);
 
@@ -830,7 +834,9 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     }
     expect(
       requireCombatant(failed.state, spellTargetId).activeEffects,
-    ).not.toContainEqual(expect.objectContaining({ kind: "spiritualWeapon" }));
+    ).not.toContainEqual(
+      expect.objectContaining({ kind: "spatialMeleeSpellAttackProxy" }),
+    );
     expect(failed.state.currentTurnResources.currentHasBonusAction).toBe(false);
     expect(
       failed.state.currentTurnResources.spellSlotUsesThisTurn,
@@ -1075,15 +1081,15 @@ function targetTurnAfterFailedSlow(
 
 function syntheticTargetOwnedFlamingSphereInteraction(): Extract<
   BattleSourcedEffectOccurrenceTemplate,
-  { readonly kind: "flamingSphere" }
+  { readonly kind: "persistentAreaSaveDamage" }
 > {
   return {
-    kind: "flamingSphere",
+    kind: "persistentAreaSaveDamage",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       "synthetic-slow-target-flaming-sphere",
     ),
     sourceCombatantId: spellTargetId,
-    areaId: flamingSphereAreaId,
+    areaId: persistentAreaSaveDamageAreaId,
     save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
     damage: { expr: { dice: 2, dieSize: 6 }, damageType: "fire" },
     ramMaxMoveFeet: movementFeet(30),

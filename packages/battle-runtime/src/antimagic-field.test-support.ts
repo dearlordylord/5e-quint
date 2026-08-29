@@ -30,15 +30,15 @@ export function magicSuppressionEmanationMembershipForTest(input: {
   };
 }
 
-export function antimagicFieldAuraEffectTemplateForTest(input: {
+export function magicSuppressionEmanationEffectTemplateForTest(input: {
   readonly areaId: BattleAreaId;
   readonly aura: TestAntimagicFieldAuraMembership;
 }): Extract<
   BattleActiveEffectOccurrenceTemplate,
-  { readonly kind: "antimagicFieldOngoingSpellSuppression" }
+  { readonly kind: "magicSuppressionEmanation" }
 > {
   return {
-    kind: "antimagicFieldOngoingSpellSuppression",
+    kind: "magicSuppressionEmanation",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(antimagicFieldUnitId),
     ),

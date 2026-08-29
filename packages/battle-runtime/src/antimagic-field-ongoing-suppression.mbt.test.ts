@@ -36,7 +36,7 @@ import {
   antimagicFieldUnitId,
   spellCasterId,
   spellTargetId,
-  spiritualWeaponUnitId,
+  spatialMeleeSpellAttackProxyUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -321,7 +321,7 @@ describe("Antimagic Field ongoing suppression MBT parity", () => {
 
 function initialRuntimeState(): AntimagicRuntimeState {
   const base = spellBattle({
-    preparedSpells: [spellRecord(spiritualWeaponUnitId)],
+    preparedSpells: [spellRecord(spatialMeleeSpellAttackProxyUnitId)],
     spellSlots: [{ spellLevel: 2, count: 1 }],
     targetSpellcasting: {
       spellcastingSource: {
@@ -345,7 +345,7 @@ function initialRuntimeState(): AntimagicRuntimeState {
     owner: caster,
   });
   const ongoingSpell = {
-    ...spiritualWeaponActiveEffectTemplate(),
+    ...spatialMeleeSpellAttackProxyActiveEffectTemplate(),
     effectRef: effectAllocation.effectRef,
   };
   const withOngoingSpell = battleRuntimeSessionForTest({
@@ -511,7 +511,7 @@ function antimagicAffectedSpiritualWeapon(
   effectRef: SpiritualWeaponEffectRef,
 ): BattleAntimagicFieldAffectedOngoingSpellEffect {
   return {
-    kind: "antimagicFieldAffectedOngoingSpellEffect",
+    kind: "magicSuppressionAffectedOngoingSpellEffect",
     effect: {
       kind: "spellActiveEffect",
       activeEffectKind: "spatialMeleeSpellAttackProxy",
@@ -568,7 +568,7 @@ function antimagicSuppressionEffect(
   );
 }
 
-function spiritualWeaponActiveEffectTemplate(): Extract<
+function spatialMeleeSpellAttackProxyActiveEffectTemplate(): Extract<
   BattleActiveEffectOccurrenceTemplate,
   { readonly kind: "spatialMeleeSpellAttackProxy" }
 > {

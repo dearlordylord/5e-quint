@@ -186,7 +186,8 @@ export const continualFlameUnitId = "continual_flame";
 
 export const contagionUnitId = "contagion";
 
-export const counterspellUnitId = "counterspell";
+export const spellCastInterruptionReactionUnitId =
+  "spellCastInterruptionReaction";
 
 export const dispelMagicUnitId = "dispel_magic";
 export const dispelEvilAndGoodUnitId = "dispel_evil_and_good";
@@ -205,7 +206,7 @@ export const ensnaringStrikeUnitId = "ensnaring_strike";
 
 export const expeditiousRetreatUnitId = "expeditious_retreat";
 
-export const dragonsBreathUnitId = "dragons_breath";
+export const grantedAreaSaveDamageActionUnitId = "dragons_breath";
 
 export const glyphOfWardingUnitId = "glyph_of_warding";
 
@@ -231,13 +232,13 @@ export const iceKnifeUnitId = "ice_knife";
 
 export const sleepUnitId = "sleep";
 
-export const hideousLaughterUnitId = "hideous_laughter";
+export const saveGatedConditionWithRepeatUnitId = "hideous_laughter";
 
-export const hideousLaughterDurationTicks = elapsedTimeTicks(10);
+export const saveGatedConditionWithRepeatDurationTicks = elapsedTimeTicks(10);
 
-export const hypnoticPatternUnitId = "hypnotic_pattern";
+export const saveGatedAreaControlUnitId = "hypnotic_pattern";
 
-export const hypnoticPatternDurationTicks = elapsedTimeTicks(10);
+export const saveGatedAreaControlDurationTicks = elapsedTimeTicks(10);
 
 export const holdPersonUnitId = "hold_person";
 
@@ -329,18 +330,18 @@ export const flameBladeUnitId = "flame_blade";
 
 export const flyUnitId = "fly";
 
-export const flamingSphereUnitId = "flaming_sphere";
-export const spiritualWeaponUnitId = "spiritual_weapon";
+export const persistentAreaSaveDamageUnitId = "flaming_sphere";
+export const spatialMeleeSpellAttackProxyUnitId = "spiritual_weapon";
 
 export const spikeGrowthUnitId = "spike_growth";
 
-export const moonbeamUnitId = "moonbeam";
+export const persistentAreaSaveDamageUnitId = "persistentAreaSaveDamage";
 
 export const webUnitId = "web";
 
 export const sleetStormUnitId = "sleet_storm";
 
-export const insectPlagueUnitId = "insect_plague";
+export const persistentAreaSaveDamageUnitId = "insect_plague";
 
 export const cloudkillUnitId = "cloudkill";
 
@@ -471,19 +472,23 @@ export const ensnaringStrikeHelperId = combatantId(
 
 export const greaseAreaId = battleAreaId("unit-profile-grease-ground-area");
 
-export const flamingSphereAreaId = battleAreaId(
+export const persistentAreaSaveDamageAreaId = battleAreaId(
   "unit-profile-flaming-sphere-area",
 );
 
-export const spikeGrowthAreaId = battleAreaId("unit-profile-spike-growth-area");
+export const areaMovementDistanceDamageAreaId = battleAreaId(
+  "unit-profile-spike-growth-area",
+);
 
-export const moonbeamAreaId = battleAreaId("unit-profile-moonbeam-area");
+export const persistentAreaSaveDamageAreaId = battleAreaId(
+  "unit-profile-persistentAreaSaveDamage-area",
+);
 
 export const webAreaId = battleAreaId("unit-profile-web-area");
 
 export const sleetStormAreaId = battleAreaId("unit-profile-sleet-storm-area");
 
-export const insectPlagueAreaId = battleAreaId(
+export const persistentAreaSaveDamageAreaId = battleAreaId(
   "unit-profile-insect-plague-area",
 );
 

@@ -70,8 +70,8 @@ import {
   requireResultHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
-  flamingSphereAreaFill,
-  flamingSphereRamMovementFill,
+  persistentAreaSaveDamageAreaFill,
+  persistentAreaSaveDamageRamMovementFill,
   singleTargetSavingThrowOutcomeFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 
@@ -179,12 +179,12 @@ type SanctuaryWardEffect = Extract<
 const sanctuaryUnitId = "sanctuary";
 const burningHandsUnitId = "burning_hands";
 const fireBoltUnitId = "fire_bolt";
-const flamingSphereUnitId = "flaming_sphere";
+const persistentAreaSaveDamageUnitId = "flaming_sphere";
 const longstriderUnitId = "longstrider";
 type SanctuarySelectedIdentityActionSpellUnitId =
   | typeof burningHandsUnitId
   | typeof fireBoltUnitId
-  | typeof flamingSphereUnitId
+  | typeof persistentAreaSaveDamageUnitId
   | typeof longstriderUnitId;
 type SanctuarySelectedIdentitySpellUnitId =
   | typeof sanctuaryUnitId
@@ -1219,7 +1219,7 @@ function battleSessionWithSanctuary(): BattleRuntimeSession {
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
         cantrips: [],
-        preparedSpells: [srdSpellRecord(flamingSphereUnitId)],
+        preparedSpells: [srdSpellRecord(persistentAreaSaveDamageUnitId)],
         featurePreparedSpells: [],
         spellAccesses: [],
         spellbookRitualSpellAccesses: [],
@@ -1378,13 +1378,15 @@ function wardedFlamingSphereRamState(): BattleState {
 function castFlamingSphereAsAttacker(
   session: BattleRuntimeSession,
 ): BattleState {
-  const act = actionSpellAct(session, flamingSphereUnitId);
+  const act = actionSpellAct(session, persistentAreaSaveDamageUnitId);
   const resolved = requireResolved(
     resolveBattleSubject({
       state: session.state,
       subject: act.subject,
       fills: [
-        flamingSphereAreaFill(requireHole(act.initialHoles, "spellAreaChoice")),
+        persistentAreaSaveDamageAreaFill(
+          requireHole(act.initialHoles, "spellAreaChoice"),
+        ),
       ],
     }),
   );
@@ -1394,8 +1396,8 @@ function castFlamingSphereAsAttacker(
 function resolveWardedFlamingSphereRamDamage(
   state: BattleState,
 ): ResolvedBattleResult {
-  const act = flamingSphereRamAct(state, wardedId);
-  const movementFill = flamingSphereRamMovementFill(
+  const act = persistentAreaSaveDamageRamAct(state, wardedId);
+  const movementFill = persistentAreaSaveDamageRamMovementFill(
     requireHole(act.initialHoles, "movableZoneRamMovement"),
   );
   const saveFill = singleTargetSavingThrowOutcomeFill(
@@ -1422,7 +1424,7 @@ function resolveWardedFlamingSphereRamDamage(
   );
 }
 
-function flamingSphereRamAct(
+function persistentAreaSaveDamageRamAct(
   state: BattleState,
   targetId: CombatantId,
 ): FlamingSphereRamAct {

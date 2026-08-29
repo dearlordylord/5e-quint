@@ -31,7 +31,7 @@ import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.
 import {
   bonusActionDashSpellAct,
   bonusSpellAct,
-  jumpMovementReplacementAct,
+  fixedCostMovementReplacementAct,
   jumpSpellTargetListFill,
   maybeJumpMovementReplacementAct,
   spellTargetListFill,
@@ -447,7 +447,7 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
       (effect) => effect.kind === "fixedCostMovementReplacement",
     );
     expect(jumpOccurrences).toHaveLength(2);
-    const selectedAct = jumpMovementReplacementAct(state);
+    const selectedAct = fixedCostMovementReplacementAct(state);
     const movement = requireHole(selectedAct.initialHoles, "movement");
 
     const resolved = resolveBattleSubject({
@@ -552,7 +552,7 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
       throw new Error("Expected Jump to resolve.");
     }
 
-    const jumpAct = jumpMovementReplacementAct(cast.state);
+    const jumpAct = fixedCostMovementReplacementAct(cast.state);
     const caster = requireCombatant(cast.state, spellCasterId);
     const staleState = {
       ...cast.state,
@@ -619,7 +619,7 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
       }),
     ]);
 
-    const jumpAct = jumpMovementReplacementAct(cast.state);
+    const jumpAct = fixedCostMovementReplacementAct(cast.state);
     const movement = requireHole(jumpAct.initialHoles, "movement");
     const threatenedJump = resolveBattleSubject({
       state: cast.state,
@@ -758,7 +758,7 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
     if (cast.tag !== "resolved") {
       throw new Error("Expected Jump to resolve.");
     }
-    const jumpAct = jumpMovementReplacementAct(cast.state);
+    const jumpAct = fixedCostMovementReplacementAct(cast.state);
     const movement = requireHole(jumpAct.initialHoles, "movement");
 
     expect(

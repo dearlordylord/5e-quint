@@ -183,7 +183,7 @@ function replaceCastActWithLevitateAltitudeControl(
       subject: {
         tag: "runtimeCommand",
         actorId: wizardId,
-        command: "levitateAltitudeControl",
+        command: "controlledVerticalSuspensionAltitudeControl",
         effectRef: input.subjectEffectRef,
         targetId: skeletonId,
       },
@@ -338,7 +338,7 @@ function codecFixture() {
         kind: "activeEffect",
         ownerId: skeletonId,
         effect: {
-          kind: "hideousLaughter",
+          kind: "saveGatedConditionWithRepeat",
           sourceProcedureRef: source.procedureRef,
           sourceCombatantId: wizardId,
           conditionHadNonSpellProneSource: false,
@@ -370,7 +370,7 @@ function codecFixture() {
         kind: "activeEffect",
         ownerId: wizardId,
         effect: {
-          kind: "greaseGroundHazard",
+          kind: "persistentAreaSaveCondition",
           sourceProcedureRef: source.procedureRef,
           sourceCombatantId: wizardId,
           areaId: battleAreaId("area:codec-grease"),
@@ -386,7 +386,7 @@ function codecFixture() {
         kind: "activeEffect",
         ownerId: wizardId,
         effect: {
-          kind: "sleetStormAreaHazard",
+          kind: "persistentAreaSaveComposite",
           sourceProcedureRef: source.procedureRef,
           sourceCombatantId: wizardId,
           areaId: battleAreaId("area:codec-sleet-storm"),
@@ -465,7 +465,7 @@ function codecFixture() {
         kind: "activeEffect",
         ownerId: wizardId,
         effect: {
-          kind: "flamingSphere",
+          kind: "persistentAreaSaveDamage",
           sourceProcedureRef: source.procedureRef,
           sourceCombatantId: wizardId,
           areaId: battleAreaId("area:codec-flaming-sphere"),
@@ -498,7 +498,7 @@ function codecFixture() {
         kind: "activeEffect",
         ownerId: wizardId,
         effect: {
-          kind: "insectPlagueAreaHazard",
+          kind: "persistentAreaSaveDamage",
           sourceProcedureRef: source.procedureRef,
           sourceCombatantId: wizardId,
           appearanceOccurrence: {
@@ -524,7 +524,7 @@ function codecFixture() {
         kind: "activeEffect",
         ownerId: wizardId,
         effect: {
-          kind: "cloudkillAreaHazard",
+          kind: "persistentAreaSaveDamage",
           sourceProcedureRef: source.procedureRef,
           sourceCombatantId: wizardId,
           appearanceOccurrence: {
@@ -550,7 +550,7 @@ function codecFixture() {
         kind: "activeEffect",
         ownerId: wizardId,
         effect: {
-          kind: "spikeGrowthHazard",
+          kind: "areaMovementDistanceDamage",
           sourceProcedureRef: source.procedureRef,
           sourceCombatantId: wizardId,
           areaId: battleAreaId("area:codec-spike-growth"),
@@ -570,7 +570,7 @@ function codecFixture() {
         kind: "activeEffect",
         ownerId: wizardId,
         effect: {
-          kind: "gustOfWindLine",
+          kind: "directionalPersistentArea",
           sourceProcedureRef: source.procedureRef,
           sourceCombatantId: wizardId,
           areaId: battleAreaId("area:codec-gust"),
@@ -634,7 +634,7 @@ function codecFixture() {
           sourceCombatantId: wizardId,
           areaId: battleAreaId("area:codec-antimagic-field"),
           auraMembership: {
-            kind: "antimagicFieldAuraMembership",
+            kind: "magicSuppressionEmanationMembership",
             originIncluded: false,
             nonOriginCombatantIds: [],
           },
@@ -771,17 +771,23 @@ function codecFixture() {
     ),
     markedDamageRiderEffectRef: activeEffectRef("spellMarkedDamageRider"),
     spellTurnStartEffectRef: activeEffectRef("spellTurnStartDamageAndSave"),
-    hideousLaughterEffectRef: activeEffectRef("hideousLaughter"),
+    saveGatedConditionWithRepeatEffectRef: activeEffectRef(
+      "saveGatedConditionWithRepeat",
+    ),
     protectionRelevantEffectRef: activeEffectRef("possession"),
-    greaseEffectRef: activeEffectRef("greaseGroundHazard"),
-    sleetStormEffectRef: activeEffectRef("sleetStormAreaHazard"),
+    greaseEffectRef: activeEffectRef("persistentAreaSaveCondition"),
+    sleetStormEffectRef: activeEffectRef("persistentAreaSaveComposite"),
     glyphEffectRef: activeEffectRef("glyphDurableOccurrence"),
-    flamingSphereEffectRef: activeEffectRef("flamingSphere"),
+    persistentAreaSaveDamageEffectRef: activeEffectRef(
+      "persistentAreaSaveDamage",
+    ),
     spellTurnEndEffectRef: activeEffectRef("spellTurnEndDamage"),
-    insectPlagueEffectRef: activeEffectRef("insectPlagueAreaHazard"),
-    cloudkillEffectRef: activeEffectRef("cloudkillAreaHazard"),
-    spikeGrowthEffectRef: activeEffectRef("spikeGrowthHazard"),
-    gustOfWindEffectRef: activeEffectRef("gustOfWindLine"),
+    persistentAreaSaveDamageEffectRef: activeEffectRef(
+      "persistentAreaSaveDamage",
+    ),
+    cloudkillEffectRef: activeEffectRef("persistentAreaSaveDamage"),
+    spikeGrowthEffectRef: activeEffectRef("areaMovementDistanceDamage"),
+    gustOfWindEffectRef: activeEffectRef("directionalPersistentArea"),
     levitateEffectRef: activeEffectRef("spellLevitatedCreature"),
     secondLevitateEffectRef: levitateEffectRefs[1]!,
     antimagicFieldEffectRef: activeEffectRef("magicSuppressionEmanation"),
@@ -812,7 +818,7 @@ const saving = (
   hole(name, {
     kind: "savingThrowOutcome",
     [variant]: value,
-    ...(variant === "hideousLaughterRepeatSave"
+    ...(variant === "saveGatedConditionRepeatSave"
       ? { damageOccurrence: { kind: "untrackedDamage" } }
       : {}),
     ability,
@@ -908,13 +914,18 @@ const savingThrowCases: readonly CodecCase[] = [
     }),
   ),
   successCase(
-    "hideousLaughterRepeatSave",
-    saving("hideousLaughterRepeatSave", "hideousLaughterRepeatSave", "wis", {
-      ...source,
-      effectRef: fixture.hideousLaughterEffectRef,
-      trigger: "endTurn",
-      save: save("wis"),
-    }),
+    "saveGatedConditionRepeatSave",
+    saving(
+      "saveGatedConditionRepeatSave",
+      "saveGatedConditionRepeatSave",
+      "wis",
+      {
+        ...source,
+        effectRef: fixture.saveGatedConditionWithRepeatEffectRef,
+        trigger: "endTurn",
+        save: save("wis"),
+      },
+    ),
   ),
   successCase(
     "spellConditionEndTurnSave",
@@ -940,9 +951,13 @@ const savingThrowCases: readonly CodecCase[] = [
   ),
   ...(
     [
-      ["greaseGroundHazard", fixture.greaseEffectRef, "area:codec-grease"],
       [
-        "sleetStormAreaHazard",
+        "persistentAreaSaveCondition",
+        fixture.greaseEffectRef,
+        "area:codec-grease",
+      ],
+      [
+        "persistentAreaSaveComposite",
         fixture.sleetStormEffectRef,
         "area:codec-sleet-storm",
       ],
@@ -961,8 +976,8 @@ const savingThrowCases: readonly CodecCase[] = [
   ),
   ...(
     [
-      ["insectPlagueAreaHazard", fixture.insectPlagueEffectRef],
-      ["cloudkillAreaHazard", fixture.cloudkillEffectRef],
+      ["persistentAreaSaveDamage", fixture.persistentAreaSaveDamageEffectRef],
+      ["persistentAreaSaveDamage", fixture.cloudkillEffectRef],
     ] as const
   ).map(([variant, effectRef]) =>
     successCase(
@@ -971,7 +986,7 @@ const savingThrowCases: readonly CodecCase[] = [
         ...source,
         effectRef,
         areaId: battleAreaId(
-          variant === "insectPlagueAreaHazard"
+          variant === "persistentAreaSaveDamage"
             ? "area:codec-insect-plague"
             : "area:codec-cloudkill",
         ),
@@ -1011,27 +1026,37 @@ const savingThrowCases: readonly CodecCase[] = [
     }),
   ),
   successCase(
-    "gustOfWindLineSave",
-    saving("gustOfWindLineSave", "gustOfWindLine", "str", {
-      targetId: skeletonId,
-      sourceCombatantId: wizardId,
-      sourceProcedureRef: fixture.sourceProcedureRef,
-      effectRef: fixture.gustOfWindEffectRef,
-      areaId: battleAreaId("area:codec-gust"),
-      directionId: battleLineDirectionId("direction:codec-gust"),
-      trigger: "endsTurnInLine",
-      save: { ability: "str", dc: { kind: "caster_spell_save_dc" } },
-      pushDistanceFeet: 15,
-    }),
+    "directionalPersistentAreaSave",
+    saving(
+      "directionalPersistentAreaSave",
+      "directionalPersistentArea",
+      "str",
+      {
+        targetId: skeletonId,
+        sourceCombatantId: wizardId,
+        sourceProcedureRef: fixture.sourceProcedureRef,
+        effectRef: fixture.gustOfWindEffectRef,
+        areaId: battleAreaId("area:codec-gust"),
+        directionId: battleLineDirectionId("direction:codec-gust"),
+        trigger: "endsTurnInLine",
+        save: { ability: "str", dc: { kind: "caster_spell_save_dc" } },
+        pushDistanceFeet: 15,
+      },
+    ),
   ),
   successCase(
-    "dragonsBreathSave",
-    saving("dragonsBreathSave", "dragonsBreath", "dex", {
-      targetId: skeletonId,
-      sourceCombatantId: wizardId,
-      sourceProcedureRef: fixture.sourceProcedureRef,
-      lengthFeet: 15,
-    }),
+    "grantedAreaSaveDamageActionSave",
+    saving(
+      "grantedAreaSaveDamageActionSave",
+      "grantedAreaSaveDamageAction",
+      "dex",
+      {
+        targetId: skeletonId,
+        sourceCombatantId: wizardId,
+        sourceProcedureRef: fixture.sourceProcedureRef,
+        lengthFeet: 15,
+      },
+    ),
   ),
 ];
 
@@ -1134,7 +1159,7 @@ const rolledDiceCases: readonly CodecCase[] = [
       critical: false,
       movableZone: {
         ...source,
-        effectRef: fixture.flamingSphereEffectRef,
+        effectRef: fixture.persistentAreaSaveDamageEffectRef,
         areaId: battleAreaId("area:codec-flaming-sphere"),
         trigger: "endsTurnWithinFiveFeetOfSphere",
         save: save("dex"),
@@ -1155,12 +1180,12 @@ const rolledDiceCases: readonly CodecCase[] = [
     }),
   ),
   successCase(
-    "insectPlagueAreaHazard",
-    rolled("insectPlagueAreaHazard", {
+    "persistentAreaSaveDamage",
+    rolled("persistentAreaSaveDamage", {
       critical: false,
-      insectPlagueAreaHazard: {
+      persistentAreaSaveDamage: {
         ...source,
-        effectRef: fixture.insectPlagueEffectRef,
+        effectRef: fixture.persistentAreaSaveDamageEffectRef,
         areaId: battleAreaId("area:codec-insect-plague"),
         trigger: "entersArea",
         damage: { expr: { dice: 1, dieSize: 6 }, damageType: "piercing" },
@@ -1168,10 +1193,10 @@ const rolledDiceCases: readonly CodecCase[] = [
     }),
   ),
   successCase(
-    "cloudkillAreaHazard",
-    rolled("cloudkillAreaHazard", {
+    "persistentAreaSaveDamage",
+    rolled("persistentAreaSaveDamage", {
       critical: false,
-      cloudkillAreaHazard: {
+      persistentAreaSaveDamage: {
         ...source,
         effectRef: fixture.cloudkillEffectRef,
         areaId: battleAreaId("area:codec-cloudkill"),
@@ -1181,9 +1206,9 @@ const rolledDiceCases: readonly CodecCase[] = [
     }),
   ),
   successCase(
-    "dragonsBreathDamage",
-    rolled("dragonsBreathDamage", {
-      dragonsBreath: {
+    "grantedAreaSaveDamageActionDamage",
+    rolled("grantedAreaSaveDamageActionDamage", {
+      grantedAreaSaveDamageAction: {
         sourceCombatantId: wizardId,
         sourceProcedureRef: fixture.sourceProcedureRef,
         damageType: "fire",
@@ -1202,26 +1227,26 @@ const sourceOwningHoleCases: readonly EncodedHole[] = [
     sourceProcedureRef: invalidSource,
     choices: ["stealth"],
   }),
-  hole("thaumaturgyActiveOneMinuteEffectCount", {
-    kind: "thaumaturgyActiveOneMinuteEffectCount",
+  hole("temporaryAbilityCheckRollModeActiveEffectCount", {
+    kind: "temporaryAbilityCheckRollModeActiveEffectCount",
     sourceProcedureRef: invalidSource,
     maximumActiveOneMinuteEffects: 3,
     requiresTableSpellEffectCount: true,
   }),
-  hole("commandOptionChoice", {
-    kind: "commandOptionChoice",
+  hole("compelledBehaviorOptionChoice", {
+    kind: "compelledBehaviorOptionChoice",
     sourceProcedureRef: invalidSource,
     choices: ["approach"],
   }),
-  hole("spiritualWeaponForcePosition", {
-    kind: "spiritualWeaponForcePosition",
+  hole("spatialMeleeSpellAttackProxyPosition", {
+    kind: "spatialMeleeSpellAttackProxyPosition",
     sourceProcedureRef: invalidSource,
     mode: "cast",
     maxDistanceFeet: 60,
     requiresTableSpatialFact: true,
   }),
-  hole("gustOfWindLineDirectionChoice", {
-    kind: "gustOfWindLineDirectionChoice",
+  hole("directionalPersistentAreaDirectionChoice", {
+    kind: "directionalPersistentAreaDirectionChoice",
     sourceCombatantId: wizardId,
     sourceProcedureRef: invalidSource,
     effectRef: fixture.effectRef,
@@ -1263,10 +1288,10 @@ const cases: readonly CodecCase[] = [
     }),
   ),
   failureCase(
-    "hideousLaughterRepeatSaveWrongOwner",
+    "saveGatedConditionRepeatSaveWrongOwner",
     saving(
-      "hideousLaughterRepeatSaveWrongOwner",
-      "hideousLaughterRepeatSave",
+      "saveGatedConditionRepeatSaveWrongOwner",
+      "saveGatedConditionRepeatSave",
       "wis",
       {
         ...source,
@@ -1370,9 +1395,9 @@ describe("battle codec execution-reference boundaries", () => {
   });
 
   test.each([
-    ["greaseGroundHazard", { kind: "nonSpatial" }],
+    ["persistentAreaSaveCondition", { kind: "nonSpatial" }],
     [
-      "gustOfWindLine",
+      "directionalPersistentArea",
       { kind: "area", areaId: battleAreaId("area:codec-wrong-class") },
     ],
     ["glyphDurableOccurrence", { kind: "nonSpatial" }],
@@ -1556,8 +1581,8 @@ describe("battle codec execution-reference boundaries", () => {
     "rejects a Gust occurrence ref with the wrong %s geometry",
     (_, areaId, directionId) => {
       const replacement = saving(
-        "gustOfWindLineSaveWrongGeometry",
-        "gustOfWindLine",
+        "directionalPersistentAreaSaveWrongGeometry",
+        "directionalPersistentArea",
         "str",
         {
           targetId: skeletonId,
@@ -1633,7 +1658,7 @@ describe("battle codec execution-reference boundaries", () => {
           kind: "areaDifficultTerrain",
           sources: [
             {
-              kind: "spikeGrowthHazard",
+              kind: "areaMovementDistanceDamage",
               effectRef: fixture.spikeGrowthEffectRef,
               sourceCombatantId: wizardId,
               sourceProcedureRef: fixture.sourceProcedureRef,
@@ -1644,8 +1669,8 @@ describe("battle codec execution-reference boundaries", () => {
           totalDistanceFeet: 10,
           difficultTerrainDistanceFeet: 5,
         },
-        gustOfWindLineMovement: {
-          kind: "gustOfWindLineMovement",
+        directionalPersistentAreaMovement: {
+          kind: "directionalPersistentAreaMovement",
           effectRef: fixture.gustOfWindEffectRef,
           sourceCombatantId: wizardId,
           sourceProcedureRef: fixture.sourceProcedureRef,
@@ -1703,7 +1728,7 @@ describe("battle codec execution-reference boundaries", () => {
           kind: "areaDifficultTerrain",
           sources: [
             {
-              kind: "spikeGrowthHazard",
+              kind: "areaMovementDistanceDamage",
               sourceCombatantId: wizardId,
               sourceProcedureRef: fixture.sourceProcedureRef,
               areaId: battleAreaId("area:codec-spike-growth"),
@@ -1722,8 +1747,8 @@ describe("battle codec execution-reference boundaries", () => {
         speedKind: "walk",
         movementCostFeet: 10,
         provokedOpportunityAttacks: [],
-        gustOfWindLineMovement: {
-          kind: "gustOfWindLineMovement",
+        directionalPersistentAreaMovement: {
+          kind: "directionalPersistentAreaMovement",
           sourceCombatantId: wizardId,
           sourceProcedureRef: fixture.sourceProcedureRef,
           areaId: battleAreaId("area:codec-gust"),
@@ -1818,7 +1843,7 @@ describe("battle codec execution-reference boundaries", () => {
 
   test("binds an Antimagic Field target choice to the source-owned aura occurrence", () => {
     const aura = {
-      kind: "antimagicFieldAura" as const,
+      kind: "magicSuppressionEmanation" as const,
       effectRef: fixture.antimagicFieldEffectRef,
       areaId: battleAreaId("area:codec-antimagic-field"),
       sourceCombatantId: wizardId,
@@ -1898,10 +1923,10 @@ describe("battle codec execution-reference boundaries", () => {
 
   test("rejects a Hideous Laughter repeat-save hole without its occurrence ref", () => {
     const decoded = Schema.decodeUnknownResult(BattleHoleSchema)({
-      ...baseHole("hideousLaughterRepeatSaveMissingEffectRef"),
+      ...baseHole("saveGatedConditionRepeatSaveMissingEffectRef"),
       kind: "savingThrowOutcome",
       damageOccurrence: { kind: "untrackedDamage" },
-      hideousLaughterRepeatSave: {
+      saveGatedConditionRepeatSave: {
         ...source,
         trigger: "damage",
         save: save("wis"),

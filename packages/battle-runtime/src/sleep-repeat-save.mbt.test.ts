@@ -472,12 +472,12 @@ describe("Sleep repeat-save MBT parity", () => {
     const target = repeatSaveFailure.state.combatants.get(skeletonId);
     expect(
       target?.activeEffects.some(
-        (effect) => effect.kind === "sleepPendingRepeatSave",
+        (effect) => effect.kind === "stagedSaveConditionPendingRepeat",
       ),
     ).toBe(false);
     expect(
       target?.activeEffects.some(
-        (effect) => effect.kind === "sleepUnconscious",
+        (effect) => effect.kind === "stagedSaveConditionApplied",
       ),
     ).toBe(true);
 

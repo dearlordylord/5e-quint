@@ -757,10 +757,10 @@ export function movementFill(
       BattleFill,
       { readonly kind: "movement" }
     >["value"]["provokedOpportunityAttacks"];
-    readonly jumpMovementReplacement?: Extract<
+    readonly fixedCostMovementReplacement?: Extract<
       BattleFill,
       { readonly kind: "movement" }
-    >["value"]["jumpMovementReplacement"];
+    >["value"]["fixedCostMovementReplacement"];
     readonly levitatedMovement?: Extract<
       BattleFill,
       { readonly kind: "movement" }
@@ -773,10 +773,10 @@ export function movementFill(
       BattleFill,
       { readonly kind: "movement" }
     >["value"]["acrobaticMovement"];
-    readonly gustOfWindLineMovement?: Extract<
+    readonly directionalPersistentAreaMovement?: Extract<
       BattleFill,
       { readonly kind: "movement" }
-    >["value"]["gustOfWindLineMovement"];
+    >["value"]["directionalPersistentAreaMovement"];
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   return {
@@ -786,9 +786,9 @@ export function movementFill(
       speedKind: value.speedKind ?? "walk",
       movementCostFeet: movementFeet(value.movementCostFeet),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
-      ...(value.jumpMovementReplacement === undefined
+      ...(value.fixedCostMovementReplacement === undefined
         ? {}
-        : { jumpMovementReplacement: value.jumpMovementReplacement }),
+        : { fixedCostMovementReplacement: value.fixedCostMovementReplacement }),
       ...(value.levitatedMovement === undefined
         ? {}
         : { levitatedMovement: value.levitatedMovement }),
@@ -798,9 +798,12 @@ export function movementFill(
       ...(value.acrobaticMovement === undefined
         ? {}
         : { acrobaticMovement: value.acrobaticMovement }),
-      ...(value.gustOfWindLineMovement === undefined
+      ...(value.directionalPersistentAreaMovement === undefined
         ? {}
-        : { gustOfWindLineMovement: value.gustOfWindLineMovement }),
+        : {
+            directionalPersistentAreaMovement:
+              value.directionalPersistentAreaMovement,
+          }),
     },
   };
 }

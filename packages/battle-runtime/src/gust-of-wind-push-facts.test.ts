@@ -32,7 +32,7 @@ describe("Gust of Wind Line push facts", () => {
     {
       name: "for another spell area",
       area: {
-        kind: "greaseGroundArea",
+        kind: "persistentAreaSaveConditionArea",
         areaId: greaseAreaId,
         originAnchorId: spellCasterId,
         affectedTargetIds: [spellTargetId],
@@ -130,9 +130,12 @@ describe("Gust of Wind Line push facts", () => {
 
 function gustOfWindArea(
   creaturePushes: readonly BattleGustOfWindLineCreaturePushOutcome[],
-): Extract<BattleSpellAreaChoice, { readonly kind: "gustOfWindLineArea" }> {
+): Extract<
+  BattleSpellAreaChoice,
+  { readonly kind: "directionalPersistentAreaArea" }
+> {
   return {
-    kind: "gustOfWindLineArea",
+    kind: "directionalPersistentAreaArea",
     areaId: gustOfWindAreaId,
     directionId: gustOfWindEastDirectionId,
     originAnchorId: spellCasterId,

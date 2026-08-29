@@ -33,9 +33,9 @@ import {
   singleTargetSavingThrowOutcomeFill,
   spellAct,
   webAreaFill,
-  webAreaRemovedAct,
+  persistentAreaSaveConditionEscapeAreaRemovedAct,
   webRestrainedNoLongerInAreaAct,
-  webRestraintSaveAct,
+  persistentAreaSaveConditionEscapeSaveAct,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
@@ -304,7 +304,11 @@ function discoverWebSave(
   state: WebRuntimeState,
   trigger: "entersArea" | "startsTurnInArea",
 ): WebRuntimeState {
-  const act = webRestraintSaveAct(state.battle, spellTargetId, trigger);
+  const act = persistentAreaSaveConditionEscapeSaveAct(
+    state.battle,
+    spellTargetId,
+    trigger,
+  );
   const result = resolveBattleSubject({
     state: state.battle.state,
     subject: act.subject,
@@ -327,7 +331,11 @@ function fillWebSave(
   succeeded: boolean,
 ): WebRuntimeState {
   const save = requireWebSaveHole(state.holes, trigger);
-  const act = webRestraintSaveAct(state.battle, spellTargetId, trigger);
+  const act = persistentAreaSaveConditionEscapeSaveAct(
+    state.battle,
+    spellTargetId,
+    trigger,
+  );
   const result = requireResolved(
     resolveBattleSubject({
       state: state.battle.state,
@@ -413,7 +421,8 @@ function moveWithDifficultTerrain(state: WebRuntimeState): WebRuntimeState {
     spellCasterId,
   ).activeEffects.find(
     (effect): effect is WebRestraintHazardEffect =>
-      effect.kind === "webRestraintHazard" && effect.areaId === webAreaId,
+      effect.kind === "persistentAreaSaveConditionEscape" &&
+      effect.areaId === webAreaId,
   );
   if (hazard === undefined) {
     throw new Error("Expected active Web hazard.");
@@ -443,7 +452,7 @@ function moveWithDifficultTerrain(state: WebRuntimeState): WebRuntimeState {
             kind: "areaDifficultTerrain",
             sources: [
               {
-                kind: "webAreaHazard",
+                kind: "persistentAreaSaveConditionEscape",
                 effectRef: hazard.effectRef,
                 sourceCombatantId: spellCasterId,
                 sourceProcedureRef: hazard.sourceProcedureRef,
@@ -473,7 +482,8 @@ function removeArea(state: WebRuntimeState): WebRuntimeState {
   const result = requireResolved(
     resolveBattleSubject({
       state: state.battle.state,
-      subject: webAreaRemovedAct(state.battle).subject,
+      subject: persistentAreaSaveConditionEscapeAreaRemovedAct(state.battle)
+        .subject,
       fills: [],
     }),
     "Expected Web area removal to resolve.",
@@ -494,7 +504,7 @@ function webProjection(state: WebRuntimeState): WebRestraintHazardState {
   const target = requireCombatant(state.battle.state, spellTargetId);
   const hazard = caster.activeEffects.find(
     (effect): effect is WebRestraintHazardEffect =>
-      effect.kind === "webRestraintHazard" &&
+      effect.kind === "persistentAreaSaveConditionEscape" &&
       effect.sourceCombatantId === spellCasterId &&
       effect.areaId === webAreaId,
   );

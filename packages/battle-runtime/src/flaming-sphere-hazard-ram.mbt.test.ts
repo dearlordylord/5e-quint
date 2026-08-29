@@ -87,7 +87,7 @@ function createFlamingSphereHazardRamDriver() {
   });
 }
 
-const flamingSphereHazardRamStateCheck = stateCheck(
+const persistentAreaSaveDamageHazardRamStateCheck = stateCheck(
   normalizeFlamingSphereHazardRamQuintState,
   compareFlamingSphereHazardRamState,
 );
@@ -153,7 +153,7 @@ describe("Flaming Sphere hazard/ram MBT parity", () => {
         backend: "typescript",
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(6),
-        stateCheck: flamingSphereHazardRamStateCheck,
+        stateCheck: persistentAreaSaveDamageHazardRamStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,

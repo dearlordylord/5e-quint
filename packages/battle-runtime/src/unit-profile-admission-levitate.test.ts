@@ -404,7 +404,8 @@ describe("L12G deterministic Levitate creature admission", () => {
     const altitudeAct = discoverBattleActCandidates(nextCasterTurn.state).find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
-        candidate.subject.command === "levitateAltitudeControl",
+        candidate.subject.command ===
+          "controlledVerticalSuspensionAltitudeControl",
     );
     expect(altitudeAct).toBeDefined();
     if (altitudeAct === undefined) {
@@ -521,7 +522,8 @@ describe("L12G deterministic Levitate creature admission", () => {
     const altitudeAct = discoverBattleActCandidates(twoOccurrences).find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
-        candidate.subject.command === "levitateAltitudeControl" &&
+        candidate.subject.command ===
+          "controlledVerticalSuspensionAltitudeControl" &&
         candidate.subject.effectRef === selected.effectRef,
     );
     if (altitudeAct === undefined) {
@@ -607,7 +609,8 @@ describe("L12G deterministic Levitate creature admission", () => {
       discoverBattleActCandidates(casterTurn).some(
         (candidate) =>
           candidate.subject.tag === "runtimeCommand" &&
-          candidate.subject.command === "levitateAltitudeControl",
+          candidate.subject.command ===
+            "controlledVerticalSuspensionAltitudeControl",
       ),
     ).toBe(false);
     const moveAct = discoverBattleActCandidates(casterTurn).find(

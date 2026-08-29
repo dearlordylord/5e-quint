@@ -23,7 +23,7 @@ import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-appl
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.invocation-magic-weapon-enhancement
 import { describe, expect, test } from "vitest";
 import {
-  counterspellUnitId,
+  spellCastInterruptionReactionUnitId,
   divineFavorDurationTicks,
   divineFavorUnitId,
   magicWeaponDurationTicks,
@@ -252,7 +252,7 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
         cantrips: [],
-        preparedSpells: [spellRecord(counterspellUnitId)],
+        preparedSpells: [spellRecord(spellCastInterruptionReactionUnitId)],
         featurePreparedSpells: [],
         spellAccesses: [],
         spellbookRitualSpellAccesses: [],
@@ -280,7 +280,11 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
               sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
                 session,
                 spellTargetId,
-                spellSlotInvocationRef(counterspellUnitId, 3, "counterspell"),
+                spellSlotInvocationRef(
+                  spellCastInterruptionReactionUnitId,
+                  3,
+                  "spellCastInterruptionReaction",
+                ),
               ),
               rangeFeet: movementFeet(60),
             },
@@ -1118,7 +1122,11 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       procedureRef: requireCharacterSpellProcedureRefForTest(
         session,
         spellCasterId,
-        spellSlotInvocationRef(magicWeaponUnitId, 2, "magicWeaponEnhancement"),
+        spellSlotInvocationRef(
+          magicWeaponUnitId,
+          2,
+          "weaponAttackDamageEnhancement",
+        ),
       ),
       mode: { tag: "cast" },
     });
@@ -1159,7 +1167,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       cast.state.combatants.get(spellCasterId)?.activeEffects,
     ).toContainEqual(
       expect.objectContaining({
-        kind: "spellMagicWeaponEnhancement",
+        kind: "spellWeaponAttackDamageEnhancement",
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         holderCombatantId: spellCasterId,
@@ -1286,7 +1294,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       state: session.state,
       ownerId: spellCasterId,
       effect: {
-        kind: "spellMagicWeaponEnhancement",
+        kind: "spellWeaponAttackDamageEnhancement",
         sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         holderCombatantId: spellCasterId,
@@ -1392,7 +1400,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
         state: session.state,
         ownerId: spellCasterId,
         effect: {
-          kind: "spellMagicWeaponEnhancement",
+          kind: "spellWeaponAttackDamageEnhancement",
           sourceProcedureRef: bonusSpellAct({
             session,
             spellId: magicWeaponUnitId,
@@ -1432,7 +1440,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       recast.state,
       spellCasterId,
     ).activeEffects.filter(
-      (effect) => effect.kind === "spellMagicWeaponEnhancement",
+      (effect) => effect.kind === "spellWeaponAttackDamageEnhancement",
     );
     expect(effects).toEqual([
       expect.objectContaining({
@@ -1456,7 +1464,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
         state: session.state,
         ownerId: spellTargetId,
         effect: {
-          kind: "spellMagicWeaponEnhancement",
+          kind: "spellWeaponAttackDamageEnhancement",
           sourceProcedureRef: battleProcedureExecutionRefForTest(
             "other-magic-weapon-caster",
           ),
@@ -1521,7 +1529,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       combatants: new Map(cast.state.combatants).set(spellCasterId, {
         ...caster,
         activeEffects: caster.activeEffects.map((effect) =>
-          effect.kind === "spellMagicWeaponEnhancement"
+          effect.kind === "spellWeaponAttackDamageEnhancement"
             ? {
                 ...effect,
                 expiresAt: {

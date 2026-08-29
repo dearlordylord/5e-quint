@@ -194,7 +194,7 @@ type MetamagicBattleInput = {
     readonly spellLevel: 1 | 2 | 3 | 4 | 5;
     readonly count: number;
   }[];
-  readonly counterspeller?: true;
+  readonly spellCastInterruptionReactioner?: true;
 };
 
 const INITIAL_SORCERY_POINTS = 4;
@@ -950,7 +950,7 @@ function resolveQuickenedConcentrationCounterspell(
   outcome: CounterspellOutcome,
 ): QuickenedSpellGovernorRuntimeState {
   const state = initialRuntimeState({
-    counterspeller: true,
+    spellCastInterruptionReactioner: true,
     preparedSpellIds: [parseSharedUnitId("bless")],
     casterSpellSlots: [{ spellLevel: 1, count: 1 }],
   });
@@ -962,7 +962,9 @@ function resolveQuickenedConcentrationCounterspell(
       subject: act.subject,
       fills: [
         spellTargetListFill(targetHole, "bless", [fighterId]),
-        spellCastReactionFactsFill([counterspellTriggerFact(state.battle)]),
+        spellCastReactionFactsFill([
+          spellCastInterruptionReactionTriggerFact(state.battle),
+        ]),
       ],
     }),
   );
@@ -980,7 +982,7 @@ function resolveQuickenedConcentrationCounterspell(
 
 function resolveQuickenedNonConcentrationCounterspellWithPriorBless(): QuickenedSpellGovernorRuntimeState {
   const initial = initialRuntimeState({
-    counterspeller: true,
+    spellCastInterruptionReactioner: true,
     preparedSpellIds: [
       parseSharedUnitId("bless"),
       parseSharedUnitId("cure_wounds"),
@@ -1009,7 +1011,9 @@ function resolveQuickenedNonConcentrationCounterspellWithPriorBless(): Quickened
       subject: act.subject,
       fills: [
         target,
-        spellCastReactionFactsFill([counterspellTriggerFact(state.battle)]),
+        spellCastReactionFactsFill([
+          spellCastInterruptionReactionTriggerFact(state.battle),
+        ]),
       ],
     }),
   );
@@ -1585,10 +1589,10 @@ function metamagicBattle(input?: MetamagicBattleInput): BattleRuntimeSession {
         initiative: 10,
         currentHp: INITIAL_TARGET_HP,
         maxHp: 20,
-        ...(input?.counterspeller === true
+        ...(input?.spellCastInterruptionReactioner === true
           ? {
               spellcasting: wizardSpellcasting({
-                preparedSpells: [spellRecord("counterspell")],
+                preparedSpells: [spellRecord("spellCastInterruptionReaction")],
                 spellSlots: [{ spellLevel: 3, count: 1 }],
               }),
             }
@@ -1794,7 +1798,7 @@ type CounterspellTriggerFact = Extract<
   { readonly kind: "spellCastInterruptionTriggerCasterVisibleWithinRange" }
 >;
 
-function counterspellTriggerFact(
+function spellCastInterruptionReactionTriggerFact(
   session: BattleRuntimeSession,
 ): CounterspellTriggerFact {
   return {
@@ -1804,7 +1808,11 @@ function counterspellTriggerFact(
     sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
       session,
       fighterId,
-      spellSlotInvocationRef("counterspell", 3, "counterspell"),
+      spellSlotInvocationRef(
+        "spellCastInterruptionReaction",
+        3,
+        "spellCastInterruptionReaction",
+      ),
     ),
     rangeFeet: movementFeet(60),
   };
@@ -1849,8 +1857,8 @@ function requireCounterspellChoice(
       );
       return (
         invocation.tag === "spellSlot" &&
-        invocation.spellId === "counterspell" &&
-        invocation.procedure === "counterspell" &&
+        invocation.spellId === "spellCastInterruptionReaction" &&
+        invocation.procedure === "spellCastInterruptionReaction" &&
         Number(invocation.slotLevel) === 3
       );
     },

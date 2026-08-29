@@ -3488,7 +3488,10 @@ type SaveConditionExpectedEffect =
       "kind" | "condition"
     >
   | Pick<
-      Extract<BattleActiveEffect, { readonly kind: "faerieFireOutline" }>,
+      Extract<
+        BattleActiveEffect,
+        { readonly kind: "saveGatedTargetProjection" }
+      >,
       "kind"
     >;
 type SaveConditionMetamagicCaseShape = {
@@ -3515,7 +3518,7 @@ const SAVE_CONDITION_METAMAGIC_CASES = [
     spellLevel: 1,
     failedSaveTargetId: skeletonId,
     carefulFailedSaveTargetIds: [skeletonId],
-    expectedFailedSaveEffects: [{ kind: "faerieFireOutline" }],
+    expectedFailedSaveEffects: [{ kind: "saveGatedTargetProjection" }],
   },
 ] as const satisfies readonly SaveConditionMetamagicCaseShape[];
 type SaveConditionMetamagicSpellCase =
@@ -4200,13 +4203,16 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       act.initialHoles,
       "Spell targets",
     );
-    const commandOptionHole = findHole(act.initialHoles, "commandOptionChoice");
+    const commandOptionHole = findHole(
+      act.initialHoles,
+      "compelledBehaviorOptionChoice",
+    );
     const targetFill = spellTargetListFill(targetHole, [skeletonId]);
     const optionFill: Extract<
       BattleFill,
-      { readonly kind: "commandOptionChoice" }
+      { readonly kind: "compelledBehaviorOptionChoice" }
     > = {
-      kind: "commandOptionChoice",
+      kind: "compelledBehaviorOptionChoice",
       holeId: commandOptionHole.holeId,
       value: "halt",
     };
@@ -4248,7 +4254,10 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       act.initialHoles,
       "Spell Careful Spell protected targets",
     );
-    const commandOptionHole = findHole(act.initialHoles, "commandOptionChoice");
+    const commandOptionHole = findHole(
+      act.initialHoles,
+      "compelledBehaviorOptionChoice",
+    );
 
     expect(targetHole.label).toBe("Spell targets");
     expect(protectedTargetsHole).toMatchObject({
@@ -4262,9 +4271,9 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
     ]);
     const optionFill: Extract<
       BattleFill,
-      { readonly kind: "commandOptionChoice" }
+      { readonly kind: "compelledBehaviorOptionChoice" }
     > = {
-      kind: "commandOptionChoice",
+      kind: "compelledBehaviorOptionChoice",
       holeId: commandOptionHole.holeId,
       value: "halt",
     };
@@ -4757,7 +4766,7 @@ function withSanctuaryWard(
   const procedureRef = requireCharacterSpellProcedureRefForTest(
     session,
     wizardId,
-    spellSlotInvocationRef("sanctuary", 1, "sanctuaryTargetingInterdiction"),
+    spellSlotInvocationRef("sanctuary", 1, "targetingSaveInterdiction"),
   );
   const act = discoverBattleActs(session).find(
     (candidate) =>
@@ -4786,7 +4795,7 @@ function withMirrorImageDuplicates(
   const procedureRef = requireCharacterSpellProcedureRefForTest(
     session,
     targetId,
-    spellSlotInvocationRef("mirror_image", 2, "mirrorImageHitInterception"),
+    spellSlotInvocationRef("mirror_image", 2, "duplicateHitInterception"),
   );
   const act = discoverBattleActs(session).find(
     (candidate) =>

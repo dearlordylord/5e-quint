@@ -45,22 +45,22 @@ import {
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
-  insectPlagueAreaFill,
-  insectPlagueAreaHazardSaveAct,
+  persistentAreaSaveDamageAreaFill,
+  persistentAreaSaveDamageSaveAct,
   singleTargetSavingThrowOutcomeFill,
   spellAct,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
-  insectPlagueAreaId,
-  insectPlagueUnitId,
+  persistentAreaSaveDamageAreaId,
+  persistentAreaSaveDamageUnitId,
   spellCasterId,
   spellTargetId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 
 type InsectPlagueEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "insectPlagueAreaHazard" }
+  { readonly kind: "persistentAreaSaveDamage" }
 >;
 
 type InsectPlagueMbtProjection = {
@@ -110,7 +110,9 @@ function createInsectPlagueAreaHazardDriver() {
     let state = initialRuntimeState(5);
     return {
       init: ({ slotLevel }) => {
-        state = initialRuntimeState(insectPlagueSlotLevel(slotLevel));
+        state = initialRuntimeState(
+          persistentAreaSaveDamageSlotLevel(slotLevel),
+        );
       },
       doCastInsectPlague: () => {
         state = castInsectPlague(state);
@@ -123,7 +125,7 @@ function createInsectPlagueAreaHazardDriver() {
         state = resolveInsectPlagueSave(state, {
           savingThrowSucceeded,
           rolledDamage,
-          trigger: insectPlagueTriggerFromQuint(trigger),
+          trigger: persistentAreaSaveDamageTriggerFromQuint(trigger),
         });
       },
       doBeginInsectPlagueLaterTurn: () => {
@@ -133,12 +135,12 @@ function createInsectPlagueAreaHazardDriver() {
         state = endInsectPlagueConcentration(state);
       },
       step: () => {},
-      getState: () => insectPlagueRuntimeProjection(state),
+      getState: () => persistentAreaSaveDamageRuntimeProjection(state),
     };
   });
 }
 
-const insectPlagueStateCheck = stateCheck(
+const persistentAreaSaveDamageStateCheck = stateCheck(
   normalizeInsectPlagueQuintState,
   compareInsectPlagueStates,
 );
@@ -147,7 +149,7 @@ describe("Insect Plague area-hazard MBT parity", () => {
   it("uses the exact cast occurrence across save holes and concentration cleanup", () => {
     const cast = castInsectPlague(initialRuntimeState(6));
     const effect = requireInsectPlagueEffect(cast.session.state);
-    const saveAct = insectPlagueAreaHazardSaveAct(
+    const saveAct = persistentAreaSaveDamageSaveAct(
       cast.session,
       spellTargetId,
       "appearsInArea",
@@ -158,13 +160,13 @@ describe("Insect Plague area-hazard MBT parity", () => {
     expect(saveAct.subject.areaMembershipTrigger.effectRef).toBe(
       effect.effectRef,
     );
-    if (!("insectPlagueAreaHazard" in saveHole)) {
+    if (!("persistentAreaSaveDamage" in saveHole)) {
       throw new Error("Expected an Insect Plague save hole.");
     }
-    expect(saveHole.insectPlagueAreaHazard.effectRef).toBe(effect.effectRef);
+    expect(saveHole.persistentAreaSaveDamage.effectRef).toBe(effect.effectRef);
 
     const cleaned = endInsectPlagueConcentration(cast);
-    expect(insectPlagueRuntimeProjection(cleaned)).toMatchObject({
+    expect(persistentAreaSaveDamageRuntimeProjection(cleaned)).toMatchObject({
       areaActive: false,
       concentrationActive: false,
       lightlyObscured: false,
@@ -192,16 +194,20 @@ describe("Insect Plague area-hazard MBT parity", () => {
       trigger: "endsTurnInArea",
     });
 
-    expect(insectPlagueRuntimeProjection(enteredOffTurn)).toMatchObject({
+    expect(
+      persistentAreaSaveDamageRuntimeProjection(enteredOffTurn),
+    ).toMatchObject({
       areaActive: true,
       targetTurn: false,
       savedThisTurn: true,
       targetHitPoints: 480,
     });
-    expect(insectPlagueRuntimeProjection(duplicateAppearance)).toEqual(
-      insectPlagueRuntimeProjection(enteredOffTurn),
-    );
-    expect(insectPlagueRuntimeProjection(endedTargetTurn)).toMatchObject({
+    expect(
+      persistentAreaSaveDamageRuntimeProjection(duplicateAppearance),
+    ).toEqual(persistentAreaSaveDamageRuntimeProjection(enteredOffTurn));
+    expect(
+      persistentAreaSaveDamageRuntimeProjection(endedTargetTurn),
+    ).toMatchObject({
       targetTurn: true,
       savedThisTurn: true,
       targetHitPoints: 470,
@@ -234,11 +240,11 @@ describe("Insect Plague area-hazard MBT parity", () => {
             kind: "areaDifficultTerrain",
             sources: [
               {
-                kind: "insectPlagueHazard",
+                kind: "persistentAreaSaveDamage",
                 effectRef: effect.effectRef,
                 sourceCombatantId: spellCasterId,
                 sourceProcedureRef: effect.sourceProcedureRef,
-                areaId: insectPlagueAreaId,
+                areaId: persistentAreaSaveDamageAreaId,
               },
             ],
             totalDistanceFeet: movementFeet(10),
@@ -248,12 +254,14 @@ describe("Insect Plague area-hazard MBT parity", () => {
       ],
     });
 
-    expect(insectPlagueRuntimeProjection(targetTurn)).toMatchObject({
-      areaActive: true,
-      areaRadiusFeet: 20,
-      lightlyObscured: true,
-      difficultTerrain: true,
-    });
+    expect(persistentAreaSaveDamageRuntimeProjection(targetTurn)).toMatchObject(
+      {
+        areaActive: true,
+        areaRadiusFeet: 20,
+        lightlyObscured: true,
+        difficultTerrain: true,
+      },
+    );
     expect(moved).toMatchObject({
       tag: "resolved",
       snapshot: {
@@ -281,7 +289,7 @@ describe("Insect Plague area-hazard MBT parity", () => {
         backend: "typescript",
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(5),
-        stateCheck: insectPlagueStateCheck,
+        stateCheck: persistentAreaSaveDamageStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,
@@ -292,7 +300,7 @@ function initialRuntimeState(
   slotLevel: InsectPlagueRuntimeState["slotLevel"],
 ): InsectPlagueRuntimeState {
   const session = spellBattle({
-    preparedSpells: [spellRecord(insectPlagueUnitId)],
+    preparedSpells: [spellRecord(persistentAreaSaveDamageUnitId)],
     spellSlots: [{ spellLevel: slotLevel, count: 1 }],
     targetHp: 500,
     targetMaxHp: 500,
@@ -311,14 +319,14 @@ function castInsectPlague(
 ): InsectPlagueRuntimeState {
   const act = spellAct({
     session: state.session,
-    spellId: insectPlagueUnitId,
+    spellId: persistentAreaSaveDamageUnitId,
     slotLevel: state.slotLevel,
   });
   const areaHole = requireHole(act.initialHoles, "spellAreaChoice");
   const resolved = resolveBattleSubject({
     state: state.session.state,
     subject: act.subject,
-    fills: [insectPlagueAreaFill(areaHole)],
+    fills: [persistentAreaSaveDamageAreaFill(areaHole)],
   });
   if (resolved.tag !== "resolved") {
     throw new Error(
@@ -346,7 +354,7 @@ function resolveInsectPlagueSave(
 ): InsectPlagueRuntimeState {
   const effect = requireInsectPlagueEffect(state.session.state);
   assertExactEffectRef(state, effect);
-  const saveAct = insectPlagueAreaHazardSaveAct(
+  const saveAct = persistentAreaSaveDamageSaveAct(
     state.session,
     spellTargetId,
     input.trigger,
@@ -358,8 +366,8 @@ function resolveInsectPlagueSave(
   }
   const saveHole = requireHole(saveAct.initialHoles, "savingThrowOutcome");
   if (
-    !("insectPlagueAreaHazard" in saveHole) ||
-    saveHole.insectPlagueAreaHazard.effectRef !== effect.effectRef
+    !("persistentAreaSaveDamage" in saveHole) ||
+    saveHole.persistentAreaSaveDamage.effectRef !== effect.effectRef
   ) {
     throw new Error(
       "Insect Plague save hole lost its exact effect occurrence.",
@@ -380,8 +388,8 @@ function resolveInsectPlagueSave(
   }
   const damageHole = requireResultHole(pendingDamage, "rolledDice");
   if (
-    !("insectPlagueAreaHazard" in damageHole) ||
-    damageHole.insectPlagueAreaHazard.effectRef !== effect.effectRef
+    !("persistentAreaSaveDamage" in damageHole) ||
+    damageHole.persistentAreaSaveDamage.effectRef !== effect.effectRef
   ) {
     throw new Error(
       "Insect Plague damage hole lost its exact effect occurrence.",
@@ -453,14 +461,14 @@ function endInsectPlagueConcentration(
   };
 }
 
-function insectPlagueRuntimeProjection(
+function persistentAreaSaveDamageRuntimeProjection(
   state: InsectPlagueRuntimeState,
 ): InsectPlagueMbtProjection {
   const battle = state.session.state;
   const currentActorId = snapshotBattle(battle).currentActorId;
   const caster = requireCombatant(battle, spellCasterId);
   const target = requireCombatant(battle, spellTargetId);
-  const effect = insectPlagueEffects(battle)[0];
+  const effect = persistentAreaSaveDamageEffects(battle)[0];
   const areaActive = effect !== undefined;
   if (effect !== undefined) {
     assertExactEffectRef(state, effect);
@@ -479,7 +487,7 @@ function insectPlagueRuntimeProjection(
       zone.kind === "spellObscurementZone" &&
       zone.sourceCombatantId === spellCasterId &&
       zone.area.kind === "pointOriginSphere" &&
-      zone.area.areaId === insectPlagueAreaId &&
+      zone.area.areaId === persistentAreaSaveDamageAreaId &&
       zone.obscurement === "lightlyObscured",
   );
   const concentrationActive =
@@ -520,19 +528,19 @@ function insectPlagueRuntimeProjection(
   };
 }
 
-function insectPlagueEffects(
+function persistentAreaSaveDamageEffects(
   state: BattleState,
 ): readonly InsectPlagueEffect[] {
   return [...state.combatants.values()].flatMap((combatant) =>
     combatant.activeEffects.filter(
       (effect): effect is InsectPlagueEffect =>
-        effect.kind === "insectPlagueAreaHazard",
+        effect.kind === "persistentAreaSaveDamage",
     ),
   );
 }
 
 function requireInsectPlagueEffect(state: BattleState): InsectPlagueEffect {
-  const effects = insectPlagueEffects(state);
+  const effects = persistentAreaSaveDamageEffects(state);
   if (effects.length !== 1 || effects[0] === undefined) {
     throw new Error("Expected one exact active Insect Plague occurrence.");
   }
@@ -563,12 +571,12 @@ function diceResults(dice: number, total: number): readonly number[] {
   return results;
 }
 
-function insectPlagueSlotLevel(value: number): 5 | 6 | 7 {
+function persistentAreaSaveDamageSlotLevel(value: number): 5 | 6 | 7 {
   if (value === 5 || value === 6 || value === 7) return value;
   throw new Error(`Unsupported Insect Plague MBT slot level: ${value}`);
 }
 
-function insectPlagueTriggerFromQuint(
+function persistentAreaSaveDamageTriggerFromQuint(
   raw: unknown,
 ): BattleInsectPlagueAreaHazardTrigger {
   const tag = quintVariantTag(raw);

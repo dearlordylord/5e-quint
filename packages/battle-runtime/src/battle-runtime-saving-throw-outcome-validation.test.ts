@@ -436,7 +436,7 @@ describe("public Saving Throw outcome validation", () => {
     });
     const save = requireHole(act.initialHoles, "savingThrowOutcome");
     const area = {
-      kind: "greaseGroundArea",
+      kind: "persistentAreaSaveConditionArea",
       areaId: battleAreaId("save-validation:grease-area"),
       originAnchorId: spellCasterId,
       affectedTargetIds: [spellTargetId],

@@ -15,7 +15,7 @@ import {
 } from "./identity.ts";
 import type {
   BattleActiveEffect,
-  BattleCloudkillMovementHole,
+  BattlePersistentAreaSourceTurnTranslationHole,
   BattleStartTurnOccurrenceOrderHole,
   BattleState,
 } from "./battle-state-execution.ts";
@@ -35,6 +35,7 @@ import {
   singleTargetSavingThrowOutcomeFill,
   spellAct,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
+
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   combatantId,
@@ -71,6 +72,14 @@ import {
   statBlockCreatureInit,
   targetFill,
 } from "./battle-runtime.test-support.ts";
+
+type SourceTurnTranslationPersistentAreaSaveDamageEffect = Extract<
+  BattleActiveEffect,
+  {
+    readonly kind: "persistentAreaSaveDamage";
+    readonly lifecycle: { readonly kind: "sourceTurnTranslation" };
+  }
+>;
 import {
   readyTargetRayOfFrost,
   spellBattleWithTargetRayOfFrost,
@@ -85,8 +94,8 @@ function withSecondCloudkillMovement(state: BattleState): BattleState {
         candidate,
       ): candidate is Extract<
         BattleActiveEffect,
-        { readonly kind: "cloudkillAreaHazard" }
-      > => candidate.kind === "cloudkillAreaHazard",
+        { readonly kind: "persistentAreaSaveDamage" }
+      > => candidate.kind === "persistentAreaSaveDamage",
     );
     if (effect === undefined) continue;
     const allocation = allocateBattleEffectExecutionRefForCreature({
@@ -122,9 +131,9 @@ function withGreaseGroundHazard(state: BattleState): {
     throw new Error("Expected the persistent-spell source.");
   }
   const cloudkill = source.activeEffects.find(
-    (effect) => effect.kind === "cloudkillAreaHazard",
+    (effect) => effect.kind === "persistentAreaSaveDamage",
   );
-  if (cloudkill?.kind !== "cloudkillAreaHazard") {
+  if (cloudkill?.kind !== "persistentAreaSaveDamage") {
     throw new Error("Expected the bound persistent-spell source procedure.");
   }
   const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
@@ -134,7 +143,7 @@ function withGreaseGroundHazard(state: BattleState): {
         kind: "activeEffect",
         ownerId: source.combatantId,
         effect: {
-          kind: "greaseGroundHazard",
+          kind: "persistentAreaSaveCondition",
           sourceProcedureRef: cloudkill.sourceProcedureRef,
           sourceCombatantId: spellCasterId,
           areaId: greaseAreaId,
@@ -219,7 +228,7 @@ function withCloudkillOwnedTurnStartTemporaryHitPoints(
 ): BattleState {
   const source = state.combatants.get(spellCasterId);
   const cloudkill = source?.activeEffects.find(
-    (effect) => effect.kind === "cloudkillAreaHazard",
+    (effect) => effect.kind === "persistentAreaSaveDamage",
   );
   if (source === undefined || cloudkill === undefined) {
     throw new Error("Expected the Cloudkill source effect.");
@@ -291,7 +300,7 @@ function withCommandGrovel(
   readonly state: BattleState;
   readonly effectRef: Extract<
     BattleActiveEffect,
-    { readonly kind: "commandPending" }
+    { readonly kind: "compelledNextTurnBehavior" }
   >["effectRef"];
 } {
   const target = state.combatants.get(actorId);
@@ -300,7 +309,7 @@ function withCommandGrovel(
   }
   const effectRef = battleEffectExecutionRefForTest("cloudkill-command-grovel");
   const effect = {
-    kind: "commandPending",
+    kind: "compelledNextTurnBehavior",
     effectRef,
     sourceCombatantId: spellCasterId,
     sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -332,7 +341,7 @@ function withCommandDrop(
   readonly state: BattleState;
   readonly effectRef: Extract<
     BattleActiveEffect,
-    { readonly kind: "commandPending" }
+    { readonly kind: "compelledNextTurnBehavior" }
   >["effectRef"];
 } {
   const target = state.combatants.get(actorId);
@@ -341,7 +350,7 @@ function withCommandDrop(
   }
   const effectRef = battleEffectExecutionRefForTest("cloudkill-command-drop");
   const effect = {
-    kind: "commandPending",
+    kind: "compelledNextTurnBehavior",
     effectRef,
     sourceCombatantId: spellCasterId,
     sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -366,12 +375,12 @@ function withCommandDrop(
   };
 }
 
-function cloudkillMovementFill(
-  hole: BattleCloudkillMovementHole,
+function persistentAreaSourceTurnTranslationFill(
+  hole: BattlePersistentAreaSourceTurnTranslationHole,
   affectedCombatantIdsInResolutionOrder: readonly CombatantId[],
 ) {
   return {
-    kind: "cloudkillMovement" as const,
+    kind: "persistentAreaSourceTurnTranslation" as const,
     holeId: hole.holeId,
     value: {
       affectedCombatantIdsInResolutionOrder,
@@ -486,18 +495,30 @@ function sourceTurnMovementBoundary() {
   return {
     cast,
     boundaryState: targetTurn.state,
-    movementHole: requireHole(movementFrontier.holes, "cloudkillMovement"),
+    movementHole: requireHole(
+      movementFrontier.holes,
+      "persistentAreaSourceTurnTranslation",
+    ),
   };
 }
 
-function activeCloudkill(state: BattleState) {
+function activeCloudkill(
+  state: BattleState,
+): SourceTurnTranslationPersistentAreaSaveDamageEffect {
   const effect = [...state.combatants.values()]
     .flatMap((combatant) => combatant.activeEffects)
-    .find((candidate) => candidate.kind === "cloudkillAreaHazard");
-  if (effect?.kind !== "cloudkillAreaHazard") {
+    .find(
+      (candidate) =>
+        candidate.kind === "persistentAreaSaveDamage" &&
+        candidate.lifecycle.kind === "sourceTurnTranslation",
+    );
+  if (
+    effect?.kind !== "persistentAreaSaveDamage" ||
+    effect.lifecycle.kind !== "sourceTurnTranslation"
+  ) {
     throw new Error("Expected an active Cloudkill effect.");
   }
-  return effect;
+  return effect as SourceTurnTranslationPersistentAreaSaveDamageEffect;
 }
 
 function withOneTickDurationCohort(
@@ -588,15 +609,16 @@ function resolveInterruptedRoundWrapAfterCohortMutation(input: {
   });
   const orderFill = startTurnOccurrenceOrderFill(
     requireResultHole(orderFrontier, "startTurnOccurrenceOrder"),
-    (occurrence) => (occurrence.kind === "cloudkillMovement" ? 0 : 1),
+    (occurrence) =>
+      occurrence.kind === "persistentAreaSourceTurnTranslation" ? 0 : 1,
   );
   const movementFrontier = endTurn({
     state: boundaryState,
     actorId: spellTargetId,
     fills: [orderFill],
   });
-  const movementFill = cloudkillMovementFill(
-    requireResultHole(movementFrontier, "cloudkillMovement"),
+  const movementFill = persistentAreaSourceTurnTranslationFill(
+    requireResultHole(movementFrontier, "persistentAreaSourceTurnTranslation"),
     [spellTargetId],
   );
   const saveFrontier = endTurn({
@@ -672,15 +694,19 @@ describe("Cloudkill source-turn movement", () => {
     });
     const orderFill = startTurnOccurrenceOrderFill(
       requireResultHole(orderFrontier, "startTurnOccurrenceOrder"),
-      (occurrence) => (occurrence.kind === "cloudkillMovement" ? 0 : 1),
+      (occurrence) =>
+        occurrence.kind === "persistentAreaSourceTurnTranslation" ? 0 : 1,
     );
     const movementFrontier = endTurn({
       state: boundaryState,
       actorId: spellTargetId,
       fills: [orderFill],
     });
-    const movementFill = cloudkillMovementFill(
-      requireResultHole(movementFrontier, "cloudkillMovement"),
+    const movementFill = persistentAreaSourceTurnTranslationFill(
+      requireResultHole(
+        movementFrontier,
+        "persistentAreaSourceTurnTranslation",
+      ),
       [],
     );
     const resolved = endTurn({
@@ -719,8 +745,11 @@ describe("Cloudkill source-turn movement", () => {
       state: readied.state,
       actorId: spellTargetId,
     });
-    const movementFill = cloudkillMovementFill(
-      requireResultHole(movementFrontier, "cloudkillMovement"),
+    const movementFill = persistentAreaSourceTurnTranslationFill(
+      requireResultHole(
+        movementFrontier,
+        "persistentAreaSourceTurnTranslation",
+      ),
       [spellTargetId],
     );
     const saveFrontier = endTurn({
@@ -980,7 +1009,9 @@ describe("Cloudkill source-turn movement", () => {
   });
 
   test("lets the turn owner order simultaneous source-start damage and Cloudkill movement", () => {
-    function resolveOrdering(choice: "cloudkillMovement" | "startTurnEffects") {
+    function resolveOrdering(
+      choice: "persistentAreaSourceTurnTranslation" | "startTurnEffects",
+    ) {
       const cast = castCloudkill();
       const targetTurn = endTurn({
         state: withSourceStartTurnDamage(cast.state),
@@ -1001,7 +1032,9 @@ describe("Cloudkill source-turn movement", () => {
             actorId: spellCasterId,
             occurrences: [
               expect.objectContaining({ kind: "spellTurnStartDamageAndSave" }),
-              expect.objectContaining({ kind: "cloudkillMovement" }),
+              expect.objectContaining({
+                kind: "persistentAreaSourceTurnTranslation",
+              }),
             ],
           },
         ],
@@ -1009,11 +1042,11 @@ describe("Cloudkill source-turn movement", () => {
       const orderFill = startTurnOccurrenceOrderFill(
         requireResultHole(orderFrontier, "startTurnOccurrenceOrder"),
         (occurrence) =>
-          occurrence.kind === "cloudkillMovement"
-            ? choice === "cloudkillMovement"
+          occurrence.kind === "persistentAreaSourceTurnTranslation"
+            ? choice === "persistentAreaSourceTurnTranslation"
               ? 0
               : 1
-            : choice === "cloudkillMovement"
+            : choice === "persistentAreaSourceTurnTranslation"
               ? 1
               : 0,
       );
@@ -1050,7 +1083,7 @@ describe("Cloudkill source-turn movement", () => {
           Schema.encodeSync(BattleFillSchema)(orderFill),
         ),
       ).toEqual(orderFill);
-      if (choice === "cloudkillMovement") {
+      if (choice === "persistentAreaSourceTurnTranslation") {
         return { state: targetTurn.state, fills: [orderFill] };
       }
       const startEffectFrontier = endTurn({
@@ -1098,7 +1131,7 @@ describe("Cloudkill source-turn movement", () => {
     expect(
       [...startEffectsFirstResult.state.combatants.values()].some((combatant) =>
         combatant.activeEffects.some(
-          (effect) => effect.kind === "cloudkillAreaHazard",
+          (effect) => effect.kind === "persistentAreaSaveDamage",
         ),
       ),
     ).toBe(false);
@@ -1106,14 +1139,19 @@ describe("Cloudkill source-turn movement", () => {
       startEffectsFirstResult.state.combatants.get(spellTargetId)?.hp,
     ).toBe(30);
 
-    const movementFirst = resolveOrdering("cloudkillMovement");
+    const movementFirst = resolveOrdering(
+      "persistentAreaSourceTurnTranslation",
+    );
     const movementFrontier = endTurn({
       state: movementFirst.state,
       actorId: spellTargetId,
       fills: movementFirst.fills,
     });
-    const movementFill = cloudkillMovementFill(
-      requireResultHole(movementFrontier, "cloudkillMovement"),
+    const movementFill = persistentAreaSourceTurnTranslationFill(
+      requireResultHole(
+        movementFrontier,
+        "persistentAreaSourceTurnTranslation",
+      ),
       [spellTargetId],
     );
     const cloudkillSaveFrontier = endTurn({
@@ -1205,14 +1243,16 @@ describe("Cloudkill source-turn movement", () => {
     expect(
       [...movementFirstResult.state.combatants.values()].some((combatant) =>
         combatant.activeEffects.some(
-          (effect) => effect.kind === "cloudkillAreaHazard",
+          (effect) => effect.kind === "persistentAreaSaveDamage",
         ),
       ),
     ).toBe(false);
   });
 
   test("orders each start-turn Temporary Hit Point grant against Cloudkill movement", () => {
-    function resolveOrdering(choice: "cloudkillMovement" | "startTurnEffects") {
+    function resolveOrdering(
+      choice: "persistentAreaSourceTurnTranslation" | "startTurnEffects",
+    ) {
       const cast = castCloudkill();
       const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
       if (targetTurn.tag !== "resolved") {
@@ -1228,11 +1268,11 @@ describe("Cloudkill source-turn movement", () => {
       const orderFill = startTurnOccurrenceOrderFill(
         requireResultHole(orderFrontier, "startTurnOccurrenceOrder"),
         (occurrence) =>
-          occurrence.kind === "cloudkillMovement"
-            ? choice === "cloudkillMovement"
+          occurrence.kind === "persistentAreaSourceTurnTranslation"
+            ? choice === "persistentAreaSourceTurnTranslation"
               ? 0
               : 1
-            : choice === "cloudkillMovement"
+            : choice === "persistentAreaSourceTurnTranslation"
               ? 1
               : 0,
       );
@@ -1241,8 +1281,11 @@ describe("Cloudkill source-turn movement", () => {
         actorId: spellTargetId,
         fills: [orderFill],
       });
-      const movementFill = cloudkillMovementFill(
-        requireResultHole(movementFrontier, "cloudkillMovement"),
+      const movementFill = persistentAreaSourceTurnTranslationFill(
+        requireResultHole(
+          movementFrontier,
+          "persistentAreaSourceTurnTranslation",
+        ),
         [spellCasterId],
       );
       const saveFrontier = endTurn({
@@ -1294,7 +1337,9 @@ describe("Cloudkill source-turn movement", () => {
       hp: 12,
       tempHp: 1,
     });
-    expect(resolveOrdering("cloudkillMovement")).toMatchObject({
+    expect(
+      resolveOrdering("persistentAreaSourceTurnTranslation"),
+    ).toMatchObject({
       hp: 10,
       tempHp: 3,
     });
@@ -1359,7 +1404,7 @@ describe("Cloudkill source-turn movement", () => {
       });
       expect(movementFrontier).toMatchObject({
         tag: "needsHoles",
-        holes: [{ kind: "cloudkillMovement" }],
+        holes: [{ kind: "persistentAreaSourceTurnTranslation" }],
       });
       if (movementFrontier.tag !== "needsHoles") {
         throw new Error(
@@ -1372,8 +1417,11 @@ describe("Cloudkill source-turn movement", () => {
         fills: [
           orderFill,
           { kind: "temporaryHitPointChoice", holeId: choiceHole.holeId, value },
-          cloudkillMovementFill(
-            requireResultHole(movementFrontier, "cloudkillMovement"),
+          persistentAreaSourceTurnTranslationFill(
+            requireResultHole(
+              movementFrontier,
+              "persistentAreaSourceTurnTranslation",
+            ),
             [],
           ),
         ],
@@ -1414,7 +1462,7 @@ describe("Cloudkill source-turn movement", () => {
       (occurrence) => occurrence.kind === "turnStartTemporaryHitPoints",
     );
     const movementOccurrence = orderHole.occurrences.find(
-      (occurrence) => occurrence.kind === "cloudkillMovement",
+      (occurrence) => occurrence.kind === "persistentAreaSourceTurnTranslation",
     );
     const firstGrant = temporaryHitPointOccurrences[0];
     const secondGrant = temporaryHitPointOccurrences[1];
@@ -1441,8 +1489,11 @@ describe("Cloudkill source-turn movement", () => {
       actorId: spellTargetId,
       fills: [orderFill],
     });
-    const movementFill = cloudkillMovementFill(
-      requireResultHole(movementFrontier, "cloudkillMovement"),
+    const movementFill = persistentAreaSourceTurnTranslationFill(
+      requireResultHole(
+        movementFrontier,
+        "persistentAreaSourceTurnTranslation",
+      ),
       [spellCasterId],
     );
     const saveFrontier = endTurn({
@@ -1527,7 +1578,8 @@ describe("Cloudkill source-turn movement", () => {
     });
     const orderFill = startTurnOccurrenceOrderFill(
       requireResultHole(orderFrontier, "startTurnOccurrenceOrder"),
-      (occurrence) => (occurrence.kind === "cloudkillMovement" ? 0 : 1),
+      (occurrence) =>
+        occurrence.kind === "persistentAreaSourceTurnTranslation" ? 0 : 1,
     );
 
     const movementFrontier = endTurn({
@@ -1537,10 +1589,13 @@ describe("Cloudkill source-turn movement", () => {
     });
     expect(movementFrontier).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "cloudkillMovement" }],
+      holes: [{ kind: "persistentAreaSourceTurnTranslation" }],
     });
-    const movementFill = cloudkillMovementFill(
-      requireResultHole(movementFrontier, "cloudkillMovement"),
+    const movementFill = persistentAreaSourceTurnTranslationFill(
+      requireResultHole(
+        movementFrontier,
+        "persistentAreaSourceTurnTranslation",
+      ),
       [],
     );
     const damageFrontier = endTurn({
@@ -1623,7 +1678,7 @@ describe("Cloudkill source-turn movement", () => {
       (occurrence) => occurrence.kind === "spellTurnStartDamageAndSave",
     );
     const movementOccurrence = orderHole.occurrences.find(
-      (occurrence) => occurrence.kind === "cloudkillMovement",
+      (occurrence) => occurrence.kind === "persistentAreaSourceTurnTranslation",
     );
     const firstDamage = damageOccurrences[0];
     const secondDamage = damageOccurrences[1];
@@ -1714,10 +1769,13 @@ describe("Cloudkill source-turn movement", () => {
     });
     expect(movementFrontier).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "cloudkillMovement" }],
+      holes: [{ kind: "persistentAreaSourceTurnTranslation" }],
     });
-    const movementFill = cloudkillMovementFill(
-      requireResultHole(movementFrontier, "cloudkillMovement"),
+    const movementFill = persistentAreaSourceTurnTranslationFill(
+      requireResultHole(
+        movementFrontier,
+        "persistentAreaSourceTurnTranslation",
+      ),
       [],
     );
     const secondDamageFrontier = endTurn({
@@ -1819,7 +1877,7 @@ describe("Cloudkill source-turn movement", () => {
       "startTurnOccurrenceOrder",
     );
     const movementOccurrences = orderHole.occurrences.filter(
-      (occurrence) => occurrence.kind === "cloudkillMovement",
+      (occurrence) => occurrence.kind === "persistentAreaSourceTurnTranslation",
     );
     const firstOccurrence = movementOccurrences[0];
     const secondOccurrence = movementOccurrences[1];
@@ -1843,9 +1901,12 @@ describe("Cloudkill source-turn movement", () => {
     });
     const firstMovementHole = requireResultHole(
       firstMovementFrontier,
-      "cloudkillMovement",
+      "persistentAreaSourceTurnTranslation",
     );
-    const firstMovementFill = cloudkillMovementFill(firstMovementHole, []);
+    const firstMovementFill = persistentAreaSourceTurnTranslationFill(
+      firstMovementHole,
+      [],
+    );
     const secondMovementFrontier = endTurn({
       state: boundaryState,
       actorId: spellTargetId,
@@ -1853,7 +1914,7 @@ describe("Cloudkill source-turn movement", () => {
     });
     const secondMovementHole = requireResultHole(
       secondMovementFrontier,
-      "cloudkillMovement",
+      "persistentAreaSourceTurnTranslation",
     );
 
     expect(secondMovementHole.holeId).not.toBe(firstMovementHole.holeId);
@@ -1864,7 +1925,7 @@ describe("Cloudkill source-turn movement", () => {
         fills: [
           orderFill,
           firstMovementFill,
-          cloudkillMovementFill(secondMovementHole, []),
+          persistentAreaSourceTurnTranslationFill(secondMovementHole, []),
         ],
       }),
     ).toMatchObject({ tag: "resolved" });
@@ -1895,7 +1956,7 @@ describe("Cloudkill source-turn movement", () => {
       "startTurnOccurrenceOrder",
     );
     const movements = orderHole.occurrences.filter(
-      (occurrence) => occurrence.kind === "cloudkillMovement",
+      (occurrence) => occurrence.kind === "persistentAreaSourceTurnTranslation",
     );
     const temporaryHitPoints = orderHole.occurrences.find(
       (occurrence) => occurrence.kind === "turnStartTemporaryHitPoints",
@@ -1925,8 +1986,11 @@ describe("Cloudkill source-turn movement", () => {
       actorId: spellTargetId,
       fills: [orderFill],
     });
-    const firstMovementFill = cloudkillMovementFill(
-      requireResultHole(firstMovementFrontier, "cloudkillMovement"),
+    const firstMovementFill = persistentAreaSourceTurnTranslationFill(
+      requireResultHole(
+        firstMovementFrontier,
+        "persistentAreaSourceTurnTranslation",
+      ),
       [],
     );
     const secondMovementFrontier = endTurn({
@@ -1934,8 +1998,11 @@ describe("Cloudkill source-turn movement", () => {
       actorId: spellTargetId,
       fills: [orderFill, firstMovementFill],
     });
-    const secondMovementFill = cloudkillMovementFill(
-      requireResultHole(secondMovementFrontier, "cloudkillMovement"),
+    const secondMovementFill = persistentAreaSourceTurnTranslationFill(
+      requireResultHole(
+        secondMovementFrontier,
+        "persistentAreaSourceTurnTranslation",
+      ),
       [spellCasterId],
     );
     const saveFrontier = endTurn({
@@ -2008,7 +2075,7 @@ describe("Cloudkill source-turn movement", () => {
       tag: "needsHoles",
       holes: [
         {
-          kind: "cloudkillMovement",
+          kind: "persistentAreaSourceTurnTranslation",
           sourceCombatantId: spellCasterId,
           areaId: cloudkillAreaId,
           distanceFeet: movementFeet(10),
@@ -2034,13 +2101,13 @@ describe("Cloudkill source-turn movement", () => {
     }
     const movementHole = requireHole(
       movementFrontier.holes,
-      "cloudkillMovement",
+      "persistentAreaSourceTurnTranslation",
     );
 
     const sourceTurn = endTurn({
       state: targetTurn.state,
       actorId: spellTargetId,
-      fills: [cloudkillMovementFill(movementHole, [])],
+      fills: [persistentAreaSourceTurnTranslationFill(movementHole, [])],
     });
 
     expect(sourceTurn).toMatchObject({
@@ -2070,13 +2137,15 @@ describe("Cloudkill source-turn movement", () => {
     }
     const movementHole = requireHole(
       movementFrontier.holes,
-      "cloudkillMovement",
+      "persistentAreaSourceTurnTranslation",
     );
 
     const saveFrontier = endTurn({
       state: targetTurn.state,
       actorId: spellTargetId,
-      fills: [cloudkillMovementFill(movementHole, [spellTargetId])],
+      fills: [
+        persistentAreaSourceTurnTranslationFill(movementHole, [spellTargetId]),
+      ],
     });
 
     expect(saveFrontier).toMatchObject({
@@ -2084,7 +2153,7 @@ describe("Cloudkill source-turn movement", () => {
       holes: [
         {
           kind: "savingThrowOutcome",
-          cloudkillAreaHazard: {
+          persistentAreaSaveDamage: {
             targetId: spellTargetId,
             sourceCombatantId: spellCasterId,
             areaId: cloudkillAreaId,
@@ -2101,7 +2170,9 @@ describe("Cloudkill source-turn movement", () => {
 
   test("applies movement-triggered save damage before advancing exactly once", () => {
     const { boundaryState, movementHole } = sourceTurnMovementBoundary();
-    const movementFill = cloudkillMovementFill(movementHole, [spellTargetId]);
+    const movementFill = persistentAreaSourceTurnTranslationFill(movementHole, [
+      spellTargetId,
+    ]);
     expect(movementFill.value).not.toHaveProperty("distanceFeet");
 
     const saveFrontier = endTurn({
@@ -2150,7 +2221,10 @@ describe("Cloudkill source-turn movement", () => {
 
   test("rejects duplicate, wrong-phase, and stale movement fills", () => {
     const { cast, boundaryState, movementHole } = sourceTurnMovementBoundary();
-    const movementFill = cloudkillMovementFill(movementHole, []);
+    const movementFill = persistentAreaSourceTurnTranslationFill(
+      movementHole,
+      [],
+    );
 
     expect(
       endTurn({
@@ -2196,7 +2270,7 @@ describe("Cloudkill source-turn movement", () => {
     const firstSourceTurn = endTurn({
       state: boundaryState,
       actorId: spellTargetId,
-      fills: [cloudkillMovementFill(movementHole, [])],
+      fills: [persistentAreaSourceTurnTranslationFill(movementHole, [])],
     });
     if (firstSourceTurn.tag !== "resolved") {
       throw new Error("Expected the first source turn to start.");
@@ -2215,19 +2289,26 @@ describe("Cloudkill source-turn movement", () => {
 
     expect(nextMovement).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "cloudkillMovement", distanceFeet: movementFeet(10) }],
+      holes: [
+        {
+          kind: "persistentAreaSourceTurnTranslation",
+          distanceFeet: movementFeet(10),
+        },
+      ],
     });
     if (nextMovement.tag !== "needsHoles") return;
     expect(
-      requireHole(nextMovement.holes, "cloudkillMovement").holeId,
+      requireHole(nextMovement.holes, "persistentAreaSourceTurnTranslation")
+        .holeId,
     ).not.toBe(movementHole.holeId);
   });
 
   test("does not accept a prior-round movement consequence fill", () => {
     const { boundaryState, movementHole } = sourceTurnMovementBoundary();
-    const firstMovementFill = cloudkillMovementFill(movementHole, [
-      spellTargetId,
-    ]);
+    const firstMovementFill = persistentAreaSourceTurnTranslationFill(
+      movementHole,
+      [spellTargetId],
+    );
     const firstSaveFrontier = endTurn({
       state: boundaryState,
       actorId: spellTargetId,
@@ -2270,8 +2351,11 @@ describe("Cloudkill source-turn movement", () => {
       state: nextTargetTurn.state,
       actorId: spellTargetId,
     });
-    const nextMovementFill = cloudkillMovementFill(
-      requireResultHole(nextMovementFrontier, "cloudkillMovement"),
+    const nextMovementFill = persistentAreaSourceTurnTranslationFill(
+      requireResultHole(
+        nextMovementFrontier,
+        "persistentAreaSourceTurnTranslation",
+      ),
       [spellTargetId],
     );
     const nextSaveFrontier = endTurn({
@@ -2319,7 +2403,8 @@ describe("Cloudkill source-turn movement", () => {
     });
     const orderFill = startTurnOccurrenceOrderFill(
       requireResultHole(orderFrontier, "startTurnOccurrenceOrder"),
-      (occurrence) => (occurrence.kind === "cloudkillMovement" ? 1 : 0),
+      (occurrence) =>
+        occurrence.kind === "persistentAreaSourceTurnTranslation" ? 1 : 0,
     );
     const rechargeFrontier = endTurn({
       state: recharging.state,
@@ -2345,8 +2430,11 @@ describe("Cloudkill source-turn movement", () => {
     if (movementFrontier.tag !== "needsHoles") {
       throw new Error("Expected the Cloudkill movement frontier.");
     }
-    const movementFill = cloudkillMovementFill(
-      requireHole(movementFrontier.holes, "cloudkillMovement"),
+    const movementFill = persistentAreaSourceTurnTranslationFill(
+      requireHole(
+        movementFrontier.holes,
+        "persistentAreaSourceTurnTranslation",
+      ),
       [spellTargetId],
     );
     const saveFrontier = endTurn({
@@ -2471,7 +2559,7 @@ describe("Cloudkill source-turn movement", () => {
       "startTurnOccurrenceOrder",
     );
     const movements = orderHole.occurrences.filter(
-      (occurrence) => occurrence.kind === "cloudkillMovement",
+      (occurrence) => occurrence.kind === "persistentAreaSourceTurnTranslation",
     );
     const temporaryHitPoints = orderHole.occurrences.find(
       (occurrence) => occurrence.kind === "turnStartTemporaryHitPoints",
@@ -2501,8 +2589,11 @@ describe("Cloudkill source-turn movement", () => {
       actorId: spellTargetId,
       fills: [orderFill],
     });
-    const firstMovementFill = cloudkillMovementFill(
-      requireResultHole(firstMovementFrontier, "cloudkillMovement"),
+    const firstMovementFill = persistentAreaSourceTurnTranslationFill(
+      requireResultHole(
+        firstMovementFrontier,
+        "persistentAreaSourceTurnTranslation",
+      ),
       [spellTargetId],
     );
     const saveFrontier = endTurn({
@@ -2652,7 +2743,7 @@ describe("Cloudkill source-turn movement", () => {
 
     expect(secondMovementFrontier).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "cloudkillMovement" }],
+      holes: [{ kind: "persistentAreaSourceTurnTranslation" }],
       snapshot: {
         combatants: expect.arrayContaining([
           expect.objectContaining({
@@ -2664,7 +2755,7 @@ describe("Cloudkill source-turn movement", () => {
     });
     const secondMovementHole = requireResultHole(
       secondMovementFrontier,
-      "cloudkillMovement",
+      "persistentAreaSourceTurnTranslation",
     );
     expect(secondMovementHole.holeId).not.toBe(firstMovementFill.holeId);
   });
@@ -2685,7 +2776,8 @@ describe("Cloudkill source-turn movement", () => {
     });
     const orderFill = startTurnOccurrenceOrderFill(
       requireResultHole(orderFrontier, "startTurnOccurrenceOrder"),
-      (occurrence) => (occurrence.kind === "cloudkillMovement" ? 0 : 1),
+      (occurrence) =>
+        occurrence.kind === "persistentAreaSourceTurnTranslation" ? 0 : 1,
     );
 
     const movementFrontier = endTurn({
@@ -2696,15 +2788,18 @@ describe("Cloudkill source-turn movement", () => {
 
     expect(movementFrontier).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "cloudkillMovement" }],
+      holes: [{ kind: "persistentAreaSourceTurnTranslation" }],
     });
     const rechargeFrontier = endTurn({
       state: recharging.state,
       actorId: spellTargetId,
       fills: [
         orderFill,
-        cloudkillMovementFill(
-          requireResultHole(movementFrontier, "cloudkillMovement"),
+        persistentAreaSourceTurnTranslationFill(
+          requireResultHole(
+            movementFrontier,
+            "persistentAreaSourceTurnTranslation",
+          ),
           [],
         ),
       ],
@@ -2729,8 +2824,11 @@ describe("Cloudkill source-turn movement", () => {
       actorId: spellTargetId,
       fills: [
         orderFill,
-        cloudkillMovementFill(
-          requireResultHole(movementFrontier, "cloudkillMovement"),
+        persistentAreaSourceTurnTranslationFill(
+          requireResultHole(
+            movementFrontier,
+            "persistentAreaSourceTurnTranslation",
+          ),
           [],
         ),
         rechargeFill,
@@ -2781,9 +2879,9 @@ describe("Cloudkill source-turn movement", () => {
     });
     const movementHole = requireResultHole(
       movementFrontier,
-      "cloudkillMovement",
+      "persistentAreaSourceTurnTranslation",
     );
-    const movementFill = cloudkillMovementFill(movementHole, [
+    const movementFill = persistentAreaSourceTurnTranslationFill(movementHole, [
       cloudkillSecondaryTargetId,
       spellCasterId,
     ]);
@@ -2797,7 +2895,7 @@ describe("Cloudkill source-turn movement", () => {
       "savingThrowOutcome",
     );
     expect(firstSaveHole).toMatchObject({
-      cloudkillAreaHazard: { targetId: cloudkillSecondaryTargetId },
+      persistentAreaSaveDamage: { targetId: cloudkillSecondaryTargetId },
     });
     const firstSaveFill = singleTargetSavingThrowOutcomeFill(
       firstSaveHole,
@@ -2898,8 +2996,11 @@ describe("Cloudkill source-turn movement", () => {
       state: secondaryTurn.state,
       actorId: cloudkillSecondaryTargetId,
     });
-    const movementFill = cloudkillMovementFill(
-      requireResultHole(movementFrontier, "cloudkillMovement"),
+    const movementFill = persistentAreaSourceTurnTranslationFill(
+      requireResultHole(
+        movementFrontier,
+        "persistentAreaSourceTurnTranslation",
+      ),
       [spellCasterId, cloudkillSecondaryTargetId],
     );
     const sourceSaveFrontier = endTurn({
@@ -2912,7 +3013,7 @@ describe("Cloudkill source-turn movement", () => {
       "savingThrowOutcome",
     );
     expect(sourceSaveHole).toMatchObject({
-      cloudkillAreaHazard: { targetId: spellCasterId },
+      persistentAreaSaveDamage: { targetId: spellCasterId },
     });
     const sourceSaveFill = singleTargetSavingThrowOutcomeFill(
       sourceSaveHole,
@@ -2962,7 +3063,7 @@ describe("Cloudkill source-turn movement", () => {
     expect(
       [...resolved.state.combatants.values()].some((combatant) =>
         combatant.activeEffects.some(
-          (effect) => effect.kind === "cloudkillAreaHazard",
+          (effect) => effect.kind === "persistentAreaSaveDamage",
         ),
       ),
     ).toBe(false);
@@ -2994,8 +3095,11 @@ describe("Cloudkill source-turn movement", () => {
       state: secondaryTurn.state,
       actorId: cloudkillSecondaryTargetId,
     });
-    const movementFill = cloudkillMovementFill(
-      requireResultHole(movementFrontier, "cloudkillMovement"),
+    const movementFill = persistentAreaSourceTurnTranslationFill(
+      requireResultHole(
+        movementFrontier,
+        "persistentAreaSourceTurnTranslation",
+      ),
       [spellTargetId, cloudkillSecondaryTargetId],
     );
     const firstSaveFrontier = endTurn({
@@ -3119,7 +3223,7 @@ describe("Cloudkill source-turn movement", () => {
     const subject = {
       tag: "runtimeCommand" as const,
       actorId: cloudkillSecondaryTargetId,
-      command: "commandGrovel" as const,
+      command: "executeCompelledGrovel" as const,
       effectRef: commanded.effectRef,
     };
     const movementFrontier = resolveBattleSubject({
@@ -3127,8 +3231,11 @@ describe("Cloudkill source-turn movement", () => {
       subject,
       fills: [],
     });
-    const movementFill = cloudkillMovementFill(
-      requireResultHole(movementFrontier, "cloudkillMovement"),
+    const movementFill = persistentAreaSourceTurnTranslationFill(
+      requireResultHole(
+        movementFrontier,
+        "persistentAreaSourceTurnTranslation",
+      ),
       [cloudkillSecondaryTargetId],
     );
     const saveFrontier = resolveBattleSubject({
@@ -3163,7 +3270,7 @@ describe("Cloudkill source-turn movement", () => {
                 parentPosition: {
                   kind: "startTurnOccurrenceSequence",
                   child: {
-                    kind: "cloudkillMovementSaveDamageSequence",
+                    kind: "persistentAreaTranslationSaveDamageSequence",
                     targetId: cloudkillSecondaryTargetId,
                   },
                 },
@@ -3217,7 +3324,7 @@ describe("Cloudkill source-turn movement", () => {
               parentPosition: {
                 kind: "startTurnOccurrenceSequence",
                 child: {
-                  kind: "cloudkillMovementSaveDamageSequence",
+                  kind: "persistentAreaTranslationSaveDamageSequence",
                   targetId: cloudkillSecondaryTargetId,
                 },
               },
@@ -3267,7 +3374,7 @@ describe("Cloudkill source-turn movement", () => {
     const subject = {
       tag: "runtimeCommand" as const,
       actorId: spellTargetId,
-      command: "commandDrop" as const,
+      command: "executeCompelledDrop" as const,
       effectRef: commanded.effectRef,
     };
     const movementFrontier = resolveBattleSubject({
@@ -3275,8 +3382,11 @@ describe("Cloudkill source-turn movement", () => {
       subject,
       fills: [],
     });
-    const movementFill = cloudkillMovementFill(
-      requireResultHole(movementFrontier, "cloudkillMovement"),
+    const movementFill = persistentAreaSourceTurnTranslationFill(
+      requireResultHole(
+        movementFrontier,
+        "persistentAreaSourceTurnTranslation",
+      ),
       [spellTargetId],
     );
     const saveFrontier = resolveBattleSubject({
@@ -3384,7 +3494,7 @@ describe("Cloudkill source-turn movement", () => {
     const subject = {
       tag: "runtimeCommand" as const,
       actorId: spellTargetId,
-      command: "commandDrop" as const,
+      command: "executeCompelledDrop" as const,
       effectRef: commanded.effectRef,
     };
     const movementFrontier = resolveBattleSubject({
@@ -3392,8 +3502,11 @@ describe("Cloudkill source-turn movement", () => {
       subject,
       fills: [],
     });
-    const movementFill = cloudkillMovementFill(
-      requireResultHole(movementFrontier, "cloudkillMovement"),
+    const movementFill = persistentAreaSourceTurnTranslationFill(
+      requireResultHole(
+        movementFrontier,
+        "persistentAreaSourceTurnTranslation",
+      ),
       [spellTargetId],
     );
     const saveFrontier = resolveBattleSubject({
@@ -3495,7 +3608,7 @@ describe("Cloudkill source-turn movement", () => {
     const subject = {
       tag: "runtimeCommand" as const,
       actorId: spellTargetId,
-      command: "greaseGroundHazardSave" as const,
+      command: "persistentAreaSaveConditionSave" as const,
       areaId: greaseAreaId,
       effectRef: grease.effectRef,
       trigger: "endsTurnInArea" as const,
@@ -3539,12 +3652,15 @@ describe("Cloudkill source-turn movement", () => {
     }
     const greaseSaveHole = combinedFrontier.holes.find(
       (hole) =>
-        hole.kind === "savingThrowOutcome" && "greaseGroundHazard" in hole,
+        hole.kind === "savingThrowOutcome" &&
+        "persistentAreaSaveCondition" in hole,
     );
     if (greaseSaveHole?.kind !== "savingThrowOutcome") {
       throw new Error("Expected the Grease end-turn save frontier.");
     }
-    expect(greaseSaveHole.greaseGroundHazard?.effectRef).toBe(grease.effectRef);
+    expect(greaseSaveHole.persistentAreaSaveCondition?.effectRef).toBe(
+      grease.effectRef,
+    );
     expect(combinedFrontier.holes).toEqual([greaseSaveHole]);
     const greaseSaveFill = singleTargetSavingThrowOutcomeFill(
       greaseSaveHole,
@@ -3570,16 +3686,16 @@ describe("Cloudkill source-turn movement", () => {
       greaseInterrupted.holes,
       "interruptDecision",
     );
-    const cloudkillMovementFrontier = resolveBattleInterrupt({
+    const persistentAreaSourceTurnTranslationFrontier = resolveBattleInterrupt({
       state: greaseInterrupted.state,
       fill: interruptDecisionFill(greaseDecision, {
         kind: "decline",
         responderId: spellTargetId,
       }),
     });
-    expect(cloudkillMovementFrontier).toMatchObject({
+    expect(persistentAreaSourceTurnTranslationFrontier).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "cloudkillMovement" }],
+      holes: [{ kind: "persistentAreaSourceTurnTranslation" }],
       snapshot: {
         round: 1,
         currentActorId: spellTargetId,
@@ -3591,17 +3707,19 @@ describe("Cloudkill source-turn movement", () => {
         ]),
       },
     });
-    if (cloudkillMovementFrontier.tag !== "needsHoles") {
+    if (persistentAreaSourceTurnTranslationFrontier.tag !== "needsHoles") {
       throw new Error("Expected Cloudkill movement after Grease resolved.");
     }
     const movementHole = requireHole(
-      cloudkillMovementFrontier.holes,
-      "cloudkillMovement",
+      persistentAreaSourceTurnTranslationFrontier.holes,
+      "persistentAreaSourceTurnTranslation",
     );
-    const movementFill = cloudkillMovementFill(movementHole, [spellTargetId]);
+    const movementFill = persistentAreaSourceTurnTranslationFill(movementHole, [
+      spellTargetId,
+    ]);
     const cloudkillSaveFrontier = resolveBattleSubject({
-      state: cloudkillMovementFrontier.state,
-      subject: cloudkillMovementFrontier.subject,
+      state: persistentAreaSourceTurnTranslationFrontier.state,
+      subject: persistentAreaSourceTurnTranslationFrontier.subject,
       fills: [movementFill],
     });
     if (cloudkillSaveFrontier.tag !== "needsHoles") {
@@ -3609,7 +3727,8 @@ describe("Cloudkill source-turn movement", () => {
     }
     const cloudkillSaveHole = cloudkillSaveFrontier.holes.find(
       (hole) =>
-        hole.kind === "savingThrowOutcome" && "cloudkillAreaHazard" in hole,
+        hole.kind === "savingThrowOutcome" &&
+        "persistentAreaSaveDamage" in hole,
     );
     if (cloudkillSaveHole?.kind !== "savingThrowOutcome") {
       throw new Error("Expected the Cloudkill movement save hole.");
@@ -3664,8 +3783,11 @@ describe("Cloudkill source-turn movement", () => {
       state: secondaryTurn.state,
       actorId: cloudkillSecondaryTargetId,
     });
-    const movementFill = cloudkillMovementFill(
-      requireResultHole(movementFrontier, "cloudkillMovement"),
+    const movementFill = persistentAreaSourceTurnTranslationFill(
+      requireResultHole(
+        movementFrontier,
+        "persistentAreaSourceTurnTranslation",
+      ),
       [cloudkillSecondaryTargetId],
     );
     const saveFrontier = endTurn({
@@ -3775,7 +3897,7 @@ describe("Cloudkill source-turn movement", () => {
       ),
     ).not.toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ kind: "cloudkillAreaHazard" }),
+        expect.objectContaining({ kind: "persistentAreaSaveDamage" }),
       ]),
     );
     expect(resumed.state.combatants.get(spellCasterId)?.hp).toBe(
@@ -3820,7 +3942,8 @@ describe("Cloudkill source-turn movement", () => {
     });
     const orderFill = startTurnOccurrenceOrderFill(
       requireResultHole(orderFrontier, "startTurnOccurrenceOrder"),
-      (occurrence) => (occurrence.kind === "cloudkillMovement" ? 0 : 1),
+      (occurrence) =>
+        occurrence.kind === "persistentAreaSourceTurnTranslation" ? 0 : 1,
     );
     const startTurnFills = [orderFill];
     const movementFrontier = endTurn({
@@ -3828,8 +3951,11 @@ describe("Cloudkill source-turn movement", () => {
       actorId: cloudkillSecondaryTargetId,
       fills: startTurnFills,
     });
-    const movementFill = cloudkillMovementFill(
-      requireResultHole(movementFrontier, "cloudkillMovement"),
+    const movementFill = persistentAreaSourceTurnTranslationFill(
+      requireResultHole(
+        movementFrontier,
+        "persistentAreaSourceTurnTranslation",
+      ),
       [cloudkillSecondaryTargetId],
     );
     const saveFrontier = endTurn({
@@ -3965,7 +4091,7 @@ describe("Cloudkill source-turn movement", () => {
       ),
     ).not.toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ kind: "cloudkillAreaHazard" }),
+        expect.objectContaining({ kind: "persistentAreaSaveDamage" }),
       ]),
     );
   });
@@ -3974,7 +4100,7 @@ describe("Cloudkill source-turn movement", () => {
     const { state } = castCloudkill();
     const cloudkill = [...state.combatants.values()]
       .flatMap(({ activeEffects }) => activeEffects)
-      .find((effect) => effect.kind === "cloudkillAreaHazard");
+      .find((effect) => effect.kind === "persistentAreaSaveDamage");
     if (cloudkill === undefined) throw new Error("Expected Cloudkill.");
 
     expect(
@@ -3983,7 +4109,7 @@ describe("Cloudkill source-turn movement", () => {
         subject: {
           tag: "runtimeCommand",
           actorId: spellCasterId,
-          command: "cloudkillAreaHazardSave",
+          command: "persistentAreaSaveDamageSave",
           areaMembershipTrigger: {
             kind: "areaMovesIntoSpace",
             areaId: cloudkillAreaId,
@@ -4018,7 +4144,7 @@ describe("Cloudkill source-turn movement", () => {
         }),
         ({ affectedCombatantIdsInResolutionOrder }) => {
           const fill = {
-            kind: "cloudkillMovement" as const,
+            kind: "persistentAreaSourceTurnTranslation" as const,
             holeId: movementHole.holeId,
             value: {
               affectedCombatantIdsInResolutionOrder,

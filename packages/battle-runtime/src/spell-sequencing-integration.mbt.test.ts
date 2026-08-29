@@ -35,7 +35,7 @@ import {
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { describe, expect, it } from "vitest";
-import dragonsBreathInput from "../../surface/content/dragons_breath.json";
+import grantedAreaSaveDamageActionInput from "../../surface/content/dragons_breath.json";
 
 import type { BattleActiveEffect } from "./active-effect/types.ts";
 import {
@@ -56,7 +56,7 @@ import {
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
-  dragonsBreathUnitId,
+  grantedAreaSaveDamageActionUnitId,
   heatMetalUnitId,
   spellCasterId,
   spellTargetId,
@@ -75,7 +75,10 @@ import {
 } from "./index.ts";
 
 type SpellSequencingTurnRole = "caster" | "target";
-type SpellSequencingConcentrationSpell = "none" | "dragonsBreath" | "heatMetal";
+type SpellSequencingConcentrationSpell =
+  | "none"
+  | "grantedAreaSaveDamageAction"
+  | "heatMetal";
 type SpellSequencingLastResult =
   | "init"
   | "castDragonsBreath"
@@ -102,7 +105,7 @@ type SpellSequencingProjection = {
   readonly turnRole: SpellSequencingTurnRole;
   readonly magicActionAvailable: boolean;
   readonly bonusActionAvailable: boolean;
-  readonly dragonsBreathActive: boolean;
+  readonly grantedAreaSaveDamageActionActive: boolean;
   readonly heatMetalActive: boolean;
   readonly concentrationSpell: SpellSequencingConcentrationSpell;
   readonly heatMetalRepeatAvailable: boolean;
@@ -119,7 +122,7 @@ type SpellSequencingRuntimeState = {
 
 type DragonsBreathEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "dragonsBreath" }
+  { readonly kind: "grantedAreaSaveDamageAction" }
 >;
 
 type HeatMetalEffect = Extract<
@@ -132,7 +135,7 @@ const spellSequencingObjectId = battleObjectId(
 );
 const initialCasterHp = 12;
 const initialTargetHp = 40;
-const dragonsBreathDamageRoll = [[2, 2, 2]] as const;
+const grantedAreaSaveDamageActionDamageRoll = [[2, 2, 2]] as const;
 const heatMetalCastDamageRoll = [[3, 4]] as const;
 const heatMetalRepeatDamageRoll = [[2, 3]] as const;
 
@@ -199,14 +202,16 @@ describe("Spell sequencing integration MBT", () => {
     const heatMetal = castHeatMetalContact(endTargetTurnAfterBreath(breathed));
 
     expect(spellSequencingProjection(breathed)).toMatchObject({
-      dragonsBreathActive: true,
+      grantedAreaSaveDamageActionActive: true,
       heatMetalActive: false,
-      concentrationSpell: "dragonsBreath",
-      casterHp: initialCasterHp - damageRollTotal(dragonsBreathDamageRoll),
+      concentrationSpell: "grantedAreaSaveDamageAction",
+      casterHp:
+        initialCasterHp -
+        damageRollTotal(grantedAreaSaveDamageActionDamageRoll),
       lastResult: "exhaledBreath",
     });
     expect(spellSequencingProjection(heatMetal)).toMatchObject({
-      dragonsBreathActive: false,
+      grantedAreaSaveDamageActionActive: false,
       heatMetalActive: true,
       concentrationSpell: "heatMetal",
       targetHp: initialTargetHp - damageRollTotal(heatMetalCastDamageRoll),
@@ -264,7 +269,10 @@ describe("Spell sequencing integration MBT", () => {
 
 function initialRuntimeState(): SpellSequencingRuntimeState {
   const battle = spellBattle({
-    preparedSpells: [dragonsBreathSpell(), spellRecord(heatMetalUnitId)],
+    preparedSpells: [
+      grantedAreaSaveDamageActionSpell(),
+      spellRecord(heatMetalUnitId),
+    ],
     spellSlots: [{ spellLevel: 2, count: 2 }],
     targetHp: initialTargetHp,
     targetMaxHp: initialTargetHp,
@@ -293,7 +301,7 @@ function castDragonsBreath(
 ): SpellSequencingRuntimeState {
   const act = bonusSpellAct({
     session: state.battle,
-    spellId: dragonsBreathUnitId,
+    spellId: grantedAreaSaveDamageActionUnitId,
     slotLevel: 2,
   });
   const targetHole = requireHole(act.initialHoles, "spellTargetList");
@@ -306,7 +314,7 @@ function castDragonsBreath(
         knownWillingSpellTargetListFill(
           targetHole,
           spellCasterId,
-          dragonsBreathUnitId,
+          grantedAreaSaveDamageActionUnitId,
           [spellTargetId],
         ),
         damageTypeChoiceFill(damageTypeHole, "fire"),
@@ -344,7 +352,7 @@ function endCasterTurnForDragonsBreath(
 function exhaleDragonsBreathAndMaintainConcentration(
   state: SpellSequencingRuntimeState,
 ): SpellSequencingRuntimeState {
-  const exhaleAct = dragonsBreathExhaleAct(state.battle);
+  const exhaleAct = grantedAreaSaveDamageActionAct(state.battle);
   const needsSave = requireNeedsHoles(
     resolveBattleSubject({
       state: state.battle.state,
@@ -354,7 +362,10 @@ function exhaleDragonsBreathAndMaintainConcentration(
     "Expected Dragon's Breath exhale Saving Throw hole.",
   );
   const saveHole = requireResultHole(needsSave, "savingThrowOutcome");
-  const saveFill = dragonsBreathSavingThrowOutcomeFill(saveHole, false);
+  const saveFill = grantedAreaSaveDamageActionSavingThrowOutcomeFill(
+    saveHole,
+    false,
+  );
   const needsDamage = requireNeedsHoles(
     resolveBattleSubject({
       state: state.battle.state,
@@ -366,7 +377,7 @@ function exhaleDragonsBreathAndMaintainConcentration(
   const damageHole = requireResultHole(needsDamage, "rolledDice");
   const damageFill = damageRollFillWithGroups(
     damageHole,
-    dragonsBreathDamageRoll,
+    grantedAreaSaveDamageActionDamageRoll,
   );
   const needsConcentration = requireNeedsHoles(
     resolveBattleSubject({
@@ -558,8 +569,8 @@ function spellSequencingProjection(
 ): SpellSequencingProjection {
   const caster = requireCombatant(state.battle.state, spellCasterId);
   const target = requireCombatant(state.battle.state, spellTargetId);
-  const dragonsBreathActive =
-    dragonsBreathTargetEffect(state.battle.state) !== undefined;
+  const grantedAreaSaveDamageActionActive =
+    grantedAreaSaveDamageActionTargetEffect(state.battle.state) !== undefined;
   const heatMetalActive = heatMetalEffect(state.battle.state) !== undefined;
   const projection = {
     turnRole: state.turnRole,
@@ -569,7 +580,7 @@ function spellSequencingProjection(
     ),
     bonusActionAvailable:
       state.battle.state.currentTurnResources.currentHasBonusAction,
-    dragonsBreathActive,
+    grantedAreaSaveDamageActionActive,
     heatMetalActive,
     concentrationSpell: concentrationSpell(state.battle.state),
     heatMetalRepeatAvailable:
@@ -581,9 +592,9 @@ function spellSequencingProjection(
     targetHp: Number(target.hp),
     lastResult: state.lastResult,
   } satisfies SpellSequencingProjection;
-  expect(projection.dragonsBreathActive && projection.heatMetalActive).toBe(
-    false,
-  );
+  expect(
+    projection.grantedAreaSaveDamageActionActive && projection.heatMetalActive,
+  ).toBe(false);
   return projection;
 }
 
@@ -591,14 +602,15 @@ function concentrationSpell(
   state: BattleState,
 ): SpellSequencingConcentrationSpell {
   const caster = requireCombatant(state, spellCasterId);
-  const dragonsBreath = dragonsBreathTargetEffect(state);
+  const grantedAreaSaveDamageAction =
+    grantedAreaSaveDamageActionTargetEffect(state);
   const heatMetal = heatMetalEffect(state);
   if (
-    dragonsBreath !== undefined &&
+    grantedAreaSaveDamageAction !== undefined &&
     caster.concentration?.sourceProcedureRef ===
-      dragonsBreath.sourceProcedureRef
+      grantedAreaSaveDamageAction.sourceProcedureRef
   ) {
-    return "dragonsBreath";
+    return "grantedAreaSaveDamageAction";
   }
   if (
     heatMetal !== undefined &&
@@ -609,12 +621,12 @@ function concentrationSpell(
   return "none";
 }
 
-function dragonsBreathTargetEffect(
+function grantedAreaSaveDamageActionTargetEffect(
   state: BattleState,
 ): DragonsBreathEffect | undefined {
   return requireCombatant(state, spellTargetId).activeEffects.find(
     (effect): effect is DragonsBreathEffect =>
-      effect.kind === "dragonsBreath" &&
+      effect.kind === "grantedAreaSaveDamageAction" &&
       effect.sourceCombatantId === spellCasterId,
   );
 }
@@ -628,18 +640,21 @@ function heatMetalEffect(state: BattleState): HeatMetalEffect | undefined {
   );
 }
 
-function dragonsBreathExhaleAct(
+function grantedAreaSaveDamageActionAct(
   session: BattleRuntimeSession,
 ): AvailableBattleAct & {
   readonly subject: Extract<
     BattleSubject,
-    { readonly tag: "runtimeCommand"; readonly command: "dragonsBreathExhale" }
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "grantedAreaSaveDamageAction";
+    }
   >;
 } {
   const exhaleAct = discoverBattleActs(session).find(
-    (act): act is ReturnType<typeof dragonsBreathExhaleAct> =>
+    (act): act is ReturnType<typeof grantedAreaSaveDamageActionAct> =>
       act.subject.tag === "runtimeCommand" &&
-      act.subject.command === "dragonsBreathExhale",
+      act.subject.command === "grantedAreaSaveDamageAction",
   );
   if (exhaleAct === undefined) {
     throw new Error("Expected Dragon's Breath exhale action.");
@@ -647,15 +662,15 @@ function dragonsBreathExhaleAct(
   return exhaleAct;
 }
 
-function dragonsBreathSpell(): SpellRecord {
-  const unit = decodeUnitRecordSync(dragonsBreathInput);
+function grantedAreaSaveDamageActionSpell(): SpellRecord {
+  const unit = decodeUnitRecordSync(grantedAreaSaveDamageActionInput);
   if (unit.kind !== "spell") {
     throw new Error("Expected Dragon's Breath fixture to decode as a spell.");
   }
   return unit;
 }
 
-function dragonsBreathSavingThrowOutcomeFill(
+function grantedAreaSaveDamageActionSavingThrowOutcomeFill(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
   succeeded: boolean,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
@@ -718,7 +733,10 @@ function normalizeSpellSequencingQuintState(
     turnRole: turnRole(state["turnRole"]),
     magicActionAvailable: booleanField(state, "magicActionAvailable"),
     bonusActionAvailable: booleanField(state, "bonusActionAvailable"),
-    dragonsBreathActive: booleanField(state, "dragonsBreathActive"),
+    grantedAreaSaveDamageActionActive: booleanField(
+      state,
+      "grantedAreaSaveDamageActionActive",
+    ),
     heatMetalActive: booleanField(state, "heatMetalActive"),
     concentrationSpell: concentrationSpellName(state["concentrationSpell"]),
     heatMetalRepeatAvailable: booleanField(state, "heatMetalRepeatAvailable"),
@@ -751,7 +769,11 @@ function turnRole(raw: unknown): SpellSequencingTurnRole {
 function concentrationSpellName(
   raw: unknown,
 ): SpellSequencingConcentrationSpell {
-  if (raw === "none" || raw === "dragonsBreath" || raw === "heatMetal") {
+  if (
+    raw === "none" ||
+    raw === "grantedAreaSaveDamageAction" ||
+    raw === "heatMetal"
+  ) {
     return raw;
   }
   throw new Error(

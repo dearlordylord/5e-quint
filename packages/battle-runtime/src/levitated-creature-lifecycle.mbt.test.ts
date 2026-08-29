@@ -139,7 +139,7 @@ type LevitateAltitudeControlAct = BattleActDiscoveryCandidate & {
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "levitateAltitudeControl";
+      readonly command: "controlledVerticalSuspensionAltitudeControl";
     }
   >;
 };
@@ -609,7 +609,7 @@ function discoverCasterControl(
   state: LevitateCreatureRuntimeState,
 ): LevitateCreatureRuntimeState {
   const battle = advanceToCasterControlTurn(state.battle.state);
-  const act = levitateAltitudeControlActInState(battle);
+  const act = controlledVerticalSuspensionAltitudeControlActInState(battle);
   return {
     ...state,
     battle: battleRuntimeSessionForTest({ ...state.battle, state: battle }),
@@ -624,7 +624,9 @@ function rejectOutOfRangeCasterControl(
   const hole = requireHole(state.holes, "levitateAltitudeChange");
   const result = resolveBattleSubject({
     state: state.battle.state,
-    subject: levitateAltitudeControlActInState(state.battle.state).subject,
+    subject: controlledVerticalSuspensionAltitudeControlActInState(
+      state.battle.state,
+    ).subject,
     fills: [levitateAltitudeChangeFill(hole, "up", 10, [])],
   });
   expect(result).toMatchObject({ tag: "invalid" });
@@ -643,7 +645,9 @@ function controlAltitudeDown10Feet(
   const resolved = requireResolved(
     resolveBattleSubject({
       state: state.battle.state,
-      subject: levitateAltitudeControlActInState(state.battle.state).subject,
+      subject: controlledVerticalSuspensionAltitudeControlActInState(
+        state.battle.state,
+      ).subject,
       fills: [
         levitateAltitudeChangeFill(hole, "down", 10, [
           {
@@ -751,7 +755,7 @@ function moveActInState(state: BattleState): MoveAct {
   return act;
 }
 
-function levitateAltitudeControlActInState(
+function controlledVerticalSuspensionAltitudeControlActInState(
   state: BattleState,
 ): LevitateAltitudeControlAct {
   const act = discoverBattleActCandidates(state).find(
@@ -779,7 +783,7 @@ function isLevitateAltitudeControlAct(
 ): candidate is LevitateAltitudeControlAct {
   return (
     candidate.subject.tag === "runtimeCommand" &&
-    candidate.subject.command === "levitateAltitudeControl"
+    candidate.subject.command === "controlledVerticalSuspensionAltitudeControl"
   );
 }
 

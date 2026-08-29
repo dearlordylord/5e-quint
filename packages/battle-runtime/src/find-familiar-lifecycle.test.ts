@@ -12,8 +12,8 @@ import {
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
   familiarMaxHp,
-  findFamiliarCurrentHitPoints,
-  findFamiliarIdentityIssue,
+  spawnedCompanionLifecycleCurrentHitPoints,
+  spawnedCompanionLifecycleIdentityIssue,
   presentFindFamiliarHitPoints,
 } from "./find-familiar-lifecycle-execution.ts";
 import { removeBattleCombatants } from "./battle-reducer/api-lifecycle.ts";
@@ -36,8 +36,8 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import {
-  findFamiliarFormEligibilityForSpell,
-  pactOfTheChainFindFamiliarFormEligibilityForSpell,
+  spawnedCompanionLifecycleFormEligibilityForSpell,
+  spawnedCompanionLifecycleFormEligibilityForSpell,
   resolvePactOfTheChainFindFamiliarForm,
   type FindFamiliarFormEligibility,
 } from "@dnd/surface/surface/find-familiar-forms";
@@ -64,10 +64,10 @@ import {
   emptyBattleRuntimeContext,
   endTurn,
   DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE,
-  findFamiliarCompanionEntryForOwner,
-  findFamiliarCompanionForOwner,
-  findFamiliarCreatureTypeOverrideForOwner,
-  findFamiliarTelepathicConnection,
+  spawnedCompanionLifecycleCompanionEntryForOwner,
+  spawnedCompanionLifecycleCompanionForOwner,
+  spawnedCompanionLifecycleCreatureTypeOverrideForOwner,
+  spawnedCompanionLifecycleTelepathicConnection,
   initiativeScore,
   permanentlyDismissFindFamiliar,
   reappearTemporarilyDismissedFindFamiliar,
@@ -147,20 +147,26 @@ if (unitCatalogResult.tag !== "ok") {
   throw new Error("Expected SRD Unit catalog for tests.");
 }
 const unitCatalog = unitCatalogResult.catalog;
-const findFamiliarSpell = requireSpellRecord("find_familiar");
+const spawnedCompanionLifecycleSpell = requireSpellRecord("find_familiar");
 const cureWoundsSpell = requireSpellRecord("cure_wounds");
 const barkskinSpell = requireSpellRecord("barkskin");
 const healingWordSpell = requireSpellRecord("healing_word");
-const counterspellSpell = requireSpellRecord("counterspell");
+const spellCastInterruptionReactionSpell = requireSpellRecord(
+  "spellCastInterruptionReaction",
+);
 const shockingGraspSpell = requireSpellRecord("shocking_grasp");
 const shieldSpell = requireSpellRecord("shield");
 const druidWildShapeUnit = unitCatalog.requireUnit("druid_wild_shape");
 const familiarEligibility: FindFamiliarFormEligibility =
   requireFindFamiliarEligibility(
-    findFamiliarFormEligibilityForSpell(findFamiliarSpell),
+    spawnedCompanionLifecycleFormEligibilityForSpell(
+      spawnedCompanionLifecycleSpell,
+    ),
   );
 const pactFamiliarEligibility =
-  pactOfTheChainFindFamiliarFormEligibilityForSpell(findFamiliarSpell);
+  spawnedCompanionLifecycleFormEligibilityForSpell(
+    spawnedCompanionLifecycleSpell,
+  );
 if (pactFamiliarEligibility === null) {
   throw new Error("Expected Pact of the Chain familiar form eligibility.");
 }
@@ -377,7 +383,7 @@ function startSpellcasterFixtureBattle(
                 proficiencyBonus: proficiencyBonus(3),
                 canCastSpells: true,
                 cantrips: [],
-                preparedSpells: [counterspellSpell],
+                preparedSpells: [spellCastInterruptionReactionSpell],
                 featurePreparedSpells: [],
                 spellAccesses: [],
                 spellbookRitualSpellAccesses: [],
@@ -436,8 +442,8 @@ function startPactWarlockFixtureBattle(
           spellbookRitualSpellAccesses: [],
           invocationSpellAccesses: [
             {
-              tag: "pactOfTheChainFindFamiliar",
-              spell: findFamiliarSpell,
+              tag: "spawnedCompanionLifecycle",
+              spell: spawnedCompanionLifecycleSpell,
             },
           ],
           spellSlots: [],
@@ -608,8 +614,8 @@ function startWrongOwnerPactFixtureBattle(): BattleRuntimeSession {
           spellbookRitualSpellAccesses: [],
           invocationSpellAccesses: [
             {
-              tag: "pactOfTheChainFindFamiliar",
-              spell: findFamiliarSpell,
+              tag: "spawnedCompanionLifecycle",
+              spell: spawnedCompanionLifecycleSpell,
             },
           ],
           spellSlots: [],
@@ -658,7 +664,7 @@ function startFindFamiliarSpellcasterFixtureBattle(): BattleRuntimeSession {
           spellbookRitualSpellAccesses: [
             {
               tag: "spellbookRitual",
-              spell: findFamiliarSpell,
+              spell: spawnedCompanionLifecycleSpell,
               featureUnitId: parseSharedUnitId("wizard_ritual_adept"),
             },
           ],
@@ -754,7 +760,7 @@ function literalHp(statBlock: StatBlockRecord): Hp {
 }
 
 function positiveCompanionHp(value: number) {
-  const currentHp = findFamiliarCurrentHitPoints(Hp(value));
+  const currentHp = spawnedCompanionLifecycleCurrentHitPoints(Hp(value));
   if (typeof currentHp === "string") {
     throw new Error(currentHp);
   }
@@ -794,7 +800,10 @@ function withFamiliarHitPoints(
   if (Number(currentHp) <= 0) {
     throw new Error("Test fixture must keep a present familiar above 0 HP.");
   }
-  const familiarEntry = findFamiliarCompanionEntryForOwner(state, casterId);
+  const familiarEntry = spawnedCompanionLifecycleCompanionEntryForOwner(
+    state,
+    casterId,
+  );
   if (familiarEntry?.companion.status !== "present") {
     throw new Error("Expected present familiar.");
   }
@@ -1014,7 +1023,7 @@ function spawnedCompanionConnectionFill(
   };
 }
 
-function counterspellTriggerFactsFill(
+function spellCastInterruptionReactionTriggerFactsFill(
   session: BattleRuntimeSession,
 ): Extract<BattleFill, { readonly kind: "targetSpatialFacts" }> {
   return {
@@ -1029,7 +1038,7 @@ function counterspellTriggerFactsFill(
           session,
           enemyId,
           spellSlotInvocationRef(
-            "counterspell",
+            "spellCastInterruptionReaction",
             3,
             "spellCastInterruptionReaction",
           ),
@@ -1286,13 +1295,13 @@ describe("Find Familiar lifecycle", () => {
         },
       },
       formEligibility: {
-        formAccess: "findFamiliar",
+        formAccess: "spawnedCompanionLifecycle",
         eligibility: familiarEligibility,
       },
       manifestation: {
         tag: "embodiedOutsideBattle",
         storedForm: {
-          formAccess: "findFamiliar",
+          formAccess: "spawnedCompanionLifecycle",
           formSelection: { tag: "normalNamedForm", formId: "cat" },
           resolvedStatBlockId: parseSharedStatBlockId("stat_block_cat"),
         },
@@ -1340,13 +1349,13 @@ describe("Find Familiar lifecycle", () => {
         getStatBlock: () => Option.some(malformedSelectedStatBlock),
       },
       formEligibility: {
-        formAccess: "findFamiliar",
+        formAccess: "spawnedCompanionLifecycle",
         eligibility: familiarEligibility,
       },
       manifestation: {
         tag: "embodiedOutsideBattle",
         storedForm: {
-          formAccess: "findFamiliar",
+          formAccess: "spawnedCompanionLifecycle",
           formSelection: { tag: "normalNamedForm", formId: "cat" },
           resolvedStatBlockId: parseSharedStatBlockId("stat_block_cat"),
         },
@@ -1382,13 +1391,13 @@ describe("Find Familiar lifecycle", () => {
       protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
       catalog: statBlockCatalog,
       formEligibility: {
-        formAccess: "findFamiliar",
+        formAccess: "spawnedCompanionLifecycle",
         eligibility: familiarEligibility,
       },
       manifestation: {
         tag: "embodiedOutsideBattle",
         storedForm: {
-          formAccess: "findFamiliar",
+          formAccess: "spawnedCompanionLifecycle",
           formSelection: { tag: "normalNamedForm", formId: "cat" },
           resolvedStatBlockId: parseSharedStatBlockId("stat_block_cat"),
         },
@@ -1407,7 +1416,7 @@ describe("Find Familiar lifecycle", () => {
     if (Result.isFailure(admitted)) return;
     expect(admitted.success.context.characters.get(casterId)).toMatchObject({
       retainedCompanionSelection: {
-        formAccess: "findFamiliar",
+        formAccess: "spawnedCompanionLifecycle",
         selectedForm: { tag: "normalNamedForm", formId: "cat" },
       },
     });
@@ -1462,7 +1471,7 @@ describe("Find Familiar lifecycle", () => {
     if (recast.tag !== "resolved") return;
     expect(recast.session.context.characters.get(casterId)).toMatchObject({
       retainedCompanionSelection: {
-        formAccess: "findFamiliar",
+        formAccess: "spawnedCompanionLifecycle",
         selectedForm: { tag: "normalNamedForm", formId: "rat" },
       },
     });
@@ -1474,17 +1483,20 @@ describe("Find Familiar lifecycle", () => {
   test("casts a familiar as owner-linked companion combatant state", () => {
     const initial = startFixtureBattle();
     expect(
-      findFamiliarCreatureTypeOverrideForOwner(initial, casterId),
+      spawnedCompanionLifecycleCreatureTypeOverrideForOwner(initial, casterId),
     ).toBeNull();
     const result = castCatFamiliar(initial);
 
     expect(result.tag).toBe("resolved");
     if (result.tag !== "resolved") return;
-    const familiar = findFamiliarCompanionForOwner(result.state, casterId);
+    const familiar = spawnedCompanionLifecycleCompanionForOwner(
+      result.state,
+      casterId,
+    );
     expect(familiar).toMatchObject({
       status: "present",
       ownerId: casterId,
-      formAccess: "findFamiliar",
+      formAccess: "spawnedCompanionLifecycle",
       creatureTypeOverride: firstTypeOverride.creatureType,
       placement: { kind: "unoccupiedSpaceWithinSpellRange" },
     });
@@ -1517,7 +1529,10 @@ describe("Find Familiar lifecycle", () => {
     expect(result.state.combatants.get(familiarId)).not.toHaveProperty("side");
     expect(result.snapshot.turnOrder).toEqual([familiarId, casterId]);
     expect(
-      findFamiliarCreatureTypeOverrideForOwner(result.state, casterId),
+      spawnedCompanionLifecycleCreatureTypeOverrideForOwner(
+        result.state,
+        casterId,
+      ),
     ).toBe(firstTypeOverride.creatureType);
     expect(result.snapshot.companions).toMatchObject([
       {
@@ -1556,13 +1571,13 @@ describe("Find Familiar lifecycle", () => {
       protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
       catalog: statBlockCatalog,
       formEligibility: {
-        formAccess: "findFamiliar",
+        formAccess: "spawnedCompanionLifecycle",
         eligibility: familiarEligibility,
       },
       manifestation: {
         tag: "temporarilyDismissed",
         storedForm: {
-          formAccess: "findFamiliar",
+          formAccess: "spawnedCompanionLifecycle",
           formSelection: { tag: "normalNamedForm", formId: "cat" },
           resolvedStatBlockId: parseSharedStatBlockId("stat_block_cat"),
         },
@@ -1597,13 +1612,13 @@ describe("Find Familiar lifecycle", () => {
       protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
       catalog: statBlockCatalog,
       formEligibility: {
-        formAccess: "findFamiliar",
+        formAccess: "spawnedCompanionLifecycle",
         eligibility: familiarEligibility,
       },
       manifestation: {
         tag: "disappearedAtZeroHitPoints",
         storedForm: {
-          formAccess: "findFamiliar",
+          formAccess: "spawnedCompanionLifecycle",
           formSelection: { tag: "normalNamedForm", formId: "owl" },
           resolvedStatBlockId: parseSharedStatBlockId("stat_block_owl"),
         },
@@ -1658,13 +1673,13 @@ describe("Find Familiar lifecycle", () => {
       protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
       catalog: statBlockCatalog,
       formEligibility: {
-        formAccess: "findFamiliar",
+        formAccess: "spawnedCompanionLifecycle",
         eligibility: familiarEligibility,
       },
       manifestation: {
         tag: "disappearedAtZeroHitPoints",
         storedForm: {
-          formAccess: "findFamiliar",
+          formAccess: "spawnedCompanionLifecycle",
           formSelection: { tag: "normalNamedForm", formId: "cat" },
           resolvedStatBlockId: parseSharedStatBlockId("stat_block_cat"),
         },
@@ -1683,7 +1698,7 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(recast.snapshot).toEqual(snapshotBattle(retained.success));
     expect(
-      findFamiliarCompanionForOwner(retained.success, casterId),
+      spawnedCompanionLifecycleCompanionForOwner(retained.success, casterId),
     ).toMatchObject({
       status: "disappearedAtZeroHitPoints",
       identity: {
@@ -1717,13 +1732,13 @@ describe("Find Familiar lifecycle", () => {
       protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
       catalog: statBlockCatalog,
       formEligibility: {
-        formAccess: "findFamiliar",
+        formAccess: "spawnedCompanionLifecycle",
         eligibility: familiarEligibility,
       },
       manifestation: {
         tag: "disappearedAtZeroHitPoints",
         storedForm: {
-          formAccess: "findFamiliar",
+          formAccess: "spawnedCompanionLifecycle",
           formSelection: { tag: "normalNamedForm", formId: "cat" },
           resolvedStatBlockId: parseSharedStatBlockId("stat_block_cat"),
         },
@@ -1768,13 +1783,13 @@ describe("Find Familiar lifecycle", () => {
       protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
       catalog: statBlockCatalog,
       formEligibility: {
-        formAccess: "findFamiliar",
+        formAccess: "spawnedCompanionLifecycle",
         eligibility: familiarEligibility,
       },
       manifestation: {
         tag: "disappearedAtZeroHitPoints",
         storedForm: {
-          formAccess: "findFamiliar",
+          formAccess: "spawnedCompanionLifecycle",
           formSelection: { tag: "normalNamedForm", formId: "cat" },
           resolvedStatBlockId: parseSharedStatBlockId("stat_block_owl"),
         },
@@ -1788,7 +1803,7 @@ describe("Find Familiar lifecycle", () => {
     expect(admitted.failure).toMatchObject({
       tag: "battleStateInitIssue",
       kind: "companionFormResolvedStatBlockMismatch",
-      formAccess: "findFamiliar",
+      formAccess: "spawnedCompanionLifecycle",
       expectedStatBlockId: parseSharedStatBlockId("stat_block_cat"),
       resolvedStatBlockId: parseSharedStatBlockId("stat_block_owl"),
     });
@@ -1821,13 +1836,13 @@ describe("Find Familiar lifecycle", () => {
       protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
       catalog: statBlockCatalog,
       formEligibility: {
-        formAccess: "findFamiliar",
+        formAccess: "spawnedCompanionLifecycle",
         eligibility: familiarEligibility,
       },
       manifestation: {
         tag: "disappearedAtZeroHitPoints",
         storedForm: {
-          formAccess: "findFamiliar",
+          formAccess: "spawnedCompanionLifecycle",
           formSelection: {
             tag: "challengeRatingZeroBeast",
             statBlockId: parseSharedStatBlockId("stat_block_goblin_warrior"),
@@ -1846,7 +1861,7 @@ describe("Find Familiar lifecycle", () => {
     expect(admitted.failure).toMatchObject({
       tag: "battleStateInitIssue",
       kind: "companionFormSelectionStatBlockInvalid",
-      formAccess: "findFamiliar",
+      formAccess: "spawnedCompanionLifecycle",
       selectedStatBlockId: parseSharedStatBlockId("stat_block_goblin_warrior"),
       expectedCreatureType: "beast",
       expectedChallengeRating: 0,
@@ -1880,13 +1895,13 @@ describe("Find Familiar lifecycle", () => {
       protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
       catalog: statBlockCatalog,
       formEligibility: {
-        formAccess: "findFamiliar",
+        formAccess: "spawnedCompanionLifecycle",
         eligibility: familiarEligibility,
       },
       manifestation: {
         tag: "disappearedAtZeroHitPoints",
         storedForm: {
-          formAccess: "findFamiliar",
+          formAccess: "spawnedCompanionLifecycle",
           formSelection: {
             tag: "challengeRatingZeroBeast",
             statBlockId: parseSharedStatBlockId("stat_block_rat"),
@@ -1901,11 +1916,11 @@ describe("Find Familiar lifecycle", () => {
     expect(Result.isSuccess(admitted)).toBe(true);
     if (Result.isFailure(admitted)) return;
     expect(
-      findFamiliarCompanionForOwner(admitted.success, casterId),
+      spawnedCompanionLifecycleCompanionForOwner(admitted.success, casterId),
     ).toMatchObject({
       status: "disappearedAtZeroHitPoints",
       creatureTypeOverride: "celestial",
-      formAccess: "findFamiliar",
+      formAccess: "spawnedCompanionLifecycle",
     });
   });
 
@@ -1927,10 +1942,12 @@ describe("Find Familiar lifecycle", () => {
 
     expect(cast.tag).toBe("resolved");
     if (cast.tag !== "resolved") return;
-    expect(findFamiliarCompanionForOwner(cast.state, casterId)).toMatchObject({
+    expect(
+      spawnedCompanionLifecycleCompanionForOwner(cast.state, casterId),
+    ).toMatchObject({
       status: "present",
       ownerId: casterId,
-      formAccess: "findFamiliar",
+      formAccess: "spawnedCompanionLifecycle",
       creatureTypeOverride: "fey",
     });
     const companionCombatant = cast.state.combatants.get(familiarId);
@@ -1979,8 +1996,10 @@ describe("Find Familiar lifecycle", () => {
           )
         : undefined,
     ).toMatchObject({ usesRemaining: 1 });
-    expect(findFamiliarCompanionForOwner(cast.state, casterId)).toMatchObject({
-      formAccess: "findFamiliar",
+    expect(
+      spawnedCompanionLifecycleCompanionForOwner(cast.state, casterId),
+    ).toMatchObject({
+      formAccess: "spawnedCompanionLifecycle",
       creatureTypeOverride: "fey",
     });
   });
@@ -2038,13 +2057,13 @@ describe("Find Familiar lifecycle", () => {
       initiative: initiativeScore(15),
       origin: expect.objectContaining({ statBlockId: "stat_block_rat" }),
     });
-    expect(findFamiliarCompanionForOwner(recast.state, casterId)).toMatchObject(
-      {
-        status: "present",
-        combatantId: familiarId,
-        identity: { tag: "battleOnly" },
-      },
-    );
+    expect(
+      spawnedCompanionLifecycleCompanionForOwner(recast.state, casterId),
+    ).toMatchObject({
+      status: "present",
+      combatantId: familiarId,
+      identity: { tag: "battleOnly" },
+    });
     const druid = recast.state.combatants.get(casterId);
     expect(
       druid?.origin.kind === "character"
@@ -2185,10 +2204,10 @@ describe("Find Familiar lifecycle", () => {
     expect(reappeared.tag).toBe("resolved");
     if (reappeared.tag !== "resolved") return;
     expect(
-      findFamiliarCompanionForOwner(reappeared.state, casterId),
+      spawnedCompanionLifecycleCompanionForOwner(reappeared.state, casterId),
     ).toMatchObject({
       status: "present",
-      formAccess: "findFamiliar",
+      formAccess: "spawnedCompanionLifecycle",
       creatureTypeOverride: "fey",
     });
     expect(reappeared.state.combatants.get(familiarId)?.initiative).toBe(
@@ -2232,12 +2251,12 @@ describe("Find Familiar lifecycle", () => {
     expect(second.state.companions).toHaveLength(1);
     expect(second.state.combatants.has(familiarId)).toBe(true);
     expect(second.state.combatants.has(replacementFamiliarId)).toBe(false);
-    expect(findFamiliarCompanionForOwner(second.state, casterId)).toMatchObject(
-      {
-        status: "present",
-        formAccess: "findFamiliar",
-      },
-    );
+    expect(
+      spawnedCompanionLifecycleCompanionForOwner(second.state, casterId),
+    ).toMatchObject({
+      status: "present",
+      formAccess: "spawnedCompanionLifecycle",
+    });
     expect(second.state.combatants.get(familiarId)).toMatchObject({
       origin: { statBlockId: "stat_block_rat" },
     });
@@ -2301,7 +2320,7 @@ describe("Find Familiar lifecycle", () => {
     expect(dismissed.state.combatants.has(familiarId)).toBe(false);
     expect(dismissed.snapshot.turnOrder).toEqual([casterId]);
     expect(
-      findFamiliarCompanionForOwner(dismissed.state, casterId),
+      spawnedCompanionLifecycleCompanionForOwner(dismissed.state, casterId),
     ).toMatchObject({
       status: "temporarilyDismissed",
       hitPoints: { currentHp: Hp(1), tempHp: Hp(3) },
@@ -2349,7 +2368,7 @@ describe("Find Familiar lifecycle", () => {
       tempHp: Hp(3),
     });
     expect(
-      findFamiliarCompanionForOwner(reappeared.state, casterId),
+      spawnedCompanionLifecycleCompanionForOwner(reappeared.state, casterId),
     ).toMatchObject({
       status: "present",
       placement: { kind: "unoccupiedSpaceWithin30Feet" },
@@ -2476,7 +2495,7 @@ describe("Find Familiar lifecycle", () => {
     expect(
       presentFindFamiliarHitPoints(withoutFamiliar, otherCombatantId),
     ).toBe("Present Find Familiar combatant is missing.");
-    expect(findFamiliarCurrentHitPoints(Hp(0))).toBe(
+    expect(spawnedCompanionLifecycleCurrentHitPoints(Hp(0))).toBe(
       "Present Find Familiar current HP must be above 0.",
     );
 
@@ -2498,7 +2517,11 @@ describe("Find Familiar lifecycle", () => {
       }),
     ).toBe("Find Familiar form Stat Block must use literal HP.");
     expect(
-      findFamiliarIdentityIssue(cast.state, otherCombatantId, familiarId),
+      spawnedCompanionLifecycleIdentityIssue(
+        cast.state,
+        otherCombatantId,
+        familiarId,
+      ),
     ).toBe(
       "Find Familiar familiar identity is already owned by another caster.",
     );
@@ -2587,13 +2610,13 @@ describe("Find Familiar lifecycle", () => {
       protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
       catalog: statBlockCatalog,
       formEligibility: {
-        formAccess: "findFamiliar",
+        formAccess: "spawnedCompanionLifecycle",
         eligibility: familiarEligibility,
       },
       manifestation: {
         tag: "temporarilyDismissed",
         storedForm: {
-          formAccess: "findFamiliar",
+          formAccess: "spawnedCompanionLifecycle",
           formSelection: { tag: "normalNamedForm", formId: "cat" },
           resolvedStatBlockId: parseSharedStatBlockId("stat_block_cat"),
         },
@@ -2637,7 +2660,7 @@ describe("Find Familiar lifecycle", () => {
     // settlement can clear the owner's durable slot; the combatant is removed
     // and the tombstone is excluded from the snapshot.
     expect(
-      findFamiliarCompanionForOwner(dismissed.state, casterId),
+      spawnedCompanionLifecycleCompanionForOwner(dismissed.state, casterId),
     ).toMatchObject({ status: "dismissedForever" });
     expect(dismissed.state.combatants.has(familiarId)).toBe(false);
     expect(dismissed.snapshot.companions).toEqual([]);
@@ -2661,7 +2684,7 @@ describe("Find Familiar lifecycle", () => {
     expect(disappeared.state.combatants.has(familiarId)).toBe(false);
     expect(disappeared.snapshot.turnOrder).toEqual([casterId]);
     expect(
-      findFamiliarCompanionForOwner(disappeared.state, casterId),
+      spawnedCompanionLifecycleCompanionForOwner(disappeared.state, casterId),
     ).toMatchObject({
       status: "disappearedAtZeroHitPoints",
     });
@@ -2670,12 +2693,12 @@ describe("Find Familiar lifecycle", () => {
     const recast = castRatFamiliar(disappeared.state);
     expect(recast.tag).toBe("resolved");
     if (recast.tag !== "resolved") return;
-    expect(findFamiliarCompanionForOwner(recast.state, casterId)).toMatchObject(
-      {
-        status: "present",
-      },
-    );
-    const recastEntry = findFamiliarCompanionEntryForOwner(
+    expect(
+      spawnedCompanionLifecycleCompanionForOwner(recast.state, casterId),
+    ).toMatchObject({
+      status: "present",
+    });
+    const recastEntry = spawnedCompanionLifecycleCompanionEntryForOwner(
       recast.state,
       casterId,
     );
@@ -2894,7 +2917,10 @@ describe("Find Familiar lifecycle", () => {
     expect(ownerRemoved.success.combatants.has(casterId)).toBe(false);
     expect(ownerRemoved.success.combatants.has(familiarId)).toBe(false);
     expect(
-      findFamiliarCompanionForOwner(ownerRemoved.success, casterId),
+      spawnedCompanionLifecycleCompanionForOwner(
+        ownerRemoved.success,
+        casterId,
+      ),
     ).toBeNull();
     expect(snapshotBattle(ownerRemoved.success).companions).toEqual([]);
 
@@ -2910,7 +2936,10 @@ describe("Find Familiar lifecycle", () => {
     expect(familiarRemoved.success.combatants.has(casterId)).toBe(true);
     expect(familiarRemoved.success.combatants.has(familiarId)).toBe(false);
     expect(
-      findFamiliarCompanionForOwner(familiarRemoved.success, casterId),
+      spawnedCompanionLifecycleCompanionForOwner(
+        familiarRemoved.success,
+        casterId,
+      ),
     ).toBeNull();
     expect(snapshotBattle(familiarRemoved.success).companions).toEqual([]);
   });
@@ -2931,9 +2960,11 @@ describe("Find Familiar lifecycle", () => {
     });
 
     expect(damaged.combatants.has(familiarId)).toBe(false);
-    expect(findFamiliarCompanionForOwner(damaged, casterId)).toMatchObject({
+    expect(
+      spawnedCompanionLifecycleCompanionForOwner(damaged, casterId),
+    ).toMatchObject({
       status: "disappearedAtZeroHitPoints",
-      formAccess: "findFamiliar",
+      formAccess: "spawnedCompanionLifecycle",
       resolvedStatBlockId: "stat_block_cat",
       creatureTypeOverride: firstTypeOverride.creatureType,
     });
@@ -2953,8 +2984,8 @@ describe("Find Familiar lifecycle", () => {
     if (cast.tag !== "resolved") return;
 
     expect(
-      findFamiliarTelepathicConnection(cast.state, {
-        kind: "findFamiliarWithin100FeetOfOwner",
+      spawnedCompanionLifecycleTelepathicConnection(cast.state, {
+        kind: "spawnedCompanionWithin100FeetOfOwner",
         ownerId: casterId,
         familiarId,
       }),
@@ -2965,8 +2996,8 @@ describe("Find Familiar lifecycle", () => {
       sharedLanguageRequired: false,
     });
     expect(
-      findFamiliarTelepathicConnection(cast.state, {
-        kind: "findFamiliarWithin100FeetOfOwner",
+      spawnedCompanionLifecycleTelepathicConnection(cast.state, {
+        kind: "spawnedCompanionWithin100FeetOfOwner",
         ownerId: casterId,
         familiarId: otherCombatantId,
       }),
@@ -2982,7 +3013,7 @@ describe("Find Familiar lifecycle", () => {
       state: cast.state,
       casterId,
       fact: {
-        kind: "findFamiliarWithin100FeetOfOwner",
+        kind: "spawnedCompanionWithin100FeetOfOwner",
         ownerId: casterId,
         familiarId,
       },
@@ -3017,7 +3048,7 @@ describe("Find Familiar lifecycle", () => {
       state: shared.state,
       casterId,
       fact: {
-        kind: "findFamiliarWithin100FeetOfOwner",
+        kind: "spawnedCompanionWithin100FeetOfOwner",
         ownerId: casterId,
         familiarId,
       },
@@ -3030,7 +3061,7 @@ describe("Find Familiar lifecycle", () => {
       state: cast.state,
       casterId,
       fact: {
-        kind: "findFamiliarWithin100FeetOfOwner",
+        kind: "spawnedCompanionWithin100FeetOfOwner",
         ownerId: casterId,
         familiarId: otherCombatantId,
       },
@@ -3047,7 +3078,7 @@ describe("Find Familiar lifecycle", () => {
       state: nextTurn.state,
       casterId,
       fact: {
-        kind: "findFamiliarWithin100FeetOfOwner",
+        kind: "spawnedCompanionWithin100FeetOfOwner",
         ownerId: casterId,
         familiarId,
       },
@@ -3094,7 +3125,7 @@ describe("Find Familiar lifecycle", () => {
       subject: cureWoundsAct.subject,
       fills: [targetFill],
       fact: {
-        kind: "findFamiliarWithin100FeetOfOwner",
+        kind: "spawnedCompanionWithin100FeetOfOwner",
         ownerId: casterId,
         familiarId,
       },
@@ -3118,7 +3149,7 @@ describe("Find Familiar lifecycle", () => {
         },
       ],
       fact: {
-        kind: "findFamiliarWithin100FeetOfOwner",
+        kind: "spawnedCompanionWithin100FeetOfOwner",
         ownerId: casterId,
         familiarId,
       },
@@ -3321,7 +3352,9 @@ describe("Find Familiar lifecycle", () => {
       damageAmount: Number(familiar.hp) + 1,
       deathFailuresAtZeroHp: 1,
     });
-    expect(findFamiliarCompanionForOwner(disappeared, casterId)).toMatchObject({
+    expect(
+      spawnedCompanionLifecycleCompanionForOwner(disappeared, casterId),
+    ).toMatchObject({
       status: "disappearedAtZeroHitPoints",
       reactionAvailable: false,
     });
@@ -3368,10 +3401,15 @@ describe("Find Familiar lifecycle", () => {
         },
       ],
     };
-    const counterspellFacts = counterspellTriggerFactsFill(
-      battleRuntimeSessionForTest({ ...session, state: cast.state }),
-    );
-    const originalFills = [connectionFill, targetFill, counterspellFacts];
+    const spellCastInterruptionReactionFacts =
+      spellCastInterruptionReactionTriggerFactsFill(
+        battleRuntimeSessionForTest({ ...session, state: cast.state }),
+      );
+    const originalFills = [
+      connectionFill,
+      targetFill,
+      spellCastInterruptionReactionFacts,
+    ];
     const interrupted = resolveBattleSubject({
       state: cast.state,
       subject: act.subject,
@@ -3464,7 +3502,7 @@ describe("Find Familiar lifecycle", () => {
       fills: [
         connectionFill,
         targetFill,
-        counterspellTriggerFactsFill(runtimeSession),
+        spellCastInterruptionReactionTriggerFactsFill(runtimeSession),
       ],
     });
     expect(interrupted).toMatchObject({
@@ -3579,7 +3617,7 @@ describe("Find Familiar lifecycle", () => {
       subject: healingWordAct.subject,
       fills: [],
       fact: {
-        kind: "findFamiliarWithin100FeetOfOwner",
+        kind: "spawnedCompanionWithin100FeetOfOwner",
         ownerId: casterId,
         familiarId,
       },
@@ -3613,7 +3651,7 @@ describe("Find Familiar lifecycle", () => {
       },
       fills: [],
       fact: {
-        kind: "findFamiliarWithin100FeetOfOwner",
+        kind: "spawnedCompanionWithin100FeetOfOwner",
         ownerId: casterId,
         familiarId,
       },
@@ -3628,7 +3666,7 @@ describe("Find Familiar lifecycle", () => {
       subject: cureWoundsAct.subject,
       fills: [],
       fact: {
-        kind: "findFamiliarWithin100FeetOfOwner",
+        kind: "spawnedCompanionWithin100FeetOfOwner",
         ownerId: casterId,
         familiarId: otherCombatantId,
       },
@@ -3649,7 +3687,7 @@ describe("Find Familiar lifecycle", () => {
       subject: cureWoundsAct.subject,
       fills: [],
       fact: {
-        kind: "findFamiliarWithin100FeetOfOwner",
+        kind: "spawnedCompanionWithin100FeetOfOwner",
         ownerId: casterId,
         familiarId,
       },
@@ -3696,7 +3734,7 @@ describe("Find Familiar lifecycle", () => {
         subject: cureWoundsAct.subject,
         fills: [targetFill],
         fact: {
-          kind: "findFamiliarWithin100FeetOfOwner",
+          kind: "spawnedCompanionWithin100FeetOfOwner",
           ownerId: casterId,
           familiarId,
         },
@@ -3813,7 +3851,7 @@ describe("Find Familiar lifecycle", () => {
     expect(dismissed.tag).toBe("resolved");
     if (dismissed.tag !== "resolved") return;
     expect(
-      findFamiliarCompanionForOwner(dismissed.state, casterId),
+      spawnedCompanionLifecycleCompanionForOwner(dismissed.state, casterId),
     ).toMatchObject({
       status: "temporarilyDismissed",
     });
@@ -4015,7 +4053,10 @@ describe("Find Familiar lifecycle", () => {
     expect(reappeared.tag).toBe("resolved");
     if (reappeared.tag !== "resolved") return;
     expect(
-      findFamiliarCompanionForOwner(reappeared.session.state, casterId),
+      spawnedCompanionLifecycleCompanionForOwner(
+        reappeared.session.state,
+        casterId,
+      ),
     ).toMatchObject({
       status: "present",
       placement: { kind: "unoccupiedSpaceWithin30Feet" },
@@ -4047,7 +4088,10 @@ describe("Find Familiar lifecycle", () => {
     expect(permanentlyDismissed.tag).toBe("resolved");
     if (permanentlyDismissed.tag !== "resolved") return;
     expect(
-      findFamiliarCompanionForOwner(permanentlyDismissed.state, casterId),
+      spawnedCompanionLifecycleCompanionForOwner(
+        permanentlyDismissed.state,
+        casterId,
+      ),
     ).toMatchObject({ status: "dismissedForever" });
     expect(permanentlyDismissed.state.combatants.has(familiarId)).toBe(false);
     expect(
@@ -4825,7 +4869,7 @@ describe("Find Familiar lifecycle", () => {
         companionId: familiarId,
         identity: { tag: "battleOnly" },
         protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
-        formAccess: "findFamiliar",
+        formAccess: "spawnedCompanionLifecycle",
         resolvedStatBlockId: "stat_block_cat",
         creatureTypeOverride: firstTypeOverride.creatureType,
         initiative: 18,
@@ -4873,7 +4917,7 @@ describe("Find Familiar lifecycle", () => {
           identity: { tag: "battleOnly" },
           protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
           reappearanceCombatantId: familiarId,
-          formAccess: "findFamiliar",
+          formAccess: "spawnedCompanionLifecycle",
           resolvedStatBlockId: "stat_block_cat",
           creatureTypeOverride: firstTypeOverride.creatureType,
           hitPoints: { currentHp: 0, tempHp: 0 },
@@ -4901,7 +4945,7 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(missing).toEqual(
       Result.fail({
-        tag: "findFamiliarReappearanceAdmissionIssue",
+        tag: "spawnedCompanionLifecycleReappearanceAdmissionIssue",
         message:
           "Retained familiar form Stat Block is missing: stat_block_cat.",
       }),
@@ -4929,7 +4973,7 @@ describe("Find Familiar lifecycle", () => {
     expect(Result.isFailure(malformed)).toBe(true);
     if (Result.isSuccess(malformed)) return;
     expect(malformed.failure).toEqual({
-      tag: "findFamiliarReappearanceAdmissionIssue",
+      tag: "spawnedCompanionLifecycleReappearanceAdmissionIssue",
       message: "Battle runtime requires literal Stat Block Armor Class.",
     });
   });
@@ -4945,19 +4989,19 @@ describe("Find Familiar lifecycle", () => {
     expect(dismissed.tag).toBe("resolved");
     if (dismissed.tag !== "resolved") return;
     expect(
-      findFamiliarCompanionForOwner(dismissed.state, casterId),
+      spawnedCompanionLifecycleCompanionForOwner(dismissed.state, casterId),
     ).toMatchObject({ status: "dismissedForever" });
     expect(dismissed.state.combatants.has(familiarId)).toBe(false);
 
     const recast = castCatFamiliar(dismissed.state);
     expect(recast.tag).toBe("resolved");
     if (recast.tag !== "resolved") return;
-    expect(findFamiliarCompanionForOwner(recast.state, casterId)).toMatchObject(
-      {
-        status: "present",
-        combatantId: familiarId,
-      },
-    );
+    expect(
+      spawnedCompanionLifecycleCompanionForOwner(recast.state, casterId),
+    ).toMatchObject({
+      status: "present",
+      combatantId: familiarId,
+    });
   });
 
   test("embodied companion admission rejects an ordinary combatant identity", () => {
@@ -4973,13 +5017,13 @@ describe("Find Familiar lifecycle", () => {
       protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
       catalog: statBlockCatalog,
       formEligibility: {
-        formAccess: "findFamiliar",
+        formAccess: "spawnedCompanionLifecycle",
         eligibility: familiarEligibility,
       },
       manifestation: {
         tag: "embodiedOutsideBattle",
         storedForm: {
-          formAccess: "findFamiliar",
+          formAccess: "spawnedCompanionLifecycle",
           formSelection: { tag: "normalNamedForm", formId: "cat" },
           resolvedStatBlockId: parseSharedStatBlockId("stat_block_cat"),
         },
@@ -5096,7 +5140,7 @@ describe("Find Familiar lifecycle", () => {
         subject: cureWoundsAct.subject,
         fills: [targetFill],
         fact: {
-          kind: "findFamiliarWithin100FeetOfOwner",
+          kind: "spawnedCompanionWithin100FeetOfOwner",
           ownerId: casterId,
           familiarId,
         },
@@ -5122,7 +5166,7 @@ describe("Find Familiar lifecycle", () => {
       subject: cureWoundsAct.subject,
       fills: [targetFill],
       fact: {
-        kind: "findFamiliarWithin100FeetOfOwner",
+        kind: "spawnedCompanionWithin100FeetOfOwner",
         ownerId: casterId,
         familiarId,
       },
@@ -5161,7 +5205,7 @@ describe("Find Familiar lifecycle", () => {
         subject: cureWoundsAct.subject,
         fills: [],
         fact: {
-          kind: "findFamiliarWithin100FeetOfOwner",
+          kind: "spawnedCompanionWithin100FeetOfOwner",
           ownerId: casterId,
           familiarId,
         },
@@ -5362,7 +5406,7 @@ describe("Find Familiar lifecycle", () => {
     const cast = castCatFamiliar(startFixtureBattle());
     expect(cast.tag).toBe("resolved");
     if (cast.tag !== "resolved") return;
-    const familiarEntry = findFamiliarCompanionEntryForOwner(
+    const familiarEntry = spawnedCompanionLifecycleCompanionEntryForOwner(
       cast.state,
       casterId,
     );

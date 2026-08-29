@@ -454,16 +454,16 @@ describe("Heat Metal object-contact public entry boundaries", () => {
       kind: "spellAreaChoice" as const,
       holeId: areaHole.holeId,
       value: {
-        kind: "antimagicFieldSelfEmanation" as const,
+        kind: "magicSuppressionSelfEmanation" as const,
         areaId: battleAreaId("object-contact-boundary-antimagic-area"),
         auraMembership: {
-          kind: "antimagicFieldAuraMembership" as const,
+          kind: "magicSuppressionEmanationMembership" as const,
           originIncluded: true,
           nonOriginCombatantIds: [],
         },
         affectedOngoingSpellEffects: [
           {
-            kind: "antimagicFieldAffectedOngoingSpellEffect" as const,
+            kind: "magicSuppressionAffectedOngoingSpellEffect" as const,
             effect: {
               kind: "spellActiveEffect" as const,
               activeEffectKind: "spellObjectContactDamage" as const,

@@ -239,12 +239,16 @@ describe("battle runtime: Concentration and readied spells", () => {
     const sourceProcedureRef = requireCharacterSpellProcedureRefForTest(
       session,
       wizardId,
-      spellSlotInvocationRef("hideous_laughter", 1, "hideousLaughter"),
+      spellSlotInvocationRef(
+        "hideous_laughter",
+        1,
+        "saveGatedConditionWithRepeat",
+      ),
     );
     const allocatedEffect = allocateBattleEffectOccurrenceForCreature({
       owner: skeleton,
       effect: {
-        kind: "hideousLaughter",
+        kind: "saveGatedConditionWithRepeat",
         sourceProcedureRef,
         sourceCombatantId: wizardId,
         conditionHadNonSpellProneSource: false,
@@ -884,27 +888,32 @@ describe("battle runtime: Concentration and readied spells", () => {
     ) {
       throw new Error("Expected readied spell caster and target.");
     }
-    const hideousLaughter = allocateBattleEffectOccurrenceForCreature({
-      owner: target,
-      effect: {
-        kind: "hideousLaughter",
-        sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
-          session,
-          secondWizardId,
-          spellSlotInvocationRef("hideous_laughter", 1, "hideousLaughter"),
-        ),
-        sourceCombatantId: secondWizardId,
-        conditionHadNonSpellProneSource: false,
-        conditionHadNonSpellIncapacitatedSource: false,
-        repeatSaveRollMode: null,
-        save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
-        expiresAt: {
-          kind: "concentration",
-          combatantId: secondWizardId,
-          durationTicks: elapsedTimeTicks(9),
+    const saveGatedConditionWithRepeat =
+      allocateBattleEffectOccurrenceForCreature({
+        owner: target,
+        effect: {
+          kind: "saveGatedConditionWithRepeat",
+          sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+            session,
+            secondWizardId,
+            spellSlotInvocationRef(
+              "hideous_laughter",
+              1,
+              "saveGatedConditionWithRepeat",
+            ),
+          ),
+          sourceCombatantId: secondWizardId,
+          conditionHadNonSpellProneSource: false,
+          conditionHadNonSpellIncapacitatedSource: false,
+          repeatSaveRollMode: null,
+          save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+          expiresAt: {
+            kind: "concentration",
+            combatantId: secondWizardId,
+            durationTicks: elapsedTimeTicks(9),
+          },
         },
-      },
-    });
+      });
     const sourceD20TestRollMode = allocateBattleEffectOccurrenceForCreature({
       owner: caster,
       effect: {
@@ -957,7 +966,8 @@ describe("battle runtime: Concentration and readied spells", () => {
         .set(secondWizardId, {
           ...laughterCaster,
           concentration: {
-            sourceProcedureRef: hideousLaughter.effect.sourceProcedureRef,
+            sourceProcedureRef:
+              saveGatedConditionWithRepeat.effect.sourceProcedureRef,
             effectKind: "spellEffect",
           },
         })
@@ -971,13 +981,16 @@ describe("battle runtime: Concentration and readied spells", () => {
         })
         .set(goblinId, {
           ...battleCreatureStateWithKnockOutPreservedConditions(
-            hideousLaughter.owner,
+            saveGatedConditionWithRepeat.owner,
             applyCondition(
               applyCondition(target.conditions, "prone"),
               "incapacitated",
             ),
           ),
-          activeEffects: [...target.activeEffects, hideousLaughter.effect],
+          activeEffects: [
+            ...target.activeEffects,
+            saveGatedConditionWithRepeat.effect,
+          ],
         }),
     };
     const enrichedSession = battleRuntimeSessionForTest({
@@ -1079,7 +1092,7 @@ describe("battle runtime: Concentration and readied spells", () => {
       "savingThrowOutcome",
     );
     expect(laughterHole).toMatchObject({
-      hideousLaughterRepeatSave: { targetId: goblinId, trigger: "damage" },
+      saveGatedConditionRepeatSave: { targetId: goblinId, trigger: "damage" },
     });
     const released = requireResolved(
       resolveBattleSubject({
@@ -1101,7 +1114,9 @@ describe("battle runtime: Concentration and readied spells", () => {
     expect(
       released.state.combatants
         .get(goblinId)
-        ?.activeEffects.some((effect) => effect.kind === "hideousLaughter"),
+        ?.activeEffects.some(
+          (effect) => effect.kind === "saveGatedConditionWithRepeat",
+        ),
     ).toBe(false);
     expect(released.state.combatants.get(goblinId)?.conditions.prone).toBe(
       false,

@@ -384,7 +384,7 @@ function concentrationSpellCastAct(state: BattleRuntimeSession): ReturnType<
     } =>
       candidate.subject.tag === "actionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.procedure ===
-        "blurAttackRollDefense",
+        "perceptionGatedAttackRollDefense",
   );
   if (act === undefined) {
     throw new Error("Expected Concentration spell cast act.");

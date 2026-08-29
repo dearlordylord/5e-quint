@@ -33,7 +33,7 @@ import {
 } from "./command-routes.ts";
 import {
   companionRouteForDiscoveredAct,
-  findFamiliarCompanionLifecycleRouteEvents,
+  spawnedCompanionLifecycleCompanionLifecycleRouteEvents,
 } from "./companion-routes.ts";
 import {
   conditionImmunityTemporaryHitPointRouteForDiscoveredAct,
@@ -146,7 +146,9 @@ describe("extracted route owner boundaries", () => {
   });
 
   test("projects companion owner outputs", () => {
-    expect(findFamiliarCompanionLifecycleRouteEvents()).toHaveLength(2);
+    expect(
+      spawnedCompanionLifecycleCompanionLifecycleRouteEvents(),
+    ).toHaveLength(2);
   });
 
   test("projects marked damage, feature, Command, and attack route events", () => {
@@ -269,7 +271,7 @@ describe("extracted route owner boundaries", () => {
       expect.objectContaining({
         subject: "commandEffect",
         fill: "spellTargetList",
-        holes: ["commandOptionChoice"],
+        holes: ["compelledBehaviorOptionChoice"],
         owner: "battleHoleFrontier",
       }),
     );

@@ -13,7 +13,7 @@ import {
   requireResultHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
-  flamingSphereUnitId,
+  persistentAreaSaveDamageUnitId,
   greaseUnitId,
   sleetStormUnitId,
   spellCasterId,
@@ -22,18 +22,18 @@ import {
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
-  flamingSphereAreaFill,
-  flamingSphereRamAct,
-  flamingSphereRamMovementFill,
-  greaseGroundHazardEndTurnAct,
+  persistentAreaSaveDamageAreaFill,
+  persistentAreaSaveDamageRamAct,
+  persistentAreaSaveDamageRamMovementFill,
+  persistentAreaSaveConditionEndTurnAct,
   greaseSavingThrowOutcomeFill,
   singleTargetSavingThrowOutcomeFill,
   sleetStormAreaFill,
-  sleetStormAreaHazardSaveAct,
+  persistentAreaSaveCompositeSaveAct,
   spellAct,
   webAreaFill,
-  webAreaRemovedAct,
-  webRestraintSaveAct,
+  persistentAreaSaveConditionEscapeAreaRemovedAct,
+  persistentAreaSaveConditionEscapeSaveAct,
   webRestrainedNoLongerInAreaAct,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
@@ -46,7 +46,7 @@ import {
 describe("battle runtime spatial-effect coverage", () => {
   test("caller-supplied Sleet Storm and expired Grease subjects become stale", () => {
     const sleet = castSleetStorm();
-    const sleetSave = sleetStormAreaHazardSaveAct(
+    const sleetSave = persistentAreaSaveCompositeSaveAct(
       sleet.targetTurn,
       spellTargetId,
       "entersArea",
@@ -74,7 +74,7 @@ describe("battle runtime spatial-effect coverage", () => {
     });
 
     const grease = castGrease();
-    const greaseSave = greaseGroundHazardEndTurnAct(
+    const greaseSave = persistentAreaSaveConditionEndTurnAct(
       battleRuntimeSessionForTest({
         ...grease.session,
         state: grease.targetTurn,
@@ -105,7 +105,7 @@ describe("battle runtime spatial-effect coverage", () => {
 
   test("Web failed saves replace the source condition after a new turn and clean up through discovered lifecycle commands", () => {
     const { cast, targetTurn } = castWeb();
-    const firstSaveAct = webRestraintSaveAct(
+    const firstSaveAct = persistentAreaSaveConditionEscapeSaveAct(
       targetTurn,
       spellTargetId,
       "startsTurnInArea",
@@ -131,7 +131,7 @@ describe("battle runtime spatial-effect coverage", () => {
       requireCombatant(firstFailed.state, spellCasterId).activeEffects,
     ).toEqual([
       expect.objectContaining({
-        kind: "webRestraintHazard",
+        kind: "persistentAreaSaveConditionEscape",
         startTurnSavedThisTurn: [spellTargetId],
       }),
     ]);
@@ -146,7 +146,7 @@ describe("battle runtime spatial-effect coverage", () => {
       ...cast,
       state: nextTargetTurn.state,
     });
-    const secondSaveAct = webRestraintSaveAct(
+    const secondSaveAct = persistentAreaSaveConditionEscapeSaveAct(
       secondTurnSession,
       spellTargetId,
       "startsTurnInArea",
@@ -177,7 +177,7 @@ describe("battle runtime spatial-effect coverage", () => {
       requireCombatant(secondFailed.state, spellCasterId).activeEffects,
     ).toEqual([
       expect.objectContaining({
-        kind: "webRestraintHazard",
+        kind: "persistentAreaSaveConditionEscape",
         startTurnSavedThisTurn: [spellTargetId],
       }),
     ]);
@@ -198,12 +198,14 @@ describe("battle runtime spatial-effect coverage", () => {
     });
     expect(
       requireCombatant(cleaned.state, spellCasterId).activeEffects,
-    ).toEqual([expect.objectContaining({ kind: "webRestraintHazard" })]);
+    ).toEqual([
+      expect.objectContaining({ kind: "persistentAreaSaveConditionEscape" }),
+    ]);
 
     const areaRemoved = requireResolved(
       resolveBattleSubject({
         state: cleaned.state,
-        subject: webAreaRemovedAct(
+        subject: persistentAreaSaveConditionEscapeAreaRemovedAct(
           battleRuntimeSessionForTest({ ...cast, state: cleaned.state }),
         ).subject,
         fills: [],
@@ -217,7 +219,7 @@ describe("battle runtime spatial-effect coverage", () => {
 
   test("Flaming Sphere ram discovers and resolves a target Concentration save before spending its Bonus Action", () => {
     const initial = spellBattle({
-      preparedSpells: [spellRecord(flamingSphereUnitId)],
+      preparedSpells: [spellRecord(persistentAreaSaveDamageUnitId)],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       casterClassLevels: [{ className: "wizard", level: 3 }],
       targetClassLevels: [{ className: "wizard", level: 3 }],
@@ -230,7 +232,7 @@ describe("battle runtime spatial-effect coverage", () => {
     });
     const sphereAct = spellAct({
       session: initial,
-      spellId: flamingSphereUnitId,
+      spellId: persistentAreaSaveDamageUnitId,
       slotLevel: 2,
     });
     const cast = requireResolved(
@@ -238,7 +240,7 @@ describe("battle runtime spatial-effect coverage", () => {
         state: initial.state,
         subject: sphereAct.subject,
         fills: [
-          flamingSphereAreaFill(
+          persistentAreaSaveDamageAreaFill(
             requireHole(sphereAct.initialHoles, "spellAreaChoice"),
           ),
         ],
@@ -274,10 +276,10 @@ describe("battle runtime spatial-effect coverage", () => {
       ...initial,
       state: casterTurn.state,
     });
-    const ram = flamingSphereRamAct(casterSession);
+    const ram = persistentAreaSaveDamageRamAct(casterSession);
     const movement = requireHole(ram.initialHoles, "movableZoneRamMovement");
     const save = requireHole(ram.initialHoles, "savingThrowOutcome");
-    const movementFill = flamingSphereRamMovementFill(movement, 30);
+    const movementFill = persistentAreaSaveDamageRamMovementFill(movement, 30);
     const saveFill = singleTargetSavingThrowOutcomeFill(
       save,
       spellTargetId,

@@ -27,7 +27,7 @@ import {
   fireballUnitId,
   flameStrikeUnitId,
   guidingBoltUnitId,
-  hideousLaughterUnitId,
+  saveGatedConditionWithRepeatUnitId,
   inflictWoundsUnitId,
   lightningBoltUnitId,
   magicMissileUnitId,
@@ -2221,7 +2221,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
   test("save-gated damage replays a missing Hideous Laughter damage repeat save", () => {
     const spell = spellRecord(fireballUnitId);
     const baseSession = spellBattle({
-      preparedSpells: [spell, spellRecord(hideousLaughterUnitId)],
+      preparedSpells: [spell, spellRecord(saveGatedConditionWithRepeatUnitId)],
       spellSlots: [
         { spellLevel: 1, count: 1 },
         { spellLevel: 3, count: 1 },
@@ -2231,15 +2231,19 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       targetMaxHp: 50,
     });
     const baseCaster = requireCombatant(baseSession.state, spellCasterId);
-    const hideousLaughterProcedureRef =
+    const saveGatedConditionWithRepeatProcedureRef =
       requireCharacterSpellProcedureRefForTest(
         baseSession,
         spellCasterId,
-        spellSlotInvocationRef(hideousLaughterUnitId, 1, "hideousLaughter"),
+        spellSlotInvocationRef(
+          saveGatedConditionWithRepeatUnitId,
+          1,
+          "saveGatedConditionWithRepeat",
+        ),
       );
-    const hideousLaughter = {
-      kind: "hideousLaughter" as const,
-      sourceProcedureRef: hideousLaughterProcedureRef,
+    const saveGatedConditionWithRepeat = {
+      kind: "saveGatedConditionWithRepeat" as const,
+      sourceProcedureRef: saveGatedConditionWithRepeatProcedureRef,
       sourceCombatantId: spellCasterId,
       conditionHadNonSpellProneSource: false,
       conditionHadNonSpellIncapacitatedSource: false,
@@ -2258,7 +2262,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       combatants: new Map(baseSession.state.combatants).set(spellCasterId, {
         ...baseCaster,
         concentration: {
-          sourceProcedureRef: hideousLaughterProcedureRef,
+          sourceProcedureRef: saveGatedConditionWithRepeatProcedureRef,
           effectKind: "spellEffect" as const,
         },
       }),
@@ -2266,7 +2270,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     const enrichedState = battleStateWithAllocatedEffectForTest({
       state: concentratingState,
       ownerId: spellTargetId,
-      effect: hideousLaughter,
+      effect: saveGatedConditionWithRepeat,
     });
     const session = battleRuntimeSessionForTest({
       ...baseSession,
@@ -2305,12 +2309,12 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       throw new Error("Expected a Hideous Laughter repeat-save hole.");
     }
     const repeatSaveHole = awaitingRepeatSave.holes.find(
-      (hole) => "hideousLaughterRepeatSave" in hole,
+      (hole) => "saveGatedConditionRepeatSave" in hole,
     );
     expect(repeatSaveHole).toBeDefined();
     expect(repeatSaveHole).toMatchObject({
       kind: "savingThrowOutcome",
-      hideousLaughterRepeatSave: expect.objectContaining({
+      saveGatedConditionRepeatSave: expect.objectContaining({
         targetId: spellTargetId,
         trigger: "damage",
       }),

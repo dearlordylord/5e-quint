@@ -79,7 +79,7 @@ type WeaponHostedScenario =
   | "trueStrikeRadiantHit"
   | "shillelaghHeldWeaponOverride"
   | "divineFavorWeaponDamageRider"
-  | "magicWeaponEnhancement"
+  | "weaponAttackDamageEnhancement"
   | "done";
 
 type WeaponHostedPhase =
@@ -207,7 +207,7 @@ const WEAPON_HOSTED_SCENARIO_BY_TAG = {
   TrueStrikeRadiantHit: "trueStrikeRadiantHit",
   ShillelaghHeldWeaponOverride: "shillelaghHeldWeaponOverride",
   DivineFavorWeaponDamageRider: "divineFavorWeaponDamageRider",
-  MagicWeaponEnhancement: "magicWeaponEnhancement",
+  MagicWeaponEnhancement: "weaponAttackDamageEnhancement",
   Done: "done",
 } as const satisfies Readonly<Record<string, WeaponHostedScenario>>;
 
@@ -383,7 +383,7 @@ function createWeaponHostedDriver() {
         state = cleanDivineFavorDuration(state);
       },
       doStartMagicWeapon: () => {
-        state = initialRuntimeState("magicWeaponEnhancement");
+        state = initialRuntimeState("weaponAttackDamageEnhancement");
       },
       doDiscoverMagicWeapon: () => {
         state = discoverMagicWeapon(state);
@@ -944,7 +944,7 @@ function routeWeaponDamageRiderDamage(): readonly ReducerRouteEvent[] {
 
 function routeWeaponEnhancementItemTarget(): readonly ReducerRouteEvent[] {
   const discovered = discoverMagicWeapon(
-    initialRuntimeState("magicWeaponEnhancement"),
+    initialRuntimeState("weaponAttackDamageEnhancement"),
   );
   if (discovered.pending.tag !== "magicWeaponTarget") {
     throw new Error("Expected pending Magic Weapon target.");
@@ -1054,7 +1054,7 @@ function routeWeaponDamageRiderDurationCleanup(): readonly ReducerRouteEvent[] {
 
 function routeWeaponEnhancementDurationCleanup(): readonly ReducerRouteEvent[] {
   const enhanced = fillMagicWeaponTarget(
-    discoverMagicWeapon(initialRuntimeState("magicWeaponEnhancement")),
+    discoverMagicWeapon(initialRuntimeState("weaponAttackDamageEnhancement")),
   );
   const caster = requireCombatant(enhanced.battle.state, spellCasterId);
   const expiringState: BattleState = {
@@ -1062,7 +1062,7 @@ function routeWeaponEnhancementDurationCleanup(): readonly ReducerRouteEvent[] {
     combatants: new Map(enhanced.battle.state.combatants).set(spellCasterId, {
       ...caster,
       activeEffects: caster.activeEffects.map((effect) =>
-        effect.kind === "spellMagicWeaponEnhancement"
+        effect.kind === "spellWeaponAttackDamageEnhancement"
           ? {
               ...effect,
               expiresAt: {
@@ -1628,7 +1628,7 @@ function cleanMagicWeaponDuration(
     combatants: new Map(state.battle.state.combatants).set(spellCasterId, {
       ...caster,
       activeEffects: caster.activeEffects.map((effect) =>
-        effect.kind === "spellMagicWeaponEnhancement"
+        effect.kind === "spellWeaponAttackDamageEnhancement"
           ? {
               ...effect,
               expiresAt: {
@@ -1666,7 +1666,8 @@ function weaponHostedProjection(
     scenario: state.scenario,
     phase: state.phase,
     targetHp:
-      state.scenario === "magicWeaponEnhancement" || state.scenario === "done"
+      state.scenario === "weaponAttackDamageEnhancement" ||
+      state.scenario === "done"
         ? 20
         : Number(requireCombatant(state.battle.state, spellTargetId).hp),
     bonusActionAvailable:
@@ -1715,7 +1716,7 @@ function activeEffectPresent(
         effect.sourceCombatantId === spellCasterId,
     );
   }
-  if (scenario === "magicWeaponEnhancement") {
+  if (scenario === "weaponAttackDamageEnhancement") {
     return battleWeaponItemHasMagicWeaponEnhancement(
       battle,
       spellCasterId,

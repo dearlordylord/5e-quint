@@ -17,7 +17,7 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import grantedAreaSaveDamageActionInput from "../../surface/content/dragons_breath.json";
 import {
-  dragonsBreathUnitId,
+  grantedAreaSaveDamageActionUnitId,
   resistanceUnitId,
   spellCasterId,
   spellTargetId,
@@ -87,7 +87,7 @@ describe("Dragon's Breath initial cast admission", () => {
     const state = session.state;
     const act = bonusSpellAct({
       session,
-      spellId: dragonsBreathUnitId,
+      spellId: grantedAreaSaveDamageActionUnitId,
       slotLevel: 3,
     });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
@@ -117,7 +117,7 @@ describe("Dragon's Breath initial cast admission", () => {
         session,
         spellCasterId,
         spellSlotInvocationRef(
-          dragonsBreathUnitId,
+          grantedAreaSaveDamageActionUnitId,
           3,
           "grantedAreaSaveDamageAction",
         ),
@@ -140,7 +140,7 @@ describe("Dragon's Breath initial cast admission", () => {
         knownWillingSpellTargetListFill(
           targetHole,
           spellCasterId,
-          dragonsBreathUnitId,
+          grantedAreaSaveDamageActionUnitId,
           [spellTargetId],
         ),
         damageTypeChoiceFill(damageTypeHole, "fire"),
@@ -187,7 +187,7 @@ describe("Dragon's Breath initial cast admission", () => {
     const state = session.state;
     const act = bonusSpellAct({
       session,
-      spellId: dragonsBreathUnitId,
+      spellId: grantedAreaSaveDamageActionUnitId,
       slotLevel: 2,
     });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
@@ -198,9 +198,12 @@ describe("Dragon's Breath initial cast admission", () => {
         state,
         subject: act.subject,
         fills: [
-          spellTargetListFill(targetHole, spellCasterId, dragonsBreathUnitId, [
-            spellTargetId,
-          ]),
+          spellTargetListFill(
+            targetHole,
+            spellCasterId,
+            grantedAreaSaveDamageActionUnitId,
+            [spellTargetId],
+          ),
           damageTypeChoiceFill(damageTypeHole, "acid"),
         ],
       }),
@@ -1089,7 +1092,7 @@ function castDragonsBreath(
 ): BattleState {
   const act = bonusSpellAct({
     session,
-    spellId: dragonsBreathUnitId,
+    spellId: grantedAreaSaveDamageActionUnitId,
     slotLevel: 2,
   });
   const targetHole = requireHole(act.initialHoles, "spellTargetList");
@@ -1101,7 +1104,7 @@ function castDragonsBreath(
       knownWillingSpellTargetListFill(
         targetHole,
         spellCasterId,
-        dragonsBreathUnitId,
+        grantedAreaSaveDamageActionUnitId,
         [spellTargetId],
       ),
       damageTypeChoiceFill(damageTypeHole, damageType),

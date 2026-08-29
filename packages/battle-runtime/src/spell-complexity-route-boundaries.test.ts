@@ -121,19 +121,19 @@ function isSavingThrowInvocation(
     case "rollModifier":
     case "creatureSizeIncrease":
     case "creatureSizeDecrease":
-    case "levitatedCreature":
+    case "controlledVerticalSuspension":
     case "saveGatedDamage":
     case "saveGatedCondition":
     case "saveGatedConditionImmunity":
     case "saveGatedAttackRollAdvantage":
-    case "counterspell":
-    case "sleepTargetAdmission":
-    case "hideousLaughter":
-    case "hypnoticPattern":
-    case "slowActivePenalties":
+    case "spellCastInterruptionReaction":
+    case "stagedSaveCondition":
+    case "saveGatedConditionWithRepeat":
+    case "saveGatedAreaControl":
+    case "saveGatedTurnConstraintBundle":
     case "command":
-    case "greaseGroundHazard":
-    case "gustOfWindLine":
+    case "persistentAreaSaveCondition":
+    case "directionalPersistentArea":
       return true;
   }
   return false;
@@ -160,12 +160,12 @@ function isSaveMetamagicInvocation(
     case "saveGatedCondition":
     case "saveGatedConditionImmunity":
     case "saveGatedAttackRollAdvantage":
-    case "hideousLaughter":
-    case "hypnoticPattern":
-    case "slowActivePenalties":
+    case "saveGatedConditionWithRepeat":
+    case "saveGatedAreaControl":
+    case "saveGatedTurnConstraintBundle":
     case "command":
-    case "greaseGroundHazard":
-    case "gustOfWindLine":
+    case "persistentAreaSaveCondition":
+    case "directionalPersistentArea":
       return true;
   }
   return false;
@@ -633,12 +633,15 @@ describe("battle replay and spell route frontiers", () => {
       message: "Ordinary object attacks require object attack table facts.",
     });
 
-    const hideousLaughterRepeat = malformedSavingThrowFill(
+    const saveGatedConditionWithRepeatRepeat = malformedSavingThrowFill(
       holeId(`${HIDEOUS_LAUGHTER_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX}synthetic`),
     );
     expect(
       attackFillSet(
-        [hideousLaughterRepeat, hideousLaughterRepeat],
+        [
+          saveGatedConditionWithRepeatRepeat,
+          saveGatedConditionWithRepeatRepeat,
+        ],
         fighterId,
         state,
       ),
@@ -1023,7 +1026,7 @@ describe("save-gate outcome validation frontiers", () => {
       validateSavingThrowOutcomes(
         {
           area: {
-            kind: "faerieFireArea",
+            kind: "saveGatedTargetProjectionArea",
             originAnchorId: spellCasterId,
             affectedTargetIds: [spellTargetId],
             affectedObjectIds: [],

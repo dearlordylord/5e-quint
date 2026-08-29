@@ -3,13 +3,13 @@
 import { describe, expect, test } from "vitest";
 
 import {
-  antimagicFieldAuraEffectTemplateForTest,
+  magicSuppressionEmanationEffectTemplateForTest,
   magicSuppressionEmanationMembershipForTest,
 } from "./antimagic-field.test-support.ts";
 import { battleStateWithAllocatedEffectForTest } from "./battle-runtime.test-support.ts";
 import {
   ANTIMAGIC_FIELD_TRANSIT_BLOCKING_MESSAGE,
-  antimagicFieldTransitInvalidReason,
+  magicSuppressionTransitInvalidReason,
 } from "./battle-reducer/antimagic-field-transit-blocking.ts";
 import {
   battleAreaId,
@@ -32,7 +32,7 @@ const unmatchedAntimagicFieldAreaId = battleAreaId(
 describe("Antimagic Field teleport transit witnesses", () => {
   test("accepts an empty witness set when no aura is active", () => {
     expect(
-      antimagicFieldTransitInvalidReason({
+      magicSuppressionTransitInvalidReason({
         state: transitBattleState(),
         actorId: spellCasterId,
         witnesses: [],
@@ -55,7 +55,7 @@ describe("Antimagic Field teleport transit witnesses", () => {
     "accepts matching origin and destination facts $name",
     ({ actorInsideAura, destinationInsideAura }) => {
       expect(
-        antimagicFieldTransitInvalidReason({
+        magicSuppressionTransitInvalidReason({
           state: activeAntimagicTransitState(actorInsideAura),
           actorId: spellCasterId,
           witnesses: [
@@ -71,7 +71,7 @@ describe("Antimagic Field teleport transit witnesses", () => {
 
   test("rejects a witness that does not identify one active aura", () => {
     expect(
-      antimagicFieldTransitInvalidReason({
+      magicSuppressionTransitInvalidReason({
         state: transitBattleState(),
         actorId: spellCasterId,
         witnesses: [
@@ -107,7 +107,7 @@ describe("Antimagic Field teleport transit witnesses", () => {
     readonly witnesses: readonly BattleAntimagicFieldTransitWitness[];
   }>)("rejects a $name witness for an active aura", ({ witnesses }) => {
     expect(
-      antimagicFieldTransitInvalidReason({
+      magicSuppressionTransitInvalidReason({
         state: activeAntimagicTransitState(false),
         actorId: spellCasterId,
         witnesses,
@@ -119,7 +119,7 @@ describe("Antimagic Field teleport transit witnesses", () => {
 
   test("rejects an origin fact that disagrees with active aura membership", () => {
     expect(
-      antimagicFieldTransitInvalidReason({
+      magicSuppressionTransitInvalidReason({
         state: activeAntimagicTransitState(true),
         actorId: spellCasterId,
         witnesses: [
@@ -149,7 +149,7 @@ describe("Antimagic Field teleport transit witnesses", () => {
     "blocks teleportation $name an active aura",
     ({ actorInsideAura, destinationInsideAura }) => {
       expect(
-        antimagicFieldTransitInvalidReason({
+        magicSuppressionTransitInvalidReason({
           state: activeAntimagicTransitState(actorInsideAura),
           actorId: spellCasterId,
           witnesses: [
@@ -182,7 +182,7 @@ function activeAntimagicTransitState(actorInsideAura: boolean): BattleState {
   const withAura = battleStateWithAllocatedEffectForTest({
     state,
     ownerId: aura.sourceCombatantId,
-    effect: antimagicFieldAuraEffectTemplateForTest({
+    effect: magicSuppressionEmanationEffectTemplateForTest({
       areaId: antimagicFieldAreaId,
       aura,
     }),
@@ -198,7 +198,7 @@ function antimagicTransitWitness(input: {
   readonly destinationInsideAura: boolean;
 }): BattleAntimagicFieldTransitWitness {
   return {
-    kind: "antimagicFieldTransit",
+    kind: "magicSuppressionTransit",
     areaId: antimagicFieldAreaId,
     sourceCombatantId: spellTargetId,
     originInsideAura: input.originInsideAura,

@@ -543,7 +543,7 @@ describe("battle runtime: Sleep", () => {
       }),
       activeEffects: [
         expect.objectContaining({
-          kind: "sleepUnconscious",
+          kind: "stagedSaveConditionApplied",
           sourceProcedureRef: expect.any(String),
           sourceCombatantId: wizardId,
           expiresAt: { kind: "concentration", combatantId: wizardId },
@@ -725,7 +725,7 @@ describe("battle runtime: Sleep", () => {
       conditions: expect.objectContaining({ unconscious: true }),
       activeEffects: [
         expect.objectContaining({
-          kind: "sleepUnconscious",
+          kind: "stagedSaveConditionApplied",
           sourceProcedureRef: expect.any(String),
           sourceCombatantId: wizardId,
         }),

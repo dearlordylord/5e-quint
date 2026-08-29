@@ -211,12 +211,12 @@ function createSlowActivePenaltiesDriver() {
       },
       doStutter: () => {},
       step: () => {},
-      getState: () => slowActivePenaltiesProjection(state),
+      getState: () => saveGatedTurnConstraintBundleProjection(state),
     };
   });
 }
 
-const slowActivePenaltiesStateCheck = stateCheck(
+const saveGatedTurnConstraintBundleStateCheck = stateCheck(
   normalizeSlowActivePenaltiesQuintState,
   compareSlowActivePenaltiesStates,
 );
@@ -228,7 +228,7 @@ describe("Slow active-penalties MBT parity", () => {
     const needsSave = requestEndTurnSave(targetTurn);
     const saved = fillEndTurnSave(needsSave, true);
 
-    expect(slowActivePenaltiesProjection(cast)).toMatchObject({
+    expect(saveGatedTurnConstraintBundleProjection(cast)).toMatchObject({
       targetSlowed: true,
       targetSpeedFeet: 15,
       targetArmorClass: 8,
@@ -237,11 +237,11 @@ describe("Slow active-penalties MBT parity", () => {
       casterConcentrating: true,
       lastResult: "failedSave",
     });
-    expect(slowActivePenaltiesProjection(needsSave)).toMatchObject({
+    expect(saveGatedTurnConstraintBundleProjection(needsSave)).toMatchObject({
       holes: ["EndTurnSave"],
       lastResult: "needsSave",
     });
-    expect(slowActivePenaltiesProjection(saved)).toMatchObject({
+    expect(saveGatedTurnConstraintBundleProjection(saved)).toMatchObject({
       targetSlowed: false,
       targetSpeedFeet: 30,
       targetArmorClass: 10,
@@ -254,7 +254,7 @@ describe("Slow active-penalties MBT parity", () => {
 
   it("projects self-Slow current-turn restriction and slowed Stat Block Multiattack cap", () => {
     const selfSlowed = castSlowSelfFailedSave(initialRuntimeState());
-    expect(slowActivePenaltiesProjection(selfSlowed)).toMatchObject({
+    expect(saveGatedTurnConstraintBundleProjection(selfSlowed)).toMatchObject({
       currentTurnRole: "caster",
       turnActionOrBonusChoice: "action",
       casterTurnCanSpendBonusAction: false,
@@ -266,7 +266,9 @@ describe("Slow active-penalties MBT parity", () => {
     );
     const multiattackTurn = endCasterTurnForMultiattackTarget(multiattackCast);
     const multiattacked = makeSlowedStatBlockMultiattack(multiattackTurn);
-    expect(slowActivePenaltiesProjection(multiattackTurn)).toMatchObject({
+    expect(
+      saveGatedTurnConstraintBundleProjection(multiattackTurn),
+    ).toMatchObject({
       currentTurnRole: "multiattackTarget",
       turnActionOrBonusChoice: "notChosen",
       targetTurnCanSpendAction: true,
@@ -274,7 +276,9 @@ describe("Slow active-penalties MBT parity", () => {
       statBlockMultiattackResourceCount: 0,
       lastResult: "multiattackTargetTurn",
     });
-    expect(slowActivePenaltiesProjection(multiattacked)).toMatchObject({
+    expect(
+      saveGatedTurnConstraintBundleProjection(multiattacked),
+    ).toMatchObject({
       currentTurnRole: "multiattackTarget",
       turnActionOrBonusChoice: "action",
       targetTurnCanSpendAction: false,
@@ -298,7 +302,7 @@ describe("Slow active-penalties MBT parity", () => {
         backend: "typescript",
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(5),
-        stateCheck: slowActivePenaltiesStateCheck,
+        stateCheck: saveGatedTurnConstraintBundleStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,
@@ -708,7 +712,7 @@ function fillSomaticSpellFailure(
   };
 }
 
-function slowActivePenaltiesProjection(
+function saveGatedTurnConstraintBundleProjection(
   state: SlowActivePenaltiesRuntimeState,
 ): SlowActivePenaltiesProjection {
   const target = requireCombatant(state.battle.state, spellTargetId);
@@ -719,7 +723,7 @@ function slowActivePenaltiesProjection(
     )?.bonus ?? 0;
   const turnResources = state.battle.state.currentTurnResources;
   const slowEffect = target.activeEffects.find(
-    (effect) => effect.kind === "slowActivePenalties",
+    (effect) => effect.kind === "saveGatedTurnConstraintBundle",
   );
   const casterConcentrationSourceProcedureRef =
     caster.concentration?.sourceProcedureRef;
@@ -728,7 +732,7 @@ function slowActivePenaltiesProjection(
     [...state.battle.state.combatants.values()].some((combatant) =>
       combatant.activeEffects.some(
         (effect) =>
-          effect.kind === "slowActivePenalties" &&
+          effect.kind === "saveGatedTurnConstraintBundle" &&
           effect.sourceCombatantId === spellCasterId &&
           effect.sourceProcedureRef === casterConcentrationSourceProcedureRef,
       ),
@@ -774,7 +778,7 @@ function slowSavingThrowOutcomeFill(
     holeId: hole.holeId,
     value: {
       area: {
-        kind: "slowArea",
+        kind: "saveGatedTurnConstraintBundleArea",
         originAnchorId: spellCasterId,
         affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
         cubeSideFeet: 40,
@@ -793,10 +797,10 @@ function requireSlowEndTurnSaveHole(holes: readonly BattleHole[]): Extract<
   BattleHole,
   { readonly kind: "savingThrowOutcome" }
 > & {
-  readonly slowActivePenaltiesEndTurnSave: unknown;
+  readonly saveGatedTurnConstraintBundleEndTurnSave: unknown;
 } {
   const hole = requireHole(holes, "savingThrowOutcome");
-  if (!("slowActivePenaltiesEndTurnSave" in hole)) {
+  if (!("saveGatedTurnConstraintBundleEndTurnSave" in hole)) {
     throw new Error("Expected Slow end-turn Saving Throw outcome hole.");
   }
   return hole;
@@ -825,7 +829,7 @@ function slowSomaticSpellFailureFill(
 function slowHole(hole: BattleHole): SlowHole {
   if (
     hole.kind === "savingThrowOutcome" &&
-    "slowActivePenaltiesEndTurnSave" in hole
+    "saveGatedTurnConstraintBundleEndTurnSave" in hole
   ) {
     return "EndTurnSave";
   }

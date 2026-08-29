@@ -56,7 +56,7 @@ function createMirrorImageHitInterceptionDriver() {
   });
 }
 
-const mirrorImageHitInterceptionStateCheck = stateCheck(
+const duplicateHitInterceptionStateCheck = stateCheck(
   normalizeMirrorImageHitInterceptionQuintState,
   compareMirrorImageHitInterceptionState,
 );
@@ -76,7 +76,7 @@ describe("Mirror Image hit-interception MBT parity", () => {
         backend: "typescript",
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(6),
-        stateCheck: mirrorImageHitInterceptionStateCheck,
+        stateCheck: duplicateHitInterceptionStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,
@@ -93,7 +93,7 @@ function normalizeMirrorImageHitInterceptionQuintState(
     Object.entries(raw),
   );
   return {
-    remainingDuplicates: mirrorImageHitInterceptionDuplicateCount(
+    remainingDuplicates: duplicateHitInterceptionDuplicateCount(
       numberFromQuintInt(state["qRemainingDuplicates"], "qRemainingDuplicates"),
     ),
     normalDamageContinues: booleanValue(
@@ -118,7 +118,7 @@ function compareMirrorImageHitInterceptionState(
   return true;
 }
 
-function mirrorImageHitInterceptionDuplicateCount(
+function duplicateHitInterceptionDuplicateCount(
   value: number,
 ): MirrorImageHitInterceptionDuplicateCount {
   const count = MIRROR_IMAGE_HIT_INTERCEPTION_DUPLICATE_COUNTS.find(

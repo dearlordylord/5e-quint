@@ -49,8 +49,8 @@ import {
   spellBattleWithTargetRayOfFrost,
 } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
-  greaseGroundHazardEndTurnAct,
-  greaseGroundHazardSaveAct,
+  persistentAreaSaveConditionEndTurnAct,
+  persistentAreaSaveConditionSaveAct,
   greaseSavingThrowOutcomeFill,
   singleTargetSavingThrowOutcomeFill,
   spellAct,
@@ -92,7 +92,11 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef(greaseUnitId, 1, "greaseGroundHazard"),
+      invocation: spellSlotInvocationRef(
+        greaseUnitId,
+        1,
+        "persistentAreaSaveCondition",
+      ),
       mode: { tag: "cast" },
     });
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
@@ -105,7 +109,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     );
     expect(spellHoleInvocation(session, [savingThrow])).toEqual(
       expect.objectContaining({
-        procedure: "greaseGroundHazard",
+        procedure: "persistentAreaSaveCondition",
         resource: { tag: "spellSlot", slotLevel: 1 },
         ability: "dex",
         targeting: { kind: "pointOriginCube", sideFeet: 10 },
@@ -164,7 +168,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       requireCombatant(resolved.state, spellCasterId).activeEffects,
     ).toEqual([
       expect.objectContaining({
-        kind: "greaseGroundHazard",
+        kind: "persistentAreaSaveCondition",
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         areaId: greaseAreaId,
@@ -241,7 +245,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       requireCombatant(resolved.state, spellCasterId).activeEffects,
     ).toEqual([
       expect.objectContaining({
-        kind: "greaseGroundHazard",
+        kind: "persistentAreaSaveCondition",
         areaId: greaseAreaId,
       }),
     ]);
@@ -312,7 +316,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       requireCombatant(declined.state, spellCasterId).activeEffects,
     ).toEqual([
       expect.objectContaining({
-        kind: "greaseGroundHazard",
+        kind: "persistentAreaSaveCondition",
         areaId: greaseAreaId,
       }),
     ]);
@@ -342,7 +346,10 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       casterId: spellCasterId,
     });
 
-    const endTurnAct = greaseGroundHazardEndTurnAct(readied, spellTargetId);
+    const endTurnAct = persistentAreaSaveConditionEndTurnAct(
+      readied,
+      spellTargetId,
+    );
     const endTurnSave = requireHole(
       endTurnAct.initialHoles,
       "savingThrowOutcome",
@@ -395,7 +402,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       session: battleRuntimeSessionForTest({ ...session, state: cast.state }),
       casterId: spellCasterId,
     });
-    const entryAct = greaseGroundHazardSaveAct(
+    const entryAct = persistentAreaSaveConditionSaveAct(
       targetTurn,
       spellTargetId,
       "entersArea",
@@ -443,11 +450,13 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     const greaseEffect = requireCombatant(
       cast.state,
       spellCasterId,
-    ).activeEffects.find((effect) => effect.kind === "greaseGroundHazard");
+    ).activeEffects.find(
+      (effect) => effect.kind === "persistentAreaSaveCondition",
+    );
 
     expect(greaseEffect).toEqual(
       expect.objectContaining({
-        kind: "greaseGroundHazard",
+        kind: "persistentAreaSaveCondition",
         areaId: greaseAreaId,
         heightenedSpellTargetDisadvantage: {
           kind: "heightenedSpellTargetDisadvantage",
@@ -522,7 +531,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       throw new Error("Expected Grease caster end turn to resolve.");
     }
 
-    const entryAct = greaseGroundHazardSaveAct(
+    const entryAct = persistentAreaSaveConditionSaveAct(
       battleRuntimeSessionForTest({
         state: targetTurn.state,
         context: session.context,
@@ -533,7 +542,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     const entrySave = requireHole(entryAct.initialHoles, "savingThrowOutcome");
     expect(entrySave).toMatchObject({
       ability: "dex",
-      greaseGroundHazard: {
+      persistentAreaSaveCondition: {
         targetId: spellTargetId,
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
@@ -547,7 +556,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       combatants: new Map(targetTurn.state.combatants).set(spellCasterId, {
         ...caster,
         activeEffects: caster.activeEffects.filter(
-          (effect) => effect.kind !== "greaseGroundHazard",
+          (effect) => effect.kind !== "persistentAreaSaveCondition",
         ),
       }),
     };
@@ -586,7 +595,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected Grease caster end turn to resolve.");
     }
-    const selectedEntryAct = greaseGroundHazardSaveAct(
+    const selectedEntryAct = persistentAreaSaveConditionSaveAct(
       battleRuntimeSessionForTest({
         state: targetTurn.state,
         context: session.context,
@@ -657,7 +666,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       throw new Error("Expected Grease caster end turn to resolve.");
     }
 
-    const endTurnAct = greaseGroundHazardEndTurnAct(
+    const endTurnAct = persistentAreaSaveConditionEndTurnAct(
       battleRuntimeSessionForTest({
         state: targetTurn.state,
         context: session.context,
@@ -701,7 +710,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       throw new Error("Expected Grease caster end turn to resolve.");
     }
 
-    const endTurnAct = greaseGroundHazardEndTurnAct(
+    const endTurnAct = persistentAreaSaveConditionEndTurnAct(
       battleRuntimeSessionForTest({
         state: targetTurn.state,
         context: session.context,
@@ -729,7 +738,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       throw new Error("Expected selected Grease end-turn save to resolve.");
     }
 
-    const nonSelectedEndTurnAct = greaseGroundHazardEndTurnAct(
+    const nonSelectedEndTurnAct = persistentAreaSaveConditionEndTurnAct(
       battleRuntimeSessionForTest({
         state: selectedTurnDone.state,
         context: session.context,
@@ -750,7 +759,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     const base = {
       tag: "runtimeCommand" as const,
       actorId: spellTargetId,
-      command: "greaseGroundHazardSave" as const,
+      command: "persistentAreaSaveConditionSave" as const,
       areaId: greaseAreaId,
       effectRef: battleEffectExecutionRefForTest("grease-subject-a"),
     };
@@ -806,7 +815,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected target turn.");
     }
-    const selected = greaseGroundHazardEndTurnAct(
+    const selected = persistentAreaSaveConditionEndTurnAct(
       battleRuntimeSessionForTest({
         state: targetTurn.state,
         context: session.context,
@@ -815,9 +824,9 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     );
     const owner = requireCombatant(targetTurn.state, spellCasterId);
     const effect = owner.activeEffects.find(
-      (candidate) => candidate.kind === "greaseGroundHazard",
+      (candidate) => candidate.kind === "persistentAreaSaveCondition",
     );
-    if (effect?.kind !== "greaseGroundHazard") {
+    if (effect?.kind !== "persistentAreaSaveCondition") {
       throw new Error("Expected Grease occurrence.");
     }
     const { effectRef: selectedRef, ...template } = effect;
@@ -831,21 +840,21 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       spellCasterId,
     ).activeEffects.find(
       (candidate) =>
-        candidate.kind === "greaseGroundHazard" &&
+        candidate.kind === "persistentAreaSaveCondition" &&
         candidate.effectRef !== selectedRef,
     );
-    if (overlappingEffect?.kind !== "greaseGroundHazard") {
+    if (overlappingEffect?.kind !== "persistentAreaSaveCondition") {
       throw new Error("Expected overlapping Grease occurrence.");
     }
     const overlappingAct = discoverBattleActCandidates(overlappingState).find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
-        candidate.subject.command === "greaseGroundHazardSave" &&
+        candidate.subject.command === "persistentAreaSaveConditionSave" &&
         candidate.subject.effectRef === overlappingEffect.effectRef,
     );
     if (
       overlappingAct?.subject.tag !== "runtimeCommand" ||
-      overlappingAct.subject.command !== "greaseGroundHazardSave"
+      overlappingAct.subject.command !== "persistentAreaSaveConditionSave"
     ) {
       throw new Error("Expected overlapping Grease save act.");
     }
@@ -950,7 +959,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
         positiveHpUnconscious: null,
       }),
     };
-    const endTurnAct = greaseGroundHazardEndTurnAct(
+    const endTurnAct = persistentAreaSaveConditionEndTurnAct(
       battleRuntimeSessionForTest({
         state: stateWithZeroHpCaster,
         context: session.context,
