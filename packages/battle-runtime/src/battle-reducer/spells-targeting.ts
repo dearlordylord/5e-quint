@@ -725,6 +725,7 @@ export function spellAreaChoiceHole(
         readonly procedure:
           | "persistentAreaTrait"
           | "magicalDarknessPointOrigin"
+          | "magicSuppressionEmanation"
           | "antimagicFieldOngoingSpellSuppression"
           | "persistentAreaSaveDamage"
           | "areaMovementDistanceDamage"
@@ -755,6 +756,7 @@ export function spellAreaChoiceHoleId(
       readonly procedure:
         | "persistentAreaTrait"
         | "magicalDarknessPointOrigin"
+        | "magicSuppressionEmanation"
         | "antimagicFieldOngoingSpellSuppression"
         | "persistentAreaSaveDamage"
         | "areaMovementDistanceDamage"

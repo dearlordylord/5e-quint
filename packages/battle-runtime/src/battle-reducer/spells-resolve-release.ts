@@ -34,7 +34,7 @@ import { spellReplayContinuation } from "./spell-reaction-continuation.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
-import { battleDancingLightId, type CombatantId } from "../identity.ts";
+import { battleMovableLightId, type CombatantId } from "../identity.ts";
 import {
   damageDispositionFillFor,
   damageDispositionFillsValidation,
@@ -466,7 +466,7 @@ function movableLightCastPlacementPlan(
       : Result.succeed({
           form: "combinedMediumForm",
           light: {
-            lightId: battleDancingLightId(
+            lightId: battleMovableLightId(
               `${actorId}:${invocation.sourceProcedureRef}:combinedMediumForm:1`,
             ),
             positionId: placement.light.positionId,
@@ -490,7 +490,7 @@ function movableLightCastPlacementPlan(
   return Result.succeed({
     form: "separateLights",
     lights: mapOneToFour(placements, (light, index) => ({
-      lightId: battleDancingLightId(
+      lightId: battleMovableLightId(
         `${actorId}:${invocation.sourceProcedureRef}:separateLights:${index + 1}`,
       ),
       positionId: light.positionId,

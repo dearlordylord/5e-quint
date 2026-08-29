@@ -74,8 +74,8 @@ type StoredGlyphCenteredSpellAreaChoice = Extract<
       | "persistentAreaTraitArea"
       | "magicalDarknessArea"
       | "pointOriginSphereDiameterArea"
-      | "pointOriginSphereArea"
-      | "pointOriginCylinderArea"
+      | "anchoredPointOriginSphereArea"
+      | "anchoredPointOriginCylinderArea"
       | "pointOriginCubeArea";
   }
 >;
@@ -181,6 +181,33 @@ export function resolveStoredGlyphAreaOngoingSpellRelease(input: {
     input.invocation,
     input.input.subject.procedureRef,
   );
+  if (invocation.procedure === "persistentAreaSaveDamage") {
+    if (invocation.lifecycle.kind === "stationary") {
+      return resolveStationaryPersistentAreaAreaHazardSpellAct({
+        ...input,
+        invocation,
+        releaseResource,
+      });
+    }
+    if (invocation.lifecycle.kind === "sourceTurnTranslation") {
+      return resolveTranslatingPersistentAreaAreaHazardSpellAct({
+        ...input,
+        invocation,
+        releaseResource,
+      });
+    }
+    return invocation.lifecycle.actionCost === "bonusAction"
+      ? resolveRamMovablePersistentAreaSpellAct({
+          ...input,
+          invocation,
+          releaseResource,
+        })
+      : resolveMovablePersistentAreaSpellAct({
+          ...input,
+          invocation,
+          releaseResource,
+        });
+  }
   return Match.value(invocation).pipe(
     byProcedure("persistentAreaTrait", (invocation) =>
       resolvePersistentAreaTraitSpellAct({
@@ -196,22 +223,8 @@ export function resolveStoredGlyphAreaOngoingSpellRelease(input: {
         releaseResource,
       }),
     ),
-    byProcedure("persistentAreaSaveDamage", (invocation) =>
-      resolveRamMovablePersistentAreaSpellAct({
-        ...input,
-        invocation,
-        releaseResource,
-      }),
-    ),
     byProcedure("areaMovementDistanceDamage", (invocation) =>
       resolveAreaMovementDistanceDamageSpellAct({
-        ...input,
-        invocation,
-        releaseResource,
-      }),
-    ),
-    byProcedure("persistentAreaSaveDamage", (invocation) =>
-      resolveMovablePersistentAreaSpellAct({
         ...input,
         invocation,
         releaseResource,
@@ -575,7 +588,7 @@ export function resolveAreaMovementDistanceDamageSpellAct(input: {
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fillSet.areaChoice.kind !== "pointOriginSphereArea" ||
+    input.fillSet.areaChoice.kind !== "anchoredPointOriginSphereArea" ||
     input.fillSet.areaChoice.areaId.length === 0
   ) {
     return invalidResult(
@@ -661,7 +674,7 @@ export function resolveMovablePersistentAreaSpellAct(input: {
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fillSet.areaChoice.kind !== "pointOriginCylinderArea" ||
+    input.fillSet.areaChoice.kind !== "anchoredPointOriginCylinderArea" ||
     input.fillSet.areaChoice.areaId.length === 0
   ) {
     return invalidResult(
@@ -820,7 +833,7 @@ export function resolvePersistentAreaSaveCompositeSpellAct(input: {
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fillSet.areaChoice.kind !== "pointOriginCylinderArea" ||
+    input.fillSet.areaChoice.kind !== "anchoredPointOriginCylinderArea" ||
     input.fillSet.areaChoice.areaId.length === 0
   ) {
     return invalidResult(
@@ -895,7 +908,7 @@ export function resolveStationaryPersistentAreaAreaHazardSpellAct(input: {
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fillSet.areaChoice.kind !== "pointOriginSphereArea" ||
+    input.fillSet.areaChoice.kind !== "anchoredPointOriginSphereArea" ||
     input.fillSet.areaChoice.areaId.length === 0
   ) {
     return invalidResult(
@@ -970,7 +983,7 @@ export function resolveTranslatingPersistentAreaAreaHazardSpellAct(input: {
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fillSet.areaChoice.kind !== "pointOriginSphereArea" ||
+    input.fillSet.areaChoice.kind !== "anchoredPointOriginSphereArea" ||
     input.fillSet.areaChoice.areaId.length === 0
   ) {
     return invalidResult(

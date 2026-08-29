@@ -161,7 +161,9 @@ function runtimeSpellPrimaryDamage(invocation: RuntimeDamageSpellProcedure): {
   readonly expr: DiceExpr;
   readonly damageType: DamageType;
 } {
-  return invocation.procedure === "objectContactDamageRepeat"
+  return invocation.procedure === "objectContactDamageRepeat" ||
+    (invocation.procedure === "spatialMeleeSpellAttackProxy" &&
+      invocation.operation === "repositionAndAttack")
     ? invocation.activeEffect.damage
     : invocation.damage;
 }
@@ -281,8 +283,7 @@ export function spellAttackRollHole(
           | "attackBurstSaveDamage"
           | "heldLightHurl"
           | "spellCreatedHeldObjectAttack"
-          | "spatialMeleeSpellAttackProxyAttackProxy"
-          | "spatialMeleeSpellAttackProxyRepeatAttack"
+          | "spatialMeleeSpellAttackProxy"
           | "spellAttackDamage";
       }
     >
@@ -364,8 +365,7 @@ function spellAttackRollHoleBase(
           | "attackBurstSaveDamage"
           | "heldLightHurl"
           | "spellCreatedHeldObjectAttack"
-          | "spatialMeleeSpellAttackProxyAttackProxy"
-          | "spatialMeleeSpellAttackProxyRepeatAttack"
+          | "spatialMeleeSpellAttackProxy"
           | "spellAttackDamage";
       }
     >
@@ -709,8 +709,7 @@ export function spellDamageTypes(
         | "heldLightHurl"
         | "spellCreatedHeldObjectAttack"
         | "spellAttackSequence"
-        | "spatialMeleeSpellAttackProxyAttackProxy"
-        | "spatialMeleeSpellAttackProxyRepeatAttack"
+        | "spatialMeleeSpellAttackProxy"
         | "spellAttackDamage";
     }
   >,
@@ -1081,7 +1080,7 @@ export function spellSavingThrowOutcomeHole(
           | "saveGatedCondition"
           | "saveGatedConditionImmunity"
           | "saveGatedAttackRollAdvantage"
-          | "counterspell"
+          | "spellCastInterruptionReaction"
           | "stagedSaveCondition"
           | "saveGatedConditionWithRepeat"
           | "saveGatedAreaControl"
@@ -1268,7 +1267,7 @@ export function spellSavingThrowAbility(
         | "saveGatedCondition"
         | "saveGatedConditionImmunity"
         | "saveGatedAttackRollAdvantage"
-        | "counterspell"
+        | "spellCastInterruptionReaction"
         | "stagedSaveCondition"
         | "saveGatedConditionWithRepeat"
         | "saveGatedAreaControl"
@@ -1303,7 +1302,7 @@ export function spellSavingThrowTargeting(
         | "saveGatedCondition"
         | "saveGatedConditionImmunity"
         | "saveGatedAttackRollAdvantage"
-        | "counterspell"
+        | "spellCastInterruptionReaction"
         | "stagedSaveCondition"
         | "saveGatedConditionWithRepeat"
         | "saveGatedAreaControl"
@@ -1314,7 +1313,7 @@ export function spellSavingThrowTargeting(
     }
   >,
 ): SpellTargeting {
-  return invocation.procedure === "counterspell"
+  return invocation.procedure === "spellCastInterruptionReaction"
     ? { kind: "singleCombatant" }
     : invocation.procedure === "attackBurstSaveDamage"
       ? invocation.burst.targeting

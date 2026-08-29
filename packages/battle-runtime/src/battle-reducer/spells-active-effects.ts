@@ -124,7 +124,7 @@ import {
   type BattlePersistentAreaSaveConditionEscapeTrigger,
 } from "../battle-state-execution.ts";
 import {
-  antimagicFieldSuppressedOngoingSpellEffectKeys,
+  magicSuppressionOngoingSpellEffectKeys,
   isTrackedOngoingSpellLightEmitter,
   ongoingSpellEffectRefForEmitter,
   ongoingSpellEffectRefKey,
@@ -441,8 +441,7 @@ export function applySpellActiveEffects(
 export function battleLightEmitters(
   state: BattleState,
 ): readonly BattleLightEmitter[] {
-  const suppressedEffectKeys =
-    antimagicFieldSuppressedOngoingSpellEffectKeys(state);
+  const suppressedEffectKeys = magicSuppressionOngoingSpellEffectKeys(state);
   const outlineLightEmitters = [...state.combatants.values()].flatMap(
     (combatant): readonly BattleLightEmitter[] =>
       combatant.activeEffects.flatMap(

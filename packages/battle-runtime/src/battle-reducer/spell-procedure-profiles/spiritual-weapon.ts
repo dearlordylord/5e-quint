@@ -60,7 +60,7 @@ import {
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../../identity.ts";
-import { antimagicFieldOngoingSpellEffectRefForActiveEffect } from "../antimagic-field-suppression.ts";
+import { ongoingSpellEffectRefForActiveEffect } from "../antimagic-field-suppression.ts";
 import {
   spatialMeleeSpellAttackProxyPositionHole,
   spellTargetHole,
@@ -194,7 +194,7 @@ function admitSpatialMeleeSpellAttackProxyRepeatAttack(
         effect.sourceCombatantId !== ctx.actor.combatantId ||
         spellAdmissionOngoingSpellEffectSuppressed(
           ctx,
-          antimagicFieldOngoingSpellEffectRefForActiveEffect(effect),
+          ongoingSpellEffectRefForActiveEffect(effect),
         ) ||
         !spatialMeleeSpellAttackProxyRepeatIsLaterTurn(effect, ctx)
       ) {
