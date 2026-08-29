@@ -190,7 +190,7 @@ const BattleCompanionIdentitySchema = Schema.Union([
 const BattleCompanionProtocolSchema = Schema.Struct({
   tag: Schema.Literals(RETAINED_COMPANION_PROTOCOL_TAGS),
 });
-const FindFamiliarCreatureTypeOverrideSchema = Schema.Literals([
+const SpawnedCompanionCreatureTypeOverrideSchema = Schema.Literals([
   "celestial",
   "fey",
   "fiend",
@@ -558,7 +558,7 @@ const BattleSpellAreaChoiceSchema = Schema.Union([
   }),
   Schema.Struct({
     ...BattleSpellAreaChoiceBaseSchema,
-    kind: Schema.Literal("slowArea"),
+    kind: Schema.Literal("saveGatedTurnConstraintBundleArea"),
     cubeSideFeet: Schema.Literal(40),
     affectedCreatureWitnesses: Schema.Array(
       Schema.Struct({
@@ -3063,7 +3063,7 @@ type BattleSpellAreaChoiceEncoded = {
       readonly sleepNonSleeperFacts?: never;
     }
   | {
-      readonly kind: "slowArea";
+      readonly kind: "saveGatedTurnConstraintBundleArea";
       readonly cubeSideFeet: 40;
       readonly affectedCreatureWitnesses: readonly {
         readonly targetId: string;
@@ -3662,7 +3662,7 @@ type BattleFillEncoded =
             }[];
           }
         | {
-            readonly kind: "webCubeArea";
+            readonly kind: "pointOriginCubeArea";
             readonly areaId: string;
             readonly originAnchor:
               | { readonly kind: "tableSelectedPoint" }
@@ -4357,7 +4357,7 @@ const BattleMovementFillValueCommonSchemaFields = {
             areaId: BattleAreaId,
           }),
           Schema.Struct({
-            kind: Schema.Literal("webAreaHazard"),
+            kind: Schema.Literal("persistentAreaSaveConditionEscape"),
             effectRef: BattleEffectExecutionRef,
             sourceCombatantId: CombatantId,
             sourceProcedureRef: BattleProcedureExecutionRef,
@@ -4826,7 +4826,7 @@ export const BattleFillSchema: Schema.Codec<
           ),
         }),
         Schema.Struct({
-          kind: Schema.Literal("webCubeArea"),
+          kind: Schema.Literal("pointOriginCubeArea"),
           areaId: BattleAreaId,
           originAnchor: BattleSpellAreaOriginAnchorSchema,
         }),
@@ -6629,7 +6629,7 @@ const BattleCompanionSnapshotSchema = Schema.Union([
     protocol: BattleCompanionProtocolSchema,
     formAccess: Schema.Literal("findFamiliar"),
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
-    creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
+    creatureTypeOverride: SpawnedCompanionCreatureTypeOverrideSchema,
     initiative: Schema.Number,
     placement: BattleCompanionPlacementSchema,
   }),
@@ -6641,7 +6641,7 @@ const BattleCompanionSnapshotSchema = Schema.Union([
     protocol: BattleCompanionProtocolSchema,
     formAccess: Schema.Literal("pactOfTheChain"),
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
-    creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
+    creatureTypeOverride: SpawnedCompanionCreatureTypeOverrideSchema,
     initiative: Schema.Number,
     placement: BattleCompanionPlacementSchema,
   }),
@@ -6653,7 +6653,7 @@ const BattleCompanionSnapshotSchema = Schema.Union([
     reappearanceCombatantId: CombatantId,
     formAccess: Schema.Literal("findFamiliar"),
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
-    creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
+    creatureTypeOverride: SpawnedCompanionCreatureTypeOverrideSchema,
     hitPoints: BattleCompanionHitPointsSchema,
     ammunitionStocks: BattleAmmunitionStocksSchema,
     reactionAvailable: Schema.Boolean,
@@ -6666,7 +6666,7 @@ const BattleCompanionSnapshotSchema = Schema.Union([
     reappearanceCombatantId: CombatantId,
     formAccess: Schema.Literal("pactOfTheChain"),
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
-    creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
+    creatureTypeOverride: SpawnedCompanionCreatureTypeOverrideSchema,
     hitPoints: BattleCompanionHitPointsSchema,
     ammunitionStocks: BattleAmmunitionStocksSchema,
     reactionAvailable: Schema.Boolean,
@@ -6678,7 +6678,7 @@ const BattleCompanionSnapshotSchema = Schema.Union([
     protocol: BattleCompanionProtocolSchema,
     formAccess: Schema.Literal("findFamiliar"),
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
-    creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
+    creatureTypeOverride: SpawnedCompanionCreatureTypeOverrideSchema,
     reactionAvailable: Schema.Boolean,
   }),
   Schema.Struct({
@@ -6688,7 +6688,7 @@ const BattleCompanionSnapshotSchema = Schema.Union([
     protocol: BattleCompanionProtocolSchema,
     formAccess: Schema.Literal("pactOfTheChain"),
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
-    creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
+    creatureTypeOverride: SpawnedCompanionCreatureTypeOverrideSchema,
     reactionAvailable: Schema.Boolean,
   }),
 ]);
