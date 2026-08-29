@@ -2785,6 +2785,837 @@ describe("Character Sheet battle handoff", () => {
         sheet,
         unitLibrary,
         statBlockCatalog,
+        companionId: retainedCompanionId("companion:pact-chain-skeleton"),
+        source: {
+          tag: "invocationSpellAccess",
+          spellId: authoredUnitId("find_familiar"),
+        },
+        selectedForm: {
+          tag: "pactOfTheChainSpecialForm",
+          formId: "skeleton",
+        },
+        creatureTypeOverrideChoiceId: "fiend",
+      }),
+    );
+    const ownerInit = expectRight(
+      characterSheetBattleInit({
+        sheet: retained,
+        unitLibrary,
+        statBlockCatalog,
+        combatantId: ownerId,
+        displayName: "Pact Companion Owner",
+        initiative: initiativeScore(12),
+        ammunitionStocks: [],
+      }),
+    );
+    const started = expectRight(
+      startBattle({
+        battleId: battleId("pact-chain-companion-admission"),
+        combatants: [ownerInit],
+      }),
+    );
+    const admissionBase = {
+      sheet: retained,
+      unitLibrary,
+      ownerCombatantId: ownerId,
+      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+      companionCombatantId: companionId,
+      initiative: initiativeScore(14),
+      placement: { kind: "unoccupiedSpaceWithinSpellRange" as const },
+      initialCombatantOrder: new Map([
+        [ownerId, 0],
+        [companionId, 1],
+      ]),
+      statBlockCatalog,
+    };
+    const admitted = expectRight(
+      admitCharacterSheetCompanionToBattle({
+        ...admissionBase,
+        state: started.state,
+      }),
+    );
+    expect(admitted.companions.get(ownerId)).toMatchObject({
+      status: "present",
+      formAccess: "pactOfTheChain",
+    });
+
+    const dismissed = retainedCompanionSheetWithManifestation(
+      retained,
+      (manifestation) => {
+        if (manifestation.tag === "disappearedAtZeroHitPoints") {
+          throw new Error("Expected embodied Pact companion fixture.");
+        }
+        return { ...manifestation, tag: "temporarilyDismissed" };
+      },
+    );
+    expect(
+      admitCharacterSheetCompanionToBattle({
+        ...admissionBase,
+        sheet: dismissed,
+        session: started,
+      }),
+    ).toMatchObject({
+      _tag: "Right",
+      right: {
+        state: {
+          companions: expect.any(Map),
+        },
+      },
+    });
+    expect(
+      admitCharacterSheetCompanionToBattle({
+        ...admissionBase,
+        sheet: dismissed,
+        state: admitted,
+      }),
+    ).toMatchObject({ _tag: "Left" });
+
+    const ordinaryRetained = retainedOrdinaryCompanionSheet({
+      characterIdValue: "character:ordinary-protocol-special-form",
+      companionIdValue: "companion:ordinary-protocol-special-form",
+      selectedForm: { tag: "normalNamedForm", formId: "cat" },
+      currentHp: Hp(2),
+      tempHp: Hp(0),
+    });
+    const ordinaryCompanion = characterSheetCompanion(ordinaryRetained);
+    const pactCompanion = characterSheetCompanion(retained);
+    if (
+      ordinaryCompanion.tag !== "retainedOneAtATime" ||
+      pactCompanion.tag !== "retainedOneAtATime"
+    ) {
+      throw new Error("Expected retained companion fixtures.");
+    }
+    const incompatibleProtocolAndSelection = expectRight(
+      replaceCharacterSheetCompanion({
+        sheet: ordinaryRetained,
+        companion: {
+          tag: "retainedOneAtATime",
+          companion: {
+            ...ordinaryCompanion.companion,
+            manifestation: pactCompanion.companion.manifestation,
+          },
+        },
+      }),
+    );
+    expect(
+      admitCharacterSheetCompanionToBattle({
+        ...admissionBase,
+        sheet: incompatibleProtocolAndSelection,
+        state: started.state,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Special retained companion forms require an attack-exception protocol.",
+      },
+    });
+  });
+
+  test("reports retained companion settlement identity and manifestation conflicts", () => {
+    const sheet = retainedOrdinaryCompanionSheet({
+      characterIdValue: "character:companion-settlement-boundaries",
+      companionIdValue: "companion:settlement-boundaries",
+      selectedForm: { tag: "normalNamedForm", formId: "cat" },
+      currentHp: Hp(2),
+      tempHp: Hp(0),
+    });
+    const ownerId = combatantId("companion-settlement-owner");
+    const companionId = combatantId("companion-settlement-companion");
+    const ownerInit = expectRight(
+      characterSheetBattleInit({
+        sheet,
+        unitLibrary,
+        statBlockCatalog,
+        combatantId: ownerId,
+        displayName: "Companion Owner",
+        initiative: initiativeScore(12),
+        ammunitionStocks: [],
+      }),
+    );
+    const started = expectRight(
+      startBattle({
+        battleId: battleId("companion-settlement-boundaries"),
+        combatants: [ownerInit],
+      }),
+    );
+    const embodiedAdmission = {
+      sheet,
+      unitLibrary,
+      ownerCombatantId: ownerId,
+      ammunitionStocks: [],
+      companionCombatantId: companionId,
+      initiative: initiativeScore(14),
+      placement: { kind: "unoccupiedSpaceWithinSpellRange" as const },
+      initialCombatantOrder: new Map<ReturnType<typeof combatantId>, number>(),
+      statBlockCatalog,
+    };
+    expect(
+      admitCharacterSheetCompanionToBattle({
+        ...embodiedAdmission,
+        state: started.state,
+      }),
+    ).toMatchObject({ _tag: "Left" });
+    expect(
+      admitCharacterSheetCompanionToBattle({
+        ...embodiedAdmission,
+        session: started,
+      }),
+    ).toMatchObject({ _tag: "Left" });
+    const admitted = expectRight(
+      admitCharacterSheetCompanionToBattle({
+        ...embodiedAdmission,
+        state: started.state,
+        initialCombatantOrder: new Map([
+          [ownerId, 0],
+          [companionId, 1],
+        ]),
+      }),
+    );
+    const selection = {
+      formAccess: "findFamiliar",
+      selectedForm: { tag: "normalNamedForm", formId: "cat" },
+    } as const;
+    const settle = (
+      state: BattleState,
+      selectedSheet: CharacterSheet = sheet,
+      retainedCompanionSelection:
+        | RetainedCompanionBattleSelection
+        | undefined = selection,
+    ) =>
+      settleCompanionFromBattle({
+        sheet: selectedSheet,
+        state,
+        ownerCombatantId: ownerId,
+        unitLibrary,
+        statBlockCatalog,
+        ...(retainedCompanionSelection === undefined
+          ? {}
+          : { retainedCompanionSelection }),
+      });
+
+    expect(
+      settleCompanionFromBattle({
+        sheet,
+        state: admitted,
+        ownerCombatantId: ownerId,
+        unitLibrary,
+        retainedCompanionSelection: selection,
+      }),
+    ).toMatchObject({ _tag: "Right" });
+    expect(
+      settleCompanionFromBattle({
+        sheet,
+        state: admitted,
+        ownerCombatantId: ownerId,
+        unitLibrary,
+        statBlockCatalog,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "no battle-owned authored form selection",
+        ),
+      },
+    });
+    expect(
+      settle(admitted, sheet, {
+        ...selection,
+        formAccess: "pactOfTheChain",
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("form access does not match") },
+    });
+
+    const noCompanionSheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:no-settlement-companion"),
+        build,
+        currentHp: Hp(7),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    expect(settle(admitted, noCompanionSheet)).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining("no Character Sheet companion slot"),
+      },
+    });
+    const otherCompanionSheet = retainedOrdinaryCompanionSheet({
+      characterIdValue: "character:other-settlement-companion",
+      companionIdValue: "companion:other-settlement-companion",
+      selectedForm: { tag: "normalNamedForm", formId: "cat" },
+      currentHp: Hp(2),
+      tempHp: Hp(0),
+    });
+    expect(settle(admitted, otherCompanionSheet)).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining("durable identity does not match"),
+      },
+    });
+
+    const companion = admitted.companions.get(ownerId);
+    if (companion === undefined) {
+      throw new Error("Expected admitted retained companion fixture.");
+    }
+    const dismissedForever = {
+      ...admitted,
+      companions: new Map([
+        [ownerId, { ...companion, status: "dismissedForever" as const }],
+      ]),
+    };
+    expect(settle(dismissedForever)).toMatchObject({
+      _tag: "Right",
+      right: { companion: { tag: "none" } },
+    });
+
+    const missingCombatant = {
+      ...admitted,
+      combatants: new Map(
+        [...admitted.combatants].filter(
+          ([combatantKey]) => combatantKey !== companionId,
+        ),
+      ),
+    };
+    expect(settle(missingCombatant)).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("combatant is missing") },
+    });
+
+    if (companion.status !== "present") {
+      throw new Error("Expected present admitted companion fixture.");
+    }
+    const companionCombatant = admitted.combatants.get(companionId);
+    const ownerCombatant = admitted.combatants.get(ownerId);
+    if (companionCombatant === undefined || ownerCombatant === undefined) {
+      throw new Error("Expected owner and companion combatant fixtures.");
+    }
+    const zeroHpCompanionState = expectRight(
+      startBattle({
+        battleId: battleId("companion-settlement-zero-hp"),
+        combatants: [
+          battleCreatureInitFromStatBlock({
+            combatantId: companionId,
+            statBlock: statBlockCatalog.requireStatBlock("stat_block_cat"),
+            initiative: initiativeScore(14),
+            currentHp: Hp(0),
+          }),
+        ],
+      }),
+    ).state;
+    const zeroHpCompanion = zeroHpCompanionState.combatants.get(companionId);
+    if (zeroHpCompanion === undefined) {
+      throw new Error("Expected zero-HP companion combatant fixture.");
+    }
+    expect(
+      settle({
+        ...admitted,
+        combatants: new Map(admitted.combatants).set(
+          companionId,
+          zeroHpCompanion,
+        ),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("must have positive HP") },
+    });
+    expect(
+      settle({
+        ...admitted,
+        combatants: new Map(admitted.combatants).set(companionId, {
+          ...ownerCombatant,
+          combatantId: companionId,
+        }),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "Present companion Stat Block combatant is missing",
+        ),
+      },
+    });
+    const ratState = expectRight(
+      startBattle({
+        battleId: battleId("companion-settlement-rat-proof"),
+        combatants: [
+          battleCreatureInitFromStatBlock({
+            combatantId: companionId,
+            statBlock: statBlockCatalog.requireStatBlock("stat_block_rat"),
+            initiative: initiativeScore(14),
+          }),
+        ],
+      }),
+    ).state;
+    const ratCombatant = ratState.combatants.get(companionId);
+    if (ratCombatant === undefined) {
+      throw new Error("Expected Rat combatant fixture.");
+    }
+    expect(
+      settle({
+        ...admitted,
+        combatants: new Map(admitted.combatants).set(companionId, ratCombatant),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "cannot be joined to its retained authored selection",
+        ),
+      },
+    });
+    expect(
+      settle(
+        {
+          ...admitted,
+          companions: new Map([
+            [
+              ownerId,
+              {
+                ...companion,
+                formAccess: "pactOfTheChain",
+              },
+            ],
+          ]),
+        },
+        sheet,
+        {
+          formAccess: "pactOfTheChain",
+          selectedForm: {
+            tag: "pactOfTheChainSpecialForm",
+            formId: "sprite",
+          },
+        },
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "does not match its resolved Stat Block id",
+        ),
+      },
+    });
+
+    const retained = characterSheetCompanion(sheet);
+    if (
+      retained.tag !== "retainedOneAtATime" ||
+      retained.companion.manifestation.tag !== "embodiedOutsideBattle"
+    ) {
+      throw new Error("Expected embodied retained companion fixture.");
+    }
+    if (companion.formAccess !== "findFamiliar") {
+      throw new Error("Expected Find Familiar companion fixture.");
+    }
+    const storedCompanionBase = {
+      ownerId: companion.ownerId,
+      identity: companion.identity,
+      protocol: companion.protocol,
+      creatureTypeOverride: companion.creatureTypeOverride,
+      formAccess: companion.formAccess,
+      resolvedStatBlockId: authoredStatBlockId("stat_block_cat"),
+      reactionAvailable: true,
+    } as const;
+    const temporarilyDismissed = {
+      ...storedCompanionBase,
+      status: "temporarilyDismissed",
+      reappearanceCombatantId: companionId,
+      hitPoints: retained.companion.manifestation.hitPoints,
+      ammunitionStocks: [],
+    } as const satisfies BattleCompanionState;
+    expect(
+      settle({
+        ...admitted,
+        companions: new Map([[ownerId, temporarilyDismissed]]),
+      }),
+    ).toMatchObject({
+      _tag: "Right",
+      right: {
+        companion: {
+          companion: { manifestation: { tag: "temporarilyDismissed" } },
+        },
+      },
+    });
+    const disappeared = {
+      ...storedCompanionBase,
+      status: "disappearedAtZeroHitPoints",
+    } as const satisfies BattleCompanionState;
+    expect(
+      settle({
+        ...admitted,
+        companions: new Map([[ownerId, disappeared]]),
+      }),
+    ).toMatchObject({
+      _tag: "Right",
+      right: {
+        companion: {
+          companion: { manifestation: { tag: "disappearedAtZeroHitPoints" } },
+        },
+      },
+    });
+    expect(
+      settleCompanionFromBattle({
+        sheet,
+        state: {
+          ...admitted,
+          companions: new Map([[ownerId, disappeared]]),
+        },
+        ownerCombatantId: ownerId,
+        unitLibrary,
+        retainedCompanionSelection: {
+          formAccess: "findFamiliar",
+          selectedForm: {
+            tag: "challengeRatingZeroBeast",
+            statBlockId: authoredStatBlockId("stat_block_cat"),
+          },
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining("requires a Stat Block catalog"),
+      },
+    });
+    expect(
+      settle({
+        ...admitted,
+        companions: new Map([
+          [
+            ownerId,
+            {
+              ...temporarilyDismissed,
+              resolvedStatBlockId: authoredStatBlockId("stat_block_rat"),
+            },
+          ],
+        ]),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "cannot be joined to its retained authored selection",
+        ),
+      },
+    });
+  });
+
+  test("recasting an embodied retained companion keeps identity and clamps carried Hit Points (A47)", () => {
+    const sheet = retainedOrdinaryCompanionSheet({
+      characterIdValue: "character:retained-recast-embodied",
+      companionIdValue: "companion:recast-embodied",
+      selectedForm: { tag: "normalNamedForm", formId: "cat" },
+      currentHp: Hp(2),
+      tempHp: Hp(1),
+    });
+
+    const recast = expectRight(
+      createRetainedFamiliarLikeCompanion({
+        sheet,
+        unitLibrary,
+        statBlockCatalog,
+        companionId: retainedCompanionId("companion:recast-embodied"),
+        source: {
+          tag: "ritualSpell",
+          spellId: authoredUnitId("find_familiar"),
+        },
+        selectedForm: { tag: "normalNamedForm", formId: "bat" },
+        creatureTypeOverrideChoiceId: "fey",
+      }),
+    );
+
+    expect(characterSheetCompanion(recast)).toMatchObject({
+      tag: "retainedOneAtATime",
+      companion: {
+        companionId: "companion:recast-embodied",
+        protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
+        manifestation: {
+          tag: "embodiedOutsideBattle",
+          selectedForm: { tag: "normalNamedForm", formId: "bat" },
+          resolvedStatBlockId: "stat_block_bat",
+          hitPoints: { currentHp: 1, tempHp: 1 },
+        },
+      },
+    });
+  });
+
+  test("recasting an admitted retained cat as a rat settles the battle-owned selection", () => {
+    const sheet = retainedOrdinaryCompanionSheet({
+      characterIdValue: "character:retained-battle-recast",
+      companionIdValue: "companion:retained-battle-recast",
+      selectedForm: { tag: "normalNamedForm", formId: "cat" },
+      currentHp: Hp(2),
+      tempHp: Hp(0),
+    });
+    const ownerId = combatantId("retained-battle-recast-owner");
+    const companionId = combatantId("retained-battle-recast-companion");
+    const ownerInit = expectRight(
+      characterSheetBattleInit({
+        sheet,
+        unitLibrary,
+        statBlockCatalog,
+        combatantId: ownerId,
+        displayName: "Owner",
+        initiative: initiativeScore(12),
+        ammunitionStocks: [],
+      }),
+    );
+    const started = expectRight(
+      startBattle({
+        battleId: battleId("retained-battle-recast"),
+        combatants: [ownerInit],
+      }),
+    );
+    const admitted = expectRight(
+      admitCharacterSheetCompanionToBattle({
+        sheet,
+        session: started,
+        unitLibrary,
+        ownerCombatantId: ownerId,
+        ammunitionStocks: [],
+        companionCombatantId: companionId,
+        initiative: initiativeScore(14),
+        placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+        initialCombatantOrder: new Map([
+          [ownerId, 0],
+          [companionId, 1],
+        ]),
+        statBlockCatalog,
+      }),
+    );
+    expect(admitted.state.combatants.get(companionId)).not.toHaveProperty(
+      "displayName",
+    );
+    expect(
+      battleCreaturePresentationDisplayName(
+        admitted.state,
+        admitted.context,
+        companionId,
+      ),
+    ).toBe("Cat");
+    const findFamiliarUnit = unitLibrary.requireUnit("find_familiar");
+    if (findFamiliarUnit.kind !== "spell") {
+      throw new Error("Find Familiar fixture must be a Spell.");
+    }
+    const eligibility = findFamiliarFormEligibilityForSpell(findFamiliarUnit);
+    if (eligibility === null) {
+      throw new Error("Find Familiar fixture must expose form eligibility.");
+    }
+    const recast = castRetainedFindFamiliarRuntime({
+      session: admitted,
+      casterId: ownerId,
+      familiarId: companionId,
+      ammunitionStocks: [],
+      catalog: statBlockCatalog,
+      eligibility,
+      selection: { tag: "normalNamedForm", formId: "rat" },
+      creatureTypeOverrideChoiceId: "fey",
+      initiative: initiativeScore(14),
+      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+    });
+    expect(recast.tag).toBe("resolved");
+    if (recast.tag !== "resolved") return;
+    expect(recast.session.state.combatants.get(companionId)).not.toHaveProperty(
+      "displayName",
+    );
+    expect(
+      recast.snapshot.combatants.find(
+        (combatant) => combatant.combatantId === companionId,
+      ),
+    ).not.toHaveProperty("displayName");
+    expect(
+      battleCreaturePresentationDisplayName(
+        recast.session.state,
+        recast.session.context,
+        companionId,
+      ),
+    ).toBe("Rat");
+
+    const settled = expectRight(
+      settleCharacterSheetFromBattle({
+        sheet,
+        battleSession: recast.session,
+        combatantId: ownerId,
+        unitLibrary,
+        statBlockCatalog,
+      }),
+    );
+
+    expect(characterSheetCompanion(settled)).toMatchObject({
+      tag: "retainedOneAtATime",
+      companion: {
+        companionId: "companion:retained-battle-recast",
+        manifestation: {
+          tag: "embodiedOutsideBattle",
+          selectedForm: { tag: "normalNamedForm", formId: "rat" },
+          resolvedStatBlockId: "stat_block_rat",
+        },
+      },
+    });
+  });
+
+  test("recasting a temporarily dismissed retained companion carries clamped Hit Points (A47)", () => {
+    const sheet = retainedOrdinaryCompanionSheet({
+      characterIdValue: "character:retained-recast-dismissed",
+      companionIdValue: "companion:recast-dismissed",
+      selectedForm: { tag: "normalNamedForm", formId: "cat" },
+      currentHp: Hp(2),
+      tempHp: Hp(1),
+    });
+    const dismissed = retainedCompanionSheetWithManifestation(
+      sheet,
+      (manifestation) => {
+        if (manifestation.tag === "disappearedAtZeroHitPoints") {
+          throw new Error("Expected embodied retained companion fixture.");
+        }
+        return {
+          ...manifestation,
+          tag: "temporarilyDismissed",
+        };
+      },
+    );
+
+    const recast = expectRight(
+      createRetainedFamiliarLikeCompanion({
+        sheet: dismissed,
+        unitLibrary,
+        statBlockCatalog,
+        companionId: retainedCompanionId("companion:recast-dismissed"),
+        source: {
+          tag: "ritualSpell",
+          spellId: authoredUnitId("find_familiar"),
+        },
+        selectedForm: { tag: "normalNamedForm", formId: "bat" },
+        creatureTypeOverrideChoiceId: "fey",
+      }),
+    );
+
+    expect(characterSheetCompanion(recast)).toMatchObject({
+      tag: "retainedOneAtATime",
+      companion: {
+        companionId: "companion:recast-dismissed",
+        manifestation: {
+          tag: "embodiedOutsideBattle",
+          selectedForm: { tag: "normalNamedForm", formId: "bat" },
+          resolvedStatBlockId: "stat_block_bat",
+          hitPoints: { currentHp: 1, tempHp: 1 },
+        },
+      },
+    });
+  });
+
+  test("recasting a retained companion disappeared at 0 Hit Points mints fresh form Hit Points (A47)", () => {
+    const sheet = retainedOrdinaryCompanionSheet({
+      characterIdValue: "character:retained-recast-disappeared",
+      companionIdValue: "companion:recast-disappeared",
+      selectedForm: { tag: "normalNamedForm", formId: "cat" },
+      currentHp: Hp(1),
+      tempHp: Hp(1),
+    });
+    const disappeared = retainedCompanionSheetWithManifestation(
+      sheet,
+      (manifestation) => ({
+        tag: "disappearedAtZeroHitPoints",
+        selectedForm: manifestation.selectedForm,
+        creatureTypeOverride: manifestation.creatureTypeOverride,
+        resolvedStatBlockId: manifestation.resolvedStatBlockId,
+      }),
+    );
+
+    const recast = expectRight(
+      createRetainedFamiliarLikeCompanion({
+        sheet: disappeared,
+        unitLibrary,
+        statBlockCatalog,
+        companionId: retainedCompanionId("companion:recast-disappeared"),
+        source: {
+          tag: "ritualSpell",
+          spellId: authoredUnitId("find_familiar"),
+        },
+        selectedForm: { tag: "normalNamedForm", formId: "cat" },
+        creatureTypeOverrideChoiceId: "fey",
+      }),
+    );
+
+    expect(characterSheetCompanion(recast)).toMatchObject({
+      tag: "retainedOneAtATime",
+      companion: {
+        companionId: "companion:recast-disappeared",
+        manifestation: {
+          tag: "embodiedOutsideBattle",
+          selectedForm: { tag: "normalNamedForm", formId: "cat" },
+          resolvedStatBlockId: "stat_block_cat",
+          hitPoints: { currentHp: 2, tempHp: 0 },
+        },
+      },
+    });
+  });
+
+  test("recasting an occupied retained companion slot rejects replacement durable identity (A47)", () => {
+    const sheet = retainedOrdinaryCompanionSheet({
+      characterIdValue: "character:retained-recast-replacement-id",
+      companionIdValue: "companion:occupied-slot",
+      selectedForm: { tag: "normalNamedForm", formId: "cat" },
+      currentHp: Hp(2),
+      tempHp: Hp(0),
+    });
+
+    const recast = createRetainedFamiliarLikeCompanion({
+      sheet,
+      unitLibrary,
+      statBlockCatalog,
+      companionId: retainedCompanionId("companion:replacement"),
+      source: { tag: "ritualSpell", spellId: authoredUnitId("find_familiar") },
+      selectedForm: { tag: "normalNamedForm", formId: "bat" },
+      creatureTypeOverrideChoiceId: "fey",
+    });
+
+    expect(recast).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Retained companion recast cannot replace the durable identity of an occupied companion slot.",
+      },
+    });
+  });
+
+  test("rejects forged retained normal-form proof before battle admission", () => {
+    const sheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:forged-companion-form"),
+        build: {
+          ...trueStrikeWizardBuild(),
+          spellcasting: {
+            sources: [
+              {
+                sourceUnitId: authoredUnitId("class_wizard"),
+                spellcastingAbility: "int",
+                cantrips: [authoredUnitId("true_strike")],
+                spellbook: [authoredUnitId("find_familiar")],
+                preparedSpells: [],
+                spellcastingFocuses: ["spellbook"],
+              },
+            ],
+            slotPools: {
+              spellcasting: {
+                kind: "spellcasting",
+                slots: [{ spellLevel: 1, count: 2 }],
+              },
+            },
+          },
+        },
+        currentHp: Hp(7),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const retained = expectRight(
+      createRetainedFamiliarLikeCompanion({
+        sheet,
+        unitLibrary,
+        statBlockCatalog,
         companionId: retainedCompanionId("companion:forged-form"),
         source: {
           tag: "ritualSpell",
@@ -5711,6 +6542,671 @@ describe("Character Sheet battle handoff", () => {
             {
               resourcePoolRef,
               resource: favoredEnemyResource,
+              usedThisTurn: false,
+              usesRemaining: resourceCount(1),
+            },
+          ],
+        },
+        hp: Hp(1),
+        maxHp: sheetMaximumHp(sheet.right),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    const settled = expectRight(handoff);
+    expect(settled.resourceExpenditures).toEqual([
+      {
+        tag: "spellAccessFreeCast",
+        sourceUnitId: authoredUnitId("ranger_favored_enemy"),
+        spellId: authoredUnitId("hunters_mark"),
+        expended: 1,
+      },
+    ]);
+
+    const nextBattleResources = expectRight(
+      characterBattleResourceInitsFromBuild(
+        settled.build,
+        unitLibrary,
+        settled.resourceExpenditures,
+      ),
+    );
+
+    expect(nextBattleResources).toContainEqual(
+      expect.objectContaining({
+        unit: favoredEnemy,
+        usesRemaining: 1,
+      }),
+    );
+  });
+
+  test("rejects Favored Enemy battle handoff when free-cast capacity drifts", () => {
+    const sheet = rebuildCharacterSheetFixture({
+      characterId: characterSheetId("character:ranger-free-cast-drift"),
+      build: favoredEnemyRangerResourceBuild(),
+      currentHp: Hp(1),
+      tempHp: Hp(0),
+      unitLibrary,
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+
+    const favoredEnemy = unitLibrary.requireUnit("ranger_favored_enemy");
+    const favoredEnemyResource = characterBattleResourceForUnit(favoredEnemy);
+    expect(hasFixedCharacterBattleResourceCap(favoredEnemyResource)).toBe(true);
+    if (!hasFixedCharacterBattleResourceCap(favoredEnemyResource)) return;
+    const resourcePoolRef = battleResourcePoolExecutionRefForTest(
+      "drifted-favored-enemy",
+    );
+    const handoff = settleHandoffBranchToCharacterSheet({
+      sheet: sheet.right,
+      unitLibrary,
+      resourceOwnership: [
+        {
+          resourcePoolRef,
+          unit: favoredEnemy,
+          purpose: { tag: "unitResource" },
+        },
+      ],
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:ranger-free-cast-drift"),
+          classLevels: parsedClassLevelsForTest("ranger", 1),
+          resources: [
+            {
+              resourcePoolRef,
+              resource: {
+                ...favoredEnemyResource,
+                cap: {
+                  ...favoredEnemyResource.cap,
+                  uses: resourceCount(favoredEnemyResource.cap.uses + 1),
+                },
+              },
+              usedThisTurn: false,
+              usesRemaining: resourceCount(1),
+            },
+          ],
+        },
+        hp: Hp(1),
+        maxHp: sheetMaximumHp(sheet.right),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(handoff).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Spell Access free-cast battle capacity must match Character Sheet resource capacity.",
+      },
+    });
+    expect(
+      settleHandoffBranchToCharacterSheet({
+        sheet: sheet.right,
+        unitLibrary,
+        resourceOwnership: [
+          {
+            resourcePoolRef,
+            unit: favoredEnemy,
+            purpose: { tag: "unitResource" },
+          },
+        ],
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId("character:ranger-free-cast-drift"),
+            classLevels: parsedClassLevelsForTest("ranger", 1),
+            resources: [
+              {
+                resourcePoolRef,
+                resource: favoredEnemyResource,
+                usedThisTurn: false,
+                usesRemaining: resourceCount(favoredEnemyResource.cap.uses + 1),
+              },
+            ],
+          },
+          hp: Hp(1),
+          maxHp: sheetMaximumHp(sheet.right),
+          tempHp: Hp(0),
+          positiveHpUnconscious: null,
+        }),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Spell Access free-cast remaining uses exceed the battle resource cap during battle handoff.",
+      },
+    });
+  });
+
+  test("hands shared Monk Focus use-count expenditures into and out of battle", () => {
+    const sheet = rebuildCharacterSheetFixture({
+      characterId: characterSheetId("character:monk-focus-handoff"),
+      build: monkBuild({ level: 2, str: 12, dex: 16 }),
+      currentHp: Hp(15),
+      tempHp: Hp(0),
+      unitLibrary,
+      resourceExpenditures: [
+        {
+          tag: "useCountResource",
+          unitId: authoredUnitId("monk_monks_focus"),
+          expended: resourceCount(1),
+        },
+      ],
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+
+    const focusUnit = unitLibrary.requireUnit("monk_monks_focus");
+    const focusResource = characterBattleResourceForUnit(focusUnit);
+    if (!hasLimitedCharacterBattleResourceCap(focusResource)) {
+      throw new Error("Expected finite Monk Focus resource.");
+    }
+    const nextBattleResources = expectRight(
+      characterBattleResourceInitsFromBuild(
+        sheet.right.build,
+        unitLibrary,
+        sheet.right.resourceExpenditures,
+      ),
+    );
+    expect(nextBattleResources).toContainEqual(
+      expect.objectContaining({
+        unit: focusUnit,
+        usesRemaining: 1,
+      }),
+    );
+    const resourcePoolRef =
+      battleResourcePoolExecutionRefForTest("focus-expended");
+
+    const handoff = settleHandoffBranchToCharacterSheet({
+      sheet: sheet.right,
+      unitLibrary,
+      resourceOwnership: [
+        {
+          resourcePoolRef,
+          unit: focusUnit,
+          purpose: { tag: "unitResource" },
+        },
+      ],
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:monk-focus-handoff"),
+          classLevels: parsedClassLevelsForTest("monk", 2),
+          resources: [
+            {
+              resourcePoolRef,
+              resource: focusResource,
+              usedThisTurn: false,
+              usesRemaining: resourceCount(0),
+            },
+          ],
+        },
+        hp: Hp(15),
+        maxHp: sheetMaximumHp(sheet.right),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(expectRight(handoff).resourceExpenditures).toEqual([
+      {
+        tag: "useCountResource",
+        unitId: "monk_monks_focus",
+        expended: 2,
+      },
+    ]);
+  });
+
+  test("rejects Monk Focus battle handoff when use-count capacity drifts", () => {
+    const sheet = rebuildCharacterSheetFixture({
+      characterId: characterSheetId("character:monk-focus-capacity-drift"),
+      build: monkBuild({ level: 2, str: 12, dex: 16 }),
+      currentHp: Hp(15),
+      tempHp: Hp(0),
+      unitLibrary,
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+
+    const focusUnit = unitLibrary.requireUnit(MONK_MONKS_FOCUS_UNIT_ID);
+    if (!isClassFeatureWithUseCountResource(focusUnit)) {
+      throw new Error("Expected Monk Focus to carry a use-count resource.");
+    }
+    const driftedFocusUnit = unitWithUseCountCap(focusUnit, {
+      kind: "fixed",
+      uses: resourceCount(3),
+    });
+    const driftedFocusResource =
+      characterBattleResourceForUnit(driftedFocusUnit);
+    if (!hasLimitedCharacterBattleResourceCap(driftedFocusResource)) {
+      throw new Error("Expected finite drifted Monk Focus resource.");
+    }
+    const resourcePoolRef =
+      battleResourcePoolExecutionRefForTest("drifted-focus");
+
+    const handoff = settleHandoffBranchToCharacterSheet({
+      sheet: sheet.right,
+      unitLibrary,
+      resourceOwnership: [
+        {
+          resourcePoolRef,
+          unit: driftedFocusUnit,
+          purpose: { tag: "unitResource" },
+        },
+      ],
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:monk-focus-capacity-drift"),
+          classLevels: parsedClassLevelsForTest("monk", 2),
+          resources: [
+            {
+              resourcePoolRef,
+              resource: driftedFocusResource,
+              usedThisTurn: false,
+              usesRemaining: resourceCount(1),
+            },
+          ],
+        },
+        hp: Hp(15),
+        maxHp: sheetMaximumHp(sheet.right),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(handoff).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Class feature use-count battle capacity must match Character Sheet resource capacity.",
+      },
+    });
+    const focusResource = characterBattleResourceForUnit(focusUnit);
+    if (!hasLimitedCharacterBattleResourceCap(focusResource)) {
+      throw new Error("Expected finite Monk Focus resource.");
+    }
+    expect(
+      settleHandoffBranchToCharacterSheet({
+        sheet: sheet.right,
+        unitLibrary,
+        resourceOwnership: [
+          {
+            resourcePoolRef,
+            unit: focusUnit,
+            purpose: { tag: "unitResource" },
+          },
+        ],
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId("character:monk-focus-capacity-drift"),
+            classLevels: parsedClassLevelsForTest("monk", 2),
+            resources: [
+              {
+                resourcePoolRef,
+                resource: focusResource,
+                usedThisTurn: false,
+                usesRemaining: resourceCount(3),
+              },
+            ],
+          },
+          hp: Hp(15),
+          maxHp: sheetMaximumHp(sheet.right),
+          tempHp: Hp(0),
+          positiveHpUnconscious: null,
+        }),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Class feature use-count remaining uses exceed the battle resource cap during battle handoff.",
+      },
+    });
+  });
+
+  test("hands Uncanny Metabolism Focus recovery and HP restoration into battle", () => {
+    const sheet = rebuildCharacterSheetFixture({
+      characterId: characterSheetId("character:monk-uncanny-handoff"),
+      build: monkBuild({ level: 2, str: 12, dex: 16 }),
+      currentHp: Hp(7),
+      tempHp: Hp(0),
+      unitLibrary,
+      resourceExpenditures: [
+        {
+          tag: "useCountResource",
+          unitId: MONK_MONKS_FOCUS_UNIT_ID,
+          expended: resourceCount(2),
+        },
+      ],
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+
+    const recovered = expectRight(
+      useMonkUncannyMetabolismWhenRollingInitiative({
+        sheet: sheet.right,
+        unitLibrary,
+        martialArtsRoll: DieRollResult(4),
+      }),
+    );
+    expect(characterSheetCurrentHp(recovered)).toBe(13);
+    expect(recovered.resourceExpenditures).toEqual([]);
+    expect(recovered.restFeatureUses).toEqual([
+      { tag: "uncannyMetabolism", usedSinceLongRest: true },
+    ]);
+
+    const focusUnit = unitLibrary.requireUnit(MONK_MONKS_FOCUS_UNIT_ID);
+    const focusResource = characterBattleResourceForUnit(focusUnit);
+    if (!hasLimitedCharacterBattleResourceCap(focusResource)) {
+      throw new Error("Expected finite Monk Focus resource.");
+    }
+    const init = expectRight(
+      characterSheetBattleInit({
+        sheet: recovered,
+        unitLibrary,
+        statBlockCatalog,
+        combatantId: combatantId("combatant:monk-uncanny-handoff"),
+        displayName: "Monk",
+        initiative: initiativeScore(16),
+        ammunitionStocks: [],
+      }),
+    );
+    if (init.creatureInit.kind !== "character") {
+      throw new Error("Expected character battle creature init.");
+    }
+    const initFocusResource = init.creatureInit.resources?.find(
+      (resource) => resource.unit.id === MONK_MONKS_FOCUS_UNIT_ID,
+    );
+    expect(init.creatureInit.currentHp).toBe(13);
+    expect(initFocusResource).toEqual(
+      expect.objectContaining({ unit: focusUnit }),
+    );
+    expect(initFocusResource).not.toHaveProperty("usesRemaining");
+    const resourcePoolRef =
+      battleResourcePoolExecutionRefForTest("focus-recovered");
+
+    const handoff = settleHandoffBranchToCharacterSheet({
+      sheet: recovered,
+      unitLibrary,
+      resourceOwnership: [
+        {
+          resourcePoolRef,
+          unit: focusUnit,
+          purpose: { tag: "unitResource" },
+        },
+      ],
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:monk-uncanny-handoff"),
+          classLevels: parsedClassLevelsForTest("monk", 2),
+          resources: [
+            {
+              resourcePoolRef,
+              resource: focusResource,
+              usedThisTurn: false,
+              usesRemaining: resourceCount(1),
+            },
+          ],
+        },
+        hp: Hp(13),
+        maxHp: sheetMaximumHp(recovered),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+    const afterBattle = expectRight(handoff);
+
+    expect(afterBattle.restFeatureUses).toEqual([
+      { tag: "uncannyMetabolism", usedSinceLongRest: true },
+    ]);
+    expect(afterBattle.resourceExpenditures).toEqual([
+      {
+        tag: "useCountResource",
+        unitId: MONK_MONKS_FOCUS_UNIT_ID,
+        expended: 1,
+      },
+    ]);
+  });
+
+  test("rejects Sorcery Point handoff when point-pool capacity drifts", () => {
+    const sheet = rebuildCharacterSheetFixture({
+      characterId: characterSheetId("character:sorcery-point-capacity-drift"),
+      build: sorcererMetamagicBuild(),
+      currentHp: Hp(24),
+      tempHp: Hp(0),
+      unitLibrary,
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+
+    const fontOfMagicUnit = unitLibrary.requireUnit("sorcerer_font_of_magic");
+    if (!isClassFeatureWithPointPoolResource(fontOfMagicUnit)) {
+      throw new Error("Expected Font of Magic to carry a point-pool resource.");
+    }
+    const driftedFontOfMagicUnit = unitWithPointPoolCap(fontOfMagicUnit, {
+      kind: "fixed",
+      uses: resourceCount(7),
+    });
+    const driftedFontOfMagicResource = characterBattleResourceForUnit(
+      driftedFontOfMagicUnit,
+    );
+    if (driftedFontOfMagicResource.kind !== "point_pool") {
+      throw new Error("Expected drifted Font of Magic point-pool resource.");
+    }
+    const resourcePoolRef = battleResourcePoolExecutionRefForTest(
+      "drifted-font-of-magic",
+    );
+
+    const handoff = settleHandoffBranchToCharacterSheet({
+      sheet: sheet.right,
+      unitLibrary,
+      resourceOwnership: [
+        {
+          resourcePoolRef,
+          unit: driftedFontOfMagicUnit,
+          purpose: { tag: "unitResource" },
+        },
+      ],
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:sorcery-point-capacity-drift"),
+          classLevels: parsedClassLevelsForTest("sorcerer", 5),
+          resources: [
+            {
+              resourcePoolRef,
+              resource: driftedFontOfMagicResource,
+              pointsRemaining: resourceCount(5),
+            },
+          ],
+        },
+        hp: Hp(24),
+        maxHp: sheetMaximumHp(sheet.right),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(handoff).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Class feature point-pool battle capacity must match Character Sheet resource capacity.",
+      },
+    });
+    const fontOfMagicResource = characterBattleResourceForUnit(fontOfMagicUnit);
+    if (fontOfMagicResource.kind !== "point_pool") {
+      throw new Error("Expected Font of Magic point-pool resource.");
+    }
+    expect(
+      settleHandoffBranchToCharacterSheet({
+        sheet: sheet.right,
+        unitLibrary,
+        resourceOwnership: [
+          {
+            resourcePoolRef,
+            unit: fontOfMagicUnit,
+            purpose: { tag: "unitResource" },
+          },
+        ],
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId("character:sorcery-point-capacity-drift"),
+            classLevels: parsedClassLevelsForTest("sorcerer", 5),
+            resources: [
+              {
+                resourcePoolRef,
+                resource: fontOfMagicResource,
+                pointsRemaining: resourceCount(6),
+              },
+            ],
+          },
+          hp: Hp(24),
+          maxHp: sheetMaximumHp(sheet.right),
+          tempHp: Hp(0),
+          positiveHpUnconscious: null,
+        }),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Class feature point-pool remaining points exceed the battle resource cap during battle handoff.",
+      },
+    });
+  });
+
+  test("persists Paladin's Smite free-cast spends for the next battle before Long Rest", () => {
+    const sheet = rebuildCharacterSheetFixture({
+      characterId: characterSheetId("character:paladin-smite-handoff"),
+      build: paladinsSmitePaladinBuild(),
+      currentHp: Hp(1),
+      tempHp: Hp(0),
+      unitLibrary,
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+
+    const paladinsSmite = unitLibrary.requireUnit("paladin_paladins_smite");
+    const paladinsSmiteResource = characterBattleResourceForUnit(paladinsSmite);
+    expect(hasFixedCharacterBattleResourceCap(paladinsSmiteResource)).toBe(
+      true,
+    );
+    if (!hasFixedCharacterBattleResourceCap(paladinsSmiteResource)) return;
+    const resourcePoolRef =
+      battleResourcePoolExecutionRefForTest("paladins-smite");
+    const handoff = settleHandoffBranchToCharacterSheet({
+      sheet: sheet.right,
+      unitLibrary,
+      resourceOwnership: [
+        {
+          resourcePoolRef,
+          unit: paladinsSmite,
+          purpose: { tag: "unitResource" },
+        },
+      ],
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:paladin-smite-handoff"),
+          classLevels: parsedClassLevelsForTest("paladin", 2),
+          resources: [
+            {
+              resourcePoolRef,
+              resource: paladinsSmiteResource,
+              usedThisTurn: false,
+              usesRemaining: resourceCount(0),
+            },
+          ],
+        },
+        hp: Hp(1),
+        maxHp: sheetMaximumHp(sheet.right),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    const settled = expectRight(handoff);
+    expect(settled.resourceExpenditures).toEqual([
+      {
+        tag: "spellAccessFreeCast",
+        sourceUnitId: authoredUnitId("paladin_paladins_smite"),
+        spellId: authoredUnitId("divine_smite"),
+        expended: 1,
+      },
+    ]);
+
+    const nextBattleResources = expectRight(
+      characterBattleResourceInitsFromBuild(
+        settled.build,
+        unitLibrary,
+        settled.resourceExpenditures,
+      ),
+    );
+
+    expect(nextBattleResources).toContainEqual(
+      expect.objectContaining({
+        unit: paladinsSmite,
+        usesRemaining: 0,
+      }),
+    );
+  });
+
+  test("rejects Favored Enemy battle handoff when free-cast cap shape is unsupported", () => {
+    const sheet = rebuildCharacterSheetFixture({
+      characterId: characterSheetId("character:ranger-handoff-scaling"),
+      build: favoredEnemyRangerResourceBuild(),
+      currentHp: Hp(1),
+      tempHp: Hp(0),
+      unitLibrary,
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+
+    const favoredEnemy = unitLibrary.requireUnit("ranger_favored_enemy");
+    const favoredEnemyResource = characterBattleResourceForUnit(favoredEnemy);
+    expect(hasLimitedCharacterBattleResourceCap(favoredEnemyResource)).toBe(
+      true,
+    );
+    if (!hasLimitedCharacterBattleResourceCap(favoredEnemyResource)) return;
+    const resourcePoolRef = battleResourcePoolExecutionRefForTest(
+      "threshold-favored-enemy",
+    );
+    const handoff = settleHandoffBranchToCharacterSheet({
+      sheet: sheet.right,
+      unitLibrary,
+      resourceOwnership: [
+        {
+          resourcePoolRef,
+          unit: favoredEnemy,
+          purpose: { tag: "unitResource" },
+        },
+      ],
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:ranger-handoff-scaling"),
+          classLevels: parsedClassLevelsForTest("ranger", 1),
+          resources: [
+            {
+              resourcePoolRef,
+              resource: {
+                ...favoredEnemyResource,
+                cap: {
+                  kind: "threshold_tiers",
+                  axis: "class",
+                  base: 2,
+                  tiers: [{ atLevel: 5, value: 3 }],
+                },
+              },
               usedThisTurn: false,
               usesRemaining: resourceCount(1),
             },
@@ -12237,1499 +13733,3 @@ function parsedClassLevelsForTest(
   }
   return result.right;
 }
-        positiveHpUnconscious: null,
-      }),
-    });
-
-    const settled = expectRight(handoff);
-    expect(settled.resourceExpenditures).toEqual([
-      {
-        tag: "spellAccessFreeCast",
-        sourceUnitId: authoredUnitId("ranger_favored_enemy"),
-        spellId: authoredUnitId("hunters_mark"),
-        expended: 1,
-      },
-    ]);
-
-    const nextBattleResources = expectRight(
-      characterBattleResourceInitsFromBuild(
-        settled.build,
-        unitLibrary,
-        settled.resourceExpenditures,
-      ),
-    );
-
-    expect(nextBattleResources).toContainEqual(
-      expect.objectContaining({
-        unit: favoredEnemy,
-        usesRemaining: 1,
-      }),
-    );
-  });
-
-  test("rejects Favored Enemy battle handoff when free-cast capacity drifts", () => {
-    const sheet = rebuildCharacterSheetFixture({
-      characterId: characterSheetId("character:ranger-free-cast-drift"),
-      build: favoredEnemyRangerResourceBuild(),
-      currentHp: Hp(1),
-      tempHp: Hp(0),
-      unitLibrary,
-    });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
-
-    const favoredEnemy = unitLibrary.requireUnit("ranger_favored_enemy");
-    const favoredEnemyResource = characterBattleResourceForUnit(favoredEnemy);
-    expect(hasFixedCharacterBattleResourceCap(favoredEnemyResource)).toBe(true);
-    if (!hasFixedCharacterBattleResourceCap(favoredEnemyResource)) return;
-    const resourcePoolRef = battleResourcePoolExecutionRefForTest(
-      "drifted-favored-enemy",
-    );
-    const handoff = settleHandoffBranchToCharacterSheet({
-      sheet: sheet.right,
-      unitLibrary,
-      resourceOwnership: [
-        {
-          resourcePoolRef,
-          unit: favoredEnemy,
-          purpose: { tag: "unitResource" },
-        },
-      ],
-      combatant: handoffBranchCombatant({
-        origin: {
-          kind: "character",
-          characterId: characterId("character:ranger-free-cast-drift"),
-          classLevels: parsedClassLevelsForTest("ranger", 1),
-          resources: [
-            {
-              resourcePoolRef,
-              resource: {
-                ...favoredEnemyResource,
-                cap: {
-                  ...favoredEnemyResource.cap,
-                  uses: resourceCount(favoredEnemyResource.cap.uses + 1),
-                },
-              },
-              usedThisTurn: false,
-              usesRemaining: resourceCount(1),
-            },
-          ],
-        },
-        hp: Hp(1),
-        maxHp: sheetMaximumHp(sheet.right),
-        tempHp: Hp(0),
-        positiveHpUnconscious: null,
-      }),
-    });
-
-    expect(handoff).toMatchObject({
-      _tag: "Left",
-      left: {
-        message:
-          "Spell Access free-cast battle capacity must match Character Sheet resource capacity.",
-      },
-    });
-    expect(
-      settleHandoffBranchToCharacterSheet({
-        sheet: sheet.right,
-        unitLibrary,
-        resourceOwnership: [
-          {
-            resourcePoolRef,
-            unit: favoredEnemy,
-            purpose: { tag: "unitResource" },
-          },
-        ],
-        combatant: handoffBranchCombatant({
-          origin: {
-            kind: "character",
-            characterId: characterId("character:ranger-free-cast-drift"),
-            classLevels: parsedClassLevelsForTest("ranger", 1),
-            resources: [
-              {
-                resourcePoolRef,
-                resource: favoredEnemyResource,
-                usedThisTurn: false,
-                usesRemaining: resourceCount(favoredEnemyResource.cap.uses + 1),
-              },
-            ],
-          },
-          hp: Hp(1),
-          maxHp: sheetMaximumHp(sheet.right),
-          tempHp: Hp(0),
-          positiveHpUnconscious: null,
-        }),
-      }),
-    ).toMatchObject({
-      _tag: "Left",
-      left: {
-        message:
-          "Spell Access free-cast remaining uses exceed the battle resource cap during battle handoff.",
-      },
-    });
-  });
-
-  test("hands shared Monk Focus use-count expenditures into and out of battle", () => {
-    const sheet = rebuildCharacterSheetFixture({
-      characterId: characterSheetId("character:monk-focus-handoff"),
-      build: monkBuild({ level: 2, str: 12, dex: 16 }),
-      currentHp: Hp(15),
-      tempHp: Hp(0),
-      unitLibrary,
-      resourceExpenditures: [
-        {
-          tag: "useCountResource",
-          unitId: authoredUnitId("monk_monks_focus"),
-          expended: resourceCount(1),
-        },
-      ],
-    });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
-
-    const focusUnit = unitLibrary.requireUnit("monk_monks_focus");
-    const focusResource = characterBattleResourceForUnit(focusUnit);
-    if (!hasLimitedCharacterBattleResourceCap(focusResource)) {
-      throw new Error("Expected finite Monk Focus resource.");
-    }
-    const nextBattleResources = expectRight(
-      characterBattleResourceInitsFromBuild(
-        sheet.right.build,
-        unitLibrary,
-        sheet.right.resourceExpenditures,
-      ),
-    );
-    expect(nextBattleResources).toContainEqual(
-      expect.objectContaining({
-        unit: focusUnit,
-        usesRemaining: 1,
-      }),
-    );
-    const resourcePoolRef =
-      battleResourcePoolExecutionRefForTest("focus-expended");
-
-    const handoff = settleHandoffBranchToCharacterSheet({
-      sheet: sheet.right,
-      unitLibrary,
-      resourceOwnership: [
-        {
-          resourcePoolRef,
-          unit: focusUnit,
-          purpose: { tag: "unitResource" },
-        },
-      ],
-      combatant: handoffBranchCombatant({
-        origin: {
-          kind: "character",
-          characterId: characterId("character:monk-focus-handoff"),
-          classLevels: parsedClassLevelsForTest("monk", 2),
-          resources: [
-            {
-              resourcePoolRef,
-              resource: focusResource,
-              usedThisTurn: false,
-              usesRemaining: resourceCount(0),
-            },
-          ],
-        },
-        hp: Hp(15),
-        maxHp: sheetMaximumHp(sheet.right),
-        tempHp: Hp(0),
-        positiveHpUnconscious: null,
-      }),
-    });
-
-    expect(expectRight(handoff).resourceExpenditures).toEqual([
-      {
-        tag: "useCountResource",
-        unitId: "monk_monks_focus",
-        expended: 2,
-      },
-    ]);
-  });
-
-  test("rejects Monk Focus battle handoff when use-count capacity drifts", () => {
-    const sheet = rebuildCharacterSheetFixture({
-      characterId: characterSheetId("character:monk-focus-capacity-drift"),
-      build: monkBuild({ level: 2, str: 12, dex: 16 }),
-      currentHp: Hp(15),
-      tempHp: Hp(0),
-      unitLibrary,
-    });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
-
-    const focusUnit = unitLibrary.requireUnit(MONK_MONKS_FOCUS_UNIT_ID);
-    if (!isClassFeatureWithUseCountResource(focusUnit)) {
-      throw new Error("Expected Monk Focus to carry a use-count resource.");
-    }
-    const driftedFocusUnit = unitWithUseCountCap(focusUnit, {
-      kind: "fixed",
-      uses: resourceCount(3),
-    });
-    const driftedFocusResource =
-      characterBattleResourceForUnit(driftedFocusUnit);
-    if (!hasLimitedCharacterBattleResourceCap(driftedFocusResource)) {
-      throw new Error("Expected finite drifted Monk Focus resource.");
-    }
-    const resourcePoolRef =
-      battleResourcePoolExecutionRefForTest("drifted-focus");
-
-    const handoff = settleHandoffBranchToCharacterSheet({
-      sheet: sheet.right,
-      unitLibrary,
-      resourceOwnership: [
-        {
-          resourcePoolRef,
-          unit: driftedFocusUnit,
-          purpose: { tag: "unitResource" },
-        },
-      ],
-      combatant: handoffBranchCombatant({
-        origin: {
-          kind: "character",
-          characterId: characterId("character:monk-focus-capacity-drift"),
-          classLevels: parsedClassLevelsForTest("monk", 2),
-          resources: [
-            {
-              resourcePoolRef,
-              resource: driftedFocusResource,
-              usedThisTurn: false,
-              usesRemaining: resourceCount(1),
-            },
-          ],
-        },
-        hp: Hp(15),
-        maxHp: sheetMaximumHp(sheet.right),
-        tempHp: Hp(0),
-        positiveHpUnconscious: null,
-      }),
-    });
-
-    expect(handoff).toMatchObject({
-      _tag: "Left",
-      left: {
-        message:
-          "Class feature use-count battle capacity must match Character Sheet resource capacity.",
-      },
-    });
-    const focusResource = characterBattleResourceForUnit(focusUnit);
-    if (!hasLimitedCharacterBattleResourceCap(focusResource)) {
-      throw new Error("Expected finite Monk Focus resource.");
-    }
-    expect(
-      settleHandoffBranchToCharacterSheet({
-        sheet: sheet.right,
-        unitLibrary,
-        resourceOwnership: [
-          {
-            resourcePoolRef,
-            unit: focusUnit,
-            purpose: { tag: "unitResource" },
-          },
-        ],
-        combatant: handoffBranchCombatant({
-          origin: {
-            kind: "character",
-            characterId: characterId("character:monk-focus-capacity-drift"),
-            classLevels: parsedClassLevelsForTest("monk", 2),
-            resources: [
-              {
-                resourcePoolRef,
-                resource: focusResource,
-                usedThisTurn: false,
-                usesRemaining: resourceCount(3),
-              },
-            ],
-          },
-          hp: Hp(15),
-          maxHp: sheetMaximumHp(sheet.right),
-          tempHp: Hp(0),
-          positiveHpUnconscious: null,
-        }),
-      }),
-    ).toMatchObject({
-      _tag: "Left",
-      left: {
-        message:
-          "Class feature use-count remaining uses exceed the battle resource cap during battle handoff.",
-      },
-    });
-  });
-
-  test("hands Uncanny Metabolism Focus recovery and HP restoration into battle", () => {
-    const sheet = rebuildCharacterSheetFixture({
-      characterId: characterSheetId("character:monk-uncanny-handoff"),
-      build: monkBuild({ level: 2, str: 12, dex: 16 }),
-      currentHp: Hp(7),
-      tempHp: Hp(0),
-      unitLibrary,
-      resourceExpenditures: [
-        {
-          tag: "useCountResource",
-          unitId: MONK_MONKS_FOCUS_UNIT_ID,
-          expended: resourceCount(2),
-        },
-      ],
-    });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
-
-    const recovered = expectRight(
-      useMonkUncannyMetabolismWhenRollingInitiative({
-        sheet: sheet.right,
-        unitLibrary,
-        martialArtsRoll: DieRollResult(4),
-      }),
-    );
-    expect(characterSheetCurrentHp(recovered)).toBe(13);
-    expect(recovered.resourceExpenditures).toEqual([]);
-    expect(recovered.restFeatureUses).toEqual([
-      { tag: "uncannyMetabolism", usedSinceLongRest: true },
-    ]);
-
-    const focusUnit = unitLibrary.requireUnit(MONK_MONKS_FOCUS_UNIT_ID);
-    const focusResource = characterBattleResourceForUnit(focusUnit);
-    if (!hasLimitedCharacterBattleResourceCap(focusResource)) {
-      throw new Error("Expected finite Monk Focus resource.");
-    }
-    const init = expectRight(
-      characterSheetBattleInit({
-        sheet: recovered,
-        unitLibrary,
-        statBlockCatalog,
-        combatantId: combatantId("combatant:monk-uncanny-handoff"),
-        displayName: "Monk",
-        initiative: initiativeScore(16),
-        ammunitionStocks: [],
-      }),
-    );
-    if (init.creatureInit.kind !== "character") {
-      throw new Error("Expected character battle creature init.");
-    }
-    const initFocusResource = init.creatureInit.resources?.find(
-      (resource) => resource.unit.id === MONK_MONKS_FOCUS_UNIT_ID,
-    );
-    expect(init.creatureInit.currentHp).toBe(13);
-    expect(initFocusResource).toEqual(
-      expect.objectContaining({ unit: focusUnit }),
-    );
-    expect(initFocusResource).not.toHaveProperty("usesRemaining");
-    const resourcePoolRef =
-      battleResourcePoolExecutionRefForTest("focus-recovered");
-
-    const handoff = settleHandoffBranchToCharacterSheet({
-      sheet: recovered,
-      unitLibrary,
-      resourceOwnership: [
-        {
-          resourcePoolRef,
-          unit: focusUnit,
-          purpose: { tag: "unitResource" },
-        },
-      ],
-      combatant: handoffBranchCombatant({
-        origin: {
-          kind: "character",
-          characterId: characterId("character:monk-uncanny-handoff"),
-          classLevels: parsedClassLevelsForTest("monk", 2),
-          resources: [
-            {
-              resourcePoolRef,
-              resource: focusResource,
-              usedThisTurn: false,
-              usesRemaining: resourceCount(1),
-            },
-          ],
-        },
-        hp: Hp(13),
-        maxHp: sheetMaximumHp(recovered),
-        tempHp: Hp(0),
-        positiveHpUnconscious: null,
-      }),
-    });
-    const afterBattle = expectRight(handoff);
-
-    expect(afterBattle.restFeatureUses).toEqual([
-      { tag: "uncannyMetabolism", usedSinceLongRest: true },
-    ]);
-    expect(afterBattle.resourceExpenditures).toEqual([
-      {
-        tag: "useCountResource",
-        unitId: MONK_MONKS_FOCUS_UNIT_ID,
-        expended: 1,
-      },
-    ]);
-  });
-
-  test("rejects Sorcery Point handoff when point-pool capacity drifts", () => {
-    const sheet = rebuildCharacterSheetFixture({
-      characterId: characterSheetId("character:sorcery-point-capacity-drift"),
-      build: sorcererMetamagicBuild(),
-      currentHp: Hp(24),
-      tempHp: Hp(0),
-      unitLibrary,
-    });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
-
-    const fontOfMagicUnit = unitLibrary.requireUnit("sorcerer_font_of_magic");
-    if (!isClassFeatureWithPointPoolResource(fontOfMagicUnit)) {
-      throw new Error("Expected Font of Magic to carry a point-pool resource.");
-    }
-    const driftedFontOfMagicUnit = unitWithPointPoolCap(fontOfMagicUnit, {
-      kind: "fixed",
-      uses: resourceCount(7),
-    });
-    const driftedFontOfMagicResource = characterBattleResourceForUnit(
-      driftedFontOfMagicUnit,
-    );
-    if (driftedFontOfMagicResource.kind !== "point_pool") {
-      throw new Error("Expected drifted Font of Magic point-pool resource.");
-    }
-    const resourcePoolRef = battleResourcePoolExecutionRefForTest(
-      "drifted-font-of-magic",
-    );
-
-    const handoff = settleHandoffBranchToCharacterSheet({
-      sheet: sheet.right,
-      unitLibrary,
-      resourceOwnership: [
-        {
-          resourcePoolRef,
-          unit: driftedFontOfMagicUnit,
-          purpose: { tag: "unitResource" },
-        },
-      ],
-      combatant: handoffBranchCombatant({
-        origin: {
-          kind: "character",
-          characterId: characterId("character:sorcery-point-capacity-drift"),
-          classLevels: parsedClassLevelsForTest("sorcerer", 5),
-          resources: [
-            {
-              resourcePoolRef,
-              resource: driftedFontOfMagicResource,
-              pointsRemaining: resourceCount(5),
-            },
-          ],
-        },
-        hp: Hp(24),
-        maxHp: sheetMaximumHp(sheet.right),
-        tempHp: Hp(0),
-        positiveHpUnconscious: null,
-      }),
-    });
-
-    expect(handoff).toMatchObject({
-      _tag: "Left",
-      left: {
-        message:
-          "Class feature point-pool battle capacity must match Character Sheet resource capacity.",
-      },
-    });
-    const fontOfMagicResource = characterBattleResourceForUnit(fontOfMagicUnit);
-    if (fontOfMagicResource.kind !== "point_pool") {
-      throw new Error("Expected Font of Magic point-pool resource.");
-    }
-    expect(
-      settleHandoffBranchToCharacterSheet({
-        sheet: sheet.right,
-        unitLibrary,
-        resourceOwnership: [
-          {
-            resourcePoolRef,
-            unit: fontOfMagicUnit,
-            purpose: { tag: "unitResource" },
-          },
-        ],
-        combatant: handoffBranchCombatant({
-          origin: {
-            kind: "character",
-            characterId: characterId("character:sorcery-point-capacity-drift"),
-            classLevels: parsedClassLevelsForTest("sorcerer", 5),
-            resources: [
-              {
-                resourcePoolRef,
-                resource: fontOfMagicResource,
-                pointsRemaining: resourceCount(6),
-              },
-            ],
-          },
-          hp: Hp(24),
-          maxHp: sheetMaximumHp(sheet.right),
-          tempHp: Hp(0),
-          positiveHpUnconscious: null,
-        }),
-      }),
-    ).toMatchObject({
-      _tag: "Left",
-      left: {
-        message:
-          "Class feature point-pool remaining points exceed the battle resource cap during battle handoff.",
-      },
-    });
-  });
-
-  test("persists Paladin's Smite free-cast spends for the next battle before Long Rest", () => {
-    const sheet = rebuildCharacterSheetFixture({
-      characterId: characterSheetId("character:paladin-smite-handoff"),
-      build: paladinsSmitePaladinBuild(),
-      currentHp: Hp(1),
-      tempHp: Hp(0),
-      unitLibrary,
-    });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
-
-    const paladinsSmite = unitLibrary.requireUnit("paladin_paladins_smite");
-    const paladinsSmiteResource = characterBattleResourceForUnit(paladinsSmite);
-    expect(hasFixedCharacterBattleResourceCap(paladinsSmiteResource)).toBe(
-      true,
-    );
-    if (!hasFixedCharacterBattleResourceCap(paladinsSmiteResource)) return;
-    const resourcePoolRef =
-      battleResourcePoolExecutionRefForTest("paladins-smite");
-    const handoff = settleHandoffBranchToCharacterSheet({
-      sheet: sheet.right,
-      unitLibrary,
-      resourceOwnership: [
-        {
-          resourcePoolRef,
-          unit: paladinsSmite,
-          purpose: { tag: "unitResource" },
-        },
-      ],
-      combatant: handoffBranchCombatant({
-        origin: {
-          kind: "character",
-          characterId: characterId("character:paladin-smite-handoff"),
-          classLevels: parsedClassLevelsForTest("paladin", 2),
-          resources: [
-            {
-              resourcePoolRef,
-              resource: paladinsSmiteResource,
-              usedThisTurn: false,
-              usesRemaining: resourceCount(0),
-            },
-          ],
-        },
-        hp: Hp(1),
-        maxHp: sheetMaximumHp(sheet.right),
-        tempHp: Hp(0),
-        positiveHpUnconscious: null,
-      }),
-    });
-
-    const settled = expectRight(handoff);
-    expect(settled.resourceExpenditures).toEqual([
-      {
-        tag: "spellAccessFreeCast",
-        sourceUnitId: authoredUnitId("paladin_paladins_smite"),
-        spellId: authoredUnitId("divine_smite"),
-        expended: 1,
-      },
-    ]);
-
-    const nextBattleResources = expectRight(
-      characterBattleResourceInitsFromBuild(
-        settled.build,
-        unitLibrary,
-        settled.resourceExpenditures,
-      ),
-    );
-
-    expect(nextBattleResources).toContainEqual(
-      expect.objectContaining({
-        unit: paladinsSmite,
-        usesRemaining: 0,
-      }),
-    );
-  });
-
-  test("rejects Favored Enemy battle handoff when free-cast cap shape is unsupported", () => {
-    const sheet = rebuildCharacterSheetFixture({
-      characterId: characterSheetId("character:ranger-handoff-scaling"),
-      build: favoredEnemyRangerResourceBuild(),
-      currentHp: Hp(1),
-      tempHp: Hp(0),
-      unitLibrary,
-    });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
-
-    const favoredEnemy = unitLibrary.requireUnit("ranger_favored_enemy");
-    const favoredEnemyResource = characterBattleResourceForUnit(favoredEnemy);
-    expect(hasLimitedCharacterBattleResourceCap(favoredEnemyResource)).toBe(
-      true,
-    );
-    if (!hasLimitedCharacterBattleResourceCap(favoredEnemyResource)) return;
-    const resourcePoolRef = battleResourcePoolExecutionRefForTest(
-      "threshold-favored-enemy",
-    );
-    const handoff = settleHandoffBranchToCharacterSheet({
-      sheet: sheet.right,
-      unitLibrary,
-      resourceOwnership: [
-        {
-          resourcePoolRef,
-          unit: favoredEnemy,
-          purpose: { tag: "unitResource" },
-        },
-      ],
-      combatant: handoffBranchCombatant({
-        origin: {
-          kind: "character",
-          characterId: characterId("character:ranger-handoff-scaling"),
-          classLevels: parsedClassLevelsForTest("ranger", 1),
-          resources: [
-            {
-              resourcePoolRef,
-              resource: {
-                ...favoredEnemyResource,
-                cap: {
-                  kind: "threshold_tiers",
-                  axis: "class",
-                  base: 2,
-                  tiers: [{ atLevel: 5, value: 3 }],
-                },
-              },
-              usedThisTurn: false,
-              usesRemaining: resourceCount(1),
-            },
-          ],
-        },
-        hp: Hp(1),
-        maxHp: sheetMaximumHp(sheet.right),
-        tempHp: Hp(0),
-        unitLibrary,
-        statBlockCatalog,
-        companionId: retainedCompanionId("companion:pact-chain-skeleton"),
-        source: {
-          tag: "invocationSpellAccess",
-          spellId: authoredUnitId("find_familiar"),
-        },
-        selectedForm: {
-          tag: "pactOfTheChainSpecialForm",
-          formId: "skeleton",
-        },
-        creatureTypeOverrideChoiceId: "fiend",
-      }),
-    );
-    const ownerInit = expectRight(
-      characterSheetBattleInit({
-        sheet: retained,
-        unitLibrary,
-        statBlockCatalog,
-        combatantId: ownerId,
-        displayName: "Pact Companion Owner",
-        initiative: initiativeScore(12),
-        ammunitionStocks: [],
-      }),
-    );
-    const started = expectRight(
-      startBattle({
-        battleId: battleId("pact-chain-companion-admission"),
-        combatants: [ownerInit],
-      }),
-    );
-    const admissionBase = {
-      sheet: retained,
-      unitLibrary,
-      ownerCombatantId: ownerId,
-      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-      companionCombatantId: companionId,
-      initiative: initiativeScore(14),
-      placement: { kind: "unoccupiedSpaceWithinSpellRange" as const },
-      initialCombatantOrder: new Map([
-        [ownerId, 0],
-        [companionId, 1],
-      ]),
-      statBlockCatalog,
-    };
-    const admitted = expectRight(
-      admitCharacterSheetCompanionToBattle({
-        ...admissionBase,
-        state: started.state,
-      }),
-    );
-    expect(admitted.companions.get(ownerId)).toMatchObject({
-      status: "present",
-      formAccess: "pactOfTheChain",
-    });
-
-    const dismissed = retainedCompanionSheetWithManifestation(
-      retained,
-      (manifestation) => {
-        if (manifestation.tag === "disappearedAtZeroHitPoints") {
-          throw new Error("Expected embodied Pact companion fixture.");
-        }
-        return { ...manifestation, tag: "temporarilyDismissed" };
-      },
-    );
-    expect(
-      admitCharacterSheetCompanionToBattle({
-        ...admissionBase,
-        sheet: dismissed,
-        session: started,
-      }),
-    ).toMatchObject({
-      _tag: "Right",
-      right: {
-        state: {
-          companions: expect.any(Map),
-        },
-      },
-    });
-    expect(
-      admitCharacterSheetCompanionToBattle({
-        ...admissionBase,
-        sheet: dismissed,
-        state: admitted,
-      }),
-    ).toMatchObject({ _tag: "Left" });
-
-    const ordinaryRetained = retainedOrdinaryCompanionSheet({
-      characterIdValue: "character:ordinary-protocol-special-form",
-      companionIdValue: "companion:ordinary-protocol-special-form",
-      selectedForm: { tag: "normalNamedForm", formId: "cat" },
-      currentHp: Hp(2),
-      tempHp: Hp(0),
-    });
-    const ordinaryCompanion = characterSheetCompanion(ordinaryRetained);
-    const pactCompanion = characterSheetCompanion(retained);
-    if (
-      ordinaryCompanion.tag !== "retainedOneAtATime" ||
-      pactCompanion.tag !== "retainedOneAtATime"
-    ) {
-      throw new Error("Expected retained companion fixtures.");
-    }
-    const incompatibleProtocolAndSelection = expectRight(
-      replaceCharacterSheetCompanion({
-        sheet: ordinaryRetained,
-        companion: {
-          tag: "retainedOneAtATime",
-          companion: {
-            ...ordinaryCompanion.companion,
-            manifestation: pactCompanion.companion.manifestation,
-          },
-        },
-      }),
-    );
-    expect(
-      admitCharacterSheetCompanionToBattle({
-        ...admissionBase,
-        sheet: incompatibleProtocolAndSelection,
-        state: started.state,
-      }),
-    ).toMatchObject({
-      _tag: "Left",
-      left: {
-        message:
-          "Special retained companion forms require an attack-exception protocol.",
-      },
-    });
-  });
-
-  test("reports retained companion settlement identity and manifestation conflicts", () => {
-    const sheet = retainedOrdinaryCompanionSheet({
-      characterIdValue: "character:companion-settlement-boundaries",
-      companionIdValue: "companion:settlement-boundaries",
-      selectedForm: { tag: "normalNamedForm", formId: "cat" },
-      currentHp: Hp(2),
-      tempHp: Hp(0),
-    });
-    const ownerId = combatantId("companion-settlement-owner");
-    const companionId = combatantId("companion-settlement-companion");
-    const ownerInit = expectRight(
-      characterSheetBattleInit({
-        sheet,
-        unitLibrary,
-        statBlockCatalog,
-        combatantId: ownerId,
-        displayName: "Companion Owner",
-        initiative: initiativeScore(12),
-        ammunitionStocks: [],
-      }),
-    );
-    const started = expectRight(
-      startBattle({
-        battleId: battleId("companion-settlement-boundaries"),
-        combatants: [ownerInit],
-      }),
-    );
-    const embodiedAdmission = {
-      sheet,
-      unitLibrary,
-      ownerCombatantId: ownerId,
-      ammunitionStocks: [],
-      companionCombatantId: companionId,
-      initiative: initiativeScore(14),
-      placement: { kind: "unoccupiedSpaceWithinSpellRange" as const },
-      initialCombatantOrder: new Map<ReturnType<typeof combatantId>, number>(),
-      statBlockCatalog,
-    };
-    expect(
-      admitCharacterSheetCompanionToBattle({
-        ...embodiedAdmission,
-        state: started.state,
-      }),
-    ).toMatchObject({ _tag: "Left" });
-    expect(
-      admitCharacterSheetCompanionToBattle({
-        ...embodiedAdmission,
-        session: started,
-      }),
-    ).toMatchObject({ _tag: "Left" });
-    const admitted = expectRight(
-      admitCharacterSheetCompanionToBattle({
-        ...embodiedAdmission,
-        state: started.state,
-        initialCombatantOrder: new Map([
-          [ownerId, 0],
-          [companionId, 1],
-        ]),
-      }),
-    );
-    const selection = {
-      formAccess: "findFamiliar",
-      selectedForm: { tag: "normalNamedForm", formId: "cat" },
-    } as const;
-    const settle = (
-      state: BattleState,
-      selectedSheet: CharacterSheet = sheet,
-      retainedCompanionSelection:
-        | RetainedCompanionBattleSelection
-        | undefined = selection,
-    ) =>
-      settleCompanionFromBattle({
-        sheet: selectedSheet,
-        state,
-        ownerCombatantId: ownerId,
-        unitLibrary,
-        statBlockCatalog,
-        ...(retainedCompanionSelection === undefined
-          ? {}
-          : { retainedCompanionSelection }),
-      });
-
-    expect(
-      settleCompanionFromBattle({
-        sheet,
-        state: admitted,
-        ownerCombatantId: ownerId,
-        unitLibrary,
-        retainedCompanionSelection: selection,
-      }),
-    ).toMatchObject({ _tag: "Right" });
-    expect(
-      settleCompanionFromBattle({
-        sheet,
-        state: admitted,
-        ownerCombatantId: ownerId,
-        unitLibrary,
-        statBlockCatalog,
-      }),
-    ).toMatchObject({
-      _tag: "Left",
-      left: {
-        message: expect.stringContaining(
-          "no battle-owned authored form selection",
-        ),
-      },
-    });
-    expect(
-      settle(admitted, sheet, {
-        ...selection,
-        formAccess: "pactOfTheChain",
-      }),
-    ).toMatchObject({
-      _tag: "Left",
-      left: { message: expect.stringContaining("form access does not match") },
-    });
-
-    const noCompanionSheet = expectRight(
-      rebuildCharacterSheetFixture({
-        characterId: characterSheetId("character:no-settlement-companion"),
-        build,
-        currentHp: Hp(7),
-        tempHp: Hp(0),
-        unitLibrary,
-      }),
-    );
-    expect(settle(admitted, noCompanionSheet)).toMatchObject({
-      _tag: "Left",
-      left: {
-        message: expect.stringContaining("no Character Sheet companion slot"),
-      },
-    });
-    const otherCompanionSheet = retainedOrdinaryCompanionSheet({
-      characterIdValue: "character:other-settlement-companion",
-      companionIdValue: "companion:other-settlement-companion",
-      selectedForm: { tag: "normalNamedForm", formId: "cat" },
-      currentHp: Hp(2),
-      tempHp: Hp(0),
-    });
-    expect(settle(admitted, otherCompanionSheet)).toMatchObject({
-      _tag: "Left",
-      left: {
-        message: expect.stringContaining("durable identity does not match"),
-      },
-    });
-
-    const companion = admitted.companions.get(ownerId);
-    if (companion === undefined) {
-      throw new Error("Expected admitted retained companion fixture.");
-    }
-    const dismissedForever = {
-      ...admitted,
-      companions: new Map([
-        [ownerId, { ...companion, status: "dismissedForever" as const }],
-      ]),
-    };
-    expect(settle(dismissedForever)).toMatchObject({
-      _tag: "Right",
-      right: { companion: { tag: "none" } },
-    });
-
-    const missingCombatant = {
-      ...admitted,
-      combatants: new Map(
-        [...admitted.combatants].filter(
-          ([combatantKey]) => combatantKey !== companionId,
-        ),
-      ),
-    };
-    expect(settle(missingCombatant)).toMatchObject({
-      _tag: "Left",
-      left: { message: expect.stringContaining("combatant is missing") },
-    });
-
-    if (companion.status !== "present") {
-      throw new Error("Expected present admitted companion fixture.");
-    }
-    const companionCombatant = admitted.combatants.get(companionId);
-    const ownerCombatant = admitted.combatants.get(ownerId);
-    if (companionCombatant === undefined || ownerCombatant === undefined) {
-      throw new Error("Expected owner and companion combatant fixtures.");
-    }
-    const zeroHpCompanionState = expectRight(
-      startBattle({
-        battleId: battleId("companion-settlement-zero-hp"),
-        combatants: [
-          battleCreatureInitFromStatBlock({
-            combatantId: companionId,
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_cat"),
-            initiative: initiativeScore(14),
-            currentHp: Hp(0),
-          }),
-        ],
-      }),
-    ).state;
-    const zeroHpCompanion = zeroHpCompanionState.combatants.get(companionId);
-    if (zeroHpCompanion === undefined) {
-      throw new Error("Expected zero-HP companion combatant fixture.");
-    }
-    expect(
-      settle({
-        ...admitted,
-        combatants: new Map(admitted.combatants).set(
-          companionId,
-          zeroHpCompanion,
-        ),
-      }),
-    ).toMatchObject({
-      _tag: "Left",
-      left: { message: expect.stringContaining("must have positive HP") },
-    });
-    expect(
-      settle({
-        ...admitted,
-        combatants: new Map(admitted.combatants).set(companionId, {
-          ...ownerCombatant,
-          combatantId: companionId,
-        }),
-      }),
-    ).toMatchObject({
-      _tag: "Left",
-      left: {
-        message: expect.stringContaining(
-          "Present companion Stat Block combatant is missing",
-        ),
-      },
-    });
-    const ratState = expectRight(
-      startBattle({
-        battleId: battleId("companion-settlement-rat-proof"),
-        combatants: [
-          battleCreatureInitFromStatBlock({
-            combatantId: companionId,
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_rat"),
-            initiative: initiativeScore(14),
-          }),
-        ],
-      }),
-    ).state;
-    const ratCombatant = ratState.combatants.get(companionId);
-    if (ratCombatant === undefined) {
-      throw new Error("Expected Rat combatant fixture.");
-    }
-    expect(
-      settle({
-        ...admitted,
-        combatants: new Map(admitted.combatants).set(companionId, ratCombatant),
-      }),
-    ).toMatchObject({
-      _tag: "Left",
-      left: {
-        message: expect.stringContaining(
-          "cannot be joined to its retained authored selection",
-        ),
-      },
-    });
-    expect(
-      settle(
-        {
-          ...admitted,
-          companions: new Map([
-            [
-              ownerId,
-              {
-                ...companion,
-                formAccess: "pactOfTheChain",
-              },
-            ],
-          ]),
-        },
-        sheet,
-        {
-          formAccess: "pactOfTheChain",
-          selectedForm: {
-            tag: "pactOfTheChainSpecialForm",
-            formId: "sprite",
-          },
-        },
-      ),
-    ).toMatchObject({
-      _tag: "Left",
-      left: {
-        message: expect.stringContaining(
-          "does not match its resolved Stat Block id",
-        ),
-      },
-    });
-
-    const retained = characterSheetCompanion(sheet);
-    if (
-      retained.tag !== "retainedOneAtATime" ||
-      retained.companion.manifestation.tag !== "embodiedOutsideBattle"
-    ) {
-      throw new Error("Expected embodied retained companion fixture.");
-    }
-    if (companion.formAccess !== "findFamiliar") {
-      throw new Error("Expected Find Familiar companion fixture.");
-    }
-    const storedCompanionBase = {
-      ownerId: companion.ownerId,
-      identity: companion.identity,
-      protocol: companion.protocol,
-      creatureTypeOverride: companion.creatureTypeOverride,
-      formAccess: companion.formAccess,
-      resolvedStatBlockId: authoredStatBlockId("stat_block_cat"),
-      reactionAvailable: true,
-    } as const;
-    const temporarilyDismissed = {
-      ...storedCompanionBase,
-      status: "temporarilyDismissed",
-      reappearanceCombatantId: companionId,
-      hitPoints: retained.companion.manifestation.hitPoints,
-      ammunitionStocks: [],
-    } as const satisfies BattleCompanionState;
-    expect(
-      settle({
-        ...admitted,
-        companions: new Map([[ownerId, temporarilyDismissed]]),
-      }),
-    ).toMatchObject({
-      _tag: "Right",
-      right: {
-        companion: {
-          companion: { manifestation: { tag: "temporarilyDismissed" } },
-        },
-      },
-    });
-    const disappeared = {
-      ...storedCompanionBase,
-      status: "disappearedAtZeroHitPoints",
-    } as const satisfies BattleCompanionState;
-    expect(
-      settle({
-        ...admitted,
-        companions: new Map([[ownerId, disappeared]]),
-      }),
-    ).toMatchObject({
-      _tag: "Right",
-      right: {
-        companion: {
-          companion: { manifestation: { tag: "disappearedAtZeroHitPoints" } },
-        },
-      },
-    });
-    expect(
-      settleCompanionFromBattle({
-        sheet,
-        state: {
-          ...admitted,
-          companions: new Map([[ownerId, disappeared]]),
-        },
-        ownerCombatantId: ownerId,
-        unitLibrary,
-        retainedCompanionSelection: {
-          formAccess: "findFamiliar",
-          selectedForm: {
-            tag: "challengeRatingZeroBeast",
-            statBlockId: authoredStatBlockId("stat_block_cat"),
-          },
-        },
-      }),
-    ).toMatchObject({
-      _tag: "Left",
-      left: {
-        message: expect.stringContaining("requires a Stat Block catalog"),
-      },
-    });
-    expect(
-      settle({
-        ...admitted,
-        companions: new Map([
-          [
-            ownerId,
-            {
-              ...temporarilyDismissed,
-              resolvedStatBlockId: authoredStatBlockId("stat_block_rat"),
-            },
-          ],
-        ]),
-      }),
-    ).toMatchObject({
-      _tag: "Left",
-      left: {
-        message: expect.stringContaining(
-          "cannot be joined to its retained authored selection",
-        ),
-      },
-    });
-  });
-
-  test("recasting an embodied retained companion keeps identity and clamps carried Hit Points (A47)", () => {
-    const sheet = retainedOrdinaryCompanionSheet({
-      characterIdValue: "character:retained-recast-embodied",
-      companionIdValue: "companion:recast-embodied",
-      selectedForm: { tag: "normalNamedForm", formId: "cat" },
-      currentHp: Hp(2),
-      tempHp: Hp(1),
-    });
-
-    const recast = expectRight(
-      createRetainedFamiliarLikeCompanion({
-        sheet,
-        unitLibrary,
-        statBlockCatalog,
-        companionId: retainedCompanionId("companion:recast-embodied"),
-        source: {
-          tag: "ritualSpell",
-          spellId: authoredUnitId("find_familiar"),
-        },
-        selectedForm: { tag: "normalNamedForm", formId: "bat" },
-        creatureTypeOverrideChoiceId: "fey",
-      }),
-    );
-
-    expect(characterSheetCompanion(recast)).toMatchObject({
-      tag: "retainedOneAtATime",
-      companion: {
-        companionId: "companion:recast-embodied",
-        protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
-        manifestation: {
-          tag: "embodiedOutsideBattle",
-          selectedForm: { tag: "normalNamedForm", formId: "bat" },
-          resolvedStatBlockId: "stat_block_bat",
-          hitPoints: { currentHp: 1, tempHp: 1 },
-        },
-      },
-    });
-  });
-
-  test("recasting an admitted retained cat as a rat settles the battle-owned selection", () => {
-    const sheet = retainedOrdinaryCompanionSheet({
-      characterIdValue: "character:retained-battle-recast",
-      companionIdValue: "companion:retained-battle-recast",
-      selectedForm: { tag: "normalNamedForm", formId: "cat" },
-      currentHp: Hp(2),
-      tempHp: Hp(0),
-    });
-    const ownerId = combatantId("retained-battle-recast-owner");
-    const companionId = combatantId("retained-battle-recast-companion");
-    const ownerInit = expectRight(
-      characterSheetBattleInit({
-        sheet,
-        unitLibrary,
-        statBlockCatalog,
-        combatantId: ownerId,
-        displayName: "Owner",
-        initiative: initiativeScore(12),
-        ammunitionStocks: [],
-      }),
-    );
-    const started = expectRight(
-      startBattle({
-        battleId: battleId("retained-battle-recast"),
-        combatants: [ownerInit],
-      }),
-    );
-    const admitted = expectRight(
-      admitCharacterSheetCompanionToBattle({
-        sheet,
-        session: started,
-        unitLibrary,
-        ownerCombatantId: ownerId,
-        ammunitionStocks: [],
-        companionCombatantId: companionId,
-        initiative: initiativeScore(14),
-        placement: { kind: "unoccupiedSpaceWithinSpellRange" },
-        initialCombatantOrder: new Map([
-          [ownerId, 0],
-          [companionId, 1],
-        ]),
-        statBlockCatalog,
-      }),
-    );
-    expect(admitted.state.combatants.get(companionId)).not.toHaveProperty(
-      "displayName",
-    );
-    expect(
-      battleCreaturePresentationDisplayName(
-        admitted.state,
-        admitted.context,
-        companionId,
-      ),
-    ).toBe("Cat");
-    const findFamiliarUnit = unitLibrary.requireUnit("find_familiar");
-    if (findFamiliarUnit.kind !== "spell") {
-      throw new Error("Find Familiar fixture must be a Spell.");
-    }
-    const eligibility = findFamiliarFormEligibilityForSpell(findFamiliarUnit);
-    if (eligibility === null) {
-      throw new Error("Find Familiar fixture must expose form eligibility.");
-    }
-    const recast = castRetainedFindFamiliarRuntime({
-      session: admitted,
-      casterId: ownerId,
-      familiarId: companionId,
-      ammunitionStocks: [],
-      catalog: statBlockCatalog,
-      eligibility,
-      selection: { tag: "normalNamedForm", formId: "rat" },
-      creatureTypeOverrideChoiceId: "fey",
-      initiative: initiativeScore(14),
-      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
-    });
-    expect(recast.tag).toBe("resolved");
-    if (recast.tag !== "resolved") return;
-    expect(recast.session.state.combatants.get(companionId)).not.toHaveProperty(
-      "displayName",
-    );
-    expect(
-      recast.snapshot.combatants.find(
-        (combatant) => combatant.combatantId === companionId,
-      ),
-    ).not.toHaveProperty("displayName");
-    expect(
-      battleCreaturePresentationDisplayName(
-        recast.session.state,
-        recast.session.context,
-        companionId,
-      ),
-    ).toBe("Rat");
-
-    const settled = expectRight(
-      settleCharacterSheetFromBattle({
-        sheet,
-        battleSession: recast.session,
-        combatantId: ownerId,
-        unitLibrary,
-        statBlockCatalog,
-      }),
-    );
-
-    expect(characterSheetCompanion(settled)).toMatchObject({
-      tag: "retainedOneAtATime",
-      companion: {
-        companionId: "companion:retained-battle-recast",
-        manifestation: {
-          tag: "embodiedOutsideBattle",
-          selectedForm: { tag: "normalNamedForm", formId: "rat" },
-          resolvedStatBlockId: "stat_block_rat",
-        },
-      },
-    });
-  });
-
-  test("recasting a temporarily dismissed retained companion carries clamped Hit Points (A47)", () => {
-    const sheet = retainedOrdinaryCompanionSheet({
-      characterIdValue: "character:retained-recast-dismissed",
-      companionIdValue: "companion:recast-dismissed",
-      selectedForm: { tag: "normalNamedForm", formId: "cat" },
-      currentHp: Hp(2),
-      tempHp: Hp(1),
-    });
-    const dismissed = retainedCompanionSheetWithManifestation(
-      sheet,
-      (manifestation) => {
-        if (manifestation.tag === "disappearedAtZeroHitPoints") {
-          throw new Error("Expected embodied retained companion fixture.");
-        }
-        return {
-          ...manifestation,
-          tag: "temporarilyDismissed",
-        };
-      },
-    );
-
-    const recast = expectRight(
-      createRetainedFamiliarLikeCompanion({
-        sheet: dismissed,
-        unitLibrary,
-        statBlockCatalog,
-        companionId: retainedCompanionId("companion:recast-dismissed"),
-        source: {
-          tag: "ritualSpell",
-          spellId: authoredUnitId("find_familiar"),
-        },
-        selectedForm: { tag: "normalNamedForm", formId: "bat" },
-        creatureTypeOverrideChoiceId: "fey",
-      }),
-    );
-
-    expect(characterSheetCompanion(recast)).toMatchObject({
-      tag: "retainedOneAtATime",
-      companion: {
-        companionId: "companion:recast-dismissed",
-        manifestation: {
-          tag: "embodiedOutsideBattle",
-          selectedForm: { tag: "normalNamedForm", formId: "bat" },
-          resolvedStatBlockId: "stat_block_bat",
-          hitPoints: { currentHp: 1, tempHp: 1 },
-        },
-      },
-    });
-  });
-
-  test("recasting a retained companion disappeared at 0 Hit Points mints fresh form Hit Points (A47)", () => {
-    const sheet = retainedOrdinaryCompanionSheet({
-      characterIdValue: "character:retained-recast-disappeared",
-      companionIdValue: "companion:recast-disappeared",
-      selectedForm: { tag: "normalNamedForm", formId: "cat" },
-      currentHp: Hp(1),
-      tempHp: Hp(1),
-    });
-    const disappeared = retainedCompanionSheetWithManifestation(
-      sheet,
-      (manifestation) => ({
-        tag: "disappearedAtZeroHitPoints",
-        selectedForm: manifestation.selectedForm,
-        creatureTypeOverride: manifestation.creatureTypeOverride,
-        resolvedStatBlockId: manifestation.resolvedStatBlockId,
-      }),
-    );
-
-    const recast = expectRight(
-      createRetainedFamiliarLikeCompanion({
-        sheet: disappeared,
-        unitLibrary,
-        statBlockCatalog,
-        companionId: retainedCompanionId("companion:recast-disappeared"),
-        source: {
-          tag: "ritualSpell",
-          spellId: authoredUnitId("find_familiar"),
-        },
-        selectedForm: { tag: "normalNamedForm", formId: "cat" },
-        creatureTypeOverrideChoiceId: "fey",
-      }),
-    );
-
-    expect(characterSheetCompanion(recast)).toMatchObject({
-      tag: "retainedOneAtATime",
-      companion: {
-        companionId: "companion:recast-disappeared",
-        manifestation: {
-          tag: "embodiedOutsideBattle",
-          selectedForm: { tag: "normalNamedForm", formId: "cat" },
-          resolvedStatBlockId: "stat_block_cat",
-          hitPoints: { currentHp: 2, tempHp: 0 },
-        },
-      },
-    });
-  });
-
-  test("recasting an occupied retained companion slot rejects replacement durable identity (A47)", () => {
-    const sheet = retainedOrdinaryCompanionSheet({
-      characterIdValue: "character:retained-recast-replacement-id",
-      companionIdValue: "companion:occupied-slot",
-      selectedForm: { tag: "normalNamedForm", formId: "cat" },
-      currentHp: Hp(2),
-      tempHp: Hp(0),
-    });
-
-    const recast = createRetainedFamiliarLikeCompanion({
-      sheet,
-      unitLibrary,
-      statBlockCatalog,
-      companionId: retainedCompanionId("companion:replacement"),
-      source: { tag: "ritualSpell", spellId: authoredUnitId("find_familiar") },
-      selectedForm: { tag: "normalNamedForm", formId: "bat" },
-      creatureTypeOverrideChoiceId: "fey",
-    });
-
-    expect(recast).toMatchObject({
-      _tag: "Left",
-      left: {
-        message:
-          "Retained companion recast cannot replace the durable identity of an occupied companion slot.",
-      },
-    });
-  });
-
-  test("rejects forged retained normal-form proof before battle admission", () => {
-    const sheet = expectRight(
-      rebuildCharacterSheetFixture({
-        characterId: characterSheetId("character:forged-companion-form"),
-        build: {
-          ...trueStrikeWizardBuild(),
-          spellcasting: {
-            sources: [
-              {
-                sourceUnitId: authoredUnitId("class_wizard"),
-                spellcastingAbility: "int",
-                cantrips: [authoredUnitId("true_strike")],
-                spellbook: [authoredUnitId("find_familiar")],
-                preparedSpells: [],
-                spellcastingFocuses: ["spellbook"],
-              },
-            ],
-            slotPools: {
-              spellcasting: {
-                kind: "spellcasting",
-                slots: [{ spellLevel: 1, count: 2 }],
-              },
-            },
-          },
-        },
-        currentHp: Hp(7),
-        tempHp: Hp(0),
-        unitLibrary,
-      }),
-    );
-    const retained = expectRight(
-      createRetainedFamiliarLikeCompanion({
-        sheet,
