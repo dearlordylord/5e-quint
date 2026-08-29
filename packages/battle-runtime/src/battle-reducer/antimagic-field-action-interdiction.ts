@@ -8,7 +8,7 @@
 
 import type { BattleSubject } from "../battle-subjects.ts";
 import type {
-  BattleAntimagicFieldAuraMembership,
+  BattleMagicSuppressionEmanationMembership,
   BattleState,
 } from "../battle-state-execution.ts";
 import type {
@@ -44,15 +44,15 @@ type SpellActSubject = Extract<
 export type ActiveAntimagicFieldAuraMembership = {
   readonly areaId: BattleAreaId;
   readonly sourceCombatantId: CombatantId;
-  readonly membership: BattleAntimagicFieldAuraMembership;
+  readonly membership: BattleMagicSuppressionEmanationMembership;
 };
 
 const NON_SPELLCASTING_SPELL_ACT_PROCEDURES = [
   "spellCreatedHeldObjectAttack",
   "spellCreatedHeldObjectReEvoke",
   "objectContactDamageRepeat",
-  "spiritualWeaponRepeatAttack",
-  "dancingLightsReposition",
+  "spatialMeleeSpellAttackProxy",
+  "movableLightManifestation",
 ] as const satisfies ReadonlyArray<SpellProcedureExecution["procedure"]>;
 
 export function combatantInsideActiveAntimagicFieldAura(
@@ -60,7 +60,10 @@ export function combatantInsideActiveAntimagicFieldAura(
   combatantId: CombatantId,
 ): boolean {
   return activeAntimagicFieldAuraMemberships(state).some((membership) =>
-    antimagicFieldAuraMembershipIncludesCombatant(membership, combatantId),
+    magicSuppressionEmanationMembershipIncludesCombatant(
+      membership,
+      combatantId,
+    ),
   );
 }
 
@@ -99,7 +102,7 @@ export function activeAntimagicFieldAuraMemberships(
 ): readonly ActiveAntimagicFieldAuraMembership[] {
   return [...state.combatants.values()].flatMap((combatant) =>
     combatant.activeEffects.flatMap((effect) =>
-      effect.kind === "antimagicFieldOngoingSpellSuppression"
+      effect.kind === "magicSuppressionEmanation"
         ? [
             {
               areaId: effect.areaId,
@@ -112,7 +115,7 @@ export function activeAntimagicFieldAuraMemberships(
   );
 }
 
-export function antimagicFieldAuraMembershipIncludesCombatant(
+export function magicSuppressionEmanationMembershipIncludesCombatant(
   membership: ActiveAntimagicFieldAuraMembership,
   combatantId: CombatantId,
 ): boolean {
@@ -189,8 +192,8 @@ function runtimeCommandSubjectSpendsMagicAction(
   subject: RuntimeCommandSubject,
 ): boolean {
   if (
-    subject.command === "dragonsBreathExhale" ||
-    subject.command === "levitateAltitudeControl" ||
+    subject.command === "grantedAreaSaveDamageAction" ||
+    subject.command === "controlledVerticalSuspensionAltitudeControl" ||
     subject.command === "replaceSelfTransformationMode"
   ) {
     return true;
@@ -210,7 +213,8 @@ function activeMoonbeamEffectForRepositionSubject(
     [...state.combatants.values()].some((combatant) =>
       combatant.activeEffects.some(
         (effect) =>
-          effect.kind === "moonbeam" && effect.areaId === subject.areaId,
+          effect.kind === "persistentAreaSaveDamage" &&
+          effect.areaId === subject.areaId,
       ),
     )
   );

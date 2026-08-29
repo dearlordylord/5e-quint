@@ -4,7 +4,7 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
 //
-// The wardingBond Spell Procedure Profile: an action spell that creates one
+// The linkedDefenseResistanceDamageShare Spell Procedure Profile: an action spell that creates one
 // paired caster-target bond from caller-supplied willing-target, paired-ring,
 // and 60-foot connection witnesses. The active-effect lifecycle and damage
 // sharing reducer helpers stay in warding-bond.ts because damage application,
@@ -14,13 +14,13 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { Result } from "effect";
 
-import { WardingBondActiveEffectTemplateSchema } from "../../active-effect/codecs.ts";
+import { LinkedDefenseResistanceDamageShareTemplateSchema } from "../../active-effect/codecs.ts";
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
-  type WardingBondSpellInvocation,
+  type LinkedDefenseResistanceDamageShareSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import {
@@ -36,8 +36,8 @@ import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import {
-  applyWardingBondSpellEffect,
-  wardingBondCastFactsAreSatisfied,
+  applyLinkedDefenseResistanceDamageShareSpellEffect,
+  linkedDefenseResistanceDamageShareCastFactsAreSatisfied,
 } from "../warding-bond.ts";
 import {
   spellTargetHole,
@@ -60,23 +60,26 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
-function admitWardingBond(
+function admitLinkedDefenseResistanceDamageShare(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
-): readonly WardingBondSpellInvocation[] {
-  const projection = wardingBondSpellProjection(ctx.actor.combatantId, spell);
+): readonly LinkedDefenseResistanceDamageShareSpellInvocation[] {
+  const projection = linkedDefenseResistanceDamageShareSpellProjection(
+    ctx.actor.combatantId,
+    spell,
+  );
   if (projection === null) {
     return [];
   }
   return ctx.spellCastOptions.flatMap(
-    (slot): readonly WardingBondSpellInvocation[] =>
+    (slot): readonly LinkedDefenseResistanceDamageShareSpellInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []
         : [
             {
               access: { tag: "prepared" },
               resource: spellInvocationResourceForCastOption(slot),
-              procedure: "wardingBond",
+              procedure: "linkedDefenseResistanceDamageShare",
               spell,
               actionCost: "magicAction",
               ...projection,
@@ -85,11 +88,11 @@ function admitWardingBond(
   );
 }
 
-function wardingBondSpellProjection(
+function linkedDefenseResistanceDamageShareSpellProjection(
   actorId: CombatantId,
   spell: BattleSpellAdmissionSource,
 ): Pick<
-  WardingBondSpellInvocation,
+  LinkedDefenseResistanceDamageShareSpellInvocation,
   "activeEffect" | "rangeFeet" | "connectionRangeFeet"
 > | null {
   if (
@@ -114,9 +117,13 @@ function wardingBondSpellProjection(
       spell.mechanics.attachment.target.value.selection.targetKinds ?? [],
       ["creature"],
     ) ||
-    !wardingBondMaterialComponentIsSupported(spell) ||
-    !wardingBondEarlyEndsAreSupported(spell.mechanics.duration.earlyEnd) ||
-    !wardingBondOperationsAreSupported(spell.mechanics.operations)
+    !linkedDefenseResistanceDamageShareMaterialComponentIsSupported(spell) ||
+    !linkedDefenseResistanceDamageShareEarlyEndsAreSupported(
+      spell.mechanics.duration.earlyEnd,
+    ) ||
+    !linkedDefenseResistanceDamageShareOperationsAreSupported(
+      spell.mechanics.operations,
+    )
   ) {
     return null;
   }
@@ -129,14 +136,14 @@ function wardingBondSpellProjection(
         rangeFeet: WARDING_BOND_CAST_RANGE_FEET,
         connectionRangeFeet: WARDING_BOND_CONNECTION_RANGE_FEET,
         activeEffect: {
-          kind: "wardingBond",
+          kind: "linkedDefenseResistanceDamageShare",
           sourceCombatantId: actorId,
           expiresAt: { kind: "duration", durationTicks: durationTicks.success },
         },
       };
 }
 
-function wardingBondMaterialComponentIsSupported(
+function linkedDefenseResistanceDamageShareMaterialComponentIsSupported(
   spell: BattleSpellAdmissionSource,
 ): boolean {
   if (!("components" in spell.mechanics)) {
@@ -155,7 +162,7 @@ function wardingBondMaterialComponentIsSupported(
   );
 }
 
-function wardingBondEarlyEndsAreSupported(
+function linkedDefenseResistanceDamageShareEarlyEndsAreSupported(
   earlyEnds: readonly { readonly kind: string }[] | undefined,
 ): boolean {
   return (
@@ -171,7 +178,7 @@ function wardingBondEarlyEndsAreSupported(
   );
 }
 
-function wardingBondOperationsAreSupported(
+function linkedDefenseResistanceDamageShareOperationsAreSupported(
   operations: Extract<
     BattleSpellAdmissionSource["mechanics"],
     { readonly family: "ongoing_effect" }
@@ -179,14 +186,22 @@ function wardingBondOperationsAreSupported(
 ): boolean {
   return (
     operations.length === 4 &&
-    operations.some(wardingBondArmorClassOperationIsSupported) &&
-    operations.some(wardingBondSavingThrowOperationIsSupported) &&
-    operations.some(wardingBondResistanceOperationIsSupported) &&
-    operations.some(wardingBondDamageShareOperationIsSupported)
+    operations.some(
+      linkedDefenseResistanceDamageShareArmorClassOperationIsSupported,
+    ) &&
+    operations.some(
+      linkedDefenseResistanceDamageShareSavingThrowOperationIsSupported,
+    ) &&
+    operations.some(
+      linkedDefenseResistanceDamageShareResistanceOperationIsSupported,
+    ) &&
+    operations.some(
+      linkedDefenseResistanceDamageShareDamageShareOperationIsSupported,
+    )
   );
 }
 
-function wardingBondOperationHasAttachedBondWithinRangePredicate(
+function linkedDefenseResistanceDamageShareOperationHasAttachedBondWithinRangePredicate(
   operation: Extract<
     BattleSpellAdmissionSource["mechanics"],
     { readonly family: "ongoing_effect" }
@@ -195,7 +210,7 @@ function wardingBondOperationHasAttachedBondWithinRangePredicate(
   return operation.predicate?.kind === "attached_bond_within_range";
 }
 
-function wardingBondArmorClassOperationIsSupported(
+function linkedDefenseResistanceDamageShareArmorClassOperationIsSupported(
   operation: Extract<
     BattleSpellAdmissionSource["mechanics"],
     { readonly family: "ongoing_effect" }
@@ -204,7 +219,9 @@ function wardingBondArmorClassOperationIsSupported(
   const effect = operation.effect;
   return (
     operation.trigger.kind === "passive" &&
-    wardingBondOperationHasAttachedBondWithinRangePredicate(operation) &&
+    linkedDefenseResistanceDamageShareOperationHasAttachedBondWithinRangePredicate(
+      operation,
+    ) &&
     effect.kind === "modify_ac" &&
     effect.delta.kind === "fixed_dice" &&
     effect.delta.sign === "+" &&
@@ -213,7 +230,7 @@ function wardingBondArmorClassOperationIsSupported(
   );
 }
 
-function wardingBondSavingThrowOperationIsSupported(
+function linkedDefenseResistanceDamageShareSavingThrowOperationIsSupported(
   operation: Extract<
     BattleSpellAdmissionSource["mechanics"],
     { readonly family: "ongoing_effect" }
@@ -222,7 +239,9 @@ function wardingBondSavingThrowOperationIsSupported(
   const effect = operation.effect;
   return (
     operation.trigger.kind === "passive" &&
-    wardingBondOperationHasAttachedBondWithinRangePredicate(operation) &&
+    linkedDefenseResistanceDamageShareOperationHasAttachedBondWithinRangePredicate(
+      operation,
+    ) &&
     effect.kind === "modify_roll_numeric" &&
     sameStringSet(effect.on, ["saving_throw"]) &&
     effect.delta.kind === "fixed_dice" &&
@@ -232,7 +251,7 @@ function wardingBondSavingThrowOperationIsSupported(
   );
 }
 
-function wardingBondResistanceOperationIsSupported(
+function linkedDefenseResistanceDamageShareResistanceOperationIsSupported(
   operation: Extract<
     BattleSpellAdmissionSource["mechanics"],
     { readonly family: "ongoing_effect" }
@@ -241,7 +260,9 @@ function wardingBondResistanceOperationIsSupported(
   const effect = operation.effect;
   return (
     operation.trigger.kind === "passive" &&
-    wardingBondOperationHasAttachedBondWithinRangePredicate(operation) &&
+    linkedDefenseResistanceDamageShareOperationHasAttachedBondWithinRangePredicate(
+      operation,
+    ) &&
     effect.kind === "grant_resistance" &&
     typeof effect.damageType === "object" &&
     effect.damageType !== null &&
@@ -249,7 +270,7 @@ function wardingBondResistanceOperationIsSupported(
   );
 }
 
-function wardingBondDamageShareOperationIsSupported(
+function linkedDefenseResistanceDamageShareDamageShareOperationIsSupported(
   operation: Extract<
     BattleSpellAdmissionSource["mechanics"],
     { readonly family: "ongoing_effect" }
@@ -262,10 +283,10 @@ function wardingBondDamageShareOperationIsSupported(
   );
 }
 
-function discoverWardingBondCastAct(
+function discoverLinkedDefenseResistanceDamageShareCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<WardingBondSpellInvocation>,
+  invocation: BattleExecutableSpellInvocation<LinkedDefenseResistanceDamageShareSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   return actionSpellCastCandidatesForTargetHole(
@@ -275,8 +296,8 @@ function discoverWardingBondCastAct(
   );
 }
 
-function resolveWardingBond(
-  input: SpellProcedureProfileResolveInput<WardingBondSpellInvocation>,
+function resolveLinkedDefenseResistanceDamageShare(
+  input: SpellProcedureProfileResolveInput<LinkedDefenseResistanceDamageShareSpellInvocation>,
 ): BattleResolutionResult {
   const targetHole = spellTargetHole(
     input.input.state,
@@ -316,7 +337,7 @@ function resolveWardingBond(
       input.invocation,
       input.fillSet.targetSpatialFacts,
     ) ||
-    !wardingBondCastFactsAreSatisfied({
+    !linkedDefenseResistanceDamageShareCastFactsAreSatisfied({
       casterId: input.actorId,
       targetId: target.combatantId,
       invocation: input.invocation,
@@ -341,7 +362,7 @@ function resolveWardingBond(
     return spellCastReactionWindow;
   }
 
-  const effected = applyWardingBondSpellEffect(
+  const effected = applyLinkedDefenseResistanceDamageShareSpellEffect(
     input.input.state,
     input.actorId,
     target.combatantId,
@@ -356,26 +377,27 @@ function resolveWardingBond(
   return resolutionFromStateResult(resourced);
 }
 
-const WardingBondInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: LeveledSpellInvocationResourceSchema,
-    procedure: Schema.Literal("wardingBond"),
-    spellRuleFacts: SpellRuleExecutionFactsSchema,
-    actionCost: Schema.Literal("magicAction"),
-    activeEffect: WardingBondActiveEffectTemplateSchema,
-    rangeFeet: MovementFeet,
-    connectionRangeFeet: MovementFeet,
-  }),
-);
-export const wardingBondProfile: SpellProcedureDeclaration<
-  "wardingBond",
-  WardingBondSpellInvocation
+const LinkedDefenseResistanceDamageShareInvocationSchema =
+  spellProcedureExecutionSchema(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: LeveledSpellInvocationResourceSchema,
+      procedure: Schema.Literal("linkedDefenseResistanceDamageShare"),
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
+      actionCost: Schema.Literal("magicAction"),
+      activeEffect: LinkedDefenseResistanceDamageShareTemplateSchema,
+      rangeFeet: MovementFeet,
+      connectionRangeFeet: MovementFeet,
+    }),
+  );
+export const linkedDefenseResistanceDamageShareProfile: SpellProcedureDeclaration<
+  "linkedDefenseResistanceDamageShare",
+  LinkedDefenseResistanceDamageShareSpellInvocation
 > = {
-  procedure: "wardingBond",
-  executionSchema: WardingBondInvocationSchema,
-  admit: admitWardingBond,
-  discoverCastAct: discoverWardingBondCastAct,
-  resolve: resolveWardingBond,
+  procedure: "linkedDefenseResistanceDamageShare",
+  executionSchema: LinkedDefenseResistanceDamageShareInvocationSchema,
+  admit: admitLinkedDefenseResistanceDamageShare,
+  discoverCastAct: discoverLinkedDefenseResistanceDamageShareCastAct,
+  resolve: resolveLinkedDefenseResistanceDamageShare,
 };
 import { spellInvocationResourceForCastOption } from "./profile.ts";

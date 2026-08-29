@@ -2,7 +2,7 @@
 
 import type {
   BattleActiveEffect,
-  BattleAntimagicFieldOngoingSpellEffectRef,
+  BattleMagicSuppressionOngoingSpellEffectRef,
   BattleLightEmitterMechanicalFacts,
   BattleOngoingSpellEffectRef,
   BattleState,
@@ -14,11 +14,11 @@ import { Match } from "effect";
 
 type TrackedOngoingSpellActiveEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "spellObjectContactDamage" | "spiritualWeapon" }
+  { readonly kind: "spellObjectContactDamage" | "spatialMeleeSpellAttackProxy" }
 >;
 type TrackedAntimagicFieldOngoingSpellActiveEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "spellObjectContactDamage" | "spiritualWeapon" }
+  { readonly kind: "spellObjectContactDamage" | "spatialMeleeSpellAttackProxy" }
 >;
 
 export function ongoingSpellEffectRefForEmitter(
@@ -32,7 +32,7 @@ export function ongoingSpellEffectRefForEmitter(
 
 export function antimagicFieldOngoingSpellEffectRefForEmitter(
   emitter: BattleTrackedOngoingSpellLightEmitter,
-): BattleAntimagicFieldOngoingSpellEffectRef {
+): BattleMagicSuppressionOngoingSpellEffectRef {
   return {
     kind: "spellLightEmitter",
     effectRef: emitter.effectRef,
@@ -51,7 +51,7 @@ export function ongoingSpellEffectRefForActiveEffect(
 
 export function antimagicFieldOngoingSpellEffectRefForActiveEffect(
   effect: TrackedAntimagicFieldOngoingSpellActiveEffect,
-): BattleAntimagicFieldOngoingSpellEffectRef {
+): BattleMagicSuppressionOngoingSpellEffectRef {
   return {
     kind: "spellActiveEffect",
     activeEffectKind: effect.kind,
@@ -78,9 +78,9 @@ export function ongoingSpellEffectRefEquals(
         effect.activeEffectKind === right.activeEffectKind,
     ),
     Match.when(
-      { kind: "antimagicFieldAura" },
+      { kind: "magicSuppressionEmanation" },
       (effect) =>
-        right.kind === "antimagicFieldAura" &&
+        right.kind === "magicSuppressionEmanation" &&
         effect.effectRef === right.effectRef &&
         effect.areaId === right.areaId &&
         effect.sourceCombatantId === right.sourceCombatantId,
@@ -102,7 +102,7 @@ export function ongoingSpellEffectRefKey(
       (effect) => `active:${effect.activeEffectKind}:${effect.effectRef}`,
     ),
     Match.when(
-      { kind: "antimagicFieldAura" },
+      { kind: "magicSuppressionEmanation" },
       (effect) => `antimagic-aura:${effect.effectRef}`,
     ),
     Match.exhaustive,
@@ -112,13 +112,13 @@ export function ongoingSpellEffectRefKey(
 export function ongoingSpellEffectRefForAntimagicFieldAura(input: {
   readonly effectRef: Extract<
     BattleActiveEffect,
-    { readonly kind: "antimagicFieldOngoingSpellSuppression" }
+    { readonly kind: "magicSuppressionEmanation" }
   >["effectRef"];
   readonly areaId: BattleAreaId;
   readonly sourceCombatantId: CombatantId;
 }): BattleOngoingSpellEffectRef {
   return {
-    kind: "antimagicFieldAura",
+    kind: "magicSuppressionEmanation",
     effectRef: input.effectRef,
     areaId: input.areaId,
     sourceCombatantId: input.sourceCombatantId,
@@ -143,7 +143,7 @@ export function antimagicFieldSuppressedOngoingSpellEffectKeys(
   return new Set(
     [...state.combatants.values()].flatMap((combatant) =>
       combatant.activeEffects.flatMap((effect) =>
-        effect.kind === "antimagicFieldOngoingSpellSuppression"
+        effect.kind === "magicSuppressionEmanation"
           ? effect.suppressedOngoingSpellEffects.map(ongoingSpellEffectRefKey)
           : [],
       ),
@@ -153,7 +153,7 @@ export function antimagicFieldSuppressedOngoingSpellEffectKeys(
 
 export function ongoingSpellEffectSuppressedByAntimagicField(
   state: BattleState,
-  effect: BattleAntimagicFieldOngoingSpellEffectRef,
+  effect: BattleMagicSuppressionOngoingSpellEffectRef,
 ): boolean {
   return antimagicFieldSuppressedOngoingSpellEffectKeys(state).has(
     ongoingSpellEffectRefKey(effect),

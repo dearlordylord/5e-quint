@@ -9,7 +9,7 @@ import type {
   BattleHole,
   BattleCompanionReappearanceInitiativeHole,
   BattleCompanionReappearancePlacementHole,
-  BattleFindFamiliarConnectionHole,
+  BattleSpawnedCompanionConnectionHole,
   BattleHeldObjectFactsHole,
 } from "./battle-state-execution.ts";
 import { FIND_FAMILIAR_TELEPATHY_RANGE_FEET } from "./find-familiar-telepathy.ts";
@@ -32,15 +32,15 @@ export function findFamiliarTouchDeliveryTargetHoles(
   );
 }
 
-export function findFamiliarConnectionHole(input: {
+export function spawnedCompanionConnectionHole(input: {
   readonly ownerId: CombatantId;
   readonly companionId: CombatantId;
-}): BattleFindFamiliarConnectionHole {
+}): BattleSpawnedCompanionConnectionHole {
   const key = `battle:find-familiar:connection:${input.ownerId}:${input.companionId}`;
   return {
     holeInstanceKey: holeInstanceKey(key),
     holeId: holeId(key),
-    kind: "findFamiliarConnection",
+    kind: "spawnedCompanionConnection",
     label: "Familiar within 100 feet",
     ownerId: input.ownerId,
     companionId: input.companionId,

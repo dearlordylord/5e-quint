@@ -225,7 +225,7 @@ type TriggeredReactionSpellExecution =
         readonly procedure:
           | "triggeredArmorDefense"
           | "fallingCreatureMitigationReaction"
-          | "counterspell";
+          | "spellCastInterruptionReaction";
       }
     >
   | (Extract<
@@ -241,7 +241,7 @@ type DirectTriggeredReactionSpellExecution = Extract<
     readonly procedure:
       | "triggeredArmorDefense"
       | "fallingCreatureMitigationReaction"
-      | "counterspell";
+      | "spellCastInterruptionReaction";
   }
 >;
 
@@ -322,7 +322,7 @@ function triggeredReactionSpellCastTargetIds(input: {
     return input.fillSet.targetList.targetIds;
   }
   if (
-    input.invocation.procedure === "counterspell" &&
+    input.invocation.procedure === "spellCastInterruptionReaction" &&
     input.frame.trigger === "spellCast"
   ) {
     return [input.frame.casterId];
@@ -381,13 +381,18 @@ function resolveDirectTriggeredReactionSpellCommand(
   /* v8 ignore stop -- @preserve */
   const { invocation, ...resolutionInput } = input;
   return Match.value(invocation).pipe(
-    byDirectTriggeredReactionProcedure("counterspell", (invocation) =>
-      spellProcedureExecutionFor(executionRegistry, "counterspell").resolve({
-        input: resolutionInput,
-        actorId: input.subject.reactorId,
-        invocation,
-        fillSet,
-      }),
+    byDirectTriggeredReactionProcedure(
+      "spellCastInterruptionReaction",
+      (invocation) =>
+        spellProcedureExecutionFor(
+          executionRegistry,
+          "spellCastInterruptionReaction",
+        ).resolve({
+          input: resolutionInput,
+          actorId: input.subject.reactorId,
+          invocation,
+          fillSet,
+        }),
     ),
     byDirectTriggeredReactionProcedure(
       "fallingCreatureMitigationReaction",
@@ -746,7 +751,7 @@ export function resolveTriggeredReactionSaveGatedDamage(
     false,
     {
       concentrationSavingThrow: concentrationFill,
-      wardingBondDamageShareConcentrationSavingThrows:
+      linkedDefenseResistanceDamageShareDamageShareConcentrationSavingThrows:
         concentrationLifecycleFills,
       saveDamageResult,
       damageDisposition,

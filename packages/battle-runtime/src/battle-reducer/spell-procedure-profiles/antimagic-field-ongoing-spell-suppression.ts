@@ -35,8 +35,9 @@ import { Result } from "effect";
 
 import {
   type ActionSpellBattleResolutionInput,
-  type BattleAntimagicFieldAffectedOngoingSpellEffect,
-  type BattleAntimagicFieldAreaChoice,
+  type BattleActDiscoveryCandidate,
+  type BattleMagicSuppressionAffectedOngoingSpellEffect,
+  type BattleMagicSuppressionAreaChoice,
   type BattleResolutionResult,
   type BattleState,
   type BattleExecutableSpellInvocation,
@@ -54,7 +55,6 @@ import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
-import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
 import { spellAreaChoiceHole } from "../spells-holes-fills.ts";
 import { spellAreaChoiceHoleId } from "../spells-targeting.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
@@ -75,13 +75,13 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
-type AntimagicFieldOngoingSpellSuppressionInvocation = Extract<
+type MagicSuppressionEmanationInvocation = Extract<
   SupportedSpellInvocation,
-  { readonly procedure: "antimagicFieldOngoingSpellSuppression" }
+  { readonly procedure: "magicSuppressionEmanation" }
 >;
-type AntimagicFieldOngoingSpellSuppressionResolveInput =
-  SpellProcedureProfileResolveInput<AntimagicFieldOngoingSpellSuppressionInvocation>;
-type AntimagicFieldOngoingSpellSuppressionProfileShape = {
+type MagicSuppressionEmanationResolveInput =
+  SpellProcedureProfileResolveInput<MagicSuppressionEmanationInvocation>;
+type MagicSuppressionEmanationProfileShape = {
   readonly radiusFeet: number;
   readonly durationTicks: ElapsedTimeTicks;
 };
@@ -95,17 +95,17 @@ const ANTIMAGIC_FIELD_SUPPRESSION_EXCEPT_SOURCES = [
   "deity",
 ] as const satisfies readonly string[];
 
-function admitAntimagicFieldOngoingSpellSuppression(
+function admitMagicSuppressionEmanation(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
-): readonly AntimagicFieldOngoingSpellSuppressionInvocation[] {
-  const profile = antimagicFieldOngoingSpellSuppressionSpell(spell);
+): readonly MagicSuppressionEmanationInvocation[] {
+  const profile = magicSuppressionEmanationSpell(spell);
   if (profile === null) {
     return [];
   }
 
   return ctx.spellCastOptions.flatMap(
-    (slot): readonly AntimagicFieldOngoingSpellSuppressionInvocation[] => {
+    (slot): readonly MagicSuppressionEmanationInvocation[] => {
       if (Number(slot.spellLevel) < ANTIMAGIC_FIELD_LEVEL) {
         return [];
       }
@@ -113,7 +113,7 @@ function admitAntimagicFieldOngoingSpellSuppression(
         {
           access: { tag: "prepared" },
           resource: spellInvocationResourceForCastOption(slot),
-          procedure: "antimagicFieldOngoingSpellSuppression",
+          procedure: "magicSuppressionEmanation",
           spell,
           targeting: {
             kind: "selfOriginEmanation",
@@ -127,9 +127,9 @@ function admitAntimagicFieldOngoingSpellSuppression(
   );
 }
 
-function antimagicFieldOngoingSpellSuppressionSpell(
+function magicSuppressionEmanationSpell(
   spell: BattleSpellAdmissionSource,
-): AntimagicFieldOngoingSpellSuppressionProfileShape | null {
+): MagicSuppressionEmanationProfileShape | null {
   if (spell.mechanics.family !== "ongoing_effect") {
     return null;
   }
@@ -171,8 +171,8 @@ function antimagicFieldOngoingSpellSuppressionSpell(
   };
 }
 
-function resolveAntimagicFieldOngoingSpellSuppression(
-  input: AntimagicFieldOngoingSpellSuppressionResolveInput,
+function resolveMagicSuppressionEmanation(
+  input: MagicSuppressionEmanationResolveInput,
 ): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
@@ -194,7 +194,7 @@ function resolveAntimagicFieldOngoingSpellSuppression(
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fillSet.areaChoice.kind !== "antimagicFieldSelfEmanation" ||
+    input.fillSet.areaChoice.kind !== "magicSuppressionSelfEmanation" ||
     input.fillSet.areaChoice.areaId.length === 0
   ) {
     return invalidResult(
@@ -240,7 +240,7 @@ function resolveAntimagicFieldOngoingSpellSuppression(
   if (resourced.tag === "invalid") {
     return resourced;
   }
-  const nextState = applyAntimagicFieldOngoingSpellSuppressionCastEffect({
+  const nextState = applyMagicSuppressionEmanationCastEffect({
     state: resourced.state,
     actorId: input.actorId,
     areaId: input.fillSet.areaChoice.areaId,
@@ -258,7 +258,7 @@ function resolveAntimagicFieldOngoingSpellSuppression(
 
 function antimagicFieldAreaChoiceInvalidReason(
   state: ActionSpellBattleResolutionInput["state"],
-  areaChoice: BattleAntimagicFieldAreaChoice,
+  areaChoice: BattleMagicSuppressionAreaChoice,
 ): string | null {
   const trackedEffects = trackedOngoingSpellEffectKeys(state);
   for (const affected of areaChoice.affectedOngoingSpellEffects) {
@@ -285,7 +285,7 @@ function trackedOngoingSpellEffectKeys(
     ...[...state.combatants.values()].flatMap((combatant) =>
       combatant.activeEffects.flatMap((effect) =>
         effect.kind === "spellObjectContactDamage" ||
-        effect.kind === "spiritualWeapon"
+        effect.kind === "spatialMeleeSpellAttackProxy"
           ? [
               ongoingSpellEffectRefKey(
                 antimagicFieldOngoingSpellEffectRefForActiveEffect(effect),
@@ -297,13 +297,13 @@ function trackedOngoingSpellEffectKeys(
   ]);
 }
 
-function applyAntimagicFieldOngoingSpellSuppressionCastEffect(input: {
+function applyMagicSuppressionEmanationCastEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly areaId: BattleAreaId;
-  readonly auraMembership: BattleAntimagicFieldAreaChoice["auraMembership"];
-  readonly affectedOngoingSpellEffects: readonly BattleAntimagicFieldAffectedOngoingSpellEffect[];
-  readonly invocation: BattleExecutableSpellInvocation<AntimagicFieldOngoingSpellSuppressionInvocation>;
+  readonly auraMembership: BattleMagicSuppressionAreaChoice["auraMembership"];
+  readonly affectedOngoingSpellEffects: readonly BattleMagicSuppressionAffectedOngoingSpellEffect[];
+  readonly invocation: BattleExecutableSpellInvocation<MagicSuppressionEmanationInvocation>;
 }): BattleState {
   const caster = input.state.combatants.get(input.actorId);
   if (caster === undefined) {
@@ -316,12 +316,12 @@ function applyAntimagicFieldOngoingSpellSuppressionCastEffect(input: {
     input.state,
     input.actorId,
     (effect) =>
-      effect.kind === "antimagicFieldOngoingSpellSuppression" &&
+      effect.kind === "magicSuppressionEmanation" &&
       effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
       effect.sourceCombatantId === input.actorId &&
       effect.areaId === input.areaId,
     {
-      kind: "antimagicFieldOngoingSpellSuppression" as const,
+      kind: "magicSuppressionEmanation" as const,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
@@ -337,28 +337,41 @@ function applyAntimagicFieldOngoingSpellSuppressionCastEffect(input: {
   );
 }
 
-const AntimagicFieldOngoingSpellSuppressionInvocationSchema =
-  spellProcedureExecutionSchema(
-    Schema.Struct({
-      access: PreparedSpellAccessSchema,
-      resource: LeveledSpellInvocationResourceSchema,
-      procedure: Schema.Literal("antimagicFieldOngoingSpellSuppression"),
-      spellRuleFacts: SpellRuleExecutionFactsSchema,
-      targeting: Schema.Struct({
-        kind: Schema.Literal("selfOriginEmanation"),
-        radiusFeet: MovementFeet,
-      }),
-      durationTicks: ElapsedTimeTicksSchema,
-      rangeFeet: MovementFeet,
+const MagicSuppressionEmanationInvocationSchema = spellProcedureExecutionSchema(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: LeveledSpellInvocationResourceSchema,
+    procedure: Schema.Literal("magicSuppressionEmanation"),
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
+    targeting: Schema.Struct({
+      kind: Schema.Literal("selfOriginEmanation"),
+      radiusFeet: MovementFeet,
     }),
-  );
-export const antimagicFieldOngoingSpellSuppressionProfile = {
-  procedure: "antimagicFieldOngoingSpellSuppression",
-  executionSchema: AntimagicFieldOngoingSpellSuppressionInvocationSchema,
-  admit: admitAntimagicFieldOngoingSpellSuppression,
-  discoverCastAct: discoverActionSpellAreaCastAct,
-  resolve: resolveAntimagicFieldOngoingSpellSuppression,
+    durationTicks: ElapsedTimeTicksSchema,
+    rangeFeet: MovementFeet,
+  }),
+);
+export const magicSuppressionEmanationProfile = {
+  procedure: "magicSuppressionEmanation",
+  executionSchema: MagicSuppressionEmanationInvocationSchema,
+  admit: admitMagicSuppressionEmanation,
+  discoverCastAct: (
+    _state: BattleState,
+    actorId: CombatantId,
+    invocation: MagicSuppressionEmanationInvocation,
+  ): readonly BattleActDiscoveryCandidate[] => [
+    {
+      subject: {
+        tag: "actionSpell",
+        actorId,
+        procedureRef: invocation.sourceProcedureRef,
+        mode: { tag: "cast" },
+      },
+      initialHoles: [spellAreaChoiceHole(invocation)],
+    },
+  ],
+  resolve: resolveMagicSuppressionEmanation,
 } satisfies SpellProcedureDeclaration<
-  "antimagicFieldOngoingSpellSuppression",
-  AntimagicFieldOngoingSpellSuppressionInvocation
+  "magicSuppressionEmanation",
+  MagicSuppressionEmanationInvocation
 >;

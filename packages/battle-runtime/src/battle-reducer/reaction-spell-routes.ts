@@ -154,7 +154,7 @@ function reactionInterruptPayloadRouteSubjectForChoice(
   }
   if (
     frame.trigger === "spellCast" &&
-    invocation?.procedure === "counterspell"
+    invocation?.procedure === "spellCastInterruptionReaction"
   ) {
     return "reactionSpellInterruption";
   }

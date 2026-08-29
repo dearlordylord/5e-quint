@@ -37,19 +37,19 @@ export function companionRouteForDiscoveredAct(
       battleReducerRouteHoles(act.initialHoles),
       "battleCompanion",
     );
-  if (act.subject.tag === "findFamiliarSharedSenses")
+  if (act.subject.tag === "spawnedCompanionSharedSenses")
     return discoverBattleActsRoute(
       "companionSharedSenses",
       battleReducerRouteHoles(act.initialHoles),
       "battleCompanion",
     );
-  if (act.subject.tag === "findFamiliarTouchSpell")
+  if (act.subject.tag === "spawnedCompanionTouchSpellProxy")
     return discoverBattleActsRoute(
       "companionTouchDelivery",
       battleReducerRouteHoles(act.initialHoles),
       "battleSpellSlotAndActionEconomy",
     );
-  if (act.subject.tag === "pactOfTheChainFamiliarAttack")
+  if (act.subject.tag === "companionAttack")
     return discoverBattleActsRoute(
       "companionReactionAttack",
       battleReducerRouteHoles(act.initialHoles),
@@ -74,7 +74,7 @@ export function companionRouteForResolution(
       ),
     ];
   }
-  if (input.subject.tag === "findFamiliarSharedSenses") {
+  if (input.subject.tag === "spawnedCompanionSharedSenses") {
     return result.tag === "resolved"
       ? [
           resolveBattleSubjectWithoutFillRoute(
@@ -90,9 +90,9 @@ export function companionRouteForResolution(
         ]
       : undefined;
   }
-  if (input.subject.tag === "findFamiliarTouchSpell")
+  if (input.subject.tag === "spawnedCompanionTouchSpellProxy")
     return findFamiliarTouchDeliveryRouteForResolution(input, result);
-  if (input.subject.tag === "pactOfTheChainFamiliarAttack")
+  if (input.subject.tag === "companionAttack")
     return pactFamiliarReactionAttackRouteForResolution(input, result);
   return undefined;
 }
