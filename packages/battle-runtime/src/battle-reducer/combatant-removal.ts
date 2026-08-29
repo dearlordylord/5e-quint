@@ -92,7 +92,7 @@ export function removeBattleCombatants(input: {
             removeIds.has(effect.sourceCombatantId)
               ? []
               : [
-                  effect.kind === "antimagicFieldOngoingSpellSuppression"
+                  effect.kind === "magicSuppressionEmanation"
                     ? {
                         ...effect,
                         auraMembership: {

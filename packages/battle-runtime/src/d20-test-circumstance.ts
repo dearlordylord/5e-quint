@@ -152,9 +152,11 @@ function savingThrowHoleTargetsA(
       : []),
     ...("objectContactSave" in hole ? hole.objectContactSave.targetIds : []),
     ...("spellTurnStartSave" in hole ? [hole.spellTurnStartSave.targetId] : []),
-    ...("sleepRepeatSave" in hole ? [hole.sleepRepeatSave.targetId] : []),
-    ...("hideousLaughterRepeatSave" in hole
-      ? [hole.hideousLaughterRepeatSave.targetId]
+    ...("stagedConditionRepeatSave" in hole
+      ? [hole.stagedConditionRepeatSave.targetId]
+      : []),
+    ...("saveGatedConditionRepeatSave" in hole
+      ? [hole.saveGatedConditionRepeatSave.targetId]
       : []),
   ];
 }
@@ -166,18 +168,21 @@ function savingThrowHoleTargetsB(
     ...("spellConditionCountedEndTurnSave" in hole
       ? [hole.spellConditionCountedEndTurnSave.targetId]
       : []),
-    ...("greaseGroundHazard" in hole ? [hole.greaseGroundHazard.targetId] : []),
-    ...("webRestraint" in hole ? [hole.webRestraint.targetId] : []),
-    ...("sleetStormAreaHazard" in hole
-      ? [hole.sleetStormAreaHazard.targetId]
+    ...("persistentAreaSaveCondition" in hole
+      ? [hole.persistentAreaSaveCondition.targetId]
       : []),
-    ...("insectPlagueAreaHazard" in hole
-      ? [hole.insectPlagueAreaHazard.targetId]
+    ...("persistentAreaSaveConditionEscape" in hole
+      ? [hole.persistentAreaSaveConditionEscape.targetId]
       : []),
-    ...("cloudkillAreaHazard" in hole
-      ? [hole.cloudkillAreaHazard.targetId]
+    ...("persistentAreaSaveComposite" in hole
+      ? [hole.persistentAreaSaveComposite.targetId]
       : []),
-    ...("gustOfWindLine" in hole ? [hole.gustOfWindLine.targetId] : []),
+    ...("persistentAreaSaveDamage" in hole
+      ? [hole.persistentAreaSaveDamage.targetId]
+      : []),
+    ...("directionalPersistentArea" in hole
+      ? [hole.directionalPersistentArea.targetId]
+      : []),
   ];
 }
 
@@ -191,8 +196,8 @@ function savingThrowHoleTargetsC(
     ...("unitFeatureConditionEndTurnSave" in hole
       ? [hole.unitFeatureConditionEndTurnSave.targetId]
       : []),
-    ...("slowActivePenaltiesEndTurnSave" in hole
-      ? [hole.slowActivePenaltiesEndTurnSave.targetId]
+    ...("turnConstraintEndTurnSave" in hole
+      ? [hole.turnConstraintEndTurnSave.targetId]
       : []),
     ...("abilityD20TestRollModeEndTurnSave" in hole
       ? [hole.abilityD20TestRollModeEndTurnSave.targetId]

@@ -33,7 +33,7 @@ import {
   type BattleExecutableSpellInvocation,
   type BattleActiveEffect,
   type BattleCreatureState,
-  type BattleAntimagicFieldOngoingSpellEffectRef,
+  type BattleMagicSuppressionOngoingSpellEffectRef,
   type BattleOngoingSpellEffectRef,
   type BattleOngoingSpellTarget,
   type BattleOngoingSpellTargetChoiceHole,
@@ -243,7 +243,9 @@ const ONGOING_SPELL_TARGET_CHOICE_HOLE_INSTANCE = holeInstanceKey(
 
 type TrackedDispellableOngoingSpellActiveEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "spellObjectContactDamage" | "spiritualWeapon" }
+  {
+    readonly kind: "spellObjectContactDamage" | "spatialMeleeSpellAttackProxy";
+  }
 >;
 
 type BattleTrackedOngoingSpellOccurrence =
@@ -257,14 +259,14 @@ type BattleTrackedOngoingSpellOccurrence =
       readonly ownerId: CombatantId;
       readonly effect: TrackedDispellableOngoingSpellActiveEffect;
     };
-type AntimagicFieldAuraOngoingSpellEffectRef = Extract<
+type MagicSuppressionEmanationOngoingSpellEffectRef = Extract<
   BattleOngoingSpellEffectRef,
-  { readonly kind: "antimagicFieldAura" }
+  { readonly kind: "magicSuppressionEmanation" }
 >;
 type OngoingSpellEndDispelException =
   | {
       readonly kind: "antimagicFieldAuraNoEffect";
-      readonly effect: AntimagicFieldAuraOngoingSpellEffectRef;
+      readonly effect: MagicSuppressionEmanationOngoingSpellEffectRef;
     }
   | {
       readonly kind: "notException";
@@ -561,7 +563,7 @@ function ongoingSpellEndDispelException(
   if (target.kind !== "magicalEffect") {
     return { kind: "notException" };
   }
-  if (target.effect.kind !== "antimagicFieldAura") {
+  if (target.effect.kind !== "magicSuppressionEmanation") {
     return { kind: "notException" };
   }
   return activeAntimagicFieldAuraMatchesTarget(state, target.effect)
@@ -585,7 +587,7 @@ function activeAntimagicFieldAuraMatchesTarget(
     (candidate) => candidate.effectRef === target.effectRef,
   );
   return (
-    effect?.kind === "antimagicFieldOngoingSpellSuppression" &&
+    effect?.kind === "magicSuppressionEmanation" &&
     effect.areaId === target.areaId &&
     effect.sourceCombatantId === target.sourceCombatantId
   );
@@ -685,7 +687,7 @@ function ongoingSpellTargetChoices(
   }
   for (const combatant of state.combatants.values()) {
     for (const effect of combatant.activeEffects) {
-      if (effect.kind === "antimagicFieldOngoingSpellSuppression") {
+      if (effect.kind === "magicSuppressionEmanation") {
         pushUniqueOngoingSpellTarget(choices, {
           kind: "magicalEffect",
           effect: ongoingSpellEffectRefForAntimagicFieldAura({
@@ -823,7 +825,7 @@ function ongoingSpellEndUnrelatedFill(
     fillSet.conditionChoice !== undefined ||
     fillSet.areaChoice !== undefined ||
     fillSet.teleportDestination !== undefined ||
-    fillSet.dancingLightsPlacement !== undefined ||
+    fillSet.movableLightPlacement !== undefined ||
     fillSet.damageTypeChoice !== undefined ||
     fillSet.concentrationSavingThrows.length > 0 ||
     fillSet.saveGatedConditionWithRepeatDamageRepeatSaves.length > 0 ||
@@ -854,13 +856,13 @@ function isTrackedDispellableOngoingSpellActiveEffect(
 ): effect is TrackedDispellableOngoingSpellActiveEffect {
   return (
     effect.kind === "spellObjectContactDamage" ||
-    effect.kind === "spiritualWeapon"
+    effect.kind === "spatialMeleeSpellAttackProxy"
   );
 }
 
 function ongoingSpellOccurrenceRef(
   occurrence: BattleTrackedOngoingSpellOccurrence,
-): BattleAntimagicFieldOngoingSpellEffectRef {
+): BattleMagicSuppressionOngoingSpellEffectRef {
   return occurrence.kind === "lightEmitter"
     ? magicSuppressionOngoingSpellEffectRefForEmitter(occurrence.emitter)
     : magicSuppressionOngoingSpellEffectRefForActiveEffect(occurrence.effect);
