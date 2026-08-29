@@ -116,7 +116,7 @@ describe("battle runtime: Sleep", () => {
       conditions: expect.objectContaining({ directIncapacitated: true }),
       activeEffects: [
         expect.objectContaining({
-          kind: "stagedSaveConditionPendingRepeatSave",
+          kind: "stagedSaveConditionPendingRepeat",
           sourceProcedureRef: expect.any(String),
           sourceCombatantId: wizardId,
           save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
@@ -206,7 +206,7 @@ describe("battle runtime: Sleep", () => {
       conditions: expect.objectContaining({ directIncapacitated: true }),
       activeEffects: [
         expect.objectContaining({
-          kind: "stagedSaveConditionPendingRepeatSave",
+          kind: "stagedSaveConditionPendingRepeat",
           sourceProcedureRef: expect.any(String),
           sourceCombatantId: wizardId,
         }),
@@ -446,7 +446,7 @@ describe("battle runtime: Sleep", () => {
     expect(repeatSave).toMatchObject({
       label: "Repeat WIS save",
       ability: "wis",
-      stagedSaveConditionRepeatSave: {
+      stagedConditionRepeatSave: {
         targetId: goblinId,
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: wizardId,
@@ -1118,7 +1118,7 @@ describe("battle runtime: Sleep", () => {
       conditions: expect.objectContaining({ directIncapacitated: true }),
       activeEffects: [
         expect.objectContaining({
-          kind: "stagedSaveConditionPendingRepeatSave",
+          kind: "stagedSaveConditionPendingRepeat",
         }),
       ],
     });

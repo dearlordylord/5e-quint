@@ -507,7 +507,7 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       tag: "invalid",
       reason: "staleSubject",
       message:
-        "Spiritual Weapon repeat attack is suppressed by Antimagic Field.",
+        "spatial melee spell-attack proxy repeat attack is suppressed by magic-suppression emanation.",
     });
     expect(
       suppressed.combatants
@@ -557,14 +557,15 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
 });
 
 function maybeSpiritualWeaponRepeatAct(session: BattleRuntimeSession) {
-  return discoverBattleActs(session).find(
-    (candidate) =>
+  return discoverBattleActs(session).find((candidate) => {
+    const presentation = battleActSpellPresentation(candidate);
+    return (
       candidate.subject.tag === "bonusActionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId ===
-        spiritualWeaponUnitId &&
-      battleActSpellPresentation(candidate)?.invocation.procedure ===
-        "spatialMeleeSpellAttackProxy",
-  );
+      presentation?.invocation.tag === "spellEffect" &&
+      presentation.invocation.spellId === spiritualWeaponUnitId &&
+      presentation.invocation.procedure === "spatialMeleeSpellAttackProxy"
+    );
+  });
 }
 
 function antimagicFieldBattle(input?: {

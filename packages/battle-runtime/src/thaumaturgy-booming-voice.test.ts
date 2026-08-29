@@ -20,12 +20,10 @@ import thaumaturgyInput from "../../surface/content/thaumaturgy.json";
 import {
   battleId,
   assertBattleSnapshotCodecRoundTripForTest,
-  cantripSpellInvocationRef,
   characterSeed,
   difficultyClass,
   elapsedTimeTicks,
   fighterId,
-  findAct,
   findHole,
   goblinId,
   requiredAbilityCheckRollMode,
@@ -62,28 +60,19 @@ const unitCatalog =
       })();
 const thaumaturgy = requireThaumaturgySpell();
 
-const thaumaturgySubject = {
-  tag: "actionSpell" as const,
-  actorId: fighterId,
-  invocation: cantripSpellInvocationRef(
-    "thaumaturgy",
-    "temporaryAbilityCheckRollMode",
-  ),
-  mode: { tag: "cast" as const },
-};
-
 describe("Thaumaturgy Booming Voice", () => {
   test("admits the SRD cantrip and asks for the active 1-minute effect count witness", () => {
     const state = battleWithThaumaturgy();
-    const act = findAct(state, thaumaturgySubject);
+    const act = thaumaturgyAct(state);
     const countHole = findThaumaturgyCountHole(act.initialHoles);
     const decodedHole = Schema.decodeUnknownResult(BattleHoleSchema)(countHole);
     const fill = thaumaturgyCountFill(countHole, 0);
     const decodedFill = Schema.decodeUnknownResult(BattleFillSchema)(fill);
 
-    expect(battleActSpellPresentation(act)?.invocation).toEqual(
-      thaumaturgySubject.invocation,
-    );
+    expect(battleActSpellPresentation(act)?.invocation).toMatchObject({
+      spellId: thaumaturgy.id,
+      procedure: "temporaryAbilityCheckRollMode",
+    });
     expect(act.initialHoles).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -100,7 +89,7 @@ describe("Thaumaturgy Booming Voice", () => {
 
   test("requires the cap witness and rejects casts when three 1-minute effects are already active", () => {
     const state = battleWithThaumaturgy();
-    const act = findAct(state, thaumaturgySubject);
+    const act = thaumaturgyAct(state);
     const missing = requireNeedsHoles(
       resolveBattleSubject({
         state: state.state,
@@ -148,7 +137,7 @@ describe("Thaumaturgy Booming Voice", () => {
     const first = withFreshMagicAction(
       castThaumaturgy(battleWithThaumaturgy(), 0),
     );
-    const act = findAct(first, thaumaturgySubject);
+    const act = thaumaturgyAct(first);
     const countHole = findThaumaturgyCountHole(act.initialHoles);
     const rejected = resolveBattleSubject({
       state: first.state,
@@ -335,7 +324,7 @@ function castThaumaturgy(
   session: BattleRuntimeSession,
   activeOneMinuteEffectCount: number,
 ): BattleRuntimeSession {
-  const act = findAct(session, thaumaturgySubject);
+  const act = thaumaturgyAct(session);
   const countHole = findThaumaturgyCountHole(act.initialHoles);
   const resolved = requireResolved(
     resolveBattleSubject({
@@ -345,6 +334,14 @@ function castThaumaturgy(
     }),
   );
   return battleRuntimeSessionForTest({ ...session, state: resolved.state });
+}
+
+function thaumaturgyAct(session: BattleRuntimeSession) {
+  const act = maybeSpellAct({ session, spellId: thaumaturgy.id });
+  if (act === undefined) {
+    throw new Error("Expected admitted minor-wonder spell act.");
+  }
+  return act;
 }
 
 function withFreshMagicAction(

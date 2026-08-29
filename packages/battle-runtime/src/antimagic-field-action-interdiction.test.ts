@@ -78,6 +78,7 @@ import {
 } from "./index.ts";
 import { battleMagicActionHealingPoolSupportForUnit } from "./unit-feature-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { magicSuppressionOngoingSpellEffectRefForActiveEffect } from "./battle-reducer/magic-suppression-ongoing-effect.ts";
 
 const antimagicFieldAreaId = battleAreaId(
   "unit-profile-antimagic-action-interdiction-area",
@@ -223,6 +224,14 @@ describe("Antimagic Field action interdiction", () => {
       session: base,
       spellId: spiritualWeaponUnitId,
     });
+    const proxy = base.state.combatants
+      .get(spellCasterId)
+      ?.activeEffects.find(
+        (effect) => effect.kind === "spatialMeleeSpellAttackProxy",
+      );
+    if (proxy === undefined || proxy.kind !== "spatialMeleeSpellAttackProxy") {
+      throw new Error("Expected spatial melee spell-attack proxy effect.");
+    }
     const stale = activeAntimagicAuraSession(
       base,
       magicSuppressionEmanationMembershipForTest({
@@ -230,6 +239,7 @@ describe("Antimagic Field action interdiction", () => {
         originIncluded: false,
         nonOriginCombatantIds: [spellCasterId],
       }),
+      [magicSuppressionOngoingSpellEffectRefForActiveEffect(proxy)],
     );
     expect(
       maybeBonusSpellAct({
@@ -579,6 +589,7 @@ function controlledVerticalSuspensionInitialRiseFill(
 function activeAntimagicAuraSession(
   session: BattleRuntimeSession,
   aura: TestAntimagicFieldAuraMembership,
+  suppressedOngoingSpellEffects: readonly import("./index.ts").BattleMagicSuppressionOngoingSpellEffectRef[] = [],
 ): BattleRuntimeSession {
   const sourceBefore = session.state.combatants.get(aura.sourceCombatantId);
   if (sourceBefore === undefined) {
@@ -590,6 +601,7 @@ function activeAntimagicAuraSession(
     effect: magicSuppressionEmanationEffectTemplateForTest({
       areaId: antimagicFieldAreaId,
       aura,
+      suppressedOngoingSpellEffects,
     }),
   });
   expect(

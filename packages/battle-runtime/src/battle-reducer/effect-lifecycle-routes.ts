@@ -522,31 +522,7 @@ export function hitPointBudgetConditionRepeatSaveRouteForResolution(
   if (endConcentrationRoute !== undefined) {
     return endConcentrationRoute;
   }
-
-  const turnBoundaryRoute = hitPointBudgetConditionRepeatSaveTurnBoundaryRoute(
-    input,
-    result,
-  );
-  if (turnBoundaryRoute !== undefined) {
-    return turnBoundaryRoute;
-  }
-
-  if (!isStagedSaveConditionSubject(input.state, input.subject)) {
-    return undefined;
-  }
-  if (result.tag !== "resolved") {
-    return undefined;
-  }
-  const fill = hitPointBudgetConditionRepeatSaveSavingThrowFill(input.fills);
-  if (fill === undefined) {
-    return undefined;
-  }
-  return hitPointBudgetConditionRepeatSaveResolvedRoutes({
-    before: input.state,
-    after: result.state,
-    fill: "savingThrowOutcome",
-    sourceCombatantId: input.subject.actorId,
-  });
+  return undefined;
 }
 
 export function repeatSaveConditionEffectRouteForResolution(
@@ -578,8 +554,11 @@ export function repeatSaveConditionEffectRouteForResolution(
   ) {
     return undefined;
   }
+  const includesStagedConditionRepeatSave =
+    fillsIncludeStagedConditionRepeatSave(input);
   return nonEmptyRouteEvents([
-    ...(combatantsConditionsChanged(input.state, result.state)
+    ...(includesStagedConditionRepeatSave ||
+    combatantsConditionsChanged(input.state, result.state)
       ? [
           resolveBattleSubjectRoute(
             "repeatSaveConditionEffect" as const,
@@ -616,7 +595,29 @@ function fillsIncludeRepeatSaveConditionEffect(
   if (!isEndTurnSubject(input.subject)) {
     return false;
   }
-  const repeatSaveHoleIds = conditionSpellEndTurnRepeatSaveHoleIds(
+  const repeatSaveHoleIds = new Set([
+    ...conditionSpellEndTurnRepeatSaveHoleIds(
+      input.state,
+      input.subject.actorId,
+    ),
+    ...hitPointBudgetConditionRepeatSaveSavingThrowHoleIds(
+      input.state,
+      input.subject.actorId,
+    ),
+  ]);
+  return input.fills.some(
+    (fill) =>
+      fill.kind === "savingThrowOutcome" && repeatSaveHoleIds.has(fill.holeId),
+  );
+}
+
+function fillsIncludeStagedConditionRepeatSave(
+  input: BattleResolutionInput,
+): boolean {
+  if (!isEndTurnSubject(input.subject)) {
+    return false;
+  }
+  const repeatSaveHoleIds = hitPointBudgetConditionRepeatSaveSavingThrowHoleIds(
     input.state,
     input.subject.actorId,
   );
@@ -634,8 +635,9 @@ function repeatSaveConditionEffectRouteHoles(
 
 function isRepeatSaveConditionEffectHole(hole: BattleHole): boolean {
   return (
+    "stagedConditionRepeatSave" in hole ||
     "spellConditionEndTurnSave" in hole ||
-    "saveGatedConditionWithRepeatRepeatSave" in hole
+    "saveGatedConditionRepeatSave" in hole
   );
 }
 
@@ -667,119 +669,6 @@ function hitPointBudgetConditionRepeatSaveConcentrationBreakRoute(
       input.state,
       result.state,
     ),
-  ]);
-}
-
-function hitPointBudgetConditionRepeatSaveTurnBoundaryRoute(
-  input: BattleResolutionInput,
-  result: BattleResolutionResult,
-): BattleReducerRouteEvents | undefined {
-  if (!isEndTurnSubject(input.subject)) {
-    return undefined;
-  }
-  const fill = hitPointBudgetConditionRepeatSaveEndTurnSavingThrowFill(input);
-  if (fill === undefined) {
-    if (result.tag === "needsHoles") {
-      const holes = hitPointBudgetConditionRepeatSaveRouteHoles(result.holes);
-      return holes.length === 0
-        ? undefined
-        : [
-            discoverBattleActsRoute(
-              "repeatSaveConditionEffect",
-              holes,
-              "battleTurnBoundary",
-            ),
-          ];
-    }
-    if (
-      result.tag === "resolved" &&
-      hasPendingHitPointBudgetConditionRepeatSaveEffect(input.state)
-    ) {
-      return [
-        hitPointBudgetConditionRepeatSaveResolveWithoutFill(
-          [],
-          "battleTurnBoundary",
-        ),
-      ];
-    }
-    return undefined;
-  }
-  if (
-    result.tag !== "resolved" ||
-    !hasPendingHitPointBudgetConditionRepeatSaveEffect(input.state)
-  ) {
-    return undefined;
-  }
-  return hitPointBudgetConditionRepeatSaveResolvedRoutes({
-    before: input.state,
-    after: result.state,
-    fill: "savingThrowOutcome",
-    sourceCombatantId: fill.value.outcomes[0]?.targetId,
-  });
-}
-
-function hitPointBudgetConditionRepeatSaveEndTurnSavingThrowFill(
-  input: BattleResolutionInput,
-): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
-  if (!isEndTurnSubject(input.subject)) {
-    return undefined;
-  }
-  const holeIds = hitPointBudgetConditionRepeatSaveSavingThrowHoleIds(
-    input.state,
-    input.subject.actorId,
-  );
-  return input.fills.find(
-    (
-      fill,
-    ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
-      fill.kind === "savingThrowOutcome" && holeIds.has(fill.holeId),
-  );
-}
-
-function hitPointBudgetConditionRepeatSaveResolvedRoutes(input: {
-  readonly before: BattleState;
-  readonly after: BattleState;
-  readonly fill: Extract<BattleReducerRouteFill, "savingThrowOutcome">;
-  readonly sourceCombatantId: CombatantId | undefined;
-}): BattleReducerRouteEvents | undefined {
-  const conditionRoutes = combatantsConditionsChanged(input.before, input.after)
-    ? [
-        resolveBattleSubjectRoute(
-          "repeatSaveConditionEffect" as const,
-          input.fill,
-          [],
-          "battleConditionLifecycle" as const,
-        ),
-      ]
-    : [];
-  const activeEffectRoutes =
-    hitPointBudgetConditionRepeatSaveEffectCount(input.after) !==
-    hitPointBudgetConditionRepeatSaveEffectCount(input.before)
-      ? [
-          hitPointBudgetConditionRepeatSaveResolveWithoutFill(
-            [],
-            "battleActiveEffect",
-          ),
-        ]
-      : [];
-  const concentrationRoutes =
-    input.sourceCombatantId !== undefined &&
-    combatantConcentrationChanged(
-      input.before,
-      input.after,
-      input.sourceCombatantId,
-    )
-      ? [
-          hitPointBudgetConditionRepeatSaveResolveWithoutFill(
-            [],
-            "battleConcentration",
-          ),
-        ]
-      : [];
-  return nonEmptyRouteEvents([
-    ...conditionRoutes,
-    ...activeEffectRoutes,
-    ...concentrationRoutes,
   ]);
 }
 
@@ -1012,27 +901,6 @@ function isTurnBoundaryEffectLifecycleHole(hole: BattleHole): boolean {
   );
 }
 
-function hitPointBudgetConditionRepeatSaveSavingThrowFill(
-  fills: readonly BattleFill[],
-): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
-  return fills.find(
-    (
-      fill,
-    ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
-      fill.kind === "savingThrowOutcome",
-  );
-}
-
-function hitPointBudgetConditionRepeatSaveRouteHoles(
-  holes: readonly BattleHole[],
-): readonly BattleReducerRouteHole[] {
-  return battleReducerRouteHoles(
-    holes.filter(
-      (hole) => hole.kind === "savingThrowOutcome" && "sleepRepeatSave" in hole,
-    ),
-  );
-}
-
 function stagedSaveConditionRouteHoles(
   holes: readonly BattleHole[],
 ): readonly BattleReducerRouteHole[] {
@@ -1047,16 +915,6 @@ function stagedSaveConditionRouteHoles(
   return battleReducerRouteHoles(savingThrowHoles);
 }
 
-function hasPendingHitPointBudgetConditionRepeatSaveEffect(
-  state: BattleState,
-): boolean {
-  return [...state.combatants.values()].some((combatant) =>
-    combatant.activeEffects.some(
-      (effect) => effect.kind === "stagedSaveConditionPendingRepeat",
-    ),
-  );
-}
-
 function combatantOwnsHitPointBudgetConditionRepeatSaveEffect(
   state: BattleState,
   combatantId: CombatantId,
@@ -1068,21 +926,6 @@ function combatantOwnsHitPointBudgetConditionRepeatSaveEffect(
           effect.kind === "stagedSaveConditionApplied") &&
         effect.expiresAt.combatantId === combatantId,
     ),
-  );
-}
-
-function hitPointBudgetConditionRepeatSaveEffectCount(
-  state: BattleState,
-): number {
-  return [...state.combatants.values()].reduce(
-    (count, combatant) =>
-      count +
-      combatant.activeEffects.filter(
-        (effect) =>
-          effect.kind === "stagedSaveConditionPendingRepeat" ||
-          effect.kind === "stagedSaveConditionApplied",
-      ).length,
-    0,
   );
 }
 

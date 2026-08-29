@@ -102,7 +102,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
     expect(savingThrow).toEqual(
       expect.objectContaining({
-        label: "Spell point-origin Cube Saving Throw outcomes",
+        label: "Spell point-origin ground square Saving Throw outcomes",
         ability: "dex",
         dc: { kind: "caster_spell_save_dc" },
       }),
@@ -112,7 +112,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
         procedure: "persistentAreaSaveCondition",
         resource: { tag: "spellSlot", slotLevel: 1 },
         ability: "dex",
-        targeting: { kind: "pointOriginCube", sideFeet: 10 },
+        targeting: { kind: "pointOriginGroundSquare", sideFeet: 10 },
         durationTicks: elapsedTimeTicks(10),
         rangeFeet: 60,
       }),

@@ -4,6 +4,7 @@ import { movementFeet } from "@dnd/shared/types";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import type {
   BattleMagicSuppressionEmanationMembership,
+  BattleMagicSuppressionOngoingSpellEffectRef,
   BattleAreaId,
   CombatantId,
 } from "./index.ts";
@@ -33,6 +34,7 @@ export function magicSuppressionEmanationMembershipForTest(input: {
 export function magicSuppressionEmanationEffectTemplateForTest(input: {
   readonly areaId: BattleAreaId;
   readonly aura: TestAntimagicFieldAuraMembership;
+  readonly suppressedOngoingSpellEffects?: readonly BattleMagicSuppressionOngoingSpellEffectRef[];
 }): Extract<
   BattleActiveEffectOccurrenceTemplate,
   { readonly kind: "magicSuppressionEmanation" }
@@ -46,7 +48,7 @@ export function magicSuppressionEmanationEffectTemplateForTest(input: {
     areaId: input.areaId,
     auraMembership: input.aura.membership,
     radiusFeet: movementFeet(10),
-    suppressedOngoingSpellEffects: [],
+    suppressedOngoingSpellEffects: input.suppressedOngoingSpellEffects ?? [],
     expiresAt: {
       kind: "concentration",
       combatantId: input.aura.sourceCombatantId,

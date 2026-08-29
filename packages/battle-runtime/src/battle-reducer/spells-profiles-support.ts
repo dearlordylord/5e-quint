@@ -109,7 +109,7 @@ export function temporaryAbilityCheckRollModeProjection(
 > | null {
   const castingTime = topLevelSpellCastingTime(spell.mechanics);
   if (
-    spell.mechanics.family !== "ongoing_effect" ||
+    spell.mechanics.family !== "modal_ongoing_effect" ||
     spell.mechanics.level !== 0 ||
     castingTime?.kind !== "action" ||
     spell.mechanics.range.kind !== "point" ||
@@ -118,12 +118,28 @@ export function temporaryAbilityCheckRollModeProjection(
     spell.mechanics.duration.value.unit !== "minute" ||
     spell.mechanics.duration.value.amount !== 1 ||
     spell.mechanics.attachment.kind !== "self" ||
-    spell.mechanics.operations.length !== 1
+    spell.mechanics.concurrentEffectLimit?.appliesTo !==
+      "spell_duration_modes" ||
+    spell.mechanics.concurrentEffectLimit.maximumActive !==
+      TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS
   ) {
     return null;
   }
-  const operation = spell.mechanics.operations[0];
-  const effect = operation.effect;
+  const matchingEffects = spell.mechanics.mode.options.flatMap((option) => {
+    if (option.effectDuration !== "spell_duration") {
+      return [];
+    }
+    const effects = option.effects ?? [];
+    if (effects.length !== 1) {
+      return [];
+    }
+    const [effect] = effects;
+    return effect.kind === "modify_roll_advantage" ? [effect] : [];
+  });
+  if (matchingEffects.length !== 1) {
+    return null;
+  }
+  const [effect] = matchingEffects;
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     spell.mechanics.duration.value,
   );
@@ -137,8 +153,6 @@ export function temporaryAbilityCheckRollModeProjection(
     Result.isFailure(durationTicks) ||
     Number(durationTicks.success) !==
       Number(THAUMATURGY_BOOMING_VOICE_DURATION_TICKS) ||
-    operation.trigger.kind !== "passive" ||
-    effect.kind !== "modify_roll_advantage" ||
     effect.mode !== "advantage" ||
     (effect.affects ?? "self_roll") !== "self_roll" ||
     !sameStringSet(effect.on, ["ability_check"]) ||

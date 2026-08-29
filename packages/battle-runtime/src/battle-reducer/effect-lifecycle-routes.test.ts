@@ -415,6 +415,12 @@ describe("effect lifecycle route boundary", () => {
         { state: sleeping, subject: endTurnSubject, fills: [] },
         needsSave,
       ),
+    ).toBeUndefined();
+    expect(
+      repeatSaveConditionEffectRouteForResolution(
+        { state: sleeping, subject: endTurnSubject, fills: [] },
+        needsSave,
+      ),
     ).toEqual([
       expect.objectContaining({
         kind: "discoverBattleActs",
@@ -422,12 +428,6 @@ describe("effect lifecycle route boundary", () => {
         holes: ["savingThrowOutcome"],
       }),
     ]);
-    expect(
-      repeatSaveConditionEffectRouteForResolution(
-        { state: sleeping, subject: endTurnSubject, fills: [] },
-        needsSave,
-      ),
-    ).toBeUndefined();
 
     const saveHole = requireBattleHole(needsSave, "savingThrowOutcome");
     const saveFill = savingThrowOutcomeFill(saveHole, [
@@ -444,17 +444,17 @@ describe("effect lifecycle route boundary", () => {
         { state: sleeping, subject: endTurnSubject, fills: [saveFill] },
         repeated,
       ),
-    ).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ owner: "battleConditionLifecycle" }),
-      ]),
-    );
+    ).toBeUndefined();
     expect(
       repeatSaveConditionEffectRouteForResolution(
         { state: sleeping, subject: endTurnSubject, fills: [saveFill] },
         repeated,
       ),
-    ).toBeUndefined();
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ owner: "battleConditionLifecycle" }),
+      ]),
+    );
 
     const endConcentrationSubject = {
       tag: "runtimeCommand" as const,

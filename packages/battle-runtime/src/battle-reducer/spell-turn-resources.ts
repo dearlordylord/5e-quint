@@ -10,12 +10,17 @@ import { Result } from "effect";
 
 import type {
   BattleCreatureState,
+  BattleExecutableSpellInvocation,
   BattleTurnResources,
   BattleTurnSpellSlotUse,
+  SupportedSpellInvocation,
 } from "../battle-state-execution.ts";
 import { resourceHasUsesRemaining } from "../character-battle-resource-execution.ts";
 import type { CombatantId } from "../identity.ts";
-import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
+import type {
+  BattleStoredSpellProcedureExecution,
+  RuntimeSpellProcedureExecution,
+} from "../character-execution.ts";
 
 type RuntimeSpellProcedure = RuntimeSpellProcedureExecution;
 
@@ -106,19 +111,18 @@ export function spellInvocationIsLevelOnePlus(
 }
 
 export function spellInvocationIsSpellcasting(
-  invocation: { readonly procedure: string } & {
-    readonly action?: string;
-  },
+  invocation:
+    | RuntimeSpellProcedure
+    | BattleStoredSpellProcedureExecution
+    | BattleExecutableSpellInvocation
+    | SupportedSpellInvocation,
 ): boolean {
-  return !(
-    invocation.procedure === "spellCreatedHeldObjectAttack" ||
-    invocation.procedure === "spellCreatedHeldObjectReEvoke" ||
-    invocation.procedure === "objectContactDamageRepeat" ||
-    invocation.procedure === "spiritualWeaponRepeatAttack" ||
-    invocation.procedure === "dancingLightsReposition" ||
-    (invocation.procedure === "markedDamageRider" &&
-      invocation.action === "transfer")
-  );
+  return "access" in invocation &&
+    typeof invocation.access === "object" &&
+    invocation.access !== null &&
+    "tag" in invocation.access
+    ? invocation.access.tag !== "spellEffect"
+    : "spellRuleFacts" in invocation;
 }
 
 export function markLevelOnePlusSpellCastThisTurn(

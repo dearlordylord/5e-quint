@@ -341,8 +341,8 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       ],
     });
     const mirrorHole = requireResultHole(mirrorHoleResult, "rolledDice");
-    if (!("mirrorImageDuplicateRoll" in mirrorHole)) {
-      throw new Error("Expected Mirror Image duplicate roll hole.");
+    if (!("duplicateHitInterceptionRoll" in mirrorHole)) {
+      throw new Error("Expected duplicate-hit interception roll hole.");
     }
     const resolved = resolveBattleSubject({
       state: mirrorImageState,
@@ -1174,6 +1174,8 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       ).some(
         (candidate) =>
           candidate.subject.tag === "bonusActionSpell" &&
+          battleActSpellPresentation(candidate)?.invocation.tag ===
+            "spellEffect" &&
           battleActSpellPresentation(candidate)?.invocation.spellId ===
             spiritualWeaponUnitId &&
           battleActSpellPresentation(candidate)?.invocation.procedure ===
@@ -1276,6 +1278,8 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     ).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.tag ===
+          "spellEffect" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
           spiritualWeaponUnitId &&
         battleActSpellPresentation(candidate)?.invocation.procedure ===
@@ -1510,6 +1514,8 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     ).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.tag ===
+          "spellEffect" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
           spiritualWeaponUnitId &&
         battleActSpellPresentation(candidate)?.invocation.procedure ===
@@ -1664,6 +1670,8 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     ).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.tag ===
+          "spellEffect" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
           spiritualWeaponUnitId &&
         battleActSpellPresentation(candidate)?.invocation.procedure ===
@@ -1731,7 +1739,6 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         triggeredReactionSpellDecision(spellTargetId, choice, []),
       ),
     });
-
     expect(resolved).toMatchObject({
       tag: "resolved",
       snapshot: {
@@ -1837,6 +1844,8 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     ).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.tag ===
+          "spellEffect" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
           spiritualWeaponUnitId &&
         battleActSpellPresentation(candidate)?.invocation.procedure ===
