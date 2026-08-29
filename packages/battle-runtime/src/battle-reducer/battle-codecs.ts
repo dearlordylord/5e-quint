@@ -448,7 +448,7 @@ const BattleDancingLightRepositionPlacementSchema = Schema.Struct({
   lightId: BattleDancingLightId,
   moveDistanceFeet: MovementFeet,
 });
-const BattleDancingLightsPlacementValueSchema = Schema.Union([
+const BattleMovableLightPlacementValueSchema = Schema.Union([
   Schema.Struct({
     mode: Schema.Literal("cast"),
     form: Schema.Literal("separateLights"),
@@ -489,7 +489,7 @@ const BattleThunderwavePushDispositionSchema = Schema.Union([
     provokesOpportunityAttacks: Schema.Literal(false),
   }),
 ]);
-const BattleGustOfWindLinePushDispositionSchema =
+const BattleDirectionalPersistentAreaPushDispositionSchema =
   BattleThunderwavePushDispositionSchema;
 
 const BattleSpellAreaOriginAnchorSchema = Schema.Union([
@@ -537,14 +537,14 @@ const BattleSpellAreaChoiceSchema = Schema.Union([
   }),
   Schema.Struct({
     ...BattleSpellAreaChoiceBaseSchema,
-    kind: Schema.Literal("faerieFireArea"),
+    kind: Schema.Literal("saveGatedTargetProjectionArea"),
     affectedObjectIds: Schema.Array(BattleObjectId),
     areaId: Schema.optionalKey(Schema.Never),
     sleepNonSleeperFacts: Schema.optionalKey(Schema.Never),
   }),
   Schema.Struct({
     ...BattleSpellAreaChoiceBaseSchema,
-    kind: Schema.Literal("hypnoticPatternArea"),
+    kind: Schema.Literal("saveGatedAreaControlArea"),
     cubeSideFeet: Schema.Literal(30),
     affectedCreatureWitnesses: Schema.Array(
       Schema.Struct({
@@ -572,19 +572,19 @@ const BattleSpellAreaChoiceSchema = Schema.Union([
   }),
   Schema.Struct({
     ...BattleSpellAreaChoiceBaseSchema,
-    kind: Schema.Literal("greaseGroundArea"),
+    kind: Schema.Literal("persistentAreaSaveConditionArea"),
     areaId: BattleAreaId,
     sleepNonSleeperFacts: Schema.optionalKey(Schema.Never),
   }),
   Schema.Struct({
     ...BattleSpellAreaChoiceBaseSchema,
-    kind: Schema.Literal("gustOfWindLineArea"),
+    kind: Schema.Literal("directionalPersistentAreaArea"),
     areaId: BattleAreaId,
     directionId: BattleLineDirectionId,
     creaturePushes: Schema.Array(
       Schema.Struct({
         targetId: CombatantId,
-        disposition: BattleGustOfWindLinePushDispositionSchema,
+        disposition: BattleDirectionalPersistentAreaPushDispositionSchema,
       }),
     ),
     sleepNonSleeperFacts: Schema.optionalKey(Schema.Never),
@@ -753,13 +753,15 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     targetId: CombatantId,
   }),
   Schema.Struct({
-    kind: Schema.Literal("attackAttackerPerceivesBlurredTargetWithSense"),
+    kind: Schema.Literal("attackerPerceivesObscuredTargetWithSense"),
     attackerId: CombatantId,
     targetId: CombatantId,
     sense: Schema.Literals(BLUR_ATTACK_ROLL_BYPASS_SENSES),
   }),
   Schema.Struct({
-    kind: Schema.Literal("attackAttackerUnaffectedByMirrorImageWithSense"),
+    kind: Schema.Literal(
+      "attackerUnaffectedByDuplicateHitInterceptionWithSense",
+    ),
     attackerId: CombatantId,
     targetId: CombatantId,
     sense: Schema.Literals(MIRROR_IMAGE_UNAFFECTED_SENSES),
@@ -778,7 +780,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     rangeFeet: MovementFeet,
   }),
   Schema.Struct({
-    kind: Schema.Literal("findFamiliarTouchSpellTarget"),
+    kind: Schema.Literal("spawnedCompanionTouchSpellTarget"),
     ownerId: CombatantId,
     familiarId: CombatantId,
     targetId: CombatantId,
@@ -796,7 +798,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     carriedCreatureId: CombatantId,
   }),
   Schema.Struct({
-    kind: Schema.Literal("spiritualWeaponTargetWithinForceReach"),
+    kind: Schema.Literal("spatialMeleeSpellAttackProxyTargetWithinReach"),
     casterId: CombatantId,
     targetId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
@@ -804,13 +806,13 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     reachFeet: MovementFeet,
   }),
   Schema.Struct({
-    kind: Schema.Literal("wardingBondPairedWornPlatinumRings"),
+    kind: Schema.Literal("linkedEffectPairedWornComponents"),
     casterId: CombatantId,
     targetId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
   }),
   Schema.Struct({
-    kind: Schema.Literal("wardingBondCreaturesDistance"),
+    kind: Schema.Literal("linkedEffectCreaturesDistance"),
     casterId: CombatantId,
     targetId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
@@ -1015,21 +1017,21 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     rangeFeet: MovementFeet,
   }),
   Schema.Struct({
-    kind: Schema.Literal("featherFallTriggerSelfOrVisibleCreatureWithinRange"),
+    kind: Schema.Literal("fallingCreatureMitigationTriggerWithinRange"),
     reactorId: CombatantId,
     fallingCreatureId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
     rangeFeet: MovementFeet,
   }),
   Schema.Struct({
-    kind: Schema.Literal("featherFallTargetFallingWithinRange"),
+    kind: Schema.Literal("fallingCreatureTargetWithinRange"),
     casterId: CombatantId,
     targetId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
     rangeFeet: MovementFeet,
   }),
   Schema.Struct({
-    kind: Schema.Literal("levitatedTargetWithinSpellRange"),
+    kind: Schema.Literal("controlledVerticalSuspensionTargetWithinRange"),
     effectRef: BattleEffectExecutionRef,
     sourceCombatantId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
@@ -1037,7 +1039,9 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     rangeFeet: MovementFeet,
   }),
   Schema.Struct({
-    kind: Schema.Literal("counterspellTriggerCasterVisibleWithinRange"),
+    kind: Schema.Literal(
+      "spellCastInterruptionTriggerCasterVisibleWithinRange",
+    ),
     reactorId: CombatantId,
     casterId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
@@ -1064,7 +1068,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     targetId: CombatantId,
   }),
   Schema.Struct({
-    kind: Schema.Literal("hypnoticPatternShakeAwakeActorWithin5Feet"),
+    kind: Schema.Literal("areaControlShakeAwakeActorWithin5Feet"),
     actorId: CombatantId,
     targetId: CombatantId,
   }),
@@ -1339,12 +1343,12 @@ const BattleOngoingSpellEffectRefSchema = Schema.Union([
     kind: Schema.Literal("spellActiveEffect"),
     activeEffectKind: Schema.Literals([
       "spellObjectContactDamage",
-      "spiritualWeapon",
+      "spatialMeleeSpellAttackProxy",
     ]),
     effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
-    kind: Schema.Literal("antimagicFieldAura"),
+    kind: Schema.Literal("magicSuppressionEmanation"),
     effectRef: BattleEffectExecutionRef,
     areaId: BattleAreaId,
     sourceCombatantId: CombatantId,
@@ -1359,12 +1363,12 @@ const BattleOngoingSpellOccurrenceRefSchema = Schema.Union([
     kind: Schema.Literal("spellActiveEffect"),
     activeEffectKind: Schema.Literals([
       "spellObjectContactDamage",
-      "spiritualWeapon",
+      "spatialMeleeSpellAttackProxy",
     ]),
     effectRef: BattleEffectExecutionRef,
   }),
 ]);
-const BattleAntimagicFieldOngoingSpellEffectRefSchema =
+const BattleMagicSuppressionOngoingSpellEffectRefSchema =
   BattleOngoingSpellOccurrenceRefSchema;
 
 const BattleOngoingSpellCombatantTargetSchema = Schema.Struct({
@@ -1530,7 +1534,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("targetSpatialFacts"),
     label: Schema.String,
-    wardingBondSeparation: Schema.Struct({
+    linkedEffectSeparation: Schema.Struct({
       sourceCombatantId: CombatantId,
       targetId: CombatantId,
       sourceProcedureRef: BattleProcedureExecutionRef,
@@ -1558,7 +1562,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
-    kind: Schema.Literal("slowSomaticSpellFailureOutcome"),
+    kind: Schema.Literal("turnConstraintSomaticSpellFailureOutcome"),
     actorId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
     failurePercent: Schema.Literal(
@@ -1669,7 +1673,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
-    kind: Schema.Literal("findFamiliarConnection"),
+    kind: Schema.Literal("spawnedCompanionConnection"),
     ownerId: CombatantId,
     companionId: CombatantId,
     rangeFeet: MovementFeet,
@@ -1687,7 +1691,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
-    kind: Schema.Literal("magicWeaponTargetItem"),
+    kind: Schema.Literal("weaponAttackDamageEnhancementTargetItem"),
     sourceProcedureRef: BattleProcedureExecutionRef,
     requiresTableItemFact: Schema.Literal(true),
   }),
@@ -1885,7 +1889,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
-    dragonsBreath: Schema.Struct({
+    grantedAreaSaveDamageAction: Schema.Struct({
       sourceCombatantId: CombatantId,
       sourceProcedureRef: BattleProcedureExecutionRef,
       damageType: DamageTypeSchema,
@@ -1937,7 +1941,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
-    mirrorImageDuplicateRoll: Schema.Struct({
+    duplicateHitInterceptionRoll: Schema.Struct({
       targetId: CombatantId,
       sourceProcedureRef: BattleProcedureExecutionRef,
       sourceCombatantId: CombatantId,
@@ -1977,7 +1981,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
-    spikeGrowthMovement: Schema.Struct({
+    areaMovementDistanceDamage: Schema.Struct({
       targetId: CombatantId,
       effectRef: BattleEffectExecutionRef,
       sourceProcedureRef: BattleProcedureExecutionRef,
@@ -1994,7 +1998,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
-    insectPlagueAreaHazard: Schema.Struct({
+    persistentAreaSaveDamage: Schema.Struct({
       ...BattleProcedureSourceSchema,
       effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
@@ -2013,7 +2017,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
-    cloudkillAreaHazard: Schema.Struct({
+    persistentAreaSaveDamage: Schema.Struct({
       ...BattleProcedureSourceSchema,
       effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
@@ -2065,7 +2069,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
-    kind: Schema.Literal("thaumaturgyActiveOneMinuteEffectCount"),
+    kind: Schema.Literal("temporaryAbilityCheckRollModeActiveEffectCount"),
     sourceProcedureRef: BattleProcedureExecutionRef,
     label: Schema.String,
     maximumActiveOneMinuteEffects: Schema.Literal(
@@ -2075,7 +2079,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
-    kind: Schema.Literal("commandOptionChoice"),
+    kind: Schema.Literal("compelledBehaviorOptionChoice"),
     sourceProcedureRef: BattleProcedureExecutionRef,
     label: Schema.String,
     choices: Schema.Array(Schema.Literals(COMMAND_OPTIONS)),
@@ -2091,7 +2095,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
-    kind: Schema.Literal("dancingLightsPlacement"),
+    kind: Schema.Literal("movableLightPlacement"),
     sourceProcedureRef: BattleProcedureExecutionRef,
     label: Schema.String,
     mode: Schema.Literals(["cast", "reposition"]),
@@ -2142,7 +2146,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
-    kind: Schema.Literal("spiritualWeaponForcePosition"),
+    kind: Schema.Literal("spatialMeleeSpellAttackProxyPosition"),
     sourceProcedureRef: BattleProcedureExecutionRef,
     label: Schema.String,
     mode: Schema.Literals(["cast", "reposition"]),
@@ -2175,7 +2179,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
     damageOccurrence: BattleDamageOccurrenceSourceSchema,
-    hideousLaughterRepeatSave: Schema.Struct({
+    saveGatedConditionRepeatSave: Schema.Struct({
       targetId: CombatantId,
       effectRef: BattleEffectExecutionRef,
       sourceProcedureRef: BattleProcedureExecutionRef,
@@ -2196,7 +2200,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
-    sleepRepeatSave: Schema.Struct({
+    stagedConditionRepeatSave: Schema.Struct({
       targetId: CombatantId,
       sourceProcedureRef: BattleProcedureExecutionRef,
       sourceCombatantId: CombatantId,
@@ -2215,7 +2219,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
-    greaseGroundHazard: Schema.Struct({
+    persistentAreaSaveCondition: Schema.Struct({
       ...BattleProcedureSourceSchema,
       effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
@@ -2235,7 +2239,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
-    webRestraint: Schema.Struct({
+    persistentAreaSaveConditionEscape: Schema.Struct({
       ...BattleProcedureSourceSchema,
       effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
@@ -2255,7 +2259,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
-    sleetStormAreaHazard: Schema.Struct({
+    persistentAreaSaveComposite: Schema.Struct({
       ...BattleProcedureSourceSchema,
       effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
@@ -2275,7 +2279,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
-    insectPlagueAreaHazard: Schema.Struct({
+    persistentAreaSaveDamage: Schema.Struct({
       ...BattleProcedureSourceSchema,
       effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
@@ -2299,7 +2303,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
-    cloudkillAreaHazard: Schema.Struct({
+    persistentAreaSaveDamage: Schema.Struct({
       ...BattleProcedureSourceSchema,
       effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
@@ -2324,7 +2328,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
-    gustOfWindLine: Schema.Struct({
+    directionalPersistentArea: Schema.Struct({
       ...BattleProcedureSourceSchema,
       effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
@@ -2344,7 +2348,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
-    kind: Schema.Literal("gustOfWindLineDirectionChoice"),
+    kind: Schema.Literal("directionalPersistentAreaDirectionChoice"),
     label: Schema.String,
     sourceCombatantId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
@@ -2406,7 +2410,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
-    slowActivePenaltiesEndTurnSave: Schema.Struct({
+    turnConstraintEndTurnSave: Schema.Struct({
       ...BattleProcedureSourceSchema,
       save: Schema.Struct({
         ability: Schema.Literal("wis"),
@@ -2545,7 +2549,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
-    kind: Schema.Literal("cloudkillMovement"),
+    kind: Schema.Literal("persistentAreaSourceTurnTranslation"),
     sourceCombatantId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
     effectRef: BattleEffectExecutionRef,
@@ -2574,7 +2578,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
-    dragonsBreath: Schema.Struct({
+    grantedAreaSaveDamageAction: Schema.Struct({
       sourceCombatantId: CombatantId,
       sourceProcedureRef: BattleProcedureExecutionRef,
       lengthFeet: Schema.Literal(15),
@@ -2710,7 +2714,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
-    kind: Schema.Literal("levitateAltitudeChange"),
+    kind: Schema.Literal("controlledVerticalSuspensionAltitudeChange"),
     effectRef: BattleEffectExecutionRef,
     label: Schema.String,
     actorId: CombatantId,
@@ -2721,7 +2725,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
-    kind: Schema.Literal("levitateInitialRise"),
+    kind: Schema.Literal("controlledVerticalSuspensionInitialRise"),
     label: Schema.String,
     actorId: CombatantId,
     targetId: CombatantId,
@@ -2795,7 +2799,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
   Schema.Union([
     Schema.Struct({
       ...BattleHoleBaseSchema,
-      kind: Schema.Literal("sanctuaryInterdictionOutcome"),
+      kind: Schema.Literal("targetingSaveInterdictionOutcome"),
       label: Schema.String,
       sourceProcedureRef: BattleProcedureExecutionRef,
       triggeringProcedureRef: BattleProcedureExecutionRef,
@@ -2816,7 +2820,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     }),
     Schema.Struct({
       ...BattleHoleBaseSchema,
-      kind: Schema.Literal("sanctuaryInterdictionOutcome"),
+      kind: Schema.Literal("targetingSaveInterdictionOutcome"),
       label: Schema.String,
       sourceProcedureRef: BattleProcedureExecutionRef,
       triggeringProcedureRef: BattleProcedureExecutionRef,
@@ -3042,13 +3046,13 @@ type BattleSpellAreaChoiceEncoded = {
       ];
     }
   | {
-      readonly kind: "faerieFireArea";
+      readonly kind: "saveGatedTargetProjectionArea";
       readonly affectedObjectIds: readonly string[];
       readonly areaId?: never;
       readonly sleepNonSleeperFacts?: never;
     }
   | {
-      readonly kind: "hypnoticPatternArea";
+      readonly kind: "saveGatedAreaControlArea";
       readonly cubeSideFeet: 30;
       readonly affectedCreatureWitnesses: readonly {
         readonly targetId: string;
@@ -3070,12 +3074,12 @@ type BattleSpellAreaChoiceEncoded = {
       readonly sleepNonSleeperFacts?: never;
     }
   | {
-      readonly kind: "greaseGroundArea";
+      readonly kind: "persistentAreaSaveConditionArea";
       readonly areaId: string;
       readonly sleepNonSleeperFacts?: never;
     }
   | {
-      readonly kind: "gustOfWindLineArea";
+      readonly kind: "directionalPersistentAreaArea";
       readonly areaId: string;
       readonly directionId: string;
       readonly creaturePushes: readonly {
@@ -3353,7 +3357,7 @@ type BattleFillEncoded =
         | { readonly kind: "notStrong" };
     }
   | {
-      readonly kind: "slowSomaticSpellFailureOutcome";
+      readonly kind: "turnConstraintSomaticSpellFailureOutcome";
       readonly holeId: string;
       readonly value: {
         readonly spellFailed: boolean;
@@ -3495,11 +3499,11 @@ type BattleFillEncoded =
                   readonly kind: "spellActiveEffect";
                   readonly activeEffectKind:
                     | "spellObjectContactDamage"
-                    | "spiritualWeapon";
+                    | "spatialMeleeSpellAttackProxy";
                   readonly effectRef: string;
                 }
               | {
-                  readonly kind: "antimagicFieldAura";
+                  readonly kind: "magicSuppressionEmanation";
                   readonly effectRef: string;
                   readonly areaId: string;
                   readonly sourceCombatantId: string;
@@ -3529,11 +3533,11 @@ type BattleFillEncoded =
                     readonly kind: "spellActiveEffect";
                     readonly activeEffectKind:
                       | "spellObjectContactDamage"
-                      | "spiritualWeapon";
+                      | "spatialMeleeSpellAttackProxy";
                     readonly effectRef: string;
                   }
                 | {
-                    readonly kind: "antimagicFieldAura";
+                    readonly kind: "magicSuppressionEmanation";
                     readonly effectRef: string;
                     readonly areaId: string;
                     readonly sourceCombatantId: string;
@@ -3592,7 +3596,7 @@ type BattleFillEncoded =
       };
     }
   | {
-      readonly kind: "magicWeaponTargetItem";
+      readonly kind: "weaponAttackDamageEnhancementTargetItem";
       readonly holeId: string;
       readonly value: {
         readonly kind: "nonmagicalWeaponItem";
@@ -3615,7 +3619,7 @@ type BattleFillEncoded =
       readonly holeId: string;
       readonly value:
         | {
-            readonly kind: "fogCloudArea";
+            readonly kind: "persistentAreaTraitArea";
             readonly areaId: string;
             readonly originAnchor:
               | { readonly kind: "tableSelectedPoint" }
@@ -3633,15 +3637,15 @@ type BattleFillEncoded =
             }[];
           }
         | {
-            readonly kind: "antimagicFieldSelfEmanation";
+            readonly kind: "magicSuppressionSelfEmanation";
             readonly areaId: string;
             readonly auraMembership: {
-              readonly kind: "antimagicFieldAuraMembership";
+              readonly kind: "magicSuppressionEmanationMembership";
               readonly originIncluded: boolean;
               readonly nonOriginCombatantIds: readonly string[];
             };
             readonly affectedOngoingSpellEffects: readonly {
-              readonly kind: "antimagicFieldAffectedOngoingSpellEffect";
+              readonly kind: "magicSuppressionAffectedOngoingSpellEffect";
               readonly effect:
                 | {
                     readonly kind: "spellLightEmitter";
@@ -3651,7 +3655,7 @@ type BattleFillEncoded =
                     readonly kind: "spellActiveEffect";
                     readonly activeEffectKind:
                       | "spellObjectContactDamage"
-                      | "spiritualWeapon";
+                      | "spatialMeleeSpellAttackProxy";
                     readonly effectRef: string;
                   };
               readonly sourceKind: "ordinarySpell" | "artifact" | "deity";
@@ -3665,46 +3669,46 @@ type BattleFillEncoded =
               | { readonly kind: "combatant"; readonly combatantId: string };
           }
         | {
-            readonly kind: "sleetStormCylinderArea";
+            readonly kind: "pointOriginCylinderArea";
             readonly areaId: string;
           }
         | {
-            readonly kind: "insectPlagueSphereArea";
+            readonly kind: "pointOriginSphereArea";
             readonly areaId: string;
           }
         | {
-            readonly kind: "cloudkillSphereArea";
+            readonly kind: "pointOriginSphereArea";
             readonly areaId: string;
           }
         | {
-            readonly kind: "flamingSphereArea";
-            readonly areaId: string;
-            readonly originAnchor:
-              | { readonly kind: "tableSelectedPoint" }
-              | { readonly kind: "combatant"; readonly combatantId: string };
-          }
-        | {
-            readonly kind: "spikeGrowthArea";
+            readonly kind: "pointOriginSphereDiameterArea";
             readonly areaId: string;
             readonly originAnchor:
               | { readonly kind: "tableSelectedPoint" }
               | { readonly kind: "combatant"; readonly combatantId: string };
           }
         | {
-            readonly kind: "moonbeamCylinderArea";
+            readonly kind: "pointOriginSphereArea";
             readonly areaId: string;
             readonly originAnchor:
               | { readonly kind: "tableSelectedPoint" }
               | { readonly kind: "combatant"; readonly combatantId: string };
           }
         | {
-            readonly kind: "gustOfWindLineArea";
+            readonly kind: "pointOriginCylinderArea";
+            readonly areaId: string;
+            readonly originAnchor:
+              | { readonly kind: "tableSelectedPoint" }
+              | { readonly kind: "combatant"; readonly combatantId: string };
+          }
+        | {
+            readonly kind: "directionalLineArea";
             readonly areaId: string;
             readonly directionId: string;
           };
     }
   | {
-      readonly kind: "gustOfWindLineDirectionChoice";
+      readonly kind: "directionalPersistentAreaDirectionChoice";
       readonly holeId: string;
       readonly value: {
         readonly directionId: string;
@@ -3737,7 +3741,7 @@ type BattleFillEncoded =
       readonly value: (typeof BATTLE_TEMPORARY_HIT_POINT_CHOICES)[number];
     }
   | {
-      readonly kind: "cloudkillMovement";
+      readonly kind: "persistentAreaSourceTurnTranslation";
       readonly holeId: string;
       readonly value: {
         readonly affectedCombatantIdsInResolutionOrder: readonly string[];
@@ -3752,8 +3756,8 @@ type BattleFillEncoded =
         readonly sourceProcedureRef: string;
         readonly destinationId: string;
         readonly distanceFeet: number;
-        readonly antimagicFieldTransit: readonly {
-          readonly kind: "antimagicFieldTransit";
+        readonly magicSuppressionTransit: readonly {
+          readonly kind: "magicSuppressionTransit";
           readonly areaId: string;
           readonly sourceCombatantId: string;
           readonly originInsideAura: boolean;
@@ -3762,7 +3766,7 @@ type BattleFillEncoded =
       };
     }
   | {
-      readonly kind: "spiritualWeaponForcePosition";
+      readonly kind: "spatialMeleeSpellAttackProxyPosition";
       readonly holeId: string;
       readonly value:
         | {
@@ -3829,7 +3833,7 @@ type BattleFillEncoded =
             readonly targetIds: readonly string[];
           }
         | {
-            readonly kind: "featherFallTargetFallingWithinRange";
+            readonly kind: "fallingCreatureTargetWithinRange";
             readonly casterId: string;
             readonly targetId: string;
             readonly sourceProcedureRef: string;
@@ -3901,14 +3905,14 @@ type BattleFillEncoded =
       };
     }
   | {
-      readonly kind: "thaumaturgyActiveOneMinuteEffectCount";
+      readonly kind: "temporaryAbilityCheckRollModeActiveEffectCount";
       readonly holeId: string;
       readonly value: {
         readonly activeOneMinuteEffectCount: number;
       };
     }
   | {
-      readonly kind: "commandOptionChoice";
+      readonly kind: "compelledBehaviorOptionChoice";
       readonly holeId: string;
       readonly value: (typeof COMMAND_OPTIONS)[number];
     }
@@ -3918,7 +3922,7 @@ type BattleFillEncoded =
       readonly value: (typeof SELF_TRANSFORMATION_MODE_KINDS)[number];
     }
   | {
-      readonly kind: "dancingLightsPlacement";
+      readonly kind: "movableLightPlacement";
       readonly holeId: string;
       readonly value:
         | {
@@ -4005,7 +4009,7 @@ type BattleFillEncoded =
       };
     }
   | {
-      readonly kind: "findFamiliarConnection";
+      readonly kind: "spawnedCompanionConnection";
       readonly holeId: string;
       readonly value: {
         readonly withinRange: true;
@@ -4044,7 +4048,7 @@ type BattleFillEncoded =
   | {
       readonly kind: "rolledDice";
       readonly holeId: string;
-      readonly spikeGrowthMovement: {
+      readonly areaMovementDistanceDamage: {
         readonly targetId: string;
         readonly sourceProcedureRef: string;
         readonly sourceCombatantId: string;
@@ -4117,7 +4121,7 @@ type BattleFillEncoded =
           };
     }
   | {
-      readonly kind: "sanctuaryInterdictionOutcome";
+      readonly kind: "targetingSaveInterdictionOutcome";
       readonly holeId: string;
       readonly value:
         | { readonly saveSucceeded: true }
@@ -4346,7 +4350,7 @@ const BattleMovementFillValueCommonSchemaFields = {
       sources: Schema.Array(
         Schema.Union([
           Schema.Struct({
-            kind: Schema.Literal("greaseGroundHazard"),
+            kind: Schema.Literal("persistentAreaSaveCondition"),
             effectRef: BattleEffectExecutionRef,
             sourceCombatantId: CombatantId,
             sourceProcedureRef: BattleProcedureExecutionRef,
@@ -4360,21 +4364,21 @@ const BattleMovementFillValueCommonSchemaFields = {
             areaId: BattleAreaId,
           }),
           Schema.Struct({
-            kind: Schema.Literal("sleetStormHazard"),
+            kind: Schema.Literal("persistentAreaSaveComposite"),
             effectRef: BattleEffectExecutionRef,
             sourceCombatantId: CombatantId,
             sourceProcedureRef: BattleProcedureExecutionRef,
             areaId: BattleAreaId,
           }),
           Schema.Struct({
-            kind: Schema.Literal("insectPlagueHazard"),
+            kind: Schema.Literal("persistentAreaSaveDamage"),
             effectRef: BattleEffectExecutionRef,
             sourceCombatantId: CombatantId,
             sourceProcedureRef: BattleProcedureExecutionRef,
             areaId: BattleAreaId,
           }),
           Schema.Struct({
-            kind: Schema.Literal("spikeGrowthHazard"),
+            kind: Schema.Literal("areaMovementDistanceDamage"),
             effectRef: BattleEffectExecutionRef,
             sourceCombatantId: CombatantId,
             sourceProcedureRef: BattleProcedureExecutionRef,
@@ -4387,9 +4391,9 @@ const BattleMovementFillValueCommonSchemaFields = {
       difficultTerrainDistanceFeet: MovementFeet,
     }),
   ),
-  gustOfWindLineMovement: Schema.optionalKey(
+  directionalPersistentAreaMovement: Schema.optionalKey(
     Schema.Struct({
-      kind: Schema.Literal("gustOfWindLineMovement"),
+      kind: Schema.Literal("directionalPersistentAreaMovement"),
       effectRef: BattleEffectExecutionRef,
       sourceCombatantId: CombatantId,
       sourceProcedureRef: BattleProcedureExecutionRef,
@@ -4488,7 +4492,7 @@ export const BattleFillSchema: Schema.Codec<
       value: BattleAreaWindStrengthSchema,
     }),
     Schema.Struct({
-      kind: Schema.Literal("slowSomaticSpellFailureOutcome"),
+      kind: Schema.Literal("turnConstraintSomaticSpellFailureOutcome"),
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
         spellFailed: Schema.Boolean,
@@ -4682,7 +4686,7 @@ export const BattleFillSchema: Schema.Codec<
       }),
     }),
     Schema.Struct({
-      kind: Schema.Literal("magicWeaponTargetItem"),
+      kind: Schema.Literal("weaponAttackDamageEnhancementTargetItem"),
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
         kind: Schema.Literal("nonmagicalWeaponItem"),
@@ -4751,7 +4755,7 @@ export const BattleFillSchema: Schema.Codec<
             targetIds: Schema.Array(CombatantId),
           }),
           Schema.Struct({
-            kind: Schema.Literal("featherFallTargetFallingWithinRange"),
+            kind: Schema.Literal("fallingCreatureTargetWithinRange"),
             casterId: CombatantId,
             targetId: CombatantId,
             sourceProcedureRef: BattleProcedureExecutionRef,
@@ -4786,7 +4790,7 @@ export const BattleFillSchema: Schema.Codec<
       holeId: BattleHoleIdSchema,
       value: Schema.Union([
         Schema.Struct({
-          kind: Schema.Literal("fogCloudArea"),
+          kind: Schema.Literal("persistentAreaTraitArea"),
           areaId: BattleAreaId,
           originAnchor: BattleSpellAreaOriginAnchorSchema,
         }),
@@ -4802,17 +4806,19 @@ export const BattleFillSchema: Schema.Codec<
           ),
         }),
         Schema.Struct({
-          kind: Schema.Literal("antimagicFieldSelfEmanation"),
+          kind: Schema.Literal("magicSuppressionSelfEmanation"),
           areaId: BattleAreaId,
           auraMembership: Schema.Struct({
-            kind: Schema.Literal("antimagicFieldAuraMembership"),
+            kind: Schema.Literal("magicSuppressionEmanationMembership"),
             originIncluded: Schema.Boolean,
             nonOriginCombatantIds: Schema.Array(CombatantId),
           }),
           affectedOngoingSpellEffects: Schema.Array(
             Schema.Struct({
-              kind: Schema.Literal("antimagicFieldAffectedOngoingSpellEffect"),
-              effect: BattleAntimagicFieldOngoingSpellEffectRefSchema,
+              kind: Schema.Literal(
+                "magicSuppressionAffectedOngoingSpellEffect",
+              ),
+              effect: BattleMagicSuppressionOngoingSpellEffectRefSchema,
               sourceKind: Schema.Literals(
                 BATTLE_ANTIMAGIC_FIELD_ONGOING_SPELL_EFFECT_SOURCE_KINDS,
               ),
@@ -4825,41 +4831,41 @@ export const BattleFillSchema: Schema.Codec<
           originAnchor: BattleSpellAreaOriginAnchorSchema,
         }),
         Schema.Struct({
-          kind: Schema.Literal("sleetStormCylinderArea"),
+          kind: Schema.Literal("pointOriginCylinderArea"),
           areaId: BattleAreaId,
         }),
         Schema.Struct({
-          kind: Schema.Literal("insectPlagueSphereArea"),
+          kind: Schema.Literal("pointOriginSphereArea"),
           areaId: BattleAreaId,
         }),
         Schema.Struct({
-          kind: Schema.Literal("cloudkillSphereArea"),
+          kind: Schema.Literal("pointOriginSphereArea"),
           areaId: BattleAreaId,
         }),
         Schema.Struct({
-          kind: Schema.Literal("flamingSphereArea"),
-          areaId: BattleAreaId,
-          originAnchor: BattleSpellAreaOriginAnchorSchema,
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("spikeGrowthArea"),
+          kind: Schema.Literal("pointOriginSphereDiameterArea"),
           areaId: BattleAreaId,
           originAnchor: BattleSpellAreaOriginAnchorSchema,
         }),
         Schema.Struct({
-          kind: Schema.Literal("moonbeamCylinderArea"),
+          kind: Schema.Literal("pointOriginSphereArea"),
           areaId: BattleAreaId,
           originAnchor: BattleSpellAreaOriginAnchorSchema,
         }),
         Schema.Struct({
-          kind: Schema.Literal("gustOfWindLineArea"),
+          kind: Schema.Literal("pointOriginCylinderArea"),
+          areaId: BattleAreaId,
+          originAnchor: BattleSpellAreaOriginAnchorSchema,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("directionalLineArea"),
           areaId: BattleAreaId,
           directionId: BattleLineDirectionId,
         }),
       ]),
     }),
     Schema.Struct({
-      kind: Schema.Literal("gustOfWindLineDirectionChoice"),
+      kind: Schema.Literal("directionalPersistentAreaDirectionChoice"),
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
         directionId: BattleLineDirectionId,
@@ -4898,7 +4904,7 @@ export const BattleFillSchema: Schema.Codec<
       value: Schema.Literals(BATTLE_TEMPORARY_HIT_POINT_CHOICES),
     }),
     Schema.Struct({
-      kind: Schema.Literal("cloudkillMovement"),
+      kind: Schema.Literal("persistentAreaSourceTurnTranslation"),
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
         affectedCombatantIdsInResolutionOrder: Schema.Array(CombatantId),
@@ -4913,9 +4919,9 @@ export const BattleFillSchema: Schema.Codec<
         sourceProcedureRef: BattleProcedureExecutionRef,
         destinationId: BattleTablePositionId,
         distanceFeet: MovementFeet,
-        antimagicFieldTransit: Schema.Array(
+        magicSuppressionTransit: Schema.Array(
           Schema.Struct({
-            kind: Schema.Literal("antimagicFieldTransit"),
+            kind: Schema.Literal("magicSuppressionTransit"),
             areaId: BattleAreaId,
             sourceCombatantId: CombatantId,
             originInsideAura: Schema.Boolean,
@@ -4925,7 +4931,7 @@ export const BattleFillSchema: Schema.Codec<
       }),
     }),
     Schema.Struct({
-      kind: Schema.Literal("spiritualWeaponForcePosition"),
+      kind: Schema.Literal("spatialMeleeSpellAttackProxyPosition"),
       holeId: BattleHoleIdSchema,
       value: Schema.Union([
         Schema.Struct({
@@ -4984,7 +4990,7 @@ export const BattleFillSchema: Schema.Codec<
       }),
     }),
     Schema.Struct({
-      kind: Schema.Literal("thaumaturgyActiveOneMinuteEffectCount"),
+      kind: Schema.Literal("temporaryAbilityCheckRollModeActiveEffectCount"),
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
         activeOneMinuteEffectCount: Schema.Number.pipe(
@@ -4994,7 +5000,7 @@ export const BattleFillSchema: Schema.Codec<
       }),
     }),
     Schema.Struct({
-      kind: Schema.Literal("commandOptionChoice"),
+      kind: Schema.Literal("compelledBehaviorOptionChoice"),
       holeId: BattleHoleIdSchema,
       value: Schema.Literals(COMMAND_OPTIONS),
     }),
@@ -5004,9 +5010,9 @@ export const BattleFillSchema: Schema.Codec<
       value: Schema.Literals(SELF_TRANSFORMATION_MODE_KINDS),
     }),
     Schema.Struct({
-      kind: Schema.Literal("dancingLightsPlacement"),
+      kind: Schema.Literal("movableLightPlacement"),
       holeId: BattleHoleIdSchema,
-      value: BattleDancingLightsPlacementValueSchema,
+      value: BattleMovableLightPlacementValueSchema,
     }),
     Schema.Struct({
       kind: Schema.Literal("unitFeatureDecision"),
@@ -5041,7 +5047,7 @@ export const BattleFillSchema: Schema.Codec<
       }),
     }),
     Schema.Struct({
-      kind: Schema.Literal("findFamiliarConnection"),
+      kind: Schema.Literal("spawnedCompanionConnection"),
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
         withinRange: Schema.Literal(true),
@@ -5247,9 +5253,9 @@ export const BattleFillSchema: Schema.Codec<
         additionalSpeedSegments: Schema.optionalKey(
           Schema.Array(BattleMovementFillValueCommonSchema),
         ),
-        jumpMovementReplacement: Schema.optionalKey(
+        fixedCostMovementReplacement: Schema.optionalKey(
           Schema.Struct({
-            kind: Schema.Literal("jumpMovementReplacement"),
+            kind: Schema.Literal("fixedCostMovementReplacement"),
             distanceFeet: MovementFeet,
             landing: Schema.Union([
               Schema.Struct({
@@ -5267,9 +5273,9 @@ export const BattleFillSchema: Schema.Codec<
             ]),
           }),
         ),
-        levitatedMovement: Schema.optionalKey(
+        controlledVerticalSuspensionMovement: Schema.optionalKey(
           Schema.Struct({
-            kind: Schema.Literal("levitatedMovement"),
+            kind: Schema.Literal("controlledVerticalSuspensionMovement"),
             effectRef: BattleEffectExecutionRef,
             sourceCombatantId: CombatantId,
             sourceProcedureRef: BattleProcedureExecutionRef,
@@ -5288,19 +5294,19 @@ export const BattleFillSchema: Schema.Codec<
             value.brutalStrikeForcefulBlow === undefined
               ? value.additionalSpeedSegments === undefined
               : value.additionalSpeedSegments !== undefined &&
-                value.jumpMovementReplacement === undefined &&
-                value.levitatedMovement === undefined &&
+                value.fixedCostMovementReplacement === undefined &&
+                value.controlledVerticalSuspensionMovement === undefined &&
                 value.commandApproach === undefined &&
                 value.commandFlee === undefined,
           {
             message:
-              "Additional speed segments require Forceful Blow movement, which cannot carry a jump, levitation, or command movement protocol.",
+              "Additional speed segments require Forceful Blow movement and cannot carry another movement-replacement or compelled-movement protocol.",
           },
         ),
       ),
     }),
     Schema.Struct({
-      kind: Schema.Literal("levitateAltitudeChange"),
+      kind: Schema.Literal("controlledVerticalSuspensionAltitudeChange"),
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
         direction: Schema.Literals(["up", "down"]),
@@ -5309,7 +5315,7 @@ export const BattleFillSchema: Schema.Codec<
       spatialFacts: BattleTargetSpatialFactsSchema,
     }),
     Schema.Struct({
-      kind: Schema.Literal("levitateInitialRise"),
+      kind: Schema.Literal("controlledVerticalSuspensionInitialRise"),
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
         distanceFeet: MovementFeet,
@@ -5371,7 +5377,7 @@ export const BattleFillSchema: Schema.Codec<
       ),
     }),
     Schema.Struct({
-      kind: Schema.Literal("sanctuaryInterdictionOutcome"),
+      kind: Schema.Literal("targetingSaveInterdictionOutcome"),
       holeId: BattleHoleIdSchema,
       value: Schema.Union([
         Schema.Struct({

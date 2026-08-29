@@ -12,14 +12,14 @@ import type {
 } from "../identity.ts";
 import {
   BATTLE_D20_ROLL_MODIFIER_DIE_SIZES,
-  COMMAND_OPTIONS,
+  COMMAND_OPTIONS as COMPELLED_BEHAVIOR_OPTIONS,
 } from "../battle-reducer/domain-constants.ts";
 
-export const MAGIC_WEAPON_ENHANCEMENT_BONUSES = [
+export const WEAPON_ATTACK_DAMAGE_ENHANCEMENT_BONUSES = [
   1, 2, 3,
 ] as const satisfies ReadonlyArray<number>;
-export type MagicWeaponEnhancementBonus =
-  (typeof MAGIC_WEAPON_ENHANCEMENT_BONUSES)[number];
+export type WeaponAttackDamageEnhancementBonus =
+  (typeof WEAPON_ATTACK_DAMAGE_ENHANCEMENT_BONUSES)[number];
 
 export const BATTLE_MOVEMENT_SPEED_KINDS = [
   "walk",
@@ -47,7 +47,8 @@ export type BattleD20RollModifierDelta = {
     }
 );
 
-export type BattleCompelledBehaviorOption = (typeof COMMAND_OPTIONS)[number];
+export type BattleCompelledBehaviorOption =
+  (typeof COMPELLED_BEHAVIOR_OPTIONS)[number];
 
 export type BattleMovableLight = {
   readonly lightId: BattleDancingLightId;

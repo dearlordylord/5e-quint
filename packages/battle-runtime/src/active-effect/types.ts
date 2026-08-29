@@ -57,7 +57,7 @@ import type {
   BattleMovableLight,
   BattleMovableLightList,
   BattleSpecialSpeedKind,
-  MagicWeaponEnhancementBonus,
+  WeaponAttackDamageEnhancementBonus,
   SpellAttackKind,
   SpellConditionRepeatSave,
 } from "./execution-vocabulary.ts";
@@ -1048,7 +1048,7 @@ export type BattleActiveEffect = (
       readonly kind: "weaponAttackDamageEnhancement";
       readonly holderCombatantId: CombatantId;
       readonly weaponItemId: BattleObjectId;
-      readonly bonus: MagicWeaponEnhancementBonus;
+      readonly bonus: WeaponAttackDamageEnhancementBonus;
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "duration" }
