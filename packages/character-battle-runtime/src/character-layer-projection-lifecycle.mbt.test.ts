@@ -295,9 +295,8 @@ function createLifecycleDriver() {
           const settled = requireRight(
             settleCharacterSheetFromBattle({
               sheet,
-              state: battleSession.state,
-              context: battleSession.context,
-              combatant,
+              battleSession,
+              combatantId: combatant.combatantId,
               unitLibrary,
             }),
           );

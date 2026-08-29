@@ -19,6 +19,7 @@ import {
   type BattleState,
   type OngoingFeatureSourceKey,
 } from "@dnd/battle-runtime";
+import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
 import {
   abilityScoreAssignment,
   classUnitId,
@@ -263,11 +264,13 @@ function settleHitPointsConditionsSlotsAndPreservedSheetState(): BattleSettlemen
   };
   const settled = requireRight(
     settleCharacterSheetFromBattle({
-      state: battleStateWithCombatant(battle.session.state, settledCombatant),
-      context: battle.session.context,
+      battleSession: battleSessionWithCombatant(
+        battle.session,
+        settledCombatant,
+      ),
+      combatantId: settledCombatant.combatantId,
       sheet,
       unitLibrary,
-      combatant: settledCombatant,
     }),
   );
   return projectFromSheet({
@@ -310,11 +313,13 @@ function settlePurePactMagicSlotExpenditure(): BattleSettlementProjection {
   };
   const settled = requireRight(
     settleCharacterSheetFromBattle({
-      state: battleStateWithCombatant(battle.session.state, settledCombatant),
-      context: battle.session.context,
+      battleSession: battleSessionWithCombatant(
+        battle.session,
+        settledCombatant,
+      ),
+      combatantId: settledCombatant.combatantId,
       sheet,
       unitLibrary,
-      combatant: settledCombatant,
     }),
   );
   return projectFromSheet({
@@ -345,11 +350,10 @@ function rejectMixedSpellAndPactSlotSettlement(): BattleSettlementProjection {
     }),
   });
   const result = settleCharacterSheetFromBattle({
-    state: battle.session.state,
-    context: battle.session.context,
+    battleSession: battle.session,
+    combatantId: battle.combatant.combatantId,
     sheet: mixedSheet,
     unitLibrary,
-    combatant: battle.combatant,
   });
   if (Either.isRight(result)) {
     throw new Error(
@@ -409,11 +413,13 @@ function settleFeatureResourceExpenditure(): BattleSettlementProjection {
   };
   const settled = requireRight(
     settleCharacterSheetFromBattle({
-      state: battleStateWithCombatant(battle.session.state, settledCombatant),
-      context: battle.session.context,
+      battleSession: battleSessionWithCombatant(
+        battle.session,
+        settledCombatant,
+      ),
+      combatantId: settledCombatant.combatantId,
       sheet,
       unitLibrary,
-      combatant: settledCombatant,
     }),
   );
   return projectFromSheet({
@@ -462,11 +468,13 @@ function rejectAmbiguousCreatedSpellSlotSource(): BattleSettlementProjection {
     },
   };
   const result = settleCharacterSheetFromBattle({
-    state: battleStateWithCombatant(battle.session.state, ambiguousCombatant),
-    context: battle.session.context,
+    battleSession: battleSessionWithCombatant(
+      battle.session,
+      ambiguousCombatant,
+    ),
+    combatantId: ambiguousCombatant.combatantId,
     sheet: withCreatedSlot,
     unitLibrary,
-    combatant: ambiguousCombatant,
   });
   if (Either.isRight(result)) {
     throw new Error("Expected ambiguous created Spell Slot handoff rejection.");
@@ -501,11 +509,13 @@ function rejectMismatchedCharacterIdentity(): BattleSettlementProjection {
     },
   };
   const result = settleCharacterSheetFromBattle({
-    state: battleStateWithCombatant(battle.session.state, mismatchedCombatant),
-    context: battle.session.context,
+    battleSession: battleSessionWithCombatant(
+      battle.session,
+      mismatchedCombatant,
+    ),
+    combatantId: mismatchedCombatant.combatantId,
     sheet,
     unitLibrary,
-    combatant: mismatchedCombatant,
   });
   if (Either.isRight(result)) {
     throw new Error("Expected mismatched identity handoff rejection.");
@@ -535,11 +545,10 @@ function rejectMaximumHpDrift(): BattleSettlementProjection {
     maxHp: Hp(wizardBattleFixtureMaximumHp + 1),
   };
   const result = settleCharacterSheetFromBattle({
-    state: battleStateWithCombatant(battle.session.state, driftedCombatant),
-    context: battle.session.context,
+    battleSession: battleSessionWithCombatant(battle.session, driftedCombatant),
+    combatantId: driftedCombatant.combatantId,
     sheet,
     unitLibrary,
-    combatant: driftedCombatant,
   });
   if (Either.isRight(result)) {
     throw new Error("Expected maximum HP drift handoff rejection.");
@@ -591,14 +600,13 @@ function rejectActiveWildShapeHandoff(): BattleSettlementProjection {
     ],
   };
   const result = settleCharacterSheetFromBattle({
-    state: battleStateWithCombatant(
-      battle.session.state,
+    battleSession: battleSessionWithCombatant(
+      battle.session,
       activeWildShapeCombatant,
     ),
-    context: battle.session.context,
+    combatantId: activeWildShapeCombatant.combatantId,
     sheet,
     unitLibrary,
-    combatant: activeWildShapeCombatant,
   });
   if (Either.isRight(result)) {
     throw new Error("Expected active Wild Shape handoff rejection.");
@@ -646,11 +654,13 @@ function rejectActiveBattleStateHandoff(): BattleSettlementProjection {
     ]),
   };
   const result = settleCharacterSheetFromBattle({
-    state: battleStateWithCombatant(battle.session.state, activeStateCombatant),
-    context: battle.session.context,
+    battleSession: battleSessionWithCombatant(
+      battle.session,
+      activeStateCombatant,
+    ),
+    combatantId: activeStateCombatant.combatantId,
     sheet,
     unitLibrary,
-    combatant: activeStateCombatant,
   });
   if (Either.isRight(result)) {
     throw new Error("Expected active battle-state handoff rejection.");
@@ -706,14 +716,13 @@ function rejectStableRecoveryProgressHandoff(): BattleSettlementProjection {
     },
   };
   const result = settleCharacterSheetFromBattle({
-    state: battleStateWithCombatant(
-      battle.session.state,
+    battleSession: battleSessionWithCombatant(
+      battle.session,
       stableRecoveryCombatant,
     ),
-    context: battle.session.context,
+    combatantId: stableRecoveryCombatant.combatantId,
     sheet: stableSheet,
     unitLibrary,
-    combatant: stableRecoveryCombatant,
   });
   if (Either.isRight(result)) {
     throw new Error("Expected in-progress Stable recovery handoff rejection.");
@@ -772,11 +781,13 @@ function settleZeroHpStableLifecycle(): BattleSettlementProjection {
   };
   const settled = requireRight(
     settleCharacterSheetFromBattle({
-      state: battleStateWithCombatant(battle.session.state, stableCombatant),
-      context: battle.session.context,
+      battleSession: battleSessionWithCombatant(
+        battle.session,
+        stableCombatant,
+      ),
+      combatantId: stableCombatant.combatantId,
       sheet: stableSheet,
       unitLibrary,
-      combatant: stableCombatant,
     }),
   );
   return projectFromSheet({
@@ -836,6 +847,16 @@ function battleStateWithCombatant(
     ...state,
     combatants: new Map(state.combatants).set(combatant.combatantId, combatant),
   };
+}
+
+function battleSessionWithCombatant(
+  session: BattleRuntimeSession,
+  combatant: BattleCreatureState,
+): BattleRuntimeSession {
+  return battleRuntimeSessionForTest({
+    state: battleStateWithCombatant(session.state, combatant),
+    context: session.context,
+  });
 }
 
 function isCharacterBattleCombatant(

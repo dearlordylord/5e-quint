@@ -17,9 +17,8 @@ import {
   type BattleCreatureState,
   type BattleStateInitIssue,
   type AuthoredStatBlockBattleInitIssue,
-  type BattleState,
-  type BattleRuntimeContext,
   type BattleRuntimeSession,
+  type CombatantId,
   type CharacterBattleResourceOwnership,
   type CharacterBattleResourceState,
   type CharacterBattleClassLevels,
@@ -549,19 +548,31 @@ function rejectCharacterBattleInitProjectionRoute(): readonly CharacterBattleRou
 
 export function settleCharacterSheetFromBattle(input: {
   readonly sheet: CharacterSheet;
-  readonly state: BattleState;
-  readonly context: BattleRuntimeContext;
-  readonly combatant: BattleCreatureState;
+  /**
+   * The nominal battle session carries the only valid state/context pairing.
+   * Settlement is also used when removing a character from an active roster,
+   * so the session is not required to be in a separate terminal state.
+   */
+  readonly battleSession: BattleRuntimeSession;
+  readonly combatantId: CombatantId;
   readonly unitLibrary: UnitCatalog;
   readonly statBlockCatalog?: StatBlockCatalog;
 }): Either.Either<CharacterSheet, CharacterSheetBattleHandoffIssue> {
-  const combatant = input.combatant;
+  const state = input.battleSession.state;
+  const combatant = state.combatants.get(input.combatantId);
+  if (combatant === undefined) {
+    return characterSheetBattleHandoffIssue(
+      "Battle handoff combatant is not present in Battle State.",
+    );
+  }
   if (!isCharacterBattleCreatureState(combatant)) {
     return characterSheetBattleHandoffIssue(
       "Battle handoff combatant is not a character.",
     );
   }
-  const runtimeContext = input.context.characters.get(combatant.combatantId);
+  const runtimeContext = input.battleSession.context.characters.get(
+    combatant.combatantId,
+  );
   if (runtimeContext === undefined) {
     return characterSheetBattleHandoffIssue(
       "Battle handoff character has no authored runtime ownership context.",
@@ -575,8 +586,8 @@ export function settleCharacterSheetFromBattle(input: {
   if (Either.isLeft(settledCharacter)) return settledCharacter;
   return settleCompanionFromBattle({
     sheet: settledCharacter.right,
-    state: input.state,
-    ownerCombatantId: input.combatant.combatantId,
+    state,
+    ownerCombatantId: combatant.combatantId,
     unitLibrary: input.unitLibrary,
     ...(runtimeContext.retainedCompanionSelection === undefined
       ? {}

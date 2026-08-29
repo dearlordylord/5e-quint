@@ -19,6 +19,7 @@ import {
   spellSlotInvocationRef,
   startBattle,
 } from "@dnd/battle-runtime";
+import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
 import {
   abilityScoreAssignment,
   classUnitId,
@@ -1035,10 +1036,12 @@ function metamagicBridgeUsesSharedPointPoolRoute(
   }
   const result = settleCharacterSheetFromBattle({
     sheet,
-    state: resolved.state,
-    context: battle.context,
+    battleSession: battleRuntimeSessionForTest({
+      state: resolved.state,
+      context: battle.context,
+    }),
+    combatantId: settledCombatant.combatantId,
     unitLibrary,
-    combatant: settledCombatant,
   });
   expect(Either.isRight(result)).toBe(true);
   return appendObservedFeatureResourceRoute(route, {
