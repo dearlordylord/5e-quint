@@ -1040,7 +1040,7 @@ evidence. `pnpm quality:milestone` was not run for this issue snapshot.
 ## Issue #384 application flow evidence snapshot
 
 This section records the application migration at source revision
-`ab984a5fd`. The React entry point, Admin Mirror loaders and event actions,
+`3aee07b3c`. The React entry point, Admin Mirror loaders and event actions,
 Character Creation and Character Sheet workflows, and Battle presentation and
 continuation flows now consume the settled Effect 4 `Result` contracts. The
 Admin Mirror decoders use the package-owned schemas through
@@ -1109,8 +1109,9 @@ The Standards and Spec passes against fixed point `b0aeb8eab` produced the
 typed stream-status, GET/SSE synchronization, narrow helper failure, and tagged
 parser-issue corrections. The final Standards corrections then removed the
 duplicate streamed-session payload owner, derived the initial invalid-origin
-projections, and replaced the request wrapper with one request identity. The
-independent review rechecked the same local RAW anchors directly and found no
+projections, and replaced the request wrapper with one branded request
+identity constructed through its Effect Schema. The independent review
+rechecked the same local RAW anchors directly and found no
 D&D-rule behavior change. The final self-review confirmed the URL and
 collection ownership boundaries, distinct UI failure states, absence of
 compatibility adapters or duplicate decoding, and the authored-identity,
