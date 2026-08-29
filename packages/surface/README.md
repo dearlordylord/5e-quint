@@ -105,10 +105,10 @@ matching executable procedure returns a typed `no_admitted_procedure` issue.
 Portable decoding may retain typed `textOnly` mechanics in canonical content;
 whether a profile admits that content for execution remains the supplied
 admission function's decision.
-Admission issue paths are constructed through `surface/mechanics-graph-path`:
-Unit and Stat Block paths have distinct branded roots, and the constructor
-rejects provenance and presentation segments before a path reaches the
-install result.
+Each family-specific admission profile owns its closed mechanics-path
+vocabulary. The installer is generic over those two distinct path types and
+keeps each path correlated with its Unit or Stat Block authored-record root;
+Surface does not accept or reinterpret arbitrary diagnostic strings.
 
 Detailed record-family rules live next to the code that owns them. For monster
 Stat Block lookup/provenance mechanics, see `src/surface/stat-block-catalog.ts`.

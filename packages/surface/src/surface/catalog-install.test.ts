@@ -1,4 +1,4 @@
-import { Either, Option } from "effect";
+import { Option } from "effect";
 import { describe, expect, test } from "vitest";
 
 import armorChainMailInput from "../../content/armor_chain_mail.json";
@@ -7,14 +7,18 @@ import { statBlockId } from "@dnd/shared/game-facts";
 import {
   installSrdSurface,
   installSrdSurfaceText,
+  type SurfaceCatalogInstallIssue,
   type SurfaceMechanicsAdmission,
 } from "./catalog-install.ts";
-import {
-  makeStatBlockMechanicsPath,
-  makeUnitMechanicsPath,
-  type StatBlockMechanicsPath,
-  type UnitMechanicsPath,
-} from "./mechanics-graph-path.ts";
+
+const UNIT_MECHANICS_PATHS = ["acFormula", "donDoff"] as const;
+type UnitMechanicsPath = (typeof UNIT_MECHANICS_PATHS)[number];
+
+const STAT_BLOCK_MECHANICS_PATHS = [
+  "actions[0].procedure",
+  "actions[1].procedure",
+] as const;
+type StatBlockMechanicsPath = (typeof STAT_BLOCK_MECHANICS_PATHS)[number];
 
 const publishedUnit = {
   ...armorChainMailInput,
@@ -25,29 +29,22 @@ const publishedStatBlock = {
   rulesExcerpt: "Synthetic test excerpt for one authored Stat Block.",
 };
 const goblinWarriorId = statBlockId(goblinWarriorInput.id);
-const unitAcFormulaPath = requirePath(
-  makeUnitMechanicsPath("unit.mechanics.acFormula"),
-  "unit.mechanics.acFormula",
-);
-const unitDonDoffPath = requirePath(
-  makeUnitMechanicsPath("unit.mechanics.donDoff"),
-  "unit.mechanics.donDoff",
-);
-const statBlockFirstProcedurePath = requirePath(
-  makeStatBlockMechanicsPath("statBlock.mechanics.actions[0].procedure"),
-  "statBlock.mechanics.actions[0].procedure",
-);
-const statBlockSecondProcedurePath = requirePath(
-  makeStatBlockMechanicsPath("statBlock.mechanics.actions[1].procedure"),
-  "statBlock.mechanics.actions[1].procedure",
-);
+const unitAcFormulaPath: UnitMechanicsPath = "acFormula";
+const unitDonDoffPath: UnitMechanicsPath = "donDoff";
+const statBlockFirstProcedurePath: StatBlockMechanicsPath =
+  "actions[0].procedure";
+const statBlockSecondProcedurePath: StatBlockMechanicsPath =
+  "actions[1].procedure";
 const portableSurface = {
   kind: "srd-5.2.1-surface-catalog",
   units: [publishedUnit],
   statBlocks: [publishedStatBlock],
 };
 
-const noMechanicsIssues: SurfaceMechanicsAdmission = {
+const noMechanicsIssues: SurfaceMechanicsAdmission<
+  UnitMechanicsPath,
+  StatBlockMechanicsPath
+> = {
   admitUnit: () => ({ tag: "admitted" }),
   admitStatBlock: () => ({ tag: "admitted" }),
 };
@@ -220,31 +217,32 @@ describe("atomic Surface catalog installation", () => {
     expect(result).not.toHaveProperty("catalog");
   });
 
-  test("rejects provenance, presentation, and cross-family mechanics paths", () => {
-    expect(
-      Either.isLeft(makeUnitMechanicsPath("unit.mechanics.provenance.section")),
-    ).toBe(true);
-    expect(
-      Either.isLeft(
-        makeStatBlockMechanicsPath(
-          "statBlock.mechanics.actions[0].description",
-        ),
-      ),
-    ).toBe(true);
-    expect(Either.isLeft(makeStatBlockMechanicsPath(unitAcFormulaPath))).toBe(
-      true,
-    );
+  test("preserves family-owned closed path vocabularies", () => {
+    expect(UNIT_MECHANICS_PATHS).toEqual(["acFormula", "donDoff"]);
+    expect(STAT_BLOCK_MECHANICS_PATHS).toEqual([
+      "actions[0].procedure",
+      "actions[1].procedure",
+    ]);
+
+    // @ts-expect-error presentation fields are not Unit mechanics paths
+    const unitPresentationPath: UnitMechanicsPath = "displayName";
+    // @ts-expect-error Unit paths cannot be used as Stat Block paths
+    const crossFamilyPath: StatBlockMechanicsPath = unitAcFormulaPath;
+    const mismatchedIssue: SurfaceCatalogInstallIssue<
+      UnitMechanicsPath,
+      StatBlockMechanicsPath
+    > = {
+      phase: "admission",
+      // @ts-expect-error a Unit root cannot carry a Stat Block mechanics path
+      root: { kind: "unit", id: armorChainMailInput.id },
+      reason: "unsupported_mechanics",
+      mechanicsPath: statBlockFirstProcedurePath,
+      message: "This impossible pairing must remain a compile error.",
+    };
+    expect([
+      unitPresentationPath,
+      crossFamilyPath,
+      mismatchedIssue,
+    ]).toHaveLength(3);
   });
 });
-
-function requirePath<Path extends UnitMechanicsPath | StatBlockMechanicsPath>(
-  result: Either.Either<Path, { readonly message: string }>,
-  input: string,
-): Path {
-  if (Either.isLeft(result)) {
-    throw new Error(
-      `Expected a valid mechanics path for ${input}: ${result.left.message}`,
-    );
-  }
-  return result.right;
-}
