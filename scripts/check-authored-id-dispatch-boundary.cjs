@@ -96,6 +96,159 @@ const GENERIC_SPELL_EXECUTION_PROJECTION_PATTERN = /\b(?:Omit|Pick)</;
 const SHALLOW_UNIT_EXECUTION_PROJECTION_PATTERN =
   /([A-Za-z_$][\w$]*) extends SupportedUnitFeatureProfile\s*\?\s*Omit<\1,\s*"unit">/;
 
+const EXECUTION_IDENTITY_ROLE_FIELDS = new Set([
+  "action",
+  "checkpoint",
+  "checkpointKind",
+  "command",
+  "effectKind",
+  "fillKind",
+  "holeKind",
+  "kind",
+  "procedure",
+  "protocolKind",
+  "tag",
+]);
+const EXECUTION_IDENTITY_ARRAY_NAME_PATTERN =
+  /(?:ACTION|CHECKPOINT|COMMAND|EFFECT|FILL|HOLE|KIND|PROCEDURE|PROTOCOL|REGISTRY|SUBJECT|TAG)(?:S|_KINDS|_KEYS|_REGISTRY)?$/i;
+const EXECUTION_DECLARATION_NAME_PATTERN =
+  /(?:Checkpoint|Command|Effect|Execution|Fill|Hole|Invocation|Procedure|Profile|Protocol|Registry|Route|Schema|Subject|Template)/;
+const EXECUTION_DIAGNOSTIC_FIELDS = new Set([
+  "detail",
+  "label",
+  "message",
+  "reason",
+  "summary",
+]);
+const EXECUTION_IDENTITY_BOUNDARIES = [
+  {
+    reason: "surface-authored-content-boundary",
+    pattern: /^packages\/surface\/(?:content|src\/surface)\//,
+  },
+  {
+    reason: "battle-procedure-admission-boundary",
+    pattern:
+      /^packages\/battle-runtime\/src\/(?:procedure-admission\/|character-execution-admission\.ts$|battle-composition-admission\.ts$|character-battle-resources\.ts$|unit-feature-support\.ts$)/,
+  },
+  {
+    reason: "battle-presentation-boundary",
+    pattern:
+      /^packages\/battle-runtime\/src\/(?:battle-act-composition\.ts$|stat-block-presentation\.ts$|battle-snapshot-presentation\.ts$)/,
+  },
+  {
+    reason: "registered-proof-instantiation-boundary",
+    pattern: /\.(?:mbt\.)?qnt$/,
+  },
+];
+
+// These are mechanics words which happen to be complete authored spell names.
+// Each exemption is an exact AST role + identifier collision. A wildcard or a
+// path exemption here would permit authored identity laundering. The checker
+// fails when an entry becomes stale so migrations must remove obsolete proof.
+function exactCollision(spellId, identifier, roles, reason) {
+  return roles.map((role) => ({ spellId, role, identifier, reason }));
+}
+
+const DISCRIMINANT_ROLES = [
+  "discriminant-literal",
+  "protocol-array-member",
+  "registry-key",
+  "schema-discriminant-literal",
+];
+
+const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
+  ...exactCollision(
+    "command",
+    "runtimeCommand",
+    DISCRIMINANT_ROLES,
+    "command is the runtime protocol category",
+  ),
+  ...exactCollision(
+    "command",
+    "command",
+    ["registry-key"],
+    "command is the discriminant field name",
+  ),
+  ...exactCollision(
+    "darkness",
+    "magicalDarknessPointOrigin",
+    DISCRIMINANT_ROLES,
+    "darkness is a visibility trait projected from generic area facts",
+  ),
+  ...exactCollision(
+    "fly",
+    "fly",
+    ["protocol-array-member"],
+    "fly is a movement mode",
+  ),
+  ...exactCollision(
+    "jump",
+    "jumpMovementReplacement",
+    DISCRIMINANT_ROLES,
+    "jump is the movement mode named by the rules",
+  ),
+  ...exactCollision(
+    "knock",
+    "knockOut",
+    ["discriminant-literal", "schema-discriminant-literal"],
+    "knock out is the zero-hit-point combat choice",
+  ),
+  ...["heldLight", "heldLightHurl", "objectLight"].flatMap((identifier) =>
+    exactCollision(
+      "light",
+      identifier,
+      DISCRIMINANT_ROLES,
+      "light is an illumination or weapon-property mechanic",
+    ),
+  ),
+  ...exactCollision(
+    "light",
+    "lightEmission",
+    ["discriminant-literal", "schema-discriminant-literal"],
+    "light is an illumination mechanic",
+  ),
+  ...exactCollision(
+    "light",
+    "lightEmitter",
+    ["discriminant-literal"],
+    "light is an illumination mechanic",
+  ),
+  ...exactCollision(
+    "light",
+    "spellLightEmitter",
+    ["discriminant-literal", "registry-key", "schema-discriminant-literal"],
+    "light is an illumination mechanic",
+  ),
+  ...exactCollision(
+    "resistance",
+    "chosenDamageResistance",
+    DISCRIMINANT_ROLES,
+    "resistance is a damage relationship",
+  ),
+  ...exactCollision(
+    "resistance",
+    "damageResistance",
+    [
+      "discriminant-literal",
+      "protocol-array-member",
+      "schema-discriminant-literal",
+    ],
+    "resistance is a damage relationship",
+  ),
+  ...exactCollision(
+    "shield",
+    "shield",
+    DISCRIMINANT_ROLES,
+    "shield is an equipment category",
+  ),
+  ...exactCollision(
+    "sleep",
+    "doesNotSleep",
+    ["discriminant-literal", "schema-discriminant-literal"],
+    "sleep is a creature-state predicate",
+  ),
+];
+
 function escapeForRegExp(text) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -1668,6 +1821,482 @@ function collectAuthoredIdentityLiterals() {
   };
 }
 
+function lexicalWords(text) {
+  return text
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
+}
+
+function collectSurfaceSpellLexicon(records) {
+  const spellRecords =
+    records ??
+    listSurfaceContentFiles(SURFACE_CONTENT_ROOT).map((filePath) => {
+      const parsed = JSON.parse(fs.readFileSync(filePath, "utf8"));
+      return { ...parsed, sourceFile: path.relative(REPO_ROOT, filePath) };
+    });
+  const malformed = [];
+  const lexicon = [];
+  const seenIds = new Set();
+
+  for (const record of spellRecords) {
+    if (record?.kind !== "spell") continue;
+    if (
+      typeof record.id !== "string" ||
+      record.id.length === 0 ||
+      typeof record.name !== "string" ||
+      record.name.length === 0
+    ) {
+      malformed.push(record?.sourceFile ?? "<synthetic-record>");
+      continue;
+    }
+    if (seenIds.has(record.id)) {
+      malformed.push(
+        `${record.sourceFile ?? "<synthetic-record>"}:duplicate:${record.id}`,
+      );
+      continue;
+    }
+    seenIds.add(record.id);
+    const idWords = lexicalWords(record.id);
+    const nameWords = lexicalWords(record.name);
+    const phraseKeys = new Set([idWords.join(" "), nameWords.join(" ")]);
+    lexicon.push({
+      id: record.id,
+      name: record.name,
+      phraseWords: [...phraseKeys].map((phrase) => phrase.split(" ")),
+    });
+  }
+
+  return {
+    malformed,
+    lexicon: lexicon.sort((left, right) => left.id.localeCompare(right.id)),
+  };
+}
+
+function wordsContainPhrase(words, phrase) {
+  if (phrase.length === 0 || phrase.length > words.length) return false;
+  for (let start = 0; start <= words.length - phrase.length; start += 1) {
+    if (phrase.every((word, offset) => words[start + offset] === word)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+const SPELL_LEXICON_MATCHER_CACHE = new WeakMap();
+
+function spellLexiconMatcher(spellLexicon) {
+  const cached = SPELL_LEXICON_MATCHER_CACHE.get(spellLexicon);
+  if (cached !== undefined) return cached;
+  const phrasesByFirstWord = new Map();
+  for (const spell of spellLexicon) {
+    for (const phrase of spell.phraseWords) {
+      const first = phrase[0];
+      const bucket = phrasesByFirstWord.get(first) ?? [];
+      bucket.push({ phrase, spell });
+      phrasesByFirstWord.set(first, bucket);
+    }
+  }
+  const matcher = { phrasesByFirstWord, results: new Map() };
+  SPELL_LEXICON_MATCHER_CACHE.set(spellLexicon, matcher);
+  return matcher;
+}
+
+function spellLexiconMatches(text, spellLexicon) {
+  const matcher = spellLexiconMatcher(spellLexicon);
+  const cached = matcher.results.get(text);
+  if (cached !== undefined) return cached;
+  const words = lexicalWords(text);
+  const matched = new Map();
+  for (const word of new Set(words)) {
+    for (const candidate of matcher.phrasesByFirstWord.get(word) ?? []) {
+      if (wordsContainPhrase(words, candidate.phrase)) {
+        matched.set(candidate.spell.id, candidate.spell);
+      }
+    }
+  }
+  const matches = [...matched.values()];
+  matcher.results.set(text, matches);
+  return matches;
+}
+
+function executionIdentityBoundaryReason(relativePath) {
+  if (
+    /(?:\.test\.[cm]?tsx?$|\.mbt\.test\.[cm]?tsx?$|\.test-support\.[cm]?tsx?$|\/test-support\/|\/fixtures?\/)/.test(
+      relativePath,
+    )
+  ) {
+    return "test-or-fixture-boundary";
+  }
+  return classifyPath(relativePath, EXECUTION_IDENTITY_BOUNDARIES);
+}
+
+function isExecutionIdentitySource(relativePath) {
+  return (
+    /^packages\/battle-runtime\/src\//.test(relativePath) &&
+    executionIdentityBoundaryReason(relativePath) === null
+  );
+}
+
+function declarationName(node) {
+  const hasExportModifier = (candidate) =>
+    candidate.modifiers?.some(
+      (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword,
+    ) === true;
+  const variableStatement = ts.isVariableDeclaration(node)
+    ? node.parent?.parent
+    : undefined;
+  const isExecutionContractDeclaration =
+    ts.isClassDeclaration(node) ||
+    ts.isEnumDeclaration(node) ||
+    ts.isInterfaceDeclaration(node) ||
+    ts.isTypeAliasDeclaration(node) ||
+    (ts.isVariableDeclaration(node) &&
+      variableStatement !== undefined &&
+      ts.isVariableStatement(variableStatement) &&
+      hasExportModifier(variableStatement));
+  if (
+    isExecutionContractDeclaration &&
+    node.name !== undefined &&
+    ts.isIdentifier(node.name) &&
+    (EXECUTION_DECLARATION_NAME_PATTERN.test(node.name.text) ||
+      EXECUTION_IDENTITY_ARRAY_NAME_PATTERN.test(node.name.text))
+  ) {
+    return node.name.text;
+  }
+  return undefined;
+}
+
+function propertyDeclaresExecutionRegistryKey(node) {
+  if (
+    ts.isPropertySignature(node) ||
+    ts.isMethodSignature(node) ||
+    ts.isMethodDeclaration(node)
+  ) {
+    let owner = node.parent;
+    while (owner !== undefined && !ts.isSourceFile(owner)) {
+      if (
+        (ts.isInterfaceDeclaration(owner) ||
+          ts.isTypeAliasDeclaration(owner)) &&
+        owner.name !== undefined
+      ) {
+        return /(?:Map|Registry|Procedures|Protocol|Variants)/.test(
+          owner.name.text,
+        );
+      }
+      owner = owner.parent;
+    }
+    return false;
+  }
+  if (!ts.isPropertyAssignment(node)) return false;
+  let owner = node.parent;
+  for (let depth = 0; owner !== undefined && depth < 5; depth += 1) {
+    if (ts.isCallExpression(owner)) {
+      return /(?:discriminator|match|registry)/i.test(
+        owner.expression.getText(),
+      );
+    }
+    if (ts.isVariableDeclaration(owner) && ts.isIdentifier(owner.name)) {
+      return EXECUTION_IDENTITY_ARRAY_NAME_PATTERN.test(owner.name.text);
+    }
+    owner = owner.parent;
+  }
+  return false;
+}
+
+function nearestPropertyRole(node) {
+  let current = node.parent;
+  for (let depth = 0; current !== undefined && depth < 7; depth += 1) {
+    if (
+      ts.isPropertyAssignment(current) ||
+      ts.isPropertySignature(current) ||
+      ts.isMethodDeclaration(current) ||
+      ts.isMethodSignature(current)
+    ) {
+      return propertyNameText(current.name);
+    }
+    if (ts.isStatement(current) || ts.isSourceFile(current)) break;
+    current = current.parent;
+  }
+  return undefined;
+}
+
+function nearestVariableName(node) {
+  let current = node.parent;
+  while (current !== undefined && !ts.isStatement(current)) {
+    if (ts.isVariableDeclaration(current) && ts.isIdentifier(current.name)) {
+      return current.name.text;
+    }
+    current = current.parent;
+  }
+  return undefined;
+}
+
+function isSchemaLiteralNode(node) {
+  let current = node.parent;
+  for (let depth = 0; current !== undefined && depth < 5; depth += 1) {
+    if (
+      ts.isCallExpression(current) &&
+      /(?:^|\.)Schema\.(?:Literal|Literals)$/.test(current.expression.getText())
+    ) {
+      return true;
+    }
+    current = current.parent;
+  }
+  return false;
+}
+
+function executionIdentityViolation(
+  source,
+  relativePath,
+  node,
+  role,
+  identifier,
+  spell,
+) {
+  const location = source.getLineAndCharacterOfPosition(node.getStart(source));
+  return {
+    relativePath,
+    line: location.line + 1,
+    column: location.character + 1,
+    spellId: spell.id,
+    spellName: spell.name,
+    role,
+    identifier,
+  };
+}
+
+function executionIdentityViolationsForFile(
+  relativePath,
+  content,
+  spellLexicon,
+) {
+  if (!isExecutionIdentitySource(relativePath)) return [];
+  const source = ts.createSourceFile(
+    relativePath,
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    relativePath.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+  );
+  const violations = [];
+  const addMatches = (node, role, identifier) => {
+    for (const spell of spellLexiconMatches(identifier, spellLexicon)) {
+      violations.push(
+        executionIdentityViolation(
+          source,
+          relativePath,
+          node,
+          role,
+          identifier,
+          spell,
+        ),
+      );
+    }
+  };
+  const visit = (node) => {
+    const declared = declarationName(node);
+    if (declared !== undefined) {
+      addMatches(node.name, "declaration-identifier", declared);
+    }
+
+    if (
+      (ts.isPropertyAssignment(node) ||
+        ts.isPropertySignature(node) ||
+        ts.isMethodDeclaration(node) ||
+        ts.isMethodSignature(node)) &&
+      node.name !== undefined
+    ) {
+      const key = propertyNameText(node.name);
+      if (key !== undefined && propertyDeclaresExecutionRegistryKey(node)) {
+        addMatches(node.name, "registry-key", key);
+      }
+    }
+
+    if (ts.isStringLiteralLike(node)) {
+      const propertyRole = nearestPropertyRole(node);
+      if (
+        propertyRole !== undefined &&
+        EXECUTION_IDENTITY_ROLE_FIELDS.has(propertyRole)
+      ) {
+        addMatches(
+          node,
+          isSchemaLiteralNode(node)
+            ? "schema-discriminant-literal"
+            : "discriminant-literal",
+          node.text,
+        );
+      } else if (
+        propertyRole !== undefined &&
+        EXECUTION_DIAGNOSTIC_FIELDS.has(propertyRole)
+      ) {
+        addMatches(node, "execution-diagnostic", node.text);
+      } else {
+        const containerName = nearestVariableName(node);
+        if (
+          containerName !== undefined &&
+          EXECUTION_IDENTITY_ARRAY_NAME_PATTERN.test(containerName)
+        ) {
+          addMatches(node, "protocol-array-member", node.text);
+        }
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+
+  const basename = path.basename(relativePath).replace(/\.[^.]+$/, "");
+  for (const spell of spellLexiconMatches(basename, spellLexicon)) {
+    violations.push({
+      relativePath,
+      line: 1,
+      column: 1,
+      spellId: spell.id,
+      spellName: spell.name,
+      role: "execution-filename",
+      identifier: basename,
+    });
+  }
+  return violations;
+}
+
+function applyExecutionIdentityCollisionExemptions(violations, exemptions) {
+  const usage = new Map(exemptions.map((exemption) => [exemption, 0]));
+  const remaining = violations.filter((violation) => {
+    const matches = exemptions.filter(
+      (exemption) =>
+        exemption.spellId === violation.spellId &&
+        exemption.role === violation.role &&
+        exemption.identifier === violation.identifier,
+    );
+    assert.ok(
+      matches.length <= 1,
+      `duplicate authored-identity collision exemption for ${violation.spellId}/${violation.role}/${violation.identifier}`,
+    );
+    if (matches.length === 0) return true;
+    usage.set(matches[0], (usage.get(matches[0]) ?? 0) + 1);
+    return false;
+  });
+  const stale = exemptions.filter((exemption) => usage.get(exemption) === 0);
+  return { remaining, stale, usage };
+}
+
+function dedupeExecutionIdentityViolations(violations) {
+  const unique = new Map();
+  for (const violation of violations) {
+    const key = `${violation.relativePath}:${violation.line}:${violation.column}:${violation.spellId}:${violation.role}:${violation.identifier}`;
+    if (!unique.has(key)) unique.set(key, violation);
+  }
+  return [...unique.values()].sort(
+    (left, right) =>
+      left.relativePath.localeCompare(right.relativePath) ||
+      left.line - right.line ||
+      left.column - right.column ||
+      left.role.localeCompare(right.role) ||
+      left.spellId.localeCompare(right.spellId),
+  );
+}
+
+function runExecutionIdentityCohortSelfTest() {
+  const { lexicon, malformed } = collectSurfaceSpellLexicon([
+    { kind: "spell", id: "cloudkill", name: "Cloudkill" },
+    { kind: "spell", id: "magic_missile", name: "Magic Missile" },
+    { kind: "spell", id: "light", name: "Light" },
+    { kind: "unit", id: "cloudkill_unit", name: "Cloudkill Unit" },
+  ]);
+  assert.deepEqual(malformed, []);
+  const fixturePath =
+    "packages/battle-runtime/src/battle-reducer/synthetic-procedure.ts";
+  const fixture = `
+    export type CloudkillAreaHazardEffect = { readonly kind: "cloudkillAreaHazard" }
+    export const RUNTIME_COMMAND_KINDS = ["magicMissileDamage", "nearMissile"] as const
+    export const Registry = { magicMissile: Schema.Struct({
+      command: Schema.Literal("magicMissileDamage"),
+    }) }
+    const invalid = { message: "Cloudkill movement could not continue." }
+  `;
+  const roles = new Set(
+    executionIdentityViolationsForFile(fixturePath, fixture, lexicon).map(
+      (violation) => violation.role,
+    ),
+  );
+  for (const expected of [
+    "declaration-identifier",
+    "discriminant-literal",
+    "schema-discriminant-literal",
+    "protocol-array-member",
+    "registry-key",
+    "execution-diagnostic",
+  ]) {
+    assert.ok(roles.has(expected), `cohort self-test missed ${expected}`);
+  }
+  assert.equal(
+    executionIdentityViolationsForFile(
+      fixturePath,
+      `const message = "nearMissile"`,
+      lexicon,
+    ).length,
+    0,
+    "cohort scanner treated a synthetic near miss as authored identity",
+  );
+  assert.equal(
+    executionIdentityViolationsForFile(
+      "packages/battle-runtime/src/procedure-admission/cloudkill.ts",
+      fixture,
+      lexicon,
+    ).length,
+    0,
+    "cohort scanner rejected the explicit admission boundary",
+  );
+  const collision = executionIdentityViolationsForFile(
+    fixturePath,
+    `export type HeldLightSpellProcedureExecution = { readonly value: true }`,
+    lexicon,
+  );
+  const applied = applyExecutionIdentityCollisionExemptions(collision, [
+    {
+      spellId: "light",
+      role: "declaration-identifier",
+      identifier: "HeldLightSpellProcedureExecution",
+      reason: "synthetic exact collision",
+    },
+  ]);
+  assert.deepEqual(applied.remaining, []);
+  assert.deepEqual(applied.stale, []);
+  assert.equal(
+    applyExecutionIdentityCollisionExemptions(
+      [],
+      [
+        {
+          spellId: "light",
+          role: "declaration-identifier",
+          identifier: "HeldLightSpellProcedureExecution",
+          reason: "synthetic stale collision",
+        },
+      ],
+    ).stale.length,
+    1,
+    "cohort scanner accepted a stale collision exemption",
+  );
+  const augmented = collectSurfaceSpellLexicon([
+    { kind: "spell", id: "cloudkill", name: "Cloudkill" },
+    { kind: "spell", id: "synthetic_procedure", name: "Synthetic Procedure" },
+  ]).lexicon;
+  assert.ok(
+    executionIdentityViolationsForFile(
+      fixturePath,
+      `export const syntheticProcedure = { procedure: "syntheticProcedure" }`,
+      augmented,
+    ).length > 0,
+    "cohort scanner did not incorporate a newly added Surface spell",
+  );
+}
+
 function collectDispatchContainerUsages(content) {
   const usages = [];
   const source = ts.createSourceFile(
@@ -3006,6 +3635,11 @@ function main() {
   assertBattleReplayAstBoundary();
   assertNoReducerOwnedActPresentation();
   runSelfTest();
+  runExecutionIdentityCohortSelfTest();
+  if (process.argv.includes("--self-test")) {
+    console.log("authored-identity dispatch boundary self-test passed");
+    return;
+  }
 
   if (!fs.existsSync(PACKAGES_ROOT)) {
     console.error("authored-id boundary check: packages directory not found");
@@ -3034,6 +3668,23 @@ function main() {
   const authoredAlternation = buildAuthoredAlternation(
     authoredIdentityLiterals,
   );
+  const { lexicon: surfaceSpellLexicon, malformed: malformedSpellRecords } =
+    collectSurfaceSpellLexicon();
+  if (malformedSpellRecords.length > 0) {
+    console.error(
+      "authored-id boundary check: malformed or duplicate Surface spell record(s):",
+    );
+    for (const malformed of malformedSpellRecords) {
+      console.error(`  - ${malformed}`);
+    }
+    process.exit(1);
+  }
+  if (surfaceSpellLexicon.length === 0) {
+    console.error(
+      "authored-id boundary check: no decoded Surface spell records discovered",
+    );
+    process.exit(1);
+  }
 
   const sourceFiles = listFiles(PACKAGES_ROOT)
     .map((filePath) =>
@@ -3055,6 +3706,7 @@ function main() {
   };
 
   const violations = [];
+  const executionIdentityViolations = [];
 
   for (const relativePath of sourceFiles) {
     const excludedReason = classifyPath(relativePath, EXCLUDED_PATH_RULES);
@@ -3077,6 +3729,13 @@ function main() {
 
     stats.checked += 1;
     const content = fs.readFileSync(path.join(REPO_ROOT, relativePath), "utf8");
+    executionIdentityViolations.push(
+      ...executionIdentityViolationsForFile(
+        relativePath,
+        content,
+        surfaceSpellLexicon,
+      ),
+    );
     violations.push(
       ...findViolationsForFile(
         relativePath,
@@ -3089,18 +3748,72 @@ function main() {
   }
 
   const uniqueViolations = dedupeViolations(violations);
+  const uniqueExecutionIdentityViolations = dedupeExecutionIdentityViolations(
+    executionIdentityViolations,
+  );
+  const executionIdentityExemptionResult =
+    applyExecutionIdentityCollisionExemptions(
+      uniqueExecutionIdentityViolations,
+      EXECUTION_IDENTITY_COLLISION_EXEMPTIONS,
+    );
 
-  if (uniqueViolations.length > 0) {
-    console.error("authored-identity dispatch boundary violation(s) found:");
-    for (const violation of uniqueViolations) {
+  if (
+    uniqueViolations.length > 0 ||
+    executionIdentityExemptionResult.remaining.length > 0 ||
+    executionIdentityExemptionResult.stale.length > 0
+  ) {
+    if (uniqueViolations.length > 0) {
+      console.error("authored-identity dispatch boundary violation(s) found:");
+      for (const violation of uniqueViolations) {
+        console.error(
+          `  - ${violation.relativePath}:${violation.line} dispatches on authored identity "${violation.literal}" (${violation.context.kind}: ${violation.context.detail})`,
+        );
+      }
+      console.error("");
       console.error(
-        `  - ${violation.relativePath}:${violation.line} dispatches on authored identity "${violation.literal}" (${violation.context.kind}: ${violation.context.detail})`,
+        "If this usage is a valid boundary (catalog/composition/fixture/legacy/support-profile admission), add an explicit allowlist rule in scripts/check-authored-id-dispatch-boundary.cjs.",
       );
     }
-    console.error("");
-    console.error(
-      "If this usage is a valid boundary (catalog/composition/fixture/legacy/support-profile admission), add an explicit allowlist rule in scripts/check-authored-id-dispatch-boundary.cjs.",
-    );
+    if (executionIdentityExemptionResult.remaining.length > 0) {
+      const byRole = new Map();
+      const bySpell = new Map();
+      for (const violation of executionIdentityExemptionResult.remaining) {
+        byRole.set(violation.role, (byRole.get(violation.role) ?? 0) + 1);
+        bySpell.set(
+          violation.spellId,
+          (bySpell.get(violation.spellId) ?? 0) + 1,
+        );
+      }
+      console.error(
+        "authored spell identity remains in production execution roles:",
+      );
+      for (const violation of executionIdentityExemptionResult.remaining) {
+        console.error(
+          `  - ${violation.relativePath}:${violation.line}:${violation.column} [${violation.role}] ${violation.identifier} <- ${violation.spellId} (${violation.spellName})`,
+        );
+      }
+      console.error(
+        `execution identity violation count: ${executionIdentityExemptionResult.remaining.length}`,
+      );
+      console.error(
+        `by role: ${formatCountMapEntries(byRole)
+          .map(({ reason, count }) => `${reason}=${count}`)
+          .join(", ")}`,
+      );
+      console.error(
+        `by authored spell: ${formatCountMapEntries(bySpell)
+          .map(({ reason, count }) => `${reason}=${count}`)
+          .join(", ")}`,
+      );
+    }
+    if (executionIdentityExemptionResult.stale.length > 0) {
+      console.error("stale authored-identity collision exemption(s):");
+      for (const exemption of executionIdentityExemptionResult.stale) {
+        console.error(
+          `  - ${exemption.spellId}/${exemption.role}/${exemption.identifier}: ${exemption.reason}`,
+        );
+      }
+    }
     process.exit(1);
   }
 
@@ -3116,6 +3829,10 @@ function main() {
   console.log("authored-identity dispatch boundary check passed");
   console.log(
     `authored identity literals discovered: ${authoredIdentityLiterals.size}`,
+  );
+  console.log(`decoded Surface spell records: ${surfaceSpellLexicon.length}`);
+  console.log(
+    `exact execution collision exemptions exercised: ${EXECUTION_IDENTITY_COLLISION_EXEMPTIONS.length}`,
   );
   console.log(`checked source files: ${stats.checked}`);
   console.log(`excluded files: ${excludedTotal}`);
