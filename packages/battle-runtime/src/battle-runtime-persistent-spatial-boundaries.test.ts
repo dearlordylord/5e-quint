@@ -4,6 +4,7 @@ import { battleActDruidWildShapePresentation } from "./battle-act-composition.ts
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   characterSeed,
+  deathSavingThrowFill,
   discoverBattleActs,
   requireNeedsHoles,
   requireResolved,
@@ -340,6 +341,26 @@ describe("persistent spatial spell boundary procedures", () => {
     expect(resolved.state.combatants.get(spellTargetId)?.hp).toBe(
       targetTurn.state.combatants.get(spellTargetId)?.hp,
     );
+    const committed = requireResolved(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: saveAct.subject,
+        fills: [
+          failedSave,
+          damageFill,
+          deathSavingThrowFill(
+            requireHole(resolved.holes, "deathSavingThrow"),
+            10,
+          ),
+        ],
+      }),
+    );
+    expect(committed.state.combatants.get(spellTargetId)?.hp).toBe(7);
+    expect(committed.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ combatantId: spellTargetId, hp: 7 }),
+      ]),
+    );
   });
 
   test("Flaming Sphere reposition becomes stale when Concentration ends", () => {
@@ -482,6 +503,26 @@ describe("persistent spatial spell boundary procedures", () => {
     });
     expect(resolved.state.combatants.get(spellTargetId)?.hp).toBe(
       targetTurn.state.combatants.get(spellTargetId)?.hp,
+    );
+    const committed = requireResolved(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: saveAct.subject,
+        fills: [
+          failedSave,
+          damageFill,
+          deathSavingThrowFill(
+            requireHole(resolved.holes, "deathSavingThrow"),
+            10,
+          ),
+        ],
+      }),
+    );
+    expect(committed.state.combatants.get(spellTargetId)?.hp).toBe(25);
+    expect(committed.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ combatantId: spellTargetId, hp: 25 }),
+      ]),
     );
   });
 

@@ -633,6 +633,7 @@ async function waitForHttpHealth(
 async function stopChildProcess(
   child: ChildProcess,
   stderr: () => string,
+  signal: "SIGINT" | "SIGTERM",
 ): Promise<void> {
   if (child.exitCode !== null || child.signalCode !== null) {
     if (child.exitCode !== 0 || child.signalCode !== null) {
@@ -666,7 +667,7 @@ async function stopChildProcess(
       child.kill("SIGKILL");
     }, 5_000);
     child.once("exit", finish);
-    child.kill("SIGTERM");
+    child.kill(signal);
   });
 }
 
@@ -674,6 +675,7 @@ async function verifyShippedHttpResponseDrain(
   port: number,
   child: ChildProcess,
   stderr: () => string,
+  signal: "SIGINT" | "SIGTERM",
 ): Promise<void> {
   const body = '{"jsonrpc":"2.0","id":99,"method":"tools/list"}';
   let resolveResponse!: (response: {
@@ -681,6 +683,13 @@ async function verifyShippedHttpResponseDrain(
     readonly statusCode: number | undefined;
   }) => void;
   let rejectResponse!: (error: unknown) => void;
+  let resolveResponseStarted!: () => void;
+  let rejectResponseStarted!: (error: unknown) => void;
+  const responseStarted = new Promise<void>((resolve, reject) => {
+    resolveResponseStarted = resolve;
+    rejectResponseStarted = reject;
+  });
+  let shutdown: Promise<void> | undefined;
   const response = new Promise<{
     readonly body: string;
     readonly statusCode: number | undefined;
@@ -704,6 +713,11 @@ async function verifyShippedHttpResponseDrain(
     const chunks: Buffer[] = [];
     incoming.on("data", (chunk: Buffer | string) => {
       chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+      if (shutdown !== undefined) return;
+      incoming.pause();
+      shutdown = stopChildProcess(child, stderr, signal);
+      resolveResponseStarted();
+      setImmediate(() => incoming.resume());
     });
     incoming.once("end", () => {
       resolveResponse({
@@ -711,22 +725,24 @@ async function verifyShippedHttpResponseDrain(
         statusCode: incoming.statusCode,
       });
     });
-    incoming.once("error", rejectResponse);
+    incoming.once("error", (error) => {
+      rejectResponse(error);
+      rejectResponseStarted(error);
+    });
   });
-  request.once("error", rejectResponse);
+  request.once("error", (error) => {
+    rejectResponse(error);
+    rejectResponseStarted(error);
+  });
   request.setTimeout(30_000, () =>
     request.destroy(new Error("Shipped HTTP response drain timed out.")),
   );
   try {
-    await new Promise<void>((resolveWrite, rejectWrite) => {
-      request.write(body.slice(0, -1), (error) =>
-        error === undefined || error === null
-          ? resolveWrite()
-          : rejectWrite(error),
-      );
-    });
-    const shutdown = stopChildProcess(child, stderr);
-    request.end(body.slice(-1));
+    request.end(body);
+    await responseStarted;
+    if (shutdown === undefined) {
+      throw new Error("Shipped HTTP response did not start shutdown.");
+    }
     const [completedResponse, processExit] = await Promise.allSettled([
       response,
       shutdown,
@@ -827,8 +843,9 @@ export type ShippedHttpMcpEntrypoint = {
   readonly release: string;
 };
 
-export async function captureShippedHttpMcpEntrypoint(
+async function captureShippedHttpMcpEntrypointForSignal(
   input: ShippedHttpMcpEntrypoint,
+  signal: "SIGINT" | "SIGTERM",
 ): Promise<McpClientCapture> {
   const directory = mkdtempSync(join(tmpdir(), "dnd-effect3-baseline-http-"));
   const port = await reserveHttpPort();
@@ -885,7 +902,12 @@ export async function captureShippedHttpMcpEntrypoint(
     await client.connect(transport as Transport);
     const capture = await captureMcpClient(client);
     await closeClientOnce();
-    await verifyShippedHttpResponseDrain(port, child, () => childStderr.trim());
+    await verifyShippedHttpResponseDrain(
+      port,
+      child,
+      () => childStderr.trim(),
+      signal,
+    );
     return capture;
   } finally {
     const cleanupFailures: unknown[] = [];
@@ -896,7 +918,7 @@ export async function captureShippedHttpMcpEntrypoint(
       ),
     );
     try {
-      await stopChildProcess(child, () => childStderr.trim());
+      await stopChildProcess(child, () => childStderr.trim(), signal);
     } catch (error) {
       cleanupFailures.push(error);
     }
@@ -912,6 +934,28 @@ export async function captureShippedHttpMcpEntrypoint(
       );
     }
   }
+}
+
+export async function captureShippedHttpMcpEntrypoint(
+  input: ShippedHttpMcpEntrypoint,
+): Promise<McpClientCapture> {
+  const sigintCapture = await captureShippedHttpMcpEntrypointForSignal(
+    input,
+    "SIGINT",
+  );
+  const sigtermCapture = await captureShippedHttpMcpEntrypointForSignal(
+    input,
+    "SIGTERM",
+  );
+  if (
+    canonicalBaselineJson(sigintCapture) !==
+    canonicalBaselineJson(sigtermCapture)
+  ) {
+    throw new Error(
+      "Shipped HTTP MCP captures differ between SIGINT and SIGTERM lifecycle probes.",
+    );
+  }
+  return sigintCapture;
 }
 
 async function captureShippedHttpAnonymousMcp(): Promise<McpClientCapture> {

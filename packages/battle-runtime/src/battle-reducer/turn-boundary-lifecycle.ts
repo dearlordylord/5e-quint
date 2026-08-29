@@ -4171,6 +4171,11 @@ type EndTurnResolutionInput = BattleResolutionInput & {
   readonly replayParentPosition?: BattleStartTurnOccurrenceSequenceCheckpoint;
 };
 
+type DelegatedEndTurnParentInput = BattleResolutionInput & {
+  readonly replayParentPosition?: BattleStartTurnOccurrenceSequenceCheckpoint;
+  readonly replayObjectOutcomes?: BattleObjectOutcomeAccumulation;
+};
+
 export function resolveEndTurnCommand(
   input: EndTurnResolutionInput,
 ): BattleResolutionResult {
@@ -4182,10 +4187,7 @@ export function resolveEndTurnCommand(
 }
 
 export function resolveDelegatedEndTurnCommand(
-  parentInput: BattleResolutionInput & {
-    readonly replayParentPosition?: BattleStartTurnOccurrenceSequenceCheckpoint;
-    readonly replayObjectOutcomes?: BattleObjectOutcomeAccumulation;
-  },
+  parentInput: DelegatedEndTurnParentInput,
   endTurnInput: BattleResolutionInput,
 ): BattleResolutionResult {
   return resolveDelegatedEndTurnCommandWithReplayState(
@@ -4196,10 +4198,7 @@ export function resolveDelegatedEndTurnCommand(
 }
 
 export function resolveStagedDelegatedEndTurnCommand(
-  parentInput: BattleResolutionInput & {
-    readonly replayParentPosition?: BattleStartTurnOccurrenceSequenceCheckpoint;
-    readonly replayObjectOutcomes?: BattleObjectOutcomeAccumulation;
-  },
+  parentInput: DelegatedEndTurnParentInput,
   endTurnInput: BattleResolutionInput,
 ): BattleResolutionResult {
   return resolveDelegatedEndTurnCommandWithReplayState(
@@ -4210,10 +4209,7 @@ export function resolveStagedDelegatedEndTurnCommand(
 }
 
 function resolveDelegatedEndTurnCommandWithReplayState(
-  parentInput: BattleResolutionInput & {
-    readonly replayParentPosition?: BattleStartTurnOccurrenceSequenceCheckpoint;
-    readonly replayObjectOutcomes?: BattleObjectOutcomeAccumulation;
-  },
+  parentInput: DelegatedEndTurnParentInput,
   endTurnInput: BattleResolutionInput,
   ordinaryReplayState: BattleState,
 ): BattleResolutionResult {

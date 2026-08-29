@@ -42,13 +42,14 @@ const ClassificationEvidenceSchema = Schema.Struct({
     changed: NonNegativeIntegerSchema,
   }),
 });
+const ORACLE_DELTA_OPERATIONS = ["added", "removed", "changed"] as const;
 const JsonSideSchema = Schema.Union([
   Schema.Struct({ tag: Schema.Literal("missing") }),
   Schema.Struct({ tag: Schema.Literal("present"), sha256: HashSchema }),
 ]);
 const ReviewedDeltaIdentitySchema = Schema.Struct({
   classificationId: Schema.String,
-  operation: Schema.Literals(["added", "removed", "changed"]),
+  operation: Schema.Literals(ORACLE_DELTA_OPERATIONS),
   path: Schema.String,
   baseline: JsonSideSchema,
   candidate: JsonSideSchema,
@@ -84,12 +85,12 @@ export type OracleDeltaCertificate = Schema.Schema.Type<
   typeof OracleDeltaCertificateSchema
 >;
 
-type JsonSide =
-  | { readonly tag: "missing" }
-  | { readonly tag: "present"; readonly sha256: string };
+type JsonSide = Schema.Schema.Type<typeof JsonSideSchema>;
+
+type OracleDeltaOperation = (typeof ORACLE_DELTA_OPERATIONS)[number];
 
 export type OracleDelta = {
-  readonly operation: "added" | "removed" | "changed";
+  readonly operation: OracleDeltaOperation;
   readonly path: string;
   readonly segments: readonly string[];
   readonly baseline: JsonSide;

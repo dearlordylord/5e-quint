@@ -80,6 +80,7 @@ import {
 import { validateGustOfWindLineAreaPushFacts } from "./gust-of-wind-push-facts.ts";
 import { revertShapeShiftedCombatantToTrueForm } from "./shape-shifting.ts";
 import {
+  isEndTurnFillKind,
   resolveDelegatedEndTurnCommand,
   resolveStagedDelegatedEndTurnCommand,
 } from "./turn-boundary-lifecycle.ts";
@@ -1410,13 +1411,14 @@ function resolveFlamingSphereSaveCommand(
       (fill) =>
         fill.kind !== "savingThrowOutcome" &&
         fill.kind !== "rolledDice" &&
-        fill.kind !== "concentrationSavingThrow",
+        fill.kind !== "concentrationSavingThrow" &&
+        !isEndTurnFillKind(fill.kind),
     )
   ) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Movable zone save accepts only save, damage, and Concentration fills.",
+      "Movable zone save accepts only save, damage, Concentration, and delegated End Turn fills.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -2110,13 +2112,14 @@ function resolveMoonbeamSaveCommand(
       (fill) =>
         fill.kind !== "savingThrowOutcome" &&
         fill.kind !== "rolledDice" &&
-        fill.kind !== "concentrationSavingThrow",
+        fill.kind !== "concentrationSavingThrow" &&
+        !isEndTurnFillKind(fill.kind),
     )
   ) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Movable zone save accepts only save, damage, and Concentration fills.",
+      "Movable zone save accepts only save, damage, Concentration, and delegated End Turn fills.",
     );
   }
   /* v8 ignore stop -- @preserve */

@@ -30,7 +30,7 @@ platform-node-shared at `4.0.0-rc.112`.
 The final [controlled-red inventory](./controlled-red-inventory.json) covers 13
 typecheck owners and records zero raw and zero deduplicated diagnostics. Its
 SHA-256 is
-`f413b1fc2f036c652a23bf9b72954073ea21d7e05f09b640e0d3b3b77626d1e5`.
+`347dde4c3f6ed0a2c0f674fd0c2dce8edfacbc3135ebc7f7b0ee7c29c008c036`.
 The migration-only inventory generator and its package scripts have been
 removed. Any future diagnostic is therefore an ordinary blocking failure, not
 an admitted migration exception.
@@ -86,9 +86,9 @@ remain the semantic evidence.
 - MCP is produced with `pnpm --filter @dnd/mcp deploy --prod --legacy`, its
   recursive deployed dependency manifests pass the shipped-cohort check, and
   the deployed HTTP entrypoint answers real requests.
-- The MCP lifecycle probe sends `SIGINT` and `SIGTERM` while a large
-  `tools/list` response is incomplete, then proves complete newline framing,
-  parseable JSON, deterministic bytes, expected exit status, empty standard
+- The MCP lifecycle probe sends `SIGINT` and `SIGTERM` after receiving only the
+  first chunk of a large `tools/list` response, then proves the complete body,
+  parseable JSON, equal captures across both signals, clean exit, empty standard
   error, response drain, and cleanup without sleeps.
 - The application production bundle and its exact dependency-free static
   server artifact are copied to an isolated directory. The smoke reads the root
