@@ -35,7 +35,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     qFeatherFallLandingFallingPronePrevented: bool,
     qFeatherFallLandedTargetMitigationCleared: bool,
     qFeatherFallOtherTargetStillMitigated: bool,
-    qFogCloudAreaIdentityRetained: bool,
+    qPersistentAreaTraitAreaIdentityRetained: bool,
     qFogCloudHeavilyObscuredZoneCount: int,
     qFogCloudRadiusFeet: int,
     qFogCloudDurationTicks: int,
@@ -130,7 +130,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
   pure def qFeatherFallLandingFallingPronePrevented: bool = qState.qFeatherFallLandingFallingPronePrevented
   pure def qFeatherFallLandedTargetMitigationCleared: bool = qState.qFeatherFallLandedTargetMitigationCleared
   pure def qFeatherFallOtherTargetStillMitigated: bool = qState.qFeatherFallOtherTargetStillMitigated
-  pure def qFogCloudAreaIdentityRetained: bool = qState.qFogCloudAreaIdentityRetained
+  pure def qPersistentAreaTraitAreaIdentityRetained: bool = qState.qPersistentAreaTraitAreaIdentityRetained
   pure def qFogCloudHeavilyObscuredZoneCount: int = qState.qFogCloudHeavilyObscuredZoneCount
   pure def qFogCloudRadiusFeet: int = qState.qFogCloudRadiusFeet
   pure def qFogCloudDurationTicks: int = qState.qFogCloudDurationTicks
@@ -204,6 +204,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
 
   val qFogCloudLevelOneRadiusFeet = 20
   val qFogCloudOneHourDurationTicks = 600
+  val qPersistentAreaTraitAreaId = "persistent-area-trait-area"
   val qGreaseOneMinuteDurationTicks = 10
   val qGreaseDifficultTerrainTotalDistanceFeet = 10
   val qGreaseDifficultTerrainDistanceFeet = 5
@@ -214,6 +215,13 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
   val qProduceFlameTenMinuteDurationTicks = 100
   val qThunderwaveExpectedAffectedTargetOutcomeCount = 3
   val qThunderwaveExpectedDispositionCount = 1
+
+  pure def persistentAreaTraitAreaIdentityRetained(
+    activeEffectAreaId: str,
+    projectedZoneAreaId: str,
+    expectedAreaId: str,
+  ): bool =
+    activeEffectAreaId == expectedAreaId and projectedZoneAreaId == expectedAreaId
 
 
   action recordProjection(
@@ -244,7 +252,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     featherFallLandingFallingPronePrevented: bool,
     featherFallLandedTargetMitigationCleared: bool,
     featherFallOtherTargetStillMitigated: bool,
-    fogCloudAreaIdentityRetained: bool,
+    persistentAreaTraitAreaIdentityRetained: bool,
     fogCloudHeavilyObscuredZoneCount: int,
     fogCloudRadiusFeet: int,
     fogCloudDurationTicks: int,
@@ -336,7 +344,7 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       qFeatherFallLandingFallingPronePrevented: featherFallLandingFallingPronePrevented,
       qFeatherFallLandedTargetMitigationCleared: featherFallLandedTargetMitigationCleared,
       qFeatherFallOtherTargetStillMitigated: featherFallOtherTargetStillMitigated,
-      qFogCloudAreaIdentityRetained: fogCloudAreaIdentityRetained,
+      qPersistentAreaTraitAreaIdentityRetained: persistentAreaTraitAreaIdentityRetained,
       qFogCloudHeavilyObscuredZoneCount: fogCloudHeavilyObscuredZoneCount,
       qFogCloudRadiusFeet: fogCloudRadiusFeet,
       qFogCloudDurationTicks: fogCloudDurationTicks,
@@ -484,7 +492,11 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       false, 0, 0, "darkness", "darkness", false, false,
       0, 0, "normal", "normal", "normal", false, false,
       false, false, false, false, 0, 0, false, false, false, false,
-      true, 1, qFogCloudLevelOneRadiusFeet, qFogCloudOneHourDurationTicks,
+      persistentAreaTraitAreaIdentityRetained(
+        qPersistentAreaTraitAreaId,
+        qPersistentAreaTraitAreaId,
+        qPersistentAreaTraitAreaId,
+      ), 1, qFogCloudLevelOneRadiusFeet, qFogCloudOneHourDurationTicks,
       true, true, true, true, true,
       false, 0, 0, 0, false, false, false,
       0, 0, false, false, false, false, false, false, false, false, false,
@@ -615,6 +627,12 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       0, false, false, true,
       ThunderwaveSavePushObjectsBoom,
     ),
+  }
+
+  run test_persistent_area_trait_area_identity_requires_joint_match = all {
+    assert(persistentAreaTraitAreaIdentityRetained("area-a", "area-a", "area-a")),
+    assert(not(persistentAreaTraitAreaIdentityRetained("area-b", "area-a", "area-a"))),
+    assert(not(persistentAreaTraitAreaIdentityRetained("area-a", "area-b", "area-a"))),
   }
 
   action step = any {
