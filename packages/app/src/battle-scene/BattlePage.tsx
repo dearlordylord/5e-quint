@@ -1,5 +1,5 @@
 import { type BattlePresentationIssue, battlePresentedCheckpointFrontierEnvelope } from "@dnd/battle-runtime"
-import { Either, Match } from "effect"
+import { Match, Result } from "effect"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { EventLog, type EventLogEntry } from "#/components/EventLog.tsx"
@@ -31,8 +31,8 @@ export function BattlePage({
   const presentedEnvelope = useMemo(() => battlePresentedCheckpointFrontierEnvelope(step.session), [step.session])
   const projectionResult = useMemo(
     () =>
-      Either.flatMap(presentedEnvelope, (envelope) =>
-        Either.mapLeft(
+      Result.flatMap(presentedEnvelope, (envelope) =>
+        Result.mapError(
           computeWizardBattleScene({ meta, snapshot: envelope.checkpoint, step, stepIndex: cursor }),
           (issue) => [issue] as const
         )
@@ -112,18 +112,18 @@ export function BattlePage({
     return () => window.removeEventListener("keydown", handler)
   }, [cursor, lastStep, stepTo])
 
-  if (Either.isLeft(projectionResult)) {
+  if (Result.isFailure(projectionResult)) {
     return (
       <PageShell title="Battle Visualizer">
         <ul role="alert">
-          {projectionResult.left.map((issue) => (
+          {projectionResult.failure.map((issue) => (
             <li key={presentationIssueKey(issue)}>{presentationIssueMessage(issue)}</li>
           ))}
         </ul>
       </PageShell>
     )
   }
-  const projection = projectionResult.right
+  const projection = projectionResult.success
 
   return (
     <PageShell title="Battle Visualizer">

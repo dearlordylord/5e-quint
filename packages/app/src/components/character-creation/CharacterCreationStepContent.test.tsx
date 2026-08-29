@@ -13,7 +13,7 @@ import {
   unitChoiceSourceUnitId
 } from "@dnd/character-creation-runtime"
 import { fireEvent, render, screen } from "@testing-library/react"
-import { Either } from "effect"
+import { Result } from "effect"
 import { describe, expect, it, vi } from "vitest"
 
 import { FIGHTER_EXAMPLE_DRAFT } from "./characterCreationPresets.ts"
@@ -184,9 +184,9 @@ describe("CharacterCreationStepContent", () => {
     const choiceKey = unitChoiceKey(CLASS_SKILL_PROFICIENCY_CHOICE_KEY)
     if (
       cardinality === undefined ||
-      Either.isLeft(equipmentUnitId) ||
-      Either.isLeft(sourceUnitId) ||
-      Either.isLeft(choiceKey)
+      Result.isFailure(equipmentUnitId) ||
+      Result.isFailure(sourceUnitId) ||
+      Result.isFailure(choiceKey)
     ) {
       throw new Error("Expected synthetic loadout test facts.")
     }
@@ -195,7 +195,7 @@ describe("CharacterCreationStepContent", () => {
       holeId: existingHole.holeId,
       source: {
         tag: "loadout",
-        equipmentUnitId: equipmentUnitId.right,
+        equipmentUnitId: equipmentUnitId.success,
         slot: LOADOUT_WEAPON_SLOT
       },
       cardinality,
@@ -209,8 +209,8 @@ describe("CharacterCreationStepContent", () => {
       holeId: secondExistingHole.holeId,
       source: {
         tag: "unitChoice",
-        unitId: sourceUnitId.right,
-        choiceKey: choiceKey.right
+        unitId: sourceUnitId.success,
+        choiceKey: choiceKey.success
       },
       options: [
         { optionId: creationChoiceOptionId("athletics"), label: "Athletics" },
