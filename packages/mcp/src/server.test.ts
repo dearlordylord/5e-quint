@@ -30,7 +30,6 @@ import {
   type BattleSubject,
   type BattleRuntimeSession,
   type BattleState,
-  type BattleStateInitIssue,
 } from "@dnd/battle-runtime";
 import {
   battleRuntimeContextForTest,
@@ -94,7 +93,7 @@ import {
   battleCreatureInitFromCharacterBuild,
   characterBattleSupportProjection,
   characterBattleRuntimeIssueMessage,
-  type BattleCreatureInitIssue,
+  type CharacterBattleRuntimeIssue,
 } from "@dnd/character-battle-runtime";
 import {
   availableCharacterSession,
@@ -136,7 +135,11 @@ import {
   buildStatBlockCatalog,
   defineSrdStatBlockCollection,
 } from "@dnd/surface/surface/stat-block-catalog";
-import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import {
+  decodeUnitRecordSync,
+  StatBlockProcedureOrdinalSchema,
+} from "@dnd/surface/surface/schema";
 import { PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS } from "@dnd/surface/surface/find-familiar-forms";
 import {
   buildUnitCatalog,
@@ -173,7 +176,7 @@ function testBattleCreatureStateWithoutKnockOut(
 
 type TestBattleRosterProjection = Either.Either<
   BattleCreatureInit,
-  BattleCreatureInitIssue | BattleStateInitIssue
+  CharacterBattleRuntimeIssue
 >;
 
 function startBattleFromProjectedRosterFixture(input: {
@@ -1232,8 +1235,9 @@ describe("MCP server route", () => {
         battleCreatureInitFromStatBlock({
           ...{
             combatantId: goblinId,
-            statBlock: root.statBlockCatalog.requireStatBlock(
-              "stat_block_goblin_warrior",
+            statBlock: assertStatBlockForTest(
+              root.statBlockCatalog,
+              statBlockId("stat_block_goblin_warrior"),
             ),
             initiative: initiativeScore(11),
           },
@@ -1339,8 +1343,9 @@ describe("MCP server route", () => {
         battleCreatureInitFromStatBlock({
           ...{
             combatantId: goblinId,
-            statBlock: root.statBlockCatalog.requireStatBlock(
-              "stat_block_goblin_warrior",
+            statBlock: assertStatBlockForTest(
+              root.statBlockCatalog,
+              statBlockId("stat_block_goblin_warrior"),
             ),
             initiative: initiativeScore(11),
           },
@@ -1393,8 +1398,9 @@ describe("MCP server route", () => {
         battleCreatureInitFromStatBlock({
           ...{
             combatantId: goblinId,
-            statBlock: root.statBlockCatalog.requireStatBlock(
-              "stat_block_goblin_warrior",
+            statBlock: assertStatBlockForTest(
+              root.statBlockCatalog,
+              statBlockId("stat_block_goblin_warrior"),
             ),
             initiative: initiativeScore(11),
           },
@@ -1461,8 +1467,9 @@ describe("MCP server route", () => {
         battleCreatureInitFromStatBlock({
           ...{
             combatantId: goblinId,
-            statBlock: root.statBlockCatalog.requireStatBlock(
-              "stat_block_goblin_warrior",
+            statBlock: assertStatBlockForTest(
+              root.statBlockCatalog,
+              statBlockId("stat_block_goblin_warrior"),
             ),
             initiative: initiativeScore(11),
           },
@@ -1524,8 +1531,9 @@ describe("MCP server route", () => {
           battleCreatureInitFromStatBlock({
             ...{
               combatantId: goblinId,
-              statBlock: root.statBlockCatalog.requireStatBlock(
-                "stat_block_goblin_warrior",
+              statBlock: assertStatBlockForTest(
+                root.statBlockCatalog,
+                statBlockId("stat_block_goblin_warrior"),
               ),
               initiative: initiativeScore(11),
             },
@@ -1561,8 +1569,9 @@ describe("MCP server route", () => {
         battleCreatureInitFromStatBlock({
           ...{
             combatantId: goblinId,
-            statBlock: root.statBlockCatalog.requireStatBlock(
-              "stat_block_goblin_warrior",
+            statBlock: assertStatBlockForTest(
+              root.statBlockCatalog,
+              statBlockId("stat_block_goblin_warrior"),
             ),
             initiative: initiativeScore(11),
           },
@@ -1615,8 +1624,9 @@ describe("MCP server route", () => {
         battleCreatureInitFromStatBlock({
           ...{
             combatantId: goblinId,
-            statBlock: root.statBlockCatalog.requireStatBlock(
-              "stat_block_goblin_warrior",
+            statBlock: assertStatBlockForTest(
+              root.statBlockCatalog,
+              statBlockId("stat_block_goblin_warrior"),
             ),
             initiative: initiativeScore(11),
           },
@@ -1665,8 +1675,9 @@ describe("MCP server route", () => {
         battleCreatureInitFromStatBlock({
           ...{
             combatantId: goblinId,
-            statBlock: root.statBlockCatalog.requireStatBlock(
-              "stat_block_goblin_warrior",
+            statBlock: assertStatBlockForTest(
+              root.statBlockCatalog,
+              statBlockId("stat_block_goblin_warrior"),
             ),
             initiative: initiativeScore(11),
           },
@@ -1704,8 +1715,9 @@ describe("MCP server route", () => {
         battleCreatureInitFromStatBlock({
           ...{
             combatantId: goblinId,
-            statBlock: root.statBlockCatalog.requireStatBlock(
-              "stat_block_goblin_warrior",
+            statBlock: assertStatBlockForTest(
+              root.statBlockCatalog,
+              statBlockId("stat_block_goblin_warrior"),
             ),
             initiative: initiativeScore(11),
           },
@@ -1748,8 +1760,9 @@ describe("MCP server route", () => {
         battleCreatureInitFromStatBlock({
           ...{
             combatantId: goblinId,
-            statBlock: root.statBlockCatalog.requireStatBlock(
-              "stat_block_goblin_warrior",
+            statBlock: assertStatBlockForTest(
+              root.statBlockCatalog,
+              statBlockId("stat_block_goblin_warrior"),
             ),
             initiative: initiativeScore(11),
           },
@@ -1804,8 +1817,9 @@ describe("MCP server route", () => {
           battleCreatureInitFromStatBlock({
             ...{
               combatantId: goblinId,
-              statBlock: root.statBlockCatalog.requireStatBlock(
-                "stat_block_goblin_warrior",
+              statBlock: assertStatBlockForTest(
+                root.statBlockCatalog,
+                statBlockId("stat_block_goblin_warrior"),
               ),
               initiative: initiativeScore(11),
             },
@@ -1840,8 +1854,9 @@ describe("MCP server route", () => {
         battleCreatureInitFromStatBlock({
           ...{
             combatantId: goblinId,
-            statBlock: root.statBlockCatalog.requireStatBlock(
-              "stat_block_goblin_warrior",
+            statBlock: assertStatBlockForTest(
+              root.statBlockCatalog,
+              statBlockId("stat_block_goblin_warrior"),
             ),
             initiative: initiativeScore(11),
           },
@@ -1912,8 +1927,9 @@ describe("MCP server route", () => {
           battleCreatureInitFromStatBlock({
             ...{
               combatantId: goblinId,
-              statBlock: root.statBlockCatalog.requireStatBlock(
-                "stat_block_goblin_warrior",
+              statBlock: assertStatBlockForTest(
+                root.statBlockCatalog,
+                statBlockId("stat_block_goblin_warrior"),
               ),
               initiative: initiativeScore(11),
             },
@@ -1976,8 +1992,9 @@ describe("MCP server route", () => {
         battleCreatureInitFromStatBlock({
           ...{
             combatantId: goblinId,
-            statBlock: root.statBlockCatalog.requireStatBlock(
-              "stat_block_goblin_warrior",
+            statBlock: assertStatBlockForTest(
+              root.statBlockCatalog,
+              statBlockId("stat_block_goblin_warrior"),
             ),
             initiative: initiativeScore(11),
           },
@@ -2082,8 +2099,9 @@ describe("MCP server route", () => {
         battleCreatureInitFromStatBlock({
           ...{
             combatantId: goblinId,
-            statBlock: root.statBlockCatalog.requireStatBlock(
-              "stat_block_goblin_warrior",
+            statBlock: assertStatBlockForTest(
+              root.statBlockCatalog,
+              statBlockId("stat_block_goblin_warrior"),
             ),
             initiative: initiativeScore(11),
           },
@@ -2786,62 +2804,42 @@ describe("MCP server route", () => {
     const continuation = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
+    const continuationActs = continuation.envelope.frontier.acts as readonly {
+      readonly label: string;
+      readonly subject: BattleSubject;
+    }[];
+    const attackSubjects = continuationActs.flatMap(({ subject }) =>
+      subject.tag === "action" && subject.action === "attack" ? [subject] : [],
+    );
     expect(
-      continuation.envelope.frontier.acts.map(
-        (act: { label: string }) => act.label,
+      continuationActs
+        .filter(({ label }) => label !== "Attack")
+        .map(({ label }) => label),
+    ).toEqual(["Move", "End Turn"]);
+    expect(attackSubjects).toHaveLength(8);
+    expect(
+      attackSubjects.every(
+        (subject) =>
+          subject.actorId === "goblin" &&
+          subject.statBlockDamageSelection
+            ?.map(({ componentRef }) => componentRef.kind)
+            .join(",") === "baseDamageComponent,advantageBonusDamageComponent",
       ),
-    ).toEqual(["Attack", "Attack", "Attack", "Attack", "Move", "End Turn"]);
+    ).toBe(true);
+    const attackProcedureRefs = Array.from(
+      new Set(attackSubjects.map(({ procedureRef }) => procedureRef)),
+    );
     expect(
-      continuation.envelope.frontier.acts.map(
-        (act: { subject: unknown }) => act.subject,
+      attackProcedureRefs.map((procedureRef) =>
+        attackSubjects
+          .filter((subject) => subject.procedureRef === procedureRef)
+          .map(({ statBlockDamageSelection }) =>
+            statBlockDamageSelection?.map(({ notation }) => notation).join(","),
+          ),
       ),
     ).toEqual([
-      expect.objectContaining({
-        tag: "action",
-        actorId: "goblin",
-        action: "attack",
-        procedureRef: expect.any(String),
-        statBlockDamageSelection: [
-          expect.objectContaining({ notation: "rolled" }),
-        ],
-      }),
-      expect.objectContaining({
-        tag: "action",
-        actorId: "goblin",
-        action: "attack",
-        procedureRef: expect.any(String),
-        statBlockDamageSelection: [
-          expect.objectContaining({ notation: "static" }),
-        ],
-      }),
-      expect.objectContaining({
-        tag: "action",
-        actorId: "goblin",
-        action: "attack",
-        procedureRef: expect.any(String),
-        statBlockDamageSelection: [
-          expect.objectContaining({ notation: "rolled" }),
-        ],
-      }),
-      expect.objectContaining({
-        tag: "action",
-        actorId: "goblin",
-        action: "attack",
-        procedureRef: expect.any(String),
-        statBlockDamageSelection: [
-          expect.objectContaining({ notation: "static" }),
-        ],
-      }),
-      {
-        tag: "runtimeCommand",
-        actorId: "goblin",
-        command: "move",
-      },
-      {
-        tag: "runtimeCommand",
-        actorId: "goblin",
-        command: "endTurn",
-      },
+      ["rolled,rolled", "rolled,static", "static,rolled", "static,static"],
+      ["rolled,rolled", "rolled,static", "static,rolled", "static,static"],
     ]);
   });
 
@@ -3446,16 +3444,31 @@ describe("MCP server route", () => {
         expect.objectContaining({ label: "End Turn" }),
       ]),
     );
+    const goblinActCandidates = goblinActs.envelope.frontier.acts as readonly {
+      readonly label: string;
+      readonly subject: BattleSubject;
+    }[];
     expect(
-      goblinActs.envelope.frontier.acts.map(
-        (act: { label: string }) => act.label,
+      goblinActCandidates.filter(
+        ({ subject }) =>
+          subject.tag === "action" &&
+          subject.action === "attack" &&
+          subject.statBlockDamageSelection !== undefined,
       ),
+    ).toHaveLength(9);
+    expect(
+      goblinActCandidates.filter(
+        ({ subject }) =>
+          subject.tag === "action" &&
+          subject.action === "attack" &&
+          subject.statBlockDamageSelection === undefined,
+      ),
+    ).toHaveLength(0);
+    expect(
+      goblinActCandidates
+        .filter(({ label }) => label !== "Attack")
+        .map(({ label }) => label),
     ).toEqual([
-      "Attack",
-      "Attack",
-      "Attack",
-      "Attack",
-      "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS,
       "Unarmed Strike (Grapple)",
       "Unarmed Strike (Shove)",
@@ -3559,8 +3572,9 @@ describe("MCP server route", () => {
           battleCreatureInitFromStatBlock({
             ...{
               combatantId: goblinId,
-              statBlock: root.statBlockCatalog.requireStatBlock(
-                "stat_block_goblin_warrior",
+              statBlock: assertStatBlockForTest(
+                root.statBlockCatalog,
+                statBlockId("stat_block_goblin_warrior"),
               ),
               initiative: initiativeScore(18),
             },
@@ -3648,8 +3662,9 @@ describe("MCP server route", () => {
           battleCreatureInitFromStatBlock({
             ...{
               combatantId: goblinId,
-              statBlock: root.statBlockCatalog.requireStatBlock(
-                "stat_block_goblin_warrior",
+              statBlock: assertStatBlockForTest(
+                root.statBlockCatalog,
+                statBlockId("stat_block_goblin_warrior"),
               ),
               initiative: initiativeScore(18),
             },
@@ -3727,8 +3742,9 @@ describe("MCP server route", () => {
           battleCreatureInitFromStatBlock({
             ...{
               combatantId: goblinId,
-              statBlock: root.statBlockCatalog.requireStatBlock(
-                "stat_block_goblin_warrior",
+              statBlock: assertStatBlockForTest(
+                root.statBlockCatalog,
+                statBlockId("stat_block_goblin_warrior"),
               ),
               initiative: initiativeScore(7),
             },
@@ -4562,20 +4578,19 @@ describe("MCP server route", () => {
       }),
     );
 
-    const skeleton = root.statBlockCatalog.requireStatBlock(
-      "stat_block_skeleton",
+    const skeleton = assertStatBlockForTest(
+      root.statBlockCatalog,
+      statBlockId("stat_block_skeleton"),
     );
-    const malformedStatBlock: StatBlockRecord = {
+    const malformedStatBlock = {
       ...skeleton,
       id: statBlockId("synthetic_invalid_battle_roster_stat_block"),
+      name: "Synthetic Invalid Battle Roster Stat Block",
       statBlock: {
         ...skeleton.statBlock,
-        hp: {
-          kind: "caster_derived" as const,
-          source: "proficiency_bonus" as const,
-        },
+        hp: { kind: "literal", value: -1 },
       },
-    };
+    } satisfies StatBlockRecord;
     const malformedCatalog: typeof root.statBlockCatalog = {
       ...root.statBlockCatalog,
       getStatBlock: (requestedId) =>
@@ -4686,7 +4701,7 @@ describe("MCP server route", () => {
             issueTag: "battleStateInitIssue",
             reason: "statBlockSourceInvalid",
             statBlockId: malformedStatBlock.id,
-            constraint: "literalMaximumHitPointsRequired",
+            constraint: "positiveMaximumHitPointsRequired",
           },
           {
             kind: "battleInitialization",
@@ -5208,8 +5223,9 @@ describe("MCP server route", () => {
       },
     });
 
-    const base = invalidHpRoot.statBlockCatalog.requireStatBlock(
-      "stat_block_goblin_warrior",
+    const base = assertStatBlockForTest(
+      invalidHpRoot.statBlockCatalog,
+      statBlockId("stat_block_goblin_warrior"),
     );
     const invalidMechanicsRecord = {
       ...base,
@@ -5217,7 +5233,6 @@ describe("MCP server route", () => {
       name: "Synthetic Invalid Mechanics",
       statBlock: {
         ...base.statBlock,
-        displayName: "Synthetic Invalid Mechanics",
         hp: { kind: "literal", value: -1 },
       },
     } satisfies StatBlockRecord;
@@ -5261,8 +5276,7 @@ describe("MCP server route", () => {
     const invalidDisplayRecord = {
       ...base,
       id: statBlockId("stat_block_synthetic_invalid_display"),
-      name: "Synthetic Invalid Display",
-      statBlock: { ...base.statBlock, displayName: "" },
+      name: "",
     } satisfies StatBlockRecord;
     const invalidDisplayRoot = {
       ...createMcpPlaySessionRoot(),
@@ -7295,10 +7309,8 @@ describe("MCP server route", () => {
     );
     expect(selected.selectedStatBlock).toMatchObject({
       id: "stat_block_goblin_warrior",
+      name: "Goblin Warrior",
       provenance: { kind: "srd-5.2.1" },
-      statBlock: {
-        displayName: "Goblin Warrior",
-      },
     });
 
     const started = readPayload(
@@ -7488,6 +7500,10 @@ describe("MCP server route", () => {
       "Attack",
       "Attack",
       "Attack",
+      "Attack",
+      "Attack",
+      "Attack",
+      "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS,
       "Unarmed Strike (Grapple)",
       "Unarmed Strike (Shove)",
@@ -7644,8 +7660,9 @@ describe("MCP server route", () => {
           battleCreatureInitFromStatBlock({
             ...{
               combatantId: goblinId,
-              statBlock: root.statBlockCatalog.requireStatBlock(
-                "stat_block_goblin_warrior",
+              statBlock: assertStatBlockForTest(
+                root.statBlockCatalog,
+                statBlockId("stat_block_goblin_warrior"),
               ),
               initiative: initiativeScore(7),
             },
@@ -8701,8 +8718,9 @@ describe("MCP server route", () => {
         battleCreatureInitFromStatBlock({
           ...{
             combatantId: goblinId,
-            statBlock: root.statBlockCatalog.requireStatBlock(
-              "stat_block_goblin_warrior",
+            statBlock: assertStatBlockForTest(
+              root.statBlockCatalog,
+              statBlockId("stat_block_goblin_warrior"),
             ),
             initiative: initiativeScore(10),
           },
@@ -8754,8 +8772,9 @@ describe("MCP server route", () => {
         battleCreatureInitFromStatBlock({
           ...{
             combatantId: goblinId,
-            statBlock: root.statBlockCatalog.requireStatBlock(
-              "stat_block_goblin_warrior",
+            statBlock: assertStatBlockForTest(
+              root.statBlockCatalog,
+              statBlockId("stat_block_goblin_warrior"),
             ),
             initiative: initiativeScore(10),
           },
@@ -8817,8 +8836,9 @@ describe("MCP server route", () => {
         battleCreatureInitFromStatBlock({
           ...{
             combatantId: goblinId,
-            statBlock: root.statBlockCatalog.requireStatBlock(
-              "stat_block_goblin_warrior",
+            statBlock: assertStatBlockForTest(
+              root.statBlockCatalog,
+              statBlockId("stat_block_goblin_warrior"),
             ),
             initiative: initiativeScore(10),
           },
@@ -8879,8 +8899,9 @@ describe("MCP server route", () => {
         battleCreatureInitFromStatBlock({
           ...{
             combatantId: goblinId,
-            statBlock: root.statBlockCatalog.requireStatBlock(
-              "stat_block_goblin_warrior",
+            statBlock: assertStatBlockForTest(
+              root.statBlockCatalog,
+              statBlockId("stat_block_goblin_warrior"),
             ),
             initiative: initiativeScore(10),
           },
@@ -9029,8 +9050,9 @@ describe("MCP server route", () => {
         battleCreatureInitFromStatBlock({
           ...{
             combatantId: goblinId,
-            statBlock: root.statBlockCatalog.requireStatBlock(
-              "stat_block_goblin_warrior",
+            statBlock: assertStatBlockForTest(
+              root.statBlockCatalog,
+              statBlockId("stat_block_goblin_warrior"),
             ),
             initiative: initiativeScore(10),
           },
@@ -9228,8 +9250,9 @@ describe("MCP server route", () => {
         battleCreatureInitFromStatBlock({
           ...{
             combatantId: goblinId,
-            statBlock: root.statBlockCatalog.requireStatBlock(
-              "stat_block_goblin_warrior",
+            statBlock: assertStatBlockForTest(
+              root.statBlockCatalog,
+              statBlockId("stat_block_goblin_warrior"),
             ),
             initiative: initiativeScore(10),
           },
@@ -9578,8 +9601,9 @@ describe("MCP server route", () => {
         battleCreatureInitFromStatBlock({
           ...{
             combatantId: goblinId,
-            statBlock: root.statBlockCatalog.requireStatBlock(
-              "stat_block_goblin_warrior",
+            statBlock: assertStatBlockForTest(
+              root.statBlockCatalog,
+              statBlockId("stat_block_goblin_warrior"),
             ),
             initiative: initiativeScore(10),
           },
@@ -9731,8 +9755,9 @@ describe("MCP server route", () => {
         battleCreatureInitFromStatBlock({
           ...{
             combatantId: goblinId,
-            statBlock: root.statBlockCatalog.requireStatBlock(
-              "stat_block_goblin_warrior",
+            statBlock: assertStatBlockForTest(
+              root.statBlockCatalog,
+              statBlockId("stat_block_goblin_warrior"),
             ),
             initiative: initiativeScore(10),
           },
@@ -10022,8 +10047,9 @@ describe("MCP server route", () => {
           battleCreatureInitFromStatBlock({
             ...{
               combatantId: goblinId,
-              statBlock: root.statBlockCatalog.requireStatBlock(
-                "stat_block_goblin_warrior",
+              statBlock: assertStatBlockForTest(
+                root.statBlockCatalog,
+                statBlockId("stat_block_goblin_warrior"),
               ),
               initiative: initiativeScore(10),
             },
@@ -10053,9 +10079,25 @@ function fighterCharacterBuild(
 function goblinWarriorMultiattackStatBlock(
   root: ReturnType<typeof createMcpPlaySessionRoot>,
 ): StatBlockRecord {
-  const base = root.statBlockCatalog.requireStatBlock(
-    "stat_block_goblin_warrior",
+  const base = assertStatBlockForTest(
+    root.statBlockCatalog,
+    statBlockId("stat_block_goblin_warrior"),
   );
+  const scimitar = base.statBlock.actions?.find(
+    (entry) =>
+      entry.kind === "executable" &&
+      entry.procedure.kind === "attack_roll" &&
+      entry.procedure.name === "Scimitar",
+  );
+  const shortbow = base.statBlock.actions?.find(
+    (entry) =>
+      entry.kind === "executable" &&
+      entry.procedure.kind === "attack_roll" &&
+      entry.procedure.name === "Shortbow",
+  );
+  if (scimitar === undefined || shortbow === undefined) {
+    throw new Error("Expected Goblin Warrior attack fixtures.");
+  }
   // MCP-only upgraded Goblin Warrior fixture: the SRD Goblin Warrior has no
   // Multiattack, but this keeps the fixture small while exercising the tool path.
   return {
@@ -10064,18 +10106,30 @@ function goblinWarriorMultiattackStatBlock(
     name: "Upgraded Goblin Warrior",
     statBlock: {
       ...base.statBlock,
-      actions: {
-        ...base.statBlock.actions,
-        multiattacks: [
-          {
+      actions: [
+        ...(base.statBlock.actions ?? []),
+        {
+          kind: "executable",
+          procedureOrdinal: Schema.decodeUnknownSync(
+            StatBlockProcedureOrdinalSchema,
+          )(3),
+          procedure: {
+            kind: "multiattack",
             name: "Multiattack",
             dispatches: [
-              { name: "Scimitar", count: { kind: "literal", value: 1 } },
-              { name: "Shortbow", count: { kind: "literal", value: 1 } },
+              {
+                procedureOrdinal: scimitar.procedureOrdinal,
+                count: { kind: "literal", value: 1 },
+              },
+              {
+                procedureOrdinal: shortbow.procedureOrdinal,
+                count: { kind: "literal", value: 1 },
+              },
             ],
           },
-        ],
-      },
+          resourceRefs: { kind: "none" },
+        },
+      ],
     },
   };
 }
@@ -10653,10 +10707,10 @@ function battleAttackSubjectForName(
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
       candidate.subject.actorId === actorId &&
-      candidate.subject.statBlockDamageSelection !== undefined &&
-      candidate.subject.statBlockDamageSelection.every(
-        ({ notation }) => notation === "rolled",
-      ) &&
+      (candidate.subject.statBlockDamageSelection === undefined ||
+        candidate.subject.statBlockDamageSelection.every(
+          ({ notation }) => notation === "rolled",
+        )) &&
       candidate.presentation.kind === "attack" &&
       candidate.presentation.procedureRef === candidate.subject.procedureRef &&
       candidate.presentation.name === attackName,
@@ -10685,6 +10739,9 @@ function battleAttackSelection(subject: BattleSubject, attackName: string) {
     ...(subject.attackDamageType === undefined
       ? {}
       : { attackDamageType: subject.attackDamageType }),
+    ...(subject.statBlockDamageSelection === undefined
+      ? {}
+      : { statBlockDamageSelection: subject.statBlockDamageSelection }),
   };
 }
 
