@@ -254,7 +254,7 @@ export {
 export {
   resolveCompelledNextTurnBehaviorSpellAct,
   resolveAbilityD20TestRollModeSaveGateSpellAct,
-  resolveGreaseGroundHazardSpellAct,
+  resolvePersistentAreaSaveConditionSpellAct,
   resolveSaveGatedConditionWithRepeatSpellAct,
   resolveSaveGateAttackRollAdvantageSpellAct,
   resolveSaveGateConditionSpellAct,

@@ -123,6 +123,15 @@ type ExecutableMovableLightRepositionInvocation = Extract<
   ExecutableMovableLightManifestationInvocation,
   { readonly operation: "reposition" }
 >;
+type ExecutableMovableLightCastResolveInput = MovableLightCastResolveInput & {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly invocation: ExecutableMovableLightCastInvocation;
+};
+type ExecutableMovableLightRepositionResolveInput =
+  MovableLightRepositionResolveInput & {
+    readonly input: BonusActionSpellBattleResolutionInput;
+    readonly invocation: ExecutableMovableLightRepositionInvocation;
+  };
 
 function admitMovableLightSeparateCast(
   spell: BattleSpellAdmissionSource,
@@ -321,10 +330,7 @@ function activeMovableLightEffect(
 function resolveMovableLightCast(
   input: MovableLightCastResolveInput,
 ): BattleResolutionResult {
-  if (
-    input.invocation.operation !== "create" ||
-    input.input.subject.tag !== "actionSpell"
-  ) {
+  if (!isExecutableMovableLightCastResolveInput(input)) {
     return invalidResult(
       input.input.state,
       "staleSubject",
@@ -333,18 +339,13 @@ function resolveMovableLightCast(
   }
   return resolveMovableLightCastSpellAct({
     ...input,
-    input: input.input as ActionSpellBattleResolutionInput,
-    invocation: input.invocation as ExecutableMovableLightCastInvocation,
   });
 }
 
 function resolveMovableLightReposition(
   input: MovableLightRepositionResolveInput,
 ): BattleResolutionResult {
-  if (
-    input.invocation.operation !== "reposition" ||
-    input.input.subject.tag !== "bonusActionSpell"
-  ) {
+  if (!isExecutableMovableLightRepositionResolveInput(input)) {
     return invalidResult(
       input.input.state,
       "staleSubject",
@@ -353,9 +354,44 @@ function resolveMovableLightReposition(
   }
   return resolveMovableLightRepositionSpellAct({
     ...input,
-    input: input.input as BonusActionSpellBattleResolutionInput,
-    invocation: input.invocation as ExecutableMovableLightRepositionInvocation,
   });
+}
+
+function isExecutableMovableLightCastResolveInput(
+  input: MovableLightCastResolveInput,
+): input is ExecutableMovableLightCastResolveInput {
+  return movableLightResolutionSubjectMatchesOperation({
+    operation: input.invocation.operation,
+    subjectTag: input.input.subject.tag,
+  });
+}
+
+function isExecutableMovableLightRepositionResolveInput(
+  input: MovableLightRepositionResolveInput,
+): input is ExecutableMovableLightRepositionResolveInput {
+  return movableLightResolutionSubjectMatchesOperation({
+    operation: input.invocation.operation,
+    subjectTag: input.input.subject.tag,
+  });
+}
+
+export function movableLightResolutionSubjectMatchesOperation(input: {
+  readonly operation: "create" | "reposition";
+  readonly subjectTag: "actionSpell" | "bonusActionSpell";
+}): boolean {
+  return Match.value(input).pipe(
+    Match.when({ operation: "create", subjectTag: "actionSpell" }, () => true),
+    Match.when(
+      { operation: "reposition", subjectTag: "bonusActionSpell" },
+      () => true,
+    ),
+    Match.whenOr(
+      { operation: "create", subjectTag: "bonusActionSpell" },
+      { operation: "reposition", subjectTag: "actionSpell" },
+      () => false,
+    ),
+    Match.exhaustive,
+  );
 }
 
 const MovableLightSeparateCastInvocationSchema = spellProcedureExecutionSchema(

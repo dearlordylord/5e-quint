@@ -486,7 +486,14 @@ describe("battle boundary admission owners", () => {
           combatantId: wizardId,
           initiative: 20,
           attack: null,
-          spellcasting: wizardSpellcasting(),
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("acid_splash")],
+            preparedSpells: [
+              spellRecord("insect_plague"),
+              spellRecord("cloudkill"),
+            ],
+            spellSlots: [{ spellLevel: 5, count: 2 }],
+          }),
         }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
@@ -499,6 +506,20 @@ describe("battle boundary admission owners", () => {
       throw new Error("Expected the codec boundary scope anchor.");
     }
     const codecProcedureRef = codecScopeAnchor.subject.procedureRef;
+    const stationaryAreaScope = findAct(
+      codecSession,
+      magicSubject("insect_plague"),
+    );
+    const translatingAreaScope = findAct(
+      codecSession,
+      magicSubject("cloudkill"),
+    );
+    if (
+      stationaryAreaScope.subject.tag !== "actionSpell" ||
+      translatingAreaScope.subject.tag !== "actionSpell"
+    ) {
+      throw new Error("Expected persistent-area codec boundary scope anchors.");
+    }
     const glyphSpellLevel = parseBattleSpellEffectLevel(3);
     if (glyphSpellLevel === null) {
       throw new Error("Expected the boundary Glyph spell level to be valid.");
@@ -658,7 +679,7 @@ describe("battle boundary admission owners", () => {
             effect: {
               kind: "persistentAreaSaveDamage",
               lifecycle: { kind: "stationary" },
-              sourceProcedureRef: codecProcedureRef,
+              sourceProcedureRef: stationaryAreaScope.subject.procedureRef,
               sourceCombatantId: wizardId,
               appearanceOccurrence: {
                 actorId: wizardId,
@@ -681,7 +702,7 @@ describe("battle boundary admission owners", () => {
               lifecycle: {
                 kind: "sourceTurnTranslation",
               },
-              sourceProcedureRef: codecProcedureRef,
+              sourceProcedureRef: translatingAreaScope.subject.procedureRef,
               sourceCombatantId: wizardId,
               appearanceOccurrence: {
                 actorId: wizardId,
@@ -709,6 +730,19 @@ describe("battle boundary admission owners", () => {
       }
       return occurrence.effect.effectRef;
     };
+    const occurrenceRefForArea = (areaName: string) => {
+      const areaId = battleAreaId(areaName);
+      const occurrence = allocatedCodecState.occurrences.find(
+        (candidate) =>
+          candidate.kind === "activeEffect" &&
+          candidate.effect.kind === "persistentAreaSaveDamage" &&
+          candidate.effect.areaId === areaId,
+      );
+      if (occurrence?.kind !== "activeEffect") {
+        throw new Error(`Expected boundary area occurrence ${areaName}.`);
+      }
+      return occurrence.effect.effectRef;
+    };
     const codecSnapshot = Schema.encodeSync(
       BattleCheckpointFrontierEnvelopeSchema,
     )({
@@ -730,12 +764,17 @@ describe("battle boundary admission owners", () => {
       holeInstanceKey: `battle:boundary-codec:${name}` as never,
       label: `boundary ${name}`,
     });
-    const codecSaving = (name: string, variant: string, value: object) =>
+    const codecSaving = (
+      name: string,
+      variant: string,
+      value: object,
+      ability: "dex" | "con" | "wis" = "dex",
+    ) =>
       encodedCodecHole({
         ...codecBase(name),
         kind: "savingThrowOutcome",
         [variant]: value,
-        ability: "dex",
+        ability,
         dc: { kind: "fixed", dc: 12 },
         areaChoices: [],
         targetRollModes: [],
@@ -890,6 +929,123 @@ describe("battle boundary admission owners", () => {
             candidate,
           ),
         ),
+      ).toBe(true);
+    }
+    const persistentAreaCases = [
+      {
+        name: "stationary save",
+        procedureRef: stationaryAreaScope.subject.procedureRef,
+        effectRef: occurrenceRefForArea("boundary-insect"),
+        areaId: battleAreaId("boundary-insect"),
+        hole: codecSaving(
+          "stationarySave",
+          "persistentAreaSaveDamage",
+          {
+            sourceProcedureRef: stationaryAreaScope.subject.procedureRef,
+            sourceCombatantId: wizardId,
+            targetId: goblinId,
+            topology: "stationary",
+            effectRef: occurrenceRefForArea("boundary-insect"),
+            areaId: battleAreaId("boundary-insect"),
+            trigger: "entersArea",
+            save: { ability: "con", dc: { kind: "fixed", dc: 12 } },
+          },
+          "con",
+        ),
+      },
+      {
+        name: "stationary damage",
+        procedureRef: stationaryAreaScope.subject.procedureRef,
+        effectRef: occurrenceRefForArea("boundary-insect"),
+        areaId: battleAreaId("boundary-insect"),
+        hole: codecRolled("stationaryDamage", {
+          persistentAreaSaveDamage: {
+            sourceProcedureRef: stationaryAreaScope.subject.procedureRef,
+            sourceCombatantId: wizardId,
+            targetId: goblinId,
+            topology: "stationary",
+            effectRef: occurrenceRefForArea("boundary-insect"),
+            areaId: battleAreaId("boundary-insect"),
+            trigger: "entersArea",
+            damage: {
+              expr: { dice: 1, dieSize: 6 },
+              damageType: "piercing",
+            },
+          },
+        }),
+      },
+      {
+        name: "translating save",
+        procedureRef: translatingAreaScope.subject.procedureRef,
+        effectRef: occurrenceRefForArea("boundary-cloudkill"),
+        areaId: battleAreaId("boundary-cloudkill"),
+        hole: codecSaving(
+          "translatingSave",
+          "persistentAreaSaveDamage",
+          {
+            sourceProcedureRef: translatingAreaScope.subject.procedureRef,
+            sourceCombatantId: wizardId,
+            targetId: goblinId,
+            topology: "translating",
+            effectRef: occurrenceRefForArea("boundary-cloudkill"),
+            areaId: battleAreaId("boundary-cloudkill"),
+            trigger: "entersArea",
+            save: { ability: "con", dc: { kind: "fixed", dc: 12 } },
+          },
+          "con",
+        ),
+      },
+      {
+        name: "translating damage",
+        procedureRef: translatingAreaScope.subject.procedureRef,
+        effectRef: occurrenceRefForArea("boundary-cloudkill"),
+        areaId: battleAreaId("boundary-cloudkill"),
+        hole: codecRolled("translatingDamage", {
+          persistentAreaSaveDamage: {
+            sourceProcedureRef: translatingAreaScope.subject.procedureRef,
+            sourceCombatantId: wizardId,
+            targetId: goblinId,
+            topology: "translating",
+            effectRef: occurrenceRefForArea("boundary-cloudkill"),
+            areaId: battleAreaId("boundary-cloudkill"),
+            trigger: "entersArea",
+            damage: {
+              expr: { dice: 1, dieSize: 6 },
+              damageType: "poison",
+            },
+          },
+        }),
+      },
+    ];
+    for (const persistentAreaCase of persistentAreaCases) {
+      const candidate = {
+        ...codecSnapshot,
+        frontier: {
+          kind: "acts" as const,
+          acts: [
+            {
+              ...codecScopeAnchor,
+              subject: {
+                tag: "runtimeCommand" as const,
+                actorId: goblinId,
+                command: "persistentAreaSaveDamageSave" as const,
+                areaMembershipTrigger: {
+                  kind: "firstEntryOnTurn" as const,
+                  areaId: persistentAreaCase.areaId,
+                  effectRef: persistentAreaCase.effectRef,
+                },
+              },
+              initialHoles: [persistentAreaCase.hole],
+            },
+          ],
+        },
+      };
+      const decoded = Schema.decodeUnknownResult(
+        BattleCheckpointFrontierEnvelopeSchema,
+      )(candidate);
+      expect(
+        Result.isSuccess(decoded),
+        `${persistentAreaCase.name}: ${Result.isFailure(decoded) ? String(decoded.failure) : ""}`,
       ).toBe(true);
     }
   });

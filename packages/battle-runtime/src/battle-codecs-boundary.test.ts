@@ -193,6 +193,39 @@ function replaceCastActWithLevitateAltitudeControl(
   );
 }
 
+function replaceCastActWithPersistentAreaSaveDamage(
+  envelope: EncodedEnvelope,
+  input: {
+    readonly sourceProcedureRef: string;
+    readonly targetId: typeof skeletonId;
+    readonly effectRef: string;
+    readonly areaId: string;
+    readonly hole: EncodedHole;
+  },
+): EncodedEnvelope {
+  return replaceActSubject(
+    envelope,
+    (act) =>
+      act.subject.tag === "actionSpell" &&
+      act.subject.mode.tag === "cast" &&
+      act.subject.procedureRef === input.sourceProcedureRef,
+    (act) => ({
+      ...act,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: input.targetId,
+        command: "persistentAreaSaveDamageSave",
+        areaMembershipTrigger: {
+          kind: "firstEntryOnTurn",
+          areaId: input.areaId,
+          effectRef: input.effectRef,
+        },
+      },
+      initialHoles: [input.hole],
+    }),
+  );
+}
+
 function replaceActOwner(
   envelope: EncodedEnvelope,
   predicate: (act: EncodedAct) => boolean,
@@ -710,6 +743,19 @@ function codecFixture() {
     }
     return occurrence.effect.effectRef;
   };
+  const persistentAreaSaveDamageEffectRef = (areaName: string) => {
+    const areaId = battleAreaId(areaName);
+    const occurrence = allocated.occurrences.find(
+      (candidate) =>
+        candidate.kind === "activeEffect" &&
+        candidate.effect.kind === "persistentAreaSaveDamage" &&
+        candidate.effect.areaId === areaId,
+    );
+    if (occurrence?.kind !== "activeEffect") {
+      throw new Error(`Expected a codec persistent area ${areaName}.`);
+    }
+    return occurrence.effect.effectRef;
+  };
   const storedLightEmitterRef = (ownerId: typeof wizardId) => {
     const occurrence = allocated.occurrences.find(
       (candidate) =>
@@ -777,12 +823,17 @@ function codecFixture() {
     greaseEffectRef: activeEffectRef("persistentAreaSaveCondition"),
     sleetStormEffectRef: activeEffectRef("persistentAreaSaveComposite"),
     glyphEffectRef: activeEffectRef("glyphDurableOccurrence"),
-    insectPlagueEffectRef: activeEffectRef("persistentAreaSaveDamage"),
-    spellTurnEndEffectRef: activeEffectRef("spellTurnEndDamage"),
-    persistentAreaSaveDamageEffectRef: activeEffectRef(
-      "persistentAreaSaveDamage",
+    movableZoneEffectRef: activeEffectRef("persistentAreaSaveDamage"),
+    insectPlagueEffectRef: persistentAreaSaveDamageEffectRef(
+      "area:codec-insect-plague",
     ),
-    cloudkillEffectRef: activeEffectRef("persistentAreaSaveDamage"),
+    spellTurnEndEffectRef: activeEffectRef("spellTurnEndDamage"),
+    persistentAreaSaveDamageEffectRef: persistentAreaSaveDamageEffectRef(
+      "area:codec-insect-plague",
+    ),
+    cloudkillEffectRef: persistentAreaSaveDamageEffectRef(
+      "area:codec-cloudkill",
+    ),
     spikeGrowthEffectRef: activeEffectRef("areaMovementDistanceDamage"),
     gustOfWindEffectRef: activeEffectRef("directionalPersistentArea"),
     levitateEffectRef: activeEffectRef("controlledVerticalSuspension"),
@@ -1167,7 +1218,7 @@ const rolledDiceCases: readonly CodecCase[] = [
       critical: false,
       movableZone: {
         ...source,
-        effectRef: fixture.persistentAreaSaveDamageEffectRef,
+        effectRef: fixture.movableZoneEffectRef,
         areaId: battleAreaId("area:codec-flaming-sphere"),
         trigger: "endsTurnWithinFiveFeetOfSphere",
         save: save("dex"),
@@ -1318,6 +1369,26 @@ const cases: readonly CodecCase[] = [
   ),
 ];
 
+const canonicalPersistentAreaSaveDamageCases = [
+  ...savingThrowCases,
+  ...rolledDiceCases,
+].filter(
+  (entry) =>
+    (entry.hole.kind === "savingThrowOutcome" ||
+      entry.hole.kind === "rolledDice") &&
+    "persistentAreaSaveDamage" in entry.hole,
+);
+
+function persistentAreaSaveDamageOwner(hole: EncodedHole) {
+  if (
+    (hole.kind === "savingThrowOutcome" || hole.kind === "rolledDice") &&
+    "persistentAreaSaveDamage" in hole
+  ) {
+    return hole.persistentAreaSaveDamage;
+  }
+  return undefined;
+}
+
 function damageProtocolHoleWithEffectRef(
   entry: CodecCase,
   effectRef: string,
@@ -1458,6 +1529,35 @@ describe("battle codec execution-reference boundaries", () => {
       Result.isFailure(decoded) ? String(decoded.failure) : undefined,
     ).toBe(expected === "Success");
   });
+
+  test.each(canonicalPersistentAreaSaveDamageCases)(
+    "Success canonical $name full-envelope binding",
+    ({ hole: replacement }) => {
+      const owner = persistentAreaSaveDamageOwner(replacement);
+      if (owner === undefined) {
+        throw new Error("Expected a persistent-area save-damage codec owner.");
+      }
+      const sourceProcedureRef =
+        owner.topology === "stationary"
+          ? fixture.insectPlagueSourceProcedureRef
+          : fixture.cloudkillSourceProcedureRef;
+      const decoded = Schema.decodeUnknownResult(
+        BattleCheckpointFrontierEnvelopeSchema,
+      )(
+        replaceCastActWithPersistentAreaSaveDamage(fixture.envelope, {
+          sourceProcedureRef,
+          targetId: skeletonId,
+          effectRef: owner.effectRef,
+          areaId: owner.areaId,
+          hole: replacement,
+        }),
+      );
+      expect(
+        Result.isSuccess(decoded),
+        Result.isFailure(decoded) ? String(decoded.failure) : undefined,
+      ).toBe(true);
+    },
+  );
 
   test("accepts only the exact Cloudkill wind-strength hole pair", () => {
     if (fixture.envelope.frontier.kind !== "acts") {

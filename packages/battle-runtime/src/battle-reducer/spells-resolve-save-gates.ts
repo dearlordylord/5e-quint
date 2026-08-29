@@ -174,12 +174,13 @@ type SaveGatedSpellResolutionInput =
   | BonusActionSpellBattleResolutionInput;
 
 type AreaSavingThrowOutcomeValue = BattleSpellAreaSavingThrowOutcomeValue;
-type GreaseSavingThrowOutcomeValue = AreaSavingThrowOutcomeValue & {
-  readonly area: Extract<
-    BattleSpellAreaChoice,
-    { readonly kind: "persistentAreaSaveConditionArea" }
-  >;
-};
+type PersistentAreaSaveConditionSavingThrowOutcomeValue =
+  AreaSavingThrowOutcomeValue & {
+    readonly area: Extract<
+      BattleSpellAreaChoice,
+      { readonly kind: "persistentAreaSaveConditionArea" }
+    >;
+  };
 
 function assertAreaSavingThrowOutcomes(
   value: BattleSpellSavingThrowOutcomeValue,
@@ -195,12 +196,12 @@ function assertAreaSavingThrowOutcomes(
 
 function assertPersistentAreaSaveConditionSavingThrowOutcomes(
   value: BattleSpellSavingThrowOutcomeValue,
-): asserts value is GreaseSavingThrowOutcomeValue {
+): asserts value is PersistentAreaSaveConditionSavingThrowOutcomeValue {
   assertAreaSavingThrowOutcomes(value);
-  /* v8 ignore start -- @preserve -- The immediately preceding save-outcome validator dispatches Grease to its ground-area validator; this assertion protects the narrowed reducer path if that contract changes. */
+  /* v8 ignore start -- @preserve -- The immediately preceding save-outcome validator dispatches the persistent ground-area condition family to its area validator; this assertion protects the narrowed reducer path if that contract changes. */
   if (value.area.kind !== "persistentAreaSaveConditionArea") {
     throw new Error(
-      "Validated Grease outcomes must include ground-area facts.",
+      "Validated persistent ground-area condition outcomes must include area facts.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -585,7 +586,7 @@ function saveMetamagicSelectionFills(
   };
 }
 
-export function resolveGreaseGroundHazardSpellAct(input: {
+export function resolvePersistentAreaSaveConditionSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<

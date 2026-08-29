@@ -29,7 +29,7 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
-import { resolveGreaseGroundHazardSpellAct as resolvePersistentAreaSaveConditionSpellAct } from "../spells-resolve-save-gates.ts";
+import { resolvePersistentAreaSaveConditionSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,

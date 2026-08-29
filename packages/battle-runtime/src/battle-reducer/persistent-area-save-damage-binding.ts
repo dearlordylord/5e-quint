@@ -9,6 +9,7 @@ import type {
   SourceTurnTranslationPersistentAreaSaveDamageSpellProcedureExecution,
   StationaryPersistentAreaSaveDamageSpellProcedureExecution,
 } from "../procedure-execution/spell-procedure-execution.ts";
+import * as Match from "effect/Match";
 
 type PersistentAreaSaveDamageEffect = Extract<
   BattleActiveEffect,
@@ -143,7 +144,8 @@ function isCollisionFacts(
 ): facts is CollisionRepositionPersistentAreaSaveDamageSpellProcedureExecution {
   return (
     facts.lifecycle.kind === "casterActionReposition" &&
-    facts.lifecycle.actionCost === "bonusAction"
+    persistentAreaSaveDamageRepositionKind(facts.lifecycle) ===
+      "collisionReposition"
   );
 }
 
@@ -155,6 +157,18 @@ function isDirectedFacts(
 ): facts is DirectedRepositionPersistentAreaSaveDamageSpellProcedureExecution {
   return (
     facts.lifecycle.kind === "casterActionReposition" &&
-    facts.lifecycle.actionCost === "magicAction"
+    persistentAreaSaveDamageRepositionKind(facts.lifecycle) ===
+      "directedReposition"
+  );
+}
+
+export function persistentAreaSaveDamageRepositionKind(lifecycle: {
+  readonly actionCost: "magicAction" | "bonusAction";
+  readonly collisionDisposition: "stopAndAffectAdjacent" | "ignoreObstacles";
+}): "collisionReposition" | "directedReposition" {
+  return Match.value(lifecycle.collisionDisposition).pipe(
+    Match.when("stopAndAffectAdjacent", () => "collisionReposition" as const),
+    Match.when("ignoreObstacles", () => "directedReposition" as const),
+    Match.exhaustive,
   );
 }

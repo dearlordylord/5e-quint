@@ -2,7 +2,7 @@ import type { BattleResolutionResult } from "../../battle-state-execution.ts";
 import { Match } from "effect";
 import { resolveStoredGlyphAreaOngoingSpellRelease } from "../spells-resolve-area-effects.ts";
 import {
-  resolveGreaseGroundHazardSpellAct,
+  resolvePersistentAreaSaveConditionSpellAct,
   resolveSaveGateConditionSpellAct,
   resolveSaveGateDamageSpellRelease,
 } from "../spells-resolve-save-gates.ts";
@@ -47,7 +47,7 @@ export function executeStoredGlyphSpellProcedure(
       }),
     ),
     byReleaseKind("persistentAreaSaveCondition", (release) =>
-      resolveGreaseGroundHazardSpellAct({
+      resolvePersistentAreaSaveConditionSpellAct({
         input: glyphInput,
         actorId,
         invocation: release.invocation,
