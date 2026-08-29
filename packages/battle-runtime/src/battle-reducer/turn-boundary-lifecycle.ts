@@ -4188,8 +4188,37 @@ export function resolveDelegatedEndTurnCommand(
   },
   endTurnInput: BattleResolutionInput,
 ): BattleResolutionResult {
+  return resolveDelegatedEndTurnCommandWithReplayState(
+    parentInput,
+    endTurnInput,
+    endTurnInput.state,
+  );
+}
+
+export function resolveStagedDelegatedEndTurnCommand(
+  parentInput: BattleResolutionInput & {
+    readonly replayParentPosition?: BattleStartTurnOccurrenceSequenceCheckpoint;
+    readonly replayObjectOutcomes?: BattleObjectOutcomeAccumulation;
+  },
+  endTurnInput: BattleResolutionInput,
+): BattleResolutionResult {
+  return resolveDelegatedEndTurnCommandWithReplayState(
+    parentInput,
+    endTurnInput,
+    parentInput.state,
+  );
+}
+
+function resolveDelegatedEndTurnCommandWithReplayState(
+  parentInput: BattleResolutionInput & {
+    readonly replayParentPosition?: BattleStartTurnOccurrenceSequenceCheckpoint;
+    readonly replayObjectOutcomes?: BattleObjectOutcomeAccumulation;
+  },
+  endTurnInput: BattleResolutionInput,
+  ordinaryReplayState: BattleState,
+): BattleResolutionResult {
   const parent = replayParentContinuationFor({
-    state: parentInput.state,
+    state: ordinaryReplayState,
     subject: parentInput.subject,
     fills: parentInput.fills,
     ...(parentInput.replayObjectOutcomes === undefined

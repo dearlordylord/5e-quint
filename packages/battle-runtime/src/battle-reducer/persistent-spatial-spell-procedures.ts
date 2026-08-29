@@ -79,7 +79,10 @@ import {
 } from "./persistent-area-save-damage.ts";
 import { validateGustOfWindLineAreaPushFacts } from "./gust-of-wind-push-facts.ts";
 import { revertShapeShiftedCombatantToTrueForm } from "./shape-shifting.ts";
-import { resolveDelegatedEndTurnCommand } from "./turn-boundary-lifecycle.ts";
+import {
+  resolveDelegatedEndTurnCommand,
+  resolveStagedDelegatedEndTurnCommand,
+} from "./turn-boundary-lifecycle.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
   applyPreparedSlotSpellDamage,
@@ -1577,7 +1580,7 @@ function resolveFlamingSphereSaveCommand(
     saveSucceeded: saveOutcome.succeeded,
     concentrationSavingThrow: concentrationFill,
   });
-  return resolveDelegatedEndTurnCommand(input, {
+  return resolveStagedDelegatedEndTurnCommand(input, {
     state: damaged,
     subject: endTurnSubject,
     fills: endTurnFills,
@@ -2298,7 +2301,7 @@ function resolveMoonbeamSaveCommand(
     effect,
   );
   if (isEndTurn) {
-    return resolveDelegatedEndTurnCommand(input, {
+    return resolveStagedDelegatedEndTurnCommand(input, {
       state: afterMark,
       subject: endTurnSubject,
       fills: endTurnFills,
