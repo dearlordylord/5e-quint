@@ -97,6 +97,7 @@ export function admitCompleteStatBlockMechanicsGraph(
 ): StatBlockMechanicsAdmissionResult {
   const issues: AdmissionIssue[] = [];
   const source = input.statBlock.statBlock;
+  inspectRootMembership(input, issues);
   const unitIds = new Set(input.surface.units.map((unit) => String(unit.id)));
   const spellUnitIds = new Set(
     input.surface.units
@@ -134,6 +135,24 @@ export function admitCompleteStatBlockMechanicsGraph(
 /** The callback shape expected by the atomic Surface installer. */
 export const admitCompleteStatBlockMechanics: SurfaceMechanicsAdmission["admitStatBlock"] =
   admitCompleteStatBlockMechanicsGraph;
+
+function inspectRootMembership(
+  input: StatBlockMechanicsAdmissionInput,
+  issues: AdmissionIssue[],
+): void {
+  const installedRoot = input.surface.statBlocks.find(
+    (candidate) => candidate.id === input.statBlock.id,
+  );
+  if (installedRoot === input.statBlock) return;
+  addIssue(
+    issues,
+    "incomplete_graph",
+    path({ kind: "singleton", role: "recordMechanics" }),
+    installedRoot === undefined
+      ? "The Stat Block admission root is absent from the decoded Surface."
+      : "The Stat Block admission root does not match the decoded Surface member with that authored identity.",
+  );
+}
 
 function inspectGeneralFacts(
   source: StandaloneStatBlock,

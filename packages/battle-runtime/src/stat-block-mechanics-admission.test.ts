@@ -67,6 +67,47 @@ describe("complete Stat Block mechanics admission", () => {
     ).toEqual({ tag: "admitted" });
   });
 
+  test.each([
+    {
+      name: "absent",
+      surfaceStatBlock: decode({
+        ...goblinWarriorInput,
+        id: "stat_block_synthetic_other_root",
+        name: "Synthetic Other Root",
+      }),
+      message:
+        "The Stat Block admission root is absent from the decoded Surface.",
+    },
+    {
+      name: "mismatched",
+      surfaceStatBlock: decode({
+        ...goblinWarriorInput,
+        name: "Synthetic Mismatched Root",
+      }),
+      message:
+        "The Stat Block admission root does not match the decoded Surface member with that authored identity.",
+    },
+  ])("rejects an $name Stat Block root", ({ surfaceStatBlock, message }) => {
+    const result = admitCompleteStatBlockMechanicsGraph({
+      statBlock: source,
+      surface: surfaceWithStatBlock(surfaceStatBlock),
+    });
+
+    expect(result).toEqual({
+      tag: "rejected",
+      issues: [
+        {
+          reason: "incomplete_graph",
+          mechanicsPath: {
+            family: "statBlock",
+            nodes: [{ kind: "singleton", role: "recordMechanics" }],
+          },
+          message,
+        },
+      ],
+    });
+  });
+
   test("walks general facts, traits, every action section, effects, triggers, and references", () => {
     const originalAction = source.statBlock.actions?.[0];
     const originalLegendaryAction = source.statBlock.actions?.[1];
@@ -84,39 +125,39 @@ describe("complete Stat Block mechanics admission", () => {
         ...originalAction.procedure,
         onHit: [
           {
-            kind: "apply_condition" as const,
-            condition: "blinded" as const,
-            expiresAt: { kind: "target_next_turn_end" as const },
+            kind: "apply_condition",
+            condition: "blinded",
+            expiresAt: { kind: "target_next_turn_end" },
           },
           ...originalAction.procedure.onHit,
         ],
       },
     };
     const reaction = {
-      kind: "executable" as const,
+      kind: "executable",
       procedureOrdinal: 1,
       procedure: originalLegendaryAction.procedure,
-      resourceRefs: { kind: "none" as const },
+      resourceRefs: { kind: "none" },
       trigger: {
-        kind: "any_of" as const,
+        kind: "any_of",
         triggers: [
-          { kind: "self_or_visible_creature_falls" as const, rangeFeet: 60 },
+          { kind: "self_or_visible_creature_falls", rangeFeet: 60 },
           {
-            kind: "targeted_by_named_spell" as const,
+            kind: "targeted_by_named_spell",
             spellId: "unit_missing_synthetic_spell",
           },
         ],
       },
     };
     const bonusAction = {
-      kind: "executable" as const,
+      kind: "executable",
       procedureOrdinal: 1,
       procedure: {
-        kind: "action_option" as const,
+        kind: "action_option",
         name: "Synthetic Unsupported Bonus Action",
-        options: ["attack" as const],
+        options: ["attack"],
       },
-      resourceRefs: { kind: "none" as const },
+      resourceRefs: { kind: "none" },
     };
     const record = decode({
       ...source,
@@ -188,12 +229,12 @@ describe("complete Stat Block mechanics admission", () => {
       ...statBlockWithoutBonusAction,
       actions: [
         {
-          kind: "textOnly" as const,
+          kind: "textOnly",
           procedureOrdinal: 1,
           name: "Synthetic Text Procedure",
           description: "A synthetic retained source description.",
-          reason: "unsupported_action_shape" as const,
-          resourceRefs: { kind: "none" as const },
+          reason: "unsupported_action_shape",
+          resourceRefs: { kind: "none" },
         },
       ],
     };
@@ -272,28 +313,28 @@ describe("complete Stat Block mechanics admission", () => {
         resources: [
           {
             ordinal: 1,
-            ownership: "shared" as const,
-            limit: { kind: "daily" as const, uses: 1 },
+            ownership: "shared",
+            limit: { kind: "daily", uses: 1 },
           },
           {
             ordinal: 2,
-            ownership: "shared" as const,
-            limit: { kind: "daily" as const, uses: 1 },
+            ownership: "shared",
+            limit: { kind: "daily", uses: 1 },
           },
         ],
         actions: [
           {
-            kind: "executable" as const,
+            kind: "executable",
             procedureOrdinal: 1,
             procedure: {
-              kind: "spellcasting" as const,
+              kind: "spellcasting",
               name: "Synthetic Spellcasting",
-              ability: "int" as const,
+              ability: "int",
               groups: [
                 {
-                  kind: "limited" as const,
+                  kind: "limited",
                   resourceRefs: {
-                    kind: "some" as const,
+                    kind: "some",
                     ordinals: [1],
                   },
                   spells: [
@@ -303,8 +344,8 @@ describe("complete Stat Block mechanics admission", () => {
                         authoredExpression: "synthetic restriction",
                         deltas: [
                           {
-                            kind: "target_limit" as const,
-                            target: "self" as const,
+                            kind: "target_limit",
+                            target: "self",
                           },
                         ],
                       },
@@ -315,7 +356,7 @@ describe("complete Stat Block mechanics admission", () => {
                 },
               ],
             },
-            resourceRefs: { kind: "none" as const },
+            resourceRefs: { kind: "none" },
           },
         ],
       },
