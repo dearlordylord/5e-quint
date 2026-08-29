@@ -1,4 +1,4 @@
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { battleToolNames } from "./battle-tool-input.ts";
@@ -39,7 +39,7 @@ describe("Play Session operation projection", () => {
     const decoded = decodePlaySessionId(
       "play-session:00000000-0000-4000-8000-000000000000",
     );
-    if (Either.isLeft(decoded)) throw new Error(decoded.left);
+    if (Result.isFailure(decoded)) throw new Error(decoded.failure);
     const applicationServices = createMcpApplicationServices();
     const registry = createPlaySessionRegistry({
       createRoot: (playSessionId) =>
@@ -47,10 +47,10 @@ describe("Play Session operation projection", () => {
           applicationServices,
           adminMirrorSessionId(playSessionId),
         ),
-      playSessionIdFactory: () => decoded.right,
+      playSessionIdFactory: () => decoded.success,
     });
 
-    expect(Either.isRight(registry.create({ tag: "anonymous" }))).toBe(true);
+    expect(Result.isSuccess(registry.create({ tag: "anonymous" }))).toBe(true);
     const publicFailure = handleCreatePlaySession(registry, undefined);
 
     expect(publicFailure.isError).toBe(true);
@@ -93,23 +93,23 @@ describe("Play Session operation projection", () => {
       },
       session,
     };
-    const decoded = Schema.decodeUnknownEither(
+    const decoded = Schema.decodeUnknownResult(
       CharacterSessionQueryOutputSchema,
     )(queryOutput);
-    expect(Either.isRight(decoded)).toBe(true);
-    if (Either.isLeft(decoded)) return;
+    expect(Result.isSuccess(decoded)).toBe(true);
+    if (Result.isFailure(decoded)) return;
 
     const unresolved = unresolvedInputsFrom(
       characterToolNames.queryCharacterSession,
-      decoded.right,
+      decoded.success,
     );
-    expect(Either.isRight(unresolved)).toBe(true);
-    if (Either.isLeft(unresolved)) return;
-    expect(unresolved.right).toEqual([]);
+    expect(Result.isSuccess(unresolved)).toBe(true);
+    if (Result.isFailure(unresolved)) return;
+    expect(unresolved.success).toEqual([]);
     const nextOperations = nextOperationsFrom(
       characterToolNames.queryCharacterSession,
       session,
-      unresolved.right,
+      unresolved.success,
       false,
     );
     expect(nextOperations).not.toContain(battleToolNames.fillBattleHole);
@@ -133,15 +133,15 @@ describe("Play Session operation projection", () => {
       characterToolNames.createCharacterDraft,
       created.structuredContent,
     );
-    expect(Either.isRight(unresolved)).toBe(true);
-    if (Either.isLeft(unresolved)) return;
-    expect(unresolved.right.length).toBeGreaterThan(0);
-    expect(unresolved.right[0]?.sourcePath).toBe("$.holes");
+    expect(Result.isSuccess(unresolved)).toBe(true);
+    if (Result.isFailure(unresolved)) return;
+    expect(unresolved.success.length).toBeGreaterThan(0);
+    expect(unresolved.success[0]?.sourcePath).toBe("$.holes");
     expect(
       nextOperationsFrom(
         characterToolNames.createCharacterDraft,
         sessionSummary(root),
-        unresolved.right,
+        unresolved.success,
         false,
       ),
     ).toContain(characterToolNames.fillCreationHoles);
@@ -180,17 +180,17 @@ describe("Play Session operation projection", () => {
       battleToolNames.startBattle,
       started.structuredContent,
     );
-    expect(Either.isRight(unresolved)).toBe(true);
-    if (Either.isLeft(unresolved)) return;
-    expect(unresolved.right.length).toBeGreaterThan(0);
-    expect(unresolved.right[0]?.sourcePath).toMatch(
+    expect(Result.isSuccess(unresolved)).toBe(true);
+    if (Result.isFailure(unresolved)) return;
+    expect(unresolved.success.length).toBeGreaterThan(0);
+    expect(unresolved.success[0]?.sourcePath).toMatch(
       /^\$\.envelope\.frontier\.acts\[\d+\]\.initialHoles$/u,
     );
     expect(
       nextOperationsFrom(
         battleToolNames.startBattle,
         sessionSummary(root),
-        unresolved.right,
+        unresolved.success,
         false,
       ),
     ).toContain(battleToolNames.fillBattleHole);
@@ -198,7 +198,7 @@ describe("Play Session operation projection", () => {
 });
 
 function activeBattleSummary(): McpSessionSummary | undefined {
-  const decoded = Schema.decodeUnknownEither(McpSessionSummarySchema)({
+  const decoded = Schema.decodeUnknownResult(McpSessionSummarySchema)({
     draftIds: [],
     characterIds: ["character:ritual-wizard"],
     selectedStatBlockId: null,
@@ -208,20 +208,20 @@ function activeBattleSummary(): McpSessionSummary | undefined {
       currentActorId: "unrelated-actor",
     },
   });
-  expect(Either.isRight(decoded)).toBe(true);
-  return Either.isRight(decoded) ? decoded.right : undefined;
+  expect(Result.isSuccess(decoded)).toBe(true);
+  return Result.isSuccess(decoded) ? decoded.success : undefined;
 }
 
 function sessionSummary(root: ReturnType<typeof createMcpPlaySessionRoot>) {
   const snapshot = root.sessionStore.snapshot();
-  const decoded = Schema.decodeUnknownEither(McpSessionSummarySchema)({
+  const decoded = Schema.decodeUnknownResult(McpSessionSummarySchema)({
     draftIds: snapshot.draftIds,
     characterIds: snapshot.characterIds,
     selectedStatBlockId: snapshot.selectedStatBlockId,
     battleState: snapshot.battleState,
   });
-  if (Either.isLeft(decoded)) {
-    throw new Error(decoded.left.message);
+  if (Result.isFailure(decoded)) {
+    throw new Error(decoded.failure.message);
   }
-  return decoded.right;
+  return decoded.success;
 }

@@ -11,7 +11,7 @@ import {
   resourceCount,
   spellSlotLevel,
 } from "@dnd/shared/types";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { ApplyCharacterSessionOperationToolInput } from "./character-session-operation-tool-input.ts";
@@ -60,19 +60,19 @@ export function applyHealingCharacterSessionOperation(
           ],
     ),
   });
-  if (Either.isLeft(source)) return source.left;
+  if (Result.isFailure(source)) return source.failure;
   return Match.value(input.operation).pipe(
     Match.when({ kind: "applyLayOnHands" }, (operation) =>
       applyLayOnHandsOperation(root, {
         characterId: input.characterId,
-        session: source.right,
+        session: source.success,
         operation,
       }),
     ),
     Match.when({ kind: "applySpellRestBenefit" }, (operation) =>
       applySpellRestBenefitOperation(root, {
         characterId: input.characterId,
-        session: source.right,
+        session: source.success,
         operation,
       }),
     ),
@@ -87,10 +87,10 @@ export function availableHealingSourceSession(
     readonly sourceCharacterId: CharacterId;
     readonly affectedCharacterIds: readonly CharacterId[];
   },
-): Either.Either<AvailableCharacterSession, ReturnType<typeof errorContent>> {
+): Result.Result<AvailableCharacterSession, ReturnType<typeof errorContent>> {
   const session = root.sessionStore.characters.get(input.sourceCharacterId);
   if (session === undefined) {
-    return Either.left(
+    return Result.fail(
       healingOperationFailure({
         ...input,
         issue: `Unknown source Character Session: ${input.sourceCharacterId}.`,
@@ -99,7 +99,7 @@ export function availableHealingSourceSession(
     );
   }
   if (session.tag === "inBattle") {
-    return Either.left(
+    return Result.fail(
       healingOperationFailure({
         ...input,
         issue:
@@ -108,7 +108,7 @@ export function availableHealingSourceSession(
       }),
     );
   }
-  return Either.right(session);
+  return Result.succeed(session);
 }
 
 export function applyLayOnHandsOperation(
@@ -124,16 +124,16 @@ export function applyLayOnHandsOperation(
     sourceCharacterId: input.characterId,
     targetCharacterId: input.operation.targetCharacterId,
   });
-  if (Either.isLeft(target)) return target.left;
+  if (Result.isFailure(target)) return target.failure;
 
   const result = applyLayOnHands({
     source: input.session,
-    target: target.right,
+    target: target.success,
     unitLibrary: root.unitLibrary,
     restoreHp: Hp(input.operation.restoreHp),
     removePoisoned: input.operation.removePoisoned,
   });
-  if (Either.isLeft(result)) {
+  if (Result.isFailure(result)) {
     return healingOperationFailure({
       operationKind: input.operation.kind,
       sourceCharacterId: input.characterId,
@@ -141,14 +141,14 @@ export function applyLayOnHandsOperation(
         input.characterId,
         input.operation.targetCharacterId,
       ],
-      issue: result.left,
+      issue: result.failure,
     });
   }
 
   const changedSessions =
-    result.right.source.characterId === result.right.target.characterId
-      ? [result.right.source]
-      : [result.right.source, result.right.target];
+    result.success.source.characterId === result.success.target.characterId
+      ? [result.success.source]
+      : [result.success.source, result.success.target];
   const committed = commitCharacterSessions(root, changedSessions, {
     operationKind: input.operation.kind,
     sourceCharacterId: input.characterId,
@@ -157,9 +157,9 @@ export function applyLayOnHandsOperation(
       input.operation.targetCharacterId,
     ],
   });
-  if (Either.isLeft(committed)) return committed.left;
+  if (Result.isFailure(committed)) return committed.failure;
   return schemaJsonContent(CharacterSessionOperationOutputSchema, {
-    character: result.right.source,
+    character: result.success.source,
     result: {
       tag: "layOnHandsApplied",
       sourceCharacterId: input.characterId,
@@ -188,16 +188,16 @@ export function applySpellRestBenefitOperation(
   const recipientSessions = spellRestBenefitRecipientSessions(root, {
     recipients: input.operation.recipients,
   });
-  if (Either.isLeft(recipientSessions)) {
+  if (Result.isFailure(recipientSessions)) {
     return healingRecipientValidationFailure({
       operationKind: input.operation.kind,
       sourceCharacterId: input.characterId,
       affectedCharacterIds,
-      issues: recipientSessions.left,
+      issues: recipientSessions.failure,
     });
   }
   const recipientInputs = mapNonEmpty(
-    recipientSessions.right,
+    recipientSessions.success,
     spellRestBenefitRecipientFromTool,
   );
 
@@ -211,27 +211,27 @@ export function applySpellRestBenefitOperation(
       : { spellSlotSource: input.operation.spellSlotSource }),
     recipients: recipientInputs,
   });
-  if (Either.isLeft(result)) {
+  if (Result.isFailure(result)) {
     return healingOperationFailure({
       operationKind: input.operation.kind,
       sourceCharacterId: input.characterId,
       affectedCharacterIds,
-      issue: result.left,
+      issue: result.failure,
     });
   }
 
   const committed = commitCharacterSessions(
     root,
-    uniqueSpellRestBenefitSessions(result.right),
+    uniqueSpellRestBenefitSessions(result.success),
     {
       operationKind: input.operation.kind,
       sourceCharacterId: input.characterId,
       affectedCharacterIds,
     },
   );
-  if (Either.isLeft(committed)) return committed.left;
+  if (Result.isFailure(committed)) return committed.failure;
   return schemaJsonContent(CharacterSessionOperationOutputSchema, {
-    character: result.right.caster,
+    character: result.success.caster,
     result: {
       tag: "spellRestBenefitApplied",
       casterCharacterId: input.characterId,
@@ -293,28 +293,28 @@ function availableTargetSession(
     readonly recipientIndex?: number;
     readonly affectedCharacterIds?: readonly CharacterId[];
   },
-): Either.Either<AvailableCharacterSession, ReturnType<typeof errorContent>> {
+): Result.Result<AvailableCharacterSession, ReturnType<typeof errorContent>> {
   const affectedCharacterIds = input.affectedCharacterIds ?? [
     input.sourceCharacterId,
     input.targetCharacterId,
   ];
   const session = lookupAvailableHealingTargetSession(root, input);
-  if (Either.isLeft(session)) {
-    return Either.left(
+  if (Result.isFailure(session)) {
+    return Result.fail(
       healingOperationFailure({
         operationKind: input.operationKind,
         sourceCharacterId: input.sourceCharacterId,
         affectedCharacterIds,
-        targetCharacterId: session.left.targetCharacterId,
-        ...(session.left.recipientIndex === undefined
+        targetCharacterId: session.failure.targetCharacterId,
+        ...(session.failure.recipientIndex === undefined
           ? {}
-          : { recipientIndex: session.left.recipientIndex }),
-        issue: session.left.message,
-        code: healingTargetIssueCode(session.left),
+          : { recipientIndex: session.failure.recipientIndex }),
+        issue: session.failure.message,
+        code: healingTargetIssueCode(session.failure),
       }),
     );
   }
-  return Either.right(session.right);
+  return Result.succeed(session.success);
 }
 
 function healingOperationFailure(input: {
@@ -394,15 +394,15 @@ function commitCharacterSessions(
   },
 ) {
   const committed = root.sessionStore.characters.setAll(sessions);
-  return Either.isLeft(committed)
-    ? Either.left(
+  return Result.isFailure(committed)
+    ? Result.fail(
         healingOperationFailure({
           ...context,
-          issue: `Character Session commit rejected: ${committed.left.tag}.`,
+          issue: `Character Session commit rejected: ${committed.failure.tag}.`,
           code: "CHARACTER_SESSION_COMMIT_INVALID",
         }),
       )
-    : Either.right(undefined);
+    : Result.succeed(undefined);
 }
 
 function mapNonEmpty<A, B>(

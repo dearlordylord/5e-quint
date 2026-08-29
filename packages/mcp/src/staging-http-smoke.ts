@@ -1,7 +1,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   verifyCompleteNewcomerJourney,
@@ -10,8 +10,8 @@ import {
 import { SAVED_PLAY_SESSION_TOOL_NAMES } from "./play-session-tool-contract.ts";
 
 const endpoint = stagingEndpoint(process.env.DND_MCP_STAGING_URL);
-if (Either.isLeft(endpoint)) {
-  process.stderr.write(`${endpoint.left}\n`);
+if (Result.isFailure(endpoint)) {
+  process.stderr.write(`${endpoint.failure}\n`);
   process.exitCode = 1;
 } else {
   const client = new Client({
@@ -19,7 +19,7 @@ if (Either.isLeft(endpoint)) {
     version: "0.1.0",
   });
   try {
-    const transport = new StreamableHTTPClientTransport(endpoint.right);
+    const transport = new StreamableHTTPClientTransport(endpoint.success);
     // The SDK class implements Transport; this cast only bridges its
     // exact-optional sessionId declaration to the interface declaration.
     await client.connect(transport as Transport);
@@ -38,17 +38,17 @@ if (Either.isLeft(endpoint)) {
 
 function stagingEndpoint(
   input: string | undefined,
-): Either.Either<URL, string> {
+): Result.Result<URL, string> {
   if (input === undefined || !URL.canParse(input)) {
-    return Either.left(
+    return Result.fail(
       "DND_MCP_STAGING_URL must be the deployed HTTPS /mcp endpoint.",
     );
   }
   const endpoint = new URL(input);
   if (endpoint.protocol !== "https:" || endpoint.pathname !== "/mcp") {
-    return Either.left(
+    return Result.fail(
       "DND_MCP_STAGING_URL must use HTTPS and have the exact /mcp path.",
     );
   }
-  return Either.right(endpoint);
+  return Result.succeed(endpoint);
 }

@@ -2,7 +2,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { Either, ManagedRuntime, Schema } from "effect";
+import { Result, ManagedRuntime, Schema } from "effect";
 
 import { createDndMcpHttpServer } from "../public-http-server.ts";
 import { createPublicMcpOAuth } from "../public-oauth.ts";
@@ -77,27 +77,27 @@ async function openLocalSmokeTarget(): Promise<SavedSessionAuthorizationSmokeTar
     issuer: new URL("/api/auth", origin).toString().replace(/\/$/u, ""),
     jwksUrl: new URL("/api/auth/jwks", origin).toString(),
   });
-  if (Either.isLeft(oauth)) throw new Error(oauth.left.message);
+  if (Result.isFailure(oauth)) throw new Error(oauth.failure.message);
   const repository = openSqlitePlaySessionRepository(
     join(scratchDirectory, "mcp-play-sessions.sqlite"),
   );
-  if (Either.isLeft(repository)) throw new Error(repository.left.message);
+  if (Result.isFailure(repository)) throw new Error(repository.failure.message);
   const server = createDndMcpHttpServer({
     hostname: "127.0.0.1",
     port: 9876,
-    playSessionRepository: repository.right,
-    oauth: oauth.right,
+    playSessionRepository: repository.success,
+    oauth: oauth.success,
     savedSessionAuthorization: { origin, service },
   });
   const endpoint = await server.listen();
-  if (Either.isLeft(endpoint)) throw new Error(endpoint.left.message);
+  if (Result.isFailure(endpoint)) throw new Error(endpoint.failure.message);
   return {
     tag: "local",
-    endpoint: endpoint.right,
+    endpoint: endpoint.success,
     origin,
     close: async () => {
       await server.close();
-      repository.right.close();
+      repository.success.close();
       await runtime.dispose();
       await rm(scratchDirectory, { recursive: true });
     },

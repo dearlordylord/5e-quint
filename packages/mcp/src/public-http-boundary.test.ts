@@ -4,7 +4,7 @@ import { request as requestHttp } from "node:http";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
-import { Either, Effect, Schema } from "effect";
+import { Result, Effect, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { decodePrincipalId } from "./play-session-access.ts";
@@ -378,7 +378,7 @@ function publisherName(value: string) {
 
 function fakeOAuth(): PublicMcpOAuth {
   const principal = decodePrincipalId("principal:http-test");
-  if (Either.isLeft(principal)) throw new Error(principal.left);
+  if (Result.isFailure(principal)) throw new Error(principal.failure);
   const resource = new URL("https://oracle.example.test/mcp");
   return {
     resource,
@@ -394,8 +394,8 @@ function fakeOAuth(): PublicMcpOAuth {
     verifyAccessToken(token) {
       return Promise.resolve(
         token === "valid-token"
-          ? Either.right(principal.right)
-          : Either.left({
+          ? Result.succeed(principal.success)
+          : Result.fail({
               tag: "publicMcpOAuthIssue",
               reason: "invalidToken",
               message: "invalid",
@@ -407,23 +407,23 @@ function fakeOAuth(): PublicMcpOAuth {
 
 function openRepository() {
   const repository = openSqlitePlaySessionRepository(":memory:");
-  if (Either.isLeft(repository)) throw new Error(repository.left.message);
-  return repository.right;
+  if (Result.isFailure(repository)) throw new Error(repository.failure.message);
+  return repository.success;
 }
 
 async function listen(
   server: ReturnType<typeof createDndMcpHttpServer>,
 ): Promise<URL> {
   const endpoint = await server.listen();
-  if (Either.isLeft(endpoint)) throw new Error(endpoint.left.message);
-  return endpoint.right;
+  if (Result.isFailure(endpoint)) throw new Error(endpoint.failure.message);
+  return endpoint.success;
 }
 
 async function close(
   server: ReturnType<typeof createDndMcpHttpServer>,
 ): Promise<void> {
   const closed = await server.close();
-  if (Either.isLeft(closed)) throw new Error(closed.left.message);
+  if (Result.isFailure(closed)) throw new Error(closed.failure.message);
 }
 
 async function disconnectAfterFirstResponseChunk(url: URL): Promise<void> {

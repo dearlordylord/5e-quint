@@ -1,4 +1,4 @@
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 
 import {
   RECOVERABLE_PLAY_SESSION_FORMAT_VERSION,
@@ -31,10 +31,10 @@ type CreationTenure = ReturnType<typeof initialTenure>;
 export function createRecoverableSession(
   runtime: RecoverableRegistryRuntime,
   caller: Extract<PlaySessionCaller, { tag: "anonymous" | "authenticated" }>,
-): Either.Either<PlaySessionCreation, PlaySessionCreationFailure> {
+): Result.Result<PlaySessionCreation, PlaySessionCreationFailure> {
   const creationTime = runtime.now();
   const pressure = pruneCreationPressure(runtime, caller, creationTime);
-  if (Either.isLeft(pressure)) return Either.left(pressure.left);
+  if (Result.isFailure(pressure)) return Result.fail(pressure.failure);
   return createUniqueSession(runtime, caller, creationTime);
 }
 
@@ -42,19 +42,19 @@ function pruneCreationPressure(
   runtime: RecoverableRegistryRuntime,
   caller: Extract<PlaySessionCaller, { tag: "anonymous" | "authenticated" }>,
   creationTime: EpochMilliseconds,
-): Either.Either<void, PlaySessionCreationFailure> {
+): Result.Result<void, PlaySessionCreationFailure> {
   const prunedExpired = runtime.input.repository.pruneExpired(creationTime);
-  if (Either.isLeft(prunedExpired)) {
-    return Either.left(creationFailure(prunedExpired.left));
+  if (Result.isFailure(prunedExpired)) {
+    return Result.fail(creationFailure(prunedExpired.failure));
   }
-  if (caller.tag !== "anonymous") return Either.right(undefined);
+  if (caller.tag !== "anonymous") return Result.succeed(undefined);
   const pruned = runtime.input.repository.pruneGuestPressure(
     creationTime,
     runtime.maximumGuestSessions - 1,
   );
-  return Either.isLeft(pruned)
-    ? Either.left(creationFailure(pruned.left))
-    : Either.right(undefined);
+  return Result.isFailure(pruned)
+    ? Result.fail(creationFailure(pruned.failure))
+    : Result.succeed(undefined);
 }
 
 function createAttempt(
@@ -83,10 +83,10 @@ function createAttempt(
     maximumSavedSessionsPerPrincipal:
       DEFAULT_MAX_SAVED_PLAY_SESSIONS_PER_PRINCIPAL,
   });
-  if (Either.isLeft(created)) {
-    return { tag: "failure", failure: creationFailure(created.left) };
+  if (Result.isFailure(created)) {
+    return { tag: "failure", failure: creationFailure(created.failure) };
   }
-  return Match.value(created.right).pipe(
+  return Match.value(created.success).pipe(
     Match.when({ tag: "playSessionIdCollision" }, () => ({
       tag: "collision" as const,
     })),
@@ -120,12 +120,12 @@ function creationFromRecord(
   creationTenure: CreationTenure,
 ): CreationAttempt {
   const root = rootFromRecord(runtime.replayServices, record);
-  if (Either.isLeft(root)) {
-    return { tag: "failure", failure: creationFailure(root.left) };
+  if (Result.isFailure(root)) {
+    return { tag: "failure", failure: creationFailure(root.failure) };
   }
   const base = {
     playSessionId: record.playSessionId,
-    projection: root.right.sessionStore.snapshot(),
+    projection: root.success.sessionStore.snapshot(),
   };
   const creation: PlaySessionCreation =
     creationTenure.tag === "saved"
@@ -149,7 +149,7 @@ function createUniqueSession(
   runtime: RecoverableRegistryRuntime,
   caller: Extract<PlaySessionCaller, { tag: "anonymous" | "authenticated" }>,
   creationTime: EpochMilliseconds,
-): Either.Either<PlaySessionCreation, PlaySessionCreationFailure> {
+): Result.Result<PlaySessionCreation, PlaySessionCreationFailure> {
   for (let attempt = 0; attempt < MAX_PLAY_SESSION_ID_ATTEMPTS; attempt += 1) {
     const created = createAttempt(runtime, caller, creationTime);
     const decision = Match.value(created).pipe(
@@ -166,10 +166,10 @@ function createUniqueSession(
     );
     if (decision.tag === "retry") continue;
     return decision.tag === "failure"
-      ? Either.left(decision.failure)
-      : Either.right(decision.creation);
+      ? Result.fail(decision.failure)
+      : Result.succeed(decision.creation);
   }
-  return Either.left({
+  return Result.fail({
     tag: "playSessionCreationFailed",
     reason: "playSessionIdCollision",
     message: `Unable to allocate a unique Play Session handle after ${MAX_PLAY_SESSION_ID_ATTEMPTS} attempts.`,

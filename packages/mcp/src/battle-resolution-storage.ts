@@ -1,5 +1,5 @@
 import type { BattleRuntimeResolutionResult } from "@dnd/battle-runtime";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 
 import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
@@ -23,7 +23,7 @@ export function storeBattleResolution(
   root: McpPlaySessionRoot,
   result: BattleRuntimeResolutionResult,
   pendingTransaction: PendingBattleFillSession | null,
-): Either.Either<
+): Result.Result<
   { readonly tag: "stored" } | { readonly tag: "invalidResultNotStored" },
   | McpBattleStateTransitionIssue
   | { readonly tag: "pendingBattleFillTransactionMissing" }
@@ -33,11 +33,11 @@ export function storeBattleResolution(
       const retainsPendingInterrupt =
         resolved.envelope.frontier.kind === "interruptDecision";
       if (retainsPendingInterrupt && pendingTransaction === null) {
-        return Either.left({
+        return Result.fail({
           tag: "pendingBattleFillTransactionMissing" as const,
         });
       }
-      return Either.map(
+      return Result.map(
         root.sessionStore.storeActiveBattle(resolved.session),
         () => {
           root.sessionStore.pendingBattleFills = retainsPendingInterrupt
@@ -49,11 +49,11 @@ export function storeBattleResolution(
     }),
     Match.when({ tag: "needsHoles" }, (needsHoles) => {
       if (pendingTransaction === null) {
-        return Either.left({
+        return Result.fail({
           tag: "pendingBattleFillTransactionMissing" as const,
         });
       }
-      return Either.map(
+      return Result.map(
         root.sessionStore.storeActiveBattle(needsHoles.session),
         () => {
           root.sessionStore.pendingBattleFills = pendingTransaction;
@@ -62,7 +62,7 @@ export function storeBattleResolution(
       );
     }),
     Match.when({ tag: "invalid" }, () =>
-      Either.right({ tag: "invalidResultNotStored" } as const),
+      Result.succeed({ tag: "invalidResultNotStored" } as const),
     ),
     Match.exhaustive,
   );
@@ -74,17 +74,17 @@ export function storedBattleResolutionContent(
   pendingTransaction: PendingBattleFillSession | null,
 ): BattleResolutionStorageResult {
   const stored = storeBattleResolution(root, result, pendingTransaction);
-  if (Either.isLeft(stored)) {
+  if (Result.isFailure(stored)) {
     return errorContent("Battle state transition failed.", {
       code: "BATTLE_STATE_TRANSITION_INVALID",
-      transition: stored.left,
+      transition: stored.failure,
     });
   }
-  if (stored.right.tag === "stored") {
+  if (stored.success.tag === "stored") {
     publishAdminProjectionBestEffort(root);
   }
   const payload = battleResolutionPayload(root, result);
-  return Either.isLeft(payload)
-    ? battlePresentationIssueContent(payload.left)
-    : schemaJsonContent(BattleResolutionOutputSchema, payload.right);
+  return Result.isFailure(payload)
+    ? battlePresentationIssueContent(payload.failure)
+    : schemaJsonContent(BattleResolutionOutputSchema, payload.success);
 }

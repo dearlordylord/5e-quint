@@ -38,7 +38,7 @@ const ProjectionPathSchema = Schema.Struct({
   pathSegments: Schema.NonEmptyArray(Schema.String),
 });
 
-const McpEvidenceSchema = Schema.Union(
+const McpEvidenceSchema = Schema.Union([
   Schema.Struct({
     status: Schema.Literal("observed"),
     refs: Schema.NonEmptyArray(EvidenceRefSchema),
@@ -47,7 +47,7 @@ const McpEvidenceSchema = Schema.Union(
     status: Schema.Literal("excluded"),
     reason: Schema.String,
   }),
-);
+]);
 
 const InstalledRowEvidenceSchema = Schema.Struct({
   caseIds: Schema.NonEmptyArray(Schema.String),
@@ -71,13 +71,13 @@ const DerivedQueryCapabilityRowSchema = Schema.Struct({
 
 const NonDerivedCapabilityRowSchema = Schema.Struct({
   ...CapabilityRowCommonFields,
-  id: Schema.Literal(...NON_DERIVED_CAPABILITY_ROW_ID_VALUES),
+  id: Schema.Literals([...NON_DERIVED_CAPABILITY_ROW_ID_VALUES]),
 });
 
-const CapabilityRowSchema = Schema.Union(
+const CapabilityRowSchema = Schema.Union([
   DerivedQueryCapabilityRowSchema,
   NonDerivedCapabilityRowSchema,
-);
+]);
 
 export const CapabilityMatrixSchema = Schema.Struct({
   schema: Schema.Literal("dnd.srd-oracle.capability-matrix.v2"),
@@ -104,17 +104,17 @@ export const CapabilityMatrixSchema = Schema.Struct({
     artifactPath: Schema.Literal(
       "plugins/dnd-srd-oracle/evals/api-mcp-selection-evidence.json",
     ),
-    evidenceKinds: Schema.Tuple(Schema.Literal("apiMcpToolSelection")),
+    evidenceKinds: Schema.Tuple([Schema.Literal("apiMcpToolSelection")]),
   }),
   installedChatGptEvidence: Schema.Struct({
     artifactPath: Schema.Literal(
       "plugins/dnd-srd-oracle/evals/installed-chatgpt-evidence.json",
     ),
-    evidenceKinds: Schema.Tuple(
+    evidenceKinds: Schema.Tuple([
       Schema.Literal("installedConnectionToolSelection"),
       Schema.Literal("installedSkillActivation"),
       Schema.Literal("installedCompleteWorkflow"),
-    ),
+    ]),
   }),
   rows: Schema.NonEmptyArray(CapabilityRowSchema),
 });

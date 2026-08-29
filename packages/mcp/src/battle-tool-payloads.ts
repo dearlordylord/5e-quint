@@ -8,7 +8,7 @@ import {
   type BattlePresentationIssues,
   type BattlePresentedCheckpointFrontierEnvelope,
 } from "@dnd/battle-runtime";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { PendingBattleFillSession } from "./session-store.ts";
@@ -72,7 +72,7 @@ export function pendingBattleFillsContent(
 export function battleSessionPayload(
   root: McpPlaySessionRoot,
   session: BattleRuntimeSession | null,
-): Either.Either<BattleSessionPayload, BattlePresentationIssues> {
+): Result.Result<BattleSessionPayload, BattlePresentationIssues> {
   const snapshot = root.sessionStore.snapshot();
   const sessionSummary = mcpSessionSummary(snapshot);
   const battleState = battleStateSnapshot(root.sessionStore.battleState);
@@ -82,7 +82,7 @@ export function battleSessionPayload(
         "Empty battle presentation requires an owned empty state.",
       );
     }
-    return Either.right({
+    return Result.succeed({
       envelope: null,
       session: { ...sessionSummary, battleState },
     });
@@ -92,7 +92,7 @@ export function battleSessionPayload(
       "Active battle presentation requires an owned active state.",
     );
   }
-  return Either.map(
+  return Result.map(
     battlePresentationEnvelopeForSession(root, session),
     (envelope) => ({
       envelope,
@@ -133,7 +133,7 @@ export function battleResolutionPayload(
     result.session,
     result.envelope,
   );
-  return Either.map(presentation, (envelope) => {
+  return Result.map(presentation, (envelope) => {
     const battleState = battleStateSnapshot(root.sessionStore.battleState);
     if (battleState.tag !== "activeBattle") {
       throw new Error("Battle resolution requires an active battle state.");
@@ -168,7 +168,7 @@ export function battleResolutionPayload(
 export function battlePresentationEnvelopeForSession(
   root: McpPlaySessionRoot,
   session: BattleRuntimeSession,
-): Either.Either<
+): Result.Result<
   BattlePresentedCheckpointFrontierEnvelope,
   BattlePresentationIssues
 > {

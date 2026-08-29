@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
@@ -64,9 +64,9 @@ describe("manual MCP battle surface coverage", () => {
       ],
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(battleStateInitIssueMessage(result.left)).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(battleStateInitIssueMessage(result.failure)).toBe(
       "Character fighter weapon weapon_longsword has missing authored presentation source.",
     );
   });
@@ -1335,9 +1335,9 @@ function startBattleRight(
     battleId: battleId(`battle:${crypto.randomUUID()}`),
     combatants,
   });
-  if (Either.isLeft(result))
-    throw new Error(battleStateInitIssueMessage(result.left));
-  return result.right;
+  if (Result.isFailure(result))
+    throw new Error(battleStateInitIssueMessage(result.failure));
+  return result.success;
 }
 
 function statBlock(
@@ -1362,7 +1362,7 @@ function statBlock(
             creatureType: input.creatureType,
           },
         };
-  const init = Either.getOrThrow(
+  const init = Result.getOrThrow(
     battleCreatureInitFromStatBlock({
       combatantId: input.combatantId,
       statBlock: battleStatBlock,

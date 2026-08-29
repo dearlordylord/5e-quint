@@ -11,7 +11,7 @@ import {
   type BattleRuntimeSession,
   type BattleFill,
 } from "@dnd/battle-runtime";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 
 import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
@@ -68,17 +68,17 @@ export function handleBattleToolCall(
       const selected = root.sessionStore.selectStatBlock(
         matched.args.statBlockId,
       );
-      if (Either.isLeft(selected)) {
+      if (Result.isFailure(selected)) {
         return unknownStatBlockContent(
           matched.args.statBlockId,
-          selected.left.message,
+          selected.failure.message,
         );
       }
-      if (previousSelectedStatBlockId !== selected.right.id) {
+      if (previousSelectedStatBlockId !== selected.success.id) {
         publishAdminProjectionBestEffort(root);
       }
       return schemaJsonContent(SelectStatBlockOutputSchema, {
-        selectedStatBlock: selected.right,
+        selectedStatBlock: selected.success,
         session: mcpSessionSummary(root.sessionStore.snapshot()),
       });
     }),
@@ -102,13 +102,13 @@ export function handleBattleToolCall(
         root,
         "Cannot resolve another act with pending fills.",
       );
-      if (Either.isLeft(state)) return state.left;
+      if (Result.isFailure(state)) return state.failure;
       if (
         matched.args.subject.tag === "runtimeCommand" &&
         matched.args.subject.command === "creatureFalls"
       ) {
         const result = openCreatureFallsRuntimeInterruptWindow({
-          session: state.right,
+          session: state.success,
           fallingCreatureId: matched.args.subject.fallingCreatureId,
           reactionSpellTargetFacts: matched.args.reactionSpellTargetFacts,
         });
@@ -120,20 +120,20 @@ export function handleBattleToolCall(
             filledSubject: matched.args.subject,
             previous: null,
             fills: [],
-            replaySession: state.right,
+            replaySession: state.success,
           }),
         );
       }
       const presentation = battlePresentationEnvelopeForSession(
         root,
-        state.right,
+        state.success,
       );
-      if (Either.isLeft(presentation)) {
-        return battlePresentationIssueContent(presentation.left);
+      if (Result.isFailure(presentation)) {
+        return battlePresentationIssueContent(presentation.failure);
       }
       const availableAct =
-        presentation.right.frontier.kind === "acts"
-          ? presentation.right.frontier.acts.find((act) =>
+        presentation.success.frontier.kind === "acts"
+          ? presentation.success.frontier.acts.find((act) =>
               sameBattleSubject(act.subject, matched.args.subject),
             )
           : undefined;
@@ -150,7 +150,7 @@ export function handleBattleToolCall(
         });
       }
       const result = resolveBattleRuntimeSubject({
-        session: state.right,
+        session: state.success,
         subject: matched.args.subject,
         fills: [],
         statBlockCatalog: root.statBlockCatalog,
@@ -163,7 +163,7 @@ export function handleBattleToolCall(
           filledSubject: matched.args.subject,
           previous: null,
           fills: [],
-          replaySession: state.right,
+          replaySession: state.success,
         }),
       );
     }),
@@ -172,9 +172,9 @@ export function handleBattleToolCall(
         root,
         "Cannot end turn with pending battle fills.",
       );
-      if (Either.isLeft(state)) return state.left;
+      if (Result.isFailure(state)) return state.failure;
       const result = resolveBattleRuntimeSubject({
-        session: state.right,
+        session: state.success,
         subject: {
           tag: "runtimeCommand",
           actorId: matched.args.actorId,
@@ -195,7 +195,7 @@ export function handleBattleToolCall(
           },
           previous: null,
           fills: [],
-          replaySession: state.right,
+          replaySession: state.success,
         }),
       );
     }),
@@ -204,24 +204,24 @@ export function handleBattleToolCall(
         root,
         "Cannot end battle with pending battle fills.",
       );
-      if (Either.isLeft(state)) return state.left;
+      if (Result.isFailure(state)) return state.failure;
 
-      const handoff = settleCharacterSessionsFromBattle(root, state.right);
-      if (Either.isLeft(handoff)) {
-        return characterSessionHandoffErrorContent(handoff.left);
+      const handoff = settleCharacterSessionsFromBattle(root, state.success);
+      if (Result.isFailure(handoff)) {
+        return characterSessionHandoffErrorContent(handoff.failure);
       }
       const committed = root.sessionStore.commitBattleEnd({
-        battleSession: state.right,
-        characterSettlements: handoff.right,
+        battleSession: state.success,
+        characterSettlements: handoff.success,
       });
-      if (Either.isLeft(committed)) {
-        return battleStateTransitionErrorContent(committed.left);
+      if (Result.isFailure(committed)) {
+        return battleStateTransitionErrorContent(committed.failure);
       }
       publishAdminProjectionBestEffort(root);
 
       return schemaJsonContent(EndBattleOutputSchema, {
-        endedBattleId: state.right.state.battleId,
-        closedAt: battleInitiativePosition(state.right.state),
+        endedBattleId: state.success.state.battleId,
+        closedAt: battleInitiativePosition(state.success.state),
         characters: Array.from(root.sessionStore.characters.entries()).map(
           ([characterId, session]) => ({
             characterId,
@@ -240,9 +240,9 @@ function handleFillBattleHoleToolCall(
   input: FillBattleHoleToolInput,
 ): BattleToolResult {
   const admitted = admitBattleFillToolInput(root, input);
-  if (Either.isLeft(admitted)) return admitted.left;
+  if (Result.isFailure(admitted)) return admitted.failure;
 
-  const { session, previous, subject, fill } = admitted.right;
+  const { session, previous, subject, fill } = admitted.success;
   const fills = [...(previous?.fills ?? []), fill];
   const replaySession =
     fill.kind === "interruptDecision"
@@ -272,14 +272,15 @@ function admitBattleFillToolInput(
   input: FillBattleHoleToolInput,
 ) {
   const visibleSession = activeBattleForTool(root);
-  if (Either.isLeft(visibleSession)) return Either.left(visibleSession.left);
+  if (Result.isFailure(visibleSession))
+    return Result.fail(visibleSession.failure);
 
   const previous = root.sessionStore.pendingBattleFills;
   if (
     previous !== null &&
     !sameBattleSubject(previous.subject, input.subject)
   ) {
-    return Either.left(
+    return Result.fail(
       errorContent("A different battle subject has pending fills.", {
         code: "BATTLE_FILL_SUBJECT_MISMATCH",
         pendingSubject: previous.subject,
@@ -289,11 +290,11 @@ function admitBattleFillToolInput(
   }
   const frontier = battleMechanicsEnvelopeForSession(
     root,
-    visibleSession.right,
+    visibleSession.success,
   ).frontier;
   const frontierIssue = pendingFillFrontierIssue(frontier, input.fill);
   if (frontierIssue !== null) {
-    return Either.left(
+    return Result.fail(
       errorContent(frontierIssue.message, frontierIssue.details),
     );
   }
@@ -301,15 +302,15 @@ function admitBattleFillToolInput(
     previous === null &&
     !battleSubjectIsAvailableWithoutPendingFills(frontier, input.subject)
   ) {
-    return Either.left(
+    return Result.fail(
       errorContent("Battle act is not currently available.", {
         code: "BATTLE_ACT_NOT_AVAILABLE",
         subject: input.subject,
       }),
     );
   }
-  return Either.right({
-    session: visibleSession.right,
+  return Result.succeed({
+    session: visibleSession.success,
     previous,
     subject: input.subject,
     fill: input.fill,
@@ -342,41 +343,41 @@ function battleSessionContent(root: McpPlaySessionRoot): BattleToolResult {
   }
   if (state.tag === "activeBattle") {
     const payload = battleSessionPayload(root, state.session);
-    return Either.isLeft(payload)
-      ? battlePresentationIssueContent(payload.left)
-      : schemaJsonContent(BattleSessionOutputSchema, payload.right);
+    return Result.isFailure(payload)
+      ? battlePresentationIssueContent(payload.failure)
+      : schemaJsonContent(BattleSessionOutputSchema, payload.success);
   }
   const payload = battleSessionPayload(root, null);
-  return Either.isLeft(payload)
-    ? battlePresentationIssueContent(payload.left)
-    : schemaJsonContent(BattleSessionOutputSchema, payload.right);
+  return Result.isFailure(payload)
+    ? battlePresentationIssueContent(payload.failure)
+    : schemaJsonContent(BattleSessionOutputSchema, payload.success);
 }
 
 function activeBattleWithoutPendingFills(
   root: McpPlaySessionRoot,
   pendingMessage: string,
-): Either.Either<BattleRuntimeSession, ToolError> {
+): Result.Result<BattleRuntimeSession, ToolError> {
   const session = activeBattleForTool(root);
-  if (Either.isLeft(session)) return session;
+  if (Result.isFailure(session)) return session;
   const pendingFills = root.sessionStore.pendingBattleFills;
   return pendingFills === null
-    ? Either.right(session.right)
-    : Either.left(pendingBattleFillsContent(pendingFills, pendingMessage));
+    ? Result.succeed(session.success)
+    : Result.fail(pendingBattleFillsContent(pendingFills, pendingMessage));
 }
 
 function activeBattleForTool(
   root: McpPlaySessionRoot,
-): Either.Either<BattleRuntimeSession, ToolError> {
+): Result.Result<BattleRuntimeSession, ToolError> {
   const state = root.sessionStore.battleState;
-  if (state.tag === "none") return Either.left(noStoredBattleContent());
+  if (state.tag === "none") return Result.fail(noStoredBattleContent());
   if (state.tag === "initialInitiativeSetup") {
-    return Either.left(
+    return Result.fail(
       errorContent("Initial Initiative setup is not finalized.", {
         code: "INITIAL_INITIATIVE_SETUP_NOT_FINALIZED",
       }),
     );
   }
-  return Either.right(state.session);
+  return Result.succeed(state.session);
 }
 
 export function pendingFillFrontierIssue(

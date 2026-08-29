@@ -1,4 +1,4 @@
-import { Either, Match, Schema } from "effect";
+import { Result, Match, Schema } from "effect";
 
 import { battleToolNames } from "./battle-tool-input.ts";
 import {
@@ -34,7 +34,7 @@ export type OperationProjectionIssue = {
 const PlaySessionReadOperationResultSchema = Schema.Struct({
   tag: Schema.Literal("playSessionResumed"),
   playSessionId: PlaySessionIdSchema,
-  battleEnvelope: Schema.Union(Schema.Null, BattlePresentationEnvelopeSchema),
+  battleEnvelope: Schema.Union([Schema.Null, BattlePresentationEnvelopeSchema]),
 });
 
 /**
@@ -49,7 +49,7 @@ const PlaySessionReadOperationResultSchema = Schema.Struct({
 export function unresolvedInputsFrom(
   operationName: PlaySessionOperationName,
   value: unknown,
-): Either.Either<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
+): Result.Result<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
   return Match.value(operationName).pipe(
     Match.when(characterToolNames.createCharacterDraft, () =>
       creationDraftUnresolvedInputs(value),
@@ -90,7 +90,7 @@ export function unresolvedInputsFrom(
     Match.when(playSessionToolNames.read, () =>
       readPlaySessionUnresolvedInputs(value),
     ),
-    Match.when(isNoHoleOperationName, () => Either.right([])),
+    Match.when(isNoHoleOperationName, () => Result.succeed([])),
     Match.exhaustive,
   );
 }
@@ -98,14 +98,15 @@ export function unresolvedInputsFrom(
 export function unresolvedInputsFromBattleEnvelope(
   value: unknown,
   envelopePath = "$.envelope",
-): Either.Either<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
-  const decoded = Schema.decodeUnknownEither(BattlePresentationEnvelopeSchema)(
+): Result.Result<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
+  const decoded = Schema.decodeUnknownResult(BattlePresentationEnvelopeSchema)(
     value,
   );
-  if (Either.isLeft(decoded)) return operationProjectionIssue(decoded.left);
-  return Either.right(
+  if (Result.isFailure(decoded))
+    return operationProjectionIssue(decoded.failure);
+  return Result.succeed(
     battlePresentationUnresolvedInputsFrom(
-      { envelope: decoded.right },
+      { envelope: decoded.success },
       envelopePath,
     ),
   );
@@ -113,26 +114,28 @@ export function unresolvedInputsFromBattleEnvelope(
 
 function creationDraftUnresolvedInputs(
   value: unknown,
-): Either.Either<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
-  const decoded = Schema.decodeUnknownEither(CreationDraftOutputSchema)(value);
-  if (Either.isLeft(decoded)) return operationProjectionIssue(decoded.left);
-  return Either.right([
-    ...nonEmptyInputGroup("$.holes", decoded.right.holes),
-    ...finalizationHoleGroup(decoded.right.finalization),
+): Result.Result<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
+  const decoded = Schema.decodeUnknownResult(CreationDraftOutputSchema)(value);
+  if (Result.isFailure(decoded))
+    return operationProjectionIssue(decoded.failure);
+  return Result.succeed([
+    ...nonEmptyInputGroup("$.holes", decoded.success.holes),
+    ...finalizationHoleGroup(decoded.success.finalization),
   ]);
 }
 
 function creationFillUnresolvedInputs(
   value: unknown,
-): Either.Either<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
-  const decoded = Schema.decodeUnknownEither(FillCreationHolesOutputSchema)(
+): Result.Result<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
+  const decoded = Schema.decodeUnknownResult(FillCreationHolesOutputSchema)(
     value,
   );
-  if (Either.isLeft(decoded)) return operationProjectionIssue(decoded.left);
-  return Either.right([
-    ...nonEmptyInputGroup("$.result.holes", decoded.right.result.holes),
+  if (Result.isFailure(decoded))
+    return operationProjectionIssue(decoded.failure);
+  return Result.succeed([
+    ...nonEmptyInputGroup("$.result.holes", decoded.success.result.holes),
     ...finalizationHoleGroup(
-      decoded.right.result.finalization,
+      decoded.success.result.finalization,
       "$.result.finalization.holes",
     ),
   ]);
@@ -140,55 +143,66 @@ function creationFillUnresolvedInputs(
 
 function finalizationUnresolvedInputs(
   value: unknown,
-): Either.Either<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
-  const decoded = Schema.decodeUnknownEither(FinalizeCharacterOutputSchema)(
+): Result.Result<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
+  const decoded = Schema.decodeUnknownResult(FinalizeCharacterOutputSchema)(
     value,
   );
-  if (Either.isLeft(decoded)) return operationProjectionIssue(decoded.left);
-  return Either.right(finalizationHoleGroup(decoded.right.finalization));
+  if (Result.isFailure(decoded))
+    return operationProjectionIssue(decoded.failure);
+  return Result.succeed(finalizationHoleGroup(decoded.success.finalization));
 }
 
 function characterSessionOperationUnresolvedInputs(
   value: unknown,
-): Either.Either<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
-  const decoded = Schema.decodeUnknownEither(
+): Result.Result<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
+  const decoded = Schema.decodeUnknownResult(
     CharacterSessionOperationOutputSchema,
   )(value);
-  if (Either.isLeft(decoded)) return operationProjectionIssue(decoded.left);
-  if (!("result" in decoded.right) || decoded.right.result === undefined) {
-    return Either.right([]);
+  if (Result.isFailure(decoded))
+    return operationProjectionIssue(decoded.failure);
+  if (!("result" in decoded.success) || decoded.success.result === undefined) {
+    return Result.succeed([]);
   }
-  return Either.right(
-    decoded.right.result.tag === "needsHoles"
-      ? nonEmptyInputGroup("$.result.holes", decoded.right.result.holes)
+  return Result.succeed(
+    decoded.success.result.tag === "needsHoles"
+      ? nonEmptyInputGroup("$.result.holes", decoded.success.result.holes)
       : [],
   );
 }
 
 function startBattleUnresolvedInputs(
   value: unknown,
-): Either.Either<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
-  const decoded = Schema.decodeUnknownEither(StartBattleOutputSchema)(value);
-  if (Either.isLeft(decoded)) return operationProjectionIssue(decoded.left);
-  return Either.right(battlePresentationUnresolvedInputsFrom(decoded.right));
+): Result.Result<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
+  const decoded = Schema.decodeUnknownResult(StartBattleOutputSchema)(value);
+  if (Result.isFailure(decoded))
+    return operationProjectionIssue(decoded.failure);
+  return Result.succeed(
+    battlePresentationUnresolvedInputsFrom(decoded.success),
+  );
 }
 
 function battleLifecycleUnresolvedInputs(
   value: unknown,
-): Either.Either<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
-  const decoded = Schema.decodeUnknownEither(BattleLifecycleOutputSchema)(
+): Result.Result<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
+  const decoded = Schema.decodeUnknownResult(BattleLifecycleOutputSchema)(
     value,
   );
-  if (Either.isLeft(decoded)) return operationProjectionIssue(decoded.left);
-  return Either.right(battlePresentationUnresolvedInputsFrom(decoded.right));
+  if (Result.isFailure(decoded))
+    return operationProjectionIssue(decoded.failure);
+  return Result.succeed(
+    battlePresentationUnresolvedInputsFrom(decoded.success),
+  );
 }
 
 function battleSessionUnresolvedInputs(
   value: unknown,
-): Either.Either<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
-  const decoded = Schema.decodeUnknownEither(BattleSessionOutputSchema)(value);
-  if (Either.isLeft(decoded)) return operationProjectionIssue(decoded.left);
-  return Either.right(battlePresentationUnresolvedInputsFrom(decoded.right));
+): Result.Result<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
+  const decoded = Schema.decodeUnknownResult(BattleSessionOutputSchema)(value);
+  if (Result.isFailure(decoded))
+    return operationProjectionIssue(decoded.failure);
+  return Result.succeed(
+    battlePresentationUnresolvedInputsFrom(decoded.success),
+  );
 }
 
 function battlePresentationUnresolvedInputsFrom(
@@ -236,27 +250,31 @@ function battlePresentationUnresolvedInputsFrom(
 
 function battleResolutionUnresolvedInputs(
   value: unknown,
-): Either.Either<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
-  const decoded = Schema.decodeUnknownEither(BattleResolutionOutputSchema)(
+): Result.Result<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
+  const decoded = Schema.decodeUnknownResult(BattleResolutionOutputSchema)(
     value,
   );
-  if (Either.isLeft(decoded)) return operationProjectionIssue(decoded.left);
-  return Either.right(battlePresentationUnresolvedInputsFrom(decoded.right));
+  if (Result.isFailure(decoded))
+    return operationProjectionIssue(decoded.failure);
+  return Result.succeed(
+    battlePresentationUnresolvedInputsFrom(decoded.success),
+  );
 }
 
 function readPlaySessionUnresolvedInputs(
   value: unknown,
-): Either.Either<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
-  const decoded = Schema.decodeUnknownEither(
+): Result.Result<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
+  const decoded = Schema.decodeUnknownResult(
     PlaySessionReadOperationResultSchema,
   )(value);
-  if (Either.isLeft(decoded)) return operationProjectionIssue(decoded.left);
-  return Either.right(
-    decoded.right.battleEnvelope === null
+  if (Result.isFailure(decoded))
+    return operationProjectionIssue(decoded.failure);
+  return Result.succeed(
+    decoded.success.battleEnvelope === null
       ? []
       : battlePresentationUnresolvedInputsFrom(
           {
-            envelope: decoded.right.battleEnvelope,
+            envelope: decoded.success.battleEnvelope,
           },
           "$.battleEnvelope",
         ),
@@ -281,8 +299,8 @@ function nonEmptyInputGroup(
 
 function operationProjectionIssue(error: {
   readonly message: string;
-}): Either.Either<never, OperationProjectionIssue> {
-  return Either.left({
+}): Result.Result<never, OperationProjectionIssue> {
+  return Result.fail({
     tag: "operationProjectionDecodeIssue",
     message: error.message,
   });

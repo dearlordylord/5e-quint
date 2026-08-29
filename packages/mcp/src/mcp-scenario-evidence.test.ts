@@ -84,7 +84,7 @@ function readJson<T>(path: string): T {
 describe("MCP scenario evidence manifest", () => {
   test("uses the production query-kind owner for exact evidence obligations", () => {
     const decode = (value: unknown) =>
-      Schema.decodeUnknownEither(CharacterSessionQueryKindsSchema)(value);
+      Schema.decodeUnknownResult(CharacterSessionQueryKindsSchema)(value);
     expect(decode([...CHARACTER_SESSION_QUERY_KIND_VALUES])).toEqual(
       expect.objectContaining({ _tag: "Right" }),
     );

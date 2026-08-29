@@ -15,7 +15,7 @@ import {
 import type { StatBlockId } from "@dnd/shared/game-facts";
 import { spellSlotLevel } from "@dnd/shared/types";
 import { PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS } from "@dnd/surface/surface/find-familiar-forms";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { AvailableCharacterSession } from "./session-store.ts";
@@ -159,24 +159,27 @@ function applyAdvanceClassLevelOperation(
   const levelGain = characterBuildClassLevelGainFromTool(root, {
     levelGain: input.operation.levelGain,
   });
-  if (Either.isLeft(levelGain)) {
-    return characterSessionOperationInvalid(input.characterId, levelGain.left);
+  if (Result.isFailure(levelGain)) {
+    return characterSessionOperationInvalid(
+      input.characterId,
+      levelGain.failure,
+    );
   }
   const build = advanceCharacterBuildClassLevel({
     build: input.session.build,
     unitLibrary: root.unitLibrary,
-    levelGain: levelGain.right,
+    levelGain: levelGain.success,
   });
-  if (Either.isLeft(build)) {
+  if (Result.isFailure(build)) {
     return characterSessionOperationInvalid(
       input.characterId,
-      runtimeIssueMessage(build.left),
+      runtimeIssueMessage(build.failure),
     );
   }
   return commitAvailableCharacterSheetOperation(root, {
     characterId: input.characterId,
     sheet: input.session,
-    build: build.right,
+    build: build.success,
   });
 }
 
@@ -202,35 +205,35 @@ function applyReplaceDruidWildShapeKnownFormOperation(
     build: input.session.build,
     unitLibrary: root.unitLibrary,
   });
-  if (Either.isLeft(facts)) {
+  if (Result.isFailure(facts)) {
     return characterSessionOperationInvalid(
       input.characterId,
-      runtimeIssueMessage(facts.left),
+      runtimeIssueMessage(facts.failure),
     );
   }
-  if (facts.right === undefined) {
+  if (facts.success === undefined) {
     return characterSessionOperationInvalid(
       input.characterId,
       "Druid Wild Shape replacement requires the Druid Wild Shape feature.",
     );
   }
   const replaced = replaceDruidWildShapeKnownForm({
-    facts: facts.right,
+    facts: facts.success,
     currentKnownFormStatBlockIds: currentKnownForms.statBlockIds,
     replacement: input.operation.replacement,
     statBlockCatalog: root.statBlockCatalog,
   });
-  if (Either.isLeft(replaced)) {
+  if (Result.isFailure(replaced)) {
     return characterSessionOperationInvalid(
       input.characterId,
-      runtimeIssueMessage(replaced.left),
+      runtimeIssueMessage(replaced.failure),
     );
   }
   return commitAvailableCharacterSheetOperation(root, {
     characterId: input.characterId,
     sheet: input.session,
     build: input.session.build,
-    druidWildShapeKnownFormStatBlockIds: replaced.right,
+    druidWildShapeKnownFormStatBlockIds: replaced.success,
   });
 }
 
@@ -253,19 +256,19 @@ function commitAvailableCharacterSheetOperation(
             input.druidWildShapeKnownFormStatBlockIds,
         }),
   });
-  if (Either.isLeft(rebuilt)) {
-    return characterSessionOperationInvalid(input.characterId, rebuilt.left);
+  if (Result.isFailure(rebuilt)) {
+    return characterSessionOperationInvalid(input.characterId, rebuilt.failure);
   }
-  const detail = characterSessionDetailForAvailableSheet(root, rebuilt.right);
-  if (Either.isLeft(detail)) {
+  const detail = characterSessionDetailForAvailableSheet(root, rebuilt.success);
+  if (Result.isFailure(detail)) {
     return characterSessionOperationInvalid(
       input.characterId,
-      detail.left.message,
+      detail.failure.message,
     );
   }
-  root.sessionStore.characters.set(rebuilt.right);
+  root.sessionStore.characters.set(rebuilt.success);
   return schemaJsonContent(CharacterSessionOperationOutputSchema, {
-    detail: characterSessionDetailOutput(detail.right),
+    detail: characterSessionDetailOutput(detail.success),
     session: mcpSessionSummary(root.sessionStore.snapshot()),
   });
 }
@@ -295,11 +298,11 @@ function applyRetainOneAtATimeCompanionOperation(
   const selectedForm = retainedCompanionFormSelectionFromTool(
     input.operation.selectedForm,
   );
-  if (Either.isLeft(selectedForm)) {
+  if (Result.isFailure(selectedForm)) {
     return errorContent("Character session operation failed.", {
       code: "CHARACTER_SESSION_OPERATION_INVALID",
       characterId: input.characterId,
-      message: selectedForm.left,
+      message: selectedForm.failure,
     });
   }
   const companionId = input.operation.companionId;
@@ -322,7 +325,7 @@ function applyRetainOneAtATimeCompanionOperation(
     statBlockCatalog: root.statBlockCatalog,
     companionId,
     source: retainedCompanionSourceFromTool(input.operation.source),
-    selectedForm: selectedForm.right,
+    selectedForm: selectedForm.success,
     ...(input.operation.creatureTypeOverrideChoiceId === undefined
       ? {}
       : {
@@ -330,16 +333,16 @@ function applyRetainOneAtATimeCompanionOperation(
             input.operation.creatureTypeOverrideChoiceId,
         }),
   });
-  if (Either.isLeft(updated)) {
+  if (Result.isFailure(updated)) {
     return errorContent("Character session operation failed.", {
       code: "CHARACTER_SESSION_OPERATION_INVALID",
       characterId: input.characterId,
-      message: updated.left.message,
+      message: updated.failure.message,
     });
   }
-  root.sessionStore.characters.set(updated.right);
+  root.sessionStore.characters.set(updated.success);
   return schemaJsonContent(CharacterSessionOperationOutputSchema, {
-    character: updated.right,
+    character: updated.success,
     session: mcpSessionSummary(root.sessionStore.snapshot()),
   });
 }
@@ -370,16 +373,16 @@ function retainedCompanionFormSelectionFromTool(
     ApplyCharacterSessionOperationToolInput["operation"],
     { readonly kind: "retainOneAtATimeCompanion" }
   >["selectedForm"],
-): Either.Either<CharacterSheetCompanionFormSelection, string> {
+): Result.Result<CharacterSheetCompanionFormSelection, string> {
   if (selectedForm.tag !== "pactOfTheChainSpecialForm") {
-    return Either.right(selectedForm);
+    return Result.succeed(selectedForm);
   }
   const specialForm = PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS.find(
     (form) => form.formId === selectedForm.formId,
   );
   return specialForm === undefined
-    ? Either.left("Unknown retained companion special form.")
-    : Either.right({
+    ? Result.fail("Unknown retained companion special form.")
+    : Result.succeed({
         tag: "pactOfTheChainSpecialForm",
         formId: specialForm.formId,
       });

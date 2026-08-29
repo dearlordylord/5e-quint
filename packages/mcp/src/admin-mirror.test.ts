@@ -2,7 +2,7 @@ import {
   battleRuntimeContextForTest,
   battleRuntimeSessionForTest,
 } from "@dnd/battle-runtime/test-support";
-import { Effect, Either } from "effect";
+import { Effect, Result } from "effect";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
 import {
@@ -184,7 +184,7 @@ describe("Admin Mirror publisher", () => {
     );
 
     publish.mockClear();
-    expect(Either.isLeft(adminProjection(root))).toBe(true);
+    expect(Result.isFailure(adminProjection(root))).toBe(true);
     publishAdminProjectionBestEffort(root);
     expect(publish).not.toHaveBeenCalled();
   });

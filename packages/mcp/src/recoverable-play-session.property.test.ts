@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
@@ -54,11 +54,14 @@ describe("recoverable Play Session properties", () => {
         now: () => now,
       });
       const creation = registry.create({ tag: "anonymous" });
-      if (Either.isLeft(creation) || creation.right.access.tag !== "guest") {
+      if (
+        Result.isFailure(creation) ||
+        creation.success.access.tag !== "guest"
+      ) {
         throw new Error("Expected a recoverable Guest Play Session.");
       }
-      expect(creation.right.access.guestAccessGrant).toBe(guestAccessGrant);
-      expect(creation.right.tenure).toMatchObject({
+      expect(creation.success.access.guestAccessGrant).toBe(guestAccessGrant);
+      expect(creation.success.tenure).toMatchObject({
         tag: "guest",
         inactiveExpiresAt: new Date(
           1_000 + GUEST_INACTIVITY_RETENTION_MS,
@@ -71,14 +74,14 @@ describe("recoverable Play Session properties", () => {
         { tag: "guest", guestAccessGrant: wrongGuestAccessGrant },
         (root) => root.sessionStore.snapshot(),
       );
-      expect(Either.isLeft(unauthorized)).toBe(true);
+      expect(Result.isFailure(unauthorized)).toBe(true);
 
       const authorized = await registry.run(
         playSessionId,
         { tag: "guest", guestAccessGrant },
         (root) => root.sessionStore.snapshot(),
       );
-      expect(Either.isRight(authorized)).toBe(true);
+      expect(Result.isSuccess(authorized)).toBe(true);
 
       now = requireEpochMilliseconds(1_001 + GUEST_INACTIVITY_RETENTION_MS);
       const expired = await registry.run(
@@ -86,7 +89,7 @@ describe("recoverable Play Session properties", () => {
         { tag: "guest", guestAccessGrant },
         (root) => root.sessionStore.snapshot(),
       );
-      expect(Either.isLeft(expired)).toBe(true);
+      expect(Result.isFailure(expired)).toBe(true);
     } finally {
       repository.close();
     }
@@ -108,7 +111,7 @@ describe("recoverable Play Session properties", () => {
             ? [seedInput[0], seedInput[1], seedInput[2], "00000001"]
             : seedInput;
           const seed = decodePlaySessionDiceSeed(normalizedSeed);
-          if (Either.isLeft(seed)) throw new Error(seed.left.message);
+          if (Result.isFailure(seed)) throw new Error(seed.failure.message);
           const playSessionId = requirePlaySessionId(
             "play-session:00000000-0000-4000-8000-000000000359",
           );
@@ -120,7 +123,7 @@ describe("recoverable Play Session properties", () => {
               repository: firstRepository,
               playSessionIdFactory: () => playSessionId,
               diceReplayFactory: () => ({
-                seed: seed.right,
+                seed: seed.success,
                 randomSource: DICE_RANDOM_SOURCE,
               }),
             });
@@ -129,17 +132,17 @@ describe("recoverable Play Session properties", () => {
               repository: secondRepository,
               playSessionIdFactory: () => playSessionId,
               diceReplayFactory: () => ({
-                seed: seed.right,
+                seed: seed.success,
                 randomSource: DICE_RANDOM_SOURCE,
               }),
             });
             const firstCreation = first.create({ tag: "anonymous" });
             const secondCreation = second.create({ tag: "anonymous" });
             if (
-              Either.isLeft(firstCreation) ||
-              firstCreation.right.access.tag !== "guest" ||
-              Either.isLeft(secondCreation) ||
-              secondCreation.right.access.tag !== "guest"
+              Result.isFailure(firstCreation) ||
+              firstCreation.success.access.tag !== "guest" ||
+              Result.isFailure(secondCreation) ||
+              secondCreation.success.access.tag !== "guest"
             ) {
               throw new Error("The property requires two Guest Play Sessions.");
             }
@@ -148,13 +151,13 @@ describe("recoverable Play Session properties", () => {
               const firstSampling = await rollRecoverably(
                 first,
                 playSessionId,
-                firstCreation.right.access.guestAccessGrant,
+                firstCreation.success.access.guestAccessGrant,
                 request,
               );
               const secondSampling = await rollRecoverably(
                 second,
                 playSessionId,
-                secondCreation.right.access.guestAccessGrant,
+                secondCreation.success.access.guestAccessGrant,
                 request,
               );
               expect(firstSampling.groups).toEqual(secondSampling.groups);
@@ -208,7 +211,10 @@ describe("recoverable Play Session properties", () => {
     });
     try {
       const creation = registry.create({ tag: "anonymous" });
-      if (Either.isLeft(creation) || creation.right.access.tag !== "guest") {
+      if (
+        Result.isFailure(creation) ||
+        creation.success.access.tag !== "guest"
+      ) {
         throw new Error("Expected a recoverable Guest Play Session.");
       }
       const request = {
@@ -218,13 +224,13 @@ describe("recoverable Play Session properties", () => {
       const first = await rollRecoverably(
         registry,
         playSessionId,
-        creation.right.access.guestAccessGrant,
+        creation.success.access.guestAccessGrant,
         request,
       );
       const repeated = await rollRecoverably(
         registry,
         playSessionId,
-        creation.right.access.guestAccessGrant,
+        creation.success.access.guestAccessGrant,
         request,
       );
       expect(repeated.groups).toEqual(first.groups);
@@ -251,10 +257,10 @@ async function rollRecoverably(
   request: Readonly<Record<string, unknown>>,
 ): Promise<Readonly<Record<string, unknown>>> {
   const decoded = decodeDiceToolCall({ name: "roll_dice", args: request });
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     throw new Error("The property generated an invalid dice request.");
   }
-  const validatedRequest = decoded.right.args;
+  const validatedRequest = decoded.success.args;
   const result = await registry.run(
     playSessionId,
     { tag: "guest", guestAccessGrant },
@@ -265,22 +271,23 @@ async function rollRecoverably(
         if (!("structuredContent" in content)) return false;
         const sampling = decodeRollDiceResult(content.structuredContent);
         return (
-          Either.isRight(sampling) && sampling.right.disposition === "sampled"
+          Result.isSuccess(sampling) &&
+          sampling.success.disposition === "sampled"
         );
       },
     },
   );
-  if (Either.isLeft(result)) {
+  if (Result.isFailure(result)) {
     throw new Error(
-      result.left.tag === "playSessionStorageFailure"
-        ? result.left.message
+      result.failure.tag === "playSessionStorageFailure"
+        ? result.failure.message
         : "The property Play Session unexpectedly became unavailable.",
     );
   }
-  if (!("structuredContent" in result.right.value)) {
+  if (!("structuredContent" in result.success.value)) {
     throw new Error("Recoverable dice operation omitted structured content.");
   }
-  const content = result.right.value.structuredContent;
+  const content = result.success.value.structuredContent;
   if (
     typeof content !== "object" ||
     content === null ||
@@ -295,24 +302,24 @@ async function rollRecoverably(
 
 function openRepository(): PlaySessionRepository {
   const repository = openSqlitePlaySessionRepository(":memory:");
-  if (Either.isLeft(repository)) throw new Error(repository.left.message);
-  return repository.right;
+  if (Result.isFailure(repository)) throw new Error(repository.failure.message);
+  return repository.success;
 }
 
 function requirePlaySessionId(input: string): PlaySessionId {
   const decoded = decodePlaySessionId(input);
-  if (Either.isLeft(decoded)) throw new Error(decoded.left);
-  return decoded.right;
+  if (Result.isFailure(decoded)) throw new Error(decoded.failure);
+  return decoded.success;
 }
 
 function requireGuestAccessGrant(hex: string): GuestAccessGrant {
   const decoded = decodeGuestAccessGrant(`guest-access:${hex}`);
-  if (Either.isLeft(decoded)) throw new Error(decoded.left);
-  return decoded.right;
+  if (Result.isFailure(decoded)) throw new Error(decoded.failure);
+  return decoded.success;
 }
 
 function requireEpochMilliseconds(input: number): EpochMilliseconds {
   const decoded = decodeEpochMilliseconds(input);
-  if (Either.isLeft(decoded)) throw new Error(decoded.left.message);
-  return decoded.right;
+  if (Result.isFailure(decoded)) throw new Error(decoded.failure.message);
+  return decoded.success;
 }

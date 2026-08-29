@@ -72,11 +72,11 @@ export const CompleteWorkflowEvaluationCaseSchema = Schema.Struct({
 });
 
 const SubmissionReviewEvaluationCaseBase = {
-  id: Schema.NonEmptyTrimmedString,
-  prompt: Schema.NonEmptyTrimmedString,
-  fixture: Schema.NonEmptyTrimmedString,
-  expectedBehavior: Schema.NonEmptyTrimmedString,
-  expectedResultShape: Schema.NonEmptyTrimmedString,
+  id: Schema.Trimmed.check(Schema.isNonEmpty()),
+  prompt: Schema.Trimmed.check(Schema.isNonEmpty()),
+  fixture: Schema.Trimmed.check(Schema.isNonEmpty()),
+  expectedBehavior: Schema.Trimmed.check(Schema.isNonEmpty()),
+  expectedResultShape: Schema.Trimmed.check(Schema.isNonEmpty()),
 };
 
 export const SubmissionReviewEvaluationCaseSchema = Schema.Union(
@@ -87,7 +87,7 @@ export const SubmissionReviewEvaluationCaseSchema = Schema.Union(
   Schema.Struct({
     ...SubmissionReviewEvaluationCaseBase,
     kind: Schema.Literal("negative"),
-    rejectionRationale: Schema.NonEmptyTrimmedString,
+    rejectionRationale: Schema.Trimmed.check(Schema.isNonEmpty()),
   }),
 );
 

@@ -3,7 +3,7 @@ import type {
   CharacterSheetLongRestStartTiming,
 } from "@dnd/character-sheet-runtime";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import type { ApplyCharacterSessionOperationToolInput } from "./character-session-operation-tool-input.ts";
 
@@ -37,13 +37,13 @@ export type RestBoundaryContext =
 
 export function cumulativeRestBoundary(input: RestBoundaryContext) {
   if (input.cumulativeRestedTicks <= input.previousCumulativeRestedTicks) {
-    return Either.left({
+    return Result.fail({
       issue:
         "Long Rest cumulativeRestedTicks must strictly increase at every boundary.",
       context: input,
     });
   }
-  return Either.right({
+  return Result.succeed({
     cumulativeRestedTicks: elapsedTimeTicks(input.cumulativeRestedTicks),
     elapsedSincePreviousBoundaryTicks: elapsedTimeTicks(
       input.cumulativeRestedTicks - input.previousCumulativeRestedTicks,

@@ -1,6 +1,6 @@
 import { movementFeet } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
-import { Either, Option, Schema } from "effect";
+import { Result, Option, Schema } from "effect";
 
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
@@ -145,12 +145,12 @@ import { adminProjection } from "./admin-mirror.ts";
 
 function testAbilityScoreAssignment(scores: RawAbilityScoreAssignment) {
   const parsed = abilityScoreAssignment(scores);
-  if (Either.isLeft(parsed)) {
+  if (Result.isFailure(parsed)) {
     throw new Error(
       "Test fixture ability scores must be valid AbilityScore values.",
     );
   }
-  return parsed.right;
+  return parsed.success;
 }
 
 function testCharacterId(draftId: string) {
@@ -169,7 +169,7 @@ function testBattleCreatureStateWithoutKnockOut(
   };
 }
 
-type TestBattleRosterProjection = Either.Either<
+type TestBattleRosterProjection = Result.Result<
   BattleCreatureInit,
   BattleCreatureInitIssue | BattleStateInitIssue
 >;
@@ -183,19 +183,19 @@ function startBattleFromProjectedRosterFixture(input: {
 }): BattleRuntimeSession {
   const combatants: BattleCreatureInit[] = [];
   for (const projection of input.projections) {
-    if (Either.isLeft(projection)) {
-      throw new Error(JSON.stringify(projection.left));
+    if (Result.isFailure(projection)) {
+      throw new Error(JSON.stringify(projection.failure));
     }
-    combatants.push(projection.right);
+    combatants.push(projection.success);
   }
   const result = startBattle({
     battleId: input.battleId,
     combatants,
   });
-  if (Either.isLeft(result)) {
-    throw new Error(characterBattleRuntimeIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(characterBattleRuntimeIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function resolvedState(result: ReturnType<typeof endTurn>): BattleState {
@@ -207,12 +207,12 @@ function resolvedState(result: ReturnType<typeof endTurn>): BattleState {
 
 function characterEquipmentItemUnitIdRight(value: string) {
   const result = characterEquipmentItemUnitId(value);
-  if (Either.isLeft(result)) {
+  if (Result.isFailure(result)) {
     throw new Error(
       `Invalid test CharacterBuild equipment item Unit id: ${value}`,
     );
   }
-  return result.right;
+  return result.success;
 }
 
 function testWizardSpellcasting(input: {
@@ -298,20 +298,20 @@ function availableCharacterSessionRight(
     conditions: [],
     ...input,
   });
-  if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+  if (Result.isFailure(result)) {
+    throw new Error(result.failure.message);
   }
-  return result.right;
+  return result.success;
 }
 
-function expectRight<T, E>(result: Either.Either<T, E>): T {
-  if (Either.isLeft(result)) {
+function expectRight<T, E>(result: Result.Result<T, E>): T {
+  if (Result.isFailure(result)) {
     throw new Error(
-      `Expected Either.right, received ${JSON.stringify(result.left)}`,
+      `Expected Result.succeed, received ${JSON.stringify(result.failure)}`,
     );
   }
 
-  return result.right;
+  return result.success;
 }
 
 type JsonSchemaObject = {
@@ -569,8 +569,8 @@ describe("MCP server route", () => {
       },
     };
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(CharacterSessionDetailOutputSchema)(
+      Result.isFailure(
+        Schema.decodeUnknownResult(CharacterSessionDetailOutputSchema)(
           malformedCurrentHp,
         ),
       ),
@@ -596,8 +596,8 @@ describe("MCP server route", () => {
       },
     };
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(CharacterSessionDetailOutputSchema)(
+      Result.isFailure(
+        Schema.decodeUnknownResult(CharacterSessionDetailOutputSchema)(
           malformedManifestationTag,
         ),
       ),
@@ -783,8 +783,8 @@ describe("MCP server route", () => {
       );
     const rejects = (value: unknown) =>
       expect(
-        Either.isLeft(
-          Schema.decodeUnknownEither(CharacterSessionQueryOutputSchema)(value),
+        Result.isFailure(
+          Schema.decodeUnknownResult(CharacterSessionQueryOutputSchema)(value),
         ),
       ).toBe(true);
 
@@ -1014,7 +1014,7 @@ describe("MCP server route", () => {
       unitLibrary: emptyCatalog.catalog,
     };
 
-    expect(Either.isLeft(adminProjection(invalidCatalogRoot))).toBe(true);
+    expect(Result.isFailure(adminProjection(invalidCatalogRoot))).toBe(true);
     expect(
       readPayload(handleToolCall(invalidCatalogRoot, "list_characters", {})),
     ).toMatchObject({
@@ -1192,7 +1192,7 @@ describe("MCP server route", () => {
         "stat_block_owl",
       ]),
     );
-    expect(Either.isRight(selected) ? selected.right.id : undefined).toBe(
+    expect(Result.isSuccess(selected) ? selected.success.id : undefined).toBe(
       "stat_block_goblin_warrior",
     );
     expect(root.sessionStore.snapshot()).toMatchObject({
@@ -1946,9 +1946,9 @@ describe("MCP server route", () => {
       root.unitLibrary,
     );
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(result.left.map((issue) => issue.message)).toEqual([
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(result.failure.map((issue) => issue.message)).toEqual([
       "Unknown Character Build Unit for battle initialization: missing_feature_one.",
       "Unknown Character Build Unit for battle initialization: missing_feature_two.",
     ]);
@@ -4285,7 +4285,7 @@ describe("MCP server route", () => {
           has: () => false,
           keys: function* () {},
           set: () => {},
-          setAll: () => Either.right(undefined),
+          setAll: () => Result.succeed(undefined),
         },
       },
     };
@@ -4743,7 +4743,7 @@ describe("MCP server route", () => {
       sessionStore: {
         ...root.sessionStore,
         commitBattleEnd: () =>
-          Either.left({
+          Result.fail({
             tag: "battleStateCharacterSessionChanged" as const,
             affectedCharacterIds: [firstCharacterId, secondCharacterId],
           }),
@@ -4794,7 +4794,7 @@ describe("MCP server route", () => {
       sessionStore: {
         ...root.sessionStore,
         commitBattleStart: () =>
-          Either.left({
+          Result.fail({
             tag: "battleStateCharacterSessionChanged" as const,
             affectedCharacterIds: [firstCharacterId, secondCharacterId],
           }),
@@ -6261,16 +6261,16 @@ describe("MCP server route", () => {
       sheet,
       unitLibrary: root.unitLibrary,
     });
-    if (Either.isLeft(magicalCunning)) {
-      throw new Error(magicalCunning.left.message);
+    if (Result.isFailure(magicalCunning)) {
+      throw new Error(magicalCunning.failure.message);
     }
-    expect(magicalCunning.right.pactSlotExpenditure).toEqual({
+    expect(magicalCunning.success.pactSlotExpenditure).toEqual({
       expended: resourceCount(1),
     });
-    expect(magicalCunning.right.restFeatureUses).toEqual([
+    expect(magicalCunning.success.restFeatureUses).toEqual([
       { tag: "magicalCunning", usedSinceLongRest: true },
     ]);
-    root.sessionStore.characters.set(magicalCunning.right);
+    root.sessionStore.characters.set(magicalCunning.success);
 
     const completed = readPayload(
       handleToolCall(root, "apply_character_session_operation", {
@@ -8083,7 +8083,7 @@ describe("MCP server route", () => {
         positiveHpUnconscious: KNOCKED_OUT_UNCONSCIOUS,
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "characterSessionIssue",
         message:
           "Knocked Out character session must have exactly 1 current HP.",

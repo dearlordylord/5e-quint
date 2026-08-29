@@ -1,5 +1,5 @@
 import { type BattleId, type BattleRuntimeSession } from "@dnd/battle-runtime";
-import { Match, Either } from "effect";
+import { Match, Result } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import { battleStateSnapshot } from "./battle-state-snapshot.ts";
@@ -47,10 +47,10 @@ export function commitActiveBattleStart(input: {
     input.root,
     input.session,
   );
-  if (Either.isLeft(presentedEnvelope)) {
-    return battlePresentationIssueContent(presentedEnvelope.left);
+  if (Result.isFailure(presentedEnvelope)) {
+    return battlePresentationIssueContent(presentedEnvelope.failure);
   }
-  const envelope = presentedEnvelope.right;
+  const envelope = presentedEnvelope.success;
   return completeBattleStateTransition({
     root: input.root,
     transition: input.root.sessionStore.commitBattleStart({

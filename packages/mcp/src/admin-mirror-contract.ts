@@ -10,17 +10,16 @@ import {
   McpSessionSnapshotSchema,
 } from "./session-snapshot-output.ts";
 
-export const AdminMirrorSessionIdSchema = Schema.NonEmptyTrimmedString.pipe(
-  Schema.brand("AdminMirrorSessionId"),
-);
+export const AdminMirrorSessionIdSchema = Schema.Trimmed.check(
+  Schema.isNonEmpty(),
+).pipe(Schema.brand("AdminMirrorSessionId"));
 export type AdminMirrorSessionId = typeof AdminMirrorSessionIdSchema.Type;
 export const adminMirrorSessionId: (value: string) => AdminMirrorSessionId =
   AdminMirrorSessionIdSchema.make;
 
-export const AdminMirrorPublisherInstanceIdSchema =
-  Schema.NonEmptyTrimmedString.pipe(
-    Schema.brand("AdminMirrorPublisherInstanceId"),
-  );
+export const AdminMirrorPublisherInstanceIdSchema = Schema.Trimmed.check(
+  Schema.isNonEmpty(),
+).pipe(Schema.brand("AdminMirrorPublisherInstanceId"));
 export type AdminMirrorPublisherInstanceId =
   typeof AdminMirrorPublisherInstanceIdSchema.Type;
 export const adminMirrorPublisherInstanceId: (
@@ -28,8 +27,7 @@ export const adminMirrorPublisherInstanceId: (
 ) => AdminMirrorPublisherInstanceId = AdminMirrorPublisherInstanceIdSchema.make;
 
 export const AdminMirrorSequenceSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
   Schema.brand("AdminMirrorSequence"),
 );
 export type AdminMirrorSequence = typeof AdminMirrorSequenceSchema.Type;
@@ -47,7 +45,7 @@ export const AdminMirrorSessionSummarySchema = Schema.Struct({
 export type AdminMirrorSessionSummary =
   typeof AdminMirrorSessionSummarySchema.Type;
 
-export const AdminSessionProjectionSchema = Schema.Union(
+export const AdminSessionProjectionSchema = Schema.Union([
   Schema.Struct({
     session: Schema.Struct({
       ...AdminMirrorSessionSummaryFields,
@@ -72,42 +70,49 @@ export const AdminSessionProjectionSchema = Schema.Union(
     battle: BattlePresentedCheckpointFrontierEnvelopeSchema,
     characters: Schema.Array(CharacterSessionRowSchema),
   }).pipe(
-    Schema.filter(
-      ({ battle, session }) =>
-        battleEnvelopeMatchesActiveSession({
-          envelope: battle,
-          session,
-        }),
-      {
-        message: () =>
-          "An active Battle envelope must match its session Battle and actor.",
-      },
+    Schema.check(
+      Schema.makeFilter(
+        ({ battle, session }) =>
+          battleEnvelopeMatchesActiveSession({
+            envelope: battle,
+            session,
+          })
+            ? undefined
+            : "An active Battle envelope must match its session Battle and actor.",
+        {
+          message:
+            "An active Battle envelope must match its session Battle and actor.",
+        },
+      ),
     ),
   ),
-);
+]);
 export type AdminSessionProjection = typeof AdminSessionProjectionSchema.Type;
 
 export const AdminMirrorBattleHpChangeSchema = Schema.Struct({
   combatantId: Schema.String,
   displayName: Schema.String,
-  maxHp: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
-  nextHp: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
-  previousHp: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+  maxHp: Schema.Number.pipe(
+    Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
+  ),
+  nextHp: Schema.Number.pipe(
+    Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
+  ),
+  previousHp: Schema.Number.pipe(
+    Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
+  ),
 });
 export type AdminMirrorBattleHpChange =
   typeof AdminMirrorBattleHpChangeSchema.Type;
 
-const JsonObjectSchema = Schema.Record({
-  key: Schema.String,
-  value: Schema.Any,
-});
+const JsonObjectSchema = Schema.Record(Schema.String, Schema.Any);
 
 export const AdminMirrorEventDebugSchema = Schema.Struct({
   derivedInput: JsonObjectSchema,
   derivedOutcome: JsonObjectSchema,
   eventKind: Schema.String,
-  nextBattle: Schema.Union(JsonObjectSchema, Schema.Null),
-  previousBattle: Schema.Union(JsonObjectSchema, Schema.Null),
+  nextBattle: Schema.Union([JsonObjectSchema, Schema.Null]),
+  previousBattle: Schema.Union([JsonObjectSchema, Schema.Null]),
 });
 export type AdminMirrorEventDebug = typeof AdminMirrorEventDebugSchema.Type;
 
@@ -116,29 +121,30 @@ export const AdminMirrorPresentationTimelineEntrySchema = Schema.Struct({
   publisherInstanceId: AdminMirrorPublisherInstanceIdSchema,
   sequence: AdminMirrorSequenceSchema,
   sourceProcessId: Schema.Number.pipe(
-    Schema.int(),
-    Schema.greaterThanOrEqualTo(0),
+    Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
   ),
   receivedAtEpochMs: Schema.Number.pipe(
-    Schema.int(),
-    Schema.greaterThanOrEqualTo(0),
+    Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
   ),
-  battleId: Schema.Union(Schema.String, Schema.Null),
-  battleRound: Schema.Union(
-    Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
+  battleId: Schema.Union([Schema.String, Schema.Null]),
+  battleRound: Schema.Union([
+    Schema.Number.pipe(
+      Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
+    ),
     Schema.Null,
-  ),
-  actionDetail: Schema.Union(Schema.String, Schema.Null),
-  actionSummary: Schema.Union(Schema.String, Schema.Null),
-  currentActorId: Schema.Union(Schema.String, Schema.Null),
-  currentActorDisplayName: Schema.Union(Schema.String, Schema.Null),
-  debug: Schema.Union(AdminMirrorEventDebugSchema, Schema.Null),
+  ]),
+  actionDetail: Schema.Union([Schema.String, Schema.Null]),
+  actionSummary: Schema.Union([Schema.String, Schema.Null]),
+  currentActorId: Schema.Union([Schema.String, Schema.Null]),
+  currentActorDisplayName: Schema.Union([Schema.String, Schema.Null]),
+  debug: Schema.Union([AdminMirrorEventDebugSchema, Schema.Null]),
   hpChanges: Schema.Array(AdminMirrorBattleHpChangeSchema),
   characterCount: Schema.Number.pipe(
-    Schema.int(),
-    Schema.greaterThanOrEqualTo(0),
+    Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
   ),
-  draftCount: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+  draftCount: Schema.Number.pipe(
+    Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
+  ),
 });
 export type AdminMirrorPresentationTimelineEntry =
   typeof AdminMirrorPresentationTimelineEntrySchema.Type;
@@ -148,8 +154,7 @@ const AdminMirrorProjectionEnvelopeFieldsSchema = Schema.Struct({
   publisherInstanceId: AdminMirrorPublisherInstanceIdSchema,
   sequence: AdminMirrorSequenceSchema,
   sourceProcessId: Schema.Number.pipe(
-    Schema.int(),
-    Schema.greaterThanOrEqualTo(0),
+    Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
   ),
   projection: AdminSessionProjectionSchema,
 });
@@ -161,8 +166,7 @@ export type AdminMirrorProjectionEnvelope =
 export const AdminMirrorSessionStateSchema = Schema.Struct({
   envelope: AdminMirrorProjectionEnvelopeSchema,
   receivedAtEpochMs: Schema.Number.pipe(
-    Schema.int(),
-    Schema.greaterThanOrEqualTo(0),
+    Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
   ),
   multiSource: Schema.Boolean,
   presentationTimeline: Schema.Array(

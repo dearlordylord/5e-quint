@@ -1,6 +1,6 @@
 import { createServer } from "node:http";
 
-import { Either } from "effect";
+import { Result } from "effect";
 import { exportJWK, generateKeyPair, SignJWT } from "jose";
 import { describe, expect, test } from "vitest";
 
@@ -14,10 +14,10 @@ describe("public MCP OAuth", () => {
       issuer: "https://identity.example.test",
       jwksUrl: "https://identity.example.test/.well-known/jwks.json",
     });
-    if (Either.isLeft(oauth)) {
+    if (Result.isFailure(oauth)) {
       throw new Error("Expected complete OAuth configuration.");
     }
-    expect(oauth.right.protectedResourceMetadata).toEqual({
+    expect(oauth.success.protectedResourceMetadata).toEqual({
       resource: "https://oracle.example.test/mcp",
       authorization_servers: ["https://identity.example.test/"],
       scopes_supported: ["play-sessions"],
@@ -50,7 +50,7 @@ describe("public MCP OAuth", () => {
       issuer: "https://issuer.example.test",
       jwksUrl: jwksUrl.toString(),
     });
-    if (Either.isLeft(oauth)) {
+    if (Result.isFailure(oauth)) {
       throw new Error("Expected complete OAuth configuration.");
     }
     try {
@@ -58,7 +58,7 @@ describe("public MCP OAuth", () => {
         audience: "https://oracle.example.test/mcp",
         expiresIn: "5m",
       });
-      expect(await oauth.right.verifyAccessToken(valid)).toMatchObject({
+      expect(await oauth.success.verifyAccessToken(valid)).toMatchObject({
         _tag: "Right",
         right: expect.stringMatching(/^oauth-principal:[0-9a-f]{64}$/u),
       });
@@ -66,7 +66,9 @@ describe("public MCP OAuth", () => {
         audience: "another-resource",
         expiresIn: "5m",
       });
-      expect(await oauth.right.verifyAccessToken(wrongAudience)).toMatchObject({
+      expect(
+        await oauth.success.verifyAccessToken(wrongAudience),
+      ).toMatchObject({
         _tag: "Left",
         left: { reason: "invalidToken" },
       });
@@ -74,7 +76,7 @@ describe("public MCP OAuth", () => {
         audience: "https://oracle.example.test/mcp",
         expiresIn: "-1s",
       });
-      expect(await oauth.right.verifyAccessToken(expired)).toMatchObject({
+      expect(await oauth.success.verifyAccessToken(expired)).toMatchObject({
         _tag: "Left",
         left: { reason: "invalidToken" },
       });
@@ -83,10 +85,12 @@ describe("public MCP OAuth", () => {
         expiresIn: "5m",
         includeScope: false,
       });
-      expect(await oauth.right.verifyAccessToken(missingScope)).toMatchObject({
-        _tag: "Left",
-        left: { reason: "invalidToken" },
-      });
+      expect(await oauth.success.verifyAccessToken(missingScope)).toMatchObject(
+        {
+          _tag: "Left",
+          left: { reason: "invalidToken" },
+        },
+      );
     } finally {
       await new Promise<void>((resolve, reject) =>
         jwksServer.close((error) =>

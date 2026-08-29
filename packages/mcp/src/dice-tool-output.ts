@@ -4,13 +4,13 @@ import { DiceRollRequestIdSchema, MAX_DIE_SIZE } from "./dice-tool-input.ts";
 import { DICE_RANDOM_SOURCE } from "./dice-sampling-service.ts";
 
 const PositiveIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
+  Schema.check(Schema.isInt()),
   Schema.positive(),
 );
 const DieSizeSchema = PositiveIntegerSchema.pipe(
-  Schema.lessThanOrEqualTo(MAX_DIE_SIZE),
+  Schema.check(Schema.isLessThanOrEqualTo(MAX_DIE_SIZE)),
 );
-const DieRollResultSchema = PositiveIntegerSchema.annotations({
+const DieRollResultSchema = PositiveIntegerSchema.annotate({
   description: "A visible raw face in the inclusive range 1..dieSize.",
 });
 const DiceRollGroupOutputBaseSchema = Schema.Struct({
@@ -40,41 +40,43 @@ const dieSizeBranches = Array.from({ length: MAX_DIE_SIZE }, (_, index) => {
 });
 
 export const DiceRollGroupOutputSchema = DiceRollGroupOutputBaseSchema.pipe(
-  Schema.filter(
-    (group) =>
-      group.results.every((result) => result >= 1 && result <= group.dieSize),
-    {
-      description:
-        "an ordered non-empty group whose visible faces are within dieSize",
-      jsonSchema: { oneOf: dieSizeBranches },
-    },
+  Schema.check(
+    Schema.makeFilter(
+      (group) =>
+        group.results.every((result) => result >= 1 && result <= group.dieSize),
+      {
+        description:
+          "an ordered non-empty group whose visible faces are within dieSize",
+        jsonSchema: { oneOf: dieSizeBranches },
+      },
+    ),
   ),
-).annotations({
+).annotate({
   description:
     "One ordered dice group and its visible raw faces. The result count is the number of returned faces, so no duplicate count can disagree with it.",
 });
 
 export const RollDiceOutputSchema = Schema.Struct({
-  requestId: DiceRollRequestIdSchema.annotations({
+  requestId: DiceRollRequestIdSchema.annotate({
     description: "The caller-supplied idempotency key for this sampling.",
   }),
-  disposition: Schema.Literal("sampled", "replayed"),
+  disposition: Schema.Literals(["sampled", "replayed"]),
   randomSource: Schema.Struct({
     diceGroupSemanticProfile: Schema.Literal(
       DICE_RANDOM_SOURCE.diceGroupSemanticProfile,
     ),
     prngSequenceProfile: Schema.Literal(DICE_RANDOM_SOURCE.prngSequenceProfile),
     stateSchemaVersion: Schema.Literal(DICE_RANDOM_SOURCE.stateSchemaVersion),
-  }).annotations({
+  }).annotate({
     description:
       "Deterministic non-cryptographic sampling identities for replay and compatibility checks; these are not proof of wagering-grade fairness.",
   }),
   groups: Schema.NonEmptyArray(DiceRollGroupOutputSchema),
-}).annotations({
+}).annotate({
   description:
     "Raw faces for each requested group in input order. The roller performs no rule interpretation or automatic fill.",
 });
 
 export type RollDiceResult = typeof RollDiceOutputSchema.Type;
 export const decodeRollDiceResult =
-  Schema.decodeUnknownEither(RollDiceOutputSchema);
+  Schema.decodeUnknownResult(RollDiceOutputSchema);

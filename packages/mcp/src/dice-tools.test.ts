@@ -199,7 +199,7 @@ describe("structured MCP bulk dice roller", () => {
     expect(
       Result.isFailure(
         Effect.runSync(
-          Effect.either(
+          Effect.result(
             first.sample(request.requestId, [{ dice: 1, dieSize: 20 }]),
           ),
         ),

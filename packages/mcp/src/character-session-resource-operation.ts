@@ -113,14 +113,14 @@ export function spendSpellAccessFreeCastOperation(
       spellId: input.operation.spellId,
     },
   });
-  if (updated._tag === "Left") {
+  if (updated._tag === "Failure") {
     return resourceOperationFailure({
       characterId: input.characterId,
       operationKind: input.operation.kind,
-      issue: updated.left,
+      issue: updated.failure,
     });
   }
-  return commitResourceOperation(root, updated.right, {
+  return commitResourceOperation(root, updated.success, {
     tag: "spellAccessFreeCastSpent",
     sourceUnitId: input.operation.sourceUnitId,
     spellId: input.operation.spellId,
@@ -140,14 +140,14 @@ export function useMonkUncannyMetabolismWhenRollingInitiativeOperation(
     unitLibrary: root.unitLibrary,
     martialArtsRoll: DieRollResult(input.operation.martialArtsRoll),
   });
-  if (updated._tag === "Left") {
+  if (updated._tag === "Failure") {
     return resourceOperationFailure({
       characterId: input.characterId,
       operationKind: input.operation.kind,
-      issue: updated.left,
+      issue: updated.failure,
     });
   }
-  return commitResourceOperation(root, updated.right, {
+  return commitResourceOperation(root, updated.success, {
     tag: "monkUncannyMetabolismUsed",
     martialArtsRoll: input.operation.martialArtsRoll,
   });
@@ -169,14 +169,14 @@ export function convertFontOfMagicSpellSlotToSorceryPointsOperation(
       ? {}
       : { spellSlotSource: input.operation.spellSlotSource }),
   });
-  if (updated._tag === "Left") {
+  if (updated._tag === "Failure") {
     return resourceOperationFailure({
       characterId: input.characterId,
       operationKind: input.operation.kind,
-      issue: updated.left,
+      issue: updated.failure,
     });
   }
-  return commitResourceOperation(root, updated.right, {
+  return commitResourceOperation(root, updated.success, {
     tag: "fontOfMagicSpellSlotConvertedToSorceryPoints",
     spellLevel: input.operation.spellLevel,
     ...(input.operation.spellSlotSource === undefined
@@ -198,14 +198,14 @@ export function convertFontOfMagicSorceryPointsToSpellSlotOperation(
     unitLibrary: root.unitLibrary,
     spellLevel: spellSlotLevel(input.operation.spellLevel),
   });
-  if (updated._tag === "Left") {
+  if (updated._tag === "Failure") {
     return resourceOperationFailure({
       characterId: input.characterId,
       operationKind: input.operation.kind,
-      issue: updated.left,
+      issue: updated.failure,
     });
   }
-  return commitResourceOperation(root, updated.right, {
+  return commitResourceOperation(root, updated.success, {
     tag: "fontOfMagicSorceryPointsConvertedToSpellSlot",
     spellLevel: input.operation.spellLevel,
   });

@@ -22,21 +22,16 @@ import {
 } from "./character-session-query-tool-output.ts";
 import { McpSessionSummarySchema } from "./session-snapshot-output.ts";
 
-const JsonObjectSchema = Schema.Record({
-  key: Schema.String,
-  value: Schema.Any,
-});
+const JsonObjectSchema = Schema.Record(Schema.String, Schema.Any);
 
 const NonNegativeIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
 );
 const PositiveIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
 );
 const SpellSlotLevelSchema = PositiveIntegerSchema.pipe(
-  Schema.lessThanOrEqualTo(9),
+  Schema.check(Schema.isLessThanOrEqualTo(9)),
 );
 export const CHARACTER_SESSION_COMPANION_MANIFESTATION_TAGS = [
   "embodiedOutsideBattle",
@@ -47,7 +42,7 @@ export const CHARACTER_SESSION_COMPANION_MANIFESTATION_TAGS = [
 >;
 export type CharacterSessionCompanionManifestationTag =
   (typeof CHARACTER_SESSION_COMPANION_MANIFESTATION_TAGS)[number];
-const CharacterSessionResourceOperationResultSchema = Schema.Union(
+const CharacterSessionResourceOperationResultSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("spellAccessFreeCastSpent"),
     sourceUnitId: UnitId,
@@ -60,16 +55,15 @@ const CharacterSessionResourceOperationResultSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("fontOfMagicSpellSlotConvertedToSorceryPoints"),
     spellLevel: SpellSlotLevelSchema,
-    spellSlotSource: Schema.optionalWith(
-      Schema.Literal(...FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES),
-      { exact: true },
+    spellSlotSource: Schema.optionalKey(
+      Schema.Literals([...FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES]),
     ),
   }),
   Schema.Struct({
     tag: Schema.Literal("fontOfMagicSorceryPointsConvertedToSpellSlot"),
     spellLevel: SpellSlotLevelSchema,
   }),
-);
+]);
 export type CharacterSessionResourceOperationResult = Schema.Schema.Type<
   typeof CharacterSessionResourceOperationResultSchema
 >;
@@ -89,7 +83,7 @@ const CharacterSheetHitDieDisplayRowSchema = Schema.Struct({
   total: PositiveIntegerSchema,
   spent: NonNegativeIntegerSchema,
 });
-const CharacterSheetUnitResourceDisplayRowSchema = Schema.Union(
+const CharacterSheetUnitResourceDisplayRowSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("layOnHandsHealingPool"),
     unitId: Schema.String,
@@ -108,7 +102,7 @@ const CharacterSheetUnitResourceDisplayRowSchema = Schema.Union(
     count: NonNegativeIntegerSchema,
     expended: NonNegativeIntegerSchema,
   }),
-);
+]);
 const CharacterSheetSpellAccessFreeCastDisplayRowSchema = Schema.Struct({
   tag: Schema.Literal("spellAccessFreeCast"),
   sourceUnitId: Schema.String,
@@ -116,14 +110,14 @@ const CharacterSheetSpellAccessFreeCastDisplayRowSchema = Schema.Struct({
   count: NonNegativeIntegerSchema,
   expended: NonNegativeIntegerSchema,
 });
-const CharacterSheetResourceDisplayRowSchema = Schema.Union(
+const CharacterSheetResourceDisplayRowSchema = Schema.Union([
   CharacterSheetUnitResourceDisplayRowSchema,
   CharacterSheetSpellAccessFreeCastDisplayRowSchema,
-);
+]);
 
 const DraftChoiceCreationHoleSourceSchema = Schema.Struct({
   tag: Schema.Literal("draft"),
-  path: Schema.Literal(...CHARACTER_DRAFT_CHOICE_PATHS),
+  path: Schema.Literals([...CHARACTER_DRAFT_CHOICE_PATHS]),
 });
 const AbilityScoresCreationHoleSourceSchema = Schema.Struct({
   tag: Schema.Literal("draft"),
@@ -132,26 +126,24 @@ const AbilityScoresCreationHoleSourceSchema = Schema.Struct({
 const UnitChoiceCreationHoleSourceSchema = Schema.Struct({
   tag: Schema.Literal("unitChoice"),
   unitId: Schema.String,
-  choiceKey: Schema.Literal(...UNIT_CHOICE_KEYS),
+  choiceKey: Schema.Literals([...UNIT_CHOICE_KEYS]),
 });
 const LoadoutCreationHoleSourceSchema = Schema.Struct({
   tag: Schema.Literal("loadout"),
   equipmentUnitId: Schema.String,
-  slot: Schema.Literal(...LOADOUT_SLOTS),
+  slot: Schema.Literals([...LOADOUT_SLOTS]),
 });
-const ChoiceCreationHoleSourceSchema = Schema.Union(
+const ChoiceCreationHoleSourceSchema = Schema.Union([
   DraftChoiceCreationHoleSourceSchema,
   UnitChoiceCreationHoleSourceSchema,
   LoadoutCreationHoleSourceSchema,
-);
+]);
 const CreationChoiceOptionSchema = Schema.Struct({
   optionId: Schema.String,
   label: Schema.String,
-  unitRef: Schema.optionalWith(Schema.Struct({ unitId: Schema.String }), {
-    exact: true,
-  }),
+  unitRef: Schema.optionalKey(Schema.Struct({ unitId: Schema.String })),
 });
-const ChoiceCardinalitySchema = Schema.Union(
+const ChoiceCardinalitySchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("exactly"),
     count: PositiveIntegerSchema,
@@ -161,8 +153,8 @@ const ChoiceCardinalitySchema = Schema.Union(
     min: NonNegativeIntegerSchema,
     max: PositiveIntegerSchema,
   }),
-);
-const CreationHoleSchema = Schema.Union(
+]);
+const CreationHoleSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("choice"),
     holeId: Schema.String,
@@ -174,10 +166,12 @@ const CreationHoleSchema = Schema.Union(
     kind: Schema.Literal("abilityScores"),
     holeId: Schema.String,
     source: AbilityScoresCreationHoleSourceSchema,
-    methods: Schema.Array(Schema.Literal(...SUPPORTED_ABILITY_SCORE_METHODS)),
+    methods: Schema.Array(
+      Schema.Literals([...SUPPORTED_ABILITY_SCORE_METHODS]),
+    ),
   }),
-);
-export const CreationFinalizationSchema = Schema.Union(
+]);
+export const CreationFinalizationSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("ready"),
     build: JsonObjectSchema,
@@ -190,8 +184,8 @@ export const CreationFinalizationSchema = Schema.Union(
     tag: Schema.Literal("invalid"),
     issues: Schema.NonEmptyArray(CreationFinalizationIssueSchema),
   }),
-);
-export const CharacterSessionRowSchema = Schema.Union(
+]);
+export const CharacterSessionRowSchema = Schema.Union([
   Schema.Struct({
     characterId: Schema.String,
     status: Schema.Literal("available"),
@@ -203,15 +197,10 @@ export const CharacterSessionRowSchema = Schema.Union(
       state: JsonObjectSchema,
     }),
     hitDice: Schema.Array(CharacterSheetHitDieDisplayRowSchema),
-    spellSlots: Schema.optionalWith(
+    spellSlots: Schema.optionalKey(
       Schema.Array(CharacterSheetSpellSlotDisplayRowSchema),
-      {
-        exact: true,
-      },
     ),
-    pactSlots: Schema.optionalWith(CharacterSheetPactSlotDisplayRowSchema, {
-      exact: true,
-    }),
+    pactSlots: Schema.optionalKey(CharacterSheetPactSlotDisplayRowSchema),
     resources: Schema.Array(CharacterSheetResourceDisplayRowSchema),
     companion: JsonObjectSchema,
   }),
@@ -223,8 +212,8 @@ export const CharacterSessionRowSchema = Schema.Union(
     battleId: Schema.String,
     companion: JsonObjectSchema,
   }),
-);
-const CreationFillResultSchema = Schema.Union(
+]);
+const CreationFillResultSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("accepted"),
     draft: JsonObjectSchema,
@@ -236,24 +225,24 @@ const CreationFillResultSchema = Schema.Union(
     draft: JsonObjectSchema,
     holes: Schema.Array(CreationHoleSchema),
     issues: Schema.NonEmptyArray(
-      Schema.Union(
+      Schema.Union([
         Schema.Struct({
           tag: Schema.Literal("illegalFill"),
           holeId: Schema.String,
           fillIndex: NonNegativeIntegerSchema,
-          code: Schema.Literal(...CREATION_FILL_ISSUE_CODES),
+          code: Schema.Literals([...CREATION_FILL_ISSUE_CODES]),
           message: Schema.String,
         }),
         Schema.Struct({
           tag: Schema.Literal("illegalBatch"),
-          code: Schema.Literal(...CREATION_BATCH_ISSUE_CODES),
+          code: Schema.Literals([...CREATION_BATCH_ISSUE_CODES]),
           message: Schema.String,
         }),
-      ),
+      ]),
     ),
     finalization: CreationFinalizationSchema,
   }),
-);
+]);
 
 export const CreationDraftOutputSchema = Schema.Struct({
   draft: JsonObjectSchema,
@@ -269,17 +258,17 @@ export const FillCreationHolesOutputSchema = Schema.Struct({
 export const FinalizeCharacterOutputSchema = Schema.Struct({
   draftId: Schema.String,
   finalization: CreationFinalizationSchema,
-  build: Schema.Union(JsonObjectSchema, Schema.Null),
+  build: Schema.Union([JsonObjectSchema, Schema.Null]),
   session: McpSessionSummarySchema,
 });
 export const ListCharactersOutputSchema = Schema.Struct({
   characters: Schema.Array(CharacterSessionRowSchema),
   session: McpSessionSummarySchema,
 });
-const ShortRestInterruptionResultSchema = Schema.Literal(
+const ShortRestInterruptionResultSchema = Schema.Literals([
   ...CHARACTER_SHEET_REST_ACTIVITY_INTERRUPTION_VALUES,
-);
-export const CharacterSessionOperationResultSchema = Schema.Union(
+]);
+export const CharacterSessionOperationResultSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("shortRestCompleted"),
     restedTicks: NonNegativeIntegerSchema,
@@ -320,37 +309,34 @@ export const CharacterSessionOperationResultSchema = Schema.Union(
     recipientCharacterIds: Schema.NonEmptyArray(Schema.String),
   }),
   CharacterSessionResourceOperationResultSchema,
-);
+]);
 const CharacterSessionSheetProjectionSchema = Schema.Struct({
   currentHp: NonNegativeIntegerSchema,
-  companion: Schema.Union(
+  companion: Schema.Union([
     Schema.Struct({ tag: Schema.Literal("none") }),
     Schema.Struct({
       tag: Schema.Literal("retainedOneAtATime"),
       companion: Schema.Struct({
         companionId: Schema.String,
         manifestation: Schema.Struct({
-          tag: Schema.Literal(
+          tag: Schema.Literals([
             ...CHARACTER_SESSION_COMPANION_MANIFESTATION_TAGS,
-          ),
+          ]),
           resolvedStatBlockId: Schema.String,
         }),
       }),
     }),
-  ),
+  ]),
   hitPointMaximum: NonNegativeIntegerSchema,
   hitDice: Schema.Array(CharacterSheetHitDieDisplayRowSchema),
-  spellSlots: Schema.optionalWith(
+  spellSlots: Schema.optionalKey(
     Schema.Array(CharacterSheetSpellSlotDisplayRowSchema),
-    { exact: true },
   ),
-  pactSlots: Schema.optionalWith(CharacterSheetPactSlotDisplayRowSchema, {
-    exact: true,
-  }),
+  pactSlots: Schema.optionalKey(CharacterSheetPactSlotDisplayRowSchema),
   resources: Schema.Array(CharacterSheetResourceDisplayRowSchema),
 });
 
-const CharacterSessionDetailSchema = Schema.Union(
+const CharacterSessionDetailSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("available"),
     characterId: Schema.String,
@@ -365,21 +351,19 @@ const CharacterSessionDetailSchema = Schema.Union(
     battleId: Schema.String,
     build: JsonObjectSchema,
   }),
-);
+]);
 
-export const CharacterSessionOperationOutputSchema = Schema.Union(
+export const CharacterSessionOperationOutputSchema = Schema.Union([
   Schema.Struct({
     character: JsonObjectSchema,
-    result: Schema.optionalWith(CharacterSessionOperationResultSchema, {
-      exact: true,
-    }),
+    result: Schema.optionalKey(CharacterSessionOperationResultSchema),
     session: McpSessionSummarySchema,
   }),
   Schema.Struct({
     detail: CharacterSessionDetailSchema,
     session: McpSessionSummarySchema,
   }),
-);
+]);
 
 export const CharacterSessionDetailOutputSchema = Schema.Struct({
   detail: CharacterSessionDetailSchema,

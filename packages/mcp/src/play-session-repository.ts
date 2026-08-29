@@ -1,4 +1,4 @@
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import { BATTLE_TOOL_NAMES } from "./battle-tool-input.ts";
 import { CHARACTER_TOOL_NAMES } from "./character-tool-input.ts";
@@ -21,21 +21,21 @@ import {
 
 export const RECOVERABLE_PLAY_SESSION_FORMAT_VERSION = 3 as const;
 
-const RecoverableStateOperationNameSchema = Schema.Literal(
+const RecoverableStateOperationNameSchema = Schema.Literals([
   ...CHARACTER_TOOL_NAMES,
   ...BATTLE_TOOL_NAMES,
-);
+]);
 const RecoverablePlaySessionOperationsSchema = Schema.Array(
-  Schema.Union(
+  Schema.Union([
     Schema.Struct({
       name: RecoverableStateOperationNameSchema,
-      args: Schema.Record({ key: Schema.String, value: Schema.Unknown }),
+      args: Schema.Record(Schema.String, Schema.Unknown),
     }),
     Schema.Struct({
       name: Schema.Literal(diceToolNames.rollDice),
       args: RollDiceArgsSchema,
     }),
-  ),
+  ]),
 );
 const StoredDiceSeedSchema = Schema.String.pipe(
   Schema.pattern(/^[0-9a-f]{32}$/u),
@@ -48,9 +48,12 @@ const StoredPlaySessionRowSchema = Schema.Struct({
   ),
   prng_sequence_profile: Schema.Literal(DICE_RANDOM_SOURCE.prngSequenceProfile),
   state_schema_version: Schema.Literal(DICE_RANDOM_SOURCE.stateSchemaVersion),
-  revision: Schema.NonNegativeInt,
+  revision: Schema.Number.check(
+    Schema.isInt(),
+    Schema.isGreaterThanOrEqualTo(0),
+  ),
   operations_json: Schema.String,
-  tenure_kind: Schema.Literal("guest", "saved"),
+  tenure_kind: Schema.Literals(["guest", "saved"]),
   guest_access_grant_digest: Schema.NullOr(GuestAccessGrantDigestSchema),
   principal_id: Schema.NullOr(Schema.String),
   last_activity_at_ms: EpochMillisecondsSchema,
@@ -103,17 +106,17 @@ export type PlaySessionRepository = {
       readonly maximumGuestSessions: number;
       readonly maximumSavedSessionsPerPrincipal: number;
     },
-  ): Either.Either<
+  ): Result.Result<
     PlaySessionRepositoryCreateResult,
     PlaySessionRepositoryIssue
   >;
   load(
     playSessionId: PlaySessionId,
-  ): Either.Either<PlaySessionRepositoryLoadResult, PlaySessionRepositoryIssue>;
+  ): Result.Result<PlaySessionRepositoryLoadResult, PlaySessionRepositoryIssue>;
   commit(
     record: RecoverablePlaySessionRecord,
     change: PlaySessionRepositoryCommit,
-  ): Either.Either<
+  ): Result.Result<
     PlaySessionRepositoryAppendResult,
     PlaySessionRepositoryIssue
   >;
@@ -121,29 +124,29 @@ export type PlaySessionRepository = {
     record: RecoverablePlaySessionRecord,
     tenure: Extract<StoredPlaySessionTenure, { tag: "saved" }>,
     maximumSavedSessionsPerPrincipal: number,
-  ): Either.Either<PlaySessionRepositorySaveResult, PlaySessionRepositoryIssue>;
+  ): Result.Result<PlaySessionRepositorySaveResult, PlaySessionRepositoryIssue>;
   listSaved(
     principalId: PrincipalId,
-  ): Either.Either<
+  ): Result.Result<
     readonly RecoverablePlaySessionRecord[],
     PlaySessionRepositoryIssue
   >;
   delete(
     playSessionId: PlaySessionId,
     revision: number,
-  ): Either.Either<boolean, PlaySessionRepositoryIssue>;
+  ): Result.Result<boolean, PlaySessionRepositoryIssue>;
   pruneGuestPressure(
     nowMs: EpochMilliseconds,
     maximumGuestSessions: number,
-  ): Either.Either<void, PlaySessionRepositoryIssue>;
+  ): Result.Result<void, PlaySessionRepositoryIssue>;
   pruneExpired(
     nowMs: EpochMilliseconds,
-  ): Either.Either<void, PlaySessionRepositoryIssue>;
+  ): Result.Result<void, PlaySessionRepositoryIssue>;
   admitRequest(
     accessKeyDigest: PlaySessionRateLimitKeyDigest,
     nowMs: EpochMilliseconds,
     maximumRequestsPerWindow: number,
-  ): Either.Either<
+  ): Result.Result<
     PlaySessionRepositoryRateAdmission,
     PlaySessionRepositoryIssue
   >;
@@ -153,45 +156,45 @@ export type PlaySessionRepository = {
 export function decodeStoredPlaySessionRecord(
   row: unknown,
   playSessionId: PlaySessionId,
-): Either.Either<RecoverablePlaySessionRecord, PlaySessionRepositoryIssue> {
-  const decodedRow = Schema.decodeUnknownEither(StoredPlaySessionRowSchema)(
+): Result.Result<RecoverablePlaySessionRecord, PlaySessionRepositoryIssue> {
+  const decodedRow = Schema.decodeUnknownResult(StoredPlaySessionRowSchema)(
     row,
   );
-  if (Either.isLeft(decodedRow)) {
-    return Either.left(invalidStoredRecordIssue(decodedRow.left.message));
+  if (Result.isFailure(decodedRow)) {
+    return Result.fail(invalidStoredRecordIssue(decodedRow.failure.message));
   }
   let parsedOperations: unknown;
   try {
-    parsedOperations = JSON.parse(decodedRow.right.operations_json);
+    parsedOperations = JSON.parse(decodedRow.success.operations_json);
   } catch (cause) {
-    return Either.left(invalidStoredRecordIssue(String(cause)));
+    return Result.fail(invalidStoredRecordIssue(String(cause)));
   }
-  const decodedOperations = Schema.decodeUnknownEither(
+  const decodedOperations = Schema.decodeUnknownResult(
     RecoverablePlaySessionOperationsSchema,
   )(parsedOperations);
-  if (Either.isLeft(decodedOperations)) {
-    return Either.left(
-      invalidStoredRecordIssue(decodedOperations.left.message),
+  if (Result.isFailure(decodedOperations)) {
+    return Result.fail(
+      invalidStoredRecordIssue(decodedOperations.failure.message),
     );
   }
-  const tenure = decodeStoredTenure(decodedRow.right);
-  if (Either.isLeft(tenure)) return Either.left(tenure.left);
+  const tenure = decodeStoredTenure(decodedRow.success);
+  if (Result.isFailure(tenure)) return Result.fail(tenure.failure);
   const diceSeed = decodeDiceSeed(
-    splitStoredDiceSeed(decodedRow.right.dice_seed),
+    splitStoredDiceSeed(decodedRow.success.dice_seed),
   );
-  if (Either.isLeft(diceSeed)) {
-    return Either.left(invalidStoredRecordIssue(diceSeed.left.message));
+  if (Result.isFailure(diceSeed)) {
+    return Result.fail(invalidStoredRecordIssue(diceSeed.failure.message));
   }
-  return Either.right({
+  return Result.succeed({
     playSessionId,
-    formatVersion: decodedRow.right.format_version,
+    formatVersion: decodedRow.success.format_version,
     diceReplay: {
-      seed: diceSeed.right,
+      seed: diceSeed.success,
       randomSource: DICE_RANDOM_SOURCE,
     },
-    revision: decodedRow.right.revision,
-    operations: decodedOperations.right,
-    tenure: tenure.right,
+    revision: decodedRow.success.revision,
+    operations: decodedOperations.success,
+    tenure: tenure.success,
   });
 }
 
@@ -206,13 +209,13 @@ function splitStoredDiceSeed(seed: string) {
 
 function decodeStoredTenure(
   row: typeof StoredPlaySessionRowSchema.Type,
-): Either.Either<StoredPlaySessionTenure, PlaySessionRepositoryIssue> {
+): Result.Result<StoredPlaySessionTenure, PlaySessionRepositoryIssue> {
   if (
     row.tenure_kind === "guest" &&
     row.guest_access_grant_digest !== null &&
     row.principal_id === null
   ) {
-    return Either.right({
+    return Result.succeed({
       tag: "guest",
       guestAccessGrantDigest: row.guest_access_grant_digest,
       lastActivityAtMs: row.last_activity_at_ms,
@@ -224,15 +227,15 @@ function decodeStoredTenure(
     row.principal_id !== null
   ) {
     const principalId = decodePrincipalId(row.principal_id);
-    return Either.mapLeft(principalId, invalidStoredRecordIssue).pipe(
-      Either.map((decodedPrincipalId) => ({
+    return Result.mapError(principalId, invalidStoredRecordIssue).pipe(
+      Result.map((decodedPrincipalId) => ({
         tag: "saved" as const,
         principalId: decodedPrincipalId,
         lastActivityAtMs: row.last_activity_at_ms,
       })),
     );
   }
-  return Either.left(
+  return Result.fail(
     invalidStoredRecordIssue("Stored Play Session tenure is contradictory."),
   );
 }

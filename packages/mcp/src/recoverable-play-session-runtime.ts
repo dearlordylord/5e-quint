@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   disabledAdminMirrorPublication,
@@ -85,7 +85,7 @@ export type RunAttemptResult<A> =
   | { readonly tag: "retry" }
   | {
       readonly tag: "result";
-      readonly result: Either.Either<
+      readonly result: Result.Result<
         PlaySessionRunResult<A>,
         PlaySessionAccessFailure
       >;
@@ -95,7 +95,7 @@ export type SaveAttemptResult =
   | { readonly tag: "retry" }
   | {
       readonly tag: "result";
-      readonly result: Either.Either<
+      readonly result: Result.Result<
         PlaySessionTenureProjection,
         PlaySessionAccessFailure
       >;

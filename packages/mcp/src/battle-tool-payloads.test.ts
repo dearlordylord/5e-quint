@@ -16,7 +16,7 @@ import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -71,11 +71,12 @@ describe("battle tool payload boundaries", () => {
       },
     });
     const payload = battleSessionPayload(root, session);
-    if (Either.isLeft(payload)) throw new Error("Expected an active payload.");
-    if (payload.right.envelope === null) {
+    if (Result.isFailure(payload))
+      throw new Error("Expected an active payload.");
+    if (payload.success.envelope === null) {
       throw new Error("Expected an active battle envelope.");
     }
-    expect(payload.right.envelope.checkpoint).not.toHaveProperty(
+    expect(payload.success.envelope.checkpoint).not.toHaveProperty(
       "pendingInterrupt",
     );
   });
@@ -169,7 +170,7 @@ describe("battle tool payload boundaries", () => {
       throw new Error("Expected the test battle act to need hole fills.");
     }
     expect(storeBattleResolution(root, result, null)).toEqual(
-      Either.left({ tag: "pendingBattleFillTransactionMissing" }),
+      Result.fail({ tag: "pendingBattleFillTransactionMissing" }),
     );
     expect(root.sessionStore.battleSession).toBe(session);
   });
@@ -227,7 +228,7 @@ describe("battle tool payload boundaries", () => {
     };
 
     expect(storeBattleResolution(root, resolvedInterrupt, pending)).toEqual(
-      Either.right({ tag: "stored" }),
+      Result.succeed({ tag: "stored" }),
     );
     expect(root.sessionStore.battleSession).toBe(session);
     expect(root.sessionStore.pendingBattleFills).toEqual(pending);
@@ -243,7 +244,7 @@ describe("battle tool payload boundaries", () => {
       envelope: { checkpoint: envelope.checkpoint, frontier: actsFrontier },
     } satisfies BattleRuntimeResolutionResult;
     expect(storeBattleResolution(root, resolvedActs, pending)).toEqual(
-      Either.right({ tag: "stored" }),
+      Result.succeed({ tag: "stored" }),
     );
     expect(root.sessionStore.pendingBattleFills).toBeNull();
   });

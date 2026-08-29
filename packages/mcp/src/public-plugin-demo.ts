@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 
-import { Either } from "effect";
+import { Result } from "effect";
 
 export const PUBLIC_PLUGIN_DEMO_PATH = "/plugin-demo.mp4";
 
@@ -19,26 +19,29 @@ export async function publicPluginDemoResponse(
   }
 
   const video = await loadPluginDemo();
-  if (Either.isLeft(video)) {
+  if (Result.isFailure(video)) {
     return new Response("Plugin demo is unavailable", { status: 503 });
   }
 
-  return new Response(method === "HEAD" ? null : new Uint8Array(video.right), {
-    headers: {
-      "cache-control": "public, max-age=300",
-      "content-disposition": 'inline; filename="5.5e-SRD-Oracle-demo.mp4"',
-      "content-length": String(video.right.byteLength),
-      "content-type": "video/mp4",
-      "x-content-type-options": "nosniff",
+  return new Response(
+    method === "HEAD" ? null : new Uint8Array(video.success),
+    {
+      headers: {
+        "cache-control": "public, max-age=300",
+        "content-disposition": 'inline; filename="5.5e-SRD-Oracle-demo.mp4"',
+        "content-length": String(video.success.byteLength),
+        "content-type": "video/mp4",
+        "x-content-type-options": "nosniff",
+      },
     },
-  });
+  );
 }
 
 async function loadPluginDemo(): Promise<
-  Either.Either<Uint8Array, { readonly tag: "pluginDemoUnavailable" }>
+  Result.Result<Uint8Array, { readonly tag: "pluginDemoUnavailable" }>
 > {
   return readFile(pluginDemoUrl).then(
-    (video) => Either.right(video),
-    () => Either.left({ tag: "pluginDemoUnavailable" }),
+    (video) => Result.succeed(video),
+    () => Result.fail({ tag: "pluginDemoUnavailable" }),
   );
 }

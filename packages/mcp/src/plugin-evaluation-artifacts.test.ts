@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { Either, Match, Schema } from "effect";
+import { Result, Match, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { SHARED_HOST_TEST_TIMEOUT_MILLISECONDS as TEST_TIMEOUT } from "../../../scripts/shared-host-test-policy.mjs";
@@ -79,27 +79,34 @@ function mcpManifestSchemaFor(matrix: CapabilityMatrix) {
       queryKinds: CharacterSessionQueryKindsSchema,
     }),
   );
-  const derivedRowSchema = Schema.Union(...derivedRowSchemas, Schema.Never);
+  const derivedRowSchema = Schema.Union([...derivedRowSchemas, Schema.Never]);
   const NonQueryCoverageScenarioIdSchema = Schema.String.pipe(
-    Schema.filter(
-      (scenarioId): scenarioId is NonQueryCoverageScenarioId =>
-        !derivedQueryScenarioIds.has(scenarioId),
-      {
-        description:
-          "ordinary manifest rows cannot use a canonical derived-query scenario id",
-      },
+    Schema.check(
+      Schema.makeFilter(
+        (scenarioId): scenarioId is NonQueryCoverageScenarioId =>
+          !derivedQueryScenarioIds.has(scenarioId),
+        {
+          description:
+            "ordinary manifest rows cannot use a canonical derived-query scenario id",
+        },
+      ),
     ),
   );
   const nonDerivedRowSchema = Schema.Struct({
     ...McpManifestRowCommonFields,
     scenarioId: NonQueryCoverageScenarioIdSchema,
   }).pipe(
-    Schema.filter((row) => !derivedQueryEvidenceKeys.has(evidenceRefKey(row)), {
-      description:
-        "ordinary manifest rows cannot use a canonical derived-query evidence key",
-    }),
+    Schema.check(
+      Schema.makeFilter(
+        (row) => !derivedQueryEvidenceKeys.has(evidenceRefKey(row)),
+        {
+          description:
+            "ordinary manifest rows cannot use a canonical derived-query evidence key",
+        },
+      ),
+    ),
   );
-  const rowSchema = Schema.Union(derivedRowSchema, nonDerivedRowSchema);
+  const rowSchema = Schema.Union([derivedRowSchema, nonDerivedRowSchema]);
   return Schema.Struct({
     schema: Schema.Literal("dnd.mcp-scenario-evidence.v1"),
     ownerPackage: Schema.Literal("@dnd/mcp"),
@@ -111,10 +118,7 @@ function mcpManifestSchemaFor(matrix: CapabilityMatrix) {
       Schema.Struct({
         flowId: Schema.String,
         scopeIds: Schema.NonEmptyArray(Schema.String),
-        followUpTaskIdsByScope: Schema.Record({
-          key: Schema.String,
-          value: Schema.String,
-        }),
+        followUpTaskIdsByScope: Schema.Record(Schema.String, Schema.String),
         description: Schema.String,
       }),
     ),
@@ -150,7 +154,7 @@ const CompleteWorkflowOperatorStepSchema = Schema.Struct({
 function unobservedCaseResultSchema<Kind extends string>(
   evidenceKind: Schema.Literal<[Kind]>,
 ) {
-  return Schema.Union(
+  return Schema.Union([
     Schema.Struct({
       caseId: Schema.String,
       evidenceKind,
@@ -162,7 +166,7 @@ function unobservedCaseResultSchema<Kind extends string>(
       status: Schema.Literal("blocked"),
       blocker: Schema.String,
     }),
-  );
+  ]);
 }
 
 const UnobservedApiMcpSelectionCaseResultSchema = unobservedCaseResultSchema(
@@ -178,25 +182,25 @@ const UnobservedSkillActivationCaseResultSchema = unobservedCaseResultSchema(
 const UnobservedWorkflowCaseResultSchema = unobservedCaseResultSchema(
   Schema.Literal("installedCompleteWorkflow"),
 );
-const UnobservedInstalledCaseResultSchema = Schema.Union(
+const UnobservedInstalledCaseResultSchema = Schema.Union([
   UnobservedConnectionToolSelectionCaseResultSchema,
   UnobservedSkillActivationCaseResultSchema,
   UnobservedWorkflowCaseResultSchema,
-);
-const ConfirmationBehaviorSchema = Schema.Union(
+]);
+const ConfirmationBehaviorSchema = Schema.Union([
   Schema.Struct({ tag: Schema.Literal("notRequested") }),
   Schema.Struct({
     tag: Schema.Literal("requested"),
-    outcome: Schema.Literal("accepted", "declined"),
+    outcome: Schema.Literals(["accepted", "declined"]),
   }),
-);
-const ToolSelectionObservationSchema = Schema.Union(
+]);
+const ToolSelectionObservationSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("toolSelected"),
     selectedTool: Schema.String,
-    arguments: Schema.Record({ key: Schema.String, value: Schema.Any }),
+    arguments: Schema.Record(Schema.String, Schema.Any),
     alsoCalledTools: Schema.Array(Schema.String),
-    outcome: Schema.Union(
+    outcome: Schema.Union([
       Schema.Struct({
         tag: Schema.Literal("success"),
         result: Schema.Any,
@@ -207,16 +211,16 @@ const ToolSelectionObservationSchema = Schema.Union(
         details: Schema.NonEmptyArray(Schema.String),
         confirmation: ConfirmationBehaviorSchema,
       }),
-    ),
+    ]),
   }),
   Schema.Struct({
     tag: Schema.Literal("noToolSelected"),
     reason: Schema.String,
     confirmation: ConfirmationBehaviorSchema,
   }),
-);
+]);
 type ToolSelectionObservation = typeof ToolSelectionObservationSchema.Type;
-const ServerAdvertisementSchema = Schema.Union(
+const ServerAdvertisementSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("advertised"),
     serverLabel: Schema.String,
@@ -226,11 +230,11 @@ const ServerAdvertisementSchema = Schema.Union(
     tag: Schema.Literal("notAdvertised"),
     reason: Schema.String,
   }),
-);
-const InventoryConclusionSchema = Schema.Literal(
+]);
+const InventoryConclusionSchema = Schema.Literals([
   "metExpectation",
   "missedExpectation",
-);
+]);
 const ToolSelectionCaseFields = {
   caseId: Schema.String,
   status: Schema.Literal("observed"),
@@ -252,31 +256,31 @@ const ObservedConnectionToolSelectionCaseResultSchema = Schema.Struct({
   evidenceKind: Schema.Literal("installedConnectionToolSelection"),
   conversationId: Schema.String,
 });
-const ApiMcpSelectionCaseResultSchema = Schema.Union(
+const ApiMcpSelectionCaseResultSchema = Schema.Union([
   UnobservedApiMcpSelectionCaseResultSchema,
   ObservedApiMcpSelectionCaseResultSchema,
-);
+]);
 const ObservedSkillCaseResultSchema = Schema.Struct({
   caseId: Schema.String,
-  evidenceKind: Schema.Literal(
+  evidenceKind: Schema.Literals([
     "installedSkillActivation",
     "installedCompleteWorkflow",
-  ),
+  ]),
   status: Schema.Literal("observed"),
-  result: Schema.Literal("passed", "failed"),
+  result: Schema.Literals(["passed", "failed"]),
   promptRef: Schema.String,
   observedAt: Schema.String,
   resultSummary: Schema.String,
   observedToolNames: Schema.Array(Schema.String),
 });
-const ObservedInstalledCaseResultSchema = Schema.Union(
+const ObservedInstalledCaseResultSchema = Schema.Union([
   ObservedConnectionToolSelectionCaseResultSchema,
   ObservedSkillCaseResultSchema,
-);
-const InstalledCaseResultSchema = Schema.Union(
+]);
+const InstalledCaseResultSchema = Schema.Union([
   UnobservedInstalledCaseResultSchema,
   ObservedInstalledCaseResultSchema,
-);
+]);
 const ObservedEnvironmentSchema = Schema.Struct({
   tag: Schema.Literal("observed"),
   accountScope: Schema.String,
@@ -309,11 +313,11 @@ const InstalledEvidenceCommonSchema = {
   officialGuidance: Schema.Literal(
     "https://developers.openai.com/plugins/deploy/connect-chatgpt",
   ),
-  operatorProtocol: Schema.Tuple(
+  operatorProtocol: Schema.Tuple([
     ConnectionToolSelectionOperatorStepSchema,
     SkillActivationOperatorStepSchema,
     CompleteWorkflowOperatorStepSchema,
-  ),
+  ]),
 };
 const PendingInstalledEvidenceSchema = Schema.Struct({
   ...InstalledEvidenceCommonSchema,
@@ -335,18 +339,22 @@ const ObservedInstalledEvidenceSchema = Schema.Struct({
   environment: ObservedEnvironmentSchema,
   caseResults: Schema.NonEmptyArray(ObservedInstalledCaseResultSchema),
 });
-const InstalledEvidenceSchema = Schema.Union(
+const InstalledEvidenceSchema = Schema.Union([
   PendingInstalledEvidenceSchema,
   PartiallyObservedInstalledEvidenceSchema,
   ObservedInstalledEvidenceSchema,
-).pipe(
-  Schema.filter(installedEvidenceHasCompleteCoverage, {
-    description:
-      "installed evidence with every connection, activation, and workflow case",
-  }),
-  Schema.filter(evidenceStatusMatchesCaseResults, {
-    description: "installed evidence status consistent with its case results",
-  }),
+]).pipe(
+  Schema.check(
+    Schema.makeFilter(installedEvidenceHasCompleteCoverage, {
+      description:
+        "installed evidence with every connection, activation, and workflow case",
+    }),
+  ),
+  Schema.check(
+    Schema.makeFilter(evidenceStatusMatchesCaseResults, {
+      description: "installed evidence status consistent with its case results",
+    }),
+  ),
 );
 type InstalledEvidence = typeof InstalledEvidenceSchema.Type;
 
@@ -360,12 +368,12 @@ const ApiMcpSelectionEvidenceCommonSchema = {
   officialGuidance: Schema.Literal(
     "https://developers.openai.com/plugins/deploy/connect-chatgpt",
   ),
-  operatorProtocol: Schema.Tuple(ApiMcpSelectionOperatorStepSchema),
+  operatorProtocol: Schema.Tuple([ApiMcpSelectionOperatorStepSchema]),
 };
 const ObservedApiEnvironmentSchema = Schema.Struct({
   tag: Schema.Literal("observed"),
   apiEndpoint: Schema.String,
-  transport: Schema.Union(
+  transport: Schema.Union([
     Schema.Struct({
       tag: Schema.Literal("publicHttps"),
       serverUrl: Schema.String,
@@ -374,7 +382,7 @@ const ObservedApiEnvironmentSchema = Schema.Struct({
       tag: Schema.Literal("secureMcpTunnel"),
       tunnelId: Schema.String,
     }),
-  ),
+  ]),
 });
 const UnobservedApiEnvironmentSchema = Schema.Struct({
   tag: Schema.Literal("notObserved"),
@@ -406,18 +414,22 @@ const ObservedApiMcpSelectionEvidenceSchema = Schema.Struct({
   environment: ObservedApiEnvironmentSchema,
   caseResults: Schema.NonEmptyArray(ObservedApiMcpSelectionCaseResultSchema),
 });
-const ApiMcpSelectionEvidenceSchema = Schema.Union(
+const ApiMcpSelectionEvidenceSchema = Schema.Union([
   PendingApiMcpSelectionEvidenceSchema,
   BlockedApiMcpSelectionEvidenceSchema,
   PartiallyObservedApiMcpSelectionEvidenceSchema,
   ObservedApiMcpSelectionEvidenceSchema,
-).pipe(
-  Schema.filter(apiMcpSelectionEvidenceHasCompleteCoverage, {
-    description: "API evidence with every MCP tool-selection case",
-  }),
-  Schema.filter(evidenceStatusMatchesCaseResults, {
-    description: "API evidence status consistent with its case results",
-  }),
+]).pipe(
+  Schema.check(
+    Schema.makeFilter(apiMcpSelectionEvidenceHasCompleteCoverage, {
+      description: "API evidence with every MCP tool-selection case",
+    }),
+  ),
+  Schema.check(
+    Schema.makeFilter(evidenceStatusMatchesCaseResults, {
+      description: "API evidence status consistent with its case results",
+    }),
+  ),
 );
 type ApiMcpSelectionEvidence = typeof ApiMcpSelectionEvidenceSchema.Type;
 
@@ -705,8 +717,8 @@ describe("5.5e SRD Oracle evaluation artifacts", () => {
       ),
     };
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(CapabilityMatrixSchema, {
+      Result.isFailure(
+        Schema.decodeUnknownResult(CapabilityMatrixSchema, {
           onExcessProperty: "error",
         })(matrixWithUnrelatedKinds),
       ),
@@ -729,8 +741,8 @@ describe("5.5e SRD Oracle evaluation artifacts", () => {
       ),
     };
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(CapabilityMatrixSchema, {
+      Result.isFailure(
+        Schema.decodeUnknownResult(CapabilityMatrixSchema, {
           onExcessProperty: "error",
         })(matrixWithDerivedIdentityAsOrdinary),
       ),
@@ -764,8 +776,8 @@ describe("5.5e SRD Oracle evaluation artifacts", () => {
       ),
     };
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(mcpManifestSchemaFor(matrix), {
+      Result.isFailure(
+        Schema.decodeUnknownResult(mcpManifestSchemaFor(matrix), {
           onExcessProperty: "error",
         })(manifestWithUnrelatedKinds),
       ),
@@ -785,8 +797,8 @@ describe("5.5e SRD Oracle evaluation artifacts", () => {
       ),
     };
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(mcpManifestSchemaFor(matrix), {
+      Result.isFailure(
+        Schema.decodeUnknownResult(mcpManifestSchemaFor(matrix), {
           onExcessProperty: "error",
         })(manifestWithoutCoverageKinds),
       ),
@@ -1131,15 +1143,15 @@ describe("5.5e SRD Oracle evaluation artifacts", () => {
       caseResults: [...apiEvidence.caseResults, ...installed.caseResults],
     };
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(InstalledEvidenceSchema, {
+      Result.isFailure(
+        Schema.decodeUnknownResult(InstalledEvidenceSchema, {
           onExcessProperty: "error",
         })(merged),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(ApiMcpSelectionEvidenceSchema, {
+      Result.isFailure(
+        Schema.decodeUnknownResult(ApiMcpSelectionEvidenceSchema, {
           onExcessProperty: "error",
         })(installed),
       ),
@@ -1197,12 +1209,12 @@ describe("5.5e SRD Oracle evaluation artifacts", () => {
       ),
     };
     expect(decodeApiMcpSelectionEvidence(observed).status).toBe("observed");
-    const contradictory = Schema.decodeUnknownEither(
+    const contradictory = Schema.decodeUnknownResult(
       ApiMcpSelectionEvidenceSchema,
       { onExcessProperty: "error" },
     )({ ...observed, environment: { tag: "notObserved" } });
-    expect(Either.isLeft(contradictory)).toBe(true);
-    const missReportedAsMet = Schema.decodeUnknownEither(
+    expect(Result.isFailure(contradictory)).toBe(true);
+    const missReportedAsMet = Schema.decodeUnknownResult(
       ApiMcpSelectionEvidenceSchema,
       { onExcessProperty: "error" },
     )({
@@ -1226,7 +1238,7 @@ describe("5.5e SRD Oracle evaluation artifacts", () => {
           : result,
       ),
     });
-    expect(Either.isLeft(missReportedAsMet)).toBe(true);
+    expect(Result.isFailure(missReportedAsMet)).toBe(true);
     const missReportedHonestly = decodeApiMcpSelectionEvidence({
       ...observed,
       caseResults: observed.caseResults.map((result) =>
@@ -1292,13 +1304,13 @@ describe("5.5e SRD Oracle evaluation artifacts", () => {
     };
     const decoded = decodeInstalledEvidence(observed);
     expect(decoded.status).toBe("observed");
-    const contradictory = Schema.decodeUnknownEither(InstalledEvidenceSchema, {
+    const contradictory = Schema.decodeUnknownResult(InstalledEvidenceSchema, {
       onExcessProperty: "error",
     })({
       ...partial,
       environment: { tag: "notObserved" },
     });
-    expect(Either.isLeft(contradictory)).toBe(true);
+    expect(Result.isFailure(contradictory)).toBe(true);
   });
 
   test("couples observed MCP selections to inventory expectations", () => {

@@ -5,7 +5,7 @@ import { DatabaseSync } from "node:sqlite";
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { createMcpApplicationServices } from "./composition-root.ts";
@@ -252,11 +252,11 @@ describe("public Play Session boundary", () => {
       tag: "authenticated",
       principalId: savedOwner,
     });
-    if (Either.isLeft(saved)) throw new Error(saved.left.message);
+    if (Result.isFailure(saved)) throw new Error(saved.failure.message);
     nowMs += SAVED_INACTIVITY_RETENTION_MS;
     expect(
       await expiryRegistry.run(
-        saved.right.playSessionId,
+        saved.success.playSessionId,
         { tag: "authenticated", principalId: savedOwner },
         () => "expired saved session must not run",
       ),
@@ -438,8 +438,8 @@ describe("public Play Session boundary", () => {
       registry.save(guest.playSessionId, guest.guestAccessGrant, firstOwner),
       registry.save(guest.playSessionId, guest.guestAccessGrant, secondOwner),
     ]);
-    expect(claims.filter(Either.isRight)).toHaveLength(1);
-    expect(claims.filter(Either.isLeft)).toEqual([
+    expect(claims.filter(Result.isSuccess)).toHaveLength(1);
+    expect(claims.filter(Result.isFailure)).toEqual([
       expect.objectContaining({
         left: { tag: "playSessionUnavailable", restoration: expect.anything() },
       }),
@@ -574,37 +574,37 @@ function createRegistry(
 function guestCreation(
   creation: ReturnType<ReturnType<typeof createRegistry>["create"]>,
 ) {
-  if (Either.isLeft(creation) || creation.right.access.tag !== "guest") {
+  if (Result.isFailure(creation) || creation.success.access.tag !== "guest") {
     throw new Error("Expected a Guest Play Session creation.");
   }
   return {
-    playSessionId: creation.right.playSessionId,
-    guestAccessGrant: creation.right.access.guestAccessGrant,
+    playSessionId: creation.success.playSessionId,
+    guestAccessGrant: creation.success.access.guestAccessGrant,
   };
 }
 
 function playSessionId(input: string) {
   const decoded = decodePlaySessionId(input);
-  if (Either.isLeft(decoded)) throw new Error(decoded.left);
-  return decoded.right;
+  if (Result.isFailure(decoded)) throw new Error(decoded.failure);
+  return decoded.success;
 }
 
 function principal(input: string) {
   const decoded = decodePrincipalId(input);
-  if (Either.isLeft(decoded)) throw new Error(decoded.left);
-  return decoded.right;
+  if (Result.isFailure(decoded)) throw new Error(decoded.failure);
+  return decoded.success;
 }
 
 function openRepository(databasePath = ":memory:"): PlaySessionRepository {
   const repository = openSqlitePlaySessionRepository(databasePath);
-  if (Either.isLeft(repository)) throw new Error(repository.left.message);
-  return repository.right;
+  if (Result.isFailure(repository)) throw new Error(repository.failure.message);
+  return repository.success;
 }
 
 function testEpochMilliseconds(input: number) {
   const decoded = decodeEpochMilliseconds(input);
-  if (Either.isLeft(decoded)) throw new Error(decoded.left.message);
-  return decoded.right;
+  if (Result.isFailure(decoded)) throw new Error(decoded.failure.message);
+  return decoded.success;
 }
 
 function toolSecuritySchemes(
@@ -616,9 +616,10 @@ function toolSecuritySchemes(
   return tool._meta?.securitySchemes;
 }
 
-function rightValue<A>(either: Either.Either<A, unknown>): A {
-  if (Either.isLeft(either)) throw new Error("Expected a successful result.");
-  return either.right;
+function rightValue<A>(either: Result.Result<A, unknown>): A {
+  if (Result.isFailure(either))
+    throw new Error("Expected a successful result.");
+  return either.success;
 }
 
 function isJsonObject(value: unknown): value is Record<string, unknown> {
@@ -627,6 +628,6 @@ function isJsonObject(value: unknown): value is Record<string, unknown> {
 
 function requireDiceRollRequestId(input: string) {
   const decoded = decodeDiceRollRequestId(input);
-  if (Either.isLeft(decoded)) throw new Error(decoded.left.message);
-  return decoded.right;
+  if (Result.isFailure(decoded)) throw new Error(decoded.failure.message);
+  return decoded.success;
 }

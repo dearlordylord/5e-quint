@@ -49,27 +49,31 @@ export const BattlePresentationEnvelopeSchema =
 
 const BattleResolvedPresentationEnvelopeSchema =
   BattlePresentationEnvelopeSchema.pipe(
-    Schema.filter(
-      (envelope) =>
-        envelope.frontier.kind === "acts" ||
-        envelope.frontier.kind === "interruptDecision",
-      {
-        message: () =>
-          "A resolved Battle result must expose an Acts or interrupt-decision frontier.",
-      },
+    Schema.check(
+      Schema.makeFilter(
+        (envelope) =>
+          envelope.frontier.kind === "acts" ||
+          envelope.frontier.kind === "interruptDecision",
+        {
+          message:
+            "A resolved Battle result must expose an Acts or interrupt-decision frontier.",
+        },
+      ),
     ),
   );
 
 const BattleNeedsHolesPresentationEnvelopeSchema =
   BattlePresentationEnvelopeSchema.pipe(
-    Schema.filter(
-      (envelope) =>
-        envelope.frontier.kind === "holes" ||
-        envelope.frontier.kind === "interruptDecision",
-      {
-        message: () =>
-          "A needsHoles Battle result must expose a Holes or interrupt-decision frontier.",
-      },
+    Schema.check(
+      Schema.makeFilter(
+        (envelope) =>
+          envelope.frontier.kind === "holes" ||
+          envelope.frontier.kind === "interruptDecision",
+        {
+          message:
+            "A needsHoles Battle result must expose a Holes or interrupt-decision frontier.",
+        },
+      ),
     ),
   );
 
@@ -77,10 +81,12 @@ const BattleActivePresentationBranchSchema = Schema.Struct({
   envelope: BattlePresentationEnvelopeSchema,
   session: McpActiveSessionSnapshotSchema,
 }).pipe(
-  Schema.filter(battleEnvelopeMatchesActiveSession, {
-    message: () =>
-      "An active Battle envelope must match its session Battle and actor.",
-  }),
+  Schema.check(
+    Schema.makeFilter(battleEnvelopeMatchesActiveSession, {
+      message:
+        "An active Battle envelope must match its session Battle and actor.",
+    }),
+  ),
 );
 
 const BattlePresentationBranches = {
@@ -144,13 +150,15 @@ const BattleLifecycleActiveOutputSchema = Schema.Struct({
   envelope: BattlePresentationEnvelopeSchema,
   session: McpActiveSessionSnapshotSchema,
 }).pipe(
-  Schema.filter(
-    ({ envelope, session }) =>
-      battleEnvelopeMatchesActiveSession({ envelope, session }),
-    {
-      message: () =>
-        "An active Battle envelope must match its session Battle and actor.",
-    },
+  Schema.check(
+    Schema.makeFilter(
+      ({ envelope, session }) =>
+        battleEnvelopeMatchesActiveSession({ envelope, session }),
+      {
+        message:
+          "An active Battle envelope must match its session Battle and actor.",
+      },
+    ),
   ),
 );
 
@@ -169,13 +177,15 @@ export const BattleResolutionOutputSchema = Schema.toCodecIso(
       envelope: BattleResolvedPresentationEnvelopeSchema,
       session: McpActiveSessionSnapshotSchema,
     }).pipe(
-      Schema.filter(
-        ({ envelope, session }) =>
-          battleEnvelopeMatchesActiveSession({ envelope, session }),
-        {
-          message: () =>
-            "An active Battle envelope must match its session Battle and actor.",
-        },
+      Schema.check(
+        Schema.makeFilter(
+          ({ envelope, session }) =>
+            battleEnvelopeMatchesActiveSession({ envelope, session }),
+          {
+            message:
+              "An active Battle envelope must match its session Battle and actor.",
+          },
+        ),
       ),
     ),
     Schema.Struct({
@@ -183,13 +193,15 @@ export const BattleResolutionOutputSchema = Schema.toCodecIso(
       envelope: BattleNeedsHolesPresentationEnvelopeSchema,
       session: McpActiveSessionSnapshotSchema,
     }).pipe(
-      Schema.filter(
-        ({ envelope, session }) =>
-          battleEnvelopeMatchesActiveSession({ envelope, session }),
-        {
-          message: () =>
-            "An active Battle envelope must match its session Battle and actor.",
-        },
+      Schema.check(
+        Schema.makeFilter(
+          ({ envelope, session }) =>
+            battleEnvelopeMatchesActiveSession({ envelope, session }),
+          {
+            message:
+              "An active Battle envelope must match its session Battle and actor.",
+          },
+        ),
       ),
     ),
     Schema.Struct({
@@ -197,13 +209,15 @@ export const BattleResolutionOutputSchema = Schema.toCodecIso(
       envelope: BattlePresentationEnvelopeSchema,
       session: McpActiveSessionSnapshotSchema,
     }).pipe(
-      Schema.filter(
-        ({ envelope, session }) =>
-          battleEnvelopeMatchesActiveSession({ envelope, session }),
-        {
-          message: () =>
-            "An active Battle envelope must match its session Battle and actor.",
-        },
+      Schema.check(
+        Schema.makeFilter(
+          ({ envelope, session }) =>
+            battleEnvelopeMatchesActiveSession({ envelope, session }),
+          {
+            message:
+              "An active Battle envelope must match its session Battle and actor.",
+          },
+        ),
       ),
     ),
   ]),

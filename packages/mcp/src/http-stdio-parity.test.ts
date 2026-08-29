@@ -6,7 +6,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { verifyCompleteNewcomerJourney } from "../test-support/mcp-acceptance-scenarios.ts";
@@ -29,7 +29,7 @@ describe("public HTTP and stdio MCP parity", () => {
         playSessionRepository: repository,
       });
       const endpoint = await httpServer.listen();
-      if (Either.isLeft(endpoint)) throw new Error(endpoint.left.message);
+      if (Result.isFailure(endpoint)) throw new Error(endpoint.failure.message);
 
       const httpClient = new Client({
         name: "dnd-http-parity",
@@ -39,7 +39,7 @@ describe("public HTTP and stdio MCP parity", () => {
         name: "dnd-stdio-parity",
         version: "0.1.0",
       });
-      const httpTransport = new StreamableHTTPClientTransport(endpoint.right);
+      const httpTransport = new StreamableHTTPClientTransport(endpoint.success);
       const stdioTransport = new StdioClientTransport({
         command: process.execPath,
         args: ["--import", "tsx", "packages/mcp/src/index.ts"],
@@ -88,7 +88,7 @@ describe("public HTTP and stdio MCP parity", () => {
         const closed = await httpServer.close();
         repository.close();
         await rm(directory, { recursive: true, force: true });
-        if (Either.isLeft(closed)) throw new Error(closed.left.message);
+        if (Result.isFailure(closed)) throw new Error(closed.failure.message);
       }
     },
     PARITY_TIMEOUT_MS,
@@ -189,6 +189,6 @@ function normalizePlaySessionId(
 
 function openRepository(databasePath: string): PlaySessionRepository {
   const repository = openSqlitePlaySessionRepository(databasePath);
-  if (Either.isLeft(repository)) throw new Error(repository.left.message);
-  return repository.right;
+  if (Result.isFailure(repository)) throw new Error(repository.failure.message);
+  return repository.success;
 }

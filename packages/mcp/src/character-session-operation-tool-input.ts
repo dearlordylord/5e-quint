@@ -13,44 +13,41 @@ import { DRUID_CIRCLE_LAND_CHOICES } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 
 const NonNegativeIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
 );
 const PositiveIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
 );
 
 const RestRecoveryArgsFields = {
-  spendHitDice: Schema.optionalWith(
+  spendHitDice: Schema.optionalKey(
     Schema.NonEmptyArray(
       Schema.Struct({
         classUnitId: UnitId,
         roll: PositiveIntegerSchema,
       }),
     ),
-    { exact: true },
   ),
-  arcaneRecovery: Schema.optionalWith(
+  arcaneRecovery: Schema.optionalKey(
     Schema.Struct({
       refundSpellSlots: Schema.NonEmptyArray(
         Schema.Struct({
           spellLevel: Schema.Number.pipe(
-            Schema.int(),
-            Schema.greaterThanOrEqualTo(1),
-            Schema.lessThanOrEqualTo(9),
+            Schema.check(
+              Schema.isInt(),
+              Schema.isGreaterThanOrEqualTo(1),
+              Schema.isLessThanOrEqualTo(9),
+            ),
           ),
           count: PositiveIntegerSchema,
         }),
       ),
     }),
-    { exact: true },
   ),
-  sorcerousRestoration: Schema.optionalWith(
+  sorcerousRestoration: Schema.optionalKey(
     Schema.Struct({
       recoverSorceryPoints: PositiveIntegerSchema,
     }),
-    { exact: true },
   ),
 } as const;
 
@@ -71,10 +68,11 @@ const SpellRestBenefitRecipientArgsSchema = Schema.Struct({
 const SpellRestBenefitOperationArgsSchema = Schema.Struct({
   kind: Schema.Literal("applySpellRestBenefit"),
   spellId: UnitId,
-  castLevel: PositiveIntegerSchema.pipe(Schema.lessThanOrEqualTo(9)),
-  spellSlotSource: Schema.optionalWith(
-    Schema.Literal(...FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES),
-    { exact: true },
+  castLevel: PositiveIntegerSchema.pipe(
+    Schema.check(Schema.isLessThanOrEqualTo(9)),
+  ),
+  spellSlotSource: Schema.optionalKey(
+    Schema.Literals([...FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES]),
   ),
   recipients: Schema.NonEmptyArray(SpellRestBenefitRecipientArgsSchema),
 });
@@ -90,21 +88,23 @@ const RetainedCompanionChallengeRatingZeroBeastSelectionArgsSchema =
   });
 const RetainedCompanionSpecialFormSelectionArgsSchema = Schema.Struct({
   tag: Schema.Literal("pactOfTheChainSpecialForm"),
-  formId: Schema.NonEmptyTrimmedString,
+  formId: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
-const RetainedCompanionFormSelectionArgsSchema = Schema.Union(
+const RetainedCompanionFormSelectionArgsSchema = Schema.Union([
   RetainedCompanionNormalFormSelectionArgsSchema,
   RetainedCompanionChallengeRatingZeroBeastSelectionArgsSchema,
   RetainedCompanionSpecialFormSelectionArgsSchema,
-);
-const RetainedCompanionSourceArgsSchema = Schema.Union(
+]);
+const RetainedCompanionSourceArgsSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("spellSlotSpellCast"),
     spellId: UnitId,
     spellLevel: Schema.Number.pipe(
-      Schema.int(),
-      Schema.greaterThanOrEqualTo(1),
-      Schema.lessThanOrEqualTo(9),
+      Schema.check(
+        Schema.isInt(),
+        Schema.isGreaterThanOrEqualTo(1),
+        Schema.isLessThanOrEqualTo(9),
+      ),
     ),
   }),
   Schema.Struct({
@@ -118,32 +118,31 @@ const RetainedCompanionSourceArgsSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("classFeatureSpellCast"),
     featureUnitId: UnitId,
-    spend: Schema.Union(
+    spend: Schema.Union([
       Schema.Struct({
         tag: Schema.Literal("spellSlot"),
         spellLevel: Schema.Number.pipe(
-          Schema.int(),
-          Schema.greaterThanOrEqualTo(1),
-          Schema.lessThanOrEqualTo(9),
+          Schema.check(
+            Schema.isInt(),
+            Schema.isGreaterThanOrEqualTo(1),
+            Schema.isLessThanOrEqualTo(9),
+          ),
         ),
       }),
       Schema.Struct({
         tag: Schema.Literal("useCountResource"),
         resourceUnitId: UnitId,
       }),
-    ),
+    ]),
   }),
-);
+]);
 const RetainOneAtATimeCompanionOperationArgsSchema = Schema.Struct({
   kind: Schema.Literal("retainOneAtATimeCompanion"),
   companionId: CharacterSheetRetainedCompanionId,
   source: RetainedCompanionSourceArgsSchema,
   selectedForm: RetainedCompanionFormSelectionArgsSchema,
-  creatureTypeOverrideChoiceId: Schema.optionalWith(
-    Schema.NonEmptyTrimmedString,
-    {
-      exact: true,
-    },
+  creatureTypeOverrideChoiceId: Schema.optionalKey(
+    Schema.Trimmed.check(Schema.isNonEmpty()),
   ),
 });
 const AdvanceClassLevelOperationArgsSchema = Schema.Struct({
@@ -158,7 +157,7 @@ const ReplaceDruidWildShapeKnownFormOperationArgsSchema = Schema.Struct({
   }),
 });
 
-const LongRestTimingArgsSchema = Schema.Union(
+const LongRestTimingArgsSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("noPriorLongRest"),
   }),
@@ -166,18 +165,18 @@ const LongRestTimingArgsSchema = Schema.Union(
     tag: Schema.Literal("elapsedSinceLastLongRest"),
     elapsedTicks: NonNegativeIntegerSchema,
   }),
-);
+]);
 
-const ShortRestInterruptionArgsSchema = Schema.Literal(
+const ShortRestInterruptionArgsSchema = Schema.Literals([
   ...CHARACTER_SHEET_REST_ACTIVITY_INTERRUPTION_VALUES,
-);
-const LongRestInterruptionArgsSchema = Schema.Union(
+]);
+const LongRestInterruptionArgsSchema = Schema.Union([
   ShortRestInterruptionArgsSchema,
   Schema.Struct({
     tag: Schema.Literal("physicalExertion"),
     durationTicks: NonNegativeIntegerSchema,
   }),
-);
+]);
 
 const WeaponMasteryReselectionArgsSchema = Schema.Struct({
   featureUnitId: UnitId,
@@ -186,7 +185,7 @@ const WeaponMasteryReselectionArgsSchema = Schema.Struct({
 
 const CalendarTimeDurationArgsSchema = Schema.Struct({
   kind: Schema.Literal("timeSpan"),
-  unit: Schema.Literal(...TIME_SPAN_UNITS),
+  unit: Schema.Literals([...TIME_SPAN_UNITS]),
   amount: PositiveIntegerSchema,
 });
 
@@ -203,9 +202,8 @@ const StableRecoveryFillArgsSchema = Schema.Struct({
 const CompleteShortRestOperationArgsSchema = Schema.Struct({
   kind: Schema.Literal("completeShortRest"),
   restedTicks: NonNegativeIntegerSchema,
-  fiendishResilienceDamageType: Schema.optionalWith(
-    Schema.Literal(...DAMAGE_TYPES),
-    { exact: true },
+  fiendishResilienceDamageType: Schema.optionalKey(
+    Schema.Literals([...DAMAGE_TYPES]),
   ),
   ...RestRecoveryArgsFields,
 });
@@ -214,24 +212,20 @@ const InterruptShortRestOperationArgsSchema = Schema.Struct({
   interruption: ShortRestInterruptionArgsSchema,
 });
 const LongRestCompletionChoiceFields = {
-  weaponMasteryReselections: Schema.optionalWith(
+  weaponMasteryReselections: Schema.optionalKey(
     Schema.NonEmptyArray(WeaponMasteryReselectionArgsSchema),
-    { exact: true },
   ),
-  druidWildShapeKnownFormReplacement: Schema.optionalWith(
+  druidWildShapeKnownFormReplacement: Schema.optionalKey(
     Schema.Struct({
       replaceStatBlockId: StatBlockId,
       selectedStatBlockId: StatBlockId,
     }),
-    { exact: true },
   ),
-  druidCircleLandChoice: Schema.optionalWith(
-    Schema.Literal(...DRUID_CIRCLE_LAND_CHOICES),
-    { exact: true },
+  druidCircleLandChoice: Schema.optionalKey(
+    Schema.Literals([...DRUID_CIRCLE_LAND_CHOICES]),
   ),
-  fiendishResilienceDamageType: Schema.optionalWith(
-    Schema.Literal(...DAMAGE_TYPES),
-    { exact: true },
+  fiendishResilienceDamageType: Schema.optionalKey(
+    Schema.Literals([...DAMAGE_TYPES]),
   ),
 } as const;
 const LongRestCompletionArgsFields = {
@@ -266,7 +260,7 @@ const PassCalendarTimeOperationArgsSchema = Schema.Struct({
   fills: Schema.Array(StableRecoveryFillArgsSchema),
 });
 const SpellSlotLevelSchema = PositiveIntegerSchema.pipe(
-  Schema.lessThanOrEqualTo(9),
+  Schema.check(Schema.isLessThanOrEqualTo(9)),
 );
 const SpendSpellAccessFreeCastOperationArgsSchema = Schema.Struct({
   kind: Schema.Literal("spendSpellAccessFreeCast"),
@@ -282,9 +276,8 @@ const ConvertFontOfMagicSpellSlotToSorceryPointsOperationArgsSchema =
   Schema.Struct({
     kind: Schema.Literal("convertFontOfMagicSpellSlotToSorceryPoints"),
     spellLevel: SpellSlotLevelSchema,
-    spellSlotSource: Schema.optionalWith(
-      Schema.Literal(...FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES),
-      { exact: true },
+    spellSlotSource: Schema.optionalKey(
+      Schema.Literals([...FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES]),
     ),
   });
 const ConvertFontOfMagicSorceryPointsToSpellSlotOperationArgsSchema =
@@ -292,7 +285,7 @@ const ConvertFontOfMagicSorceryPointsToSpellSlotOperationArgsSchema =
     kind: Schema.Literal("convertFontOfMagicSorceryPointsToSpellSlot"),
     spellLevel: SpellSlotLevelSchema,
   });
-const CharacterSessionOperationArgsSchema = Schema.Union(
+const CharacterSessionOperationArgsSchema = Schema.Union([
   RetainOneAtATimeCompanionOperationArgsSchema,
   LayOnHandsOperationArgsSchema,
   SpellRestBenefitOperationArgsSchema,
@@ -307,7 +300,7 @@ const CharacterSessionOperationArgsSchema = Schema.Union(
   UseMonkUncannyMetabolismWhenRollingInitiativeOperationArgsSchema,
   ConvertFontOfMagicSpellSlotToSorceryPointsOperationArgsSchema,
   ConvertFontOfMagicSorceryPointsToSpellSlotOperationArgsSchema,
-);
+]);
 
 export const ApplyCharacterSessionOperationArgsSchema = Schema.Struct({
   characterId: CharacterSheetIdSchema,

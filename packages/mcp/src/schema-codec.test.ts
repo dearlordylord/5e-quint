@@ -47,7 +47,7 @@ describe("MCP output JSON Schema identity", () => {
   test("extracts an object branch and rejects schemas with no object input", () => {
     expect(
       mcpObjectJsonSchema(
-        Schema.Union(Schema.String, Schema.Struct({ value: Schema.String })),
+        Schema.Union([Schema.String, Schema.Struct({ value: Schema.String })]),
       ),
     ).toMatchObject({
       type: "object",
@@ -60,13 +60,13 @@ describe("MCP output JSON Schema identity", () => {
 
   test("advertises copied result objects without expanding their canonical schema", () => {
     const Copied = Schema.Struct({
-      kind: Schema.Literal("first", "second"),
+      kind: Schema.Literals(["first", "second"]),
       nested: Schema.Struct({ value: Schema.String }),
-    }).annotations({ identifier: "Copied" });
-    const RetainedLeaf = Schema.String.annotations({
+    }).annotate({ identifier: "Copied" });
+    const RetainedLeaf = Schema.String.annotate({
       identifier: "RetainedLeaf",
     });
-    const Retained = Schema.Struct({ leaf: RetainedLeaf }).annotations({
+    const Retained = Schema.Struct({ leaf: RetainedLeaf }).annotate({
       identifier: "Retained",
     });
     const CanonicalArgs = Schema.Struct({
@@ -154,7 +154,7 @@ describe("MCP output JSON Schema identity", () => {
 
 describe("MCP model output JSON Schema", () => {
   test("retains the root result contract without expanding nested definitions", () => {
-    const Nested = Schema.Struct({ hidden: Schema.String }).annotations({
+    const Nested = Schema.Struct({ hidden: Schema.String }).annotate({
       identifier: "NestedResult",
     });
     const codec = Schema.Struct({
@@ -179,11 +179,11 @@ describe("MCP model output JSON Schema", () => {
   });
 
   test("retains distinct root and nested object branches within the bound", () => {
-    const codec = Schema.Union(
+    const codec = Schema.Union([
       Schema.Struct({ value: Schema.Struct({ first: Schema.String }) }),
       Schema.Struct({ value: Schema.Struct({ second: Schema.Number }) }),
       Schema.Struct({ error: Schema.String }),
-    );
+    ]);
 
     expect(mcpModelOutputJsonSchema(codec)).toMatchObject({
       anyOf: [

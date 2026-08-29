@@ -1,4 +1,4 @@
-import { Either, Effect, ManagedRuntime, Schema } from "effect";
+import { Result, Effect, ManagedRuntime, Schema } from "effect";
 
 import { createDndMcpHttpServer } from "./public-http-server.ts";
 import { createPublicMcpOAuth } from "./public-oauth.ts";
@@ -17,18 +17,23 @@ import {
 } from "./public-service-operations.ts";
 
 const PublicMcpConfigurationSchema = Schema.Struct({
-  authorizationDatabasePath: Schema.NonEmptyTrimmedString,
-  authorizationSecret: Schema.NonEmptyTrimmedString.pipe(Schema.minLength(32)),
-  databasePath: Schema.NonEmptyTrimmedString,
-  hostname: Schema.NonEmptyTrimmedString,
-  port: Schema.NumberFromString.pipe(Schema.int(), Schema.between(1, 65_535)),
-  environment: Schema.Literal(...PUBLIC_MCP_DEPLOYMENT_ENVIRONMENTS),
-  release: Schema.NonEmptyTrimmedString,
+  authorizationDatabasePath: Schema.Trimmed.check(Schema.isNonEmpty()),
+  authorizationSecret: Schema.Trimmed.check(Schema.isNonEmpty()).pipe(
+    Schema.check(Schema.isMinLength(32)),
+  ),
+  databasePath: Schema.Trimmed.check(Schema.isNonEmpty()),
+  hostname: Schema.Trimmed.check(Schema.isNonEmpty()),
+  port: Schema.NumberFromString.pipe(
+    Schema.check(Schema.isInt()),
+    Schema.between(1, 65_535),
+  ),
+  environment: Schema.Literals([...PUBLIC_MCP_DEPLOYMENT_ENVIRONMENTS]),
+  release: Schema.Trimmed.check(Schema.isNonEmpty()),
   publisherName: PublicMcpPublisherNameSchema,
   publicOrigin: PublicMcpOriginSchema,
 });
 
-const configuration = Schema.decodeUnknownEither(PublicMcpConfigurationSchema)({
+const configuration = Schema.decodeUnknownResult(PublicMcpConfigurationSchema)({
   authorizationDatabasePath:
     process.env.DND_SAVED_SESSION_AUTHORIZATION_DATABASE_PATH,
   authorizationSecret: process.env.DND_SAVED_SESSION_AUTHORIZATION_SECRET,
@@ -48,62 +53,62 @@ const metricsBearerToken = optionalEnvironmentValue(
   process.env.DND_MCP_METRICS_TOKEN,
 );
 
-if (Either.isLeft(configuration)) {
+if (Result.isFailure(configuration)) {
   writePublicMcpInitializationFailure("configuration");
   process.exitCode = 1;
 } else {
-  const resource = new URL("/mcp", configuration.right.publicOrigin);
-  const issuer = new URL("/api/auth", configuration.right.publicOrigin);
+  const resource = new URL("/mcp", configuration.success.publicOrigin);
+  const issuer = new URL("/api/auth", configuration.success.publicOrigin);
   const oauth = createPublicMcpOAuth({
     resource: resource.toString(),
     authorizationServer: issuer.toString(),
     issuer: issuer.toString().replace(/\/$/u, ""),
     jwksUrl: new URL(
       "/api/auth/jwks",
-      configuration.right.publicOrigin,
+      configuration.success.publicOrigin,
     ).toString(),
   });
-  if (Either.isLeft(oauth)) {
+  if (Result.isFailure(oauth)) {
     writePublicMcpInitializationFailure("oauth");
     process.exitCode = 1;
   } else {
     const repository = openSqlitePlaySessionRepository(
-      configuration.right.databasePath,
+      configuration.success.databasePath,
     );
-    if (Either.isLeft(repository)) {
+    if (Result.isFailure(repository)) {
       writePublicMcpInitializationFailure("storage");
       process.exitCode = 1;
     } else {
       const authorizationRuntime = ManagedRuntime.make(
         savedSessionAuthorizationLayer({
-          authorizationServerOrigin: configuration.right.publicOrigin,
-          databasePath: configuration.right.authorizationDatabasePath,
+          authorizationServerOrigin: configuration.success.publicOrigin,
+          databasePath: configuration.success.authorizationDatabasePath,
           resource,
-          secret: configuration.right.authorizationSecret,
+          secret: configuration.success.authorizationSecret,
         }),
       );
       const authorization = await authorizationRuntime.runPromise(
-        Effect.either(SavedSessionAuthorization),
+        Effect.result(SavedSessionAuthorization),
       );
-      if (Either.isLeft(authorization)) {
-        repository.right.close();
+      if (Result.isFailure(authorization)) {
+        repository.success.close();
         await authorizationRuntime.dispose();
         writePublicMcpInitializationFailure("authorization");
         process.exitCode = 1;
       } else {
         const server = createDndMcpHttpServer({
-          playSessionRepository: repository.right,
-          hostname: configuration.right.hostname,
-          port: configuration.right.port,
-          oauth: oauth.right,
+          playSessionRepository: repository.success,
+          hostname: configuration.success.hostname,
+          port: configuration.success.port,
+          oauth: oauth.success,
           savedSessionAuthorization: {
-            origin: configuration.right.publicOrigin,
-            service: authorization.right,
+            origin: configuration.success.publicOrigin,
+            service: authorization.success,
           },
           operations: {
-            environment: configuration.right.environment,
-            release: configuration.right.release,
-            publisherName: configuration.right.publisherName,
+            environment: configuration.success.environment,
+            release: configuration.success.release,
+            publisherName: configuration.success.publisherName,
             ...(openAiAppsChallenge === undefined
               ? {}
               : { openAiAppsChallenge }),
@@ -111,8 +116,8 @@ if (Either.isLeft(configuration)) {
           },
         });
         const endpoint = await server.listen();
-        if (Either.isLeft(endpoint)) {
-          repository.right.close();
+        if (Result.isFailure(endpoint)) {
+          repository.success.close();
           await authorizationRuntime.dispose();
           writePublicMcpInitializationFailure("listen");
           process.exitCode = 1;
@@ -123,9 +128,9 @@ if (Either.isLeft(configuration)) {
               severity: "info",
               event: "public_mcp_initialized",
               service: PUBLIC_MCP_SERVICE_NAME,
-              environment: configuration.right.environment,
-              release: configuration.right.release,
-              endpoint: endpoint.right.toString(),
+              environment: configuration.success.environment,
+              release: configuration.success.release,
+              endpoint: endpoint.success.toString(),
               oauthAvailable: true,
               domainChallengeAvailable: openAiAppsChallenge !== undefined,
               metricsAvailable: metricsBearerToken !== undefined,
@@ -138,13 +143,13 @@ if (Either.isLeft(configuration)) {
             server
               .close()
               .then((closed) => {
-                if (Either.isLeft(closed)) {
+                if (Result.isFailure(closed)) {
                   writePublicMcpInitializationFailure("shutdown");
                   process.exitCode = 1;
                 }
               })
               .finally(async () => {
-                repository.right.close();
+                repository.success.close();
                 await authorizationRuntime.dispose();
               });
           };

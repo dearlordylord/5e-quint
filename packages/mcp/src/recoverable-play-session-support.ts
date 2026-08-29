@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   publishAdminProjectionBestEffort,
@@ -42,7 +42,7 @@ import { handleToolCall } from "./server.ts";
 export function rootFromRecord(
   applicationServices: McpApplicationServices,
   record: RecoverablePlaySessionRecord,
-): Either.Either<McpPlaySessionRoot, PlaySessionRepositoryIssue> {
+): Result.Result<McpPlaySessionRoot, PlaySessionRepositoryIssue> {
   const root = createMcpPlaySessionRoot(
     applicationServices,
     adminMirrorSessionId(record.playSessionId),
@@ -51,14 +51,14 @@ export function rootFromRecord(
   for (const operation of record.operations) {
     const replayed = handleToolCall(root, operation.name, operation.args);
     if ("isError" in replayed && replayed.isError === true) {
-      return Either.left({
+      return Result.fail({
         tag: "playSessionRepositoryIssue",
         reason: "invalidStoredRecord",
         message: `Stored Play Session operation ${operation.name} no longer reconstructs successfully.`,
       });
     }
   }
-  return Either.right(root);
+  return Result.succeed(root);
 }
 
 export function publishCurrentProjection(
@@ -111,25 +111,25 @@ export function admitRequest(
   tenure: StoredPlaySessionTenure,
   nowMs: EpochMilliseconds,
   maximumRequestsPerWindow: number,
-): Either.Either<void, PlaySessionAccessFailure> {
+): Result.Result<void, PlaySessionAccessFailure> {
   const accessKeyDigest = playSessionRateLimitKeyDigest(tenure);
   const admitted = repository.admitRequest(
     accessKeyDigest,
     nowMs,
     maximumRequestsPerWindow,
   );
-  if (Either.isLeft(admitted)) {
-    return Either.left(accessFailure(admitted.left));
+  if (Result.isFailure(admitted)) {
+    return Result.fail(accessFailure(admitted.failure));
   }
-  if (admitted.right.tag === "rateExceeded") {
-    return Either.left({
+  if (admitted.success.tag === "rateExceeded") {
+    return Result.fail({
       tag: "playSessionLimitFailure",
       reason: "requestRateExceeded",
       message: "Too many Play Session requests. Retry after the stated delay.",
-      retryAfterSeconds: admitted.right.retryAfterSeconds,
+      retryAfterSeconds: admitted.success.retryAfterSeconds,
     });
   }
-  return Either.right(undefined);
+  return Result.succeed(undefined);
 }
 
 export function concurrentWriteFailure(): PlaySessionAccessFailure {
@@ -145,27 +145,29 @@ export function deleteSavedRecord(
   repository: PlaySessionRepository,
   playSessionId: PlaySessionId,
   principalId: PrincipalId,
-): Either.Either<
+): Result.Result<
   { readonly tag: "playSessionDeleted" },
   PlaySessionAccessFailure
 > {
   const loaded = repository.load(playSessionId);
-  if (Either.isLeft(loaded)) return Either.left(accessFailure(loaded.left));
+  if (Result.isFailure(loaded))
+    return Result.fail(accessFailure(loaded.failure));
   if (
-    loaded.right.tag === "absent" ||
-    loaded.right.record.tenure.tag !== "saved" ||
-    loaded.right.record.tenure.principalId !== principalId
+    loaded.success.tag === "absent" ||
+    loaded.success.record.tenure.tag !== "saved" ||
+    loaded.success.record.tenure.principalId !== principalId
   ) {
-    return Either.left(PLAY_SESSION_UNAVAILABLE);
+    return Result.fail(PLAY_SESSION_UNAVAILABLE);
   }
   const deleted = repository.delete(
     playSessionId,
-    loaded.right.record.revision,
+    loaded.success.record.revision,
   );
-  if (Either.isLeft(deleted)) return Either.left(accessFailure(deleted.left));
-  return deleted.right
-    ? Either.right({ tag: "playSessionDeleted" })
-    : Either.left(concurrentWriteFailure());
+  if (Result.isFailure(deleted))
+    return Result.fail(accessFailure(deleted.failure));
+  return deleted.success
+    ? Result.succeed({ tag: "playSessionDeleted" })
+    : Result.fail(concurrentWriteFailure());
 }
 
 export function savedTenure(

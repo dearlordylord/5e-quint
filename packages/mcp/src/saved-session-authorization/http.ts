@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 
-import { Either, Effect } from "effect";
+import { Result, Effect } from "effect";
 
 import { PUBLIC_MCP_MAX_REQUEST_BYTES } from "../public-http-routes.ts";
 import type { AuthorizationServerOrigin } from "../public-origin.ts";
@@ -32,7 +32,7 @@ export async function handleSavedSessionAuthorizationRequest(input: {
   readonly incoming: IncomingMessage;
   readonly outgoing: ServerResponse;
   readonly pathname: string;
-}): Promise<Either.Either<void, SavedSessionAuthorizationHttpIssue>> {
+}): Promise<Result.Result<void, SavedSessionAuthorizationHttpIssue>> {
   const cancellation = nodeRequestCancellation(input.incoming, input.outgoing);
   try {
     if (input.pathname === "/saved-session-vault") {
@@ -41,7 +41,7 @@ export async function handleSavedSessionAuthorizationRequest(input: {
         savedSessionVaultPage(),
         cancellation.signal,
       );
-      return Either.right(undefined);
+      return Result.succeed(undefined);
     }
     if (input.pathname === "/saved-session-consent") {
       await writeResponse(
@@ -49,22 +49,22 @@ export async function handleSavedSessionAuthorizationRequest(input: {
         savedSessionConsentPage(),
         cancellation.signal,
       );
-      return Either.right(undefined);
+      return Result.succeed(undefined);
     }
     const request = await webRequest(
       input.incoming,
       input.authorization.origin,
       cancellation.signal,
     );
-    if (Either.isLeft(request)) return request;
+    if (Result.isFailure(request)) return request;
     const response = await Effect.runPromise(
-      input.authorization.service.handle(request.right).pipe(Effect.either),
+      input.authorization.service.handle(request.success).pipe(Effect.result),
     );
-    if (Either.isLeft(response)) {
-      return Either.left(httpIssue("requestFailed"));
+    if (Result.isFailure(response)) {
+      return Result.fail(httpIssue("requestFailed"));
     }
-    await writeResponse(input.outgoing, response.right, cancellation.signal);
-    return Either.right(undefined);
+    await writeResponse(input.outgoing, response.success, cancellation.signal);
+    return Result.succeed(undefined);
   } finally {
     cancellation.dispose();
   }
@@ -74,15 +74,15 @@ async function webRequest(
   incoming: IncomingMessage,
   origin: URL,
   signal: AbortSignal,
-): Promise<Either.Either<Request, SavedSessionAuthorizationHttpIssue>> {
+): Promise<Result.Result<Request, SavedSessionAuthorizationHttpIssue>> {
   const body = await requestBody(incoming);
-  if (Either.isLeft(body)) return Either.left(body.left);
-  return Either.right(
+  if (Result.isFailure(body)) return Result.fail(body.failure);
+  return Result.succeed(
     new Request(new URL(incoming.url ?? "/", origin), {
       method: incoming.method ?? "GET",
       headers: webRequestHeaders(incoming),
       signal,
-      ...webRequestBody(body.right),
+      ...webRequestBody(body.success),
     }),
   );
 }
@@ -105,9 +105,9 @@ function webRequestBody(body: Uint8Array): { readonly body?: Uint8Array } {
 
 async function requestBody(
   incoming: IncomingMessage,
-): Promise<Either.Either<Uint8Array, SavedSessionAuthorizationHttpIssue>> {
+): Promise<Result.Result<Uint8Array, SavedSessionAuthorizationHttpIssue>> {
   if (incoming.method === "GET" || incoming.method === "HEAD") {
-    return Either.right(new Uint8Array());
+    return Result.succeed(new Uint8Array());
   }
   const chunks: Buffer[] = [];
   let byteLength = 0;
@@ -115,11 +115,11 @@ async function requestBody(
     const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
     byteLength += buffer.byteLength;
     if (byteLength > PUBLIC_MCP_MAX_REQUEST_BYTES) {
-      return Either.left(httpIssue("requestTooLarge"));
+      return Result.fail(httpIssue("requestTooLarge"));
     }
     chunks.push(buffer);
   }
-  return Either.right(Buffer.concat(chunks));
+  return Result.succeed(Buffer.concat(chunks));
 }
 
 async function writeResponse(

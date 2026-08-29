@@ -21,7 +21,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
-import { Either } from "effect";
+import { Result } from "effect";
 import {
   abilityScoreAssignment,
   characterDraftId,
@@ -341,17 +341,17 @@ function snapshotDefinitions(
   return snapshot;
 }
 
-function eitherSnapshot(value: Either.Either<unknown, unknown>): unknown {
-  return Either.isRight(value)
-    ? { tag: "right", value: value.right }
-    : { tag: "left", value: value.left };
+function eitherSnapshot(value: Result.Result<unknown, unknown>): unknown {
+  return Result.isSuccess(value)
+    ? { tag: "right", value: value.success }
+    : { tag: "left", value: value.failure };
 }
 
 function persistedSessionSnapshot(
-  value: Either.Either<unknown, unknown>,
+  value: Result.Result<unknown, unknown>,
   stableFailureReason?: "malformedOperationsJson",
 ): unknown {
-  if (Either.isRight(value) || stableFailureReason === undefined) {
+  if (Result.isSuccess(value) || stableFailureReason === undefined) {
     return eitherSnapshot(value);
   }
   return {
@@ -366,12 +366,12 @@ function persistedSessionSnapshot(
 
 function requirePlaySessionId(value: string) {
   const decoded = decodePlaySessionId(value);
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     throw new Error(
-      `Effect 3 baseline fixture has an invalid Play Session id: ${decoded.left}`,
+      `Effect 3 baseline fixture has an invalid Play Session id: ${decoded.failure}`,
     );
   }
-  return decoded.right;
+  return decoded.success;
 }
 
 function decodePersistedSessionFixture(
@@ -502,8 +502,8 @@ function captureReducerFixtures(): Readonly<Record<string, unknown>> {
       removedUnconscious: restoredConditionState,
     },
     characterSheetHitPoints: eitherSnapshot(sheetHitPoints),
-    characterSheetCurrentHp: Either.isRight(sheetHitPoints)
-      ? characterSheetHitPointsCurrentHp(sheetHitPoints.right)
+    characterSheetCurrentHp: Result.isSuccess(sheetHitPoints)
+      ? characterSheetHitPointsCurrentHp(sheetHitPoints.success)
       : null,
   };
 }
