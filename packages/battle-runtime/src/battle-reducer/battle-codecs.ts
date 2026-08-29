@@ -8116,17 +8116,18 @@ function serializedBattleHolesOwnBoundExecutionReferences(input: {
   );
 }
 
-function serializedBattleActHolesMatchSelectedOccurrence(
-  act: EncodedBattleActDiscoveryCandidate,
+function serializedSubjectHolesMatchSelectedOccurrence(
+  subject: EncodedBattleSubject,
+  holes: readonly EncodedBattleHole[],
 ): boolean {
   const protectionRelevantEffect =
-    act.subject.tag === "runtimeCommand" &&
-    act.subject.command === "protectionRelevantEffectSave"
-      ? act.subject.relevantEffect
+    subject.tag === "runtimeCommand" &&
+    subject.command === "protectionRelevantEffectSave"
+      ? subject.relevantEffect
       : undefined;
   if (
     protectionRelevantEffect !== undefined &&
-    act.initialHoles.some(
+    holes.some(
       (hole) =>
         hole.kind === "savingThrowOutcome" &&
         "protectionRelevantEffectSave" in hole &&
@@ -8137,29 +8138,48 @@ function serializedBattleActHolesMatchSelectedOccurrence(
     return false;
   }
   const selectedOccurrenceRefs = battleSubjectBoundExecutionReferences(
-    act.subject,
+    subject,
   ).flatMap((reference) =>
     reference.kind === "activeEffectOccurrence" ||
-    (reference.kind === "activeEffect" &&
-      act.subject.tag === "runtimeCommand" &&
-      act.subject.command === "protectionRelevantEffectSave")
+    reference.kind === "activeEffect"
       ? [reference.effectRef]
       : [],
   );
-  if (selectedOccurrenceRefs.length === 0 || act.initialHoles.length === 0) {
-    return true;
-  }
-  const holeOccurrenceRefs = act.initialHoles.flatMap((hole) =>
+  if (selectedOccurrenceRefs.length === 0) return true;
+  const holeOccurrenceRefs = holes.flatMap((hole) =>
     serializedBattleHoleExecutionReferences(hole).flatMap((reference) =>
       reference.kind === "effectOccurrence" ? [reference.ref] : [],
     ),
   );
-  return (
+  const matches =
     selectedOccurrenceRefs.length === 1 &&
-    holeOccurrenceRefs.length > 0 &&
+    (holes.length > 0 ||
+      (holes.length === 0 &&
+        selectedOccurrenceSubjectRequiresNoOccurrenceHole(subject))) &&
     holeOccurrenceRefs.every(
       (effectRef) => effectRef === selectedOccurrenceRefs[0],
-    )
+    );
+  return matches;
+}
+
+function selectedOccurrenceSubjectRequiresNoOccurrenceHole(
+  subject: EncodedBattleSubject,
+): boolean {
+  return Match.value(subject).pipe(
+    Match.when(
+      { tag: "bonusActionStandardAction" },
+      (value) => value.sourceEffectRef !== undefined,
+    ),
+    Match.when({ tag: "runtimeCommand" }, (value) =>
+      Match.value(value.command).pipe(
+        Match.when("webRestrainedNoLongerInArea", () => true),
+        Match.when("webAreaRemoved", () => true),
+        Match.when("moonbeamCylinderExit", () => true),
+        Match.when("wardingBondSeparation", () => true),
+        Match.orElse(() => false),
+      ),
+    ),
+    Match.orElse(() => false),
   );
 }
 
@@ -9036,6 +9056,10 @@ function serializedInterruptChoiceInvariantsHold(input: {
     holes: readonly EncodedBattleHole[],
     expectedProcedureRefs: ReadonlySet<BattleProcedureExecutionRef>,
   ) => boolean;
+  readonly subjectHolesMatchSelectedOccurrence: (
+    subject: EncodedBattleSubject,
+    holes: readonly EncodedBattleHole[],
+  ) => boolean;
 }): boolean {
   const { choice, combatants, readiedSpells, readiedResponses, trigger } =
     input;
@@ -9051,6 +9075,11 @@ function serializedInterruptChoiceInvariantsHold(input: {
       readiedSpells,
       readiedResponses,
     }) &&
+    (subject === undefined ||
+      input.subjectHolesMatchSelectedOccurrence(
+        subject,
+        choice.initialHoles,
+      )) &&
     input.holesAreBound(
       choice.initialHoles,
       serializedInterruptChoiceExpectedProcedureRefs(choice),
@@ -9100,7 +9129,10 @@ function battleCheckpointFrontierInvariantsHold(
           (act) =>
             subjectIsBound(act.subject) &&
             battleActExecutionCandidateInvariantHolds(act) &&
-            serializedBattleActHolesMatchSelectedOccurrence(act) &&
+            serializedSubjectHolesMatchSelectedOccurrence(
+              act.subject,
+              act.initialHoles,
+            ) &&
             holesAreBound(
               act.initialHoles,
               new Set(battleSubjectProcedureRefs(act.subject)),
@@ -9108,6 +9140,10 @@ function battleCheckpointFrontierInvariantsHold(
         ),
       holes: (value) =>
         subjectIsBound(value.subject) &&
+        serializedSubjectHolesMatchSelectedOccurrence(
+          value.subject,
+          value.holes,
+        ) &&
         holesAreBound(
           value.holes,
           new Set(battleSubjectProcedureRefs(value.subject)),
@@ -9123,6 +9159,8 @@ function battleCheckpointFrontierInvariantsHold(
             readiedResponses,
             subjectIsBound,
             holesAreBound,
+            subjectHolesMatchSelectedOccurrence:
+              serializedSubjectHolesMatchSelectedOccurrence,
           }),
         ),
     }),

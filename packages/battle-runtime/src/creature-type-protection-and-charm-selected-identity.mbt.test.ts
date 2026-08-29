@@ -603,16 +603,19 @@ describe("Protection relevant-effect selected occurrence identity", () => {
     const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)({
       checkpoint: snapshotBattle(fixture.state),
       frontier: {
-        kind: "acts",
-        acts: [{ subject: selectedSubject, initialHoles: [selectedHole] }],
+        kind: "holes",
+        subject: selectedSubject,
+        holes: [selectedHole],
+        continuation: { kind: "ordinaryReplay" },
       },
     });
     expect(() =>
       Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(encoded),
     ).not.toThrow();
-    if (encoded.frontier.kind !== "acts") {
-      throw new Error("Expected the focused Protection Acts frontier.");
+    if (encoded.frontier.kind !== "holes") {
+      throw new Error("Expected the focused Protection Holes frontier.");
     }
+    const focusedFrontier = encoded.frontier;
     const target = encoded.checkpoint.combatants.find(
       (combatant) => combatant.combatantId === protectedTargetId,
     );
@@ -639,22 +642,19 @@ describe("Protection relevant-effect selected occurrence identity", () => {
       const forged = {
         ...encoded,
         frontier: {
-          ...encoded.frontier,
-          acts: encoded.frontier.acts.map((act) => ({
-            ...act,
-            initialHoles: act.initialHoles.map((hole) =>
-              hole.kind === "savingThrowOutcome" &&
-              "protectionRelevantEffectSave" in hole
-                ? {
-                    ...hole,
-                    protectionRelevantEffectSave: {
-                      ...hole.protectionRelevantEffectSave,
-                      ...forgedPayload,
-                    },
-                  }
-                : hole,
-            ),
-          })),
+          ...focusedFrontier,
+          holes: focusedFrontier.holes.map((hole) =>
+            hole.kind === "savingThrowOutcome" &&
+            "protectionRelevantEffectSave" in hole
+              ? {
+                  ...hole,
+                  protectionRelevantEffectSave: {
+                    ...hole.protectionRelevantEffectSave,
+                    ...forgedPayload,
+                  },
+                }
+              : hole,
+          ),
         },
       };
       expect(() =>
@@ -666,25 +666,26 @@ describe("Protection relevant-effect selected occurrence identity", () => {
     const forgedSubject = {
       ...encoded,
       frontier: {
-        ...encoded.frontier,
-        acts: encoded.frontier.acts.map((act) =>
-          act.subject.tag === "runtimeCommand" &&
-          act.subject.command === "protectionRelevantEffectSave"
-            ? {
-                ...act,
-                subject: {
-                  ...act.subject,
-                  relevantEffect: "possession" as const,
-                },
-              }
-            : act,
-        ),
+        ...focusedFrontier,
+        subject: {
+          ...focusedFrontier.subject,
+          relevantEffect: "possession" as const,
+        },
       },
     };
     expect(() =>
       Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
         forgedSubject,
       ),
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)({
+        checkpoint: encoded.checkpoint,
+        frontier: {
+          kind: "acts",
+          acts: [{ subject: focusedFrontier.subject, initialHoles: [] }],
+        },
+      }),
     ).toThrow();
   });
 
