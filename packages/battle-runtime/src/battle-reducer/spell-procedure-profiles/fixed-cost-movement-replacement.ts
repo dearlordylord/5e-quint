@@ -265,9 +265,11 @@ function applyFixedCostMovementReplacementSpellEffect(
           effect.sourceCombatantId === actorId,
         [
           {
-            ...invocation.activeEffect,
+            kind: "fixedCostMovementReplacement",
             sourceCombatantId: actorId,
             sourceProcedureRef: procedureRef,
+            usedThisTurn: invocation.activeEffect.usedThisTurn,
+            expiresAt: invocation.activeEffect.expiresAt,
           },
         ],
       ),

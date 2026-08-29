@@ -60,6 +60,7 @@ import {
   spellTargetId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
+import { boundGrantedAreaSaveDamageActionEffect } from "./battle-reducer/spell-modifier-binding.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   bonusSpellAct,
@@ -345,7 +346,9 @@ function grantedAreaSaveDamageActionEffectProjection(
   state: DragonsBreathInitialRuntimeState,
 ): DragonsBreathInitialEffectState {
   const caster = requireCombatant(state.battle.state, spellCasterId);
-  const effect = grantedAreaSaveDamageActionTargetEffect(state.battle.state);
+  const effect = boundGrantedAreaSaveDamageActionEffectProjection(
+    state.battle.state,
+  );
   const spellSaveDc = spellSaveDcForCaster(state.battle.state, spellCasterId);
   const targetEffectActive = effect !== undefined;
   const casterConcentrating =
@@ -367,8 +370,8 @@ function grantedAreaSaveDamageActionEffectProjection(
       effect === undefined
         ? "none"
         : grantedAreaSaveDamageActionDamageType(effect.damageType),
-    effectOriginalSlotLevel: effect?.originalSlotLevel ?? 0,
-    effectSpellSaveDc: effect === undefined ? 0 : Number(effect.spellSaveDc),
+    effectOriginalSlotLevel: effect?.castLevel ?? 0,
+    effectSpellSaveDc: effect === undefined ? 0 : Number(spellSaveDc),
     effectDurationTicks:
       effect?.expiresAt.kind === "concentration"
         ? Number(effect.expiresAt.durationTicks)
@@ -399,6 +402,13 @@ function grantedAreaSaveDamageActionTargetEffect(
       effect.kind === "grantedAreaSaveDamageAction" &&
       effect.sourceCombatantId === spellCasterId,
   );
+}
+
+function boundGrantedAreaSaveDamageActionEffectProjection(state: BattleState) {
+  const effect = grantedAreaSaveDamageActionTargetEffect(state);
+  return effect === undefined
+    ? undefined
+    : boundGrantedAreaSaveDamageActionEffect(state, effect);
 }
 
 function grantedAreaSaveDamageActionActAvailable(

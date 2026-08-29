@@ -195,6 +195,12 @@ import {
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import type { SaveGatedConditionWithRepeatEffect } from "./staged-condition-repeat-save.ts";
 import { saveGatedConditionWithRepeatEffects } from "./staged-condition-repeat-save.ts";
+import {
+  boundSaveGatedTurnConstraintBundleEffect,
+  boundStagedSaveConditionPendingRepeatEffect,
+  type BoundSaveGatedTurnConstraintBundleEffect,
+  type BoundStagedSaveConditionPendingRepeatEffect,
+} from "./spell-modifier-binding.ts";
 import { resetBattleTurnResources } from "./turn-resource-reset.ts";
 import {
   collectTurnBoundaryHoleFills,
@@ -1131,6 +1137,7 @@ function resolveEndTurn({
   const combatantsAfterSleepRepeatSaves = stateAfterSleepRepeatSaves.combatants;
   const combatantsAfterSaveGatedConditionWithRepeatRepeatSaves =
     applySaveGatedConditionWithRepeatRepeatSaveFills(
+      stateAfterSleepRepeatSaves,
       combatantsAfterSleepRepeatSaves,
       currentActorId(state),
       saveGatedConditionWithRepeatRepeatSaves,
@@ -1155,6 +1162,7 @@ function resolveEndTurn({
     );
   const combatantsAfterSlowActivePenaltyRepeatSaves =
     applySaveGatedTurnConstraintBundleEndTurnSaveFills(
+      { ...state, combatants: combatantsAfterUnitFeatureConditionRepeatSaves },
       combatantsAfterUnitFeatureConditionRepeatSaves,
       currentActorId(state),
       saveGatedTurnConstraintBundleEndTurnSaves,
@@ -1265,6 +1273,7 @@ function resolveEndTurn({
     currentTurnResources: resetTurnResources,
   });
   const currentTurnResourcesAfterSlow = slowActionOrBonusActionTurnResources(
+    stateAfterCompelledHalt,
     stateAfterCompelledHalt.currentTurnResources,
     stateAfterCompelledHalt.combatants.get(nextActorId),
   );
@@ -1827,10 +1836,8 @@ function validateSpellTurnStartSavingThrowOutcome(
   return "Turn-start spell Saving Throw outcome must match the starting-turn target.";
 }
 
-type StagedSaveConditionPendingRepeatEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "stagedSaveConditionPendingRepeat" }
->;
+type StagedSaveConditionPendingRepeatEffect =
+  BoundStagedSaveConditionPendingRepeatEffect;
 
 type SpellConditionEndTurnSaveEffect = Extract<
   BattleActiveEffect,
@@ -1852,10 +1859,8 @@ type AbilityD20TestRollModeEndTurnSaveEffect = Extract<
   { readonly kind: "abilityD20TestRollModeEndTurnSave" }
 >;
 
-export type SaveGatedTurnConstraintBundleEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "saveGatedTurnConstraintBundle" }
->;
+export type SaveGatedTurnConstraintBundleEffect =
+  BoundSaveGatedTurnConstraintBundleEffect;
 
 type DurationActiveEffect = Extract<
   Exclude<
@@ -1890,17 +1895,27 @@ function activeEffectsMatching<Effect extends BattleActiveEffect>(
 }
 
 function stagedSaveConditionPendingRepeatEffects(
+  state: BattleState,
   combatant: BattleCreatureState | undefined,
   actorId: CombatantId,
   round: RoundType,
 ): readonly StagedSaveConditionPendingRepeatEffect[] {
-  return activeEffectsMatching(
-    combatant,
-    (effect): effect is StagedSaveConditionPendingRepeatEffect =>
-      effect.kind === "stagedSaveConditionPendingRepeat" &&
-      effect.repeatAt.combatantId === actorId &&
-      effect.repeatAt.round === round,
-  );
+  return combatant === undefined
+    ? []
+    : combatant.activeEffects.flatMap((effect) => {
+        if (
+          effect.kind !== "stagedSaveConditionPendingRepeat" ||
+          effect.repeatAt.combatantId !== actorId ||
+          effect.repeatAt.round !== round
+        ) {
+          return [];
+        }
+        const boundEffect = boundStagedSaveConditionPendingRepeatEffect(
+          state,
+          effect,
+        );
+        return boundEffect === undefined ? [] : [boundEffect];
+      });
 }
 
 function hitPointBudgetConditionRepeatSavingThrowOutcomeHole(
@@ -1959,6 +1974,7 @@ export function hitPointBudgetConditionRepeatSaveSavingThrowHoleIds(
   return new Set(
     [
       ...stagedSaveConditionPendingRepeatEffects(
+        state,
         actor,
         actorId,
         state.initiative.round,
@@ -1980,7 +1996,7 @@ export function conditionSpellEndTurnRepeatSaveHoleIds(
   const actor = state.combatants.get(actorId);
   return new Set(
     [
-      ...saveGatedConditionWithRepeatEffects(actor).map((effect) =>
+      ...saveGatedConditionWithRepeatEffects(state, actor).map((effect) =>
         saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
           actorId,
           effect,
@@ -2212,13 +2228,21 @@ function unitFeatureConditionEndTurnSavingThrowOutcomeFor(
 }
 
 function saveGatedTurnConstraintBundleEffects(
+  state: BattleState,
   combatant: BattleCreatureState | undefined,
 ): readonly SaveGatedTurnConstraintBundleEffect[] {
-  return activeEffectsMatching(
-    combatant,
-    (effect): effect is SaveGatedTurnConstraintBundleEffect =>
-      effect.kind === "saveGatedTurnConstraintBundle",
-  );
+  return combatant === undefined
+    ? []
+    : combatant.activeEffects.flatMap((effect) => {
+        if (effect.kind !== "saveGatedTurnConstraintBundle") {
+          return [];
+        }
+        const boundEffect = boundSaveGatedTurnConstraintBundleEffect(
+          state,
+          effect,
+        );
+        return boundEffect === undefined ? [] : [boundEffect];
+      });
 }
 
 function saveGatedTurnConstraintBundleEndTurnSavingThrowOutcomeHole(
@@ -2392,6 +2416,7 @@ function applyHitPointBudgetConditionRepeatSaveFills(
 ): BattleState {
   const actor = state.combatants.get(actorId);
   const effects = stagedSaveConditionPendingRepeatEffects(
+    state,
     actor,
     actorId,
     round,
@@ -2500,6 +2525,7 @@ function applyHitPointBudgetConditionRepeatSaveFills(
 }
 
 function applySaveGatedConditionWithRepeatRepeatSaveFills(
+  state: BattleState,
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   actorId: CombatantId,
   saves: readonly Extract<
@@ -2508,7 +2534,10 @@ function applySaveGatedConditionWithRepeatRepeatSaveFills(
   >[],
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   const actor = combatants.get(actorId);
-  const effects = saveGatedConditionWithRepeatEffects(actor);
+  const effects = saveGatedConditionWithRepeatEffects(
+    { ...state, combatants },
+    actor,
+  );
   if (actor === undefined || effects.length === 0) {
     return combatants;
   }
@@ -2642,6 +2671,7 @@ function applyUnitFeatureConditionEndTurnSaveFills(
 }
 
 function applySaveGatedTurnConstraintBundleEndTurnSaveFills(
+  state: BattleState,
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   actorId: CombatantId,
   saves: readonly Extract<
@@ -2650,7 +2680,10 @@ function applySaveGatedTurnConstraintBundleEndTurnSaveFills(
   >[],
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   const actor = combatants.get(actorId);
-  const effects = saveGatedTurnConstraintBundleEffects(actor);
+  const effects = saveGatedTurnConstraintBundleEffects(
+    { ...state, combatants },
+    actor,
+  );
   if (actor === undefined || effects.length === 0) {
     return combatants;
   }
@@ -4939,6 +4972,7 @@ function resolveEndTurnCommandForParent(
   const actorId = currentActorId(input.state);
   const actor = input.state.combatants.get(actorId);
   const sleepRepeatSaveRequests = stagedSaveConditionPendingRepeatEffects(
+    input.state,
     actor,
     actorId,
     input.state.initiative.round,
@@ -4954,7 +4988,7 @@ function resolveEndTurnCommandForParent(
     (request) => request.hole,
   );
   const saveGatedConditionWithRepeatRepeatSaveRequests =
-    saveGatedConditionWithRepeatEffects(actor).map((effect) => ({
+    saveGatedConditionWithRepeatEffects(input.state, actor).map((effect) => ({
       effect,
       hole: saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
         actorId,
@@ -5017,7 +5051,7 @@ function resolveEndTurnCommandForParent(
   const unitFeatureConditionEndTurnSaveHoles =
     unitFeatureConditionEndTurnSaveRequests.map((request) => request.hole);
   const saveGatedTurnConstraintBundleEndTurnSaveRequests =
-    saveGatedTurnConstraintBundleEffects(actor).map((effect) => ({
+    saveGatedTurnConstraintBundleEffects(input.state, actor).map((effect) => ({
       effect,
       hole: saveGatedTurnConstraintBundleEndTurnSavingThrowOutcomeHole(
         actorId,

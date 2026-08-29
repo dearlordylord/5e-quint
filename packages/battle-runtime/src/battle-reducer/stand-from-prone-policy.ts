@@ -16,7 +16,7 @@ export function standFromProneCostFeet(
   if (actor === undefined || !hasCondition(actor.conditions, "prone")) {
     return null;
   }
-  if (saveGatedConditionWithRepeatEffects(actor).length > 0) {
+  if (saveGatedConditionWithRepeatEffects(state, actor).length > 0) {
     return null;
   }
   const speed = effectiveWalkSpeed(

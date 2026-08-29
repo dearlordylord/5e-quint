@@ -23,43 +23,58 @@ import type {
   BattlePersistentAreaSaveConditionEscapeSavingThrowOutcomeHole,
   BattlePersistentAreaSaveConditionEscapeTrigger,
 } from "../battle-state-execution.ts";
+import type {
+  CollisionRepositionPersistentAreaSaveDamageSpellProcedureExecution,
+  DirectedRepositionPersistentAreaSaveDamageSpellProcedureExecution,
+} from "../procedure-execution/spell-procedure-execution.ts";
+import type {
+  BoundDirectionalPersistentAreaEffect,
+  BoundPersistentAreaSaveConditionEffect,
+  BoundPersistentAreaSaveConditionEscapeEffect,
+} from "./persistent-spell-area-binding.ts";
 
-export type PersistentAreaSaveConditionEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "persistentAreaSaveCondition" }
->;
+export type PersistentAreaSaveConditionEffect =
+  BoundPersistentAreaSaveConditionEffect;
 
-export type PersistentAreaSaveConditionEscapeEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "persistentAreaSaveConditionEscape" }
->;
+export type PersistentAreaSaveConditionEscapeEffect =
+  BoundPersistentAreaSaveConditionEscapeEffect;
 
 export type RamMovablePersistentAreaEffect = Extract<
   BattleActiveEffect,
   {
     readonly kind: "persistentAreaSaveDamage";
-    readonly lifecycle: {
-      readonly kind: "casterActionReposition";
-      readonly actionCost: "bonusAction";
-    };
+    readonly lifecycle: { readonly kind: "casterActionReposition" };
+    readonly savedThisTurn?: never;
   }
->;
+> & {
+  readonly lifecycle: CollisionRepositionPersistentAreaSaveDamageSpellProcedureExecution["lifecycle"];
+  readonly save: {
+    readonly ability: CollisionRepositionPersistentAreaSaveDamageSpellProcedureExecution["ability"];
+    readonly dc: CollisionRepositionPersistentAreaSaveDamageSpellProcedureExecution["dc"];
+  };
+  readonly ramMaxMoveFeet: CollisionRepositionPersistentAreaSaveDamageSpellProcedureExecution["ramMaxMoveFeet"];
+  readonly damage: CollisionRepositionPersistentAreaSaveDamageSpellProcedureExecution["damage"];
+};
 
 export type MovablePersistentAreaEffect = Extract<
   BattleActiveEffect,
   {
     readonly kind: "persistentAreaSaveDamage";
-    readonly lifecycle: {
-      readonly kind: "casterActionReposition";
-      readonly actionCost: "magicAction";
-    };
+    readonly lifecycle: { readonly kind: "casterActionReposition" };
+    readonly shapeShiftSuppressed: readonly CombatantId[];
   }
->;
+> & {
+  readonly lifecycle: DirectedRepositionPersistentAreaSaveDamageSpellProcedureExecution["lifecycle"];
+  readonly save: {
+    readonly ability: DirectedRepositionPersistentAreaSaveDamageSpellProcedureExecution["ability"];
+    readonly dc: DirectedRepositionPersistentAreaSaveDamageSpellProcedureExecution["dc"];
+  };
+  readonly repositionMaxMoveFeet: DirectedRepositionPersistentAreaSaveDamageSpellProcedureExecution["repositionMaxMoveFeet"];
+  readonly damage: DirectedRepositionPersistentAreaSaveDamageSpellProcedureExecution["damage"];
+};
 
-export type DirectionalPersistentAreaEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "directionalPersistentArea" }
->;
+export type DirectionalPersistentAreaEffect =
+  BoundDirectionalPersistentAreaEffect;
 
 type HazardSavingThrow =
   | PersistentAreaSaveConditionEffect["save"]

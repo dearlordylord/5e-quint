@@ -326,7 +326,6 @@ function applyMagicSuppressionEmanationCastEffect(input: {
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
       auraMembership: input.auraMembership,
-      radiusFeet: input.invocation.targeting.radiusFeet,
       suppressedOngoingSpellEffects,
       expiresAt: {
         kind: "concentration" as const,

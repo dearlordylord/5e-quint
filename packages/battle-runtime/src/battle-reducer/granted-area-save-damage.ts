@@ -56,6 +56,7 @@ import {
   type GrantedAreaSaveDamageActionEffect,
   type GrantedAreaSaveDamageActionSubject,
 } from "./granted-area-save-damage-discovery.ts";
+import { boundGrantedAreaSaveDamageActionEffect } from "./spell-modifier-binding.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./ongoing-feature-relationship.ts";
 import { grantedAreaSaveDamageActionHoleKey } from "./selected-effect-hole-key.ts";
 type ExpectedDragonBreathFill = {
@@ -87,7 +88,11 @@ export function resolveGrantedAreaSaveDamageActionCommand(
       "Magic action is no longer available for Granted area Save damage.",
     );
   }
-  const effect = activeGrantedAreaSaveDamageActionEffect(actor, input.subject);
+  const effect = activeGrantedAreaSaveDamageActionEffect(
+    input.state,
+    actor,
+    input.subject,
+  );
   if (effect === undefined) {
     return invalidResult(
       input.state,
@@ -483,18 +488,22 @@ function grantedAreaSaveDamageActionDamageExpr(
   readonly dice: number;
   readonly dieSize: 6;
 } {
-  return { dice: Number(effect.originalSlotLevel) + 1, dieSize: 6 };
+  return { dice: Number(effect.castLevel) + 1, dieSize: 6 };
 }
 
 function activeGrantedAreaSaveDamageActionEffect(
+  state: BattleState,
   actor: BattleCreatureState | undefined,
   subject: GrantedAreaSaveDamageActionSubject,
 ): GrantedAreaSaveDamageActionEffect | undefined {
-  return actor?.activeEffects.find(
-    (effect): effect is GrantedAreaSaveDamageActionEffect =>
-      effect.kind === "grantedAreaSaveDamageAction" &&
-      spellActiveEffectExecutionRef(effect) === subject.effectRef,
+  const effect = actor?.activeEffects.find(
+    (candidate) =>
+      candidate.kind === "grantedAreaSaveDamageAction" &&
+      spellActiveEffectExecutionRef(candidate) === subject.effectRef,
   );
+  return effect?.kind === "grantedAreaSaveDamageAction"
+    ? boundGrantedAreaSaveDamageActionEffect(state, effect)
+    : undefined;
 }
 
 /* v8 ignore start -- @preserve -- Malformed saving-throw validator: Granted area Save damage discovery supplies the exhaler-owned Cone, unique affected targets, and matching outcomes; admitted damage execution remains measured. */

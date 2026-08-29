@@ -111,6 +111,7 @@ import {
 } from "./granted-flight-end-fall-cleanup.ts";
 import {
   checkSaveGatedConditionWithRepeatDamageRepeatSaveFills,
+  saveGatedConditionWithRepeatEffects,
   saveGatedConditionWithRepeatDamageRepeatSaveHoles,
   saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole,
   validateSaveGatedConditionWithRepeatRepeatSavingThrowOutcome,
@@ -151,10 +152,6 @@ type SavingThrowOutcomeFill = Extract<
 type SaveGatedConditionWithRepeatRepeatSaveHole = ReturnType<
   typeof saveGatedConditionWithRepeatDamageRepeatSaveHoles
 >[number];
-type SaveGatedConditionWithRepeatEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "saveGatedConditionWithRepeat" }
->;
 type ConcentrationSavingThrowFillHolePair = {
   readonly fill: ConcentrationSavingThrowFill;
   readonly hole: BattleConcentrationSavingThrowHole;
@@ -715,6 +712,7 @@ export function damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles
   return input.damageAmount > 0
     ? [
         ...saveGatedConditionWithRepeatDamageRepeatSaveHoles(
+          input.state,
           input.target,
           input.damageEventKey,
         ),
@@ -736,6 +734,7 @@ function linkedDefenseResistanceDamageShareSaveGatedConditionWithRepeatRepeatSav
     input.target,
   ).flatMap((caster) =>
     saveGatedConditionWithRepeatDamageRepeatSaveHoles(
+      input.state,
       caster,
       input.damageEventKey,
     ),
@@ -911,30 +910,28 @@ function applySaveGatedConditionWithRepeatDamageRepeatSaves(
   if (target === undefined) {
     return state;
   }
-  const succeededEffects = target.activeEffects
-    .filter(
-      (effect): effect is SaveGatedConditionWithRepeatEffect =>
-        effect.kind === "saveGatedConditionWithRepeat",
-    )
-    .filter((effect) => {
-      const hole = saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
+  const succeededEffects = saveGatedConditionWithRepeatEffects(
+    state,
+    target,
+  ).filter((effect) => {
+    const hole = saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
+      targetId,
+      effect,
+      "damage",
+      damageEventKey,
+    );
+    const fill = fills.find((candidate) => candidate.holeId === hole.holeId);
+    if (
+      fill === undefined ||
+      validateSaveGatedConditionWithRepeatRepeatSavingThrowOutcome(
+        fill.value,
         targetId,
-        effect,
-        "damage",
-        damageEventKey,
-      );
-      const fill = fills.find((candidate) => candidate.holeId === hole.holeId);
-      if (
-        fill === undefined ||
-        validateSaveGatedConditionWithRepeatRepeatSavingThrowOutcome(
-          fill.value,
-          targetId,
-        ) !== null
-      ) {
-        return false;
-      }
-      return fill.value.outcomes[0]?.succeeded === true;
-    });
+      ) !== null
+    ) {
+      return false;
+    }
+    return fill.value.outcomes[0]?.succeeded === true;
+  });
   return succeededEffects.reduce(
     (nextState, effect) =>
       removeSaveGatedConditionWithRepeatEffectFromTarget(

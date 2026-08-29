@@ -36,11 +36,7 @@ import {
 } from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
-import {
-  movementFeet,
-  type Ability,
-  type DifficultyClass,
-} from "@dnd/shared/types";
+import { movementFeet, type Ability } from "@dnd/shared/types";
 import type { DamageType } from "@dnd/surface/surface/types";
 import type {
   BattleEffectExecutionRef,
@@ -67,6 +63,7 @@ import {
   characterExecutionWithMovableLightReposition,
   characterExecutionWithSpellCreatedHeldObjectProcedures,
   characterExecutionWithSpatialMeleeSpellAttackProxyRepeatAttack,
+  characterRetainedSpellProcedureExecution,
   characterUnitProcedure,
 } from "../character-execution-queries.ts";
 import type {
@@ -142,10 +139,15 @@ import {
   battleCreatureWithoutSpellCreatedHeldObjectHand,
 } from "../active-effect/lifecycle.ts";
 import {
+  boundPersistentAreaSaveCompositeEffect,
+  boundPersistentAreaSaveConditionEscapeEffect,
+  magicalDarknessPointOriginRadiusFeet,
+  persistentAreaTraitRadiusFeet,
+} from "./persistent-spell-area-binding.ts";
+import {
   endOfNextTurnExpiration,
   END_OF_NEXT_TURN_DURING_TURN,
 } from "./spell-end-target-state.ts";
-import { spellInvocationEffectiveSpellLevel } from "./spells-effective-level.ts";
 
 export const FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND = 60;
 export const FAERIE_FIRE_DIM_LIGHT_RADIUS_FEET = movementFeet(10);
@@ -240,10 +242,8 @@ type SavedPersistentAreaSaveDamageEffect = Extract<
 type MovablePersistentAreaActiveEffect = Extract<
   PersistentAreaSaveDamageEffect,
   {
-    readonly lifecycle: {
-      readonly kind: "casterActionReposition";
-      readonly actionCost: "magicAction";
-    };
+    readonly savedThisTurn: readonly CombatantId[];
+    readonly shapeShiftSuppressed: readonly CombatantId[];
   }
 >;
 type StationaryPersistentAreaSaveDamageActiveEffect = Extract<
@@ -254,24 +254,6 @@ type TranslatingPersistentAreaSaveDamageActiveEffect = Extract<
   PersistentAreaSaveDamageEffect,
   { readonly lifecycle: { readonly kind: "sourceTurnTranslation" } }
 >;
-
-function isStationaryPersistentAreaSaveDamageActiveEffect(
-  effect: BattleActiveEffect,
-): effect is StationaryPersistentAreaSaveDamageActiveEffect {
-  return (
-    effect.kind === "persistentAreaSaveDamage" &&
-    effect.lifecycle.kind === "stationary"
-  );
-}
-
-function isTranslatingPersistentAreaSaveDamageActiveEffect(
-  effect: BattleActiveEffect,
-): effect is TranslatingPersistentAreaSaveDamageActiveEffect {
-  return (
-    effect.kind === "persistentAreaSaveDamage" &&
-    effect.lifecycle.kind === "sourceTurnTranslation"
-  );
-}
 type SingleSaveAreaActiveEffect =
   | SavedPersistentAreaSaveDamageEffect
   | Extract<
@@ -1091,24 +1073,34 @@ export function battleObscurementZones(
   return [...state.combatants.values()].flatMap(
     (combatant): readonly BattleObscurementZone[] =>
       combatant.activeEffects.flatMap(
-        (effect): readonly BattleObscurementZone[] =>
-          effect.kind === "persistentAreaTrait"
-            ? [
-                {
-                  kind: "spellObscurementZone",
-                  sourceProcedureRef: effect.sourceProcedureRef,
-                  sourceCombatantId: effect.sourceCombatantId,
-                  obscurement: "heavilyObscured",
-                  area: {
-                    kind: "pointOriginSphere",
-                    areaId: effect.areaId,
-                    radiusFeet: effect.radiusFeet,
+        (effect): readonly BattleObscurementZone[] => {
+          if (effect.kind === "persistentAreaTrait") {
+            const radiusFeet = persistentAreaTraitRadiusFeet(state, effect);
+            return radiusFeet === undefined
+              ? []
+              : [
+                  {
+                    kind: "spellObscurementZone",
+                    sourceProcedureRef: effect.sourceProcedureRef,
+                    sourceCombatantId: effect.sourceCombatantId,
+                    obscurement: "heavilyObscured",
+                    area: {
+                      kind: "pointOriginSphere",
+                      areaId: effect.areaId,
+                      radiusFeet,
+                    },
+                    expiresAt: effect.expiresAt,
                   },
-                  expiresAt: effect.expiresAt,
-                },
-              ]
-            : effect.kind === "magicalDarknessPointOrigin"
-              ? [
+                ];
+          }
+          if (effect.kind === "magicalDarknessPointOrigin") {
+            const radiusFeet = magicalDarknessPointOriginRadiusFeet(
+              state,
+              effect,
+            );
+            return radiusFeet === undefined
+              ? []
+              : [
                   {
                     kind: "spellMagicalDarknessZone",
                     sourceProcedureRef: effect.sourceProcedureRef,
@@ -1116,75 +1108,111 @@ export function battleObscurementZones(
                     area: {
                       kind: "pointOriginSphere",
                       areaId: effect.areaId,
-                      radiusFeet: effect.radiusFeet,
+                      radiusFeet,
                     },
                     expiresAt: effect.expiresAt,
                   },
-                ]
-              : effect.kind === "persistentAreaSaveConditionEscape"
-                ? [
-                    {
-                      kind: "spellObscurementZone",
-                      sourceProcedureRef: effect.sourceProcedureRef,
-                      sourceCombatantId: effect.sourceCombatantId,
-                      obscurement: "lightlyObscured",
-                      area: {
-                        kind: "pointOriginCube",
-                        areaId: effect.areaId,
-                        sideFeet: effect.sideFeet,
-                      },
-                      expiresAt: effect.expiresAt,
+                ];
+          }
+          if (effect.kind === "persistentAreaSaveConditionEscape") {
+            const boundEffect = boundPersistentAreaSaveConditionEscapeEffect(
+              state,
+              effect,
+            );
+            return boundEffect === undefined
+              ? []
+              : [
+                  {
+                    kind: "spellObscurementZone",
+                    sourceProcedureRef: effect.sourceProcedureRef,
+                    sourceCombatantId: effect.sourceCombatantId,
+                    obscurement: "lightlyObscured",
+                    area: {
+                      kind: "pointOriginCube",
+                      areaId: effect.areaId,
+                      sideFeet: boundEffect.sideFeet,
                     },
-                  ]
-                : effect.kind === "persistentAreaSaveComposite"
-                  ? [
-                      {
-                        kind: "spellObscurementZone",
-                        sourceProcedureRef: effect.sourceProcedureRef,
-                        sourceCombatantId: effect.sourceCombatantId,
-                        obscurement: "heavilyObscured",
-                        area: {
-                          kind: "pointOriginCylinder",
-                          areaId: effect.areaId,
-                          radiusFeet: effect.radiusFeet,
-                          heightFeet: effect.heightFeet,
-                        },
-                        expiresAt: effect.expiresAt,
-                      },
-                    ]
-                  : isStationaryPersistentAreaSaveDamageActiveEffect(effect)
-                    ? [
-                        {
-                          kind: "spellObscurementZone",
-                          sourceProcedureRef: effect.sourceProcedureRef,
-                          sourceCombatantId: effect.sourceCombatantId,
-                          obscurement: "lightlyObscured",
-                          area: {
-                            kind: "pointOriginSphere",
-                            areaId: effect.areaId,
-                            radiusFeet: effect.radiusFeet,
-                          },
-                          expiresAt: effect.expiresAt,
-                        },
-                      ]
-                    : isTranslatingPersistentAreaSaveDamageActiveEffect(effect)
-                      ? [
-                          {
-                            kind: "spellObscurementZone",
-                            sourceProcedureRef: effect.sourceProcedureRef,
-                            sourceCombatantId: effect.sourceCombatantId,
-                            obscurement: "heavilyObscured",
-                            area: {
-                              kind: "pointOriginSphere",
-                              areaId: effect.areaId,
-                              radiusFeet: effect.radiusFeet,
-                            },
-                            expiresAt: effect.expiresAt,
-                          },
-                        ]
-                      : [],
+                    expiresAt: effect.expiresAt,
+                  },
+                ];
+          }
+          if (effect.kind === "persistentAreaSaveComposite") {
+            const boundEffect = boundPersistentAreaSaveCompositeEffect(
+              state,
+              effect,
+            );
+            return boundEffect === undefined
+              ? []
+              : [
+                  {
+                    kind: "spellObscurementZone",
+                    sourceProcedureRef: effect.sourceProcedureRef,
+                    sourceCombatantId: effect.sourceCombatantId,
+                    obscurement: "heavilyObscured",
+                    area: {
+                      kind: "pointOriginCylinder",
+                      areaId: effect.areaId,
+                      radiusFeet: boundEffect.radiusFeet,
+                      heightFeet: boundEffect.heightFeet,
+                    },
+                    expiresAt: effect.expiresAt,
+                  },
+                ];
+          }
+          return effect.kind === "persistentAreaSaveDamage"
+            ? persistentAreaSaveDamageObscurementZone(combatant, effect)
+            : [];
+        },
       ),
   );
+}
+
+function persistentAreaSaveDamageObscurementZone(
+  owner: BattleCreatureState,
+  effect: PersistentAreaSaveDamageEffect,
+): readonly BattleObscurementZone[] {
+  if (
+    owner.origin.kind !== "character" ||
+    effect.sourceCombatantId !== owner.combatantId
+  ) {
+    return [];
+  }
+  const procedure = characterRetainedSpellProcedureExecution(
+    owner.origin.execution,
+    effect.sourceProcedureRef,
+  );
+  if (procedure?.procedure !== "persistentAreaSaveDamage") {
+    return [];
+  }
+  const obscuredArea =
+    procedure.lifecycle.kind === "stationary" &&
+    procedure.targeting.kind === "pointOriginSphere"
+      ? {
+          obscurement: "lightlyObscured" as const,
+          radiusFeet: procedure.targeting.radiusFeet,
+        }
+      : procedure.lifecycle.kind === "sourceTurnTranslation" &&
+          procedure.targeting.kind === "pointOriginSphere"
+        ? {
+            obscurement: "heavilyObscured" as const,
+            radiusFeet: procedure.targeting.radiusFeet,
+          }
+        : null;
+  if (obscuredArea === null) return [];
+  return [
+    {
+      kind: "spellObscurementZone",
+      sourceProcedureRef: effect.sourceProcedureRef,
+      sourceCombatantId: effect.sourceCombatantId,
+      obscurement: obscuredArea.obscurement,
+      area: {
+        kind: "pointOriginSphere",
+        areaId: effect.areaId,
+        radiusFeet: obscuredArea.radiusFeet,
+      },
+      expiresAt: effect.expiresAt,
+    },
+  ];
 }
 
 export function applySpellLightEmitterEffects(
@@ -1831,10 +1859,6 @@ export function applyStagedSaveConditionPendingRepeatEffects(
           target,
           "incapacitated",
         ),
-        save: {
-          ability: invocation.ability,
-          dc: invocation.dc,
-        },
         repeatAt: endOfNextTurnExpiration(
           state,
           targetId,
@@ -1892,10 +1916,6 @@ export function applySaveGatedConditionWithRepeatEffects(
           targetId,
           heightenedSpellTargetId,
         ),
-        save: {
-          ability: invocation.ability,
-          dc: invocation.dc,
-        },
         expiresAt: {
           kind: "concentration" as const,
           combatantId: actorId,
@@ -1965,10 +1985,6 @@ export function applyPersistentAreaSaveConditionCastEffects(input: {
               kind: "heightenedSpellTargetDisadvantage" as const,
               targetId: input.heightenedSpellTargetId,
             },
-      save: {
-        ability: input.invocation.ability,
-        dc: input.invocation.dc,
-      },
       expiresAt: {
         kind: "duration" as const,
         durationTicks: input.invocation.durationTicks,
@@ -2074,7 +2090,6 @@ export function applyPersistentAreaTraitCastEffect(input: {
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
-      radiusFeet: input.invocation.targeting.radiusFeet,
       expiresAt: {
         kind: "concentration" as const,
         combatantId: input.actorId,
@@ -2104,7 +2119,6 @@ export function applyMagicalDarknessPointOriginCastEffect(input: {
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.areaChoice.areaId,
-      radiusFeet: input.invocation.targeting.radiusFeet,
       expiresAt: {
         kind: "concentration" as const,
         combatantId: input.actorId,
@@ -2151,16 +2165,10 @@ export function applyRamMovablePersistentAreaCastEffect(input: {
     actorId: input.actorId,
     activeEffect: {
       kind: "persistentAreaSaveDamage" as const,
-      lifecycle: input.invocation.lifecycle,
+      lifecycle: { kind: input.invocation.lifecycle.kind },
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
-      save: {
-        ability: input.invocation.ability,
-        dc: input.invocation.dc,
-      },
-      damage: input.invocation.damage,
-      ramMaxMoveFeet: input.invocation.ramMaxMoveFeet,
       expiresAt: {
         kind: "concentration" as const,
         combatantId: input.actorId,
@@ -2194,18 +2202,11 @@ export function applySpatialMeleeSpellAttackProxyEffect(input: {
       kind: "spatialMeleeSpellAttackProxy",
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
-      sourceSpellLevel: spellInvocationEffectiveSpellLevel(input.invocation),
       forcePositionId: input.forcePositionId,
-      forceReachFeet: input.invocation.forceReachFeet,
-      repeatMoveMaxFeet: input.invocation.repeatMoveMaxFeet,
-      repeatTargeting: input.repeatTargeting,
       startedOn: {
         actorId: input.actorId,
         round: input.state.initiative.round,
       },
-      damage: input.invocation.damage,
-      attackKind: input.invocation.attackKind,
-      attackBonus: input.invocation.attackBonus,
       expiresAt: {
         kind: "concentration",
         combatantId: input.actorId,
@@ -2231,6 +2232,7 @@ export function applySpatialMeleeSpellAttackProxyEffect(input: {
     operation: "repositionAndAttack" as const,
     activeEffectRef: activeEffect.effectRef,
     activeEffectSourceProcedureRef: activeEffect.sourceProcedureRef,
+    repeatTargeting: input.repeatTargeting,
   } satisfies RepeatSpatialMeleeSpellAttackProxySpellProcedureExecution;
   combatants.set(input.actorId, {
     ...owner,
@@ -2293,8 +2295,6 @@ export function applyAreaMovementDistanceDamageCastEffect(input: {
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
-      damage: input.invocation.damage,
-      damagePerFeet: input.invocation.damagePerFeet,
       expiresAt: {
         kind: "concentration" as const,
         combatantId: input.actorId,
@@ -2324,16 +2324,10 @@ export function applyMovablePersistentAreaCastEffect(input: {
     actorId: input.actorId,
     activeEffect: {
       kind: "persistentAreaSaveDamage" as const,
-      lifecycle: input.invocation.lifecycle,
+      lifecycle: { kind: input.invocation.lifecycle.kind },
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
-      save: {
-        ability: input.invocation.ability,
-        dc: input.invocation.dc,
-      },
-      damage: input.invocation.damage,
-      repositionMaxMoveFeet: input.invocation.repositionMaxMoveFeet,
       savedThisTurn: [],
       shapeShiftSuppressed: [],
       expiresAt: {
@@ -2362,11 +2356,6 @@ export function applyPersistentAreaSaveConditionEscapeCastEffect(input: {
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
-      sideFeet: input.invocation.targeting.sideFeet,
-      save: {
-        ability: input.invocation.ability,
-        dc: input.invocation.dc,
-      },
       entrySavedThisTurn: [],
       startTurnSavedThisTurn: [],
       expiresAt: {
@@ -2395,12 +2384,6 @@ export function applyPersistentAreaSaveCompositeCastEffect(input: {
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
-      radiusFeet: input.invocation.targeting.radiusFeet,
-      heightFeet: input.invocation.targeting.heightFeet,
-      save: {
-        ability: input.invocation.ability,
-        dc: input.invocation.dc,
-      },
       savedThisTurn: [],
       expiresAt: {
         kind: "concentration" as const,
@@ -2428,7 +2411,7 @@ export function applyStationaryPersistentAreaAreaHazardCastEffect(input: {
     actorId: input.actorId,
     activeEffect: {
       kind: "persistentAreaSaveDamage" as const,
-      lifecycle: input.invocation.lifecycle,
+      lifecycle: { kind: input.invocation.lifecycle.kind },
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       appearanceOccurrence: {
@@ -2436,12 +2419,6 @@ export function applyStationaryPersistentAreaAreaHazardCastEffect(input: {
         round: input.state.initiative.round,
       },
       areaId: input.areaId,
-      radiusFeet: input.invocation.targeting.radiusFeet,
-      save: {
-        ability: input.invocation.ability,
-        dc: input.invocation.dc,
-      },
-      damage: input.invocation.damage,
       savedThisTurn: [],
       expiresAt: {
         kind: "concentration" as const,
@@ -2469,7 +2446,7 @@ export function applyTranslatingPersistentAreaAreaHazardCastEffect(input: {
     actorId: input.actorId,
     activeEffect: {
       kind: "persistentAreaSaveDamage" as const,
-      lifecycle: input.invocation.lifecycle,
+      lifecycle: { kind: input.invocation.lifecycle.kind },
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       appearanceOccurrence: {
@@ -2477,12 +2454,6 @@ export function applyTranslatingPersistentAreaAreaHazardCastEffect(input: {
         round: input.state.initiative.round,
       },
       areaId: input.areaId,
-      radiusFeet: input.invocation.targeting.radiusFeet,
-      save: {
-        ability: input.invocation.ability,
-        dc: input.invocation.dc,
-      },
-      damage: input.invocation.damage,
       savedThisTurn: [],
       expiresAt: {
         kind: "concentration" as const,
@@ -2526,16 +2497,6 @@ export function applyDirectionalPersistentAreaCastEffect(input: {
         actorId: input.actorId,
         round: input.state.initiative.round,
       },
-      line: {
-        lengthFeet: input.invocation.targeting.lengthFeet,
-        widthFeet: input.invocation.targeting.widthFeet,
-      },
-      save: {
-        ability: input.invocation.ability,
-        dc: input.invocation.dc,
-      },
-      pushDistanceFeet: input.invocation.pushDistanceFeet,
-      movementCost: input.invocation.movementCost,
       expiresAt: {
         kind: "concentration" as const,
         combatantId: input.actorId,
@@ -2610,7 +2571,7 @@ export function resetAllMovablePersistentAreaSavedThisTurn(
     combatants,
     (effect) =>
       effect.kind === "persistentAreaSaveDamage" &&
-      effect.lifecycle.kind === "casterActionReposition",
+      effect.shapeShiftSuppressed !== undefined,
   );
 }
 
@@ -2657,7 +2618,7 @@ export function resetAllStationaryPersistentAreaSavedThisTurn(
     combatants,
     (effect) =>
       effect.kind === "persistentAreaSaveDamage" &&
-      effect.lifecycle.kind === "stationary",
+      effect.appearanceOccurrence !== undefined,
   );
 }
 
@@ -2668,7 +2629,7 @@ export function resetAllTranslatingPersistentAreaSavedThisTurn(
     combatants,
     (effect) =>
       effect.kind === "persistentAreaSaveDamage" &&
-      effect.lifecycle.kind === "sourceTurnTranslation",
+      effect.appearanceOccurrence !== undefined,
   );
 }
 
@@ -2710,8 +2671,8 @@ function movablePersistentAreaEffectMatches(
 > {
   return (
     current.kind === "persistentAreaSaveDamage" &&
-    current.lifecycle.kind === "casterActionReposition" &&
-    current.lifecycle.actionCost === "magicAction" &&
+    current.shapeShiftSuppressed !== undefined &&
+    current.savedThisTurn !== undefined &&
     current.effectRef === effect.effectRef &&
     current.areaId === effect.areaId
   );
@@ -3454,7 +3415,6 @@ export function applyGrantedAreaSaveDamageActionSpellEffect(
   actorId: CombatantId,
   targetId: CombatantId,
   damageType: DamageType,
-  spellSaveDc: DifficultyClass,
   invocation: Extract<
     BattleExecutableSpellInvocation,
     { readonly procedure: "grantedAreaSaveDamageAction" }
@@ -3470,11 +3430,11 @@ export function applyGrantedAreaSaveDamageActionSpellEffect(
   const allocation = allocateBattleEffectOccurrenceForCreature({
     owner: target,
     effect: {
-      ...invocation.activeEffect,
+      kind: "grantedAreaSaveDamageAction",
       sourceProcedureRef: procedureRef,
       sourceCombatantId: actorId,
       damageType,
-      spellSaveDc,
+      expiresAt: invocation.activeEffect.expiresAt,
     },
   });
   const activeEffects = [...allocation.owner.activeEffects, allocation.effect];

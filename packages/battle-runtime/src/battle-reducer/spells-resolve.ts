@@ -3521,7 +3521,7 @@ function spatialMeleeSpellAttackProxyRepeatTargetingInvalidReason(
   ) {
     return null;
   }
-  const repeatTargeting = invocation.activeEffect.repeatTargeting;
+  const repeatTargeting = invocation.repeatTargeting;
   if (repeatTargeting.kind === "unrestricted") {
     return null;
   }

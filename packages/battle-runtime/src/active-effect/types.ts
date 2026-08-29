@@ -27,11 +27,9 @@ import type {
   AttackBonus,
   Condition,
   DamageDieSize,
-  DifficultyClass,
   MovementDeltaFeet,
   MovementFeet,
   Round as RoundType,
-  SpellSlotLevel,
 } from "@dnd/shared/types";
 import type { GlyphStoredSpellRelease } from "../procedure-execution/glyph-stored-spell.ts";
 import type {
@@ -57,7 +55,6 @@ import type {
   BattleMovableLight,
   BattleMovableLightList,
   BattleSpecialSpeedKind,
-  WeaponAttackDamageEnhancementBonus,
   SpellAttackKind,
   SpellConditionRepeatSave,
 } from "./execution-vocabulary.ts";
@@ -161,8 +158,6 @@ export type ControlledVerticalSuspensionActiveEffect = BattleSpellEffectBase &
   BattleReplayAddressableEffect & {
     readonly kind: "controlledVerticalSuspension";
     readonly altitudeFeet: MovementFeet;
-    readonly maxAltitudeChangeFeet: MovementFeet;
-    readonly rangeFeet: MovementFeet;
     readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
   };
 export type BattleUnitFeatureEffectBase = BattleActiveEffectSource;
@@ -311,19 +306,8 @@ export type SpellConcentrationOrStoredDurationExpiration =
 export type SpatialMeleeSpellAttackProxyActiveEffect = BattleSpellEffectBase &
   BattleReplayAddressableEffect & {
     readonly kind: "spatialMeleeSpellAttackProxy";
-    readonly sourceSpellLevel: BattleSpellEffectLevel;
     readonly forcePositionId: BattleTablePositionId;
-    readonly forceReachFeet: MovementFeet;
-    readonly repeatMoveMaxFeet: MovementFeet;
-    readonly repeatTargeting: SpatialMeleeSpellAttackProxyRepeatTargeting;
     readonly startedOn: BattleTurnAnchor;
-    readonly damage: {
-      readonly kind: "fixedSpellAttackDamage";
-      readonly expr: DiceExpr;
-      readonly damageType: DamageType;
-    };
-    readonly attackKind: Extract<SpellAttackKind, "melee_spell_attack">;
-    readonly attackBonus: AttackBonus;
     readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
   };
 /* v8 ignore start -- @preserve -- This canonical value exists only to derive SpellTurnStartDamageAndSaveSource; production code consumes the derived type and has no runtime array consumer. */
@@ -606,10 +590,6 @@ export type BattleActiveEffect = (
       BattleReplayAddressableEffect & {
         readonly kind: "stagedSaveConditionPendingRepeat";
         readonly conditionHadNonSpellSource: boolean;
-        readonly save: {
-          readonly ability: Extract<Ability, "wis">;
-          readonly dc: DcSource;
-        };
         readonly repeatAt: Extract<
           BattleActiveEffectExpiration,
           { readonly kind: "endOfTurn" }
@@ -636,10 +616,6 @@ export type BattleActiveEffect = (
         AttackRollMode,
         "disadvantage"
       > | null;
-      readonly save: {
-        readonly ability: Extract<Ability, "wis">;
-        readonly dc: DcSource;
-      };
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "concentration" }
@@ -658,10 +634,6 @@ export type BattleActiveEffect = (
     })
   | (BattleSpellEffectBase & {
       readonly kind: "saveGatedTurnConstraintBundle";
-      readonly save: {
-        readonly ability: Extract<Ability, "wis">;
-        readonly dc: DcSource;
-      };
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "concentration" }
@@ -671,10 +643,6 @@ export type BattleActiveEffect = (
       readonly kind: "persistentAreaSaveCondition";
       readonly areaId: BattleAreaId;
       readonly heightenedSpellTargetDisadvantage: AreaSpellEffectHeightenedRepeatSaveRider;
-      readonly save: {
-        readonly ability: Extract<Ability, "dex">;
-        readonly dc: DcSource;
-      };
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "duration" }
@@ -683,11 +651,6 @@ export type BattleActiveEffect = (
   | (BattleSpellEffectBase & {
       readonly kind: "persistentAreaSaveConditionEscape";
       readonly areaId: BattleAreaId;
-      readonly sideFeet: MovementFeet;
-      readonly save: {
-        readonly ability: Extract<Ability, "dex">;
-        readonly dc: DcSource;
-      };
       readonly entrySavedThisTurn: readonly CombatantId[];
       readonly startTurnSavedThisTurn: readonly CombatantId[];
       readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
@@ -695,12 +658,6 @@ export type BattleActiveEffect = (
   | (BattleSpellEffectBase & {
       readonly kind: "persistentAreaSaveComposite";
       readonly areaId: BattleAreaId;
-      readonly radiusFeet: MovementFeet;
-      readonly heightFeet: MovementFeet;
-      readonly save: {
-        readonly ability: Extract<Ability, "dex">;
-        readonly dc: DcSource;
-      };
       readonly savedThisTurn: readonly CombatantId[];
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
@@ -713,90 +670,39 @@ export type BattleActiveEffect = (
         readonly lifecycle: { readonly kind: "stationary" };
         readonly appearanceOccurrence: BattleTurnAnchor;
         readonly areaId: BattleAreaId;
-        readonly radiusFeet: MovementFeet;
-        readonly save: {
-          readonly ability: Extract<Ability, "con">;
-          readonly dc: DcSource;
-        };
-        readonly damage: {
-          readonly expr: DiceExpr;
-          readonly damageType: Extract<DamageType, "piercing">;
-        };
         readonly savedThisTurn: readonly CombatantId[];
+        readonly shapeShiftSuppressed?: never;
         readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
       })
   | (BattleSpellEffectBase &
       BattleReplayAddressableEffect & {
         readonly kind: "persistentAreaSaveDamage";
-        readonly lifecycle: {
-          readonly kind: "sourceTurnTranslation";
-          readonly distanceFeet: MovementFeet;
-          readonly direction: "awayFromSource";
-          readonly movedAreaOperation: "saveDamage";
-          readonly environmentalEnd: "strongWind";
-        };
+        readonly lifecycle: { readonly kind: "sourceTurnTranslation" };
         readonly appearanceOccurrence: BattleTurnAnchor;
         readonly areaId: BattleAreaId;
-        readonly radiusFeet: MovementFeet;
-        readonly save: {
-          readonly ability: Extract<Ability, "con">;
-          readonly dc: DcSource;
-        };
-        readonly damage: {
-          readonly expr: DiceExpr;
-          readonly damageType: Extract<DamageType, "poison">;
-        };
         readonly savedThisTurn: readonly CombatantId[];
+        readonly shapeShiftSuppressed?: never;
         readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
       })
   | (BattleSpellEffectBase & {
       readonly kind: "persistentAreaSaveDamage";
-      readonly lifecycle: {
-        readonly kind: "casterActionReposition";
-        readonly actionCost: "bonusAction";
-        readonly movedAreaOperation: "saveDamage";
-        readonly collisionDisposition: "stopAndAffectAdjacent";
-      };
+      readonly lifecycle: { readonly kind: "casterActionReposition" };
       readonly areaId: BattleAreaId;
-      readonly save: {
-        readonly ability: Extract<Ability, "dex">;
-        readonly dc: DcSource;
-      };
-      readonly damage: {
-        readonly expr: DiceExpr;
-        readonly damageType: Extract<DamageType, "fire">;
-      };
-      readonly ramMaxMoveFeet: MovementFeet;
+      readonly appearanceOccurrence?: never;
+      readonly savedThisTurn?: never;
+      readonly shapeShiftSuppressed?: never;
       readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
     })
   | (BattleSpellEffectBase & {
       readonly kind: "areaMovementDistanceDamage";
       readonly areaId: BattleAreaId;
-      readonly damage: {
-        readonly expr: DiceExpr;
-        readonly damageType: Extract<DamageType, "piercing">;
-      };
-      readonly damagePerFeet: MovementFeet;
       readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
     })
   | (BattleSpellEffectBase & {
       readonly kind: "persistentAreaSaveDamage";
-      readonly lifecycle: {
-        readonly kind: "casterActionReposition";
-        readonly actionCost: "magicAction";
-        readonly movedAreaOperation: "saveDamage";
-        readonly collisionDisposition: "ignoreObstacles";
-      };
+      readonly lifecycle: { readonly kind: "casterActionReposition" };
       readonly areaId: BattleAreaId;
-      readonly save: {
-        readonly ability: Extract<Ability, "con">;
-        readonly dc: DcSource;
-      };
-      readonly damage: {
-        readonly expr: DiceExpr;
-        readonly damageType: Extract<DamageType, "radiant">;
-      };
-      readonly repositionMaxMoveFeet: MovementFeet;
+      readonly appearanceOccurrence?: never;
       readonly savedThisTurn: readonly CombatantId[];
       readonly shapeShiftSuppressed: readonly CombatantId[];
       readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
@@ -807,38 +713,22 @@ export type BattleActiveEffect = (
       readonly directionId: BattleLineDirectionId;
       readonly heightenedSpellTargetDisadvantage: AreaSpellEffectHeightenedRepeatSaveRider;
       readonly castTurn: BattleTurnAnchor;
-      readonly line: {
-        readonly lengthFeet: MovementFeet;
-        readonly widthFeet: MovementFeet;
-      };
-      readonly save: {
-        readonly ability: Extract<Ability, "str">;
-        readonly dc: DcSource;
-      };
-      readonly pushDistanceFeet: MovementFeet;
-      readonly movementCost: {
-        readonly multiplier: 2;
-        readonly appliesTo: "towardSource";
-      };
       readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
     })
   | (BattleSpellEffectBase & {
       readonly kind: "persistentAreaTrait";
       readonly areaId: BattleAreaId;
-      readonly radiusFeet: MovementFeet;
       readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
     })
   | (BattleSpellEffectBase & {
       readonly kind: "magicalDarknessPointOrigin";
       readonly areaId: BattleAreaId;
-      readonly radiusFeet: MovementFeet;
       readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
     })
   | (BattleSpellEffectBase & {
       readonly kind: "magicSuppressionEmanation";
       readonly areaId: BattleAreaId;
       readonly auraMembership: BattleMagicSuppressionEmanationMembership;
-      readonly radiusFeet: MovementFeet;
       readonly suppressedOngoingSpellEffects: readonly BattleMagicSuppressionOngoingSpellEffectRef[];
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
@@ -1042,7 +932,6 @@ export type BattleActiveEffect = (
       readonly kind: "weaponAttackDamageEnhancement";
       readonly holderCombatantId: CombatantId;
       readonly weaponItemId: BattleObjectId;
-      readonly bonus: WeaponAttackDamageEnhancementBonus;
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "duration" }
@@ -1071,8 +960,6 @@ export type BattleActiveEffect = (
   | (BattleSpellEffectBase &
       BattleReplayAddressableEffect & {
         readonly kind: "fixedCostMovementReplacement";
-        readonly movementCostFeet: MovementFeet;
-        readonly maxJumpDistanceFeet: MovementFeet;
         readonly usedThisTurn: boolean;
         readonly expiresAt: Extract<
           BattleActiveEffectExpiration,
@@ -1083,8 +970,6 @@ export type BattleActiveEffect = (
       BattleReplayAddressableEffect & {
         readonly kind: "grantedAreaSaveDamageAction";
         readonly damageType: DamageType;
-        readonly originalSlotLevel: SpellSlotLevel;
-        readonly spellSaveDc: DifficultyClass;
         readonly expiresAt: Extract<
           BattleActiveEffectExpiration,
           { readonly kind: "concentration" }
@@ -1099,10 +984,6 @@ export type BattleActiveEffect = (
     })
   | (BattleSpellEffectBase & {
       readonly kind: "targetingSaveInterdiction";
-      readonly save: {
-        readonly ability: Extract<Ability, "wis">;
-        readonly dc: DcSource;
-      };
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "duration" }

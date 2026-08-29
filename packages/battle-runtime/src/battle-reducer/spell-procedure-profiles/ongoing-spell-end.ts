@@ -68,6 +68,8 @@ import type { BattleSpellEffectLevel } from "../spells-effective-level.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import { effectiveD20TestNaturalOneRerollAbilityCheckValue } from "../d20-test-natural-one-reroll.ts";
+import { characterRetainedSpellProcedureExecution } from "../../character-execution-queries.ts";
+import { spellInvocationEffectiveSpellLevel } from "../spells-effective-level.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -253,11 +255,13 @@ type BattleTrackedOngoingSpellOccurrence =
       readonly kind: "lightEmitter";
       readonly ownerId: CombatantId;
       readonly emitter: BattleTrackedOngoingSpellLightEmitter;
+      readonly sourceSpellLevel: BattleSpellEffectLevel;
     }
   | {
       readonly kind: "activeEffect";
       readonly ownerId: CombatantId;
       readonly effect: TrackedDispellableOngoingSpellActiveEffect;
+      readonly sourceSpellLevel: BattleSpellEffectLevel;
     };
 type MagicSuppressionEmanationOngoingSpellEffectRef = Extract<
   BattleOngoingSpellEffectRef,
@@ -733,6 +737,7 @@ function matchingTrackedOngoingSpellOccurrences(
                   kind: "lightEmitter" as const,
                   ownerId: combatant.combatantId,
                   emitter,
+                  sourceSpellLevel: emitter.sourceSpellLevel,
                 },
               ]
             : [],
@@ -740,18 +745,38 @@ function matchingTrackedOngoingSpellOccurrences(
       : [],
   );
   const activeEffects = [...state.combatants.values()].flatMap((combatant) =>
-    combatant.activeEffects.flatMap((effect) =>
-      isTrackedDispellableOngoingSpellActiveEffect(effect) &&
-      dispellableActiveEffectMatchesOngoingTarget(effect, target)
-        ? [
-            {
-              kind: "activeEffect" as const,
-              ownerId: combatant.combatantId,
-              effect,
-            },
-          ]
-        : [],
-    ),
+    combatant.activeEffects.flatMap((effect) => {
+      if (
+        !isTrackedDispellableOngoingSpellActiveEffect(effect) ||
+        !dispellableActiveEffectMatchesOngoingTarget(effect, target) ||
+        combatant.origin.kind !== "character" ||
+        effect.sourceCombatantId !== combatant.combatantId
+      ) {
+        return [];
+      }
+      const source = characterRetainedSpellProcedureExecution(
+        combatant.origin.execution,
+        effect.sourceProcedureRef,
+      );
+      if (
+        source === undefined ||
+        (source.procedure !== "objectContactDamage" &&
+          !(
+            source.procedure === "spatialMeleeSpellAttackProxy" &&
+            source.operation === "createAndAttack"
+          ))
+      ) {
+        return [];
+      }
+      return [
+        {
+          kind: "activeEffect" as const,
+          ownerId: combatant.combatantId,
+          effect,
+          sourceSpellLevel: spellInvocationEffectiveSpellLevel(source),
+        },
+      ];
+    }),
   );
   return [...lightEmitters, ...activeEffects];
 }
@@ -871,9 +896,7 @@ function ongoingSpellOccurrenceRef(
 function ongoingSpellOccurrenceSourceSpellLevel(
   occurrence: BattleTrackedOngoingSpellOccurrence,
 ): BattleSpellEffectLevel {
-  return occurrence.kind === "lightEmitter"
-    ? occurrence.emitter.sourceSpellLevel
-    : occurrence.effect.sourceSpellLevel;
+  return occurrence.sourceSpellLevel;
 }
 
 function uniqueConcentrationSources(

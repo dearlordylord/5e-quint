@@ -433,10 +433,6 @@ function applyTurnHinderingActivePenaltyEffects(
         kind: "saveGatedTurnConstraintBundle" as const,
         sourceProcedureRef: invocation.sourceProcedureRef,
         sourceCombatantId: actorId,
-        save: {
-          ability: invocation.ability,
-          dc: invocation.dc,
-        },
         expiresAt: {
           kind: "concentration" as const,
           combatantId: actorId,
@@ -464,6 +460,7 @@ function applyTurnHinderingActivePenaltyEffects(
   const currentTurnActorId = currentActorId(state);
   const currentTurnResources = appliedTargetIds.includes(currentTurnActorId)
     ? slowActionOrBonusActionTurnResources(
+        { ...state, combatants },
         state.currentTurnResources,
         combatants.get(currentTurnActorId),
       )

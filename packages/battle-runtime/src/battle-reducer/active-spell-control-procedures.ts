@@ -22,6 +22,7 @@ import {
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { applySelfTransformationModeEffect } from "./spells-active-effects.ts";
+import { spellProcedureBoundToActiveEffect } from "./spell-active-effect-binding.ts";
 
 export function resolveControlledVerticalSuspensionAltitudeControlCommand(
   input: BattleResolutionInputForSubject<
@@ -68,11 +69,22 @@ export function resolveControlledVerticalSuspensionAltitudeControlCommand(
       "ControlledVerticalSuspension altitude control is no longer active for the target.",
     );
   }
+  const sourceProcedure = spellProcedureBoundToActiveEffect(
+    input.state,
+    effect,
+  );
+  if (sourceProcedure?.procedure !== "controlledVerticalSuspension") {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "ControlledVerticalSuspension source procedure is no longer available.",
+    );
+  }
   const hole = controlledVerticalSuspensionAltitudeChangeHole({
     actorId: input.subject.actorId,
     targetId: input.subject.targetId,
     effectRef: effect.effectRef,
-    maxDistanceFeet: effect.maxAltitudeChangeFeet,
+    maxDistanceFeet: sourceProcedure.maxAltitudeChangeFeet,
   });
   const fill = input.fills[0];
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -124,7 +136,7 @@ export function resolveControlledVerticalSuspensionAltitudeControlCommand(
       sourceCombatantId: effect.sourceCombatantId,
       sourceProcedureRef: effect.sourceProcedureRef,
       targetId: input.subject.targetId,
-      rangeFeet: effect.rangeFeet,
+      rangeFeet: sourceProcedure.rangeFeet,
     })
   ) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */

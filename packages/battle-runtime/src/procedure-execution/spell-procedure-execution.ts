@@ -34,6 +34,7 @@ import type {
   SpellObjectContactDamageActiveEffect,
   SpellTurnEndDamage,
   SpatialMeleeSpellAttackProxyActiveEffect,
+  SpatialMeleeSpellAttackProxyRepeatTargeting,
 } from "../active-effect/types.ts";
 import type { BattleActiveEffectSource } from "../active-effect/source.ts";
 import type {
@@ -508,10 +509,12 @@ export type GrantedAreaSaveDamageActionSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
     readonly actionCost: "bonusAction";
+    readonly ability: "dex";
     readonly activeEffect: Omit<
       SpellActiveEffectTemplate<"grantedAreaSaveDamageAction">,
-      "damageType" | "spellSaveDc"
+      "damageType"
     >;
+    readonly dc: DcSource;
     readonly damageTypeChoices: readonly DamageType[];
     readonly procedure: "grantedAreaSaveDamageAction";
     readonly rangeFeet: MovementFeet;
@@ -739,7 +742,10 @@ export type FixedCostMovementReplacementSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
     readonly actionCost: "bonusAction";
-    readonly activeEffect: SpellActiveEffectTemplate<"fixedCostMovementReplacement">;
+    readonly activeEffect: SpellActiveEffectTemplate<"fixedCostMovementReplacement"> & {
+      readonly movementCostFeet: MovementFeet;
+      readonly maxJumpDistanceFeet: MovementFeet;
+    };
     readonly procedure: "fixedCostMovementReplacement";
     readonly rangeFeet: MovementFeet;
     readonly resource: LeveledSpellInvocationResource;
@@ -761,6 +767,7 @@ export type ControlledVerticalSuspensionSpellProcedureExecution =
       "sourceProcedureRef" | "effectRef"
     >;
     readonly dc: DcSource;
+    readonly maxAltitudeChangeFeet: MovementFeet;
     readonly maxInitialRiseFeet: MovementFeet;
     readonly procedure: "controlledVerticalSuspension";
     readonly rangeFeet: MovementFeet;
@@ -1003,7 +1010,12 @@ export type TargetingSaveInterdictionSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
     readonly actionCost: "bonusAction";
-    readonly activeEffect: SpellActiveEffectTemplate<"targetingSaveInterdiction">;
+    readonly activeEffect: SpellActiveEffectTemplate<"targetingSaveInterdiction"> & {
+      readonly save: {
+        readonly ability: "wis";
+        readonly dc: DcSource;
+      };
+    };
     readonly procedure: "targetingSaveInterdiction";
     readonly rangeFeet: MovementFeet;
     readonly resource: LeveledSpellInvocationResource;
@@ -1402,6 +1414,7 @@ export type RepeatSpatialMeleeSpellAttackProxySpellProcedureExecution = {
   readonly activeEffectSourceProcedureRef: BattleProcedureExecutionRef;
   readonly procedure: "spatialMeleeSpellAttackProxy";
   readonly operation: "repositionAndAttack";
+  readonly repeatTargeting: SpatialMeleeSpellAttackProxyRepeatTargeting;
 };
 
 export const TemporaryAbilityCheckRollModeSelectedModeSchema = Schema.Struct({
@@ -1652,12 +1665,9 @@ export type RepeatSpatialMeleeSpellAttackProxyLiveSpellProcedureExecution =
     readonly operation: "repositionAndAttack";
     readonly actionCost: "bonusAction";
     readonly activeEffect: SpatialMeleeSpellAttackProxyActiveEffect;
+    readonly repeatTargeting: SpatialMeleeSpellAttackProxyRepeatTargeting;
     readonly targeting: { readonly kind: "singleCombatant" };
-    readonly damage: {
-      readonly kind: "fixedSpellAttackDamage";
-      readonly expr: DiceExpr;
-      readonly damageType: DamageType;
-    };
+    readonly damage: CreateSpatialMeleeSpellAttackProxySpellProcedureExecution["damage"];
     readonly attackKind: "melee_spell_attack";
     readonly attackBonus: AttackBonus;
     readonly forceReachFeet: MovementFeet;

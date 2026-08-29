@@ -279,6 +279,7 @@ import type {
 } from "./character-execution.ts";
 import type {
   SpawnedCompanionLifecycleExecutionFacts,
+  CreateSpatialMeleeSpellAttackProxySpellProcedureExecution,
   SpellRuleExecutionFactsOwner,
   StagedSaveConditionAutomaticSuccessPredicates,
   StagedSaveConditionEscapeAction,
@@ -351,6 +352,7 @@ import type {
   SpellTurnEndDamage,
   SpellTurnStartDamage,
   SpellTurnStartDamageSave,
+  SpatialMeleeSpellAttackProxyRepeatTargeting,
   TurnAnchoredBattleActiveEffectExpiration,
 } from "./active-effect/types.ts";
 import type {
@@ -2534,6 +2536,7 @@ export type ControlledVerticalSuspensionSpellInvocation = {
   readonly activeEffect: BattleSpellActiveEffectTemplate<
     Omit<ControlledVerticalSuspensionActiveEffect, "altitudeFeet">
   >;
+  readonly maxAltitudeChangeFeet: MovementFeet;
   readonly maxInitialRiseFeet: MovementFeet;
   readonly rangeFeet: MovementFeet;
 };
@@ -2703,7 +2706,10 @@ export type FixedCostMovementReplacementSpellInvocation = {
       BattleActiveEffect,
       { readonly kind: "fixedCostMovementReplacement" }
     >
-  >;
+  > & {
+    readonly movementCostFeet: MovementFeet;
+    readonly maxJumpDistanceFeet: MovementFeet;
+  };
   readonly rangeFeet: MovementFeet;
 };
 export type GrantedAreaSaveDamageActionSpellInvocation = {
@@ -2712,20 +2718,22 @@ export type GrantedAreaSaveDamageActionSpellInvocation = {
   readonly procedure: "grantedAreaSaveDamageAction";
   readonly spell: BattleSpellAdmissionSource;
   readonly actionCost: "bonusAction";
+  readonly ability: "dex";
   readonly targeting: {
     readonly kind: "targetList";
     readonly minTargets: 1;
     readonly maxTargets: 1;
   };
-  readonly activeEffect: BattleSpellActiveEffectTemplate<
-    Omit<
+  readonly activeEffect: Omit<
+    BattleSpellActiveEffectTemplate<
       Extract<
         BattleActiveEffect,
         { readonly kind: "grantedAreaSaveDamageAction" }
-      >,
-      "damageType" | "spellSaveDc"
-    >
+      >
+    >,
+    "damageType"
   >;
+  readonly dc: DcSource;
   readonly damageTypeChoices: readonly DamageType[];
   readonly rangeFeet: MovementFeet;
 };
@@ -2782,7 +2790,12 @@ export type TargetingSaveInterdictionSpellInvocation = {
   };
   readonly activeEffect: BattleSpellActiveEffectTemplate<
     Extract<BattleActiveEffect, { readonly kind: "targetingSaveInterdiction" }>
-  >;
+  > & {
+    readonly save: {
+      readonly ability: "wis";
+      readonly dc: DcSource;
+    };
+  };
   readonly rangeFeet: MovementFeet;
 };
 export type DirectConditionSpellInvocation = {
@@ -3097,13 +3110,14 @@ export type RepeatSpatialMeleeSpellAttackProxyInvocation = {
     BattleActiveEffect,
     { readonly kind: "spatialMeleeSpellAttackProxy" }
   >;
+  readonly repeatTargeting: SpatialMeleeSpellAttackProxyRepeatTargeting;
   readonly targeting: Extract<
     SpellTargeting,
     { readonly kind: "singleCombatant" }
   >;
   readonly damage: Extract<
-    BattleActiveEffect,
-    { readonly kind: "spatialMeleeSpellAttackProxy" }
+    CreateSpatialMeleeSpellAttackProxySpellProcedureExecution,
+    { readonly operation: "createAndAttack" }
   >["damage"];
   readonly attackKind: Extract<SpellAttackKind, "melee_spell_attack">;
   readonly attackBonus: AttackBonus;

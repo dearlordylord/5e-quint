@@ -3,7 +3,6 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type {
-  BattleActiveEffect,
   BattleCreatureState,
   BattleExecutableSpellInvocation,
   BattleTurnConstraintSomaticSpellFailureOutcomeHole,
@@ -14,11 +13,13 @@ import { SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT } from "./domain-constant
 import type { SpellMetamagicApplicationFact } from "./metamagic-support.ts";
 import { subtleSpellComponentProjectionForApplications } from "./metamagic-support.ts";
 import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
+import {
+  boundSaveGatedTurnConstraintBundleEffect,
+  type BoundSaveGatedTurnConstraintBundleEffect,
+} from "./spell-modifier-binding.ts";
 
-type SaveGatedTurnConstraintBundleEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "saveGatedTurnConstraintBundle" }
->;
+type SaveGatedTurnConstraintBundleEffect =
+  BoundSaveGatedTurnConstraintBundleEffect;
 
 export function turnConstraintSomaticSpellFailureOutcomeHole(input: {
   readonly state: BattleState;
@@ -27,6 +28,7 @@ export function turnConstraintSomaticSpellFailureOutcomeHole(input: {
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
 }): BattleTurnConstraintSomaticSpellFailureOutcomeHole | null {
   const effects = saveGatedTurnConstraintBundleEffects(
+    input.state,
     input.state.combatants.get(input.actorId),
   );
   if (
@@ -65,14 +67,21 @@ export function turnConstraintSomaticSpellFailureOutcomeHole(input: {
 }
 
 export function saveGatedTurnConstraintBundleEffects(
+  state: BattleState,
   combatant: BattleCreatureState | undefined,
 ): readonly SaveGatedTurnConstraintBundleEffect[] {
   return combatant === undefined
     ? []
-    : combatant.activeEffects.filter(
-        (effect): effect is SaveGatedTurnConstraintBundleEffect =>
-          effect.kind === "saveGatedTurnConstraintBundle",
-      );
+    : combatant.activeEffects.flatMap((effect) => {
+        if (effect.kind !== "saveGatedTurnConstraintBundle") {
+          return [];
+        }
+        const boundEffect = boundSaveGatedTurnConstraintBundleEffect(
+          state,
+          effect,
+        );
+        return boundEffect === undefined ? [] : [boundEffect];
+      });
 }
 
 function spellInvocationRequiresEffectiveSomaticComponent(input: {

@@ -10,6 +10,7 @@ import type {
   BattleSavingThrowFlatBonusProjection,
   BattleSavingThrowRollModeProjection,
   BattleSavingThrowOutcomeValue,
+  BattleState,
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import {
@@ -18,13 +19,15 @@ import {
 } from "./domain-constants.ts";
 import { uniqueSavingThrowRollModeProjections } from "./saving-throw-roll-mode-projections.ts";
 import { linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget } from "./linked-defense-damage-share.ts";
+import {
+  boundSaveGatedConditionWithRepeatEffect,
+  type BoundSaveGatedConditionWithRepeatEffect,
+} from "./spell-modifier-binding.ts";
 
 const DEFAULT_DAMAGE_REPEAT_SAVE_EVENT_KEY = "damage";
 
-export type SaveGatedConditionWithRepeatEffect = Extract<
-  BattleCreatureState["activeEffects"][number],
-  { readonly kind: "saveGatedConditionWithRepeat" }
->;
+export type SaveGatedConditionWithRepeatEffect =
+  BoundSaveGatedConditionWithRepeatEffect;
 
 type SaveGatedConditionRepeatSaveTrigger =
   BattleSaveGatedConditionRepeatSavingThrowOutcomeHole["saveGatedConditionRepeatSave"]["trigger"];
@@ -47,14 +50,21 @@ const HIDEOUS_LAUGHTER_DAMAGE_REPEAT_SAVE_FILL_HOLE_MISMATCH_MESSAGE =
   "save-gated condition damage repeat save fills must match every requested damaged target exactly once.";
 
 export function saveGatedConditionWithRepeatEffects(
+  state: BattleState,
   combatant: BattleCreatureState | undefined,
 ): readonly SaveGatedConditionWithRepeatEffect[] {
   return combatant === undefined
     ? []
-    : combatant.activeEffects.filter(
-        (effect): effect is SaveGatedConditionWithRepeatEffect =>
-          effect.kind === "saveGatedConditionWithRepeat",
-      );
+    : combatant.activeEffects.flatMap((effect) => {
+        if (effect.kind !== "saveGatedConditionWithRepeat") {
+          return [];
+        }
+        const boundEffect = boundSaveGatedConditionWithRepeatEffect(
+          state,
+          effect,
+        );
+        return boundEffect === undefined ? [] : [boundEffect];
+      });
 }
 
 function repeatSaveKeyPart(value: string): string {
@@ -137,15 +147,20 @@ function saveGatedConditionWithRepeatRepeatSavingThrowRollModeProjections(
 }
 
 export function saveGatedConditionWithRepeatDamageRepeatSaveHoles(
+  state: BattleState,
   target: BattleCreatureState,
   damageEventKey: string = DEFAULT_DAMAGE_REPEAT_SAVE_EVENT_KEY,
 ): BattleSaveGatedConditionRepeatSavingThrowOutcomeHole[] {
-  return target.activeEffects.flatMap((effect) =>
-    effect.kind === "saveGatedConditionWithRepeat"
+  return target.activeEffects.flatMap((effect) => {
+    const boundEffect =
+      effect.kind === "saveGatedConditionWithRepeat"
+        ? boundSaveGatedConditionWithRepeatEffect(state, effect)
+        : undefined;
+    return boundEffect !== undefined
       ? [
           saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
             target.combatantId,
-            effect,
+            boundEffect,
             "damage",
             damageEventKey,
             linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget(
@@ -153,8 +168,8 @@ export function saveGatedConditionWithRepeatDamageRepeatSaveHoles(
             ),
           ),
         ]
-      : [],
-  );
+      : [];
+  });
 }
 
 export function isSaveGatedConditionWithRepeatDamageRepeatSaveFill(
@@ -166,12 +181,14 @@ export function isSaveGatedConditionWithRepeatDamageRepeatSaveFill(
 }
 
 export function saveGatedConditionWithRepeatDamageRepeatSaveFillsForTarget(
+  state: BattleState,
   target: BattleCreatureState,
   fills: readonly SavingThrowOutcomeFill[],
   damageEventKey: string = DEFAULT_DAMAGE_REPEAT_SAVE_EVENT_KEY,
 ): readonly SavingThrowOutcomeFill[] {
   const holeIds = new Set(
     saveGatedConditionWithRepeatDamageRepeatSaveHoles(
+      state,
       target,
       damageEventKey,
     ).map((hole) => hole.holeId),
@@ -180,6 +197,7 @@ export function saveGatedConditionWithRepeatDamageRepeatSaveFillsForTarget(
 }
 
 export function saveGatedConditionWithRepeatDamageRepeatSaveFillCheck(input: {
+  readonly state: BattleState;
   readonly target: BattleCreatureState;
   readonly damageAmount: number;
   readonly fills: readonly SavingThrowOutcomeFill[];
@@ -188,6 +206,7 @@ export function saveGatedConditionWithRepeatDamageRepeatSaveFillCheck(input: {
   const holes =
     input.damageAmount > 0
       ? saveGatedConditionWithRepeatDamageRepeatSaveHoles(
+          input.state,
           input.target,
           input.damageEventKey,
         )

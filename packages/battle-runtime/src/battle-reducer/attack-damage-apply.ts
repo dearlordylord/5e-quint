@@ -68,6 +68,7 @@ import {
   type StatBlockMultiattackActionResource,
 } from "./battle-runtime-protocol.ts";
 import { isStatBlockMultiattackActionResource } from "./action-resource-kinds.ts";
+import { weaponAttackDamageEnhancementBonus } from "./spell-modifier-binding.ts";
 import { attackDamageDieFloorChoiceProcedureRefs } from "./attack-damage-die-floor-choice.ts";
 import {
   damageAllowsKnockOut,
@@ -1118,17 +1119,21 @@ export function battleWeaponItemWeaponAttackDamageEnhancementBonus(
   exclusion: WeaponAttackDamageEnhancementExclusion = {},
 ): WeaponAttackDamageEnhancementBonus | null {
   const bonuses = [...state.combatants.values()].flatMap((combatant) =>
-    combatant.activeEffects.filter(
-      (effect): effect is WeaponAttackDamageEnhancementEffect =>
-        isWeaponAttackDamageEnhancementEffect(effect) &&
-        effect.holderCombatantId === holderCombatantId &&
-        effect.weaponItemId === weaponItemId &&
-        !weaponAttackDamageEnhancementEffectExcluded(effect, exclusion),
-    ),
+    combatant.activeEffects.flatMap((effect) => {
+      if (
+        !isWeaponAttackDamageEnhancementEffect(effect) ||
+        effect.holderCombatantId !== holderCombatantId ||
+        effect.weaponItemId !== weaponItemId ||
+        weaponAttackDamageEnhancementEffectExcluded(effect, exclusion)
+      ) {
+        return [];
+      }
+      const bonus = weaponAttackDamageEnhancementBonus(state, effect);
+      return bonus === undefined ? [] : [bonus];
+    }),
   );
   return bonuses.reduce<WeaponAttackDamageEnhancementBonus | null>(
-    (highest, effect) =>
-      highest === null || effect.bonus > highest ? effect.bonus : highest,
+    (highest, bonus) => (highest === null || bonus > highest ? bonus : highest),
     null,
   );
 }
