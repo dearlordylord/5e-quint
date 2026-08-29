@@ -584,14 +584,33 @@ describe("persistent spatial spell boundary procedures", () => {
       }),
       "rolledDice",
     );
+    const entersDamageFill = damageRollFillWithGroups(entersDamage, [[2, 3]]);
+    const unrelatedDeathSave = deathSavingThrowFill(
+      requireHole(
+        requireNeedsHoles(
+          endTurn({ state: targetTurn.state, actorId: spellTargetId }),
+        ).holes,
+        "deathSavingThrow",
+      ),
+      10,
+    );
+    expect(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: entersSubject,
+        fills: [entersSaveFill, entersDamageFill, unrelatedDeathSave],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Movable zone save accepts only its save, damage, Concentration, and applicable delegated End Turn fills.",
+    });
     const entered = requireResolved(
       resolveBattleSubject({
         state: targetTurn.state,
         subject: entersSubject,
-        fills: [
-          entersSaveFill,
-          damageRollFillWithGroups(entersDamage, [[2, 3]]),
-        ],
+        fills: [entersSaveFill, entersDamageFill],
       }),
     );
 

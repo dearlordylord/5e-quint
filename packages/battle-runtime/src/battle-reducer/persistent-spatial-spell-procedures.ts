@@ -2106,6 +2106,7 @@ function resolveMoonbeamSaveCommand(
     readonly subject: MoonbeamSaveSubject;
   } & PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
+  const isEndTurn = input.subject.trigger === "endsTurnInArea";
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fills.some(
@@ -2113,13 +2114,13 @@ function resolveMoonbeamSaveCommand(
         fill.kind !== "savingThrowOutcome" &&
         fill.kind !== "rolledDice" &&
         fill.kind !== "concentrationSavingThrow" &&
-        !isEndTurnFillKind(fill.kind),
+        !(isEndTurn && isEndTurnFillKind(fill.kind)),
     )
   ) {
     return invalidResult(
       input.state,
       "invalidFill",
-      "Movable zone save accepts only save, damage, Concentration, and delegated End Turn fills.",
+      "Movable zone save accepts only its save, damage, Concentration, and applicable delegated End Turn fills.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -2136,7 +2137,6 @@ function resolveMoonbeamSaveCommand(
       "Movable zone save is no longer available.",
     );
   }
-  const isEndTurn = input.subject.trigger === "endsTurnInArea";
   const endTurnSubject = {
     tag: "runtimeCommand" as const,
     actorId: input.subject.actorId,

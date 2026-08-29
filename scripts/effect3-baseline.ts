@@ -671,13 +671,38 @@ async function stopChildProcess(
   });
 }
 
+const SHIPPED_HTTP_TOOLS_LIST_BODY =
+  '{"jsonrpc":"2.0","id":99,"method":"tools/list"}';
+
+function canonicalShippedHttpToolsResponse(input: {
+  readonly body: string;
+  readonly context: string;
+  readonly statusCode: number | undefined;
+}): string {
+  if (input.statusCode !== 200) {
+    throw new Error(
+      `${input.context} returned status ${input.statusCode ?? "unknown"}.`,
+    );
+  }
+  const payload: unknown = JSON.parse(input.body);
+  if (
+    !isPlainRecord(payload) ||
+    payload.jsonrpc !== "2.0" ||
+    payload.id !== 99 ||
+    !isPlainRecord(payload.result) ||
+    !Array.isArray(payload.result.tools)
+  ) {
+    throw new Error(`${input.context} was not a complete tools/list response.`);
+  }
+  return canonicalBaselineJson(payload);
+}
+
 async function verifyShippedHttpResponseDrain(
   port: number,
   child: ChildProcess,
   stderr: () => string,
   signal: "SIGINT" | "SIGTERM",
-): Promise<void> {
-  const body = '{"jsonrpc":"2.0","id":99,"method":"tools/list"}';
+): Promise<string> {
   let resolveResponse!: (response: {
     readonly body: string;
     readonly statusCode: number | undefined;
@@ -690,6 +715,8 @@ async function verifyShippedHttpResponseDrain(
     rejectResponseStarted = reject;
   });
   let shutdown: Promise<void> | undefined;
+  let receivedBytes = 0;
+  let bytesAtShutdown: number | undefined;
   const response = new Promise<{
     readonly body: string;
     readonly statusCode: number | undefined;
@@ -705,21 +732,40 @@ async function verifyShippedHttpResponseDrain(
     headers: {
       accept: "application/json, text/event-stream",
       connection: "close",
-      "content-length": Buffer.byteLength(body),
+      "content-length": Buffer.byteLength(SHIPPED_HTTP_TOOLS_LIST_BODY),
       "content-type": "application/json",
     },
   });
   request.once("response", (incoming) => {
     const chunks: Buffer[] = [];
     incoming.on("data", (chunk: Buffer | string) => {
-      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+      const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+      chunks.push(bytes);
+      receivedBytes += bytes.byteLength;
       if (shutdown !== undefined) return;
       incoming.pause();
+      bytesAtShutdown = receivedBytes;
       shutdown = stopChildProcess(child, stderr, signal);
       resolveResponseStarted();
       setImmediate(() => incoming.resume());
     });
     incoming.once("end", () => {
+      if (bytesAtShutdown === undefined) {
+        const error = new Error(
+          "Shipped HTTP response ended before shutdown could be coordinated from response bytes.",
+        );
+        rejectResponseStarted(error);
+        rejectResponse(error);
+        return;
+      }
+      if (receivedBytes <= bytesAtShutdown) {
+        rejectResponse(
+          new Error(
+            "Shipped HTTP response delivered no bytes after shutdown began.",
+          ),
+        );
+        return;
+      }
       resolveResponse({
         body: Buffer.concat(chunks).toString("utf8"),
         statusCode: incoming.statusCode,
@@ -738,7 +784,7 @@ async function verifyShippedHttpResponseDrain(
     request.destroy(new Error("Shipped HTTP response drain timed out.")),
   );
   try {
-    request.end(body);
+    request.end(SHIPPED_HTTP_TOOLS_LIST_BODY);
     await responseStarted;
     if (shutdown === undefined) {
       throw new Error("Shipped HTTP response did not start shutdown.");
@@ -756,25 +802,55 @@ async function verifyShippedHttpResponseDrain(
     if (completedResponse.status !== "fulfilled") {
       throw new Error("Shipped HTTP response drain produced no response.");
     }
-    if (completedResponse.value.statusCode !== 200) {
-      throw new Error(
-        `Shipped HTTP shutdown returned status ${completedResponse.value.statusCode ?? "unknown"}.`,
-      );
-    }
-    const payload: unknown = JSON.parse(completedResponse.value.body);
-    if (
-      !isPlainRecord(payload) ||
-      payload.id !== 99 ||
-      !isPlainRecord(payload.result) ||
-      !Array.isArray(payload.result.tools)
-    ) {
-      throw new Error(
-        "Shipped HTTP shutdown did not drain the complete tools/list response.",
-      );
-    }
+    return canonicalShippedHttpToolsResponse({
+      ...completedResponse.value,
+      context: "Shipped HTTP shutdown",
+    });
   } finally {
     request.destroy();
   }
+}
+
+async function captureShippedHttpToolsResponse(port: number): Promise<string> {
+  const response = await new Promise<{
+    readonly body: string;
+    readonly statusCode: number | undefined;
+  }>((resolveResponse, rejectResponse) => {
+    const request = requestHttp({
+      host: "127.0.0.1",
+      port,
+      path: "/mcp",
+      method: "POST",
+      headers: {
+        accept: "application/json, text/event-stream",
+        connection: "close",
+        "content-length": Buffer.byteLength(SHIPPED_HTTP_TOOLS_LIST_BODY),
+        "content-type": "application/json",
+      },
+    });
+    request.once("response", (incoming) => {
+      const chunks: Buffer[] = [];
+      incoming.on("data", (chunk: Buffer | string) => {
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+      });
+      incoming.once("end", () => {
+        resolveResponse({
+          body: Buffer.concat(chunks).toString("utf8"),
+          statusCode: incoming.statusCode,
+        });
+      });
+      incoming.once("error", rejectResponse);
+    });
+    request.once("error", rejectResponse);
+    request.setTimeout(30_000, () =>
+      request.destroy(new Error("Shipped HTTP tools/list capture timed out.")),
+    );
+    request.end(SHIPPED_HTTP_TOOLS_LIST_BODY);
+  });
+  return canonicalShippedHttpToolsResponse({
+    ...response,
+    context: "Shipped HTTP tools/list capture",
+  });
 }
 
 async function captureHttpWithoutOAuthMcp(): Promise<McpClientCapture> {
@@ -902,12 +978,18 @@ async function captureShippedHttpMcpEntrypointForSignal(
     await client.connect(transport as Transport);
     const capture = await captureMcpClient(client);
     await closeClientOnce();
-    await verifyShippedHttpResponseDrain(
+    const ordinaryTools = await captureShippedHttpToolsResponse(port);
+    const drainedTools = await verifyShippedHttpResponseDrain(
       port,
       child,
       () => childStderr.trim(),
       signal,
     );
+    if (drainedTools !== ordinaryTools) {
+      throw new Error(
+        `Shipped HTTP ${signal} shutdown changed or truncated the tools/list response.`,
+      );
+    }
     return capture;
   } finally {
     const cleanupFailures: unknown[] = [];
