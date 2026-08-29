@@ -390,15 +390,9 @@ export function attackActionOptionForSubject(
     { readonly tag: "action"; readonly action: "attack" }
   >,
 ): BoundSupportedAttackActionOption | undefined {
-  return attackActionOptionsForActor(state, subject.actorId).find((attack) => {
-    return (
-      boundAttackExecutionSelectionMatchesOption(subject, attack) &&
-      (attack.kind === "statBlockAttack"
-        ? attack.damageNotation ===
-          (subject.statBlockDamageNotation ?? "rolled")
-        : subject.statBlockDamageNotation === undefined)
-    );
-  });
+  return attackActionOptionsForActor(state, subject.actorId).find((attack) =>
+    boundAttackExecutionSelectionMatchesOption(subject, attack),
+  );
 }
 
 export function attackActionOptionsForActor(

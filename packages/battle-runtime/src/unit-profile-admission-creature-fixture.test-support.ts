@@ -41,6 +41,7 @@ import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
 import { battleObjectId } from "./identity.ts";
 import { attackActionOptionForSubject } from "./battle-reducer/attack-damage-apply.ts";
+import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
 import {
   battleAmmunitionStock,
   requiredAmmunitionKinds,
@@ -367,7 +368,11 @@ export function statBlockAttackAct(
       candidate.subject.tag === "action" &&
       candidate.subject.actorId === actorId &&
       candidate.subject.action === "attack" &&
-      candidate.subject.statBlockDamageNotation === undefined &&
+      candidate.subject.statBlockDamageSelection !== undefined &&
+      statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+        candidate.subject.statBlockDamageSelection,
+        "rolled",
+      ) &&
       candidate.presentation.kind === "attack" &&
       candidate.presentation.name === attackName,
   );

@@ -21,6 +21,7 @@ import {
   readyTriggerDescription,
   resolveBattleRuntimeSubject,
   resolveBattleRuntimeSubjectWithTableD20TestCircumstances,
+  statBlockAttackDamageSelectionUsesOnlyComponentNotation,
 } from "../../../packages/battle-runtime/src/index.ts";
 import {
   battleRuntimeContextFromCharacterAdmission,
@@ -553,8 +554,8 @@ describe("scenario setup public-SDK boundary", () => {
         spatialDecisions: [],
       },
       ambientIllumination: setup.session.battlefield.ambientIllumination,
-      statBlockDamageNotation:
-        setup.session.battlefield.statBlockDamageNotation,
+      statBlockDamageSelectionPolicy:
+        setup.session.battlefield.statBlockDamageSelectionPolicy,
       environment: {
         overhead: setup.session.battlefield.environment.overhead,
         barrierHeights: [],
@@ -640,8 +641,8 @@ describe("scenario setup public-SDK boundary", () => {
         spatialDecisions: [],
       },
       ambientIllumination: setup.session.battlefield.ambientIllumination,
-      statBlockDamageNotation:
-        setup.session.battlefield.statBlockDamageNotation,
+      statBlockDamageSelectionPolicy:
+        setup.session.battlefield.statBlockDamageSelectionPolicy,
       environment: setup.session.battlefield.environment,
       initialRangedAttackEnemyRelationships:
         setup.session.battlefield.initialRangedAttackEnemyRelationships,
@@ -739,7 +740,7 @@ describe("scenario setup public-SDK boundary", () => {
         spatialDecisions: [],
       },
       ambientIllumination: "brightLight",
-      statBlockDamageNotation: "rolled",
+      statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
       environment: { overhead: { kind: "open" }, barrierHeights: [] },
       initialRangedAttackEnemyRelationships: [],
       movementAllyRelationships: [],
@@ -1091,8 +1092,8 @@ describe("scenario setup public-SDK boundary", () => {
     const tableSessionInput = {
       battle: setup.session.battle,
       ambientIllumination: setup.session.battlefield.ambientIllumination,
-      statBlockDamageNotation:
-        setup.session.battlefield.statBlockDamageNotation,
+      statBlockDamageSelectionPolicy:
+        setup.session.battlefield.statBlockDamageSelectionPolicy,
       environment: setup.session.battlefield.environment,
       initialRangedAttackEnemyRelationships: [],
       movementAllyRelationships: [],
@@ -1289,8 +1290,8 @@ describe("scenario setup public-SDK boundary", () => {
         spatialDecisions: [tableMovementDecision],
       },
       ambientIllumination: setup.session.battlefield.ambientIllumination,
-      statBlockDamageNotation:
-        setup.session.battlefield.statBlockDamageNotation,
+      statBlockDamageSelectionPolicy:
+        setup.session.battlefield.statBlockDamageSelectionPolicy,
       environment: setup.session.battlefield.environment,
       initialRangedAttackEnemyRelationships: [],
       movementAllyRelationships: [],
@@ -1387,7 +1388,15 @@ describe("scenario setup public-SDK boundary", () => {
             procedureRef: characterAttackProcedureRef,
             attackAbility: "strength",
             attackDamageType: "slashing",
-            statBlockDamageNotation: "static",
+            statBlockDamageSelection: [
+              {
+                componentRef: {
+                  kind: "baseDamageComponent",
+                  ordinal: 1,
+                },
+                notation: "static",
+              },
+            ],
           },
         ],
       },
@@ -1598,8 +1607,8 @@ describe("scenario setup public-SDK boundary", () => {
         ],
       },
       ambientIllumination: setup.session.battlefield.ambientIllumination,
-      statBlockDamageNotation:
-        setup.session.battlefield.statBlockDamageNotation,
+      statBlockDamageSelectionPolicy:
+        setup.session.battlefield.statBlockDamageSelectionPolicy,
       environment: setup.session.battlefield.environment,
       initialRangedAttackEnemyRelationships: [],
       movementAllyRelationships: [],
@@ -1773,7 +1782,9 @@ describe("scenario setup public-SDK boundary", () => {
           spatialDecisions: [],
         },
         ambientIllumination: "brightLight",
-        statBlockDamageNotation: "rolled",
+        statBlockDamageSelectionPolicy: {
+          preferredComponentNotation: "rolled",
+        },
         environment: { overhead: { kind: "open" }, barrierHeights: [] },
         initialRangedAttackEnemyRelationships: [],
         movementAllyRelationships: allies
@@ -1982,7 +1993,7 @@ describe("scenario setup public-SDK boundary", () => {
         spatialDecisions: [],
       },
       ambientIllumination: "brightLight",
-      statBlockDamageNotation: "rolled",
+      statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
       environment: { overhead: { kind: "open" }, barrierHeights: [] },
       initialRangedAttackEnemyRelationships: [],
       movementAllyRelationships: [],
@@ -2010,7 +2021,7 @@ describe("scenario setup public-SDK boundary", () => {
     expect(expectedThreats).toHaveLength(2);
     const staticScenario = createScenarioSession({
       ...scenarioInput,
-      statBlockDamageNotation: "static",
+      statBlockDamageSelectionPolicy: { preferredComponentNotation: "static" },
     });
     expect(Either.isRight(staticScenario)).toBe(true);
     if (Either.isRight(staticScenario)) {
@@ -2024,8 +2035,11 @@ describe("scenario setup public-SDK boundary", () => {
       );
       expect(staticStatBlockThreats).not.toEqual([]);
       expect(
-        staticStatBlockThreats.every(
-          ({ selection }) => selection.statBlockDamageNotation === "static",
+        staticStatBlockThreats.every(({ selection }) =>
+          statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+            selection.statBlockDamageSelection,
+            "static",
+          ),
         ),
       ).toBe(true);
       const staticPlan = planScenarioMovement({
@@ -2047,7 +2061,9 @@ describe("scenario setup public-SDK boundary", () => {
             expect.objectContaining({
               kind: "opportunityAttack",
               subject: expect.objectContaining({
-                statBlockDamageNotation: "static",
+                statBlockDamageSelection: expect.arrayContaining([
+                  expect.objectContaining({ notation: "static" }),
+                ]),
               }),
             }),
           ]),
@@ -2125,7 +2141,7 @@ describe("scenario setup public-SDK boundary", () => {
         spatialDecisions: [],
       },
       ambientIllumination: "brightLight",
-      statBlockDamageNotation: "rolled",
+      statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
       environment: { overhead: { kind: "open" }, barrierHeights: [] },
       initialRangedAttackEnemyRelationships: [],
       movementAllyRelationships: [],
@@ -2186,7 +2202,7 @@ describe("scenario setup public-SDK boundary", () => {
         spatialDecisions: [],
       },
       ambientIllumination: "brightLight",
-      statBlockDamageNotation: "rolled",
+      statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
       environment: { overhead: { kind: "open" }, barrierHeights: [] },
       initialRangedAttackEnemyRelationships: [],
       movementAllyRelationships: [],
@@ -2238,7 +2254,7 @@ describe("scenario setup public-SDK boundary", () => {
         spatialDecisions: [],
       },
       ambientIllumination: "brightLight",
-      statBlockDamageNotation: "rolled",
+      statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
       environment: { overhead: { kind: "open" }, barrierHeights: [] },
       initialRangedAttackEnemyRelationships: [
         {
@@ -2298,14 +2314,20 @@ describe("scenario setup public-SDK boundary", () => {
       (response) =>
         response.kind === "attack" &&
         response.selection.attackAbility === undefined &&
-        response.selection.statBlockDamageNotation === "static" &&
+        statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+          response.selection.statBlockDamageSelection,
+          "static",
+        ) &&
         rawReadyHole.responseChoices.some(
           (candidate) =>
             candidate.kind === "attack" &&
             candidate.selection.attackAbility === undefined &&
             candidate.selection.procedureRef ===
               response.selection.procedureRef &&
-            candidate.selection.statBlockDamageNotation === undefined,
+            statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+              candidate.selection.statBlockDamageSelection,
+              "rolled",
+            ),
         ),
     );
     const scenarioReadyAct = scenarioActs.find(
@@ -2322,7 +2344,10 @@ describe("scenario setup public-SDK boundary", () => {
           response.selection.attackAbility === undefined &&
           response.selection.procedureRef ===
             rawStaticResponse?.selection.procedureRef &&
-          response.selection.statBlockDamageNotation === "static",
+          statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+            response.selection.statBlockDamageSelection,
+            "static",
+          ),
       ),
     ).toBe(false);
     if (
@@ -2345,18 +2370,21 @@ describe("scenario setup public-SDK boundary", () => {
           },
         ],
       );
-      expect(projectedReadyFills).toEqual([
-        expect.objectContaining({
-          value: expect.objectContaining({
-            response: expect.objectContaining({
-              kind: "attack",
-              selection: expect.not.objectContaining({
-                statBlockDamageNotation: "static",
-              }),
-            }),
-          }),
-        }),
-      ]);
+      const projectedReadyFill = projectedReadyFills[0];
+      expect(projectedReadyFill?.kind).toBe("readyDeclaration");
+      if (
+        projectedReadyFill?.kind === "readyDeclaration" &&
+        projectedReadyFill.value.response.kind === "attack" &&
+        projectedReadyFill.value.response.selection.attackAbility === undefined
+      ) {
+        expect(
+          statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+            projectedReadyFill.value.response.selection
+              .statBlockDamageSelection,
+            "rolled",
+          ),
+        ).toBe(true);
+      }
       expect(
         resolveBattleRuntimeSubject({
           session: composed.right.battle,
@@ -2370,31 +2398,51 @@ describe("scenario setup public-SDK boundary", () => {
       attack.subject.action === "attack" &&
       !("attackAbility" in attack.subject)
     ) {
+      const rawStatBlockAttacks = discoverBattleActs(
+        composed.right.battle,
+      ).flatMap(({ subject }) =>
+        subject.tag === "action" &&
+        subject.action === "attack" &&
+        subject.attackAbility === undefined &&
+        subject.procedureRef === attack.subject.procedureRef
+          ? [subject]
+          : [],
+      );
       expect(
         scenarioActs.some(
           ({ subject }) =>
             subject.tag === "action" &&
             subject.action === "attack" &&
             subject.procedureRef === attack.subject.procedureRef &&
-            "statBlockDamageNotation" in subject &&
-            subject.statBlockDamageNotation === "static",
+            subject.attackAbility === undefined &&
+            statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+              subject.statBlockDamageSelection,
+              "static",
+            ),
         ),
       ).toBe(false);
-      expect(
-        discoverBattleActs(composed.right.battle).some(
-          ({ subject }) =>
-            subject.tag === "action" &&
-            subject.action === "attack" &&
-            subject.procedureRef === attack.subject.procedureRef &&
-            subject.statBlockDamageNotation === "static",
+      const rawStaticAttack = rawStatBlockAttacks.find((subject) =>
+        statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+          subject.statBlockDamageSelection,
+          "static",
         ),
-      ).toBe(true);
-      expect(
-        scenarioBattleSubject(composed.right, {
-          ...attack.subject,
-          statBlockDamageNotation: "static",
-        }),
-      ).not.toHaveProperty("statBlockDamageNotation");
+      );
+      expect(rawStaticAttack).toBeDefined();
+      if (rawStaticAttack !== undefined) {
+        const projectedAttack = scenarioBattleSubject(
+          composed.right,
+          rawStaticAttack,
+        );
+        expect(
+          projectedAttack.tag === "action" &&
+            projectedAttack.action === "attack" &&
+            projectedAttack.attackAbility === undefined &&
+            statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+              projectedAttack.statBlockDamageSelection,
+              "rolled",
+            ),
+        ).toBe(true);
+      }
     }
     const frontier = resolveBattleRuntimeSubject({
       session: composed.right.battle,
@@ -2490,7 +2538,7 @@ describe("scenario setup public-SDK boundary", () => {
         space: { revision: 11 },
       },
       ambientIllumination: "brightLight",
-      statBlockDamageNotation: "rolled",
+      statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
       environment: {
         overhead: { kind: "open" },
         barrierHeights: expect.any(Array),
@@ -2720,8 +2768,8 @@ describe("scenario setup public-SDK boundary", () => {
       battle: result.session.battle,
       spatial: { kind: "tableAuthored", spatialDecisions: [] },
       ambientIllumination: result.session.battlefield.ambientIllumination,
-      statBlockDamageNotation:
-        result.session.battlefield.statBlockDamageNotation,
+      statBlockDamageSelectionPolicy:
+        result.session.battlefield.statBlockDamageSelectionPolicy,
       environment: {
         ...result.session.battlefield.environment,
         barrierHeights: [],
@@ -2835,8 +2883,8 @@ describe("scenario setup public-SDK boundary", () => {
         ],
       },
       ambientIllumination: result.session.battlefield.ambientIllumination,
-      statBlockDamageNotation:
-        result.session.battlefield.statBlockDamageNotation,
+      statBlockDamageSelectionPolicy:
+        result.session.battlefield.statBlockDamageSelectionPolicy,
       environment: {
         ...result.session.battlefield.environment,
         barrierHeights: [],
@@ -2925,8 +2973,8 @@ describe("scenario setup public-SDK boundary", () => {
         ],
       },
       ambientIllumination: result.session.battlefield.ambientIllumination,
-      statBlockDamageNotation:
-        result.session.battlefield.statBlockDamageNotation,
+      statBlockDamageSelectionPolicy:
+        result.session.battlefield.statBlockDamageSelectionPolicy,
       environment: {
         ...result.session.battlefield.environment,
         barrierHeights: [],
@@ -3135,7 +3183,7 @@ describe("scenario setup public-SDK boundary", () => {
         spatialDecisions: [],
       },
       ambientIllumination: "brightLight" as const,
-      statBlockDamageNotation: "rolled",
+      statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
       environment: { overhead: { kind: "open" }, barrierHeights: [] },
       initialRangedAttackEnemyRelationships: [],
       movementAllyRelationships: [],
@@ -3341,7 +3389,7 @@ describe("scenario setup public-SDK boundary", () => {
     const dimScenario = createScenarioSession({
       ...twoThreatInput,
       ambientIllumination: "dimLight",
-      statBlockDamageNotation: "rolled",
+      statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     });
     expect(Either.isRight(dimScenario)).toBe(true);
     if (Either.isRight(dimScenario)) {
@@ -3864,8 +3912,8 @@ describe("scenario setup public-SDK boundary", () => {
       battle: geometrySession.battle,
       spatial: { kind: "tableAuthored", spatialDecisions: decisions },
       ambientIllumination: geometrySession.battlefield.ambientIllumination,
-      statBlockDamageNotation:
-        geometrySession.battlefield.statBlockDamageNotation,
+      statBlockDamageSelectionPolicy:
+        geometrySession.battlefield.statBlockDamageSelectionPolicy,
       environment: {
         overhead: geometrySession.battlefield.environment.overhead,
         barrierHeights: [],
@@ -4050,8 +4098,8 @@ describe("scenario setup public-SDK boundary", () => {
         ],
       },
       ambientIllumination: geometrySession.battlefield.ambientIllumination,
-      statBlockDamageNotation:
-        geometrySession.battlefield.statBlockDamageNotation,
+      statBlockDamageSelectionPolicy:
+        geometrySession.battlefield.statBlockDamageSelectionPolicy,
       environment: {
         overhead: geometrySession.battlefield.environment.overhead,
         barrierHeights: [],

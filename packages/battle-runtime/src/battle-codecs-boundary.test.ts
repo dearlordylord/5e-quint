@@ -45,7 +45,8 @@ import {
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
-import type { BattleSubject } from "./battle-subjects.ts";
+import { BattleSubjectSchema, type BattleSubject } from "./battle-subjects.ts";
+import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import {
   battleAreaId,
@@ -382,7 +383,7 @@ function staticDartSubject(
   {
     readonly tag: "action";
     readonly action: "attack";
-    readonly statBlockDamageNotation: "static";
+    readonly statBlockDamageSelection: unknown;
   }
 > {
   const subject = discoverBattleActs(session).find(
@@ -390,12 +391,20 @@ function staticDartSubject(
       candidate.tag === "action" &&
       candidate.action === "attack" &&
       candidate.actorId === goblinId &&
-      candidate.statBlockDamageNotation === "static",
+      candidate.statBlockDamageSelection !== undefined &&
+      statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+        candidate.statBlockDamageSelection,
+        "static",
+      ),
   )?.subject;
   if (
     subject?.tag !== "action" ||
     subject.action !== "attack" ||
-    subject.statBlockDamageNotation !== "static"
+    subject.statBlockDamageSelection === undefined ||
+    !statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+      subject.statBlockDamageSelection,
+      "static",
+    )
   ) {
     throw new Error("Expected a discovered static Stat Block attack.");
   }
@@ -765,6 +774,80 @@ describe("battle codec Stat Block Recharge d6 boundaries", () => {
   });
 });
 
+describe("battle codec attack-selection boundaries", () => {
+  test("rejects a Stat Block selection on a character-only Weapon Mastery Push fact", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("codec-weapon-mastery-push-selection"),
+      combatants: [
+        statBlockCreatureInit({
+          combatantId: goblinId,
+          statBlock: codecStaticDartStatBlock(),
+          initiative: 20,
+        }),
+        characterSeed({ combatantId: fighterId, initiative: 10 }),
+      ],
+    });
+    const subject = staticDartSubject(session);
+
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleFillSchema)({
+          kind: "targetSpatialFacts",
+          holeId: holeId("weapon-mastery-push-stat-block-selection"),
+          spatialFacts: [
+            {
+              kind: "weaponMasteryPushDisposition",
+              attackerId: subject.actorId,
+              targetId: fighterId,
+              procedureRef: subject.procedureRef,
+              statBlockDamageSelection: subject.statBlockDamageSelection,
+              disposition: {
+                kind: "blocked",
+                distanceFeet: movementFeet(0),
+                reason: "noLegalDestination",
+                provokesOpportunityAttacks: false,
+              },
+            },
+          ],
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("rejects noncanonical component roles through the Stat Block subject codec", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("codec-stat-block-damage-component-roles"),
+      combatants: [
+        statBlockCreatureInit({
+          combatantId: goblinId,
+          statBlock: codecStaticDartStatBlock(),
+          initiative: 20,
+        }),
+        characterSeed({ combatantId: fighterId, initiative: 10 }),
+      ],
+    });
+    const subject = staticDartSubject(session);
+
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSubjectSchema)({
+          ...subject,
+          statBlockDamageSelection: [
+            {
+              componentRef: { kind: "baseDamageComponent", ordinal: 2 },
+              notation: "rolled",
+            },
+            {
+              componentRef: { kind: "baseDamageComponent", ordinal: 1 },
+              notation: "static",
+            },
+          ],
+        }),
+      ),
+    ).toBe(true);
+  });
+});
+
 describe("battle codec act ownership boundaries", () => {
   test("preserves static Stat Block distance identity for an ordinary attack", () => {
     const session = startBattleSessionRight({
@@ -790,7 +873,7 @@ describe("battle codec act ownership boundaries", () => {
         fighterId,
         {
           procedureRef: subject.procedureRef,
-          statBlockDamageNotation: "static",
+          statBlockDamageSelection: subject.statBlockDamageSelection,
         },
         movementFeet(5),
       ),
@@ -804,7 +887,7 @@ describe("battle codec act ownership boundaries", () => {
         {
           kind: "attackTargetDistance",
           procedureRef: subject.procedureRef,
-          statBlockDamageNotation: "static",
+          statBlockDamageSelection: subject.statBlockDamageSelection,
         },
       ],
     });
@@ -840,8 +923,12 @@ describe("battle codec act ownership boundaries", () => {
     const attackResponse = declarationHole.responseChoices.find(
       (response) =>
         response.kind === "attack" &&
-        "statBlockDamageNotation" in response.selection &&
-        response.selection.statBlockDamageNotation === "static",
+        "statBlockDamageSelection" in response.selection &&
+        response.selection.statBlockDamageSelection !== undefined &&
+        statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+          response.selection.statBlockDamageSelection,
+          "static",
+        ),
     );
     if (attackResponse?.kind !== "attack") {
       throw new Error("Expected the static Stat Block Ready response.");
@@ -903,7 +990,8 @@ describe("battle codec act ownership boundaries", () => {
       spatialFacts: [
         {
           kind: "attackTargetDistance",
-          statBlockDamageNotation: "static",
+          statBlockDamageSelection:
+            attackResponse.selection.statBlockDamageSelection,
         },
       ],
     });

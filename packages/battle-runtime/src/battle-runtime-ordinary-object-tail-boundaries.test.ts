@@ -17,6 +17,7 @@ import {
   characterBattleFeatureInitForTest,
   characterSeed,
   attackRollFill,
+  battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest,
   damageRollFill,
   discoverBattleActs,
   fighterAttackSubject,
@@ -65,7 +66,10 @@ describe("battle runtime: ordinary object attack tail boundaries", () => {
       (candidate) =>
         candidate.subject.tag === "action" &&
         candidate.subject.action === "attack" &&
-        candidate.subject.statBlockDamageNotation === undefined &&
+        battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+          candidate.subject,
+          "rolled",
+        ) &&
         candidate.summary.includes("Calibration Strike"),
     );
     if (
@@ -140,7 +144,10 @@ describe("battle runtime: ordinary object attack tail boundaries", () => {
       (candidate) =>
         candidate.subject.tag === "action" &&
         candidate.subject.action === "attack" &&
-        candidate.subject.statBlockDamageNotation === undefined &&
+        battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+          candidate.subject,
+          "rolled",
+        ) &&
         candidate.summary.includes("Bite"),
     );
     if (biteAct === undefined || biteAct.subject.tag !== "action") {
@@ -259,13 +266,19 @@ describe("battle runtime: ordinary object attack tail boundaries", () => {
       (candidate) =>
         candidate.subject.tag === "action" &&
         candidate.subject.action === "attack" &&
-        candidate.subject.statBlockDamageNotation === "static" &&
+        battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+          candidate.subject,
+          "static",
+        ) &&
         candidate.summary.includes("Scimitar"),
     );
     if (
       staticAct?.subject.tag !== "action" ||
       staticAct.subject.action !== "attack" ||
-      staticAct.subject.statBlockDamageNotation !== "static"
+      !battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+        staticAct.subject,
+        "static",
+      )
     ) {
       throw new Error("Expected the discovered static Scimitar attack.");
     }

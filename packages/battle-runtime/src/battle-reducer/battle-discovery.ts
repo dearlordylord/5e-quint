@@ -990,6 +990,7 @@ function pactOfTheChainFamiliarAttackActs(
       return [];
     }
     const targetHole = attackTargetHole(state, familiarId, attack);
+    const selection = attackExecutionSelectionForOption(attack);
     return targetHole.choices.length === 0
       ? []
       : [
@@ -999,9 +1000,7 @@ function pactOfTheChainFamiliarAttackActs(
               actorId,
               familiarId,
               procedureRef: attack.procedureRef,
-              ...(attack.damageNotation === "static"
-                ? { statBlockDamageNotation: "static" as const }
-                : {}),
+              statBlockDamageSelection: selection.statBlockDamageSelection,
             },
             initialHoles: [targetHole],
           },

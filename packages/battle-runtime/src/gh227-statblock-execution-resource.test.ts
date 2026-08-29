@@ -15,6 +15,7 @@ import {
   attackTargetFill,
   battleId,
   battleRuntimeContextForStateForTest,
+  battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest,
   characterSeed,
   damageRollFill,
   discoverBattleActs,
@@ -90,7 +91,12 @@ function resolveStatBlockAttack(
     subject,
     fills: [target, attackRoll],
   });
-  if (subject.statBlockDamageNotation === "static") {
+  if (
+    battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+      subject,
+      "static",
+    )
+  ) {
     return requireResolved(beforeDamage).state;
   }
   const damageHole = requireHole(beforeDamage, "rolledDice");

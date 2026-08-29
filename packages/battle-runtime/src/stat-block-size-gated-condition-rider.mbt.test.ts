@@ -36,6 +36,7 @@ import {
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import {
   battleId,
+  battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest,
   combatantId,
   damageRollFill,
   DieRollResult,
@@ -308,7 +309,12 @@ describe("Stat Block size-gated condition rider focused MBT", () => {
     const subject = attackSubject(
       sizeGatedConditionRiderBattle("mediumOrSmaller"),
     );
-    expect(subject.statBlockDamageNotation ?? "rolled").toBe("rolled");
+    expect(
+      battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+        subject,
+        "rolled",
+      ),
+    ).toBe(true);
   });
 
   it(
@@ -450,7 +456,10 @@ function attackSubject(
       candidate.subject.actorId === actorId &&
       candidate.subject.action === "attack" &&
       candidate.subject.procedureRef !== undefined &&
-      (candidate.subject.statBlockDamageNotation ?? "rolled") === "rolled",
+      battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+        candidate.subject,
+        "rolled",
+      ),
   );
   if (matchingActs.length !== 1) {
     const attackSubjects = discoverBattleActCandidates(state).flatMap(

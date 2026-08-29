@@ -1,6 +1,7 @@
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-STAT-BLOCK-MULTIATTACK-001
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import {
+  battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest,
   resolveBattleSubject,
   startBattleRight,
   statBlockProcedurePresentationsForStateForTest,
@@ -390,7 +391,10 @@ function attackSubject(
       act.subject.tag === "action" &&
       act.subject.action === "attack" &&
       act.subject.procedureRef === procedureRef &&
-      act.subject.statBlockDamageNotation === undefined,
+      battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+        act.subject,
+        "rolled",
+      ),
   )?.subject;
   if (subject?.tag !== "action" || subject.action !== "attack") {
     throw new Error(`Expected admitted ${attackName} subject.`);

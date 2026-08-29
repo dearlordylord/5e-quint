@@ -21,7 +21,7 @@ Every one of the **2602** #350 structural rows is assigned exactly once. The che
 | stat-block.action-lifecycle                    | executable    | covered         |  329 |         329 | stat-block.action-lifecycle              | BATTLE.STAT_BLOCK.ACTION_LIFECYCLE              |         — |
 | stat-block.bonus-action-lifecycle              | executable    | covered         |   78 |          72 | stat-block.bonus-action-lifecycle        | BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE        |         — |
 | stat-block.legendary-action-lifecycle          | executable    | covered         |    6 |           3 | stat-block.legendary-action-lifecycle    | BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE    |         — |
-| stat-block.attack-procedure                    | executable    | needs-qnt-owner |  252 |         213 | stat-block.attack-procedure              | BATTLE.STAT_BLOCK.ATTACK_PROCEDURE              |      #427 |
+| stat-block.attack-procedure                    | executable    | covered         |  252 |         213 | stat-block.attack-procedure              | BATTLE.STAT_BLOCK.ATTACK_PROCEDURE              |         — |
 | stat-block.multiattack                         | executable    | covered         |   89 |          44 | stat-block.multiattack                   | BATTLE.STAT_BLOCK.MULTIATTACK                   |         — |
 | stat-block.resource-lifecycle                  | executable    | covered         |  330 |         122 | stat-block.resource-lifecycle            | BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE            |         — |
 | stat-block.spell-invocation.unrestricted       | missingOwner  | not-applicable  |  286 |          50 | stat-block.spell-invocation.unrestricted | BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED |      #418 |

@@ -177,7 +177,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     battle: started.right,
     spatial: { kind: "tableAuthored", spatialDecisions },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: { overhead: { kind: "open" }, barrierHeights: [] },
     initialRangedAttackEnemyRelationships: [],
     movementAllyRelationships: [],

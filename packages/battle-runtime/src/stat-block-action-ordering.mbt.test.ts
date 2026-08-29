@@ -64,6 +64,7 @@ import {
   requireNeedsHoles,
   requireResolved,
   resolveBattleSubject,
+  battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest,
   startBattleSessionRight,
   statBlockCreatureInit,
   type BattleFill,
@@ -74,7 +75,10 @@ import {
 } from "./battle-runtime.test-support.ts";
 import type { AttackDamageRider } from "./battle-state-execution.ts";
 import type { BattleResolutionResult } from "./index.ts";
-import type { StatBlockDamageNotation } from "./battle-action-options.ts";
+import { attackExecutionSelectionForOption } from "./battle-action-options.ts";
+import type { StatBlockDamageComponentNotation } from "./stat-block-attack-damage-selection.ts";
+import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
+import { sameBattleSubject } from "./battle-subjects.ts";
 
 type StatBlockAttack = Extract<
   AuthoredExecutableProcedure,
@@ -134,7 +138,7 @@ const srdGoblinWarrior = decodeStatBlockRecordSync(srdGoblinWarriorInput);
 
 function admittedAttackOption(
   attack: StatBlockAttack,
-  damageNotation: StatBlockDamageNotation,
+  damageComponentNotation: StatBlockDamageComponentNotation,
 ) {
   const baseAttackEntry = srdGoblinWarrior.statBlock.actions?.find(
     (entry) =>
@@ -200,7 +204,10 @@ function admittedAttackOption(
   return statBlockAttackActionOptions(admission.execution).find(
     (option) =>
       option.procedureRef === authoredProcedureRef &&
-      option.damageNotation === damageNotation,
+      statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+        attackExecutionSelectionForOption(option).statBlockDamageSelection,
+        damageComponentNotation,
+      ),
   );
 }
 
@@ -289,8 +296,7 @@ function createStatBlockActionOrderingDriverWithProjection<State>(
           act.subject.tag === "action" &&
           act.subject.action === "attack" &&
           act.subject.procedureRef === input.attackSubject.procedureRef &&
-          act.subject.statBlockDamageNotation ===
-            input.attackSubject.statBlockDamageNotation,
+          sameBattleSubject(act.subject, input.attackSubject),
       )?.subject;
       if (
         admittedSubject?.tag !== "action" ||
@@ -789,7 +795,9 @@ describe("Stat Block action ordering MBT", () => {
     expect(subject).toMatchObject({
       tag: "action",
       action: "attack",
-      statBlockDamageNotation: "static",
+      statBlockDamageSelection: [
+        expect.objectContaining({ notation: "static" }),
+      ],
     });
     expect(subject.procedureRef).toBeDefined();
     expect("attackName" in subject).toBe(false);
@@ -915,7 +923,7 @@ function statBlockActionOrderingBattle(
 function requireDiscoveredStatBlockAttackSubject(
   session: BattleRuntimeSession,
   attackName: string,
-  statBlockDamageNotation: StatBlockDamageNotation,
+  damageComponentNotation: StatBlockDamageComponentNotation,
 ): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
@@ -926,8 +934,10 @@ function requireDiscoveredStatBlockAttackSubject(
       candidate.subject.action === "attack" &&
       candidate.subject.actorId === goblinId &&
       candidate.summary.includes(attackName) &&
-      (candidate.subject.statBlockDamageNotation ?? "rolled") ===
-        statBlockDamageNotation,
+      battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+        candidate.subject,
+        damageComponentNotation,
+      ),
   );
   if (
     act === undefined ||
@@ -935,7 +945,7 @@ function requireDiscoveredStatBlockAttackSubject(
     act.subject.action !== "attack"
   ) {
     throw new Error(
-      `Expected discovered ${statBlockDamageNotation} Stat Block attack subject.`,
+      `Expected discovered ${damageComponentNotation} Stat Block attack subject.`,
     );
   }
   return act.subject;

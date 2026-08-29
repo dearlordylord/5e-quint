@@ -1,8 +1,8 @@
 {
   "summary": {
     "total": 162,
-    "covered": 144,
-    "open": 12,
+    "covered": 145,
+    "open": 11,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
@@ -12,8 +12,8 @@
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 144,
-      "needs-qnt-owner": 12,
+      "covered": 145,
+      "needs-qnt-owner": 11,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
       "boundary-only": 5,
@@ -2913,28 +2913,39 @@
       "title": "Battle Stat Block Legendary Action windows and resources"
     },
     {
-      "followUpTaskIds": ["GH-427"],
       "id": "BATTLE.STAT_BLOCK.ATTACK_PROCEDURE",
       "kind": "profile-procedure",
       "parityWitnesses": [
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/stat-block-attack-resolution.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-stat-block-attack-resolution.mbt.qnt",
+          "stepAction": "step"
+        },
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts"
         }
       ],
       "profiles": ["stat-block.attack-procedure"],
-      "qntOwners": [],
-      "reason": "Production runtime executes the 252 checked Attack Procedure rows, but #427 owns the missing identity-independent QNT semantics and parity for attack rolls, multiple damage components, and admitted typed hit riders.",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-attack-resolution.qnt"
+      ],
+      "reason": "The identity-independent rule core owns Attack Roll hit/miss, per-instance static-or-rolled damage, Critical Hit dice, typed damage aggregation, Advantage-only bonus damage, and the admitted size-gated Prone rider. The focused five-family MBT computes expected projections through that core and compares them with actual production reducer state and frontiers; additional-effect continuations remain outside this obligation.",
       "runtime": "battle",
       "runtimeOwners": [
+        "packages/battle-runtime/src/battle-action-options.ts",
+        "packages/battle-runtime/src/stat-block-attack-damage-selection.ts",
+        "packages/battle-runtime/src/statblock-attack-damage-support.ts",
+        "packages/battle-runtime/src/battle-subjects.ts",
+        "packages/battle-runtime/src/battle-reducer/codec-building-blocks.ts",
         "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
         "packages/battle-runtime/src/battle-reducer/statblock-attacks.ts",
-        "packages/battle-runtime/src/battle-reducer/statblock-attack-hit-condition-riders.ts",
-        "packages/battle-runtime/src/statblock-attack-hit-condition-support.ts",
         "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
-        "packages/battle-runtime/src/statblock-attack-damage-support.ts"
+        "packages/battle-runtime/src/statblock-attack-hit-condition-support.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock-attack-hit-condition-riders.ts"
       ],
-      "status": "needs-qnt-owner",
+      "status": "covered",
       "surfaceEvidence": [
         ".references/srd-5.2.1/Monsters/Overview.md#Parts-of-a-Stat-Block",
         "UBIQUITOUS_LANGUAGE.md#Creatures-and-Stat-Blocks"
@@ -9689,6 +9700,12 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "Identity-independent Stat Block Attack Roll hit/miss, per-instance static-or-rolled damage, Critical Hit dice, typed aggregation, Advantage-only bonus damage, and admitted size-gated Prone rider semantics.",
+      "obligationIds": ["BATTLE.STAT_BLOCK.ATTACK_PROCEDURE"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-attack-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "Focused Stat Block Bonus Action resource semantics.",
       "obligationIds": ["BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE"],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-bonus-action-lifecycle.qnt",
@@ -10054,6 +10071,18 @@
       "evidence": "Focused Action lifecycle inductive evidence.",
       "obligationIds": [],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-action-lifecycle-inductive.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Focused executable Stat Block attack impact and full per-type resolution examples.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-attack-resolution-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Bounded inductive evidence for the canonical primitive Stat Block attack impact owner.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-attack-resolution-inductive.qnt",
       "role": "proof-only"
     },
     {
@@ -11680,6 +11709,12 @@
       "obligationIds": [],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-initial-condition-immunity-tests.qnt",
       "role": "proof-only"
+    },
+    {
+      "evidence": "Computed-oracle five-family Stat Block attack resolver fixture paired with actual production reducer projections; reusable semantics live in the shared rule core.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-stat-block-attack-resolution.mbt.qnt",
+      "role": "mbt-fixture"
     }
   ],
   "qntRegistry": [
@@ -13282,6 +13317,21 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-action-lifecycle.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-attack-resolution-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-attack-resolution-inductive.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-attack-resolution.qnt",
       "role": "semantic-core"
     },
     {
@@ -16490,6 +16540,40 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/stat-block-action-lifecycle.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "map",
+        "fold",
+        "membership",
+        "list",
+        "size"
+      ],
+      "obligationId": "BATTLE.STAT_BLOCK.ATTACK_PROCEDURE",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-attack-resolution-inductive.qnt",
+        "packages/shared-algebras/proofs/rule-core/stat-block-attack-resolution-examples.qnt",
+        "packages/battle-runtime/battle-runtime-stat-block-attack-resolution.mbt.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-attack-resolution.qnt"
       ],
       "status": "generation-subset-clean"
     },

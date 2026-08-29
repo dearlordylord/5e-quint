@@ -10421,14 +10421,20 @@ describe("Character battle runtime boundary coverage", () => {
       (entry) => entry.kind === "executable",
     );
     const resourceOrdinal = source.statBlock.resources?.[0]?.ordinal;
-    if (action === undefined || resourceOrdinal === undefined) {
+    if (
+      action === undefined ||
+      action.procedure.kind !== "attack_roll" ||
+      resourceOrdinal === undefined
+    ) {
       throw new Error("Expected the Sphinx resource-backed action fixture.");
     }
     const malformedStatBlock = { ...source.statBlock };
     delete malformedStatBlock.resources;
     malformedStatBlock.actions = [
       {
-        ...action,
+        kind: "executable",
+        procedureOrdinal: action.procedureOrdinal,
+        procedure: action.procedure,
         resourceRefs: { kind: "some", ordinals: [resourceOrdinal] },
       },
     ];
@@ -10814,6 +10820,7 @@ function attackMeleeReachFact(
         targetId,
         distanceFeet: movementFeet(5),
         procedureRef: subject.procedureRef,
+        statBlockDamageSelection: subject.statBlockDamageSelection,
       }
     : {
         kind: "attackTargetDistance",

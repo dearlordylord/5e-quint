@@ -133,8 +133,6 @@ const semanticFamilyDefinitions = [
     ],
     profileId: "stat-block.attack-procedure",
     obligationId: "BATTLE.STAT_BLOCK.ATTACK_PROCEDURE",
-    formalEvidenceState: "needs-qnt-owner",
-    proofFollowUpIssueNumber: 427,
   },
   {
     id: "stat-block.multiattack",
@@ -754,11 +752,13 @@ function validateCoverageJoin(
               qntOwnerRoles.get(owner.ownerPath) !== "proof-only" ||
               !readiness.proofOnly.includes(owner.ownerPath),
           ) ||
-          readiness.proofOnly.some(
-            (ownerPath) =>
-              qntOwnerRoles.get(ownerPath) !== "proof-only" ||
-              readinessSemanticAndBridgeOwners.has(ownerPath),
-          )
+          readiness.proofOnly.some((ownerPath) => {
+            const role = qntOwnerRoles.get(ownerPath);
+            return (
+              (role !== "proof-only" && role !== "mbt-fixture") ||
+              readinessSemanticAndBridgeOwners.has(ownerPath)
+            );
+          })
         ) {
           fail(`${family.id} qnt-proof owner partition is not exact.`);
         }
@@ -1155,14 +1155,18 @@ async function runSelfTest() {
     "does not join exactly to tracker task GH-418",
   );
 
-  const hiddenFormalGapCoverage = structuredClone(realCoverage);
-  hiddenFormalGapCoverage.obligations.find(
+  const missingAttackFormalOwnershipCoverage = structuredClone(realCoverage);
+  missingAttackFormalOwnershipCoverage.obligations.find(
     ({ id }) => id === "BATTLE.STAT_BLOCK.ATTACK_PROCEDURE",
-  ).status = "covered";
+  ).qntOwners = [];
   assertThrowsWith(
-    "hidden attack formal gap",
-    () => validateCoverageJoin(realReconciliation, hiddenFormalGapCoverage),
-    "does not expose formal gap GH-427 exactly",
+    "missing covered attack formal ownership",
+    () =>
+      validateCoverageJoin(
+        realReconciliation,
+        missingAttackFormalOwnershipCoverage,
+      ),
+    "cross-layer owner join is not exact",
   );
 
   const duplicateRankPressure = structuredClone(realPressure);

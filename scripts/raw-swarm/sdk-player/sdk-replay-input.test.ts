@@ -3,10 +3,10 @@ import { describe, expect, test } from "vitest";
 import {
   battleExecutionScopeOrdinal,
   battleId,
-  battleProcedureExecutionRef,
   battleStatBlockExecutionScopeRef,
   combatantId,
 } from "../../../packages/battle-runtime/src/index.ts";
+import { battleStatBlockProcedureExecutionRef } from "../../../packages/battle-runtime/src/identity.ts";
 import { movementFeet } from "../../../packages/shared/src/types.ts";
 import {
   canonicalSdkCallInput,
@@ -102,7 +102,7 @@ describe("SDK replay input", () => {
   test("removes undefined union properties before decoding and recording", () => {
     const actorId = combatantId("goblin-warrior");
     const targetId = combatantId("fighter");
-    const procedureRef = battleProcedureExecutionRef(
+    const procedureRef = battleStatBlockProcedureExecutionRef(
       battleStatBlockExecutionScopeRef(
         battleId("canonical-input"),
         actorId,
@@ -110,6 +110,12 @@ describe("SDK replay input", () => {
       ),
       battleExecutionScopeOrdinal(1),
     );
+    const statBlockDamageSelection = [
+      {
+        componentRef: { kind: "baseDamageComponent", ordinal: 1 },
+        notation: "static",
+      },
+    ] as const;
     const decoded = canonicalSdkCallInput({
       operation: "resolveBattleRuntimeSubject",
       input: {
@@ -118,7 +124,7 @@ describe("SDK replay input", () => {
           actorId,
           action: "attack",
           procedureRef,
-          statBlockDamageNotation: "static",
+          statBlockDamageSelection,
         },
         fills: [
           {
@@ -132,6 +138,7 @@ describe("SDK replay input", () => {
                 targetId,
                 procedureRef,
                 distanceFeet: movementFeet(5),
+                statBlockDamageSelection,
                 attackAbility: undefined,
                 attackDamageType: undefined,
               },

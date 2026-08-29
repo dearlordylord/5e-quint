@@ -31,6 +31,8 @@ import {
 } from "./battle-runtime.test-support.ts";
 import { statBlockExecutionAdmissionCohort } from "./stat-block-execution.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution-state.ts";
+import { attackExecutionSelectionForOption } from "./battle-action-options.ts";
+import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
 import {
   statBlockTraitsAreSupported,
   supportedStatBlockTraitAttackRollModes,
@@ -216,19 +218,25 @@ describe("generic Stat Block projection", () => {
     const scratch = statBlockAttackActionOptions(admission.execution).find(
       (option) =>
         option.procedureRef === scratchBinding.procedureRef &&
-        option.damageNotation === "static",
+        statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+          attackExecutionSelectionForOption(option).statBlockDamageSelection,
+          "static",
+        ),
     );
 
     expect(scratch).toMatchObject({
       kind: "statBlockAttack",
-      damageNotation: "static",
       attack: {
-        onHit: [
-          {
-            kind: "damage",
-            amount: { kind: "fixed", static: 1 },
+        onHit: {
+          damage: {
+            baseComponents: [
+              {
+                kind: "fixed",
+                amount: 1,
+              },
+            ],
           },
-        ],
+        },
       },
     });
   });
