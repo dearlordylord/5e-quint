@@ -13,6 +13,7 @@ export {
   MONK_FOCUS_PROCEDURE_QUERY,
   bindStoredSpellProcedureExecutionFacts,
   characterExecutionWithMovableLightReposition,
+  characterExecutionWithSpatialMeleeSpellAttackProxyRepeatAttack,
   characterExecutionWithHeldLightHurl,
   characterExecutionWithMarkedDamageRiderTransfer,
   characterExecutionWithObjectContactDamageRepeat,

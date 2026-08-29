@@ -27,7 +27,7 @@ import { describe, expect, test } from "vitest";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import { removeBattleCombatants } from "./battle-reducer/api-lifecycle.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
-import { characterExecutionWithSpiritualWeaponRepeatAttack } from "./character-execution-admission.ts";
+import { characterExecutionWithSpatialMeleeSpellAttackProxyRepeatAttack } from "./character-execution-admission.ts";
 import {
   allocateBattleEffectExecutionRefForCreature,
   type BattleActiveEffectOccurrenceTemplate,
@@ -419,14 +419,15 @@ function spatialMeleeSpellAttackProxyRepeatBattle(): BattleRuntimeSession {
   expect(Number(effectAllocation.owner.nextEffectOrdinal)).toBe(
     Number(caster.nextEffectOrdinal) + 1,
   );
-  const execution = characterExecutionWithSpiritualWeaponRepeatAttack(
-    caster.origin.execution,
-    {
-      procedure: "spatialMeleeSpellAttackProxy",
-      activeEffectRef: activeEffect.effectRef,
-      activeEffectSourceProcedureRef: sourceBinding.procedureRef,
-    },
-  );
+  const execution =
+    characterExecutionWithSpatialMeleeSpellAttackProxyRepeatAttack(
+      caster.origin.execution,
+      {
+        procedure: "spatialMeleeSpellAttackProxy",
+        activeEffectRef: activeEffect.effectRef,
+        activeEffectSourceProcedureRef: sourceBinding.procedureRef,
+      },
+    );
   return battleRuntimeSessionForTest({
     ...session,
     state: {

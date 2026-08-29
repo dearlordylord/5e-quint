@@ -1265,6 +1265,36 @@ export function flamingSphereAreaFill(
   };
 }
 
+export function persistentAreaSaveDamageAreaFill(
+  hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
+  areaId = battleAreaId("persistent-area-save-damage-catalog-area"),
+  originAnchor: BattleSpellAreaOriginAnchor = tableSelectedPointAreaOriginAnchor,
+): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
+  const value = Match.value(hole.area.kind).pipe(
+    Match.when("pointOriginSphereDiameter", () => ({
+      kind: "pointOriginSphereDiameterArea" as const,
+      areaId,
+      originAnchor,
+    })),
+    Match.when("pointOriginSphere", () => ({
+      kind: "anchoredPointOriginSphereArea" as const,
+      areaId,
+      originAnchor,
+    })),
+    Match.when("pointOriginCylinder", () => ({
+      kind: "anchoredPointOriginCylinderArea" as const,
+      areaId,
+      originAnchor,
+    })),
+    Match.orElse(() => {
+      throw new Error(
+        `Unsupported persistent-area save-damage targeting: ${hole.area.kind}.`,
+      );
+    }),
+  );
+  return { kind: "spellAreaChoice", holeId: hole.holeId, value };
+}
+
 export function spikeGrowthAreaFill(
   hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
   areaId = spikeGrowthAreaId,
