@@ -9,7 +9,10 @@ import {
   SrdStatBlockRecordSchema,
   decodeSrdSurfaceSync,
 } from "@dnd/surface/surface/schema";
-import { installSrdSurface } from "@dnd/surface/surface/catalog-install";
+import {
+  installSrdSurface,
+  type SurfaceMechanicsAdmission,
+} from "@dnd/surface/surface/catalog-install";
 import type {
   SrdStatBlockRecord,
   SrdSurface,
@@ -36,9 +39,9 @@ if (source === undefined) {
   throw new Error("Expected a decoded Stat Block fixture.");
 }
 
-const permissiveAdmission = {
-  admitUnit: () => ({ tag: "admitted" as const }),
-  admitStatBlock: () => ({ tag: "admitted" as const }),
+const permissiveAdmission: SurfaceMechanicsAdmission = {
+  admitUnit: () => ({ tag: "admitted" }),
+  admitStatBlock: () => ({ tag: "admitted" }),
 };
 
 function surfaceWithStatBlock(statBlock: SrdStatBlockRecord): SrdSurface {
