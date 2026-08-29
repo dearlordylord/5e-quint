@@ -5873,10 +5873,10 @@
         "BATTLE.DAMAGE.ATTACK_BRANCHES",
         "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"
       ],
-      "followUpTaskIds": ["GH-427"],
+      "followUpTaskIds": [],
       "holeKind": "attackRoll",
       "id": "BattleAttackRollHole",
-      "reason": "Attack Roll results drive hit, miss, Critical Hit, replacement, and post-hit continuation semantics across attacks and feature riders; generic attack branch coverage is now split from feature-specific follow-ups. The protocol ordering obligation also owns the Stat Block Attack Roll position after Stat Block target choice or Multiattack dispatch control. Formal semantics for the existing executable Stat Block attack/damage/rider family remain explicitly owned by GH-427.",
+      "reason": "Attack Roll results drive hit, miss, Critical Hit, replacement, and post-hit continuation semantics across attacks and feature riders; generic attack branch coverage is split from feature-specific follow-ups. The protocol ordering obligation also owns the Stat Block Attack Roll position after Stat Block target choice or Multiattack dispatch control. BATTLE.STAT_BLOCK.ATTACK_PROCEDURE owns formal semantics for the admitted Stat Block attack, damage, and typed-rider family.",
       "subject": "battle-hole-family"
     },
     {
@@ -6409,9 +6409,9 @@
         "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"
       ],
       "fillKind": "attackRoll",
-      "followUpTaskIds": ["GH-427"],
+      "followUpTaskIds": [],
       "id": "attackRoll",
-      "reason": "Attack Roll fills drive hit, miss, Critical Hit, replacement, and downstream attack or spell damage/continuation semantics. The protocol ordering obligation also owns Stat Block Attack Roll fills after Stat Block target choice or Multiattack dispatch control. Formal semantics for the existing executable Stat Block attack/damage/rider family remain explicitly owned by GH-427.",
+      "reason": "Attack Roll fills drive hit, miss, Critical Hit, replacement, and downstream attack or spell damage/continuation semantics. The protocol ordering obligation also owns Stat Block Attack Roll fills after Stat Block target choice or Multiattack dispatch control. BATTLE.STAT_BLOCK.ATTACK_PROCEDURE owns formal semantics for the admitted Stat Block attack, damage, and typed-rider family.",
       "subject": "battle-fill-kind"
     },
     {
