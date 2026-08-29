@@ -101,7 +101,7 @@ import {
   BattleAttackExecutionScopeRef,
   BattleAttackProcedureExecutionRef,
   BattleCharacterExecutionScopeRef,
-  BattleDancingLightId,
+  BattleMovableLightId,
   BattleId,
   BattleLineDirectionId,
   BattleObjectId,
@@ -436,38 +436,38 @@ const WildShapeFormLimbObjectHandlingWitnessSchema = Schema.Struct({
   kind: Schema.Literals(WILD_SHAPE_FORM_LIMB_OBJECT_HANDLING_WITNESSES),
 });
 
-const BattleDancingLightCastPlacementSchema = Schema.Struct({
+const BattleMovableLightCastPlacementSchema = Schema.Struct({
   positionId: BattleTablePositionId,
   distanceFromCasterFeet: MovementFeet,
   nearestSiblingDistanceFeet: Schema.optionalKey(MovementFeet),
 });
-const BattleDancingLightRepositionPlacementSchema = Schema.Struct({
+const BattleMovableLightRepositionPlacementSchema = Schema.Struct({
   positionId: BattleTablePositionId,
   distanceFromCasterFeet: MovementFeet,
   nearestSiblingDistanceFeet: Schema.optionalKey(MovementFeet),
-  lightId: BattleDancingLightId,
+  lightId: BattleMovableLightId,
   moveDistanceFeet: MovementFeet,
 });
 const BattleMovableLightPlacementValueSchema = Schema.Union([
   Schema.Struct({
     mode: Schema.Literal("cast"),
     form: Schema.Literal("separateLights"),
-    lights: Schema.Array(BattleDancingLightCastPlacementSchema),
+    lights: Schema.Array(BattleMovableLightCastPlacementSchema),
   }),
   Schema.Struct({
     mode: Schema.Literal("cast"),
     form: Schema.Literal("combinedMediumForm"),
-    light: BattleDancingLightCastPlacementSchema,
+    light: BattleMovableLightCastPlacementSchema,
   }),
   Schema.Struct({
     mode: Schema.Literal("reposition"),
     form: Schema.Literal("separateLights"),
-    lights: Schema.Array(BattleDancingLightRepositionPlacementSchema),
+    lights: Schema.Array(BattleMovableLightRepositionPlacementSchema),
   }),
   Schema.Struct({
     mode: Schema.Literal("reposition"),
     form: Schema.Literal("combinedMediumForm"),
-    light: BattleDancingLightRepositionPlacementSchema,
+    light: BattleMovableLightRepositionPlacementSchema,
   }),
 ]);
 
@@ -1329,8 +1329,8 @@ const BattleLightEmitterAttachmentSchema = Schema.Union([
     objectId: BattleObjectId,
   }),
   Schema.Struct({
-    kind: Schema.Literal("dancingLight"),
-    lightId: BattleDancingLightId,
+    kind: Schema.Literal("movableLight"),
+    lightId: BattleMovableLightId,
     positionId: BattleTablePositionId,
     form: Schema.Literals(["separateLights", "combinedMediumForm"]),
   }),
@@ -2102,7 +2102,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     mode: Schema.Literals(["cast", "reposition"]),
     form: Schema.Literals(["separateLights", "combinedMediumForm"]),
-    activeLightIds: Schema.Array(BattleDancingLightId),
+    activeLightIds: Schema.Array(BattleMovableLightId),
     rangeFeet: MovementFeet,
     maxMoveFeet: MovementFeet,
     spacingFeet: MovementFeet,

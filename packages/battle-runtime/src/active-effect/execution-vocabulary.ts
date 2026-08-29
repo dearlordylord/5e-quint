@@ -6,7 +6,7 @@ import type {
 import type {
   BattleEffectExecutionRef,
   BattleAreaId,
-  BattleDancingLightId,
+  BattleMovableLightId,
   BattleTablePositionId,
   CombatantId,
 } from "../identity.ts";
@@ -51,7 +51,7 @@ export type BattleCompelledBehaviorOption =
   (typeof COMPELLED_BEHAVIOR_OPTIONS)[number];
 
 export type BattleMovableLight = {
-  readonly lightId: BattleDancingLightId;
+  readonly lightId: BattleMovableLightId;
   readonly positionId: BattleTablePositionId;
 };
 export type BattleMovableLightList =

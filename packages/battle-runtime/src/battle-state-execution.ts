@@ -276,7 +276,14 @@ import type {
   SpellProcedureInput,
   SpellProcedureExecution,
 } from "./character-execution.ts";
-import type { SpellRuleExecutionFactsOwner } from "./procedure-execution/spell-procedure-execution.ts";
+import type {
+  SpawnedCompanionLifecycleExecutionFacts,
+  SpellRuleExecutionFactsOwner,
+  StagedSaveConditionAutomaticSuccessPredicates,
+  StagedSaveConditionEscapeAction,
+  TemporaryAbilityCheckRollModeConcurrentDurationModeLimit,
+  TemporaryAbilityCheckRollModeSelectedMode,
+} from "./procedure-execution/spell-procedure-execution.ts";
 import type {
   CantripSpellAccess,
   LeveledSpellInvocationResource,
@@ -386,7 +393,7 @@ import type {
   BattleAttackProcedureExecutionRef,
   BattleCharacterExecutionScopeRef,
   BattleCompanionFormId,
-  BattleDancingLightId,
+  BattleMovableLightId,
   BattleExecutionScopeCursor,
   BattleLineDirectionId,
   BattleObjectId,
@@ -479,7 +486,7 @@ export type BattleLightEmitterAttachment =
     }
   | {
       readonly kind: "movableLight";
-      readonly lightId: BattleDancingLightId;
+      readonly lightId: BattleMovableLightId;
       readonly positionId: BattleTablePositionId;
       readonly form: BattleMovableLightForm;
     };
@@ -650,7 +657,7 @@ export type BattleLightEmitterProjectionFact =
     }
   | {
       readonly kind: "movableLight";
-      readonly lightId: BattleDancingLightId;
+      readonly lightId: BattleMovableLightId;
       readonly positionId: BattleTablePositionId;
       readonly form: BattleMovableLightForm;
       readonly distanceFeet: MovementFeet;
@@ -2450,7 +2457,14 @@ export type TemporaryAbilityCheckRollModeSpellInvocation = {
     >
   >;
   readonly rangeFeet: MovementFeet;
+  readonly selectedMode: TemporaryAbilityCheckRollModeSelectedMode;
+  readonly concurrentDurationModeLimit: TemporaryAbilityCheckRollModeConcurrentDurationModeLimit;
 };
+
+export type SpawnedCompanionLifecycleSpellInvocation =
+  SpawnedCompanionLifecycleExecutionFacts & {
+    readonly spell: BattleSpellAdmissionSource;
+  };
 type RollModifierSpellSaveGate = {
   readonly ability: Ability;
   readonly dc: DcSource;
@@ -3184,6 +3198,7 @@ type SupportedSpellInvocationSource =
   | SeeInvisibleObserverSightSpellInvocation
   | GrantedAreaSaveDamageActionSpellInvocation
   | CompositeTargetBuffWithAftermathSpellInvocation
+  | SpawnedCompanionLifecycleSpellInvocation
   | {
       readonly access: CantripSpellAccess;
       readonly resource: NoSpellInvocationResource;
@@ -3384,6 +3399,8 @@ type SupportedSpellInvocationSource =
         { readonly kind: "pointOriginSphere" }
       >;
       readonly rangeFeet: MovementFeet;
+      readonly automaticSuccessPredicates: StagedSaveConditionAutomaticSuccessPredicates;
+      readonly escapeAction: StagedSaveConditionEscapeAction;
     }
   | {
       readonly access: PreparedSpellAccess;
@@ -5993,7 +6010,7 @@ export type BattleMovableLightCastPlacement = {
 };
 export type BattleMovableLightRepositionPlacement =
   BattleMovableLightCastPlacement & {
-    readonly lightId: BattleDancingLightId;
+    readonly lightId: BattleMovableLightId;
     readonly moveDistanceFeet: MovementFeet;
   };
 export type BattleMovableLightCastPlacementList =
@@ -6029,7 +6046,7 @@ export type BattleMovableLightPlacementHole = {
   readonly label: string;
   readonly mode: BattleMovableLightPlacementValue["mode"];
   readonly form: BattleMovableLightForm;
-  readonly activeLightIds: readonly BattleDancingLightId[];
+  readonly activeLightIds: readonly BattleMovableLightId[];
   readonly rangeFeet: MovementFeet;
   readonly maxMoveFeet: MovementFeet;
   readonly spacingFeet: MovementFeet;

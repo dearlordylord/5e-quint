@@ -1468,8 +1468,9 @@ export type PersistentAreaSaveConditionEscapeSpellProcedureExecution =
 
 /**
  * Authored-free facts shared by companion admission and the retained-companion
- * lifecycle. Casting resource settlement remains outside the battle spell
- * procedure union because ritual casting does not spend a battle action.
+ * lifecycle. Its execution carries the ritual-or-slot casting distinction
+ * directly, so it does not invent a battle action or duplicate durable
+ * companion state.
  */
 export type SpawnedCompanionLifecycleExecutionFacts = {
   readonly procedure: "spawnedCompanionLifecycle";
@@ -1610,6 +1611,7 @@ export interface SpellProcedureExecutionByProcedure {
     | CreateSpatialMeleeSpellAttackProxySpellProcedureExecution
     | RepeatSpatialMeleeSpellAttackProxySpellProcedureExecution;
   readonly temporaryAbilityCheckRollMode: TemporaryAbilityCheckRollModeSpellProcedureExecution;
+  readonly spawnedCompanionLifecycle: SpawnedCompanionLifecycleExecutionFacts;
   readonly linkedDefenseResistanceDamageShare: LinkedDefenseResistanceDamageShareSpellProcedureExecution;
   readonly weaponAttackOverride: WeaponAttackOverrideSpellProcedureExecution;
   readonly weaponDamageRider: WeaponDamageRiderSpellProcedureExecution;

@@ -17,7 +17,6 @@ export {
   characterExecutionWithMarkedDamageRiderTransfer,
   characterExecutionWithObjectContactDamageRepeat,
   characterExecutionWithSpellCreatedHeldObjectProcedures,
-  characterExecutionWithSpatialMeleeSpellAttackProxyRepeatAttack,
   characterProcedureBinding,
   characterProcedureBindingSnapshots,
   characterSpellProcedure,
@@ -2341,7 +2340,10 @@ export function spellProcedureExecution(
         spellRuleFacts,
         ability: value.ability,
         access: value.access,
+        actionCost: value.actionCost,
         dc: value.dc,
+        durationTicks: value.durationTicks,
+        maxTargets: value.maxTargets,
         procedure: value.procedure,
         rangeFeet: value.rangeFeet,
         resource: value.resource,
@@ -2494,6 +2496,10 @@ export function spellProcedureExecution(
           })),
           Match.exhaustive,
         ),
+      spawnedCompanionLifecycle: (value) => {
+        const { spell: _spell, ...execution } = value;
+        return execution;
+      },
       temporaryAbilityCheckRollMode: (value) => ({
         spellRuleFacts,
         access: value.access,
@@ -2502,6 +2508,8 @@ export function spellProcedureExecution(
         procedure: value.procedure,
         rangeFeet: value.rangeFeet,
         resource: value.resource,
+        selectedMode: value.selectedMode,
+        concurrentDurationModeLimit: value.concurrentDurationModeLimit,
       }),
       linkedDefenseResistanceDamageShare: (value) => ({
         spellRuleFacts,
