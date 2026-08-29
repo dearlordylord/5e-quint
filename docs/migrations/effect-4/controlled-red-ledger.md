@@ -1040,7 +1040,7 @@ evidence. `pnpm quality:milestone` was not run for this issue snapshot.
 ## Issue #384 application flow evidence snapshot
 
 This section records the application migration at source revision
-`127c33473`. The React entry point, Admin Mirror loaders and event actions,
+`957e898cd`. The React entry point, Admin Mirror loaders and event actions,
 Character Creation and Character Sheet workflows, and Battle presentation and
 continuation flows now consume the settled Effect 4 `Result` contracts. The
 Admin Mirror decoders use the package-owned schemas through
@@ -1057,6 +1057,15 @@ through `Schema.URLFromString`, restricted to a branded HTTP(S) origin, and
 carried as `URL` through the HTTP and event-stream boundaries. Battle snapshot
 and scene projection failures remain typed and user-visible rather than being
 replaced by fallback execution facts.
+
+Admin Mirror stream transport failure and invalid decoded events have separate
+typed, always-visible status projections while retained sessions remain
+available. A single collection reducer owns GET snapshots and streamed
+sessions: stream updates received during an active GET are replayed over its
+snapshot, stale GET completions are ignored, and only GET completion marks the
+collection loaded because the server's initial SSE replay has no completion
+marker. Boundary parser failures are tagged records, and private fetch and
+response-decoding helpers expose only the failure variant each can produce.
 
 No D&D rule behavior, authored content, provenance, or authored-identity
 execution dispatch changed in this application-only migration. The application
@@ -1079,9 +1088,9 @@ files. No assumption or rules implementation changed.
 
 - `pnpm --filter @dnd/app run typecheck --pretty false`: passed; the app owner
   moved from 60 diagnostics to zero.
-- `pnpm --filter @dnd/app test --reporter=dot`: passed, 18 files and 83 tests.
+- `pnpm --filter @dnd/app test --reporter=dot`: passed, 18 files and 87 tests.
 - Focused route boot and route selection tests: passed, 2 files and 10 tests.
-- `pnpm --filter @dnd/app build`: passed; Vite transformed 1,541 modules and
+- `pnpm --filter @dnd/app build`: passed; Vite transformed 1,543 modules and
   emitted the production bundle. The existing large-chunk advisory remained a
   warning, not a build failure.
 - `pnpm --filter @dnd/app lint`: passed, including ESLint, Prettier, and the
@@ -1092,10 +1101,12 @@ files. No assumption or rules implementation changed.
   SHA-256: `1c55aa460e7c8d0063372e85d49a924ea7365fc2c5d258830dfa4c4aa173cc83`.
 
 The repeated Standards and Spec passes against fixed point `b0aeb8eab`
-converged with no remaining findings. The independent review rechecked the
-same local RAW anchors directly and found no D&D-rule behavior change. It also
-confirmed the final typed URL boundary, distinct UI failure states, absence of
-compatibility adapters or duplicate decoding, and the authored-identity,
-provenance, PHB+, architecture, and connascence boundaries.
+converged after the typed stream-status, GET/SSE synchronization, narrow helper
+failure, and tagged parser-issue corrections. The independent review rechecked
+the same local RAW anchors directly and found no D&D-rule behavior change. The
+final self-review confirmed the URL and collection ownership boundaries,
+distinct UI failure states, absence of compatibility adapters or duplicate
+decoding, and the authored-identity, provenance, PHB+, architecture, and
+connascence boundaries.
 
 `pnpm quality:milestone` was not run for this package-scoped issue snapshot.
