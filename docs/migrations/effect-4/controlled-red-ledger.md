@@ -1036,3 +1036,66 @@ authored identity, provenance, and PHB+ boundaries. The Spec axis passed for
 shutdown, and exact-once cleanup corrections. The global immutable-oracle delta
 is explicitly retained for its #386 owner and is not counted as #383 green
 evidence. `pnpm quality:milestone` was not run for this issue snapshot.
+
+## Issue #384 application flow evidence snapshot
+
+This section records the application migration at source revision
+`127c33473`. The React entry point, Admin Mirror loaders and event actions,
+Character Creation and Character Sheet workflows, and Battle presentation and
+continuation flows now consume the settled Effect 4 `Result` contracts. The
+Admin Mirror decoders use the package-owned schemas through
+`Schema.decodeUnknownResult`; the app does not provide an `Either`
+compatibility layer or a second decoder.
+
+The migration preserves the existing UI state boundaries. Character Draft
+open, invalid, and ready finalization states remain distinct from Character
+Sheet construction and projection failures. Empty Character Sheet collections
+and initial-loading, confirmed-empty, invalid-configuration, invalid-response,
+unavailable, and missing-retained-session Admin Mirror states have separate
+user-visible projections. The configured Admin Mirror origin is decoded once
+through `Schema.URLFromString`, restricted to a branded HTTP(S) origin, and
+carried as `URL` through the HTTP and event-stream boundaries. Battle snapshot
+and scene projection failures remain typed and user-visible rather than being
+replaced by fallback execution facts.
+
+No D&D rule behavior, authored content, provenance, or authored-identity
+execution dispatch changed in this application-only migration. The application
+continues to consume runtime-owned Character Build, Character Sheet, battle
+checkpoint/frontier, and presentation projections without storing a parallel
+execution model.
+
+The independent RAW pass used a bounded hidden-path `rg -uu` search before
+directly inspecting the likely SRD 5.2.1 corpus files. The user-visible
+Character Creation and Character Sheet terms remain grounded by
+`Character-Creation.md#Step-3-Ability-Scores` (Standard Array and Point Cost),
+`Character-Creation.md#Step-5-Character-Creation-Details` (Hit Points, Temporary Hit
+Points, Death Saving Throws, and Spell Slots), and
+`Spells/Gaining-and-Casting.md#Spell-Slots`. The unchanged Battle demo terms
+were checked directly against `Playing-the-Game.md#Damage-and-Healing` and the
+Counterspell, Fireball, and Shatter entries in the local spell-description
+files. No assumption or rules implementation changed.
+
+### Verification
+
+- `pnpm --filter @dnd/app run typecheck --pretty false`: passed; the app owner
+  moved from 60 diagnostics to zero.
+- `pnpm --filter @dnd/app test --reporter=dot`: passed, 18 files and 83 tests.
+- Focused route boot and route selection tests: passed, 2 files and 10 tests.
+- `pnpm --filter @dnd/app build`: passed; Vite transformed 1,541 modules and
+  emitted the production bundle. The existing large-chunk advisory remained a
+  warning, not a build failure.
+- `pnpm --filter @dnd/app lint`: passed, including ESLint, Prettier, and the
+  package duplication threshold.
+- `pnpm regenerate:effect4-controlled-red`: passed. The inventory now records
+  65 raw and 65 deduplicated diagnostics, with `@dnd/app` at zero; the remaining
+  owners are battle-runtime (62) and character-sheet-runtime (3). Inventory
+  SHA-256: `1c55aa460e7c8d0063372e85d49a924ea7365fc2c5d258830dfa4c4aa173cc83`.
+
+The repeated Standards and Spec passes against fixed point `b0aeb8eab`
+converged with no remaining findings. The independent review rechecked the
+same local RAW anchors directly and found no D&D-rule behavior change. It also
+confirmed the final typed URL boundary, distinct UI failure states, absence of
+compatibility adapters or duplicate decoding, and the authored-identity,
+provenance, PHB+, architecture, and connascence boundaries.
+
+`pnpm quality:milestone` was not run for this package-scoped issue snapshot.
