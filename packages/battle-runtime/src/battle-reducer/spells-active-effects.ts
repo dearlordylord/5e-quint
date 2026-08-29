@@ -105,7 +105,6 @@ import {
   type BattleSightObscurement,
   type BattleSpellAreaChoice,
   type BattleState,
-  type BattleTurnAnchor,
   type BattleExecutableSpellInvocation,
   type BattleStoredLightEmitter,
   type BattleStoredLightEmitterTemplate,
@@ -247,10 +246,12 @@ type MovablePersistentAreaActiveEffect = Extract<
 >;
 type StationaryPersistentAreaSaveDamageActiveEffect = Extract<
   PersistentAreaSaveDamageEffect,
-  { readonly appearanceOccurrence: BattleTurnAnchor }
+  { readonly lifecycle: { readonly kind: "stationary" } }
 >;
-type TranslatingPersistentAreaSaveDamageActiveEffect =
-  StationaryPersistentAreaSaveDamageActiveEffect;
+type TranslatingPersistentAreaSaveDamageActiveEffect = Extract<
+  PersistentAreaSaveDamageEffect,
+  { readonly lifecycle: { readonly kind: "sourceTurnTranslation" } }
+>;
 type SingleSaveAreaActiveEffect =
   | SavedPersistentAreaSaveDamageEffect
   | Extract<
@@ -1152,26 +1153,34 @@ function persistentAreaSaveDamageObscurementZone(
     owner.origin.execution,
     effect.sourceProcedureRef,
   );
-  if (
-    procedure?.procedure !== "persistentAreaSaveDamage" ||
-    (procedure.lifecycle.kind !== "stationary" &&
-      procedure.lifecycle.kind !== "sourceTurnTranslation")
-  ) {
+  if (procedure?.procedure !== "persistentAreaSaveDamage") {
     return [];
   }
+  const obscuredArea =
+    procedure.lifecycle.kind === "stationary" &&
+    procedure.targeting.kind === "pointOriginSphere"
+      ? {
+          obscurement: "lightlyObscured" as const,
+          radiusFeet: procedure.targeting.radiusFeet,
+        }
+      : procedure.lifecycle.kind === "sourceTurnTranslation" &&
+          procedure.targeting.kind === "pointOriginSphere"
+        ? {
+            obscurement: "heavilyObscured" as const,
+            radiusFeet: procedure.targeting.radiusFeet,
+          }
+        : null;
+  if (obscuredArea === null) return [];
   return [
     {
       kind: "spellObscurementZone",
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
-      obscurement:
-        procedure.lifecycle.kind === "stationary"
-          ? "lightlyObscured"
-          : "heavilyObscured",
+      obscurement: obscuredArea.obscurement,
       area: {
         kind: "pointOriginSphere",
         areaId: effect.areaId,
-        radiusFeet: procedure.targeting.radiusFeet,
+        radiusFeet: obscuredArea.radiusFeet,
       },
       expiresAt: effect.expiresAt,
     },
@@ -2142,6 +2151,7 @@ export function applyRamMovablePersistentAreaCastEffect(input: {
     actorId: input.actorId,
     activeEffect: {
       kind: "persistentAreaSaveDamage" as const,
+      lifecycle: { kind: input.invocation.lifecycle.kind },
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
@@ -2302,6 +2312,7 @@ export function applyMovablePersistentAreaCastEffect(input: {
     actorId: input.actorId,
     activeEffect: {
       kind: "persistentAreaSaveDamage" as const,
+      lifecycle: { kind: input.invocation.lifecycle.kind },
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
@@ -2399,6 +2410,7 @@ export function applyStationaryPersistentAreaAreaHazardCastEffect(input: {
     actorId: input.actorId,
     activeEffect: {
       kind: "persistentAreaSaveDamage" as const,
+      lifecycle: { kind: input.invocation.lifecycle.kind },
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       appearanceOccurrence: {
@@ -2433,6 +2445,7 @@ export function applyTranslatingPersistentAreaAreaHazardCastEffect(input: {
     actorId: input.actorId,
     activeEffect: {
       kind: "persistentAreaSaveDamage" as const,
+      lifecycle: { kind: input.invocation.lifecycle.kind },
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       appearanceOccurrence: {

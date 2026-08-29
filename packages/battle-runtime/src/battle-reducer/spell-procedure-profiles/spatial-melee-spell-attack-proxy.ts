@@ -66,6 +66,7 @@ import {
   spellTargetHole,
 } from "../spells-targeting.ts";
 import { resolveBonusActionSpellAttackProxyAct } from "../spells-resolve.ts";
+import { characterRetainedSpellProcedureExecution } from "../../character-execution-queries.ts";
 import type { SpellProcedureExecutionRegistry } from "./execution-registry.ts";
 import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import type {
@@ -200,6 +201,29 @@ function admitSpatialMeleeSpellAttackProxyRepeatAttack(
       ) {
         return [];
       }
+      const source = characterRetainedSpellProcedureExecution(
+        ctx.actor.origin.execution,
+        effect.sourceProcedureRef,
+      );
+      const repeat = ctx.actor.origin.execution.procedureBindings.find(
+        (binding) =>
+          binding.procedure.kind === "spellInvocation" &&
+          binding.procedure.execution.procedure ===
+            "spatialMeleeSpellAttackProxy" &&
+          binding.procedure.execution.operation === "repositionAndAttack" &&
+          binding.procedure.execution.activeEffectRef === effect.effectRef &&
+          binding.procedure.execution.activeEffectSourceProcedureRef ===
+            effect.sourceProcedureRef,
+      )?.procedure;
+      if (
+        source?.procedure !== "spatialMeleeSpellAttackProxy" ||
+        source.operation !== "createAndAttack" ||
+        repeat?.kind !== "spellInvocation" ||
+        repeat.execution.procedure !== "spatialMeleeSpellAttackProxy" ||
+        repeat.execution.operation !== "repositionAndAttack"
+      ) {
+        return [];
+      }
       return [
         {
           access: {
@@ -213,11 +237,12 @@ function admitSpatialMeleeSpellAttackProxyRepeatAttack(
           actionCost: "bonusAction",
           activeEffect: effect,
           targeting: { kind: "singleCombatant" },
-          damage: effect.damage,
-          attackKind: effect.attackKind,
-          attackBonus: effect.attackBonus,
-          forceReachFeet: effect.forceReachFeet,
-          repeatMoveMaxFeet: effect.repeatMoveMaxFeet,
+          repeatTargeting: repeat.execution.repeatTargeting,
+          damage: source.damage,
+          attackKind: source.attackKind,
+          attackBonus: source.attackBonus,
+          forceReachFeet: source.forceReachFeet,
+          repeatMoveMaxFeet: source.repeatMoveMaxFeet,
         },
       ];
     },

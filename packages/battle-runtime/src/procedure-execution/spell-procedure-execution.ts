@@ -34,6 +34,7 @@ import type {
   SpellObjectContactDamageActiveEffect,
   SpellTurnEndDamage,
   SpatialMeleeSpellAttackProxyActiveEffect,
+  SpatialMeleeSpellAttackProxyRepeatTargeting,
 } from "../active-effect/types.ts";
 import type { BattleActiveEffectSource } from "../active-effect/source.ts";
 import type {
@@ -1655,11 +1656,7 @@ export type RepeatSpatialMeleeSpellAttackProxyLiveSpellProcedureExecution =
     readonly activeEffect: SpatialMeleeSpellAttackProxyActiveEffect;
     readonly repeatTargeting: SpatialMeleeSpellAttackProxyRepeatTargeting;
     readonly targeting: { readonly kind: "singleCombatant" };
-    readonly damage: {
-      readonly kind: "fixedSpellAttackDamage";
-      readonly expr: DiceExpr;
-      readonly damageType: DamageType;
-    };
+    readonly damage: CreateSpatialMeleeSpellAttackProxySpellProcedureExecution["damage"];
     readonly attackKind: "melee_spell_attack";
     readonly attackBonus: AttackBonus;
     readonly forceReachFeet: MovementFeet;

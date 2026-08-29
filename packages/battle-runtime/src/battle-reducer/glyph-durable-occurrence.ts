@@ -2128,63 +2128,13 @@ function glyphStoredConcentrationFullDurationEffect(input: {
     return input.effect;
   }
   if (input.effect.kind === "persistentAreaSaveDamage") {
-    return Match.value(input.effect).pipe(
-      Match.when(
-        { lifecycle: { kind: "stationary" } },
-        (effect) =>
-          ({
-            ...effect,
-            expiresAt: {
-              kind: "duration",
-              durationTicks: input.fullDurationTicks,
-            },
-          }) satisfies BattleActiveEffect,
-      ),
-      Match.when(
-        { lifecycle: { kind: "sourceTurnTranslation" } },
-        (effect) =>
-          ({
-            ...effect,
-            expiresAt: {
-              kind: "duration",
-              durationTicks: input.fullDurationTicks,
-            },
-          }) satisfies BattleActiveEffect,
-      ),
-      Match.when(
-        {
-          lifecycle: {
-            kind: "casterActionReposition",
-            collisionDisposition: "stopAndAffectAdjacent",
-          },
-        },
-        (effect) =>
-          ({
-            ...effect,
-            expiresAt: {
-              kind: "duration",
-              durationTicks: input.fullDurationTicks,
-            },
-          }) satisfies BattleActiveEffect,
-      ),
-      Match.when(
-        {
-          lifecycle: {
-            kind: "casterActionReposition",
-            collisionDisposition: "ignoreObstacles",
-          },
-        },
-        (effect) =>
-          ({
-            ...effect,
-            expiresAt: {
-              kind: "duration",
-              durationTicks: input.fullDurationTicks,
-            },
-          }) satisfies BattleActiveEffect,
-      ),
-      Match.exhaustive,
-    );
+    return {
+      ...input.effect,
+      expiresAt: {
+        kind: "duration",
+        durationTicks: input.fullDurationTicks,
+      },
+    };
   }
   return {
     ...input.effect,

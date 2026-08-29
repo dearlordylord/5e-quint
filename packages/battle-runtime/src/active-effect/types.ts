@@ -699,6 +699,17 @@ export type BattleActiveEffect = (
   | (BattleSpellEffectBase &
       BattleReplayAddressableEffect & {
         readonly kind: "persistentAreaSaveDamage";
+        readonly lifecycle: { readonly kind: "stationary" };
+        readonly appearanceOccurrence: BattleTurnAnchor;
+        readonly areaId: BattleAreaId;
+        readonly savedThisTurn: readonly CombatantId[];
+        readonly shapeShiftSuppressed?: never;
+        readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
+      })
+  | (BattleSpellEffectBase &
+      BattleReplayAddressableEffect & {
+        readonly kind: "persistentAreaSaveDamage";
+        readonly lifecycle: { readonly kind: "sourceTurnTranslation" };
         readonly appearanceOccurrence: BattleTurnAnchor;
         readonly areaId: BattleAreaId;
         readonly savedThisTurn: readonly CombatantId[];
@@ -707,6 +718,7 @@ export type BattleActiveEffect = (
       })
   | (BattleSpellEffectBase & {
       readonly kind: "persistentAreaSaveDamage";
+      readonly lifecycle: { readonly kind: "casterActionReposition" };
       readonly areaId: BattleAreaId;
       readonly appearanceOccurrence?: never;
       readonly savedThisTurn?: never;
@@ -725,6 +737,7 @@ export type BattleActiveEffect = (
     })
   | (BattleSpellEffectBase & {
       readonly kind: "persistentAreaSaveDamage";
+      readonly lifecycle: { readonly kind: "casterActionReposition" };
       readonly areaId: BattleAreaId;
       readonly appearanceOccurrence?: never;
       readonly savedThisTurn: readonly CombatantId[];

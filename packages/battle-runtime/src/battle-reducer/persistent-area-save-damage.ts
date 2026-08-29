@@ -34,7 +34,7 @@ import type {
 } from "../battle-state-execution.ts";
 import { validateRolledDiceFillForDiceExpr } from "../battle-state-execution.ts";
 import type { BattleEffectExecutionRef, CombatantId } from "../identity.ts";
-import { characterRetainedSpellProcedureExecution } from "../character-execution-queries.ts";
+import { boundPersistentAreaSaveDamageEffect } from "./persistent-area-save-damage-binding.ts";
 import type {
   SourceTurnTranslationPersistentAreaSaveDamageSpellProcedureExecution,
   StationaryPersistentAreaSaveDamageSpellProcedureExecution,
@@ -83,23 +83,27 @@ type PersistentAreaSaveDamageOccurrence = Extract<
   }
 >;
 
-type StationaryPersistentAreaAreaHazardEffect =
-  PersistentAreaSaveDamageOccurrence & {
-    readonly save: {
-      readonly ability: StationaryPersistentAreaSaveDamageSpellProcedureExecution["ability"];
-      readonly dc: StationaryPersistentAreaSaveDamageSpellProcedureExecution["dc"];
-    };
-    readonly damage: StationaryPersistentAreaSaveDamageSpellProcedureExecution["damage"];
+type StationaryPersistentAreaAreaHazardEffect = Extract<
+  PersistentAreaSaveDamageOccurrence,
+  { readonly lifecycle: { readonly kind: "stationary" } }
+> & {
+  readonly save: {
+    readonly ability: StationaryPersistentAreaSaveDamageSpellProcedureExecution["ability"];
+    readonly dc: StationaryPersistentAreaSaveDamageSpellProcedureExecution["dc"];
   };
+  readonly damage: StationaryPersistentAreaSaveDamageSpellProcedureExecution["damage"];
+};
 
-export type TranslatingPersistentAreaAreaHazardEffect =
-  PersistentAreaSaveDamageOccurrence & {
-    readonly save: {
-      readonly ability: SourceTurnTranslationPersistentAreaSaveDamageSpellProcedureExecution["ability"];
-      readonly dc: SourceTurnTranslationPersistentAreaSaveDamageSpellProcedureExecution["dc"];
-    };
-    readonly damage: SourceTurnTranslationPersistentAreaSaveDamageSpellProcedureExecution["damage"];
+export type TranslatingPersistentAreaAreaHazardEffect = Extract<
+  PersistentAreaSaveDamageOccurrence,
+  { readonly lifecycle: { readonly kind: "sourceTurnTranslation" } }
+> & {
+  readonly save: {
+    readonly ability: SourceTurnTranslationPersistentAreaSaveDamageSpellProcedureExecution["ability"];
+    readonly dc: SourceTurnTranslationPersistentAreaSaveDamageSpellProcedureExecution["dc"];
   };
+  readonly damage: SourceTurnTranslationPersistentAreaSaveDamageSpellProcedureExecution["damage"];
+};
 
 export type TranslatingPersistentAreaMovementSaveDamageRequest = {
   readonly effect: TranslatingPersistentAreaAreaHazardEffect;
@@ -1490,30 +1494,29 @@ function persistentAreaSaveDamageEffectForRef(
   }
   if (located === undefined) return undefined;
   const owner = state.combatants.get(located.effectOwnerId);
-  if (
-    owner?.origin.kind !== "character" ||
-    located.effect.sourceCombatantId !== located.effectOwnerId
-  ) {
-    return undefined;
+  if (owner === undefined) return undefined;
+  const bound = boundPersistentAreaSaveDamageEffect(owner, located.effect);
+  if (expectedLifecycle === "stationary" && bound?.kind === "stationary") {
+    return {
+      effectOwnerId: located.effectOwnerId,
+      effect: {
+        ...bound.effect,
+        save: { ability: bound.facts.ability, dc: bound.facts.dc },
+        damage: bound.facts.damage,
+      },
+    };
   }
-  const procedure = characterRetainedSpellProcedureExecution(
-    owner.origin.execution,
-    located.effect.sourceProcedureRef,
-  );
-  if (
-    procedure?.procedure !== "persistentAreaSaveDamage" ||
-    procedure.lifecycle.kind !== expectedLifecycle
-  ) {
-    return undefined;
-  }
-  return {
-    effectOwnerId: located.effectOwnerId,
-    effect: {
-      ...located.effect,
-      save: { ability: procedure.ability, dc: procedure.dc },
-      damage: procedure.damage,
-    },
-  };
+  return expectedLifecycle === "sourceTurnTranslation" &&
+    bound?.kind === "sourceTurnTranslation"
+    ? {
+        effectOwnerId: located.effectOwnerId,
+        effect: {
+          ...bound.effect,
+          save: { ability: bound.facts.ability, dc: bound.facts.dc },
+          damage: bound.facts.damage,
+        },
+      }
+    : undefined;
 }
 
 function persistentAreaTriggerFromMembershipFact(

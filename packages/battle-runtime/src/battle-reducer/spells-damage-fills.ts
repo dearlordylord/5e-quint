@@ -161,9 +161,7 @@ function runtimeSpellPrimaryDamage(invocation: RuntimeDamageSpellProcedure): {
   readonly expr: DiceExpr;
   readonly damageType: DamageType;
 } {
-  return invocation.procedure === "objectContactDamageRepeat" ||
-    (invocation.procedure === "spatialMeleeSpellAttackProxy" &&
-      invocation.operation === "repositionAndAttack")
+  return invocation.procedure === "objectContactDamageRepeat"
     ? invocation.activeEffect.damage
     : invocation.damage;
 }

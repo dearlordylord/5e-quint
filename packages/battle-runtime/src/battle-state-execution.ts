@@ -279,6 +279,7 @@ import type {
 } from "./character-execution.ts";
 import type {
   SpawnedCompanionLifecycleExecutionFacts,
+  CreateSpatialMeleeSpellAttackProxySpellProcedureExecution,
   SpellRuleExecutionFactsOwner,
   StagedSaveConditionAutomaticSuccessPredicates,
   StagedSaveConditionEscapeAction,
@@ -351,6 +352,7 @@ import type {
   SpellTurnEndDamage,
   SpellTurnStartDamage,
   SpellTurnStartDamageSave,
+  SpatialMeleeSpellAttackProxyRepeatTargeting,
   TurnAnchoredBattleActiveEffectExpiration,
 } from "./active-effect/types.ts";
 import type {
@@ -3097,13 +3099,14 @@ export type RepeatSpatialMeleeSpellAttackProxyInvocation = {
     BattleActiveEffect,
     { readonly kind: "spatialMeleeSpellAttackProxy" }
   >;
+  readonly repeatTargeting: SpatialMeleeSpellAttackProxyRepeatTargeting;
   readonly targeting: Extract<
     SpellTargeting,
     { readonly kind: "singleCombatant" }
   >;
   readonly damage: Extract<
-    BattleActiveEffect,
-    { readonly kind: "spatialMeleeSpellAttackProxy" }
+    CreateSpatialMeleeSpellAttackProxySpellProcedureExecution,
+    { readonly operation: "createAndAttack" }
   >["damage"];
   readonly attackKind: Extract<SpellAttackKind, "melee_spell_attack">;
   readonly attackBonus: AttackBonus;

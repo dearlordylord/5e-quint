@@ -124,6 +124,7 @@ import {
   type RamMovablePersistentAreaEffect,
   type MovablePersistentAreaEffect,
 } from "./persistent-spatial-spell-discovery.ts";
+import { boundPersistentAreaSaveDamageEffect } from "./persistent-area-save-damage-binding.ts";
 import {
   canonicalHeldObjectIdsForActor,
   executeCompelledDropHeldObjectFactsHole,
@@ -175,10 +176,7 @@ type EnvironmentEndedPersistentAreaSaveDamageEffect = Extract<
   BattleActiveEffect,
   {
     readonly kind: "persistentAreaSaveDamage";
-    readonly lifecycle: {
-      readonly kind: "sourceTurnTranslation";
-      readonly environmentalEnd: "strongWind";
-    };
+    readonly lifecycle: { readonly kind: "sourceTurnTranslation" };
   }
 >;
 export function discoverBattleActCandidatesWithExecutionRegistry(
@@ -1460,12 +1458,21 @@ function activeRamMovablePersistentAreaEffects(
   state: BattleState,
 ): readonly RamMovablePersistentAreaEffect[] {
   return [...state.combatants.values()].flatMap((combatant) =>
-    combatant.activeEffects.filter(
-      (effect): effect is RamMovablePersistentAreaEffect =>
-        effect.kind === "persistentAreaSaveDamage" &&
-        effect.lifecycle.kind === "casterActionReposition" &&
-        effect.lifecycle.actionCost === "bonusAction",
-    ),
+    combatant.activeEffects.flatMap((effect) => {
+      if (effect.kind !== "persistentAreaSaveDamage") return [];
+      const bound = boundPersistentAreaSaveDamageEffect(combatant, effect);
+      return bound?.kind === "collisionReposition"
+        ? [
+            {
+              ...bound.effect,
+              lifecycle: bound.facts.lifecycle,
+              save: { ability: bound.facts.ability, dc: bound.facts.dc },
+              ramMaxMoveFeet: bound.facts.ramMaxMoveFeet,
+              damage: bound.facts.damage,
+            },
+          ]
+        : [];
+    }),
   );
 }
 
@@ -1542,12 +1549,21 @@ function activeMovablePersistentAreaEffects(
   state: BattleState,
 ): readonly MovablePersistentAreaEffect[] {
   return [...state.combatants.values()].flatMap((combatant) =>
-    combatant.activeEffects.filter(
-      (effect): effect is MovablePersistentAreaEffect =>
-        effect.kind === "persistentAreaSaveDamage" &&
-        effect.lifecycle.kind === "casterActionReposition" &&
-        effect.lifecycle.actionCost === "magicAction",
-    ),
+    combatant.activeEffects.flatMap((effect) => {
+      if (effect.kind !== "persistentAreaSaveDamage") return [];
+      const bound = boundPersistentAreaSaveDamageEffect(combatant, effect);
+      return bound?.kind === "directedReposition"
+        ? [
+            {
+              ...bound.effect,
+              lifecycle: bound.facts.lifecycle,
+              save: { ability: bound.facts.ability, dc: bound.facts.dc },
+              repositionMaxMoveFeet: bound.facts.repositionMaxMoveFeet,
+              damage: bound.facts.damage,
+            },
+          ]
+        : [];
+    }),
   );
 }
 
@@ -1682,28 +1698,20 @@ function environmentEndedPersistentAreaSaveDamageActs(
   return [...state.combatants].flatMap(([effectOwnerId, combatant]) =>
     combatant.activeEffects.flatMap(
       (effect): readonly BattleActDiscoveryCandidate[] => {
-        if (!isEnvironmentEndedPersistentAreaSaveDamageEffect(effect)) {
+        if (effect.kind !== "persistentAreaSaveDamage") {
           return [];
         }
+        const bound = boundPersistentAreaSaveDamageEffect(combatant, effect);
+        if (bound?.kind !== "sourceTurnTranslation") return [];
         return [
           environmentEndedPersistentAreaSaveDamageAct(
             actorId,
             effectOwnerId,
-            effect,
+            bound.effect,
           ),
         ];
       },
     ),
-  );
-}
-
-function isEnvironmentEndedPersistentAreaSaveDamageEffect(
-  effect: BattleActiveEffect,
-): effect is EnvironmentEndedPersistentAreaSaveDamageEffect {
-  return (
-    effect.kind === "persistentAreaSaveDamage" &&
-    effect.lifecycle.kind === "sourceTurnTranslation" &&
-    effect.lifecycle.environmentalEnd === "strongWind"
   );
 }
 
