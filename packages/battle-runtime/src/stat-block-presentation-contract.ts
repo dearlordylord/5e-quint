@@ -1,13 +1,12 @@
 import type { StatBlockProcedureOrdinal } from "@dnd/surface/surface/types";
+import {
+  STAT_BLOCK_PROCEDURE_SECTIONS,
+  type StatBlockProcedureSection,
+} from "./procedure-execution/stat-block-procedure-sections.ts";
 
-export const STAT_BLOCK_ACTION_PROJECTION_SECTIONS = [
-  "actions",
-  "bonusActions",
-  "reactions",
-  "legendaryActions",
-] as const;
-export type StatBlockActionProjectionSection =
-  (typeof STAT_BLOCK_ACTION_PROJECTION_SECTIONS)[number];
+export const STAT_BLOCK_ACTION_PROJECTION_SECTIONS =
+  STAT_BLOCK_PROCEDURE_SECTIONS;
+export type StatBlockActionProjectionSection = StatBlockProcedureSection;
 
 export const STAT_BLOCK_PROCEDURE_PRESENTATION_KINDS = [
   "attack",

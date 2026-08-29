@@ -27,7 +27,7 @@ import {
   authoredStatBlockProcedureExecutionDecision,
   type AuthoredStatBlockProcedureExecutionDecision,
   type StatBlockProcedureExecutionFailedFact,
-} from "./stat-block-authored-projection.ts";
+} from "./procedure-admission/stat-block-procedure-execution-decision.ts";
 import { statBlockTraitSupport } from "./statblock-action-execution-support.ts";
 import {
   parseStatBlockRuntimeResource,
