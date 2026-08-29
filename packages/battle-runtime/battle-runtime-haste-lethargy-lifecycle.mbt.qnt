@@ -19,6 +19,10 @@
 // lethargy rider.
 module battleRuntimeHasteLethargyLifecycleMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+  import battleRuntimeCompositeEnhancementAftermath.* from "./battle-runtime-composite-enhancement-aftermath"
+
+  pure val activeCompositeEnhancementAftermath =
+    ActiveAftermath
 
   type WitnessHole = | HasteLethargyLifecycle
 
@@ -111,6 +115,7 @@ module battleRuntimeHasteLethargyLifecycleMbt {
 
   action doBreakConcentration = all {
     qScenario == Init,
+    compositeEnhancementAftermathIsActive(activeCompositeEnhancementAftermath),
     recordProjection(
       ConcentrationEnded,
       false,
@@ -130,6 +135,7 @@ module battleRuntimeHasteLethargyLifecycleMbt {
 
   action doExpireDuration = all {
     qScenario == Init,
+    compositeEnhancementAftermathIsActive(activeCompositeEnhancementAftermath),
     recordProjection(
       DurationExpired,
       false,
@@ -149,6 +155,7 @@ module battleRuntimeHasteLethargyLifecycleMbt {
 
   action doRecastReplacement = all {
     qScenario == Init,
+    compositeEnhancementAftermathIsActive(activeCompositeEnhancementAftermath),
     recordProjection(
       RecastReplacement,
       true,
@@ -168,6 +175,7 @@ module battleRuntimeHasteLethargyLifecycleMbt {
 
   action doBreakTargetConcentration = all {
     qScenario == Init,
+    compositeEnhancementAftermathIsActive(activeCompositeEnhancementAftermath),
     recordProjection(
       TargetConcentrationBroken,
       false,
@@ -187,6 +195,13 @@ module battleRuntimeHasteLethargyLifecycleMbt {
 
   action doCleanupWithPreexistingIncapacitated = all {
     qScenario == Init,
+    not(compositeEnhancementAftermathIsActive(
+      compositeEnhancementAftermathAfterTargetTurn(
+        activeCompositeEnhancementAftermath,
+        true,
+      )
+    )),
+    sourceOwnedConditionPreserved(true, false),
     recordProjection(
       TargetTurnCleanupPreserved,
       false,

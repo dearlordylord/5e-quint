@@ -4,6 +4,17 @@
 
 module battleRuntimeSlowActivePenaltiesMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+  import battleRuntimeSaveGatedTurnConstraintBundle.* from "./battle-runtime-save-gated-turn-constraint-bundle"
+
+  pure val admittedTurnConstraintBundle = {
+    speedNumerator: 1,
+    speedDenominator: 2,
+    armorClassDelta: -2,
+    dexteritySaveDelta: -2,
+    reactionsAllowed: false,
+    maximumAttackActionAttacks: 1,
+    somaticSpellFailurePercent: 25,
+  }
 
   // RAW trace:
   // - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Slow:
@@ -96,6 +107,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
 
   action doCastSlowFailedSave = all {
     qState.scenarioOutcome == Init,
+    turnConstraintBundleIsAdmitted(admittedTurnConstraintBundle),
     recordSlowState(
       "caster",
       "notRestricted",
@@ -157,6 +169,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
   action doFillEndTurnSaveSuccess = all {
     qState.scenarioOutcome == NeedsSave,
     qState.protocol.holes == Set(EndTurnSave),
+    not(repeatSaveKeepsConstraint(true)),
     recordSlowState(
       "caster",
       "notRestricted",
@@ -178,6 +191,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
   action doFillEndTurnSaveFailure = all {
     qState.scenarioOutcome == NeedsSave,
     qState.protocol.holes == Set(EndTurnSave),
+    repeatSaveKeepsConstraint(false),
     recordSlowState(
       "caster",
       "notRestricted",
@@ -259,6 +273,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
   action doFillSomaticSpellFailure = all {
     qState.scenarioOutcome == NeedsSomaticFailure,
     qState.protocol.holes == Set(SomaticFailure),
+    somaticSpellFails(25, admittedTurnConstraintBundle.somaticSpellFailurePercent),
     recordSlowState(
       "target",
       "bonusAction",

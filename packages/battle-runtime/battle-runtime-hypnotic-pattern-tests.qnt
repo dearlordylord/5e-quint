@@ -8,6 +8,7 @@ module battleRuntimeHypnoticPatternTests {
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeSleepHideousLaughter.* from "./battle-runtime-sleep-hideous-laughter"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
+  import battleRuntimeSaveGatedControlEscape.* from "./battle-runtime-save-gated-control-escape"
 
   run test_hypnotic_pattern_failed_save_spends_slot_and_projects_control = {
     val controlled = resolveHypnoticPattern(initialState, false, 3)
@@ -83,6 +84,7 @@ module battleRuntimeHypnoticPatternTests {
     val noDamage = combatantAfterHypnoticPatternDamage(controlled, Fighter, Goblin, 0)
     all {
       assert(combatantHasHypnoticPattern(controlled)),
+      assert(not(controlEffectRemainsAfter(TargetDamaged, false))),
       assert(not(combatantHasHypnoticPattern(damaged))),
       assert(damaged.activeEffects.contains(CharmPersonCharmed({ source: Goblin, durationTicks: 10 }))),
       assert(not(damaged.incapacitated)),
@@ -102,6 +104,7 @@ module battleRuntimeHypnoticPatternTests {
     val notAdjacent = shakeAwakeFromHypnoticPattern(nextRoundFighterTurn, Goblin, false)
     all {
       assert(not(shaken.actionAvailable)),
+      assert(not(controlEffectRemainsAfter(OtherCreatureAction, true))),
       assert(not(shaken.goblin.incapacitated)),
       assert(not(combatantHasHypnoticPattern(shaken.goblin))),
       assert(hypnoticPatternEffectiveSpeed(shaken.goblin) == initialState.goblin.speed),
