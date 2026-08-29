@@ -20,6 +20,7 @@ import {
   combatantId,
   criticalRange19UnitRefs,
   discoverBattleActs,
+  discoverBattleActCandidates,
   endTurn,
   fighterId,
   fighterVsGoblinBattle,
@@ -229,7 +230,7 @@ function encodedActivatedMultiattackSnapshot(): EncodedSnapshot {
   const turn = requireResolved(
     endTurn({ state: session.state, actorId: wizardId }),
   ).state;
-  const multiattack = discoverBattleActs({ ...session, state: turn }).find(
+  const multiattack = discoverBattleActCandidates(turn).find(
     (act) =>
       act.subject.tag === "action" &&
       act.subject.action === "multiattack" &&
