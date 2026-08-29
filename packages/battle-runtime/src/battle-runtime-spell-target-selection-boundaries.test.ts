@@ -37,7 +37,7 @@ import {
   massCureWoundsUnitId,
   spellCasterId,
   spellTargetId,
-  spatialMeleeSpellAttackProxyUnitId,
+  spiritualWeaponUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import {
   battleAreaId,
@@ -480,7 +480,7 @@ describe("spell target-selection public boundaries", () => {
 
   test("Spiritual Weapon distinguishes cast placement from later repositioning", () => {
     const session = spellBattle({
-      preparedSpells: [spellRecord(spatialMeleeSpellAttackProxyUnitId)],
+      preparedSpells: [spellRecord(spiritualWeaponUnitId)],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       casterClassLevels: [{ className: "cleric", level: 3 }],
     });
@@ -488,7 +488,7 @@ describe("spell target-selection public boundaries", () => {
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
-          spatialMeleeSpellAttackProxyUnitId &&
+          spiritualWeaponUnitId &&
         battleActSpellPresentation(candidate)?.invocation.procedure ===
           "spatialMeleeSpellAttackProxy",
     );
@@ -533,7 +533,7 @@ describe("spell target-selection public boundaries", () => {
     const castTarget = requireHole(cast.initialHoles, "targetChoice");
     const castTargetFill = spatialMeleeSpellAttackProxyTargetFill(
       castTarget,
-      spatialMeleeSpellAttackProxyUnitId,
+      spiritualWeaponUnitId,
       spellCasterId,
       spellTargetId,
       initialPositionId,
@@ -580,7 +580,7 @@ describe("spell target-selection public boundaries", () => {
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
-          spatialMeleeSpellAttackProxyUnitId &&
+          spiritualWeaponUnitId &&
         battleActSpellPresentation(candidate)?.invocation.procedure ===
           "spatialMeleeSpellAttackProxy",
     );

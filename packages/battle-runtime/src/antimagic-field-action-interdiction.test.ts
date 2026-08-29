@@ -45,7 +45,7 @@ import {
   rayOfFrostUnitId,
   spellCasterId,
   spellTargetId,
-  spatialMeleeSpellAttackProxyUnitId,
+  spiritualWeaponUnitId,
   unitLibrary,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
@@ -222,7 +222,7 @@ describe("Antimagic Field action interdiction", () => {
     const base = spatialMeleeSpellAttackProxyRepeatBattle();
     const repeat = bonusSpellAct({
       session: base,
-      spellId: spatialMeleeSpellAttackProxyUnitId,
+      spellId: spiritualWeaponUnitId,
     });
     const stale = activeAntimagicAuraSession(
       base,
@@ -236,7 +236,7 @@ describe("Antimagic Field action interdiction", () => {
     expect(
       maybeBonusSpellAct({
         session: stale,
-        spellId: spatialMeleeSpellAttackProxyUnitId,
+        spellId: spiritualWeaponUnitId,
       }),
     ).toBeDefined();
     expect(
@@ -388,7 +388,7 @@ function flameBladeAttackBattle(): BattleRuntimeSession {
 
 function spatialMeleeSpellAttackProxyRepeatBattle(): BattleRuntimeSession {
   const session = spellBattle({
-    preparedSpells: [spellRecord(spatialMeleeSpellAttackProxyUnitId)],
+    preparedSpells: [spellRecord(spiritualWeaponUnitId)],
     spellSlots: [{ spellLevel: 2, count: 1 }],
   });
   const caster = session.state.combatants.get(spellCasterId);

@@ -466,6 +466,12 @@ function codecFixture() {
         ownerId: wizardId,
         effect: {
           kind: "persistentAreaSaveDamage",
+          lifecycle: {
+            kind: "casterActionReposition",
+            actionCost: "bonusAction",
+            movedAreaOperation: "saveDamage",
+            collisionDisposition: "stopAndAffectAdjacent",
+          },
           sourceProcedureRef: source.procedureRef,
           sourceCombatantId: wizardId,
           areaId: battleAreaId("area:codec-flaming-sphere"),
@@ -499,6 +505,7 @@ function codecFixture() {
         ownerId: wizardId,
         effect: {
           kind: "persistentAreaSaveDamage",
+          lifecycle: { kind: "stationary" },
           sourceProcedureRef: source.procedureRef,
           sourceCombatantId: wizardId,
           appearanceOccurrence: {
@@ -525,6 +532,13 @@ function codecFixture() {
         ownerId: wizardId,
         effect: {
           kind: "persistentAreaSaveDamage",
+          lifecycle: {
+            kind: "sourceTurnTranslation",
+            distanceFeet: movementFeet(10),
+            direction: "awayFromSource",
+            movedAreaOperation: "saveDamage",
+            environmentalEnd: "strongWind",
+          },
           sourceProcedureRef: source.procedureRef,
           sourceCombatantId: wizardId,
           appearanceOccurrence: {
@@ -778,9 +792,7 @@ function codecFixture() {
     greaseEffectRef: activeEffectRef("persistentAreaSaveCondition"),
     sleetStormEffectRef: activeEffectRef("persistentAreaSaveComposite"),
     glyphEffectRef: activeEffectRef("glyphDurableOccurrence"),
-    persistentAreaSaveDamageEffectRef: activeEffectRef(
-      "persistentAreaSaveDamage",
-    ),
+    insectPlagueEffectRef: activeEffectRef("persistentAreaSaveDamage"),
     spellTurnEndEffectRef: activeEffectRef("spellTurnEndDamage"),
     persistentAreaSaveDamageEffectRef: activeEffectRef(
       "persistentAreaSaveDamage",

@@ -56,7 +56,7 @@ import {
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
-  grantedAreaSaveDamageActionUnitId,
+  dragonsBreathUnitId,
   heatMetalUnitId,
   spellCasterId,
   spellTargetId,
@@ -301,7 +301,7 @@ function castDragonsBreath(
 ): SpellSequencingRuntimeState {
   const act = bonusSpellAct({
     session: state.battle,
-    spellId: grantedAreaSaveDamageActionUnitId,
+    spellId: dragonsBreathUnitId,
     slotLevel: 2,
   });
   const targetHole = requireHole(act.initialHoles, "spellTargetList");
@@ -314,7 +314,7 @@ function castDragonsBreath(
         knownWillingSpellTargetListFill(
           targetHole,
           spellCasterId,
-          grantedAreaSaveDamageActionUnitId,
+          dragonsBreathUnitId,
           [spellTargetId],
         ),
         damageTypeChoiceFill(damageTypeHole, "fire"),

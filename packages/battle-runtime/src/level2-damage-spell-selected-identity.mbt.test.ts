@@ -63,7 +63,7 @@ import { spellSlotInvocationRef } from "./unit-profile-admission.test-support.ts
 const rayOfEnfeeblementUnitId = "ray_of_enfeeblement";
 type Level2DamageSpellUnitId =
   | typeof acidArrowUnitId
-  | typeof grantedAreaSaveDamageActionUnitId
+  | typeof dragonsBreathUnitId
   | typeof flameBladeUnitId
   | typeof flamingSphereUnitId
   | typeof heatMetalUnitId
@@ -71,7 +71,7 @@ type Level2DamageSpellUnitId =
   | typeof rayOfEnfeeblementUnitId
   | typeof scorchingRayUnitId
   | typeof shatterUnitId
-  | typeof spatialMeleeSpellAttackProxyUnitId;
+  | typeof spiritualWeaponUnitId;
 type Level2DamageSpellSelectedIdentityResult =
   | "init"
   | "acidArrowAttackTiming"
@@ -142,10 +142,10 @@ defineSelectedIdentityReplayAndQntReplay({
       ],
     },
     {
-      unitId: grantedAreaSaveDamageActionUnitId,
+      unitId: dragonsBreathUnitId,
       procedures: [
         selectedSpellProcedure("doDiscoverDragonsBreathInitial", {
-          spellId: grantedAreaSaveDamageActionUnitId,
+          spellId: dragonsBreathUnitId,
           actionTag: "bonusActionSpell",
           slotLevel: 2,
           procedure: "grantedAreaSaveDamageAction",
@@ -238,10 +238,10 @@ defineSelectedIdentityReplayAndQntReplay({
       ],
     },
     {
-      unitId: spatialMeleeSpellAttackProxyUnitId,
+      unitId: spiritualWeaponUnitId,
       procedures: [
         selectedSpellProcedure("doDiscoverSpiritualWeaponAttackProxy", {
-          spellId: spatialMeleeSpellAttackProxyUnitId,
+          spellId: spiritualWeaponUnitId,
           actionTag: "bonusActionSpell",
           slotLevel: 2,
           procedure: "spatialMeleeSpellAttackProxy",
@@ -577,7 +577,7 @@ function selectedSpellBattle(spell: SpellRecord): BattleRuntimeSession {
 }
 
 function selectedSpellRecord(unitId: Level2DamageSpellUnitId): SpellRecord {
-  if (unitId === grantedAreaSaveDamageActionUnitId) {
+  if (unitId === dragonsBreathUnitId) {
     return decodedSpellRecord(grantedAreaSaveDamageActionInput, unitId);
   }
   if (unitId === rayOfEnfeeblementUnitId) {

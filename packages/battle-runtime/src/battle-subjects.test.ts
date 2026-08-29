@@ -127,6 +127,14 @@ describe("BattleSubject identity", () => {
         effectOwnerId: actorId,
         effectRef,
       },
+      endPersistentAreaSaveConditionEscapeForDeparture: {
+        areaId,
+        effectRef,
+      },
+      endPersistentAreaSaveConditionEscapeForAreaRemoval: {
+        areaId,
+        effectRef,
+      },
       directionalPersistentAreaSave: {
         areaId,
         effectRef,

@@ -128,7 +128,7 @@ import {
   spellCasterId,
   spellTargetId,
   shieldOfFaithUnitId,
-  spatialMeleeSpellAttackProxyUnitId,
+  spiritualWeaponUnitId,
   spikeGrowthUnitId,
   thunderwaveSecondTargetId,
   thunderwaveUnitId,
@@ -3183,10 +3183,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
   });
 
   test("stored harmful-object release keeps frontiers durable and lasts full duration", () => {
-    const storedInvocation = storedSpellInvocation(
-      spatialMeleeSpellAttackProxyUnitId,
-      2,
-    );
+    const storedInvocation = storedSpellInvocation(spiritualWeaponUnitId, 2);
     expect(storedInvocation.procedure).toBe("spatialMeleeSpellAttackProxy");
     expect(storedInvocation.spell.mechanics.duration.kind).toBe(
       "concentration",
@@ -3199,7 +3196,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       {
         preparedSpells: [
           spellRecord(guidingBoltUnitId),
-          spellRecord(spatialMeleeSpellAttackProxyUnitId),
+          spellRecord(spiritualWeaponUnitId),
         ],
         spellSlots: [
           { spellLevel: 1, count: 1 },
@@ -3467,7 +3464,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     });
     const wrongRepeatTargetFill = spatialMeleeSpellAttackProxyTargetFill(
       repeatTarget,
-      spatialMeleeSpellAttackProxyUnitId,
+      spiritualWeaponUnitId,
       spellCasterId,
       spellCasterId,
       glyphHarmfulObjectPositionId,
@@ -5680,7 +5677,7 @@ function spatialMeleeSpellAttackProxyGlyphReleaseDriver(
     { className: "cleric" as const, level: 5 },
   ];
   const storedInvocation = storedSpellInvocation(
-    spatialMeleeSpellAttackProxyUnitId,
+    spiritualWeaponUnitId,
     2,
     undefined,
     { casterClassLevels },
@@ -5691,7 +5688,7 @@ function spatialMeleeSpellAttackProxyGlyphReleaseDriver(
   });
   const session = sessionWithGlyphEffect(effect, {
     casterClassLevels,
-    preparedSpells: [spellRecord(spatialMeleeSpellAttackProxyUnitId)],
+    preparedSpells: [spellRecord(spiritualWeaponUnitId)],
     spellSlots: [{ spellLevel: 2, count: 1 }],
     ...input,
   });
@@ -6047,7 +6044,7 @@ defineSelectedIdentityReplayWitness({
           "glyphStoredSummonObjectPlacement",
           () =>
             storedSpellInvocation(
-              spatialMeleeSpellAttackProxyUnitId,
+              spiritualWeaponUnitId,
               2,
               "spatialMeleeSpellAttackProxy",
             ).procedure === "spatialMeleeSpellAttackProxy",

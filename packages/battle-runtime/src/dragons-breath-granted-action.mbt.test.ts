@@ -68,7 +68,7 @@ import {
 } from "./index.ts";
 import type { BattleActDiscoveryCandidate } from "./battle-state-execution.ts";
 import {
-  grantedAreaSaveDamageActionUnitId,
+  dragonsBreathUnitId,
   spellCasterId,
   spellTargetId,
 } from "./unit-profile-admission-catalog.test-support.ts";
@@ -386,7 +386,7 @@ function castDragonsBreath(
 ): DragonsBreathRuntimeState {
   const act = bonusSpellAct({
     session: state.session,
-    spellId: grantedAreaSaveDamageActionUnitId,
+    spellId: dragonsBreathUnitId,
     slotLevel,
   });
   const targetHole = requireHole(act.initialHoles, "spellTargetList");
@@ -399,7 +399,7 @@ function castDragonsBreath(
         knownWillingSpellTargetListFill(
           targetHole,
           spellCasterId,
-          grantedAreaSaveDamageActionUnitId,
+          dragonsBreathUnitId,
           [spellTargetId],
         ),
         damageTypeChoiceFill(damageTypeHole, damageType),
@@ -671,7 +671,7 @@ function spellInvocationAvailable(session: BattleRuntimeSession): boolean {
     (act) =>
       act.subject.tag === "bonusActionSpell" &&
       battleActSpellPresentation(act)?.invocation.spellId ===
-        grantedAreaSaveDamageActionUnitId,
+        dragonsBreathUnitId,
   );
 }
 

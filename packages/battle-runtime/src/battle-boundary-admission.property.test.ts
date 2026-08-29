@@ -627,6 +627,12 @@ describe("battle boundary admission owners", () => {
             ownerId: wizardId,
             effect: {
               kind: "persistentAreaSaveDamage",
+              lifecycle: {
+                kind: "casterActionReposition",
+                actionCost: "bonusAction",
+                movedAreaOperation: "saveDamage",
+                collisionDisposition: "stopAndAffectAdjacent",
+              },
               sourceProcedureRef: codecProcedureRef,
               sourceCombatantId: wizardId,
               areaId: battleAreaId("boundary-movable"),
@@ -660,6 +666,7 @@ describe("battle boundary admission owners", () => {
             ownerId: wizardId,
             effect: {
               kind: "persistentAreaSaveDamage",
+              lifecycle: { kind: "stationary" },
               sourceProcedureRef: codecProcedureRef,
               sourceCombatantId: wizardId,
               appearanceOccurrence: {
@@ -686,6 +693,13 @@ describe("battle boundary admission owners", () => {
             ownerId: wizardId,
             effect: {
               kind: "persistentAreaSaveDamage",
+              lifecycle: {
+                kind: "sourceTurnTranslation",
+                distanceFeet: movementFeet(10),
+                direction: "awayFromSource",
+                movedAreaOperation: "saveDamage",
+                environmentalEnd: "strongWind",
+              },
               sourceProcedureRef: codecProcedureRef,
               sourceCombatantId: wizardId,
               appearanceOccurrence: {
@@ -2933,7 +2947,7 @@ describe("battle boundary admission owners", () => {
             },
             invocationSpellAccesses: [
               {
-                tag: "spawnedCompanionLifecycle",
+                tag: "pactOfTheChainFindFamiliar",
                 spell: spellRecord("find_familiar"),
               },
             ],

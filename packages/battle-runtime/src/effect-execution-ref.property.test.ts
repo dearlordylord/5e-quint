@@ -309,7 +309,7 @@ function occurrenceTemplateHasProductionOwnerSourceFacts(input: {
                           battleObjectId(
                             `effect-occurrence-property-light-object-${input.descriptor.marker}`,
                           ),
-                        dancingLight: () => false,
+                        movableLight: () => false,
                       }),
                     ),
                   objectInvisibleRevealLightEmitter: () => false,

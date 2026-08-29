@@ -4684,7 +4684,7 @@ function supportedInvocationFor(
   session: BattleRuntimeSession,
   targetSpellId: Parameters<typeof spellRecord>[0],
   procedure: SpellSlotInvocationRefProcedure,
-): ReturnType<typeof supportedSpellActs>[number] {
+) {
   const actor = requireBattleCreature(session.state, wizardId);
   const act = discoverBattleActs(session).find(
     (candidate) =>

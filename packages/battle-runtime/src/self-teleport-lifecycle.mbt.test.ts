@@ -43,7 +43,7 @@ import {
 import { describe, expect, it } from "vitest";
 
 import type {
-  BattleAntimagicFieldTransitWitness,
+  BattleMagicSuppressionTransitWitness,
   BattleHole,
   BattleResolutionResult,
   BattleState,
@@ -106,7 +106,7 @@ type SelfTeleportRuntimeState = {
   readonly battle: BattleState;
   readonly lastTeleport: SelfTeleportOutcome | undefined;
   readonly lastAntimagicTransitWitness:
-    | BattleAntimagicFieldTransitWitness
+    | BattleMagicSuppressionTransitWitness
     | undefined;
   readonly lastResult: LastResult;
 };
@@ -399,7 +399,7 @@ function castSelfTeleportIntoAntimagicAura(
   );
   const act = requireSelfTeleportAct(battle);
   const destinationHole = requireTeleportDestinationHole(act.initialHoles);
-  const transitWitness: BattleAntimagicFieldTransitWitness = {
+  const transitWitness: BattleMagicSuppressionTransitWitness = {
     kind: "magicSuppressionTransit",
     areaId: ANTIMAGIC_FIELD_AREA_ID,
     sourceCombatantId: spellTargetId,

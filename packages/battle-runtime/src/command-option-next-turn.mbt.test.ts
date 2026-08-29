@@ -776,7 +776,7 @@ function grappledByCaster(state: BattleState): BattleState {
 
 function requireRuntimeCommand(
   state: BattleState,
-  command: RuntimeCommandSubject["compelledNextTurnBehavior"],
+  command: RuntimeCommandSubject["command"],
 ): RuntimeCommandAct {
   const candidate = discoverBattleActCandidates(state).find(
     (candidate): candidate is RuntimeCommandCandidate =>

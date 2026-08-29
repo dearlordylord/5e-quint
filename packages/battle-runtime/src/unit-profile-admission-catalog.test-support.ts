@@ -206,7 +206,7 @@ export const ensnaringStrikeUnitId = "ensnaring_strike";
 
 export const expeditiousRetreatUnitId = "expeditious_retreat";
 
-export const grantedAreaSaveDamageActionUnitId = "dragons_breath";
+export const dragonsBreathUnitId = "dragons_breath";
 
 export const glyphOfWardingUnitId = "glyph_of_warding";
 

@@ -47,7 +47,7 @@ import {
   heatMetalUnitId,
   spellCasterId,
   spellTargetId,
-  spatialMeleeSpellAttackProxyUnitId,
+  spiritualWeaponUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import {
   requireHole,
@@ -1789,7 +1789,7 @@ function stateWithBoundSpiritualWeaponEffect(sourceSpellLevel: 2 | 4): {
     ),
     preparedSpells: [
       spellRecord(dispelMagicUnitId),
-      spellRecord(spatialMeleeSpellAttackProxyUnitId),
+      spellRecord(spiritualWeaponUnitId),
     ],
     spellSlots: [
       { spellLevel: 1, count: 4 },
@@ -1802,7 +1802,7 @@ function stateWithBoundSpiritualWeaponEffect(sourceSpellLevel: 2 | 4): {
     baseState,
     spellCasterId,
     spellSlotInvocationRef(
-      spatialMeleeSpellAttackProxyUnitId,
+      spiritualWeaponUnitId,
       sourceSpellLevel,
       "spatialMeleeSpellAttackProxy",
     ),
@@ -2017,7 +2017,7 @@ function spatialMeleeSpellAttackProxyEffect(input: {
   return {
     kind: "spatialMeleeSpellAttackProxy",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(spatialMeleeSpellAttackProxyUnitId),
+      String(spiritualWeaponUnitId),
     ),
     sourceCombatantId: spellCasterId,
     sourceSpellLevel: testBattleSpellEffectLevel(input.sourceSpellLevel),

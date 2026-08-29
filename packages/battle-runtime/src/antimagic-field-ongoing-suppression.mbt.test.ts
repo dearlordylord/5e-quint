@@ -36,7 +36,7 @@ import {
   antimagicFieldUnitId,
   spellCasterId,
   spellTargetId,
-  spatialMeleeSpellAttackProxyUnitId,
+  spiritualWeaponUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -60,7 +60,7 @@ import {
   breakBattleConcentration,
   endTurn,
   type BattleActiveEffect,
-  type BattleAntimagicFieldAffectedOngoingSpellEffect,
+  type BattleMagicSuppressionAffectedOngoingSpellEffect,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
@@ -90,7 +90,7 @@ const ANTIMAGIC_FIELD_ONGOING_SUPPRESSION_SCENARIO_OUTCOME_BY_TAG: Readonly<
 } as const;
 
 type AntimagicSuppressionSourceKind = Extract<
-  BattleAntimagicFieldAffectedOngoingSpellEffect["sourceKind"],
+  BattleMagicSuppressionAffectedOngoingSpellEffect["sourceKind"],
   "ordinarySpell" | "artifact"
 >;
 
@@ -321,7 +321,7 @@ describe("Antimagic Field ongoing suppression MBT parity", () => {
 
 function initialRuntimeState(): AntimagicRuntimeState {
   const base = spellBattle({
-    preparedSpells: [spellRecord(spatialMeleeSpellAttackProxyUnitId)],
+    preparedSpells: [spellRecord(spiritualWeaponUnitId)],
     spellSlots: [{ spellLevel: 2, count: 1 }],
     targetSpellcasting: {
       spellcastingSource: {
@@ -488,7 +488,7 @@ function antimagicProjection(
 
 function antimagicFieldAreaFill(input: {
   readonly hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>;
-  readonly affectedOngoingSpellEffects: readonly BattleAntimagicFieldAffectedOngoingSpellEffect[];
+  readonly affectedOngoingSpellEffects: readonly BattleMagicSuppressionAffectedOngoingSpellEffect[];
 }): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
   return {
     kind: "spellAreaChoice",
@@ -509,7 +509,7 @@ function antimagicFieldAreaFill(input: {
 function antimagicAffectedSpiritualWeapon(
   sourceKind: AntimagicSuppressionSourceKind,
   effectRef: SpiritualWeaponEffectRef,
-): BattleAntimagicFieldAffectedOngoingSpellEffect {
+): BattleMagicSuppressionAffectedOngoingSpellEffect {
   return {
     kind: "magicSuppressionAffectedOngoingSpellEffect",
     effect: {

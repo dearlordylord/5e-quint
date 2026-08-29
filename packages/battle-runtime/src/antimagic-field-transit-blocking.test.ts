@@ -13,7 +13,7 @@ import {
 } from "./battle-reducer/antimagic-field-transit-blocking.ts";
 import {
   battleAreaId,
-  type BattleAntimagicFieldTransitWitness,
+  type BattleMagicSuppressionTransitWitness,
   type BattleState,
 } from "./index.ts";
 import {
@@ -104,7 +104,7 @@ describe("Antimagic Field teleport transit witnesses", () => {
     },
   ] satisfies ReadonlyArray<{
     readonly name: string;
-    readonly witnesses: readonly BattleAntimagicFieldTransitWitness[];
+    readonly witnesses: readonly BattleMagicSuppressionTransitWitness[];
   }>)("rejects a $name witness for an active aura", ({ witnesses }) => {
     expect(
       magicSuppressionTransitInvalidReason({
@@ -196,7 +196,7 @@ function activeAntimagicTransitState(actorInsideAura: boolean): BattleState {
 function antimagicTransitWitness(input: {
   readonly originInsideAura: boolean;
   readonly destinationInsideAura: boolean;
-}): BattleAntimagicFieldTransitWitness {
+}): BattleMagicSuppressionTransitWitness {
   return {
     kind: "magicSuppressionTransit",
     areaId: antimagicFieldAreaId,
