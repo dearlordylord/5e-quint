@@ -9,7 +9,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-dice-reroll
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spatial-melee-spell-attack-proxy-attack-proxy
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
@@ -281,8 +281,8 @@ export function spellAttackRollHole(
           | "attackBurstSaveDamage"
           | "heldLightHurl"
           | "spellCreatedHeldObjectAttack"
-          | "spiritualWeaponAttackProxy"
-          | "spiritualWeaponRepeatAttack"
+          | "spatialMeleeSpellAttackProxyAttackProxy"
+          | "spatialMeleeSpellAttackProxyRepeatAttack"
           | "spellAttackDamage";
       }
     >
@@ -364,8 +364,8 @@ function spellAttackRollHoleBase(
           | "attackBurstSaveDamage"
           | "heldLightHurl"
           | "spellCreatedHeldObjectAttack"
-          | "spiritualWeaponAttackProxy"
-          | "spiritualWeaponRepeatAttack"
+          | "spatialMeleeSpellAttackProxyAttackProxy"
+          | "spatialMeleeSpellAttackProxyRepeatAttack"
           | "spellAttackDamage";
       }
     >
@@ -709,8 +709,8 @@ export function spellDamageTypes(
         | "heldLightHurl"
         | "spellCreatedHeldObjectAttack"
         | "spellAttackSequence"
-        | "spiritualWeaponAttackProxy"
-        | "spiritualWeaponRepeatAttack"
+        | "spatialMeleeSpellAttackProxyAttackProxy"
+        | "spatialMeleeSpellAttackProxyRepeatAttack"
         | "spellAttackDamage";
     }
   >,
@@ -1076,7 +1076,7 @@ export function spellSavingThrowOutcomeHole(
           | "rollModifier"
           | "creatureSizeIncrease"
           | "creatureSizeDecrease"
-          | "levitatedCreature"
+          | "controlledVerticalSuspension"
           | "saveGatedDamage"
           | "saveGatedCondition"
           | "saveGatedConditionImmunity"
@@ -1087,8 +1087,8 @@ export function spellSavingThrowOutcomeHole(
           | "hypnoticPattern"
           | "slowActivePenalties"
           | "command"
-          | "greaseGroundHazard"
-          | "gustOfWindLine";
+          | "persistentAreaSaveCondition"
+          | "directionalPersistentArea";
       }
     >
   >,
@@ -1264,7 +1264,7 @@ export function spellSavingThrowAbility(
         | "saveGatedDamage"
         | "creatureSizeIncrease"
         | "creatureSizeDecrease"
-        | "levitatedCreature"
+        | "controlledVerticalSuspension"
         | "saveGatedCondition"
         | "saveGatedConditionImmunity"
         | "saveGatedAttackRollAdvantage"
@@ -1273,8 +1273,8 @@ export function spellSavingThrowAbility(
         | "hideousLaughter"
         | "hypnoticPattern"
         | "command"
-        | "greaseGroundHazard"
-        | "gustOfWindLine"
+        | "persistentAreaSaveCondition"
+        | "directionalPersistentArea"
         | "slowActivePenalties";
     }
   >,
@@ -1299,7 +1299,7 @@ export function spellSavingThrowTargeting(
         | "saveGatedDamage"
         | "creatureSizeIncrease"
         | "creatureSizeDecrease"
-        | "levitatedCreature"
+        | "controlledVerticalSuspension"
         | "saveGatedCondition"
         | "saveGatedConditionImmunity"
         | "saveGatedAttackRollAdvantage"
@@ -1308,8 +1308,8 @@ export function spellSavingThrowTargeting(
         | "hideousLaughter"
         | "hypnoticPattern"
         | "command"
-        | "greaseGroundHazard"
-        | "gustOfWindLine"
+        | "persistentAreaSaveCondition"
+        | "directionalPersistentArea"
         | "slowActivePenalties";
     }
   >,

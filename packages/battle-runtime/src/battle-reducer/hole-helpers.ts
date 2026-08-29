@@ -172,8 +172,8 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
       ),
       byBattleHoleKind("damageTypeChoice", () => "damageTypeChoice" as const),
       byBattleHoleKind(
-        "dancingLightsPlacement",
-        () => "dancingLightsPlacement" as const,
+        "movableLightPlacement",
+        () => "movableLightPlacement" as const,
       ),
       byBattleHoleKind("deathSavingThrow", () => "deathSavingThrow" as const),
       byBattleHoleKind(
@@ -182,8 +182,8 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
       ),
       byBattleHoleKind("grappleOutcome", () => "grappleOutcome" as const),
       byBattleHoleKind(
-        "gustOfWindLineDirectionChoice",
-        () => "gustOfWindLineDirectionChoice" as const,
+        "directionalPersistentAreaDirectionChoice",
+        () => "directionalPersistentAreaDirectionChoice" as const,
       ),
       byBattleHoleKind("heldObjectFacts", () => "heldObjectFacts" as const),
       byBattleHoleKind(
@@ -202,12 +202,12 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
       ),
       byBattleHoleKind("interruptDecision", () => "interruptDecision" as const),
       byBattleHoleKind(
-        "levitateAltitudeChange",
-        () => "levitateAltitudeChange" as const,
+        "controlledVerticalSuspensionAltitudeChange",
+        () => "controlledVerticalSuspensionAltitudeChange" as const,
       ),
       byBattleHoleKind(
-        "levitateInitialRise",
-        () => "levitateInitialRise" as const,
+        "controlledVerticalSuspensionInitialRise",
+        () => "controlledVerticalSuspensionInitialRise" as const,
       ),
       byBattleHoleKind(
         "magicWeaponTargetItem",
@@ -221,7 +221,10 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
         "movableZoneRepositionMovement",
         () => "movableZoneRepositionMovement" as const,
       ),
-      byBattleHoleKind("cloudkillMovement", () => "cloudkillMovement" as const),
+      byBattleHoleKind(
+        "persistentAreaSourceTurnTranslation",
+        () => "persistentAreaSourceTurnTranslation" as const,
+      ),
       byBattleHoleKind(
         "startTurnOccurrenceOrder",
         () => "startTurnOccurrenceOrder" as const,
@@ -277,8 +280,8 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
         () => "spellcastingAbilityCheck" as const,
       ),
       byBattleHoleKind(
-        "spiritualWeaponForcePosition",
-        () => "spiritualWeaponForcePosition" as const,
+        "spatialMeleeSpellAttackProxyPosition",
+        () => "spatialMeleeSpellAttackProxyPosition" as const,
       ),
       byBattleHoleKind(
         "statBlockRechargeRoll",
