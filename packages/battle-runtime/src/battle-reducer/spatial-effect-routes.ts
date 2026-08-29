@@ -92,7 +92,7 @@ export function spatialEffectCompositionRuntimeRouteForDiscoveredAct(
       "battleAreaHazard",
     );
   }
-  if (act.subject.command === "jumpMovementReplacement") {
+  if (act.subject.command === "fixedCostMovementReplacement") {
     return spatialCompositionDiscover(
       "movementPresentation",
       ["movement"],
@@ -118,13 +118,11 @@ export function spatialEffectCompositionRouteForResolution(
   ) {
     return undefined;
   }
-  const procedure = spellInvocationForRouteSubject(
-    input.state,
-    input.subject,
-  )?.procedure;
+  const invocation = spellInvocationForRouteSubject(input.state, input.subject);
+  const procedure = invocation?.procedure;
   if (
-    procedure === "movableLightSeparateCast" ||
-    procedure === "movableLightCombinedCast"
+    procedure === "movableLightManifestation" &&
+    invocation.operation === "create"
   ) {
     return [
       spatialCompositionResolveWithoutFill(
@@ -141,7 +139,10 @@ export function spatialEffectCompositionRouteForResolution(
       ),
     ];
   }
-  if (procedure === "movableLightReposition") {
+  if (
+    procedure === "movableLightManifestation" &&
+    invocation.operation === "reposition"
+  ) {
     return [
       spatialCompositionResolve(
         "spatialEffect",
@@ -237,7 +238,6 @@ export function spatialEffectCompositionRouteForResolution(
     ];
   }
   if (
-    procedure === "persistentAreaSaveDamage" ||
     procedure === "persistentAreaSaveDamage" ||
     procedure === "areaMovementDistanceDamage" ||
     procedure === "persistentAreaSaveConditionEscape"
@@ -385,7 +385,7 @@ function spatialEffectCompositionRuntimeRouteForResolution(
     return undefined;
   }
   if (
-    input.subject.command === "dispersePersistentAreaTrait" &&
+    input.subject.command === "endPersistentAreaTraitForEnvironment" &&
     result.tag === "resolved"
   ) {
     return [
@@ -428,7 +428,7 @@ function spatialEffectCompositionRuntimeRouteForResolution(
     }
     if (
       areaDifficultTerrain.sources.some(
-        (source) => source.kind === "areaMovementDistanceDamageHazard",
+        (source) => source.kind === "areaMovementDistanceDamage",
       )
     ) {
       return [
@@ -521,7 +521,7 @@ function spatialEffectCompositionRuntimeRouteForResolution(
       ),
     ];
   }
-  if (input.subject.command !== "jumpMovementReplacement") {
+  if (input.subject.command !== "fixedCostMovementReplacement") {
     return undefined;
   }
   const fill = input.fills.at(-1);
@@ -574,8 +574,8 @@ function spatialEffectCompositionDiscoveryHoles(
   invocation: BattleSpellProcedureExecution,
 ): readonly BattleReducerRouteHole[] {
   if (
-    invocation.procedure === "movableLightSeparateCast" ||
-    invocation.procedure === "movableLightCombinedCast"
+    invocation.procedure === "movableLightManifestation" &&
+    invocation.operation === "create"
   ) {
     return [];
   }
@@ -590,13 +590,10 @@ function isSpatialEffectCompositionDiscoverySubject(
 ): boolean {
   const procedure = invocation.procedure;
   return (
-    procedure === "movableLightSeparateCast" ||
-    procedure === "movableLightCombinedCast" ||
-    procedure === "movableLightReposition" ||
+    procedure === "movableLightManifestation" ||
     procedure === "saveGatedAttackRollAdvantage" ||
     procedure === "persistentAreaTrait" ||
     procedure === "persistentAreaSaveCondition" ||
-    procedure === "persistentAreaSaveDamage" ||
     procedure === "persistentAreaSaveDamage" ||
     procedure === "areaMovementDistanceDamage" ||
     procedure === "persistentAreaSaveConditionEscape"
@@ -625,7 +622,7 @@ function battleHasActiveAreaDifficultTerrainHazard(
     combatant.activeEffects.some(
       (effect) =>
         effect.kind === "persistentAreaSaveCondition" ||
-        effect.kind === "areaMovementDistanceDamageHazard" ||
+        effect.kind === "areaMovementDistanceDamage" ||
         effect.kind === "persistentAreaSaveConditionEscape",
     ),
   );
@@ -637,7 +634,7 @@ function isAreaMovementDistanceDamageHazardMovementFill(
   return (
     fill.kind === "movement" &&
     fill.value.areaDifficultTerrain?.sources.some(
-      (source) => source.kind === "areaMovementDistanceDamageHazard",
+      (source) => source.kind === "areaMovementDistanceDamage",
     ) === true
   );
 }
