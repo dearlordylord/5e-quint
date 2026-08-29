@@ -744,6 +744,17 @@ describe("Character Creation owner facts", () => {
           ...buildFact,
           equipment: {
             ...buildFact.equipment,
+            startingEquipmentCurrencyRemainderCp: 0.5,
+          },
+        }),
+      ),
+    ).toContain("invalid copper-piece amount");
+    expect(
+      parseErrorMessage(
+        decodeCharacterBuildFact({
+          ...buildFact,
+          equipment: {
+            ...buildFact.equipment,
             startingEquipmentCurrencyRemainderCp: -1,
           },
         }),
@@ -947,13 +958,13 @@ describe("Character Creation owner facts", () => {
       decodeCreationFillFact({ ...fact, label: "presentation" })._tag,
     ).toBe("Left");
     expect(
-      Either.isLeft(
+      parseErrorMessage(
         Schema.decodeUnknownEither(CreationFillFactSchema)({
           ...fact,
           optionIds: [fact.optionIds[0], fact.optionIds[0]],
         }),
       ),
-    ).toBe(true);
+    ).toContain("choice optionIds must not contain duplicate members");
   });
 
   test("projects owner rejections without draft protocol state or prose", () => {
