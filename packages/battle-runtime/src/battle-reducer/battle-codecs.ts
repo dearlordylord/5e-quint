@@ -67,7 +67,7 @@ import {
 } from "./procedure-execution-codecs.ts";
 import { SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS } from "./battle-runtime-protocol.ts";
 import {
-  dragonsBreathHoleKey as grantedAreaSaveDamageActionHoleKey,
+  grantedAreaSaveDamageActionHoleKey,
   escapeSpellRestraintAbilityCheckHoleKey,
 } from "./selected-effect-hole-key.ts";
 import { characterAttackExecutionRefsMatchLayout } from "../attack-execution.ts";
@@ -3702,7 +3702,7 @@ type BattleFillEncoded =
               | { readonly kind: "combatant"; readonly combatantId: string };
           }
         | {
-            readonly kind: "directionalLineArea";
+            readonly kind: "directionalPersistentAreaArea";
             readonly areaId: string;
             readonly directionId: string;
           };
@@ -4858,7 +4858,7 @@ export const BattleFillSchema: Schema.Codec<
           originAnchor: BattleSpellAreaOriginAnchorSchema,
         }),
         Schema.Struct({
-          kind: Schema.Literal("directionalLineArea"),
+          kind: Schema.Literal("directionalPersistentAreaArea"),
           areaId: BattleAreaId,
           directionId: BattleLineDirectionId,
         }),

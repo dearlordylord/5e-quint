@@ -78,6 +78,7 @@ import type {
   SpellTargeting,
 } from "./spell-invocation-vocabulary.ts";
 import type { WeaponAttackOverrideSpellProcedureExecution } from "./weapon-attack-override.ts";
+import { Schema } from "effect";
 
 type SurfaceSkill = Skill;
 
@@ -1170,6 +1171,27 @@ export type TriggeredArmorDefenseSpellProcedureExecution =
     readonly resource: LeveledSpellInvocationResource;
   };
 
+export const StagedSaveConditionAutomaticSuccessPredicatesSchema = Schema.Tuple(
+  [
+    Schema.Struct({ kind: Schema.Literal("doesNotSleep") }),
+    Schema.Struct({
+      kind: Schema.Literal("conditionImmunity"),
+      condition: Schema.Literal("exhaustion"),
+    }),
+  ],
+);
+export type StagedSaveConditionAutomaticSuccessPredicates =
+  typeof StagedSaveConditionAutomaticSuccessPredicatesSchema.Type;
+
+export const StagedSaveConditionEscapeActionSchema = Schema.Struct({
+  kind: Schema.Literal("endCurrentEffect"),
+  actor: Schema.Literal("anotherCreature"),
+  cost: Schema.Literal("action"),
+  method: Schema.Literal("shakeAwake"),
+});
+export type StagedSaveConditionEscapeAction =
+  typeof StagedSaveConditionEscapeActionSchema.Type;
+
 export type StagedSaveConditionSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly ability: "wis";
@@ -1182,6 +1204,8 @@ export type StagedSaveConditionSpellProcedureExecution =
       readonly kind: "pointOriginSphere";
       readonly radiusFeet: MovementFeet;
     };
+    readonly automaticSuccessPredicates: StagedSaveConditionAutomaticSuccessPredicates;
+    readonly escapeAction: StagedSaveConditionEscapeAction;
   };
 
 export type PersistentAreaSaveCompositeSpellProcedureExecution =
@@ -1380,6 +1404,21 @@ export type RepeatSpatialMeleeSpellAttackProxySpellProcedureExecution = {
   readonly operation: "repositionAndAttack";
 };
 
+export const TemporaryAbilityCheckRollModeSelectedModeSchema = Schema.Struct({
+  kind: Schema.Literal("abilityCheckRollMode"),
+  ability: Schema.Literal("cha"),
+  skill: Schema.Literal("intimidation"),
+  rollMode: Schema.Literal("advantage"),
+  effectDuration: Schema.Literal("spellDuration"),
+});
+export type TemporaryAbilityCheckRollModeSelectedMode =
+  typeof TemporaryAbilityCheckRollModeSelectedModeSchema.Type;
+
+export const TemporaryAbilityCheckRollModeConcurrentDurationModeLimitSchema =
+  Schema.Struct({ maximumActive: Schema.Literal(3) });
+export type TemporaryAbilityCheckRollModeConcurrentDurationModeLimit =
+  typeof TemporaryAbilityCheckRollModeConcurrentDurationModeLimitSchema.Type;
+
 export type TemporaryAbilityCheckRollModeSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: CantripSpellAccess;
@@ -1388,6 +1427,8 @@ export type TemporaryAbilityCheckRollModeSpellProcedureExecution =
     readonly procedure: "temporaryAbilityCheckRollMode";
     readonly rangeFeet: MovementFeet;
     readonly resource: NoSpellInvocationResource;
+    readonly selectedMode: TemporaryAbilityCheckRollModeSelectedMode;
+    readonly concurrentDurationModeLimit: TemporaryAbilityCheckRollModeConcurrentDurationModeLimit;
   };
 
 export type LinkedDefenseResistanceDamageShareSpellProcedureExecution =

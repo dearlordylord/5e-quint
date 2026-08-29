@@ -13,22 +13,21 @@ const GLYPH_STORED_IMMEDIATE_OR_OCCURRENCE_PROCEDURES = [
   "saveGatedDamage",
   "attackBurstSaveDamage",
   "saveGatedCondition",
-  "greaseGroundHazard",
-  "spiritualWeaponAttackProxy",
+  "persistentAreaSaveCondition",
+  "spatialMeleeSpellAttackProxy",
 ] as const satisfies ReadonlyArray<SpellProcedureExecution["procedure"]>;
 export const GLYPH_STORED_AREA_ONGOING_PROCEDURES = [
-  "fogCloudObscurement",
+  "persistentAreaTrait",
   "magicalDarknessPointOrigin",
-  "flamingSphere",
-  "spikeGrowthMovementHazard",
-  "moonbeam",
-  "webRestraintHazard",
-  "gustOfWindLine",
+  "persistentAreaSaveDamage",
+  "areaMovementDistanceDamage",
+  "persistentAreaSaveConditionEscape",
+  "directionalPersistentArea",
 ] as const satisfies ReadonlyArray<SpellProcedureExecution["procedure"]>;
 export type GlyphStoredAreaOngoingProcedure =
   (typeof GLYPH_STORED_AREA_ONGOING_PROCEDURES)[number];
 export const GLYPH_STORED_AREA_CONTROL_PROCEDURES = [
-  "hypnoticPattern",
+  "saveGatedAreaControl",
 ] as const satisfies ReadonlyArray<SpellProcedureExecution["procedure"]>;
 export type GlyphStoredAreaControlProcedure =
   (typeof GLYPH_STORED_AREA_CONTROL_PROCEDURES)[number];
@@ -37,9 +36,9 @@ export const GLYPH_STORED_SINGLE_CREATURE_ACTIVE_EFFECT_PROCEDURES = [
   "rollModifier",
   "creatureSizeIncrease",
   "creatureSizeDecrease",
-  "levitatedCreature",
+  "controlledVerticalSuspension",
   "directCondition",
-  "hastePositive",
+  "compositeTargetBuffWithAftermath",
   "creatureTypeProtection",
   "conditionImmunityAndTurnStartTemporaryHitPoints",
 ] as const satisfies ReadonlyArray<SpellProcedureExecution["procedure"]>;
@@ -164,7 +163,7 @@ type GlyphStoredOrdinaryProcedure = GlyphStoredProcedureFor<
 type GlyphStoredOrdinaryTriggeringCreatureProcedure =
   | GlyphStoredNonConcentrationSingleCreatureSaveDamageProcedure
   | GlyphStoredProcedureWithConcentration<
-      GlyphStoredProcedureFor<"spiritualWeaponAttackProxy">
+      GlyphStoredProcedureFor<"spatialMeleeSpellAttackProxy">
     >
   | GlyphStoredProcedureWithoutConcentration<GlyphStoredOrdinaryProcedure>;
 
@@ -185,9 +184,9 @@ export type GlyphStoredSpellRelease =
     }
   | {
       readonly kind: "spellGlyph";
-      readonly executionKind: "greaseGroundHazard";
+      readonly executionKind: "persistentAreaSaveCondition";
       readonly storedProcedure: GlyphStoredProcedureWithoutConcentration<
-        GlyphStoredProcedureFor<"greaseGroundHazard">
+        GlyphStoredProcedureFor<"persistentAreaSaveCondition">
       >;
     }
   | {
@@ -346,12 +345,12 @@ export function glyphStoredSpellRelease(
       executionKind: "areaControl",
       storedProcedure,
     };
-  } else if (storedProcedure.procedure === "greaseGroundHazard") {
+  } else if (storedProcedure.procedure === "persistentAreaSaveCondition") {
     if (!glyphStoredProcedureDoesNotRequireConcentration(storedProcedure))
       return null;
     return {
       kind: "spellGlyph",
-      executionKind: "greaseGroundHazard",
+      executionKind: "persistentAreaSaveCondition",
       storedProcedure,
     };
   } else if (storedProcedure.procedure === "saveGatedCondition") {
@@ -420,7 +419,7 @@ export function glyphStoredSpellRelease(
       executionKind: "selfTransformation",
       storedProcedure,
     };
-  } else if (storedProcedure.procedure === "spiritualWeaponAttackProxy") {
+  } else if (storedProcedure.procedure === "spatialMeleeSpellAttackProxy") {
     if (!glyphStoredProcedureRequiresConcentration(storedProcedure))
       return null;
     return {

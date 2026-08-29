@@ -2299,7 +2299,7 @@ export type BattlePointOriginSphereAreaChoice = Extract<
 >;
 export type BattleDirectionalLineAreaChoice = Extract<
   BattleSpellAreaIdentityChoice,
-  { readonly kind: "directionalLineArea" }
+  { readonly kind: "directionalPersistentAreaArea" }
 >;
 export type BattleSpellAreaIdentityChoice =
   | {
@@ -2352,7 +2352,7 @@ export type BattleSpellAreaIdentityChoice =
       readonly originAnchor: BattleSpellAreaOriginAnchor;
     }
   | {
-      readonly kind: "directionalLineArea";
+      readonly kind: "directionalPersistentAreaArea";
       readonly areaId: BattleAreaId;
       readonly directionId: BattleLineDirectionId;
     };
