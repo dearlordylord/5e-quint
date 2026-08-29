@@ -796,7 +796,14 @@ describe("Stat Block action ordering MBT", () => {
       tag: "action",
       action: "attack",
       statBlockDamageSelection: [
-        expect.objectContaining({ notation: "static" }),
+        {
+          componentRef: { kind: "baseDamageComponent", ordinal: 1 },
+          notation: "static",
+        },
+        {
+          componentRef: { kind: "advantageBonusDamageComponent" },
+          notation: "static",
+        },
       ],
     });
     expect(subject.procedureRef).toBeDefined();
