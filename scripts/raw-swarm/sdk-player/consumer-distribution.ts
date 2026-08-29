@@ -88,11 +88,11 @@ const declarationDiagnosticCodes = new Set(["TS4023", "TS4058", "TS7056"]);
 /** The emitted declaration graph is compilation support, not an unbounded SDK. */
 export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE = {
   files: 512,
-  bytes: 9_997_813,
+  bytes: 9_998_042,
 } as const;
 /**
  * Effect 4's reviewed declaration graph uses every admitted file and leaves a
- * 487,947-byte margin below the smallest round binary-megabyte bound that
+ * 487,718-byte margin below the smallest round binary-megabyte bound that
  * contains it. Any graph growth must update the reviewed measure explicitly.
  */
 export const PUBLIC_DECLARATION_BUNDLE_MAX_FILES =
