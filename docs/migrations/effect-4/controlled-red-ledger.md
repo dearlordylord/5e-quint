@@ -1040,7 +1040,7 @@ evidence. `pnpm quality:milestone` was not run for this issue snapshot.
 ## Issue #384 application flow evidence snapshot
 
 This section records the application migration at source revision
-`957e898cd`. The React entry point, Admin Mirror loaders and event actions,
+`ab984a5fd`. The React entry point, Admin Mirror loaders and event actions,
 Character Creation and Character Sheet workflows, and Battle presentation and
 continuation flows now consume the settled Effect 4 `Result` contracts. The
 Admin Mirror decoders use the package-owned schemas through
@@ -1061,11 +1061,16 @@ replaced by fallback execution facts.
 Admin Mirror stream transport failure and invalid decoded events have separate
 typed, always-visible status projections while retained sessions remain
 available. A single collection reducer owns GET snapshots and streamed
-sessions: stream updates received during an active GET are replayed over its
-snapshot, stale GET completions are ignored, and only GET completion marks the
-collection loaded because the server's initial SSE replay has no completion
-marker. Boundary parser failures are tagged records, and private fetch and
-response-decoding helpers expose only the failure variant each can produce.
+sessions. Its one canonical session collection is updated by the stream; while
+a GET is active, a set of streamed session identities determines which
+canonical records supersede the response snapshot without storing their
+payloads twice. Stale GET completions are ignored, and only GET completion
+marks the collection loaded because the server's initial SSE replay has no
+completion marker. Invalid mirror configuration initializes both the
+collection and stream projections directly, so the first render cannot present
+loading or connecting. Boundary parser failures are tagged records, and
+private fetch and response-decoding helpers expose only the failure variant
+each can produce.
 
 No D&D rule behavior, authored content, provenance, or authored-identity
 execution dispatch changed in this application-only migration. The application
@@ -1088,7 +1093,7 @@ files. No assumption or rules implementation changed.
 
 - `pnpm --filter @dnd/app run typecheck --pretty false`: passed; the app owner
   moved from 60 diagnostics to zero.
-- `pnpm --filter @dnd/app test --reporter=dot`: passed, 18 files and 87 tests.
+- `pnpm --filter @dnd/app test --reporter=dot`: passed, 18 files and 88 tests.
 - Focused route boot and route selection tests: passed, 2 files and 10 tests.
 - `pnpm --filter @dnd/app build`: passed; Vite transformed 1,543 modules and
   emitted the production bundle. The existing large-chunk advisory remained a
@@ -1100,13 +1105,15 @@ files. No assumption or rules implementation changed.
   owners are battle-runtime (62) and character-sheet-runtime (3). Inventory
   SHA-256: `1c55aa460e7c8d0063372e85d49a924ea7365fc2c5d258830dfa4c4aa173cc83`.
 
-The repeated Standards and Spec passes against fixed point `b0aeb8eab`
-converged after the typed stream-status, GET/SSE synchronization, narrow helper
-failure, and tagged parser-issue corrections. The independent review rechecked
-the same local RAW anchors directly and found no D&D-rule behavior change. The
-final self-review confirmed the URL and collection ownership boundaries,
-distinct UI failure states, absence of compatibility adapters or duplicate
-decoding, and the authored-identity, provenance, PHB+, architecture, and
-connascence boundaries.
+The Standards and Spec passes against fixed point `b0aeb8eab` produced the
+typed stream-status, GET/SSE synchronization, narrow helper failure, and tagged
+parser-issue corrections. The final Standards corrections then removed the
+duplicate streamed-session payload owner, derived the initial invalid-origin
+projections, and replaced the request wrapper with one request identity. The
+independent review rechecked the same local RAW anchors directly and found no
+D&D-rule behavior change. The final self-review confirmed the URL and
+collection ownership boundaries, distinct UI failure states, absence of
+compatibility adapters or duplicate decoding, and the authored-identity,
+provenance, PHB+, architecture, and connascence boundaries.
 
 `pnpm quality:milestone` was not run for this package-scoped issue snapshot.
