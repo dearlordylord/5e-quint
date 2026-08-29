@@ -146,6 +146,35 @@ module statBlockAttackResolutionExamples {
     }
   }
 
+  run test_mismatched_type_advantage_bonus_is_illegal = {
+    val mismatchedBonus = SelectedStatBlockAdvantageBonusDamage({
+      component: {
+        componentRole: AdvantageBonusStatBlockDamageComponent,
+        damageType: PoisonDamage,
+        selectedAmount: SelectedStaticStatBlockDamage({ amount: 3 }),
+      },
+    })
+    val result = resolveStatBlockAttack(attackFacts(
+      { naturalD20: 12, total: 18, armorClass: 15, criticalThreshold: 20 },
+      AdvantageStatBlockAttackRoll,
+      baseComponent(
+        1,
+        SlashingDamage,
+        SelectedStaticStatBlockDamage({ amount: 5 })
+      ),
+      List(),
+      mismatchedBonus,
+      NoStatBlockHitRider
+    ))
+    all {
+      assert(not(result.impact.factsLegal)),
+      assert(result.impact.rawDamageAmount == 0),
+      assert(damageAmountForType(result.activeDamageByType, SlashingDamage) == 0),
+      assert(damageAmountForType(result.activeDamageByType, PoisonDamage) == 0),
+      assert(result.adjustedDamageAmount == 0),
+    }
+  }
+
   run test_miss_applies_neither_damage_nor_hit_rider = {
     val result = resolveStatBlockAttack(attackFacts(
       { naturalD20: 2, total: 8, armorClass: 15, criticalThreshold: 20 },

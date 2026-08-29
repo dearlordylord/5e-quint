@@ -1,8 +1,8 @@
 // RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001
 // UNIT-PROFILE-COVERAGE: runtime-owner stat-block.attack-procedure
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
-import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
-import { Match, Schema } from "effect";
+import type { PositiveInteger, ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import { Brand, Match, Schema } from "effect";
 
 export const STAT_BLOCK_DAMAGE_COMPONENT_NOTATIONS = [
   "rolled",
@@ -18,10 +18,21 @@ export const StatBlockBaseDamageComponentOrdinal = Schema.Number.pipe(
 );
 export type StatBlockBaseDamageComponentOrdinal =
   typeof StatBlockBaseDamageComponentOrdinal.Type;
-export const statBlockBaseDamageComponentOrdinal: (
-  value: number,
-) => StatBlockBaseDamageComponentOrdinal =
-  StatBlockBaseDamageComponentOrdinal.make;
+const makeStatBlockBaseDamageComponentOrdinal =
+  Brand.nominal<StatBlockBaseDamageComponentOrdinal>();
+const decodeStatBlockBaseDamageComponentOrdinal = Schema.decodeUnknownEither(
+  StatBlockBaseDamageComponentOrdinal,
+);
+
+export function parseStatBlockBaseDamageComponentOrdinal(input: unknown) {
+  return decodeStatBlockBaseDamageComponentOrdinal(input);
+}
+
+export function statBlockBaseDamageComponentOrdinal(
+  value: PositiveInteger,
+): StatBlockBaseDamageComponentOrdinal {
+  return makeStatBlockBaseDamageComponentOrdinal(value);
+}
 
 export const StatBlockAttackDamageComponentRef = Schema.Union(
   Schema.Struct({

@@ -2,7 +2,7 @@ import fc from "fast-check";
 import { Either, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
-import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import { PositiveInteger, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
 
 import {
   statBlockAttackDamageSelectionForDamage,
@@ -12,9 +12,11 @@ import {
 import {
   selectedStatBlockAttackDamageHasCanonicalComponentRefs,
   selectedStatBlockAttackDamageOptions,
+  supportedStatBlockAttackDamage,
 } from "./statblock-attack-damage-support.ts";
 import {
   StatBlockAttackDamageSelection,
+  parseStatBlockBaseDamageComponentOrdinal,
   parseStatBlockAttackDamageSelection,
   statBlockAdvantageBonusDamageComponentRef,
   statBlockAttackDamageSelection,
@@ -55,13 +57,13 @@ const INVALID_COMPONENT_ROLE_SELECTIONS = [
     selection: [
       {
         componentRef: statBlockBaseDamageComponentRef(
-          statBlockBaseDamageComponentOrdinal(1),
+          statBlockBaseDamageComponentOrdinal(PositiveInteger(1)),
         ),
         notation: "static",
       },
       {
         componentRef: statBlockBaseDamageComponentRef(
-          statBlockBaseDamageComponentOrdinal(3),
+          statBlockBaseDamageComponentOrdinal(PositiveInteger(3)),
         ),
         notation: "rolled",
       },
@@ -72,13 +74,13 @@ const INVALID_COMPONENT_ROLE_SELECTIONS = [
     selection: [
       {
         componentRef: statBlockBaseDamageComponentRef(
-          statBlockBaseDamageComponentOrdinal(2),
+          statBlockBaseDamageComponentOrdinal(PositiveInteger(2)),
         ),
         notation: "rolled",
       },
       {
         componentRef: statBlockBaseDamageComponentRef(
-          statBlockBaseDamageComponentOrdinal(1),
+          statBlockBaseDamageComponentOrdinal(PositiveInteger(1)),
         ),
         notation: "static",
       },
@@ -93,7 +95,7 @@ const INVALID_COMPONENT_ROLE_SELECTIONS = [
       },
       {
         componentRef: statBlockBaseDamageComponentRef(
-          statBlockBaseDamageComponentOrdinal(1),
+          statBlockBaseDamageComponentOrdinal(PositiveInteger(1)),
         ),
         notation: "static",
       },
@@ -104,7 +106,7 @@ const INVALID_COMPONENT_ROLE_SELECTIONS = [
     selection: [
       {
         componentRef: statBlockBaseDamageComponentRef(
-          statBlockBaseDamageComponentOrdinal(1),
+          statBlockBaseDamageComponentOrdinal(PositiveInteger(1)),
         ),
         notation: "static",
       },
@@ -174,13 +176,42 @@ describe("Stat Block per-component damage selection properties", () => {
     ).toBe(true);
   });
 
+  it.each([0, -1, 1.5])(
+    "returns a typed failure for invalid base ordinal %s",
+    (input) => {
+      expect(
+        Either.isLeft(parseStatBlockBaseDamageComponentOrdinal(input)),
+      ).toBe(true);
+    },
+  );
+
+  it("rejects an Advantage bonus whose type differs from the first base component", () => {
+    expect(
+      supportedStatBlockAttackDamage({
+        onHit: [
+          {
+            kind: "damage",
+            damageType: "slashing",
+            amount: { kind: "fixed", static: 5 },
+          },
+          {
+            kind: "conditional_bonus_damage",
+            when: { kind: "attack_roll_had_advantage" },
+            damageType: "poison",
+            amount: { kind: "fixed", static: 3 },
+          },
+        ],
+      }),
+    ).toBeNull();
+  });
+
   it("rejects every duplicate component role regardless of notation", () => {
     const componentRefArbitrary = fc.oneof(
       fc
         .integer({ min: 1, max: 20 })
         .map((ordinal) =>
           statBlockBaseDamageComponentRef(
-            statBlockBaseDamageComponentOrdinal(ordinal),
+            statBlockBaseDamageComponentOrdinal(PositiveInteger(ordinal)),
           ),
         ),
       fc.constant(statBlockAdvantageBonusDamageComponentRef),
@@ -249,7 +280,7 @@ function componentSelections(
   const baseSelections = baseNotations.map(
     (notation, index): StatBlockAttackDamageComponentSelection => ({
       componentRef: statBlockBaseDamageComponentRef(
-        statBlockBaseDamageComponentOrdinal(index + 1),
+        statBlockBaseDamageComponentOrdinalAtIndex(index),
       ),
       notation,
     }),
@@ -279,7 +310,7 @@ function projectedDamage(
   const baseComponents = baseShapes.map((shape, index) =>
     projectedDamageComponent(
       statBlockBaseDamageComponentRef(
-        statBlockBaseDamageComponentOrdinal(index + 1),
+        statBlockBaseDamageComponentOrdinalAtIndex(index),
       ),
       shape,
     ),
@@ -299,6 +330,16 @@ function projectedDamage(
           ),
         }),
   };
+}
+
+function statBlockBaseDamageComponentOrdinalAtIndex(index: number) {
+  const ordinal = parseStatBlockBaseDamageComponentOrdinal(index + 1);
+  if (Either.isLeft(ordinal)) {
+    throw new Error(
+      "A zero-based array index must produce a positive ordinal.",
+    );
+  }
+  return ordinal.right;
 }
 
 function projectedDamageComponent(

@@ -1,7 +1,7 @@
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-STAT-BLOCK-ATTACK-PROCEDURE-001 RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.attack-procedure
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
-import { movementFeet } from "@dnd/shared/types";
+import { movementFeet, PositiveInteger } from "@dnd/shared/types";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import { isDeepStrictEqual } from "node:util";
 
@@ -372,7 +372,7 @@ function singleBaseDamageSelection(
     statBlockAttackDamageSelection([
       {
         componentRef: statBlockBaseDamageComponentRef(
-          statBlockBaseDamageComponentOrdinal(1),
+          statBlockBaseDamageComponentOrdinal(PositiveInteger(1)),
         ),
         notation,
       },
@@ -388,13 +388,13 @@ function twoBaseDamageSelection(input: {
     statBlockAttackDamageSelection([
       {
         componentRef: statBlockBaseDamageComponentRef(
-          statBlockBaseDamageComponentOrdinal(1),
+          statBlockBaseDamageComponentOrdinal(PositiveInteger(1)),
         ),
         notation: input.firstBaseComponent,
       },
       {
         componentRef: statBlockBaseDamageComponentRef(
-          statBlockBaseDamageComponentOrdinal(2),
+          statBlockBaseDamageComponentOrdinal(PositiveInteger(2)),
         ),
         notation: input.secondBaseComponent,
       },
@@ -410,7 +410,7 @@ function baseAndAdvantageBonusDamageSelection(input: {
     statBlockAttackDamageSelection([
       {
         componentRef: statBlockBaseDamageComponentRef(
-          statBlockBaseDamageComponentOrdinal(1),
+          statBlockBaseDamageComponentOrdinal(PositiveInteger(1)),
         ),
         notation: input.baseComponent,
       },

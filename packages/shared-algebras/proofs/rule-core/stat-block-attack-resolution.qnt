@@ -8,6 +8,9 @@
 // - .references/srd-5.2.1/Monsters/Overview.md#Parts-of-a-Stat-Block
 //   defines monster Attack Notation and permits the number or expression to
 //   be used for each instance of damage.
+// - .references/srd-5.2.1/Monsters/Monsters-E-G.md contains attacks whose
+//   conditional Advantage bonus has the same damage type as the base damage;
+//   this slice admits that typed conditional-bonus family only.
 // - .references/srd-5.2.1/Playing-the-Game.md#Attack-Rolls defines hit
 //   resolution against Armor Class.
 // - .references/srd-5.2.1/Playing-the-Game.md#Critical-Hits doubles only the
@@ -169,13 +172,16 @@ module statBlockAttackResolution {
     }
   }
 
-  pure def canonicalStatBlockAdvantageBonusRole(
+  pure def canonicalStatBlockAdvantageBonusDamage(
+    firstBaseDamageComponent: SelectedStatBlockDamageComponent,
     advantageBonusDamage: StatBlockAdvantageBonusDamage
   ): bool =
     match advantageBonusDamage {
       | NoStatBlockAdvantageBonusDamage => true
-      | SelectedStatBlockAdvantageBonusDamage(data) =>
-          data.component.componentRole == AdvantageBonusStatBlockDamageComponent
+      | SelectedStatBlockAdvantageBonusDamage(data) => all {
+          data.component.componentRole == AdvantageBonusStatBlockDamageComponent,
+          data.component.damageType == firstBaseDamageComponent.damageType,
+        }
     }
 
   pure def allSelectedStatBlockDamageComponents(
@@ -270,7 +276,10 @@ module statBlockAttackResolution {
       facts.firstBaseDamageComponent,
       facts.remainingBaseDamageComponents
     ),
-    canonicalStatBlockAdvantageBonusRole(facts.advantageBonusDamage),
+    canonicalStatBlockAdvantageBonusDamage(
+      facts.firstBaseDamageComponent,
+      facts.advantageBonusDamage
+    ),
     selectedStatBlockDamageDefinitionsLegal(facts),
     not(outcome.hits)
       or activeSelectedStatBlockDamageRollsLegal(facts, outcome.critical),

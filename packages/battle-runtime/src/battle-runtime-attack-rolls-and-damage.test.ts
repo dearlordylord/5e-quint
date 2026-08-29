@@ -1,7 +1,7 @@
 import { battleObjectId } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { classLevel } from "@dnd/shared/types";
+import { classLevel, PositiveInteger } from "@dnd/shared/types";
 import { Either } from "effect";
 import {
   startBattleRight,
@@ -245,7 +245,7 @@ describe("battle runtime: attack rolls and damage", () => {
                 {
                   kind: "fixed",
                   componentRef: statBlockBaseDamageComponentRef(
-                    statBlockBaseDamageComponentOrdinal(2),
+                    statBlockBaseDamageComponentOrdinal(PositiveInteger(2)),
                   ),
                   amount: 4,
                   damageType: "fire",

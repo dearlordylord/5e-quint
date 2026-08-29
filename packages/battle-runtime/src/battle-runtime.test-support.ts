@@ -69,6 +69,7 @@ import {
   difficultyClass,
   Hp,
   NonNegativeInteger,
+  PositiveInteger,
   movementDeltaFeet,
   movementFeet,
   proficiencyBonus,
@@ -218,7 +219,7 @@ export function singleBaseStatBlockAttackDamageSelectionForTest(
     statBlockAttackDamageSelection([
       {
         componentRef: statBlockBaseDamageComponentRef(
-          statBlockBaseDamageComponentOrdinal(1),
+          statBlockBaseDamageComponentOrdinal(PositiveInteger(1)),
         ),
         notation,
       },

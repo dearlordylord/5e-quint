@@ -26,7 +26,7 @@ import {
 import {
   statBlockAdvantageBonusDamageComponentRef,
   statBlockAttackDamageComponentRefsMatchSelectionRoles,
-  statBlockBaseDamageComponentOrdinal,
+  parseStatBlockBaseDamageComponentOrdinal,
   statBlockBaseDamageComponentRef,
   statBlockAttackDamageSelectionKey,
   STAT_BLOCK_DAMAGE_COMPONENT_NOTATIONS,
@@ -95,23 +95,25 @@ export function supportedStatBlockAttackDamage(
   if (unreferencedBaseComponents === null) {
     return null;
   }
-  const [firstBaseComponent, ...remainingBaseComponents] =
-    unreferencedBaseComponents;
-  const baseComponents: ReadonlyNonEmptyArray<StatBlockAttackDamageComponent> =
-    [
-      withStatBlockDamageComponentRef(
-        firstBaseComponent,
-        statBlockBaseDamageComponentRef(statBlockBaseDamageComponentOrdinal(1)),
-      ),
-      ...remainingBaseComponents.map((component, index) =>
-        withStatBlockDamageComponentRef(
-          component,
-          statBlockBaseDamageComponentRef(
-            statBlockBaseDamageComponentOrdinal(index + 2),
+  const referencedBaseComponents = Either.all(
+    unreferencedBaseComponents.map((component, index) =>
+      Either.map(
+        parseStatBlockBaseDamageComponentOrdinal(index + 1),
+        (ordinal) =>
+          withStatBlockDamageComponentRef(
+            component,
+            statBlockBaseDamageComponentRef(ordinal),
           ),
-        ),
       ),
-    ];
+    ),
+  );
+  if (Either.isLeft(referencedBaseComponents)) {
+    return null;
+  }
+  const baseComponents = nonEmpty(referencedBaseComponents.right);
+  if (baseComponents === null) {
+    return null;
+  }
 
   const advantageBonuses = effects.flatMap((effect) =>
     effect.kind === "advantageBonus" ? [effect.component] : [],
