@@ -3,6 +3,7 @@
 
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
 module battleRuntimeThaumaturgy {
+  import battleRuntimeTemporaryAbilityCheckRollMode.* from "./battle-runtime-temporary-ability-check-roll-mode"
   import battleRuntimeModel.* from "./battle-runtime-model"
 
   pure def thaumaturgyBoomingVoiceDurationTicks: int = 10
@@ -32,20 +33,23 @@ module battleRuntimeThaumaturgy {
     source: Actor,
     activeOneMinuteEffectCount: int,
   ): int =
-    if (activeEffectsContainThaumaturgyBoomingVoice(effects, source))
-      activeOneMinuteEffectCount
-    else
-      activeOneMinuteEffectCount + 1
+    activeOccurrenceCountAfterReplacement(
+      activeEffectsContainThaumaturgyBoomingVoice(effects, source),
+      activeOneMinuteEffectCount,
+    )
 
   pure def thaumaturgyBoomingVoiceAbilityCheckRollMode(effects: Set[ActiveEffect], actor: Actor, ability: Ability, skill: AbilityCheckSkill): AbilityCheckRollMode =
-    if (
-      ability == ChaAbility and
-      skill == IntimidationSkill and
+    match temporaryAbilityCheckRollMode(
       effects.exists(effect => match effect {
         | ThaumaturgyBoomingVoice(data) => data.source == actor
         | _ => false
-      })
-    ) AdvantageAbilityCheck else NormalAbilityCheck
+      }),
+      ability == ChaAbility,
+      skill == IntimidationSkill,
+    ) {
+      | TemporaryAbilityCheckAdvantageRoll => AdvantageAbilityCheck
+      | TemporaryAbilityCheckNormalRoll => NormalAbilityCheck
+    }
 
   pure def resolveFighterThaumaturgyBoomingVoice(
     state: BattleState,
@@ -60,7 +64,11 @@ module battleRuntimeThaumaturgy {
         not(activeEffectsContainThaumaturgyBoomingVoice(state.fighter.activeEffects, Fighter)) or
         activeOneMinuteEffectCount > 0
       ) and
-      thaumaturgyActiveOneMinuteEffectCountAfterBoomingVoiceCast(state.fighter.activeEffects, Fighter, activeOneMinuteEffectCount) <= thaumaturgyMaxActiveOneMinuteEffects and
+      temporaryAbilityCheckOccurrenceAdmitted(
+        activeOneMinuteEffectCount,
+        thaumaturgyMaxActiveOneMinuteEffects,
+        activeEffectsContainThaumaturgyBoomingVoice(state.fighter.activeEffects, Fighter),
+      ) and
       state.actionAvailable and
       not(state.fighter.unconscious) and
       not(state.fighter.incapacitated) and

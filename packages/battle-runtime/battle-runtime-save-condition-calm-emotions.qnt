@@ -4,6 +4,8 @@
 
 module battleRuntimeSaveConditionCalmEmotions {
 
+  import battleRuntimeSaveGatedConditionImmunity.* from "./battle-runtime-save-gated-condition-immunity"
+
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
 
@@ -18,23 +20,23 @@ module battleRuntimeSaveConditionCalmEmotions {
     target: Combatant,
     savingThrowSucceeded: bool,
   ): Combatant =
-    if (savingThrowSucceeded)
-      target
-    else
+    if (saveGatedConditionImmunityApplies(savingThrowSucceeded))
       {
         ...target,
         activeEffects: target.activeEffects
           .exclude(calmEmotionsConditionImmunityEffects)
           .union(calmEmotionsConditionImmunityEffects),
       }
+    else
+      target
   pure def calmEmotionsIncludedTargetsAreLegal(
     fighterIncluded: bool,
     fighterCreatureType: RuntimeCreatureType,
     goblinIncluded: bool,
     goblinCreatureType: RuntimeCreatureType,
   ): bool =
-    (not(fighterIncluded) or fighterCreatureType == HumanoidCreature) and
-      (not(goblinIncluded) or goblinCreatureType == HumanoidCreature)
+    includedTargetCreatureTypeIsLegal(fighterIncluded, fighterCreatureType == HumanoidCreature) and
+      includedTargetCreatureTypeIsLegal(goblinIncluded, goblinCreatureType == HumanoidCreature)
   pure def resolveCalmEmotions(
     state: BattleState,
     fighterIncluded: bool,
