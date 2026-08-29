@@ -52,12 +52,12 @@ import { validateRolledDiceFillForDiceExpr } from "../battle-state-execution.ts"
 import { snapshotBattle } from "./battle-snapshot.ts";
 
 import {
-  dragonsBreathHoleKey,
   dragonsBreathSavingThrowOutcomeHole,
   type DragonsBreathEffect,
   type DragonsBreathExhaleSubject,
 } from "./dragons-breath-discovery.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./ongoing-feature-relationship.ts";
+import { dragonsBreathHoleKey } from "./selected-effect-hole-key.ts";
 type ExpectedDragonBreathFill = {
   readonly kind: BattleFill["kind"];
   readonly holeId: BattleHoleId;
@@ -461,7 +461,7 @@ function dragonsBreathDamageRollHole(
 ): BattleDragonsBreathDamageRollHole {
   const expr = dragonsBreathDamageExpr(effect);
   const key = dragonsBreathHoleKey(
-    effect,
+    spellActiveEffectExecutionRef(effect),
     `damage-result:${expr.dice}d${expr.dieSize}`,
   );
   return {

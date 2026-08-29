@@ -214,7 +214,6 @@ import type {
 import {
   ATTACK_ONLY_ACTION_RESOURCE_EXCLUDED_ACTIONS,
   ESCAPE_GRAPPLE_OUTCOME_HOLE_ID,
-  ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_ID,
   GRAPPLE_OUTCOME_HOLE_ID,
   GRAPPLE_TARGET_HOLE_ID,
   HELP_ATTACK_ALLY_HOLE_ID,
@@ -1646,7 +1645,7 @@ export function resolveEscapeSpellRestraint(
   });
   const check = abilityCheckFill(
     input.fills,
-    ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_ID,
+    checkHole.holeId,
     "Escape spell Restraint",
     { rollMode: checkHole.rollMode },
   );

@@ -11,6 +11,10 @@ import { Schema } from "effect";
 import * as Result from "effect/Result";
 import { describe, expect, test } from "vitest";
 import { Hp } from "@dnd/shared/types";
+import {
+  holeId,
+  holeInstanceKey,
+} from "@dnd/shared-algebras/runtime-hole-algebra";
 import dragonsBreathInput from "../../surface/content/dragons_breath.json";
 import {
   dragonsBreathUnitId,
@@ -272,6 +276,33 @@ describe("Dragon's Breath initial cast admission", () => {
       subject: exhaleAct.subject,
       holes: needsDamage.holes,
     });
+    const wrongOccurrenceHoles = needsDamage.holes.map((hole) =>
+      hole.kind === "rolledDice" && "dragonsBreath" in hole
+        ? {
+            ...hole,
+            holeId: holeId("battle:dragons-breath:another-occurrence:damage"),
+            holeInstanceKey: holeInstanceKey(
+              "battle:dragons-breath:another-occurrence:damage",
+            ),
+          }
+        : hole,
+    );
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)({
+          checkpoint: needsDamage.snapshot,
+          frontier: {
+            kind: "acts",
+            acts: [
+              {
+                subject: exhaleAct.subject,
+                initialHoles: wrongOccurrenceHoles,
+              },
+            ],
+          },
+        }),
+      ),
+    ).toBe(true);
     const damageHole = requireResultHole(needsDamage, "rolledDice");
     expect(damageHole).toMatchObject({
       dragonsBreath: { sourceCombatantId: spellCasterId },

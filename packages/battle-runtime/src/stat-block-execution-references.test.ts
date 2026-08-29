@@ -1,4 +1,8 @@
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
+import {
+  holeId,
+  holeInstanceKey,
+} from "@dnd/shared-algebras/runtime-hole-algebra";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { Result, Schema } from "effect";
 import {
@@ -84,6 +88,7 @@ import {
 } from "./battle-reducer/api-lifecycle.ts";
 import { statBlockAttackProcedureSection } from "./battle-reducer/statblock.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
+import { escapeSpellRestraintAbilityCheckHoleKey } from "./battle-reducer/selected-effect-hole-key.ts";
 
 const isolatedExecutionBattleId = battleId(
   "battle-stat-block-isolated-execution-admission",
@@ -1655,9 +1660,22 @@ describe("Stat Block execution references", () => {
       targetId: fighterId,
       effectRef: fighterEffectRef,
     };
+    const escapeSpellRestraintHole = (effectRef: BattleEffectExecutionRef) => {
+      const key = escapeSpellRestraintAbilityCheckHoleKey(effectRef);
+      return {
+        holeId: holeId(key),
+        holeInstanceKey: holeInstanceKey(key),
+        kind: "abilityCheck" as const,
+        label: "Escape spell restraint Strength (Athletics) check (DC 1)",
+        ability: "str" as const,
+        skill: "athletics" as const,
+        dc: 1,
+      };
+    };
     const snapshotWithEffectOwner = (
       ownerId: CombatantId,
       effectRef: BattleEffectExecutionRef,
+      initialHoles: readonly unknown[] = [escapeSpellRestraintHole(effectRef)],
     ) => ({
       ...encodedEnvelope,
       checkpoint: {
@@ -1683,7 +1701,7 @@ describe("Stat Block execution references", () => {
       frontier: {
         ...encodedEnvelope.frontier,
         acts: [
-          { ...firstAct, subject: escapeSubject, initialHoles: [] },
+          { ...firstAct, subject: escapeSubject, initialHoles },
           ...encodedActs.slice(1),
         ],
       },
@@ -1693,6 +1711,24 @@ describe("Stat Block execution references", () => {
         snapshotWithEffectOwner(fighterId, fighterEffectRef),
       ),
     ).not.toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
+        snapshotWithEffectOwner(fighterId, fighterEffectRef, []),
+      ),
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
+        snapshotWithEffectOwner(fighterId, fighterEffectRef, [
+          {
+            ...escapeSpellRestraintHole(fighterEffectRef),
+            holeId: holeId("battle:codec:unrelated-ability-check"),
+            holeInstanceKey: holeInstanceKey(
+              "battle:codec:unrelated-ability-check",
+            ),
+          },
+        ]),
+      ),
+    ).toThrow();
     const duplicateActiveEffectSnapshot = snapshotWithEffectOwner(
       fighterId,
       fighterEffectRef,
@@ -1731,7 +1767,7 @@ describe("Stat Block execution references", () => {
             {
               ...firstAct,
               subject: { ...escapeSubject, effectRef: actorEffectRef },
-              initialHoles: [],
+              initialHoles: [escapeSpellRestraintHole(actorEffectRef)],
             },
             ...encodedActs.slice(1),
           ],

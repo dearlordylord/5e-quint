@@ -194,11 +194,6 @@ export const ESCAPE_GRAPPLE_OUTCOME_HOLE_ID = holeId(
 export const ESCAPE_GRAPPLE_OUTCOME_HOLE_INSTANCE = holeInstanceKey(
   "battle:escape-grapple:outcome",
 );
-export const ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_ID = holeId(
-  "battle:escape-spell-restraint:athletics-check",
-);
-export const ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_INSTANCE =
-  holeInstanceKey("battle:escape-spell-restraint:athletics-check");
 export const REACTION_MODIFIER_ROLL_HOLE_ID = holeId(
   "battle:reaction:modifier-roll",
 );

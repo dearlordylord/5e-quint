@@ -18,6 +18,7 @@ import {
   savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./ongoing-feature-relationship.ts";
+import { dragonsBreathHoleKey } from "./selected-effect-hole-key.ts";
 
 export type DragonsBreathEffect = Extract<
   BattleCreatureState["activeEffects"][number],
@@ -67,7 +68,10 @@ export function dragonsBreathSavingThrowOutcomeHole(
   actorId: CombatantId,
   effect: DragonsBreathEffect,
 ): BattleDragonsBreathSavingThrowOutcomeHole {
-  const key = dragonsBreathHoleKey(effect, "saving-throw-outcome");
+  const key = dragonsBreathHoleKey(
+    spellActiveEffectExecutionRef(effect),
+    "saving-throw-outcome",
+  );
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
@@ -96,13 +100,6 @@ export function dragonsBreathSavingThrowOutcomeHole(
         }
       : {}),
   };
-}
-
-export function dragonsBreathHoleKey(
-  effect: DragonsBreathEffect,
-  suffix: string,
-): string {
-  return `battle:dragons-breath:${effect.sourceProcedureRef}:${effect.sourceCombatantId}:${suffix}`;
 }
 
 function activeDragonsBreathEffects(

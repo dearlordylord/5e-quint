@@ -13,7 +13,11 @@ import { optionalProperty } from "../optional-property.ts";
 import { Match } from "effect";
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
-import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
+import {
+  holeId,
+  holeInstanceKey,
+  type AttackRollMode,
+} from "@dnd/shared-algebras/runtime-hole-algebra";
 import { battleFillKind } from "../battle-protocol-kinds.ts";
 import {
   difficultyClass,
@@ -23,6 +27,7 @@ import {
 import type { Ability, Skill } from "@dnd/surface/surface/types";
 import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
 import { mechanicalD20TestRollMode } from "../d20-test-circumstance.ts";
+import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import type {
   BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
@@ -76,8 +81,6 @@ import {
   ATTACK_TARGET_HOLE_INSTANCE,
   ESCAPE_GRAPPLE_OUTCOME_HOLE_ID,
   ESCAPE_GRAPPLE_OUTCOME_HOLE_INSTANCE,
-  ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_ID,
-  ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_INSTANCE,
   GRAPPLE_OUTCOME_HOLE_ID,
   GRAPPLE_OUTCOME_HOLE_INSTANCE,
   GRAPPLE_TARGET_HOLE_ID,
@@ -98,6 +101,7 @@ import {
   SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID,
   SLEEP_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
 } from "./battle-runtime-protocol.ts";
+import { escapeSpellRestraintAbilityCheckHoleKey } from "./selected-effect-hole-key.ts";
 import { spellSaveDcForCaster } from "./spell-save-dc.ts";
 import {
   creatureSizeIsLargerThanSelf,
@@ -393,9 +397,12 @@ export function escapeSpellRestraintAbilityCheckHole(
 ): BattleAbilityCheckHole {
   const dc = spellSaveDcForCaster(state, effect.sourceCombatantId);
   const rollMode = requiredAbilityCheckRollMode(state, input.actorId, "str");
+  const key = escapeSpellRestraintAbilityCheckHoleKey(
+    spellActiveEffectExecutionRef(effect),
+  );
   return {
-    holeInstanceKey: ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_INSTANCE,
-    holeId: ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_ID,
+    holeInstanceKey: holeInstanceKey(key),
+    holeId: holeId(key),
     kind: "abilityCheck",
     label: `Escape spell restraint Strength (Athletics) check (DC ${dc ?? 1})`,
     ability: "str",

@@ -19,7 +19,11 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 // This module owns Effect Schema values for battle state execution.
 
-import { ATTACK_ROLL_MODES } from "@dnd/shared-algebras/runtime-hole-algebra";
+import {
+  ATTACK_ROLL_MODES,
+  holeId,
+  holeInstanceKey,
+} from "@dnd/shared-algebras/runtime-hole-algebra";
 import { ArmorClassSchema as BattleArmorClassSchema } from "@dnd/shared-algebras/armor-class-algebra";
 import { RETAINED_COMPANION_PROTOCOL_TAGS } from "@dnd/shared-algebras/companion-protocol-algebra";
 import {
@@ -62,6 +66,10 @@ import {
   UnitSupportProcedureExecutionSchema,
 } from "./procedure-execution-codecs.ts";
 import { SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS } from "./battle-runtime-protocol.ts";
+import {
+  dragonsBreathHoleKey,
+  escapeSpellRestraintAbilityCheckHoleKey,
+} from "./selected-effect-hole-key.ts";
 import { characterAttackExecutionRefsMatchLayout } from "../attack-execution.ts";
 import {
   BATTLE_INTERRUPT_TRIGGERS,
@@ -8168,17 +8176,45 @@ function selectedOccurrenceSubjectAllowsReferenceFreeHoles(
   holes: readonly EncodedBattleHole[],
 ): boolean {
   return Match.value(subject).pipe(
-    Match.when(
-      { tag: "action", action: "escapeSpellRestraint" },
-      () => holes.length === 1 && holes[0]?.kind === "abilityCheck",
-    ),
+    Match.when({ tag: "action", action: "escapeSpellRestraint" }, (escape) => {
+      const key = escapeSpellRestraintAbilityCheckHoleKey(escape.effectRef);
+      return (
+        holes.length === 1 &&
+        holes[0]?.kind === "abilityCheck" &&
+        holes[0].holeId === holeId(key) &&
+        holes[0].holeInstanceKey === holeInstanceKey(key)
+      );
+    }),
     Match.when(
       { tag: "runtimeCommand", command: "dragonsBreathExhale" },
-      () =>
-        holes.length === 1 &&
-        ((holes[0]?.kind === "savingThrowOutcome" &&
-          "dragonsBreath" in holes[0]) ||
-          (holes[0]?.kind === "rolledDice" && "dragonsBreath" in holes[0])),
+      (exhale) => {
+        const selectedHole = holes[0];
+        if (
+          holes.length !== 1 ||
+          selectedHole === undefined ||
+          !("dragonsBreath" in selectedHole)
+        ) {
+          return false;
+        }
+        const suffix = Match.value(selectedHole).pipe(
+          Match.when(
+            { kind: "savingThrowOutcome" },
+            () => "saving-throw-outcome",
+          ),
+          Match.when(
+            { kind: "rolledDice" },
+            (rolled) =>
+              `damage-result:${rolled.dragonsBreath.expr.dice}d${rolled.dragonsBreath.expr.dieSize}`,
+          ),
+          Match.orElse(() => undefined),
+        );
+        if (suffix === undefined) return false;
+        const key = dragonsBreathHoleKey(exhale.effectRef, suffix);
+        return (
+          selectedHole.holeId === holeId(key) &&
+          selectedHole.holeInstanceKey === holeInstanceKey(key)
+        );
+      },
     ),
     Match.when(
       { tag: "runtimeCommand", command: "disperseCloudkill" },
@@ -8192,7 +8228,6 @@ function selectedOccurrenceSubjectRequiresNoOccurrenceHole(
   subject: EncodedBattleSubject,
 ): boolean {
   return Match.value(subject).pipe(
-    Match.when({ tag: "action", action: "escapeSpellRestraint" }, () => true),
     Match.when(
       { tag: "bonusActionStandardAction" },
       (value) => value.sourceEffectRef !== undefined,
