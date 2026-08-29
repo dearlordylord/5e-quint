@@ -85,7 +85,7 @@ import {
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID,
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID,
 } from "./domain-constants.ts";
-import { isSaveGatedConditionWithRepeatDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
+import { isSaveGatedConditionWithRepeatDamageRepeatSaveFill } from "./staged-condition-repeat-save.ts";
 
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -98,7 +98,7 @@ import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlet
 import {
   targetingSaveInterdictionCheck,
   targetChoiceFillAfterSanctuaryAttackRollReplacement,
-} from "./sanctuary-targeting-interdiction.ts";
+} from "./targeting-save-interdiction.ts";
 import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 import {
   chainedSpellAttackRollHole,

@@ -70,16 +70,16 @@ import { combatantCanTakeActions } from "./creature-state-execution.ts";
 import {
   ramMovablePersistentAreaDamageAfterSave,
   ramMovablePersistentAreaMoveDistanceAccepted,
-} from "./flaming-sphere-hazard-ram.ts";
+} from "./collision-reposition-area-hazard.ts";
 import {
   movablePersistentAreaDamageAfterSave,
   movablePersistentAreaMoveDistanceAccepted,
-} from "./moonbeam-movable-zone.ts";
+} from "./directed-reposition-area.ts";
 import {
   resolveTranslatingPersistentAreaAreaSaveDamage,
   resolveStationaryPersistentAreaAreaSaveDamage,
 } from "./persistent-area-save-damage.ts";
-import { validateDirectionalPersistentAreaAreaPushFacts } from "./gust-of-wind-push-facts.ts";
+import { validateDirectionalPersistentAreaAreaPushFacts } from "./directional-area-push-facts.ts";
 import { revertShapeShiftedCombatantToTrueForm } from "./shape-shifting.ts";
 import {
   isEndTurnFillKind,

@@ -36,7 +36,7 @@ import {
   spendSpellMetamagicSorceryPoints,
 } from "./metamagic.ts";
 import { invalidResult } from "./result-helpers.ts";
-import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
+import { battleStateAfterTargetActionEarlyEndForActor } from "./targeting-save-interdiction.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
 import {
   markInvocationLevelOnePlusSpellCastThisTurn,

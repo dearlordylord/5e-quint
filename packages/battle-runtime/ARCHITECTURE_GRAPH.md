@@ -56,7 +56,7 @@ protocol in `battle-reducer/reducer-route-protocol.ts` and
 and composable first-applicable precedence. `attack-routes.ts` owns weapon,
 creature, and general battle-action routes; `combatant-lifecycle-routes.ts`
 owns zero-Hit-Point stabilization, death saves, Concentration teardown, and Hit
-Point restoration routes; `command-routes.ts` owns Command effect projection;
+Point restoration routes; `compelled-behavior-routes.ts` owns Command effect projection;
 `spell-defense-routes.ts` owns defensive armor, warding, and spell-attack
 routes; and `effect-lifecycle-routes.ts` owns repeat-save, roll-modifier,
 damage-reduction, and scalar-effect lifecycle routes. Companion lifecycle,
@@ -112,12 +112,12 @@ distance-triggered Spike Growth damage remains part of movement resolution.
 vocabulary and hole/projection construction shared with `discoverBattleActs`;
 procedure-only staged holes remain local to the execution owner.
 
-Command follow-ups are owned by `battle-reducer/command-procedures.ts`, which
+Command follow-ups are owned by `battle-reducer/compelled-behavior-procedures.ts`, which
 keeps pending-effect admission, Grovel/Drop resolution, Approach/Flee movement
 continuations, and their End Turn sequencing behind one interface.
-`battle-reducer/command-halt.ts` owns Halt's turn-start resource/movement
+`battle-reducer/compelled-behavior-halt.ts` owns Halt's turn-start resource/movement
 projection and its exhaustive stale-subject suppression classification.
-`battle-reducer/command-procedure-discovery.ts` owns the pending-effect query
+`battle-reducer/compelled-behavior-discovery.ts` owns the pending-effect query
 and Drop hole projection shared with battle discovery. Voluntary, granted, and
 spell-constrained movement is owned by `battle-reducer/movement-procedures.ts`;
 its single parser owns movement-mode selection and cost/witness validation,

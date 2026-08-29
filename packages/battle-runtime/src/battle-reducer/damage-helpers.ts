@@ -54,7 +54,7 @@ import {
   activeOngoingFeatureOccurrencesForCombatant,
   ongoingFeatureProfileForSourceKey,
 } from "./creature-state-execution.ts";
-import { combatantHasLinkedDefenseResistanceDamageShareResistance } from "./warding-bond.ts";
+import { combatantHasLinkedDefenseResistanceDamageShareResistance } from "./linked-defense-damage-share.ts";
 import {
   attackDamageComponents,
   attackDamageModifier,

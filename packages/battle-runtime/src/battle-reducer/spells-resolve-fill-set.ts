@@ -60,13 +60,13 @@ import {
   isSpellDamageReductionRollFill,
 } from "./damage-helpers.ts";
 import { validateUniqueAttackSightFacts } from "./attack-fill-set.ts";
-import { isSaveGatedConditionWithRepeatDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
+import { isSaveGatedConditionWithRepeatDamageRepeatSaveFill } from "./staged-condition-repeat-save.ts";
 
 import { DamageRelationshipDecisionsByHole } from "./damage-relationship-decisions.ts";
 import {
   isDuplicateHitInterceptionDuplicateRollFill,
   duplicateHitInterceptionRollHoleId,
-} from "./mirror-image-hit-interception.ts";
+} from "./duplicate-hit-interception.ts";
 import {
   spellBurstDamageHole,
   rollModifierUsesTargetAbilityChoices,
@@ -101,7 +101,7 @@ import {
   spatialMeleeSpellAttackProxyPositionInvalidReason,
   spellTargetRequiresAttackRollRelationshipFact,
 } from "./spells-targeting.ts";
-import { controlledVerticalSuspensionInitialRiseHole } from "./levitate-creature.ts";
+import { controlledVerticalSuspensionInitialRiseHole } from "./controlled-vertical-suspension.ts";
 import { effectiveD20TestNaturalOneRerollSavingThrowOutcomes } from "./d20-test-natural-one-reroll.ts";
 import {
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID,

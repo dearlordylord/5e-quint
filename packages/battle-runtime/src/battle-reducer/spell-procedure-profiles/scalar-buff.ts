@@ -67,7 +67,7 @@ import {
 import {
   battleStateWithFlySpeedGrantEndFallCleanupFrames,
   flySpeedGrantEndFallCleanupFramesForExpiredEffects,
-} from "../fly-speed-grant-end-fall-cleanup.ts";
+} from "../granted-flight-end-fall-cleanup.ts";
 import {
   needsHolesResult,
   spellSelectionResolution,

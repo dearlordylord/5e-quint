@@ -136,7 +136,7 @@ import {
   resolveSpellAct,
 } from "./spells-resolve.ts";
 import { resolveReleaseSpellCreatedHeldObjectCommand } from "./spells-resolve-release.ts";
-import { resolveGrantedAreaSaveDamageActionCommand } from "./dragons-breath.ts";
+import { resolveGrantedAreaSaveDamageActionCommand } from "./granted-area-save-damage.ts";
 import type { BattleAttackRouteResolvers } from "./attack-resolvers.ts";
 import {
   resolveBonusActionDash,
@@ -177,8 +177,8 @@ import {
   pendingCompelledBehaviorObligationIssue,
   resolveCompelledHaltEndTurn,
   resolveCompelledBehaviorFollowUp,
-} from "./command-procedures.ts";
-import { compelledHaltSuppressionIssue } from "./command-halt.ts";
+} from "./compelled-behavior-procedures.ts";
+import { compelledHaltSuppressionIssue } from "./compelled-behavior-halt.ts";
 import {
   isMovementProcedureSubject,
   resolveMovementProcedure,

@@ -11,7 +11,7 @@ import {
   spellProcedureExecutionFor,
   type SpellProcedureExecutionRegistry,
 } from "./execution-registry.ts";
-import { resolveStoredGlyphAreaControlSpellRelease } from "./hypnotic-pattern.ts";
+import { resolveStoredGlyphAreaControlSpellRelease } from "./area-control-condition.ts";
 import type { StoredGlyphSpellProcedureResolution } from "./resolution-contract.ts";
 import { resolveStoredGlyphSelfTransformationModeSpellRelease } from "./self-transformation-mode.ts";
 

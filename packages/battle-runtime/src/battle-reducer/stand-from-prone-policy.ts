@@ -2,7 +2,7 @@ import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 
 import type { BattleState } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
-import { saveGatedConditionWithRepeatEffects } from "./hideous-laughter-repeat-save.ts";
+import { saveGatedConditionWithRepeatEffects } from "./staged-condition-repeat-save.ts";
 import {
   battleMovementBudgetForActor,
   effectiveWalkSpeed,

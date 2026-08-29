@@ -20,7 +20,7 @@ import {
   offHandAttackActionOptionsForActor,
 } from "./battle-reducer/attack-damage-apply.ts";
 import { attackActionOptionPresentationName } from "./stat-block-presentation.ts";
-import { maxFixedCostMovementReplacementDistanceFeet } from "./battle-reducer/jump-movement-replacement.ts";
+import { maxFixedCostMovementReplacementDistanceFeet } from "./battle-reducer/fixed-cost-movement-replacement.ts";
 import { statBlockProcedurePresentationsForActor } from "./stat-block-presentation.ts";
 import type {
   BattleSubject,

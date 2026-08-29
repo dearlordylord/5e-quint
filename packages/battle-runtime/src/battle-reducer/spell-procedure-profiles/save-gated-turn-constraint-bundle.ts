@@ -66,7 +66,7 @@ import {
 } from "../codec-building-blocks.ts";
 import { currentActorId } from "../creature-state-leaves.ts";
 import { failedSavingThrowTargetIds } from "../saving-throw-outcomes.ts";
-import { slowActionOrBonusActionTurnResources } from "../slow-active-penalties-runtime.ts";
+import { slowActionOrBonusActionTurnResources } from "../save-gated-turn-constraint-runtime.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,

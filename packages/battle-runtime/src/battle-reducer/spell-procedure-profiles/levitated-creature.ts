@@ -48,7 +48,7 @@ import {
   CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CONTROL_FEET,
   CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_FEET,
   controlledVerticalSuspensionInitialRiseHole,
-} from "../levitate-creature.ts";
+} from "../controlled-vertical-suspension.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
 import { spellTargetHole } from "../spells-targeting.ts";
 import {

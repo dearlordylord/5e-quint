@@ -10,13 +10,13 @@ import { afterHitSaveGatedConditionProfile } from "./after-hit-save-gated-condit
 import { afterHitTimedDamageAndSaveProfile } from "./after-hit-timed-damage-and-save.ts";
 import { magicSuppressionEmanationProfile } from "./magic-suppression-emanation.ts";
 import { attackBurstSaveDamageProfile } from "./attack-burst-save-damage.ts";
-import { perceptionGatedAttackRollDefenseProfile } from "./blur-attack-roll-defense.ts";
-import { compelledNextTurnBehaviorProfile } from "./command.ts";
+import { perceptionGatedAttackRollDefenseProfile } from "./perception-gated-attack-roll-defense.ts";
+import { compelledNextTurnBehaviorProfile } from "./compelled-next-turn-behavior.ts";
 import { chainedSpellAttackDamageProfile } from "./chained-spell-attack-damage.ts";
 import { chosenDamageResistanceProfile } from "./chosen-damage-resistance.ts";
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./condition-immunity-turn-start-temporary-hit-points.ts";
 import { conditionRemovalProtectionProfile } from "./condition-removal-protection.ts";
-import { spellCastInterruptionReactionProfile } from "./counterspell.ts";
+import { spellCastInterruptionReactionProfile } from "./spell-cast-interruption-reaction.ts";
 import {
   creatureSizeChangeProfile,
   creatureSizeDecreaseProfile,
@@ -25,25 +25,25 @@ import { creatureTypeProtectionProfile } from "./creature-type-protection.ts";
 import { directConditionProfile } from "./direct-condition.ts";
 import { directConditionRemovalProfile } from "./direct-condition-removal.ts";
 import { directHitPointRestorationProfile } from "./direct-hit-point-restoration.ts";
-import { grantedAreaSaveDamageActionProfile } from "./dragons-breath-initial.ts";
-import { movableLightManifestationProfile } from "./dancing-lights.ts";
-import { grantedAlternateActionCostProfile } from "./expeditious-retreat-dash.ts";
-import { fallingCreatureMitigationReactionProfile } from "./feather-fall-mitigation.ts";
-import { persistentAreaTraitProfile } from "./fog-cloud-obscurement.ts";
-import { persistentAreaSaveConditionProfile } from "./grease-ground-hazard.ts";
-import { directionalPersistentAreaProfile } from "./gust-of-wind-line.ts";
+import { grantedAreaSaveDamageActionProfile } from "./granted-area-save-damage.ts";
+import { movableLightManifestationProfile } from "./movable-illumination-manifestation.ts";
+import { grantedAlternateActionCostProfile } from "./bonus-action-dash.ts";
+import { fallingCreatureMitigationReactionProfile } from "./falling-creature-mitigation-reaction.ts";
+import { persistentAreaTraitProfile } from "./persistent-area-obscurement.ts";
+import { persistentAreaSaveConditionProfile } from "./persistent-area-save-condition.ts";
+import { directionalPersistentAreaProfile } from "./directional-persistent-area.ts";
 import { heldLightHurlProfile } from "./held-light-hurl.ts";
 import { heldLightProfile } from "./held-light.ts";
-import { compositeTargetBuffWithAftermathProfile } from "./haste-positive.ts";
-import { saveGatedConditionWithRepeatProfile } from "./hideous-laughter.ts";
-import { saveGatedAreaControlProfile } from "./hypnotic-pattern.ts";
-import { fixedCostMovementReplacementProfile } from "./jump-movement-replacement.ts";
+import { compositeTargetBuffWithAftermathProfile } from "./composite-target-buff.ts";
+import { saveGatedConditionWithRepeatProfile } from "./staged-save-condition.ts";
+import { saveGatedAreaControlProfile } from "./area-control-condition.ts";
+import { fixedCostMovementReplacementProfile } from "./fixed-cost-movement-replacement.ts";
 import { controlledVerticalSuspensionProfile } from "./levitated-creature.ts";
 import { makeStableProfile } from "./make-stable.ts";
-import { weaponAttackDamageEnhancementProfile } from "./magic-weapon-enhancement.ts";
+import { weaponAttackDamageEnhancementProfile } from "./weapon-attack-enhancement.ts";
 import { magicalDarknessPointOriginProfile } from "./magical-darkness-point-origin.ts";
 import { markedDamageRiderProfile } from "./marked-damage-rider.ts";
-import { duplicateHitInterceptionProfile } from "./mirror-image-hit-interception.ts";
+import { duplicateHitInterceptionProfile } from "./duplicate-hit-interception.ts";
 import { persistentAreaSaveDamageProfile } from "./persistent-area-save-damage.ts";
 import {
   objectContactDamageProfile,
@@ -54,7 +54,7 @@ import { ongoingSpellEndProfile } from "./ongoing-spell-end.ts";
 import { persistentArmorEffectProfile } from "./persistent-armor-effect.ts";
 import { repeatedDamageAllocationProfile } from "./repeated-damage-allocation.ts";
 import { rollModifierProfile } from "./roll-modifier.ts";
-import { targetingSaveInterdictionProfile } from "./sanctuary-targeting-interdiction.ts";
+import { targetingSaveInterdictionProfile } from "./targeting-save-interdiction.ts";
 import { saveGatedAttackRollAdvantageProfile } from "./save-gated-attack-roll-advantage.ts";
 import { saveGatedConditionImmunityProfile } from "./save-gated-condition-immunity.ts";
 import { saveGatedConditionProfile } from "./save-gated-condition.ts";
@@ -63,12 +63,12 @@ import { scalarBuffProfile } from "./scalar-buff.ts";
 import { seeInvisibleObserverSightProfile } from "./see-invisible-observer-sight.ts";
 import { selfTransformationModeProfile } from "./self-transformation-mode.ts";
 import { selfTeleportProfile } from "./self-teleport.ts";
-import { triggeredArmorDefenseProfile } from "./shield-reaction.ts";
-import { stagedSaveConditionProfile } from "./sleep-target-admission.ts";
-import { persistentAreaSaveCompositeProfile } from "./sleet-storm-area-hazard.ts";
-import { saveGatedTurnConstraintBundleProfile } from "./slow-active-penalties.ts";
-import { areaMovementDistanceDamageProfile } from "./spike-growth-movement-hazard.ts";
-import { persistentAreaSaveConditionEscapeProfile } from "./web-restraint-hazard.ts";
+import { triggeredArmorDefenseProfile } from "./triggered-armor-defense.ts";
+import { stagedSaveConditionProfile } from "./hit-point-budget-condition-admission.ts";
+import { persistentAreaSaveCompositeProfile } from "./persistent-area-save-composite.ts";
+import { saveGatedTurnConstraintBundleProfile } from "./save-gated-turn-constraint-bundle.ts";
+import { areaMovementDistanceDamageProfile } from "./area-movement-distance-damage.ts";
+import { persistentAreaSaveConditionEscapeProfile } from "./persistent-area-save-condition-escape.ts";
 import { spellAttackDamageProfile } from "./spell-attack-damage.ts";
 import { spellAttackSequenceProfile } from "./spell-attack-sequence.ts";
 import {
@@ -77,9 +77,9 @@ import {
   spellCreatedHeldObjectReEvokeProfile,
 } from "./spell-created-held-object.ts";
 import { spellHostedWeaponAttackProfile } from "./spell-hosted-weapon-attack.ts";
-import { spatialMeleeSpellAttackProxyProfile } from "./spiritual-weapon.ts";
-import { temporaryAbilityCheckRollModeProfile } from "./thaumaturgy-booming-voice.ts";
-import { linkedDefenseResistanceDamageShareProfile } from "./warding-bond.ts";
+import { spatialMeleeSpellAttackProxyProfile } from "./spatial-melee-spell-attack-proxy.ts";
+import { temporaryAbilityCheckRollModeProfile } from "./temporary-ability-check-roll-mode.ts";
+import { linkedDefenseResistanceDamageShareProfile } from "./linked-defense-damage-share-profile.ts";
 import { weaponAttackOverrideProfile } from "./weapon-attack-override.ts";
 import { weaponDamageRiderProfile } from "./weapon-damage-rider.ts";
 import type { BattleSpellProcedureKey } from "../../character-execution.ts";

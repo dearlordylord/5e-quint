@@ -70,7 +70,7 @@ import { deduplicateBattleHolesById } from "./hole-helpers.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
-import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
+import { battleStateAfterTargetActionEarlyEndForActor } from "./targeting-save-interdiction.ts";
 import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 import {
   applyAvailableSourceDamageRollPenalty,
@@ -105,7 +105,7 @@ import {
   SPELL_MAGICAL_EFFECT_SOURCE,
   magicalEffectTargetsInterdictionMessage,
 } from "./magic-suppression-magical-effect-interdiction.ts";
-import { linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
+import { linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget } from "./linked-defense-damage-share.ts";
 
 type ObjectContactDamageInvocation = Extract<
   SupportedSpellInvocation,

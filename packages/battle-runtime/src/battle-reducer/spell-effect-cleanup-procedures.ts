@@ -15,7 +15,7 @@ import {
   battleStateAfterLinkedDefenseResistanceDamageShareSeparation,
   linkedDefenseResistanceDamageShareSeparationFactsAreSatisfied,
   linkedDefenseResistanceDamageShareSeparationFactsHole,
-} from "./warding-bond.ts";
+} from "./linked-defense-damage-share.ts";
 import { areaWindStrengthHole } from "./area-wind-strength.ts";
 
 export function resolveDispersePersistentAreaTraitCommand(

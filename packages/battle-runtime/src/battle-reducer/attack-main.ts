@@ -180,8 +180,8 @@ import {
   battleStateAfterTargetActionEarlyEndForActor,
   targetingSaveInterdictionCheck,
   targetChoiceFillAfterSanctuaryAttackRollReplacement,
-} from "./sanctuary-targeting-interdiction.ts";
-import { duplicateHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
+} from "./targeting-save-interdiction.ts";
+import { duplicateHitInterceptionCheck } from "./duplicate-hit-interception.ts";
 import { resolveOpenHandTechniqueAfterHit } from "./open-hand-technique.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { resolveStunningStrikeAfterHit } from "./stunning-strike.ts";

@@ -121,7 +121,7 @@ import {
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
 } from "./domain-constants.ts";
 import { spellAttackSequencePartName } from "./spells-execution-facts.ts";
-import { linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
+import { linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget } from "./linked-defense-damage-share.ts";
 import {
   activeCreatureSizeChangeEffect,
   creatureSizeChangeStrengthRollMode,

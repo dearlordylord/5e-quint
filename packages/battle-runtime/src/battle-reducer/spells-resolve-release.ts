@@ -83,7 +83,7 @@ import { revealHidden } from "./hole-helpers.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
-import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
+import { battleStateAfterTargetActionEarlyEndForActor } from "./targeting-save-interdiction.ts";
 import { expendSpellSlot } from "./spell-effects.ts";
 import {
   releaseSpellCreatedHeldObjectState,

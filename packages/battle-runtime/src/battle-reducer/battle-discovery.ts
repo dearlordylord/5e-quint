@@ -60,8 +60,8 @@ import { currentActorId, grappledBy } from "./creature-state-leaves.ts";
 import {
   activeControlledVerticalSuspensionTargetsControlledBy,
   controlledVerticalSuspensionAltitudeChangeHole,
-} from "./levitate-creature.ts";
-import { grantedAreaSaveDamageActionActs } from "./dragons-breath-discovery.ts";
+} from "./controlled-vertical-suspension.ts";
+import { grantedAreaSaveDamageActionActs } from "./granted-area-save-damage-discovery.ts";
 import {
   combatantCanTakeActions,
   combatantCanTakeReactions,
@@ -129,7 +129,7 @@ import {
   executeCompelledDropHeldObjectFactsHole,
   compelledNextTurnBehaviorEffectsForActor,
   type CompelledNextTurnBehaviorEffect,
-} from "./command-procedure-discovery.ts";
+} from "./compelled-behavior-discovery.ts";
 import { standFromProneCostFeet } from "./stand-from-prone-policy.ts";
 import { movementHole } from "./movement-holes.ts";
 import { readiedSpellInitialHoles } from "./readied-initial-holes.ts";
@@ -144,7 +144,7 @@ import { monkFocusActs } from "./monk-focus-discovery.ts";
 import {
   isLinkedDefenseResistanceDamageShareEffect,
   linkedDefenseResistanceDamageShareSeparationFactsHole,
-} from "./warding-bond.ts";
+} from "./linked-defense-damage-share.ts";
 import { SELF_TRANSFORMATION_MODE_KINDS } from "./domain-constants.ts";
 import { areaWindStrengthHole } from "./area-wind-strength.ts";
 import { discoverLegendaryActionActs } from "./unit-feature-discovery.ts";

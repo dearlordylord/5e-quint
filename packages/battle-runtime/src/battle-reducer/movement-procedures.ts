@@ -82,8 +82,8 @@ import { damageAmountAfterTargetAdjustments } from "./damage-helpers.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import { rolledDiceFillForHole } from "./fill-hole-protocol.ts";
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
-import { validateControlledVerticalSuspensionMovementFact } from "./levitate-creature.ts";
-import { maxFixedCostMovementReplacementDistanceFeet } from "./jump-movement-replacement.ts";
+import { validateControlledVerticalSuspensionMovementFact } from "./controlled-vertical-suspension.ts";
+import { maxFixedCostMovementReplacementDistanceFeet } from "./fixed-cost-movement-replacement.ts";
 import { movementHole } from "./movement-holes.ts";
 import {
   battleMovementBudgetForActor,

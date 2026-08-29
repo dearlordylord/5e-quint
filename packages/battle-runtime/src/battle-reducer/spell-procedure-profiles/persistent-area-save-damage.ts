@@ -3,10 +3,10 @@ import type {
   SpellInvocationAdmittedByRegisteredProcedure,
   SpellProcedureDeclaration,
 } from "./profile.ts";
-import { sourceTurnTranslationPersistentAreaSaveDamageProfile } from "./cloudkill-area-hazard.ts";
-import { collisionRepositionPersistentAreaSaveDamageProfile } from "./flaming-sphere.ts";
-import { stationaryPersistentAreaSaveDamageProfile } from "./insect-plague-area-hazard.ts";
-import { directedRepositionPersistentAreaSaveDamageProfile } from "./moonbeam.ts";
+import { sourceTurnTranslationPersistentAreaSaveDamageProfile } from "./source-turn-translation-persistent-area-save-damage.ts";
+import { collisionRepositionPersistentAreaSaveDamageProfile } from "./collision-reposition-persistent-area-save-damage.ts";
+import { stationaryPersistentAreaSaveDamageProfile } from "./stationary-persistent-area-save-damage.ts";
+import { directedRepositionPersistentAreaSaveDamageProfile } from "./directed-reposition-persistent-area-save-damage.ts";
 
 export const persistentAreaSaveDamageProfile = {
   procedure: "persistentAreaSaveDamage",

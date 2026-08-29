@@ -53,7 +53,7 @@ import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 import {
   battleStateAfterTargetActionEarlyEndForActor,
   targetingSaveInterdictionCheck,
-} from "./sanctuary-targeting-interdiction.ts";
+} from "./targeting-save-interdiction.ts";
 import {
   applyPreparedSlotSpellDamage,
   repeatedDamageAllocationNegatedForTarget,

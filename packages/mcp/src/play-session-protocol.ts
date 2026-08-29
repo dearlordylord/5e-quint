@@ -38,7 +38,7 @@ import {
   recoverableOperationResult,
   unavailablePlaySessionEnvelope,
 } from "./play-session-envelope.ts";
-import { createdCharacterDraftId } from "./play-session-command.ts";
+import { createdCharacterDraftId } from "./play-session-compelled-next-turn-behavior.ts";
 import {
   battleSessionPayload,
   battlePresentationIssueContent,

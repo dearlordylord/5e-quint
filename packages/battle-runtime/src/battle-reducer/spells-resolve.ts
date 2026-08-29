@@ -127,7 +127,7 @@ import {
 import { revealHidden } from "./hole-helpers.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
-import { duplicateHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
+import { duplicateHitInterceptionCheck } from "./duplicate-hit-interception.ts";
 import {
   type RegisteredSpellProcedure,
   type RegisteredSpellProcedureExecution,
@@ -281,7 +281,7 @@ import {
   battleStateAfterTargetActionEarlyEndForActor,
   targetingSaveInterdictionCheck,
   targetChoiceFillAfterSanctuaryAttackRollReplacement,
-} from "./sanctuary-targeting-interdiction.ts";
+} from "./targeting-save-interdiction.ts";
 import {
   spellCastInterruptFrame,
   spellCastMetamagicApplicationsInput,
@@ -289,7 +289,7 @@ import {
 import {
   fillsAfterTurnConstraintSomaticSpellFailureOutcome,
   resolveSlowSomaticSpellFailure,
-} from "./slow-active-penalties-runtime.ts";
+} from "./save-gated-turn-constraint-runtime.ts";
 import { parseWeaponAttackOverrideFillInput } from "./weapon-attack-override-fill-input.ts";
 
 import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";

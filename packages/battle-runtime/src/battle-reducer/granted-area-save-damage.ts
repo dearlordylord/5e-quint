@@ -37,7 +37,7 @@ import {
   damageDispositionFillsValidation,
   zeroHitPointReplacementDispositionHole,
 } from "./attack-damage-apply.ts";
-import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
+import { battleStateAfterTargetActionEarlyEndForActor } from "./targeting-save-interdiction.ts";
 import type {
   BattleCreatureState,
   BattleGrantedAreaSaveDamageActionDamageRollHole,
@@ -55,7 +55,7 @@ import {
   grantedAreaSaveDamageActionSavingThrowOutcomeHole,
   type GrantedAreaSaveDamageActionEffect,
   type GrantedAreaSaveDamageActionSubject,
-} from "./dragons-breath-discovery.ts";
+} from "./granted-area-save-damage-discovery.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./ongoing-feature-relationship.ts";
 import { grantedAreaSaveDamageActionHoleKey } from "./selected-effect-hole-key.ts";
 type ExpectedDragonBreathFill = {

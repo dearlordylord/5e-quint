@@ -59,7 +59,7 @@ import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlet
 import {
   targetingSaveInterdictionCheck,
   targetChoiceFillAfterSanctuaryAttackRollReplacement,
-} from "./sanctuary-targeting-interdiction.ts";
+} from "./targeting-save-interdiction.ts";
 import {
   activeMarkedDamageRiders,
   applyAvailableSpellDamageReduction,
@@ -73,7 +73,7 @@ import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decis
 import {
   saveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
   saveGatedConditionWithRepeatDamageRepeatSaveFillsForTarget,
-} from "./hideous-laughter-repeat-save.ts";
+} from "./staged-condition-repeat-save.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import {
   attackRollHoleWithD20TestNaturalOneRerollOption,
@@ -110,7 +110,7 @@ import {
   spellTargetIsLegal,
   validateSpellAttackSequencePartDamageFill,
 } from "./spells-holes-fills.ts";
-import { duplicateHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
+import { duplicateHitInterceptionCheck } from "./duplicate-hit-interception.ts";
 import type {
   SpellFillSet,
   SpellAttackSequencePartFillSet,

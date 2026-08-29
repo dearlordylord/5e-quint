@@ -55,7 +55,7 @@ import {
   saveMetamagicSelectionState,
   validateSavingThrowOutcomes,
 } from "./spells-resolve-save-gates.ts";
-import { validateDirectionalPersistentAreaAreaPushFacts } from "./gust-of-wind-push-facts.ts";
+import { validateDirectionalPersistentAreaAreaPushFacts } from "./directional-area-push-facts.ts";
 import type { SpellFillSet } from "./spells-resolve-fill-set.ts";
 import { failedSavingThrowTargetIds } from "./saving-throw-outcomes.ts";
 import { isTrackedOngoingSpellLightEmitter } from "./magic-suppression-ongoing-effect.ts";

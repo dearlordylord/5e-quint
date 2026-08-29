@@ -60,7 +60,7 @@ import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { applyBattleMovement } from "./battle-movement.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
-import { targetingSaveInterdictionCheck } from "./sanctuary-targeting-interdiction.ts";
+import { targetingSaveInterdictionCheck } from "./targeting-save-interdiction.ts";
 import {
   spellCastInterruptFrame,
   spellCastMetamagicApplicationsInput,

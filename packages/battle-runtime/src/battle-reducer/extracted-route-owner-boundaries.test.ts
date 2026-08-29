@@ -30,7 +30,7 @@ import {
 import {
   compelledBehaviorRouteForDiscoveredAct,
   compelledBehaviorRouteForResolution,
-} from "./command-routes.ts";
+} from "./compelled-behavior-routes.ts";
 import {
   companionRouteForDiscoveredAct,
   spawnedCompanionLifecycleRouteEvents,

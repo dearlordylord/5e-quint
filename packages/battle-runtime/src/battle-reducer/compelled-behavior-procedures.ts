@@ -47,13 +47,13 @@ import {
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { applyExecuteCompelledGrovelProneToTarget } from "./spells-active-effects.ts";
-import type { CompelledNextTurnBehaviorEffect } from "./command-procedure-discovery.ts";
+import type { CompelledNextTurnBehaviorEffect } from "./compelled-behavior-discovery.ts";
 import {
   canonicalHeldObjectIdsForActor,
   executeCompelledDropHeldObjectFactsHole,
   executeCompelledDropHeldObjectFactsHoleId,
   compelledNextTurnBehaviorEffectsForActor,
-} from "./command-procedure-discovery.ts";
+} from "./compelled-behavior-discovery.ts";
 
 const COMMAND_FOLLOW_UP_BY_OPTION = {
   approach: "executeCompelledApproach",

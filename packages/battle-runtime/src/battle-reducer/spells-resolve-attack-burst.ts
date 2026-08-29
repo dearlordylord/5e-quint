@@ -75,14 +75,14 @@ import {
 } from "./d20-test-natural-one-reroll.ts";
 
 import { needsHolesResult } from "./needs-holes-result.ts";
-import { duplicateHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
+import { duplicateHitInterceptionCheck } from "./duplicate-hit-interception.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import {
   targetingSaveInterdictionCheck,
   targetChoiceFillAfterSanctuaryAttackRollReplacement,
-} from "./sanctuary-targeting-interdiction.ts";
+} from "./targeting-save-interdiction.ts";
 import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 import {
   applyPreparedSlotSpellDamage,

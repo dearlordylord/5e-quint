@@ -10,7 +10,7 @@ import {
   currentActorId,
   normalizeBattleGrapples,
 } from "./creature-state-leaves.ts";
-import { updateControlledVerticalSuspensionAltitude } from "./levitate-creature.ts";
+import { updateControlledVerticalSuspensionAltitude } from "./controlled-vertical-suspension.ts";
 import { readiedMovementBudgetForActor } from "./movement-holes.ts";
 import {
   battleMovementBudgetForActor,

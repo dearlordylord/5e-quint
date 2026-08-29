@@ -18,7 +18,7 @@ import {
   controlledVerticalSuspensionTargetWithinRangeFactPresent,
   controlledVerticalSuspensionAltitudeChangeHole,
   updateControlledVerticalSuspensionAltitude,
-} from "./levitate-creature.ts";
+} from "./controlled-vertical-suspension.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { applySelfTransformationModeEffect } from "./spells-active-effects.ts";

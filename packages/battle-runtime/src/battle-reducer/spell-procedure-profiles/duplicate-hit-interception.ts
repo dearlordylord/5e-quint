@@ -24,7 +24,7 @@ import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
 //
 // What stays in shared infrastructure:
 //   - The duplicate-roll hole, hit redirection, duplicate destruction, and
-//     bypass witness logic stay in mirror-image-hit-interception.ts.
+//     bypass witness logic stay in duplicate-hit-interception.ts.
 //   - Timed duration expiry stays in the shared active-effect lifecycle.
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";

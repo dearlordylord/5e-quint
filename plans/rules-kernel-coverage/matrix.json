@@ -180,7 +180,7 @@
       "reason": "The promoted Sleet Storm runtime consumes caller-supplied area identity, movement facts, and entry/start-turn trigger subjects. Automatic geometry, pathfinding, area membership, and exposed-flame state are explicit table/environment boundaries.",
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/sleet-storm-area-hazard.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-area-save-composite.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
@@ -219,7 +219,7 @@
       "reason": "The promoted Insect Plague runtime consumes caller-supplied area identity, movement facts, appears-in-area, enters-area, and ends-turn-in-area trigger subjects, then owns Concentration duration, active Sphere effect state, Difficult Terrain and Lightly Obscured projections, one shared once-per-turn save ledger, Constitution save-for-half Piercing damage, slot scaling, and cleanup. Automatic Sphere geometry, pathfinding, area membership derivation, and environmental swarm presentation are explicit table/spatial boundaries. The focused QNT semantic owner and connected MBT witness cover the reducer-owned lifecycle and its production projection.",
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/insect-plague-area-hazard.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/stationary-persistent-area-save-damage.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
         "packages/battle-runtime/src/battle-reducer/persistent-area-save-damage.ts",
@@ -270,13 +270,13 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/cloudkill-area-hazard.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/source-turn-translation-persistent-area-save-damage.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
         "packages/battle-runtime/src/battle-reducer/persistent-area-save-damage.ts",
         "packages/battle-runtime/src/battle-reducer/replay-continuation.ts",
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
-        "packages/battle-runtime/src/battle-reducer/command-procedures.ts",
+        "packages/battle-runtime/src/battle-reducer/compelled-behavior-procedures.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-subjects.ts",
@@ -317,13 +317,13 @@
       "reason": "The promoted Slow runtime consumes caller-supplied affected-creature area witnesses, save outcomes, retained active Slow effects, shared action-economy state, Attack action resource state, and canonical spell component facts. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller/table facts.",
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/slow-active-penalties.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-turn-constraint-bundle.ts",
         "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/creature-state.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
-        "packages/battle-runtime/src/battle-reducer/slow-active-penalties-runtime.ts",
+        "packages/battle-runtime/src/battle-reducer/save-gated-turn-constraint-runtime.ts",
         "packages/battle-runtime/src/battle-reducer/spell-turn-resources.ts",
         "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
@@ -682,7 +682,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spiritual-weapon.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spatial-melee-spell-attack-proxy.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -739,7 +739,7 @@
         "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/direct-condition.ts",
         "packages/battle-runtime/src/battle-reducer/direct-condition-lifecycle.ts",
-        "packages/battle-runtime/src/battle-reducer/sanctuary-targeting-interdiction.ts",
+        "packages/battle-runtime/src/battle-reducer/targeting-save-interdiction.ts",
         "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
       ],
@@ -1148,7 +1148,7 @@
       "reason": "The reducer owns the creature-branch active effect, altitude scalar, action/resource spending, save outcome, caster control command, target movement altitude update, and concentration/duration cleanup. Caller/table facts still own target visibility, target range, fixed-object or surface reach, and map geometry.",
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/levitate-creature.ts",
+        "packages/battle-runtime/src/battle-reducer/controlled-vertical-suspension.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/levitated-creature.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
@@ -1233,7 +1233,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/metamagic.ts",
         "packages/battle-runtime/src/battle-reducer/spell-cast-interrupt-frame.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/counterspell.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spell-cast-interruption-reaction.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/creature-size-change.ts",
         "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
@@ -1275,7 +1275,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/metamagic.ts",
         "packages/battle-runtime/src/battle-reducer/metamagic-support.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/command.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/compelled-next-turn-behavior.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-condition.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-damage.ts",
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
@@ -1315,7 +1315,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/metamagic.ts",
         "packages/battle-runtime/src/battle-reducer/metamagic-support.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/command.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/compelled-next-turn-behavior.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-condition.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-condition-immunity.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-damage.ts",
@@ -1973,7 +1973,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/expeditious-retreat-dash.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/bonus-action-dash.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -2735,10 +2735,10 @@
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/mirror-image-hit-interception.ts",
+        "packages/battle-runtime/src/battle-reducer/duplicate-hit-interception.ts",
         "packages/battle-runtime/src/battle-reducer/attack-main.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-burst.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/mirror-image-hit-interception.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/duplicate-hit-interception.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -2765,8 +2765,8 @@
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/warding-bond.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/warding-bond.ts",
+        "packages/battle-runtime/src/battle-reducer/linked-defense-damage-share.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/linked-defense-damage-share.ts",
         "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
@@ -2798,7 +2798,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/sanctuary-targeting-interdiction.ts"
+        "packages/battle-runtime/src/battle-reducer/targeting-save-interdiction.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [],
@@ -2935,7 +2935,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/command-procedures.ts",
+        "packages/battle-runtime/src/battle-reducer/compelled-behavior-procedures.ts",
         "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
@@ -3466,7 +3466,7 @@
         "packages/battle-runtime/src/battle-reducer/attack-main.ts",
         "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/command.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/compelled-next-turn-behavior.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-sequence.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-chained.ts",
@@ -4345,7 +4345,7 @@
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/dragons-breath-initial.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/granted-area-save-damage.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
       ],
       "status": "covered",
@@ -4373,7 +4373,7 @@
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/dragons-breath.ts",
+        "packages/battle-runtime/src/battle-reducer/granted-area-save-damage.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
@@ -4719,7 +4719,7 @@
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/haste-positive.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/composite-target-buff.ts",
         "packages/battle-runtime/src/battle-reducer/spell-granted-action-resource.ts",
         "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
@@ -4764,7 +4764,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/active-effect/types.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/haste-positive.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/composite-target-buff.ts",
         "packages/battle-runtime/src/battle-reducer/spell-end-target-state.ts",
         "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",

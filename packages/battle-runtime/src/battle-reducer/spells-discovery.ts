@@ -44,8 +44,8 @@ import {
   spellCastInterruptionReactionCapableReactors,
   spellCastCanTriggerSpellCastInterruption,
   type SpellCastInterruptionCapableReactor,
-} from "./counterspell-reaction-discovery.ts";
-import { turnConstraintSomaticSpellFailureOutcomeHole } from "./slow-active-penalties-facts.ts";
+} from "./spell-cast-interruption-reaction-discovery.ts";
+import { turnConstraintSomaticSpellFailureOutcomeHole } from "./save-gated-turn-constraint-facts.ts";
 import {
   type BattleActDiscoveryCandidate,
   type BattleCreatureState,

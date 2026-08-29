@@ -7,7 +7,7 @@ import { applyDamageToPositiveHitPoints } from "./focused-spell-hazard-damage.ts
 import {
   ramMovablePersistentAreaDamageAfterSave,
   ramMovablePersistentAreaMoveDistanceAccepted,
-} from "./flaming-sphere-hazard-ram.ts";
+} from "./collision-reposition-area-hazard.ts";
 
 const byTag = Match.discriminator("tag");
 

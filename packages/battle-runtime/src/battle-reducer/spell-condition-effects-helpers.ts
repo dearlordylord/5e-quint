@@ -35,7 +35,7 @@ import type {
 } from "../battle-state-execution.ts";
 import { KnockedOutConditionState as KnockedOutConditionStateBrand } from "./knocked-out-state.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
-import { linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
+import { linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget } from "./linked-defense-damage-share.ts";
 
 import {
   activeEffectCondition,

@@ -34,7 +34,7 @@ import {
 } from "../spell-reaction-trigger-shape.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { completeReactionSpellSlotCast } from "../reaction-spell-resolution.ts";
-import { triggeredArmorDefenseSpellMatchesTrigger } from "../shield-reaction-trigger.ts";
+import { triggeredArmorDefenseSpellMatchesTrigger } from "../triggered-armor-defense-reaction.ts";
 import { spendSpellAccessFreeCastResource } from "../spells-resolve-resources.ts";
 import type {
   SpellAdmissionContext,

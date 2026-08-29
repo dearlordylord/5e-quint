@@ -63,8 +63,8 @@ import {
   STUNNING_STRIKE_DECISION_HOLE_ID,
   STUNNING_STRIKE_SAVE_HOLE_ID,
 } from "./domain-constants.ts";
-import { isSaveGatedConditionWithRepeatDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
-import { isDuplicateHitInterceptionDuplicateRollFill } from "./mirror-image-hit-interception.ts";
+import { isSaveGatedConditionWithRepeatDamageRepeatSaveFill } from "./staged-condition-repeat-save.ts";
+import { isDuplicateHitInterceptionDuplicateRollFill } from "./duplicate-hit-interception.ts";
 import { DamageRelationshipDecisionsByHole } from "./damage-relationship-decisions.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.ts";
 

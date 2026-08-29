@@ -19,7 +19,7 @@ import {
   type DuplicateHitInterceptionDuplicateCount,
   type DuplicateHitInterceptionFills,
   type DuplicateHitInterceptionState,
-} from "./battle-reducer/mirror-image-hit-interception.ts";
+} from "./battle-reducer/duplicate-hit-interception.ts";
 
 const initialState: DuplicateHitInterceptionState = {
   remainingDuplicates: 3,

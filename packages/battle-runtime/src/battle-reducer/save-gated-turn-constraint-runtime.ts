@@ -24,9 +24,9 @@ import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 import {
   saveGatedTurnConstraintBundleEffects,
   turnConstraintSomaticSpellFailureOutcomeHole,
-} from "./slow-active-penalties-facts.ts";
+} from "./save-gated-turn-constraint-facts.ts";
 import type { SpellMetamagicApplicationFact } from "./metamagic-support.ts";
-export { turnConstraintSomaticSpellFailureOutcomeHole } from "./slow-active-penalties-facts.ts";
+export { turnConstraintSomaticSpellFailureOutcomeHole } from "./save-gated-turn-constraint-facts.ts";
 
 type SlowSomaticSpellFailureSubject =
   | ActionSpellBattleResolutionInput["subject"]

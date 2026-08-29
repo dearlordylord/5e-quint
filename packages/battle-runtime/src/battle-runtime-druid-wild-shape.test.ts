@@ -123,7 +123,7 @@ import {
   type WildShapeEquipmentDispositionChoice,
   type WildShapeLoadoutObjectRef,
 } from "./index.ts";
-import { canonicalHeldObjectIdsForActor } from "./battle-reducer/command-procedure-discovery.ts";
+import { canonicalHeldObjectIdsForActor } from "./battle-reducer/compelled-behavior-discovery.ts";
 import { statBlockProcedurePresentations } from "./stat-block-presentation.ts";
 import type { BattleRuntimeSession } from "./battle-runtime-context.ts";
 import { DRUID_BEAST_SPELLS_CLASS_LEVEL } from "./unit-feature-support.ts";

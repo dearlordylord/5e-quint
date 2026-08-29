@@ -3,7 +3,7 @@ import type {
   BattleFill,
   BattleSpellCastReactionFact,
 } from "../battle-state-execution.ts";
-import type { BattleFillAfterTurnConstraintSomaticSpellFailureOutcome } from "./slow-active-penalties-runtime.ts";
+import type { BattleFillAfterTurnConstraintSomaticSpellFailureOutcome } from "./save-gated-turn-constraint-runtime.ts";
 import { parseSpellCastReactionFactsFill } from "./spells-resolve-fill-set.ts";
 
 export type WeaponAttackOverrideFillInput = {

@@ -3,7 +3,7 @@
 import { movementFeet } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 
-import { validateDirectionalPersistentAreaAreaPushFacts } from "./battle-reducer/gust-of-wind-push-facts.ts";
+import { validateDirectionalPersistentAreaAreaPushFacts } from "./battle-reducer/directional-area-push-facts.ts";
 import type {
   BattleDirectionalPersistentAreaCreaturePushOutcome,
   BattleSpellAreaChoice,

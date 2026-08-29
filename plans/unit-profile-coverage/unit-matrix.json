@@ -277,7 +277,7 @@
         "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/sleet-storm-area-hazard.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-area-save-composite.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
@@ -319,8 +319,8 @@
         "packages/battle-runtime/src/battle-reducer/creature-state.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
-        "packages/battle-runtime/src/battle-reducer/slow-active-penalties-runtime.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/slow-active-penalties.ts",
+        "packages/battle-runtime/src/battle-reducer/save-gated-turn-constraint-runtime.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-turn-constraint-bundle.ts",
         "packages/battle-runtime/src/battle-reducer/spell-turn-resources.ts",
         "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
@@ -4068,7 +4068,7 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/mirror-image-hit-interception.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/duplicate-hit-interception.ts"
       ],
       "sourceBoundary": "The runtime consumes the authored Mirror Image spell, the attacker's Blinded condition, and caller-supplied attack-target spatial facts for Blindsight or Truesight perception. It owns Magic Action and Spell Slot spend, the self timed duplicate pool, d6-per-remaining-duplicate hit interception, duplicate destruction, final-duplicate cleanup, and normal continuation when the duplicate roll fails.",
       "taskRefs": [
@@ -4144,8 +4144,8 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/warding-bond.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/warding-bond.ts",
+        "packages/battle-runtime/src/battle-reducer/linked-defense-damage-share.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/linked-defense-damage-share.ts",
         "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
         "packages/battle-runtime/src/battle-reducer/creature-state.ts",
@@ -4438,7 +4438,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/magic-weapon-enhancement.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/weapon-attack-override.ts"
       ],
       "sourceBoundary": "The runtime consumes the authored Magic Weapon item-enhancement Surface shape plus caller-supplied exact holder-plus-item identity and nonmagical weapon witness facts. It owns Bonus Action level-2-or-higher Spell Slot spending, one caster-owned item-attached Spell Effect, one-hour duration cleanup, same-caster recast replacement, other-caster active Magic Weapon rejection for the selected holder-plus-item weapon, magic-weapon status projection, and exact holder-plus-item +1/+2/+3 attack-roll and weapon damage-roll projection without mutating authored weapon records or adding spell-owned loadout state. Touch range, physical item selection, and nonmagical target verification remain table/caller witness facts at the fill boundary.",
       "taskRefs": [
@@ -4508,7 +4508,7 @@
         "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
-        "packages/battle-runtime/src/battle-reducer/levitate-creature.ts",
+        "packages/battle-runtime/src/battle-reducer/controlled-vertical-suspension.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/levitated-creature.ts",
         "packages/battle-runtime/src/battle-reducer/readied-release.ts",
         "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
@@ -4586,7 +4586,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/metamagic.ts",
         "packages/battle-runtime/src/battle-reducer/spell-cast-interrupt-frame.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/counterspell.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spell-cast-interruption-reaction.ts",
         "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-resources.ts",
@@ -4631,7 +4631,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/metamagic.ts",
         "packages/battle-runtime/src/battle-reducer/metamagic-support.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/command.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/compelled-next-turn-behavior.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-condition.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-damage.ts",
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
@@ -4667,7 +4667,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/metamagic.ts",
         "packages/battle-runtime/src/battle-reducer/metamagic-support.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/command.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/compelled-next-turn-behavior.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-condition.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-condition-immunity.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-damage.ts",
@@ -4677,8 +4677,8 @@
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/grease-ground-hazard.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/gust-of-wind-line.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-area-save-condition.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/directional-persistent-area.ts"
       ],
       "sourceBoundary": "The runtime consumes selected Heightened Spell Metamagic effectKind and Sorcery Point cost facts from the character's known Metamagic options, the existing Font of Magic Sorcery Point point-pool, and one typed target-choice fill for supported action-time Saving Throw spell procedures. It rejects unknown, unaffordable, non-save, unsupported-mode, repeated, and non-affected selected targets before spending resources. The selected affected target receives Disadvantage on the spell's Saving Throw through the shared Saving Throw roll-mode projection, including normal Advantage/Disadvantage cancellation, while ordinary save success, failed-save, damage, no-effect, and Sorcery Point spending behavior remain owned by the base spell procedure. For promoted repeat-save lifecycles, it carries the selected target through combatant-owned Hideous Laughter, occurrence-local Grease and Gust of Wind Line area Spell Effects, and combatant-owned repeating save-gated condition effects, projecting Disadvantage only when the later save target matches the selected target. Repeating save-gated condition effects store only a presence rider because the active-effect owner is already the later save target.",
       "taskRefs": [
@@ -5144,7 +5144,7 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/dragons-breath-initial.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/granted-area-save-damage.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
       ],
       "sourceBoundary": "The runtime consumes the authored Dragon's Breath ongoing-effect Surface shape, caller-supplied one willing touched creature target facts, a caster-selected damage type from the authored damage-type hole, and a selected level-2-or-higher Spell Slot. It owns Bonus Action and Spell Slot spending, caster-owned Concentration up to 1 minute, target-attached active effect replacement for the same caster and spell, chosen damage type retention, original slot level retention, caster Spell Save DC retention at cast time, and cleanup when the caster's Concentration ends. The target-granted Magic action, 15-foot Cone placement, affected-creature area membership, Dexterity save-for-half damage, and slot-scaled breath damage execution remain outside this profile and are owned by L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION.",
@@ -5175,7 +5175,7 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/dragons-breath.ts",
+        "packages/battle-runtime/src/battle-reducer/granted-area-save-damage.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
@@ -5320,7 +5320,7 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spiritual-weapon.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spatial-melee-spell-attack-proxy.ts",
         "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
@@ -6218,7 +6218,7 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/haste-positive.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/composite-target-buff.ts",
         "packages/battle-runtime/src/battle-reducer/spell-end-target-state.ts",
         "packages/battle-runtime/src/battle-reducer/spell-granted-action-resource.ts",
         "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
@@ -6338,14 +6338,14 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/glyph-durable-occurrence.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/hypnotic-pattern.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/area-control-condition.ts",
         "packages/battle-runtime/src/active-effect/types.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/scalar-buff.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/roll-modifier.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/creature-size-change.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/levitated-creature.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/direct-condition.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/haste-positive.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/composite-target-buff.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/creature-type-protection.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/self-transformation-mode.ts",
@@ -7122,7 +7122,7 @@
         "packages/battle-runtime/battle-runtime-insect-plague-area-hazard.qnt"
       ],
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/insect-plague-area-hazard.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/stationary-persistent-area-save-damage.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
@@ -7155,7 +7155,7 @@
         "packages/battle-runtime/battle-runtime-cloudkill-area-hazard.qnt"
       ],
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/cloudkill-area-hazard.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/source-turn-translation-persistent-area-save-damage.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
@@ -27787,7 +27787,7 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer/metamagic.ts",
             "packages/battle-runtime/src/battle-reducer/spell-cast-interrupt-frame.ts",
-            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/counterspell.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spell-cast-interruption-reaction.ts",
             "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-resources.ts",
@@ -27832,7 +27832,7 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer/metamagic.ts",
             "packages/battle-runtime/src/battle-reducer/metamagic-support.ts",
-            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/command.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/compelled-next-turn-behavior.ts",
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-condition.ts",
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-damage.ts",
             "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
@@ -27868,7 +27868,7 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer/metamagic.ts",
             "packages/battle-runtime/src/battle-reducer/metamagic-support.ts",
-            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/command.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/compelled-next-turn-behavior.ts",
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-condition.ts",
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-condition-immunity.ts",
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-damage.ts",
@@ -27878,8 +27878,8 @@
             "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
             "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
-            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/grease-ground-hazard.ts",
-            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/gust-of-wind-line.ts"
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-area-save-condition.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/directional-persistent-area.ts"
           ],
           "sourceBoundary": "The runtime consumes selected Heightened Spell Metamagic effectKind and Sorcery Point cost facts from the character's known Metamagic options, the existing Font of Magic Sorcery Point point-pool, and one typed target-choice fill for supported action-time Saving Throw spell procedures. It rejects unknown, unaffordable, non-save, unsupported-mode, repeated, and non-affected selected targets before spending resources. The selected affected target receives Disadvantage on the spell's Saving Throw through the shared Saving Throw roll-mode projection, including normal Advantage/Disadvantage cancellation, while ordinary save success, failed-save, damage, no-effect, and Sorcery Point spending behavior remain owned by the base spell procedure. For promoted repeat-save lifecycles, it carries the selected target through combatant-owned Hideous Laughter, occurrence-local Grease and Gust of Wind Line area Spell Effects, and combatant-owned repeating save-gated condition effects, projecting Disadvantage only when the later save target matches the selected target. Repeating save-gated condition effects store only a presence rider because the active-effect owner is already the later save target.",
           "taskRefs": [
@@ -35178,7 +35178,7 @@
             "packages/battle-runtime/battle-runtime-cloudkill-area-hazard.qnt"
           ],
           "runtimeOwners": [
-            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/cloudkill-area-hazard.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/source-turn-translation-persistent-area-save-damage.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
             "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
             "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
@@ -37300,7 +37300,7 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
-            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/dragons-breath-initial.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/granted-area-save-damage.ts",
             "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
           ],
           "sourceBoundary": "The runtime consumes the authored Dragon's Breath ongoing-effect Surface shape, caller-supplied one willing touched creature target facts, a caster-selected damage type from the authored damage-type hole, and a selected level-2-or-higher Spell Slot. It owns Bonus Action and Spell Slot spending, caster-owned Concentration up to 1 minute, target-attached active effect replacement for the same caster and spell, chosen damage type retention, original slot level retention, caster Spell Save DC retention at cast time, and cleanup when the caster's Concentration ends. The target-granted Magic action, 15-foot Cone placement, affected-creature area membership, Dexterity save-for-half damage, and slot-scaled breath damage execution remain outside this profile and are owned by L12G-FOLLOWUP-DRAGONS-BREATH-GRANTED-ACTION.",
@@ -37331,7 +37331,7 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
-            "packages/battle-runtime/src/battle-reducer/dragons-breath.ts",
+            "packages/battle-runtime/src/battle-reducer/granted-area-save-damage.ts",
             "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
             "packages/battle-runtime/src/battle-subjects.ts"
@@ -39548,7 +39548,7 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
-            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/haste-positive.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/composite-target-buff.ts",
             "packages/battle-runtime/src/battle-reducer/spell-end-target-state.ts",
             "packages/battle-runtime/src/battle-reducer/spell-granted-action-resource.ts",
             "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
@@ -40170,7 +40170,7 @@
             "packages/battle-runtime/battle-runtime-insect-plague-area-hazard.qnt"
           ],
           "runtimeOwners": [
-            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/insect-plague-area-hazard.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/stationary-persistent-area-save-damage.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
             "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
             "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
@@ -40537,7 +40537,7 @@
             "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
             "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
-            "packages/battle-runtime/src/battle-reducer/levitate-creature.ts",
+            "packages/battle-runtime/src/battle-reducer/controlled-vertical-suspension.ts",
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/levitated-creature.ts",
             "packages/battle-runtime/src/battle-reducer/readied-release.ts",
             "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
@@ -45137,7 +45137,7 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
             "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
-            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/magic-weapon-enhancement.ts"
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/weapon-attack-override.ts"
           ],
           "sourceBoundary": "The runtime consumes the authored Magic Weapon item-enhancement Surface shape plus caller-supplied exact holder-plus-item identity and nonmagical weapon witness facts. It owns Bonus Action level-2-or-higher Spell Slot spending, one caster-owned item-attached Spell Effect, one-hour duration cleanup, same-caster recast replacement, other-caster active Magic Weapon rejection for the selected holder-plus-item weapon, magic-weapon status projection, and exact holder-plus-item +1/+2/+3 attack-roll and weapon damage-roll projection without mutating authored weapon records or adding spell-owned loadout state. Touch range, physical item selection, and nonmagical target verification remain table/caller witness facts at the fill boundary.",
           "taskRefs": [
@@ -45357,7 +45357,7 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
-            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/mirror-image-hit-interception.ts"
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/duplicate-hit-interception.ts"
           ],
           "sourceBoundary": "The runtime consumes the authored Mirror Image spell, the attacker's Blinded condition, and caller-supplied attack-target spatial facts for Blindsight or Truesight perception. It owns Magic Action and Spell Slot spend, the self timed duplicate pool, d6-per-remaining-duplicate hit interception, duplicate destruction, final-duplicate cleanup, and normal continuation when the duplicate roll fails.",
           "taskRefs": [
@@ -46313,7 +46313,7 @@
             "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
             "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
-            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/sleet-storm-area-hazard.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-area-save-composite.ts",
             "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
             "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
@@ -46423,8 +46423,8 @@
             "packages/battle-runtime/src/battle-reducer/creature-state.ts",
             "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
             "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
-            "packages/battle-runtime/src/battle-reducer/slow-active-penalties-runtime.ts",
-            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/slow-active-penalties.ts",
+            "packages/battle-runtime/src/battle-reducer/save-gated-turn-constraint-runtime.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-turn-constraint-bundle.ts",
             "packages/battle-runtime/src/battle-reducer/spell-turn-resources.ts",
             "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
@@ -46870,14 +46870,14 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer/glyph-durable-occurrence.ts",
-            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/hypnotic-pattern.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/area-control-condition.ts",
             "packages/battle-runtime/src/active-effect/types.ts",
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/scalar-buff.ts",
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/roll-modifier.ts",
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/creature-size-change.ts",
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/levitated-creature.ts",
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/direct-condition.ts",
-            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/haste-positive.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/composite-target-buff.ts",
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/creature-type-protection.ts",
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts",
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/self-transformation-mode.ts",
@@ -47163,7 +47163,7 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
-            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spiritual-weapon.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spatial-melee-spell-attack-proxy.ts",
             "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
             "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
@@ -48012,8 +48012,8 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
-            "packages/battle-runtime/src/battle-reducer/warding-bond.ts",
-            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/warding-bond.ts",
+            "packages/battle-runtime/src/battle-reducer/linked-defense-damage-share.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/linked-defense-damage-share.ts",
             "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
             "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
             "packages/battle-runtime/src/battle-reducer/creature-state.ts",

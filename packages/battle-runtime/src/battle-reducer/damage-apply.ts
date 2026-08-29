@@ -108,14 +108,14 @@ import { concentrationSavingThrowDc } from "./domain-helpers.ts";
 import {
   battleStateWithFlySpeedGrantEndFallCleanupFrames,
   flySpeedGrantEndFallCleanupFramesForExpiredEffects,
-} from "./fly-speed-grant-end-fall-cleanup.ts";
+} from "./granted-flight-end-fall-cleanup.ts";
 import {
   checkSaveGatedConditionWithRepeatDamageRepeatSaveFills,
   saveGatedConditionWithRepeatDamageRepeatSaveHoles,
   saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole,
   validateSaveGatedConditionWithRepeatRepeatSavingThrowOutcome,
-} from "./hideous-laughter-repeat-save.ts";
-import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
+} from "./staged-condition-repeat-save.ts";
+import { battleStateAfterTargetActionEarlyEndForActor } from "./targeting-save-interdiction.ts";
 import {
   conditionsAfterExpiringSpellConditionEffects,
   removeSaveGatedAreaControlEffectsFromTarget,
@@ -138,7 +138,7 @@ import {
   battleStateAfterLinkedDefenseResistanceDamageShareCasterZeroHitPoints,
   isLinkedDefenseResistanceDamageShareEffect,
   linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget,
-} from "./warding-bond.ts";
+} from "./linked-defense-damage-share.ts";
 
 type ConcentrationSavingThrowFill = Extract<
   BattleFill,

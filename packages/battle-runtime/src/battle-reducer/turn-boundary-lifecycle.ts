@@ -110,7 +110,7 @@ import {
   STAT_BLOCK_RECHARGE_ROLL_HOLE_ID,
 } from "./battle-runtime-protocol.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
-import { applyCompelledHaltAtTurnStart } from "./command-halt.ts";
+import { applyCompelledHaltAtTurnStart } from "./compelled-behavior-halt.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import {
   d20TestNaturalOneRerollDieDecisionRequired,
@@ -143,8 +143,8 @@ import {
 import {
   battleStateWithFlySpeedGrantEndFallCleanupFrames,
   flySpeedGrantEndFallCleanupFramesForExpiredEffects,
-} from "./fly-speed-grant-end-fall-cleanup.ts";
-import { saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole } from "./hideous-laughter-repeat-save.ts";
+} from "./granted-flight-end-fall-cleanup.ts";
+import { saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole } from "./staged-condition-repeat-save.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import {
   persistentAreaSourceTurnTranslationSavingThrowHoleId,
@@ -160,7 +160,7 @@ import {
   type ReplayParentContinuation,
 } from "./replay-continuation.ts";
 import { invalidResult } from "./result-helpers.ts";
-import { slowActionOrBonusActionTurnResources } from "./slow-active-penalties-runtime.ts";
+import { slowActionOrBonusActionTurnResources } from "./save-gated-turn-constraint-runtime.ts";
 import {
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffectsForSources,
@@ -193,8 +193,8 @@ import {
   savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
-import type { SaveGatedConditionWithRepeatEffect } from "./hideous-laughter-repeat-save.ts";
-import { saveGatedConditionWithRepeatEffects } from "./hideous-laughter-repeat-save.ts";
+import type { SaveGatedConditionWithRepeatEffect } from "./staged-condition-repeat-save.ts";
+import { saveGatedConditionWithRepeatEffects } from "./staged-condition-repeat-save.ts";
 import { resetBattleTurnResources } from "./turn-resource-reset.ts";
 import {
   collectTurnBoundaryHoleFills,

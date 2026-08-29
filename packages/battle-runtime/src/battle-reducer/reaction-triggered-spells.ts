@@ -17,7 +17,7 @@ import {
   spellHasAvailableSpend,
 } from "./spell-turn-resources.ts";
 import { supportedSpellActs } from "./supported-spell-acts.ts";
-import { triggeredArmorDefenseSpellMatchesTrigger } from "./shield-reaction-trigger.ts";
+import { triggeredArmorDefenseSpellMatchesTrigger } from "./triggered-armor-defense-reaction.ts";
 import {
   spellDamageHole,
   spellSavingThrowOutcomeHole,
@@ -26,7 +26,7 @@ import {
 import {
   spellCastInterruptionReactionCapableReactors,
   spellCastCanTriggerSpellCastInterruption,
-} from "./counterspell-reaction-discovery.ts";
+} from "./spell-cast-interruption-reaction-discovery.ts";
 import { spellCastReactionFactsHole } from "./spell-cast-interrupt-frame.ts";
 import { combatantInsideActiveAntimagicFieldAura } from "./magic-suppression-action-interdiction.ts";
 import { isTriggeredReactionSpellInvocation } from "./spell-interrupt-procedure-kinds.ts";
@@ -38,7 +38,7 @@ import type {
   BattleTargetSpatialFact,
 } from "../battle-state-execution.ts";
 
-export { triggeredArmorDefenseSpellMatchesTrigger } from "./shield-reaction-trigger.ts";
+export { triggeredArmorDefenseSpellMatchesTrigger } from "./triggered-armor-defense-reaction.ts";
 
 export function triggeredReactionSpellChoices(
   state: BattleState,

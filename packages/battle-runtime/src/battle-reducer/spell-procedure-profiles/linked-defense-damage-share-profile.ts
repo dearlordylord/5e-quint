@@ -7,7 +7,7 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 // The linkedDefenseResistanceDamageShare Spell Procedure Profile: an action spell that creates one
 // paired caster-target bond from caller-supplied willing-target, paired-ring,
 // and 60-foot connection witnesses. The active-effect lifecycle and damage
-// sharing reducer helpers stay in warding-bond.ts because damage application,
+// sharing reducer helpers stay in linked-defense-damage-share.ts because damage application,
 // cleanup, Saving Throw projections, and separation acts consume them outside
 // cast resolution.
 
@@ -38,7 +38,7 @@ import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import {
   applyLinkedDefenseResistanceDamageShareSpellEffect,
   linkedDefenseResistanceDamageShareCastFactsAreSatisfied,
-} from "../warding-bond.ts";
+} from "../linked-defense-damage-share.ts";
 import {
   spellTargetHole,
   spellTargetIsKnownWilling,

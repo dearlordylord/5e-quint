@@ -38,7 +38,7 @@ import { invalidResult } from "../result-helpers.ts";
 import {
   battleStateAfterTargetActionEarlyEndForActor,
   combatantWithTargetingSaveInterdiction,
-} from "../sanctuary-targeting-interdiction.ts";
+} from "../targeting-save-interdiction.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import {
