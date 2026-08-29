@@ -103,6 +103,31 @@ function projectionBuild(
   };
 }
 
+function fighterSorcererMulticlassProjectionBuild(): ReturnType<
+  typeof projectionBuild
+> {
+  const fighterClassUnitId = classUnitId(authoredUnitId("class_fighter"));
+  const sorcererClassUnitId = classUnitId(authoredUnitId("class_sorcerer"));
+  const startingBuild = projectionBuild(fighterClassUnitId);
+  return {
+    ...startingBuild,
+    abilityScores: {
+      ...startingBuild.abilityScores,
+      str: abilityScore(13),
+      cha: abilityScore(13),
+    },
+    progression: {
+      ...startingBuild.progression,
+      advancements: [
+        {
+          classUnitId: sorcererClassUnitId,
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+        },
+      ],
+    },
+  };
+}
+
 function catalogWithHitPointMaximumFeature(
   featureUnitId: UnitRecord["id"],
   delta: HitPointMaximumDelta,
@@ -130,7 +155,8 @@ function catalogWithHitPointMaximumFeature(
   const feature = {
     ...source,
     id: featureUnitId,
-    name: "Synthetic Hit Point Bonus",
+    acquiredAtLevel: 1,
+    name: "Synthetic Level-One Hit Point Bonus",
     provenance: {
       kind: "synthetic-test",
       section: "synthetic hit point projection boundary",
@@ -581,20 +607,11 @@ describe("character finalization boundaries", () => {
     const featureUnitId = authoredUnitId(
       "synthetic_character_axis_hit_point_bonus",
     );
-    const build = projectionBuild(classUnitId(authoredUnitId("class_fighter")));
+    const build = fighterSorcererMulticlassProjectionBuild();
 
     expect(
       characterBuildHitPoints(
-        {
-          ...build,
-          features: [
-            {
-              kind: "selectedClassChoice",
-              selectedFromUnitId: authoredUnitId("synthetic_feature_source"),
-              unitId: featureUnitId,
-            },
-          ],
-        },
+        buildWithSelectedHitPointFeature(build, featureUnitId),
         catalogWithHitPointMaximumFeature(featureUnitId, {
           kind: "linear_per_level",
           axis: "character",
@@ -605,7 +622,7 @@ describe("character finalization boundaries", () => {
       ),
     ).toMatchObject({
       _tag: "Right",
-      right: { maximum: 11 },
+      right: { maximum: 16 },
     });
   });
 
@@ -613,21 +630,7 @@ describe("character finalization boundaries", () => {
     const featureUnitId = authoredUnitId(
       "synthetic_class_axis_hit_point_bonus",
     );
-    const fighterClassUnitId = classUnitId(authoredUnitId("class_fighter"));
-    const sorcererClassUnitId = classUnitId(authoredUnitId("class_sorcerer"));
-    const startingBuild = projectionBuild(fighterClassUnitId);
-    const build = {
-      ...startingBuild,
-      progression: {
-        ...startingBuild.progression,
-        advancements: [
-          {
-            classUnitId: sorcererClassUnitId,
-            hitPointRule: { tag: "fixedHigherLevelGain" },
-          },
-        ],
-      },
-    } satisfies ReturnType<typeof projectionBuild>;
+    const build = fighterSorcererMulticlassProjectionBuild();
 
     expect(
       characterBuildHitPoints(
