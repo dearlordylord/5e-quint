@@ -495,7 +495,6 @@ export function classifyUnrestrictedStatBlockSpellReferences(
 ): readonly StatBlockSpellReferenceClassification[] {
   return records.flatMap((record, index) => {
     const recordOrdinal = index + 1;
-    const references = spellReferencesByLocation(record);
     return statBlockProcedurePressureOccurrences(
       record,
       recordOrdinal,
@@ -517,8 +516,9 @@ export function classifyUnrestrictedStatBlockSpellReferences(
           occurrence.witness.location.kind === "spellReference",
       )
       .flatMap((occurrence) => {
-        const reference = references.get(
-          JSON.stringify(occurrence.witness.location),
+        const reference = spellReferenceAtLocation(
+          record,
+          occurrence.witness.location,
         );
         if (
           reference === undefined ||
@@ -526,10 +526,7 @@ export function classifyUnrestrictedStatBlockSpellReferences(
         ) {
           return [];
         }
-        const definition = spellDefinitionForReference(
-          source,
-          reference.reference.spellId,
-        );
+        const definition = source.definitions.get(reference.reference.spellId);
         return [
           {
             rowId: occurrence.rowId,
@@ -569,7 +566,6 @@ export function countUnrestrictedStatBlockSpellReferenceDefinitions(
   const shipped = new Set<string>();
   const unresolved = new Set<string>();
   for (const [index, record] of records.entries()) {
-    const references = spellReferencesByLocation(record);
     for (const occurrence of statBlockProcedurePressureOccurrences(
       record,
       index + 1,
@@ -581,8 +577,9 @@ export function countUnrestrictedStatBlockSpellReferenceDefinitions(
       ) {
         continue;
       }
-      const reference = references.get(
-        JSON.stringify(occurrence.witness.location),
+      const reference = spellReferenceAtLocation(
+        record,
+        occurrence.witness.location,
       );
       if (
         reference === undefined ||
@@ -592,7 +589,7 @@ export function countUnrestrictedStatBlockSpellReferenceDefinitions(
       }
       const spellId = reference.reference.spellId;
       all.add(spellId);
-      (spellDefinitionForReference(source, spellId) === undefined
+      (source.definitions.get(spellId) === undefined
         ? unresolved
         : shipped
       ).add(spellId);
@@ -610,39 +607,35 @@ type SpellReferenceAtLocation = {
   readonly groupKind: StatBlockSpellcastingGroup["kind"];
 };
 
-function spellReferencesByLocation(
+function spellReferenceAtLocation(
   record: StatBlockRecord,
-): ReadonlyMap<string, SpellReferenceAtLocation> {
-  const references = new Map<string, SpellReferenceAtLocation>();
+  location: Extract<
+    StatBlockProcedurePressureLocation,
+    { readonly kind: "spellReference" }
+  >,
+): SpellReferenceAtLocation | undefined {
   for (const section of authoredProcedureSections(record)) {
-    for (const entry of section.entries) {
-      if (
-        entry.kind !== "executable" ||
-        entry.procedure.kind !== "spellcasting"
-      ) {
-        continue;
-      }
-      for (const [groupIndex, group] of entry.procedure.groups.entries()) {
-        for (const [spellIndex, reference] of group.spells.entries()) {
-          const location: Extract<
-            StatBlockProcedurePressureLocation,
-            { readonly kind: "spellReference" }
-          > = {
-            kind: "spellReference",
-            section: section.section,
-            procedureOrdinal: entry.procedureOrdinal,
-            groupOrdinal: groupIndex + 1,
-            spellOrdinal: spellIndex + 1,
-          };
-          references.set(JSON.stringify(location), {
-            reference,
-            groupKind: group.kind,
-          });
-        }
-      }
+    if (section.section !== location.section) continue;
+    const entry = section.entries.find(
+      (candidate) => candidate.procedureOrdinal === location.procedureOrdinal,
+    );
+    if (
+      entry === undefined ||
+      entry.kind !== "executable" ||
+      entry.procedure.kind !== "spellcasting"
+    ) {
+      return undefined;
     }
+    const group = entry.procedure.groups[location.groupOrdinal - 1];
+    if (group === undefined) return undefined;
+    const reference = group.spells[location.spellOrdinal - 1];
+    if (reference === undefined) return undefined;
+    return {
+      reference,
+      groupKind: group.kind,
+    };
   }
-  return references;
+  return undefined;
 }
 
 function spellCastingTimeKind(
@@ -656,23 +649,6 @@ function spellDurationKind(
   definition: SpellRecord,
 ): StatBlockSpellReferenceDurationKind {
   return definition.mechanics.duration.kind;
-}
-
-/**
- * Stat Block spell names are normalized at their authored parser boundary by
- * lowercasing and replacing spaces, while the Unit catalog uses the same
- * identifier form with punctuation omitted. Preserve direct authored IDs, but
- * admit that punctuation-only normalization when joining the two authored
- * boundaries. The normalized key never leaves this join.
- */
-function spellDefinitionForReference(
-  source: StatBlockSpellReferenceClassificationSource,
-  spellId: string,
-): SpellRecord | undefined {
-  return (
-    source.definitions.get(spellId) ??
-    source.definitions.get(spellId.replaceAll("'", ""))
-  );
 }
 
 type ProcedurePressureOccurrenceBuilder = (

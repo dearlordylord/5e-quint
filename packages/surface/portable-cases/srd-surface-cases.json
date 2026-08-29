@@ -13590,7 +13590,8 @@
               "level": 4,
               "school": "conjuration",
               "range": {
-                "kind": "self"
+                "kind": "point",
+                "feet": 500
               },
               "components": {
                 "v": true,
@@ -85738,7 +85739,7 @@
                             "spellId": "greater_restoration"
                           },
                           {
-                            "spellId": "heroes'_feast"
+                            "spellId": "heroes_feast"
                           },
                           {
                             "spellId": "zone_of_truth"
@@ -163081,7 +163082,7 @@
                             "spellId": "greater_restoration"
                           },
                           {
-                            "spellId": "heroes'_feast"
+                            "spellId": "heroes_feast"
                           },
                           {
                             "spellId": "zone_of_truth"

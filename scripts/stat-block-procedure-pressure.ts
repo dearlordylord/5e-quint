@@ -12,7 +12,10 @@ import { format } from "prettier";
 
 import { srdStatBlockCollection } from "../packages/surface/src/surface/stat-block-catalog.ts";
 import { srdUnitCollection } from "../packages/surface/src/surface/unit-catalog.ts";
-import type { SpellRecord } from "../packages/surface/src/surface/types.ts";
+import type {
+  SpellRecord,
+  StatBlockRecord,
+} from "../packages/surface/src/surface/types.ts";
 import {
   analyzeStatBlockProcedurePressure,
   classifyUnrestrictedStatBlockSpellReferences,
@@ -101,6 +104,24 @@ type UnitProfileCoverageMatrix = {
 
 const UNIT_PROFILE_COVERAGE_MATRIX_PATH =
   "plans/unit-profile-coverage/unit-matrix.json";
+const PRE_RESOLUTION_BASELINE_PATH =
+  "plans/stat-block-procedure-pressure/pre-resolution-baseline.json";
+
+type PreResolutionSpellReferenceBaseline = {
+  readonly schema: "dnd.stat-block-spell-reference-pre-resolution-baseline.v1";
+  readonly provenance: {
+    readonly kind: "srd-5.2.1";
+    readonly recordedAtRevision: string;
+    readonly sourcePaths: readonly string[];
+  };
+  readonly rowIds: readonly string[];
+  readonly unresolvedRowIds: readonly string[];
+  readonly definitionIds: {
+    readonly shipped: readonly string[];
+    readonly unresolved: readonly string[];
+    readonly profiled: readonly string[];
+  };
+};
 
 export async function buildStatBlockProcedurePressureArtifacts(): Promise<StatBlockProcedurePressureArtifacts> {
   const sourceDiscovery = discoverSrdStatBlocks(
@@ -121,6 +142,7 @@ export async function buildStatBlockProcedurePressureArtifacts(): Promise<StatBl
     srdStatBlockCollection.statBlocks,
     sourceAuthority,
   );
+  const baseline = readPreResolutionSpellReferenceBaseline();
   const source = statBlockSpellReferenceClassificationSource();
   const spellReferenceClassifications =
     classifyUnrestrictedStatBlockSpellReferences(
@@ -133,8 +155,10 @@ export async function buildStatBlockProcedurePressureArtifacts(): Promise<StatBl
     sourceAuthority,
     source,
   );
-  const baselineSource =
-    preResolutionSpellReferenceClassificationSource(source);
+  const baselineSource = preResolutionSpellReferenceClassificationSource(
+    source,
+    baseline,
+  );
   const preResolutionSpellReferenceClassifications =
     classifyUnrestrictedStatBlockSpellReferences(
       srdStatBlockCollection.statBlocks,
@@ -162,6 +186,13 @@ export async function buildStatBlockProcedurePressureArtifacts(): Promise<StatBl
       ),
     },
   };
+  assertPreResolutionBaselineBijection({
+    baseline,
+    records: srdStatBlockCollection.statBlocks,
+    currentRows: spellReferenceClassifications,
+    baselineRows: preResolutionSpellReferenceClassifications,
+    source,
+  });
   return {
     json: await format(JSON.stringify(report), { parser: "json" }),
     markdown: await format(renderStatBlockProcedurePressureMarkdown(report), {
@@ -184,26 +215,289 @@ function statBlockSpellReferenceClassificationSource(): StatBlockSpellReferenceC
 
 function preResolutionSpellReferenceClassificationSource(
   source: StatBlockSpellReferenceClassificationSource,
+  baseline: PreResolutionSpellReferenceBaseline,
 ): StatBlockSpellReferenceClassificationSource {
-  const matrix = readUnitProfileCoverageMatrix();
-  const baselineDefinitionIds = new Set(
-    matrix.units
-      .filter(
-        ({ collectionId, kind, catalogAdmissionStatus }) =>
-          collectionId === "srd-5.2.1" &&
-          kind === "spell" &&
-          catalogAdmissionStatus === "installed",
-      )
-      .map(({ unitId }) => unitId),
+  const baselineDefinitionIds = new Set(baseline.definitionIds.shipped);
+  const expectedDefinitionIds = new Set([
+    ...baseline.definitionIds.shipped,
+    ...baseline.definitionIds.unresolved,
+  ]);
+  const missingDefinitions = [...expectedDefinitionIds].filter(
+    (unitId) => !source.definitions.has(unitId),
   );
+  if (missingDefinitions.length > 0) {
+    throw new Error(
+      `Pinned pre-resolution baseline definitions are absent from the current authored catalog: ${missingDefinitions.join(", ")}`,
+    );
+  }
   return {
     definitions: new Map(
       [...source.definitions].filter(([unitId]) =>
         baselineDefinitionIds.has(unitId),
       ),
     ),
-    profiledDefinitionIds: source.profiledDefinitionIds,
+    profiledDefinitionIds: new Set(baseline.definitionIds.profiled),
   };
+}
+
+function readPreResolutionSpellReferenceBaseline(): PreResolutionSpellReferenceBaseline {
+  const parsed: unknown = JSON.parse(
+    readFileSync(join(process.cwd(), PRE_RESOLUTION_BASELINE_PATH), "utf8"),
+  );
+  if (!isUnknownRecord(parsed)) {
+    throw new Error(
+      "Pre-resolution spell-reference baseline must be an object.",
+    );
+  }
+  if (
+    parsed.schema !==
+    "dnd.stat-block-spell-reference-pre-resolution-baseline.v1"
+  ) {
+    throw new Error(
+      "Pre-resolution spell-reference baseline schema is invalid.",
+    );
+  }
+  if (!isUnknownRecord(parsed.provenance)) {
+    throw new Error(
+      "Pre-resolution spell-reference baseline provenance is invalid.",
+    );
+  }
+  const provenanceKind = unknownString(parsed.provenance.kind);
+  const recordedAtRevision = unknownString(
+    parsed.provenance.recordedAtRevision,
+  );
+  const sourcePaths = readStringArray(
+    parsed.provenance.sourcePaths,
+    "pre-resolution baseline provenance sourcePaths",
+  );
+  if (provenanceKind !== "srd-5.2.1" || recordedAtRevision === undefined) {
+    throw new Error(
+      "Pre-resolution spell-reference baseline provenance is incomplete.",
+    );
+  }
+  if (
+    sourcePaths.length !== SRD_STAT_BLOCK_SOURCE_PATHS.length ||
+    sourcePaths.some(
+      (sourcePath, index) => sourcePath !== SRD_STAT_BLOCK_SOURCE_PATHS[index],
+    )
+  ) {
+    throw new Error(
+      "Pre-resolution spell-reference baseline source paths do not match the SRD denominator.",
+    );
+  }
+  const rowIds = readStringArray(
+    parsed.rowIds,
+    "pre-resolution baseline rowIds",
+  );
+  const unresolvedRowIds = readStringArray(
+    parsed.unresolvedRowIds,
+    "pre-resolution baseline unresolvedRowIds",
+  );
+  if (!isUnknownRecord(parsed.definitionIds)) {
+    throw new Error(
+      "Pre-resolution spell-reference baseline definitionIds are invalid.",
+    );
+  }
+  const shipped = readStringArray(
+    parsed.definitionIds.shipped,
+    "pre-resolution baseline shipped definitionIds",
+  );
+  const unresolved = readStringArray(
+    parsed.definitionIds.unresolved,
+    "pre-resolution baseline unresolved definitionIds",
+  );
+  const profiled = readStringArray(
+    parsed.definitionIds.profiled,
+    "pre-resolution baseline profiled definitionIds",
+  );
+  assertUniqueStrings(rowIds, "pre-resolution baseline rowIds");
+  assertUniqueStrings(
+    unresolvedRowIds,
+    "pre-resolution baseline unresolvedRowIds",
+  );
+  const shippedSet = assertUniqueStrings(
+    shipped,
+    "pre-resolution baseline shipped definitionIds",
+  );
+  const unresolvedSet = assertUniqueStrings(
+    unresolved,
+    "pre-resolution baseline unresolved definitionIds",
+  );
+  const profiledSet = assertUniqueStrings(
+    profiled,
+    "pre-resolution baseline profiled definitionIds",
+  );
+  if ([...shippedSet].some((unitId) => unresolvedSet.has(unitId))) {
+    throw new Error(
+      "Pre-resolution baseline shipped and unresolved definition memberships overlap.",
+    );
+  }
+  const rowSet = new Set(rowIds);
+  if (unresolvedRowIds.some((rowId) => !rowSet.has(rowId))) {
+    throw new Error(
+      "Pre-resolution baseline unresolved row membership is outside its denominator.",
+    );
+  }
+  if ([...profiledSet].some((unitId) => !shippedSet.has(unitId))) {
+    throw new Error(
+      "Pre-resolution baseline profiled definitions must be shipped definitions.",
+    );
+  }
+  return {
+    schema:
+      "dnd.stat-block-spell-reference-pre-resolution-baseline.v1" as const,
+    provenance: {
+      kind: "srd-5.2.1" as const,
+      recordedAtRevision,
+      sourcePaths,
+    },
+    rowIds,
+    unresolvedRowIds,
+    definitionIds: { shipped, unresolved, profiled },
+  };
+}
+
+function readStringArray(value: unknown, label: string): readonly string[] {
+  if (
+    !Array.isArray(value) ||
+    !value.every((item): item is string => typeof item === "string")
+  ) {
+    throw new Error(`${label} must be an array of strings.`);
+  }
+  return value;
+}
+
+function assertUniqueStrings(
+  values: readonly string[],
+  label: string,
+): Set<string> {
+  const unique = new Set(values);
+  if (unique.size !== values.length) {
+    throw new Error(`${label} must not contain duplicate members.`);
+  }
+  return unique;
+}
+
+function unrestrictedSpellReferenceDefinitionIds(
+  records: readonly StatBlockRecord[],
+): ReadonlySet<string> {
+  const definitionIds = new Set<string>();
+  for (const record of records) {
+    const sections = [
+      record.statBlock.actions,
+      record.statBlock.bonusActions,
+      record.statBlock.reactions,
+      record.statBlock.legendaryActions?.entries,
+    ];
+    for (const entries of sections) {
+      for (const entry of entries ?? []) {
+        if (
+          entry.kind !== "executable" ||
+          entry.procedure.kind !== "spellcasting"
+        ) {
+          continue;
+        }
+        for (const group of entry.procedure.groups) {
+          for (const reference of group.spells) {
+            if (reference.restriction === undefined) {
+              definitionIds.add(reference.spellId);
+            }
+          }
+        }
+      }
+    }
+  }
+  return definitionIds;
+}
+
+function assertStringSetEqual(
+  actual: ReadonlySet<string>,
+  expected: ReadonlySet<string>,
+  label: string,
+): void {
+  const missing = [...expected].filter((member) => !actual.has(member));
+  const extra = [...actual].filter((member) => !expected.has(member));
+  if (missing.length > 0 || extra.length > 0) {
+    throw new Error(
+      `${label} differs (missing: ${missing.join(", ")}; extra: ${extra.join(", ")}).`,
+    );
+  }
+}
+
+function assertPreResolutionBaselineBijection(args: {
+  readonly baseline: PreResolutionSpellReferenceBaseline;
+  readonly records: readonly StatBlockRecord[];
+  readonly currentRows: readonly StatBlockSpellReferenceClassification[];
+  readonly baselineRows: readonly StatBlockSpellReferenceClassification[];
+  readonly source: StatBlockSpellReferenceClassificationSource;
+}): void {
+  const baselineRowSet = assertUniqueStrings(
+    args.baseline.rowIds,
+    "pre-resolution baseline rowIds",
+  );
+  const currentRowIds = args.currentRows.map(({ rowId }) => rowId);
+  const currentRowSet = assertUniqueStrings(
+    currentRowIds,
+    "current spell-reference classification rowIds",
+  );
+  assertStringSetEqual(
+    currentRowSet,
+    baselineRowSet,
+    "current classification row denominator",
+  );
+  const baselineClassificationRowSet = assertUniqueStrings(
+    args.baselineRows.map(({ rowId }) => rowId),
+    "pre-resolution classification rowIds",
+  );
+  assertStringSetEqual(
+    baselineClassificationRowSet,
+    baselineRowSet,
+    "pre-resolution classification row denominator",
+  );
+  const currentUnresolvedRowSet = assertUniqueStrings(
+    args.currentRows
+      .filter(({ definitionStatus }) => definitionStatus === "unresolved")
+      .map(({ rowId }) => rowId),
+    "current unresolved spell-reference rowIds",
+  );
+  assertStringSetEqual(
+    currentUnresolvedRowSet,
+    new Set(),
+    "current unresolved spell-reference rows",
+  );
+  const baselineUnresolvedRowSet = new Set(args.baseline.unresolvedRowIds);
+  const observedPreResolutionUnresolvedRowSet = assertUniqueStrings(
+    args.baselineRows
+      .filter(({ definitionStatus }) => definitionStatus === "unresolved")
+      .map(({ rowId }) => rowId),
+    "pre-resolution unresolved spell-reference rowIds",
+  );
+  assertStringSetEqual(
+    observedPreResolutionUnresolvedRowSet,
+    baselineUnresolvedRowSet,
+    "pinned pre-resolution unresolved row membership",
+  );
+
+  const expectedDefinitionIds = new Set([
+    ...args.baseline.definitionIds.shipped,
+    ...args.baseline.definitionIds.unresolved,
+  ]);
+  const observedDefinitionIds = unrestrictedSpellReferenceDefinitionIds(
+    args.records,
+  );
+  assertStringSetEqual(
+    observedDefinitionIds,
+    expectedDefinitionIds,
+    "current unrestricted spell-reference definition membership",
+  );
+  const missingAuthoredDefinitions = [...observedDefinitionIds].filter(
+    (definitionId) => !args.source.definitions.has(definitionId),
+  );
+  if (missingAuthoredDefinitions.length > 0) {
+    throw new Error(
+      `Current unrestricted spell-reference definitions are absent from the authored catalog: ${missingAuthoredDefinitions.join(", ")}`,
+    );
+  }
 }
 
 function profiledSpellDefinitionIds(
@@ -465,7 +759,7 @@ function renderStatBlockProcedurePressureMarkdown(
       return `| ${view} | ${String(summary.total)} | ${String(summary.distinctDefinitionCount)} | ${String(summary.unresolvedDefinitionCount)} | ${String(summary.definitionStatus.shipped)} | ${String(summary.definitionStatus.unresolved)} | ${String(summary.profileStatus.profiled)} | ${String(summary.profileStatus.unprofiled)} | ${String(summary.facets.longCasting)} | ${String(summary.facets.shippedConcentration)} |`;
     }),
     "",
-    "The pre-resolution view is the pinned baseline used to prove the #418 partition: 286 = 104 shipped/profiled + 111 shipped/unprofiled + 71 unresolved, with 21 long-casting rows and 104 shipped Concentration rows. The current view reflects the admitted SRD definitions; these rows remain non-executable until a typed owner admits them.",
+    `The pre-resolution view is the pinned SRD baseline in \`${PRE_RESOLUTION_BASELINE_PATH}\`, used to prove the #418 partition: 286 = 104 shipped/profiled + 111 shipped/unprofiled + 71 unresolved, with 21 long-casting rows and 104 shipped Concentration rows. The current view reflects the admitted SRD definitions; these rows remain non-executable until a typed owner admits them.`,
     "",
     "## Bounded generic capability proposals",
     "",
@@ -517,16 +811,21 @@ function runSpellReferenceClassificationSelfTest(): void {
     sourceDiscovery.identities,
   );
   const currentSource = statBlockSpellReferenceClassificationSource();
+  const baseline = readPreResolutionSpellReferenceBaseline();
+  const baselineSource = preResolutionSpellReferenceClassificationSource(
+    currentSource,
+    baseline,
+  );
   const baselineRows = classifyUnrestrictedStatBlockSpellReferences(
     srdStatBlockCollection.statBlocks,
     sourceAuthority,
-    preResolutionSpellReferenceClassificationSource(currentSource),
+    baselineSource,
   );
   const baselineDefinitionCounts =
     countUnrestrictedStatBlockSpellReferenceDefinitions(
       srdStatBlockCollection.statBlocks,
       sourceAuthority,
-      preResolutionSpellReferenceClassificationSource(currentSource),
+      baselineSource,
     );
   const baselineSummary = summarizeSpellReferenceClassifications(
     baselineRows,
@@ -544,6 +843,16 @@ function runSpellReferenceClassificationSelfTest(): void {
   ) {
     throw new Error(
       `Unexpected pre-resolution Stat Block spell-reference classification: ${JSON.stringify(baselineSummary)}`,
+    );
+  }
+  if (
+    baselineSummary.primaryPartition.shippedProfiled +
+      baselineSummary.primaryPartition.shippedUnprofiled +
+      baselineSummary.primaryPartition.unresolved !==
+    baselineSummary.total
+  ) {
+    throw new Error(
+      `Pre-resolution primary partition does not cover its denominator: ${JSON.stringify(baselineSummary.primaryPartition)}`,
     );
   }
   for (const row of baselineRows) {
@@ -578,6 +887,13 @@ function runSpellReferenceClassificationSelfTest(): void {
     currentRows,
     currentDefinitionCounts,
   );
+  assertPreResolutionBaselineBijection({
+    baseline,
+    records: srdStatBlockCollection.statBlocks,
+    currentRows,
+    baselineRows,
+    source: currentSource,
+  });
   if (
     currentSummary.total !== 286 ||
     currentSummary.distinctDefinitionCount !== 101 ||
@@ -587,6 +903,25 @@ function runSpellReferenceClassificationSelfTest(): void {
   ) {
     throw new Error(
       `Unexpected current Stat Block spell-reference classification: ${JSON.stringify(currentSummary)}`,
+    );
+  }
+  const derivedCurrentFacets = {
+    longCasting: currentRows.filter(
+      ({ castingTimeKind }) =>
+        castingTimeKind === "minutes" || castingTimeKind === "hours",
+    ).length,
+    shippedConcentration: currentRows.filter(
+      ({ definitionStatus, durationKind }) =>
+        definitionStatus === "shipped" && durationKind === "concentration",
+    ).length,
+  };
+  if (
+    currentSummary.facets.longCasting !== derivedCurrentFacets.longCasting ||
+    currentSummary.facets.shippedConcentration !==
+      derivedCurrentFacets.shippedConcentration
+  ) {
+    throw new Error(
+      `Current spell-reference facets are not derived from current rows: ${JSON.stringify({ summary: currentSummary.facets, derived: derivedCurrentFacets })}`,
     );
   }
 }

@@ -1,5 +1,10 @@
 # Druidcraft Frontier Decision
 
+> Archived pre-admission decision. Issue #446 subsequently admitted the SRD
+> Spell Definition and recorded an `unsupported-profile` disposition in
+> `plans/unit-profile-coverage/unit-claims.jsonl`; the historical generated
+> state below is not the current catalog state.
+
 ## RAW Sources
 
 - `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1729` defines
@@ -64,12 +69,12 @@ map-light derivation for mundane objects.
 
 ## Effect Classification
 
-| RAW effect | Classification | Rationale |
-| --- | --- | --- |
-| Weather Sensor | Runtime-detached utility | The predictive sign is a Tiny harmless sensory effect and local weather information. It creates no battle-owned Spell Effect beyond presentation and a 1-round table-facing sign. |
-| Bloom | Runtime-detached utility | Flower, seed pod, and leaf bud changes are environmental/narrative object state. No current CharacterBuild, Surface catalog, or battle-runtime owner consumes that state. |
-| Sensory Effect | Runtime-detached presentation | The harmless effect is bounded by a 5-foot Cube but has no damage, condition, targeting, save, attack, movement, illumination, or obscurement consequence. |
-| Fire Play | Runtime-detached environment/object adjudication | Lighting or snuffing a candle, torch, or campfire touches mundane environmental flame state. Existing light-emitter profiles are source-owned spell effects, not a general fire/light inventory owner. |
+| RAW effect     | Classification                                   | Rationale                                                                                                                                                                                              |
+| -------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Weather Sensor | Runtime-detached utility                         | The predictive sign is a Tiny harmless sensory effect and local weather information. It creates no battle-owned Spell Effect beyond presentation and a 1-round table-facing sign.                      |
+| Bloom          | Runtime-detached utility                         | Flower, seed pod, and leaf bud changes are environmental/narrative object state. No current CharacterBuild, Surface catalog, or battle-runtime owner consumes that state.                              |
+| Sensory Effect | Runtime-detached presentation                    | The harmless effect is bounded by a 5-foot Cube but has no damage, condition, targeting, save, attack, movement, illumination, or obscurement consequence.                                             |
+| Fire Play      | Runtime-detached environment/object adjudication | Lighting or snuffing a candle, torch, or campfire touches mundane environmental flame state. Existing light-emitter profiles are source-owned spell effects, not a general fire/light inventory owner. |
 
 ## Decision
 

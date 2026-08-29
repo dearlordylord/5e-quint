@@ -97,7 +97,7 @@
               [ { spellId = "detect_magic" }
               , { spellId = "dispel_magic" }
               , { spellId = "greater_restoration" }
-              , { spellId = "heroes'_feast" }
+              , { spellId = "heroes_feast" }
               , { spellId = "zone_of_truth" }
               ]
             }

@@ -37,7 +37,7 @@ The current catalog join is identity-free: each row carries only its structural 
 | current       |  286 |         101 |                      0 |     286 |          0 |      104 |        182 |           36 |                   126 |
 | preResolution |  286 |         101 |                     35 |     215 |         71 |      104 |        182 |           21 |                   104 |
 
-The pre-resolution view is the pinned baseline used to prove the #418 partition: 286 = 104 shipped/profiled + 111 shipped/unprofiled + 71 unresolved, with 21 long-casting rows and 104 shipped Concentration rows. The current view reflects the admitted SRD definitions; these rows remain non-executable until a typed owner admits them.
+The pre-resolution view is the pinned SRD baseline in `plans/stat-block-procedure-pressure/pre-resolution-baseline.json`, used to prove the #418 partition: 286 = 104 shipped/profiled + 111 shipped/unprofiled + 71 unresolved, with 21 long-casting rows and 104 shipped Concentration rows. The current view reflects the admitted SRD definitions; these rows remain non-executable until a typed owner admits them.
 
 ## Bounded generic capability proposals
 
