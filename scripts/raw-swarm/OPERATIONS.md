@@ -200,9 +200,9 @@ role. The complete transcript, replay evidence, findings, and retained review
 results remain the authorities.
 
 The Effect 4 public declaration graph is a reviewed deterministic measurement:
-512 declaration files and 9,998,042 bytes. The file gate admits exactly those
+512 declaration files and 9,998,283 bytes. The file gate admits exactly those
 512 files, so any added file requires review. The byte gate is the smallest
-round binary-megabyte bound above the measurement, 10 MiB, leaving 487,718
+round binary-megabyte bound above the measurement, 10 MiB, leaving 487,477
 bytes of explicit margin. Deterministic verification asserts the measured
 graph, exact-at-cap acceptance, and cap-plus-one rejection for both limits;
 raising either bound requires a new measured graph and review.

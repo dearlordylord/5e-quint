@@ -1,6 +1,7 @@
 import type {
   BattleActiveEffect,
   BattleEffectOccurrenceIdentity,
+  BattleEffectOccurrenceTemplate,
   BattleSourcedActiveEffectTemplate,
 } from "./active-effect/types.ts";
 import type { BattleActiveEffectSource } from "./active-effect/source.ts";
@@ -48,7 +49,7 @@ export type BattleSourcedEffectOccurrence = Extract<
 export type BattleActiveEffectOccurrenceTemplate =
   BattleActiveEffect extends infer Effect
     ? Effect extends BattleActiveEffect
-      ? Omit<Effect, "effectRef"> & { readonly effectRef?: never }
+      ? BattleEffectOccurrenceTemplate<Effect>
       : never
     : never;
 type BattleAllocatedActiveEffectOccurrence = BattleActiveEffect &

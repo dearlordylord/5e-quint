@@ -14,13 +14,13 @@
   },
   "candidate": {
     "byteLength": 51968201,
-    "sha256": "6b9dd6d3c0b075c6b953ef0784d50a84ad8f0a261c4f813ecd54c3bc9271dc95"
+    "sha256": "01a26e0a2d69312c7428d9e7895549d2d495255d63522b9e737b7120f221efe3"
   },
   "delta": {
     "algorithm": "recursive-json-pointer-leaf-v1",
     "identity": "Each identity is canonical JSON containing its operation, JSON Pointer path, and SHA-256 digest or explicit missing tag for both sides. Added or removed subtrees are one identity at their owning path; changed arrays and objects recurse by index and key.",
     "totalCount": 7338,
-    "identitySha256": "6ca9e44ea5b77d1d8aafe04f94de90327fc0072fa022e62a7fc5471eb5eb27ee",
+    "identitySha256": "81c05252117f189564e73592ea0e794d9793ead182bee5b7c6bcbbc3615e3438",
     "classifications": [
       {
         "deltaCount": 0,
@@ -144,7 +144,7 @@
       },
       {
         "deltaCount": 254,
-        "deltaIdentitySha256": "ddd0a75b4fcbb4dbcb9f8726399531d4e9b3345a048d7ae35f1aeb02d7c9563c",
+        "deltaIdentitySha256": "cf199c4d9e5750e783bdc968fe9dbe3dcd71a5612ac2cf5c6d7a551769af4c3f",
         "id": "raw-swarm-artifact-authority",
         "operations": {
           "added": 43,
@@ -44532,7 +44532,7 @@
           "tag": "present"
         },
         "candidate": {
-          "sha256": "7fa5b7ee2d8f52f72c675f3b267a51cbe5d608e45c9731011621caa2bc376233",
+          "sha256": "9232d2eaab2e6fa428bd3b23b014782d6ebb61b457115d7f533d954939f4bc74",
           "tag": "present"
         },
         "classificationId": "raw-swarm-artifact-authority",

@@ -1138,8 +1138,8 @@ then prove complete newline-framed JSON, byte-for-byte output ownership, exit
 code 130, empty standard error, and cleanup; no timing sleep is used.
 
 The public declaration graph has a reviewed deterministic measure of 512 files
-and 9,998,042 bytes. The file limit is exactly 512. The byte limit is 10 MiB,
-the smallest round binary-megabyte bound above the graph, with a 487,718-byte
+and 9,998,283 bytes. The file limit is exactly 512. The byte limit is 10 MiB,
+the smallest round binary-megabyte bound above the graph, with a 487,477-byte
 margin. Tests prove acceptance exactly at both caps and fail-closed rejection
 at each cap plus one, and the real public distribution must equal the reviewed
 measure. Raw Swarm lane hygiene again enforces that `quality:body` does not
