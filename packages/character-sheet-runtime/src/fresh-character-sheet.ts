@@ -131,90 +131,117 @@ export const freshCharacterSheet = Brand.nominal<FreshCharacterSheet>();
 export function freshCharacterSheetFromParsedState(
   sheet: CharacterSheet,
 ): Result.Result<FreshCharacterSheet, string> {
+  if (isNonSpellcastingCharacterSheet(sheet)) {
+    return freshNonSpellcastingCharacterSheetFromParsedState(sheet);
+  }
+  if (isSpellcastingCharacterSheet(sheet)) {
+    return freshSpellcastingCharacterSheetFromParsedState(sheet);
+  }
+  return Result.fail("Fresh Character Sheet requires a supported build.");
+}
+
+function freshNonSpellcastingCharacterSheetFromParsedState(
+  sheet: NonSpellcastingCharacterSheet,
+): Result.Result<FreshCharacterSheet, string> {
   const {
     tag: _tag,
     characterId: _characterId,
     build: _build,
     ...facts
   } = sheet;
-  if (isNonSpellcastingBuild(sheet.build)) {
-    const decoded = Schema.decodeUnknownResult(
-      FreshNonSpellcastingCharacterSheetProjectionSchema,
-      { onExcessProperty: "error" },
-    )(facts);
-    if (Result.isFailure(decoded)) {
-      return Result.fail(
-        "Fresh Character Sheet requires unspent initial play state.",
-      );
-    }
-    const { druidWildShapeKnownForms: _decodedKnownForms, ...decodedFacts } =
-      decoded.success;
-    return Result.succeed(
-      freshCharacterSheet({
-        tag: sheet.tag,
-        characterId: sheet.characterId,
-        build: sheet.build,
-        ...decodedFacts,
-        hitPointMaximumReduction: FRESH_CHARACTER_SHEET_ZERO_HP,
-        hitPoints: {
-          ...decodedFacts.hitPoints,
-          currentHp: Hp(decodedFacts.hitPoints.currentHp),
-          tempHp: FRESH_CHARACTER_SHEET_ZERO_HP,
-        },
-        ...(sheet.druidWildShapeKnownForms === undefined
-          ? {}
-          : { druidWildShapeKnownForms: sheet.druidWildShapeKnownForms }),
-      }),
+  const decoded = Schema.decodeUnknownResult(
+    FreshNonSpellcastingCharacterSheetProjectionSchema,
+    { onExcessProperty: "error" },
+  )(facts);
+  if (Result.isFailure(decoded)) {
+    return Result.fail(
+      "Fresh Character Sheet requires unspent initial play state.",
     );
   }
-  if (isSpellcastingBuild(sheet.build)) {
-    if (sheet.pactSlotExpenditure !== undefined) {
-      return Result.fail(
-        "Fresh Character Sheet requires unspent initial play state.",
-      );
-    }
-    const {
-      bookOfShadowsPresence: _bookOfShadowsPresence,
-      pactSlotExpenditure: _pactSlotExpenditure,
-      ...spellcastingFacts
-    } = facts;
-    const decoded = Schema.decodeUnknownResult(
-      FreshSpellcastingCharacterSheetProjectionSchema,
-      { onExcessProperty: "error" },
-    )({
-      ...spellcastingFacts,
-      ...(sheet.bookOfShadowsPresence === undefined
+  const { druidWildShapeKnownForms: _decodedKnownForms, ...decodedFacts } =
+    decoded.success;
+  return Result.succeed(
+    freshCharacterSheet({
+      tag: sheet.tag,
+      characterId: sheet.characterId,
+      build: sheet.build,
+      ...decodedFacts,
+      hitPointMaximumReduction: FRESH_CHARACTER_SHEET_ZERO_HP,
+      hitPoints: {
+        ...decodedFacts.hitPoints,
+        currentHp: Hp(decodedFacts.hitPoints.currentHp),
+        tempHp: FRESH_CHARACTER_SHEET_ZERO_HP,
+      },
+      ...(sheet.druidWildShapeKnownForms === undefined
         ? {}
-        : { bookOfShadowsPresence: sheet.bookOfShadowsPresence }),
-    });
-    if (Result.isFailure(decoded)) {
-      return Result.fail(
-        "Fresh Character Sheet requires unspent initial play state.",
-      );
-    }
-    const { druidWildShapeKnownForms: _decodedKnownForms, ...decodedFacts } =
-      decoded.success;
-    return Result.succeed(
-      freshCharacterSheet({
-        tag: sheet.tag,
-        characterId: sheet.characterId,
-        build: sheet.build,
-        ...decodedFacts,
-        hitPointMaximumReduction: FRESH_CHARACTER_SHEET_ZERO_HP,
-        hitPoints: {
-          ...decodedFacts.hitPoints,
-          currentHp: Hp(decodedFacts.hitPoints.currentHp),
-          tempHp: FRESH_CHARACTER_SHEET_ZERO_HP,
-        },
-        ...(sheet.druidWildShapeKnownForms === undefined
-          ? {}
-          : { druidWildShapeKnownForms: sheet.druidWildShapeKnownForms }),
-        bookOfShadowsPresence: sheet.bookOfShadowsPresence,
-        pactSlotExpenditure: undefined,
-      }),
+        : { druidWildShapeKnownForms: sheet.druidWildShapeKnownForms }),
+    }),
+  );
+}
+
+function freshSpellcastingCharacterSheetFromParsedState(
+  sheet: SpellcastingCharacterSheet,
+): Result.Result<FreshCharacterSheet, string> {
+  if (sheet.pactSlotExpenditure !== undefined) {
+    return Result.fail(
+      "Fresh Character Sheet requires unspent initial play state.",
     );
   }
-  return Result.fail("Fresh Character Sheet requires a supported build.");
+  const {
+    tag: _tag,
+    characterId: _characterId,
+    build: _build,
+    bookOfShadowsPresence: _bookOfShadowsPresence,
+    pactSlotExpenditure: _pactSlotExpenditure,
+    ...spellcastingFacts
+  } = sheet;
+  const decoded = Schema.decodeUnknownResult(
+    FreshSpellcastingCharacterSheetProjectionSchema,
+    { onExcessProperty: "error" },
+  )({
+    ...spellcastingFacts,
+    ...(sheet.bookOfShadowsPresence === undefined
+      ? {}
+      : { bookOfShadowsPresence: sheet.bookOfShadowsPresence }),
+  });
+  if (Result.isFailure(decoded)) {
+    return Result.fail(
+      "Fresh Character Sheet requires unspent initial play state.",
+    );
+  }
+  const { druidWildShapeKnownForms: _decodedKnownForms, ...decodedFacts } =
+    decoded.success;
+  return Result.succeed(
+    freshCharacterSheet({
+      tag: sheet.tag,
+      characterId: sheet.characterId,
+      build: sheet.build,
+      ...decodedFacts,
+      hitPointMaximumReduction: FRESH_CHARACTER_SHEET_ZERO_HP,
+      hitPoints: {
+        ...decodedFacts.hitPoints,
+        currentHp: Hp(decodedFacts.hitPoints.currentHp),
+        tempHp: FRESH_CHARACTER_SHEET_ZERO_HP,
+      },
+      ...(sheet.druidWildShapeKnownForms === undefined
+        ? {}
+        : { druidWildShapeKnownForms: sheet.druidWildShapeKnownForms }),
+      bookOfShadowsPresence: sheet.bookOfShadowsPresence,
+      pactSlotExpenditure: undefined,
+    }),
+  );
+}
+
+function isSpellcastingCharacterSheet(
+  sheet: CharacterSheet,
+): sheet is SpellcastingCharacterSheet {
+  return isSpellcastingBuild(sheet.build);
+}
+
+function isNonSpellcastingCharacterSheet(
+  sheet: CharacterSheet,
+): sheet is NonSpellcastingCharacterSheet {
+  return isNonSpellcastingBuild(sheet.build);
 }
 
 export function isFreshSpellcastingCharacterSheet(

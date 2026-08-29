@@ -535,27 +535,40 @@ export function applySpellDamageReductionConsumption(
       "Resolved spell damage reduction must belong to its application target.",
     );
   }
-  const effectIndex = target.activeEffects.findIndex(
-    (candidate) => candidate.effectRef === consumption.identity.effectRef,
+  const consumed = spellDamageReductionEffectForConsumption(
+    target,
+    consumption.identity,
   );
-  const effect = target.activeEffects[effectIndex];
-  if (
-    effect?.kind !== "spellDamageReduction" ||
-    effect.sourceProcedureRef !== consumption.identity.sourceProcedureRef ||
-    effect.sourceCombatantId !== consumption.identity.sourceCombatantId ||
-    effect.damageType !== consumption.identity.damageType
-  ) {
-    return target;
-  }
-  if (effect.usedThisTurn) {
+  if (consumed === null || consumed.effect.usedThisTurn) {
     return target;
   }
   return {
     ...target,
     activeEffects: target.activeEffects.map((candidate, index) =>
-      index === effectIndex ? { ...effect, usedThisTurn: true } : candidate,
+      index === consumed.effectIndex
+        ? { ...consumed.effect, usedThisTurn: true }
+        : candidate,
     ),
   };
+}
+
+function spellDamageReductionEffectForConsumption(
+  target: BattleCreatureState,
+  identity: SpellDamageReductionIdentity,
+): AvailableSpellDamageReduction | null {
+  const effectIndex = target.activeEffects.findIndex(
+    (candidate) => candidate.effectRef === identity.effectRef,
+  );
+  const effect = target.activeEffects[effectIndex];
+  if (
+    effect?.kind !== "spellDamageReduction" ||
+    effect.sourceProcedureRef !== identity.sourceProcedureRef ||
+    effect.sourceCombatantId !== identity.sourceCombatantId ||
+    effect.damageType !== identity.damageType
+  ) {
+    return null;
+  }
+  return { effectIndex, effect };
 }
 
 function spellDamageReductionRollForAvailable(

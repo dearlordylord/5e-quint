@@ -2,6 +2,7 @@ import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type {
   BattleFill,
+  BattleHole,
   BattleResolutionInputForSubject,
   BattleResolutionResult,
 } from "../battle-state-execution.ts";
@@ -58,27 +59,25 @@ export function resolveProtectionRelevantEffectSaveCommand(
     );
   }
   const attemptedSaveFills = input.fills.filter(
-    (
-      fill,
-    ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+    (fill): fill is ProtectionRelevantEffectSaveFill =>
       fill.kind === "savingThrowOutcome",
   );
-  if (input.fills.length === 0) {
+  const fillCheck = protectionRelevantEffectSaveFillForHole(
+    input.fills,
+    attemptedSaveFills,
+    hole,
+  );
+  if (fillCheck.tag === "needsHoles") {
     return needsHolesResult(input.state, input.subject, [hole]);
   }
-  const saveFill = attemptedSaveFills[0];
-  if (
-    input.fills.length !== 1 ||
-    attemptedSaveFills.length !== 1 ||
-    saveFill === undefined ||
-    saveFill.holeId !== hole.holeId
-  ) {
+  if (fillCheck.tag === "invalid") {
     return invalidResult(
       input.state,
       "invalidFill",
       "Protection relevant-effect save fill does not match the selected effect occurrence.",
     );
   }
+  const saveFill = fillCheck.fill;
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (saveFill.relationshipFacts !== undefined) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -110,6 +109,36 @@ export function resolveProtectionRelevantEffectSaveCommand(
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+type ProtectionRelevantEffectSaveFill = Extract<
+  BattleFill,
+  { readonly kind: "savingThrowOutcome" }
+>;
+
+type ProtectionRelevantEffectSaveFillCheck =
+  | { readonly tag: "needsHoles" }
+  | { readonly tag: "invalid" }
+  | { readonly tag: "valid"; readonly fill: ProtectionRelevantEffectSaveFill };
+
+function protectionRelevantEffectSaveFillForHole(
+  fills: readonly BattleFill[],
+  attemptedSaveFills: readonly ProtectionRelevantEffectSaveFill[],
+  hole: BattleHole,
+): ProtectionRelevantEffectSaveFillCheck {
+  if (fills.length === 0) {
+    return { tag: "needsHoles" };
+  }
+  const saveFill = attemptedSaveFills[0];
+  if (
+    fills.length !== 1 ||
+    attemptedSaveFills.length !== 1 ||
+    saveFill === undefined ||
+    saveFill.holeId !== hole.holeId
+  ) {
+    return { tag: "invalid" };
+  }
+  return { tag: "valid", fill: saveFill };
 }
 
 export function resolveCreatureTypeProtectionConditionAttemptCommand(

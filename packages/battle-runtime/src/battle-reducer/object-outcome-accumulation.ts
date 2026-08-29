@@ -3,6 +3,7 @@ import type {
   BattleObjectOutcomeAccumulation,
   BattleResolutionResult,
 } from "../battle-state-execution.ts";
+import { optionalProperty } from "../optional-property.ts";
 
 type ResolvedBattleResult = Extract<
   BattleResolutionResult,
@@ -62,14 +63,14 @@ export function appendObjectOutcomeAccumulation(
   if (objectDamages !== undefined) {
     return {
       objectDamages,
-      ...(objectIgnitions === undefined ? {} : { objectIgnitions }),
-      ...(droppedObjects === undefined ? {} : { droppedObjects }),
+      ...optionalProperty("objectIgnitions", objectIgnitions),
+      ...optionalProperty("droppedObjects", droppedObjects),
     };
   }
   if (objectIgnitions !== undefined) {
     return {
       objectIgnitions,
-      ...(droppedObjects === undefined ? {} : { droppedObjects }),
+      ...optionalProperty("droppedObjects", droppedObjects),
     };
   }
   return droppedObjects === undefined ? undefined : { droppedObjects };

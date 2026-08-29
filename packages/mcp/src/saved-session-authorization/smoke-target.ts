@@ -79,30 +79,12 @@ async function openLocalSmokeTarget(): Promise<SavedSessionAuthorizationSmokeTar
     if (closed) return;
     closed = true;
     const failures: unknown[] = [];
-    if (closeServer !== undefined) {
-      try {
-        await closeServer();
-      } catch (error) {
-        failures.push(error);
-      }
-    }
-    if (closeRepository !== undefined) {
-      try {
-        closeRepository();
-      } catch (error) {
-        failures.push(error);
-      }
-    }
-    try {
-      await runtime.dispose();
-    } catch (error) {
-      failures.push(error);
-    }
-    try {
-      await rm(scratchDirectory, { recursive: true });
-    } catch (error) {
-      failures.push(error);
-    }
+    await captureCleanupFailure(failures, closeServer);
+    await captureCleanupFailure(failures, closeRepository);
+    await captureCleanupFailure(failures, () => runtime.dispose());
+    await captureCleanupFailure(failures, () =>
+      rm(scratchDirectory, { recursive: true }),
+    );
     if (failures.length > 0) {
       throw new AggregateError(
         failures,
@@ -151,5 +133,17 @@ async function openLocalSmokeTarget(): Promise<SavedSessionAuthorizationSmokeTar
       );
     }
     throw error;
+  }
+}
+
+async function captureCleanupFailure(
+  failures: unknown[],
+  cleanup: (() => void | Promise<void>) | undefined,
+): Promise<void> {
+  if (cleanup === undefined) return;
+  try {
+    await cleanup();
+  } catch (error) {
+    failures.push(error);
   }
 }
