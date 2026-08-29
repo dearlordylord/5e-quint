@@ -1592,7 +1592,7 @@
       "parityWitnesses": [
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/magic-suppression-action-interdiction.mbt.test.ts",
+          "ownerPath": "packages/battle-runtime/src/antimagic-field-action-interdiction.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-magic-suppression-action-interdiction.mbt.qnt",
           "stepAction": "step"
         }
@@ -1624,7 +1624,7 @@
       "parityWitnesses": [
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/magic-suppression-magical-effect-interdiction.mbt.test.ts",
+          "ownerPath": "packages/battle-runtime/src/antimagic-field-magical-effect-interdiction.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-magic-suppression-magical-effect-interdiction.mbt.qnt",
           "stepAction": "step"
         }

@@ -558,7 +558,7 @@
     "packages/battle-runtime/battle-runtime-warding-bond.qnt",
     "packages/battle-runtime/src/acid-arrow-timing.mbt.test.ts",
     "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
-    "packages/battle-runtime/src/magic-suppression-action-interdiction.mbt.test.ts",
+    "packages/battle-runtime/src/antimagic-field-action-interdiction.mbt.test.ts",
     "packages/battle-runtime/src/antimagic-field-ongoing-suppression.mbt.test.ts",
     "packages/battle-runtime/src/battle-runtime-hunters-mark-and-hex.test.ts",
     "packages/battle-runtime/src/blur-attack-roll-defense-lifecycle.mbt.test.ts",
