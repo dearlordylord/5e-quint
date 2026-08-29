@@ -84980,7 +84980,7 @@
           "anchor": "function assertLevelOneBless",
           "needles": [
             "const act = spellSlotActForProcedure(",
-            "const expectedEffect = expectedLevelOneBlessEffect(",
+            "const expectedEffectFacts = expectedLevelOneBlessEffectFacts(",
             "maxTargets: 3",
             "procedure: \"rollModifier\"",
             "actionCost: \"magicAction\"",
@@ -84988,7 +84988,8 @@
             "effect: discoveryEffect",
             "blessTargetListFill(",
             "activeEffects",
-            "toEqual([expectedEffect])",
+            "...expectedEffectFacts,",
+            "effectRef: expect.any(String)",
             "caster.concentration",
             "effectKind: \"spellEffect\"",
             "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
@@ -84997,7 +84998,7 @@
           ]
         },
         {
-          "anchor": "function expectedLevelOneBlessEffect",
+          "anchor": "function expectedLevelOneBlessEffectFacts",
           "needles": [
             "kind: \"d20RollModifier\"",
             "sourceProcedureRef,",
@@ -85086,7 +85087,7 @@
           "anchor": "function assertLevelOneBless",
           "needles": [
             "const act = spellSlotActForProcedure(",
-            "const expectedEffect = expectedLevelOneBlessEffect(",
+            "const expectedEffectFacts = expectedLevelOneBlessEffectFacts(",
             "maxTargets: 3",
             "procedure: \"rollModifier\"",
             "actionCost: \"magicAction\"",
@@ -85094,7 +85095,8 @@
             "effect: discoveryEffect",
             "blessTargetListFill(",
             "activeEffects",
-            "toEqual([expectedEffect])",
+            "...expectedEffectFacts,",
+            "effectRef: expect.any(String)",
             "caster.concentration",
             "effectKind: \"spellEffect\"",
             "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
@@ -85103,7 +85105,7 @@
           ]
         },
         {
-          "anchor": "function expectedLevelOneBlessEffect",
+          "anchor": "function expectedLevelOneBlessEffectFacts",
           "needles": [
             "kind: \"d20RollModifier\"",
             "sourceProcedureRef,",
@@ -85194,7 +85196,7 @@
           "needles": [
             "shieldOfFaithBonusActionSpellSlotAct(session, input.casterId)",
             "snapshotCombatant(",
-            "expectedLevelOneShieldOfFaithEffect(",
+            "const expectedEffectFacts = expectedLevelOneShieldOfFaithEffectFacts(",
             "tag: \"bonusActionSpell\"",
             "spellId: shieldOfFaithSpellId",
             "procedure: \"scalarBuff\"",
@@ -85202,7 +85204,8 @@
             "choices: expect.arrayContaining([input.casterId, input.targetId])",
             "spellTargetFill(",
             "activeEffects",
-            "toEqual([expectedEffect])",
+            "...expectedEffectFacts,",
+            "effectRef: expect.any(String)",
             "initialTargetArmorClass + 2",
             "caster.concentration",
             "effectKind: \"spellEffect\"",
@@ -85214,7 +85217,7 @@
           ]
         },
         {
-          "anchor": "function expectedLevelOneShieldOfFaithEffect",
+          "anchor": "function expectedLevelOneShieldOfFaithEffectFacts",
           "needles": [
             "kind: \"spellArmorClassBonus\"",
             "sourceProcedureRef,",
@@ -85323,7 +85326,7 @@
           "needles": [
             "shieldOfFaithBonusActionSpellSlotAct(session, input.casterId)",
             "snapshotCombatant(",
-            "expectedLevelOneShieldOfFaithEffect(",
+            "const expectedEffectFacts = expectedLevelOneShieldOfFaithEffectFacts(",
             "tag: \"bonusActionSpell\"",
             "spellId: shieldOfFaithSpellId",
             "procedure: \"scalarBuff\"",
@@ -85331,7 +85334,8 @@
             "choices: expect.arrayContaining([input.casterId, input.targetId])",
             "spellTargetFill(",
             "activeEffects",
-            "toEqual([expectedEffect])",
+            "...expectedEffectFacts,",
+            "effectRef: expect.any(String)",
             "initialTargetArmorClass + 2",
             "caster.concentration",
             "effectKind: \"spellEffect\"",
@@ -85343,7 +85347,7 @@
           ]
         },
         {
-          "anchor": "function expectedLevelOneShieldOfFaithEffect",
+          "anchor": "function expectedLevelOneShieldOfFaithEffectFacts",
           "needles": [
             "kind: \"spellArmorClassBonus\"",
             "sourceProcedureRef,",
