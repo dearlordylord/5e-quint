@@ -509,10 +509,12 @@ export type GrantedAreaSaveDamageActionSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
     readonly actionCost: "bonusAction";
+    readonly ability: "dex";
     readonly activeEffect: Omit<
       SpellActiveEffectTemplate<"grantedAreaSaveDamageAction">,
-      "damageType" | "spellSaveDc"
+      "damageType"
     >;
+    readonly dc: DcSource;
     readonly damageTypeChoices: readonly DamageType[];
     readonly procedure: "grantedAreaSaveDamageAction";
     readonly rangeFeet: MovementFeet;

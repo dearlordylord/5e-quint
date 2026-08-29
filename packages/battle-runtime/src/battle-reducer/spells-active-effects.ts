@@ -36,11 +36,7 @@ import {
 } from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
-import {
-  movementFeet,
-  type Ability,
-  type DifficultyClass,
-} from "@dnd/shared/types";
+import { movementFeet, type Ability } from "@dnd/shared/types";
 import type { DamageType } from "@dnd/surface/surface/types";
 import type {
   BattleEffectExecutionRef,
@@ -3419,7 +3415,6 @@ export function applyGrantedAreaSaveDamageActionSpellEffect(
   actorId: CombatantId,
   targetId: CombatantId,
   damageType: DamageType,
-  spellSaveDc: DifficultyClass,
   invocation: Extract<
     BattleExecutableSpellInvocation,
     { readonly procedure: "grantedAreaSaveDamageAction" }
@@ -3435,11 +3430,11 @@ export function applyGrantedAreaSaveDamageActionSpellEffect(
   const allocation = allocateBattleEffectOccurrenceForCreature({
     owner: target,
     effect: {
-      ...invocation.activeEffect,
+      kind: "grantedAreaSaveDamageAction",
       sourceProcedureRef: procedureRef,
       sourceCombatantId: actorId,
       damageType,
-      spellSaveDc,
+      expiresAt: invocation.activeEffect.expiresAt,
     },
   });
   const activeEffects = [...allocation.owner.activeEffects, allocation.effect];

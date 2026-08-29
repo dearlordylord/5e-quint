@@ -2718,20 +2718,22 @@ export type GrantedAreaSaveDamageActionSpellInvocation = {
   readonly procedure: "grantedAreaSaveDamageAction";
   readonly spell: BattleSpellAdmissionSource;
   readonly actionCost: "bonusAction";
+  readonly ability: "dex";
   readonly targeting: {
     readonly kind: "targetList";
     readonly minTargets: 1;
     readonly maxTargets: 1;
   };
-  readonly activeEffect: BattleSpellActiveEffectTemplate<
-    Omit<
+  readonly activeEffect: Omit<
+    BattleSpellActiveEffectTemplate<
       Extract<
         BattleActiveEffect,
         { readonly kind: "grantedAreaSaveDamageAction" }
-      >,
-      "damageType" | "spellSaveDc"
-    >
+      >
+    >,
+    "damageType"
   >;
+  readonly dc: DcSource;
   readonly damageTypeChoices: readonly DamageType[];
   readonly rangeFeet: MovementFeet;
 };

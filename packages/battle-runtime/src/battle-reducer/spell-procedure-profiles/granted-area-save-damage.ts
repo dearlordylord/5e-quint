@@ -7,8 +7,8 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 //
 // The grantedAreaSaveDamageAction Spell Procedure Profile: a prepared Bonus Action
 // spell that attaches a Concentration-owned Spell Effect to one willing touched
-// creature and stores the chosen damage type plus caster Spell Save DC for the
-// target-granted Magic Action.
+// creature and stores the chosen damage type for the target-granted Magic
+// Action. The source execution binding owns the cast level and save mechanics.
 //
 // RAW anchors:
 //   - SRD 5.2.1 Spells "Dragon's Breath": Bonus Action, Touch,
@@ -24,7 +24,7 @@ import {
   elapsedTimeTicksFromTimeSpanDuration,
   ElapsedTimeTicksSchema,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet, SpellSlotLevel } from "@dnd/shared/types";
+import { movementFeet } from "@dnd/shared/types";
 import { Result } from "effect";
 
 import {
@@ -36,7 +36,6 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
-import { spellSaveDcForCaster } from "../spell-save-dc.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 
 import { needsHolesResult } from "../needs-holes-result.ts";
@@ -60,6 +59,7 @@ import {
 } from "./profile.ts";
 import {
   DamageTypeSchema,
+  DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
@@ -84,7 +84,6 @@ function admitGrantedAreaSaveDamageAction(
       const projection = grantedAreaSaveDamageActionSpellProjection(
         ctx.actor.combatantId,
         spell,
-        slot.spellLevel,
       );
       return projection === null
         ? []
@@ -110,10 +109,9 @@ function admitGrantedAreaSaveDamageAction(
 function grantedAreaSaveDamageActionSpellProjection(
   actorId: CombatantId,
   spell: BattleSpellAdmissionSource,
-  slotLevel: SpellSlotLevel,
 ): Pick<
   GrantedAreaSaveDamageActionSpellInvocation,
-  "activeEffect" | "damageTypeChoices" | "rangeFeet"
+  "ability" | "activeEffect" | "damageTypeChoices" | "dc" | "rangeFeet"
 > | null {
   if (spell.mechanics.family !== "ongoing_effect") {
     return null;
@@ -182,12 +180,13 @@ function grantedAreaSaveDamageActionSpellProjection(
   return Result.isFailure(durationTicks)
     ? null
     : {
+        ability: "dex",
+        dc: effect.dc,
         rangeFeet: movementFeet(5),
         damageTypeChoices: damageTypeChoice.options,
         activeEffect: {
           kind: "grantedAreaSaveDamageAction",
           sourceCombatantId: actorId,
-          originalSlotLevel: slotLevel,
           expiresAt: {
             kind: "concentration",
             combatantId: actorId,
@@ -257,15 +256,6 @@ function resolveGrantedAreaSaveDamageAction(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const spellSaveDc = spellSaveDcForCaster(input.input.state, input.actorId);
-  if (spellSaveDc === null) {
-    return invalidResult(
-      input.input.state,
-      "unsupportedSubject",
-      "Dragon's Breath requires a caster Spell Save DC.",
-    );
-  }
-
   const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
     input,
     targetSelection.targetIds,
@@ -285,7 +275,6 @@ function resolveGrantedAreaSaveDamageAction(
     input.actorId,
     targetId,
     input.fillSet.damageTypeChoice.value,
-    spellSaveDc,
     input.invocation,
     input.input.subject.procedureRef,
   );
@@ -305,6 +294,8 @@ export const GrantedAreaSaveDamageActionInvocationSchema =
       procedure: Schema.Literal("grantedAreaSaveDamageAction"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("bonusAction"),
+      ability: Schema.Literal("dex"),
+      dc: DcSourceSchema,
       targeting: Schema.Struct({
         kind: Schema.Literal("targetList"),
         minTargets: Schema.Literal(1),
@@ -314,7 +305,6 @@ export const GrantedAreaSaveDamageActionInvocationSchema =
         ...BattleEffectOccurrenceTemplateSchemaFields,
         kind: Schema.Literal("grantedAreaSaveDamageAction"),
         sourceCombatantId: CombatantId,
-        originalSlotLevel: SpellSlotLevel,
         expiresAt: Schema.Struct({
           kind: Schema.Literal("concentration"),
           combatantId: CombatantId,

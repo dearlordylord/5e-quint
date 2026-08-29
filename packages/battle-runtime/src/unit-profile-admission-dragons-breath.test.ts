@@ -51,7 +51,6 @@ import {
   elapsedTimeTicks,
   endTurn,
   resolveBattleSubject,
-  spellSaveDcForCaster,
   spellSlotInvocationRef,
   type BattleFill,
   type BattleHole,
@@ -75,7 +74,7 @@ import {
 import { BattleCheckpointFrontierEnvelopeSchema } from "./index.ts";
 
 describe("Dragon's Breath initial cast admission", () => {
-  test("stores chosen damage type, original slot, and caster save DC on the willing target", () => {
+  test("stores only the chosen damage type on the willing target", () => {
     const spell = grantedAreaSaveDamageActionSpell();
     const session = spellBattle({
       preparedSpells: [spell],
@@ -99,10 +98,6 @@ describe("Dragon's Breath initial cast admission", () => {
     ).find(
       (candidate) => candidate.sourceProcedureRef === act.subject.procedureRef,
     );
-    const expectedSpellSaveDc = spellSaveDcForCaster(state, spellCasterId);
-    if (expectedSpellSaveDc === null) {
-      throw new Error("Expected fixture caster Spell Save DC.");
-    }
     if (invocation === undefined) {
       throw new Error("Expected Dragon's Breath runtime invocation.");
     }
@@ -166,9 +161,7 @@ describe("Dragon's Breath initial cast admission", () => {
         kind: "grantedAreaSaveDamageAction",
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
-        originalSlotLevel: 3,
         damageType: "fire",
-        spellSaveDc: expectedSpellSaveDc,
         expiresAt: {
           kind: "concentration",
           combatantId: spellCasterId,
@@ -263,7 +256,7 @@ describe("Dragon's Breath initial cast admission", () => {
     expect(saveHole).toMatchObject({
       kind: "savingThrowOutcome",
       ability: "dex",
-      dc: { kind: "fixed" },
+      dc: { kind: "caster_spell_save_dc" },
     });
     const needsDamage = resolveBattleSubject({
       state: targetTurn,

@@ -19,11 +19,13 @@ import {
 } from "./spells-damage-fills.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./ongoing-feature-relationship.ts";
 import { grantedAreaSaveDamageActionHoleKey } from "./selected-effect-hole-key.ts";
+import {
+  boundGrantedAreaSaveDamageActionEffect,
+  type BoundGrantedAreaSaveDamageActionEffect,
+} from "./spell-modifier-binding.ts";
 
-export type GrantedAreaSaveDamageActionEffect = Extract<
-  BattleCreatureState["activeEffects"][number],
-  { readonly kind: "grantedAreaSaveDamageAction" }
->;
+export type GrantedAreaSaveDamageActionEffect =
+  BoundGrantedAreaSaveDamageActionEffect;
 
 export type GrantedAreaSaveDamageActionSubject = Extract<
   BattleResolutionInputForSubject<
@@ -52,19 +54,21 @@ export function grantedAreaSaveDamageActionActs(
   ) {
     return [];
   }
-  return activeGrantedAreaSaveDamageActionEffects(actor).map((effect) => {
-    const subject = grantedAreaSaveDamageActionSubject(actorId, effect);
-    return {
-      subject,
-      initialHoles: [
-        grantedAreaSaveDamageActionSavingThrowOutcomeHole(
-          state,
-          actorId,
-          effect,
-        ),
-      ],
-    };
-  });
+  return activeGrantedAreaSaveDamageActionEffects(state, actor).map(
+    (effect) => {
+      const subject = grantedAreaSaveDamageActionSubject(actorId, effect);
+      return {
+        subject,
+        initialHoles: [
+          grantedAreaSaveDamageActionSavingThrowOutcomeHole(
+            state,
+            actorId,
+            effect,
+          ),
+        ],
+      };
+    },
+  );
 }
 
 export function grantedAreaSaveDamageActionSavingThrowOutcomeHole(
@@ -86,8 +90,8 @@ export function grantedAreaSaveDamageActionSavingThrowOutcomeHole(
       sourceProcedureRef: effect.sourceProcedureRef,
       lengthFeet: DRAGONS_BREATH_CONE_LENGTH_FEET,
     },
-    ability: "dex",
-    dc: { kind: "fixed", dc: effect.spellSaveDc },
+    ability: effect.save.ability,
+    dc: effect.save.dc,
     areaChoices: [],
     targetRollModes: savingThrowRollModeProjections(state, "dex"),
     targetFlatBonuses: savingThrowFlatBonusProjections(state, "dex"),
@@ -107,12 +111,16 @@ export function grantedAreaSaveDamageActionSavingThrowOutcomeHole(
 }
 
 function activeGrantedAreaSaveDamageActionEffects(
+  state: BattleState,
   actor: BattleCreatureState,
 ): readonly GrantedAreaSaveDamageActionEffect[] {
-  return actor.activeEffects.filter(
-    (effect): effect is GrantedAreaSaveDamageActionEffect =>
-      effect.kind === "grantedAreaSaveDamageAction",
-  );
+  return actor.activeEffects.flatMap((effect) => {
+    if (effect.kind !== "grantedAreaSaveDamageAction") {
+      return [];
+    }
+    const boundEffect = boundGrantedAreaSaveDamageActionEffect(state, effect);
+    return boundEffect === undefined ? [] : [boundEffect];
+  });
 }
 
 function grantedAreaSaveDamageActionSubject(

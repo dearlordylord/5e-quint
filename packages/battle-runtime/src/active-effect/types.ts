@@ -27,11 +27,9 @@ import type {
   AttackBonus,
   Condition,
   DamageDieSize,
-  DifficultyClass,
   MovementDeltaFeet,
   MovementFeet,
   Round as RoundType,
-  SpellSlotLevel,
 } from "@dnd/shared/types";
 import type { GlyphStoredSpellRelease } from "../procedure-execution/glyph-stored-spell.ts";
 import type {
@@ -972,8 +970,6 @@ export type BattleActiveEffect = (
       BattleReplayAddressableEffect & {
         readonly kind: "grantedAreaSaveDamageAction";
         readonly damageType: DamageType;
-        readonly originalSlotLevel: SpellSlotLevel;
-        readonly spellSaveDc: DifficultyClass;
         readonly expiresAt: Extract<
           BattleActiveEffectExpiration,
           { readonly kind: "concentration" }

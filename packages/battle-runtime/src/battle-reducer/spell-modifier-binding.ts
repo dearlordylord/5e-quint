@@ -4,6 +4,7 @@ import type {
 } from "../battle-state-execution.ts";
 import type {
   FixedCostMovementReplacementSpellProcedureExecution,
+  GrantedAreaSaveDamageActionSpellProcedureExecution,
   SaveGatedConditionWithRepeatSpellProcedureExecution,
   SaveGatedTurnConstraintBundleSpellProcedureExecution,
   StagedSaveConditionSpellProcedureExecution,
@@ -110,5 +111,43 @@ export function boundTargetingSaveInterdictionEffect(
   const facts = spellProcedureBoundToActiveEffect(state, effect);
   return facts?.procedure === "targetingSaveInterdiction"
     ? { ...effect, save: facts.activeEffect.save }
+    : undefined;
+}
+
+export type BoundGrantedAreaSaveDamageActionEffect =
+  EffectOf<"grantedAreaSaveDamageAction"> & {
+    readonly castLevel: GrantedAreaSaveDamageActionSpellProcedureExecution["resource"] extends infer Resource
+      ? Resource extends {
+          readonly tag: "spellSlot";
+          readonly slotLevel: infer Level;
+        }
+        ? Level
+        : Resource extends {
+              readonly tag: "spellAccessFreeCast";
+              readonly castLevel: infer Level;
+            }
+          ? Level
+          : never
+      : never;
+    readonly save: Pick<
+      GrantedAreaSaveDamageActionSpellProcedureExecution,
+      "ability" | "dc"
+    >;
+  };
+
+export function boundGrantedAreaSaveDamageActionEffect(
+  state: BattleState,
+  effect: EffectOf<"grantedAreaSaveDamageAction">,
+): BoundGrantedAreaSaveDamageActionEffect | undefined {
+  const facts = spellProcedureBoundToActiveEffect(state, effect);
+  return facts?.procedure === "grantedAreaSaveDamageAction"
+    ? {
+        ...effect,
+        castLevel:
+          facts.resource.tag === "spellSlot"
+            ? facts.resource.slotLevel
+            : facts.resource.castLevel,
+        save: { ability: facts.ability, dc: facts.dc },
+      }
     : undefined;
 }

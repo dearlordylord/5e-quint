@@ -67,6 +67,7 @@ import {
   type BattleSubject,
 } from "./index.ts";
 import type { BattleActDiscoveryCandidate } from "./battle-state-execution.ts";
+import { boundGrantedAreaSaveDamageActionEffect } from "./battle-reducer/spell-modifier-binding.ts";
 import {
   dragonsBreathUnitId,
   spellCasterId,
@@ -502,14 +503,14 @@ function resolveSavingThrow(
     throw new Error("Expected Dragon's Breath damage roll hole.");
   }
   const damageHole = requireResultHole(result, "rolledDice");
-  const effect = requireDragonsBreathTargetEffect(state.session.state);
+  const effect = requireBoundDragonsBreathTargetEffect(state.session.state);
   expect(damageHole).toMatchObject({
     grantedAreaSaveDamageAction: {
       sourceCombatantId: spellCasterId,
       sourceProcedureRef: effect.sourceProcedureRef,
       damageType: effect.damageType,
       expr: {
-        dice: Number(effect.originalSlotLevel) + 1,
+        dice: Number(effect.castLevel) + 1,
         dieSize: 6,
       },
     },
@@ -530,10 +531,8 @@ function resolveDamageRoll(
   const subject = requirePendingExhale(state);
   const saveHole = grantedAreaSaveDamageActionSavingThrowHole(state);
   const damageHole = requireHole(state.holes, "rolledDice");
-  const effect = requireDragonsBreathTargetEffect(state.session.state);
-  const damageRoll = grantedAreaSaveDamageActionDamageRoll(
-    effect.originalSlotLevel,
-  );
+  const effect = requireBoundDragonsBreathTargetEffect(state.session.state);
+  const damageRoll = grantedAreaSaveDamageActionDamageRoll(effect.castLevel);
   const result = resolveBattleSubject({
     state: state.session.state,
     subject,
@@ -573,7 +572,7 @@ function resolveConcentration(
     state.holes,
     "concentrationSavingThrow",
   );
-  const effect = requireDragonsBreathTargetEffect(state.session.state);
+  const effect = requireBoundDragonsBreathTargetEffect(state.session.state);
   const result = requireResolved(
     resolveBattleSubject({
       state: state.session.state,
@@ -585,8 +584,7 @@ function resolveConcentration(
         ),
         damageRollFillWithGroups(
           damageHole,
-          grantedAreaSaveDamageActionDamageRoll(effect.originalSlotLevel)
-            .groups,
+          grantedAreaSaveDamageActionDamageRoll(effect.castLevel).groups,
         ),
         {
           kind: "concentrationSavingThrow",
@@ -631,7 +629,9 @@ function grantedAreaSaveDamageActionGrantedActionProjection(
   state: DragonsBreathRuntimeState,
 ): DragonsBreathGrantedActionState {
   const caster = requireCombatant(state.session.state, spellCasterId);
-  const effect = grantedAreaSaveDamageActionTargetEffect(state.session.state);
+  const effect = boundGrantedAreaSaveDamageActionTargetEffect(
+    state.session.state,
+  );
   const casterConcentrating =
     effect !== undefined &&
     caster.concentration?.sourceProcedureRef === effect.sourceProcedureRef &&
@@ -648,8 +648,11 @@ function grantedAreaSaveDamageActionGrantedActionProjection(
       effect === undefined
         ? "none"
         : grantedAreaSaveDamageActionDamageType(effect.damageType),
-    effectOriginalSlotLevel: Number(effect?.originalSlotLevel ?? 0),
-    effectSpellSaveDc: effect === undefined ? 0 : Number(effect.spellSaveDc),
+    effectOriginalSlotLevel: Number(effect?.castLevel ?? 0),
+    effectSpellSaveDc:
+      effect === undefined
+        ? 0
+        : Number(spellSaveDcForCaster(state.session.state, spellCasterId)),
     saveOutcome: state.saveOutcome,
     damageRollTotal: state.damageRollTotal,
     casterHp: Number(caster.hp),
@@ -702,12 +705,17 @@ function grantedAreaSaveDamageActionTargetEffect(
   );
 }
 
-function requireDragonsBreathTargetEffect(
-  state: BattleState,
-): DragonsBreathEffect {
+function boundGrantedAreaSaveDamageActionTargetEffect(state: BattleState) {
   const effect = grantedAreaSaveDamageActionTargetEffect(state);
+  return effect === undefined
+    ? undefined
+    : boundGrantedAreaSaveDamageActionEffect(state, effect);
+}
+
+function requireBoundDragonsBreathTargetEffect(state: BattleState) {
+  const effect = boundGrantedAreaSaveDamageActionTargetEffect(state);
   if (effect === undefined) {
-    throw new Error("Expected active Dragon's Breath target effect.");
+    throw new Error("Expected source-bound Dragon's Breath target effect.");
   }
   return effect;
 }
