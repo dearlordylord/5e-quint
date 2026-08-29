@@ -5817,7 +5817,7 @@ export const CreatureDismissalSchema = Schema.Struct({
   onZeroHp: optionalExact(Schema.Literal("disappears")),
   onSpawnedCreatureDamage: optionalExact(Schema.Literal("spell_ends")),
   onSpellEnd: Schema.Union([
-    Schema.Literal("disappears"),
+    Schema.Literals(["disappears", "persists"]),
     Schema.Struct({
       kind: Schema.Literal("gradual_fade"),
       riderDismountGrace: DurationValueSchema,

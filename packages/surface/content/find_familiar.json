@@ -115,8 +115,7 @@
     },
     "dismissal": {
       "leavesBehind": "equipment",
-      "manualDismiss": "magic_action",
-      "onSpellEnd": "disappears",
+      "onSpellEnd": "persists",
       "onZeroHp": "disappears"
     },
     "duration": {

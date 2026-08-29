@@ -85,8 +85,7 @@ let findFamiliar =
               }
           , dismissal =
               { onZeroHp = "disappears"
-              , onSpellEnd = "disappears"
-              , manualDismiss = "magic_action"
+              , onSpellEnd = "persists"
               , leavesBehind = "equipment"
               }
           , companionLifecycle =
