@@ -13,9 +13,14 @@ import {
   assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
+import {
+  advanceToActorNextTurnForTest,
+  castFlyAndAdvanceToCasterTurnForTest,
+  requireActorAdmittedSpellActForTest,
+} from "./spell-effect-fixture.test-support.ts";
+import { knownWillingSpellTargetFill } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
-  type BattleActiveEffect,
   type BattleDamageRollHole,
   type BattleFill,
   type BattleHole,
@@ -70,7 +75,10 @@ import {
   testDaggerAttack,
   testShortswordAttack,
   unitLibrary,
+  wizardSpellcasting,
+  spellRecord,
 } from "./battle-runtime.test-support.ts";
+import { spellSlotInvocationRef } from "./battle-subjects.ts";
 import { battleCunningStrikeOptionGrantSupportForUnit } from "./unit-feature-support.ts";
 
 describe("battle runtime: Cunning Strike", () => {
@@ -640,7 +648,7 @@ describe("battle runtime: Cunning Strike", () => {
     const damage = requireAttackDamageHole(
       cunningStrikeDamagePreview({
         targetStatBlock: largeTargetStatBlock(),
-        targetActiveEffects: [targetSizeChangeEffect("increase")],
+        targetSizeChangeDirection: "increase",
       }).damage,
     );
 
@@ -864,7 +872,7 @@ type CunningStrikeOptionId = NonNullable<
 >["optionId"];
 
 type CunningStrikeBattleInput = {
-  readonly targetActiveEffects?: readonly BattleActiveEffect[];
+  readonly targetSizeChangeDirection?: "increase" | "decrease";
   readonly targetConcentrating?: boolean;
   readonly targetStatBlock?: ReturnType<typeof statBlockRecord>;
   readonly withOffHandAttack?: boolean;
@@ -1274,6 +1282,9 @@ function cunningStrikeBattle(
             className: "rogue",
             level: input.withSupremeSneak === true ? 9 : 5,
           },
+          ...(input.targetSizeChangeDirection === undefined
+            ? []
+            : [{ className: "wizard" as const, level: 3 }]),
         ],
         d20Statistics: testCharacterD20Statistics({ dex: 16 }),
         unitFeatures: [
@@ -1288,6 +1299,21 @@ function cunningStrikeBattle(
             ? supremeSneakUnitRefs()
             : cunningStrikeUnitRefs(),
         attack,
+        ...(input.targetSizeChangeDirection === undefined
+          ? {}
+          : {
+              spellcasting: {
+                ...wizardSpellcasting({
+                  preparedSpells: [spellRecord("enlarge_reduce")],
+                  spellSlots: [{ spellLevel: 2, count: 1 }],
+                }),
+                spellcastingSource: {
+                  tag: "classSpellcasting" as const,
+                  className: "wizard" as const,
+                  abilityModifier: 3,
+                },
+              },
+            }),
         ...(input.withOffHandAttack === true
           ? {
               offHandAttack: testDaggerAttack(),
@@ -1315,16 +1341,50 @@ function cunningStrikeBattle(
             }),
           ]
         : []),
-      statBlockCreatureInit({
-        initiative: 10,
-        tempHp: 40,
-        ...(input.targetStatBlock === undefined
-          ? {}
-          : { statBlock: input.targetStatBlock }),
-      }),
+      input.targetConcentrating === true
+        ? characterSeed({
+            combatantId: goblinId,
+            displayName: "Concentrating Cunning Strike Target",
+            initiative: 25,
+            tempHp: 40,
+            classLevels: [{ className: "wizard", level: 5 }],
+            spellcasting: wizardSpellcasting({
+              preparedSpells: [spellRecord("fly")],
+              spellSlots: [{ spellLevel: 3, count: 1 }],
+            }),
+          })
+        : statBlockCreatureInit({
+            initiative: 10,
+            tempHp: 40,
+            ...(input.targetStatBlock === undefined
+              ? {}
+              : { statBlock: input.targetStatBlock }),
+          }),
     ],
   });
-  const visibleState = session.state;
+  const concentrationSession =
+    input.targetConcentrating === true
+      ? battleRuntimeSessionForTest({
+          ...session,
+          state: requireResolved(
+            endTurn({
+              state: castFlyAndAdvanceToCasterTurnForTest({
+                session,
+                casterId: goblinId,
+                targetId: goblinId,
+              }).state,
+              actorId: goblinId,
+            }),
+          ).state,
+        })
+      : session;
+  const visibleState =
+    input.targetSizeChangeDirection === undefined
+      ? concentrationSession.state
+      : castCunningStrikeSizeChange(
+          concentrationSession,
+          input.targetSizeChangeDirection,
+        );
   const rogue = visibleState.combatants.get(fighterId);
   if (rogue === undefined) {
     throw new Error("Expected Cunning Strike rogue combatant.");
@@ -1342,25 +1402,49 @@ function cunningStrikeBattle(
           ...rogue,
           hidden: { discoveryDc: difficultyClass(16) },
         })
-        .set(goblinId, {
-          ...target,
-          activeEffects: [
-            ...target.activeEffects,
-            ...(input.targetActiveEffects ?? []),
-          ],
-          ...(input.targetConcentrating === true
-            ? {
-                concentration: {
-                  sourceProcedureRef: battleProcedureExecutionRefForTest(
-                    String("synthetic_cunning_strike_concentration"),
-                  ),
-                  effectKind: "spellEffect" as const,
-                },
-              }
-            : {}),
-        }),
+        .set(goblinId, target),
     },
   });
+}
+
+function castCunningStrikeSizeChange(
+  session: BattleRuntimeSession,
+  direction: "increase" | "decrease",
+): BattleState {
+  const expected = spellSlotInvocationRef(
+    "enlarge_reduce",
+    2,
+    direction === "increase" ? "creatureSizeIncrease" : "creatureSizeDecrease",
+  );
+  const act = requireActorAdmittedSpellActForTest({
+    session,
+    actorId: fighterId,
+    subjectTag: "actionSpell",
+    invocationRef: expected,
+  });
+  const target = requireHole(
+    resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [],
+    }),
+    "targetChoice",
+  );
+  const cast = requireResolved(
+    resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          target,
+          "enlarge_reduce",
+          fighterId,
+          goblinId,
+        ),
+      ],
+    }),
+  );
+  return advanceToActorNextTurnForTest(cast.state, fighterId);
 }
 
 function largeTargetStatBlock(): ReturnType<typeof statBlockRecord> {
@@ -1375,24 +1459,6 @@ function largeTargetStatBlock(): ReturnType<typeof statBlockRecord> {
       ...base.statBlock,
       displayName: "Synthetic Cunning Strike Large Target",
       size: "large",
-    },
-  };
-}
-
-function targetSizeChangeEffect(
-  direction: "increase" | "decrease",
-): Extract<BattleActiveEffect, { readonly kind: "spellCreatureSizeChange" }> {
-  return {
-    kind: "spellCreatureSizeChange",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String("enlarge_reduce"),
-    ),
-    sourceCombatantId: fighterId,
-    direction,
-    expiresAt: {
-      kind: "concentration",
-      combatantId: fighterId,
-      durationTicks: elapsedTimeTicks(60),
     },
   };
 }

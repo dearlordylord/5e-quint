@@ -6,7 +6,7 @@ import * as Result from "effect/Result";
 import {
   spellActiveEffectForExecutionRef,
   spellActiveEffectExecutionRef,
-} from "../active-effect/execution-ref.ts";
+} from "../effect-execution-ref.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type {
   BattleResolutionInputForSubject,
@@ -71,6 +71,7 @@ export function resolveLevitateAltitudeControlCommand(
   const hole = levitateAltitudeChangeHole({
     actorId: input.subject.actorId,
     targetId: input.subject.targetId,
+    effectRef: effect.effectRef,
     maxDistanceFeet: effect.maxAltitudeChangeFeet,
   });
   const fill = input.fills[0];
@@ -116,6 +117,7 @@ export function resolveLevitateAltitudeControlCommand(
   if (
     !levitatedTargetWithinSpellRangeFactPresent({
       facts: fill.spatialFacts,
+      effectRef: effect.effectRef,
       sourceCombatantId: effect.sourceCombatantId,
       sourceProcedureRef: effect.sourceProcedureRef,
       targetId: input.subject.targetId,
@@ -139,6 +141,7 @@ export function resolveLevitateAltitudeControlCommand(
   const nextState = updateLevitatedCreatureAltitude({
     state: spentState,
     targetId: input.subject.targetId,
+    effectRef: effect.effectRef,
     sourceCombatantId: effect.sourceCombatantId,
     sourceProcedureRef: effect.sourceProcedureRef,
     change: fill.value,

@@ -31,6 +31,7 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -44,6 +45,7 @@ import {
 } from "../codec-building-blocks.ts";
 
 const FailedSaveAttackRollAdvantageEffectSchema = Schema.Struct({
+  ...BattleEffectOccurrenceTemplateSchemaFields,
   sourceCombatantId: CombatantId,
   kind: Schema.Literal("faerieFireOutline"),
   expiresAt: BattleActiveEffectExpirationSchema,

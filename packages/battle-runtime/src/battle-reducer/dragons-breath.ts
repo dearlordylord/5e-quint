@@ -12,7 +12,7 @@ import {
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import * as Result from "effect/Result";
 import type { CombatantId } from "../identity.ts";
-import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
+import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import {
   applyBattleHitPointDamage,
   concentrationSavingThrowHole,

@@ -27,6 +27,7 @@ import {
   fireballUnitId,
   flameStrikeUnitId,
   guidingBoltUnitId,
+  hideousLaughterUnitId,
   inflictWoundsUnitId,
   lightningBoltUnitId,
   magicMissileUnitId,
@@ -83,7 +84,6 @@ import type {
   CombatantId,
   EffectAtom,
 } from "./unit-profile-admission.test-support.ts";
-import type { BattleActiveEffect } from "./battle-state-execution.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import {
   repeatedDamageAllocationActionKind,
@@ -92,6 +92,7 @@ import {
 } from "./battle-reducer/spell-procedure-profiles/repeated-damage-allocation-facts.ts";
 import {
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   requireCharacterSpellProcedureRefForTest,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
@@ -1546,8 +1547,9 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     expect(
       requireCombatant(resolved.state, spellCasterId).activeEffects,
     ).toEqual([
-      {
+      expect.objectContaining({
         kind: "spellConcentrationDuration",
+        effectRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         sourceProcedureRef: act.subject.procedureRef,
         expiresAt: {
@@ -1555,7 +1557,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
           combatantId: spellCasterId,
           durationTicks: mindSpikeDurationTicks,
         },
-      },
+      }),
     ]);
     expect(
       snapshotBattle(resolved.state).combatants.find(
@@ -1729,8 +1731,9 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     expect(
       requireCombatant(resolved.state, spellCasterId).activeEffects,
     ).toEqual([
-      {
+      expect.objectContaining({
         kind: "spellConcentrationDuration",
+        effectRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         sourceProcedureRef: act.subject.procedureRef,
         expiresAt: {
@@ -1738,7 +1741,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
           combatantId: spellCasterId,
           durationTicks: mindSpikeDurationTicks,
         },
-      },
+      }),
     ]);
   });
   test("mind_spike successful save applies half damage and breaks prior Concentration without starting Mind Spike", () => {
@@ -2218,17 +2221,22 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
   test("save-gated damage replays a missing Hideous Laughter damage repeat save", () => {
     const spell = spellRecord(fireballUnitId);
     const baseSession = spellBattle({
-      preparedSpells: [spell],
-      spellSlots: [{ spellLevel: 3, count: 1 }],
+      preparedSpells: [spell, spellRecord(hideousLaughterUnitId)],
+      spellSlots: [
+        { spellLevel: 1, count: 1 },
+        { spellLevel: 3, count: 1 },
+      ],
       casterClassLevels: [{ className: "wizard", level: 5 }],
       targetHp: 50,
       targetMaxHp: 50,
     });
     const baseCaster = requireCombatant(baseSession.state, spellCasterId);
-    const baseTarget = requireCombatant(baseSession.state, spellTargetId);
-    const hideousLaughterProcedureRef = battleProcedureExecutionRefForTest(
-      "synthetic-save-gated-damage-hideous-laughter",
-    );
+    const hideousLaughterProcedureRef =
+      requireCharacterSpellProcedureRefForTest(
+        baseSession,
+        spellCasterId,
+        spellSlotInvocationRef(hideousLaughterUnitId, 1, "hideousLaughter"),
+      );
     const hideousLaughter = {
       kind: "hideousLaughter" as const,
       sourceProcedureRef: hideousLaughterProcedureRef,
@@ -2244,25 +2252,22 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         kind: "concentration" as const,
         combatantId: spellCasterId,
       },
-    } satisfies Extract<
-      BattleActiveEffect,
-      { readonly kind: "hideousLaughter" }
-    >;
-    const enrichedState = {
+    } as const;
+    const concentratingState: BattleState = {
       ...baseSession.state,
-      combatants: new Map(baseSession.state.combatants)
-        .set(spellCasterId, {
-          ...baseCaster,
-          concentration: {
-            sourceProcedureRef: hideousLaughterProcedureRef,
-            effectKind: "spellEffect" as const,
-          },
-        })
-        .set(spellTargetId, {
-          ...baseTarget,
-          activeEffects: [...baseTarget.activeEffects, hideousLaughter],
-        }),
+      combatants: new Map(baseSession.state.combatants).set(spellCasterId, {
+        ...baseCaster,
+        concentration: {
+          sourceProcedureRef: hideousLaughterProcedureRef,
+          effectKind: "spellEffect" as const,
+        },
+      }),
     };
+    const enrichedState = battleStateWithAllocatedEffectForTest({
+      state: concentratingState,
+      ownerId: spellTargetId,
+      effect: hideousLaughter,
+    });
     const session = battleRuntimeSessionForTest({
       ...baseSession,
       state: enrichedState,

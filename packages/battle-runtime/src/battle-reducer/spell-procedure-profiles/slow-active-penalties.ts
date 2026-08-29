@@ -43,6 +43,7 @@ import {
 } from "../interrupt-execution.ts";
 import { spellReplayContinuation } from "../spell-reaction-continuation.ts";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
+import { allocateBattleEffectOccurrenceForCreature } from "../../effect-execution-ref.ts";
 import { type CombatantId } from "../../identity.ts";
 import {
   SLOW_ACTIVE_PENALTIES_ARMOR_CLASS_DELTA,
@@ -424,16 +425,9 @@ function applySlowActivePenaltyEffects(
     if (target === undefined) {
       continue;
     }
-    const activeEffects = [
-      ...target.activeEffects.filter(
-        (effect) =>
-          !(
-            effect.kind === "slowActivePenalties" &&
-            effect.sourceProcedureRef === invocation.sourceProcedureRef &&
-            effect.sourceCombatantId === actorId
-          ),
-      ),
-      {
+    const allocation = allocateBattleEffectOccurrenceForCreature({
+      owner: target,
+      effect: {
         kind: "slowActivePenalties" as const,
         sourceProcedureRef: invocation.sourceProcedureRef,
         sourceCombatantId: actorId,
@@ -447,10 +441,21 @@ function applySlowActivePenaltyEffects(
           durationTicks: invocation.durationTicks,
         },
       },
+    });
+    const activeEffects = [
+      ...allocation.owner.activeEffects.filter(
+        (effect) =>
+          !(
+            effect.kind === "slowActivePenalties" &&
+            effect.sourceProcedureRef === invocation.sourceProcedureRef &&
+            effect.sourceCombatantId === actorId
+          ),
+      ),
+      allocation.effect,
     ];
     combatants.set(
       targetId,
-      battleCreatureWithSpellActiveEffects(target, activeEffects),
+      battleCreatureWithSpellActiveEffects(allocation.owner, activeEffects),
     );
     appliedTargetIds.push(targetId);
   }

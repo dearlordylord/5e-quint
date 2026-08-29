@@ -412,9 +412,9 @@ function magicalDarknessAreaChoiceInvalidReason(
     { readonly procedure: "magicalDarknessPointOrigin" }
   >,
 ): string | null {
-  const trackedEmitters = trackedOngoingSpellLightEmittersByEffectId(state);
+  const trackedEmitters = trackedOngoingSpellLightEmittersByEffectRef(state);
   for (const overlap of areaChoice.spellCreatedLightOverlaps) {
-    const emitter = trackedEmitters.get(overlap.sourceEffectId);
+    const emitter = trackedEmitters.get(overlap.effectRef);
     if (emitter === undefined) {
       return "Darkness spell-light overlap must reference a tracked ongoing spell light.";
     }
@@ -428,16 +428,16 @@ function magicalDarknessAreaChoiceInvalidReason(
   return null;
 }
 
-function trackedOngoingSpellLightEmittersByEffectId(
+function trackedOngoingSpellLightEmittersByEffectRef(
   state: ActionSpellBattleResolutionInput["state"],
 ): ReadonlyMap<
-  BattleTrackedOngoingSpellLightEmitter["sourceEffectId"],
+  BattleTrackedOngoingSpellLightEmitter["effectRef"],
   BattleTrackedOngoingSpellLightEmitter
 > {
   return new Map(
     state.lightEmitters.flatMap((emitter) =>
       isTrackedOngoingSpellLightEmitter(emitter)
-        ? [[emitter.sourceEffectId, emitter]]
+        ? [[emitter.effectRef, emitter]]
         : [],
     ),
   );

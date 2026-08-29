@@ -21,7 +21,7 @@ import {
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import { Match } from "effect";
 import type {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
@@ -450,6 +450,7 @@ export function spellDamageReductionRollProtocolId(
 ): string {
   return [
     SPELL_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX,
+    reduction.effectRef,
     reduction.sourceProcedureRef,
     reduction.sourceCombatantId,
     reduction.targetId,
@@ -475,6 +476,7 @@ export function sourceDamageRollPenaltyRollProtocolId(
 ): string {
   return [
     SOURCE_DAMAGE_ROLL_PENALTY_ROLL_HOLE_PREFIX,
+    penalty.effectRef,
     penalty.sourceProcedureRef,
     penalty.sourceCombatantId,
     penalty.affectedCombatantId,
@@ -534,15 +536,15 @@ export function applySpellDamageReductionConsumption(
     );
   }
   const effectIndex = target.activeEffects.findIndex(
-    (candidate) =>
-      candidate.kind === "spellDamageReduction" &&
-      candidate.sourceProcedureRef ===
-        consumption.identity.sourceProcedureRef &&
-      candidate.sourceCombatantId === consumption.identity.sourceCombatantId &&
-      candidate.damageType === consumption.identity.damageType,
+    (candidate) => candidate.effectRef === consumption.identity.effectRef,
   );
   const effect = target.activeEffects[effectIndex];
-  if (effect?.kind !== "spellDamageReduction") {
+  if (
+    effect?.kind !== "spellDamageReduction" ||
+    effect.sourceProcedureRef !== consumption.identity.sourceProcedureRef ||
+    effect.sourceCombatantId !== consumption.identity.sourceCombatantId ||
+    effect.damageType !== consumption.identity.damageType
+  ) {
     return target;
   }
   if (effect.usedThisTurn) {
@@ -572,6 +574,7 @@ function spellDamageReductionIdentityForAvailable(
 ): SpellDamageReductionIdentity {
   const { effect } = available;
   return {
+    effectRef: effect.effectRef,
     sourceProcedureRef: effect.sourceProcedureRef,
     sourceCombatantId: effect.sourceCombatantId,
     targetId: target.combatantId,
@@ -611,6 +614,7 @@ export function availableSourceDamageRollPenalty(
   );
   return effect?.kind === "sourceDamageRollPenalty"
     ? {
+        effectRef: effect.effectRef,
         sourceProcedureRef: effect.sourceProcedureRef,
         sourceCombatantId: effect.sourceCombatantId,
         affectedCombatantId: source.combatantId,
@@ -889,7 +893,7 @@ export function activeSpellWeaponDamageRiders(
 
 export function activeMarkedDamageRiderEffect(
   attacker: BattleCreatureState | undefined,
-  effectRef: BattleActiveEffectExecutionRef,
+  effectRef: BattleEffectExecutionRef,
 ): SpellMarkedDamageRider | null {
   return (
     attacker?.activeEffects.find(

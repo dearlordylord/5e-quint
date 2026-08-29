@@ -38,7 +38,7 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../../identity.ts";
@@ -339,7 +339,7 @@ const DancingLightsRepositionInvocationSchema = spellProcedureExecutionSchema(
     procedure: Schema.Literal("dancingLightsReposition"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("bonusAction"),
-    activeEffectRef: BattleActiveEffectExecutionRef,
+    activeEffectRef: BattleEffectExecutionRef,
     sourceDancingLightsProcedureRef: BattleProcedureExecutionRef,
     maxMoveFeet: MovementFeet,
     rangeFeet: MovementFeet,

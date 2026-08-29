@@ -3,25 +3,27 @@ import {
   fighterVsGoblinBattle,
   goblinId,
   characterSeed,
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
-} from "../battle-runtime.test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 
-import { combatantId, type BattleProcedureExecutionRef } from "../identity.ts";
+import { combatantId, type BattleProcedureExecutionRef } from "./identity.ts";
 import {
   addBattleCombatant,
   removeBattleCombatants,
-} from "../battle-reducer/api-lifecycle.ts";
+} from "./battle-reducer/api-lifecycle.ts";
 import { Result } from "effect";
-import type { SpellActiveEffect } from "./execution-ref.ts";
+import type { SpellActiveEffect } from "./effect-execution-ref.ts";
 import {
-  allocateBattleActiveEffectRef,
+  allocateBattleEffectOccurrencesForCreature,
+  allocateBattleEffectExecutionRef,
   spellActiveEffectExecutionRef,
   spellActiveEffectForExecutionRef,
-} from "./execution-ref.ts";
+} from "./effect-execution-ref.ts";
+import type { BattleSourcedEffectOccurrenceTemplate } from "./effect-execution-ref.ts";
 
 const sourceId = combatantId("effect-source");
 
@@ -31,9 +33,28 @@ function syntheticEffect(
 ): SpellActiveEffect {
   return {
     kind: "spellCondition",
-    effectRef: battleActiveEffectExecutionRefForTest(
+    effectRef: battleEffectExecutionRefForTest(
       `${sourceProcedureRef}:${condition}`,
     ),
+    sourceProcedureRef,
+    sourceCombatantId: sourceId,
+    condition,
+    conditionHadNonSpellSource: false,
+    escape: null,
+    turnStartDamage: null,
+    expiresAt: {
+      kind: "duration",
+      durationTicks: elapsedTimeTicks(60),
+    },
+  };
+}
+
+function syntheticEffectTemplate(
+  sourceProcedureRef: BattleProcedureExecutionRef,
+  condition: "charmed" | "frightened",
+): BattleSourcedEffectOccurrenceTemplate {
+  return {
+    kind: "spellCondition",
     sourceProcedureRef,
     sourceCombatantId: sourceId,
     condition,
@@ -53,7 +74,7 @@ describe("spell active-effect execution references", () => {
     const missingOwnerId = combatantId("missing-effect-owner");
 
     expect(
-      allocateBattleActiveEffectRef({
+      allocateBattleEffectExecutionRef({
         state: initial,
         ownerId: missingOwnerId,
       }),
@@ -63,14 +84,14 @@ describe("spell active-effect execution references", () => {
   test("allocates repeated refs from canonical owner state without replacing other combatants", () => {
     const initial = fighterVsGoblinBattle();
     const goblin = initial.combatants.get(goblinId);
-    const first = allocateBattleActiveEffectRef({
+    const first = allocateBattleEffectExecutionRef({
       state: initial,
       ownerId: fighterId,
     });
     expect(first.tag).toBe("allocated");
     if (first.tag !== "allocated") return;
 
-    const second = allocateBattleActiveEffectRef({
+    const second = allocateBattleEffectExecutionRef({
       state: first.state,
       ownerId: fighterId,
     });
@@ -82,14 +103,47 @@ describe("spell active-effect execution references", () => {
     expect(second.owner.activeEffects).toEqual(
       initial.combatants.get(fighterId)?.activeEffects,
     );
-    expect(Number(second.owner.nextActiveEffectOrdinal)).toBe(
-      Number(initial.combatants.get(fighterId)?.nextActiveEffectOrdinal) + 2,
+    expect(Number(second.owner.nextEffectOrdinal)).toBe(
+      Number(initial.combatants.get(fighterId)?.nextEffectOrdinal) + 2,
+    );
+  });
+
+  test("allocates one fresh occurrence reference for every effect in a sourced batch", () => {
+    const initial = fighterVsGoblinBattle();
+    const owner = initial.combatants.get(fighterId);
+    if (owner === undefined) throw new Error("Expected fighter owner.");
+    const sourceProcedureRef = battleProcedureExecutionRefForTest(
+      "effect-occurrence-batch",
+    );
+
+    const templates = [
+      syntheticEffectTemplate(sourceProcedureRef, "charmed"),
+      syntheticEffectTemplate(sourceProcedureRef, "frightened"),
+    ] as const;
+    const allocation = allocateBattleEffectOccurrencesForCreature({
+      owner,
+      effects: templates,
+    });
+
+    expect(allocation.effects).toHaveLength(2);
+    expect(allocation.effects[0]?.effectRef).not.toBe(
+      allocation.effects[1]?.effectRef,
+    );
+    expect(allocation.effects.map((effect) => effect.kind)).toEqual([
+      "spellCondition",
+      "spellCondition",
+    ]);
+    expect(Number(allocation.owner.nextEffectOrdinal)).toBe(
+      Number(owner.nextEffectOrdinal) + 2,
+    );
+    expect(templates.every((template) => !("effectRef" in template))).toBe(
+      true,
     );
   });
 
   test("does not reuse an active-effect occurrence ref after owner re-admission", () => {
     const initial = fighterVsGoblinBattle();
-    const first = allocateBattleActiveEffectRef({
+    const first = allocateBattleEffectExecutionRef({
       state: initial,
       ownerId: fighterId,
     });
@@ -106,7 +160,7 @@ describe("spell active-effect execution references", () => {
     });
     expect(Result.isSuccess(readmitted)).toBe(true);
     if (Result.isFailure(readmitted)) return;
-    const second = allocateBattleActiveEffectRef({
+    const second = allocateBattleEffectExecutionRef({
       state: readmitted.success,
       ownerId: fighterId,
     });
@@ -157,7 +211,7 @@ describe("spell active-effect execution references", () => {
     expect(
       spellActiveEffectForExecutionRef(
         [charm, frightened],
-        battleActiveEffectExecutionRefForTest("missing-effect"),
+        battleEffectExecutionRefForTest("missing-effect"),
       ),
     ).toBeUndefined();
   });

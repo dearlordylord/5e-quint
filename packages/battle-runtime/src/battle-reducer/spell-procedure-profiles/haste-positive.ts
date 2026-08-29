@@ -23,6 +23,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import { isEffectAtom } from "@dnd/surface/surface/types";
 import { Result, Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 
 import type { BattleActiveEffect } from "../../active-effect/types.ts";
 import {
@@ -34,6 +35,7 @@ import {
   type HastePositiveSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
+import type { BattleSourcedEffectOccurrenceTemplateList } from "../../effect-execution-ref.ts";
 
 import { replaceAllocatedTargetSpellActiveEffects } from "../active-effect-replacement.ts";
 import { spellSelectionResolution } from "../needs-holes-result.ts";
@@ -428,21 +430,7 @@ function applyHastePositiveEffects(
           isHastePositiveActiveEffect(effect) &&
           effect.sourceProcedureRef === invocation.sourceProcedureRef &&
           effect.sourceCombatantId === actorId,
-        (effectRef) =>
-          hastePositiveEffects(invocation).map((effect) =>
-            effect.kind === "spellGrantedActionResource"
-              ? {
-                  ...effect,
-                  sourceProcedureRef: invocation.sourceProcedureRef,
-                  sourceCombatantId: actorId,
-                  effectRef,
-                }
-              : {
-                  ...effect,
-                  sourceProcedureRef: invocation.sourceProcedureRef,
-                  sourceCombatantId: actorId,
-                },
-          ),
+        hastePositiveEffectTemplates(invocation, actorId),
       ),
     state,
   );
@@ -460,18 +448,36 @@ type HastePositiveActiveEffect = Extract<
   }
 >;
 
-type HastePositiveEffectTemplate =
-  HastePositiveSpellInvocation["activeEffects"][keyof HastePositiveSpellInvocation["activeEffects"]];
-
-function hastePositiveEffects(
+function hastePositiveEffectTemplates(
   invocation: BattleExecutableSpellInvocation<HastePositiveSpellInvocation>,
-): readonly HastePositiveEffectTemplate[] {
+  actorId: CombatantId,
+): BattleSourcedEffectOccurrenceTemplateList {
   return [
-    invocation.activeEffects.speedRatio,
-    invocation.activeEffects.armorClassBonus,
-    invocation.activeEffects.dexteritySavingThrowAdvantage,
-    invocation.activeEffects.grantedActionResource,
-    invocation.activeEffects.spellEndTargetState,
+    {
+      ...invocation.activeEffects.speedRatio,
+      sourceProcedureRef: invocation.sourceProcedureRef,
+      sourceCombatantId: actorId,
+    },
+    {
+      ...invocation.activeEffects.armorClassBonus,
+      sourceProcedureRef: invocation.sourceProcedureRef,
+      sourceCombatantId: actorId,
+    },
+    {
+      ...invocation.activeEffects.dexteritySavingThrowAdvantage,
+      sourceProcedureRef: invocation.sourceProcedureRef,
+      sourceCombatantId: actorId,
+    },
+    {
+      ...invocation.activeEffects.grantedActionResource,
+      sourceProcedureRef: invocation.sourceProcedureRef,
+      sourceCombatantId: actorId,
+    },
+    {
+      ...invocation.activeEffects.spellEndTargetState,
+      sourceProcedureRef: invocation.sourceProcedureRef,
+      sourceCombatantId: actorId,
+    },
   ];
 }
 
@@ -502,6 +508,7 @@ const HastePositiveInvocationSchema = spellProcedureExecutionSchema(
     }),
     activeEffects: Schema.Struct({
       speedRatio: Schema.Struct({
+        ...BattleEffectOccurrenceTemplateSchemaFields,
         kind: Schema.Literal("speedRatio"),
         sourceCombatantId: CombatantId,
         numerator: Schema.Number,
@@ -509,6 +516,7 @@ const HastePositiveInvocationSchema = spellProcedureExecutionSchema(
         expiresAt: HastePositiveExpirationSchema,
       }),
       armorClassBonus: Schema.Struct({
+        ...BattleEffectOccurrenceTemplateSchemaFields,
         kind: Schema.Literal("spellArmorClassBonus"),
         sourceCombatantId: CombatantId,
         bonus: Schema.Number,
@@ -516,6 +524,7 @@ const HastePositiveInvocationSchema = spellProcedureExecutionSchema(
         expiresAt: HastePositiveExpirationSchema,
       }),
       dexteritySavingThrowAdvantage: Schema.Struct({
+        ...BattleEffectOccurrenceTemplateSchemaFields,
         kind: Schema.Literal("savingThrowRollMode"),
         sourceCombatantId: CombatantId,
         ability: Schema.Literal("dex"),
@@ -523,12 +532,14 @@ const HastePositiveInvocationSchema = spellProcedureExecutionSchema(
         expiresAt: HastePositiveExpirationSchema,
       }),
       grantedActionResource: Schema.Struct({
+        ...BattleEffectOccurrenceTemplateSchemaFields,
         kind: Schema.Literal("spellGrantedActionResource"),
         sourceCombatantId: CombatantId,
         restriction: HastePositiveActionRestrictionSchema,
         expiresAt: HastePositiveExpirationSchema,
       }),
       spellEndTargetState: Schema.Struct({
+        ...BattleEffectOccurrenceTemplateSchemaFields,
         kind: Schema.Literal("spellEndTargetState"),
         sourceCombatantId: CombatantId,
         condition: Schema.Literal("incapacitated"),

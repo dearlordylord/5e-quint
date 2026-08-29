@@ -16,6 +16,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.brutal-strike
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 // This module owns Effect Schema values for battle state execution.
 
 import { ATTACK_ROLL_MODES } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -32,6 +33,9 @@ import {
   ResourceCount,
 } from "@dnd/shared/types";
 import { BattleCreatureDisplayNameSchema } from "../battle-creature-display-name.ts";
+import { EFFECT_OCCURRENCE_SOURCE_KINDS } from "../character-execution-vocabulary.ts";
+import { BattleRoundSchema } from "../active-effect/round-codec.ts";
+import { BATTLE_ACTIVE_EFFECT_KINDS } from "../active-effect/types.ts";
 import type { Ability, DamageType, Skill } from "@dnd/surface/surface/types";
 import {
   CreatureAttackRollMechanicsSchema,
@@ -54,6 +58,7 @@ import {
 } from "../unit-feature-support.ts";
 import { Match, Schema } from "effect";
 import { SpellExecutionFactsSchema } from "./spell-execution-facts-codec.ts";
+import { battleActiveEffectOccurrenceSpatialClass } from "./creature-state-execution.ts";
 import {
   UnitFeatureProcedureExecutionSchema,
   UnitSupportProcedureExecutionSchema,
@@ -85,8 +90,8 @@ import {
 } from "../battle-subjects.ts";
 import {
   BattleAreaId,
-  BattleActiveEffectExecutionRef,
-  BattleActiveEffectExecutionOrdinal,
+  BattleEffectExecutionRef,
+  BattleEffectExecutionOrdinal,
   BattleAttackExecutionScopeRef,
   BattleAttackProcedureExecutionRef,
   BattleCharacterExecutionScopeRef,
@@ -102,7 +107,8 @@ import {
   BattleExecutionScopeCursor,
   battleProcedureExecutionRefBelongsToScope,
   battleProcedureExecutionRefOrdinalIsBefore,
-  battleActiveEffectExecutionRefOrdinalIsBefore,
+  battleEffectExecutionRefBelongsToScope,
+  battleEffectExecutionRefOrdinalIsBefore,
   battleCharacterExecutionScopeRefBelongsToBattle,
   battleCharacterExecutionScopeRefBelongsToCombatant,
   battleCharacterExecutionScopeRefOrdinalIsBefore,
@@ -115,6 +121,7 @@ import {
   battleStatBlockExecutionScopeRefIsWellFormed,
   battleStatBlockExecutionScopeRefOrdinalIsBefore,
   BattleSpellEffectOccurrenceId,
+  BattleStartTurnOccurrenceId,
   BattleTablePositionId,
   CombatantId,
 } from "../identity.ts";
@@ -160,6 +167,10 @@ import type {
   BattleFill,
   BattleHole,
   BattleMovementFillValue,
+} from "../battle-state-execution.ts";
+import {
+  BATTLE_START_TURN_OCCURRENCE_KINDS,
+  BATTLE_TEMPORARY_HIT_POINT_CHOICES,
 } from "../battle-state-execution.ts";
 import { ATTACK_PRESENTATION_JOIN_ISSUE_REASONS } from "../attack-presentation-contract.ts";
 const NonEmptyTrimmedStringSchema = Schema.Trimmed.pipe(
@@ -297,6 +308,16 @@ const BattleHoleBaseSchema = {
   spell: Schema.optionalKey(Schema.Never),
   unit: Schema.optionalKey(Schema.Never),
 } as const;
+const BattleStartTurnOccurrenceOptionSchema = Schema.Struct({
+  occurrenceId: BattleStartTurnOccurrenceId,
+  kind: Schema.Literals(BATTLE_START_TURN_OCCURRENCE_KINDS),
+  label: Schema.String,
+});
+
+const BattleAreaWindStrengthSchema = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("strong") }),
+  Schema.Struct({ kind: Schema.Literal("notStrong") }),
+]);
 
 const BattleBrutalStrikeForcefulBlowMovementFactSchema = Schema.Struct({
   kind: Schema.Literal("brutalStrikeForcefulBlowStraightTowardTarget"),
@@ -1007,6 +1028,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
   }),
   Schema.Struct({
     kind: Schema.Literal("levitatedTargetWithinSpellRange"),
+    effectRef: BattleEffectExecutionRef,
     sourceCombatantId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
     targetId: CombatantId,
@@ -1281,6 +1303,14 @@ const BattleSavingThrowFlatBonusProjectionSchema = Schema.Struct({
   bonus: Schema.Number,
 });
 
+const BattleDamageOccurrenceSourceSchema = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("untrackedDamage") }),
+  Schema.Struct({
+    kind: Schema.Literal("spellTurnEndDamage"),
+    effectRef: BattleEffectExecutionRef,
+  }),
+]);
+
 const BattleLightEmitterAttachmentSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("combatant"),
@@ -1301,7 +1331,7 @@ const BattleLightEmitterAttachmentSchema = Schema.Union([
 const BattleOngoingSpellEffectRefSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("spellLightEmitter"),
-    sourceEffectId: BattleSpellEffectOccurrenceId,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     kind: Schema.Literal("spellActiveEffect"),
@@ -1309,18 +1339,19 @@ const BattleOngoingSpellEffectRefSchema = Schema.Union([
       "spellObjectContactDamage",
       "spiritualWeapon",
     ]),
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     kind: Schema.Literal("antimagicFieldAura"),
+    effectRef: BattleEffectExecutionRef,
     areaId: BattleAreaId,
     sourceCombatantId: CombatantId,
   }),
 ]);
-const BattleAntimagicFieldOngoingSpellEffectRefSchema = Schema.Union([
+const BattleOngoingSpellOccurrenceRefSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("spellLightEmitter"),
-    sourceEffectId: BattleSpellEffectOccurrenceId,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     kind: Schema.Literal("spellActiveEffect"),
@@ -1328,23 +1359,32 @@ const BattleAntimagicFieldOngoingSpellEffectRefSchema = Schema.Union([
       "spellObjectContactDamage",
       "spiritualWeapon",
     ]),
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   }),
 ]);
+const BattleAntimagicFieldOngoingSpellEffectRefSchema =
+  BattleOngoingSpellOccurrenceRefSchema;
 
+const BattleOngoingSpellCombatantTargetSchema = Schema.Struct({
+  kind: Schema.Literal("combatant"),
+  combatantId: CombatantId,
+});
+const BattleOngoingSpellObjectTargetSchema = Schema.Struct({
+  kind: Schema.Literal("object"),
+  objectId: BattleObjectId,
+});
+const BattleOngoingSpellMagicalEffectTargetSchema = Schema.Struct({
+  kind: Schema.Literal("magicalEffect"),
+  effect: BattleOngoingSpellEffectRefSchema,
+});
+const BattleOngoingSpellOccurrenceTargetSchema = Schema.Struct({
+  kind: Schema.Literal("magicalEffect"),
+  effect: BattleOngoingSpellOccurrenceRefSchema,
+});
 const BattleOngoingSpellTargetSchema = Schema.Union([
-  Schema.Struct({
-    kind: Schema.Literal("combatant"),
-    combatantId: CombatantId,
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("object"),
-    objectId: BattleObjectId,
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("magicalEffect"),
-    effect: BattleOngoingSpellEffectRefSchema,
-  }),
+  BattleOngoingSpellCombatantTargetSchema,
+  BattleOngoingSpellObjectTargetSchema,
+  BattleOngoingSpellMagicalEffectTargetSchema,
 ]);
 
 const BattleOngoingSpellTargetWithinRangeFactSchema = Schema.Struct({
@@ -1372,6 +1412,7 @@ const SpellTurnDamageSchema = Schema.Struct({
 
 const BattleSpellTurnStartDamageSourceSchema = Schema.Struct({
   ...BattleProcedureSourceSchema,
+  effectRef: BattleEffectExecutionRef,
   trigger: Schema.Union([
     Schema.Struct({
       kind: Schema.Literal("condition"),
@@ -1388,6 +1429,7 @@ const BattleSpellTurnStartDamageSourceSchema = Schema.Struct({
 
 const BattleSpellTurnEndDamageSourceSchema = Schema.Struct({
   ...BattleProcedureSourceSchema,
+  effectRef: BattleEffectExecutionRef,
   damage: SpellTurnDamageSchema,
 });
 
@@ -1506,6 +1548,11 @@ const BattleHolePayloadUnionSchema = Schema.Union([
       components: Schema.Array(Schema.Literals(["V", "S", "M"])),
     }),
     requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("areaWindStrength"),
+    areaId: BattleAreaId,
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1849,7 +1896,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     glyphExplosiveRune: Schema.Struct({
       sourceCombatantId: CombatantId,
       sourceProcedureRef: BattleProcedureExecutionRef,
-      sourceEffectId: BattleSpellEffectOccurrenceId,
+      effectRef: BattleEffectExecutionRef,
       damage: Schema.Struct({
         expr: DiceExprSchema,
       }),
@@ -1859,6 +1906,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
     spellDamageReduction: Schema.Struct({
+      effectRef: BattleEffectExecutionRef,
       sourceProcedureRef: BattleProcedureExecutionRef,
       sourceCombatantId: CombatantId,
       targetId: CombatantId,
@@ -1873,6 +1921,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
     sourceDamageRollPenalty: Schema.Struct({
+      effectRef: BattleEffectExecutionRef,
       sourceProcedureRef: BattleProcedureExecutionRef,
       sourceCombatantId: CombatantId,
       affectedCombatantId: CombatantId,
@@ -1910,6 +1959,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     kind: Schema.Literal("rolledDice"),
     movableZone: Schema.Struct({
       ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
       trigger: Schema.Literals([
         "endsTurnWithinFiveFeetOfSphere",
@@ -1927,6 +1977,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     kind: Schema.Literal("rolledDice"),
     spikeGrowthMovement: Schema.Struct({
       targetId: CombatantId,
+      effectRef: BattleEffectExecutionRef,
       sourceProcedureRef: BattleProcedureExecutionRef,
       sourceCombatantId: CombatantId,
       areaId: BattleAreaId,
@@ -1943,6 +1994,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     kind: Schema.Literal("rolledDice"),
     insectPlagueAreaHazard: Schema.Struct({
       ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
       trigger: Schema.Literals([
         "appearsInArea",
@@ -1961,6 +2013,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     kind: Schema.Literal("rolledDice"),
     cloudkillAreaHazard: Schema.Struct({
       ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
       trigger: Schema.Literals([
         "appearsInArea",
@@ -2100,6 +2153,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     spellTurnStartSave: Schema.Struct({
       targetId: CombatantId,
+      effectRef: BattleEffectExecutionRef,
       sourceProcedureRef: BattleProcedureExecutionRef,
       sourceCombatantId: CombatantId,
       save: Schema.Struct({
@@ -2118,8 +2172,10 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
+    damageOccurrence: BattleDamageOccurrenceSourceSchema,
     hideousLaughterRepeatSave: Schema.Struct({
       targetId: CombatantId,
+      effectRef: BattleEffectExecutionRef,
       sourceProcedureRef: BattleProcedureExecutionRef,
       sourceCombatantId: CombatantId,
       trigger: Schema.Literals(["endTurn", "damage"]),
@@ -2159,6 +2215,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     greaseGroundHazard: Schema.Struct({
       ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
       trigger: Schema.Literals(["entersArea", "endsTurnInArea"]),
       save: Schema.Struct({
@@ -2178,6 +2235,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     webRestraint: Schema.Struct({
       ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
       trigger: Schema.Literals(["entersArea", "startsTurnInArea"]),
       save: Schema.Struct({
@@ -2197,6 +2255,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     sleetStormAreaHazard: Schema.Struct({
       ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
       trigger: Schema.Literals(["entersArea", "startsTurnInArea"]),
       save: Schema.Struct({
@@ -2216,6 +2275,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     insectPlagueAreaHazard: Schema.Struct({
       ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
       trigger: Schema.Literals([
         "appearsInArea",
@@ -2239,6 +2299,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     cloudkillAreaHazard: Schema.Struct({
       ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
       trigger: Schema.Literals([
         "appearsInArea",
@@ -2263,6 +2324,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     gustOfWindLine: Schema.Struct({
       ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
       directionId: BattleLineDirectionId,
       trigger: Schema.Literal("endsTurnInLine"),
@@ -2284,6 +2346,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     sourceCombatantId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
+    effectRef: BattleEffectExecutionRef,
     areaId: BattleAreaId,
     directionId: BattleLineDirectionId,
     requiresTableSpatialFact: Schema.Literal(true),
@@ -2375,6 +2438,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     movableZone: Schema.Struct({
       ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
       trigger: Schema.Literals([
         "endsTurnWithinFiveFeetOfSphere",
@@ -2402,6 +2466,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     movableZone: Schema.Struct({
       ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
       trigger: Schema.Literals([
         "appearsInArea",
@@ -2431,6 +2496,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     movableZone: Schema.Struct({
       ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
       maxMoveFeet: MovementFeet,
     }),
@@ -2443,9 +2509,47 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     movableZone: Schema.Struct({
       sourceProcedureRef: BattleProcedureExecutionRef,
       sourceCombatantId: CombatantId,
+      effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
       maxMoveFeet: MovementFeet,
     }),
+    requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("startTurnOccurrenceOrder"),
+    actorId: CombatantId,
+    occurrences: Schema.TupleWithRest(
+      Schema.Tuple([
+        BattleStartTurnOccurrenceOptionSchema,
+        BattleStartTurnOccurrenceOptionSchema,
+      ]),
+      [BattleStartTurnOccurrenceOptionSchema],
+    ),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("temporaryHitPointChoice"),
+    sourceCombatantId: CombatantId,
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    effectRef: BattleEffectExecutionRef,
+    sourceTurn: Schema.Struct({
+      actorId: CombatantId,
+      round: BattleRoundSchema,
+    }),
+    occurrenceId: BattleStartTurnOccurrenceId,
+    existingTemporaryHitPoints: HpSchema,
+    grantedTemporaryHitPoints: HpSchema,
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("cloudkillMovement"),
+    sourceCombatantId: CombatantId,
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    effectRef: BattleEffectExecutionRef,
+    areaId: BattleAreaId,
+    distanceFeet: MovementFeet,
+    directionRequirement: Schema.Literal("awayFromSource"),
     requiresTableSpatialFact: Schema.Literal(true),
   }),
   Schema.Struct({
@@ -2454,6 +2558,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     protectionRelevantEffectSave: Schema.Struct({
       ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
       relevantEffect: Schema.Literals(["charmed", "frightened", "possession"]),
       save: SpellConditionRepeatSaveSchema,
     }),
@@ -2489,7 +2594,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     glyphExplosiveRune: Schema.Struct({
       sourceCombatantId: CombatantId,
       sourceProcedureRef: BattleProcedureExecutionRef,
-      sourceEffectId: BattleSpellEffectOccurrenceId,
+      effectRef: BattleEffectExecutionRef,
       radiusFeet: Schema.Literal(20),
     }),
     ability: Schema.Literal("dex"),
@@ -2578,6 +2683,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("concentrationSavingThrow"),
     label: Schema.String,
+    damageOccurrence: BattleDamageOccurrenceSourceSchema,
     combatantId: CombatantId,
     dc: DifficultyClass,
     damageAmount: DamageAmount,
@@ -2603,6 +2709,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("levitateAltitudeChange"),
+    effectRef: BattleEffectExecutionRef,
     label: Schema.String,
     actorId: CombatantId,
     targetId: CombatantId,
@@ -2634,13 +2741,29 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     dc: DifficultyClass,
     rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
-    spellcastingAbilityCheck: Schema.Struct({
-      casterId: CombatantId,
-      sourceProcedureRef: BattleProcedureExecutionRef,
-      target: BattleOngoingSpellTargetSchema,
-      effect: BattleOngoingSpellEffectRefSchema,
-      contestedSpellLevel: BattleSpellEffectLevel,
-    }),
+    spellcastingAbilityCheck: Schema.Union([
+      Schema.Struct({
+        casterId: CombatantId,
+        sourceProcedureRef: BattleProcedureExecutionRef,
+        target: BattleOngoingSpellOccurrenceTargetSchema,
+        checkedOccurrence: Schema.optionalKey(Schema.Never),
+        contestedSpellLevel: BattleSpellEffectLevel,
+      }),
+      Schema.Struct({
+        casterId: CombatantId,
+        sourceProcedureRef: BattleProcedureExecutionRef,
+        target: Schema.Union([
+          BattleOngoingSpellCombatantTargetSchema,
+          BattleOngoingSpellObjectTargetSchema,
+        ]),
+        checkedOccurrence: Schema.Struct({
+          ownerId: CombatantId,
+          effect: BattleOngoingSpellOccurrenceRefSchema,
+          target: Schema.optionalKey(Schema.Never),
+        }),
+        contestedSpellLevel: BattleSpellEffectLevel,
+      }),
+    ]),
     ...D20TestNaturalOneRerollHoleOptionsSchema,
   }),
   Schema.Struct({
@@ -2709,6 +2832,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("attackDamageDisposition"),
     label: Schema.String,
+    damageOccurrence: BattleDamageOccurrenceSourceSchema,
     attackerId: CombatantId,
     targetId: CombatantId,
     choices: Schema.Array(
@@ -3046,7 +3170,6 @@ type BattleD20TestRolledD20sEncoded = {
   readonly second: number;
   readonly selected: "first" | "second";
 };
-
 type BattleD20TestNaturalOneRerollDecisionEncoded =
   | {
       readonly kind: "decline";
@@ -3221,6 +3344,13 @@ type BattleFillEncoded =
       readonly spatialFacts: readonly BattleTargetSpatialFactEncoded[];
     }
   | {
+      readonly kind: "areaWindStrength";
+      readonly holeId: string;
+      readonly value:
+        | { readonly kind: "strong" }
+        | { readonly kind: "notStrong" };
+    }
+  | {
       readonly kind: "slowSomaticSpellFailureOutcome";
       readonly holeId: string;
       readonly value: {
@@ -3357,7 +3487,7 @@ type BattleFillEncoded =
             readonly effect:
               | {
                   readonly kind: "spellLightEmitter";
-                  readonly sourceEffectId: string;
+                  readonly effectRef: string;
                 }
               | {
                   readonly kind: "spellActiveEffect";
@@ -3368,6 +3498,7 @@ type BattleFillEncoded =
                 }
               | {
                   readonly kind: "antimagicFieldAura";
+                  readonly effectRef: string;
                   readonly areaId: string;
                   readonly sourceCombatantId: string;
                 };
@@ -3390,7 +3521,7 @@ type BattleFillEncoded =
               readonly effect:
                 | {
                     readonly kind: "spellLightEmitter";
-                    readonly sourceEffectId: string;
+                    readonly effectRef: string;
                   }
                 | {
                     readonly kind: "spellActiveEffect";
@@ -3401,6 +3532,7 @@ type BattleFillEncoded =
                   }
                 | {
                     readonly kind: "antimagicFieldAura";
+                    readonly effectRef: string;
                     readonly areaId: string;
                     readonly sourceCombatantId: string;
                   };
@@ -3495,7 +3627,7 @@ type BattleFillEncoded =
               | { readonly kind: "combatant"; readonly combatantId: string };
             readonly spellCreatedLightOverlaps: readonly {
               readonly kind: "spellCreatedLightOverlapsArea";
-              readonly sourceEffectId: string;
+              readonly effectRef: string;
             }[];
           }
         | {
@@ -3511,7 +3643,7 @@ type BattleFillEncoded =
               readonly effect:
                 | {
                     readonly kind: "spellLightEmitter";
-                    readonly sourceEffectId: string;
+                    readonly effectRef: string;
                   }
                 | {
                     readonly kind: "spellActiveEffect";
@@ -3588,6 +3720,25 @@ type BattleFillEncoded =
       readonly holeId: string;
       readonly value: {
         readonly moveFeet: number;
+      };
+    }
+  | {
+      readonly kind: "startTurnOccurrenceOrder";
+      readonly holeId: string;
+      readonly value: {
+        readonly occurrenceIds: readonly [string, string, ...string[]];
+      };
+    }
+  | {
+      readonly kind: "temporaryHitPointChoice";
+      readonly holeId: string;
+      readonly value: (typeof BATTLE_TEMPORARY_HIT_POINT_CHOICES)[number];
+    }
+  | {
+      readonly kind: "cloudkillMovement";
+      readonly holeId: string;
+      readonly value: {
+        readonly affectedCombatantIdsInResolutionOrder: readonly string[];
       };
     }
   | {
@@ -4090,6 +4241,7 @@ type BattleFillEncoded =
         };
         readonly levitatedMovement?: {
           readonly kind: "levitatedMovement";
+          readonly effectRef: string;
           readonly sourceCombatantId: string;
           readonly sourceProcedureRef: string;
           readonly fixedObjectOrSurfaceWithinReach: true;
@@ -4193,30 +4345,35 @@ const BattleMovementFillValueCommonSchemaFields = {
         Schema.Union([
           Schema.Struct({
             kind: Schema.Literal("greaseGroundHazard"),
+            effectRef: BattleEffectExecutionRef,
             sourceCombatantId: CombatantId,
             sourceProcedureRef: BattleProcedureExecutionRef,
             areaId: BattleAreaId,
           }),
           Schema.Struct({
             kind: Schema.Literal("webAreaHazard"),
+            effectRef: BattleEffectExecutionRef,
             sourceCombatantId: CombatantId,
             sourceProcedureRef: BattleProcedureExecutionRef,
             areaId: BattleAreaId,
           }),
           Schema.Struct({
             kind: Schema.Literal("sleetStormHazard"),
+            effectRef: BattleEffectExecutionRef,
             sourceCombatantId: CombatantId,
             sourceProcedureRef: BattleProcedureExecutionRef,
             areaId: BattleAreaId,
           }),
           Schema.Struct({
             kind: Schema.Literal("insectPlagueHazard"),
+            effectRef: BattleEffectExecutionRef,
             sourceCombatantId: CombatantId,
             sourceProcedureRef: BattleProcedureExecutionRef,
             areaId: BattleAreaId,
           }),
           Schema.Struct({
             kind: Schema.Literal("spikeGrowthHazard"),
+            effectRef: BattleEffectExecutionRef,
             sourceCombatantId: CombatantId,
             sourceProcedureRef: BattleProcedureExecutionRef,
             areaId: BattleAreaId,
@@ -4231,6 +4388,7 @@ const BattleMovementFillValueCommonSchemaFields = {
   gustOfWindLineMovement: Schema.optionalKey(
     Schema.Struct({
       kind: Schema.Literal("gustOfWindLineMovement"),
+      effectRef: BattleEffectExecutionRef,
       sourceCombatantId: CombatantId,
       sourceProcedureRef: BattleProcedureExecutionRef,
       areaId: BattleAreaId,
@@ -4321,6 +4479,11 @@ export const BattleFillSchema: Schema.Codec<
       kind: Schema.Literal("targetSpatialFacts"),
       holeId: BattleHoleIdSchema,
       spatialFacts: BattleTargetSpatialFactsSchema,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("areaWindStrength"),
+      holeId: BattleHoleIdSchema,
+      value: BattleAreaWindStrengthSchema,
     }),
     Schema.Struct({
       kind: Schema.Literal("slowSomaticSpellFailureOutcome"),
@@ -4632,7 +4795,7 @@ export const BattleFillSchema: Schema.Codec<
           spellCreatedLightOverlaps: Schema.Array(
             Schema.Struct({
               kind: Schema.Literal("spellCreatedLightOverlapsArea"),
-              sourceEffectId: BattleSpellEffectOccurrenceId,
+              effectRef: BattleEffectExecutionRef,
             }),
           ),
         }),
@@ -4712,6 +4875,31 @@ export const BattleFillSchema: Schema.Codec<
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
         moveFeet: MovementFeet,
+      }),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("startTurnOccurrenceOrder"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        occurrenceIds: Schema.TupleWithRest(
+          Schema.Tuple([
+            BattleStartTurnOccurrenceId,
+            BattleStartTurnOccurrenceId,
+          ]),
+          [BattleStartTurnOccurrenceId],
+        ),
+      }),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("temporaryHitPointChoice"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Literals(BATTLE_TEMPORARY_HIT_POINT_CHOICES),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("cloudkillMovement"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        affectedCombatantIdsInResolutionOrder: Schema.Array(CombatantId),
       }),
     }),
     Schema.Struct({
@@ -5080,6 +5268,7 @@ export const BattleFillSchema: Schema.Codec<
         levitatedMovement: Schema.optionalKey(
           Schema.Struct({
             kind: Schema.Literal("levitatedMovement"),
+            effectRef: BattleEffectExecutionRef,
             sourceCombatantId: CombatantId,
             sourceProcedureRef: BattleProcedureExecutionRef,
             fixedObjectOrSurfaceWithinReach: Schema.Literal(true),
@@ -5283,7 +5472,7 @@ export const RuntimeActionResourceSchema = Schema.Union([
     kind: Schema.Literal("action"),
     source: Schema.Literal("spellEffect"),
     sourceOwnerId: Schema.String,
-    sourceEffectRef: BattleActiveEffectExecutionRef,
+    sourceEffectRef: BattleEffectExecutionRef,
     sourceProcedureRef: Schema.optionalKey(Schema.Never),
     restriction: BattleActionRestrictionSchema,
   }),
@@ -5461,6 +5650,11 @@ const StatBlockProcedureSchema = Schema.Union([
       Schema.Literals(SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS),
     ),
   }),
+  Schema.Struct({
+    kind: Schema.Literal("effectOccurrenceSource"),
+    effectRef: BattleEffectExecutionRef,
+    effectKind: Schema.Literals(EFFECT_OCCURRENCE_SOURCE_KINDS),
+  }),
 ]);
 
 const StatBlockProcedureBindingSnapshotSchema = Schema.Struct({
@@ -5571,13 +5765,15 @@ function statBlockExecutionSnapshotGraphIsValid(snapshot: {
       ).length;
       const limitedUsePoolCount = pools.length - legendaryPoolCount;
       const procedurePoolShapeIsValid =
-        binding.procedure.kind === "multiattack"
+        binding.procedure.kind === "effectOccurrenceSource"
           ? pools.length === 0
-          : binding.procedure.kind === "bonusActionOption" ||
-              (binding.procedure.kind === "attack" &&
-                binding.procedure.section === "actions")
-            ? pools.length <= 1 && legendaryPoolCount === 0
-            : legendaryPoolCount <= 1 && limitedUsePoolCount <= 1;
+          : binding.procedure.kind === "multiattack"
+            ? pools.length === 0
+            : binding.procedure.kind === "bonusActionOption" ||
+                (binding.procedure.kind === "attack" &&
+                  binding.procedure.section === "actions")
+              ? pools.length <= 1 && legendaryPoolCount === 0
+              : legendaryPoolCount <= 1 && limitedUsePoolCount <= 1;
       const legendaryPoolOwnershipIsValid =
         binding.procedure.kind !== "attack" ||
         binding.procedure.section !== "legendaryActions" ||
@@ -5660,6 +5856,11 @@ const CharacterBattleCreatureOriginSnapshotSchema = Schema.Struct({
           Schema.Struct({
             kind: Schema.Literal("unavailableSpellInvocation"),
           }),
+          Schema.Struct({
+            kind: Schema.Literal("effectOccurrenceSource"),
+            effectRef: BattleEffectExecutionRef,
+            effectKind: Schema.Literals(EFFECT_OCCURRENCE_SOURCE_KINDS),
+          }),
         ]),
       }),
     ),
@@ -5710,14 +5911,32 @@ const StatBlockBattleCreatureOriginSnapshotSchema = Schema.Struct({
   execution: StatBlockExecutionSnapshotSchema,
 });
 
+const BattleActiveEffectOccurrenceLocationSchema = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("nonSpatial") }),
+  Schema.Struct({ kind: Schema.Literal("area"), areaId: BattleAreaId }),
+  Schema.Struct({
+    kind: Schema.Literal("line"),
+    areaId: BattleAreaId,
+    directionId: BattleLineDirectionId,
+  }),
+  Schema.Struct({ kind: Schema.Literal("object"), objectId: BattleObjectId }),
+]);
+
 const BattleCreatureSnapshotCommonFields = {
   combatantId: CombatantId,
   initiative: Schema.Number,
   hp: Schema.Number,
   maxHp: Schema.Number,
   tempHp: Schema.Number,
-  nextActiveEffectOrdinal: BattleActiveEffectExecutionOrdinal,
-  activeEffectRefs: Schema.Array(BattleActiveEffectExecutionRef),
+  nextEffectOrdinal: BattleEffectExecutionOrdinal,
+  activeEffectOccurrences: Schema.Array(
+    Schema.Struct({
+      kind: Schema.Literal("activeEffect"),
+      effectRef: BattleEffectExecutionRef,
+      activeEffectKind: Schema.Literals(BATTLE_ACTIVE_EFFECT_KINDS),
+      location: BattleActiveEffectOccurrenceLocationSchema,
+    }),
+  ),
   armorClass: Schema.Number,
   size: Schema.String,
   zeroHpLifecycle: BattleCreatureZeroHpLifecycleSnapshotSchema,
@@ -5839,7 +6058,8 @@ function battleCreatureSnapshotCommonInvariantsHold(
   snapshot: BattleCreatureSnapshotInvariantInput,
 ): boolean {
   if (
-    new Set(snapshot.activeEffectRefs).size !== snapshot.activeEffectRefs.length
+    new Set(snapshot.activeEffectOccurrences.map(({ effectRef }) => effectRef))
+      .size !== snapshot.activeEffectOccurrences.length
   ) {
     return false;
   }
@@ -5849,12 +6069,37 @@ function battleCreatureSnapshotCommonInvariantsHold(
   ) {
     return false;
   }
-  return snapshot.activeEffectRefs.every((effectRef) =>
-    battleActiveEffectExecutionRefOrdinalIsBefore(
-      effectRef,
-      snapshot.origin.execution.scopeRef,
-      snapshot.nextActiveEffectOrdinal,
+  return snapshot.activeEffectOccurrences.every(
+    (occurrence) =>
+      serializedActiveEffectOccurrenceLocationMatchesKind(occurrence) &&
+      battleEffectExecutionRefOrdinalIsBefore(
+        occurrence.effectRef,
+        snapshot.origin.execution.scopeRef,
+        snapshot.nextEffectOrdinal,
+      ),
+  );
+}
+
+function serializedActiveEffectOccurrenceLocationMatchesKind(
+  occurrence: BattleCreatureSnapshotInvariantInput["activeEffectOccurrences"][number],
+): boolean {
+  return Match.value(
+    battleActiveEffectOccurrenceSpatialClass(occurrence.activeEffectKind),
+  ).pipe(
+    Match.when(
+      "anchored",
+      () =>
+        occurrence.location.kind === "area" ||
+        occurrence.location.kind === "object",
     ),
+    Match.whenOr(
+      "area",
+      "line",
+      "nonSpatial",
+      "object",
+      (spatialClass) => occurrence.location.kind === spatialClass,
+    ),
+    Match.exhaustive,
   );
 }
 
@@ -5973,7 +6218,33 @@ export const BattleActPresentationSchema = Schema.Union([
 const BattleActExecutionCandidateSchema = Schema.Struct({
   subject: BattleSubjectSchema,
   initialHoles: Schema.Array(BattleHoleSchema),
-});
+}).pipe(
+  Schema.check(
+    Schema.makeFilter(
+      (act) => {
+        const subject = act.subject;
+        if (
+          subject.tag !== "runtimeCommand" ||
+          subject.command !== "levitateAltitudeControl"
+        ) {
+          return true;
+        }
+        const altitudeHole = act.initialHoles[0];
+        return (
+          act.initialHoles.length === 1 &&
+          altitudeHole?.kind === "levitateAltitudeChange" &&
+          altitudeHole.effectRef === subject.effectRef &&
+          altitudeHole.actorId === subject.actorId &&
+          altitudeHole.targetId === subject.targetId
+        );
+      },
+      {
+        message:
+          "Levitate altitude control subjects and initial holes must identify the same effect occurrence, actor, and target.",
+      },
+    ),
+  ),
+);
 
 const BattleReadiedSpellSnapshotSchema = Schema.Struct({
   casterId: CombatantId,
@@ -6191,7 +6462,7 @@ const BattleLightEmitterEndOfTurnExpirationSchema = Schema.Struct({
   round: Schema.Number,
 });
 
-const BattleSpellLightEmitterFields = {
+const BattleSpellLightEmitterMechanicalFields = {
   kind: Schema.Literal("spellLightEmitter"),
   sourceProcedureRef: BattleProcedureExecutionRef,
   sourceCombatantId: CombatantId,
@@ -6211,18 +6482,71 @@ const BattleSpellLightEmitterFields = {
   expiresAt: BattleActiveEffectExpirationSchema,
 };
 
-const BattleLightEmitterSchema = Schema.Union([
+const BattleProjectedSpellLightEmitterFields = {
+  ...BattleSpellLightEmitterMechanicalFields,
+  effectRef: Schema.optionalKey(Schema.Never),
+};
+
+const BattleStoredSpellLightEmitterFields = {
+  ...BattleSpellLightEmitterMechanicalFields,
+  effectRef: BattleEffectExecutionRef,
+};
+
+const BattleProjectedSpellLightEmitterSchema = Schema.Union([
   Schema.Struct({
-    ...BattleSpellLightEmitterFields,
+    ...BattleProjectedSpellLightEmitterFields,
     sourceEffectId: BattleSpellEffectOccurrenceId,
     sourceSpellLevel: BattleSpellEffectLevel,
   }),
   Schema.Struct({
-    ...BattleSpellLightEmitterFields,
+    ...BattleProjectedSpellLightEmitterFields,
     sourceEffectId: Schema.optionalKey(Schema.Never),
     sourceSpellLevel: Schema.optionalKey(Schema.Never),
   }),
+]);
+
+const BattleStoredSpellLightEmitterSchema = Schema.Union([
   Schema.Struct({
+    ...BattleStoredSpellLightEmitterFields,
+    sourceEffectId: BattleSpellEffectOccurrenceId,
+    sourceSpellLevel: BattleSpellEffectLevel,
+  }),
+  Schema.Struct({
+    ...BattleStoredSpellLightEmitterFields,
+    sourceEffectId: Schema.optionalKey(Schema.Never),
+    sourceSpellLevel: Schema.optionalKey(Schema.Never),
+  }),
+]);
+
+const BattleProjectedObjectInvisibleRevealLightEmitterSchema = Schema.Struct({
+  effectRef: Schema.optionalKey(Schema.Never),
+  kind: Schema.Literal("objectInvisibleRevealLightEmitter"),
+  sourceProcedureRef: BattleProcedureExecutionRef,
+  sourceCombatantId: CombatantId,
+  objectId: BattleObjectId,
+  emission: BattleDimLightEmissionSchema,
+  expiresAt: BattleLightEmitterEndOfTurnExpirationSchema,
+});
+
+const BattleStoredObjectInvisibleRevealLightEmitterSchema = Schema.Struct({
+  effectRef: BattleEffectExecutionRef,
+  kind: Schema.Literal("objectInvisibleRevealLightEmitter"),
+  sourceProcedureRef: BattleProcedureExecutionRef,
+  sourceCombatantId: CombatantId,
+  objectId: BattleObjectId,
+  emission: BattleDimLightEmissionSchema,
+  expiresAt: BattleLightEmitterEndOfTurnExpirationSchema,
+});
+
+const BattleStoredLightEmitterSchema = Schema.Union([
+  BattleStoredSpellLightEmitterSchema,
+  BattleStoredObjectInvisibleRevealLightEmitterSchema,
+]);
+
+const BattleLightEmitterSchema = Schema.Union([
+  BattleProjectedSpellLightEmitterSchema,
+  Schema.Struct({
+    effectRef: Schema.optionalKey(Schema.Never),
     kind: Schema.Literal("unitFeatureLightEmitter"),
     sourceProcedureRef: BattleProcedureExecutionRef,
     sourceCombatantId: CombatantId,
@@ -6241,14 +6565,7 @@ const BattleLightEmitterSchema = Schema.Union([
     ]),
     expiresAt: BattleActiveEffectExpirationSchema,
   }),
-  Schema.Struct({
-    kind: Schema.Literal("objectInvisibleRevealLightEmitter"),
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    sourceCombatantId: CombatantId,
-    objectId: BattleObjectId,
-    emission: BattleDimLightEmissionSchema,
-    expiresAt: BattleLightEmitterEndOfTurnExpirationSchema,
-  }),
+  BattleProjectedObjectInvisibleRevealLightEmitterSchema,
 ]);
 
 const BattlePointOriginSphereAreaSchema = Schema.Struct({
@@ -6388,32 +6705,92 @@ type EncodedBattleActExecutionCandidate =
   typeof BattleActExecutionCandidateSchema.Type;
 type EncodedBattleSubject = typeof BattleSubjectSchema.Type;
 type EncodedBattleHole = typeof BattleHolePayloadUnionSchema.Type;
+type EncodedBattleStoredLightEmitter =
+  typeof BattleStoredLightEmitterSchema.Type;
+type SerializedActiveEffectKind =
+  EncodedBattleCreatureSnapshot["activeEffectOccurrences"][number]["activeEffectKind"];
+type SerializedActiveEffectLocationExpectation =
+  | { readonly kind: "identityOnly" }
+  | { readonly kind: "nonSpatial" }
+  | { readonly kind: "area"; readonly areaId: BattleAreaId }
+  | {
+      readonly kind: "line";
+      readonly areaId: BattleAreaId;
+      readonly directionId: BattleLineDirectionId;
+    }
+  | { readonly kind: "object"; readonly objectId: BattleObjectId };
+type SerializedEffectOccurrenceExpectation =
+  | {
+      readonly kind: "activeEffect";
+      readonly activeEffectKinds: readonly [
+        SerializedActiveEffectKind,
+        ...SerializedActiveEffectKind[],
+      ];
+      readonly location: SerializedActiveEffectLocationExpectation;
+    }
+  | { readonly kind: "storedLightEmitter" };
 
 type SerializedExecutionReferenceOwnership =
   | {
+      readonly kind: "subjectProcedure";
       readonly ref: BattleProcedureExecutionRef;
       readonly ownerId: CombatantId | undefined;
-      readonly subjectProcedure: true;
     }
   | {
+      readonly kind: "execution";
       readonly ref: string;
       readonly ownerId: CombatantId | undefined;
-      readonly subjectProcedure: false;
+    }
+  | {
+      readonly kind: "effectOccurrence";
+      readonly ref: BattleEffectExecutionRef;
+      readonly ownerId: CombatantId | undefined;
+      readonly expectation: SerializedEffectOccurrenceExpectation;
     };
 
 function serializedExecutionReference(
   ref: string,
   ownerId: CombatantId | undefined,
-): Extract<SerializedExecutionReferenceOwnership, { subjectProcedure: false }> {
-  return { ref, ownerId, subjectProcedure: false };
+): Extract<SerializedExecutionReferenceOwnership, { kind: "execution" }> {
+  return { kind: "execution", ref, ownerId };
+}
+
+function serializedEffectOccurrenceReference(
+  ref: BattleEffectExecutionRef,
+  expectation: SerializedEffectOccurrenceExpectation,
+  ownerId: CombatantId | undefined,
+): SerializedExecutionReferenceOwnership {
+  return {
+    kind: "effectOccurrence",
+    ref,
+    ownerId,
+    expectation,
+  };
+}
+
+function serializedOngoingSpellOccurrenceExpectation(
+  effect: Schema.Schema.Type<typeof BattleOngoingSpellOccurrenceRefSchema>,
+): SerializedEffectOccurrenceExpectation {
+  return Match.value(effect).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      spellActiveEffect: ({ activeEffectKind }) => ({
+        kind: "activeEffect" as const,
+        activeEffectKinds: [activeEffectKind] as const,
+        location: { kind: "identityOnly" as const },
+      }),
+      spellLightEmitter: () => ({ kind: "storedLightEmitter" as const }),
+    }),
+  );
 }
 
 function serializedSubjectProcedureReference(
   ref: BattleProcedureExecutionRef,
   ownerId: CombatantId | undefined,
-): Extract<SerializedExecutionReferenceOwnership, { subjectProcedure: true }> {
-  const subjectProcedure = true;
-  return { ref, ownerId, subjectProcedure };
+): Extract<
+  SerializedExecutionReferenceOwnership,
+  { kind: "subjectProcedure" }
+> {
+  return { kind: "subjectProcedure", ref, ownerId };
 }
 
 const noSerializedExecutionReferences =
@@ -6434,6 +6811,47 @@ function serializedBattleHoleExecutionReferences(
     serializedExecutionReference(ref, ownerId);
   const bound = (ref: string): SerializedExecutionReferenceOwnership =>
     serializedExecutionReference(ref, undefined);
+  const boundOccurrence = (
+    ref: BattleEffectExecutionRef,
+    expectation: SerializedEffectOccurrenceExpectation,
+    ownerId?: CombatantId,
+  ): SerializedExecutionReferenceOwnership =>
+    serializedEffectOccurrenceReference(ref, expectation, ownerId);
+  const activeEffect = (
+    activeEffectKind: SerializedActiveEffectKind,
+    location: SerializedActiveEffectLocationExpectation = {
+      kind: "identityOnly",
+    },
+  ): SerializedEffectOccurrenceExpectation => ({
+    kind: "activeEffect",
+    activeEffectKinds: [activeEffectKind],
+    location,
+  });
+  const activeEffectKinds = (
+    activeEffectKind: SerializedActiveEffectKind,
+    alternateActiveEffectKind: SerializedActiveEffectKind,
+    location: SerializedActiveEffectLocationExpectation,
+  ): SerializedEffectOccurrenceExpectation => ({
+    kind: "activeEffect",
+    activeEffectKinds: [activeEffectKind, alternateActiveEffectKind],
+    location,
+  });
+  const damageOccurrenceReferences = (
+    occurrence: Schema.Schema.Type<typeof BattleDamageOccurrenceSourceSchema>,
+    ownerId: CombatantId,
+  ): readonly SerializedExecutionReferenceOwnership[] =>
+    Match.value(occurrence).pipe(
+      Match.discriminatorsExhaustive("kind")({
+        untrackedDamage: () => [],
+        spellTurnEndDamage: ({ effectRef }) => [
+          boundOccurrence(
+            effectRef,
+            activeEffect("spellTurnEndDamage"),
+            ownerId,
+          ),
+        ],
+      }),
+    );
   const attackOptionReferences = (
     attack: Extract<
       EncodedBattleHole,
@@ -6444,12 +6862,12 @@ function serializedBattleHoleExecutionReferences(
       Match.discriminatorsExhaustive("kind")({
         weapon: (value) => [
           ...(value.attackDamageAbilityModifierChoice?.procedureRefs ?? []).map(
-            bound,
+            (ref) => bound(ref),
           ),
           ...(value.alternateAbilityChoices ?? []).flatMap(
             (choice) =>
               choice.attackDamageAbilityModifierChoice?.procedureRefs.map(
-                bound,
+                (ref) => bound(ref),
               ) ?? [],
           ),
         ],
@@ -6471,6 +6889,19 @@ function serializedBattleHoleExecutionReferences(
       readonly sourceCombatantId: CombatantId;
     }): readonly SerializedExecutionReferenceOwnership[] => [
       source(owner.sourceProcedureRef, owner.sourceCombatantId),
+      ...bonuses,
+    ];
+    const occurrenceSource = (
+      owner: {
+        readonly sourceProcedureRef: BattleProcedureExecutionRef;
+        readonly sourceCombatantId: CombatantId;
+        readonly effectRef: BattleEffectExecutionRef;
+      },
+      ownerId: CombatantId,
+      expectation: SerializedEffectOccurrenceExpectation,
+    ): readonly SerializedExecutionReferenceOwnership[] => [
+      source(owner.sourceProcedureRef, owner.sourceCombatantId),
+      boundOccurrence(owner.effectRef, expectation, ownerId),
       ...bonuses,
     ];
     return Match.value(value).pipe(
@@ -6495,11 +6926,23 @@ function serializedBattleHoleExecutionReferences(
               procedureSource(matched.objectContactSave),
             ),
             Match.when({ spellTurnStartSave: Match.any }, (matched) =>
-              procedureSource(matched.spellTurnStartSave),
+              occurrenceSource(
+                matched.spellTurnStartSave,
+                matched.spellTurnStartSave.targetId,
+                activeEffect("spellTurnStartDamageAndSave"),
+              ),
             ),
-            Match.when({ hideousLaughterRepeatSave: Match.any }, (matched) =>
-              procedureSource(matched.hideousLaughterRepeatSave),
-            ),
+            Match.when({ hideousLaughterRepeatSave: Match.any }, (matched) => [
+              ...occurrenceSource(
+                matched.hideousLaughterRepeatSave,
+                matched.hideousLaughterRepeatSave.targetId,
+                activeEffect("hideousLaughter"),
+              ),
+              ...damageOccurrenceReferences(
+                matched.damageOccurrence,
+                matched.hideousLaughterRepeatSave.targetId,
+              ),
+            ]),
             Match.when({ sleepRepeatSave: Match.any }, (matched) =>
               procedureSource(matched.sleepRepeatSave),
             ),
@@ -6527,7 +6970,14 @@ function serializedBattleHoleExecutionReferences(
                 procedureSource(matched.abilityD20TestRollModeEndTurnSave),
             ),
             Match.when({ protectionRelevantEffectSave: Match.any }, (matched) =>
-              procedureSource(matched.protectionRelevantEffectSave),
+              occurrenceSource(
+                matched.protectionRelevantEffectSave,
+                matched.protectionRelevantEffectSave.targetId,
+                matched.protectionRelevantEffectSave.relevantEffect ===
+                  "possession"
+                  ? activeEffect("possession")
+                  : activeEffect("spellConditionRepeatSave"),
+              ),
             ),
             Match.exhaustive,
           ),
@@ -6545,31 +6995,92 @@ function serializedBattleHoleExecutionReferences(
         (hole) =>
           Match.value(hole).pipe(
             Match.when({ greaseGroundHazard: Match.any }, (matched) =>
-              procedureSource(matched.greaseGroundHazard),
+              occurrenceSource(
+                matched.greaseGroundHazard,
+                matched.greaseGroundHazard.sourceCombatantId,
+                activeEffect("greaseGroundHazard", {
+                  kind: "area",
+                  areaId: matched.greaseGroundHazard.areaId,
+                }),
+              ),
             ),
             Match.when({ webRestraint: Match.any }, (matched) =>
-              procedureSource(matched.webRestraint),
+              occurrenceSource(
+                matched.webRestraint,
+                matched.webRestraint.sourceCombatantId,
+                activeEffect("webRestraintHazard", {
+                  kind: "area",
+                  areaId: matched.webRestraint.areaId,
+                }),
+              ),
             ),
             Match.when({ sleetStormAreaHazard: Match.any }, (matched) =>
-              procedureSource(matched.sleetStormAreaHazard),
+              occurrenceSource(
+                matched.sleetStormAreaHazard,
+                matched.sleetStormAreaHazard.sourceCombatantId,
+                activeEffect("sleetStormAreaHazard", {
+                  kind: "area",
+                  areaId: matched.sleetStormAreaHazard.areaId,
+                }),
+              ),
             ),
             Match.when({ insectPlagueAreaHazard: Match.any }, (matched) =>
-              procedureSource(matched.insectPlagueAreaHazard),
+              occurrenceSource(
+                matched.insectPlagueAreaHazard,
+                matched.insectPlagueAreaHazard.sourceCombatantId,
+                activeEffect("insectPlagueAreaHazard", {
+                  kind: "area",
+                  areaId: matched.insectPlagueAreaHazard.areaId,
+                }),
+              ),
             ),
             Match.when({ cloudkillAreaHazard: Match.any }, (matched) =>
-              procedureSource(matched.cloudkillAreaHazard),
+              occurrenceSource(
+                matched.cloudkillAreaHazard,
+                matched.cloudkillAreaHazard.sourceCombatantId,
+                activeEffect("cloudkillAreaHazard", {
+                  kind: "area",
+                  areaId: matched.cloudkillAreaHazard.areaId,
+                }),
+              ),
             ),
             Match.when({ gustOfWindLine: Match.any }, (matched) =>
-              procedureSource(matched.gustOfWindLine),
+              occurrenceSource(
+                matched.gustOfWindLine,
+                matched.gustOfWindLine.sourceCombatantId,
+                activeEffect("gustOfWindLine", {
+                  kind: "line",
+                  areaId: matched.gustOfWindLine.areaId,
+                  directionId: matched.gustOfWindLine.directionId,
+                }),
+              ),
             ),
             Match.when({ movableZone: Match.any }, (matched) =>
-              procedureSource(matched.movableZone),
+              occurrenceSource(
+                matched.movableZone,
+                matched.movableZone.sourceCombatantId,
+                matched.movableZone.trigger ===
+                  "endsTurnWithinFiveFeetOfSphere" ||
+                  matched.movableZone.trigger === "rammedBySphere"
+                  ? activeEffect("flamingSphere", {
+                      kind: "area",
+                      areaId: matched.movableZone.areaId,
+                    })
+                  : activeEffect("moonbeam", {
+                      kind: "area",
+                      areaId: matched.movableZone.areaId,
+                    }),
+              ),
             ),
             Match.when({ dragonsBreath: Match.any }, (matched) =>
               procedureSource(matched.dragonsBreath),
             ),
             Match.when({ glyphExplosiveRune: Match.any }, (matched) =>
-              procedureSource(matched.glyphExplosiveRune),
+              occurrenceSource(
+                matched.glyphExplosiveRune,
+                matched.glyphExplosiveRune.sourceCombatantId,
+                activeEffect("glyphDurableOccurrence"),
+              ),
             ),
             Match.exhaustive,
           ),
@@ -6587,14 +7098,31 @@ function serializedBattleHoleExecutionReferences(
     }): readonly SerializedExecutionReferenceOwnership[] => [
       source(owner.sourceProcedureRef, owner.sourceCombatantId),
     ];
+    const activeOccurrenceSource = (
+      owner: {
+        readonly targetId: CombatantId;
+        readonly sourceProcedureRef: BattleProcedureExecutionRef;
+        readonly sourceCombatantId: CombatantId;
+        readonly effectRef: BattleEffectExecutionRef;
+      },
+      expectation: SerializedEffectOccurrenceExpectation,
+    ): readonly SerializedExecutionReferenceOwnership[] => [
+      source(owner.sourceProcedureRef, owner.sourceCombatantId),
+      boundOccurrence(owner.effectRef, expectation, owner.targetId),
+    ];
     return Match.value(value).pipe(
       Match.when({ sourceProcedureRef: Match.any }, (hole) => [
         source(hole.sourceProcedureRef),
         ...Match.value(hole).pipe(
           Match.when({ spellMarkedDamageRiders: Match.any }, (spellDamage) =>
-            (spellDamage.spellMarkedDamageRiders ?? []).map((rider) =>
+            (spellDamage.spellMarkedDamageRiders ?? []).flatMap((rider) => [
               owned(rider.sourceProcedureRef, rider.sourceCombatantId),
-            ),
+              boundOccurrence(
+                rider.effectRef,
+                activeEffect("spellMarkedDamageRider"),
+                rider.sourceCombatantId,
+              ),
+            ]),
           ),
           Match.orElse(() => []),
         ),
@@ -6603,54 +7131,128 @@ function serializedBattleHoleExecutionReferences(
         procedureSource(hole.dragonsBreath),
       ),
       Match.when({ glyphExplosiveRune: Match.any }, (hole) =>
-        procedureSource(hole.glyphExplosiveRune),
+        activeOccurrenceSource(
+          {
+            ...hole.glyphExplosiveRune,
+            targetId: hole.glyphExplosiveRune.sourceCombatantId,
+          },
+          activeEffect("glyphDurableOccurrence"),
+        ),
       ),
-      Match.when({ spellDamageReduction: Match.any }, (hole) =>
-        procedureSource(hole.spellDamageReduction),
-      ),
-      Match.when({ sourceDamageRollPenalty: Match.any }, (hole) =>
-        procedureSource(hole.sourceDamageRollPenalty),
-      ),
+      Match.when({ spellDamageReduction: Match.any }, (hole) => [
+        ...procedureSource(hole.spellDamageReduction),
+        boundOccurrence(
+          hole.spellDamageReduction.effectRef,
+          activeEffect("spellDamageReduction"),
+          hole.spellDamageReduction.targetId,
+        ),
+      ]),
+      Match.when({ sourceDamageRollPenalty: Match.any }, (hole) => [
+        ...procedureSource(hole.sourceDamageRollPenalty),
+        boundOccurrence(
+          hole.sourceDamageRollPenalty.effectRef,
+          activeEffect("sourceDamageRollPenalty"),
+          hole.sourceDamageRollPenalty.affectedCombatantId,
+        ),
+      ]),
       Match.when({ mirrorImageDuplicateRoll: Match.any }, (hole) =>
         procedureSource(hole.mirrorImageDuplicateRoll),
       ),
       Match.when({ spellTurnStartDamage: Match.any }, (hole) =>
-        procedureSource(hole.spellTurnStartDamage),
+        activeOccurrenceSource(
+          hole.spellTurnStartDamage,
+          activeEffect("spellTurnStartDamageAndSave"),
+        ),
       ),
       Match.when({ spellTurnEndDamage: Match.any }, (hole) =>
-        procedureSource(hole.spellTurnEndDamage),
+        activeOccurrenceSource(
+          hole.spellTurnEndDamage,
+          activeEffect("spellTurnEndDamage"),
+        ),
       ),
-      Match.when({ movableZone: Match.any }, (hole) =>
-        procedureSource(hole.movableZone),
-      ),
-      Match.when({ spikeGrowthMovement: Match.any }, (hole) =>
-        procedureSource(hole.spikeGrowthMovement),
-      ),
-      Match.when({ insectPlagueAreaHazard: Match.any }, (hole) =>
-        procedureSource(hole.insectPlagueAreaHazard),
-      ),
-      Match.when({ cloudkillAreaHazard: Match.any }, (hole) =>
-        procedureSource(hole.cloudkillAreaHazard),
-      ),
+      Match.when({ movableZone: Match.any }, (hole) => [
+        ...procedureSource(hole.movableZone),
+        boundOccurrence(
+          hole.movableZone.effectRef,
+          hole.movableZone.trigger === "endsTurnWithinFiveFeetOfSphere" ||
+            hole.movableZone.trigger === "rammedBySphere"
+            ? activeEffect("flamingSphere", {
+                kind: "area",
+                areaId: hole.movableZone.areaId,
+              })
+            : activeEffect("moonbeam", {
+                kind: "area",
+                areaId: hole.movableZone.areaId,
+              }),
+          hole.movableZone.sourceCombatantId,
+        ),
+      ]),
+      Match.when({ spikeGrowthMovement: Match.any }, (hole) => [
+        ...procedureSource(hole.spikeGrowthMovement),
+        boundOccurrence(
+          hole.spikeGrowthMovement.effectRef,
+          activeEffect("spikeGrowthHazard", {
+            kind: "area",
+            areaId: hole.spikeGrowthMovement.areaId,
+          }),
+          hole.spikeGrowthMovement.sourceCombatantId,
+        ),
+      ]),
+      Match.when({ insectPlagueAreaHazard: Match.any }, (hole) => [
+        ...procedureSource(hole.insectPlagueAreaHazard),
+        boundOccurrence(
+          hole.insectPlagueAreaHazard.effectRef,
+          activeEffect("insectPlagueAreaHazard", {
+            kind: "area",
+            areaId: hole.insectPlagueAreaHazard.areaId,
+          }),
+          hole.insectPlagueAreaHazard.sourceCombatantId,
+        ),
+      ]),
+      Match.when({ cloudkillAreaHazard: Match.any }, (hole) => [
+        ...procedureSource(hole.cloudkillAreaHazard),
+        boundOccurrence(
+          hole.cloudkillAreaHazard.effectRef,
+          activeEffect("cloudkillAreaHazard", {
+            kind: "area",
+            areaId: hole.cloudkillAreaHazard.areaId,
+          }),
+          hole.cloudkillAreaHazard.sourceCombatantId,
+        ),
+      ]),
       Match.when({ attack: Match.any }, (hole) => [
         ...attackOptionReferences(hole.attack),
         ...(hole.attackDamageRiders ?? []).map((rider) =>
           owned(rider.procedureRef, rider.attackerId),
         ),
-        ...(hole.spellWeaponDamageRiders ?? []).map((rider) =>
+        ...(hole.spellWeaponDamageRiders ?? []).flatMap((rider) => [
           owned(rider.sourceProcedureRef, rider.sourceCombatantId),
-        ),
-        ...(hole.spellMarkedDamageRiders ?? []).map((rider) =>
+          boundOccurrence(
+            rider.effectRef,
+            activeEffect("spellWeaponDamageRider"),
+            rider.sourceCombatantId,
+          ),
+        ]),
+        ...(hole.spellMarkedDamageRiders ?? []).flatMap((rider) => [
           owned(rider.sourceProcedureRef, rider.sourceCombatantId),
-        ),
+          boundOccurrence(
+            rider.effectRef,
+            activeEffect("spellMarkedDamageRider"),
+            rider.sourceCombatantId,
+          ),
+        ]),
         ...(hole.cunningStrikeOptions ?? []).flatMap((option) => [
           bound(option.procedureRef),
           bound(option.sourceDamageRiderProcedureRef),
         ]),
-        ...(hole.weaponDamageDiceRollChoiceProcedureRefs ?? []).map(bound),
-        ...(hole.attackDamageDieFloorChoiceProcedureRefs ?? []).map(bound),
+        ...(hole.weaponDamageDiceRollChoiceProcedureRefs ?? []).map((ref) =>
+          bound(ref),
+        ),
+        ...(hole.attackDamageDieFloorChoiceProcedureRefs ?? []).map((ref) =>
+          bound(ref),
+        ),
         ...(hole.attackDamageAbilityModifierChoice?.procedureRefs ?? []).map(
-          bound,
+          (ref) => bound(ref),
         ),
       ]),
       Match.when({ kind: "rolledDice" }, () => []),
@@ -6668,6 +7270,7 @@ function serializedBattleHoleExecutionReferences(
         ),
       helpAttackAllyDecision: noSerializedExecutionReferences,
       helpAttackEnemyDecision: noSerializedExecutionReferences,
+      areaWindStrength: noSerializedExecutionReferences,
       damageRelationshipDecisions: (value) =>
         value.questions.flatMap((question) =>
           question.kind === "enemyZeroHitPointTemporaryHitPoints"
@@ -6725,10 +7328,39 @@ function serializedBattleHoleExecutionReferences(
       ongoingSpellTargetChoice: (value) => [
         owned(value.procedureRef, value.casterId),
         ...value.choices.flatMap((choice) =>
-          choice.kind === "magicalEffect" &&
-          choice.effect.kind === "spellActiveEffect"
-            ? [bound(choice.effect.effectRef)]
-            : [],
+          Match.value(choice).pipe(
+            Match.discriminatorsExhaustive("kind")({
+              combatant: () => [],
+              object: () => [],
+              magicalEffect: ({ effect }) =>
+                Match.value(effect).pipe(
+                  Match.discriminatorsExhaustive("kind")({
+                    antimagicFieldAura: (occurrence) => [
+                      boundOccurrence(
+                        occurrence.effectRef,
+                        activeEffect("antimagicFieldOngoingSpellSuppression", {
+                          kind: "area",
+                          areaId: occurrence.areaId,
+                        }),
+                        occurrence.sourceCombatantId,
+                      ),
+                    ],
+                    spellActiveEffect: (occurrence) => [
+                      boundOccurrence(
+                        occurrence.effectRef,
+                        serializedOngoingSpellOccurrenceExpectation(occurrence),
+                      ),
+                    ],
+                    spellLightEmitter: (occurrence) => [
+                      boundOccurrence(
+                        occurrence.effectRef,
+                        serializedOngoingSpellOccurrenceExpectation(occurrence),
+                      ),
+                    ],
+                  }),
+                ),
+            }),
+          ),
         ),
       ],
       objectContactTargets: (value) => [
@@ -6790,52 +7422,126 @@ function serializedBattleHoleExecutionReferences(
       savingThrowOutcome: savingThrowReferences,
       gustOfWindLineDirectionChoice: (value) => [
         source(value.sourceProcedureRef, value.sourceCombatantId),
+        boundOccurrence(
+          value.effectRef,
+          activeEffect("gustOfWindLine", {
+            kind: "line",
+            areaId: value.areaId,
+            directionId: value.directionId,
+          }),
+          value.sourceCombatantId,
+        ),
       ],
       movableZoneRepositionMovement: (value) => [
         source(
           value.movableZone.sourceProcedureRef,
           value.movableZone.sourceCombatantId,
         ),
+        boundOccurrence(
+          value.movableZone.effectRef,
+          activeEffectKinds("flamingSphere", "moonbeam", {
+            kind: "area",
+            areaId: value.movableZone.areaId,
+          }),
+          value.movableZone.sourceCombatantId,
+        ),
+      ],
+      cloudkillMovement: (value) => [
+        source(value.sourceProcedureRef, value.sourceCombatantId),
+        boundOccurrence(
+          value.effectRef,
+          activeEffect("cloudkillAreaHazard", {
+            kind: "area",
+            areaId: value.areaId,
+          }),
+          value.sourceCombatantId,
+        ),
+      ],
+      startTurnOccurrenceOrder: () => [],
+      temporaryHitPointChoice: (value) => [
+        source(value.sourceProcedureRef, value.sourceCombatantId),
+        boundOccurrence(
+          value.effectRef,
+          activeEffect("turnStartTemporaryHitPoints"),
+          value.sourceTurn.actorId,
+        ),
       ],
       statBlockRechargeRoll: (value) =>
         value.rechargeTargets.map((ref) => owned(ref, value.combatantId)),
-      spellcastingAbilityCheck: (value) => [
-        source(
-          value.spellcastingAbilityCheck.sourceProcedureRef,
-          value.spellcastingAbilityCheck.casterId,
-        ),
-        ...(value.spellcastingAbilityCheck.effect.kind === "spellActiveEffect"
-          ? [bound(value.spellcastingAbilityCheck.effect.effectRef)]
-          : []),
-      ],
+      spellcastingAbilityCheck: (value) => {
+        const check = value.spellcastingAbilityCheck;
+        return [
+          source(check.sourceProcedureRef, check.casterId),
+          ...Match.value(check).pipe(
+            Match.when({ target: { kind: "magicalEffect" } }, (magical) => [
+              boundOccurrence(
+                magical.target.effect.effectRef,
+                serializedOngoingSpellOccurrenceExpectation(
+                  magical.target.effect,
+                ),
+              ),
+            ]),
+            Match.orElse((aggregate) => [
+              boundOccurrence(
+                aggregate.checkedOccurrence.effect.effectRef,
+                serializedOngoingSpellOccurrenceExpectation(
+                  aggregate.checkedOccurrence.effect,
+                ),
+                aggregate.checkedOccurrence.ownerId,
+              ),
+            ]),
+          ),
+        ];
+      },
       sanctuaryInterdictionOutcome: (value) => [
         owned(value.sourceProcedureRef, value.sourceCombatantId),
         source(value.triggeringProcedureRef, value.triggeringCombatantId),
       ],
       abilityCheck: noSerializedExecutionReferences,
-      attackDamageDisposition: (value) =>
-        value.choices.flatMap((choice) =>
+      attackDamageDisposition: (value) => [
+        ...damageOccurrenceReferences(value.damageOccurrence, value.targetId),
+        ...value.choices.flatMap((choice) =>
           choice.kind === "zeroHitPointReplacement"
             ? [owned(choice.procedureRef, value.targetId)]
             : [],
         ),
+      ],
       companionReappearanceInitiative: noSerializedExecutionReferences,
       companionReappearancePlacement: noSerializedExecutionReferences,
-      concentrationSavingThrow: (value) =>
-        value.targetFlatBonuses.map((bonus) =>
+      concentrationSavingThrow: (value) => [
+        ...damageOccurrenceReferences(
+          value.damageOccurrence,
+          value.combatantId,
+        ),
+        ...value.targetFlatBonuses.map((bonus) =>
           owned(bonus.sourceProcedureRef, bonus.sourceCombatantId),
         ),
+      ],
       cunningStrikeEndTurnCoverFacts: noSerializedExecutionReferences,
       deathSavingThrow: noSerializedExecutionReferences,
       findFamiliarConnection: noSerializedExecutionReferences,
       grappleOutcome: noSerializedExecutionReferences,
       interruptDecision: noSerializedExecutionReferences,
-      levitateAltitudeChange: noSerializedExecutionReferences,
+      levitateAltitudeChange: (value) => [
+        boundOccurrence(
+          value.effectRef,
+          activeEffect("spellLevitatedCreature"),
+          value.targetId,
+        ),
+      ],
       levitateInitialRise: noSerializedExecutionReferences,
       movement: noSerializedExecutionReferences,
       movableZoneRamMovement: (value) => [
         source(
           value.movableZone.sourceProcedureRef,
+          value.movableZone.sourceCombatantId,
+        ),
+        boundOccurrence(
+          value.movableZone.effectRef,
+          activeEffect("flamingSphere", {
+            kind: "area",
+            areaId: value.movableZone.areaId,
+          }),
           value.movableZone.sourceCombatantId,
         ),
       ],
@@ -6859,10 +7565,12 @@ function serializedStatBlockAuthoritativeExecutionReferences(
 function serializedCombatantAuthoritativeExecutionReferences(
   combatant: EncodedBattleCreatureSnapshot,
 ): readonly string[] {
-  const activeEffectRefs = combatant.activeEffectRefs;
+  const effectOccurrenceRefs = combatant.activeEffectOccurrences.map(
+    ({ effectRef }) => effectRef,
+  );
   if (combatant.origin.kind === "statBlock") {
     return [
-      ...activeEffectRefs,
+      ...effectOccurrenceRefs,
       ...serializedStatBlockAuthoritativeExecutionReferences(
         combatant.origin.execution,
       ),
@@ -6870,7 +7578,7 @@ function serializedCombatantAuthoritativeExecutionReferences(
   }
   const origin = combatant.origin;
   return [
-    ...activeEffectRefs,
+    ...effectOccurrenceRefs,
     origin.execution.scopeRef,
     ...origin.execution.procedureBindings.map(
       (binding) => binding.procedureRef,
@@ -6899,6 +7607,7 @@ function characterProcedureBindingKind(
   | "unitSupportProfile"
   | "spellInvocation"
   | "unavailableSpellInvocation"
+  | "effectOccurrenceSource"
   | undefined {
   return characterProcedureBinding(combatants, combatantId, procedureRef)
     ?.procedure.kind;
@@ -7075,7 +7784,7 @@ type SerializedLightEmitterSource =
     };
 
 function serializedLightEmitterSource(
-  emitter: Schema.Schema.Type<typeof BattleLightEmitterSchema>,
+  emitter: SerializedLightEmitterSource,
 ): SerializedLightEmitterSource {
   return {
     kind: emitter.kind,
@@ -7085,7 +7794,7 @@ function serializedLightEmitterSource(
 }
 
 function serializedLightEmitterOwnsSource(
-  emitter: Schema.Schema.Type<typeof BattleLightEmitterSchema>,
+  emitter: SerializedLightEmitterSource,
   combatants: readonly EncodedBattleCreatureSnapshot[],
 ): boolean {
   return Match.value(serializedLightEmitterSource(emitter)).pipe(
@@ -7134,19 +7843,164 @@ function serializedObscurementZoneOwnsSource(
   );
 }
 
+function serializedSpellcastingAbilityCheckTargetMatchesOccurrence(
+  hole: EncodedBattleHole,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+  storedLightEmitters: readonly EncodedBattleStoredLightEmitter[],
+): boolean {
+  if (
+    hole.kind !== "spellcastingAbilityCheck" ||
+    hole.spellcastingAbilityCheck.target.kind === "magicalEffect"
+  ) {
+    return true;
+  }
+  const { target, checkedOccurrence } = hole.spellcastingAbilityCheck;
+  if (checkedOccurrence === undefined) return false;
+  const owner = combatants.find(
+    (combatant) => combatant.combatantId === checkedOccurrence.ownerId,
+  );
+  if (owner === undefined) return false;
+  return Match.value(checkedOccurrence.effect).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      spellLightEmitter: ({ effectRef }) =>
+        storedLightEmitters.some(
+          (emitter) =>
+            emitter.kind === "spellLightEmitter" &&
+            emitter.effectRef === effectRef &&
+            battleEffectExecutionRefBelongsToScope(
+              emitter.effectRef,
+              owner.origin.execution.scopeRef,
+            ) &&
+            Match.value(target).pipe(
+              Match.discriminatorsExhaustive("kind")({
+                combatant: ({ combatantId }) =>
+                  emitter.attachment.kind === "combatant" &&
+                  emitter.attachment.combatantId === combatantId,
+                object: ({ objectId }) =>
+                  emitter.attachment.kind === "object" &&
+                  emitter.attachment.objectId === objectId,
+              }),
+            ),
+        ),
+      spellActiveEffect: ({ effectRef, activeEffectKind }) =>
+        target.kind === "object" &&
+        activeEffectKind === "spellObjectContactDamage" &&
+        owner.activeEffectOccurrences.some(
+          (occurrence) =>
+            occurrence.kind === "activeEffect" &&
+            occurrence.effectRef === effectRef &&
+            occurrence.activeEffectKind === activeEffectKind &&
+            occurrence.location.kind === "object" &&
+            occurrence.location.objectId === target.objectId,
+        ),
+    }),
+  );
+}
+
+function serializedActiveEffectLocationMatchesExpectation(
+  actual: Schema.Schema.Type<typeof BattleActiveEffectOccurrenceLocationSchema>,
+  expected: SerializedActiveEffectLocationExpectation,
+): boolean {
+  return Match.value(expected).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      identityOnly: () => true,
+      nonSpatial: () => actual.kind === "nonSpatial",
+      area: ({ areaId }) => actual.kind === "area" && actual.areaId === areaId,
+      line: ({ areaId, directionId }) =>
+        actual.kind === "line" &&
+        actual.areaId === areaId &&
+        actual.directionId === directionId,
+      object: ({ objectId }) =>
+        actual.kind === "object" && actual.objectId === objectId,
+    }),
+  );
+}
+
+function serializedActiveEffectMatchesExpectation(
+  occurrence: EncodedBattleCreatureSnapshot["activeEffectOccurrences"][number],
+  reference: Extract<
+    SerializedExecutionReferenceOwnership,
+    { readonly kind: "effectOccurrence" }
+  >,
+  expectation: Extract<
+    SerializedEffectOccurrenceExpectation,
+    { readonly kind: "activeEffect" }
+  >,
+): boolean {
+  return (
+    occurrence.effectRef === reference.ref &&
+    expectation.activeEffectKinds.some(
+      (activeEffectKind) => activeEffectKind === occurrence.activeEffectKind,
+    ) &&
+    serializedActiveEffectLocationMatchesExpectation(
+      occurrence.location,
+      expectation.location,
+    )
+  );
+}
+
 function serializedBattleHoleOwnsBoundExecutionReferences(input: {
   readonly hole: EncodedBattleHole;
   readonly combatants: readonly EncodedBattleCreatureSnapshot[];
+  readonly storedLightEmitters: readonly EncodedBattleStoredLightEmitter[];
   readonly boundExecutionRefs: ReadonlySet<string>;
   readonly expectedProcedureRefs:
     | ReadonlySet<BattleProcedureExecutionRef>
     | undefined;
 }): boolean {
-  const { hole, combatants, boundExecutionRefs, expectedProcedureRefs } = input;
+  const {
+    hole,
+    combatants,
+    storedLightEmitters,
+    boundExecutionRefs,
+    expectedProcedureRefs,
+  } = input;
+  if (
+    !serializedSpellcastingAbilityCheckTargetMatchesOccurrence(
+      hole,
+      combatants,
+      storedLightEmitters,
+    )
+  ) {
+    return false;
+  }
   return serializedBattleHoleExecutionReferences(hole).every((reference) => {
     if (!boundExecutionRefs.has(reference.ref)) return false;
+    if (reference.kind === "effectOccurrence") {
+      const eligibleOwners =
+        reference.ownerId === undefined
+          ? combatants
+          : combatants.filter(
+              (combatant) => combatant.combatantId === reference.ownerId,
+            );
+      return Match.value(reference.expectation).pipe(
+        Match.discriminatorsExhaustive("kind")({
+          activeEffect: (expectation) =>
+            eligibleOwners.some((combatant) =>
+              combatant.activeEffectOccurrences.some((occurrence) =>
+                serializedActiveEffectMatchesExpectation(
+                  occurrence,
+                  reference,
+                  expectation,
+                ),
+              ),
+            ),
+          storedLightEmitter: () =>
+            eligibleOwners.some((combatant) =>
+              storedLightEmitters.some(
+                (emitter) =>
+                  emitter.effectRef === reference.ref &&
+                  battleEffectExecutionRefBelongsToScope(
+                    emitter.effectRef,
+                    combatant.origin.execution.scopeRef,
+                  ),
+              ),
+            ),
+        }),
+      );
+    }
     if (
-      reference.subjectProcedure &&
+      reference.kind === "subjectProcedure" &&
       expectedProcedureRefs !== undefined &&
       expectedProcedureRefs.size > 0 &&
       !expectedProcedureRefs.has(reference.ref)
@@ -7253,6 +8107,7 @@ function serializedBattleSubjectProcedureRefs(
 function serializedBattleHolesOwnBoundExecutionReferences(input: {
   readonly holes: readonly EncodedBattleHole[];
   readonly combatants: readonly EncodedBattleCreatureSnapshot[];
+  readonly storedLightEmitters: readonly EncodedBattleStoredLightEmitter[];
   readonly boundExecutionRefs: ReadonlySet<string>;
   readonly expectedProcedureRefs:
     | ReadonlySet<BattleProcedureExecutionRef>
@@ -7262,9 +8117,57 @@ function serializedBattleHolesOwnBoundExecutionReferences(input: {
     serializedBattleHoleOwnsBoundExecutionReferences({
       hole,
       combatants: input.combatants,
+      storedLightEmitters: input.storedLightEmitters,
       boundExecutionRefs: input.boundExecutionRefs,
       expectedProcedureRefs: input.expectedProcedureRefs,
     }),
+  );
+}
+
+function serializedBattleActHolesMatchSelectedOccurrence(
+  act: EncodedBattleActExecutionCandidate,
+): boolean {
+  const protectionRelevantEffect =
+    act.subject.tag === "runtimeCommand" &&
+    act.subject.command === "protectionRelevantEffectSave"
+      ? act.subject.relevantEffect
+      : undefined;
+  if (
+    protectionRelevantEffect !== undefined &&
+    act.initialHoles.some(
+      (hole) =>
+        hole.kind === "savingThrowOutcome" &&
+        "protectionRelevantEffectSave" in hole &&
+        hole.protectionRelevantEffectSave.relevantEffect !==
+          protectionRelevantEffect,
+    )
+  ) {
+    return false;
+  }
+  const selectedOccurrenceRefs = battleSubjectBoundExecutionReferences(
+    act.subject,
+  ).flatMap((reference) =>
+    reference.kind === "activeEffectOccurrence" ||
+    (reference.kind === "activeEffect" &&
+      act.subject.tag === "runtimeCommand" &&
+      act.subject.command === "protectionRelevantEffectSave")
+      ? [reference.effectRef]
+      : [],
+  );
+  if (selectedOccurrenceRefs.length === 0 || act.initialHoles.length === 0) {
+    return true;
+  }
+  const holeOccurrenceRefs = act.initialHoles.flatMap((hole) =>
+    serializedBattleHoleExecutionReferences(hole).flatMap((reference) =>
+      reference.kind === "effectOccurrence" ? [reference.ref] : [],
+    ),
+  );
+  return (
+    selectedOccurrenceRefs.length === 1 &&
+    holeOccurrenceRefs.length > 0 &&
+    holeOccurrenceRefs.every(
+      (effectRef) => effectRef === selectedOccurrenceRefs[0],
+    )
   );
 }
 
@@ -7277,9 +8180,12 @@ function serializedStatBlockProcedureKind(
     (candidate) => candidate.combatantId === combatantId,
   );
   if (combatant?.origin.kind !== "statBlock") return undefined;
-  return combatant.origin.execution.procedureBindings.find(
+  const procedure = combatant.origin.execution.procedureBindings.find(
     (binding) => binding.procedureRef === procedureRef,
-  )?.procedure.kind;
+  )?.procedure;
+  return procedure?.kind === "effectOccurrenceSource"
+    ? undefined
+    : procedure?.kind;
 }
 
 function serializedBattleActOwnsBoundProcedure(
@@ -7447,6 +8353,7 @@ function serializedBattleActOwnsBoundProcedure(
           procedure.executionFacts.kind === "bonusActionDashSpell",
         /* v8 ignore next -- @preserve -- Malformed snapshot defense: an explicitly unavailable Spell Invocation can never own an executable Bonus Action standard-action subject. */
         unavailableSpellInvocation: () => false,
+        effectOccurrenceSource: () => false,
         unitFeature: (procedure) => {
           const executionKind = procedure.execution.kind;
           return (
@@ -7488,7 +8395,27 @@ function serializedBattleSubjectOwnsBoundExecutionReferences(
         activeEffect: ({ ownerId, effectRef }) =>
           combatants
             .find((combatant) => combatant.combatantId === ownerId)
-            ?.activeEffectRefs.includes(effectRef) === true,
+            ?.activeEffectOccurrences.some(
+              (occurrence) =>
+                occurrence.kind === "activeEffect" &&
+                occurrence.effectRef === effectRef &&
+                serializedBattleSubjectMatchesActiveEffectOccurrence(
+                  subject,
+                  occurrence,
+                ),
+            ) === true,
+        activeEffectOccurrence: ({ effectRef }) =>
+          combatants.some((combatant) =>
+            combatant.activeEffectOccurrences.some(
+              (occurrence) =>
+                occurrence.kind === "activeEffect" &&
+                occurrence.effectRef === effectRef &&
+                serializedBattleSubjectMatchesActiveEffectOccurrence(
+                  subject,
+                  occurrence,
+                ),
+            ),
+          ),
         statBlockScope: ({ ownerId, scopeRef }) => {
           const combatant = combatants.find(
             (candidate) => candidate.combatantId === ownerId,
@@ -7503,6 +8430,127 @@ function serializedBattleSubjectOwnsBoundExecutionReferences(
       }),
     );
   });
+}
+
+function serializedBattleSubjectMatchesActiveEffectOccurrence(
+  subject: EncodedBattleSubject,
+  occurrence: EncodedBattleCreatureSnapshot["activeEffectOccurrences"][number],
+): boolean {
+  if (subject.tag !== "runtimeCommand") return true;
+  return Match.value(subject).pipe(
+    Match.when({ command: "greaseGroundHazardSave" }, ({ areaId }) =>
+      serializedActiveEffectMatchesSubjectLocation(
+        occurrence,
+        "greaseGroundHazard",
+        { kind: "area", areaId },
+      ),
+    ),
+    Match.when({ command: "webRestraintSave" }, ({ areaId }) =>
+      serializedActiveEffectMatchesSubjectLocation(
+        occurrence,
+        "webRestraintHazard",
+        { kind: "area", areaId },
+      ),
+    ),
+    Match.when(
+      { command: "sleetStormAreaHazardSave" },
+      ({ areaMembershipTrigger }) =>
+        serializedActiveEffectMatchesSubjectLocation(
+          occurrence,
+          "sleetStormAreaHazard",
+          { kind: "area", areaId: areaMembershipTrigger.areaId },
+        ),
+    ),
+    Match.when(
+      { command: "insectPlagueAreaHazardSave" },
+      ({ areaMembershipTrigger }) =>
+        serializedActiveEffectMatchesSubjectLocation(
+          occurrence,
+          "insectPlagueAreaHazard",
+          { kind: "area", areaId: areaMembershipTrigger.areaId },
+        ),
+    ),
+    Match.when(
+      { command: "cloudkillAreaHazardSave" },
+      ({ areaMembershipTrigger }) =>
+        serializedActiveEffectMatchesSubjectLocation(
+          occurrence,
+          "cloudkillAreaHazard",
+          { kind: "area", areaId: areaMembershipTrigger.areaId },
+        ),
+    ),
+    Match.whenOr(
+      { command: "gustOfWindLineSave" },
+      { command: "gustOfWindLineDirectionChange" },
+      ({ areaId, directionId }) =>
+        serializedActiveEffectMatchesSubjectLocation(
+          occurrence,
+          "gustOfWindLine",
+          { kind: "line", areaId, directionId },
+        ),
+    ),
+    Match.when({ command: "movableZoneSave" }, ({ areaId, trigger }) =>
+      serializedActiveEffectMatchesSubjectLocation(
+        occurrence,
+        trigger === "endsTurnWithinFiveFeetOfSphere"
+          ? "flamingSphere"
+          : "moonbeam",
+        { kind: "area", areaId },
+      ),
+    ),
+    Match.when({ command: "moonbeamCylinderExit" }, ({ areaId }) =>
+      serializedActiveEffectMatchesSubjectLocation(occurrence, "moonbeam", {
+        kind: "area",
+        areaId,
+      }),
+    ),
+    Match.when(
+      { command: "movableZoneReposition" },
+      ({ areaId }) =>
+        (occurrence.activeEffectKind === "flamingSphere" ||
+          occurrence.activeEffectKind === "moonbeam") &&
+        serializedActiveEffectLocationMatchesExpectation(occurrence.location, {
+          kind: "area",
+          areaId,
+        }),
+    ),
+    Match.when({ command: "movableZoneRam" }, ({ areaId }) =>
+      serializedActiveEffectMatchesSubjectLocation(
+        occurrence,
+        "flamingSphere",
+        { kind: "area", areaId },
+      ),
+    ),
+    Match.when({ command: "jumpMovementReplacement" }, () =>
+      serializedActiveEffectMatchesSubjectLocation(
+        occurrence,
+        "jumpMovementReplacement",
+        { kind: "nonSpatial" },
+      ),
+    ),
+    Match.when({ command: "levitateAltitudeControl" }, () =>
+      serializedActiveEffectMatchesSubjectLocation(
+        occurrence,
+        "spellLevitatedCreature",
+        { kind: "nonSpatial" },
+      ),
+    ),
+    Match.orElse(() => true),
+  );
+}
+
+function serializedActiveEffectMatchesSubjectLocation(
+  occurrence: EncodedBattleCreatureSnapshot["activeEffectOccurrences"][number],
+  activeEffectKind: SerializedActiveEffectKind,
+  location: SerializedActiveEffectLocationExpectation,
+): boolean {
+  return (
+    occurrence.activeEffectKind === activeEffectKind &&
+    serializedActiveEffectLocationMatchesExpectation(
+      occurrence.location,
+      location,
+    )
+  );
 }
 
 function pendingInterruptChoiceOwnsBoundProcedure(input: {
@@ -7812,6 +8860,7 @@ const BattleSnapshotCommonFields = {
   currentActorId: CombatantId,
   turnOrder: Schema.Array(CombatantId),
   companions: Schema.Array(BattleCompanionSnapshotSchema),
+  storedLightEmitters: Schema.Array(BattleStoredLightEmitterSchema),
   lightEmitters: Schema.Array(BattleLightEmitterSchema),
   obscurementZones: Schema.Array(BattleObscurementZoneSchema),
   acts: Schema.Array(BattleActExecutionCandidateSchema),
@@ -7876,13 +8925,22 @@ function battleSnapshotInvariantsHold(
   const liveCombatantIds = new Set(
     snapshot.combatants.map((combatant) => combatant.combatantId),
   );
-  const boundExecutionRefs = new Set(
-    snapshot.combatants.flatMap(
+  const boundExecutionRefs = new Set([
+    ...snapshot.combatants.flatMap(
       serializedCombatantAuthoritativeExecutionReferences,
     ),
-  );
+    ...snapshot.storedLightEmitters.map(({ effectRef }) => effectRef),
+  ]);
+  const effectOccurrenceRefs = [
+    ...snapshot.combatants.flatMap((combatant) =>
+      combatant.activeEffectOccurrences.map(({ effectRef }) => effectRef),
+    ),
+    ...snapshot.storedLightEmitters.map(({ effectRef }) => effectRef),
+  ];
   return (
     battleSnapshotLiveCombatantIdsAreUnique(snapshot, liveCombatantIds) &&
+    new Set(effectOccurrenceRefs).size === effectOccurrenceRefs.length &&
+    serializedEffectOccurrenceSourceBindingsMatch(snapshot.combatants) &&
     new Set([...executionScopeRefs, ...retiredExecutionScopeRefs]).size ===
       executionScopeRefs.length + retiredExecutionScopeRefs.length &&
     cursorByCombatant.size === snapshot.executionScopeCursors.length &&
@@ -7905,6 +8963,7 @@ function battleSnapshotInvariantsHold(
           act.subject,
           snapshot.combatants,
         ) &&
+        serializedBattleActHolesMatchSelectedOccurrence(act) &&
         serializedBattleActOwnsBoundProcedure(
           act,
           snapshot.combatants,
@@ -7913,6 +8972,7 @@ function battleSnapshotInvariantsHold(
         serializedBattleHolesOwnBoundExecutionReferences({
           holes: act.initialHoles,
           combatants: snapshot.combatants,
+          storedLightEmitters: snapshot.storedLightEmitters,
           boundExecutionRefs,
           expectedProcedureRefs: serializedBattleSubjectProcedureRefs(
             act.subject,
@@ -7926,6 +8986,23 @@ function battleSnapshotInvariantsHold(
       serializedReadiedResponseIsBound(snapshot.combatants, readied),
     ) &&
     battleSnapshotPendingInterruptIsValid(snapshot, boundExecutionRefs) &&
+    snapshot.storedLightEmitters.every((emitter) => {
+      const owners = snapshot.combatants.filter((combatant) =>
+        battleEffectExecutionRefBelongsToScope(
+          emitter.effectRef,
+          combatant.origin.execution.scopeRef,
+        ),
+      );
+      return (
+        owners.length === 1 &&
+        battleEffectExecutionRefOrdinalIsBefore(
+          emitter.effectRef,
+          owners[0]!.origin.execution.scopeRef,
+          owners[0]!.nextEffectOrdinal,
+        ) &&
+        serializedLightEmitterOwnsSource(emitter, snapshot.combatants)
+      );
+    }) &&
     snapshot.lightEmitters.every((emitter) =>
       serializedLightEmitterOwnsSource(emitter, snapshot.combatants),
     ) &&
@@ -7964,6 +9041,46 @@ function battleSnapshotInvariantsHold(
   );
 }
 
+function serializedEffectOccurrenceSourceBindingsMatch(
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+): boolean {
+  const activeEffectKindByRef = new Map(
+    combatants.flatMap((combatant) =>
+      combatant.activeEffectOccurrences.map(
+        (occurrence) =>
+          [occurrence.effectRef, occurrence.activeEffectKind] as const,
+      ),
+    ),
+  );
+  const sourceBindings = combatants.flatMap((combatant) => {
+    const procedureBindings =
+      combatant.origin.kind === "statBlock"
+        ? combatant.origin.execution.procedureBindings
+        : [
+            ...combatant.origin.execution.procedureBindings,
+            ...combatant.origin.druidWildShapeAvailableForms.flatMap(
+              (form) => form.execution.procedureBindings,
+            ),
+          ];
+    return procedureBindings.flatMap((binding) =>
+      binding.procedure.kind === "effectOccurrenceSource"
+        ? [binding.procedure]
+        : [],
+    );
+  });
+  return (
+    new Set(sourceBindings.map((binding) => binding.effectRef)).size ===
+      sourceBindings.length &&
+    sourceBindings.every((binding) => {
+      const activeEffectKind = activeEffectKindByRef.get(binding.effectRef);
+      return (
+        activeEffectKind === undefined ||
+        activeEffectKind === binding.effectKind
+      );
+    })
+  );
+}
+
 function battleSnapshotLiveCombatantIdsAreUnique(
   snapshot: BattleSnapshotInvariantInput,
   liveCombatantIds: ReadonlySet<CombatantId>,
@@ -7987,6 +9104,7 @@ function battleSnapshotPendingInterruptIsValid(
     serializedBattleHoleOwnsBoundExecutionReferences({
       hole: pendingInterrupt.decisionHole,
       combatants: snapshot.combatants,
+      storedLightEmitters: snapshot.storedLightEmitters,
       boundExecutionRefs,
       expectedProcedureRefs: undefined,
     }) &&
@@ -8001,6 +9119,7 @@ function battleSnapshotPendingInterruptIsValid(
         serializedBattleHolesOwnBoundExecutionReferences({
           holes: choice.initialHoles,
           combatants: snapshot.combatants,
+          storedLightEmitters: snapshot.storedLightEmitters,
           boundExecutionRefs,
           expectedProcedureRefs: serializedInterruptChoiceProcedureRefs(choice),
         }),

@@ -138,7 +138,7 @@ export {
 export {
   spellActiveEffectExecutionRef,
   spellActiveEffectForExecutionRef,
-} from "./active-effect/execution-ref.ts";
+} from "./effect-execution-ref.ts";
 
 export {
   battleActSpellPresentation,

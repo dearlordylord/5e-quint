@@ -3,6 +3,7 @@ import type {
   BattleActDiscoveryCandidate,
   AdmittedBattleResolutionInput,
   BattleFill,
+  BattleHandledInterruptOccurrence,
   BattleInterruptedProcedure,
   BattleResolutionInput,
   BattleResolutionResult,
@@ -270,7 +271,7 @@ export function resolveReplayContinuationFromState(
     BattleInterruptedProcedure,
     { readonly kind: "replay" }
   >,
-  handledInterruptTrigger: BattleInterruptTrigger,
+  handledInterruptOccurrence: BattleHandledInterruptOccurrence,
   fills: readonly BattleFill[],
 ): BattleResolutionResult {
   const executionRegistry = spellProcedureExecutionRegistry();
@@ -279,7 +280,7 @@ export function resolveReplayContinuationFromState(
     resolveReplayContinuationFromStateWithRegistry({
       state,
       continuation,
-      handledInterruptTrigger,
+      handledInterruptOccurrence,
       fills,
       execution: replayContinuationExecution(executionRegistry),
     }),

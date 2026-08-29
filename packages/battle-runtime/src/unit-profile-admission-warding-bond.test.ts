@@ -4,6 +4,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
 import {
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   requireCharacterUnitProcedureRefForTest,
   unitLibrary,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
@@ -61,7 +62,7 @@ import {
   wardingBondSpellTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
-import { spellActiveEffectExecutionRef } from "./active-effect/execution-ref.ts";
+import { spellActiveEffectExecutionRef } from "./effect-execution-ref.ts";
 import {
   applyBattleHitPointDamage,
   applyCondition,
@@ -1018,28 +1019,21 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       actorId: spellCasterId,
     });
     const turnStartDamage = requireResultHole(awaitingTurnStart, "rolledDice");
-    const turnStartSave = requireResultHole(
-      awaitingTurnStart,
-      "savingThrowOutcome",
-    );
     const damageFill = damageRollFillWithGroups(turnStartDamage, [[2, 2, 2]]);
-    const saveFill = savingThrowOutcomeFill(turnStartSave, [
-      { targetId: spellTargetId, succeeded: false },
-    ]);
-    const needsCasterSave = endTurn({
+    const awaitingTurnStartSave = endTurn({
       state,
       actorId: spellCasterId,
-      fills: [saveFill, damageFill],
+      fills: [damageFill],
     });
     const casterSave = requireResultHole(
-      needsCasterSave,
+      awaitingTurnStartSave,
       "concentrationSavingThrow",
     );
     expect(casterSave).toMatchObject({
       combatantId: spellCasterId,
       damageAmount: 3,
     });
-    expect(needsCasterSave.routeEvents).toEqual(
+    expect(awaitingTurnStartSave.routeEvents).toEqual(
       expect.arrayContaining([
         {
           kind: "resolveBattleSubject",
@@ -1050,15 +1044,24 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
         },
       ]),
     );
+    const concentrationFill = concentrationSavingThrowFill(casterSave, false);
+    const needsTurnStartSave = endTurn({
+      state,
+      actorId: spellCasterId,
+      fills: [damageFill, concentrationFill],
+    });
+    const turnStartSave = requireResultHole(
+      needsTurnStartSave,
+      "savingThrowOutcome",
+    );
+    const saveFill = savingThrowOutcomeFill(turnStartSave, [
+      { targetId: spellTargetId, succeeded: false },
+    ]);
 
     const resolved = endTurn({
       state,
       actorId: spellCasterId,
-      fills: [
-        damageFill,
-        saveFill,
-        concentrationSavingThrowFill(casterSave, false),
-      ],
+      fills: [damageFill, saveFill, concentrationFill],
     });
     expect(resolved).toMatchObject({ tag: "resolved" });
     if (resolved.tag !== "resolved") {
@@ -1078,7 +1081,6 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       state,
       actorId: spellCasterId,
     });
-    const turnStartDamage = requireResultHole(awaitingTurnStart, "rolledDice");
     if (awaitingTurnStart.tag !== "needsHoles") {
       throw new Error("Expected turn-start damage and save holes.");
     }
@@ -1091,30 +1093,43 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
         hole.hideousLaughterRepeatSave.targetId === spellCasterId &&
         hole.hideousLaughterRepeatSave.trigger === "endTurn",
     );
-    const turnStartSave = awaitingTurnStart.holes.find(
-      (
-        hole,
-      ): hole is Extract<BattleHole, { readonly kind: "savingThrowOutcome" }> =>
-        hole.kind === "savingThrowOutcome" &&
-        "spellTurnStartSave" in hole &&
-        hole.spellTurnStartSave.targetId === spellTargetId,
-    );
-    if (endTurnRepeatSave === undefined || turnStartSave === undefined) {
-      throw new Error(
-        "Expected Hideous Laughter end-turn and turn-start saves.",
-      );
+    if (endTurnRepeatSave === undefined) {
+      throw new Error("Expected Hideous Laughter end-turn save.");
     }
-    const damageFill = damageRollFillWithGroups(turnStartDamage, [[2, 2, 2]]);
     const endTurnRepeatSaveFill = savingThrowOutcomeFill(endTurnRepeatSave, [
       { targetId: spellCasterId, succeeded: false },
     ]);
-    const saveFill = savingThrowOutcomeFill(turnStartSave, [
-      { targetId: spellTargetId, succeeded: false },
-    ]);
+    const awaitingTurnStartDamage = endTurn({
+      state,
+      actorId: spellCasterId,
+      fills: [endTurnRepeatSaveFill],
+    });
+    const turnStartDamage = requireResultHole(
+      awaitingTurnStartDamage,
+      "rolledDice",
+    );
+    const damageFill = damageRollFillWithGroups(turnStartDamage, [[2, 2, 2]]);
+    const awaitingTurnStartSave = endTurn({
+      state,
+      actorId: spellCasterId,
+      fills: [endTurnRepeatSaveFill, damageFill],
+    });
+    const targetConcentrationSave = requireResultHole(
+      awaitingTurnStartSave,
+      "concentrationSavingThrow",
+    );
+    expect(targetConcentrationSave).toMatchObject({
+      combatantId: spellTargetId,
+      damageAmount: 3,
+    });
+    const targetConcentrationFill = concentrationSavingThrowFill(
+      targetConcentrationSave,
+      true,
+    );
     const needsRepeatSave = endTurn({
       state,
       actorId: spellCasterId,
-      fills: [endTurnRepeatSaveFill, damageFill, saveFill],
+      fills: [endTurnRepeatSaveFill, damageFill, targetConcentrationFill],
     });
     if (needsRepeatSave.tag !== "needsHoles") {
       throw new Error("Expected shared damage Hideous Laughter repeat save.");
@@ -1139,37 +1154,35 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       targetRollModes: [{ targetId: spellCasterId, rollMode: "advantage" }],
     });
 
-    const needsTargetConcentrationSave = endTurn({
+    const repeatSaveFill = savingThrowOutcomeFill(repeatSave, [
+      { targetId: spellCasterId, succeeded: true },
+    ]);
+    const needsTurnStartSave = endTurn({
       state,
       actorId: spellCasterId,
       fills: [
         endTurnRepeatSaveFill,
         damageFill,
-        saveFill,
-        savingThrowOutcomeFill(repeatSave, [
-          { targetId: spellCasterId, succeeded: true },
-        ]),
+        targetConcentrationFill,
+        repeatSaveFill,
       ],
     });
-    const targetConcentrationSave = requireResultHole(
-      needsTargetConcentrationSave,
-      "concentrationSavingThrow",
+    const turnStartSave = requireResultHole(
+      needsTurnStartSave,
+      "savingThrowOutcome",
     );
-    expect(targetConcentrationSave).toMatchObject({
-      combatantId: spellTargetId,
-      damageAmount: 3,
-    });
+    const saveFill = savingThrowOutcomeFill(turnStartSave, [
+      { targetId: spellTargetId, succeeded: false },
+    ]);
     const resolved = endTurn({
       state,
       actorId: spellCasterId,
       fills: [
         endTurnRepeatSaveFill,
         damageFill,
+        targetConcentrationFill,
+        repeatSaveFill,
         saveFill,
-        savingThrowOutcomeFill(repeatSave, [
-          { targetId: spellCasterId, succeeded: true },
-        ]),
-        concentrationSavingThrowFill(targetConcentrationSave, true),
       ],
     });
     expect(resolved).toMatchObject({ tag: "resolved" });
@@ -1230,29 +1243,23 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
 
   test("Warding Bond creation preserves an unrelated target protection", () => {
     const session = wardingBondBattle();
-    const target = requireCombatant(session.state, spellTargetId);
     const unrelatedSource = battleProcedureExecutionRefForTest(
       "synthetic-warding-bond-unrelated",
     );
-    const state: BattleState = {
-      ...session.state,
-      combatants: new Map(session.state.combatants).set(spellTargetId, {
-        ...target,
-        activeEffects: [
-          ...target.activeEffects,
-          {
-            kind: "damageResistance" as const,
-            sourceProcedureRef: unrelatedSource,
-            sourceCombatantId: spellCasterId,
-            damageType: "cold" as const,
-            expiresAt: {
-              kind: "duration" as const,
-              durationTicks: elapsedTimeTicks(10),
-            },
-          },
-        ],
-      }),
-    };
+    const state = battleStateWithAllocatedEffectForTest({
+      state: session.state,
+      ownerId: spellTargetId,
+      effect: {
+        kind: "damageResistance" as const,
+        sourceProcedureRef: unrelatedSource,
+        sourceCombatantId: spellCasterId,
+        damageType: "cold" as const,
+        expiresAt: {
+          kind: "duration" as const,
+          durationTicks: elapsedTimeTicks(10),
+        },
+      },
+    });
     const cast = castWardingBond(
       battleRuntimeSessionForTest({ ...session, state }),
     );
@@ -1457,43 +1464,37 @@ function withTargetConcentration(state: BattleState): BattleState {
 }
 
 function withTurnStartDamageOnTarget(state: BattleState): BattleState {
-  const target = requireCombatant(state, spellTargetId);
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(spellTargetId, {
-      ...target,
-      activeEffects: [
-        ...target.activeEffects,
-        {
-          kind: "spellTurnStartDamageAndSave" as const,
-          source: "afterHitTimedDamageAndSave" as const,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(searingSmiteUnitId),
-          ),
-          sourceCombatantId: spellCasterId,
-          damage: {
-            expr: { dice: 3, dieSize: 6 },
-            damageType: "fire",
-          },
-          save: {
-            ability: "con" as const,
-            dc: { kind: "caster_spell_save_dc" as const },
-            successEnds: "spell" as const,
-          },
-          expiresAt: {
-            kind: "duration" as const,
-            durationTicks: elapsedTimeTicks(60),
-          },
-        },
-      ],
-    }),
-  };
+  return battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: spellTargetId,
+    effect: {
+      kind: "spellTurnStartDamageAndSave" as const,
+      source: "afterHitTimedDamageAndSave" as const,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(searingSmiteUnitId),
+      ),
+      sourceCombatantId: spellCasterId,
+      damage: {
+        expr: { dice: 3, dieSize: 6 },
+        damageType: "fire",
+      },
+      save: {
+        ability: "con" as const,
+        dc: { kind: "caster_spell_save_dc" as const },
+        successEnds: "spell" as const,
+      },
+      expiresAt: {
+        kind: "duration" as const,
+        durationTicks: elapsedTimeTicks(60),
+      },
+    },
+  });
 }
 
 function withHideousLaughterOnTarget(state: BattleState): BattleState {
   const caster = requireCombatant(state, spellCasterId);
   const target = requireCombatant(state, spellTargetId);
-  return {
+  const prepared = {
     ...state,
     combatants: new Map(state.combatants)
       .set(spellCasterId, {
@@ -1513,36 +1514,37 @@ function withHideousLaughterOnTarget(state: BattleState): BattleState {
             "incapacitated",
           ),
         ),
-        activeEffects: [
-          ...target.activeEffects,
-          {
-            kind: "hideousLaughter" as const,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(hideousLaughterUnitId),
-            ),
-            sourceCombatantId: spellCasterId,
-            conditionHadNonSpellProneSource: false,
-            conditionHadNonSpellIncapacitatedSource: false,
-            repeatSaveRollMode: null,
-            save: {
-              ability: "wis" as const,
-              dc: { kind: "caster_spell_save_dc" as const },
-            },
-            expiresAt: {
-              kind: "concentration" as const,
-              combatantId: spellCasterId,
-              durationTicks: hideousLaughterDurationTicks,
-            },
-          },
-        ],
       }),
   };
+  return battleStateWithAllocatedEffectForTest({
+    state: prepared,
+    ownerId: spellTargetId,
+    effect: {
+      kind: "hideousLaughter" as const,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(hideousLaughterUnitId),
+      ),
+      sourceCombatantId: spellCasterId,
+      conditionHadNonSpellProneSource: false,
+      conditionHadNonSpellIncapacitatedSource: false,
+      repeatSaveRollMode: null,
+      save: {
+        ability: "wis" as const,
+        dc: { kind: "caster_spell_save_dc" as const },
+      },
+      expiresAt: {
+        kind: "concentration" as const,
+        combatantId: spellCasterId,
+        durationTicks: hideousLaughterDurationTicks,
+      },
+    },
+  });
 }
 
 function withHideousLaughterOnCaster(state: BattleState): BattleState {
   const caster = requireCombatant(state, spellCasterId);
   const target = requireCombatant(state, spellTargetId);
-  return {
+  const prepared = {
     ...state,
     combatants: new Map(state.combatants)
       .set(spellCasterId, {
@@ -1553,28 +1555,6 @@ function withHideousLaughterOnCaster(state: BattleState): BattleState {
             "incapacitated",
           ),
         ),
-        activeEffects: [
-          ...caster.activeEffects,
-          {
-            kind: "hideousLaughter" as const,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(hideousLaughterUnitId),
-            ),
-            sourceCombatantId: spellTargetId,
-            conditionHadNonSpellProneSource: false,
-            conditionHadNonSpellIncapacitatedSource: false,
-            repeatSaveRollMode: null,
-            save: {
-              ability: "wis" as const,
-              dc: { kind: "caster_spell_save_dc" as const },
-            },
-            expiresAt: {
-              kind: "concentration" as const,
-              combatantId: spellTargetId,
-              durationTicks: hideousLaughterDurationTicks,
-            },
-          },
-        ],
       })
       .set(spellTargetId, {
         ...target,
@@ -1586,6 +1566,29 @@ function withHideousLaughterOnCaster(state: BattleState): BattleState {
         },
       }),
   };
+  return battleStateWithAllocatedEffectForTest({
+    state: prepared,
+    ownerId: spellCasterId,
+    effect: {
+      kind: "hideousLaughter" as const,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(hideousLaughterUnitId),
+      ),
+      sourceCombatantId: spellTargetId,
+      conditionHadNonSpellProneSource: false,
+      conditionHadNonSpellIncapacitatedSource: false,
+      repeatSaveRollMode: null,
+      save: {
+        ability: "wis" as const,
+        dc: { kind: "caster_spell_save_dc" as const },
+      },
+      expiresAt: {
+        kind: "concentration" as const,
+        combatantId: spellTargetId,
+        durationTicks: hideousLaughterDurationTicks,
+      },
+    },
+  });
 }
 
 function separateWardingBond(state: BattleState): BattleState {

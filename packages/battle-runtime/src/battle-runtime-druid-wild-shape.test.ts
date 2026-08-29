@@ -189,7 +189,7 @@ test("replay rejects a Wild Shape subject bound to an unrelated procedure", () =
         subject: { ...subject, procedureRef: unrelatedProcedureRef },
         fills: [],
       },
-      "attackHit",
+      { trigger: "attackHit" },
       [],
     ),
   ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
@@ -206,6 +206,14 @@ test("assumes, reuses, and dismisses a known Beast Wild Shape form", () => {
     resolveDruidWildShapeWithoutLoadoutEquipment(initial, assumeRidingHorse),
   );
   const activeDruid = requireCharacter(assumed.state, druidId);
+  const initialDruid = requireCharacter(initial, druidId);
+  const firstWildShapeEffect = activeDruid.activeEffects.find(
+    (effect) => effect.kind === "druidWildShapeForm",
+  );
+  expect(firstWildShapeEffect).toHaveProperty("effectRef");
+  expect(Number(activeDruid.nextEffectOrdinal)).toBe(
+    Number(initialDruid.nextEffectOrdinal) + 1,
+  );
   const activeForm = activeDruidWildShapeForm(activeDruid);
   expect(activeForm?.id).toBe(ridingHorseId);
   expect(Number(activeDruid.tempHp)).toBe(2);
@@ -261,6 +269,22 @@ test("assumes, reuses, and dismisses a known Beast Wild Shape form", () => {
     resolveDruidWildShapeWithoutLoadoutEquipment(nextTurn, assumeCat),
   );
   const reusedDruid = requireCharacter(reused.state, druidId);
+  const secondWildShapeEffect = reusedDruid.activeEffects.find(
+    (effect) => effect.kind === "druidWildShapeForm",
+  );
+  expect(secondWildShapeEffect).toHaveProperty("effectRef");
+  const firstWildShapeRef =
+    firstWildShapeEffect !== undefined && "effectRef" in firstWildShapeEffect
+      ? firstWildShapeEffect.effectRef
+      : undefined;
+  const secondWildShapeRef =
+    secondWildShapeEffect !== undefined && "effectRef" in secondWildShapeEffect
+      ? secondWildShapeEffect.effectRef
+      : undefined;
+  expect(secondWildShapeRef).not.toBe(firstWildShapeRef);
+  expect(Number(reusedDruid.nextEffectOrdinal)).toBe(
+    Number(activeDruid.nextEffectOrdinal) + 1,
+  );
   expect(activeDruidWildShapeForm(reusedDruid)?.id).toBe(catId);
   expect(
     discoverBattleActCandidates(reused.state).some((act) =>

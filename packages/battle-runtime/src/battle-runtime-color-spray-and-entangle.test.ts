@@ -26,8 +26,8 @@ import {
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./battle-runtime.test-support.ts";
-import { spellActiveEffectExecutionRef } from "./active-effect/execution-ref.ts";
-import type { SpellActiveEffect } from "./active-effect/execution-ref.ts";
+import { spellActiveEffectExecutionRef } from "./effect-execution-ref.ts";
+import type { SpellActiveEffect } from "./effect-execution-ref.ts";
 import { describe, expect, test } from "vitest";
 import type {
   BattleSubject,

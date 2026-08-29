@@ -1,4 +1,7 @@
-import { battleActiveEffectExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleEffectExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
+} from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay level1-spatial-witness dancing_lights faerie_fire feather_fall fog_cloud grease jump light produce_flame thunderwave
 // UNIT-IDENTITY-REPLAY: level1-spatial-witness dancing_lights doDancingLightsMovableDimLight
 // UNIT-IDENTITY-REPLAY: level1-spatial-witness faerie_fire doFaerieFireOutlineAdvantageInvisibleDimLight
@@ -96,6 +99,7 @@ import {
   type BattleTargetSpatialFact,
   type CombatantId,
 } from "./index.ts";
+import type { BattleEffectExecutionRef } from "./identity.ts";
 import type { BattleActDiscoveryCandidate } from "./battle-state-execution.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
@@ -1498,6 +1502,7 @@ function replayAreaHazardSaveRoute(): readonly BattleReducerRouteEvent[] {
       greaseMovementFill(requireHole(movementAct.initialHoles, "movement"), {
         areaId: greaseAreaId,
         movementCostFeet: greaseDifficultTerrainMovementCostFeet,
+        effectRef: greaseGroundHazardEffect(cast.state).effectRef,
         sourceProcedureRef: greaseGroundHazardEffect(cast.state)
           .sourceProcedureRef,
       }),
@@ -1575,6 +1580,7 @@ function replayAreaHazardMovementRoute(): readonly BattleReducerRouteEvent[] {
       greaseMovementFill(requireHole(movementAct.initialHoles, "movement"), {
         areaId: greaseAreaId,
         movementCostFeet: greaseDifficultTerrainMovementCostFeet,
+        effectRef: greaseGroundHazardEffect(cast.state).effectRef,
         sourceProcedureRef: greaseGroundHazardEffect(cast.state)
           .sourceProcedureRef,
       }),
@@ -2267,6 +2273,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
           greaseMovementFill(movement, {
             areaId: staleGreaseAreaId,
             movementCostFeet: greaseDifficultTerrainMovementCostFeet,
+            effectRef: greaseGroundHazardEffect(cast.state).effectRef,
             sourceProcedureRef: greaseGroundHazardEffect(cast.state)
               .sourceProcedureRef,
           }),
@@ -2280,6 +2287,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
           greaseMovementFill(movement, {
             areaId: greaseAreaId,
             movementCostFeet: greaseDifficultTerrainMovementCostFeet,
+            effectRef: greaseGroundHazardEffect(cast.state).effectRef,
             sourceProcedureRef: greaseGroundHazardEffect(cast.state)
               .sourceProcedureRef,
           }),
@@ -3333,16 +3341,20 @@ function lightBattle(): BattleState {
 
 function lightOneRoundRemainingBattle(): BattleState {
   const battle = lightBattle();
-  return {
-    ...battle,
-    lightEmitters: [
-      lightObjectSpellEmitter({
-        objectId: lightExpiringObjectId,
-        durationTicks: lightExpiringDurationTicks,
-        sourceProcedureRef: lightAct(battle).subject.procedureRef,
-      }),
+  return battleStateWithAllocatedEffectOccurrencesForTest({
+    state: battle,
+    occurrences: [
+      {
+        kind: "storedLightEmitter",
+        ownerId: casterId,
+        emitter: lightObjectSpellEmitter({
+          objectId: lightExpiringObjectId,
+          durationTicks: lightExpiringDurationTicks,
+          sourceProcedureRef: lightAct(battle).subject.procedureRef,
+        }),
+      },
     ],
-  };
+  }).state;
 }
 
 function produceFlameBattle(): BattleState {
@@ -3929,6 +3941,7 @@ function greaseMovementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
   input: {
     readonly areaId: BattleAreaId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly movementCostFeet: MovementFeet;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
   },
@@ -3945,6 +3958,7 @@ function greaseMovementFill(
         sources: [
           {
             kind: "greaseGroundHazard",
+            effectRef: input.effectRef,
             sourceCombatantId: casterId,
             sourceProcedureRef: input.sourceProcedureRef,
             areaId: input.areaId,
@@ -5313,7 +5327,7 @@ function lightObjectSpellEmitter(input: {
   readonly objectId: BattleObjectId;
   readonly durationTicks: ElapsedTimeTicks;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
-}): ObjectLightEmitter {
+}) {
   return {
     kind: "spellLightEmitter",
     sourceProcedureRef: input.sourceProcedureRef,
@@ -5332,7 +5346,7 @@ function lightObjectSpellEmitter(input: {
       kind: "duration",
       durationTicks: input.durationTicks,
     },
-  };
+  } as const;
 }
 
 function produceFlameHeldLightEffect(
@@ -5377,7 +5391,7 @@ function produceFlameHeldLightEffectValue(
 ): Extract<BattleActiveEffect, { readonly kind: "heldLight" }> {
   return {
     kind: "heldLight",
-    effectRef: battleActiveEffectExecutionRefForTest(
+    effectRef: battleEffectExecutionRefForTest(
       "synthetic-produce-flame-held-light",
     ),
     sourceProcedureRef,

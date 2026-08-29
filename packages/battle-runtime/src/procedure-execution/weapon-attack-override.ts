@@ -2,6 +2,7 @@ import { AbilityModifier, AttackBonus } from "@dnd/shared/types";
 import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
 import { Match, Schema } from "effect";
 import { DurationBattleActiveEffectExpirationSchema } from "../active-effect/expiration-codecs.ts";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../active-effect/template-codec.ts";
 import type { BattleActiveEffectIdentity } from "../active-effect/source.ts";
 import {
   HELD_WEAPON_LOADOUT_SLOTS,
@@ -31,9 +32,10 @@ export type WeaponAttackOverrideSpellProcedureExecution =
     readonly spellRuleFacts: SpellRuleExecutionFacts;
   };
 
-export type SpellWeaponAttackOverrideEffect =
+export type SourcedSpellWeaponAttackOverrideTemplate =
   SpellWeaponAttackOverrideTemplate & {
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
+    readonly effectRef?: never;
   };
 
 type WeaponAttackOverrideActor<ActiveEffect, SelectedLoadout> = {
@@ -278,10 +280,7 @@ export function weaponAttackOverrideExecutor<
             readonly continuation: Continuation;
           };
         };
-        readonly activeEffects: readonly (
-          | Actor["activeEffects"][number]
-          | SpellWeaponAttackOverrideEffect
-        )[];
+        readonly effect: SourcedSpellWeaponAttackOverrideTemplate;
       }) => State;
       readonly spendSpellCastResources: (input: {
         readonly state: State;
@@ -387,14 +386,13 @@ export function weaponAttackOverrideExecutor<
       tag: clearedProgress.tag,
       execution,
     } as const;
-    const activeEffects = activeEffectsAfterWeaponAttackOverride(
-      authorization.execution.caster.activeEffects,
-      authorization.execution.invocation.sourceProcedureRef,
-      authorization.execution.invocation.activeEffect,
-    );
     const effected = runtime.commitWeaponAttackOverrideEffect({
       authorization,
-      activeEffects,
+      effect: {
+        ...authorization.execution.invocation.activeEffect,
+        sourceProcedureRef:
+          authorization.execution.invocation.sourceProcedureRef,
+      },
     });
     const resourced = runtime.spendSpellCastResources({
       state: effected,
@@ -429,6 +427,7 @@ export const SpellWeaponAttackOverrideTemplateSchema =
       damage: Schema.Struct({ expr: DiceExprSchema }),
       damageTypeChoices: Schema.Tuple([DamageTypeSchema, DamageTypeSchema]),
       expiresAt: DurationBattleActiveEffectExpirationSchema,
+      ...BattleEffectOccurrenceTemplateSchemaFields,
     }),
   );
 
@@ -444,24 +443,3 @@ export const WeaponAttackOverrideExecutionSchema =
       attachedWeaponSlot: Schema.Literals(HELD_WEAPON_LOADOUT_SLOTS),
     }),
   );
-
-/** Replace a prior casting by the same combatant and procedure occurrence. */
-export function activeEffectsAfterWeaponAttackOverride<
-  Effect extends BattleActiveEffectIdentity,
->(
-  activeEffects: readonly Effect[],
-  sourceProcedureRef: BattleProcedureExecutionRef,
-  activeEffect: SpellWeaponAttackOverrideTemplate,
-): readonly (Effect | SpellWeaponAttackOverrideEffect)[] {
-  return [
-    ...activeEffects.filter(
-      (effect) =>
-        !(
-          effect.kind === "spellWeaponAttackOverride" &&
-          effect.sourceProcedureRef === sourceProcedureRef &&
-          effect.sourceCombatantId === activeEffect.sourceCombatantId
-        ),
-    ),
-    { ...activeEffect, sourceProcedureRef },
-  ];
-}

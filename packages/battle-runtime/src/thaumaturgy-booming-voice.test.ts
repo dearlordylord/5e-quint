@@ -3,7 +3,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-self-ability-check-advantage
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { Schema } from "effect";
@@ -389,7 +389,7 @@ function withHexCharismaDisadvantage(state: BattleState): BattleState {
   }
   const hexEffect = {
     kind: "spellMarkedDamageRider",
-    effectRef: battleActiveEffectExecutionRefForTest("booming-voice-hex"),
+    effectRef: battleEffectExecutionRefForTest("booming-voice-hex"),
     sourceProcedureRef: battleProcedureExecutionRefForTest(String("hex")),
     sourceCombatantId: goblinId,
     targetCombatantId: fighterId,

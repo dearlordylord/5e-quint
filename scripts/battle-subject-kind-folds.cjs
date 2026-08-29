@@ -28,8 +28,16 @@ function propertyAssignment(objectLiteral, propertyName) {
 }
 
 function schemaLiteralStrings(expression) {
-  if (!isSchemaCall(expression, "Literal")) return [];
-  return expression.arguments
+  if (
+    !isSchemaCall(expression, "Literal") &&
+    !isSchemaCall(expression, "Literals")
+  ) {
+    return [];
+  }
+  const literalArguments = expression.arguments.flatMap((argument) =>
+    ts.isArrayLiteralExpression(argument) ? argument.elements : [argument],
+  );
+  return literalArguments
     .filter((argument) => ts.isStringLiteral(argument))
     .map((argument) => argument.text);
 }
@@ -263,7 +271,12 @@ function extractBattleSubjectKindCases(rootPath) {
   );
   const cases = [];
   function collectStruct(callExpression) {
-    if (!isSchemaCall(callExpression, "Struct")) return;
+    const isStruct = isSchemaCall(callExpression, "Struct");
+    const isInterruptSelection =
+      ts.isIdentifier(callExpression.expression) &&
+      callExpression.expression.text ===
+        "battleInterruptAttackExecutionSelectionWithFields";
+    if (!isStruct && !isInterruptSelection) return;
     const [shape] = callExpression.arguments;
     if (!ts.isObjectLiteralExpression(shape)) return;
     const tags = schemaLiteralPropertyStrings(shape, "tag");

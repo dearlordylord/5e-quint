@@ -24,6 +24,7 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   attackExecutionSelectionForSubjectForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   characterAttackSubjectForTest,
 } from "./battle-runtime.test-support.ts";
@@ -249,6 +250,9 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
       spellTargetId,
       {
         kind: "hideousLaughter",
+        effectRef: battleEffectExecutionRefForTest(
+          "stale-misty-step-hideous-laughter",
+        ),
         sourceProcedureRef: battleProcedureExecutionRefForTest(
           String(hideousLaughterUnitId),
         ),

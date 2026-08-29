@@ -23,7 +23,7 @@ import type { Ability, Skill } from "@dnd/surface/surface/types";
 import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
 import { mechanicalD20TestRollMode } from "../d20-test-circumstance.ts";
 import type {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
@@ -215,6 +215,11 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
         "movableZoneRepositionMovement",
         () => "movableZoneRepositionMovement" as const,
       ),
+      byBattleHoleKind("cloudkillMovement", () => "cloudkillMovement" as const),
+      byBattleHoleKind(
+        "startTurnOccurrenceOrder",
+        () => "startTurnOccurrenceOrder" as const,
+      ),
       byBattleHoleKind("readyDeclaration", () => "readyDeclaration" as const),
       byBattleHoleKind("movement", () => "movement" as const),
       byBattleHoleKind(
@@ -252,6 +257,7 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
       ),
     )
     .pipe(
+      byBattleHoleKind("areaWindStrength", () => "areaWindStrength" as const),
       byBattleHoleKind("shoveOutcome", () => "shoveOutcome" as const),
       byBattleHoleKind("skillChoice", () => "skillChoice" as const),
       byBattleHoleKind("spellAreaChoice", () => "spellAreaChoice" as const),
@@ -292,6 +298,10 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
       byBattleHoleKind(
         "toolPossessionFacts",
         () => "toolPossessionFacts" as const,
+      ),
+      byBattleHoleKind(
+        "temporaryHitPointChoice",
+        () => "temporaryHitPointChoice" as const,
       ),
       byBattleHoleKind(
         "unitFeatureDecision",
@@ -1049,7 +1059,7 @@ export function alternateActionCostProfilesForActor(
     | {
         readonly kind: "spellEffect";
         readonly procedureRef: BattleProcedureExecutionRef;
-        readonly effectRef: BattleActiveEffectExecutionRef;
+        readonly effectRef: BattleEffectExecutionRef;
       };
   readonly profile: Extract<
     UnitSupportProcedureExecution,

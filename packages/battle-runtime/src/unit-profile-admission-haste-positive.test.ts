@@ -1,5 +1,9 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
+} from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5-C17-HASTE-POSITIVE-RUNTIME haste
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5-C18-HASTE-LETHARGY-RUNTIME haste
@@ -128,6 +132,18 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
         "spellGrantedActionResource",
       ]),
     );
+    const hasteEffects = target.activeEffects.filter((effect) =>
+      isHastePositiveEffectKind(effect.kind),
+    );
+    expect(hasteEffects).toHaveLength(5);
+    expect(hasteEffects.every((effect) => "effectRef" in effect)).toBe(true);
+    expect(
+      new Set(
+        hasteEffects.flatMap((effect) =>
+          "effectRef" in effect ? [effect.effectRef] : [],
+        ),
+      ).size,
+    ).toBe(hasteEffects.length);
     expect(savingThrowRollModeProjections(resolved.state, "dex")).toEqual([
       { targetId: spellTargetId, rollMode: "advantage" },
     ]);
@@ -277,6 +293,10 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       subject: act.subject,
       targetHole: requireHole(act.initialHoles, "targetChoice"),
     });
+    const targetBeforeLethargy = requireCombatant(
+      resolved.state,
+      spellTargetId,
+    );
 
     const ended = breakBattleConcentration(resolved.state, spellCasterId);
     const caster = requireCombatant(ended, spellCasterId);
@@ -288,6 +308,16 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     expect(Number(effectiveWalkSpeed(ended, target))).toBe(0);
     expect(hasHasteLethargyCondition(target)).toBe(true);
     expect(hasHasteSpeedZero(target)).toBe(true);
+    const lethargyRefs = target.activeEffects.flatMap((effect) =>
+      (effect.kind === "spellCondition" || effect.kind === "spellSpeedZero") &&
+      "effectRef" in effect
+        ? [effect.effectRef]
+        : [],
+    );
+    expect(new Set(lethargyRefs).size).toBe(2);
+    expect(Number(target.nextEffectOrdinal)).toBe(
+      Number(targetBeforeLethargy.nextEffectOrdinal) + 2,
+    );
   });
 
   test("Haste lethargy Incapacitated breaks the target's own Concentration", () => {
@@ -494,11 +524,24 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       spellId: hasteUnitId,
       slotLevel: 3,
     });
+    const initialTargetOrdinal = Number(
+      requireCombatant(state.state, spellTargetId).nextEffectOrdinal,
+    );
     const first = resolveHaste({
       state: state.state,
       subject: firstAct.subject,
       targetHole: requireHole(firstAct.initialHoles, "targetChoice"),
     });
+    const firstTarget = requireCombatant(first.state, spellTargetId);
+    const firstHasteRefs = firstTarget.activeEffects.flatMap((effect) =>
+      isHastePositiveEffectKind(effect.kind) && "effectRef" in effect
+        ? [effect.effectRef]
+        : [],
+    );
+    expect(firstHasteRefs).toHaveLength(5);
+    expect(Number(firstTarget.nextEffectOrdinal)).toBe(
+      initialTargetOrdinal + 5,
+    );
     const targetTurn = expectEndTurn(first.state, spellCasterId);
     const nextCasterTurn = expectEndTurn(targetTurn, spellTargetId);
     const secondAct = spellAct({
@@ -506,6 +549,9 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       spellId: hasteUnitId,
       slotLevel: 3,
     });
+    const ordinalBeforeRecast = Number(
+      requireCombatant(nextCasterTurn, spellTargetId).nextEffectOrdinal,
+    );
     const second = resolveHaste({
       state: nextCasterTurn,
       subject: secondAct.subject,
@@ -513,6 +559,11 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     });
     const caster = requireCombatant(second.state, spellCasterId);
     const target = requireCombatant(second.state, spellTargetId);
+    const secondHasteRefs = target.activeEffects.flatMap((effect) =>
+      isHastePositiveEffectKind(effect.kind) && "effectRef" in effect
+        ? [effect.effectRef]
+        : [],
+    );
 
     expect(caster.concentration).toEqual(
       expect.objectContaining({
@@ -525,6 +576,13 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     expect(hasHasteSpeedZero(target)).toBe(true);
     expect(hasCondition(target.conditions, "incapacitated")).toBe(true);
     expect(Number(effectiveWalkSpeed(second.state, target))).toBe(0);
+    expect(secondHasteRefs).toHaveLength(5);
+    expect(secondHasteRefs.every((ref) => !firstHasteRefs.includes(ref))).toBe(
+      true,
+    );
+    // Recasting promotes the old Haste end-state into two occurrences, then
+    // binds five fresh positive effects.
+    expect(Number(target.nextEffectOrdinal)).toBe(ordinalBeforeRecast + 7);
   });
 
   test("Haste creation preserves a target-owned concentration effect", () => {
@@ -635,7 +693,7 @@ function stateWithSyntheticTargetConcentration(
   state: BattleState,
 ): BattleState {
   const target = requireCombatant(state, spellTargetId);
-  const concentrationEffect: BattleActiveEffect = {
+  const concentrationEffect = {
     kind: "spellArmorClassBonus",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       "synthetic-target-concentration-fixture",
@@ -647,8 +705,8 @@ function stateWithSyntheticTargetConcentration(
       kind: "concentration",
       combatantId: spellTargetId,
     },
-  };
-  return {
+  } as const;
+  const concentratingState = {
     ...state,
     combatants: new Map(state.combatants).set(spellTargetId, {
       ...target,
@@ -658,9 +716,13 @@ function stateWithSyntheticTargetConcentration(
           "synthetic-target-concentration-fixture",
         ),
       },
-      activeEffects: [...target.activeEffects, concentrationEffect],
     }),
   };
+  return battleStateWithAllocatedEffectForTest({
+    state: concentratingState,
+    ownerId: spellTargetId,
+    effect: concentrationEffect,
+  });
 }
 
 function hasSyntheticTargetConcentrationEffect(
@@ -680,6 +742,9 @@ function stateWithSleepPendingRepeatSave(
   const combatant = requireCombatant(state, combatantId);
   const sleepPendingEffect: BattleActiveEffect = {
     kind: "sleepPendingRepeatSave",
+    effectRef: battleEffectExecutionRefForTest(
+      "synthetic-sleep-repeat-save-effect",
+    ),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       "synthetic-sleep-repeat-save-fixture",
     ),

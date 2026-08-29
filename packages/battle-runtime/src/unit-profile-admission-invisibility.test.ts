@@ -9,6 +9,7 @@ import { Result } from "effect";
 import type { BattleProcedureExecutionRef } from "./identity.ts";
 import {
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   requireCharacterSpellProcedureRefForTest,
   characterSpellInvocationRefForProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
@@ -628,34 +629,28 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
     ).toBeNull();
   });
 
-  test("invisibility preserves an unrelated target effect", () => {
+  test("invisibility preserves a low-level unrelated target effect", () => {
     const session = spellBattle({
       preparedSpells: [spellRecord(invisibilityUnitId)],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
-    const target = requireCombatant(session.state, spellTargetId);
     const unrelatedSource = battleProcedureExecutionRefForTest(
       "synthetic-invisibility-unrelated-resistance",
     );
-    const state: BattleState = {
-      ...session.state,
-      combatants: new Map(session.state.combatants).set(spellTargetId, {
-        ...target,
-        activeEffects: [
-          ...target.activeEffects,
-          {
-            kind: "damageResistance" as const,
-            sourceProcedureRef: unrelatedSource,
-            sourceCombatantId: spellTargetId,
-            damageType: "cold" as const,
-            expiresAt: {
-              kind: "duration" as const,
-              durationTicks: elapsedTimeTicks(10),
-            },
-          },
-        ],
-      }),
-    };
+    const state = battleStateWithAllocatedEffectForTest({
+      state: session.state,
+      ownerId: spellTargetId,
+      effect: {
+        kind: "damageResistance",
+        sourceProcedureRef: unrelatedSource,
+        sourceCombatantId: spellTargetId,
+        damageType: "cold",
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(10),
+        },
+      },
+    });
     const cast = castInvisibilityOnTargets(
       battleRuntimeSessionForTest({ ...session, state }),
       [spellTargetId],

@@ -5,7 +5,7 @@ import type { ActionRestriction } from "@dnd/surface/surface/types";
 import {
   CreatureId as CreatureIdSchema,
   CONDITIONS,
-  type BattleActiveEffectExecutionRef,
+  type BattleEffectExecutionRef,
   type BattleProcedureExecutionRef,
 } from "@dnd/shared/types";
 import { Index, Initiative, Round } from "@dnd/shared/types";
@@ -66,12 +66,12 @@ import {
 const sourceOwnerId = Schema.decodeUnknownSync(CreatureIdSchema)("owner-a");
 const battleProcedureExecutionRef =
   Brand.nominal<BattleProcedureExecutionRef>();
-const battleActiveEffectExecutionRef =
-  Brand.nominal<BattleActiveEffectExecutionRef>();
+const battleEffectExecutionRef =
+  Brand.nominal<BattleEffectExecutionRef>();
 const unitActionProcedureRef = battleProcedureExecutionRef(
   "unit-action-procedure-a",
 );
-const spellEffectRef = battleActiveEffectExecutionRef(
+const spellEffectRef = battleEffectExecutionRef(
   "synthetic-active-effect-ref-a",
 );
 const attackOnlyRestriction: ActionRestriction = {

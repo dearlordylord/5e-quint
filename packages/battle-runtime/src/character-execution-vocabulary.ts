@@ -10,6 +10,11 @@ import type {
   BattleResourcePoolExecutionRef,
 } from "./identity.ts";
 import type { SpellProcedureExecution } from "./character-execution.ts";
+import type { EffectOccurrenceSourceProcedure } from "./effect-occurrence-source-vocabulary.ts";
+export {
+  EFFECT_OCCURRENCE_SOURCE_KINDS,
+  type EffectOccurrenceSourceKind,
+} from "./effect-occurrence-source-vocabulary.ts";
 import type { Brand, Schema } from "effect";
 
 export type UnitFeatureProcedureExecution = Schema.Schema.Type<
@@ -38,6 +43,9 @@ export type CharacterUnitProcedureExecution =
       readonly execution: UnitSupportProcedureExecution;
     };
 
+export type CharacterEffectOccurrenceSourceProcedure =
+  EffectOccurrenceSourceProcedure;
+
 export type CharacterProcedureBinding =
   | {
       readonly procedureRef: BattleProcedureExecutionRef;
@@ -56,6 +64,10 @@ export type CharacterProcedureBinding =
         readonly kind: "unavailableSpellInvocation";
         readonly execution: SpellProcedureExecution;
       };
+    }
+  | {
+      readonly procedureRef: BattleProcedureExecutionRef;
+      readonly procedure: CharacterEffectOccurrenceSourceProcedure;
     };
 
 export type CharacterProcedureBindingSnapshot =
@@ -73,6 +85,10 @@ export type CharacterProcedureBindingSnapshot =
   | {
       readonly procedureRef: BattleProcedureExecutionRef;
       readonly procedure: { readonly kind: "unavailableSpellInvocation" };
+    }
+  | {
+      readonly procedureRef: BattleProcedureExecutionRef;
+      readonly procedure: CharacterEffectOccurrenceSourceProcedure;
     };
 
 type CharacterExecutionStateData = {

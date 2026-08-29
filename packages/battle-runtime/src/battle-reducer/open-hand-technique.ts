@@ -5,6 +5,7 @@
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { difficultyClass } from "@dnd/shared/types";
 import { Match } from "effect";
+import { allocateBattleEffectOccurrenceForCreature } from "../effect-execution-ref.ts";
 
 import type {
   BattleFill,
@@ -17,7 +18,6 @@ import type {
   BattleUnitFeatureSavingThrowOutcomeHole,
   CharacterBattleCreatureState,
 } from "../battle-state-execution.ts";
-import type { BattleActiveEffect } from "../active-effect/types.ts";
 import type { MonkFocusFlurryOfBlowsStrikeSubject } from "../battle-subjects.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import {
@@ -285,18 +285,21 @@ function applyOpenHandTechniqueOpportunityAttackDenial(
   hit: OpenHandTechniqueFlurryHit,
 ): BattleState {
   const target = hit.target;
-  const effect: BattleActiveEffect = {
-    kind: "opportunityAttackDenied",
-    sourceProcedureRef: hit.procedureRef,
-    sourceCombatantId: hit.actorId,
-    expiresAt: { kind: "startOfTurn", combatantId: hit.targetId },
-  };
+  const allocation = allocateBattleEffectOccurrenceForCreature({
+    owner: target,
+    effect: {
+      kind: "opportunityAttackDenied",
+      sourceProcedureRef: hit.procedureRef,
+      sourceCombatantId: hit.actorId,
+      expiresAt: { kind: "startOfTurn", combatantId: hit.targetId },
+    },
+  });
   return {
     ...state,
     combatants: new Map(state.combatants).set(hit.targetId, {
-      ...target,
+      ...allocation.owner,
       activeEffects: [
-        ...target.activeEffects.filter(
+        ...allocation.owner.activeEffects.filter(
           (candidate) =>
             !(
               candidate.kind === "opportunityAttackDenied" &&
@@ -305,7 +308,7 @@ function applyOpenHandTechniqueOpportunityAttackDenial(
               candidate.sourceCombatantId === hit.actorId
             ),
         ),
-        effect,
+        allocation.effect,
       ],
     }),
   };

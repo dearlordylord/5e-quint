@@ -30,6 +30,7 @@ import type {
   BattleStatBlockExecutionScopeRef,
   BattleStatBlockProcedureExecutionRef,
 } from "./identity.ts";
+import type { EffectOccurrenceSourceProcedure } from "./effect-occurrence-source-vocabulary.ts";
 
 export type BattleStatBlockExecutionSource = {
   readonly id: StatBlockId;
@@ -60,7 +61,8 @@ export type StatBlockBonusActionOptionProcedure = {
 export type StatBlockProcedure =
   | StatBlockAttackProcedure
   | StatBlockMultiattackProcedure
-  | StatBlockBonusActionOptionProcedure;
+  | StatBlockBonusActionOptionProcedure
+  | EffectOccurrenceSourceProcedure;
 
 export type StatBlockProcedureBindingFor<
   TProcedure extends StatBlockProcedure,

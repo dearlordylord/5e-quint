@@ -1,4 +1,4 @@
-import { movementFeet } from "@dnd/shared/types";
+import { movementDeltaFeet, movementFeet } from "@dnd/shared/types";
 import { battleObjectId } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { Result, Schema } from "effect";
@@ -17,6 +17,7 @@ import {
   attackExecutionSelectionForSubjectForTest,
   attackRollFill,
   attackTargetFill,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   battleId,
   characterBonusAttackSubjectForTest,
   fighterAttackSubject,
@@ -25,10 +26,12 @@ import {
   requireHole,
   requireResolved,
   resolveBattleSubject,
+  spellRecord,
   startBattleRight,
   startBattleSessionRight,
   statBlockCreatureInit,
   testDaggerAttack,
+  wizardSpellcasting,
   characterSeed,
 } from "./battle-runtime.test-support.ts";
 import {
@@ -36,6 +39,7 @@ import {
   battleAttackExecutionScopeRefBelongsToBattle,
   battleAttackExecutionScopeRefBelongsToCombatant,
   battleProcedureExecutionRefBelongsToScope,
+  battleEffectExecutionRef,
 } from "./identity.ts";
 import { boundAttackExecutionSelectionKey } from "./battle-action-options.ts";
 import { unitLibrary } from "./unit-profile-admission-catalog.test-support.ts";
@@ -91,6 +95,220 @@ function fighterAttackScope(state: ReturnType<typeof identicalDaggerBattle>) {
 }
 
 describe("character attack execution references", () => {
+  test("snapshots validate a mixed durable-effect occurrence census", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-mixed-effect-occurrence-census"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("light")],
+          }),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const fighter = state.combatants.get(fighterId);
+    const goblin = state.combatants.get(goblinId);
+    if (fighter?.origin.kind !== "character" || goblin === undefined) {
+      throw new Error("Expected both effect occurrence participants.");
+    }
+    const sourceProcedureRef = fighter.origin.execution.procedureBindings.find(
+      (binding) => binding.procedure.kind === "spellInvocation",
+    )?.procedureRef;
+    if (sourceProcedureRef === undefined) {
+      throw new Error("Expected a spell invocation occurrence source.");
+    }
+    const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+      state,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: goblinId,
+          effect: {
+            kind: "speedDelta",
+            sourceProcedureRef,
+            sourceCombatantId: fighterId,
+            deltaFeet: movementDeltaFeet(10),
+            expiresAt: { kind: "untilDispelled" },
+          },
+        },
+        {
+          kind: "storedLightEmitter",
+          ownerId: goblinId,
+          emitter: {
+            kind: "spellLightEmitter",
+            sourceProcedureRef,
+            sourceCombatantId: fighterId,
+            attachment: { kind: "combatant", combatantId: goblinId },
+            emission: { kind: "dim", radiusFeet: movementFeet(10) },
+            opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
+            expiresAt: { kind: "untilDispelled" },
+          },
+        },
+      ],
+    });
+    expect(allocated.occurrences).toHaveLength(2);
+    expect(
+      new Set(
+        allocated.occurrences.map((occurrence) =>
+          occurrence.kind === "activeEffect"
+            ? occurrence.effect.effectRef
+            : occurrence.emitter.effectRef,
+        ),
+      ).size,
+    ).toBe(2);
+    const snapshot = snapshotBattle(allocated.state);
+    const encoded = Schema.encodeSync(BattleSnapshotSchema)(snapshot);
+    const ownerSnapshot = encoded.combatants.find(
+      (combatant) => combatant.combatantId === goblinId,
+    );
+    if (ownerSnapshot === undefined) {
+      throw new Error("Expected allocated occurrence owner snapshot.");
+    }
+    expect(
+      ownerSnapshot.activeEffectOccurrences.map(({ kind }) => kind),
+    ).toEqual(["activeEffect"]);
+    expect(encoded.storedLightEmitters).toHaveLength(1);
+    expect(
+      encoded.lightEmitters.every((emitter) => !("effectRef" in emitter)),
+    ).toBe(true);
+    expect(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(encoded),
+      ),
+    ).toBe(true);
+
+    const withoutCensus = {
+      ...encoded,
+      combatants: encoded.combatants.map((combatant) =>
+        combatant.combatantId === goblinId
+          ? (({ activeEffectOccurrences: _activeEffectOccurrences, ...rest }) =>
+              rest)(combatant)
+          : combatant,
+      ),
+    };
+    const duplicateAcrossKinds = {
+      ...encoded,
+      storedLightEmitters: encoded.storedLightEmitters.map((emitter) => ({
+        ...emitter,
+        effectRef: ownerSnapshot.activeEffectOccurrences[0]!.effectRef,
+      })),
+    };
+    const goblinOccurrence = ownerSnapshot.activeEffectOccurrences[0];
+    if (goblinOccurrence === undefined) {
+      throw new Error("Expected allocated occurrence metadata.");
+    }
+    const wrongOwner = {
+      ...encoded,
+      combatants: encoded.combatants.map((combatant) =>
+        combatant.combatantId === goblinId
+          ? { ...combatant, activeEffectOccurrences: [] }
+          : combatant.combatantId === fighterId
+            ? {
+                ...combatant,
+                activeEffectOccurrences: [
+                  ...combatant.activeEffectOccurrences,
+                  goblinOccurrence,
+                ],
+              }
+            : combatant,
+      ),
+    };
+    const futureRef = battleEffectExecutionRef(
+      JSON.stringify({
+        kind: "effectOccurrence",
+        ownerScopeRef: goblin.origin.execution.scopeRef,
+        ordinal: Number(ownerSnapshot.nextEffectOrdinal),
+      }),
+    );
+    const future = {
+      ...encoded,
+      combatants: encoded.combatants.map((combatant) =>
+        combatant.combatantId === goblinId
+          ? {
+              ...combatant,
+              activeEffectOccurrences: [
+                ...combatant.activeEffectOccurrences,
+                { ...goblinOccurrence, effectRef: futureRef },
+              ],
+            }
+          : combatant,
+      ),
+    };
+    const injectedProjectionRef = {
+      ...encoded,
+      lightEmitters: encoded.lightEmitters.map((emitter, index) =>
+        index === 0
+          ? { ...emitter, effectRef: goblinOccurrence.effectRef }
+          : emitter,
+      ),
+    };
+    const unknownActiveEffectKind = {
+      ...encoded,
+      combatants: encoded.combatants.map((combatant) =>
+        combatant.combatantId !== goblinId
+          ? combatant
+          : {
+              ...combatant,
+              activeEffectOccurrences: combatant.activeEffectOccurrences.map(
+                (occurrence) =>
+                  occurrence.kind === "activeEffect"
+                    ? { ...occurrence, activeEffectKind: "notAnActiveEffect" }
+                    : occurrence,
+              ),
+            },
+      ),
+    };
+    const contradictoryActiveEffectMetadata = {
+      ...encoded,
+      combatants: encoded.combatants.map((combatant) =>
+        combatant.combatantId !== goblinId
+          ? combatant
+          : {
+              ...combatant,
+              activeEffectOccurrences: combatant.activeEffectOccurrences.map(
+                (occurrence) =>
+                  occurrence.kind === "activeEffect"
+                    ? {
+                        ...occurrence,
+                        location: {
+                          kind: "object",
+                          objectId: battleObjectId(
+                            "contradictory-active-effect-object",
+                          ),
+                        },
+                      }
+                    : occurrence,
+              ),
+            },
+      ),
+    };
+    const duplicateStoredEmitter = {
+      ...encoded,
+      storedLightEmitters: [
+        ...encoded.storedLightEmitters,
+        ...encoded.storedLightEmitters,
+      ],
+    };
+    for (const invalid of [
+      withoutCensus,
+      duplicateAcrossKinds,
+      wrongOwner,
+      future,
+      unknownActiveEffectKind,
+      contradictoryActiveEffectMetadata,
+      duplicateStoredEmitter,
+      injectedProjectionRef,
+    ]) {
+      expect(
+        Result.isFailure(
+          Schema.decodeUnknownResult(BattleSnapshotSchema)(invalid),
+        ),
+      ).toBe(true);
+    }
+  });
+
   test("battle admission rejects a weapon without an authored presentation source", () => {
     const character = characterSeed({ initiative: 20 });
     if (character.creatureInit.kind !== "character") {

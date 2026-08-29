@@ -187,6 +187,7 @@ export function attackDamageDispositionHole(input: {
   return choices.length > 1
     ? {
         kind: "attackDamageDisposition",
+        damageOccurrence: { kind: "untrackedDamage" },
         holeId: ATTACK_DAMAGE_DISPOSITION_HOLE_ID,
         holeInstanceKey: ATTACK_DAMAGE_DISPOSITION_HOLE_INSTANCE,
         label: "Attack damage disposition",
@@ -214,6 +215,7 @@ export function zeroHitPointReplacementDispositionHole(input: {
   return choices.length > 1
     ? {
         kind: "attackDamageDisposition",
+        damageOccurrence: { kind: "untrackedDamage" },
         holeId:
           input.holeKey?.holeId ??
           damageDispositionHoleIdForTarget(input.target.combatantId),

@@ -1,7 +1,7 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV50D2 command
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel
-import { battleActiveEffectExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import { battleEffectExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { battleStateWithSyntheticWeakeningEndTurnSave } from "./command-delegated-end-turn.test-support.ts";
 import { describe, expect, test } from "vitest";
@@ -314,13 +314,22 @@ describe("QMBT14 deterministic Command control option admission", () => {
     if (awaitingSave.tag !== "needsHoles") {
       throw new Error("Expected Command Grovel save frontier.");
     }
-    expect(awaitingSave.state).toEqual({
-      ...committedState,
+    expect(awaitingSave.state).toMatchObject({
       subjectResolutionPhase: {
         kind: "subjectContinuation",
         subject: grovelAct.subject,
       },
     });
+    expect(requireCombatant(awaitingSave.state, spellTargetId)).toMatchObject({
+      conditions: expect.objectContaining({ prone: true }),
+    });
+    expect(
+      requireCombatant(awaitingSave.state, spellTargetId).activeEffects,
+    ).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "commandPending", option: "grovel" }),
+      ]),
+    );
     expect(awaitingSave.snapshot).toEqual(snapshotBattle(awaitingSave.state));
     expect(requireCombatant(committedState, spellTargetId)).toMatchObject({
       conditions: expect.objectContaining({ prone: false }),
@@ -614,9 +623,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
         tag: "runtimeCommand",
         actorId: spellTargetId,
         command: "commandGrovel",
-        effectRef: battleActiveEffectExecutionRefForTest(
-          "stale-command-grovel",
-        ),
+        effectRef: battleEffectExecutionRefForTest("stale-command-grovel"),
       },
       fills: [],
     });
@@ -789,13 +796,19 @@ describe("QMBT14 deterministic Command control option admission", () => {
     if (awaitingEndTurnSave.tag !== "needsHoles") {
       throw new Error("Expected Command Drop save frontier.");
     }
-    expect(awaitingEndTurnSave.state).toEqual({
-      ...committedWithSave,
+    expect(awaitingEndTurnSave.state).toMatchObject({
       subjectResolutionPhase: {
         kind: "subjectContinuation",
         subject: dropSubject,
       },
     });
+    expect(
+      requireCombatant(awaitingEndTurnSave.state, spellTargetId).activeEffects,
+    ).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "commandPending", option: "drop" }),
+      ]),
+    );
     expect(awaitingEndTurnSave).not.toHaveProperty("droppedObjects");
     expect(awaitingEndTurnSave.snapshot).toEqual(
       snapshotBattle(awaitingEndTurnSave.state),
@@ -848,6 +861,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
     if (dropped.tag !== "resolved") {
       throw new Error("Expected Command Drop to resolve.");
     }
+    expect(dropped.droppedObjects).toHaveLength(1);
     expect(
       requireCombatant(dropped.state, spellTargetId).activeEffects,
     ).toEqual([]);
@@ -1123,9 +1137,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
         tag: "runtimeCommand",
         actorId: spellCasterId,
         command: "commandGrovel",
-        effectRef: battleActiveEffectExecutionRefForTest(
-          "premature-command-grovel",
-        ),
+        effectRef: battleEffectExecutionRefForTest("premature-command-grovel"),
       },
       fills: [],
     });

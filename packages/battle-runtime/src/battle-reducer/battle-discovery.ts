@@ -26,7 +26,7 @@ import {
   canSpendUnarmedStrikeActionResource,
   spendActionResourceAtIndex,
 } from "@dnd/shared-algebras/action-economy-algebra";
-import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
+import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import { Result } from "effect";
 import type {
   BattleMovementSpeedKind,
@@ -146,6 +146,7 @@ import {
   wardingBondSeparationFactsHole,
 } from "./warding-bond.ts";
 import { SELF_TRANSFORMATION_MODE_KINDS } from "./domain-constants.ts";
+import { areaWindStrengthHole } from "./area-wind-strength.ts";
 import { discoverLegendaryActionActs } from "./unit-feature-discovery.ts";
 import {
   activeSelfTransformationModeEffect,
@@ -869,6 +870,7 @@ function levitateAltitudeControlActs(
         levitateAltitudeChangeHole({
           actorId,
           targetId,
+          effectRef: effect.effectRef,
           maxDistanceFeet: effect.maxAltitudeChangeFeet,
         }),
       ],
@@ -1142,6 +1144,7 @@ function greaseGroundHazardSaveAct(
       actorId,
       command: "greaseGroundHazardSave",
       areaId: effect.areaId,
+      effectRef: effect.effectRef,
       trigger,
     },
     initialHoles: [
@@ -1195,6 +1198,7 @@ function webRestraintSaveAct(
       actorId,
       command: "webRestraintSave",
       areaId: effect.areaId,
+      effectRef: effect.effectRef,
       trigger,
     },
     initialHoles: [
@@ -1232,6 +1236,7 @@ function webRestrainedNoLongerInAreaActs(
             actorId,
             command: "webRestrainedNoLongerInArea" as const,
             areaId: web.areaId,
+            effectRef: web.effectRef,
           },
           initialHoles: [],
         }));
@@ -1249,6 +1254,7 @@ function webAreaRemovalActs(
       actorId,
       command: "webAreaRemoved" as const,
       areaId: effect.areaId,
+      effectRef: effect.effectRef,
     },
     initialHoles: [],
   }));
@@ -1275,6 +1281,7 @@ function gustOfWindLineEndTurnSaveActs(
       actorId,
       command: "gustOfWindLineSave" as const,
       areaId: effect.areaId,
+      effectRef: effect.effectRef,
       directionId: effect.directionId,
       trigger: "endsTurnInLine" as const,
     },
@@ -1309,6 +1316,7 @@ function gustOfWindLineDirectionChangeActs(
               actorId,
               command: "gustOfWindLineDirectionChange" as const,
               areaId: effect.areaId,
+              effectRef: effect.effectRef,
               directionId: effect.directionId,
             },
             initialHoles: [gustOfWindLineDirectionChoiceHole(effect)],
@@ -1395,6 +1403,7 @@ function flamingSphereSaveAct(
       actorId,
       command: "movableZoneSave",
       areaId: effect.areaId,
+      effectRef: effect.effectRef,
       trigger: "endsTurnWithinFiveFeetOfSphere",
     },
     initialHoles: [
@@ -1418,6 +1427,7 @@ function flamingSphereRepositionAct(
       actorId,
       command: "movableZoneReposition",
       areaId: effect.areaId,
+      effectRef: effect.effectRef,
     },
     initialHoles: [flamingSphereRepositionMovementHole(effect)],
   };
@@ -1436,6 +1446,7 @@ function flamingSphereRamAct(
       command: "movableZoneRam",
       targetId,
       areaId: effect.areaId,
+      effectRef: effect.effectRef,
       trigger: "rammedBySphere",
     },
     initialHoles: [
@@ -1468,6 +1479,7 @@ function moonbeamEndTurnSaveActs(
       actorId,
       command: "movableZoneSave" as const,
       areaId: effect.areaId,
+      effectRef: effect.effectRef,
       trigger: "endsTurnInArea" as const,
     },
     initialHoles: [
@@ -1488,6 +1500,7 @@ function moonbeamCylinderExitActs(
         actorId,
         command: "moonbeamCylinderExit" as const,
         areaId: effect.areaId,
+        effectRef: effect.effectRef,
       },
       initialHoles: [],
     }));
@@ -1513,6 +1526,7 @@ function moonbeamRepositionActs(
               actorId,
               command: "movableZoneReposition" as const,
               areaId: effect.areaId,
+              effectRef: effect.effectRef,
             },
             initialHoles: [moonbeamRepositionMovementHole(effect)],
           },
@@ -1578,11 +1592,11 @@ function cloudkillStrongWindDispersalActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
-  return [...state.combatants.values()].flatMap((combatant) =>
+  return [...state.combatants].flatMap(([effectOwnerId, combatant]) =>
     combatant.activeEffects.flatMap(
       (effect): readonly BattleActDiscoveryCandidate[] =>
         effect.kind === "cloudkillAreaHazard"
-          ? [cloudkillStrongWindDispersalAct(actorId, effect)]
+          ? [cloudkillStrongWindDispersalAct(actorId, effectOwnerId, effect)]
           : [],
     ),
   );
@@ -1590,6 +1604,7 @@ function cloudkillStrongWindDispersalActs(
 
 function cloudkillStrongWindDispersalAct(
   actorId: CombatantId,
+  effectOwnerId: CombatantId,
   effect: CloudkillAreaHazardEffect,
 ): BattleActDiscoveryCandidate {
   return {
@@ -1597,9 +1612,15 @@ function cloudkillStrongWindDispersalAct(
       tag: "runtimeCommand",
       actorId,
       command: "disperseCloudkill",
-      areaId: effect.areaId,
+      effectOwnerId,
+      effectRef: spellActiveEffectExecutionRef(effect),
     },
-    initialHoles: [],
+    initialHoles: [
+      areaWindStrengthHole(
+        effect.areaId,
+        spellActiveEffectExecutionRef(effect),
+      ),
+    ],
   };
 }
 

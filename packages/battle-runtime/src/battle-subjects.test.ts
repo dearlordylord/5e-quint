@@ -1,5 +1,5 @@
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { Schema } from "effect";
@@ -69,9 +69,7 @@ describe("BattleSubject identity", () => {
       ),
       NonNegativeInteger(0),
     );
-    const effectRef = battleActiveEffectExecutionRefForTest(
-      "runtime-command-effect",
-    );
+    const effectRef = battleEffectExecutionRefForTest("runtime-command-effect");
     const areaId = "runtime-command-area";
     const runtimeCommandExtras = {
       endTurn: {},
@@ -105,33 +103,44 @@ describe("BattleSubject identity", () => {
         attackAbility: "str",
         attackDamageType: "slashing",
       },
-      greaseGroundHazardSave: { areaId, trigger: "entersArea" },
-      webRestraintSave: { areaId, trigger: "startsTurnInArea" },
+      greaseGroundHazardSave: { areaId, effectRef, trigger: "entersArea" },
+      webRestraintSave: { areaId, effectRef, trigger: "startsTurnInArea" },
       sleetStormAreaHazardSave: {
-        areaMembershipTrigger: { kind: "turnStartInArea", areaId },
+        areaMembershipTrigger: { kind: "turnStartInArea", areaId, effectRef },
       },
       insectPlagueAreaHazardSave: {
-        areaMembershipTrigger: { kind: "turnEndInArea", areaId },
+        areaMembershipTrigger: { kind: "turnEndInArea", areaId, effectRef },
       },
       cloudkillAreaHazardSave: {
-        areaMembershipTrigger: { kind: "areaMovesIntoSpace", areaId },
+        areaMembershipTrigger: {
+          kind: "areaMovesIntoSpace",
+          areaId,
+          effectRef,
+        },
       },
-      disperseCloudkill: { areaId },
-      webRestrainedNoLongerInArea: { areaId },
-      webAreaRemoved: { areaId },
+      disperseCloudkill: { effectOwnerId: actorId, effectRef },
+      webRestrainedNoLongerInArea: { areaId, effectRef },
+      webAreaRemoved: { areaId, effectRef },
       gustOfWindLineSave: {
         areaId,
+        effectRef,
         directionId: "runtime-command-direction",
         trigger: "endsTurnInLine",
       },
       gustOfWindLineDirectionChange: {
         areaId,
+        effectRef,
         directionId: "runtime-command-direction",
       },
-      movableZoneSave: { areaId, trigger: "entersArea" },
-      moonbeamCylinderExit: { areaId },
-      movableZoneReposition: { areaId },
-      movableZoneRam: { targetId, areaId, trigger: "rammedBySphere" },
+      movableZoneSave: { areaId, effectRef, trigger: "entersArea" },
+      moonbeamCylinderExit: { areaId, effectRef },
+      movableZoneReposition: { areaId, effectRef },
+      movableZoneRam: {
+        targetId,
+        areaId,
+        effectRef,
+        trigger: "rammedBySphere",
+      },
       releaseSpellCreatedHeldObject: { effectRef },
       protectionRelevantEffectSave: { effectRef, relevantEffect: "charmed" },
       creatureTypeProtectionConditionAttempt: {
@@ -203,9 +212,7 @@ describe("BattleSubject identity", () => {
       ),
       NonNegativeInteger(0),
     );
-    const effectRef = battleActiveEffectExecutionRefForTest(
-      "action-subject-effect",
-    );
+    const effectRef = battleEffectExecutionRefForTest("action-subject-effect");
     const actionExtras = {
       attack: {
         procedureRef: attackProcedureRef,
@@ -286,7 +293,7 @@ describe("BattleSubject identity", () => {
       actorId,
       battleExecutionScopeOrdinal(3),
     );
-    const effectRef = battleActiveEffectExecutionRefForTest(
+    const effectRef = battleEffectExecutionRefForTest(
       "reference-bearing-subject-effect",
     );
     const candidates = [
@@ -589,6 +596,7 @@ describe("BattleSubject identity", () => {
         actorId,
         command: "greaseGroundHazardSave",
         areaId: "synthetic-area",
+        effectRef: battleEffectExecutionRefForTest("synthetic-area-effect"),
         trigger: "entersArea",
         sourceCombatantId: actorId,
         sourceProcedureRef: battleProcedureExecutionRefForTest(

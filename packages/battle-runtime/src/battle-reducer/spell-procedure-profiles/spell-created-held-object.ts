@@ -52,6 +52,7 @@ import type {
   DiceExpr,
 } from "@dnd/surface/surface/types";
 import { Result, Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -63,12 +64,12 @@ import {
 } from "../../battle-state-execution.ts";
 import { snapshotBattle } from "../interrupt-execution.ts";
 import {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../../identity.ts";
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
-import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
+import { allocateBattleEffectExecutionRef } from "../../effect-execution-ref.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { spellCreatedHeldObjectHasFreeHand } from "../spell-created-held-object.ts";
@@ -105,6 +106,7 @@ type SpellCreatedHeldObjectInvocation = Extract<
 >;
 
 const SpellCreatedHeldObjectTemplateSchema = Schema.Struct({
+  ...BattleEffectOccurrenceTemplateSchemaFields,
   kind: Schema.Literal("spellCreatedHeldObject"),
   sourceCombatantId: CombatantId,
   objectState: Schema.Struct({ kind: Schema.Literal("held") }),
@@ -471,7 +473,7 @@ function resolveSpellCreatedHeldObject(
     return resourced;
   }
   /* v8 ignore stop -- @preserve */
-  const allocation = allocateBattleActiveEffectRef({
+  const allocation = allocateBattleEffectExecutionRef({
     state: resourced.state,
     ownerId: input.actorId,
   });
@@ -652,7 +654,7 @@ const SpellCreatedHeldObjectAttackInvocationSchema =
       rangeFeet: MovementFeet,
       attackKind: Schema.Literal("melee_spell_attack"),
       attackBonus: AttackBonus,
-      sourceEffectRef: BattleActiveEffectExecutionRef,
+      sourceEffectRef: BattleEffectExecutionRef,
       sourceHeldObjectProcedureRef: BattleProcedureExecutionRef,
     }),
   );
@@ -665,7 +667,7 @@ const SpellCreatedHeldObjectReEvokeInvocationSchema =
       procedure: Schema.Literal("spellCreatedHeldObjectReEvoke"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("bonusAction"),
-      sourceEffectRef: BattleActiveEffectExecutionRef,
+      sourceEffectRef: BattleEffectExecutionRef,
       sourceHeldObjectProcedureRef: BattleProcedureExecutionRef,
     }),
   );

@@ -19,10 +19,10 @@ import type { CreatureType } from "@dnd/shared/game-facts";
 import type { Condition } from "@dnd/shared/types";
 import type { CombatantId } from "../identity.ts";
 import type {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
 } from "../identity.ts";
-import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
+import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import type {
   BattleActiveEffect,
   BattleActiveEffectExpiration,
@@ -264,6 +264,7 @@ export function protectionRelevantEffectSavingThrowOutcomeHole(
   const key = [
     "battle:protection-relevant-effect-save:",
     targetId,
+    spellActiveEffectExecutionRef(effect),
     effect.sourceCombatantId,
     effect.sourceProcedureRef,
     relevantEffect,
@@ -277,6 +278,7 @@ export function protectionRelevantEffectSavingThrowOutcomeHole(
     label: `${relevantEffect} save`,
     protectionRelevantEffectSave: {
       targetId,
+      effectRef: spellActiveEffectExecutionRef(effect),
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       relevantEffect,
@@ -545,7 +547,7 @@ export function spellRestraintEffectEntries(
 export function spellRestraintEffectFor(
   state: BattleState,
   combatantId: CombatantId,
-  effectRef: BattleActiveEffectExecutionRef,
+  effectRef: BattleEffectExecutionRef,
 ):
   | Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>
   | undefined {
@@ -711,17 +713,18 @@ export function removeHypnoticPatternControlEffectsFromTarget(
 export function removeHideousLaughterEffectFromTarget(
   state: BattleState,
   targetId: CombatantId,
-  expiringEffect: HideousLaughterEffect,
+  effectRef: BattleEffectExecutionRef,
 ): BattleState {
   const target = state.combatants.get(targetId);
-  if (
-    target === undefined ||
-    !target.activeEffects.some((effect) => effect === expiringEffect)
-  ) {
+  const expiringEffect = target?.activeEffects.find(
+    (effect): effect is HideousLaughterEffect =>
+      effect.kind === "hideousLaughter" && effect.effectRef === effectRef,
+  );
+  if (target === undefined || expiringEffect === undefined) {
     return state;
   }
   const activeEffects = target.activeEffects.filter(
-    (effect) => effect !== expiringEffect,
+    (effect) => effect.effectRef !== effectRef,
   );
   const conditions = conditionsAfterExpiringHideousLaughterEffect(
     target.conditions,

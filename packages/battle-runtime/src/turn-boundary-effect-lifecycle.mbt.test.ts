@@ -1,4 +1,3 @@
-import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING
 // RAW trace:
 // - .references/srd-5.2.1/Playing-the-Game.md#The Order of Combat: combat
@@ -11,9 +10,8 @@ import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 //   rules-defined turn-boundary trigger shape.
 // - UBIQUITOUS_LANGUAGE.md: Boundary Crossing, Spell Effect, Reaction, Timer.
 // Boundary: bounded source/target fixture; not exhaustive same-timing ordering.
-// Death Saving Throw ordering is intentionally outside this witness; this
-// fixture does not assert a same-timing ordering for that lifecycle.
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+// Death Saving Throw resolution ordering is outside this witness; the mixed
+// boundary case asserts only that the table receives the required order choice.
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   difficultyClass,
@@ -25,8 +23,8 @@ import {
   battleProcedureExecutionCursor,
   battleProcedureExecutionRef,
 } from "./identity.ts";
-import type { SpellRecord } from "@dnd/surface/surface/types";
 import { describe, expect, it } from "vitest";
+import { Result, Schema } from "effect";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -51,7 +49,6 @@ import {
   characterSeed,
   damageRollFillWithGroups,
   fighterId,
-  fighterVsGoblinBattle,
   findHole,
   goblinId,
   savingThrowOutcomeFill,
@@ -60,9 +57,10 @@ import {
 import {
   battleReducerStartRouteEvent,
   battleId,
+  BattleSnapshotSchema,
   endTurn,
+  snapshotBattle,
   type ActiveOngoingFeatureOccurrence,
-  type BattleActiveEffect,
   type BattleCreatureState,
   type BattleResolutionResult,
   type BattleProcedureExecutionRef,
@@ -71,6 +69,10 @@ import {
   type OngoingFeatureSourceKey,
 } from "./index.ts";
 import type { UnitFeatureProcedureExecution } from "./character-execution-admission.ts";
+import {
+  battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest,
+  type LowLevelEffectOccurrenceTemplate,
+} from "./low-level-effect-occurrence.test-support.ts";
 
 type TurnBoundaryLifecycleScenario =
   | "init"
@@ -128,6 +130,7 @@ type TurnBoundaryLifecycleProjection = {
 
 type TurnBoundaryLifecycleRuntimeState = {
   readonly battle: BattleState;
+  readonly effectProcedureRefs: TurnBoundaryEffectProcedureRefs;
   readonly scenario: TurnBoundaryLifecycleScenario;
   readonly turnStartDamageAppliedBeforeEndDamage: boolean;
   readonly turnEndDamageAppliedBeforeExpiry: boolean;
@@ -136,6 +139,12 @@ type TurnBoundaryLifecycleRuntimeState = {
   readonly startTurnOngoingExpiredAtSourceStart: boolean;
   readonly turnStartDurationExpiredAfterRoundTick: boolean;
   readonly lastHoleOrder: TurnBoundaryHoleOrder;
+};
+
+type TurnBoundaryEffectProcedureRefs = {
+  readonly turnStartDamage: BattleProcedureExecutionRef;
+  readonly turnEndDamage: BattleProcedureExecutionRef;
+  readonly untilNextTurn: BattleProcedureExecutionRef;
 };
 
 type TurnBoundaryLifecycleDriverAction =
@@ -164,26 +173,9 @@ const turnBoundaryRouteSurfaceByQuintTag = {
   SourceNextTurnResolvedRouteSurface: "sourceNextTurnResolved",
 } as const satisfies Readonly<Record<string, TurnBoundaryRouteSurface>>;
 
-const turnStartDamageSpellId = syntheticSpellId(
-  "synthetic_turn_boundary_start_damage",
-);
-const turnEndDamageSpellId = syntheticSpellId(
-  "synthetic_turn_boundary_end_damage",
-);
-const untilNextTurnSpellId = syntheticSpellId(
-  "synthetic_turn_boundary_until_next_turn",
-);
 const initialTargetHp = 10;
 const turnStartDamageRoll = 2;
 const turnEndDamageRoll = 3;
-
-function syntheticSpellId(id: string): SpellRecord["id"] {
-  // SpellRecord["id"] is a branded string whose brand is compile-time-only and
-  // erased at runtime. This bounded fixture never looks the synthetic id up in
-  // Surface content; active-effect lifecycle code only carries and compares the
-  // raw string for equality.
-  return parseSharedUnitId(id);
-}
 
 const driverSchema = {
   init: {},
@@ -240,7 +232,74 @@ const replaySequences = [
 ] as const satisfies ReadonlyArray<TurnBoundaryLifecycleReplaySequence>;
 
 describe("turn-boundary effect lifecycle MBT", () => {
+  function assertLowLevelEffectSourceSnapshotContract(): void {
+    const snapshot = snapshotBattle(battleWithTurnBoundaryEffects());
+    const encoded = Schema.encodeSync(BattleSnapshotSchema)(snapshot);
+    expect(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(encoded),
+      ),
+    ).toBe(true);
+    const fighter = encoded.combatants.find(
+      (combatant) => combatant.combatantId === fighterId,
+    );
+    if (fighter?.origin.kind !== "character") {
+      throw new Error("Expected encoded fighter character origin.");
+    }
+    const sourceBinding = fighter.origin.execution.procedureBindings.find(
+      (binding) => binding.procedure.kind === "effectOccurrenceSource",
+    );
+    if (sourceBinding?.procedure.kind !== "effectOccurrenceSource") {
+      throw new Error("Expected a low-level effect occurrence source binding.");
+    }
+    const encodedWithEffectKind = (effectKind: string): unknown => ({
+      ...encoded,
+      combatants: encoded.combatants.map((combatant) =>
+        combatant.combatantId !== fighterId ||
+        combatant.origin.kind !== "character"
+          ? combatant
+          : {
+              ...combatant,
+              origin: {
+                ...combatant.origin,
+                execution: {
+                  ...combatant.origin.execution,
+                  procedureBindings:
+                    combatant.origin.execution.procedureBindings.map(
+                      (binding) =>
+                        binding.procedureRef !== sourceBinding.procedureRef
+                          ? binding
+                          : {
+                              ...binding,
+                              procedure: {
+                                ...sourceBinding.procedure,
+                                effectKind,
+                              },
+                            },
+                    ),
+                },
+              },
+            },
+      ),
+    });
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+          encodedWithEffectKind("spellCondition"),
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+          encodedWithEffectKind("damageResistance"),
+        ),
+      ),
+    ).toBe(true);
+  }
+
   it("replays the bounded turn-boundary lifecycle sequence deterministically", async () => {
+    assertLowLevelEffectSourceSnapshotContract();
     const replayedActions = new Set<TurnBoundaryLifecycleDriverAction>();
 
     for (const sequence of replaySequences) {
@@ -283,31 +342,29 @@ describe("turn-boundary effect lifecycle MBT", () => {
     MBT_TEST_TIMEOUT_MS,
   );
 
-  it("splits mixed death-save and turn-boundary discovery route ownership", () => {
+  it("requests occurrence ordering before mixed death-save and turn-boundary ownership", () => {
     const awaitingBoundary = endTurn({
       state: battleWithTurnBoundaryEffectsAndDeathSave(),
       actorId: fighterId,
     });
     assertNeedsHoles(awaitingBoundary, "mixed death-save route discovery");
-    expect(awaitingBoundary.holes.map((hole) => hole.kind)).toEqual([
-      "deathSavingThrow",
-      "rolledDice",
-      "savingThrowOutcome",
+    expect(awaitingBoundary.holes).toEqual([
+      expect.objectContaining({
+        kind: "startTurnOccurrenceOrder",
+        occurrences: expect.arrayContaining([
+          expect.objectContaining({ kind: "deathSavingThrow" }),
+          expect.objectContaining({ kind: "spellTurnStartDamageAndSave" }),
+        ]),
+      }),
     ]);
     expect(
       routeEventsOf(awaitingBoundary, "mixed death-save route discovery"),
     ).toEqual([
       {
-        kind: "discoverBattleActs",
-        subject: "deathSavingThrow",
-        holes: ["deathSavingThrow"],
-        owner: "battleHitPointAndZeroHpLifecycle",
-      },
-      {
-        kind: "discoverBattleActs",
-        subject: "turnBoundaryEffectLifecycle",
-        holes: ["rolledDice", "savingThrowOutcome"],
-        owner: "battleTurnBoundary",
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "battleAction",
+        holes: [],
+        owner: "battleActionEconomy",
       },
     ]);
     expect(
@@ -327,19 +384,11 @@ describe("turn-boundary effect lifecycle MBT", () => {
     assertNeedsHoles(awaitingBoundary, "mixed repeat-save route discovery");
     expect(awaitingBoundary.holes.map((hole) => hole.kind)).toEqual([
       "savingThrowOutcome",
-      "rolledDice",
-      "savingThrowOutcome",
     ]);
     expect(
       awaitingBoundary.holes.some(
         (hole) =>
           hole.kind === "savingThrowOutcome" && "sleepRepeatSave" in hole,
-      ),
-    ).toBe(true);
-    expect(
-      awaitingBoundary.holes.some(
-        (hole) =>
-          hole.kind === "savingThrowOutcome" && "spellTurnStartSave" in hole,
       ),
     ).toBe(true);
     expect(
@@ -349,12 +398,6 @@ describe("turn-boundary effect lifecycle MBT", () => {
         kind: "discoverBattleActs",
         subject: "repeatSaveConditionEffect",
         holes: ["savingThrowOutcome"],
-        owner: "battleTurnBoundary",
-      },
-      {
-        kind: "discoverBattleActs",
-        subject: "turnBoundaryEffectLifecycle",
-        holes: ["rolledDice", "savingThrowOutcome"],
         owner: "battleTurnBoundary",
       },
     ]);
@@ -411,15 +454,7 @@ describe("turn-boundary effect lifecycle MBT", () => {
     assertNeedsHoles(awaitingBoundary, "mixed saving throw route discovery");
     expect(awaitingBoundary.holes.map((hole) => hole.kind)).toEqual([
       "savingThrowOutcome",
-      "rolledDice",
-      "savingThrowOutcome",
     ]);
-    expect(
-      awaitingBoundary.holes.some(
-        (hole) =>
-          hole.kind === "savingThrowOutcome" && "spellTurnStartSave" in hole,
-      ),
-    ).toBe(true);
 
     const conditionSaveHole = findSpellConditionEndTurnSaveHole(
       awaitingBoundary.holes,
@@ -554,8 +589,10 @@ function createTurnBoundaryRouteReplayDriver() {
 }
 
 function initialRuntimeState(): TurnBoundaryLifecycleRuntimeState {
+  const fixture = battleWithTurnBoundaryEffectsFixture();
   return {
-    battle: battleWithTurnBoundaryEffects(),
+    battle: fixture.state,
+    effectProcedureRefs: fixture.effectProcedureRefs,
     scenario: "init",
     turnStartDamageAppliedBeforeEndDamage: false,
     turnEndDamageAppliedBeforeExpiry: false,
@@ -652,19 +689,30 @@ function resolveTargetStartTurn(
   if (awaitingBoundary.tag !== "needsHoles") {
     throw new Error("Expected target start-turn damage and save holes.");
   }
-  expect(holeOrder(awaitingBoundary.holes)).toBe("turnStartDamageThenSave");
-  const resolved = endTurn({
-    state: state.battle,
+  expect(awaitingBoundary.holes.map((hole) => hole.kind)).toEqual([
+    "rolledDice",
+  ]);
+  const damageFill = damageRollFillWithGroups(
+    findHole(awaitingBoundary.holes, "rolledDice"),
+    [[turnStartDamageRoll]],
+  );
+  const awaitingSave = endTurn({
+    state: awaitingBoundary.state,
     actorId: fighterId,
-    fills: [
-      damageRollFillWithGroups(findHole(awaitingBoundary.holes, "rolledDice"), [
-        [turnStartDamageRoll],
-      ]),
-      savingThrowOutcomeFill(
-        findHole(awaitingBoundary.holes, "savingThrowOutcome"),
-        [{ targetId: goblinId, succeeded: false }],
-      ),
-    ],
+    fills: [damageFill],
+  });
+  assertNeedsHoles(awaitingSave, "target start-turn save");
+  expect(awaitingSave.holes.map((hole) => hole.kind)).toEqual([
+    "savingThrowOutcome",
+  ]);
+  const saveFill = savingThrowOutcomeFill(
+    findHole(awaitingSave.holes, "savingThrowOutcome"),
+    [{ targetId: goblinId, succeeded: false }],
+  );
+  const resolved = endTurn({
+    state: awaitingBoundary.state,
+    actorId: fighterId,
+    fills: [damageFill, saveFill],
   });
   if (resolved.tag !== "resolved") {
     throw new Error("Expected target start-turn boundary to resolve.");
@@ -678,7 +726,7 @@ function resolveTargetStartTurn(
       hasEffect(
         resolved.state,
         goblinId,
-        battleProcedureExecutionRefForTest(turnEndDamageSpellId),
+        state.effectProcedureRefs.turnEndDamage,
       ),
     lastHoleOrder: "turnStartDamageThenSave",
   };
@@ -716,7 +764,7 @@ function resolveSourceNextTurn(
       !hasEffect(
         resolved.state,
         goblinId,
-        battleProcedureExecutionRefForTest(turnEndDamageSpellId),
+        state.effectProcedureRefs.turnEndDamage,
       ),
     endTurnOngoingExpiredAtTargetEnd: !hasOngoingFeature(
       resolved.state,
@@ -726,7 +774,7 @@ function resolveSourceNextTurn(
     untilNextTurnExpiredAtSourceStart: !hasEffect(
       resolved.state,
       fighterId,
-      battleProcedureExecutionRefForTest(untilNextTurnSpellId),
+      state.effectProcedureRefs.untilNextTurn,
     ),
     startTurnOngoingExpiredAtSourceStart: !hasOngoingFeature(
       resolved.state,
@@ -736,7 +784,7 @@ function resolveSourceNextTurn(
     turnStartDurationExpiredAfterRoundTick: !hasEffect(
       resolved.state,
       goblinId,
-      battleProcedureExecutionRefForTest(turnStartDamageSpellId),
+      state.effectProcedureRefs.turnStartDamage,
     ),
     lastHoleOrder: "turnEndDamageOnly",
   };
@@ -746,63 +794,39 @@ function battleWithTurnBoundaryEffects(input?: {
   readonly baseBattle?: BattleState;
   readonly targetHp?: number;
 }): BattleState {
-  const battle = input?.baseBattle ?? fighterVsGoblinBattle();
-  const fighter = requireCombatant(battle, fighterId);
-  const goblin = requireCombatant(battle, goblinId);
-  if (fighter.origin.kind !== "character") {
-    throw new Error(
-      "Turn-boundary lifecycle fixture source must be a character.",
+  return battleWithTurnBoundaryEffectsFixture(input).state;
+}
+
+function battleWithTurnBoundaryEffectsFixture(input?: {
+  readonly baseBattle?: BattleState;
+  readonly targetHp?: number;
+}): {
+  readonly state: BattleState;
+  readonly effectProcedureRefs: TurnBoundaryEffectProcedureRefs;
+} {
+  const battle = input?.baseBattle ?? turnBoundaryCharacterBattle();
+  const startOngoing =
+    stateWithAllocatedSyntheticOngoingFeatureProcedureForTest(
+      battle,
+      fighterId,
+      syntheticOngoingFeatureExecution("turnBoundary"),
     );
-  }
-  const firstProcedureOrdinal = Number(
-    fighter.origin.execution.nextProcedureOrdinal,
+  const endOngoing = stateWithAllocatedSyntheticOngoingFeatureProcedureForTest(
+    startOngoing.state,
+    fighterId,
+    syntheticOngoingFeatureExecution("fixedDuration"),
   );
-  const startTurnOngoingFeatureKey = battleProcedureExecutionRef(
-    fighter.origin.execution.scopeRef,
-    NonNegativeInteger(firstProcedureOrdinal),
-  );
-  const endTurnOngoingFeatureKey = battleProcedureExecutionRef(
-    fighter.origin.execution.scopeRef,
-    NonNegativeInteger(firstProcedureOrdinal + 1),
-  );
-  return {
-    ...battle,
-    combatants: new Map(battle.combatants)
+  const fighter = requireCombatant(endOngoing.state, fighterId);
+  const goblin = requireCombatant(endOngoing.state, goblinId);
+  const stateWithOngoingFeatures = {
+    ...endOngoing.state,
+    combatants: new Map(endOngoing.state.combatants)
       .set(fighterId, {
         ...fighter,
-        origin: {
-          ...fighter.origin,
-          execution: {
-            ...fighter.origin.execution,
-            nextProcedureOrdinal: battleProcedureExecutionCursor(
-              firstProcedureOrdinal + 2,
-            ),
-            procedureBindings: [
-              ...fighter.origin.execution.procedureBindings,
-              {
-                procedureRef: startTurnOngoingFeatureKey,
-                procedure: {
-                  kind: "unitFeature",
-                  source: { kind: "intrinsic" },
-                  execution: syntheticOngoingFeatureExecution("turnBoundary"),
-                },
-              },
-              {
-                procedureRef: endTurnOngoingFeatureKey,
-                procedure: {
-                  kind: "unitFeature",
-                  source: { kind: "intrinsic" },
-                  execution: syntheticOngoingFeatureExecution("fixedDuration"),
-                },
-              },
-            ],
-          },
-        },
-        activeEffects: [...fighter.activeEffects, untilNextTurnEffect()],
         activeOngoingFeatureOccurrences: new Map([
           ...fighter.activeOngoingFeatureOccurrences,
-          [startTurnOngoingFeatureKey, startTurnOngoingFeature()],
-          [endTurnOngoingFeatureKey, endTurnOngoingFeature()],
+          [startOngoing.procedureRef, startTurnOngoingFeature()],
+          [endOngoing.procedureRef, endTurnOngoingFeature()],
         ]),
       })
       .set(goblinId, {
@@ -810,13 +834,54 @@ function battleWithTurnBoundaryEffects(input?: {
         hp: Hp(input?.targetHp ?? initialTargetHp),
         maxHp: Hp(initialTargetHp),
         positiveHpUnconscious: null,
-        activeEffects: [
-          ...goblin.activeEffects,
-          turnStartDamageEffect(),
-          turnEndDamageEffect(),
-        ],
       }),
   };
+  const untilNextTurn =
+    battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest({
+      state: stateWithOngoingFeatures,
+      sourceCombatantId: fighterId,
+      ownerId: fighterId,
+      effect: untilNextTurnEffect(),
+    });
+  const turnStartDamage =
+    battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest({
+      state: untilNextTurn.state,
+      sourceCombatantId: fighterId,
+      ownerId: goblinId,
+      effect: turnStartDamageEffect(),
+    });
+  const turnEndDamage =
+    battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest({
+      state: turnStartDamage.state,
+      sourceCombatantId: fighterId,
+      ownerId: goblinId,
+      effect: turnEndDamageEffect(),
+    });
+  return {
+    state: turnEndDamage.state,
+    effectProcedureRefs: {
+      turnStartDamage: turnStartDamage.sourceProcedureRef,
+      turnEndDamage: turnEndDamage.sourceProcedureRef,
+      untilNextTurn: untilNextTurn.sourceProcedureRef,
+    },
+  };
+}
+
+function turnBoundaryCharacterBattle(): BattleState {
+  return startBattleRight({
+    battleId: battleId("battle-turn-boundary-effect-lifecycle"),
+    combatants: [
+      characterSeed({ combatantId: fighterId, initiative: 20 }),
+      characterSeed({
+        combatantId: goblinId,
+        displayName: "Target Fighter",
+        initiative: 10,
+        currentHp: initialTargetHp,
+        maxHp: initialTargetHp,
+        attack: null,
+      }),
+    ],
+  });
 }
 
 function battleWithTurnBoundaryEffectsAndDeathSave(): BattleState {
@@ -850,56 +915,70 @@ function battleWithTurnBoundaryEffectsAndDeathSave(): BattleState {
 
 function battleWithTurnBoundaryEffectsAndConditionSave(): BattleState {
   const battle = battleWithTurnBoundaryEffects();
-  const fighter = requireCombatant(battle, fighterId);
-  return {
-    ...battle,
-    combatants: new Map(battle.combatants).set(fighterId, {
-      ...fighter,
-      activeEffects: [
-        ...fighter.activeEffects,
-        fighterSpellConditionEndTurnSaveEffect(),
-      ],
-    }),
-  };
+  return battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest({
+    state: battle,
+    sourceCombatantId: goblinId,
+    ownerId: fighterId,
+    effect: fighterSpellConditionEndTurnSaveEffect(),
+  }).state;
 }
 
 function battleWithTurnBoundaryEffectsAndSleepRepeatSave(): BattleState {
   const battle = battleWithTurnBoundaryEffects();
-  const fighter = requireCombatant(battle, fighterId);
+  const allocated = battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest({
+    state: battle,
+    sourceCombatantId: goblinId,
+    ownerId: fighterId,
+    effect: sleepPendingRepeatSaveEffect(),
+  });
+  const goblin = requireCombatant(allocated.state, goblinId);
   return {
-    ...battle,
-    combatants: new Map(battle.combatants).set(fighterId, {
-      ...fighter,
-      activeEffects: [...fighter.activeEffects, sleepPendingRepeatSaveEffect()],
+    ...allocated.state,
+    combatants: new Map(allocated.state.combatants).set(goblinId, {
+      ...goblin,
+      concentration: {
+        sourceProcedureRef: allocated.sourceProcedureRef,
+        effectKind: "spellEffect",
+      },
     }),
   };
 }
 
 function battleWithCurrentActorEndTurnDamageAndConcentration(): BattleState {
-  const battle = fighterVsGoblinBattle();
-  const fighter = requireCombatant(battle, fighterId);
+  const battle = turnBoundaryCharacterBattle();
+  const incomingDamage =
+    battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest({
+      state: battle,
+      sourceCombatantId: goblinId,
+      ownerId: fighterId,
+      effect: fighterTurnEndDamageEffect(),
+    });
+  const concentration =
+    battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest({
+      state: incomingDamage.state,
+      sourceCombatantId: fighterId,
+      ownerId: fighterId,
+      effect: fighterConcentrationEffect(),
+    });
+  const fighter = requireCombatant(concentration.state, fighterId);
   return {
-    ...battle,
-    combatants: new Map(battle.combatants).set(fighterId, {
+    ...concentration.state,
+    combatants: new Map(concentration.state.combatants).set(fighterId, {
       ...fighter,
       concentration: {
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          "synthetic_turn_boundary_target_concentration",
-        ),
+        sourceProcedureRef: concentration.sourceProcedureRef,
         effectKind: "spellEffect",
       },
-      activeEffects: [...fighter.activeEffects, fighterTurnEndDamageEffect()],
     }),
   };
 }
 
-function sleepPendingRepeatSaveEffect(): BattleActiveEffect {
+function sleepPendingRepeatSaveEffect(): Extract<
+  LowLevelEffectOccurrenceTemplate,
+  { readonly kind: "sleepPendingRepeatSave" }
+> {
   return {
     kind: "sleepPendingRepeatSave",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(syntheticSpellId("synthetic_turn_boundary_sleep_repeat")),
-    ),
-    sourceCombatantId: goblinId,
     conditionHadNonSpellSource: false,
     save: {
       ability: "wis",
@@ -910,13 +989,12 @@ function sleepPendingRepeatSaveEffect(): BattleActiveEffect {
   };
 }
 
-function fighterSpellConditionEndTurnSaveEffect(): BattleActiveEffect {
+function fighterSpellConditionEndTurnSaveEffect(): Extract<
+  LowLevelEffectOccurrenceTemplate,
+  { readonly kind: "spellConditionEndTurnSave" }
+> {
   return {
     kind: "spellConditionEndTurnSave",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      "synthetic_turn_boundary_condition_end_save",
-    ),
-    sourceCombatantId: goblinId,
     condition: "poisoned",
     conditionHadNonSpellSource: false,
     heightenedSpellTargetDisadvantage: null,
@@ -928,18 +1006,83 @@ function fighterSpellConditionEndTurnSaveEffect(): BattleActiveEffect {
   };
 }
 
-function fighterTurnEndDamageEffect(): BattleActiveEffect {
+function fighterTurnEndDamageEffect(): Extract<
+  LowLevelEffectOccurrenceTemplate,
+  { readonly kind: "spellTurnEndDamage" }
+> {
   return {
     kind: "spellTurnEndDamage",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(turnEndDamageSpellId),
-    ),
-    sourceCombatantId: goblinId,
     damage: {
       expr: { dice: 1, dieSize: 6 },
       damageType: "fire",
     },
     expiresAt: { kind: "endOfTurn", combatantId: fighterId, round: Round(1) },
+  };
+}
+
+function fighterConcentrationEffect(): Extract<
+  LowLevelEffectOccurrenceTemplate,
+  { readonly kind: "nextAttackRollBySelf" }
+> {
+  return {
+    kind: "nextAttackRollBySelf",
+    mode: "advantage",
+    expiresAt: {
+      kind: "concentration",
+      combatantId: fighterId,
+      durationTicks: elapsedTimeTicks(10),
+    },
+  };
+}
+
+function stateWithAllocatedSyntheticOngoingFeatureProcedureForTest(
+  state: BattleState,
+  sourceCombatantId: typeof fighterId,
+  execution: Extract<
+    UnitFeatureProcedureExecution,
+    { readonly kind: "ongoingFeature" }
+  >,
+): {
+  readonly state: BattleState;
+  readonly procedureRef: BattleProcedureExecutionRef;
+} {
+  const source = requireCombatant(state, sourceCombatantId);
+  if (source.origin.kind !== "character") {
+    throw new Error(
+      "Turn-boundary ongoing-feature procedures require a character source.",
+    );
+  }
+  const ordinal = Number(source.origin.execution.nextProcedureOrdinal);
+  const procedureRef = battleProcedureExecutionRef(
+    source.origin.execution.scopeRef,
+    NonNegativeInteger(ordinal),
+  );
+  return {
+    procedureRef,
+    state: {
+      ...state,
+      combatants: new Map(state.combatants).set(sourceCombatantId, {
+        ...source,
+        origin: {
+          ...source.origin,
+          execution: {
+            ...source.origin.execution,
+            nextProcedureOrdinal: battleProcedureExecutionCursor(ordinal + 1),
+            procedureBindings: [
+              ...source.origin.execution.procedureBindings,
+              {
+                procedureRef,
+                procedure: {
+                  kind: "unitFeature",
+                  source: { kind: "intrinsic" },
+                  execution,
+                },
+              },
+            ],
+          },
+        },
+      }),
+    },
   };
 }
 
@@ -1008,14 +1151,13 @@ function endTurnOngoingFeature(): ActiveOngoingFeatureOccurrence {
   };
 }
 
-function turnStartDamageEffect(): BattleActiveEffect {
+function turnStartDamageEffect(): Extract<
+  LowLevelEffectOccurrenceTemplate,
+  { readonly kind: "spellTurnStartDamageAndSave" }
+> {
   return {
     kind: "spellTurnStartDamageAndSave",
     source: "turnBoundaryEffectLifecycle",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(turnStartDamageSpellId),
-    ),
-    sourceCombatantId: fighterId,
     damage: {
       expr: { dice: 1, dieSize: 4 },
       damageType: "fire",
@@ -1029,13 +1171,12 @@ function turnStartDamageEffect(): BattleActiveEffect {
   };
 }
 
-function turnEndDamageEffect(): BattleActiveEffect {
+function turnEndDamageEffect(): Extract<
+  LowLevelEffectOccurrenceTemplate,
+  { readonly kind: "spellTurnEndDamage" }
+> {
   return {
     kind: "spellTurnEndDamage",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(turnEndDamageSpellId),
-    ),
-    sourceCombatantId: fighterId,
     damage: {
       expr: { dice: 1, dieSize: 6 },
       damageType: "fire",
@@ -1044,13 +1185,12 @@ function turnEndDamageEffect(): BattleActiveEffect {
   };
 }
 
-function untilNextTurnEffect(): BattleActiveEffect {
+function untilNextTurnEffect(): Extract<
+  LowLevelEffectOccurrenceTemplate,
+  { readonly kind: "nextAttackRollBySelf" }
+> {
   return {
     kind: "nextAttackRollBySelf",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(untilNextTurnSpellId),
-    ),
-    sourceCombatantId: fighterId,
     mode: "advantage",
     expiresAt: { kind: "startOfTurn", combatantId: fighterId },
   };
@@ -1067,17 +1207,17 @@ function turnBoundaryLifecycleProjection(
     turnStartDamageActive: hasEffect(
       state.battle,
       goblinId,
-      battleProcedureExecutionRefForTest(turnStartDamageSpellId),
+      state.effectProcedureRefs.turnStartDamage,
     ),
     turnEndDamageActive: hasEffect(
       state.battle,
       goblinId,
-      battleProcedureExecutionRefForTest(turnEndDamageSpellId),
+      state.effectProcedureRefs.turnEndDamage,
     ),
     untilNextTurnActive: hasEffect(
       state.battle,
       fighterId,
-      battleProcedureExecutionRefForTest(untilNextTurnSpellId),
+      state.effectProcedureRefs.untilNextTurn,
     ),
     startTurnOngoingFeatureActive: hasOngoingFeature(
       state.battle,

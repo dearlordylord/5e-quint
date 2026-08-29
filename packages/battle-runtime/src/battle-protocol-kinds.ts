@@ -17,6 +17,7 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
     .pipe(
       byBattleFillKind("abilityCheck", () => "abilityCheck" as const),
       byBattleFillKind("abilityChoice", () => "abilityChoice" as const),
+      byBattleFillKind("areaWindStrength", () => "areaWindStrength" as const),
       byBattleFillKind(
         "attackDamageDisposition",
         () => "attackDamageDisposition" as const,
@@ -93,6 +94,11 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
       byBattleFillKind(
         "movableZoneRepositionMovement",
         () => "movableZoneRepositionMovement" as const,
+      ),
+      byBattleFillKind("cloudkillMovement", () => "cloudkillMovement" as const),
+      byBattleFillKind(
+        "startTurnOccurrenceOrder",
+        () => "startTurnOccurrenceOrder" as const,
       ),
       byBattleFillKind("readyDeclaration", () => "readyDeclaration" as const),
       byBattleFillKind("movement", () => "movement" as const),
@@ -171,6 +177,10 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
       byBattleFillKind(
         "toolPossessionFacts",
         () => "toolPossessionFacts" as const,
+      ),
+      byBattleFillKind(
+        "temporaryHitPointChoice",
+        () => "temporaryHitPointChoice" as const,
       ),
       byBattleFillKind(
         "unitFeatureDecision",

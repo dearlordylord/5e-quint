@@ -6,7 +6,6 @@ import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 import rayOfEnfeeblementInput from "../../surface/content/ray_of_enfeeblement.json";
 
@@ -18,6 +17,7 @@ import {
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
+  mbtPickSchemas,
   mbtTraceCount,
   numberFromQuintInt,
   quintRecordField,
@@ -103,20 +103,12 @@ type RayOfEnfeeblementRuntimeState = {
   readonly lastResult: RayLastResult;
 };
 
-const QuintIntAsNumber = Schema.transform(
-  Schema.BigIntFromSelf,
-  Schema.Number,
-  { strict: true, decode: (n) => Number(n), encode: (n) => BigInt(n) },
-);
-
-const intSchema = Schema.standardSchemaV1(QuintIntAsNumber);
-
 const driverSchema = {
   init: {},
   doCastFailedSave: {},
   doEndCasterTurn: {},
   doResolveTargetDamage: {
-    penaltyRoll: intSchema,
+    penaltyRoll: mbtPickSchemas.int,
   },
   doDiscoverRepeatSave: {},
   doFillRepeatSaveFailure: {},

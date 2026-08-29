@@ -469,7 +469,9 @@ function replayRecordedProcedureFromRoot(): InterruptStackResumeRuntimeState {
   });
   const replayFrameState = {
     ...state,
-    interruptStack: [replayContinuationFrame(continuation, "attackHit")],
+    interruptStack: [
+      replayContinuationFrame(continuation, { trigger: "attackHit" }),
+    ],
   };
   const replayFromRoot = resolveBattleSubject({
     state: replayFrameState,

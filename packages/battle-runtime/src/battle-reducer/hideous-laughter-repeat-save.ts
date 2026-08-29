@@ -88,8 +88,7 @@ export function hideousLaughterRepeatSavingThrowOutcomeHole(
     hideousLaughterRepeatSaveHoleKeyPrefix(trigger),
     [
       targetId,
-      effect.sourceCombatantId,
-      effect.sourceProcedureRef,
+      effect.effectRef,
       ...(trigger === "damage" ? [damageEventKey] : []),
     ]
       .map(repeatSaveKeyPart)
@@ -97,11 +96,13 @@ export function hideousLaughterRepeatSavingThrowOutcomeHole(
   ].join("");
   return {
     kind: "savingThrowOutcome",
+    damageOccurrence: { kind: "untrackedDamage" },
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: "Repeat WIS save",
     hideousLaughterRepeatSave: {
       targetId,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       trigger,

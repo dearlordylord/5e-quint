@@ -3,12 +3,14 @@
 import type {
   BattleActiveEffect,
   BattleAntimagicFieldOngoingSpellEffectRef,
-  BattleLightEmitter,
+  BattleLightEmitterMechanicalFacts,
   BattleOngoingSpellEffectRef,
   BattleState,
   BattleTrackedOngoingSpellLightEmitter,
+  BattleTrackedOngoingSpellLightEmitterMechanicalFacts,
 } from "../battle-state-execution.ts";
 import type { BattleAreaId, CombatantId } from "../identity.ts";
+import { Match } from "effect";
 
 type TrackedOngoingSpellActiveEffect = Extract<
   BattleActiveEffect,
@@ -24,7 +26,7 @@ export function ongoingSpellEffectRefForEmitter(
 ): BattleOngoingSpellEffectRef {
   return {
     kind: "spellLightEmitter",
-    sourceEffectId: emitter.sourceEffectId,
+    effectRef: emitter.effectRef,
   };
 }
 
@@ -33,7 +35,7 @@ export function antimagicFieldOngoingSpellEffectRefForEmitter(
 ): BattleAntimagicFieldOngoingSpellEffectRef {
   return {
     kind: "spellLightEmitter",
-    sourceEffectId: emitter.sourceEffectId,
+    effectRef: emitter.effectRef,
   };
 }
 
@@ -61,63 +63,73 @@ export function ongoingSpellEffectRefEquals(
   left: BattleOngoingSpellEffectRef,
   right: BattleOngoingSpellEffectRef,
 ): boolean {
-  if (left.kind !== right.kind) {
-    return false;
-  }
-  if (
-    left.kind === "antimagicFieldAura" &&
-    right.kind === "antimagicFieldAura"
-  ) {
-    return (
-      left.areaId === right.areaId &&
-      left.sourceCombatantId === right.sourceCombatantId
-    );
-  }
-  if (
-    left.kind === "antimagicFieldAura" ||
-    right.kind === "antimagicFieldAura"
-  ) {
-    return false;
-  }
-  if (left.kind === "spellActiveEffect" && right.kind === "spellActiveEffect") {
-    return (
-      left.effectRef === right.effectRef &&
-      left.activeEffectKind === right.activeEffectKind
-    );
-  }
-  return (
-    left.kind === "spellLightEmitter" &&
-    right.kind === "spellLightEmitter" &&
-    left.sourceEffectId === right.sourceEffectId
+  return Match.value(left).pipe(
+    Match.when(
+      { kind: "spellLightEmitter" },
+      (effect) =>
+        right.kind === "spellLightEmitter" &&
+        effect.effectRef === right.effectRef,
+    ),
+    Match.when(
+      { kind: "spellActiveEffect" },
+      (effect) =>
+        right.kind === "spellActiveEffect" &&
+        effect.effectRef === right.effectRef &&
+        effect.activeEffectKind === right.activeEffectKind,
+    ),
+    Match.when(
+      { kind: "antimagicFieldAura" },
+      (effect) =>
+        right.kind === "antimagicFieldAura" &&
+        effect.effectRef === right.effectRef &&
+        effect.areaId === right.areaId &&
+        effect.sourceCombatantId === right.sourceCombatantId,
+    ),
+    Match.exhaustive,
   );
 }
 
 export function ongoingSpellEffectRefKey(
   ref: BattleOngoingSpellEffectRef,
 ): string {
-  if (ref.kind === "spellLightEmitter") {
-    return `light:${ref.sourceEffectId}`;
-  }
-  if (ref.kind === "spellActiveEffect") {
-    return `active:${ref.activeEffectKind}:${ref.effectRef}`;
-  }
-  return `antimagic-aura:${ref.sourceCombatantId}:${ref.areaId}`;
+  return Match.value(ref).pipe(
+    Match.when(
+      { kind: "spellLightEmitter" },
+      (effect) => `light:${effect.effectRef}`,
+    ),
+    Match.when(
+      { kind: "spellActiveEffect" },
+      (effect) => `active:${effect.activeEffectKind}:${effect.effectRef}`,
+    ),
+    Match.when(
+      { kind: "antimagicFieldAura" },
+      (effect) => `antimagic-aura:${effect.effectRef}`,
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function ongoingSpellEffectRefForAntimagicFieldAura(input: {
+  readonly effectRef: Extract<
+    BattleActiveEffect,
+    { readonly kind: "antimagicFieldOngoingSpellSuppression" }
+  >["effectRef"];
   readonly areaId: BattleAreaId;
   readonly sourceCombatantId: CombatantId;
 }): BattleOngoingSpellEffectRef {
   return {
     kind: "antimagicFieldAura",
+    effectRef: input.effectRef,
     areaId: input.areaId,
     sourceCombatantId: input.sourceCombatantId,
   };
 }
 
-export function isTrackedOngoingSpellLightEmitter(
-  emitter: BattleLightEmitter,
-): emitter is BattleTrackedOngoingSpellLightEmitter {
+export function isTrackedOngoingSpellLightEmitter<
+  Emitter extends BattleLightEmitterMechanicalFacts,
+>(
+  emitter: Emitter,
+): emitter is Emitter & BattleTrackedOngoingSpellLightEmitterMechanicalFacts {
   return (
     emitter.kind === "spellLightEmitter" &&
     "sourceEffectId" in emitter &&

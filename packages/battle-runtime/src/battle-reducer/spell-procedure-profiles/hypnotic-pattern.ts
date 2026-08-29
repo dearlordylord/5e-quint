@@ -42,6 +42,7 @@ import { spellReplayContinuation } from "../spell-reaction-continuation.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../../character-battle-resource-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
+import { allocateBattleEffectOccurrenceForCreature } from "../../effect-execution-ref.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import {
   conditionApplicationPreventedByConditionImmunity,
@@ -495,9 +496,9 @@ function applyHypnoticPatternControlEffects(
         effect.sourceProcedureRef === invocation.sourceProcedureRef &&
         effect.sourceCombatantId === actorId,
     );
-    const activeEffects = [
-      ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
-      {
+    const allocation = allocateBattleEffectOccurrenceForCreature({
+      owner: target,
+      effect: {
         kind: "hypnoticPatternControl" as const,
         sourceProcedureRef: invocation.sourceProcedureRef,
         sourceCombatantId: actorId,
@@ -511,10 +512,16 @@ function applyHypnoticPatternControlEffects(
           durationTicks: invocation.durationTicks,
         },
       },
+    });
+    const activeEffects = [
+      ...allocation.owner.activeEffects.filter(
+        (effect) => !replacing.includes(effect),
+      ),
+      allocation.effect,
     ];
     combatants.set(
       targetId,
-      battleCreatureWithSpellActiveEffects(target, activeEffects),
+      battleCreatureWithSpellActiveEffects(allocation.owner, activeEffects),
     );
     appliedTargetIds.push(targetId);
   }

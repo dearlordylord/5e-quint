@@ -14,6 +14,8 @@ import {
   requireHole,
   requireResultHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
+import { requireResolved } from "./battle-runtime.test-support.ts";
+import { allocateBattleEffectExecutionRefForCreature } from "./effect-execution-ref.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   cloudkillAreaFill,
@@ -38,6 +40,7 @@ import {
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./unit-profile-admission.test-support.ts";
+import type { BattleCloudkillAreaHazardTrigger } from "./battle-state-execution.ts";
 import { resolveCloudkillAreaSaveDamage } from "./battle-reducer/persistent-area-save-damage.ts";
 
 function castCloudkill() {
@@ -87,11 +90,12 @@ function resolveCloudkillSave(input: {
   readonly session: ReturnType<typeof castCloudkill>["session"];
   readonly state: ReturnType<typeof castCloudkill>["cast"];
   readonly succeeded: boolean;
+  readonly trigger: BattleCloudkillAreaHazardTrigger;
 }) {
   const saveAct = cloudkillAreaHazardSaveAct(
     battleRuntimeSessionForTest({ ...input.session, state: input.state }),
     spellTargetId,
-    "appearsInArea",
+    input.trigger,
   );
   const saveHole = requireHole(saveAct.initialHoles, "savingThrowOutcome");
   const pendingDamage = resolveBattleSubject({
@@ -127,6 +131,18 @@ function resolveCloudkillSave(input: {
       damageRollFillWithGroups(damageHole, [[6, 6, 6, 6, 6]]),
     ],
   });
+}
+
+function cloudkillSavedThisTurn(
+  state: ReturnType<typeof castCloudkill>["cast"],
+) {
+  const effect = requireCombatant(state, spellCasterId).activeEffects.find(
+    (candidate) => candidate.kind === "cloudkillAreaHazard",
+  );
+  if (effect?.kind !== "cloudkillAreaHazard") {
+    throw new Error("Expected active Cloudkill area hazard.");
+  }
+  return effect.savedThisTurn;
 }
 
 describe("L19E deterministic Cloudkill area-hazard admission", () => {
@@ -240,11 +256,14 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
 
   test("appearance save applies full or half Poison damage through the active hazard", () => {
     const { cast, session } = castCloudkill();
-    const failed = resolveCloudkillSave({
-      session,
-      state: cast,
-      succeeded: false,
-    });
+    const failed = requireResolved(
+      resolveCloudkillSave({
+        session,
+        state: cast,
+        succeeded: false,
+        trigger: "appearsInArea",
+      }),
+    );
     expect(failed).toMatchObject({
       tag: "resolved",
       snapshot: {
@@ -253,12 +272,14 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
         ]),
       },
     });
+    expect(cloudkillSavedThisTurn(failed.state)).toEqual([spellTargetId]);
 
     const { cast: secondCast, session: secondSession } = castCloudkill();
     const succeeded = resolveCloudkillSave({
       session: secondSession,
       state: secondCast,
       succeeded: true,
+      trigger: "appearsInArea",
     });
     expect(succeeded).toMatchObject({
       tag: "resolved",
@@ -268,6 +289,113 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
         ]),
       },
     });
+  });
+
+  test("appearance and later qualified saves share one per-turn hazard ledger", () => {
+    const { cast, session } = castCloudkill();
+    const appearanceSession = battleRuntimeSessionForTest({
+      ...session,
+      state: cast,
+    });
+    const appearanceAct = cloudkillAreaHazardSaveAct(
+      appearanceSession,
+      spellTargetId,
+      "appearsInArea",
+    );
+    expect(cloudkillSavedThisTurn(cast)).toEqual([]);
+
+    const saveHole = requireHole(
+      appearanceAct.initialHoles,
+      "savingThrowOutcome",
+    );
+    const pendingDamage = resolveBattleSubject({
+      state: cast,
+      subject: appearanceAct.subject,
+      fills: [
+        singleTargetSavingThrowOutcomeFill(saveHole, spellTargetId, true),
+      ],
+    });
+    if (pendingDamage.tag === "invalid") {
+      throw new Error(
+        `Expected Cloudkill appearance save to request damage: ${JSON.stringify(pendingDamage)}`,
+      );
+    }
+    expect(cloudkillSavedThisTurn(pendingDamage.state)).toEqual([]);
+
+    const appeared = requireResolved(
+      resolveCloudkillSave({
+        session,
+        state: cast,
+        succeeded: true,
+        trigger: "appearsInArea",
+      }),
+    );
+    expect(cloudkillSavedThisTurn(appeared.state)).toEqual([spellTargetId]);
+
+    const entryAct = cloudkillAreaHazardSaveAct(
+      battleRuntimeSessionForTest({ ...session, state: appeared.state }),
+      spellTargetId,
+      "entersArea",
+    );
+    const duplicate = resolveCloudkillAreaSaveDamage({
+      state: appeared.state,
+      subject: entryAct.subject,
+      fills: [],
+    });
+    expect(duplicate).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Cloudkill save was already resolved for this target this turn.",
+    });
+    expect(cloudkillSavedThisTurn(appeared.state)).toEqual([spellTargetId]);
+
+    const targetTurn = requireResolved(
+      endTurn({ state: appeared.state, actorId: spellCasterId }),
+    );
+    expect(cloudkillSavedThisTurn(targetTurn.state)).toEqual([]);
+
+    const entrySaved = requireResolved(
+      resolveCloudkillSave({
+        session,
+        state: targetTurn.state,
+        succeeded: true,
+        trigger: "entersArea",
+      }),
+    );
+    expect(cloudkillSavedThisTurn(entrySaved.state)).toEqual([spellTargetId]);
+  });
+
+  test("rejects a freshly fabricated appearance after the cast occurrence", () => {
+    const { cast, session } = castCloudkill();
+    const appeared = requireResolved(
+      resolveCloudkillSave({
+        session,
+        state: cast,
+        succeeded: true,
+        trigger: "appearsInArea",
+      }),
+    );
+    const targetTurn = requireResolved(
+      endTurn({ state: appeared.state, actorId: spellCasterId }),
+    );
+    const fabricatedAppearance = cloudkillAreaHazardSaveAct(
+      battleRuntimeSessionForTest({ ...session, state: targetTurn.state }),
+      spellTargetId,
+      "appearsInArea",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: fabricatedAppearance.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Cloudkill appearance save is outside its cast occurrence.",
+    });
+    expect(cloudkillSavedThisTurn(targetTurn.state)).toEqual([]);
   });
 
   test("a discovered save becomes stale when Cloudkill Concentration ends", () => {
@@ -300,10 +428,11 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     );
     const combatants = new Map(targetTurn.combatants);
     combatants.delete(spellTargetId);
+    const stateWithoutTarget = { ...targetTurn, combatants };
 
     expect(
       resolveCloudkillAreaSaveDamage({
-        state: { ...targetTurn, combatants },
+        state: stateWithoutTarget,
         subject: saveAct.subject,
         fills: [],
       }),
@@ -312,96 +441,130 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
       reason: "staleSubject",
       message: "Cloudkill save target is no longer available.",
     });
+    expect(cloudkillSavedThisTurn(stateWithoutTarget)).toEqual([]);
   });
 
-  test("cloud movement, entry, and end-turn saves share the once-per-turn hazard ledger", () => {
+  test("binds a discovered save to the exact Cloudkill occurrence across same-area replacement", () => {
     const { targetTurn, session } = castCloudkill();
-    const moveAct = cloudkillAreaHazardSaveAct(
+    const saveAct = cloudkillAreaHazardSaveAct(
       battleRuntimeSessionForTest({ ...session, state: targetTurn }),
       spellTargetId,
-      "movesIntoSpace",
+      "endsTurnInArea",
     );
-    const saveHole = requireHole(moveAct.initialHoles, "savingThrowOutcome");
-    const pendingDamage = resolveBattleSubject({
-      state: targetTurn,
-      subject: moveAct.subject,
-      fills: [
-        singleTargetSavingThrowOutcomeFill(saveHole, spellTargetId, true),
-      ],
-    });
-    if (pendingDamage.tag === "invalid") {
-      throw new Error(
-        `Expected Cloudkill movement save to request damage: ${JSON.stringify(pendingDamage)}`,
-      );
+    const caster = requireCombatant(targetTurn, spellCasterId);
+    const effect = caster.activeEffects.find(
+      (candidate) => candidate.kind === "cloudkillAreaHazard",
+    );
+    if (effect?.kind !== "cloudkillAreaHazard") {
+      throw new Error("Expected active Cloudkill.");
     }
-    const damageHole = requireResultHole(pendingDamage, "rolledDice");
-    const movedIntoSpace = resolveBattleSubject({
-      state: targetTurn,
-      subject: moveAct.subject,
-      fills: [
-        singleTargetSavingThrowOutcomeFill(saveHole, spellTargetId, true),
-        damageRollFillWithGroups(damageHole, [[1, 1, 1, 1, 1]]),
-      ],
+    const allocation = allocateBattleEffectExecutionRefForCreature({
+      owner: caster,
     });
-    if (movedIntoSpace.tag !== "resolved") {
-      throw new Error("Expected Cloudkill movement save to resolve.");
-    }
+    const replacement = {
+      ...effect,
+      effectRef: allocation.effectRef,
+      savedThisTurn: [],
+    };
+    const replacedState = {
+      ...targetTurn,
+      combatants: new Map(targetTurn.combatants).set(spellCasterId, {
+        ...allocation.owner,
+        activeEffects: allocation.owner.activeEffects.map((candidate) =>
+          candidate === effect ? replacement : candidate,
+        ),
+      }),
+    };
 
     expect(
       resolveBattleSubject({
-        state: movedIntoSpace.state,
-        subject: cloudkillAreaHazardSaveAct(
-          battleRuntimeSessionForTest({
-            ...session,
-            state: movedIntoSpace.state,
-          }),
-          spellTargetId,
-          "entersArea",
-        ).subject,
+        state: replacedState,
+        subject: saveAct.subject,
         fills: [],
       }),
-    ).toMatchObject({
-      tag: "invalid",
-      message: "Cloudkill save was already resolved for this target this turn.",
-    });
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 
-  test("strong wind dispersal ends the active Cloudkill hazard", () => {
-    const { cast } = castCloudkill();
+  test("marks the exact relocated Cloudkill owner once even when owner differs from source", () => {
+    const { targetTurn } = castCloudkill();
+    const caster = requireCombatant(targetTurn, spellCasterId);
+    const target = requireCombatant(targetTurn, spellTargetId);
+    const effect = caster.activeEffects.find(
+      (candidate) => candidate.kind === "cloudkillAreaHazard",
+    );
+    if (effect?.kind !== "cloudkillAreaHazard") {
+      throw new Error("Expected active Cloudkill.");
+    }
+    const allocation = allocateBattleEffectExecutionRefForCreature({
+      owner: target,
+    });
+    const relocatedEffect = {
+      ...effect,
+      effectRef: allocation.effectRef,
+    };
+    const relocatedState = {
+      ...targetTurn,
+      combatants: new Map(targetTurn.combatants).set(spellTargetId, {
+        ...allocation.owner,
+        activeEffects: [...allocation.owner.activeEffects, relocatedEffect],
+      }),
+    };
     const subject = {
       tag: "runtimeCommand" as const,
-      actorId: spellCasterId,
-      command: "disperseCloudkill" as const,
-      areaId: cloudkillAreaId,
+      actorId: spellTargetId,
+      command: "cloudkillAreaHazardSave" as const,
+      areaMembershipTrigger: {
+        kind: "turnEndInArea" as const,
+        areaId: relocatedEffect.areaId,
+        effectRef: relocatedEffect.effectRef,
+      },
     };
-    const dispersed = resolveBattleSubject({
-      state: cast,
+    const saveFrontier = resolveBattleSubject({
+      state: relocatedState,
       subject,
       fills: [],
     });
-    expect(dispersed).toMatchObject({
-      tag: "resolved",
-      snapshot: {
-        obscurementZones: [],
-      },
+    const saveFill = singleTargetSavingThrowOutcomeFill(
+      requireResultHole(saveFrontier, "savingThrowOutcome"),
+      spellTargetId,
+      true,
+    );
+    const damageFrontier = resolveBattleSubject({
+      state: relocatedState,
+      subject,
+      fills: [saveFill],
     });
-    if (dispersed.tag !== "resolved") {
-      throw new Error("Expected Cloudkill dispersal to resolve.");
-    }
-    expect(requireCombatant(dispersed.state, spellCasterId)).toMatchObject({
-      concentration: null,
-      activeEffects: [],
+    const damageFill = damageRollFillWithGroups(
+      requireResultHole(damageFrontier, "rolledDice"),
+      [[6, 6, 6, 6, 6]],
+    );
+    const resolved = resolveBattleSubject({
+      state: relocatedState,
+      subject,
+      fills: [saveFill, damageFill],
     });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") return;
+    expect(
+      requireCombatant(resolved.state, spellTargetId).activeEffects.find(
+        (candidate) =>
+          candidate.kind === "cloudkillAreaHazard" &&
+          candidate.effectRef === relocatedEffect.effectRef,
+      ),
+    ).toMatchObject({ savedThisTurn: [spellTargetId] });
+    expect(
+      requireCombatant(resolved.state, spellCasterId).activeEffects.find(
+        (candidate) =>
+          candidate.kind === "cloudkillAreaHazard" &&
+          candidate.effectRef === effect.effectRef,
+      ),
+    ).toMatchObject({ savedThisTurn: [] });
     expect(
       resolveBattleSubject({
-        state: dispersed.state,
+        state: resolved.state,
         subject,
         fills: [],
       }),
-    ).toMatchObject({
-      tag: "invalid",
-      reason: "staleSubject",
-      message: "Cloudkill area is no longer active.",
-    });
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 });

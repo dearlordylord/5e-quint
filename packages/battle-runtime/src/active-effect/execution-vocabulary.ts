@@ -4,10 +4,9 @@ import type {
   DcSource,
 } from "@dnd/surface/surface/types";
 import type {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleAreaId,
   BattleDancingLightId,
-  BattleSpellEffectOccurrenceId,
   BattleTablePositionId,
   CombatantId,
 } from "../identity.ts";
@@ -78,22 +77,25 @@ export type SpellConditionRepeatSave = {
 export type BattleOngoingSpellEffectRef =
   | {
       readonly kind: "spellLightEmitter";
-      readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+      readonly effectRef: BattleEffectExecutionRef;
     }
   | {
       readonly kind: "spellActiveEffect";
       readonly activeEffectKind: "spellObjectContactDamage" | "spiritualWeapon";
-      readonly effectRef: BattleActiveEffectExecutionRef;
+      readonly effectRef: BattleEffectExecutionRef;
     }
   | {
       readonly kind: "antimagicFieldAura";
+      readonly effectRef: BattleEffectExecutionRef;
       readonly areaId: BattleAreaId;
       readonly sourceCombatantId: CombatantId;
     };
-export type BattleAntimagicFieldOngoingSpellEffectRef = Exclude<
+export type BattleOngoingSpellOccurrenceRef = Exclude<
   BattleOngoingSpellEffectRef,
   { readonly kind: "antimagicFieldAura" }
 >;
+export type BattleAntimagicFieldOngoingSpellEffectRef =
+  BattleOngoingSpellOccurrenceRef;
 
 export type BattleAntimagicFieldAuraMembership = {
   readonly kind: "antimagicFieldAuraMembership";

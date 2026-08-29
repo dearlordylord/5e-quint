@@ -1,4 +1,10 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import {
+  allocateBattleEffectOccurrenceTemplatesForCreature,
+  type BattleActiveEffectOccurrenceTemplate,
+  type BattleAllocatedEffectOccurrence,
+} from "./effect-execution-ref.ts";
+import type { BattleStoredLightEmitterTemplate } from "./battle-state-execution.ts";
 
 export const SURFACE_UNIT_RECORD_SCHEMA_NEGATIVE_TEST_TIMEOUT_MILLISECONDS = 10_000;
 
@@ -144,13 +150,13 @@ import {
 } from "./battle-subjects.ts";
 import {
   battleCharacterExecutionScopeRef,
-  battleActiveEffectExecutionRef,
+  battleEffectExecutionRef,
   battleExecutionScopeOrdinal,
   battleProcedureExecutionRef,
   BattleProcedureExecutionRef,
   spellId,
 } from "./identity.ts";
-import type { BattleActiveEffectExecutionRef } from "./identity.ts";
+import type { BattleEffectExecutionRef } from "./identity.ts";
 import {
   battleRuntimeContextFromCharacterAdmission,
   type BattleRuntimeContext,
@@ -403,7 +409,7 @@ type BonusActionStandardActionSelectorForTest =
       readonly tag: "bonusActionStandardAction";
       readonly actorId: CombatantId;
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
-      readonly sourceEffectRef: BattleActiveEffectExecutionRef;
+      readonly sourceEffectRef: BattleEffectExecutionRef;
       readonly action: "dash";
       readonly speedKind: Extract<
         CharacterProcedureSubjectForTest,
@@ -549,16 +555,16 @@ export function battleProcedureExecutionRefForSpellHoleForTest(
   );
 }
 
-export function battleActiveEffectExecutionRefForTest(
+export function battleEffectExecutionRefForTest(
   discriminator: string,
-): BattleActiveEffectExecutionRef {
+): BattleEffectExecutionRef {
   let ordinal = 2_166_136_261;
   for (const character of discriminator) {
     ordinal = Math.imul(ordinal ^ character.charCodeAt(0), 16_777_619) >>> 0;
   }
-  return battleActiveEffectExecutionRef(
+  return battleEffectExecutionRef(
     JSON.stringify({
-      kind: "activeEffectOccurrence",
+      kind: "effectOccurrence",
       ownerScopeRef: battleCharacterExecutionScopeRef(
         battleId("test-battle"),
         combatantId("test-active-effect-owner"),
@@ -566,6 +572,95 @@ export function battleActiveEffectExecutionRefForTest(
       ),
       ordinal,
     }),
+  );
+}
+
+export function battleStateWithAllocatedEffectForTest(input: {
+  readonly state: BattleState;
+  readonly ownerId: CombatantId;
+  readonly effect: BattleActiveEffectOccurrenceTemplate;
+}): BattleState {
+  return battleStateWithAllocatedEffectOccurrencesForTest({
+    state: input.state,
+    occurrences: [
+      { kind: "activeEffect", ownerId: input.ownerId, effect: input.effect },
+    ],
+  }).state;
+}
+
+export function battleStateWithAllocatedEffectOccurrencesForTest(input: {
+  readonly state: BattleState;
+  readonly occurrences: readonly (
+    | {
+        readonly kind: "activeEffect";
+        readonly ownerId: CombatantId;
+        readonly effect: BattleActiveEffectOccurrenceTemplate;
+      }
+    | {
+        readonly kind: "storedLightEmitter";
+        readonly ownerId: CombatantId;
+        readonly emitter: BattleStoredLightEmitterTemplate;
+      }
+  )[];
+}): {
+  readonly state: BattleState;
+  readonly occurrences: readonly (BattleAllocatedEffectOccurrence & {
+    readonly ownerId: CombatantId;
+  })[];
+} {
+  return input.occurrences.reduce<{
+    readonly state: BattleState;
+    readonly occurrences: readonly (BattleAllocatedEffectOccurrence & {
+      readonly ownerId: CombatantId;
+    })[];
+  }>(
+    (result, occurrence) => {
+      const owner = result.state.combatants.get(occurrence.ownerId);
+      if (owner === undefined) {
+        throw new Error(
+          `Expected effect occurrence owner ${occurrence.ownerId}.`,
+        );
+      }
+      const allocation = allocateBattleEffectOccurrenceTemplatesForCreature({
+        owner,
+        occurrences: [occurrence],
+      });
+      const allocated = allocation.occurrences[0];
+      if (allocated === undefined) {
+        throw new Error("A single occurrence template must allocate once.");
+      }
+      const state =
+        allocated.kind === "activeEffect"
+          ? {
+              ...result.state,
+              combatants: new Map(result.state.combatants).set(
+                occurrence.ownerId,
+                {
+                  ...allocation.owner,
+                  activeEffects: [
+                    ...allocation.owner.activeEffects,
+                    allocated.effect,
+                  ],
+                },
+              ),
+            }
+          : {
+              ...result.state,
+              combatants: new Map(result.state.combatants).set(
+                occurrence.ownerId,
+                allocation.owner,
+              ),
+              lightEmitters: [...result.state.lightEmitters, allocated.emitter],
+            };
+      return {
+        state,
+        occurrences: [
+          ...result.occurrences,
+          { ...allocated, ownerId: occurrence.ownerId },
+        ],
+      };
+    },
+    { state: input.state, occurrences: [] },
   );
 }
 
@@ -632,7 +727,7 @@ export function requireCharacterSpellProcedureRefForTest(
     const presentation = battleActSpellPresentation(act);
     return (
       presentation !== undefined &&
-      sameSpellInvocationRef(presentation.invocation, invocationRef)
+      spellInvocationRefsEqualForTest(presentation.invocation, invocationRef)
     );
   })?.subject;
   if (
@@ -654,40 +749,62 @@ export function requireCharacterSpellProcedureRefForTest(
   return procedureRef;
 }
 
-function sameSpellInvocationRef(
+export function spellInvocationRefsEqualForTest(
   left: SpellInvocationRef,
   right: SpellInvocationRef,
 ): boolean {
-  if (
-    left.tag !== right.tag ||
-    left.spellId !== right.spellId ||
-    left.procedure !== right.procedure
-  ) {
+  if (left.spellId !== right.spellId || left.procedure !== right.procedure) {
     return false;
   }
-  if (left.tag === "cantrip" && right.tag === "cantrip") return true;
-  if (left.tag === "spellEffect" && right.tag === "spellEffect") {
-    return left.sourceCombatantId === right.sourceCombatantId;
-  }
-  if (
-    left.tag === "spellAccessFreeCast" &&
-    right.tag === "spellAccessFreeCast"
-  ) {
-    return left.resourcePoolRef === right.resourcePoolRef;
-  }
-  if (left.tag === "armorOfShadows" && right.tag === "armorOfShadows") {
-    return true;
-  }
-  return left.tag === "spellSlot" && right.tag === "spellSlot"
-    ? left.slotLevel === right.slotLevel
-    : false;
+  return Match.value(left).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      cantrip: (invocation) =>
+        right.tag === "cantrip" &&
+        spellInvocationSourceRefsEqualForTest(invocation.source, right.source),
+      spellSlot: (invocation) =>
+        right.tag === "spellSlot" &&
+        spellInvocationSourceRefsEqualForTest(
+          invocation.source,
+          right.source,
+        ) &&
+        invocation.slotLevel === right.slotLevel,
+      spellAccessFreeCast: (invocation) =>
+        right.tag === "spellAccessFreeCast" &&
+        spellInvocationSourceRefsEqualForTest(
+          invocation.source,
+          right.source,
+        ) &&
+        invocation.resourcePoolRef === right.resourcePoolRef,
+      armorOfShadows: () => right.tag === "armorOfShadows",
+      spellEffect: (invocation) =>
+        right.tag === "spellEffect" &&
+        invocation.sourceCombatantId === right.sourceCombatantId,
+    }),
+  );
+}
+
+function spellInvocationSourceRefsEqualForTest(
+  left: Extract<SpellInvocationRef, { readonly tag: "cantrip" }>["source"],
+  right: Extract<SpellInvocationRef, { readonly tag: "cantrip" }>["source"],
+): boolean {
+  return Match.value(left).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      classSpellcasting: () => right.tag === "classSpellcasting",
+      spellAccess: (source) =>
+        right.tag === "spellAccess" &&
+        source.spellAccessRef === right.spellAccessRef,
+    }),
+  );
 }
 
 function supportedSpellInvocationMatchesRef(
   invocation: AuthoredSelectedSpellInvocation,
   ref: SpellInvocationRef,
 ): boolean {
-  return sameSpellInvocationRef(supportedSpellInvocationRef(invocation), ref);
+  return spellInvocationRefsEqualForTest(
+    supportedSpellInvocationRef(invocation),
+    ref,
+  );
 }
 
 export function requireCharacterUnitProcedureRefForTest(

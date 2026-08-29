@@ -51,7 +51,7 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../../identity.ts";
@@ -476,7 +476,7 @@ const ObjectContactDamageRepeatInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     procedure: Schema.Literal("objectContactDamageRepeat"),
     spellRuleFacts: Schema.optionalKey(Schema.Never),
-    activeEffectRef: BattleActiveEffectExecutionRef,
+    activeEffectRef: BattleEffectExecutionRef,
     activeEffectSourceProcedureRef: BattleProcedureExecutionRef,
   }),
 );

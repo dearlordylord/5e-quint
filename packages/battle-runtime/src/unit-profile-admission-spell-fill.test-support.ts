@@ -1,4 +1,5 @@
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
+import { Match } from "effect";
 import {
   DieRollResult,
   movementFeet,
@@ -122,6 +123,7 @@ import { requireCombatant } from "./unit-profile-admission-creature-fixture.test
 import {
   battleProcedureExecutionRefForSpellHoleForTest,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
 } from "./battle-runtime.test-support.ts";
 import {
   bindSelectedSpellInvocation,
@@ -388,30 +390,25 @@ export function withResistanceEffect(
   damageType: DamageType,
   usedThisTurn: boolean,
 ): BattleState {
-  const target = requireCombatant(state, targetId);
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(targetId, {
-      ...target,
-      activeEffects: [
-        ...target.activeEffects,
-        {
-          kind: "spellDamageReduction" as const,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(resistanceUnitId),
-          ),
-          sourceCombatantId: spellCasterId,
-          damageType,
-          amount: { dice: 1 as const, dieSize: 4 as const },
-          usedThisTurn,
-          expiresAt: {
-            kind: "concentration" as const,
-            combatantId: spellCasterId,
-          },
-        },
-      ],
-    }),
-  };
+  requireCombatant(state, targetId);
+  return battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: targetId,
+    effect: {
+      kind: "spellDamageReduction",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(resistanceUnitId),
+      ),
+      sourceCombatantId: spellCasterId,
+      damageType,
+      amount: { dice: 1, dieSize: 4 },
+      usedThisTurn,
+      expiresAt: {
+        kind: "concentration",
+        combatantId: spellCasterId,
+      },
+    },
+  });
 }
 
 export function spellTargetFill(
@@ -1489,6 +1486,7 @@ export function sleetStormAreaHazardSaveAct(
     areaMembershipTrigger: {
       kind: trigger === "entersArea" ? "firstEntryOnTurn" : "turnStartInArea",
       areaId: effect.areaId,
+      effectRef: effect.effectRef,
     },
   };
   return {
@@ -1540,15 +1538,24 @@ export function insectPlagueAreaHazardSaveAct(
     tag: "runtimeCommand",
     actorId,
     command: "insectPlagueAreaHazardSave",
-    areaMembershipTrigger: {
-      kind:
-        trigger === "appearsInArea"
-          ? "appearsInArea"
-          : trigger === "entersArea"
-            ? "firstEntryOnTurn"
-            : "turnEndInArea",
-      areaId: effect.areaId,
-    },
+    areaMembershipTrigger: Match.value(trigger).pipe(
+      Match.when("appearsInArea", () => ({
+        kind: "appearsInArea" as const,
+        areaId: effect.areaId,
+        effectRef: effect.effectRef,
+      })),
+      Match.when("entersArea", () => ({
+        kind: "firstEntryOnTurn" as const,
+        areaId: effect.areaId,
+        effectRef: effect.effectRef,
+      })),
+      Match.when("endsTurnInArea", () => ({
+        kind: "turnEndInArea" as const,
+        areaId: effect.areaId,
+        effectRef: effect.effectRef,
+      })),
+      Match.exhaustive,
+    ),
   };
   return {
     presentation: { kind: "intrinsic" },
@@ -1599,17 +1606,29 @@ export function cloudkillAreaHazardSaveAct(
     tag: "runtimeCommand",
     actorId,
     command: "cloudkillAreaHazardSave",
-    areaMembershipTrigger: {
-      kind:
-        trigger === "appearsInArea"
-          ? "appearsInArea"
-          : trigger === "movesIntoSpace"
-            ? "areaMovesIntoSpace"
-            : trigger === "entersArea"
-              ? "firstEntryOnTurn"
-              : "turnEndInArea",
-      areaId: effect.areaId,
-    },
+    areaMembershipTrigger: Match.value(trigger).pipe(
+      Match.when("appearsInArea", () => ({
+        kind: "appearsInArea" as const,
+        areaId: effect.areaId,
+        effectRef: effect.effectRef,
+      })),
+      Match.when("movesIntoSpace", () => ({
+        kind: "areaMovesIntoSpace" as const,
+        areaId: effect.areaId,
+        effectRef: effect.effectRef,
+      })),
+      Match.when("entersArea", () => ({
+        kind: "firstEntryOnTurn" as const,
+        areaId: effect.areaId,
+        effectRef: effect.effectRef,
+      })),
+      Match.when("endsTurnInArea", () => ({
+        kind: "turnEndInArea" as const,
+        areaId: effect.areaId,
+        effectRef: effect.effectRef,
+      })),
+      Match.exhaustive,
+    ),
   };
   return {
     presentation: { kind: "intrinsic" },

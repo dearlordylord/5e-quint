@@ -1,6 +1,9 @@
-import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import {
-  antimagicFieldAuraEffectForTest,
+  battleStateWithAllocatedEffectForTest,
+  resolveBattleSubject,
+} from "./battle-runtime.test-support.ts";
+import {
+  antimagicFieldAuraEffectTemplateForTest,
   antimagicFieldAuraMembershipForTest,
   type TestAntimagicFieldAuraMembership,
 } from "./antimagic-field.test-support.ts";
@@ -541,25 +544,22 @@ function activeAntimagicAuraState(
   state: BattleState,
   aura: TestAntimagicFieldAuraMembership,
 ): BattleState {
-  const combatants = new Map(state.combatants);
-  const source = combatants.get(aura.sourceCombatantId);
-  if (source === undefined) {
+  const sourceBefore = state.combatants.get(aura.sourceCombatantId);
+  if (sourceBefore === undefined) {
     throw new Error("Antimagic Field test source must be in the battle.");
   }
-  combatants.set(aura.sourceCombatantId, {
-    ...source,
-    activeEffects: [
-      ...source.activeEffects,
-      antimagicFieldAuraEffectForTest({
-        areaId: ANTIMAGIC_FIELD_AREA_ID,
-        aura,
-      }),
-    ],
+  const withAura = battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: aura.sourceCombatantId,
+    effect: antimagicFieldAuraEffectTemplateForTest({
+      areaId: ANTIMAGIC_FIELD_AREA_ID,
+      aura,
+    }),
   });
-  return {
-    ...state,
-    combatants,
-  };
+  expect(
+    Number(withAura.combatants.get(aura.sourceCombatantId)?.nextEffectOrdinal),
+  ).toBe(Number(sourceBefore.nextEffectOrdinal) + 1);
+  return withAura;
 }
 
 function normalizeSelfTeleportQuintState(raw: unknown): SelfTeleportProjection {

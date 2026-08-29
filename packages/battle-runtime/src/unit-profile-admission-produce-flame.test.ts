@@ -48,7 +48,10 @@ import type {
   BattleRuntimeSession,
   BattleState,
 } from "./unit-profile-admission.test-support.ts";
-import { battleProcedureExecutionRefForSpellHoleForTest } from "./battle-runtime.test-support.ts";
+import {
+  assertBattleSnapshotCodecRoundTripForTest,
+  battleProcedureExecutionRefForSpellHoleForTest,
+} from "./battle-runtime.test-support.ts";
 import { characterSpellProcedureExecution } from "./character-execution-admission.ts";
 
 describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
@@ -107,6 +110,8 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
         },
       },
     ]);
+    expect(resolved.snapshot.storedLightEmitters).toEqual([]);
+    assertBattleSnapshotCodecRoundTripForTest(resolved.snapshot);
     expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
       false,
     );
@@ -221,8 +226,8 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
       }),
     );
     expect(heldLightEffects[0]?.effectRef).not.toBe(firstHeldLight.effectRef);
-    expect(Number(recastCaster.nextActiveEffectOrdinal)).toBe(
-      Number(initialCaster.nextActiveEffectOrdinal) + 2,
+    expect(Number(recastCaster.nextEffectOrdinal)).toBe(
+      Number(initialCaster.nextEffectOrdinal) + 2,
     );
     expect(recast.snapshot.lightEmitters).toHaveLength(1);
     expect(recast.snapshot.lightEmitters[0]).toEqual(

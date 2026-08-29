@@ -1,6 +1,5 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
-import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -9,6 +8,7 @@ import {
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
+  mbtPickSchemas,
   mbtTraceCount,
   numberFromQuintInt,
   quintVariantTag,
@@ -86,30 +86,20 @@ function initialState(slotLedgerLevel: number): MoonbeamMovableZoneState {
   };
 }
 
-const QuintIntAsNumber = Schema.transform(
-  Schema.BigIntFromSelf,
-  Schema.Number,
-  { strict: true, decode: (n) => Number(n), encode: (n) => BigInt(n) },
-);
-
-const intSchema = Schema.standardSchemaV1(QuintIntAsNumber);
-const boolSchema = Schema.standardSchemaV1(Schema.Boolean);
-const unknownSchema = Schema.standardSchemaV1(Schema.Unknown);
-
 const driverSchema = {
   init: {
-    slotLedgerLevel: intSchema,
+    slotLedgerLevel: mbtPickSchemas.int,
   },
   doCastMoonbeam: {
-    slotLevel: intSchema,
+    slotLevel: mbtPickSchemas.int,
   },
   doMoonbeamSave: {
-    savingThrowSucceeded: boolSchema,
-    rolledDamage: intSchema,
-    trigger: unknownSchema,
+    savingThrowSucceeded: mbtPickSchemas.bool,
+    rolledDamage: mbtPickSchemas.int,
+    trigger: mbtPickSchemas.unknown,
   },
   doReposition: {
-    moveFeet: intSchema,
+    moveFeet: mbtPickSchemas.int,
   },
   doBeginLaterTurn: {},
   doResetSavedThisTurn: {},

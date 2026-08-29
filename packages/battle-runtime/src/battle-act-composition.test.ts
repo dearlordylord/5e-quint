@@ -10,7 +10,7 @@ import {
   discoverBattleActs,
 } from "./battle-act-composition.ts";
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleId,
   battleProcedureExecutionRefForTest,
   characterSeed,
@@ -224,7 +224,7 @@ describe("battle act composition presentations", () => {
     const missingProcedureRef = battleProcedureExecutionRefForTest(
       "missing-character-procedure",
     );
-    const missingEffectRef = battleActiveEffectExecutionRefForTest(
+    const missingEffectRef = battleEffectExecutionRefForTest(
       "missing-character-effect",
     );
 
@@ -441,7 +441,7 @@ describe("battle act composition presentations", () => {
       "missing-attack-procedure",
       fighterId,
     );
-    const missingEffectRef = battleActiveEffectExecutionRefForTest(
+    const missingEffectRef = battleEffectExecutionRefForTest(
       "missing-jump-effect",
     );
     const staleSubjects = [

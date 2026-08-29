@@ -1,18 +1,25 @@
 import { optionalProperty } from "../optional-property.ts";
-import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
+import { Match } from "effect";
 import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
 import type {
   AdmittedBattleResolutionInput,
   BattleFill,
+  BattleHandledInterruptOccurrence,
+  BattleHandledInterruptRouteProjection,
   BattleInterruptCheckpoint,
   BattleInterruptRouteOptions,
   BattleInterruptedProcedure,
+  BattleObjectOutcomeAccumulation,
   BattleReplayContinuationFrame,
+  BattleStartTurnOccurrenceSequenceCheckpoint,
   BattleResolutionResult,
   BattleState,
   GlyphStoredSpellReleaseReplayContext,
 } from "../battle-state-execution.ts";
-import { battleContinuationFillEquals } from "./battle-fill-equality.ts";
+import {
+  battleContinuationFillEquals,
+  isBattleContinuationComparableFill,
+} from "./battle-fill-equality.ts";
 import {
   currentInterruptCheckpoint,
   currentInterruptFrame,
@@ -29,6 +36,69 @@ import { mergeObjectOutcomeResult } from "./object-outcome-accumulation.ts";
 const admittedReplayContinuationSubject = Symbol(
   "AdmittedReplayContinuationSubject",
 );
+
+const replayParentContinuation = Symbol("ReplayParentContinuation");
+
+export function handledInterruptRouteProjection(
+  occurrence: BattleHandledInterruptOccurrence,
+): Exclude<
+  BattleHandledInterruptRouteProjection,
+  { readonly handledInterruptOccurrence?: never }
+> {
+  return { handledInterruptOccurrence: occurrence };
+}
+
+export type ReplayParentContinuation = {
+  readonly state: BattleState;
+  readonly subject: BattleSubject;
+  readonly fills: readonly BattleFill[];
+  readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
+  readonly [replayParentContinuation]: true;
+};
+
+export function replayParentContinuationFor(
+  input: Pick<
+    ReplayParentContinuation,
+    "state" | "subject" | "fills" | "objectOutcomes"
+  >,
+): ReplayParentContinuation {
+  return { ...input, [replayParentContinuation]: true };
+}
+
+export function replayParentProcedureAt(
+  parent: ReplayParentContinuation,
+  position: BattleStartTurnOccurrenceSequenceCheckpoint,
+): Extract<BattleInterruptedProcedure, { readonly kind: "replay" }> {
+  return {
+    kind: "replay",
+    subject: parent.subject,
+    fills: parent.fills,
+    parentPosition: position,
+    ...optionalProperty("objectOutcomes", parent.objectOutcomes),
+  };
+}
+
+export function projectReplayChildResult(
+  parent: ReplayParentContinuation,
+  child: BattleResolutionResult,
+): BattleResolutionResult {
+  return Match.value(child).pipe(
+    Match.when({ tag: "needsHoles" }, (result) => {
+      const state =
+        result.state.interruptStack.length > parent.state.interruptStack.length
+          ? result.state
+          : parent.state;
+      return needsHolesResult(state, parent.subject, result.holes);
+    }),
+    Match.when({ tag: "invalid" }, (result) =>
+      invalidResult(parent.state, result.reason, result.message),
+    ),
+    Match.when({ tag: "resolved" }, (result) =>
+      mergeObjectOutcomeResult(result, parent.objectOutcomes),
+    ),
+    Match.exhaustive,
+  );
+}
 
 export type AdmittedReplayContinuationSubject = {
   readonly input: AdmittedBattleResolutionInput;
@@ -84,7 +154,7 @@ type ReplayContinuationResolutionInput = {
     BattleInterruptedProcedure,
     { readonly kind: "replay" }
   >;
-  readonly handledInterruptTrigger: BattleInterruptTrigger;
+  readonly handledInterruptOccurrence: BattleHandledInterruptOccurrence;
   readonly fills: readonly BattleFill[];
   readonly execution: ReplayContinuationExecution;
 };
@@ -94,12 +164,12 @@ export function replayContinuationFrame(
     BattleInterruptedProcedure,
     { readonly kind: "replay" }
   >,
-  handledInterruptTrigger: BattleInterruptTrigger,
+  handledInterruptOccurrence: BattleHandledInterruptOccurrence,
 ): BattleReplayContinuationFrame {
   return {
     kind: "replayContinuation",
     continuation,
-    handledInterruptTrigger,
+    handledInterruptOccurrence,
   };
 }
 
@@ -126,7 +196,7 @@ export function resolveReplayContinuation(input: {
       interruptStack: input.state.interruptStack.slice(0, -1),
     },
     continuation: frame.continuation,
-    handledInterruptTrigger: frame.handledInterruptTrigger,
+    handledInterruptOccurrence: frame.handledInterruptOccurrence,
     fills: reconstructReplayContinuationFills(
       frame.continuation.fills,
       input.fills,
@@ -164,17 +234,6 @@ function replayContinuationSuffixFills(
   });
 }
 
-const replayContinuationSemanticFillKinds = [
-  "targetChoice",
-  "attackRoll",
-  "rolledDice",
-] as const satisfies ReadonlyArray<BattleFill["kind"]>;
-
-type ReplayContinuationSemanticFill = Extract<
-  BattleFill,
-  { readonly kind: (typeof replayContinuationSemanticFillKinds)[number] }
->;
-
 function replayContinuationRecordedFillMatches(
   recordedFill: BattleFill,
   submittedFill: BattleFill,
@@ -190,18 +249,12 @@ function replayContinuationSemanticFillEquals(
   submittedFill: BattleFill,
 ): boolean {
   if (
-    !isReplayContinuationSemanticFill(recordedFill) ||
-    !isReplayContinuationSemanticFill(submittedFill)
+    !isBattleContinuationComparableFill(recordedFill) ||
+    !isBattleContinuationComparableFill(submittedFill)
   ) {
     return false;
   }
   return battleContinuationFillEquals(recordedFill, submittedFill);
-}
-
-function isReplayContinuationSemanticFill(
-  fill: BattleFill,
-): fill is ReplayContinuationSemanticFill {
-  return replayContinuationSemanticFillKinds.some((kind) => kind === fill.kind);
 }
 
 export function resolveReplayContinuationFromState(
@@ -232,7 +285,7 @@ export function resolveReplayContinuationFromState(
       admission.input,
       replayInterruptRouteOptions(
         input.continuation,
-        input.handledInterruptTrigger,
+        input.handledInterruptOccurrence,
       ),
     ),
   );
@@ -269,7 +322,7 @@ export function resolveReplayContinuationFromState(
       ...result.state.interruptStack,
       replayContinuationFrame(
         input.continuation,
-        input.handledInterruptTrigger,
+        input.handledInterruptOccurrence,
       ),
     ],
   };
@@ -309,14 +362,16 @@ function replayInterruptRouteOptions(
     BattleInterruptedProcedure,
     { readonly kind: "replay" }
   >,
-  handledInterruptTrigger: BattleInterruptTrigger,
+  handledInterruptOccurrence: BattleHandledInterruptOccurrence,
 ): Extract<
   BattleInterruptRouteOptions,
   { readonly replayingInterruptedProcedure: true }
 > {
   return {
     replayingInterruptedProcedure: true,
-    handledInterruptTrigger,
+    ...handledInterruptRouteProjection(handledInterruptOccurrence),
+    ...optionalProperty("replayParentPosition", continuation.parentPosition),
+    ...optionalProperty("objectOutcomes", continuation.objectOutcomes),
     ...optionalProperty(
       "pendingAttackDamageReductions",
       continuation.attackDamageReductions,
@@ -339,7 +394,7 @@ function resolveGlyphStoredSpellReplayContinuationFromState(
       ...replay.witness,
       fills: input.fills,
     },
-    handledInterruptTrigger: input.handledInterruptTrigger,
+    handledInterruptTrigger: input.handledInterruptOccurrence.trigger,
   });
   if (result.tag === "released") {
     return mergeObjectOutcomeResult(
@@ -365,7 +420,7 @@ function resolveGlyphStoredSpellReplayContinuationFromState(
         ...result.state.interruptStack,
         replayContinuationFrame(
           input.continuation,
-          input.handledInterruptTrigger,
+          input.handledInterruptOccurrence,
         ),
       ],
     };
@@ -447,3 +502,4 @@ function activeInterruptWithReplayContinuationAttackDamageChanges(
     ],
   };
 }
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE

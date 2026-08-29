@@ -1,5 +1,8 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
+} from "./battle-runtime.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { isDeepStrictEqual } from "node:util";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-sleet-storm-area-hazard
@@ -40,7 +43,6 @@ import { spellRecord } from "./unit-profile-admission-spell-record.test-support.
 import {
   battleObscurementZones,
   endTurn,
-  type BattleActiveEffect,
   type BattleHole,
   type BattleResolutionResult,
   type BattleRuntimeSession,
@@ -317,7 +319,7 @@ function initialRuntimeState(): SleetStormRuntimeState {
 
 function stateWithTargetConcentration(state: BattleState): BattleState {
   const target = requireCombatant(state, spellTargetId);
-  const concentrationEffect: BattleActiveEffect = {
+  const concentrationEffect = {
     kind: "spellArmorClassBonus",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(syntheticTargetConcentrationSpellId),
@@ -329,8 +331,8 @@ function stateWithTargetConcentration(state: BattleState): BattleState {
       kind: "concentration",
       combatantId: spellTargetId,
     },
-  };
-  return {
+  } as const;
+  const concentratingState = {
     ...state,
     combatants: new Map(state.combatants).set(spellTargetId, {
       ...target,
@@ -340,9 +342,13 @@ function stateWithTargetConcentration(state: BattleState): BattleState {
         ),
         effectKind: "spellEffect",
       },
-      activeEffects: [...target.activeEffects, concentrationEffect],
     }),
   };
+  return battleStateWithAllocatedEffectForTest({
+    state: concentratingState,
+    ownerId: spellTargetId,
+    effect: concentrationEffect,
+  });
 }
 
 function castSleetStorm(state: SleetStormRuntimeState): SleetStormRuntimeState {
@@ -487,6 +493,7 @@ function moveWithDifficultTerrain(
             sources: [
               {
                 kind: "sleetStormHazard",
+                effectRef: hazard.effectRef,
                 sourceCombatantId: spellCasterId,
                 sourceProcedureRef: hazard.sourceProcedureRef,
                 areaId: sleetStormAreaId,

@@ -5,9 +5,10 @@ import {
 } from "@dnd/surface/surface/schema";
 import type { DamageType, DiceExpr } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "./template-codec.ts";
 import { HUNTERS_MARK_FINDING_SKILLS } from "../battle-reducer/domain-constants.ts";
 import {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
@@ -93,6 +94,7 @@ type SpellWeaponDamageRider = Extract<
   { readonly kind: "spellWeaponDamageRider" }
 >;
 export type SpellWeaponDamageRiderTemplate = {
+  readonly effectRef?: never;
   readonly sourceCombatantId: CombatantId;
   readonly kind: "spellWeaponDamageRider";
   readonly damage: {
@@ -114,18 +116,23 @@ const SpellWeaponDamageRiderMechanicalFields = {
 
 export const SpellWeaponDamageRiderTemplateSchema =
   exactSchema<SpellWeaponDamageRiderTemplate>()(
-    Schema.Struct(SpellWeaponDamageRiderMechanicalFields),
+    Schema.Struct({
+      ...SpellWeaponDamageRiderMechanicalFields,
+      ...BattleEffectOccurrenceTemplateSchemaFields,
+    }),
   );
 
 export const SpellWeaponDamageRiderSchema =
   exactSchema<SpellWeaponDamageRider>()(
     Schema.Struct({
       sourceProcedureRef: BattleProcedureExecutionRef,
+      effectRef: BattleEffectExecutionRef,
       ...SpellWeaponDamageRiderMechanicalFields,
     }),
   );
 
 export type SpellMarkedDamageRiderTemplate = {
+  readonly effectRef?: never;
   readonly sourceCombatantId: CombatantId;
   readonly kind: "spellMarkedDamageRider";
   readonly targetCombatantId: CombatantId;
@@ -153,19 +160,23 @@ const SpellMarkedDamageRiderMechanicalFields = {
 
 export const SpellMarkedDamageRiderTemplateSchema =
   exactSchema<SpellMarkedDamageRiderTemplate>()(
-    Schema.Struct(SpellMarkedDamageRiderMechanicalFields),
+    Schema.Struct({
+      ...SpellMarkedDamageRiderMechanicalFields,
+      ...BattleEffectOccurrenceTemplateSchemaFields,
+    }),
   );
 
 export const SpellMarkedDamageRiderSchema =
   exactSchema<SpellMarkedDamageRider>()(
     Schema.Struct({
       sourceProcedureRef: BattleProcedureExecutionRef,
-      effectRef: BattleActiveEffectExecutionRef,
+      effectRef: BattleEffectExecutionRef,
       ...SpellMarkedDamageRiderMechanicalFields,
     }),
   );
 
 export type ThaumaturgyBoomingVoiceTemplate = {
+  readonly effectRef?: never;
   readonly sourceCombatantId: CombatantId;
   readonly kind: "thaumaturgyBoomingVoice";
   readonly expiresAt: DurationBattleActiveEffectExpiration;
@@ -177,10 +188,12 @@ export const ThaumaturgyBoomingVoiceTemplateSchema =
       sourceCombatantId: CombatantId,
       kind: Schema.Literal("thaumaturgyBoomingVoice"),
       expiresAt: DurationBattleActiveEffectExpirationSchema,
+      ...BattleEffectOccurrenceTemplateSchemaFields,
     }),
   );
 
 export type BlurredActiveEffectTemplate = {
+  readonly effectRef?: never;
   readonly sourceCombatantId: CombatantId;
   readonly kind: "blurred";
   readonly expiresAt: ConcentrationBattleActiveEffectExpiration;
@@ -192,10 +205,12 @@ export const BlurredActiveEffectTemplateSchema =
       sourceCombatantId: CombatantId,
       kind: Schema.Literal("blurred"),
       expiresAt: ConcentrationBattleActiveEffectExpirationSchema,
+      ...BattleEffectOccurrenceTemplateSchemaFields,
     }),
   );
 
 export type WardingBondActiveEffectTemplate = {
+  readonly effectRef?: never;
   readonly sourceCombatantId: CombatantId;
   readonly kind: "wardingBond";
   readonly expiresAt: DurationBattleActiveEffectExpiration;
@@ -207,5 +222,6 @@ export const WardingBondActiveEffectTemplateSchema =
       sourceCombatantId: CombatantId,
       kind: Schema.Literal("wardingBond"),
       expiresAt: DurationBattleActiveEffectExpirationSchema,
+      ...BattleEffectOccurrenceTemplateSchemaFields,
     }),
   );

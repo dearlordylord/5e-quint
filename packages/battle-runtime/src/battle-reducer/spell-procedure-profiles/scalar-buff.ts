@@ -59,6 +59,7 @@ import {
 import { CombatantId } from "../../identity.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
+import { allocateBattleEffectOccurrenceForCreature } from "../../effect-execution-ref.ts";
 import {
   applyHitPointMaximumIncrease,
   applyTemporaryHitPoints,
@@ -103,6 +104,7 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -126,6 +128,7 @@ const ScalarBuffActiveEffectTemplateSchema = Schema.Union([
     kind: Schema.Literal("speedDelta"),
     deltaFeet: MovementDeltaFeet,
     expiresAt: BattleActiveEffectExpirationSchema,
+    ...BattleEffectOccurrenceTemplateSchemaFields,
   }),
   Schema.Struct({
     sourceCombatantId: CombatantId,
@@ -137,6 +140,7 @@ const ScalarBuffActiveEffectTemplateSchema = Schema.Union([
     speed: Schema.Struct({ kind: Schema.Literal("equalToSpeed") }),
     hover: Schema.Literal(false),
     expiresAt: BattleActiveEffectExpirationSchema,
+    ...BattleEffectOccurrenceTemplateSchemaFields,
   }),
   Schema.Struct({
     sourceCombatantId: CombatantId,
@@ -148,6 +152,7 @@ const ScalarBuffActiveEffectTemplateSchema = Schema.Union([
     }),
     hover: Schema.Literal(true),
     expiresAt: BattleActiveEffectExpirationSchema,
+    ...BattleEffectOccurrenceTemplateSchemaFields,
   }),
   Schema.Struct({
     sourceCombatantId: CombatantId,
@@ -155,12 +160,14 @@ const ScalarBuffActiveEffectTemplateSchema = Schema.Union([
     bonus: Schema.Number,
     negatesRepeatedDamageAllocation: Schema.Boolean,
     expiresAt: BattleActiveEffectExpirationSchema,
+    ...BattleEffectOccurrenceTemplateSchemaFields,
   }),
   Schema.Struct({
     sourceCombatantId: CombatantId,
     kind: Schema.Literal("spellArmorClassFloor"),
     floor: ArmorClassSchema,
     expiresAt: BattleActiveEffectExpirationSchema,
+    ...BattleEffectOccurrenceTemplateSchemaFields,
   }),
 ]);
 
@@ -169,6 +176,7 @@ const HitPointMaximumIncreaseTemplateSchema = Schema.Struct({
   kind: Schema.Literal("hitPointMaximumIncrease"),
   amount: Schema.Number,
   expiresAt: BattleActiveEffectExpirationSchema,
+  ...BattleEffectOccurrenceTemplateSchemaFields,
 });
 type ScalarBuffResolveInput =
   SpellProcedureProfileResolveInput<ScalarBuffInvocation>;
@@ -381,12 +389,19 @@ function applyScalarBuffEffect(
         combatants: new Map(nextState.combatants).set(targetId, nextTarget),
       };
     }
-    if (scalarEffect.kind === "hitPointMaximumIncrease") {
-      const nextTarget = applyHitPointMaximumIncrease(target, {
+    const allocation = allocateBattleEffectOccurrenceForCreature({
+      owner: target,
+      effect: {
         ...scalarEffect.activeEffect,
         sourceProcedureRef: invocation.sourceProcedureRef,
         sourceCombatantId: actorId,
-      });
+      },
+    });
+    if (allocation.effect.kind === "hitPointMaximumIncrease") {
+      const nextTarget = applyHitPointMaximumIncrease(
+        allocation.owner,
+        allocation.effect,
+      );
       return {
         ...nextState,
         combatants: new Map(nextState.combatants).set(targetId, nextTarget),
@@ -397,13 +412,11 @@ function applyScalarBuffEffect(
         effect.kind === scalarEffect.activeEffect.kind &&
         effect.sourceProcedureRef === invocation.sourceProcedureRef,
     );
-    const nextTarget = battleCreatureWithSpellActiveEffects(target, [
-      ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
-      {
-        ...scalarEffect.activeEffect,
-        sourceProcedureRef: invocation.sourceProcedureRef,
-        sourceCombatantId: actorId,
-      },
+    const nextTarget = battleCreatureWithSpellActiveEffects(allocation.owner, [
+      ...allocation.owner.activeEffects.filter(
+        (effect) => !replacing.includes(effect),
+      ),
+      allocation.effect,
     ]);
     const applied = {
       ...nextState,

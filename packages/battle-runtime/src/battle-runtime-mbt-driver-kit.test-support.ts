@@ -58,6 +58,7 @@ import {
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   characterBattleFeatureInitForTest,
   characterSpellInvocationRefForProcedureRefForTest,
   fighterTurnWithReadiedAcidAndSecondReadiedRay,
@@ -15571,28 +15572,30 @@ function stateWithPreexistingBlurConcentration(
   state: BattleState,
 ): BattleState {
   const caster = requireBattleCombatant(state, fighterId);
-  return {
+  const sourceProcedureRef = battleProcedureExecutionRefForTest("blur");
+  const concentratingState = {
     ...state,
     combatants: new Map(state.combatants).set(fighterId, {
       ...caster,
       concentration: {
-        sourceProcedureRef: battleProcedureExecutionRefForTest("blur"),
+        sourceProcedureRef,
         effectKind: "spellEffect",
       },
-      activeEffects: [
-        ...caster.activeEffects,
-        {
-          kind: "blurred",
-          sourceProcedureRef: battleProcedureExecutionRefForTest("blur"),
-          sourceCombatantId: fighterId,
-          expiresAt: {
-            kind: "concentration",
-            combatantId: fighterId,
-          },
-        },
-      ],
     }),
   };
+  return battleStateWithAllocatedEffectForTest({
+    state: concentratingState,
+    ownerId: fighterId,
+    effect: {
+      kind: "blurred",
+      sourceProcedureRef,
+      sourceCombatantId: fighterId,
+      expiresAt: {
+        kind: "concentration",
+        combatantId: fighterId,
+      },
+    },
+  });
 }
 
 function advanceToConcentrationAttackerTurn(state: BattleState): BattleState {
@@ -18630,6 +18633,9 @@ function reducerRouteHolesFromRuntimeHole(
   if (hole.kind === "gustOfWindLineDirectionChoice") {
     return ["gustOfWindLineDirectionChoice"];
   }
+  // Area wind strength is caller/table-supplied environmental evidence, not a
+  // durable reducer-route frontier.
+  if (hole.kind === "areaWindStrength") return [];
   // Held-object inventories are caller/table-supplied boundary facts, not a
   // durable reducer-route frontier.
   if (hole.kind === "heldObjectFacts") return [];
@@ -18902,8 +18908,28 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
         Match.when({ kind: "movement" }, () => {
           throw new Error("Battle runtime MBT does not model movement holes.");
         }),
+        Match.when({ kind: "cloudkillMovement" }, () => {
+          throw new Error(
+            "Generic battle runtime MBT leaves Cloudkill movement to its focused witness.",
+          );
+        }),
+        Match.when({ kind: "startTurnOccurrenceOrder" }, () => {
+          throw new Error(
+            "Generic battle runtime MBT leaves simultaneous Cloudkill start-turn ordering to its focused witness.",
+          );
+        }),
+        Match.when({ kind: "temporaryHitPointChoice" }, () => {
+          throw new Error(
+            "Generic battle runtime MBT leaves Temporary Hit Point choices to focused turn-boundary witnesses.",
+          );
+        }),
       )
       .pipe(
+        Match.when({ kind: "areaWindStrength" }, () => {
+          throw new Error(
+            "Generic battle runtime MBT does not model area wind-strength holes.",
+          );
+        }),
         Match.when({ kind: "toolPossessionFacts" }, () => {
           throw new Error(
             "Battle runtime MBT does not model tool possession holes.",

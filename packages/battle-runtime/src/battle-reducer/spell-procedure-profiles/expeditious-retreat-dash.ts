@@ -29,7 +29,7 @@ import {
 import { activeOngoingFeaturesPreventSpellInvocation } from "../spells-invocation-guards.ts";
 import { snapshotBattle } from "../interrupt-execution.ts";
 import { CombatantId } from "../../identity.ts";
-import { allocateBattleActiveEffectRefForCreature } from "../../active-effect/execution-ref.ts";
+import { allocateBattleEffectExecutionRefForCreature } from "../../effect-execution-ref.ts";
 import { applyDashToActor } from "../mobility-actions.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { revealHidden } from "../hole-helpers.ts";
@@ -50,6 +50,7 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -65,6 +66,7 @@ type ExpeditiousRetreatDashInvocation = Extract<
 >;
 
 const SpellDashBonusActionEffectSchema = Schema.Struct({
+  ...BattleEffectOccurrenceTemplateSchemaFields,
   kind: Schema.Literal("spellDashBonusAction"),
   sourceCombatantId: CombatantId,
   expiresAt: ConcentrationBattleActiveEffectExpirationSchema,
@@ -324,7 +326,7 @@ function resolveExpeditiousRetreatDash(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const allocation = allocateBattleActiveEffectRefForCreature({
+  const allocation = allocateBattleEffectExecutionRefForCreature({
     owner: effectHost,
   });
   const effectedActor = {

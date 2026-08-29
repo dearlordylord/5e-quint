@@ -4,6 +4,7 @@ import type {
 } from "./battle-state-execution.ts";
 import type {
   BattleAreaId,
+  BattleEffectExecutionRef,
   BattleSpellEffectOccurrenceId,
   BattleTablePositionId,
   CombatantId,
@@ -50,6 +51,7 @@ export type GlyphStoredSpellReleaseProfile = {
 
 export type GlyphTriggerOccurrenceWitness = {
   readonly kind: "tableWitnessedGlyphTriggerOccurrence";
+  readonly effectRef: BattleEffectExecutionRef;
   readonly sourceEffectId: BattleSpellEffectOccurrenceId;
 };
 export type GlyphStoredSpellSingleCreatureRetargetingWitness = {

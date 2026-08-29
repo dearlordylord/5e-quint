@@ -3,14 +3,15 @@ import type {
   BattleCreatureState,
   BattleState,
 } from "../battle-state-execution.ts";
-import type {
-  BattleActiveEffectExecutionRef,
-  BattleProcedureExecutionRef,
-  CombatantId,
-} from "../identity.ts";
+import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import type { BattleActiveEffectSource } from "../active-effect/source.ts";
 import { battleCreatureWithSpellActiveEffects } from "../active-effect/lifecycle.ts";
-import { allocateBattleActiveEffectRef } from "../active-effect/execution-ref.ts";
+import {
+  allocateBattleEffectOccurrenceForCreature,
+  allocateBattleEffectOccurrencesForCreature,
+  type BattleSourcedEffectOccurrenceTemplate,
+  type BattleSourcedEffectOccurrenceTemplateList,
+} from "../effect-execution-ref.ts";
 import { combatantsAfterConcentrationSpellEffectsEndedIfNoEffects } from "./spell-condition-effects-helpers.ts";
 
 /**
@@ -68,19 +69,23 @@ export function replaceTargetActiveEffect(
   state: BattleState,
   targetId: CombatantId,
   replaces: (effect: BattleActiveEffect) => boolean,
-  replacement: BattleActiveEffect,
+  replacement: BattleSourcedEffectOccurrenceTemplate,
 ): BattleState {
   const target = state.combatants.get(targetId);
   if (target === undefined) {
     return state;
   }
+  const allocation = allocateBattleEffectOccurrenceForCreature({
+    owner: target,
+    effect: replacement,
+  });
   return {
     ...state,
     combatants: new Map(state.combatants).set(targetId, {
-      ...target,
+      ...allocation.owner,
       activeEffects: [
-        ...target.activeEffects.filter((effect) => !replaces(effect)),
-        replacement,
+        ...allocation.owner.activeEffects.filter((effect) => !replaces(effect)),
+        allocation.effect,
       ],
     }),
   };
@@ -90,21 +95,25 @@ export function replaceTargetSpellActiveEffect(
   state: BattleState,
   targetId: CombatantId,
   replaces: (effect: BattleActiveEffect) => boolean,
-  replacement: BattleActiveEffect,
+  replacement: BattleSourcedEffectOccurrenceTemplate,
 ): BattleState {
   const target = state.combatants.get(targetId);
   if (target === undefined) {
     return state;
   }
+  const allocation = allocateBattleEffectOccurrenceForCreature({
+    owner: target,
+    effect: replacement,
+  });
   const activeEffects = [
-    ...target.activeEffects.filter((effect) => !replaces(effect)),
-    replacement,
+    ...allocation.owner.activeEffects.filter((effect) => !replaces(effect)),
+    allocation.effect,
   ];
   return {
     ...state,
     combatants: new Map(state.combatants).set(
       targetId,
-      battleCreatureWithSpellActiveEffects(target, activeEffects),
+      battleCreatureWithSpellActiveEffects(allocation.owner, activeEffects),
     ),
   };
 }
@@ -113,24 +122,23 @@ export function replaceAllocatedTargetSpellActiveEffects(
   state: BattleState,
   targetId: CombatantId,
   replaces: (effect: BattleActiveEffect) => boolean,
-  replacements: (
-    effectRef: BattleActiveEffectExecutionRef,
-  ) => readonly BattleActiveEffect[],
+  replacements: BattleSourcedEffectOccurrenceTemplateList,
 ): BattleState {
-  const allocation = allocateBattleActiveEffectRef({
-    state,
-    ownerId: targetId,
-  });
-  if (allocation.tag === "ownerNotFound") {
+  const target = state.combatants.get(targetId);
+  if (target === undefined) {
     return state;
   }
+  const allocation = allocateBattleEffectOccurrencesForCreature({
+    owner: target,
+    effects: replacements,
+  });
   const activeEffects = [
     ...allocation.owner.activeEffects.filter((effect) => !replaces(effect)),
-    ...replacements(allocation.effectRef),
+    ...allocation.effects,
   ];
   return {
-    ...allocation.state,
-    combatants: new Map(allocation.state.combatants).set(
+    ...state,
+    combatants: new Map(state.combatants).set(
       targetId,
       battleCreatureWithSpellActiveEffects(allocation.owner, activeEffects),
     ),

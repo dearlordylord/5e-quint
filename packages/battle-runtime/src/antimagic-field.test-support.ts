@@ -3,11 +3,11 @@ import { movementFeet } from "@dnd/shared/types";
 
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import type {
-  BattleActiveEffect,
   BattleAntimagicFieldAuraMembership,
   BattleAreaId,
   CombatantId,
 } from "./index.ts";
+import type { BattleActiveEffectOccurrenceTemplate } from "./effect-execution-ref.ts";
 import { antimagicFieldUnitId } from "./unit-profile-admission-catalog.test-support.ts";
 
 export type TestAntimagicFieldAuraMembership = {
@@ -30,11 +30,11 @@ export function antimagicFieldAuraMembershipForTest(input: {
   };
 }
 
-export function antimagicFieldAuraEffectForTest(input: {
+export function antimagicFieldAuraEffectTemplateForTest(input: {
   readonly areaId: BattleAreaId;
   readonly aura: TestAntimagicFieldAuraMembership;
 }): Extract<
-  BattleActiveEffect,
+  BattleActiveEffectOccurrenceTemplate,
   { readonly kind: "antimagicFieldOngoingSpellSuppression" }
 > {
   return {

@@ -130,6 +130,7 @@ function battleSnapshotProjectionFromActs(
         ];
       },
     ),
+    storedLightEmitters: state.lightEmitters,
     lightEmitters: battleLightEmitters(state),
     obscurementZones: battleObscurementZones(state),
     acts: availableActs.map(({ subject, initialHoles }) => ({

@@ -481,7 +481,7 @@ function assertBattleReplayExecutionBoundary() {
     {
       relativePath: "packages/battle-runtime/src/identity.ts",
       patterns: [
-        /BattleActiveEffectExecutionRef\s*=\s*Schema\.NonEmptyTrimmedString\.pipe\(\s*Schema\.brand/,
+        /BattleEffectExecutionRef\s*=\s*Schema\.NonEmptyTrimmedString\.pipe\(\s*Schema\.brand/,
         /BattleSpellDamageDieExecutionRef\s*=\s*Schema\.NonEmptyTrimmedString\.pipe\(\s*Schema\.brand/,
         POSITIONAL_DAMAGE_DIE_IDENTITY_PATTERN,
       ],

@@ -56,7 +56,7 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../../identity.ts";
@@ -473,7 +473,7 @@ const SpiritualWeaponRepeatAttackInvocationSchema =
     Schema.Struct({
       procedure: Schema.Literal("spiritualWeaponRepeatAttack"),
       spellRuleFacts: Schema.optionalKey(Schema.Never),
-      activeEffectRef: BattleActiveEffectExecutionRef,
+      activeEffectRef: BattleEffectExecutionRef,
       activeEffectSourceProcedureRef: BattleProcedureExecutionRef,
     }),
   );

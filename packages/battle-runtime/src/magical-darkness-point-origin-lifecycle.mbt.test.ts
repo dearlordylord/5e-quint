@@ -1,5 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import { battleStateWithAllocatedEffectOccurrencesForTest } from "./battle-runtime.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-magical-darkness-point-origin
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
@@ -36,11 +36,16 @@ import {
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
-import { battleSpellEffectOccurrenceId } from "./identity.ts";
 import {
-  spellCasterId,
-  spellTargetId,
+  battleSpellEffectOccurrenceId,
+  type BattleEffectExecutionRef,
+  type BattleProcedureExecutionRef,
+} from "./identity.ts";
+import {
+  continualFlameUnitId,
   darknessUnitId,
+  lightUnitId,
+  spellCasterId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
@@ -65,8 +70,8 @@ import {
   type BattleRuntimeSession,
   type BattleSpellAreaOriginAnchor,
   type BattleState,
-  type BattleTrackedOngoingSpellLightEmitter,
 } from "./index.ts";
+import type { BattleStoredLightEmitterTemplate } from "./battle-state-execution.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 
 type LastResult =
@@ -103,6 +108,11 @@ type DarknessProjection = {
 
 type DarknessRuntimeState = {
   readonly battle: BattleRuntimeSession;
+  readonly lightRefs: {
+    readonly overlappingLowLevel: BattleEffectExecutionRef;
+    readonly overlappingHighLevel: BattleEffectExecutionRef;
+    readonly nonOverlappingLowLevel: BattleEffectExecutionRef;
+  };
   readonly lastResult: LastResult;
 };
 
@@ -231,33 +241,78 @@ describe("Magical Darkness point-origin lifecycle MBT parity", () => {
 
 function initialRuntimeState(): DarknessRuntimeState {
   const session = spellBattle({
-    preparedSpells: [spellRecord(darknessUnitId)],
-    spellSlots: [{ spellLevel: 2, count: 1 }],
+    cantrips: [spellRecord(lightUnitId)],
+    preparedSpells: [
+      spellRecord(darknessUnitId),
+      spellRecord(continualFlameUnitId),
+    ],
+    spellSlots: [
+      { spellLevel: 2, count: 1 },
+      { spellLevel: 3, count: 1 },
+    ],
   });
+  const lightAct = spellAct({ session, spellId: lightUnitId });
+  const heightenedContinualFlameAct = spellAct({
+    session,
+    spellId: continualFlameUnitId,
+    slotLevel: 3,
+  });
+  const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+    state: session.state,
+    occurrences: [
+      {
+        sourceEffectId: OVERLAPPING_LOW_LEVEL_LIGHT_ID,
+        sourceSpellLevel: 0,
+        sourceProcedureRef: lightAct.subject.procedureRef,
+        objectId: "focused-darkness-overlapping-level-two-object",
+        expiresAt: {
+          kind: "duration" as const,
+          durationTicks: elapsedTimeTicks(600),
+        },
+      },
+      {
+        sourceEffectId: OVERLAPPING_HIGH_LEVEL_LIGHT_ID,
+        sourceSpellLevel: 3,
+        sourceProcedureRef: heightenedContinualFlameAct.subject.procedureRef,
+        objectId: "focused-darkness-overlapping-level-three-object",
+        expiresAt: { kind: "untilDispelled" as const },
+      },
+      {
+        sourceEffectId: NON_OVERLAPPING_LOW_LEVEL_LIGHT_ID,
+        sourceSpellLevel: 0,
+        sourceProcedureRef: lightAct.subject.procedureRef,
+        objectId: "focused-darkness-non-overlapping-level-two-object",
+        expiresAt: {
+          kind: "duration" as const,
+          durationTicks: elapsedTimeTicks(600),
+        },
+      },
+    ].map((emitter) => ({
+      kind: "storedLightEmitter" as const,
+      ownerId: spellCasterId,
+      emitter: trackedObjectSpellLightEmitter({
+        ...emitter,
+      }),
+    })),
+  });
+  const lightRefs = allocated.occurrences.flatMap((occurrence) =>
+    occurrence.kind === "storedLightEmitter"
+      ? [occurrence.emitter.effectRef]
+      : [],
+  );
+  if (lightRefs.length !== 3) {
+    throw new Error("Expected three allocated Darkness light witnesses.");
+  }
   return {
     battle: battleRuntimeSessionForTest({
       ...session,
-      state: {
-        ...session.state,
-        lightEmitters: [
-          trackedObjectSpellLightEmitter({
-            sourceEffectId: OVERLAPPING_LOW_LEVEL_LIGHT_ID,
-            sourceSpellLevel: 2,
-            objectId: "focused-darkness-overlapping-level-two-object",
-          }),
-          trackedObjectSpellLightEmitter({
-            sourceEffectId: OVERLAPPING_HIGH_LEVEL_LIGHT_ID,
-            sourceSpellLevel: 3,
-            objectId: "focused-darkness-overlapping-level-three-object",
-          }),
-          trackedObjectSpellLightEmitter({
-            sourceEffectId: NON_OVERLAPPING_LOW_LEVEL_LIGHT_ID,
-            sourceSpellLevel: 2,
-            objectId: "focused-darkness-non-overlapping-level-two-object",
-          }),
-        ],
-      },
+      state: allocated.state,
     }),
+    lightRefs: {
+      overlappingLowLevel: lightRefs[0]!,
+      overlappingHighLevel: lightRefs[1]!,
+      nonOverlappingLowLevel: lightRefs[2]!,
+    },
     lastResult: "init",
   };
 }
@@ -279,7 +334,7 @@ function castWithAreaAndLightWitnesses(
         magicalDarknessAreaFill(area, DARKNESS_AREA_ID, [
           {
             kind: "spellCreatedLightOverlapsArea",
-            sourceEffectId: OVERLAPPING_LOW_LEVEL_LIGHT_ID,
+            effectRef: state.lightRefs.overlappingLowLevel,
           },
         ]),
       ],
@@ -287,6 +342,7 @@ function castWithAreaAndLightWitnesses(
     "Expected Darkness cast to resolve.",
   );
   return {
+    ...state,
     battle: battleRuntimeSessionForTest({
       state: resolved.state,
       context: state.battle.context,
@@ -299,6 +355,7 @@ function breakDarknessConcentration(
   state: DarknessRuntimeState,
 ): DarknessRuntimeState {
   return {
+    ...state,
     battle: battleRuntimeSessionForTest({
       state: breakBattleConcentration(state.battle.state, spellCasterId),
       context: state.battle.context,
@@ -315,6 +372,7 @@ function expireDarknessDuration(
     elapsedTimeTicks(1),
   );
   return {
+    ...state,
     battle: battleRuntimeSessionForTest({
       state: {
         ...expiring,
@@ -379,15 +437,15 @@ function darknessProjection(state: DarknessRuntimeState): DarknessProjection {
           }) ?? "none"),
     overlappingLowLevelSpellLightActive: spellLightEmitterActive(
       state.battle.state,
-      OVERLAPPING_LOW_LEVEL_LIGHT_ID,
+      state.lightRefs.overlappingLowLevel,
     ),
     overlappingHighLevelSpellLightActive: spellLightEmitterActive(
       state.battle.state,
-      OVERLAPPING_HIGH_LEVEL_LIGHT_ID,
+      state.lightRefs.overlappingHighLevel,
     ),
     nonOverlappingLowLevelSpellLightActive: spellLightEmitterActive(
       state.battle.state,
-      NON_OVERLAPPING_LOW_LEVEL_LIGHT_ID,
+      state.lightRefs.nonOverlappingLowLevel,
     ),
     lastResult: state.lastResult,
   };
@@ -415,10 +473,12 @@ function magicalDarknessAreaFill(
 }
 
 function trackedObjectSpellLightEmitter(input: {
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly sourceEffectId: ReturnType<typeof battleSpellEffectOccurrenceId>;
   readonly sourceSpellLevel: number;
   readonly objectId: string;
-}): BattleTrackedOngoingSpellLightEmitter {
+  readonly expiresAt: BattleStoredLightEmitterTemplate["expiresAt"];
+}): BattleStoredLightEmitterTemplate {
   const sourceSpellLevel = parseBattleSpellEffectLevel(input.sourceSpellLevel);
   if (sourceSpellLevel === null) {
     throw new Error(
@@ -427,10 +487,8 @@ function trackedObjectSpellLightEmitter(input: {
   }
   return {
     kind: "spellLightEmitter",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String("synthetic_spell_light"),
-    ),
-    sourceCombatantId: spellTargetId,
+    sourceProcedureRef: input.sourceProcedureRef,
+    sourceCombatantId: spellCasterId,
     sourceEffectId: input.sourceEffectId,
     sourceSpellLevel,
     attachment: {
@@ -443,7 +501,7 @@ function trackedObjectSpellLightEmitter(input: {
       dimAdditionalFeet: movementFeet(20),
     },
     opaqueCoverInteraction: { kind: "blocksEmission" },
-    expiresAt: { kind: "untilDispelled" },
+    expiresAt: input.expiresAt,
   };
 }
 
@@ -498,13 +556,11 @@ function magicalDarknessActiveEffect(
 
 function spellLightEmitterActive(
   state: BattleState,
-  sourceEffectId: ReturnType<typeof battleSpellEffectOccurrenceId>,
+  effectRef: BattleEffectExecutionRef,
 ): boolean {
   return state.lightEmitters.some(
     (emitter) =>
-      emitter.kind === "spellLightEmitter" &&
-      "sourceEffectId" in emitter &&
-      emitter.sourceEffectId === sourceEffectId,
+      emitter.kind === "spellLightEmitter" && emitter.effectRef === effectRef,
   );
 }
 

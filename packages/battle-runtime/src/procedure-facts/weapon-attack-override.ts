@@ -7,6 +7,7 @@ import type { CantripSpellAccess } from "../procedure-execution/spell-invocation
 
 /** Authored-identity-free facts shared by admission and execution. */
 export type SpellWeaponAttackOverrideTemplate = {
+  readonly effectRef?: never;
   readonly sourceCombatantId: CombatantId;
   readonly kind: "spellWeaponAttackOverride";
   readonly weaponItemId: BattleObjectId;

@@ -15,7 +15,7 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import { Result } from "effect";
-import { allocateBattleActiveEffectRefForCreature } from "../active-effect/execution-ref.ts";
+import { allocateBattleEffectOccurrenceForCreature } from "../effect-execution-ref.ts";
 import { characterExecutionWithObjectContactDamageRepeat } from "../character-execution-queries.ts";
 import type { ObjectContactDamageRepeatSpellProcedureExecution } from "../character-execution.ts";
 import {
@@ -43,7 +43,7 @@ import { spellReplayContinuation } from "./spell-reaction-continuation.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import {
-  type BattleActiveEffectExecutionRef,
+  type BattleEffectExecutionRef,
   type BattleObjectId,
   type BattleProcedureExecutionRef,
   type CombatantId,
@@ -1332,7 +1332,9 @@ function applyObjectContactPenalties(input: {
     if (target === undefined) {
       continue;
     }
-    const effect: ObjectContactPenaltyActiveEffect = {
+    const effect: Omit<ObjectContactPenaltyActiveEffect, "effectRef"> & {
+      readonly effectRef?: never;
+    } = {
       kind: "selfAttackRollAndAbilityCheckRollMode",
       sourceEffectRef,
       sourceProcedureRef: objectContactDamageSourceProcedureRef(
@@ -1345,17 +1347,21 @@ function applyObjectContactPenalties(input: {
         combatantId: input.actorId,
       },
     };
+    const allocation = allocateBattleEffectOccurrenceForCreature({
+      owner: target,
+      effect,
+    });
     combatants = new Map(combatants).set(targetId, {
-      ...target,
+      ...allocation.owner,
       activeEffects: [
-        ...target.activeEffects.filter(
+        ...allocation.owner.activeEffects.filter(
           (candidate) =>
             !(
               candidate.kind === "selfAttackRollAndAbilityCheckRollMode" &&
               candidate.sourceEffectRef === effect.sourceEffectRef
             ),
         ),
-        effect,
+        allocation.effect,
       ],
     });
   }
@@ -1365,7 +1371,7 @@ function applyObjectContactPenalties(input: {
 function objectContactDamageEffectIsActive(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly effectRef: BattleActiveEffectExecutionRef;
+  readonly effectRef: BattleEffectExecutionRef;
 }): boolean {
   const actor = input.state.combatants.get(input.actorId);
   return (
@@ -1389,31 +1395,28 @@ function applyObjectContactDamageActiveEffect(input: {
     return input.state;
   }
   /* v8 ignore stop -- @preserve */
-  const allocation = allocateBattleActiveEffectRefForCreature({
+  const allocation = allocateBattleEffectOccurrenceForCreature({
     owner: actor,
+    effect: {
+      kind: "spellObjectContactDamage",
+      sourceProcedureRef: input.invocation.sourceProcedureRef,
+      sourceCombatantId: input.actorId,
+      sourceSpellLevel: spellInvocationEffectiveSpellLevel(input.invocation),
+      objectId: input.objectId,
+      rangeFeet: input.invocation.rangeFeet,
+      damage: input.invocation.damage,
+      startedOn: {
+        actorId: input.actorId,
+        round: input.state.initiative.round,
+      },
+      expiresAt: {
+        kind: "concentration",
+        combatantId: input.actorId,
+        durationTicks: input.invocation.durationTicks,
+      },
+    },
   });
-  const effect = {
-    kind: "spellObjectContactDamage" as const,
-    effectRef: allocation.effectRef,
-    sourceProcedureRef: input.invocation.sourceProcedureRef,
-    sourceCombatantId: input.actorId,
-    sourceSpellLevel: spellInvocationEffectiveSpellLevel(input.invocation),
-    objectId: input.objectId,
-    rangeFeet: input.invocation.rangeFeet,
-    damage: input.invocation.damage,
-    startedOn: {
-      actorId: input.actorId,
-      round: input.state.initiative.round,
-    },
-    expiresAt: {
-      kind: "concentration" as const,
-      combatantId: input.actorId,
-      durationTicks: input.invocation.durationTicks,
-    },
-  } satisfies Extract<
-    BattleActiveEffect,
-    { readonly kind: "spellObjectContactDamage" }
-  >;
+  const effect = allocation.effect;
   const owner = allocation.owner;
   if (owner.origin.kind !== "character") return input.state;
   const repeatExecution = {

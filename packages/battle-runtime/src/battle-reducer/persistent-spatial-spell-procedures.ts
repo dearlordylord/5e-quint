@@ -17,9 +17,9 @@ import type {
   BattleSleetStormAreaMembershipTrigger,
   BattleSubject,
 } from "../battle-subjects.ts";
-import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import {
   type BattleAreaId,
+  type BattleEffectExecutionRef,
   type BattleProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
@@ -27,6 +27,7 @@ import type {
   BattleActiveEffect,
   BattleCreatureState,
   BattleFill,
+  BattleHandledInterruptOccurrence,
   BattleFlamingSphereDamageRollHole,
   BattleFlamingSphereRamMovementHole,
   BattleFlamingSphereTrigger,
@@ -38,6 +39,7 @@ import type {
   BattleResolutionInput,
   BattleResolutionInputForSubject,
   BattleResolutionResult,
+  BattleStartTurnOccurrenceSequenceCheckpoint,
   BattleSavingThrowOutcome,
   BattleSavingThrowOutcomeValue,
   BattleSpellAreaChoice,
@@ -77,7 +79,7 @@ import {
 } from "./persistent-area-save-damage.ts";
 import { validateGustOfWindLineAreaPushFacts } from "./gust-of-wind-push-facts.ts";
 import { revertShapeShiftedCombatantToTrueForm } from "./shape-shifting.ts";
-import { resolveEndTurnCommand } from "./turn-boundary-lifecycle.ts";
+import { resolveDelegatedEndTurnCommand } from "./turn-boundary-lifecycle.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
   applyPreparedSlotSpellDamage,
@@ -139,6 +141,14 @@ const PERSISTENT_SPATIAL_SPELL_PROCEDURE_COMMANDS = [
 type PersistentSpatialSpellProcedureCommand =
   (typeof PERSISTENT_SPATIAL_SPELL_PROCEDURE_COMMANDS)[number];
 
+type PersistentSpatialReplayRoute = {
+  readonly handledSaveFailedOccurrence?: Extract<
+    BattleHandledInterruptOccurrence,
+    { readonly trigger: "saveFailed" }
+  >;
+  readonly replayParentPosition?: BattleStartTurnOccurrenceSequenceCheckpoint;
+};
+
 type PersistentSpatialSpellProcedureSubject = Extract<
   BattleSubject,
   {
@@ -178,30 +188,64 @@ type PersistentSpatialSaveFailedReplaySubject = Extract<
   }
 >;
 
+function persistentSpatialReplayEffectRef(
+  subject: PersistentSpatialSaveFailedReplaySubject,
+): BattleEffectExecutionRef {
+  return Match.value(subject).pipe(
+    Match.discriminatorsExhaustive("command")({
+      greaseGroundHazardSave: ({ effectRef }) => effectRef,
+      webRestraintSave: ({ effectRef }) => effectRef,
+      sleetStormAreaHazardSave: ({ areaMembershipTrigger }) =>
+        areaMembershipTrigger.effectRef,
+      gustOfWindLineSave: ({ effectRef }) => effectRef,
+      movableZoneSave: ({ effectRef }) => effectRef,
+      movableZoneRam: ({ effectRef }) => effectRef,
+    }),
+  );
+}
+
 function maybeOpenPersistentSpatialSaveFailedReplayInterrupt(input: {
   readonly state: BattleState;
   readonly outcome: BattleSavingThrowOutcome;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly replaySubject: PersistentSpatialSaveFailedReplaySubject;
   readonly replayFills: readonly BattleFill[];
-  readonly handledInterruptTrigger: BattleInterruptTrigger | undefined;
+  readonly handledSaveFailedOccurrence:
+    | Extract<
+        BattleHandledInterruptOccurrence,
+        { readonly trigger: "saveFailed" }
+      >
+    | undefined;
+  readonly replayParentPosition:
+    | BattleStartTurnOccurrenceSequenceCheckpoint
+    | undefined;
 }): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
   if (input.outcome.succeeded) {
     return null;
   }
+  const effectRef = persistentSpatialReplayEffectRef(input.replaySubject);
+  const handledThisOccurrence =
+    input.handledSaveFailedOccurrence?.targetId === input.outcome.targetId &&
+    input.handledSaveFailedOccurrence.sourceProcedureRef ===
+      input.sourceProcedureRef &&
+    input.handledSaveFailedOccurrence.effectRef === effectRef;
   return maybeOpenInterruptWindow(
     input.state,
     {
       trigger: "saveFailed",
       targetId: input.outcome.targetId,
       sourceProcedureRef: input.sourceProcedureRef,
+      effectRef,
       continuation: {
         kind: "replay",
         subject: input.replaySubject,
         fills: input.replayFills,
+        ...(input.replayParentPosition === undefined
+          ? {}
+          : { parentPosition: input.replayParentPosition }),
       },
     },
-    input.handledInterruptTrigger,
+    handledThisOccurrence ? "saveFailed" : undefined,
   );
 }
 
@@ -216,21 +260,33 @@ export function isPersistentSpatialSpellProcedureSubject(
   );
 }
 
-export function persistentAreaAppearanceSaveMayResolveOutsideCurrentTurn(
+export function isPersistentAreaSubjectAllowedOutsideCurrentActorTurn(
   subject: BattleSubject,
 ): boolean {
-  return (
-    subject.tag === "runtimeCommand" &&
-    (subject.command === "insectPlagueAreaHazardSave" ||
-      subject.command === "cloudkillAreaHazardSave") &&
-    subject.areaMembershipTrigger.kind === "appearsInArea"
-  );
+  if (subject.tag !== "runtimeCommand") return false;
+  if (subject.command === "insectPlagueAreaHazardSave") {
+    return Match.value(subject.areaMembershipTrigger.kind).pipe(
+      Match.when("appearsInArea", () => true),
+      Match.when("firstEntryOnTurn", () => true),
+      Match.when("turnEndInArea", () => false),
+      Match.exhaustive,
+    );
+  }
+  if (subject.command === "cloudkillAreaHazardSave") {
+    return Match.value(subject.areaMembershipTrigger.kind).pipe(
+      Match.when("appearsInArea", () => true),
+      Match.when("areaMovesIntoSpace", () => false),
+      Match.when("firstEntryOnTurn", () => false),
+      Match.when("turnEndInArea", () => false),
+      Match.exhaustive,
+    );
+  }
+  return false;
 }
 
 export function resolvePersistentSpatialSpellProcedureCommand(
-  input: BattleResolutionInputForSubject<PersistentSpatialSpellProcedureSubject> & {
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+  input: BattleResolutionInputForSubject<PersistentSpatialSpellProcedureSubject> &
+    PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
   return Match.value(input.subject).pipe(
     Match.when({ command: "greaseGroundHazardSave" }, (subject) =>
@@ -304,6 +360,7 @@ function greaseGroundHazardEffectFor(
 ): GreaseGroundHazardEffect | undefined {
   return activeEffectForArea(
     state,
+    subject.effectRef,
     subject.areaId,
     (effect): effect is GreaseGroundHazardEffect =>
       effect.kind === "greaseGroundHazard",
@@ -314,13 +371,16 @@ function activeEffectForArea<
   TEffect extends BattleActiveEffect & { readonly areaId: BattleAreaId },
 >(
   state: BattleState,
+  effectRef: BattleEffectExecutionRef,
   areaId: BattleAreaId,
   isExpectedEffect: (effect: BattleActiveEffect) => effect is TEffect,
 ): TEffect | undefined {
   for (const combatant of state.combatants.values()) {
     const effect = combatant.activeEffects.find(
       (candidate): candidate is TEffect =>
-        isExpectedEffect(candidate) && candidate.areaId === areaId,
+        candidate.effectRef === effectRef &&
+        isExpectedEffect(candidate) &&
+        candidate.areaId === areaId,
     );
     if (effect !== undefined) return effect;
   }
@@ -360,8 +420,7 @@ function resolveGreaseGroundHazardSaveCommand(
         readonly command: "greaseGroundHazardSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+  } & PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
   if (input.subject.trigger === "endsTurnInArea") {
     return resolveGreaseGroundHazardEndTurnSaveCommand(input);
@@ -378,8 +437,7 @@ function resolveGreaseGroundHazardEntrySaveCommand(
         readonly command: "greaseGroundHazardSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+  } & PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed fill set: the discovered Grease hazard subject exposes at most its one Saving Throw outcome hole. */
   if (
@@ -436,7 +494,8 @@ function resolveGreaseGroundHazardEntrySaveCommand(
       sourceProcedureRef: effect.sourceProcedureRef,
       replaySubject: input.subject,
       replayFills: input.fills,
-      handledInterruptTrigger: input.handledInterruptTrigger,
+      handledSaveFailedOccurrence: input.handledSaveFailedOccurrence,
+      replayParentPosition: input.replayParentPosition,
     });
   if (saveFailedReactionWindow !== null) {
     return saveFailedReactionWindow;
@@ -466,6 +525,7 @@ function webRestraintHazardEffectFor(
 ): WebRestraintHazardEffect | undefined {
   return activeEffectForArea(
     state,
+    subject.effectRef,
     subject.areaId,
     (effect): effect is WebRestraintHazardEffect =>
       effect.kind === "webRestraintHazard",
@@ -505,8 +565,7 @@ function resolveWebRestraintSaveCommand(
         readonly command: "webRestraintSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+  } & PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed fill set: the discovered Web restraint subject exposes at most its one Saving Throw outcome hole. */
   if (
@@ -586,7 +645,8 @@ function resolveWebRestraintSaveCommand(
       sourceProcedureRef: effect.sourceProcedureRef,
       replaySubject: input.subject,
       replayFills: input.fills,
-      handledInterruptTrigger: input.handledInterruptTrigger,
+      handledSaveFailedOccurrence: input.handledSaveFailedOccurrence,
+      replayParentPosition: input.replayParentPosition,
     });
   if (saveFailedReactionWindow !== null) {
     return saveFailedReactionWindow;
@@ -619,6 +679,7 @@ function sleetStormAreaHazardEffectFor(
 ): SleetStormAreaHazardEffect | undefined {
   return activeEffectForArea(
     state,
+    subject.areaMembershipTrigger.effectRef,
     subject.areaMembershipTrigger.areaId,
     (effect): effect is SleetStormAreaHazardEffect =>
       effect.kind === "sleetStormAreaHazard",
@@ -649,7 +710,7 @@ export function sleetStormAreaHazardSavingThrowOutcomeHole(
   effect: SleetStormAreaHazardEffect,
   trigger: BattleSleetStormAreaHazardTrigger,
 ): BattleSleetStormAreaHazardSavingThrowOutcomeHole {
-  const key = `battle:sleet-storm-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
+  const key = `battle:sleet-storm-area-hazard-save:${targetId}:${effect.effectRef}:${trigger}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
@@ -657,6 +718,7 @@ export function sleetStormAreaHazardSavingThrowOutcomeHole(
     label: `${trigger === "entersArea" ? "Entry" : "Start-turn"} DEX save`,
     sleetStormAreaHazard: {
       targetId,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
@@ -707,8 +769,7 @@ function resolveSleetStormAreaHazardSaveCommand(
         readonly command: "sleetStormAreaHazardSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+  } & PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed fill set: the discovered Sleet Storm subject exposes at most its one Saving Throw outcome hole. */
   if (
@@ -785,7 +846,8 @@ function resolveSleetStormAreaHazardSaveCommand(
       sourceProcedureRef: effect.sourceProcedureRef,
       replaySubject: input.subject,
       replayFills: input.fills,
-      handledInterruptTrigger: input.handledInterruptTrigger,
+      handledSaveFailedOccurrence: input.handledSaveFailedOccurrence,
+      replayParentPosition: input.replayParentPosition,
     });
   if (saveFailedReactionWindow !== null) {
     return saveFailedReactionWindow;
@@ -814,8 +876,7 @@ function resolveInsectPlagueAreaHazardSaveCommand(
         readonly command: "insectPlagueAreaHazardSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+  } & PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
   return resolveInsectPlagueAreaSaveDamage(input);
 }
@@ -829,9 +890,15 @@ function resolveCloudkillAreaHazardSaveCommand(
         readonly command: "cloudkillAreaHazardSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+  } & PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
+  if (input.subject.areaMembershipTrigger.kind === "areaMovesIntoSpace") {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Cloudkill movement saves resolve only through the source's start-turn boundary.",
+    );
+  }
   return resolveCloudkillAreaSaveDamage(input);
 }
 
@@ -933,6 +1000,7 @@ function gustOfWindLineEffectFor(
 ): GustOfWindLineEffect | undefined {
   return activeEffectForArea(
     state,
+    subject.effectRef,
     subject.areaId,
     (effect): effect is GustOfWindLineEffect =>
       effect.kind === "gustOfWindLine" &&
@@ -984,8 +1052,7 @@ function resolveGustOfWindLineSaveCommand(
         readonly command: "gustOfWindLineSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+  } & PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
   const effect = gustOfWindLineEffectFor(input.state, input.subject);
   if (effect === undefined) {
@@ -1034,17 +1101,11 @@ function resolveGustOfWindLineSaveCommand(
   const endTurnFills = input.fills.filter(
     (fill) => fill.holeId !== hole.holeId,
   );
-  const endTurnProbe = resolveEndTurnCommand({
-    state: input.state,
-    subject: endTurnSubject,
-    fills: endTurnFills,
-  });
   if (matchingGustFill === undefined) {
-    return needsSpatialProcedureHoleWithEndTurnFrontier({
+    return needsSpatialProcedureHole({
       state: input.state,
       subject: input.subject,
       hole,
-      endTurnProbe,
     });
   }
   const validation = validateGustOfWindLineSavingThrowOutcome(
@@ -1057,13 +1118,6 @@ function resolveGustOfWindLineSaveCommand(
     return invalidResult(input.state, "invalidFill", validation);
   }
   /* v8 ignore stop -- @preserve */
-  const pendingEndTurn = pendingSpatialProcedureEndTurnResult(
-    endTurnProbe,
-    input.subject,
-  );
-  if (pendingEndTurn !== null) {
-    return pendingEndTurn;
-  }
   const outcome = matchingGustFill.value.outcomes[0]!;
   const saveFailedReactionWindow =
     maybeOpenPersistentSpatialSaveFailedReplayInterrupt({
@@ -1072,19 +1126,17 @@ function resolveGustOfWindLineSaveCommand(
       sourceProcedureRef: effect.sourceProcedureRef,
       replaySubject: input.subject,
       replayFills: input.fills,
-      handledInterruptTrigger: input.handledInterruptTrigger,
+      handledSaveFailedOccurrence: input.handledSaveFailedOccurrence,
+      replayParentPosition: input.replayParentPosition,
     });
   if (saveFailedReactionWindow !== null) {
     return saveFailedReactionWindow;
   }
-  const endTurnResult = resolveEndTurnCommand({
+  return resolveDelegatedEndTurnCommand(input, {
     state: input.state,
     subject: endTurnSubject,
     fills: endTurnFills,
   });
-  return endTurnResult.tag === "needsHoles"
-    ? { ...endTurnResult, subject: input.subject }
-    : endTurnResult;
 }
 
 function resolveGustOfWindLineDirectionChangeCommand(
@@ -1174,6 +1226,7 @@ function resolveGustOfWindLineDirectionChangeCommand(
     },
     sourceCombatantId: effect.sourceCombatantId,
     sourceProcedureRef: effect.sourceProcedureRef,
+    effectRef: effect.effectRef,
     areaId: effect.areaId,
     directionId: directionFill.value.directionId,
   });
@@ -1199,6 +1252,7 @@ function flamingSphereEffectFor(
 ): FlamingSphereEffect | undefined {
   return activeEffectForArea(
     state,
+    subject.effectRef,
     subject.areaId,
     (effect): effect is FlamingSphereEffect => effect.kind === "flamingSphere",
   );
@@ -1209,7 +1263,7 @@ function flamingSphereDamageRollHole(
   effect: FlamingSphereEffect,
   trigger: BattleFlamingSphereTrigger,
 ): BattleFlamingSphereDamageRollHole {
-  const key = `battle:flaming-sphere-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
+  const key = `battle:flaming-sphere-damage:${targetId}:${effect.effectRef}:${trigger}`;
   return {
     kind: "rolledDice",
     holeId: holeId(key),
@@ -1217,6 +1271,7 @@ function flamingSphereDamageRollHole(
     label: `${flamingSphereTriggerLabel(trigger)} damage`,
     movableZone: {
       targetId,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
@@ -1344,8 +1399,7 @@ function applyFlamingSphereDamage(input: {
 function resolveFlamingSphereSaveCommand(
   input: BattleResolutionInput & {
     readonly subject: FlamingSphereSaveSubject;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+  } & PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
@@ -1423,18 +1477,12 @@ function resolveFlamingSphereSaveCommand(
       fill.holeId !== damageHole.holeId &&
       fill.holeId !== concentrationHoleId,
   );
-  const endTurnProbe = resolveEndTurnCommand({
-    state: input.state,
-    subject: endTurnSubject,
-    fills: endTurnFills,
-  });
   const saveFill = savingThrowOutcomeFillForHole(saveFills, saveHole);
   if (saveFill === undefined) {
-    return needsSpatialProcedureHoleWithEndTurnFrontier({
+    return needsSpatialProcedureHole({
       state: input.state,
       subject: input.subject,
       hole: saveHole,
-      endTurnProbe,
     });
   }
   const saveValidation = validateFlamingSphereSavingThrowOutcome(
@@ -1454,18 +1502,18 @@ function resolveFlamingSphereSaveCommand(
       sourceProcedureRef: effect.sourceProcedureRef,
       replaySubject: input.subject,
       replayFills: input.fills,
-      handledInterruptTrigger: input.handledInterruptTrigger,
+      handledSaveFailedOccurrence: input.handledSaveFailedOccurrence,
+      replayParentPosition: input.replayParentPosition,
     });
   if (saveFailedReactionWindow !== null) {
     return saveFailedReactionWindow;
   }
   const damageFill = rolledDiceFillForHole(damageFills, damageHole);
   if (damageFill === undefined) {
-    return needsSpatialProcedureHoleWithEndTurnFrontier({
+    return needsSpatialProcedureHole({
       state: input.state,
       subject: input.subject,
       hole: damageHole,
-      endTurnProbe,
     });
   }
   const damageValidation = validateFlamingSphereDamageRoll(
@@ -1515,19 +1563,11 @@ function resolveFlamingSphereSaveCommand(
       ? undefined
       : concentrationSavingThrowFillFor(concentrationFills, concentrationHole);
   if (concentrationHole !== null && concentrationFill === undefined) {
-    return needsSpatialProcedureHoleWithEndTurnFrontier({
+    return needsSpatialProcedureHole({
       state: input.state,
       subject: input.subject,
       hole: concentrationHole,
-      endTurnProbe,
     });
-  }
-  const pendingEndTurn = pendingSpatialProcedureEndTurnResult(
-    endTurnProbe,
-    input.subject,
-  );
-  if (pendingEndTurn !== null) {
-    return pendingEndTurn;
   }
   const damaged = applyFlamingSphereDamage({
     state: input.state,
@@ -1537,14 +1577,11 @@ function resolveFlamingSphereSaveCommand(
     saveSucceeded: saveOutcome.succeeded,
     concentrationSavingThrow: concentrationFill,
   });
-  const endTurnResult = resolveEndTurnCommand({
+  return resolveDelegatedEndTurnCommand(input, {
     state: damaged,
     subject: endTurnSubject,
     fills: endTurnFills,
   });
-  return endTurnResult.tag === "needsHoles"
-    ? { ...endTurnResult, subject: input.subject }
-    : endTurnResult;
 }
 
 function resolveFlamingSphereRepositionCommand(
@@ -1652,8 +1689,7 @@ function resolveFlamingSphereRamCommand(
         readonly command: "movableZoneRam";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+  } & PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
@@ -1855,7 +1891,8 @@ function resolveFlamingSphereRamCommand(
       sourceProcedureRef: effect.sourceProcedureRef,
       replaySubject: input.subject,
       replayFills: input.fills,
-      handledInterruptTrigger: input.handledInterruptTrigger,
+      handledSaveFailedOccurrence: input.handledSaveFailedOccurrence,
+      replayParentPosition: input.replayParentPosition,
     });
   if (saveFailedReactionWindow !== null) {
     return saveFailedReactionWindow;
@@ -1912,6 +1949,7 @@ function moonbeamEffectFor(
 ): MoonbeamEffect | undefined {
   return activeEffectForArea(
     state,
+    subject.effectRef,
     subject.areaId,
     (effect): effect is MoonbeamEffect => effect.kind === "moonbeam",
   );
@@ -1922,7 +1960,7 @@ function moonbeamDamageRollHole(
   effect: MoonbeamEffect,
   trigger: BattleMoonbeamSaveTrigger,
 ): BattleMoonbeamDamageRollHole {
-  const key = `battle:moonbeam-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
+  const key = `battle:moonbeam-damage:${targetId}:${effect.effectRef}:${trigger}`;
   return {
     kind: "rolledDice",
     holeId: holeId(key),
@@ -1930,6 +1968,7 @@ function moonbeamDamageRollHole(
     label: `${moonbeamTriggerLabel(trigger)} damage`,
     movableZone: {
       targetId,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       areaId: effect.areaId,
@@ -2060,8 +2099,7 @@ function applyMoonbeamShapeShiftRider(input: {
 function resolveMoonbeamSaveCommand(
   input: BattleResolutionInput & {
     readonly subject: MoonbeamSaveSubject;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+  } & PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
@@ -2100,14 +2138,11 @@ function resolveMoonbeamSaveCommand(
   };
   if (effect.savedThisTurn.includes(input.subject.actorId)) {
     if (isEndTurn) {
-      const endTurnResult = resolveEndTurnCommand({
+      return resolveDelegatedEndTurnCommand(input, {
         state: input.state,
         subject: endTurnSubject,
         fills: input.fills,
       });
-      return endTurnResult.tag === "needsHoles"
-        ? { ...endTurnResult, subject: input.subject }
-        : endTurnResult;
     }
     return {
       tag: "resolved",
@@ -2154,20 +2189,12 @@ function resolveMoonbeamSaveCommand(
           fill.holeId !== concentrationHoleId,
       )
     : [];
-  const endTurnProbe = isEndTurn
-    ? resolveEndTurnCommand({
-        state: input.state,
-        subject: endTurnSubject,
-        fills: endTurnFills,
-      })
-    : null;
   const saveFill = savingThrowOutcomeFillForHole(saveFills, saveHole);
   if (saveFill === undefined) {
-    return needsSpatialProcedureHoleWithEndTurnFrontier({
+    return needsSpatialProcedureHole({
       state: input.state,
       subject: input.subject,
       hole: saveHole,
-      endTurnProbe,
     });
   }
   const saveValidation = validateMoonbeamSavingThrowOutcome(
@@ -2187,18 +2214,18 @@ function resolveMoonbeamSaveCommand(
       sourceProcedureRef: effect.sourceProcedureRef,
       replaySubject: input.subject,
       replayFills: input.fills,
-      handledInterruptTrigger: input.handledInterruptTrigger,
+      handledSaveFailedOccurrence: input.handledSaveFailedOccurrence,
+      replayParentPosition: input.replayParentPosition,
     });
   if (saveFailedReactionWindow !== null) {
     return saveFailedReactionWindow;
   }
   const damageFill = rolledDiceFillForHole(damageFills, damageHole);
   if (damageFill === undefined) {
-    return needsSpatialProcedureHoleWithEndTurnFrontier({
+    return needsSpatialProcedureHole({
       state: input.state,
       subject: input.subject,
       hole: damageHole,
-      endTurnProbe,
     });
   }
   const damageValidation = validateMoonbeamDamageRoll(damageFill, damageHole);
@@ -2245,19 +2272,11 @@ function resolveMoonbeamSaveCommand(
       ? undefined
       : concentrationSavingThrowFillFor(concentrationFills, concentrationHole);
   if (concentrationHole !== null && concentrationFill === undefined) {
-    return needsSpatialProcedureHoleWithEndTurnFrontier({
+    return needsSpatialProcedureHole({
       state: input.state,
       subject: input.subject,
       hole: concentrationHole,
-      endTurnProbe,
     });
-  }
-  const pendingEndTurn = pendingSpatialProcedureEndTurnResult(
-    endTurnProbe,
-    input.subject,
-  );
-  if (pendingEndTurn !== null) {
-    return pendingEndTurn;
   }
   const afterDamage = applyMoonbeamDamage({
     state: input.state,
@@ -2279,14 +2298,11 @@ function resolveMoonbeamSaveCommand(
     effect,
   );
   if (isEndTurn) {
-    const endTurnResult = resolveEndTurnCommand({
+    return resolveDelegatedEndTurnCommand(input, {
       state: afterMark,
       subject: endTurnSubject,
       fills: endTurnFills,
     });
-    return endTurnResult.tag === "needsHoles"
-      ? { ...endTurnResult, subject: input.subject }
-      : endTurnResult;
   }
   return {
     tag: "resolved",
@@ -2431,38 +2447,12 @@ function resolveMoonbeamRepositionCommand(
   };
 }
 
-function needsSpatialProcedureHoleWithEndTurnFrontier(input: {
+function needsSpatialProcedureHole(input: {
   readonly state: BattleState;
   readonly subject: BattleSubject;
   readonly hole: BattleHole;
-  readonly endTurnProbe: BattleResolutionResult | null;
 }): BattleResolutionResult {
-  /* v8 ignore start -- @preserve -- Malformed combined-command input: a nested End Turn probe is invalid only when fills outside the admitted spatial procedure and End Turn hole contracts were supplied. */
-  if (input.endTurnProbe?.tag === "invalid") {
-    return input.endTurnProbe;
-  }
-  /* v8 ignore stop -- @preserve */
-  return needsHolesResult(input.state, input.subject, [
-    input.hole,
-    ...(input.endTurnProbe?.tag === "needsHoles"
-      ? input.endTurnProbe.holes
-      : []),
-  ]);
-}
-
-function pendingSpatialProcedureEndTurnResult(
-  endTurnProbe: BattleResolutionResult | null,
-  subject: BattleSubject,
-): BattleResolutionResult | null {
-  if (endTurnProbe?.tag === "needsHoles") {
-    return { ...endTurnProbe, subject };
-  }
-  /* v8 ignore start -- @preserve -- Malformed combined-command input: a nested End Turn probe is invalid only when fills outside the admitted spatial procedure and End Turn hole contracts were supplied. */
-  if (endTurnProbe?.tag === "invalid") {
-    return endTurnProbe;
-  }
-  /* v8 ignore stop -- @preserve */
-  return null;
+  return needsHolesResult(input.state, input.subject, [input.hole]);
 }
 
 function resolveGreaseGroundHazardEndTurnSaveCommand(
@@ -2474,8 +2464,7 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
         readonly command: "greaseGroundHazardSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+  } & PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
   const effect = greaseGroundHazardEffectFor(input.state, input.subject);
   if (effect === undefined) {
@@ -2524,17 +2513,11 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
   const endTurnFills = input.fills.filter(
     (fill) => fill.holeId !== hole.holeId,
   );
-  const endTurnProbe = resolveEndTurnCommand({
-    state: input.state,
-    subject: endTurnSubject,
-    fills: endTurnFills,
-  });
   if (matchingGreaseFill === undefined) {
-    return needsSpatialProcedureHoleWithEndTurnFrontier({
+    return needsSpatialProcedureHole({
       state: input.state,
       subject: input.subject,
       hole,
-      endTurnProbe,
     });
   }
   const validation = validateGreaseGroundHazardSavingThrowOutcome(
@@ -2546,13 +2529,6 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
     return invalidResult(input.state, "invalidFill", validation);
   }
   /* v8 ignore stop -- @preserve */
-  const pendingEndTurn = pendingSpatialProcedureEndTurnResult(
-    endTurnProbe,
-    input.subject,
-  );
-  if (pendingEndTurn !== null) {
-    return pendingEndTurn;
-  }
   const outcome = matchingGreaseFill.value.outcomes[0]!;
   const saveFailedReactionWindow =
     maybeOpenPersistentSpatialSaveFailedReplayInterrupt({
@@ -2561,7 +2537,8 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
       sourceProcedureRef: effect.sourceProcedureRef,
       replaySubject: input.subject,
       replayFills: input.fills,
-      handledInterruptTrigger: input.handledInterruptTrigger,
+      handledSaveFailedOccurrence: input.handledSaveFailedOccurrence,
+      replayParentPosition: input.replayParentPosition,
     });
   if (saveFailedReactionWindow !== null) {
     return saveFailedReactionWindow;
@@ -2569,12 +2546,9 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
   const nextState = outcome.succeeded
     ? input.state
     : applyGreaseProneToTarget(input.state, input.subject.actorId);
-  const endTurnResult = resolveEndTurnCommand({
+  return resolveDelegatedEndTurnCommand(input, {
     state: nextState,
     subject: endTurnSubject,
     fills: endTurnFills,
   });
-  return endTurnResult.tag === "needsHoles"
-    ? { ...endTurnResult, subject: input.subject }
-    : endTurnResult;
 }

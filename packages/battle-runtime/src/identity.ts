@@ -54,30 +54,37 @@ export const BattleSpellEffectOccurrenceId = NonEmptyTrimmedStringSchema.pipe(
 export type BattleSpellEffectOccurrenceId =
   typeof BattleSpellEffectOccurrenceId.Type;
 
-export const BattleActiveEffectExecutionRef = NonEmptyTrimmedStringSchema.pipe(
+export const BattleStartTurnOccurrenceId = NonEmptyTrimmedStringSchema.pipe(
+  Schema.brand("BattleStartTurnOccurrenceId"),
+);
+export type BattleStartTurnOccurrenceId =
+  typeof BattleStartTurnOccurrenceId.Type;
+export const battleStartTurnOccurrenceId: (
+  value: string,
+) => BattleStartTurnOccurrenceId = BattleStartTurnOccurrenceId.make;
+
+export const BattleEffectExecutionRef = NonEmptyTrimmedStringSchema.pipe(
   Schema.check(
-    Schema.makeFilter(battleActiveEffectExecutionReferenceIsCanonical, {
-      message: "Invalid canonical Battle active-effect execution ref.",
+    Schema.makeFilter(battleEffectExecutionReferenceIsCanonical, {
+      message: "Invalid canonical Battle effect execution ref.",
     }),
   ),
-  Schema.brand("BattleActiveEffectExecutionRef"),
+  Schema.brand("BattleEffectExecutionRef"),
 );
-export type BattleActiveEffectExecutionRef =
-  typeof BattleActiveEffectExecutionRef.Type;
-export const battleActiveEffectExecutionRef: (
+export type BattleEffectExecutionRef = typeof BattleEffectExecutionRef.Type;
+export const battleEffectExecutionRef: (
   value: string,
-) => BattleActiveEffectExecutionRef = BattleActiveEffectExecutionRef.make;
+) => BattleEffectExecutionRef = BattleEffectExecutionRef.make;
 
-export const BattleActiveEffectExecutionOrdinal = Schema.Number.pipe(
+export const BattleEffectExecutionOrdinal = Schema.Number.pipe(
   Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
-  Schema.brand("BattleActiveEffectExecutionOrdinal"),
+  Schema.brand("BattleEffectExecutionOrdinal"),
 );
-export type BattleActiveEffectExecutionOrdinal =
-  typeof BattleActiveEffectExecutionOrdinal.Type;
-export const battleActiveEffectExecutionOrdinal: (
+export type BattleEffectExecutionOrdinal =
+  typeof BattleEffectExecutionOrdinal.Type;
+export const battleEffectExecutionOrdinal: (
   value: number,
-) => BattleActiveEffectExecutionOrdinal =
-  BattleActiveEffectExecutionOrdinal.make;
+) => BattleEffectExecutionOrdinal = BattleEffectExecutionOrdinal.make;
 
 export const battleSpellEffectOccurrenceId: (
   value: string,
@@ -530,19 +537,33 @@ export function battleResourcePoolExecutionRefBelongsToScope(
   );
 }
 
-export function battleActiveEffectExecutionRefOrdinalIsBefore(
-  effectRef: BattleActiveEffectExecutionRef,
+export function battleEffectExecutionRefOrdinalIsBefore(
+  effectRef: BattleEffectExecutionRef,
   scopeRef: BattleExecutionScopeRef,
-  nextEffectOrdinal: BattleActiveEffectExecutionOrdinal,
+  nextEffectOrdinal: BattleEffectExecutionOrdinal,
 ): boolean {
   const decoded = parseExecutionReference(effectRef);
   return (
     decoded !== null &&
     decoded.ownerScopeRef === scopeRef &&
-    decoded.kind === "activeEffectOccurrence" &&
+    decoded.kind === "effectOccurrence" &&
     nonNegativeIntegerProperty(decoded, "ordinal") &&
     Number(decoded.ordinal) < nextEffectOrdinal &&
-    battleActiveEffectExecutionReferenceIsCanonical(effectRef)
+    battleEffectExecutionReferenceIsCanonical(effectRef)
+  );
+}
+
+export function battleEffectExecutionRefBelongsToScope(
+  effectRef: BattleEffectExecutionRef,
+  scopeRef: BattleExecutionScopeRef,
+): boolean {
+  const decoded = parseExecutionReference(effectRef);
+  return (
+    decoded !== null &&
+    decoded.ownerScopeRef === scopeRef &&
+    decoded.kind === "effectOccurrence" &&
+    nonNegativeIntegerProperty(decoded, "ordinal") &&
+    battleEffectExecutionReferenceIsCanonical(effectRef)
   );
 }
 
@@ -642,21 +663,19 @@ function battleOwnedExecutionScopeReferenceIsCanonical(
   );
 }
 
-function battleActiveEffectExecutionReferenceIsCanonical(
-  reference: string,
-): boolean {
+function battleEffectExecutionReferenceIsCanonical(reference: string): boolean {
   const decoded = parseExecutionReference(reference);
   return (
     decoded !== null &&
     hasExactKeys(decoded, ["kind", "ownerScopeRef", "ordinal"]) &&
-    decoded.kind === "activeEffectOccurrence" &&
+    decoded.kind === "effectOccurrence" &&
     typeof decoded.ownerScopeRef === "string" &&
     (Schema.is(BattleStatBlockExecutionScopeRef)(decoded.ownerScopeRef) ||
       Schema.is(BattleCharacterExecutionScopeRef)(decoded.ownerScopeRef)) &&
     nonNegativeIntegerProperty(decoded, "ordinal") &&
     reference ===
       JSON.stringify({
-        kind: "activeEffectOccurrence",
+        kind: "effectOccurrence",
         ownerScopeRef: decoded.ownerScopeRef,
         ordinal: decoded.ordinal,
       })

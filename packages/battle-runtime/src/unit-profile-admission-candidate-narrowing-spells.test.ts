@@ -49,7 +49,7 @@ import {
 } from "./unit-profile-admission.test-support.ts";
 import type { SpellMarkedDamageRider } from "./unit-profile-admission.test-support.ts";
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
@@ -307,7 +307,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     }
     const markedDamageRider = {
       kind: "spellMarkedDamageRider" as const,
-      effectRef: battleActiveEffectExecutionRefForTest("candidate-mark"),
+      effectRef: battleEffectExecutionRefForTest("candidate-mark"),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String(spellId("hunters_mark")),
       ),

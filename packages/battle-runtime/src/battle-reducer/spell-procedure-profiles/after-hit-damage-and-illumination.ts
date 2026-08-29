@@ -57,6 +57,7 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -71,6 +72,7 @@ type AfterHitDamageAndIlluminationInvocation =
   AfterHitDamageAndIlluminationSpellInvocation;
 
 const ShiningSmiteIlluminationEffectSchema = Schema.Struct({
+  ...BattleEffectOccurrenceTemplateSchemaFields,
   kind: Schema.Literal("shiningSmiteIllumination"),
   sourceCombatantId: CombatantId,
   expiresAt: Schema.Struct({

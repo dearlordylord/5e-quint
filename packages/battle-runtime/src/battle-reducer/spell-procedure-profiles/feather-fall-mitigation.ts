@@ -27,6 +27,7 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import { Result, Match, Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 
 import {
   type AvailableBattleAct,
@@ -44,6 +45,7 @@ import { sameStringSet } from "../spells-execution-facts.ts";
 import { completeReactionSpellSlotCast } from "../reaction-spell-resolution.ts";
 import { featherFallReactionSpellMatchesTrigger } from "../reaction-triggered-spells.ts";
 import { spendSpellAccessFreeCastResource } from "../spells-resolve-resources.ts";
+import { replaceTargetSpellActiveEffect } from "../active-effect-replacement.ts";
 
 import type {
   SpellAdmissionContext,
@@ -202,24 +204,11 @@ function resolveFeatherFallMitigation(
     invocation: input.invocation,
   });
   const effected: BattleState = targetSelection.targetIds.reduce(
-    (state, targetId) => {
-      const target = state.combatants.get(targetId);
-      return target === undefined
-        ? state
-        : {
-            ...state,
-            combatants: new Map(state.combatants).set(targetId, {
-              ...target,
-              activeEffects: [
-                ...target.activeEffects,
-                {
-                  ...input.invocation.activeEffect,
-                  sourceProcedureRef: input.invocation.sourceProcedureRef,
-                },
-              ],
-            }),
-          };
-    },
+    (state, targetId) =>
+      replaceTargetSpellActiveEffect(state, targetId, () => false, {
+        ...input.invocation.activeEffect,
+        sourceProcedureRef: input.invocation.sourceProcedureRef,
+      }),
     castingState,
   );
   return Match.value(input.invocation.resource).pipe(
@@ -263,6 +252,7 @@ const FeatherFallMitigationInvocationSchema = spellProcedureExecutionSchema(
       maxTargets: Schema.Literal(5),
     }),
     activeEffect: Schema.Struct({
+      ...BattleEffectOccurrenceTemplateSchemaFields,
       kind: Schema.Literal("featherFallMitigation"),
       sourceCombatantId: CombatantId,
       expiresAt: DurationBattleActiveEffectExpirationSchema,

@@ -32,8 +32,10 @@ import {
   type BattleObjectId,
   type CombatantId,
 } from "../../identity.ts";
+import { allocateBattleStoredLightEmitterForCreature } from "../../effect-execution-ref.ts";
 import {
   type BattleActDiscoveryCandidate,
+  type BattleCreatureState,
   type BattleResolutionResult,
   type BattleState,
   type BattleExecutableSpellInvocation,
@@ -349,10 +351,11 @@ function discoverObjectLightCastAct(
 
 function applyObjectLightEffect(
   state: BattleState,
-  actorId: CombatantId,
+  actor: BattleCreatureState,
   objectId: BattleObjectId,
   invocation: BattleExecutableSpellInvocation<ObjectLightInvocation>,
 ): BattleState {
+  const actorId = actor.combatantId;
   const retainedEmitters =
     invocation.targeting.object.kind === "lightCantripObject"
       ? state.lightEmitters.filter(
@@ -364,27 +367,29 @@ function applyObjectLightEffect(
             ),
         )
       : state.lightEmitters;
+  const allocation = allocateBattleStoredLightEmitterForCreature({
+    owner: actor,
+    emitter: {
+      kind: "spellLightEmitter",
+      sourceProcedureRef: invocation.sourceProcedureRef,
+      sourceCombatantId: actorId,
+      sourceEffectId: objectLightSpellEffectOccurrenceId(
+        state,
+        actorId,
+        objectId,
+        invocation,
+      ),
+      sourceSpellLevel: spellInvocationEffectiveSpellLevel(invocation),
+      attachment: { kind: "object", objectId },
+      emission: invocation.light,
+      opaqueCoverInteraction: { kind: "blocksEmission" },
+      expiresAt: invocation.expiresAt,
+    },
+  });
   return {
     ...state,
-    lightEmitters: [
-      ...retainedEmitters,
-      {
-        kind: "spellLightEmitter",
-        sourceProcedureRef: invocation.sourceProcedureRef,
-        sourceCombatantId: actorId,
-        sourceEffectId: objectLightSpellEffectOccurrenceId(
-          state,
-          actorId,
-          objectId,
-          invocation,
-        ),
-        sourceSpellLevel: spellInvocationEffectiveSpellLevel(invocation),
-        attachment: { kind: "object", objectId },
-        emission: invocation.light,
-        opaqueCoverInteraction: { kind: "blocksEmission" },
-        expiresAt: invocation.expiresAt,
-      },
-    ],
+    combatants: new Map(state.combatants).set(actorId, allocation.owner),
+    lightEmitters: [...retainedEmitters, allocation.emitter],
   };
 }
 
@@ -465,6 +470,15 @@ function resolveObjectLight(
   }
   /* v8 ignore stop -- @preserve */
 
+  const actor = input.input.state.combatants.get(input.actorId);
+  if (actor === undefined) {
+    return invalidResult(
+      input.input.state,
+      "missingCombatant",
+      "Object light caster is not in this battle.",
+    );
+  }
+
   const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
     input,
     [],
@@ -477,7 +491,7 @@ function resolveObjectLight(
 
   const effected = applyObjectLightEffect(
     input.input.state,
-    input.actorId,
+    actor,
     objectTarget.objectId,
     input.invocation,
   );

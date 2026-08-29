@@ -11,6 +11,9 @@ const {
   generatorReadinessBlockerCatalogIssues,
   generatorReadinessScannerBlockers,
 } = require("./rules-kernel-coverage-config.cjs");
+const {
+  extractBattleSubjectKinds,
+} = require("./battle-subject-kind-folds.cjs");
 
 // Self-test roots are synthetic: the checker-owned qntRegistryExemptions name
 // real repo paths that never exist under the temp root, so default the
@@ -1395,6 +1398,29 @@ function runSelfTest() {
     sampleBattleSubjectsPath,
     "utf8",
   );
+
+  writeFile(
+    sampleBattleSubjectsPath,
+    [
+      "import { Schema } from 'effect';",
+      "const battleInterruptAttackExecutionSelectionWithFields = (fields) => Schema.Struct(fields);",
+      "export const BattleSubjectSchema = Schema.Union(",
+      "  Schema.Struct({ tag: Schema.Literal('companionLifecycle'), action: Schema.Literals(['temporarilyDismiss', 'reappear']) }),",
+      "  Schema.Struct({ tag: Schema.Literal('findFamiliarTouchSpell'), spellAction: Schema.Literals(['action', 'bonusAction']) }),",
+      "  battleInterruptAttackExecutionSelectionWithFields({ tag: Schema.Literal('runtimeCommand'), command: Schema.Literal('retaliationAttack') }),",
+      ");",
+    ].join("\n") + "\n",
+  );
+  assert.deepEqual(
+    Array.from(extractBattleSubjectKinds(root)).sort(),
+    [
+      "companionDeliveredMagic",
+      "companionLifecycle",
+      "runtimeCommandRetaliationAttack",
+    ],
+    "BattleSubject extraction must follow Schema.Literals and interrupt-selection field wrappers.",
+  );
+  writeFile(sampleBattleSubjectsPath, sampleBattleSubjectsText);
 
   writeFile(
     sampleBattleReducerPath,

@@ -4,7 +4,7 @@ import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 // UNIT-IDENTITY-REPLAY: L1H-ANIMAL-FRIENDSHIP animal_friendship doDiscoverAnimalFriendshipBeastTargetAdmission doResolveAnimalFriendshipFailedSaveCharmed doResolveAnimalFriendshipCasterDamageBreak
 // UNIT-IDENTITY-REPLAY: L1H-PROTECTION-EVIL-GOOD protection_from_evil_and_good doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage doPreventProtectionFromEvilAndGoodScopedCharmAndPossession doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
-import { Result } from "effect";
+import { Result, Schema } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { battleActsWithReducerRouteEvents } from "./battle-act-composition.ts";
 import { describe, expect, it } from "vitest";
@@ -31,6 +31,7 @@ import {
 import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
 import {
   battleId,
+  BattleSnapshotSchema,
   battleReducerStartRouteEvent,
   characterId,
   combatantId,
@@ -76,14 +77,14 @@ import {
   run,
   type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
-import type { ReplayAddressableSpellActiveEffect } from "./active-effect/execution-ref.ts";
+import type { BattleActiveEffectOccurrenceTemplate } from "./effect-execution-ref.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
-  battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   resolveBattleSubject,
   statBlockProcedurePresentationsForStateForTest,
 } from "./battle-runtime.test-support.ts";
+import { battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest } from "./low-level-effect-occurrence.test-support.ts";
 import {
   characterSpellProcedure,
   type SpellProcedureExecution,
@@ -127,7 +128,12 @@ type ProtectionFromEvilAndGoodEvidence = {
   readonly unscopedPossessionUnprevented: boolean;
   readonly relevantCharmSaveHasAdvantage: boolean;
   readonly relevantCharmSaveCleared: boolean;
+  readonly relevantCharmSiblingPreserved: boolean;
 };
+type ProtectionRelevantCharmActiveEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "spellConditionRepeatSave" }
+>;
 type CreatureTypeProtectionAndCharmSelectedIdentityProjection = {
   readonly beastTargetAdmitted: boolean;
   readonly humanoidTargetAdmitted: boolean;
@@ -142,6 +148,7 @@ type CreatureTypeProtectionAndCharmSelectedIdentityProjection = {
   readonly unscopedPossessionUnprevented: boolean;
   readonly relevantCharmSaveHasAdvantage: boolean;
   readonly relevantCharmSaveCleared: boolean;
+  readonly relevantCharmSiblingPreserved: boolean;
   readonly targetCharmed: boolean;
   readonly animalFriendshipEffectPresent: boolean;
   readonly actionAvailable: boolean;
@@ -347,6 +354,7 @@ const selectedUnitIdentityReplays = [
           protectionEffectPresent: true,
           relevantCharmSaveHasAdvantage: true,
           relevantCharmSaveCleared: true,
+          relevantCharmSiblingPreserved: true,
           actionAvailable: false,
           firstLevelSlotsExpended: 1,
           lastResult: "protectionRelevantSaveResolved",
@@ -483,6 +491,311 @@ describe("Creature Type Protection and Charm public reducer qRoute replay", () =
   );
 });
 
+describe("Protection relevant-effect selected occurrence identity", () => {
+  it("clears the selected charm occurrence and preserves its same-shape sibling", () => {
+    const resolved = resolveProtectionFromEvilAndGoodRelevantCharmSave();
+    expect(resolved.evidence).toMatchObject({
+      relevantCharmSaveHasAdvantage: true,
+      relevantCharmSaveCleared: true,
+      relevantCharmSiblingPreserved: true,
+    });
+  });
+
+  it("rejects duplicate selected and cross-wired save fills in either order", () => {
+    const protectedState = resolveProtectionFromEvilAndGood();
+    const fixture = stateWithProtectionRelevantCharmOccurrences(
+      protectionFromEvilAndGoodProtectedTargetTurn(protectedState.state),
+    );
+    const selectedSubject = protectionRelevantCharmSaveSubject(
+      fixture.selectedEffect,
+    );
+    const siblingSubject = protectionRelevantCharmSaveSubject(
+      fixture.siblingEffect,
+    );
+    const selectedHole = requireResultHole(
+      resolveBattleSubject({
+        state: fixture.state,
+        subject: selectedSubject,
+        fills: [],
+      }),
+      "savingThrowOutcome",
+    );
+    if (!("protectionRelevantEffectSave" in selectedHole)) {
+      throw new Error("Expected Protection relevant-effect save hole.");
+    }
+    expect(selectedHole.protectionRelevantEffectSave.effectRef).toBe(
+      selectedSubject.effectRef,
+    );
+    const siblingHole = requireResultHole(
+      resolveBattleSubject({
+        state: fixture.state,
+        subject: siblingSubject,
+        fills: [],
+      }),
+      "savingThrowOutcome",
+    );
+    const selectedFill = savingThrowOutcomeFill(selectedHole, [
+      { targetId: protectedTargetId, succeeded: true },
+    ]);
+    const siblingFill = savingThrowOutcomeFill(siblingHole, [
+      { targetId: protectedTargetId, succeeded: true },
+    ]);
+    const unsupportedFill = {
+      kind: "targetChoice",
+      holeId: selectedHole.holeId,
+      value: protectedTargetId,
+    } as const satisfies BattleFill;
+
+    for (const fills of [
+      [selectedFill, siblingFill],
+      [siblingFill, selectedFill],
+      [selectedFill, selectedFill],
+      [selectedFill, unsupportedFill],
+      [unsupportedFill, selectedFill],
+    ]) {
+      const rejected = resolveBattleSubject({
+        state: fixture.state,
+        subject: selectedSubject,
+        fills,
+      });
+      expect(rejected).toMatchObject({
+        tag: "invalid",
+        reason: "invalidFill",
+        message:
+          "Protection relevant-effect save fill does not match the selected effect occurrence.",
+      });
+      const snapshottedTarget = rejected.snapshot.combatants.find(
+        (combatant) => combatant.combatantId === protectedTargetId,
+      );
+      expect(
+        snapshottedTarget?.activeEffectOccurrences.some(
+          (effect) => effect.effectRef === fixture.selectedEffect.effectRef,
+        ),
+      ).toBe(true);
+      expect(
+        snapshottedTarget?.activeEffectOccurrences.some(
+          (effect) => effect.effectRef === fixture.siblingEffect.effectRef,
+        ),
+      ).toBe(true);
+    }
+  });
+
+  it("rejects forged protection-save hole occurrence identity, kind, and ownership", () => {
+    const protectedState = resolveProtectionFromEvilAndGood();
+    const fixture = stateWithProtectionRelevantCharmOccurrences(
+      protectionFromEvilAndGoodProtectedTargetTurn(protectedState.state),
+    );
+    const selectedSubject = protectionRelevantCharmSaveSubject(
+      fixture.selectedEffect,
+    );
+    const selectedHole = requireResultHole(
+      resolveBattleSubject({
+        state: fixture.state,
+        subject: selectedSubject,
+        fills: [],
+      }),
+      "savingThrowOutcome",
+    );
+    if (!("protectionRelevantEffectSave" in selectedHole)) {
+      throw new Error("Expected Protection relevant-effect save hole.");
+    }
+    const encoded = Schema.encodeSync(BattleSnapshotSchema)({
+      ...snapshotBattle(fixture.state),
+      acts: [{ subject: selectedSubject, initialHoles: [selectedHole] }],
+    });
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(encoded),
+    ).not.toThrow();
+    const target = encoded.combatants.find(
+      (combatant) => combatant.combatantId === protectedTargetId,
+    );
+    const wrongKindEffect = target?.activeEffectOccurrences.find(
+      (effect) => effect.activeEffectKind === "creatureTypeProtection",
+    );
+    if (wrongKindEffect === undefined) {
+      throw new Error("Expected the target's protection occurrence.");
+    }
+    const forgedPayloads = [
+      {
+        effectRef: fixture.siblingEffect.effectRef,
+        targetId: protectedTargetId,
+      },
+      { effectRef: wrongKindEffect.effectRef, targetId: protectedTargetId },
+      { effectRef: fixture.selectedEffect.effectRef, targetId: feySourceId },
+      {
+        effectRef: fixture.selectedEffect.effectRef,
+        targetId: protectedTargetId,
+        relevantEffect: "possession",
+      },
+    ] as const;
+    for (const forgedPayload of forgedPayloads) {
+      const forged = {
+        ...encoded,
+        acts: encoded.acts.map((act) => ({
+          ...act,
+          initialHoles: act.initialHoles.map((hole) =>
+            hole.kind === "savingThrowOutcome" &&
+            "protectionRelevantEffectSave" in hole
+              ? {
+                  ...hole,
+                  protectionRelevantEffectSave: {
+                    ...hole.protectionRelevantEffectSave,
+                    ...forgedPayload,
+                  },
+                }
+              : hole,
+          ),
+        })),
+      };
+      expect(() =>
+        Schema.decodeUnknownSync(BattleSnapshotSchema)(forged),
+      ).toThrow();
+    }
+    const forgedSubject = {
+      ...encoded,
+      acts: encoded.acts.map((act) =>
+        act.subject.tag === "runtimeCommand" &&
+        act.subject.command === "protectionRelevantEffectSave"
+          ? {
+              ...act,
+              subject: {
+                ...act.subject,
+                relevantEffect: "possession" as const,
+              },
+            }
+          : act,
+      ),
+    };
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(forgedSubject),
+    ).toThrow();
+  });
+
+  it("round-trips the stat-block-owned low-level source binding and rejects a contradictory effect kind", () => {
+    const protectedState = resolveProtectionFromEvilAndGood();
+    const fixture = stateWithProtectionRelevantCharmOccurrences(
+      protectionFromEvilAndGoodProtectedTargetTurn(protectedState.state),
+    );
+    const encoded = Schema.encodeSync(BattleSnapshotSchema)(
+      snapshotBattle(fixture.state),
+    );
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(encoded),
+    ).not.toThrow();
+    const fey = encoded.combatants.find(
+      (combatant) => combatant.combatantId === feySourceId,
+    );
+    if (fey?.origin.kind !== "statBlock") {
+      throw new Error(
+        "Expected the low-level source to retain Stat Block origin.",
+      );
+    }
+    const contradictory = {
+      ...encoded,
+      combatants: encoded.combatants.map((combatant) =>
+        combatant.combatantId !== feySourceId ||
+        combatant.origin.kind !== "statBlock"
+          ? combatant
+          : {
+              ...combatant,
+              origin: {
+                ...combatant.origin,
+                execution: {
+                  ...combatant.origin.execution,
+                  procedureBindings:
+                    combatant.origin.execution.procedureBindings.map(
+                      (binding) =>
+                        binding.procedure.kind !== "effectOccurrenceSource"
+                          ? binding
+                          : {
+                              ...binding,
+                              procedure: {
+                                ...binding.procedure,
+                                effectKind: "spellCondition" as const,
+                              },
+                            },
+                    ),
+                },
+              },
+            },
+      ),
+    };
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(contradictory),
+    ).toThrow();
+  });
+
+  it("rejects cross-owner duplicate source bindings while preserving one expired historical binding", () => {
+    const protectedState = resolveProtectionFromEvilAndGood();
+    const fixture = stateWithProtectionRelevantCharmOccurrences(
+      protectionFromEvilAndGoodProtectedTargetTurn(protectedState.state),
+    );
+    const characterSource =
+      battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest({
+        state: fixture.state,
+        sourceCombatantId: casterId,
+        ownerId: protectedTargetId,
+        effect: protectionRelevantCharmEffect(),
+      });
+    const encoded = Schema.encodeSync(BattleSnapshotSchema)(
+      snapshotBattle(characterSource.state),
+    );
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(encoded),
+    ).not.toThrow();
+
+    const expiredHistorical = {
+      ...encoded,
+      acts: [],
+      combatants: encoded.combatants.map((combatant) => ({
+        ...combatant,
+        activeEffectOccurrences: combatant.activeEffectOccurrences.filter(
+          (effect) => effect.effectRef !== characterSource.effectRef,
+        ),
+      })),
+    };
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(expiredHistorical),
+    ).not.toThrow();
+
+    const crossOwnerDuplicate = {
+      ...encoded,
+      combatants: encoded.combatants.map((combatant) =>
+        combatant.combatantId !== casterId ||
+        combatant.origin.kind !== "character"
+          ? combatant
+          : {
+              ...combatant,
+              origin: {
+                ...combatant.origin,
+                execution: {
+                  ...combatant.origin.execution,
+                  procedureBindings:
+                    combatant.origin.execution.procedureBindings.map(
+                      (binding) =>
+                        binding.procedure.kind !== "effectOccurrenceSource" ||
+                        binding.procedure.effectRef !==
+                          characterSource.effectRef
+                          ? binding
+                          : {
+                              ...binding,
+                              procedure: {
+                                ...binding.procedure,
+                                effectRef: fixture.selectedEffect.effectRef,
+                              },
+                            },
+                    ),
+                },
+              },
+            },
+      ),
+    };
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(crossOwnerDuplicate),
+    ).toThrow();
+  });
+});
+
 defineSelectedIdentityReplayAndQntReplay({
   describeLabel: "Creature Type Protection and Charm selected identity replay",
   taskId: "creature-type-protection-and-charm-selected-identity",
@@ -512,6 +825,7 @@ defineSelectedIdentityReplayAndQntReplay({
     unscopedPossessionUnprevented: "bool",
     relevantCharmSaveHasAdvantage: "bool",
     relevantCharmSaveCleared: "bool",
+    relevantCharmSiblingPreserved: "bool",
     targetCharmed: "bool",
     animalFriendshipEffectPresent: "bool",
     actionAvailable: "bool",
@@ -770,21 +1084,13 @@ function publicProtectionFromEvilAndGoodPreventionRoute(): readonly ReducerRoute
 
 function publicProtectionFromEvilAndGoodRelevantSaveRoute(): readonly ReducerRouteEvent[] {
   const resolved = resolveProtectionFromEvilAndGood();
-  const repeatCharmEffect = protectionRelevantCharmEffect();
   const targetTurn = protectionFromEvilAndGoodProtectedTargetTurn(
     resolved.state,
   );
-  const protectedTarget = requireCombatantState(targetTurn, protectedTargetId);
-  const activeEffectState: BattleState = {
-    ...targetTurn,
-    combatants: new Map(targetTurn.combatants).set(protectedTargetId, {
-      ...protectedTarget,
-      activeEffects: [...protectedTarget.activeEffects, repeatCharmEffect],
-    }),
-  };
-  const subject = protectionRelevantCharmSaveSubject(repeatCharmEffect);
+  const fixture = stateWithProtectionRelevantCharmOccurrences(targetTurn);
+  const subject = protectionRelevantCharmSaveSubject(fixture.selectedEffect);
   const needsSave = resolveBattleSubject({
-    state: activeEffectState,
+    state: fixture.state,
     subject,
     fills: [],
   });
@@ -868,7 +1174,7 @@ function resolveProtectionFromEvilAndGoodWalk(): ProtectionFromEvilAndGoodWalk {
 }
 
 function protectionRelevantCharmSaveSubject(
-  effect: ReplayAddressableSpellActiveEffect,
+  effect: ProtectionRelevantCharmActiveEffect,
 ): Extract<
   BattleSubject,
   {
@@ -955,6 +1261,7 @@ function expectedProjection(
     unscopedPossessionUnprevented: false,
     relevantCharmSaveHasAdvantage: false,
     relevantCharmSaveCleared: false,
+    relevantCharmSiblingPreserved: false,
     targetCharmed: false,
     animalFriendshipEffectPresent: false,
     actionAvailable: true,
@@ -977,6 +1284,7 @@ function emptyProtectionFromEvilAndGoodEvidence(): ProtectionFromEvilAndGoodEvid
     unscopedPossessionUnprevented: false,
     relevantCharmSaveHasAdvantage: false,
     relevantCharmSaveCleared: false,
+    relevantCharmSiblingPreserved: false,
   };
 }
 
@@ -1270,34 +1578,20 @@ function resolveProtectionFromEvilAndGoodRelevantCharmSave(): {
   readonly evidence: ProtectionFromEvilAndGoodEvidence;
 } {
   const resolved = resolveProtectionFromEvilAndGood();
-  const repeatCharmEffect = protectionRelevantCharmEffect();
   const targetTurn = protectionFromEvilAndGoodProtectedTargetTurn(
     resolved.state,
   );
-  const protectedTarget = requireCombatantState(targetTurn, protectedTargetId);
-  const activeEffectState: BattleState = {
-    ...targetTurn,
-    combatants: new Map(targetTurn.combatants).set(protectedTargetId, {
-      ...protectedTarget,
-      activeEffects: [...protectedTarget.activeEffects, repeatCharmEffect],
-    }),
-  };
-  const subject = {
-    tag: "runtimeCommand" as const,
-    actorId: protectedTargetId,
-    command: "protectionRelevantEffectSave" as const,
-    effectRef: spellActiveEffectExecutionRef(repeatCharmEffect),
-    relevantEffect: "charmed" as const,
-  };
+  const fixture = stateWithProtectionRelevantCharmOccurrences(targetTurn);
+  const subject = protectionRelevantCharmSaveSubject(fixture.selectedEffect);
   const needsHole = resolveBattleSubject({
-    state: activeEffectState,
+    state: fixture.state,
     subject,
     fills: [],
   });
   const saveHole = requireResultHole(needsHole, "savingThrowOutcome");
   const resolvedSave = requireResolvedState(
     resolveBattleSubject({
-      state: activeEffectState,
+      state: fixture.state,
       subject,
       fills: [
         savingThrowOutcomeFill(saveHole, [
@@ -1316,10 +1610,14 @@ function resolveProtectionFromEvilAndGoodRelevantCharmSave(): {
           rollMode.targetId === protectedTargetId &&
           rollMode.rollMode === "advantage",
       ),
-      relevantCharmSaveCleared: !requireCombatantState(
+      relevantCharmSaveCleared: !effectPresentOnProtectedTarget(
         resolvedSave,
-        protectedTargetId,
-      ).activeEffects.includes(repeatCharmEffect),
+        fixture.selectedEffect,
+      ),
+      relevantCharmSiblingPreserved: effectPresentOnProtectedTarget(
+        resolvedSave,
+        fixture.siblingEffect,
+      ),
     },
   };
 }
@@ -1774,22 +2072,77 @@ function spellConditionPresentOnProtectedTarget(
   );
 }
 
-function protectionRelevantCharmEffect(): Extract<
-  BattleActiveEffect,
-  { readonly kind: "spellConditionRepeatSave" }
+function protectionRelevantCharmEffect(): Omit<
+  Extract<
+    BattleActiveEffectOccurrenceTemplate,
+    { readonly kind: "spellConditionRepeatSave" }
+  >,
+  "sourceProcedureRef" | "sourceCombatantId"
 > {
   return {
     kind: "spellConditionRepeatSave",
-    effectRef: battleActiveEffectExecutionRefForTest("relevant-charm"),
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      "creature-type-protection-and-charm-selected-identity-relevant-charm",
-    ),
-    sourceCombatantId: feySourceId,
     condition: "charmed",
     conditionHadNonSpellSource: false,
     save: { ability: "wis", dc: { kind: "fixed", dc: difficultyClass(13) } },
     expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(600) },
   };
+}
+
+function stateWithProtectionRelevantCharmOccurrences(state: BattleState): {
+  readonly state: BattleState;
+  readonly selectedEffect: ProtectionRelevantCharmActiveEffect;
+  readonly siblingEffect: ProtectionRelevantCharmActiveEffect;
+} {
+  // This witness deliberately begins below spell admission with two
+  // pre-existing, same-shape effects. Canonical target-owned occurrence refs
+  // make the runtime command's selected identity observable without claiming
+  // an admitted Fey spell procedure.
+  const selectedAllocation =
+    battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest({
+      state,
+      sourceCombatantId: feySourceId,
+      ownerId: protectedTargetId,
+      effect: protectionRelevantCharmEffect(),
+    });
+  const siblingAllocation =
+    battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest({
+      state: selectedAllocation.state,
+      sourceCombatantId: feySourceId,
+      ownerId: protectedTargetId,
+      effect: protectionRelevantCharmEffect(),
+    });
+  const target = siblingAllocation.state.combatants.get(protectedTargetId);
+  const selectedOccurrence = target?.activeEffects.find(
+    (effect) => effect.effectRef === selectedAllocation.effectRef,
+  );
+  const siblingOccurrence = target?.activeEffects.find(
+    (effect) => effect.effectRef === siblingAllocation.effectRef,
+  );
+  if (
+    selectedOccurrence?.kind !== "spellConditionRepeatSave" ||
+    siblingOccurrence?.kind !== "spellConditionRepeatSave"
+  ) {
+    throw new Error("Expected two allocated relevant-charm occurrences.");
+  }
+  if (selectedOccurrence.effectRef === siblingOccurrence.effectRef) {
+    throw new Error("Relevant-charm occurrences must have distinct refs.");
+  }
+  return {
+    state: siblingAllocation.state,
+    selectedEffect: selectedOccurrence,
+    siblingEffect: siblingOccurrence,
+  };
+}
+
+function effectPresentOnProtectedTarget(
+  state: BattleState,
+  effect: ProtectionRelevantCharmActiveEffect,
+): boolean {
+  const effectRef = spellActiveEffectExecutionRef(effect);
+  return requireCombatantState(state, protectedTargetId).activeEffects.some(
+    (candidate) =>
+      "effectRef" in candidate && candidate.effectRef === effectRef,
+  );
 }
 
 function projectCreatureTypeProtectionAndCharmSelectedIdentityState(
@@ -1823,6 +2176,8 @@ function projectCreatureTypeProtectionAndCharmSelectedIdentityState(
     relevantCharmSaveHasAdvantage:
       protectionEvidence.relevantCharmSaveHasAdvantage,
     relevantCharmSaveCleared: protectionEvidence.relevantCharmSaveCleared,
+    relevantCharmSiblingPreserved:
+      protectionEvidence.relevantCharmSiblingPreserved,
     targetCharmed:
       target === undefined
         ? false

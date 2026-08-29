@@ -35,6 +35,7 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -54,6 +55,7 @@ const ConditionImmunityActiveEffectTemplateSchema = Schema.Struct({
   kind: Schema.Literal("conditionImmunity"),
   condition: BattleConditionSchema,
   expiresAt: BattleActiveEffectExpirationSchema,
+  ...BattleEffectOccurrenceTemplateSchemaFields,
 });
 
 type SaveGatedConditionImmunitySpellInvocation = Extract<

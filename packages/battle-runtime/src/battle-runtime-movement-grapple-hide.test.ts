@@ -13,10 +13,17 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import { abilityModifier, Hp } from "@dnd/shared/types";
 import { Result } from "effect";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
+import {
+  advanceToActorNextTurnForTest,
+  castFlyAndAdvanceToCasterTurnForTest,
+  requireActorAdmittedSpellActForTest,
+} from "./spell-effect-fixture.test-support.ts";
+import { knownWillingSpellTargetFill } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
   BattleInterruptProcedureChoiceSchema,
   BattleSnapshotSchema,
+  spellSlotInvocationRef,
 } from "./index.ts";
 import {
   deriveCreatureSpaceTraversalMovementFactFromTableRoute,
@@ -58,7 +65,6 @@ import {
   difficultyClass,
   discoverBattleActCandidates,
   discoverBattleActs,
-  elapsedTimeTicks,
   endTurn,
   fighterAttackSubject,
   fighterGrapplesGoblin,
@@ -1703,6 +1709,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       sources: [
         {
           kind: "greaseGroundHazard" as const,
+          effectRef: greaseEffect.effectRef,
           sourceCombatantId: wizardId,
           sourceProcedureRef: greaseEffect.sourceProcedureRef,
           areaId,
@@ -1770,6 +1777,12 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
   test("Grease Difficult Terrain movement facts expire with the Grease ground hazard", () => {
     const areaId = battleAreaId("test-expiring-grease-area");
     const greased = castGroundHazardForMovementTest(areaId);
+    const greaseEffect = greased.combatants
+      .get(wizardId)
+      ?.activeEffects.find((effect) => effect.kind === "greaseGroundHazard");
+    if (greaseEffect === undefined || greaseEffect.areaId !== areaId) {
+      throw new Error("Expected the admitted Grease ground hazard.");
+    }
     let expired = greased;
     for (let i = 0; i < 20; i += 1) {
       expired = requireResolved(
@@ -1812,6 +1825,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
               sources: [
                 {
                   kind: "greaseGroundHazard",
+                  effectRef: greaseEffect.effectRef,
                   sourceCombatantId: wizardId,
                   sourceProcedureRef: expect.any(String),
                   areaId,
@@ -3636,12 +3650,22 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
   });
 
   test("Fast Wrestler drag cost uses current target size after size changes", () => {
-    const state = startBattleRight({
+    const sizeChangeSession = startBattleSessionRight({
       battleId: battleId("battle-grappler-fast-wrestler-current-size"),
       combatants: [
         characterSeed({
           initiative: 20,
+          classLevels: [{ className: "fighter", level: 1 }],
           characterUnitRefs: grapplerUnitRefs(),
+        }),
+        characterSeed({
+          combatantId: wizardId,
+          initiative: 15,
+          classLevels: [{ className: "wizard", level: 3 }],
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("enlarge_reduce")],
+            spellSlots: [{ spellLevel: 2, count: 1 }],
+          }),
         }),
         skeletonCreatureInit({ initiative: 10 }),
       ],
@@ -3652,12 +3676,16 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       action: "grapple",
     };
     const target = requireHole(
-      resolveBattleSubject({ state, subject: grappleSubject, fills: [] }),
+      resolveBattleSubject({
+        state: sizeChangeSession.state,
+        subject: grappleSubject,
+        fills: [],
+      }),
       "targetChoice",
     );
     const outcome = requireHole(
       resolveBattleSubject({
-        state,
+        state: sizeChangeSession.state,
         subject: grappleSubject,
         fills: [targetFill(target, skeletonId)],
       }),
@@ -3665,7 +3693,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     );
     const grappled = requireResolved(
       resolveBattleSubject({
-        state,
+        state: sizeChangeSession.state,
         subject: grappleSubject,
         fills: [
           targetFill(target, skeletonId),
@@ -3673,32 +3701,55 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         ],
       }),
     ).state;
-    const skeleton = grappled.combatants.get(skeletonId);
-    if (skeleton === undefined) {
-      throw new Error("Expected skeleton target.");
-    }
-    const enlarged = {
-      ...grappled,
-      combatants: new Map(grappled.combatants).set(skeletonId, {
-        ...skeleton,
-        activeEffects: [
-          ...skeleton.activeEffects,
-          {
-            kind: "spellCreatureSizeChange" as const,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(spellRecord("enlarge_reduce").id),
-            ),
-            sourceCombatantId: fighterId,
-            direction: "increase" as const,
-            expiresAt: {
-              kind: "concentration" as const,
-              combatantId: fighterId,
-              durationTicks: elapsedTimeTicks(60),
-            },
-          },
-        ],
+    expect(grappled.grapples).toContainEqual(
+      expect.objectContaining({ grapplerId: fighterId, targetId: skeletonId }),
+    );
+    const wizardTurn = requireResolved(
+      endTurn({ state: grappled, actorId: fighterId }),
+    ).state;
+    const wizardSession = battleRuntimeSessionForTest({
+      ...sizeChangeSession,
+      state: wizardTurn,
+    });
+    const expectedSizeChange = spellSlotInvocationRef(
+      "enlarge_reduce",
+      2,
+      "creatureSizeIncrease",
+    );
+    const sizeChangeAct = requireActorAdmittedSpellActForTest({
+      session: wizardSession,
+      actorId: wizardId,
+      subjectTag: "actionSpell",
+      invocationRef: expectedSizeChange,
+    });
+    const sizeTarget = requireHole(
+      resolveBattleSubject({
+        state: wizardTurn,
+        subject: sizeChangeAct.subject,
+        fills: [],
       }),
-    };
+      "targetChoice",
+    );
+    const enlarged = advanceToActorNextTurnForTest(
+      requireResolved(
+        resolveBattleSubject({
+          state: wizardTurn,
+          subject: sizeChangeAct.subject,
+          fills: [
+            knownWillingSpellTargetFill(
+              sizeTarget,
+              "enlarge_reduce",
+              wizardId,
+              skeletonId,
+            ),
+          ],
+        }),
+      ).state,
+      fighterId,
+    );
+    expect(enlarged.grapples).toContainEqual(
+      expect.objectContaining({ grapplerId: fighterId, targetId: skeletonId }),
+    );
     const moveSubject: BattleSubject = {
       tag: "runtimeCommand",
       actorId: fighterId,
@@ -4273,26 +4324,53 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
   });
 
   test("staged verbal spell damage keeps the caster revealed while requesting Concentration saves", () => {
-    const session = wizardVsSkeletonBattle();
+    const baseSession = startBattleSessionRight({
+      battleId: battleId("battle-hidden-caster-concentration-save"),
+      combatants: [
+        characterSeed({
+          combatantId: skeletonId,
+          displayName: "Concentrating Target",
+          initiative: 20,
+          attack: null,
+          classLevels: [{ className: "wizard", level: 5 }],
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("fly")],
+            spellSlots: [{ spellLevel: 3, count: 1 }],
+          }),
+        }),
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Hidden Missile Caster",
+          initiative: 10,
+          attack: null,
+          classLevels: [{ className: "wizard", level: 1 }],
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("magic_missile")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+      ],
+    });
+    const concentratingTargetTurn = castFlyAndAdvanceToCasterTurnForTest({
+      session: baseSession,
+      casterId: skeletonId,
+      targetId: skeletonId,
+    }).state;
+    const wizardTurn = requireResolved(
+      endTurn({ state: concentratingTargetTurn, actorId: skeletonId }),
+    ).state;
+    const session = battleRuntimeSessionForTest({
+      ...baseSession,
+      state: wizardTurn,
+    });
     const state = session.state;
     const wizard = state.combatants.get(wizardId)!;
-    const skeleton = state.combatants.get(skeletonId)!;
     const hiddenState: BattleState = {
       ...state,
-      combatants: new Map(state.combatants)
-        .set(wizardId, {
-          ...wizard,
-          hidden: { discoveryDc: difficultyClass(17) },
-        })
-        .set(skeletonId, {
-          ...skeleton,
-          concentration: {
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String("mage_armor"),
-            ),
-            effectKind: "spellEffect",
-          },
-        }),
+      combatants: new Map(state.combatants).set(wizardId, {
+        ...wizard,
+        hidden: { discoveryDc: difficultyClass(17) },
+      }),
     };
     const subject = findAct(session, magicSubject("magic_missile")).subject;
     const target = requireHole(
@@ -4403,7 +4481,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           },
           fills: [],
         },
-        "attackHit",
+        { trigger: "attackHit" },
         [],
       ),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });

@@ -2,12 +2,12 @@
 
 import { optionalProperty } from "../optional-property.ts";
 import { Match } from "effect";
-import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import { sameBattleSubject } from "../battle-subjects.ts";
 import type {
   AdmittedBattleResolutionInput,
   BattleAttackDamageEvent,
   BattleFill,
+  BattleHandledInterruptOccurrence,
   BattleInterruptCheckpoint,
   BattleInterruptDecision,
   BattleInterruptFrame,
@@ -34,6 +34,7 @@ import {
 import { combatantCanTakeReactions } from "./creature-state-execution.ts";
 import {
   interruptCheckpointFrame,
+  interruptedProcedureSupportsAttackDamageChanges,
   spendReaction,
 } from "./interrupt-execution.ts";
 import { interruptAttackExecutionSelectionsEqual } from "./movement-speed.ts";
@@ -46,6 +47,7 @@ import { admitBattleResolutionInput } from "./resolution-admission.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { releasePendingSpellSlotUseThisTurn } from "./spell-turn-resources.ts";
 import { appendObjectOutcomeAccumulation } from "./object-outcome-accumulation.ts";
+import { handledInterruptRouteProjection } from "./replay-continuation.ts";
 
 const admittedActiveInterruptProcedure = Symbol(
   "AdmittedActiveInterruptProcedure",
@@ -67,7 +69,7 @@ type ResolveActiveInterruptSubject = (
 type ResumeInterruptContinuation = (input: {
   readonly state: BattleState;
   readonly continuation: BattleInterruptedProcedure;
-  readonly handledInterruptTrigger: BattleInterruptTrigger;
+  readonly handledInterruptOccurrence: BattleHandledInterruptOccurrence;
 }) => BattleResolutionResult;
 
 export class InterruptLifecycleExecution {
@@ -95,7 +97,7 @@ export class InterruptLifecycleExecution {
   resumeContinuation(input: {
     readonly state: BattleState;
     readonly continuation: BattleInterruptedProcedure;
-    readonly handledInterruptTrigger: BattleInterruptTrigger;
+    readonly handledInterruptOccurrence: BattleHandledInterruptOccurrence;
   }): BattleResolutionResult {
     return this.continuationResumer(input);
   }
@@ -118,7 +120,7 @@ type InterruptLifecycleDecisionOutcome =
 
 type ResolvedObjectOutcomeSource = Pick<
   Extract<BattleResolutionResult, { readonly tag: "resolved" }>,
-  "objectDamages" | "objectIgnitions"
+  "objectDamages" | "objectIgnitions" | "droppedObjects"
 >;
 
 export function resolveInterruptLifecycleDecision(input: {
@@ -332,10 +334,11 @@ export function resolveActiveInterruptProcedure(input: {
     input: continuationResolution,
     interruptRouteOptions: {
       replayingInterruptedProcedure: true,
-      ...optionalProperty(
-        "handledInterruptTrigger",
-        activeInterrupt.handledInterruptTrigger,
-      ),
+      ...(activeInterrupt.handledInterruptOccurrence === undefined
+        ? {}
+        : handledInterruptRouteProjection(
+            activeInterrupt.handledInterruptOccurrence,
+          )),
       ...(activeInterrupt.pendingAttackDamageReductions === undefined
         ? {}
         : {
@@ -520,9 +523,9 @@ function advanceInterruptCheckpointAfterResponder(input: {
     ),
   };
   const continuedState = stateForContinuingInterruptCheckpoint(
-    recordHandledInterruptTriggerForActiveInterrupt(
+    recordHandledInterruptOccurrenceForActiveInterrupt(
       closedState,
-      input.frame.trigger,
+      handledInterruptOccurrenceFor(completedFrame),
     ),
     completedFrame,
   );
@@ -530,7 +533,7 @@ function advanceInterruptCheckpointAfterResponder(input: {
     input.execution.resumeContinuation({
       state: continuedState,
       continuation: completedFrame.continuation,
-      handledInterruptTrigger: completedFrame.trigger,
+      handledInterruptOccurrence: handledInterruptOccurrenceFor(completedFrame),
     }),
     input.execution,
   );
@@ -578,6 +581,10 @@ function appendObjectOutcomesToContinuation(
       objectIgnitions: [
         ...continuation.objectIgnitions,
         ...(source.objectIgnitions ?? []),
+      ],
+      droppedObjects: [
+        ...continuation.droppedObjects,
+        ...(source.droppedObjects ?? []),
       ],
     };
   }
@@ -687,8 +694,7 @@ function interruptCheckpointAfterModifier(
   if (
     frame.trigger === "attackHit" &&
     choice.kind === "attackDamageReduction" &&
-    frame.continuation.kind === "replay" &&
-    frame.continuation.glyphStoredSpellReleaseReplay === undefined
+    interruptedProcedureSupportsAttackDamageChanges(frame.continuation)
   ) {
     return {
       ...frame,
@@ -898,9 +904,44 @@ function sameInterruptProcedureChoice(
   );
 }
 
-function recordHandledInterruptTriggerForActiveInterrupt(
+function handledInterruptOccurrenceFor(
+  frame: BattleInterruptCheckpoint,
+): BattleHandledInterruptOccurrence {
+  return Match.value(frame).pipe(
+    Match.when({ trigger: "saveFailed" }, (saveFailed) => ({
+      trigger: "saveFailed" as const,
+      targetId: saveFailed.targetId,
+      ...optionalProperty("sourceProcedureRef", saveFailed.sourceProcedureRef),
+      ...optionalProperty("effectRef", saveFailed.effectRef),
+    })),
+    Match.when({ trigger: "attackHit" }, () => ({
+      trigger: "attackHit" as const,
+    })),
+    Match.when({ trigger: "attackDamage" }, () => ({
+      trigger: "attackDamage" as const,
+    })),
+    Match.when({ trigger: "spellCast" }, () => ({
+      trigger: "spellCast" as const,
+    })),
+    Match.when({ trigger: "afterDamage" }, () => ({
+      trigger: "afterDamage" as const,
+    })),
+    Match.when({ trigger: "creatureFalls" }, () => ({
+      trigger: "creatureFalls" as const,
+    })),
+    Match.when({ trigger: "opportunityAttack" }, () => ({
+      trigger: "opportunityAttack" as const,
+    })),
+    Match.when({ trigger: "reportedReadyTrigger" }, () => ({
+      trigger: "reportedReadyTrigger" as const,
+    })),
+    Match.exhaustive,
+  );
+}
+
+function recordHandledInterruptOccurrenceForActiveInterrupt(
   state: BattleState,
-  handledInterruptTrigger: BattleInterruptTrigger,
+  handledInterruptOccurrence: BattleHandledInterruptOccurrence,
 ): BattleState {
   const frame = currentInterruptCheckpoint(state);
   if (frame?.activeInterrupt === undefined) {
@@ -914,7 +955,7 @@ function recordHandledInterruptTriggerForActiveInterrupt(
         ...frame,
         activeInterrupt: {
           ...frame.activeInterrupt,
-          handledInterruptTrigger,
+          handledInterruptOccurrence,
         },
       }),
     ],

@@ -146,7 +146,7 @@ function combatantMechanicalProjection(combatant: BattleCreatureState) {
     hidden: combatant.hidden,
     dodging: combatant.dodging,
     zeroHpLifecycle: combatant.zeroHpLifecycle,
-    nextActiveEffectOrdinal: combatant.nextActiveEffectOrdinal,
+    nextEffectOrdinal: combatant.nextEffectOrdinal,
   };
   if (combatant.origin.kind !== "character") {
     return {
@@ -221,8 +221,8 @@ function snapshotCombatantMechanicalProjection(
     hp: Number(combatant.hp),
     maxHp: Number(combatant.maxHp),
     tempHp: Number(combatant.tempHp),
-    nextActiveEffectOrdinal: combatant.nextActiveEffectOrdinal,
-    activeEffectRefs: combatant.activeEffectRefs,
+    nextEffectOrdinal: combatant.nextEffectOrdinal,
+    activeEffectOccurrences: combatant.activeEffectOccurrences,
     armorClass: combatant.armorClass,
     size: combatant.size,
     zeroHpLifecycle: combatant.zeroHpLifecycle,

@@ -917,7 +917,11 @@ function applyHideousLaughterDamageRepeatSaves(
     });
   return succeededEffects.reduce(
     (nextState, effect) =>
-      removeHideousLaughterEffectFromTarget(nextState, targetId, effect),
+      removeHideousLaughterEffectFromTarget(
+        nextState,
+        targetId,
+        effect.effectRef,
+      ),
     state,
   );
 }
@@ -1561,6 +1565,7 @@ export function concentrationSavingThrowHole(
   const holeKey = `${CONCENTRATION_SAVING_THROW_HOLE_INSTANCE_PREFIX}:${combatant.combatantId}`;
   return {
     kind: "concentrationSavingThrow",
+    damageOccurrence: { kind: "untrackedDamage" },
     holeInstanceKey: holeInstanceKey(holeKey),
     holeId: holeId(holeKey),
     label: "Concentration Constitution Saving Throw",

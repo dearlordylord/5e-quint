@@ -2,6 +2,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
 } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME slow
@@ -45,7 +46,6 @@ import {
   flamingSphereAreaId,
   flamingSphereRepositionAct,
   flamingSphereRepositionMovementFill,
-  flamingSphereUnitId,
   greaseUnitId,
   maybeSpellAct,
   movementFeet,
@@ -65,7 +65,6 @@ import {
 } from "./unit-profile-admission.test-support.ts";
 import type {
   AvailableBattleAct,
-  BattleActiveEffect,
   BattleFill,
   BattleHole,
   BattleRuntimeSession,
@@ -85,6 +84,7 @@ import {
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
 import { BattleSnapshotSchema } from "./index.ts";
+import type { BattleSourcedEffectOccurrenceTemplate } from "./effect-execution-ref.ts";
 
 const slowExtraTargetId = combatantId("unit-profile-slow-extra-target");
 const slowMultiattackTargetId = combatantId(
@@ -496,17 +496,39 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     ).toBe(false);
   });
 
-  test("slowed target Flaming Sphere Bonus Action prevents a later Action", () => {
-    const targetTurn = withCombatantActiveEffect(
-      targetTurnAfterFailedSlow(
-        spellBattle({
-          preparedSpells: [spellRecord(slowUnitId)],
-          spellSlots: [{ spellLevel: 3, count: 1 }],
-        }),
-      ),
-      spellTargetId,
-      targetOwnedFlamingSphereEffect(),
+  test("a slowed target's low-level Flaming Sphere interaction prevents a later Action", () => {
+    const slowedTargetTurn = targetTurnAfterFailedSlow(
+      spellBattle({
+        preparedSpells: [spellRecord(slowUnitId)],
+        spellSlots: [{ spellLevel: 3, count: 1 }],
+      }),
     );
+    const flamingSphere = syntheticTargetOwnedFlamingSphereInteraction();
+    const slowedTarget = requireCombatant(
+      slowedTargetTurn.state,
+      spellTargetId,
+    );
+    const stateWithConcentration = {
+      ...slowedTargetTurn.state,
+      combatants: new Map(slowedTargetTurn.state.combatants).set(
+        spellTargetId,
+        {
+          ...slowedTarget,
+          concentration: {
+            sourceProcedureRef: flamingSphere.sourceProcedureRef,
+            effectKind: "spellEffect" as const,
+          },
+        },
+      ),
+    };
+    const targetTurn = battleRuntimeSessionForTest({
+      ...slowedTargetTurn,
+      state: battleStateWithAllocatedEffectForTest({
+        state: stateWithConcentration,
+        ownerId: spellTargetId,
+        effect: flamingSphere,
+      }),
+    });
 
     const reposition = flamingSphereRepositionAct(targetTurn, spellTargetId);
     const movement = requireHole(
@@ -832,67 +854,118 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     ).toBe(false);
   });
 
-  test("Slow recast replaces only its own active penalties", () => {
+  test("Slow recast replaces its admitted occurrence and preserves a low-level unrelated occurrence", () => {
     const base = spellBattle({
       preparedSpells: [spellRecord(slowUnitId)],
-      spellSlots: [{ spellLevel: 3, count: 1 }],
+      spellSlots: [{ spellLevel: 3, count: 2 }],
     });
-    const act = spellAct({ session: base, spellId: slowUnitId, slotLevel: 3 });
-    const savingThrow = requireSpellSavingThrowOutcomeHole(act.initialHoles);
-    const target = requireCombatant(base.state, spellTargetId);
+    const firstAct = spellAct({
+      session: base,
+      spellId: slowUnitId,
+      slotLevel: 3,
+    });
+    const firstSavingThrow = requireSpellSavingThrowOutcomeHole(
+      firstAct.initialHoles,
+    );
+    const firstCast = resolveBattleSubject({
+      state: base.state,
+      subject: firstAct.subject,
+      fills: [
+        slowSavingThrowOutcomeFill(firstSavingThrow, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    if (firstCast.tag !== "resolved") {
+      throw new Error("Expected initial Slow cast to resolve.");
+    }
+    const firstEffect = requireCombatant(
+      firstCast.state,
+      spellTargetId,
+    ).activeEffects.find((effect) => effect.kind === "slowActivePenalties");
+    if (firstEffect?.kind !== "slowActivePenalties") {
+      throw new Error("Expected initial admitted Slow occurrence.");
+    }
+    const targetTurn = endTurn({
+      state: firstCast.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected first Slow caster turn to end.");
+    }
+    const repeatSaveFrontier = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+    });
+    if (repeatSaveFrontier.tag !== "needsHoles") {
+      throw new Error("Expected Slow repeat-save frontier.");
+    }
+    const repeatSave = requireSlowEndTurnSaveHole(repeatSaveFrontier.holes);
+    const casterTurn = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+      fills: [
+        singleTargetSavingThrowOutcomeFill(repeatSave, spellTargetId, false),
+      ],
+    });
+    if (casterTurn.tag !== "resolved") {
+      throw new Error("Expected failed Slow repeat save to resolve.");
+    }
     const unrelatedSource = battleProcedureExecutionRefForTest(
       "synthetic-slow-unrelated",
     );
-    const state: BattleState = {
-      ...base.state,
-      combatants: new Map(base.state.combatants)
-        .set(spellCasterId, {
-          ...requireCombatant(base.state, spellCasterId),
-          concentration: {
-            sourceProcedureRef: act.subject.procedureRef,
-            effectKind: "spellEffect",
-          },
-        })
-        .set(spellTargetId, {
-          ...target,
-          concentration: {
-            sourceProcedureRef: unrelatedSource,
-            effectKind: "spellEffect",
-          },
-          activeEffects: [
-            {
-              kind: "slowActivePenalties" as const,
-              sourceProcedureRef: act.subject.procedureRef,
-              sourceCombatantId: spellCasterId,
-              save: {
-                ability: "wis" as const,
-                dc: { kind: "caster_spell_save_dc" as const },
-              },
-              expiresAt: {
-                kind: "concentration" as const,
-                combatantId: spellCasterId,
-                durationTicks: elapsedTimeTicks(10),
-              },
-            },
-            {
-              kind: "slowActivePenalties" as const,
-              sourceProcedureRef: unrelatedSource,
-              sourceCombatantId: spellTargetId,
-              save: {
-                ability: "wis" as const,
-                dc: { kind: "caster_spell_save_dc" as const },
-              },
-              expiresAt: {
-                kind: "concentration" as const,
-                combatantId: spellTargetId,
-                durationTicks: elapsedTimeTicks(10),
-              },
-            },
-          ],
-        }),
+    const target = requireCombatant(casterTurn.state, spellTargetId);
+    const targetConcentratingState = {
+      ...casterTurn.state,
+      combatants: new Map(casterTurn.state.combatants).set(spellTargetId, {
+        ...target,
+        concentration: {
+          sourceProcedureRef: unrelatedSource,
+          effectKind: "spellEffect" as const,
+        },
+      }),
     };
+    const stateWithUnrelated = battleStateWithAllocatedEffectForTest({
+      state: targetConcentratingState,
+      ownerId: spellTargetId,
+      effect: {
+        kind: "slowActivePenalties",
+        sourceProcedureRef: unrelatedSource,
+        sourceCombatantId: spellTargetId,
+        save: {
+          ability: "wis",
+          dc: { kind: "caster_spell_save_dc" },
+        },
+        expiresAt: {
+          kind: "concentration",
+          combatantId: spellTargetId,
+          durationTicks: elapsedTimeTicks(60),
+        },
+      },
+    });
+    const unrelatedEffect = requireCombatant(
+      stateWithUnrelated,
+      spellTargetId,
+    ).activeEffects.find(
+      (effect) =>
+        effect.kind === "slowActivePenalties" &&
+        effect.sourceProcedureRef === unrelatedSource,
+    );
+    if (unrelatedEffect?.kind !== "slowActivePenalties") {
+      throw new Error("Expected unrelated synthetic Slow occurrence.");
+    }
+    const recastSession = battleRuntimeSessionForTest({
+      ...base,
+      state: stateWithUnrelated,
+    });
+    const act = spellAct({
+      session: recastSession,
+      spellId: slowUnitId,
+      slotLevel: 3,
+    });
+    const savingThrow = requireSpellSavingThrowOutcomeHole(act.initialHoles);
     const resolved = resolveBattleSubject({
-      state,
+      state: recastSession.state,
       subject: act.subject,
       fills: [
         slowSavingThrowOutcomeFill(savingThrow, [
@@ -909,6 +982,15 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       spellTargetId,
     ).activeEffects;
     expect(effects).toHaveLength(2);
+    const replacement = effects.find(
+      (effect) =>
+        effect.kind === "slowActivePenalties" &&
+        effect.sourceProcedureRef === act.subject.procedureRef,
+    );
+    expect(replacement?.effectRef).not.toBe(firstEffect.effectRef);
+    expect(
+      effects.some((effect) => effect.effectRef === unrelatedEffect.effectRef),
+    ).toBe(true);
     expect(effects).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -983,32 +1065,14 @@ function targetTurnAfterFailedSlow(
   return battleRuntimeSessionForTest({ ...session, state: targetTurn.state });
 }
 
-function withCombatantActiveEffect(
-  session: BattleRuntimeSession,
-  combatantId: CombatantId,
-  effect: BattleActiveEffect,
-): BattleRuntimeSession {
-  const combatant = requireCombatant(session.state, combatantId);
-  return battleRuntimeSessionForTest({
-    ...session,
-    state: {
-      ...session.state,
-      combatants: new Map(session.state.combatants).set(combatantId, {
-        ...combatant,
-        activeEffects: [...combatant.activeEffects, effect],
-      }),
-    },
-  });
-}
-
-function targetOwnedFlamingSphereEffect(): Extract<
-  BattleActiveEffect,
+function syntheticTargetOwnedFlamingSphereInteraction(): Extract<
+  BattleSourcedEffectOccurrenceTemplate,
   { readonly kind: "flamingSphere" }
 > {
   return {
     kind: "flamingSphere",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(flamingSphereUnitId),
+      "synthetic-slow-target-flaming-sphere",
     ),
     sourceCombatantId: spellTargetId,
     areaId: flamingSphereAreaId,

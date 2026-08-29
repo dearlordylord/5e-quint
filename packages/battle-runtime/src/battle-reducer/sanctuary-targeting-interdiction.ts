@@ -20,6 +20,7 @@ import { battleCreatureWithSpellActiveEffects } from "../active-effect/lifecycle
 import { battleStateAfterDirectConditionTargetActionEarlyEndForActor } from "./direct-condition-lifecycle.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.ts";
 import { parseAttackRollRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
+import { allocateBattleEffectOccurrenceForCreature } from "../effect-execution-ref.ts";
 
 type SanctuaryTargetingInterdictionCheckCommon =
   | { readonly tag: "notWarded" }
@@ -364,11 +365,17 @@ export function combatantWithSanctuaryWard(
       effect.kind === "sanctuaryWard" &&
       effect.sourceProcedureRef === invocation.sourceProcedureRef,
   );
-  return battleCreatureWithSpellActiveEffects(target, [
-    ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
-    {
+  const allocation = allocateBattleEffectOccurrenceForCreature({
+    owner: target,
+    effect: {
       ...invocation.activeEffect,
       sourceProcedureRef: invocation.sourceProcedureRef,
     },
+  });
+  return battleCreatureWithSpellActiveEffects(allocation.owner, [
+    ...allocation.owner.activeEffects.filter(
+      (effect) => !replacing.includes(effect),
+    ),
+    allocation.effect,
   ]);
 }

@@ -113,7 +113,7 @@ describe("battle runtime: Bardic Inspiration", () => {
       }),
     );
     expect(resolved.state.combatants.get(goblinId)?.activeEffects).toEqual([
-      {
+      expect.objectContaining({
         kind: "bardicInspirationDie",
         sourceProcedureRef: requireBardicInspirationProcedureRef(state),
         sourceCombatantId: fighterId,
@@ -122,7 +122,7 @@ describe("battle runtime: Bardic Inspiration", () => {
           kind: "duration",
           durationTicks: requireElapsedHours(1),
         },
-      },
+      }),
     ]);
   });
 

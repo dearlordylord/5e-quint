@@ -111,6 +111,7 @@ export type {
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.fighter-tactical-master unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.STAT_BLOCK.ATTACK_CONTROL BATTLE.COMPOSITION.REDUCER_SPINE_CONTRACT BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE BATTLE.SPELL.READIED_RESPONSE_PROCEDURE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE BATTLE.SPELL.REACTION_CASTING_TIME
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
@@ -288,6 +289,7 @@ import type {
   BattleAntimagicFieldOngoingSpellEffectRef,
   BattleCommandOption,
   BattleOngoingSpellEffectRef,
+  BattleOngoingSpellOccurrenceRef,
   MagicWeaponEnhancementBonus,
   SpellAttackKind,
   SpellConditionRepeatSave,
@@ -301,6 +303,7 @@ export {
   type BattleDancingLight,
   type BattleDancingLightList,
   type BattleOngoingSpellEffectRef,
+  type BattleOngoingSpellOccurrenceRef,
   type MagicWeaponEnhancementBonus,
   type SpellAttackKind,
   type SpellConditionRepeatSave,
@@ -322,12 +325,13 @@ import type {
 } from "./companion-state.ts";
 import type { BattleReducerRouteEvents } from "./battle-reducer/reducer-route-protocol.ts";
 import type { ZeroHpLifecycle } from "./zero-hp-lifecycle.ts";
+import type { BattleActiveEffectSource } from "./active-effect/source.ts";
 import type {
   BattleActiveEffect,
   BattleActiveEffectExpiration,
+  BattleEffectOccurrenceIdentity,
   BattleSpellEffectBase,
   BattleSpellActiveEffectTemplate,
-  BattleUnitFeatureEffectBase,
   MarkedDamageRiderRetargetTiming,
   PersistentArmorSpellActiveEffect,
   SelfTransformationNaturalWeaponFacts,
@@ -374,8 +378,8 @@ import type {
 } from "./battle-reducer/knocked-out-state.ts";
 import { spellDamageRerollUnsupportedIssue } from "./battle-reducer/spell-reroll-issues.ts";
 import type {
-  BattleActiveEffectExecutionOrdinal,
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionOrdinal,
+  BattleEffectExecutionRef,
   BattleAreaId,
   BattleAttackExecutionScopeRef,
   BattleAttackProcedureExecutionRef,
@@ -485,33 +489,42 @@ export type BattleLightEmitterOpaqueCoverInteraction =
   | {
       readonly kind: "doesNotBlockEmission";
     };
-type BattleSpellLightEmitterBase = BattleSpellEffectBase & {
+type BattleSpellLightEmitterFacts = BattleActiveEffectSource & {
   readonly kind: "spellLightEmitter";
   readonly attachment: BattleLightEmitterAttachment;
   readonly emission: BattleLightEmission;
   readonly opaqueCoverInteraction: BattleLightEmitterOpaqueCoverInteraction;
   readonly expiresAt: BattleActiveEffectExpiration;
 };
-export type BattleTrackedOngoingSpellLightEmitter =
-  BattleSpellLightEmitterBase & {
-    readonly sourceEffectId: BattleSpellEffectOccurrenceId;
-    readonly sourceSpellLevel: BattleSpellEffectLevel;
-  };
-export type BattleProjectedSpellLightEmitter = BattleSpellLightEmitterBase & {
-  readonly sourceEffectId?: never;
-  readonly sourceSpellLevel?: never;
+type BattleTrackedOngoingSpellLightEmitterFacts = {
+  readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+  readonly sourceSpellLevel: BattleSpellEffectLevel;
 };
-export type BattleSpellLightEmitter =
-  | BattleTrackedOngoingSpellLightEmitter
-  | BattleProjectedSpellLightEmitter;
-export type BattleUnitFeatureLightEmitter = BattleUnitFeatureEffectBase & {
+export type BattleTrackedOngoingSpellLightEmitterMechanicalFacts =
+  BattleSpellLightEmitterFacts & BattleTrackedOngoingSpellLightEmitterFacts;
+type BattleSpellLightEmitterVariantFacts =
+  | BattleTrackedOngoingSpellLightEmitterFacts
+  | {
+      readonly sourceEffectId?: never;
+      readonly sourceSpellLevel?: never;
+    };
+export type BattleProjectedSpellLightEmitter = BattleSpellLightEmitterFacts &
+  BattleSpellLightEmitterVariantFacts & { readonly effectRef?: never };
+export type BattleTrackedOngoingSpellLightEmitter =
+  BattleTrackedOngoingSpellLightEmitterMechanicalFacts &
+    BattleEffectOccurrenceIdentity;
+export type BattleSpellLightEmitter = BattleSpellLightEmitterFacts &
+  BattleSpellLightEmitterVariantFacts &
+  BattleEffectOccurrenceIdentity;
+export type BattleUnitFeatureLightEmitter = BattleActiveEffectSource & {
+  readonly effectRef?: never;
   readonly kind: "unitFeatureLightEmitter";
   readonly attachment: BattleLightEmitterAttachment;
   readonly emission: BattleLightEmission;
   readonly opaqueCoverInteraction: BattleLightEmitterOpaqueCoverInteraction;
   readonly expiresAt: BattleActiveEffectExpiration;
 };
-export type BattleObjectInvisibleRevealLightEmitter = BattleSpellEffectBase & {
+type BattleObjectInvisibleRevealLightEmitterFacts = BattleActiveEffectSource & {
   readonly kind: "objectInvisibleRevealLightEmitter";
   readonly objectId: BattleObjectId;
   readonly emission: Extract<BattleLightEmission, { readonly kind: "dim" }>;
@@ -520,11 +533,32 @@ export type BattleObjectInvisibleRevealLightEmitter = BattleSpellEffectBase & {
     { readonly kind: "endOfTurn" }
   >;
 };
+export type BattleObjectInvisibleRevealLightEmitter =
+  BattleObjectInvisibleRevealLightEmitterFacts & BattleEffectOccurrenceIdentity;
 export type BattleStoredLightEmitter =
   | BattleSpellLightEmitter
   | BattleObjectInvisibleRevealLightEmitter;
+export type BattleStoredLightEmitterTemplate =
+  BattleStoredLightEmitter extends infer Emitter
+    ? Emitter extends BattleStoredLightEmitter
+      ? Omit<Emitter, "effectRef"> & { readonly effectRef?: never }
+      : never
+    : never;
+export type BattleLightEmitterMechanicalFacts =
+  | (BattleSpellLightEmitterFacts & BattleSpellLightEmitterVariantFacts)
+  | BattleObjectInvisibleRevealLightEmitterFacts
+  | (BattleActiveEffectSource & {
+      readonly kind: "unitFeatureLightEmitter";
+      readonly attachment: BattleLightEmitterAttachment;
+      readonly emission: BattleLightEmission;
+      readonly opaqueCoverInteraction: BattleLightEmitterOpaqueCoverInteraction;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    });
 export type BattleLightEmitter =
-  | BattleStoredLightEmitter
+  | BattleProjectedSpellLightEmitter
+  | (BattleObjectInvisibleRevealLightEmitterFacts & {
+      readonly effectRef?: never;
+    })
   | BattleUnitFeatureLightEmitter;
 export type BattleOngoingSpellTarget =
   | {
@@ -736,11 +770,43 @@ export type BattleAttackDamageInterruptionFrame = {
   readonly phase: "attackDamage";
   readonly continuation: BattleAttackDamageInterruptionContinuation;
 };
+export type BattleStartTurnOccurrenceSequenceCheckpoint = {
+  readonly kind: "startTurnOccurrenceSequence";
+  readonly sequence:
+    | {
+        readonly kind: "single";
+        readonly occurrenceId: BattleStartTurnOccurrenceOption["occurrenceId"];
+      }
+    | {
+        readonly kind: "ordered";
+        readonly occurrenceIds: readonly [
+          BattleStartTurnOccurrenceOption["occurrenceId"],
+          BattleStartTurnOccurrenceOption["occurrenceId"],
+          ...BattleStartTurnOccurrenceOption["occurrenceId"][],
+        ];
+      };
+  readonly sourceTurn: {
+    readonly actorId: CombatantId;
+    readonly round: RoundType;
+  };
+  /** Exact child holes completed before the current occurrence; fill values live only in the replay procedure. */
+  readonly completedPrefixHoleIds: readonly BattleHoleId[];
+  readonly roundDurationCohort: {
+    readonly activeEffectRefs: readonly BattleEffectExecutionRef[];
+    readonly lightEmitterRefs: readonly BattleEffectExecutionRef[];
+  };
+  readonly child: {
+    readonly kind: "cloudkillMovementSaveDamageSequence";
+    readonly effectRef: BattleEffectExecutionRef;
+    readonly targetId: CombatantId;
+  };
+};
 export type BattleInterruptedProcedure =
   | {
       readonly kind: "replay";
       readonly subject: BattleSubject;
       readonly fills: readonly BattleFill[];
+      readonly parentPosition?: never;
       readonly glyphStoredSpellReleaseReplay?: never;
       readonly attackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
       readonly attackDamageAdditions?: ReadonlyNonEmptyArray<AttackSpellDamageAddition>;
@@ -748,8 +814,19 @@ export type BattleInterruptedProcedure =
     }
   | {
       readonly kind: "replay";
+      readonly subject: BattleSubject;
+      readonly fills: readonly BattleFill[];
+      readonly parentPosition: BattleStartTurnOccurrenceSequenceCheckpoint;
+      readonly glyphStoredSpellReleaseReplay?: never;
+      readonly attackDamageReductions?: never;
+      readonly attackDamageAdditions?: never;
+      readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
+    }
+  | {
+      readonly kind: "replay";
       readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
       readonly fills: readonly BattleFill[];
+      readonly parentPosition?: never;
       readonly glyphStoredSpellReleaseReplay: GlyphStoredSpellReleaseReplayContext;
       readonly attackDamageReductions?: never;
       readonly attackDamageAdditions?: never;
@@ -1156,7 +1233,7 @@ type BattleActiveInterruptProcedure = {
   readonly responderId: CombatantId;
   readonly subject: BattleInterruptProcedureChoiceWithSubject["subject"];
   readonly fills: readonly BattleFill[];
-  readonly handledInterruptTrigger?: BattleInterruptTrigger;
+  readonly handledInterruptOccurrence?: BattleHandledInterruptOccurrence;
   readonly pendingAttackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
   readonly pendingAttackDamageAdditions?: ReadonlyNonEmptyArray<AttackSpellDamageAddition>;
 };
@@ -1202,6 +1279,7 @@ export type BattleInterruptCheckpoint =
       readonly trigger: "saveFailed";
       readonly targetId: CombatantId;
       readonly sourceProcedureRef?: BattleProcedureExecutionRef;
+      readonly effectRef?: BattleEffectExecutionRef;
     })
   | (BattleInterruptCheckpointWithContinuationBase & {
       readonly trigger: "afterDamage";
@@ -1234,6 +1312,7 @@ export type BattleAttackHitReplayCheckpoint = Extract<
     BattleInterruptedProcedure,
     {
       readonly kind: "replay";
+      readonly parentPosition?: never;
       readonly glyphStoredSpellReleaseReplay?: never;
     }
   >;
@@ -1294,13 +1373,34 @@ export type BattleSpellCastMetamagicCommitment =
 export type BattleSpellCastConcentrationCommitment =
   | { readonly kind: "none" }
   | { readonly kind: "breakExisting" };
+export type BattleHandledInterruptOccurrence =
+  | {
+      readonly trigger: "saveFailed";
+      readonly targetId: CombatantId;
+      readonly sourceProcedureRef?: BattleProcedureExecutionRef;
+      readonly effectRef?: BattleEffectExecutionRef;
+    }
+  | {
+      [T in Exclude<BattleInterruptTrigger, "saveFailed">]: {
+        readonly trigger: T;
+      };
+    }[Exclude<BattleInterruptTrigger, "saveFailed">];
+
+export type BattleHandledInterruptRouteProjection =
+  | {
+      readonly handledInterruptOccurrence?: never;
+    }
+  | {
+      readonly handledInterruptOccurrence: BattleHandledInterruptOccurrence;
+    };
+
 export type BattleReplayContinuationFrame = {
   readonly kind: "replayContinuation";
   readonly continuation: Extract<
     BattleInterruptedProcedure,
     { readonly kind: "replay" }
   >;
-  readonly handledInterruptTrigger: BattleInterruptTrigger;
+  readonly handledInterruptOccurrence: BattleHandledInterruptOccurrence;
 };
 export type BattleAttackDamageContinuationConcentrationFrame = {
   readonly kind: "attackDamageContinuationConcentration";
@@ -1413,30 +1513,35 @@ export type BattleAcrobaticMovementFact = {
 export type BattleAreaDifficultTerrainSource =
   | {
       readonly kind: "greaseGroundHazard";
+      readonly effectRef: BattleEffectExecutionRef;
       readonly sourceCombatantId: CombatantId;
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly areaId: BattleAreaId;
     }
   | {
       readonly kind: "webAreaHazard";
+      readonly effectRef: BattleEffectExecutionRef;
       readonly sourceCombatantId: CombatantId;
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly areaId: BattleAreaId;
     }
   | {
       readonly kind: "sleetStormHazard";
+      readonly effectRef: BattleEffectExecutionRef;
       readonly sourceCombatantId: CombatantId;
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly areaId: BattleAreaId;
     }
   | {
       readonly kind: "insectPlagueHazard";
+      readonly effectRef: BattleEffectExecutionRef;
       readonly sourceCombatantId: CombatantId;
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly areaId: BattleAreaId;
     }
   | {
       readonly kind: "spikeGrowthHazard";
+      readonly effectRef: BattleEffectExecutionRef;
       readonly sourceCombatantId: CombatantId;
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly areaId: BattleAreaId;
@@ -1450,6 +1555,7 @@ export type BattleAreaDifficultTerrainMovementFact = {
 };
 export type BattleGustOfWindLineMovementFact = {
   readonly kind: "gustOfWindLineMovement";
+  readonly effectRef: BattleEffectExecutionRef;
   readonly sourceCombatantId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly areaId: BattleAreaId;
@@ -1501,6 +1607,7 @@ export type BattleJumpMovementReplacementFact = {
 export type BattleLevitateAltitudeDirection = "up" | "down";
 export type BattleLevitatedMovementFact = {
   readonly kind: "levitatedMovement";
+  readonly effectRef: BattleEffectExecutionRef;
   readonly sourceCombatantId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly fixedObjectOrSurfaceWithinReach: true;
@@ -1856,6 +1963,7 @@ export type BattleTargetSpatialFact =
     }
   | {
       readonly kind: "levitatedTargetWithinSpellRange";
+      readonly effectRef: BattleEffectExecutionRef;
       readonly sourceCombatantId: CombatantId;
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
       readonly targetId: CombatantId;
@@ -2146,7 +2254,7 @@ export type BattleMagicalDarknessAreaChoice = Extract<
 >;
 export type BattleSpellCreatedLightAreaOverlap = {
   readonly kind: "spellCreatedLightOverlapsArea";
-  readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+  readonly effectRef: BattleEffectExecutionRef;
 };
 export type BattleSpellAreaOriginAnchor =
   | {
@@ -2841,7 +2949,7 @@ export type HeldLightHurlSpellInvocation = HeldLightHurlMechanicalFacts & {
   readonly access: CantripSpellAccess;
   readonly resource: NoSpellInvocationResource;
   readonly procedure: "heldLightHurl";
-  readonly sourceEffectRef: BattleActiveEffectExecutionRef;
+  readonly sourceEffectRef: BattleEffectExecutionRef;
   readonly sourceHeldLightProcedureRef: BattleProcedureExecutionRef;
   readonly spell: BattleSpellAdmissionSource;
 };
@@ -2884,7 +2992,7 @@ export type DancingLightsSpellInvocation =
       readonly procedure: "dancingLightsReposition";
       readonly spell: BattleSpellAdmissionSource;
       readonly actionCost: "bonusAction";
-      readonly activeEffectRef: BattleActiveEffectExecutionRef;
+      readonly activeEffectRef: BattleEffectExecutionRef;
       readonly sourceDancingLightsProcedureRef: BattleProcedureExecutionRef;
       readonly maxMoveFeet: MovementFeet;
       readonly rangeFeet: MovementFeet;
@@ -2914,7 +3022,7 @@ export type SpellCreatedHeldObjectSpellInvocation =
       readonly rangeFeet: MovementFeet;
       readonly attackKind: SpellCreatedHeldObjectActiveEffect["attack"]["attackKind"];
       readonly attackBonus: SpellCreatedHeldObjectActiveEffect["attack"]["attackBonus"];
-      readonly sourceEffectRef: BattleActiveEffectExecutionRef;
+      readonly sourceEffectRef: BattleEffectExecutionRef;
       readonly sourceHeldObjectProcedureRef: BattleProcedureExecutionRef;
     }
   | {
@@ -2923,7 +3031,7 @@ export type SpellCreatedHeldObjectSpellInvocation =
       readonly procedure: "spellCreatedHeldObjectReEvoke";
       readonly spell: BattleSpellAdmissionSource;
       readonly actionCost: "bonusAction";
-      readonly sourceEffectRef: BattleActiveEffectExecutionRef;
+      readonly sourceEffectRef: BattleEffectExecutionRef;
       readonly sourceHeldObjectProcedureRef: BattleProcedureExecutionRef;
     };
 export type ObjectContactDamageSpellInvocation =
@@ -4020,7 +4128,7 @@ type BattleCreatureStateCommon = {
   readonly maxHp: Hp;
   readonly tempHp: Hp;
   readonly activeEffects: readonly BattleActiveEffect[];
-  readonly nextActiveEffectOrdinal: BattleActiveEffectExecutionOrdinal;
+  readonly nextEffectOrdinal: BattleEffectExecutionOrdinal;
   readonly activeOngoingFeatureOccurrences: ReadonlyMap<
     OngoingFeatureSourceKey,
     ActiveOngoingFeatureOccurrence
@@ -4480,6 +4588,16 @@ export type BattleWardingBondSeparationFactsHole = {
   };
   readonly requiresTableSpatialFact: true;
 };
+export type BattleAreaWindStrength =
+  | { readonly kind: "strong" }
+  | { readonly kind: "notStrong" };
+export type BattleAreaWindStrengthHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "areaWindStrength";
+  readonly label: string;
+  readonly areaId: BattleAreaId;
+};
 export type BattleSpellAreaChoiceHole = {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly holeInstanceKey: HoleInstanceKey;
@@ -4624,10 +4742,17 @@ export type BattleObjectOutcomeAccumulation =
   | {
       readonly objectDamages: ReadonlyNonEmptyArray<BattleObjectDamageOutcome>;
       readonly objectIgnitions?: ReadonlyNonEmptyArray<BattleObjectIgnitionOutcome>;
+      readonly droppedObjects?: readonly BattleDroppedObjectOutcome[];
     }
   | {
       readonly objectDamages?: ReadonlyNonEmptyArray<BattleObjectDamageOutcome>;
       readonly objectIgnitions: ReadonlyNonEmptyArray<BattleObjectIgnitionOutcome>;
+      readonly droppedObjects?: readonly BattleDroppedObjectOutcome[];
+    }
+  | {
+      readonly objectDamages?: ReadonlyNonEmptyArray<BattleObjectDamageOutcome>;
+      readonly objectIgnitions?: ReadonlyNonEmptyArray<BattleObjectIgnitionOutcome>;
+      readonly droppedObjects: readonly BattleDroppedObjectOutcome[];
     };
 export type BattleFireballObjectIgnitionFact = {
   readonly objectId: BattleObjectId;
@@ -4932,7 +5057,7 @@ export type BattleGlyphExplosiveRuneDamageRollHole = Extract<
   readonly glyphExplosiveRune: {
     readonly sourceCombatantId: CombatantId;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
-    readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly damage: {
       readonly expr: DiceExpr;
     };
@@ -4969,6 +5094,7 @@ export type BattleSpellTurnStartDamageRollHole = Extract<
 > & {
   readonly spellTurnStartDamage: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly trigger:
@@ -4987,6 +5113,7 @@ export type BattleSpellTurnEndDamageRollHole = Extract<
 > & {
   readonly spellTurnEndDamage: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly damage: SpellTurnEndDamage;
@@ -4999,6 +5126,7 @@ export type BattleSpellTurnStartSavingThrowOutcomeHole = {
   readonly label: string;
   readonly spellTurnStartSave: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly save: SpellTurnStartDamageSave;
@@ -5030,13 +5158,21 @@ export type BattleSleepRepeatSavingThrowOutcomeHole = {
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
 };
 export type BattleHideousLaughterRepeatTrigger = "endTurn" | "damage";
+export type BattleDamageOccurrenceSource =
+  | { readonly kind: "untrackedDamage" }
+  | {
+      readonly kind: "spellTurnEndDamage";
+      readonly effectRef: BattleEffectExecutionRef;
+    };
 export type BattleHideousLaughterRepeatSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "savingThrowOutcome";
   readonly label: string;
+  readonly damageOccurrence: BattleDamageOccurrenceSource;
   readonly hideousLaughterRepeatSave: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly trigger: BattleHideousLaughterRepeatTrigger;
@@ -5081,6 +5217,7 @@ export type BattleGreaseGroundHazardSavingThrowOutcomeHole = {
   readonly label: string;
   readonly greaseGroundHazard: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5104,6 +5241,7 @@ export type BattleWebRestraintSavingThrowOutcomeHole = {
   readonly label: string;
   readonly webRestraint: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5138,6 +5276,7 @@ export type BattleSleetStormAreaHazardSavingThrowOutcomeHole = {
   readonly label: string;
   readonly sleetStormAreaHazard: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5160,6 +5299,7 @@ export type BattleInsectPlagueAreaHazardSavingThrowOutcomeHole = {
   readonly label: string;
   readonly insectPlagueAreaHazard: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5182,6 +5322,7 @@ export type BattleCloudkillAreaHazardSavingThrowOutcomeHole = {
   readonly label: string;
   readonly cloudkillAreaHazard: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5203,6 +5344,7 @@ export type BattleInsectPlagueAreaHazardDamageRollHole = Extract<
 > & {
   readonly insectPlagueAreaHazard: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5220,6 +5362,7 @@ export type BattleCloudkillAreaHazardDamageRollHole = Extract<
 > & {
   readonly cloudkillAreaHazard: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5239,6 +5382,7 @@ export type BattleGustOfWindLineSavingThrowOutcomeHole = {
   readonly label: string;
   readonly gustOfWindLine: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5263,6 +5407,7 @@ export type BattleGustOfWindLineDirectionChoiceHole = {
   readonly label: string;
   readonly sourceCombatantId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  readonly effectRef: BattleEffectExecutionRef;
   readonly areaId: BattleAreaId;
   readonly directionId: BattleLineDirectionId;
   readonly requiresTableSpatialFact: true;
@@ -5351,6 +5496,7 @@ export type BattleFlamingSphereRamMovementHole = {
   readonly label: string;
   readonly movableZone: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5364,6 +5510,7 @@ export type BattleMovableZoneRepositionMovementHole = {
   readonly kind: "movableZoneRepositionMovement";
   readonly label: string;
   readonly movableZone: {
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5378,6 +5525,7 @@ export type BattleFlamingSphereSavingThrowOutcomeHole = {
   readonly label: string;
   readonly movableZone: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5399,6 +5547,7 @@ export type BattleFlamingSphereDamageRollHole = Extract<
 > & {
   readonly movableZone: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5419,6 +5568,7 @@ export type BattleMoonbeamSavingThrowOutcomeHole = {
   readonly label: string;
   readonly movableZone: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5440,6 +5590,7 @@ export type BattleMoonbeamDamageRollHole = Extract<
 > & {
   readonly movableZone: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5454,6 +5605,7 @@ export type BattleSpikeGrowthMovementDamageRollHole = Extract<
 > & {
   readonly spikeGrowthMovement: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5472,6 +5624,7 @@ export type BattleProtectionRelevantEffectSavingThrowOutcomeHole = {
   readonly label: string;
   readonly protectionRelevantEffectSave: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly relevantEffect: "charmed" | "frightened" | "possession";
@@ -5758,7 +5911,7 @@ export type BattleGlyphExplosiveRuneSavingThrowOutcomeHole = {
   readonly glyphExplosiveRune: {
     readonly sourceCombatantId: CombatantId;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
-    readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly radiusFeet: 20;
   };
   readonly ability: Extract<Ability, "dex">;
@@ -5842,6 +5995,7 @@ export type BattleConcentrationSavingThrowHole = {
   readonly holeId: BattleHoleId;
   readonly kind: "concentrationSavingThrow";
   readonly label: string;
+  readonly damageOccurrence: BattleDamageOccurrenceSource;
   readonly combatantId: CombatantId;
   readonly dc: DifficultyClass;
   readonly damageAmount: DamageAmount;
@@ -5856,6 +6010,68 @@ export type BattleInterruptDecisionHole = {
   readonly label: string;
   readonly trigger: BattleInterruptTrigger;
   readonly eligibleResponders: readonly CombatantId[];
+};
+export type BattleCloudkillMovementHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "cloudkillMovement";
+  readonly label: string;
+  readonly sourceCombatantId: CombatantId;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  readonly effectRef: BattleEffectExecutionRef;
+  readonly areaId: BattleAreaId;
+  readonly distanceFeet: MovementFeet;
+  readonly directionRequirement: "awayFromSource";
+  readonly requiresTableSpatialFact: true;
+};
+export type BattleStartTurnOccurrenceOrderHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "startTurnOccurrenceOrder";
+  readonly label: string;
+  readonly actorId: CombatantId;
+  readonly occurrences: readonly [
+    BattleStartTurnOccurrenceOption,
+    BattleStartTurnOccurrenceOption,
+    ...BattleStartTurnOccurrenceOption[],
+  ];
+};
+export const BATTLE_TEMPORARY_HIT_POINT_CHOICES = [
+  "keepExisting",
+  "replaceWithGranted",
+] as const;
+export type BattleTemporaryHitPointChoice =
+  (typeof BATTLE_TEMPORARY_HIT_POINT_CHOICES)[number];
+export type BattleTemporaryHitPointChoiceHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "temporaryHitPointChoice";
+  readonly label: string;
+  readonly sourceCombatantId: CombatantId;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  readonly effectRef: BattleEffectExecutionRef;
+  readonly sourceTurn: {
+    readonly actorId: CombatantId;
+    readonly round: RoundType;
+  };
+  readonly occurrenceId: BattleStartTurnOccurrenceOption["occurrenceId"];
+  readonly existingTemporaryHitPoints: Hp;
+  readonly grantedTemporaryHitPoints: Hp;
+};
+export const BATTLE_START_TURN_OCCURRENCE_KINDS = [
+  "deathSavingThrow",
+  "statBlockRecharge",
+  "turnStartTemporaryHitPoints",
+  "spellConditionTurnStartDamage",
+  "spellTurnStartDamageAndSave",
+  "cloudkillMovement",
+] as const;
+export type BattleStartTurnOccurrenceKind =
+  (typeof BATTLE_START_TURN_OCCURRENCE_KINDS)[number];
+export type BattleStartTurnOccurrenceOption = {
+  readonly occurrenceId: import("./identity.ts").BattleStartTurnOccurrenceId;
+  readonly kind: BattleStartTurnOccurrenceKind;
+  readonly label: string;
 };
 type BattleMovementHoleCommon = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -5880,6 +6096,7 @@ export type BattleLevitateAltitudeChangeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "levitateAltitudeChange";
+  readonly effectRef: BattleEffectExecutionRef;
   readonly label: string;
   readonly actorId: CombatantId;
   readonly targetId: CombatantId;
@@ -5918,10 +6135,27 @@ export type BattleSpellcastingAbilityCheckHole = {
   readonly spellcastingAbilityCheck: {
     readonly casterId: CombatantId;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
-    readonly target: BattleOngoingSpellTarget;
-    readonly effect: BattleOngoingSpellEffectRef;
     readonly contestedSpellLevel: BattleSpellEffectLevel;
-  };
+  } & (
+    | {
+        readonly target: Extract<
+          BattleOngoingSpellTarget,
+          { readonly kind: "magicalEffect" }
+        > & { readonly effect: BattleOngoingSpellOccurrenceRef };
+        readonly checkedOccurrence?: never;
+      }
+    | {
+        readonly target: Exclude<
+          BattleOngoingSpellTarget,
+          { readonly kind: "magicalEffect" }
+        >;
+        readonly checkedOccurrence: {
+          readonly ownerId: CombatantId;
+          readonly effect: BattleOngoingSpellOccurrenceRef;
+          readonly target?: never;
+        };
+      }
+  );
   readonly requiresTableSpatialFact?: boolean;
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
 };
@@ -6012,6 +6246,7 @@ export type BattleAttackDamageDispositionHole = {
   readonly holeId: BattleHoleId;
   readonly kind: "attackDamageDisposition";
   readonly label: string;
+  readonly damageOccurrence: BattleDamageOccurrenceSource;
   readonly attackerId: CombatantId;
   readonly targetId: CombatantId;
   readonly choices: readonly BattleAttackDamageDisposition[];
@@ -6051,6 +6286,7 @@ export type BattleHole =
   | BattleSpellCastReactionFactsHole
   | BattleSlowSomaticSpellFailureOutcomeHole
   | BattleWardingBondSeparationFactsHole
+  | BattleAreaWindStrengthHole
   | BattleObjectTargetChoiceHole
   | BattleObjectContactTargetsHole
   | BattleObjectContactSavingThrowOutcomeHole
@@ -6124,6 +6360,9 @@ export type BattleHole =
   | BattleStatBlockRechargeRollHole
   | BattleConcentrationSavingThrowHole
   | BattleInterruptDecisionHole
+  | BattleStartTurnOccurrenceOrderHole
+  | BattleTemporaryHitPointChoiceHole
+  | BattleCloudkillMovementHole
   | BattleMovementHole
   | BattleLevitateAltitudeChangeHole
   | BattleLevitateInitialRiseHole
@@ -6209,6 +6448,7 @@ export function cunningStrikeOptionUnsupportedIssue(
     : CUNNING_STRIKE_OPTION_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE;
 }
 export type SpellDamageReductionRoll = {
+  readonly effectRef: BattleEffectExecutionRef;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly sourceCombatantId: CombatantId;
   readonly targetId: CombatantId;
@@ -6219,6 +6459,7 @@ export type SpellDamageReductionRoll = {
   };
 };
 export type SourceDamageRollPenaltyFill = {
+  readonly effectRef: BattleEffectExecutionRef;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly sourceCombatantId: CombatantId;
   readonly affectedCombatantId: CombatantId;
@@ -6239,12 +6480,36 @@ export type BattleMovementFill = {
   readonly holeId: BattleHoleId;
   readonly value: BattleMovementFillValue;
 };
+export type BattleCloudkillMovementFill = {
+  readonly kind: "cloudkillMovement";
+  readonly holeId: BattleHoleId;
+  readonly value: {
+    readonly affectedCombatantIdsInResolutionOrder: readonly CombatantId[];
+  };
+};
+export type BattleStartTurnOccurrenceOrderFill = {
+  readonly kind: "startTurnOccurrenceOrder";
+  readonly holeId: BattleHoleId;
+  readonly value: {
+    readonly occurrenceIds: readonly [
+      import("./identity.ts").BattleStartTurnOccurrenceId,
+      import("./identity.ts").BattleStartTurnOccurrenceId,
+      ...import("./identity.ts").BattleStartTurnOccurrenceId[],
+    ];
+  };
+};
+export type BattleTemporaryHitPointChoiceFill = {
+  readonly kind: "temporaryHitPointChoice";
+  readonly holeId: BattleHoleId;
+  readonly value: BattleTemporaryHitPointChoice;
+};
 export type BattleBrutalStrikeForcefulBlowMovementFill = {
   readonly kind: "movement";
   readonly holeId: BattleHoleId;
   readonly value: BattleBrutalStrikeForcefulBlowMovementFillValue;
 };
 export type BattleFill =
+  | BattleTemporaryHitPointChoiceFill
   | {
       readonly kind: "readyDeclaration";
       readonly holeId: BattleHoleId;
@@ -6410,6 +6675,11 @@ export type BattleFill =
       readonly spatialFacts: readonly BattleTargetSpatialFact[];
     }
   | {
+      readonly kind: "areaWindStrength";
+      readonly holeId: BattleHoleId;
+      readonly value: BattleAreaWindStrength;
+    }
+  | {
       readonly kind: "slowSomaticSpellFailureOutcome";
       readonly holeId: BattleHoleId;
       readonly value: {
@@ -6541,6 +6811,8 @@ export type BattleFill =
       readonly holeId: BattleHoleId;
       readonly value: BattleInterruptDecision;
     }
+  | BattleCloudkillMovementFill
+  | BattleStartTurnOccurrenceOrderFill
   | BattleMovementFill
   | {
       readonly kind: "levitateAltitudeChange";
@@ -6775,19 +7047,37 @@ export type BattleInterruptRouteOptions =
   | {
       readonly replayingInterruptedProcedure?: never;
       readonly handledInterruptTrigger?: BattleInterruptTrigger;
+      readonly handledInterruptOccurrence?: never;
+      readonly replayParentPosition?: never;
+      readonly pendingAttackDamageReductions?: never;
+      readonly pendingAttackDamageAdditions?: never;
+    }
+  | (BattleHandledInterruptRouteProjection & {
+      readonly replayingInterruptedProcedure: true;
+      readonly replayParentPosition?: BattleStartTurnOccurrenceSequenceCheckpoint;
+      readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
+      readonly pendingAttackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
+      readonly pendingAttackDamageAdditions?: ReadonlyNonEmptyArray<AttackSpellDamageAddition>;
+    });
+export type BattleInterruptConsumerOptions =
+  | {
+      readonly replayingInterruptedProcedure?: never;
+      readonly handledInterruptTrigger?: BattleInterruptTrigger;
+      readonly replayParentPosition?: never;
       readonly pendingAttackDamageReductions?: never;
       readonly pendingAttackDamageAdditions?: never;
     }
   | {
       readonly replayingInterruptedProcedure: true;
-      readonly handledInterruptTrigger?: BattleInterruptTrigger;
+      readonly handledInterruptTrigger: BattleInterruptTrigger;
+      readonly replayParentPosition?: BattleStartTurnOccurrenceSequenceCheckpoint;
       readonly pendingAttackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
       readonly pendingAttackDamageAdditions?: ReadonlyNonEmptyArray<AttackSpellDamageAddition>;
     };
 export type AttackBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "action"; readonly action: "attack" }>
 > &
-  BattleInterruptRouteOptions;
+  BattleInterruptConsumerOptions;
 export type MultiattackBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<
     BattleSubject,
@@ -6801,7 +7091,7 @@ export type OffHandAttackBattleResolutionInput =
       { readonly tag: "bonusAction"; readonly action: "offHandAttack" }
     >
   > &
-    BattleInterruptRouteOptions;
+    BattleInterruptConsumerOptions;
 export type MartialArtsBonusUnarmedStrikeBattleResolutionInput =
   BattleResolutionInputForSubject<
     Extract<
@@ -6812,7 +7102,7 @@ export type MartialArtsBonusUnarmedStrikeBattleResolutionInput =
       }
     >
   > &
-    BattleInterruptRouteOptions;
+    BattleInterruptConsumerOptions;
 export type StatBlockBonusActionOptionBattleResolutionInput =
   BattleResolutionInputForSubject<
     Extract<
@@ -6858,7 +7148,7 @@ export type EscapeSpellRestraintBattleResolutionInput =
 export type ActionSpellBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "actionSpell" }>
 > &
-  BattleInterruptRouteOptions &
+  BattleInterruptConsumerOptions &
   (
     | {
         readonly reactionContinuation?: {
@@ -6901,7 +7191,7 @@ export type MonkFocusOptionBattleResolutionInput =
   >;
 export type MonkFocusFlurryOfBlowsStrikeBattleResolutionInput =
   BattleResolutionInputForSubject<MonkFocusFlurryOfBlowsStrikeSubject> &
-    BattleInterruptRouteOptions;
+    BattleInterruptConsumerOptions;
 export type DruidWildShapeBattleResolutionInput =
   BattleResolutionInputForSubject<
     Extract<BattleSubject, { readonly tag: "druidWildShape" }>
@@ -7034,6 +7324,7 @@ export type BattleSnapshot = {
   readonly turnOrder: readonly CombatantId[];
   readonly combatants: readonly BattleCreatureSnapshot[];
   readonly companions: readonly BattleCompanionSnapshot[];
+  readonly storedLightEmitters: readonly BattleStoredLightEmitter[];
   readonly lightEmitters: readonly BattleLightEmitter[];
   readonly obscurementZones: readonly BattleObscurementZone[];
   readonly acts: readonly BattleSnapshotAct[];
@@ -7057,8 +7348,13 @@ type BattleCreatureSnapshotCommon = {
   readonly hp: Hp;
   readonly maxHp: Hp;
   readonly tempHp: Hp;
-  readonly nextActiveEffectOrdinal: BattleActiveEffectExecutionOrdinal;
-  readonly activeEffectRefs: readonly BattleActiveEffectExecutionRef[];
+  readonly nextEffectOrdinal: BattleEffectExecutionOrdinal;
+  readonly activeEffectOccurrences: readonly {
+    readonly kind: "activeEffect";
+    readonly effectRef: BattleEffectExecutionRef;
+    readonly activeEffectKind: BattleActiveEffect["kind"];
+    readonly location: BattleActiveEffectOccurrenceLocation;
+  }[];
   readonly armorClass: ArmorClass;
   readonly size: Size;
   readonly zeroHpLifecycle: BattleCreatureZeroHpLifecycleSnapshot;
@@ -7078,6 +7374,16 @@ type BattleCreatureSnapshotCommon = {
   };
   readonly ammunitionStocks: readonly BattleAmmunitionStock[];
 };
+
+export type BattleActiveEffectOccurrenceLocation =
+  | { readonly kind: "nonSpatial" }
+  | { readonly kind: "area"; readonly areaId: BattleAreaId }
+  | {
+      readonly kind: "line";
+      readonly areaId: BattleAreaId;
+      readonly directionId: BattleLineDirectionId;
+    }
+  | { readonly kind: "object"; readonly objectId: BattleObjectId };
 
 export type BattleCreatureSnapshot = BattleCreatureSnapshotCommon &
   (

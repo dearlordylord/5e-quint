@@ -11,7 +11,7 @@ type ResolvedBattleResult = Extract<
 
 type ObjectOutcomeSource = Pick<
   ResolvedBattleResult,
-  "objectDamages" | "objectIgnitions"
+  "objectDamages" | "objectIgnitions" | "droppedObjects"
 >;
 
 function appendNonEmpty<T>(
@@ -26,6 +26,16 @@ function appendNonEmpty<T>(
   return current === undefined ? [first, ...rest] : [...current, ...candidates];
 }
 
+function appendKnownCollection<T>(
+  current: readonly T[] | undefined,
+  additions: readonly T[] | undefined,
+): readonly T[] | undefined {
+  if (additions === undefined || additions.length === 0) {
+    return current ?? additions;
+  }
+  return current === undefined ? additions : [...current, ...additions];
+}
+
 export function appendObjectOutcomeAccumulation(
   current: BattleObjectOutcomeAccumulation | undefined,
   source: ObjectOutcomeSource,
@@ -38,16 +48,31 @@ export function appendObjectOutcomeAccumulation(
     current?.objectIgnitions,
     source.objectIgnitions,
   );
-  if (objectDamages !== undefined && objectIgnitions !== undefined) {
-    return { objectDamages, objectIgnitions };
+  const droppedObjects = appendKnownCollection(
+    current?.droppedObjects,
+    source.droppedObjects,
+  );
+  if (
+    objectDamages === undefined &&
+    objectIgnitions === undefined &&
+    droppedObjects === undefined
+  ) {
+    return undefined;
   }
   if (objectDamages !== undefined) {
-    return { objectDamages };
+    return {
+      objectDamages,
+      ...(objectIgnitions === undefined ? {} : { objectIgnitions }),
+      ...(droppedObjects === undefined ? {} : { droppedObjects }),
+    };
   }
   if (objectIgnitions !== undefined) {
-    return { objectIgnitions };
+    return {
+      objectIgnitions,
+      ...(droppedObjects === undefined ? {} : { droppedObjects }),
+    };
   }
-  return undefined;
+  return droppedObjects === undefined ? undefined : { droppedObjects };
 }
 
 export function mergeObjectOutcomeResult(
@@ -65,5 +90,8 @@ export function mergeObjectOutcomeResult(
         ...(outcomes.objectIgnitions === undefined
           ? {}
           : { objectIgnitions: outcomes.objectIgnitions }),
+        ...(outcomes.droppedObjects === undefined
+          ? {}
+          : { droppedObjects: outcomes.droppedObjects }),
       };
 }

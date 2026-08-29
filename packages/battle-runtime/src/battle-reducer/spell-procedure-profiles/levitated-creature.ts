@@ -36,7 +36,7 @@ import {
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
-import { allocateBattleActiveEffectRefForCreature } from "../../active-effect/execution-ref.ts";
+import { allocateBattleEffectExecutionRefForCreature } from "../../effect-execution-ref.ts";
 
 import { needsHolesResult } from "../needs-holes-result.ts";
 import {
@@ -61,6 +61,7 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -325,7 +326,7 @@ function applyLevitatedCreatureSpellEffect(
     if (target === undefined) {
       return nextState;
     }
-    const allocation = allocateBattleActiveEffectRefForCreature({
+    const allocation = allocateBattleEffectExecutionRefForCreature({
       owner: target,
     });
     const allocatedTarget = allocation.owner;
@@ -373,6 +374,7 @@ const LevitatedCreatureInvocationSchema = spellProcedureExecutionSchema(
       maxTargets: Schema.Literal(1),
     }),
     activeEffect: Schema.Struct({
+      ...BattleEffectOccurrenceTemplateSchemaFields,
       kind: Schema.Literal("spellLevitatedCreature"),
       sourceCombatantId: CombatantId,
       maxAltitudeChangeFeet: MovementFeet,

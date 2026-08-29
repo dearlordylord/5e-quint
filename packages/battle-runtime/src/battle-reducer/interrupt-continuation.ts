@@ -12,6 +12,7 @@ import type {
   BattleConcentrationSavingThrowHole,
   BattleCunningStrikeContinuationFill,
   BattleFill,
+  BattleHandledInterruptOccurrence,
   BattleInterruptedProcedure,
   BattleInterruptFrame,
   BattleResolutionResult,
@@ -275,20 +276,20 @@ export class InterruptContinuationExecution {
   execute(input: {
     readonly state: BattleState;
     readonly continuation: BattleInterruptedProcedure;
-    readonly handledInterruptTrigger: BattleInterruptTrigger;
+    readonly handledInterruptOccurrence: BattleHandledInterruptOccurrence;
   }): BattleResolutionResult {
     return input.continuation.kind === "replay"
       ? resolveReplayContinuationFromState({
           state: input.state,
           continuation: input.continuation,
-          handledInterruptTrigger: input.handledInterruptTrigger,
+          handledInterruptOccurrence: input.handledInterruptOccurrence,
           fills: input.continuation.fills,
           execution: this.replayExecution,
         })
       : resumeInterruptedProcedure(
           input.state,
           input.continuation,
-          input.handledInterruptTrigger,
+          input.handledInterruptOccurrence.trigger,
           this.attackResolvers,
         );
   }
@@ -441,7 +442,7 @@ function notActiveContinuation(
 export function resolveInterruptContinuation(input: {
   readonly state: BattleState;
   readonly continuation: BattleInterruptedProcedure;
-  readonly handledInterruptTrigger: BattleInterruptTrigger;
+  readonly handledInterruptOccurrence: BattleHandledInterruptOccurrence;
   readonly execution: InterruptContinuationExecution;
 }): BattleResolutionResult {
   return input.execution.execute(input);

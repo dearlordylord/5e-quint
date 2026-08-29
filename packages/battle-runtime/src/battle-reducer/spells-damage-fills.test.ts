@@ -21,6 +21,7 @@ import { spellRecord } from "../unit-profile-admission-spell-record.test-support
 import type { BattleSelectedSpellInvocation } from "../battle-state-execution.ts";
 import {
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   characterSpellInvocationForProcedureRefForTest,
   slotAttackDamageSpell,
 } from "../battle-runtime.test-support.ts";
@@ -189,7 +190,7 @@ describe("spell damage fill projections", () => {
     expect(Number(requireCombatant(state, spellTargetId).hp)).toBe(4);
   });
 
-  test("leaves damage unapplied while a source-side damage penalty still needs its roll", () => {
+  test("leaves damage unapplied while a low-level source-side penalty still needs its roll", () => {
     const spell = slotAttackDamageSpell();
     const session = spellBattle({
       preparedSpells: [spell],
@@ -200,26 +201,30 @@ describe("spell damage fill projections", () => {
       throw new Error("Expected a spell attack damage invocation.");
     }
     const caster = requireCombatant(session.state, spellCasterId);
-    const stateWithPenalty = {
+    const sourceProcedureRef = battleProcedureExecutionRefForTest(
+      "synthetic-low-level-spells-damage-fills-source-penalty",
+    );
+    const concentratingState = {
       ...session.state,
       combatants: new Map(session.state.combatants).set(spellCasterId, {
         ...caster,
-        activeEffects: [
-          {
-            kind: "sourceDamageRollPenalty" as const,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              "spells-damage-fills:source-penalty",
-            ),
-            sourceCombatantId: spellCasterId,
-            amount: { dice: 1 as const, dieSize: 8 as const },
-            expiresAt: {
-              kind: "concentration" as const,
-              combatantId: spellCasterId,
-            },
-          },
-        ],
+        concentration: { sourceProcedureRef, effectKind: "spellEffect" },
       }),
     };
+    const stateWithPenalty = battleStateWithAllocatedEffectForTest({
+      state: concentratingState,
+      ownerId: spellCasterId,
+      effect: {
+        kind: "sourceDamageRollPenalty",
+        sourceProcedureRef,
+        sourceCombatantId: spellCasterId,
+        amount: { dice: 1, dieSize: 8 },
+        expiresAt: {
+          kind: "concentration",
+          combatantId: spellCasterId,
+        },
+      },
+    });
     const damageRoll = damageRollFillWithGroups(spellDamageHole(invocation), [
       [4, 4],
     ]);

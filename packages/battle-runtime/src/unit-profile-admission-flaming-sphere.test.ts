@@ -1,4 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import { battleEffectExecutionRefForTest } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-MISSING-FLAMING-SPHERE flaming_sphere
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-flaming-sphere-hazard-ram
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE
@@ -1009,6 +1010,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       tag: "runtimeCommand" as const,
       actorId: spellTargetId,
       areaId: flamingSphereAreaId,
+      effectRef: battleEffectExecutionRefForTest("flaming-sphere-subject"),
     };
 
     expect(

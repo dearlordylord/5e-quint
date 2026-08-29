@@ -1,19 +1,17 @@
 import { describe, expect, test } from "vitest";
+import { resourceCount } from "@dnd/shared/types";
 
 import type {
   AvailableBattleAct,
-  BattleActiveEffect,
   BattleFill,
   BattleState,
 } from "./battle-state-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import type { BattleRuntimeSession } from "./battle-runtime-context.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleCreatureWithSpellActiveEffects } from "./active-effect/lifecycle.ts";
 import {
-  battleActiveEffectExecutionRefForTest,
   battleId,
-  battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   characterSeed,
   combatantId,
   concentrationSavingThrowFill,
@@ -28,6 +26,7 @@ import {
   requireResolved,
   resolveBattleSubject,
   skeletonId,
+  spellRecord,
   spellSlotInvocationRef,
   spellTargetAllocationFill,
   startBattleSessionRight,
@@ -39,12 +38,89 @@ import {
   fighterId,
   unitLibrary,
 } from "./battle-runtime.test-support.ts";
+import { castRayOfEnfeeblementWithFailedSave } from "./ray-of-enfeeblement-failed-save.test-support.ts";
+import {
+  savingThrowOutcomeFill,
+  spellAct,
+  spellTargetListFill,
+} from "./unit-profile-admission-spell-fill.test-support.ts";
 
 const magicMissileInvocation = spellSlotInvocationRef(
   "magic_missile",
   1,
   "repeatedDamageAllocation",
 );
+const sanctuaryCasterId = combatantId("spell-damage-sanctuary-caster");
+
+function wizardVsWardedSkeletonBattle(): BattleRuntimeSession {
+  const baseSession = wizardVsSkeletonBattle({
+    extraCombatants: [
+      characterSeed({
+        combatantId: sanctuaryCasterId,
+        displayName: "Sanctuary caster",
+        initiative: 5,
+        attack: null,
+        classLevels: [{ className: "cleric", level: 1 }],
+        spellcasting: {
+          ...wizardSpellcasting({
+            preparedSpells: [spellRecord("sanctuary")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "cleric",
+            abilityModifier: 3,
+          },
+        },
+      }),
+    ],
+  });
+  const sanctuaryProcedureRef = requireCharacterSpellProcedureRefForTest(
+    baseSession,
+    sanctuaryCasterId,
+    spellSlotInvocationRef("sanctuary", 1, "sanctuaryTargetingInterdiction"),
+  );
+  const allocated = battleStateWithAllocatedEffectForTest({
+    state: baseSession.state,
+    ownerId: skeletonId,
+    effect: {
+      kind: "sanctuaryWard",
+      sourceProcedureRef: sanctuaryProcedureRef,
+      sourceCombatantId: sanctuaryCasterId,
+      save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+      expiresAt: {
+        kind: "duration",
+        durationTicks: elapsedTimeTicks(10),
+      },
+    },
+  });
+  const sanctuaryCaster = allocated.combatants.get(sanctuaryCasterId);
+  if (
+    sanctuaryCaster?.origin.kind !== "character" ||
+    sanctuaryCaster.origin.spellcasting === undefined
+  ) {
+    throw new Error("Expected the admitted Sanctuary caster.");
+  }
+  const state: BattleState = {
+    ...allocated,
+    combatants: new Map(allocated.combatants).set(sanctuaryCasterId, {
+      ...sanctuaryCaster,
+      origin: {
+        ...sanctuaryCaster.origin,
+        spellcasting: {
+          ...sanctuaryCaster.origin.spellcasting,
+          spellSlots: sanctuaryCaster.origin.spellcasting.spellSlots.map(
+            (slot) =>
+              slot.spellLevel === 1
+                ? { ...slot, expended: resourceCount(1) }
+                : slot,
+          ),
+        },
+      },
+    }),
+  };
+  return battleRuntimeSessionForTest({ ...baseSession, state });
+}
 
 function readiedSpellProcedureRef(state: BattleState) {
   const readied = state.readiedSpells.get(wizardId);
@@ -93,6 +169,8 @@ function magicMissileFills(
 describe("battle runtime: spell damage lifecycle replay", () => {
   test("prepared slot damage requests concentration, zero-HP, and relationship holes in order", () => {
     const charmSourceId = combatantId("spell-damage-charm-source");
+    const charmPerson = spellRecord("charm_person");
+    const rayOfEnfeeblement = spellRecord("ray_of_enfeeblement");
     const baseSession = startBattleSessionRight({
       battleId: battleId("battle-spell-damage-lifecycle"),
       combatants: [
@@ -110,6 +188,11 @@ describe("battle runtime: spell damage lifecycle replay", () => {
           attack: null,
           currentHp: 1,
           maxHp: 12,
+          classLevels: [{ className: "wizard", level: 3 }],
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [rayOfEnfeeblement],
+            spellSlots: [{ spellLevel: 2, count: 1 }],
+          }),
           resources: [
             { unit: unitLibrary.requireUnit("orc_relentless_endurance") },
           ],
@@ -119,55 +202,112 @@ describe("battle runtime: spell damage lifecycle replay", () => {
           displayName: "Charm Source",
           initiative: 5,
           attack: null,
+          classLevels: [{ className: "wizard", level: 1 }],
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [charmPerson],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
         }),
       ],
     });
-    const target = baseSession.state.combatants.get(fighterId);
-    if (target === undefined) {
-      throw new Error("Expected the Orc target.");
-    }
-    const relationshipEffect = {
-      kind: "spellCondition" as const,
-      effectRef: battleActiveEffectExecutionRefForTest(
-        "spell-damage-relationship-condition",
-      ),
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "spell-damage-relationship-source",
-      ),
-      sourceCombatantId: charmSourceId,
-      condition: "charmed" as const,
-      conditionHadNonSpellSource: false,
-      escape: { kind: "targetDamagedByCasterOrAlly" as const },
-      turnStartDamage: null,
-      expiresAt: {
-        kind: "duration" as const,
-        durationTicks: elapsedTimeTicks(1),
-      },
-    } satisfies BattleActiveEffect;
-    const concentrationSourceProcedureRef = battleProcedureExecutionRefForTest(
-      "spell-damage-concentration-source",
+    const fighterTurn = requireResolved(
+      endTurn({ state: baseSession.state, actorId: wizardId }),
     );
-    const concentrationEffect = {
-      kind: "nextAttackRollBySelf",
-      sourceProcedureRef: concentrationSourceProcedureRef,
-      sourceCombatantId: fighterId,
-      mode: "advantage",
-      expiresAt: { kind: "concentration", combatantId: fighterId },
-    } satisfies BattleActiveEffect;
-    const affectedTarget = battleCreatureWithSpellActiveEffects(target, [
-      relationshipEffect,
-      concentrationEffect,
-    ]);
-    const state: BattleState = {
-      ...baseSession.state,
-      combatants: new Map(baseSession.state.combatants).set(fighterId, {
-        ...affectedTarget,
-        concentration: {
-          sourceProcedureRef: concentrationSourceProcedureRef,
-          effectKind: "spellEffect",
-        },
+    const ray = castRayOfEnfeeblementWithFailedSave({
+      session: battleRuntimeSessionForTest({
+        ...baseSession,
+        state: fighterTurn.state,
       }),
-    };
+      casterId: fighterId,
+      targetId: charmSourceId,
+    });
+    const charmSourceTurn = requireResolved(
+      endTurn({ state: ray.session.state, actorId: fighterId }),
+    );
+    const charmSession = battleRuntimeSessionForTest({
+      ...baseSession,
+      state: charmSourceTurn.state,
+    });
+    const charmAct = spellAct({
+      session: charmSession,
+      spellId: "charm_person",
+      slotLevel: 1,
+    });
+    const charmTargetHole = charmAct.initialHoles.find(
+      (hole) => hole.kind === "spellTargetList",
+    );
+    if (charmTargetHole === undefined) {
+      throw new Error("Expected Charm Person target selection.");
+    }
+    const charmTargetFill = spellTargetListFill(
+      charmTargetHole,
+      charmSourceId,
+      "charm_person",
+      [fighterId],
+    );
+    const charmNeedsSave = resolveBattleSubject({
+      state: charmSession.state,
+      subject: charmAct.subject,
+      fills: [charmTargetFill],
+    });
+    if (charmNeedsSave.tag !== "needsHoles") {
+      throw new Error("Expected Charm Person Saving Throw selection.");
+    }
+    const charmCast = requireResolved(
+      resolveBattleSubject({
+        state: charmNeedsSave.state,
+        subject: charmNeedsSave.subject,
+        fills: [
+          charmTargetFill,
+          savingThrowOutcomeFill(
+            requireHole(charmNeedsSave, "savingThrowOutcome"),
+            [{ targetId: fighterId, succeeded: false }],
+          ),
+        ],
+      }),
+    );
+    const relationshipEffect = charmCast.state.combatants
+      .get(fighterId)
+      ?.activeEffects.find(
+        (effect) =>
+          effect.kind === "spellCondition" &&
+          effect.sourceProcedureRef === charmAct.subject.procedureRef,
+      );
+    if (relationshipEffect?.kind !== "spellCondition") {
+      throw new Error("Expected the production Charm Person effect.");
+    }
+    const charmEndTurnNeedsSave = endTurn({
+      state: charmCast.state,
+      actorId: charmSourceId,
+    });
+    const state = requireResolved(
+      endTurn({
+        state: charmCast.state,
+        actorId: charmSourceId,
+        fills: [
+          savingThrowOutcomeFill(
+            requireHole(charmEndTurnNeedsSave, "savingThrowOutcome"),
+            [{ targetId: charmSourceId, succeeded: false }],
+          ),
+        ],
+      }),
+    ).state;
+    expect(state.combatants.get(fighterId)?.conditions.charmed).toBe(true);
+    const activeCharmSource = state.combatants.get(charmSourceId);
+    if (
+      activeCharmSource?.origin.kind !== "character" ||
+      activeCharmSource.origin.spellcasting === undefined
+    ) {
+      throw new Error("Expected active Charm Person source.");
+    }
+    expect(
+      activeCharmSource.origin.spellcasting.spellSlots.find(
+        (slot) => slot.spellLevel === 1,
+      )?.expended,
+    ).toBe(resourceCount(1));
+    expect(state.combatants.get(charmSourceId)?.nextEffectOrdinal).toBe(
+      ray.targetCursorAfterCast,
+    );
     const subject = magicMissileAct(
       battleRuntimeSessionForTest({ state, context: baseSession.context }),
     ).subject;
@@ -244,31 +384,43 @@ describe("battle runtime: spell damage lifecycle replay", () => {
 
     expect(resolved.state.combatants.get(fighterId)?.hp).toBe(Hp(1));
     expect(resolved.state.combatants.get(fighterId)?.concentration).toBeNull();
-    expect(resolved.state.combatants.get(fighterId)?.activeEffects).toEqual([]);
+    expect(resolved.state.combatants.get(fighterId)?.conditions.charmed).toBe(
+      false,
+    );
+    expect(
+      resolved.state.combatants
+        .get(fighterId)
+        ?.activeEffects.some(
+          (effect) => effect.effectRef === relationshipEffect.effectRef,
+        ),
+    ).toBe(false);
+    expect(
+      resolved.state.combatants
+        .get(charmSourceId)
+        ?.activeEffects.some(
+          (effect) =>
+            effect.effectRef === ray.damagePenaltyEffect.effectRef ||
+            effect.effectRef === ray.abilityPenaltyEffect.effectRef,
+        ),
+    ).toBe(false);
+    expect(
+      resolved.state.combatants.get(charmSourceId)?.nextEffectOrdinal,
+    ).toBe(ray.targetCursorAfterCast);
   });
 
   test("Sanctuary can consume a prepared slot cast when the warded target is lost", () => {
-    const baseSession = wizardVsSkeletonBattle();
+    const baseSession = wizardVsWardedSkeletonBattle();
     const warded = baseSession.state.combatants.get(skeletonId);
     if (warded === undefined) {
       throw new Error("Expected the warded target.");
     }
-    const sanctuary: BattleActiveEffect = {
-      kind: "sanctuaryWard",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "spell-damage-sanctuary-source",
-      ),
-      sourceCombatantId: wizardId,
-      save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
-      expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(1) },
-    };
-    const state: BattleState = {
-      ...baseSession.state,
-      combatants: new Map(baseSession.state.combatants).set(skeletonId, {
-        ...warded,
-        activeEffects: [sanctuary],
-      }),
-    };
+    const state = baseSession.state;
+    const sanctuary = warded.activeEffects.find(
+      (effect) => effect.kind === "sanctuaryWard",
+    );
+    if (sanctuary === undefined) {
+      throw new Error("Expected the allocated Sanctuary ward.");
+    }
     const session = battleRuntimeSessionForTest({
       state,
       context: baseSession.context,
@@ -308,30 +460,22 @@ describe("battle runtime: spell damage lifecycle replay", () => {
 
     expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(13);
     expect(expendedLevelOneSlots(resolved, wizardId)).toBe(1);
+    expect(
+      resolved.state.combatants
+        .get(skeletonId)
+        ?.activeEffects.some(
+          (effect) => effect.effectRef === sanctuary.effectRef,
+        ),
+    ).toBe(true);
   });
 
   test("a lost Sanctuary ward ends a readied prepared slot spell without repeat damage", () => {
-    const baseSession = wizardVsSkeletonBattle();
+    const baseSession = wizardVsWardedSkeletonBattle();
     const warded = baseSession.state.combatants.get(skeletonId);
     if (warded === undefined) {
       throw new Error("Expected the warded target.");
     }
-    const sanctuary: BattleActiveEffect = {
-      kind: "sanctuaryWard",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "spell-damage-readied-sanctuary-source",
-      ),
-      sourceCombatantId: wizardId,
-      save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
-      expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(2) },
-    };
-    const state: BattleState = {
-      ...baseSession.state,
-      combatants: new Map(baseSession.state.combatants).set(skeletonId, {
-        ...warded,
-        activeEffects: [sanctuary],
-      }),
-    };
+    const state = baseSession.state;
     const session = battleRuntimeSessionForTest({
       state,
       context: baseSession.context,
@@ -403,6 +547,19 @@ describe("battle runtime: spell damage lifecycle replay", () => {
     expect(expendedLevelOneSlots(released, wizardId)).toBe(1);
     expect(released.state.combatants.get(wizardId)?.concentration).toBeNull();
     expect(released.state.readiedSpells.has(wizardId)).toBe(false);
+    const sanctuary = warded.activeEffects.find(
+      (effect) => effect.kind === "sanctuaryWard",
+    );
+    if (sanctuary === undefined) {
+      throw new Error("Expected the allocated Sanctuary ward.");
+    }
+    expect(
+      released.state.combatants
+        .get(skeletonId)
+        ?.activeEffects.some(
+          (effect) => effect.effectRef === sanctuary.effectRef,
+        ),
+    ).toBe(true);
   });
 
   test("action-time prepared damage reports stale action and Spell Slot resources after discovery", () => {

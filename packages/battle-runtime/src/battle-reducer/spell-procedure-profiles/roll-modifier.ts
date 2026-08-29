@@ -44,6 +44,7 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 import { spellSlotLevel } from "@dnd/shared/types";
 
 import { BattleProcedureExecutionRef, CombatantId } from "../../identity.ts";
+import { allocateBattleEffectOccurrenceForCreature } from "../../effect-execution-ref.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import {
   type BattleActDiscoveryCandidate,
@@ -90,6 +91,7 @@ import type {
 } from "./profile.ts";
 import { cantripSpellAccessFor } from "./profile.ts";
 import { Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -111,6 +113,7 @@ import {
 } from "../domain-constants.ts";
 
 const D20RollModifierEffectSchema = Schema.Struct({
+  ...BattleEffectOccurrenceTemplateSchemaFields,
   kind: Schema.Literal("d20RollModifier"),
   sourceCombatantId: CombatantId,
   on: Schema.Array(Schema.Literals(BATTLE_D20_ROLL_MODIFIER_KINDS)),
@@ -131,6 +134,7 @@ const D20RollModifierEffectSchema = Schema.Struct({
 });
 
 const AbilityCheckRollModeEffectSchema = Schema.Struct({
+  ...BattleEffectOccurrenceTemplateSchemaFields,
   kind: Schema.Literal("abilityCheckRollMode"),
   sourceCombatantId: CombatantId,
   mode: Schema.Literal("advantage"),
@@ -259,20 +263,24 @@ function applyRollModifierEffectsByTarget(
     if (target === undefined) {
       return nextState;
     }
+    const allocation = allocateBattleEffectOccurrenceForCreature({
+      owner: target,
+      effect: { ...selectedEffect, sourceProcedureRef },
+    });
     const activeEffects = [
-      ...target.activeEffects.filter(
+      ...allocation.owner.activeEffects.filter(
         (effect) =>
           !(
             effect.kind === selectedEffect.kind &&
             effect.sourceProcedureRef === sourceProcedureRef
           ),
       ),
-      { ...selectedEffect, sourceProcedureRef },
+      allocation.effect,
     ];
     return {
       ...nextState,
       combatants: new Map(nextState.combatants).set(targetId, {
-        ...target,
+        ...allocation.owner,
         activeEffects,
       }),
     };

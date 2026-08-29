@@ -100,6 +100,16 @@ describe("battle runtime: Stunning Strike", () => {
     if (target === undefined) {
       throw new Error("Expected Stunning Strike target.");
     }
+    const targetBefore = window.state.combatants.get(goblinId);
+    const failedEffectRefs = target.activeEffects.flatMap((effect) =>
+      effect.kind === "unitFeatureCondition" && "effectRef" in effect
+        ? [effect.effectRef]
+        : [],
+    );
+    expect(new Set(failedEffectRefs).size).toBe(1);
+    expect(Number(target.nextEffectOrdinal)).toBe(
+      Number(targetBefore?.nextEffectOrdinal) + 1,
+    );
     expect(hasCondition(target.conditions, "stunned")).toBe(true);
     expect(target?.activeEffects).toEqual(
       expect.arrayContaining([
@@ -179,6 +189,18 @@ describe("battle runtime: Stunning Strike", () => {
     if (target === undefined) {
       throw new Error("Expected Stunning Strike target.");
     }
+    const targetBefore = window.state.combatants.get(goblinId);
+    const successfulEffectRefs = target.activeEffects.flatMap((effect) =>
+      (effect.kind === "speedHalved" ||
+        effect.kind === "nextAttackRollAgainstSelf") &&
+      "effectRef" in effect
+        ? [effect.effectRef]
+        : [],
+    );
+    expect(new Set(successfulEffectRefs).size).toBe(2);
+    expect(Number(target.nextEffectOrdinal)).toBe(
+      Number(targetBefore?.nextEffectOrdinal) + 2,
+    );
     expect(hasCondition(target.conditions, "stunned")).toBe(false);
     expect(effectiveWalkSpeed(resolved.state, target)).toBe(15);
     expect(

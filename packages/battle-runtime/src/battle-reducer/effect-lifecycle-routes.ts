@@ -1,5 +1,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
+import { nextInitiative } from "@dnd/shared-algebras/initiative-algebra";
+
 import type {
   BattleActDiscoveryCandidate,
   BattleActiveEffect,
@@ -941,7 +943,13 @@ function isTurnBoundaryEffectLifecycleSavingThrowFill(
       (effect) =>
         effect.kind === "spellTurnStartDamageAndSave" &&
         fill.holeId ===
-          spellTurnStartSavingThrowOutcomeHoleId(combatant.combatantId, effect),
+          spellTurnStartSavingThrowOutcomeHoleId(
+            {
+              actorId: combatant.combatantId,
+              round: nextInitiative(state.initiative).round,
+            },
+            effect,
+          ),
     ),
   );
 }

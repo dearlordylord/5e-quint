@@ -1,7 +1,4 @@
-import {
-  battleProcedureExecutionRefForTest,
-  characterBattleFeatureInitForTest,
-} from "./battle-runtime.test-support.ts";
+import { characterBattleFeatureInitForTest } from "./battle-runtime.test-support.ts";
 import { battleReducerRouteEventsForDiscoveredAct } from "./battle-reducer/reducer-route.ts";
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
@@ -42,7 +39,6 @@ import {
   discoverBattleActCandidates,
   endTurn,
   startBattle,
-  type BattleActiveEffect,
   type BattleState,
   type BattleSubject,
 } from "./index.ts";
@@ -72,6 +68,8 @@ import {
   wizardId,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
+import { difficultyClass } from "@dnd/shared/types";
+import { battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest } from "./low-level-effect-occurrence.test-support.ts";
 
 const speciesGoliathPowerfulBuildUnitId = "species_goliath_powerful_build";
 const speciesHalflingNimblenessUnitId = "species_halfling_nimbleness";
@@ -348,46 +346,51 @@ function poisonedDwarvenResilienceEndTurnBattle(): BattleState {
         combatantId: wizardId,
         displayName: "Poison Source",
         initiative: 10,
+        attack: null,
+        spellcasting: wizardSpellcasting(),
       }),
     ],
   });
   if (Result.isFailure(result)) {
     throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  const target = result.success.state.combatants.get(
+  // This fixture exercises the lower-level repeat-save interaction, not spell
+  // admission. Give that synthetic boundary its own source-owned procedure and
+  // fixed DC so it cannot be mistaken for an admitted spell lifecycle.
+  const allocated = battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest({
+    state: result.success.state,
+    sourceCombatantId: wizardId,
+    ownerId: poisonedDwarvenResilienceTargetId,
+    effect: {
+      kind: "spellConditionEndTurnSave",
+      condition: "poisoned",
+      conditionHadNonSpellSource: false,
+      heightenedSpellTargetDisadvantage: null,
+      save: {
+        ability: "con",
+        dc: { kind: "fixed", dc: difficultyClass(10) },
+      },
+      expiresAt: {
+        kind: "duration",
+        durationTicks: elapsedTimeTicks(10),
+      },
+    },
+  });
+  const target = allocated.state.combatants.get(
     poisonedDwarvenResilienceTargetId,
   );
   if (target === undefined) {
     throw new Error("Expected poisoned Dwarven Resilience target.");
   }
-  const poisonedEffect = {
-    kind: "spellConditionEndTurnSave",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String("synthetic_poison_condition_save"),
-    ),
-    sourceCombatantId: wizardId,
-    condition: "poisoned",
-    conditionHadNonSpellSource: false,
-    heightenedSpellTargetDisadvantage: null,
-    save: {
-      ability: "con",
-      dc: { kind: "caster_spell_save_dc" },
-    },
-    expiresAt: {
-      kind: "duration",
-      durationTicks: elapsedTimeTicks(10),
-    },
-  } satisfies BattleActiveEffect;
   const poisonedTarget = {
     ...testBattleCreatureStateWithConditions(
       target,
       applyCondition(target.conditions, "poisoned"),
     ),
-    activeEffects: [...target.activeEffects, poisonedEffect],
   };
   return {
-    ...result.success.state,
-    combatants: new Map(result.success.state.combatants).set(
+    ...allocated.state,
+    combatants: new Map(allocated.state.combatants).set(
       poisonedDwarvenResilienceTargetId,
       poisonedTarget,
     ),
