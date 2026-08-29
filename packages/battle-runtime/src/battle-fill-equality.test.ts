@@ -438,13 +438,11 @@ describe("battle fill equality", () => {
       readonly die?: "first" | "second";
       readonly replacementNaturalD20?: number;
       readonly resultSucceeded?: boolean;
-      readonly resultNaturalD20?: number;
     };
     const concentrationReroll = ({
       die = "first",
       replacementNaturalD20 = 15,
       resultSucceeded = true,
-      resultNaturalD20 = replacementNaturalD20,
     }: ConcentrationRerollOverrides = {}) =>
       concentration({
         kind: "rerollRolledDie",
@@ -454,7 +452,7 @@ describe("battle fill equality", () => {
           naturalD20: DieRollResult(replacementNaturalD20),
           result: {
             succeeded: resultSucceeded,
-            naturalD20: DieRollResult(resultNaturalD20),
+            naturalD20: DieRollResult(replacementNaturalD20),
           },
         },
       });
@@ -510,11 +508,6 @@ describe("battle fill equality", () => {
         name: "result succeeded",
         left: { resultSucceeded: true },
         right: { resultSucceeded: false },
-      },
-      {
-        name: "result natural d20 with replacement projection",
-        left: { replacementNaturalD20: 15, resultNaturalD20: 15 },
-        right: { replacementNaturalD20: 14, resultNaturalD20: 14 },
       },
     ] satisfies readonly {
       readonly name: string;
