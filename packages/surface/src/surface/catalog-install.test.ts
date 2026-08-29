@@ -120,7 +120,7 @@ describe("atomic Surface catalog installation", () => {
             {
               reason: "ambiguous_mechanics",
               mechanicsPath: unitDonDoffPath,
-              message: "The source locator is ambiguous for this profile.",
+              message: "The equipment effect is ambiguous for this profile.",
             },
           ],
         }),
@@ -157,7 +157,7 @@ describe("atomic Surface catalog installation", () => {
           root: { kind: "unit", id: armorChainMailInput.id },
           reason: "ambiguous_mechanics",
           mechanicsPath: unitDonDoffPath,
-          message: "The source locator is ambiguous for this profile.",
+          message: "The equipment effect is ambiguous for this profile.",
         },
         {
           phase: "admission",
