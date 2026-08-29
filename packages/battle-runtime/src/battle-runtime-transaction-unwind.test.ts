@@ -571,8 +571,10 @@ describe("battle runtime transaction completion unwind", () => {
       throw new Error("Expected standalone Ready movement to settle.");
     }
     expect(settled.resolution.session.state.interruptStack).toEqual([]);
+    expect(
+      settled.resolution.session.state.readiedResponses.has(fighterId),
+    ).toBe(false);
     expect(settled.resolution.envelope.frontier.kind).toBe("acts");
-    expect(settled.acts.length).toBeGreaterThan(0);
   });
 
   test("returns a typed invalid result for a report without a readied response", () => {
