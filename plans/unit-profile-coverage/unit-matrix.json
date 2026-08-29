@@ -33858,7 +33858,7 @@
           "owner": "future active random-behavior control Spell Effect plus table/spatial random-target and movement owner",
           "reason": "A future owner must carry the Concentration-owned affected-target set, slot-scaled Sphere radius, action/Reaction denial, target-turn d10 behavior roll, random direction movement, no-action branches, random reachable melee target selection, Attack action forcing, and repeat Wisdom saves. Table/spatial ownership must supply area membership, cardinal directions, reach, target availability, and movement path facts without duplicating map or action state."
         },
-        "reason": "Confusion is present in the local SRD level-4 text but has no authored Surface record in this corpus. It affects creatures in a Sphere with Wisdom saves, denies Bonus Actions/Reactions, rolls a d10 behavior table at each affected turn start, can force random movement or melee Attack action, and repeats saves at turn end. No promoted profile is claimed until a turn-behavior control owner exists.",
+        "reason": "Confusion is an authored SRD Surface Spell Definition installed in this corpus. It affects creatures in a Sphere with Wisdom saves, denies Bonus Actions/Reactions, rolls a d10 behavior table at each affected turn start, can force random movement or melee Attack action, and repeats saves at turn end. No promoted profile is claimed until a turn-behavior control owner exists.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -33881,7 +33881,7 @@
           "owner": "future table/spatial water-volume and environmental-hazard owner",
           "reason": "A future owner must carry the controlled water area, current selected mode, Magic Action mode changes, wave repeats, trenches, redirects, whirlpool geometry, vehicle interactions, creature pull movement, Strength saves, damage, and swim-away checks. Water bodies, depth, flow, vehicles, routes, and environmental persistence are table/environment facts and must not be copied into generic spell reducers."
         },
-        "reason": "Control Water is present in the local SRD level-4 text but has no authored Surface record in this corpus. It manipulates water in a large Cube with Flood, Part Water, Redirect Flow, and Whirlpool modes, including vehicle capsizing, water level/wave state, swim pulls, save-gated whirlpool damage, and Athletics escape. No promoted profile is claimed until a water/environment owner exists.",
+        "reason": "Control Water is an authored SRD Surface Spell Definition installed in this corpus. It manipulates water in a large Cube with Flood, Part Water, Redirect Flow, and Whirlpool modes, including vehicle capsizing, water level/wave state, swim pulls, save-gated whirlpool damage, and Athletics escape. No promoted profile is claimed until a water/environment owner exists.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -34249,7 +34249,7 @@
           "owner": "future single-target fear-illusion Spell Effect plus repeating save/damage owner",
           "reason": "A future owner must carry the target-specific illusion, initial and end-turn Wisdom saves, slot-scaled Psychic damage, failed-save Ability Check and attack-roll Disadvantage, successful-save cleanup, and repeated damage timing. It must consume existing roll-mode, damage, condition/effect lifecycle, and turn-boundary owners without dispatching on the spell name."
         },
-        "reason": "Phantasmal Killer is present in the local SRD level-4 text but has no authored Surface record in this corpus. It makes an initial Wisdom save, deals Psychic damage, applies Ability Check and attack-roll Disadvantage on failed saves, repeats end-turn Wisdom saves, repeats damage on failed repeat saves, and ends on successful saves. No promoted profile is claimed until a fear-illusion repeating-save owner exists.",
+        "reason": "Phantasmal Killer is an authored SRD Surface Spell Definition installed in this corpus. It makes an initial Wisdom save, deals Psychic damage, applies Ability Check and attack-roll Disadvantage on failed saves, repeats end-turn Wisdom saves, repeats damage on failed repeat saves, and ends on successful saves. No promoted profile is claimed until a fear-illusion repeating-save owner exists.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",
@@ -34479,7 +34479,7 @@
           "owner": "future area save-damage plus delayed target damage Spell Effect owner",
           "reason": "A future owner must admit Sphere affected creatures, Dexterity saves, initial Acid damage with half damage on success, failed-save-only delayed Acid damage at each target next-turn end, slot scaling, and cleanup. Table/spatial ownership must provide area membership while target-turn timing and delayed damage use existing active-effect and damage owners."
         },
-        "reason": "Vitriolic Sphere is present in the local SRD level-4 text but has no authored Surface record in this corpus. It deals Dexterity save-gated Acid damage in a Sphere and applies delayed end-of-next-turn Acid damage only to failed-save creatures, with slot-scaled initial damage. No promoted profile is claimed until a delayed-damage area spell owner exists.",
+        "reason": "Vitriolic Sphere is an authored SRD Surface Spell Definition installed in this corpus. It deals Dexterity save-gated Acid damage in a Sphere and applies delayed end-of-next-turn Acid damage only to failed-save creatures, with slot-scaled initial damage. No promoted profile is claimed until a delayed-damage area spell owner exists.",
         "tag": "unsupported-profile"
       },
       "collectionId": "srd-5.2.1",

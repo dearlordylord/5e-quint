@@ -339,6 +339,9 @@ export type StatBlockSpellReferenceClassification = {
 export type StatBlockSpellReferenceClassificationSource = {
   readonly definitions: ReadonlyMap<string, SpellRecord>;
   readonly profiledDefinitionIds: ReadonlySet<string>;
+  readonly resolveUnitReference: (
+    authoredReference: string,
+  ) => string | undefined;
 };
 
 export type StatBlockSpellReferenceDefinitionCounts = {
@@ -526,7 +529,10 @@ export function classifyUnrestrictedStatBlockSpellReferences(
         ) {
           return [];
         }
-        const definition = source.definitions.get(reference.reference.spellId);
+        const spellId =
+          source.resolveUnitReference(reference.reference.spellId) ??
+          reference.reference.spellId;
+        const definition = source.definitions.get(spellId);
         return [
           {
             rowId: occurrence.rowId,
@@ -587,7 +593,9 @@ export function countUnrestrictedStatBlockSpellReferenceDefinitions(
       ) {
         continue;
       }
-      const spellId = reference.reference.spellId;
+      const spellId =
+        source.resolveUnitReference(reference.reference.spellId) ??
+        reference.reference.spellId;
       all.add(spellId);
       (source.definitions.get(spellId) === undefined
         ? unresolved

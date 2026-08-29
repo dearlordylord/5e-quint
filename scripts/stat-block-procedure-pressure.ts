@@ -6,12 +6,17 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { format } from "prettier";
 
 import { srdStatBlockCollection } from "../packages/surface/src/surface/stat-block-catalog.ts";
-import { srdUnitCollection } from "../packages/surface/src/surface/unit-catalog.ts";
+import {
+  resolveAuthoredUnitReference,
+  srdUnitCollection,
+} from "../packages/surface/src/surface/unit-catalog.ts";
 import type {
   SpellRecord,
   StatBlockRecord,
@@ -106,6 +111,16 @@ const UNIT_PROFILE_COVERAGE_MATRIX_PATH =
   "plans/unit-profile-coverage/unit-matrix.json";
 const PRE_RESOLUTION_BASELINE_PATH =
   "plans/stat-block-procedure-pressure/pre-resolution-baseline.json";
+const PRE_RESOLUTION_BASELINE_REVISION =
+  "312a425f5a1ae9723ff192aaadb1ee1600befa27" as const;
+const PRE_RESOLUTION_BASELINE_CATALOG_SOURCE_PATH =
+  "packages/surface/src/surface/unit-catalog.ts" as const;
+
+type PreResolutionBaselineSourceSnapshot = {
+  readonly sourcePath: string;
+  readonly gitBlob: string;
+  readonly sha256: string;
+};
 
 type PreResolutionSpellReferenceBaseline = {
   readonly schema: "dnd.stat-block-spell-reference-pre-resolution-baseline.v1";
@@ -113,6 +128,8 @@ type PreResolutionSpellReferenceBaseline = {
     readonly kind: "srd-5.2.1";
     readonly recordedAtRevision: string;
     readonly sourcePaths: readonly string[];
+    readonly sourceSnapshots: readonly PreResolutionBaselineSourceSnapshot[];
+    readonly catalogSource: PreResolutionBaselineSourceSnapshot;
   };
   readonly rowIds: readonly string[];
   readonly unresolvedRowIds: readonly string[];
@@ -144,6 +161,11 @@ export async function buildStatBlockProcedurePressureArtifacts(): Promise<StatBl
   );
   const baseline = readPreResolutionSpellReferenceBaseline();
   const source = statBlockSpellReferenceClassificationSource();
+  assertPreResolutionBaselineProvenance({
+    baseline,
+    records: srdStatBlockCollection.statBlocks,
+    resolveUnitReference: source.resolveUnitReference,
+  });
   const spellReferenceClassifications =
     classifyUnrestrictedStatBlockSpellReferences(
       srdStatBlockCollection.statBlocks,
@@ -210,6 +232,9 @@ function statBlockSpellReferenceClassificationSource(): StatBlockSpellReferenceC
   return {
     definitions,
     profiledDefinitionIds: profiledSpellDefinitionIds(matrix),
+    resolveUnitReference: (authoredReference) =>
+      resolveAuthoredUnitReference(authoredReference, srdUnitCollection.units)
+        ?.canonicalUnitId,
   };
 }
 
@@ -237,6 +262,7 @@ function preResolutionSpellReferenceClassificationSource(
       ),
     ),
     profiledDefinitionIds: new Set(baseline.definitionIds.profiled),
+    resolveUnitReference: source.resolveUnitReference,
   };
 }
 
@@ -275,6 +301,11 @@ function readPreResolutionSpellReferenceBaseline(): PreResolutionSpellReferenceB
       "Pre-resolution spell-reference baseline provenance is incomplete.",
     );
   }
+  if (recordedAtRevision !== PRE_RESOLUTION_BASELINE_REVISION) {
+    throw new Error(
+      `Pre-resolution spell-reference baseline must be recorded at ${PRE_RESOLUTION_BASELINE_REVISION}.`,
+    );
+  }
   if (
     sourcePaths.length !== SRD_STAT_BLOCK_SOURCE_PATHS.length ||
     sourcePaths.some(
@@ -283,6 +314,20 @@ function readPreResolutionSpellReferenceBaseline(): PreResolutionSpellReferenceB
   ) {
     throw new Error(
       "Pre-resolution spell-reference baseline source paths do not match the SRD denominator.",
+    );
+  }
+  const sourceSnapshots = readBaselineSourceSnapshots(
+    parsed.provenance.sourceSnapshots,
+  );
+  const catalogSource = readBaselineSourceSnapshot(
+    parsed.provenance.catalogSource,
+    "pre-resolution baseline catalogSource",
+  );
+  if (
+    catalogSource.sourcePath !== PRE_RESOLUTION_BASELINE_CATALOG_SOURCE_PATH
+  ) {
+    throw new Error(
+      "Pre-resolution baseline catalogSource does not identify the canonical Unit catalog source.",
     );
   }
   const rowIds = readStringArray(
@@ -350,6 +395,8 @@ function readPreResolutionSpellReferenceBaseline(): PreResolutionSpellReferenceB
       kind: "srd-5.2.1" as const,
       recordedAtRevision,
       sourcePaths,
+      sourceSnapshots,
+      catalogSource,
     },
     rowIds,
     unresolvedRowIds,
@@ -367,6 +414,64 @@ function readStringArray(value: unknown, label: string): readonly string[] {
   return value;
 }
 
+function readBaselineSourceSnapshots(
+  value: unknown,
+): readonly PreResolutionBaselineSourceSnapshot[] {
+  if (!Array.isArray(value)) {
+    throw new Error(
+      "Pre-resolution baseline provenance sourceSnapshots must be an array.",
+    );
+  }
+  const snapshots = value.map((snapshot, index) =>
+    readBaselineSourceSnapshot(
+      snapshot,
+      `pre-resolution baseline sourceSnapshots row ${String(index + 1)}`,
+    ),
+  );
+  if (
+    snapshots.length !== SRD_STAT_BLOCK_SOURCE_PATHS.length ||
+    snapshots.some(
+      (snapshot, index) =>
+        snapshot.sourcePath !== SRD_STAT_BLOCK_SOURCE_PATHS[index],
+    )
+  ) {
+    throw new Error(
+      "Pre-resolution baseline sourceSnapshots do not match the SRD denominator.",
+    );
+  }
+  assertUniqueStrings(
+    snapshots.map(({ sourcePath }) => sourcePath),
+    "pre-resolution baseline sourceSnapshots source paths",
+  );
+  return snapshots;
+}
+
+function readBaselineSourceSnapshot(
+  value: unknown,
+  label: string,
+): PreResolutionBaselineSourceSnapshot {
+  if (!isUnknownRecord(value)) {
+    throw new Error(`${label} must be an object.`);
+  }
+  const sourcePath = unknownString(value.sourcePath);
+  const gitBlob = unknownString(value.gitBlob);
+  const sha256 = unknownString(value.sha256);
+  if (
+    sourcePath === undefined ||
+    gitBlob === undefined ||
+    sha256 === undefined
+  ) {
+    throw new Error(`${label} is incomplete.`);
+  }
+  if (!/^[0-9a-f]{40}$/.test(gitBlob)) {
+    throw new Error(`${label} gitBlob is not a Git object id.`);
+  }
+  if (!/^[0-9a-f]{64}$/.test(sha256)) {
+    throw new Error(`${label} sha256 is not a SHA-256 digest.`);
+  }
+  return { sourcePath, gitBlob, sha256 };
+}
+
 function assertUniqueStrings(
   values: readonly string[],
   label: string,
@@ -380,6 +485,7 @@ function assertUniqueStrings(
 
 function unrestrictedSpellReferenceDefinitionIds(
   records: readonly StatBlockRecord[],
+  resolveUnitReference: (authoredReference: string) => string | undefined,
 ): ReadonlySet<string> {
   const definitionIds = new Set<string>();
   for (const record of records) {
@@ -400,7 +506,9 @@ function unrestrictedSpellReferenceDefinitionIds(
         for (const group of entry.procedure.groups) {
           for (const reference of group.spells) {
             if (reference.restriction === undefined) {
-              definitionIds.add(reference.spellId);
+              definitionIds.add(
+                resolveUnitReference(reference.spellId) ?? reference.spellId,
+              );
             }
           }
         }
@@ -408,6 +516,131 @@ function unrestrictedSpellReferenceDefinitionIds(
     }
   }
   return definitionIds;
+}
+
+function assertPreResolutionBaselineProvenance(args: {
+  readonly baseline: PreResolutionSpellReferenceBaseline;
+  readonly records: readonly StatBlockRecord[];
+  readonly resolveUnitReference: (
+    authoredReference: string,
+  ) => string | undefined;
+}): void {
+  const revision = execFileSync(
+    "git",
+    ["rev-parse", "--verify", `${PRE_RESOLUTION_BASELINE_REVISION}^{commit}`],
+    { cwd: process.cwd(), encoding: "utf8" },
+  ).trim();
+  if (revision !== PRE_RESOLUTION_BASELINE_REVISION) {
+    throw new Error(
+      `Pinned pre-resolution baseline revision resolved to ${revision}, expected ${PRE_RESOLUTION_BASELINE_REVISION}.`,
+    );
+  }
+
+  for (const snapshot of args.baseline.provenance.sourceSnapshots) {
+    assertBaselineSourceSnapshot(
+      snapshot,
+      PRE_RESOLUTION_BASELINE_REVISION,
+      "SRD source",
+      true,
+    );
+  }
+  assertBaselineSourceSnapshot(
+    args.baseline.provenance.catalogSource,
+    PRE_RESOLUTION_BASELINE_REVISION,
+    "Unit catalog source",
+    false,
+  );
+
+  const expectedDefinitionIds = new Set([
+    ...args.baseline.definitionIds.shipped,
+    ...args.baseline.definitionIds.unresolved,
+  ]);
+  const historicalCatalog = readGitRevisionFile(
+    PRE_RESOLUTION_BASELINE_REVISION,
+    args.baseline.provenance.catalogSource.sourcePath,
+  ).toString("utf8");
+  const importedContentIds = new Set(
+    [
+      ...historicalCatalog.matchAll(
+        /from\s+["']\.\.\/\.\.\/content\/([^"']+)\.json["'];/g,
+      ),
+    ].map((match) => match[1] ?? ""),
+  );
+  const historicalShippedDefinitionIds = new Set(
+    [...importedContentIds].filter((unitId) =>
+      expectedDefinitionIds.has(unitId),
+    ),
+  );
+  assertStringSetEqual(
+    historicalShippedDefinitionIds,
+    new Set(args.baseline.definitionIds.shipped),
+    "historical pre-resolution shipped definition membership",
+  );
+
+  const observedDefinitionIds = unrestrictedSpellReferenceDefinitionIds(
+    args.records,
+    args.resolveUnitReference,
+  );
+  const historicalUnresolvedDefinitionIds = new Set(
+    [...observedDefinitionIds].filter(
+      (definitionId) => !historicalShippedDefinitionIds.has(definitionId),
+    ),
+  );
+  assertStringSetEqual(
+    historicalUnresolvedDefinitionIds,
+    new Set(args.baseline.definitionIds.unresolved),
+    "historical pre-resolution unresolved definition membership",
+  );
+}
+
+function assertBaselineSourceSnapshot(
+  snapshot: PreResolutionBaselineSourceSnapshot,
+  revision: string,
+  label: string,
+  checkCurrentFile: boolean,
+): void {
+  const historicalBytes = readGitRevisionFile(revision, snapshot.sourcePath);
+  const historicalSha256 = sha256Bytes(historicalBytes);
+  if (historicalSha256 !== snapshot.sha256) {
+    throw new Error(
+      `${label} ${snapshot.sourcePath} does not match its pinned SHA-256 digest.`,
+    );
+  }
+  const historicalGitBlob = execFileSync(
+    "git",
+    ["rev-parse", `${revision}:${snapshot.sourcePath}`],
+    { cwd: process.cwd(), encoding: "utf8" },
+  ).trim();
+  if (historicalGitBlob !== snapshot.gitBlob) {
+    throw new Error(
+      `${label} ${snapshot.sourcePath} does not match its pinned Git blob.`,
+    );
+  }
+  if (checkCurrentFile) {
+    const currentBytes = readFileSync(join(process.cwd(), snapshot.sourcePath));
+    if (sha256Bytes(currentBytes) !== snapshot.sha256) {
+      throw new Error(
+        `${label} ${snapshot.sourcePath} changed after the pinned pre-resolution revision.`,
+      );
+    }
+  }
+}
+
+function readGitRevisionFile(revision: string, sourcePath: string): Buffer {
+  try {
+    return execFileSync("git", ["show", `${revision}:${sourcePath}`], {
+      cwd: process.cwd(),
+      maxBuffer: 5_000_000,
+    });
+  } catch (error) {
+    throw new Error(
+      `Unable to read pinned Git source ${revision}:${sourcePath}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
+function sha256Bytes(value: Uint8Array): string {
+  return createHash("sha256").update(value).digest("hex");
 }
 
 function assertStringSetEqual(
@@ -484,6 +717,7 @@ function assertPreResolutionBaselineBijection(args: {
   ]);
   const observedDefinitionIds = unrestrictedSpellReferenceDefinitionIds(
     args.records,
+    args.source.resolveUnitReference,
   );
   assertStringSetEqual(
     observedDefinitionIds,
@@ -812,6 +1046,11 @@ function runSpellReferenceClassificationSelfTest(): void {
   );
   const currentSource = statBlockSpellReferenceClassificationSource();
   const baseline = readPreResolutionSpellReferenceBaseline();
+  assertPreResolutionBaselineProvenance({
+    baseline,
+    records: srdStatBlockCollection.statBlocks,
+    resolveUnitReference: currentSource.resolveUnitReference,
+  });
   const baselineSource = preResolutionSpellReferenceClassificationSource(
     currentSource,
     baseline,

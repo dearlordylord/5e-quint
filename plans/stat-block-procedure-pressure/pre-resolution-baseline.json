@@ -2,7 +2,7 @@
   "schema": "dnd.stat-block-spell-reference-pre-resolution-baseline.v1",
   "provenance": {
     "kind": "srd-5.2.1",
-    "recordedAtRevision": "58362db5731fdecde1f39c422010551c4680bef9",
+    "recordedAtRevision": "312a425f5a1ae9723ff192aaadb1ee1600befa27",
     "sourcePaths": [
       ".references/srd-5.2.1/Animals.md",
       ".references/srd-5.2.1/Monsters/Monsters-A-B.md",
@@ -12,7 +12,54 @@
       ".references/srd-5.2.1/Monsters/Monsters-M-O.md",
       ".references/srd-5.2.1/Monsters/Monsters-P-S.md",
       ".references/srd-5.2.1/Monsters/Monsters-T-Z.md"
-    ]
+    ],
+    "sourceSnapshots": [
+      {
+        "sourcePath": ".references/srd-5.2.1/Animals.md",
+        "gitBlob": "0606d1354e1bf0150593f2e2dbb192b0c65334cb",
+        "sha256": "8ad77c4926049b10f00dc9a4847b8e2a5d1405246aca14a2735284a15efb4e78"
+      },
+      {
+        "sourcePath": ".references/srd-5.2.1/Monsters/Monsters-A-B.md",
+        "gitBlob": "0ef060815a848411eaf2a2948fd092f95aca2cf8",
+        "sha256": "bf18ece7d9b34c378616dae0826b7233d9bb8caea85ee847c18891c41e2da328"
+      },
+      {
+        "sourcePath": ".references/srd-5.2.1/Monsters/Monsters-C-D.md",
+        "gitBlob": "fb68f83aafbdbf711bc714027dace08091557b0f",
+        "sha256": "e8a60f29635a6c872856e983774cc1e1231475d323ba4b398044aa7926282b13"
+      },
+      {
+        "sourcePath": ".references/srd-5.2.1/Monsters/Monsters-E-G.md",
+        "gitBlob": "1702958535cd6571448a02be8e8a57b338d3d5e9",
+        "sha256": "77b01ccf77760296de31b52286b3a1015dec25678ed6df1b5b71c03f57af3b43"
+      },
+      {
+        "sourcePath": ".references/srd-5.2.1/Monsters/Monsters-H-L.md",
+        "gitBlob": "59ca1c8744a94783411221d7006d83f7fb6d8f0e",
+        "sha256": "640af5dd34e96d9f03b66771464a053638e60b295b628822fe53d91fe2031d67"
+      },
+      {
+        "sourcePath": ".references/srd-5.2.1/Monsters/Monsters-M-O.md",
+        "gitBlob": "3f7bd0f6f9511fdc8d68790b54af009f48e76d46",
+        "sha256": "fb4ceafa7c90658d55be999109fc628f60ec530f90b20df05db6367f945cb19f"
+      },
+      {
+        "sourcePath": ".references/srd-5.2.1/Monsters/Monsters-P-S.md",
+        "gitBlob": "7bf16e17176fd36b6753dda4808e50964ffc2962",
+        "sha256": "e954dcd237dcb93020aafb4aad7ddeb640da36ba4ba3fd7b6d157c8dc9b37e45"
+      },
+      {
+        "sourcePath": ".references/srd-5.2.1/Monsters/Monsters-T-Z.md",
+        "gitBlob": "368e64047b64f823c1db173e2e2caa232262e01c",
+        "sha256": "1500d512dcb5c22256d8ebcf0d92aeaf3f245f153fd9aebbfba3f1441c98c73c"
+      }
+    ],
+    "catalogSource": {
+      "sourcePath": "packages/surface/src/surface/unit-catalog.ts",
+      "gitBlob": "b44b69cbfd8c9fc3ba28b98c5af28b9f97deb517",
+      "sha256": "a39625c9be21699f17bda9c48fe4d629933bd106c80ee7933e1b135069050669"
+    }
   },
   "rowIds": [
     "stat-block-117:{\"kind\":\"spellReference\",\"section\":\"actions\",\"procedureOrdinal\":4,\"groupOrdinal\":1,\"spellOrdinal\":1}",

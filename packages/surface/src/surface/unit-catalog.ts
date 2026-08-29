@@ -468,6 +468,55 @@ export type UnitCatalog = {
   readonly requireUnit: (id: string) => UnitRecord;
 };
 
+export type AuthoredUnitReferenceResolution = {
+  readonly authoredReference: string;
+  readonly canonicalUnitId: UnitId;
+  readonly unit: UnitRecord;
+};
+
+/**
+ * Resolve a source-authored Unit reference at the catalog boundary.
+ *
+ * Authored source may retain punctuation that is not part of the canonical
+ * Unit id (for example, a possessive apostrophe). Compare the supplied value
+ * to catalog-owned ids directly first, then use the deterministic authored
+ * reference key. No alias table is maintained, and an ambiguous key is not
+ * resolved.
+ */
+export function resolveAuthoredUnitReference(
+  authoredReference: string,
+  units: readonly UnitRecord[],
+): AuthoredUnitReferenceResolution | undefined {
+  const exact = units.find((unit) => unit.id === authoredReference);
+  if (exact !== undefined) {
+    return {
+      authoredReference,
+      canonicalUnitId: exact.id,
+      unit: exact,
+    };
+  }
+
+  const key = authoredUnitReferenceKey(authoredReference);
+  const matches = units.filter(
+    (unit) => authoredUnitReferenceKey(unit.id) === key,
+  );
+  return matches.length === 1
+    ? {
+        authoredReference,
+        canonicalUnitId: matches[0]!.id,
+        unit: matches[0]!,
+      }
+    : undefined;
+}
+
+function authoredUnitReferenceKey(value: string): string {
+  return value
+    .normalize("NFKC")
+    .trim()
+    .toLowerCase()
+    .replace(/[\u0027\u2019]/g, "");
+}
+
 export type ClassSpellListName = SpellcastingClassRecord["className"];
 
 export type ClassSpellList = {
