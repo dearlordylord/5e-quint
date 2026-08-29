@@ -1,4 +1,4 @@
-import { Option } from "effect";
+import { Either, Option } from "effect";
 import { describe, expect, test } from "vitest";
 
 import armorChainMailInput from "../../content/armor_chain_mail.json";
@@ -9,6 +9,12 @@ import {
   installSrdSurfaceText,
   type SurfaceMechanicsAdmission,
 } from "./catalog-install.ts";
+import {
+  makeStatBlockMechanicsPath,
+  makeUnitMechanicsPath,
+  type StatBlockMechanicsPath,
+  type UnitMechanicsPath,
+} from "./mechanics-graph-path.ts";
 
 const publishedUnit = {
   ...armorChainMailInput,
@@ -19,6 +25,22 @@ const publishedStatBlock = {
   rulesExcerpt: "Synthetic test excerpt for one authored Stat Block.",
 };
 const goblinWarriorId = statBlockId(goblinWarriorInput.id);
+const unitAcFormulaPath = requirePath(
+  makeUnitMechanicsPath("unit.mechanics.acFormula"),
+  "unit.mechanics.acFormula",
+);
+const unitDonDoffPath = requirePath(
+  makeUnitMechanicsPath("unit.mechanics.donDoff"),
+  "unit.mechanics.donDoff",
+);
+const statBlockFirstProcedurePath = requirePath(
+  makeStatBlockMechanicsPath("statBlock.mechanics.actions[0].procedure"),
+  "statBlock.mechanics.actions[0].procedure",
+);
+const statBlockSecondProcedurePath = requirePath(
+  makeStatBlockMechanicsPath("statBlock.mechanics.actions[1].procedure"),
+  "statBlock.mechanics.actions[1].procedure",
+);
 const portableSurface = {
   kind: "srd-5.2.1-surface-catalog",
   units: [publishedUnit],
@@ -89,12 +111,12 @@ describe("atomic Surface catalog installation", () => {
           issues: [
             {
               reason: "unsupported_mechanics",
-              mechanicsPath: "equipment.acFormula",
+              mechanicsPath: unitAcFormulaPath,
               message: "The equipment formula is not admitted by this profile.",
             },
             {
               reason: "ambiguous_mechanics",
-              mechanicsPath: "provenance.section",
+              mechanicsPath: unitDonDoffPath,
               message: "The source locator is ambiguous for this profile.",
             },
           ],
@@ -104,12 +126,12 @@ describe("atomic Surface catalog installation", () => {
           issues: [
             {
               reason: "incomplete_graph",
-              mechanicsPath: "statBlock.actions[0].procedure",
+              mechanicsPath: statBlockFirstProcedurePath,
               message: "The action graph is incomplete for this profile.",
             },
             {
               reason: "no_admitted_procedure",
-              mechanicsPath: "statBlock.actions[1].procedure",
+              mechanicsPath: statBlockSecondProcedurePath,
               message: "No executable procedure profile matched this action.",
             },
           ],
@@ -124,28 +146,28 @@ describe("atomic Surface catalog installation", () => {
           phase: "admission",
           root: { kind: "unit", id: armorChainMailInput.id },
           reason: "unsupported_mechanics",
-          mechanicsPath: "equipment.acFormula",
+          mechanicsPath: unitAcFormulaPath,
           message: "The equipment formula is not admitted by this profile.",
         },
         {
           phase: "admission",
           root: { kind: "unit", id: armorChainMailInput.id },
           reason: "ambiguous_mechanics",
-          mechanicsPath: "provenance.section",
+          mechanicsPath: unitDonDoffPath,
           message: "The source locator is ambiguous for this profile.",
         },
         {
           phase: "admission",
           root: { kind: "statBlock", id: goblinWarriorInput.id },
           reason: "incomplete_graph",
-          mechanicsPath: "statBlock.actions[0].procedure",
+          mechanicsPath: statBlockFirstProcedurePath,
           message: "The action graph is incomplete for this profile.",
         },
         {
           phase: "admission",
           root: { kind: "statBlock", id: goblinWarriorInput.id },
           reason: "no_admitted_procedure",
-          mechanicsPath: "statBlock.actions[1].procedure",
+          mechanicsPath: statBlockSecondProcedurePath,
           message: "No executable procedure profile matched this action.",
         },
       ],
@@ -197,4 +219,32 @@ describe("atomic Surface catalog installation", () => {
     expect(admissionCalled).toBe(false);
     expect(result).not.toHaveProperty("catalog");
   });
+
+  test("rejects provenance, presentation, and cross-family mechanics paths", () => {
+    expect(
+      Either.isLeft(makeUnitMechanicsPath("unit.mechanics.provenance.section")),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        makeStatBlockMechanicsPath(
+          "statBlock.mechanics.actions[0].description",
+        ),
+      ),
+    ).toBe(true);
+    expect(Either.isLeft(makeStatBlockMechanicsPath(unitAcFormulaPath))).toBe(
+      true,
+    );
+  });
 });
+
+function requirePath<Path extends UnitMechanicsPath | StatBlockMechanicsPath>(
+  result: Either.Either<Path, { readonly message: string }>,
+  input: string,
+): Path {
+  if (Either.isLeft(result)) {
+    throw new Error(
+      `Expected a valid mechanics path for ${input}: ${result.left.message}`,
+    );
+  }
+  return result.right;
+}

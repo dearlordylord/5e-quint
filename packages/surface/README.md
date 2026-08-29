@@ -102,6 +102,13 @@ the separate Unit and Stat Block catalogs. No receipt, support-status record,
 or diagnostic-path state is stored or returned as installed state. A mechanics
 admission function must explicitly return `admitted`; a valid record with no
 matching executable procedure returns a typed `no_admitted_procedure` issue.
+Portable decoding may retain typed `textOnly` mechanics in canonical content;
+whether a profile admits that content for execution remains the supplied
+admission function's decision.
+Admission issue paths are constructed through `surface/mechanics-graph-path`:
+Unit and Stat Block paths have distinct branded roots, and the constructor
+rejects provenance and presentation segments before a path reaches the
+install result.
 
 Detailed record-family rules live next to the code that owns them. For monster
 Stat Block lookup/provenance mechanics, see `src/surface/stat-block-catalog.ts`.

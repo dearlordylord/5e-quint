@@ -18,6 +18,10 @@ import {
   type UnitCatalog,
   type UnitCatalogBuildIssue,
 } from "./unit-catalog.ts";
+import type {
+  StatBlockMechanicsPath,
+  UnitMechanicsPath,
+} from "./mechanics-graph-path.ts";
 
 /** Reasons a mechanics admission profile can reject an authored record. */
 export const SURFACE_MECHANICS_ADMISSION_REASONS = [
@@ -42,21 +46,45 @@ export type SurfaceAuthoredRecordRoot =
  * The path is relative to the record's typed mechanics value. It is not a
  * persisted diagnostic path: it exists only in a rejected install result.
  */
-export type SurfaceMechanicsAdmissionIssueDraft = {
+export type UnitMechanicsAdmissionIssueDraft = {
   readonly reason: SurfaceMechanicsAdmissionReason;
-  readonly mechanicsPath: string;
+  readonly mechanicsPath: UnitMechanicsPath;
   readonly message: string;
 };
 
-export type SurfaceMechanicsAdmissionResult =
+export type StatBlockMechanicsAdmissionIssueDraft = {
+  readonly reason: SurfaceMechanicsAdmissionReason;
+  readonly mechanicsPath: StatBlockMechanicsPath;
+  readonly message: string;
+};
+
+export type SurfaceMechanicsAdmissionIssueDraft =
+  | UnitMechanicsAdmissionIssueDraft
+  | StatBlockMechanicsAdmissionIssueDraft;
+
+export type UnitMechanicsAdmissionResult =
   | { readonly tag: "admitted" }
   | {
       readonly tag: "rejected";
       readonly issues: readonly [
-        SurfaceMechanicsAdmissionIssueDraft,
-        ...SurfaceMechanicsAdmissionIssueDraft[],
+        UnitMechanicsAdmissionIssueDraft,
+        ...UnitMechanicsAdmissionIssueDraft[],
       ];
     };
+
+export type StatBlockMechanicsAdmissionResult =
+  | { readonly tag: "admitted" }
+  | {
+      readonly tag: "rejected";
+      readonly issues: readonly [
+        StatBlockMechanicsAdmissionIssueDraft,
+        ...StatBlockMechanicsAdmissionIssueDraft[],
+      ];
+    };
+
+export type SurfaceMechanicsAdmissionResult =
+  | UnitMechanicsAdmissionResult
+  | StatBlockMechanicsAdmissionResult;
 
 /**
  * Context-independent mechanics checks supplied by the owning runtime
@@ -69,11 +97,11 @@ export type SurfaceMechanicsAdmission = {
   readonly admitUnit: (input: {
     readonly unit: SrdUnitRecord;
     readonly surface: SrdSurface;
-  }) => SurfaceMechanicsAdmissionResult;
+  }) => UnitMechanicsAdmissionResult;
   readonly admitStatBlock: (input: {
     readonly statBlock: SrdStatBlockRecord;
     readonly surface: SrdSurface;
-  }) => SurfaceMechanicsAdmissionResult;
+  }) => StatBlockMechanicsAdmissionResult;
 };
 
 export type SurfaceCatalogDecodeIssue =
