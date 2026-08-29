@@ -462,7 +462,14 @@ export function combatantOriginSnapshot(
         scopeRef: origin.execution.scopeRef,
         procedureBindings: characterProcedureBindingSnapshots(
           origin.execution,
-          (invocation) => spellExecutionFacts(invocation),
+          (invocation) => {
+            if (invocation.procedure === "spawnedCompanionLifecycle") {
+              throw new Error(
+                "Non-battle companion lifecycle must not enter battle snapshots.",
+              );
+            }
+            return spellExecutionFacts(invocation);
+          },
         ),
       },
       attackExecution: {

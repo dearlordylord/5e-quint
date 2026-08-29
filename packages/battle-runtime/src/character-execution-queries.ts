@@ -14,6 +14,7 @@ import {
 } from "./identity.ts";
 import type {
   BattleSpellProcedureExecution,
+  BattleStoredSpellProcedureExecution,
   RepositionMovableLightManifestationSpellProcedureExecution,
   HeldLightHurlSpellProcedureExecution,
   MarkedDamageRiderTransferSpellProcedureExecution,
@@ -23,6 +24,7 @@ import type {
   SpellExecutableExecutionOf,
   SpellProcedureExecution,
   RepeatSpatialMeleeSpellAttackProxySpellProcedureExecution,
+  RuntimeSpellProcedureExecution,
 } from "./character-execution.ts";
 import type { SpellExecutionFacts } from "./battle-reducer/spell-execution-facts.ts";
 import { sameSpellProcedureExecution } from "./same-spell-procedure-execution.ts";
@@ -128,42 +130,48 @@ export function characterProcedureBindingSnapshots(
     invocation: SpellProcedureExecution,
   ) => SpellExecutionFacts,
 ) {
-  return execution.procedureBindings.map((binding) =>
-    Match.value(binding.procedure).pipe(
-      Match.when({ kind: "unitFeature" }, (procedure) => ({
-        procedureRef: binding.procedureRef,
-        procedure: {
-          kind: procedure.kind,
-          source: procedure.source,
-          execution: procedure.execution,
-        },
-      })),
-      Match.when({ kind: "unitSupportProfile" }, (procedure) => ({
-        procedureRef: binding.procedureRef,
-        procedure: {
-          kind: procedure.kind,
-          source: procedure.source,
-          execution: procedure.execution,
-        },
-      })),
-      Match.when({ kind: "spellInvocation" }, (procedure) => ({
-        procedureRef: binding.procedureRef,
-        procedure: {
-          kind: procedure.kind,
-          executionFacts: executionFactsFor(procedure.execution),
-        },
-      })),
-      Match.when({ kind: "unavailableSpellInvocation" }, (procedure) => ({
-        procedureRef: binding.procedureRef,
-        procedure: { kind: procedure.kind },
-      })),
-      Match.when({ kind: "effectOccurrenceSource" }, (procedure) => ({
-        procedureRef: binding.procedureRef,
-        procedure,
-      })),
-      Match.exhaustive,
-    ),
-  );
+  return execution.procedureBindings
+    .filter(
+      (binding) =>
+        binding.procedure.kind !== "spellInvocation" ||
+        binding.procedure.execution.procedure !== "spawnedCompanionLifecycle",
+    )
+    .map((binding) =>
+      Match.value(binding.procedure).pipe(
+        Match.when({ kind: "unitFeature" }, (procedure) => ({
+          procedureRef: binding.procedureRef,
+          procedure: {
+            kind: procedure.kind,
+            source: procedure.source,
+            execution: procedure.execution,
+          },
+        })),
+        Match.when({ kind: "unitSupportProfile" }, (procedure) => ({
+          procedureRef: binding.procedureRef,
+          procedure: {
+            kind: procedure.kind,
+            source: procedure.source,
+            execution: procedure.execution,
+          },
+        })),
+        Match.when({ kind: "spellInvocation" }, (procedure) => ({
+          procedureRef: binding.procedureRef,
+          procedure: {
+            kind: procedure.kind,
+            executionFacts: executionFactsFor(procedure.execution),
+          },
+        })),
+        Match.when({ kind: "unavailableSpellInvocation" }, (procedure) => ({
+          procedureRef: binding.procedureRef,
+          procedure: { kind: procedure.kind },
+        })),
+        Match.when({ kind: "effectOccurrenceSource" }, (procedure) => ({
+          procedureRef: binding.procedureRef,
+          procedure,
+        })),
+        Match.exhaustive,
+      ),
+    );
 }
 
 export function unitSupportProfileKind(
@@ -365,6 +373,9 @@ export function characterSpellProcedure(
     (candidate) => candidate.procedureRef === procedureRef,
   );
   if (binding?.procedure.kind !== "spellInvocation") return undefined;
+  if (binding.procedure.execution.procedure === "spawnedCompanionLifecycle") {
+    return undefined;
+  }
   const executable = executableSpellProcedureFromLiveEffects(
     execution,
     binding.procedure.execution,
@@ -389,14 +400,14 @@ export function characterSpellProcedureExecution(
 
 function executableSpellProcedureFromLiveEffects(
   execution: CharacterExecutionState,
-  stored: SpellProcedureExecution,
+  stored: BattleStoredSpellProcedureExecution,
   liveActor:
     | {
         readonly combatantId: CombatantId;
         readonly activeEffects: readonly BattleActiveEffect[];
       }
     | undefined,
-): SpellExecutableExecutionOf<SpellProcedureExecution> | undefined {
+): SpellExecutableExecutionOf<RuntimeSpellProcedureExecution> | undefined {
   if (
     stored.procedure === "markedDamageRider" &&
     stored.action === "transfer"

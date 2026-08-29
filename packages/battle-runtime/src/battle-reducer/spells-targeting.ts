@@ -624,7 +624,6 @@ function ordinarySpellTargetSpatialFactRequest(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation,
 ): Pick<BattleSpellTargetListHole, "spellTargetSpatialFactRequest"> {
-  if (invocation.procedure === "spawnedCompanionLifecycle") return {};
   const rangeFeet =
     "rangeFeet" in invocation
       ? invocation.rangeFeet

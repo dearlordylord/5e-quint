@@ -7,9 +7,9 @@ import type {
 } from "../../battle-state-execution.ts";
 import type {
   BattleSpellProcedureExecution,
+  BattleSpellProcedureKey,
   SpellProcedureInput,
   SpellProcedureExecutionByProcedure,
-  SpellProcedureKey,
 } from "../../character-execution.ts";
 import type { CombatantId } from "../../identity.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
@@ -45,7 +45,9 @@ export function spellProcedureResolutionContext<
   };
 }
 
-export type SpellProcedureProfileResolveInput<I extends SpellProcedureInput> =
+export type SpellProcedureProfileResolveInput<
+  I extends SpellProcedureInput<BattleSpellProcedureKey>,
+> =
   SpellProcedureDeclarationResolution<I["procedure"]> extends infer Resolution
     ? Resolution extends { readonly invocation: unknown }
       ? Omit<Resolution, "invocation"> & {
@@ -54,7 +56,9 @@ export type SpellProcedureProfileResolveInput<I extends SpellProcedureInput> =
       : never
     : never;
 
-export type SpellProcedureExecutionDeclaration<P extends SpellProcedureKey> = {
+export type SpellProcedureExecutionDeclaration<
+  P extends BattleSpellProcedureKey,
+> = {
   readonly procedure: P;
   readonly discoverCastAct: (
     state: BattleState,

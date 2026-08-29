@@ -36,6 +36,7 @@ import type {
   SpellAccessFreeCastInvocationResource,
   SpellSlotInvocationResource,
 } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import type { BattleSpellProcedureKey } from "../../character-execution.ts";
 import { cantripSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import {
   magicSuppressionOngoingSpellEffectKeys,
@@ -206,7 +207,7 @@ export function spellAdmissionCharacterLevel(
 }
 
 export type SpellInvocationAdmittedByRegisteredProcedure<
-  P extends SupportedSpellInvocation["procedure"],
+  P extends BattleSpellProcedureKey,
 > = {
   readonly [I in SupportedSpellInvocation as I["procedure"]]: P extends I["procedure"]
     ? I
@@ -219,7 +220,7 @@ export type SpellInvocationAdmittedByRegisteredProcedure<
 // literal their invocation carries; a combined profile may register one literal
 // while accepting an invocation whose procedure field admits that literal.
 export type SpellProcedureAdmissionDeclaration<
-  P extends SupportedSpellInvocation["procedure"],
+  P extends BattleSpellProcedureKey,
   I extends SpellInvocationAdmittedByRegisteredProcedure<P>,
 > = {
   // Discovery: enumerate every currently-admissible invocation of this
@@ -232,13 +233,13 @@ export type SpellProcedureAdmissionDeclaration<
 };
 
 export type SpellProcedureDeclaration<
-  P extends SupportedSpellInvocation["procedure"],
+  P extends BattleSpellProcedureKey,
   I extends SpellInvocationAdmittedByRegisteredProcedure<P>,
 > = SpellProcedureAdmissionDeclaration<P, I> &
   SpellProcedureExecutionDeclaration<P>;
 
 export type SynthesizedSpellProcedureDeclaration<
-  P extends SupportedSpellInvocation["procedure"],
+  P extends BattleSpellProcedureKey,
 > = {
   readonly admission: "synthesized";
 } & SpellProcedureExecutionDeclaration<P>;

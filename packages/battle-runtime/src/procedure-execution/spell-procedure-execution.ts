@@ -1674,8 +1674,14 @@ type LiveDynamicSpellProcedureExecution<
       ? RepeatSpatialMeleeSpellAttackProxyLiveSpellProcedureExecution
       : never;
 export type SpellProcedureKey = keyof SpellProcedureExecutionByProcedure;
+export type BattleSpellProcedureKey = Exclude<
+  SpellProcedureKey,
+  "spawnedCompanionLifecycle"
+>;
 type AnySpellProcedureExecution =
   SpellProcedureExecutionByProcedure[SpellProcedureKey];
+type AnyBattleSpellProcedureExecution =
+  SpellProcedureExecutionByProcedure[BattleSpellProcedureKey];
 export type SpellProcedureInput<
   P extends SpellProcedureKey = SpellProcedureKey,
 > =
@@ -1706,10 +1712,12 @@ export type SpellExecutableExecutionOf<Input extends SpellProcedureInput> =
         ? LiveDynamicSpellProcedureExecution<Execution>
         : Execution
       : never;
+export type BattleStoredSpellProcedureExecution =
+  SpellProcedureExecution<AnyBattleSpellProcedureExecution>;
 export type RuntimeSpellProcedureExecution =
-  SpellExecutableExecutionOf<SpellProcedureExecution>;
+  SpellExecutableExecutionOf<BattleStoredSpellProcedureExecution>;
 export type BattleSpellProcedureExecution<
-  Input extends SpellProcedureInput = SpellProcedureExecution,
+  Input extends SpellProcedureInput = BattleStoredSpellProcedureExecution,
 > = SpellExecutableExecutionOf<Input> & {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
 };

@@ -32,9 +32,6 @@ export function spellInvocationEffectiveSpellLevel(
 export function spellInvocationCastLevel(
   invocation: RuntimeSpellProcedureExecution,
 ): BattleSpellEffectLevel {
-  if (invocation.procedure === "spawnedCompanionLifecycle") {
-    return requireBattleSpellEffectLevel(invocation.casting.nonRitualSlotLevel);
-  }
   const resource: NoSpellInvocationResource | LeveledSpellInvocationResource =
     invocation.resource;
   return requireBattleSpellEffectLevel(

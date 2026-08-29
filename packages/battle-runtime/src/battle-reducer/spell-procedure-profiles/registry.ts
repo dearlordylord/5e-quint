@@ -82,7 +82,7 @@ import { temporaryAbilityCheckRollModeProfile } from "./thaumaturgy-booming-voic
 import { linkedDefenseResistanceDamageShareProfile } from "./warding-bond.ts";
 import { weaponAttackOverrideProfile } from "./weapon-attack-override.ts";
 import { weaponDamageRiderProfile } from "./weapon-damage-rider.ts";
-import type { SupportedSpellInvocation } from "../../battle-state-execution.ts";
+import type { BattleSpellProcedureKey } from "../../character-execution.ts";
 import type {
   RegisteredSpellProcedureExecution,
   SpellProcedureExecutionRegistry,
@@ -97,9 +97,7 @@ import type {
 import { snapshotBattle } from "../battle-snapshot.ts";
 import { executeStoredGlyphSpellProcedure } from "./stored-glyph-resolution.ts";
 
-type RegisteredSpellProcedureDeclaration<
-  P extends SupportedSpellInvocation["procedure"],
-> = {
+type RegisteredSpellProcedureDeclaration<P extends BattleSpellProcedureKey> = {
   readonly procedure: P;
   readonly execution: SpellProcedureExecutionDeclaration<P>;
 } & (
@@ -116,12 +114,10 @@ type RegisteredSpellProcedureDeclaration<
 );
 
 export type RegisteredSpellProcedureDeclarations = {
-  readonly [P in SupportedSpellInvocation["procedure"]]: RegisteredSpellProcedureDeclaration<P>;
+  readonly [P in BattleSpellProcedureKey]: RegisteredSpellProcedureDeclaration<P>;
 };
 
-function registeredSpellProcedureDeclaration<
-  P extends SupportedSpellInvocation["procedure"],
->(
+function registeredSpellProcedureDeclaration<P extends BattleSpellProcedureKey>(
   declaration:
     | SpellProcedureDeclaration<
         P,
@@ -426,7 +422,7 @@ export function registeredSpellProcedureExecutions(): SpellProcedureExecutionReg
 type AssertNoMissingSpellProcedure<T extends never> = T;
 export type RegisteredSpellProcedureCompletenessCheck =
   AssertNoMissingSpellProcedure<
-    | Exclude<SupportedSpellInvocation["procedure"], RegisteredSpellProcedure>
-    | Exclude<RegisteredSpellProcedure, SupportedSpellInvocation["procedure"]>
+    | Exclude<BattleSpellProcedureKey, RegisteredSpellProcedure>
+    | Exclude<RegisteredSpellProcedure, BattleSpellProcedureKey>
     | RegisteredDeclarationProcedureMismatch
   >;
