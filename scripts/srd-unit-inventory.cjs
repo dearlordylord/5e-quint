@@ -715,30 +715,6 @@ const spellUnitMissingClassifications = new Map([
     },
   ],
   [
-    "disguise_self",
-    {
-      kind: "catalog-only-closure",
-      reason:
-        "Self-disguise appearance, physical-inspection failure, and Study action adjudication are social/exploration pressure outside the current promoted runtime owners.",
-    },
-  ],
-  [
-    "druidcraft",
-    {
-      kind: "catalog-only-closure",
-      reason:
-        "Weather signs, harmless sensory effects, plant blossoming, and candle/torch/campfire narration are noncombat environmental effects outside promoted runtime owners.",
-    },
-  ],
-  [
-    "elementalism",
-    {
-      kind: "catalog-only-closure",
-      reason:
-        "Harmless elemental sensory changes, small water creation, surface marks, and crude shaping are noncombat environmental effects outside promoted runtime owners.",
-    },
-  ],
-  [
     "floating_disk",
     {
       kind: "catalog-only-closure",
@@ -763,14 +739,6 @@ const spellUnitMissingClassifications = new Map([
     },
   ],
   [
-    "mage_hand",
-    {
-      kind: "catalog-only-closure",
-      reason:
-        "Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners.",
-    },
-  ],
-  [
     "message",
     {
       kind: "catalog-only-closure",
@@ -784,22 +752,6 @@ const spellUnitMissingClassifications = new Map([
       kind: missingAuthoredRuntimeClosureKind,
       reason:
         "Ground-area Difficult Terrain, Strength save damage, Restrained application, once-per-turn area triggers, and Athletics escape require a future active area-control hazard owner plus table/spatial membership facts.",
-    },
-  ],
-  [
-    "confusion",
-    {
-      kind: missingAuthoredRuntimeClosureKind,
-      reason:
-        "Random target-turn behavior, action and Reaction denial, random movement, forced melee attacks, repeat saves, and slot-scaled area membership require a future active control Spell Effect plus table/spatial random-target and movement owners.",
-    },
-  ],
-  [
-    "control_water",
-    {
-      kind: missingAuthoredRuntimeClosureKind,
-      reason:
-        "Water volume, waves, trenches, redirected flow, whirlpools, vehicle capsizing, swimming pulls, and water-area persistence are table/spatial/environment facts outside promoted spell runtime owners.",
     },
   ],
   [
@@ -851,14 +803,6 @@ const spellUnitMissingClassifications = new Map([
     },
   ],
   [
-    "phantasmal_killer",
-    {
-      kind: missingAuthoredRuntimeClosureKind,
-      reason:
-        "Single-target fear illusion, initial and repeat Wisdom saves, Psychic damage, Ability Check and attack-roll Disadvantage, and end-turn cleanup require a future repeating-save illusion Spell Effect owner.",
-    },
-  ],
-  [
     "private_sanctum",
     {
       kind: missingAuthoredRuntimeClosureKind,
@@ -888,14 +832,6 @@ const spellUnitMissingClassifications = new Map([
       kind: missingAuthoredRuntimeClosureKind,
       reason:
         "Stone object or terrain-section reshaping, object geometry, passage/door/hinge/latch outcomes, and mechanical-detail limits are runtime-detached object and terrain-shaping facts.",
-    },
-  ],
-  [
-    "vitriolic_sphere",
-    {
-      kind: missingAuthoredRuntimeClosureKind,
-      reason:
-        "Area Dexterity save Acid damage plus failed-save-only delayed end-of-next-turn damage requires a future area save-damage owner with delayed target damage active effects and table/spatial membership facts.",
     },
   ],
   [

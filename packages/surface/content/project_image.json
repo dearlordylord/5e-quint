@@ -1,0 +1,47 @@
+{
+  "id": "project_image",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a statuette of yourself worth 5+ GP",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "day"
+      }
+    },
+    "family": "activation",
+    "level": 7,
+    "phases": [
+      {
+        "attachment": {
+          "description": "a location you have seen before within range",
+          "kind": "location"
+        },
+        "effects": [
+          {
+            "kind": "none"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "feet": 2640000,
+      "kind": "point"
+    },
+    "school": "illusion"
+  },
+  "name": "Project Image",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-P#Project Image"
+  }
+}

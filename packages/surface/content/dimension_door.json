@@ -31,7 +31,8 @@
       }
     ],
     "range": {
-      "kind": "self"
+      "feet": 500,
+      "kind": "point"
     },
     "school": "conjuration"
   },

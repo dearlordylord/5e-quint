@@ -1,0 +1,46 @@
+{
+  "id": "heroes_feast",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "amount": 10,
+      "kind": "minutes",
+      "ritual": false
+    },
+    "components": {
+      "m": "a gem-encrusted bowl worth 1,000+ GP, which the spell consumes",
+      "materialConsumed": true,
+      "materialCostGp": 1000,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 6,
+    "phases": [
+      {
+        "attachment": {
+          "description": "an unoccupied 10-foot Cube next to you",
+          "kind": "location"
+        },
+        "effects": [
+          {
+            "kind": "none"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "conjuration"
+  },
+  "name": "Heroes' Feast",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Heroes' Feast"
+  }
+}

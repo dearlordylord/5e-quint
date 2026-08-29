@@ -430,13 +430,9 @@ function assertTableSpatialUnsupportedClosureStrictClosed() {
 function assertLevelNineFinalSupportBlocksUnsupportedAndMissingRows() {
   const adoptedNoMatrixFixtureRows = [
     "create_or_destroy_water",
-    "disguise_self",
-    "druidcraft",
-    "elementalism",
     "floating_disk",
     "goodberry",
     "illusory_script",
-    "mage_hand",
     "mending",
     "message",
     "prestidigitation",
