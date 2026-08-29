@@ -8,10 +8,11 @@ import type {
   CreatureAttackRollMechanics,
   DiceExpr,
 } from "@dnd/surface/surface/types";
-import { Match } from "effect";
+import { Brand, Either, Match } from "effect";
 import type {
   SelectedStatBlockAttackDamage,
   SelectedStatBlockAttackDamageComponent,
+  SelectedStatBlockAttackDamageComponents,
   SelectedStatBlockAttackRollMechanics,
   StatBlockAttackDamage,
   StatBlockAttackDamageComponent,
@@ -54,6 +55,17 @@ type UnreferencedStatBlockAttackDamageComponent =
       Extract<StatBlockAttackDamageComponent, { readonly static: number }>,
       "componentRef"
     >;
+
+const selectedStatBlockAttackDamage =
+  Brand.nominal<SelectedStatBlockAttackDamage>();
+
+export function parseSelectedStatBlockAttackDamage(
+  damage: SelectedStatBlockAttackDamageComponents,
+) {
+  return selectedStatBlockAttackDamageHasCanonicalComponentRefs(damage)
+    ? Either.right(selectedStatBlockAttackDamage(damage))
+    : Either.left({ kind: "nonCanonicalStatBlockAttackDamageRoles" } as const);
+}
 
 export function supportedStatBlockAttackDamage(
   attack: SupportedCreatureAttackRollMechanics,
@@ -266,7 +278,7 @@ export function selectedStatBlockAttackDamageOptions(
     firstComponentOptions.map((component) => [component]),
   );
   const advantageBonus = damage.advantageBonus;
-  const options: readonly SelectedStatBlockAttackDamage[] =
+  const options: readonly SelectedStatBlockAttackDamageComponents[] =
     advantageBonus === undefined
       ? baseOptions.map((baseComponents) => ({ baseComponents }))
       : baseOptions.flatMap((baseComponents) =>
@@ -277,7 +289,12 @@ export function selectedStatBlockAttackDamageOptions(
             }),
           ),
         );
-  return deduplicatedSelectedStatBlockAttackDamageOptions(options);
+  return deduplicatedSelectedStatBlockAttackDamageOptions(
+    options.flatMap((option) => {
+      const parsed = parseSelectedStatBlockAttackDamage(option);
+      return Either.isRight(parsed) ? [parsed.right] : [];
+    }),
+  );
 }
 
 function deduplicatedSelectedStatBlockAttackDamageOptions(
@@ -344,7 +361,7 @@ function selectedStatBlockDamageComponent(
 }
 
 export function selectedStatBlockAttackDamageHasCanonicalComponentRefs(
-  damage: SelectedStatBlockAttackDamage,
+  damage: SelectedStatBlockAttackDamageComponents,
 ): boolean {
   const [firstBaseComponent, ...remainingBaseComponents] =
     damage.baseComponents;

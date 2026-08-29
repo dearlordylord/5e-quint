@@ -2,6 +2,7 @@ import { battleObjectId } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { classLevel } from "@dnd/shared/types";
+import { Either } from "effect";
 import {
   startBattleRight,
   startBattleSessionRight,
@@ -71,6 +72,7 @@ import type {
   SpellMarkedDamageRider,
 } from "./battle-state-execution.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
+import { parseSelectedStatBlockAttackDamage } from "./statblock-attack-damage-support.ts";
 import {
   attackActionBonus,
   attackActionOptionName,
@@ -236,19 +238,21 @@ describe("battle runtime: attack rolls and damage", () => {
         ...rolledAttack.attack,
         onHit: {
           ...rolledAttack.attack.onHit,
-          damage: {
-            baseComponents: [
-              firstDamageComponent,
-              {
-                kind: "fixed",
-                componentRef: statBlockBaseDamageComponentRef(
-                  statBlockBaseDamageComponentOrdinal(2),
-                ),
-                amount: 4,
-                damageType: "fire",
-              },
-            ],
-          },
+          damage: Either.getOrThrow(
+            parseSelectedStatBlockAttackDamage({
+              baseComponents: [
+                firstDamageComponent,
+                {
+                  kind: "fixed",
+                  componentRef: statBlockBaseDamageComponentRef(
+                    statBlockBaseDamageComponentOrdinal(2),
+                  ),
+                  amount: 4,
+                  damageType: "fire",
+                },
+              ],
+            }),
+          ),
         },
       },
     };

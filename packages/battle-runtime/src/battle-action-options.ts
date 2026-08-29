@@ -16,11 +16,10 @@ import type {
   StatBlockValue,
   WeaponDamage,
 } from "@dnd/surface/surface/types";
-import { Match } from "effect";
+import { Brand, Match } from "effect";
 import type { CharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-schema.ts";
 import type { AttackDamageAbilityModifierChoice } from "./battle-reducer/attack-damage-ability-modifier-choice.ts";
 import {
-  statBlockAttackDamageSelection,
   statBlockAttackDamageSelectionsEqual,
   statBlockAttackDamageSelectionKey,
   type StatBlockAttackDamageComponentRef,
@@ -451,10 +450,17 @@ export type SelectedStatBlockAttackDamageComponent =
       readonly damageType: DamageType;
     };
 
-export type SelectedStatBlockAttackDamage = {
+export type SelectedStatBlockAttackDamageComponents = {
   readonly baseComponents: ReadonlyNonEmptyArray<SelectedStatBlockAttackDamageComponent>;
   readonly advantageBonus?: SelectedStatBlockAttackDamageComponent;
 };
+
+export type SelectedStatBlockAttackDamage =
+  SelectedStatBlockAttackDamageComponents &
+    Brand.Brand<"SelectedStatBlockAttackDamage">;
+
+const statBlockAttackDamageSelectionFromSelectedDamage =
+  Brand.nominal<StatBlockAttackDamageSelection>();
 
 export type SelectedStatBlockAttackHitEffects = {
   readonly damage: SelectedStatBlockAttackDamage;
@@ -471,7 +477,7 @@ export function statBlockAttackDamageSelectionForDamage(
 ): StatBlockAttackDamageSelection {
   const [firstBaseComponent, ...remainingBaseComponents] =
     damage.baseComponents;
-  return statBlockAttackDamageSelection([
+  return statBlockAttackDamageSelectionFromSelectedDamage([
     statBlockAttackDamageComponentSelection(firstBaseComponent),
     ...remainingBaseComponents.map(statBlockAttackDamageComponentSelection),
     ...(damage.advantageBonus === undefined

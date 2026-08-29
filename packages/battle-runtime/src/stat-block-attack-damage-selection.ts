@@ -64,10 +64,18 @@ export const StatBlockAttackDamageSelection = Schema.NonEmptyArray(
 export type StatBlockAttackDamageSelection =
   typeof StatBlockAttackDamageSelection.Type;
 
+const decodeStatBlockAttackDamageSelection = Schema.decodeUnknownEither(
+  StatBlockAttackDamageSelection,
+);
+
+export function parseStatBlockAttackDamageSelection(input: unknown) {
+  return decodeStatBlockAttackDamageSelection(input);
+}
+
 export function statBlockAttackDamageSelection(
   selections: ReadonlyNonEmptyArray<StatBlockAttackDamageComponentSelection>,
-): StatBlockAttackDamageSelection {
-  return StatBlockAttackDamageSelection.make(selections);
+) {
+  return decodeStatBlockAttackDamageSelection(selections);
 }
 
 export function statBlockAttackDamageComponentRefKey(

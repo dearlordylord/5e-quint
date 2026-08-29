@@ -69,18 +69,18 @@ describe("SDK player consumer distribution", () => {
   test("bounds the declaration bundle to accessible declaration files", () => {
     expect(PUBLIC_DECLARATION_BUNDLE_MAX_FILES).toBe(520);
     expect(PUBLIC_DECLARATION_BUNDLE_MAX_BYTES).toBe(13 * 512 * 1024);
+    const exactPreExistingDiagnostics = [
+      `packages/battle-runtime/src/battle-reducer/battle-codecs.ts(5585,14): error TS4023: Exported variable 'StatBlockExecutionSnapshotSchema' has or is using name 'CurseOccurrenceEffect' from external module "${repoRoot}/packages/surface/src/surface/schema-spell" but cannot be named.`,
+      "packages/surface/src/surface/schema-spell.ts(6856,14): error TS7056: The inferred type of this node exceeds the maximum length the compiler will serialize. An explicit type annotation is needed.",
+    ];
     expect(
-      unexpectedPublicDeclarationDiagnostics([
-        "packages/surface/src/surface/schema-spell.ts(1,1): error TS7056: existing giant schema",
-      ]),
+      unexpectedPublicDeclarationDiagnostics(exactPreExistingDiagnostics),
     ).toEqual([]);
+    const newDiagnosticInPreExistingOwner =
+      "packages/battle-runtime/src/battle-reducer/battle-codecs.ts(5586,14): error TS7056: The inferred type of this node exceeds the maximum length the compiler will serialize. An explicit type annotation is needed.";
     expect(
-      unexpectedPublicDeclarationDiagnostics([
-        "packages/battle-runtime/src/battle-reducer/codec-building-blocks.ts(1,1): error TS7056: attack owner",
-      ]),
-    ).toEqual([
-      "packages/battle-runtime/src/battle-reducer/codec-building-blocks.ts(1,1): error TS7056: attack owner",
-    ]);
+      unexpectedPublicDeclarationDiagnostics([newDiagnosticInPreExistingOwner]),
+    ).toEqual([newDiagnosticInPreExistingOwner]);
     const directory = mkdtempSync(join(tmpdir(), "dnd-declaration-gate-"));
     writeFileSync(join(directory, "allowed.d.ts"), "export {};\n");
     expect(assertPublicDeclarationBundle(directory)).toEqual({

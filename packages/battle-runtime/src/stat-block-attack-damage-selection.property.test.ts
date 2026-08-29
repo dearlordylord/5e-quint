@@ -15,6 +15,7 @@ import {
 } from "./statblock-attack-damage-support.ts";
 import {
   StatBlockAttackDamageSelection,
+  parseStatBlockAttackDamageSelection,
   statBlockAdvantageBonusDamageComponentRef,
   statBlockAttackDamageSelection,
   statBlockAttackDamageSelectionKey,
@@ -44,7 +45,7 @@ const INVALID_COMPONENT_ROLE_SELECTIONS = [
     name: "rejects a bonus-only selection",
     selection: [
       {
-        componentRef: { kind: "advantageBonusDamageComponent" },
+        componentRef: statBlockAdvantageBonusDamageComponentRef,
         notation: "static",
       },
     ],
@@ -53,11 +54,15 @@ const INVALID_COMPONENT_ROLE_SELECTIONS = [
     name: "rejects a gapped base ordinal",
     selection: [
       {
-        componentRef: { kind: "baseDamageComponent", ordinal: 1 },
+        componentRef: statBlockBaseDamageComponentRef(
+          statBlockBaseDamageComponentOrdinal(1),
+        ),
         notation: "static",
       },
       {
-        componentRef: { kind: "baseDamageComponent", ordinal: 3 },
+        componentRef: statBlockBaseDamageComponentRef(
+          statBlockBaseDamageComponentOrdinal(3),
+        ),
         notation: "rolled",
       },
     ],
@@ -66,11 +71,15 @@ const INVALID_COMPONENT_ROLE_SELECTIONS = [
     name: "rejects out-of-order base ordinals",
     selection: [
       {
-        componentRef: { kind: "baseDamageComponent", ordinal: 2 },
+        componentRef: statBlockBaseDamageComponentRef(
+          statBlockBaseDamageComponentOrdinal(2),
+        ),
         notation: "rolled",
       },
       {
-        componentRef: { kind: "baseDamageComponent", ordinal: 1 },
+        componentRef: statBlockBaseDamageComponentRef(
+          statBlockBaseDamageComponentOrdinal(1),
+        ),
         notation: "static",
       },
     ],
@@ -79,11 +88,13 @@ const INVALID_COMPONENT_ROLE_SELECTIONS = [
     name: "rejects an Advantage bonus before the base components",
     selection: [
       {
-        componentRef: { kind: "advantageBonusDamageComponent" },
+        componentRef: statBlockAdvantageBonusDamageComponentRef,
         notation: "rolled",
       },
       {
-        componentRef: { kind: "baseDamageComponent", ordinal: 1 },
+        componentRef: statBlockBaseDamageComponentRef(
+          statBlockBaseDamageComponentOrdinal(1),
+        ),
         notation: "static",
       },
     ],
@@ -92,24 +103,17 @@ const INVALID_COMPONENT_ROLE_SELECTIONS = [
     name: "rejects a duplicate Advantage bonus role",
     selection: [
       {
-        componentRef: { kind: "baseDamageComponent", ordinal: 1 },
+        componentRef: statBlockBaseDamageComponentRef(
+          statBlockBaseDamageComponentOrdinal(1),
+        ),
         notation: "static",
       },
       {
-        componentRef: { kind: "advantageBonusDamageComponent" },
+        componentRef: statBlockAdvantageBonusDamageComponentRef,
         notation: "rolled",
       },
       {
-        componentRef: { kind: "advantageBonusDamageComponent" },
-        notation: "static",
-      },
-    ],
-  },
-  {
-    name: "rejects a malformed zero base ordinal",
-    selection: [
-      {
-        componentRef: { kind: "baseDamageComponent", ordinal: 0 },
+        componentRef: statBlockAdvantageBonusDamageComponentRef,
         notation: "static",
       },
     ],
@@ -127,7 +131,10 @@ describe("Stat Block per-component damage selection properties", () => {
             baseNotations,
             advantageBonusNotation,
           );
-          const selection = statBlockAttackDamageSelection(selections);
+          const parsedSelection = statBlockAttackDamageSelection(selections);
+          expect(Either.isRight(parsedSelection)).toBe(true);
+          if (Either.isLeft(parsedSelection)) return;
+          const selection = parsedSelection.right;
           const encoded = Schema.encodeSync(StatBlockAttackDamageSelection)(
             selection,
           );
@@ -150,9 +157,19 @@ describe("Stat Block per-component damage selection properties", () => {
   });
 
   it.each(INVALID_COMPONENT_ROLE_SELECTIONS)("$name", ({ selection }) => {
+    const result = statBlockAttackDamageSelection(selection);
+    expect(Either.isLeft(result)).toBe(true);
+  });
+
+  it("rejects a malformed zero base ordinal at the raw boundary", () => {
     expect(
       Either.isLeft(
-        Schema.decodeUnknownEither(StatBlockAttackDamageSelection)(selection),
+        parseStatBlockAttackDamageSelection([
+          {
+            componentRef: { kind: "baseDamageComponent", ordinal: 0 },
+            notation: "static",
+          },
+        ]),
       ),
     ).toBe(true);
   });
@@ -175,9 +192,7 @@ describe("Stat Block per-component damage selection properties", () => {
         notationArbitrary,
         notationArbitrary,
         (componentRef, firstNotation, secondNotation) => {
-          const decoded = Schema.decodeUnknownEither(
-            StatBlockAttackDamageSelection,
-          )([
+          const decoded = statBlockAttackDamageSelection([
             { componentRef, notation: firstNotation },
             { componentRef, notation: secondNotation },
           ]);

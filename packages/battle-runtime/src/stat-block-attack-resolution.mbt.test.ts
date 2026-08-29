@@ -5,13 +5,14 @@ import { movementFeet } from "@dnd/shared/types";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import { isDeepStrictEqual } from "node:util";
 
-import { Match } from "effect";
+import { Either, Match } from "effect";
 import { describe, it } from "vitest";
 
 import type {
   AuthoredExecutableProcedure,
   StatBlockRecord,
 } from "@dnd/surface/surface/types";
+import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -39,6 +40,13 @@ import {
   startBattleRight,
   statBlockCreatureInit,
 } from "./battle-runtime.test-support.ts";
+import type { StatBlockAttackActionOption } from "./battle-action-options.ts";
+import { attackActionOptionForSubject } from "./battle-reducer/attack-damage-apply.ts";
+import {
+  attackDamageByTypeEntries,
+  fixedAttackDamageByTypeEntries,
+  type DamageAmountByTypeEntry,
+} from "./battle-reducer/damage-helpers.ts";
 import {
   statBlockAdvantageBonusDamageComponentRef,
   statBlockAttackDamageSelection,
@@ -65,6 +73,7 @@ const STAT_BLOCK_ATTACK_PARITY_SCENARIOS = [
   "singleRollableSelectedRolledMiss",
   "singleRollableSelectedRolledCritical",
   "twoRollableHeterogeneousHit",
+  "twoRollableTypedImmunityHit",
   "twoDistinctStaticAggregationHit",
   "intrinsicStaticAndRollableHit",
   "advantageBonusRiderHit",
@@ -83,6 +92,13 @@ const STAT_BLOCK_ATTACK_FIXTURE_FAMILIES = [
 ] as const;
 type StatBlockAttackFixtureFamily =
   (typeof STAT_BLOCK_ATTACK_FIXTURE_FAMILIES)[number];
+
+const STAT_BLOCK_ATTACK_TARGET_DAMAGE_ADJUSTMENTS = [
+  "none",
+  "piercingImmunity",
+] as const;
+type StatBlockAttackTargetDamageAdjustment =
+  (typeof STAT_BLOCK_ATTACK_TARGET_DAMAGE_ADJUSTMENTS)[number];
 
 type StatBlockAttackParityHole = "TargetChoice" | "AttackRoll" | "DamageRoll";
 
@@ -109,6 +125,7 @@ type ScenarioConfiguration = {
   readonly scenario: StatBlockAttackParityScenario;
   readonly quintInit: string;
   readonly family: StatBlockAttackFixtureFamily;
+  readonly targetDamageAdjustment: StatBlockAttackTargetDamageAdjustment;
   readonly damageSelection: StatBlockAttackDamageSelection;
   readonly attackRoll: {
     readonly naturalD20: number;
@@ -131,6 +148,7 @@ const SCENARIO_BY_TAG = {
   SingleRollableSelectedRolledMiss: "singleRollableSelectedRolledMiss",
   SingleRollableSelectedRolledCritical: "singleRollableSelectedRolledCritical",
   TwoRollableHeterogeneousHit: "twoRollableHeterogeneousHit",
+  TwoRollableTypedImmunityHit: "twoRollableTypedImmunityHit",
   TwoDistinctStaticAggregationHit: "twoDistinctStaticAggregationHit",
   IntrinsicStaticAndRollableHit: "intrinsicStaticAndRollableHit",
   AdvantageBonusRiderHit: "advantageBonusRiderHit",
@@ -151,6 +169,7 @@ const DRIVER_SCHEMA = {
   initSingleRollableSelectedRolledMiss: {},
   initSingleRollableSelectedRolledCritical: {},
   initTwoRollableHeterogeneousHit: {},
+  initTwoRollableTypedImmunityHit: {},
   initTwoDistinctStaticAggregationHit: {},
   initIntrinsicStaticAndRollableHit: {},
   initAdvantageBonusRiderHit: {},
@@ -185,6 +204,7 @@ const scenarioConfigurations = [
     scenario: "staticOnlyHit",
     quintInit: "initStaticOnlyHit",
     family: "staticOnly",
+    targetDamageAdjustment: "none",
     damageSelection: singleBaseDamageSelection("static"),
     attackRoll: HIT_ROLL,
     damageRollGroups: [],
@@ -193,6 +213,7 @@ const scenarioConfigurations = [
     scenario: "singleRollableSelectedStaticHit",
     quintInit: "initSingleRollableSelectedStaticHit",
     family: "singleRollable",
+    targetDamageAdjustment: "none",
     damageSelection: singleBaseDamageSelection("static"),
     attackRoll: HIT_ROLL,
     damageRollGroups: [],
@@ -201,6 +222,7 @@ const scenarioConfigurations = [
     scenario: "singleRollableSelectedRolledHit",
     quintInit: "initSingleRollableSelectedRolledHit",
     family: "singleRollable",
+    targetDamageAdjustment: "none",
     damageSelection: singleBaseDamageSelection("rolled"),
     attackRoll: HIT_ROLL,
     damageRollGroups: [[3]],
@@ -209,6 +231,7 @@ const scenarioConfigurations = [
     scenario: "singleRollableSelectedRolledMiss",
     quintInit: "initSingleRollableSelectedRolledMiss",
     family: "singleRollable",
+    targetDamageAdjustment: "none",
     damageSelection: singleBaseDamageSelection("rolled"),
     attackRoll: MISS_ROLL,
     damageRollGroups: [],
@@ -217,6 +240,7 @@ const scenarioConfigurations = [
     scenario: "singleRollableSelectedRolledCritical",
     quintInit: "initSingleRollableSelectedRolledCritical",
     family: "singleRollable",
+    targetDamageAdjustment: "none",
     damageSelection: singleBaseDamageSelection("rolled"),
     attackRoll: CRITICAL_ROLL,
     damageRollGroups: [[3, 4]],
@@ -225,6 +249,19 @@ const scenarioConfigurations = [
     scenario: "twoRollableHeterogeneousHit",
     quintInit: "initTwoRollableHeterogeneousHit",
     family: "twoRollable",
+    targetDamageAdjustment: "none",
+    damageSelection: twoBaseDamageSelection({
+      firstBaseComponent: "static",
+      secondBaseComponent: "rolled",
+    }),
+    attackRoll: HIT_ROLL,
+    damageRollGroups: [[4]],
+  },
+  {
+    scenario: "twoRollableTypedImmunityHit",
+    quintInit: "initTwoRollableTypedImmunityHit",
+    family: "twoRollable",
+    targetDamageAdjustment: "piercingImmunity",
     damageSelection: twoBaseDamageSelection({
       firstBaseComponent: "static",
       secondBaseComponent: "rolled",
@@ -236,6 +273,7 @@ const scenarioConfigurations = [
     scenario: "twoDistinctStaticAggregationHit",
     quintInit: "initTwoDistinctStaticAggregationHit",
     family: "twoRollable",
+    targetDamageAdjustment: "none",
     damageSelection: twoBaseDamageSelection({
       firstBaseComponent: "static",
       secondBaseComponent: "static",
@@ -247,6 +285,7 @@ const scenarioConfigurations = [
     scenario: "intrinsicStaticAndRollableHit",
     quintInit: "initIntrinsicStaticAndRollableHit",
     family: "intrinsicStaticAndRollable",
+    targetDamageAdjustment: "none",
     damageSelection: twoBaseDamageSelection({
       firstBaseComponent: "static",
       secondBaseComponent: "rolled",
@@ -258,6 +297,7 @@ const scenarioConfigurations = [
     scenario: "advantageBonusRiderHit",
     quintInit: "initAdvantageBonusRiderHit",
     family: "advantageBonusAndRider",
+    targetDamageAdjustment: "none",
     damageSelection: baseAndAdvantageBonusDamageSelection({
       baseComponent: "static",
       advantageBonusComponent: "rolled",
@@ -269,6 +309,7 @@ const scenarioConfigurations = [
     scenario: "normalRollAdvantageBonusInactiveHit",
     quintInit: "initNormalRollAdvantageBonusInactiveHit",
     family: "advantageBonusAndRider",
+    targetDamageAdjustment: "none",
     damageSelection: baseAndAdvantageBonusDamageSelection({
       baseComponent: "static",
       advantageBonusComponent: "rolled",
@@ -280,6 +321,7 @@ const scenarioConfigurations = [
     scenario: "advantageBonusRiderMiss",
     quintInit: "initAdvantageBonusRiderMiss",
     family: "advantageBonusAndRider",
+    targetDamageAdjustment: "none",
     damageSelection: baseAndAdvantageBonusDamageSelection({
       baseComponent: "static",
       advantageBonusComponent: "rolled",
@@ -289,55 +331,95 @@ const scenarioConfigurations = [
   },
 ] as const satisfies readonly ScenarioConfiguration[];
 
+function assertScenarioConfigurationCoverage(): void {
+  const scenarios = new Set(
+    scenarioConfigurations.map(({ scenario }) => scenario),
+  );
+  const fixtureFamilies = new Set(
+    scenarioConfigurations.map(({ family }) => family),
+  );
+  const targetDamageAdjustments = new Set(
+    scenarioConfigurations.map(
+      ({ targetDamageAdjustment }) => targetDamageAdjustment,
+    ),
+  );
+  if (
+    scenarioConfigurations.length !==
+      STAT_BLOCK_ATTACK_PARITY_SCENARIOS.length ||
+    scenarios.size !== STAT_BLOCK_ATTACK_PARITY_SCENARIOS.length ||
+    !STAT_BLOCK_ATTACK_PARITY_SCENARIOS.every((scenario) =>
+      scenarios.has(scenario),
+    ) ||
+    !STAT_BLOCK_ATTACK_FIXTURE_FAMILIES.every((family) =>
+      fixtureFamilies.has(family),
+    ) ||
+    !STAT_BLOCK_ATTACK_TARGET_DAMAGE_ADJUSTMENTS.every((adjustment) =>
+      targetDamageAdjustments.has(adjustment),
+    )
+  ) {
+    throw new Error(
+      "Stat Block attack parity scenarios must cover each scenario, fixture family, and target damage adjustment exactly as declared.",
+    );
+  }
+}
+
+assertScenarioConfigurationCoverage();
+
 function singleBaseDamageSelection(
   notation: "rolled" | "static",
 ): StatBlockAttackDamageSelection {
-  return statBlockAttackDamageSelection([
-    {
-      componentRef: statBlockBaseDamageComponentRef(
-        statBlockBaseDamageComponentOrdinal(1),
-      ),
-      notation,
-    },
-  ]);
+  return Either.getOrThrow(
+    statBlockAttackDamageSelection([
+      {
+        componentRef: statBlockBaseDamageComponentRef(
+          statBlockBaseDamageComponentOrdinal(1),
+        ),
+        notation,
+      },
+    ]),
+  );
 }
 
 function twoBaseDamageSelection(input: {
   readonly firstBaseComponent: "rolled" | "static";
   readonly secondBaseComponent: "rolled" | "static";
 }): StatBlockAttackDamageSelection {
-  return statBlockAttackDamageSelection([
-    {
-      componentRef: statBlockBaseDamageComponentRef(
-        statBlockBaseDamageComponentOrdinal(1),
-      ),
-      notation: input.firstBaseComponent,
-    },
-    {
-      componentRef: statBlockBaseDamageComponentRef(
-        statBlockBaseDamageComponentOrdinal(2),
-      ),
-      notation: input.secondBaseComponent,
-    },
-  ]);
+  return Either.getOrThrow(
+    statBlockAttackDamageSelection([
+      {
+        componentRef: statBlockBaseDamageComponentRef(
+          statBlockBaseDamageComponentOrdinal(1),
+        ),
+        notation: input.firstBaseComponent,
+      },
+      {
+        componentRef: statBlockBaseDamageComponentRef(
+          statBlockBaseDamageComponentOrdinal(2),
+        ),
+        notation: input.secondBaseComponent,
+      },
+    ]),
+  );
 }
 
 function baseAndAdvantageBonusDamageSelection(input: {
   readonly baseComponent: "rolled" | "static";
   readonly advantageBonusComponent: "rolled" | "static";
 }): StatBlockAttackDamageSelection {
-  return statBlockAttackDamageSelection([
-    {
-      componentRef: statBlockBaseDamageComponentRef(
-        statBlockBaseDamageComponentOrdinal(1),
-      ),
-      notation: input.baseComponent,
-    },
-    {
-      componentRef: statBlockAdvantageBonusDamageComponentRef,
-      notation: input.advantageBonusComponent,
-    },
-  ]);
+  return Either.getOrThrow(
+    statBlockAttackDamageSelection([
+      {
+        componentRef: statBlockBaseDamageComponentRef(
+          statBlockBaseDamageComponentOrdinal(1),
+        ),
+        notation: input.baseComponent,
+      },
+      {
+        componentRef: statBlockAdvantageBonusDamageComponentRef,
+        notation: input.advantageBonusComponent,
+      },
+    ]),
+  );
 }
 
 function createStatBlockAttackParityDriver(
@@ -346,12 +428,13 @@ function createStatBlockAttackParityDriver(
   return defineDriver<typeof DRIVER_SCHEMA, StatBlockAttackParityProjection>(
     DRIVER_SCHEMA,
     () => {
-      let resolutionState = statBlockAttackParityBattle(configuration.family);
+      let resolutionState = statBlockAttackParityBattle(configuration);
       let state = resolutionState;
       let subject = requireStatBlockAttackSubject(
         resolutionState,
         configuration.damageSelection,
       );
+      let attack = requireStatBlockAttackOption(resolutionState, subject);
       let holes: readonly BattleHole[] = [];
       let targetChoice: Extract<
         BattleFill,
@@ -365,19 +448,22 @@ function createStatBlockAttackParityDriver(
       let attackHits = false;
       let critical = false;
       let factsLegal = true;
+      let rawDamageAmount = 0;
 
       function reset(): void {
-        resolutionState = statBlockAttackParityBattle(configuration.family);
+        resolutionState = statBlockAttackParityBattle(configuration);
         state = resolutionState;
         subject = requireStatBlockAttackSubject(
           resolutionState,
           configuration.damageSelection,
         );
+        attack = requireStatBlockAttackOption(resolutionState, subject);
         targetChoice = null;
         attackRoll = null;
         attackHits = false;
         critical = false;
         factsLegal = true;
+        rawDamageAmount = 0;
         const result = resolveBattleSubject({
           state: resolutionState,
           subject,
@@ -437,6 +523,7 @@ function createStatBlockAttackParityDriver(
         initSingleRollableSelectedRolledMiss: reset,
         initSingleRollableSelectedRolledCritical: reset,
         initTwoRollableHeterogeneousHit: reset,
+        initTwoRollableTypedImmunityHit: reset,
         initTwoDistinctStaticAggregationHit: reset,
         initIntrinsicStaticAndRollableHit: reset,
         initAdvantageBonusRiderHit: reset,
@@ -460,18 +547,35 @@ function createStatBlockAttackParityDriver(
               : {}),
           });
           resolveCurrentSubject([selectedTargetChoice, attackRoll]);
+          if (attackHits && !holes.some((hole) => hole.kind === "rolledDice")) {
+            rawDamageAmount = fixedStatBlockAttackDamageAmount({
+              state: resolutionState,
+              attack,
+              attackRoll,
+            });
+          }
         },
         doFillDamageRoll: () => {
           const selectedTargetChoice = requireTargetChoice(targetChoice);
           const selectedAttackRoll = requireAttackRoll(attackRoll);
+          const damageRoll = damageRollFillWithGroups(
+            requireHole(holes, "rolledDice"),
+            configuration.damageRollGroups,
+          );
+          const resolvedRawDamageAmount = rolledStatBlockAttackDamageAmount({
+            state: resolutionState,
+            subject,
+            attack,
+            attackRoll: selectedAttackRoll,
+            damageRoll,
+            critical,
+          });
           resolveCurrentSubject([
             selectedTargetChoice,
             selectedAttackRoll,
-            damageRollFillWithGroups(
-              requireHole(holes, "rolledDice"),
-              configuration.damageRollGroups,
-            ),
+            damageRoll,
           ]);
+          rawDamageAmount = resolvedRawDamageAmount;
         },
         step: () => {},
         getState: () =>
@@ -483,6 +587,7 @@ function createStatBlockAttackParityDriver(
             attackHits,
             critical,
             factsLegal,
+            rawDamageAmount,
           }),
       };
     },
@@ -520,8 +625,9 @@ describe("Stat Block attack semantic parity focused MBT", () => {
 });
 
 function statBlockAttackParityBattle(
-  family: StatBlockAttackFixtureFamily,
+  configuration: ScenarioConfiguration,
 ): BattleState {
+  const { family, targetDamageAdjustment } = configuration;
   return startBattleRight({
     battleId: battleId(`stat-block-attack-parity-${family}`),
     combatants: [
@@ -538,6 +644,7 @@ function statBlockAttackParityBattle(
         statBlock: statBlockAttackParityBystander(
           "stat_block_attack_parity_target",
           "Synthetic Attack Parity Target",
+          targetDamageAdjustment,
         ),
       }),
       statBlockCreatureInit({
@@ -547,6 +654,7 @@ function statBlockAttackParityBattle(
         statBlock: statBlockAttackParityBystander(
           "stat_block_attack_parity_ally",
           "Synthetic Attack Parity Ally",
+          "none",
         ),
       }),
     ],
@@ -559,6 +667,7 @@ function statBlockAttackParityActor(
   const base = statBlockAttackParityBystander(
     `stat_block_attack_parity_${family}`,
     "Synthetic Attack Parity Actor",
+    "none",
   );
   return {
     ...base,
@@ -591,6 +700,7 @@ function statBlockAttackParityActor(
 function statBlockAttackParityBystander(
   id: string,
   name: string,
+  targetDamageAdjustment: StatBlockAttackTargetDamageAdjustment,
 ): StatBlockRecord {
   return {
     id: parseSharedStatBlockId(id),
@@ -619,6 +729,15 @@ function statBlockAttackParityBystander(
       initiative: { modifier: 0, score: 10 },
       passivePerception: 10,
       communication: { kind: "none" },
+      ...Match.value(targetDamageAdjustment).pipe(
+        Match.when("none", () => ({})),
+        Match.when("piercingImmunity", () => ({
+          immunities: decodeCreatureImmunityDeclarationSync({
+            damageTypes: ["piercing"],
+          }),
+        })),
+        Match.exhaustive,
+      ),
     },
   };
 }
@@ -685,7 +804,7 @@ function fixtureAttack(family: StatBlockAttackFixtureFamily): StatBlockAttack {
             amount: {
               kind: "fixed" as const,
               expr: { dice: 1, dieSize: 6 },
-              static: 3,
+              static: 4,
             },
           },
         ],
@@ -794,6 +913,67 @@ function requireStatBlockAttackSubject(
   return subject;
 }
 
+function requireStatBlockAttackOption(
+  state: BattleState,
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >,
+): StatBlockAttackActionOption {
+  const attack = attackActionOptionForSubject(state, subject);
+  if (attack?.kind !== "statBlockAttack") {
+    throw new Error("Expected selected Stat Block attack option.");
+  }
+  return attack;
+}
+
+function fixedStatBlockAttackDamageAmount(input: {
+  readonly state: BattleState;
+  readonly attack: StatBlockAttackActionOption;
+  readonly attackRoll: Extract<BattleFill, { readonly kind: "attackRoll" }>;
+}): number {
+  const entries = fixedAttackDamageByTypeEntries(
+    input.state,
+    input.state.combatants.get(actorId),
+    input.attack,
+    input.attackRoll.value,
+  );
+  if (entries === null) {
+    throw new Error("Expected selected fixed Stat Block attack damage.");
+  }
+  return totalRawDamageAmount(entries);
+}
+
+function rolledStatBlockAttackDamageAmount(input: {
+  readonly state: BattleState;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >;
+  readonly attack: StatBlockAttackActionOption;
+  readonly attackRoll: Extract<BattleFill, { readonly kind: "attackRoll" }>;
+  readonly damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>;
+  readonly critical: boolean;
+}): number {
+  return totalRawDamageAmount(
+    attackDamageByTypeEntries(
+      input.state,
+      input.state.combatants.get(actorId),
+      input.attack,
+      input.subject.procedureRef,
+      input.damageRoll,
+      input.critical,
+      input.attackRoll.value,
+    ),
+  );
+}
+
+function totalRawDamageAmount(
+  entries: readonly DamageAmountByTypeEntry[],
+): number {
+  return entries.reduce((total, entry) => total + entry.amount, 0);
+}
+
 function statBlockAttackTargetChoiceFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   attackRollMode: "normal" | "advantage",
@@ -876,6 +1056,7 @@ function projectStatBlockAttackParityState(input: {
   readonly attackHits: boolean;
   readonly critical: boolean;
   readonly factsLegal: boolean;
+  readonly rawDamageAmount: number;
 }): StatBlockAttackParityProjection {
   const target = requireTarget(input.state);
   const damageApplied = targetInitialHp - Number(target.hp);
@@ -885,7 +1066,7 @@ function projectStatBlockAttackParityState(input: {
     targetProne: hasCondition(target.conditions, "prone"),
     attackHits: input.attackHits,
     critical: input.critical,
-    rawDamageAmount: damageApplied,
+    rawDamageAmount: input.rawDamageAmount,
     adjustedDamageAmount: damageApplied,
     factsLegal: input.factsLegal,
     holes: input.holes.map(projectStatBlockAttackParityHole).sort(),

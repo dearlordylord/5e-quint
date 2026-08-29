@@ -261,6 +261,7 @@ const SelectedStatBlockAttackDamageSchema = Schema.Struct({
     message: () =>
       "Selected Stat Block damage component refs must form the canonical role bijection.",
   }),
+  Schema.brand("SelectedStatBlockAttackDamage"),
 );
 
 const StatBlockAttackHitTargetSizeConditionRiderSchema = Schema.Struct({

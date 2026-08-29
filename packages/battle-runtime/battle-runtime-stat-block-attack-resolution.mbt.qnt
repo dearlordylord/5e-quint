@@ -18,6 +18,7 @@ module battleRuntimeStatBlockAttackResolutionMbt {
     | SingleRollableSelectedRolledMiss
     | SingleRollableSelectedRolledCritical
     | TwoRollableHeterogeneousHit
+    | TwoRollableTypedImmunityHit
     | TwoDistinctStaticAggregationHit
     | IntrinsicStaticAndRollableHit
     | AdvantageBonusRiderHit
@@ -174,12 +175,26 @@ module battleRuntimeStatBlockAttackResolutionMbt {
           targetDamageAdjustments: noDamageAdjustmentFacts,
           hitRider: NoStatBlockHitRider,
         }
+      | TwoRollableTypedImmunityHit => {
+          attackRoll: hitRoll,
+          attackRollMode: NormalStatBlockAttackRoll,
+          firstBaseDamageComponent: baseStaticDamage(1, PiercingDamage, 3),
+          remainingBaseDamageComponents:
+            List(baseRolledDamage(2, PoisonDamage, 1, 6, List(4), 0)),
+          advantageBonusDamage: NoStatBlockAdvantageBonusDamage,
+          targetDamageAdjustments: {
+            immunities: Set(PiercingDamage),
+            resistances: Set(),
+            vulnerabilities: Set(),
+          },
+          hitRider: NoStatBlockHitRider,
+        }
       | TwoDistinctStaticAggregationHit => {
           attackRoll: hitRoll,
           attackRollMode: NormalStatBlockAttackRoll,
           firstBaseDamageComponent: baseStaticDamage(1, PiercingDamage, 3),
           remainingBaseDamageComponents:
-            List(baseStaticDamage(2, PoisonDamage, 3)),
+            List(baseStaticDamage(2, PoisonDamage, 4)),
           advantageBonusDamage: NoStatBlockAdvantageBonusDamage,
           targetDamageAdjustments: noDamageAdjustmentFacts,
           hitRider: NoStatBlockHitRider,
@@ -294,6 +309,8 @@ module battleRuntimeStatBlockAttackResolutionMbt {
     recordInitial(SingleRollableSelectedRolledCritical)
   action initTwoRollableHeterogeneousHit =
     recordInitial(TwoRollableHeterogeneousHit)
+  action initTwoRollableTypedImmunityHit =
+    recordInitial(TwoRollableTypedImmunityHit)
   action initTwoDistinctStaticAggregationHit =
     recordInitial(TwoDistinctStaticAggregationHit)
   action initIntrinsicStaticAndRollableHit =

@@ -214,14 +214,16 @@ import {
 export function singleBaseStatBlockAttackDamageSelectionForTest(
   notation: StatBlockDamageComponentNotation,
 ) {
-  return statBlockAttackDamageSelection([
-    {
-      componentRef: statBlockBaseDamageComponentRef(
-        statBlockBaseDamageComponentOrdinal(1),
-      ),
-      notation,
-    },
-  ]);
+  return Either.getOrThrow(
+    statBlockAttackDamageSelection([
+      {
+        componentRef: statBlockBaseDamageComponentRef(
+          statBlockBaseDamageComponentOrdinal(1),
+        ),
+        notation,
+      },
+    ]),
+  );
 }
 
 export function battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
