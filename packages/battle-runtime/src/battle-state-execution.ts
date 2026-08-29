@@ -4486,6 +4486,12 @@ export type BattleInitializationLeafIssue =
       readonly ownerPath?: readonly (string | number)[];
     } & BattleInitializationIssueFacts)
   | {
+      readonly tag: "statBlockResourceGraphIssue";
+      readonly issues: ReadonlyNonEmptyArray<StatBlockResourceGraphAdmissionFailure>;
+      readonly combatantId: CombatantId;
+      readonly ownerPath: readonly (string | number)[];
+    }
+  | {
       readonly tag: "weaponLoadoutMismatch";
       readonly slot: "main-hand" | "off-hand";
       readonly ownerPath?: readonly (string | number)[];

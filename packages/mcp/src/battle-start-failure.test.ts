@@ -1,9 +1,18 @@
-import { characterId } from "@dnd/battle-runtime";
+import {
+  characterId,
+  combatantId,
+  type BattleInitializationIssue,
+} from "@dnd/battle-runtime";
 import type { BattleRosterIssue } from "@dnd/character-battle-runtime";
 import { unitId } from "@dnd/shared/game-facts";
+import { StatBlockProcedureResourceOrdinalSchema } from "@dnd/surface/surface/schema";
+import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { battleRosterIssuePayload } from "./battle-start-failure.ts";
+import {
+  battleRosterIssuePayload,
+  battleRuntimeIssuePayload,
+} from "./battle-start-failure.ts";
 
 const characterProjectionIdentity = {
   kind: "characterSheetProjection" as const,
@@ -13,6 +22,34 @@ const characterProjectionIdentity = {
 };
 
 describe("battle start failure projection", () => {
+  test("retains structured Stat Block resource graph issues", () => {
+    const resourceOrdinal = Schema.decodeUnknownSync(
+      StatBlockProcedureResourceOrdinalSchema,
+    )(3);
+    const issue = {
+      tag: "statBlockResourceGraphIssue",
+      issues: [
+        {
+          kind: "missingResourceDeclaration",
+          ordinal: resourceOrdinal,
+        },
+      ],
+      combatantId: combatantId("combatant:resource-graph-failure"),
+      ownerPath: ["initialCombatants", 2],
+    } as const satisfies BattleInitializationIssue;
+
+    expect(battleRuntimeIssuePayload(issue)).toEqual([
+      {
+        kind: "battleInitialization",
+        code: "BATTLE_INITIALIZATION_INVALID",
+        ownerPath: ["initialCombatants", 2],
+        issueTag: "statBlockResourceGraphIssue",
+        combatantId: issue.combatantId,
+        issues: issue.issues,
+      },
+    ]);
+  });
+
   test.each([
     {
       cause: "invalidBuildSpellAccess" as const,

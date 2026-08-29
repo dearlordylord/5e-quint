@@ -242,6 +242,78 @@ describe("Stat Block combatant admission capability", () => {
     );
   });
 
+  test("startBattle preserves the complete Stat Block resource graph failure", () => {
+    const init = statBlockCreatureInit({
+      combatantId: admittedCombatantId,
+      initiative: 10,
+      statBlock: monsterResourceStatBlock(),
+    });
+    const source = init.creatureInit.source;
+    const [firstResource, secondResource] = source.resources;
+    const [firstProcedure, ...remainingProcedures] = source.procedures;
+    if (
+      firstResource === undefined ||
+      secondResource === undefined ||
+      firstProcedure === undefined ||
+      firstProcedure.kind === "spellcasting"
+    ) {
+      throw new Error("Expected resource-backed Stat Block procedures.");
+    }
+    const missingThree = Schema.decodeUnknownSync(
+      StatBlockProcedureResourceOrdinalSchema,
+    )(3);
+    const missingFour = Schema.decodeUnknownSync(
+      StatBlockProcedureResourceOrdinalSchema,
+    )(4);
+    const issues = [
+      { kind: "duplicateResourceOrdinal", ordinal: firstResource.ordinal },
+      { kind: "duplicateResourceOrdinal", ordinal: secondResource.ordinal },
+      { kind: "missingResourceDeclaration", ordinal: missingThree },
+      { kind: "missingResourceDeclaration", ordinal: missingFour },
+    ] as const;
+    const result = startBattle({
+      battleId: battleId("resource-graph-admission-failure"),
+      combatants: [
+        {
+          ...init,
+          creatureInit: {
+            ...init.creatureInit,
+            source: {
+              ...source,
+              resources: [
+                firstResource,
+                firstResource,
+                secondResource,
+                secondResource,
+              ],
+              procedures: [
+                {
+                  ...firstProcedure,
+                  resourceRefs: [
+                    firstResource.ordinal,
+                    missingThree,
+                    missingThree,
+                    missingFour,
+                  ],
+                },
+                ...remainingProcedures,
+              ],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result).toEqual(
+      Either.left({
+        tag: "statBlockResourceGraphIssue",
+        issues,
+        combatantId: admittedCombatantId,
+        ownerPath: ["initialCombatants", 0],
+      }),
+    );
+  });
+
   test("rejects nonliteral authored Stat Block initialization facts at the schema boundary", () => {
     const source = statBlockRecord();
     expectCasterDerivedArmorClassSourceRejectedAtStatBlockDecodeBoundary(

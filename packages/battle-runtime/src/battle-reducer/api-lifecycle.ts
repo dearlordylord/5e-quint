@@ -114,11 +114,19 @@ function battleInitializationLeafIssueFromStateIssue(
   ownerPath?: readonly (string | number)[],
 ): BattleInitializationLeafIssue {
   if (issue.tag === "statBlockResourceGraphIssue") {
-    return battleInitializationIssue(
-      fallbackFacts,
-      battleStateInitIssueMessage(issue),
+    if (!("combatantId" in fallbackFacts) || ownerPath === undefined) {
+      return battleInitializationIssue(
+        fallbackFacts,
+        battleStateInitIssueMessage(issue),
+        ownerPath,
+      );
+    }
+    return {
+      tag: issue.tag,
+      issues: issue.issues,
+      combatantId: fallbackFacts.combatantId,
       ownerPath,
-    );
+    };
   }
   const resolvedOwnerPath = issue.ownerPath ?? ownerPath;
   if (issue.tag === "weaponLoadoutMismatch") {
@@ -255,6 +263,10 @@ export function battleInitializationIssueLeaves(
       );
     }),
     Match.when({ tag: "battleStateInitIssue" }, battleInitializationLeafList),
+    Match.when(
+      { tag: "statBlockResourceGraphIssue" },
+      battleInitializationLeafList,
+    ),
     Match.when({ tag: "weaponLoadoutMismatch" }, battleInitializationLeafList),
     Match.exhaustive,
   );

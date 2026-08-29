@@ -107,7 +107,14 @@ export function admitBattleStatBlockCombatantSource(input: {
   AdmittedBattleStatBlockCombatant,
   StatBlockCombatantAdmissionIssue
 > {
-  const statBlock = input.source;
+  const resourceGraph = admitStatBlockResourceGraph(input.source);
+  if (Either.isLeft(resourceGraph)) {
+    return Either.left({
+      tag: "statBlockResourceGraphIssue",
+      issues: resourceGraph.left,
+    });
+  }
+  const statBlock = resourceGraph.right;
   if (typeof statBlock.statBlock.creatureType !== "string") {
     return issue("Battle runtime requires a concrete creature type.", {
       kind: "statBlockCombatantInvalid",
