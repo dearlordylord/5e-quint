@@ -71,7 +71,7 @@ export function spatialEffectCompositionRuntimeRouteForDiscoveredAct(
       "battleAreaHazard",
     );
   }
-  if (act.subject.command === "greaseGroundHazardSave") {
+  if (act.subject.command === "persistentAreaSaveConditionSave") {
     return spatialCompositionDiscover(
       "spatialEffect",
       ["savingThrowOutcome"],
@@ -85,7 +85,7 @@ export function spatialEffectCompositionRuntimeRouteForDiscoveredAct(
       "battleAreaHazard",
     );
   }
-  if (act.subject.command === "webRestraintSave") {
+  if (act.subject.command === "persistentAreaSaveConditionEscapeSave") {
     return spatialCompositionDiscover(
       "spatialEffect",
       ["savingThrowOutcome"],
@@ -123,8 +123,8 @@ export function spatialEffectCompositionRouteForResolution(
     input.subject,
   )?.procedure;
   if (
-    procedure === "dancingLightsSeparateCast" ||
-    procedure === "dancingLightsCombinedCast"
+    procedure === "movableLightSeparateCast" ||
+    procedure === "movableLightCombinedCast"
   ) {
     return [
       spatialCompositionResolveWithoutFill(
@@ -141,7 +141,7 @@ export function spatialEffectCompositionRouteForResolution(
       ),
     ];
   }
-  if (procedure === "dancingLightsReposition") {
+  if (procedure === "movableLightReposition") {
     return [
       spatialCompositionResolve(
         "spatialEffect",
@@ -191,7 +191,7 @@ export function spatialEffectCompositionRouteForResolution(
       ),
     ];
   }
-  if (procedure === "fogCloudObscurement") {
+  if (procedure === "persistentAreaTrait") {
     return [
       spatialCompositionResolve(
         "spatialEffect",
@@ -217,7 +217,7 @@ export function spatialEffectCompositionRouteForResolution(
       ),
     ];
   }
-  if (procedure === "greaseGroundHazard") {
+  if (procedure === "persistentAreaSaveCondition") {
     return [
       spatialCompositionResolve(
         "spatialEffect",
@@ -237,10 +237,10 @@ export function spatialEffectCompositionRouteForResolution(
     ];
   }
   if (
-    procedure === "flamingSphere" ||
-    procedure === "moonbeam" ||
-    procedure === "spikeGrowthMovementHazard" ||
-    procedure === "webRestraintHazard"
+    procedure === "persistentAreaSaveDamage" ||
+    procedure === "persistentAreaSaveDamage" ||
+    procedure === "areaMovementDistanceDamage" ||
+    procedure === "persistentAreaSaveConditionEscape"
   ) {
     return [
       spatialCompositionResolve(
@@ -257,7 +257,7 @@ export function spatialEffectCompositionRouteForResolution(
         "spatialEffect",
         "battleConcentration",
       ),
-      ...(procedure === "moonbeam"
+      ...(procedure === "persistentAreaSaveDamage"
         ? [
             spatialCompositionResolveWithoutFill(
               "spatialEffect",
@@ -270,7 +270,7 @@ export function spatialEffectCompositionRouteForResolution(
         "spatialEffect",
         "battleCreatureSpaceMovement",
       ),
-      ...(procedure === "webRestraintHazard"
+      ...(procedure === "persistentAreaSaveConditionEscape"
         ? [
             spatialCompositionResolveWithoutFill(
               "spatialEffect",
@@ -385,7 +385,7 @@ function spatialEffectCompositionRuntimeRouteForResolution(
     return undefined;
   }
   if (
-    input.subject.command === "disperseFogCloud" &&
+    input.subject.command === "dispersePersistentAreaTrait" &&
     result.tag === "resolved"
   ) {
     return [
@@ -407,7 +407,7 @@ function spatialEffectCompositionRuntimeRouteForResolution(
     const fill = input.fills.at(-1);
     if (
       fill?.kind === "rolledDice" &&
-      input.fills.some(isSpikeGrowthHazardMovementFill) &&
+      input.fills.some(isAreaMovementDistanceDamageHazardMovementFill) &&
       result.tag === "resolved"
     ) {
       return [
@@ -428,7 +428,7 @@ function spatialEffectCompositionRuntimeRouteForResolution(
     }
     if (
       areaDifficultTerrain.sources.some(
-        (source) => source.kind === "spikeGrowthHazard",
+        (source) => source.kind === "areaMovementDistanceDamageHazard",
       )
     ) {
       return [
@@ -444,7 +444,7 @@ function spatialEffectCompositionRuntimeRouteForResolution(
     }
     if (
       !areaDifficultTerrain.sources.some(
-        (source) => source.kind === "greaseGroundHazard",
+        (source) => source.kind === "persistentAreaSaveCondition",
       )
     ) {
       return undefined;
@@ -468,8 +468,8 @@ function spatialEffectCompositionRuntimeRouteForResolution(
     ];
   }
   if (
-    input.subject.command === "greaseGroundHazardSave" ||
-    input.subject.command === "webRestraintSave"
+    input.subject.command === "persistentAreaSaveConditionSave" ||
+    input.subject.command === "persistentAreaSaveConditionEscapeSave"
   ) {
     const fill = input.fills.at(-1);
     if (
@@ -574,8 +574,8 @@ function spatialEffectCompositionDiscoveryHoles(
   invocation: BattleSpellProcedureExecution,
 ): readonly BattleReducerRouteHole[] {
   if (
-    invocation.procedure === "dancingLightsSeparateCast" ||
-    invocation.procedure === "dancingLightsCombinedCast"
+    invocation.procedure === "movableLightSeparateCast" ||
+    invocation.procedure === "movableLightCombinedCast"
   ) {
     return [];
   }
@@ -590,16 +590,16 @@ function isSpatialEffectCompositionDiscoverySubject(
 ): boolean {
   const procedure = invocation.procedure;
   return (
-    procedure === "dancingLightsSeparateCast" ||
-    procedure === "dancingLightsCombinedCast" ||
-    procedure === "dancingLightsReposition" ||
+    procedure === "movableLightSeparateCast" ||
+    procedure === "movableLightCombinedCast" ||
+    procedure === "movableLightReposition" ||
     procedure === "saveGatedAttackRollAdvantage" ||
-    procedure === "fogCloudObscurement" ||
-    procedure === "greaseGroundHazard" ||
-    procedure === "flamingSphere" ||
-    procedure === "moonbeam" ||
-    procedure === "spikeGrowthMovementHazard" ||
-    procedure === "webRestraintHazard"
+    procedure === "persistentAreaTrait" ||
+    procedure === "persistentAreaSaveCondition" ||
+    procedure === "persistentAreaSaveDamage" ||
+    procedure === "persistentAreaSaveDamage" ||
+    procedure === "areaMovementDistanceDamage" ||
+    procedure === "persistentAreaSaveConditionEscape"
   );
 }
 
@@ -624,20 +624,20 @@ function battleHasActiveAreaDifficultTerrainHazard(
   return [...state.combatants.values()].some((combatant) =>
     combatant.activeEffects.some(
       (effect) =>
-        effect.kind === "greaseGroundHazard" ||
-        effect.kind === "spikeGrowthHazard" ||
-        effect.kind === "webRestraintHazard",
+        effect.kind === "persistentAreaSaveCondition" ||
+        effect.kind === "areaMovementDistanceDamageHazard" ||
+        effect.kind === "persistentAreaSaveConditionEscape",
     ),
   );
 }
 
-function isSpikeGrowthHazardMovementFill(
+function isAreaMovementDistanceDamageHazardMovementFill(
   fill: BattleFill,
 ): fill is Extract<BattleFill, { readonly kind: "movement" }> {
   return (
     fill.kind === "movement" &&
     fill.value.areaDifficultTerrain?.sources.some(
-      (source) => source.kind === "spikeGrowthHazard",
+      (source) => source.kind === "areaMovementDistanceDamageHazard",
     ) === true
   );
 }

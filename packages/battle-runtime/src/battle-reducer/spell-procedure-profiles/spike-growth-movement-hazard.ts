@@ -4,7 +4,7 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 //
-// The spikeGrowthMovementHazard Spell Procedure Profile: action-time Spell
+// The areaMovementDistanceDamage Spell Procedure Profile: action-time Spell
 // Slot casting creates a caster-owned Concentration Sphere of Difficult
 // Terrain. The runtime owns Spell Slot spending, Concentration duration,
 // table-supplied Sphere identity, Difficult Terrain movement-cost facts, and
@@ -35,7 +35,7 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
-import { resolveSpikeGrowthMovementHazardSpellAct } from "../spells-resolve-area-effects.ts";
+import { resolveAreaMovementDistanceDamageSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -52,14 +52,14 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
-type SpikeGrowthMovementHazardSpellInvocation = Extract<
+type AreaMovementDistanceDamageSpellInvocation = Extract<
   SupportedSpellInvocation,
-  { readonly procedure: "spikeGrowthMovementHazard" }
+  { readonly procedure: "areaMovementDistanceDamage" }
 >;
-type SpikeGrowthMovementHazardResolveInput =
-  SpellProcedureProfileResolveInput<SpikeGrowthMovementHazardSpellInvocation>;
+type AreaMovementDistanceDamageResolveInput =
+  SpellProcedureProfileResolveInput<AreaMovementDistanceDamageSpellInvocation>;
 
-type SpikeGrowthMovementHazardProfileShape = {
+type AreaMovementDistanceDamageProfileShape = {
   readonly durationTicks: ElapsedTimeTicks;
   readonly radiusFeet: number;
   readonly rangeFeet: number;
@@ -78,17 +78,17 @@ const SPIKE_GROWTH_DAMAGE_PER_FEET = 5;
 const SPIKE_GROWTH_DAMAGE_DICE = 2;
 const SPIKE_GROWTH_DAMAGE_DIE_SIZE = 4;
 
-function admitSpikeGrowthMovementHazard(
+function admitAreaMovementDistanceDamage(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
-): readonly SpikeGrowthMovementHazardSpellInvocation[] {
-  const spikeGrowth = spikeGrowthMovementHazardSpell(spell);
-  if (spikeGrowth === null) {
+): readonly AreaMovementDistanceDamageSpellInvocation[] {
+  const areaMovementDistanceDamage = areaMovementDistanceDamageSpell(spell);
+  if (areaMovementDistanceDamage === null) {
     return [];
   }
 
   return ctx.spellCastOptions.flatMap(
-    (slot): readonly SpikeGrowthMovementHazardSpellInvocation[] => {
+    (slot): readonly AreaMovementDistanceDamageSpellInvocation[] => {
       if (Number(slot.spellLevel) < SPIKE_GROWTH_LEVEL) {
         return [];
       }
@@ -96,28 +96,28 @@ function admitSpikeGrowthMovementHazard(
         {
           access: { tag: "prepared" },
           resource: spellInvocationResourceForCastOption(slot),
-          procedure: "spikeGrowthMovementHazard",
+          procedure: "areaMovementDistanceDamage",
           spell,
           targeting: {
             kind: "pointOriginSphere",
-            radiusFeet: movementFeet(spikeGrowth.radiusFeet),
+            radiusFeet: movementFeet(areaMovementDistanceDamage.radiusFeet),
           },
-          durationTicks: spikeGrowth.durationTicks,
-          rangeFeet: movementFeet(spikeGrowth.rangeFeet),
+          durationTicks: areaMovementDistanceDamage.durationTicks,
+          rangeFeet: movementFeet(areaMovementDistanceDamage.rangeFeet),
           damage: {
-            expr: spikeGrowth.damage.expr,
-            damageType: spikeGrowth.damage.damageType,
+            expr: areaMovementDistanceDamage.damage.expr,
+            damageType: areaMovementDistanceDamage.damage.damageType,
           },
-          damagePerFeet: movementFeet(spikeGrowth.damagePerFeet),
+          damagePerFeet: movementFeet(areaMovementDistanceDamage.damagePerFeet),
         },
       ];
     },
   );
 }
 
-function spikeGrowthMovementHazardSpell(
+function areaMovementDistanceDamageSpell(
   spell: BattleSpellAdmissionSource,
-): SpikeGrowthMovementHazardProfileShape | null {
+): AreaMovementDistanceDamageProfileShape | null {
   if (spell.mechanics.family !== "ongoing_effect") {
     return null;
   }
@@ -180,10 +180,10 @@ function spikeGrowthMovementHazardSpell(
   };
 }
 
-function resolveSpikeGrowthMovementHazard(
-  input: SpikeGrowthMovementHazardResolveInput,
+function resolveAreaMovementDistanceDamage(
+  input: AreaMovementDistanceDamageResolveInput,
 ): BattleResolutionResult {
-  return resolveSpikeGrowthMovementHazardSpellAct({
+  return resolveAreaMovementDistanceDamageSpellAct({
     input: input.input,
     actorId: input.actorId,
     invocation: input.invocation,
@@ -191,33 +191,34 @@ function resolveSpikeGrowthMovementHazard(
   });
 }
 
-const SpikeGrowthMovementHazardInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: LeveledSpellInvocationResourceSchema,
-    procedure: Schema.Literal("spikeGrowthMovementHazard"),
-    spellRuleFacts: SpellRuleExecutionFactsSchema,
-    targeting: Schema.Struct({
-      kind: Schema.Literal("pointOriginSphere"),
-      radiusFeet: MovementFeet,
+const AreaMovementDistanceDamageInvocationSchema =
+  spellProcedureExecutionSchema(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: LeveledSpellInvocationResourceSchema,
+      procedure: Schema.Literal("areaMovementDistanceDamage"),
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("pointOriginSphere"),
+        radiusFeet: MovementFeet,
+      }),
+      durationTicks: ElapsedTimeTicksSchema,
+      rangeFeet: MovementFeet,
+      damage: Schema.Struct({
+        expr: DiceExprSchema,
+        damageType: Schema.Literal("piercing"),
+      }),
+      damagePerFeet: MovementFeet,
     }),
-    durationTicks: ElapsedTimeTicksSchema,
-    rangeFeet: MovementFeet,
-    damage: Schema.Struct({
-      expr: DiceExprSchema,
-      damageType: Schema.Literal("piercing"),
-    }),
-    damagePerFeet: MovementFeet,
-  }),
-);
-export const spikeGrowthMovementHazardProfile = {
-  procedure: "spikeGrowthMovementHazard",
-  executionSchema: SpikeGrowthMovementHazardInvocationSchema,
-  admit: admitSpikeGrowthMovementHazard,
+  );
+export const areaMovementDistanceDamageProfile = {
+  procedure: "areaMovementDistanceDamage",
+  executionSchema: AreaMovementDistanceDamageInvocationSchema,
+  admit: admitAreaMovementDistanceDamage,
   discoverCastAct: discoverActionSpellAreaCastAct,
-  resolve: resolveSpikeGrowthMovementHazard,
+  resolve: resolveAreaMovementDistanceDamage,
 } satisfies SpellProcedureDeclaration<
-  "spikeGrowthMovementHazard",
-  SpikeGrowthMovementHazardSpellInvocation
+  "areaMovementDistanceDamage",
+  AreaMovementDistanceDamageSpellInvocation
 >;
 import { spellInvocationResourceForCastOption } from "./profile.ts";

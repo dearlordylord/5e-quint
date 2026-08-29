@@ -2,9 +2,9 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-moonbeam-movable-zone
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOVABLE_PERSISTENT_AREA_MOVABLE_ZONE_LIFECYCLE
 //
-// The moonbeam Spell Procedure Profile: action-time Spell Slot casting creates
+// The Moonbeam Spell Procedure Profile: action-time Spell Slot casting creates
 // a caster-owned Concentration Cylinder. The runtime owns Spell Slot spending,
 // Concentration duration, Constitution Saving Throw-gated Radiant damage,
 // once-per-creature-per-turn save limiting, shape-shift reversion/suppression
@@ -35,7 +35,7 @@ import {
 } from "../../battle-state-execution.ts";
 import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
 import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
-import { resolveMoonbeamSpellAct } from "../spells-resolve-area-effects.ts";
+import { resolveMovablePersistentAreaSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -53,60 +53,69 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
-type MoonbeamSpellInvocation = Extract<
+type MovablePersistentAreaSpellInvocation = Extract<
   SupportedSpellInvocation,
-  { readonly procedure: "moonbeam" }
+  {
+    readonly procedure: "persistentAreaSaveDamage";
+    readonly lifecycle: {
+      readonly kind: "casterActionReposition";
+      readonly actionCost: "magicAction";
+    };
+  }
 >;
-type MoonbeamResolveInput =
-  SpellProcedureProfileResolveInput<MoonbeamSpellInvocation>;
+type MovablePersistentAreaResolveInput =
+  SpellProcedureProfileResolveInput<MovablePersistentAreaSpellInvocation>;
 
 type OngoingOperationEffect = Extract<
   BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
 >["operations"][number]["effect"];
-type MoonbeamInitialPhase = Extract<
+type MovablePersistentAreaInitialPhase = Extract<
   BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
 >["initialPhase"];
-type MoonbeamFailedSaveEffect = Extract<
-  Extract<MoonbeamInitialPhase, { readonly kind: "save_gate" }>["onFail"],
+type MovablePersistentAreaFailedSaveEffect = Extract<
+  Extract<
+    MovablePersistentAreaInitialPhase,
+    { readonly kind: "save_gate" }
+  >["onFail"],
   { readonly kind: "composite" }
 >["effects"][number];
-type MoonbeamSaveGateDamage = Extract<
-  MoonbeamFailedSaveEffect,
+type MovablePersistentAreaSaveGateDamage = Extract<
+  MovablePersistentAreaFailedSaveEffect,
   { readonly kind: "damage" }
 >;
-type MoonbeamProfileShape = {
+type MovablePersistentAreaProfileShape = {
   readonly durationTicks: ElapsedTimeTicks;
   readonly radiusFeet: number;
   readonly heightFeet: number;
   readonly repositionMaxMoveFeet: number;
-  readonly damageAmount: MoonbeamSaveGateDamage["amount"];
+  readonly damageAmount: MovablePersistentAreaSaveGateDamage["amount"];
 };
 
-const MOONBEAM_LEVEL = 2;
-const MOONBEAM_RANGE_FEET = 120;
-const MOONBEAM_DURATION_MINUTES = 1;
-const MOONBEAM_OPERATION_COUNT = 5;
-const MOONBEAM_RADIUS_FEET = 5;
-const MOONBEAM_HEIGHT_FEET = 40;
-const MOONBEAM_REPOSITION_MAX_MOVE_FEET = 60;
-const MOONBEAM_BASE_DAMAGE_DICE = 2;
-const MOONBEAM_DAMAGE_DIE_SIZE = 10;
-const MOONBEAM_DAMAGE_DICE_PER_SLOT_LEVEL = 1;
+const MOVABLE_PERSISTENT_AREA_LEVEL = 2;
+const MOVABLE_PERSISTENT_AREA_RANGE_FEET = 120;
+const MOVABLE_PERSISTENT_AREA_DURATION_MINUTES = 1;
+const MOVABLE_PERSISTENT_AREA_OPERATION_COUNT = 5;
+const MOVABLE_PERSISTENT_AREA_RADIUS_FEET = 5;
+const MOVABLE_PERSISTENT_AREA_HEIGHT_FEET = 40;
+const MOVABLE_PERSISTENT_AREA_REPOSITION_MAX_MOVE_FEET = 60;
+const MOVABLE_PERSISTENT_AREA_BASE_DAMAGE_DICE = 2;
+const MOVABLE_PERSISTENT_AREA_DAMAGE_DIE_SIZE = 10;
+const MOVABLE_PERSISTENT_AREA_DAMAGE_DICE_PER_SLOT_LEVEL = 1;
 
-function admitMoonbeam(
+function admitMovablePersistentArea(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
-): readonly MoonbeamSpellInvocation[] {
-  const moonbeam = moonbeamSpell(spell);
-  if (moonbeam === null) {
+): readonly MovablePersistentAreaSpellInvocation[] {
+  const movablePersistentArea = movablePersistentAreaSpell(spell);
+  if (movablePersistentArea === null) {
     return [];
   }
 
   return preparedSpellSlotInvocations(spell, ctx, (base, slotLevel) => {
     const damageExpr = supportedDamageAmountExpr({
-      amount: moonbeam.damageAmount,
+      amount: movablePersistentArea.damageAmount,
       spellLevel: spell.mechanics.level,
       slotLevel,
     });
@@ -114,25 +123,33 @@ function admitMoonbeam(
       ? null
       : {
           ...base,
-          procedure: "moonbeam",
+          procedure: "persistentAreaSaveDamage",
+          lifecycle: {
+            kind: "casterActionReposition",
+            actionCost: "magicAction",
+            movedAreaOperation: "saveDamage",
+            collisionDisposition: "ignoreObstacles",
+          },
           ability: "con",
           dc: { kind: "caster_spell_save_dc" },
           targeting: {
             kind: "pointOriginCylinder",
-            radiusFeet: movementFeet(moonbeam.radiusFeet),
-            heightFeet: movementFeet(moonbeam.heightFeet),
+            radiusFeet: movementFeet(movablePersistentArea.radiusFeet),
+            heightFeet: movementFeet(movablePersistentArea.heightFeet),
           },
-          durationTicks: moonbeam.durationTicks,
-          rangeFeet: movementFeet(MOONBEAM_RANGE_FEET),
-          repositionMaxMoveFeet: movementFeet(moonbeam.repositionMaxMoveFeet),
+          durationTicks: movablePersistentArea.durationTicks,
+          rangeFeet: movementFeet(MOVABLE_PERSISTENT_AREA_RANGE_FEET),
+          repositionMaxMoveFeet: movementFeet(
+            movablePersistentArea.repositionMaxMoveFeet,
+          ),
           damage: { expr: damageExpr, damageType: "radiant" },
         };
   });
 }
 
-function moonbeamSpell(
+function movablePersistentAreaSpell(
   spell: BattleSpellAdmissionSource,
-): MoonbeamProfileShape | null {
+): MovablePersistentAreaProfileShape | null {
   if (spell.mechanics.family !== "ongoing_effect") {
     return null;
   }
@@ -146,7 +163,9 @@ function moonbeamSpell(
       ? attachment
       : null;
   const cylinderArea = cylinderHole?.value ?? null;
-  const initialDamage = isMoonbeamSaveGate(spell.mechanics.initialPhase);
+  const initialDamage = isMovablePersistentAreaSaveGate(
+    spell.mechanics.initialPhase,
+  );
   const endTurnOperation = spell.mechanics.operations.find(
     (operation) => operation.trigger.kind === "on_creature_ends_turn_in_area",
   );
@@ -172,29 +191,31 @@ function moonbeamSpell(
   );
 
   if (
-    spell.mechanics.level !== MOONBEAM_LEVEL ||
+    spell.mechanics.level !== MOVABLE_PERSISTENT_AREA_LEVEL ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== MOONBEAM_RANGE_FEET ||
+    spell.mechanics.range.feet !== MOVABLE_PERSISTENT_AREA_RANGE_FEET ||
     spell.mechanics.duration.kind !== "concentration" ||
     spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== MOONBEAM_DURATION_MINUTES ||
-    spell.mechanics.operations.length !== MOONBEAM_OPERATION_COUNT ||
+    spell.mechanics.duration.upTo.amount !==
+      MOVABLE_PERSISTENT_AREA_DURATION_MINUTES ||
+    spell.mechanics.operations.length !==
+      MOVABLE_PERSISTENT_AREA_OPERATION_COUNT ||
     durationTicks === null ||
     Result.isFailure(durationTicks) ||
     cylinderHole?.holeId !== "moonbeam_cylinder" ||
     cylinderArea?.kind !== "area" ||
     cylinderArea?.origin.kind !== "point_within_range" ||
     cylinderArea.shape.kind !== "cylinder" ||
-    cylinderArea.shape.radiusFeet !== MOONBEAM_RADIUS_FEET ||
-    cylinderArea.shape.heightFeet !== MOONBEAM_HEIGHT_FEET ||
+    cylinderArea.shape.radiusFeet !== MOVABLE_PERSISTENT_AREA_RADIUS_FEET ||
+    cylinderArea.shape.heightFeet !== MOVABLE_PERSISTENT_AREA_HEIGHT_FEET ||
     initialDamage === null ||
-    isMoonbeamSaveGate(endTurnOperation?.effect) === null ||
-    isMoonbeamSaveGate(enterOperation?.effect) === null ||
-    isMoonbeamSaveGate(moveIntoOperation?.effect) === null ||
+    isMovablePersistentAreaSaveGate(endTurnOperation?.effect) === null ||
+    isMovablePersistentAreaSaveGate(enterOperation?.effect) === null ||
+    isMovablePersistentAreaSaveGate(moveIntoOperation?.effect) === null ||
     repositionOperation?.effect.kind !== "reposition_attachment" ||
     repositionOperation.effect.maxMoveFeet !==
-      MOONBEAM_REPOSITION_MAX_MOVE_FEET ||
+      MOVABLE_PERSISTENT_AREA_REPOSITION_MAX_MOVE_FEET ||
     dimLightOperation?.effect.kind !== "area_emits_dim_light"
   ) {
     return null;
@@ -209,9 +230,12 @@ function moonbeamSpell(
   };
 }
 
-function isMoonbeamSaveGate(
-  effect: OngoingOperationEffect | MoonbeamInitialPhase | undefined,
-): MoonbeamSaveGateDamage | null {
+function isMovablePersistentAreaSaveGate(
+  effect:
+    | OngoingOperationEffect
+    | MovablePersistentAreaInitialPhase
+    | undefined,
+): MovablePersistentAreaSaveGateDamage | null {
   if (effect?.kind !== "save_gate") {
     return null;
   }
@@ -222,8 +246,8 @@ function isMoonbeamSaveGate(
     return null;
   }
   const damageEffects = effect.onFail.effects.flatMap(
-    (failedEffect): readonly MoonbeamSaveGateDamage[] => {
-      const damage = moonbeamDamageEffect(failedEffect);
+    (failedEffect): readonly MovablePersistentAreaSaveGateDamage[] => {
+      const damage = movablePersistentAreaDamageEffect(failedEffect);
       return damage === null ? [] : [damage];
     },
   );
@@ -253,28 +277,32 @@ function isMoonbeamSaveGate(
   return damage;
 }
 
-function moonbeamDamageEffect(
-  effect: MoonbeamFailedSaveEffect,
-): MoonbeamSaveGateDamage | null {
+function movablePersistentAreaDamageEffect(
+  effect: MovablePersistentAreaFailedSaveEffect,
+): MovablePersistentAreaSaveGateDamage | null {
   if (
     effect.kind !== "damage" ||
     effect.damageType !== "radiant" ||
     effect.amount?.kind !== "linear_per_level" ||
     effect.amount.axis !== "slot" ||
-    effect.amount.startingAtLevel !== MOONBEAM_LEVEL ||
-    effect.amount.base.dice !== MOONBEAM_BASE_DAMAGE_DICE ||
-    effect.amount.base.dieSize !== MOONBEAM_DAMAGE_DIE_SIZE ||
-    effect.amount.perLevel.dice !== MOONBEAM_DAMAGE_DICE_PER_SLOT_LEVEL ||
+    effect.amount.startingAtLevel !== MOVABLE_PERSISTENT_AREA_LEVEL ||
+    effect.amount.base.dice !== MOVABLE_PERSISTENT_AREA_BASE_DAMAGE_DICE ||
+    effect.amount.base.dieSize !== MOVABLE_PERSISTENT_AREA_DAMAGE_DIE_SIZE ||
+    effect.amount.perLevel.dice !==
+      MOVABLE_PERSISTENT_AREA_DAMAGE_DICE_PER_SLOT_LEVEL ||
     (effect.amount.perLevel.dieSize !== undefined &&
-      effect.amount.perLevel.dieSize !== MOONBEAM_DAMAGE_DIE_SIZE)
+      effect.amount.perLevel.dieSize !==
+        MOVABLE_PERSISTENT_AREA_DAMAGE_DIE_SIZE)
   ) {
     return null;
   }
   return effect;
 }
 
-function resolveMoonbeam(input: MoonbeamResolveInput): BattleResolutionResult {
-  return resolveMoonbeamSpellAct({
+function resolveMovablePersistentArea(
+  input: MovablePersistentAreaResolveInput,
+): BattleResolutionResult {
+  return resolveMovablePersistentAreaSpellAct({
     input: input.input,
     actorId: input.actorId,
     invocation: input.invocation,
@@ -282,11 +310,17 @@ function resolveMoonbeam(input: MoonbeamResolveInput): BattleResolutionResult {
   });
 }
 
-const MoonbeamInvocationSchema = spellProcedureExecutionSchema(
+const MovablePersistentAreaInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
-    procedure: Schema.Literal("moonbeam"),
+    procedure: Schema.Literal("persistentAreaSaveDamage"),
+    lifecycle: Schema.Struct({
+      kind: Schema.Literal("casterActionReposition"),
+      actionCost: Schema.Literal("magicAction"),
+      movedAreaOperation: Schema.Literal("saveDamage"),
+      collisionDisposition: Schema.Literal("ignoreObstacles"),
+    }),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     ability: Schema.Literal("con"),
     dc: DcSourceSchema,
@@ -305,10 +339,13 @@ const MoonbeamInvocationSchema = spellProcedureExecutionSchema(
   }),
 );
 
-export const moonbeamProfile = {
-  procedure: "moonbeam",
-  executionSchema: MoonbeamInvocationSchema,
-  admit: admitMoonbeam,
+export const movablePersistentAreaProfile = {
+  procedure: "persistentAreaSaveDamage",
+  executionSchema: MovablePersistentAreaInvocationSchema,
+  admit: admitMovablePersistentArea,
   discoverCastAct: discoverActionSpellAreaCastAct,
-  resolve: resolveMoonbeam,
-} satisfies SpellProcedureDeclaration<"moonbeam", MoonbeamSpellInvocation>;
+  resolve: resolveMovablePersistentArea,
+} satisfies SpellProcedureDeclaration<
+  "persistentAreaSaveDamage",
+  MovablePersistentAreaSpellInvocation
+>;

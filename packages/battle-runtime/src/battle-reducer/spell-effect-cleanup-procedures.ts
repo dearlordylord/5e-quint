@@ -1,4 +1,4 @@
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.TRANSLATING_PERSISTENT_AREA_AREA_HAZARD_LIFECYCLE
 import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import { Match } from "effect";
 import type { BattleSubject } from "../battle-subjects.ts";
@@ -18,13 +18,13 @@ import {
 } from "./warding-bond.ts";
 import { areaWindStrengthHole } from "./area-wind-strength.ts";
 
-export function resolveDisperseFogCloudCommand(
+export function resolveDispersePersistentAreaTraitCommand(
   input: BattleResolutionInput & {
     readonly subject: Extract<
       BattleSubject,
       {
         readonly tag: "runtimeCommand";
-        readonly command: "disperseFogCloud";
+        readonly command: "dispersePersistentAreaTrait";
       }
     >;
   },
@@ -35,27 +35,27 @@ export function resolveDisperseFogCloudCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Fog Cloud strong-wind dispersal uses no fills.",
+      "persistent-area trait strong-wind dispersal uses no fills.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  const fogCloud = [...input.state.combatants.values()]
+  const persistentAreaTrait = [...input.state.combatants.values()]
     .flatMap((combatant) => combatant.activeEffects)
     .find(
       (effect) =>
-        effect.kind === "fogCloudObscurement" &&
+        effect.kind === "persistentAreaTrait" &&
         effect.areaId === input.subject.areaId,
     );
-  if (fogCloud === undefined) {
+  if (persistentAreaTrait === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Fog Cloud area is no longer active.",
+      "persistent-area trait area is no longer active.",
     );
   }
   const nextState = breakBattleConcentration(
     input.state,
-    fogCloud.sourceCombatantId,
+    persistentAreaTrait.sourceCombatantId,
   );
   return {
     tag: "resolved",
@@ -64,13 +64,13 @@ export function resolveDisperseFogCloudCommand(
   };
 }
 
-export function resolveDisperseCloudkillCommand(
+export function resolveDisperseTranslatingPersistentAreaCommand(
   input: BattleResolutionInput & {
     readonly subject: Extract<
       BattleSubject,
       {
         readonly tag: "runtimeCommand";
-        readonly command: "disperseCloudkill";
+        readonly command: "disperseTranslatingPersistentArea";
       }
     >;
   },
@@ -81,32 +81,32 @@ export function resolveDisperseCloudkillCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Cloudkill dispersal uses one area wind-strength fact fill.",
+      "TranslatingPersistentArea dispersal uses one area wind-strength fact fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  const cloudkill = input.state.combatants
+  const translatingPersistentArea = input.state.combatants
     .get(input.subject.effectOwnerId)
     ?.activeEffects.find(
       (
         effect,
       ): effect is Extract<
         BattleActiveEffect,
-        { readonly kind: "cloudkillAreaHazard" }
+        { readonly kind: "persistentAreaSaveDamage" }
       > =>
-        effect.kind === "cloudkillAreaHazard" &&
+        effect.kind === "persistentAreaSaveDamage" &&
         spellActiveEffectExecutionRef(effect) === input.subject.effectRef,
     );
-  if (cloudkill === undefined) {
+  if (translatingPersistentArea === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Cloudkill area is no longer active for this dispersal subject.",
+      "TranslatingPersistentArea area is no longer active for this dispersal subject.",
     );
   }
   const hole = areaWindStrengthHole(
-    cloudkill.areaId,
-    spellActiveEffectExecutionRef(cloudkill),
+    translatingPersistentArea.areaId,
+    spellActiveEffectExecutionRef(translatingPersistentArea),
   );
   const fill = input.fills[0];
   if (fill === undefined) {
@@ -116,7 +116,7 @@ export function resolveDisperseCloudkillCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Cloudkill dispersal requires the requested area wind-strength fact.",
+      "TranslatingPersistentArea dispersal requires the requested area wind-strength fact.",
     );
   }
   const strongWindEstablished = Match.value(fill.value).pipe(
@@ -128,12 +128,12 @@ export function resolveDisperseCloudkillCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Cloudkill dispersal requires strong wind in its area.",
+      "TranslatingPersistentArea dispersal requires strong wind in its area.",
     );
   }
   const nextState = breakBattleConcentration(
     input.state,
-    cloudkill.sourceCombatantId,
+    translatingPersistentArea.sourceCombatantId,
   );
   return {
     tag: "resolved",

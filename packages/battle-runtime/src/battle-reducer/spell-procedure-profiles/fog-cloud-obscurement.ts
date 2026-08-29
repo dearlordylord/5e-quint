@@ -31,7 +31,7 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
-import { resolveFogCloudObscurementSpellAct } from "../spells-resolve-area-effects.ts";
+import { resolvePersistentAreaTraitSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -48,13 +48,13 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
-type FogCloudObscurementSpellInvocation = Extract<
+type PersistentAreaTraitSpellInvocation = Extract<
   SupportedSpellInvocation,
-  { readonly procedure: "fogCloudObscurement" }
+  { readonly procedure: "persistentAreaTrait" }
 >;
-type FogCloudObscurementResolveInput =
-  SpellProcedureProfileResolveInput<FogCloudObscurementSpellInvocation>;
-type FogCloudObscurementProfileShape = {
+type PersistentAreaTraitResolveInput =
+  SpellProcedureProfileResolveInput<PersistentAreaTraitSpellInvocation>;
+type PersistentAreaTraitProfileShape = {
   readonly durationTicks: ElapsedTimeTicks;
   readonly radius: LinearPerLevel<number>;
 };
@@ -66,32 +66,35 @@ const FOG_CLOUD_OPERATION_COUNT = 1;
 const FOG_CLOUD_BASE_RADIUS_FEET = 20;
 const FOG_CLOUD_RADIUS_FEET_PER_SLOT_LEVEL = 20;
 
-function admitFogCloudObscurement(
+function admitPersistentAreaTrait(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
-): readonly FogCloudObscurementSpellInvocation[] {
-  const fogCloud = fogCloudObscurementSpell(spell);
-  if (fogCloud === null) {
+): readonly PersistentAreaTraitSpellInvocation[] {
+  const persistentAreaTrait = persistentAreaTraitSpell(spell);
+  if (persistentAreaTrait === null) {
     return [];
   }
 
   return ctx.spellCastOptions.flatMap(
-    (slot): readonly FogCloudObscurementSpellInvocation[] => {
+    (slot): readonly PersistentAreaTraitSpellInvocation[] => {
       const radiusFeet =
-        fogCloud.radius.base +
-        Math.max(0, Number(slot.spellLevel) - fogCloud.radius.startingAtLevel) *
-          fogCloud.radius.perLevel;
+        persistentAreaTrait.radius.base +
+        Math.max(
+          0,
+          Number(slot.spellLevel) - persistentAreaTrait.radius.startingAtLevel,
+        ) *
+          persistentAreaTrait.radius.perLevel;
       return [
         {
           access: { tag: "prepared" },
           resource: spellInvocationResourceForCastOption(slot),
-          procedure: "fogCloudObscurement",
+          procedure: "persistentAreaTrait",
           spell,
           targeting: {
             kind: "pointOriginSphere",
             radiusFeet: movementFeet(radiusFeet),
           },
-          durationTicks: fogCloud.durationTicks,
+          durationTicks: persistentAreaTrait.durationTicks,
           rangeFeet: movementFeet(FOG_CLOUD_RANGE_FEET),
         },
       ];
@@ -99,9 +102,9 @@ function admitFogCloudObscurement(
   );
 }
 
-function fogCloudObscurementSpell(
+function persistentAreaTraitSpell(
   spell: BattleSpellAdmissionSource,
-): FogCloudObscurementProfileShape | null {
+): PersistentAreaTraitProfileShape | null {
   if (spell.mechanics.family !== "ongoing_effect") {
     return null;
   }
@@ -157,10 +160,10 @@ function fogCloudObscurementSpell(
   };
 }
 
-function resolveFogCloudObscurement(
-  input: FogCloudObscurementResolveInput,
+function resolvePersistentAreaTrait(
+  input: PersistentAreaTraitResolveInput,
 ): BattleResolutionResult {
-  return resolveFogCloudObscurementSpellAct({
+  return resolvePersistentAreaTraitSpellAct({
     input: input.input,
     actorId: input.actorId,
     invocation: input.invocation,
@@ -168,11 +171,11 @@ function resolveFogCloudObscurement(
   });
 }
 
-const FogCloudObscurementInvocationSchema = spellProcedureExecutionSchema(
+const PersistentAreaTraitInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
-    procedure: Schema.Literal("fogCloudObscurement"),
+    procedure: Schema.Literal("persistentAreaTrait"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     targeting: Schema.Struct({
       kind: Schema.Literal("pointOriginSphere"),
@@ -182,14 +185,14 @@ const FogCloudObscurementInvocationSchema = spellProcedureExecutionSchema(
     rangeFeet: MovementFeet,
   }),
 );
-export const fogCloudObscurementProfile = {
-  procedure: "fogCloudObscurement",
-  executionSchema: FogCloudObscurementInvocationSchema,
-  admit: admitFogCloudObscurement,
+export const persistentAreaTraitProfile = {
+  procedure: "persistentAreaTrait",
+  executionSchema: PersistentAreaTraitInvocationSchema,
+  admit: admitPersistentAreaTrait,
   discoverCastAct: discoverActionSpellAreaCastAct,
-  resolve: resolveFogCloudObscurement,
+  resolve: resolvePersistentAreaTrait,
 } satisfies SpellProcedureDeclaration<
-  "fogCloudObscurement",
-  FogCloudObscurementSpellInvocation
+  "persistentAreaTrait",
+  PersistentAreaTraitSpellInvocation
 >;
 import { spellInvocationResourceForCastOption } from "./profile.ts";

@@ -39,7 +39,7 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
-import { resolveSleetStormAreaHazardSpellAct } from "../spells-resolve-area-effects.ts";
+import { resolvePersistentAreaSaveCompositeSpellAct } from "../spells-resolve-area-effects.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -50,12 +50,12 @@ import {
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 
-type SleetStormAreaHazardSpellInvocation = Extract<
+type PersistentAreaSaveCompositeSpellInvocation = Extract<
   SupportedSpellInvocation,
-  { readonly procedure: "sleetStormAreaHazard" }
+  { readonly procedure: "persistentAreaSaveComposite" }
 >;
-type SleetStormAreaHazardResolveInput =
-  SpellProcedureProfileResolveInput<SleetStormAreaHazardSpellInvocation>;
+type PersistentAreaSaveCompositeResolveInput =
+  SpellProcedureProfileResolveInput<PersistentAreaSaveCompositeSpellInvocation>;
 type OngoingMechanics = Extract<
   BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
@@ -65,13 +65,13 @@ type OngoingSaveGateEffect = Extract<
   OngoingOperationEffect,
   { readonly kind: "save_gate" }
 >;
-type SleetStormAreaHazardSaveEffect = OngoingSaveGateEffect & {
+type PersistentAreaSaveCompositeSaveEffect = OngoingSaveGateEffect & {
   readonly onFail: Extract<
     OngoingSaveGateEffect["onFail"],
     { readonly kind: "composite" }
   >;
 };
-type SleetStormAreaHazardProfileShape = {
+type PersistentAreaSaveCompositeProfileShape = {
   readonly durationTicks: ElapsedTimeTicks;
   readonly rangeFeet: number;
   readonly radiusFeet: number;
@@ -85,17 +85,17 @@ const SLEET_STORM_OPERATION_COUNT = 5;
 const SLEET_STORM_RADIUS_FEET = 20;
 const SLEET_STORM_HEIGHT_FEET = 40;
 
-function admitSleetStormAreaHazard(
+function admitPersistentAreaSaveComposite(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
-): readonly SleetStormAreaHazardSpellInvocation[] {
-  const sleetStorm = sleetStormAreaHazardSpell(spell);
-  if (sleetStorm === null) {
+): readonly PersistentAreaSaveCompositeSpellInvocation[] {
+  const persistentAreaSaveComposite = persistentAreaSaveCompositeSpell(spell);
+  if (persistentAreaSaveComposite === null) {
     return [];
   }
 
   return ctx.spellCastOptions.flatMap(
-    (slot): readonly SleetStormAreaHazardSpellInvocation[] => {
+    (slot): readonly PersistentAreaSaveCompositeSpellInvocation[] => {
       if (Number(slot.spellLevel) < SLEET_STORM_LEVEL) {
         return [];
       }
@@ -103,26 +103,26 @@ function admitSleetStormAreaHazard(
         {
           access: { tag: "prepared" },
           resource: spellInvocationResourceForCastOption(slot),
-          procedure: "sleetStormAreaHazard",
+          procedure: "persistentAreaSaveComposite",
           spell,
           ability: "dex",
           dc: { kind: "caster_spell_save_dc" },
           targeting: {
             kind: "pointOriginCylinder",
-            radiusFeet: movementFeet(sleetStorm.radiusFeet),
-            heightFeet: movementFeet(sleetStorm.heightFeet),
+            radiusFeet: movementFeet(persistentAreaSaveComposite.radiusFeet),
+            heightFeet: movementFeet(persistentAreaSaveComposite.heightFeet),
           },
-          durationTicks: sleetStorm.durationTicks,
-          rangeFeet: movementFeet(sleetStorm.rangeFeet),
+          durationTicks: persistentAreaSaveComposite.durationTicks,
+          rangeFeet: movementFeet(persistentAreaSaveComposite.rangeFeet),
         },
       ];
     },
   );
 }
 
-function sleetStormAreaHazardSpell(
+function persistentAreaSaveCompositeSpell(
   spell: BattleSpellAdmissionSource,
-): SleetStormAreaHazardProfileShape | null {
+): PersistentAreaSaveCompositeProfileShape | null {
   const ongoing = ongoingConcentrationAreaSpellFacts(spell);
   if (ongoing === null) {
     return null;
@@ -168,8 +168,8 @@ function sleetStormAreaHazardSpell(
     area.shape.kind !== "cylinder" ||
     area.shape.radiusFeet !== SLEET_STORM_RADIUS_FEET ||
     area.shape.heightFeet !== SLEET_STORM_HEIGHT_FEET ||
-    !isSleetStormAreaHazardSaveGate(enterOperation?.effect) ||
-    !isSleetStormAreaHazardSaveGate(startTurnOperation?.effect) ||
+    !isPersistentAreaSaveCompositeSaveGate(enterOperation?.effect) ||
+    !isPersistentAreaSaveCompositeSaveGate(startTurnOperation?.effect) ||
     sharedSaveLimitGroup === null ||
     difficultTerrainOperation === undefined ||
     heavilyObscuredOperation === undefined ||
@@ -204,9 +204,9 @@ function sharedOncePerTurnLimitGroup(
   return enterLimit.limitGroup;
 }
 
-function isSleetStormAreaHazardSaveGate(
+function isPersistentAreaSaveCompositeSaveGate(
   effect: OngoingOperationEffect | undefined,
-): effect is SleetStormAreaHazardSaveEffect {
+): effect is PersistentAreaSaveCompositeSaveEffect {
   if (
     effect?.kind !== "save_gate" ||
     effect.ability !== "dex" ||
@@ -228,10 +228,10 @@ function isSleetStormAreaHazardSaveGate(
   return appliesProne && breaksConcentration;
 }
 
-function resolveSleetStormAreaHazard(
-  input: SleetStormAreaHazardResolveInput,
+function resolvePersistentAreaSaveComposite(
+  input: PersistentAreaSaveCompositeResolveInput,
 ): BattleResolutionResult {
-  return resolveSleetStormAreaHazardSpellAct({
+  return resolvePersistentAreaSaveCompositeSpellAct({
     input: input.input,
     actorId: input.actorId,
     invocation: input.invocation,
@@ -239,32 +239,33 @@ function resolveSleetStormAreaHazard(
   });
 }
 
-const SleetStormAreaHazardInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: LeveledSpellInvocationResourceSchema,
-    procedure: Schema.Literal("sleetStormAreaHazard"),
-    spellRuleFacts: SpellRuleExecutionFactsSchema,
-    ability: Schema.Literal("dex"),
-    dc: DcSourceSchema,
-    targeting: Schema.Struct({
-      kind: Schema.Literal("pointOriginCylinder"),
-      radiusFeet: MovementFeet,
-      heightFeet: MovementFeet,
+const PersistentAreaSaveCompositeInvocationSchema =
+  spellProcedureExecutionSchema(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: LeveledSpellInvocationResourceSchema,
+      procedure: Schema.Literal("persistentAreaSaveComposite"),
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
+      ability: Schema.Literal("dex"),
+      dc: DcSourceSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("pointOriginCylinder"),
+        radiusFeet: MovementFeet,
+        heightFeet: MovementFeet,
+      }),
+      durationTicks: ElapsedTimeTicksSchema,
+      rangeFeet: MovementFeet,
     }),
-    durationTicks: ElapsedTimeTicksSchema,
-    rangeFeet: MovementFeet,
-  }),
-);
+  );
 
-export const sleetStormAreaHazardProfile = {
-  procedure: "sleetStormAreaHazard",
-  executionSchema: SleetStormAreaHazardInvocationSchema,
-  admit: admitSleetStormAreaHazard,
+export const persistentAreaSaveCompositeProfile = {
+  procedure: "persistentAreaSaveComposite",
+  executionSchema: PersistentAreaSaveCompositeInvocationSchema,
+  admit: admitPersistentAreaSaveComposite,
   discoverCastAct: discoverActionSpellAreaCastAct,
-  resolve: resolveSleetStormAreaHazard,
+  resolve: resolvePersistentAreaSaveComposite,
 } satisfies SpellProcedureDeclaration<
-  "sleetStormAreaHazard",
-  SleetStormAreaHazardSpellInvocation
+  "persistentAreaSaveComposite",
+  PersistentAreaSaveCompositeSpellInvocation
 >;
 import { spellInvocationResourceForCastOption } from "./profile.ts";

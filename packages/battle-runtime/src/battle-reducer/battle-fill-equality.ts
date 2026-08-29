@@ -19,7 +19,7 @@ export const BATTLE_CONTINUATION_COMPARABLE_FILL_KINDS = [
   "concentrationSavingThrow",
   "savingThrowOutcome",
   "movement",
-  "cloudkillMovement",
+  "persistentAreaSourceTurnTranslation",
   "startTurnOccurrenceOrder",
   "temporaryHitPointChoice",
   "toolPossessionFacts",
@@ -99,8 +99,8 @@ export function battleContinuationFillEquals(
         b.kind === "movement" &&
         left.holeId === b.holeId &&
         movementFillValuesEqual(left.value, b.value),
-      cloudkillMovement: (left) =>
-        b.kind === "cloudkillMovement" &&
+      persistentAreaSourceTurnTranslation: (left) =>
+        b.kind === "persistentAreaSourceTurnTranslation" &&
         left.holeId === b.holeId &&
         arrayValuesEqual(
           left.value.affectedCombatantIdsInResolutionOrder,

@@ -3,7 +3,7 @@ import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-hole
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-grease-ground-hazard unit-feature.metamagic-heightened-save-disadvantage
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 //
-// The greaseGroundHazard Spell Procedure Profile: action-time Spell Slot
+// The persistentAreaSaveCondition Spell Procedure Profile: action-time Spell Slot
 // casting that creates a one-minute ground-area Difficult Terrain hazard and
 // gates Prone application behind Dexterity Saving Throws when the grease
 // appears, when a creature enters it, and when a creature ends its turn there.
@@ -31,7 +31,7 @@ import {
 } from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { hasSaveGateRepeatSaves } from "./_save-gate-helpers.ts";
-import { resolveGreaseGroundHazardSpellAct } from "../spells-resolve-save-gates.ts";
+import { resolveGreaseGroundHazardSpellAct as resolvePersistentAreaSaveConditionSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -48,12 +48,12 @@ import {
 } from "../codec-building-blocks.ts";
 import { Result, Schema } from "effect";
 
-type GreaseGroundHazardSpellInvocation = Extract<
+type PersistentAreaSaveConditionSpellInvocation = Extract<
   SupportedSpellInvocation,
-  { readonly procedure: "greaseGroundHazard" }
+  { readonly procedure: "persistentAreaSaveCondition" }
 >;
 
-type GreaseGroundHazardPhase = Extract<
+type PersistentAreaSaveConditionPhase = Extract<
   ActivationPhase,
   { readonly kind: "save_gate" }
 > & {
@@ -64,37 +64,37 @@ type GreaseGroundHazardPhase = Extract<
       readonly kind: "area";
       readonly origin: { readonly kind: "point_within_range" };
       readonly shape: {
-        readonly kind: "cube";
+        readonly kind: "ground_square";
         readonly sideFeet: 10;
       };
     };
   };
 };
 
-type GreaseGroundHazardResolveInput =
-  SpellProcedureProfileResolveInput<GreaseGroundHazardSpellInvocation>;
+type PersistentAreaSaveConditionResolveInput =
+  SpellProcedureProfileResolveInput<PersistentAreaSaveConditionSpellInvocation>;
 
-function admitGreaseGroundHazard(
-  spell: GreaseGroundHazardSpellInvocation["spell"],
+function admitPersistentAreaSaveCondition(
+  spell: PersistentAreaSaveConditionSpellInvocation["spell"],
   ctx: SpellAdmissionContext,
-): readonly GreaseGroundHazardSpellInvocation[] {
-  return supportedPreparedGreaseGroundHazardProfile(
+): readonly PersistentAreaSaveConditionSpellInvocation[] {
+  return supportedPreparedPersistentAreaSaveConditionProfile(
     spell,
     ctx.spellCastOptions,
   );
 }
 
-export function supportedPreparedGreaseGroundHazardProfile(
-  spell: GreaseGroundHazardSpellInvocation["spell"],
+export function supportedPreparedPersistentAreaSaveConditionProfile(
+  spell: PersistentAreaSaveConditionSpellInvocation["spell"],
   castOptions: SpellAdmissionContext["spellCastOptions"],
-): readonly GreaseGroundHazardSpellInvocation[] {
-  const grease = greaseGroundHazardSpell(spell);
+): readonly PersistentAreaSaveConditionSpellInvocation[] {
+  const grease = persistentAreaSaveConditionSpell(spell);
   if (grease === null) {
     return [];
   }
 
   return castOptions.flatMap(
-    (slot): readonly GreaseGroundHazardSpellInvocation[] => {
+    (slot): readonly PersistentAreaSaveConditionSpellInvocation[] => {
       if (Number(slot.spellLevel) < spell.mechanics.level) {
         return [];
       }
@@ -102,7 +102,7 @@ export function supportedPreparedGreaseGroundHazardProfile(
         {
           access: { tag: "prepared" },
           resource: spellInvocationResourceForCastOption(slot),
-          procedure: "greaseGroundHazard",
+          procedure: "persistentAreaSaveCondition",
           spell,
           ability: grease.phase.ability,
           dc: grease.phase.dc,
@@ -115,13 +115,13 @@ export function supportedPreparedGreaseGroundHazardProfile(
   );
 }
 
-function greaseGroundHazardSpell(
-  spell: GreaseGroundHazardSpellInvocation["spell"],
+function persistentAreaSaveConditionSpell(
+  spell: PersistentAreaSaveConditionSpellInvocation["spell"],
 ): {
-  readonly phase: GreaseGroundHazardPhase;
+  readonly phase: PersistentAreaSaveConditionPhase;
   readonly targeting: Extract<
     SpellTargeting,
-    { readonly kind: "pointOriginCube" }
+    { readonly kind: "pointOriginGroundSquare" }
   >;
   readonly durationTicks: ElapsedTimeTicks;
   readonly rangeFeet: MovementFeet;
@@ -143,7 +143,7 @@ function greaseGroundHazardSpell(
     spell.mechanics.duration.value.unit !== "minute" ||
     spell.mechanics.duration.value.amount !== 1 ||
     spell.mechanics.phases.length !== 1 ||
-    !isGreaseGroundHazardPhase(phase) ||
+    !isPersistentAreaSaveConditionPhase(phase) ||
     durationTicks === null ||
     Result.isFailure(durationTicks)
   ) {
@@ -153,7 +153,7 @@ function greaseGroundHazardSpell(
   return {
     phase,
     targeting: {
-      kind: "pointOriginCube",
+      kind: "pointOriginGroundSquare",
       sideFeet: movementFeet(phase.attachment.value.shape.sideFeet),
     },
     durationTicks: durationTicks.success,
@@ -161,9 +161,9 @@ function greaseGroundHazardSpell(
   };
 }
 
-function isGreaseGroundHazardPhase(
+function isPersistentAreaSaveConditionPhase(
   phase: ActivationPhase | undefined,
-): phase is GreaseGroundHazardPhase {
+): phase is PersistentAreaSaveConditionPhase {
   const failedEffect = phase?.kind === "save_gate" ? phase.onFail : undefined;
   return (
     phase?.kind === "save_gate" &&
@@ -181,18 +181,18 @@ function isGreaseGroundHazardPhase(
   );
 }
 
-function discoverGreaseGroundHazardCastAct(
+function discoverPersistentAreaSaveConditionCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<GreaseGroundHazardSpellInvocation>,
+  invocation: BattleExecutableSpellInvocation<PersistentAreaSaveConditionSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return discoverSavingThrowSpellCastActs(state, actorId, invocation);
 }
 
-function resolveGreaseGroundHazard(
-  input: GreaseGroundHazardResolveInput,
+function resolvePersistentAreaSaveCondition(
+  input: PersistentAreaSaveConditionResolveInput,
 ): BattleResolutionResult {
-  return resolveGreaseGroundHazardSpellAct({
+  return resolvePersistentAreaSaveConditionSpellAct({
     input: input.input,
     actorId: input.actorId,
     invocation: input.invocation,
@@ -201,30 +201,31 @@ function resolveGreaseGroundHazard(
   });
 }
 
-const GreaseGroundHazardInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: LeveledSpellInvocationResourceSchema,
-    procedure: Schema.Literal("greaseGroundHazard"),
-    spellRuleFacts: SpellRuleExecutionFactsSchema,
-    ability: Schema.Literal("dex"),
-    dc: DcSourceSchema,
-    targeting: Schema.Struct({
-      kind: Schema.Literal("pointOriginCube"),
-      sideFeet: MovementFeet,
+const PersistentAreaSaveConditionInvocationSchema =
+  spellProcedureExecutionSchema(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: LeveledSpellInvocationResourceSchema,
+      procedure: Schema.Literal("persistentAreaSaveCondition"),
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
+      ability: Schema.Literal("dex"),
+      dc: DcSourceSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("pointOriginGroundSquare"),
+        sideFeet: MovementFeet,
+      }),
+      durationTicks: ElapsedTimeTicksSchema,
+      rangeFeet: MovementFeet,
     }),
-    durationTicks: ElapsedTimeTicksSchema,
-    rangeFeet: MovementFeet,
-  }),
-);
-export const greaseGroundHazardProfile = {
-  procedure: "greaseGroundHazard",
-  executionSchema: GreaseGroundHazardInvocationSchema,
-  admit: admitGreaseGroundHazard,
-  discoverCastAct: discoverGreaseGroundHazardCastAct,
-  resolve: resolveGreaseGroundHazard,
+  );
+export const persistentAreaSaveConditionProfile = {
+  procedure: "persistentAreaSaveCondition",
+  executionSchema: PersistentAreaSaveConditionInvocationSchema,
+  admit: admitPersistentAreaSaveCondition,
+  discoverCastAct: discoverPersistentAreaSaveConditionCastAct,
+  resolve: resolvePersistentAreaSaveCondition,
 } satisfies SpellProcedureDeclaration<
-  "greaseGroundHazard",
-  GreaseGroundHazardSpellInvocation
+  "persistentAreaSaveCondition",
+  PersistentAreaSaveConditionSpellInvocation
 >;
 import { spellInvocationResourceForCastOption } from "./profile.ts";
