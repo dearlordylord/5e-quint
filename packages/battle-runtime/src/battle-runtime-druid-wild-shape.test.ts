@@ -56,6 +56,7 @@ import {
 } from "./character-battle-resource-execution.ts";
 import type { CharacterBattleClassLevel } from "./character-class-level.ts";
 import { spellDefinitionHasPricedOrConsumedMaterialComponent } from "./battle-reducer/spells-invocation-guards.ts";
+import { isNonSpellStatBlockProcedureBinding } from "./stat-block-execution-state.ts";
 
 type CharacterSeedInput = Parameters<typeof characterSeed>[0];
 
@@ -713,8 +714,10 @@ test("an active Wild Shape form restores a spent recharge action from its start-
   const rechargeBinding =
     rechargePool === undefined
       ? undefined
-      : active?.admission.execution.procedureBindings.find((binding) =>
-          binding.resourcePoolRefs.includes(rechargePool.resourcePoolRef),
+      : active?.admission.execution.procedureBindings.find(
+          (binding) =>
+            isNonSpellStatBlockProcedureBinding(binding) &&
+            binding.resourcePoolRefs.includes(rechargePool.resourcePoolRef),
         );
   if (
     active === null ||

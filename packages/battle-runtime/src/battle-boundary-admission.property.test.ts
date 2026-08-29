@@ -114,6 +114,7 @@ import {
 } from "./stat-block-execution.ts";
 import {
   statBlockBonusActionOptionBindings,
+  isNonSpellStatBlockProcedureBinding,
   statBlockMultiattackBindings,
   statBlockAttackActionOptions,
 } from "./stat-block-execution-state.ts";
@@ -1859,16 +1860,22 @@ describe("battle boundary admission owners", () => {
         executionSource,
         {
           ...snapshot,
-          procedureBindings: snapshot.procedureBindings.map((binding, index) =>
-            index === 0
-              ? {
-                  ...binding,
-                  resourcePoolRefs: [
-                    ...binding.resourcePoolRefs,
-                    ...binding.resourcePoolRefs,
-                  ],
-                }
-              : binding,
+          procedureBindings: snapshot.procedureBindings.map(
+            (binding, index) => {
+              if (
+                index !== 0 ||
+                !isNonSpellStatBlockProcedureBinding(binding)
+              ) {
+                return binding;
+              }
+              return {
+                ...binding,
+                resourcePoolRefs: [
+                  ...binding.resourcePoolRefs,
+                  ...binding.resourcePoolRefs,
+                ],
+              };
+            },
           ),
         },
       ),

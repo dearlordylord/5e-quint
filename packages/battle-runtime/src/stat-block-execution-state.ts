@@ -1,6 +1,6 @@
-// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-MULTIATTACK-001 RAW-STAT-BLOCK-LIMITED-USAGE-001
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties stat-block.multiattack stat-block.resource-lifecycle
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP BATTLE.STAT_BLOCK.MULTIATTACK BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-MULTIATTACK-001 RAW-STAT-BLOCK-LIMITED-USAGE-001 RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties stat-block.multiattack stat-block.resource-lifecycle stat-block.spellcasting.procedure
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP BATTLE.STAT_BLOCK.MULTIATTACK BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE BATTLE.STAT_BLOCK.SPELLCASTING_PROCEDURE
 import { optionalProperty } from "./optional-property.ts";
 import {
   PositiveInteger,
@@ -158,7 +158,7 @@ function missingResourceDeclarationIssues(
   const missingOrdinals = new Set<StatBlockProcedureResourceOrdinal>();
   const missingIssues: StatBlockResourceGraphAdmissionFailure[] = [];
   for (const procedure of procedures) {
-    for (const ordinal of procedure.resourceRefs) {
+    for (const ordinal of runtimeProcedureResourceRefs(procedure)) {
       if (declaredOrdinals.has(ordinal) || missingOrdinals.has(ordinal)) {
         continue;
       }
@@ -170,6 +170,17 @@ function missingResourceDeclarationIssues(
     }
   }
   return missingIssues;
+}
+
+function runtimeProcedureResourceRefs(
+  procedure: BattleStatBlockRuntimeProcedure,
+): readonly StatBlockProcedureResourceOrdinal[] {
+  return procedure.kind === "spellcasting"
+    ? [
+        ...procedure.resourceRefs,
+        ...procedure.groups.flatMap(({ resourceRefs }) => resourceRefs),
+      ]
+    : procedure.resourceRefs;
 }
 
 export type StatBlockLegendaryActionUsesParseFailure = "invalidPositiveInteger";
@@ -308,6 +319,58 @@ export type BattleStatBlockRuntimeMultiattackDispatch = {
   readonly count: PositiveIntegerType;
 };
 
+/**
+ * A spell reference after the generic Stat Block procedure boundary has
+ * removed authored identity and protected expression. Restricted references
+ * remain a typed, non-executable child outcome; #428's semantic deltas are
+ * intentionally not promoted into this runtime shape.
+ *
+ * This increment never selects a child invocation. The child owner will add a
+ * canonical invocation reference at its own selection boundary; until then an
+ * outcome kind is enough to preserve the procedure's admitted shape without
+ * creating a positional or authored-identity dispatch key.
+ */
+export type StatBlockSpellcastingInvocationOutcome =
+  | { readonly kind: "unrestricted" }
+  | { readonly kind: "restricted" };
+
+/**
+ * Group facts retain only the execution-relevant group kind, child outcome
+ * kinds, and resource ordinals. Spell ids, names, provenance, and authored
+ * restriction prose remain at the Surface/presentation boundary. This owner
+ * maps the complete group; it does not select a group or invocation.
+ */
+export type BattleStatBlockRuntimeSpellcastingGroup =
+  | {
+      readonly kind: "at_will";
+      readonly resourceRefs: readonly [];
+      readonly invocations: ReadonlyNonEmptyArray<StatBlockSpellcastingInvocationOutcome>;
+    }
+  | {
+      readonly kind: "limited";
+      readonly resourceRefs: ReadonlyNonEmptyArray<StatBlockProcedureResourceOrdinal>;
+      readonly invocations: ReadonlyNonEmptyArray<StatBlockSpellcastingInvocationOutcome>;
+    };
+
+export type BattleStatBlockRuntimeSpellcastingComponents = {
+  readonly v: boolean;
+  readonly s: boolean;
+  readonly m: "required" | "notRequired";
+};
+
+export type BattleStatBlockRuntimeSpellcastingProcedure = {
+  readonly kind: "spellcasting";
+  readonly section: "actions" | "bonusActions";
+  readonly procedureOrdinal: StatBlockProcedureOrdinal;
+  readonly ability: Ability;
+  readonly spellSaveDc?: PositiveIntegerType;
+  readonly spellAttackBonus?: IntegerType;
+  readonly components?: BattleStatBlockRuntimeSpellcastingComponents;
+  readonly groups: ReadonlyNonEmptyArray<BattleStatBlockRuntimeSpellcastingGroup>;
+  /** Stat Block spellcasting entries cannot own a top-level resource. */
+  readonly resourceRefs: readonly [];
+};
+
 export type BattleStatBlockRuntimeFacts = {
   readonly size: Size;
   readonly creatureType: CreatureType;
@@ -373,7 +436,8 @@ export type BattleStatBlockRuntimeProcedure =
       readonly procedureOrdinal: StatBlockProcedureOrdinal;
       readonly standardActions: ReadonlyNonEmptyArray<SupportedStatBlockBonusActionStandardAction>;
       readonly resourceRefs: readonly StatBlockProcedureResourceOrdinal[];
-    };
+    }
+  | BattleStatBlockRuntimeSpellcastingProcedure;
 
 export type StatBlockActionProjectionShape =
   | "attack"
@@ -381,6 +445,7 @@ export type StatBlockActionProjectionShape =
   | "save"
   | "support"
   | "actionOption"
+  | "spellcasting"
   | "special";
 
 /**
@@ -442,22 +507,99 @@ export type StatBlockBonusActionOptionProcedure = {
   readonly standardActions: ReadonlyNonEmptyArray<SupportedStatBlockBonusActionStandardAction>;
 };
 
+export type StatBlockSpellcastingGroup =
+  | {
+      readonly kind: "at_will";
+      readonly resourcePoolRefs: readonly [];
+      readonly invocations: ReadonlyNonEmptyArray<StatBlockSpellcastingInvocationOutcome>;
+    }
+  | {
+      readonly kind: "limited";
+      readonly resourcePoolRefs: ReadonlyNonEmptyArray<BattleResourcePoolExecutionRef>;
+      readonly invocations: ReadonlyNonEmptyArray<StatBlockSpellcastingInvocationOutcome>;
+    };
+
+export type StatBlockSpellcastingProcedure = {
+  readonly kind: "spellcasting";
+  readonly section: "actions" | "bonusActions";
+  readonly procedureOrdinal: StatBlockProcedureOrdinal;
+  readonly ability: Ability;
+  readonly spellSaveDc?: PositiveIntegerType;
+  readonly spellAttackBonus?: IntegerType;
+  readonly components?: BattleStatBlockRuntimeSpellcastingComponents;
+  readonly groups: ReadonlyNonEmptyArray<StatBlockSpellcastingGroup>;
+};
+
+export type StatBlockSpellcastingActionCost = "magicAction" | "bonusAction";
+
+/**
+ * Project an admitted Stat Block spellcasting procedure into the battle
+ * action-economy vocabulary. The procedure shape has already narrowed the
+ * section to Actions or Bonus Actions; unsupported action sections cannot
+ * reach this owner.
+ */
+export function statBlockSpellcastingActionCost(
+  procedure: Pick<StatBlockSpellcastingProcedure, "kind" | "section">,
+): StatBlockSpellcastingActionCost {
+  return Match.value(procedure.section).pipe(
+    Match.when("actions", () => "magicAction" as const),
+    Match.when("bonusActions", () => "bonusAction" as const),
+    Match.exhaustive,
+  );
+}
+
 export type StatBlockProcedure =
   | StatBlockAttackProcedure
   | StatBlockUnarmedStrikeProcedure
   | StatBlockMultiattackProcedure
-  | StatBlockBonusActionOptionProcedure;
+  | StatBlockBonusActionOptionProcedure
+  | StatBlockSpellcastingProcedure;
 
+/**
+ * A known spellcasting procedure has no procedure-owned resource pools;
+ * group invocation selection owns those references. This conditional is
+ * deliberately distributive so a heterogeneous binding remains a union whose
+ * spellcasting branch cannot carry a top-level resource reference.
+ */
 export type StatBlockProcedureBindingFor<
   TProcedure extends StatBlockProcedure,
-> = {
-  readonly procedureRef: BattleStatBlockProcedureExecutionRef;
-  readonly resourcePoolRefs: readonly BattleResourcePoolExecutionRef[];
-  readonly procedure: TProcedure;
-};
+> = TProcedure extends StatBlockSpellcastingProcedure
+  ? {
+      readonly procedureRef: BattleStatBlockProcedureExecutionRef;
+      readonly resourcePoolRefs: readonly [];
+      readonly procedure: TProcedure;
+    }
+  : {
+      readonly procedureRef: BattleStatBlockProcedureExecutionRef;
+      readonly resourcePoolRefs: readonly BattleResourcePoolExecutionRef[];
+      readonly procedure: TProcedure;
+    };
 
 export type StatBlockProcedureBinding =
   StatBlockProcedureBindingFor<StatBlockProcedure>;
+
+type StatBlockAggregateSpellcastingBinding = Extract<
+  StatBlockProcedureBinding,
+  { readonly procedure: { readonly kind: "spellcasting" } }
+>;
+type StatBlockSpellcastingBindingTopLevelResourceInvariantHolds =
+  StatBlockAggregateSpellcastingBinding["resourcePoolRefs"] extends readonly []
+    ? true
+    : false;
+type AssertStatBlockProcedureBindingInvariant<Condition extends true> =
+  Condition;
+export type StatBlockSpellcastingBindingTopLevelResourceInvariant =
+  AssertStatBlockProcedureBindingInvariant<StatBlockSpellcastingBindingTopLevelResourceInvariantHolds>;
+
+export type StatBlockNonSpellProcedureBinding = StatBlockProcedureBindingFor<
+  Exclude<StatBlockProcedure, StatBlockSpellcastingProcedure>
+>;
+
+export function isNonSpellStatBlockProcedureBinding(
+  binding: StatBlockProcedureBinding,
+): binding is StatBlockNonSpellProcedureBinding {
+  return binding.procedure.kind !== "spellcasting";
+}
 export type StatBlockProcedureBindingSnapshot = StatBlockProcedureBinding;
 
 export type StatBlockResourcePoolState =

@@ -79,6 +79,7 @@ export const STAT_BLOCK_PROCEDURE_PRESSURE_EXECUTION_OWNERS = [
   "battle-runtime delegated Bonus Action procedure",
   "battle-runtime generic Stat Block Multiattack control",
   "battle-runtime generic Stat Block attack procedure",
+  "battle-runtime generic Stat Block spellcasting procedure",
 ] as const;
 
 export type StatBlockProcedurePressureExecutionOwner =
@@ -97,6 +98,7 @@ export const STAT_BLOCK_PROCEDURE_PRESSURE_RUNTIME_SHAPES = [
   "recharge",
   "recharge_after_rest",
   "resourceReference",
+  "spellcasting",
 ] as const;
 
 export type StatBlockProcedurePressureRuntimeShape =
@@ -829,6 +831,15 @@ function procedureDisposition(
       ({ runtime }) => ({
         kind: "executable" as const,
         owner: "battle-runtime delegated Bonus Action procedure" as const,
+        runtimeShape: runtime.kind,
+      }),
+    ),
+    Match.when(
+      { kind: "executable", procedureKind: "spellcasting" },
+      ({ runtime }) => ({
+        kind: "executable" as const,
+        owner:
+          "battle-runtime generic Stat Block spellcasting procedure" as const,
         runtimeShape: runtime.kind,
       }),
     ),

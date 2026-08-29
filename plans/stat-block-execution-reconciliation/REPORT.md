@@ -8,8 +8,8 @@ Every one of the **2602** #350 structural rows is assigned exactly once. The che
 
 | State        | Rows |
 | ------------ | ---: |
-| executable   | 1084 |
-| missingOwner |  552 |
+| executable   | 1142 |
+| missingOwner |  494 |
 | textOnly     |  912 |
 | tableOwned   |   54 |
 | malformed    |    0 |
@@ -23,9 +23,9 @@ Every one of the **2602** #350 structural rows is assigned exactly once. The che
 | stat-block.legendary-action-lifecycle          | executable    | covered         |    6 |           3 | stat-block.legendary-action-lifecycle    | BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE    |         — |
 | stat-block.attack-procedure                    | executable    | covered         |  252 |         213 | stat-block.attack-procedure              | BATTLE.STAT_BLOCK.ATTACK_PROCEDURE              |         — |
 | stat-block.multiattack                         | executable    | covered         |   89 |          44 | stat-block.multiattack                   | BATTLE.STAT_BLOCK.MULTIATTACK                   |         — |
+| stat-block.spellcasting.procedure              | executable    | covered         |   58 |          51 | stat-block.spellcasting.procedure        | BATTLE.STAT_BLOCK.SPELLCASTING_PROCEDURE        |         — |
 | stat-block.resource-lifecycle                  | executable    | covered         |  330 |         122 | stat-block.resource-lifecycle            | BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE            |         — |
 | stat-block.spell-invocation.unrestricted       | missingOwner  | not-applicable  |  286 |          50 | stat-block.spell-invocation.unrestricted | BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED |      #418 |
-| stat-block.spellcasting.procedure              | missingOwner  | not-applicable  |   58 |          51 | stat-block.spellcasting.procedure        | BATTLE.STAT_BLOCK.SPELLCASTING_PROCEDURE        |      #419 |
 | stat-block.spellcasting.limited-group          | missingOwner  | not-applicable  |   59 |          48 | stat-block.spellcasting.limited-group    | BATTLE.STAT_BLOCK.SPELLCASTING_LIMITED_GROUP    |      #420 |
 | stat-block.save-procedure                      | missingOwner  | not-applicable  |   48 |          48 | stat-block.save-procedure                | BATTLE.STAT_BLOCK.SAVE_PROCEDURE                |      #421 |
 | stat-block.spellcasting.at-will-group          | missingOwner  | not-applicable  |   48 |          47 | stat-block.spellcasting.at-will-group    | BATTLE.STAT_BLOCK.SPELLCASTING_AT_WILL_GROUP    |      #422 |

@@ -81,6 +81,7 @@ import {
 import {
   restoreStatBlockExecutionAdmission,
   restoreStatBlockExecutionAdmissions,
+  isNonSpellStatBlockProcedureBinding,
   spendStatBlockProcedureResources,
   statBlockProcedureBinding,
   statBlockExecutionAdmissionCohort,
@@ -102,6 +103,7 @@ import {
 } from "./battle-action-options.ts";
 import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
 import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
+import { syntheticSpellcastingProcedureEntry } from "./stat-block-spellcasting-procedure.test-support.ts";
 
 const isolatedExecutionBattleId = battleId(
   "battle-stat-block-isolated-execution-admission",
@@ -1385,6 +1387,84 @@ describe("Stat Block execution references", () => {
     ).toThrow();
   });
 
+  test("rejects spellcasting groups bound to a Legendary Action pool", () => {
+    const actorId = combatantId("execution-ref-spellcasting-legendary-pool");
+    const base = monsterResourceStatBlock();
+    const actions = requireProcedureActions(base);
+    const spellcasting = syntheticSpellcastingProcedureEntry();
+    const record: StatBlockRecord = {
+      ...base,
+      statBlock: {
+        ...base.statBlock,
+        actions: [...actions, spellcasting],
+      },
+    };
+    const admission = isolatedStatBlockAdmissions(actorId, [record])[0];
+    if (admission === undefined) {
+      throw new Error("Expected the spellcasting Stat Block admission.");
+    }
+    const snapshot = statBlockExecutionSnapshot(admission.execution);
+    const spellcastingBinding = snapshot.procedureBindings.find(
+      (binding) => binding.procedure.kind === "spellcasting",
+    );
+    const legendaryPool = snapshot.resourcePools.find(
+      (pool) => pool.kind === "legendaryActions",
+    );
+    if (
+      spellcastingBinding?.procedure.kind !== "spellcasting" ||
+      legendaryPool === undefined
+    ) {
+      throw new Error(
+        "Expected spellcasting and Legendary Action execution bindings.",
+      );
+    }
+    const limitedGroup = spellcastingBinding.procedure.groups.find(
+      (group) => group.kind === "limited",
+    );
+    if (limitedGroup === undefined) {
+      throw new Error("Expected a limited spellcasting group.");
+    }
+    const malformedProcedure = {
+      ...spellcastingBinding.procedure,
+      groups: spellcastingBinding.procedure.groups.map((group) =>
+        group === limitedGroup
+          ? {
+              ...group,
+              resourcePoolRefs: [legendaryPool.resourcePoolRef],
+            }
+          : group,
+      ),
+    };
+    const malformed = {
+      ...snapshot,
+      procedureBindings: snapshot.procedureBindings.map((binding) =>
+        binding.procedureRef === spellcastingBinding.procedureRef
+          ? { ...binding, procedure: malformedProcedure }
+          : binding,
+      ),
+    };
+    expect(() =>
+      Schema.decodeUnknownSync(StatBlockExecutionSnapshotSchema)(malformed),
+    ).toThrow();
+
+    const malformedTopLevelResourceBinding = {
+      ...snapshot,
+      procedureBindings: snapshot.procedureBindings.map((binding) =>
+        binding.procedureRef === spellcastingBinding.procedureRef
+          ? {
+              ...binding,
+              resourcePoolRefs: [legendaryPool.resourcePoolRef],
+            }
+          : binding,
+      ),
+    };
+    expect(() =>
+      Schema.decodeUnknownSync(StatBlockExecutionSnapshotSchema)(
+        malformedTopLevelResourceBinding,
+      ),
+    ).toThrow();
+  });
+
   test("spends a procedure's complete resource set atomically", () => {
     const actorId = combatantId("execution-ref-atomic-resource-spend");
     const base = monsterResourceStatBlock();
@@ -1425,6 +1505,9 @@ describe("Stat Block execution references", () => {
     if (admission === undefined || binding === undefined) {
       throw new Error("Expected an admitted limited-use Legendary Action.");
     }
+    if (!isNonSpellStatBlockProcedureBinding(binding)) {
+      throw new Error("Expected a non-spellcasting resource binding.");
+    }
     expect(binding.resourcePoolRefs).toHaveLength(2);
     const reorderedSnapshot = Schema.decodeUnknownSync(
       StatBlockExecutionSnapshotSchema,
@@ -1460,13 +1543,18 @@ describe("Stat Block execution references", () => {
           {
             ...statBlockExecutionSnapshot(admission.execution),
             procedureBindings: admission.execution.procedureBindings.map(
-              (candidate) =>
-                candidate.procedureRef === binding.procedureRef
-                  ? {
-                      ...candidate,
-                      resourcePoolRefs: [firstOwnedPoolRef, firstOwnedPoolRef],
-                    }
-                  : candidate,
+              (candidate) => {
+                if (
+                  candidate.procedureRef !== binding.procedureRef ||
+                  !isNonSpellStatBlockProcedureBinding(candidate)
+                ) {
+                  return candidate;
+                }
+                return {
+                  ...candidate,
+                  resourcePoolRefs: [firstOwnedPoolRef, firstOwnedPoolRef],
+                };
+              },
             ),
           },
         ),

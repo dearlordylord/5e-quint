@@ -423,7 +423,10 @@ export type {
 export type {
   StatBlockActionProjectionShape,
   StatBlockProjectionIssue,
+  StatBlockSpellcastingActionCost,
 } from "./stat-block-execution-state.ts";
+
+export { statBlockSpellcastingActionCost } from "./stat-block-execution-state.ts";
 
 export {
   authoredStatBlockBattleInitIssueMessage,

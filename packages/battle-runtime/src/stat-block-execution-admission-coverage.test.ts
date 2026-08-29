@@ -125,7 +125,8 @@ describe("Stat Block execution admission branch coverage", () => {
     if (
       firstResource === undefined ||
       secondResource === undefined ||
-      firstProcedure === undefined
+      firstProcedure === undefined ||
+      firstProcedure.kind === "spellcasting"
     ) {
       throw new Error("Expected the resource-backed Stat Block graph.");
     }
