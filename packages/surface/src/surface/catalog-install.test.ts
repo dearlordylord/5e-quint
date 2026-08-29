@@ -4,21 +4,18 @@ import { describe, expect, test } from "vitest";
 import armorChainMailInput from "../../content/armor_chain_mail.json";
 import goblinWarriorInput from "../../content/stat_block_goblin_warrior.json";
 import { statBlockId } from "@dnd/shared/game-facts";
+import { PositiveInteger } from "@dnd/shared/types";
 import {
   installSrdSurface,
   installSrdSurfaceText,
-  type SurfaceCatalogInstallIssue,
   type SurfaceMechanicsAdmission,
 } from "./catalog-install.ts";
-
-const UNIT_MECHANICS_PATHS = ["acFormula", "donDoff"] as const;
-type UnitMechanicsPath = (typeof UNIT_MECHANICS_PATHS)[number];
-
-const STAT_BLOCK_MECHANICS_PATHS = [
-  "actions[0].procedure",
-  "actions[1].procedure",
-] as const;
-type StatBlockMechanicsPath = (typeof STAT_BLOCK_MECHANICS_PATHS)[number];
+import {
+  statBlockMechanicsPath,
+  unitMechanicsPath,
+  type StatBlockMechanicsPath,
+  type UnitMechanicsPath,
+} from "./mechanics-graph-path.ts";
 
 const publishedUnit = {
   ...armorChainMailInput,
@@ -29,12 +26,21 @@ const publishedStatBlock = {
   rulesExcerpt: "Synthetic test excerpt for one authored Stat Block.",
 };
 const goblinWarriorId = statBlockId(goblinWarriorInput.id);
-const unitAcFormulaPath: UnitMechanicsPath = "acFormula";
-const unitDonDoffPath: UnitMechanicsPath = "donDoff";
-const statBlockFirstProcedurePath: StatBlockMechanicsPath =
-  "actions[0].procedure";
-const statBlockSecondProcedurePath: StatBlockMechanicsPath =
-  "actions[1].procedure";
+const unitAcFormulaPath = unitMechanicsPath([
+  { kind: "singleton", role: "recordMechanics" },
+]);
+const unitDonDoffPath = unitMechanicsPath([
+  { kind: "singleton", role: "recordMechanics" },
+  { kind: "singleton", role: "effect" },
+]);
+const statBlockFirstProcedurePath = statBlockMechanicsPath([
+  { kind: "occurrence", role: "action", ordinal: PositiveInteger(1) },
+  { kind: "singleton", role: "procedure" },
+]);
+const statBlockSecondProcedurePath = statBlockMechanicsPath([
+  { kind: "occurrence", role: "action", ordinal: PositiveInteger(2) },
+  { kind: "singleton", role: "procedure" },
+]);
 const portableSurface = {
   kind: "srd-5.2.1-surface-catalog",
   units: [publishedUnit],
@@ -215,34 +221,5 @@ describe("atomic Surface catalog installation", () => {
     ).toEqual(["schema", "duplicate-authored-identity"]);
     expect(admissionCalled).toBe(false);
     expect(result).not.toHaveProperty("catalog");
-  });
-
-  test("preserves family-owned closed path vocabularies", () => {
-    expect(UNIT_MECHANICS_PATHS).toEqual(["acFormula", "donDoff"]);
-    expect(STAT_BLOCK_MECHANICS_PATHS).toEqual([
-      "actions[0].procedure",
-      "actions[1].procedure",
-    ]);
-
-    // @ts-expect-error presentation fields are not Unit mechanics paths
-    const unitPresentationPath: UnitMechanicsPath = "displayName";
-    // @ts-expect-error Unit paths cannot be used as Stat Block paths
-    const crossFamilyPath: StatBlockMechanicsPath = unitAcFormulaPath;
-    const mismatchedIssue: SurfaceCatalogInstallIssue<
-      UnitMechanicsPath,
-      StatBlockMechanicsPath
-    > = {
-      phase: "admission",
-      // @ts-expect-error a Unit root cannot carry a Stat Block mechanics path
-      root: { kind: "unit", id: armorChainMailInput.id },
-      reason: "unsupported_mechanics",
-      mechanicsPath: statBlockFirstProcedurePath,
-      message: "This impossible pairing must remain a compile error.",
-    };
-    expect([
-      unitPresentationPath,
-      crossFamilyPath,
-      mismatchedIssue,
-    ]).toHaveLength(3);
   });
 });

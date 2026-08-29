@@ -10,6 +10,7 @@
     "./surface/druid-wild-shape-readers": "./src/surface/druid-wild-shape-readers.ts",
     "./surface/find-familiar-forms": "./src/surface/find-familiar-forms.ts",
     "./surface/portable-surface": "./src/surface/portable-surface.ts",
+    "./surface/mechanics-graph-path": "./src/surface/mechanics-graph-path.ts",
     "./surface/stat-block-catalog": "./src/surface/stat-block-catalog.ts",
     "./surface/stat-block-catalog.test-support": "./src/surface/stat-block-catalog.test-support.ts",
     "./surface/stat-block-speed-readers": "./src/surface/stat-block-speed-readers.ts",
