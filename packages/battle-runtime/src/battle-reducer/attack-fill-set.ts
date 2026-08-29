@@ -64,7 +64,7 @@ import {
   STUNNING_STRIKE_SAVE_HOLE_ID,
 } from "./domain-constants.ts";
 import { isSaveGatedConditionWithRepeatDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
-import { isMirrorImageDuplicateRollFill } from "./mirror-image-hit-interception.ts";
+import { isDuplicateHitInterceptionDuplicateRollFill } from "./mirror-image-hit-interception.ts";
 import { DamageRelationshipDecisionsByHole } from "./damage-relationship-decisions.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.ts";
 
@@ -1093,7 +1093,7 @@ function processRolledDiceFill(
   fill: BattleRolledDiceFill,
   context: SelectedAttackFillContext,
 ): SelectedAttackFillProcessingResult {
-  if (isMirrorImageDuplicateRollFill(fill)) {
+  if (isDuplicateHitInterceptionDuplicateRollFill(fill)) {
     return rememberSelectedAttackFill(
       context.duplicateHitInterceptionRoll,
       fill,

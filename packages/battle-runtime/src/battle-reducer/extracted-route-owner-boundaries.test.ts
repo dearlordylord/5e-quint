@@ -33,7 +33,7 @@ import {
 } from "./command-routes.ts";
 import {
   companionRouteForDiscoveredAct,
-  spawnedCompanionLifecycleCompanionLifecycleRouteEvents,
+  spawnedCompanionLifecycleRouteEvents,
 } from "./companion-routes.ts";
 import {
   conditionImmunityTemporaryHitPointRouteForDiscoveredAct,
@@ -146,9 +146,7 @@ describe("extracted route owner boundaries", () => {
   });
 
   test("projects companion owner outputs", () => {
-    expect(
-      spawnedCompanionLifecycleCompanionLifecycleRouteEvents(),
-    ).toHaveLength(2);
+    expect(spawnedCompanionLifecycleRouteEvents()).toHaveLength(2);
   });
 
   test("projects marked damage, feature, Command, and attack route events", () => {

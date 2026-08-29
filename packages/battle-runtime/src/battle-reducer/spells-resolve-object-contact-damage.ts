@@ -1508,7 +1508,7 @@ function objectContactDamageUnrelatedFillsMessage(
     fillSet.conditionChoice !== undefined ||
     fillSet.areaChoice !== undefined ||
     fillSet.teleportDestination !== undefined ||
-    fillSet.dancingLightsPlacement !== undefined ||
+    fillSet.movableLightPlacement !== undefined ||
     fillSet.damageTypeChoice !== undefined ||
     (!options.allowSpellCastReactionFacts &&
       fillSet.reactionSpellTargetFacts.length > 0) ||

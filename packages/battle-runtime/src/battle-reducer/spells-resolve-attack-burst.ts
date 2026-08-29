@@ -75,7 +75,7 @@ import {
 } from "./d20-test-natural-one-reroll.ts";
 
 import { needsHolesResult } from "./needs-holes-result.ts";
-import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
+import { duplicateHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
@@ -563,7 +563,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
     : undefined;
   const mirrorImageCheck =
     hit && mirrorImageAttacker !== undefined
-      ? mirrorImageHitInterceptionCheck({
+      ? duplicateHitInterceptionCheck({
           state: attackRolledState,
           attacker: mirrorImageAttacker,
           target,

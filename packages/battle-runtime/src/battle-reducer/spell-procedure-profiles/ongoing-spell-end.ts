@@ -580,7 +580,7 @@ function ongoingSpellEndDispelException(
 
 function activeAntimagicFieldAuraMatchesTarget(
   state: BattleState,
-  target: AntimagicFieldAuraOngoingSpellEffectRef,
+  target: MagicSuppressionEmanationOngoingSpellEffectRef,
 ): boolean {
   const source = state.combatants.get(target.sourceCombatantId);
   const effect = source?.activeEffects.find(

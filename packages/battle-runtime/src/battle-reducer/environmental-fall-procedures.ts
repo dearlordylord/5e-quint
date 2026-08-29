@@ -18,7 +18,7 @@ import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-h
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import {
   battleReducerRouteForCreatureFallsInterruptWindow,
-  battleReducerRouteForFeatherFallLanding,
+  battleReducerRouteForFallingCreatureMitigationLanding,
 } from "./interrupt-route-projection.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import { featherFallLandingCleanupForCombatant } from "./spells-holes-fills.ts";
@@ -253,7 +253,8 @@ function resolveFeatherFallLandingForTarget(
     fallDamagePrevented: true,
     fallingPronePrevented: true,
   } as const satisfies BattleFallingCreatureMitigationLandingResult;
-  const routeEvents = battleReducerRouteForFeatherFallLanding(result);
+  const routeEvents =
+    battleReducerRouteForFallingCreatureMitigationLanding(result);
   return routeEvents === undefined ? result : { ...result, routeEvents };
 }
 

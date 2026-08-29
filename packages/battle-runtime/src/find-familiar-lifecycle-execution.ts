@@ -38,7 +38,7 @@ import {
 import type { FindFamiliarCreatureTypeOverride } from "@dnd/shared/game-facts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import { retainedStoredFormForPresentCompanion } from "./companion-stored-form.ts";
-import { findFamiliarCompanionLifecycleRouteEvents } from "./battle-reducer/companion-routes.ts";
+import { spawnedCompanionLifecycleRouteEvents } from "./battle-reducer/companion-routes.ts";
 import type { BattleReducerRouteEvents } from "./battle-reducer/reducer-route-protocol.ts";
 
 type FindFamiliarCombatantRemoval =
@@ -213,7 +213,7 @@ export function temporarilyDismissFindFamiliar(
       familiarId,
       ...optionalProperty("heldObjectIds", input.heldObjectIds),
     }),
-    findFamiliarCompanionLifecycleRouteEvents(),
+    spawnedCompanionLifecycleRouteEvents(),
   );
 }
 
@@ -384,7 +384,7 @@ export function reappearAdmittedTemporarilyDismissedFindFamiliar(
   return resolvedFindFamiliarResult(
     nextState.state,
     [],
-    findFamiliarCompanionLifecycleRouteEvents(),
+    spawnedCompanionLifecycleRouteEvents(),
   );
 }
 

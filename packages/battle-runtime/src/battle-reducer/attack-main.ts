@@ -800,7 +800,7 @@ function resolveBrutalStrikeForcefulBlowMovement(input: {
     brutalStrikeForcefulBlow,
     additionalSpeedSegments,
     fixedCostMovementReplacement: _fixedCostMovementReplacement,
-    levitatedMovement: _levitatedMovement,
+    controlledVerticalSuspensionMovement: _controlledVerticalSuspensionMovement,
     compelledApproach: _compelledApproach,
     compelledFlee: _compelledFlee,
     ...firstSegment
