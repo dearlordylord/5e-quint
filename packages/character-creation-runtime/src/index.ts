@@ -6,7 +6,6 @@ export {
 } from "./class-spellcasting.ts";
 
 export {
-  admitCharacterDefinitionMechanics,
   projectCharacterDefinition,
   type CharacterDefinitionAdmissionInput,
   type CharacterDefinitionAdmissionIssue,

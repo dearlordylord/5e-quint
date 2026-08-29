@@ -16,10 +16,7 @@ import {
   type UnitReaderResult,
   type WizardClassCreationFacts,
 } from "@dnd/surface/surface/character-creation-readers";
-import type {
-  SurfaceMechanicsAdmission,
-  UnitMechanicsAdmissionIssueDraft,
-} from "@dnd/surface/surface/catalog-install";
+import type { UnitMechanicsAdmissionIssueDraft } from "@dnd/surface/surface/catalog-install";
 import {
   unitMechanicsPath,
   type UnitMechanicsPath,
@@ -67,6 +64,23 @@ export type CharacterDefinitionProjection =
       readonly kind: "species";
       readonly facts: MechanicsFacts<SpeciesCreationFacts>;
     };
+
+export type CharacterDefinitionClassFacts = Extract<
+  CharacterDefinitionProjection,
+  { readonly kind: "class" }
+>["facts"];
+export type CharacterDefinitionSubclassFacts = Extract<
+  CharacterDefinitionProjection,
+  { readonly kind: "subclass" }
+>["facts"];
+export type CharacterDefinitionBackgroundFacts = Extract<
+  CharacterDefinitionProjection,
+  { readonly kind: "background" }
+>["facts"];
+export type CharacterDefinitionSpeciesFacts = Extract<
+  CharacterDefinitionProjection,
+  { readonly kind: "species" }
+>["facts"];
 
 /**
  * Project one already-decoded Character Definition Unit without consulting a
@@ -175,10 +189,6 @@ export function admitCharacterDefinitionMechanicsGraph(
     : { tag: "rejected", issues: [firstIssue, ...remainingIssues] };
 }
 
-/** The owner callback shape consumed by the atomic Surface installer. */
-export const admitCharacterDefinitionMechanics =
-  admitCharacterDefinitionMechanicsGraph satisfies SurfaceMechanicsAdmission["admitUnit"];
-
 function projectionAdmissionIssue(
   issue: SurfaceReadIssue,
 ): CharacterDefinitionAdmissionIssue {
@@ -196,10 +206,19 @@ function inspectCharacterDefinitionRoot(
   const installedRoot = input.surface.units.find(
     (candidate) => candidate.id === input.unit.id,
   );
-  // The Surface catalog's duplicate authored-id check makes id membership the
-  // root-correlation invariant. Do not require JavaScript object identity or
-  // re-project a second copy of the root here.
-  if (installedRoot !== undefined) return;
+  // Correlate decoded roots by their complete structural content. The
+  // catalog's duplicate-id check locates the candidate, but an altered
+  // same-id record must not inherit the installed root's admission.
+  if (installedRoot !== undefined) {
+    if (sameCharacterDefinitionStructure(installedRoot, input.unit)) return;
+    addAdmissionIssue(
+      issues,
+      "ambiguous_mechanics",
+      rootMechanicsPath(),
+      "The Character Definition admission root has the installed id but different decoded mechanics.",
+    );
+    return;
+  }
   addAdmissionIssue(
     issues,
     "incomplete_graph",
@@ -234,6 +253,8 @@ function inspectCharacterDefinitionLinks(
       issues,
       statBlockIds,
       unitIds,
+      owningClassName:
+        input.unit.kind === "class" ? input.unit.className : undefined,
     });
   }
 }
@@ -244,6 +265,9 @@ function inspectCharacterDefinitionLink(input: {
   readonly issues: CharacterDefinitionAdmissionIssue[];
   readonly statBlockIds: ReadonlySet<string>;
   readonly unitIds: ReadonlyMap<string, UnitRecord>;
+  readonly owningClassName:
+    | Extract<UnitRecord, { readonly kind: "class" }>["className"]
+    | undefined;
 }): void {
   const linkPath = characterDefinitionLinkPath(input.index, input.link);
   if (input.link.targetKind === "unit") {
@@ -253,6 +277,7 @@ function inspectCharacterDefinitionLink(input: {
       link,
       linkPath,
       unitIds: input.unitIds,
+      owningClassName: input.owningClassName,
     });
     return;
   }
@@ -275,6 +300,9 @@ function inspectCharacterDefinitionUnitLink(input: {
   readonly linkPath: UnitMechanicsPath;
   readonly issues: CharacterDefinitionAdmissionIssue[];
   readonly unitIds: ReadonlyMap<string, UnitRecord>;
+  readonly owningClassName:
+    | Extract<UnitRecord, { readonly kind: "class" }>["className"]
+    | undefined;
 }): void {
   const target = input.unitIds.get(input.link.targetId);
   if (target === undefined) {
@@ -289,13 +317,36 @@ function inspectCharacterDefinitionUnitLink(input: {
     return;
   }
 
-  const expectedKinds = expectedCharacterDefinitionTargetKinds(input.link);
-  if (expectedKinds !== undefined && !expectedKinds.includes(target.kind)) {
+  const expectation = expectedCharacterDefinitionTarget(input.link);
+  if (expectation.tag === "unowned") {
+    addAdmissionIssue(
+      input.issues,
+      "unsupported_mechanics",
+      input.linkPath,
+      `The Character Definition ${input.link.relation} authored ${input.link.category} has no owner projection.`,
+    );
+    return;
+  }
+  if (!expectation.targetKinds.includes(target.kind)) {
     addAdmissionIssue(
       input.issues,
       "ambiguous_mechanics",
       input.linkPath,
-      `The Character Definition ${input.link.relation} resolves to an incompatible Unit shape; expected ${expectedKinds.join(" or ")}.`,
+      `The Character Definition ${input.link.relation} resolves to an incompatible Unit shape; expected ${expectation.targetKinds.join(" or ")}.`,
+    );
+    return;
+  }
+  if (
+    expectation.requiresOwningClassName &&
+    (input.owningClassName === undefined ||
+      target.kind !== "subclass" ||
+      target.className !== input.owningClassName)
+  ) {
+    addAdmissionIssue(
+      input.issues,
+      "ambiguous_mechanics",
+      input.linkPath,
+      `The Character Definition subclass-choice target must belong to ${input.owningClassName ?? "the owning class"}.`,
     );
   }
 }
@@ -322,33 +373,67 @@ const CHARACTER_DEFINITION_ITEM_KINDS = [
   "weapon",
 ] as const satisfies ReadonlyArray<UnitRecord["kind"]>;
 
-function expectedCharacterDefinitionTargetKinds(
+type CharacterDefinitionTargetExpectation =
+  | {
+      readonly tag: "supported";
+      readonly targetKinds: readonly UnitRecord["kind"][];
+      readonly requiresOwningClassName?: boolean;
+    }
+  | { readonly tag: "unowned" };
+
+function expectedCharacterDefinitionTarget(
   link: SurfaceAuthoredLink,
-): readonly UnitRecord["kind"][] | undefined {
-  if (link.targetKind !== "unit") return undefined;
+): CharacterDefinitionTargetExpectation {
+  if (link.targetKind !== "unit") return { tag: "unowned" };
+  if (link.sourceRole === "class-feature-grant") {
+    return {
+      tag: "supported",
+      targetKinds: CHARACTER_DEFINITION_CLASS_FEATURE_KINDS,
+    };
+  }
+  if (link.sourceRole === "class-subclass-choice") {
+    return {
+      tag: "supported",
+      targetKinds: CHARACTER_DEFINITION_SUBCLASS_KINDS,
+      requiresOwningClassName: true,
+    };
+  }
   return Match.value(link.relation).pipe(
-    Match.when("excluded-armor-reference", () =>
-      CHARACTER_DEFINITION_ITEM_KINDS.filter(
+    Match.when("excluded-armor-reference", () => ({
+      tag: "supported" as const,
+      targetKinds: CHARACTER_DEFINITION_ITEM_KINDS.filter(
         (kind) => kind === "armor" || kind === "armor_template",
       ),
-    ),
-    Match.when("item-reference", () => CHARACTER_DEFINITION_ITEM_KINDS),
-    Match.when(
-      "linked-spell-reference",
-      () => CHARACTER_DEFINITION_SPELL_KINDS,
-    ),
-    Match.when("origin-feat-reference", () => CHARACTER_DEFINITION_FEAT_KINDS),
-    Match.when("resource-link", () => undefined),
-    Match.when("spell-reference", () => CHARACTER_DEFINITION_SPELL_KINDS),
-    Match.when("subclass-choice", () => CHARACTER_DEFINITION_SUBCLASS_KINDS),
-    // Character Definition feature grants are the only root-owned
-    // `unit-reference` branch; their target shape is a Class Feature.
-    Match.when(
-      "unit-reference",
-      () => CHARACTER_DEFINITION_CLASS_FEATURE_KINDS,
-    ),
-    Match.when("spell-list", () => CHARACTER_DEFINITION_SPELL_KINDS),
-    Match.when("weapon-reference", () => ["weapon"] as const),
+    })),
+    Match.when("item-reference", () => ({
+      tag: "supported" as const,
+      targetKinds: CHARACTER_DEFINITION_ITEM_KINDS,
+    })),
+    Match.when("linked-spell-reference", () => ({
+      tag: "supported" as const,
+      targetKinds: CHARACTER_DEFINITION_SPELL_KINDS,
+    })),
+    Match.when("origin-feat-reference", () => ({
+      tag: "supported" as const,
+      targetKinds: CHARACTER_DEFINITION_FEAT_KINDS,
+    })),
+    Match.when("resource-link", () => ({ tag: "unowned" as const })),
+    Match.when("spell-reference", () => ({
+      tag: "supported" as const,
+      targetKinds: CHARACTER_DEFINITION_SPELL_KINDS,
+    })),
+    // A generic subclass-choice or unit-reference is intentionally not
+    // accepted: its source role is required to identify the owning branch.
+    Match.when("subclass-choice", () => ({ tag: "unowned" as const })),
+    Match.when("unit-reference", () => ({ tag: "unowned" as const })),
+    Match.when("spell-list", () => ({
+      tag: "supported" as const,
+      targetKinds: CHARACTER_DEFINITION_SPELL_KINDS,
+    })),
+    Match.when("weapon-reference", () => ({
+      tag: "supported" as const,
+      targetKinds: ["weapon"] as const,
+    })),
     Match.exhaustive,
   );
 }
@@ -369,6 +454,43 @@ function characterDefinitionLinkPath(
 
 function rootMechanicsPath(): UnitMechanicsPath {
   return unitMechanicsPath([{ kind: "singleton", role: "recordMechanics" }]);
+}
+
+function sameCharacterDefinitionStructure(
+  left: SrdUnitRecord,
+  right: SrdUnitRecord,
+): boolean {
+  return sameStructuralValue(left, right);
+}
+
+function sameStructuralValue(left: unknown, right: unknown): boolean {
+  if (Object.is(left, right)) return true;
+  if (typeof left !== typeof right || left === null || right === null) {
+    return false;
+  }
+  if (Array.isArray(left) || Array.isArray(right)) {
+    if (!Array.isArray(left) || !Array.isArray(right)) return false;
+    return (
+      left.length === right.length &&
+      left.every((value, index) => sameStructuralValue(value, right[index]))
+    );
+  }
+  if (!isStructuralRecord(left) || !isStructuralRecord(right)) return false;
+  const leftKeys = Object.keys(left);
+  const rightKeys = Object.keys(right);
+  return (
+    leftKeys.length === rightKeys.length &&
+    leftKeys.every(
+      (key) =>
+        Object.hasOwn(right, key) && sameStructuralValue(left[key], right[key]),
+    )
+  );
+}
+
+function isStructuralRecord(
+  value: unknown,
+): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function addAdmissionIssue(

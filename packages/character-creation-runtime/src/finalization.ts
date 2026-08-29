@@ -21,15 +21,9 @@ import {
 } from "@dnd/shared/types";
 import {
   MAGIC_INITIATE_SPELLCASTING_ABILITY_OPTIONS,
-  readBackgroundCreationFacts,
-  readClassCreationFacts,
   readMagicInitiateSpellAccessSourceFacts,
-  readSpeciesCreationFacts,
-  type ClassCreationFacts,
-  type SpeciesCreationFacts,
   type SurfaceReadIssue,
   type UnitReaderResult,
-  type WizardClassCreationFacts,
 } from "@dnd/surface/surface/character-creation-readers";
 import { SKILLS } from "@dnd/surface/surface/types";
 import type {
@@ -83,7 +77,13 @@ import {
   startingEquipmentChoiceHole,
   startingEquipmentUnitIds,
 } from "./discovery.ts";
-import { projectCharacterDefinition } from "./character-definition-projection.ts";
+import {
+  projectCharacterDefinition,
+  type CharacterDefinitionBackgroundFacts,
+  type CharacterDefinitionClassFacts,
+  type CharacterDefinitionProjection,
+  type CharacterDefinitionSpeciesFacts,
+} from "./character-definition-projection.ts";
 import {
   decodeAbilityScoreIncreaseOptionId,
   decodeProficiencyGrantSubjectOptionId,
@@ -261,6 +261,13 @@ type BackgroundAbilityScoreIncreaseDelta = {
   readonly ability: Ability;
   readonly increase: number;
 };
+
+type ClassCreationFacts = CharacterDefinitionClassFacts;
+type SpeciesCreationFacts = CharacterDefinitionSpeciesFacts;
+type WizardClassCreationFacts = Extract<
+  CharacterDefinitionClassFacts,
+  { readonly className: "wizard" }
+>;
 
 type ClassFactsByUnitId = ReadonlyMap<UnitRecord["id"], ClassCreationFacts>;
 type FinalizationIssues = NonEmptyReadonlyArray<CreationFinalizationIssue>;
@@ -458,7 +465,7 @@ export function executableSupportIssues(
           ...expectedValueIssue(
             draconicAncestrySelectionMatchesSurface(
               selections,
-              dependencies.species.right.speciesUnit,
+              dependencies.species.right.speciesFacts,
             ),
             { tag: "draconicAncestryMismatch" },
           ),
@@ -552,11 +559,12 @@ function magicInitiateSpellListsAreDistinct(
 ): boolean {
   const background = unitLibrary.getUnit(selections.background);
   const backgroundFacts = Option.isSome(background)
-    ? readBackgroundCreationFacts(background.value)
+    ? projectCharacterDefinition(background.value)
     : undefined;
   const backgroundFeatUnitIds =
-    backgroundFacts?.tag === "readable"
-      ? [backgroundFacts.value.originFeatId]
+    backgroundFacts?.tag === "readable" &&
+    backgroundFacts.value.kind === "background"
+      ? [backgroundFacts.value.facts.originFeatId]
       : [];
   const features = finalizedClassChoiceFeaturesForSupportedChoices(
     unitChoiceSelections(selections),
@@ -639,20 +647,30 @@ function backgroundSupportDependencies(
   if (Either.isLeft(backgroundUnit)) {
     return Either.left([backgroundUnit.left]);
   }
-  const backgroundFacts = readableForFinalization(
-    readBackgroundCreationFacts(backgroundUnit.right),
+  const backgroundProjection = projectForFinalization(
+    backgroundUnit.right,
     selections.background,
     "background",
   );
   /* v8 ignore start -- @preserve -- The selected background was admitted as readable from this catalog before score projection. */
-  if (Either.isLeft(backgroundFacts)) {
-    return Either.left([backgroundFacts.left]);
+  if (
+    Either.isLeft(backgroundProjection) ||
+    backgroundProjection.right.kind !== "background"
+  ) {
+    return Either.left([
+      Either.isLeft(backgroundProjection)
+        ? backgroundProjection.left
+        : unsupportedCharacterDefinitionKind(
+            selections.background,
+            "background",
+          ),
+    ]);
   }
   /* v8 ignore stop -- @preserve */
   const scoresAfterBackground = applyBackgroundAbilityScoreIncrease(
     selections.abilityScoreGeneration.assignedScores,
     selections.backgroundAbilityScoreIncrease,
-    backgroundFacts.right.abilityScoreIncrease.abilities,
+    backgroundProjection.right.facts.abilityScoreIncrease.abilities,
   );
   if (Either.isLeft(scoresAfterBackground)) {
     return Either.left([scoresAfterBackground.left]);
@@ -678,16 +696,21 @@ function speciesSupportDependencies(
     "species",
   );
   if (Either.isLeft(speciesUnit)) return Either.left([speciesUnit.left]);
-  const speciesFacts = readableForFinalization(
-    readSpeciesCreationFacts(speciesUnit.right),
+  const speciesProjection = projectForFinalization(
+    speciesUnit.right,
     selections.species,
     "species",
   );
   /* v8 ignore start -- @preserve -- The selected species was admitted as readable from this catalog before dependency projection. */
-  return Either.isLeft(speciesFacts)
-    ? Either.left([speciesFacts.left])
+  return Either.isLeft(speciesProjection) ||
+    speciesProjection.right.kind !== "species"
+    ? Either.left([
+        Either.isLeft(speciesProjection)
+          ? speciesProjection.left
+          : unsupportedCharacterDefinitionKind(selections.species, "species"),
+      ])
     : Either.right({
-        speciesFacts: speciesFacts.right,
+        speciesFacts: speciesProjection.right.facts,
         speciesUnit: speciesUnit.right,
       });
   /* v8 ignore stop -- @preserve */
@@ -764,16 +787,17 @@ export function selectedPreparedSpellsAreInSelectedSpellbook(
     startingClassUnitId(selections.progression),
   );
   if (Option.isNone(classUnit)) return false;
-  const classFacts = readClassCreationFacts(classUnit.value);
+  const classProjection = projectCharacterDefinition(classUnit.value);
   if (
-    classFacts.tag !== "readable" ||
-    !isWizardClassCreationFacts(classFacts.value)
+    classProjection.tag !== "readable" ||
+    classProjection.value.kind !== "class" ||
+    !isWizardClassCreationFacts(classProjection.value.facts)
   ) {
     return true;
   }
 
   const spellcasting = classSpellcastingCreationAtLevel(
-    classFacts.value.spellcasting,
+    classProjection.value.facts.spellcasting,
     classLevelForUnit(
       selections.progression,
       startingClassUnitId(selections.progression),
@@ -899,9 +923,9 @@ function draconicAncestrySelectionMatchesSurface(
     FinalizedCharacterSelections,
     "species" | "draconicAncestry"
   >,
-  speciesUnit: UnitRecord,
+  speciesFacts: SpeciesCreationFacts,
 ): boolean {
-  const source = draconicAncestryDamageTypeSource(speciesUnit);
+  const source = draconicAncestryDamageTypeSource(speciesFacts);
   if (source === undefined) {
     return selections.draconicAncestry === undefined;
   }
@@ -913,10 +937,10 @@ function draconicAncestrySelectionMatchesSurface(
 }
 
 function draconicAncestryDamageTypeSource(
-  unit: UnitRecord,
+  facts: SpeciesCreationFacts,
 ): DragonbornSpeciesRecord["draconicAncestry"]["damageType"] | undefined {
-  return unit.kind === "species" && "draconicAncestry" in unit
-    ? unit.draconicAncestry.damageType
+  return "draconicAncestry" in facts
+    ? facts.draconicAncestry.damageType
     : undefined;
 }
 
@@ -926,13 +950,18 @@ function finalizedSpeciesChoiceFacts(
     "choices" | "draconicAncestry"
   >,
   species: UnitRecord,
+  speciesFacts: SpeciesCreationFacts,
   unitLibrary: UnitCatalog,
 ): Either.Either<
   CharacterBuildSpeciesChoiceFacts | undefined,
   FinalizationIssues
 > {
-  const draconicSource = draconicAncestryDamageTypeSource(species);
-  const lineageSource = speciesLineageChoiceSource(species, unitLibrary);
+  const draconicSource = draconicAncestryDamageTypeSource(speciesFacts);
+  const lineageSource = speciesLineageChoiceSource(
+    species,
+    speciesFacts,
+    unitLibrary,
+  );
   /* v8 ignore start -- @preserve -- Support admission rejects unreadable, conflicting, or absent species-choice sources before projection. */
   if (Either.isLeft(lineageSource)) {
     return Either.left(lineageSource.left);
@@ -1001,15 +1030,10 @@ type SpeciesLineageChoiceSource = {
 
 function speciesLineageChoiceSource(
   species: UnitRecord,
+  speciesFacts: SpeciesCreationFacts,
   unitLibrary: UnitCatalog,
 ): Either.Either<SpeciesLineageChoiceSource | undefined, FinalizationIssues> {
-  const facts = readSpeciesCreationFacts(species);
-  /* v8 ignore start -- @preserve -- Species-choice projection receives readable species facts with installed trait references from support admission. */
-  if (facts.tag !== "readable") {
-    return Either.right(undefined);
-  }
-
-  const sources = Object.values(facts.value.traits).flatMap((traitUnitId) => {
+  const sources = Object.values(speciesFacts.traits).flatMap((traitUnitId) => {
     const traitUnit = unitLibrary.getUnit(traitUnitId);
     if (Option.isNone(traitUnit) || traitUnit.value.kind !== "species_trait") {
       return [];
@@ -1023,7 +1047,6 @@ function speciesLineageChoiceSource(
         ]
       : [];
   });
-  /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- The supported species catalog admits at most one trait carrying Gnomish Lineage mechanics. */
   if (sources.length > 1) {
     return Either.left([
@@ -1517,12 +1540,12 @@ export function isSupportedBackgroundAbilityScoreIncrease(
   const backgroundOption = unitLibrary.getUnit(backgroundUnitId);
   if (Option.isNone(backgroundOption)) return false;
   const background = backgroundOption.value;
-  const facts = readBackgroundCreationFacts(background);
-  if (facts.tag !== "readable") {
+  const projection = projectCharacterDefinition(background);
+  if (projection.tag !== "readable" || projection.value.kind !== "background") {
     return false;
   }
 
-  const eligible = facts.value.abilityScoreIncrease.abilities;
+  const eligible = projection.value.facts.abilityScoreIncrease.abilities;
   if (selection.kind === "oneEach") {
     return backgroundAbilityScoreIncreaseFitsCap(
       baseScores,
@@ -1575,14 +1598,18 @@ function classFactsEntryForFinalization(
 > {
   const classUnit = unitForFinalization(unitLibrary, classUnitId, "class");
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
-  const facts = readableForFinalization(
-    readClassCreationFacts(classUnit.right),
+  const projection = projectForFinalization(
+    classUnit.right,
     classUnitId,
     "class",
   );
-  return Either.isLeft(facts)
-    ? Either.left(facts.left)
-    : Either.right([classUnitId, facts.right]);
+  if (Either.isLeft(projection)) return Either.left(projection.left);
+  if (projection.right.kind !== "class") {
+    return Either.left(
+      unsupportedCharacterDefinitionKind(classUnitId, "class"),
+    );
+  }
+  return Either.right([classUnitId, projection.right.facts]);
 }
 
 function fixedMulticlassProficiencySubjects(
@@ -1649,14 +1676,20 @@ export function buildCharacterBuild(input: {
   /* v8 ignore start -- @preserve -- The support gate already resolved this selected background in the same catalog. */
   if (Either.isLeft(backgroundUnit)) return Either.left([backgroundUnit.left]);
   /* v8 ignore stop -- @preserve */
-  const backgroundFacts = readableForFinalization(
-    readBackgroundCreationFacts(backgroundUnit.right),
+  const backgroundProjection = projectForFinalization(
+    backgroundUnit.right,
     selections.background,
     "background",
   );
   /* v8 ignore start -- @preserve -- The support gate already parsed this selected background's creation facts. */
-  if (Either.isLeft(backgroundFacts))
-    return Either.left([backgroundFacts.left]);
+  if (Either.isLeft(backgroundProjection)) {
+    return Either.left([backgroundProjection.left]);
+  }
+  if (backgroundProjection.right.kind !== "background") {
+    return Either.left([
+      unsupportedCharacterDefinitionKind(selections.background, "background"),
+    ]);
+  }
   /* v8 ignore stop -- @preserve */
   const speciesUnit = unitForFinalization(
     input.unitLibrary,
@@ -1666,17 +1699,25 @@ export function buildCharacterBuild(input: {
   /* v8 ignore start -- @preserve -- The support gate already resolved this selected species in the same catalog. */
   if (Either.isLeft(speciesUnit)) return Either.left([speciesUnit.left]);
   /* v8 ignore stop -- @preserve */
-  const speciesFacts = readableForFinalization(
-    readSpeciesCreationFacts(speciesUnit.right),
+  const speciesProjection = projectForFinalization(
+    speciesUnit.right,
     selections.species,
     "species",
   );
   /* v8 ignore start -- @preserve -- The support gate already parsed this selected species's creation facts. */
-  if (Either.isLeft(speciesFacts)) return Either.left([speciesFacts.left]);
+  if (Either.isLeft(speciesProjection)) {
+    return Either.left([speciesProjection.left]);
+  }
+  if (speciesProjection.right.kind !== "species") {
+    return Either.left([
+      unsupportedCharacterDefinitionKind(selections.species, "species"),
+    ]);
+  }
   /* v8 ignore stop -- @preserve */
   const speciesChoiceFacts = finalizedSpeciesChoiceFacts(
     selections,
     speciesUnit.right,
+    speciesProjection.right.facts,
     input.unitLibrary,
   );
   /* v8 ignore start -- @preserve -- The support gate already proved the species source agrees with its selected choices. */
@@ -1688,7 +1729,7 @@ export function buildCharacterBuild(input: {
   const finalScores = applyBackgroundAbilityScoreIncrease(
     baseScores,
     selections.backgroundAbilityScoreIncrease,
-    backgroundFacts.right.abilityScoreIncrease.abilities,
+    backgroundProjection.right.facts.abilityScoreIncrease.abilities,
   );
   /* v8 ignore start -- @preserve -- The support gate already admitted this background increase against these scores. */
   if (Either.isLeft(finalScores)) return Either.left([finalScores.left]);
@@ -1797,8 +1838,11 @@ function finalizedMagicInitiateSpellAccesses(
     ...(() => {
       const background = unitLibrary.getUnit(selections.background);
       if (Option.isNone(background)) return [];
-      const facts = readBackgroundCreationFacts(background.value);
-      return facts.tag === "readable" ? [facts.value.originFeatId] : [];
+      const projection = projectCharacterDefinition(background.value);
+      return projection.tag === "readable" &&
+        projection.value.kind === "background"
+        ? [projection.value.facts.originFeatId]
+        : [];
     })(),
     ...characterBuildSpeciesOriginFeatUnitIds({
       species: selections.species,
@@ -2249,13 +2293,19 @@ export function characterBuildProficiencies(
     "background",
   );
   if (Either.isLeft(backgroundUnit)) return Either.left([backgroundUnit.left]);
-  const backgroundFacts = readableForFinalization(
-    readBackgroundCreationFacts(backgroundUnit.right),
+  const backgroundProjection = projectForFinalization(
+    backgroundUnit.right,
     build.background,
     "background",
   );
-  if (Either.isLeft(backgroundFacts))
-    return Either.left([backgroundFacts.left]);
+  if (Either.isLeft(backgroundProjection)) {
+    return Either.left([backgroundProjection.left]);
+  }
+  if (backgroundProjection.right.kind !== "background") {
+    return Either.left([
+      unsupportedCharacterDefinitionKind(build.background, "background"),
+    ]);
+  }
 
   const multiclassSubjects = fixedMulticlassProficiencySubjects(
     {
@@ -2280,7 +2330,7 @@ export function characterBuildProficiencies(
   return Either.right({
     savingThrows: startingClassFacts.savingThrowProficiencies,
     skills: uniqueValues([
-      ...backgroundFacts.right.skillProficiencies,
+      ...backgroundProjection.right.facts.skillProficiencies,
       ...build.proficiencyChoices.flatMap((subject) =>
         subject.kind === "skill" || subject.kind === "skill_expertise"
           ? [subject.skill]
@@ -2377,9 +2427,11 @@ export function characterBuildFeatureUnitIds(
     ...progressionClassUnitIds(build.progression).flatMap((classUnitId) => {
       const unit = unitLibrary.getUnit(classUnitId);
       if (Option.isNone(unit)) return [];
-      const facts = readClassCreationFacts(unit.value);
-      if (facts.tag !== "readable") return [];
-      return facts.value.featureGrants
+      const projection = projectCharacterDefinition(unit.value);
+      if (projection.tag !== "readable" || projection.value.kind !== "class") {
+        return [];
+      }
+      return projection.value.facts.featureGrants
         .filter(
           (grant) =>
             grant.level <= classLevelForUnit(build.progression, classUnitId),
@@ -2655,8 +2707,13 @@ export function allFinalizedChoicesSupported(
   const selectedClassUnitId = startingClassUnitId(selections.progression);
   const classUnit = unitLibrary.getUnit(selectedClassUnitId);
   if (Option.isNone(classUnit)) return false;
-  const classFacts = readClassCreationFacts(classUnit.value);
-  if (classFacts.tag !== "readable") return false;
+  const classProjection = projectCharacterDefinition(classUnit.value);
+  if (
+    classProjection.tag !== "readable" ||
+    classProjection.value.kind !== "class"
+  ) {
+    return false;
+  }
   const classFactsByUnitId = allClassFactsForFinalization(
     selections.progression,
     unitLibrary,
@@ -2664,18 +2721,25 @@ export function allFinalizedChoicesSupported(
   if (Either.isLeft(classFactsByUnitId)) return false;
   const backgroundUnit = unitLibrary.getUnit(selections.background);
   if (Option.isNone(backgroundUnit)) return false;
-  const backgroundFacts = readBackgroundCreationFacts(backgroundUnit.value);
-  if (backgroundFacts.tag !== "readable") return false;
+  const backgroundProjection = projectCharacterDefinition(backgroundUnit.value);
+  if (
+    backgroundProjection.tag !== "readable" ||
+    backgroundProjection.value.kind !== "background"
+  ) {
+    return false;
+  }
+  const classFacts = classProjection.value.facts;
+  const backgroundFacts = backgroundProjection.value.facts;
   const classEquipmentHole = requireUnitChoiceCreationHole(
     startingEquipmentChoiceHole(
       unitSource(selectedClassUnitId, CLASS_EQUIPMENT_CHOICE_KEY),
-      classFacts.value.startingEquipment,
+      classFacts.startingEquipment,
     ),
   );
   const backgroundEquipmentHole = requireUnitChoiceCreationHole(
     startingEquipmentChoiceHole(
       unitSource(selections.background, BACKGROUND_EQUIPMENT_CHOICE_KEY),
-      backgroundFacts.value.startingEquipment,
+      backgroundFacts.startingEquipment,
     ),
   );
   /* v8 ignore start -- @preserve -- Supported class and background equipment choices each produce a Unit-sourced choice hole. */
@@ -2688,9 +2752,9 @@ export function allFinalizedChoicesSupported(
   /* v8 ignore stop -- @preserve */
   const supportedHoles = supportedFinalizationChoiceHoles({
     selections,
-    classFacts: classFacts.value,
+    classFacts,
     classFactsByUnitId: classFactsByUnitId.right,
-    backgroundFacts: backgroundFacts.value,
+    backgroundFacts,
     unitLibrary,
     classEquipmentHole,
     backgroundEquipmentHole,
@@ -2740,7 +2804,7 @@ export function allFinalizedChoicesSupported(
           choice,
           selectedClassUnitId,
           CLASS_EQUIPMENT_CHOICE_KEY,
-          classFacts.value.startingEquipment,
+          classFacts.startingEquipment,
           supportProfile,
         );
       }
@@ -2752,7 +2816,7 @@ export function allFinalizedChoicesSupported(
           choice,
           selections.background,
           BACKGROUND_EQUIPMENT_CHOICE_KEY,
-          backgroundFacts.value.startingEquipment,
+          backgroundFacts.startingEquipment,
           supportProfile,
         );
       }
@@ -2854,10 +2918,7 @@ type SupportedFinalizationChoiceHoleInput = {
   readonly selections: FinalizedCharacterSelections;
   readonly classFacts: ClassCreationFacts;
   readonly classFactsByUnitId: ClassFactsByUnitId;
-  readonly backgroundFacts: Extract<
-    ReturnType<typeof readBackgroundCreationFacts>,
-    { readonly tag: "readable" }
-  >["value"];
+  readonly backgroundFacts: CharacterDefinitionBackgroundFacts;
   readonly unitLibrary: UnitCatalog;
   readonly classEquipmentHole: UnitChoiceCreationHole;
   readonly backgroundEquipmentHole: UnitChoiceCreationHole;
@@ -3129,11 +3190,12 @@ function speciesTraitGrantChoiceHolesForFinalization(
 ): readonly ChoiceCreationHole[] {
   const background = input.unitLibrary.getUnit(input.selections.background);
   const backgroundFacts = Option.isSome(background)
-    ? readBackgroundCreationFacts(background.value)
+    ? projectCharacterDefinition(background.value)
     : undefined;
   const excludedMagicInitiateSpellLists = magicInitiateSpellListsForUnitIds(
-    backgroundFacts?.tag === "readable"
-      ? [backgroundFacts.value.originFeatId]
+    backgroundFacts?.tag === "readable" &&
+      backgroundFacts.value.kind === "background"
+      ? [backgroundFacts.value.facts.originFeatId]
       : [],
     input.unitLibrary,
   );
@@ -3220,12 +3282,12 @@ function selectedSpeciesTraitUnitsForFinalization(
   if (Option.isNone(speciesUnit)) {
     return [];
   }
-  const facts = readSpeciesCreationFacts(speciesUnit.value);
-  if (facts.tag !== "readable") {
+  const projection = projectCharacterDefinition(speciesUnit.value);
+  if (projection.tag !== "readable" || projection.value.kind !== "species") {
     return [];
   }
 
-  return Object.values(facts.value.traits).flatMap((traitUnitId) => {
+  return Object.values(projection.value.facts.traits).flatMap((traitUnitId) => {
     const traitUnit = input.unitLibrary.getUnit(traitUnitId);
     return Option.isSome(traitUnit) && traitUnit.value.kind === "species_trait"
       ? [traitUnit.value]
@@ -3532,22 +3594,27 @@ function isSupportedCoinEquipmentSelection(
   const classUnit = unitLibrary.getUnit(startingClassId);
   const backgroundUnit = unitLibrary.getUnit(selections.background);
   if (Option.isNone(classUnit) || Option.isNone(backgroundUnit)) return false;
-  const classFacts = readClassCreationFacts(classUnit.value);
-  const backgroundFacts = readBackgroundCreationFacts(backgroundUnit.value);
-  if (classFacts.tag !== "readable" || backgroundFacts.tag !== "readable") {
+  const classProjection = projectCharacterDefinition(classUnit.value);
+  const backgroundProjection = projectCharacterDefinition(backgroundUnit.value);
+  if (
+    classProjection.tag !== "readable" ||
+    classProjection.value.kind !== "class" ||
+    backgroundProjection.tag !== "readable" ||
+    backgroundProjection.value.kind !== "background"
+  ) {
     return false;
   }
   const classChoice = selectedStartingEquipmentForBuild(
     selections,
     startingClassId,
     CLASS_EQUIPMENT_CHOICE_KEY,
-    classFacts.value.startingEquipment,
+    classProjection.value.facts.startingEquipment,
   );
   const backgroundChoice = selectedStartingEquipmentForBuild(
     selections,
     selections.background,
     BACKGROUND_EQUIPMENT_CHOICE_KEY,
-    backgroundFacts.value.startingEquipment,
+    backgroundProjection.value.facts.startingEquipment,
   );
   return isCoinGrantStartingEquipmentChoices(classChoice, backgroundChoice);
 }
@@ -3664,9 +3731,11 @@ function characterBuildDerivedFeatureUnitIds(
     ...progressionClassUnitIds(build.progression).flatMap((classUnitId) => {
       const unit = unitLibrary.getUnit(classUnitId);
       if (Option.isNone(unit)) return [];
-      const facts = readClassCreationFacts(unit.value);
-      if (facts.tag !== "readable") return [];
-      return facts.value.featureGrants
+      const projection = projectCharacterDefinition(unit.value);
+      if (projection.tag !== "readable" || projection.value.kind !== "class") {
+        return [];
+      }
+      return projection.value.facts.featureGrants
         .filter(
           (grant) =>
             grant.level <= classLevelForUnit(build.progression, classUnitId),
@@ -3720,8 +3789,10 @@ function backgroundOriginFeatUnitIds(
 ): readonly UnitRecord["id"][] {
   const unit = unitLibrary.getUnit(build.background);
   if (Option.isNone(unit)) return [];
-  const facts = readBackgroundCreationFacts(unit.value);
-  return facts.tag === "readable" ? [facts.value.originFeatId] : [];
+  const projection = projectCharacterDefinition(unit.value);
+  return projection.tag === "readable" && projection.value.kind === "background"
+    ? [projection.value.facts.originFeatId]
+    : [];
 }
 
 function speciesTraitUnitIds(
@@ -3730,9 +3801,9 @@ function speciesTraitUnitIds(
 ): readonly UnitRecord["id"][] {
   const unit = unitLibrary.getUnit(build.species);
   if (Option.isNone(unit)) return [];
-  const facts = readSpeciesCreationFacts(unit.value);
-  return facts.tag === "readable"
-    ? Object.values(facts.value.traits).map(authoredUnitId)
+  const projection = projectCharacterDefinition(unit.value);
+  return projection.tag === "readable" && projection.value.kind === "species"
+    ? Object.values(projection.value.facts.traits).map(authoredUnitId)
     : [];
 }
 
@@ -3746,14 +3817,20 @@ function speciesTraitUnitIdsForHitPointProjection(
     "species",
   );
   if (Either.isLeft(speciesUnit)) return Either.left(speciesUnit.left);
-  const speciesFacts = readableForFinalization(
-    readSpeciesCreationFacts(speciesUnit.right),
+  const speciesProjection = projectForFinalization(
+    speciesUnit.right,
     build.species,
     "species",
   );
-  if (Either.isLeft(speciesFacts)) return Either.left(speciesFacts.left);
+  if (Either.isLeft(speciesProjection))
+    return Either.left(speciesProjection.left);
+  if (speciesProjection.right.kind !== "species") {
+    return Either.left(
+      unsupportedCharacterDefinitionKind(build.species, "species"),
+    );
+  }
   return Either.right(
-    Object.values(speciesFacts.right.traits).map(authoredUnitId),
+    Object.values(speciesProjection.right.facts.traits).map(authoredUnitId),
   );
 }
 
@@ -4258,13 +4335,10 @@ function startingEquipmentChoiceForBuild(input: {
   readonly unitLibrary: UnitCatalog;
   readonly sourceUnitId: UnitRecord["id"];
   readonly lookupRole: CreationFinalizationLookupUnitRole;
-  readonly readableRole: CreationFinalizationReadableUnitRole;
+  readonly definitionKind: "class" | "background";
   readonly choiceKey:
     | typeof CLASS_EQUIPMENT_CHOICE_KEY
     | typeof BACKGROUND_EQUIPMENT_CHOICE_KEY;
-  readonly readFacts: (unit: UnitRecord) => UnitReaderResult<{
-    readonly startingEquipment: readonly StartingEquipmentChoice[];
-  }>;
 }): Either.Either<
   StartingEquipmentChoiceForBuild,
   CharacterBuildProjectionIssue
@@ -4275,20 +4349,29 @@ function startingEquipmentChoiceForBuild(input: {
     input.lookupRole,
   );
   if (Either.isLeft(unit)) return Either.left(unit.left);
-  const facts = readableForFinalization(
-    input.readFacts(unit.right),
+  const projection = projectForFinalization(
+    unit.right,
     input.sourceUnitId,
-    input.readableRole,
+    input.definitionKind,
   );
-  return Either.map(facts, ({ startingEquipment }) => ({
+  if (Either.isLeft(projection)) return Either.left(projection.left);
+  if (projection.right.kind !== input.definitionKind) {
+    return Either.left(
+      unsupportedCharacterDefinitionKind(
+        input.sourceUnitId,
+        input.definitionKind,
+      ),
+    );
+  }
+  return Either.right({
     sourceUnitId: input.sourceUnitId,
     choice: selectedStartingEquipmentForBuild(
       input.selections,
       input.sourceUnitId,
       input.choiceKey,
-      startingEquipment,
+      projection.right.facts.startingEquipment,
     ),
-  }));
+  });
 }
 
 function startingEquipmentChoicesForBuild(
@@ -4304,18 +4387,16 @@ function startingEquipmentChoicesForBuild(
     unitLibrary,
     sourceUnitId: startingClassId,
     lookupRole: "class",
-    readableRole: "class",
+    definitionKind: "class",
     choiceKey: CLASS_EQUIPMENT_CHOICE_KEY,
-    readFacts: readClassCreationFacts,
   });
   const backgroundChoice = startingEquipmentChoiceForBuild({
     selections,
     unitLibrary,
     sourceUnitId: selections.background,
     lookupRole: "background",
-    readableRole: "background",
+    definitionKind: "background",
     choiceKey: BACKGROUND_EQUIPMENT_CHOICE_KEY,
-    readFacts: readBackgroundCreationFacts,
   });
   if (Either.isLeft(classChoice) && Either.isLeft(backgroundChoice)) {
     return Either.left([classChoice.left, backgroundChoice.left]);
@@ -4726,6 +4807,35 @@ export function optionalUnitId(
   unitId: UnitRecord["id"] | undefined,
 ): readonly UnitRecord["id"][] {
   return unitId == null ? [] : [unitId];
+}
+
+/**
+ * Finalization's root lookup boundary projects a Character Definition once;
+ * downstream helpers receive this source-free projection rather than
+ * re-reading the authored Unit shape.
+ */
+function projectForFinalization(
+  unit: UnitRecord,
+  unitId: UnitRecord["id"],
+  role: CreationFinalizationReadableUnitRole,
+): Either.Either<CharacterDefinitionProjection, CharacterBuildProjectionIssue> {
+  return readableForFinalization(
+    projectCharacterDefinition(unit),
+    unitId,
+    role,
+  );
+}
+
+function unsupportedCharacterDefinitionKind(
+  unitId: UnitRecord["id"],
+  role: CreationFinalizationReadableUnitRole,
+): CharacterBuildProjectionIssue {
+  return characterBuildProjectionIssue({
+    tag: "unreadableUnit",
+    role,
+    unitId,
+    issues: [{ code: "unsupportedUnitKind" }],
+  });
 }
 
 function readableForFinalization<T>(
@@ -5368,8 +5478,10 @@ function backgroundSkillProficiencies(
   if (Option.isNone(backgroundUnit)) {
     return [];
   }
-  const facts = readBackgroundCreationFacts(backgroundUnit.value);
-  return facts.tag === "readable" ? facts.value.skillProficiencies : [];
+  const projection = projectCharacterDefinition(backgroundUnit.value);
+  return projection.tag === "readable" && projection.value.kind === "background"
+    ? projection.value.facts.skillProficiencies
+    : [];
   /* v8 ignore stop -- @preserve */
 }
 

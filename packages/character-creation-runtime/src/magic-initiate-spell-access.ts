@@ -2,9 +2,7 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
   MAGIC_INITIATE_SPELLCASTING_ABILITY_OPTIONS,
-  readBackgroundCreationFacts,
   readMagicInitiateSpellAccessSourceFacts,
-  readSpeciesCreationFacts,
   type MagicInitiateSpellAccessSourceFacts,
 } from "@dnd/surface/surface/character-creation-readers";
 import {
@@ -18,6 +16,7 @@ import type {
   CharacterBuild,
   CharacterBuildMagicInitiateSpellAccess,
 } from "./types.ts";
+import { projectCharacterDefinition } from "./character-definition-projection.ts";
 
 export type CharacterBuildMagicInitiateSpellAccessIssue = {
   readonly index?: number;
@@ -148,29 +147,36 @@ export function characterBuildSpeciesOriginFeatUnitIds(input: {
 }): readonly UnitRecord["id"][] {
   const species = input.unitLibrary.getUnit(input.species);
   if (Option.isNone(species)) return [];
-  const speciesFacts = readSpeciesCreationFacts(species.value);
-  if (speciesFacts.tag !== "readable") return [];
+  const speciesProjection = projectCharacterDefinition(species.value);
+  if (
+    speciesProjection.tag !== "readable" ||
+    speciesProjection.value.kind !== "species"
+  ) {
+    return [];
+  }
 
   const originFeatSources = new Set(
-    Object.values(speciesFacts.value.traits).flatMap((traitUnitId) => {
-      const trait = input.unitLibrary.getUnit(traitUnitId);
-      if (
-        Option.isNone(trait) ||
-        trait.value.kind !== "species_trait" ||
-        trait.value.mechanics.family !== "passive"
-      ) {
-        return [];
-      }
-      return trait.value.mechanics.grants.some(
-        (grant) =>
-          grant.kind === "grant_feat" &&
-          ("category" in grant
-            ? grant.category === "origin"
-            : grant.categories.includes("origin")),
-      )
-        ? [trait.value.id]
-        : [];
-    }),
+    Object.values(speciesProjection.value.facts.traits).flatMap(
+      (traitUnitId) => {
+        const trait = input.unitLibrary.getUnit(traitUnitId);
+        if (
+          Option.isNone(trait) ||
+          trait.value.kind !== "species_trait" ||
+          trait.value.mechanics.family !== "passive"
+        ) {
+          return [];
+        }
+        return trait.value.mechanics.grants.some(
+          (grant) =>
+            grant.kind === "grant_feat" &&
+            ("category" in grant
+              ? grant.category === "origin"
+              : grant.categories.includes("origin")),
+        )
+          ? [trait.value.id]
+          : [];
+      },
+    ),
   );
 
   return input.features.flatMap((feature) => {
@@ -314,10 +320,13 @@ function magicInitiateGrantInstances(
   const grants: MagicInitiateGrantInstance[] = [];
   const background = unitLibrary.getUnit(build.background);
   if (Option.isSome(background)) {
-    const facts = readBackgroundCreationFacts(background.value);
-    if (facts.tag === "readable") {
+    const projection = projectCharacterDefinition(background.value);
+    if (
+      projection.tag === "readable" &&
+      projection.value.kind === "background"
+    ) {
       const grant = magicInitiateGrantInstance(
-        facts.value.originFeatId,
+        projection.value.facts.originFeatId,
         unitLibrary,
       );
       if (grant !== undefined) grants.push(grant);

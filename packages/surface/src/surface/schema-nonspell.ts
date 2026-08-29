@@ -38,6 +38,7 @@ import {
   StandardActionKindSchema,
   surfaceSchemaRole,
   type SurfaceIdentityKind,
+  type SurfaceLinkSourceRole,
   type SurfaceProjectionKind,
   type SurfaceProtocolKind,
   type SurfaceUnitDependencyRelation,
@@ -95,22 +96,26 @@ const surfaceProjection = <A, I, R>(
 const surfaceReference = <A, I, R>(
   schema: Schema.Schema<A & string, I, R>,
   relation: SurfaceUnitReferenceRelation,
+  sourceRole?: SurfaceLinkSourceRole,
 ) =>
-  surfaceSchemaRole(Schema.typeSchema(schema.pipe(Schema.compose(UnitId))), {
-    category: "reference",
-    relation,
-    targetKind: "unit",
-  });
+  surfaceSchemaRole(
+    Schema.typeSchema(schema.pipe(Schema.compose(UnitId))),
+    sourceRole === undefined
+      ? { category: "reference", relation, targetKind: "unit" }
+      : { category: "reference", relation, targetKind: "unit", sourceRole },
+  );
 
 const surfaceDependency = <A, I, R>(
   schema: Schema.Schema<A & string, I, R>,
   relation: SurfaceUnitDependencyRelation,
+  sourceRole?: SurfaceLinkSourceRole,
 ) =>
-  surfaceSchemaRole(Schema.typeSchema(schema.pipe(Schema.compose(UnitId))), {
-    category: "dependency",
-    relation,
-    targetKind: "unit",
-  });
+  surfaceSchemaRole(
+    Schema.typeSchema(schema.pipe(Schema.compose(UnitId))),
+    sourceRole === undefined
+      ? { category: "dependency", relation, targetKind: "unit" }
+      : { category: "dependency", relation, targetKind: "unit", sourceRole },
+  );
 
 const surfaceExactDependency = <const Value extends string>(
   value: Value,
@@ -2633,7 +2638,11 @@ export const StartingEquipmentChoiceSchema = Schema.Union(
 );
 
 export const ClassFeatureGrantSchema = Schema.Struct({
-  unitId: surfaceDependency(NonEmptyStringSchema, "unit-reference"),
+  unitId: surfaceDependency(
+    NonEmptyStringSchema,
+    "unit-reference",
+    "class-feature-grant",
+  ),
   level: PositiveIntegerSchema,
 });
 
@@ -3371,7 +3380,11 @@ const ClassRecordBaseFields = {
     Schema.Struct({
       level: PositiveIntegerSchema,
       options: Schema.NonEmptyArray(
-        surfaceReference(NonEmptyStringSchema, "subclass-choice"),
+        surfaceReference(
+          NonEmptyStringSchema,
+          "subclass-choice",
+          "class-subclass-choice",
+        ),
       ),
     }),
   ),

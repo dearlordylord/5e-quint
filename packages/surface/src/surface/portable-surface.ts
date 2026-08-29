@@ -11,6 +11,7 @@ import {
 import type { SrdUnitRecord } from "./types.ts";
 import {
   readSurfaceSchemaRole,
+  type SurfaceLinkSourceRole,
   type SurfaceSchemaFieldRole,
 } from "./schema-base.ts";
 import { normalizeStatBlockIdentity } from "./stat-block-identity.ts";
@@ -82,10 +83,17 @@ type SurfaceAuthoredLinkRole = Extract<
   { readonly category: "dependency" | "reference" }
 >;
 
-export type SurfaceAuthoredLink = SurfaceAuthoredLinkRole & {
-  readonly path: string;
-  readonly targetId: string;
-};
+type SurfaceAuthoredLinkWithSourceRole<Role extends SurfaceAuthoredLinkRole> =
+  Role extends unknown
+    ? Omit<Role, "sourceRole"> & {
+        readonly sourceRole: SurfaceLinkSourceRole;
+        readonly path: string;
+        readonly targetId: string;
+      }
+    : never;
+
+export type SurfaceAuthoredLink =
+  SurfaceAuthoredLinkWithSourceRole<SurfaceAuthoredLinkRole>;
 
 export type SurfaceAuthoredLinkCollection = {
   readonly links: readonly SurfaceAuthoredLink[];
@@ -670,14 +678,23 @@ type AuthoredLinkWalkContext = {
 
 type AuthoredLinkNodeHandler = (context: AuthoredLinkWalkContext) => void;
 
+function authoredLinkSourceRole(
+  role: SurfaceAuthoredLinkRole,
+): SurfaceLinkSourceRole {
+  return "sourceRole" in role && role.sourceRole !== undefined
+    ? role.sourceRole
+    : "generic";
+}
+
 function authoredLinkKey(
   category: SurfaceAuthoredLink["category"],
   path: string,
   targetKind: "unit" | "statBlock",
   targetId: string,
   relation: string,
+  sourceRole: SurfaceLinkSourceRole,
 ): string {
-  return `${category}\u0000${path}\u0000${targetKind}\u0000${targetId}\u0000${relation}`;
+  return `${category}\u0000${path}\u0000${targetKind}\u0000${targetId}\u0000${relation}\u0000${sourceRole}`;
 }
 
 function handleStringAuthoredLink(context: AuthoredLinkWalkContext): void {
@@ -694,6 +711,7 @@ function handleStringAuthoredLink(context: AuthoredLinkWalkContext): void {
     role.targetKind,
     current.value,
     role.relation,
+    authoredLinkSourceRole(role),
   );
   if (
     links.some(
@@ -704,6 +722,7 @@ function handleStringAuthoredLink(context: AuthoredLinkWalkContext): void {
           link.targetKind,
           link.targetId,
           link.relation,
+          link.sourceRole,
         ) === key,
     )
   ) {
@@ -711,6 +730,7 @@ function handleStringAuthoredLink(context: AuthoredLinkWalkContext): void {
   }
   links.push({
     ...role,
+    sourceRole: authoredLinkSourceRole(role),
     path: current.path,
     targetId: current.value,
   });
