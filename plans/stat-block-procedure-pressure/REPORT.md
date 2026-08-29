@@ -28,6 +28,17 @@ The SRD catalog contributes **330 records** and **2602 procedure-bearing occurre
 | missingOwner |   494 |
 | malformed    |     0 |
 
+## Unrestricted spell-reference classification
+
+The current catalog join is identity-free: each row carries only its structural row ID, definition/profile status, group kind, source section, cast-level presence, casting-time kind, and duration kind. Authored spell IDs, names, and provenance are consulted at the catalog boundary and are not emitted in this join.
+
+| Join view     | Rows | Definitions | Unresolved definitions | Shipped | Unresolved | Profiled | Unprofiled | Long casting | Shipped Concentration |
+| ------------- | ---: | ----------: | ---------------------: | ------: | ---------: | -------: | ---------: | -----------: | --------------------: |
+| current       |  286 |         101 |                      0 |     286 |          0 |      104 |        182 |           36 |                   126 |
+| preResolution |  286 |         101 |                     35 |     215 |         71 |      104 |        182 |           21 |                   104 |
+
+The pre-resolution view is the pinned baseline used to prove the #418 partition: 286 = 104 shipped/profiled + 111 shipped/unprofiled + 71 unresolved, with 21 long-casting rows and 104 shipped Concentration rows. The current view reflects the admitted SRD definitions; these rows remain non-executable until a typed owner admits them.
+
 ## Bounded generic capability proposals
 
 Pressure score is occurrence count plus distinct Stat Block count. At most 24 proposals are emitted.

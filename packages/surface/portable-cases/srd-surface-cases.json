@@ -13044,6 +13044,2313 @@
             "rulesExcerpt": "# Character Origins\n## Character Species\n### Species Descriptions\n#### Tiefling\n\n**Creature Type:** Humanoid\n**Size:** Medium (about 4–7 feet tall) or Small (about 3–4 feet tall), chosen when you select this species\n**Speed:** 30 feet\n\nAs a Tiefling, you have the following special traits.\n\n***Darkvision.*** You have Darkvision with a range of 60 feet.\n\n***Fiendish Legacy.*** You are the recipient of a legacy that grants you supernatural abilities. Choose a legacy from the Fiendish Legacies table. You gain the level 1 benefit of the chosen legacy.\n\nWhen you reach character levels 3 and 5, you learn a higher-level spell, as shown on the table. You always have that spell prepared. You can cast it once without a spell slot, and you regain the ability to cast it in that way when you finish a Long Rest. You can also cast the spell using any spell slots you have of the appropriate level.\n\nIntelligence, Wisdom, or Charisma is your spellcasting ability for the spells you cast with this trait (choose the ability when you select the legacy).\n\n***Otherworldly Presence.*** You know the *Thaumaturgy* cantrip. When you cast it with this trait, the spell uses the same spellcasting ability you use for your Fiendish Legacy trait.\n\n##### Fiendish Legacies\n\n| Legacy   | Level 1 | Level 3 | Level 5 |\n|----------|---------|---------|---------|\n| Abyssal  | You have Resistance to Poison damage. You also know the *Poison Spray* cantrip. | *Ray of Sickness* | *Hold Person* |\n| Chthonic | You have Resistance to Necrotic damage. You also know the *Chill Touch* cantrip. | *False Life* | *Ray of Enfeeblement* |\n| Infernal | You have Resistance to Fire damage. You also know the *Fire Bolt* cantrip. | *Hellish Rebuke* | *Darkness* |"
           },
           {
+            "id": "animate_dead",
+            "name": "Animate Dead",
+            "kind": "spell",
+            "mechanics": {
+              "level": 3,
+              "school": "necromancy",
+              "range": {
+                "kind": "point",
+                "feet": 10
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": "a drop of blood, a piece of flesh, and a pinch of bone dust"
+              },
+              "duration": {
+                "kind": "instantaneous"
+              },
+              "castingTime": {
+                "kind": "minutes",
+                "amount": 1,
+                "ritual": false
+              },
+              "family": "reanimated_creature",
+              "targetKind": "corpse_or_bones_of_small_or_medium_humanoid",
+              "menu": [
+                {
+                  "slotLevel": 3,
+                  "options": [
+                    {
+                      "monsterId": "stat_block_skeleton",
+                      "count": 1
+                    },
+                    {
+                      "monsterId": "zombie",
+                      "count": 1
+                    }
+                  ]
+                },
+                {
+                  "slotLevel": 4,
+                  "options": [
+                    {
+                      "monsterId": "stat_block_skeleton",
+                      "count": 3
+                    },
+                    {
+                      "monsterId": "zombie",
+                      "count": 3
+                    }
+                  ]
+                },
+                {
+                  "slotLevel": 5,
+                  "options": [
+                    {
+                      "monsterId": "stat_block_skeleton",
+                      "count": 5
+                    },
+                    {
+                      "monsterId": "zombie",
+                      "count": 5
+                    }
+                  ]
+                },
+                {
+                  "slotLevel": 6,
+                  "options": [
+                    {
+                      "monsterId": "stat_block_skeleton",
+                      "count": 7
+                    },
+                    {
+                      "monsterId": "zombie",
+                      "count": 7
+                    }
+                  ]
+                },
+                {
+                  "slotLevel": 7,
+                  "options": [
+                    {
+                      "monsterId": "stat_block_skeleton",
+                      "count": 9
+                    },
+                    {
+                      "monsterId": "zombie",
+                      "count": 9
+                    }
+                  ]
+                },
+                {
+                  "slotLevel": 8,
+                  "options": [
+                    {
+                      "monsterId": "stat_block_skeleton",
+                      "count": 11
+                    },
+                    {
+                      "monsterId": "zombie",
+                      "count": 11
+                    }
+                  ]
+                },
+                {
+                  "slotLevel": 9,
+                  "options": [
+                    {
+                      "monsterId": "stat_block_skeleton",
+                      "count": 13
+                    },
+                    {
+                      "monsterId": "zombie",
+                      "count": 13
+                    }
+                  ]
+                }
+              ],
+              "control": {
+                "initiative": "own_roll",
+                "commandCost": {
+                  "kind": "bonus_action"
+                },
+                "commandRangeFeet": 60,
+                "defaultBehavior": "dodge_and_avoid"
+              },
+              "reassertWindow": {
+                "hours": 24,
+                "maxReassertPerCast": 4
+              }
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-A-D#Animate Dead"
+            },
+            "rulesExcerpt": "# Spell Descriptions: A–D\n## Animate Dead\n\n*Level 3 Necromancy (Cleric, Wizard)*\n\n**Casting Time:** 1 minute\n**Range:** 10 feet\n**Components:** V, S, M (a drop of blood, a piece of flesh, and a pinch of bone dust)\n**Duration:** Instantaneous\n\nChoose a pile of bones or a corpse of a Medium or Small Humanoid within range. The target becomes an Undead creature: a **Skeleton** if you chose bones or a **Zombie** if you chose a corpse (see \"Monsters\" for the stat blocks).\n\nOn each of your turns, you can take a Bonus Action to mentally command any creature you made with this spell if the creature is within 60 feet of you (if you control multiple creatures, you can command any of them at the same time, issuing the same command to each one). You decide what action the creature will take and where it will move on its next turn, or you can issue a general command, such as to guard a chamber or corridor. If you issue no commands, the creature takes the Dodge action and moves only to avoid harm. Once given an order, the creature continues to follow it until its task is complete.\n\nThe creature is under your control for 24 hours, after which it stops obeying any command you've given it. To maintain control of the creature for another 24 hours, you must cast this spell on the creature again before the current 24-hour period ends. This use of the spell reasserts your control over up to four creatures you have animated with this spell rather than animating a new creature.\n\n***Using a Higher-Level Spell Slot.*** You animate or reassert control over two additional Undead creatures for each spell slot level above 3. Each of the creatures must come from a different corpse or pile of bones.\n\n---"
+          },
+          {
+            "id": "chain_lightning",
+            "name": "Chain Lightning",
+            "kind": "spell",
+            "mechanics": {
+              "level": 6,
+              "school": "evocation",
+              "range": {
+                "kind": "point",
+                "feet": 150
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": "three silver pins"
+              },
+              "duration": {
+                "kind": "instantaneous"
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "save_gate",
+                  "attachment": {
+                    "kind": "hole",
+                    "holeId": "chain_lightning_target",
+                    "value": {
+                      "kind": "target",
+                      "selection": {
+                        "mode": "choose_up_to",
+                        "count": {
+                          "kind": "linear",
+                          "base": 4,
+                          "perSlotAboveBase": 1,
+                          "baseLevel": 6
+                        },
+                        "targetKinds": [
+                          "creature",
+                          "object"
+                        ]
+                      }
+                    },
+                    "label": "target"
+                  },
+                  "ability": "dex",
+                  "dc": {
+                    "kind": "caster_spell_save_dc"
+                  },
+                  "onFail": {
+                    "kind": "damage",
+                    "damageType": "lightning",
+                    "amount": {
+                      "kind": "fixed",
+                      "expr": {
+                        "dice": 10,
+                        "dieSize": 8
+                      }
+                    }
+                  },
+                  "onSuccess": {
+                    "kind": "half_damage"
+                  }
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-A-D#Chain Lightning"
+            },
+            "rulesExcerpt": "# Spell Descriptions: A–D\n## Chain Lightning\n\n*Level 6 Evocation (Sorcerer, Wizard)*\n\n**Casting Time:** Action\n**Range:** 150 feet\n**Components:** V, S, M (three silver pins)\n**Duration:** Instantaneous\n\nYou launch a lightning bolt toward a target you can see within range. Three bolts then leap from that target to as many as three other targets of your choice, each of which must be within 30 feet of the first target. A target can be a creature or an object and can be targeted by only one of the bolts.\n\nEach target makes a Dexterity saving throw, taking 10d8 Lightning damage on a failed save or half as much damage on a successful one.\n\n***Using a Higher-Level Spell Slot.*** One additional bolt leaps from the first target to another target for each spell slot level above 6.\n\n---"
+          },
+          {
+            "id": "clairvoyance",
+            "name": "Clairvoyance",
+            "kind": "spell",
+            "mechanics": {
+              "level": 3,
+              "school": "divination",
+              "range": {
+                "kind": "point",
+                "feet": 5280
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": "a focus worth 100+ GP, either a jeweled horn for hearing or a glass eye for seeing",
+                "materialCostGp": 100
+              },
+              "duration": {
+                "kind": "concentration",
+                "upTo": {
+                  "unit": "minute",
+                  "amount": 10
+                }
+              },
+              "castingTime": {
+                "kind": "minutes",
+                "amount": 10,
+                "ritual": false
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "hole",
+                    "holeId": "clairvoyance_sensor_location",
+                    "value": {
+                      "kind": "location",
+                      "description": "a familiar location; an obvious unfamiliar location"
+                    },
+                    "label": "sensor location"
+                  },
+                  "effects": [
+                    {
+                      "kind": "create_sensor",
+                      "visibility": "invisible",
+                      "durability": "invulnerable"
+                    },
+                    {
+                      "kind": "remote_perception",
+                      "senses": [
+                        "seeing",
+                        "hearing"
+                      ],
+                      "switchCost": "bonus_action"
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-A-D#Clairvoyance"
+            },
+            "rulesExcerpt": "# Spell Descriptions: A–D\n## Clairvoyance\n\n*Level 3 Divination (Bard, Cleric, Sorcerer, Wizard)*\n\n**Casting Time:** 10 minutes\n**Range:** 1 mile\n**Components:** V, S, M (a focus worth 100+ GP, either a jeweled horn for hearing or a glass eye for seeing)\n**Duration:** Concentration, up to 10 minutes\n\nYou create an Invisible sensor within range in a location familiar to you (a place you have visited or seen before) or in an obvious location that is unfamiliar to you (such as behind a door, around a corner, or in a grove of trees). The intangible, invulnerable sensor remains in place for the duration.\n\nWhen you cast the spell, choose seeing or hearing. You can use the chosen sense through the sensor as if you were in its space. As a Bonus Action, you can switch between seeing and hearing.\n\nA creature that sees the sensor (such as a creature benefiting from *See Invisibility* or Truesight) sees a luminous orb about the size of your fist.\n\n---"
+          },
+          {
+            "id": "confusion",
+            "name": "Confusion",
+            "kind": "spell",
+            "mechanics": {
+              "level": 4,
+              "school": "enchantment",
+              "range": {
+                "kind": "point",
+                "feet": 90
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": "three nut shells"
+              },
+              "duration": {
+                "kind": "concentration",
+                "upTo": {
+                  "unit": "minute",
+                  "amount": 1
+                }
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "area",
+                    "shape": {
+                      "kind": "sphere",
+                      "radiusFeet": 10
+                    },
+                    "origin": {
+                      "kind": "point_within_range"
+                    }
+                  },
+                  "effects": [
+                    {
+                      "kind": "none"
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-A-D#Confusion"
+            },
+            "rulesExcerpt": "# Spell Descriptions: A–D\n## Confusion\n\n*Level 4 Enchantment (Bard, Druid, Sorcerer, Wizard)*\n\n**Casting Time:** Action\n**Range:** 90 feet\n**Components:** V, S, M (three nut shells)\n**Duration:** Concentration, up to 1 minute\n\nEach creature in a 10-foot-radius Sphere centered on a point you choose within range must succeed on a Wisdom saving throw, or that target can't take Bonus Actions or Reactions and must roll 1d10 at the start of each of its turns to determine its behavior for that turn, consulting the table below.\n\n| 1d10  | Behavior for the Turn |\n|-------|-----------------------|\n| 1     | The target doesn't take an action, and it uses all its movement to move. Roll 1d4 for the direction: 1, north; 2, east; 3, south; or 4, west. |\n| 2–6   | The target doesn't move or take actions. |\n| 7–8   | The target doesn't move, and it takes the Attack action to make one melee attack against a random creature within reach. If none are within reach, the target takes no action. |\n| 9–10  | The target chooses its behavior. |\n\nAt the end of each of its turns, an affected target repeats the save, ending the spell on itself on a success.\n\n***Using a Higher-Level Spell Slot.*** The Sphere's radius increases by 5 feet for each spell slot level above 4.\n\n---"
+          },
+          {
+            "id": "control_water",
+            "name": "Control Water",
+            "kind": "spell",
+            "mechanics": {
+              "level": 4,
+              "school": "transmutation",
+              "range": {
+                "kind": "point",
+                "feet": 300
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": "a mixture of water and dust"
+              },
+              "duration": {
+                "kind": "concentration",
+                "upTo": {
+                  "unit": "minute",
+                  "amount": 10
+                }
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "area",
+                    "shape": {
+                      "kind": "cube",
+                      "sideFeet": 100
+                    },
+                    "origin": {
+                      "kind": "point_within_range"
+                    }
+                  },
+                  "effects": [
+                    {
+                      "kind": "none"
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-A-D#Control Water"
+            },
+            "rulesExcerpt": "# Spell Descriptions: A–D\n## Control Water\n\n*Level 4 Transmutation (Cleric, Druid, Wizard)*\n\n**Casting Time:** Action\n**Range:** 300 feet\n**Components:** V, S, M (a mixture of water and dust)\n**Duration:** Concentration, up to 10 minutes\n\nUntil the spell ends, you control any water inside an area you choose that is a Cube up to 100 feet on a side, using one of the following effects. As a Magic action on your later turns, you can repeat the same effect or choose a different one.\n\n- **Flood.** You cause the water level of all standing water in the area to rise by as much as 20 feet. If you choose an area in a large body of water, you instead create a 20-foot tall wave that travels from one side of the area to the other and then crashes. Any Huge or smaller vehicles in the wave's path are carried with it to the other side. Any Huge or smaller vehicles struck by the wave have a 25 percent chance of capsizing. The water level remains elevated until the spell ends or you choose a different effect. If this effect produced a wave, the wave repeats on the start of your next turn while the flood effect lasts.\n- **Part Water.** You part water in the area and create a trench. The trench extends across the spell's area, and the separated water forms a wall to either side. The trench remains until the spell ends or you choose a different effect. The water then slowly fills in the trench over the course of the next round until the normal water level is restored.\n- **Redirect Flow.** You cause flowing water in the area to move in a direction you choose, even if the water has to flow over obstacles, up walls, or in other unlikely directions. The water in the area moves as you direct it, but once it moves beyond the spell's area, it resumes its flow based on the terrain. The water continues to move in the direction you chose until the spell ends or you choose a different effect.\n- **Whirlpool.** You cause a whirlpool to form in the center of the area, which must be at least 50 feet square and 25 feet deep. The whirlpool lasts until you choose a different effect or the spell ends. The whirlpool is 5 feet wide at the base, up to 50 feet wide at the top, and 25 feet tall. Any creature in the water and within 25 feet of the whirlpool is pulled 10 feet toward it. When a creature enters the whirlpool for the first time on a turn or ends its turn there, it makes a Strength saving throw. On a failed save, the creature takes 2d8 Bludgeoning damage. On a successful save, the creature takes half as much damage. A creature can swim away from the whirlpool only if it first takes an action to pull away and succeeds on a Strength (Athletics) check against your spell save DC.\n\n---"
+          },
+          {
+            "id": "control_weather",
+            "name": "Control Weather",
+            "kind": "spell",
+            "mechanics": {
+              "level": 8,
+              "school": "transmutation",
+              "range": {
+                "kind": "self"
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": "burning incense"
+              },
+              "duration": {
+                "kind": "concentration",
+                "upTo": {
+                  "unit": "hour",
+                  "amount": 8
+                }
+              },
+              "castingTime": {
+                "kind": "minutes",
+                "amount": 10,
+                "ritual": false
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "self"
+                  },
+                  "effects": [
+                    {
+                      "kind": "none"
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-A-D#Control Weather"
+            },
+            "rulesExcerpt": "# Spell Descriptions: A–D\n## Control Weather\n\n*Level 8 Transmutation (Cleric, Druid, Wizard)*\n\n**Casting Time:** 10 minutes\n**Range:** Self\n**Components:** V, S, M (burning incense)\n**Duration:** Concentration, up to 8 hours\n\nYou take control of the weather within 5 miles of you for the duration. You must be outdoors to cast this spell, and it ends early if you go indoors.\n\nWhen you cast the spell, you change the current weather conditions, which are determined by the GM. You can change precipitation, temperature, and wind. It takes 1d4 × 10 minutes for the new conditions to take effect. Once they do so, you can change the conditions again. When the spell ends, the weather gradually returns to normal.\n\nWhen you change the weather conditions, find a current condition on the following tables and change its stage by one, up or down. When changing the wind, you can change its direction.\n\n#### Precipitation\n\n| Stage | Condition                               |\n|-------|-----------------------------------------|\n| 1     | Clear                                   |\n| 2     | Light clouds                            |\n| 3     | Overcast or ground fog                  |\n| 4     | Rain, hail, or snow                     |\n| 5     | Torrential rain, driving hail, or blizzard |\n\n#### Temperature\n\n| Stage | Condition  |\n|-------|------------|\n| 1     | Heat wave  |\n| 2     | Hot        |\n| 3     | Warm       |\n| 4     | Cool       |\n| 5     | Cold       |\n| 6     | Freezing   |\n\n#### Wind\n\n| Stage | Condition     |\n|-------|---------------|\n| 1     | Calm          |\n| 2     | Moderate wind |\n| 3     | Strong wind   |\n| 4     | Gale          |\n| 5     | Storm         |\n\n---"
+          },
+          {
+            "id": "create_undead",
+            "name": "Create Undead",
+            "kind": "spell",
+            "mechanics": {
+              "level": 6,
+              "school": "necromancy",
+              "range": {
+                "kind": "point",
+                "feet": 10
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": "one 150+ GP black onyx stone for each corpse",
+                "materialCostGp": 150
+              },
+              "duration": {
+                "kind": "instantaneous"
+              },
+              "castingTime": {
+                "kind": "minutes",
+                "amount": 1,
+                "ritual": false
+              },
+              "family": "reanimated_creature",
+              "targetKind": "corpse_of_small_or_medium_humanoid",
+              "menu": [
+                {
+                  "slotLevel": 6,
+                  "options": [
+                    {
+                      "monsterId": "ghoul",
+                      "count": 3
+                    }
+                  ]
+                },
+                {
+                  "slotLevel": 7,
+                  "options": [
+                    {
+                      "monsterId": "ghoul",
+                      "count": 4
+                    }
+                  ]
+                },
+                {
+                  "slotLevel": 8,
+                  "options": [
+                    {
+                      "monsterId": "ghoul",
+                      "count": 5
+                    },
+                    {
+                      "monsterId": "ghast",
+                      "count": 2
+                    },
+                    {
+                      "monsterId": "wight",
+                      "count": 2
+                    }
+                  ]
+                },
+                {
+                  "slotLevel": 9,
+                  "options": [
+                    {
+                      "monsterId": "ghoul",
+                      "count": 6
+                    },
+                    {
+                      "monsterId": "ghast",
+                      "count": 3
+                    },
+                    {
+                      "monsterId": "wight",
+                      "count": 3
+                    },
+                    {
+                      "monsterId": "mummy",
+                      "count": 2
+                    }
+                  ]
+                }
+              ],
+              "control": {
+                "initiative": "own_roll",
+                "commandCost": {
+                  "kind": "bonus_action"
+                },
+                "commandRangeFeet": 120,
+                "defaultBehavior": "dodge_and_avoid"
+              },
+              "reassertWindow": {
+                "hours": 24,
+                "maxReassertPerCast": 3
+              },
+              "nightOnly": true
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-A-D#Create Undead"
+            },
+            "rulesExcerpt": "# Spell Descriptions: A–D\n## Create Undead\n\n*Level 6 Necromancy (Cleric, Warlock, Wizard)*\n\n**Casting Time:** 1 minute\n**Range:** 10 feet\n**Components:** V, S, M (one 150+ GP black onyx stone for each corpse)\n**Duration:** Instantaneous\n\nYou can cast this spell only at night. Choose up to three corpses of Medium or Small Humanoids within range. Each one becomes a **Ghoul** under your control (see \"Monsters\" for its stat block).\n\nAs a Bonus Action on each of your turns, you can mentally command any creature you animated with this spell if the creature is within 120 feet of you (if you control multiple creatures, you can command any of them at the same time, issuing the same command to them). You decide what action the creature will take and where it will move on its next turn, or you can issue a general command, such as to guard a particular place. If you issue no commands, the creature takes the Dodge action and moves only to avoid harm. Once given an order, the creature continues to follow the order until its task is complete.\n\nThe creature is under your control for 24 hours, after which it stops obeying any command you've given it. To maintain control of the creature for another 24 hours, you must cast this spell on the creature before the current 24-hour period ends. This use of the spell reasserts your control over up to three creatures you have animated with this spell rather than animating new ones.\n\n***Using a Higher-Level Spell Slot.*** If you use a level 7 spell slot, you can animate or reassert control over four **Ghouls**. If you use a level 8 spell slot, you can animate or reassert control over five **Ghouls** or two **Ghasts** or **Wights**. If you use a level 9 spell slot, you can animate or reassert control over six **Ghouls**, three **Ghasts** or **Wights**, or two **Mummies**. See \"Monsters\" for these stat blocks.\n\n---"
+          },
+          {
+            "id": "dimension_door",
+            "name": "Dimension Door",
+            "kind": "spell",
+            "mechanics": {
+              "level": 4,
+              "school": "conjuration",
+              "range": {
+                "kind": "self"
+              },
+              "components": {
+                "v": true,
+                "s": false,
+                "m": false
+              },
+              "duration": {
+                "kind": "instantaneous"
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "self"
+                  },
+                  "effects": [
+                    {
+                      "kind": "teleport",
+                      "maxFeet": 500,
+                      "destination": "unoccupied_visible_space"
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-A-D#Dimension Door"
+            },
+            "rulesExcerpt": "# Spell Descriptions: A–D\n## Dimension Door\n\n*Level 4 Conjuration (Bard, Sorcerer, Warlock, Wizard)*\n\n**Casting Time:** Action\n**Range:** 500 feet\n**Components:** V\n**Duration:** Instantaneous\n\nYou teleport to a location within range. You arrive at exactly the spot desired. It can be a place you can see, one you can visualize, or one you can describe by stating distance and direction, such as \"200 feet straight downward\" or \"300 feet upward to the northwest at a 45-degree angle.\"\n\nYou can also teleport one willing creature. The creature must be within 5 feet of you when you teleport, and it teleports to a space within 5 feet of your destination space.\n\nIf you, the other creature, or both would arrive in a space occupied by a creature or completely filled by one or more objects, you and any creature traveling with you each take 4d6 Force damage, and the teleportation fails.\n\n---"
+          },
+          {
+            "id": "disguise_self",
+            "name": "Disguise Self",
+            "kind": "spell",
+            "mechanics": {
+              "level": 1,
+              "school": "illusion",
+              "range": {
+                "kind": "self"
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": false
+              },
+              "duration": {
+                "kind": "timed",
+                "value": {
+                  "unit": "hour",
+                  "amount": 1
+                }
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "self"
+                  },
+                  "effects": [
+                    {
+                      "kind": "none"
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-A-D#Disguise Self"
+            },
+            "rulesExcerpt": "# Spell Descriptions: A–D\n## Disguise Self\n\n*Level 1 Illusion (Bard, Sorcerer, Wizard)*\n\n**Casting Time:** Action\n**Range:** Self\n**Components:** V, S\n**Duration:** 1 hour\n\nYou make yourself—including your clothing, armor, weapons, and other belongings on your person—look different until the spell ends. You can seem 1 foot shorter or taller and can appear heavier or lighter. You must adopt a form that has the same basic arrangement of limbs as you have. Otherwise, the extent of the illusion is up to you.\n\nThe changes wrought by this spell fail to hold up to physical inspection. For example, if you use this spell to add a hat to your outfit, objects pass through the hat, and anyone who touches it would feel nothing.\n\nTo discern that you are disguised, a creature must take the Study action to inspect your appearance and succeed on an Intelligence (Investigation) check against your spell save DC.\n\n---"
+          },
+          {
+            "id": "druidcraft",
+            "name": "Druidcraft",
+            "kind": "spell",
+            "mechanics": {
+              "level": 0,
+              "school": "transmutation",
+              "range": {
+                "kind": "point",
+                "feet": 30
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": false
+              },
+              "duration": {
+                "kind": "instantaneous"
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "area",
+                    "shape": {
+                      "kind": "cube",
+                      "sideFeet": 5
+                    },
+                    "origin": {
+                      "kind": "point_within_range"
+                    }
+                  },
+                  "effects": [
+                    {
+                      "kind": "none"
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-A-D#Druidcraft"
+            },
+            "rulesExcerpt": "# Spell Descriptions: A–D\n## Druidcraft\n\n*Transmutation Cantrip (Druid)*\n\n**Casting Time:** Action\n**Range:** 30 feet\n**Components:** V, S\n**Duration:** Instantaneous\n\nWhispering to the spirits of nature, you create one of the following effects within range:\n\n- **Weather Sensor.** You create a Tiny, harmless sensory effect that predicts what the weather will be at your location for the next 24 hours. The effect might manifest as a golden orb for clear skies, a cloud for rain, falling snowflakes for snow, and so on. This effect persists for 1 round.\n- **Bloom.** You instantly make a flower blossom, a seed pod open, or a leaf bud bloom.\n- **Sensory Effect.** You create a harmless sensory effect, such as falling leaves, spectral dancing fairies, a gentle breeze, the sound of an animal, or the faint odor of skunk. The effect must fit in a 5-foot Cube.\n- **Fire Play.** You light or snuff out a candle, a torch, or a campfire."
+          },
+          {
+            "id": "elementalism",
+            "name": "Elementalism",
+            "kind": "spell",
+            "mechanics": {
+              "level": 0,
+              "school": "transmutation",
+              "range": {
+                "kind": "point",
+                "feet": 30
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": false
+              },
+              "duration": {
+                "kind": "instantaneous"
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "area",
+                    "shape": {
+                      "kind": "cube",
+                      "sideFeet": 5
+                    },
+                    "origin": {
+                      "kind": "point_within_range"
+                    }
+                  },
+                  "effects": [
+                    {
+                      "kind": "none"
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-E-L#Elementalism"
+            },
+            "rulesExcerpt": "# Spell Descriptions: E–L\n## Elementalism\n\n*Transmutation Cantrip (Druid, Sorcerer, Wizard)*\n\n**Casting Time:** Action\n**Range:** 30 feet\n**Components:** V, S\n**Duration:** Instantaneous\n\nYou exert control over the elements, creating one of the following effects within range.\n\n**Beckon Air.** You create a breeze strong enough to ripple cloth, stir dust, rustle leaves, and close open doors and shutters, all in a 5-foot Cube. Doors and shutters being held open by someone or something aren't affected.\n\n**Beckon Earth.** You create a thin shroud of dust or sand that covers surfaces in a 5-foot-square area, or you cause a single word to appear in your handwriting in a patch of dirt or sand.\n\n**Beckon Fire.** You create a thin cloud of harmless embers and colored, scented smoke in a 5-foot Cube. You choose the color and scent, and the embers can light candles, torches, or lamps in that area. The smoke's scent lingers for 1 minute.\n\n**Beckon Water.** You create a spray of cool mist that lightly dampens creatures and objects in a 5-foot Cube. Alternatively, you create 1 cup of clean water either in an open container or on a surface, and the water evaporates in 1 minute.\n\n**Sculpt Element.** You cause dirt, sand, fire, smoke, mist, or water that can fit in a 1-foot Cube to assume a crude shape (such as that of a creature) for 1 hour.\n\n---"
+          },
+          {
+            "id": "etherealness",
+            "name": "Etherealness",
+            "kind": "spell",
+            "mechanics": {
+              "level": 7,
+              "school": "conjuration",
+              "range": {
+                "kind": "self"
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": false
+              },
+              "duration": {
+                "kind": "timed",
+                "value": {
+                  "unit": "hour",
+                  "amount": 8
+                }
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "self"
+                  },
+                  "effects": [
+                    {
+                      "kind": "none"
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-E-L#Etherealness"
+            },
+            "rulesExcerpt": "# Spell Descriptions: E–L\n## Etherealness\n\n*Level 7 Conjuration (Bard, Cleric, Sorcerer, Warlock, Wizard)*\n\n**Casting Time:** Action\n**Range:** Self\n**Components:** V, S\n**Duration:** Up to 8 hours\n\nYou step into the border regions of the Ethereal Plane, where it overlaps with your current plane. You remain in the Border Ethereal for the duration. During this time, you can move in any direction. If you move up or down, every foot of movement costs an extra foot. You can perceive the plane you left, which looks gray, and you can't see anything there more than 60 feet away.\n\nWhile on the Ethereal Plane, you can affect and be affected only by creatures, objects, and effects on that plane. Creatures that aren't on the Ethereal Plane can't perceive or interact with you unless a feature gives them the ability to do so.\n\nWhen the spell ends, you return to the plane you left in the spot that corresponds to your space in the Border Ethereal. If you appear in an occupied space, you are shunted to the nearest unoccupied space and take Force damage equal to twice the number of feet you are moved.\n\nThis spell ends instantly if you cast it while you are on the Ethereal Plane or a plane that doesn't border it, such as one of the Outer Planes.\n\n**Using a Higher-Level Spell Slot.** You can target up to three willing creatures (including yourself) for each spell slot level above 7. The creatures must be within 10 feet of you when you cast the spell.\n\n---"
+          },
+          {
+            "id": "fear",
+            "name": "Fear",
+            "kind": "spell",
+            "mechanics": {
+              "level": 3,
+              "school": "illusion",
+              "range": {
+                "kind": "self"
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": "a white feather"
+              },
+              "duration": {
+                "kind": "concentration",
+                "upTo": {
+                  "unit": "minute",
+                  "amount": 1
+                }
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "save_gate",
+                  "attachment": {
+                    "kind": "area",
+                    "shape": {
+                      "kind": "cone",
+                      "lengthFeet": 30
+                    },
+                    "origin": {
+                      "kind": "self"
+                    }
+                  },
+                  "ability": "wis",
+                  "dc": {
+                    "kind": "caster_spell_save_dc"
+                  },
+                  "onFail": {
+                    "kind": "apply_condition",
+                    "condition": "frightened"
+                  },
+                  "onSuccess": {
+                    "kind": "none"
+                  }
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-E-L#Fear"
+            },
+            "rulesExcerpt": "# Spell Descriptions: E–L\n## Fear\n\n*Level 3 Illusion (Bard, Sorcerer, Warlock, Wizard)*\n\n**Casting Time:** Action\n**Range:** Self\n**Components:** V, S, M (a white feather)\n**Duration:** Concentration, up to 1 minute\n\nEach creature in a 30-foot Cone must succeed on a Wisdom saving throw or drop whatever it is holding and have the Frightened condition for the duration.\n\nA Frightened creature takes the Dash action and moves away from you by the safest route on each of its turns unless there is nowhere to move. If the creature ends its turn in a space where it doesn't have line of sight to you, the creature makes a Wisdom saving throw. On a successful save, the spell ends on that creature.\n\n---"
+          },
+          {
+            "id": "finger_of_death",
+            "name": "Finger of Death",
+            "kind": "spell",
+            "mechanics": {
+              "level": 7,
+              "school": "necromancy",
+              "range": {
+                "kind": "point",
+                "feet": 60
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": false
+              },
+              "duration": {
+                "kind": "instantaneous"
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "save_gate",
+                  "attachment": {
+                    "kind": "hole",
+                    "holeId": "finger_of_death_target",
+                    "value": {
+                      "kind": "target",
+                      "selection": {
+                        "mode": "one"
+                      }
+                    },
+                    "label": "target"
+                  },
+                  "ability": "con",
+                  "dc": {
+                    "kind": "caster_spell_save_dc"
+                  },
+                  "onFail": {
+                    "kind": "damage",
+                    "damageType": "necrotic",
+                    "amount": {
+                      "kind": "fixed",
+                      "expr": {
+                        "dice": 7,
+                        "dieSize": 8,
+                        "flat": 30
+                      }
+                    }
+                  },
+                  "onSuccess": {
+                    "kind": "half_damage"
+                  }
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-E-L.md#Finger of Death"
+            },
+            "rulesExcerpt": "# Spell Descriptions: E–L\n## Finger of Death\n\n*Level 7 Necromancy (Sorcerer, Warlock, Wizard)*\n\n**Casting Time:** Action\n**Range:** 60 feet\n**Components:** V, S\n**Duration:** Instantaneous\n\nYou unleash negative energy toward a creature you can see within range. The target makes a Constitution saving throw, taking 7d8 + 30 Necrotic damage on a failed save or half as much damage on a successful one.\n\nA Humanoid killed by this spell rises at the start of your next turn as a **Zombie** (see \"Monsters\") that follows your verbal orders.\n\n---"
+          },
+          {
+            "id": "harm",
+            "name": "Harm",
+            "kind": "spell",
+            "mechanics": {
+              "level": 6,
+              "school": "necromancy",
+              "range": {
+                "kind": "point",
+                "feet": 60
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": false
+              },
+              "duration": {
+                "kind": "instantaneous"
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "save_gate",
+                  "attachment": {
+                    "kind": "hole",
+                    "holeId": "harm_target",
+                    "value": {
+                      "kind": "target",
+                      "selection": {
+                        "mode": "one"
+                      }
+                    },
+                    "label": "target"
+                  },
+                  "ability": "con",
+                  "dc": {
+                    "kind": "caster_spell_save_dc"
+                  },
+                  "onFail": {
+                    "kind": "composite",
+                    "effects": [
+                      {
+                        "kind": "damage",
+                        "damageType": "necrotic",
+                        "amount": {
+                          "kind": "fixed",
+                          "expr": {
+                            "dice": 14,
+                            "dieSize": 6,
+                            "flat": 0
+                          }
+                        }
+                      },
+                      {
+                        "kind": "modify_max_hp",
+                        "direction": "decrease",
+                        "delta": {
+                          "kind": "linked",
+                          "link": {
+                            "kind": "damage_taken",
+                            "scale": "full"
+                          }
+                        },
+                        "floor": 1
+                      }
+                    ]
+                  },
+                  "onSuccess": {
+                    "kind": "half_damage"
+                  }
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-E-L#Harm"
+            },
+            "rulesExcerpt": "# Spell Descriptions: E–L\n## Harm\n\n*Level 6 Necromancy (Cleric)*\n\n**Casting Time:** Action\n**Range:** 60 feet\n**Components:** V, S\n**Duration:** Instantaneous\n\nYou unleash virulent magic on a creature you can see within range. The target makes a Constitution saving throw. On a failed save, it takes 14d6 Necrotic damage, and its Hit Point maximum is reduced by an amount equal to the Necrotic damage it took. On a successful save, it takes half as much damage only. This spell can't reduce a target's Hit Point maximum below 1.\n\n---"
+          },
+          {
+            "id": "heroes_feast",
+            "name": "Heroes' Feast",
+            "kind": "spell",
+            "mechanics": {
+              "level": 6,
+              "school": "conjuration",
+              "range": {
+                "kind": "self"
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": "a gem-encrusted bowl worth 1,000+ GP, which the spell consumes",
+                "materialCostGp": 1000,
+                "materialConsumed": true
+              },
+              "duration": {
+                "kind": "instantaneous"
+              },
+              "castingTime": {
+                "kind": "minutes",
+                "amount": 10,
+                "ritual": false
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "location",
+                    "description": "an unoccupied 10-foot Cube next to you"
+                  },
+                  "effects": [
+                    {
+                      "kind": "none"
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-E-L#Heroes' Feast"
+            },
+            "rulesExcerpt": "# Spell Descriptions: E–L\n## Heroes' Feast\n\n*Level 6 Conjuration (Bard, Cleric, Druid)*\n\n**Casting Time:** 10 minutes\n**Range:** Self\n**Components:** V, S, M (a gem-encrusted bowl worth 1,000+ GP, which the spell consumes)\n**Duration:** Instantaneous\n\nYou conjure a feast that appears on a surface in an unoccupied 10-foot Cube next to you. The feast takes 1 hour to consume and disappears at the end of that time, and the beneficial effects don't set in until this hour is over. Up to twelve creatures can partake of the feast.\n\nA creature that partakes gains several benefits, which last for 24 hours. The creature has Resistance to Poison damage, and it has Immunity to the Frightened and Poisoned conditions. Its Hit Point maximum also increases by 2d10, and it gains the same number of Hit Points.\n\n---"
+          },
+          {
+            "id": "ice_storm",
+            "name": "Ice Storm",
+            "kind": "spell",
+            "mechanics": {
+              "level": 4,
+              "school": "evocation",
+              "range": {
+                "kind": "point",
+                "feet": 300
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": "a mitten"
+              },
+              "duration": {
+                "kind": "instantaneous"
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "save_gate",
+                  "attachment": {
+                    "kind": "hole",
+                    "holeId": "ice_storm_cylinder",
+                    "value": {
+                      "kind": "area",
+                      "shape": {
+                        "kind": "cylinder",
+                        "radiusFeet": 20,
+                        "heightFeet": 40
+                      },
+                      "origin": {
+                        "kind": "point_within_range"
+                      }
+                    },
+                    "label": "storm cylinder"
+                  },
+                  "ability": "dex",
+                  "dc": {
+                    "kind": "caster_spell_save_dc"
+                  },
+                  "onFail": {
+                    "kind": "composite",
+                    "effects": [
+                      {
+                        "kind": "damage",
+                        "damageType": "bludgeoning",
+                        "amount": {
+                          "kind": "linear_per_level",
+                          "axis": "slot",
+                          "base": {
+                            "dice": 2,
+                            "dieSize": 10
+                          },
+                          "perLevel": {
+                            "dice": 1,
+                            "dieSize": 10
+                          },
+                          "startingAtLevel": 4
+                        }
+                      },
+                      {
+                        "kind": "damage",
+                        "damageType": "cold",
+                        "amount": {
+                          "kind": "fixed",
+                          "expr": {
+                            "dice": 4,
+                            "dieSize": 6
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "onSuccess": {
+                    "kind": "half_damage"
+                  }
+                },
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "hole",
+                    "holeId": "ice_storm_cylinder",
+                    "value": {
+                      "kind": "area",
+                      "shape": {
+                        "kind": "cylinder",
+                        "radiusFeet": 20,
+                        "heightFeet": 40
+                      },
+                      "origin": {
+                        "kind": "point_within_range"
+                      }
+                    },
+                    "label": "storm cylinder"
+                  },
+                  "effects": [
+                    {
+                      "kind": "area_is_difficult_terrain"
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-E-L#Ice Storm"
+            },
+            "rulesExcerpt": "# Spell Descriptions: E–L\n## Ice Storm\n\n*Level 4 Evocation (Druid, Sorcerer, Wizard)*\n\n**Casting Time:** Action\n**Range:** 300 feet\n**Components:** V, S, M (a mitten)\n**Duration:** Instantaneous\n\nHail falls in a 20-foot-radius, 40-foot-high Cylinder centered on a point within range. Each creature in the Cylinder makes a Dexterity saving throw. A creature takes 2d10 Bludgeoning damage and 4d6 Cold damage on a failed save or half as much damage on a successful one.\n\nHailstones turn ground in the Cylinder into Difficult Terrain until the end of your next turn.\n\n**Using a Higher-Level Spell Slot.** The Bludgeoning damage increases by 1d10 for each spell slot level above 4.\n\n---"
+          },
+          {
+            "id": "identify",
+            "name": "Identify",
+            "kind": "spell",
+            "mechanics": {
+              "level": 1,
+              "school": "divination",
+              "range": {
+                "kind": "touch"
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": "a pearl worth 100+ GP",
+                "materialCostGp": 100
+              },
+              "duration": {
+                "kind": "instantaneous"
+              },
+              "castingTime": {
+                "kind": "minutes",
+                "amount": 1,
+                "ritual": true
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "self"
+                  },
+                  "effects": [
+                    {
+                      "kind": "none"
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-E-L#Identify"
+            },
+            "rulesExcerpt": "# Spell Descriptions: E–L\n## Identify\n\n*Level 1 Divination (Bard, Wizard)*\n\n**Casting Time:** 1 minute or Ritual\n**Range:** Touch\n**Components:** V, S, M (a pearl worth 100+ GP)\n**Duration:** Instantaneous\n\nYou touch an object throughout the spell's casting. If the object is a magic item or some other magical object, you learn its properties and how to use them, whether it requires Attunement, and how many charges it has, if any. You learn whether any ongoing spells are affecting the item and what they are. If the item was created by a spell, you learn that spell's name.\n\nIf you instead touch a creature throughout the casting, you learn which ongoing spells, if any, are currently affecting it.\n\n---"
+          },
+          {
+            "id": "mage_hand",
+            "name": "Mage Hand",
+            "kind": "spell",
+            "mechanics": {
+              "level": 0,
+              "school": "conjuration",
+              "range": {
+                "kind": "point",
+                "feet": 30
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": false
+              },
+              "duration": {
+                "kind": "timed",
+                "value": {
+                  "unit": "minute",
+                  "amount": 1
+                }
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "location",
+                    "description": "an unoccupied space within range"
+                  },
+                  "effects": [
+                    {
+                      "kind": "none"
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-M-P#Mage Hand"
+            },
+            "rulesExcerpt": "# Spell Descriptions M–P\n## Mage Hand\n\n*Conjuration Cantrip (Bard, Sorcerer, Warlock, Wizard)*\n\n**Casting Time:** Action\n**Range:** 30 feet\n**Components:** V, S\n**Duration:** 1 minute\n\nA spectral, floating hand appears at a point you choose within range. The hand lasts for the duration. The hand vanishes if it is ever more than 30 feet away from you or if you cast this spell again.\n\nWhen you cast the spell, you can use the hand to manipulate an object, open an unlocked door or container, stow or retrieve an item from an open container, or pour the contents out of a vial.\n\nAs a Magic action on your later turns, you can control the hand thus again. As part of that action, you can move the hand up to 30 feet.\n\nThe hand can't attack, activate magic items, or carry more than 10 pounds.\n\n---"
+          },
+          {
+            "id": "major_image",
+            "name": "Major Image",
+            "kind": "spell",
+            "mechanics": {
+              "level": 3,
+              "school": "illusion",
+              "range": {
+                "kind": "point",
+                "feet": 120
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": "a bit of fleece"
+              },
+              "duration": {
+                "kind": "concentration",
+                "upTo": {
+                  "unit": "minute",
+                  "amount": 10
+                }
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "ongoing_effect",
+              "attachment": {
+                "kind": "hole",
+                "holeId": "major_image_point",
+                "value": {
+                  "kind": "area",
+                  "shape": {
+                    "kind": "cube",
+                    "sideFeet": 20
+                  },
+                  "origin": {
+                    "kind": "point_within_range"
+                  }
+                },
+                "label": "spell origin point"
+              },
+              "operations": [
+                {
+                  "trigger": {
+                    "kind": "passive"
+                  },
+                  "effect": {
+                    "kind": "create_illusion",
+                    "maxSize": "gargantuan",
+                    "channels": [
+                      "visual",
+                      "sound",
+                      "smell",
+                      "temperature"
+                    ]
+                  }
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-M-P.md#Major Image"
+            },
+            "rulesExcerpt": "# Spell Descriptions M–P\n## Major Image\n\n*Level 3 Illusion (Bard, Sorcerer, Warlock, Wizard)*\n\n**Casting Time:** Action\n**Range:** 120 feet\n**Components:** V, S, M (a bit of fleece)\n**Duration:** Concentration, up to 10 minutes\n\nYou create the image of an object, a creature, or some other visible phenomenon that is no larger than a 20-foot Cube. The image appears at a spot that you can see within range and lasts for the duration. It seems real, including sounds, smells, and temperature appropriate to the thing depicted, but it can't deal damage or cause conditions.\n\nIf you are within range of the illusion, you can take a Magic action to cause the image to move to any other spot within range. As the image changes location, you can alter its appearance so that its movements appear natural for the image. For example, if you create an image of a creature and move it, you can alter the image so that it appears to be walking. Similarly, you can cause the illusion to make different sounds at different times, even making it carry on a conversation, for example.\n\nPhysical interaction with the image reveals it to be an illusion, for things can pass through it. A creature that takes a Study action to examine the image can determine that it is an illusion with a successful Intelligence (Investigation) check against your spell save DC. If a creature discerns the illusion for what it is, the creature can see through the image, and its other sensory qualities become faint to the creature.\n\n**Using a Higher-Level Spell Slot.** The spell lasts until dispelled, without requiring Concentration, if cast with a level 4+ spell slot.\n\n---"
+          },
+          {
+            "id": "phantasmal_killer",
+            "name": "Phantasmal Killer",
+            "kind": "spell",
+            "mechanics": {
+              "level": 4,
+              "school": "illusion",
+              "range": {
+                "kind": "point",
+                "feet": 120
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": false
+              },
+              "duration": {
+                "kind": "concentration",
+                "upTo": {
+                  "unit": "minute",
+                  "amount": 1
+                }
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "hole",
+                    "holeId": "phantasmal_killer_target",
+                    "value": {
+                      "kind": "target",
+                      "selection": {
+                        "mode": "one"
+                      }
+                    },
+                    "label": "one creature you can see"
+                  },
+                  "effects": [
+                    {
+                      "kind": "none"
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-M-P#Phantasmal Killer"
+            },
+            "rulesExcerpt": "# Spell Descriptions M–P\n## Phantasmal Killer\n\n*Level 4 Illusion (Bard, Wizard)*\n\n**Casting Time:** Action\n**Range:** 120 feet\n**Components:** V, S\n**Duration:** Concentration, up to 1 minute\n\nYou tap into the nightmares of a creature you can see within range and create an illusion of its deepest fears, visible only to that creature. The target makes a Wisdom saving throw. On a failed save, the target takes 4d10 Psychic damage and has Disadvantage on ability checks and attack rolls for the duration. On a successful save, the target takes half as much damage, and the spell ends.\n\nFor the duration, the target makes a Wisdom saving throw at the end of each of its turns. On a failed save, it takes the Psychic damage again. On a successful save, the spell ends.\n\n**Using a Higher-Level Spell Slot.** The damage increases by 1d10 for each spell slot level above 4.\n\n---"
+          },
+          {
+            "id": "plane_shift",
+            "name": "Plane Shift",
+            "kind": "spell",
+            "mechanics": {
+              "level": 7,
+              "school": "conjuration",
+              "range": {
+                "kind": "touch"
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": "a forked, metal rod worth 250+ GP and attuned to a plane of existence",
+                "materialCostGp": 250
+              },
+              "duration": {
+                "kind": "instantaneous"
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "hole",
+                    "holeId": "plane_shift_travelers",
+                    "value": {
+                      "kind": "target",
+                      "selection": {
+                        "mode": "choose_up_to",
+                        "count": 8,
+                        "targetKinds": [
+                          "creature"
+                        ],
+                        "disposition": "willing"
+                      }
+                    },
+                    "label": "up to eight willing creatures"
+                  },
+                  "effects": [
+                    {
+                      "kind": "none"
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-M-P#Plane Shift"
+            },
+            "rulesExcerpt": "# Spell Descriptions M–P\n## Plane Shift\n\n*Level 7 Conjuration (Cleric, Druid, Sorcerer, Warlock, Wizard)*\n\n**Casting Time:** Action\n**Range:** Touch\n**Components:** V, S, M (a forked, metal rod worth 250+ GP and attuned to a plane of existence)\n**Duration:** Instantaneous\n\nYou and up to eight willing creatures who link hands in a circle are transported to a different plane of existence. You can specify a target destination in general terms, such as a specific city on the Elemental Plane of Fire or palace on the second level of the Nine Hells, and you appear in or near that destination, as determined by the GM.\n\nAlternatively, if you know the sigil sequence of a teleportation circle on another plane of existence, this spell can take you to that circle. If the teleportation circle is too small to hold all the creatures you transported, they appear in the closest unoccupied spaces next to the circle.\n\n---"
+          },
+          {
+            "id": "power_word_kill",
+            "name": "Power Word Kill",
+            "kind": "spell",
+            "mechanics": {
+              "level": 9,
+              "school": "enchantment",
+              "range": {
+                "kind": "point",
+                "feet": 60
+              },
+              "components": {
+                "v": true,
+                "s": false,
+                "m": false
+              },
+              "duration": {
+                "kind": "instantaneous"
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "hole",
+                    "holeId": "power_word_kill_target",
+                    "value": {
+                      "kind": "target",
+                      "selection": {
+                        "mode": "one"
+                      }
+                    },
+                    "label": "target"
+                  },
+                  "effects": [
+                    {
+                      "kind": "conditional_by_current_hp",
+                      "threshold": 100,
+                      "comparison": "lte",
+                      "onMatch": {
+                        "kind": "kill_target"
+                      },
+                      "otherwise": {
+                        "kind": "damage",
+                        "damageType": "psychic",
+                        "amount": {
+                          "kind": "fixed",
+                          "expr": {
+                            "dice": 12,
+                            "dieSize": 12
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-M-P#Power Word Kill"
+            },
+            "rulesExcerpt": "# Spell Descriptions M–P\n## Power Word Kill\n\n*Level 9 Enchantment (Bard, Sorcerer, Warlock, Wizard)*\n\n**Casting Time:** Action\n**Range:** 60 feet\n**Component:** V\n**Duration:** Instantaneous\n\nYou compel one creature you can see within range to die. If the target has 100 Hit Points or fewer, it dies. Otherwise, it takes 12d12 Psychic damage.\n\n---"
+          },
+          {
+            "id": "power_word_stun",
+            "name": "Power Word Stun",
+            "kind": "spell",
+            "mechanics": {
+              "level": 8,
+              "school": "enchantment",
+              "range": {
+                "kind": "point",
+                "feet": 60
+              },
+              "components": {
+                "v": true,
+                "s": false,
+                "m": false
+              },
+              "duration": {
+                "kind": "instantaneous"
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "hole",
+                    "holeId": "power_word_stun_target",
+                    "value": {
+                      "kind": "target",
+                      "selection": {
+                        "mode": "one"
+                      }
+                    },
+                    "label": "target"
+                  },
+                  "effects": [
+                    {
+                      "kind": "conditional_by_current_hp",
+                      "threshold": 150,
+                      "comparison": "lte",
+                      "onMatch": {
+                        "kind": "composite",
+                        "effects": [
+                          {
+                            "kind": "apply_condition",
+                            "condition": "stunned"
+                          },
+                          {
+                            "kind": "repeat_save_for_condition",
+                            "condition": "stunned",
+                            "ability": "con",
+                            "dc": {
+                              "kind": "caster_spell_save_dc"
+                            },
+                            "cadence": "end_of_target_turn",
+                            "onSuccess": "ends_condition"
+                          }
+                        ]
+                      },
+                      "otherwise": {
+                        "kind": "set_speed",
+                        "feet": 0
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-M-P#Power Word Stun"
+            },
+            "rulesExcerpt": "# Spell Descriptions M–P\n## Power Word Stun\n\n*Level 8 Enchantment (Bard, Sorcerer, Warlock, Wizard)*\n\n**Casting Time:** Action\n**Range:** 60 feet\n**Components:** V\n**Duration:** Instantaneous\n\nYou overwhelm the mind of one creature you can see within range. If the target has 150 Hit Points or fewer, it has the Stunned condition. Otherwise, its Speed is 0 until the start of your next turn.\n\nThe Stunned target makes a Constitution saving throw at the end of each of its turns, ending the condition on itself on a success.\n\n---"
+          },
+          {
+            "id": "project_image",
+            "name": "Project Image",
+            "kind": "spell",
+            "mechanics": {
+              "level": 7,
+              "school": "illusion",
+              "range": {
+                "kind": "point",
+                "feet": 2640000
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": "a statuette of yourself worth 5+ GP"
+              },
+              "duration": {
+                "kind": "concentration",
+                "upTo": {
+                  "unit": "day",
+                  "amount": 1
+                }
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "location",
+                    "description": "a location you have seen before within range"
+                  },
+                  "effects": [
+                    {
+                      "kind": "none"
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-M-P#Project Image"
+            },
+            "rulesExcerpt": "# Spell Descriptions M–P\n## Project Image\n\n*Level 7 Illusion (Bard, Wizard)*\n\n**Casting Time:** Action\n**Range:** 500 miles\n**Components:** V, S, M (a statuette of yourself worth 5+ GP)\n**Duration:** Concentration, up to 1 day\n\nYou create an illusory copy of yourself that lasts for the duration. The copy can appear at any location within range that you have seen before, regardless of intervening obstacles. The illusion looks and sounds like you, but it is intangible. If the illusion takes any damage, it disappears, and the spell ends.\n\nYou can see through the illusion's eyes and hear through its ears as if you were in its space. As a Magic action, you can move it up to 60 feet and make it gesture, speak, and behave in whatever way you choose. It mimics your mannerisms perfectly.\n\nPhysical interaction with the image reveals it to be illusory, since things can pass through it. A creature that takes the Study action to examine the image can determine that it is an illusion with a successful Intelligence (Investigation) check against your spell save DC. If a creature discerns the illusion for what it is, the creature can see through the image, and any noise it makes sounds hollow to the creature.\n\n---"
+          },
+          {
+            "id": "resurrection",
+            "name": "Resurrection",
+            "kind": "spell",
+            "mechanics": {
+              "level": 7,
+              "school": "necromancy",
+              "range": {
+                "kind": "touch"
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": "a diamond worth 1,000+ GP, which the spell consumes",
+                "materialCostGp": 1000,
+                "materialConsumed": true
+              },
+              "duration": {
+                "kind": "instantaneous"
+              },
+              "castingTime": {
+                "kind": "hours",
+                "amount": 1,
+                "ritual": false
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "hole",
+                    "holeId": "resurrection_target",
+                    "value": {
+                      "kind": "target",
+                      "selection": {
+                        "mode": "one",
+                        "targetKinds": [
+                          "creature"
+                        ],
+                        "stateFilter": [
+                          "dead"
+                        ]
+                      }
+                    },
+                    "label": "dead creature"
+                  },
+                  "effects": [
+                    {
+                      "kind": "none"
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-Q-R#Resurrection"
+            },
+            "rulesExcerpt": "# Spell Descriptions: Q–R\n## Resurrection\n\n*Level 7 Necromancy (Bard, Cleric)*\n\n**Casting Time:** 1 hour\n**Range:** Touch\n**Components:** V, S, M (a diamond worth 1,000+ GP, which the spell consumes)\n**Duration:** Instantaneous\n\nWith a touch, you revive a dead creature that has been dead for no more than a century, didn't die of old age, and wasn't Undead when it died.\n\nThe creature returns to life with all its Hit Points. This spell also neutralizes any poisons that affected the creature at the time of death. This spell closes all mortal wounds and restores any missing body parts.\n\nComing back from the dead is an ordeal. The target takes a −4 penalty to D20 Tests. Every time the target finishes a Long Rest, the penalty is reduced by 1 until it becomes 0.\n\nCasting this spell to revive a creature that has been dead for 365 days or longer taxes you. Until you finish a Long Rest, you can't cast spells again, and you have Disadvantage on D20 Tests.\n\n---"
+          },
+          {
+            "id": "spirit_guardians",
+            "name": "Spirit Guardians",
+            "kind": "spell",
+            "mechanics": {
+              "level": 3,
+              "school": "conjuration",
+              "range": {
+                "kind": "self"
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": "a prayer scroll"
+              },
+              "duration": {
+                "kind": "concentration",
+                "upTo": {
+                  "unit": "minute",
+                  "amount": 10
+                }
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "ongoing_effect",
+              "attachment": {
+                "kind": "area",
+                "shape": {
+                  "kind": "emanation",
+                  "radiusFeet": 15
+                },
+                "origin": {
+                  "kind": "self"
+                }
+              },
+              "operations": [
+                {
+                  "trigger": {
+                    "kind": "passive"
+                  },
+                  "effect": {
+                    "kind": "set_speed_ratio",
+                    "numerator": 1,
+                    "denominator": 2
+                  }
+                },
+                {
+                  "trigger": {
+                    "kind": "on_attached_turn_start"
+                  },
+                  "effect": {
+                    "kind": "save_gate",
+                    "ability": "wis",
+                    "dc": {
+                      "kind": "caster_spell_save_dc"
+                    },
+                    "onFail": {
+                      "kind": "damage",
+                      "damageType": {
+                        "kind": "hole",
+                        "holeId": "spirit_guardians_damage_type",
+                        "value": {
+                          "kind": "choice",
+                          "label": "radiant (good/neutral caster) or necrotic (evil caster)",
+                          "options": [
+                            "radiant",
+                            "necrotic"
+                          ]
+                        },
+                        "label": "radiant (good/neutral caster) or necrotic (evil caster)"
+                      },
+                      "amount": {
+                        "kind": "linear_per_level",
+                        "axis": "slot",
+                        "base": {
+                          "dice": 3,
+                          "dieSize": 8
+                        },
+                        "perLevel": {
+                          "dice": 1
+                        },
+                        "startingAtLevel": 3
+                      }
+                    },
+                    "onSuccess": {
+                      "kind": "half_damage"
+                    }
+                  }
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-S-Z#Spirit Guardians"
+            },
+            "rulesExcerpt": "# Spell Descriptions: S–Z\n## Spirit Guardians\n\n*Level 3 Conjuration (Cleric)*\n\n**Casting Time:** Action\n**Range:** Self\n**Components:** V, S, M (a prayer scroll)\n**Duration:** Concentration, up to 10 minutes\n\nProtective spirits flit around you in a 15-foot Emanation for the duration. If you are good or neutral, their spectral form appears angelic or fey (your choice). If you are evil, they appear fiendish.\n\nWhen you cast this spell, you can designate creatures to be unaffected by it. Any other creature's Speed is halved in the Emanation, and whenever the Emanation enters a creature's space and whenever a creature enters the Emanation or ends its turn there, the creature must make a Wisdom saving throw. On a failed save, the creature takes 3d8 Radiant damage (if you are good or neutral) or 3d8 Necrotic damage (if you are evil). On a successful save, the creature takes half as much damage. A creature makes this save only once per turn.\n\n**Using a Higher-Level Spell Slot.** The damage increases by 1d8 for each spell slot level above 3.\n\n---"
+          },
+          {
+            "id": "teleport",
+            "name": "Teleport",
+            "kind": "spell",
+            "mechanics": {
+              "level": 7,
+              "school": "conjuration",
+              "range": {
+                "kind": "point",
+                "feet": 10
+              },
+              "components": {
+                "v": true,
+                "s": false,
+                "m": false
+              },
+              "duration": {
+                "kind": "instantaneous"
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "self"
+                  },
+                  "effects": [
+                    {
+                      "kind": "none"
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-S-Z#Teleport"
+            },
+            "rulesExcerpt": "# Spell Descriptions: S–Z\n## Teleport\n\n*Level 7 Conjuration (Bard, Sorcerer, Wizard)*\n\n**Casting Time:** Action\n**Range:** 10 feet\n**Components:** V\n**Duration:** Instantaneous\n\nThis spell instantly transports you and up to eight willing creatures that you can see within range, or a single object that you can see within range, to a destination you select. If you target an object, it must be Large or smaller, and it can't be held or carried by an unwilling creature.\n\nThe destination you choose must be known to you, and it must be on the same plane of existence as you. Your familiarity with the destination determines whether you arrive there successfully. The GM rolls 1d100 and consults the Teleportation Outcome table and the explanations after it.\n\n#### Teleportation Outcome\n\n| Familiarity | Mishap | Similar Area | Off Target | On Target |\n|---|---|---|---|---|\n| Permanent circle | — | — | — | 01–00 |\n| Linked object | — | — | — | 01–00 |\n| Very familiar | 01–05 | 06–13 | 14–24 | 25–00 |\n| Seen casually | 01–33 | 34–43 | 44–53 | 54–00 |\n| Viewed once or described | 01–43 | 44–53 | 54–73 | 74–00 |\n| False destination | 01–50 | 51–00 | — | — |\n\n**Familiarity.** Here are the meanings of the terms in the table's Familiarity column:\n\n- \"Permanent circle\" means a permanent teleportation circle whose sigil sequence you know.\n- \"Linked object\" means you possess an object taken from the desired destination within the last six months, such as a book from a wizard's library.\n- \"Very familiar\" is a place you have visited often, a place you have carefully studied, or a place you can see when you cast the spell.\n- \"Seen casually\" is a place you have seen more than once but with which you aren't very familiar.\n- \"Viewed once or described\" is a place you have seen once, possibly using magic, or a place you know through someone else's description, perhaps from a map.\n- \"False destination\" is a place that doesn't exist. Perhaps you tried to scry an enemy's sanctum but instead viewed an illusion, or you are attempting to teleport to a location that no longer exists.\n\n**Mishap.** The spell's unpredictable magic results in a difficult journey. Each teleporting creature (or the target object) takes 3d10 Force damage, and the GM rerolls on the table to see where you wind up (multiple mishaps can occur, dealing damage each time).\n\n**Similar Area.** You and your group (or the target object) appear in a different area that's visually or thematically similar to the target area. You appear in the closest similar place. If you are heading for your home laboratory, for example, you might appear in another person's laboratory in the same city.\n\n**Off Target.** You and your group (or the target object) appear 2d12 miles away from the destination in a random direction. Roll 1d8 for the direction: 1, east; 2, southeast; 3, south; 4, southwest; 5, west; 6, northwest; 7, north; or 8, northeast.\n\n**On Target.** You and your group (or the target object) appear where you intended.\n\n---"
+          },
+          {
+            "id": "tongues",
+            "name": "Tongues",
+            "kind": "spell",
+            "mechanics": {
+              "level": 3,
+              "school": "divination",
+              "range": {
+                "kind": "touch"
+              },
+              "components": {
+                "v": true,
+                "s": false,
+                "m": "a miniature ziggurat"
+              },
+              "duration": {
+                "kind": "timed",
+                "value": {
+                  "unit": "hour",
+                  "amount": 1
+                }
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "hole",
+                    "holeId": "tongues_target",
+                    "value": {
+                      "kind": "target",
+                      "selection": {
+                        "mode": "one"
+                      }
+                    },
+                    "label": "target"
+                  },
+                  "effects": [
+                    {
+                      "kind": "grant_language_understanding",
+                      "scope": "spoken_or_signed",
+                      "intelligibleToAnyLanguageKnower": true
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-S-Z#Tongues"
+            },
+            "rulesExcerpt": "# Spell Descriptions: S–Z\n## Tongues\n\n*Level 3 Divination (Bard, Cleric, Sorcerer, Warlock, Wizard)*\n\n**Casting Time:** Action\n**Range:** Touch\n**Components:** V, M (a miniature ziggurat)\n**Duration:** 1 hour\n\nThis spell grants the creature you touch the ability to understand any spoken or signed language that it hears or sees. Moreover, when the target communicates by speaking or signing, any creature that knows at least one language can understand it if that creature can hear the speech or see the signing.\n\n---"
+          },
+          {
+            "id": "true_seeing",
+            "name": "True Seeing",
+            "kind": "spell",
+            "mechanics": {
+              "level": 6,
+              "school": "divination",
+              "range": {
+                "kind": "touch"
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": "mushroom powder worth 25+ GP, which the spell consumes",
+                "materialCostGp": 25,
+                "materialConsumed": true
+              },
+              "duration": {
+                "kind": "timed",
+                "value": {
+                  "unit": "hour",
+                  "amount": 1
+                }
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "hole",
+                    "holeId": "true_seeing_target",
+                    "value": {
+                      "kind": "target",
+                      "selection": {
+                        "mode": "one"
+                      }
+                    },
+                    "label": "target"
+                  },
+                  "effects": [
+                    {
+                      "kind": "grant_sense",
+                      "sense": "truesight",
+                      "rangeFeet": 120
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-S-Z#True Seeing"
+            },
+            "rulesExcerpt": "# Spell Descriptions: S–Z\n## True Seeing\n\n*Level 6 Divination (Bard, Cleric, Sorcerer, Warlock, Wizard)*\n\n**Casting Time:** Action\n**Range:** Touch\n**Components:** V, S, M (mushroom powder worth 25+ GP, which the spell consumes)\n**Duration:** 1 hour\n\nFor the duration, the willing creature you touch has Truesight with a range of 120 feet.\n\n---"
+          },
+          {
+            "id": "vitriolic_sphere",
+            "name": "Vitriolic Sphere",
+            "kind": "spell",
+            "mechanics": {
+              "level": 4,
+              "school": "evocation",
+              "range": {
+                "kind": "point",
+                "feet": 150
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": "a drop of bile"
+              },
+              "duration": {
+                "kind": "instantaneous"
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "area",
+                    "shape": {
+                      "kind": "sphere",
+                      "radiusFeet": 20
+                    },
+                    "origin": {
+                      "kind": "point_within_range"
+                    }
+                  },
+                  "effects": [
+                    {
+                      "kind": "none"
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-S-Z#Vitriolic Sphere"
+            },
+            "rulesExcerpt": "# Spell Descriptions: S–Z\n## Vitriolic Sphere\n\n*Level 4 Evocation (Sorcerer, Wizard)*\n\n**Casting Time:** Action\n**Range:** 150 feet\n**Components:** V, S, M (a drop of bile)\n**Duration:** Instantaneous\n\nYou point at a location within range, and a glowing, 1-foot-diameter ball of acid streaks there and explodes in a 20-foot-radius Sphere. Each creature in that area makes a Dexterity saving throw. On a failed save, a creature takes 10d4 Acid damage and another 5d4 Acid damage at the end of its next turn. On a successful save, a creature takes half the initial damage only.\n\n**Using a Higher-Level Spell Slot.** The initial damage increases by 2d4 for each spell slot level above 4.\n\n---"
+          },
+          {
+            "id": "wall_of_fire",
+            "name": "Wall of Fire",
+            "kind": "spell",
+            "mechanics": {
+              "level": 4,
+              "school": "evocation",
+              "range": {
+                "kind": "point",
+                "feet": 120
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": "a piece of charcoal"
+              },
+              "duration": {
+                "kind": "concentration",
+                "upTo": {
+                  "unit": "minute",
+                  "amount": 1
+                }
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "ongoing_effect",
+              "attachment": {
+                "kind": "hole",
+                "holeId": "wall_of_fire_point",
+                "value": {
+                  "kind": "area",
+                  "shape": {
+                    "kind": "choice",
+                    "options": [
+                      {
+                        "kind": "line",
+                        "lengthFeet": 60,
+                        "widthFeet": 1
+                      },
+                      {
+                        "kind": "cylinder",
+                        "radiusFeet": 10,
+                        "heightFeet": 20
+                      }
+                    ]
+                  },
+                  "origin": {
+                    "kind": "point_within_range"
+                  }
+                },
+                "label": "spell origin point"
+              },
+              "initialPhase": {
+                "kind": "save_gate",
+                "attachment": {
+                  "kind": "hole",
+                  "holeId": "wall_of_fire_point",
+                  "value": {
+                    "kind": "area",
+                    "shape": {
+                      "kind": "choice",
+                      "options": [
+                        {
+                          "kind": "line",
+                          "lengthFeet": 60,
+                          "widthFeet": 1
+                        },
+                        {
+                          "kind": "cylinder",
+                          "radiusFeet": 10,
+                          "heightFeet": 20
+                        }
+                      ]
+                    },
+                    "origin": {
+                      "kind": "point_within_range"
+                    }
+                  },
+                  "label": "spell origin point"
+                },
+                "ability": "dex",
+                "dc": {
+                  "kind": "caster_spell_save_dc"
+                },
+                "onFail": {
+                  "kind": "damage",
+                  "damageType": "fire",
+                  "amount": {
+                    "kind": "linear_per_level",
+                    "axis": "slot",
+                    "base": {
+                      "dice": 5,
+                      "dieSize": 8
+                    },
+                    "perLevel": {
+                      "dice": 1
+                    },
+                    "startingAtLevel": 4
+                  }
+                },
+                "onSuccess": {
+                  "kind": "half_damage"
+                }
+              },
+              "operations": [
+                {
+                  "trigger": {
+                    "kind": "on_creature_enters_area"
+                  },
+                  "effect": {
+                    "kind": "damage",
+                    "damageType": "fire",
+                    "amount": {
+                      "kind": "linear_per_level",
+                      "axis": "slot",
+                      "base": {
+                        "dice": 5,
+                        "dieSize": 8
+                      },
+                      "perLevel": {
+                        "dice": 1
+                      },
+                      "startingAtLevel": 4
+                    }
+                  }
+                },
+                {
+                  "trigger": {
+                    "kind": "on_creature_ends_turn_in_area"
+                  },
+                  "effect": {
+                    "kind": "damage",
+                    "damageType": "fire",
+                    "amount": {
+                      "kind": "linear_per_level",
+                      "axis": "slot",
+                      "base": {
+                        "dice": 5,
+                        "dieSize": 8
+                      },
+                      "perLevel": {
+                        "dice": 1
+                      },
+                      "startingAtLevel": 4
+                    }
+                  }
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-S-Z.md#Wall of Fire"
+            },
+            "rulesExcerpt": "# Spell Descriptions: S–Z\n## Wall of Fire\n\n*Level 4 Evocation (Druid, Sorcerer, Wizard)*\n\n**Casting Time:** Action\n**Range:** 120 feet\n**Components:** V, S, M (a piece of charcoal)\n**Duration:** Concentration, up to 1 minute\n\nYou create a wall of fire on a solid surface within range. You can make the wall up to 60 feet long, 20 feet high, and 1 foot thick, or a ringed wall up to 20 feet in diameter, 20 feet high, and 1 foot thick. The wall is opaque and lasts for the duration.\n\nWhen the wall appears, each creature in its area makes a Dexterity saving throw, taking 5d8 Fire damage on a failed save or half as much damage on a successful one.\n\nOne side of the wall, selected by you when you cast this spell, deals 5d8 Fire damage to each creature that ends its turn within 10 feet of that side or inside the wall. A creature takes the same damage when it enters the wall for the first time on a turn or ends its turn there. The other side of the wall deals no damage.\n\n**Using a Higher-Level Spell Slot.** The damage increases by 1d8 for each spell slot level above 4.\n\n---"
+          },
+          {
+            "id": "water_breathing",
+            "name": "Water Breathing",
+            "kind": "spell",
+            "mechanics": {
+              "level": 3,
+              "school": "transmutation",
+              "range": {
+                "kind": "point",
+                "feet": 30
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": "a short reed"
+              },
+              "duration": {
+                "kind": "timed",
+                "value": {
+                  "unit": "hour",
+                  "amount": 24
+                }
+              },
+              "castingTime": {
+                "kind": "action",
+                "ritual": true
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "hole",
+                    "holeId": "water_breathing_targets",
+                    "value": {
+                      "kind": "target",
+                      "selection": {
+                        "mode": "choose_up_to",
+                        "count": 10
+                      }
+                    },
+                    "label": "targets"
+                  },
+                  "effects": [
+                    {
+                      "kind": "water_breathing"
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-S-Z#Water Breathing"
+            },
+            "rulesExcerpt": "# Spell Descriptions: S–Z\n## Water Breathing\n\n*Level 3 Transmutation (Druid, Ranger, Sorcerer, Wizard)*\n\n**Casting Time:** Action or Ritual\n**Range:** 30 feet\n**Components:** V, S, M (a short reed)\n**Duration:** 24 hours\n\nThis spell grants up to ten willing creatures of your choice within range the ability to breathe underwater until the spell ends. Affected creatures also retain their normal mode of respiration.\n\n---"
+          },
+          {
+            "id": "wind_walk",
+            "name": "Wind Walk",
+            "kind": "spell",
+            "mechanics": {
+              "level": 6,
+              "school": "transmutation",
+              "range": {
+                "kind": "point",
+                "feet": 30
+              },
+              "components": {
+                "v": true,
+                "s": true,
+                "m": "a candle"
+              },
+              "duration": {
+                "kind": "timed",
+                "value": {
+                  "unit": "hour",
+                  "amount": 8
+                }
+              },
+              "castingTime": {
+                "kind": "minutes",
+                "amount": 1,
+                "ritual": false
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "hole",
+                    "holeId": "wind_walk_target",
+                    "value": {
+                      "kind": "target",
+                      "selection": {
+                        "mode": "choose_up_to",
+                        "count": 11
+                      }
+                    },
+                    "label": "target"
+                  },
+                  "effects": [
+                    {
+                      "kind": "composite",
+                      "effects": [
+                        {
+                          "kind": "grant_speed",
+                          "speedKind": "fly",
+                          "feet": 300,
+                          "hover": true
+                        },
+                        {
+                          "kind": "grant_condition_immunity",
+                          "condition": "prone"
+                        },
+                        {
+                          "kind": "grant_resistance",
+                          "damageType": "bludgeoning"
+                        },
+                        {
+                          "kind": "grant_resistance",
+                          "damageType": "piercing"
+                        },
+                        {
+                          "kind": "grant_resistance",
+                          "damageType": "slashing"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-S-Z#Wind Walk"
+            },
+            "rulesExcerpt": "# Spell Descriptions: S–Z\n## Wind Walk\n\n*Level 6 Transmutation (Druid)*\n\n**Casting Time:** 1 minute\n**Range:** 30 feet\n**Components:** V, S, M (a candle)\n**Duration:** 8 hours\n\nYou and up to ten willing creatures of your choice within range assume gaseous forms for the duration, appearing as wisps of cloud. While in this cloud form, a target has a Fly Speed of 300 feet and can hover; it has Immunity to the Prone condition; and it has Resistance to Bludgeoning, Piercing, and Slashing damage. The only actions a target can take in this form are the Dash action or a Magic action to begin reverting to its normal form. Reverting takes 1 minute, during which the target has the Stunned condition. Until the spell ends, the target can revert to cloud form, which also requires a Magic action followed by a 1-minute transformation.\n\nIf a target is in cloud form and flying when the effect ends, the target descends 60 feet per round for 1 minute until it lands, which it does safely. If it can't land after 1 minute, it falls the remaining distance.\n\n---"
+          },
+          {
+            "id": "word_of_recall",
+            "name": "Word of Recall",
+            "kind": "spell",
+            "mechanics": {
+              "level": 6,
+              "school": "conjuration",
+              "range": {
+                "kind": "point",
+                "feet": 5
+              },
+              "components": {
+                "v": true,
+                "s": false,
+                "m": false
+              },
+              "duration": {
+                "kind": "instantaneous"
+              },
+              "castingTime": {
+                "kind": "action"
+              },
+              "family": "activation",
+              "phases": [
+                {
+                  "kind": "direct",
+                  "attachment": {
+                    "kind": "self"
+                  },
+                  "effects": [
+                    {
+                      "kind": "none"
+                    }
+                  ]
+                }
+              ]
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Spells/Descriptions-S-Z#Word of Recall"
+            },
+            "rulesExcerpt": "# Spell Descriptions: S–Z\n## Word of Recall\n\n*Level 6 Conjuration (Cleric)*\n\n**Casting Time:** Action\n**Range:** 5 feet\n**Components:** V\n**Duration:** Instantaneous\n\nYou and up to five willing creatures within 5 feet of you instantly teleport to a previously designated sanctuary. You and any creatures that teleport with you appear in the nearest unoccupied space to the spot you designated when you prepared your sanctuary (see below). If you cast this spell without first preparing a sanctuary, the spell has no effect.\n\nYou must designate a location, such as a temple, as a sanctuary by casting this spell there.\n\n---"
+          },
+          {
             "id": "acid_splash",
             "name": "Acid Splash",
             "kind": "spell",
@@ -91705,7 +94012,121 @@
       "name": "valid published aggregate",
       "expected": {
         "production": {
-          "tag": "accepted"
+          "tag": "rejected",
+          "issues": [
+            {
+              "code": "dangling-authored-dependency",
+              "path": "$.units[195].mechanics.menu[0].options[1].monsterId",
+              "targetKind": "statBlock",
+              "targetId": "zombie",
+              "relation": "monster-reference"
+            },
+            {
+              "code": "dangling-authored-dependency",
+              "path": "$.units[195].mechanics.menu[1].options[1].monsterId",
+              "targetKind": "statBlock",
+              "targetId": "zombie",
+              "relation": "monster-reference"
+            },
+            {
+              "code": "dangling-authored-dependency",
+              "path": "$.units[195].mechanics.menu[2].options[1].monsterId",
+              "targetKind": "statBlock",
+              "targetId": "zombie",
+              "relation": "monster-reference"
+            },
+            {
+              "code": "dangling-authored-dependency",
+              "path": "$.units[195].mechanics.menu[3].options[1].monsterId",
+              "targetKind": "statBlock",
+              "targetId": "zombie",
+              "relation": "monster-reference"
+            },
+            {
+              "code": "dangling-authored-dependency",
+              "path": "$.units[195].mechanics.menu[4].options[1].monsterId",
+              "targetKind": "statBlock",
+              "targetId": "zombie",
+              "relation": "monster-reference"
+            },
+            {
+              "code": "dangling-authored-dependency",
+              "path": "$.units[195].mechanics.menu[5].options[1].monsterId",
+              "targetKind": "statBlock",
+              "targetId": "zombie",
+              "relation": "monster-reference"
+            },
+            {
+              "code": "dangling-authored-dependency",
+              "path": "$.units[195].mechanics.menu[6].options[1].monsterId",
+              "targetKind": "statBlock",
+              "targetId": "zombie",
+              "relation": "monster-reference"
+            },
+            {
+              "code": "dangling-authored-dependency",
+              "path": "$.units[201].mechanics.menu[0].options[0].monsterId",
+              "targetKind": "statBlock",
+              "targetId": "ghoul",
+              "relation": "monster-reference"
+            },
+            {
+              "code": "dangling-authored-dependency",
+              "path": "$.units[201].mechanics.menu[1].options[0].monsterId",
+              "targetKind": "statBlock",
+              "targetId": "ghoul",
+              "relation": "monster-reference"
+            },
+            {
+              "code": "dangling-authored-dependency",
+              "path": "$.units[201].mechanics.menu[2].options[0].monsterId",
+              "targetKind": "statBlock",
+              "targetId": "ghoul",
+              "relation": "monster-reference"
+            },
+            {
+              "code": "dangling-authored-dependency",
+              "path": "$.units[201].mechanics.menu[2].options[1].monsterId",
+              "targetKind": "statBlock",
+              "targetId": "ghast",
+              "relation": "monster-reference"
+            },
+            {
+              "code": "dangling-authored-dependency",
+              "path": "$.units[201].mechanics.menu[2].options[2].monsterId",
+              "targetKind": "statBlock",
+              "targetId": "wight",
+              "relation": "monster-reference"
+            },
+            {
+              "code": "dangling-authored-dependency",
+              "path": "$.units[201].mechanics.menu[3].options[0].monsterId",
+              "targetKind": "statBlock",
+              "targetId": "ghoul",
+              "relation": "monster-reference"
+            },
+            {
+              "code": "dangling-authored-dependency",
+              "path": "$.units[201].mechanics.menu[3].options[1].monsterId",
+              "targetKind": "statBlock",
+              "targetId": "ghast",
+              "relation": "monster-reference"
+            },
+            {
+              "code": "dangling-authored-dependency",
+              "path": "$.units[201].mechanics.menu[3].options[2].monsterId",
+              "targetKind": "statBlock",
+              "targetId": "wight",
+              "relation": "monster-reference"
+            },
+            {
+              "code": "dangling-authored-dependency",
+              "path": "$.units[201].mechanics.menu[3].options[3].monsterId",
+              "targetKind": "statBlock",
+              "targetId": "mummy",
+              "relation": "monster-reference"
+            }
+          ]
         },
         "independent": {
           "tag": "accepted"

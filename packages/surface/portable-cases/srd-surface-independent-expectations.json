@@ -5,7 +5,7 @@
   "cases": [
     {
       "name": "valid published aggregate",
-      "inputSha256": "c9faee8a89ec23dc234c5e7093cdd1595abe9074df08815e932d894805b1e920",
+      "inputSha256": "6b7a821d1e9c1e5cb7f09f3f2ac058fcaf80908732407e2be778fbb20d34b1a6",
       "expected": {
         "tag": "accepted"
       }
