@@ -1590,8 +1590,12 @@ describe("battle runtime transaction completion unwind", () => {
       }),
       "first Ready trigger report",
     );
-    if (firstReport.frontier.kind !== "interruptDecision") return;
-    const firstReportChoice = firstReport.frontier.choices.find(
+    expect(firstReport.frontier.kind).toBe("interruptDecision");
+    const firstReportFrontier = requireInterruptFrontier(
+      firstReport.frontier,
+      "first Ready trigger report",
+    );
+    const firstReportChoice = firstReportFrontier.choices.find(
       (choice) =>
         choice.kind === "nestedProcedure" &&
         choice.subject.command === "releaseReadiedMovement",
@@ -1663,8 +1667,12 @@ describe("battle runtime transaction completion unwind", () => {
       }),
       "second Ready trigger report",
     );
-    if (secondReport.frontier.kind !== "interruptDecision") return;
-    const secondReportChoice = secondReport.frontier.choices.find(
+    expect(secondReport.frontier.kind).toBe("interruptDecision");
+    const secondReportFrontier = requireInterruptFrontier(
+      secondReport.frontier,
+      "second Ready trigger report",
+    );
+    const secondReportChoice = secondReportFrontier.choices.find(
       (choice) =>
         choice.kind === "nestedProcedure" &&
         choice.subject.command === "releaseReadiedMovement",
