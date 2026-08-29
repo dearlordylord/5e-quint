@@ -188,6 +188,7 @@ describe("battle runtime: class action features", () => {
       ...session.state,
       currentTurnResources: {
         actionResources: [],
+        actionTakenThisTurn: false,
         currentHasBonusAction: true,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
         movementActionBonusActionExclusion: { kind: "notRestricted" },
@@ -350,6 +351,7 @@ describe("battle runtime: class action features", () => {
       ...zeroHpActorSession.state,
       currentTurnResources: {
         actionResources: [],
+        actionTakenThisTurn: false,
         currentHasBonusAction: true,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
         movementActionBonusActionExclusion: { kind: "notRestricted" },
@@ -407,6 +409,7 @@ describe("battle runtime: class action features", () => {
       }),
       currentTurnResources: {
         actionResources: [],
+        actionTakenThisTurn: false,
         currentHasBonusAction: true,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
         movementActionBonusActionExclusion: { kind: "notRestricted" },
@@ -590,6 +593,7 @@ describe("battle runtime: class action features", () => {
       ...noBonusActionSession.state,
       currentTurnResources: {
         actionResources: [{ kind: "action", source: "turn" }],
+        actionTakenThisTurn: false,
         currentHasBonusAction: false,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
         movementActionBonusActionExclusion: { kind: "notRestricted" },

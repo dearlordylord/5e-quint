@@ -133,7 +133,10 @@ import {
 import { hideousLaughterRepeatSavingThrowOutcomeHole } from "./hideous-laughter-repeat-save.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
-import { slowActionOrBonusActionTurnResources } from "./slow-active-penalties-runtime.ts";
+import {
+  battleStateWithReconciledCurrentActorSlowTurnRestriction,
+  slowActionOrBonusActionTurnResources,
+} from "./slow-active-penalties-turn-restriction.ts";
 import {
   slowActivePenaltiesEffects,
   type SlowActivePenaltiesEffect,
@@ -432,23 +435,23 @@ function resolveEndTurn({
     damageDispositions,
     turnBoundaryHideousLaughterDamageRepeatSaves,
   ).combatants;
+  const durationTickState = {
+    ...state,
+    initiative,
+    combatants: combatantsAfterSpellTurnStartDamage,
+  };
   const durationTick =
     Number(initiative.round) > Number(state.initiative.round)
-      ? tickDurationEffects(combatantsAfterSpellTurnStartDamage, {
-          state: {
-            ...state,
-            initiative,
-            combatants: combatantsAfterSpellTurnStartDamage,
-          },
+      ? tickBattleStateDurationEffects(durationTickState, {
           spellEndTargetStatePromotionTiming:
             END_OF_NEXT_TURN_NEW_ROUND_DURATION_TICK,
         })
       : {
-          value: combatantsAfterSpellTurnStartDamage,
+          value: durationTickState,
           flySpeedGrantEndFallCleanupFrames: [],
           spellEndTargetStatePromotionIds: [],
         };
-  const combatantsAfterDurationTick = durationTick.value;
+  const combatantsAfterDurationTick = durationTick.value.combatants;
   flySpeedGrantEndFallCleanupFrames.push(
     ...durationTick.flySpeedGrantEndFallCleanupFrames,
   );
@@ -460,7 +463,7 @@ function resolveEndTurn({
   const combatantsAfterDamageReductionReset =
     resetSpellDamageReductionsForNewTurn(combatantsAfterRecharge);
   const resetTurnResources = spellGrantedActionResourceTurnResources(
-    resetBattleTurnResources(state.currentTurnResources),
+    resetBattleTurnResources(durationTick.value.currentTurnResources),
     combatantsAfterDamageReductionReset.get(nextActorId),
   );
   const stateAfterCommandHalt = applyCommandHaltAtTurnStart({
@@ -2206,6 +2209,38 @@ function expireEndOfTurnEffects(
       effect.expiresAt.combatantId === actorId &&
       effect.expiresAt.round === round,
   );
+}
+
+export type BattleStateDurationTickContext = {
+  readonly spellEndTargetStatePromotionTiming: EndOfNextTurnExpirationTiming;
+};
+
+export function tickBattleStateDurationEffects(
+  state: BattleState,
+  context?: BattleStateDurationTickContext,
+): {
+  readonly value: BattleState;
+  readonly flySpeedGrantEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
+  readonly spellEndTargetStatePromotionIds: readonly CombatantId[];
+} {
+  const ticked = tickDurationEffects(
+    state.combatants,
+    context === undefined
+      ? undefined
+      : {
+          state,
+          spellEndTargetStatePromotionTiming:
+            context.spellEndTargetStatePromotionTiming,
+        },
+  );
+  return {
+    value: battleStateWithReconciledCurrentActorSlowTurnRestriction({
+      ...state,
+      combatants: ticked.value,
+    }),
+    flySpeedGrantEndFallCleanupFrames: ticked.flySpeedGrantEndFallCleanupFrames,
+    spellEndTargetStatePromotionIds: ticked.spellEndTargetStatePromotionIds,
+  };
 }
 
 type DurationTickContext = {

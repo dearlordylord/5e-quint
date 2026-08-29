@@ -191,6 +191,7 @@ export function battleTurnSnapshot(
   const resources = state.currentTurnResources;
   return {
     actionResources: resources.actionResources,
+    actionTakenThisTurn: resources.actionTakenThisTurn,
     bonusActionAvailable:
       canSpendBonusAction(resources) &&
       availableActs.some(({ subject }) =>
