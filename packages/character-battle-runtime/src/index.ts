@@ -83,6 +83,7 @@ import {
 import { type BattleCreatureInitIssue } from "./battle-character-build-projection.ts";
 import { characterBattleOriginFeatSelectedReferenceProjection } from "./origin-feat-selected-reference-projection.ts";
 import {
+  characterSheetBattleHandoffCombatantMissing,
   characterSheetBattleHandoffIssue,
   type CharacterSheetBattleHandoffIssue,
 } from "./battle-handoff-issue.ts";
@@ -561,9 +562,7 @@ export function settleCharacterSheetFromBattle(input: {
   const state = input.battleSession.state;
   const combatant = state.combatants.get(input.combatantId);
   if (combatant === undefined) {
-    return characterSheetBattleHandoffIssue(
-      "Battle handoff combatant is not present in Battle State.",
-    );
+    return characterSheetBattleHandoffCombatantMissing(input.combatantId);
   }
   if (!isCharacterBattleCreatureState(combatant)) {
     return characterSheetBattleHandoffIssue(

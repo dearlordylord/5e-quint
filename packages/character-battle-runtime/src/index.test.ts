@@ -1204,17 +1204,19 @@ describe("Character Sheet battle handoff", () => {
       session.state,
       statBlockCombatantId,
     );
+    const missingCombatantId = combatantId("settlement-missing-combatant");
     expect(
       settleCharacterSheetFromBattle({
         sheet,
         battleSession: session,
-        combatantId: combatantId("settlement-missing-combatant"),
+        combatantId: missingCombatantId,
         unitLibrary,
       }),
     ).toMatchObject({
       _tag: "Left",
       left: {
-        message: "Battle handoff combatant is not present in Battle State.",
+        tag: "characterSheetBattleHandoffCombatantMissing",
+        combatantId: missingCombatantId,
       },
     });
     expect(
