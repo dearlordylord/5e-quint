@@ -934,6 +934,16 @@ export {
 } from "./unit-feature-support.ts";
 
 export {
+  admitBattleFeatureMasteryProcedure,
+  isBattleFeatureMasteryUnit,
+  type BattleFeatureMasteryProcedure,
+  type BattleFeatureMasteryProcedureAdmissionInput,
+  type BattleFeatureMasteryProcedureAdmissionIssue,
+  type BattleFeatureMasteryProcedureAdmissionResult,
+  type BattleFeatureMasteryUnit,
+} from "./procedure-admission/battle-feature-mastery.ts";
+
+export {
   activeDruidWildShapeEffect,
   activeDruidWildShapeForm,
   combatantAbilityCheckModifier,

@@ -1179,12 +1179,368 @@ type BattleUnitSupportProfilesInputWithHuntersPreyAdmission = Omit<
   "unit"
 > & {
   readonly huntersPreyAdmission: HuntersPreyAdmission;
+  /**
+   * Static Battle admission validates contextual mechanics' authored shape but
+   * leaves Character-dependent specialization for the binding boundary.
+   */
+  readonly deferContextualSupport?: true;
 };
 
 type AdmittedBattleUnitSupportProfiles = {
   readonly supportProfiles: readonly BattleUnitSupportProfile[];
   readonly huntersPreyAdmission: SupportedHuntersPreyAdmission;
 };
+
+/**
+ * Context-independent Battle support proof.  The support profile collection is
+ * the existing executable vocabulary; the contextual entries retain only the
+ * already-parsed shape needed to specialize it after Character facts arrive.
+ * This is intentionally structural rather than an opaque/nominal receipt.
+ */
+export type AdmittedBattleUnitSupportPlan = {
+  readonly profiles: readonly BattleUnitSupportProfile[];
+  readonly huntersPrey:
+    | { readonly tag: "none" }
+    | {
+        readonly tag: "options";
+        readonly profile: HuntersPreyAdmittedMechanicsProfile;
+      };
+  readonly contextual: AdmittedContextualUnitSupport;
+};
+
+type AdmittedContextualUnitSupport = {
+  readonly attackActionAreaSaveDamageReplacement: AttackActionAreaSaveDamageReplacementAdmission | null;
+  readonly passiveDamageResistance: PassiveDamageResistanceAdmission | null;
+  readonly magicActionAreaSaveDamageHealing: {
+    readonly className: ClassName;
+    readonly acquiredAtLevel: number;
+    readonly profile: BattleMagicActionAreaSaveDamageHealingSupportProfile;
+  } | null;
+  readonly magicActionSaveGatedCondition: {
+    readonly className: ClassName;
+    readonly acquiredAtLevel: number;
+    readonly profile: BattleMagicActionSaveGatedConditionSupportProfile;
+  } | null;
+  readonly druidWildShapeKnownForm: {
+    readonly className: "druid";
+    readonly acquiredAtLevel: number;
+    readonly knownFormRoster: DruidWildShapeKnownFormsRoster;
+  } | null;
+  readonly tacticalMasterReplacement: {
+    readonly className: ClassName;
+    readonly acquiredAtLevel: number;
+    readonly profile: BattleTacticalMasterReplacementSupportProfile;
+  } | null;
+};
+
+export type BattleUnitSupportPlanBindingInput = {
+  readonly selectedOption?: BattleUnitSupportProfileSelectedOption;
+  readonly classLevels?: readonly CharacterBattleClassLevelInit[];
+  readonly sourceFacts?: BattleUnitSupportProfileSourceFacts;
+};
+
+export function admitBattleUnitSupportPlan(
+  unit: BattleUnitSupportSource,
+): Either.Either<AdmittedBattleUnitSupportPlan, BattleUnitSupportProfileIssue> {
+  // Composite mechanics are admitted as one execution graph. Part-specific
+  // validation belongs to the catalog/path admission owner, not this support
+  // projection, because several readers correlate facts across parts.
+  const admitted = battleUnitSupportProfilesForInputWithHuntersPreyAdmission({
+    huntersPreyAdmission: huntersPreyAdmissionForUnit(unit),
+    deferContextualSupport: true,
+  });
+  if (Either.isLeft(admitted)) return Either.left(admitted.left);
+  const contextual = admitContextualUnitSupport(unit);
+  if (Either.isLeft(contextual)) return Either.left(contextual.left);
+  return Either.right({
+    profiles: admitted.right.supportProfiles,
+    huntersPrey:
+      admitted.right.huntersPreyAdmission.tag === "admitted"
+        ? {
+            tag: "options",
+            profile: admitted.right.huntersPreyAdmission.profile,
+          }
+        : { tag: "none" },
+    contextual: contextual.right,
+  });
+}
+
+export function bindAdmittedBattleUnitSupportPlan(input: {
+  readonly plan: AdmittedBattleUnitSupportPlan;
+  readonly binding: BattleUnitSupportPlanBindingInput;
+}): Either.Either<
+  readonly BattleUnitSupportProfile[],
+  BattleUnitSupportProfileIssue
+> {
+  const classLevels =
+    input.binding.classLevels === undefined
+      ? undefined
+      : parseBattleUnitSupportClassLevels(input.binding.classLevels);
+  const profiles: BattleUnitSupportProfile[] = [];
+  const selectedHuntersPrey =
+    input.plan.huntersPrey.tag === "options" &&
+    input.binding.selectedOption !== undefined
+      ? selectedHuntersPreySupportProfile(
+          input.plan.huntersPrey.profile,
+          input.binding.selectedOption,
+        )
+      : null;
+  if (
+    input.plan.huntersPrey.tag === "options" &&
+    selectedHuntersPrey === null
+  ) {
+    return battleUnitSupportProfileIssue(
+      "Admitted Hunter's Prey mechanics require a retained selection before battle initialization.",
+    );
+  }
+  if (
+    input.binding.selectedOption?.kind === "huntersPrey" &&
+    selectedHuntersPrey === null
+  ) {
+    return battleUnitSupportProfileIssue(
+      "The retained Hunter's Prey selection does not belong to the admitted Unit mechanics graph.",
+    );
+  }
+  profiles.push(...input.plan.profiles);
+  const contextual = bindAdmittedContextualUnitSupport({
+    admitted: input.plan.contextual,
+    classLevels,
+    sourceFacts: input.binding.sourceFacts,
+  });
+  if (Either.isLeft(contextual)) return Either.left(contextual.left);
+  profiles.push(...contextual.right);
+  if (selectedHuntersPrey !== null) profiles.push(selectedHuntersPrey);
+  return Either.right(profiles);
+}
+
+function admitContextualUnitSupport(
+  unit: BattleUnitSupportSource,
+): Either.Either<AdmittedContextualUnitSupport, BattleUnitSupportProfileIssue> {
+  if (isClassicNonSrdMechanicsUnit(unit)) {
+    return Either.right({
+      attackActionAreaSaveDamageReplacement: null,
+      passiveDamageResistance: null,
+      magicActionAreaSaveDamageHealing: null,
+      magicActionSaveGatedCondition: null,
+      druidWildShapeKnownForm: null,
+      tacticalMasterReplacement: null,
+    });
+  }
+  const attackActionAreaSaveDamageReplacement =
+    attackActionAreaSaveDamageReplacementAdmissionForUnit(unit);
+  if (
+    attackActionAreaSaveDamageReplacement === null &&
+    hasAttackActionAreaSaveDamageReplacementMechanics(unit)
+  ) {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Attack-action area save-damage replacement Unit hook: ${unit.id}.`,
+    );
+  }
+  const passiveDamageResistance = passiveDamageResistanceAdmissionForUnit(unit);
+  if (
+    passiveDamageResistance === null &&
+    hasPassiveDamageResistanceMechanics(unit)
+  ) {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle passive damage Resistance Unit hook: ${unit.id}.`,
+    );
+  }
+  const landsAidProfile = magicActionAreaSaveDamageHealingProfileForUnit(unit);
+  if (
+    landsAidProfile === null &&
+    hasMagicActionAreaSaveDamageHealingMechanics(unit)
+  ) {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Magic Action area save damage/healing Unit hook: ${unit.id}.`,
+    );
+  }
+  const saveGatedConditionProfile =
+    magicActionSaveGatedConditionProfileForUnit(unit);
+  if (
+    saveGatedConditionProfile === null &&
+    hasMagicActionSaveGatedConditionMechanics(unit)
+  ) {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Magic Action save-gated condition Unit hook: ${unit.id}.`,
+    );
+  }
+  const wildShapeAdmission = druidWildShapeKnownFormAdmissionForUnit(unit);
+  if (wildShapeAdmission === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Druid Wild Shape Unit hook: ${unit.id}.`,
+    );
+  }
+  const tacticalMaster = battleTacticalMasterReplacementSupportForUnit(unit);
+  if (tacticalMaster === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Tactical Master Unit hook: ${unit.id}.`,
+    );
+  }
+  const classIdentity =
+    unit.kind === "class_feature"
+      ? { className: unit.className, acquiredAtLevel: unit.acquiredAtLevel }
+      : null;
+  return Either.right({
+    attackActionAreaSaveDamageReplacement,
+    passiveDamageResistance,
+    magicActionAreaSaveDamageHealing:
+      landsAidProfile === null || classIdentity === null
+        ? null
+        : {
+            ...classIdentity,
+            profile: {
+              kind: MAGIC_ACTION_AREA_SAVE_DAMAGE_HEALING_SUPPORT_PROFILE,
+              damageHealing: landsAidProfile.damageHealing,
+            },
+          },
+    magicActionSaveGatedCondition:
+      saveGatedConditionProfile === null || classIdentity === null
+        ? null
+        : {
+            ...classIdentity,
+            profile: {
+              kind: MAGIC_ACTION_SAVE_GATED_CONDITION_SUPPORT_PROFILE,
+              condition: saveGatedConditionProfile.condition,
+            },
+          },
+    druidWildShapeKnownForm:
+      wildShapeAdmission === null
+        ? null
+        : {
+            className: wildShapeAdmission.unit.className,
+            acquiredAtLevel: wildShapeAdmission.unit.acquiredAtLevel,
+            knownFormRoster: wildShapeAdmission.knownFormRoster,
+          },
+    tacticalMasterReplacement:
+      tacticalMaster === null || classIdentity === null
+        ? null
+        : { ...classIdentity, profile: tacticalMaster },
+  });
+}
+
+function bindAdmittedContextualUnitSupport(input: {
+  readonly admitted: AdmittedContextualUnitSupport;
+  readonly classLevels: readonly CharacterBattleClassLevel[] | undefined;
+  readonly sourceFacts: BattleUnitSupportProfileSourceFacts | undefined;
+}): Either.Either<
+  readonly BattleUnitSupportProfile[],
+  BattleUnitSupportProfileIssue
+> {
+  const profiles: BattleUnitSupportProfile[] = [];
+  const breath = input.admitted.attackActionAreaSaveDamageReplacement;
+  if (breath !== null) {
+    const damageType = input.sourceFacts?.draconicAncestryDamageType;
+    if (damageType === undefined) {
+      return battleUnitSupportProfileIssue(
+        "Admitted Draconic Ancestry breath mechanics require the retained Character source fact.",
+      );
+    }
+    profiles.push({
+      kind: ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
+      breath: {
+        ...breath,
+        damage: {
+          ...breath.damage,
+          damageType: { ...breath.damage.damageType, value: damageType },
+        },
+      },
+    });
+  }
+  const resistance = input.admitted.passiveDamageResistance;
+  if (resistance !== null) {
+    const damageType =
+      resistance.damageType.kind === "fixed"
+        ? resistance.damageType
+        : input.sourceFacts?.draconicAncestryDamageType === undefined
+          ? undefined
+          : {
+              ...resistance.damageType,
+              value: input.sourceFacts.draconicAncestryDamageType,
+            };
+    if (damageType === undefined) {
+      return battleUnitSupportProfileIssue(
+        "Admitted Draconic Ancestry resistance mechanics require the retained Character source fact.",
+      );
+    }
+    profiles.push({
+      kind: PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
+      resistance: { damageType },
+    });
+  }
+  const landsAid = input.admitted.magicActionAreaSaveDamageHealing;
+  if (landsAid !== null) {
+    const level = admittedClassLevel(input.classLevels, landsAid);
+    if (level === undefined && input.classLevels !== undefined) {
+      return battleUnitSupportProfileIssue(
+        "Admitted Magic Action area save damage/healing mechanics require the owning class at or above acquisition level.",
+      );
+    }
+    if (level !== undefined) {
+      const amount = landsAidFixedAmountProfile(level);
+      profiles.push({
+        ...landsAid.profile,
+        damageHealing: {
+          ...landsAid.profile.damageHealing,
+          damage: { ...landsAid.profile.damageHealing.damage, amount },
+          healing: { ...landsAid.profile.damageHealing.healing, amount },
+        },
+      });
+    }
+  }
+  const saveGated = input.admitted.magicActionSaveGatedCondition;
+  if (
+    saveGated !== null &&
+    input.classLevels !== undefined &&
+    admittedClassLevel(input.classLevels, saveGated) === undefined
+  ) {
+    return battleUnitSupportProfileIssue(
+      "Admitted Magic Action save-gated condition mechanics require the owning class at or above acquisition level.",
+    );
+  }
+  if (
+    saveGated !== null &&
+    admittedClassLevel(input.classLevels, saveGated) !== undefined
+  ) {
+    profiles.push(saveGated.profile);
+  }
+  const wildShape = input.admitted.druidWildShapeKnownForm;
+  if (wildShape !== null) {
+    const level = admittedClassLevel(input.classLevels, wildShape);
+    if (level !== undefined) {
+      const profile = druidWildShapeKnownFormProfileForRoster(
+        wildShape.knownFormRoster,
+        level,
+      );
+      if (profile === null) {
+        return battleUnitSupportProfileIssue(
+          "Admitted Druid Wild Shape roster cannot be specialized at the retained class level.",
+        );
+      }
+      profiles.push(profile);
+    }
+  }
+  const tacticalMaster = input.admitted.tacticalMasterReplacement;
+  if (
+    tacticalMaster !== null &&
+    admittedClassLevel(input.classLevels, tacticalMaster) !== undefined
+  ) {
+    profiles.push(tacticalMaster.profile);
+  }
+  return Either.right(profiles);
+}
+
+function admittedClassLevel(
+  classLevels: readonly CharacterBattleClassLevel[] | undefined,
+  admitted: { readonly className: ClassName; readonly acquiredAtLevel: number },
+): ClassLevel | undefined {
+  const level =
+    classLevels === undefined
+      ? classLevel(admitted.acquiredAtLevel)
+      : findCharacterClassLevel(classLevels, admitted.className);
+  return level === undefined || Number(level) < admitted.acquiredAtLevel
+    ? undefined
+    : level;
+}
 
 export function battleUnitSupportProfilesForUnit(
   input: BattleUnitSupportProfilesInput,
@@ -1210,6 +1566,8 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
 > {
   const { huntersPreyAdmission, ...supportInput } =
     inputWithHuntersPreyAdmission;
+  const deferContextualSupport =
+    inputWithHuntersPreyAdmission.deferContextualSupport === true;
   const input: BattleUnitSupportProfilesInput = {
     ...supportInput,
     unit: huntersPreyAdmission.unit,
@@ -1377,11 +1735,13 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
     supportProfiles.push(attackRollMissToHitReplacementSupport);
   }
 
-  const attackActionAreaSaveDamageReplacementSupport =
-    battleAttackActionAreaSaveDamageReplacementSupportForUnit({
-      unit: input.unit,
-      draconicAncestryDamageType: input.sourceFacts?.draconicAncestryDamageType,
-    });
+  const attackActionAreaSaveDamageReplacementSupport = deferContextualSupport
+    ? null
+    : battleAttackActionAreaSaveDamageReplacementSupportForUnit({
+        unit: input.unit,
+        draconicAncestryDamageType:
+          input.sourceFacts?.draconicAncestryDamageType,
+      });
   /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (attackActionAreaSaveDamageReplacementSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
@@ -1432,11 +1792,13 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
     supportProfiles.push(passiveAbilityCheckRollModeSupport);
   }
 
-  const passiveDamageResistanceSupport =
-    battlePassiveDamageResistanceSupportForUnit({
-      unit: input.unit,
-      draconicAncestryDamageType: input.sourceFacts?.draconicAncestryDamageType,
-    });
+  const passiveDamageResistanceSupport = deferContextualSupport
+    ? null
+    : battlePassiveDamageResistanceSupportForUnit({
+        unit: input.unit,
+        draconicAncestryDamageType:
+          input.sourceFacts?.draconicAncestryDamageType,
+      });
   /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (passiveDamageResistanceSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
@@ -1672,11 +2034,12 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
     supportProfiles.push(magicActionHealingPoolSupport);
   }
 
-  const magicActionAreaSaveDamageHealingSupport =
-    battleMagicActionAreaSaveDamageHealingSupportForUnit(
-      input.unit,
-      input.classLevels,
-    );
+  const magicActionAreaSaveDamageHealingSupport = deferContextualSupport
+    ? null
+    : battleMagicActionAreaSaveDamageHealingSupportForUnit(
+        input.unit,
+        input.classLevels,
+      );
   /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (magicActionAreaSaveDamageHealingSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
@@ -1688,11 +2051,12 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
     supportProfiles.push(magicActionAreaSaveDamageHealingSupport);
   }
 
-  const magicActionSaveGatedConditionSupport =
-    battleMagicActionSaveGatedConditionSupportForUnit(
-      input.unit,
-      input.classLevels,
-    );
+  const magicActionSaveGatedConditionSupport = deferContextualSupport
+    ? null
+    : battleMagicActionSaveGatedConditionSupportForUnit(
+        input.unit,
+        input.classLevels,
+      );
   /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (magicActionSaveGatedConditionSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
@@ -1807,8 +2171,9 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
     supportProfiles.push(bardicInspirationGrantSupport);
   }
 
-  const druidWildShapeKnownFormSupport =
-    input.classLevels === undefined
+  const druidWildShapeKnownFormSupport = deferContextualSupport
+    ? null
+    : input.classLevels === undefined
       ? battleDruidWildShapeKnownFormSupportForUnit(input.unit)
       : battleDruidWildShapeKnownFormSupportForUnitAtClassLevels(
           input.unit,
@@ -1838,8 +2203,9 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
     supportProfiles.push(druidWildCompanionSpellCastSupport);
   }
 
-  const tacticalMasterReplacementSupport =
-    input.classLevels === undefined
+  const tacticalMasterReplacementSupport = deferContextualSupport
+    ? null
+    : input.classLevels === undefined
       ? battleTacticalMasterReplacementSupportForUnit(input.unit)
       : battleTacticalMasterReplacementSupportForUnitAtClassLevels(
           input.unit,
@@ -4905,14 +5271,24 @@ export function attackRollMissToHitReplacementProfileForUnit(
   };
 }
 
-export function attackActionAreaSaveDamageReplacementProfileForUnit(input: {
-  readonly unit: AuthoredUnitSource;
-  readonly draconicAncestryDamageType: DraconicAncestryDamageType;
-}): Extract<
-  SupportedUnitFeatureProfile,
-  { readonly kind: "attackActionAreaSaveDamageReplacement" }
-> | null {
-  const { unit } = input;
+type AttackActionAreaSaveDamageReplacementAdmission = Omit<
+  AttackActionAreaSaveDamageReplacementProfile,
+  "damage"
+> & {
+  readonly damage: Omit<
+    AttackActionAreaSaveDamageReplacementProfile["damage"],
+    "damageType"
+  > & {
+    readonly damageType: Omit<
+      AttackActionAreaSaveDamageReplacementProfile["damage"]["damageType"],
+      "value"
+    >;
+  };
+};
+
+function attackActionAreaSaveDamageReplacementAdmissionForUnit(
+  unit: AuthoredUnitSource,
+): AttackActionAreaSaveDamageReplacementAdmission | null {
   if (unit.kind !== "species_trait" || unit.mechanics.family !== "activation") {
     return null;
   }
@@ -4940,35 +5316,30 @@ export function attackActionAreaSaveDamageReplacementProfileForUnit(input: {
   }
   const shapeChoice = breathWeaponShapeChoice(phase.attachment.shape);
   const amount = breathWeaponDamageAmount(phase.onFail.amount);
-  const damageType = draconicAncestryDamageTypeRef(
+  const damageType = draconicAncestryDamageTypeAdmission(
     phase.onFail.damageType,
-    input.draconicAncestryDamageType,
   );
-  if (shapeChoice === null || amount === null || damageType === null) {
+  if (shapeChoice === null || amount === null || !damageType) {
     return null;
   }
   return {
-    kind: "attackActionAreaSaveDamageReplacement",
-    unit,
-    breath: {
-      activationCost: { kind: "replaceAttack" },
-      resource: {
-        cap: { kind: "proficiencyBonus" },
-        resetCadence: "longRest",
-      },
-      area: {
-        origin: { kind: "self" },
-        shapeChoice,
-      },
-      save: {
-        ability: "dex",
-        dc: { kind: "innate", base: 8, ability: "con" },
-      },
-      damage: {
-        damageType,
-        amount,
-        onSuccess: "halfDamage",
-      },
+    activationCost: { kind: "replaceAttack" },
+    resource: {
+      cap: { kind: "proficiencyBonus" },
+      resetCadence: "longRest",
+    },
+    area: {
+      origin: { kind: "self" },
+      shapeChoice,
+    },
+    save: {
+      ability: "dex",
+      dc: { kind: "innate", base: 8, ability: "con" },
+    },
+    damage: {
+      damageType,
+      amount,
+      onSuccess: "halfDamage",
     },
   };
 }
@@ -5036,25 +5407,18 @@ function breathWeaponDamageAmount(
 }
 
 type DamageEffectAtom = Extract<EffectAtom, { readonly kind: "damage" }>;
-const DRACONIC_ANCESTRY_RESOURCE_SHAPE_WITNESS_DAMAGE_TYPE =
-  "fire" satisfies DraconicAncestryDamageType;
-
 export function unitHasAttackActionAreaSaveDamageReplacementResourceShape(
   unit: AuthoredUnitSource,
 ): boolean {
-  return (
-    attackActionAreaSaveDamageReplacementProfileForUnit({
-      unit,
-      draconicAncestryDamageType:
-        DRACONIC_ANCESTRY_RESOURCE_SHAPE_WITNESS_DAMAGE_TYPE,
-    }) !== null
-  );
+  return attackActionAreaSaveDamageReplacementAdmissionForUnit(unit) !== null;
 }
 
-function draconicAncestryDamageTypeRef(
+function draconicAncestryDamageTypeAdmission(
   damageType: DamageEffectAtom["damageType"],
-  selectedDamageType: DraconicAncestryDamageType,
-): AttackActionAreaSaveDamageReplacementProfile["damage"]["damageType"] | null {
+): Omit<
+  AttackActionAreaSaveDamageReplacementProfile["damage"]["damageType"],
+  "value"
+> | null {
   if (
     typeof damageType !== "object" ||
     damageType === null ||
@@ -5066,7 +5430,33 @@ function draconicAncestryDamageTypeRef(
   return {
     kind: "draconicAncestry",
     holeId: DRACONIC_ANCESTRY_DAMAGE_TYPE_HOLE_ID,
-    value: selectedDamageType,
+  };
+}
+
+export function attackActionAreaSaveDamageReplacementProfileForUnit(input: {
+  readonly unit: AuthoredUnitSource;
+  readonly draconicAncestryDamageType: DraconicAncestryDamageType;
+}): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "attackActionAreaSaveDamageReplacement" }
+> | null {
+  const admitted = attackActionAreaSaveDamageReplacementAdmissionForUnit(
+    input.unit,
+  );
+  if (admitted === null) return null;
+  return {
+    kind: "attackActionAreaSaveDamageReplacement",
+    unit: input.unit,
+    breath: {
+      ...admitted,
+      damage: {
+        ...admitted.damage,
+        damageType: {
+          ...admitted.damage.damageType,
+          value: input.draconicAncestryDamageType,
+        },
+      },
+    },
   };
 }
 
@@ -5075,27 +5465,20 @@ type GrantResistanceEffectAtom = Extract<
   { readonly kind: "grant_resistance" }
 >;
 
-function draconicAncestryResistanceDamageTypeRef(
-  damageType: GrantResistanceEffectAtom["damageType"],
-  selectedDamageType: DraconicAncestryDamageType | undefined,
-): PassiveDamageResistanceProfile["damageType"] | null {
-  if (
-    typeof damageType !== "object" ||
-    damageType === null ||
-    damageType.kind !== "same_choice_as" ||
-    damageType.holeId !== DRACONIC_ANCESTRY_DAMAGE_TYPE_HOLE_ID
-  ) {
-    return null;
-  }
-  if (selectedDamageType === undefined) {
-    return null;
-  }
-  return {
-    kind: "draconicAncestry",
-    holeId: DRACONIC_ANCESTRY_DAMAGE_TYPE_HOLE_ID,
-    value: selectedDamageType,
-  };
-}
+type PassiveDamageResistanceAdmission = {
+  readonly damageType:
+    | Extract<
+        PassiveDamageResistanceProfile["damageType"],
+        { readonly kind: "fixed" }
+      >
+    | Omit<
+        Extract<
+          PassiveDamageResistanceProfile["damageType"],
+          { readonly kind: "draconicAncestry" }
+        >,
+        "value"
+      >;
+};
 
 function fixedResistanceDamageTypeRef(
   damageType: GrantResistanceEffectAtom["damageType"],
@@ -5107,16 +5490,6 @@ function fixedResistanceDamageTypeRef(
 
 function isDamageType(value: string): value is DamageType {
   return DAMAGE_TYPE_VALUES.has(value);
-}
-
-function passiveResistanceDamageTypeRef(
-  damageType: GrantResistanceEffectAtom["damageType"],
-  selectedDamageType: DraconicAncestryDamageType | undefined,
-): PassiveDamageResistanceProfile["damageType"] | null {
-  return (
-    fixedResistanceDamageTypeRef(damageType) ??
-    draconicAncestryResistanceDamageTypeRef(damageType, selectedDamageType)
-  );
 }
 
 function passiveResistanceDamageTypeMechanicsAreSupported(
@@ -5139,11 +5512,9 @@ function draconicAncestryResistanceDamageTypeMechanicsAreSupported(
   );
 }
 
-export function passiveDamageResistanceProfileForUnit(input: {
-  readonly unit: AuthoredUnitSource;
-  readonly draconicAncestryDamageType?: DraconicAncestryDamageType | undefined;
-}): PassiveDamageResistanceProfile | null {
-  const { unit } = input;
+function passiveDamageResistanceAdmissionForUnit(
+  unit: AuthoredUnitSource,
+): PassiveDamageResistanceAdmission | null {
   if (unit.kind !== "species_trait" || unit.mechanics.family !== "passive") {
     return null;
   }
@@ -5158,11 +5529,34 @@ export function passiveDamageResistanceProfileForUnit(input: {
   if ("sourceFilter" in grant && grant.sourceFilter !== undefined) {
     return null;
   }
-  const damageType = passiveResistanceDamageTypeRef(
-    grant.damageType,
-    input.draconicAncestryDamageType,
-  );
+  const damageType =
+    fixedResistanceDamageTypeRef(grant.damageType) ??
+    (draconicAncestryResistanceDamageTypeMechanicsAreSupported(grant.damageType)
+      ? {
+          kind: "draconicAncestry" as const,
+          holeId: DRACONIC_ANCESTRY_DAMAGE_TYPE_HOLE_ID,
+        }
+      : null);
   return damageType === null ? null : { damageType };
+}
+
+export function passiveDamageResistanceProfileForUnit(input: {
+  readonly unit: AuthoredUnitSource;
+  readonly draconicAncestryDamageType?: DraconicAncestryDamageType | undefined;
+}): PassiveDamageResistanceProfile | null {
+  const admitted = passiveDamageResistanceAdmissionForUnit(input.unit);
+  if (admitted === null) return null;
+  if (admitted.damageType.kind === "fixed") {
+    return { damageType: admitted.damageType };
+  }
+  return input.draconicAncestryDamageType === undefined
+    ? null
+    : {
+        damageType: {
+          ...admitted.damageType,
+          value: input.draconicAncestryDamageType,
+        },
+      };
 }
 
 export function passiveSavingThrowRollModeProfileForUnit(
@@ -7351,7 +7745,16 @@ function druidWildShapeKnownFormProfileForAdmission(
   admission: DruidWildShapeKnownFormAdmission,
   classLevel: ClassLevel,
 ): BattleDruidWildShapeKnownFormSupportProfile | null {
-  const knownFormRoster = admission.knownFormRoster;
+  return druidWildShapeKnownFormProfileForRoster(
+    admission.knownFormRoster,
+    classLevel,
+  );
+}
+
+function druidWildShapeKnownFormProfileForRoster(
+  knownFormRoster: DruidWildShapeKnownFormsRoster,
+  classLevel: ClassLevel,
+): BattleDruidWildShapeKnownFormSupportProfile | null {
   const knownFormCount = classLevelTotalChoicesAtLevel(
     knownFormRoster.knownForms,
     classLevel,
