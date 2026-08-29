@@ -9,6 +9,7 @@ import {
   SrdStatBlockRecordSchema,
   decodeSrdSurfaceSync,
 } from "@dnd/surface/surface/schema";
+import type { StatBlockMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import {
   installSrdSurface,
   type SurfaceMechanicsAdmission,
@@ -198,30 +199,21 @@ describe("complete Stat Block mechanics admission", () => {
     expect(result.tag).toBe("rejected");
     if (result.tag !== "rejected") return;
 
-    expect(result.issues.length).toBeGreaterThan(6);
-    expect(result.issues.map(({ reason }) => reason)).toEqual(
-      expect.arrayContaining([
-        "ambiguous_mechanics",
-        "unsupported_mechanics",
-        "incomplete_graph",
-      ]),
-    );
-    const paths = result.issues.map(({ mechanicsPath }) =>
-      mechanicsPath.nodes.map((node) => node.role),
-    );
-    expect(paths).toEqual(
-      expect.arrayContaining([
-        ["generalFact"],
-        ["trait"],
-        ["action", "procedure"],
-        ["action", "procedure", "effect"],
-        ["bonusAction", "procedure"],
-        ["reaction"],
-        ["reaction", "extension"],
-        ["reaction", "extension", "extension"],
-        ["reaction", "extension", "extension", "reference"],
-        ["legendaryAction", "extension"],
-      ]),
+    expect(normalizeAdmissionIssues(result.issues)).toEqual(
+      [
+        "ambiguous_mechanics|statBlock|singleton:generalFact",
+        "ambiguous_mechanics|statBlock|occurrence:legendaryAction:1/singleton:extension",
+        "incomplete_graph|statBlock|occurrence:reaction:1/singleton:extension/occurrence:extension:2/singleton:reference",
+        "unsupported_mechanics|statBlock|occurrence:action:1/singleton:procedure",
+        "unsupported_mechanics|statBlock|occurrence:action:1/singleton:procedure/occurrence:effect:1",
+        "unsupported_mechanics|statBlock|occurrence:bonusAction:1/singleton:procedure",
+        "unsupported_mechanics|statBlock|singleton:reaction",
+        "unsupported_mechanics|statBlock|occurrence:reaction:1/singleton:extension",
+        "unsupported_mechanics|statBlock|occurrence:reaction:1/singleton:extension/occurrence:extension:1",
+        "unsupported_mechanics|statBlock|occurrence:reaction:1/singleton:extension/occurrence:extension:2",
+        "unsupported_mechanics|statBlock|occurrence:reaction:1/singleton:procedure",
+        "unsupported_mechanics|statBlock|occurrence:trait:1",
+      ].sort(),
     );
   });
 
@@ -386,26 +378,35 @@ describe("complete Stat Block mechanics admission", () => {
     expect(result.tag).toBe("rejected");
     if (result.tag !== "rejected") return;
 
-    const paths = result.issues.map(({ mechanicsPath }) =>
-      mechanicsPath.nodes.map((node) => node.role),
-    );
-    expect(paths).toEqual(
-      expect.arrayContaining([
-        ["action", "procedure", "extension"],
-        ["action", "procedure", "extension", "dependency"],
-        ["action", "procedure", "extension", "reference"],
-        ["action", "procedure", "extension", "reference", "extension"],
-      ]),
-    );
-    const incompletePaths = result.issues
-      .filter(({ reason }) => reason === "incomplete_graph")
-      .map(({ mechanicsPath }) => mechanicsPath.nodes.at(-1));
-    expect(incompletePaths).toEqual(
-      expect.arrayContaining([
-        { kind: "occurrence", role: "dependency", ordinal: 1 },
-        { kind: "occurrence", role: "reference", ordinal: 2 },
-        { kind: "occurrence", role: "reference", ordinal: 3 },
-      ]),
+    expect(normalizeAdmissionIssues(result.issues)).toEqual(
+      [
+        "incomplete_graph|statBlock|occurrence:action:1/singleton:procedure/occurrence:extension:1/occurrence:dependency:1",
+        "incomplete_graph|statBlock|occurrence:action:1/singleton:procedure/occurrence:extension:1/occurrence:reference:2",
+        "incomplete_graph|statBlock|occurrence:action:1/singleton:procedure/occurrence:extension:1/occurrence:reference:3",
+        "unsupported_mechanics|statBlock|occurrence:action:1/singleton:procedure/occurrence:extension:1",
+        "unsupported_mechanics|statBlock|occurrence:action:1/singleton:procedure/occurrence:extension:1/occurrence:reference:1",
+        "unsupported_mechanics|statBlock|occurrence:action:1/singleton:procedure/occurrence:extension:1/occurrence:reference:1/occurrence:extension:1",
+        "unsupported_mechanics|statBlock|occurrence:action:1/singleton:procedure/occurrence:extension:1/occurrence:reference:2",
+        "unsupported_mechanics|statBlock|occurrence:action:1/singleton:procedure/occurrence:extension:1/occurrence:reference:3",
+      ].sort(),
     );
   });
 });
+
+function normalizeAdmissionIssues(
+  issues: readonly {
+    readonly reason: string;
+    readonly mechanicsPath: StatBlockMechanicsPath;
+  }[],
+): readonly string[] {
+  return issues
+    .map(({ reason, mechanicsPath }) => {
+      const nodes = mechanicsPath.nodes.map((node) =>
+        node.kind === "singleton"
+          ? `${node.kind}:${node.role}`
+          : `${node.kind}:${node.role}:${Number(node.ordinal)}`,
+      );
+      return `${reason}|${mechanicsPath.family}|${nodes.join("/")}`;
+    })
+    .sort();
+}
