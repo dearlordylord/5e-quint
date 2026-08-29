@@ -91,6 +91,12 @@ describe("complete Stat Block mechanics admission", () => {
       message:
         "The Stat Block admission root does not match the decoded Surface member with that authored identity.",
     },
+    {
+      name: "reparsed-equivalent",
+      surfaceStatBlock: decode(source),
+      message:
+        "The Stat Block admission root does not match the decoded Surface member with that authored identity.",
+    },
   ])("rejects an $name Stat Block root", ({ surfaceStatBlock, message }) => {
     const result = admitCompleteStatBlockMechanicsGraph({
       statBlock: source,

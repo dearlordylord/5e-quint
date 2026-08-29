@@ -90,7 +90,12 @@ type Section = {
  * Portable decoding has already validated schema-declared Authored
  * Dependencies. This profile closes the nested typed reference edges that
  * affect a Stat Block's executable graph and reports their paths without
- * copying referenced records.
+ * copying referenced records. The `statBlock` must be the exact record member
+ * of `surface`, not a same-id clone or a separately decoded equivalent: the
+ * admission result must describe one call-local authored graph, and accepting
+ * two independently decoded roots could validate one graph while installing
+ * the other. The canonical installer preserves this identity by passing its
+ * call-local member directly to the admission callback.
  */
 export function admitCompleteStatBlockMechanicsGraph(
   input: StatBlockMechanicsAdmissionInput,
