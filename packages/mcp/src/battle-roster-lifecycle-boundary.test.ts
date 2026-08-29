@@ -142,10 +142,13 @@ function removeCharacter(
 function rootAndCharacterRegistrySnapshot(
   root: ReturnType<typeof createMcpPlaySessionRoot>,
 ) {
-  return {
-    session: root.sessionStore.snapshot(),
+  return structuredClone({
+    snapshot: root.sessionStore.snapshot(),
+    battleState: root.sessionStore.battleState,
+    battleSession: root.sessionStore.battleSession,
     characters: Array.from(root.sessionStore.characters.entries()),
-  };
+    pendingBattleTransaction: root.sessionStore.getPendingBattleTransaction(),
+  });
 }
 
 function pendingInterruptTransaction() {
