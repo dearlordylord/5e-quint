@@ -497,6 +497,8 @@ export function describeAreaShape(s: AreaShapeSpec): string {
       return `cone ${s.lengthFeet} ft`;
     case "cube":
       return `cube ${s.sideFeet} ft side`;
+    case "ground_square":
+      return `ground square ${s.sideFeet} ft side`;
     case "cube_cluster": {
       const contig = s.contiguous === true ? ", contiguous" : "";
       return `up to ${s.maxCubes} cubes (${s.sideFeet} ft side${contig})`;
@@ -534,6 +536,8 @@ export function describeAreaShapeFixed(s: AreaShapeDescriptor): string {
       return `cone ${s.lengthFeet} ft`;
     case "cube":
       return `cube ${s.sideFeet} ft side`;
+    case "ground_square":
+      return `ground square ${s.sideFeet} ft side`;
     case "cube_cluster": {
       const contig = s.contiguous === true ? ", contiguous" : "";
       return `up to ${s.maxCubes} cubes (${s.sideFeet} ft side${contig})`;

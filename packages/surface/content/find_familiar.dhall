@@ -11,22 +11,8 @@
 --   Beast that has a Challenge Rating of 0" is represented as an
 --   eligibility rule over the same Stat Block catalog.
 --
--- Runtime utility:
---   • Telepathic connection (100 ft) and shared-senses bonus action are
---     encoded via control.telepathy and promoted by battle-runtime.
---   • "Your familiar can deliver the touch" (touch-spell proxy within
---     100 ft, costs the familiar's reaction) is promoted by
---     battle-runtime as a single cast/delivery procedure, not as a
---     separate authored EffectAtom.
---
--- DEFERRED — remaining lifecycle details:
---   • Pocket-dimension dismissal/recall (30 ft reappearance on Magic
---     action): CreatureDismissal.manualDismiss = "magic_action"
---     captures the sheathe/recall cycle at a coarse grain; the 30-ft
---     reappearance radius is not yet modeled.
---   • "Adopt a new eligible form" on recast: matches
---     `replace_on_recast` lifecycle atom; not threaded into the
---     family yet.
+-- Companion execution reads touch delivery, temporary dismissal/recall, and
+-- recast outcomes from the typed companion lifecycle below.
 
 let findFamiliar =
       { kind = "spell"
@@ -102,6 +88,30 @@ let findFamiliar =
               , onSpellEnd = "disappears"
               , manualDismiss = "magic_action"
               , leavesBehind = "equipment"
+              }
+          , companionLifecycle =
+              { kind = "bound_companion"
+              , touchSpellDelivery =
+                  { spellRange = "touch"
+                  , companionWithinFeetOfCaster = 100
+                  , companionCost = "reaction"
+                  , timing = "when_caster_casts_spell"
+                  }
+              , temporaryDismissal =
+                  { cost = "magic_action"
+                  , destination = "pocket_dimension"
+                  , recall =
+                      { cost = "magic_action"
+                      , placement =
+                          { kind = "unoccupied_space_within_feet_of_caster"
+                          , maxDistanceFeet = 30
+                          }
+                      }
+                  }
+              , recast =
+                  { existingCompanion = "adopt_new_eligible_form"
+                  , zeroHitPointDisappearance = "reappear"
+                  }
               }
           }
       }

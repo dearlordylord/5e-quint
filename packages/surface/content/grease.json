@@ -2,6 +2,21 @@
   "id": "grease",
   "kind": "spell",
   "mechanics": {
+    "attachment": {
+      "holeId": "grease_point",
+      "kind": "hole",
+      "label": "spell origin point",
+      "value": {
+        "kind": "area",
+        "origin": {
+          "kind": "point_within_range"
+        },
+        "shape": {
+          "kind": "ground_square",
+          "sideFeet": 10
+        }
+      }
+    },
     "castingTime": {
       "kind": "action"
     },
@@ -17,36 +32,82 @@
         "unit": "minute"
       }
     },
-    "family": "activation",
+    "family": "ongoing_effect",
+    "initialPhase": {
+      "ability": "dex",
+      "attachment": {
+        "holeId": "grease_point",
+        "kind": "hole",
+        "label": "spell origin point",
+        "value": {
+          "kind": "area",
+          "origin": {
+            "kind": "point_within_range"
+          },
+          "shape": {
+            "kind": "ground_square",
+            "sideFeet": 10
+          }
+        }
+      },
+      "dc": {
+        "kind": "caster_spell_save_dc"
+      },
+      "kind": "save_gate",
+      "onFail": {
+        "condition": "prone",
+        "kind": "apply_condition"
+      },
+      "onSuccess": {
+        "kind": "none"
+      }
+    },
     "level": 1,
-    "phases": [
+    "operations": [
       {
-        "ability": "dex",
-        "attachment": {
-          "holeId": "grease_point",
-          "kind": "hole",
-          "label": "spell origin point",
-          "value": {
-            "kind": "area",
-            "origin": {
-              "kind": "point_within_range"
-            },
-            "shape": {
-              "kind": "cube",
-              "sideFeet": 10
-            }
+        "effect": {
+          "kind": "area_is_difficult_terrain"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "ability": "dex",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "condition": "prone",
+            "kind": "apply_condition"
+          },
+          "onSuccess": {
+            "kind": "none"
           }
         },
-        "dc": {
-          "kind": "caster_spell_save_dc"
+        "trigger": {
+          "kind": "on_creature_enters_area"
+        }
+      },
+      {
+        "effect": {
+          "ability": "dex",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "condition": "prone",
+            "kind": "apply_condition"
+          },
+          "onSuccess": {
+            "kind": "none"
+          }
         },
-        "kind": "save_gate",
-        "onFail": {
-          "condition": "prone",
-          "kind": "apply_condition"
-        },
-        "onSuccess": {
-          "kind": "none"
+        "trigger": {
+          "kind": "on_creature_ends_turn_in_area"
         }
       }
     ],
