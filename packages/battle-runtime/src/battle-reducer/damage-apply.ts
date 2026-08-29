@@ -118,7 +118,7 @@ import {
 import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
 import {
   conditionsAfterExpiringSpellConditionEffects,
-  removeSaveGatedAreaControlControlEffectsFromTarget,
+  removeSaveGatedAreaControlEffectsFromTarget,
   removeSaveGatedConditionWithRepeatEffectFromTarget,
   removeSleepEffectsFromTarget,
 } from "./spell-condition-effects-helpers.ts";
@@ -503,7 +503,7 @@ export function applyBattleHitPointDamage(input: {
       : afterTargetActionEarlyEnd;
   const afterSaveGatedAreaControl =
     input.damageAmount > 0
-      ? removeSaveGatedAreaControlControlEffectsFromTarget(afterSleep, targetId)
+      ? removeSaveGatedAreaControlEffectsFromTarget(afterSleep, targetId)
       : afterSleep;
   const afterSaveGatedConditionWithRepeat =
     input.damageAmount > 0

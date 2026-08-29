@@ -53,9 +53,9 @@ type SaveGatedConditionWithRepeatEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "saveGatedConditionWithRepeat" }
 >;
-type SaveGatedAreaControlControlEffect = Extract<
+type SaveGatedAreaControlEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "saveGatedAreaControlControl" }
+  { readonly kind: "saveGatedAreaControl" }
 >;
 export type SpellConcentrationEffectSource = {
   readonly sourceCombatantId: CombatantId;
@@ -99,7 +99,7 @@ export function conditionHadNonSpellSourceBeforeSpellEffect(
     conditionHasNonSpellSource(combatant, condition) ||
     combatant.activeEffects.some(
       (effect) =>
-        (effect.kind === "saveGatedAreaControlControl" &&
+        (effect.kind === "saveGatedAreaControl" &&
           ((condition === "charmed" &&
             effect.conditionHadNonSpellCharmedSource) ||
             (condition === "incapacitated" &&
@@ -471,7 +471,7 @@ function activeEffectDirectlyAppliesCondition(
       condition === "unconscious") ||
     (effect.kind === "saveGatedConditionWithRepeat" &&
       (condition === "prone" || condition === "incapacitated")) ||
-    (effect.kind === "saveGatedAreaControlControl" &&
+    (effect.kind === "saveGatedAreaControl" &&
       (condition === "charmed" || condition === "incapacitated"))
   );
 }
@@ -623,7 +623,7 @@ export function saveGatedAreaControlShakeAwakeTargetChoices(
     .filter(
       ([id, combatant]) =>
         id !== actorId &&
-        combatant.activeEffects.some(isSaveGatedAreaControlControlEffect),
+        combatant.activeEffects.some(isSaveGatedAreaControlEffect),
     )
     .map(([id]) => id);
 }
@@ -668,7 +668,7 @@ function isSleepEffect(effect: BattleActiveEffect): boolean {
   );
 }
 
-export function removeSaveGatedAreaControlControlEffectsFromTarget(
+export function removeSaveGatedAreaControlEffectsFromTarget(
   state: BattleState,
   targetId: CombatantId,
 ): BattleState {
@@ -676,9 +676,7 @@ export function removeSaveGatedAreaControlControlEffectsFromTarget(
   if (target === undefined) {
     return state;
   }
-  const expiring = target.activeEffects.filter(
-    isSaveGatedAreaControlControlEffect,
-  );
+  const expiring = target.activeEffects.filter(isSaveGatedAreaControlEffect);
   if (expiring.length === 0) {
     return state;
   }
@@ -824,10 +822,10 @@ export function combatantsAfterConcentrationSpellEffectsEndedIfNoEffectsForSourc
   );
 }
 
-function isSaveGatedAreaControlControlEffect(
+function isSaveGatedAreaControlEffect(
   effect: BattleActiveEffect,
-): effect is SaveGatedAreaControlControlEffect {
-  return effect.kind === "saveGatedAreaControlControl";
+): effect is SaveGatedAreaControlEffect {
+  return effect.kind === "saveGatedAreaControl";
 }
 
 function sameSaveGatedConditionWithRepeatSpellEffect(
@@ -869,8 +867,8 @@ export function conditionsAfterExpiringSpellConditionEffects(
           effect,
         );
       }
-      if (effect.kind === "saveGatedAreaControlControl") {
-        return conditionsAfterExpiringSaveGatedAreaControlControlEffect(
+      if (effect.kind === "saveGatedAreaControl") {
+        return conditionsAfterExpiringSaveGatedAreaControlEffect(
           nextConditions,
           remainingEffects,
           effect,
@@ -952,10 +950,10 @@ function conditionsAfterExpiringSaveGatedConditionWithRepeatEffect(
     : removeCondition(withoutProne, "incapacitated");
 }
 
-function conditionsAfterExpiringSaveGatedAreaControlControlEffect(
+function conditionsAfterExpiringSaveGatedAreaControlEffect(
   conditions: ConditionState,
   remainingEffects: readonly BattleActiveEffect[],
-  expiringEffect: SaveGatedAreaControlControlEffect,
+  expiringEffect: SaveGatedAreaControlEffect,
 ): ConditionState {
   const withoutCharmed =
     remainingEffects.some((remaining) =>

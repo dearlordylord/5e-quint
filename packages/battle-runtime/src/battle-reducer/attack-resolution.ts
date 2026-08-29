@@ -142,7 +142,7 @@ import { combatantHasSaveGatedTurnConstraintBundle } from "./slow-active-penalti
 
 import {
   saveGatedAreaControlShakeAwakeTargetChoices,
-  removeSaveGatedAreaControlControlEffectsFromTarget,
+  removeSaveGatedAreaControlEffectsFromTarget,
   removeSpellConditionEffect,
   removeSleepEffectsFromTarget,
   spellRestraintEffectFor,
@@ -903,7 +903,7 @@ export function resolveShakeAwakeFromSaveGatedAreaControl(
       "Hypnotic Pattern shake-awake is no longer available.",
     );
   }
-  const nextState = removeSaveGatedAreaControlControlEffectsFromTarget(
+  const nextState = removeSaveGatedAreaControlEffectsFromTarget(
     { ...input.state, currentTurnResources: spent.success },
     targetId,
   );
