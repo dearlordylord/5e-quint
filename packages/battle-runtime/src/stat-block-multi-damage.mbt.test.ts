@@ -121,6 +121,8 @@ function createStatBlockMultiDamageDriverWithProjection<State>(
 ) {
   return defineDriver<typeof driverSchema, State>(driverSchema, () => {
     let state = statBlockMultiDamageBattle();
+    let resolutionState = state;
+    let subject = requireDiscoveredStatBlockAttackSubject(state, "rolled");
     let damageMode: StatBlockMultiDamageMode = "rolled";
     let holes: readonly BattleHole[] = [];
     let route: readonly ReducerRouteEvent[] = [];
@@ -136,12 +138,13 @@ function createStatBlockMultiDamageDriverWithProjection<State>(
 
     function reset(mode: StatBlockMultiDamageMode): void {
       state = statBlockMultiDamageBattle();
+      resolutionState = state;
+      subject = requireDiscoveredStatBlockAttackSubject(state, mode);
       damageMode = mode;
       targetChoice = null;
       attackRoll = null;
-      const subject = requireDiscoveredStatBlockAttackSubject(state, mode);
       const result = resolveBattleSubject({
-        state,
+        state: resolutionState,
         subject,
         fills: [],
       });
@@ -216,8 +219,8 @@ function createStatBlockMultiDamageDriverWithProjection<State>(
     }): void {
       recordResult(
         resolveBattleSubject({
-          state,
-          subject: requireDiscoveredStatBlockAttackSubject(state, damageMode),
+          state: resolutionState,
+          subject,
           fills: input.fills,
         }),
         input.routeFill,
