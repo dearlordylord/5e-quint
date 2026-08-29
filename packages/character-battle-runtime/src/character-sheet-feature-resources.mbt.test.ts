@@ -14,6 +14,7 @@ import {
   type BattleCreatureState,
   type BattleState,
 } from "@dnd/battle-runtime";
+import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
 import {
   abilityScoreAssignment,
   classUnitId,
@@ -791,10 +792,12 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
   const handoff = requireRight(
     settleCharacterSheetFromBattle({
       sheet,
-      state: battleStateWithCombatant(battle.state, spentSorcerer),
-      context: battle.context,
+      battleSession: battleRuntimeSessionForTest({
+        state: battleStateWithCombatant(battle.state, spentSorcerer),
+        context: battle.context,
+      }),
+      combatantId: spentSorcerer.combatantId,
       unitLibrary,
-      combatant: spentSorcerer,
     }),
   );
   const expended = resourceExpended(

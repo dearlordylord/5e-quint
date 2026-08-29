@@ -2193,12 +2193,27 @@ describe("Character Sheet battle handoff", () => {
       session.state,
       statBlockCombatantId,
     );
+    const missingCombatantId = combatantId("settlement-missing-combatant");
     expect(
       settleCharacterSheetFromBattle({
         sheet,
-        state: session.state,
-        context: session.context,
-        combatant: statBlockCombatant,
+        battleSession: session,
+        combatantId: missingCombatantId,
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "characterSheetBattleHandoffIssue",
+        handoffReason: "combatantMissing",
+        combatantId: missingCombatantId,
+      },
+    });
+    expect(
+      settleCharacterSheetFromBattle({
+        sheet,
+        battleSession: session,
+        combatantId: statBlockCombatant.combatantId,
         unitLibrary,
       }),
     ).toMatchObject({
@@ -2213,9 +2228,11 @@ describe("Character Sheet battle handoff", () => {
     expect(
       settleCharacterSheetFromBattle({
         sheet,
-        state: session.state,
-        context: battleRuntimeContextForTest(new Map()),
-        combatant: characterCombatant,
+        battleSession: battleRuntimeSessionForTest({
+          state: session.state,
+          context: battleRuntimeContextForTest(new Map()),
+        }),
+        combatantId: characterCombatant.combatantId,
         unitLibrary,
       }),
     ).toMatchObject({
@@ -3134,9 +3151,11 @@ describe("Character Sheet battle handoff", () => {
     const handoff = expectRight(
       settleCharacterSheetFromBattle({
         sheet,
-        state: cast.state,
-        context: state.context,
-        combatant: requireCombatant(cast.state, ownerId),
+        battleSession: battleRuntimeSessionForTest({
+          state: cast.state,
+          context: state.context,
+        }),
+        combatantId: ownerId,
         unitLibrary,
         statBlockCatalog,
       }),
@@ -4510,10 +4529,9 @@ describe("Character Sheet battle handoff", () => {
     expect(
       settleCharacterSheetFromBattle({
         sheet,
-        state: session.state,
-        context: session.context,
+        battleSession: session,
+        combatantId: combatant.combatantId,
         unitLibrary,
-        combatant,
       }),
     ).toMatchObject({
       _tag: "Right",
@@ -7919,9 +7937,8 @@ describe("Character Build battle projection", () => {
     const settled = expectRight(
       settleCharacterSheetFromBattle({
         sheet,
-        state: entry.session.state,
-        context: entry.session.context,
-        combatant,
+        battleSession: entry.session,
+        combatantId: combatant.combatantId,
         unitLibrary,
         statBlockCatalog,
       }),
@@ -12116,24 +12133,28 @@ function testSorcererMetamagicOptionId(optionId: string) {
   return expectRight(sorcererMetamagicOptionId(optionId));
 }
 
-function settleHandoffBranchToCharacterSheet(
-  input: Omit<
-    Parameters<typeof settleCharacterSheetFromBattle>[0],
-    "state" | "context"
-  > & {
-    readonly context?: BattleRuntimeContext;
-    readonly resourceOwnership?: readonly CharacterBattleResourceOwnership[];
-  },
-): ReturnType<typeof settleCharacterSheetFromBattle> {
+function settleHandoffBranchToCharacterSheet(input: {
+  readonly sheet: CharacterSheet;
+  readonly combatant: BattleCreatureState;
+  readonly unitLibrary: UnitCatalog;
+  readonly statBlockCatalog?: StatBlockCatalog;
+  readonly context?: BattleRuntimeContext;
+  readonly resourceOwnership?: readonly CharacterBattleResourceOwnership[];
+}): ReturnType<typeof settleCharacterSheetFromBattle> {
   const session = handoffBranchSession(
     input.combatant,
     input.resourceOwnership,
   );
   return settleCharacterSheetFromBattle({
     sheet: input.sheet,
-    state: session.state,
-    context: input.context ?? session.context,
-    combatant: input.combatant,
+    battleSession:
+      input.context === undefined
+        ? session
+        : battleRuntimeSessionForTest({
+            state: session.state,
+            context: input.context,
+          }),
+    combatantId: input.combatant.combatantId,
     unitLibrary: input.unitLibrary,
     ...(input.statBlockCatalog === undefined
       ? {}
@@ -13534,9 +13555,8 @@ function parsedClassLevelsForTest(
     const settled = expectRight(
       settleCharacterSheetFromBattle({
         sheet,
-        state: recast.session.state,
-        context: recast.session.context,
-        combatant: requireCombatant(recast.session.state, ownerId),
+        battleSession: recast.session,
+        combatantId: ownerId,
         unitLibrary,
         statBlockCatalog,
       }),

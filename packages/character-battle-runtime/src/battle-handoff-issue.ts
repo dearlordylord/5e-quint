@@ -70,6 +70,10 @@ export type CharacterSheetBattleHandoffFact =
       readonly check: CharacterSheetBattleHandoffValidationCheck;
     }
   | {
+      readonly handoffReason: "combatantMissing";
+      readonly combatantId: CombatantId;
+    }
+  | {
       readonly handoffReason: "spellSlotSourceAmbiguous";
       readonly spellLevel: SpellSlotLevel;
     }
@@ -235,4 +239,13 @@ export function characterSheetBattleHandoffIssueFromIssue(
         message: issue.message,
         ...characterSheetBattleHandoffFactFromIssue(issue),
       };
+}
+
+export function characterSheetBattleHandoffCombatantMissing(
+  combatantId: CombatantId,
+): Either.Either<never, CharacterSheetBattleHandoffIssue> {
+  return characterSheetBattleHandoffIssue(
+    { handoffReason: "combatantMissing", combatantId },
+    "Battle handoff combatant is not present in Battle State.",
+  );
 }

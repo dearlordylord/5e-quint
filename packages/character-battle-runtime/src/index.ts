@@ -18,8 +18,8 @@ import {
   type BattleStateInitIssue,
   type BattleStatBlockInitializationIssue,
   type BattleInitializationIssueFacts,
-  type BattleState,
-  type BattleRuntimeContext,
+  type BattleRuntimeSession,
+  type CombatantId,
   type CharacterBattleResourceOwnership,
   type CharacterBattleResourceState,
   type CharacterBattleClassLevels,
@@ -98,6 +98,7 @@ import {
 } from "./battle-character-build-projection.ts";
 import { characterBattleOriginFeatSelectedReferenceProjection } from "./origin-feat-selected-reference-projection.ts";
 import {
+  characterSheetBattleHandoffCombatantMissing,
   characterSheetBattleHandoffIssuesFromStateInit,
   characterSheetBattleHandoffIssue,
   characterSheetBattleHandoffIssueFromIssue,
@@ -1157,20 +1158,30 @@ function rejectCharacterBattleInitProjectionRoute(): readonly CharacterBattleRou
 
 export function settleCharacterSheetFromBattle(input: {
   readonly sheet: CharacterSheet;
-  readonly state: BattleState;
-  readonly context: BattleRuntimeContext;
-  readonly combatant: BattleCreatureState;
+  /**
+   * The nominal battle session carries the only valid state/context pairing.
+   * Settlement is also used when removing a character from an active roster,
+   * so the session is not required to be in a separate terminal state.
+   */
+  readonly battleSession: BattleRuntimeSession;
+  readonly combatantId: CombatantId;
   readonly unitLibrary: UnitCatalog;
   readonly statBlockCatalog?: StatBlockCatalog;
 }): Either.Either<CharacterSheet, CharacterSheetBattleHandoffIssue> {
-  const combatant = input.combatant;
+  const state = input.battleSession.state;
+  const combatant = state.combatants.get(input.combatantId);
+  if (combatant === undefined) {
+    return characterSheetBattleHandoffCombatantMissing(input.combatantId);
+  }
   if (!isCharacterBattleCreatureState(combatant)) {
     return characterBattleHandoffValidationIssue(
       "combatantNotCharacter",
       "Battle handoff combatant is not a character.",
     );
   }
-  const runtimeContext = input.context.characters.get(combatant.combatantId);
+  const runtimeContext = input.battleSession.context.characters.get(
+    combatant.combatantId,
+  );
   if (runtimeContext === undefined) {
     return characterBattleHandoffValidationIssue(
       "runtimeContextMissing",
@@ -1185,8 +1196,8 @@ export function settleCharacterSheetFromBattle(input: {
   if (Either.isLeft(settledCharacter)) return settledCharacter;
   return settleCompanionFromBattle({
     sheet: settledCharacter.right,
-    state: input.state,
-    ownerCombatantId: input.combatant.combatantId,
+    state,
+    ownerCombatantId: combatant.combatantId,
     unitLibrary: input.unitLibrary,
     ...(runtimeContext.retainedCompanionSelection === undefined
       ? {}
