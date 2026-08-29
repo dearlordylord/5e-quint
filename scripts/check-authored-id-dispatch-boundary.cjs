@@ -182,12 +182,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "fly is a movement mode",
   ),
   ...exactCollision(
-    "jump",
-    "jumpMovementReplacement",
-    DISCRIMINANT_ROLES,
-    "jump is the movement mode named by the rules",
-  ),
-  ...exactCollision(
     "knock",
     "knockOut",
     ["discriminant-literal", "schema-discriminant-literal"],
