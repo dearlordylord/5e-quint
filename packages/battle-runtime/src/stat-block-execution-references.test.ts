@@ -70,6 +70,7 @@ import {
 import {
   restoreStatBlockExecutionAdmission,
   restoreStatBlockExecutionAdmissions,
+  isNonSpellStatBlockProcedureBinding,
   spendStatBlockProcedureResources,
   statBlockProcedureBinding,
   statBlockExecutionAdmissionCohort,
@@ -1472,6 +1473,9 @@ describe("Stat Block execution references", () => {
     if (admission === undefined || binding === undefined) {
       throw new Error("Expected an admitted limited-use Legendary Action.");
     }
+    if (!isNonSpellStatBlockProcedureBinding(binding)) {
+      throw new Error("Expected a non-spellcasting resource binding.");
+    }
     expect(binding.resourcePoolRefs).toHaveLength(2);
     const reorderedSnapshot = Schema.decodeUnknownSync(
       StatBlockExecutionSnapshotSchema,
@@ -1507,13 +1511,18 @@ describe("Stat Block execution references", () => {
           {
             ...statBlockExecutionSnapshot(admission.execution),
             procedureBindings: admission.execution.procedureBindings.map(
-              (candidate) =>
-                candidate.procedureRef === binding.procedureRef
-                  ? {
-                      ...candidate,
-                      resourcePoolRefs: [firstOwnedPoolRef, firstOwnedPoolRef],
-                    }
-                  : candidate,
+              (candidate) => {
+                if (
+                  candidate.procedureRef !== binding.procedureRef ||
+                  !isNonSpellStatBlockProcedureBinding(candidate)
+                ) {
+                  return candidate;
+                }
+                return {
+                  ...candidate,
+                  resourcePoolRefs: [firstOwnedPoolRef, firstOwnedPoolRef],
+                };
+              },
             ),
           },
         ),
@@ -1529,7 +1538,6 @@ describe("Stat Block execution references", () => {
     expect(twice).toBe(once);
     expect(once.resourcePools).toEqual(
       admission.execution.resourcePools.map((pool) =>
-        binding.procedure.kind !== "spellcasting" &&
         binding.resourcePoolRefs.includes(pool.resourcePoolRef)
           ? pool.kind === "daily" || pool.kind === "legendaryActions"
             ? { ...pool, usesRemaining: Number(pool.usesRemaining) - 1 }

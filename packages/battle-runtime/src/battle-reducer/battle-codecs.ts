@@ -5658,33 +5658,59 @@ const StatBlockSpellcastingProcedureSchema = Schema.Struct({
   groups: Schema.NonEmptyArray(StatBlockSpellcastingGroupSchema),
 });
 
+const StatBlockMultiattackProcedureSchema = Schema.Struct({
+  kind: Schema.Literal("multiattack"),
+  section: Schema.Literal("actions"),
+  procedureOrdinal: StatBlockProcedureOrdinalSchema,
+  dispatchProcedureRefs: Schema.NonEmptyArray(
+    BattleStatBlockProcedureExecutionRef,
+  ),
+});
+
+const StatBlockBonusActionOptionProcedureSchema = Schema.Struct({
+  kind: Schema.Literal("bonusActionOption"),
+  section: Schema.Literal("bonusActions"),
+  procedureOrdinal: StatBlockProcedureOrdinalSchema,
+  standardActions: Schema.NonEmptyArray(
+    Schema.Literal(...SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS),
+  ),
+});
+
 const StatBlockProcedureSchema = Schema.Union(
   StatBlockAttackProcedureSchema,
   StatBlockUnarmedStrikeProcedureSchema,
-  Schema.Struct({
-    kind: Schema.Literal("multiattack"),
-    section: Schema.Literal("actions"),
-    procedureOrdinal: StatBlockProcedureOrdinalSchema,
-    dispatchProcedureRefs: Schema.NonEmptyArray(
-      BattleStatBlockProcedureExecutionRef,
-    ),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("bonusActionOption"),
-    section: Schema.Literal("bonusActions"),
-    procedureOrdinal: StatBlockProcedureOrdinalSchema,
-    standardActions: Schema.NonEmptyArray(
-      Schema.Literal(...SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS),
-    ),
-  }),
+  StatBlockMultiattackProcedureSchema,
+  StatBlockBonusActionOptionProcedureSchema,
   StatBlockSpellcastingProcedureSchema,
 );
 
-const StatBlockProcedureBindingSnapshotSchema = Schema.Struct({
-  procedureRef: BattleStatBlockProcedureExecutionRef,
-  procedure: StatBlockProcedureSchema,
-  resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
-});
+const StatBlockProcedureBindingSnapshotSchema = Schema.Union(
+  Schema.Struct({
+    procedureRef: BattleStatBlockProcedureExecutionRef,
+    procedure: StatBlockAttackProcedureSchema,
+    resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
+  }),
+  Schema.Struct({
+    procedureRef: BattleStatBlockProcedureExecutionRef,
+    procedure: StatBlockUnarmedStrikeProcedureSchema,
+    resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
+  }),
+  Schema.Struct({
+    procedureRef: BattleStatBlockProcedureExecutionRef,
+    procedure: StatBlockMultiattackProcedureSchema,
+    resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
+  }),
+  Schema.Struct({
+    procedureRef: BattleStatBlockProcedureExecutionRef,
+    procedure: StatBlockBonusActionOptionProcedureSchema,
+    resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
+  }),
+  Schema.Struct({
+    procedureRef: BattleStatBlockProcedureExecutionRef,
+    procedure: StatBlockSpellcastingProcedureSchema,
+    resourcePoolRefs: Schema.Tuple(),
+  }),
+);
 
 const StatBlockExecutionSnapshotShapeSchema = Schema.Struct({
   scopeRef: BattleStatBlockExecutionScopeRef,
@@ -5705,6 +5731,10 @@ type EncodedStatBlockExecutionSnapshot = Schema.Schema.Type<
 >;
 type EncodedStatBlockProcedureBinding = Schema.Schema.Type<
   typeof StatBlockProcedureBindingSnapshotSchema
+>;
+type EncodedStatBlockAttackProcedureBinding = Extract<
+  EncodedStatBlockProcedureBinding,
+  { readonly procedure: { readonly kind: "attack" } }
 >;
 type EncodedStatBlockResourcePool = Schema.Schema.Type<
   typeof StatBlockResourcePoolStateSchema
@@ -5922,16 +5952,22 @@ function legendaryProcedurePoolOwnershipIsValid(
   binding: EncodedStatBlockProcedureBinding,
   legendaryPool: EncodedStatBlockResourcePool | undefined,
 ): boolean {
-  if (
-    binding.procedure.kind !== "attack" ||
-    binding.procedure.section !== "legendaryActions"
-  ) {
+  if (!isEncodedStatBlockAttackProcedureBinding(binding)) {
+    return true;
+  }
+  if (binding.procedure.section !== "legendaryActions") {
     return true;
   }
   return (
     legendaryPool !== undefined &&
     binding.resourcePoolRefs.includes(legendaryPool.resourcePoolRef)
   );
+}
+
+function isEncodedStatBlockAttackProcedureBinding(
+  binding: EncodedStatBlockProcedureBinding,
+): binding is EncodedStatBlockAttackProcedureBinding {
+  return binding.procedure.kind === "attack";
 }
 
 function multiattackBindingDispatchIsValid(

@@ -562,24 +562,49 @@ export type StatBlockProcedure =
 
 /**
  * A known spellcasting procedure has no procedure-owned resource pools;
- * group invocation selection owns those references. The non-distributive
- * conditional preserves the existing heterogeneous binding collection while
- * making the concrete spellcasting specialization's empty tuple structural.
+ * group invocation selection owns those references. This conditional is
+ * deliberately distributive so a heterogeneous binding remains a union whose
+ * spellcasting branch cannot carry a top-level resource reference.
  */
 export type StatBlockProcedureBindingFor<
   TProcedure extends StatBlockProcedure,
-> = {
-  readonly procedureRef: BattleStatBlockProcedureExecutionRef;
-  readonly resourcePoolRefs: [TProcedure] extends [
-    StatBlockSpellcastingProcedure,
-  ]
-    ? readonly []
-    : readonly BattleResourcePoolExecutionRef[];
-  readonly procedure: TProcedure;
-};
+> = TProcedure extends StatBlockSpellcastingProcedure
+  ? {
+      readonly procedureRef: BattleStatBlockProcedureExecutionRef;
+      readonly resourcePoolRefs: readonly [];
+      readonly procedure: TProcedure;
+    }
+  : {
+      readonly procedureRef: BattleStatBlockProcedureExecutionRef;
+      readonly resourcePoolRefs: readonly BattleResourcePoolExecutionRef[];
+      readonly procedure: TProcedure;
+    };
 
 export type StatBlockProcedureBinding =
   StatBlockProcedureBindingFor<StatBlockProcedure>;
+
+type StatBlockAggregateSpellcastingBinding = Extract<
+  StatBlockProcedureBinding,
+  { readonly procedure: { readonly kind: "spellcasting" } }
+>;
+type StatBlockSpellcastingBindingTopLevelResourceInvariantHolds =
+  StatBlockAggregateSpellcastingBinding["resourcePoolRefs"] extends readonly []
+    ? true
+    : false;
+type AssertStatBlockProcedureBindingInvariant<Condition extends true> =
+  Condition;
+export type StatBlockSpellcastingBindingTopLevelResourceInvariant =
+  AssertStatBlockProcedureBindingInvariant<StatBlockSpellcastingBindingTopLevelResourceInvariantHolds>;
+
+export type StatBlockNonSpellProcedureBinding = StatBlockProcedureBindingFor<
+  Exclude<StatBlockProcedure, StatBlockSpellcastingProcedure>
+>;
+
+export function isNonSpellStatBlockProcedureBinding(
+  binding: StatBlockProcedureBinding,
+): binding is StatBlockNonSpellProcedureBinding {
+  return binding.procedure.kind !== "spellcasting";
+}
 export type StatBlockProcedureBindingSnapshot = StatBlockProcedureBinding;
 
 export type StatBlockResourcePoolState =
