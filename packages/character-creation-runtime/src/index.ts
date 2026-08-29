@@ -6,6 +6,11 @@ export {
 } from "./class-spellcasting.ts";
 
 export {
+  projectCharacterDefinition,
+  type CharacterDefinitionProjection,
+} from "./character-definition-projection.ts";
+
+export {
   characterBuildSpeciesOriginFeatUnitIds,
   parseCharacterBuildMagicInitiateSpellAccesses,
   type MagicInitiateAbility,
