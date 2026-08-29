@@ -92,6 +92,25 @@ Draft 2020-12 validator. Regenerate them with
 This boundary changes no D&D rules; it only validates the already-authored
 publication contract.
 
+The `surface/catalog-install` boundary composes that portable decode with
+context-independent Static Mechanics Admission in one atomic operation.
+`installSrdSurface` and `installSrdSurfaceText` keep decoded canonical content
+call-local, invoke distinct Unit and Stat Block admission functions, and
+accumulate their typed issues with record roots and mechanics paths. A rejected
+result exposes only its non-empty issue collection; an accepted result exposes
+the separate Unit and Stat Block catalogs. No receipt, support-status record,
+or diagnostic-path state is stored or returned as installed state. A mechanics
+admission function must explicitly return `admitted`; a valid record with no
+matching executable procedure returns a typed `no_admitted_procedure` issue.
+Portable decoding may retain typed `textOnly` mechanics in canonical content;
+whether a profile admits that content for execution remains the supplied
+admission function's decision.
+Mechanics paths use the closed domain-role vocabulary in
+`surface/mechanics-graph-path`. Profiles can narrow that vocabulary, while the
+installer requires every path to be a structured Unit or Stat Block path and
+keeps it correlated with the matching authored-record root. Arbitrary strings,
+presentation fields, and cross-family paths are not accepted.
+
 Detailed record-family rules live next to the code that owns them. For monster
 Stat Block lookup/provenance mechanics, see `src/surface/stat-block-catalog.ts`.
 
