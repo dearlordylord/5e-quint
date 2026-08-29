@@ -1,29 +1,29 @@
 // Spell active-effect application extracted from spells-holes-fills.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-initial
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-insect-plague-area-hazard
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-cloudkill-area-hazard
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-persistent-area-save-condition-escape-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-persistent-area-save-composite-area-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-stationary-persistent-area-area-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-translatingPersistentArea-area-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-area-movement-distance-damage-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy spell.invocation-glyph-stored-summon-object-placement
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spatial-melee-spell-attack-proxy-attack-proxy spell.invocation-glyph-stored-summon-object-placement
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.paladin-sacred-weapon
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line unit-feature.metamagic-heightened-save-disadvantage
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-directional-persistent-area-line unit-feature.metamagic-heightened-save-disadvantage
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOVABLE_PERSISTENT_AREA_MOVABLE_ZONE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.STATIONARY_PERSISTENT_AREA_AREA_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.TRANSLATING_PERSISTENT_AREA_AREA_HAZARD_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING
@@ -64,15 +64,15 @@ import {
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-hit-point-state.ts";
 import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
-  characterExecutionWithDancingLightsReposition,
+  characterExecutionWithMovableLightReposition,
   characterExecutionWithSpellCreatedHeldObjectProcedures,
-  characterExecutionWithSpiritualWeaponRepeatAttack,
+  characterExecutionWithSpatialMeleeSpellAttackProxyRepeatAttack,
   characterUnitProcedure,
 } from "../character-execution-queries.ts";
 import type {
-  DancingLightsRepositionSpellProcedureExecution,
+  RepositionMovableLightManifestationSpellProcedureExecution,
   SpellCreatedHeldObjectSpellProcedureExecution,
-  SpiritualWeaponRepeatAttackSpellProcedureExecution,
+  RepeatSpatialMeleeSpellAttackProxySpellProcedureExecution,
 } from "../character-execution.ts";
 import { breakBattleConcentration } from "./damage-apply.ts";
 import {
@@ -86,7 +86,7 @@ import {
   type BattleActiveEffectExpiration,
   type BattleCommandOption,
   type BattleCreatureState,
-  type BattleDancingLight,
+  type BattleMovableLight,
   type BattleIllumination,
   type BattleLightEmitter,
   type BattleLightEmitterMechanicalFacts,
@@ -107,7 +107,7 @@ import {
   type BattleExecutableSpellInvocation,
   type BattleStoredLightEmitter,
   type BattleStoredLightEmitterTemplate,
-  type SpiritualWeaponRepeatTargeting,
+  type SpatialMeleeSpellAttackProxyRepeatTargeting,
   type SpellCreatedHeldObjectActiveEffect,
   type SpellCreatedHeldObjectState,
   type SelfTransformationModeEffectPayload,
@@ -121,7 +121,7 @@ import {
   type SpellPostDamageRider,
   type SpellPostDamageRiderExpiration,
   type SupportedSpellInvocation,
-  type BattleWebRestraintTrigger,
+  type BattlePersistentAreaSaveConditionEscapeTrigger,
 } from "../battle-state-execution.ts";
 import {
   antimagicFieldSuppressedOngoingSpellEffectKeys,
@@ -205,22 +205,19 @@ function selectedConditionEffect(
         repeatSave: effect.repeatSave,
       };
 }
-export const DANCING_LIGHTS_DIM_LIGHT_RADIUS_FEET = movementFeet(10);
+export const MOVABLE_LIGHT_DIM_LIGHT_RADIUS_FEET = movementFeet(10);
 export const SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET = movementFeet(5);
 export const PERCEPTION_LIGHTLY_OBSCURED_ROLL_MODE = "disadvantage" as const;
 const SHINING_SMITE_DIM_ADDITIONAL_RADIUS_FEET = movementFeet(0);
 const CASTER_AREA_SPELL_ACTIVE_EFFECT_KINDS = [
-  "greaseGroundHazard",
-  "fogCloudObscurement",
+  "persistentAreaSaveCondition",
+  "persistentAreaTrait",
   "magicalDarknessPointOrigin",
-  "flamingSphere",
-  "spikeGrowthHazard",
-  "moonbeam",
-  "webRestraintHazard",
-  "sleetStormAreaHazard",
-  "insectPlagueAreaHazard",
-  "cloudkillAreaHazard",
-  "gustOfWindLine",
+  "persistentAreaSaveDamage",
+  "areaMovementDistanceDamage",
+  "persistentAreaSaveConditionEscape",
+  "persistentAreaSaveComposite",
+  "directionalPersistentArea",
 ] as const satisfies ReadonlyArray<BattleActiveEffect["kind"]>;
 type CasterAreaSpellActiveEffectKind =
   (typeof CASTER_AREA_SPELL_ACTIVE_EFFECT_KINDS)[number];
@@ -232,32 +229,68 @@ type CasterAreaSpellActiveEffectTemplate = Extract<
   BattleSourcedEffectOccurrenceTemplate,
   { readonly kind: CasterAreaSpellActiveEffectKind }
 >;
-const SINGLE_SAVE_AREA_ACTIVE_EFFECT_KINDS = [
-  "moonbeam",
-  "sleetStormAreaHazard",
-  "insectPlagueAreaHazard",
-  "cloudkillAreaHazard",
-] as const satisfies ReadonlyArray<BattleActiveEffect["kind"]>;
-type SingleSaveAreaActiveEffect = Extract<
+type PersistentAreaSaveDamageEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: (typeof SINGLE_SAVE_AREA_ACTIVE_EFFECT_KINDS)[number] }
+  { readonly kind: "persistentAreaSaveDamage" }
 >;
-type SingleSaveAreaHazardActiveEffect = Exclude<
-  SingleSaveAreaActiveEffect,
-  { readonly kind: "moonbeam" }
+type SavedPersistentAreaSaveDamageEffect = Extract<
+  PersistentAreaSaveDamageEffect,
+  { readonly savedThisTurn: readonly CombatantId[] }
 >;
-type DancingLightsActiveEffect = Extract<
+type MovablePersistentAreaActiveEffect = Extract<
+  PersistentAreaSaveDamageEffect,
+  {
+    readonly lifecycle: {
+      readonly kind: "casterActionReposition";
+      readonly actionCost: "magicAction";
+    };
+  }
+>;
+type StationaryPersistentAreaSaveDamageActiveEffect = Extract<
+  PersistentAreaSaveDamageEffect,
+  { readonly lifecycle: { readonly kind: "stationary" } }
+>;
+type TranslatingPersistentAreaSaveDamageActiveEffect = Extract<
+  PersistentAreaSaveDamageEffect,
+  { readonly lifecycle: { readonly kind: "sourceTurnTranslation" } }
+>;
+
+function isStationaryPersistentAreaSaveDamageActiveEffect(
+  effect: BattleActiveEffect,
+): effect is StationaryPersistentAreaSaveDamageActiveEffect {
+  return (
+    effect.kind === "persistentAreaSaveDamage" &&
+    effect.lifecycle.kind === "stationary"
+  );
+}
+
+function isTranslatingPersistentAreaSaveDamageActiveEffect(
+  effect: BattleActiveEffect,
+): effect is TranslatingPersistentAreaSaveDamageActiveEffect {
+  return (
+    effect.kind === "persistentAreaSaveDamage" &&
+    effect.lifecycle.kind === "sourceTurnTranslation"
+  );
+}
+type SingleSaveAreaActiveEffect =
+  | SavedPersistentAreaSaveDamageEffect
+  | Extract<
+      BattleActiveEffect,
+      { readonly kind: "persistentAreaSaveComposite" }
+    >;
+type SingleSaveAreaHazardActiveEffect = SingleSaveAreaActiveEffect;
+type MovableLightActiveEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "dancingLights" }
+  { readonly kind: "movableLightManifestation" }
 >;
-type DancingLightsEffectShape =
+type MovableLightEffectShape =
   | Pick<
-      Extract<DancingLightsActiveEffect, { readonly form: "separateLights" }>,
+      Extract<MovableLightActiveEffect, { readonly form: "separateLights" }>,
       "form" | "lights"
     >
   | Pick<
       Extract<
-        DancingLightsActiveEffect,
+        MovableLightActiveEffect,
         { readonly form: "combinedMediumForm" }
       >,
       "form" | "light"
@@ -471,20 +504,20 @@ export function battleLightEmitters(
                     ]
                   : effect.kind === "paladinSacredWeapon"
                     ? paladinSacredWeaponLightEmitters(combatant, effect)
-                    : effect.kind === "dancingLights"
-                      ? dancingLightsFromEffect(effect).map((light) => ({
+                    : effect.kind === "movableLightManifestation"
+                      ? movableLightFromEffect(effect).map((light) => ({
                           kind: "spellLightEmitter" as const,
                           sourceProcedureRef: effect.sourceProcedureRef,
                           sourceCombatantId: effect.sourceCombatantId,
                           attachment: {
-                            kind: "dancingLight" as const,
+                            kind: "movableLight" as const,
                             lightId: light.lightId,
                             positionId: light.positionId,
                             form: effect.form,
                           },
                           emission: {
                             kind: "dim" as const,
-                            radiusFeet: DANCING_LIGHTS_DIM_LIGHT_RADIUS_FEET,
+                            radiusFeet: MOVABLE_LIGHT_DIM_LIGHT_RADIUS_FEET,
                           },
                           opaqueCoverInteraction: {
                             kind: "doesNotBlockEmission" as const,
@@ -882,9 +915,9 @@ function lightEmitterAttachmentMatchesTarget(
         objectAttachment.objectId === target.objectId,
     ),
     Match.when(
-      { kind: "dancingLight" },
+      { kind: "movableLight" },
       (lightAttachment) =>
-        target.kind === "dancingLight" &&
+        target.kind === "movableLight" &&
         lightAttachment.lightId === target.lightId &&
         lightAttachment.positionId === target.positionId &&
         lightAttachment.form === target.form,
@@ -1057,7 +1090,7 @@ export function battleObscurementZones(
     (combatant): readonly BattleObscurementZone[] =>
       combatant.activeEffects.flatMap(
         (effect): readonly BattleObscurementZone[] =>
-          effect.kind === "fogCloudObscurement"
+          effect.kind === "persistentAreaTrait"
             ? [
                 {
                   kind: "spellObscurementZone",
@@ -1086,7 +1119,7 @@ export function battleObscurementZones(
                     expiresAt: effect.expiresAt,
                   },
                 ]
-              : effect.kind === "webRestraintHazard"
+              : effect.kind === "persistentAreaSaveConditionEscape"
                 ? [
                     {
                       kind: "spellObscurementZone",
@@ -1101,7 +1134,7 @@ export function battleObscurementZones(
                       expiresAt: effect.expiresAt,
                     },
                   ]
-                : effect.kind === "sleetStormAreaHazard"
+                : effect.kind === "persistentAreaSaveComposite"
                   ? [
                       {
                         kind: "spellObscurementZone",
@@ -1117,7 +1150,7 @@ export function battleObscurementZones(
                         expiresAt: effect.expiresAt,
                       },
                     ]
-                  : effect.kind === "insectPlagueAreaHazard"
+                  : isStationaryPersistentAreaSaveDamageActiveEffect(effect)
                     ? [
                         {
                           kind: "spellObscurementZone",
@@ -1132,7 +1165,7 @@ export function battleObscurementZones(
                           expiresAt: effect.expiresAt,
                         },
                       ]
-                    : effect.kind === "cloudkillAreaHazard"
+                    : isTranslatingPersistentAreaSaveDamageActiveEffect(effect)
                       ? [
                           {
                             kind: "spellObscurementZone",
@@ -1239,38 +1272,37 @@ export function tickDurationBattleLightEmitters(
   });
 }
 
-export type DancingLightsCastPlan = DancingLightsEffectShape;
-type DancingLightsEffect = Extract<
+export type MovableLightCastPlan = MovableLightEffectShape;
+type MovableLightEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "dancingLights" }
+  { readonly kind: "movableLightManifestation" }
 >;
 
-export type DancingLightsRepositionPlan =
+export type MovableLightRepositionPlan =
   | {
       readonly kind: "replaceEffect";
-      readonly effect: DancingLightsEffect;
-      readonly effectShape: DancingLightsEffectShape;
+      readonly effect: MovableLightEffect;
+      readonly effectShape: MovableLightEffectShape;
     }
   | {
       readonly kind: "removeEffect";
-      readonly effect: DancingLightsEffect;
+      readonly effect: MovableLightEffect;
     };
 
-export function applyDancingLightsSpellEffect(
+export function applyMovableLightSpellEffect(
   state: BattleState,
   actorId: CombatantId,
   invocation: Extract<
     BattleExecutableSpellInvocation,
     {
-      readonly procedure:
-        | "dancingLightsSeparateCast"
-        | "dancingLightsCombinedCast";
+      readonly procedure: "movableLightManifestation";
+      readonly operation: "create";
     }
   >,
-  plan: DancingLightsCastPlan,
+  plan: MovableLightCastPlan,
 ): BattleState {
   const caster = state.combatants.get(actorId);
-  /* v8 ignore start -- @preserve -- Defensive internal guard: action-spell admission preserves the character caster through Dancing Lights cast application. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: action-spell admission preserves the character caster through movable-light manifestation cast application. */
   if (caster === undefined) {
     return state;
   }
@@ -1278,7 +1310,7 @@ export function applyDancingLightsSpellEffect(
   const allocation = allocateBattleEffectOccurrenceForCreature({
     owner: caster,
     effect: {
-      kind: "dancingLights",
+      kind: "movableLightManifestation",
       sourceProcedureRef: invocation.sourceProcedureRef,
       sourceCombatantId: actorId,
       expiresAt: invocation.expiresAt,
@@ -1286,22 +1318,24 @@ export function applyDancingLightsSpellEffect(
     },
   });
   const owner = allocation.owner;
-  /* v8 ignore start -- @preserve -- Defensive internal guard: the Dancing Lights invocation is admitted only for a character spellcaster, and active-effect allocation preserves origin kind. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: the movable-light manifestation invocation is admitted only for a character spellcaster, and active-effect allocation preserves origin kind. */
   if (owner.origin.kind !== "character") return state;
   /* v8 ignore stop -- @preserve */
   const activeEffect = allocation.effect;
-  const repositionExecution: DancingLightsRepositionSpellProcedureExecution = {
-    spellRuleFacts: invocation.spellRuleFacts,
-    access: invocation.access,
-    resource: { tag: "none" },
-    procedure: "dancingLightsReposition",
-    actionCost: "bonusAction",
-    activeEffectRef: activeEffect.effectRef,
-    sourceDancingLightsProcedureRef: activeEffect.sourceProcedureRef,
-    maxMoveFeet: invocation.maxMoveFeet,
-    rangeFeet: invocation.rangeFeet,
-    spacingFeet: invocation.spacingFeet,
-  };
+  const repositionExecution: RepositionMovableLightManifestationSpellProcedureExecution =
+    {
+      spellRuleFacts: invocation.spellRuleFacts,
+      access: invocation.access,
+      resource: { tag: "none" },
+      procedure: "movableLightManifestation",
+      operation: "reposition",
+      actionCost: "bonusAction",
+      activeEffectRef: activeEffect.effectRef,
+      sourceManifestationProcedureRef: activeEffect.sourceProcedureRef,
+      maxMoveFeet: invocation.maxMoveFeet,
+      rangeFeet: invocation.rangeFeet,
+      spacingFeet: invocation.spacingFeet,
+    };
   return {
     ...state,
     combatants: new Map(state.combatants).set(actorId, {
@@ -1309,14 +1343,14 @@ export function applyDancingLightsSpellEffect(
       activeEffects: [
         ...owner.activeEffects.filter(
           (effect) =>
-            effect.kind !== "dancingLights" ||
+            effect.kind !== "movableLightManifestation" ||
             !activeEffectSourceMatches(effect, activeEffect),
         ),
         activeEffect,
       ],
       origin: {
         ...owner.origin,
-        execution: characterExecutionWithDancingLightsReposition(
+        execution: characterExecutionWithMovableLightReposition(
           owner.origin.execution,
           repositionExecution,
         ),
@@ -1325,13 +1359,13 @@ export function applyDancingLightsSpellEffect(
   };
 }
 
-export function repositionDancingLightsSpellEffect(
+export function repositionMovableLightSpellEffect(
   state: BattleState,
   actorId: CombatantId,
-  plan: DancingLightsRepositionPlan,
+  plan: MovableLightRepositionPlan,
 ): BattleState {
   const caster = state.combatants.get(actorId);
-  /* v8 ignore start -- @preserve -- Defensive internal guard: the admitted Dancing Lights reposition subject retains its caster while the active effect is replayed. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: the admitted movable-light manifestation reposition subject retains its caster while the active effect is replayed. */
   if (caster === undefined) {
     return state;
   }
@@ -1342,7 +1376,7 @@ export function repositionDancingLightsSpellEffect(
       ...caster,
       activeEffects: caster.activeEffects.flatMap((effect) => {
         if (
-          effect.kind !== "dancingLights" ||
+          effect.kind !== "movableLightManifestation" ||
           effect.effectRef !== plan.effect.effectRef ||
           effect.sourceProcedureRef !== plan.effect.sourceProcedureRef ||
           effect.sourceCombatantId !== actorId ||
@@ -1358,9 +1392,12 @@ export function repositionDancingLightsSpellEffect(
   };
 }
 
-export function dancingLightsFromEffect(
-  effect: Extract<BattleActiveEffect, { readonly kind: "dancingLights" }>,
-): readonly BattleDancingLight[] {
+export function movableLightFromEffect(
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "movableLightManifestation" }
+  >,
+): readonly BattleMovableLight[] {
   return effect.form === "combinedMediumForm" ? [effect.light] : effect.lights;
 }
 
@@ -1897,17 +1934,17 @@ function hideousLaughterRepeatSaveRollMode(
   return targetId === heightenedSpellTargetId ? "disadvantage" : null;
 }
 
-export function applyGreaseGroundHazardCastEffects(input: {
+export function applyPersistentAreaSaveConditionCastEffects(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly area: Extract<
     BattleSpellAreaChoice,
-    { readonly kind: "greaseGroundArea" }
+    { readonly kind: "persistentAreaSaveConditionArea" }
   >;
   readonly failedTargetIds: readonly CombatantId[];
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "greaseGroundHazard" }
+    { readonly procedure: "persistentAreaSaveCondition" }
   >;
   readonly heightenedSpellTargetId: CombatantId | null;
 }): BattleState {
@@ -1915,7 +1952,7 @@ export function applyGreaseGroundHazardCastEffects(input: {
     state: input.state,
     actorId: input.actorId,
     activeEffect: {
-      kind: "greaseGroundHazard" as const,
+      kind: "persistentAreaSaveCondition" as const,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.area.areaId,
@@ -2018,20 +2055,20 @@ function sameCasterAreaSpellOccurrence(
   );
 }
 
-export function applyFogCloudObscurementCastEffect(input: {
+export function applyPersistentAreaTraitCastEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly areaId: BattleAreaId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "fogCloudObscurement" }
+    { readonly procedure: "persistentAreaTrait" }
   >;
 }): BattleState {
   return battleStateAfterReplacingCasterActiveEffect({
     state: input.state,
     actorId: input.actorId,
     activeEffect: {
-      kind: "fogCloudObscurement" as const,
+      kind: "persistentAreaTrait" as const,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
@@ -2092,20 +2129,27 @@ export function applyMagicalDarknessPointOriginCastEffect(input: {
   };
 }
 
-export function applyFlamingSphereCastEffect(input: {
+export function applyRamMovablePersistentAreaCastEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly areaId: BattleAreaId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "flamingSphere" }
+    {
+      readonly procedure: "persistentAreaSaveDamage";
+      readonly lifecycle: {
+        readonly kind: "casterActionReposition";
+        readonly actionCost: "bonusAction";
+      };
+    }
   >;
 }): BattleState {
   return battleStateAfterReplacingCasterActiveEffect({
     state: input.state,
     actorId: input.actorId,
     activeEffect: {
-      kind: "flamingSphere" as const,
+      kind: "persistentAreaSaveDamage" as const,
+      lifecycle: input.invocation.lifecycle,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
@@ -2124,14 +2168,17 @@ export function applyFlamingSphereCastEffect(input: {
   });
 }
 
-export function applySpiritualWeaponAttackProxyEffect(input: {
+export function applySpatialMeleeSpellAttackProxyEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly forcePositionId: BattleTablePositionId;
-  readonly repeatTargeting: SpiritualWeaponRepeatTargeting;
+  readonly repeatTargeting: SpatialMeleeSpellAttackProxyRepeatTargeting;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "spiritualWeaponAttackProxy" }
+    {
+      readonly procedure: "spatialMeleeSpellAttackProxy";
+      readonly operation: "createAndAttack";
+    }
   >;
 }): BattleState {
   const combatants = new Map(input.state.combatants);
@@ -2142,7 +2189,7 @@ export function applySpiritualWeaponAttackProxyEffect(input: {
   const allocation = allocateBattleEffectOccurrenceForCreature({
     owner: caster,
     effect: {
-      kind: "spiritualWeapon",
+      kind: "spatialMeleeSpellAttackProxy",
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       sourceSpellLevel: spellInvocationEffectiveSpellLevel(input.invocation),
@@ -2169,7 +2216,7 @@ export function applySpiritualWeaponAttackProxyEffect(input: {
     ...caster.activeEffects.filter(
       (effect) =>
         !(
-          effect.kind === "spiritualWeapon" &&
+          effect.kind === "spatialMeleeSpellAttackProxy" &&
           activeEffectSourceMatches(effect, activeEffect)
         ),
     ),
@@ -2178,16 +2225,17 @@ export function applySpiritualWeaponAttackProxyEffect(input: {
   const owner = allocation.owner;
   if (owner.origin.kind !== "character") return input.state;
   const repeatExecution = {
-    procedure: "spiritualWeaponRepeatAttack" as const,
+    procedure: "spatialMeleeSpellAttackProxy" as const,
+    operation: "repositionAndAttack" as const,
     activeEffectRef: activeEffect.effectRef,
     activeEffectSourceProcedureRef: activeEffect.sourceProcedureRef,
-  } satisfies SpiritualWeaponRepeatAttackSpellProcedureExecution;
+  } satisfies RepeatSpatialMeleeSpellAttackProxySpellProcedureExecution;
   combatants.set(input.actorId, {
     ...owner,
     activeEffects,
     origin: {
       ...owner.origin,
-      execution: characterExecutionWithSpiritualWeaponRepeatAttack(
+      execution: characterExecutionWithSpatialMeleeSpellAttackProxyRepeatAttack(
         owner.origin.execution,
         repeatExecution,
       ),
@@ -2196,11 +2244,14 @@ export function applySpiritualWeaponAttackProxyEffect(input: {
   return { ...input.state, combatants };
 }
 
-export function repositionSpiritualWeaponAttackProxyEffect(input: {
+export function repositionSpatialMeleeSpellAttackProxyEffect(input: {
   readonly state: BattleState;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "spiritualWeaponRepeatAttack" }
+    {
+      readonly procedure: "spatialMeleeSpellAttackProxy";
+      readonly operation: "repositionAndAttack";
+    }
   >;
   readonly forcePositionId: BattleTablePositionId;
 }): BattleState {
@@ -2214,7 +2265,7 @@ export function repositionSpiritualWeaponAttackProxyEffect(input: {
   combatants.set(input.invocation.activeEffect.sourceCombatantId, {
     ...caster,
     activeEffects: caster.activeEffects.map((effect) =>
-      effect.kind === "spiritualWeapon" &&
+      effect.kind === "spatialMeleeSpellAttackProxy" &&
       effect.effectRef === input.invocation.activeEffect.effectRef
         ? { ...effect, forcePositionId: input.forcePositionId }
         : effect,
@@ -2223,20 +2274,20 @@ export function repositionSpiritualWeaponAttackProxyEffect(input: {
   return { ...input.state, combatants };
 }
 
-export function applySpikeGrowthMovementHazardCastEffect(input: {
+export function applyAreaMovementDistanceDamageCastEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly areaId: BattleAreaId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "spikeGrowthMovementHazard" }
+    { readonly procedure: "areaMovementDistanceDamage" }
   >;
 }): BattleState {
   return battleStateAfterReplacingCasterActiveEffect({
     state: input.state,
     actorId: input.actorId,
     activeEffect: {
-      kind: "spikeGrowthHazard" as const,
+      kind: "areaMovementDistanceDamage" as const,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
@@ -2251,20 +2302,27 @@ export function applySpikeGrowthMovementHazardCastEffect(input: {
   });
 }
 
-export function applyMoonbeamCastEffect(input: {
+export function applyMovablePersistentAreaCastEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly areaId: BattleAreaId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "moonbeam" }
+    {
+      readonly procedure: "persistentAreaSaveDamage";
+      readonly lifecycle: {
+        readonly kind: "casterActionReposition";
+        readonly actionCost: "magicAction";
+      };
+    }
   >;
 }): BattleState {
   return battleStateAfterReplacingCasterActiveEffect({
     state: input.state,
     actorId: input.actorId,
     activeEffect: {
-      kind: "moonbeam" as const,
+      kind: "persistentAreaSaveDamage" as const,
+      lifecycle: input.invocation.lifecycle,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
@@ -2285,20 +2343,20 @@ export function applyMoonbeamCastEffect(input: {
   });
 }
 
-export function applyWebRestraintHazardCastEffect(input: {
+export function applyPersistentAreaSaveConditionEscapeCastEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly areaId: BattleAreaId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "webRestraintHazard" }
+    { readonly procedure: "persistentAreaSaveConditionEscape" }
   >;
 }): BattleState {
   return battleStateAfterReplacingCasterActiveEffect({
     state: input.state,
     actorId: input.actorId,
     activeEffect: {
-      kind: "webRestraintHazard" as const,
+      kind: "persistentAreaSaveConditionEscape" as const,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
@@ -2318,20 +2376,20 @@ export function applyWebRestraintHazardCastEffect(input: {
   });
 }
 
-export function applySleetStormAreaHazardCastEffect(input: {
+export function applyPersistentAreaSaveCompositeCastEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly areaId: BattleAreaId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "sleetStormAreaHazard" }
+    { readonly procedure: "persistentAreaSaveComposite" }
   >;
 }): BattleState {
   return battleStateAfterReplacingCasterActiveEffect({
     state: input.state,
     actorId: input.actorId,
     activeEffect: {
-      kind: "sleetStormAreaHazard" as const,
+      kind: "persistentAreaSaveComposite" as const,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
@@ -2351,20 +2409,24 @@ export function applySleetStormAreaHazardCastEffect(input: {
   });
 }
 
-export function applyInsectPlagueAreaHazardCastEffect(input: {
+export function applyStationaryPersistentAreaAreaHazardCastEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly areaId: BattleAreaId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "insectPlagueAreaHazard" }
+    {
+      readonly procedure: "persistentAreaSaveDamage";
+      readonly lifecycle: { readonly kind: "stationary" };
+    }
   >;
 }): BattleState {
   return battleStateAfterReplacingCasterActiveEffect({
     state: input.state,
     actorId: input.actorId,
     activeEffect: {
-      kind: "insectPlagueAreaHazard" as const,
+      kind: "persistentAreaSaveDamage" as const,
+      lifecycle: input.invocation.lifecycle,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       appearanceOccurrence: {
@@ -2388,20 +2450,24 @@ export function applyInsectPlagueAreaHazardCastEffect(input: {
   });
 }
 
-export function applyCloudkillAreaHazardCastEffect(input: {
+export function applyTranslatingPersistentAreaAreaHazardCastEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly areaId: BattleAreaId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "cloudkillAreaHazard" }
+    {
+      readonly procedure: "persistentAreaSaveDamage";
+      readonly lifecycle: { readonly kind: "sourceTurnTranslation" };
+    }
   >;
 }): BattleState {
   return battleStateAfterReplacingCasterActiveEffect({
     state: input.state,
     actorId: input.actorId,
     activeEffect: {
-      kind: "cloudkillAreaHazard" as const,
+      kind: "persistentAreaSaveDamage" as const,
+      lifecycle: input.invocation.lifecycle,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       appearanceOccurrence: {
@@ -2425,16 +2491,16 @@ export function applyCloudkillAreaHazardCastEffect(input: {
   });
 }
 
-export function applyGustOfWindLineCastEffect(input: {
+export function applyDirectionalPersistentAreaCastEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly area: Extract<
     BattleSpellAreaChoice,
-    { readonly kind: "gustOfWindLineArea" }
+    { readonly kind: "directionalPersistentAreaArea" }
   >;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "gustOfWindLine" }
+    { readonly procedure: "directionalPersistentArea" }
   >;
   readonly heightenedSpellTargetId: CombatantId | null;
 }): BattleState {
@@ -2442,7 +2508,7 @@ export function applyGustOfWindLineCastEffect(input: {
     state: input.state,
     actorId: input.actorId,
     activeEffect: {
-      kind: "gustOfWindLine" as const,
+      kind: "directionalPersistentArea" as const,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.area.areaId,
@@ -2477,7 +2543,7 @@ export function applyGustOfWindLineCastEffect(input: {
   });
 }
 
-export function replaceGustOfWindLineDirection(input: {
+export function replaceDirectionalPersistentAreaDirection(input: {
   readonly state: BattleState;
   readonly sourceCombatantId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
@@ -2490,7 +2556,7 @@ export function replaceGustOfWindLineDirection(input: {
     return input.state;
   }
   const activeEffects = source.activeEffects.map((effect) =>
-    effect.kind === "gustOfWindLine" &&
+    effect.kind === "directionalPersistentArea" &&
     effect.effectRef === input.effectRef &&
     effect.areaId === input.areaId
       ? { ...effect, directionId: input.directionId }
@@ -2505,25 +2571,25 @@ export function replaceGustOfWindLineDirection(input: {
   };
 }
 
-const SINGLE_SAVE_AREA_ACTIVE_EFFECT_KIND_SET: ReadonlySet<
-  BattleActiveEffect["kind"]
-> = new Set(SINGLE_SAVE_AREA_ACTIVE_EFFECT_KINDS);
-
 function isSingleSaveAreaActiveEffect(
   activeEffect: BattleActiveEffect,
 ): activeEffect is SingleSaveAreaActiveEffect {
-  return SINGLE_SAVE_AREA_ACTIVE_EFFECT_KIND_SET.has(activeEffect.kind);
+  return (
+    activeEffect.kind === "persistentAreaSaveComposite" ||
+    (activeEffect.kind === "persistentAreaSaveDamage" &&
+      "savedThisTurn" in activeEffect)
+  );
 }
 
 function resetAllSingleSaveAreaEffectsForTurn(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
-  kind: SingleSaveAreaActiveEffect["kind"],
+  matchesLifecycle: (effect: SingleSaveAreaActiveEffect) => boolean,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   const next = new Map(combatants);
   for (const [id, combatant] of next) {
     const activeEffects = combatant.activeEffects.map((effect) =>
       isSingleSaveAreaActiveEffect(effect) &&
-      effect.kind === kind &&
+      matchesLifecycle(effect) &&
       effect.savedThisTurn.length > 0
         ? { ...effect, savedThisTurn: [] as readonly CombatantId[] }
         : effect,
@@ -2535,19 +2601,24 @@ function resetAllSingleSaveAreaEffectsForTurn(
   return next;
 }
 
-export function resetAllMoonbeamSavedThisTurn(
+export function resetAllMovablePersistentAreaSavedThisTurn(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
-  return resetAllSingleSaveAreaEffectsForTurn(combatants, "moonbeam");
+  return resetAllSingleSaveAreaEffectsForTurn(
+    combatants,
+    (effect) =>
+      effect.kind === "persistentAreaSaveDamage" &&
+      effect.lifecycle.kind === "casterActionReposition",
+  );
 }
 
-export function resetAllWebSavedThisTurn(
+export function resetAllPersistentAreaSaveConditionEscapeSavedThisTurn(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   const next = new Map(combatants);
   for (const [id, combatant] of next) {
     const activeEffects = combatant.activeEffects.map((effect) =>
-      effect.kind === "webRestraintHazard" &&
+      effect.kind === "persistentAreaSaveConditionEscape" &&
       (effect.entrySavedThisTurn.length > 0 ||
         effect.startTurnSavedThisTurn.length > 0)
         ? {
@@ -2568,44 +2639,51 @@ export function resetAllWebSavedThisTurn(
   return next;
 }
 
-export function resetAllSleetStormSavedThisTurn(
+export function resetAllPersistentAreaSaveCompositeSavedThisTurn(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   return resetAllSingleSaveAreaEffectsForTurn(
     combatants,
-    "sleetStormAreaHazard",
+    (effect) => effect.kind === "persistentAreaSaveComposite",
   );
 }
 
-export function resetAllInsectPlagueSavedThisTurn(
+export function resetAllStationaryPersistentAreaSavedThisTurn(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   return resetAllSingleSaveAreaEffectsForTurn(
     combatants,
-    "insectPlagueAreaHazard",
+    (effect) =>
+      effect.kind === "persistentAreaSaveDamage" &&
+      effect.lifecycle.kind === "stationary",
   );
 }
 
-export function resetAllCloudkillSavedThisTurn(
+export function resetAllTranslatingPersistentAreaSavedThisTurn(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   return resetAllSingleSaveAreaEffectsForTurn(
     combatants,
-    "cloudkillAreaHazard",
+    (effect) =>
+      effect.kind === "persistentAreaSaveDamage" &&
+      effect.lifecycle.kind === "sourceTurnTranslation",
   );
 }
 
-export function markMoonbeamSavedThisTurn(
+export function markMovablePersistentAreaSavedThisTurn(
   state: BattleState,
   targetId: CombatantId,
-  effect: Extract<BattleActiveEffect, { readonly kind: "moonbeam" }>,
+  effect: Extract<
+    MovablePersistentAreaActiveEffect,
+    { readonly kind: "persistentAreaSaveDamage" }
+  >,
 ): BattleState {
   return updateEffectOwnerActiveEffects({
     state,
     effectOwnerId: effect.sourceCombatantId,
     update: (activeEffects) =>
       activeEffects.map((current) =>
-        moonbeamEffectMatches(current, effect)
+        movablePersistentAreaEffectMatches(current, effect)
           ? {
               ...current,
               savedThisTurn: appendCombatantIdOnce(
@@ -2618,28 +2696,39 @@ export function markMoonbeamSavedThisTurn(
   });
 }
 
-function moonbeamEffectMatches(
+function movablePersistentAreaEffectMatches(
   current: BattleActiveEffect,
-  effect: Extract<BattleActiveEffect, { readonly kind: "moonbeam" }>,
-): current is Extract<BattleActiveEffect, { readonly kind: "moonbeam" }> {
+  effect: Extract<
+    MovablePersistentAreaActiveEffect,
+    { readonly kind: "persistentAreaSaveDamage" }
+  >,
+): current is Extract<
+  MovablePersistentAreaActiveEffect,
+  { readonly kind: "persistentAreaSaveDamage" }
+> {
   return (
-    current.kind === "moonbeam" &&
+    current.kind === "persistentAreaSaveDamage" &&
+    current.lifecycle.kind === "casterActionReposition" &&
+    current.lifecycle.actionCost === "magicAction" &&
     current.effectRef === effect.effectRef &&
     current.areaId === effect.areaId
   );
 }
 
-export function addMoonbeamShapeShiftSuppression(
+export function addMovablePersistentAreaShapeShiftSuppression(
   state: BattleState,
   targetId: CombatantId,
-  effect: Extract<BattleActiveEffect, { readonly kind: "moonbeam" }>,
+  effect: Extract<
+    MovablePersistentAreaActiveEffect,
+    { readonly kind: "persistentAreaSaveDamage" }
+  >,
 ): BattleState {
   return updateEffectOwnerActiveEffects({
     state,
     effectOwnerId: effect.sourceCombatantId,
     update: (activeEffects) =>
       activeEffects.map((current) =>
-        moonbeamEffectMatches(current, effect)
+        movablePersistentAreaEffectMatches(current, effect)
           ? {
               ...current,
               shapeShiftSuppressed: appendCombatantIdOnce(
@@ -2652,17 +2741,20 @@ export function addMoonbeamShapeShiftSuppression(
   });
 }
 
-export function removeMoonbeamShapeShiftSuppression(
+export function removeMovablePersistentAreaShapeShiftSuppression(
   state: BattleState,
   targetId: CombatantId,
-  effect: Extract<BattleActiveEffect, { readonly kind: "moonbeam" }>,
+  effect: Extract<
+    MovablePersistentAreaActiveEffect,
+    { readonly kind: "persistentAreaSaveDamage" }
+  >,
 ): BattleState {
   return updateEffectOwnerActiveEffects({
     state,
     effectOwnerId: effect.sourceCombatantId,
     update: (activeEffects) =>
       activeEffects.map((current) =>
-        moonbeamEffectMatches(current, effect)
+        movablePersistentAreaEffectMatches(current, effect)
           ? {
               ...current,
               shapeShiftSuppressed: current.shapeShiftSuppressed.filter(
@@ -2674,11 +2766,14 @@ export function removeMoonbeamShapeShiftSuppression(
   });
 }
 
-export function markWebSavedThisTurn(
+export function markPersistentAreaSaveConditionEscapeSavedThisTurn(
   state: BattleState,
   targetId: CombatantId,
-  effect: Extract<BattleActiveEffect, { readonly kind: "webRestraintHazard" }>,
-  trigger: BattleWebRestraintTrigger,
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "persistentAreaSaveConditionEscape" }
+  >,
+  trigger: BattlePersistentAreaSaveConditionEscapeTrigger,
 ): BattleState {
   return updateEffectOwnerActiveEffects({
     state,
@@ -2733,26 +2828,23 @@ function markSingleSaveAreaHazardSavedThisTurn(
   });
 }
 
-export function markSleetStormAreaHazardSavedThisTurn(
+export function markPersistentAreaSaveCompositeSavedThisTurn(
   state: BattleState,
   targetId: CombatantId,
   effect: Extract<
     BattleActiveEffect,
-    { readonly kind: "sleetStormAreaHazard" }
+    { readonly kind: "persistentAreaSaveComposite" }
   >,
 ): BattleState {
   return markSingleSaveAreaHazardSavedThisTurn(state, targetId, effect);
 }
 
-export function markInsectPlagueAreaHazardSavedThisTurn(
+export function markStationaryPersistentAreaAreaHazardSavedThisTurn(
   state: BattleState,
   targetId: CombatantId,
   locatedEffect: {
     readonly effectOwnerId: CombatantId;
-    readonly effect: Extract<
-      BattleActiveEffect,
-      { readonly kind: "insectPlagueAreaHazard" }
-    >;
+    readonly effect: StationaryPersistentAreaSaveDamageActiveEffect;
   },
 ): BattleState {
   return markSingleSaveAreaHazardSavedThisTurn(
@@ -2763,15 +2855,12 @@ export function markInsectPlagueAreaHazardSavedThisTurn(
   );
 }
 
-export function markCloudkillAreaHazardSavedThisTurn(
+export function markTranslatingPersistentAreaAreaHazardSavedThisTurn(
   state: BattleState,
   targetId: CombatantId,
   locatedEffect: {
     readonly effectOwnerId: CombatantId;
-    readonly effect: Extract<
-      BattleActiveEffect,
-      { readonly kind: "cloudkillAreaHazard" }
-    >;
+    readonly effect: TranslatingPersistentAreaSaveDamageActiveEffect;
   },
 ): BattleState {
   return markSingleSaveAreaHazardSavedThisTurn(
@@ -2782,13 +2871,16 @@ export function markCloudkillAreaHazardSavedThisTurn(
   );
 }
 
-export function applyWebRestrainedCondition(
+export function applyPersistentAreaSaveConditionEscapeRestrainedCondition(
   state: BattleState,
   targetId: CombatantId,
-  effect: Extract<BattleActiveEffect, { readonly kind: "webRestraintHazard" }>,
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "persistentAreaSaveConditionEscape" }
+  >,
 ): BattleState {
   const target = state.combatants.get(targetId);
-  /* v8 ignore start -- @preserve -- Defensive internal guard: Web failed-save outcomes are validated against the current combatant map before restraint is applied. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: PersistentAreaSaveConditionEscape failed-save outcomes are validated against the current combatant map before restraint is applied. */
   if (target === undefined) {
     return state;
   }
@@ -2836,7 +2928,7 @@ export function applyWebRestrainedCondition(
   };
 }
 
-export function removeWebRestrainedCondition(input: {
+export function removePersistentAreaSaveConditionEscapeRestrainedCondition(input: {
   readonly state: BattleState;
   readonly targetId: CombatantId;
   readonly sourceCombatantId: CombatantId;
@@ -2859,7 +2951,7 @@ export function removeWebRestrainedCondition(input: {
     : removeSpellConditionEffect(input.state, input.targetId, effect);
 }
 
-export function applyGreaseProneToTarget(
+export function applyPersistentAreaSaveConditionProneToTarget(
   state: BattleState,
   targetId: CombatantId,
 ): BattleState {
@@ -2876,7 +2968,7 @@ export function applyProneToTarget(
   };
 }
 
-export function applySleetStormAreaHazardFailedSaveEffect(
+export function applyPersistentAreaSaveCompositeFailedSaveEffect(
   state: BattleState,
   targetId: CombatantId,
 ): BattleState {

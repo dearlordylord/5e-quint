@@ -1,7 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spatial-melee-spell-attack-proxy-attack-proxy
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-range-increase
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
@@ -28,7 +28,7 @@ import {
   type BattleSpellCastReactionFact,
   type BattleMagicWeaponTargetItemFact,
   type BattleSavingThrowRelationshipFact,
-  type BattleSpiritualWeaponForcePosition,
+  type BattleSpatialMeleeSpellAttackProxyPosition,
   type BattleObjectContactTargetSpatialFact,
   type BattleOngoingSpellTargetWithinRangeFact,
   type BattleTargetSpatialFact,
@@ -97,12 +97,12 @@ import {
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.ts";
 import {
   magicWeaponTargetItemHoleId,
-  spellDancingLightsPlacementHoleId,
-  spiritualWeaponForcePositionHole,
-  spiritualWeaponForcePositionInvalidReason,
+  spellMovableLightPlacementHoleId,
+  spatialMeleeSpellAttackProxyPositionHole,
+  spatialMeleeSpellAttackProxyPositionInvalidReason,
   spellTargetRequiresAttackRollRelationshipFact,
 } from "./spells-targeting.ts";
-import { levitateInitialRiseHole } from "./levitate-creature.ts";
+import { controlledVerticalSuspensionInitialRiseHole } from "./levitate-creature.ts";
 import { effectiveD20TestNaturalOneRerollSavingThrowOutcomes } from "./d20-test-natural-one-reroll.ts";
 import {
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID,
@@ -117,8 +117,7 @@ const MIRROR_IMAGE_DUPLICATE_ROLL_PROCEDURES = [
   "spellAttackDamage",
   "heldLightHurl",
   "attackBurstSaveDamage",
-  "spiritualWeaponAttackProxy",
-  "spiritualWeaponRepeatAttack",
+  "spatialMeleeSpellAttackProxy",
 ] as const satisfies readonly RuntimeSpellProcedure["procedure"][];
 const MIRROR_IMAGE_DUPLICATE_ROLL_PROCEDURE_SET: ReadonlySet<
   RuntimeSpellProcedure["procedure"]
@@ -260,16 +259,18 @@ export type SpellFillSet =
         | SelfTransformationModeKind
         | undefined;
       readonly conditionChoice: Condition | undefined;
-      readonly levitateInitialRiseFeet: MovementFeet | undefined;
+      readonly controlledVerticalSuspensionInitialRiseFeet:
+        | MovementFeet
+        | undefined;
       readonly areaChoice: BattleSpellAreaIdentityChoice | undefined;
       readonly teleportDestination:
         | Extract<BattleFill, { readonly kind: "teleportDestination" }>
         | undefined;
-      readonly spiritualWeaponForcePosition:
-        | BattleSpiritualWeaponForcePosition
+      readonly spatialMeleeSpellAttackProxyPosition:
+        | BattleSpatialMeleeSpellAttackProxyPosition
         | undefined;
-      readonly dancingLightsPlacement:
-        | Extract<BattleFill, { readonly kind: "dancingLightsPlacement" }>
+      readonly movableLightPlacement:
+        | Extract<BattleFill, { readonly kind: "movableLightPlacement" }>
         | undefined;
       readonly damageTypeChoice:
         | Extract<BattleFill, { readonly kind: "damageTypeChoice" }>
@@ -423,16 +424,16 @@ export function spellFillSet(
   let commandOptionChoice: BattleCommandOption | undefined;
   let selfTransformationModeChoice: SelfTransformationModeKind | undefined;
   let conditionChoice: Condition | undefined;
-  let levitateInitialRiseFeet: MovementFeet | undefined;
+  let controlledVerticalSuspensionInitialRiseFeet: MovementFeet | undefined;
   let areaChoice: BattleSpellAreaIdentityChoice | undefined;
   let teleportDestination:
     | Extract<BattleFill, { readonly kind: "teleportDestination" }>
     | undefined;
-  let spiritualWeaponForcePosition:
-    | BattleSpiritualWeaponForcePosition
+  let spatialMeleeSpellAttackProxyPosition:
+    | BattleSpatialMeleeSpellAttackProxyPosition
     | undefined;
-  let dancingLightsPlacement:
-    | Extract<BattleFill, { readonly kind: "dancingLightsPlacement" }>
+  let movableLightPlacement:
+    | Extract<BattleFill, { readonly kind: "movableLightPlacement" }>
     | undefined;
   let damageTypeChoice:
     | Extract<BattleFill, { readonly kind: "damageTypeChoice" }>
@@ -970,16 +971,16 @@ export function spellFillSet(
     if (fill.kind === "spellAreaChoice") {
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
-        invocation.procedure !== "fogCloudObscurement" &&
+        invocation.procedure !== "persistentAreaTrait" &&
         invocation.procedure !== "magicalDarknessPointOrigin" &&
         invocation.procedure !== "antimagicFieldOngoingSpellSuppression" &&
-        invocation.procedure !== "flamingSphere" &&
-        invocation.procedure !== "spikeGrowthMovementHazard" &&
-        invocation.procedure !== "moonbeam" &&
-        invocation.procedure !== "sleetStormAreaHazard" &&
-        invocation.procedure !== "insectPlagueAreaHazard" &&
-        invocation.procedure !== "cloudkillAreaHazard" &&
-        invocation.procedure !== "webRestraintHazard"
+        invocation.procedure !== "persistentAreaSaveDamage" &&
+        invocation.procedure !== "areaMovementDistanceDamage" &&
+        invocation.procedure !== "persistentAreaSaveDamage" &&
+        invocation.procedure !== "persistentAreaSaveComposite" &&
+        invocation.procedure !== "persistentAreaSaveDamage" &&
+        invocation.procedure !== "persistentAreaSaveDamage" &&
+        invocation.procedure !== "persistentAreaSaveConditionEscape"
       ) {
         /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
@@ -1031,43 +1032,40 @@ export function spellFillSet(
       continue;
     }
 
-    if (fill.kind === "dancingLightsPlacement") {
+    if (fill.kind === "movableLightPlacement") {
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (
-        invocation.procedure !== "dancingLightsSeparateCast" &&
-        invocation.procedure !== "dancingLightsCombinedCast" &&
-        invocation.procedure !== "dancingLightsReposition"
-      ) {
+      if (invocation.procedure !== "movableLightManifestation") {
         /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
-          message: "Dancing Lights placement does not match this spell act.",
+          message:
+            "movable-light manifestation placement does not match this spell act.",
         };
       }
       /* v8 ignore stop -- @preserve */
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         fill.holeId !==
-        spellDancingLightsPlacementHoleId(invocation, fill.value.form)
+        spellMovableLightPlacementHoleId(invocation, fill.value.form)
       ) {
         /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
-            "Dancing Lights placement must use the selected spell act placement hole.",
+            "movable-light manifestation placement must use the selected spell act placement hole.",
         };
       }
       /* v8 ignore stop -- @preserve */
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (dancingLightsPlacement !== undefined) {
+      if (movableLightPlacement !== undefined) {
         /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
-          message: "Dancing Lights placement was filled twice.",
+          message: "movable-light manifestation placement was filled twice.",
         };
       }
       /* v8 ignore stop -- @preserve */
-      dancingLightsPlacement = fill;
+      movableLightPlacement = fill;
       continue;
     }
 
@@ -1504,21 +1502,21 @@ export function spellFillSet(
       continue;
     }
 
-    if (fill.kind === "levitateInitialRise") {
+    if (fill.kind === "controlledVerticalSuspensionInitialRise") {
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
-        invocation.procedure !== "levitatedCreature" ||
+        invocation.procedure !== "controlledVerticalSuspension" ||
         targetId === undefined
       ) {
         /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
-            "Levitate initial rise must follow the selected Levitate creature target.",
+            "ControlledVerticalSuspension initial rise must follow the selected ControlledVerticalSuspension creature target.",
         };
       }
       /* v8 ignore stop -- @preserve */
-      const hole = levitateInitialRiseHole({
+      const hole = controlledVerticalSuspensionInitialRiseHole({
         actorId: invocation.activeEffect.sourceCombatantId,
         targetId,
         maxDistanceFeet: invocation.maxInitialRiseFeet,
@@ -1529,7 +1527,7 @@ export function spellFillSet(
         return {
           tag: "invalid",
           message:
-            "Levitate initial rise must use the selected spell act initial-rise hole.",
+            "ControlledVerticalSuspension initial rise must use the selected spell act initial-rise hole.",
         };
       }
       /* v8 ignore stop -- @preserve */
@@ -1543,20 +1541,21 @@ export function spellFillSet(
         return {
           tag: "invalid",
           message:
-            "Levitate initial rise must be a whole number no greater than the spell limit.",
+            "ControlledVerticalSuspension initial rise must be a whole number no greater than the spell limit.",
         };
       }
       /* v8 ignore stop -- @preserve */
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (levitateInitialRiseFeet !== undefined) {
+      if (controlledVerticalSuspensionInitialRiseFeet !== undefined) {
         /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
-          message: "Levitate initial rise was filled twice.",
+          message:
+            "ControlledVerticalSuspension initial rise was filled twice.",
         };
       }
       /* v8 ignore stop -- @preserve */
-      levitateInitialRiseFeet = fill.value.distanceFeet;
+      controlledVerticalSuspensionInitialRiseFeet = fill.value.distanceFeet;
       continue;
     }
 
@@ -1836,24 +1835,21 @@ export function spellFillSet(
       continue;
     }
 
-    if (fill.kind === "spiritualWeaponForcePosition") {
+    if (fill.kind === "spatialMeleeSpellAttackProxyPosition") {
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (
-        invocation.procedure !== "spiritualWeaponAttackProxy" &&
-        invocation.procedure !== "spiritualWeaponRepeatAttack"
-      ) {
+      if (invocation.procedure !== "spatialMeleeSpellAttackProxy") {
         /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
-            "Spiritual Weapon force position does not match this spell act.",
+            "spatial melee spell-attack proxy force position does not match this spell act.",
         };
       }
       /* v8 ignore stop -- @preserve */
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         fill.holeId !==
-        spiritualWeaponForcePositionHole({
+        spatialMeleeSpellAttackProxyPositionHole({
           ...invocation,
           sourceProcedureRef,
         }).holeId
@@ -1862,31 +1858,35 @@ export function spellFillSet(
         return {
           tag: "invalid",
           message:
-            "Spiritual Weapon force position must use the selected spell act position hole.",
+            "spatial melee spell-attack proxy force position must use the selected spell act position hole.",
         };
       }
       /* v8 ignore stop -- @preserve */
-      const spiritualWeaponForcePositionError =
-        spiritualWeaponForcePositionInvalidReason(fill.value, invocation);
+      const spatialMeleeSpellAttackProxyPositionError =
+        spatialMeleeSpellAttackProxyPositionInvalidReason(
+          fill.value,
+          invocation,
+        );
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (spiritualWeaponForcePositionError !== null) {
+      if (spatialMeleeSpellAttackProxyPositionError !== null) {
         /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
-          message: spiritualWeaponForcePositionError,
+          message: spatialMeleeSpellAttackProxyPositionError,
         };
       }
       /* v8 ignore stop -- @preserve */
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (spiritualWeaponForcePosition !== undefined) {
+      if (spatialMeleeSpellAttackProxyPosition !== undefined) {
         /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
-          message: "Spiritual Weapon force position was filled twice.",
+          message:
+            "spatial melee spell-attack proxy force position was filled twice.",
         };
       }
       /* v8 ignore stop -- @preserve */
-      spiritualWeaponForcePosition = fill.value;
+      spatialMeleeSpellAttackProxyPosition = fill.value;
       continue;
     }
 
@@ -2238,11 +2238,11 @@ export function spellFillSet(
     commandOptionChoice,
     selfTransformationModeChoice,
     conditionChoice,
-    levitateInitialRiseFeet,
+    controlledVerticalSuspensionInitialRiseFeet,
     areaChoice,
     teleportDestination,
-    spiritualWeaponForcePosition,
-    dancingLightsPlacement,
+    spatialMeleeSpellAttackProxyPosition,
+    movableLightPlacement,
     damageTypeChoice,
     concentrationSavingThrows,
     hideousLaughterDamageRepeatSaves,
@@ -2319,8 +2319,7 @@ function spellInvocationCanUseRemarkableAthleteCriticalMovement(
     invocation.procedure === "spellAttackDamage" ||
     invocation.procedure === "heldLightHurl" ||
     invocation.procedure === "spellCreatedHeldObjectAttack" ||
-    invocation.procedure === "spiritualWeaponAttackProxy" ||
-    invocation.procedure === "spiritualWeaponRepeatAttack" ||
+    invocation.procedure === "spatialMeleeSpellAttackProxy" ||
     invocation.procedure === "attackBurstSaveDamage"
   );
 }
@@ -2377,9 +2376,9 @@ export function spellFillSetSavingThrowTargeting(
         invocation.procedure === "command" ||
         invocation.procedure === "creatureSizeIncrease" ||
         invocation.procedure === "creatureSizeDecrease" ||
-        invocation.procedure === "levitatedCreature" ||
-        invocation.procedure === "greaseGroundHazard" ||
-        invocation.procedure === "gustOfWindLine" ||
+        invocation.procedure === "controlledVerticalSuspension" ||
+        invocation.procedure === "persistentAreaSaveCondition" ||
+        invocation.procedure === "directionalPersistentArea" ||
         invocation.procedure === "slowActivePenalties"
       ? invocation.targeting
       : { kind: "singleCombatant" };
