@@ -83,190 +83,214 @@ function contextText(delivery: ContextDelivery): string {
     : benchmarkContextForRole(delivery.profile, delivery.role);
 }
 
-type DeclarationDiagnosticLocation = readonly [line: number, column: number];
-type NamedDeclarationDiagnosticLocation = readonly [
-  line: number,
-  column: number,
-  exportedVariable: string,
-];
-
-const DECLARATION_SERIALIZATION_LENGTH_DIAGNOSTICS = {
-  "packages/battle-runtime/src/battle-reducer/battle-codecs.ts": [
-    [5585, 14],
-    [6185, 14],
-    [6373, 14],
-    [8502, 14],
-    [8514, 14],
-  ],
-  "packages/battle-runtime/src/battle-reducer/ongoing-concentration-area-spell.ts":
-    [[4, 17]],
-  "packages/surface/src/surface/schema-nonspell.ts": [
-    [457, 14],
-    [505, 14],
-    [532, 14],
-    [558, 14],
-    [566, 14],
-    [593, 14],
-    [1052, 14],
-    [1071, 14],
-    [1835, 14],
-    [1875, 14],
-    [1917, 14],
-    [1927, 14],
-    [1932, 14],
-    [1938, 14],
-    [1944, 14],
-    [1953, 14],
-    [1958, 14],
-    [1967, 14],
-    [1975, 14],
-    [1981, 14],
-    [1986, 14],
-    [1993, 14],
-    [1999, 14],
-    [3569, 14],
-    [3575, 14],
-    [3581, 14],
-    [3587, 14],
-    [3594, 14],
-    [3600, 14],
-    [3606, 14],
-    [3612, 14],
-    [3618, 14],
-    [3624, 14],
-    [3630, 14],
-    [3636, 14],
-    [3642, 14],
-    [3648, 14],
-    [3680, 14],
-    [3762, 14],
-    [3939, 14],
-    [3950, 14],
-    [4210, 14],
-    [4218, 14],
-    [4223, 14],
-    [4255, 14],
-    [4265, 14],
-    [4291, 14],
-    [4298, 14],
-    [4336, 14],
-    [4372, 14],
-    [4390, 14],
-    [4434, 14],
-  ],
-  "packages/surface/src/surface/schema-spell.ts": [
-    [6856, 14],
-    [6888, 14],
-    [6896, 14],
-    [6985, 14],
-    [7002, 14],
-  ],
-  "packages/surface/src/surface/schema.ts": [
-    [765, 14],
-    [775, 14],
-    [803, 14],
-    [813, 14],
-  ],
-} as const satisfies Readonly<
-  Record<string, readonly DeclarationDiagnosticLocation[]>
->;
-
-const DECLARATION_SERIALIZATION_EXTERNAL_NAME_DIAGNOSTICS = {
-  "packages/battle-runtime/src/battle-reducer/battle-codecs.ts": [
-    [5585, 14, "StatBlockExecutionSnapshotSchema"],
-    [6185, 14, "BattleUnitSupportSourceSchema"],
-    [8502, 14, "BattlePresentedSnapshotSchema"],
-    [8514, 14, "BattleSnapshotSchema"],
-  ],
-  "packages/surface/src/surface/schema-nonspell.ts": [
-    [457, 14, "PassiveOperationSchema"],
-    [505, 14, "ActivatedAbilityMechanicsSchema"],
-    [532, 14, "TriggeredReactionAbilityMechanicsSchema"],
-    [558, 14, "MagicItemSpawnedCreatureMechanicsSchema"],
-    [566, 14, "ClassFeatureActivationMechanicsSchema"],
-    [593, 14, "ClassFeatureAcquisitionChoiceMechanicsSchema"],
-    [1052, 14, "ClassFeatureComponentMechanicsSchema"],
-    [1071, 14, "CompositeClassFeatureMechanicsSchema"],
-    [1835, 14, "PassiveMechanicsSchema"],
-    [1875, 14, "ClassFeatureMechanicsSchema"],
-    [1917, 14, "ClassGeneralFeatureMechanicsSchema"],
-    [1927, 14, "BardClassFeatureMechanicsSchema"],
-    [1932, 14, "ClericClassFeatureMechanicsSchema"],
-    [1938, 14, "DruidClassFeatureMechanicsSchema"],
-    [1944, 14, "WizardClassFeatureMechanicsSchema"],
-    [1953, 14, "BarbarianClassFeatureMechanicsSchema"],
-    [1958, 14, "FighterClassFeatureMechanicsSchema"],
-    [1967, 14, "MonkClassFeatureMechanicsSchema"],
-    [1975, 14, "PaladinClassFeatureMechanicsSchema"],
-    [1981, 14, "RangerClassFeatureMechanicsSchema"],
-    [1986, 14, "RogueClassFeatureMechanicsSchema"],
-    [1993, 14, "SorcererClassFeatureMechanicsSchema"],
-    [1999, 14, "WarlockClassFeatureMechanicsSchema"],
-    [3569, 14, "BardClassFeatureRecordSchema"],
-    [3575, 14, "WizardClassFeatureRecordSchema"],
-    [3581, 14, "BarbarianClassFeatureRecordSchema"],
-    [3587, 14, "FighterClassFeatureRecordSchema"],
-    [3594, 14, "ClericClassFeatureRecordSchema"],
-    [3600, 14, "DruidClassFeatureRecordSchema"],
-    [3606, 14, "MonkClassFeatureRecordSchema"],
-    [3612, 14, "PaladinClassFeatureRecordSchema"],
-    [3618, 14, "RangerClassFeatureRecordSchema"],
-    [3624, 14, "RogueClassFeatureRecordSchema"],
-    [3630, 14, "SorcererClassFeatureRecordSchema"],
-    [3636, 14, "WarlockClassFeatureRecordSchema"],
-    [3642, 14, "OtherClassFeatureRecordSchema"],
-    [3648, 14, "ClassFeatureRecordSchema"],
-    [3680, 14, "FeatMechanicsSchema"],
-    [3762, 14, "FeatRecordSchema"],
-    [3939, 14, "SpeciesTraitMechanicsSchema"],
-    [3950, 14, "SpeciesTraitRecordSchema"],
-    [4210, 14, "MagicItemComponentMechanicsSchema"],
-    [4218, 14, "CompositeMagicItemMechanicsSchema"],
-    [4223, 14, "MagicItemMechanicsSchema"],
-    [4255, 14, "MagicItemVariantSchema"],
-    [4265, 14, "MagicItemRecordSchema"],
-    [4291, 14, "MagicEquipmentTraitSchema"],
-    [4298, 14, "MagicEquipmentVariantSchema"],
-    [4336, 14, "ArmorTemplateRecordSchema"],
-    [4372, 14, "ShieldTemplateRecordSchema"],
-    [4390, 14, "WeaponTemplateRecordSchema"],
-    [4434, 14, "UnitRecordSchema"],
-  ],
-  "packages/surface/src/surface/schema.ts": [
-    [765, 14, "SrdUnitRecordSchema"],
-    [775, 14, "PublishedSrdUnitRecordSchema"],
-    [803, 14, "SrdSurfaceSchema"],
-    [813, 14, "PublishedSrdSurfaceSchema"],
-  ],
-} as const satisfies Readonly<
-  Record<string, readonly NamedDeclarationDiagnosticLocation[]>
->;
-
 const DECLARATION_SERIALIZATION_LENGTH_MESSAGE =
   "The inferred type of this node exceeds the maximum length the compiler will serialize. An explicit type annotation is needed.";
 const DECLARATION_SERIALIZATION_EXTERNAL_NAME_SUFFIX = `has or is using name 'CurseOccurrenceEffect' from external module "<repo>/packages/surface/src/surface/schema-spell" but cannot be named.`;
+const DECLARATION_SERIALIZATION_LENGTH_BASELINE = [
+  {
+    owner: "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+    count: 5,
+  },
+  {
+    owner:
+      "packages/battle-runtime/src/battle-reducer/ongoing-concentration-area-spell.ts",
+    count: 1,
+  },
+  { owner: "packages/surface/src/surface/schema-nonspell.ts", count: 52 },
+  { owner: "packages/surface/src/surface/schema-spell.ts", count: 5 },
+  { owner: "packages/surface/src/surface/schema.ts", count: 4 },
+] as const;
+const DECLARATION_SERIALIZATION_EXTERNAL_NAME_BASELINE = [
+  {
+    owner: "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+    exportedVariables: [
+      "StatBlockExecutionSnapshotSchema",
+      "BattleUnitSupportSourceSchema",
+      "BattlePresentedSnapshotSchema",
+      "BattleSnapshotSchema",
+    ],
+  },
+  {
+    owner: "packages/surface/src/surface/schema-nonspell.ts",
+    exportedVariables: [
+      "PassiveOperationSchema",
+      "ActivatedAbilityMechanicsSchema",
+      "TriggeredReactionAbilityMechanicsSchema",
+      "MagicItemSpawnedCreatureMechanicsSchema",
+      "ClassFeatureActivationMechanicsSchema",
+      "ClassFeatureAcquisitionChoiceMechanicsSchema",
+      "ClassFeatureComponentMechanicsSchema",
+      "CompositeClassFeatureMechanicsSchema",
+      "PassiveMechanicsSchema",
+      "ClassFeatureMechanicsSchema",
+      "ClassGeneralFeatureMechanicsSchema",
+      "BardClassFeatureMechanicsSchema",
+      "ClericClassFeatureMechanicsSchema",
+      "DruidClassFeatureMechanicsSchema",
+      "WizardClassFeatureMechanicsSchema",
+      "BarbarianClassFeatureMechanicsSchema",
+      "FighterClassFeatureMechanicsSchema",
+      "MonkClassFeatureMechanicsSchema",
+      "PaladinClassFeatureMechanicsSchema",
+      "RangerClassFeatureMechanicsSchema",
+      "RogueClassFeatureMechanicsSchema",
+      "SorcererClassFeatureMechanicsSchema",
+      "WarlockClassFeatureMechanicsSchema",
+      "BardClassFeatureRecordSchema",
+      "WizardClassFeatureRecordSchema",
+      "BarbarianClassFeatureRecordSchema",
+      "FighterClassFeatureRecordSchema",
+      "ClericClassFeatureRecordSchema",
+      "DruidClassFeatureRecordSchema",
+      "MonkClassFeatureRecordSchema",
+      "PaladinClassFeatureRecordSchema",
+      "RangerClassFeatureRecordSchema",
+      "RogueClassFeatureRecordSchema",
+      "SorcererClassFeatureRecordSchema",
+      "WarlockClassFeatureRecordSchema",
+      "OtherClassFeatureRecordSchema",
+      "ClassFeatureRecordSchema",
+      "FeatMechanicsSchema",
+      "FeatRecordSchema",
+      "SpeciesTraitMechanicsSchema",
+      "SpeciesTraitRecordSchema",
+      "MagicItemComponentMechanicsSchema",
+      "CompositeMagicItemMechanicsSchema",
+      "MagicItemMechanicsSchema",
+      "MagicItemVariantSchema",
+      "MagicItemRecordSchema",
+      "MagicEquipmentTraitSchema",
+      "MagicEquipmentVariantSchema",
+      "ArmorTemplateRecordSchema",
+      "ShieldTemplateRecordSchema",
+      "WeaponTemplateRecordSchema",
+      "UnitRecordSchema",
+    ],
+  },
+  {
+    owner: "packages/surface/src/surface/schema.ts",
+    exportedVariables: [
+      "SrdUnitRecordSchema",
+      "PublishedSrdUnitRecordSchema",
+      "SrdSurfaceSchema",
+      "PublishedSrdSurfaceSchema",
+    ],
+  },
+] as const;
 
-const PRE_EXISTING_DECLARATION_SERIALIZATION_DIAGNOSTICS = new Set([
-  ...Object.entries(DECLARATION_SERIALIZATION_LENGTH_DIAGNOSTICS).flatMap(
-    ([owner, locations]) =>
-      locations.map(
-        ([line, column]) =>
-          `${owner}(${String(line)},${String(column)}): error TS7056: ${DECLARATION_SERIALIZATION_LENGTH_MESSAGE}`,
-      ),
-  ),
-  ...Object.entries(
-    DECLARATION_SERIALIZATION_EXTERNAL_NAME_DIAGNOSTICS,
-  ).flatMap(([owner, locations]) =>
-    locations.map(
-      ([line, column, exportedVariable]) =>
-        `${owner}(${String(line)},${String(column)}): error TS4023: Exported variable '${exportedVariable}' ${DECLARATION_SERIALIZATION_EXTERNAL_NAME_SUFFIX}`,
+const PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_CODES = [
+  "TS4023",
+  "TS4058",
+  "TS7056",
+] as const;
+type PublicDeclarationSerializationDiagnosticCode =
+  (typeof PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_CODES)[number];
+export type PublicDeclarationSerializationDiagnosticBaselineEntry = {
+  readonly owner: string;
+  readonly code: PublicDeclarationSerializationDiagnosticCode;
+  readonly message: string;
+  readonly count: number;
+};
+
+function declarationDiagnosticFingerprintFromParts(
+  owner: string,
+  code: PublicDeclarationSerializationDiagnosticCode,
+  message: string,
+): string {
+  return `${owner}: error ${code}: ${message}`;
+}
+
+export const PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_BASELINE: readonly PublicDeclarationSerializationDiagnosticBaselineEntry[] =
+  [
+    ...DECLARATION_SERIALIZATION_LENGTH_BASELINE.map(
+      ({
+        owner,
+        count,
+      }): PublicDeclarationSerializationDiagnosticBaselineEntry => ({
+        owner,
+        code: "TS7056",
+        message: DECLARATION_SERIALIZATION_LENGTH_MESSAGE,
+        count,
+      }),
     ),
-  ),
-  `packages/battle-runtime/src/battle-reducer/ongoing-concentration-area-spell.ts(4,17): error TS4058: Return type of exported function ${DECLARATION_SERIALIZATION_EXTERNAL_NAME_SUFFIX}`,
-]);
+    ...DECLARATION_SERIALIZATION_EXTERNAL_NAME_BASELINE.flatMap(
+      ({ owner, exportedVariables }) =>
+        exportedVariables.map(
+          (
+            exportedVariable,
+          ): PublicDeclarationSerializationDiagnosticBaselineEntry => ({
+            owner,
+            code: "TS4023",
+            message: `Exported variable '${exportedVariable}' ${DECLARATION_SERIALIZATION_EXTERNAL_NAME_SUFFIX}`,
+            count: 1,
+          }),
+        ),
+    ),
+    {
+      owner:
+        "packages/battle-runtime/src/battle-reducer/ongoing-concentration-area-spell.ts",
+      code: "TS4058",
+      message: `Return type of exported function ${DECLARATION_SERIALIZATION_EXTERNAL_NAME_SUFFIX}`,
+      count: 1,
+    },
+  ];
 
-function declarationDiagnosticFingerprint(diagnostic: string): string {
-  return diagnostic.replaceAll(repoRoot, "<repo>").replaceAll("\\", "/");
+function diagnosticCountMap(
+  baseline: readonly PublicDeclarationSerializationDiagnosticBaselineEntry[],
+): ReadonlyMap<string, number> {
+  const counts = new Map<string, number>();
+  for (const { owner, code, message, count } of baseline) {
+    const fingerprint = declarationDiagnosticFingerprintFromParts(
+      owner,
+      code,
+      message,
+    );
+    counts.set(fingerprint, (counts.get(fingerprint) ?? 0) + count);
+  }
+  return counts;
+}
+
+const PINNED_DECLARATION_SERIALIZATION_DIAGNOSTIC_COUNTS = diagnosticCountMap(
+  PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_BASELINE,
+);
+
+function publicDeclarationSerializationDiagnosticCode(
+  value: string,
+): PublicDeclarationSerializationDiagnosticCode | null {
+  return (
+    PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_CODES.find(
+      (code) => code === value,
+    ) ?? null
+  );
+}
+
+function declarationDiagnosticFingerprint(diagnostic: string): string | null {
+  const normalizedRepoRoot = repoRoot.replaceAll("\\", "/");
+  const normalizedDiagnostic = diagnostic
+    .replaceAll("\\", "/")
+    .replaceAll(normalizedRepoRoot, "<repo>");
+  const parsed = /^(.*)\(\d+,\d+\): error (TS\d+): (.*)$/.exec(
+    normalizedDiagnostic,
+  );
+  if (parsed === null) return null;
+  const [, ownerWithOptionalRoot, code, message] = parsed;
+  if (
+    ownerWithOptionalRoot === undefined ||
+    code === undefined ||
+    message === undefined
+  ) {
+    return null;
+  }
+  const diagnosticCode = publicDeclarationSerializationDiagnosticCode(code);
+  if (diagnosticCode === null) return null;
+  const owner = ownerWithOptionalRoot.startsWith("<repo>/")
+    ? ownerWithOptionalRoot.slice("<repo>/".length)
+    : ownerWithOptionalRoot;
+  return declarationDiagnosticFingerprintFromParts(
+    owner,
+    diagnosticCode,
+    message,
+  );
 }
 
 /**
@@ -287,15 +311,31 @@ export type PublicDeclarationBundleMeasure = {
   readonly bytes: number;
 };
 
-export function unexpectedPublicDeclarationDiagnostics(
+export function publicDeclarationDiagnosticBaselineMismatches(
   diagnostics: readonly string[],
 ): readonly string[] {
-  return diagnostics.filter(
-    (line) =>
-      !PRE_EXISTING_DECLARATION_SERIALIZATION_DIAGNOSTICS.has(
-        declarationDiagnosticFingerprint(line),
-      ),
+  const remainingExpected = new Map(
+    PINNED_DECLARATION_SERIALIZATION_DIAGNOSTIC_COUNTS,
   );
+  const unexpected = diagnostics.flatMap((diagnostic) => {
+    const fingerprint = declarationDiagnosticFingerprint(diagnostic);
+    if (fingerprint === null) return [diagnostic];
+    const remainingCount = remainingExpected.get(fingerprint);
+    if (remainingCount === undefined || remainingCount === 0) {
+      return [diagnostic];
+    }
+    remainingExpected.set(fingerprint, remainingCount - 1);
+    return [];
+  });
+  const missing = [...remainingExpected.entries()].flatMap(
+    ([fingerprint, remainingCount]) =>
+      remainingCount === 0
+        ? []
+        : [
+            `Missing pinned public declaration diagnostic (${String(remainingCount)} occurrence${remainingCount === 1 ? "" : "s"}): ${fingerprint}`,
+          ],
+  );
+  return [...unexpected, ...missing];
 }
 const PLAYER_RUN_START_OBSERVATION = {
   kind: "awaitingFirstContinuation",
@@ -384,16 +424,20 @@ export function emitPublicDeclarations(
   if (result.signal !== null) {
     throw new Error(`Public declaration emission stopped by ${result.signal}.`);
   }
+  const diagnostics = `${result.stdout}${result.stderr}`
+    .split("\n")
+    .filter((line) => line.includes("error TS"));
+  const diagnosticBaselineMismatches =
+    publicDeclarationDiagnosticBaselineMismatches(diagnostics);
+  if (
+    diagnosticBaselineMismatches.length > 0 ||
+    (result.status !== 0 && diagnostics.length === 0)
+  ) {
+    throw new Error(
+      `Public declaration emission failed:\n${diagnosticBaselineMismatches.join("\n") || result.stderr}`,
+    );
+  }
   if (result.status !== 0) {
-    const diagnostics = `${result.stdout}${result.stderr}`
-      .split("\n")
-      .filter((line) => line.includes("error TS"));
-    const unexpected = unexpectedPublicDeclarationDiagnostics(diagnostics);
-    if (diagnostics.length === 0 || unexpected.length > 0) {
-      throw new Error(
-        `Public declaration emission failed:\n${unexpected.join("\n") || result.stderr}`,
-      );
-    }
     // TypeScript 5.9 reports the explicitly partitioned pre-existing
     // diagnostics only while serializing the listed giant inferred schemas.
     // Required-file checks below and the isolated consumer typecheck are the
