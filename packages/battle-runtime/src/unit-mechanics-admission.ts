@@ -14,10 +14,18 @@ import {
   type MechanicsGraphPathNode,
   type UnitMechanicsPath,
 } from "@dnd/surface/surface/mechanics-graph-path";
-import { srdUnitAuthoredDependencies } from "@dnd/surface/surface/portable-surface";
-import type { SrdSurface, SrdUnitRecord } from "@dnd/surface/surface/types";
+import { srdUnitAuthoredLinks } from "@dnd/surface/surface/portable-surface";
+import { decodeUnitRecordEither } from "@dnd/surface/surface/schema";
+import type {
+  PassiveMechanics,
+  SrdSurface,
+  SrdUnitRecord,
+} from "@dnd/surface/surface/types";
 
-import { battleUnitSupportProfilesForUnit } from "./unit-feature-support.ts";
+import {
+  battleUnitSupportProfilesForUnit,
+  type BattleUnitSupportProfile,
+} from "./unit-feature-support.ts";
 
 type AdmissionIssue = UnitMechanicsAdmissionIssueDraft<UnitMechanicsPath>;
 
@@ -36,7 +44,7 @@ export function admitCompleteUnitMechanicsGraph(
 ): UnitMechanicsAdmissionResult {
   const issues: AdmissionIssue[] = [];
   inspectRootMembership(input, issues);
-  inspectDependencies(input, issues);
+  inspectAuthoredLinks(input, issues);
   inspectExecutionSupport(input.unit, issues);
 
   const [firstIssue, ...remainingIssues] = issues;
@@ -67,7 +75,7 @@ function inspectRootMembership(
   );
 }
 
-function inspectDependencies(
+function inspectAuthoredLinks(
   input: UnitMechanicsAdmissionInput,
   issues: AdmissionIssue[],
 ): void {
@@ -75,22 +83,27 @@ function inspectDependencies(
   const statBlockIds = new Set(
     input.surface.statBlocks.map((statBlock) => String(statBlock.id)),
   );
-  const projection = srdUnitAuthoredDependencies(input.unit);
+  const projection = srdUnitAuthoredLinks(input.unit);
   for (const issue of projection.issues) {
     addIssue(
       issues,
       "unsupported_mechanics",
       path({ kind: "singleton", role: "recordMechanics" }),
-      `The Unit dependency graph cannot be interpreted: ${issue.message}`,
+      `The Unit authored-link graph cannot be interpreted: ${issue.message}`,
     );
   }
-  for (const [index, dependency] of projection.dependencies.entries()) {
-    const installedIds = Match.value(dependency.targetKind).pipe(
+  for (const [index, link] of projection.links.entries()) {
+    const installedIds = Match.value(link.targetKind).pipe(
       Match.when("unit", () => unitIds),
       Match.when("statBlock", () => statBlockIds),
       Match.exhaustive,
     );
-    if (installedIds.has(dependency.targetId)) continue;
+    if (installedIds.has(link.targetId)) continue;
+    const linkRole = Match.value(link.category).pipe(
+      Match.when("dependency", () => "dependency" as const),
+      Match.when("reference", () => "reference" as const),
+      Match.exhaustive,
+    );
     addIssue(
       issues,
       "incomplete_graph",
@@ -98,11 +111,11 @@ function inspectDependencies(
         { kind: "singleton", role: "recordMechanics" },
         {
           kind: "occurrence",
-          role: "dependency",
+          role: linkRole,
           ordinal: PositiveInteger(index + 1),
         },
       ),
-      `The Unit ${dependency.relation} dependency does not resolve to an installed ${dependency.targetKind}.`,
+      `The Unit ${link.relation} authored ${link.category} does not resolve to an installed ${link.targetKind}.`,
     );
   }
 }
@@ -114,8 +127,8 @@ function inspectExecutionSupport(
   if (unit.kind === "class_feature" && unit.mechanics.family === "composite") {
     const before = issues.length;
     for (const [index, mechanics] of unit.mechanics.parts.entries()) {
-      inspectProfileResult(
-        battleUnitSupportProfilesForUnit({ unit: { ...unit, mechanics } }),
+      inspectUnitProfileCoverage(
+        { ...unit, mechanics },
         path(
           { kind: "singleton", role: "recordMechanics" },
           {
@@ -130,11 +143,180 @@ function inspectExecutionSupport(
     if (issues.length > before) return;
   }
 
-  inspectProfileResult(
-    battleUnitSupportProfilesForUnit({ unit }),
-    mechanicsRootPath(unit),
+  inspectUnitProfileCoverage(unit, mechanicsRootPath(unit), issues);
+}
+
+function inspectUnitProfileCoverage(
+  unit: SrdUnitRecord,
+  mechanicsPath: UnitMechanicsPath,
+  issues: AdmissionIssue[],
+): void {
+  const support = battleUnitSupportProfilesForUnit({ unit });
+  const before = issues.length;
+  inspectProfileResult(support, mechanicsPath, issues);
+  if (
+    issues.length !== before ||
+    Either.isLeft(support) ||
+    !("mechanics" in unit) ||
+    unit.mechanics.family !== "passive"
+  ) {
+    return;
+  }
+  inspectPassiveMechanicsCoverage(
+    unit,
+    unit.mechanics,
+    support.right,
+    mechanicsPath,
     issues,
   );
+}
+
+function inspectPassiveMechanicsCoverage(
+  unit: SrdUnitRecord,
+  mechanics: PassiveMechanics,
+  admittedProfiles: readonly BattleUnitSupportProfile[],
+  mechanicsPath: UnitMechanicsPath,
+  issues: AdmissionIssue[],
+): void {
+  for (const [index] of mechanics.grants.entries()) {
+    inspectRepresentedPassiveBranch({
+      unit,
+      admittedProfiles,
+      mechanics: {
+        ...mechanics,
+        grants: mechanics.grants.filter(
+          (_, grantIndex) => grantIndex !== index,
+        ),
+      },
+      mechanicsPath: appendOccurrence(mechanicsPath, "effect", index + 1),
+      label: "effect",
+      issues,
+    });
+  }
+
+  if (mechanics.condition !== undefined) {
+    const { condition: _condition, ...withoutCondition } = mechanics;
+    inspectRepresentedPassiveBranch({
+      unit,
+      admittedProfiles,
+      mechanics: withoutCondition,
+      mechanicsPath: appendOccurrence(mechanicsPath, "generalFact", 1),
+      label: "condition",
+      issues,
+    });
+  }
+
+  for (const [index] of (mechanics.suppressedBy ?? []).entries()) {
+    const remaining = mechanics.suppressedBy?.filter(
+      (_, suppressorIndex) => suppressorIndex !== index,
+    );
+    const { suppressedBy: _suppressedBy, ...withoutSuppressors } = mechanics;
+    inspectRepresentedPassiveBranch({
+      unit,
+      admittedProfiles,
+      mechanics:
+        remaining === undefined || remaining.length === 0
+          ? withoutSuppressors
+          : { ...mechanics, suppressedBy: remaining },
+      mechanicsPath: appendOccurrence(mechanicsPath, "generalFact", index + 2),
+      label: "suppressor",
+      issues,
+    });
+  }
+
+  for (const [index] of (mechanics.operations ?? []).entries()) {
+    const remaining = mechanics.operations?.filter(
+      (_, operationIndex) => operationIndex !== index,
+    );
+    const { operations: _operations, ...withoutOperations } = mechanics;
+    inspectRepresentedPassiveBranch({
+      unit,
+      admittedProfiles,
+      mechanics:
+        remaining === undefined || remaining.length === 0
+          ? withoutOperations
+          : { ...mechanics, operations: remaining },
+      mechanicsPath: appendOccurrence(
+        mechanicsPath,
+        "generalFact",
+        (mechanics.suppressedBy?.length ?? 0) + index + 2,
+      ),
+      label: "operation",
+      issues,
+    });
+  }
+}
+
+function inspectRepresentedPassiveBranch(input: {
+  readonly unit: SrdUnitRecord;
+  readonly admittedProfiles: readonly BattleUnitSupportProfile[];
+  readonly mechanics: unknown;
+  readonly mechanicsPath: UnitMechanicsPath;
+  readonly label: "condition" | "effect" | "operation" | "suppressor";
+  readonly issues: AdmissionIssue[];
+}): void {
+  const variant = decodeUnitRecordEither({
+    ...input.unit,
+    mechanics: input.mechanics,
+  });
+  if (Either.isLeft(variant)) return;
+  const supportWithoutBranch = battleUnitSupportProfilesForUnit({
+    unit: variant.right,
+  });
+  if (
+    Either.isLeft(supportWithoutBranch) ||
+    !sameSupportProfiles(input.admittedProfiles, supportWithoutBranch.right)
+  ) {
+    return;
+  }
+  addIssue(
+    input.issues,
+    "unsupported_mechanics",
+    input.mechanicsPath,
+    `The passive ${input.label} is represented in the authored graph but is not consumed by an admitted execution profile.`,
+  );
+}
+
+function sameSupportProfiles(
+  left: readonly BattleUnitSupportProfile[],
+  right: readonly BattleUnitSupportProfile[],
+): boolean {
+  return sameStructuralValue(left, right);
+}
+
+function sameStructuralValue(left: unknown, right: unknown): boolean {
+  if (Object.is(left, right)) return true;
+  if (Array.isArray(left) && Array.isArray(right)) {
+    return (
+      left.length === right.length &&
+      left.every((value, index) => sameStructuralValue(value, right[index]))
+    );
+  }
+  if (!isRecord(left) || !isRecord(right)) return false;
+  const leftKeys = Object.keys(left).sort();
+  const rightKeys = Object.keys(right).sort();
+  return (
+    leftKeys.length === rightKeys.length &&
+    leftKeys.every(
+      (key, index) =>
+        key === rightKeys[index] && sameStructuralValue(left[key], right[key]),
+    )
+  );
+}
+
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function appendOccurrence(
+  mechanicsPath: UnitMechanicsPath,
+  role: MechanicsGraphPathNode["role"],
+  ordinal: number,
+): UnitMechanicsPath {
+  return unitMechanicsPath([
+    ...mechanicsPath.nodes,
+    { kind: "occurrence", role, ordinal: PositiveInteger(ordinal) },
+  ]);
 }
 
 function inspectProfileResult(

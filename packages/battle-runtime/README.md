@@ -134,10 +134,12 @@ by:
 
 `admitCompleteUnitMechanicsGraph` is the context-independent catalog-install
 view of that same parser. It checks every composite branch separately, checks
-schema-declared authored dependencies through Surface's canonical dependency
-walker, requires the root to be the exact member of that decoded Surface, and
-returns only typed non-empty rejection issues or `admitted`. It does not create
-a support registry, admission receipt, executable projection, or Runtime Hole.
+every represented passive branch against the admitted profile projection,
+checks schema-declared authored dependencies and references through Surface's
+canonical authored-link walker, requires the root to be the exact member of
+that decoded Surface, and returns only typed non-empty rejection issues or
+`admitted`. It does not create a support registry, admission receipt,
+executable projection, or Runtime Hole.
 This boundary changes no rule or reducer semantics, so it has no RAW, QNT, or
 battle-MBT owner of its own.
 
