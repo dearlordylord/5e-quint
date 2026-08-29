@@ -802,7 +802,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       "savingThrowOutcome",
     );
     expect(repeatSave).toMatchObject({
-      saveGatedConditionWithRepeatRepeatSave: {
+      saveGatedConditionRepeatSave: {
         targetId: spellTargetId,
         trigger: "damage",
       },
@@ -1106,10 +1106,9 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
         hole,
       ): hole is Extract<BattleHole, { readonly kind: "savingThrowOutcome" }> =>
         hole.kind === "savingThrowOutcome" &&
-        "saveGatedConditionWithRepeatRepeatSave" in hole &&
-        hole.saveGatedConditionWithRepeatRepeatSave.targetId ===
-          spellCasterId &&
-        hole.saveGatedConditionWithRepeatRepeatSave.trigger === "endTurn",
+        "saveGatedConditionRepeatSave" in hole &&
+        hole.saveGatedConditionRepeatSave.targetId === spellCasterId &&
+        hole.saveGatedConditionRepeatSave.trigger === "endTurn",
     );
     if (endTurnRepeatSave === undefined) {
       throw new Error("Expected Hideous Laughter end-turn save.");
@@ -1157,14 +1156,14 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
         hole,
       ): hole is Extract<BattleHole, { readonly kind: "savingThrowOutcome" }> =>
         hole.kind === "savingThrowOutcome" &&
-        "saveGatedConditionWithRepeatRepeatSave" in hole &&
-        hole.saveGatedConditionWithRepeatRepeatSave.targetId === spellCasterId,
+        "saveGatedConditionRepeatSave" in hole &&
+        hole.saveGatedConditionRepeatSave.targetId === spellCasterId,
     );
     if (repeatSave === undefined) {
       throw new Error("Expected caster Hideous Laughter damage repeat save.");
     }
     expect(repeatSave).toMatchObject({
-      saveGatedConditionWithRepeatRepeatSave: {
+      saveGatedConditionRepeatSave: {
         targetId: spellCasterId,
         sourceProcedureRef: expect.any(String),
         trigger: "damage",

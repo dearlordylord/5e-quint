@@ -5600,6 +5600,7 @@ export type BattleStationaryPersistentAreaSaveDamageSavingThrowOutcomeHole = {
   readonly kind: "savingThrowOutcome";
   readonly label: string;
   readonly persistentAreaSaveDamage: {
+    readonly topology: "stationary";
     readonly targetId: CombatantId;
     readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
@@ -5623,6 +5624,7 @@ export type BattleTranslatingPersistentAreaSaveDamageSavingThrowOutcomeHole = {
   readonly kind: "savingThrowOutcome";
   readonly label: string;
   readonly persistentAreaSaveDamage: {
+    readonly topology: "translating";
     readonly targetId: CombatantId;
     readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
@@ -5645,6 +5647,7 @@ export type BattleStationaryPersistentAreaSaveDamageRollHole = Extract<
   { readonly kind: "rolledDice" }
 > & {
   readonly persistentAreaSaveDamage: {
+    readonly topology: "stationary";
     readonly targetId: CombatantId;
     readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
@@ -5663,6 +5666,7 @@ export type BattleTranslatingPersistentAreaSaveDamageRollHole = Extract<
   { readonly kind: "rolledDice" }
 > & {
   readonly persistentAreaSaveDamage: {
+    readonly topology: "translating";
     readonly targetId: CombatantId;
     readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;

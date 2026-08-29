@@ -696,7 +696,11 @@ export function characterSpellInvocationRefForProcedureRefForTest(
     ?.spellPresentationSources.find(
       (candidate) => candidate.procedureRef === procedureRef,
     );
-  if (source === undefined) {
+  if (
+    source === undefined ||
+    !("access" in source.invocation) ||
+    !("spell" in source.invocation)
+  ) {
     throw new Error(
       `Expected spell presentation source ${procedureRef} for ${actorId}.`,
     );
@@ -805,6 +809,9 @@ function supportedSpellInvocationMatchesRef(
   invocation: AuthoredSelectedSpellInvocation,
   ref: SpellInvocationRef,
 ): boolean {
+  if (!("access" in invocation) || !("spell" in invocation)) {
+    return false;
+  }
   return spellInvocationRefsEqualForTest(
     supportedSpellInvocationRef(invocation),
     ref,

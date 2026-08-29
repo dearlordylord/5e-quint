@@ -956,7 +956,7 @@ function cloudkillSaveHole(
     { readonly kind: "savingThrowOutcome" }
   >,
 ): BattleTranslatingPersistentAreaSaveDamageSavingThrowOutcomeHole {
-  if (!("persistentAreaSaveDamage" in hole)) {
+  if (!isTranslatingPersistentAreaSaveDamageHole(hole)) {
     throw new Error("Expected Cloudkill saving throw hole.");
   }
   return hole;
@@ -968,10 +968,29 @@ function cloudkillDamageHole(
     { readonly kind: "rolledDice" }
   >,
 ): BattleTranslatingPersistentAreaSaveDamageRollHole {
-  if (!("persistentAreaSaveDamage" in hole)) {
+  if (!isTranslatingPersistentAreaSaveDamageHole(hole)) {
     throw new Error("Expected Cloudkill damage roll hole.");
   }
   return hole;
+}
+
+function isTranslatingPersistentAreaSaveDamageHole<
+  Hole extends Extract<
+    import("./index.ts").BattleHole,
+    { readonly kind: "savingThrowOutcome" | "rolledDice" }
+  >,
+>(
+  hole: Hole,
+): hole is Extract<
+  Hole,
+  {
+    readonly persistentAreaSaveDamage: { readonly topology: "translating" };
+  }
+> {
+  return (
+    "persistentAreaSaveDamage" in hole &&
+    hole.persistentAreaSaveDamage.topology === "translating"
+  );
 }
 
 function submitPendingProcedure(
