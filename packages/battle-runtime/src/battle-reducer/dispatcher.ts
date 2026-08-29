@@ -102,13 +102,13 @@ import {
 } from "./interrupt-lifecycle.ts";
 import { resolveCastTriggeredReactionSpellCommand } from "./triggered-reaction-spell-procedures.ts";
 import {
-  resolveLevitateAltitudeControlCommand,
+  resolveControlledVerticalSuspensionAltitudeControlCommand,
   resolveReplaceSelfTransformationModeCommand,
 } from "./active-spell-control-procedures.ts";
 import {
-  resolveDisperseCloudkillCommand,
-  resolveDisperseFogCloudCommand,
-  resolveWardingBondSeparationCommand,
+  resolveDisperseTranslatingPersistentAreaCommand,
+  resolveDispersePersistentAreaTraitCommand,
+  resolveLinkedDefenseResistanceDamageShareSeparationCommand,
 } from "./spell-effect-cleanup-procedures.ts";
 import {
   resolveCreatureTypeProtectionConditionAttemptCommand,
@@ -121,7 +121,7 @@ import { invalidResult } from "./result-helpers.ts";
 import { battleReducerRouteForInterrupt } from "./interrupt-route-projection.ts";
 import { battleReducerRouteForResolution } from "./reducer-route.ts";
 import {
-  antimagicFieldInterdictionMessage,
+  magicSuppressionInterdictionMessage,
   battleSubjectInterdictedByAntimagicField,
 } from "./antimagic-field-action-interdiction.ts";
 import type { SpellProcedureExecutionRegistry } from "./spell-procedure-profiles/execution-registry.ts";
@@ -136,7 +136,7 @@ import {
   resolveSpellAct,
 } from "./spells-resolve.ts";
 import { resolveReleaseSpellCreatedHeldObjectCommand } from "./spells-resolve-release.ts";
-import { resolveDragonsBreathExhaleCommand } from "./dragons-breath.ts";
+import { resolveGrantedAreaSaveDamageActionCommand } from "./dragons-breath.ts";
 import type { BattleAttackRouteResolvers } from "./attack-resolvers.ts";
 import {
   resolveBonusActionDash,
@@ -153,7 +153,7 @@ import {
   resolveReady,
   resolveReleaseGrappleCommand,
   resolveSearch,
-  resolveShakeAwakeFromHypnoticPattern,
+  resolveShakeAwakeFromSaveGatedAreaControl,
   resolveShakeAwakeFromSleep,
   resolveShove,
   resolveStatBlockBonusActionOption,
@@ -173,12 +173,12 @@ import {
   resolveReleaseReadiedSpellCommand,
 } from "./readied-release.ts";
 import {
-  isCommandFollowUpSubject,
-  pendingCommandObligationIssue,
-  resolveCommandHaltEndTurn,
-  resolveCommandFollowUp,
+  isCompelledBehaviorFollowUpSubject,
+  pendingCompelledBehaviorObligationIssue,
+  resolveCompelledHaltEndTurn,
+  resolveCompelledBehaviorFollowUp,
 } from "./command-procedures.ts";
-import { commandHaltSuppressionIssue } from "./command-halt.ts";
+import { compelledHaltSuppressionIssue } from "./command-halt.ts";
 import {
   isMovementProcedureSubject,
   resolveMovementProcedure,
@@ -568,21 +568,23 @@ function battleSubjectObligationAdmissionResult(
   input: AdmittedBattleResolutionInput,
   options: ResolveBattleSubjectInternalOptions,
 ): BattleResolutionResult | null {
-  const commandObligationIssue = pendingCommandObligationIssue(
-    input.state,
-    input.subject,
-  );
+  const compelledBehaviorObligationIssue =
+    pendingCompelledBehaviorObligationIssue(input.state, input.subject);
   /* v8 ignore start -- @preserve -- Defensive stale-subject rejection: rediscovery exposes the pending Command obligation instead of unrelated subjects. */
-  if (commandObligationIssue !== null) {
-    return invalidResult(input.state, "staleSubject", commandObligationIssue);
+  if (compelledBehaviorObligationIssue !== null) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      compelledBehaviorObligationIssue,
+    );
   }
   /* v8 ignore stop -- @preserve */
-  const commandHaltIssue = commandHaltSuppressionIssue(
+  const compelledHaltIssue = compelledHaltSuppressionIssue(
     input.state,
     input.subject,
   );
-  if (commandHaltIssue !== null) {
-    return invalidResult(input.state, "staleSubject", commandHaltIssue);
+  if (compelledHaltIssue !== null) {
+    return invalidResult(input.state, "staleSubject", compelledHaltIssue);
   }
   if (
     options.readiedActionActorId === undefined &&
@@ -602,7 +604,7 @@ function battleSubjectObligationAdmissionResult(
     return invalidResult(
       input.state,
       "staleSubject",
-      antimagicFieldInterdictionMessage(input.state, input.subject),
+      magicSuppressionInterdictionMessage(input.state, input.subject),
     );
   }
   const actionEligibilityIssue = battleSubjectActionEligibilityIssue(
@@ -699,14 +701,14 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       if (subject.action === "escapeSpellRestraint") {
         return resolveEscapeSpellRestraint({ ...input, subject });
       }
-      if (subject.action === "shakeAwakeFromSleep") {
+      if (subject.action === "shakeAwakeFromStagedCondition") {
         return resolveShakeAwakeFromSleep({ ...input, subject });
       }
-      if (subject.action === "shakeAwakeFromHypnoticPattern") {
-        return resolveShakeAwakeFromHypnoticPattern({ ...input, subject });
+      if (subject.action === "shakeAwakeFromAreaControl") {
+        return resolveShakeAwakeFromSaveGatedAreaControl({ ...input, subject });
       }
     }
-    if (subject.tag === "pactOfTheChainFamiliarAttack") {
+    if (subject.tag === "companionAttack") {
       return options.attackResolvers.resolvePactOfTheChainFamiliarReactionAttack(
         {
           ...input,
@@ -751,10 +753,10 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     if (subject.tag === "companionLifecycle") {
       return resolveCompanionLifecycleSubject({ ...input, subject });
     }
-    if (subject.tag === "findFamiliarSharedSenses") {
+    if (subject.tag === "spawnedCompanionSharedSenses") {
       return resolveFindFamiliarSharedSensesSubject({ ...input, subject });
     }
-    if (subject.tag === "findFamiliarTouchSpell") {
+    if (subject.tag === "spawnedCompanionTouchSpellProxy") {
       return resolveFindFamiliarTouchSpellSubject(
         { ...input, subject },
         FindFamiliarProcedureExecution.fromResolver((admitted) =>
@@ -807,21 +809,21 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       return resolveUnitFeatureHeldWeaponActivation({ ...input, subject });
     }
     if (subject.tag === "runtimeCommand" && subject.command === "endTurn") {
-      return input.state.currentTurnResources.commandHalt === null
+      return input.state.currentTurnResources.compelledHalt === null
         ? resolveEndTurnCommand({
             ...input,
             ...handledInterruptRouteOption,
             ...replayParentRouteOption,
           })
-        : resolveCommandHaltEndTurn({
+        : resolveCompelledHaltEndTurn({
             ...input,
             subject,
             ...handledInterruptRouteOption,
             ...replayParentRouteOption,
           });
     }
-    if (isCommandFollowUpSubject(subject)) {
-      return resolveCommandFollowUp({
+    if (isCompelledBehaviorFollowUpSubject(subject)) {
+      return resolveCompelledBehaviorFollowUp({
         ...input,
         subject,
         ...handledInterruptRouteOption,
@@ -847,9 +849,12 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     }
     if (
       subject.tag === "runtimeCommand" &&
-      subject.command === "levitateAltitudeControl"
+      subject.command === "controlledVerticalSuspensionAltitudeControl"
     ) {
-      return resolveLevitateAltitudeControlCommand({ ...input, subject });
+      return resolveControlledVerticalSuspensionAltitudeControlCommand({
+        ...input,
+        subject,
+      });
     }
     if (isPersistentSpatialSpellProcedureSubject(subject)) {
       return resolvePersistentSpatialSpellProcedureCommand({
@@ -877,14 +882,20 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
           subject,
         });
       }
-      if (subject.command === "disperseFogCloud") {
-        return resolveDisperseFogCloudCommand({ ...input, subject });
+      if (subject.command === "endPersistentAreaTraitForEnvironment") {
+        return resolveDispersePersistentAreaTraitCommand({ ...input, subject });
       }
-      if (subject.command === "disperseCloudkill") {
-        return resolveDisperseCloudkillCommand({ ...input, subject });
+      if (subject.command === "endPersistentAreaSaveDamageForEnvironment") {
+        return resolveDisperseTranslatingPersistentAreaCommand({
+          ...input,
+          subject,
+        });
       }
-      if (subject.command === "wardingBondSeparation") {
-        return resolveWardingBondSeparationCommand({ ...input, subject });
+      if (subject.command === "linkedDefenseResistanceDamageShareSeparation") {
+        return resolveLinkedDefenseResistanceDamageShareSeparationCommand({
+          ...input,
+          subject,
+        });
       }
       if (subject.command === "releaseReadiedSpell") {
         return resolveReleaseReadiedSpellCommand(
@@ -974,8 +985,8 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         };
       }
       /* v8 ignore stop -- @preserve */
-      if (subject.command === "dragonsBreathExhale") {
-        return resolveDragonsBreathExhaleCommand({
+      if (subject.command === "grantedAreaSaveDamageAction") {
+        return resolveGrantedAreaSaveDamageActionCommand({
           ...input,
           subject,
         });
@@ -1025,7 +1036,7 @@ function resolveBonusActionStandardActionSubject(
     Match.when(
       {
         bonusActionStandardActionAdmission: {
-          procedure: { kind: "expeditiousRetreatDash" },
+          procedure: { kind: "grantedAlternateActionCost" },
         },
       },
       (dashInput) =>

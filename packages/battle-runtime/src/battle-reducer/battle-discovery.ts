@@ -44,7 +44,7 @@ import {
   companionHeldObjectFactsHole,
   companionReappearanceInitiativeHole,
   companionReappearancePlacementHole,
-  findFamiliarConnectionHole,
+  spawnedCompanionConnectionHole,
   findFamiliarTouchDeliveryTargetHoles,
 } from "../find-familiar-companion-subjects.ts";
 import {
@@ -61,7 +61,7 @@ import {
   activeControlledVerticalSuspensionTargetsControlledBy,
   controlledVerticalSuspensionAltitudeChangeHole,
 } from "./levitate-creature.ts";
-import { dragonsBreathExhaleActs } from "./dragons-breath-discovery.ts";
+import { grantedAreaSaveDamageActionActs } from "./dragons-breath-discovery.ts";
 import {
   combatantCanTakeActions,
   combatantCanTakeReactions,
@@ -79,7 +79,7 @@ import {
   grappleTargetHole,
   hiddenSearchTargetChoices,
   hideAbilityCheckHole,
-  hypnoticPatternShakeAwakeTargetHole,
+  saveGatedAreaControlShakeAwakeTargetHole,
   searchTargetHole,
   shoveTargetChoices,
   shoveTargetHole,
@@ -91,7 +91,7 @@ import {
   representedMovementSpeedKinds,
 } from "./movement-speed.ts";
 import {
-  hypnoticPatternShakeAwakeTargetChoices,
+  saveGatedAreaControlShakeAwakeTargetChoices,
   protectionRelevantEffectSavingThrowOutcomeHole,
   protectionRelevantEffectsForTarget,
   sleepShakeAwakeTargetChoices,
@@ -126,9 +126,9 @@ import {
 } from "./persistent-spatial-spell-discovery.ts";
 import {
   canonicalHeldObjectIdsForActor,
-  commandDropHeldObjectFactsHole,
-  commandPendingEffectsForActor,
-  type CommandPendingEffect,
+  executeCompelledDropHeldObjectFactsHole,
+  compelledNextTurnBehaviorEffectsForActor,
+  type CompelledNextTurnBehaviorEffect,
 } from "./command-procedure-discovery.ts";
 import { standFromProneCostFeet } from "./stand-from-prone-policy.ts";
 import { movementHole } from "./movement-holes.ts";
@@ -142,8 +142,8 @@ import {
 import { supportedUnitFeatureActs } from "./unit-feature-discovery.ts";
 import { monkFocusActs } from "./monk-focus-discovery.ts";
 import {
-  isWardingBondEffect,
-  wardingBondSeparationFactsHole,
+  isLinkedDefenseResistanceDamageShareEffect,
+  linkedDefenseResistanceDamageShareSeparationFactsHole,
 } from "./warding-bond.ts";
 import { SELF_TRANSFORMATION_MODE_KINDS } from "./domain-constants.ts";
 import { areaWindStrengthHole } from "./area-wind-strength.ts";
@@ -212,48 +212,48 @@ function discoverBattleActCandidatesInternal(
   );
 }
 
-function commandPendingActs(input: {
+function compelledBehaviorPendingActs(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly tableEventActs: readonly BattleActDiscoveryCandidate[];
   readonly startTurnAreaControlActs: readonly BattleActDiscoveryCandidate[];
 }): readonly BattleActDiscoveryCandidate[] | null {
-  const pendingEffects = commandPendingEffectsForActor(
+  const pendingEffects = compelledNextTurnBehaviorEffectsForActor(
     input.state,
     input.actorId,
   );
-  const commandActs = (
+  const compelledBehaviorEffects = (
     option: Extract<
       (typeof pendingEffects)[number]["option"],
       "grovel" | "drop" | "approach" | "flee"
     >,
   ) => pendingEffects.filter((effect) => effect.option === option);
-  const commandGrovelEffects = commandActs("grovel");
-  if (commandGrovelEffects.length > 0) {
+  const grovelEffects = compelledBehaviorEffects("grovel");
+  if (grovelEffects.length > 0) {
     return [
       ...input.tableEventActs,
       ...input.startTurnAreaControlActs,
-      ...commandGrovelEffects.map((effect) => ({
+      ...grovelEffects.map((effect) => ({
         subject: {
           tag: "runtimeCommand" as const,
           actorId: input.actorId,
-          command: "commandGrovel" as const,
+          command: "executeCompelledGrovel" as const,
           effectRef: spellActiveEffectExecutionRef(effect),
         },
         initialHoles: [],
       })),
     ];
   }
-  const commandDropEffects = commandActs("drop");
-  if (commandDropEffects.length > 0) {
+  const dropEffects = compelledBehaviorEffects("drop");
+  if (dropEffects.length > 0) {
     return [
       ...input.tableEventActs,
       ...input.startTurnAreaControlActs,
-      ...commandDropEffects.map((effect) => {
+      ...dropEffects.map((effect) => {
         const subject = {
           tag: "runtimeCommand" as const,
           actorId: input.actorId,
-          command: "commandDrop" as const,
+          command: "executeCompelledDrop" as const,
           effectRef: spellActiveEffectExecutionRef(effect),
         };
         const canonicalObjectIds = canonicalHeldObjectIdsForActor(
@@ -264,31 +264,31 @@ function commandPendingActs(input: {
           subject,
           initialHoles:
             canonicalObjectIds === null
-              ? [commandDropHeldObjectFactsHole(subject)]
+              ? [executeCompelledDropHeldObjectFactsHole(subject)]
               : [],
         };
       }),
     ];
   }
-  const commandApproachEffects = commandActs("approach");
-  if (commandApproachEffects.length > 0) {
-    return commandMovementActs(input, commandApproachEffects, "approach");
+  const approachEffects = compelledBehaviorEffects("approach");
+  if (approachEffects.length > 0) {
+    return compelledMovementActs(input, approachEffects, "approach");
   }
-  const commandFleeEffects = commandActs("flee");
-  return commandFleeEffects.length > 0
-    ? commandMovementActs(input, commandFleeEffects, "flee")
+  const fleeEffects = compelledBehaviorEffects("flee");
+  return fleeEffects.length > 0
+    ? compelledMovementActs(input, fleeEffects, "flee")
     : null;
 }
 
-function commandMovementActs(
+function compelledMovementActs(
   input: {
     readonly state: BattleState;
     readonly actorId: CombatantId;
     readonly tableEventActs: readonly BattleActDiscoveryCandidate[];
     readonly startTurnAreaControlActs: readonly BattleActDiscoveryCandidate[];
   },
-  effects: readonly CommandPendingEffect[],
-  command: "approach" | "flee",
+  effects: readonly CompelledNextTurnBehaviorEffect[],
+  option: "approach" | "flee",
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     ...input.tableEventActs,
@@ -298,9 +298,9 @@ function commandMovementActs(
         tag: "runtimeCommand" as const,
         actorId: input.actorId,
         command:
-          command === "approach"
-            ? ("commandApproach" as const)
-            : ("commandFlee" as const),
+          option === "approach"
+            ? ("executeCompelledApproach" as const)
+            : ("executeCompelledFlee" as const),
         effectRef: spellActiveEffectExecutionRef(effect),
       },
       initialHoles: combatantCanMoveInState(input.state, input.actorId)
@@ -310,13 +310,13 @@ function commandMovementActs(
   ];
 }
 
-function commandHaltActs(input: {
+function compelledHaltActs(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly acts: BattleActDiscoveryCandidate[];
   readonly startTurnAreaControlActs: readonly BattleActDiscoveryCandidate[];
 }): readonly BattleActDiscoveryCandidate[] | null {
-  if (input.state.currentTurnResources.commandHalt === null) return null;
+  if (input.state.currentTurnResources.compelledHalt === null) return null;
   input.acts.push(...input.startTurnAreaControlActs);
   input.acts.push(
     ...persistentAreaSaveConditionEndTurnActs(input.state, input.actorId),
@@ -342,7 +342,12 @@ function commandHaltActs(input: {
       input.actorId,
     ),
   );
-  input.acts.push(...wardingBondSeparationActs(input.state, input.actorId));
+  input.acts.push(
+    ...linkedDefenseResistanceDamageShareSeparationActs(
+      input.state,
+      input.actorId,
+    ),
+  );
   input.acts.push(endTurnAct(input.actorId));
   input.acts.push(...readiedSpellReleaseActs(input.state, input.actorId));
   input.acts.push(...discoverLegendaryActionActs(input.state));
@@ -413,14 +418,14 @@ function discoverBattleActsWithoutRouteEvents(
   }
   const startTurnAreaControlActs =
     persistentAreaSaveConditionEscapeStartTurnSaveActs(state, actorId);
-  const commandActs = commandPendingActs({
+  const compelledActs = compelledBehaviorPendingActs({
     state,
     actorId,
     tableEventActs,
     startTurnAreaControlActs,
   });
-  if (commandActs !== null) return commandActs;
-  const haltedActs = commandHaltActs({
+  if (compelledActs !== null) return compelledActs;
+  const haltedActs = compelledHaltActs({
     state,
     actorId,
     acts,
@@ -431,10 +436,10 @@ function discoverBattleActsWithoutRouteEvents(
   acts.push(...selfTransformationModeReplacementActs(state, actorId));
   acts.push(...controlledVerticalSuspensionAltitudeControlActs(state, actorId));
   if (!combatantInsideActiveAntimagicFieldAura(state, actorId)) {
-    acts.push(...dragonsBreathExhaleActs(state, actorId));
+    acts.push(...grantedAreaSaveDamageActionActs(state, actorId));
   }
   appendOrdinaryAttackActs(state, actorId, acts);
-  acts.push(...pactOfTheChainFamiliarAttackActs(state, actorId));
+  acts.push(...companionAttackActs(state, actorId));
   if (hasOpenStatBlockMultiattackDispatch) {
     acts.push(...movementActs(state, actorId));
     acts.push(...persistentAreaSaveConditionEndTurnActs(state, actorId));
@@ -488,22 +493,26 @@ function discoverBattleActsWithoutRouteEvents(
     sleepShakeAwakeTargetChoices(state, actorId).length > 0
   ) {
     acts.push({
-      subject: { tag: "action", actorId, action: "shakeAwakeFromSleep" },
+      subject: {
+        tag: "action",
+        actorId,
+        action: "shakeAwakeFromStagedCondition",
+      },
       initialHoles: [sleepShakeAwakeTargetHole(state, actorId)],
     });
   }
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
     hasTurnActionResource(state.currentTurnResources) &&
-    hypnoticPatternShakeAwakeTargetChoices(state, actorId).length > 0
+    saveGatedAreaControlShakeAwakeTargetChoices(state, actorId).length > 0
   ) {
     acts.push({
       subject: {
         tag: "action",
         actorId,
-        action: "shakeAwakeFromHypnoticPattern",
+        action: "shakeAwakeFromAreaControl",
       },
-      initialHoles: [hypnoticPatternShakeAwakeTargetHole(state, actorId)],
+      initialHoles: [saveGatedAreaControlShakeAwakeTargetHole(state, actorId)],
     });
   }
   if (
@@ -670,7 +679,9 @@ function discoverBattleActsWithoutRouteEvents(
   acts.push(
     ...persistentAreaSaveConditionEscapeAreaRemovalActs(state, actorId),
   );
-  acts.push(...wardingBondSeparationActs(state, actorId));
+  acts.push(
+    ...linkedDefenseResistanceDamageShareSeparationActs(state, actorId),
+  );
   acts.push(...endConcentrationActs(state, actorId));
   const readyResponses = readyResponseChoices(state, actorId, acts);
   if (
@@ -769,12 +780,12 @@ function companionProtocolActs(
   if (actorCanAct && canSpendBonusAction(state.currentTurnResources)) {
     acts.push({
       subject: {
-        tag: "findFamiliarSharedSenses",
+        tag: "spawnedCompanionSharedSenses",
         actorId,
         familiarId,
       },
       initialHoles: [
-        findFamiliarConnectionHole({
+        spawnedCompanionConnectionHole({
           ownerId: actorId,
           companionId: familiarId,
         }),
@@ -783,7 +794,7 @@ function companionProtocolActs(
   }
   if (combatantCanTakeReactions(familiarCombatant)) {
     acts.push(
-      ...findFamiliarTouchSpellActs({
+      ...spawnedCompanionTouchSpellProxyActs({
         state,
         actorId,
         companionId: familiarId,
@@ -794,7 +805,7 @@ function companionProtocolActs(
   return acts;
 }
 
-function findFamiliarTouchSpellActs(input: {
+function spawnedCompanionTouchSpellProxyActs(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly companionId: CombatantId;
@@ -828,7 +839,7 @@ function findFamiliarTouchSpellActs(input: {
       return [
         {
           subject: {
-            tag: "findFamiliarTouchSpell",
+            tag: "spawnedCompanionTouchSpellProxy",
             actorId: input.actorId,
             procedureRef: subject.procedureRef,
             companionId: input.companionId,
@@ -838,7 +849,7 @@ function findFamiliarTouchSpellActs(input: {
             ...optionalProperty("metamagic", subject.metamagic),
           },
           initialHoles: [
-            findFamiliarConnectionHole({
+            spawnedCompanionConnectionHole({
               ownerId: input.actorId,
               companionId: input.companionId,
             }),
@@ -969,7 +980,7 @@ function selfTransformationModeReplacementActs(
   });
 }
 
-function pactOfTheChainFamiliarAttackActs(
+function companionAttackActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
@@ -1011,7 +1022,7 @@ function pactOfTheChainFamiliarAttackActs(
       : [
           {
             subject: {
-              tag: "pactOfTheChainFamiliarAttack" as const,
+              tag: "companionAttack" as const,
               actorId,
               familiarId,
               procedureRef: attack.procedureRef,
@@ -1718,35 +1729,44 @@ function environmentEndedPersistentAreaSaveDamageAct(
   };
 }
 
-function wardingBondSeparationActs(
+function linkedDefenseResistanceDamageShareSeparationActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
   return [...state.combatants].flatMap(([targetId, combatant]) =>
     combatant.activeEffects.flatMap(
       (effect): readonly BattleActDiscoveryCandidate[] =>
-        isWardingBondEffect(effect)
-          ? [wardingBondSeparationAct(actorId, targetId, effect)]
+        isLinkedDefenseResistanceDamageShareEffect(effect)
+          ? [
+              linkedDefenseResistanceDamageShareSeparationAct(
+                actorId,
+                targetId,
+                effect,
+              ),
+            ]
           : [],
     ),
   );
 }
 
-function wardingBondSeparationAct(
+function linkedDefenseResistanceDamageShareSeparationAct(
   actorId: CombatantId,
   targetId: CombatantId,
-  effect: Extract<BattleActiveEffect, { readonly kind: "wardingBond" }>,
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "linkedDefenseResistanceDamageShare" }
+  >,
 ): BattleActDiscoveryCandidate {
   return {
     subject: {
       tag: "runtimeCommand",
       actorId,
-      command: "wardingBondSeparation",
+      command: "linkedDefenseResistanceDamageShareSeparation",
       effectRef: spellActiveEffectExecutionRef(effect),
       targetId,
     },
     initialHoles: [
-      wardingBondSeparationFactsHole({
+      linkedDefenseResistanceDamageShareSeparationFactsHole({
         sourceCombatantId: effect.sourceCombatantId,
         sourceProcedureRef: effect.sourceProcedureRef,
         targetId,
@@ -1774,11 +1794,11 @@ export function movementActs(
       subject: { tag: "runtimeCommand", actorId, command: "move" },
       initialHoles: [movementHoleForActor],
     },
-    ...jumpMovementReplacementActs(state, actorId, movementHoleForActor),
+    ...fixedCostMovementReplacementActs(state, actorId, movementHoleForActor),
   ];
 }
 
-function jumpMovementReplacementActs(
+function fixedCostMovementReplacementActs(
   state: BattleState,
   actorId: CombatantId,
   movementHoleForActor: ReturnType<typeof movementHole>,
@@ -1790,7 +1810,7 @@ function jumpMovementReplacementActs(
   return actor.activeEffects.flatMap(
     (effect): readonly BattleActDiscoveryCandidate[] => {
       if (
-        effect.kind !== "jumpMovementReplacement" ||
+        effect.kind !== "fixedCostMovementReplacement" ||
         effect.usedThisTurn ||
         Number(movementHoleForActor.movementBudgetFeet) <
           Number(effect.movementCostFeet)
@@ -1802,7 +1822,7 @@ function jumpMovementReplacementActs(
           subject: {
             tag: "runtimeCommand" as const,
             actorId,
-            command: "jumpMovementReplacement" as const,
+            command: "fixedCostMovementReplacement" as const,
             effectRef: spellActiveEffectExecutionRef(effect),
           },
           initialHoles: [movementHoleForActor],

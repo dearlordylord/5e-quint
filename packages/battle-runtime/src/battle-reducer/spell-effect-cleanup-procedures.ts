@@ -12,9 +12,9 @@ import { breakBattleConcentration } from "./damage-apply.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
-  battleStateAfterWardingBondSeparation,
-  wardingBondSeparationFactsAreSatisfied,
-  wardingBondSeparationFactsHole,
+  battleStateAfterLinkedDefenseResistanceDamageShareSeparation,
+  linkedDefenseResistanceDamageShareSeparationFactsAreSatisfied,
+  linkedDefenseResistanceDamageShareSeparationFactsHole,
 } from "./warding-bond.ts";
 import { areaWindStrengthHole } from "./area-wind-strength.ts";
 
@@ -24,7 +24,7 @@ export function resolveDispersePersistentAreaTraitCommand(
       BattleSubject,
       {
         readonly tag: "runtimeCommand";
-        readonly command: "dispersePersistentAreaTrait";
+        readonly command: "endPersistentAreaTraitForEnvironment";
       }
     >;
   },
@@ -70,7 +70,7 @@ export function resolveDisperseTranslatingPersistentAreaCommand(
       BattleSubject,
       {
         readonly tag: "runtimeCommand";
-        readonly command: "disperseTranslatingPersistentArea";
+        readonly command: "endPersistentAreaSaveDamageForEnvironment";
       }
     >;
   },
@@ -142,13 +142,13 @@ export function resolveDisperseTranslatingPersistentAreaCommand(
   };
 }
 
-export function resolveWardingBondSeparationCommand(
+export function resolveLinkedDefenseResistanceDamageShareSeparationCommand(
   input: BattleResolutionInput & {
     readonly subject: Extract<
       BattleSubject,
       {
         readonly tag: "runtimeCommand";
-        readonly command: "wardingBondSeparation";
+        readonly command: "linkedDefenseResistanceDamageShareSeparation";
       }
     >;
   },
@@ -159,7 +159,7 @@ export function resolveWardingBondSeparationCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Warding Bond separation uses one table spatial fact fill.",
+      "Linked defense separation uses one table spatial fact fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -169,9 +169,9 @@ export function resolveWardingBondSeparationCommand(
       candidate,
     ): candidate is Extract<
       BattleActiveEffect,
-      { readonly kind: "wardingBond" }
+      { readonly kind: "linkedDefenseResistanceDamageShare" }
     > =>
-      candidate.kind === "wardingBond" &&
+      candidate.kind === "linkedDefenseResistanceDamageShare" &&
       spellActiveEffectExecutionRef(candidate) === input.subject.effectRef,
   );
   if (
@@ -181,10 +181,10 @@ export function resolveWardingBondSeparationCommand(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Warding Bond is no longer active for this connected target.",
+      "The linked defense effect is no longer active for this connected target.",
     );
   }
-  const hole = wardingBondSeparationFactsHole({
+  const hole = linkedDefenseResistanceDamageShareSeparationFactsHole({
     sourceCombatantId: effect.sourceCombatantId,
     sourceProcedureRef: effect.sourceProcedureRef,
     targetId: input.subject.targetId,
@@ -197,7 +197,7 @@ export function resolveWardingBondSeparationCommand(
   if (
     fill.kind !== "targetSpatialFacts" ||
     fill.holeId !== hole.holeId ||
-    !wardingBondSeparationFactsAreSatisfied({
+    !linkedDefenseResistanceDamageShareSeparationFactsAreSatisfied({
       sourceCombatantId: effect.sourceCombatantId,
       sourceProcedureRef: effect.sourceProcedureRef,
       targetId: input.subject.targetId,
@@ -208,16 +208,17 @@ export function resolveWardingBondSeparationCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Warding Bond separation requires a table fact that the connected creatures are beyond 60 feet.",
+      "Linked defense separation requires a table fact that the connected creatures are beyond 60 feet.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  const nextState = battleStateAfterWardingBondSeparation({
-    state: input.state,
-    sourceCombatantId: effect.sourceCombatantId,
-    sourceProcedureRef: effect.sourceProcedureRef,
-    targetId: input.subject.targetId,
-  });
+  const nextState =
+    battleStateAfterLinkedDefenseResistanceDamageShareSeparation({
+      state: input.state,
+      sourceCombatantId: effect.sourceCombatantId,
+      sourceProcedureRef: effect.sourceProcedureRef,
+      targetId: input.subject.targetId,
+    });
   return {
     tag: "resolved",
     state: nextState,

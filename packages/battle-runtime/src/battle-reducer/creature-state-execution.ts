@@ -250,18 +250,15 @@ const areaActiveEffectOccurrence = spatialProjectionHandler(
 );
 
 const activeEffectOccurrenceSpatialProjectionHandlers = {
-  antimagicFieldOngoingSpellSuppression: areaActiveEffectOccurrence,
-  cloudkillAreaHazard: areaActiveEffectOccurrence,
-  flamingSphere: areaActiveEffectOccurrence,
-  fogCloudObscurement: areaActiveEffectOccurrence,
-  greaseGroundHazard: areaActiveEffectOccurrence,
-  insectPlagueAreaHazard: areaActiveEffectOccurrence,
+  magicSuppressionEmanation: areaActiveEffectOccurrence,
+  persistentAreaSaveDamage: areaActiveEffectOccurrence,
+  persistentAreaTrait: areaActiveEffectOccurrence,
+  persistentAreaSaveCondition: areaActiveEffectOccurrence,
+  persistentAreaSaveConditionEscape: areaActiveEffectOccurrence,
+  persistentAreaSaveComposite: areaActiveEffectOccurrence,
+  areaMovementDistanceDamage: areaActiveEffectOccurrence,
   magicalDarknessPointOrigin: areaActiveEffectOccurrence,
-  moonbeam: areaActiveEffectOccurrence,
-  sleetStormAreaHazard: areaActiveEffectOccurrence,
-  spikeGrowthHazard: areaActiveEffectOccurrence,
-  webRestraintHazard: areaActiveEffectOccurrence,
-  gustOfWindLine: spatialProjectionHandler("line", (line) => ({
+  directionalPersistentArea: spatialProjectionHandler("line", (line) => ({
     spatialClass: "line" as const,
     location: {
       kind: "line" as const,
@@ -294,43 +291,43 @@ const activeEffectOccurrenceSpatialProjectionHandlers = {
   abilityCheckRollMode: nonSpatialActiveEffectOccurrence,
   abilityD20TestRollModeEndTurnSave: nonSpatialActiveEffectOccurrence,
   bardicInspirationDie: nonSpatialActiveEffectOccurrence,
-  blurred: nonSpatialActiveEffectOccurrence,
+  perceptionGatedAttackRollDefense: nonSpatialActiveEffectOccurrence,
   brutalStrikeHamstring: nonSpatialActiveEffectOccurrence,
-  commandPending: nonSpatialActiveEffectOccurrence,
+  compelledNextTurnBehavior: nonSpatialActiveEffectOccurrence,
   conditionImmunity: nonSpatialActiveEffectOccurrence,
   conditionSavingThrowRollMode: nonSpatialActiveEffectOccurrence,
   creatureTypeProtection: nonSpatialActiveEffectOccurrence,
   d20RollModifier: nonSpatialActiveEffectOccurrence,
   damageResistance: nonSpatialActiveEffectOccurrence,
-  dancingLights: nonSpatialActiveEffectOccurrence,
-  dragonsBreath: nonSpatialActiveEffectOccurrence,
+  movableLightManifestation: nonSpatialActiveEffectOccurrence,
+  grantedAreaSaveDamageAction: nonSpatialActiveEffectOccurrence,
   druidWildShapeForm: nonSpatialActiveEffectOccurrence,
-  faerieFireOutline: nonSpatialActiveEffectOccurrence,
-  featherFallMitigation: nonSpatialActiveEffectOccurrence,
-  findFamiliarSharedSenses: nonSpatialActiveEffectOccurrence,
+  saveGatedTargetProjection: nonSpatialActiveEffectOccurrence,
+  fallingCreatureMitigationReaction: nonSpatialActiveEffectOccurrence,
+  spawnedCompanionSharedSenses: nonSpatialActiveEffectOccurrence,
   heldLight: nonSpatialActiveEffectOccurrence,
-  hideousLaughter: nonSpatialActiveEffectOccurrence,
+  saveGatedConditionWithRepeat: nonSpatialActiveEffectOccurrence,
   hitPointMaximumIncrease: nonSpatialActiveEffectOccurrence,
   hitPointRegainPrevented: nonSpatialActiveEffectOccurrence,
-  hypnoticPatternControl: nonSpatialActiveEffectOccurrence,
+  saveGatedAreaControl: nonSpatialActiveEffectOccurrence,
   invisibleBenefitDenied: nonSpatialActiveEffectOccurrence,
-  jumpMovementReplacement: nonSpatialActiveEffectOccurrence,
-  mirrorImageDuplicates: nonSpatialActiveEffectOccurrence,
+  fixedCostMovementReplacement: nonSpatialActiveEffectOccurrence,
+  duplicateHitInterception: nonSpatialActiveEffectOccurrence,
   nextAttackRollAgainstSelf: nonSpatialActiveEffectOccurrence,
   nextAttackRollBySelf: nonSpatialActiveEffectOccurrence,
   opportunityAttackDenied: nonSpatialActiveEffectOccurrence,
   paladinSacredWeapon: nonSpatialActiveEffectOccurrence,
   possession: nonSpatialActiveEffectOccurrence,
-  sanctuaryWard: nonSpatialActiveEffectOccurrence,
+  targetingSaveInterdiction: nonSpatialActiveEffectOccurrence,
   savingThrowRollMode: nonSpatialActiveEffectOccurrence,
   seeInvisibleAndEthereal: nonSpatialActiveEffectOccurrence,
   selfAttackRollAndAbilityCheckRollMode: nonSpatialActiveEffectOccurrence,
   selfSpeedZero: nonSpatialActiveEffectOccurrence,
   selfTransformation: nonSpatialActiveEffectOccurrence,
-  shiningSmiteIllumination: nonSpatialActiveEffectOccurrence,
-  sleepPendingRepeatSave: nonSpatialActiveEffectOccurrence,
-  sleepUnconscious: nonSpatialActiveEffectOccurrence,
-  slowActivePenalties: nonSpatialActiveEffectOccurrence,
+  afterHitDamageAndIllumination: nonSpatialActiveEffectOccurrence,
+  stagedSaveConditionPendingRepeat: nonSpatialActiveEffectOccurrence,
+  stagedSaveConditionApplied: nonSpatialActiveEffectOccurrence,
+  saveGatedTurnConstraintBundle: nonSpatialActiveEffectOccurrence,
   sourceDamageRollPenalty: nonSpatialActiveEffectOccurrence,
   specialSpeedGrant: nonSpatialActiveEffectOccurrence,
   speedDelta: nonSpatialActiveEffectOccurrence,
@@ -350,8 +347,8 @@ const activeEffectOccurrenceSpatialProjectionHandlers = {
   spellDashBonusAction: nonSpatialActiveEffectOccurrence,
   spellEndTargetState: nonSpatialActiveEffectOccurrence,
   spellGrantedActionResource: nonSpatialActiveEffectOccurrence,
-  spellLevitatedCreature: nonSpatialActiveEffectOccurrence,
-  spellMagicWeaponEnhancement: nonSpatialActiveEffectOccurrence,
+  controlledVerticalSuspension: nonSpatialActiveEffectOccurrence,
+  weaponAttackDamageEnhancement: nonSpatialActiveEffectOccurrence,
   spellMarkedDamageRider: nonSpatialActiveEffectOccurrence,
   spellShapeShiftedForm: nonSpatialActiveEffectOccurrence,
   spellSpeedZero: nonSpatialActiveEffectOccurrence,
@@ -359,14 +356,14 @@ const activeEffectOccurrenceSpatialProjectionHandlers = {
   spellTurnStartDamageAndSave: nonSpatialActiveEffectOccurrence,
   spellWeaponAttackOverride: nonSpatialActiveEffectOccurrence,
   spellWeaponDamageRider: nonSpatialActiveEffectOccurrence,
-  spiritualWeapon: nonSpatialActiveEffectOccurrence,
+  spatialMeleeSpellAttackProxy: nonSpatialActiveEffectOccurrence,
   targetActionEndedSpellCondition: nonSpatialActiveEffectOccurrence,
-  thaumaturgyBoomingVoice: nonSpatialActiveEffectOccurrence,
+  temporaryAbilityCheckRollMode: nonSpatialActiveEffectOccurrence,
   turnStartTemporaryHitPoints: nonSpatialActiveEffectOccurrence,
   unitFeatureCondition: nonSpatialActiveEffectOccurrence,
   unitFeatureConditionEndTurnSave: nonSpatialActiveEffectOccurrence,
   unitFeatureSpeedDelta: nonSpatialActiveEffectOccurrence,
-  wardingBond: nonSpatialActiveEffectOccurrence,
+  linkedDefenseResistanceDamageShare: nonSpatialActiveEffectOccurrence,
 } satisfies {
   readonly [Kind in BattleActiveEffect["kind"]]: ((
     effect: Extract<BattleActiveEffect, { readonly kind: Kind }>,
@@ -545,7 +542,7 @@ export function activeEffectArmorClass(
   const spellArmorClassBonuses = combatant.activeEffects.flatMap((effect) =>
     effect.kind === "spellArmorClassBonus"
       ? [{ kind: "flat" as const, bonus: armorClassDelta(effect.bonus) }]
-      : effect.kind === "wardingBond"
+      : effect.kind === "linkedDefenseResistanceDamageShare"
         ? [
             {
               kind: "flat" as const,
@@ -554,11 +551,11 @@ export function activeEffectArmorClass(
           ]
         : [],
   );
-  const slowActivePenaltyEffect = combatant.activeEffects.find(
-    (effect) => effect.kind === "slowActivePenalties",
+  const turnConstraintPenaltyEffect = combatant.activeEffects.find(
+    (effect) => effect.kind === "saveGatedTurnConstraintBundle",
   );
   const armorClassBonuses =
-    slowActivePenaltyEffect === undefined
+    turnConstraintPenaltyEffect === undefined
       ? spellArmorClassBonuses
       : [
           ...spellArmorClassBonuses,

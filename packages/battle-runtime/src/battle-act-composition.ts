@@ -20,7 +20,7 @@ import {
   offHandAttackActionOptionsForActor,
 } from "./battle-reducer/attack-damage-apply.ts";
 import { attackActionOptionPresentationName } from "./stat-block-presentation.ts";
-import { maxJumpMovementReplacementDistanceFeet } from "./battle-reducer/jump-movement-replacement.ts";
+import { maxFixedCostMovementReplacementDistanceFeet } from "./battle-reducer/jump-movement-replacement.ts";
 import { statBlockProcedurePresentationsForActor } from "./stat-block-presentation.ts";
 import type {
   BattleSubject,
@@ -369,7 +369,7 @@ function intrinsicActPresentationText(
     if (effect?.kind === "fixedCostMovementReplacement") {
       return {
         label: "Jump",
-        summary: `Spend ${effect.movementCostFeet} feet of Movement to jump up to ${maxJumpMovementReplacementDistanceFeet(state, subject.actorId, effect)} feet using table-supplied landing facts.`,
+        summary: `Spend ${effect.movementCostFeet} feet of Movement to jump up to ${maxFixedCostMovementReplacementDistanceFeet(state, subject.actorId, effect)} feet using table-supplied landing facts.`,
       };
     }
   }
