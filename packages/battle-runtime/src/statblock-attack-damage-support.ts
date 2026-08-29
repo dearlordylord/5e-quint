@@ -161,6 +161,17 @@ function supportedStatBlockAttackDamageEffect(
     : { kind: "advantageBonus", component: advantageBonus };
 }
 
+/**
+ * The individual damage branch used by the complete attack support profile.
+ * Keeping this next to the selected-damage projection prevents admission and
+ * projection from growing separate effect-shape allowlists.
+ */
+export function statBlockAttackDamageEffectIsSupported(
+  effect: CreatureAttackRollMechanics["onHit"][number],
+): boolean {
+  return supportedStatBlockAttackDamageEffect(effect) !== null;
+}
+
 function supportedStatBlockBaseDamageEffect(
   effect: CreatureAttackRollMechanics["onHit"][number],
 ): UnreferencedStatBlockAttackDamageComponent | null {
