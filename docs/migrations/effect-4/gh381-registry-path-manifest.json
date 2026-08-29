@@ -506,7 +506,7 @@
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-turn-constraint-bundle.ts",
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spell-attack-damage.ts",
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spell-hosted-weapon-attack.ts",
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/linked-defense-damage-share.ts",
+    "packages/battle-runtime/src/battle-reducer/linked-defense-damage-share.ts",
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/weapon-damage-rider.ts",
     "packages/battle-runtime/src/battle-reducer/spell-turn-resources.ts",
     "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",

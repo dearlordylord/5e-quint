@@ -3424,7 +3424,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-companion-lifecycle-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-find-familiar-lifecycle-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -4145,7 +4145,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/battle-reducer/linked-defense-damage-share.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/linked-defense-damage-share.ts",
+        "packages/battle-runtime/src/battle-reducer/linked-defense-damage-share.ts",
         "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
         "packages/battle-runtime/src/battle-reducer/creature-state.ts",
@@ -38625,7 +38625,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-companion-lifecycle-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-find-familiar-lifecycle-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -48013,7 +48013,7 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
             "packages/battle-runtime/src/battle-reducer/linked-defense-damage-share.ts",
-            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/linked-defense-damage-share.ts",
+            "packages/battle-runtime/src/battle-reducer/linked-defense-damage-share.ts",
             "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
             "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
             "packages/battle-runtime/src/battle-reducer/creature-state.ts",
