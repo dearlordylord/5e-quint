@@ -4,7 +4,7 @@ import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 import { decodeStatBlockRecordEither } from "@dnd/surface/surface/schema";
-import { classLevel, resourceCount } from "@dnd/shared/types";
+import { classLevel, PositiveInteger, resourceCount } from "@dnd/shared/types";
 import { statBlockId, unitId } from "@dnd/shared/game-facts";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
@@ -32,6 +32,18 @@ import {
   frenzyDamageTypeDecision,
   weaponTargetConstraint,
 } from "./battle-reducer/statblock-attacks.ts";
+import type { SupportedCreatureAttackRollMechanics } from "./battle-action-options.ts";
+import {
+  statBlockAdvantageBonusDamageComponentRef,
+  statBlockAttackDamageSelection,
+  statBlockBaseDamageComponentOrdinal,
+  statBlockBaseDamageComponentRef,
+  type StatBlockAttackDamageComponentRef,
+  type StatBlockAttackDamageComponentSelection,
+  type StatBlockAttackDamageSelection,
+  type StatBlockDamageComponentNotation,
+} from "./stat-block-attack-damage-selection.ts";
+import { sameBattleSubject, type BattleSubject } from "./battle-subjects.ts";
 import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-apply.ts";
 import {
   battleContinuationFillEquals,
@@ -195,6 +207,117 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { castResolvedFindFamiliar } from "./find-familiar-lifecycle.ts";
 
 const PROPERTY_OPTIONS = { numRuns: 64, seed: 0x5eed18 } as const;
+
+type PactFamiliarAttackSubject = Extract<
+  BattleSubject,
+  { readonly tag: "pactOfTheChainFamiliarAttack" }
+>;
+
+type StatBlockDamageEffect =
+  SupportedCreatureAttackRollMechanics["onHit"][number];
+type StatBlockBaseDamageEffect = Extract<
+  StatBlockDamageEffect,
+  { readonly kind: "damage" }
+>;
+type StatBlockAdvantageBonusDamageEffect = Extract<
+  StatBlockDamageEffect,
+  { readonly kind: "conditional_bonus_damage" }
+>;
+
+function isStatBlockBaseDamageEffect(
+  effect: StatBlockDamageEffect,
+): effect is StatBlockBaseDamageEffect {
+  return effect.kind === "damage";
+}
+
+function isStatBlockAdvantageBonusDamageEffect(
+  effect: StatBlockDamageEffect,
+): effect is StatBlockAdvantageBonusDamageEffect {
+  return (
+    effect.kind === "conditional_bonus_damage" &&
+    effect.when.kind === "attack_roll_had_advantage"
+  );
+}
+
+function expectedStatBlockDamageComponentNotations(
+  effect: StatBlockBaseDamageEffect | StatBlockAdvantageBonusDamageEffect,
+): readonly StatBlockDamageComponentNotation[] {
+  const notations: StatBlockDamageComponentNotation[] = [];
+  if ("expr" in effect.amount && effect.amount.expr.dice > 0) {
+    notations.push("rolled");
+  }
+  if (typeof effect.amount.static === "number") {
+    notations.push("static");
+  }
+  if (notations.length === 0) {
+    throw new Error(
+      "Expected every admitted Stat Block damage component to expose a notation.",
+    );
+  }
+  return notations;
+}
+
+function expectedStatBlockDamageSelections(
+  attack: SupportedCreatureAttackRollMechanics,
+): readonly StatBlockAttackDamageSelection[] {
+  const onHitEffects: readonly StatBlockDamageEffect[] = [...attack.onHit];
+  const baseComponents = onHitEffects
+    .filter(isStatBlockBaseDamageEffect)
+    .map((effect, index) => ({
+      componentRef: statBlockBaseDamageComponentRef(
+        statBlockBaseDamageComponentOrdinal(PositiveInteger(index + 1)),
+      ),
+      notations: expectedStatBlockDamageComponentNotations(effect),
+    }));
+  const advantageBonus = onHitEffects.find(
+    isStatBlockAdvantageBonusDamageEffect,
+  );
+  const components: readonly {
+    readonly componentRef: StatBlockAttackDamageComponentRef;
+    readonly notations: readonly StatBlockDamageComponentNotation[];
+  }[] = [
+    ...baseComponents,
+    ...(advantageBonus === undefined
+      ? []
+      : [
+          {
+            componentRef: statBlockAdvantageBonusDamageComponentRef,
+            notations:
+              expectedStatBlockDamageComponentNotations(advantageBonus),
+          },
+        ]),
+  ];
+  const [firstComponent, ...remainingComponents] = components;
+  if (firstComponent === undefined) {
+    throw new Error("Expected an admitted Stat Block attack damage component.");
+  }
+
+  let selections: readonly StatBlockAttackDamageComponentSelection[][] = [[]];
+  for (const component of [firstComponent, ...remainingComponents]) {
+    selections = selections.flatMap((selection) =>
+      component.notations.map((notation) => [
+        ...selection,
+        { componentRef: component.componentRef, notation },
+      ]),
+    );
+  }
+  return selections.map((selection) => {
+    const [firstSelection, ...remainingSelections] = selection;
+    if (firstSelection === undefined) {
+      throw new Error("Expected a non-empty Stat Block damage selection.");
+    }
+    const parsed = statBlockAttackDamageSelection([
+      firstSelection,
+      ...remainingSelections,
+    ]);
+    if (Either.isLeft(parsed)) {
+      throw new Error(
+        "Expected canonical Stat Block damage component roles in test fixture.",
+      );
+    }
+    return parsed.right;
+  });
+}
 
 function moveHole(state: BattleState, actorId: CombatantId): BattleHole {
   return requireHole(
@@ -2669,24 +2792,104 @@ describe("battle boundary admission owners", () => {
     const pactCandidates = candidates.filter(
       (act) => act.subject.tag === "pactOfTheChainFamiliarAttack",
     );
-    expect(pactCandidates).toHaveLength(5);
     const familiar = session.state.combatants.get(familiarId);
     if (familiar?.origin.kind !== "statBlock") {
       throw new Error("Expected admitted familiar Stat Block.");
     }
+    const actionAttackBindings =
+      familiar.origin.execution.procedureBindings.filter(
+        (binding) =>
+          binding.procedure.kind === "attack" &&
+          binding.procedure.section === "actions",
+      );
+    const unarmedStrikeBindings =
+      familiar.origin.execution.procedureBindings.filter(
+        (binding) => binding.procedure.kind === "unarmedStrike",
+      );
+    const legendaryAttackProcedureRefs = new Set(
+      familiar.origin.execution.procedureBindings.flatMap((binding) =>
+        binding.procedure.kind === "attack" &&
+        binding.procedure.section === "legendaryActions"
+          ? [binding.procedureRef]
+          : [],
+      ),
+    );
+    expect(actionAttackBindings).toHaveLength(2);
+    expect(unarmedStrikeBindings).toHaveLength(1);
+    expect(legendaryAttackProcedureRefs.size).toBeGreaterThan(0);
     expect(
-      pactCandidates.every((act) => {
-        const subject = act.subject;
-        if (subject.tag !== "pactOfTheChainFamiliarAttack") return false;
-        const binding = familiar.origin.execution.procedureBindings.find(
-          (candidate) => candidate.procedureRef === subject.procedureRef,
-        );
-        return (
-          binding?.procedure.kind === "unarmedStrike" ||
-          (binding?.procedure.kind === "attack" &&
-            binding.procedure.section === "actions")
-        );
-      }),
+      actionAttackBindings.every(
+        (binding) =>
+          binding.procedure.kind === "attack" &&
+          expectedStatBlockDamageSelections(binding.procedure.attack).length ===
+            4,
+      ),
+    ).toBe(true);
+    expect(
+      unarmedStrikeBindings.every(
+        (binding) =>
+          binding.procedure.kind === "unarmedStrike" &&
+          expectedStatBlockDamageSelections(binding.procedure.attack).length ===
+            1,
+      ),
+    ).toBe(true);
+    const expectedPactSubjects = [
+      ...actionAttackBindings,
+      ...unarmedStrikeBindings,
+    ].flatMap((binding): readonly PactFamiliarAttackSubject[] => {
+      if (
+        binding.procedure.kind !== "attack" &&
+        binding.procedure.kind !== "unarmedStrike"
+      ) {
+        return [];
+      }
+      return expectedStatBlockDamageSelections(binding.procedure.attack).map(
+        (statBlockDamageSelection) => ({
+          tag: "pactOfTheChainFamiliarAttack" as const,
+          actorId: wizardId,
+          familiarId,
+          procedureRef: binding.procedureRef,
+          statBlockDamageSelection,
+        }),
+      );
+    });
+    const pactSubjects = pactCandidates.map((act) => {
+      const subject = act.subject;
+      if (subject.tag !== "pactOfTheChainFamiliarAttack") {
+        throw new Error("Expected a Pact familiar attack candidate.");
+      }
+      return subject;
+    });
+    expect(
+      pactSubjects.every(
+        (subject) => !legendaryAttackProcedureRefs.has(subject.procedureRef),
+      ),
+    ).toBe(true);
+    const distinctPactProcedureRefs = new Set(
+      pactSubjects.map((subject) => subject.procedureRef),
+    );
+    expect(pactSubjects.length).toBeGreaterThan(distinctPactProcedureRefs.size);
+    expect(
+      pactSubjects.every((candidate, index) =>
+        pactSubjects
+          .slice(index + 1)
+          .every((other) => !sameBattleSubject(candidate, other)),
+      ),
+    ).toBe(true);
+    expect(pactSubjects.length).toBe(expectedPactSubjects.length);
+    expect(
+      pactSubjects.every((actualSubject) =>
+        expectedPactSubjects.some((expectedSubject) =>
+          sameBattleSubject(actualSubject, expectedSubject),
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      expectedPactSubjects.every((expectedSubject) =>
+        pactSubjects.some((actualSubject) =>
+          sameBattleSubject(expectedSubject, actualSubject),
+        ),
+      ),
     ).toBe(true);
 
     const available = discoverBattleActs(session);
