@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-magical-effect-interdiction
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-magical-effect-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
 //
 // SRD 5.2.1 Antimagic Field prevents spells, magic items, and other magical
@@ -8,7 +8,7 @@
 
 import type { BattleState } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
-import { combatantInsideActiveAntimagicFieldAura } from "./antimagic-field-action-interdiction.ts";
+import { combatantInsideActiveAntimagicFieldAura } from "./magic-suppression-action-interdiction.ts";
 
 const MAGICAL_EFFECT_SOURCE_KINDS = [
   "spell",

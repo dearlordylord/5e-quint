@@ -98,8 +98,8 @@ const ACCEPTED_MBT_GROUPS = {
       reason:
         "focused one-file witnesses are opt-in by direct vitest file selection until promoted to package scripts",
       files: new Set([
-        "src/antimagic-field-action-interdiction.mbt.test.ts",
-        "src/antimagic-field-magical-effect-interdiction.mbt.test.ts",
+        "src/magic-suppression-action-interdiction.mbt.test.ts",
+        "src/magic-suppression-magical-effect-interdiction.mbt.test.ts",
         "src/death-saving-throw.mbt.test.ts",
         "src/dragonborn-breath-weapon-runtime.mbt.test.ts",
         "src/eldritch-blast.mbt.test.ts",

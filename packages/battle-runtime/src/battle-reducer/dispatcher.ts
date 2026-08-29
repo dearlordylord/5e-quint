@@ -8,7 +8,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-cloudkill-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-granted-action
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-action-interdiction
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-action-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
@@ -80,11 +80,11 @@ import {
 } from "./creature-state-execution.ts";
 import { consumeOrCloseLegendaryActionWindow } from "./legendary-action-window.ts";
 import {
-  FindFamiliarProcedureExecution,
+  CompanionLifecycleProcedureExecution,
   resolveCompanionLifecycleSubject,
   resolveFindFamiliarSharedSensesSubject,
   resolveFindFamiliarTouchSpellSubject,
-} from "./find-familiar-procedures.ts";
+} from "./companion-lifecycle-procedures.ts";
 import {
   type AdmittedReplayContinuationSubject,
   ReplayContinuationExecution,
@@ -123,7 +123,7 @@ import { battleReducerRouteForResolution } from "./reducer-route.ts";
 import {
   magicSuppressionInterdictionMessage,
   battleSubjectInterdictedByAntimagicField,
-} from "./antimagic-field-action-interdiction.ts";
+} from "./magic-suppression-action-interdiction.ts";
 import type { SpellProcedureExecutionRegistry } from "./spell-procedure-profiles/execution-registry.ts";
 import {
   currentActorHasOpenStatBlockMultiattackDispatch,
@@ -759,7 +759,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     if (subject.tag === "spawnedCompanionTouchSpellProxy") {
       return resolveFindFamiliarTouchSpellSubject(
         { ...input, subject },
-        FindFamiliarProcedureExecution.fromResolver((admitted) =>
+        CompanionLifecycleProcedureExecution.fromResolver((admitted) =>
           resolveBattleSubjectInternal(admitted, options),
         ),
         options.interruptRouteOptions.replayingInterruptedProcedure === true

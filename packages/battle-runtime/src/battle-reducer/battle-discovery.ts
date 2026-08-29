@@ -37,8 +37,8 @@ import { CombatantId } from "../identity.ts";
 import {
   findFamiliarCompanionEntryForOwner,
   isPresentFindFamiliarCombatant,
-} from "../find-familiar-state.ts";
-import { combatantHasPactOfTheChainFindFamiliar } from "../find-familiar-pact-facts.ts";
+} from "../spawned-companion-state.ts";
+import { combatantHasPactOfTheChainFindFamiliar } from "../companion-reaction-feature-facts.ts";
 import { ammunitionForAttackIsAvailable } from "../battle-ammunition.ts";
 import {
   companionHeldObjectFactsHole,
@@ -46,7 +46,7 @@ import {
   companionReappearancePlacementHole,
   spawnedCompanionConnectionHole,
   findFamiliarTouchDeliveryTargetHoles,
-} from "../find-familiar-companion-subjects.ts";
+} from "../companion-subjects.ts";
 import {
   attackActionOptionsForActor,
   martialArtsBonusUnarmedStrikeActionOptionForActor,
@@ -101,7 +101,7 @@ import { discoverSupportedSpellInvocations } from "./spells-discovery.ts";
 import type { SpellProcedureExecutionRegistry } from "./spell-procedure-profiles/execution-registry.ts";
 import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
 import { supportedSpellActs } from "./supported-spell-acts.ts";
-import { combatantInsideActiveAntimagicFieldAura } from "./antimagic-field-action-interdiction.ts";
+import { combatantInsideActiveAntimagicFieldAura } from "./magic-suppression-action-interdiction.ts";
 import {
   statBlockBonusActionOptionBindings,
   statBlockMultiattackBindings,

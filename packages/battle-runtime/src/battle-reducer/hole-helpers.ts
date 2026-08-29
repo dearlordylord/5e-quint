@@ -25,7 +25,7 @@ import {
   type DifficultyClass,
 } from "@dnd/shared/types";
 import type { Ability, Skill } from "@dnd/surface/surface/types";
-import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
+import { isPresentFindFamiliarCombatant } from "../spawned-companion-state.ts";
 import { mechanicalD20TestRollMode } from "../d20-test-circumstance.ts";
 import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import type {
@@ -51,7 +51,7 @@ import {
   resourceHasUsesRemaining,
   type CharacterBattleUseCountResourceState,
 } from "../character-battle-resource-execution.ts";
-import { ongoingSpellEffectSuppressedByAntimagicField } from "./antimagic-field-suppression.ts";
+import { ongoingSpellEffectSuppressedByAntimagicField } from "./magic-suppression-ongoing-effect.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.ts";
 import {
   activeCreatureSizeChangeEffect,

@@ -15,7 +15,7 @@ import type { CombatantId } from "../identity.ts";
 import {
   activeAntimagicFieldAuraMemberships,
   magicSuppressionEmanationMembershipIncludesCombatant,
-} from "./antimagic-field-action-interdiction.ts";
+} from "./magic-suppression-action-interdiction.ts";
 
 export const ANTIMAGIC_FIELD_TRANSIT_BLOCKING_MESSAGE =
   "Teleportation into or out of an Antimagic Field aura is blocked.";

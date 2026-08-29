@@ -46,7 +46,7 @@ import {
   spellTeleportDestinationHole,
   spellTeleportDestinationHoleId,
 } from "../spells-targeting.ts";
-import { magicSuppressionTransitInvalidReason } from "../antimagic-field-transit-blocking.ts";
+import { magicSuppressionTransitInvalidReason } from "../magic-suppression-transit-blocking.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,

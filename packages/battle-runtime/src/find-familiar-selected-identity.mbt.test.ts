@@ -4,7 +4,7 @@ import {
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
-// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.find-familiar-lifecycle
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.companion-lifecycle
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay B22-FIND-FAMILIAR-IDENTITY-WITNESS find_familiar
 // UNIT-IDENTITY-REPLAY: B22-FIND-FAMILIAR-IDENTITY-WITNESS find_familiar doCastFindFamiliar doRecastFindFamiliarReplacement doDismissAndReappearFindFamiliar doDeliverTouchSpellThroughFindFamiliar
 import {
@@ -226,7 +226,7 @@ function observeDeliverTouchSpellThroughFindFamiliarRoute(): readonly BattleRedu
   });
   if (awaitingHealingRoll.tag !== "needsHoles") {
     throw new Error(
-      `Expected Find Familiar touch delivery healing roll, got ${awaitingHealingRoll.tag}.`,
+      `Expected Companion touch delivery healing roll, got ${awaitingHealingRoll.tag}.`,
     );
   }
   const delivered = resolveBattleSubject({
@@ -379,14 +379,14 @@ function deliverTouchSpellThroughFindFamiliarProjection(): FindFamiliarSelectedI
     subject: cureWoundsAct.subject,
     fills: [targetFill],
     fact: {
-      kind: "findFamiliarWithin100FeetOfOwner",
+      kind: "companionWithinCommunicationRangeOfOwner",
       ownerId: casterId,
       familiarId,
     },
   });
   if (awaitingHealingRoll.tag !== "needsHoles") {
     throw new Error(
-      `Expected Find Familiar touch delivery healing roll, got ${awaitingHealingRoll.tag}.`,
+      `Expected Companion touch delivery healing roll, got ${awaitingHealingRoll.tag}.`,
     );
   }
   const delivered = deliverTouchSpellThroughFindFamiliar({
@@ -401,15 +401,13 @@ function deliverTouchSpellThroughFindFamiliarProjection(): FindFamiliarSelectedI
       },
     ],
     fact: {
-      kind: "findFamiliarWithin100FeetOfOwner",
+      kind: "companionWithinCommunicationRangeOfOwner",
       ownerId: casterId,
       familiarId,
     },
   });
   if (delivered.tag !== "resolved") {
-    throw new Error(
-      `Expected Find Familiar touch delivery, got ${delivered.tag}.`,
-    );
+    throw new Error(`Expected Companion touch delivery, got ${delivered.tag}.`);
   }
   return projectBattleCompanionState(delivered.state, "touchDelivered");
 }
@@ -514,7 +512,7 @@ function touchDeliveryAct(session: BattleRuntimeSession): AvailableBattleAct & {
         cureWoundsUnitId,
   );
   if (act === undefined) {
-    throw new Error("Expected Find Familiar touch delivery act.");
+    throw new Error("Expected Companion touch delivery act.");
   }
   return act;
 }

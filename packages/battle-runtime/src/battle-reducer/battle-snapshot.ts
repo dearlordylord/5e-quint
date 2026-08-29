@@ -8,7 +8,7 @@ import type {
   BattleReadyResponseSnapshot,
 } from "../battle-subjects.ts";
 import type { BattleCompanionSnapshot } from "../companion-state.ts";
-import { battleCompanionEntries } from "../find-familiar-state.ts";
+import { battleCompanionEntries } from "../spawned-companion-state.ts";
 import { CombatantId, battleReplayStackDepth } from "../identity.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import {

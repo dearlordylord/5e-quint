@@ -51,12 +51,12 @@ import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.t
 import {
   OTHER_MAGICAL_EFFECT_SOURCE,
   magicalEffectTargetsInterdictionMessage,
-} from "./antimagic-field-magical-effect-interdiction.ts";
+} from "./magic-suppression-magical-effect-interdiction.ts";
 import { attackActionOptionsForActor } from "./attack-damage-apply.ts";
 import { spellSaveDcForCaster } from "./spell-save-dc.ts";
 import { ongoingFeatureLifecycleHasExtensionTrigger } from "./ongoing-feature-helpers.ts";
 import { scoreModifier } from "./domain-helpers.ts";
-import { combatantInsideActiveAntimagicFieldAura } from "./antimagic-field-action-interdiction.ts";
+import { combatantInsideActiveAntimagicFieldAura } from "./magic-suppression-action-interdiction.ts";
 import { combatantShapeShiftingSuppressed } from "./shape-shifting.ts";
 import {
   wildShapeCanUseWornLoadoutObject,

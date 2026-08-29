@@ -929,7 +929,7 @@
       "parityWitnesses": [
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/find-familiar-lifecycle.test.ts"
+          "ownerPath": "packages/battle-runtime/src/companion-lifecycle.test.ts"
         },
         {
           "kind": "focused-mbt",
@@ -938,15 +938,15 @@
           "stepAction": "step"
         }
       ],
-      "profiles": ["spell.find-familiar-lifecycle"],
+      "profiles": ["spell.companion-lifecycle"],
       "qntOwners": ["packages/battle-runtime/battle-runtime-find-familiar.qnt"],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/find-familiar-lifecycle.ts",
-        "packages/battle-runtime/src/find-familiar-state.ts",
-        "packages/battle-runtime/src/find-familiar-telepathy.ts",
-        "packages/battle-runtime/src/find-familiar-pact-chain.ts",
-        "packages/battle-runtime/src/battle-reducer/find-familiar-procedures.ts",
+        "packages/battle-runtime/src/companion-lifecycle.ts",
+        "packages/battle-runtime/src/companion-state.ts",
+        "packages/battle-runtime/src/companion-communication.ts",
+        "packages/battle-runtime/src/companion-reaction-attack.ts",
+        "packages/battle-runtime/src/battle-reducer/companion-lifecycle-procedures.ts",
         "packages/battle-runtime/src/battle-reducer/companion-routes.ts"
       ],
       "status": "covered",
@@ -1570,15 +1570,13 @@
           "stepAction": "step"
         }
       ],
-      "profiles": [
-        "spell.invocation-antimagic-field-ongoing-spell-suppression"
-      ],
+      "profiles": ["spell.invocation-magic-suppression-emanation"],
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-antimagic-suppression.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/antimagic-field-ongoing-spell-suppression.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/magic-suppression-emanation.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
       ],
       "status": "covered",
@@ -1594,18 +1592,18 @@
       "parityWitnesses": [
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/antimagic-field-action-interdiction.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt",
+          "ownerPath": "packages/battle-runtime/src/magic-suppression-action-interdiction.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-magic-suppression-action-interdiction.mbt.qnt",
           "stepAction": "step"
         }
       ],
-      "profiles": ["spell.invocation-antimagic-field-action-interdiction"],
+      "profiles": ["spell.invocation-magic-suppression-action-interdiction"],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt"
+        "packages/battle-runtime/battle-runtime-magic-suppression-action-interdiction.mbt.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/antimagic-field-action-interdiction.ts",
+        "packages/battle-runtime/src/battle-reducer/magic-suppression-action-interdiction.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts",
         "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
@@ -1626,20 +1624,20 @@
       "parityWitnesses": [
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/antimagic-field-magical-effect-interdiction.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt",
+          "ownerPath": "packages/battle-runtime/src/magic-suppression-magical-effect-interdiction.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-magic-suppression-magical-effect-interdiction.mbt.qnt",
           "stepAction": "step"
         }
       ],
       "profiles": [
-        "spell.invocation-antimagic-field-magical-effect-interdiction"
+        "spell.invocation-magic-suppression-magical-effect-interdiction"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt"
+        "packages/battle-runtime/battle-runtime-magic-suppression-magical-effect-interdiction.mbt.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/antimagic-field-magical-effect-interdiction.ts",
+        "packages/battle-runtime/src/battle-reducer/magic-suppression-magical-effect-interdiction.ts",
         "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts",
@@ -2100,7 +2098,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/antimagic-field-transit-blocking.ts",
+        "packages/battle-runtime/src/battle-reducer/magic-suppression-transit-blocking.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/self-teleport.ts"
       ],
       "status": "covered",
@@ -7831,7 +7829,7 @@
     },
     {
       "obligationIds": ["BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE"],
-      "profileId": "spell.find-familiar-lifecycle"
+      "profileId": "spell.companion-lifecycle"
     },
     {
       "obligationIds": ["BATTLE.COMMAND.OPTION_AND_NEXT_TURN"],
@@ -8059,17 +8057,17 @@
     },
     {
       "obligationIds": ["BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION"],
-      "profileId": "spell.invocation-antimagic-field-ongoing-spell-suppression"
+      "profileId": "spell.invocation-magic-suppression-emanation"
     },
     {
       "obligationIds": ["BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION"],
-      "profileId": "spell.invocation-antimagic-field-action-interdiction"
+      "profileId": "spell.invocation-magic-suppression-action-interdiction"
     },
     {
       "obligationIds": [
         "BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION"
       ],
-      "profileId": "spell.invocation-antimagic-field-magical-effect-interdiction"
+      "profileId": "spell.invocation-magic-suppression-magical-effect-interdiction"
     },
     {
       "obligationIds": ["BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD"],
@@ -8225,9 +8223,9 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt is the focused Antimagic Field action-interdiction literal projection witness for aura-membership spellcasting and Magic Action blocking. It is MBT-only parity evidence, not qnt-proof verification evidence.",
+      "evidence": "packages/battle-runtime/battle-runtime-magic-suppression-action-interdiction.mbt.qnt is the focused Antimagic Field action-interdiction literal projection witness for aura-membership spellcasting and Magic Action blocking. It is MBT-only parity evidence, not qnt-proof verification evidence.",
       "obligationIds": ["BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION"],
-      "ownerPath": "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-magic-suppression-action-interdiction.mbt.qnt",
       "role": "mbt-fixture"
     },
     {
@@ -8237,11 +8235,11 @@
       "role": "mbt-fixture"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt is the focused Antimagic Field magical-effect interdiction literal projection witness for target and affected-creature blocking through shared aura-membership witnesses. It is MBT-only parity evidence, not qnt-proof verification evidence.",
+      "evidence": "packages/battle-runtime/battle-runtime-magic-suppression-magical-effect-interdiction.mbt.qnt is the focused Antimagic Field magical-effect interdiction literal projection witness for target and affected-creature blocking through shared aura-membership witnesses. It is MBT-only parity evidence, not qnt-proof verification evidence.",
       "obligationIds": [
         "BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION"
       ],
-      "ownerPath": "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-magic-suppression-magical-effect-interdiction.mbt.qnt",
       "role": "mbt-fixture"
     },
     {
@@ -17622,16 +17620,16 @@
     "character-sheet.weapon-mastery-class-level-reselection",
     "character-sheet.weapon-mastery-reselection",
     "spell.creature-type-protection-and-charm",
-    "spell.find-familiar-lifecycle",
+    "spell.companion-lifecycle",
     "spell.hit-point-restoration",
     "spell.invocation-acid-arrow-attack-timing",
     "spell.invocation-after-hit-damage",
     "spell.invocation-after-hit-damage-illumination",
     "spell.invocation-after-hit-restraint-turn-start-damage",
     "spell.invocation-after-hit-timed-damage-save",
-    "spell.invocation-antimagic-field-action-interdiction",
-    "spell.invocation-antimagic-field-magical-effect-interdiction",
-    "spell.invocation-antimagic-field-ongoing-spell-suppression",
+    "spell.invocation-magic-suppression-action-interdiction",
+    "spell.invocation-magic-suppression-magical-effect-interdiction",
+    "spell.invocation-magic-suppression-emanation",
     "spell.invocation-attack-roll-advantage-save",
     "spell.invocation-blur-attack-roll-defense",
     "spell.invocation-chained-attack-damage",

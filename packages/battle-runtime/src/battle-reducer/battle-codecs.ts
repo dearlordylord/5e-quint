@@ -131,7 +131,7 @@ import { creatureAttackRollMechanicsAreSupported } from "../statblock-action-sup
 import { ATTACK_DAMAGE_ABILITY_MODIFIER_CHOICE_SELECTIONS } from "./attack-damage-ability-modifier-choice.ts";
 import { ATTACK_DAMAGE_DIE_FLOOR_CHOICE_SELECTIONS } from "./attack-damage-die-floor-choice.ts";
 import {
-  BATTLE_ANTIMAGIC_FIELD_ONGOING_SPELL_EFFECT_SOURCE_KINDS,
+  BATTLE_MAGIC_SUPPRESSION_ONGOING_SPELL_EFFECT_SOURCE_KINDS,
   BATTLE_ATTACK_RANGE_BANDS,
   BLUR_ATTACK_ROLL_BYPASS_SENSES,
   COMMAND_OPTIONS,
@@ -4826,7 +4826,7 @@ export const BattleFillSchema: Schema.Codec<
               ),
               effect: BattleMagicSuppressionOngoingSpellEffectRefSchema,
               sourceKind: Schema.Literals(
-                BATTLE_ANTIMAGIC_FIELD_ONGOING_SPELL_EFFECT_SOURCE_KINDS,
+                BATTLE_MAGIC_SUPPRESSION_ONGOING_SPELL_EFFECT_SOURCE_KINDS,
               ),
             }),
           ),

@@ -3,7 +3,7 @@ import * as Option from "effect/Option";
 import { Result } from "effect";
 
 import type { BattleCompanionState } from "../companion-state.ts";
-import { battleCompanionEntries } from "../find-familiar-state.ts";
+import { battleCompanionEntries } from "../spawned-companion-state.ts";
 import {
   battleAttackExecutionScopeRefForProcedureRef,
   type CombatantId,

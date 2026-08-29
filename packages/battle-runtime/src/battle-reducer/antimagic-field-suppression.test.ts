@@ -17,7 +17,7 @@ import {
   ongoingSpellEffectRefEquals,
   ongoingSpellEffectRefForEmitter,
   ongoingSpellEffectRefKey,
-} from "./antimagic-field-suppression.ts";
+} from "./magic-suppression-ongoing-effect.ts";
 
 function trackedEmitter(
   effectRef: ReturnType<typeof battleEffectExecutionRefForTest>,

@@ -2,7 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spatial-melee-spell-attack-proxy-attack-proxy spell.invocation-glyph-stored-summon-object-placement
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-magical-effect-interdiction
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-magical-effect-interdiction
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-range-increase
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE
 
@@ -67,7 +67,7 @@ import {
 import {
   SPELL_MAGICAL_EFFECT_SOURCE,
   magicalEffectTargetsInterdictionMessage,
-} from "./antimagic-field-magical-effect-interdiction.ts";
+} from "./magic-suppression-magical-effect-interdiction.ts";
 
 type RuntimeSpellProcedure = RuntimeSpellProcedureExecution;
 
@@ -734,7 +734,7 @@ export function spellAreaChoiceHole(
           | "persistentAreaTrait"
           | "magicalDarknessPointOrigin"
           | "magicSuppressionEmanation"
-          | "antimagicFieldOngoingSpellSuppression"
+          | "magicSuppressionOngoingSpellEffect"
           | "persistentAreaSaveDamage"
           | "areaMovementDistanceDamage"
           | "persistentAreaSaveDamage"
@@ -765,7 +765,7 @@ export function spellAreaChoiceHoleId(
         | "persistentAreaTrait"
         | "magicalDarknessPointOrigin"
         | "magicSuppressionEmanation"
-        | "antimagicFieldOngoingSpellSuppression"
+        | "magicSuppressionOngoingSpellEffect"
         | "persistentAreaSaveDamage"
         | "areaMovementDistanceDamage"
         | "persistentAreaSaveDamage"

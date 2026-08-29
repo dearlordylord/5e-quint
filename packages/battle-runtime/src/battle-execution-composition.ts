@@ -29,12 +29,12 @@ import {
   resolveFlySpeedGrantEndFallCleanup as resolveFlySpeedGrantEndFallCleanupStateOnly,
 } from "./battle-reducer/environmental-fall-procedures.ts";
 import {
-  FindFamiliarProcedureExecution,
-  resolveAdmittedFindFamiliarReappearanceSubject as resolveAdmittedFindFamiliarReappearanceSubjectStateOnly,
+  CompanionLifecycleProcedureExecution,
+  resolveAdmittedCompanionReappearanceSubject as resolveAdmittedCompanionReappearanceSubjectStateOnly,
   resolveFindFamiliarTouchSpellSubject,
   shareFindFamiliarSenses as shareFindFamiliarSensesStateOnly,
-} from "./battle-reducer/find-familiar-procedures.ts";
-import { spawnedCompanionConnectionHole } from "./find-familiar-companion-subjects.ts";
+} from "./battle-reducer/companion-lifecycle-procedures.ts";
+import { spawnedCompanionConnectionHole } from "./companion-subjects.ts";
 import {
   ReplayContinuationExecution,
   resolveReplayContinuationFromState as resolveReplayContinuationFromStateWithRegistry,
@@ -46,11 +46,11 @@ import {
   battleSnapshotProjection as battleSnapshotProjectionFromState,
   snapshotBattle as snapshotBattleFromState,
 } from "./battle-reducer/battle-snapshot.ts";
-import type { FindFamiliarWithin100FeetFact } from "./find-familiar-telepathy.ts";
+import type { FindFamiliarWithin100FeetFact } from "./companion-communication.ts";
 import type { CombatantId } from "./identity.ts";
 import { ATTACK_RESOLVERS } from "./battle-reducer/attack-main.ts";
 import { resolveMonkFocusFlurryOfBlowsStrike } from "./battle-reducer/monk-flurry-attack.ts";
-import { resolvePactOfTheChainFamiliarReactionAttack } from "./find-familiar-pact-chain.ts";
+import { resolvePactOfTheChainFamiliarReactionAttack } from "./companion-reaction-attack.ts";
 import type { BattleAttackRouteResolvers } from "./battle-reducer/attack-resolvers.ts";
 
 const BATTLE_ATTACK_ROUTE_RESOLVERS = {
@@ -91,14 +91,14 @@ export function resolveBattleInterrupt(input: {
   );
 }
 
-export function resolveAdmittedFindFamiliarReappearanceSubject(
+export function resolveAdmittedCompanionReappearanceSubject(
   input: Parameters<
-    typeof resolveAdmittedFindFamiliarReappearanceSubjectStateOnly
+    typeof resolveAdmittedCompanionReappearanceSubjectStateOnly
   >[0],
 ): BattleResolutionResult {
   return battleResolutionWithExecutionSnapshot(
     input.admission.state,
-    resolveAdmittedFindFamiliarReappearanceSubjectStateOnly(input),
+    resolveAdmittedCompanionReappearanceSubjectStateOnly(input),
   );
 }
 
@@ -193,7 +193,7 @@ export function deliverTouchSpellThroughFindFamiliar(input: {
           ...input.fills,
         ],
       },
-      FindFamiliarProcedureExecution.fromResolver((admitted) =>
+      CompanionLifecycleProcedureExecution.fromResolver((admitted) =>
         resolveAdmittedBattleSubjectWithRegistry(
           admitted,
           executionRegistry,

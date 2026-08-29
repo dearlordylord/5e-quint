@@ -8,7 +8,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-area-movement-distance-damage-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spatial-melee-spell-attack-proxy-attack-proxy spell.invocation-glyph-stored-summon-object-placement
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-emanation
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.paladin-sacred-weapon
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-directional-persistent-area-line unit-feature.metamagic-heightened-save-disadvantage
@@ -128,7 +128,7 @@ import {
   isTrackedOngoingSpellLightEmitter,
   ongoingSpellEffectRefForEmitter,
   ongoingSpellEffectRefKey,
-} from "./antimagic-field-suppression.ts";
+} from "./magic-suppression-ongoing-effect.ts";
 import {
   HIDEOUS_LAUGHTER_DURATION_TICKS,
   SPELL_CREATED_HELD_OBJECT_MELEE_REACH_FEET,

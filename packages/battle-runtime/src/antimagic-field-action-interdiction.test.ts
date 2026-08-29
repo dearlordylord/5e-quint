@@ -10,7 +10,7 @@ import {
   type TestAntimagicFieldAuraMembership,
 } from "./antimagic-field.test-support.ts";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-antimagic-field-action-interdiction
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-magic-suppression-action-interdiction
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {

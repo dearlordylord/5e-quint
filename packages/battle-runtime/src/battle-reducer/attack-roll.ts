@@ -109,7 +109,7 @@ import {
   currentActorId,
   grappledBy,
 } from "./creature-state-leaves.ts";
-import { ongoingSpellEffectSuppressedByAntimagicField } from "./antimagic-field-suppression.ts";
+import { ongoingSpellEffectSuppressedByAntimagicField } from "./magic-suppression-ongoing-effect.ts";
 import {
   activeOngoingFeatureOccurrenceFromExecution,
   extendOngoingFeatureToEndOfNextTurn,

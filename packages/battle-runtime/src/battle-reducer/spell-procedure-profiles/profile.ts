@@ -41,7 +41,7 @@ import { cantripSpellAccessForCastingSource } from "../../procedure-execution/sp
 import {
   magicSuppressionOngoingSpellEffectKeys,
   ongoingSpellEffectRefKey,
-} from "../antimagic-field-suppression.ts";
+} from "../magic-suppression-ongoing-effect.ts";
 import { characterBattleLevel } from "../../character-class-level.ts";
 import type { SpellProcedureExecutionDeclaration } from "./execution-profile.ts";
 export * from "./execution-profile.ts";

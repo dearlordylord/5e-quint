@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.find-familiar-lifecycle
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.companion-lifecycle
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 import * as Result from "effect/Result";
 
@@ -24,14 +24,14 @@ import {
   statBlockAttackActionOptions,
   statBlockAttackProcedureSection,
 } from "./battle-reducer/statblock.ts";
-import { findPresentFamiliarById } from "./find-familiar-state.ts";
+import { findPresentFamiliarById } from "./spawned-companion-state.ts";
 import type { CombatantId } from "./identity.ts";
-import { combatantHasPactOfTheChainFindFamiliar } from "./find-familiar-pact-facts.ts";
+import { combatantHasPactOfTheChainFindFamiliar } from "./companion-reaction-feature-facts.ts";
 import {
   ammunitionForAttackIsAvailable,
   spendAmmunitionForAcceptedAttack,
 } from "./battle-ammunition.ts";
-export { combatantHasPactOfTheChainFindFamiliar } from "./find-familiar-pact-facts.ts";
+export { combatantHasPactOfTheChainFindFamiliar } from "./companion-reaction-feature-facts.ts";
 
 export type PactOfTheChainFamiliarAttackSubject = Extract<
   BattleSubject,

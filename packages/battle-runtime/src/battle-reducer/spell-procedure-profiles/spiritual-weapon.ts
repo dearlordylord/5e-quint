@@ -60,7 +60,7 @@ import {
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../../identity.ts";
-import { magicSuppressionOngoingSpellEffectRefForActiveEffect } from "../antimagic-field-suppression.ts";
+import { magicSuppressionOngoingSpellEffectRefForActiveEffect } from "../magic-suppression-ongoing-effect.ts";
 import {
   spatialMeleeSpellAttackProxyPositionHole,
   spellTargetHole,

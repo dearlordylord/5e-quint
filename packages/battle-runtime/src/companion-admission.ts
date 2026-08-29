@@ -10,12 +10,12 @@ import {
   findCompanionEntryByOwner,
   type BattleCompanionStoredForm,
 } from "./companion-state.ts";
-import type { AdmittedFindFamiliarReappearance } from "./find-familiar-admission-state.ts";
+import type { AdmittedFindFamiliarReappearance } from "./companion-admission-state.ts";
 import type { BattleStatBlockPresentationSource } from "./battle-runtime-context.ts";
 import {
   familiarStatBlockWithCreatureTypeOverride,
   findFamiliarIdentityIssue,
-} from "./find-familiar-lifecycle-execution.ts";
+} from "./companion-lifecycle-execution.ts";
 import {
   battleExecutionScopeInitialOrNextOrdinal,
   type CombatantId,
@@ -41,7 +41,7 @@ export function admitFindFamiliarReappearance(input: {
     readonly presentation: BattleStatBlockPresentationSource;
   },
   {
-    readonly tag: "findFamiliarReappearanceAdmissionIssue";
+    readonly tag: "companionReappearanceAdmissionIssue";
     readonly message: string;
   }
 > {
@@ -144,12 +144,12 @@ function issue(
 ): Result.Result<
   never,
   {
-    readonly tag: "findFamiliarReappearanceAdmissionIssue";
+    readonly tag: "companionReappearanceAdmissionIssue";
     readonly message: string;
   }
 > {
   return Result.fail({
-    tag: "findFamiliarReappearanceAdmissionIssue",
+    tag: "companionReappearanceAdmissionIssue",
     message,
   });
 }

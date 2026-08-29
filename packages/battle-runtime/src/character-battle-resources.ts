@@ -147,14 +147,14 @@ type SpellAccessGrant = Extract<
   EffectAtom,
   { readonly kind: "grant_spell_access" }
 >;
-export type PactOfTheChainFindFamiliarInvocationMode = {
+export type CompanionReactionInvocationMode = {
   readonly action: "magicAction";
   readonly resource: "noSpellSlot";
 };
 export const PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE = {
   action: "magicAction",
   resource: "noSpellSlot",
-} as const satisfies PactOfTheChainFindFamiliarInvocationMode;
+} as const satisfies CompanionReactionInvocationMode;
 type FamiliarFormCatalog = Extract<
   SpawnedCreatureMechanics["creature"],
   { readonly kind: "familiar_form_catalog" }

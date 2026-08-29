@@ -82,7 +82,7 @@ export type {
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy spell.invocation-glyph-stored-summon-object-placement
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-action-interdiction
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-action-interdiction
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE
@@ -92,7 +92,7 @@ export type {
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-emanation
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-duration-and-concentration
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-missed-spell-attack-reroll
@@ -375,7 +375,7 @@ import {
   type OpenHandTechniqueDecisionChoice,
   type SelfTransformationModeKind,
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS as TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
-  type BattleAntimagicFieldOngoingSpellEffectSourceKind as BattleMagicSuppressionOngoingSpellEffectSourceKind,
+  type BattleMagicSuppressionOngoingSpellEffectSourceKind as BattleMagicSuppressionOngoingSpellEffectSourceKind,
 } from "./battle-reducer/domain-constants.ts";
 import {
   BRUTAL_STRIKE_EFFECT_DECISION_CHOICES,

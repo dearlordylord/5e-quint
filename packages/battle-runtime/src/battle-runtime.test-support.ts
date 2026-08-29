@@ -33,8 +33,8 @@ import { attackActionOptionName } from "./battle-reducer/statblock-attacks.ts";
 import { statBlockAttackProcedureSection } from "./battle-reducer/statblock.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
 import { statBlockProcedurePresentations } from "./stat-block-presentation.ts";
-import { admitFindFamiliarReappearance } from "./find-familiar-admission.ts";
-import { resolveAdmittedFindFamiliarReappearanceSubject } from "./battle-reducer/find-familiar-procedures.ts";
+import { admitFindFamiliarReappearance } from "./companion-admission.ts";
+import { resolveAdmittedCompanionReappearanceSubject } from "./battle-reducer/companion-lifecycle-procedures.ts";
 
 import {
   abilityModifier,
@@ -2346,7 +2346,7 @@ function resolveBattleSubjectWithOptionalFamiliarAdmission(
   }
   return Result.isFailure(admission)
     ? resolveBattleSubjectRuntime(input)
-    : resolveAdmittedFindFamiliarReappearanceSubject({
+    : resolveAdmittedCompanionReappearanceSubject({
         fills: input.fills,
         admission: admission.success.mechanics,
       });

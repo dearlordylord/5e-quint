@@ -58,7 +58,7 @@ import {
 import { validateDirectionalPersistentAreaAreaPushFacts } from "./gust-of-wind-push-facts.ts";
 import type { SpellFillSet } from "./spells-resolve-fill-set.ts";
 import { failedSavingThrowTargetIds } from "./saving-throw-outcomes.ts";
-import { isTrackedOngoingSpellLightEmitter } from "./antimagic-field-suppression.ts";
+import { isTrackedOngoingSpellLightEmitter } from "./magic-suppression-ongoing-effect.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resource-execution.ts";
 
 const byProcedure = Match.discriminator("procedure");

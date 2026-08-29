@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-emanation
 
 import type {
   BattleActiveEffect,
@@ -16,7 +16,7 @@ type TrackedOngoingSpellActiveEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "spellObjectContactDamage" | "spatialMeleeSpellAttackProxy" }
 >;
-type TrackedAntimagicFieldOngoingSpellActiveEffect = Extract<
+type TrackedMagicSuppressionOngoingSpellActiveEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "spellObjectContactDamage" | "spatialMeleeSpellAttackProxy" }
 >;
@@ -50,7 +50,7 @@ export function ongoingSpellEffectRefForActiveEffect(
 }
 
 export function magicSuppressionOngoingSpellEffectRefForActiveEffect(
-  effect: TrackedAntimagicFieldOngoingSpellActiveEffect,
+  effect: TrackedMagicSuppressionOngoingSpellActiveEffect,
 ): BattleMagicSuppressionOngoingSpellEffectRef {
   return {
     kind: "spellActiveEffect",

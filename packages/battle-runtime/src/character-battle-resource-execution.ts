@@ -71,7 +71,7 @@ export type CharacterBattleMetamagicState = {
   readonly spellUseLimit: "one_per_spell_unless_option_allows_stacking";
   readonly knownOptions: readonly CharacterBattleMetamagicOptionFact[];
 };
-export type PactOfTheChainFindFamiliarInvocationMode = {
+export type CompanionReactionInvocationMode = {
   readonly action: "magicAction";
   readonly resource: "noSpellSlot";
 };
@@ -91,7 +91,7 @@ export type CharacterBattleSpellcastingExecutionState = {
   readonly proficiencyBonus: ProficiencyBonus;
   readonly canCastSpells: boolean;
   readonly spellSlots: readonly CharacterBattleSpellSlotState[];
-  readonly pactOfTheChainFindFamiliarInvocationMode: PactOfTheChainFindFamiliarInvocationMode | null;
+  readonly pactOfTheChainFindFamiliarInvocationMode: CompanionReactionInvocationMode | null;
 };
 export type CharacterBattlePointPoolSpendIssue = {
   readonly tag: "characterBattlePointPoolSpendIssue";

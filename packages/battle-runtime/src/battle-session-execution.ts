@@ -9,7 +9,7 @@ import {
   endTurn,
   openCreatureFallsInterruptWindow,
   resolveAdmittedBattleSubject,
-  resolveAdmittedFindFamiliarReappearanceSubject,
+  resolveAdmittedCompanionReappearanceSubject,
   resolveBattleInterrupt,
   snapshotBattle,
 } from "./battle-execution-composition.ts";
@@ -39,7 +39,7 @@ import type {
   BattleTargetSpatialFact,
 } from "./battle-state-execution.ts";
 import type { BattleStatBlockExecutionCatalog } from "./battle-state-execution.ts";
-import { admitFindFamiliarReappearance } from "./find-familiar-admission.ts";
+import { admitFindFamiliarReappearance } from "./companion-admission.ts";
 import {
   admitTableD20TestCircumstanceDecisions,
   battleD20TestCircumstanceRequests,
@@ -394,7 +394,7 @@ export function resolveBattleRuntimeSubject(
         admission.failure.message,
       );
     }
-    const result = resolveAdmittedFindFamiliarReappearanceSubject({
+    const result = resolveAdmittedCompanionReappearanceSubject({
       fills: input.fills,
       admission: admission.success.mechanics,
     });

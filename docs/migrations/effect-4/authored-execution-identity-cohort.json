@@ -26,7 +26,7 @@
   "procedureCohort": [
     {
       "record": "antimagic_field",
-      "current": ["antimagicFieldOngoingSpellSuppression"],
+      "current": ["magicSuppressionOngoingSpellEffect"],
       "family": "magicSuppressionEmanation"
     },
     {
@@ -194,7 +194,7 @@
       "antimagicFieldAffectedOngoingSpellEffect",
       "antimagicFieldAura",
       "antimagicFieldAuraMembership",
-      "antimagicFieldOngoingSpellSuppression",
+      "magicSuppressionOngoingSpellEffect",
       "antimagicFieldSelfEmanation",
       "antimagicFieldTransit"
     ],
@@ -352,11 +352,11 @@
     "find_familiar": [
       "findFamiliar",
       "findFamiliarConnection",
-      "findFamiliarReappearanceAdmissionIssue",
+      "companionReappearanceAdmissionIssue",
       "findFamiliarSharedSenses",
       "findFamiliarTouchSpell",
       "findFamiliarTouchSpellTarget",
-      "findFamiliarWithin100FeetOfOwner",
+      "companionWithinCommunicationRangeOfOwner",
       "pactOfTheChainFindFamiliar"
     ],
     "shining_smite": ["shiningSmiteIllumination"]

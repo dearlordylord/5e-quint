@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.find-familiar-lifecycle
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.companion-lifecycle
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 import {
   holeId,
@@ -12,7 +12,7 @@ import type {
   BattleSpawnedCompanionConnectionHole,
   BattleHeldObjectFactsHole,
 } from "./battle-state-execution.ts";
-import { FIND_FAMILIAR_TELEPATHY_RANGE_FEET } from "./find-familiar-telepathy.ts";
+import { FIND_FAMILIAR_TELEPATHY_RANGE_FEET } from "./companion-communication.ts";
 import type { CombatantId } from "./identity.ts";
 
 export const FIND_FAMILIAR_TOUCH_DELIVERY_TARGET_LABEL =

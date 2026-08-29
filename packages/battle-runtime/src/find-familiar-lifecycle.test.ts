@@ -6,7 +6,7 @@ import {
   battleRuntimeContextForTest,
   battleRuntimeSessionForTest,
 } from "./battle-runtime-session.test-support.ts";
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.find-familiar-lifecycle unit-feature.d20-test-natural-one-reroll
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.companion-lifecycle unit-feature.d20-test-natural-one-reroll
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84I5 find_familiar
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
@@ -15,7 +15,7 @@ import {
   findFamiliarCurrentHitPoints,
   findFamiliarIdentityIssue,
   presentFindFamiliarHitPoints,
-} from "./find-familiar-lifecycle-execution.ts";
+} from "./companion-lifecycle-execution.ts";
 import { removeBattleCombatants } from "./battle-reducer/api-lifecycle.ts";
 import { Result } from "effect";
 import * as Option from "effect/Option";
@@ -89,13 +89,13 @@ import {
 import { battleStatBlockProcedureExecutionRef } from "./identity.ts";
 import {
   deliverTouchSpellThroughFindFamiliar as deliverTouchSpellThroughFindFamiliarWithExecution,
-  FindFamiliarProcedureExecution,
-  resolveAdmittedFindFamiliarReappearanceSubject,
-} from "./battle-reducer/find-familiar-procedures.ts";
+  CompanionLifecycleProcedureExecution,
+  resolveAdmittedCompanionReappearanceSubject,
+} from "./battle-reducer/companion-lifecycle-procedures.ts";
 import { companionRouteForResolution } from "./battle-reducer/companion-routes.ts";
-import { admitFindFamiliarReappearance } from "./find-familiar-admission.ts";
-import { castResolvedFindFamiliar } from "./find-familiar-lifecycle.ts";
-import { spendFindFamiliarTouchDeliveryReaction } from "./find-familiar-telepathy.ts";
+import { admitFindFamiliarReappearance } from "./companion-admission.ts";
+import { castResolvedFindFamiliar } from "./companion-lifecycle.ts";
+import { spendFindFamiliarTouchDeliveryReaction } from "./companion-communication.ts";
 import {
   assertBattleSnapshotCodecRoundTripForTest,
   characterBattleFeatureInitForTest,
@@ -245,7 +245,7 @@ function startFixtureBattle(
   const skeleton = statBlockCatalog.requireStatBlock("stat_block_skeleton");
   const maxHp = literalHp(skeleton);
   const result = startBattle({
-    battleId: battleId("find-familiar-lifecycle-test"),
+    battleId: battleId("companion-lifecycle-test"),
     combatants: [
       {
         combatantId: casterId,
@@ -327,7 +327,7 @@ function startSpellcasterFixtureBattle(
   const usesWizardShockingGrasp =
     input.casterSpellProfile === "wizardShockingGrasp";
   const result = startBattle({
-    battleId: battleId("find-familiar-telepathy-test"),
+    battleId: battleId("companion-communication-test"),
     combatants: [
       characterCreature({
         combatantId: casterId,
@@ -408,7 +408,7 @@ function startPactWarlockFixtureBattle(
   } = {},
 ): BattleRuntimeSession {
   const result = startBattle({
-    battleId: battleId("find-familiar-pact-chain-test"),
+    battleId: battleId("companion-reaction-attack-test"),
     combatants: [
       characterCreature({
         combatantId: casterId,
@@ -586,7 +586,7 @@ function wildShapeResourcePoolRefForFixture(session: BattleRuntimeSession) {
 
 function startWrongOwnerPactFixtureBattle(): BattleRuntimeSession {
   const result = startBattle({
-    battleId: battleId("find-familiar-pact-chain-wrong-owner-test"),
+    battleId: battleId("companion-reaction-attack-wrong-owner-test"),
     combatants: [
       characterCreature({
         combatantId: otherCombatantId,
@@ -1193,7 +1193,7 @@ describe("Find Familiar lifecycle", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Retained Find Familiar recast requires a battle-owned authored form selection.",
+        "Retained companion recast requires a battle-owned authored form selection.",
     });
 
     const absentPactFamiliarInput = {
@@ -1679,7 +1679,7 @@ describe("Find Familiar lifecycle", () => {
     expect(recast).toMatchObject({
       tag: "invalid",
       message:
-        "Retained Find Familiar recast requires the session-owned authored selection transition.",
+        "Retained companion recast requires the session-owned authored selection transition.",
     });
     expect(recast.snapshot).toEqual(snapshotBattle(retained.success));
     expect(
@@ -2475,7 +2475,7 @@ describe("Find Familiar lifecycle", () => {
     );
     expect(
       presentFindFamiliarHitPoints(withoutFamiliar, otherCombatantId),
-    ).toBe("Present Find Familiar combatant is missing.");
+    ).toBe("Present companion combatant is missing.");
     expect(findFamiliarCurrentHitPoints(Hp(0))).toBe(
       "Present Find Familiar current HP must be above 0.",
     );
@@ -2954,7 +2954,7 @@ describe("Find Familiar lifecycle", () => {
 
     expect(
       findFamiliarTelepathicConnection(cast.state, {
-        kind: "findFamiliarWithin100FeetOfOwner",
+        kind: "companionWithinCommunicationRangeOfOwner",
         ownerId: casterId,
         familiarId,
       }),
@@ -2966,7 +2966,7 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(
       findFamiliarTelepathicConnection(cast.state, {
-        kind: "findFamiliarWithin100FeetOfOwner",
+        kind: "companionWithinCommunicationRangeOfOwner",
         ownerId: casterId,
         familiarId: otherCombatantId,
       }),
@@ -2982,7 +2982,7 @@ describe("Find Familiar lifecycle", () => {
       state: cast.state,
       casterId,
       fact: {
-        kind: "findFamiliarWithin100FeetOfOwner",
+        kind: "companionWithinCommunicationRangeOfOwner",
         ownerId: casterId,
         familiarId,
       },
@@ -3017,7 +3017,7 @@ describe("Find Familiar lifecycle", () => {
       state: shared.state,
       casterId,
       fact: {
-        kind: "findFamiliarWithin100FeetOfOwner",
+        kind: "companionWithinCommunicationRangeOfOwner",
         ownerId: casterId,
         familiarId,
       },
@@ -3030,7 +3030,7 @@ describe("Find Familiar lifecycle", () => {
       state: cast.state,
       casterId,
       fact: {
-        kind: "findFamiliarWithin100FeetOfOwner",
+        kind: "companionWithinCommunicationRangeOfOwner",
         ownerId: casterId,
         familiarId: otherCombatantId,
       },
@@ -3047,7 +3047,7 @@ describe("Find Familiar lifecycle", () => {
       state: nextTurn.state,
       casterId,
       fact: {
-        kind: "findFamiliarWithin100FeetOfOwner",
+        kind: "companionWithinCommunicationRangeOfOwner",
         ownerId: casterId,
         familiarId,
       },
@@ -3094,7 +3094,7 @@ describe("Find Familiar lifecycle", () => {
       subject: cureWoundsAct.subject,
       fills: [targetFill],
       fact: {
-        kind: "findFamiliarWithin100FeetOfOwner",
+        kind: "companionWithinCommunicationRangeOfOwner",
         ownerId: casterId,
         familiarId,
       },
@@ -3118,7 +3118,7 @@ describe("Find Familiar lifecycle", () => {
         },
       ],
       fact: {
-        kind: "findFamiliarWithin100FeetOfOwner",
+        kind: "companionWithinCommunicationRangeOfOwner",
         ownerId: casterId,
         familiarId,
       },
@@ -3584,7 +3584,7 @@ describe("Find Familiar lifecycle", () => {
       subject: healingWordAct.subject,
       fills: [],
       fact: {
-        kind: "findFamiliarWithin100FeetOfOwner",
+        kind: "companionWithinCommunicationRangeOfOwner",
         ownerId: casterId,
         familiarId,
       },
@@ -3618,7 +3618,7 @@ describe("Find Familiar lifecycle", () => {
       },
       fills: [],
       fact: {
-        kind: "findFamiliarWithin100FeetOfOwner",
+        kind: "companionWithinCommunicationRangeOfOwner",
         ownerId: casterId,
         familiarId,
       },
@@ -3633,7 +3633,7 @@ describe("Find Familiar lifecycle", () => {
       subject: cureWoundsAct.subject,
       fills: [],
       fact: {
-        kind: "findFamiliarWithin100FeetOfOwner",
+        kind: "companionWithinCommunicationRangeOfOwner",
         ownerId: casterId,
         familiarId: otherCombatantId,
       },
@@ -3654,7 +3654,7 @@ describe("Find Familiar lifecycle", () => {
       subject: cureWoundsAct.subject,
       fills: [],
       fact: {
-        kind: "findFamiliarWithin100FeetOfOwner",
+        kind: "companionWithinCommunicationRangeOfOwner",
         ownerId: casterId,
         familiarId,
       },
@@ -3701,7 +3701,7 @@ describe("Find Familiar lifecycle", () => {
         subject: cureWoundsAct.subject,
         fills: [targetFill],
         fact: {
-          kind: "findFamiliarWithin100FeetOfOwner",
+          kind: "companionWithinCommunicationRangeOfOwner",
           ownerId: casterId,
           familiarId,
         },
@@ -3710,7 +3710,7 @@ describe("Find Familiar lifecycle", () => {
           fills: [targetFill],
         },
       },
-      FindFamiliarProcedureExecution.fromResolver((admitted) => {
+      CompanionLifecycleProcedureExecution.fromResolver((admitted) => {
         expect(
           admitted.state.combatants.get(familiarId)?.reactionAvailable,
         ).toBe(false);
@@ -3878,7 +3878,7 @@ describe("Find Familiar lifecycle", () => {
     expect(Result.isSuccess(admittedReappearance)).toBe(true);
     if (Result.isFailure(admittedReappearance)) return;
     const mechanicalPlacementFrontier =
-      resolveAdmittedFindFamiliarReappearanceSubject({
+      resolveAdmittedCompanionReappearanceSubject({
         fills: [],
         admission: admittedReappearance.success.mechanics,
       });
@@ -5101,7 +5101,7 @@ describe("Find Familiar lifecycle", () => {
         subject: cureWoundsAct.subject,
         fills: [targetFill],
         fact: {
-          kind: "findFamiliarWithin100FeetOfOwner",
+          kind: "companionWithinCommunicationRangeOfOwner",
           ownerId: casterId,
           familiarId,
         },
@@ -5110,7 +5110,7 @@ describe("Find Familiar lifecycle", () => {
           fills: [targetFill],
         },
       },
-      FindFamiliarProcedureExecution.fromResolver(() => {
+      CompanionLifecycleProcedureExecution.fromResolver(() => {
         throw new Error("Committed stale delivery must not resolve the spell.");
       }),
       "committed",
@@ -5119,7 +5119,7 @@ describe("Find Familiar lifecycle", () => {
       tag: "invalid",
       reason: "staleSubject",
       message:
-        "Find Familiar touch delivery continuation requires its committed Reaction.",
+        "Companion touch delivery continuation requires its committed Reaction.",
     });
 
     const firstDelivery = deliverTouchSpellThroughFindFamiliar({
@@ -5127,7 +5127,7 @@ describe("Find Familiar lifecycle", () => {
       subject: cureWoundsAct.subject,
       fills: [targetFill],
       fact: {
-        kind: "findFamiliarWithin100FeetOfOwner",
+        kind: "companionWithinCommunicationRangeOfOwner",
         ownerId: casterId,
         familiarId,
       },
@@ -5142,7 +5142,7 @@ describe("Find Familiar lifecycle", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Find Familiar touch delivery requires the familiar's available Reaction at completion.",
+        "Companion touch delivery requires the familiar's available Reaction at completion.",
     });
   });
 
@@ -5166,7 +5166,7 @@ describe("Find Familiar lifecycle", () => {
         subject: cureWoundsAct.subject,
         fills: [],
         fact: {
-          kind: "findFamiliarWithin100FeetOfOwner",
+          kind: "companionWithinCommunicationRangeOfOwner",
           ownerId: casterId,
           familiarId,
         },
@@ -5175,7 +5175,7 @@ describe("Find Familiar lifecycle", () => {
           fills: [],
         },
       },
-      FindFamiliarProcedureExecution.fromResolver((admitted) => ({
+      CompanionLifecycleProcedureExecution.fromResolver((admitted) => ({
         tag: "resolved",
         state: admitted.state,
         snapshot: snapshotBattle(admitted.state),
@@ -5186,7 +5186,7 @@ describe("Find Familiar lifecycle", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Find Familiar touch delivery currently supports exactly one selected target choice.",
+        "Companion touch delivery currently supports exactly one selected target choice.",
     });
   });
 

@@ -38,7 +38,7 @@
       "module/binding:afterHitSpellRouteForInterrupt": 23,
       "module/binding:afterHitSpellTurnBoundaryRouteForResolution": 11
     },
-    "packages/battle-runtime/src/battle-reducer/antimagic-field-action-interdiction.ts": {
+    "packages/battle-runtime/src/battle-reducer/magic-suppression-action-interdiction.ts": {
       "module/binding:antimagicFieldSubjectInterdiction": 13
     },
     "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts": {
@@ -191,7 +191,7 @@
     "packages/battle-runtime/src/battle-reducer/feature-action-routes.ts": {
       "module/binding:attackActionAreaSaveDamageReplacementRouteForResolution": 11
     },
-    "packages/battle-runtime/src/battle-reducer/find-familiar-procedures.ts": {
+    "packages/battle-runtime/src/battle-reducer/companion-lifecycle-procedures.ts": {
       "module/binding:deliverTouchSpellThroughFindFamiliar": 10
     },
     "packages/battle-runtime/src/battle-reducer/glyph-durable-occurrence.ts": {
@@ -422,8 +422,8 @@
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/after-hit-timed-damage-and-save.ts": {
       "module/binding:afterHitTimedDamageAndSaveSpellProjection": 47
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/antimagic-field-ongoing-spell-suppression.ts": {
-      "module/binding:antimagicFieldOngoingSpellSuppressionSpell": 20
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/magic-suppression-emanation.ts": {
+      "module/binding:magicSuppressionOngoingSpellEffectSpell": 20
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/blur-attack-roll-defense.ts": {
       "module/binding:blurAttackRollDefenseShape": 25
@@ -844,16 +844,16 @@
     "packages/battle-runtime/src/domain-value-equality.ts": {
       "module/binding:sameDomainValue": 19
     },
-    "packages/battle-runtime/src/find-familiar-lifecycle-execution.ts": {
+    "packages/battle-runtime/src/companion-lifecycle-execution.ts": {
       "module/binding:withFindFamiliarCombatant": 11
     },
-    "packages/battle-runtime/src/find-familiar-lifecycle.ts": {
+    "packages/battle-runtime/src/companion-lifecycle.ts": {
       "module/binding:castResolvedFindFamiliar": 13,
       "module/binding:castWildCompanion": 14,
       "module/binding:selectedStoredFormStatBlockId": 9,
       "module/binding:spendWildCompanionCost": 10
     },
-    "packages/battle-runtime/src/find-familiar-telepathy.ts": {
+    "packages/battle-runtime/src/companion-communication.ts": {
       "module/binding:findFamiliarTouchDeliveryFills": 10,
       "module/binding:prepareTouchSpellDeliveryThroughFindFamiliar": 14
     },

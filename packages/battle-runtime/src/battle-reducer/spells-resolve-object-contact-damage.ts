@@ -1,6 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-magical-effect-interdiction
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-magical-effect-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
 
@@ -100,11 +100,11 @@ import {
 import {
   magicSuppressionOngoingSpellEffectRefForActiveEffect,
   ongoingSpellEffectSuppressedByAntimagicField,
-} from "./antimagic-field-suppression.ts";
+} from "./magic-suppression-ongoing-effect.ts";
 import {
   SPELL_MAGICAL_EFFECT_SOURCE,
   magicalEffectTargetsInterdictionMessage,
-} from "./antimagic-field-magical-effect-interdiction.ts";
+} from "./magic-suppression-magical-effect-interdiction.ts";
 import { linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
 
 type ObjectContactDamageInvocation = Extract<

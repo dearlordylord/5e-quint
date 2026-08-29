@@ -153,7 +153,7 @@ module battleRuntimeObscuringAreaEffectsTests {
       )
     val broken = breakConcentrationSpellEffects(resolved, Fighter)
     all {
-      assert(antimagicFieldOngoingSpellSuppressionActive(resolved, antimagicFieldAreaId)),
+      assert(magicSuppressionOngoingSpellEffectActive(resolved, antimagicFieldAreaId)),
       assert(resolved.lightEmitters == Set(continualFlameObjectEmitter(LightObjectTarget))),
       assert(battleRuntimeLightEmitters(resolved) == Set()),
       assert(battleRuntimeLightEmitters(broken) == Set(continualFlameObjectEmitter(LightObjectTarget))),
@@ -170,7 +170,7 @@ module battleRuntimeObscuringAreaEffectsTests {
         7,
       )
     all {
-      assert(not(antimagicFieldOngoingSpellSuppressionActive(resolved, antimagicFieldAreaId))),
+      assert(not(magicSuppressionOngoingSpellEffectActive(resolved, antimagicFieldAreaId))),
       assert(not(battleActorHasCommittedSpellSlotUse(resolved, Fighter))),
     }
   }

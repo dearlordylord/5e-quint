@@ -1,6 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-emanation
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-duration-and-concentration
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
@@ -187,7 +187,7 @@ import {
 import {
   magicSuppressionOngoingSpellEffectRefForActiveEffect,
   ongoingSpellEffectSuppressedByAntimagicField,
-} from "./antimagic-field-suppression.ts";
+} from "./magic-suppression-ongoing-effect.ts";
 
 import {
   admitSpellMetamagicApplications,

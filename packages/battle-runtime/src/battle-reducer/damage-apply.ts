@@ -79,7 +79,7 @@ import {
 } from "../character-battle-resource-execution.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import { setCompanion } from "../companion-state.ts";
-import { findPresentFamiliarById } from "../find-familiar-state.ts";
+import { findPresentFamiliarById } from "../spawned-companion-state.ts";
 import { retainedStoredFormForPresentCompanion } from "../companion-stored-form.ts";
 import { findFamiliarDisappearedAtZeroHitPointsState } from "../companion-state.ts";
 import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";

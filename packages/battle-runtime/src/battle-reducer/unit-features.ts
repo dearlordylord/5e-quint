@@ -1,6 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-action-interdiction
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-magical-effect-interdiction
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-action-interdiction
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-magical-effect-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
@@ -72,7 +72,7 @@ import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-f
 import {
   OTHER_MAGICAL_EFFECT_SOURCE,
   magicalEffectTargetsInterdictionMessage,
-} from "./antimagic-field-magical-effect-interdiction.ts";
+} from "./magic-suppression-magical-effect-interdiction.ts";
 import { spendReaction } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import {

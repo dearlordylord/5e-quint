@@ -85,7 +85,7 @@ attack-resolution capabilities, then delegates continuation resolution through
 that single typed owner.
 
 Find Familiar lifecycle, reappearance, shared-senses, and touch-delivery
-procedures belong to `battle-reducer/find-familiar-procedures.ts`. Touch
+procedures belong to `battle-reducer/companion-lifecycle-procedures.ts`. Touch
 delivery receives admitted spell resolution as a closed execution capability,
 so its connection fact, target-fact translation, spell result, and familiar
 Reaction commitment remain one procedure without reversing the dispatcher

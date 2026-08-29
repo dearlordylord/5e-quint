@@ -28,7 +28,7 @@ import { reactionRollOrDamageReductionChoices } from "./reaction-modifiers.ts";
 import { triggeredReactionSpellChoices } from "./reaction-triggered-spells.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
-import { combatantInsideActiveAntimagicFieldAura } from "./antimagic-field-action-interdiction.ts";
+import { combatantInsideActiveAntimagicFieldAura } from "./magic-suppression-action-interdiction.ts";
 import { afterHitSaveGatedConditionSavingThrowOutcomeHole } from "./after-hit-save-gated-condition-hole.ts";
 import { isAttackHitBonusActionSpellInvocation } from "./spell-interrupt-procedure-kinds.ts";
 import {

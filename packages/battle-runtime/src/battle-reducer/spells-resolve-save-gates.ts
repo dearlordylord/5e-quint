@@ -1,6 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-magical-effect-interdiction
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-magical-effect-interdiction
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.potent-cantrip
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-careful-save-protection
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
@@ -113,7 +113,7 @@ import {
 import {
   SPELL_MAGICAL_EFFECT_SOURCE,
   magicalEffectTargetsInterdictionMessage,
-} from "./antimagic-field-magical-effect-interdiction.ts";
+} from "./magic-suppression-magical-effect-interdiction.ts";
 import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resource-execution.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";

@@ -54,7 +54,7 @@ import {
   currentActorId,
   grappledBy,
 } from "./creature-state-leaves.ts";
-import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
+import { isPresentFindFamiliarCombatant } from "../spawned-companion-state.ts";
 import { GRAPPLE_TARGET_REACH_FEET } from "./domain-constants.ts";
 import {
   activeDruidWildShapeForm,

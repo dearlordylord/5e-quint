@@ -61,7 +61,7 @@ import {
   ongoingSpellEffectRefForActiveEffect,
   ongoingSpellEffectRefForEmitter,
   ongoingSpellEffectRefKey,
-} from "../antimagic-field-suppression.ts";
+} from "../magic-suppression-ongoing-effect.ts";
 import { combatantsAfterConcentrationSpellEffectsEndedIfNoEffects } from "../spell-condition-effects-helpers.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
 import type { BattleSpellEffectLevel } from "../spells-effective-level.ts";
@@ -265,7 +265,7 @@ type MagicSuppressionEmanationOngoingSpellEffectRef = Extract<
 >;
 type OngoingSpellEndDispelException =
   | {
-      readonly kind: "antimagicFieldAuraNoEffect";
+      readonly kind: "magicSuppressionAuraNoEffect";
       readonly effect: MagicSuppressionEmanationOngoingSpellEffectRef;
     }
   | {
@@ -403,7 +403,7 @@ function resolveOngoingSpellEndSpellAct(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  if (dispelException.kind === "antimagicFieldAuraNoEffect") {
+  if (dispelException.kind === "magicSuppressionAuraNoEffect") {
     return resolveOngoingSpellEndDispelException({
       state: input.input.state,
       actorId: input.actorId,
@@ -568,13 +568,13 @@ function ongoingSpellEndDispelException(
   }
   return activeAntimagicFieldAuraMatchesTarget(state, target.effect)
     ? {
-        kind: "antimagicFieldAuraNoEffect",
+        kind: "magicSuppressionAuraNoEffect",
         effect: target.effect,
       }
     : {
         kind: "invalid",
         message:
-          "Dispel Magic Antimagic Field aura target must reference an active aura.",
+          "Ongoing-spell ending suppression target must reference an active aura.",
       };
 }
 
@@ -599,7 +599,7 @@ function resolveOngoingSpellEndDispelException(input: {
   readonly invocation: BattleExecutableSpellInvocation<OngoingSpellEndInvocation>;
   readonly exception: Extract<
     OngoingSpellEndDispelException,
-    { readonly kind: "antimagicFieldAuraNoEffect" }
+    { readonly kind: "magicSuppressionAuraNoEffect" }
   >;
 }): BattleResolutionResult {
   const resourced = spendSpellCastResources({

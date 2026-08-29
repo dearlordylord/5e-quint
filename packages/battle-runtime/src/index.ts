@@ -244,7 +244,7 @@ export {
   type CharacterBattleSpellListFact,
   type CharacterBattleSpellcastingExecutionState,
   type CharacterBattleSpellcastingState,
-  type PactOfTheChainFindFamiliarInvocationMode,
+  type CompanionReactionInvocationMode,
 } from "./character-battle-resources.ts";
 
 export {
@@ -266,12 +266,12 @@ export {
   type FindFamiliarReappearanceInput,
   type WildCompanionCastInput,
   type WildCompanionSpend,
-} from "./find-familiar-lifecycle.ts";
+} from "./companion-lifecycle.ts";
 export {
   admitCompanionToBattleRuntime,
   castRetainedFindFamiliarRuntime,
   type RetainedCompanionRuntimeCastResult,
-} from "./find-familiar-presentation.ts";
+} from "./companion-presentation.ts";
 
 export type {
   BattleCompanionAbsentState,
@@ -288,22 +288,22 @@ export {
   findFamiliarCompanionEntryForOwner,
   findFamiliarCompanionForOwner,
   findFamiliarCreatureTypeOverrideForOwner,
-} from "./find-familiar-state.ts";
+} from "./spawned-companion-state.ts";
 
 export {
   FIND_FAMILIAR_TELEPATHY_RANGE_FEET,
   findFamiliarTelepathicConnection,
-  type FindFamiliarSharedSensesEffect,
+  type CompanionSharedSensesEffect,
   type FindFamiliarTelepathicConnection,
   type FindFamiliarWithin100FeetFact,
-} from "./find-familiar-telepathy.ts";
+} from "./companion-communication.ts";
 
 export {
   deliverTouchSpellThroughFindFamiliar,
   shareFindFamiliarSenses,
 } from "./battle-execution-composition.ts";
 
-export type { PactOfTheChainFamiliarAttackSubject } from "./find-familiar-pact-chain.ts";
+export type { PactOfTheChainFamiliarAttackSubject } from "./companion-reaction-attack.ts";
 
 export {
   battleCreaturePresentationDisplayName,

@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.find-familiar-lifecycle
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.companion-lifecycle
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
 import { movementFeet, type MovementFeet } from "@dnd/shared/types";
@@ -18,7 +18,7 @@ import { combatantCanTakeReactions } from "./battle-reducer/creature-state-execu
 import { spellInvocationIsSpellcasting } from "./battle-reducer/spell-turn-resources.ts";
 import { characterSpellProcedure } from "./character-execution-queries.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
-import { findFamiliarCompanionEntryForOwner } from "./find-familiar-state.ts";
+import { findFamiliarCompanionEntryForOwner } from "./spawned-companion-state.ts";
 import { allocateBattleEffectExecutionRefForCreature } from "./effect-execution-ref.ts";
 import type {
   BattleEffectExecutionRef,
@@ -29,7 +29,7 @@ import type {
 export const FIND_FAMILIAR_TELEPATHY_RANGE_FEET = movementFeet(100);
 
 export type FindFamiliarWithin100FeetFact = {
-  readonly kind: "findFamiliarWithin100FeetOfOwner";
+  readonly kind: "companionWithinCommunicationRangeOfOwner";
   readonly ownerId: CombatantId;
   readonly familiarId: CombatantId;
 };
@@ -41,7 +41,7 @@ export type FindFamiliarTelepathicConnection = {
   readonly sharedLanguageRequired: false;
 };
 
-export type FindFamiliarSharedSensesEffect = Extract<
+export type CompanionSharedSensesEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "spawnedCompanionSharedSenses" }
 >;
@@ -178,7 +178,7 @@ export function prepareTouchSpellDeliveryThroughFindFamiliar(input: {
   if (actor?.origin.kind !== "character") {
     return invalidTransition(
       "unsupportedActOption",
-      "Find Familiar touch delivery requires a supported spell invocation.",
+      "Companion touch delivery requires a supported spell invocation.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -195,7 +195,7 @@ export function prepareTouchSpellDeliveryThroughFindFamiliar(input: {
   ) {
     return invalidTransition(
       "unsupportedActOption",
-      "Find Familiar touch delivery requires a supported spell invocation.",
+      "Companion touch delivery requires a supported spell invocation.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -209,7 +209,7 @@ export function prepareTouchSpellDeliveryThroughFindFamiliar(input: {
   if (connection === null || connection.ownerId !== input.subject.actorId) {
     return invalidTransition(
       "invalidFill",
-      "Find Familiar touch delivery requires a present familiar within 100 feet of its caster.",
+      "Companion touch delivery requires a present familiar within 100 feet of its caster.",
     );
   }
   const familiar = input.state.combatants.get(connection.familiarId);
@@ -219,7 +219,7 @@ export function prepareTouchSpellDeliveryThroughFindFamiliar(input: {
   ) {
     return invalidTransition(
       "staleSubject",
-      "Find Familiar touch delivery requires the familiar's available Reaction.",
+      "Companion touch delivery requires the familiar's available Reaction.",
     );
   }
   if (
@@ -228,7 +228,7 @@ export function prepareTouchSpellDeliveryThroughFindFamiliar(input: {
   ) {
     return invalidTransition(
       "staleSubject",
-      "Find Familiar touch delivery continuation requires its committed Reaction.",
+      "Companion touch delivery continuation requires its committed Reaction.",
     );
   }
   const deliveryFills = findFamiliarTouchDeliveryFills({
@@ -260,7 +260,7 @@ export function spendFindFamiliarTouchDeliveryReaction(input: {
     return {
       tag: "invalid",
       message:
-        "Find Familiar touch delivery requires the familiar to remain present.",
+        "Companion touch delivery requires the familiar to remain present.",
     };
   }
   /* v8 ignore stop -- @preserve */
@@ -268,7 +268,7 @@ export function spendFindFamiliarTouchDeliveryReaction(input: {
     return {
       tag: "invalid",
       message:
-        "Find Familiar touch delivery requires the familiar's available Reaction at completion.",
+        "Companion touch delivery requires the familiar's available Reaction at completion.",
     };
   }
   return {
@@ -307,7 +307,7 @@ function findFamiliarTouchDeliveryFills(input: {
       return {
         tag: "invalid",
         message:
-          "Find Familiar touch delivery currently supports single target-choice Touch spells.",
+          "Companion touch delivery currently supports single target-choice Touch spells.",
       };
     }
     /* v8 ignore stop -- @preserve */
@@ -321,7 +321,7 @@ function findFamiliarTouchDeliveryFills(input: {
       return {
         tag: "invalid",
         message:
-          "Find Familiar touch delivery currently supports exactly one target choice.",
+          "Companion touch delivery currently supports exactly one target choice.",
       };
     }
     /* v8 ignore stop -- @preserve */
@@ -363,7 +363,7 @@ function findFamiliarTouchDeliveryFills(input: {
     : {
         tag: "invalid",
         message:
-          "Find Familiar touch delivery requires a table fact that the familiar can deliver the Touch spell to the selected target.",
+          "Companion touch delivery requires a table fact that the familiar can deliver the Touch spell to the selected target.",
       };
 }
 
@@ -388,7 +388,7 @@ function spawnedCompanionSharedSensesEffect(input: {
   readonly familiarId: CombatantId;
   readonly familiarSenses: readonly CreatureSense[];
   readonly effectRef: BattleEffectExecutionRef;
-}): FindFamiliarSharedSensesEffect {
+}): CompanionSharedSensesEffect {
   return {
     kind: "spawnedCompanionSharedSenses",
     effectRef: input.effectRef,

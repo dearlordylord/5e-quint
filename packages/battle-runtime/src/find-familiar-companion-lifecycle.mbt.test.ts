@@ -1,7 +1,7 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
-// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.find-familiar-lifecycle
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.companion-lifecycle
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 // RAW trace:
@@ -759,7 +759,7 @@ function spawnedCompanionLifecycleCompanionProjection(
 
 function familiarWithin100FeetFact() {
   return {
-    kind: "findFamiliarWithin100FeetOfOwner" as const,
+    kind: "companionWithinCommunicationRangeOfOwner" as const,
     ownerId: casterId,
     familiarId,
   };

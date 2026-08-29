@@ -26,7 +26,7 @@ import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   characterUnitProcedure,
 } from "../character-execution-queries.ts";
-import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
+import { isPresentFindFamiliarCombatant } from "../spawned-companion-state.ts";
 import {
   attackExecutionSelectionForOption,
   boundAttackExecutionSelectionKey,

@@ -1,7 +1,7 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
-// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-antimagic-field-ongoing-spell-suppression
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-magic-suppression-emanation
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS antimagic_field
 // UNIT-IDENTITY-REPLAY: B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS antimagic_field doSuppressOrdinarySpell doSuppressArtifactSpell doBreakAntimagicConcentration
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION
@@ -17,7 +17,7 @@ import {
 import { describe, expect, it } from "vitest";
 
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
-import { ongoingSpellEffectSuppressedByAntimagicField } from "./battle-reducer/antimagic-field-suppression.ts";
+import { ongoingSpellEffectSuppressedByAntimagicField } from "./battle-reducer/magic-suppression-ongoing-effect.ts";
 import {
   allocateBattleEffectExecutionRefForCreature,
   type BattleActiveEffectOccurrenceTemplate,

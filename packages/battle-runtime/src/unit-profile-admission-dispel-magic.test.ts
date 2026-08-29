@@ -1399,7 +1399,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Dispel Magic Antimagic Field aura target must reference an active aura.",
+        "Ongoing-spell ending suppression target must reference an active aura.",
     });
   });
 

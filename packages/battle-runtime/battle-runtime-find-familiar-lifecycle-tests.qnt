@@ -1,5 +1,5 @@
 // -*- mode: Bluespec; -*-
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.find-familiar-lifecycle
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.companion-lifecycle
 
 module battleRuntimeFindFamiliarLifecycleTests {
   import battleRuntimeModel.* from "./battle-runtime-model"

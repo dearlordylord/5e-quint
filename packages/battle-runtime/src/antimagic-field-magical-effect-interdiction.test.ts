@@ -11,7 +11,7 @@ import {
   type TestAntimagicFieldAuraMembership,
 } from "./antimagic-field.test-support.ts";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-antimagic-field-magical-effect-interdiction
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-magic-suppression-magical-effect-interdiction
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
 import { classLevel, Hp, movementFeet } from "@dnd/shared/types";
 import { Result } from "effect";
@@ -23,7 +23,7 @@ import {
   OTHER_MAGICAL_EFFECT_SOURCE,
   SPELL_MAGICAL_EFFECT_SOURCE,
   magicalEffectTargetsInterdictedByAntimagicField,
-} from "./battle-reducer/antimagic-field-magical-effect-interdiction.ts";
+} from "./battle-reducer/magic-suppression-magical-effect-interdiction.ts";
 import {
   burningHandsUnitId,
   clericChannelDivinityUnitId,

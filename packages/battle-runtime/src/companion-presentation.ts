@@ -18,7 +18,7 @@ import {
   castResolvedFindFamiliar,
   type CompanionBattleAdmissionInput,
   type FindFamiliarCastInput,
-} from "./find-familiar-lifecycle.ts";
+} from "./companion-lifecycle.ts";
 import { resolveFindFamiliarForm } from "@dnd/surface/surface/find-familiar-forms";
 import { snapshotBattle } from "./battle-reducer/battle-snapshot.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
@@ -124,7 +124,7 @@ export function castRetainedFindFamiliarRuntime(
       session: input.session,
       reason: "invalidFill",
       message:
-        "Retained Find Familiar recast requires a battle-owned authored form selection.",
+        "Retained companion recast requires a battle-owned authored form selection.",
       snapshot: snapshotBattle(input.session.state),
     };
   }
@@ -171,7 +171,7 @@ export function castRetainedFindFamiliarRuntime(
       session: input.session,
       reason: "invalidFill",
       message:
-        "Resolved Find Familiar execution unexpectedly requested additional fills.",
+        "Resolved companion lifecycle execution unexpectedly requested additional fills.",
       snapshot: result.snapshot,
     };
   }
@@ -209,7 +209,7 @@ export function castRetainedFindFamiliarRuntime(
       session: input.session,
       reason: "invalidFill",
       message:
-        "Retained Find Familiar recast owner has no authored runtime context.",
+        "Retained companion recast owner has no authored runtime context.",
       snapshot: snapshotBattle(input.session.state),
     };
   }

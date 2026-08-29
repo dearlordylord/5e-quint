@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.find-familiar-lifecycle
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.companion-lifecycle
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 
 import { optionalProperty } from "../optional-property.ts";
@@ -14,26 +14,26 @@ import type {
   BattleResolutionResult,
   BattleState,
 } from "../battle-state-execution.ts";
-import type { AdmittedFindFamiliarReappearance } from "../find-familiar-admission-state.ts";
+import type { AdmittedFindFamiliarReappearance } from "../companion-admission-state.ts";
 import {
   companionHeldObjectFactsHole,
   companionReappearanceInitiativeHole,
   companionReappearancePlacementHole,
   spawnedCompanionConnectionHole,
   findFamiliarTouchDeliveryTargetHoles,
-} from "../find-familiar-companion-subjects.ts";
+} from "../companion-subjects.ts";
 import {
   permanentlyDismissFindFamiliar,
   reappearAdmittedTemporarilyDismissedFindFamiliar,
   temporarilyDismissFindFamiliar,
-} from "../find-familiar-lifecycle-execution.ts";
-import { findFamiliarCompanionEntryForOwner } from "../find-familiar-state.ts";
+} from "../companion-lifecycle-execution.ts";
+import { findFamiliarCompanionEntryForOwner } from "../spawned-companion-state.ts";
 import {
   prepareTouchSpellDeliveryThroughFindFamiliar,
   shareFindFamiliarSenses as applyFindFamiliarSharedSenses,
   spendFindFamiliarTouchDeliveryReaction,
   type FindFamiliarWithin100FeetFact,
-} from "../find-familiar-telepathy.ts";
+} from "../companion-communication.ts";
 import type { CombatantId } from "../identity.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import { consumeOrCloseLegendaryActionWindow } from "./legendary-action-window.ts";
@@ -47,15 +47,15 @@ type ResolveAdmittedFindFamiliarSpell = (
     | AdmittedBonusActionSpellBattleResolutionInput,
 ) => BattleResolutionResult;
 
-export class FindFamiliarProcedureExecution {
+export class CompanionLifecycleProcedureExecution {
   private constructor(
     private readonly resolveAdmittedSpell: ResolveAdmittedFindFamiliarSpell,
   ) {}
 
   static fromResolver(
     resolver: ResolveAdmittedFindFamiliarSpell,
-  ): FindFamiliarProcedureExecution {
-    return new FindFamiliarProcedureExecution(resolver);
+  ): CompanionLifecycleProcedureExecution {
+    return new CompanionLifecycleProcedureExecution(resolver);
   }
 
   resolveSpell(
@@ -124,7 +124,7 @@ export function resolveCompanionLifecycleSubject(
   return exhaustive;
 }
 
-export function resolveAdmittedFindFamiliarReappearanceSubject(input: {
+export function resolveAdmittedCompanionReappearanceSubject(input: {
   readonly fills: readonly BattleFill[];
   readonly admission: AdmittedFindFamiliarReappearance;
 }): BattleResolutionResult {
@@ -262,7 +262,7 @@ export function resolveFindFamiliarTouchSpellSubject(
   input: BattleResolutionInputForSubject<
     Extract<BattleSubject, { readonly tag: "spawnedCompanionTouchSpellProxy" }>
   >,
-  execution: FindFamiliarProcedureExecution,
+  execution: CompanionLifecycleProcedureExecution,
   reactionCommitment: "uncommitted" | "committed",
 ): BattleResolutionResult {
   const connection = spawnedCompanionConnectionFact({
@@ -320,7 +320,7 @@ export function deliverTouchSpellThroughFindFamiliar(
       readonly fills: readonly BattleFill[];
     };
   },
-  execution: FindFamiliarProcedureExecution,
+  execution: CompanionLifecycleProcedureExecution,
   reactionCommitment: "uncommitted" | "committed",
 ): BattleResolutionResult {
   const prepared = prepareTouchSpellDeliveryThroughFindFamiliar({
@@ -375,7 +375,7 @@ export function deliverTouchSpellThroughFindFamiliar(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Find Familiar touch delivery currently supports exactly one selected target choice.",
+      "Companion touch delivery currently supports exactly one selected target choice.",
     );
   }
   return cast;
@@ -461,7 +461,7 @@ function spawnedCompanionConnectionFact(input: {
     tag: "resolved",
     holeId: expectedHole.holeId,
     fact: {
-      kind: "findFamiliarWithin100FeetOfOwner",
+      kind: "companionWithinCommunicationRangeOfOwner",
       ownerId: input.ownerId,
       familiarId: input.companionId,
     },

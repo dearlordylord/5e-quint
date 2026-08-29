@@ -1,8 +1,8 @@
 import { spellInvocationResourceForCastOption } from "./profile.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-emanation
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-action-interdiction
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-action-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION
 //
 // The Antimagic Field ongoing-spell suppression Spell Procedure Profile:
@@ -48,7 +48,7 @@ import {
   magicSuppressionOngoingSpellEffectRefForEmitter,
   isTrackedOngoingSpellLightEmitter,
   ongoingSpellEffectRefKey,
-} from "../antimagic-field-suppression.ts";
+} from "../magic-suppression-ongoing-effect.ts";
 import { snapshotBattle } from "../interrupt-execution.ts";
 import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";

@@ -4,7 +4,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-effective-level-extra-target
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-action-interdiction
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-action-interdiction
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION
@@ -39,7 +39,7 @@ import { spellCastReactionFactsHole } from "./spell-cast-interrupt-frame.ts";
 import {
   combatantInsideActiveAntimagicFieldAura,
   spellInvocationActInterdictedByAntimagicField,
-} from "./antimagic-field-action-interdiction.ts";
+} from "./magic-suppression-action-interdiction.ts";
 import {
   spellCastInterruptionReactionCapableReactors,
   spellCastCanTriggerSpellCastInterruption,

@@ -1038,7 +1038,7 @@
         },
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/find-familiar-lifecycle.test.ts"
+          "ownerPath": "packages/battle-runtime/src/companion-lifecycle.test.ts"
         }
       ]
     },
@@ -3401,17 +3401,17 @@
       ]
     },
     {
-      "id": "spell.find-familiar-lifecycle",
+      "id": "spell.companion-lifecycle",
       "profileKind": "spell-invocation",
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-find-familiar.qnt"
       ],
       "runtimeOwners": [
-        "packages/battle-runtime/src/find-familiar-lifecycle.ts",
-        "packages/battle-runtime/src/find-familiar-state.ts",
-        "packages/battle-runtime/src/find-familiar-telepathy.ts",
-        "packages/battle-runtime/src/find-familiar-pact-chain.ts",
-        "packages/battle-runtime/src/battle-reducer/find-familiar-procedures.ts"
+        "packages/battle-runtime/src/companion-lifecycle.ts",
+        "packages/battle-runtime/src/companion-state.ts",
+        "packages/battle-runtime/src/companion-communication.ts",
+        "packages/battle-runtime/src/companion-reaction-attack.ts",
+        "packages/battle-runtime/src/battle-reducer/companion-lifecycle-procedures.ts"
       ],
       "sourceBoundary": "The runtime consumes the authored Find Familiar spell form catalog, caller-selected form and Celestial/Fey/Fiend type choice, caller-supplied unoccupied placement facts, caller-supplied familiar identity and Initiative facts, caller-supplied 100-foot connection facts, ordinary spell fills for Touch delivery, selected Pact of the Chain Spell Access, owner Attack-action attack availability, familiar Reaction availability, supported familiar Stat Block action attacks, and caller-supplied held-item drop boundary facts. It records companion lifecycle and replacement state, inserts a present familiar as an allied combatant with its own Initiative turn and ordinary action/Reaction resources, allows supported non-attack actions, rejects ordinary Find Familiar attacks, projects telepathic communication without shared language, applies the caster Bonus Action shared-senses effect until the caster's next turn, resolves Touch spell delivery atomically with the familiar Reaction spend, and resolves the Pact of the Chain familiar attack exception atomically with one owner Attack-action attack forgone and the familiar Reaction spent.",
       "taskRefs": [
@@ -3424,11 +3424,11 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-find-familiar-lifecycle-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-companion-lifecycle-tests.qnt"
         },
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/find-familiar-lifecycle.test.ts"
+          "ownerPath": "packages/battle-runtime/src/companion-lifecycle.test.ts"
         }
       ]
     },
@@ -4007,7 +4007,7 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/antimagic-field-transit-blocking.ts",
+        "packages/battle-runtime/src/battle-reducer/magic-suppression-transit-blocking.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/self-teleport.ts"
       ],
       "sourceBoundary": "The runtime consumes the authored Misty Step spell, a caller-supplied unoccupied visible destination within 30 feet, and caller-supplied Antimagic Field origin/destination aura-membership witnesses for each active aura. It spends the caster's Bonus Action and Spell Slot, emits a self-teleport outcome, records that teleportation spends no Movement, provokes no Opportunity Attacks, and carries worn and carried equipment, and rejects teleportation across an active Antimagic Field aura boundary before spending resources. Automatic visibility, occupancy, blocked-destination fallback, map-position derivation, destination aura-membership derivation, and plane state remain table/spatial facts outside this runtime boundary.",
@@ -4888,14 +4888,14 @@
       ]
     },
     {
-      "id": "spell.invocation-antimagic-field-ongoing-spell-suppression",
+      "id": "spell.invocation-magic-suppression-emanation",
       "profileKind": "spell-invocation",
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-antimagic-suppression.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/antimagic-field-ongoing-spell-suppression.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/magic-suppression-emanation.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
       ],
       "sourceBoundary": "The runtime consumes the authored Antimagic Field ongoing-spell suppression shape, a self-origin 10-foot Emanation area identity, and caller-supplied affected tracked ongoing Spell Effect facts. It owns Magic Action and level-8-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, active Antimagic Field suppression state, suppression of ordinary tracked spell-created light emitters and tracked spellObjectContactDamage and Spiritual Weapon active-effect occurrences without deleting the ongoing spell occurrence, duration ticking while suppressed, exclusion of artifact/deity spell sources from suppression, and cleanup on Concentration or duration end. The remaining Antimagic Field clauses are intentionally split by owner outside this tracked-effect subset: aura-membership action interdiction, magical-effect targeting/delivery interdiction, magic-item property suppression, table-spatial magical area clipping, planar travel blocking, portal closure, Dispel Magic immunity on the aura, and broader not-yet-tracked ongoing Spell Effect suppression.",
@@ -4921,17 +4921,17 @@
       ]
     },
     {
-      "id": "spell.invocation-antimagic-field-action-interdiction",
+      "id": "spell.invocation-magic-suppression-action-interdiction",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt"
+        "packages/battle-runtime/battle-runtime-magic-suppression-action-interdiction.mbt.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/antimagic-field-action-interdiction.ts",
+        "packages/battle-runtime/src/battle-reducer/magic-suppression-action-interdiction.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/antimagic-field-ongoing-spell-suppression.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/magic-suppression-emanation.ts",
         "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/unit-features.ts"
       ],
@@ -4943,22 +4943,22 @@
       "verificationOwners": [
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/antimagic-field-action-interdiction.mbt.test.ts"
+          "ownerPath": "packages/battle-runtime/src/magic-suppression-action-interdiction.mbt.test.ts"
         },
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/antimagic-field-action-interdiction.test.ts"
+          "ownerPath": "packages/battle-runtime/src/magic-suppression-action-interdiction.test.ts"
         }
       ]
     },
     {
-      "id": "spell.invocation-antimagic-field-magical-effect-interdiction",
+      "id": "spell.invocation-magic-suppression-magical-effect-interdiction",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt"
+        "packages/battle-runtime/battle-runtime-magic-suppression-magical-effect-interdiction.mbt.qnt"
       ],
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/antimagic-field-magical-effect-interdiction.ts",
+        "packages/battle-runtime/src/battle-reducer/magic-suppression-magical-effect-interdiction.ts",
         "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts",
@@ -4972,11 +4972,11 @@
       "verificationOwners": [
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/antimagic-field-magical-effect-interdiction.mbt.test.ts"
+          "ownerPath": "packages/battle-runtime/src/magic-suppression-magical-effect-interdiction.mbt.test.ts"
         },
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/antimagic-field-magical-effect-interdiction.test.ts"
+          "ownerPath": "packages/battle-runtime/src/magic-suppression-magical-effect-interdiction.test.ts"
         }
       ]
     },
@@ -9143,7 +9143,7 @@
             "title": "Battle Find Familiar companion lifecycle, replacement, form and type choice, telepathy, touch delivery, and Pact reaction-attack state"
           }
         ],
-        "profileId": "spell.find-familiar-lifecycle",
+        "profileId": "spell.companion-lifecycle",
         "profileKind": "spell-invocation",
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-find-familiar.qnt"
@@ -9958,7 +9958,7 @@
             "title": "Battle Antimagic Field creates a self-origin Emanation and suppresses tracked ongoing spell effects inside it without deleting their occurrence state"
           }
         ],
-        "profileId": "spell.invocation-antimagic-field-ongoing-spell-suppression",
+        "profileId": "spell.invocation-magic-suppression-emanation",
         "profileKind": "spell-invocation",
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-antimagic-suppression.qnt"
@@ -9974,10 +9974,10 @@
             "title": "Battle Antimagic Field aura membership blocks spellcasting and Magic actions for creatures inside the aura"
           }
         ],
-        "profileId": "spell.invocation-antimagic-field-action-interdiction",
+        "profileId": "spell.invocation-magic-suppression-action-interdiction",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt"
+          "packages/battle-runtime/battle-runtime-magic-suppression-action-interdiction.mbt.qnt"
         ]
       },
       {
@@ -9990,10 +9990,10 @@
             "title": "Battle Antimagic Field aura membership blocks magical effects from targeting or affecting creatures inside the aura"
           }
         ],
-        "profileId": "spell.invocation-antimagic-field-magical-effect-interdiction",
+        "profileId": "spell.invocation-magic-suppression-magical-effect-interdiction",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt"
+          "packages/battle-runtime/battle-runtime-magic-suppression-magical-effect-interdiction.mbt.qnt"
         ]
       },
       {
@@ -18166,7 +18166,7 @@
       "claimKind": "qnt-proof",
       "note": "Promoted battle-runtime Quint ownership covers Find Familiar companion lifecycle, one-familiar replacement, selected form and Celestial/Fey/Fiend type choice, caller-supplied Initiative and placement facts, temporary and permanent dismissal, 0-HP disappearance, reappearance, and held-item drop boundary events.",
       "profileIds": [
-        "spell.find-familiar-lifecycle"
+        "spell.companion-lifecycle"
       ],
       "taskId": "SRDINV84I2"
     },
@@ -18174,7 +18174,7 @@
       "claimKind": "completed-runtime-parity",
       "note": "Focused battle-runtime tests cover Find Familiar lifecycle state creation, chosen creature-type override projection, one-familiar replacement, temporary dismissal, permanent dismissal, 0-HP disappearance, Magic-action reappearance, and held-item drop boundary events.",
       "profileIds": [
-        "spell.find-familiar-lifecycle"
+        "spell.companion-lifecycle"
       ],
       "taskId": "SRDINV84I2"
     },
@@ -18182,7 +18182,7 @@
       "claimKind": "qnt-proof",
       "note": "Promoted battle-runtime Quint ownership covers Find Familiar present familiar combatant admission, its own Initiative turn and turn resources, supported non-attack action availability, ordinary attack rejection, and Opportunity Attack rejection.",
       "profileIds": [
-        "spell.find-familiar-lifecycle"
+        "spell.companion-lifecycle"
       ],
       "taskId": "SRDINV84I3"
     },
@@ -18190,7 +18190,7 @@
       "claimKind": "completed-runtime-parity",
       "note": "Focused battle-runtime tests cover present familiar combatant insertion, turn/action/Reaction resource ownership, supported non-attack action allowance, ordinary attack rejection, and combatant-removal cleanup for familiar-owned readied state on disappearance or dismissal.",
       "profileIds": [
-        "spell.find-familiar-lifecycle"
+        "spell.companion-lifecycle"
       ],
       "taskId": "SRDINV84I3"
     },
@@ -18198,7 +18198,7 @@
       "claimKind": "qnt-proof",
       "note": "Promoted battle-runtime Quint ownership covers Find Familiar 100-foot telepathic connection projection without shared language, Bonus Action shared senses until the caster's next turn, and Touch spell delivery through a present familiar with atomic familiar Reaction spend.",
       "profileIds": [
-        "spell.find-familiar-lifecycle"
+        "spell.companion-lifecycle"
       ],
       "taskId": "SRDINV84I4"
     },
@@ -18206,7 +18206,7 @@
       "claimKind": "completed-runtime-parity",
       "note": "Focused battle-runtime tests cover telepathy range projection, shared-language independence, Bonus Action shared-senses duration and special-sense projection, Touch-only delivery, familiar Reaction spend, atomic cast/delivery failure, and no map-visibility derivation.",
       "profileIds": [
-        "spell.find-familiar-lifecycle"
+        "spell.companion-lifecycle"
       ],
       "taskId": "SRDINV84I4"
     },
@@ -18214,7 +18214,7 @@
       "claimKind": "qnt-proof",
       "note": "Promoted battle-runtime Quint ownership covers Pact of the Chain's familiar attack exception requiring selected Pact of the Chain, a present familiar, one owner Attack-action attack to forgo, the familiar's Reaction, and a supported familiar attack.",
       "profileIds": [
-        "spell.find-familiar-lifecycle"
+        "spell.companion-lifecycle"
       ],
       "taskId": "SRDINV84I5"
     },
@@ -18222,7 +18222,7 @@
       "claimKind": "completed-runtime-parity",
       "note": "Focused battle-runtime tests cover Pact of the Chain gating, non-Pact rejection, present familiar ownership, owner Attack-action attack accounting, familiar Reaction spend, and supported familiar Stat Block action attack resolution.",
       "profileIds": [
-        "spell.find-familiar-lifecycle"
+        "spell.companion-lifecycle"
       ],
       "taskId": "SRDINV84I5"
     },
@@ -18898,7 +18898,7 @@
       "claimKind": "qnt-proof",
       "note": "Package-local promoted Quint facts cover Antimagic Field's Magic Action and level-8-or-higher Spell Slot spend, caller-supplied self-origin 10-foot Emanation identity, active suppression effect, suppression of ordinary tracked spell-light emitters by source effect id, artifact/deity source exclusion, duration ticking while suppressed, and cleanup on Concentration or duration end.",
       "profileIds": [
-        "spell.invocation-antimagic-field-ongoing-spell-suppression"
+        "spell.invocation-magic-suppression-emanation"
       ],
       "taskId": "L12G-ANTIMAGIC-FIELD-TRACKED-LIGHT-SUPPRESSION"
     },
@@ -18906,7 +18906,7 @@
       "claimKind": "completed-runtime-parity",
       "note": "Focused battle-runtime tests cover Antimagic Field Surface-profile admission, level-8 Spell Slot self-emanation casting, area-choice fill validation, suppression of ordinary tracked spell light without deleting the occurrence, artifact/deity spell-light exclusion, suppressed duration ticking, and cleanup through Concentration or duration end.",
       "profileIds": [
-        "spell.invocation-antimagic-field-ongoing-spell-suppression"
+        "spell.invocation-magic-suppression-emanation"
       ],
       "taskId": "L12G-ANTIMAGIC-FIELD-TRACKED-LIGHT-SUPPRESSION"
     },
@@ -18914,7 +18914,7 @@
       "claimKind": "completed-runtime-parity",
       "note": "Focused battle-runtime tests extend Antimagic Field beyond tracked spell-light emitters to tracked spellObjectContactDamage active-effect occurrences, covering stable occurrence-reference suppression, no deletion of the suppressed occurrence, duration ticking while suppressed, Bonus Action repeat suppression, and restoration when the Antimagic Field concentration effect ends.",
       "profileIds": [
-        "spell.invocation-antimagic-field-ongoing-spell-suppression"
+        "spell.invocation-magic-suppression-emanation"
       ],
       "taskId": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION"
     },
@@ -18922,7 +18922,7 @@
       "claimKind": "qnt-proof",
       "note": "Focused Quint proofs extend Antimagic Field suppression from tracked spell-light source effect ids to generic ongoing Spell Effect refs, covering tracked spell-light suppression plus tracked Heat Metal spellObjectContactDamage suppression without deleting the occurrence while duration continues to tick.",
       "profileIds": [
-        "spell.invocation-antimagic-field-ongoing-spell-suppression"
+        "spell.invocation-magic-suppression-emanation"
       ],
       "taskId": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-GENERIC-SUPPRESSION"
     },
@@ -18930,7 +18930,7 @@
       "claimKind": "completed-runtime-parity",
       "note": "Focused battle-runtime tests extend Antimagic Field suppression to tracked Spiritual Weapon active-effect occurrences. Coverage includes stable occurrence-reference suppression, no deletion of the suppressed occurrence, duration ticking while suppressed, stale resolver rejection for previously discovered Spiritual Weapon repeat subjects, and restoration when Antimagic Field concentration ends. Spellcasting and Magic Action prevention, including the caster-origin Emanation case, remain split out because the runtime has no explicit origin-included or aura-membership fact at this boundary.",
       "profileIds": [
-        "spell.invocation-antimagic-field-ongoing-spell-suppression"
+        "spell.invocation-magic-suppression-emanation"
       ],
       "taskId": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-PREVENTION-AND-BROADER-SUPPRESSION"
     },
@@ -18938,7 +18938,7 @@
       "claimKind": "qnt-proof",
       "note": "Focused Quint proofs extend Antimagic Field ongoing Spell Effect refs to Spiritual Weapon, covering repeat-attack suppression without deleting the tracked occurrence; the shared Antimagic suppression ref helper is model-only and does not infer Emanation origin membership.",
       "profileIds": [
-        "spell.invocation-antimagic-field-ongoing-spell-suppression"
+        "spell.invocation-magic-suppression-emanation"
       ],
       "taskId": "L12G-FOLLOWUP-ANTIMAGIC-FIELD-PREVENTION-AND-BROADER-SUPPRESSION"
     },
@@ -18946,7 +18946,7 @@
       "claimKind": "completed-runtime-parity",
       "note": "Focused battle-runtime tests cover caller-supplied Antimagic Field aura membership with explicit Emanation origin inclusion, Action spell discovery suppression, Bonus Action spell discovery suppression, non-origin membership suppression without table geometry, stale spell subject rejection, supported non-spell Magic Action feature discovery and stale-subject rejection, and triggered Reaction spell stale-subject rejection.",
       "profileIds": [
-        "spell.invocation-antimagic-field-action-interdiction"
+        "spell.invocation-magic-suppression-action-interdiction"
       ],
       "taskId": "L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION"
     },
@@ -18954,7 +18954,7 @@
       "claimKind": "completed-runtime-parity",
       "note": "Promoted focused MBT parity witnesses Antimagic Field aura action interdiction for inside-aura discovery blocking, origin-excluded allowance, stale Action spell rejection, stale Magic Action rejection, and triggered Reaction spell rejection while keeping aura membership caller-supplied.",
       "profileIds": [
-        "spell.invocation-antimagic-field-action-interdiction"
+        "spell.invocation-magic-suppression-action-interdiction"
       ],
       "taskId": "L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION"
     },
@@ -19674,7 +19674,7 @@
       "claimKind": "completed-runtime-parity",
       "note": "Focused battle-runtime tests and MBT cover a shared magical-effect interdiction boundary for spell target selection, spell area effect delivery, and supported non-spell Magic Action feature targeting, consuming existing Antimagic Field aura membership witnesses without authored-identity dispatch or duplicate spell-specific target state.",
       "profileIds": [
-        "spell.invocation-antimagic-field-magical-effect-interdiction"
+        "spell.invocation-magic-suppression-magical-effect-interdiction"
       ],
       "taskId": "L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION"
     },
@@ -32717,7 +32717,7 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/find-familiar-lifecycle.test.ts"
+              "ownerPath": "packages/battle-runtime/src/companion-lifecycle.test.ts"
             }
           ]
         }
@@ -33821,9 +33821,9 @@
         ],
         "futureProfileOwner": "split Antimagic Field magic-item, portal, future broader ongoing Spell Effect, and future planar-travel owners",
         "profileIds": [
-          "spell.invocation-antimagic-field-ongoing-spell-suppression",
-          "spell.invocation-antimagic-field-action-interdiction",
-          "spell.invocation-antimagic-field-magical-effect-interdiction",
+          "spell.invocation-magic-suppression-emanation",
+          "spell.invocation-magic-suppression-action-interdiction",
+          "spell.invocation-magic-suppression-magical-effect-interdiction",
           "spell.invocation-ongoing-spell-ending"
         ],
         "rawRequirementIds": [
@@ -33872,14 +33872,14 @@
       "kind": "spell",
       "profiles": [
         {
-          "id": "spell.invocation-antimagic-field-ongoing-spell-suppression",
+          "id": "spell.invocation-magic-suppression-emanation",
           "profileKind": "spell-invocation",
           "qntOwners": [
             "packages/battle-runtime/battle-runtime-antimagic-suppression.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
-            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/antimagic-field-ongoing-spell-suppression.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/magic-suppression-emanation.ts",
             "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
           ],
           "sourceBoundary": "The runtime consumes the authored Antimagic Field ongoing-spell suppression shape, a self-origin 10-foot Emanation area identity, and caller-supplied affected tracked ongoing Spell Effect facts. It owns Magic Action and level-8-or-higher Spell Slot spending, caster-owned Concentration up to 1 hour, active Antimagic Field suppression state, suppression of ordinary tracked spell-created light emitters and tracked spellObjectContactDamage and Spiritual Weapon active-effect occurrences without deleting the ongoing spell occurrence, duration ticking while suppressed, exclusion of artifact/deity spell sources from suppression, and cleanup on Concentration or duration end. The remaining Antimagic Field clauses are intentionally split by owner outside this tracked-effect subset: aura-membership action interdiction, magical-effect targeting/delivery interdiction, magic-item property suppression, table-spatial magical area clipping, planar travel blocking, portal closure, Dispel Magic immunity on the aura, and broader not-yet-tracked ongoing Spell Effect suppression.",
@@ -33905,17 +33905,17 @@
           ]
         },
         {
-          "id": "spell.invocation-antimagic-field-action-interdiction",
+          "id": "spell.invocation-magic-suppression-action-interdiction",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt"
+            "packages/battle-runtime/battle-runtime-magic-suppression-action-interdiction.mbt.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
-            "packages/battle-runtime/src/battle-reducer/antimagic-field-action-interdiction.ts",
+            "packages/battle-runtime/src/battle-reducer/magic-suppression-action-interdiction.ts",
             "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
             "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts",
-            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/antimagic-field-ongoing-spell-suppression.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/magic-suppression-emanation.ts",
             "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/unit-features.ts"
           ],
@@ -33927,22 +33927,22 @@
           "verificationOwners": [
             {
               "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/antimagic-field-action-interdiction.mbt.test.ts"
+              "ownerPath": "packages/battle-runtime/src/magic-suppression-action-interdiction.mbt.test.ts"
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/antimagic-field-action-interdiction.test.ts"
+              "ownerPath": "packages/battle-runtime/src/magic-suppression-action-interdiction.test.ts"
             }
           ]
         },
         {
-          "id": "spell.invocation-antimagic-field-magical-effect-interdiction",
+          "id": "spell.invocation-magic-suppression-magical-effect-interdiction",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt"
+            "packages/battle-runtime/battle-runtime-magic-suppression-magical-effect-interdiction.mbt.qnt"
           ],
           "runtimeOwners": [
-            "packages/battle-runtime/src/battle-reducer/antimagic-field-magical-effect-interdiction.ts",
+            "packages/battle-runtime/src/battle-reducer/magic-suppression-magical-effect-interdiction.ts",
             "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts",
@@ -33956,11 +33956,11 @@
           "verificationOwners": [
             {
               "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/antimagic-field-magical-effect-interdiction.mbt.test.ts"
+              "ownerPath": "packages/battle-runtime/src/magic-suppression-magical-effect-interdiction.mbt.test.ts"
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/antimagic-field-magical-effect-interdiction.test.ts"
+              "ownerPath": "packages/battle-runtime/src/magic-suppression-magical-effect-interdiction.test.ts"
             }
           ]
         },
@@ -38568,7 +38568,7 @@
           }
         ],
         "profileIds": [
-          "spell.find-familiar-lifecycle"
+          "spell.companion-lifecycle"
         ],
         "supportedMechanics": [
           "present familiar combatant insertion with its own Initiative turn, action, Reaction, and Movement resources",
@@ -38588,7 +38588,7 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
-          "ownerPath": "packages/battle-runtime/src/find-familiar-lifecycle.test.ts",
+          "ownerPath": "packages/battle-runtime/src/companion-lifecycle.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "SRDINV84I5"
         },
@@ -38602,17 +38602,17 @@
       "kind": "spell",
       "profiles": [
         {
-          "id": "spell.find-familiar-lifecycle",
+          "id": "spell.companion-lifecycle",
           "profileKind": "spell-invocation",
           "qntOwners": [
             "packages/battle-runtime/battle-runtime-find-familiar.qnt"
           ],
           "runtimeOwners": [
-            "packages/battle-runtime/src/find-familiar-lifecycle.ts",
-            "packages/battle-runtime/src/find-familiar-state.ts",
-            "packages/battle-runtime/src/find-familiar-telepathy.ts",
-            "packages/battle-runtime/src/find-familiar-pact-chain.ts",
-            "packages/battle-runtime/src/battle-reducer/find-familiar-procedures.ts"
+            "packages/battle-runtime/src/companion-lifecycle.ts",
+            "packages/battle-runtime/src/companion-state.ts",
+            "packages/battle-runtime/src/companion-communication.ts",
+            "packages/battle-runtime/src/companion-reaction-attack.ts",
+            "packages/battle-runtime/src/battle-reducer/companion-lifecycle-procedures.ts"
           ],
           "sourceBoundary": "The runtime consumes the authored Find Familiar spell form catalog, caller-selected form and Celestial/Fey/Fiend type choice, caller-supplied unoccupied placement facts, caller-supplied familiar identity and Initiative facts, caller-supplied 100-foot connection facts, ordinary spell fills for Touch delivery, selected Pact of the Chain Spell Access, owner Attack-action attack availability, familiar Reaction availability, supported familiar Stat Block action attacks, and caller-supplied held-item drop boundary facts. It records companion lifecycle and replacement state, inserts a present familiar as an allied combatant with its own Initiative turn and ordinary action/Reaction resources, allows supported non-attack actions, rejects ordinary Find Familiar attacks, projects telepathic communication without shared language, applies the caster Bonus Action shared-senses effect until the caster's next turn, resolves Touch spell delivery atomically with the familiar Reaction spend, and resolves the Pact of the Chain familiar attack exception atomically with one owner Attack-action attack forgone and the familiar Reaction spent.",
           "taskRefs": [
@@ -38625,11 +38625,11 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-find-familiar-lifecycle-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-companion-lifecycle-tests.qnt"
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/find-familiar-lifecycle.test.ts"
+              "ownerPath": "packages/battle-runtime/src/companion-lifecycle.test.ts"
             }
           ]
         }
@@ -40990,7 +40990,7 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
-            "packages/battle-runtime/src/battle-reducer/antimagic-field-transit-blocking.ts",
+            "packages/battle-runtime/src/battle-reducer/magic-suppression-transit-blocking.ts",
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/self-teleport.ts"
           ],
           "sourceBoundary": "The runtime consumes the authored Misty Step spell, a caller-supplied unoccupied visible destination within 30 feet, and caller-supplied Antimagic Field origin/destination aura-membership witnesses for each active aura. It spends the caster's Bonus Action and Spell Slot, emits a self-teleport outcome, records that teleportation spends no Movement, provokes no Opportunity Attacks, and carries worn and carried equipment, and rejects teleportation across an active Antimagic Field aura boundary before spending resources. Automatic visibility, occupancy, blocked-destination fallback, map-position derivation, destination aura-membership derivation, and plane state remain table/spatial facts outside this runtime boundary.",

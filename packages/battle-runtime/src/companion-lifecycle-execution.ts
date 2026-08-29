@@ -12,13 +12,13 @@ import type {
   BattleState,
 } from "./battle-state-execution.ts";
 import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
-import type { AdmittedFindFamiliarReappearance } from "./find-familiar-admission-state.ts";
+import type { AdmittedFindFamiliarReappearance } from "./companion-admission-state.ts";
 import { currentActorId } from "./battle-reducer/creature-state-leaves.ts";
 import { snapshotBattle } from "./battle-reducer/battle-snapshot.ts";
 import { removeBattleCombatants } from "./battle-reducer/combatant-removal.ts";
 import { addBattleStatBlockCombatant } from "./battle-reducer/stat-block-combatant-execution.ts";
 import type { CombatantId, InitiativeScore } from "./identity.ts";
-import { findPresentFamiliarById } from "./find-familiar-state.ts";
+import { findPresentFamiliarById } from "./spawned-companion-state.ts";
 import {
   findCompanionEntryByOwner,
   findFamiliarDisappearedAtZeroHitPointsState,
@@ -118,7 +118,7 @@ export function presentFindFamiliarHitPoints(
   }
   const combatant = state.combatants.get(familiarId);
   if (combatant === undefined) {
-    return "Present Find Familiar combatant is missing.";
+    return "Present companion combatant is missing.";
   }
   const currentHp = findFamiliarCurrentHitPoints(combatant.hp);
   /* v8 ignore start -- @preserve -- Present-companion lifecycle invariant: a familiar at zero HP is transitioned and removed atomically before present-state HP is retained. */
@@ -236,7 +236,7 @@ function temporarilyDismissFindFamiliarFacts(
   const combatant = input.state.combatants.get(familiarId);
   /* v8 ignore start -- @preserve -- Present-companion lifecycle invariant: the same live combatant that supplied retained Hit Points owns its Reaction availability. */
   if (combatant === undefined) {
-    return "Present Find Familiar combatant is missing.";
+    return "Present companion combatant is missing.";
   }
   /* v8 ignore stop -- @preserve */
   const retainedForm = retainedStoredFormForPresentCompanion({
@@ -419,7 +419,7 @@ export function applyFindFamiliarZeroHitPointDisappearance(input: {
     return invalidFindFamiliarResult(
       input.state,
       "missingCombatant",
-      "Present Find Familiar combatant is missing.",
+      "Present companion combatant is missing.",
     );
   }
   /* v8 ignore stop -- @preserve */

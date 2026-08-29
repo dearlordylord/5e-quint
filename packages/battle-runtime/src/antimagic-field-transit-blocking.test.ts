@@ -10,7 +10,7 @@ import { battleStateWithAllocatedEffectForTest } from "./battle-runtime.test-sup
 import {
   ANTIMAGIC_FIELD_TRANSIT_BLOCKING_MESSAGE,
   magicSuppressionTransitInvalidReason,
-} from "./battle-reducer/antimagic-field-transit-blocking.ts";
+} from "./battle-reducer/magic-suppression-transit-blocking.ts";
 import {
   battleAreaId,
   type BattleMagicSuppressionTransitWitness,

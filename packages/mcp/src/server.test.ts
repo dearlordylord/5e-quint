@@ -4016,7 +4016,7 @@ describe("MCP server route", () => {
 
   test("start_battle admits a retained companion from Character Sheet state", () => {
     const root = createMcpPlaySessionRoot();
-    const draftId = "draft:mcp-find-familiar-admission";
+    const draftId = "draft:mcp-companion-admission";
     createFinalizedWizardWithFindFamiliar(root, draftId);
     setStoredRetainedFamiliarCompanion(root, draftId, {
       formId: "cat",
@@ -4026,7 +4026,7 @@ describe("MCP server route", () => {
 
     const started = readPayload(
       handleToolCall(root, "start_battle", {
-        battleId: "battle:mcp-find-familiar-admission",
+        battleId: "battle:mcp-companion-admission",
         initiativeMode: "direct",
         initialCombatants: [
           {

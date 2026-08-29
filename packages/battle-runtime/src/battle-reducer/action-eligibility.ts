@@ -12,7 +12,7 @@ import type {
   BattleState,
   BattleTurnResources,
 } from "../battle-state-execution.ts";
-import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
+import { isPresentFindFamiliarCombatant } from "../spawned-companion-state.ts";
 import { canSpendEscapeGrappleActionResource } from "./action-resource-kinds.ts";
 import {
   combatantCanTakeActions,

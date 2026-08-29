@@ -12,7 +12,7 @@ import {
 } from "./antimagic-field.test-support.ts";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
-// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-antimagic-field-magical-effect-interdiction
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-magic-suppression-magical-effect-interdiction
 import { classLevel, Hp, movementFeet } from "@dnd/shared/types";
 import { Result } from "effect";
 import { describe, expect, it } from "vitest";
@@ -21,7 +21,7 @@ import {
   OTHER_MAGICAL_EFFECT_SOURCE,
   SPELL_MAGICAL_EFFECT_SOURCE,
   magicalEffectTargetsInterdictedByAntimagicField,
-} from "./battle-reducer/antimagic-field-magical-effect-interdiction.ts";
+} from "./battle-reducer/magic-suppression-magical-effect-interdiction.ts";
 import {
   burningHandsUnitId,
   clericChannelDivinityUnitId,
@@ -113,7 +113,7 @@ describe("Antimagic Field magical-effect interdiction MBT", () => {
       await run({
         spec: mbtSpecPath(
           import.meta.dirname,
-          "battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt",
+          "battle-runtime-magic-suppression-magical-effect-interdiction.mbt.qnt",
         ),
         init: "init",
         step: "step",

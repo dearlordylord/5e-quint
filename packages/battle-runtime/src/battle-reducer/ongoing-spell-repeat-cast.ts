@@ -2,7 +2,7 @@ import type { BattleState } from "../battle-state-execution.ts";
 import {
   magicSuppressionOngoingSpellEffectRefForActiveEffect,
   ongoingSpellEffectSuppressedByAntimagicField,
-} from "./antimagic-field-suppression.ts";
+} from "./magic-suppression-ongoing-effect.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 
 type RepeatableOngoingSpellEffect = Parameters<

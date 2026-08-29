@@ -5,13 +5,13 @@ import type { BattleState } from "./battle-state-execution.ts";
 import type { AdmittedBattleStatBlockCombatant } from "./stat-block-combatant-execution-state.ts";
 
 /** Session-admitted mechanics for one retained familiar reappearance. */
-export type FindFamiliarReappearanceSubject = Omit<
+export type CompanionReappearanceSubject = Omit<
   Extract<BattleSubject, { readonly tag: "companionLifecycle" }>,
   "action"
 > & { readonly action: "reappear" };
 
 export type AdmittedFindFamiliarReappearance = {
   readonly state: BattleState;
-  readonly subject: FindFamiliarReappearanceSubject;
+  readonly subject: CompanionReappearanceSubject;
   readonly combatantAdmission: AdmittedBattleStatBlockCombatant;
 } & Brand.Brand<"AdmittedFindFamiliarReappearance">;

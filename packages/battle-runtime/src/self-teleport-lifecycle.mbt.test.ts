@@ -61,7 +61,7 @@ import {
   battleTablePositionId,
   movementFeet,
 } from "./unit-profile-admission.test-support.ts";
-import { magicSuppressionTransitInvalidReason } from "./battle-reducer/antimagic-field-transit-blocking.ts";
+import { magicSuppressionTransitInvalidReason } from "./battle-reducer/magic-suppression-transit-blocking.ts";
 import {
   mistyStepUnitId,
   spellCasterId,

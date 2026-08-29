@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.find-familiar-lifecycle
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.companion-lifecycle
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 import {
   ordinaryFamiliarLikeProtocol,
@@ -15,7 +15,7 @@ export {
   temporarilyDismissFindFamiliar,
   type FindFamiliarLifecycleInputBase,
   type FindFamiliarOwnerInput,
-} from "./find-familiar-lifecycle-execution.ts";
+} from "./companion-lifecycle-execution.ts";
 export { retainedStoredFormForPresentCompanion } from "./companion-stored-form.ts";
 import {
   familiarMaxHp,
@@ -32,7 +32,7 @@ import {
   resolvedFindFamiliarResult,
   spendFindFamiliarMagicAction,
   withFindFamiliarCombatant,
-} from "./find-familiar-lifecycle-execution.ts";
+} from "./companion-lifecycle-execution.ts";
 import { findFamiliarDisappearedAtZeroHitPointsState } from "./companion-state.ts";
 
 import type {
@@ -59,7 +59,7 @@ import {
   battleStateInitIssueMessage,
 } from "./battle-reducer/domain-helpers.ts";
 import { admitBattleStatBlockCombatant } from "./stat-block-combatant-admission.ts";
-import { admitFindFamiliarReappearance } from "./find-familiar-admission.ts";
+import { admitFindFamiliarReappearance } from "./companion-admission.ts";
 import type { BattleStatBlockExecutionCatalog } from "./battle-state-execution.ts";
 import type { AdmittedBattleStatBlockCombatant } from "./stat-block-combatant-execution-state.ts";
 import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
@@ -188,7 +188,7 @@ type FindFamiliarCastPrior =
 
 type FindFamiliarCastReactionIssue = {
   readonly tag: "missingLiveCombatant";
-  readonly message: "Present Find Familiar combatant is missing.";
+  readonly message: "Present companion combatant is missing.";
 };
 
 function findFamiliarPresentCombatant(input: {
@@ -199,7 +199,7 @@ function findFamiliarPresentCombatant(input: {
   return combatant === undefined
     ? Result.fail({
         tag: "missingLiveCombatant",
-        message: "Present Find Familiar combatant is missing.",
+        message: "Present companion combatant is missing.",
       })
     : Result.succeed(combatant);
 }
@@ -360,7 +360,7 @@ export function castResolvedFindFamiliar(
     return invalidFindFamiliarResult(
       input.state,
       "invalidFill",
-      "Retained Find Familiar recast requires the session-owned authored selection transition.",
+      "Retained companion recast requires the session-owned authored selection transition.",
     );
   }
   const familiarId =

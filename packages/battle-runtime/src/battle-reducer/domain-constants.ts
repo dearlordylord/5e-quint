@@ -73,13 +73,13 @@ export type SelfTransformationNonNaturalWeaponModeKind =
   (typeof SELF_TRANSFORMATION_NON_NATURAL_WEAPON_MODE_KINDS)[number];
 export const SELF_TRANSFORMATION_NATURAL_WEAPONS_MODE_KIND =
   "naturalWeapons" satisfies SelfTransformationModeKind;
-export const BATTLE_ANTIMAGIC_FIELD_ONGOING_SPELL_EFFECT_SOURCE_KINDS = [
+export const BATTLE_MAGIC_SUPPRESSION_ONGOING_SPELL_EFFECT_SOURCE_KINDS = [
   "ordinarySpell",
   "artifact",
   "deity",
 ] as const;
-export type BattleAntimagicFieldOngoingSpellEffectSourceKind =
-  (typeof BATTLE_ANTIMAGIC_FIELD_ONGOING_SPELL_EFFECT_SOURCE_KINDS)[number];
+export type BattleMagicSuppressionOngoingSpellEffectSourceKind =
+  (typeof BATTLE_MAGIC_SUPPRESSION_ONGOING_SPELL_EFFECT_SOURCE_KINDS)[number];
 export const BLUR_ATTACK_ROLL_BYPASS_SENSES = [
   "blindsight",
   "truesight",

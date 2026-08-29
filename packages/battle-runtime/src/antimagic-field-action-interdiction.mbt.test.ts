@@ -11,7 +11,7 @@ import {
 } from "./antimagic-field.test-support.ts";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
-// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-antimagic-field-action-interdiction
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-magic-suppression-action-interdiction
 import { classLevel, Hp, NonNegativeInteger } from "@dnd/shared/types";
 import { Result } from "effect";
 import { describe, expect, it } from "vitest";
@@ -99,7 +99,7 @@ describe("Antimagic Field action interdiction MBT", () => {
       await run({
         spec: mbtSpecPath(
           import.meta.dirname,
-          "battle-runtime-antimagic-field-action-interdiction.mbt.qnt",
+          "battle-runtime-magic-suppression-action-interdiction.mbt.qnt",
         ),
         init: "init",
         step: "step",

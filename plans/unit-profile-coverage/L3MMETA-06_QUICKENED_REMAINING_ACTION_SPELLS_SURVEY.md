@@ -90,7 +90,7 @@ next slice because the proof/runtime witness usually has to carry area identity,
 movement, object-contact, suppression, or cleanup facts in addition to the
 Bonus Action rewrite:
 
-- `antimagicFieldOngoingSpellSuppression`
+- `magicSuppressionOngoingSpellEffect`
 - `dancingLightsSeparateCast`
 - `dancingLightsCombinedCast`
 - `flamingSphere`

@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-antimagic-field-magical-effect-interdiction
-// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-antimagic-field-magical-effect-interdiction
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-magic-suppression-magical-effect-interdiction
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-magic-suppression-magical-effect-interdiction
 //
 // Self-contained literal projection witness for Antimagic Field magical-effect
 // targeting and delivery interdiction. The paired TypeScript driver executes

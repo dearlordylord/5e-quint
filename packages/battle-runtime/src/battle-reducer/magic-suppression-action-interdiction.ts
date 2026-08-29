@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-action-interdiction
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-action-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
 //
 // SRD 5.2.1 Antimagic Field blocks spellcasting and Magic Actions inside its
@@ -26,10 +26,10 @@ import {
   spellInvocationSpendsMagicAction,
 } from "./spell-turn-resources.ts";
 
-type AntimagicFieldInterdictionKind = "spellcasting" | "magicAction";
-type AntimagicFieldSubjectInterdiction = {
+type MagicSuppressionInterdictionKind = "spellcasting" | "magicAction";
+type MagicSuppressionSubjectInterdiction = {
   readonly actorId: CombatantId;
-  readonly kind: AntimagicFieldInterdictionKind;
+  readonly kind: MagicSuppressionInterdictionKind;
 };
 type RuntimeCommandSubject = Extract<
   BattleSubject,
@@ -127,7 +127,7 @@ export function magicSuppressionEmanationMembershipIncludesCombatant(
 function magicSuppressionSubjectInterdiction(
   state: BattleState,
   subject: BattleSubject,
-): AntimagicFieldSubjectInterdiction | null {
+): MagicSuppressionSubjectInterdiction | null {
   if (
     subject.tag === "actionSpell" ||
     subject.tag === "bonusActionSpell" ||
@@ -169,7 +169,7 @@ function magicSuppressionSubjectInterdiction(
 function spellActSubjectInterdictionKind(
   state: BattleState,
   subject: SpellActSubject,
-): AntimagicFieldInterdictionKind | null {
+): MagicSuppressionInterdictionKind | null {
   const actor = state.combatants.get(subject.actorId);
   if (actor?.origin.kind !== "character") return null;
   const invocation = characterSpellProcedure(

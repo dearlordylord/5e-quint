@@ -8,7 +8,7 @@ import { afterHitDamageAndIlluminationProfile } from "./after-hit-damage-and-ill
 import { afterHitDamageProfile } from "./after-hit-damage.ts";
 import { afterHitSaveGatedConditionProfile } from "./after-hit-save-gated-condition.ts";
 import { afterHitTimedDamageAndSaveProfile } from "./after-hit-timed-damage-and-save.ts";
-import { magicSuppressionEmanationProfile } from "./antimagic-field-ongoing-spell-suppression.ts";
+import { magicSuppressionEmanationProfile } from "./magic-suppression-emanation.ts";
 import { attackBurstSaveDamageProfile } from "./attack-burst-save-damage.ts";
 import { perceptionGatedAttackRollDefenseProfile } from "./blur-attack-roll-defense.ts";
 import { compelledNextTurnBehaviorProfile } from "./command.ts";
