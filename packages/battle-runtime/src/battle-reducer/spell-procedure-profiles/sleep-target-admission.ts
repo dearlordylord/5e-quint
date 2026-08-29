@@ -206,6 +206,8 @@ function isStagedSaveConditionPhase(
   const repeatSave = repeatSaves?.length === 1 ? repeatSaves[0] : undefined;
   const repeatFailure =
     repeatSave !== undefined ? repeatSave.onFailAgain : undefined;
+  const automaticSuccess =
+    phase?.kind === "save_gate" ? phase.autoSuccessIfTarget : undefined;
   return (
     phase?.kind === "save_gate" &&
     phase.ability === "wis" &&
@@ -217,12 +219,11 @@ function isStagedSaveConditionPhase(
     phase.attachment.value.shape.kind === "sphere" &&
     phase.attachment.value.shape.radiusFeet ===
       SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET &&
-    phase.autoSuccessIfTarget.kind === "any" &&
-    phase.autoSuccessIfTarget.predicates.length === 2 &&
-    phase.autoSuccessIfTarget.predicates[0]?.kind === "does_not_sleep" &&
-    phase.autoSuccessIfTarget.predicates[1]?.kind ===
-      "has_condition_immunity" &&
-    phase.autoSuccessIfTarget.predicates[1].condition === "exhaustion" &&
+    automaticSuccess?.kind === "any" &&
+    automaticSuccess.predicates.length === 2 &&
+    automaticSuccess.predicates[0]?.kind === "does_not_sleep" &&
+    automaticSuccess.predicates[1]?.kind === "has_condition_immunity" &&
+    automaticSuccess.predicates[1].condition === "exhaustion" &&
     phase.onFail.kind === "composite" &&
     phase.onFail.effects.length === 2 &&
     phase.onFail.effects[0]?.kind === "apply_condition" &&
