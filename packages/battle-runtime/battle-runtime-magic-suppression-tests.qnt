@@ -5,7 +5,7 @@
 module battleRuntimeMagicSuppressionTests {
   import battleRuntimeMagicSuppression.* from "./battle-runtime-magic-suppression"
 
-  run test_magic_suppression_interdicts_actions_effects_and_function_without_pausing_duration = {
+  run magicSuppressionInterdictsActionsEffectsAndFunctionWithoutPausingDurationTest = {
     val ordinaryEffectInside = {
       insideSuppressionArea: true,
       exemptSource: false,

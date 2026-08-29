@@ -5,7 +5,7 @@
 module battleRuntimeCompositeEnhancementAftermathTests {
   import battleRuntimeCompositeEnhancementAftermath.* from "./battle-runtime-composite-enhancement-aftermath"
 
-  run test_composite_enhancement_aftermath_ends_at_target_turn_boundary_and_preserves_other_sources = {
+  run compositeEnhancementAftermathEndsAtTargetTurnAndPreservesOtherSourcesTest = {
     val activeAftermath = ActiveAftermath
     val cleaned = compositeEnhancementAftermathAfterTargetTurn(activeAftermath, true)
     all {
