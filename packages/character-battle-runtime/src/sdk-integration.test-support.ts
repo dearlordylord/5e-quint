@@ -191,7 +191,7 @@ export function battleSessionFromSheets(input: {
   >[0][];
 }): BattleRuntimeSession {
   const characterInits = input.characters.map((character) =>
-    requireRight(
+    requireSuccess(
       characterSheetBattleInit({
         sheet: character.sheet,
         combatantId: character.combatantId,
@@ -203,13 +203,13 @@ export function battleSessionFromSheets(input: {
       }),
     ),
   );
-  return requireRight(
+  return requireSuccess(
     startBattle({
       battleId: battleId(input.battleIdText),
       combatants: [
         ...characterInits,
         ...input.monsters.map((monster) =>
-          requireRight(battleCreatureInitFromStatBlock(monster)),
+          requireSuccess(battleCreatureInitFromStatBlock(monster)),
         ),
       ],
     }),
@@ -228,7 +228,7 @@ export function characterSheet(input: {
   return {
     combatantId: input.combatantId,
     initiative: input.initiative,
-    sheet: requireRight(
+    sheet: requireSuccess(
       rebuildCharacterSheet({
         characterId: characterSheetId(input.characterIdText),
         build: input.build,
@@ -275,7 +275,7 @@ function levelFiveBaseBuild(input: {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: requireRight(
+    abilityScores: requireSuccess(
       abilityScoreAssignment(
         input.abilityScores ?? {
           str: 16,
@@ -308,7 +308,7 @@ export function levelFiveMartialBuild(input: {
 }): CharacterBuild {
   const weaponItemId = characterEquipmentItemId({
     slot: "main",
-    unitId: requireRight(characterEquipmentItemUnitId(input.weaponUnitId)),
+    unitId: requireSuccess(characterEquipmentItemUnitId(input.weaponUnitId)),
   });
   return levelFiveBaseBuild({
     classUnitId: input.classUnitId,
@@ -541,7 +541,7 @@ function levelFiveFighterCreationFill(hole: CreationHole): CreationFill {
       kind: "abilityScores",
       holeId: hole.holeId,
       method: "standardArray",
-      value: requireRight(
+      value: requireSuccess(
         abilityScoreAssignment({
           str: 15,
           dex: 14,
@@ -769,7 +769,7 @@ function levelFiveWizardCreationFill(
       kind: "abilityScores",
       holeId: hole.holeId,
       method: "standardArray",
-      value: requireRight(
+      value: requireSuccess(
         abilityScoreAssignment({
           str: 8,
           dex: 14,
@@ -1071,14 +1071,14 @@ export function levelFiveSorcererBuild(
       {
         kind: "selectedSorcererMetamagicOption",
         selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
-        optionId: requireRight(
+        optionId: requireSuccess(
           sorcererMetamagicOptionId("sorcerer_empowered_spell"),
         ),
       },
       {
         kind: "selectedSorcererMetamagicOption",
         selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
-        optionId: requireRight(
+        optionId: requireSuccess(
           sorcererMetamagicOptionId("sorcerer_heightened_spell"),
         ),
       },
@@ -1515,7 +1515,7 @@ export function characterResources(combatant: CharacterCombatantState) {
   return combatant.origin.resources;
 }
 
-export function requireRight<A, E>(either: Result.Result<A, E>): A {
+export function requireSuccess<A, E>(either: Result.Result<A, E>): A {
   if (Result.isSuccess(either)) return either.success;
   throw new Error(
     `Expected Result.succeed, got ${JSON.stringify(either.failure)}.`,
