@@ -142,12 +142,8 @@ export function updateStatBlockActorResources(
   };
 }
 
-export function attackSubjectPart(attack: BoundSupportedAttackActionOption):
-  | (CharacterAttackExecutionSelection & {
-      readonly statBlockDamageNotation?: never;
-    })
-  | (StatBlockAttackExecutionSelection & {
-      readonly statBlockDamageNotation?: "static";
-    }) {
+export function attackSubjectPart(
+  attack: BoundSupportedAttackActionOption,
+): CharacterAttackExecutionSelection | StatBlockAttackExecutionSelection {
   return attackExecutionSelectionForOption(attack);
 }

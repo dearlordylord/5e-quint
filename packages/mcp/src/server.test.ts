@@ -2801,26 +2801,36 @@ describe("MCP server route", () => {
         actorId: "goblin",
         action: "attack",
         procedureRef: expect.any(String),
+        statBlockDamageSelection: [
+          expect.objectContaining({ notation: "rolled" }),
+        ],
       }),
       expect.objectContaining({
         tag: "action",
         actorId: "goblin",
         action: "attack",
         procedureRef: expect.any(String),
-        statBlockDamageNotation: "static",
+        statBlockDamageSelection: [
+          expect.objectContaining({ notation: "static" }),
+        ],
       }),
       expect.objectContaining({
         tag: "action",
         actorId: "goblin",
         action: "attack",
         procedureRef: expect.any(String),
+        statBlockDamageSelection: [
+          expect.objectContaining({ notation: "rolled" }),
+        ],
       }),
       expect.objectContaining({
         tag: "action",
         actorId: "goblin",
         action: "attack",
         procedureRef: expect.any(String),
-        statBlockDamageNotation: "static",
+        statBlockDamageSelection: [
+          expect.objectContaining({ notation: "static" }),
+        ],
       }),
       {
         tag: "runtimeCommand",
@@ -10643,7 +10653,10 @@ function battleAttackSubjectForName(
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
       candidate.subject.actorId === actorId &&
-      candidate.subject.statBlockDamageNotation === undefined &&
+      candidate.subject.statBlockDamageSelection !== undefined &&
+      candidate.subject.statBlockDamageSelection.every(
+        ({ notation }) => notation === "rolled",
+      ) &&
       candidate.presentation.kind === "attack" &&
       candidate.presentation.procedureRef === candidate.subject.procedureRef &&
       candidate.presentation.name === attackName,

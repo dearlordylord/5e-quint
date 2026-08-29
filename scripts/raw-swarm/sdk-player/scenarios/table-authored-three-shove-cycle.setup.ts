@@ -183,7 +183,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       spatialDecisions,
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: {
       overhead: { kind: "open" },
       barrierHeights: [],

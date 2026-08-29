@@ -111,6 +111,8 @@ import type {
 } from "./battle-runtime.test-support.ts";
 import type { BattleRuntimeSession } from "./index.ts";
 import { describe, expect, test } from "vitest";
+import { attackExecutionSelectionForOption } from "./battle-action-options.ts";
+import { selectedStatBlockAttackRollOptions } from "./statblock-attack-damage-support.ts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   battleProcedureExecutionRefForTest,
@@ -2715,12 +2717,25 @@ describe("battle runtime: class action features", () => {
         "Expected a supported duplicate-damage-type Stat Block attack.",
       );
     }
+    const selectedStrengthBasedAttack =
+      selectedStatBlockAttackRollOptions(strengthBasedAttack)[0];
+    const selectedMultiDamageAttack = selectedStatBlockAttackRollOptions(
+      multiDamageStatBlockAttack,
+    )[0];
+    const selectedDuplicateDamageTypeAttack =
+      selectedStatBlockAttackRollOptions(duplicateDamageTypeStatBlockAttack)[0];
+    if (
+      selectedStrengthBasedAttack === undefined ||
+      selectedMultiDamageAttack === undefined ||
+      selectedDuplicateDamageTypeAttack === undefined
+    ) {
+      throw new Error("Expected rolled Stat Block attack projections.");
+    }
     expect(
       activeRageDamageBonusForFrenzy(ragingActor, {
         kind: "statBlockAttack",
         procedureRef: statBlockProcedureRef,
-        attack: strengthBasedAttack,
-        damageNotation: "rolled",
+        attack: selectedStrengthBasedAttack,
       }),
     ).toMatchObject({ damageBonus: 2 });
 
@@ -2762,14 +2777,12 @@ describe("battle runtime: class action features", () => {
     const singleDamageStatBlockOption = {
       kind: "statBlockAttack",
       procedureRef: statBlockProcedureRef,
-      attack: strengthBasedAttack,
-      damageNotation: "rolled",
+      attack: selectedStrengthBasedAttack,
     } as const;
     const mixedDamageStatBlockOption = {
       kind: "statBlockAttack",
       procedureRef: statBlockProcedureRef,
-      attack: multiDamageStatBlockAttack,
-      damageNotation: "rolled",
+      attack: selectedMultiDamageAttack,
     } as const;
     const mixedDamageTarget = attackTargetHole(
       afterRecklessRoll.state,
@@ -2780,7 +2793,7 @@ describe("battle runtime: class action features", () => {
       tag: "action",
       actorId: fighterId,
       action: "attack",
-      procedureRef: statBlockProcedureRef,
+      ...attackExecutionSelectionForOption(mixedDamageStatBlockOption),
     } as const;
     const stopBeforeAttackSpend = () => {
       throw new Error("Frenzy damage-type tests stop before attack spend.");
@@ -2824,7 +2837,7 @@ describe("battle runtime: class action features", () => {
         attackerId: fighterId,
         attack: {
           ...mixedDamageStatBlockOption,
-          attack: duplicateDamageTypeStatBlockAttack,
+          attack: selectedDuplicateDamageTypeAttack,
         },
         hitWithAttackRoll: true,
         selectedDamageType: undefined,

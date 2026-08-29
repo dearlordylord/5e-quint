@@ -33,6 +33,7 @@ import {
   abilityCheckFill,
   attackDamageHoleAfterHit,
   attackInitialTargetHole,
+  attackExecutionSelectionForSubjectForTest,
   attackRollFill,
   attackRollHoleAfterTarget,
   attackTargetFill,
@@ -40,6 +41,7 @@ import {
   authoredProcedureOrdinal,
   battleId,
   battleRuntimeContextForStateForTest,
+  battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest,
   characterAttackSubjectForTest,
   characterSeed,
   damageRollFill,
@@ -142,7 +144,10 @@ function resolveMultiattackDispatchMiss(
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
       candidate.subject.procedureRef === procedureRef &&
-      candidate.subject.statBlockDamageNotation === undefined,
+      battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+        candidate.subject,
+        "rolled",
+      ),
   );
   if (act === undefined) {
     throw new Error("Expected a pending Multiattack dispatch.");
@@ -193,7 +198,7 @@ function discoveredStatBlockBonusActionSubject(
 function discoveredStatBlockAttackSubject(
   state: BattleState,
   procedureOrdinal: number,
-  damageNotation: "rolled" | "static" = "rolled",
+  damageComponentNotation: "rolled" | "static" = "rolled",
 ): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
@@ -203,8 +208,10 @@ function discoveredStatBlockAttackSubject(
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
       candidate.subject.procedureRef !== undefined &&
-      (candidate.subject.statBlockDamageNotation ?? "rolled") ===
-        damageNotation &&
+      battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+        candidate.subject,
+        damageComponentNotation,
+      ) &&
       candidate.subject.procedureRef ===
         procedureRefForAttack(state, procedureOrdinal),
   );
@@ -533,21 +540,12 @@ function proneImmuneTargetStatBlock(): StatBlockRecord {
   };
 }
 
-function procedureRefForStatBlockAttackSubject(
+function biteMeleeReachFact(
+  targetId: CombatantId,
   subject: Extract<
     BattleSubject,
     { readonly tag: "action"; readonly action: "attack" }
   >,
-) {
-  if (subject.procedureRef === undefined) {
-    throw new Error("Expected Stat Block attack procedure ref.");
-  }
-  return BattleStatBlockProcedureExecutionRef.make(subject.procedureRef);
-}
-
-function biteMeleeReachFact(
-  targetId: CombatantId,
-  procedureRef: ReturnType<typeof BattleStatBlockProcedureExecutionRef.make>,
 ) {
   return [
     {
@@ -555,7 +553,7 @@ function biteMeleeReachFact(
       actorId: goblinId,
       targetId,
       distanceFeet: movementFeet(5),
-      procedureRef,
+      ...attackExecutionSelectionForSubjectForTest(subject),
     },
   ];
 }
@@ -666,10 +664,7 @@ function resolveBiteAgainst(input: {
   const targetChoice = targetFill(
     targetHole,
     input.targetId,
-    biteMeleeReachFact(
-      input.targetId,
-      procedureRefForStatBlockAttackSubject(subject),
-    ),
+    biteMeleeReachFact(input.targetId, subject),
   );
   const rollHole = requireHole(
     resolveBattleSubject({
@@ -726,21 +721,21 @@ describe("battle runtime: Stat Block actions", () => {
     }
 
     const acts = discoverStatBlockActs(afterFighter.state);
+    const scimitar = discoveredStatBlockAttackSubject(
+      afterFighter.state,
+      1,
+      "rolled",
+    );
+    const shortbow = discoveredStatBlockAttackSubject(
+      afterFighter.state,
+      2,
+      "rolled",
+    );
 
     expect(acts.map((act) => act.subject)).toEqual(
       expect.arrayContaining([
-        {
-          tag: "action",
-          actorId: goblinId,
-          action: "attack",
-          procedureRef: procedureRefForAttack(afterFighter.state, 1),
-        },
-        {
-          tag: "action",
-          actorId: goblinId,
-          action: "attack",
-          procedureRef: procedureRefForAttack(afterFighter.state, 2),
-        },
+        scimitar,
+        shortbow,
         { tag: "runtimeCommand", actorId: goblinId, command: "move" },
         { tag: "runtimeCommand", actorId: goblinId, command: "endTurn" },
       ]),
@@ -900,18 +895,15 @@ describe("battle runtime: Stat Block actions", () => {
       }),
     ).state;
     const subject = discoveredStatBlockAttackSubject(monsterTurn, 1);
+    const staticSubject = discoveredStatBlockAttackSubject(
+      monsterTurn,
+      1,
+      "static",
+    );
 
     expect(
       discoverStatBlockActs(monsterTurn).map((act) => act.subject),
-    ).toEqual(
-      expect.arrayContaining([
-        subject,
-        {
-          ...subject,
-          statBlockDamageNotation: "static",
-        },
-      ]),
-    );
+    ).toEqual(expect.arrayContaining([subject, staticSubject]));
 
     const targetHole = attackInitialTargetHole(monsterTurn, subject);
     const targetChoice = venomDartTargetFill(targetHole);
@@ -1035,19 +1027,8 @@ describe("battle runtime: Stat Block actions", () => {
 
     expect(discoverStatBlockActs(state).map((act) => act.subject)).toEqual(
       expect.arrayContaining([
-        {
-          tag: "action",
-          actorId: goblinId,
-          action: "attack",
-          procedureRef: procedureRefForAttack(state, 1),
-        },
-        {
-          tag: "action",
-          actorId: goblinId,
-          action: "attack",
-          procedureRef: procedureRefForAttack(state, 1),
-          statBlockDamageNotation: "static",
-        },
+        discoveredStatBlockAttackSubject(state, 1, "rolled"),
+        discoveredStatBlockAttackSubject(state, 1, "static"),
       ]),
     );
   });
@@ -1585,38 +1566,37 @@ describe("battle runtime: Stat Block actions", () => {
     ]);
     const continuationActs = discoverStatBlockActs(multiattackState);
     const continuationSubjects = continuationActs.map((act) => act.subject);
-    expect(continuationSubjects).toEqual([
-      {
-        tag: "action",
-        actorId: goblinId,
-        action: "attack",
-        procedureRef: procedureRefForAttack(multiattackState, 1),
-      },
-      {
-        tag: "action",
-        actorId: goblinId,
-        action: "attack",
-        procedureRef: procedureRefForAttack(multiattackState, 1),
-        statBlockDamageNotation: "static",
-      },
-      {
-        tag: "action",
-        actorId: goblinId,
-        action: "attack",
-        procedureRef: procedureRefForAttack(multiattackState, 2),
-      },
-      {
-        tag: "action",
-        actorId: goblinId,
-        action: "attack",
-        procedureRef: procedureRefForAttack(multiattackState, 2),
-        statBlockDamageNotation: "static",
-      },
+    const continuationAttackSubjects = continuationSubjects.flatMap(
+      (continuationSubject) =>
+        continuationSubject.tag === "action" &&
+        continuationSubject.action === "attack"
+          ? [continuationSubject]
+          : [],
+    );
+    expect(
+      continuationAttackSubjects.map((attackSubject) =>
+        attackSubject.statBlockDamageSelection?.map(({ notation }) => notation),
+      ),
+    ).toEqual([
+      ["rolled", "rolled"],
+      ["rolled", "static"],
+      ["static", "rolled"],
+      ["static", "static"],
+      ["rolled", "rolled"],
+      ["rolled", "static"],
+      ["static", "rolled"],
+      ["static", "static"],
+    ]);
+    expect(continuationSubjects.slice(-2)).toEqual([
       { tag: "runtimeCommand", actorId: goblinId, command: "move" },
       { tag: "runtimeCommand", actorId: goblinId, command: "endTurn" },
     ]);
     expect(continuationSubjects).not.toContainEqual(subject);
     expect(continuationActs.map((act) => act.label)).toEqual([
+      "Attack",
+      "Attack",
+      "Attack",
+      "Attack",
       "Attack",
       "Attack",
       "Attack",
@@ -1688,7 +1668,10 @@ describe("battle runtime: Stat Block actions", () => {
         act.subject.action === "attack" &&
         act.subject.procedureRef ===
           procedureRefForAttack(multiattackStateAfterSlowApplied, 2) &&
-        act.subject.statBlockDamageNotation === undefined,
+        battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+          act.subject,
+          "rolled",
+        ),
     );
     if (shortbow === undefined) throw new Error("Expected Shortbow act.");
     const shortbowSubject = shortbow.subject;
@@ -1740,12 +1723,7 @@ describe("battle runtime: Stat Block actions", () => {
       discoverStatBlockActs(afterDispatch).map((act) => act.subject),
     ).toEqual(
       expect.arrayContaining([
-        {
-          tag: "action",
-          actorId: goblinId,
-          action: "attack",
-          procedureRef: procedureRefForAttack(afterDispatch, 1),
-        },
+        discoveredStatBlockAttackSubject(afterDispatch, 1, "rolled"),
       ]),
     );
     expect(

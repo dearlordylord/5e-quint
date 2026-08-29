@@ -69,6 +69,7 @@ import {
   difficultyClass,
   Hp,
   NonNegativeInteger,
+  PositiveInteger,
   movementDeltaFeet,
   movementFeet,
   proficiencyBonus,
@@ -198,7 +199,47 @@ import {
 } from "./character-execution-admission.ts";
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
 import { characterBattleCreatureInitWeaponAttack } from "./battle-init.ts";
-import type { CharacterWeaponAttackActionOption } from "./battle-action-options.ts";
+import {
+  attackExecutionSelectionForOption,
+  type CharacterAttackExecutionSelection,
+  type CharacterWeaponAttackActionOption,
+} from "./battle-action-options.ts";
+import {
+  statBlockAttackDamageSelection,
+  statBlockAttackDamageSelectionUsesOnlyComponentNotation,
+  statBlockBaseDamageComponentOrdinal,
+  statBlockBaseDamageComponentRef,
+  type StatBlockDamageComponentNotation,
+} from "./stat-block-attack-damage-selection.ts";
+
+export function singleBaseStatBlockAttackDamageSelectionForTest(
+  notation: StatBlockDamageComponentNotation,
+) {
+  return Either.getOrThrow(
+    statBlockAttackDamageSelection([
+      {
+        componentRef: statBlockBaseDamageComponentRef(
+          statBlockBaseDamageComponentOrdinal(PositiveInteger(1)),
+        ),
+        notation,
+      },
+    ]),
+  );
+}
+
+export function battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+  subject: BattleSubject,
+  notation: StatBlockDamageComponentNotation,
+): boolean {
+  return (
+    "statBlockDamageSelection" in subject &&
+    subject.statBlockDamageSelection !== undefined &&
+    statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+      subject.statBlockDamageSelection,
+      notation,
+    )
+  );
+}
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   armorOfShadowsSpellInvocationRef,
@@ -1547,10 +1588,7 @@ export function goblinTurnBattle(
 export function fighterAttackSubject(
   state: BattleState,
   attackName: string = "Longsword",
-): Extract<
-  BattleSubject,
-  { readonly tag: "action"; readonly action: "attack" }
-> {
+): ReturnType<typeof characterAttackSubjectForTest> {
   return characterAttackSubjectForTest(state, fighterId, attackName);
 }
 
@@ -1604,6 +1642,15 @@ export function characterAttackSubjectForTest(
 }
 
 export function attackExecutionSelectionForSubjectForTest(
+  subject: ReturnType<typeof characterAttackSubjectForTest>,
+): CharacterAttackExecutionSelection;
+export function attackExecutionSelectionForSubjectForTest(
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >,
+): BattleInterruptAttackExecutionSelection;
+export function attackExecutionSelectionForSubjectForTest(
   subject: Extract<
     BattleSubject,
     { readonly tag: "action"; readonly action: "attack" }
@@ -1614,12 +1661,10 @@ export function attackExecutionSelectionForSubjectForTest(
   }
   return subject.attackAbility === undefined ||
     subject.attackDamageType === undefined
-    ? subject.statBlockDamageNotation === "static"
-      ? {
-          procedureRef: subject.procedureRef,
-          statBlockDamageNotation: "static",
-        }
-      : { procedureRef: subject.procedureRef }
+    ? {
+        procedureRef: subject.procedureRef,
+        statBlockDamageSelection: subject.statBlockDamageSelection,
+      }
     : {
         procedureRef: subject.procedureRef,
         attackAbility: subject.attackAbility,
@@ -1718,14 +1763,17 @@ export function statBlockAttackSubjectForTest(
         actorId,
         candidate.procedureRef,
       ) === section &&
-      candidate.damageNotation === "rolled",
+      statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+        attackExecutionSelectionForOption(candidate).statBlockDamageSelection,
+        "rolled",
+      ),
   );
   if (option === undefined) throw new Error(`Expected ${attackName} attack.`);
   return {
     tag: "action",
     actorId,
     action: "attack",
-    procedureRef: option.procedureRef,
+    ...attackExecutionSelectionForOption(option),
   };
 }
 
@@ -2929,7 +2977,7 @@ export function attackRollFill(
       { readonly kind: "attackRoll" }
     >["value"]["d20TestNaturalOneReroll"];
   },
-): BattleFill {
+): Extract<BattleFill, { readonly kind: "attackRoll" }> {
   if (hole.kind !== "attackRoll") {
     throw new Error("Expected attackRoll hole.");
   }
@@ -5265,7 +5313,10 @@ export function opportunityAttackProcedureSelectionForTest(
   const selection: BattleInterruptAttackExecutionSelection =
     choice.subject.attackAbility === undefined ||
     choice.subject.attackDamageType === undefined
-      ? { procedureRef: choice.subject.procedureRef }
+      ? {
+          procedureRef: choice.subject.procedureRef,
+          statBlockDamageSelection: choice.subject.statBlockDamageSelection,
+        }
       : {
           procedureRef: choice.subject.procedureRef,
           attackAbility: choice.subject.attackAbility,

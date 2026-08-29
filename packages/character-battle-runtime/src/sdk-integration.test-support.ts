@@ -1166,7 +1166,10 @@ export function attackSubject(
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
       candidate.subject.actorId === actorId &&
-      candidate.subject.statBlockDamageNotation === undefined &&
+      candidate.subject.statBlockDamageSelection !== undefined &&
+      candidate.subject.statBlockDamageSelection.every(
+        ({ notation }) => notation === "rolled",
+      ) &&
       candidate.presentation.kind === "attack" &&
       candidate.presentation.name === attackName,
   );

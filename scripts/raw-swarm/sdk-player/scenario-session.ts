@@ -24,7 +24,8 @@ import type {
   BattleTargetSpatialFact,
   BattleTablePositionId,
   CombatantId,
-  StatBlockDamageNotation,
+  StatBlockAttackDamageSelection,
+  StatBlockDamageComponentNotation,
   AvailableBattleAct,
   TableD20TestCircumstanceDecision,
   TableD20TestCircumstanceSource,
@@ -57,6 +58,7 @@ import {
   sameBattleSubject,
   zeroHpLifecycleIsTerminal,
 } from "../../../packages/battle-runtime/src/index.ts";
+import { statBlockAttackDamageComponentRefKey } from "../../../packages/battle-runtime/src/stat-block-attack-damage-selection.ts";
 import type { ArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { isIncapacitated } from "../../../packages/shared-algebras/src/conditions-algebra.ts";
 import {
@@ -190,12 +192,16 @@ export type ScenarioBattlefield = Readonly<{
   /** Canonical spatial ownership boundary; geometry is optional by construction. */
   readonly spatial: ScenarioSpatialBoundary;
   readonly ambientIllumination: BattleIllumination;
-  readonly statBlockDamageNotation: StatBlockDamageNotation;
+  readonly statBlockDamageSelectionPolicy: ScenarioStatBlockDamageSelectionPolicy;
   readonly environment: ScenarioEnvironment;
   readonly initialRangedAttackEnemyRelationships: readonly ScenarioInitialRangedAttackEnemyRelationship[];
   readonly movementAllyRelationships: readonly ScenarioMovementAllyRelationship[];
   readonly opportunityAttackEnemyRelationships: readonly ScenarioOpportunityAttackEnemyRelationship[];
   readonly objects: readonly ScenarioBattleObject[];
+}>;
+
+export type ScenarioStatBlockDamageSelectionPolicy = Readonly<{
+  readonly preferredComponentNotation: StatBlockDamageComponentNotation;
 }>;
 
 export type ScenarioPlacement = Readonly<{
@@ -290,35 +296,43 @@ function isStatBlockAttackSubject(
   );
 }
 
-function statBlockAttackDamageNotation(
-  selection: Readonly<{ readonly statBlockDamageNotation?: "static" }>,
-): StatBlockDamageNotation {
-  return selection.statBlockDamageNotation === "static" ? "static" : "rolled";
-}
-
 type ScenarioStatBlockDamageOption = Readonly<{
   readonly procedureRef: BattleProcedureExecutionRef;
-  readonly statBlockDamageNotation?: "static";
+  readonly statBlockDamageSelection: StatBlockAttackDamageSelection;
 }>;
 
 function scenarioStatBlockDamageOptionIsAdmitted(input: {
-  readonly selected: StatBlockDamageNotation;
+  readonly policy: ScenarioStatBlockDamageSelectionPolicy;
   readonly option: ScenarioStatBlockDamageOption;
   readonly available: readonly ScenarioStatBlockDamageOption[];
 }): boolean {
-  const selectedNotationIsAvailable = input.available.some(
-    (candidate) =>
-      candidate.procedureRef === input.option.procedureRef &&
-      statBlockAttackDamageNotation(candidate) === input.selected,
+  const sameProcedureOptions = input.available.filter(
+    (candidate) => candidate.procedureRef === input.option.procedureRef,
   );
-  return (
-    !selectedNotationIsAvailable ||
-    statBlockAttackDamageNotation(input.option) === input.selected
-  );
+  return input.option.statBlockDamageSelection.every((component) => {
+    const componentRefKey = statBlockAttackDamageComponentRefKey(
+      component.componentRef,
+    );
+    const preferredComponentNotationIsAvailable = sameProcedureOptions.some(
+      (candidate) =>
+        candidate.statBlockDamageSelection.some(
+          (candidateComponent) =>
+            statBlockAttackDamageComponentRefKey(
+              candidateComponent.componentRef,
+            ) === componentRefKey &&
+            candidateComponent.notation ===
+              input.policy.preferredComponentNotation,
+        ),
+    );
+    return (
+      !preferredComponentNotationIsAvailable ||
+      component.notation === input.policy.preferredComponentNotation
+    );
+  });
 }
 
 function scenarioReadyResponseChoices(input: {
-  readonly selected: StatBlockDamageNotation;
+  readonly policy: ScenarioStatBlockDamageSelectionPolicy;
   readonly choices: readonly BattleReadyResponse[];
 }): readonly BattleReadyResponse[] {
   const statBlockOptions = input.choices.flatMap((choice) =>
@@ -334,7 +348,7 @@ function scenarioReadyResponseChoices(input: {
       return true;
     }
     return scenarioStatBlockDamageOptionIsAdmitted({
-      selected: input.selected,
+      policy: input.policy,
       option: choice.selection,
       available: statBlockOptions,
     });
@@ -370,7 +384,7 @@ export function scenarioBattleActs(
     .filter(({ subject }) => {
       if (!isStatBlockAttackSubject(subject)) return true;
       return scenarioStatBlockDamageOptionIsAdmitted({
-        selected: session.battlefield.statBlockDamageNotation,
+        policy: session.battlefield.statBlockDamageSelectionPolicy,
         option: subject,
         available: statBlockOptions,
       });
@@ -385,7 +399,7 @@ export function scenarioBattleActs(
           ? {
               ...hole,
               responseChoices: scenarioReadyResponseChoices({
-                selected: session.battlefield.statBlockDamageNotation,
+                policy: session.battlefield.statBlockDamageSelectionPolicy,
                 choices: hole.responseChoices,
               }),
             }
@@ -557,10 +571,12 @@ export function scenarioBattleSubject(
     sameStatBlockAttackProcedure(subject, candidate),
   );
   return (
-    sameProcedure.find(
-      (candidate) =>
-        statBlockAttackDamageNotation(candidate) ===
-        session.battlefield.statBlockDamageNotation,
+    sameProcedure.find((candidate) =>
+      scenarioStatBlockDamageOptionIsAdmitted({
+        policy: session.battlefield.statBlockDamageSelectionPolicy,
+        option: candidate,
+        available: sameProcedure,
+      }),
     ) ??
     sameProcedure[0] ??
     subject
@@ -583,7 +599,7 @@ export function scenarioOpportunityAttackExecutionCandidates(input: {
   return candidates.filter(({ selection }) => {
     if (selection.attackAbility !== undefined) return true;
     return scenarioStatBlockDamageOptionIsAdmitted({
-      selected: input.session.battlefield.statBlockDamageNotation,
+      policy: input.session.battlefield.statBlockDamageSelectionPolicy,
       option: selection,
       available: statBlockOptions,
     });
@@ -1002,7 +1018,7 @@ export function createScenarioSession(input: {
   readonly battle: BattleRuntimeSession;
   readonly spatial: ScenarioSpatialSetupInput;
   readonly ambientIllumination: BattleIllumination;
-  readonly statBlockDamageNotation: StatBlockDamageNotation;
+  readonly statBlockDamageSelectionPolicy: ScenarioStatBlockDamageSelectionPolicy;
   readonly environment: ScenarioEnvironment;
   readonly initialRangedAttackEnemyRelationships: readonly ScenarioInitialRangedAttackEnemyRelationship[];
   readonly movementAllyRelationships: readonly ScenarioMovementAllyRelationship[];
@@ -1386,7 +1402,9 @@ export function createScenarioSession(input: {
   const battlefieldValue = {
     spatial,
     ambientIllumination: input.ambientIllumination,
-    statBlockDamageNotation: input.statBlockDamageNotation,
+    statBlockDamageSelectionPolicy: Object.freeze({
+      ...input.statBlockDamageSelectionPolicy,
+    }),
     environment: Object.freeze({
       overhead: Object.freeze({ ...input.environment.overhead }),
       barrierHeights: Object.freeze(

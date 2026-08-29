@@ -96,6 +96,11 @@ import {
 } from "./battle-reducer/api-lifecycle.ts";
 import { statBlockAttackProcedureSection } from "./battle-reducer/statblock.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
+import {
+  attackExecutionSelectionForOption,
+  boundAttackExecutionSelectionMatchesOption,
+} from "./battle-action-options.ts";
+import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
 import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 
 const isolatedExecutionBattleId = battleId(
@@ -293,7 +298,8 @@ describe("Stat Block execution references", () => {
           ...entry.procedure,
           onHit: mapNonEmpty(entry.procedure.onHit, (effect) => {
             if (
-              effect.kind !== "damage" ||
+              (effect.kind !== "damage" &&
+                effect.kind !== "conditional_bonus_damage") ||
               effect.amount.kind !== "fixed" ||
               !("expr" in effect.amount) ||
               !("static" in effect.amount)
@@ -318,9 +324,16 @@ describe("Stat Block execution references", () => {
       [rolledOnly],
     );
     expect(
-      statBlockAttackActionOptions(admission.execution).map(
-        ({ damageNotation }) => damageNotation,
-      ),
+      statBlockAttackActionOptions(admission.execution).map((option) => {
+        const selection =
+          attackExecutionSelectionForOption(option).statBlockDamageSelection;
+        return statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+          selection,
+          "rolled",
+        )
+          ? "rolled"
+          : "static";
+      }),
     ).toEqual([...attacks.map(() => "rolled"), "static"]);
   });
 
@@ -643,7 +656,11 @@ describe("Stat Block execution references", () => {
         act.subject.action === "attack" &&
         act.subject.actorId === firstId &&
         act.subject.procedureRef !== undefined &&
-        act.subject.statBlockDamageNotation === undefined,
+        act.subject.statBlockDamageSelection !== undefined &&
+        statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+          act.subject.statBlockDamageSelection,
+          "rolled",
+        ),
     )?.subject;
     if (replaySubject?.tag !== "action" || replaySubject.action !== "attack") {
       throw new Error("Expected a rolled Stat Block attack replay subject.");
@@ -1506,7 +1523,7 @@ describe("Stat Block execution references", () => {
       {
         reactorId: actorId,
         distanceFeet: movementFeet(5),
-        procedureRef: attack.procedureRef,
+        ...attackExecutionSelectionForOption(attack),
       },
     ])[0];
     if (
@@ -1562,8 +1579,7 @@ describe("Stat Block execution references", () => {
         act.subject.action === "attack" &&
         "procedureRef" in act.subject &&
         act.subject.procedureRef === meleeOption.procedureRef &&
-        (act.subject.statBlockDamageNotation ?? "rolled") ===
-          meleeOption.damageNotation,
+        boundAttackExecutionSelectionMatchesOption(act.subject, meleeOption),
     );
     if (meleeOption === undefined || attackAct === undefined) {
       throw new Error("Expected an admitted melee attack target hole.");
@@ -1628,10 +1644,19 @@ describe("Stat Block execution references", () => {
     const decodedStatBlockAttack = decodedAttackRollHole.attack;
     expect(decodedStatBlockAttack).toEqual(attackRollHole.attack);
     expect(decodedStatBlockAttack).not.toHaveProperty("part");
+    if (
+      attackAct.subject.tag !== "action" ||
+      attackAct.subject.action !== "attack" ||
+      attackAct.subject.statBlockDamageSelection === undefined
+    ) {
+      throw new Error("Expected a selected Stat Block attack subject.");
+    }
+    const damageSelection = attackAct.subject.statBlockDamageSelection;
+    const firstSelection = damageSelection[0];
     expect(() =>
       Schema.decodeUnknownSync(BattleSubjectSchema)({
         ...attackAct.subject,
-        statBlockDamageNotation: "rolled",
+        statBlockDamageSelection: [...damageSelection, firstSelection],
       }),
     ).toThrow();
     expect(() =>

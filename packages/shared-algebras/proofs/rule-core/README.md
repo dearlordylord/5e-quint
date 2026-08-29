@@ -574,10 +574,14 @@ focused Slow MBT lane in `packages/battle-runtime`.
 
 ## Stat Block procedure families
 
-Stat Block execution is modeled by five independent, projection-shaped rule
+Stat Block execution is modeled by six independent, projection-shaped rule
 cores after authored `StatBlockRecord` admission:
 
 - `stat-block-action-lifecycle.qnt` spends the ordinary Action resource;
+- `stat-block-attack-resolution.qnt` owns Attack Roll hit/miss, independent
+  notation selection for each damage instance, Critical Hit dice, typed damage
+  aggregation, Advantage-only bonus damage, and the admitted size-gated Prone
+  hit rider;
 - `stat-block-bonus-action-lifecycle.qnt` spends the Bonus Action resource;
 - `stat-block-multiattack.qnt` spends one Attack action, retains only the listed
   pending dispatches, permits Movement and End Turn interleaving, and closes
@@ -591,8 +595,8 @@ Each rule core has its own `-inductive.qnt` proof machine and `-examples.qnt`
 run-block evidence. Shared action-turn helpers remain lower-level rule facts;
 there is no aggregate Stat Block procedure state or proof owner. Stat Block
 Reaction execution is not modeled by these covered families and remains the
-separate missing-owner capability tracked by GitHub #423. Attack-roll, damage,
-and hit-rider semantics remain the separate formal gap tracked by GitHub #427.
+separate missing-owner capability tracked by GitHub #423. Additional-effect
+continuations beyond the admitted typed hit rider remain owned by GitHub #425.
 
 Authored catalog breadth, monster tactics, per-Legendary-Action identity
 cooldowns, and broad reducer replay remain outside these focused rule cores.
@@ -624,3 +628,9 @@ Movement/Grapple/OA-decline parity, and
 `packages/battle-runtime/src/rule-core-reactions.mbt.test.ts` for QCORE8
 Reaction offer/decline/spend, continuation resume, Readied Movement release,
 and Concentration damage-save parity.
+Stat Block Attack Roll parity lives in
+`packages/battle-runtime/battle-runtime-stat-block-attack-resolution.mbt.qnt`
+with
+`packages/battle-runtime/src/stat-block-attack-resolution.mbt.test.ts`; its
+five synthetic fixture families compare the reusable QNT resolver with actual
+production reducer state and hole projections.

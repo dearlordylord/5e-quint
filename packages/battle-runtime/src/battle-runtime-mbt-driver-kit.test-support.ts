@@ -63,6 +63,7 @@ import {
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
   battleProcedureExecutionRefForTest,
+  battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest,
   characterBattleFeatureInitForTest,
   characterSpellInvocationRefForProcedureRefForTest,
   fighterTurnWithReadiedAcidAndSecondReadiedRay,
@@ -16051,7 +16052,10 @@ function skeletonShortswordSubject(
       candidate.subject.actorId === skeletonId &&
       candidate.subject.action === "attack" &&
       candidate.subject.procedureRef === shortswordBinding.procedureRef &&
-      candidate.subject.statBlockDamageNotation === undefined,
+      battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+        candidate.subject,
+        "rolled",
+      ),
   );
   if (matchingActs.length !== 1) {
     throw new Error("Expected one rolled Skeleton Shortsword attack act.");

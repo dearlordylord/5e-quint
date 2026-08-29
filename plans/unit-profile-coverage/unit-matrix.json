@@ -73,18 +73,18 @@
     },
     "qntProfileModelingCoverage": {
       "denominator": 164,
-      "numerator": 152,
-      "percent": "92.7%"
+      "numerator": 153,
+      "percent": "93.3%"
     },
     "qntProofCoverage": {
       "denominator": 164,
-      "numerator": 147,
-      "percent": "89.6%"
+      "numerator": 148,
+      "percent": "90.2%"
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 203,
-      "numerator": 168,
-      "percent": "82.8%"
+      "numerator": 169,
+      "percent": "83.3%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 203,
@@ -3376,23 +3376,37 @@
     {
       "id": "stat-block.attack-procedure",
       "profileKind": "stat-block-control",
-      "qntOwners": [],
-      "qntOwnershipStatus": "needs-qnt-owner",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-attack-resolution.qnt"
+      ],
       "runtimeOwners": [
+        "packages/battle-runtime/src/battle-action-options.ts",
+        "packages/battle-runtime/src/stat-block-attack-damage-selection.ts",
+        "packages/battle-runtime/src/statblock-attack-damage-support.ts",
+        "packages/battle-runtime/src/battle-subjects.ts",
+        "packages/battle-runtime/src/battle-reducer/codec-building-blocks.ts",
         "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
         "packages/battle-runtime/src/battle-reducer/statblock-attacks.ts",
-        "packages/battle-runtime/src/battle-reducer/statblock-attack-hit-condition-riders.ts",
-        "packages/battle-runtime/src/statblock-attack-hit-condition-support.ts",
         "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
-        "packages/battle-runtime/src/statblock-attack-damage-support.ts"
+        "packages/battle-runtime/src/statblock-attack-hit-condition-support.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock-attack-hit-condition-riders.ts"
       ],
       "sourceBoundary": "StatBlockRecord",
       "taskRefs": [
-        "SB-ACTIONS-RUNTIME-TEST",
-        "GH-427"
+        "SB-ATTACK-RESOLUTION-INDUCTIVE",
+        "SB-ATTACK-RESOLUTION-MBT",
+        "SB-ACTIONS-RUNTIME-TEST"
       ],
       "title": "Stat Block attack and damage procedure",
       "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-attack-resolution-inductive.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/stat-block-attack-resolution.mbt.test.ts"
+        },
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts"
@@ -7655,8 +7669,8 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 203,
-        "numerator": 168,
-        "percent": "82.8%"
+        "numerator": 169,
+        "percent": "83.3%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 203,
@@ -9365,21 +9379,20 @@
         ]
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
-            "followUpTaskIds": [
-              "GH-427"
-            ],
             "obligationId": "BATTLE.STAT_BLOCK.ATTACK_PROCEDURE",
             "runtime": "battle",
-            "status": "needs-qnt-owner",
+            "status": "covered",
             "title": "Battle Stat Block attack, damage, and typed hit-rider procedure"
           }
         ],
         "profileId": "stat-block.attack-procedure",
         "profileKind": "stat-block-control",
-        "qntOwners": []
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/stat-block-attack-resolution.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -21421,12 +21434,20 @@
       "taskId": "SB-MULTIATTACK-MBT"
     },
     {
-      "claimKind": "missing-qnt-owner",
-      "note": "Non-capability formal proof/parity follow-up; runtime ownership already exists.",
+      "claimKind": "qnt-proof",
+      "note": "Identity-independent bounded proof evidence for Attack Roll hit/miss, per-instance static-or-rolled damage, Critical Hit dice, Advantage-only bonus damage, and the admitted typed hit rider.",
       "profileIds": [
         "stat-block.attack-procedure"
       ],
-      "taskId": "GH-427"
+      "taskId": "SB-ATTACK-RESOLUTION-INDUCTIVE"
+    },
+    {
+      "claimKind": "runtime-parity",
+      "note": "Five synthetic fixture families compare the reusable Stat Block attack resolver with actual production reducer state and hole projections.",
+      "profileIds": [
+        "stat-block.attack-procedure"
+      ],
+      "taskId": "SB-ATTACK-RESOLUTION-MBT"
     }
   ],
   "unitGroupDenominatorAudit": {

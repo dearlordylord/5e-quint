@@ -10592,6 +10592,7 @@ function attackMeleeReachFact(
         targetId,
         distanceFeet: movementFeet(5),
         procedureRef: subject.procedureRef,
+        statBlockDamageSelection: subject.statBlockDamageSelection,
       }
     : {
         kind: "attackTargetDistance",

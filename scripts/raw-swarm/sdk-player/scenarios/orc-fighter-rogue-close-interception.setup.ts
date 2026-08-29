@@ -193,7 +193,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "static",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "static" },
     environment: { overhead: { kind: "open" }, barrierHeights: [] },
     initialRangedAttackEnemyRelationships: [
       { attackerId: goblinId, enemyId: fighterId },

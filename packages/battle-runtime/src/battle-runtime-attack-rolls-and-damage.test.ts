@@ -1,7 +1,8 @@
 import { battleObjectId } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { classLevel } from "@dnd/shared/types";
+import { classLevel, PositiveInteger } from "@dnd/shared/types";
+import { Either } from "effect";
 import {
   startBattleRight,
   startBattleSessionRight,
@@ -57,7 +58,11 @@ import type {
   BattleState,
   BattleSubject,
 } from "./battle-runtime.test-support.ts";
-import type { RolledStatBlockAttackActionOption } from "./battle-action-options.ts";
+import type { StatBlockAttackActionOption } from "./battle-action-options.ts";
+import {
+  statBlockBaseDamageComponentOrdinal,
+  statBlockBaseDamageComponentRef,
+} from "./stat-block-attack-damage-selection.ts";
 import type { AttackRollResult } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type {
   AttackDamageRider,
@@ -67,6 +72,7 @@ import type {
   SpellMarkedDamageRider,
 } from "./battle-state-execution.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
+import { parseSelectedStatBlockAttackDamage } from "./statblock-attack-damage-support.ts";
 import {
   attackActionBonus,
   attackActionOptionName,
@@ -127,12 +133,12 @@ describe("battle runtime: attack rolls and damage", () => {
     const scimitar = statBlockOptions.find(
       (option) =>
         option.attack.attackType === "melee" &&
-        option.damageNotation === "rolled",
+        isRolledStatBlockAttackOption(option),
     );
     const scimitarStatic = statBlockOptions.find(
       (option) =>
         option.attack.attackType === "melee" &&
-        option.damageNotation === "static",
+        isFixedStatBlockAttackOption(option),
     );
     if (scimitar === undefined || scimitarStatic === undefined) {
       throw new Error("Expected rolled and static Scimitar options.");
@@ -189,7 +195,7 @@ describe("battle runtime: attack rolls and damage", () => {
     expect(weaponDamageComponent(scimitar, false)).toBeNull();
   });
 
-  test("mixed expression and static annotations still require a damage roll", () => {
+  test("a selected rolled component requires a damage roll", () => {
     const state = goblinTurnBattle();
     const goblin = state.combatants.get(goblinId);
     if (goblin?.origin.kind !== "statBlock") {
@@ -201,31 +207,8 @@ describe("battle runtime: attack rolls and damage", () => {
     if (rolledAttack === undefined) {
       throw new Error("Expected a rolled Stat Block attack.");
     }
-    const firstDamageEffect = rolledAttack.attack.onHit.find(
-      (effect) => effect.kind === "damage",
-    );
-    if (
-      firstDamageEffect === undefined ||
-      firstDamageEffect.kind !== "damage"
-    ) {
-      throw new Error("Expected a rolled Stat Block damage component.");
-    }
-    const mixedOnHit: RolledStatBlockAttackActionOption["attack"]["onHit"] = [
-      {
-        ...firstDamageEffect,
-        amount: { ...firstDamageEffect.amount, static: 3 },
-      },
-    ];
-    const mixedAttack: RolledStatBlockAttackActionOption = {
-      ...rolledAttack,
-      attack: {
-        ...rolledAttack.attack,
-        onHit: mixedOnHit,
-      },
-    };
-    expect(mixedAttack.kind).toBe("statBlockAttack");
     expect(
-      fixedAttackDamageByTypeEntries(state, goblin, mixedAttack, {
+      fixedAttackDamageByTypeEntries(state, goblin, rolledAttack, {
         total: 14,
         naturalD20: DieRollResult(10),
       }),
@@ -244,28 +227,33 @@ describe("battle runtime: attack rolls and damage", () => {
     if (rolledAttack === undefined) {
       throw new Error("Expected a rolled Stat Block attack.");
     }
-    const firstDamageEffect = rolledAttack.attack.onHit.find(
-      (effect) => effect.kind === "damage",
-    );
-    if (
-      firstDamageEffect === undefined ||
-      firstDamageEffect.kind !== "damage"
-    ) {
+    const firstDamageComponent =
+      rolledAttack.attack.onHit.damage.baseComponents[0];
+    if (firstDamageComponent.kind !== "rolled") {
       throw new Error("Expected a rolled Stat Block damage component.");
     }
-    const mixedOnHit: RolledStatBlockAttackActionOption["attack"]["onHit"] = [
-      firstDamageEffect,
-      {
-        kind: "damage",
-        damageType: "fire",
-        amount: { kind: "fixed", static: 4 },
-      },
-    ];
-    const mixedAttack: RolledStatBlockAttackActionOption = {
+    const mixedAttack: StatBlockAttackActionOption = {
       ...rolledAttack,
       attack: {
         ...rolledAttack.attack,
-        onHit: mixedOnHit,
+        onHit: {
+          ...rolledAttack.attack.onHit,
+          damage: Either.getOrThrow(
+            parseSelectedStatBlockAttackDamage({
+              baseComponents: [
+                firstDamageComponent,
+                {
+                  kind: "fixed",
+                  componentRef: statBlockBaseDamageComponentRef(
+                    statBlockBaseDamageComponentOrdinal(PositiveInteger(2)),
+                  ),
+                  amount: 4,
+                  damageType: "fire",
+                },
+              ],
+            }),
+          ),
+        },
       },
     };
     expect(
@@ -285,7 +273,7 @@ describe("battle runtime: attack rolls and damage", () => {
     const scimitar = statBlockAttackActionOptions(goblin.origin.execution).find(
       (option) =>
         option.attack.attackType === "melee" &&
-        option.damageNotation === "rolled",
+        isRolledStatBlockAttackOption(option),
     );
     if (scimitar === undefined) {
       throw new Error("Expected a rolled Stat Block melee attack.");
@@ -622,7 +610,7 @@ describe("battle runtime: attack rolls and damage", () => {
     const scimitar = statBlockOptions.find(
       (option) =>
         option.attack.attackType === "melee" &&
-        option.damageNotation === "rolled",
+        isRolledStatBlockAttackOption(option),
     );
     const shortbow = statBlockOptions.find(
       (option) => option.attack.attackType === "ranged",
@@ -1916,6 +1904,22 @@ describe("battle runtime: attack rolls and damage", () => {
 
 function isRolledStatBlockAttackOption(
   option: ReturnType<typeof statBlockAttackActionOptions>[number],
-): option is RolledStatBlockAttackActionOption {
-  return option.damageNotation === "rolled";
+): option is StatBlockAttackActionOption {
+  const damage = option.attack.onHit.damage;
+  return (
+    damage.baseComponents.every((component) => component.kind === "rolled") &&
+    (damage.advantageBonus === undefined ||
+      damage.advantageBonus.kind === "rolled")
+  );
+}
+
+function isFixedStatBlockAttackOption(
+  option: ReturnType<typeof statBlockAttackActionOptions>[number],
+): option is StatBlockAttackActionOption {
+  const damage = option.attack.onHit.damage;
+  return (
+    damage.baseComponents.every((component) => component.kind === "fixed") &&
+    (damage.advantageBonus === undefined ||
+      damage.advantageBonus.kind === "fixed")
+  );
 }

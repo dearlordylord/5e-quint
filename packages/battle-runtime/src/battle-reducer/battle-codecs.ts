@@ -86,8 +86,8 @@ import {
   BattleSubjectSchema,
   battleSubjectBoundExecutionReferences,
   battleSubjectProcedureRefs,
-  BattleAttackExecutionAbilitySchema,
   BattleAttackExecutionSelectionSchema,
+  CharacterAttackExecutionSelectionSchema,
   BattleReadyResponseSnapshotSchema,
   BattleReadyResponseSchema,
   BattleInterruptAttackExecutionSelectionSchema,
@@ -668,65 +668,23 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     firstTargetId: CombatantId,
     secondTargetId: CombatantId,
   }),
-  Schema.Union(
+  Schema.extend(
+    CharacterAttackExecutionSelectionSchema,
     Schema.Struct({
       kind: Schema.Literal("weaponMasteryPushDisposition"),
       attackerId: CombatantId,
       targetId: CombatantId,
-      procedureRef: BattleAttackProcedureExecutionRef,
-      attackAbility: BattleAttackExecutionAbilitySchema,
-      attackDamageType: DamageTypeSchema,
-      attackName: Schema.optionalWith(Schema.Never, { exact: true }),
-      disposition: BattleThunderwavePushDispositionSchema,
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("weaponMasteryPushDisposition"),
-      attackerId: CombatantId,
-      targetId: CombatantId,
-      procedureRef: BattleStatBlockProcedureExecutionRef,
-      attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
-      attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
-      attackName: Schema.optionalWith(Schema.Never, { exact: true }),
       disposition: BattleThunderwavePushDispositionSchema,
     }),
   ),
-  Schema.Union(
+  Schema.extend(
+    BattleAttackExecutionSelectionSchema,
     Schema.Struct({
       kind: Schema.Literal("attackTargetDistance"),
       actorId: CombatantId,
       targetId: CombatantId,
-      procedureRef: BattleAttackProcedureExecutionRef,
-      attackAbility: BattleAttackExecutionAbilitySchema,
-      attackDamageType: DamageTypeSchema,
-      attackName: Schema.optionalWith(Schema.Never, { exact: true }),
       distanceFeet: MovementFeet,
     }),
-    Schema.Union(
-      Schema.Struct({
-        kind: Schema.Literal("attackTargetDistance"),
-        actorId: CombatantId,
-        targetId: CombatantId,
-        procedureRef: BattleStatBlockProcedureExecutionRef,
-        attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
-        attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
-        attackName: Schema.optionalWith(Schema.Never, { exact: true }),
-        statBlockDamageNotation: Schema.optionalWith(Schema.Never, {
-          exact: true,
-        }),
-        distanceFeet: MovementFeet,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("attackTargetDistance"),
-        actorId: CombatantId,
-        targetId: CombatantId,
-        procedureRef: BattleStatBlockProcedureExecutionRef,
-        attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
-        attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
-        attackName: Schema.optionalWith(Schema.Never, { exact: true }),
-        statBlockDamageNotation: Schema.Literal("static"),
-        distanceFeet: MovementFeet,
-      }),
-    ),
   ),
   Schema.Struct({
     kind: Schema.Literal("attackAttackerCannotSeeTarget"),
@@ -3183,19 +3141,9 @@ type BattleD20TestNaturalOneRerollOutcomeDecisionEncoded =
       };
     };
 
-type BattleInterruptAttackExecutionSelectionEncoded =
-  | {
-      readonly procedureRef: string;
-      readonly attackAbility: Ability | "spellcasting";
-      readonly attackDamageType: DamageType;
-      readonly attackName?: never;
-    }
-  | {
-      readonly procedureRef: string;
-      readonly attackAbility?: never;
-      readonly attackDamageType?: never;
-      readonly attackName?: never;
-    };
+type BattleInterruptAttackExecutionSelectionEncoded = Schema.Schema.Encoded<
+  typeof BattleInterruptAttackExecutionSelectionSchema
+>;
 
 type BattleDamageRelationshipDecisionEncoded = {
   readonly questionId: string;

@@ -40,6 +40,8 @@ import {
 } from "./battle-runtime.test-support.ts";
 import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
+import { attackExecutionSelectionForOption } from "./battle-action-options.ts";
+import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
 import { attackExecutionDamageType } from "./battle-action-options.ts";
 import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-apply.ts";
 import {
@@ -354,7 +356,11 @@ describe("battle presentation joins", () => {
       throw new Error("Expected Goblin Stat Block actor.");
     }
     const attack = statBlockAttackActionOptions(actor.origin.execution).find(
-      (candidate) => candidate.damageNotation === "rolled",
+      (candidate) =>
+        statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+          attackExecutionSelectionForOption(candidate).statBlockDamageSelection,
+          "rolled",
+        ),
     );
     if (attack === undefined) {
       throw new Error("Expected a rolled Stat Block attack.");

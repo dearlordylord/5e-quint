@@ -8,30 +8,65 @@ import type {
   CreatureAttackRollMechanics,
   DiceExpr,
 } from "@dnd/surface/surface/types";
+import { Brand, Either, Match } from "effect";
 import type {
+  SelectedStatBlockAttackDamage,
+  SelectedStatBlockAttackDamageComponent,
+  SelectedStatBlockAttackDamageComponents,
+  SelectedStatBlockAttackRollMechanics,
   StatBlockAttackDamage,
   StatBlockAttackDamageComponent,
-  StaticStatBlockAttackDamage,
   SupportedCreatureAttackRollMechanics,
-  SupportedStaticDamageCreatureAttackRollMechanics,
 } from "./battle-action-options.ts";
-import { supportedStatBlockAttackHitConditionRiderEffect } from "./statblock-attack-hit-condition-support.ts";
+import { statBlockAttackDamageSelectionForDamage } from "./battle-action-options.ts";
+import {
+  supportedStatBlockAttackHitConditionRiderEffect,
+  supportedStatBlockAttackHitConditionRiders,
+} from "./statblock-attack-hit-condition-support.ts";
+import {
+  statBlockAdvantageBonusDamageComponentRef,
+  statBlockAttackDamageComponentRefsMatchSelectionRoles,
+  parseStatBlockBaseDamageComponentOrdinal,
+  statBlockBaseDamageComponentRef,
+  statBlockAttackDamageSelectionKey,
+  STAT_BLOCK_DAMAGE_COMPONENT_NOTATIONS,
+  type StatBlockAttackDamageComponentRef,
+  type StatBlockDamageComponentNotation,
+} from "./stat-block-attack-damage-selection.ts";
 
 type CreatureAttackHitEffects = Pick<CreatureAttackRollMechanics, "onHit">;
 
 type SupportedStatBlockAttackDamageEffect =
   | {
       readonly kind: "base";
-      readonly component: StatBlockAttackDamageComponent;
+      readonly component: UnreferencedStatBlockAttackDamageComponent;
     }
   | {
       readonly kind: "advantageBonus";
-      readonly component: StatBlockAttackDamageComponent;
+      readonly component: UnreferencedStatBlockAttackDamageComponent;
     };
 
-export function supportedStatBlockAttackDamage(
-  attack: SupportedStaticDamageCreatureAttackRollMechanics,
-): StaticStatBlockAttackDamage;
+type UnreferencedStatBlockAttackDamageComponent =
+  | Omit<
+      Extract<StatBlockAttackDamageComponent, { readonly expr: DiceExpr }>,
+      "componentRef"
+    >
+  | Omit<
+      Extract<StatBlockAttackDamageComponent, { readonly static: number }>,
+      "componentRef"
+    >;
+
+const selectedStatBlockAttackDamage =
+  Brand.nominal<SelectedStatBlockAttackDamage>();
+
+export function parseSelectedStatBlockAttackDamage(
+  damage: SelectedStatBlockAttackDamageComponents,
+) {
+  return selectedStatBlockAttackDamageHasCanonicalComponentRefs(damage)
+    ? Either.right(selectedStatBlockAttackDamage(damage))
+    : Either.left({ kind: "nonCanonicalStatBlockAttackDamageRoles" } as const);
+}
+
 export function supportedStatBlockAttackDamage(
   attack: SupportedCreatureAttackRollMechanics,
 ): StatBlockAttackDamage;
@@ -52,11 +87,30 @@ export function supportedStatBlockAttackDamage(
     }
     effects.push(parsed);
   }
-  const baseComponents = nonEmpty(
+  const unreferencedBaseComponents = nonEmpty(
     effects.flatMap((effect) =>
       effect.kind === "base" ? [effect.component] : [],
     ),
   );
+  if (unreferencedBaseComponents === null) {
+    return null;
+  }
+  const referencedBaseComponents = Either.all(
+    unreferencedBaseComponents.map((component, index) =>
+      Either.map(
+        parseStatBlockBaseDamageComponentOrdinal(index + 1),
+        (ordinal) =>
+          withStatBlockDamageComponentRef(
+            component,
+            statBlockBaseDamageComponentRef(ordinal),
+          ),
+      ),
+    ),
+  );
+  if (Either.isLeft(referencedBaseComponents)) {
+    return null;
+  }
+  const baseComponents = nonEmpty(referencedBaseComponents.right);
   if (baseComponents === null) {
     return null;
   }
@@ -67,7 +121,14 @@ export function supportedStatBlockAttackDamage(
   if (advantageBonuses.length > 1) {
     return null;
   }
-  const advantageBonus = advantageBonuses[0];
+  const unreferencedAdvantageBonus = advantageBonuses[0];
+  const advantageBonus =
+    unreferencedAdvantageBonus === undefined
+      ? undefined
+      : withStatBlockDamageComponentRef(
+          unreferencedAdvantageBonus,
+          statBlockAdvantageBonusDamageComponentRef,
+        );
   if (
     advantageBonus !== undefined &&
     advantageBonus.damageType !== baseComponents[0].damageType
@@ -102,7 +163,7 @@ function supportedStatBlockAttackDamageEffect(
 
 function supportedStatBlockBaseDamageEffect(
   effect: CreatureAttackRollMechanics["onHit"][number],
-): StatBlockAttackDamageComponent | null {
+): UnreferencedStatBlockAttackDamageComponent | null {
   if (
     effect.kind !== "damage" ||
     effect.amount.kind !== "fixed" ||
@@ -119,7 +180,7 @@ function supportedStatBlockBaseDamageEffect(
 
 function supportedStatBlockAdvantageBonusDamageEffect(
   effect: CreatureAttackRollMechanics["onHit"][number],
-): StatBlockAttackDamageComponent | null {
+): UnreferencedStatBlockAttackDamageComponent | null {
   if (
     effect.kind !== "conditional_bonus_damage" ||
     effect.when.kind !== "attack_roll_had_advantage" ||
@@ -142,8 +203,8 @@ function statBlockDamageComponent(
     readonly static?: number;
   },
   damageType: StatBlockAttackDamageComponent["damageType"],
-): StatBlockAttackDamageComponent {
-  const staticDamage = statBlockDamageNotationStaticAmount(amount);
+): UnreferencedStatBlockAttackDamageComponent {
+  const staticDamage = printedStatBlockDamageAmount(amount);
   return {
     expr: amount.expr,
     ...optionalProperty("static", staticDamage),
@@ -151,7 +212,7 @@ function statBlockDamageComponent(
   };
 }
 
-function statBlockDamageNotationStaticAmount(amount: {
+function printedStatBlockDamageAmount(amount: {
   readonly kind: "fixed";
   readonly expr: DiceExpr;
   readonly static?: number;
@@ -161,29 +222,165 @@ function statBlockDamageNotationStaticAmount(amount: {
     : undefined;
 }
 
-export function statBlockAttackDamageSupportsStaticNotation(
-  damage: StatBlockAttackDamage,
-): boolean {
-  return (
-    damage.baseComponents.every(
-      (component) => component.static !== undefined,
-    ) &&
-    (damage.advantageBonus === undefined ||
-      damage.advantageBonus.static !== undefined)
+export function selectedStatBlockAttackRollOptions(
+  attack: SupportedCreatureAttackRollMechanics,
+): readonly SelectedStatBlockAttackRollMechanics[] {
+  const damage = supportedStatBlockAttackDamage(attack);
+  const [conditionRider] = supportedStatBlockAttackHitConditionRiders(attack);
+  return selectedStatBlockAttackDamageOptions(damage).map(
+    (selectedDamage): SelectedStatBlockAttackRollMechanics => {
+      const onHit = {
+        damage: selectedDamage,
+        ...optionalProperty("conditionRider", conditionRider),
+      };
+      const common = {
+        attackAbility: attack.attackAbility,
+        attackBonus: attack.attackBonus,
+        onHit,
+      };
+      return Match.value(attack).pipe(
+        Match.when({ attackType: "melee" }, (meleeAttack) => ({
+          ...common,
+          attackType: meleeAttack.attackType,
+          reachFeet: meleeAttack.reachFeet,
+        })),
+        Match.when({ attackType: "ranged" }, (rangedAttack) => ({
+          ...common,
+          attackType: rangedAttack.attackType,
+          rangeFeet: rangedAttack.rangeFeet,
+          ...optionalProperty("ammunition", rangedAttack.ammunition),
+        })),
+        Match.exhaustive,
+      );
+    },
   );
 }
 
-export function statBlockAttackDamageRequiresRoll(
+export function selectedStatBlockAttackDamageOptions(
   damage: StatBlockAttackDamage,
-): boolean {
-  return (
-    damage.baseComponents.some(
-      (component) => "expr" in component && component.expr.dice > 0,
-    ) ||
-    (damage.advantageBonus !== undefined &&
-      "expr" in damage.advantageBonus &&
-      damage.advantageBonus.expr.dice > 0)
+): readonly SelectedStatBlockAttackDamage[] {
+  const [firstBaseComponent, ...remainingBaseComponents] =
+    damage.baseComponents;
+  const firstComponentOptions =
+    selectedStatBlockDamageComponentOptions(firstBaseComponent);
+  const baseOptions = remainingBaseComponents.reduce<
+    readonly ReadonlyNonEmptyArray<SelectedStatBlockAttackDamageComponent>[]
+  >(
+    (options, component) =>
+      options.flatMap((baseOption) =>
+        selectedStatBlockDamageComponentOptions(component).map(
+          (
+            selectedComponent,
+          ): ReadonlyNonEmptyArray<SelectedStatBlockAttackDamageComponent> => [
+            ...baseOption,
+            selectedComponent,
+          ],
+        ),
+      ),
+    firstComponentOptions.map((component) => [component]),
   );
+  const advantageBonus = damage.advantageBonus;
+  const options: readonly SelectedStatBlockAttackDamageComponents[] =
+    advantageBonus === undefined
+      ? baseOptions.map((baseComponents) => ({ baseComponents }))
+      : baseOptions.flatMap((baseComponents) =>
+          selectedStatBlockDamageComponentOptions(advantageBonus).map(
+            (advantageBonus) => ({
+              baseComponents,
+              advantageBonus,
+            }),
+          ),
+        );
+  return deduplicatedSelectedStatBlockAttackDamageOptions(
+    options.flatMap((option) => {
+      const parsed = parseSelectedStatBlockAttackDamage(option);
+      return Either.isRight(parsed) ? [parsed.right] : [];
+    }),
+  );
+}
+
+function deduplicatedSelectedStatBlockAttackDamageOptions(
+  options: readonly SelectedStatBlockAttackDamage[],
+): readonly SelectedStatBlockAttackDamage[] {
+  const seenSelectionKeys = new Set<string>();
+  return options.filter((option) => {
+    const selectionKey = statBlockAttackDamageSelectionKey(
+      statBlockAttackDamageSelectionForDamage(option),
+    );
+    if (seenSelectionKeys.has(selectionKey)) return false;
+    seenSelectionKeys.add(selectionKey);
+    return true;
+  });
+}
+
+function selectedStatBlockDamageComponentOptions(
+  component: StatBlockAttackDamageComponent,
+): readonly SelectedStatBlockAttackDamageComponent[] {
+  const notations: readonly StatBlockDamageComponentNotation[] =
+    STAT_BLOCK_DAMAGE_COMPONENT_NOTATIONS.filter((notation) =>
+      Match.value(notation).pipe(
+        Match.when(
+          "rolled",
+          () => "expr" in component && component.expr.dice > 0,
+        ),
+        Match.when("static", () => component.static !== undefined),
+        Match.exhaustive,
+      ),
+    );
+  return notations.flatMap((notation) => {
+    const selected = selectedStatBlockDamageComponent(component, notation);
+    return selected === null ? [] : [selected];
+  });
+}
+
+function selectedStatBlockDamageComponent(
+  component: StatBlockAttackDamageComponent,
+  notation: StatBlockDamageComponentNotation,
+): SelectedStatBlockAttackDamageComponent | null {
+  return Match.value(notation).pipe(
+    Match.when("static", () =>
+      component.static === undefined
+        ? null
+        : {
+            kind: "fixed" as const,
+            componentRef: component.componentRef,
+            amount: component.static,
+            damageType: component.damageType,
+          },
+    ),
+    Match.when("rolled", () =>
+      "expr" in component && component.expr.dice > 0
+        ? {
+            kind: "rolled" as const,
+            componentRef: component.componentRef,
+            expr: component.expr,
+            damageType: component.damageType,
+          }
+        : null,
+    ),
+    Match.exhaustive,
+  );
+}
+
+export function selectedStatBlockAttackDamageHasCanonicalComponentRefs(
+  damage: SelectedStatBlockAttackDamageComponents,
+): boolean {
+  const [firstBaseComponent, ...remainingBaseComponents] =
+    damage.baseComponents;
+  return statBlockAttackDamageComponentRefsMatchSelectionRoles([
+    firstBaseComponent.componentRef,
+    ...remainingBaseComponents.map(({ componentRef }) => componentRef),
+    ...(damage.advantageBonus === undefined
+      ? []
+      : [damage.advantageBonus.componentRef]),
+  ]);
+}
+
+function withStatBlockDamageComponentRef(
+  component: UnreferencedStatBlockAttackDamageComponent,
+  componentRef: StatBlockAttackDamageComponentRef,
+): StatBlockAttackDamageComponent {
+  return { ...component, componentRef };
 }
 
 function nonEmpty<T>(values: readonly T[]): ReadonlyNonEmptyArray<T> | null {

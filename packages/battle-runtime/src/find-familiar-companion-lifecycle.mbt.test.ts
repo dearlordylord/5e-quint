@@ -31,6 +31,8 @@ import {
 } from "@dnd/surface/surface/find-familiar-forms";
 import * as Either from "effect/Either";
 import { describe, expect, it } from "vitest";
+import { attackExecutionSelectionForOption } from "./battle-action-options.ts";
+import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -941,12 +943,17 @@ function pactScratchSubject(
   if (procedureRef === undefined) {
     throw new Error("Expected admitted Scratch procedure.");
   }
+  const attack = statBlockAttackActionOptions(familiar.origin.execution).find(
+    (candidate) => candidate.procedureRef === procedureRef,
+  );
+  if (attack === undefined) {
+    throw new Error("Expected executable Scratch damage selection.");
+  }
   return {
     tag: "pactOfTheChainFamiliarAttack",
     actorId: casterId,
     familiarId,
-    procedureRef,
-    statBlockDamageNotation: "static",
+    ...attackExecutionSelectionForOption(attack),
   };
 }
 

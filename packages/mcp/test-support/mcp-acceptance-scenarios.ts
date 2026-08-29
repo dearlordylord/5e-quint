@@ -4133,7 +4133,12 @@ export function attackSubjectFromActs(
       subject.action === "attack" &&
       subject.actorId === actorId &&
       candidate.summary === `Take the Attack action with ${attackName}.` &&
-      subject.statBlockDamageNotation === undefined
+      Array.isArray(subject.statBlockDamageSelection) &&
+      subject.statBlockDamageSelection.length > 0 &&
+      subject.statBlockDamageSelection.every(
+        (component) =>
+          isJsonObject(component) && component.notation === "rolled",
+      )
     );
   });
   assert.equal(

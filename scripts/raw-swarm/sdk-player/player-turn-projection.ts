@@ -11,6 +11,10 @@ import {
   BattleResourcePoolExecutionRef,
 } from "../../../packages/battle-runtime/src/identity.ts";
 import {
+  StatBlockAttackDamageSelection,
+  type StatBlockAttackDamageSelection as StatBlockAttackDamageSelectionType,
+} from "../../../packages/battle-runtime/src/stat-block-attack-damage-selection.ts";
+import {
   BATTLE_INVALID_REASON_CODES,
   type BattleHole,
   type BattleInvalidReasonCode,
@@ -239,7 +243,7 @@ type PlayerSubjectProjectionCommon = {
   readonly procedureRef?: string;
   readonly attackAbility?: string;
   readonly attackDamageType?: string;
-  readonly statBlockDamageNotation?: string;
+  readonly statBlockDamageSelection?: StatBlockAttackDamageSelectionType;
   readonly speedKind?: string;
   readonly standardAction?: string;
 };
@@ -1019,7 +1023,6 @@ export function projectPlayerSubject(
     "procedureRef",
     "attackAbility",
     "attackDamageType",
-    "statBlockDamageNotation",
     "speedKind",
     "standardAction",
   ] as const;
@@ -1044,6 +1047,18 @@ export function projectPlayerSubject(
           }
         : undefined;
   if (value.mode !== undefined && mode === undefined) return undefined;
+  const statBlockDamageSelection =
+    value.statBlockDamageSelection === undefined
+      ? undefined
+      : Schema.decodeUnknownEither(StatBlockAttackDamageSelection)(
+          value.statBlockDamageSelection,
+        );
+  if (
+    statBlockDamageSelection !== undefined &&
+    Either.isLeft(statBlockDamageSelection)
+  ) {
+    return undefined;
+  }
   const common: PlayerSubjectProjectionCommon = {
     actorId: value.actorId,
     ...(typeof value.procedureRef === "string"
@@ -1055,8 +1070,8 @@ export function projectPlayerSubject(
     ...(typeof value.attackDamageType === "string"
       ? { attackDamageType: value.attackDamageType }
       : {}),
-    ...(typeof value.statBlockDamageNotation === "string"
-      ? { statBlockDamageNotation: value.statBlockDamageNotation }
+    ...(statBlockDamageSelection !== undefined
+      ? { statBlockDamageSelection: statBlockDamageSelection.right }
       : {}),
     ...(typeof value.speedKind === "string"
       ? { speedKind: value.speedKind }

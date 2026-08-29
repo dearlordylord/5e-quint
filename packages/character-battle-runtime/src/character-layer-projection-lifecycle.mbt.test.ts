@@ -572,7 +572,10 @@ function requireSkeletonShortswordAct(
       act.subject.actorId === lifecycleSkeletonCombatantId &&
       act.presentation.kind === "attack" &&
       act.presentation.name === "Shortsword" &&
-      act.subject.statBlockDamageNotation === undefined,
+      act.subject.statBlockDamageSelection !== undefined &&
+      act.subject.statBlockDamageSelection.every(
+        ({ notation }) => notation === "rolled",
+      ),
   );
   if (acts.length !== 1) {
     throw new Error("Expected exactly one rolled Skeleton Shortsword act.");
@@ -602,6 +605,7 @@ function targetChoiceFill(
           targetId: lifecycleCharacterCombatantId,
           distanceFeet: movementFeet(5),
           procedureRef: subject.procedureRef,
+          statBlockDamageSelection: subject.statBlockDamageSelection,
         }
       : {
           kind: "attackTargetDistance" as const,

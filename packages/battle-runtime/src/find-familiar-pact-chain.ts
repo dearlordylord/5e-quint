@@ -9,7 +9,10 @@ import type {
   BattleResolutionInputForSubject,
 } from "./battle-state-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
-import type { StatBlockAttackActionOption } from "./battle-action-options.ts";
+import {
+  boundAttackExecutionSelectionMatchesOption,
+  type StatBlockAttackActionOption,
+} from "./battle-action-options.ts";
 import { combatantCanTakeReactions } from "./battle-reducer/creature-state-execution.ts";
 import { snapshotBattle } from "./battle-reducer/battle-snapshot.ts";
 import { spendReaction } from "./battle-reducer/interrupt-execution.ts";
@@ -117,10 +120,13 @@ function pactFamiliarAttackActionOptionForInput(
           attack.procedureRef,
         ) === "actions" &&
         attack.procedureRef === input.subject.procedureRef &&
-        attack.damageNotation ===
-          (input.subject.statBlockDamageNotation === "static"
-            ? "static"
-            : "rolled"),
+        boundAttackExecutionSelectionMatchesOption(
+          {
+            procedureRef: input.subject.procedureRef,
+            statBlockDamageSelection: input.subject.statBlockDamageSelection,
+          },
+          attack,
+        ),
     ) ?? null
   );
 }

@@ -10883,8 +10883,6 @@
       ],
       "profileId": "stat-block.attack-procedure",
       "obligationId": "BATTLE.STAT_BLOCK.ATTACK_PROCEDURE",
-      "formalEvidenceState": "needs-qnt-owner",
-      "proofFollowUpIssueNumber": 427,
       "occurrenceCount": 252,
       "statBlockCount": 213,
       "memberRowIds": [
