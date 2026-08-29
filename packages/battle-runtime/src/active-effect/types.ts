@@ -57,7 +57,6 @@ import type {
   BattleMovableLight,
   BattleMovableLightList,
   BattleSpecialSpeedKind,
-  WeaponAttackDamageEnhancementBonus,
   SpellAttackKind,
   SpellConditionRepeatSave,
 } from "./execution-vocabulary.ts";
@@ -947,7 +946,6 @@ export type BattleActiveEffect = (
       readonly kind: "weaponAttackDamageEnhancement";
       readonly holderCombatantId: CombatantId;
       readonly weaponItemId: BattleObjectId;
-      readonly bonus: WeaponAttackDamageEnhancementBonus;
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
         { readonly kind: "duration" }
@@ -976,8 +974,6 @@ export type BattleActiveEffect = (
   | (BattleSpellEffectBase &
       BattleReplayAddressableEffect & {
         readonly kind: "fixedCostMovementReplacement";
-        readonly movementCostFeet: MovementFeet;
-        readonly maxJumpDistanceFeet: MovementFeet;
         readonly usedThisTurn: boolean;
         readonly expiresAt: Extract<
           BattleActiveEffectExpiration,

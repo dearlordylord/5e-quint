@@ -21,6 +21,7 @@ import {
 } from "./battle-reducer/attack-damage-apply.ts";
 import { attackActionOptionPresentationName } from "./stat-block-presentation.ts";
 import { maxFixedCostMovementReplacementDistanceFeet } from "./battle-reducer/fixed-cost-movement-replacement.ts";
+import { boundFixedCostMovementReplacementEffect } from "./battle-reducer/spell-modifier-binding.ts";
 import { statBlockProcedurePresentationsForActor } from "./stat-block-presentation.ts";
 import type {
   BattleSubject,
@@ -374,10 +375,16 @@ function intrinsicActPresentationText(
       subject.effectRef,
     );
     if (effect?.kind === "fixedCostMovementReplacement") {
-      return {
-        label: "Jump",
-        summary: `Spend ${effect.movementCostFeet} feet of Movement to jump up to ${maxFixedCostMovementReplacementDistanceFeet(state, subject.actorId, effect)} feet using table-supplied landing facts.`,
-      };
+      const boundEffect = boundFixedCostMovementReplacementEffect(
+        state,
+        effect,
+      );
+      if (boundEffect !== undefined) {
+        return {
+          label: "Jump",
+          summary: `Spend ${boundEffect.movementCostFeet} feet of Movement to jump up to ${maxFixedCostMovementReplacementDistanceFeet(state, subject.actorId, boundEffect)} feet using table-supplied landing facts.`,
+        };
+      }
     }
   }
   if (

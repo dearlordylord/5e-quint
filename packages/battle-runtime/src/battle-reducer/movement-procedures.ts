@@ -30,7 +30,6 @@ import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type {
   AdmittedBattleResolutionInput,
   BattleAcrobaticMovementFact,
-  BattleActiveEffect,
   BattleAreaDifficultTerrainMovementFact,
   BattleAreaDifficultTerrainSource,
   BattleBrutalStrikeForcefulBlowMovementFact,
@@ -90,6 +89,10 @@ import {
   type BoundDirectionalPersistentAreaEffect,
 } from "./persistent-spell-area-binding.ts";
 import { maxFixedCostMovementReplacementDistanceFeet } from "./fixed-cost-movement-replacement.ts";
+import {
+  boundFixedCostMovementReplacementEffect,
+  type BoundFixedCostMovementReplacementEffect,
+} from "./spell-modifier-binding.ts";
 import { movementHole } from "./movement-holes.ts";
 import {
   battleMovementBudgetForActor,
@@ -259,10 +262,8 @@ function movementOpportunityReactionWindow(
   );
 }
 
-type FixedCostMovementReplacementEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "fixedCostMovementReplacement" }
->;
+type FixedCostMovementReplacementEffect =
+  BoundFixedCostMovementReplacementEffect;
 
 function resolveFixedCostMovementReplacementCommand(
   input: BattleResolutionInputForSubject<
@@ -406,14 +407,15 @@ function fixedCostMovementReplacementEffectForSubject(
     return null;
   }
   /* v8 ignore stop -- @preserve */
-  return (
-    actor.activeEffects.find(
-      (effect): effect is FixedCostMovementReplacementEffect =>
-        effect.kind === "fixedCostMovementReplacement" &&
-        spellActiveEffectExecutionRef(effect) === subject.effectRef &&
-        !effect.usedThisTurn,
-    ) ?? null
+  const effect = actor.activeEffects.find(
+    (candidate) =>
+      candidate.kind === "fixedCostMovementReplacement" &&
+      spellActiveEffectExecutionRef(candidate) === subject.effectRef &&
+      !candidate.usedThisTurn,
   );
+  return effect?.kind === "fixedCostMovementReplacement"
+    ? (boundFixedCostMovementReplacementEffect(state, effect) ?? null)
+    : null;
 }
 
 function markFixedCostMovementReplacementUsed(

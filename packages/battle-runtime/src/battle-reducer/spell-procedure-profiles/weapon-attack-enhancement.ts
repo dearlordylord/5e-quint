@@ -304,7 +304,6 @@ function resolveWeaponAttackDamageEnhancement(
       sourceCombatantId: input.actorId,
       holderCombatantId: targetItem.holderCombatantId,
       weaponItemId: targetItem.itemId,
-      bonus: input.invocation.bonus,
       expiresAt: {
         kind: "duration",
         durationTicks: input.invocation.durationTicks,

@@ -2706,7 +2706,10 @@ export type FixedCostMovementReplacementSpellInvocation = {
       BattleActiveEffect,
       { readonly kind: "fixedCostMovementReplacement" }
     >
-  >;
+  > & {
+    readonly movementCostFeet: MovementFeet;
+    readonly maxJumpDistanceFeet: MovementFeet;
+  };
   readonly rangeFeet: MovementFeet;
 };
 export type GrantedAreaSaveDamageActionSpellInvocation = {

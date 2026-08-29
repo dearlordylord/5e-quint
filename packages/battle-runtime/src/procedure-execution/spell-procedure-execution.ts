@@ -740,7 +740,10 @@ export type FixedCostMovementReplacementSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: PreparedSpellAccess;
     readonly actionCost: "bonusAction";
-    readonly activeEffect: SpellActiveEffectTemplate<"fixedCostMovementReplacement">;
+    readonly activeEffect: SpellActiveEffectTemplate<"fixedCostMovementReplacement"> & {
+      readonly movementCostFeet: MovementFeet;
+      readonly maxJumpDistanceFeet: MovementFeet;
+    };
     readonly procedure: "fixedCostMovementReplacement";
     readonly rangeFeet: MovementFeet;
     readonly resource: LeveledSpellInvocationResource;

@@ -131,6 +131,7 @@ import {
   boundPersistentAreaSaveConditionEffect,
   boundPersistentAreaSaveConditionEscapeEffect,
 } from "./persistent-spell-area-binding.ts";
+import { boundFixedCostMovementReplacementEffect } from "./spell-modifier-binding.ts";
 import {
   canonicalHeldObjectIdsForActor,
   executeCompelledDropHeldObjectFactsHole,
@@ -1855,9 +1856,18 @@ function fixedCostMovementReplacementActs(
     (effect): readonly BattleActDiscoveryCandidate[] => {
       if (
         effect.kind !== "fixedCostMovementReplacement" ||
-        effect.usedThisTurn ||
+        effect.usedThisTurn
+      ) {
+        return [];
+      }
+      const boundEffect = boundFixedCostMovementReplacementEffect(
+        state,
+        effect,
+      );
+      if (
+        boundEffect === undefined ||
         Number(movementHoleForActor.movementBudgetFeet) <
-          Number(effect.movementCostFeet)
+          Number(boundEffect.movementCostFeet)
       ) {
         return [];
       }
