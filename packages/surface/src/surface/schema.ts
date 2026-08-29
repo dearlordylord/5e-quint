@@ -114,6 +114,7 @@ export {
   OngoingActionCostSchema,
   AuthoredConditionalEffectSchema,
   OngoingEffectMechanicsSchema,
+  ModalOngoingEffectMechanicsSchema,
   OngoingEffectSchema,
   OngoingOperationSchema,
   OngoingPredicateSchema,

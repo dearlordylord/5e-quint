@@ -420,6 +420,9 @@ export const CastTimeEffectModeChoiceSchema = Schema.Struct({
     Schema.Struct({
       id: surfaceProtocol(Schema.String, "optionId"),
       displayName: surfaceIdentity(Schema.String, "displayName"),
+      effectDuration: optionalExact(
+        Schema.Literals(["instantaneous", "spell_duration"]),
+      ),
       effects: optionalExact(
         Schema.suspend(() => nonEmpty(EffectAtomSchema)).pipe(
           Schema.annotate({
@@ -1944,6 +1947,9 @@ type PhaseContinuation = {
 type SaveGateTargetAutoSuccessPredicate = Schema.Schema.Type<
   typeof SaveGateTargetAutoSuccessPredicateSchema
 >;
+type AnySaveGateTargetAutoSuccessPredicate = Schema.Schema.Type<
+  typeof AnySaveGateTargetAutoSuccessPredicateSchema
+>;
 type CourierTaskEffect = Schema.Schema.Type<typeof CourierTaskEffectSchema>;
 
 type ActivationPhase =
@@ -1978,6 +1984,19 @@ type ActivationPhase =
       readonly repeatSaves?: ReadonlyNonEmptyArray<RepeatSaveSpec>;
       readonly autoSuccessIfCasterSlotGte?: "triggering_spell_level";
       readonly autoSuccessIfTarget: SaveGateTargetAutoSuccessPredicate;
+      readonly saveAppliesIf?: "unwilling_target" | "unwilling_creature_target";
+      readonly usageLimit?: UsageLimit;
+    }
+  | {
+      readonly kind: "save_gate";
+      readonly attachment: AreaAttachment;
+      readonly ability: Ability;
+      readonly dc: DcSource;
+      readonly onFail: EffectAtom;
+      readonly onSuccess: SaveSuccessOutcome;
+      readonly repeatSaves?: ReadonlyNonEmptyArray<RepeatSaveSpec>;
+      readonly autoSuccessIfCasterSlotGte?: "triggering_spell_level";
+      readonly autoSuccessIfTarget: AnySaveGateTargetAutoSuccessPredicate;
       readonly saveAppliesIf?: "unwilling_target" | "unwilling_creature_target";
       readonly usageLimit?: UsageLimit;
     }
@@ -2521,6 +2540,10 @@ export const AreaShapeDescriptorSchema = Schema.Union([
     sideFeet: Schema.Number,
   }),
   Schema.Struct({
+    kind: Schema.Literal("ground_square"),
+    sideFeet: Schema.Number,
+  }),
+  Schema.Struct({
     kind: Schema.Literal("cube_cluster"),
     maxCubes: Schema.Number,
     sideFeet: Schema.Number,
@@ -2766,10 +2789,26 @@ export const ExtradimensionalSpaceEffectSchema = strictStruct({
   }),
 });
 
-export const SaveGateTargetAutoSuccessPredicateSchema = strictStruct({
-  kind: Schema.Literal("challenge_rating_not_equal"),
-  challengeRating: Schema.Literal(0),
+const SaveGateTargetPredicateLeafSchema = Schema.Union([
+  strictStruct({ kind: Schema.Literal("does_not_sleep") }),
+  strictStruct({
+    kind: Schema.Literal("has_condition_immunity"),
+    condition: ConditionSchema,
+  }),
+]);
+
+const AnySaveGateTargetAutoSuccessPredicateSchema = strictStruct({
+  kind: Schema.Literal("any"),
+  predicates: nonEmpty(SaveGateTargetPredicateLeafSchema),
 });
+
+export const SaveGateTargetAutoSuccessPredicateSchema = Schema.Union([
+  strictStruct({
+    kind: Schema.Literal("challenge_rating_not_equal"),
+    challengeRating: Schema.Literal(0),
+  }),
+  AnySaveGateTargetAutoSuccessPredicateSchema,
+]);
 
 export const CourierTaskEffectSchema = strictStruct({
   kind: Schema.Literal("assign_courier_task"),
@@ -4632,6 +4671,23 @@ export const ActivationPhaseSchema: Schema.Codec<
         usageLimit: optionalExact(UsageLimitSchema),
       }),
       Schema.Struct({
+        kind: Schema.Literal("save_gate"),
+        attachment: AreaAttachmentSchema,
+        ability: AbilitySchema,
+        dc: DcSourceSchema,
+        onFail: EffectAtomSchema,
+        onSuccess: SaveSuccessOutcomeSchema,
+        repeatSaves: optionalExact(nonEmpty(RepeatSaveSpecSchema)),
+        autoSuccessIfCasterSlotGte: optionalExact(
+          Schema.Literal("triggering_spell_level"),
+        ),
+        autoSuccessIfTarget: AnySaveGateTargetAutoSuccessPredicateSchema,
+        saveAppliesIf: optionalExact(
+          Schema.Literals(["unwilling_target", "unwilling_creature_target"]),
+        ),
+        usageLimit: optionalExact(UsageLimitSchema),
+      }),
+      Schema.Struct({
         kind: Schema.Literal("ability_check_gate"),
         attachment: AttachmentSchema,
         ability: SpellcastingAbilityCheckAbilitySchema,
@@ -4757,6 +4813,23 @@ export const OngoingEffectMechanicsSchema = SpellMechanicsHeaderSchema.pipe(
     }).fields,
   ),
 );
+
+export const ModalOngoingEffectMechanicsSchema =
+  SpellMechanicsHeaderSchema.pipe(
+    Schema.fieldsAssign(
+      strictStruct({
+        family: Schema.Literal("modal_ongoing_effect"),
+        attachment: AttachmentSchema,
+        mode: CastTimeEffectModeChoiceSchema,
+        concurrentEffectLimit: optionalExact(
+          strictStruct({
+            maximumActive: PositiveIntegerSchema,
+            appliesTo: Schema.Literal("spell_duration_modes"),
+          }),
+        ),
+      }).fields,
+    ),
+  );
 
 export const ActivationMechanicsSchema = SpellMechanicsHeaderSchema.pipe(
   Schema.fieldsAssign(
@@ -5744,7 +5817,7 @@ export const CreatureDismissalSchema = Schema.Struct({
   onZeroHp: optionalExact(Schema.Literal("disappears")),
   onSpawnedCreatureDamage: optionalExact(Schema.Literal("spell_ends")),
   onSpellEnd: Schema.Union([
-    Schema.Literal("disappears"),
+    Schema.Literals(["disappears", "persists"]),
     Schema.Struct({
       kind: Schema.Literal("gradual_fade"),
       riderDismountGrace: DurationValueSchema,
@@ -5875,6 +5948,32 @@ export const SpawnedCreaturePayloadSchema = Schema.Struct({
   mount: optionalExact(SpawnedCreatureMountSchema),
   control: optionalExact(CreatureControlSchema),
   dismissal: CreatureDismissalSchema,
+  companionLifecycle: optionalExact(
+    strictStruct({
+      kind: Schema.Literal("bound_companion"),
+      touchSpellDelivery: strictStruct({
+        spellRange: Schema.Literal("touch"),
+        companionWithinFeetOfCaster: PositiveIntegerSchema,
+        companionCost: Schema.Literal("reaction"),
+        timing: Schema.Literal("when_caster_casts_spell"),
+      }),
+      temporaryDismissal: strictStruct({
+        cost: Schema.Literal("magic_action"),
+        destination: Schema.Literal("pocket_dimension"),
+        recall: strictStruct({
+          cost: Schema.Literal("magic_action"),
+          placement: strictStruct({
+            kind: Schema.Literal("unoccupied_space_within_feet_of_caster"),
+            maxDistanceFeet: PositiveIntegerSchema,
+          }),
+        }),
+      }),
+      recast: strictStruct({
+        existingCompanion: Schema.Literal("adopt_new_eligible_form"),
+        zeroHitPointDisappearance: Schema.Literal("reappear"),
+      }),
+    }),
+  ),
 });
 
 export const SpawnedCreatureMechanicsSchema = SpellMechanicsHeaderSchema.pipe(
@@ -5973,6 +6072,7 @@ export const MinorMagicEffectMenuMechanicsSchema =
 
 export const SpellMechanicsSchema = Schema.Union([
   OngoingEffectMechanicsSchema,
+  ModalOngoingEffectMechanicsSchema,
   ActivationMechanicsSchema,
   ModalActivationMechanicsSchema,
   TriggeredReactionMechanicsSchema,

@@ -9,22 +9,54 @@
 --    A creature that enters the area or ends its turn there must also
 --    succeed on that save or fall Prone."
 --
--- Runtime profile boundary:
---   * the spell creates an active ground hazard keyed by caller-supplied
---     ground-area identity;
---   * on-cast, enter-area, and end-turn-in-area Dexterity Saving Throws
---     consume caller-supplied affected/triggering creature facts;
---   * failed Grease saves apply the Prone condition;
---   * caller-supplied Difficult Terrain movement facts validate the
---     active hazard identity and spend total Movement distance plus one
---     extra foot per foot moved through Grease.
---
--- Automatic area membership, pathfinding, and grid geometry derivation
--- remain runtime-detached table/spatial derivations.
---
--- Area is modeled with area shape "cube" (sideFeet = 10). The RAW
--- "10-foot square" is a 2-D ground footprint, and the Surface area shape
--- vocabulary has no square primitive.
+-- The area is a two-dimensional ground square, not a Cube. Its Difficult
+-- Terrain and recurring entry/end-turn saves last for the authored duration.
+
+let Area =
+      { kind = "hole"
+      , holeId = "grease_point"
+      , label = "spell origin point"
+      , value =
+          { kind = "area"
+          , shape = { kind = "ground_square", sideFeet = 10 }
+          , origin = { kind = "point_within_range" }
+          }
+      }
+
+let ConditionEffect =
+      { kind : Text
+      , condition : Optional Text
+      }
+
+let noneConditionEffect : ConditionEffect =
+      { kind = ""
+      , condition = None Text
+      }
+
+let OperationEffect =
+      { kind : Text
+      , ability : Optional Text
+      , dc : Optional { kind : Text }
+      , onFail : Optional ConditionEffect
+      , onSuccess : Optional { kind : Text }
+      }
+
+let saveEffect : OperationEffect =
+      { kind = "save_gate"
+      , ability = Some "dex"
+      , dc = Some { kind = "caster_spell_save_dc" }
+      , onFail = Some
+          (noneConditionEffect // { kind = "apply_condition", condition = Some "prone" })
+      , onSuccess = Some { kind = "none" }
+      }
+
+let difficultTerrain : OperationEffect =
+      { kind = "area_is_difficult_terrain"
+      , ability = None Text
+      , dc = None { kind : Text }
+      , onFail = None ConditionEffect
+      , onSuccess = None { kind : Text }
+      }
 
 let grease =
       { kind = "spell"
@@ -36,7 +68,7 @@ let grease =
           }
 
       , mechanics =
-          { family = "activation"
+          { family = "ongoing_effect"
           , level = 1
           , school = "conjuration"
           , castingTime = { kind = "action" }
@@ -50,18 +82,10 @@ let grease =
               { kind = "timed"
               , value = { unit = "minute", amount = 1 }
               }
-          , phases =
-              [ { kind = "save_gate"
-                , attachment =
-                    { kind = "hole"
-                    , holeId = "grease_point"
-                    , label = "spell origin point"
-                    , value =
-                        { kind = "area"
-                        , shape = { kind = "cube", sideFeet = 10 }
-                        , origin = { kind = "point_within_range" }
-                        }
-                    }
+          , attachment = Area
+          , initialPhase =
+              { kind = "save_gate"
+              , attachment = Area
                 , ability = "dex"
                 , dc = { kind = "caster_spell_save_dc" }
                 , onFail =
@@ -69,6 +93,16 @@ let grease =
                     , condition = "prone"
                     }
                 , onSuccess = { kind = "none" }
+              }
+          , operations =
+              [ { trigger = { kind = "passive" }
+                , effect = difficultTerrain
+                }
+              , { trigger = { kind = "on_creature_enters_area" }
+                , effect = saveEffect
+                }
+              , { trigger = { kind = "on_creature_ends_turn_in_area" }
+                , effect = saveEffect
                 }
               ]
           }

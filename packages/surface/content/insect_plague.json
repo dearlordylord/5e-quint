@@ -72,6 +72,10 @@
       },
       "onSuccess": {
         "kind": "half_damage"
+      },
+      "usageLimit": {
+        "kind": "once_per_turn",
+        "limitGroup": "insect_plague_save_per_turn"
       }
     },
     "level": 5,
@@ -123,7 +127,8 @@
           "kind": "on_creature_enters_area"
         },
         "usageLimit": {
-          "kind": "once_per_turn"
+          "kind": "once_per_turn",
+          "limitGroup": "insect_plague_save_per_turn"
         }
       },
       {
@@ -157,7 +162,8 @@
           "kind": "on_creature_ends_turn_in_area"
         },
         "usageLimit": {
-          "kind": "once_per_turn"
+          "kind": "once_per_turn",
+          "limitGroup": "insect_plague_save_per_turn"
         }
       }
     ],
