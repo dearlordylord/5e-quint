@@ -11,6 +11,11 @@ import {
 import type { BattleState } from "./battle-state-execution.ts";
 import type { CombatantId } from "./identity.ts";
 
+export {
+  battleStateWithAllocatedEffectForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
+} from "./battle-runtime.test-support.ts";
+
 /**
  * Test-only construction for reducer-state fixtures that bypass battle
  * admission. The main package API omits these constructors, and the quality

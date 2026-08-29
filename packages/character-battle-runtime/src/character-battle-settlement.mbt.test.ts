@@ -5,9 +5,7 @@ import * as path from "node:path";
 
 import {
   battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
-  battleExecutionScopeOrdinal,
   battleId,
-  battleStatBlockExecutionScopeRef,
   characterBattleResourceIsPointPool,
   characterId,
   combatantId,
@@ -19,6 +17,7 @@ import {
   type BattleState,
   type OngoingFeatureSourceKey,
 } from "@dnd/battle-runtime";
+import { battleStateWithAllocatedEffectForTest } from "@dnd/battle-runtime/test-support";
 import {
   abilityScoreAssignment,
   classUnitId,
@@ -36,7 +35,7 @@ import {
   characterSheetSpellSlots,
   characterSheetTempHp,
   convertFontOfMagicSorceryPointsToSpellSlot,
-  createFreshCharacterSheet as createFreshCharacterSheetCore,
+  rebuildCharacterSheet as rebuildCharacterSheetCore,
   type CharacterSheet,
   type CharacterSheetInput,
 } from "@dnd/character-sheet-runtime";
@@ -72,7 +71,7 @@ function battleCreatureInitFromStatBlock(
     "ammunitionStocks" | "conditions"
   >,
 ) {
-  return requireRight(
+  return requireSuccess(
     parseBattleCreatureInitFromStatBlock({
       ...input,
       ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
@@ -276,7 +275,7 @@ function settleHitPointsConditionsSlotsAndPreservedSheetState(): BattleSettlemen
       },
     },
   };
-  const settled = requireRight(
+  const settled = requireSuccess(
     settleCharacterSheetFromBattle({
       state: battleStateWithCombatant(battle.session.state, settledCombatant),
       context: battle.session.context,
@@ -323,7 +322,7 @@ function settlePurePactMagicSlotExpenditure(): BattleSettlementProjection {
       },
     },
   };
-  const settled = requireRight(
+  const settled = requireSuccess(
     settleCharacterSheetFromBattle({
       state: battleStateWithCombatant(battle.session.state, settledCombatant),
       context: battle.session.context,
@@ -404,7 +403,7 @@ function settleFeatureResourceExpenditure(): BattleSettlementProjection {
   if (sorceryPoints === undefined) {
     throw new Error("Expected battle Sorcery Point point-pool resource.");
   }
-  const spentSorceryPoints = requireRight(
+  const spentSorceryPoints = requireSuccess(
     spendCharacterPointPoolResource({
       resource: sorceryPoints,
       points: resourceCount(2),
@@ -422,7 +421,7 @@ function settleFeatureResourceExpenditure(): BattleSettlementProjection {
       ),
     },
   };
-  const settled = requireRight(
+  const settled = requireSuccess(
     settleCharacterSheetFromBattle({
       state: battleStateWithCombatant(battle.session.state, settledCombatant),
       context: battle.session.context,
@@ -447,7 +446,7 @@ function rejectAmbiguousCreatedSpellSlotSource(): BattleSettlementProjection {
     build: sorcererMetamagicBuild(),
     currentHp: 24,
   });
-  const withCreatedSlot = requireRight(
+  const withCreatedSlot = requireSuccess(
     convertFontOfMagicSorceryPointsToSpellSlot({
       sheet,
       unitLibrary,
@@ -581,35 +580,36 @@ function rejectActiveWildShapeHandoff(): BattleSettlementProjection {
     sheet,
   });
   const combatant = battle.combatant;
-  const activeWildShapeCombatant: CharacterBattleCombatant = {
-    ...combatant,
-    activeEffects: [
-      ...combatant.activeEffects,
-      {
-        kind: "druidWildShapeForm",
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          "settlement-active-wild-shape",
-        ),
-        sourceCombatantId: combatant.combatantId,
-        formScopeRef: battleStatBlockExecutionScopeRef(
-          battleId("battle:settlement-active-wild-shape"),
-          combatant.combatantId,
-          battleExecutionScopeOrdinal(1),
-        ),
-        formLimbs: { kind: "cannotHandleObjects" },
-        equipmentDisposition: [],
-        expiresAt: {
-          kind: "duration",
-          durationTicks: elapsedTimeTicks(600),
-        },
+  const form = combatant.origin.druidWildShapeAvailableForms?.[0];
+  if (form === undefined) {
+    throw new Error("Expected an admitted Wild Shape form.");
+  }
+  const activeWildShapeState = battleStateWithAllocatedEffectForTest({
+    state: battle.session.state,
+    ownerId: combatant.combatantId,
+    effect: {
+      kind: "druidWildShapeForm",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "settlement-active-wild-shape",
+      ),
+      sourceCombatantId: combatant.combatantId,
+      formScopeRef: form.execution.scopeRef,
+      formLimbs: { kind: "cannotHandleObjects" },
+      equipmentDisposition: [],
+      expiresAt: {
+        kind: "duration",
+        durationTicks: elapsedTimeTicks(600),
       },
-    ],
-  };
+    },
+  });
+  const activeWildShapeCombatant = activeWildShapeState.combatants.get(
+    combatant.combatantId,
+  );
+  if (!isCharacterBattleCombatant(activeWildShapeCombatant)) {
+    throw new Error("Expected active Wild Shape character combatant.");
+  }
   const result = settleCharacterSheetFromBattle({
-    state: battleStateWithCombatant(
-      battle.session.state,
-      activeWildShapeCombatant,
-    ),
+    state: activeWildShapeState,
     context: battle.session.context,
     sheet,
     unitLibrary,
@@ -785,7 +785,7 @@ function settleZeroHpStableLifecycle(): BattleSettlementProjection {
       },
     },
   };
-  const settled = requireRight(
+  const settled = requireSuccess(
     settleCharacterSheetFromBattle({
       state: battleStateWithCombatant(battle.session.state, stableCombatant),
       context: battle.session.context,
@@ -809,7 +809,7 @@ function startCharacterBattle(input: {
   readonly combatantId: ReturnType<typeof combatantId>;
   readonly sheet: CharacterSheet;
 }): CharacterBattleSession {
-  const characterInit = requireRight(
+  const characterInit = requireSuccess(
     characterSheetBattleInit({
       sheet: input.sheet,
       unitLibrary,
@@ -820,7 +820,7 @@ function startCharacterBattle(input: {
       ammunitionStocks: [],
     }),
   );
-  const session = requireRight(
+  const session = requireSuccess(
     startBattle({
       battleId: battleId(input.battleIdText),
       combatants: [
@@ -1007,14 +1007,15 @@ function sheetFixture(
     >
   >,
 ): CharacterSheet {
-  return requireRight(
-    createFreshCharacterSheetCore({
+  return requireSuccess(
+    rebuildCharacterSheetCore({
       characterId: characterSheetId(input.characterIdText),
       build: input.build,
       currentHp: Hp(input.currentHp),
       tempHp: Hp(input.tempHp ?? 0),
       hitPointMaximumReduction: Hp(input.hitPointMaximumReduction ?? 0),
       conditions: input.conditions ?? [],
+      companion: { tag: "none" },
       unitLibrary,
       ...(input.zeroHpLifecycle === undefined
         ? {}
@@ -1046,7 +1047,7 @@ function sheetFixture(
 }
 
 function characterBuildMaximumHp(build: CharacterBuild): number {
-  return requireRight(characterBuildHitPoints(build, unitLibrary)).maximum;
+  return requireSuccess(characterBuildHitPoints(build, unitLibrary)).maximum;
 }
 
 function syntheticOngoingFeatureSourceKey(id: string): OngoingFeatureSourceKey {
@@ -1116,7 +1117,7 @@ function mixedSpellAndPactSlotBuild(): CharacterBuild {
     ...build,
     // Keep this synthetic mixed-slot build at the same derived HP maximum as
     // the wizard source sheet so this scenario isolates slot-source rejection.
-    abilityScores: requireRight(
+    abilityScores: requireSuccess(
       abilityScoreAssignment({
         str: 13,
         dex: 14,
@@ -1189,14 +1190,14 @@ function sorcererMetamagicBuild(): CharacterBuild {
       {
         kind: "selectedSorcererMetamagicOption",
         selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
-        optionId: requireRight(
+        optionId: requireSuccess(
           sorcererMetamagicOptionId("sorcerer_empowered_spell"),
         ),
       },
       {
         kind: "selectedSorcererMetamagicOption",
         selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
-        optionId: requireRight(
+        optionId: requireSuccess(
           sorcererMetamagicOptionId("sorcerer_heightened_spell"),
         ),
       },
@@ -1221,7 +1222,7 @@ function baseBuild(input: {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: requireRight(
+    abilityScores: requireSuccess(
       abilityScoreAssignment({
         str: 13,
         dex: 14,
@@ -1462,7 +1463,7 @@ function nullaryVariantTag(raw: unknown, field: string): string {
   throw new Error(`Expected Quint variant field ${field}.`);
 }
 
-function requireRight<A, E>(either: Result.Result<A, E>): A {
+function requireSuccess<A, E>(either: Result.Result<A, E>): A {
   if (Result.isSuccess(either)) return either.success;
   throw new Error(
     `Expected Result.succeed, got ${JSON.stringify(either.failure)}.`,

@@ -35,7 +35,11 @@ import {
   type CombatantId,
   type SpellSlotProcedure,
 } from "@dnd/battle-runtime";
-import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
+import {
+  battleRuntimeSessionForTest,
+  battleStateWithAllocatedEffectForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
+} from "@dnd/battle-runtime/test-support";
 import {
   CHARACTER_SHEET_SHORT_REST_TICKS,
   characterSheetId,
@@ -90,7 +94,7 @@ import {
   requireHole,
   requireHoleFromList,
   requireResolved,
-  requireRight,
+  requireSuccess,
   savingThrowOutcomeFill,
   spellSlotActForProcedure,
   srdStatBlock,
@@ -1217,6 +1221,17 @@ describe("level 5 SDK tracer bullets", () => {
         cast.state,
         sleetStormCase.casterId,
       );
+      const sleetStormEffect = caster.activeEffects.find(
+        (
+          effect,
+        ): effect is Extract<
+          BattleActiveEffect,
+          { readonly kind: "sleetStormAreaHazard" }
+        > => effect.kind === "sleetStormAreaHazard",
+      );
+      if (sleetStormEffect === undefined) {
+        throw new Error("Expected the cast Sleet Storm occurrence.");
+      }
 
       expect(caster).toMatchObject({
         concentration: {
@@ -1288,6 +1303,7 @@ describe("level 5 SDK tracer bullets", () => {
                 sources: [
                   {
                     kind: "sleetStormHazard",
+                    effectRef: sleetStormEffect.effectRef,
                     sourceCombatantId: sleetStormCase.casterId,
                     sourceProcedureRef: sleetStormProcedureRef,
                     areaId: sleetStormAreaId,
@@ -1305,7 +1321,9 @@ describe("level 5 SDK tracer bullets", () => {
         movementSpentFeet: movementFeet(15),
       });
 
-      const entrySaveSubject = sleetStormAreaHazardSaveSubject();
+      const entrySaveSubject = sleetStormAreaHazardSaveSubject(
+        sleetStormEffect.effectRef,
+      );
       const entrySave = requireHole(
         resolveBattleSubject({
           state: moved.state,
@@ -1768,15 +1786,19 @@ describe("level 5 SDK tracer bullets", () => {
         ],
         monsters: [],
       });
-      const state: BattleState = {
-        ...session.state,
-        lightEmitters: [
-          trackedObjectSpellLightEmitter({
-            objectId,
-            sourceCombatantId: dispelMagicCase.casterId,
-          }),
+      const state = battleStateWithAllocatedEffectOccurrencesForTest({
+        state: session.state,
+        occurrences: [
+          {
+            kind: "storedLightEmitter",
+            ownerId: dispelMagicCase.casterId,
+            emitter: trackedObjectSpellLightEmitter({
+              objectId,
+              sourceCombatantId: dispelMagicCase.casterId,
+            }),
+          },
         ],
-      };
+      }).state;
       const sessionWithTrackedLightEmitter = battleRuntimeSessionForTest({
         ...session,
         state,
@@ -2632,7 +2654,7 @@ describe("level 5 SDK tracer bullets", () => {
   });
 
   test("Sorcerous Restoration uses the sheet rest lifecycle to recover half level rounded down once per Long Rest", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheet({
         characterId: characterSheetId(
           "character:l5-tracer-sorcerous-restoration",
@@ -2655,8 +2677,8 @@ describe("level 5 SDK tracer bullets", () => {
     );
 
     expect(characterSheetResources(sheet, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+      _tag: "Success",
+      success: expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: sorcererFontOfMagicUnitId,
@@ -2666,14 +2688,14 @@ describe("level 5 SDK tracer bullets", () => {
       ]),
     });
 
-    const rest = requireRight(startShortRest({ sheet }));
-    const completion = requireRight(
+    const rest = requireSuccess(startShortRest({ sheet }));
+    const completion = requireSuccess(
       finishShortRest({
         rest,
         restedTicks: CHARACTER_SHEET_SHORT_REST_TICKS,
       }),
     );
-    const rested = requireRight(
+    const rested = requireSuccess(
       completeShortRest({
         completion,
         unitLibrary,
@@ -2694,8 +2716,8 @@ describe("level 5 SDK tracer bullets", () => {
       { tag: "sorcerousRestoration", usedSinceLongRest: true },
     ]);
     expect(characterSheetResources(rested, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+      _tag: "Success",
+      success: expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: sorcererFontOfMagicUnitId,
@@ -3212,7 +3234,7 @@ function spellTargetListFill(
 function trackedObjectSpellLightEmitter(input: {
   readonly objectId: ReturnType<typeof battleObjectId>;
   readonly sourceCombatantId: CombatantId;
-}): BattleTrackedOngoingSpellLightEmitter {
+}): Omit<BattleTrackedOngoingSpellLightEmitter, "effectRef"> {
   return {
     kind: "spellLightEmitter",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -4000,30 +4022,33 @@ function protectionFromEnergyDamageTypeChoiceFill(
 function stateWithSleetStormTargetConcentration(
   state: BattleState,
 ): BattleState {
-  const target = requireCombatant(state, sleetStormTargetId);
   const concentrationProcedureRef = battleProcedureExecutionRefForTest(
     "sleet-storm-target-concentration",
   );
-  const concentrationEffect = {
-    kind: "spellArmorClassBonus",
-    sourceProcedureRef: concentrationProcedureRef,
-    sourceCombatantId: sleetStormTargetId,
-    bonus: 1,
-    negatesRepeatedDamageAllocation: false,
-    expiresAt: {
-      kind: "concentration",
-      combatantId: sleetStormTargetId,
+  const allocatedState = battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: sleetStormTargetId,
+    effect: {
+      kind: "spellArmorClassBonus",
+      sourceProcedureRef: concentrationProcedureRef,
+      sourceCombatantId: sleetStormTargetId,
+      bonus: 1,
+      negatesRepeatedDamageAllocation: false,
+      expiresAt: {
+        kind: "concentration",
+        combatantId: sleetStormTargetId,
+      },
     },
-  } satisfies BattleActiveEffect;
+  });
+  const allocatedTarget = requireCombatant(allocatedState, sleetStormTargetId);
   return {
-    ...state,
-    combatants: new Map(state.combatants).set(sleetStormTargetId, {
-      ...target,
+    ...allocatedState,
+    combatants: new Map(allocatedState.combatants).set(sleetStormTargetId, {
+      ...allocatedTarget,
       concentration: {
         sourceProcedureRef: concentrationProcedureRef,
         effectKind: "spellEffect",
       },
-      activeEffects: [...target.activeEffects, concentrationEffect],
     }),
   };
 }
@@ -4066,7 +4091,12 @@ function movementFill(
   };
 }
 
-function sleetStormAreaHazardSaveSubject(): Extract<
+function sleetStormAreaHazardSaveSubject(
+  effectRef: Extract<
+    BattleActiveEffect,
+    { readonly kind: "sleetStormAreaHazard" }
+  >["effectRef"],
+): Extract<
   AvailableBattleAct["subject"],
   {
     readonly tag: "runtimeCommand";
@@ -4079,6 +4109,7 @@ function sleetStormAreaHazardSaveSubject(): Extract<
     command: "sleetStormAreaHazardSave",
     areaMembershipTrigger: {
       kind: "firstEntryOnTurn",
+      effectRef,
       areaId: sleetStormAreaId,
     },
   };
