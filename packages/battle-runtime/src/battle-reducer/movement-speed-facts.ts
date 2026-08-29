@@ -152,7 +152,7 @@ function battleSlowSpeedChanges(
   combatant: BattleCreatureState,
 ): readonly SpeedChange[] {
   return combatant.activeEffects.some(
-    (effect) => effect.kind === "slowActivePenalties",
+    (effect) => effect.kind === "saveGatedTurnConstraintBundle",
   )
     ? [
         {
@@ -207,7 +207,7 @@ export function battleTerminalSpeedZero(
       (effect) => effect.kind === "spellSpeedZero",
     ) ||
     combatant.activeEffects.some(
-      (effect) => effect.kind === "hypnoticPatternControl",
+      (effect) => effect.kind === "saveGatedAreaControlControl",
     ) ||
     hasCondition(combatant.conditions, "paralyzed") ||
     hasCondition(combatant.conditions, "petrified") ||

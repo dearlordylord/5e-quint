@@ -336,7 +336,7 @@ function isAfterHitSpellConcentrationTeardownSubject(
   return [...state.combatants.values()].some((combatant) =>
     combatant.activeEffects.some(
       (effect) =>
-        effect.kind === "shiningSmiteIllumination" &&
+        effect.kind === "afterHitDamageAndIllumination" &&
         effect.sourceProcedureRef === concentration.sourceProcedureRef &&
         effect.sourceCombatantId === subject.actorId,
     ),

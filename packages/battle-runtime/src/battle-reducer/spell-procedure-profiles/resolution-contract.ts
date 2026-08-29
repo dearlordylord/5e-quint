@@ -97,7 +97,7 @@ type SpellProcedureExecutionClassResolutionInput<P extends SpellProcedureKey> =
       ? ActionSpellBattleResolutionInput
       : never;
 
-export type HypnoticPatternStoredGlyphRelease = {
+export type SaveGatedAreaControlStoredGlyphRelease = {
   readonly kind: "storedGlyphSpellRelease";
   readonly selfOriginAreaAnchorId: CombatantId;
 };
@@ -113,7 +113,7 @@ type OrdinarySpellProcedureResolutionOptions<P extends SpellProcedureKey> =
       : { readonly metamagicApplications?: never });
 
 type SpellProcedureResolutionOptions<P extends SpellProcedureKey> =
-  P extends "hypnoticPattern"
+  P extends "saveGatedAreaControl"
     ?
         | {
             readonly metamagicApplications: readonly CharacterBattleMetamagicOptionFact[];
@@ -121,7 +121,7 @@ type SpellProcedureResolutionOptions<P extends SpellProcedureKey> =
           }
         | {
             readonly metamagicApplications?: never;
-            readonly storedGlyphRelease: HypnoticPatternStoredGlyphRelease;
+            readonly storedGlyphRelease: SaveGatedAreaControlStoredGlyphRelease;
           }
     : P extends GlyphStoredSingleCreatureActiveEffectProcedure
       ?
@@ -140,7 +140,10 @@ type SpellProcedureResolutionOptions<P extends SpellProcedureKey> =
 export type SpellProcedureResolutionInput<P extends SpellProcedureKey> =
   P extends "persistentArmorEffect"
     ? ActionSpellBattleResolutionInput & { readonly castingState: BattleState }
-    : P extends "counterspell" | "shieldReaction" | "featherFallMitigation"
+    : P extends
+          | "counterspell"
+          | "triggeredArmorDefense"
+          | "fallingCreatureMitigationReaction"
       ? TriggeredReactionSpellResolutionInput
       : P extends
             | "afterHitDamage"
@@ -149,7 +152,7 @@ export type SpellProcedureResolutionInput<P extends SpellProcedureKey> =
         ? AttackHitDamageResolutionInput
         : P extends "afterHitSaveGatedCondition"
           ? AttackHitSaveGatedConditionResolutionInput
-          : P extends "expeditiousRetreatDash"
+          : P extends "grantedAlternateActionCost"
             ? BonusActionDashSpellBattleResolutionInput
             : P extends SpellProcedureWithQuickenedActionCostRewrite
               ?

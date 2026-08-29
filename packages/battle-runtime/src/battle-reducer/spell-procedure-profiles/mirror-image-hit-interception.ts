@@ -5,21 +5,21 @@ import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-mirror-image-hit-interception
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
 //
-// The mirrorImageHitInterception Spell Procedure Profile: a prepared action
+// The duplicateHitInterception Spell Procedure Profile: a prepared action
 // spell that creates a timed self Spell Effect with three duplicates that can
 // intercept attack-roll hits against the caster.
 //
 // What lives here:
-//   - admit()           - was supportedPreparedMirrorImageHitInterceptionSpellProfile
+//   - admit()           - was supportedPreparedDuplicateHitInterceptionSpellProfile
 //                         in spells-profiles-support.ts
-//   - discoverCastAct() - was the mirrorImageHitInterception branch in
+//   - discoverCastAct() - was the duplicateHitInterception branch in
 //                         spells-discovery.ts
-//   - castSummary()     - was the mirrorImageHitInterception branch in
+//   - castSummary()     - was the duplicateHitInterception branch in
 //                         spells-discovery.ts
 //                         spells-invocation-ref.ts
-//   - resolve()         - was resolveMirrorImageHitInterceptionSpellAct in
+//   - resolve()         - was resolveDuplicateHitInterceptionSpellAct in
 //                         spells-resolve-support-effects.ts
-//   - applyEffect()     - was applyMirrorImageHitInterceptionSpellEffect in
+//   - applyEffect()     - was applyDuplicateHitInterceptionSpellEffect in
 //                         spells-active-effects.ts
 //
 // What stays in shared infrastructure:
@@ -36,7 +36,7 @@ import {
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
-  type MirrorImageHitInterceptionSpellInvocation,
+  type DuplicateHitInterceptionSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import {
@@ -64,10 +64,10 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
-function mirrorImageHitInterceptionShape(
+function duplicateHitInterceptionShape(
   actorId: CombatantId,
   spell: BattleSpellAdmissionSource,
-): Pick<MirrorImageHitInterceptionSpellInvocation, "activeEffect"> | null {
+): Pick<DuplicateHitInterceptionSpellInvocation, "activeEffect"> | null {
   if (
     spell.mechanics.family !== "passive_hit_intercept" ||
     spell.mechanics.level !== 2 ||
@@ -104,7 +104,7 @@ function mirrorImageHitInterceptionShape(
     ? null
     : {
         activeEffect: {
-          kind: "mirrorImageDuplicates",
+          kind: "duplicateHitInterception",
           sourceCombatantId: actorId,
           remainingDuplicates: MIRROR_IMAGE_INITIAL_DUPLICATES,
           expiresAt: {
@@ -115,23 +115,23 @@ function mirrorImageHitInterceptionShape(
       };
 }
 
-function admitMirrorImageHitInterception(
+function admitDuplicateHitInterception(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
-): readonly MirrorImageHitInterceptionSpellInvocation[] {
-  const shape = mirrorImageHitInterceptionShape(ctx.actor.combatantId, spell);
+): readonly DuplicateHitInterceptionSpellInvocation[] {
+  const shape = duplicateHitInterceptionShape(ctx.actor.combatantId, spell);
   if (shape === null) {
     return [];
   }
   return ctx.spellCastOptions.flatMap(
-    (slot): readonly MirrorImageHitInterceptionSpellInvocation[] =>
+    (slot): readonly DuplicateHitInterceptionSpellInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []
         : [
             {
               access: { tag: "prepared" },
               resource: spellInvocationResourceForCastOption(slot),
-              procedure: "mirrorImageHitInterception",
+              procedure: "duplicateHitInterception",
               spell,
               actionCost: "magicAction",
               ...shape,
@@ -140,24 +140,24 @@ function admitMirrorImageHitInterception(
   );
 }
 
-function discoverMirrorImageHitInterceptionCastAct(
+function discoverDuplicateHitInterceptionCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<MirrorImageHitInterceptionSpellInvocation>,
+  invocation: BattleExecutableSpellInvocation<DuplicateHitInterceptionSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [actionSpellCastCandidate(actorId, invocation.sourceProcedureRef, [])];
 }
 
-function applyMirrorImageHitInterceptionEffect(
+function applyDuplicateHitInterceptionEffect(
   state: BattleState,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<MirrorImageHitInterceptionSpellInvocation>,
+  invocation: BattleExecutableSpellInvocation<DuplicateHitInterceptionSpellInvocation>,
 ): BattleState {
   return replaceTargetSpellActiveEffect(
     state,
     actorId,
     (effect) =>
-      effect.kind === "mirrorImageDuplicates" &&
+      effect.kind === "duplicateHitInterception" &&
       effect.sourceProcedureRef === invocation.sourceProcedureRef &&
       effect.sourceCombatantId === actorId,
     {
@@ -168,8 +168,8 @@ function applyMirrorImageHitInterceptionEffect(
   );
 }
 
-function resolveMirrorImageHitInterception(
-  input: SpellProcedureProfileResolveInput<MirrorImageHitInterceptionSpellInvocation>,
+function resolveDuplicateHitInterception(
+  input: SpellProcedureProfileResolveInput<DuplicateHitInterceptionSpellInvocation>,
 ): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!fillsBelongToSpellCastHoles(input.input.fills)) {
@@ -186,7 +186,7 @@ function resolveMirrorImageHitInterception(
     targetIds: [input.actorId],
     castingResource: { kind: "magicAction" },
     applyEffect: (state) =>
-      applyMirrorImageHitInterceptionEffect(
+      applyDuplicateHitInterceptionEffect(
         state,
         input.actorId,
         input.invocation,
@@ -194,31 +194,30 @@ function resolveMirrorImageHitInterception(
   });
 }
 
-const MirrorImageHitInterceptionInvocationSchema =
-  spellProcedureExecutionSchema(
-    Schema.Struct({
-      access: PreparedSpellAccessSchema,
-      resource: LeveledSpellInvocationResourceSchema,
-      procedure: Schema.Literal("mirrorImageHitInterception"),
-      spellRuleFacts: SpellRuleExecutionFactsSchema,
-      actionCost: Schema.Literal("magicAction"),
-      activeEffect: Schema.Struct({
-        ...BattleEffectOccurrenceTemplateSchemaFields,
-        kind: Schema.Literal("mirrorImageDuplicates"),
-        sourceCombatantId: CombatantId,
-        remainingDuplicates: Schema.Literal(MIRROR_IMAGE_INITIAL_DUPLICATES),
-        expiresAt: DurationBattleActiveEffectExpirationSchema,
-      }),
+const DuplicateHitInterceptionInvocationSchema = spellProcedureExecutionSchema(
+  Schema.Struct({
+    access: PreparedSpellAccessSchema,
+    resource: LeveledSpellInvocationResourceSchema,
+    procedure: Schema.Literal("duplicateHitInterception"),
+    spellRuleFacts: SpellRuleExecutionFactsSchema,
+    actionCost: Schema.Literal("magicAction"),
+    activeEffect: Schema.Struct({
+      ...BattleEffectOccurrenceTemplateSchemaFields,
+      kind: Schema.Literal("duplicateHitInterception"),
+      sourceCombatantId: CombatantId,
+      remainingDuplicates: Schema.Literal(MIRROR_IMAGE_INITIAL_DUPLICATES),
+      expiresAt: DurationBattleActiveEffectExpirationSchema,
     }),
-  );
-export const mirrorImageHitInterceptionProfile: SpellProcedureDeclaration<
-  "mirrorImageHitInterception",
-  MirrorImageHitInterceptionSpellInvocation
+  }),
+);
+export const duplicateHitInterceptionProfile: SpellProcedureDeclaration<
+  "duplicateHitInterception",
+  DuplicateHitInterceptionSpellInvocation
 > = {
-  procedure: "mirrorImageHitInterception",
-  executionSchema: MirrorImageHitInterceptionInvocationSchema,
-  admit: admitMirrorImageHitInterception,
-  discoverCastAct: discoverMirrorImageHitInterceptionCastAct,
-  resolve: resolveMirrorImageHitInterception,
+  procedure: "duplicateHitInterception",
+  executionSchema: DuplicateHitInterceptionInvocationSchema,
+  admit: admitDuplicateHitInterception,
+  discoverCastAct: discoverDuplicateHitInterceptionCastAct,
+  resolve: resolveDuplicateHitInterception,
 };
 import { spellInvocationResourceForCastOption } from "./profile.ts";

@@ -2,7 +2,7 @@ import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import type {
   BattleCreatureState,
-  BattleFeatherFallLandingResult,
+  BattleFallingCreatureMitigationLandingResult,
   BattleFallDamageLandingResult,
   BattleInterruptFrame,
   BattleRawFallDamage,
@@ -206,7 +206,7 @@ function flySpeedGrantEndFallCleanupFrame(
 export function resolveFeatherFallLanding(input: {
   readonly state: BattleState;
   readonly targetId: CombatantId;
-}): BattleFeatherFallLandingResult {
+}): BattleFallingCreatureMitigationLandingResult {
   const target = input.state.combatants.get(input.targetId);
   if (target === undefined) {
     return {
@@ -223,7 +223,10 @@ export function resolveFeatherFallLanding(input: {
 function resolveFeatherFallLandingForTarget(
   state: BattleState,
   target: BattleCreatureState,
-): Exclude<BattleFeatherFallLandingResult, { readonly tag: "invalid" }> {
+): Exclude<
+  BattleFallingCreatureMitigationLandingResult,
+  { readonly tag: "invalid" }
+> {
   const cleanup = featherFallLandingCleanupForCombatant(target);
   if (cleanup.tag === "unmitigated") {
     return {
@@ -249,7 +252,7 @@ function resolveFeatherFallLandingForTarget(
     targetId: target.combatantId,
     fallDamagePrevented: true,
     fallingPronePrevented: true,
-  } as const satisfies BattleFeatherFallLandingResult;
+  } as const satisfies BattleFallingCreatureMitigationLandingResult;
   const routeEvents = battleReducerRouteForFeatherFallLanding(result);
   return routeEvents === undefined ? result : { ...result, routeEvents };
 }
@@ -314,7 +317,7 @@ export function resolveFallDamageLanding(input: {
     fallDamagePrevented: effectiveFallDamage === 0,
     fallingPronePrevented: effectiveFallDamage === 0,
     slowFallReductionAmount: toDamageAmount(slowFallReductionAmount),
-    featherFallMitigated: featherFall.tag === "mitigated",
+    fallingCreatureMitigated: featherFall.tag === "mitigated",
   };
 }
 

@@ -26,7 +26,7 @@ import {
 import { invalidResult } from "../result-helpers.ts";
 import { snapshotBattle } from "../interrupt-execution.ts";
 import { stateAfterSpellCastDeclared } from "../spell-cast-declaration.ts";
-import { applyShieldReactionSpellActiveEffect } from "../spells-active-effects.ts";
+import { applyTriggeredArmorDefenseSpellActiveEffect } from "../spells-active-effects.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
 import {
   reactionTriggerIncludesHitByAttackRoll,
@@ -34,7 +34,7 @@ import {
 } from "../spell-reaction-trigger-shape.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { completeReactionSpellSlotCast } from "../reaction-spell-resolution.ts";
-import { shieldReactionSpellMatchesTrigger } from "../shield-reaction-trigger.ts";
+import { triggeredArmorDefenseSpellMatchesTrigger } from "../shield-reaction-trigger.ts";
 import { spendSpellAccessFreeCastResource } from "../spells-resolve-resources.ts";
 import type {
   SpellAdmissionContext,
@@ -54,30 +54,30 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
-type ShieldReactionInvocation = Extract<
+type TriggeredArmorDefenseInvocation = Extract<
   SupportedSpellInvocation,
-  { readonly procedure: "shieldReaction" }
+  { readonly procedure: "triggeredArmorDefense" }
 >;
-type ShieldReactionResolveInput =
-  SpellProcedureProfileResolveInput<ShieldReactionInvocation>;
+type TriggeredArmorDefenseResolveInput =
+  SpellProcedureProfileResolveInput<TriggeredArmorDefenseInvocation>;
 
-function admitShieldReaction(
+function admitTriggeredArmorDefense(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
-): readonly ShieldReactionInvocation[] {
-  const projection = shieldReactionSpellProjection(spell);
+): readonly TriggeredArmorDefenseInvocation[] {
+  const projection = triggeredArmorDefenseSpellProjection(spell);
   if (projection === null) {
     return [];
   }
   return ctx.spellCastOptions.flatMap(
-    (slot): readonly ShieldReactionInvocation[] =>
+    (slot): readonly TriggeredArmorDefenseInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []
         : [
             {
               access: { tag: "prepared" },
               resource: spellInvocationResourceForCastOption(slot),
-              procedure: "shieldReaction",
+              procedure: "triggeredArmorDefense",
               spell,
               ...projection,
             },
@@ -85,10 +85,10 @@ function admitShieldReaction(
   );
 }
 
-function shieldReactionSpellProjection(
+function triggeredArmorDefenseSpellProjection(
   spell: BattleSpellAdmissionSource,
 ): Pick<
-  ShieldReactionInvocation,
+  TriggeredArmorDefenseInvocation,
   "armorClassBonus" | "negatesRepeatedDamageAllocation"
 > | null {
   if (spell.mechanics.family !== "triggered_reaction") {
@@ -147,15 +147,20 @@ function shieldReactionSpellProjection(
 }
 
 /* v8 ignore start -- @preserve -- Reaction-only profile: Shield candidates are admitted from attack-hit or Magic Missile interrupt frames, so ordinary turn discovery must return no acts. */
-function discoverShieldReactionCastAct(): readonly AvailableBattleAct[] {
+function discoverTriggeredArmorDefenseCastAct(): readonly AvailableBattleAct[] {
   return [];
 }
 /* v8 ignore stop -- @preserve */
 
-function resolveShieldReaction(
-  input: ShieldReactionResolveInput,
+function resolveTriggeredArmorDefense(
+  input: TriggeredArmorDefenseResolveInput,
 ): BattleResolutionResult {
-  if (!shieldReactionSpellMatchesTrigger(input.invocation, input.input.frame)) {
+  if (
+    !triggeredArmorDefenseSpellMatchesTrigger(
+      input.invocation,
+      input.input.frame,
+    )
+  ) {
     return invalidResult(
       input.input.state,
       "staleSubject",
@@ -177,7 +182,7 @@ function resolveShieldReaction(
     casterId: input.input.subject.reactorId,
     invocation: input.invocation,
   });
-  const effected = applyShieldReactionSpellActiveEffect(
+  const effected = applyTriggeredArmorDefenseSpellActiveEffect(
     castingState,
     input.input.subject.reactorId,
     input.invocation,
@@ -211,24 +216,24 @@ function resolveShieldReaction(
   );
 }
 
-const ShieldReactionInvocationSchema = spellProcedureExecutionSchema(
+const TriggeredArmorDefenseInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
-    procedure: Schema.Literal("shieldReaction"),
+    procedure: Schema.Literal("triggeredArmorDefense"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     armorClassBonus: Schema.Number,
     negatesRepeatedDamageAllocation: Schema.Literal(true),
   }),
 );
-export const shieldReactionProfile = {
-  procedure: "shieldReaction",
-  executionSchema: ShieldReactionInvocationSchema,
-  admit: admitShieldReaction,
-  discoverCastAct: discoverShieldReactionCastAct,
-  resolve: resolveShieldReaction,
+export const triggeredArmorDefenseProfile = {
+  procedure: "triggeredArmorDefense",
+  executionSchema: TriggeredArmorDefenseInvocationSchema,
+  admit: admitTriggeredArmorDefense,
+  discoverCastAct: discoverTriggeredArmorDefenseCastAct,
+  resolve: resolveTriggeredArmorDefense,
 } satisfies SpellProcedureDeclaration<
-  "shieldReaction",
-  ShieldReactionInvocation
+  "triggeredArmorDefense",
+  TriggeredArmorDefenseInvocation
 >;
 import { spellInvocationResourceForCastOption } from "./profile.ts";

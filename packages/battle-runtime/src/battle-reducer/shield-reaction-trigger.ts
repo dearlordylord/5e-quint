@@ -4,9 +4,12 @@ import type {
   SupportedSpellInvocation,
 } from "../battle-state-execution.ts";
 
-export function shieldReactionSpellMatchesTrigger(
+export function triggeredArmorDefenseSpellMatchesTrigger(
   invocation: BattleExecutableSpellInvocation<
-    Extract<SupportedSpellInvocation, { readonly procedure: "shieldReaction" }>
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "triggeredArmorDefense" }
+    >
   >,
   frame: BattleInterruptCheckpointInput,
 ): boolean {

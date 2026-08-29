@@ -419,7 +419,7 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
       "two-jump-occurrences",
     );
     const jumpEffect = {
-      kind: "jumpMovementReplacement" as const,
+      kind: "fixedCostMovementReplacement" as const,
       sourceProcedureRef,
       sourceCombatantId: spellCasterId,
       movementCostFeet: movementFeet(10),
@@ -444,7 +444,7 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
       state,
       spellCasterId,
     ).activeEffects.filter(
-      (effect) => effect.kind === "jumpMovementReplacement",
+      (effect) => effect.kind === "fixedCostMovementReplacement",
     );
     expect(jumpOccurrences).toHaveLength(2);
     const selectedAct = jumpMovementReplacementAct(state);
@@ -457,8 +457,8 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
         movementFill(movement, {
           movementCostFeet: 10,
           provokedOpportunityAttacks: [],
-          jumpMovementReplacement: {
-            kind: "jumpMovementReplacement",
+          fixedCostMovementReplacement: {
+            kind: "fixedCostMovementReplacement",
             distanceFeet: movementFeet(30),
             landing: {
               kind: "legalLanding",
@@ -476,7 +476,7 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
       resolved.state,
       spellCasterId,
     ).activeEffects.filter(
-      (effect) => effect.kind === "jumpMovementReplacement",
+      (effect) => effect.kind === "fixedCostMovementReplacement",
     );
     expect(
       resolvedOccurrences.find(
@@ -512,8 +512,8 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
       jumpActs.map((act) => battleActSpellPresentation(act)?.invocation),
     ).toEqual(
       expect.arrayContaining([
-        spellSlotInvocationRef(jumpUnitId, 1, "jumpMovementReplacement"),
-        spellSlotInvocationRef(jumpUnitId, 2, "jumpMovementReplacement"),
+        spellSlotInvocationRef(jumpUnitId, 1, "fixedCostMovementReplacement"),
+        spellSlotInvocationRef(jumpUnitId, 2, "fixedCostMovementReplacement"),
       ]),
     );
     const levelTwo = jumpActs.find(
@@ -559,7 +559,7 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
       combatants: new Map(cast.state.combatants).set(spellCasterId, {
         ...caster,
         activeEffects: caster.activeEffects.filter(
-          (effect) => effect.kind !== "jumpMovementReplacement",
+          (effect) => effect.kind !== "fixedCostMovementReplacement",
         ),
       }),
     };
@@ -609,7 +609,7 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
     }
     expect(cast.state.combatants.get(spellCasterId)?.activeEffects).toEqual([
       expect.objectContaining({
-        kind: "jumpMovementReplacement",
+        kind: "fixedCostMovementReplacement",
         sourceProcedureRef: castAct.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         movementCostFeet: movementFeet(10),
@@ -640,8 +640,8 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
               ),
             },
           ],
-          jumpMovementReplacement: {
-            kind: "jumpMovementReplacement",
+          fixedCostMovementReplacement: {
+            kind: "fixedCostMovementReplacement",
             distanceFeet: movementFeet(30),
             landing: {
               kind: "legalLanding",
@@ -661,7 +661,7 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
       threatenedJump.state.combatants
         .get(spellCasterId)
         ?.activeEffects.find(
-          (effect) => effect.kind === "jumpMovementReplacement",
+          (effect) => effect.kind === "fixedCostMovementReplacement",
         ),
     ).toMatchObject({ usedThisTurn: true });
     const jumped = resolveBattleSubject({
@@ -671,8 +671,8 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
         movementFill(movement, {
           movementCostFeet: 10,
           provokedOpportunityAttacks: [],
-          jumpMovementReplacement: {
-            kind: "jumpMovementReplacement",
+          fixedCostMovementReplacement: {
+            kind: "fixedCostMovementReplacement",
             distanceFeet: movementFeet(30),
             landing: {
               kind: "legalLanding",
@@ -704,7 +704,7 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
       jumped.state.combatants.get(spellCasterId)?.activeEffects,
     ).toContainEqual(
       expect.objectContaining({
-        kind: "jumpMovementReplacement",
+        kind: "fixedCostMovementReplacement",
         usedThisTurn: true,
       }),
     );
@@ -781,8 +781,8 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
           movementFill(movement, {
             movementCostFeet: 5,
             provokedOpportunityAttacks: [],
-            jumpMovementReplacement: {
-              kind: "jumpMovementReplacement",
+            fixedCostMovementReplacement: {
+              kind: "fixedCostMovementReplacement",
               distanceFeet: movementFeet(30),
               landing: {
                 kind: "legalLanding",
@@ -801,8 +801,8 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
           movementFill(movement, {
             movementCostFeet: 10,
             provokedOpportunityAttacks: [],
-            jumpMovementReplacement: {
-              kind: "jumpMovementReplacement",
+            fixedCostMovementReplacement: {
+              kind: "fixedCostMovementReplacement",
               distanceFeet: movementFeet(35),
               landing: {
                 kind: "legalLanding",
@@ -821,8 +821,8 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
         movementFill(movement, {
           movementCostFeet: 10,
           provokedOpportunityAttacks: [],
-          jumpMovementReplacement: {
-            kind: "jumpMovementReplacement",
+          fixedCostMovementReplacement: {
+            kind: "fixedCostMovementReplacement",
             distanceFeet: movementFeet(30),
             landing: {
               kind: "legalLanding",
@@ -890,9 +890,9 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
       spellCasterId,
     );
     const priorJump = beforeRecast.activeEffects.find(
-      (effect) => effect.kind === "jumpMovementReplacement",
+      (effect) => effect.kind === "fixedCostMovementReplacement",
     );
-    if (priorJump?.kind !== "jumpMovementReplacement") {
+    if (priorJump?.kind !== "fixedCostMovementReplacement") {
       throw new Error("Expected prior Jump occurrence.");
     }
     const targetTurn = endTurn({
@@ -938,16 +938,18 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
     );
     expect(effects).toContainEqual(
       expect.objectContaining({
-        kind: "jumpMovementReplacement",
+        kind: "fixedCostMovementReplacement",
         sourceProcedureRef: act.subject.procedureRef,
         usedThisTurn: false,
       }),
     );
     expect(
-      effects.filter((effect) => effect.kind === "jumpMovementReplacement"),
+      effects.filter(
+        (effect) => effect.kind === "fixedCostMovementReplacement",
+      ),
     ).toHaveLength(1);
     const replacementJump = effects.find(
-      (effect) => effect.kind === "jumpMovementReplacement",
+      (effect) => effect.kind === "fixedCostMovementReplacement",
     );
     expect(replacementJump?.effectRef).not.toBe(priorJump.effectRef);
     expect(Number(recastCaster.nextEffectOrdinal)).toBe(

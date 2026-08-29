@@ -10,8 +10,8 @@ import { afterHitSaveGatedConditionProfile } from "./after-hit-save-gated-condit
 import { afterHitTimedDamageAndSaveProfile } from "./after-hit-timed-damage-and-save.ts";
 import { antimagicFieldOngoingSpellSuppressionProfile } from "./antimagic-field-ongoing-spell-suppression.ts";
 import { attackBurstSaveDamageProfile } from "./attack-burst-save-damage.ts";
-import { blurAttackRollDefenseProfile } from "./blur-attack-roll-defense.ts";
-import { commandProfile } from "./command.ts";
+import { perceptionGatedAttackRollDefenseProfile } from "./blur-attack-roll-defense.ts";
+import { compelledNextTurnBehaviorProfile } from "./command.ts";
 import { chainedSpellAttackDamageProfile } from "./chained-spell-attack-damage.ts";
 import { chosenDamageResistanceProfile } from "./chosen-damage-resistance.ts";
 import { cloudkillAreaHazardProfile } from "./cloudkill-area-hazard.ts";
@@ -26,31 +26,31 @@ import { creatureTypeProtectionProfile } from "./creature-type-protection.ts";
 import { directConditionProfile } from "./direct-condition.ts";
 import { directConditionRemovalProfile } from "./direct-condition-removal.ts";
 import { directHitPointRestorationProfile } from "./direct-hit-point-restoration.ts";
-import { dragonsBreathInitialProfile } from "./dragons-breath-initial.ts";
+import { grantedAreaSaveDamageActionProfile } from "./dragons-breath-initial.ts";
 import {
   dancingLightsCombinedCastProfile,
   dancingLightsRepositionProfile,
   dancingLightsSeparateCastProfile,
 } from "./dancing-lights.ts";
-import { expeditiousRetreatDashProfile } from "./expeditious-retreat-dash.ts";
-import { featherFallMitigationProfile } from "./feather-fall-mitigation.ts";
+import { grantedAlternateActionCostProfile } from "./expeditious-retreat-dash.ts";
+import { fallingCreatureMitigationReactionProfile } from "./feather-fall-mitigation.ts";
 import { flamingSphereProfile } from "./flaming-sphere.ts";
 import { fogCloudObscurementProfile } from "./fog-cloud-obscurement.ts";
 import { greaseGroundHazardProfile } from "./grease-ground-hazard.ts";
 import { gustOfWindLineProfile } from "./gust-of-wind-line.ts";
 import { heldLightHurlProfile } from "./held-light-hurl.ts";
 import { heldLightProfile } from "./held-light.ts";
-import { hastePositiveProfile } from "./haste-positive.ts";
-import { hideousLaughterProfile } from "./hideous-laughter.ts";
-import { hypnoticPatternProfile } from "./hypnotic-pattern.ts";
+import { compositeTargetBuffWithAftermathProfile } from "./haste-positive.ts";
+import { saveGatedConditionWithRepeatProfile } from "./hideous-laughter.ts";
+import { saveGatedAreaControlProfile } from "./hypnotic-pattern.ts";
 import { insectPlagueAreaHazardProfile } from "./insect-plague-area-hazard.ts";
-import { jumpMovementReplacementProfile } from "./jump-movement-replacement.ts";
+import { fixedCostMovementReplacementProfile } from "./jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./levitated-creature.ts";
 import { makeStableProfile } from "./make-stable.ts";
-import { magicWeaponEnhancementProfile } from "./magic-weapon-enhancement.ts";
+import { weaponAttackDamageEnhancementProfile } from "./magic-weapon-enhancement.ts";
 import { magicalDarknessPointOriginProfile } from "./magical-darkness-point-origin.ts";
 import { markedDamageRiderProfile } from "./marked-damage-rider.ts";
-import { mirrorImageHitInterceptionProfile } from "./mirror-image-hit-interception.ts";
+import { duplicateHitInterceptionProfile } from "./mirror-image-hit-interception.ts";
 import { moonbeamProfile } from "./moonbeam.ts";
 import {
   objectContactDamageProfile,
@@ -61,7 +61,7 @@ import { ongoingSpellEndProfile } from "./ongoing-spell-end.ts";
 import { persistentArmorEffectProfile } from "./persistent-armor-effect.ts";
 import { repeatedDamageAllocationProfile } from "./repeated-damage-allocation.ts";
 import { rollModifierProfile } from "./roll-modifier.ts";
-import { sanctuaryTargetingInterdictionProfile } from "./sanctuary-targeting-interdiction.ts";
+import { targetingSaveInterdictionProfile } from "./sanctuary-targeting-interdiction.ts";
 import { saveGatedAttackRollAdvantageProfile } from "./save-gated-attack-roll-advantage.ts";
 import { saveGatedConditionImmunityProfile } from "./save-gated-condition-immunity.ts";
 import { saveGatedConditionProfile } from "./save-gated-condition.ts";
@@ -70,10 +70,10 @@ import { scalarBuffProfile } from "./scalar-buff.ts";
 import { seeInvisibleObserverSightProfile } from "./see-invisible-observer-sight.ts";
 import { selfTransformationModeProfile } from "./self-transformation-mode.ts";
 import { selfTeleportProfile } from "./self-teleport.ts";
-import { shieldReactionProfile } from "./shield-reaction.ts";
-import { sleepTargetAdmissionProfile } from "./sleep-target-admission.ts";
+import { triggeredArmorDefenseProfile } from "./shield-reaction.ts";
+import { stagedSaveConditionProfile } from "./sleep-target-admission.ts";
 import { sleetStormAreaHazardProfile } from "./sleet-storm-area-hazard.ts";
-import { slowActivePenaltiesProfile } from "./slow-active-penalties.ts";
+import { saveGatedTurnConstraintBundleProfile } from "./slow-active-penalties.ts";
 import { spikeGrowthMovementHazardProfile } from "./spike-growth-movement-hazard.ts";
 import { webRestraintHazardProfile } from "./web-restraint-hazard.ts";
 import { spellAttackDamageProfile } from "./spell-attack-damage.ts";
@@ -88,7 +88,7 @@ import {
   spiritualWeaponAttackProxyProfile,
   spiritualWeaponRepeatAttackProfile,
 } from "./spiritual-weapon.ts";
-import { thaumaturgyBoomingVoiceProfile } from "./thaumaturgy-booming-voice.ts";
+import { temporaryAbilityCheckRollModeProfile } from "./thaumaturgy-booming-voice.ts";
 import { wardingBondProfile } from "./warding-bond.ts";
 import { weaponAttackOverrideProfile } from "./weapon-attack-override.ts";
 import { weaponDamageRiderProfile } from "./weapon-damage-rider.ts";
@@ -169,23 +169,23 @@ export function registeredSpellProcedureDeclarations(): RegisteredSpellProcedure
     heldLight: registeredSpellProcedureDeclaration(heldLightProfile),
     heldLightHurl: registeredSpellProcedureDeclaration(heldLightHurlProfile),
     objectLight: registeredSpellProcedureDeclaration(objectLightProfile),
-    thaumaturgyBoomingVoice: registeredSpellProcedureDeclaration(
-      thaumaturgyBoomingVoiceProfile,
+    temporaryAbilityCheckRollMode: registeredSpellProcedureDeclaration(
+      temporaryAbilityCheckRollModeProfile,
     ),
-    blurAttackRollDefense: registeredSpellProcedureDeclaration(
-      blurAttackRollDefenseProfile,
+    perceptionGatedAttackRollDefense: registeredSpellProcedureDeclaration(
+      perceptionGatedAttackRollDefenseProfile,
     ),
     seeInvisibleObserverSight: registeredSpellProcedureDeclaration(
       seeInvisibleObserverSightProfile,
     ),
-    mirrorImageHitInterception: registeredSpellProcedureDeclaration(
-      mirrorImageHitInterceptionProfile,
+    duplicateHitInterception: registeredSpellProcedureDeclaration(
+      duplicateHitInterceptionProfile,
     ),
     persistentArmorEffect: registeredSpellProcedureDeclaration(
       persistentArmorEffectProfile,
     ),
-    magicWeaponEnhancement: registeredSpellProcedureDeclaration(
-      magicWeaponEnhancementProfile,
+    weaponAttackDamageEnhancement: registeredSpellProcedureDeclaration(
+      weaponAttackDamageEnhancementProfile,
     ),
     wardingBond: registeredSpellProcedureDeclaration(wardingBondProfile),
     creatureTypeProtection: registeredSpellProcedureDeclaration(
@@ -197,7 +197,9 @@ export function registeredSpellProcedureDeclarations(): RegisteredSpellProcedure
     chosenDamageResistance: registeredSpellProcedureDeclaration(
       chosenDamageResistanceProfile,
     ),
-    hastePositive: registeredSpellProcedureDeclaration(hastePositiveProfile),
+    compositeTargetBuffWithAftermath: registeredSpellProcedureDeclaration(
+      compositeTargetBuffWithAftermathProfile,
+    ),
     directCondition: registeredSpellProcedureDeclaration(
       directConditionProfile,
     ),
@@ -221,24 +223,24 @@ export function registeredSpellProcedureDeclarations(): RegisteredSpellProcedure
     directHitPointRestoration: registeredSpellProcedureDeclaration(
       directHitPointRestorationProfile,
     ),
-    expeditiousRetreatDash: registeredSpellProcedureDeclaration(
-      expeditiousRetreatDashProfile,
+    grantedAlternateActionCost: registeredSpellProcedureDeclaration(
+      grantedAlternateActionCostProfile,
     ),
-    jumpMovementReplacement: registeredSpellProcedureDeclaration(
-      jumpMovementReplacementProfile,
+    fixedCostMovementReplacement: registeredSpellProcedureDeclaration(
+      fixedCostMovementReplacementProfile,
     ),
-    featherFallMitigation: registeredSpellProcedureDeclaration(
-      featherFallMitigationProfile,
+    fallingCreatureMitigationReaction: registeredSpellProcedureDeclaration(
+      fallingCreatureMitigationReactionProfile,
     ),
     selfTeleport: registeredSpellProcedureDeclaration(selfTeleportProfile),
     selfTransformationMode: registeredSpellProcedureDeclaration(
       selfTransformationModeProfile,
     ),
-    dragonsBreathInitial: registeredSpellProcedureDeclaration(
-      dragonsBreathInitialProfile,
+    grantedAreaSaveDamageAction: registeredSpellProcedureDeclaration(
+      grantedAreaSaveDamageActionProfile,
     ),
-    sanctuaryTargetingInterdiction: registeredSpellProcedureDeclaration(
-      sanctuaryTargetingInterdictionProfile,
+    targetingSaveInterdiction: registeredSpellProcedureDeclaration(
+      targetingSaveInterdictionProfile,
     ),
     markedDamageRider: registeredSpellProcedureDeclaration(
       markedDamageRiderProfile,
@@ -277,17 +279,17 @@ export function registeredSpellProcedureDeclarations(): RegisteredSpellProcedure
     abilityD20TestRollModeSaveGate: registeredSpellProcedureDeclaration(
       abilityD20TestRollModeSaveGateProfile,
     ),
-    sleepTargetAdmission: registeredSpellProcedureDeclaration(
-      sleepTargetAdmissionProfile,
+    stagedSaveCondition: registeredSpellProcedureDeclaration(
+      stagedSaveConditionProfile,
     ),
-    hideousLaughter: registeredSpellProcedureDeclaration(
-      hideousLaughterProfile,
+    saveGatedConditionWithRepeat: registeredSpellProcedureDeclaration(
+      saveGatedConditionWithRepeatProfile,
     ),
-    hypnoticPattern: registeredSpellProcedureDeclaration(
-      hypnoticPatternProfile,
+    saveGatedAreaControl: registeredSpellProcedureDeclaration(
+      saveGatedAreaControlProfile,
     ),
-    slowActivePenalties: registeredSpellProcedureDeclaration(
-      slowActivePenaltiesProfile,
+    saveGatedTurnConstraintBundle: registeredSpellProcedureDeclaration(
+      saveGatedTurnConstraintBundleProfile,
     ),
     greaseGroundHazard: registeredSpellProcedureDeclaration(
       greaseGroundHazardProfile,
@@ -319,9 +321,13 @@ export function registeredSpellProcedureDeclarations(): RegisteredSpellProcedure
     antimagicFieldOngoingSpellSuppression: registeredSpellProcedureDeclaration(
       antimagicFieldOngoingSpellSuppressionProfile,
     ),
-    command: registeredSpellProcedureDeclaration(commandProfile),
+    compelledNextTurnBehavior: registeredSpellProcedureDeclaration(
+      compelledNextTurnBehaviorProfile,
+    ),
     counterspell: registeredSpellProcedureDeclaration(counterspellProfile),
-    shieldReaction: registeredSpellProcedureDeclaration(shieldReactionProfile),
+    triggeredArmorDefense: registeredSpellProcedureDeclaration(
+      triggeredArmorDefenseProfile,
+    ),
     spellAttackDamage: registeredSpellProcedureDeclaration(
       spellAttackDamageProfile,
     ),

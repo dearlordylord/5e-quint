@@ -33,7 +33,7 @@ import {
 } from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { oneAdditionalTargetPerSpellSlotAboveBaseLevel } from "./_save-gate-helpers.ts";
-import { resolveCommandSpellAct } from "../spells-resolve-save-gates.ts";
+import { resolveCompelledNextTurnBehaviorSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -51,13 +51,13 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
-  commandOptionChoiceHole,
+  compelledBehaviorOptionChoiceHole,
   spellTargetListHole,
 } from "../spells-holes-fills.ts";
 
-type CommandSpellInvocation = Extract<
+type CompelledNextTurnBehaviorSpellInvocation = Extract<
   SupportedSpellInvocation,
-  { readonly procedure: "command" }
+  { readonly procedure: "compelledNextTurnBehavior" }
 >;
 
 type CommandPhase = Extract<ActivationPhase, { readonly kind: "save_gate" }> & {
@@ -101,19 +101,19 @@ type CommandPhase = Extract<ActivationPhase, { readonly kind: "save_gate" }> & {
 };
 
 type CommandResolveInput =
-  SpellProcedureProfileResolveInput<CommandSpellInvocation>;
+  SpellProcedureProfileResolveInput<CompelledNextTurnBehaviorSpellInvocation>;
 
 function admitCommand(
-  spell: CommandSpellInvocation["spell"],
+  spell: CompelledNextTurnBehaviorSpellInvocation["spell"],
   ctx: SpellAdmissionContext,
-): readonly CommandSpellInvocation[] {
+): readonly CompelledNextTurnBehaviorSpellInvocation[] {
   return supportedPreparedCommandProfile(spell, ctx.spellCastOptions);
 }
 
 export function supportedPreparedCommandProfile(
-  spell: CommandSpellInvocation["spell"],
+  spell: CompelledNextTurnBehaviorSpellInvocation["spell"],
   castOptions: SpellAdmissionContext["spellCastOptions"],
-): readonly CommandSpellInvocation[] {
+): readonly CompelledNextTurnBehaviorSpellInvocation[] {
   const command = commandSpell(spell);
   if (command === null) {
     return [];
@@ -124,7 +124,7 @@ export function supportedPreparedCommandProfile(
     castOptions,
     (base, slotLevel) => ({
       ...base,
-      procedure: "command",
+      procedure: "compelledNextTurnBehavior",
       actionCost: "magicAction",
       ability: command.phase.ability,
       dc: command.phase.dc,
@@ -133,7 +133,9 @@ export function supportedPreparedCommandProfile(
   );
 }
 
-function commandSpell(spell: CommandSpellInvocation["spell"]): {
+function commandSpell(
+  spell: CompelledNextTurnBehaviorSpellInvocation["spell"],
+): {
   readonly phase: CommandPhase;
   readonly targeting: (
     slotLevel: SpellSlotLevel,
@@ -212,7 +214,7 @@ function isCommandPhase(
 function discoverCommandCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<CommandSpellInvocation>,
+  invocation: BattleExecutableSpellInvocation<CompelledNextTurnBehaviorSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
@@ -224,19 +226,20 @@ function discoverCommandCastAct(
     return [];
   }
 
-  const commandOptionHole = commandOptionChoiceHole(invocation);
+  const compelledBehaviorOptionHole =
+    compelledBehaviorOptionChoiceHole(invocation);
   return discoverTargetSavingThrowSpellCastActs({
     state,
     actorId,
     actor,
     invocation,
     targetHole,
-    additionalHoles: [commandOptionHole],
+    additionalHoles: [compelledBehaviorOptionHole],
   });
 }
 
 function resolveCommand(input: CommandResolveInput): BattleResolutionResult {
-  return resolveCommandSpellAct({
+  return resolveCompelledNextTurnBehaviorSpellAct({
     input: input.input,
     actorId: input.actorId,
     invocation: input.invocation,
@@ -249,7 +252,7 @@ const CommandInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
     resource: LeveledSpellInvocationResourceSchema,
-    procedure: Schema.Literal("command"),
+    procedure: Schema.Literal("compelledNextTurnBehavior"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),
     ability: Schema.Literal("wis"),
@@ -261,10 +264,13 @@ const CommandInvocationSchema = spellProcedureExecutionSchema(
     }),
   }),
 );
-export const commandProfile = {
-  procedure: "command",
+export const compelledNextTurnBehaviorProfile = {
+  procedure: "compelledNextTurnBehavior",
   executionSchema: CommandInvocationSchema,
   admit: admitCommand,
   discoverCastAct: discoverCommandCastAct,
   resolve: resolveCommand,
-} satisfies SpellProcedureDeclaration<"command", CommandSpellInvocation>;
+} satisfies SpellProcedureDeclaration<
+  "compelledNextTurnBehavior",
+  CompelledNextTurnBehaviorSpellInvocation
+>;

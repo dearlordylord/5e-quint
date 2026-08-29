@@ -48,13 +48,13 @@ import type {
 
 type MirrorImageBypassSense = Extract<
   BattleTargetSpatialFact,
-  { readonly kind: "attackAttackerUnaffectedByMirrorImageWithSense" }
+  { readonly kind: "attackerUnaffectedByDuplicateHitInterceptionWithSense" }
 >["sense"];
 type MirrorImageDuplicateRollHole = Extract<
   BattleHole,
   { readonly kind: "rolledDice" }
 > & {
-  readonly mirrorImageDuplicateRoll: {
+  readonly duplicateHitInterceptionRoll: {
     readonly targetId: CombatantId;
     readonly sourceProcedureRef: ReturnType<
       typeof battleProcedureExecutionRefForTest
@@ -67,7 +67,7 @@ type MirrorImageDuplicateRollHole = Extract<
 };
 type MirrorImageActiveEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "mirrorImageDuplicates" }
+  { readonly kind: "duplicateHitInterception" }
 >;
 
 describe("L12G-MISSING-MIRROR-IMAGE deterministic Mirror Image admission", () => {
@@ -83,7 +83,7 @@ describe("L12G-MISSING-MIRROR-IMAGE deterministic Mirror Image admission", () =>
 
     expect(caster.concentration).toBeNull();
     expect(mirrorImage).toMatchObject({
-      kind: "mirrorImageDuplicates",
+      kind: "duplicateHitInterception",
       sourceProcedureRef: mirrorImage.sourceProcedureRef,
       sourceCombatantId: spellCasterId,
       remainingDuplicates: 3,
@@ -108,7 +108,7 @@ describe("L12G-MISSING-MIRROR-IMAGE deterministic Mirror Image admission", () =>
     const sourceProcedureRef = mirrorImage.sourceProcedureRef;
 
     expect(attack.mirrorHole).toMatchObject({
-      mirrorImageDuplicateRoll: {
+      duplicateHitInterceptionRoll: {
         targetId: spellCasterId,
         sourceProcedureRef,
         sourceCombatantId: spellCasterId,
@@ -368,7 +368,7 @@ describe("L12G-MISSING-MIRROR-IMAGE deterministic Mirror Image admission", () =>
         targetFacts: [mirrorImageBypassFact(attackerId, spellCasterId, sense)],
       });
 
-      expect("mirrorImageDuplicateRoll" in damageHole).toBe(false);
+      expect("duplicateHitInterceptionRoll" in damageHole).toBe(false);
     },
   );
 
@@ -384,7 +384,7 @@ describe("L12G-MISSING-MIRROR-IMAGE deterministic Mirror Image admission", () =>
       targetFacts: [],
     });
 
-    expect("mirrorImageDuplicateRoll" in damageHole).toBe(false);
+    expect("duplicateHitInterceptionRoll" in damageHole).toBe(false);
   });
 });
 
@@ -413,7 +413,7 @@ function castMirrorImage(session: BattleRuntimeSession): BattleRuntimeSession {
     tag: "spellSlot",
     spellId: mirrorImageUnitId,
     slotLevel: 2,
-    procedure: "mirrorImageHitInterception",
+    procedure: "duplicateHitInterception",
   });
   const result = resolveBattleSubject({
     state: session.state,
@@ -563,16 +563,16 @@ function requireMirrorImageDuplicateRollHole(
 ): MirrorImageDuplicateRollHole {
   const hole = requireResultHole(result, "rolledDice");
   if (
-    !("mirrorImageDuplicateRoll" in hole) ||
-    hole.mirrorImageDuplicateRoll.sourceProcedureRef === undefined
+    !("duplicateHitInterceptionRoll" in hole) ||
+    hole.duplicateHitInterceptionRoll.sourceProcedureRef === undefined
   ) {
     throw new Error("Expected Mirror Image duplicate roll hole.");
   }
   return {
     ...hole,
-    mirrorImageDuplicateRoll: {
-      ...hole.mirrorImageDuplicateRoll,
-      sourceProcedureRef: hole.mirrorImageDuplicateRoll.sourceProcedureRef,
+    duplicateHitInterceptionRoll: {
+      ...hole.duplicateHitInterceptionRoll,
+      sourceProcedureRef: hole.duplicateHitInterceptionRoll.sourceProcedureRef,
     },
   };
 }
@@ -581,7 +581,7 @@ function requireNonMirrorRolledDiceHole(
   result: ReturnType<typeof resolveBattleSubject>,
 ): Extract<BattleHole, { readonly kind: "rolledDice" }> {
   const hole = requireResultHole(result, "rolledDice");
-  if ("mirrorImageDuplicateRoll" in hole) {
+  if ("duplicateHitInterceptionRoll" in hole) {
     throw new Error("Expected ordinary damage roll hole.");
   }
   return hole;
@@ -593,7 +593,7 @@ function activeMirrorImage(
   return (
     effects.find(
       (effect): effect is MirrorImageActiveEffect =>
-        effect.kind === "mirrorImageDuplicates",
+        effect.kind === "duplicateHitInterception",
     ) ?? null
   );
 }
@@ -608,7 +608,7 @@ function withMirrorImageDuplicateCount(
     combatants: new Map(state.combatants).set(spellCasterId, {
       ...caster,
       activeEffects: caster.activeEffects.map((effect) =>
-        effect.kind === "mirrorImageDuplicates"
+        effect.kind === "duplicateHitInterception"
           ? { ...effect, remainingDuplicates }
           : effect,
       ),
@@ -638,7 +638,7 @@ function mirrorImageBypassFact(
   sense: MirrorImageBypassSense,
 ): BattleTargetSpatialFact {
   return {
-    kind: "attackAttackerUnaffectedByMirrorImageWithSense",
+    kind: "attackerUnaffectedByDuplicateHitInterceptionWithSense",
     attackerId,
     targetId,
     sense,

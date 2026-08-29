@@ -4,7 +4,7 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-jump-movement-replacement
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
 //
-// The jumpMovementReplacement Spell Procedure Profile: a prepared Bonus Action
+// The fixedCostMovementReplacement Spell Procedure Profile: a prepared Bonus Action
 // spell that attaches a one-minute, once-on-each-target-turn movement spend
 // replacement to touched willing creatures.
 //
@@ -57,18 +57,18 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
-type JumpMovementReplacementInvocation = Extract<
+type FixedCostMovementReplacementInvocation = Extract<
   SupportedSpellInvocation,
-  { readonly procedure: "jumpMovementReplacement" }
+  { readonly procedure: "fixedCostMovementReplacement" }
 >;
-type JumpMovementReplacementResolveInput =
-  SpellProcedureProfileResolveInput<JumpMovementReplacementInvocation>;
+type FixedCostMovementReplacementResolveInput =
+  SpellProcedureProfileResolveInput<FixedCostMovementReplacementInvocation>;
 
-function admitJumpMovementReplacement(
+function admitFixedCostMovementReplacement(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
-): readonly JumpMovementReplacementInvocation[] {
-  const projection = jumpMovementReplacementSpellProjection(
+): readonly FixedCostMovementReplacementInvocation[] {
+  const projection = fixedCostMovementReplacementSpellProjection(
     ctx.actor.combatantId,
     spell,
   );
@@ -76,11 +76,11 @@ function admitJumpMovementReplacement(
     return [];
   }
   return ctx.spellCastOptions.flatMap(
-    (slot): readonly JumpMovementReplacementInvocation[] => {
+    (slot): readonly FixedCostMovementReplacementInvocation[] => {
       if (Number(slot.spellLevel) < spell.mechanics.level) {
         return [];
       }
-      const maxTargets = jumpMovementReplacementTargetCount(
+      const maxTargets = fixedCostMovementReplacementTargetCount(
         spell,
         slot.spellLevel,
       );
@@ -90,7 +90,7 @@ function admitJumpMovementReplacement(
             {
               access: { tag: "prepared" },
               resource: spellInvocationResourceForCastOption(slot),
-              procedure: "jumpMovementReplacement",
+              procedure: "fixedCostMovementReplacement",
               spell,
               actionCost: "bonusAction",
               targeting: {
@@ -106,11 +106,11 @@ function admitJumpMovementReplacement(
   );
 }
 
-function jumpMovementReplacementSpellProjection(
+function fixedCostMovementReplacementSpellProjection(
   actorId: CombatantId,
   spell: BattleSpellAdmissionSource,
 ): Pick<
-  JumpMovementReplacementInvocation,
+  FixedCostMovementReplacementInvocation,
   "activeEffect" | "rangeFeet"
 > | null {
   if (
@@ -159,7 +159,7 @@ function jumpMovementReplacementSpellProjection(
     : {
         rangeFeet: movementFeet(5),
         activeEffect: {
-          kind: "jumpMovementReplacement",
+          kind: "fixedCostMovementReplacement",
           sourceCombatantId: actorId,
           movementCostFeet: movementFeet(effect.movementCostFeet),
           maxJumpDistanceFeet: movementFeet(effect.maxJumpDistanceFeet),
@@ -169,7 +169,7 @@ function jumpMovementReplacementSpellProjection(
       };
 }
 
-function jumpMovementReplacementTargetCount(
+function fixedCostMovementReplacementTargetCount(
   spell: BattleSpellAdmissionSource,
   slotLevel: SpellSlotLevel,
 ): number | null {
@@ -191,10 +191,10 @@ function jumpMovementReplacementTargetCount(
   );
 }
 
-function discoverJumpMovementReplacementCastAct(
+function discoverFixedCostMovementReplacementCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<JumpMovementReplacementInvocation>,
+  invocation: BattleExecutableSpellInvocation<FixedCostMovementReplacementInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetListHole(state, actorId, invocation);
   return spellCastCandidatesForTargetHole(
@@ -205,8 +205,8 @@ function discoverJumpMovementReplacementCastAct(
   );
 }
 
-function resolveJumpMovementReplacement(
-  input: JumpMovementReplacementResolveInput,
+function resolveFixedCostMovementReplacement(
+  input: FixedCostMovementReplacementResolveInput,
 ): BattleResolutionResult {
   const targetSelection = selectSpellTargetList({
     state: input.input.state,
@@ -232,7 +232,7 @@ function resolveJumpMovementReplacement(
     return spellCastReactionWindow;
   }
 
-  const effected = applyJumpMovementReplacementSpellEffect(
+  const effected = applyFixedCostMovementReplacementSpellEffect(
     input.input.state,
     input.actorId,
     targetIds,
@@ -247,11 +247,11 @@ function resolveJumpMovementReplacement(
   });
 }
 
-function applyJumpMovementReplacementSpellEffect(
+function applyFixedCostMovementReplacementSpellEffect(
   state: BattleState,
   actorId: CombatantId,
   targetIds: readonly CombatantId[],
-  invocation: JumpMovementReplacementResolveInput["invocation"],
+  invocation: FixedCostMovementReplacementResolveInput["invocation"],
   procedureRef: BonusActionSpellBattleResolutionInput["subject"]["procedureRef"],
 ): BattleState {
   return targetIds.reduce(
@@ -260,7 +260,7 @@ function applyJumpMovementReplacementSpellEffect(
         nextState,
         targetId,
         (effect) =>
-          effect.kind === "jumpMovementReplacement" &&
+          effect.kind === "fixedCostMovementReplacement" &&
           effect.sourceProcedureRef === procedureRef &&
           effect.sourceCombatantId === actorId,
         [
@@ -275,39 +275,40 @@ function applyJumpMovementReplacementSpellEffect(
   );
 }
 
-const JumpMovementReplacementInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: LeveledSpellInvocationResourceSchema,
-    procedure: Schema.Literal("jumpMovementReplacement"),
-    spellRuleFacts: SpellRuleExecutionFactsSchema,
-    actionCost: Schema.Literal("bonusAction"),
-    targeting: Schema.Struct({
-      kind: Schema.Literal("targetList"),
-      minTargets: Schema.Literal(1),
-      maxTargets: Schema.Number,
-      requiredTargetDisposition: Schema.Literal("willing"),
+const FixedCostMovementReplacementInvocationSchema =
+  spellProcedureExecutionSchema(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: LeveledSpellInvocationResourceSchema,
+      procedure: Schema.Literal("fixedCostMovementReplacement"),
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
+      actionCost: Schema.Literal("bonusAction"),
+      targeting: Schema.Struct({
+        kind: Schema.Literal("targetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Number,
+        requiredTargetDisposition: Schema.Literal("willing"),
+      }),
+      activeEffect: Schema.Struct({
+        ...BattleEffectOccurrenceTemplateSchemaFields,
+        kind: Schema.Literal("fixedCostMovementReplacement"),
+        sourceCombatantId: CombatantId,
+        movementCostFeet: MovementFeet,
+        maxJumpDistanceFeet: MovementFeet,
+        usedThisTurn: Schema.Literal(false),
+        expiresAt: DurationBattleActiveEffectExpirationSchema,
+      }),
+      rangeFeet: MovementFeet,
     }),
-    activeEffect: Schema.Struct({
-      ...BattleEffectOccurrenceTemplateSchemaFields,
-      kind: Schema.Literal("jumpMovementReplacement"),
-      sourceCombatantId: CombatantId,
-      movementCostFeet: MovementFeet,
-      maxJumpDistanceFeet: MovementFeet,
-      usedThisTurn: Schema.Literal(false),
-      expiresAt: DurationBattleActiveEffectExpirationSchema,
-    }),
-    rangeFeet: MovementFeet,
-  }),
-);
-export const jumpMovementReplacementProfile = {
-  procedure: "jumpMovementReplacement",
-  executionSchema: JumpMovementReplacementInvocationSchema,
-  admit: admitJumpMovementReplacement,
-  discoverCastAct: discoverJumpMovementReplacementCastAct,
-  resolve: resolveJumpMovementReplacement,
+  );
+export const fixedCostMovementReplacementProfile = {
+  procedure: "fixedCostMovementReplacement",
+  executionSchema: FixedCostMovementReplacementInvocationSchema,
+  admit: admitFixedCostMovementReplacement,
+  discoverCastAct: discoverFixedCostMovementReplacementCastAct,
+  resolve: resolveFixedCostMovementReplacement,
 } satisfies SpellProcedureDeclaration<
-  "jumpMovementReplacement",
-  JumpMovementReplacementInvocation
+  "fixedCostMovementReplacement",
+  FixedCostMovementReplacementInvocation
 >;
 import { spellInvocationResourceForCastOption } from "./profile.ts";

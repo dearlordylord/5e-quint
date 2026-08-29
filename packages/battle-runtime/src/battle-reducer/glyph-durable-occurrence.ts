@@ -75,7 +75,7 @@ import type {
   BattleGlyphExplosiveRuneSavingThrowOutcomeHole,
   BattleHole,
   BattleResolutionCheckpointBoundary,
-  BattleHideousLaughterRepeatSavingThrowOutcomeHole,
+  BattleSaveGatedConditionRepeatSavingThrowOutcomeHole,
   BattleSpellDamageReductionRollHole,
   BattleSpellTargetListSpatialFact,
   BattleState,
@@ -116,8 +116,8 @@ import {
   applyBattleHitPointDamage,
   damageLifecycleConcentrationSavingThrowFillCheck,
   damageLifecycleConcentrationSavingThrowHoles,
-  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
-  damageLifecycleHideousLaughterDamageRepeatSaveHoles,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
 import {
@@ -241,7 +241,7 @@ type GlyphExplosiveRuneDamageDispositionFill = Extract<
   BattleFill,
   { readonly kind: "attackDamageDisposition" }
 >;
-type GlyphExplosiveRuneHideousLaughterRepeatSaveFill = Extract<
+type GlyphExplosiveRuneSaveGatedConditionWithRepeatRepeatSaveFill = Extract<
   BattleFill,
   { readonly kind: "savingThrowOutcome" }
 >;
@@ -262,7 +262,7 @@ type GlyphExplosiveRuneDamageResolutionHole =
   | BattleSpellDamageReductionRollHole
   | BattleConcentrationSavingThrowHole
   | BattleAttackDamageDispositionHole
-  | BattleHideousLaughterRepeatSavingThrowOutcomeHole;
+  | BattleSaveGatedConditionRepeatSavingThrowOutcomeHole;
 type GlyphExplosiveRuneReleaseHole =
   | BattleGlyphExplosiveRuneSavingThrowOutcomeHole
   | GlyphExplosiveRuneDamageResolutionHole;
@@ -339,7 +339,7 @@ export type GlyphExplosiveRuneAreaMembership =
       readonly spellDamageReductionRolls: readonly GlyphExplosiveRuneSpellDamageReductionRollFill[];
       readonly concentrationSavingThrows: readonly GlyphExplosiveRuneConcentrationSavingThrowFill[];
       readonly damageDispositions: readonly GlyphExplosiveRuneDamageDispositionFill[];
-      readonly hideousLaughterDamageRepeatSaves: readonly GlyphExplosiveRuneHideousLaughterRepeatSaveFill[];
+      readonly saveGatedConditionWithRepeatDamageRepeatSaves: readonly GlyphExplosiveRuneSaveGatedConditionWithRepeatRepeatSaveFill[];
     };
 
 export type GlyphExplosiveRuneReleaseWitness = {
@@ -508,7 +508,7 @@ type GlyphExplosiveRuneReleaseWitnessValidationFailure =
   | "spellDamageReductionMismatch"
   | "concentrationSavingThrowMismatch"
   | "damageDispositionMismatch"
-  | "hideousLaughterDamageRepeatSaveMismatch";
+  | "saveGatedConditionWithRepeatDamageRepeatSaveMismatch";
 type GlyphExplosiveRuneDamageLifecycle = {
   readonly damageRollTotal: number;
   readonly damageTargets: readonly {
@@ -520,7 +520,7 @@ type GlyphExplosiveRuneDamageLifecycle = {
   }[];
   readonly concentrationSavingThrowHoles: readonly BattleConcentrationSavingThrowHole[];
   readonly damageDispositionHoles: readonly BattleAttackDamageDispositionHole[];
-  readonly hideousLaughterDamageRepeatSaveHoles: readonly BattleHideousLaughterRepeatSavingThrowOutcomeHole[];
+  readonly saveGatedConditionWithRepeatDamageRepeatSaveHoles: readonly BattleSaveGatedConditionRepeatSavingThrowOutcomeHole[];
 };
 type GlyphExplosiveRuneDamageLifecycleCheck =
   | {
@@ -2038,7 +2038,7 @@ type GlyphStoredSpellFullDurationEffect = Extract<
       | "moonbeam"
       | "webRestraintHazard"
       | "gustOfWindLine"
-      | "hypnoticPatternControl"
+      | "saveGatedAreaControlControl"
       | "speedDelta"
       | "speedRatio"
       | "specialSpeedGrant"
@@ -2146,7 +2146,7 @@ function glyphStoredSpellFullDurationEffectSupportsExpiration(
     effect.kind === "moonbeam" ||
     effect.kind === "webRestraintHazard" ||
     effect.kind === "gustOfWindLine" ||
-    effect.kind === "hypnoticPatternControl" ||
+    effect.kind === "saveGatedAreaControlControl" ||
     effect.kind === "speedDelta" ||
     effect.kind === "speedRatio" ||
     effect.kind === "specialSpeedGrant" ||
@@ -2440,7 +2440,7 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
         damageTargets: [],
         concentrationSavingThrowHoles: [],
         damageDispositionHoles: [],
-        hideousLaughterDamageRepeatSaveHoles: [],
+        saveGatedConditionWithRepeatDamageRepeatSaveHoles: [],
       },
     };
   }
@@ -2582,47 +2582,51 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
     return { tag: "invalid", reason: "damageDispositionMismatch" };
   }
 
-  const hideousLaughterDamageRepeatSaveHoles = damageLifecycleTargets.flatMap(
-    ({ target, damage }) =>
-      damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+  const saveGatedConditionWithRepeatDamageRepeatSaveHoles =
+    damageLifecycleTargets.flatMap(({ target, damage }) =>
+      damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
         state: input.state,
         target,
         damageAmount: damage.damageAmount,
       }),
-  );
-  const invalidHideousLaughterRepeatSaveCheck = damageLifecycleTargets
-    .map(({ target, damage }) => {
-      const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
-        state: input.state,
-        target,
-        damageAmount: damage.damageAmount,
-      });
-      return damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
-        state: input.state,
-        target,
-        damageAmount: damage.damageAmount,
-        fills: fillsMatchingHoleIds(
-          areaMembership.hideousLaughterDamageRepeatSaves,
-          holes,
-        ),
-      });
-    })
-    .find((check) => check.tag === "invalid");
-  if (invalidHideousLaughterRepeatSaveCheck?.tag === "invalid") {
+    );
+  const invalidSaveGatedConditionWithRepeatRepeatSaveCheck =
+    damageLifecycleTargets
+      .map(({ target, damage }) => {
+        const holes =
+          damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
+            state: input.state,
+            target,
+            damageAmount: damage.damageAmount,
+          });
+        return damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck(
+          {
+            state: input.state,
+            target,
+            damageAmount: damage.damageAmount,
+            fills: fillsMatchingHoleIds(
+              areaMembership.saveGatedConditionWithRepeatDamageRepeatSaves,
+              holes,
+            ),
+          },
+        );
+      })
+      .find((check) => check.tag === "invalid");
+  if (invalidSaveGatedConditionWithRepeatRepeatSaveCheck?.tag === "invalid") {
     return {
       tag: "invalid",
-      reason: "hideousLaughterDamageRepeatSaveMismatch",
+      reason: "saveGatedConditionWithRepeatDamageRepeatSaveMismatch",
     };
   }
   if (
     hasUnexpectedOrDuplicateFills(
-      areaMembership.hideousLaughterDamageRepeatSaves,
-      hideousLaughterDamageRepeatSaveHoles,
+      areaMembership.saveGatedConditionWithRepeatDamageRepeatSaves,
+      saveGatedConditionWithRepeatDamageRepeatSaveHoles,
     )
   ) {
     return {
       tag: "invalid",
-      reason: "hideousLaughterDamageRepeatSaveMismatch",
+      reason: "saveGatedConditionWithRepeatDamageRepeatSaveMismatch",
     };
   }
 
@@ -2638,9 +2642,9 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
         damageDispositionFillFor(areaMembership.damageDispositions, hole) ===
         undefined,
     ),
-    ...hideousLaughterDamageRepeatSaveHoles.filter(
+    ...saveGatedConditionWithRepeatDamageRepeatSaveHoles.filter(
       (hole) =>
-        !areaMembership.hideousLaughterDamageRepeatSaves.some(
+        !areaMembership.saveGatedConditionWithRepeatDamageRepeatSaves.some(
           (fill) => fill.holeId === hole.holeId,
         ),
     ),
@@ -2659,7 +2663,7 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
       })),
       concentrationSavingThrowHoles,
       damageDispositionHoles,
-      hideousLaughterDamageRepeatSaveHoles,
+      saveGatedConditionWithRepeatDamageRepeatSaveHoles,
     },
   };
 }
@@ -2794,15 +2798,15 @@ function applyGlyphExplosiveRuneDamage(input: {
       areaMembership.concentrationSavingThrows,
       concentrationHoles,
     );
-    const hideousLaughterRepeatSaveHoles =
-      damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+    const saveGatedConditionWithRepeatRepeatSaveHoles =
+      damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
         state,
         target: spellReduction.target,
         damageAmount,
       });
-    const hideousLaughterRepeatSaveFills = fillsMatchingHoleIds(
-      areaMembership.hideousLaughterDamageRepeatSaves,
-      hideousLaughterRepeatSaveHoles,
+    const saveGatedConditionWithRepeatRepeatSaveFills = fillsMatchingHoleIds(
+      areaMembership.saveGatedConditionWithRepeatDamageRepeatSaves,
+      saveGatedConditionWithRepeatRepeatSaveHoles,
     );
     state = applyBattleHitPointDamage({
       state,
@@ -2821,7 +2825,8 @@ function applyGlyphExplosiveRuneDamage(input: {
         targetId,
       ),
       wardingBondDamageShareConcentrationSavingThrows: concentrationFills,
-      hideousLaughterDamageRepeatSaves: hideousLaughterRepeatSaveFills,
+      saveGatedConditionWithRepeatDamageRepeatSaves:
+        saveGatedConditionWithRepeatRepeatSaveFills,
     });
   }
   return { tag: "ok", state, damageRollTotal: input.lifecycle.damageRollTotal };

@@ -2,7 +2,7 @@ import { optionalProperty } from "../../optional-property.ts";
 import { discoverTargetSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-hideous-laughter-repeat-save-lifecycle
 //
-// The hideousLaughter Spell Procedure Profile: action-time Spell Slot casting
+// The saveGatedConditionWithRepeat Spell Procedure Profile: action-time Spell Slot casting
 // where target-list creatures make a Wisdom Saving Throw before failed-save
 // targets receive Prone and Incapacitated spell effects with repeat Saving
 // Throws at end of turn and on damage.
@@ -31,7 +31,7 @@ import {
 import { type CombatantId } from "../../identity.ts";
 import { readiedSpellAct } from "../spells-discovery.ts";
 import { oneAdditionalTargetPerSpellSlotAboveBaseLevel } from "./_save-gate-helpers.ts";
-import { resolveHideousLaughterSpellAct } from "../spells-resolve-save-gates.ts";
+import { resolveSaveGatedConditionWithRepeatSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -51,12 +51,12 @@ import {
 } from "../codec-building-blocks.ts";
 import { spellTargetListHole } from "../spells-holes-fills.ts";
 
-type HideousLaughterSpellInvocation = Extract<
+type SaveGatedConditionWithRepeatSpellInvocation = Extract<
   SupportedSpellInvocation,
-  { readonly procedure: "hideousLaughter" }
+  { readonly procedure: "saveGatedConditionWithRepeat" }
 >;
 
-type HideousLaughterPhase = Extract<
+type SaveGatedConditionWithRepeatPhase = Extract<
   ActivationPhase,
   { readonly kind: "save_gate" }
 > & {
@@ -70,22 +70,25 @@ type HideousLaughterPhase = Extract<
   };
 };
 
-type HideousLaughterResolveInput =
-  SpellProcedureProfileResolveInput<HideousLaughterSpellInvocation>;
+type SaveGatedConditionWithRepeatResolveInput =
+  SpellProcedureProfileResolveInput<SaveGatedConditionWithRepeatSpellInvocation>;
 
-function admitHideousLaughter(
-  spell: HideousLaughterSpellInvocation["spell"],
+function admitSaveGatedConditionWithRepeat(
+  spell: SaveGatedConditionWithRepeatSpellInvocation["spell"],
   ctx: SpellAdmissionContext,
-): readonly HideousLaughterSpellInvocation[] {
-  return supportedPreparedHideousLaughterProfile(spell, ctx.spellCastOptions);
+): readonly SaveGatedConditionWithRepeatSpellInvocation[] {
+  return supportedPreparedSaveGatedConditionWithRepeatProfile(
+    spell,
+    ctx.spellCastOptions,
+  );
 }
 
-export function supportedPreparedHideousLaughterProfile(
-  spell: HideousLaughterSpellInvocation["spell"],
+export function supportedPreparedSaveGatedConditionWithRepeatProfile(
+  spell: SaveGatedConditionWithRepeatSpellInvocation["spell"],
   castOptions: SpellAdmissionContext["spellCastOptions"],
-): readonly HideousLaughterSpellInvocation[] {
-  const hideousLaughter = hideousLaughterSpell(spell);
-  if (hideousLaughter === null) {
+): readonly SaveGatedConditionWithRepeatSpellInvocation[] {
+  const saveGatedConditionWithRepeat = saveGatedConditionWithRepeatSpell(spell);
+  if (saveGatedConditionWithRepeat === null) {
     return [];
   }
 
@@ -94,17 +97,19 @@ export function supportedPreparedHideousLaughterProfile(
     castOptions,
     (base, slotLevel) => ({
       ...base,
-      procedure: "hideousLaughter",
+      procedure: "saveGatedConditionWithRepeat",
       actionCost: "magicAction",
-      ability: hideousLaughter.phase.ability,
-      dc: hideousLaughter.phase.dc,
-      targeting: hideousLaughter.targeting(slotLevel),
+      ability: saveGatedConditionWithRepeat.phase.ability,
+      dc: saveGatedConditionWithRepeat.phase.dc,
+      targeting: saveGatedConditionWithRepeat.targeting(slotLevel),
     }),
   );
 }
 
-function hideousLaughterSpell(spell: HideousLaughterSpellInvocation["spell"]): {
-  readonly phase: HideousLaughterPhase;
+function saveGatedConditionWithRepeatSpell(
+  spell: SaveGatedConditionWithRepeatSpellInvocation["spell"],
+): {
+  readonly phase: SaveGatedConditionWithRepeatPhase;
   readonly targeting: (
     slotLevel: SpellSlotLevel,
   ) => Extract<SpellTargeting, { readonly kind: "targetList" }>;
@@ -122,7 +127,7 @@ function hideousLaughterSpell(spell: HideousLaughterSpellInvocation["spell"]): {
     spell.mechanics.duration.upTo.unit !== "minute" ||
     spell.mechanics.duration.upTo.amount !== 1 ||
     spell.mechanics.phases.length !== 1 ||
-    !isHideousLaughterPhase(phase)
+    !isSaveGatedConditionWithRepeatPhase(phase)
   ) {
     return null;
   }
@@ -148,9 +153,9 @@ function hideousLaughterSpell(spell: HideousLaughterSpellInvocation["spell"]): {
   };
 }
 
-function isHideousLaughterPhase(
+function isSaveGatedConditionWithRepeatPhase(
   phase: ActivationPhase | undefined,
-): phase is HideousLaughterPhase {
+): phase is SaveGatedConditionWithRepeatPhase {
   const failedEffects =
     phase?.kind === "save_gate" && phase.onFail.kind === "composite"
       ? phase.onFail.effects
@@ -197,10 +202,10 @@ function isHideousLaughterPhase(
   );
 }
 
-function discoverHideousLaughterCastAct(
+function discoverSaveGatedConditionWithRepeatCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<HideousLaughterSpellInvocation>,
+  invocation: BattleExecutableSpellInvocation<SaveGatedConditionWithRepeatSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
@@ -222,10 +227,10 @@ function discoverHideousLaughterCastAct(
   return [...castActs, ...readiedSpellAct(state, actorId, invocation)];
 }
 
-function resolveHideousLaughter(
-  input: HideousLaughterResolveInput,
+function resolveSaveGatedConditionWithRepeat(
+  input: SaveGatedConditionWithRepeatResolveInput,
 ): BattleResolutionResult {
-  return resolveHideousLaughterSpellAct({
+  return resolveSaveGatedConditionWithRepeatSpellAct({
     input: input.input,
     actorId: input.actorId,
     invocation: input.invocation,
@@ -234,30 +239,31 @@ function resolveHideousLaughter(
   });
 }
 
-const HideousLaughterInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: LeveledSpellInvocationResourceSchema,
-    procedure: Schema.Literal("hideousLaughter"),
-    spellRuleFacts: SpellRuleExecutionFactsSchema,
-    actionCost: Schema.Literal("magicAction"),
-    ability: Schema.Literal("wis"),
-    dc: DcSourceSchema,
-    targeting: Schema.Struct({
-      kind: Schema.Literal("targetList"),
-      minTargets: Schema.Literal(1),
-      maxTargets: Schema.Number,
+const SaveGatedConditionWithRepeatInvocationSchema =
+  spellProcedureExecutionSchema(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: LeveledSpellInvocationResourceSchema,
+      procedure: Schema.Literal("saveGatedConditionWithRepeat"),
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
+      actionCost: Schema.Literal("magicAction"),
+      ability: Schema.Literal("wis"),
+      dc: DcSourceSchema,
+      targeting: Schema.Struct({
+        kind: Schema.Literal("targetList"),
+        minTargets: Schema.Literal(1),
+        maxTargets: Schema.Number,
+      }),
+      rangeFeet: MovementFeet,
     }),
-    rangeFeet: MovementFeet,
-  }),
-);
-export const hideousLaughterProfile = {
-  procedure: "hideousLaughter",
-  executionSchema: HideousLaughterInvocationSchema,
-  admit: admitHideousLaughter,
-  discoverCastAct: discoverHideousLaughterCastAct,
-  resolve: resolveHideousLaughter,
+  );
+export const saveGatedConditionWithRepeatProfile = {
+  procedure: "saveGatedConditionWithRepeat",
+  executionSchema: SaveGatedConditionWithRepeatInvocationSchema,
+  admit: admitSaveGatedConditionWithRepeat,
+  discoverCastAct: discoverSaveGatedConditionWithRepeatCastAct,
+  resolve: resolveSaveGatedConditionWithRepeat,
 } satisfies SpellProcedureDeclaration<
-  "hideousLaughter",
-  HideousLaughterSpellInvocation
+  "saveGatedConditionWithRepeat",
+  SaveGatedConditionWithRepeatSpellInvocation
 >;

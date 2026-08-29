@@ -65,7 +65,7 @@ import type {
   BattleStartTurnOccurrenceOrderHole,
   BattleFill,
   BattleFlySpeedGrantEndFallCleanupFrame,
-  BattleHideousLaughterRepeatSavingThrowOutcomeHole,
+  BattleSaveGatedConditionRepeatSavingThrowOutcomeHole,
   BattleHole,
   BattleHoleId,
   BattleObjectOutcomeAccumulation,
@@ -75,8 +75,8 @@ import type {
   BattleSavingThrowFlatBonusProjection,
   BattleSavingThrowOutcomeValue,
   BattleSavingThrowRollModeProjection,
-  BattleSleepRepeatSavingThrowOutcomeHole,
-  BattleSlowActivePenaltiesEndTurnSavingThrowOutcomeHole,
+  BattleStagedConditionRepeatSavingThrowOutcomeHole,
+  BattleTurnConstraintEndTurnSavingThrowOutcomeHole,
   BattleSpellConditionCountedEndTurnSavingThrowOutcomeHole,
   BattleSpellConditionEndTurnSavingThrowOutcomeHole,
   BattleSpellTurnEndDamageRollHole,
@@ -110,7 +110,7 @@ import {
   STAT_BLOCK_RECHARGE_ROLL_HOLE_ID,
 } from "./battle-runtime-protocol.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
-import { applyCommandHaltAtTurnStart } from "./command-halt.ts";
+import { applyCompelledHaltAtTurnStart } from "./command-halt.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import {
   d20TestNaturalOneRerollDieDecisionRequired,
@@ -126,8 +126,8 @@ import {
   breakCombatantConcentration,
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowHoles,
-  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
-  damageLifecycleHideousLaughterDamageRepeatSaveHoles,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
   deathSavingThrowHole,
   fillsMatchingHoleIds,
   processStatBlockRechargeRolls,
@@ -144,7 +144,7 @@ import {
   battleStateWithFlySpeedGrantEndFallCleanupFrames,
   flySpeedGrantEndFallCleanupFramesForExpiredEffects,
 } from "./fly-speed-grant-end-fall-cleanup.ts";
-import { hideousLaughterRepeatSavingThrowOutcomeHole } from "./hideous-laughter-repeat-save.ts";
+import { saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole } from "./hideous-laughter-repeat-save.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import {
   cloudkillMovementSavingThrowHoleId,
@@ -164,7 +164,7 @@ import { slowActionOrBonusActionTurnResources } from "./slow-active-penalties-ru
 import {
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffectsForSources,
-  combatantsAfterHideousLaughterSpellEndedIfNoEffects,
+  combatantsAfterSaveGatedConditionWithRepeatSpellEndedIfNoEffects,
   conditionHadNonSpellSourceBeforeSpellEffect,
   conditionsAfterApplyingSpellConditionEffects,
   conditionsAfterExpiringSpellConditionEffects,
@@ -193,8 +193,8 @@ import {
   savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
-import type { HideousLaughterEffect } from "./hideous-laughter-repeat-save.ts";
-import { hideousLaughterEffects } from "./hideous-laughter-repeat-save.ts";
+import type { SaveGatedConditionWithRepeatEffect } from "./hideous-laughter-repeat-save.ts";
+import { saveGatedConditionWithRepeatEffects } from "./hideous-laughter-repeat-save.ts";
 import { resetBattleTurnResources } from "./turn-resource-reset.ts";
 import {
   collectTurnBoundaryHoleFills,
@@ -209,7 +209,7 @@ type ResolvedTurnBoundaryFills = {
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[];
-  readonly hideousLaughterRepeatSaves: readonly Extract<
+  readonly saveGatedConditionWithRepeatRepeatSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[];
@@ -225,7 +225,7 @@ type ResolvedTurnBoundaryFills = {
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[];
-  readonly slowActivePenaltiesEndTurnSaves: readonly Extract<
+  readonly saveGatedTurnConstraintBundleEndTurnSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[];
@@ -245,7 +245,7 @@ type ResolvedTurnBoundaryFills = {
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[];
-  readonly turnBoundaryHideousLaughterDamageRepeatSaves: readonly Extract<
+  readonly turnBoundarySaveGatedConditionWithRepeatDamageRepeatSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[];
@@ -1019,16 +1019,16 @@ function resolveEndTurn({
   deathSavingThrowRoll,
   statBlockRechargeRolls,
   sleepRepeatSaves,
-  hideousLaughterRepeatSaves,
+  saveGatedConditionWithRepeatRepeatSaves,
   spellConditionEndTurnSaves,
   spellConditionCountedEndTurnSaves,
   unitFeatureConditionEndTurnSaves,
-  slowActivePenaltiesEndTurnSaves,
+  saveGatedTurnConstraintBundleEndTurnSaves,
   abilityD20TestRollModeEndTurnSaves,
   spellTurnEndDamageRolls,
   spellTurnStartDamageRolls,
   spellTurnStartSaves,
-  turnBoundaryHideousLaughterDamageRepeatSaves,
+  turnBoundarySaveGatedConditionWithRepeatDamageRepeatSaves,
   concentrationSavingThrows,
   damageDispositions,
   spellTurnStartDamageEffectsBeforeCloudkillMovement,
@@ -1110,15 +1110,15 @@ function resolveEndTurn({
     sleepRepeatSaves,
   );
   const combatantsAfterSleepRepeatSaves = stateAfterSleepRepeatSaves.combatants;
-  const combatantsAfterHideousLaughterRepeatSaves =
-    applyHideousLaughterRepeatSaveFills(
+  const combatantsAfterSaveGatedConditionWithRepeatRepeatSaves =
+    applySaveGatedConditionWithRepeatRepeatSaveFills(
       combatantsAfterSleepRepeatSaves,
       currentActorId(state),
-      hideousLaughterRepeatSaves,
+      saveGatedConditionWithRepeatRepeatSaves,
     );
   const combatantsAfterSpellConditionRepeatSaves =
     applySpellConditionEndTurnSaveFills(
-      combatantsAfterHideousLaughterRepeatSaves,
+      combatantsAfterSaveGatedConditionWithRepeatRepeatSaves,
       currentActorId(state),
       spellConditionEndTurnSaves,
     );
@@ -1135,10 +1135,10 @@ function resolveEndTurn({
       unitFeatureConditionEndTurnSaves,
     );
   const combatantsAfterSlowActivePenaltyRepeatSaves =
-    applySlowActivePenaltiesEndTurnSaveFills(
+    applySaveGatedTurnConstraintBundleEndTurnSaveFills(
       combatantsAfterUnitFeatureConditionRepeatSaves,
       currentActorId(state),
-      slowActivePenaltiesEndTurnSaves,
+      saveGatedTurnConstraintBundleEndTurnSaves,
     );
   const combatantsAfterAbilityD20TestRepeatSaves =
     applyAbilityD20TestRollModeEndTurnSaveFills(
@@ -1156,7 +1156,7 @@ function resolveEndTurn({
     spellTurnEndDamageRolls,
     concentrationSavingThrows,
     damageDispositions,
-    turnBoundaryHideousLaughterDamageRepeatSaves,
+    turnBoundarySaveGatedConditionWithRepeatDamageRepeatSaves,
   ).combatants;
   const combatantsAfterEndEffects = expireEndOfTurnEffects(
     combatantsAfterSpellTurnEndDamage,
@@ -1210,7 +1210,7 @@ function resolveEndTurn({
     spellTurnStartSaves,
     concentrationSavingThrows,
     damageDispositions,
-    turnBoundaryHideousLaughterDamageRepeatSaves,
+    turnBoundarySaveGatedConditionWithRepeatDamageRepeatSaves,
     spellTurnStartDamageEffectsBeforeCloudkillMovement,
   ).combatants;
   const durationTick = {
@@ -1235,26 +1235,26 @@ function resolveEndTurn({
     resetBattleTurnResources(state.currentTurnResources),
     combatantsAfterDamageReductionReset.get(nextActorId),
   );
-  const stateAfterCommandHalt = applyCommandHaltAtTurnStart({
+  const stateAfterCompelledHalt = applyCompelledHaltAtTurnStart({
     ...stateAfterSleepRepeatSaves,
     combatants: combatantsAfterDamageReductionReset,
     initiative,
     currentTurnResources: resetTurnResources,
   });
   const currentTurnResourcesAfterSlow = slowActionOrBonusActionTurnResources(
-    stateAfterCommandHalt.currentTurnResources,
-    stateAfterCommandHalt.combatants.get(nextActorId),
+    stateAfterCompelledHalt.currentTurnResources,
+    stateAfterCompelledHalt.combatants.get(nextActorId),
   );
   const currentTurnResourcesAfterActionRestriction =
     moveActionBonusActionTurnResources(
       currentTurnResourcesAfterSlow,
-      stateAfterCommandHalt.combatants.get(nextActorId),
+      stateAfterCompelledHalt.combatants.get(nextActorId),
     );
   const nextState = battleStateWithFlySpeedGrantEndFallCleanupFrames(
     {
       ...stateAfterSleepRepeatSaves,
       initiative,
-      combatants: stateAfterCommandHalt.combatants,
+      combatants: stateAfterCompelledHalt.combatants,
       lightEmitters: lightEmittersAfterDurationTick,
       currentTurnResources: currentTurnResourcesAfterActionRestriction,
       readiedSpells,
@@ -1374,7 +1374,7 @@ function resetSpellDamageReductionsForNewTurn(
     [...combatants].map(([id, combatant]) => {
       const activeEffects = combatant.activeEffects.map((effect) =>
         (effect.kind === "spellDamageReduction" ||
-          effect.kind === "jumpMovementReplacement") &&
+          effect.kind === "fixedCostMovementReplacement") &&
         effect.usedThisTurn
           ? { ...effect, usedThisTurn: false }
           : effect,
@@ -1705,11 +1705,11 @@ function applySpellTurnStartDamage(
     { readonly kind: "concentrationSavingThrow" }
   >[],
   damageDisposition: ReturnType<typeof damageDispositionForTarget>,
-  hideousLaughterDamageRepeatSaves: readonly Extract<
+  saveGatedConditionWithRepeatDamageRepeatSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[],
-  hideousLaughterDamageRepeatSaveEventKey?: string,
+  saveGatedConditionWithRepeatDamageRepeatSaveEventKey?: string,
 ): BattleState {
   return applyPreparedSlotSpellDamage(
     state,
@@ -1719,8 +1719,8 @@ function applySpellTurnStartDamage(
       concentrationSavingThrow,
       wardingBondDamageShareConcentrationSavingThrows,
       damageDisposition,
-      hideousLaughterDamageRepeatSaves,
-      hideousLaughterDamageRepeatSaveEventKey,
+      saveGatedConditionWithRepeatDamageRepeatSaves,
+      saveGatedConditionWithRepeatDamageRepeatSaveEventKey,
       damageSourceId: effect.sourceCombatantId,
       spatialFacts: [],
     },
@@ -1804,9 +1804,9 @@ function validateSpellTurnStartSavingThrowOutcome(
   return "Turn-start spell Saving Throw outcome must match the starting-turn target.";
 }
 
-type SleepPendingRepeatSaveEffect = Extract<
+type StagedSaveConditionPendingRepeatEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "sleepPendingRepeatSave" }
+  { readonly kind: "stagedSaveConditionPendingRepeat" }
 >;
 
 type SpellConditionEndTurnSaveEffect = Extract<
@@ -1829,18 +1829,27 @@ type AbilityD20TestRollModeEndTurnSaveEffect = Extract<
   { readonly kind: "abilityD20TestRollModeEndTurnSave" }
 >;
 
-export type SlowActivePenaltiesEffect = Extract<
+export type SaveGatedTurnConstraintBundleEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "slowActivePenalties" }
+  { readonly kind: "saveGatedTurnConstraintBundle" }
 >;
 
 type DurationActiveEffect = Extract<
   Exclude<
     BattleActiveEffect,
-    | Extract<BattleActiveEffect, { readonly kind: "sleepPendingRepeatSave" }>
-    | Extract<BattleActiveEffect, { readonly kind: "sleepUnconscious" }>
+    | Extract<
+        BattleActiveEffect,
+        { readonly kind: "stagedSaveConditionPendingRepeat" }
+      >
+    | Extract<
+        BattleActiveEffect,
+        { readonly kind: "stagedSaveConditionApplied" }
+      >
     | Extract<BattleActiveEffect, { readonly kind: "spellDashBonusAction" }>
-    | Extract<BattleActiveEffect, { readonly kind: "commandPending" }>
+    | Extract<
+        BattleActiveEffect,
+        { readonly kind: "compelledNextTurnBehavior" }
+      >
   >,
   { readonly expiresAt: BattleActiveEffectExpiration }
 > & {
@@ -1857,15 +1866,15 @@ function activeEffectsMatching<Effect extends BattleActiveEffect>(
   return combatant?.activeEffects.filter(isEffect) ?? [];
 }
 
-function sleepPendingRepeatSaveEffects(
+function stagedSaveConditionPendingRepeatEffects(
   combatant: BattleCreatureState | undefined,
   actorId: CombatantId,
   round: RoundType,
-): readonly SleepPendingRepeatSaveEffect[] {
+): readonly StagedSaveConditionPendingRepeatEffect[] {
   return activeEffectsMatching(
     combatant,
-    (effect): effect is SleepPendingRepeatSaveEffect =>
-      effect.kind === "sleepPendingRepeatSave" &&
+    (effect): effect is StagedSaveConditionPendingRepeatEffect =>
+      effect.kind === "stagedSaveConditionPendingRepeat" &&
       effect.repeatAt.combatantId === actorId &&
       effect.repeatAt.round === round,
   );
@@ -1873,9 +1882,9 @@ function sleepPendingRepeatSaveEffects(
 
 function sleepRepeatSavingThrowOutcomeHole(
   targetId: CombatantId,
-  effect: SleepPendingRepeatSaveEffect,
+  effect: StagedSaveConditionPendingRepeatEffect,
   targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
-): BattleSleepRepeatSavingThrowOutcomeHole {
+): BattleStagedConditionRepeatSavingThrowOutcomeHole {
   const key = `battle:sleep-repeat-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}`;
   return {
     kind: "savingThrowOutcome",
@@ -1901,7 +1910,7 @@ function sleepRepeatSavingThrowOutcomeFor(
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[],
-  hole: BattleSleepRepeatSavingThrowOutcomeHole,
+  hole: BattleStagedConditionRepeatSavingThrowOutcomeHole,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
   return fills.find((fill) => fill.holeId === hole.holeId);
 }
@@ -1926,7 +1935,7 @@ export function sleepRepeatSaveSavingThrowHoleIds(
   const actor = state.combatants.get(actorId);
   return new Set(
     [
-      ...sleepPendingRepeatSaveEffects(
+      ...stagedSaveConditionPendingRepeatEffects(
         actor,
         actorId,
         state.initiative.round,
@@ -1948,8 +1957,8 @@ export function conditionSpellEndTurnRepeatSaveHoleIds(
   const actor = state.combatants.get(actorId);
   return new Set(
     [
-      ...hideousLaughterEffects(actor).map((effect) =>
-        hideousLaughterRepeatSavingThrowOutcomeHole(
+      ...saveGatedConditionWithRepeatEffects(actor).map((effect) =>
+        saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
           actorId,
           effect,
           "endTurn",
@@ -2179,22 +2188,22 @@ function unitFeatureConditionEndTurnSavingThrowOutcomeFor(
   return fills.find((fill) => fill.holeId === hole.holeId);
 }
 
-function slowActivePenaltiesEffects(
+function saveGatedTurnConstraintBundleEffects(
   combatant: BattleCreatureState | undefined,
-): readonly SlowActivePenaltiesEffect[] {
+): readonly SaveGatedTurnConstraintBundleEffect[] {
   return activeEffectsMatching(
     combatant,
-    (effect): effect is SlowActivePenaltiesEffect =>
-      effect.kind === "slowActivePenalties",
+    (effect): effect is SaveGatedTurnConstraintBundleEffect =>
+      effect.kind === "saveGatedTurnConstraintBundle",
   );
 }
 
-function slowActivePenaltiesEndTurnSavingThrowOutcomeHole(
+function saveGatedTurnConstraintBundleEndTurnSavingThrowOutcomeHole(
   targetId: CombatantId,
-  effect: SlowActivePenaltiesEffect,
+  effect: SaveGatedTurnConstraintBundleEffect,
   state?: BattleState,
   targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
-): BattleSlowActivePenaltiesEndTurnSavingThrowOutcomeHole {
+): BattleTurnConstraintEndTurnSavingThrowOutcomeHole {
   const key = [
     "battle:slow-active-penalties-end-turn-save",
     targetId,
@@ -2208,7 +2217,7 @@ function slowActivePenaltiesEndTurnSavingThrowOutcomeHole(
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: "End-turn WIS save",
-    slowActivePenaltiesEndTurnSave: {
+    saveGatedTurnConstraintBundleEndTurnSave: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
@@ -2227,12 +2236,12 @@ function slowActivePenaltiesEndTurnSavingThrowOutcomeHole(
   };
 }
 
-function slowActivePenaltiesEndTurnSavingThrowOutcomeFor(
+function saveGatedTurnConstraintBundleEndTurnSavingThrowOutcomeFor(
   fills: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[],
-  hole: BattleSlowActivePenaltiesEndTurnSavingThrowOutcomeHole,
+  hole: BattleTurnConstraintEndTurnSavingThrowOutcomeHole,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
   return fills.find((fill) => fill.holeId === hole.holeId);
 }
@@ -2297,12 +2306,12 @@ function abilityD20TestRollModeEndTurnSavingThrowOutcomeFor(
   return fills.find((fill) => fill.holeId === hole.holeId);
 }
 
-function hideousLaughterRepeatSavingThrowOutcomeFor(
+function saveGatedConditionWithRepeatRepeatSavingThrowOutcomeFor(
   fills: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[],
-  hole: BattleHideousLaughterRepeatSavingThrowOutcomeHole,
+  hole: BattleSaveGatedConditionRepeatSavingThrowOutcomeHole,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
   return fills.find((fill) => fill.holeId === hole.holeId);
 }
@@ -2335,7 +2344,7 @@ function validateSpellConditionEndTurnSavingThrowOutcome(
   /* v8 ignore stop -- @preserve */
 }
 
-function validateSlowActivePenaltiesEndTurnSavingThrowOutcome(
+function validateSaveGatedTurnConstraintBundleEndTurnSavingThrowOutcome(
   value: BattleSavingThrowOutcomeValue,
   targetId: CombatantId,
 ): string | null {
@@ -2359,7 +2368,11 @@ function applySleepRepeatSaveFills(
   >[],
 ): BattleState {
   const actor = state.combatants.get(actorId);
-  const effects = sleepPendingRepeatSaveEffects(actor, actorId, round);
+  const effects = stagedSaveConditionPendingRepeatEffects(
+    actor,
+    actorId,
+    round,
+  );
   if (actor === undefined || effects.length === 0) {
     return state;
   }
@@ -2410,9 +2423,9 @@ function applySleepRepeatSaveFills(
           };
     const unconsciousEffect: Extract<
       BattleActiveEffect,
-      { readonly kind: "sleepUnconscious" }
+      { readonly kind: "stagedSaveConditionApplied" }
     > = {
-      kind: "sleepUnconscious" as const,
+      kind: "stagedSaveConditionApplied" as const,
       effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
@@ -2460,7 +2473,7 @@ function applySleepRepeatSaveFills(
   }, state);
 }
 
-function applyHideousLaughterRepeatSaveFills(
+function applySaveGatedConditionWithRepeatRepeatSaveFills(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   actorId: CombatantId,
   saves: readonly Extract<
@@ -2469,21 +2482,24 @@ function applyHideousLaughterRepeatSaveFills(
   >[],
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   const actor = combatants.get(actorId);
-  const effects = hideousLaughterEffects(actor);
+  const effects = saveGatedConditionWithRepeatEffects(actor);
   if (actor === undefined || effects.length === 0) {
     return combatants;
   }
   return effects.reduce((nextCombatants, effect) => {
-    const hole = hideousLaughterRepeatSavingThrowOutcomeHole(
+    const hole = saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
       actorId,
       effect,
       "endTurn",
     );
-    const save = hideousLaughterRepeatSavingThrowOutcomeFor(saves, hole);
+    const save = saveGatedConditionWithRepeatRepeatSavingThrowOutcomeFor(
+      saves,
+      hole,
+    );
     if (save?.value.outcomes[0]?.succeeded !== true) {
       return nextCombatants;
     }
-    return removeHideousLaughterEffectFromCombatants(
+    return removeSaveGatedConditionWithRepeatEffectFromCombatants(
       nextCombatants,
       actorId,
       effect,
@@ -2599,7 +2615,7 @@ function applyUnitFeatureConditionEndTurnSaveFills(
   }, combatants);
 }
 
-function applySlowActivePenaltiesEndTurnSaveFills(
+function applySaveGatedTurnConstraintBundleEndTurnSaveFills(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   actorId: CombatantId,
   saves: readonly Extract<
@@ -2608,20 +2624,23 @@ function applySlowActivePenaltiesEndTurnSaveFills(
   >[],
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   const actor = combatants.get(actorId);
-  const effects = slowActivePenaltiesEffects(actor);
+  const effects = saveGatedTurnConstraintBundleEffects(actor);
   if (actor === undefined || effects.length === 0) {
     return combatants;
   }
   return effects.reduce((nextCombatants, effect) => {
-    const hole = slowActivePenaltiesEndTurnSavingThrowOutcomeHole(
+    const hole = saveGatedTurnConstraintBundleEndTurnSavingThrowOutcomeHole(
       actorId,
       effect,
     );
-    const save = slowActivePenaltiesEndTurnSavingThrowOutcomeFor(saves, hole);
+    const save = saveGatedTurnConstraintBundleEndTurnSavingThrowOutcomeFor(
+      saves,
+      hole,
+    );
     if (save?.value.outcomes[0]?.succeeded !== true) {
       return nextCombatants;
     }
-    return removeSlowActivePenaltiesEffectFromCombatants(
+    return removeSaveGatedTurnConstraintBundleEffectFromCombatants(
       nextCombatants,
       actorId,
       effect,
@@ -2780,10 +2799,10 @@ function removeUnitFeatureConditionEndTurnSaveEffectFromCombatants(
   ).combatants;
 }
 
-function removeSlowActivePenaltiesEffectFromCombatants(
+function removeSaveGatedTurnConstraintBundleEffectFromCombatants(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   targetId: CombatantId,
-  expiringEffect: SlowActivePenaltiesEffect,
+  expiringEffect: SaveGatedTurnConstraintBundleEffect,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   return afterActiveEffectOccurrenceUpdate(
     updateCombatantWithActiveEffectOccurrence(
@@ -2805,10 +2824,10 @@ function removeSlowActivePenaltiesEffectFromCombatants(
   );
 }
 
-function removeHideousLaughterEffectFromCombatants(
+function removeSaveGatedConditionWithRepeatEffectFromCombatants(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   targetId: CombatantId,
-  expiringEffect: HideousLaughterEffect,
+  expiringEffect: SaveGatedConditionWithRepeatEffect,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   return afterActiveEffectOccurrenceUpdate(
     updateCombatantWithActiveEffectOccurrence(
@@ -2831,7 +2850,7 @@ function removeHideousLaughterEffectFromCombatants(
       },
     ),
     (updatedCombatants) =>
-      combatantsAfterHideousLaughterSpellEndedIfNoEffects(
+      combatantsAfterSaveGatedConditionWithRepeatSpellEndedIfNoEffects(
         updatedCombatants,
         expiringEffect,
       ),
@@ -2932,7 +2951,7 @@ function applyStartTurnSpellDamageFills(
     BattleFill,
     { readonly kind: "attackDamageDisposition" }
   >[],
-  hideousLaughterDamageRepeatSaves: readonly Extract<
+  saveGatedConditionWithRepeatDamageRepeatSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[],
@@ -2974,15 +2993,15 @@ function applyStartTurnSpellDamageFills(
       concentrationSavingThrows,
       concentrationLifecycleHoles,
     );
-    const hideousLaughterLifecycleHoles =
-      damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+    const saveGatedConditionWithRepeatLifecycleHoles =
+      damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
         state: nextState,
         target,
         damageAmount,
       });
-    const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
-      hideousLaughterDamageRepeatSaves,
-      hideousLaughterLifecycleHoles,
+    const saveGatedConditionWithRepeatLifecycleFills = fillsMatchingHoleIds(
+      saveGatedConditionWithRepeatDamageRepeatSaves,
+      saveGatedConditionWithRepeatLifecycleHoles,
     );
     const damaged = applySpellTurnStartDamage(
       nextState,
@@ -3005,7 +3024,7 @@ function applyStartTurnSpellDamageFills(
         damageDispositions,
         actorId,
       ),
-      hideousLaughterLifecycleFills,
+      saveGatedConditionWithRepeatLifecycleFills,
     );
     if (effect.kind !== "spellTurnStartDamageAndSave") {
       return damaged;
@@ -3083,7 +3102,7 @@ function resolveSpellTurnStartDamageOccurrence(input: {
     roll: rollStage.value.roll,
   });
   if (dispositionStage.tag === "result") return dispositionStage;
-  const hideousStage = resolveStartTurnDamageHideousLaughterFills({
+  const hideousStage = resolveStartTurnDamageSaveGatedConditionWithRepeatFills({
     input,
     effect,
     target,
@@ -3314,14 +3333,14 @@ function resolveStartTurnDamageDispositionFills(input: {
   };
 }
 
-function resolveStartTurnDamageHideousLaughterFills(input: {
+function resolveStartTurnDamageSaveGatedConditionWithRepeatFills(input: {
   readonly input: StartTurnDamageOccurrenceInput;
   readonly effect: SpellTurnStartDamageEffect;
   readonly target: BattleCreatureState;
   readonly damageAmount: ReturnType<typeof spellTurnStartDamageAmount>;
 }): StartTurnDamageStage<{
   readonly damageEventKey: string;
-  readonly hideousHoles: readonly BattleHideousLaughterRepeatSavingThrowOutcomeHole[];
+  readonly hideousHoles: readonly BattleSaveGatedConditionRepeatSavingThrowOutcomeHole[];
   readonly exactHideousFills: readonly StartTurnDamageSavingThrowFill[];
   readonly savingThrowFills: readonly StartTurnDamageSavingThrowFill[];
 }> {
@@ -3329,12 +3348,13 @@ function resolveStartTurnDamageHideousLaughterFills(input: {
     input.input.sourceTurn,
     input.effect,
   );
-  const hideousHoles = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
-    state: input.input.state,
-    target: input.target,
-    damageAmount: input.damageAmount,
-    damageEventKey,
-  });
+  const hideousHoles =
+    damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
+      state: input.input.state,
+      target: input.target,
+      damageAmount: input.damageAmount,
+      damageEventKey,
+    });
   const savingThrowFills = input.input.fills.filter(
     (fill): fill is StartTurnDamageSavingThrowFill =>
       fill.kind === "savingThrowOutcome",
@@ -3343,13 +3363,14 @@ function resolveStartTurnDamageHideousLaughterFills(input: {
     savingThrowFills,
     hideousHoles,
   );
-  const check = damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
-    state: input.input.state,
-    target: input.target,
-    damageAmount: input.damageAmount,
-    fills: exactHideousFills,
-    damageEventKey,
-  });
+  const check =
+    damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck({
+      state: input.input.state,
+      target: input.target,
+      damageAmount: input.damageAmount,
+      fills: exactHideousFills,
+      damageEventKey,
+    });
   return Match.value(check).pipe(
     Match.when({ tag: "invalid" }, ({ message }) => ({
       tag: "result" as const,
@@ -3455,7 +3476,7 @@ function applyResolvedStartTurnDamageOccurrence(input: {
   readonly dispositionHoles: readonly BattleAttackDamageDispositionHole[];
   readonly exactDispositionFills: readonly StartTurnDamageDispositionFill[];
   readonly damageEventKey: string;
-  readonly hideousHoles: readonly BattleHideousLaughterRepeatSavingThrowOutcomeHole[];
+  readonly hideousHoles: readonly BattleSaveGatedConditionRepeatSavingThrowOutcomeHole[];
   readonly exactHideousFills: readonly StartTurnDamageSavingThrowFill[];
 }): StartTurnOccurrenceStep {
   const effect = startTurnDamageEffectForResolution(input.effectResolution);
@@ -3556,7 +3577,7 @@ function applyEndTurnSpellDamageFills(
     BattleFill,
     { readonly kind: "attackDamageDisposition" }
   >[],
-  hideousLaughterDamageRepeatSaves: readonly Extract<
+  saveGatedConditionWithRepeatDamageRepeatSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[],
@@ -3596,17 +3617,17 @@ function applyEndTurnSpellDamageFills(
         rawConcentrationLifecycleHoles,
         concentrationSavingThrows,
       );
-    const rawHideousLaughterLifecycleHoles =
-      damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+    const rawSaveGatedConditionWithRepeatLifecycleHoles =
+      damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
         state: nextState,
         target,
         damageAmount,
       });
-    const hideousLaughterLifecycleFills =
+    const saveGatedConditionWithRepeatLifecycleFills =
       spellTurnEndDamageDownstreamFillsForRawHoles(
         effect,
-        rawHideousLaughterLifecycleHoles,
-        hideousLaughterDamageRepeatSaves,
+        rawSaveGatedConditionWithRepeatLifecycleHoles,
+        saveGatedConditionWithRepeatDamageRepeatSaves,
       );
     const exactConcentrationFill =
       exactConcentrationHole === null
@@ -3638,7 +3659,8 @@ function applyEndTurnSpellDamageFills(
         rawDispositionFills,
         actorId,
       ),
-      hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
+      saveGatedConditionWithRepeatDamageRepeatSaves:
+        saveGatedConditionWithRepeatLifecycleFills,
       damageSourceId: effect.sourceCombatantId,
       spatialFacts: [],
     });
@@ -4518,8 +4540,8 @@ function activeEffectDurationTicks(
   effect: BattleActiveEffect,
 ): DurationActiveEffect["expiresAt"]["durationTicks"] | null {
   if (
-    effect.kind === "sleepPendingRepeatSave" ||
-    effect.kind === "sleepUnconscious" ||
+    effect.kind === "stagedSaveConditionPendingRepeat" ||
+    effect.kind === "stagedSaveConditionApplied" ||
     !("expiresAt" in effect)
   ) {
     return null;
@@ -4873,7 +4895,7 @@ function resolveEndTurnCommandForParent(
   const nextActor = input.state.combatants.get(nextActorId);
   const actorId = currentActorId(input.state);
   const actor = input.state.combatants.get(actorId);
-  const sleepRepeatSaveRequests = sleepPendingRepeatSaveEffects(
+  const sleepRepeatSaveRequests = stagedSaveConditionPendingRepeatEffects(
     actor,
     actorId,
     input.state.initiative.round,
@@ -4888,10 +4910,10 @@ function resolveEndTurnCommandForParent(
   const sleepRepeatSaveHoles = sleepRepeatSaveRequests.map(
     (request) => request.hole,
   );
-  const hideousLaughterRepeatSaveRequests = hideousLaughterEffects(actor).map(
-    (effect) => ({
+  const saveGatedConditionWithRepeatRepeatSaveRequests =
+    saveGatedConditionWithRepeatEffects(actor).map((effect) => ({
       effect,
-      hole: hideousLaughterRepeatSavingThrowOutcomeHole(
+      hole: saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
         actorId,
         effect,
         "endTurn",
@@ -4902,11 +4924,11 @@ function resolveEndTurnCommandForParent(
           effect.save.ability,
         ),
       ),
-    }),
-  );
-  const hideousLaughterRepeatSaveHoles = hideousLaughterRepeatSaveRequests.map(
-    (request) => request.hole,
-  );
+    }));
+  const saveGatedConditionWithRepeatRepeatSaveHoles =
+    saveGatedConditionWithRepeatRepeatSaveRequests.map(
+      (request) => request.hole,
+    );
   const spellConditionEndTurnSaveRequests = spellConditionEndTurnSaveEffects(
     actor,
   ).map((effect) => ({
@@ -4951,19 +4973,24 @@ function resolveEndTurnCommandForParent(
     }));
   const unitFeatureConditionEndTurnSaveHoles =
     unitFeatureConditionEndTurnSaveRequests.map((request) => request.hole);
-  const slowActivePenaltiesEndTurnSaveRequests = slowActivePenaltiesEffects(
-    actor,
-  ).map((effect) => ({
-    effect,
-    hole: slowActivePenaltiesEndTurnSavingThrowOutcomeHole(
-      actorId,
+  const saveGatedTurnConstraintBundleEndTurnSaveRequests =
+    saveGatedTurnConstraintBundleEffects(actor).map((effect) => ({
       effect,
-      input.state,
-      endTurnSavingThrowFlatBonuses(input.state, actorId, effect.save.ability),
-    ),
-  }));
-  const slowActivePenaltiesEndTurnSaveHoles =
-    slowActivePenaltiesEndTurnSaveRequests.map((request) => request.hole);
+      hole: saveGatedTurnConstraintBundleEndTurnSavingThrowOutcomeHole(
+        actorId,
+        effect,
+        input.state,
+        endTurnSavingThrowFlatBonuses(
+          input.state,
+          actorId,
+          effect.save.ability,
+        ),
+      ),
+    }));
+  const saveGatedTurnConstraintBundleEndTurnSaveHoles =
+    saveGatedTurnConstraintBundleEndTurnSaveRequests.map(
+      (request) => request.hole,
+    );
   const abilityD20TestEndTurnSaveRequests =
     abilityD20TestRollModeEndTurnSaveEffects(actor).map((effect) => ({
       effect,
@@ -5121,10 +5148,10 @@ function resolveEndTurnCommandForParent(
     );
   const initialHoles = [
     ...sleepRepeatSaveHoles,
-    ...hideousLaughterRepeatSaveHoles,
+    ...saveGatedConditionWithRepeatRepeatSaveHoles,
     ...spellConditionEndTurnSaveHoles,
     ...unitFeatureConditionEndTurnSaveHoles,
-    ...slowActivePenaltiesEndTurnSaveHoles,
+    ...saveGatedTurnConstraintBundleEndTurnSaveHoles,
     ...abilityD20TestEndTurnSaveHoles,
     ...endTurnDamageHoles,
   ];
@@ -5200,13 +5227,19 @@ function resolveEndTurnCommandForParent(
   const sleepRepeatSaves = sleepRepeatSaveCollection.resolved.map(
     ({ fill }) => fill,
   );
-  const hideousLaughterRepeatSaveCollection = collectTurnBoundaryHoleFills(
-    hideousLaughterRepeatSaveRequests,
-    (hole) =>
-      hideousLaughterRepeatSavingThrowOutcomeFor(savingThrowOutcomeFills, hole),
-  );
-  const hideousLaughterRepeatSaves =
-    hideousLaughterRepeatSaveCollection.resolved.map(({ fill }) => fill);
+  const saveGatedConditionWithRepeatRepeatSaveCollection =
+    collectTurnBoundaryHoleFills(
+      saveGatedConditionWithRepeatRepeatSaveRequests,
+      (hole) =>
+        saveGatedConditionWithRepeatRepeatSavingThrowOutcomeFor(
+          savingThrowOutcomeFills,
+          hole,
+        ),
+    );
+  const saveGatedConditionWithRepeatRepeatSaves =
+    saveGatedConditionWithRepeatRepeatSaveCollection.resolved.map(
+      ({ fill }) => fill,
+    );
   const spellConditionEndTurnSaveCollection = collectTurnBoundaryHoleFills(
     spellConditionEndTurnSaveRequests,
     (hole) =>
@@ -5236,16 +5269,19 @@ function resolveEndTurnCommandForParent(
     );
   const unitFeatureConditionEndTurnSaves =
     unitFeatureConditionEndTurnSaveCollection.resolved.map(({ fill }) => fill);
-  const slowActivePenaltiesEndTurnSaveCollection = collectTurnBoundaryHoleFills(
-    slowActivePenaltiesEndTurnSaveRequests,
-    (hole) =>
-      slowActivePenaltiesEndTurnSavingThrowOutcomeFor(
-        savingThrowOutcomeFills,
-        hole,
-      ),
-  );
-  const slowActivePenaltiesEndTurnSaves =
-    slowActivePenaltiesEndTurnSaveCollection.resolved.map(({ fill }) => fill);
+  const saveGatedTurnConstraintBundleEndTurnSaveCollection =
+    collectTurnBoundaryHoleFills(
+      saveGatedTurnConstraintBundleEndTurnSaveRequests,
+      (hole) =>
+        saveGatedTurnConstraintBundleEndTurnSavingThrowOutcomeFor(
+          savingThrowOutcomeFills,
+          hole,
+        ),
+    );
+  const saveGatedTurnConstraintBundleEndTurnSaves =
+    saveGatedTurnConstraintBundleEndTurnSaveCollection.resolved.map(
+      ({ fill }) => fill,
+    );
   const abilityD20TestEndTurnSaveCollection = collectTurnBoundaryHoleFills(
     abilityD20TestEndTurnSaveRequests,
     (hole) =>
@@ -5258,13 +5294,15 @@ function resolveEndTurnCommandForParent(
     abilityD20TestEndTurnSaveCollection.resolved.map(({ fill }) => fill);
   const missingEndTurnSaveHoles = firstMissingEndTurnSaveHoleFrontier({
     sleepRepeat: sleepRepeatSaveCollection.missingHoles,
-    hideousLaughterRepeat: hideousLaughterRepeatSaveCollection.missingHoles,
+    saveGatedConditionWithRepeatRepeat:
+      saveGatedConditionWithRepeatRepeatSaveCollection.missingHoles,
     spellCondition: spellConditionEndTurnSaveCollection.missingHoles,
     countedSpellCondition:
       spellConditionCountedEndTurnSaveCollection.missingHoles,
     unitFeatureCondition:
       unitFeatureConditionEndTurnSaveCollection.missingHoles,
-    slowActivePenalties: slowActivePenaltiesEndTurnSaveCollection.missingHoles,
+    saveGatedTurnConstraintBundle:
+      saveGatedTurnConstraintBundleEndTurnSaveCollection.missingHoles,
     abilityD20TestRollMode: abilityD20TestEndTurnSaveCollection.missingHoles,
   });
   if (missingEndTurnSaveHoles.length > 0) {
@@ -5318,7 +5356,7 @@ function resolveEndTurnCommandForParent(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const endTurnHideousLaughterDamageRepeatSaveChecks =
+  const endTurnSaveGatedConditionWithRepeatDamageRepeatSaveChecks =
     endTurnDamageRollRequests.map((request) => {
       /* v8 ignore start -- @preserve -- Internal turn-boundary invariant: endTurnDamageRollRequests can contain an entry only when that effect was read from actor. */
       if (actor === undefined) {
@@ -5331,21 +5369,23 @@ function resolveEndTurnCommandForParent(
         request.effect,
         request.roll,
       );
-      const rawHoles = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
-        state: input.state,
-        target: actor,
-        damageAmount,
-      });
-      const check = damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
-        state: input.state,
-        target: actor,
-        damageAmount,
-        fills: spellTurnEndDamageDownstreamFillsForRawHoles(
-          request.effect,
-          rawHoles,
-          savingThrowOutcomeFills,
-        ),
-      });
+      const rawHoles =
+        damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
+          state: input.state,
+          target: actor,
+          damageAmount,
+        });
+      const check =
+        damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck({
+          state: input.state,
+          target: actor,
+          damageAmount,
+          fills: spellTurnEndDamageDownstreamFillsForRawHoles(
+            request.effect,
+            rawHoles,
+            savingThrowOutcomeFills,
+          ),
+        });
       return check.tag === "invalid"
         ? check
         : {
@@ -5356,33 +5396,41 @@ function resolveEndTurnCommandForParent(
             ),
           };
     });
-  const invalidEndTurnHideousLaughterDamageRepeatSaveCheck =
-    endTurnHideousLaughterDamageRepeatSaveChecks.find(
+  const invalidEndTurnSaveGatedConditionWithRepeatDamageRepeatSaveCheck =
+    endTurnSaveGatedConditionWithRepeatDamageRepeatSaveChecks.find(
       (check) => check.tag === "invalid",
     );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (invalidEndTurnHideousLaughterDamageRepeatSaveCheck?.tag === "invalid") {
+  if (
+    invalidEndTurnSaveGatedConditionWithRepeatDamageRepeatSaveCheck?.tag ===
+    "invalid"
+  ) {
     return invalidResult(
       input.state,
       "invalidFill",
-      invalidEndTurnHideousLaughterDamageRepeatSaveCheck.message,
+      invalidEndTurnSaveGatedConditionWithRepeatDamageRepeatSaveCheck.message,
     );
   }
   /* v8 ignore stop -- @preserve */
-  const endTurnHideousLaughterDamageRepeatSaveHoles =
-    endTurnHideousLaughterDamageRepeatSaveChecks.flatMap((check) =>
-      check.tag === "needsHoles" || check.tag === "ok" ? [...check.holes] : [],
+  const endTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles =
+    endTurnSaveGatedConditionWithRepeatDamageRepeatSaveChecks.flatMap(
+      (check) =>
+        check.tag === "needsHoles" || check.tag === "ok"
+          ? [...check.holes]
+          : [],
     );
-  const missingEndTurnHideousLaughterDamageRepeatSaveHoles =
-    endTurnHideousLaughterDamageRepeatSaveChecks.flatMap((check) =>
-      check.tag === "needsHoles" ? [...check.holes] : [],
+  const missingEndTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles =
+    endTurnSaveGatedConditionWithRepeatDamageRepeatSaveChecks.flatMap(
+      (check) => (check.tag === "needsHoles" ? [...check.holes] : []),
     );
-  if (missingEndTurnHideousLaughterDamageRepeatSaveHoles.length > 0) {
+  if (
+    missingEndTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles.length > 0
+  ) {
     return needsHolesResult(input.state, input.subject, [
-      ...missingEndTurnHideousLaughterDamageRepeatSaveHoles,
+      ...missingEndTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
     ]);
   }
-  const startTurnHideousLaughterDamageRepeatSaveChecks =
+  const startTurnSaveGatedConditionWithRepeatDamageRepeatSaveChecks =
     startTurnDamageRollRequestsBeforeCloudkillMovement.map((request) => {
       /* v8 ignore start -- @preserve -- Internal turn-boundary invariant: startTurnDamageRollRequests can contain an entry only when that effect was read from nextActor. */
       if (nextActor === undefined) {
@@ -5395,68 +5443,81 @@ function resolveEndTurnCommandForParent(
         request.effect,
         request.roll,
       );
-      const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
-        state: input.state,
-        target: nextActor,
-        damageAmount,
-      });
-      return damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
-        state: input.state,
-        target: nextActor,
-        damageAmount,
-        fills: fillsMatchingHoleIds(savingThrowOutcomeFills, holes),
-      });
+      const holes =
+        damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
+          state: input.state,
+          target: nextActor,
+          damageAmount,
+        });
+      return damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck(
+        {
+          state: input.state,
+          target: nextActor,
+          damageAmount,
+          fills: fillsMatchingHoleIds(savingThrowOutcomeFills, holes),
+        },
+      );
     });
-  const invalidStartTurnHideousLaughterDamageRepeatSaveCheck =
-    startTurnHideousLaughterDamageRepeatSaveChecks.find(
+  const invalidStartTurnSaveGatedConditionWithRepeatDamageRepeatSaveCheck =
+    startTurnSaveGatedConditionWithRepeatDamageRepeatSaveChecks.find(
       (check) => check.tag === "invalid",
     );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (invalidStartTurnHideousLaughterDamageRepeatSaveCheck?.tag === "invalid") {
+  if (
+    invalidStartTurnSaveGatedConditionWithRepeatDamageRepeatSaveCheck?.tag ===
+    "invalid"
+  ) {
     return invalidResult(
       input.state,
       "invalidFill",
-      invalidStartTurnHideousLaughterDamageRepeatSaveCheck.message,
+      invalidStartTurnSaveGatedConditionWithRepeatDamageRepeatSaveCheck.message,
     );
   }
   /* v8 ignore stop -- @preserve */
-  const startTurnHideousLaughterDamageRepeatSaveHoles =
-    startTurnHideousLaughterDamageRepeatSaveChecks.flatMap((check) =>
-      check.tag === "needsHoles" || check.tag === "ok" ? [...check.holes] : [],
+  const startTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles =
+    startTurnSaveGatedConditionWithRepeatDamageRepeatSaveChecks.flatMap(
+      (check) =>
+        check.tag === "needsHoles" || check.tag === "ok"
+          ? [...check.holes]
+          : [],
     );
-  const missingStartTurnHideousLaughterDamageRepeatSaveHoles =
-    startTurnHideousLaughterDamageRepeatSaveChecks.flatMap((check) =>
-      check.tag === "needsHoles" ? [...check.holes] : [],
+  const missingStartTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles =
+    startTurnSaveGatedConditionWithRepeatDamageRepeatSaveChecks.flatMap(
+      (check) => (check.tag === "needsHoles" ? [...check.holes] : []),
     );
-  if (missingStartTurnHideousLaughterDamageRepeatSaveHoles.length > 0) {
+  if (
+    missingStartTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles.length > 0
+  ) {
     return needsHolesResult(input.state, input.subject, [
-      ...missingStartTurnHideousLaughterDamageRepeatSaveHoles,
+      ...missingStartTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
     ]);
   }
-  const startTurnHideousLaughterDamageRepeatSaves = fillsMatchingHoleIds(
-    savingThrowOutcomeFills,
-    startTurnHideousLaughterDamageRepeatSaveHoles,
-  );
-  const endTurnHideousLaughterDamageRepeatSaves = fillsMatchingHoleIds(
-    savingThrowOutcomeFills,
-    endTurnHideousLaughterDamageRepeatSaveHoles,
-  );
-  const turnBoundaryHideousLaughterDamageRepeatSaves = [
-    ...endTurnHideousLaughterDamageRepeatSaves,
-    ...startTurnHideousLaughterDamageRepeatSaves,
+  const startTurnSaveGatedConditionWithRepeatDamageRepeatSaves =
+    fillsMatchingHoleIds(
+      savingThrowOutcomeFills,
+      startTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
+    );
+  const endTurnSaveGatedConditionWithRepeatDamageRepeatSaves =
+    fillsMatchingHoleIds(
+      savingThrowOutcomeFills,
+      endTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
+    );
+  const turnBoundarySaveGatedConditionWithRepeatDamageRepeatSaves = [
+    ...endTurnSaveGatedConditionWithRepeatDamageRepeatSaves,
+    ...startTurnSaveGatedConditionWithRepeatDamageRepeatSaves,
   ];
   const savingThrowOutcomeHoleIds = new Set<BattleHoleId>(
     [
       ...sleepRepeatSaveHoles,
-      ...hideousLaughterRepeatSaveHoles,
+      ...saveGatedConditionWithRepeatRepeatSaveHoles,
       ...spellConditionEndTurnSaveHoles,
       ...spellConditionCountedEndTurnSaveRequests.map(
         (request) => request.hole,
       ),
       ...unitFeatureConditionEndTurnSaveHoles,
-      ...slowActivePenaltiesEndTurnSaveHoles,
+      ...saveGatedTurnConstraintBundleEndTurnSaveHoles,
       ...abilityD20TestEndTurnSaveHoles,
-      ...endTurnHideousLaughterDamageRepeatSaveHoles,
+      ...endTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
     ].map((hole) => hole.holeId),
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -5465,13 +5526,13 @@ function resolveEndTurnCommandForParent(
       savingThrowOutcomeHoleIds.has(fill.holeId),
     ).length !==
     sleepRepeatSaves.length +
-      hideousLaughterRepeatSaves.length +
+      saveGatedConditionWithRepeatRepeatSaves.length +
       spellConditionEndTurnSaves.length +
       spellConditionCountedEndTurnSaves.length +
       unitFeatureConditionEndTurnSaves.length +
-      slowActivePenaltiesEndTurnSaves.length +
+      saveGatedTurnConstraintBundleEndTurnSaves.length +
       abilityD20TestEndTurnSaves.length +
-      endTurnHideousLaughterDamageRepeatSaves.length
+      endTurnSaveGatedConditionWithRepeatDamageRepeatSaves.length
   ) {
     return invalidResult(
       input.state,
@@ -5491,18 +5552,23 @@ function resolveEndTurnCommandForParent(
     }
     /* v8 ignore stop -- @preserve */
   }
-  for (const { fill } of slowActivePenaltiesEndTurnSaveCollection.resolved) {
-    const validation = validateSlowActivePenaltiesEndTurnSavingThrowOutcome(
-      fill.value,
-      actorId,
-    );
+  for (const {
+    fill,
+  } of saveGatedTurnConstraintBundleEndTurnSaveCollection.resolved) {
+    const validation =
+      validateSaveGatedTurnConstraintBundleEndTurnSavingThrowOutcome(
+        fill.value,
+        actorId,
+      );
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (validation !== null) {
       return invalidResult(input.state, "invalidFill", validation);
     }
     /* v8 ignore stop -- @preserve */
   }
-  for (const { fill } of hideousLaughterRepeatSaveCollection.resolved) {
+  for (const {
+    fill,
+  } of saveGatedConditionWithRepeatRepeatSaveCollection.resolved) {
     const validation = validateSleepRepeatSavingThrowOutcome(
       fill.value,
       actorId,
@@ -5557,13 +5623,14 @@ function resolveEndTurnCommandForParent(
     }
     /* v8 ignore stop -- @preserve */
   }
-  for (const fill of startTurnHideousLaughterDamageRepeatSaves) {
-    const hole = startTurnHideousLaughterDamageRepeatSaveHoles.find(
-      (candidate) => candidate.holeId === fill.holeId,
-    );
+  for (const fill of startTurnSaveGatedConditionWithRepeatDamageRepeatSaves) {
+    const hole =
+      startTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles.find(
+        (candidate) => candidate.holeId === fill.holeId,
+      );
     const validation = validateSleepRepeatSavingThrowOutcome(
       fill.value,
-      hole?.hideousLaughterRepeatSave.targetId ?? nextActorId,
+      hole?.saveGatedConditionWithRepeatRepeatSave.targetId ?? nextActorId,
     );
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (validation !== null) {
@@ -5571,13 +5638,13 @@ function resolveEndTurnCommandForParent(
     }
     /* v8 ignore stop -- @preserve */
   }
-  for (const fill of endTurnHideousLaughterDamageRepeatSaves) {
-    const hole = endTurnHideousLaughterDamageRepeatSaveHoles.find(
+  for (const fill of endTurnSaveGatedConditionWithRepeatDamageRepeatSaves) {
+    const hole = endTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles.find(
       (candidate) => candidate.holeId === fill.holeId,
     );
     const validation = validateSleepRepeatSavingThrowOutcome(
       fill.value,
-      hole?.hideousLaughterRepeatSave.targetId ?? actorId,
+      hole?.saveGatedConditionWithRepeatRepeatSave.targetId ?? actorId,
     );
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (validation !== null) {
@@ -5786,16 +5853,16 @@ function resolveEndTurnCommandForParent(
     deathSavingThrowRoll: undefined,
     statBlockRechargeRolls: [],
     sleepRepeatSaves,
-    hideousLaughterRepeatSaves,
+    saveGatedConditionWithRepeatRepeatSaves,
     spellConditionEndTurnSaves,
     spellConditionCountedEndTurnSaves,
     unitFeatureConditionEndTurnSaves,
-    slowActivePenaltiesEndTurnSaves,
+    saveGatedTurnConstraintBundleEndTurnSaves,
     abilityD20TestRollModeEndTurnSaves: abilityD20TestEndTurnSaves,
     spellTurnEndDamageRolls: endTurnDamageRolls,
     spellTurnStartDamageRolls: [],
     spellTurnStartSaves: [],
-    turnBoundaryHideousLaughterDamageRepeatSaves,
+    turnBoundarySaveGatedConditionWithRepeatDamageRepeatSaves,
     concentrationSavingThrows: concentrationSavingThrowFills.filter((fill) =>
       concentrationHoleIds.has(fill.holeId),
     ),

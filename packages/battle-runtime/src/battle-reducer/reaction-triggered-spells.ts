@@ -17,7 +17,7 @@ import {
   spellHasAvailableSpend,
 } from "./spell-turn-resources.ts";
 import { supportedSpellActs } from "./supported-spell-acts.ts";
-import { shieldReactionSpellMatchesTrigger } from "./shield-reaction-trigger.ts";
+import { triggeredArmorDefenseSpellMatchesTrigger } from "./shield-reaction-trigger.ts";
 import {
   spellDamageHole,
   spellSavingThrowOutcomeHole,
@@ -38,7 +38,7 @@ import type {
   BattleTargetSpatialFact,
 } from "../battle-state-execution.ts";
 
-export { shieldReactionSpellMatchesTrigger } from "./shield-reaction-trigger.ts";
+export { triggeredArmorDefenseSpellMatchesTrigger } from "./shield-reaction-trigger.ts";
 
 export function triggeredReactionSpellChoices(
   state: BattleState,
@@ -123,7 +123,8 @@ export function triggeredReactionSpellChoices(
                       executableInvocation,
                     ),
                   ]
-                : executableInvocation.procedure === "featherFallMitigation"
+                : executableInvocation.procedure ===
+                    "fallingCreatureMitigationReaction"
                   ? [
                       ...spellCastReactionFactsHoles,
                       spellTargetListHole(
@@ -160,9 +161,9 @@ export function triggeredReactionSpellTurnResourceAvailable(
     SpellProcedureExecution,
     {
       readonly procedure:
-        | "shieldReaction"
+        | "triggeredArmorDefense"
         | "saveGatedDamage"
-        | "featherFallMitigation"
+        | "fallingCreatureMitigationReaction"
         | "counterspell";
     }
   >,
@@ -182,9 +183,9 @@ export function triggeredReactionSpellMatchesTrigger(
       SpellProcedureExecution,
       {
         readonly procedure:
-          | "shieldReaction"
+          | "triggeredArmorDefense"
           | "saveGatedDamage"
-          | "featherFallMitigation"
+          | "fallingCreatureMitigationReaction"
           | "counterspell";
       }
     >
@@ -192,8 +193,8 @@ export function triggeredReactionSpellMatchesTrigger(
   frame: BattleInterruptCheckpointInput,
   reactorId: CombatantId,
 ): boolean {
-  if (invocation.procedure === "shieldReaction") {
-    return shieldReactionSpellMatchesTrigger(invocation, frame);
+  if (invocation.procedure === "triggeredArmorDefense") {
+    return triggeredArmorDefenseSpellMatchesTrigger(invocation, frame);
   }
   if (invocation.procedure === "saveGatedDamage") {
     return hellishRebukeReactionSpellMatchesTrigger(invocation, frame);
@@ -282,7 +283,7 @@ export function featherFallReactionSpellMatchesTrigger(
   invocation: BattleExecutableSpellInvocation<
     Extract<
       SpellProcedureExecution,
-      { readonly procedure: "featherFallMitigation" }
+      { readonly procedure: "fallingCreatureMitigationReaction" }
     >
   >,
   frame: BattleInterruptCheckpointInput,
@@ -291,7 +292,7 @@ export function featherFallReactionSpellMatchesTrigger(
     frame.trigger === "creatureFalls" &&
     frame.reactionSpellTargetFacts.some(
       (fact) =>
-        fact.kind === "featherFallTriggerSelfOrVisibleCreatureWithinRange" &&
+        fact.kind === "fallingCreatureMitigationTriggerWithinRange" &&
         fact.reactorId === invocation.activeEffect.sourceCombatantId &&
         fact.fallingCreatureId === frame.fallingCreatureId &&
         fact.sourceProcedureRef === invocation.sourceProcedureRef &&
@@ -309,7 +310,7 @@ function featherFallTriggerReactors(
   return [
     ...new Set(
       frame.reactionSpellTargetFacts.flatMap((fact): readonly CombatantId[] =>
-        fact.kind === "featherFallTriggerSelfOrVisibleCreatureWithinRange" &&
+        fact.kind === "fallingCreatureMitigationTriggerWithinRange" &&
         fact.fallingCreatureId === frame.fallingCreatureId
           ? [fact.reactorId]
           : [],
