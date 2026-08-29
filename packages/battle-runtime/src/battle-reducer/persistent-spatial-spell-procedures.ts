@@ -926,20 +926,6 @@ type PersistentAreaSaveDamageSubject = Extract<
   }
 >;
 
-type StationaryPersistentAreaSaveDamageSubject = Extract<
-  PersistentAreaSaveDamageSubject,
-  {
-    readonly areaMembershipTrigger: BattleStationaryPersistentAreaSaveDamageMembershipTrigger;
-  }
->;
-
-type TranslatingPersistentAreaSaveDamageSubject = Extract<
-  PersistentAreaSaveDamageSubject,
-  {
-    readonly areaMembershipTrigger: BattleTranslatingPersistentAreaSaveDamageMembershipTrigger;
-  }
->;
-
 function persistentAreaSaveDamageLifecycleFor(
   state: BattleState,
   subject: PersistentAreaSaveDamageSubject,
@@ -970,34 +956,56 @@ function resolvePersistentAreaSaveDamageCommand(
     input.state,
     input.subject,
   );
-  if (lifecycle === undefined) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Persistent-area save damage is no longer available.",
-    );
-  }
-  if (lifecycle === "stationary") {
-    /* The active effect lookup immediately above proves that this membership
-       fact belongs to the stationary lifecycle represented by this subject. */
-    return resolveStationaryPersistentAreaAreaSaveDamage({
+  const trigger = input.subject.areaMembershipTrigger;
+  const staleSubject = (message: string): BattleResolutionResult =>
+    invalidResult(input.state, "staleSubject", message);
+  const stationary = (
+    areaMembershipTrigger: BattleStationaryPersistentAreaSaveDamageMembershipTrigger,
+  ): BattleResolutionResult =>
+    resolveStationaryPersistentAreaAreaSaveDamage({
       ...input,
-      subject: input.subject as StationaryPersistentAreaSaveDamageSubject,
+      subject: { ...input.subject, areaMembershipTrigger },
     });
-  }
-  if (input.subject.areaMembershipTrigger.kind === "areaMovesIntoSpace") {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Source-turn translating area movement saves resolve only through the source's start-turn boundary.",
-    );
-  }
-  /* The active effect lookup immediately above proves that this membership
-     fact belongs to the source-turn translating lifecycle. */
-  return resolveTranslatingPersistentAreaAreaSaveDamage({
-    ...input,
-    subject: input.subject as TranslatingPersistentAreaSaveDamageSubject,
-  });
+  const translating = (
+    areaMembershipTrigger: BattleTranslatingPersistentAreaSaveDamageMembershipTrigger,
+  ): BattleResolutionResult =>
+    resolveTranslatingPersistentAreaAreaSaveDamage({
+      ...input,
+      subject: { ...input.subject, areaMembershipTrigger },
+    });
+
+  return Match.value(lifecycle).pipe(
+    Match.when(undefined, () =>
+      staleSubject("Persistent-area save damage is no longer available."),
+    ),
+    Match.when("stationary", () =>
+      Match.value(trigger).pipe(
+        Match.when({ kind: "appearsInArea" }, stationary),
+        Match.when({ kind: "firstEntryOnTurn" }, stationary),
+        Match.when({ kind: "turnEndInArea" }, stationary),
+        Match.when({ kind: "areaMovesIntoSpace" }, () =>
+          staleSubject(
+            "Stationary persistent-area save damage cannot replay an area-movement occurrence.",
+          ),
+        ),
+        Match.exhaustive,
+      ),
+    ),
+    Match.when("sourceTurnTranslation", () =>
+      Match.value(trigger).pipe(
+        Match.when({ kind: "appearsInArea" }, translating),
+        Match.when({ kind: "firstEntryOnTurn" }, translating),
+        Match.when({ kind: "turnEndInArea" }, translating),
+        Match.when({ kind: "areaMovesIntoSpace" }, () =>
+          staleSubject(
+            "Source-turn translating area movement saves resolve only through the source's start-turn boundary.",
+          ),
+        ),
+        Match.exhaustive,
+      ),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function resolvePersistentAreaSaveConditionEscapeRestrainedNoLongerInAreaCommand(

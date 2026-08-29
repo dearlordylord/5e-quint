@@ -232,6 +232,41 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
     );
   });
 
+  test("rejects an area-movement occurrence replay against a stationary effect", () => {
+    const { targetTurn } = castInsectPlague();
+    const effect = requireCombatant(
+      targetTurn,
+      spellCasterId,
+    ).activeEffects.find(
+      (candidate) => candidate.kind === "persistentAreaSaveDamage",
+    );
+    if (effect?.kind !== "persistentAreaSaveDamage") {
+      throw new Error("Expected active stationary area hazard.");
+    }
+
+    expect(
+      resolveBattleSubject({
+        state: targetTurn,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: spellTargetId,
+          command: "persistentAreaSaveDamageSave",
+          areaMembershipTrigger: {
+            kind: "areaMovesIntoSpace",
+            areaId: insectPlagueAreaId,
+            effectRef: effect.effectRef,
+          },
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Stationary persistent-area save damage cannot replay an area-movement occurrence.",
+    });
+  });
+
   test("cast projects its obscured difficult-terrain hazard and rejects replay after slot spend", () => {
     const { act, cast, session, targetTurn } = castInsectPlague();
 
@@ -411,7 +446,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Insect Plague save target is no longer available.",
+      message: "stationary persistent area save target is no longer available.",
     });
     expect(persistentAreaSaveDamageSavedThisTurn(stateWithoutTarget)).toEqual(
       [],
@@ -465,7 +500,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
       tag: "invalid",
       reason: "staleSubject",
       message:
-        "Insect Plague save was already resolved for this target this turn.",
+        "stationary persistent area save was already resolved for this target this turn.",
     });
     expect(persistentAreaSaveDamageSavedThisTurn(appeared.state)).toEqual([
       spellTargetId,
@@ -506,7 +541,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Insect Plague save was already resolved for this target this turn.",
+        "stationary persistent area save was already resolved for this target this turn.",
     });
   });
 
@@ -543,7 +578,8 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Insect Plague appearance save is outside its cast occurrence.",
+      message:
+        "stationary persistent area appearance save is outside its cast occurrence.",
     });
     expect(persistentAreaSaveDamageSavedThisTurn(targetTurn.state)).toEqual([]);
   });
@@ -577,7 +613,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Insect Plague save is no longer available.",
+      message: "Persistent-area save damage is no longer available.",
     });
   });
 

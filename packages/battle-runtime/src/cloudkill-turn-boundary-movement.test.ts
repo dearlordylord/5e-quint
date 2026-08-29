@@ -4122,7 +4122,7 @@ describe("Cloudkill source-turn movement", () => {
       tag: "invalid",
       reason: "staleSubject",
       message:
-        "Cloudkill movement saves resolve only through the source's start-turn boundary.",
+        "Source-turn translating area movement saves resolve only through the source's start-turn boundary.",
     });
   });
 

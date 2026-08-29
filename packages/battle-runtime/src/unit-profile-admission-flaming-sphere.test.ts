@@ -237,10 +237,28 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       fills: [failedSave],
     });
     const damage = requireResultHole(needsDamage, "rolledDice");
+    const damageFill = damageRollFillWithGroups(damage, [[3, 4]]);
+    const needsSourceTurnTranslation = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: endWithinFiveFeet.subject,
+      fills: [failedSave, damageFill],
+    });
+    const sourceTurnTranslation = requireResultHole(
+      needsSourceTurnTranslation,
+      "persistentAreaSourceTurnTranslation",
+    );
     const resolved = resolveBattleSubject({
       state: targetTurn.state,
       subject: endWithinFiveFeet.subject,
-      fills: [failedSave, damageRollFillWithGroups(damage, [[3, 4]])],
+      fills: [
+        failedSave,
+        damageFill,
+        {
+          kind: "persistentAreaSourceTurnTranslation",
+          holeId: sourceTurnTranslation.holeId,
+          value: { affectedCombatantIdsInResolutionOrder: [] },
+        },
+      ],
     });
 
     expect(resolved).toMatchObject({
@@ -249,7 +267,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     });
     if (resolved.tag !== "resolved") {
       throw new Error(
-        "Expected Flaming Sphere end-within-5-feet damage to resolve.",
+        "Expected end-within-5-feet damage to resolve after filling the complete frontier.",
       );
     }
     expect(requireCombatant(resolved.state, spellTargetId).hp).toBe(Hp(13));
