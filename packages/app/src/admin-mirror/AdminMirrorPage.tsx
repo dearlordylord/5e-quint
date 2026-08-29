@@ -1,16 +1,19 @@
 import {
   type AdminMirrorPresentationTimelineEntry,
-  type AdminMirrorSessionListResponse,
-  AdminMirrorSessionListResponseSchema,
-  type AdminMirrorSessionState,
-  AdminMirrorSessionStateSchema
+  type AdminMirrorSessionState
 } from "@dnd/mcp/experimental-admin-mirror-contract"
-import { Result, Schema } from "effect"
+import { Match, Result } from "effect"
 import { parseAsString, useQueryState } from "nuqs"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
 import { PageShell } from "#/components/PageShell.tsx"
 import { BTN_SM } from "#/components/styles.ts"
+
+import {
+  decodeMirrorSessionEvent,
+  loadMirrorSessions,
+  type MirrorSessionLoadState
+} from "./admin-mirror-session-boundary.ts"
 
 const DEFAULT_MIRROR_PORT = 8787
 const EVENT_JSON_INDENT_SPACES = 2
@@ -19,6 +22,7 @@ const SELECTED_SESSION_QUERY_PARAM = "session"
 export function AdminMirrorPage() {
   const mirrorUrl = useMemo(defaultMirrorUrl, [])
   const [sessions, setSessions] = useState<ReadonlyArray<AdminMirrorSessionState>>([])
+  const [sessionLoadState, setSessionLoadState] = useState<MirrorSessionLoadState>({ tag: "loading" })
   const [selectedSessionId, setSelectedSessionId] = useQueryState(
     SELECTED_SESSION_QUERY_PARAM,
     parseAsString.withOptions({ history: "replace" })
@@ -26,23 +30,16 @@ export function AdminMirrorPage() {
   const [connection, setConnection] = useState<"connecting" | "offline" | "streaming">("connecting")
 
   const refresh = useCallback(async () => {
-    try {
-      const response = await fetch(`${mirrorUrl}/admin-projections`)
-      if (!response.ok) {
-        setConnection("offline")
-        return
-      }
-      const decoded = decodeMirrorSessionResponse(await response.json())
-      if (Result.isFailure(decoded)) {
-        setConnection("offline")
-        return
-      }
-      const payload = decoded.success
-      setSessions(payload.sessions)
-      setConnection((current) => (current === "streaming" ? current : "offline"))
-    } catch {
+    setSessionLoadState({ tag: "loading" })
+    const loaded = await loadMirrorSessions(mirrorUrl)
+    if (Result.isFailure(loaded)) {
       setConnection("offline")
+      setSessionLoadState(loaded.failure)
+      return
     }
+    setSessions(loaded.success.sessions)
+    setSessionLoadState({ tag: "loaded" })
+    setConnection((current) => (current === "streaming" ? current : "offline"))
   }, [mirrorUrl])
 
   useEffect(() => {
@@ -62,6 +59,7 @@ export function AdminMirrorPage() {
       }
       const session = decoded.success
       setSessions((current) => upsertSession(current, session))
+      setSessionLoadState({ tag: "loaded" })
     }
     source.addEventListener("open", handleOpen)
     source.addEventListener("error", handleError)
@@ -98,7 +96,7 @@ export function AdminMirrorPage() {
         <aside className="rounded-lg border border-gray-800 bg-gray-900/80 p-3">
           <h2 className="mb-3 text-sm font-semibold text-gray-200">Sessions</h2>
           {sessions.length === 0 ? (
-            <p className="text-sm text-gray-500">No mirror sessions.</p>
+            <p className="text-sm text-gray-500">{emptyMirrorSessionCollectionMessage(sessionLoadState)}</p>
           ) : (
             <ol className="space-y-2">
               {sessions.map((session) => {
@@ -132,7 +130,7 @@ export function AdminMirrorPage() {
         <section className="space-y-4">
           {selectedSession === null ? (
             <div className="rounded-lg border border-gray-800 bg-gray-900/80 p-6 text-center text-gray-500">
-              {selectedSessionId === null ? "No session selected." : `Session ${selectedSessionId} is not retained.`}
+              {missingMirrorSessionMessage(sessionLoadState, selectedSessionId)}
             </div>
           ) : (
             <SessionDetail session={selectedSession} />
@@ -140,6 +138,26 @@ export function AdminMirrorPage() {
         </section>
       </main>
     </PageShell>
+  )
+}
+
+function emptyMirrorSessionCollectionMessage(state: MirrorSessionLoadState): string {
+  return mirrorSessionLoadMessage(state, () => "No mirror sessions.")
+}
+
+function missingMirrorSessionMessage(state: MirrorSessionLoadState, selectedSessionId: string | null): string {
+  return mirrorSessionLoadMessage(state, () =>
+    selectedSessionId === null ? "No session selected." : `Session ${selectedSessionId} is not retained.`
+  )
+}
+
+function mirrorSessionLoadMessage(state: MirrorSessionLoadState, loadedMessage: () => string): string {
+  return Match.value(state).pipe(
+    Match.when({ tag: "loading" }, () => "Loading mirror sessions."),
+    Match.when({ tag: "loaded" }, loadedMessage),
+    Match.when({ tag: "invalidResponse" }, () => "Mirror session response is invalid."),
+    Match.when({ tag: "unavailable" }, () => "Mirror sessions are unavailable."),
+    Match.exhaustive
   )
 }
 
@@ -380,22 +398,6 @@ export function selectMirrorSession(
     return sessions.find((session) => session.envelope.mirrorSessionId === selectedSessionId) ?? null
   }
   return sessions[0] ?? null
-}
-
-export function decodeMirrorSessionResponse(value: unknown): Result.Result<AdminMirrorSessionListResponse, string> {
-  const decoded = Schema.decodeUnknownResult(AdminMirrorSessionListResponseSchema)(value)
-  return Result.mapError(decoded, (error) => error.message)
-}
-
-export function decodeMirrorSessionEvent(value: string): Result.Result<AdminMirrorSessionState, string> {
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(value)
-  } catch {
-    return Result.fail("Expected JSON mirror session event.")
-  }
-  const decoded = Schema.decodeUnknownResult(AdminMirrorSessionStateSchema)(parsed)
-  return Result.mapError(decoded, (error) => error.message)
 }
 
 function defaultMirrorUrl(): string {

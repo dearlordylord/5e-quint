@@ -11,13 +11,8 @@ import { Result, Schema } from "effect"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
 import { WIZARD_BATTLE_DEMO_STEPS } from "../battle-scene/wizard-battle-demo.ts"
-import {
-  AdminMirrorPage,
-  decodeMirrorSessionEvent,
-  decodeMirrorSessionResponse,
-  presentationTimelineTitle,
-  selectMirrorSession
-} from "./AdminMirrorPage.tsx"
+import { decodeMirrorSessionEvent, decodeMirrorSessionResponse } from "./admin-mirror-session-boundary.ts"
+import { AdminMirrorPage, presentationTimelineTitle, selectMirrorSession } from "./AdminMirrorPage.tsx"
 
 const setSelectedSessionId = vi.fn()
 const queryState = vi.hoisted((): { value: string | null } => ({ value: null }))
@@ -238,6 +233,16 @@ describe("AdminMirrorPage mirror boundary", () => {
     fetchMock.mockRejectedValueOnce(new Error("unavailable"))
     render(<AdminMirrorPage />)
     expect(await screen.findByText("offline")).toBeTruthy()
+    expect(await screen.findAllByText("Mirror sessions are unavailable.")).toHaveLength(2)
+    expect(screen.queryByText("No mirror sessions.")).toBeNull()
+  })
+
+  test("does not present a pending mirror load as an empty collection", () => {
+    fetchMock.mockReturnValue(new Promise<Response>(() => undefined))
+    render(<AdminMirrorPage />)
+
+    expect(screen.getAllByText("Loading mirror sessions.")).toHaveLength(2)
+    expect(screen.queryByText("No mirror sessions.")).toBeNull()
   })
 
   test("shows a requested session that is no longer retained", async () => {
@@ -252,11 +257,13 @@ describe("AdminMirrorPage mirror boundary", () => {
     fetchMock.mockResolvedValueOnce(new Response(null, { status: 503 }))
     render(<AdminMirrorPage />)
     expect(await screen.findByText("offline")).toBeTruthy()
+    expect(await screen.findAllByText("Mirror sessions are unavailable.")).toHaveLength(2)
 
     cleanup()
     fetchMock.mockResolvedValueOnce(jsonResponse({ sessions: "invalid" }))
     render(<AdminMirrorPage />)
     expect(await screen.findByText("offline")).toBeTruthy()
+    expect(await screen.findAllByText("Mirror session response is invalid.")).toHaveLength(2)
   })
 
   test("renders an explicitly empty retained presentation timeline", async () => {
