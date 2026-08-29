@@ -482,7 +482,7 @@ describe("turn-boundary effect lifecycle MBT", () => {
     expect(routeEvents).toEqual([
       {
         kind: "resolveBattleSubject",
-        subject: "commandEffect",
+        subject: "compelledBehaviorEffect",
         fill: "savingThrowOutcome",
         holes: ["rolledDice"],
         owner: "battleActiveEffect",

@@ -236,20 +236,20 @@ it("observes Careful Command no-effect route through public reducer entrypoints"
     { kind: "startBattle", owner: "battleActionEconomy" },
     {
       kind: "discoverBattleActs",
-      subject: "commandEffect",
+      subject: "compelledBehaviorEffect",
       holes: ["compelledBehaviorOptionChoice", "spellTargetList"],
       owner: "battleSpellSlotAndActionEconomy",
     },
     {
       kind: "resolveBattleSubject",
-      subject: "commandEffect",
+      subject: "compelledBehaviorEffect",
       fill: "compelledBehaviorOptionChoice",
       holes: ["savingThrowOutcome"],
       owner: "battleHoleFrontier",
     },
     {
       kind: "resolveBattleSubject",
-      subject: "commandEffect",
+      subject: "compelledBehaviorEffect",
       fill: "savingThrowOutcome",
       holes: [],
       owner: "battleActiveEffect",

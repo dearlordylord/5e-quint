@@ -84,7 +84,7 @@ function wizardVsWardedSkeletonBattle(): BattleRuntimeSession {
     state: baseSession.state,
     ownerId: skeletonId,
     effect: {
-      kind: "sanctuaryWard",
+      kind: "targetingSaveInterdiction",
       sourceProcedureRef: sanctuaryProcedureRef,
       sourceCombatantId: sanctuaryCasterId,
       save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
@@ -416,7 +416,7 @@ describe("battle runtime: spell damage lifecycle replay", () => {
     }
     const state = baseSession.state;
     const sanctuary = warded.activeEffects.find(
-      (effect) => effect.kind === "sanctuaryWard",
+      (effect) => effect.kind === "targetingSaveInterdiction",
     );
     if (sanctuary === undefined) {
       throw new Error("Expected the allocated Sanctuary ward.");
@@ -548,7 +548,7 @@ describe("battle runtime: spell damage lifecycle replay", () => {
     expect(released.state.combatants.get(wizardId)?.concentration).toBeNull();
     expect(released.state.readiedSpells.has(wizardId)).toBe(false);
     const sanctuary = warded.activeEffects.find(
-      (effect) => effect.kind === "sanctuaryWard",
+      (effect) => effect.kind === "targetingSaveInterdiction",
     );
     if (sanctuary === undefined) {
       throw new Error("Expected the allocated Sanctuary ward.");

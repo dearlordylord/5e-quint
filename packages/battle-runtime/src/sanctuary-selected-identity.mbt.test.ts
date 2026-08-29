@@ -173,7 +173,7 @@ type ResolvedBattleResult = Extract<
 >;
 type SanctuaryWardEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "sanctuaryWard" }
+  { readonly kind: "targetingSaveInterdiction" }
 >;
 
 const sanctuaryUnitId = "sanctuary";
@@ -1675,6 +1675,7 @@ function sanctuaryWard(
   combatantIdValue: CombatantId,
 ): SanctuaryWardEffect | undefined {
   return combatant(state, combatantIdValue).activeEffects.find(
-    (effect): effect is SanctuaryWardEffect => effect.kind === "sanctuaryWard",
+    (effect): effect is SanctuaryWardEffect =>
+      effect.kind === "targetingSaveInterdiction",
   );
 }

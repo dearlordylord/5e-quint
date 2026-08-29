@@ -827,7 +827,7 @@ describe("battle reducer route connector MBT", () => {
     });
     expect(state.route.at(-1)).toEqual({
       kind: "resolveBattleSubject",
-      subject: "commandEffect",
+      subject: "compelledBehaviorEffect",
       fill: "movement",
       holes: ["interruptDecision"],
       owner: "battleInterruptStack",

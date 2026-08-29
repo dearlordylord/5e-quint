@@ -2038,7 +2038,7 @@ function withSanctuaryWard(
   const ward = allocateBattleEffectOccurrenceForCreature({
     owner: warded,
     effect: {
-      kind: "sanctuaryWard",
+      kind: "targetingSaveInterdiction",
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String("sanctuary"),
       ),

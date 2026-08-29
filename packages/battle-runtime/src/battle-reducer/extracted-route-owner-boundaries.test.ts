@@ -248,7 +248,7 @@ describe("extracted route owner boundaries", () => {
     const act = findAct(session, magicSubject("compelledNextTurnBehavior"));
     expect(commandRouteForDiscoveredAct(session.state, act)).toEqual([
       expect.objectContaining({
-        subject: "commandEffect",
+        subject: "compelledBehaviorEffect",
         owner: "battleSpellSlotAndActionEconomy",
       }),
     ]);
@@ -269,7 +269,7 @@ describe("extracted route owner boundaries", () => {
       ),
     ).toEqual(
       expect.objectContaining({
-        subject: "commandEffect",
+        subject: "compelledBehaviorEffect",
         fill: "spellTargetList",
         holes: ["compelledBehaviorOptionChoice"],
         owner: "battleHoleFrontier",

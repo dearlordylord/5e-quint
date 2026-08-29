@@ -3830,7 +3830,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
           spellDamageReductionRolls: [],
           concentrationSavingThrows: [],
           damageDispositions: [],
-          saveGatedConditionDamageRepeatSaves: [],
+          saveGatedConditionWithRepeatDamageRepeatSaves: [],
         },
       },
     });
@@ -3907,7 +3907,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         spellDamageReductionRolls: [],
         concentrationSavingThrows: [],
         damageDispositions: [],
-        saveGatedConditionDamageRepeatSaves: [],
+        saveGatedConditionWithRepeatDamageRepeatSaves: [],
       };
 
       const needsReduction = releaseGlyphExplosiveRune({
@@ -4028,7 +4028,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         spellDamageReductionRolls: [],
         concentrationSavingThrows: [],
         damageDispositions: [],
-        saveGatedConditionDamageRepeatSaves: [],
+        saveGatedConditionWithRepeatDamageRepeatSaves: [],
       },
     };
 
@@ -4077,8 +4077,9 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       concentrationSavingThrows:
         validWitness.areaMembership.concentrationSavingThrows,
       damageDispositions: validWitness.areaMembership.damageDispositions,
-      saveGatedConditionDamageRepeatSaves:
-        validWitness.areaMembership.saveGatedConditionDamageRepeatSaves,
+      saveGatedConditionWithRepeatDamageRepeatSaves:
+        validWitness.areaMembership
+          .saveGatedConditionWithRepeatDamageRepeatSaves,
     };
     const missingDamageRoll = releaseGlyphExplosiveRune({
       state,
@@ -4379,7 +4380,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       spellDamageReductionRolls: [],
       concentrationSavingThrows: [],
       damageDispositions: [],
-      saveGatedConditionDamageRepeatSaves: [],
+      saveGatedConditionWithRepeatDamageRepeatSaves: [],
     };
     const pending = releaseGlyphExplosiveRune({
       state: baseState,
@@ -4505,7 +4506,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       spellDamageReductionRolls: [],
       concentrationSavingThrows: [],
       damageDispositions: [],
-      saveGatedConditionDamageRepeatSaves: [],
+      saveGatedConditionWithRepeatDamageRepeatSaves: [],
     };
     const pending = releaseGlyphExplosiveRune({
       state: baseState,
@@ -4637,7 +4638,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       spellDamageReductionRolls: [],
       concentrationSavingThrows: [],
       damageDispositions: [],
-      saveGatedConditionDamageRepeatSaves: [],
+      saveGatedConditionWithRepeatDamageRepeatSaves: [],
     };
     const pending = releaseGlyphExplosiveRune({
       state: baseState,
@@ -4679,7 +4680,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         coveredAreaId: glyphCoveredAreaId,
         areaMembership: {
           ...areaMembership,
-          saveGatedConditionDamageRepeatSaves: [repeatSaveFill],
+          saveGatedConditionWithRepeatDamageRepeatSaves: [repeatSaveFill],
         },
       },
     });
@@ -4706,7 +4707,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
           coveredAreaId: glyphCoveredAreaId,
           areaMembership: {
             ...areaMembership,
-            saveGatedConditionDamageRepeatSaves: [
+            saveGatedConditionWithRepeatDamageRepeatSaves: [
               repeatSaveFill,
               repeatSaveFill,
             ],
@@ -5859,7 +5860,7 @@ function glyphExplosiveRuneReleaseWitness(input: {
       spellDamageReductionRolls: [],
       concentrationSavingThrows: [],
       damageDispositions: [],
-      saveGatedConditionDamageRepeatSaves: [],
+      saveGatedConditionWithRepeatDamageRepeatSaves: [],
     },
   };
 }
