@@ -68,7 +68,7 @@ function battleCreatureInitFromStatBlock(
     "ammunitionStocks" | "conditions"
   >,
 ) {
-  return expectRight(
+  return expectSuccess(
     parseBattleCreatureInitFromStatBlock({
       ...input,
       ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
@@ -511,7 +511,7 @@ function createSheetDerivedBattleActsDriver(input: {
         const currentSession = requireSession(session);
         const state = requireAcceptedState(acceptedState);
         const character = requireCharacterCombatant(state);
-        const settled = expectRight(
+        const settled = expectSuccess(
           settleCharacterSheetFromBattle({
             state,
             context: currentSession.battle.context,
@@ -610,7 +610,7 @@ function startSheetDerivedSession(
   input?: { readonly levelOneSlotsExpended?: number },
 ): SheetDerivedSession {
   const levelOneSlotsExpended = input?.levelOneSlotsExpended ?? 0;
-  const sheet = expectRight(
+  const sheet = expectSuccess(
     createFreshCharacterSheetCore({
       characterId: characterSheetId("character:sheet-derived-caster"),
       build,
@@ -630,7 +630,7 @@ function startSheetDerivedSession(
       unitLibrary,
     }),
   );
-  const characterInit = expectRight(
+  const characterInit = expectSuccess(
     characterSheetBattleInit({
       sheet,
       unitLibrary,
@@ -642,7 +642,7 @@ function startSheetDerivedSession(
     }),
   );
   const targetInit = battleCreatureInitFromRidingHorse();
-  const battle = expectRight(
+  const battle = expectSuccess(
     startBattle({
       battleId: battleId("battle:sheet-derived-acts"),
       combatants: [characterInit, targetInit],
@@ -668,7 +668,7 @@ function sheetDerivedBuild(input?: {
   readonly wieldedWeapon?: boolean;
   readonly preparedSpell?: boolean;
 }): CharacterBuild {
-  const daggerUnitId = expectRight(
+  const daggerUnitId = expectSuccess(
     characterEquipmentItemUnitId(authoredUnitId("weapon_dagger")),
   );
   const daggerItemId = characterEquipmentItemId({
@@ -687,7 +687,7 @@ function sheetDerivedBuild(input?: {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: expectRight(
+    abilityScores: expectSuccess(
       abilityScoreAssignment({
         str: 13,
         dex: 14,
@@ -933,9 +933,11 @@ function damageRollFill(
   };
 }
 
-function expectRight<A, E>(value: Result.Result<A, E>): A {
+function expectSuccess<A, E>(value: Result.Result<A, E>): A {
   if (Result.isFailure(value)) {
-    throw new Error(`Expected Right, got ${JSON.stringify(value.failure)}.`);
+    throw new Error(
+      `Expected Result success, got ${JSON.stringify(value.failure)}.`,
+    );
   }
   return value.success;
 }
