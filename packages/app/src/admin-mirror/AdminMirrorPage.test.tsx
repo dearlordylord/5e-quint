@@ -7,7 +7,7 @@ import {
   AdminMirrorSessionStateSchema
 } from "@dnd/mcp/experimental-admin-mirror-contract"
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
-import { Either, Schema } from "effect"
+import { Result, Schema } from "effect"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
 import { WIZARD_BATTLE_DEMO_STEPS } from "../battle-scene/wizard-battle-demo.ts"
@@ -62,7 +62,7 @@ describe("AdminMirrorPage mirror boundary", () => {
       sessions: [rawSessionState({ sequence: 0 })]
     })
 
-    expect(Either.isRight(decoded)).toBe(true)
+    expect(Result.isSuccess(decoded)).toBe(true)
   })
 
   test("rejects invalid mirror protocol values", () => {
@@ -70,25 +70,25 @@ describe("AdminMirrorPage mirror boundary", () => {
       sessions: [rawSessionState({ sequence: -1 })]
     })
 
-    expect(Either.isLeft(decoded)).toBe(true)
+    expect(Result.isFailure(decoded)).toBe(true)
   })
 
   test("rejects malformed mirror event JSON", () => {
     const decoded = decodeMirrorSessionEvent("{")
 
-    expect(Either.isLeft(decoded)).toBe(true)
+    expect(Result.isFailure(decoded)).toBe(true)
   })
 
   test("rejects valid JSON with an invalid mirror event shape", () => {
     const decoded = decodeMirrorSessionEvent(JSON.stringify({}))
 
-    expect(Either.isLeft(decoded)).toBe(true)
+    expect(Result.isFailure(decoded)).toBe(true)
   })
 
   test("decodes mirror session events", () => {
     const decoded = decodeMirrorSessionEvent(JSON.stringify(rawSessionState({ sequence: 2 })))
 
-    expect(Either.isRight(decoded)).toBe(true)
+    expect(Result.isSuccess(decoded)).toBe(true)
   })
 
   test("does not replace a requested missing session with the newest session", () => {
@@ -329,7 +329,7 @@ function rawSessionState(input: { readonly mirrorSessionId?: string; readonly se
 
 function rawDetailedSessionState() {
   const base = rawSessionState({ sequence: 1 })
-  const battle = Either.getOrThrow(battlePresentedCheckpointFrontierEnvelope(WIZARD_BATTLE_DEMO_STEPS[0].session))
+  const battle = Result.getOrThrow(battlePresentedCheckpointFrontierEnvelope(WIZARD_BATTLE_DEMO_STEPS[0].session))
   const result = {
     ...base,
     envelope: {

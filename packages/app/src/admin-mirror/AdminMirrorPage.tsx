@@ -5,7 +5,7 @@ import {
   type AdminMirrorSessionState,
   AdminMirrorSessionStateSchema
 } from "@dnd/mcp/experimental-admin-mirror-contract"
-import { Either, Schema } from "effect"
+import { Result, Schema } from "effect"
 import { parseAsString, useQueryState } from "nuqs"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
@@ -28,10 +28,16 @@ export function AdminMirrorPage() {
   const refresh = useCallback(async () => {
     try {
       const response = await fetch(`${mirrorUrl}/admin-projections`)
-      if (!response.ok) throw new Error(`Mirror returned ${response.status}`)
+      if (!response.ok) {
+        setConnection("offline")
+        return
+      }
       const decoded = decodeMirrorSessionResponse(await response.json())
-      if (Either.isLeft(decoded)) throw new Error(decoded.left)
-      const payload = decoded.right
+      if (Result.isFailure(decoded)) {
+        setConnection("offline")
+        return
+      }
+      const payload = decoded.success
       setSessions(payload.sessions)
       setConnection((current) => (current === "streaming" ? current : "offline"))
     } catch {
@@ -50,11 +56,11 @@ export function AdminMirrorPage() {
     const handleError = () => setConnection("offline")
     const handleMessage = (event: MessageEvent<string>) => {
       const decoded = decodeMirrorSessionEvent(event.data)
-      if (Either.isLeft(decoded)) {
+      if (Result.isFailure(decoded)) {
         setConnection("offline")
         return
       }
-      const session = decoded.right
+      const session = decoded.success
       setSessions((current) => upsertSession(current, session))
     }
     source.addEventListener("open", handleOpen)
@@ -376,20 +382,20 @@ export function selectMirrorSession(
   return sessions[0] ?? null
 }
 
-export function decodeMirrorSessionResponse(value: unknown): Either.Either<AdminMirrorSessionListResponse, string> {
-  const decoded = Schema.decodeUnknownEither(AdminMirrorSessionListResponseSchema)(value)
-  return Either.mapLeft(decoded, (error) => error.message)
+export function decodeMirrorSessionResponse(value: unknown): Result.Result<AdminMirrorSessionListResponse, string> {
+  const decoded = Schema.decodeUnknownResult(AdminMirrorSessionListResponseSchema)(value)
+  return Result.mapError(decoded, (error) => error.message)
 }
 
-export function decodeMirrorSessionEvent(value: string): Either.Either<AdminMirrorSessionState, string> {
+export function decodeMirrorSessionEvent(value: string): Result.Result<AdminMirrorSessionState, string> {
   let parsed: unknown
   try {
     parsed = JSON.parse(value)
   } catch {
-    return Either.left("Expected JSON mirror session event.")
+    return Result.fail("Expected JSON mirror session event.")
   }
-  const decoded = Schema.decodeUnknownEither(AdminMirrorSessionStateSchema)(parsed)
-  return Either.mapLeft(decoded, (error) => error.message)
+  const decoded = Schema.decodeUnknownResult(AdminMirrorSessionStateSchema)(parsed)
+  return Result.mapError(decoded, (error) => error.message)
 }
 
 function defaultMirrorUrl(): string {

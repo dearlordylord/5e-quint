@@ -24,7 +24,7 @@ import { attackBonus, Hp, movementFeet, proficiencyBonus } from "@dnd/shared/typ
 import { abilityModifier, defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra"
 import type { SpellRecord } from "@dnd/surface/surface/types"
 import { buildUnitCatalog, srdUnitCollection } from "@dnd/surface/surface/unit-catalog"
-import { Either } from "effect"
+import { Result } from "effect"
 
 import {
   counterspellDecision,
@@ -1133,10 +1133,10 @@ function requireInitialSession(spellsById: Readonly<Record<string, SpellRecord>>
     )
   })
   /* v8 ignore next -- @preserve -- battle setup inputs are checked-in typed fixture records */
-  if (Either.isLeft(session)) {
-    throw new Error(`Wizard battle demo fixture is invalid: ${battleStateInitIssueMessage(session.left)}`)
+  if (Result.isFailure(session)) {
+    throw new Error(`Wizard battle demo fixture is invalid: ${battleStateInitIssueMessage(session.failure)}`)
   }
-  return session.right
+  return session.success
 }
 
 function wizardCreature(input: {
