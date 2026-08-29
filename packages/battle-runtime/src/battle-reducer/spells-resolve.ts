@@ -310,7 +310,6 @@ const NATIVE_BONUS_ACTION_SPELL_PROCEDURES = [
   "movableLightManifestation",
   "objectContactDamageRepeat",
   "spatialMeleeSpellAttackProxy",
-  "spatialMeleeSpellAttackProxy",
   "spellCreatedHeldObject",
   "spellCreatedHeldObjectReEvoke",
   "scalarBuff",
@@ -1673,7 +1672,6 @@ function spellAttackRollHoleWithSeekingOption(
         | "heldLightHurl"
         | "spellCreatedHeldObjectAttack"
         | "spatialMeleeSpellAttackProxy"
-        | "spatialMeleeSpellAttackProxy"
         | "spellAttackDamage";
     }
   >,
@@ -1794,8 +1792,7 @@ function resolveSpellActInternal(
   const invocation = invocationAdmission.invocation;
   const replayingSpatialMeleeSpellAttackProxyAttackHit =
     input.handledInterruptTrigger === "attackHit" &&
-    (invocation.procedure === "spatialMeleeSpellAttackProxy" ||
-      invocation.procedure === "spatialMeleeSpellAttackProxy");
+    invocation.procedure === "spatialMeleeSpellAttackProxy";
   const spiritualWeaponCommitAlreadyApplied =
     spiritualWeaponResolutionCommitAlreadyApplied({
       state: input.state,
@@ -1842,6 +1839,7 @@ function resolveSpellActInternal(
   }
   if (
     invocation.procedure === "spatialMeleeSpellAttackProxy" &&
+    invocation.operation === "repositionAndAttack" &&
     ongoingSpellEffectSuppressedByAntimagicField(
       input.state,
       magicSuppressionOngoingSpellEffectRefForActiveEffect(
@@ -1892,7 +1890,6 @@ function resolveSpellActInternal(
       invocation.procedure === "persistentAreaSaveConditionEscape" ||
       invocation.procedure === "persistentAreaSaveComposite" ||
       invocation.procedure === "directionalPersistentArea" ||
-      invocation.procedure === "persistentAreaSaveDamage" ||
       invocation.procedure === "persistentAreaSaveDamage" ||
       invocation.procedure === "objectContactDamage" ||
       invocation.procedure === "objectContactDamageRepeat" ||
@@ -2131,8 +2128,7 @@ function resolveSpellActInternal(
       ? invocationAdmission.applications
       : options.metamagicApplications;
   if (
-    (invocationForResolution.procedure === "spatialMeleeSpellAttackProxy" ||
-      invocationForResolution.procedure === "spatialMeleeSpellAttackProxy") &&
+    invocationForResolution.procedure === "spatialMeleeSpellAttackProxy" &&
     fillSet.spatialMeleeSpellAttackProxyPosition === undefined
   ) {
     return needsHolesResult(castingState, input.subject, [
@@ -2140,14 +2136,12 @@ function resolveSpellActInternal(
     ]);
   }
   const spatialMeleeSpellAttackProxyPosition =
-    invocationForResolution.procedure === "spatialMeleeSpellAttackProxy" ||
     invocationForResolution.procedure === "spatialMeleeSpellAttackProxy"
       ? fillSet.spatialMeleeSpellAttackProxyPosition
       : undefined;
   const spatialMeleeSpellAttackProxyPositionError =
     spatialMeleeSpellAttackProxyPosition === undefined ||
-    (invocationForResolution.procedure !== "spatialMeleeSpellAttackProxy" &&
-      invocationForResolution.procedure !== "spatialMeleeSpellAttackProxy")
+    invocationForResolution.procedure !== "spatialMeleeSpellAttackProxy"
       ? null
       : spatialMeleeSpellAttackProxyPositionInvalidReason(
           spatialMeleeSpellAttackProxyPosition,
@@ -3374,7 +3368,10 @@ function spiritualWeaponCastCommitAlreadyApplied(input: {
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "spatialMeleeSpellAttackProxy" }
+    {
+      readonly procedure: "spatialMeleeSpellAttackProxy";
+      readonly operation: "createAndAttack";
+    }
   >;
   readonly forcePositionId: Extract<
     BattleFill,
@@ -3400,7 +3397,10 @@ function spiritualWeaponResolutionCommitAlreadyApplied(input: {
   readonly invocation: BattleExecutableSpellInvocation;
   readonly fills: readonly BattleFill[];
 }): boolean {
-  if (input.invocation.procedure !== "spatialMeleeSpellAttackProxy") {
+  if (
+    input.invocation.procedure !== "spatialMeleeSpellAttackProxy" ||
+    input.invocation.operation !== "createAndAttack"
+  ) {
     return false;
   }
   const fillSet = spellFillSet(
@@ -3429,7 +3429,10 @@ function spiritualWeaponRepeatIsLaterTurn(input: {
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "spatialMeleeSpellAttackProxy" }
+    {
+      readonly procedure: "spatialMeleeSpellAttackProxy";
+      readonly operation: "repositionAndAttack";
+    }
   >;
 }): boolean {
   return (
@@ -3443,7 +3446,10 @@ function spiritualWeaponRepeatTargetingInvalidReason(
   invocation: BattleExecutableSpellInvocation,
   targetId: CombatantId,
 ): string | null {
-  if (invocation.procedure !== "spatialMeleeSpellAttackProxy") {
+  if (
+    invocation.procedure !== "spatialMeleeSpellAttackProxy" ||
+    invocation.operation !== "repositionAndAttack"
+  ) {
     return null;
   }
   const repeatTargeting = invocation.activeEffect.repeatTargeting;
@@ -3467,7 +3473,10 @@ function spendSpellActResolutionResources(input: {
     { readonly kind: "spatialMeleeSpellAttackProxyPosition" }
   >["value"];
 }): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
-  if (input.invocation.procedure === "spatialMeleeSpellAttackProxy") {
+  if (
+    input.invocation.procedure === "spatialMeleeSpellAttackProxy" &&
+    input.invocation.operation === "createAndAttack"
+  ) {
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
       input.spatialMeleeSpellAttackProxyPosition === undefined ||
@@ -3519,7 +3528,10 @@ function spendSpellActResolutionResources(input: {
       snapshot: snapshotBattle(nextState),
     };
   }
-  if (input.invocation.procedure === "spatialMeleeSpellAttackProxy") {
+  if (
+    input.invocation.procedure === "spatialMeleeSpellAttackProxy" &&
+    input.invocation.operation === "repositionAndAttack"
+  ) {
     if (
       !spiritualWeaponRepeatIsLaterTurn({
         state: input.state,

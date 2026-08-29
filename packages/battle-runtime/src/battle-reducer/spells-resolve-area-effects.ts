@@ -182,31 +182,53 @@ export function resolveStoredGlyphAreaOngoingSpellRelease(input: {
     input.input.subject.procedureRef,
   );
   if (invocation.procedure === "persistentAreaSaveDamage") {
-    if (invocation.lifecycle.kind === "stationary") {
-      return resolveStationaryPersistentAreaAreaHazardSpellAct({
-        ...input,
-        invocation,
-        releaseResource,
-      });
-    }
-    if (invocation.lifecycle.kind === "sourceTurnTranslation") {
-      return resolveTranslatingPersistentAreaAreaHazardSpellAct({
-        ...input,
-        invocation,
-        releaseResource,
-      });
-    }
-    return invocation.lifecycle.actionCost === "bonusAction"
-      ? resolveRamMovablePersistentAreaSpellAct({
+    return Match.value(invocation).pipe(
+      Match.when({ lifecycle: { kind: "stationary" } }, (invocation) =>
+        resolveStationaryPersistentAreaAreaHazardSpellAct({
           ...input,
           invocation,
           releaseResource,
-        })
-      : resolveMovablePersistentAreaSpellAct({
-          ...input,
-          invocation,
-          releaseResource,
-        });
+        }),
+      ),
+      Match.when(
+        { lifecycle: { kind: "sourceTurnTranslation" } },
+        (invocation) =>
+          resolveTranslatingPersistentAreaAreaHazardSpellAct({
+            ...input,
+            invocation,
+            releaseResource,
+          }),
+      ),
+      Match.when(
+        {
+          lifecycle: {
+            kind: "casterActionReposition",
+            actionCost: "bonusAction",
+          },
+        },
+        (invocation) =>
+          resolveRamMovablePersistentAreaSpellAct({
+            ...input,
+            invocation,
+            releaseResource,
+          }),
+      ),
+      Match.when(
+        {
+          lifecycle: {
+            kind: "casterActionReposition",
+            actionCost: "magicAction",
+          },
+        },
+        (invocation) =>
+          resolveMovablePersistentAreaSpellAct({
+            ...input,
+            invocation,
+            releaseResource,
+          }),
+      ),
+      Match.exhaustive,
+    );
   }
   return Match.value(invocation).pipe(
     byProcedure("persistentAreaTrait", (invocation) =>
@@ -1113,7 +1135,7 @@ export function resolveDirectionalPersistentAreaSpellAct(input: {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !("area" in savingThrowOutcomes) ||
-    savingThrowOutcomes.area.kind !== "directionalLineArea"
+    savingThrowOutcomes.area.kind !== "directionalPersistentAreaArea"
   ) {
     return invalidResult(
       input.input.state,
@@ -1124,7 +1146,7 @@ export function resolveDirectionalPersistentAreaSpellAct(input: {
   /* v8 ignore stop -- @preserve */
   const area: Extract<
     BattleSpellAreaChoice,
-    { readonly kind: "directionalLineArea" }
+    { readonly kind: "directionalPersistentAreaArea" }
   > = savingThrowOutcomes.area;
   const failedTargetIds = failedSavingThrowTargetIds(
     savingThrowOutcomes.outcomes,
