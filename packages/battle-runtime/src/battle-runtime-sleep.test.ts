@@ -116,7 +116,7 @@ describe("battle runtime: Sleep", () => {
       conditions: expect.objectContaining({ directIncapacitated: true }),
       activeEffects: [
         expect.objectContaining({
-          kind: "sleepPendingRepeatSave",
+          kind: "stagedSaveConditionPendingRepeatSave",
           sourceProcedureRef: expect.any(String),
           sourceCombatantId: wizardId,
           save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
@@ -206,7 +206,7 @@ describe("battle runtime: Sleep", () => {
       conditions: expect.objectContaining({ directIncapacitated: true }),
       activeEffects: [
         expect.objectContaining({
-          kind: "sleepPendingRepeatSave",
+          kind: "stagedSaveConditionPendingRepeatSave",
           sourceProcedureRef: expect.any(String),
           sourceCombatantId: wizardId,
         }),
@@ -446,7 +446,7 @@ describe("battle runtime: Sleep", () => {
     expect(repeatSave).toMatchObject({
       label: "Repeat WIS save",
       ability: "wis",
-      sleepRepeatSave: {
+      stagedSaveConditionRepeatSave: {
         targetId: goblinId,
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: wizardId,
@@ -1117,7 +1117,9 @@ describe("battle runtime: Sleep", () => {
     expect(noDamage.combatants.get(goblinId)).toMatchObject({
       conditions: expect.objectContaining({ directIncapacitated: true }),
       activeEffects: [
-        expect.objectContaining({ kind: "sleepPendingRepeatSave" }),
+        expect.objectContaining({
+          kind: "stagedSaveConditionPendingRepeatSave",
+        }),
       ],
     });
 
@@ -1340,8 +1342,15 @@ describe("battle runtime: Sleep", () => {
     ).state;
     const subject: Extract<
       BattleSubject,
-      { readonly tag: "action"; readonly action: "shakeAwakeFromSleep" }
-    > = { tag: "action", actorId: fighterId, action: "shakeAwakeFromSleep" };
+      {
+        readonly tag: "action";
+        readonly action: "shakeAwakeFromStagedCondition";
+      }
+    > = {
+      tag: "action",
+      actorId: fighterId,
+      action: "shakeAwakeFromStagedCondition",
+    };
     const act = findAct(fighterTurn, subject);
     const target = findHole(act.initialHoles, "targetChoice");
     const replayTarget = requireHole(
@@ -1369,7 +1378,7 @@ describe("battle runtime: Sleep", () => {
         fills: [
           targetFill(target, goblinId, [
             {
-              kind: "sleepShakeAwakeActorWithin5Feet",
+              kind: "stagedConditionShakeAwakeActorWithin5Feet",
               actorId: fighterId,
               targetId: goblinId,
             },

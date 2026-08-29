@@ -456,7 +456,7 @@ function isSaveGatedSpellResolution(
 
 function isSaveGatedSpellProcedure(procedure: string): boolean {
   return (
-    procedure === "hypnoticPattern" ||
+    procedure === "saveGatedAreaControl" ||
     procedure === "saveGatedDamage" ||
     procedure === "saveGatedCondition"
   );

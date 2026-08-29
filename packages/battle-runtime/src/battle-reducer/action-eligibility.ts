@@ -325,11 +325,11 @@ function actionSubjectEligibilityFacts(
     ),
     Match.when("escapeSpellRestraint", () => standard("utilize")),
     Match.when(
-      "shakeAwakeFromSleep",
+      "shakeAwakeFromStagedCondition",
       () => ({ tag: "actorEligibilityOnly" }) as const,
     ),
     Match.when(
-      "shakeAwakeFromHypnoticPattern",
+      "shakeAwakeFromAreaControl",
       () => ({ tag: "actorEligibilityOnly" }) as const,
     ),
     Match.exhaustive,

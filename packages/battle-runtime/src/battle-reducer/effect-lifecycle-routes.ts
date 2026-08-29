@@ -59,7 +59,7 @@ export function rollModifierRouteForDiscoveredAct(
     "rollModifierEffect",
     rollModifierRouteHoles(act.initialHoles),
     spellInvocationForRouteSubject(state, act.subject)?.procedure ===
-      "thaumaturgyBoomingVoice"
+      "temporaryAbilityCheckRollMode"
       ? "battleActiveEffect"
       : "battleSpellSlotAndActionEconomy",
   );
@@ -81,10 +81,10 @@ export function rollModifierRouteForResolution(
   }
   if (
     spellInvocationForRouteSubject(input.state, input.subject)?.procedure ===
-    "thaumaturgyBoomingVoice"
+    "temporaryAbilityCheckRollMode"
   ) {
     if (
-      fill.kind === "thaumaturgyActiveOneMinuteEffectCount" &&
+      fill.kind === "temporaryAbilityCheckRollModeActiveEffectCount" &&
       result.tag === "resolved"
     ) {
       return [rollModifierResolveWithoutFill([], "battleActiveEffect")];
@@ -503,12 +503,12 @@ export function sleepRepeatSaveRouteForDiscoveredAct(
   state: BattleState,
   act: BattleActDiscoveryCandidate,
 ): BattleReducerRouteEvent | undefined {
-  if (!isSleepTargetAdmissionSubject(state, act.subject)) {
+  if (!isStagedSaveConditionSubject(state, act.subject)) {
     return undefined;
   }
   return discoverBattleActsRoute(
     "repeatSaveConditionEffect",
-    sleepTargetAdmissionRouteHoles(act.initialHoles),
+    stagedSaveConditionRouteHoles(act.initialHoles),
     "battleSpellSlotAndActionEconomy",
   );
 }
@@ -530,7 +530,7 @@ export function sleepRepeatSaveRouteForResolution(
     return turnBoundaryRoute;
   }
 
-  if (!isSleepTargetAdmissionSubject(input.state, input.subject)) {
+  if (!isStagedSaveConditionSubject(input.state, input.subject)) {
     return undefined;
   }
   if (result.tag !== "resolved") {
@@ -633,7 +633,8 @@ function repeatSaveConditionEffectRouteHoles(
 
 function isRepeatSaveConditionEffectHole(hole: BattleHole): boolean {
   return (
-    "spellConditionEndTurnSave" in hole || "hideousLaughterRepeatSave" in hole
+    "spellConditionEndTurnSave" in hole ||
+    "saveGatedConditionWithRepeatRepeatSave" in hole
   );
 }
 
@@ -999,7 +1000,7 @@ function sleepRepeatSaveRouteHoles(
   );
 }
 
-function sleepTargetAdmissionRouteHoles(
+function stagedSaveConditionRouteHoles(
   holes: readonly BattleHole[],
 ): readonly BattleReducerRouteHole[] {
   const savingThrowHoles = holes.filter(
@@ -1016,7 +1017,7 @@ function sleepTargetAdmissionRouteHoles(
 function hasPendingSleepRepeatSaveEffect(state: BattleState): boolean {
   return [...state.combatants.values()].some((combatant) =>
     combatant.activeEffects.some(
-      (effect) => effect.kind === "sleepPendingRepeatSave",
+      (effect) => effect.kind === "stagedSaveConditionPendingRepeat",
     ),
   );
 }
@@ -1028,8 +1029,8 @@ function combatantOwnsSleepRepeatSaveEffect(
   return [...state.combatants.values()].some((combatant) =>
     combatant.activeEffects.some(
       (effect) =>
-        (effect.kind === "sleepPendingRepeatSave" ||
-          effect.kind === "sleepUnconscious") &&
+        (effect.kind === "stagedSaveConditionPendingRepeat" ||
+          effect.kind === "stagedSaveConditionApplied") &&
         effect.expiresAt.combatantId === combatantId,
     ),
   );
@@ -1041,8 +1042,8 @@ function sleepRepeatSaveEffectCount(state: BattleState): number {
       count +
       combatant.activeEffects.filter(
         (effect) =>
-          effect.kind === "sleepPendingRepeatSave" ||
-          effect.kind === "sleepUnconscious",
+          effect.kind === "stagedSaveConditionPendingRepeat" ||
+          effect.kind === "stagedSaveConditionApplied",
       ).length,
     0,
   );
@@ -1122,7 +1123,7 @@ function isRollModifierEffectDiscoverySubject(
     (spellInvocationForRouteSubject(state, subject)?.procedure ===
       "rollModifier" ||
       spellInvocationForRouteSubject(state, subject)?.procedure ===
-        "thaumaturgyBoomingVoice")
+        "temporaryAbilityCheckRollMode")
   );
 }
 
@@ -1138,7 +1139,7 @@ function isRollModifierEffectResolutionSubject(
     (spellInvocationForRouteSubject(state, subject)?.procedure ===
       "rollModifier" ||
       spellInvocationForRouteSubject(state, subject)?.procedure ===
-        "thaumaturgyBoomingVoice")
+        "temporaryAbilityCheckRollMode")
   );
 }
 
@@ -1155,7 +1156,7 @@ function isScalarBuffEffectSubject(
   );
 }
 
-function isSleepTargetAdmissionSubject(
+function isStagedSaveConditionSubject(
   state: BattleState,
   subject: BattleResolutionInput["subject"],
 ): subject is Extract<
@@ -1165,6 +1166,6 @@ function isSleepTargetAdmissionSubject(
   return (
     subject.tag === "actionSpell" &&
     spellInvocationForRouteSubject(state, subject)?.procedure ===
-      "sleepTargetAdmission"
+      "stagedSaveCondition"
   );
 }

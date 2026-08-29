@@ -71,8 +71,8 @@ export const BATTLE_SUBJECT_ACTIONS = [
   "shove",
   "escapeGrapple",
   "escapeSpellRestraint",
-  "shakeAwakeFromSleep",
-  "shakeAwakeFromHypnoticPattern",
+  "shakeAwakeFromStagedCondition",
+  "shakeAwakeFromAreaControl",
 ] as const;
 export type BattleSubjectAction = (typeof BATTLE_SUBJECT_ACTIONS)[number];
 
@@ -99,34 +99,33 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "releaseGrapple",
   "opportunityAttack",
   "retaliationAttack",
-  "greaseGroundHazardSave",
-  "webRestraintSave",
-  "sleetStormAreaHazardSave",
-  "insectPlagueAreaHazardSave",
-  "cloudkillAreaHazardSave",
-  "disperseCloudkill",
-  "webRestrainedNoLongerInArea",
-  "webAreaRemoved",
-  "gustOfWindLineSave",
-  "gustOfWindLineDirectionChange",
+  "persistentAreaSaveConditionSave",
+  "persistentAreaSaveConditionEscapeSave",
+  "persistentAreaSaveCompositeSave",
+  "persistentAreaSaveDamageSave",
+  "endPersistentAreaSaveDamageForEnvironment",
+  "endPersistentAreaSaveConditionEscapeForDeparture",
+  "endPersistentAreaSaveConditionEscapeForAreaRemoval",
+  "directionalPersistentAreaSave",
+  "directionalPersistentAreaDirectionChange",
   "movableZoneSave",
-  "moonbeamCylinderExit",
+  "persistentAreaSaveDamageExit",
   "movableZoneReposition",
   "movableZoneRam",
   "releaseSpellCreatedHeldObject",
   "protectionRelevantEffectSave",
   "creatureTypeProtectionConditionAttempt",
   "creatureTypeProtectionPossessionAttempt",
-  "disperseFogCloud",
-  "wardingBondSeparation",
-  "jumpMovementReplacement",
-  "dragonsBreathExhale",
+  "endPersistentAreaTraitForEnvironment",
+  "linkedDefenseResistanceDamageShareSeparation",
+  "fixedCostMovementReplacement",
+  "grantedAreaSaveDamageAction",
   "replaceSelfTransformationMode",
-  "commandGrovel",
-  "commandDrop",
-  "commandApproach",
-  "commandFlee",
-  "levitateAltitudeControl",
+  "executeCompelledGrovel",
+  "executeCompelledDrop",
+  "executeCompelledApproach",
+  "executeCompelledFlee",
+  "controlledVerticalSuspensionAltitudeControl",
   "creatureFalls",
 ] as const;
 export type BattleRuntimeCommand = (typeof BATTLE_RUNTIME_COMMANDS)[number];
@@ -162,7 +161,7 @@ const RejectRedundantSpellSourceFields = {
   sourceCombatantId: Schema.optionalKey(Schema.Never),
 } as const;
 
-export const BattleSleetStormAreaMembershipTriggerSchema = Schema.Union([
+export const BattlePersistentAreaSaveCompositeTriggerSchema = Schema.Union([
   Schema.Struct({
     ...RejectRedundantSpellSourceFields,
     kind: Schema.Literal("firstEntryOnTurn"),
@@ -176,68 +175,68 @@ export const BattleSleetStormAreaMembershipTriggerSchema = Schema.Union([
     effectRef: BattleEffectExecutionRef,
   }),
 ]);
-export type BattleSleetStormAreaMembershipTrigger =
-  typeof BattleSleetStormAreaMembershipTriggerSchema.Type;
+export type BattlePersistentAreaSaveCompositeTrigger =
+  typeof BattlePersistentAreaSaveCompositeTriggerSchema.Type;
 
-export const BattleInsectPlagueAreaMembershipTriggerSchema = Schema.Union([
-  Schema.Struct({
-    ...RejectRedundantSpellSourceFields,
-    kind: Schema.Literal("appearsInArea"),
-    areaId: BattleAreaId,
-    effectRef: BattleEffectExecutionRef,
-  }),
-  Schema.Struct({
-    ...RejectRedundantSpellSourceFields,
-    kind: Schema.Literal("firstEntryOnTurn"),
-    areaId: BattleAreaId,
-    effectRef: BattleEffectExecutionRef,
-  }),
-  Schema.Struct({
-    ...RejectRedundantSpellSourceFields,
-    kind: Schema.Literal("turnEndInArea"),
-    areaId: BattleAreaId,
-    effectRef: BattleEffectExecutionRef,
-  }),
-]);
-export type BattleInsectPlagueAreaMembershipTrigger =
-  typeof BattleInsectPlagueAreaMembershipTriggerSchema.Type;
+export const BattleStationaryPersistentAreaSaveDamageTriggerSchema =
+  Schema.Union([
+    Schema.Struct({
+      ...RejectRedundantSpellSourceFields,
+      kind: Schema.Literal("appearsInArea"),
+      areaId: BattleAreaId,
+      effectRef: BattleEffectExecutionRef,
+    }),
+    Schema.Struct({
+      ...RejectRedundantSpellSourceFields,
+      kind: Schema.Literal("firstEntryOnTurn"),
+      areaId: BattleAreaId,
+      effectRef: BattleEffectExecutionRef,
+    }),
+    Schema.Struct({
+      ...RejectRedundantSpellSourceFields,
+      kind: Schema.Literal("turnEndInArea"),
+      areaId: BattleAreaId,
+      effectRef: BattleEffectExecutionRef,
+    }),
+  ]);
+export type BattleStationaryPersistentAreaSaveDamageTrigger =
+  typeof BattleStationaryPersistentAreaSaveDamageTriggerSchema.Type;
 
-export const BattleCloudkillAreaMembershipTriggerSchema = Schema.Union([
-  Schema.Struct({
-    ...RejectRedundantSpellSourceFields,
-    kind: Schema.Literal("appearsInArea"),
-    areaId: BattleAreaId,
-    effectRef: BattleEffectExecutionRef,
-  }),
-  Schema.Struct({
-    ...RejectRedundantSpellSourceFields,
-    kind: Schema.Literal("areaMovesIntoSpace"),
-    areaId: BattleAreaId,
-    effectRef: BattleEffectExecutionRef,
-  }),
-  Schema.Struct({
-    ...RejectRedundantSpellSourceFields,
-    kind: Schema.Literal("firstEntryOnTurn"),
-    areaId: BattleAreaId,
-    effectRef: BattleEffectExecutionRef,
-  }),
-  Schema.Struct({
-    ...RejectRedundantSpellSourceFields,
-    kind: Schema.Literal("turnEndInArea"),
-    areaId: BattleAreaId,
-    effectRef: BattleEffectExecutionRef,
-  }),
-]);
-export type BattleCloudkillAreaMembershipTrigger =
-  typeof BattleCloudkillAreaMembershipTriggerSchema.Type;
+export const BattleTranslatingPersistentAreaSaveDamageTriggerSchema =
+  Schema.Union([
+    Schema.Struct({
+      ...RejectRedundantSpellSourceFields,
+      kind: Schema.Literal("appearsInArea"),
+      areaId: BattleAreaId,
+      effectRef: BattleEffectExecutionRef,
+    }),
+    Schema.Struct({
+      ...RejectRedundantSpellSourceFields,
+      kind: Schema.Literal("areaMovesIntoSpace"),
+      areaId: BattleAreaId,
+      effectRef: BattleEffectExecutionRef,
+    }),
+    Schema.Struct({
+      ...RejectRedundantSpellSourceFields,
+      kind: Schema.Literal("firstEntryOnTurn"),
+      areaId: BattleAreaId,
+      effectRef: BattleEffectExecutionRef,
+    }),
+    Schema.Struct({
+      ...RejectRedundantSpellSourceFields,
+      kind: Schema.Literal("turnEndInArea"),
+      areaId: BattleAreaId,
+      effectRef: BattleEffectExecutionRef,
+    }),
+  ]);
+export type BattleTranslatingPersistentAreaSaveDamageTrigger =
+  typeof BattleTranslatingPersistentAreaSaveDamageTriggerSchema.Type;
 
 export const CANTRIP_SPELL_PROCEDURES = [
   "heldLight",
   "objectLight",
   "heldLightHurl",
-  "dancingLightsSeparateCast",
-  "dancingLightsCombinedCast",
-  "dancingLightsReposition",
+  "movableLightManifestation",
   "damageReduction",
   "makeStable",
   "spellAttackSequence",
@@ -246,7 +245,7 @@ export const CANTRIP_SPELL_PROCEDURES = [
   "spellAttackDamage",
   "saveGatedDamage",
   "rollModifier",
-  "thaumaturgyBoomingVoice",
+  "temporaryAbilityCheckRollMode",
 ] as const;
 export type CantripSpellProcedure = (typeof CANTRIP_SPELL_PROCEDURES)[number];
 
@@ -264,64 +263,61 @@ export const SPELL_SLOT_PROCEDURES = [
   "saveGatedCondition",
   "saveGatedConditionImmunity",
   "saveGatedAttackRollAdvantage",
-  "sleepTargetAdmission",
-  "hideousLaughter",
-  "hypnoticPattern",
-  "slowActivePenalties",
-  "greaseGroundHazard",
-  "webRestraintHazard",
-  "gustOfWindLine",
-  "fogCloudObscurement",
+  "stagedSaveCondition",
+  "saveGatedConditionWithRepeat",
+  "saveGatedAreaControl",
+  "saveGatedTurnConstraintBundle",
+  "persistentAreaSaveCondition",
+  "persistentAreaSaveConditionEscape",
+  "directionalPersistentArea",
+  "persistentAreaTrait",
   "magicalDarknessPointOrigin",
-  "antimagicFieldOngoingSpellSuppression",
-  "flamingSphere",
-  "spiritualWeaponAttackProxy",
-  "spikeGrowthMovementHazard",
-  "moonbeam",
-  "sleetStormAreaHazard",
-  "insectPlagueAreaHazard",
-  "cloudkillAreaHazard",
+  "magicSuppressionEmanation",
+  "persistentAreaSaveDamage",
+  "spatialMeleeSpellAttackProxy",
+  "areaMovementDistanceDamage",
+  "persistentAreaSaveComposite",
   "objectContactDamage",
   "spellCreatedHeldObject",
-  "command",
+  "compelledNextTurnBehavior",
   "repeatedDamageAllocation",
   "directHitPointRestoration",
   "rollModifier",
   "creatureSizeIncrease",
   "creatureSizeDecrease",
-  "levitatedCreature",
-  "wardingBond",
+  "controlledVerticalSuspension",
+  "linkedDefenseResistanceDamageShare",
   "scalarBuff",
   "selfTransformationMode",
   "conditionImmunityAndTurnStartTemporaryHitPoints",
   "creatureTypeProtection",
-  "blurAttackRollDefense",
+  "perceptionGatedAttackRollDefense",
   "seeInvisibleObserverSight",
-  "mirrorImageHitInterception",
+  "duplicateHitInterception",
   "conditionRemovalProtection",
   "chosenDamageResistance",
-  "hastePositive",
+  "compositeTargetBuffWithAftermath",
   "directConditionRemoval",
   "weaponDamageRider",
-  "magicWeaponEnhancement",
+  "weaponAttackDamageEnhancement",
   "afterHitDamage",
   "afterHitSaveGatedCondition",
   "abilityD20TestRollModeSaveGate",
   "afterHitTimedDamageAndSave",
   "afterHitDamageAndIllumination",
   "markedDamageRider",
-  "expeditiousRetreatDash",
-  "jumpMovementReplacement",
-  "dragonsBreathInitial",
+  "grantedAlternateActionCost",
+  "fixedCostMovementReplacement",
+  "grantedAreaSaveDamageAction",
   "selfTeleport",
-  "sanctuaryTargetingInterdiction",
+  "targetingSaveInterdiction",
   "directCondition",
   "persistentArmorEffect",
-  "shieldReaction",
-  "counterspell",
+  "triggeredArmorDefense",
+  "spellCastInterruptionReaction",
   "objectLight",
   "ongoingSpellEnd",
-  "featherFallMitigation",
+  "fallingCreatureMitigationReaction",
 ] as const;
 export type SpellSlotProcedure = (typeof SPELL_SLOT_PROCEDURES)[number];
 export const SpellInvocationSourceRefSchema = Schema.Union([
@@ -367,7 +363,7 @@ export const SpellInvocationRefSchema = Schema.Union([
     procedure: Schema.Literals([
       "markedDamageRiderTransfer",
       "objectContactDamageRepeat",
-      "spiritualWeaponRepeatAttack",
+      "spatialMeleeSpellAttackProxy",
       "spellCreatedHeldObjectAttack",
       "spellCreatedHeldObjectReEvoke",
     ]),
@@ -429,7 +425,7 @@ export function spellEffectInvocationRef(
   procedure:
     | "markedDamageRiderTransfer"
     | "objectContactDamageRepeat"
-    | "spiritualWeaponRepeatAttack"
+    | "spatialMeleeSpellAttackProxy"
     | "spellCreatedHeldObjectAttack"
     | "spellCreatedHeldObjectReEvoke",
 ): SpellInvocationRef {
@@ -636,7 +632,7 @@ export const BattleSubjectSchema = Schema.Union([
     statBlockDamageNotation: Schema.Literal("static"),
   }),
   Schema.Struct({
-    tag: Schema.Literal("pactOfTheChainFamiliarAttack"),
+    tag: Schema.Literal("companionAttack"),
     actorId: CombatantId,
     familiarId: CombatantId,
     procedureRef: BattleStatBlockProcedureExecutionRef,
@@ -710,12 +706,12 @@ export const BattleSubjectSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("action"),
     actorId: CombatantId,
-    action: Schema.Literal("shakeAwakeFromSleep"),
+    action: Schema.Literal("shakeAwakeFromStagedCondition"),
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
     actorId: CombatantId,
-    action: Schema.Literal("shakeAwakeFromHypnoticPattern"),
+    action: Schema.Literal("shakeAwakeFromAreaControl"),
   }),
   Schema.Union([
     Schema.Struct({
@@ -868,12 +864,12 @@ export const BattleSubjectSchema = Schema.Union([
     ]),
   }),
   Schema.Struct({
-    tag: Schema.Literal("findFamiliarSharedSenses"),
+    tag: Schema.Literal("spawnedCompanionSharedSenses"),
     actorId: CombatantId,
     familiarId: CombatantId,
   }),
   Schema.Struct({
-    tag: Schema.Literal("findFamiliarTouchSpell"),
+    tag: Schema.Literal("spawnedCompanionTouchSpellProxy"),
     actorId: CombatantId,
     procedureRef: BattleProcedureExecutionRef,
     invocation: Schema.optionalKey(Schema.Never),
@@ -979,7 +975,7 @@ export const BattleSubjectSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("greaseGroundHazardSave"),
+    command: Schema.Literal("persistentAreaSaveConditionSave"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
     effectRef: BattleEffectExecutionRef,
@@ -988,7 +984,7 @@ export const BattleSubjectSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("webRestraintSave"),
+    command: Schema.Literal("persistentAreaSaveConditionEscapeSave"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
     effectRef: BattleEffectExecutionRef,
@@ -997,25 +993,27 @@ export const BattleSubjectSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("sleetStormAreaHazardSave"),
-    areaMembershipTrigger: BattleSleetStormAreaMembershipTriggerSchema,
+    command: Schema.Literal("persistentAreaSaveCompositeSave"),
+    areaMembershipTrigger: BattlePersistentAreaSaveCompositeTriggerSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("insectPlagueAreaHazardSave"),
-    areaMembershipTrigger: BattleInsectPlagueAreaMembershipTriggerSchema,
+    command: Schema.Literal("persistentAreaSaveDamageSave"),
+    areaMembershipTrigger:
+      BattleStationaryPersistentAreaSaveDamageTriggerSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("cloudkillAreaHazardSave"),
-    areaMembershipTrigger: BattleCloudkillAreaMembershipTriggerSchema,
+    command: Schema.Literal("persistentAreaSaveDamageSave"),
+    areaMembershipTrigger:
+      BattleTranslatingPersistentAreaSaveDamageTriggerSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("disperseCloudkill"),
+    command: Schema.Literal("endPersistentAreaSaveDamageForEnvironment"),
     ...RejectRedundantSpellSourceFields,
     effectOwnerId: CombatantId,
     effectRef: BattleEffectExecutionRef,
@@ -1023,7 +1021,7 @@ export const BattleSubjectSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("webRestrainedNoLongerInArea"),
+    command: Schema.Literal("endPersistentAreaSaveConditionEscapeForDeparture"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
     effectRef: BattleEffectExecutionRef,
@@ -1031,7 +1029,9 @@ export const BattleSubjectSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("webAreaRemoved"),
+    command: Schema.Literal(
+      "endPersistentAreaSaveConditionEscapeForAreaRemoval",
+    ),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
     effectRef: BattleEffectExecutionRef,
@@ -1039,7 +1039,7 @@ export const BattleSubjectSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("gustOfWindLineSave"),
+    command: Schema.Literal("directionalPersistentAreaSave"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
     effectRef: BattleEffectExecutionRef,
@@ -1049,7 +1049,7 @@ export const BattleSubjectSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("gustOfWindLineDirectionChange"),
+    command: Schema.Literal("directionalPersistentAreaDirectionChange"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
     effectRef: BattleEffectExecutionRef,
@@ -1081,7 +1081,7 @@ export const BattleSubjectSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("moonbeamCylinderExit"),
+    command: Schema.Literal("persistentAreaSaveDamageExit"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
     effectRef: BattleEffectExecutionRef,
@@ -1135,14 +1135,14 @@ export const BattleSubjectSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("disperseFogCloud"),
+    command: Schema.Literal("endPersistentAreaTraitForEnvironment"),
     ...RejectRedundantSpellSourceFields,
     areaId: BattleAreaId,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("wardingBondSeparation"),
+    command: Schema.Literal("linkedDefenseResistanceDamageShareSeparation"),
     ...RejectRedundantSpellSourceFields,
     effectRef: BattleEffectExecutionRef,
     targetId: CombatantId,
@@ -1150,14 +1150,14 @@ export const BattleSubjectSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("jumpMovementReplacement"),
+    command: Schema.Literal("fixedCostMovementReplacement"),
     ...RejectRedundantSpellSourceFields,
     effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("dragonsBreathExhale"),
+    command: Schema.Literal("grantedAreaSaveDamageAction"),
     ...RejectRedundantSpellSourceFields,
     effectRef: BattleEffectExecutionRef,
   }),
@@ -1181,35 +1181,35 @@ export const BattleSubjectSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("commandGrovel"),
+    command: Schema.Literal("executeCompelledGrovel"),
     ...RejectRedundantSpellSourceFields,
     effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("commandDrop"),
+    command: Schema.Literal("executeCompelledDrop"),
     ...RejectRedundantSpellSourceFields,
     effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("commandApproach"),
+    command: Schema.Literal("executeCompelledApproach"),
     ...RejectRedundantSpellSourceFields,
     effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("commandFlee"),
+    command: Schema.Literal("executeCompelledFlee"),
     ...RejectRedundantSpellSourceFields,
     effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
-    command: Schema.Literal("levitateAltitudeControl"),
+    command: Schema.Literal("controlledVerticalSuspensionAltitudeControl"),
     ...RejectRedundantSpellSourceFields,
     effectRef: BattleEffectExecutionRef,
     targetId: CombatantId,
@@ -1296,8 +1296,8 @@ function battleActionSubjectProcedureRefs(
       shove: noProcedureExecutionReferences,
       escapeGrapple: noProcedureExecutionReferences,
       escapeSpellRestraint: noProcedureExecutionReferences,
-      shakeAwakeFromSleep: noProcedureExecutionReferences,
-      shakeAwakeFromHypnoticPattern: noProcedureExecutionReferences,
+      shakeAwakeFromStagedCondition: noProcedureExecutionReferences,
+      shakeAwakeFromAreaControl: noProcedureExecutionReferences,
     }),
   );
 }
@@ -1321,34 +1321,37 @@ function battleRuntimeCommandProcedureRefs(
       releaseGrapple: noProcedureExecutionReferences,
       opportunityAttack: (value) => [value.procedureRef],
       retaliationAttack: (value) => [value.procedureRef],
-      greaseGroundHazardSave: noProcedureExecutionReferences,
-      webRestraintSave: noProcedureExecutionReferences,
-      sleetStormAreaHazardSave: noProcedureExecutionReferences,
-      insectPlagueAreaHazardSave: noProcedureExecutionReferences,
-      cloudkillAreaHazardSave: noProcedureExecutionReferences,
-      disperseCloudkill: noProcedureExecutionReferences,
-      webRestrainedNoLongerInArea: noProcedureExecutionReferences,
-      webAreaRemoved: noProcedureExecutionReferences,
-      gustOfWindLineSave: noProcedureExecutionReferences,
-      gustOfWindLineDirectionChange: noProcedureExecutionReferences,
+      persistentAreaSaveConditionSave: noProcedureExecutionReferences,
+      persistentAreaSaveConditionEscapeSave: noProcedureExecutionReferences,
+      persistentAreaSaveCompositeSave: noProcedureExecutionReferences,
+      persistentAreaSaveDamageSave: noProcedureExecutionReferences,
+      endPersistentAreaSaveDamageForEnvironment: noProcedureExecutionReferences,
+      endPersistentAreaSaveConditionEscapeForDeparture:
+        noProcedureExecutionReferences,
+      endPersistentAreaSaveConditionEscapeForAreaRemoval:
+        noProcedureExecutionReferences,
+      directionalPersistentAreaSave: noProcedureExecutionReferences,
+      directionalPersistentAreaDirectionChange: noProcedureExecutionReferences,
       movableZoneSave: noProcedureExecutionReferences,
-      moonbeamCylinderExit: noProcedureExecutionReferences,
+      persistentAreaSaveDamageExit: noProcedureExecutionReferences,
       movableZoneReposition: noProcedureExecutionReferences,
       movableZoneRam: noProcedureExecutionReferences,
       releaseSpellCreatedHeldObject: noProcedureExecutionReferences,
       protectionRelevantEffectSave: noProcedureExecutionReferences,
       creatureTypeProtectionConditionAttempt: noProcedureExecutionReferences,
       creatureTypeProtectionPossessionAttempt: noProcedureExecutionReferences,
-      disperseFogCloud: noProcedureExecutionReferences,
-      wardingBondSeparation: noProcedureExecutionReferences,
-      jumpMovementReplacement: noProcedureExecutionReferences,
-      dragonsBreathExhale: noProcedureExecutionReferences,
+      endPersistentAreaTraitForEnvironment: noProcedureExecutionReferences,
+      linkedDefenseResistanceDamageShareSeparation:
+        noProcedureExecutionReferences,
+      fixedCostMovementReplacement: noProcedureExecutionReferences,
+      grantedAreaSaveDamageAction: noProcedureExecutionReferences,
       replaceSelfTransformationMode: noProcedureExecutionReferences,
-      commandGrovel: noProcedureExecutionReferences,
-      commandDrop: noProcedureExecutionReferences,
-      commandApproach: noProcedureExecutionReferences,
-      commandFlee: noProcedureExecutionReferences,
-      levitateAltitudeControl: noProcedureExecutionReferences,
+      executeCompelledGrovel: noProcedureExecutionReferences,
+      executeCompelledDrop: noProcedureExecutionReferences,
+      executeCompelledApproach: noProcedureExecutionReferences,
+      executeCompelledFlee: noProcedureExecutionReferences,
+      controlledVerticalSuspensionAltitudeControl:
+        noProcedureExecutionReferences,
       creatureFalls: noProcedureExecutionReferences,
     }),
   );
@@ -1360,7 +1363,7 @@ export function battleSubjectProcedureRefs(
   return Match.value(subject).pipe(
     Match.discriminatorsExhaustive("tag")({
       action: battleActionSubjectProcedureRefs,
-      pactOfTheChainFamiliarAttack: (value) => [value.procedureRef],
+      companionAttack: (value) => [value.procedureRef],
       bonusAction: (value) => [value.procedureRef],
       bonusActionStandardAction: (value) => [value.procedureRef],
       monkFocusOption: (value) => [value.procedureRef],
@@ -1375,8 +1378,8 @@ export function battleSubjectProcedureRefs(
       unitFeatureHeldWeaponActivation: (value) => [value.procedureRef],
       druidWildShape: (value) => [value.procedureRef],
       companionLifecycle: noProcedureExecutionReferences,
-      findFamiliarSharedSenses: noProcedureExecutionReferences,
-      findFamiliarTouchSpell: (value) => [value.procedureRef],
+      spawnedCompanionSharedSenses: noProcedureExecutionReferences,
+      spawnedCompanionTouchSpellProxy: (value) => [value.procedureRef],
       runtimeCommand: battleRuntimeCommandProcedureRefs,
     }),
   );
@@ -1425,8 +1428,8 @@ function battleActionSubjectBoundExecutionReferences(
           effectRef: value.effectRef,
         },
       ],
-      shakeAwakeFromSleep: noBoundExecutionReferences,
-      shakeAwakeFromHypnoticPattern: noBoundExecutionReferences,
+      shakeAwakeFromStagedCondition: noBoundExecutionReferences,
+      shakeAwakeFromAreaControl: noBoundExecutionReferences,
     }),
   );
 }
@@ -1519,37 +1522,36 @@ function battleRuntimeCommandBoundExecutionReferences(
       releaseGrapple: noBoundExecutionReferences,
       opportunityAttack: noBoundExecutionReferences,
       retaliationAttack: noBoundExecutionReferences,
-      greaseGroundHazardSave: activeEffectOccurrence,
-      webRestraintSave: activeEffectOccurrence,
-      sleetStormAreaHazardSave: (value) =>
+      persistentAreaSaveConditionSave: activeEffectOccurrence,
+      persistentAreaSaveConditionEscapeSave: activeEffectOccurrence,
+      persistentAreaSaveCompositeSave: (value) =>
         activeEffectOccurrence(value.areaMembershipTrigger),
-      insectPlagueAreaHazardSave: (value) =>
+      persistentAreaSaveDamageSave: (value) =>
         activeEffectOccurrence(value.areaMembershipTrigger),
-      cloudkillAreaHazardSave: (value) =>
-        activeEffectOccurrence(value.areaMembershipTrigger),
-      disperseCloudkill: ownedEffect,
-      webRestrainedNoLongerInArea: activeEffectOccurrence,
-      webAreaRemoved: activeEffectOccurrence,
-      gustOfWindLineSave: activeEffectOccurrence,
-      gustOfWindLineDirectionChange: activeEffectOccurrence,
+      endPersistentAreaSaveDamageForEnvironment: ownedEffect,
+      endPersistentAreaSaveConditionEscapeForDeparture: activeEffectOccurrence,
+      endPersistentAreaSaveConditionEscapeForAreaRemoval:
+        activeEffectOccurrence,
+      directionalPersistentAreaSave: activeEffectOccurrence,
+      directionalPersistentAreaDirectionChange: activeEffectOccurrence,
       movableZoneSave: activeEffectOccurrence,
-      moonbeamCylinderExit: activeEffectOccurrence,
+      persistentAreaSaveDamageExit: activeEffectOccurrence,
       movableZoneReposition: activeEffectOccurrence,
       movableZoneRam: activeEffectOccurrence,
       releaseSpellCreatedHeldObject: actorEffect,
       protectionRelevantEffectSave: actorEffect,
       creatureTypeProtectionConditionAttempt: noBoundExecutionReferences,
       creatureTypeProtectionPossessionAttempt: noBoundExecutionReferences,
-      disperseFogCloud: noBoundExecutionReferences,
-      wardingBondSeparation: targetEffect,
-      jumpMovementReplacement: actorEffect,
-      dragonsBreathExhale: actorEffect,
+      endPersistentAreaTraitForEnvironment: noBoundExecutionReferences,
+      linkedDefenseResistanceDamageShareSeparation: targetEffect,
+      fixedCostMovementReplacement: actorEffect,
+      grantedAreaSaveDamageAction: actorEffect,
       replaceSelfTransformationMode: actorEffect,
-      commandGrovel: actorEffect,
-      commandDrop: actorEffect,
-      commandApproach: actorEffect,
-      commandFlee: actorEffect,
-      levitateAltitudeControl: targetEffect,
+      executeCompelledGrovel: actorEffect,
+      executeCompelledDrop: actorEffect,
+      executeCompelledApproach: actorEffect,
+      executeCompelledFlee: actorEffect,
+      controlledVerticalSuspensionAltitudeControl: targetEffect,
       creatureFalls: noBoundExecutionReferences,
     }),
   );
@@ -1561,7 +1563,7 @@ export function battleSubjectBoundExecutionReferences(
   return Match.value(subject).pipe(
     Match.discriminatorsExhaustive("tag")({
       action: battleActionSubjectBoundExecutionReferences,
-      pactOfTheChainFamiliarAttack: noBoundExecutionReferences,
+      companionAttack: noBoundExecutionReferences,
       bonusAction: noBoundExecutionReferences,
       bonusActionStandardAction:
         battleBonusActionStandardActionBoundExecutionReferences,
@@ -1574,8 +1576,8 @@ export function battleSubjectBoundExecutionReferences(
       unitFeatureHeldWeaponActivation: noBoundExecutionReferences,
       druidWildShape: battleDruidWildShapeBoundExecutionReferences,
       companionLifecycle: noBoundExecutionReferences,
-      findFamiliarSharedSenses: noBoundExecutionReferences,
-      findFamiliarTouchSpell: noBoundExecutionReferences,
+      spawnedCompanionSharedSenses: noBoundExecutionReferences,
+      spawnedCompanionTouchSpellProxy: noBoundExecutionReferences,
       runtimeCommand: battleRuntimeCommandBoundExecutionReferences,
     }),
   );
@@ -1588,7 +1590,7 @@ export type CharacterProcedureBattleSubject = Extract<
       | "actionSpell"
       | "bonusActionSpell"
       | "bonusActionDashSpell"
-      | "findFamiliarTouchSpell"
+      | "spawnedCompanionTouchSpellProxy"
       | "unitFeature"
       | "unitFeatureHeldWeaponActivation"
       | "druidWildShape"
@@ -1604,7 +1606,7 @@ export function isCharacterProcedureBattleSubject(
     subject.tag === "actionSpell" ||
     subject.tag === "bonusActionSpell" ||
     subject.tag === "bonusActionDashSpell" ||
-    subject.tag === "findFamiliarTouchSpell" ||
+    subject.tag === "spawnedCompanionTouchSpellProxy" ||
     subject.tag === "unitFeature" ||
     subject.tag === "unitFeatureHeldWeaponActivation" ||
     subject.tag === "druidWildShape" ||
@@ -1683,11 +1685,12 @@ function spellMetamagicSelectionKey(
 
 function battleSubjectKey(subject: BattleSubject): string {
   return Match.value(subject).pipe(
-    Match.when({ tag: "action", action: "shakeAwakeFromSleep" }, (action) =>
-      JSON.stringify([action.tag, action.actorId, action.action]),
+    Match.when(
+      { tag: "action", action: "shakeAwakeFromStagedCondition" },
+      (action) => JSON.stringify([action.tag, action.actorId, action.action]),
     ),
     Match.when(
-      { tag: "action", action: "shakeAwakeFromHypnoticPattern" },
+      { tag: "action", action: "shakeAwakeFromAreaControl" },
       (action) => JSON.stringify([action.tag, action.actorId, action.action]),
     ),
     Match.when({ tag: "action", action: "shove" }, (action) =>
@@ -1750,14 +1753,14 @@ function battleSubjectKey(subject: BattleSubject): string {
     Match.when({ tag: "companionLifecycle" }, (companion) =>
       JSON.stringify([companion.tag, companion.actorId, companion.action]),
     ),
-    Match.when({ tag: "findFamiliarSharedSenses" }, (sharedSenses) =>
+    Match.when({ tag: "spawnedCompanionSharedSenses" }, (sharedSenses) =>
       JSON.stringify([
         sharedSenses.tag,
         sharedSenses.actorId,
         sharedSenses.familiarId,
       ]),
     ),
-    Match.when({ tag: "findFamiliarTouchSpell" }, (spell) =>
+    Match.when({ tag: "spawnedCompanionTouchSpellProxy" }, (spell) =>
       JSON.stringify([
         spell.tag,
         spell.actorId,
@@ -1776,7 +1779,7 @@ function battleSubjectKey(subject: BattleSubject): string {
         activation.weaponItemId,
       ]),
     ),
-    Match.when({ tag: "pactOfTheChainFamiliarAttack" }, (attack) =>
+    Match.when({ tag: "companionAttack" }, (attack) =>
       JSON.stringify([
         attack.tag,
         attack.actorId,

@@ -8,7 +8,7 @@ import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import type {
   BattleActDiscoveryCandidate,
   BattleCreatureState,
-  BattleDragonsBreathSavingThrowOutcomeHole,
+  BattleGrantedAreaSaveDamageActionSavingThrowOutcomeHole,
   BattleResolutionInputForSubject,
   BattleState,
 } from "../battle-state-execution.ts";
@@ -18,29 +18,29 @@ import {
   savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./ongoing-feature-relationship.ts";
-import { dragonsBreathHoleKey } from "./selected-effect-hole-key.ts";
+import { grantedAreaSaveDamageActionHoleKey } from "./selected-effect-hole-key.ts";
 
-export type DragonsBreathEffect = Extract<
+export type GrantedAreaSaveDamageActionEffect = Extract<
   BattleCreatureState["activeEffects"][number],
-  { readonly kind: "dragonsBreath" }
+  { readonly kind: "grantedAreaSaveDamageAction" }
 >;
 
-export type DragonsBreathExhaleSubject = Extract<
+export type GrantedAreaSaveDamageActionSubject = Extract<
   BattleResolutionInputForSubject<
     Extract<
       import("../battle-subjects.ts").BattleSubject,
       {
         readonly tag: "runtimeCommand";
-        readonly command: "dragonsBreathExhale";
+        readonly command: "grantedAreaSaveDamageAction";
       }
     >
   >["subject"],
-  { readonly command: "dragonsBreathExhale" }
+  { readonly command: "grantedAreaSaveDamageAction" }
 >;
 
 const DRAGONS_BREATH_CONE_LENGTH_FEET = 15;
 
-export function dragonsBreathExhaleActs(
+export function grantedAreaSaveDamageActionActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
@@ -52,23 +52,27 @@ export function dragonsBreathExhaleActs(
   ) {
     return [];
   }
-  return activeDragonsBreathEffects(actor).map((effect) => {
-    const subject = dragonsBreathExhaleSubject(actorId, effect);
+  return activeGrantedAreaSaveDamageActionEffects(actor).map((effect) => {
+    const subject = grantedAreaSaveDamageActionSubject(actorId, effect);
     return {
       subject,
       initialHoles: [
-        dragonsBreathSavingThrowOutcomeHole(state, actorId, effect),
+        grantedAreaSaveDamageActionSavingThrowOutcomeHole(
+          state,
+          actorId,
+          effect,
+        ),
       ],
     };
   });
 }
 
-export function dragonsBreathSavingThrowOutcomeHole(
+export function grantedAreaSaveDamageActionSavingThrowOutcomeHole(
   state: BattleState,
   actorId: CombatantId,
-  effect: DragonsBreathEffect,
-): BattleDragonsBreathSavingThrowOutcomeHole {
-  const key = dragonsBreathHoleKey(
+  effect: GrantedAreaSaveDamageActionEffect,
+): BattleGrantedAreaSaveDamageActionSavingThrowOutcomeHole {
+  const key = grantedAreaSaveDamageActionHoleKey(
     spellActiveEffectExecutionRef(effect),
     "saving-throw-outcome",
   );
@@ -77,7 +81,7 @@ export function dragonsBreathSavingThrowOutcomeHole(
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: "Dragon's Breath 15-foot Cone Saving Throw outcomes",
-    dragonsBreath: {
+    grantedAreaSaveDamageAction: {
       sourceCombatantId: effect.sourceCombatantId,
       sourceProcedureRef: effect.sourceProcedureRef,
       lengthFeet: DRAGONS_BREATH_CONE_LENGTH_FEET,
@@ -102,22 +106,23 @@ export function dragonsBreathSavingThrowOutcomeHole(
   };
 }
 
-function activeDragonsBreathEffects(
+function activeGrantedAreaSaveDamageActionEffects(
   actor: BattleCreatureState,
-): readonly DragonsBreathEffect[] {
+): readonly GrantedAreaSaveDamageActionEffect[] {
   return actor.activeEffects.filter(
-    (effect): effect is DragonsBreathEffect => effect.kind === "dragonsBreath",
+    (effect): effect is GrantedAreaSaveDamageActionEffect =>
+      effect.kind === "grantedAreaSaveDamageAction",
   );
 }
 
-function dragonsBreathExhaleSubject(
+function grantedAreaSaveDamageActionSubject(
   actorId: CombatantId,
-  effect: DragonsBreathEffect,
-): DragonsBreathExhaleSubject {
+  effect: GrantedAreaSaveDamageActionEffect,
+): GrantedAreaSaveDamageActionSubject {
   return {
     tag: "runtimeCommand",
     actorId,
-    command: "dragonsBreathExhale",
+    command: "grantedAreaSaveDamageAction",
     effectRef: spellActiveEffectExecutionRef(effect),
   };
 }

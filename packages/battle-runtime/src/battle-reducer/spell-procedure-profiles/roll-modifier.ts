@@ -33,7 +33,7 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 //   - rollModifierSpellProjection + projection sub-helpers
 //     (rollModifierActiveEffect, rollModifierAbilityCheckRollModeEffect,
 //     rollModifierSpellTargeting, rollModifierSkillFilter) — entangled with
-//     scalarBuff and thaumaturgyBoomingVoice; full extraction is a separate
+//     scalarBuff and temporaryAbilityCheckRollMode; full extraction is a separate
 //     sweep.
 //   - rollModifierSpellTargetSelection / EffectSelection / AffectedTargets —
 //     ~400 lines in spells-resolve-target-selection.ts. Moveable later.

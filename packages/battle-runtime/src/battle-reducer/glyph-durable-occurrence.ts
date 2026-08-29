@@ -75,7 +75,7 @@ import type {
   BattleGlyphExplosiveRuneSavingThrowOutcomeHole,
   BattleHole,
   BattleResolutionCheckpointBoundary,
-  BattleHideousLaughterRepeatSavingThrowOutcomeHole,
+  BattleSaveGatedConditionRepeatSavingThrowOutcomeHole,
   BattleSpellDamageReductionRollHole,
   BattleSpellTargetListSpatialFact,
   BattleState,
@@ -116,8 +116,8 @@ import {
   applyBattleHitPointDamage,
   damageLifecycleConcentrationSavingThrowFillCheck,
   damageLifecycleConcentrationSavingThrowHoles,
-  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
-  damageLifecycleHideousLaughterDamageRepeatSaveHoles,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
 import {
@@ -227,7 +227,7 @@ function glyphStoredSpellTargetShapeForExecutionKind(
   return Match.value(executionKind).pipe(
     Match.when("areaOngoing", () => "area" as const),
     Match.when("areaControl", () => "area" as const),
-    Match.when("greaseGroundHazard", () => "area" as const),
+    Match.when("persistentAreaSaveCondition", () => "area" as const),
     Match.when("ordinaryArea", () => "area" as const),
     Match.when("saveGatedCondition", () => "singleCreature" as const),
     Match.when("fullDurationSaveGatedDamage", () => "singleCreature" as const),
@@ -241,7 +241,7 @@ type GlyphExplosiveRuneDamageDispositionFill = Extract<
   BattleFill,
   { readonly kind: "attackDamageDisposition" }
 >;
-type GlyphExplosiveRuneHideousLaughterRepeatSaveFill = Extract<
+type GlyphExplosiveRuneSaveGatedConditionWithRepeatRepeatSaveFill = Extract<
   BattleFill,
   { readonly kind: "savingThrowOutcome" }
 >;
@@ -262,7 +262,7 @@ type GlyphExplosiveRuneDamageResolutionHole =
   | BattleSpellDamageReductionRollHole
   | BattleConcentrationSavingThrowHole
   | BattleAttackDamageDispositionHole
-  | BattleHideousLaughterRepeatSavingThrowOutcomeHole;
+  | BattleSaveGatedConditionRepeatSavingThrowOutcomeHole;
 type GlyphExplosiveRuneReleaseHole =
   | BattleGlyphExplosiveRuneSavingThrowOutcomeHole
   | GlyphExplosiveRuneDamageResolutionHole;
@@ -339,7 +339,7 @@ export type GlyphExplosiveRuneAreaMembership =
       readonly spellDamageReductionRolls: readonly GlyphExplosiveRuneSpellDamageReductionRollFill[];
       readonly concentrationSavingThrows: readonly GlyphExplosiveRuneConcentrationSavingThrowFill[];
       readonly damageDispositions: readonly GlyphExplosiveRuneDamageDispositionFill[];
-      readonly hideousLaughterDamageRepeatSaves: readonly GlyphExplosiveRuneHideousLaughterRepeatSaveFill[];
+      readonly saveGatedConditionWithRepeatDamageRepeatSaves: readonly GlyphExplosiveRuneSaveGatedConditionWithRepeatRepeatSaveFill[];
     };
 
 export type GlyphExplosiveRuneReleaseWitness = {
@@ -508,7 +508,7 @@ type GlyphExplosiveRuneReleaseWitnessValidationFailure =
   | "spellDamageReductionMismatch"
   | "concentrationSavingThrowMismatch"
   | "damageDispositionMismatch"
-  | "hideousLaughterDamageRepeatSaveMismatch";
+  | "saveGatedConditionWithRepeatDamageRepeatSaveMismatch";
 type GlyphExplosiveRuneDamageLifecycle = {
   readonly damageRollTotal: number;
   readonly damageTargets: readonly {
@@ -520,7 +520,7 @@ type GlyphExplosiveRuneDamageLifecycle = {
   }[];
   readonly concentrationSavingThrowHoles: readonly BattleConcentrationSavingThrowHole[];
   readonly damageDispositionHoles: readonly BattleAttackDamageDispositionHole[];
-  readonly hideousLaughterDamageRepeatSaveHoles: readonly BattleHideousLaughterRepeatSavingThrowOutcomeHole[];
+  readonly saveGatedConditionWithRepeatDamageRepeatSaveHoles: readonly BattleSaveGatedConditionRepeatSavingThrowOutcomeHole[];
 };
 type GlyphExplosiveRuneDamageLifecycleCheck =
   | {
@@ -1503,22 +1503,22 @@ function isGlyphStoredSelfTransformationModeSpellInvocation(
 function glyphStoredSpellInvocationHostilePlacementSubject(
   invocation: GlyphStoredSpellFacts,
 ): GlyphStoredSpellRuntimeHostilePlacementSubject | null {
-  if (invocation.procedure === "greaseGroundHazard") {
+  if (invocation.procedure === "persistentAreaSaveCondition") {
     return "traps";
   }
-  if (invocation.procedure === "spiritualWeaponAttackProxy") {
+  if (invocation.procedure === "spatialMeleeSpellAttackProxy") {
     return "harmful_objects";
   }
   return null;
 }
 
-function isGlyphStoredSpiritualWeaponInvocation(
+function isGlyphStoredSpatialMeleeSpellAttackProxyInvocation(
   invocation: GlyphStoredSpellFacts,
 ): invocation is Extract<
   GlyphStoredSpellFacts,
-  { readonly procedure: "spiritualWeaponAttackProxy" }
+  { readonly procedure: "spatialMeleeSpellAttackProxy" }
 > {
-  return invocation.procedure === "spiritualWeaponAttackProxy";
+  return invocation.procedure === "spatialMeleeSpellAttackProxy";
 }
 
 function glyphReleaseWitnessMatchesStoredOccurrence(
@@ -1691,7 +1691,9 @@ function glyphStoredSpellHostilePlacementValidation(input: {
     return "hostilePlacementTargetMismatch";
   }
   if (hostilePlacement.subject === "harmful_objects") {
-    if (!isGlyphStoredSpiritualWeaponInvocation(input.invocation)) {
+    if (
+      !isGlyphStoredSpatialMeleeSpellAttackProxyInvocation(input.invocation)
+    ) {
       return "hostilePlacementSubjectMismatch";
     }
     const invocation = input.invocation;
@@ -1705,8 +1707,8 @@ function glyphStoredSpellHostilePlacementValidation(input: {
         fill,
       ): fill is Extract<
         BattleFill,
-        { readonly kind: "spiritualWeaponForcePosition" }
-      > => fill.kind === "spiritualWeaponForcePosition",
+        { readonly kind: "spatialMeleeSpellAttackProxyPosition" }
+      > => fill.kind === "spatialMeleeSpellAttackProxyPosition",
     );
     if (forcePosition === undefined) {
       return null;
@@ -1717,7 +1719,7 @@ function glyphStoredSpellHostilePlacementValidation(input: {
     const targetWithinPlacedForceReach =
       input.witness.targeting.targetSpatialFacts.some(
         (fact) =>
-          fact.kind === "spiritualWeaponTargetWithinForceReach" &&
+          fact.kind === "spatialMeleeSpellAttackProxyTargetWithinReach" &&
           fact.casterId === input.sourceCombatantId &&
           fact.targetId === input.witness.triggeringCreatureId &&
           fact.sourceProcedureRef === input.sourceProcedureRef &&
@@ -1831,8 +1833,8 @@ function storedGlyphSpellReleasePlan(
       ),
       anchorId: triggeringCreatureId,
     })),
-    Match.when({ executionKind: "greaseGroundHazard" }, (stored) => ({
-      kind: "greaseGroundHazard" as const,
+    Match.when({ executionKind: "persistentAreaSaveCondition" }, (stored) => ({
+      kind: "persistentAreaSaveCondition" as const,
       invocation: bindStoredSpellProcedureExecutionFacts(
         stored.storedProcedure,
         procedureRef,
@@ -2030,15 +2032,14 @@ type GlyphStoredSpellFullDurationEffect = Extract<
       | "spellConditionRepeatSave"
       | "spellConditionEndTurnSave"
       | "spellConcentrationDuration"
-      | "spiritualWeapon"
-      | "fogCloudObscurement"
+      | "spatialMeleeSpellAttackProxy"
+      | "persistentAreaTrait"
       | "magicalDarknessPointOrigin"
-      | "flamingSphere"
-      | "spikeGrowthHazard"
-      | "moonbeam"
-      | "webRestraintHazard"
-      | "gustOfWindLine"
-      | "hypnoticPatternControl"
+      | "persistentAreaSaveDamage"
+      | "areaMovementDistanceDamage"
+      | "persistentAreaSaveConditionEscape"
+      | "directionalPersistentArea"
+      | "saveGatedAreaControl"
       | "speedDelta"
       | "speedRatio"
       | "specialSpeedGrant"
@@ -2048,7 +2049,7 @@ type GlyphStoredSpellFullDurationEffect = Extract<
       | "d20RollModifier"
       | "abilityCheckRollMode"
       | "spellCreatureSizeChange"
-      | "spellLevitatedCreature"
+      | "controlledVerticalSuspension"
       | "targetActionEndedSpellCondition"
       | "creatureTypeProtection"
       | "savingThrowRollMode"
@@ -2138,15 +2139,14 @@ function glyphStoredSpellFullDurationEffectSupportsExpiration(
     effect.kind === "spellConditionRepeatSave" ||
     effect.kind === "spellConditionEndTurnSave" ||
     effect.kind === "spellConcentrationDuration" ||
-    effect.kind === "spiritualWeapon" ||
-    effect.kind === "fogCloudObscurement" ||
+    effect.kind === "spatialMeleeSpellAttackProxy" ||
+    effect.kind === "persistentAreaTrait" ||
     effect.kind === "magicalDarknessPointOrigin" ||
-    effect.kind === "flamingSphere" ||
-    effect.kind === "spikeGrowthHazard" ||
-    effect.kind === "moonbeam" ||
-    effect.kind === "webRestraintHazard" ||
-    effect.kind === "gustOfWindLine" ||
-    effect.kind === "hypnoticPatternControl" ||
+    effect.kind === "persistentAreaSaveDamage" ||
+    effect.kind === "areaMovementDistanceDamage" ||
+    effect.kind === "persistentAreaSaveConditionEscape" ||
+    effect.kind === "directionalPersistentArea" ||
+    effect.kind === "saveGatedAreaControl" ||
     effect.kind === "speedDelta" ||
     effect.kind === "speedRatio" ||
     effect.kind === "specialSpeedGrant" ||
@@ -2156,7 +2156,7 @@ function glyphStoredSpellFullDurationEffectSupportsExpiration(
     effect.kind === "d20RollModifier" ||
     effect.kind === "abilityCheckRollMode" ||
     effect.kind === "spellCreatureSizeChange" ||
-    effect.kind === "spellLevitatedCreature" ||
+    effect.kind === "controlledVerticalSuspension" ||
     effect.kind === "targetActionEndedSpellCondition" ||
     effect.kind === "creatureTypeProtection" ||
     effect.kind === "savingThrowRollMode" ||
@@ -2440,7 +2440,7 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
         damageTargets: [],
         concentrationSavingThrowHoles: [],
         damageDispositionHoles: [],
-        hideousLaughterDamageRepeatSaveHoles: [],
+        saveGatedConditionWithRepeatDamageRepeatSaveHoles: [],
       },
     };
   }
@@ -2582,47 +2582,51 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
     return { tag: "invalid", reason: "damageDispositionMismatch" };
   }
 
-  const hideousLaughterDamageRepeatSaveHoles = damageLifecycleTargets.flatMap(
-    ({ target, damage }) =>
-      damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+  const saveGatedConditionWithRepeatDamageRepeatSaveHoles =
+    damageLifecycleTargets.flatMap(({ target, damage }) =>
+      damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
         state: input.state,
         target,
         damageAmount: damage.damageAmount,
       }),
-  );
-  const invalidHideousLaughterRepeatSaveCheck = damageLifecycleTargets
-    .map(({ target, damage }) => {
-      const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
-        state: input.state,
-        target,
-        damageAmount: damage.damageAmount,
-      });
-      return damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
-        state: input.state,
-        target,
-        damageAmount: damage.damageAmount,
-        fills: fillsMatchingHoleIds(
-          areaMembership.hideousLaughterDamageRepeatSaves,
-          holes,
-        ),
-      });
-    })
-    .find((check) => check.tag === "invalid");
-  if (invalidHideousLaughterRepeatSaveCheck?.tag === "invalid") {
+    );
+  const invalidSaveGatedConditionWithRepeatRepeatSaveCheck =
+    damageLifecycleTargets
+      .map(({ target, damage }) => {
+        const holes =
+          damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
+            state: input.state,
+            target,
+            damageAmount: damage.damageAmount,
+          });
+        return damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck(
+          {
+            state: input.state,
+            target,
+            damageAmount: damage.damageAmount,
+            fills: fillsMatchingHoleIds(
+              areaMembership.saveGatedConditionWithRepeatDamageRepeatSaves,
+              holes,
+            ),
+          },
+        );
+      })
+      .find((check) => check.tag === "invalid");
+  if (invalidSaveGatedConditionWithRepeatRepeatSaveCheck?.tag === "invalid") {
     return {
       tag: "invalid",
-      reason: "hideousLaughterDamageRepeatSaveMismatch",
+      reason: "saveGatedConditionWithRepeatDamageRepeatSaveMismatch",
     };
   }
   if (
     hasUnexpectedOrDuplicateFills(
-      areaMembership.hideousLaughterDamageRepeatSaves,
-      hideousLaughterDamageRepeatSaveHoles,
+      areaMembership.saveGatedConditionWithRepeatDamageRepeatSaves,
+      saveGatedConditionWithRepeatDamageRepeatSaveHoles,
     )
   ) {
     return {
       tag: "invalid",
-      reason: "hideousLaughterDamageRepeatSaveMismatch",
+      reason: "saveGatedConditionWithRepeatDamageRepeatSaveMismatch",
     };
   }
 
@@ -2638,9 +2642,9 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
         damageDispositionFillFor(areaMembership.damageDispositions, hole) ===
         undefined,
     ),
-    ...hideousLaughterDamageRepeatSaveHoles.filter(
+    ...saveGatedConditionWithRepeatDamageRepeatSaveHoles.filter(
       (hole) =>
-        !areaMembership.hideousLaughterDamageRepeatSaves.some(
+        !areaMembership.saveGatedConditionWithRepeatDamageRepeatSaves.some(
           (fill) => fill.holeId === hole.holeId,
         ),
     ),
@@ -2659,7 +2663,7 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
       })),
       concentrationSavingThrowHoles,
       damageDispositionHoles,
-      hideousLaughterDamageRepeatSaveHoles,
+      saveGatedConditionWithRepeatDamageRepeatSaveHoles,
     },
   };
 }
@@ -2794,15 +2798,15 @@ function applyGlyphExplosiveRuneDamage(input: {
       areaMembership.concentrationSavingThrows,
       concentrationHoles,
     );
-    const hideousLaughterRepeatSaveHoles =
-      damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+    const saveGatedConditionWithRepeatRepeatSaveHoles =
+      damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
         state,
         target: spellReduction.target,
         damageAmount,
       });
-    const hideousLaughterRepeatSaveFills = fillsMatchingHoleIds(
-      areaMembership.hideousLaughterDamageRepeatSaves,
-      hideousLaughterRepeatSaveHoles,
+    const saveGatedConditionWithRepeatRepeatSaveFills = fillsMatchingHoleIds(
+      areaMembership.saveGatedConditionWithRepeatDamageRepeatSaves,
+      saveGatedConditionWithRepeatRepeatSaveHoles,
     );
     state = applyBattleHitPointDamage({
       state,
@@ -2820,8 +2824,10 @@ function applyGlyphExplosiveRuneDamage(input: {
         concentrationHoles,
         targetId,
       ),
-      wardingBondDamageShareConcentrationSavingThrows: concentrationFills,
-      hideousLaughterDamageRepeatSaves: hideousLaughterRepeatSaveFills,
+      linkedDefenseResistanceDamageShareConcentrationSavingThrows:
+        concentrationFills,
+      saveGatedConditionWithRepeatDamageRepeatSaves:
+        saveGatedConditionWithRepeatRepeatSaveFills,
     });
   }
   return { tag: "ok", state, damageRollTotal: input.lifecycle.damageRollTotal };

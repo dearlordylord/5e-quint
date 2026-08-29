@@ -17,7 +17,6 @@ export {
   characterExecutionWithMarkedDamageRiderTransfer,
   characterExecutionWithObjectContactDamageRepeat,
   characterExecutionWithSpellCreatedHeldObjectProcedures,
-  characterExecutionWithSpiritualWeaponRepeatAttack,
   characterProcedureBinding,
   characterProcedureBindingSnapshots,
   characterSpellProcedure,
@@ -1716,7 +1715,7 @@ export function spellProcedureExecution(
         procedure: value.procedure,
         resource: value.resource,
       }),
-      antimagicFieldOngoingSpellSuppression: (value) => ({
+      magicSuppressionEmanation: (value) => ({
         spellRuleFacts,
         access: value.access,
         durationTicks: value.durationTicks,
@@ -1737,7 +1736,7 @@ export function spellProcedureExecution(
         resource: value.resource,
         targeting: value.targeting,
       }),
-      blurAttackRollDefense: (value) => ({
+      perceptionGatedAttackRollDefense: (value) => ({
         spellRuleFacts,
         access: value.access,
         actionCost: value.actionCost,
@@ -1769,19 +1768,7 @@ export function spellProcedureExecution(
         resource: value.resource,
         targeting: value.targeting,
       }),
-      cloudkillAreaHazard: (value) => ({
-        spellRuleFacts,
-        ability: value.ability,
-        access: value.access,
-        damage: value.damage,
-        dc: value.dc,
-        durationTicks: value.durationTicks,
-        procedure: value.procedure,
-        rangeFeet: value.rangeFeet,
-        resource: value.resource,
-        targeting: value.targeting,
-      }),
-      command: (value) => ({
+      compelledNextTurnBehavior: (value) => ({
         spellRuleFacts,
         ability: value.ability,
         access: value.access,
@@ -1811,7 +1798,7 @@ export function spellProcedureExecution(
         resource: value.resource,
         targeting: value.targeting,
       }),
-      counterspell: (value) => ({
+      spellCastInterruptionReaction: (value) => ({
         spellRuleFacts,
         ability: value.ability,
         access: value.access,
@@ -1868,46 +1855,10 @@ export function spellProcedureExecution(
         resource: value.resource,
         targeting: value.targeting,
       }),
-      dancingLightsCombinedCast: (value) => ({
-        spellRuleFacts,
-        access: value.access,
-        actionCost: value.actionCost,
-        dimRadiusFeet: value.dimRadiusFeet,
-        expiresAt: value.expiresAt,
-        form: value.form,
-        maxMoveFeet: value.maxMoveFeet,
-        procedure: value.procedure,
-        rangeFeet: value.rangeFeet,
-        resource: value.resource,
-        spacingFeet: value.spacingFeet,
-      }),
-      /* v8 ignore start -- @preserve -- Dancing Lights reposition is synthesized from an admitted active effect; it is never an authored character spell invocation at this projection boundary. */
-      dancingLightsReposition: (value) => ({
-        spellRuleFacts,
-        access: value.access,
-        actionCost: value.actionCost,
-        activeEffectRef: value.activeEffectRef,
-        sourceDancingLightsProcedureRef: value.sourceDancingLightsProcedureRef,
-        maxMoveFeet: value.maxMoveFeet,
-        procedure: value.procedure,
-        rangeFeet: value.rangeFeet,
-        resource: value.resource,
-        spacingFeet: value.spacingFeet,
-      }),
-      /* v8 ignore stop -- @preserve */
-      dancingLightsSeparateCast: (value) => ({
-        spellRuleFacts,
-        access: value.access,
-        actionCost: value.actionCost,
-        dimRadiusFeet: value.dimRadiusFeet,
-        expiresAt: value.expiresAt,
-        form: value.form,
-        maxMoveFeet: value.maxMoveFeet,
-        procedure: value.procedure,
-        rangeFeet: value.rangeFeet,
-        resource: value.resource,
-        spacingFeet: value.spacingFeet,
-      }),
+      movableLightManifestation: (value) => {
+        const { spell: _spell, ...execution } = value;
+        return { ...execution, spellRuleFacts };
+      },
       directCondition: (value) => ({
         spellRuleFacts,
         access: value.access,
@@ -1938,7 +1889,7 @@ export function spellProcedureExecution(
         resource: value.resource,
         targeting: value.targeting,
       }),
-      dragonsBreathInitial: (value) => ({
+      grantedAreaSaveDamageAction: (value) => ({
         spellRuleFacts,
         access: value.access,
         actionCost: value.actionCost,
@@ -1949,7 +1900,7 @@ export function spellProcedureExecution(
         resource: value.resource,
         targeting: value.targeting,
       }),
-      expeditiousRetreatDash: (value) => ({
+      grantedAlternateActionCost: (value) => ({
         spellRuleFacts,
         access: value.access,
         actionCost: value.actionCost,
@@ -1957,7 +1908,7 @@ export function spellProcedureExecution(
         procedure: value.procedure,
         resource: value.resource,
       }),
-      featherFallMitigation: (value) => ({
+      fallingCreatureMitigationReaction: (value) => ({
         spellRuleFacts,
         access: value.access,
         activeEffect: value.activeEffect,
@@ -1966,20 +1917,11 @@ export function spellProcedureExecution(
         resource: value.resource,
         targeting: value.targeting,
       }),
-      flamingSphere: (value) => ({
-        spellRuleFacts,
-        ability: value.ability,
-        access: value.access,
-        damage: value.damage,
-        dc: value.dc,
-        durationTicks: value.durationTicks,
-        procedure: value.procedure,
-        ramMaxMoveFeet: value.ramMaxMoveFeet,
-        rangeFeet: value.rangeFeet,
-        resource: value.resource,
-        targeting: value.targeting,
-      }),
-      fogCloudObscurement: (value) => ({
+      persistentAreaSaveDamage: (value) => {
+        const { spell: _spell, ...execution } = value;
+        return { ...execution, spellRuleFacts };
+      },
+      persistentAreaTrait: (value) => ({
         spellRuleFacts,
         access: value.access,
         durationTicks: value.durationTicks,
@@ -1988,7 +1930,7 @@ export function spellProcedureExecution(
         resource: value.resource,
         targeting: value.targeting,
       }),
-      greaseGroundHazard: (value) => ({
+      persistentAreaSaveCondition: (value) => ({
         spellRuleFacts,
         ability: value.ability,
         access: value.access,
@@ -1999,7 +1941,7 @@ export function spellProcedureExecution(
         resource: value.resource,
         targeting: value.targeting,
       }),
-      gustOfWindLine: (value) => ({
+      directionalPersistentArea: (value) => ({
         spellRuleFacts,
         ability: value.ability,
         access: value.access,
@@ -2012,7 +1954,7 @@ export function spellProcedureExecution(
         resource: value.resource,
         targeting: value.targeting,
       }),
-      hastePositive: (value) => ({
+      compositeTargetBuffWithAftermath: (value) => ({
         spellRuleFacts,
         access: value.access,
         actionCost: value.actionCost,
@@ -2046,7 +1988,7 @@ export function spellProcedureExecution(
         sourceHeldLightProcedureRef: value.sourceHeldLightProcedureRef,
         targeting: value.targeting,
       }),
-      hideousLaughter: (value) => ({
+      saveGatedConditionWithRepeat: (value) => ({
         spellRuleFacts,
         ability: value.ability,
         access: value.access,
@@ -2057,7 +1999,7 @@ export function spellProcedureExecution(
         targeting: value.targeting,
       }),
       /* v8 ignore stop -- @preserve */
-      hypnoticPattern: (value) => ({
+      saveGatedAreaControl: (value) => ({
         spellRuleFacts,
         ability: value.ability,
         access: value.access,
@@ -2069,19 +2011,7 @@ export function spellProcedureExecution(
         resource: value.resource,
         targeting: value.targeting,
       }),
-      insectPlagueAreaHazard: (value) => ({
-        spellRuleFacts,
-        ability: value.ability,
-        access: value.access,
-        damage: value.damage,
-        dc: value.dc,
-        durationTicks: value.durationTicks,
-        procedure: value.procedure,
-        rangeFeet: value.rangeFeet,
-        resource: value.resource,
-        targeting: value.targeting,
-      }),
-      jumpMovementReplacement: (value) => ({
+      fixedCostMovementReplacement: (value) => ({
         spellRuleFacts,
         access: value.access,
         actionCost: value.actionCost,
@@ -2091,7 +2021,7 @@ export function spellProcedureExecution(
         resource: value.resource,
         targeting: value.targeting,
       }),
-      levitatedCreature: (value) => ({
+      controlledVerticalSuspension: (value) => ({
         spellRuleFacts,
         ability: value.ability,
         access: value.access,
@@ -2115,7 +2045,7 @@ export function spellProcedureExecution(
         resource: value.resource,
         targeting: value.targeting,
       }),
-      magicWeaponEnhancement: (value) => ({
+      weaponAttackDamageEnhancement: (value) => ({
         spellRuleFacts,
         access: value.access,
         actionCost: value.actionCost,
@@ -2159,26 +2089,13 @@ export function spellProcedureExecution(
           })),
           Match.exhaustive,
         ),
-      mirrorImageHitInterception: (value) => ({
+      duplicateHitInterception: (value) => ({
         spellRuleFacts,
         access: value.access,
         actionCost: value.actionCost,
         activeEffect: value.activeEffect,
         procedure: value.procedure,
         resource: value.resource,
-      }),
-      moonbeam: (value) => ({
-        spellRuleFacts,
-        ability: value.ability,
-        access: value.access,
-        damage: value.damage,
-        dc: value.dc,
-        durationTicks: value.durationTicks,
-        procedure: value.procedure,
-        rangeFeet: value.rangeFeet,
-        repositionMaxMoveFeet: value.repositionMaxMoveFeet,
-        resource: value.resource,
-        targeting: value.targeting,
       }),
       objectContactDamage: (value) => ({
         spellRuleFacts,
@@ -2286,7 +2203,7 @@ export function spellProcedureExecution(
               skillChoices: value.skillChoices,
               targeting: value.targeting,
             },
-      sanctuaryTargetingInterdiction: (value) => ({
+      targetingSaveInterdiction: (value) => ({
         spellRuleFacts,
         access: value.access,
         actionCost: value.actionCost,
@@ -2411,7 +2328,7 @@ export function spellProcedureExecution(
         procedure: value.procedure,
         resource: value.resource,
       }),
-      shieldReaction: (value) => ({
+      triggeredArmorDefense: (value) => ({
         spellRuleFacts,
         access: value.access,
         armorClassBonus: value.armorClassBonus,
@@ -2419,28 +2336,7 @@ export function spellProcedureExecution(
         procedure: value.procedure,
         resource: value.resource,
       }),
-      sleepTargetAdmission: (value) => ({
-        spellRuleFacts,
-        ability: value.ability,
-        access: value.access,
-        dc: value.dc,
-        procedure: value.procedure,
-        rangeFeet: value.rangeFeet,
-        resource: value.resource,
-        targeting: value.targeting,
-      }),
-      sleetStormAreaHazard: (value) => ({
-        spellRuleFacts,
-        ability: value.ability,
-        access: value.access,
-        dc: value.dc,
-        durationTicks: value.durationTicks,
-        procedure: value.procedure,
-        rangeFeet: value.rangeFeet,
-        resource: value.resource,
-        targeting: value.targeting,
-      }),
-      slowActivePenalties: (value) => ({
+      saveGatedTurnConstraintBundle: (value) => ({
         spellRuleFacts,
         ability: value.ability,
         access: value.access,
@@ -2453,6 +2349,21 @@ export function spellProcedureExecution(
         resource: value.resource,
         targeting: value.targeting,
       }),
+      persistentAreaSaveComposite: (value) => ({
+        spellRuleFacts,
+        ability: value.ability,
+        access: value.access,
+        dc: value.dc,
+        durationTicks: value.durationTicks,
+        procedure: value.procedure,
+        rangeFeet: value.rangeFeet,
+        resource: value.resource,
+        targeting: value.targeting,
+      }),
+      stagedSaveCondition: (value) => {
+        const { spell: _spell, ...execution } = value;
+        return { ...execution, spellRuleFacts };
+      },
       spellAttackDamage: (value) =>
         Match.value(value).pipe(
           Match.when({ access: isCantripSpellAccess }, (value) => ({
@@ -2559,7 +2470,7 @@ export function spellProcedureExecution(
         resource: value.resource,
         spellcastingAbilityModifier: value.spellcastingAbilityModifier,
       }),
-      spikeGrowthMovementHazard: (value) => ({
+      areaMovementDistanceDamage: (value) => ({
         spellRuleFacts,
         access: value.access,
         damage: value.damage,
@@ -2570,27 +2481,33 @@ export function spellProcedureExecution(
         resource: value.resource,
         targeting: value.targeting,
       }),
-      spiritualWeaponAttackProxy: (value) => ({
-        spellRuleFacts,
-        access: value.access,
-        actionCost: value.actionCost,
-        attackBonus: value.attackBonus,
-        attackKind: value.attackKind,
-        damage: value.damage,
-        durationTicks: value.durationTicks,
-        forceReachFeet: value.forceReachFeet,
+      spatialMeleeSpellAttackProxy: (value) =>
+        Match.value(value).pipe(
+          Match.when({ operation: "createAndAttack" }, (created) => {
+            const { spell: _spell, ...execution } = created;
+            return { ...execution, spellRuleFacts };
+          }),
+          Match.when({ operation: "repositionAndAttack" }, (repeat) => ({
+            activeEffectRef: repeat.activeEffect.effectRef,
+            activeEffectSourceProcedureRef:
+              repeat.activeEffect.sourceProcedureRef,
+            operation: repeat.operation,
+            procedure: repeat.procedure,
+          })),
+          Match.exhaustive,
+        ),
+      spawnedCompanionLifecycle: (value) => ({
+        casting: value.casting,
+        control: value.control,
+        formEligibility: value.formEligibility,
+        initialPlacement: value.initialPlacement,
+        lifecycle: value.lifecycle,
         procedure: value.procedure,
-        rangeFeet: value.rangeFeet,
-        repeatMoveMaxFeet: value.repeatMoveMaxFeet,
-        resource: value.resource,
-        targeting: value.targeting,
+        sharedSensesActionCost: value.sharedSensesActionCost,
+        telepathyRangeFeet: value.telepathyRangeFeet,
+        touchSpellProxy: value.touchSpellProxy,
       }),
-      spiritualWeaponRepeatAttack: (value) => ({
-        activeEffectRef: value.activeEffect.effectRef,
-        activeEffectSourceProcedureRef: value.activeEffect.sourceProcedureRef,
-        procedure: value.procedure,
-      }),
-      thaumaturgyBoomingVoice: (value) => ({
+      temporaryAbilityCheckRollMode: (value) => ({
         spellRuleFacts,
         access: value.access,
         actionCost: value.actionCost,
@@ -2598,8 +2515,10 @@ export function spellProcedureExecution(
         procedure: value.procedure,
         rangeFeet: value.rangeFeet,
         resource: value.resource,
+        selectedMode: value.selectedMode,
+        concurrentDurationModeLimit: value.concurrentDurationModeLimit,
       }),
-      wardingBond: (value) => ({
+      linkedDefenseResistanceDamageShare: (value) => ({
         spellRuleFacts,
         access: value.access,
         actionCost: value.actionCost,
@@ -2626,7 +2545,7 @@ export function spellProcedureExecution(
         procedure: value.procedure,
         resource: value.resource,
       }),
-      webRestraintHazard: (value) => ({
+      persistentAreaSaveConditionEscape: (value) => ({
         spellRuleFacts,
         ability: value.ability,
         access: value.access,

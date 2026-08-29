@@ -22,40 +22,40 @@ import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 import {
-  slowActivePenaltiesEffects,
-  slowSomaticSpellFailureOutcomeHole,
+  saveGatedTurnConstraintBundleEffects,
+  turnConstraintSomaticSpellFailureOutcomeHole,
 } from "./slow-active-penalties-facts.ts";
 import type { SpellMetamagicApplicationFact } from "./metamagic-support.ts";
-export { slowSomaticSpellFailureOutcomeHole } from "./slow-active-penalties-facts.ts";
+export { turnConstraintSomaticSpellFailureOutcomeHole } from "./slow-active-penalties-facts.ts";
 
 type SlowSomaticSpellFailureSubject =
   | ActionSpellBattleResolutionInput["subject"]
   | BonusActionSpellBattleResolutionInput["subject"]
   | BonusActionDashSpellBattleResolutionInput["subject"];
 
-export type BattleFillAfterSlowSomaticSpellFailureOutcome = Exclude<
+export type BattleFillAfterTurnConstraintSomaticSpellFailureOutcome = Exclude<
   BattleFill,
-  { readonly kind: "slowSomaticSpellFailureOutcome" }
+  { readonly kind: "turnConstraintSomaticSpellFailureOutcome" }
 >;
 
 type SlowSomaticSpellFailureResolution =
   | {
       readonly tag: "continue";
-      readonly fills: readonly BattleFillAfterSlowSomaticSpellFailureOutcome[];
+      readonly fills: readonly BattleFillAfterTurnConstraintSomaticSpellFailureOutcome[];
     }
   | BattleResolutionResult;
 
-export function combatantHasSlowActivePenalties(
+export function combatantHasSaveGatedTurnConstraintBundle(
   combatant: BattleCreatureState | undefined,
 ): boolean {
-  return slowActivePenaltiesEffects(combatant).length > 0;
+  return saveGatedTurnConstraintBundleEffects(combatant).length > 0;
 }
 
 export function slowActionOrBonusActionTurnResources(
   resources: BattleTurnResources,
   actor: BattleCreatureState | undefined,
 ): BattleTurnResources {
-  return combatantHasSlowActivePenalties(actor)
+  return combatantHasSaveGatedTurnConstraintBundle(actor)
     ? enableActionOrBonusActionExclusion(resources)
     : resources;
 }
@@ -70,16 +70,18 @@ export function resolveSlowSomaticSpellFailure(input: {
   readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
 }): SlowSomaticSpellFailureResolution {
-  const hole = slowSomaticSpellFailureOutcomeHole(input);
+  const hole = turnConstraintSomaticSpellFailureOutcomeHole(input);
   const fills = input.fills.filter(
     (
       fill,
     ): fill is Extract<
       BattleFill,
-      { readonly kind: "slowSomaticSpellFailureOutcome" }
-    > => fill.kind === "slowSomaticSpellFailureOutcome",
+      { readonly kind: "turnConstraintSomaticSpellFailureOutcome" }
+    > => fill.kind === "turnConstraintSomaticSpellFailureOutcome",
   );
-  const remainingFills = fillsAfterSlowSomaticSpellFailureOutcome(input.fills);
+  const remainingFills = fillsAfterTurnConstraintSomaticSpellFailureOutcome(
+    input.fills,
+  );
   if (hole === null) {
     return fills.length === 0
       ? { tag: "continue", fills: remainingFills }
@@ -127,11 +129,11 @@ export function resolveSlowSomaticSpellFailure(input: {
     : { tag: "continue", fills: remainingFills };
 }
 
-export function fillsAfterSlowSomaticSpellFailureOutcome(
+export function fillsAfterTurnConstraintSomaticSpellFailureOutcome(
   fills: readonly BattleFill[],
-): readonly BattleFillAfterSlowSomaticSpellFailureOutcome[] {
+): readonly BattleFillAfterTurnConstraintSomaticSpellFailureOutcome[] {
   return fills.filter(
-    (fill): fill is BattleFillAfterSlowSomaticSpellFailureOutcome =>
-      fill.kind !== "slowSomaticSpellFailureOutcome",
+    (fill): fill is BattleFillAfterTurnConstraintSomaticSpellFailureOutcome =>
+      fill.kind !== "turnConstraintSomaticSpellFailureOutcome",
   );
 }

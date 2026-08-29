@@ -3,7 +3,7 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-weapon-enhancement
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 //
-// The magicWeaponEnhancement Spell Procedure Profile: a Bonus Action spell that
+// The weaponAttackDamageEnhancement Spell Procedure Profile: a Bonus Action spell that
 // attaches a timed magic-weapon enhancement to an exact holder-plus-item weapon
 // identity supplied by the table-owned fill boundary.
 
@@ -13,17 +13,17 @@ import type { Attachment, EffectAtom } from "@dnd/surface/surface/types";
 import { Result } from "effect";
 
 import {
-  MAGIC_WEAPON_ENHANCEMENT_BONUSES,
+  WEAPON_ATTACK_DAMAGE_ENHANCEMENT_BONUSES,
   type BattleActDiscoveryCandidate,
   type BattleActiveEffectExpiration,
-  type BattleMagicWeaponTargetItemFact,
+  type BattleWeaponEnhancementTargetItemFact,
   type BattleResolutionResult,
   type BattleState,
-  type MagicWeaponEnhancementBonus,
+  type WeaponAttackDamageEnhancementBonus,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import type { CombatantId } from "../../identity.ts";
-import { battleWeaponItemHasMagicWeaponEnhancement } from "../attack-damage-apply.ts";
+import { battleWeaponItemHasWeaponAttackDamageEnhancement } from "../attack-damage-apply.ts";
 import { isCharacterBattleCreatureState } from "../creature-state-execution.ts";
 import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
 
@@ -35,8 +35,8 @@ import { loadoutHasUsableHeldWeaponItem } from "../wild-shape-equipment.ts";
 import { characterEffectiveLoadout } from "../battle-object-lifecycle.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import {
-  magicWeaponTargetItemHole,
-  magicWeaponTargetItemHoleId,
+  weaponAttackDamageEnhancementTargetItemHole,
+  weaponAttackDamageEnhancementTargetItemHoleId,
 } from "../spells-targeting.ts";
 import type {
   SpellAdmissionContext,
@@ -53,12 +53,12 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
-type MagicWeaponEnhancementInvocation = Extract<
+type WeaponAttackDamageEnhancementInvocation = Extract<
   SupportedSpellInvocation,
-  { readonly procedure: "magicWeaponEnhancement" }
+  { readonly procedure: "weaponAttackDamageEnhancement" }
 >;
 
-type MagicWeaponEnhancementProjection = {
+type WeaponAttackDamageEnhancementProjection = {
   readonly durationTicks: Extract<
     BattleActiveEffectExpiration,
     { readonly kind: "duration" }
@@ -69,20 +69,20 @@ type MagicWeaponEnhancementProjection = {
   >["bonus"];
 };
 
-function admitMagicWeaponEnhancement(
+function admitWeaponAttackDamageEnhancement(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
-): readonly MagicWeaponEnhancementInvocation[] {
-  const projection = magicWeaponEnhancementProjection(spell);
+): readonly WeaponAttackDamageEnhancementInvocation[] {
+  const projection = weaponAttackDamageEnhancementProjection(spell);
   if (projection === null) {
     return [];
   }
   return ctx.spellCastOptions.flatMap(
-    (slot): readonly MagicWeaponEnhancementInvocation[] => {
+    (slot): readonly WeaponAttackDamageEnhancementInvocation[] => {
       if (Number(slot.spellLevel) < spell.mechanics.level) {
         return [];
       }
-      const bonus = magicWeaponEnhancementBonusForSlot(
+      const bonus = weaponAttackDamageEnhancementBonusForSlot(
         projection.bonus,
         slot.spellLevel,
       );
@@ -92,7 +92,7 @@ function admitMagicWeaponEnhancement(
             {
               access: { tag: "prepared" },
               resource: spellInvocationResourceForCastOption(slot),
-              procedure: "magicWeaponEnhancement",
+              procedure: "weaponAttackDamageEnhancement",
               spell,
               actionCost: "bonusAction",
               bonus,
@@ -103,9 +103,9 @@ function admitMagicWeaponEnhancement(
   );
 }
 
-function magicWeaponEnhancementProjection(
+function weaponAttackDamageEnhancementProjection(
   spell: BattleSpellAdmissionSource,
-): MagicWeaponEnhancementProjection | null {
+): WeaponAttackDamageEnhancementProjection | null {
   if (
     spell.mechanics.family !== "ongoing_effect" ||
     spell.mechanics.level !== 2 ||
@@ -155,10 +155,10 @@ function magicWeaponDurationEarlyEndIsSupported(
   return earlyEnd.length === 1 && earlyEnd[0]?.kind === "caster_recasts_spell";
 }
 
-function magicWeaponEnhancementBonusForSlot(
-  bonus: MagicWeaponEnhancementProjection["bonus"],
+function weaponAttackDamageEnhancementBonusForSlot(
+  bonus: WeaponAttackDamageEnhancementProjection["bonus"],
   slotLevel: SpellSlotLevel,
-): MagicWeaponEnhancementBonus | null {
+): WeaponAttackDamageEnhancementBonus | null {
   if (
     bonus.kind !== "threshold_tiers" ||
     bonus.axis !== "slot" ||
@@ -166,11 +166,11 @@ function magicWeaponEnhancementBonusForSlot(
   ) {
     return null;
   }
-  const base = magicWeaponEnhancementBonusFromNumber(bonus.base);
+  const base = weaponAttackDamageEnhancementBonusFromNumber(bonus.base);
   if (base === null) {
     return null;
   }
-  return bonus.tiers.reduce<MagicWeaponEnhancementBonus | null>(
+  return bonus.tiers.reduce<WeaponAttackDamageEnhancementBonus | null>(
     (current, tier) => {
       if (current === null) {
         return null;
@@ -178,28 +178,30 @@ function magicWeaponEnhancementBonusForSlot(
       if (Number(slotLevel) < tier.atLevel) {
         return current;
       }
-      return magicWeaponEnhancementBonusFromNumber(tier.value);
+      return weaponAttackDamageEnhancementBonusFromNumber(tier.value);
     },
     base,
   );
 }
 
-function magicWeaponEnhancementBonusFromNumber(
+function weaponAttackDamageEnhancementBonusFromNumber(
   value: number,
-): MagicWeaponEnhancementBonus | null {
-  return isMagicWeaponEnhancementBonus(value) ? value : null;
+): WeaponAttackDamageEnhancementBonus | null {
+  return isWeaponAttackDamageEnhancementBonus(value) ? value : null;
 }
 
-function isMagicWeaponEnhancementBonus(
+function isWeaponAttackDamageEnhancementBonus(
   value: number,
-): value is MagicWeaponEnhancementBonus {
-  return MAGIC_WEAPON_ENHANCEMENT_BONUSES.some((bonus) => bonus === value);
+): value is WeaponAttackDamageEnhancementBonus {
+  return WEAPON_ATTACK_DAMAGE_ENHANCEMENT_BONUSES.some(
+    (bonus) => bonus === value,
+  );
 }
 
-function discoverMagicWeaponEnhancementCastAct(
+function discoverWeaponAttackDamageEnhancementCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<MagicWeaponEnhancementInvocation>,
+  invocation: import("../../battle-state-execution.ts").BattleExecutableSpellInvocation<WeaponAttackDamageEnhancementInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [
     {
@@ -209,18 +211,18 @@ function discoverMagicWeaponEnhancementCastAct(
         procedureRef: invocation.sourceProcedureRef,
         mode: { tag: "cast" },
       },
-      initialHoles: [magicWeaponTargetItemHole(invocation)],
+      initialHoles: [weaponAttackDamageEnhancementTargetItemHole(invocation)],
     },
   ];
 }
 
-function resolveMagicWeaponEnhancement(
-  input: SpellProcedureProfileResolveInput<MagicWeaponEnhancementInvocation>,
+function resolveWeaponAttackDamageEnhancement(
+  input: SpellProcedureProfileResolveInput<WeaponAttackDamageEnhancementInvocation>,
 ): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !fillsBelongToSpellCastHoles(input.input.fills, [
-      magicWeaponTargetItemHoleId(input.invocation),
+      weaponAttackDamageEnhancementTargetItemHoleId(input.invocation),
     ])
   ) {
     return invalidResult(
@@ -230,14 +232,20 @@ function resolveMagicWeaponEnhancement(
     );
   }
   /* v8 ignore stop -- @preserve */
-  if (input.fillSet.magicWeaponTargetItem === undefined) {
+  if (input.fillSet.weaponAttackDamageEnhancementTargetItem === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
-      magicWeaponTargetItemHole(input.invocation),
+      weaponAttackDamageEnhancementTargetItemHole(input.invocation),
     ]);
   }
-  const targetItem = input.fillSet.magicWeaponTargetItem.value;
+  const targetItem =
+    input.fillSet.weaponAttackDamageEnhancementTargetItem.value;
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (!battleMagicWeaponTargetItemIsHeldWeapon(input.input.state, targetItem)) {
+  if (
+    !battleWeaponAttackDamageEnhancementTargetItemIsHeldWeapon(
+      input.input.state,
+      targetItem,
+    )
+  ) {
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -247,7 +255,7 @@ function resolveMagicWeaponEnhancement(
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    battleWeaponItemHasMagicWeaponEnhancement(
+    battleWeaponItemHasWeaponAttackDamageEnhancement(
       input.input.state,
       targetItem.holderCombatantId,
       targetItem.itemId,
@@ -287,11 +295,11 @@ function resolveMagicWeaponEnhancement(
     input.input.state,
     input.actorId,
     (effect) =>
-      effect.kind === "spellMagicWeaponEnhancement" &&
+      effect.kind === "weaponAttackDamageEnhancement" &&
       effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
       effect.sourceCombatantId === input.actorId,
     {
-      kind: "spellMagicWeaponEnhancement",
+      kind: "weaponAttackDamageEnhancement",
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       holderCombatantId: targetItem.holderCombatantId,
@@ -312,9 +320,9 @@ function resolveMagicWeaponEnhancement(
   return resolutionFromStateResult(resourced);
 }
 
-function battleMagicWeaponTargetItemIsHeldWeapon(
+function battleWeaponAttackDamageEnhancementTargetItemIsHeldWeapon(
   state: BattleState,
-  targetItem: BattleMagicWeaponTargetItemFact,
+  targetItem: BattleWeaponEnhancementTargetItemFact,
 ): boolean {
   const holder = state.combatants.get(targetItem.holderCombatantId);
   if (!isCharacterBattleCreatureState(holder)) {
@@ -328,26 +336,26 @@ function battleMagicWeaponTargetItemIsHeldWeapon(
   });
 }
 
-export const MagicWeaponEnhancementInvocationSchema =
+export const WeaponAttackDamageEnhancementInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
-      procedure: Schema.Literal("magicWeaponEnhancement"),
+      procedure: Schema.Literal("weaponAttackDamageEnhancement"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("bonusAction"),
       bonus: Schema.Literals([1, 2, 3]),
       durationTicks: ElapsedTimeTicksSchema,
     }),
   );
-export const magicWeaponEnhancementProfile: SpellProcedureDeclaration<
-  "magicWeaponEnhancement",
-  MagicWeaponEnhancementInvocation
+export const weaponAttackDamageEnhancementProfile: SpellProcedureDeclaration<
+  "weaponAttackDamageEnhancement",
+  WeaponAttackDamageEnhancementInvocation
 > = {
-  procedure: "magicWeaponEnhancement",
-  executionSchema: MagicWeaponEnhancementInvocationSchema,
-  admit: admitMagicWeaponEnhancement,
-  discoverCastAct: discoverMagicWeaponEnhancementCastAct,
-  resolve: resolveMagicWeaponEnhancement,
+  procedure: "weaponAttackDamageEnhancement",
+  executionSchema: WeaponAttackDamageEnhancementInvocationSchema,
+  admit: admitWeaponAttackDamageEnhancement,
+  discoverCastAct: discoverWeaponAttackDamageEnhancementCastAct,
+  resolve: resolveWeaponAttackDamageEnhancement,
 };
 import { spellInvocationResourceForCastOption } from "./profile.ts";

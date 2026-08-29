@@ -25,6 +25,8 @@ let OperationEffect =
       , dc : Optional { kind : Text }
       , onFail : Optional SaveDamage
       , onSuccess : Optional { kind : Text }
+      , distanceFeet : Optional Natural
+      , direction : Optional Text
       }
 
 let defaultOperationEffect : OperationEffect =
@@ -33,18 +35,25 @@ let defaultOperationEffect : OperationEffect =
       , dc = None { kind : Text }
       , onFail = None SaveDamage
       , onSuccess = None { kind : Text }
+      , distanceFeet = None Natural
+      , direction = None Text
       }
 
 let Operation =
       { trigger : { kind : Text }
-      , usageLimit : Optional { kind : Text }
+      , usageLimit : Optional { kind : Text, limitGroup : Optional Text }
       , effect : OperationEffect
       }
 
 let defaultOperation : Operation =
       { trigger = { kind = "" }
-      , usageLimit = None { kind : Text }
+      , usageLimit = None { kind : Text, limitGroup : Optional Text }
       , effect = defaultOperationEffect
+      }
+
+let sharedSaveLimit =
+      { kind = "once_per_turn"
+      , limitGroup = Some "cloudkill_save_per_turn"
       }
 
 let cloudkill =
@@ -104,12 +113,22 @@ let cloudkill =
                       }
                   }
               , onSuccess = { kind = "half_damage" }
+              , usageLimit = sharedSaveLimit
               }
           , operations =
               [ defaultOperation // { trigger = { kind = "passive" }
                 , effect = defaultOperationEffect // { kind = "area_is_heavily_obscured" }
                 }
-              , defaultOperation // { trigger = { kind = "on_attached_turn_start" }
+              , defaultOperation // { trigger = { kind = "on_caster_turn_start" }
+                , effect =
+                    defaultOperationEffect
+                      //  { kind = "move_area"
+                          , distanceFeet = Some 10
+                          , direction = Some "away_from_caster"
+                          }
+                }
+              , defaultOperation // { trigger = { kind = "on_area_moves_into_creature_space" }
+                , usageLimit = Some sharedSaveLimit
                 , effect =
                     defaultOperationEffect // { kind = "save_gate"
                     , ability = Some "con"
@@ -129,7 +148,7 @@ let cloudkill =
                     }
                 }
               , defaultOperation // { trigger = { kind = "on_creature_enters_area" }
-                , usageLimit = Some { kind = "once_per_turn" }
+                , usageLimit = Some sharedSaveLimit
                 , effect =
                     defaultOperationEffect // { kind = "save_gate"
                     , ability = Some "con"
@@ -149,7 +168,7 @@ let cloudkill =
                     }
                 }
               , defaultOperation // { trigger = { kind = "on_creature_ends_turn_in_area" }
-                , usageLimit = Some { kind = "once_per_turn" }
+                , usageLimit = Some sharedSaveLimit
                 , effect =
                     defaultOperationEffect // { kind = "save_gate"
                     , ability = Some "con"

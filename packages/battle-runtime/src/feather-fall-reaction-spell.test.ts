@@ -100,7 +100,7 @@ describe("Feather Fall Reaction spell", () => {
     const invocationRef = spellAccessFreeCastSpellInvocationRef(
       featherFallUnitId,
       resourcePoolRef,
-      "featherFallMitigation",
+      "fallingCreatureMitigationReaction",
     );
     const awaitingReaction = openFeatherFallWindow(
       session,
@@ -135,7 +135,7 @@ describe("Feather Fall Reaction spell", () => {
     ).toMatchObject({
       tag: "spellAccessFreeCast",
       spellId: featherFallUnitId,
-      procedure: "featherFallMitigation",
+      procedure: "fallingCreatureMitigationReaction",
     });
     const targetList = requireHole(
       reactionChoice.initialHoles,
@@ -258,7 +258,7 @@ describe("Feather Fall Reaction spell", () => {
         return (
           invocation.tag === "spellSlot" &&
           invocation.spellId === featherFallUnitId &&
-          invocation.procedure === "featherFallMitigation"
+          invocation.procedure === "fallingCreatureMitigationReaction"
         );
       },
     );
@@ -313,7 +313,7 @@ describe("Feather Fall Reaction spell", () => {
       const target = requireCombatant(resolved.session.state, targetId);
       expect(target.activeEffects).toContainEqual(
         expect.objectContaining({
-          kind: "featherFallMitigation",
+          kind: "fallingCreatureMitigationReaction",
           sourceProcedureRef: expect.any(String),
           sourceCombatantId: casterId,
           expiresAt: expect.objectContaining({ kind: "duration" }),
@@ -643,7 +643,7 @@ function castFeatherFallOn(
     return (
       invocation.tag === "spellSlot" &&
       invocation.spellId === featherFallUnitId &&
-      invocation.procedure === "featherFallMitigation"
+      invocation.procedure === "fallingCreatureMitigationReaction"
     );
   });
   if (choice === undefined || choice.kind !== "castTriggeredReactionSpell") {
@@ -740,7 +740,7 @@ function openFeatherFallWindow(
   invocationRef = spellSlotInvocationRef(
     featherFallUnitId,
     1,
-    "featherFallMitigation",
+    "fallingCreatureMitigationReaction",
   ),
 ): BattleResolutionResult {
   return openCreatureFallsInterruptWindow({
@@ -762,13 +762,13 @@ function featherFallTriggerFacts(
   invocationRef = spellSlotInvocationRef(
     featherFallUnitId,
     1,
-    "featherFallMitigation",
+    "fallingCreatureMitigationReaction",
   ),
 ): readonly BattleTargetSpatialFact[] {
   return includeTriggerFact
     ? [
         {
-          kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange",
+          kind: "fallingCreatureMitigationTriggerWithinRange",
           reactorId: casterId,
           fallingCreatureId,
           sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
@@ -808,7 +808,7 @@ function featherFallTargetListFill(
     holeId: hole.holeId,
     value: { targetIds },
     spatialFacts: fallingTargetIds.map((targetId) => ({
-      kind: "featherFallTargetFallingWithinRange",
+      kind: "fallingCreatureTargetWithinRange",
       casterId: casterIdValue,
       targetId,
       sourceProcedureRef: battleProcedureExecutionRefForSpellHoleForTest(hole),

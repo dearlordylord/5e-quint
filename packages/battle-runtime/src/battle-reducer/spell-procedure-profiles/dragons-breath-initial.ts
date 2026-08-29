@@ -5,7 +5,7 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-initial
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
 //
-// The dragonsBreathInitial Spell Procedure Profile: a prepared Bonus Action
+// The grantedAreaSaveDamageAction Spell Procedure Profile: a prepared Bonus Action
 // spell that attaches a Concentration-owned Spell Effect to one willing touched
 // creature and stores the chosen damage type plus caster Spell Save DC for the
 // target-granted Magic Action.
@@ -32,7 +32,7 @@ import {
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
-  type DragonsBreathInitialSpellInvocation,
+  type GrantedAreaSaveDamageActionSpellInvocation,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
@@ -42,7 +42,7 @@ import { breakBattleConcentration } from "../damage-apply.ts";
 import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { selectSpellTargetList } from "../spell-target-list-selection.ts";
-import { applyDragonsBreathInitialSpellEffect } from "../spells-active-effects.ts";
+import { applyGrantedAreaSaveDamageActionSpellEffect } from "../spells-active-effects.ts";
 import { spellDamageTypeChoiceHole } from "../spells-damage-fills.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
@@ -65,23 +65,23 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
-type DragonsBreathInitialInvocation = Extract<
+type GrantedAreaSaveDamageActionInvocation = Extract<
   SupportedSpellInvocation,
-  { readonly procedure: "dragonsBreathInitial" }
+  { readonly procedure: "grantedAreaSaveDamageAction" }
 >;
-type DragonsBreathInitialResolveInput =
-  SpellProcedureProfileResolveInput<DragonsBreathInitialInvocation>;
+type GrantedAreaSaveDamageActionResolveInput =
+  SpellProcedureProfileResolveInput<GrantedAreaSaveDamageActionInvocation>;
 
-function admitDragonsBreathInitial(
+function admitGrantedAreaSaveDamageAction(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
-): readonly DragonsBreathInitialInvocation[] {
+): readonly GrantedAreaSaveDamageActionInvocation[] {
   return ctx.spellCastOptions.flatMap(
-    (slot): readonly DragonsBreathInitialInvocation[] => {
+    (slot): readonly GrantedAreaSaveDamageActionInvocation[] => {
       if (Number(slot.spellLevel) < spell.mechanics.level) {
         return [];
       }
-      const projection = dragonsBreathInitialSpellProjection(
+      const projection = grantedAreaSaveDamageActionSpellProjection(
         ctx.actor.combatantId,
         spell,
         slot.spellLevel,
@@ -92,7 +92,7 @@ function admitDragonsBreathInitial(
             {
               access: { tag: "prepared" },
               resource: spellInvocationResourceForCastOption(slot),
-              procedure: "dragonsBreathInitial",
+              procedure: "grantedAreaSaveDamageAction",
               spell,
               actionCost: "bonusAction",
               targeting: {
@@ -107,12 +107,12 @@ function admitDragonsBreathInitial(
   );
 }
 
-function dragonsBreathInitialSpellProjection(
+function grantedAreaSaveDamageActionSpellProjection(
   actorId: CombatantId,
   spell: BattleSpellAdmissionSource,
   slotLevel: SpellSlotLevel,
 ): Pick<
-  DragonsBreathInitialSpellInvocation,
+  GrantedAreaSaveDamageActionSpellInvocation,
   "activeEffect" | "damageTypeChoices" | "rangeFeet"
 > | null {
   if (spell.mechanics.family !== "ongoing_effect") {
@@ -185,7 +185,7 @@ function dragonsBreathInitialSpellProjection(
         rangeFeet: movementFeet(5),
         damageTypeChoices: damageTypeChoice.options,
         activeEffect: {
-          kind: "dragonsBreath",
+          kind: "grantedAreaSaveDamageAction",
           sourceCombatantId: actorId,
           originalSlotLevel: slotLevel,
           expiresAt: {
@@ -197,10 +197,10 @@ function dragonsBreathInitialSpellProjection(
       };
 }
 
-function discoverDragonsBreathInitialCastAct(
+function discoverGrantedAreaSaveDamageActionCastAct(
   state: BattleState,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<DragonsBreathInitialInvocation>,
+  invocation: BattleExecutableSpellInvocation<GrantedAreaSaveDamageActionInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetListHole(state, actorId, invocation);
   return spellCastCandidatesForTargetHole(
@@ -212,8 +212,8 @@ function discoverDragonsBreathInitialCastAct(
   );
 }
 
-function resolveDragonsBreathInitial(
-  input: DragonsBreathInitialResolveInput,
+function resolveGrantedAreaSaveDamageAction(
+  input: GrantedAreaSaveDamageActionResolveInput,
 ): BattleResolutionResult {
   const targetSelection = selectSpellTargetList({
     state: input.input.state,
@@ -280,7 +280,7 @@ function resolveDragonsBreathInitial(
     input.input.state,
     input.actorId,
   );
-  const effected = applyDragonsBreathInitialSpellEffect(
+  const effected = applyGrantedAreaSaveDamageActionSpellEffect(
     concentrationBase,
     input.actorId,
     targetId,
@@ -297,12 +297,12 @@ function resolveDragonsBreathInitial(
   });
 }
 
-export const DragonsBreathInitialInvocationSchema =
+export const GrantedAreaSaveDamageActionInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
-      procedure: Schema.Literal("dragonsBreathInitial"),
+      procedure: Schema.Literal("grantedAreaSaveDamageAction"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("bonusAction"),
       targeting: Schema.Struct({
@@ -312,7 +312,7 @@ export const DragonsBreathInitialInvocationSchema =
       }),
       activeEffect: Schema.Struct({
         ...BattleEffectOccurrenceTemplateSchemaFields,
-        kind: Schema.Literal("dragonsBreath"),
+        kind: Schema.Literal("grantedAreaSaveDamageAction"),
         sourceCombatantId: CombatantId,
         originalSlotLevel: SpellSlotLevel,
         expiresAt: Schema.Struct({
@@ -325,13 +325,13 @@ export const DragonsBreathInitialInvocationSchema =
       rangeFeet: MovementFeet,
     }),
   );
-export const dragonsBreathInitialProfile = {
-  procedure: "dragonsBreathInitial",
-  executionSchema: DragonsBreathInitialInvocationSchema,
-  admit: admitDragonsBreathInitial,
-  discoverCastAct: discoverDragonsBreathInitialCastAct,
-  resolve: resolveDragonsBreathInitial,
+export const grantedAreaSaveDamageActionProfile = {
+  procedure: "grantedAreaSaveDamageAction",
+  executionSchema: GrantedAreaSaveDamageActionInvocationSchema,
+  admit: admitGrantedAreaSaveDamageAction,
+  discoverCastAct: discoverGrantedAreaSaveDamageActionCastAct,
+  resolve: resolveGrantedAreaSaveDamageAction,
 } satisfies SpellProcedureDeclaration<
-  "dragonsBreathInitial",
-  DragonsBreathInitialInvocation
+  "grantedAreaSaveDamageAction",
+  GrantedAreaSaveDamageActionInvocation
 >;

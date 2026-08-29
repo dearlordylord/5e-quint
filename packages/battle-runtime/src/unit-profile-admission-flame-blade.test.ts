@@ -999,7 +999,7 @@ type SpellCastReactionFactsFill = Extract<
 
 type CounterspellTriggerFact = Extract<
   SpellCastReactionFactsFill["spatialFacts"][number],
-  { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
+  { readonly kind: "spellCastInterruptionTriggerCasterVisibleWithinRange" }
 >;
 
 function counterspellTriggerFact(input: {
@@ -1007,7 +1007,7 @@ function counterspellTriggerFact(input: {
   readonly casterId: CombatantId;
 }): CounterspellTriggerFact {
   return {
-    kind: "counterspellTriggerCasterVisibleWithinRange",
+    kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
     reactorId: input.reactorId,
     casterId: input.casterId,
     sourceProcedureRef: battleProcedureExecutionRefForTest(

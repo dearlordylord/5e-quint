@@ -7,7 +7,7 @@ import {
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import {
   antimagicFieldAuraEffectTemplateForTest,
-  antimagicFieldAuraMembershipForTest,
+  magicSuppressionEmanationMembershipForTest,
   type TestAntimagicFieldAuraMembership,
 } from "./antimagic-field.test-support.ts";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
@@ -375,7 +375,7 @@ function outsideAuraSpellTargetState(): BattleRuntimeSession {
 function insideAuraSpellTargetState(): BattleRuntimeSession {
   return activeAntimagicAuraSession(
     spellTargetBattle(),
-    antimagicFieldAuraMembershipForTest({
+    magicSuppressionEmanationMembershipForTest({
       sourceCombatantId: spellTargetId,
       originIncluded: true,
       nonOriginCombatantIds: [],
@@ -399,7 +399,7 @@ function outsideAuraSpellAreaState(): BattleRuntimeSession {
 function insideAuraSpellAreaState(): BattleRuntimeSession {
   return activeAntimagicAuraSession(
     spellAreaBattle(),
-    antimagicFieldAuraMembershipForTest({
+    magicSuppressionEmanationMembershipForTest({
       sourceCombatantId: spellTargetId,
       originIncluded: true,
       nonOriginCombatantIds: [],
@@ -421,7 +421,7 @@ function outsideAuraObjectContactState(): BattleRuntimeSession {
 function insideAuraObjectContactState(): BattleRuntimeSession {
   return activeAntimagicAuraSession(
     objectContactBattle(),
-    antimagicFieldAuraMembershipForTest({
+    magicSuppressionEmanationMembershipForTest({
       sourceCombatantId: spellTargetId,
       originIncluded: true,
       nonOriginCombatantIds: [],
@@ -445,7 +445,7 @@ function outsideAuraOtherMagicalEffectState(): BattleRuntimeSession {
 function insideAuraOtherMagicalEffectState(): BattleRuntimeSession {
   return activeAntimagicAuraSession(
     preserveLifeBattle(),
-    antimagicFieldAuraMembershipForTest({
+    magicSuppressionEmanationMembershipForTest({
       sourceCombatantId: spellTargetId,
       originIncluded: true,
       nonOriginCombatantIds: [],

@@ -890,7 +890,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
           holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
           spatialFacts: [
             {
-              kind: "counterspellTriggerCasterVisibleWithinRange",
+              kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
               reactorId: skeletonId,
               casterId: fighterId,
               sourceProcedureRef: requireCharacterSpellProcedureRefForTest(

@@ -12,60 +12,60 @@ import type {
   BattleState,
 } from "../battle-state-execution.ts";
 
-export type CommandPendingEffect = Extract<
+export type CompelledNextTurnBehaviorEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "commandPending" }
+  { readonly kind: "compelledNextTurnBehavior" }
 >;
 
-export function commandPendingEffectsForActor(
+export function compelledNextTurnBehaviorEffectsForActor(
   state: BattleState,
   actorId: CombatantId,
-): readonly CommandPendingEffect[] {
+): readonly CompelledNextTurnBehaviorEffect[] {
   const actor = state.combatants.get(actorId);
   if (actor === undefined) {
     return [];
   }
   return actor.activeEffects.filter(
-    (effect): effect is CommandPendingEffect =>
-      effect.kind === "commandPending" &&
+    (effect): effect is CompelledNextTurnBehaviorEffect =>
+      effect.kind === "compelledNextTurnBehavior" &&
       effect.expiresAt.combatantId === actorId &&
       effect.expiresAt.round === state.initiative.round,
   );
 }
 
-const COMMAND_DROP_HELD_OBJECT_FACTS_HOLE_INSTANCE = holeInstanceKey(
-  "battle:command-drop:held-object-facts",
+const COMPELLED_DROP_HELD_OBJECT_FACTS_HOLE_INSTANCE = holeInstanceKey(
+  "battle:compelled-drop:held-object-facts",
 );
 
-export function commandDropHeldObjectFactsHole(
+export function executeCompelledDropHeldObjectFactsHole(
   subject: Extract<
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "commandDrop";
+      readonly command: "executeCompelledDrop";
     }
   >,
 ): BattleHeldObjectFactsHole {
   return {
-    holeInstanceKey: COMMAND_DROP_HELD_OBJECT_FACTS_HOLE_INSTANCE,
-    holeId: commandDropHeldObjectFactsHoleId(subject),
+    holeInstanceKey: COMPELLED_DROP_HELD_OBJECT_FACTS_HOLE_INSTANCE,
+    holeId: executeCompelledDropHeldObjectFactsHoleId(subject),
     kind: "heldObjectFacts",
-    label: "Command Drop held-object facts",
+    label: "Compelled drop held-object facts",
     actorId: subject.actorId,
   };
 }
 
-export function commandDropHeldObjectFactsHoleId(
+export function executeCompelledDropHeldObjectFactsHoleId(
   subject: Extract<
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "commandDrop";
+      readonly command: "executeCompelledDrop";
     }
   >,
 ): BattleHoleId {
   return holeId(
-    `battle:command-drop:held-object-facts:${subject.actorId}:${subject.effectRef}`,
+    `battle:compelled-drop:held-object-facts:${subject.actorId}:${subject.effectRef}`,
   );
 }
 

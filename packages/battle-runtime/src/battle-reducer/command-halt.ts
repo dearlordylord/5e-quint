@@ -1,9 +1,9 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-command-halt-grovel
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-compelled-halt-grovel
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 
 import { movementFeet, type Round } from "@dnd/shared/types";
 import type {
-  BattleCommandHaltTurnSuppression,
+  BattleCompelledHaltTurnSuppression,
   BattleCreatureState,
   BattleState,
 } from "../battle-state-execution.ts";
@@ -19,57 +19,57 @@ import {
   representedMovementSpeedKinds,
 } from "./movement-speed.ts";
 
-export function applyCommandHaltAtTurnStart(state: BattleState): BattleState {
+export function applyCompelledHaltAtTurnStart(state: BattleState): BattleState {
   const actorId = currentActorId(state);
-  const commandHalt = commandHaltTurnSuppressionForActor(
+  const compelledHalt = compelledHaltTurnSuppressionForActor(
     state.combatants,
     actorId,
     state.initiative.round,
   );
-  if (commandHalt === null) return state;
+  if (compelledHalt === null) return state;
 
   return {
     ...state,
-    combatants: combatantsWithCommandHaltMovementSpent(state, actorId),
+    combatants: combatantsWithCompelledHaltMovementSpent(state, actorId),
     currentTurnResources: {
       ...state.currentTurnResources,
       actionResources: [],
       currentHasBonusAction: false,
-      commandHalt,
+      compelledHalt,
     },
   };
 }
 
-export function commandHaltSuppressionIssue(
+export function compelledHaltSuppressionIssue(
   state: BattleState,
   subject: BattleSubject,
 ): string | null {
   const actorId = battleSubjectActorId(subject);
-  return state.currentTurnResources.commandHalt !== null &&
+  return state.currentTurnResources.compelledHalt !== null &&
     actorId === currentActorId(state) &&
-    subjectSuppressedByCommandHalt(subject)
-    ? "Command Halt suppresses Movement, Actions, and Bonus Actions for this turn."
+    subjectSuppressedByCompelledHalt(subject)
+    ? "The compelled halt behavior suppresses Movement, Actions, and Bonus Actions for this turn."
     : null;
 }
 
-function commandHaltTurnSuppressionForActor(
+function compelledHaltTurnSuppressionForActor(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   actorId: CombatantId,
   round: Round,
-): BattleCommandHaltTurnSuppression | null {
+): BattleCompelledHaltTurnSuppression | null {
   const actor = combatants.get(actorId);
   const halted =
     actor?.activeEffects.some(
       (effect) =>
-        effect.kind === "commandPending" &&
+        effect.kind === "compelledNextTurnBehavior" &&
         effect.option === "halt" &&
         effect.expiresAt.combatantId === actorId &&
         effect.expiresAt.round === round,
     ) ?? false;
-  return halted ? { kind: "commandHalt" } : null;
+  return halted ? { kind: "compelledHalt" } : null;
 }
 
-function combatantsWithCommandHaltMovementSpent(
+function combatantsWithCompelledHaltMovementSpent(
   state: BattleState,
   actorId: CombatantId,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
@@ -92,7 +92,7 @@ function combatantsWithCommandHaltMovementSpent(
   });
 }
 
-const COMMAND_HALT_SUPPRESSES_RUNTIME_COMMAND = {
+const COMPELLED_HALT_SUPPRESSES_RUNTIME_COMMAND = {
   endTurn: false,
   endConcentration: false,
   move: true,
@@ -107,38 +107,37 @@ const COMMAND_HALT_SUPPRESSES_RUNTIME_COMMAND = {
   releaseGrapple: false,
   opportunityAttack: false,
   retaliationAttack: false,
-  greaseGroundHazardSave: false,
-  webRestraintSave: false,
-  sleetStormAreaHazardSave: false,
-  insectPlagueAreaHazardSave: false,
-  cloudkillAreaHazardSave: false,
-  disperseCloudkill: false,
-  webRestrainedNoLongerInArea: false,
-  webAreaRemoved: false,
-  gustOfWindLineSave: false,
-  gustOfWindLineDirectionChange: false,
+  persistentAreaSaveConditionSave: false,
+  persistentAreaSaveConditionEscapeSave: false,
+  persistentAreaSaveCompositeSave: false,
+  persistentAreaSaveDamageSave: false,
+  endPersistentAreaSaveDamageForEnvironment: false,
+  endPersistentAreaSaveConditionEscapeForDeparture: false,
+  endPersistentAreaSaveConditionEscapeForAreaRemoval: false,
+  directionalPersistentAreaSave: false,
+  directionalPersistentAreaDirectionChange: false,
   movableZoneSave: false,
-  moonbeamCylinderExit: false,
+  persistentAreaSaveDamageExit: false,
   movableZoneReposition: false,
   movableZoneRam: false,
   releaseSpellCreatedHeldObject: false,
   protectionRelevantEffectSave: false,
   creatureTypeProtectionConditionAttempt: false,
   creatureTypeProtectionPossessionAttempt: false,
-  disperseFogCloud: false,
-  wardingBondSeparation: false,
-  jumpMovementReplacement: true,
-  dragonsBreathExhale: false,
+  endPersistentAreaTraitForEnvironment: false,
+  linkedDefenseResistanceDamageShareSeparation: false,
+  fixedCostMovementReplacement: true,
+  grantedAreaSaveDamageAction: false,
   replaceSelfTransformationMode: true,
-  commandGrovel: false,
-  commandDrop: false,
-  commandApproach: false,
-  commandFlee: false,
-  levitateAltitudeControl: true,
+  executeCompelledGrovel: false,
+  executeCompelledDrop: false,
+  executeCompelledApproach: false,
+  executeCompelledFlee: false,
+  controlledVerticalSuspensionAltitudeControl: true,
   creatureFalls: false,
 } as const satisfies Record<BattleRuntimeCommand, boolean>;
 
-const COMMAND_HALT_SUPPRESSES_SUBJECT_TAG = {
+const COMPELLED_HALT_SUPPRESSES_SUBJECT_TAG = {
   action: true,
   actionSpell: true,
   bonusAction: true,
@@ -147,11 +146,11 @@ const COMMAND_HALT_SUPPRESSES_SUBJECT_TAG = {
   bonusActionStandardAction: true,
   companionLifecycle: true,
   druidWildShape: true,
-  findFamiliarSharedSenses: true,
-  findFamiliarTouchSpell: true,
+  spawnedCompanionSharedSenses: true,
+  spawnedCompanionTouchSpellProxy: true,
   monkFocusFlurryOfBlowsStrike: true,
   monkFocusOption: true,
-  pactOfTheChainFamiliarAttack: true,
+  companionAttack: true,
   unitFeature: true,
   unitFeatureHeldWeaponActivation: true,
 } as const satisfies Record<
@@ -159,8 +158,8 @@ const COMMAND_HALT_SUPPRESSES_SUBJECT_TAG = {
   boolean
 >;
 
-function subjectSuppressedByCommandHalt(subject: BattleSubject): boolean {
+function subjectSuppressedByCompelledHalt(subject: BattleSubject): boolean {
   return subject.tag === "runtimeCommand"
-    ? COMMAND_HALT_SUPPRESSES_RUNTIME_COMMAND[subject.command]
-    : COMMAND_HALT_SUPPRESSES_SUBJECT_TAG[subject.tag];
+    ? COMPELLED_HALT_SUPPRESSES_RUNTIME_COMMAND[subject.command]
+    : COMPELLED_HALT_SUPPRESSES_SUBJECT_TAG[subject.tag];
 }

@@ -1009,7 +1009,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     critical,
     {
       concentrationSavingThrow: concentrationFill,
-      wardingBondDamageShareConcentrationSavingThrows:
+      linkedDefenseResistanceDamageShareConcentrationSavingThrows:
         input.fillSet.concentrationSavingThrows,
       damageDisposition,
       spellMarkedDamageRiders,

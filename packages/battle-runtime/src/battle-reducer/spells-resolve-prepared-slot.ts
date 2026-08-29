@@ -676,7 +676,7 @@ export function resolvePreparedSlotSpellAct(input: {
                   concentrationLifecycleFills,
                   concentrationSave,
                 ),
-          wardingBondDamageShareConcentrationSavingThrows:
+          linkedDefenseResistanceDamageShareConcentrationSavingThrows:
             concentrationLifecycleFills,
           damageDisposition: damageDispositionForTarget(
             damageDispositionHoles,

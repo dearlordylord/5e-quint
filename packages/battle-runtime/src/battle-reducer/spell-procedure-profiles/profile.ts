@@ -38,7 +38,7 @@ import type {
 } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import { cantripSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import {
-  antimagicFieldSuppressedOngoingSpellEffectKeys,
+  magicSuppressionOngoingSpellEffectKeys,
   ongoingSpellEffectRefKey,
 } from "../antimagic-field-suppression.ts";
 import { characterBattleLevel } from "../../character-class-level.ts";
@@ -195,7 +195,7 @@ export function spellAdmissionBattleProjection(
           round: state.initiative.round,
         },
         suppressedOngoingSpellEffectKeys:
-          antimagicFieldSuppressedOngoingSpellEffectKeys(state),
+          magicSuppressionOngoingSpellEffectKeys(state),
       };
 }
 

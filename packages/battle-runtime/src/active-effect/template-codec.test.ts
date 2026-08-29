@@ -2,11 +2,11 @@ import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
-  BlurredActiveEffectTemplateSchema,
+  PerceptionGatedAttackRollDefenseTemplateSchema,
+  LinkedDefenseResistanceDamageShareTemplateSchema,
   SpellMarkedDamageRiderTemplateSchema,
   SpellWeaponDamageRiderTemplateSchema,
-  ThaumaturgyBoomingVoiceTemplateSchema,
-  WardingBondActiveEffectTemplateSchema,
+  TemporaryAbilityCheckRollModeTemplateSchema,
 } from "./codecs.ts";
 import { SpellWeaponAttackOverrideTemplateSchema } from "../procedure-execution/weapon-attack-override.ts";
 import {
@@ -48,28 +48,28 @@ const templateSchemas = [
     },
   },
   {
-    name: "thaumaturgy voice",
-    schema: ThaumaturgyBoomingVoiceTemplateSchema,
+    name: "temporary ability-check roll mode",
+    schema: TemporaryAbilityCheckRollModeTemplateSchema,
     encoded: {
-      kind: "thaumaturgyBoomingVoice",
+      kind: "temporaryAbilityCheckRollMode",
       sourceCombatantId: "template-source",
       expiresAt: duration,
     },
   },
   {
-    name: "blurred",
-    schema: BlurredActiveEffectTemplateSchema,
+    name: "perception-gated attack-roll defense",
+    schema: PerceptionGatedAttackRollDefenseTemplateSchema,
     encoded: {
-      kind: "blurred",
+      kind: "perceptionGatedAttackRollDefense",
       sourceCombatantId: "template-source",
       expiresAt: concentration,
     },
   },
   {
-    name: "warding bond",
-    schema: WardingBondActiveEffectTemplateSchema,
+    name: "linked defense, resistance, and damage share",
+    schema: LinkedDefenseResistanceDamageShareTemplateSchema,
     encoded: {
-      kind: "wardingBond",
+      kind: "linkedDefenseResistanceDamageShare",
       sourceCombatantId: "template-source",
       expiresAt: duration,
     },

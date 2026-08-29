@@ -13,6 +13,7 @@ import {
 } from "./tracer-rule-labels.ts";
 import type { IdGen } from "./tracer-rule-labels.ts";
 import type { SpellCtx } from "./tracer-spell-context.ts";
+import { Match } from "effect";
 
 import { traceEffectAtom } from "./tracer-effect-atom.ts";
 
@@ -134,7 +135,7 @@ export function tracePhase(
           : "";
       const targetAutoLabel =
         phase.autoSuccessIfTarget !== undefined
-          ? `\nauto-success if target Challenge Rating != ${phase.autoSuccessIfTarget.challengeRating}`
+          ? `\nauto-success if target ${describeTargetAutoSuccess(phase.autoSuccessIfTarget)}`
           : "";
       const gateLabel =
         phase.saveAppliesIf !== undefined
@@ -341,6 +342,37 @@ export function tracePhase(
   }
 }
 
+function describeTargetAutoSuccess(
+  predicate: NonNullable<
+    Extract<
+      ActivationPhase,
+      { readonly kind: "save_gate" }
+    >["autoSuccessIfTarget"]
+  >,
+): string {
+  return Match.value(predicate).pipe(
+    Match.when(
+      { kind: "challenge_rating_not_equal" },
+      ({ challengeRating }) => `Challenge Rating != ${challengeRating}`,
+    ),
+    Match.when({ kind: "any" }, ({ predicates }) =>
+      predicates
+        .map((leaf) =>
+          Match.value(leaf).pipe(
+            Match.when({ kind: "does_not_sleep" }, () => "does not sleep"),
+            Match.when(
+              { kind: "has_condition_immunity" },
+              ({ condition }) => `${condition} immunity`,
+            ),
+            Match.exhaustive,
+          ),
+        )
+        .join(" or "),
+    ),
+    Match.exhaustive,
+  );
+}
+
 export function tracePhaseContinuation(
   continuation: import("../surface/types.ts").PhaseContinuation,
   hostId: string,
@@ -400,10 +432,9 @@ export function traceEffectModeChoice(
     category: "procedure",
     atomKind: "choose",
     label: `choose\n${mode.label}\n${mode.options
-      .map((option) =>
-        option.effects === undefined
-          ? `${option.displayName} (DM-owned)`
-          : option.displayName,
+      .map(
+        (option) =>
+          `${option.displayName}${option.effectDuration === undefined ? "" : ` [${option.effectDuration.replaceAll("_", " ")}]`}${option.effects === undefined ? " (DM-owned)" : ""}`,
       )
       .join(" | ")}${switchTag}`,
   });

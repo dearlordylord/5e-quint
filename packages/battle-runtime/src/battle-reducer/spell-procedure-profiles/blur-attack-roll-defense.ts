@@ -6,22 +6,22 @@ import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-blur-attack-roll-defense
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE
 //
-// The blurAttackRollDefense Spell Procedure Profile: a prepared action spell
+// The perceptionGatedAttackRollDefense Spell Procedure Profile: a prepared action spell
 // that creates a concentration self Spell Effect imposing Disadvantage on
 // Attack Rolls against the caster unless the attacker perceives them with
 // Blindsight or Truesight.
 //
 // What lives here:
-//   - admit()           - was supportedPreparedBlurAttackRollDefenseSpellProfile
+//   - admit()           - was supportedPreparedPerceptionGatedAttackRollDefenseSpellProfile
 //                         in spells-profiles-support.ts
-//   - discoverCastAct() - was the blurAttackRollDefense branch in
+//   - discoverCastAct() - was the perceptionGatedAttackRollDefense branch in
 //                         spells-discovery.ts
-//   - castSummary()     - was the blurAttackRollDefense branch in
+//   - castSummary()     - was the perceptionGatedAttackRollDefense branch in
 //                         spells-discovery.ts
 //                         spells-invocation-ref.ts
-//   - resolve()         - was resolveBlurAttackRollDefenseSpellAct in
+//   - resolve()         - was resolvePerceptionGatedAttackRollDefenseSpellAct in
 //                         spells-resolve-support-effects.ts
-//   - applyEffect()     - was applyBlurAttackRollDefenseSpellEffect in
+//   - applyEffect()     - was applyPerceptionGatedAttackRollDefenseSpellEffect in
 //                         spells-active-effects.ts
 //
 // What stays in shared infrastructure:
@@ -34,10 +34,10 @@ import {
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
-  type BlurAttackRollDefenseSpellInvocation,
+  type PerceptionGatedAttackRollDefenseSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
-import { BlurredActiveEffectTemplateSchema } from "../../active-effect/codecs.ts";
+import { PerceptionGatedAttackRollDefenseTemplateSchema } from "../../active-effect/codecs.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
@@ -57,10 +57,13 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
-function blurAttackRollDefenseShape(
+function perceptionGatedAttackRollDefenseShape(
   actorId: CombatantId,
   spell: BattleSpellAdmissionSource,
-): Pick<BlurAttackRollDefenseSpellInvocation, "activeEffect"> | null {
+): Pick<
+  PerceptionGatedAttackRollDefenseSpellInvocation,
+  "activeEffect"
+> | null {
   if (
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 2 ||
@@ -95,30 +98,33 @@ function blurAttackRollDefenseShape(
   }
   return {
     activeEffect: {
-      kind: "blurred",
+      kind: "perceptionGatedAttackRollDefense",
       sourceCombatantId: actorId,
       expiresAt,
     },
   };
 }
 
-function admitBlurAttackRollDefense(
+function admitPerceptionGatedAttackRollDefense(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
-): readonly BlurAttackRollDefenseSpellInvocation[] {
-  const shape = blurAttackRollDefenseShape(ctx.actor.combatantId, spell);
+): readonly PerceptionGatedAttackRollDefenseSpellInvocation[] {
+  const shape = perceptionGatedAttackRollDefenseShape(
+    ctx.actor.combatantId,
+    spell,
+  );
   if (shape === null) {
     return [];
   }
   return ctx.spellCastOptions.flatMap(
-    (slot): readonly BlurAttackRollDefenseSpellInvocation[] =>
+    (slot): readonly PerceptionGatedAttackRollDefenseSpellInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []
         : [
             {
               access: { tag: "prepared" },
               resource: spellInvocationResourceForCastOption(slot),
-              procedure: "blurAttackRollDefense",
+              procedure: "perceptionGatedAttackRollDefense",
               spell,
               actionCost: "magicAction",
               ...shape,
@@ -127,24 +133,24 @@ function admitBlurAttackRollDefense(
   );
 }
 
-function discoverBlurAttackRollDefenseCastAct(
+function discoverPerceptionGatedAttackRollDefenseCastAct(
   _state: BattleState,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<BlurAttackRollDefenseSpellInvocation>,
+  invocation: BattleExecutableSpellInvocation<PerceptionGatedAttackRollDefenseSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   return [actionSpellCastCandidate(actorId, invocation.sourceProcedureRef, [])];
 }
 
-function applyBlurAttackRollDefenseEffect(
+function applyPerceptionGatedAttackRollDefenseEffect(
   state: BattleState,
   actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<BlurAttackRollDefenseSpellInvocation>,
+  invocation: BattleExecutableSpellInvocation<PerceptionGatedAttackRollDefenseSpellInvocation>,
 ): BattleState {
   return replaceTargetSpellActiveEffect(
     state,
     actorId,
     (effect) =>
-      effect.kind === "blurred" &&
+      effect.kind === "perceptionGatedAttackRollDefense" &&
       effect.sourceProcedureRef === invocation.sourceProcedureRef &&
       effect.sourceCombatantId === actorId,
     {
@@ -155,8 +161,8 @@ function applyBlurAttackRollDefenseEffect(
   );
 }
 
-function resolveBlurAttackRollDefense(
-  input: SpellProcedureProfileResolveInput<BlurAttackRollDefenseSpellInvocation>,
+function resolvePerceptionGatedAttackRollDefense(
+  input: SpellProcedureProfileResolveInput<PerceptionGatedAttackRollDefenseSpellInvocation>,
 ): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!fillsBelongToSpellCastHoles(input.input.fills)) {
@@ -173,27 +179,32 @@ function resolveBlurAttackRollDefense(
     targetIds: [input.actorId],
     castingResource: { kind: "magicAction" },
     applyEffect: (state) =>
-      applyBlurAttackRollDefenseEffect(state, input.actorId, input.invocation),
+      applyPerceptionGatedAttackRollDefenseEffect(
+        state,
+        input.actorId,
+        input.invocation,
+      ),
   });
 }
 
-const BlurAttackRollDefenseInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Struct({
-    access: PreparedSpellAccessSchema,
-    resource: LeveledSpellInvocationResourceSchema,
-    procedure: Schema.Literal("blurAttackRollDefense"),
-    spellRuleFacts: SpellRuleExecutionFactsSchema,
-    actionCost: Schema.Literal("magicAction"),
-    activeEffect: BlurredActiveEffectTemplateSchema,
-  }),
-);
-export const blurAttackRollDefenseProfile: SpellProcedureDeclaration<
-  "blurAttackRollDefense",
-  BlurAttackRollDefenseSpellInvocation
+const PerceptionGatedAttackRollDefenseInvocationSchema =
+  spellProcedureExecutionSchema(
+    Schema.Struct({
+      access: PreparedSpellAccessSchema,
+      resource: LeveledSpellInvocationResourceSchema,
+      procedure: Schema.Literal("perceptionGatedAttackRollDefense"),
+      spellRuleFacts: SpellRuleExecutionFactsSchema,
+      actionCost: Schema.Literal("magicAction"),
+      activeEffect: PerceptionGatedAttackRollDefenseTemplateSchema,
+    }),
+  );
+export const perceptionGatedAttackRollDefenseProfile: SpellProcedureDeclaration<
+  "perceptionGatedAttackRollDefense",
+  PerceptionGatedAttackRollDefenseSpellInvocation
 > = {
-  procedure: "blurAttackRollDefense",
-  executionSchema: BlurAttackRollDefenseInvocationSchema,
-  admit: admitBlurAttackRollDefense,
-  discoverCastAct: discoverBlurAttackRollDefenseCastAct,
-  resolve: resolveBlurAttackRollDefense,
+  procedure: "perceptionGatedAttackRollDefense",
+  executionSchema: PerceptionGatedAttackRollDefenseInvocationSchema,
+  admit: admitPerceptionGatedAttackRollDefense,
+  discoverCastAct: discoverPerceptionGatedAttackRollDefenseCastAct,
+  resolve: resolvePerceptionGatedAttackRollDefense,
 };

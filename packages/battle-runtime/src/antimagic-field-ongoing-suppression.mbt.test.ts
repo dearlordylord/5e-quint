@@ -72,7 +72,7 @@ const antimagicFieldAreaId = battleAreaId("focused-antimagic-field-area");
 
 type SpiritualWeaponEffectRef = Extract<
   BattleActiveEffect,
-  { readonly kind: "spiritualWeapon" }
+  { readonly kind: "spatialMeleeSpellAttackProxy" }
 >["effectRef"];
 
 type AntimagicLastResult =
@@ -450,7 +450,7 @@ function antimagicProjection(
   const ongoingSpell = requireSpiritualWeaponActiveEffect(state.battle.state);
   const ongoingSpellRef = {
     kind: "spellActiveEffect" as const,
-    activeEffectKind: "spiritualWeapon" as const,
+    activeEffectKind: "spatialMeleeSpellAttackProxy" as const,
     effectRef: ongoingSpell.effectRef,
   };
   const projection = {
@@ -494,10 +494,10 @@ function antimagicFieldAreaFill(input: {
     kind: "spellAreaChoice",
     holeId: input.hole.holeId,
     value: {
-      kind: "antimagicFieldSelfEmanation",
+      kind: "magicSuppressionSelfEmanation",
       areaId: antimagicFieldAreaId,
       auraMembership: {
-        kind: "antimagicFieldAuraMembership",
+        kind: "magicSuppressionEmanationMembership",
         originIncluded: true,
         nonOriginCombatantIds: [],
       },
@@ -514,7 +514,7 @@ function antimagicAffectedSpiritualWeapon(
     kind: "antimagicFieldAffectedOngoingSpellEffect",
     effect: {
       kind: "spellActiveEffect",
-      activeEffectKind: "spiritualWeapon",
+      activeEffectKind: "spatialMeleeSpellAttackProxy",
       effectRef,
     },
     sourceKind,
@@ -531,13 +531,13 @@ function assertSuppressionActiveEffectShape(
       ? [
           {
             kind: "spellActiveEffect",
-            activeEffectKind: "spiritualWeapon",
+            activeEffectKind: "spatialMeleeSpellAttackProxy",
             effectRef,
           },
         ]
       : [];
   expect(antimagicSuppressionEffect(state)).toMatchObject({
-    kind: "antimagicFieldOngoingSpellSuppression",
+    kind: "magicSuppressionEmanation",
     sourceCombatantId: spellTargetId,
     areaId: antimagicFieldAreaId,
     radiusFeet: movementFeet(10),
@@ -553,19 +553,16 @@ function assertSuppressionActiveEffectShape(
 function antimagicSuppressionEffect(
   state: BattleState,
 ):
-  | Extract<
-      BattleActiveEffect,
-      { readonly kind: "antimagicFieldOngoingSpellSuppression" }
-    >
+  | Extract<BattleActiveEffect, { readonly kind: "magicSuppressionEmanation" }>
   | undefined {
   return requireCombatant(state, spellTargetId).activeEffects.find(
     (
       effect,
     ): effect is Extract<
       BattleActiveEffect,
-      { readonly kind: "antimagicFieldOngoingSpellSuppression" }
+      { readonly kind: "magicSuppressionEmanation" }
     > =>
-      effect.kind === "antimagicFieldOngoingSpellSuppression" &&
+      effect.kind === "magicSuppressionEmanation" &&
       effect.sourceCombatantId === spellTargetId &&
       effect.areaId === antimagicFieldAreaId,
   );
@@ -573,14 +570,14 @@ function antimagicSuppressionEffect(
 
 function spiritualWeaponActiveEffectTemplate(): Extract<
   BattleActiveEffectOccurrenceTemplate,
-  { readonly kind: "spiritualWeapon" }
+  { readonly kind: "spatialMeleeSpellAttackProxy" }
 > {
   const sourceSpellLevel = parseBattleSpellEffectLevel(2);
   if (sourceSpellLevel === null) {
     throw new Error("Expected valid Spiritual Weapon spell effect level.");
   }
   return {
-    kind: "spiritualWeapon",
+    kind: "spatialMeleeSpellAttackProxy",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       "spiritual-weapon-effect-fixture",
     ),
@@ -613,9 +610,9 @@ function spiritualWeaponActiveEffectTemplate(): Extract<
 
 function requireSpiritualWeaponActiveEffect(state: BattleState) {
   const effect = requireCombatant(state, spellCasterId).activeEffects.find(
-    (candidate) => candidate.kind === "spiritualWeapon",
+    (candidate) => candidate.kind === "spatialMeleeSpellAttackProxy",
   );
-  if (effect?.kind !== "spiritualWeapon") {
+  if (effect?.kind !== "spatialMeleeSpellAttackProxy") {
     throw new Error("Expected allocated Spiritual Weapon active effect.");
   }
   return effect;

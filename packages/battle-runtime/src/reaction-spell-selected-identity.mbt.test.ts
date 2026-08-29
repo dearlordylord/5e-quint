@@ -806,7 +806,7 @@ function startMagicMissileWithCounterspell(input: {
         holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
         spatialFacts: [
           {
-            kind: "counterspellTriggerCasterVisibleWithinRange",
+            kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
             reactorId,
             casterId: triggerCreatureId,
             sourceProcedureRef: battleProcedureExecutionRefForTest(

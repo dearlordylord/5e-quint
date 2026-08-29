@@ -274,7 +274,7 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
           holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
           spatialFacts: [
             {
-              kind: "counterspellTriggerCasterVisibleWithinRange",
+              kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
               reactorId: spellTargetId,
               casterId: spellCasterId,
               sourceProcedureRef: requireCharacterSpellProcedureRefForTest(

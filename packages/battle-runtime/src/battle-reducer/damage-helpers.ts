@@ -54,7 +54,7 @@ import {
   activeOngoingFeatureOccurrencesForCombatant,
   ongoingFeatureProfileForSourceKey,
 } from "./creature-state-execution.ts";
-import { combatantHasWardingBondResistance } from "./warding-bond.ts";
+import { combatantHasLinkedDefenseResistanceDamageShareResistance } from "./warding-bond.ts";
 import {
   attackDamageComponents,
   attackDamageModifier,
@@ -1011,7 +1011,7 @@ function targetHasRuntimeDamageResistance(
       (effect) =>
         effect.kind === "damageResistance" && effect.damageType === damageType,
     ) ||
-    combatantHasWardingBondResistance(target) ||
+    combatantHasLinkedDefenseResistanceDamageShareResistance(target) ||
     characterExecutionGrantsPassiveDamageResistance(target, damageType) ||
     [...activeOngoingFeatureOccurrencesForCombatant(state, target)].some(
       ([key]) =>

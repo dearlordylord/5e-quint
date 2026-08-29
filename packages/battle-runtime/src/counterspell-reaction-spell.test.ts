@@ -42,7 +42,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { counterspellCapableReactors } from "./battle-reducer/counterspell-reaction-discovery.ts";
+import { spellCastInterruptionReactionCapableReactors } from "./battle-reducer/counterspell-reaction-discovery.ts";
 import {
   cantripSpellInvocationRef,
   spellSlotInvocationRef,
@@ -80,7 +80,9 @@ describe("Counterspell Reaction spell", () => {
       counterspellerSlots: [{ spellLevel: 3, count: 0 }],
     });
 
-    expect(counterspellCapableReactors(session.state)).toEqual([]);
+    expect(spellCastInterruptionReactionCapableReactors(session.state)).toEqual(
+      [],
+    );
   });
 
   test("an inherited attack trigger does not suppress the distinct spell-cast window", () => {
@@ -247,7 +249,7 @@ describe("Counterspell Reaction spell", () => {
     const invocationRef = spellAccessFreeCastSpellInvocationRef(
       counterspellUnitId,
       resourcePoolRef,
-      "counterspell",
+      "spellCastInterruptionReaction",
     );
     const awaitingReaction = startMagicMissile({
       session,
@@ -1059,7 +1061,7 @@ describe("Counterspell Reaction spell", () => {
         spellSlotInvocationRef(
           expeditiousRetreatUnitId,
           1,
-          "expeditiousRetreatDash",
+          "grantedAlternateActionCost",
         ),
       ),
     );
@@ -1648,7 +1650,7 @@ type CounterspellTriggerFact = Extract<
     BattleFill,
     { readonly kind: "targetSpatialFacts" }
   >["spatialFacts"][number],
-  { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
+  { readonly kind: "spellCastInterruptionTriggerCasterVisibleWithinRange" }
 >;
 
 function counterspellTriggerFact(input: {
@@ -1660,14 +1662,18 @@ function counterspellTriggerFact(input: {
   >[2];
 }): CounterspellTriggerFact {
   return {
-    kind: "counterspellTriggerCasterVisibleWithinRange",
+    kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
     reactorId: input.reactorId,
     casterId: input.casterId,
     sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
       input.session,
       input.reactorId,
       input.invocationRef ??
-        spellSlotInvocationRef(counterspellUnitId, 3, "counterspell"),
+        spellSlotInvocationRef(
+          counterspellUnitId,
+          3,
+          "spellCastInterruptionReaction",
+        ),
     ),
     rangeFeet: movementFeet(60),
   };
@@ -1763,7 +1769,7 @@ function requireCounterspellChoice(
     result,
     reactorId,
     spellId: counterspellUnitId,
-    procedure: "counterspell",
+    procedure: "spellCastInterruptionReaction",
     slotLevel,
     ...(resource === undefined ? {} : { resource }),
   });

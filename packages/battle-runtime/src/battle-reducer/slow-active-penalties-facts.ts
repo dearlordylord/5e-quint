@@ -6,7 +6,7 @@ import type {
   BattleActiveEffect,
   BattleCreatureState,
   BattleExecutableSpellInvocation,
-  BattleSlowSomaticSpellFailureOutcomeHole,
+  BattleTurnConstraintSomaticSpellFailureOutcomeHole,
   BattleState,
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
@@ -15,18 +15,18 @@ import type { SpellMetamagicApplicationFact } from "./metamagic-support.ts";
 import { subtleSpellComponentProjectionForApplications } from "./metamagic-support.ts";
 import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
 
-type SlowActivePenaltiesEffect = Extract<
+type SaveGatedTurnConstraintBundleEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "slowActivePenalties" }
+  { readonly kind: "saveGatedTurnConstraintBundle" }
 >;
 
-export function slowSomaticSpellFailureOutcomeHole(input: {
+export function turnConstraintSomaticSpellFailureOutcomeHole(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation;
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-}): BattleSlowSomaticSpellFailureOutcomeHole | null {
-  const effects = slowActivePenaltiesEffects(
+}): BattleTurnConstraintSomaticSpellFailureOutcomeHole | null {
+  const effects = saveGatedTurnConstraintBundleEffects(
     input.state.combatants.get(input.actorId),
   );
   if (
@@ -52,7 +52,7 @@ export function slowSomaticSpellFailureOutcomeHole(input: {
   return {
     holeInstanceKey: holeInstanceKey(key),
     holeId: holeId(key),
-    kind: "slowSomaticSpellFailureOutcome",
+    kind: "turnConstraintSomaticSpellFailureOutcome",
     label: "Slow Somatic spell failure chance",
     actorId: input.actorId,
     sourceProcedureRef: input.invocation.sourceProcedureRef,
@@ -64,14 +64,14 @@ export function slowSomaticSpellFailureOutcomeHole(input: {
   };
 }
 
-export function slowActivePenaltiesEffects(
+export function saveGatedTurnConstraintBundleEffects(
   combatant: BattleCreatureState | undefined,
-): readonly SlowActivePenaltiesEffect[] {
+): readonly SaveGatedTurnConstraintBundleEffect[] {
   return combatant === undefined
     ? []
     : combatant.activeEffects.filter(
-        (effect): effect is SlowActivePenaltiesEffect =>
-          effect.kind === "slowActivePenalties",
+        (effect): effect is SaveGatedTurnConstraintBundleEffect =>
+          effect.kind === "saveGatedTurnConstraintBundle",
       );
 }
 

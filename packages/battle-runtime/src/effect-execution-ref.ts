@@ -21,24 +21,24 @@ export type ReplayAddressableSpellActiveEffect = Extract<
   BattleActiveEffect,
   {
     readonly kind:
-      | "commandPending"
-      | "cloudkillAreaHazard"
-      | "dragonsBreath"
-      | "dancingLights"
+      | "compelledNextTurnBehavior"
+      | "persistentAreaSaveDamage"
+      | "grantedAreaSaveDamageAction"
+      | "movableLightManifestation"
       | "heldLight"
-      | "jumpMovementReplacement"
+      | "fixedCostMovementReplacement"
       | "spellObjectContactDamage"
       | "spellMarkedDamageRider"
       | "spellDashBonusAction"
-      | "spiritualWeapon"
+      | "spatialMeleeSpellAttackProxy"
       | "possession"
       | "selfTransformation"
       | "spellCondition"
       | "spellConditionRepeatSave"
       | "spellCreatedHeldObject"
       | "spellGrantedActionResource"
-      | "spellLevitatedCreature"
-      | "wardingBond";
+      | "controlledVerticalSuspension"
+      | "linkedDefenseResistanceDamageShare";
   }
 >;
 export type SpellActiveEffect = ReplayAddressableSpellActiveEffect;

@@ -11,21 +11,21 @@ import {
 import { supportedSpellActs } from "./supported-spell-acts.ts";
 import { spellComponents } from "./spell-cast-interrupt-frame.ts";
 
-type CounterspellInvocation = Extract<
+type SpellCastInterruptionInvocation = Extract<
   BattleExecutableSpellInvocation,
-  { readonly procedure: "counterspell" }
+  { readonly procedure: "spellCastInterruptionReaction" }
 >;
 
-export type CounterspellCapableReactor = {
+export type SpellCastInterruptionCapableReactor = {
   readonly combatantId: CombatantId;
-  readonly invocations: readonly CounterspellInvocation[];
+  readonly invocations: readonly SpellCastInterruptionInvocation[];
 };
 
-export function counterspellCapableReactors(
+export function spellCastInterruptionReactionCapableReactors(
   state: BattleState,
-): readonly CounterspellCapableReactor[] {
+): readonly SpellCastInterruptionCapableReactor[] {
   return [...state.combatants.values()].flatMap(
-    (combatant): readonly CounterspellCapableReactor[] => {
+    (combatant): readonly SpellCastInterruptionCapableReactor[] => {
       if (
         combatant.origin.kind !== "character" ||
         !combatantCanTakeReactions(combatant) ||
@@ -37,11 +37,14 @@ export function counterspellCapableReactors(
         return [];
       }
       const invocations = supportedSpellActs(state, combatant).flatMap(
-        (candidate): readonly CounterspellInvocation[] => {
-          if (candidate.procedure !== "counterspell") return [];
+        (candidate): readonly SpellCastInterruptionInvocation[] => {
+          if (candidate.procedure !== "spellCastInterruptionReaction")
+            return [];
           const execution = candidate;
           return spellHasAvailableSpend(combatant, execution) &&
-            counterspellInvocationHasSpellCastTrigger(execution)
+            spellCastInterruptionReactionInvocationHasSpellCastTrigger(
+              execution,
+            )
             ? [execution]
             : [];
         },
@@ -53,10 +56,10 @@ export function counterspellCapableReactors(
   );
 }
 
-export function spellCastCanTriggerCounterspell(input: {
+export function spellCastCanTriggerSpellCastInterruption(input: {
   readonly casterId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation;
-  readonly reactors: readonly CounterspellCapableReactor[];
+  readonly reactors: readonly SpellCastInterruptionCapableReactor[];
 }): boolean {
   const triggeringComponents = spellComponents(input.invocation);
   return (
@@ -64,17 +67,17 @@ export function spellCastCanTriggerCounterspell(input: {
     input.reactors.some(
       (reactor) =>
         reactor.combatantId !== input.casterId &&
-        reactor.invocations.some((counterspell) => {
+        reactor.invocations.some((spellCastInterruptionReaction) => {
           return triggeringComponents.some((component) =>
-            counterspell.triggerComponents.includes(component),
+            spellCastInterruptionReaction.triggerComponents.includes(component),
           );
         }),
     )
   );
 }
 
-function counterspellInvocationHasSpellCastTrigger(
-  invocation: CounterspellInvocation,
+function spellCastInterruptionReactionInvocationHasSpellCastTrigger(
+  invocation: SpellCastInterruptionInvocation,
 ): boolean {
   return invocation.triggerComponents.length > 0;
 }

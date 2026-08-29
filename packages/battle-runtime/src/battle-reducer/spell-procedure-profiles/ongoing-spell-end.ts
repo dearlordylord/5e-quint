@@ -54,8 +54,8 @@ import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult, resolutionFromStateResult } from "../result-helpers.ts";
 import {
   isTrackedOngoingSpellLightEmitter,
-  antimagicFieldOngoingSpellEffectRefForActiveEffect,
-  antimagicFieldOngoingSpellEffectRefForEmitter,
+  magicSuppressionOngoingSpellEffectRefForActiveEffect,
+  magicSuppressionOngoingSpellEffectRefForEmitter,
   ongoingSpellEffectRefEquals,
   ongoingSpellEffectRefForAntimagicFieldAura,
   ongoingSpellEffectRefForActiveEffect,
@@ -817,8 +817,8 @@ function ongoingSpellEndUnrelatedFill(
     fillSet.skillChoice !== undefined ||
     fillSet.targetAbilityChoices !== undefined ||
     fillSet.abilityChoice !== undefined ||
-    fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
-    fillSet.commandOptionChoice !== undefined ||
+    fillSet.temporaryAbilityCheckRollModeActiveEffectCount !== undefined ||
+    fillSet.compelledBehaviorOptionChoice !== undefined ||
     fillSet.selfTransformationModeChoice !== undefined ||
     fillSet.conditionChoice !== undefined ||
     fillSet.areaChoice !== undefined ||
@@ -826,7 +826,7 @@ function ongoingSpellEndUnrelatedFill(
     fillSet.dancingLightsPlacement !== undefined ||
     fillSet.damageTypeChoice !== undefined ||
     fillSet.concentrationSavingThrows.length > 0 ||
-    fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
+    fillSet.saveGatedConditionWithRepeatDamageRepeatSaves.length > 0 ||
     fillSet.damageDispositions.length > 0 ||
     fillSet.damageRoll !== undefined ||
     fillSet.mirrorImageDuplicateRoll !== undefined ||
@@ -862,8 +862,8 @@ function ongoingSpellOccurrenceRef(
   occurrence: BattleTrackedOngoingSpellOccurrence,
 ): BattleAntimagicFieldOngoingSpellEffectRef {
   return occurrence.kind === "lightEmitter"
-    ? antimagicFieldOngoingSpellEffectRefForEmitter(occurrence.emitter)
-    : antimagicFieldOngoingSpellEffectRefForActiveEffect(occurrence.effect);
+    ? magicSuppressionOngoingSpellEffectRefForEmitter(occurrence.emitter)
+    : magicSuppressionOngoingSpellEffectRefForActiveEffect(occurrence.effect);
 }
 
 function ongoingSpellOccurrenceSourceSpellLevel(

@@ -121,7 +121,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       procedureRef: requireCharacterSpellProcedureRefForTest(
         state,
         spellCasterId,
-        spellSlotInvocationRef(slowUnitId, 3, "slowActivePenalties"),
+        spellSlotInvocationRef(slowUnitId, 3, "saveGatedTurnConstraintBundle"),
       ),
       mode: { tag: "cast" },
     });
@@ -159,7 +159,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     const savedTarget = requireCombatant(cast.state, slowExtraTargetId);
     expect(target.activeEffects).toEqual([
       expect.objectContaining({
-        kind: "slowActivePenalties",
+        kind: "saveGatedTurnConstraintBundle",
         sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
@@ -224,7 +224,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     );
     const slowed = requireCombatant(cast, spellTargetId);
     const slowEffect = slowed.activeEffects.find(
-      (effect) => effect.kind === "slowActivePenalties",
+      (effect) => effect.kind === "saveGatedTurnConstraintBundle",
     );
     expect(slowEffect).toBeDefined();
     expect(Number(effectiveWalkSpeed(cast, slowed))).toBe(15);
@@ -252,7 +252,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       expect.objectContaining({
         ability: "wis",
         dc: { kind: "caster_spell_save_dc" },
-        slowActivePenaltiesEndTurnSave: {
+        turnConstraintEndTurnSave: {
           targetId: spellTargetId,
           sourceProcedureRef: slowEffect?.sourceProcedureRef,
           sourceCombatantId: spellCasterId,
@@ -275,7 +275,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     }
     const maintainedTarget = requireCombatant(maintained.state, spellTargetId);
     expect(maintainedTarget.activeEffects).toContainEqual(
-      expect.objectContaining({ kind: "slowActivePenalties" }),
+      expect.objectContaining({ kind: "saveGatedTurnConstraintBundle" }),
     );
     expect(Number(effectiveWalkSpeed(maintained.state, maintainedTarget))).toBe(
       15,
@@ -379,7 +379,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     }
 
     expect(requireCombatant(cast.state, spellCasterId).activeEffects).toEqual([
-      expect.objectContaining({ kind: "slowActivePenalties" }),
+      expect.objectContaining({ kind: "saveGatedTurnConstraintBundle" }),
     ]);
     expect(cast.state.currentTurnResources.actionResources).toEqual([]);
     expect(cast.state.currentTurnResources.currentHasBonusAction).toBe(false);
@@ -585,7 +585,9 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     const slowEffect = requireCombatant(
       targetTurn.state,
       spellTargetId,
-    ).activeEffects.find((effect) => effect.kind === "slowActivePenalties");
+    ).activeEffects.find(
+      (effect) => effect.kind === "saveGatedTurnConstraintBundle",
+    );
     expect(slowEffect).toBeDefined();
     expect(slowChance).toEqual(
       expect.objectContaining({
@@ -614,7 +616,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       holes: act.initialHoles,
     });
     const wrongOwnerHoles = act.initialHoles.map((hole) =>
-      hole.kind === "slowSomaticSpellFailureOutcome"
+      hole.kind === "turnConstraintSomaticSpellFailureOutcome"
         ? {
             ...hole,
             activeEffectSources: hole.activeEffectSources.map((source) => ({
@@ -654,7 +656,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
 
     const target = requireCombatant(failed.state, spellTargetId);
     expect(target.activeEffects).toEqual([
-      expect.objectContaining({ kind: "slowActivePenalties" }),
+      expect.objectContaining({ kind: "saveGatedTurnConstraintBundle" }),
     ]);
     expect(failed.state.currentTurnResources.actionResources).toEqual([]);
     expect(failed.state.currentTurnResources.currentHasBonusAction).toBe(false);
@@ -853,7 +855,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
 
     expect(
       act.initialHoles.some(
-        (hole) => hole.kind === "slowSomaticSpellFailureOutcome",
+        (hole) => hole.kind === "turnConstraintSomaticSpellFailureOutcome",
       ),
     ).toBe(false);
   });
@@ -886,8 +888,10 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     const firstEffect = requireCombatant(
       firstCast.state,
       spellTargetId,
-    ).activeEffects.find((effect) => effect.kind === "slowActivePenalties");
-    if (firstEffect?.kind !== "slowActivePenalties") {
+    ).activeEffects.find(
+      (effect) => effect.kind === "saveGatedTurnConstraintBundle",
+    );
+    if (firstEffect?.kind !== "saveGatedTurnConstraintBundle") {
       throw new Error("Expected initial admitted Slow occurrence.");
     }
     const targetTurn = endTurn({
@@ -933,7 +937,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       state: targetConcentratingState,
       ownerId: spellTargetId,
       effect: {
-        kind: "slowActivePenalties",
+        kind: "saveGatedTurnConstraintBundle",
         sourceProcedureRef: unrelatedSource,
         sourceCombatantId: spellTargetId,
         save: {
@@ -952,10 +956,10 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       spellTargetId,
     ).activeEffects.find(
       (effect) =>
-        effect.kind === "slowActivePenalties" &&
+        effect.kind === "saveGatedTurnConstraintBundle" &&
         effect.sourceProcedureRef === unrelatedSource,
     );
-    if (unrelatedEffect?.kind !== "slowActivePenalties") {
+    if (unrelatedEffect?.kind !== "saveGatedTurnConstraintBundle") {
       throw new Error("Expected unrelated synthetic Slow occurrence.");
     }
     const recastSession = battleRuntimeSessionForTest({
@@ -988,7 +992,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     expect(effects).toHaveLength(2);
     const replacement = effects.find(
       (effect) =>
-        effect.kind === "slowActivePenalties" &&
+        effect.kind === "saveGatedTurnConstraintBundle" &&
         effect.sourceProcedureRef === act.subject.procedureRef,
     );
     expect(replacement?.effectRef).not.toBe(firstEffect.effectRef);
@@ -998,11 +1002,11 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     expect(effects).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          kind: "slowActivePenalties",
+          kind: "saveGatedTurnConstraintBundle",
           sourceProcedureRef: unrelatedSource,
         }),
         expect.objectContaining({
-          kind: "slowActivePenalties",
+          kind: "saveGatedTurnConstraintBundle",
           sourceProcedureRef: act.subject.procedureRef,
         }),
       ]),
@@ -1177,7 +1181,7 @@ function slowSavingThrowOutcomeFill(
     holeId: hole.holeId,
     value: {
       area: {
-        kind: "slowArea",
+        kind: "saveGatedTurnConstraintBundleArea",
         originAnchorId: spellCasterId,
         affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
         cubeSideFeet: 40,
@@ -1220,7 +1224,7 @@ defineSelectedIdentityReplayWitness({
           actionName: "doReplaySlowActivePenalties",
           projectionAfter: {
             unitId: slowUnitId,
-            procedure: "slowActivePenalties",
+            procedure: "saveGatedTurnConstraintBundle",
             targetHasSlow: true,
             somaticFailureRequested: false,
           },
@@ -1233,13 +1237,13 @@ defineSelectedIdentityReplayWitness({
             );
             return {
               unitId: slowUnitId,
-              procedure: "slowActivePenalties",
+              procedure: "saveGatedTurnConstraintBundle",
               targetHasSlow: requireCombatant(
                 state,
                 spellTargetId,
               ).activeEffects.some(
                 (effect) =>
-                  effect.kind === "slowActivePenalties" &&
+                  effect.kind === "saveGatedTurnConstraintBundle" &&
                   effect.sourceCombatantId === spellCasterId,
               ),
               somaticFailureRequested: false,
@@ -1286,7 +1290,7 @@ defineSelectedIdentityReplayWitness({
                 spellTargetId,
               ).activeEffects.some(
                 (effect) =>
-                  effect.kind === "slowActivePenalties" &&
+                  effect.kind === "saveGatedTurnConstraintBundle" &&
                   effect.sourceCombatantId === spellCasterId,
               ),
               somaticFailureRequested: true,
@@ -1302,10 +1306,10 @@ function requireSlowEndTurnSaveHole(holes: readonly BattleHole[]): Extract<
   BattleHole,
   { readonly kind: "savingThrowOutcome" }
 > & {
-  readonly slowActivePenaltiesEndTurnSave: unknown;
+  readonly turnConstraintEndTurnSave: unknown;
 } {
   const hole = requireHole(holes, "savingThrowOutcome");
-  if (!("slowActivePenaltiesEndTurnSave" in hole)) {
+  if (!("turnConstraintEndTurnSave" in hole)) {
     throw new Error("Expected Slow end-turn Saving Throw outcome hole.");
   }
   return hole;
@@ -1313,19 +1317,25 @@ function requireSlowEndTurnSaveHole(holes: readonly BattleHole[]): Extract<
 
 function requireSlowSomaticSpellFailureHole(
   holes: readonly BattleHole[],
-): Extract<BattleHole, { readonly kind: "slowSomaticSpellFailureOutcome" }> {
-  return requireHole(holes, "slowSomaticSpellFailureOutcome");
+): Extract<
+  BattleHole,
+  { readonly kind: "turnConstraintSomaticSpellFailureOutcome" }
+> {
+  return requireHole(holes, "turnConstraintSomaticSpellFailureOutcome");
 }
 
 function slowSomaticSpellFailureFill(
   hole: Extract<
     BattleHole,
-    { readonly kind: "slowSomaticSpellFailureOutcome" }
+    { readonly kind: "turnConstraintSomaticSpellFailureOutcome" }
   >,
   spellFailed: boolean,
-): Extract<BattleFill, { readonly kind: "slowSomaticSpellFailureOutcome" }> {
+): Extract<
+  BattleFill,
+  { readonly kind: "turnConstraintSomaticSpellFailureOutcome" }
+> {
   return {
-    kind: "slowSomaticSpellFailureOutcome",
+    kind: "turnConstraintSomaticSpellFailureOutcome",
     holeId: hole.holeId,
     value: { spellFailed },
   };

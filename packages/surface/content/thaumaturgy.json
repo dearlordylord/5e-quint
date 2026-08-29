@@ -13,6 +13,10 @@
       "s": false,
       "v": true
     },
+    "concurrentEffectLimit": {
+      "appliesTo": "spell_duration_modes",
+      "maximumActive": 3
+    },
     "duration": {
       "kind": "timed",
       "value": {
@@ -20,32 +24,62 @@
         "unit": "minute"
       }
     },
-    "family": "ongoing_effect",
+    "family": "modal_ongoing_effect",
     "level": 0,
-    "operations": [
-      {
-        "effect": {
-          "abilityFilter": [
-            "cha"
-          ],
-          "affects": "self_roll",
-          "kind": "modify_roll_advantage",
-          "mode": "advantage",
-          "on": [
-            "ability_check"
-          ],
-          "skillFilter": {
-            "kind": "fixed",
-            "skills": [
-              "intimidation"
-            ]
-          }
+    "mode": {
+      "label": "minor wonder",
+      "options": [
+        {
+          "displayName": "Altered Eyes",
+          "effectDuration": "spell_duration",
+          "id": "altered_eyes"
         },
-        "trigger": {
-          "kind": "passive"
+        {
+          "displayName": "Booming Voice",
+          "effectDuration": "spell_duration",
+          "effects": [
+            {
+              "abilityFilter": [
+                "cha"
+              ],
+              "affects": "self_roll",
+              "kind": "modify_roll_advantage",
+              "mode": "advantage",
+              "on": [
+                "ability_check"
+              ],
+              "skillFilter": {
+                "kind": "fixed",
+                "skills": [
+                  "intimidation"
+                ]
+              }
+            }
+          ],
+          "id": "booming_voice"
+        },
+        {
+          "displayName": "Fire Play",
+          "effectDuration": "spell_duration",
+          "id": "fire_play"
+        },
+        {
+          "displayName": "Invisible Hand",
+          "effectDuration": "instantaneous",
+          "id": "invisible_hand"
+        },
+        {
+          "displayName": "Phantom Sound",
+          "effectDuration": "instantaneous",
+          "id": "phantom_sound"
+        },
+        {
+          "displayName": "Tremors",
+          "effectDuration": "spell_duration",
+          "id": "tremors"
         }
-      }
-    ],
+      ]
+    },
     "range": {
       "feet": 30,
       "kind": "point"

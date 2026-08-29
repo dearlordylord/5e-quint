@@ -60,7 +60,7 @@ import {
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../../identity.ts";
-import { antimagicFieldOngoingSpellEffectRefForActiveEffect } from "../antimagic-field-suppression.ts";
+import { magicSuppressionOngoingSpellEffectRefForActiveEffect } from "../antimagic-field-suppression.ts";
 import {
   spiritualWeaponForcePositionHole,
   spellTargetHole,
@@ -186,7 +186,7 @@ function admitSpiritualWeaponRepeatAttack(
         effect.sourceCombatantId !== ctx.actor.combatantId ||
         spellAdmissionOngoingSpellEffectSuppressed(
           ctx,
-          antimagicFieldOngoingSpellEffectRefForActiveEffect(effect),
+          magicSuppressionOngoingSpellEffectRefForActiveEffect(effect),
         ) ||
         !spiritualWeaponRepeatIsLaterTurn(effect, ctx)
       ) {

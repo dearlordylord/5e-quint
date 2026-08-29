@@ -202,7 +202,7 @@ export function resumeInterruptedProcedure(
         state,
         continuation,
       ),
-      wardingBondDamageShareConcentrationSavingThrows:
+      linkedDefenseResistanceDamageShareConcentrationSavingThrows:
         continuationConcentrationSavingThrows,
       spatialFacts: attackDamageContinuationTargetSpatialFacts(continuation),
       relationshipDecisions: continuation.continuation.relationshipDecisions,

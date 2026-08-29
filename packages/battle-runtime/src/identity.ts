@@ -48,12 +48,12 @@ export type BattleLineDirectionId = typeof BattleLineDirectionId.Type;
 export const battleLineDirectionId: (value: string) => BattleLineDirectionId =
   BattleLineDirectionId.make;
 
-export const BattleDancingLightId = NonEmptyTrimmedStringSchema.pipe(
-  Schema.brand("BattleDancingLightId"),
+export const BattleMovableLightId = NonEmptyTrimmedStringSchema.pipe(
+  Schema.brand("BattleMovableLightId"),
 );
-export type BattleDancingLightId = typeof BattleDancingLightId.Type;
-export const battleDancingLightId: (value: string) => BattleDancingLightId =
-  BattleDancingLightId.make;
+export type BattleMovableLightId = typeof BattleMovableLightId.Type;
+export const battleMovableLightId: (value: string) => BattleMovableLightId =
+  BattleMovableLightId.make;
 
 export const BattleSpellEffectOccurrenceId = NonEmptyTrimmedStringSchema.pipe(
   Schema.brand("BattleSpellEffectOccurrenceId"),

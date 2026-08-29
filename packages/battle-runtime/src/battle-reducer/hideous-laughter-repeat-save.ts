@@ -6,7 +6,7 @@ import { Match } from "effect";
 import type {
   BattleCreatureState,
   BattleFill,
-  BattleHideousLaughterRepeatSavingThrowOutcomeHole,
+  BattleSaveGatedConditionRepeatSavingThrowOutcomeHole,
   BattleSavingThrowFlatBonusProjection,
   BattleSavingThrowRollModeProjection,
   BattleSavingThrowOutcomeValue,
@@ -17,43 +17,43 @@ import {
   HIDEOUS_LAUGHTER_END_TURN_REPEAT_SAVE_HOLE_KEY_PREFIX,
 } from "./domain-constants.ts";
 import { uniqueSavingThrowRollModeProjections } from "./saving-throw-roll-mode-projections.ts";
-import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
+import { linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
 
 const DEFAULT_DAMAGE_REPEAT_SAVE_EVENT_KEY = "damage";
 
-export type HideousLaughterEffect = Extract<
+export type SaveGatedConditionWithRepeatEffect = Extract<
   BattleCreatureState["activeEffects"][number],
-  { readonly kind: "hideousLaughter" }
+  { readonly kind: "saveGatedConditionWithRepeat" }
 >;
 
-type HideousLaughterRepeatSaveTrigger =
-  BattleHideousLaughterRepeatSavingThrowOutcomeHole["hideousLaughterRepeatSave"]["trigger"];
+type SaveGatedConditionRepeatSaveTrigger =
+  BattleSaveGatedConditionRepeatSavingThrowOutcomeHole["saveGatedConditionRepeatSave"]["trigger"];
 type SavingThrowOutcomeFill = Extract<
   BattleFill,
   { readonly kind: "savingThrowOutcome" }
 >;
-type HideousLaughterDamageRepeatSaveFillCheckResult =
+type SaveGatedConditionWithRepeatDamageRepeatSaveFillCheckResult =
   | {
       readonly tag: "ok";
-      readonly holes: readonly BattleHideousLaughterRepeatSavingThrowOutcomeHole[];
+      readonly holes: readonly BattleSaveGatedConditionRepeatSavingThrowOutcomeHole[];
     }
   | {
       readonly tag: "needsHoles";
-      readonly holes: readonly BattleHideousLaughterRepeatSavingThrowOutcomeHole[];
+      readonly holes: readonly BattleSaveGatedConditionRepeatSavingThrowOutcomeHole[];
     }
   | { readonly tag: "invalid"; readonly message: string };
 
 const HIDEOUS_LAUGHTER_DAMAGE_REPEAT_SAVE_FILL_HOLE_MISMATCH_MESSAGE =
-  "Hideous Laughter damage repeat save fills must match every requested damaged target exactly once.";
+  "save-gated condition damage repeat save fills must match every requested damaged target exactly once.";
 
-export function hideousLaughterEffects(
+export function saveGatedConditionWithRepeatEffects(
   combatant: BattleCreatureState | undefined,
-): readonly HideousLaughterEffect[] {
+): readonly SaveGatedConditionWithRepeatEffect[] {
   return combatant === undefined
     ? []
     : combatant.activeEffects.filter(
-        (effect): effect is HideousLaughterEffect =>
-          effect.kind === "hideousLaughter",
+        (effect): effect is SaveGatedConditionWithRepeatEffect =>
+          effect.kind === "saveGatedConditionWithRepeat",
       );
 }
 
@@ -61,8 +61,8 @@ function repeatSaveKeyPart(value: string): string {
   return encodeURIComponent(value);
 }
 
-function hideousLaughterRepeatSaveHoleKeyPrefix(
-  trigger: HideousLaughterRepeatSaveTrigger,
+function saveGatedConditionRepeatSaveHoleKeyPrefix(
+  trigger: SaveGatedConditionRepeatSaveTrigger,
 ): string {
   return Match.value(trigger).pipe(
     Match.when(
@@ -77,15 +77,15 @@ function hideousLaughterRepeatSaveHoleKeyPrefix(
   );
 }
 
-export function hideousLaughterRepeatSavingThrowOutcomeHole(
+export function saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
   targetId: CombatantId,
-  effect: HideousLaughterEffect,
-  trigger: HideousLaughterRepeatSaveTrigger,
+  effect: SaveGatedConditionWithRepeatEffect,
+  trigger: SaveGatedConditionRepeatSaveTrigger,
   damageEventKey: string = DEFAULT_DAMAGE_REPEAT_SAVE_EVENT_KEY,
   targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
-): BattleHideousLaughterRepeatSavingThrowOutcomeHole {
+): BattleSaveGatedConditionRepeatSavingThrowOutcomeHole {
   const key = [
-    hideousLaughterRepeatSaveHoleKeyPrefix(trigger),
+    saveGatedConditionRepeatSaveHoleKeyPrefix(trigger),
     [
       targetId,
       effect.effectRef,
@@ -100,7 +100,7 @@ export function hideousLaughterRepeatSavingThrowOutcomeHole(
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: "Repeat WIS save",
-    hideousLaughterRepeatSave: {
+    saveGatedConditionRepeatSave: {
       targetId,
       effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -111,19 +111,20 @@ export function hideousLaughterRepeatSavingThrowOutcomeHole(
     ability: effect.save.ability,
     dc: effect.save.dc,
     areaChoices: [],
-    targetRollModes: hideousLaughterRepeatSavingThrowRollModeProjections(
-      targetId,
-      effect,
-      trigger,
-    ),
+    targetRollModes:
+      saveGatedConditionWithRepeatRepeatSavingThrowRollModeProjections(
+        targetId,
+        effect,
+        trigger,
+      ),
     targetFlatBonuses,
   };
 }
 
-function hideousLaughterRepeatSavingThrowRollModeProjections(
+function saveGatedConditionWithRepeatRepeatSavingThrowRollModeProjections(
   targetId: CombatantId,
-  effect: HideousLaughterEffect,
-  trigger: HideousLaughterRepeatSaveTrigger,
+  effect: SaveGatedConditionWithRepeatEffect,
+  trigger: SaveGatedConditionRepeatSaveTrigger,
 ): readonly BattleSavingThrowRollModeProjection[] {
   const damageRepeatSaveRollModeProjections: readonly BattleSavingThrowRollModeProjection[] =
     trigger === "damage" ? [{ targetId, rollMode: "advantage" }] : [];
@@ -135,26 +136,28 @@ function hideousLaughterRepeatSavingThrowRollModeProjections(
   ]);
 }
 
-export function hideousLaughterDamageRepeatSaveHoles(
+export function saveGatedConditionWithRepeatDamageRepeatSaveHoles(
   target: BattleCreatureState,
   damageEventKey: string = DEFAULT_DAMAGE_REPEAT_SAVE_EVENT_KEY,
-): BattleHideousLaughterRepeatSavingThrowOutcomeHole[] {
+): BattleSaveGatedConditionRepeatSavingThrowOutcomeHole[] {
   return target.activeEffects.flatMap((effect) =>
-    effect.kind === "hideousLaughter"
+    effect.kind === "saveGatedConditionWithRepeat"
       ? [
-          hideousLaughterRepeatSavingThrowOutcomeHole(
+          saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
             target.combatantId,
             effect,
             "damage",
             damageEventKey,
-            wardingBondSavingThrowFlatBonusProjectionsForTarget(target),
+            linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget(
+              target,
+            ),
           ),
         ]
       : [],
   );
 }
 
-export function isHideousLaughterDamageRepeatSaveFill(
+export function isSaveGatedConditionWithRepeatDamageRepeatSaveFill(
   fill: SavingThrowOutcomeFill,
 ): boolean {
   return String(fill.holeId).startsWith(
@@ -162,39 +165,43 @@ export function isHideousLaughterDamageRepeatSaveFill(
   );
 }
 
-export function hideousLaughterDamageRepeatSaveFillsForTarget(
+export function saveGatedConditionWithRepeatDamageRepeatSaveFillsForTarget(
   target: BattleCreatureState,
   fills: readonly SavingThrowOutcomeFill[],
   damageEventKey: string = DEFAULT_DAMAGE_REPEAT_SAVE_EVENT_KEY,
 ): readonly SavingThrowOutcomeFill[] {
   const holeIds = new Set(
-    hideousLaughterDamageRepeatSaveHoles(target, damageEventKey).map(
-      (hole) => hole.holeId,
-    ),
+    saveGatedConditionWithRepeatDamageRepeatSaveHoles(
+      target,
+      damageEventKey,
+    ).map((hole) => hole.holeId),
   );
   return fills.filter((fill) => holeIds.has(fill.holeId));
 }
 
-export function hideousLaughterDamageRepeatSaveFillCheck(input: {
+export function saveGatedConditionWithRepeatDamageRepeatSaveFillCheck(input: {
   readonly target: BattleCreatureState;
   readonly damageAmount: number;
   readonly fills: readonly SavingThrowOutcomeFill[];
   readonly damageEventKey?: string | undefined;
-}): HideousLaughterDamageRepeatSaveFillCheckResult {
+}): SaveGatedConditionWithRepeatDamageRepeatSaveFillCheckResult {
   const holes =
     input.damageAmount > 0
-      ? hideousLaughterDamageRepeatSaveHoles(input.target, input.damageEventKey)
+      ? saveGatedConditionWithRepeatDamageRepeatSaveHoles(
+          input.target,
+          input.damageEventKey,
+        )
       : [];
-  return checkHideousLaughterDamageRepeatSaveFills({
+  return checkSaveGatedConditionWithRepeatDamageRepeatSaveFills({
     holes,
     fills: input.fills,
   });
 }
 
-export function checkHideousLaughterDamageRepeatSaveFills(input: {
-  readonly holes: readonly BattleHideousLaughterRepeatSavingThrowOutcomeHole[];
+export function checkSaveGatedConditionWithRepeatDamageRepeatSaveFills(input: {
+  readonly holes: readonly BattleSaveGatedConditionRepeatSavingThrowOutcomeHole[];
   readonly fills: readonly SavingThrowOutcomeFill[];
-}): HideousLaughterDamageRepeatSaveFillCheckResult {
+}): SaveGatedConditionWithRepeatDamageRepeatSaveFillCheckResult {
   const { holes } = input;
   const missingHoles = holes.filter(
     (hole) => !input.fills.some((fill) => fill.holeId === hole.holeId),
@@ -211,7 +218,9 @@ export function checkHideousLaughterDamageRepeatSaveFills(input: {
   }
   /* v8 ignore stop -- @preserve */
   const invalidFillIssue = input.fills
-    .map((fill) => hideousLaughterDamageRepeatSaveFillIssue(fill, holes))
+    .map((fill) =>
+      saveGatedConditionWithRepeatDamageRepeatSaveFillIssue(fill, holes),
+    )
     .find((issue): issue is string => issue !== null);
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (invalidFillIssue !== undefined) {
@@ -224,27 +233,27 @@ export function checkHideousLaughterDamageRepeatSaveFills(input: {
   return { tag: "ok", holes };
 }
 
-function hideousLaughterDamageRepeatSaveFillIssue(
+function saveGatedConditionWithRepeatDamageRepeatSaveFillIssue(
   fill: SavingThrowOutcomeFill,
-  holes: readonly BattleHideousLaughterRepeatSavingThrowOutcomeHole[],
+  holes: readonly BattleSaveGatedConditionRepeatSavingThrowOutcomeHole[],
 ): string | null {
   const hole = holes.find((candidate) => candidate.holeId === fill.holeId);
   return hole === undefined
     ? HIDEOUS_LAUGHTER_DAMAGE_REPEAT_SAVE_FILL_HOLE_MISMATCH_MESSAGE
-    : validateHideousLaughterRepeatSavingThrowOutcome(
+    : validateSaveGatedConditionWithRepeatRepeatSavingThrowOutcome(
         fill.value,
-        hole.hideousLaughterRepeatSave.targetId,
+        hole.saveGatedConditionRepeatSave.targetId,
       );
 }
 
-export function validateHideousLaughterRepeatSavingThrowOutcome(
+export function validateSaveGatedConditionWithRepeatRepeatSavingThrowOutcome(
   value: BattleSavingThrowOutcomeValue,
   targetId: CombatantId,
 ): string | null {
   if ("area" in value) {
-    return "Hideous Laughter repeat Saving Throw outcome must not include area facts.";
+    return "save-gated condition repeat Saving Throw outcome must not include area facts.";
   }
   return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
     ? null
-    : "Hideous Laughter repeat Saving Throw outcome must match the affected target exactly once.";
+    : "save-gated condition repeat Saving Throw outcome must match the affected target exactly once.";
 }

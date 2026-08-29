@@ -7,7 +7,7 @@ import type {
   BattleSavingThrowFlatBonusProjection,
   BattleState,
   BattleTargetSpatialFact,
-  BattleWardingBondSeparationFactsHole,
+  BattleLinkedEffectSeparationFactsHole,
   SupportedSpellInvocation,
 } from "../battle-state-execution.ts";
 import { allocateBattleEffectExecutionRefForCreature } from "../effect-execution-ref.ts";
@@ -19,27 +19,31 @@ import {
   WARDING_BOND_SAVING_THROW_BONUS,
 } from "./domain-constants.ts";
 
-export type WardingBondEffect = Extract<
+export type LinkedDefenseResistanceDamageShareEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "wardingBond" }
+  { readonly kind: "linkedDefenseResistanceDamageShare" }
 >;
 
-export function isWardingBondEffect(
+export function isLinkedDefenseResistanceDamageShareEffect(
   effect: BattleActiveEffect,
-): effect is WardingBondEffect {
-  return effect.kind === "wardingBond";
+): effect is LinkedDefenseResistanceDamageShareEffect {
+  return effect.kind === "linkedDefenseResistanceDamageShare";
 }
 
-export function combatantHasWardingBondResistance(
+export function combatantHasLinkedDefenseResistanceDamageShareResistance(
   combatant: BattleCreatureState,
 ): boolean {
-  return combatant.activeEffects.some(isWardingBondEffect);
+  return combatant.activeEffects.some(
+    isLinkedDefenseResistanceDamageShareEffect,
+  );
 }
 
-export function wardingBondSavingThrowFlatBonusProjectionsForTarget(
+export function linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget(
   target: BattleCreatureState,
 ): readonly BattleSavingThrowFlatBonusProjection[] {
-  const effect = target.activeEffects.find(isWardingBondEffect);
+  const effect = target.activeEffects.find(
+    isLinkedDefenseResistanceDamageShareEffect,
+  );
   return effect === undefined
     ? []
     : [
@@ -52,25 +56,28 @@ export function wardingBondSavingThrowFlatBonusProjectionsForTarget(
       ];
 }
 
-export function wardingBondCastFactsAreSatisfied(input: {
+export function linkedDefenseResistanceDamageShareCastFactsAreSatisfied(input: {
   readonly casterId: CombatantId;
   readonly targetId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation<
-    Extract<SupportedSpellInvocation, { readonly procedure: "wardingBond" }>
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "linkedDefenseResistanceDamageShare" }
+    >
   >;
   readonly facts: readonly BattleTargetSpatialFact[];
 }): boolean {
   return (
     input.facts.some(
       (fact) =>
-        fact.kind === "wardingBondPairedWornPlatinumRings" &&
+        fact.kind === "linkedEffectPairedWornComponents" &&
         fact.casterId === input.casterId &&
         fact.targetId === input.targetId &&
         fact.sourceProcedureRef === input.invocation.sourceProcedureRef,
     ) &&
     input.facts.some(
       (fact) =>
-        fact.kind === "wardingBondCreaturesDistance" &&
+        fact.kind === "linkedEffectCreaturesDistance" &&
         fact.casterId === input.casterId &&
         fact.targetId === input.targetId &&
         fact.sourceProcedureRef === input.invocation.sourceProcedureRef &&
@@ -80,18 +87,22 @@ export function wardingBondCastFactsAreSatisfied(input: {
   );
 }
 
-export function applyWardingBondSpellEffect(
+export function applyLinkedDefenseResistanceDamageShareSpellEffect(
   state: BattleState,
   casterId: CombatantId,
   targetId: CombatantId,
   invocation: BattleExecutableSpellInvocation<
-    Extract<SupportedSpellInvocation, { readonly procedure: "wardingBond" }>
+    Extract<
+      SupportedSpellInvocation,
+      { readonly procedure: "linkedDefenseResistanceDamageShare" }
+    >
   >,
 ): BattleState {
-  const withoutPriorBonds = battleStateWithoutWardingBondConnectedToCombatants(
-    state,
-    [casterId, targetId],
-  );
+  const withoutPriorBonds =
+    battleStateWithoutLinkedDefenseResistanceDamageShareConnectedToCombatants(
+      state,
+      [casterId, targetId],
+    );
   const target = withoutPriorBonds.combatants.get(targetId);
   if (target === undefined) {
     return withoutPriorBonds;
@@ -117,36 +128,45 @@ export function applyWardingBondSpellEffect(
   };
 }
 
-export function battleStateWithoutWardingBondConnectedToCombatants(
+export function battleStateWithoutLinkedDefenseResistanceDamageShareConnectedToCombatants(
   state: BattleState,
   combatantIds: readonly CombatantId[],
 ): BattleState {
   const connectedIds = new Set(combatantIds);
-  return battleStateWithoutWardingBondEffects(state, (hostId, effect) =>
-    wardingBondEffectIsConnectedToAny(effect, hostId, connectedIds),
+  return battleStateWithoutLinkedDefenseResistanceDamageShareEffects(
+    state,
+    (hostId, effect) =>
+      linkedDefenseResistanceDamageShareEffectIsConnectedToAny(
+        effect,
+        hostId,
+        connectedIds,
+      ),
   );
 }
 
-export function battleStateAfterWardingBondCasterZeroHitPoints(
+export function battleStateAfterLinkedDefenseResistanceDamageShareCasterZeroHitPoints(
   state: BattleState,
 ): BattleState {
-  return battleStateWithoutWardingBondEffects(state, (_hostId, effect) => {
-    const caster = state.combatants.get(effect.sourceCombatantId);
-    return caster !== undefined && Number(caster.hp) === 0;
-  });
+  return battleStateWithoutLinkedDefenseResistanceDamageShareEffects(
+    state,
+    (_hostId, effect) => {
+      const caster = state.combatants.get(effect.sourceCombatantId);
+      return caster !== undefined && Number(caster.hp) === 0;
+    },
+  );
 }
 
-export function wardingBondSeparationFactsHole(input: {
+export function linkedDefenseResistanceDamageShareSeparationFactsHole(input: {
   readonly sourceCombatantId: CombatantId;
-  readonly sourceProcedureRef: WardingBondEffect["sourceProcedureRef"];
+  readonly sourceProcedureRef: LinkedDefenseResistanceDamageShareEffect["sourceProcedureRef"];
   readonly targetId: CombatantId;
-}): BattleWardingBondSeparationFactsHole {
+}): BattleLinkedEffectSeparationFactsHole {
   return {
     kind: "targetSpatialFacts",
     holeId: WARDING_BOND_SEPARATION_FACTS_HOLE_ID,
     holeInstanceKey: WARDING_BOND_SEPARATION_FACTS_HOLE_INSTANCE,
-    label: "Warding Bond separation facts",
-    wardingBondSeparation: {
+    label: "Linked-effect separation facts",
+    linkedEffectSeparation: {
       sourceCombatantId: input.sourceCombatantId,
       targetId: input.targetId,
       sourceProcedureRef: input.sourceProcedureRef,
@@ -156,15 +176,15 @@ export function wardingBondSeparationFactsHole(input: {
   };
 }
 
-export function wardingBondSeparationFactsAreSatisfied(input: {
+export function linkedDefenseResistanceDamageShareSeparationFactsAreSatisfied(input: {
   readonly sourceCombatantId: CombatantId;
-  readonly sourceProcedureRef: WardingBondEffect["sourceProcedureRef"];
+  readonly sourceProcedureRef: LinkedDefenseResistanceDamageShareEffect["sourceProcedureRef"];
   readonly targetId: CombatantId;
   readonly facts: readonly BattleTargetSpatialFact[];
 }): boolean {
   return input.facts.some(
     (fact) =>
-      fact.kind === "wardingBondCreaturesDistance" &&
+      fact.kind === "linkedEffectCreaturesDistance" &&
       fact.casterId === input.sourceCombatantId &&
       fact.targetId === input.targetId &&
       fact.sourceProcedureRef === input.sourceProcedureRef &&
@@ -172,13 +192,13 @@ export function wardingBondSeparationFactsAreSatisfied(input: {
   );
 }
 
-export function battleStateAfterWardingBondSeparation(input: {
+export function battleStateAfterLinkedDefenseResistanceDamageShareSeparation(input: {
   readonly state: BattleState;
   readonly sourceCombatantId: CombatantId;
-  readonly sourceProcedureRef: WardingBondEffect["sourceProcedureRef"];
+  readonly sourceProcedureRef: LinkedDefenseResistanceDamageShareEffect["sourceProcedureRef"];
   readonly targetId: CombatantId;
 }): BattleState {
-  return battleStateWithoutWardingBondEffects(
+  return battleStateWithoutLinkedDefenseResistanceDamageShareEffects(
     input.state,
     (hostId, effect) =>
       hostId === input.targetId &&
@@ -187,15 +207,21 @@ export function battleStateAfterWardingBondSeparation(input: {
   );
 }
 
-function battleStateWithoutWardingBondEffects(
+function battleStateWithoutLinkedDefenseResistanceDamageShareEffects(
   state: BattleState,
-  remove: (hostId: CombatantId, effect: WardingBondEffect) => boolean,
+  remove: (
+    hostId: CombatantId,
+    effect: LinkedDefenseResistanceDamageShareEffect,
+  ) => boolean,
 ): BattleState {
   let changed = false;
   const combatants = new Map(state.combatants);
   for (const [hostId, combatant] of state.combatants) {
     const activeEffects = combatant.activeEffects.filter((effect) => {
-      if (!isWardingBondEffect(effect) || !remove(hostId, effect)) {
+      if (
+        !isLinkedDefenseResistanceDamageShareEffect(effect) ||
+        !remove(hostId, effect)
+      ) {
         return true;
       }
       changed = true;
@@ -208,8 +234,8 @@ function battleStateWithoutWardingBondEffects(
   return changed ? { ...state, combatants } : state;
 }
 
-function wardingBondEffectIsConnectedToAny(
-  effect: WardingBondEffect,
+function linkedDefenseResistanceDamageShareEffectIsConnectedToAny(
+  effect: LinkedDefenseResistanceDamageShareEffect,
   hostId: CombatantId,
   combatantIds: ReadonlySet<CombatantId>,
 ): boolean {

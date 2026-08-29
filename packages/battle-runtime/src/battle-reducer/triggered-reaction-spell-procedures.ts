@@ -27,7 +27,7 @@ import {
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowFillCheck,
   damageLifecycleConcentrationSavingThrowHoles,
-  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
 import {
@@ -223,9 +223,9 @@ type TriggeredReactionSpellExecution =
       BattleSpellProcedureExecution,
       {
         readonly procedure:
-          | "shieldReaction"
-          | "featherFallMitigation"
-          | "counterspell";
+          | "triggeredArmorDefense"
+          | "fallingCreatureMitigationReaction"
+          | "spellCastInterruptionReaction";
       }
     >
   | (Extract<
@@ -239,9 +239,9 @@ type DirectTriggeredReactionSpellExecution = Extract<
   TriggeredReactionSpellExecution,
   {
     readonly procedure:
-      | "shieldReaction"
-      | "featherFallMitigation"
-      | "counterspell";
+      | "triggeredArmorDefense"
+      | "fallingCreatureMitigationReaction"
+      | "spellCastInterruptionReaction";
   }
 >;
 
@@ -305,7 +305,7 @@ function triggeredReactionSpellCastTargetIds(input: {
     { readonly tag: "ok" }
   >;
 }): readonly CombatantId[] {
-  if (input.invocation.procedure === "shieldReaction") {
+  if (input.invocation.procedure === "triggeredArmorDefense") {
     return [input.reactorId];
   }
   /* v8 ignore next -- @preserve -- The selected Reaction choice was discovered from a matching after-damage frame. */
@@ -316,13 +316,13 @@ function triggeredReactionSpellCastTargetIds(input: {
     return [input.frame.damageSourceId];
   }
   if (
-    input.invocation.procedure === "featherFallMitigation" &&
+    input.invocation.procedure === "fallingCreatureMitigationReaction" &&
     input.fillSet.targetList !== undefined
   ) {
     return input.fillSet.targetList.targetIds;
   }
   if (
-    input.invocation.procedure === "counterspell" &&
+    input.invocation.procedure === "spellCastInterruptionReaction" &&
     input.frame.trigger === "spellCast"
   ) {
     return [input.frame.casterId];
@@ -381,27 +381,37 @@ function resolveDirectTriggeredReactionSpellCommand(
   /* v8 ignore stop -- @preserve */
   const { invocation, ...resolutionInput } = input;
   return Match.value(invocation).pipe(
-    byDirectTriggeredReactionProcedure("counterspell", (invocation) =>
-      spellProcedureExecutionFor(executionRegistry, "counterspell").resolve({
-        input: resolutionInput,
-        actorId: input.subject.reactorId,
-        invocation,
-        fillSet,
-      }),
+    byDirectTriggeredReactionProcedure(
+      "spellCastInterruptionReaction",
+      (invocation) =>
+        spellProcedureExecutionFor(
+          executionRegistry,
+          "spellCastInterruptionReaction",
+        ).resolve({
+          input: resolutionInput,
+          actorId: input.subject.reactorId,
+          invocation,
+          fillSet,
+        }),
     ),
-    byDirectTriggeredReactionProcedure("featherFallMitigation", (invocation) =>
+    byDirectTriggeredReactionProcedure(
+      "fallingCreatureMitigationReaction",
+      (invocation) =>
+        spellProcedureExecutionFor(
+          executionRegistry,
+          "fallingCreatureMitigationReaction",
+        ).resolve({
+          input: resolutionInput,
+          actorId: input.subject.reactorId,
+          invocation,
+          fillSet,
+        }),
+    ),
+    byDirectTriggeredReactionProcedure("triggeredArmorDefense", (invocation) =>
       spellProcedureExecutionFor(
         executionRegistry,
-        "featherFallMitigation",
+        "triggeredArmorDefense",
       ).resolve({
-        input: resolutionInput,
-        actorId: input.subject.reactorId,
-        invocation,
-        fillSet,
-      }),
-    ),
-    byDirectTriggeredReactionProcedure("shieldReaction", (invocation) =>
-      spellProcedureExecutionFor(executionRegistry, "shieldReaction").resolve({
         input: resolutionInput,
         actorId: input.subject.reactorId,
         invocation,
@@ -666,31 +676,31 @@ export function resolveTriggeredReactionSaveGatedDamage(
       damageDispositionHole,
     ]);
   }
-  const hideousLaughterSaveCheck =
-    damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+  const saveGatedConditionWithRepeatSaveCheck =
+    damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck({
       state: input.state,
       target,
       damageAmount,
-      fills: fillSet.hideousLaughterDamageRepeatSaves,
+      fills: fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
     });
-  if (hideousLaughterSaveCheck.tag === "needsHoles") {
+  if (saveGatedConditionWithRepeatSaveCheck.tag === "needsHoles") {
     return needsHolesResult(input.state, input.subject, [
-      ...hideousLaughterSaveCheck.holes,
+      ...saveGatedConditionWithRepeatSaveCheck.holes,
     ]);
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (hideousLaughterSaveCheck.tag === "invalid") {
+  if (saveGatedConditionWithRepeatSaveCheck.tag === "invalid") {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
-      hideousLaughterSaveCheck.message,
+      saveGatedConditionWithRepeatSaveCheck.message,
     );
   }
   /* v8 ignore stop -- @preserve */
-  const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
-    fillSet.hideousLaughterDamageRepeatSaves,
-    hideousLaughterSaveCheck.holes,
+  const saveGatedConditionWithRepeatLifecycleFills = fillsMatchingHoleIds(
+    fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+    saveGatedConditionWithRepeatSaveCheck.holes,
   );
   const damageDisposition = damageDispositionForTarget(
     damageDispositionHoles,
@@ -741,12 +751,13 @@ export function resolveTriggeredReactionSaveGatedDamage(
     false,
     {
       concentrationSavingThrow: concentrationFill,
-      wardingBondDamageShareConcentrationSavingThrows:
+      linkedDefenseResistanceDamageShareConcentrationSavingThrows:
         concentrationLifecycleFills,
       saveDamageResult,
       damageDisposition,
       sourceDamageRollPenaltyRoll,
-      hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
+      saveGatedConditionWithRepeatDamageRepeatSaves:
+        saveGatedConditionWithRepeatLifecycleFills,
       damageSourceId: input.subject.reactorId,
       spatialFacts: fillSet.targetSpatialFacts,
       ...optionalProperty("relationshipDecisions", relationshipCheck.decisions),

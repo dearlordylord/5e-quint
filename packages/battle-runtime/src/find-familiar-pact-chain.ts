@@ -35,7 +35,7 @@ export { combatantHasPactOfTheChainFindFamiliar } from "./find-familiar-pact-fac
 
 export type PactOfTheChainFamiliarAttackSubject = Extract<
   BattleSubject,
-  { readonly tag: "pactOfTheChainFamiliarAttack" }
+  { readonly tag: "companionAttack" }
 >;
 
 export type PactOfTheChainFamiliarReactionAttackSubjectInput =
