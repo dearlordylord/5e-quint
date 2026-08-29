@@ -292,10 +292,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       ...session.state,
       combatants: new Map(session.state.combatants).set(spellTargetId, {
         ...mirrorImage.owner,
-        activeEffects: [
-          ...target.activeEffects,
-          mirrorImage.effect,
-        ],
+        activeEffects: [...target.activeEffects, mirrorImage.effect],
       }),
     };
     const act = bonusSpellAct({
@@ -1354,8 +1351,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     ).activeEffects.find(
       (effect) =>
         "sourceProcedureRef" in effect &&
-        effect.sourceProcedureRef ===
-          unrelatedEffect.effect.sourceProcedureRef,
+        effect.sourceProcedureRef === unrelatedEffect.effect.sourceProcedureRef,
     );
     if (unrelatedEffectBeforeRepeat === undefined) {
       throw new Error(

@@ -861,10 +861,7 @@ describe("battle runtime: Concentration and readied spells", () => {
       ],
     });
     const expendedState = battleStateWithAllSpellSlotsExpended(
-      battleStateWithAllSpellSlotsExpended(
-        session.state,
-        secondWizardId,
-      ),
+      battleStateWithAllSpellSlotsExpended(session.state, secondWizardId),
       fighterId,
     );
     const mechanicallyPossibleState: BattleState = {

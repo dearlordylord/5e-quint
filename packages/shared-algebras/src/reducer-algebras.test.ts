@@ -66,8 +66,7 @@ import {
 const sourceOwnerId = Schema.decodeUnknownSync(CreatureIdSchema)("owner-a");
 const battleProcedureExecutionRef =
   Brand.nominal<BattleProcedureExecutionRef>();
-const battleEffectExecutionRef =
-  Brand.nominal<BattleEffectExecutionRef>();
+const battleEffectExecutionRef = Brand.nominal<BattleEffectExecutionRef>();
 const unitActionProcedureRef = battleProcedureExecutionRef(
   "unit-action-procedure-a",
 );

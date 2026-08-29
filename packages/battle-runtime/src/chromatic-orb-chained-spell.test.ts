@@ -950,10 +950,7 @@ function chromaticOrbSessionWithReadiedResponse(
   });
 }
 
-function priorCastSpellcasting(
-  spell: SpellRecord,
-  spellLevel: 1 | 2,
-) {
+function priorCastSpellcasting(spell: SpellRecord, spellLevel: 1 | 2) {
   return {
     spellcastingSource: {
       tag: "classSpellcasting" as const,
@@ -1357,9 +1354,7 @@ function withTargetConcentration(): BattleState {
   const state = stateAfterPriorSpellCasts({
     state: session.state,
     round: Round(2),
-    expendedSpellLevels: [
-      { combatantId: firstTargetId, spellLevel: 1 },
-    ],
+    expendedSpellLevels: [{ combatantId: firstTargetId, spellLevel: 1 }],
   });
   const target = state.combatants.get(firstTargetId);
   const laughterTarget = state.combatants.get(secondTargetId);
@@ -1487,9 +1482,7 @@ function withSourceDamageRollPenalty(): BattleState {
   const state = stateAfterPriorSpellCasts({
     state: session.state,
     round: Round(2),
-    expendedSpellLevels: [
-      { combatantId: firstTargetId, spellLevel: 2 },
-    ],
+    expendedSpellLevels: [{ combatantId: firstTargetId, spellLevel: 2 }],
   });
   const source = state.combatants.get(firstTargetId);
   if (source === undefined) {
@@ -1504,14 +1497,13 @@ function withSourceDamageRollPenalty(): BattleState {
   });
   return {
     ...ray.state,
-    combatants: new Map(ray.state.combatants)
-      .set(firstTargetId, {
-        ...source,
-        concentration: {
-          sourceProcedureRef: ray.sourceProcedureRef,
-          effectKind: "spellEffect",
-        },
-      }),
+    combatants: new Map(ray.state.combatants).set(firstTargetId, {
+      ...source,
+      concentration: {
+        sourceProcedureRef: ray.sourceProcedureRef,
+        effectKind: "spellEffect",
+      },
+    }),
   };
 }
 
@@ -1562,12 +1554,11 @@ function withWardingBondSharedCasterLifecycle() {
     targetId: thirdTargetId,
     remainingDurationTicks: elapsedTimeTicks(9),
   });
-  const hideousLaughterProcedureRef =
-    requireCharacterSpellProcedureRefForTest(
-      session,
-      secondTargetId,
-      spellSlotInvocationRef("hideous_laughter", 1, "hideousLaughter"),
-    );
+  const hideousLaughterProcedureRef = requireCharacterSpellProcedureRefForTest(
+    session,
+    secondTargetId,
+    spellSlotInvocationRef("hideous_laughter", 1, "hideousLaughter"),
+  );
   const hideousLaughter = allocateBattleEffectOccurrenceForCreature({
     owner: caster,
     effect: {

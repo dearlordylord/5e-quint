@@ -131,9 +131,7 @@ describe("damage and hit point lifecycle helpers", () => {
         amount: 5,
         expiresAt: {
           kind: "duration",
-          durationTicks: elapsedTimeTicks(
-            Number(requireElapsedHours(8)) - 4,
-          ),
+          durationTicks: elapsedTimeTicks(Number(requireElapsedHours(8)) - 4),
         },
       },
     });
@@ -162,9 +160,7 @@ describe("damage and hit point lifecycle helpers", () => {
           amount: 5,
           expiresAt: {
             kind: "duration",
-            durationTicks: elapsedTimeTicks(
-              Number(requireElapsedHours(8)) - 3,
-            ),
+            durationTicks: elapsedTimeTicks(Number(requireElapsedHours(8)) - 3),
           },
         },
       });
@@ -600,11 +596,7 @@ describe("damage and hit point lifecycle helpers", () => {
         sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
           session,
           fighterId,
-          spellSlotInvocationRef(
-            "charm_person",
-            1,
-            "saveGatedCondition",
-          ),
+          spellSlotInvocationRef("charm_person", 1, "saveGatedCondition"),
         ),
         sourceCombatantId: fighterId,
         condition: "charmed",
@@ -613,9 +605,7 @@ describe("damage and hit point lifecycle helpers", () => {
         turnStartDamage: null,
         expiresAt: {
           kind: "duration",
-          durationTicks: elapsedTimeTicks(
-            Number(requireElapsedHours(1)) - 4,
-          ),
+          durationTicks: elapsedTimeTicks(Number(requireElapsedHours(1)) - 4),
         },
       },
     });
@@ -653,8 +643,8 @@ describe("damage and hit point lifecycle helpers", () => {
       fighterId,
       spellSlotInvocationRef("hideous_laughter", 1, "hideousLaughter"),
     );
-    const concentrationEscapeEffect =
-      allocateBattleEffectOccurrenceForCreature({
+    const concentrationEscapeEffect = allocateBattleEffectOccurrenceForCreature(
+      {
         owner: target,
         effect: {
           kind: "hideousLaughter",
@@ -670,7 +660,8 @@ describe("damage and hit point lifecycle helpers", () => {
             durationTicks: elapsedTimeTicks(7),
           },
         },
-      });
+      },
+    );
     const concentrationState = {
       ...state,
       combatants: new Map(state.combatants)
@@ -700,9 +691,9 @@ describe("damage and hit point lifecycle helpers", () => {
     expect(broken.value.get(fighterId)?.concentration).toBeNull();
     expect(broken.value.get(goblinId)?.activeEffects).toEqual([]);
     expect(broken.value.get(goblinId)?.conditions.prone).toBe(false);
-    expect(
-      broken.value.get(goblinId)?.conditions.directIncapacitated,
-    ).toBe(false);
+    expect(broken.value.get(goblinId)?.conditions.directIncapacitated).toBe(
+      false,
+    );
     expect(broken.value.get(goblinId)?.positiveHpUnconscious).toBeNull();
   });
 });
