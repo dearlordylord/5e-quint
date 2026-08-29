@@ -1,5 +1,5 @@
 import type { AdminMirrorSessionState } from "@dnd/mcp/experimental-admin-mirror-contract"
-import { Match, Result } from "effect"
+import { Match, Result, Schema } from "effect"
 
 import type {
   AdminMirrorOrigin,
@@ -9,7 +9,8 @@ import type {
 } from "./admin-mirror-session-boundary.ts"
 
 type MirrorSessionId = AdminMirrorSessionState["envelope"]["mirrorSessionId"]
-type MirrorSessionLoadRequestId = symbol
+const MirrorSessionLoadRequestIdSchema = Schema.Symbol.pipe(Schema.brand("MirrorSessionLoadRequestId"))
+type MirrorSessionLoadRequestId = typeof MirrorSessionLoadRequestIdSchema.Type
 
 type MirrorSessionCollectionState =
   | { readonly tag: "configurationInvalid" }
@@ -54,7 +55,7 @@ export function makeInitialMirrorSessionCollectionState(
 }
 
 export function makeMirrorSessionLoadRequestId(): MirrorSessionLoadRequestId {
-  return Symbol("mirrorSessionLoadRequest")
+  return MirrorSessionLoadRequestIdSchema.make(Symbol("mirrorSessionLoadRequest"))
 }
 
 export function mirrorSessionCollectionSessions(
