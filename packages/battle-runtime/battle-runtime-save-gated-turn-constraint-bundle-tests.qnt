@@ -5,7 +5,7 @@
 module battleRuntimeSaveGatedTurnConstraintBundleTests {
   import battleRuntimeSaveGatedTurnConstraintBundle.* from "./battle-runtime-save-gated-turn-constraint-bundle"
 
-  run saveGatedTurnConstraintCoversCostAttackSomaticAndEscapeBoundariesTest = {
+  run test_save_gated_turn_constraint_bundle_covers_cost_attack_somatic_and_escape_boundaries = {
     val admitted = {
       speedNumerator: 1,
       speedDenominator: 2,

@@ -5,7 +5,7 @@
 module battleRuntimeSaveGatedControlEscapeTests {
   import battleRuntimeSaveGatedControlEscape.* from "./battle-runtime-save-gated-control-escape"
 
-  run saveGatedControlEndsOnDamageOrWitnessedOtherCreatureActionTest = {
+  run test_save_gated_control_ends_on_damage_or_witnessed_other_creature_action = {
     all {
       assert(controlProjectionIsActive(true, true, 0)),
       assert(not(controlEffectRemainsAfter(TargetDamaged, false))),
