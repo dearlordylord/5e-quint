@@ -575,14 +575,24 @@ function rayOfFrostActionSpellAct(
       candidate,
     ): candidate is AvailableBattleAct & {
       readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
-    } =>
-      candidate.subject.tag === "actionSpell" &&
-      candidate.subject.actorId === sorcererId &&
-      characterSpellProcedure(execution, candidate.subject.procedureRef)
-        ?.procedure === "spellAttackDamage" &&
-      (castingSourceTag === undefined ||
-        characterSpellProcedure(execution, candidate.subject.procedureRef)
-          ?.spellRuleFacts.castingSource.tag === castingSourceTag),
+    } => {
+      if (
+        candidate.subject.tag !== "actionSpell" ||
+        candidate.subject.actorId !== sorcererId
+      ) {
+        return false;
+      }
+      const procedure = characterSpellProcedure(
+        execution,
+        candidate.subject.procedureRef,
+      );
+      return (
+        procedure?.procedure === "spellAttackDamage" &&
+        (castingSourceTag === undefined ||
+          ("spellRuleFacts" in procedure &&
+            procedure.spellRuleFacts.castingSource.tag === castingSourceTag))
+      );
+    },
   );
   if (act === undefined) {
     throw new Error("Expected Ray of Frost action Spell act.");

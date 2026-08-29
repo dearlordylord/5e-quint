@@ -977,7 +977,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     });
     const sanctuaryHole = findHole(
       needsSanctuary.tag === "needsHoles" ? needsSanctuary.holes : [],
-      "sanctuaryInterdictionOutcome",
+      "targetingSaveInterdictionOutcome",
     );
     const sanctuaryRetarget = sanctuaryRetargetFill(sanctuaryHole, fighterId);
     const awaitingAttackRoll = resolveBattleSubject({
@@ -1056,7 +1056,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     });
     const sanctuaryHole = findHole(
       needsSanctuary.tag === "needsHoles" ? needsSanctuary.holes : [],
-      "sanctuaryInterdictionOutcome",
+      "targetingSaveInterdictionOutcome",
     );
     const sanctuaryRetarget = sanctuaryRetargetFill(sanctuaryHole, fighterId);
     const fills: BattleFill[] = [
@@ -1144,7 +1144,9 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     );
     expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(2));
     expect(resolved.state.combatants.get(fighterId)?.hp).toBe(12);
-    expect(mirrorImageDuplicatesRemaining(resolved.state, fighterId)).toBe(2);
+    expect(duplicateHitInterceptionRemaining(resolved.state, fighterId)).toBe(
+      2,
+    );
   });
 
   test("discovers and resolves Quickened action spells after the Magic action is already spent", () => {
@@ -3488,7 +3490,10 @@ type SaveConditionExpectedEffect =
       "kind" | "condition"
     >
   | Pick<
-      Extract<BattleActiveEffect, { readonly kind: "faerieFireOutline" }>,
+      Extract<
+        BattleActiveEffect,
+        { readonly kind: "saveGatedTargetProjection" }
+      >,
       "kind"
     >;
 type SaveConditionMetamagicCaseShape = {
@@ -3515,7 +3520,7 @@ const SAVE_CONDITION_METAMAGIC_CASES = [
     spellLevel: 1,
     failedSaveTargetId: skeletonId,
     carefulFailedSaveTargetIds: [skeletonId],
-    expectedFailedSaveEffects: [{ kind: "faerieFireOutline" }],
+    expectedFailedSaveEffects: [{ kind: "saveGatedTargetProjection" }],
   },
 ] as const satisfies readonly SaveConditionMetamagicCaseShape[];
 type SaveConditionMetamagicSpellCase =
@@ -4200,13 +4205,16 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       act.initialHoles,
       "Spell targets",
     );
-    const commandOptionHole = findHole(act.initialHoles, "commandOptionChoice");
+    const commandOptionHole = findHole(
+      act.initialHoles,
+      "compelledBehaviorOptionChoice",
+    );
     const targetFill = spellTargetListFill(targetHole, [skeletonId]);
     const optionFill: Extract<
       BattleFill,
-      { readonly kind: "commandOptionChoice" }
+      { readonly kind: "compelledBehaviorOptionChoice" }
     > = {
-      kind: "commandOptionChoice",
+      kind: "compelledBehaviorOptionChoice",
       holeId: commandOptionHole.holeId,
       value: "halt",
     };
@@ -4248,7 +4256,10 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       act.initialHoles,
       "Spell Careful Spell protected targets",
     );
-    const commandOptionHole = findHole(act.initialHoles, "commandOptionChoice");
+    const commandOptionHole = findHole(
+      act.initialHoles,
+      "compelledBehaviorOptionChoice",
+    );
 
     expect(targetHole.label).toBe("Spell targets");
     expect(protectedTargetsHole).toMatchObject({
@@ -4262,9 +4273,9 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
     ]);
     const optionFill: Extract<
       BattleFill,
-      { readonly kind: "commandOptionChoice" }
+      { readonly kind: "compelledBehaviorOptionChoice" }
     > = {
-      kind: "commandOptionChoice",
+      kind: "compelledBehaviorOptionChoice",
       holeId: commandOptionHole.holeId,
       value: "halt",
     };
@@ -4673,7 +4684,7 @@ function supportedInvocationFor(
   session: BattleRuntimeSession,
   targetSpellId: Parameters<typeof spellRecord>[0],
   procedure: SpellSlotInvocationRefProcedure,
-): ReturnType<typeof supportedSpellActs>[number] {
+) {
   const actor = requireBattleCreature(session.state, wizardId);
   const act = discoverBattleActs(session).find(
     (candidate) =>
@@ -4694,7 +4705,11 @@ function supportedInvocationFor(
   const invocation = supportedSpellActs(session.state, actor).find(
     (candidate) => candidate.sourceProcedureRef === procedureRef,
   );
-  if (invocation === undefined) {
+  if (
+    invocation === undefined ||
+    !("spellRuleFacts" in invocation) ||
+    !("resource" in invocation)
+  ) {
     throw new Error(`Expected ${targetSpellId} ${procedure} invocation.`);
   }
   return invocation;
@@ -4704,7 +4719,7 @@ function admittedSubtleProjection(
   state: BattleState,
   invocation: ReturnType<typeof supportedSpellActs>[number],
 ) {
-  if (invocation.resource.tag !== "spellSlot") {
+  if (!("resource" in invocation) || invocation.resource.tag !== "spellSlot") {
     throw new Error("Expected Spell Slot invocation.");
   }
   const admission = admitSpellMetamagicApplications({
@@ -4757,7 +4772,7 @@ function withSanctuaryWard(
   const procedureRef = requireCharacterSpellProcedureRefForTest(
     session,
     wizardId,
-    spellSlotInvocationRef("sanctuary", 1, "sanctuaryTargetingInterdiction"),
+    spellSlotInvocationRef("sanctuary", 1, "targetingSaveInterdiction"),
   );
   const act = discoverBattleActs(session).find(
     (candidate) =>
@@ -4786,7 +4801,7 @@ function withMirrorImageDuplicates(
   const procedureRef = requireCharacterSpellProcedureRefForTest(
     session,
     targetId,
-    spellSlotInvocationRef("mirror_image", 2, "mirrorImageHitInterception"),
+    spellSlotInvocationRef("mirror_image", 2, "duplicateHitInterception"),
   );
   const act = discoverBattleActs(session).find(
     (candidate) =>
@@ -4842,12 +4857,12 @@ function withHuntersMark(
 function sanctuaryRetargetFill(
   hole: BattleHole,
   targetId: ReturnType<typeof combatantId>,
-): Extract<BattleFill, { readonly kind: "sanctuaryInterdictionOutcome" }> {
-  if (hole.kind !== "sanctuaryInterdictionOutcome") {
+): Extract<BattleFill, { readonly kind: "targetingSaveInterdictionOutcome" }> {
+  if (hole.kind !== "targetingSaveInterdictionOutcome") {
     throw new Error("Expected Sanctuary interdiction outcome hole.");
   }
   return {
-    kind: "sanctuaryInterdictionOutcome",
+    kind: "targetingSaveInterdictionOutcome",
     holeId: hole.holeId,
     value: {
       saveSucceeded: false,
@@ -4881,7 +4896,7 @@ function sanctuaryRetargetFill(
   };
 }
 
-function mirrorImageDuplicatesRemaining(
+function duplicateHitInterceptionRemaining(
   state: BattleState,
   targetId: ReturnType<typeof combatantId>,
 ): number | null {
@@ -4891,8 +4906,8 @@ function mirrorImageDuplicatesRemaining(
       candidate,
     ): candidate is Extract<
       BattleActiveEffect,
-      { readonly kind: "mirrorImageDuplicates" }
-    > => candidate.kind === "mirrorImageDuplicates",
+      { readonly kind: "duplicateHitInterception" }
+    > => candidate.kind === "duplicateHitInterception",
   );
   return effect?.remainingDuplicates ?? null;
 }
@@ -6158,7 +6173,8 @@ function carefulCommandAct(session: BattleRuntimeSession): ActionSpellAct {
   const act = discoverBattleActs(session).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId === "command" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        "compelledNextTurnBehavior" &&
       candidate.subject.metamagic?.some(
         (selection) => selection.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
       ) === true,

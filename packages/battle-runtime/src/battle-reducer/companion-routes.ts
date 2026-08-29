@@ -17,7 +17,7 @@ import type {
   BattleReducerRouteEvents,
 } from "./reducer-route-protocol.ts";
 
-export function findFamiliarCompanionLifecycleRouteEvents(): BattleReducerRouteEvents {
+export function spawnedCompanionLifecycleRouteEvents(): BattleReducerRouteEvents {
   return [
     discoverBattleActsRoute("companionLifecycle", [], "battleCompanion"),
     resolveBattleSubjectWithoutFillRoute(

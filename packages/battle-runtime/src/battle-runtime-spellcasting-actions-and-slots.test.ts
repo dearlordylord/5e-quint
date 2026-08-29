@@ -171,7 +171,11 @@ describe("battle runtime: spellcasting actions and slots", () => {
         act.subject.procedureRef,
         actor,
       );
-      return invocation === undefined ? [] : [invocation];
+      return invocation !== undefined &&
+        "spellRuleFacts" in invocation &&
+        "resource" in invocation
+        ? [invocation]
+        : [];
     });
 
     expect(
@@ -382,7 +386,12 @@ describe("battle runtime: spellcasting actions and slots", () => {
         act.subject.procedureRef,
         actor,
       );
-      return invocation === undefined ? [] : [invocation];
+      return invocation !== undefined &&
+        "access" in invocation &&
+        "resource" in invocation &&
+        "spellRuleFacts" in invocation
+        ? [invocation]
+        : [];
     });
     expect(
       cantripInvocations.map((invocation) => ({
@@ -569,6 +578,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
     );
     if (
       invocation === undefined ||
+      !("resource" in invocation) ||
       invocation.resource.tag !== "spellAccessFreeCast"
     ) {
       throw new Error("Expected Hunter's Mark class-feature invocation.");
@@ -1430,7 +1440,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
     ).state;
     expect(afterSlotSpell.currentTurnResources).toMatchObject({
       currentHasBonusAction: true,
-      commandHalt: null,
+      compelledHalt: null,
       spellSlotUsesThisTurn: [{ kind: "committed", combatantId: wizardId }],
       levelOnePlusSpellCastsThisTurn: [wizardId],
     });

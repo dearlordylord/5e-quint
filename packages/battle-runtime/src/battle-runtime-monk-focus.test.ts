@@ -541,7 +541,7 @@ describe("battle runtime: Monk's Focus battle options", () => {
       stepped.state,
       (candidate) =>
         candidate.tag === "runtimeCommand" &&
-        candidate.command === "jumpMovementReplacement",
+        candidate.command === "fixedCostMovementReplacement",
     );
     const movement = requireHole(
       resolveBattleSubject({
@@ -556,7 +556,7 @@ describe("battle runtime: Monk's Focus battle options", () => {
       resolveBattleSubject({
         state: stepped.state,
         subject: jumpAct,
-        fills: [jumpMovementReplacementFill(movement, 60)],
+        fills: [fixedCostMovementReplacementFill(movement, 60)],
       }),
     );
 
@@ -564,7 +564,7 @@ describe("battle runtime: Monk's Focus battle options", () => {
       resolved.state.combatants
         .get(fighterId)
         ?.activeEffects.find(
-          (effect) => effect.kind === "jumpMovementReplacement",
+          (effect) => effect.kind === "fixedCostMovementReplacement",
         )?.usedThisTurn,
     ).toBe(true);
   });
@@ -595,7 +595,7 @@ describe("battle runtime: Monk's Focus battle options", () => {
     ).find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
-        candidate.subject.command === "jumpMovementReplacement",
+        candidate.subject.command === "fixedCostMovementReplacement",
     );
 
     expect(jumpAct?.summary).toContain("up to 60 feet");
@@ -622,7 +622,7 @@ describe("battle runtime: Monk's Focus battle options", () => {
       stepped.state,
       (candidate) =>
         candidate.tag === "runtimeCommand" &&
-        candidate.command === "jumpMovementReplacement",
+        candidate.command === "fixedCostMovementReplacement",
     );
     const movement = requireHole(
       resolveBattleSubject({
@@ -636,7 +636,7 @@ describe("battle runtime: Monk's Focus battle options", () => {
     const result = resolveBattleSubject({
       state: stepped.state,
       subject: jumpAct,
-      fills: [jumpMovementReplacementFill(movement, 61)],
+      fills: [fixedCostMovementReplacementFill(movement, 61)],
     });
 
     expect(result).toMatchObject({
@@ -1322,7 +1322,11 @@ function monkFocusResourceForSubject(
 function withJumpMovementReplacementEffect(
   session: BattleRuntimeSession,
 ): BattleState {
-  const expected = spellSlotInvocationRef("jump", 1, "jumpMovementReplacement");
+  const expected = spellSlotInvocationRef(
+    "jump",
+    1,
+    "fixedCostMovementReplacement",
+  );
   const act = requireActorAdmittedSpellActForTest({
     session,
     actorId: fighterId,
@@ -1349,7 +1353,7 @@ function withJumpMovementReplacementEffect(
   return advanceToActorNextTurnForTest(cast.state, fighterId);
 }
 
-function jumpMovementReplacementFill(
+function fixedCostMovementReplacementFill(
   hole: BattleHole,
   distanceFeet: number,
 ): Extract<BattleFill, { readonly kind: "movement" }> {
@@ -1363,8 +1367,8 @@ function jumpMovementReplacementFill(
       speedKind: "walk",
       movementCostFeet: movementFeet(10),
       provokedOpportunityAttacks: [],
-      jumpMovementReplacement: {
-        kind: "jumpMovementReplacement",
+      fixedCostMovementReplacement: {
+        kind: "fixedCostMovementReplacement",
         distanceFeet: movementFeet(distanceFeet),
         landing: {
           kind: "legalLanding",
@@ -1437,7 +1441,7 @@ function stateWithCommandHalt(state: BattleState): BattleState {
     ...state,
     currentTurnResources: {
       ...state.currentTurnResources,
-      commandHalt: { kind: "commandHalt" },
+      compelledHalt: { kind: "compelledHalt" },
     },
   };
 }

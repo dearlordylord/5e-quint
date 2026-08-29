@@ -22,11 +22,11 @@ import {
   flamingSphereAreaFill,
   flamingSphereEndTurnAct,
   flamingSphereRepositionAct,
-  gustOfWindLineDirectionChangeAct,
-  gustOfWindLineDirectionChoiceFill,
-  gustOfWindLineEndTurnSaveAct,
-  gustOfWindLineSavingThrowOutcomeFill,
-  greaseGroundHazardEndTurnAct,
+  directionalPersistentAreaDirectionChangeAct,
+  directionalPersistentAreaDirectionChoiceFill,
+  directionalPersistentAreaEndTurnSaveAct,
+  directionalPersistentAreaSavingThrowOutcomeFill,
+  persistentAreaSaveConditionEndTurnAct,
   greaseSavingThrowOutcomeFill,
   moonbeamAreaFill,
   moonbeamEndTurnSaveAct,
@@ -72,7 +72,7 @@ describe("persistent spatial spell boundary procedures", () => {
         state: initial.state,
         subject: castAct.subject,
         fills: [
-          gustOfWindLineSavingThrowOutcomeFill(castSave, [
+          directionalPersistentAreaSavingThrowOutcomeFill(castSave, [
             { targetId: spellTargetId, succeeded: true },
           ]),
         ],
@@ -81,7 +81,7 @@ describe("persistent spatial spell boundary procedures", () => {
     const targetTurn = requireResolved(
       endTurn({ state: cast.state, actorId: spellCasterId }),
     );
-    const saveAct = gustOfWindLineEndTurnSaveAct(targetTurn.state);
+    const saveAct = directionalPersistentAreaEndTurnSaveAct(targetTurn.state);
     const save = requireHole(saveAct.initialHoles, "savingThrowOutcome");
 
     expect(
@@ -90,7 +90,7 @@ describe("persistent spatial spell boundary procedures", () => {
         subject: saveAct.subject,
         fills: [
           {
-            ...gustOfWindLineSavingThrowOutcomeFill(save, [
+            ...directionalPersistentAreaSavingThrowOutcomeFill(save, [
               { targetId: spellTargetId, succeeded: true },
             ]),
             value: { outcomes: [{ targetId: spellTargetId, succeeded: true }] },
@@ -108,7 +108,7 @@ describe("persistent spatial spell boundary procedures", () => {
         state: targetTurn.state,
         subject: saveAct.subject,
         fills: [
-          gustOfWindLineSavingThrowOutcomeFill(
+          directionalPersistentAreaSavingThrowOutcomeFill(
             save,
             [{ targetId: spellTargetId, succeeded: true }],
             { areaId: battleAreaId("wrong-gust-line") },
@@ -126,7 +126,7 @@ describe("persistent spatial spell boundary procedures", () => {
         state: targetTurn.state,
         subject: saveAct.subject,
         fills: [
-          gustOfWindLineSavingThrowOutcomeFill(save, [
+          directionalPersistentAreaSavingThrowOutcomeFill(save, [
             { targetId: spellCasterId, succeeded: true },
           ]),
         ],
@@ -157,7 +157,7 @@ describe("persistent spatial spell boundary procedures", () => {
         state: initial.state,
         subject: castAct.subject,
         fills: [
-          gustOfWindLineSavingThrowOutcomeFill(
+          directionalPersistentAreaSavingThrowOutcomeFill(
             requireHole(castAct.initialHoles, "savingThrowOutcome"),
             [{ targetId: spellTargetId, succeeded: true }],
           ),
@@ -167,12 +167,12 @@ describe("persistent spatial spell boundary procedures", () => {
     const targetTurn = requireResolved(
       endTurn({ state: cast.state, actorId: spellCasterId }),
     );
-    const saveAct = gustOfWindLineEndTurnSaveAct(targetTurn.state);
+    const saveAct = directionalPersistentAreaEndTurnSaveAct(targetTurn.state);
     const pending = resolveBattleSubject({
       state: targetTurn.state,
       subject: saveAct.subject,
       fills: [
-        gustOfWindLineSavingThrowOutcomeFill(
+        directionalPersistentAreaSavingThrowOutcomeFill(
           requireHole(saveAct.initialHoles, "savingThrowOutcome"),
           [{ targetId: spellTargetId, succeeded: true }],
         ),
@@ -201,7 +201,7 @@ describe("persistent spatial spell boundary procedures", () => {
         state: initial.state,
         subject: castAct.subject,
         fills: [
-          gustOfWindLineSavingThrowOutcomeFill(
+          directionalPersistentAreaSavingThrowOutcomeFill(
             requireHole(castAct.initialHoles, "savingThrowOutcome"),
             [],
           ),
@@ -211,31 +211,31 @@ describe("persistent spatial spell boundary procedures", () => {
     const targetTurn = requireResolved(
       endTurn({ state: cast.state, actorId: spellCasterId }),
     );
-    const saveAct = gustOfWindLineEndTurnSaveAct(targetTurn.state);
+    const saveAct = directionalPersistentAreaEndTurnSaveAct(targetTurn.state);
     const resolvedTargetTurn = requireResolved(
       resolveBattleSubject({
         state: targetTurn.state,
         subject: saveAct.subject,
         fills: [
-          gustOfWindLineSavingThrowOutcomeFill(
+          directionalPersistentAreaSavingThrowOutcomeFill(
             requireHole(saveAct.initialHoles, "savingThrowOutcome"),
             [{ targetId: spellTargetId, succeeded: true }],
           ),
         ],
       }),
     );
-    const directionAct = gustOfWindLineDirectionChangeAct(
+    const directionAct = directionalPersistentAreaDirectionChangeAct(
       resolvedTargetTurn.state,
     );
     const directionHole = requireHole(
       directionAct.initialHoles,
-      "gustOfWindLineDirectionChoice",
+      "directionalPersistentAreaDirectionChoice",
     );
     const changed = requireResolved(
       resolveBattleSubject({
         state: resolvedTargetTurn.state,
         subject: directionAct.subject,
-        fills: [gustOfWindLineDirectionChoiceFill(directionHole)],
+        fills: [directionalPersistentAreaDirectionChoiceFill(directionHole)],
       }),
     );
     expect(changed.state.currentTurnResources.currentHasBonusAction).toBe(
@@ -246,7 +246,7 @@ describe("persistent spatial spell boundary procedures", () => {
       resolveBattleSubject({
         state: changed.state,
         subject: directionAct.subject,
-        fills: [gustOfWindLineDirectionChoiceFill(directionHole)],
+        fills: [directionalPersistentAreaDirectionChoiceFill(directionHole)],
       }),
     ).toMatchObject({
       tag: "invalid",
@@ -632,7 +632,7 @@ describe("persistent spatial spell boundary procedures", () => {
 
   test("Moonbeam Cylinder exit is stale after its suppression is cleared", () => {
     const initial = startBattleSessionRight({
-      battleId: battleId("persistent-spatial-moonbeam-exit"),
+      battleId: battleId("persistent-spatial-persistentAreaSaveDamage-exit"),
       combatants: [
         characterSeed({
           combatantId: spellTargetId,
@@ -780,7 +780,7 @@ describe("persistent spatial spell boundary procedures", () => {
     ).find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
-        candidate.subject.command === "moonbeamCylinderExit" &&
+        candidate.subject.command === "persistentAreaSaveDamageExit" &&
         candidate.subject.actorId === spellTargetId,
     );
     if (exitAct === undefined) {
@@ -834,7 +834,7 @@ describe("persistent spatial spell boundary procedures", () => {
     const targetTurn = requireResolved(
       endTurn({ state: cast.state, actorId: spellCasterId }),
     );
-    const saveAct = greaseGroundHazardEndTurnAct(
+    const saveAct = persistentAreaSaveConditionEndTurnAct(
       battleRuntimeSessionForTest({ ...initial, state: targetTurn.state }),
       spellTargetId,
     );

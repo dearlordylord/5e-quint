@@ -43,7 +43,7 @@ import {
   requireCharacterSpellProcedureRefForTest,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
-import { hideousLaughterDurationTicks } from "./unit-profile-admission-catalog.test-support.ts";
+import { saveGatedConditionWithRepeatDurationTicks } from "./unit-profile-admission-catalog.test-support.ts";
 import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
   spellAct,
@@ -82,7 +82,7 @@ if (unitCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 const hellishRebukeUnitId = "hellish_rebuke";
-const hideousLaughterUnitId = "hideous_laughter";
+const saveGatedConditionWithRepeatUnitId = "hideous_laughter";
 const magicMissileUnitId = "magic_missile";
 const spellCasterId = combatantId("hellish-rebuke-caster");
 const laughterCasterId = combatantId("hideous-laughter-caster");
@@ -373,14 +373,14 @@ describe("Hellish Rebuke Reaction spell", () => {
     const session = battleWithThirdPartyHideousLaughter(hellishRebuke);
     const laughterAct = spellAct({
       session,
-      spellId: hideousLaughterUnitId,
+      spellId: saveGatedConditionWithRepeatUnitId,
       slotLevel: 1,
     });
     expect(laughterAct.subject.actorId).toBe(laughterCasterId);
     const targetList = spellTargetListFill(
       requireHole(laughterAct.initialHoles, "spellTargetList"),
       laughterCasterId,
-      hideousLaughterUnitId,
+      saveGatedConditionWithRepeatUnitId,
       [damagerId],
     );
     const awaitingInitialSave = resolveBattleSubject({
@@ -411,7 +411,7 @@ describe("Hellish Rebuke Reaction spell", () => {
     const laughterCaster = requireCombatant(laughed.state, laughterCasterId);
     const laughingDamager = requireCombatant(laughed.state, damagerId);
     const laughterEffect = laughingDamager.activeEffects.find(
-      (effect) => effect.kind === "hideousLaughter",
+      (effect) => effect.kind === "saveGatedConditionWithRepeat",
     );
     expect(laughterCaster.concentration).toMatchObject({
       sourceProcedureRef: laughterAct.subject.procedureRef,
@@ -430,7 +430,7 @@ describe("Hellish Rebuke Reaction spell", () => {
       expiresAt: {
         kind: "concentration",
         combatantId: laughterCasterId,
-        durationTicks: hideousLaughterDurationTicks,
+        durationTicks: saveGatedConditionWithRepeatDurationTicks,
       },
     });
 
@@ -535,7 +535,7 @@ describe("Hellish Rebuke Reaction spell", () => {
       holes: [
         {
           kind: "savingThrowOutcome",
-          hideousLaughterRepeatSave: {
+          saveGatedConditionRepeatSave: {
             targetId: damagerId,
             trigger: "damage",
           },
@@ -1249,7 +1249,7 @@ function battleWithThirdPartyHideousLaughter(
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
         cantrips: [],
-        preparedSpells: [srdSpellRecord(hideousLaughterUnitId)],
+        preparedSpells: [srdSpellRecord(saveGatedConditionWithRepeatUnitId)],
         featurePreparedSpells: [],
         spellAccesses: [],
         spellbookRitualSpellAccesses: [],

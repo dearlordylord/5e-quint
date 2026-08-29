@@ -63,7 +63,7 @@ type AdmittedSpellActSubject = Extract<
       | "actionSpell"
       | "bonusActionSpell"
       | "bonusActionDashSpell"
-      | "findFamiliarTouchSpell";
+      | "spawnedCompanionTouchSpellProxy";
   }
 >;
 type AdmittedSpellActTag = AdmittedSpellActSubject["tag"];

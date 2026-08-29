@@ -68,13 +68,13 @@ type Level2ProtectionSpellSelectedIdentityResult =
   | "init"
   | "aidHitPointBuff"
   | "barkskinArmorClassFloor"
-  | "blurAttackRollDefense"
+  | "perceptionGatedAttackRollDefense"
   | "continualFlameObjectLight"
   | "enhanceAbilityRollModifier"
   | "enhanceAbilityHigherSlotPerTarget"
   | "enlargeReduceSizeIncrease"
-  | "magicWeaponEnhancement"
-  | "mirrorImageHitInterception"
+  | "weaponAttackDamageEnhancement"
+  | "duplicateHitInterception"
   | "passWithoutTraceStealthModifier"
   | "linkedDefenseResistanceDamageShareLinkedEffect";
 type Level2ProtectionSpellSelectedIdentityProjection = {
@@ -95,13 +95,13 @@ const LEVEL2_PROTECTION_SPELL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   Init: "init",
   AidHitPointBuff: "aidHitPointBuff",
   BarkskinArmorClassFloor: "barkskinArmorClassFloor",
-  BlurAttackRollDefense: "blurAttackRollDefense",
+  BlurAttackRollDefense: "perceptionGatedAttackRollDefense",
   ContinualFlameObjectLight: "continualFlameObjectLight",
   EnhanceAbilityRollModifier: "enhanceAbilityRollModifier",
   EnhanceAbilityHigherSlotPerTarget: "enhanceAbilityHigherSlotPerTarget",
   EnlargeReduceSizeIncrease: "enlargeReduceSizeIncrease",
-  MagicWeaponEnhancement: "magicWeaponEnhancement",
-  MirrorImageHitInterception: "mirrorImageHitInterception",
+  MagicWeaponEnhancement: "weaponAttackDamageEnhancement",
+  MirrorImageHitInterception: "duplicateHitInterception",
   PassWithoutTraceStealthModifier: "passWithoutTraceStealthModifier",
   WardingBondLinkedEffect: "linkedDefenseResistanceDamageShareLinkedEffect",
 } as const satisfies Readonly<
@@ -154,8 +154,8 @@ defineSelectedIdentityReplayAndQntReplay({
         selectedSpellProcedure("doDiscoverBlurAttackRollDefense", {
           spellId: blurUnitId,
           actionTag: "actionSpell",
-          procedure: "blurAttackRollDefense",
-          result: "blurAttackRollDefense",
+          procedure: "perceptionGatedAttackRollDefense",
+          result: "perceptionGatedAttackRollDefense",
         }),
       ],
     },
@@ -202,8 +202,8 @@ defineSelectedIdentityReplayAndQntReplay({
         selectedSpellProcedure("doDiscoverMagicWeaponEnhancement", {
           spellId: magicWeaponUnitId,
           actionTag: "bonusActionSpell",
-          procedure: "magicWeaponEnhancement",
-          result: "magicWeaponEnhancement",
+          procedure: "weaponAttackDamageEnhancement",
+          result: "weaponAttackDamageEnhancement",
         }),
       ],
     },
@@ -213,8 +213,8 @@ defineSelectedIdentityReplayAndQntReplay({
         selectedSpellProcedure("doDiscoverMirrorImageHitInterception", {
           spellId: mirrorImageUnitId,
           actionTag: "actionSpell",
-          procedure: "mirrorImageHitInterception",
-          result: "mirrorImageHitInterception",
+          procedure: "duplicateHitInterception",
+          result: "duplicateHitInterception",
         }),
       ],
     },

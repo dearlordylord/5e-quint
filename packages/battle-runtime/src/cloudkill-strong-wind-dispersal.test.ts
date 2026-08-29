@@ -63,7 +63,7 @@ function cloudkillDispersalAct() {
   ).find(
     (candidate) =>
       candidate.subject.tag === "runtimeCommand" &&
-      candidate.subject.command === "disperseCloudkill",
+      candidate.subject.command === "endPersistentAreaSaveDamageForEnvironment",
   );
   if (act === undefined) {
     throw new Error("Expected active Cloudkill dispersal act.");
@@ -77,7 +77,7 @@ describe("Cloudkill strong-wind dispersal", () => {
     const caster = requireCombatant(state, spellCasterId);
     const containingOwner = requireCombatant(state, spellTargetId);
     const cloudkill = caster.activeEffects.find(
-      (effect) => effect.kind === "cloudkillAreaHazard",
+      (effect) => effect.kind === "persistentAreaSaveDamage",
     );
     if (cloudkill === undefined) {
       throw new Error("Expected active Cloudkill effect.");
@@ -110,7 +110,8 @@ describe("Cloudkill strong-wind dispersal", () => {
     ).find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
-        candidate.subject.command === "disperseCloudkill",
+        candidate.subject.command ===
+          "endPersistentAreaSaveDamageForEnvironment",
     );
     if (act === undefined) {
       throw new Error("Expected relocated Cloudkill dispersal act.");
@@ -312,7 +313,8 @@ describe("Cloudkill strong-wind dispersal", () => {
     ).find(
       (candidate) =>
         candidate.subject.tag === "runtimeCommand" &&
-        candidate.subject.command === "disperseCloudkill",
+        candidate.subject.command ===
+          "endPersistentAreaSaveDamageForEnvironment",
     );
     if (dispersal === undefined) {
       throw new Error("Expected active Cloudkill dispersal act.");

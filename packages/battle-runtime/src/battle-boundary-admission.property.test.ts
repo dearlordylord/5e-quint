@@ -531,7 +531,7 @@ describe("battle boundary admission owners", () => {
             kind: "activeEffect",
             ownerId: goblinId,
             effect: {
-              kind: "hideousLaughter",
+              kind: "saveGatedConditionWithRepeat",
               sourceProcedureRef: codecProcedureRef,
               sourceCombatantId: wizardId,
               conditionHadNonSpellProneSource: false,
@@ -626,7 +626,13 @@ describe("battle boundary admission owners", () => {
             kind: "activeEffect",
             ownerId: wizardId,
             effect: {
-              kind: "flamingSphere",
+              kind: "persistentAreaSaveDamage",
+              lifecycle: {
+                kind: "casterActionReposition",
+                actionCost: "bonusAction",
+                movedAreaOperation: "saveDamage",
+                collisionDisposition: "stopAndAffectAdjacent",
+              },
               sourceProcedureRef: codecProcedureRef,
               sourceCombatantId: wizardId,
               areaId: battleAreaId("boundary-movable"),
@@ -643,7 +649,7 @@ describe("battle boundary admission owners", () => {
             kind: "activeEffect",
             ownerId: wizardId,
             effect: {
-              kind: "spikeGrowthHazard",
+              kind: "areaMovementDistanceDamage",
               sourceProcedureRef: codecProcedureRef,
               sourceCombatantId: wizardId,
               areaId: battleAreaId("boundary-spike"),
@@ -659,7 +665,8 @@ describe("battle boundary admission owners", () => {
             kind: "activeEffect",
             ownerId: wizardId,
             effect: {
-              kind: "insectPlagueAreaHazard",
+              kind: "persistentAreaSaveDamage",
+              lifecycle: { kind: "stationary" },
               sourceProcedureRef: codecProcedureRef,
               sourceCombatantId: wizardId,
               appearanceOccurrence: {
@@ -685,7 +692,14 @@ describe("battle boundary admission owners", () => {
             kind: "activeEffect",
             ownerId: wizardId,
             effect: {
-              kind: "cloudkillAreaHazard",
+              kind: "persistentAreaSaveDamage",
+              lifecycle: {
+                kind: "sourceTurnTranslation",
+                distanceFeet: movementFeet(10),
+                direction: "awayFromSource",
+                movedAreaOperation: "saveDamage",
+                environmentalEnd: "strongWind",
+              },
               sourceProcedureRef: codecProcedureRef,
               sourceCombatantId: wizardId,
               appearanceOccurrence: {
@@ -769,9 +783,9 @@ describe("battle boundary admission owners", () => {
       encodedCodecHole({
         ...codecBase("laughter"),
         kind: "savingThrowOutcome",
-        hideousLaughterRepeatSave: {
+        saveGatedConditionRepeatSave: {
           ...codecSource,
-          effectRef: occurrenceRef("hideousLaughter"),
+          effectRef: occurrenceRef("saveGatedConditionWithRepeat"),
           trigger: "endTurn",
           save: { ability: "wis", dc: { kind: "fixed", dc: 12 } },
         },
@@ -862,7 +876,7 @@ describe("battle boundary admission owners", () => {
       codecRolled("movableZone", {
         movableZone: {
           ...codecSource,
-          effectRef: occurrenceRef("flamingSphere"),
+          effectRef: occurrenceRef("persistentAreaSaveDamage"),
           areaId: battleAreaId("boundary-movable"),
           trigger: "endsTurnWithinFiveFeetOfSphere",
           save: { ability: "dex", dc: { kind: "fixed", dc: 12 } },
@@ -871,25 +885,25 @@ describe("battle boundary admission owners", () => {
       codecRolled("spikeGrowth", {
         spikeGrowthMovement: {
           ...codecSource,
-          effectRef: occurrenceRef("spikeGrowthHazard"),
+          effectRef: occurrenceRef("areaMovementDistanceDamage"),
           areaId: battleAreaId("boundary-spike"),
           distanceFeet: 10,
           damage: { expr: { dice: 1, dieSize: 4 }, damageType: "piercing" },
         },
       }),
-      codecRolled("insectPlague", {
-        insectPlagueAreaHazard: {
+      codecRolled("persistentAreaSaveDamage", {
+        persistentAreaSaveDamage: {
           ...codecSource,
-          effectRef: occurrenceRef("insectPlagueAreaHazard"),
+          effectRef: occurrenceRef("persistentAreaSaveDamage"),
           areaId: battleAreaId("boundary-insect"),
           trigger: "entersArea",
           damage: { expr: { dice: 1, dieSize: 6 }, damageType: "piercing" },
         },
       }),
       codecRolled("cloudkill", {
-        cloudkillAreaHazard: {
+        persistentAreaSaveDamage: {
           ...codecSource,
-          effectRef: occurrenceRef("cloudkillAreaHazard"),
+          effectRef: occurrenceRef("persistentAreaSaveDamage"),
           areaId: battleAreaId("boundary-cloudkill"),
           trigger: "entersArea",
           damage: { expr: { dice: 1, dieSize: 6 }, damageType: "poison" },
@@ -2308,7 +2322,7 @@ describe("battle boundary admission owners", () => {
     const shieldBinding = shieldWizard.origin.execution.procedureBindings.find(
       (binding) =>
         binding.procedure.kind === "spellInvocation" &&
-        binding.procedure.execution.procedure === "shieldReaction",
+        binding.procedure.execution.procedure === "triggeredArmorDefense",
     );
     if (shieldBinding?.procedure.kind !== "spellInvocation") {
       throw new Error("Expected Shield reaction procedure fixture.");

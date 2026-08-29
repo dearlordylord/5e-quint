@@ -9,7 +9,7 @@ import {
   damageRollFillWithGroups,
   endTurn,
   findHole,
-  fogCloudAreaFill,
+  persistentAreaTraitAreaFill,
   requireCharacterSpellProcedureRefForTest,
   requireHole,
   requireResolved,
@@ -247,7 +247,7 @@ describe("persistent area save/damage public boundaries", () => {
       resolveBattleSubject({
         state: targetSession.state,
         subject: fogAct.subject,
-        fills: [fogCloudAreaFill(fogArea, fogCloudBoundaryAreaId)],
+        fills: [persistentAreaTraitAreaFill(fogArea, fogCloudBoundaryAreaId)],
       }),
     );
     const concentratedSession = battleRuntimeSessionForTest({

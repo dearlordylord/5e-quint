@@ -60,7 +60,7 @@ import {
   breakBattleConcentration,
   endTurn,
   type BattleActiveEffect,
-  type BattleAntimagicFieldAffectedOngoingSpellEffect,
+  type BattleMagicSuppressionAffectedOngoingSpellEffect,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
@@ -90,7 +90,7 @@ const ANTIMAGIC_FIELD_ONGOING_SUPPRESSION_SCENARIO_OUTCOME_BY_TAG: Readonly<
 } as const;
 
 type AntimagicSuppressionSourceKind = Extract<
-  BattleAntimagicFieldAffectedOngoingSpellEffect["sourceKind"],
+  BattleMagicSuppressionAffectedOngoingSpellEffect["sourceKind"],
   "ordinarySpell" | "artifact"
 >;
 
@@ -345,7 +345,7 @@ function initialRuntimeState(): AntimagicRuntimeState {
     owner: caster,
   });
   const ongoingSpell = {
-    ...spiritualWeaponActiveEffectTemplate(),
+    ...spatialMeleeSpellAttackProxyActiveEffectTemplate(),
     effectRef: effectAllocation.effectRef,
   };
   const withOngoingSpell = battleRuntimeSessionForTest({
@@ -488,7 +488,7 @@ function antimagicProjection(
 
 function antimagicFieldAreaFill(input: {
   readonly hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>;
-  readonly affectedOngoingSpellEffects: readonly BattleAntimagicFieldAffectedOngoingSpellEffect[];
+  readonly affectedOngoingSpellEffects: readonly BattleMagicSuppressionAffectedOngoingSpellEffect[];
 }): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
   return {
     kind: "spellAreaChoice",
@@ -509,9 +509,9 @@ function antimagicFieldAreaFill(input: {
 function antimagicAffectedSpiritualWeapon(
   sourceKind: AntimagicSuppressionSourceKind,
   effectRef: SpiritualWeaponEffectRef,
-): BattleAntimagicFieldAffectedOngoingSpellEffect {
+): BattleMagicSuppressionAffectedOngoingSpellEffect {
   return {
-    kind: "antimagicFieldAffectedOngoingSpellEffect",
+    kind: "magicSuppressionAffectedOngoingSpellEffect",
     effect: {
       kind: "spellActiveEffect",
       activeEffectKind: "spatialMeleeSpellAttackProxy",
@@ -568,7 +568,7 @@ function antimagicSuppressionEffect(
   );
 }
 
-function spiritualWeaponActiveEffectTemplate(): Extract<
+function spatialMeleeSpellAttackProxyActiveEffectTemplate(): Extract<
   BattleActiveEffectOccurrenceTemplate,
   { readonly kind: "spatialMeleeSpellAttackProxy" }
 > {

@@ -25,8 +25,8 @@ import {
   classLevel,
   endTurn,
   greaseAreaId,
-  greaseGroundHazardEndTurnAct,
-  greaseGroundHazardSaveAct,
+  persistentAreaSaveConditionEndTurnAct,
+  persistentAreaSaveConditionSaveAct,
   greaseUnitId,
   parseSupportedUnitFeatureProfile,
   PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
@@ -213,7 +213,7 @@ describe("L12G deterministic Danger Sense admission", () => {
   test("Danger Sense projects through Grease entry and end-turn Dexterity save holes", () => {
     const state = dangerSenseGreaseGroundHazardBattle();
 
-    const entryAct = greaseGroundHazardSaveAct(
+    const entryAct = persistentAreaSaveConditionSaveAct(
       state,
       spellTargetId,
       "entersArea",
@@ -221,7 +221,7 @@ describe("L12G deterministic Danger Sense admission", () => {
     const entrySave = requireHole(entryAct.initialHoles, "savingThrowOutcome");
     expect(entrySave).toMatchObject({
       ability: "dex",
-      greaseGroundHazard: {
+      persistentAreaSaveCondition: {
         targetId: spellTargetId,
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
@@ -231,14 +231,17 @@ describe("L12G deterministic Danger Sense admission", () => {
       targetRollModes: [{ targetId: spellTargetId, rollMode: "advantage" }],
     });
 
-    const endTurnAct = greaseGroundHazardEndTurnAct(state, spellTargetId);
+    const endTurnAct = persistentAreaSaveConditionEndTurnAct(
+      state,
+      spellTargetId,
+    );
     const endTurnSave = requireHole(
       endTurnAct.initialHoles,
       "savingThrowOutcome",
     );
     expect(endTurnSave).toMatchObject({
       ability: "dex",
-      greaseGroundHazard: {
+      persistentAreaSaveCondition: {
         targetId: spellTargetId,
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
@@ -254,7 +257,7 @@ describe("L12G deterministic Danger Sense admission", () => {
       incapacitated: true,
     });
 
-    const entryAct = greaseGroundHazardSaveAct(
+    const entryAct = persistentAreaSaveConditionSaveAct(
       state,
       spellTargetId,
       "entersArea",
@@ -263,7 +266,10 @@ describe("L12G deterministic Danger Sense admission", () => {
       requireHole(entryAct.initialHoles, "savingThrowOutcome").targetRollModes,
     ).toEqual([]);
 
-    const endTurnAct = greaseGroundHazardEndTurnAct(state, spellTargetId);
+    const endTurnAct = persistentAreaSaveConditionEndTurnAct(
+      state,
+      spellTargetId,
+    );
     expect(
       requireHole(endTurnAct.initialHoles, "savingThrowOutcome")
         .targetRollModes,
@@ -332,7 +338,7 @@ function dangerSenseGreaseGroundHazardBattle(input?: {
   const expected = spellSlotInvocationRef(
     greaseUnitId,
     1,
-    "greaseGroundHazard",
+    "persistentAreaSaveCondition",
   );
   const act = requireActorAdmittedSpellActForTest({
     session,
@@ -351,7 +357,7 @@ function dangerSenseGreaseGroundHazardBattle(input?: {
           holeId: save.holeId,
           value: {
             area: {
-              kind: "greaseGroundArea",
+              kind: "persistentAreaSaveConditionArea",
               originAnchorId: spellCasterId,
               affectedTargetIds: [],
               areaId: greaseAreaId,

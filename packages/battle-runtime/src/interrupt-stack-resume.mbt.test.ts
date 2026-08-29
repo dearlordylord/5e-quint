@@ -675,7 +675,7 @@ function requireShieldReactionChoice(
           (binding) =>
             binding.procedureRef === candidate.subject.procedureRef &&
             binding.procedure.kind === "spellInvocation" &&
-            binding.procedure.execution.procedure === "shieldReaction",
+            binding.procedure.execution.procedure === "triggeredArmorDefense",
         )
       );
     },

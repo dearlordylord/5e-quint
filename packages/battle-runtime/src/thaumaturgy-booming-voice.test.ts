@@ -40,7 +40,7 @@ import {
   battleActSpellPresentation,
   BattleFillSchema,
   BattleHoleSchema,
-  thaumaturgyBoomingVoiceInfluenceAbilityCheckHole,
+  temporaryAbilityCheckRollModeInfluenceAbilityCheckHole,
   type BattleActiveEffect,
   type BattleFill,
   type BattleHole,
@@ -131,7 +131,7 @@ describe("Thaumaturgy Booming Voice", () => {
     expect(temporaryAbilityCheckRollModeEffectCount(refreshed)).toBe(1);
     expect(refreshed.state.currentTurnResources.actionResources).toEqual([]);
     expect(
-      thaumaturgyBoomingVoiceInfluenceAbilityCheckHole(
+      temporaryAbilityCheckRollModeInfluenceAbilityCheckHole(
         refreshed.state,
         fighterId,
         difficultyClass(13),
@@ -186,7 +186,7 @@ describe("Thaumaturgy Booming Voice", () => {
     expect(caster?.concentration).toBeNull();
 
     expect(
-      thaumaturgyBoomingVoiceInfluenceAbilityCheckHole(
+      temporaryAbilityCheckRollModeInfluenceAbilityCheckHole(
         resolved.state,
         fighterId,
         difficultyClass(13),
@@ -214,7 +214,7 @@ describe("Thaumaturgy Booming Voice", () => {
     const cancelled = withHexCharismaDisadvantage(resolved.state);
 
     expect(
-      thaumaturgyBoomingVoiceInfluenceAbilityCheckHole(
+      temporaryAbilityCheckRollModeInfluenceAbilityCheckHole(
         cancelled,
         fighterId,
         difficultyClass(13),

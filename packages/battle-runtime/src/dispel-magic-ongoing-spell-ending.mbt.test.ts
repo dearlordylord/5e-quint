@@ -4,7 +4,7 @@ import {
   battleStateWithAllocatedEffectOccurrencesForTest,
 } from "./battle-runtime.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
-import { antimagicFieldAuraMembershipForTest } from "./antimagic-field.test-support.ts";
+import { magicSuppressionEmanationMembershipForTest } from "./antimagic-field.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-ongoing-spell-ending
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING
 // RAW trace:
@@ -333,7 +333,7 @@ function initialRuntimeState(): DispelMagicInitialRuntimeState {
       {
         kind: "activeEffect",
         ownerId: spellTargetId,
-        effect: antimagicFieldAuraEffect(),
+        effect: magicSuppressionEmanationEffect(),
       },
       {
         kind: "storedLightEmitter",
@@ -516,7 +516,7 @@ function targetAntimagicAura(
   const target = {
     kind: "magicalEffect" as const,
     effect: {
-      kind: "antimagicFieldAura" as const,
+      kind: "magicSuppressionEmanation" as const,
       effectRef: aura.effectRef,
       areaId: antimagicFieldAreaId,
       sourceCombatantId: spellTargetId,
@@ -604,11 +604,11 @@ function requirePendingHigherLevelCheckState(
   return state;
 }
 
-function antimagicFieldAuraEffect(): Extract<
+function magicSuppressionEmanationEffect(): Extract<
   BattleActiveEffectOccurrenceTemplate,
   { readonly kind: "magicSuppressionEmanation" }
 > {
-  const aura = antimagicFieldAuraMembershipForTest({
+  const aura = magicSuppressionEmanationMembershipForTest({
     sourceCombatantId: spellTargetId,
     originIncluded: true,
     nonOriginCombatantIds: [],

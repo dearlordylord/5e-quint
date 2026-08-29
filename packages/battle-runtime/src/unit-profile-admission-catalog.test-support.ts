@@ -186,7 +186,8 @@ export const continualFlameUnitId = "continual_flame";
 
 export const contagionUnitId = "contagion";
 
-export const counterspellUnitId = "counterspell";
+export const spellCastInterruptionReactionUnitId =
+  "spellCastInterruptionReaction";
 
 export const dispelMagicUnitId = "dispel_magic";
 export const dispelEvilAndGoodUnitId = "dispel_evil_and_good";
@@ -231,13 +232,13 @@ export const iceKnifeUnitId = "ice_knife";
 
 export const sleepUnitId = "sleep";
 
-export const hideousLaughterUnitId = "hideous_laughter";
+export const saveGatedConditionWithRepeatUnitId = "hideous_laughter";
 
-export const hideousLaughterDurationTicks = elapsedTimeTicks(10);
+export const saveGatedConditionWithRepeatDurationTicks = elapsedTimeTicks(10);
 
-export const hypnoticPatternUnitId = "hypnotic_pattern";
+export const saveGatedAreaControlUnitId = "hypnotic_pattern";
 
-export const hypnoticPatternDurationTicks = elapsedTimeTicks(10);
+export const saveGatedAreaControlDurationTicks = elapsedTimeTicks(10);
 
 export const holdPersonUnitId = "hold_person";
 
@@ -305,7 +306,7 @@ export const charmPersonUnitId = "charm_person";
 
 export const chillTouchUnitId = "chill_touch";
 
-export const commandUnitId = "command";
+export const commandUnitId = "compelledNextTurnBehavior";
 
 export const commandLegendaryActorId = combatantId(
   "unit-profile-command-legendary",

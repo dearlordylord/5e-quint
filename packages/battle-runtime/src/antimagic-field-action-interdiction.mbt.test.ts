@@ -5,7 +5,7 @@ import {
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
 import {
-  antimagicFieldAuraEffectTemplateForTest,
+  magicSuppressionEmanationEffectTemplateForTest,
   magicSuppressionEmanationMembershipForTest,
   type TestAntimagicFieldAuraMembership,
 } from "./antimagic-field.test-support.ts";
@@ -349,7 +349,7 @@ function activeAntimagicAuraSession(
   const state = battleStateWithAllocatedEffectForTest({
     state: session.state,
     ownerId: aura.sourceCombatantId,
-    effect: antimagicFieldAuraEffectTemplateForTest({
+    effect: magicSuppressionEmanationEffectTemplateForTest({
       areaId: antimagicFieldAreaId,
       aura,
     }),

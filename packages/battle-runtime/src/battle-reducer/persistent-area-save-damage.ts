@@ -1529,6 +1529,7 @@ export function stationaryPersistentAreaSaveDamageSavingThrowOutcomeHole(
     holeInstanceKey: holeInstanceKey(key),
     label: `${persistentAreaHazardTriggerLabel(trigger)} CON save`,
     persistentAreaSaveDamage: {
+      topology: "stationary",
       targetId,
       effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -1554,6 +1555,7 @@ function stationaryPersistentAreaSaveDamageDamageRollHole(
     holeInstanceKey: holeInstanceKey(key),
     label: `${persistentAreaHazardTriggerLabel(trigger)} damage (${expr})`,
     persistentAreaSaveDamage: {
+      topology: "stationary",
       targetId,
       effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -1613,6 +1615,7 @@ export function translatingPersistentAreaSaveDamageSavingThrowOutcomeHole(
     holeInstanceKey: holeInstanceKey(key),
     label: `${persistentAreaHazardTriggerLabel(trigger)} CON save`,
     persistentAreaSaveDamage: {
+      topology: "translating",
       targetId,
       effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -1648,6 +1651,7 @@ function translatingPersistentAreaSaveDamageDamageRollHole(
     holeInstanceKey: holeInstanceKey(key),
     label: `${persistentAreaHazardTriggerLabel(trigger)} damage (${expr})`,
     persistentAreaSaveDamage: {
+      topology: "translating",
       targetId,
       effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,

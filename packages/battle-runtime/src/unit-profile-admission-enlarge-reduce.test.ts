@@ -203,7 +203,7 @@ function quickenedCreatureSizeAct(input?: {
             proficiencyBonus: proficiencyBonus(2),
             canCastSpells: true,
             cantrips: [],
-            preparedSpells: [spellRecord("counterspell")],
+            preparedSpells: [spellRecord("spellCastInterruptionReaction")],
             featurePreparedSpells: [],
             spellAccesses: [],
             spellbookRitualSpellAccesses: [],
@@ -442,7 +442,11 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
           spellTargetId,
         ),
         spellCastReactionFactsFill([
-          counterspellTriggerFact(castingSession, spellTargetId, spellCasterId),
+          spellCastInterruptionReactionTriggerFact(
+            castingSession,
+            spellTargetId,
+            spellCasterId,
+          ),
         ]),
       ],
     });
@@ -523,7 +527,11 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
           spellTargetId,
         ),
         spellCastReactionFactsFill([
-          counterspellTriggerFact(session, spellTargetId, spellCasterId),
+          spellCastInterruptionReactionTriggerFact(
+            session,
+            spellTargetId,
+            spellCasterId,
+          ),
         ]),
       ],
     });
@@ -578,7 +586,11 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
           spellTargetId,
         ),
         spellCastReactionFactsFill([
-          counterspellTriggerFact(session, spellTargetId, spellCasterId),
+          spellCastInterruptionReactionTriggerFact(
+            session,
+            spellTargetId,
+            spellCasterId,
+          ),
         ]),
       ],
     });
@@ -1792,7 +1804,7 @@ type CounterspellTriggerFact = Extract<
   { readonly kind: "spellCastInterruptionTriggerCasterVisibleWithinRange" }
 >;
 
-function counterspellTriggerFact(
+function spellCastInterruptionReactionTriggerFact(
   session: BattleRuntimeSession,
   reactorId: typeof spellTargetId,
   casterId: typeof spellCasterId,
@@ -1804,7 +1816,11 @@ function counterspellTriggerFact(
     sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
       session,
       reactorId,
-      spellSlotInvocationRef("counterspell", 3, "counterspell"),
+      spellSlotInvocationRef(
+        "spellCastInterruptionReaction",
+        3,
+        "spellCastInterruptionReaction",
+      ),
     ),
     rangeFeet: movementFeet(60),
   };
@@ -1852,8 +1868,8 @@ function requireCounterspellChoice(
       );
       return (
         invocation.tag === "spellSlot" &&
-        invocation.spellId === "counterspell" &&
-        invocation.procedure === "counterspell" &&
+        invocation.spellId === "spellCastInterruptionReaction" &&
+        invocation.procedure === "spellCastInterruptionReaction" &&
         Number(invocation.slotLevel) === 3
       );
     },

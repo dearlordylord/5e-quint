@@ -271,12 +271,12 @@ export function concentrationRouteForResolution(
         battleCombatantHasActiveEffectKind(
           input.state,
           input.subject.actorId,
-          "spikeGrowthHazard",
+          "areaMovementDistanceDamage",
         ) ||
         battleCombatantHasActiveEffectKind(
           input.state,
           input.subject.actorId,
-          "webRestraintHazard",
+          "persistentAreaSaveConditionEscape",
         )
           ? [
               resolveBattleSubjectWithoutFillRoute(

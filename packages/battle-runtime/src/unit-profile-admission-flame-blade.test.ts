@@ -15,7 +15,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import {
-  counterspellUnitId,
+  spellCastInterruptionReactionUnitId,
   flameBladeUnitId,
   spellCasterId,
   spellTargetId,
@@ -350,7 +350,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
       fills: [
         targetFill,
         spellCastReactionFactsFill([
-          counterspellTriggerFact({
+          spellCastInterruptionReactionTriggerFact({
             reactorId: spellTargetId,
             casterId: spellCasterId,
           }),
@@ -1002,7 +1002,7 @@ type CounterspellTriggerFact = Extract<
   { readonly kind: "spellCastInterruptionTriggerCasterVisibleWithinRange" }
 >;
 
-function counterspellTriggerFact(input: {
+function spellCastInterruptionReactionTriggerFact(input: {
   readonly reactorId: CombatantId;
   readonly casterId: CombatantId;
 }): CounterspellTriggerFact {
@@ -1011,7 +1011,7 @@ function counterspellTriggerFact(input: {
     reactorId: input.reactorId,
     casterId: input.casterId,
     sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(counterspellUnitId),
+      String(spellCastInterruptionReactionUnitId),
     ),
     rangeFeet: movementFeet(60),
   };

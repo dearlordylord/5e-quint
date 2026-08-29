@@ -207,7 +207,7 @@ export function battleTerminalSpeedZero(
       (effect) => effect.kind === "spellSpeedZero",
     ) ||
     combatant.activeEffects.some(
-      (effect) => effect.kind === "saveGatedAreaControlControl",
+      (effect) => effect.kind === "saveGatedAreaControl",
     ) ||
     hasCondition(combatant.conditions, "paralyzed") ||
     hasCondition(combatant.conditions, "petrified") ||

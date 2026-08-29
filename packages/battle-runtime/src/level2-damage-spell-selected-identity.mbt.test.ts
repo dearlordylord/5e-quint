@@ -1,13 +1,13 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
-// UNIT-IDENTITY-EVIDENCE: selected-identity-replay B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH acid_arrow dragons_breath flame_blade flaming_sphere heat_metal moonbeam ray_of_enfeeblement scorching_ray shatter spiritual_weapon
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH acid_arrow dragons_breath flame_blade flaming_sphere heat_metal persistentAreaSaveDamage ray_of_enfeeblement scorching_ray shatter spiritual_weapon
 // UNIT-IDENTITY-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH acid_arrow doDiscoverAcidArrowAttackTiming
 // UNIT-IDENTITY-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH dragons_breath doDiscoverDragonsBreathInitial
 // UNIT-IDENTITY-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH flame_blade doDiscoverFlameBladeHeldObject
 // UNIT-IDENTITY-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH flaming_sphere doDiscoverFlamingSphereHazard
 // UNIT-IDENTITY-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH heat_metal doDiscoverHeatMetalObjectContact
-// UNIT-IDENTITY-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH moonbeam doDiscoverMoonbeamMovableZone
+// UNIT-IDENTITY-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH persistentAreaSaveDamage doDiscoverMoonbeamMovableZone
 // UNIT-IDENTITY-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH ray_of_enfeeblement doDiscoverRayOfEnfeeblementSaveGate
 // UNIT-IDENTITY-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH scorching_ray doDiscoverScorchingRayAttackSequence
 // UNIT-IDENTITY-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH shatter doDiscoverShatterSaveGatedDamage
@@ -16,7 +16,7 @@ import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { describe, expect, it } from "vitest";
 
-import dragonsBreathInput from "../../surface/content/dragons_breath.json";
+import grantedAreaSaveDamageActionInput from "../../surface/content/dragons_breath.json";
 import rayOfEnfeeblementInput from "../../surface/content/ray_of_enfeeblement.json";
 import {
   damageRollFillWithGroups,
@@ -75,15 +75,15 @@ type Level2DamageSpellUnitId =
 type Level2DamageSpellSelectedIdentityResult =
   | "init"
   | "acidArrowAttackTiming"
-  | "dragonsBreathInitial"
+  | "grantedAreaSaveDamageAction"
   | "flameBladeHeldObject"
-  | "flamingSphereHazard"
+  | "persistentAreaSaveDamageHazard"
   | "heatMetalObjectContact"
-  | "moonbeamMovableZone"
+  | "persistentAreaSaveDamageMovableZone"
   | "rayOfEnfeeblementSaveGate"
   | "scorchingRayAttackSequence"
   | "shatterSaveGatedDamage"
-  | "spiritualWeaponAttackProxy";
+  | "spatialMeleeSpellAttackProxy";
 type Level2DamageSpellSelectedIdentityProjection = {
   readonly lastResult: Level2DamageSpellSelectedIdentityResult;
 };
@@ -99,15 +99,15 @@ type SelectedLevel2DamageSpellInvocation = {
 const LEVEL2_DAMAGE_SPELL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   Init: "init",
   AcidArrowAttackTiming: "acidArrowAttackTiming",
-  DragonsBreathInitial: "dragonsBreathInitial",
+  DragonsBreathInitial: "grantedAreaSaveDamageAction",
   FlameBladeHeldObject: "flameBladeHeldObject",
-  FlamingSphereHazard: "flamingSphereHazard",
+  FlamingSphereHazard: "persistentAreaSaveDamageHazard",
   HeatMetalObjectContact: "heatMetalObjectContact",
-  MoonbeamMovableZone: "moonbeamMovableZone",
+  MoonbeamMovableZone: "persistentAreaSaveDamageMovableZone",
   RayOfEnfeeblementSaveGate: "rayOfEnfeeblementSaveGate",
   ScorchingRayAttackSequence: "scorchingRayAttackSequence",
   ShatterSaveGatedDamage: "shatterSaveGatedDamage",
-  SpiritualWeaponAttackProxy: "spiritualWeaponAttackProxy",
+  SpiritualWeaponAttackProxy: "spatialMeleeSpellAttackProxy",
 } as const satisfies Readonly<
   Record<string, Level2DamageSpellSelectedIdentityResult>
 >;
@@ -148,8 +148,8 @@ defineSelectedIdentityReplayAndQntReplay({
           spellId: dragonsBreathUnitId,
           actionTag: "bonusActionSpell",
           slotLevel: 2,
-          procedure: "dragonsBreathInitial",
-          result: "dragonsBreathInitial",
+          procedure: "grantedAreaSaveDamageAction",
+          result: "grantedAreaSaveDamageAction",
         }),
       ],
     },
@@ -172,8 +172,8 @@ defineSelectedIdentityReplayAndQntReplay({
           spellId: flamingSphereUnitId,
           actionTag: "actionSpell",
           slotLevel: 2,
-          procedure: "flamingSphere",
-          result: "flamingSphereHazard",
+          procedure: "persistentAreaSaveDamage",
+          result: "persistentAreaSaveDamageHazard",
         }),
       ],
     },
@@ -196,8 +196,8 @@ defineSelectedIdentityReplayAndQntReplay({
           spellId: moonbeamUnitId,
           actionTag: "actionSpell",
           slotLevel: 2,
-          procedure: "moonbeam",
-          result: "moonbeamMovableZone",
+          procedure: "persistentAreaSaveDamage",
+          result: "persistentAreaSaveDamageMovableZone",
         }),
       ],
     },
@@ -244,8 +244,8 @@ defineSelectedIdentityReplayAndQntReplay({
           spellId: spiritualWeaponUnitId,
           actionTag: "bonusActionSpell",
           slotLevel: 2,
-          procedure: "spiritualWeaponAttackProxy",
-          result: "spiritualWeaponAttackProxy",
+          procedure: "spatialMeleeSpellAttackProxy",
+          result: "spatialMeleeSpellAttackProxy",
         }),
       ],
     },
@@ -578,7 +578,7 @@ function selectedSpellBattle(spell: SpellRecord): BattleRuntimeSession {
 
 function selectedSpellRecord(unitId: Level2DamageSpellUnitId): SpellRecord {
   if (unitId === dragonsBreathUnitId) {
-    return decodedSpellRecord(dragonsBreathInput, unitId);
+    return decodedSpellRecord(grantedAreaSaveDamageActionInput, unitId);
   }
   if (unitId === rayOfEnfeeblementUnitId) {
     return decodedSpellRecord(rayOfEnfeeblementInput, unitId);

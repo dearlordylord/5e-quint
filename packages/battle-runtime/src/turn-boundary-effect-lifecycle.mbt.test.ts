@@ -482,7 +482,7 @@ describe("turn-boundary effect lifecycle MBT", () => {
     expect(routeEvents).toEqual([
       {
         kind: "resolveBattleSubject",
-        subject: "commandEffect",
+        subject: "compelledBehaviorEffect",
         fill: "savingThrowOutcome",
         holes: ["rolledDice"],
         owner: "battleActiveEffect",
@@ -929,7 +929,7 @@ function battleWithTurnBoundaryEffectsAndSleepRepeatSave(): BattleState {
     state: battle,
     sourceCombatantId: goblinId,
     ownerId: fighterId,
-    effect: sleepPendingRepeatSaveEffect(),
+    effect: stagedSaveConditionPendingRepeatEffect(),
   });
   const goblin = requireCombatant(allocated.state, goblinId);
   return {
@@ -973,12 +973,12 @@ function battleWithCurrentActorEndTurnDamageAndConcentration(): BattleState {
   };
 }
 
-function sleepPendingRepeatSaveEffect(): Extract<
+function stagedSaveConditionPendingRepeatEffect(): Extract<
   LowLevelEffectOccurrenceTemplate,
-  { readonly kind: "sleepPendingRepeatSave" }
+  { readonly kind: "stagedSaveConditionPendingRepeat" }
 > {
   return {
-    kind: "sleepPendingRepeatSave",
+    kind: "stagedSaveConditionPendingRepeat",
     conditionHadNonSpellSource: false,
     save: {
       ability: "wis",

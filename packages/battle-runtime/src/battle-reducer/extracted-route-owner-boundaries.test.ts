@@ -28,12 +28,12 @@ import {
   zeroHitPointStabilizationRouteForDiscoveredAct,
 } from "./combatant-lifecycle-routes.ts";
 import {
-  commandRouteForDiscoveredAct,
-  commandRouteForResolution,
+  compelledBehaviorRouteForDiscoveredAct,
+  compelledBehaviorRouteForResolution,
 } from "./command-routes.ts";
 import {
   companionRouteForDiscoveredAct,
-  findFamiliarCompanionLifecycleRouteEvents,
+  spawnedCompanionLifecycleRouteEvents,
 } from "./companion-routes.ts";
 import {
   conditionImmunityTemporaryHitPointRouteForDiscoveredAct,
@@ -146,7 +146,7 @@ describe("extracted route owner boundaries", () => {
   });
 
   test("projects companion owner outputs", () => {
-    expect(findFamiliarCompanionLifecycleRouteEvents()).toHaveLength(2);
+    expect(spawnedCompanionLifecycleRouteEvents()).toHaveLength(2);
   });
 
   test("projects marked damage, feature, Command, and attack route events", () => {
@@ -243,10 +243,10 @@ describe("extracted route owner boundaries", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const act = findAct(session, magicSubject("command"));
-    expect(commandRouteForDiscoveredAct(session.state, act)).toEqual([
+    const act = findAct(session, magicSubject("compelledNextTurnBehavior"));
+    expect(compelledBehaviorRouteForDiscoveredAct(session.state, act)).toEqual([
       expect.objectContaining({
-        subject: "commandEffect",
+        subject: "compelledBehaviorEffect",
         owner: "battleSpellSlotAndActionEconomy",
       }),
     ]);
@@ -261,15 +261,15 @@ describe("extracted route owner boundaries", () => {
     });
 
     expect(
-      commandRouteForResolution(
+      compelledBehaviorRouteForResolution(
         { state: session.state, subject: act.subject, fills },
         result,
       ),
     ).toEqual(
       expect.objectContaining({
-        subject: "commandEffect",
+        subject: "compelledBehaviorEffect",
         fill: "spellTargetList",
-        holes: ["commandOptionChoice"],
+        holes: ["compelledBehaviorOptionChoice"],
         owner: "battleHoleFrontier",
       }),
     );

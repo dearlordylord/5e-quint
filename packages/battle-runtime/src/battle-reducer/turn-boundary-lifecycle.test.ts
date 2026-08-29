@@ -377,7 +377,7 @@ describe("turn-boundary active-effect occurrence updates", () => {
         },
       },
       {
-        kind: "jumpMovementReplacement" as const,
+        kind: "fixedCostMovementReplacement" as const,
         sourceProcedureRef: jumpProcedureRef,
         sourceCombatantId: wizardId,
         movementCostFeet: movementFeet(10),
@@ -440,7 +440,7 @@ describe("turn-boundary active-effect occurrence updates", () => {
       "sleep-repeat-source",
     );
     const pendingSleepTemplate = {
-      kind: "sleepPendingRepeatSave" as const,
+      kind: "stagedSaveConditionPendingRepeat" as const,
       sourceProcedureRef,
       sourceCombatantId: fighterId,
       conditionHadNonSpellSource: false,
@@ -478,7 +478,7 @@ describe("turn-boundary active-effect occurrence updates", () => {
     const pendingSleepOccurrence = allocated.occurrences[0];
     if (
       pendingSleepOccurrence?.kind !== "activeEffect" ||
-      pendingSleepOccurrence.effect.kind !== "sleepPendingRepeatSave"
+      pendingSleepOccurrence.effect.kind !== "stagedSaveConditionPendingRepeat"
     ) {
       throw new Error("Expected the allocated pending Sleep occurrence.");
     }
@@ -527,7 +527,7 @@ describe("turn-boundary active-effect occurrence updates", () => {
     if (failed.tag !== "resolved") return;
     expect(failed.state.combatants.get(goblinId)?.activeEffects).toEqual([
       expect.objectContaining({
-        kind: "sleepUnconscious",
+        kind: "stagedSaveConditionApplied",
         effectRef: pendingSleepOccurrence.effect.effectRef,
       }),
     ]);

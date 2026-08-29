@@ -788,7 +788,7 @@ function resolveIncapacitatedReversionWithRoute(
     resolveBattleSubject({
       state: opponentTurn.state.battle.state,
       subject: act.subject,
-      fills: [hypnoticPatternSavingThrowOutcomeFill(savingThrow)],
+      fills: [saveGatedAreaControlSavingThrowOutcomeFill(savingThrow)],
     }),
   );
   return {
@@ -967,7 +967,7 @@ function actionSpellAct(
   return act;
 }
 
-function hypnoticPatternSavingThrowOutcomeFill(
+function saveGatedAreaControlSavingThrowOutcomeFill(
   hole: BattleHole,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   const baseFill = savingThrowOutcomeFill(hole, [
@@ -980,7 +980,7 @@ function hypnoticPatternSavingThrowOutcomeFill(
     ...baseFill,
     value: {
       area: {
-        kind: "hypnoticPatternArea",
+        kind: "saveGatedAreaControlArea",
         originAnchorId: opponentId,
         affectedTargetIds: [druidId],
         cubeSideFeet: 30,

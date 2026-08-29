@@ -89,7 +89,11 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       procedureRef: requireCharacterSpellProcedureRefForTest(
         session,
         spellCasterId,
-        spellSlotInvocationRef(flamingSphereUnitId, 2, "flamingSphere"),
+        spellSlotInvocationRef(
+          flamingSphereUnitId,
+          2,
+          "persistentAreaSaveDamage",
+        ),
       ),
       mode: { tag: "cast" },
     });
@@ -105,7 +109,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     );
     expect(spellHoleInvocation(session, [area])).toEqual(
       expect.objectContaining({
-        procedure: "flamingSphere",
+        procedure: "persistentAreaSaveDamage",
         resource: { tag: "spellSlot", slotLevel: 2 },
         ability: "dex",
         dc: { kind: "caster_spell_save_dc" },
@@ -121,7 +125,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     );
     expect(spellHoleInvocation(session, thirdLevelAct.initialHoles)).toEqual(
       expect.objectContaining({
-        procedure: "flamingSphere",
+        procedure: "persistentAreaSaveDamage",
         damage: { expr: { dice: 3, dieSize: 6 }, damageType: "fire" },
       }),
     );
@@ -154,7 +158,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       requireCombatant(resolved.state, spellCasterId).activeEffects,
     ).toEqual([
       expect.objectContaining({
-        kind: "flamingSphere",
+        kind: "persistentAreaSaveDamage",
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         areaId: flamingSphereAreaId,

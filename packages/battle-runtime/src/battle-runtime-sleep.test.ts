@@ -543,7 +543,7 @@ describe("battle runtime: Sleep", () => {
       }),
       activeEffects: [
         expect.objectContaining({
-          kind: "sleepUnconscious",
+          kind: "stagedSaveConditionApplied",
           sourceProcedureRef: expect.any(String),
           sourceCombatantId: wizardId,
           expiresAt: { kind: "concentration", combatantId: wizardId },
@@ -725,7 +725,7 @@ describe("battle runtime: Sleep", () => {
       conditions: expect.objectContaining({ unconscious: true }),
       activeEffects: [
         expect.objectContaining({
-          kind: "sleepUnconscious",
+          kind: "stagedSaveConditionApplied",
           sourceProcedureRef: expect.any(String),
           sourceCombatantId: wizardId,
         }),
@@ -1729,7 +1729,7 @@ describe("battle runtime: Sleep", () => {
               area: {
                 originAnchorId: wizardId,
                 affectedTargetIds: [goblinId],
-                sleepNonSleeperFacts: [
+                stagedConditionAutomaticSuccessFacts: [
                   { kind: "doesNotSleep", targetId: goblinId },
                 ],
               },
@@ -1756,7 +1756,7 @@ describe("battle runtime: Sleep", () => {
               area: {
                 originAnchorId: wizardId,
                 affectedTargetIds: [goblinId],
-                sleepNonSleeperFacts: [
+                stagedConditionAutomaticSuccessFacts: [
                   { kind: "doesNotSleep", targetId: goblinId },
                 ],
               },
@@ -1824,7 +1824,7 @@ describe("battle runtime: Sleep", () => {
               area: {
                 originAnchorId: wizardId,
                 affectedTargetIds: [goblinId],
-                sleepNonSleeperFacts: [
+                stagedConditionAutomaticSuccessFacts: [
                   { kind: "doesNotSleep", targetId: fighterId },
                 ],
               },
@@ -1850,7 +1850,7 @@ describe("battle runtime: Sleep", () => {
               area: {
                 originAnchorId: wizardId,
                 affectedTargetIds: [goblinId],
-                sleepNonSleeperFacts: [
+                stagedConditionAutomaticSuccessFacts: [
                   { kind: "doesNotSleep", targetId: goblinId },
                   { kind: "doesNotSleep", targetId: goblinId },
                 ],

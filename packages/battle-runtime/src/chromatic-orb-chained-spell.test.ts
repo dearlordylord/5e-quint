@@ -623,7 +623,9 @@ describe("Chromatic Orb chained spell attack", () => {
     expect(
       resolved.state.combatants
         .get(secondTargetId)
-        ?.activeEffects.some((effect) => effect.kind === "hideousLaughter"),
+        ?.activeEffects.some(
+          (effect) => effect.kind === "saveGatedConditionWithRepeat",
+        ),
     ).toBe(false);
     expect(
       resolved.state.combatants.get(secondTargetId)?.conditions.prone,
@@ -709,17 +711,20 @@ describe("Chromatic Orb chained spell attack", () => {
       ...damage.fills,
       concentrationFill,
     ]);
-    const hideousLaughterHole = requireHideousLaughterRepeatSaveHole(
-      requireHole(awaitingHideousLaughter.holes, "savingThrowOutcome"),
-    );
-    expect(hideousLaughterHole.hideousLaughterRepeatSave).toMatchObject({
+    const saveGatedConditionWithRepeatHole =
+      requireHideousLaughterRepeatSaveHole(
+        requireHole(awaitingHideousLaughter.holes, "savingThrowOutcome"),
+      );
+    expect(
+      saveGatedConditionWithRepeatHole.saveGatedConditionRepeatSave,
+    ).toMatchObject({
       targetId: linkedDefenseResistanceDamageShareCasterId,
       trigger: "damage",
     });
     const resolved = resolveResolved(state, damage.subject, [
       ...damage.fills,
       concentrationFill,
-      savingThrowOutcomeFill(hideousLaughterHole, [
+      savingThrowOutcomeFill(saveGatedConditionWithRepeatHole, [
         {
           targetId: linkedDefenseResistanceDamageShareCasterId,
           succeeded: true,
@@ -737,7 +742,9 @@ describe("Chromatic Orb chained spell attack", () => {
       effectKind: "spellEffect",
     });
     expect(
-      caster?.activeEffects.some((effect) => effect.kind === "hideousLaughter"),
+      caster?.activeEffects.some(
+        (effect) => effect.kind === "saveGatedConditionWithRepeat",
+      ),
     ).toBe(false);
     expect(caster?.conditions.prone).toBe(false);
     expect(caster?.conditions.directIncapacitated).toBe(false);
@@ -1373,12 +1380,16 @@ function withTargetConcentration(): BattleState {
   const sourceProcedureRef = requireCharacterSpellProcedureRefForTest(
     session,
     firstTargetId,
-    spellSlotInvocationRef("hideous_laughter", 1, "hideousLaughter"),
+    spellSlotInvocationRef(
+      "hideous_laughter",
+      1,
+      "saveGatedConditionWithRepeat",
+    ),
   );
   const laughter = allocateBattleEffectOccurrenceForCreature({
     owner: laughterTarget,
     effect: {
-      kind: "hideousLaughter",
+      kind: "saveGatedConditionWithRepeat",
       sourceProcedureRef,
       sourceCombatantId: firstTargetId,
       conditionHadNonSpellProneSource: false,
@@ -1574,28 +1585,34 @@ function withWardingBondSharedCasterLifecycle() {
     targetId: thirdTargetId,
     remainingDurationTicks: elapsedTimeTicks(9),
   });
-  const hideousLaughterProcedureRef = requireCharacterSpellProcedureRefForTest(
-    session,
-    secondTargetId,
-    spellSlotInvocationRef("hideous_laughter", 1, "hideousLaughter"),
-  );
-  const hideousLaughter = allocateBattleEffectOccurrenceForCreature({
-    owner: caster,
-    effect: {
-      kind: "hideousLaughter",
-      sourceProcedureRef: hideousLaughterProcedureRef,
-      sourceCombatantId: secondTargetId,
-      conditionHadNonSpellProneSource: false,
-      conditionHadNonSpellIncapacitatedSource: false,
-      repeatSaveRollMode: null,
-      save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
-      expiresAt: {
-        kind: "concentration",
-        combatantId: secondTargetId,
-        durationTicks: elapsedTimeTicks(9),
+  const saveGatedConditionWithRepeatProcedureRef =
+    requireCharacterSpellProcedureRefForTest(
+      session,
+      secondTargetId,
+      spellSlotInvocationRef(
+        "hideous_laughter",
+        1,
+        "saveGatedConditionWithRepeat",
+      ),
+    );
+  const saveGatedConditionWithRepeat =
+    allocateBattleEffectOccurrenceForCreature({
+      owner: caster,
+      effect: {
+        kind: "saveGatedConditionWithRepeat",
+        sourceProcedureRef: saveGatedConditionWithRepeatProcedureRef,
+        sourceCombatantId: secondTargetId,
+        conditionHadNonSpellProneSource: false,
+        conditionHadNonSpellIncapacitatedSource: false,
+        repeatSaveRollMode: null,
+        save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+        expiresAt: {
+          kind: "concentration",
+          combatantId: secondTargetId,
+          durationTicks: elapsedTimeTicks(9),
+        },
       },
-    },
-  });
+    });
   return {
     rayEffectRefs: ray.effectRefs,
     rayProcedureRef: ray.sourceProcedureRef,
@@ -1605,13 +1622,16 @@ function withWardingBondSharedCasterLifecycle() {
       combatants: new Map(ray.state.combatants)
         .set(linkedDefenseResistanceDamageShareCasterId, {
           ...battleCreatureStateWithKnockOutPreservedConditions(
-            hideousLaughter.owner,
+            saveGatedConditionWithRepeat.owner,
             applyCondition(
               applyCondition(caster.conditions, "prone"),
               "incapacitated",
             ),
           ),
-          activeEffects: [...caster.activeEffects, hideousLaughter.effect],
+          activeEffects: [
+            ...caster.activeEffects,
+            saveGatedConditionWithRepeat.effect,
+          ],
           concentration: {
             sourceProcedureRef: ray.sourceProcedureRef,
             effectKind: "spellEffect",
@@ -1627,7 +1647,7 @@ function withWardingBondSharedCasterLifecycle() {
         .set(secondTargetId, {
           ...laughterCaster,
           concentration: {
-            sourceProcedureRef: hideousLaughterProcedureRef,
+            sourceProcedureRef: saveGatedConditionWithRepeatProcedureRef,
             effectKind: "spellEffect",
           },
         }),
@@ -1651,8 +1671,8 @@ function requireHole<K extends BattleHole["kind"]>(
 
 function requireHideousLaughterRepeatSaveHole(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
-): Extract<BattleHole, { readonly hideousLaughterRepeatSave: unknown }> {
-  if (!("hideousLaughterRepeatSave" in hole)) {
+): Extract<BattleHole, { readonly saveGatedConditionRepeatSave: unknown }> {
+  if (!("saveGatedConditionRepeatSave" in hole)) {
     throw new Error("Expected Hideous Laughter repeat save hole.");
   }
   return hole;

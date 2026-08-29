@@ -5,7 +5,7 @@ import {
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
 import {
-  antimagicFieldAuraEffectTemplateForTest,
+  magicSuppressionEmanationEffectTemplateForTest,
   magicSuppressionEmanationMembershipForTest,
   type TestAntimagicFieldAuraMembership,
 } from "./antimagic-field.test-support.ts";
@@ -27,7 +27,7 @@ import { describe, expect, test } from "vitest";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import { removeBattleCombatants } from "./battle-reducer/api-lifecycle.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
-import { characterExecutionWithSpiritualWeaponRepeatAttack } from "./character-execution-admission.ts";
+import { characterExecutionWithSpatialMeleeSpellAttackProxyRepeatAttack } from "./character-execution-admission.ts";
 import {
   allocateBattleEffectExecutionRefForCreature,
   type BattleActiveEffectOccurrenceTemplate,
@@ -219,7 +219,7 @@ describe("Antimagic Field action interdiction", () => {
   });
 
   test("does not interdict non-spell Bonus Action spell-effect discovery or stale resolution", () => {
-    const base = spiritualWeaponRepeatBattle();
+    const base = spatialMeleeSpellAttackProxyRepeatBattle();
     const repeat = bonusSpellAct({
       session: base,
       spellId: spiritualWeaponUnitId,
@@ -234,7 +234,10 @@ describe("Antimagic Field action interdiction", () => {
     );
 
     expect(
-      maybeBonusSpellAct({ session: stale, spellId: spiritualWeaponUnitId }),
+      maybeBonusSpellAct({
+        session: stale,
+        spellId: spiritualWeaponUnitId,
+      }),
     ).toBeDefined();
     expect(
       resolveBattleSubject({
@@ -383,7 +386,7 @@ function flameBladeAttackBattle(): BattleRuntimeSession {
   return battleRuntimeSessionForTest({ ...session, state: cast.state });
 }
 
-function spiritualWeaponRepeatBattle(): BattleRuntimeSession {
+function spatialMeleeSpellAttackProxyRepeatBattle(): BattleRuntimeSession {
   const session = spellBattle({
     preparedSpells: [spellRecord(spiritualWeaponUnitId)],
     spellSlots: [{ spellLevel: 2, count: 1 }],
@@ -408,20 +411,24 @@ function spiritualWeaponRepeatBattle(): BattleRuntimeSession {
     owner: caster,
   });
   const activeEffect = {
-    ...spiritualWeaponActiveEffectTemplate(sourceBinding.procedureRef),
+    ...spatialMeleeSpellAttackProxyActiveEffectTemplate(
+      sourceBinding.procedureRef,
+    ),
     effectRef: effectAllocation.effectRef,
   };
   expect(Number(effectAllocation.owner.nextEffectOrdinal)).toBe(
     Number(caster.nextEffectOrdinal) + 1,
   );
-  const execution = characterExecutionWithSpiritualWeaponRepeatAttack(
-    caster.origin.execution,
-    {
-      procedure: "spatialMeleeSpellAttackProxy",
-      activeEffectRef: activeEffect.effectRef,
-      activeEffectSourceProcedureRef: sourceBinding.procedureRef,
-    },
-  );
+  const execution =
+    characterExecutionWithSpatialMeleeSpellAttackProxyRepeatAttack(
+      caster.origin.execution,
+      {
+        procedure: "spatialMeleeSpellAttackProxy",
+        operation: "repositionAndAttack",
+        activeEffectRef: activeEffect.effectRef,
+        activeEffectSourceProcedureRef: sourceBinding.procedureRef,
+      },
+    );
   return battleRuntimeSessionForTest({
     ...session,
     state: {
@@ -435,7 +442,7 @@ function spiritualWeaponRepeatBattle(): BattleRuntimeSession {
   });
 }
 
-function spiritualWeaponActiveEffectTemplate(
+function spatialMeleeSpellAttackProxyActiveEffectTemplate(
   sourceProcedureRef: BattleProcedureExecutionRef,
 ): Extract<
   BattleActiveEffectOccurrenceTemplate,
@@ -582,7 +589,7 @@ function activeAntimagicAuraSession(
   const state = battleStateWithAllocatedEffectForTest({
     state: session.state,
     ownerId: aura.sourceCombatantId,
-    effect: antimagicFieldAuraEffectTemplateForTest({
+    effect: magicSuppressionEmanationEffectTemplateForTest({
       areaId: antimagicFieldAreaId,
       aura,
     }),

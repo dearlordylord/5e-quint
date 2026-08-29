@@ -8,7 +8,7 @@ import {
 import { describe, expect, test } from "vitest";
 import { spellTeleportDestinationHole } from "./battle-reducer/spells-holes-fills.ts";
 import {
-  hideousLaughterUnitId,
+  saveGatedConditionWithRepeatUnitId,
   mistyStepUnitId,
   spellCasterId,
   spellTargetId,
@@ -34,7 +34,7 @@ import {
   battleTablePositionId,
   combatantId,
   discoverBattleActs,
-  hideousLaughterRepeatSavingThrowOutcomeHole,
+  saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole,
   movementFeet,
   resolveBattleSubject,
   savingThrowOutcomeFill,
@@ -246,28 +246,29 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
       act.initialHoles,
       "teleportDestination",
     );
-    const staleRepeatSaveHole = hideousLaughterRepeatSavingThrowOutcomeHole(
-      spellTargetId,
-      {
-        kind: "hideousLaughter",
-        effectRef: battleEffectExecutionRefForTest(
-          "stale-misty-step-hideous-laughter",
-        ),
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(hideousLaughterUnitId),
-        ),
-        sourceCombatantId: spellCasterId,
-        conditionHadNonSpellProneSource: false,
-        conditionHadNonSpellIncapacitatedSource: false,
-        repeatSaveRollMode: null,
-        save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
-        expiresAt: {
-          kind: "concentration",
-          combatantId: spellCasterId,
+    const staleRepeatSaveHole =
+      saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
+        spellTargetId,
+        {
+          kind: "saveGatedConditionWithRepeat",
+          effectRef: battleEffectExecutionRefForTest(
+            "stale-misty-step-hideous-laughter",
+          ),
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            String(saveGatedConditionWithRepeatUnitId),
+          ),
+          sourceCombatantId: spellCasterId,
+          conditionHadNonSpellProneSource: false,
+          conditionHadNonSpellIncapacitatedSource: false,
+          repeatSaveRollMode: null,
+          save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+          expiresAt: {
+            kind: "concentration",
+            combatantId: spellCasterId,
+          },
         },
-      },
-      "damage",
-    );
+        "damage",
+      );
 
     expect(
       resolveBattleSubject({

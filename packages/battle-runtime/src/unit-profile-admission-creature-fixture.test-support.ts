@@ -757,14 +757,14 @@ export function movementFill(
       BattleFill,
       { readonly kind: "movement" }
     >["value"]["provokedOpportunityAttacks"];
-    readonly jumpMovementReplacement?: Extract<
+    readonly fixedCostMovementReplacement?: Extract<
       BattleFill,
       { readonly kind: "movement" }
-    >["value"]["jumpMovementReplacement"];
-    readonly levitatedMovement?: Extract<
+    >["value"]["fixedCostMovementReplacement"];
+    readonly controlledVerticalSuspensionMovement?: Extract<
       BattleFill,
       { readonly kind: "movement" }
-    >["value"]["levitatedMovement"];
+    >["value"]["controlledVerticalSuspensionMovement"];
     readonly areaDifficultTerrain?: Extract<
       BattleFill,
       { readonly kind: "movement" }
@@ -773,10 +773,10 @@ export function movementFill(
       BattleFill,
       { readonly kind: "movement" }
     >["value"]["acrobaticMovement"];
-    readonly gustOfWindLineMovement?: Extract<
+    readonly directionalPersistentAreaMovement?: Extract<
       BattleFill,
       { readonly kind: "movement" }
-    >["value"]["gustOfWindLineMovement"];
+    >["value"]["directionalPersistentAreaMovement"];
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   return {
@@ -786,21 +786,27 @@ export function movementFill(
       speedKind: value.speedKind ?? "walk",
       movementCostFeet: movementFeet(value.movementCostFeet),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
-      ...(value.jumpMovementReplacement === undefined
+      ...(value.fixedCostMovementReplacement === undefined
         ? {}
-        : { jumpMovementReplacement: value.jumpMovementReplacement }),
-      ...(value.levitatedMovement === undefined
+        : { fixedCostMovementReplacement: value.fixedCostMovementReplacement }),
+      ...(value.controlledVerticalSuspensionMovement === undefined
         ? {}
-        : { levitatedMovement: value.levitatedMovement }),
+        : {
+            controlledVerticalSuspensionMovement:
+              value.controlledVerticalSuspensionMovement,
+          }),
       ...(value.areaDifficultTerrain === undefined
         ? {}
         : { areaDifficultTerrain: value.areaDifficultTerrain }),
       ...(value.acrobaticMovement === undefined
         ? {}
         : { acrobaticMovement: value.acrobaticMovement }),
-      ...(value.gustOfWindLineMovement === undefined
+      ...(value.directionalPersistentAreaMovement === undefined
         ? {}
-        : { gustOfWindLineMovement: value.gustOfWindLineMovement }),
+        : {
+            directionalPersistentAreaMovement:
+              value.directionalPersistentAreaMovement,
+          }),
     },
   };
 }

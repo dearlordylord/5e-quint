@@ -110,7 +110,7 @@ import {
   spellTargetIsLegal,
   validateSpellAttackSequencePartDamageFill,
 } from "./spells-holes-fills.ts";
-import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
+import { duplicateHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
 import type {
   SpellFillSet,
   SpellAttackSequencePartFillSet,
@@ -609,7 +609,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       );
     }
     /* v8 ignore stop -- @preserve */
-    const mirrorImageCheck = mirrorImageHitInterceptionCheck({
+    const mirrorImageCheck = duplicateHitInterceptionCheck({
       state: attackRolledState,
       attacker: mirrorImageAttacker,
       target: attackRolledState.combatants.get(target.combatantId) ?? target,

@@ -1014,7 +1014,7 @@ function spawnedCompanionConnectionFill(
   };
 }
 
-function counterspellTriggerFactsFill(
+function spellCastInterruptionReactionTriggerFactsFill(
   session: BattleRuntimeSession,
 ): Extract<BattleFill, { readonly kind: "targetSpatialFacts" }> {
   return {
@@ -1029,7 +1029,7 @@ function counterspellTriggerFactsFill(
           session,
           enemyId,
           spellSlotInvocationRef(
-            "counterspell",
+            "spellCastInterruptionReaction",
             3,
             "spellCastInterruptionReaction",
           ),
@@ -3368,10 +3368,15 @@ describe("Find Familiar lifecycle", () => {
         },
       ],
     };
-    const counterspellFacts = counterspellTriggerFactsFill(
-      battleRuntimeSessionForTest({ ...session, state: cast.state }),
-    );
-    const originalFills = [connectionFill, targetFill, counterspellFacts];
+    const spellCastInterruptionReactionFacts =
+      spellCastInterruptionReactionTriggerFactsFill(
+        battleRuntimeSessionForTest({ ...session, state: cast.state }),
+      );
+    const originalFills = [
+      connectionFill,
+      targetFill,
+      spellCastInterruptionReactionFacts,
+    ];
     const interrupted = resolveBattleSubject({
       state: cast.state,
       subject: act.subject,
@@ -3464,7 +3469,7 @@ describe("Find Familiar lifecycle", () => {
       fills: [
         connectionFill,
         targetFill,
-        counterspellTriggerFactsFill(runtimeSession),
+        spellCastInterruptionReactionTriggerFactsFill(runtimeSession),
       ],
     });
     expect(interrupted).toMatchObject({
@@ -4901,7 +4906,7 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(missing).toEqual(
       Result.fail({
-        tag: "findFamiliarReappearanceAdmissionIssue",
+        tag: "spawnedCompanionLifecycleReappearanceAdmissionIssue",
         message:
           "Retained familiar form Stat Block is missing: stat_block_cat.",
       }),
@@ -4929,7 +4934,7 @@ describe("Find Familiar lifecycle", () => {
     expect(Result.isFailure(malformed)).toBe(true);
     if (Result.isSuccess(malformed)) return;
     expect(malformed.failure).toEqual({
-      tag: "findFamiliarReappearanceAdmissionIssue",
+      tag: "spawnedCompanionLifecycleReappearanceAdmissionIssue",
       message: "Battle runtime requires literal Stat Block Armor Class.",
     });
   });

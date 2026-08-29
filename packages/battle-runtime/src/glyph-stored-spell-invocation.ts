@@ -85,15 +85,15 @@ type GlyphStoredConcentrationSaveGatedDamageInvocation = Extract<
   readonly spell: GlyphStoredConcentrationSpellExecutionSource;
   readonly targeting: GlyphStoredSingleCreatureTargeting;
 };
-type GlyphStoredGreaseGroundHazardInvocation = Extract<
+type GlyphStoredPersistentAreaSaveConditionInvocation = Extract<
   GlyphStoredPreparedSlotInvocation<SupportedSpellInvocation>,
-  { readonly procedure: "greaseGroundHazard" }
+  { readonly procedure: "persistentAreaSaveCondition" }
 > & {
   readonly spell: GlyphStoredNonConcentrationSpellExecutionSource;
 };
-type GlyphStoredConcentrationHarmfulObjectInvocation = Extract<
+type GlyphStoredConcentrationSpatialMeleeSpellAttackProxyInvocation = Extract<
   GlyphStoredPreparedSlotInvocation<SupportedSpellInvocation>,
-  { readonly procedure: "spiritualWeaponAttackProxy" }
+  { readonly procedure: "spatialMeleeSpellAttackProxy" }
 > & {
   readonly spell: GlyphStoredConcentrationSpellExecutionSource;
 };
@@ -141,9 +141,9 @@ type GlyphStoredSpellInvocationCandidateWithSpellTargeting = Extract<
         SupportedSpellInvocation,
         {
           readonly procedure:
-            | "greaseGroundHazard"
+            | "persistentAreaSaveCondition"
             | "saveGatedCondition"
-            | "spiritualWeaponAttackProxy"
+            | "spatialMeleeSpellAttackProxy"
             | GlyphStoredAreaOngoingProcedure
             | GlyphStoredAreaControlProcedure;
         }
@@ -162,10 +162,10 @@ export type GlyphStoredSpellInvocationCandidate =
 export type GlyphStoredSpellInvocation =
   | Extract<
       | GlyphStoredReadiedSpellInvocation
-      | GlyphStoredGreaseGroundHazardInvocation
+      | GlyphStoredPersistentAreaSaveConditionInvocation
       | GlyphStoredConcentrationSaveGatedDamageInvocation
       | GlyphStoredConcentrationSaveGatedConditionInvocation
-      | GlyphStoredConcentrationHarmfulObjectInvocation
+      | GlyphStoredConcentrationSpatialMeleeSpellAttackProxyInvocation
       | GlyphStoredAreaOngoingInvocation
       | GlyphStoredAreaControlInvocation,
       {

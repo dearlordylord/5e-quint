@@ -299,7 +299,7 @@ type CharacterProcedureSubjectForTest = Extract<
       | "actionSpell"
       | "bonusActionSpell"
       | "bonusActionDashSpell"
-      | "findFamiliarTouchSpell"
+      | "spawnedCompanionTouchSpellProxy"
       | "unitFeature"
       | "unitFeatureHeldWeaponActivation"
       | "druidWildShape"
@@ -322,7 +322,7 @@ type BonusActionDashSpellSubjectForTest = Extract<
 >;
 type FindFamiliarTouchSpellSubjectForTest = Extract<
   CharacterProcedureSubjectForTest,
-  { readonly tag: "findFamiliarTouchSpell" }
+  { readonly tag: "spawnedCompanionTouchSpellProxy" }
 >;
 
 type SpellProcedureSelectorForTest =
@@ -351,7 +351,7 @@ type SpellProcedureSelectorForTest =
       readonly speedKind: BonusActionDashSpellSubjectForTest["speedKind"];
     }
   | {
-      readonly tag: "findFamiliarTouchSpell";
+      readonly tag: "spawnedCompanionTouchSpellProxy";
       readonly actorId: CombatantId;
       readonly invocation: SpellInvocationRef;
       readonly procedureRef?: BattleProcedureExecutionRef;
@@ -696,7 +696,11 @@ export function characterSpellInvocationRefForProcedureRefForTest(
     ?.spellPresentationSources.find(
       (candidate) => candidate.procedureRef === procedureRef,
     );
-  if (source === undefined) {
+  if (
+    source === undefined ||
+    !("access" in source.invocation) ||
+    !("spell" in source.invocation)
+  ) {
     throw new Error(
       `Expected spell presentation source ${procedureRef} for ${actorId}.`,
     );
@@ -805,6 +809,9 @@ function supportedSpellInvocationMatchesRef(
   invocation: AuthoredSelectedSpellInvocation,
   ref: SpellInvocationRef,
 ): boolean {
+  if (!("access" in invocation) || !("spell" in invocation)) {
+    return false;
+  }
   return spellInvocationRefsEqualForTest(
     supportedSpellInvocationRef(invocation),
     ref,
@@ -1011,11 +1018,15 @@ const testSpellRecords = new Map(
         : [],
     ),
 );
-const findFamiliarSpellRecord = decodeUnitRecordSync(findFamiliarInput);
-if (findFamiliarSpellRecord.kind !== "spell") {
+const spawnedCompanionLifecycleSpellRecord =
+  decodeUnitRecordSync(findFamiliarInput);
+if (spawnedCompanionLifecycleSpellRecord.kind !== "spell") {
   throw new Error("Find Familiar test input must decode to a spell record.");
 }
-testSpellRecords.set(findFamiliarSpellRecord.id, findFamiliarSpellRecord);
+testSpellRecords.set(
+  spawnedCompanionLifecycleSpellRecord.id,
+  spawnedCompanionLifecycleSpellRecord,
+);
 
 export function requireResolved(
   result: ReturnType<typeof resolveBattleSubject>,
@@ -1059,86 +1070,11 @@ export function requireNeedsHoles(
   return result;
 }
 
-export function subjectName(
-  subject: BattleSubject,
-):
-  | "attack"
-  | "dash"
-  | "disengage"
-  | "dodge"
-  | "helpAttack"
-  | "hide"
-  | "multiattack"
-  | "ready"
-  | "search"
-  | "grapple"
-  | "shove"
-  | "escapeGrapple"
-  | "escapeSpellRestraint"
-  | "shakeAwakeFromSleep"
-  | "offHandAttack"
-  | "martialArtsUnarmedStrike"
-  | "statBlockActionOption"
-  | "actionSpell"
-  | "bonusActionSpell"
-  | "bonusActionDashSpell"
-  | "pactOfTheChainFamiliarAttack"
-  | "monkFocusOption"
-  | "monkFocusFlurryOfBlowsStrike"
-  | "unitFeature"
-  | "unitFeatureHeldWeaponActivation"
-  | "druidWildShape"
-  | "companionLifecycle"
-  | "findFamiliarSharedSenses"
-  | "findFamiliarTouchSpell"
-  | "endTurn"
-  | "endConcentration"
-  | "move"
-  | "standFromProne"
-  | "releaseGrapple"
-  | "releaseReadiedSpell"
-  | "releaseReadiedMovement"
-  | "reportReadyTrigger"
-  | "releaseReadiedAction"
-  | "releaseReadiedAttack"
-  | "releaseSpellCreatedHeldObject"
-  | "castTriggeredReactionSpell"
-  | "castAttackHitBonusActionSpell"
-  | "opportunityAttack"
-  | "retaliationAttack"
-  | "greaseGroundHazardSave"
-  | "webRestraintSave"
-  | "sleetStormAreaHazardSave"
-  | "insectPlagueAreaHazardSave"
-  | "cloudkillAreaHazardSave"
-  | "webRestrainedNoLongerInArea"
-  | "webAreaRemoved"
-  | "gustOfWindLineSave"
-  | "gustOfWindLineDirectionChange"
-  | "movableZoneSave"
-  | "moonbeamCylinderExit"
-  | "movableZoneReposition"
-  | "movableZoneRam"
-  | "jumpMovementReplacement"
-  | "levitateAltitudeControl"
-  | "dragonsBreathExhale"
-  | "replaceSelfTransformationMode"
-  | "commandGrovel"
-  | "commandDrop"
-  | "commandApproach"
-  | "commandFlee"
-  | "disperseFogCloud"
-  | "disperseCloudkill"
-  | "wardingBondSeparation"
-  | "shakeAwakeFromHypnoticPattern"
-  | "protectionRelevantEffectSave"
-  | "creatureTypeProtectionConditionAttempt"
-  | "creatureTypeProtectionPossessionAttempt"
-  | "creatureFalls" {
+export function subjectName(subject: BattleSubject) {
   if (subject.tag === "action") {
     return subject.action;
   }
-  if (subject.tag === "pactOfTheChainFamiliarAttack") {
+  if (subject.tag === "companionAttack") {
     return subject.tag;
   }
   if (subject.tag === "bonusAction") {
@@ -1174,11 +1110,11 @@ export function subjectName(
   if (subject.tag === "companionLifecycle") {
     return "companionLifecycle";
   }
-  if (subject.tag === "findFamiliarSharedSenses") {
-    return "findFamiliarSharedSenses";
+  if (subject.tag === "spawnedCompanionSharedSenses") {
+    return "spawnedCompanionSharedSenses";
   }
-  if (subject.tag === "findFamiliarTouchSpell") {
-    return "findFamiliarTouchSpell";
+  if (subject.tag === "spawnedCompanionTouchSpellProxy") {
+    return "spawnedCompanionTouchSpellProxy";
   }
   return subject.command;
 }
@@ -2095,7 +2031,7 @@ function isSpellProcedureSelectorForTest(
     (selector.tag === "actionSpell" ||
       selector.tag === "bonusActionSpell" ||
       selector.tag === "bonusActionDashSpell" ||
-      selector.tag === "findFamiliarTouchSpell")
+      selector.tag === "spawnedCompanionTouchSpellProxy")
   );
 }
 
@@ -2130,7 +2066,7 @@ function spellProcedureSubjectForTest(
         mode: value.mode,
         speedKind: value.speedKind,
       }),
-      findFamiliarTouchSpell: (value) => ({
+      spawnedCompanionTouchSpellProxy: (value) => ({
         tag: value.tag,
         actorId: value.actorId,
         procedureRef,
@@ -2374,7 +2310,7 @@ function resolveBattleSubject(
     (subject.tag === "actionSpell" ||
       subject.tag === "bonusActionSpell" ||
       subject.tag === "bonusActionDashSpell" ||
-      subject.tag === "findFamiliarTouchSpell")
+      subject.tag === "spawnedCompanionTouchSpellProxy")
       ? bindSelectedSpellSpatialFactsForTest(input.fills, subject.procedureRef)
       : input.fills;
   return resolveBattleSubjectWithOptionalFamiliarAdmission(
@@ -2513,17 +2449,21 @@ export function battleSubjectSelection(subject: BattleSubject) {
 
 type SleepShakeAwakeSubject = Extract<
   BattleSubject,
-  { readonly tag: "action"; readonly action: "shakeAwakeFromSleep" }
+  { readonly tag: "action"; readonly action: "shakeAwakeFromStagedCondition" }
 >;
 
 export function sleepShakeAwakeSubject(): SleepShakeAwakeSubject {
-  return { tag: "action", actorId: fighterId, action: "shakeAwakeFromSleep" };
+  return {
+    tag: "action",
+    actorId: fighterId,
+    action: "shakeAwakeFromStagedCondition",
+  };
 }
 
 export function sleepShakeAwakeTargetFill(hole: BattleHole): BattleFill {
   return targetFill(hole, goblinId, [
     {
-      kind: "sleepShakeAwakeActorWithin5Feet",
+      kind: "stagedConditionShakeAwakeActorWithin5Feet",
       actorId: fighterId,
       targetId: goblinId,
     },
@@ -3271,7 +3211,7 @@ export function castGroundHazardForMovementTest(
     resolveBattleSubject({
       session,
       subject,
-      fills: [greaseGroundAreaSavingThrowFill(save, areaId)],
+      fills: [persistentAreaSaveConditionAreaSavingThrowFill(save, areaId)],
     }),
   ).state;
 }
@@ -3316,12 +3256,12 @@ export function castFogCloud(
     resolveBattleSubject({
       session,
       subject,
-      fills: [fogCloudAreaFill(area, areaId)],
+      fills: [persistentAreaTraitAreaFill(area, areaId)],
     }),
   );
 }
 
-export function fogCloudAreaFill(
+export function persistentAreaTraitAreaFill(
   hole: BattleHole,
   areaId: BattleAreaId,
   originAnchor: BattleSpellAreaOriginAnchor = { kind: "tableSelectedPoint" },
@@ -3332,11 +3272,11 @@ export function fogCloudAreaFill(
   return {
     kind: "spellAreaChoice",
     holeId: hole.holeId,
-    value: { kind: "fogCloudArea", areaId, originAnchor },
+    value: { kind: "persistentAreaTraitArea", areaId, originAnchor },
   };
 }
 
-function greaseGroundAreaSavingThrowFill(
+function persistentAreaSaveConditionAreaSavingThrowFill(
   hole: BattleHole,
   areaId: BattleAreaId,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
@@ -3348,7 +3288,7 @@ function greaseGroundAreaSavingThrowFill(
     holeId: hole.holeId,
     value: {
       area: {
-        kind: "greaseGroundArea",
+        kind: "persistentAreaSaveConditionArea",
         originAnchorId: wizardId,
         affectedTargetIds: [],
         areaId,
@@ -5969,7 +5909,7 @@ function testMagicSubjectInvocation(spell: SpellRecord): SpellInvocationRef {
     const presentation = battleActSpellPresentation(act);
     return presentation !== undefined &&
       presentation.invocation.spellId === spellId(spell.id) &&
-      presentation.invocation.procedure !== "shieldReaction" &&
+      presentation.invocation.procedure !== "triggeredArmorDefense" &&
       act.subject.tag === "actionSpell" &&
       act.subject.mode.tag === "cast" &&
       act.subject.metamagic === undefined

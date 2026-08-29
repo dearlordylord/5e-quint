@@ -81,7 +81,7 @@ import {
   spellSlotInvocationRef,
   spellSlotLevel,
   supportedPreparedSaveGateConditionProfile,
-  supportedPreparedSleepTargetAdmissionProfile,
+  supportedPreparedStagedSaveConditionProfile,
 } from "./unit-profile-admission.test-support.ts";
 import {
   assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
@@ -1569,7 +1569,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       ),
     ).toEqual([]);
     expect(
-      supportedPreparedSleepTargetAdmissionProfile(
+      supportedPreparedStagedSaveConditionProfile(
         spellAdmissionSource(spell),
         spellSlots,
       ),

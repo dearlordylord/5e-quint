@@ -1233,7 +1233,7 @@ describe("battle fill protocol boundary owners", () => {
       throw new Error("Expected canonical Slow invocation.");
     }
     const ignoredFill = {
-      kind: "slowSomaticSpellFailureOutcome" as const,
+      kind: "turnConstraintSomaticSpellFailureOutcome" as const,
       holeId: holeId("boundary-slow-failure"),
       value: { spellFailed: false },
     };
@@ -1356,13 +1356,16 @@ describe("battle fill protocol boundary owners", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const commandAct = findAct(commandSession, magicSubject("command"));
+    const commandAct = findAct(
+      commandSession,
+      magicSubject("compelledNextTurnBehavior"),
+    );
     const commandInvocation = characterSpellProcedureFromAct(
       commandSession.state,
       commandAct,
       wizardId,
     );
-    if (commandInvocation?.procedure !== "command") {
+    if (commandInvocation?.procedure !== "compelledNextTurnBehavior") {
       throw new Error("Expected canonical Command target-list invocation.");
     }
     const commandTargetHole = commandAct.initialHoles.find(
@@ -1377,7 +1380,7 @@ describe("battle fill protocol boundary owners", () => {
     const commandTarget = spellTargetListFill(
       commandTargetHole,
       wizardId,
-      "command",
+      "compelledNextTurnBehavior",
       [skeletonId],
     );
     expect(

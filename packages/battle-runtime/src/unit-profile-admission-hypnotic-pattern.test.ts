@@ -23,8 +23,8 @@ import {
   elapsedTimeTicks,
   endTurn,
   hasCondition,
-  hypnoticPatternDurationTicks,
-  hypnoticPatternUnitId,
+  saveGatedAreaControlDurationTicks,
+  saveGatedAreaControlUnitId,
   maybeSpellAct,
   requireCombatant,
   requireHole,
@@ -67,13 +67,13 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     expect(
       maybeSpellAct({
         session: state,
-        spellId: hypnoticPatternUnitId,
+        spellId: saveGatedAreaControlUnitId,
         slotLevel: 2,
       }),
     ).toBeUndefined();
     const act = spellAct({
       session: state,
-      spellId: hypnoticPatternUnitId,
+      spellId: saveGatedAreaControlUnitId,
       slotLevel: 3,
     });
 
@@ -87,7 +87,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
         state,
         spellCasterId,
         spellSlotInvocationRef(
-          hypnoticPatternUnitId,
+          saveGatedAreaControlUnitId,
           3,
           "saveGatedAreaControl",
         ),
@@ -133,7 +133,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
         expiresAt: {
           kind: "concentration",
           combatantId: spellCasterId,
-          durationTicks: hypnoticPatternDurationTicks,
+          durationTicks: saveGatedAreaControlDurationTicks,
         },
       }),
     ]);
@@ -150,7 +150,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     });
     const act = spellAct({
       session: state,
-      spellId: hypnoticPatternUnitId,
+      spellId: saveGatedAreaControlUnitId,
       slotLevel: 3,
     });
     const savingThrow = requireSpellSavingThrowOutcomeHole(act.initialHoles);
@@ -738,7 +738,11 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     const unrelatedSource = requireCharacterSpellProcedureRefForTest(
       base,
       unrelatedCasterId,
-      spellSlotInvocationRef(hypnoticPatternUnitId, 3, "saveGatedAreaControl"),
+      spellSlotInvocationRef(
+        saveGatedAreaControlUnitId,
+        3,
+        "saveGatedAreaControl",
+      ),
     );
     const unrelatedCaster = requireCombatant(base.state, unrelatedCasterId);
     if (
@@ -833,7 +837,7 @@ function castFailedHypnoticPattern(
 ): BattleRuntimeSession {
   const act = spellAct({
     session,
-    spellId: hypnoticPatternUnitId,
+    spellId: saveGatedAreaControlUnitId,
     slotLevel: 3,
   });
   const savingThrow = requireSpellSavingThrowOutcomeHole(act.initialHoles);

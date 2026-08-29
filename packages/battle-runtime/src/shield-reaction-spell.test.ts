@@ -132,7 +132,7 @@ describe("Shield Reaction spell", () => {
     expect(invocation).toMatchObject({
       tag: "spellAccessFreeCast",
       spellId: shieldUnitId,
-      procedure: "shieldReaction",
+      procedure: "triggeredArmorDefense",
     });
 
     const resolved = resolveBattleInterrupt({
@@ -1325,7 +1325,7 @@ function resolveShieldReactionChoice(
   ).toMatchObject({
     tag: "spellSlot",
     spellId: shieldUnitId,
-    procedure: "shieldReaction",
+    procedure: "triggeredArmorDefense",
   });
   return resolveBattleInterrupt({
     state: awaitingReaction.state,

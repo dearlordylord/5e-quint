@@ -1692,7 +1692,9 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     const greased = castGroundHazardForMovementTest(areaId);
     const greaseEffect = greased.combatants
       .get(wizardId)
-      ?.activeEffects.find((effect) => effect.kind === "greaseGroundHazard");
+      ?.activeEffects.find(
+        (effect) => effect.kind === "persistentAreaSaveCondition",
+      );
     if (greaseEffect === undefined || greaseEffect.areaId !== areaId) {
       throw new Error("Expected the admitted Grease ground hazard.");
     }
@@ -1709,7 +1711,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       kind: "areaDifficultTerrain" as const,
       sources: [
         {
-          kind: "greaseGroundHazard" as const,
+          kind: "persistentAreaSaveCondition" as const,
           effectRef: greaseEffect.effectRef,
           sourceCombatantId: wizardId,
           sourceProcedureRef: greaseEffect.sourceProcedureRef,
@@ -1767,9 +1769,12 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     const effect = moved.combatants
       .get(wizardId)
       ?.activeEffects.find(
-        (candidate) => candidate.kind === "greaseGroundHazard",
+        (candidate) => candidate.kind === "persistentAreaSaveCondition",
       );
-    expect(effect).toMatchObject({ kind: "greaseGroundHazard", areaId });
+    expect(effect).toMatchObject({
+      kind: "persistentAreaSaveCondition",
+      areaId,
+    });
     expect(effect).not.toHaveProperty("originAnchorId");
     expect(effect).not.toHaveProperty("affectedTargetIds");
     expect(effect).not.toHaveProperty("shape");
@@ -1780,7 +1785,9 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     const greased = castGroundHazardForMovementTest(areaId);
     const greaseEffect = greased.combatants
       .get(wizardId)
-      ?.activeEffects.find((effect) => effect.kind === "greaseGroundHazard");
+      ?.activeEffects.find(
+        (effect) => effect.kind === "persistentAreaSaveCondition",
+      );
     if (greaseEffect === undefined || greaseEffect.areaId !== areaId) {
       throw new Error("Expected the admitted Grease ground hazard.");
     }
@@ -1799,7 +1806,8 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         .get(wizardId)
         ?.activeEffects.some(
           (effect) =>
-            effect.kind === "greaseGroundHazard" && effect.areaId === areaId,
+            effect.kind === "persistentAreaSaveCondition" &&
+            effect.areaId === areaId,
         ),
     ).toBe(false);
 
@@ -1825,7 +1833,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
               kind: "areaDifficultTerrain",
               sources: [
                 {
-                  kind: "greaseGroundHazard",
+                  kind: "persistentAreaSaveCondition",
                   effectRef: greaseEffect.effectRef,
                   sourceCombatantId: wizardId,
                   sourceProcedureRef: expect.any(String),

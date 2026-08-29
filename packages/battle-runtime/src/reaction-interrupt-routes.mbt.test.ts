@@ -31,9 +31,10 @@ type RouteState<Surface extends string> = {
 
 const REACTION_CASTING_TIME_ROUTE_SURFACE_BY_TAG = {
   FreshRouteSurface: "fresh",
-  CounterspellEndedSpellCastRouteSurface: "counterspellEndedSpellCast",
+  CounterspellEndedSpellCastRouteSurface:
+    "spellCastInterruptionReactionEndedSpellCast",
   CounterspellAllowedSpellCastResumeRouteSurface:
-    "counterspellAllowedSpellCastResume",
+    "spellCastInterruptionReactionAllowedSpellCastResume",
   HellishRebukeAfterDamageRouteSurface: "hellishRebukeAfterDamage",
 } as const satisfies Readonly<Record<string, string>>;
 type ReactionCastingTimeRouteSurface =
@@ -334,16 +335,16 @@ function pendingReactionDecisionRoute(): readonly ReducerRouteEvent[] {
   ];
 }
 
-function counterspellEndedSpellCastRouteState(): RouteState<"counterspellEndedSpellCast"> {
-  return routeState("counterspellEndedSpellCast", [
+function spellCastInterruptionReactionEndedSpellCastRouteState(): RouteState<"spellCastInterruptionReactionEndedSpellCast"> {
+  return routeState("spellCastInterruptionReactionEndedSpellCast", [
     ...pendingReactionDecisionRoute(),
     reactionSpellInterrupt(routeHoles(), "battleInterruptStack"),
     reactionSpellInterrupt(routeHoles(), "battleSpellSlotAndActionEconomy"),
   ]);
 }
 
-function counterspellAllowedSpellCastResumeRouteState(): RouteState<"counterspellAllowedSpellCastResume"> {
-  return routeState("counterspellAllowedSpellCastResume", [
+function spellCastInterruptionReactionAllowedSpellCastResumeRouteState(): RouteState<"spellCastInterruptionReactionAllowedSpellCastResume"> {
+  return routeState("spellCastInterruptionReactionAllowedSpellCastResume", [
     ...pendingReactionDecisionRoute(),
     reactionSpellInterrupt(routeHoles("rolledDice"), "battleInterruptStack"),
     reactionSpellInterrupt(
@@ -403,10 +404,10 @@ function createReactionCastingTimeRouteDriver() {
     return {
       init: reset,
       doCounterspellEndsSpellCast: () => {
-        state = counterspellEndedSpellCastRouteState();
+        state = spellCastInterruptionReactionEndedSpellCastRouteState();
       },
       doCounterspellAllowsSpellCastResume: () => {
-        state = counterspellAllowedSpellCastResumeRouteState();
+        state = spellCastInterruptionReactionAllowedSpellCastResumeRouteState();
       },
       doHellishRebukeAfterDamage: () => {
         state = hellishRebukeAfterDamageRouteState();
@@ -864,14 +865,14 @@ const reactionInterruptPayloadRouteStateCheck = stateCheck(
 
 const reactionRouteReplaySequences = [
   {
-    name: "counterspell-ends-spell-cast",
+    name: "spellCastInterruptionReaction-ends-spell-cast",
     action: "doCounterspellEndsSpellCast",
-    expected: counterspellEndedSpellCastRouteState(),
+    expected: spellCastInterruptionReactionEndedSpellCastRouteState(),
   },
   {
-    name: "counterspell-allows-spell-cast-resume",
+    name: "spellCastInterruptionReaction-allows-spell-cast-resume",
     action: "doCounterspellAllowsSpellCastResume",
-    expected: counterspellAllowedSpellCastResumeRouteState(),
+    expected: spellCastInterruptionReactionAllowedSpellCastResumeRouteState(),
   },
   {
     name: "hellish-rebuke-after-damage",

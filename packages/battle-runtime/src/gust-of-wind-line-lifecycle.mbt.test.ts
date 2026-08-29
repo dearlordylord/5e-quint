@@ -30,10 +30,10 @@ import {
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
-  gustOfWindLineDirectionChangeAct,
-  gustOfWindLineDirectionChoiceFill,
-  gustOfWindLineEndTurnSaveAct,
-  gustOfWindLineSavingThrowOutcomeFill,
+  directionalPersistentAreaDirectionChangeAct,
+  directionalPersistentAreaDirectionChoiceFill,
+  directionalPersistentAreaEndTurnSaveAct,
+  directionalPersistentAreaSavingThrowOutcomeFill,
   maybeSpellAct,
   spellAct,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
@@ -59,7 +59,7 @@ import {
   type BattleProcedureExecutionRef,
   type BattleSubject,
 } from "./index.ts";
-import type { GustOfWindLineEffect } from "./battle-reducer/persistent-spatial-spell-discovery.ts";
+import type { DirectionalPersistentAreaEffect } from "./battle-reducer/persistent-spatial-spell-discovery.ts";
 
 const gustMovementTotalFeet = 5;
 const gustMovementCloserFeet = 5;
@@ -320,7 +320,7 @@ function castGustOfWind(
       state: state.battle.state,
       subject: act.subject,
       fills: [
-        gustOfWindLineSavingThrowOutcomeFill(save, [
+        directionalPersistentAreaSavingThrowOutcomeFill(save, [
           { targetId: spellTargetId, succeeded },
         ]),
       ],
@@ -363,7 +363,7 @@ function endCasterTurn(state: GustRuntimeState): GustRuntimeState {
 }
 
 function discoverEndTurnLineSave(state: GustRuntimeState): GustRuntimeState {
-  const act = gustOfWindLineEndTurnSaveAct(
+  const act = directionalPersistentAreaEndTurnSaveAct(
     state.battle.state,
     spellTargetId,
     gustOfWindAreaId,
@@ -391,7 +391,7 @@ function fillEndTurnLineSave(
   }
   const directionId = effect.directionId;
   const save = requireEndTurnLineSaveHole(state.holes);
-  const act = gustOfWindLineEndTurnSaveAct(
+  const act = directionalPersistentAreaEndTurnSaveAct(
     state.battle.state,
     spellTargetId,
     gustOfWindAreaId,
@@ -402,7 +402,7 @@ function fillEndTurnLineSave(
       state: state.battle.state,
       subject: act.subject,
       fills: [
-        gustOfWindLineSavingThrowOutcomeFill(
+        directionalPersistentAreaSavingThrowOutcomeFill(
           save,
           [{ targetId: spellTargetId, succeeded }],
           { directionId },
@@ -450,13 +450,14 @@ function moveCloserThroughLine(state: GustRuntimeState): GustRuntimeState {
         movementFill(moveHole, {
           movementCostFeet: gustMovementCostFeet,
           provokedOpportunityAttacks: [],
-          gustOfWindLineMovement: gustOfWindLineMovementFact({
-            effectRef: effect.effectRef,
-            sourceProcedureRef: effect.sourceProcedureRef,
-            directionId,
-            totalDistanceFeet: gustMovementTotalFeet,
-            closerDistanceFeet: gustMovementCloserFeet,
-          }),
+          directionalPersistentAreaMovement:
+            directionalPersistentAreaMovementFact({
+              effectRef: effect.effectRef,
+              sourceProcedureRef: effect.sourceProcedureRef,
+              directionId,
+              totalDistanceFeet: gustMovementTotalFeet,
+              closerDistanceFeet: gustMovementCloserFeet,
+            }),
         }),
       ],
     }),
@@ -474,7 +475,7 @@ function moveCloserThroughLine(state: GustRuntimeState): GustRuntimeState {
 }
 
 function discoverDirectionChange(state: GustRuntimeState): GustRuntimeState {
-  const act = gustOfWindLineDirectionChangeAct(
+  const act = directionalPersistentAreaDirectionChangeAct(
     state.battle.state,
     spellCasterId,
     gustOfWindAreaId,
@@ -494,7 +495,7 @@ function discoverDirectionChange(state: GustRuntimeState): GustRuntimeState {
 
 function changeDirectionEast(state: GustRuntimeState): GustRuntimeState {
   const direction = requireDirectionChoiceHole(state.holes);
-  const act = gustOfWindLineDirectionChangeAct(
+  const act = directionalPersistentAreaDirectionChangeAct(
     state.battle.state,
     spellCasterId,
     gustOfWindAreaId,
@@ -504,7 +505,7 @@ function changeDirectionEast(state: GustRuntimeState): GustRuntimeState {
     resolveBattleSubject({
       state: state.battle.state,
       subject: act.subject,
-      fills: [gustOfWindLineDirectionChoiceFill(direction)],
+      fills: [directionalPersistentAreaDirectionChoiceFill(direction)],
     }),
     "Expected Gust of Wind direction change to resolve.",
   );
@@ -564,11 +565,13 @@ function gustProjection(state: GustRuntimeState): GustOfWindLineState {
   return projection;
 }
 
-function gustLineEffect(state: BattleState): GustOfWindLineEffect | undefined {
+function gustLineEffect(
+  state: BattleState,
+): DirectionalPersistentAreaEffect | undefined {
   const caster = requireCombatant(state, spellCasterId);
   return caster.activeEffects.find(
-    (effect): effect is GustOfWindLineEffect =>
-      effect.kind === "gustOfWindLine" &&
+    (effect): effect is DirectionalPersistentAreaEffect =>
+      effect.kind === "directionalPersistentArea" &&
       effect.sourceCombatantId === spellCasterId &&
       effect.areaId === gustOfWindAreaId,
   );
@@ -582,13 +585,15 @@ function effectDirectionId(state: BattleState): BattleLineDirectionId {
   return effect.directionId;
 }
 
-function lineDirection(effect: GustOfWindLineEffect): GustLineDirection {
+function lineDirection(
+  effect: DirectionalPersistentAreaEffect,
+): GustLineDirection {
   if (effect.directionId === gustOfWindNorthDirectionId) return "north";
   if (effect.directionId === gustOfWindEastDirectionId) return "east";
   throw new Error(`Unexpected Gust of Wind direction ${effect.directionId}.`);
 }
 
-function gustOfWindLineMovementFact(input: {
+function directionalPersistentAreaMovementFact(input: {
   readonly effectRef: BattleEffectExecutionRef;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly directionId: BattleLineDirectionId;
@@ -597,9 +602,9 @@ function gustOfWindLineMovementFact(input: {
 }): Extract<
   BattleFill,
   { readonly kind: "movement" }
->["value"]["gustOfWindLineMovement"] {
+>["value"]["directionalPersistentAreaMovement"] {
   return {
-    kind: "gustOfWindLineMovement",
+    kind: "directionalPersistentAreaMovement",
     effectRef: input.effectRef,
     sourceCombatantId: spellCasterId,
     sourceProcedureRef: input.sourceProcedureRef,
@@ -617,7 +622,8 @@ function maybeGustDirectionChangeAct(
   return discoverBattleActCandidates(state).find(
     (candidate) =>
       candidate.subject.tag === "runtimeCommand" &&
-      candidate.subject.command === "gustOfWindLineDirectionChange" &&
+      candidate.subject.command ===
+        "directionalPersistentAreaDirectionChange" &&
       candidate.subject.actorId === spellCasterId &&
       candidate.subject.areaId === gustOfWindAreaId &&
       candidate.subject.directionId === directionId,
@@ -635,7 +641,7 @@ function requireInitialLineSaveHole(
       { readonly kind: "savingThrowOutcome" }
     > =>
       candidate.kind === "savingThrowOutcome" &&
-      !("gustOfWindLine" in candidate),
+      !("directionalPersistentArea" in candidate),
   );
   if (hole === undefined) {
     throw new Error("Expected initial Gust of Wind Line save hole.");
@@ -653,7 +659,8 @@ function requireEndTurnLineSaveHole(
       BattleHole,
       { readonly kind: "savingThrowOutcome" }
     > =>
-      candidate.kind === "savingThrowOutcome" && "gustOfWindLine" in candidate,
+      candidate.kind === "savingThrowOutcome" &&
+      "directionalPersistentArea" in candidate,
   );
   if (hole === undefined) {
     throw new Error("Expected end-turn Gust of Wind Line save hole.");
@@ -663,14 +670,17 @@ function requireEndTurnLineSaveHole(
 
 function requireDirectionChoiceHole(
   holes: readonly BattleHole[],
-): Extract<BattleHole, { readonly kind: "gustOfWindLineDirectionChoice" }> {
+): Extract<
+  BattleHole,
+  { readonly kind: "directionalPersistentAreaDirectionChoice" }
+> {
   const hole = holes.find(
     (
       candidate,
     ): candidate is Extract<
       BattleHole,
-      { readonly kind: "gustOfWindLineDirectionChoice" }
-    > => candidate.kind === "gustOfWindLineDirectionChoice",
+      { readonly kind: "directionalPersistentAreaDirectionChoice" }
+    > => candidate.kind === "directionalPersistentAreaDirectionChoice",
   );
   if (hole === undefined) {
     throw new Error("Expected Gust of Wind Line direction-choice hole.");
@@ -683,10 +693,13 @@ function battleHolesToGustHoles(
 ): readonly GustHole[] {
   return holes
     .map((hole) => {
-      if (hole.kind === "gustOfWindLineDirectionChoice") {
+      if (hole.kind === "directionalPersistentAreaDirectionChoice") {
         return "DirectionChoice";
       }
-      if (hole.kind === "savingThrowOutcome" && "gustOfWindLine" in hole) {
+      if (
+        hole.kind === "savingThrowOutcome" &&
+        "directionalPersistentArea" in hole
+      ) {
         return "EndTurnLineSave";
       }
       if (hole.kind === "savingThrowOutcome") {

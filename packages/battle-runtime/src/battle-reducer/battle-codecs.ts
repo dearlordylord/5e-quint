@@ -2001,6 +2001,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
     persistentAreaSaveDamage: Schema.Struct({
+      topology: Schema.Literal("stationary"),
       ...BattleProcedureSourceSchema,
       effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
@@ -2020,6 +2021,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
     persistentAreaSaveDamage: Schema.Struct({
+      topology: Schema.Literal("translating"),
       ...BattleProcedureSourceSchema,
       effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
@@ -2282,6 +2284,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
     persistentAreaSaveDamage: Schema.Struct({
+      topology: Schema.Literal("stationary"),
       ...BattleProcedureSourceSchema,
       effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
@@ -2306,6 +2309,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
     persistentAreaSaveDamage: Schema.Struct({
+      topology: Schema.Literal("translating"),
       ...BattleProcedureSourceSchema,
       effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,

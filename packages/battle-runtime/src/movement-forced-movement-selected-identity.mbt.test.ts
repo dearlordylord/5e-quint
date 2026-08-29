@@ -100,14 +100,14 @@ type MovementCompelledMovementSelectedIdentityProjection = {
   readonly dissonantMovementFillRequired: boolean;
   readonly targetMovementSpentFeet: number;
   readonly commandMovementFillRequired: boolean;
-  readonly commandPendingEffectObserved: boolean;
-  readonly commandPendingEffectCount: number;
+  readonly compelledNextTurnBehaviorEffectObserved: boolean;
+  readonly compelledNextTurnBehaviorEffectCount: number;
   readonly climbSpeedFeet: number;
   readonly swimSpeedFeet: number;
   readonly lastResult:
     | "init"
     | "dissonantWhispers"
-    | "commandFlee"
+    | "executeCompelledFlee"
     | "expeditiousRetreat"
     | "rangerRoving"
     | "barbarianFastMovement"
@@ -132,7 +132,7 @@ type RuntimeMoveAct = AvailableBattleAct & {
 type RuntimeCommandFleeAct = AvailableBattleAct & {
   readonly subject: Extract<
     BattleSubject,
-    { readonly tag: "runtimeCommand"; readonly command: "commandFlee" }
+    { readonly tag: "runtimeCommand"; readonly command: "executeCompelledFlee" }
   >;
 };
 type DashAct = AvailableBattleAct & {
@@ -171,7 +171,7 @@ defineSelectedIdentityReplayAndQntReplay({
     lastResult: {
       Init: "init",
       DissonantWhispers: "dissonantWhispers",
-      CommandFlee: "commandFlee",
+      CommandFlee: "executeCompelledFlee",
       ExpeditiousRetreat: "expeditiousRetreat",
       RangerRoving: "rangerRoving",
       BarbarianFastMovement: "barbarianFastMovement",
@@ -192,8 +192,8 @@ defineSelectedIdentityReplayAndQntReplay({
     dissonantMovementFillRequired: "bool",
     targetMovementSpentFeet: "int",
     commandMovementFillRequired: "bool",
-    commandPendingEffectObserved: "bool",
-    commandPendingEffectCount: "int",
+    compelledNextTurnBehaviorEffectObserved: "bool",
+    compelledNextTurnBehaviorEffectCount: "int",
     climbSpeedFeet: "int",
     swimSpeedFeet: "int",
     lastResult: "variant",
@@ -214,7 +214,7 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doCommandFleeTargetTurn",
-          discover: commandFleeTargetTurn,
+          discover: executeCompelledFleeTargetTurn,
         },
       ],
     },
@@ -481,15 +481,18 @@ function replayCommandFleeTargetTurnRoute(): readonly BattleReducerRouteEvent[] 
   });
   const act = actionSpellAct(state, "command");
   const target = requireHole(act.initialHoles, "spellTargetList");
-  const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+  const commandOption = requireHole(
+    act.initialHoles,
+    "compelledBehaviorOptionChoice",
+  );
   const targetFill = spellTargetListFill(target, act.subject.procedureRef, [
     targetId,
   ]);
   const optionFill: Extract<
     BattleFill,
-    { readonly kind: "commandOptionChoice" }
+    { readonly kind: "compelledBehaviorOptionChoice" }
   > = {
-    kind: "commandOptionChoice",
+    kind: "compelledBehaviorOptionChoice",
     holeId: commandOption.holeId,
     value: "flee",
   };
@@ -511,13 +514,13 @@ function replayCommandFleeTargetTurnRoute(): readonly BattleReducerRouteEvent[] 
   requireResolvedRouteResult(cast, "Command cast");
   const targetTurn = endTurn({ state: cast.state, actorId: casterId });
   requireResolvedRouteResult(targetTurn, "Command caster End Turn");
-  const flee = commandFleeAct(targetTurn.state);
+  const flee = executeCompelledFleeAct(targetTurn.state);
   const movement = requireHole(flee.initialHoles, "movement");
   const moved = resolveBattleSubject({
     state: targetTurn.state,
     subject: flee.subject,
     fills: [
-      commandFleeMovementFill(movement, {
+      executeCompelledFleeMovementFill(movement, {
         movementCostFeet: 30,
         provokedOpportunityAttacks: [],
       }),
@@ -682,7 +685,7 @@ function createMovementCompelledMovementRouteDriver() {
         route = [
           ...appendCompelledMovementRoute(route, [
             { kind: "spellTargetList" },
-            { kind: "commandOptionChoice" },
+            { kind: "compelledBehaviorOptionChoice" },
             { kind: "savingThrowOutcome" },
             { kind: "movement" },
           ]),
@@ -1229,7 +1232,7 @@ function resolvedProjection(
     >;
     readonly dissonantMovementFillRequired?: boolean;
     readonly commandMovementFillRequired?: boolean;
-    readonly commandPendingEffectObserved?: boolean;
+    readonly compelledNextTurnBehaviorEffectObserved?: boolean;
   },
 ): MovementCompelledMovementSelectedIdentityProjection {
   if (result.tag !== "resolved") {
@@ -1243,7 +1246,8 @@ function resolvedProjection(
     lastResult: flags.lastResult,
     dissonantMovementFillRequired: flags.dissonantMovementFillRequired ?? false,
     commandMovementFillRequired: flags.commandMovementFillRequired ?? false,
-    commandPendingEffectObserved: flags.commandPendingEffectObserved ?? false,
+    compelledNextTurnBehaviorEffectObserved:
+      flags.compelledNextTurnBehaviorEffectObserved ?? false,
   });
 }
 
@@ -1279,8 +1283,8 @@ function withTargetTurnMovementSpent(
   return { ...state, combatants };
 }
 
-function commandFleeTargetTurn(): MovementCompelledMovementSelectedIdentityProjection {
-  let commandPendingEffectObserved = false;
+function executeCompelledFleeTargetTurn(): MovementCompelledMovementSelectedIdentityProjection {
+  let compelledNextTurnBehaviorEffectObserved = false;
   let commandMovementFillRequired = false;
   const state = movementCompelledMovementSpellBattle({
     sourceClassName: "cleric",
@@ -1290,17 +1294,17 @@ function commandFleeTargetTurn(): MovementCompelledMovementSelectedIdentityProje
     resolveCommandFleeTargetTurn(
       state,
       (castState) => {
-        commandPendingEffectObserved =
-          commandPendingEffectCount(castState) === 1;
+        compelledNextTurnBehaviorEffectObserved =
+          compelledNextTurnBehaviorEffectCount(castState) === 1;
       },
       () => {
         commandMovementFillRequired = true;
       },
     ),
     {
-      lastResult: "commandFlee",
+      lastResult: "executeCompelledFlee",
       commandMovementFillRequired,
-      commandPendingEffectObserved,
+      compelledNextTurnBehaviorEffectObserved,
     },
   );
 }
@@ -1354,8 +1358,8 @@ function expectedProjection(
     dissonantMovementFillRequired: false,
     targetMovementSpentFeet: 0,
     commandMovementFillRequired: false,
-    commandPendingEffectObserved: false,
-    commandPendingEffectCount: 0,
+    compelledNextTurnBehaviorEffectObserved: false,
+    compelledNextTurnBehaviorEffectCount: 0,
     climbSpeedFeet: 0,
     swimSpeedFeet: 0,
     lastResult: "init",
@@ -1418,15 +1422,18 @@ function resolveCommandFleeTargetTurn(
 ): BattleResolutionResult {
   const act = actionSpellAct(state, "command");
   const target = requireHole(act.initialHoles, "spellTargetList");
-  const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+  const commandOption = requireHole(
+    act.initialHoles,
+    "compelledBehaviorOptionChoice",
+  );
   const targetFill = spellTargetListFill(target, act.subject.procedureRef, [
     targetId,
   ]);
   const optionFill: Extract<
     BattleFill,
-    { readonly kind: "commandOptionChoice" }
+    { readonly kind: "compelledBehaviorOptionChoice" }
   > = {
-    kind: "commandOptionChoice",
+    kind: "compelledBehaviorOptionChoice",
     holeId: commandOption.holeId,
     value: "flee",
   };
@@ -1458,14 +1465,14 @@ function resolveCommandFleeTargetTurn(
       `Expected Command caster End Turn to resolve, got ${targetTurn.tag}.`,
     );
   }
-  const flee = commandFleeAct(targetTurn.state);
+  const flee = executeCompelledFleeAct(targetTurn.state);
   const movement = requireHole(flee.initialHoles, "movement");
   onMovementFillRequired();
   return resolveBattleSubject({
     state: targetTurn.state,
     subject: flee.subject,
     fills: [
-      commandFleeMovementFill(movement, {
+      executeCompelledFleeMovementFill(movement, {
         movementCostFeet: 30,
         provokedOpportunityAttacks: [],
       }),
@@ -1826,12 +1833,12 @@ function withReducerRouteEvents<TAct extends AvailableBattleAct>(
   };
 }
 
-function commandFleeAct(state: BattleState): RuntimeCommandFleeAct {
+function executeCompelledFleeAct(state: BattleState): RuntimeCommandFleeAct {
   const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is RuntimeCommandFleeAct =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.actorId === targetId &&
-      candidate.subject.command === "commandFlee",
+      candidate.subject.command === "executeCompelledFlee",
   );
   if (act === undefined) {
     throw new Error("Expected Command Flee runtime command.");
@@ -1978,7 +1985,7 @@ function movementFill(
   };
 }
 
-function commandFleeMovementFill(
+function executeCompelledFleeMovementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
   value: {
     readonly movementCostFeet: number;
@@ -1995,22 +2002,22 @@ function commandFleeMovementFill(
       speedKind: "walk",
       movementCostFeet: movementFeet(value.movementCostFeet),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
-      commandFlee: {
-        kind: "commandFleeFastestAvailableRouteAwayFromCaster",
+      compelledFlee: {
+        kind: "compelledFleeFastestAvailableRouteAwayFromSource",
       },
     },
   };
 }
 
-function commandPendingEffectCount(state: BattleState): number {
+function compelledNextTurnBehaviorEffectCount(state: BattleState): number {
   return (
     state.combatants.get(targetId)?.activeEffects.filter(
       (
         effect,
       ): effect is BattleActiveEffect & {
-        readonly kind: "commandPending";
+        readonly kind: "compelledNextTurnBehavior";
       } =>
-        effect.kind === "commandPending" &&
+        effect.kind === "compelledNextTurnBehavior" &&
         effect.sourceCombatantId === casterId,
     ).length ?? 0
   );
@@ -2036,7 +2043,7 @@ function projectMovementCompelledMovementSelectedIdentityState(
     readonly lastResult: MovementCompelledMovementSelectedIdentityProjection["lastResult"];
     readonly dissonantMovementFillRequired: boolean;
     readonly commandMovementFillRequired: boolean;
-    readonly commandPendingEffectObserved: boolean;
+    readonly compelledNextTurnBehaviorEffectObserved: boolean;
   },
 ): MovementCompelledMovementSelectedIdentityProjection {
   const snapshot = snapshotBattle(state);
@@ -2072,8 +2079,10 @@ function projectMovementCompelledMovementSelectedIdentityState(
     dissonantMovementFillRequired: flags.dissonantMovementFillRequired,
     targetMovementSpentFeet: Number(targetState.movementSpentFeet),
     commandMovementFillRequired: flags.commandMovementFillRequired,
-    commandPendingEffectObserved: flags.commandPendingEffectObserved,
-    commandPendingEffectCount: commandPendingEffectCount(state),
+    compelledNextTurnBehaviorEffectObserved:
+      flags.compelledNextTurnBehaviorEffectObserved,
+    compelledNextTurnBehaviorEffectCount:
+      compelledNextTurnBehaviorEffectCount(state),
     climbSpeedFeet: speedKindFeet(caster, "climb"),
     swimSpeedFeet: speedKindFeet(caster, "swim"),
     lastResult: flags.lastResult,

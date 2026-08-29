@@ -391,7 +391,7 @@ function hasNonCompositeTargetBuffWithAftermathFill(
     fillSet.compelledBehaviorOptionChoice !== undefined ||
     fillSet.areaChoice !== undefined ||
     fillSet.teleportDestination !== undefined ||
-    fillSet.dancingLightsPlacement !== undefined ||
+    fillSet.movableLightPlacement !== undefined ||
     fillSet.damageTypeChoice !== undefined ||
     fillSet.savingThrowOutcomes !== undefined ||
     fillSet.movement !== undefined ||

@@ -185,7 +185,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
     }
     expect(requireCombatant(cast.state, spellTargetId).activeEffects).toEqual([
       expect.objectContaining({
-        kind: "commandPending",
+        kind: "compelledNextTurnBehavior",
         option: "grovel",
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
@@ -335,14 +335,20 @@ describe("QMBT14 deterministic Command control option admission", () => {
       requireCombatant(awaitingSave.state, spellTargetId).activeEffects,
     ).not.toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ kind: "commandPending", option: "grovel" }),
+        expect.objectContaining({
+          kind: "compelledNextTurnBehavior",
+          option: "grovel",
+        }),
       ]),
     );
     expect(awaitingSave.snapshot).toEqual(snapshotBattle(awaitingSave.state));
     expect(requireCombatant(committedState, spellTargetId)).toMatchObject({
       conditions: expect.objectContaining({ prone: false }),
       activeEffects: expect.arrayContaining([
-        expect.objectContaining({ kind: "commandPending", option: "grovel" }),
+        expect.objectContaining({
+          kind: "compelledNextTurnBehavior",
+          option: "grovel",
+        }),
       ]),
     });
     const saveHole = requireResultHole(awaitingSave, "savingThrowOutcome");
@@ -432,7 +438,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
       requireCombatant(declined.state, spellTargetId).activeEffects,
     ).toEqual([
       expect.objectContaining({
-        kind: "commandPending",
+        kind: "compelledNextTurnBehavior",
         option: "grovel",
         sourceCombatantId: spellCasterId,
       }),
@@ -499,7 +505,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
     }
     expect(requireCombatant(cast.state, spellTargetId).activeEffects).toEqual([
       expect.objectContaining({
-        kind: "commandPending",
+        kind: "compelledNextTurnBehavior",
         option: "halt",
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
@@ -822,7 +828,10 @@ describe("QMBT14 deterministic Command control option admission", () => {
       requireCombatant(awaitingEndTurnSave.state, spellTargetId).activeEffects,
     ).not.toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ kind: "commandPending", option: "drop" }),
+        expect.objectContaining({
+          kind: "compelledNextTurnBehavior",
+          option: "drop",
+        }),
       ]),
     );
     expect(awaitingEndTurnSave).not.toHaveProperty("droppedObjects");
@@ -1144,7 +1153,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
     }
     expect(requireCombatant(cast.state, spellCasterId).activeEffects).toEqual([
       expect.objectContaining({
-        kind: "commandPending",
+        kind: "compelledNextTurnBehavior",
         option: "grovel",
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,

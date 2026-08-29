@@ -46,7 +46,7 @@ import {
   spellTeleportDestinationHole,
   spellTeleportDestinationHoleId,
 } from "../spells-targeting.ts";
-import { antimagicFieldTransitInvalidReason } from "../antimagic-field-transit-blocking.ts";
+import { magicSuppressionTransitInvalidReason } from "../antimagic-field-transit-blocking.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -168,10 +168,10 @@ function resolveSelfTeleport(
     return invalidResult(input.input.state, "invalidFill", validation);
   }
   /* v8 ignore stop -- @preserve */
-  const antimagicTransitInvalidReason = antimagicFieldTransitInvalidReason({
+  const antimagicTransitInvalidReason = magicSuppressionTransitInvalidReason({
     state: input.input.state,
     actorId: input.actorId,
-    witnesses: destination.antimagicFieldTransit,
+    witnesses: destination.magicSuppressionTransit,
   });
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (antimagicTransitInvalidReason !== null) {

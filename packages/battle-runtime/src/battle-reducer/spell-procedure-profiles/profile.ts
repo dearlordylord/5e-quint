@@ -18,7 +18,7 @@ import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import type { CharacterLevel } from "@dnd/shared/types";
 import type { SpellSlotLevel } from "@dnd/shared/types";
 import type {
-  BattleAntimagicFieldOngoingSpellEffectRef,
+  BattleMagicSuppressionOngoingSpellEffectRef,
   BattleCreatureState,
   BattleState,
   SupportedSpellInvocation,
@@ -175,7 +175,7 @@ export function spellAdmissionBattleTurn(
 
 export function spellAdmissionOngoingSpellEffectSuppressed(
   ctx: SpellAdmissionContext,
-  effect: BattleAntimagicFieldOngoingSpellEffectRef,
+  effect: BattleMagicSuppressionOngoingSpellEffectRef,
 ): boolean {
   return (
     ctx.battle?.suppressedOngoingSpellEffectKeys.has(
