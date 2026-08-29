@@ -20,7 +20,7 @@ export const EFFECT4_ORACLE_DELTA_CERTIFICATE_PATH =
 const REPOSITORY_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const CERTIFICATE_FORMAT_VERSION = 1;
 const CERTIFICATE_SHA256 =
-  "219b2230079265e3fd614f5e3c4b46b2ef6f30dc9c3f8c1c50a2c4b7de9cf37a";
+  "77e0fdafeecf319627e00c6839b2b27037be735dc0e894658f75ee15ad6731be";
 
 const HashSchema = Schema.String.pipe(
   Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/u)),
