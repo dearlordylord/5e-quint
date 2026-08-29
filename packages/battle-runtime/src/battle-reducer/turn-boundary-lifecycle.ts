@@ -3098,13 +3098,12 @@ function resolveSpellTurnStartDamageOccurrence(input: {
   if (endingSaveStage.tag === "result") return endingSaveStage;
   return applyResolvedStartTurnDamageOccurrence({
     input,
-    effect,
+    effectResolution: endingSaveStage.value,
     target,
     ...rollStage.value,
     ...concentrationStage.value,
     ...dispositionStage.value,
     ...hideousStage.value,
-    endingSave: endingSaveStage.value,
   });
 }
 
@@ -3129,10 +3128,16 @@ type StartTurnDamageSavingThrowFill = Extract<
   { readonly kind: "savingThrowOutcome" }
 >;
 
-type StartTurnDamageEndingSave =
-  | { readonly tag: "notApplicable" }
+type StartTurnDamageEffectResolution =
   | {
-      readonly tag: "answered";
+      readonly tag: "damageOnly";
+      readonly effect: Extract<
+        SpellTurnStartDamageEffect,
+        { readonly kind: "spellCondition" }
+      >;
+    }
+  | {
+      readonly tag: "damageAndEndingSave";
       readonly effect: Extract<
         SpellTurnStartDamageEffect,
         { readonly kind: "spellTurnStartDamageAndSave" }
@@ -3375,9 +3380,12 @@ function resolveStartTurnDamageEndingSave(input: {
   readonly input: StartTurnDamageOccurrenceInput;
   readonly effect: SpellTurnStartDamageEffect;
   readonly savingThrowFills: readonly StartTurnDamageSavingThrowFill[];
-}): StartTurnDamageStage<StartTurnDamageEndingSave> {
+}): StartTurnDamageStage<StartTurnDamageEffectResolution> {
   if (input.effect.kind !== "spellTurnStartDamageAndSave") {
-    return { tag: "resolved", value: { tag: "notApplicable" } };
+    return {
+      tag: "resolved",
+      value: { tag: "damageOnly", effect: input.effect },
+    };
   }
   const hole = spellTurnStartSavingThrowOutcomeHole(
     input.input.sourceTurn,
@@ -3426,13 +3434,18 @@ function resolveStartTurnDamageEndingSave(input: {
   }
   return {
     tag: "resolved",
-    value: { tag: "answered", effect: input.effect, hole, fill },
+    value: {
+      tag: "damageAndEndingSave",
+      effect: input.effect,
+      hole,
+      fill,
+    },
   };
 }
 
 function applyResolvedStartTurnDamageOccurrence(input: {
   readonly input: StartTurnDamageOccurrenceInput;
-  readonly effect: SpellTurnStartDamageEffect;
+  readonly effectResolution: StartTurnDamageEffectResolution;
   readonly target: BattleCreatureState;
   readonly rollHole: BattleSpellTurnStartDamageRollHole;
   readonly roll: StartTurnDamageRollFill;
@@ -3444,8 +3457,8 @@ function applyResolvedStartTurnDamageOccurrence(input: {
   readonly damageEventKey: string;
   readonly hideousHoles: readonly BattleHideousLaughterRepeatSavingThrowOutcomeHole[];
   readonly exactHideousFills: readonly StartTurnDamageSavingThrowFill[];
-  readonly endingSave: StartTurnDamageEndingSave;
 }): StartTurnOccurrenceStep {
+  const effect = startTurnDamageEffectForResolution(input.effectResolution);
   const rawConcentrationHoles = damageLifecycleConcentrationSavingThrowHoles({
     state: input.input.state,
     target: input.target,
@@ -3470,7 +3483,7 @@ function applyResolvedStartTurnDamageOccurrence(input: {
   const damaged = applySpellTurnStartDamage(
     input.input.state,
     input.target,
-    input.effect,
+    effect,
     input.roll,
     mainConcentrationHole === undefined
       ? undefined
@@ -3490,7 +3503,7 @@ function applyResolvedStartTurnDamageOccurrence(input: {
   const nextState = startTurnDamageStateAfterEndingSave(
     damaged,
     input.input.sourceTurn.actorId,
-    input.endingSave,
+    input.effectResolution,
   );
   const acceptedHoleIds = new Set<BattleHoleId>([
     input.rollHole.holeId,
@@ -3498,8 +3511,8 @@ function applyResolvedStartTurnDamageOccurrence(input: {
     ...input.dispositionHoles.map((hole) => hole.holeId),
     ...input.hideousHoles.map((hole) => hole.holeId),
   ]);
-  if (input.endingSave.tag === "answered") {
-    acceptedHoleIds.add(input.endingSave.hole.holeId);
+  if (input.effectResolution.tag === "damageAndEndingSave") {
+    acceptedHoleIds.add(input.effectResolution.hole.holeId);
   }
   return { tag: "advanced", state: nextState, acceptedHoleIds };
 }
@@ -3507,15 +3520,25 @@ function applyResolvedStartTurnDamageOccurrence(input: {
 function startTurnDamageStateAfterEndingSave(
   damaged: BattleState,
   actorId: CombatantId,
-  endingSave: StartTurnDamageEndingSave,
+  resolution: StartTurnDamageEffectResolution,
 ): BattleState {
-  return Match.value(endingSave).pipe(
-    Match.when({ tag: "notApplicable" }, () => damaged),
-    Match.when({ tag: "answered" }, ({ effect, fill }) =>
+  return Match.value(resolution).pipe(
+    Match.when({ tag: "damageOnly" }, () => damaged),
+    Match.when({ tag: "damageAndEndingSave" }, ({ effect, fill }) =>
       fill.value.outcomes[0]?.succeeded === true
         ? removeSpellTurnStartDamageAndSaveEffect(damaged, actorId, effect)
         : damaged,
     ),
+    Match.exhaustive,
+  );
+}
+
+function startTurnDamageEffectForResolution(
+  resolution: StartTurnDamageEffectResolution,
+): SpellTurnStartDamageEffect {
+  return Match.value(resolution).pipe(
+    Match.when({ tag: "damageOnly" }, ({ effect }) => effect),
+    Match.when({ tag: "damageAndEndingSave" }, ({ effect }) => effect),
     Match.exhaustive,
   );
 }
