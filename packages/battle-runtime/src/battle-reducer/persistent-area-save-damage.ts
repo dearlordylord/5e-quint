@@ -95,14 +95,8 @@ type PersistentAreaResolutionContext =
   | {
       readonly kind: "replayParent";
       readonly parent: ReplayParentContinuation;
-      readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
-      readonly sequence: BattleStartTurnOccurrenceSequenceCheckpoint["sequence"];
-      readonly completedPrefixHoleIds: BattleStartTurnOccurrenceSequenceCheckpoint["completedPrefixHoleIds"];
-      readonly roundDurationCohort: BattleStartTurnOccurrenceSequenceCheckpoint["roundDurationCohort"];
+      readonly replayPlan: CloudkillMovementReplayPlan;
       readonly occurrence: BattleStartTurnOccurrenceSequenceCheckpoint["child"];
-      readonly handledPosition:
-        | BattleStartTurnOccurrenceSequenceCheckpoint
-        | undefined;
     };
 
 type PersistentAreaSaveDamageStep =
@@ -131,9 +125,10 @@ export type CloudkillMovementSaveDamageSequenceResult =
       readonly result: BattleResolutionResult;
     };
 
-type CloudkillMovementSequenceContinuation =
+type CloudkillMovementReplayPlan =
   | {
       readonly kind: "turnBoundaryReplay";
+      readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
       readonly sequence: BattleStartTurnOccurrenceSequenceCheckpoint["sequence"];
       readonly completedPrefixHoleIds: BattleStartTurnOccurrenceSequenceCheckpoint["completedPrefixHoleIds"];
       readonly roundDurationCohort: BattleStartTurnOccurrenceSequenceCheckpoint["roundDurationCohort"];
@@ -147,13 +142,7 @@ type CloudkillMovementSequenceContinuation =
       readonly checkpoint: BattleStartTurnOccurrenceSequenceCheckpoint;
     };
 
-type CloudkillMovementReplayFacts = Pick<
-  Extract<PersistentAreaResolutionContext, { readonly kind: "replayParent" }>,
-  | "sequence"
-  | "completedPrefixHoleIds"
-  | "roundDurationCohort"
-  | "handledPosition"
->;
+const byCloudkillMovementReplayPlanKind = Match.discriminator("kind");
 
 type CloudkillMovementRequestStep =
   | { readonly tag: "stopped" }
@@ -337,15 +326,24 @@ export function resolveCloudkillMovementSaveDamageSequence(input: {
   readonly advancedState: BattleState;
   readonly parent: ReplayParentContinuation;
   readonly requests: readonly CloudkillMovementSaveDamageRequest[];
-  readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
-  readonly continuation: CloudkillMovementSequenceContinuation;
+  readonly replayPlan: CloudkillMovementReplayPlan;
 }): CloudkillMovementSaveDamageSequenceResult {
   const saveHoleIds = new Set<BattleHoleId>();
   const damageHoleIds = new Set<BattleHoleId>();
   const concentrationHoleIds = new Set<BattleHoleId>();
   const dispositionHoleIds = new Set<BattleHoleId>();
-  const replayFacts = cloudkillMovementReplayFacts(input.continuation);
-  let parentPositionMatched = replayFacts.handledPosition === undefined;
+  let parentPositionMatched = Match.value(input.replayPlan).pipe(
+    byCloudkillMovementReplayPlanKind("turnBoundaryReplay", () => true),
+    byCloudkillMovementReplayPlanKind(
+      "advancedPrefixAtCheckpoint",
+      () => false,
+    ),
+    byCloudkillMovementReplayPlanKind(
+      "advancedPrefixAfterCheckpoint",
+      () => true,
+    ),
+    Match.exhaustive,
+  );
   let state = input.advancedState;
 
   for (const [requestIndex, request] of input.requests.entries()) {
@@ -353,9 +351,7 @@ export function resolveCloudkillMovementSaveDamageSequence(input: {
       state,
       parent: input.parent,
       request,
-      sourceTurn: input.sourceTurn,
-      continuation: input.continuation,
-      replayFacts,
+      replayPlan: input.replayPlan,
       isFirstRequest: requestIndex === 0,
     });
     if (step.tag === "stopped") break;
@@ -386,60 +382,31 @@ export function resolveCloudkillMovementSaveDamageSequence(input: {
   };
 }
 
-const byCloudkillMovementSequenceContinuationKind = Match.discriminator("kind");
-
-function cloudkillMovementReplayFacts(
-  continuation: CloudkillMovementSequenceContinuation,
-): CloudkillMovementReplayFacts {
-  return Match.value(continuation).pipe(
-    byCloudkillMovementSequenceContinuationKind(
-      "turnBoundaryReplay",
-      ({ sequence, completedPrefixHoleIds, roundDurationCohort }) => ({
-        sequence,
-        completedPrefixHoleIds,
-        roundDurationCohort,
-        handledPosition: undefined,
-      }),
-    ),
-    byCloudkillMovementSequenceContinuationKind(
-      "advancedPrefixAtCheckpoint",
-      ({ checkpoint }) => ({
-        sequence: checkpoint.sequence,
-        completedPrefixHoleIds: checkpoint.completedPrefixHoleIds,
-        roundDurationCohort: checkpoint.roundDurationCohort,
-        handledPosition: checkpoint,
-      }),
-    ),
-    byCloudkillMovementSequenceContinuationKind(
-      "advancedPrefixAfterCheckpoint",
-      ({ checkpoint }) => ({
-        sequence: checkpoint.sequence,
-        completedPrefixHoleIds: checkpoint.completedPrefixHoleIds,
-        roundDurationCohort: checkpoint.roundDurationCohort,
-        handledPosition: undefined,
-      }),
-    ),
-    Match.exhaustive,
-  );
-}
-
 function resolveCloudkillMovementSaveDamageRequest(input: {
   readonly state: BattleState;
   readonly parent: ReplayParentContinuation;
   readonly request: CloudkillMovementSaveDamageRequest;
-  readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
-  readonly continuation: CloudkillMovementSequenceContinuation;
-  readonly replayFacts: CloudkillMovementReplayFacts;
+  readonly replayPlan: CloudkillMovementReplayPlan;
   readonly isFirstRequest: boolean;
 }): CloudkillMovementRequestStep {
-  const requestParent =
-    input.continuation.kind === "turnBoundaryReplay"
-      ? input.parent
-      : replayParentContinuationFor({
-          state: input.state,
-          subject: input.parent.subject,
-          fills: input.parent.fills,
-        });
+  const resumedRequestParent = () =>
+    replayParentContinuationFor({
+      state: input.state,
+      subject: input.parent.subject,
+      fills: input.parent.fills,
+    });
+  const requestParent = Match.value(input.replayPlan).pipe(
+    byCloudkillMovementReplayPlanKind("turnBoundaryReplay", () => input.parent),
+    byCloudkillMovementReplayPlanKind(
+      "advancedPrefixAtCheckpoint",
+      resumedRequestParent,
+    ),
+    byCloudkillMovementReplayPlanKind(
+      "advancedPrefixAfterCheckpoint",
+      resumedRequestParent,
+    ),
+    Match.exhaustive,
+  );
   const locatedActiveEffect = activeEffectForRef(
     input.state,
     input.request.effect.effectRef,
@@ -473,16 +440,12 @@ function resolveCloudkillMovementSaveDamageRequest(input: {
     context: {
       kind: "replayParent",
       parent: requestParent,
-      sourceTurn: input.sourceTurn,
-      sequence: input.replayFacts.sequence,
-      completedPrefixHoleIds: input.replayFacts.completedPrefixHoleIds,
-      roundDurationCohort: input.replayFacts.roundDurationCohort,
+      replayPlan: input.replayPlan,
       occurrence: {
         kind: "cloudkillMovementSaveDamageSequence",
         effectRef: input.request.effect.effectRef,
         targetId: input.request.subject.actorId,
       },
-      handledPosition: input.replayFacts.handledPosition,
     },
   });
 }
@@ -751,7 +714,7 @@ function resolvePersistentAreaSaveDamageStep(input: {
   const holeIds = persistentAreaResolvedHoleIds({
     saveHole,
     damageHole,
-    concentrationHole: concentrationStage.value.hole,
+    concentration: concentrationStage.value,
     dispositionHole: dispositionStage.value.hole,
   });
   const consumedFillIssue = persistentAreaConsumedFillIssue({
@@ -777,7 +740,7 @@ function resolvePersistentAreaSaveDamageStep(input: {
       ),
       ...optionalProperty(
         "concentrationSavingThrow",
-        concentrationStage.value.fill,
+        persistentAreaConcentrationFill(concentrationStage.value),
       ),
       spatialFacts: [],
     },
@@ -798,7 +761,7 @@ function persistentAreaResolvedHoleIds(input: {
   readonly damageHole:
     | BattleInsectPlagueAreaHazardDamageRollHole
     | BattleCloudkillAreaHazardDamageRollHole;
-  readonly concentrationHole: BattleConcentrationSavingThrowHole | null;
+  readonly concentration: PersistentAreaConcentrationAnswer;
   readonly dispositionHole: ReturnType<
     typeof zeroHitPointReplacementDispositionHole
   >;
@@ -806,8 +769,7 @@ function persistentAreaResolvedHoleIds(input: {
   return {
     save: input.saveHole.holeId,
     damage: input.damageHole.holeId,
-    concentration:
-      input.concentrationHole === null ? null : input.concentrationHole.holeId,
+    concentration: persistentAreaConcentrationHoleId(input.concentration),
     disposition:
       input.dispositionHole === null ? null : input.dispositionHole.holeId,
   };
@@ -826,6 +788,34 @@ type PersistentAreaConcentrationFill = Extract<
   BattleFill,
   { readonly kind: "concentrationSavingThrow" }
 >;
+
+type PersistentAreaConcentrationAnswer =
+  | { readonly tag: "notRequired" }
+  | {
+      readonly tag: "answered";
+      readonly hole: BattleConcentrationSavingThrowHole;
+      readonly fill: PersistentAreaConcentrationFill;
+    };
+
+function persistentAreaConcentrationHoleId(
+  answer: PersistentAreaConcentrationAnswer,
+): BattleHoleId | null {
+  return Match.value(answer).pipe(
+    Match.when({ tag: "notRequired" }, () => null),
+    Match.when({ tag: "answered" }, ({ hole }) => hole.holeId),
+    Match.exhaustive,
+  );
+}
+
+function persistentAreaConcentrationFill(
+  answer: PersistentAreaConcentrationAnswer,
+): PersistentAreaConcentrationFill | undefined {
+  return Match.value(answer).pipe(
+    Match.when({ tag: "notRequired" }, () => undefined),
+    Match.when({ tag: "answered" }, ({ fill }) => fill),
+    Match.exhaustive,
+  );
+}
 
 type PersistentAreaDispositionFill = Extract<
   BattleFill,
@@ -984,24 +974,20 @@ function resolvePersistentAreaConcentrationStage(input: {
   readonly context: PersistentAreaResolutionContext;
   readonly procedureName: "Insect Plague" | "Cloudkill";
   readonly adjustedDamage: ReturnType<typeof persistentAreaAdjustedDamage>;
-}): PersistentAreaStage<{
-  readonly hole: BattleConcentrationSavingThrowHole | null;
-  readonly fill: PersistentAreaConcentrationFill | undefined;
-}> {
+}): PersistentAreaStage<PersistentAreaConcentrationAnswer> {
   const { resolution, target } = input.procedure;
   const hole = persistentAreaConcentrationSavingThrowHole(
     target,
     input.adjustedDamage,
     input.context,
   );
-  const fills =
-    hole === null
-      ? []
-      : resolution.fills.filter(
-          (fill): fill is PersistentAreaConcentrationFill =>
-            fill.kind === "concentrationSavingThrow" &&
-            fill.holeId === hole.holeId,
-        );
+  if (hole === null) {
+    return { tag: "resolved", value: { tag: "notRequired" } };
+  }
+  const fills = resolution.fills.filter(
+    (fill): fill is PersistentAreaConcentrationFill =>
+      fill.kind === "concentrationSavingThrow" && fill.holeId === hole.holeId,
+  );
   /* v8 ignore start -- @preserve -- Malformed fill set: a damaged concentrating target exposes at most one Concentration save hole. */
   if (fills.length > 1) {
     return persistentAreaStepResult(
@@ -1014,15 +1000,14 @@ function resolvePersistentAreaConcentrationStage(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  const fill =
-    hole === null ? undefined : concentrationSavingThrowFillFor(fills, hole);
-  if (hole !== null && fill === undefined) {
+  const fill = concentrationSavingThrowFillFor(fills, hole);
+  if (fill === undefined) {
     return persistentAreaStepResult(
       input.context,
       needsHolesResult(resolution.state, resolution.subject, [hole]),
     );
   }
-  return { tag: "resolved", value: { hole, fill } };
+  return { tag: "resolved", value: { tag: "answered", hole, fill } };
 }
 
 function resolvePersistentAreaDispositionStage(input: {
@@ -1102,6 +1087,26 @@ function persistentAreaConsumedFillIssue(input: {
 
 const byPersistentAreaResolutionContextKind = Match.discriminator("kind");
 
+function cloudkillMovementReplaySourceTurn(
+  replayPlan: CloudkillMovementReplayPlan,
+): BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"] {
+  return Match.value(replayPlan).pipe(
+    byCloudkillMovementReplayPlanKind(
+      "turnBoundaryReplay",
+      ({ sourceTurn }) => sourceTurn,
+    ),
+    byCloudkillMovementReplayPlanKind(
+      "advancedPrefixAtCheckpoint",
+      ({ checkpoint }) => checkpoint.sourceTurn,
+    ),
+    byCloudkillMovementReplayPlanKind(
+      "advancedPrefixAfterCheckpoint",
+      ({ checkpoint }) => checkpoint.sourceTurn,
+    ),
+    Match.exhaustive,
+  );
+}
+
 function persistentAreaStepResult(
   context: PersistentAreaResolutionContext,
   result: BattleResolutionResult,
@@ -1125,20 +1130,34 @@ function persistentAreaReplayPosition(
     byPersistentAreaResolutionContextKind("standalone", () => undefined),
     byPersistentAreaResolutionContextKind(
       "replayParent",
-      ({
-        completedPrefixHoleIds,
-        occurrence,
-        roundDurationCohort,
-        sequence,
-        sourceTurn,
-      }) => ({
-        kind: "startTurnOccurrenceSequence" as const,
-        sequence,
-        completedPrefixHoleIds,
-        roundDurationCohort,
-        sourceTurn,
-        child: occurrence,
-      }),
+      ({ occurrence, replayPlan }) =>
+        Match.value(replayPlan).pipe(
+          byCloudkillMovementReplayPlanKind(
+            "turnBoundaryReplay",
+            ({
+              completedPrefixHoleIds,
+              roundDurationCohort,
+              sequence,
+              sourceTurn,
+            }) => ({
+              kind: "startTurnOccurrenceSequence" as const,
+              sequence,
+              completedPrefixHoleIds,
+              roundDurationCohort,
+              sourceTurn,
+              child: occurrence,
+            }),
+          ),
+          byCloudkillMovementReplayPlanKind(
+            "advancedPrefixAtCheckpoint",
+            ({ checkpoint }) => ({ ...checkpoint, child: occurrence }),
+          ),
+          byCloudkillMovementReplayPlanKind(
+            "advancedPrefixAfterCheckpoint",
+            ({ checkpoint }) => ({ ...checkpoint, child: occurrence }),
+          ),
+          Match.exhaustive,
+        ),
     ),
     Match.exhaustive,
   );
@@ -1150,11 +1169,20 @@ function persistentAreaHandledPositionMatches(
 ): boolean {
   return Match.value(context).pipe(
     byPersistentAreaResolutionContextKind("standalone", () => false),
-    byPersistentAreaResolutionContextKind(
-      "replayParent",
-      ({ handledPosition }) =>
-        handledPosition !== undefined &&
-        sameCloudkillMovementSaveDamagePosition(handledPosition, position),
+    byPersistentAreaResolutionContextKind("replayParent", ({ replayPlan }) =>
+      Match.value(replayPlan).pipe(
+        byCloudkillMovementReplayPlanKind("turnBoundaryReplay", () => false),
+        byCloudkillMovementReplayPlanKind(
+          "advancedPrefixAtCheckpoint",
+          ({ checkpoint }) =>
+            sameCloudkillMovementSaveDamagePosition(checkpoint, position),
+        ),
+        byCloudkillMovementReplayPlanKind(
+          "advancedPrefixAfterCheckpoint",
+          () => false,
+        ),
+        Match.exhaustive,
+      ),
     ),
     Match.exhaustive,
   );
@@ -1247,13 +1275,17 @@ function persistentAreaProcedureHoles(
         cloudkill.resolution.subject.actorId,
         cloudkill.locatedEffect.effect,
         cloudkill.trigger,
-        context.kind === "replayParent" ? context.sourceTurn : undefined,
+        context.kind === "replayParent"
+          ? cloudkillMovementReplaySourceTurn(context.replayPlan)
+          : undefined,
       ),
       damageHole: cloudkillAreaHazardDamageRollHole(
         cloudkill.resolution.subject.actorId,
         cloudkill.locatedEffect.effect,
         cloudkill.trigger,
-        context.kind === "replayParent" ? context.sourceTurn : undefined,
+        context.kind === "replayParent"
+          ? cloudkillMovementReplaySourceTurn(context.replayPlan)
+          : undefined,
       ),
     })),
     Match.exhaustive,
@@ -1586,7 +1618,8 @@ function persistentAreaConcentrationSavingThrowHole(
 ): BattleConcentrationSavingThrowHole | null {
   const base = concentrationSavingThrowHole(target, damageAmount);
   if (base === null || context.kind === "standalone") return base;
-  const key = `battle:cloudkill-movement-concentration:${context.sourceTurn.actorId}:${Number(context.sourceTurn.round)}:${context.occurrence.effectRef}:${context.occurrence.targetId}`;
+  const sourceTurn = cloudkillMovementReplaySourceTurn(context.replayPlan);
+  const key = `battle:cloudkill-movement-concentration:${sourceTurn.actorId}:${Number(sourceTurn.round)}:${context.occurrence.effectRef}:${context.occurrence.targetId}`;
   return {
     ...base,
     holeId: holeId(key),

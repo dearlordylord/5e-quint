@@ -2,7 +2,6 @@ import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type {
   BattleFill,
-  BattleHole,
   BattleResolutionInputForSubject,
   BattleResolutionResult,
 } from "../battle-state-execution.ts";
@@ -115,6 +114,9 @@ type ProtectionRelevantEffectSaveFill = Extract<
   BattleFill,
   { readonly kind: "savingThrowOutcome" }
 >;
+type ProtectionRelevantEffectSaveHole = ReturnType<
+  typeof protectionRelevantEffectSavingThrowOutcomeHole
+>;
 
 type ProtectionRelevantEffectSaveFillCheck =
   | { readonly tag: "needsHoles" }
@@ -124,7 +126,7 @@ type ProtectionRelevantEffectSaveFillCheck =
 function protectionRelevantEffectSaveFillForHole(
   fills: readonly BattleFill[],
   attemptedSaveFills: readonly ProtectionRelevantEffectSaveFill[],
-  hole: BattleHole,
+  hole: ProtectionRelevantEffectSaveHole,
 ): ProtectionRelevantEffectSaveFillCheck {
   if (fills.length === 0) {
     return { tag: "needsHoles" };

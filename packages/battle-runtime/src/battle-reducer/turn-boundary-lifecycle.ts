@@ -906,8 +906,7 @@ function resolveCloudkillMovementSequenceResume(input: {
     advancedState: resolution.state,
     parent: input.parent,
     requests: pending.requests,
-    sourceTurn: checkpoint.sourceTurn,
-    continuation: cloudkillMovementResumeContinuation(
+    replayPlan: cloudkillMovementResumeReplayPlan(
       checkpoint,
       checkpointRequestPending,
     ),
@@ -929,12 +928,12 @@ function resolveCloudkillMovementSequenceResume(input: {
   );
 }
 
-function cloudkillMovementResumeContinuation(
+function cloudkillMovementResumeReplayPlan(
   checkpoint: BattleStartTurnOccurrenceSequenceCheckpoint,
   checkpointRequestPending: boolean,
 ): Parameters<
   typeof resolveCloudkillMovementSaveDamageSequence
->[0]["continuation"] {
+>[0]["replayPlan"] {
   return checkpointRequestPending
     ? { kind: "advancedPrefixAtCheckpoint", checkpoint }
     : { kind: "advancedPrefixAfterCheckpoint", checkpoint };
@@ -3105,7 +3104,7 @@ function resolveSpellTurnStartDamageOccurrence(input: {
     ...concentrationStage.value,
     ...dispositionStage.value,
     ...hideousStage.value,
-    ...endingSaveStage.value,
+    endingSave: endingSaveStage.value,
   });
 }
 
@@ -3129,6 +3128,18 @@ type StartTurnDamageSavingThrowFill = Extract<
   BattleFill,
   { readonly kind: "savingThrowOutcome" }
 >;
+
+type StartTurnDamageEndingSave =
+  | { readonly tag: "notApplicable" }
+  | {
+      readonly tag: "answered";
+      readonly effect: Extract<
+        SpellTurnStartDamageEffect,
+        { readonly kind: "spellTurnStartDamageAndSave" }
+      >;
+      readonly hole: BattleSpellTurnStartSavingThrowOutcomeHole;
+      readonly fill: StartTurnDamageSavingThrowFill;
+    };
 
 type StartTurnDamageOccurrenceInput = Parameters<
   typeof resolveSpellTurnStartDamageOccurrence
@@ -3364,11 +3375,23 @@ function resolveStartTurnDamageEndingSave(input: {
   readonly input: StartTurnDamageOccurrenceInput;
   readonly effect: SpellTurnStartDamageEffect;
   readonly savingThrowFills: readonly StartTurnDamageSavingThrowFill[];
-}): StartTurnDamageStage<{
-  readonly saveHole: BattleSpellTurnStartSavingThrowOutcomeHole | undefined;
-  readonly save: StartTurnDamageSavingThrowFill | undefined;
-}> {
-  const { saveHole, save, exactSaveFills } = startTurnEndingSaveFacts(input);
+}): StartTurnDamageStage<StartTurnDamageEndingSave> {
+  if (input.effect.kind !== "spellTurnStartDamageAndSave") {
+    return { tag: "resolved", value: { tag: "notApplicable" } };
+  }
+  const hole = spellTurnStartSavingThrowOutcomeHole(
+    input.input.sourceTurn,
+    input.effect,
+    savingThrowFlatBonusProjections(
+      input.input.state,
+      input.effect.save.ability,
+    ).filter(
+      (projection) => projection.targetId === input.input.sourceTurn.actorId,
+    ),
+  );
+  const exactSaveFills = input.savingThrowFills.filter(
+    (fill) => fill.holeId === hole.holeId,
+  );
   if (exactSaveFills.length > 1) {
     return {
       tag: "result",
@@ -3379,63 +3402,32 @@ function resolveStartTurnDamageEndingSave(input: {
       ),
     };
   }
-  if (saveHole !== undefined && save === undefined) {
+  const fill = spellTurnStartSavingThrowOutcomeFor(
+    input.savingThrowFills,
+    hole,
+  );
+  if (fill === undefined) {
     return {
       tag: "result",
       result: needsHolesResult(input.input.resultState, input.input.subject, [
-        saveHole,
+        hole,
       ]),
     };
   }
-  if (save !== undefined) {
-    const issue = validateSpellTurnStartSavingThrowOutcome(
-      save.value,
-      input.input.sourceTurn.actorId,
-    );
-    if (issue !== null) {
-      return {
-        tag: "result",
-        result: invalidResult(input.input.resultState, "invalidFill", issue),
-      };
-    }
+  const issue = validateSpellTurnStartSavingThrowOutcome(
+    fill.value,
+    input.input.sourceTurn.actorId,
+  );
+  if (issue !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(input.input.resultState, "invalidFill", issue),
+    };
   }
-  return { tag: "resolved", value: { saveHole, save } };
-}
-
-function startTurnEndingSaveFacts(input: {
-  readonly input: StartTurnDamageOccurrenceInput;
-  readonly effect: SpellTurnStartDamageEffect;
-  readonly savingThrowFills: readonly StartTurnDamageSavingThrowFill[];
-}): {
-  readonly saveHole: BattleSpellTurnStartSavingThrowOutcomeHole | undefined;
-  readonly save: StartTurnDamageSavingThrowFill | undefined;
-  readonly exactSaveFills: readonly StartTurnDamageSavingThrowFill[];
-} {
-  const saveHole =
-    input.effect.kind === "spellTurnStartDamageAndSave"
-      ? spellTurnStartSavingThrowOutcomeHole(
-          input.input.sourceTurn,
-          input.effect,
-          savingThrowFlatBonusProjections(
-            input.input.state,
-            input.effect.save.ability,
-          ).filter(
-            (projection) =>
-              projection.targetId === input.input.sourceTurn.actorId,
-          ),
-        )
-      : undefined;
-  const save =
-    saveHole === undefined
-      ? undefined
-      : spellTurnStartSavingThrowOutcomeFor(input.savingThrowFills, saveHole);
-  const exactSaveFills =
-    saveHole === undefined
-      ? []
-      : input.savingThrowFills.filter(
-          (fill) => fill.holeId === saveHole.holeId,
-        );
-  return { saveHole, save, exactSaveFills };
+  return {
+    tag: "resolved",
+    value: { tag: "answered", effect: input.effect, hole, fill },
+  };
 }
 
 function applyResolvedStartTurnDamageOccurrence(input: {
@@ -3452,9 +3444,7 @@ function applyResolvedStartTurnDamageOccurrence(input: {
   readonly damageEventKey: string;
   readonly hideousHoles: readonly BattleHideousLaughterRepeatSavingThrowOutcomeHole[];
   readonly exactHideousFills: readonly StartTurnDamageSavingThrowFill[];
-  readonly savingThrowFills: readonly StartTurnDamageSavingThrowFill[];
-  readonly saveHole: BattleSpellTurnStartSavingThrowOutcomeHole | undefined;
-  readonly save: StartTurnDamageSavingThrowFill | undefined;
+  readonly endingSave: StartTurnDamageEndingSave;
 }): StartTurnOccurrenceStep {
   const rawConcentrationHoles = damageLifecycleConcentrationSavingThrowHoles({
     state: input.input.state,
@@ -3500,8 +3490,7 @@ function applyResolvedStartTurnDamageOccurrence(input: {
   const nextState = startTurnDamageStateAfterEndingSave(
     damaged,
     input.input.sourceTurn.actorId,
-    input.effect,
-    input.save,
+    input.endingSave,
   );
   const acceptedHoleIds = new Set<BattleHoleId>([
     input.rollHole.holeId,
@@ -3509,23 +3498,26 @@ function applyResolvedStartTurnDamageOccurrence(input: {
     ...input.dispositionHoles.map((hole) => hole.holeId),
     ...input.hideousHoles.map((hole) => hole.holeId),
   ]);
-  if (input.saveHole !== undefined) acceptedHoleIds.add(input.saveHole.holeId);
+  if (input.endingSave.tag === "answered") {
+    acceptedHoleIds.add(input.endingSave.hole.holeId);
+  }
   return { tag: "advanced", state: nextState, acceptedHoleIds };
 }
 
 function startTurnDamageStateAfterEndingSave(
   damaged: BattleState,
   actorId: CombatantId,
-  effect: SpellTurnStartDamageEffect,
-  save: StartTurnDamageSavingThrowFill | undefined,
+  endingSave: StartTurnDamageEndingSave,
 ): BattleState {
-  if (
-    effect.kind === "spellTurnStartDamageAndSave" &&
-    save?.value.outcomes[0]?.succeeded === true
-  ) {
-    return removeSpellTurnStartDamageAndSaveEffect(damaged, actorId, effect);
-  }
-  return damaged;
+  return Match.value(endingSave).pipe(
+    Match.when({ tag: "notApplicable" }, () => damaged),
+    Match.when({ tag: "answered" }, ({ effect, fill }) =>
+      fill.value.outcomes[0]?.succeeded === true
+        ? removeSpellTurnStartDamageAndSaveEffect(damaged, actorId, effect)
+        : damaged,
+    ),
+    Match.exhaustive,
+  );
 }
 
 function applyEndTurnSpellDamageFills(
@@ -4179,9 +4171,9 @@ function resolveOrderedCloudkillMovementOccurrence(input: {
     advancedState: input.state,
     parent: input.input.parent,
     requests: cloudkillMovementSaveDamageRequests([movement]),
-    sourceTurn: input.input.sourceTurn,
-    continuation: {
+    replayPlan: {
       kind: "turnBoundaryReplay",
+      sourceTurn: input.input.sourceTurn,
       sequence: input.input.traversal,
       completedPrefixHoleIds: [...input.acceptedHoleIds].sort(),
       roundDurationCohort: input.input.roundDurationCohort,
