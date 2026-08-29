@@ -1916,7 +1916,7 @@ function battleSubjectKey(subject: BattleSubject): string {
               ? command.naturalWeaponDamageType
               : null,
             "areaId" in command ? command.areaId : null,
-            "effectRef" in command ? command.effectRef : null,
+            runtimeCommandEffectOccurrenceKey(command),
             "trigger" in command ? command.trigger : null,
             runtimeCommandAreaMembershipTrigger(command),
             "relevantEffect" in command ? command.relevantEffect : null,
@@ -1926,6 +1926,12 @@ function battleSubjectKey(subject: BattleSubject): string {
       ),
     ),
   );
+}
+
+function runtimeCommandEffectOccurrenceKey(
+  command: Extract<BattleSubject, { readonly tag: "runtimeCommand" }>,
+): BattleEffectExecutionRef | null {
+  return "effectRef" in command ? command.effectRef : null;
 }
 
 function runtimeCommandAreaMembershipTrigger(

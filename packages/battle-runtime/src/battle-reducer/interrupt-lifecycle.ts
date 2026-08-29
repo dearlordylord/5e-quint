@@ -551,6 +551,37 @@ function completeResolvedActiveInterruptIfPending(
     : completeActiveInterruptProcedure(result.state, execution, result);
 }
 
+type DamageSequenceObjectOutcomeContinuation = Extract<
+  BattleInterruptedProcedure,
+  {
+    readonly kind:
+      | "afterDamageSequence"
+      | "afterDamageSequenceWithPrimaryAttackFollowUp"
+      | "movementThenAfterDamageSequence";
+  }
+>;
+
+function appendObjectOutcomesToDamageContinuation(
+  continuation: DamageSequenceObjectOutcomeContinuation,
+  source: ResolvedObjectOutcomeSource,
+): DamageSequenceObjectOutcomeContinuation {
+  return {
+    ...continuation,
+    objectDamages: [
+      ...continuation.objectDamages,
+      ...(source.objectDamages ?? []),
+    ],
+    objectIgnitions: [
+      ...continuation.objectIgnitions,
+      ...(source.objectIgnitions ?? []),
+    ],
+    droppedObjects: [
+      ...continuation.droppedObjects,
+      ...(source.droppedObjects ?? []),
+    ],
+  };
+}
+
 function appendObjectOutcomesToContinuation(
   continuation: BattleInterruptedProcedure,
   source: ResolvedObjectOutcomeSource | undefined,
@@ -572,21 +603,7 @@ function appendObjectOutcomesToContinuation(
     continuation.kind === "afterDamageSequenceWithPrimaryAttackFollowUp" ||
     continuation.kind === "movementThenAfterDamageSequence"
   ) {
-    return {
-      ...continuation,
-      objectDamages: [
-        ...continuation.objectDamages,
-        ...(source.objectDamages ?? []),
-      ],
-      objectIgnitions: [
-        ...continuation.objectIgnitions,
-        ...(source.objectIgnitions ?? []),
-      ],
-      droppedObjects: [
-        ...continuation.droppedObjects,
-        ...(source.droppedObjects ?? []),
-      ],
-    };
+    return appendObjectOutcomesToDamageContinuation(continuation, source);
   }
   // Readied spells are not offered for attack-damage, movement, or command
   // continuations, so those variants have no legal object outcome payload to

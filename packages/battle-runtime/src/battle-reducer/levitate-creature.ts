@@ -19,6 +19,7 @@ import type {
   BattleTargetSpatialFact,
   SpellLevitatedCreatureActiveEffect,
 } from "../battle-state-execution.ts";
+import { Match } from "effect";
 import {
   LEVITATE_ALTITUDE_CHANGE_HOLE_ID,
   LEVITATE_ALTITUDE_CHANGE_HOLE_INSTANCE,
@@ -172,32 +173,81 @@ export function validateLevitatedMovementFact(input: {
   readonly movementCostFeet: BattleMovementFillValue["movementCostFeet"];
   readonly areaExtraCostFeet: MovementFeet;
 }): string | null {
-  const activeEffect = activeLevitatedCreatureEffect(input.combatant);
-  if (input.fact === undefined) {
+  return Match.value(
+    levitatedMovementEffectAdmission(input.combatant, input.fact),
+  ).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      notApplicable: () => null,
+      invalid: ({ message }) => message,
+      matched: ({ effect, fact }) =>
+        validateMatchedLevitatedMovementFact(input, effect, fact),
+    }),
+  );
+}
+
+type LevitatedMovementEffectAdmission =
+  | { readonly tag: "notApplicable" }
+  | { readonly tag: "invalid"; readonly message: string }
+  | {
+      readonly tag: "matched";
+      readonly effect: SpellLevitatedCreatureActiveEffect;
+      readonly fact: BattleLevitatedMovementFact;
+    };
+
+function levitatedMovementEffectAdmission(
+  combatant: BattleCreatureState,
+  fact: BattleLevitatedMovementFact | undefined,
+): LevitatedMovementEffectAdmission {
+  const activeEffect = activeLevitatedCreatureEffect(combatant);
+  if (fact === undefined) {
     return activeEffect === undefined
-      ? null
-      : "Levitated targets require a fixed-object or surface-within-reach movement witness.";
+      ? { tag: "notApplicable" }
+      : {
+          tag: "invalid",
+          message:
+            "Levitated targets require a fixed-object or surface-within-reach movement witness.",
+        };
   }
-  const effect = activeLevitatedCreatureEffect(input.combatant, input.fact);
+  const effect = activeLevitatedCreatureEffect(combatant, fact);
   if (effect === undefined) {
-    return activeEffect === undefined
-      ? "Levitated movement witness was supplied for a target that is not levitated."
-      : "Levitated movement witness does not match the active Levitate effect.";
+    return {
+      tag: "invalid",
+      message:
+        activeEffect === undefined
+          ? "Levitated movement witness was supplied for a target that is not levitated."
+          : "Levitated movement witness does not match the active Levitate effect.",
+    };
   }
   /* v8 ignore start -- @preserve -- Stale Levitate witness: discovery copies the active effect's source combatant and procedure identity into the movement fact. */
   if (
-    input.fact.sourceCombatantId !== effect.sourceCombatantId ||
-    input.fact.sourceProcedureRef !== effect.sourceProcedureRef
+    fact.sourceCombatantId !== effect.sourceCombatantId ||
+    fact.sourceProcedureRef !== effect.sourceProcedureRef
   ) {
-    return "Levitated movement witness does not match the active Levitate effect.";
+    return {
+      tag: "invalid",
+      message:
+        "Levitated movement witness does not match the active Levitate effect.",
+    };
   }
   /* v8 ignore stop -- @preserve */
+  return { tag: "matched", effect, fact };
+}
+
+function validateMatchedLevitatedMovementFact(
+  input: {
+    readonly speedKind: BattleMovementFillValue["speedKind"];
+    readonly movementCostFeet: BattleMovementFillValue["movementCostFeet"];
+    readonly areaExtraCostFeet: MovementFeet;
+  },
+  effect: SpellLevitatedCreatureActiveEffect,
+  fact: BattleLevitatedMovementFact,
+): string | null {
   /* v8 ignore start -- @preserve -- Malformed Levitate witness: movement discovery publishes altitude movement only when a fixed object or surface is within reach. */
-  if (!input.fact.fixedObjectOrSurfaceWithinReach) {
+  if (!fact.fixedObjectOrSurfaceWithinReach) {
     return "Levitated movement requires a fixed object or surface within reach.";
   }
   /* v8 ignore stop -- @preserve */
-  const altitudeChange = input.fact.altitudeChange;
+  const altitudeChange = fact.altitudeChange;
   if (altitudeChange === undefined) {
     return null;
   }

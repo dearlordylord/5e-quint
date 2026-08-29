@@ -1521,6 +1521,57 @@ function isGlyphStoredSpiritualWeaponInvocation(
   return invocation.procedure === "spiritualWeaponAttackProxy";
 }
 
+function glyphReleaseWitnessMatchesStoredOccurrence(
+  effect: GlyphDurableOccurrenceActiveEffect,
+  witness: GlyphTriggerOccurrenceWitness,
+): boolean {
+  return witness.sourceEffectId === effect.sourceEffectId;
+}
+
+function glyphStoredSpellOccurrenceReleaseValidation(
+  effect: GlyphDurableOccurrenceActiveEffect,
+  witness: GlyphTriggerOccurrenceWitness,
+): Result.Result<
+  GlyphStoredSpellOccurrenceActiveEffect,
+  GlyphStoredSpellReleaseWitnessValidationFailure
+> {
+  if (!glyphReleaseWitnessMatchesStoredOccurrence(effect, witness)) {
+    return Result.fail("sourceEffectMismatch");
+  }
+  return isGlyphStoredSpellOccurrence(effect)
+    ? Result.succeed(effect)
+    : Result.fail("storedReleaseBranchMismatch");
+}
+
+type GlyphExplosiveRuneOccurrenceActiveEffect =
+  StoredGlyphDurableOccurrenceEffect & {
+    readonly release: Extract<
+      GlyphDurableOccurrenceActiveEffect["release"],
+      { readonly kind: "explosiveRune" }
+    >;
+  };
+
+function isGlyphExplosiveRuneOccurrence(
+  effect: StoredGlyphDurableOccurrenceEffect,
+): effect is GlyphExplosiveRuneOccurrenceActiveEffect {
+  return effect.release.kind === "explosiveRune";
+}
+
+function glyphExplosiveRuneOccurrenceReleaseValidation(
+  effect: StoredGlyphDurableOccurrenceEffect,
+  witness: GlyphTriggerOccurrenceWitness,
+): Result.Result<
+  GlyphExplosiveRuneOccurrenceActiveEffect,
+  GlyphExplosiveRuneReleaseWitnessValidationFailure
+> {
+  if (!glyphReleaseWitnessMatchesStoredOccurrence(effect, witness)) {
+    return Result.fail("sourceEffectMismatch");
+  }
+  return isGlyphExplosiveRuneOccurrence(effect)
+    ? Result.succeed(effect)
+    : Result.fail("releaseBranchMismatch");
+}
+
 /* v8 ignore start -- @preserve -- Malformed release-witness validator: Glyph release discovery binds occurrence branch, creature, target shape, placement, procedure, and area origin before execution. */
 function glyphStoredSpellReleaseWitnessValidation(input: {
   readonly state: BattleState;
@@ -1528,20 +1579,20 @@ function glyphStoredSpellReleaseWitnessValidation(input: {
   readonly effect: GlyphDurableOccurrenceActiveEffect;
   readonly witness: GlyphStoredSpellReleaseWitness;
 }): GlyphStoredSpellReleaseWitnessValidationFailure | null {
-  if (
-    input.witness.triggerOccurrence.sourceEffectId !==
-    input.effect.sourceEffectId
-  ) {
-    return "sourceEffectMismatch";
+  const occurrenceReleaseValidation =
+    glyphStoredSpellOccurrenceReleaseValidation(
+      input.effect,
+      input.witness.triggerOccurrence,
+    );
+  if (Result.isFailure(occurrenceReleaseValidation)) {
+    return occurrenceReleaseValidation.failure;
   }
-  if (input.effect.release.kind !== "spellGlyph") {
-    return "storedReleaseBranchMismatch";
-  }
+  const effect = occurrenceReleaseValidation.success;
   if (!input.state.combatants.has(input.witness.triggeringCreatureId)) {
     return "triggeringCreatureNotFound";
   }
   const targetShape = glyphStoredSpellTargetShapeForExecutionKind(
-    input.effect.release.executionKind,
+    effect.release.executionKind,
   );
   if (
     targetShape === "singleCreature" &&
@@ -1556,16 +1607,16 @@ function glyphStoredSpellReleaseWitnessValidation(input: {
   ) {
     return "storedSpellTargetShapeMismatch";
   }
-  const procedureRef = glyphStoredSpellProcedureRef(input.state, input.effect);
+  const procedureRef = glyphStoredSpellProcedureRef(input.state, effect);
   if (procedureRef === undefined) {
     return "storedSpellResolutionInvalid";
   }
   const hostilePlacementValidation = glyphStoredSpellHostilePlacementValidation(
     {
       profile: input.profile,
-      invocation: input.effect.release.storedProcedure,
+      invocation: effect.release.storedProcedure,
       sourceProcedureRef: procedureRef,
-      sourceCombatantId: input.effect.sourceCombatantId,
+      sourceCombatantId: effect.sourceCombatantId,
       witness: input.witness,
     },
   );
@@ -2198,21 +2249,21 @@ function glyphExplosiveRuneReleaseWitnessValidation(input: {
   readonly effect: StoredGlyphDurableOccurrenceEffect;
   readonly witness: GlyphExplosiveRuneReleaseWitness;
 }): GlyphExplosiveRuneReleaseWitnessValidationFailure | null {
-  if (
-    input.witness.triggerOccurrence.sourceEffectId !==
-    input.effect.sourceEffectId
-  ) {
-    return "sourceEffectMismatch";
+  const occurrenceReleaseValidation =
+    glyphExplosiveRuneOccurrenceReleaseValidation(
+      input.effect,
+      input.witness.triggerOccurrence,
+    );
+  if (Result.isFailure(occurrenceReleaseValidation)) {
+    return occurrenceReleaseValidation.failure;
   }
-  if (input.effect.release.kind !== "explosiveRune") {
-    return "releaseBranchMismatch";
-  }
-  if (input.witness.coveredAreaId !== input.effect.coveredAreaId) {
+  const effect = occurrenceReleaseValidation.success;
+  if (input.witness.coveredAreaId !== effect.coveredAreaId) {
     return "coveredAreaMismatch";
   }
   if (
     !glyphExplosiveRuneDamageTypeSupported(
-      input.effect.release.damageType,
+      effect.release.damageType,
       input.profile,
     )
   ) {
@@ -2232,7 +2283,7 @@ function glyphExplosiveRuneReleaseWitnessValidation(input: {
   }
   const damageRollHole = glyphExplosiveRuneDamageRollHole({
     profile: input.profile,
-    effect: input.effect,
+    effect,
   });
   const damageRoll = input.witness.areaMembership.damageRoll;
   if (damageRoll === undefined) {
@@ -2243,7 +2294,7 @@ function glyphExplosiveRuneReleaseWitnessValidation(input: {
   }
   return validateRolledDiceForDiceExpr(
     damageRoll.value,
-    glyphExplosiveRuneDamageExpr(input.profile, input.effect),
+    glyphExplosiveRuneDamageExpr(input.profile, effect),
   ) === null
     ? null
     : "damageRollMismatch";

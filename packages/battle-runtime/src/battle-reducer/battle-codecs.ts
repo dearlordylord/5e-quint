@@ -5762,20 +5762,6 @@ function statBlockExecutionSnapshotGraphIsValid(snapshot: {
         const pool = resourcePoolsByRef.get(ref);
         return pool === undefined ? [] : [pool];
       });
-      const legendaryPoolCount = pools.filter(
-        (pool) => pool.kind === "legendaryActions",
-      ).length;
-      const limitedUsePoolCount = pools.length - legendaryPoolCount;
-      const procedurePoolShapeIsValid =
-        binding.procedure.kind === "effectOccurrenceSource"
-          ? pools.length === 0
-          : binding.procedure.kind === "multiattack"
-            ? pools.length === 0
-            : binding.procedure.kind === "bonusActionOption" ||
-                (binding.procedure.kind === "attack" &&
-                  binding.procedure.section === "actions")
-              ? pools.length <= 1 && legendaryPoolCount === 0
-              : legendaryPoolCount <= 1 && limitedUsePoolCount <= 1;
       const legendaryPoolOwnershipIsValid =
         binding.procedure.kind !== "attack" ||
         binding.procedure.section !== "legendaryActions" ||
@@ -5785,7 +5771,7 @@ function statBlockExecutionSnapshotGraphIsValid(snapshot: {
         new Set(binding.resourcePoolRefs).size ===
           binding.resourcePoolRefs.length &&
         pools.length === binding.resourcePoolRefs.length &&
-        procedurePoolShapeIsValid &&
+        statBlockProcedureResourcePoolShapeIsValid(binding.procedure, pools) &&
         legendaryPoolOwnershipIsValid &&
         (binding.procedure.kind !== "multiattack" ||
           (binding.procedure.dispatchProcedureRefs.length > 0 &&
@@ -5803,6 +5789,34 @@ function statBlockExecutionSnapshotGraphIsValid(snapshot: {
     (legendaryBindings.length === 0
       ? legendaryPools.length === 0
       : legendaryPools.length === 1)
+  );
+}
+
+function statBlockProcedureResourcePoolShapeIsValid(
+  procedure: Schema.Schema.Type<typeof StatBlockProcedureSchema>,
+  pools: readonly Schema.Schema.Type<typeof StatBlockResourcePoolStateSchema>[],
+): boolean {
+  const legendaryPoolCount = pools.filter(
+    (pool) => pool.kind === "legendaryActions",
+  ).length;
+  const limitedUsePoolCount = pools.length - legendaryPoolCount;
+  const actionPoolShapeIsValid = () =>
+    pools.length <= 1 && legendaryPoolCount === 0;
+  return Match.value(procedure).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      effectOccurrenceSource: () => pools.length === 0,
+      multiattack: () => pools.length === 0,
+      bonusActionOption: actionPoolShapeIsValid,
+      attack: ({ section }) =>
+        Match.value(section).pipe(
+          Match.when("actions", actionPoolShapeIsValid),
+          Match.when(
+            "legendaryActions",
+            () => legendaryPoolCount <= 1 && limitedUsePoolCount <= 1,
+          ),
+          Match.exhaustive,
+        ),
+    }),
   );
 }
 
@@ -7093,19 +7107,36 @@ function serializedBattleHoleExecutionReferences(
       source(owner.sourceProcedureRef, owner.sourceCombatantId),
       boundOccurrence(owner.effectRef, expectation, owner.targetId),
     ];
+    const spellDamageRiderReferences = (
+      riders:
+        | readonly {
+            readonly sourceProcedureRef: BattleProcedureExecutionRef;
+            readonly sourceCombatantId: CombatantId;
+            readonly effectRef: BattleEffectExecutionRef;
+          }[]
+        | undefined,
+      activeEffectKind: Extract<
+        SerializedActiveEffectKind,
+        "spellMarkedDamageRider" | "spellWeaponDamageRider"
+      >,
+    ): readonly SerializedExecutionReferenceOwnership[] =>
+      (riders ?? []).flatMap((rider) => [
+        owned(rider.sourceProcedureRef, rider.sourceCombatantId),
+        boundOccurrence(
+          rider.effectRef,
+          activeEffect(activeEffectKind),
+          rider.sourceCombatantId,
+        ),
+      ]);
     return Match.value(value).pipe(
       Match.when({ sourceProcedureRef: Match.any }, (hole) => [
         source(hole.sourceProcedureRef),
         ...Match.value(hole).pipe(
           Match.when({ spellMarkedDamageRiders: Match.any }, (spellDamage) =>
-            (spellDamage.spellMarkedDamageRiders ?? []).flatMap((rider) => [
-              owned(rider.sourceProcedureRef, rider.sourceCombatantId),
-              boundOccurrence(
-                rider.effectRef,
-                activeEffect("spellMarkedDamageRider"),
-                rider.sourceCombatantId,
-              ),
-            ]),
+            spellDamageRiderReferences(
+              spellDamage.spellMarkedDamageRiders,
+              "spellMarkedDamageRider",
+            ),
           ),
           Match.orElse(() => []),
         ),
@@ -7208,22 +7239,14 @@ function serializedBattleHoleExecutionReferences(
         ...(hole.attackDamageRiders ?? []).map((rider) =>
           owned(rider.procedureRef, rider.attackerId),
         ),
-        ...(hole.spellWeaponDamageRiders ?? []).flatMap((rider) => [
-          owned(rider.sourceProcedureRef, rider.sourceCombatantId),
-          boundOccurrence(
-            rider.effectRef,
-            activeEffect("spellWeaponDamageRider"),
-            rider.sourceCombatantId,
-          ),
-        ]),
-        ...(hole.spellMarkedDamageRiders ?? []).flatMap((rider) => [
-          owned(rider.sourceProcedureRef, rider.sourceCombatantId),
-          boundOccurrence(
-            rider.effectRef,
-            activeEffect("spellMarkedDamageRider"),
-            rider.sourceCombatantId,
-          ),
-        ]),
+        ...spellDamageRiderReferences(
+          hole.spellWeaponDamageRiders,
+          "spellWeaponDamageRider",
+        ),
+        ...spellDamageRiderReferences(
+          hole.spellMarkedDamageRiders,
+          "spellMarkedDamageRider",
+        ),
         ...(hole.cunningStrikeOptions ?? []).flatMap((option) => [
           bound(option.procedureRef),
           bound(option.sourceDamageRiderProcedureRef),
@@ -8023,6 +8046,59 @@ function serializedActiveEffectMatchesExpectation(
   );
 }
 
+function serializedEffectOccurrenceReferenceIsOwned(
+  reference: Extract<
+    SerializedExecutionReferenceOwnership,
+    { readonly kind: "effectOccurrence" }
+  >,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+  storedLightEmitters: readonly EncodedBattleStoredLightEmitter[],
+): boolean {
+  const eligibleOwners =
+    reference.ownerId === undefined
+      ? combatants
+      : combatants.filter(
+          (combatant) => combatant.combatantId === reference.ownerId,
+        );
+  return Match.value(reference.expectation).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      activeEffect: (expectation) =>
+        eligibleOwners.some((combatant) =>
+          combatant.activeEffectOccurrences.some((occurrence) =>
+            serializedActiveEffectMatchesExpectation(
+              occurrence,
+              reference,
+              expectation,
+            ),
+          ),
+        ),
+      storedLightEmitter: () =>
+        eligibleOwners.some((combatant) =>
+          storedLightEmitters.some(
+            (emitter) =>
+              emitter.effectRef === reference.ref &&
+              battleEffectExecutionRefBelongsToScope(
+                emitter.effectRef,
+                combatant.origin.execution.scopeRef,
+              ),
+          ),
+        ),
+    }),
+  );
+}
+
+function serializedSubjectProcedureReferenceIsExpected(
+  reference: SerializedExecutionReferenceOwnership,
+  expectedProcedureRefs: ReadonlySet<BattleProcedureExecutionRef> | undefined,
+): boolean {
+  return (
+    reference.kind !== "subjectProcedure" ||
+    expectedProcedureRefs === undefined ||
+    expectedProcedureRefs.size === 0 ||
+    expectedProcedureRefs.has(reference.ref)
+  );
+}
+
 function serializedBattleHoleOwnsBoundExecutionReferences(input: {
   readonly hole: EncodedBattleHole;
   readonly combatants: readonly EncodedBattleCreatureSnapshot[];
@@ -8051,43 +8127,17 @@ function serializedBattleHoleOwnsBoundExecutionReferences(input: {
   return serializedBattleHoleExecutionReferences(hole).every((reference) => {
     if (!boundExecutionRefs.has(reference.ref)) return false;
     if (reference.kind === "effectOccurrence") {
-      const eligibleOwners =
-        reference.ownerId === undefined
-          ? combatants
-          : combatants.filter(
-              (combatant) => combatant.combatantId === reference.ownerId,
-            );
-      return Match.value(reference.expectation).pipe(
-        Match.discriminatorsExhaustive("kind")({
-          activeEffect: (expectation) =>
-            eligibleOwners.some((combatant) =>
-              combatant.activeEffectOccurrences.some((occurrence) =>
-                serializedActiveEffectMatchesExpectation(
-                  occurrence,
-                  reference,
-                  expectation,
-                ),
-              ),
-            ),
-          storedLightEmitter: () =>
-            eligibleOwners.some((combatant) =>
-              storedLightEmitters.some(
-                (emitter) =>
-                  emitter.effectRef === reference.ref &&
-                  battleEffectExecutionRefBelongsToScope(
-                    emitter.effectRef,
-                    combatant.origin.execution.scopeRef,
-                  ),
-              ),
-            ),
-        }),
+      return serializedEffectOccurrenceReferenceIsOwned(
+        reference,
+        combatants,
+        storedLightEmitters,
       );
     }
     if (
-      reference.kind === "subjectProcedure" &&
-      expectedProcedureRefs !== undefined &&
-      expectedProcedureRefs.size > 0 &&
-      !expectedProcedureRefs.has(reference.ref)
+      !serializedSubjectProcedureReferenceIsExpected(
+        reference,
+        expectedProcedureRefs,
+      )
     ) {
       return false;
     }
@@ -8124,25 +8174,30 @@ function serializedBattleHolesOwnBoundExecutionReferences(input: {
   );
 }
 
+function serializedProtectionRelevantEffectHolesMatchSubject(
+  subject: EncodedBattleSubject,
+  holes: readonly EncodedBattleHole[],
+): boolean {
+  if (
+    subject.tag !== "runtimeCommand" ||
+    subject.command !== "protectionRelevantEffectSave"
+  ) {
+    return true;
+  }
+  return holes.every(
+    (hole) =>
+      hole.kind !== "savingThrowOutcome" ||
+      !("protectionRelevantEffectSave" in hole) ||
+      hole.protectionRelevantEffectSave.relevantEffect ===
+        subject.relevantEffect,
+  );
+}
+
 function serializedSubjectHolesMatchSelectedOccurrence(
   subject: EncodedBattleSubject,
   holes: readonly EncodedBattleHole[],
 ): boolean {
-  const protectionRelevantEffect =
-    subject.tag === "runtimeCommand" &&
-    subject.command === "protectionRelevantEffectSave"
-      ? subject.relevantEffect
-      : undefined;
-  if (
-    protectionRelevantEffect !== undefined &&
-    holes.some(
-      (hole) =>
-        hole.kind === "savingThrowOutcome" &&
-        "protectionRelevantEffectSave" in hole &&
-        hole.protectionRelevantEffectSave.relevantEffect !==
-          protectionRelevantEffect,
-    )
-  ) {
+  if (!serializedProtectionRelevantEffectHolesMatchSubject(subject, holes)) {
     return false;
   }
   const selectedOccurrenceRefs = battleSubjectBoundExecutionReferences(
@@ -8734,20 +8789,9 @@ function battleSnapshotInvariantsHold(
   const liveCombatantIds = new Set(
     snapshot.combatants.map((combatant) => combatant.combatantId),
   );
-  const executionScopeRefs = snapshot.combatants.flatMap(
-    battleSnapshotExecutionScopeRefs,
-  );
-  const effectOccurrenceRefs = [
-    ...snapshot.combatants.flatMap((combatant) =>
-      combatant.activeEffectOccurrences.map(({ effectRef }) => effectRef),
-    ),
-    ...snapshot.storedLightEmitters.map(({ effectRef }) => effectRef),
-  ];
   return (
     battleSnapshotLiveCombatantIdsAreUnique(snapshot, liveCombatantIds) &&
-    new Set(effectOccurrenceRefs).size === effectOccurrenceRefs.length &&
-    serializedEffectOccurrenceSourceBindingsMatch(snapshot.combatants) &&
-    new Set(executionScopeRefs).size === executionScopeRefs.length &&
+    serializedBattleExecutionIdentityGraphIsValid(snapshot) &&
     snapshot.readiedResponses.spells.every((readied) =>
       serializedReadiedSpellOwnsInvocation(snapshot.combatants, readied),
     ) &&
@@ -8780,6 +8824,25 @@ function battleSnapshotInvariantsHold(
     snapshot.combatants.every((combatant) =>
       battleSnapshotExecutionScopesBelongToBattle(snapshot.battleId, combatant),
     )
+  );
+}
+
+function serializedBattleExecutionIdentityGraphIsValid(
+  snapshot: BattleSnapshotInvariantInput,
+): boolean {
+  const executionScopeRefs = snapshot.combatants.flatMap(
+    battleSnapshotExecutionScopeRefs,
+  );
+  const effectOccurrenceRefs = [
+    ...snapshot.combatants.flatMap((combatant) =>
+      combatant.activeEffectOccurrences.map(({ effectRef }) => effectRef),
+    ),
+    ...snapshot.storedLightEmitters.map(({ effectRef }) => effectRef),
+  ];
+  return (
+    new Set(effectOccurrenceRefs).size === effectOccurrenceRefs.length &&
+    serializedEffectOccurrenceSourceBindingsMatch(snapshot.combatants) &&
+    new Set(executionScopeRefs).size === executionScopeRefs.length
   );
 }
 

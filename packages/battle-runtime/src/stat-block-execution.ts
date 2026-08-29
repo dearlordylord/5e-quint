@@ -572,6 +572,43 @@ export type StatBlockExecutionRestoration<
   readonly snapshot: StatBlockExecutionSnapshot;
 };
 
+function effectOccurrenceSourceRefCountsForRestorationCohort<
+  TStatBlock extends BattleStatBlockExecutionSource,
+>(
+  restorations: readonly StatBlockExecutionRestoration<TStatBlock>[],
+): ReadonlyMap<BattleEffectExecutionRef, number> {
+  const counts = new Map<BattleEffectExecutionRef, number>();
+  for (const restoration of restorations) {
+    for (const binding of restoration.snapshot.procedureBindings) {
+      if (binding.procedure.kind !== "effectOccurrenceSource") continue;
+      counts.set(
+        binding.procedure.effectRef,
+        (counts.get(binding.procedure.effectRef) ?? 0) + 1,
+      );
+    }
+  }
+  return counts;
+}
+
+function statBlockExecutionScopeCanBeRestored(input: {
+  readonly scopeRef: BattleStatBlockExecutionScopeRef;
+  readonly restoredScopeRefs: ReadonlySet<BattleStatBlockExecutionScopeRef>;
+  readonly battleId: BattleId;
+  readonly combatantId: CombatantId;
+}): boolean {
+  return (
+    !input.restoredScopeRefs.has(input.scopeRef) &&
+    battleStatBlockExecutionScopeRefBelongsToBattle(
+      input.scopeRef,
+      input.battleId,
+    ) &&
+    battleStatBlockExecutionScopeRefBelongsToCombatant(
+      input.scopeRef,
+      input.combatantId,
+    )
+  );
+}
+
 export function restoreStatBlockExecutionAdmissions<
   TStatBlock extends BattleStatBlockExecutionSource,
 >(
@@ -604,20 +641,8 @@ export function restoreStatBlockExecutionAdmissions<
   readonly StatBlockExecutionAdmission<TStatBlock>[],
   ReadonlyNonEmptyArray<StatBlockExecutionRestoreIssue>
 > {
-  const effectOccurrenceSourceRefCounts = new Map<
-    BattleEffectExecutionRef,
-    number
-  >();
-  for (const restoration of restorations) {
-    for (const binding of restoration.snapshot.procedureBindings) {
-      if (binding.procedure.kind !== "effectOccurrenceSource") continue;
-      effectOccurrenceSourceRefCounts.set(
-        binding.procedure.effectRef,
-        (effectOccurrenceSourceRefCounts.get(binding.procedure.effectRef) ??
-          0) + 1,
-      );
-    }
-  }
+  const effectOccurrenceSourceRefCounts =
+    effectOccurrenceSourceRefCountsForRestorationCohort(restorations);
   const restored: StatBlockExecutionAdmission<TStatBlock>[] = [];
   const issues: StatBlockExecutionRestoreIssue[] = [];
   const restoredScopeRefs = new Set<BattleStatBlockExecutionScopeRef>();
@@ -634,15 +659,12 @@ export function restoreStatBlockExecutionAdmissions<
       continue;
     }
     if (
-      restoredScopeRefs.has(snapshot.scopeRef) ||
-      !battleStatBlockExecutionScopeRefBelongsToBattle(
-        snapshot.scopeRef,
+      !statBlockExecutionScopeCanBeRestored({
+        scopeRef: snapshot.scopeRef,
+        restoredScopeRefs,
         battleId,
-      ) ||
-      !battleStatBlockExecutionScopeRefBelongsToCombatant(
-        snapshot.scopeRef,
         combatantId,
-      )
+      })
     ) {
       issues.push(
         statBlockExecutionRestoreIssue(

@@ -82,6 +82,18 @@ type CommandReplayRoute = {
   readonly replayObjectOutcomes?: BattleObjectOutcomeAccumulation;
 };
 
+type CommandReplayParentPositionFields =
+  | { readonly replayParentPosition?: never }
+  | {
+      readonly replayParentPosition: BattleStartTurnOccurrenceSequenceCheckpoint;
+    };
+
+function commandReplayParentPositionFields(
+  replayParentPosition: BattleStartTurnOccurrenceSequenceCheckpoint | undefined,
+): CommandReplayParentPositionFields {
+  return replayParentPosition === undefined ? {} : { replayParentPosition };
+}
+
 export function isCommandFollowUpSubject(
   subject: BattleSubject,
 ): subject is CommandFollowUpSubject {
@@ -548,9 +560,7 @@ function resolveCommandApproachCommand(
     movedWithinFiveFeetOfCaster: approachFact.movedWithinFiveFeetOfCaster,
     parentFills: input.fills,
     endTurnFills: extraFills,
-    ...(input.replayParentPosition === undefined
-      ? {}
-      : { replayParentPosition: input.replayParentPosition }),
+    ...commandReplayParentPositionFields(input.replayParentPosition),
   });
 }
 
@@ -615,9 +625,7 @@ function resolveCommandApproachAfterMovement(input: {
       state: input.state,
       subject: input.subject,
       fills: input.parentFills,
-      ...(input.replayParentPosition === undefined
-        ? {}
-        : { replayParentPosition: input.replayParentPosition }),
+      ...commandReplayParentPositionFields(input.replayParentPosition),
     },
     {
       state: withoutPending,
@@ -769,9 +777,7 @@ function resolveCommandFleeCommand(
     movement: movement.movement,
     parentFills: input.fills,
     endTurnFills: extraFills,
-    ...(input.replayParentPosition === undefined
-      ? {}
-      : { replayParentPosition: input.replayParentPosition }),
+    ...commandReplayParentPositionFields(input.replayParentPosition),
   });
 }
 
@@ -819,9 +825,7 @@ function resolveCommandFleeAfterMovement(input: {
       state: input.state,
       subject: input.subject,
       fills: input.parentFills,
-      ...(input.replayParentPosition === undefined
-        ? {}
-        : { replayParentPosition: input.replayParentPosition }),
+      ...commandReplayParentPositionFields(input.replayParentPosition),
     },
     {
       state: withoutPending,

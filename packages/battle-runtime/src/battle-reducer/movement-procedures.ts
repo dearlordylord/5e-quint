@@ -1402,18 +1402,9 @@ function validateGustOfWindLineMovementFact(
     };
   }
   /* v8 ignore stop -- @preserve */
-  const source = state.combatants.get(fact.sourceCombatantId);
-  const effect = source?.activeEffects.find(
-    (candidate) => candidate.effectRef === fact.effectRef,
-  );
+  const effect = activeGustOfWindLineForMovementFact(state, fact);
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    effect?.kind !== "gustOfWindLine" ||
-    effect.sourceCombatantId !== fact.sourceCombatantId ||
-    effect.sourceProcedureRef !== fact.sourceProcedureRef ||
-    effect.areaId !== fact.areaId ||
-    effect.directionId !== fact.directionId
-  ) {
+  if (effect === null) {
     return {
       tag: "invalid",
       message:
@@ -1428,6 +1419,26 @@ function validateGustOfWindLineMovementFact(
       Number(fact.closerDistanceFeet) * (effect.movementCost.multiplier - 1),
     ),
   };
+}
+
+function activeGustOfWindLineForMovementFact(
+  state: BattleState,
+  fact: BattleGustOfWindLineMovementFact,
+): Extract<BattleActiveEffect, { readonly kind: "gustOfWindLine" }> | null {
+  const source = state.combatants.get(fact.sourceCombatantId);
+  const effect = source?.activeEffects.find(
+    (candidate) => candidate.effectRef === fact.effectRef,
+  );
+  if (
+    effect?.kind !== "gustOfWindLine" ||
+    effect.sourceCombatantId !== fact.sourceCombatantId ||
+    effect.sourceProcedureRef !== fact.sourceProcedureRef ||
+    effect.areaId !== fact.areaId ||
+    effect.directionId !== fact.directionId
+  ) {
+    return null;
+  }
+  return effect;
 }
 
 type AreaMovementCostFactResult =
